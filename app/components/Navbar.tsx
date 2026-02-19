@@ -40,7 +40,7 @@ export default function Navbar() {
         alignItems: "center",
       }}
     >
-      <Link href="/projects">Tyomaat.fi PRO</Link>
+      <Link href="/projects">Tyomaat.fi PRO ✅</Link>
 
       <div style={{ marginLeft: "auto" }}>
         {!session ? (
