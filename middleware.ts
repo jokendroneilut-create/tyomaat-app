@@ -21,11 +21,13 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // Jos cookie puuttuu/vanhentunut, getUser voi palauttaa error -> käsitellään turvallisesti
   const { data, error } = await supabase.auth.getUser()
-  // Joskus getUser voi palauttaa error jos cookie puuttuu/vanha – se on ok
   const user = error ? null : data.user
 
   const pathname = request.nextUrl.pathname
+
+  // Suojataan nämä reitit
   const isProtected =
     pathname.startsWith('/dashboard') || pathname.startsWith('/projects')
 
@@ -39,6 +41,7 @@ export async function middleware(request: NextRequest) {
   return response
 }
 
+// ✅ TÄRKEÄ: ota mukaan myös pelkkä "/dashboard" ja "/projects"
 export const config = {
-  matcher: ['/dashboard/:path*', '/projects/:path*'],
+  matcher: ['/dashboard', '/dashboard/:path*', '/projects', '/projects/:path*'],
 }
