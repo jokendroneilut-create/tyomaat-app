@@ -1,65 +1,63 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { supabase } from '../../lib/supabaseClient'
 
 export default function LoginPage() {
   const router = useRouter()
+  const params = useSearchParams()
+  const next = params.get('next') || '/dashboard'
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleLogin(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setErrorMessage('')
+    setError(null)
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     setLoading(false)
-
     if (error) {
-      setErrorMessage(error.message)
+      setError(error.message)
       return
     }
 
-    router.push('/dashboard')
+    router.replace(next)
   }
 
   return (
-    <div style={{ padding: 40, maxWidth: 420, margin: '0 auto' }}>
-      <h1>Kirjaudu sisään</h1>
+    <div style={{ maxWidth: 420, margin: '40px auto', padding: 20 }}>
+      <h1>Kirjaudu</h1>
 
-      <form onSubmit={handleLogin} style={{ marginTop: 20 }}>
+      {error && (
+        <div style={{ marginTop: 10, padding: 10, border: '1px solid #ffb4b4', background: '#ffecec', borderRadius: 8 }}>
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={onSubmit} style={{ marginTop: 12 }}>
         <input
-          type="email"
           placeholder="Sähköposti"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', marginBottom: 10, padding: 10 }}
+          style={{ width: '100%', padding: 10, marginTop: 8 }}
         />
-
         <input
-          type="password"
           placeholder="Salasana"
+          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', marginBottom: 10, padding: 10 }}
+          style={{ width: '100%', padding: 10, marginTop: 8 }}
         />
-
-        <button type="submit" style={{ width: '100%', padding: 10 }}>
-          {loading ? 'Kirjaudutaan...' : 'Kirjaudu'}
+        <button disabled={loading} style={{ marginTop: 12, padding: 10, width: '100%' }}>
+          {loading ? 'Kirjaudutaan…' : 'Kirjaudu'}
         </button>
       </form>
-
-      {errorMessage && (
-        <p style={{ color: 'red', marginTop: 12 }}>{errorMessage}</p>
-      )}
     </div>
   )
 }

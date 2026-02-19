@@ -41,7 +41,6 @@ export default function Navbar() {
       }}
     >
       <Link href="/">Etusivu</Link>
-      <Link href="/dashboard">Dashboard</Link>
       <Link href="/projects">Projects</Link>
 
       <div style={{ marginLeft: "auto" }}>
