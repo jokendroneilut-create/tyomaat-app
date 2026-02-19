@@ -1,27 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabaseClient'
 
 export default function LoginPage() {
-  const router = useRouter()
-
   const [nextPath, setNextPath] = useState('/dashboard')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // ✅ Lue next-parametri vasta clientissä -> ei prerender erroria buildissä
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
       const next = params.get('next')
       if (next) setNextPath(next)
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, [])
 
   async function onSubmit(e: React.FormEvent) {
@@ -38,7 +32,8 @@ export default function LoginPage() {
       return
     }
 
-    router.replace(nextPath)
+    // ✅ täysi reload varmistaa että middleware näkee uudet cookiet heti
+    window.location.href = nextPath
   }
 
   return (
