@@ -1,6 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
+function parseAdminEmails(value: string | undefined) {
+  return (value || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean)
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next()
 
@@ -21,15 +28,15 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Jos cookie puuttuu/vanhentunut, getUser voi palauttaa error -> käsitellään turvallisesti
   const { data, error } = await supabase.auth.getUser()
   const user = error ? null : data.user
 
   const pathname = request.nextUrl.pathname
+  const isDashboard = pathname.startsWith('/dashboard')
+  const isProjects = pathname.startsWith('/projects')
 
-  // Suojataan nämä reitit
-  const isProtected =
-    pathname.startsWith('/dashboard') || pathname.startsWith('/projects')
+  // Suojataan nämä reitit kirjautumisella
+  const isProtected = isDashboard || isProjects
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
@@ -38,10 +45,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // ✅ Dashboard vain admin-emailille
+  if (isDashboard) {
+    const admins = parseAdminEmails(process.env.ADMIN_EMAILS)
+    const userEmail = (user?.email || '').toLowerCase()
+
+    if (!admins.includes(userEmail)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/projects' // tai '/' jos haluat
+      return NextResponse.redirect(url)
+    }
+  }
+
   return response
 }
 
-// ✅ TÄRKEÄ: ota mukaan myös pelkkä "/dashboard" ja "/projects"
 export const config = {
   matcher: ['/dashboard', '/dashboard/:path*', '/projects', '/projects/:path*'],
 }
