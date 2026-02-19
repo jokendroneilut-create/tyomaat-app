@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
+/* ===============================
+   PERUS TEEMA
+================================= */
+
 :root {
-  --background: #ffffff;
+  --background: #f6f7f9;
   --foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0f172a;
     --foreground: #ededed;
   }
 }
@@ -16,31 +20,109 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-/* ============================= */
-/* LEAFLET CUSTOM MARKERS */
-/* ============================= */
+/* ===============================
+   PERUS KORTIT & GRID
+================================= */
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+button {
+  transition: all 0.15s ease;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+/* ===============================
+   LEAFLET KORJAUKSET
+================================= */
+
+/* Estää karttaa tulemaan modaalin tai korttien päälle */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+/* Popupin fontti siistimmäksi */
+.leaflet-popup-content {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* ===============================
+   MARKER DOT -TYYLI
+================================= */
 
 .marker-dot {
   width: 14px;
   height: 14px;
-  border-radius: 9999px;
-  border: 2px solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+  border: 2px solid white;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
 }
 
-.marker--planning { background: #3b82f6; }
-.marker--tender   { background: #f59e0b; }
-.marker--active   { background: #22c55e; }
-.marker--done     { background: #6b7280; }
-.marker--default  { background: #111827; }
+/* Vaihe-värit */
 
-.leaflet-popup-content-wrapper {
+.marker--planning {
+  background: #2563eb; /* Suunnittelussa - sininen */
+}
+
+.marker--active {
+  background: #16a34a; /* Rakentaminen aloitettu - vihreä */
+}
+
+.marker--done {
+  background: #6b7280; /* Valmis - harmaa */
+}
+
+.marker--tender {
+  background: #f59e0b; /* Kilpailutus - oranssi */
+}
+
+.marker--default {
+  background: #ef4444; /* Muu - punainen */
+}
+
+/* ===============================
+   KARTTALEGENDA
+================================= */
+
+.map-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: white;
   border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  z-index: 400;
 }
 
-.leaflet-popup-content {
-  margin: 10px 14px;
-  font-size: 14px;
+.map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.map-legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.map-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
