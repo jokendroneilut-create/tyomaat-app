@@ -97,7 +97,7 @@ function SuffixInput(props: {
         onChange={(e) => props.onChange(e.target.value)}
         style={{
           width: '100%',
-          padding: '8px 44px 8px 8px', // tilaa suffixille oikealle
+          padding: '8px 44px 8px 8px',
           border: '1px solid #ddd',
           borderRadius: 6,
         }}
@@ -120,13 +120,16 @@ function SuffixInput(props: {
   )
 }
 
+function formatSupabaseError(error: any) {
+  return [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ')
+}
+
 export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  // Lomakkeessa numero-kentät pidetään “digits string” muodossa
   const emptyForm = {
     name: '',
     location: '',
@@ -139,9 +142,9 @@ export default function Dashboard() {
     builder: '',
     property_type: '',
 
-    apartments: '', // digits
-    floor_area: '', // digits
-    estimated_cost: '', // digits
+    apartments: '',
+    floor_area: '',
+    estimated_cost: '',
     construction_start: '',
 
     structural_design: '',
@@ -155,7 +158,7 @@ export default function Dashboard() {
 
   const [form, setForm] = useState<any>(emptyForm)
 
-  // Formatoidut arvot inputteihin (tuhaterottimet)
+  // display formatting (thousand separators)
   const apartmentsDisplay = useMemo(
     () => formatThousandsFI(onlyDigits(form.apartments)),
     [form.apartments]
@@ -174,12 +177,6 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function formatSupabaseError(error: any) {
-    return [error?.message, error?.details, error?.hint, error?.code]
-      .filter(Boolean)
-      .join(' | ')
-  }
-
   function showErrorUI(prefix: string, error: any) {
     const msg = formatSupabaseError(error) || 'Tuntematon virhe'
     console.log(prefix, error)
@@ -191,11 +188,7 @@ export default function Dashboard() {
     setLoading(true)
     setSubmitError(null)
 
-    const res1 = await supabase
-      .from('projects')
-      .select('*')
-      .order('created_at', { ascending: false })
-
+    const res1 = await supabase.from('projects').select('*').order('created_at', { ascending: false })
     if (!res1.error) {
       setProjects((res1.data as Project[]) || [])
       setLoading(false)
@@ -213,16 +206,35 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  async function geocodeAddress(address: string) {
-    if (!address) return { lat: null as number | null, lon: null as number | null }
+  // ✅ parempi geokoodaus
+  function buildGeocodeQuery() {
+    const parts = [
+      (form.location || '').trim(),
+      (form.city || '').trim(),
+      (form.region || '').trim(),
+      'Finland',
+    ].filter(Boolean)
+
+    return parts.join(', ')
+  }
+
+  async function geocodeAddress(query: string) {
+    if (!query) return { lat: null as number | null, lon: null as number | null }
 
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
-      )
-      const data = await res.json()
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(
+        query
+      )}`
 
-      if (data && data.length > 0) {
+      const res = await fetch(url, {
+        headers: {
+          // Nominatim tykkää kun on "asialliset" headerit
+          'Accept-Language': 'fi,en;q=0.8',
+        },
+      })
+
+      const data = await res.json()
+      if (Array.isArray(data) && data.length > 0 && data[0]?.lat && data[0]?.lon) {
         return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) }
       }
       return { lat: null, lon: null }
@@ -232,7 +244,7 @@ export default function Dashboard() {
     }
   }
 
-  // inputin onChange tallentaa vain digits
+  // onChange: keep digits only
   function setDigitsField(field: 'apartments' | 'floor_area' | 'estimated_cost', raw: string) {
     setForm((prev: any) => ({
       ...prev,
@@ -244,7 +256,30 @@ export default function Dashboard() {
     e.preventDefault()
     setSubmitError(null)
 
-    const coords = await geocodeAddress(form.location)
+    // ✅ 1) Ensisijainen: location + city + region + Finland
+    const q1 = buildGeocodeQuery()
+    let coords = await geocodeAddress(q1)
+
+    // ✅ 2) Fallback: jos location ei löydy, kokeile city + Finland
+    if ((coords.lat == null || coords.lon == null) && (form.city || '').trim()) {
+      const q2 = `${(form.city || '').trim()}, Finland`
+      coords = await geocodeAddress(q2)
+    }
+
+    // ✅ 3) Fallback: jos city puuttuu, kokeile region + Finland
+    if ((coords.lat == null || coords.lon == null) && (form.region || '').trim()) {
+      const q3 = `${(form.region || '').trim()}, Finland`
+      coords = await geocodeAddress(q3)
+    }
+
+    // ✅ Jos et halua sallia tallennusta ilman koordinaatteja, pidä tämä:
+    // (Jos haluat sallia, kommentoi tämä if pois.)
+    if (coords.lat == null || coords.lon == null) {
+      setSubmitError(
+        `Osoitetta ei löytynyt kartalta. Lisää tarkempi osoite.\nHaku: "${q1}"`
+      )
+      return
+    }
 
     const payload = {
       ...form,
@@ -257,9 +292,7 @@ export default function Dashboard() {
       floor_area: digitsToNumberOrNull(form.floor_area),
       estimated_cost: digitsToNumberOrNull(form.estimated_cost),
 
-      construction_start: form.construction_start?.trim()
-        ? form.construction_start.trim()
-        : null,
+      construction_start: form.construction_start?.trim() ? form.construction_start.trim() : null,
 
       latitude: coords.lat,
       longitude: coords.lon,
@@ -355,13 +388,13 @@ export default function Dashboard() {
               background: '#ffecec',
               color: '#8a0000',
               borderRadius: 8,
+              whiteSpace: 'pre-wrap',
             }}
           >
             Tallennusvirhe: {submitError}
           </div>
         )}
 
-        {/* Perustiedot */}
         <input
           placeholder="Projektin nimi"
           value={form.name}
@@ -370,7 +403,7 @@ export default function Dashboard() {
         />
 
         <input
-          placeholder="Sijainti / Osoite"
+          placeholder="Sijainti / Osoite (esim. katuosoite)"
           value={form.location}
           onChange={(e) => setForm({ ...form, location: e.target.value })}
           style={{ width: '100%', padding: 8, marginTop: 8 }}
@@ -396,7 +429,6 @@ export default function Dashboard() {
           style={{ width: '100%', padding: 8, marginTop: 8 }}
         />
 
-        {/* Vaihe dropdown */}
         <select
           value={form.phase}
           onChange={(e) => setForm({ ...form, phase: e.target.value })}
@@ -409,7 +441,6 @@ export default function Dashboard() {
           ))}
         </select>
 
-        {/* Lisätiedot */}
         <input
           placeholder="🏗️ Rakennuttaja"
           value={form.developer}
@@ -431,7 +462,6 @@ export default function Dashboard() {
           style={{ width: '100%', padding: 8, marginTop: 8 }}
         />
 
-        {/* ✅ Numerokentät: tuhaterotin + suffix */}
         <SuffixInput
           inputMode="numeric"
           placeholder="🏠 Asuntoja"
@@ -463,7 +493,6 @@ export default function Dashboard() {
           style={{ width: '100%', padding: 8, marginTop: 8 }}
         />
 
-        {/* Suunnittelijat / urakoitsijat */}
         <input
           placeholder="Rakennesuunnittelu"
           value={form.structural_design}
@@ -543,14 +572,10 @@ export default function Dashboard() {
             <strong>Näkyvyys:</strong> {p.is_public ? '🟢 Julkinen' : '🔒 Piilotettu'}
           </p>
 
-          <button onClick={() => togglePublic(p.id, p.is_public)}>
-            {p.is_public ? 'Piilota' : 'Julkaise'}
-          </button>
-
+          <button onClick={() => togglePublic(p.id, p.is_public)}>{p.is_public ? 'Piilota' : 'Julkaise'}</button>
           <button onClick={() => startEdit(p)} style={{ marginLeft: 10 }}>
             Muokkaa
           </button>
-
           <button
             onClick={() => deleteProject(p.id)}
             style={{ marginLeft: 10, background: 'red', color: 'white' }}

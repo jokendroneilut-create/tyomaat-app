@@ -72,6 +72,10 @@ function useIsMobile(breakpoint = 768) {
   return isMobile
 }
 
+function hasCoords(p: Project) {
+  return p.latitude != null && p.longitude != null
+}
+
 export default function Projects() {
   const isMobile = useIsMobile(768)
   const pageSize = isMobile ? 15 : 30
@@ -171,18 +175,36 @@ export default function Projects() {
     })
   }, [projects, q, region, city, phase, propertyType])
 
-  // Kartan näkymärajauksen suodatus listaan
-  const inViewProjects = useMemo(() => {
-    if (!limitToMapView || !mapBounds) return filteredProjects
-    const { south, west, north, east } = mapBounds
+  // ✅ Erottele koordinaatilliset / koordinaatittomat suodatetuista
+  const filteredWithCoords = useMemo(
+    () => filteredProjects.filter((p) => hasCoords(p)),
+    [filteredProjects]
+  )
+  const filteredNoCoords = useMemo(
+    () => filteredProjects.filter((p) => !hasCoords(p)),
+    [filteredProjects]
+  )
 
-    return filteredProjects.filter((p) => {
-      if (p.latitude == null || p.longitude == null) return false
-      const lat = p.latitude
-      const lon = p.longitude
+  // ✅ Kartan näkymärajauksen suodatus (vain koordinaatilliset)
+  const inBoundsWithCoords = useMemo(() => {
+    if (!limitToMapView || !mapBounds) return filteredWithCoords
+
+    const { south, west, north, east } = mapBounds
+    return filteredWithCoords.filter((p) => {
+      const lat = p.latitude as number
+      const lon = p.longitude as number
       return lat >= south && lat <= north && lon >= west && lon <= east
     })
-  }, [filteredProjects, limitToMapView, mapBounds])
+  }, [filteredWithCoords, limitToMapView, mapBounds])
+
+  // ✅ Lopullinen lista:
+  // - jos karttarajaus päällä -> näytä kartassa olevat + lisäksi kaikki koordinaatittomat
+  // - jos karttarajaus pois -> näytä kaikki suodatetut
+  const listProjects = useMemo(() => {
+    if (!limitToMapView) return filteredProjects
+    // karttarajaus: koordinaatittomat mukaan (näkyvät listassa)
+    return [...inBoundsWithCoords, ...filteredNoCoords]
+  }, [limitToMapView, filteredProjects, inBoundsWithCoords, filteredNoCoords])
 
   // Kun filtteri vaihtuu tai mobiili/desktop vaihtuu, aloita lista alusta
   useEffect(() => {
@@ -190,8 +212,8 @@ export default function Projects() {
   }, [q, region, city, phase, propertyType, limitToMapView, mapBounds, pageSize])
 
   const visibleProjects = useMemo(
-    () => inViewProjects.slice(0, visibleCount),
-    [inViewProjects, visibleCount]
+    () => listProjects.slice(0, visibleCount),
+    [listProjects, visibleCount]
   )
 
   const clearFilters = () => {
@@ -220,6 +242,10 @@ export default function Projects() {
     if (selected) window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selected])
+
+  // laskurit UI:hin
+  const mapCount = limitToMapView ? inBoundsWithCoords.length : filteredWithCoords.length
+  const noCoordsCount = filteredNoCoords.length
 
   if (loading) return <p style={{ padding: 20 }}>Ladataan...</p>
 
@@ -342,23 +368,27 @@ export default function Projects() {
         </label>
 
         <div className="projects-counter">
-          Karttanäkymässä <strong>{inViewProjects.length}</strong> / suodatetuista{' '}
-          {filteredProjects.length} (yhteensä {projects.length})
+          Kartassa <strong>{mapCount}</strong> / suodatetuista {filteredProjects.length}
+          {noCoordsCount > 0 ? (
+            <>
+              {' '}
+              • <strong>{noCoordsCount}</strong> ilman koordinaatteja (näkyvät listassa)
+            </>
+          ) : null}
         </div>
       </div>
 
       {/* Kartta */}
       <div className="projects-map" style={{ height: mapHeight }}>
+        {/* Kartalle menee edelleen kaikki suodatetut — markerit tulevat vain niille joilla on koordinaatit */}
         <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} />
       </div>
 
       {/* Lista */}
       <div className="projects-list">
-        {inViewProjects.length === 0 && (
-          <p>Ei projekteja karttanäkymässä / valituilla filttereillä.</p>
-        )}
+        {listProjects.length === 0 && <p>Ei projekteja valituilla filttereillä.</p>}
 
-        {inViewProjects.length > 0 && (
+        {listProjects.length > 0 && (
           <>
             {/* Desktop-table */}
             <div className="projects-tableWrap">
@@ -372,7 +402,25 @@ export default function Projects() {
 
               {visibleProjects.map((p) => (
                 <div key={p.id} className="projects-tableRow">
-                  <div className="projects-name">{p.name}</div>
+                  <div className="projects-name">
+                    {p.name}{' '}
+                    {!hasCoords(p) ? (
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontSize: 12,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          border: '1px solid #e5e7eb',
+                          background: '#f9fafb',
+                          color: '#6b7280',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Ei koordinaatteja
+                      </span>
+                    ) : null}
+                  </div>
                   <div>{p.city}</div>
                   <div>{p.region || '-'}</div>
                   <div>{p.phase}</div>
@@ -389,7 +437,25 @@ export default function Projects() {
             <div className="projects-cards">
               {visibleProjects.map((p) => (
                 <div key={p.id} className="projects-cardRow">
-                  <div className="projects-cardTitle">{p.name}</div>
+                  <div className="projects-cardTitle">
+                    {p.name}{' '}
+                    {!hasCoords(p) ? (
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontSize: 12,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          border: '1px solid #e5e7eb',
+                          background: '#f9fafb',
+                          color: '#6b7280',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Ei koordinaatteja
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="projects-cardMeta">
                     {p.city} • {p.region || '-'} • {p.phase}
                   </div>
@@ -402,7 +468,7 @@ export default function Projects() {
           </>
         )}
 
-        {inViewProjects.length > visibleCount && (
+        {listProjects.length > visibleCount && (
           <div className="projects-more">
             <button className="projects-moreBtn" onClick={() => setVisibleCount((c) => c + pageSize)}>
               Lataa lisää (+{pageSize})
