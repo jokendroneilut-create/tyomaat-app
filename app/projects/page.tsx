@@ -42,9 +42,7 @@ function uniqSorted(values: (string | null | undefined)[]) {
 function formatEUR(n: number | null | undefined) {
   if (n == null) return '-'
   try {
-    return (
-      new Intl.NumberFormat('fi-FI', { maximumFractionDigits: 0 }).format(n) + ' €'
-    )
+    return new Intl.NumberFormat('fi-FI', { maximumFractionDigits: 0 }).format(n) + ' €'
   } catch {
     return `${n} €`
   }
@@ -53,34 +51,49 @@ function formatEUR(n: number | null | undefined) {
 function formatM2(n: number | null | undefined) {
   if (n == null) return '-'
   try {
-    return (
-      new Intl.NumberFormat('fi-FI', { maximumFractionDigits: 0 }).format(n) + ' m²'
-    )
+    return new Intl.NumberFormat('fi-FI', { maximumFractionDigits: 0 }).format(n) + ' m²'
   } catch {
     return `${n} m²`
   }
 }
 
-const PAGE_SIZE = 30
+/** Kevyt mobile-aware: käytä näytön leveyttä (ei user-agentia) */
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [breakpoint])
+
+  return isMobile
+}
 
 export default function Projects() {
+  const isMobile = useIsMobile(768)
+  const pageSize = isMobile ? 15 : 30
+  const mapHeight = isMobile ? 360 : 520
+
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
 
-  // ✅ Filtterit
+  // Filtterit
   const [q, setQ] = useState('')
   const [region, setRegion] = useState<string>('') // '' = kaikki
   const [city, setCity] = useState<string>('') // '' = kaikki
   const [phase, setPhase] = useState<string>('') // '' = kaikki
   const [propertyType, setPropertyType] = useState<string>('') // '' = kaikki
 
-  // ✅ listan sivutus / “lataa lisää”
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  // listan sivutus / “lataa lisää”
+  const [visibleCount, setVisibleCount] = useState(pageSize)
 
-  // ✅ modal
+  // modal
   const [selected, setSelected] = useState<Project | null>(null)
 
-  // ✅ kartta rajaa listaa
+  // kartta rajaa listaa
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [limitToMapView, setLimitToMapView] = useState(true)
 
@@ -123,6 +136,7 @@ export default function Projects() {
   }, [projects, region])
 
   const phases = useMemo(() => uniqSorted(projects.map((p) => p.phase)), [projects])
+
   const propertyTypes = useMemo(
     () => uniqSorted(projects.map((p) => p.property_type)),
     [projects]
@@ -157,11 +171,11 @@ export default function Projects() {
     })
   }, [projects, q, region, city, phase, propertyType])
 
-  // ✅ Kartan näkymärajauksen suodatus listaan
+  // Kartan näkymärajauksen suodatus listaan
   const inViewProjects = useMemo(() => {
     if (!limitToMapView || !mapBounds) return filteredProjects
-
     const { south, west, north, east } = mapBounds
+
     return filteredProjects.filter((p) => {
       if (p.latitude == null || p.longitude == null) return false
       const lat = p.latitude
@@ -170,10 +184,10 @@ export default function Projects() {
     })
   }, [filteredProjects, limitToMapView, mapBounds])
 
-  // Kun filtteri vaihtuu, aloita lista alusta
+  // Kun filtteri vaihtuu tai mobiili/desktop vaihtuu, aloita lista alusta
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE)
-  }, [q, region, city, phase, propertyType, limitToMapView, mapBounds])
+    setVisibleCount(pageSize)
+  }, [q, region, city, phase, propertyType, limitToMapView, mapBounds, pageSize])
 
   const visibleProjects = useMemo(
     () => inViewProjects.slice(0, visibleCount),
@@ -210,8 +224,8 @@ export default function Projects() {
   if (loading) return <p style={{ padding: 20 }}>Ladataan...</p>
 
   return (
-    <div style={{ padding: 20, maxWidth: 1100, margin: '0 auto' }}>
-      {/* ✅ Pakota Leaflet aina taakse (varmistus) */}
+    <div className="projects-page">
+      {/* Leaflet z-index varmistus */}
       <style jsx global>{`
         .leaflet-container {
           z-index: 0 !important;
@@ -231,143 +245,94 @@ export default function Projects() {
         }
       `}</style>
 
-      <h1 style={{ marginBottom: 12 }}>Työmaat</h1>
+      <h1 className="projects-title">Työmaat</h1>
 
-      {/* 🔎 Filtterit */}
-      <div
-        style={{
-          border: '1px solid #e5e5e5',
-          padding: 14,
-          borderRadius: 12,
-          background: '#fff',
-          marginBottom: 18,
-          display: 'grid',
-          gridTemplateColumns: '1.3fr 1fr 1fr 1fr 1fr auto',
-          gap: 10,
-          alignItems: 'end',
-        }}
-      >
-        <div>
-          <label style={{ display: 'block', fontSize: 12, marginBottom: 6 }}>Haku</label>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Hae nimen, maakunnan, kaupungin, rakennuttajan…"
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #ddd',
-              borderRadius: 10,
-            }}
-          />
+      {/* Filtterit */}
+      <div className="projects-filters-card">
+        <div className="projects-filters-grid">
+          <div>
+            <label className="projects-label">Haku</label>
+            <input
+              className="projects-input"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Hae nimen, maakunnan, kaupungin, rakennuttajan…"
+            />
+          </div>
+
+          <div>
+            <label className="projects-label">Maakunta</label>
+            <select
+              className="projects-select"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+            >
+              <option value="">Kaikki</option>
+              {regions.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="projects-label">Kaupunki</label>
+            <select
+              className="projects-select"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            >
+              <option value="">Kaikki</option>
+              {cities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="projects-label">Vaihe</label>
+            <select
+              className="projects-select"
+              value={phase}
+              onChange={(e) => setPhase(e.target.value)}
+            >
+              <option value="">Kaikki</option>
+              {phases.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="projects-label">Kohdetyyppi</label>
+            <select
+              className="projects-select"
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
+            >
+              <option value="">Kaikki</option>
+              {propertyTypes.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button className="projects-clear" onClick={clearFilters}>
+            Tyhjennä
+          </button>
         </div>
-
-        <div>
-          <label style={{ display: 'block', fontSize: 12, marginBottom: 6 }}>Maakunta</label>
-          <select
-            value={region}
-            onChange={(e) => setRegion(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #ddd',
-              borderRadius: 10,
-              background: '#fff',
-            }}
-          >
-            <option value="">Kaikki</option>
-            {regions.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontSize: 12, marginBottom: 6 }}>Kaupunki</label>
-          <select
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #ddd',
-              borderRadius: 10,
-              background: '#fff',
-            }}
-          >
-            <option value="">Kaikki</option>
-            {cities.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontSize: 12, marginBottom: 6 }}>Vaihe</label>
-          <select
-            value={phase}
-            onChange={(e) => setPhase(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #ddd',
-              borderRadius: 10,
-              background: '#fff',
-            }}
-          >
-            <option value="">Kaikki</option>
-            {phases.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontSize: 12, marginBottom: 6 }}>Kohdetyyppi</label>
-          <select
-            value={propertyType}
-            onChange={(e) => setPropertyType(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #ddd',
-              borderRadius: 10,
-              background: '#fff',
-            }}
-          >
-            <option value="">Kaikki</option>
-            {propertyTypes.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button
-          onClick={clearFilters}
-          style={{
-            padding: '10px 14px',
-            border: '1px solid #ddd',
-            borderRadius: 10,
-            background: '#f7f7f7',
-            cursor: 'pointer',
-            height: 42,
-          }}
-        >
-          Tyhjennä
-        </button>
       </div>
 
-      {/* ✅ Kartta-rajauksen toggle */}
-      <div style={{ marginBottom: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
-        <label style={{ display: 'flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}>
+      {/* Kartta-rajauksen toggle + laskuri */}
+      <div className="projects-topbar">
+        <label className="projects-checkbox">
           <input
             type="checkbox"
             checked={limitToMapView}
@@ -376,154 +341,101 @@ export default function Projects() {
           Rajaa listaa kartan mukaan
         </label>
 
-        <div style={{ marginLeft: 'auto', color: '#555' }}>
+        <div className="projects-counter">
           Karttanäkymässä <strong>{inViewProjects.length}</strong> / suodatetuista{' '}
           {filteredProjects.length} (yhteensä {projects.length})
         </div>
       </div>
 
-      {/* 🗺 Kartta */}
-      
-<MapClient projects={filteredProjects} onBoundsChange={setMapBounds} />      {/* 📋 TIIVIS LISTA + LATAA LISÄÄ */}
-      <div style={{ marginTop: 16 }}>
-        {inViewProjects.length === 0 && <p>Ei projekteja karttanäkymässä / valituilla filttereillä.</p>}
+      {/* Kartta */}
+      <div className="projects-map" style={{ height: mapHeight }}>
+        <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} />
+      </div>
+
+      {/* Lista */}
+      <div className="projects-list">
+        {inViewProjects.length === 0 && (
+          <p>Ei projekteja karttanäkymässä / valituilla filttereillä.</p>
+        )}
 
         {inViewProjects.length > 0 && (
-          <div
-            style={{
-              border: '1px solid #e5e5e5',
-              borderRadius: 12,
-              background: '#fff',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1.6fr 1fr 1fr 1fr auto',
-                gap: 10,
-                padding: '10px 12px',
-                fontSize: 12,
-                color: '#666',
-                borderBottom: '1px solid #eee',
-                background: '#fafafa',
-              }}
-            >
-              <div>Nimi</div>
-              <div>Kaupunki</div>
-              <div>Maakunta</div>
-              <div>Vaihe</div>
-              <div />
+          <>
+            {/* Desktop-table */}
+            <div className="projects-tableWrap">
+              <div className="projects-tableHead">
+                <div>Nimi</div>
+                <div>Kaupunki</div>
+                <div>Maakunta</div>
+                <div>Vaihe</div>
+                <div />
+              </div>
+
+              {visibleProjects.map((p) => (
+                <div key={p.id} className="projects-tableRow">
+                  <div className="projects-name">{p.name}</div>
+                  <div>{p.city}</div>
+                  <div>{p.region || '-'}</div>
+                  <div>{p.phase}</div>
+                  <div className="projects-actions">
+                    <button className="projects-btn" onClick={() => setSelected(p)}>
+                      Näytä tiedot
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {visibleProjects.map((p) => (
-              <div
-                key={p.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1.6fr 1fr 1fr 1fr auto',
-                  gap: 10,
-                  padding: '12px',
-                  borderBottom: '1px solid #f0f0f0',
-                  alignItems: 'center',
-                }}
-              >
-                <div style={{ fontWeight: 600, lineHeight: 1.25 }}>{p.name}</div>
-                <div>{p.city}</div>
-                <div>{p.region || '-'}</div>
-                <div>{p.phase}</div>
-                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                  <button
-                    onClick={() => setSelected(p)}
-                    style={{
-                      padding: '8px 10px',
-                      border: '1px solid #ddd',
-                      borderRadius: 10,
-                      background: '#fff',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
+            {/* Mobile-cards */}
+            <div className="projects-cards">
+              {visibleProjects.map((p) => (
+                <div key={p.id} className="projects-cardRow">
+                  <div className="projects-cardTitle">{p.name}</div>
+                  <div className="projects-cardMeta">
+                    {p.city} • {p.region || '-'} • {p.phase}
+                  </div>
+                  <button className="projects-btn projects-btnFull" onClick={() => setSelected(p)}>
                     Näytä tiedot
                   </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
 
         {inViewProjects.length > visibleCount && (
-          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
-            <button
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-              style={{
-                padding: '10px 14px',
-                border: '1px solid #ddd',
-                borderRadius: 12,
-                background: '#f7f7f7',
-                cursor: 'pointer',
-              }}
-            >
-              Lataa lisää (+{PAGE_SIZE})
+          <div className="projects-more">
+            <button className="projects-moreBtn" onClick={() => setVisibleCount((c) => c + pageSize)}>
+              Lataa lisää (+{pageSize})
             </button>
           </div>
         )}
       </div>
 
-      {/* 🪟 MODAL: täydet tiedot */}
+      {/* MODAL */}
       {selected && (
         <div
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) closeModal()
           }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.45)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 18,
-            zIndex: 9999, // ✅ aina kartan päälle
-          }}
+          className="projects-modalBackdrop"
         >
-          <div
-            style={{
-              width: 'min(860px, 100%)',
-              maxHeight: '85vh',
-              overflow: 'auto',
-              background: '#fff',
-              borderRadius: 14,
-              padding: 18,
-              border: '1px solid #eee',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+          <div className="projects-modal">
+            <div className="projects-modalTop">
               <div>
-                <h2 style={{ margin: 0 }}>{selected.name}</h2>
-                <div style={{ marginTop: 6, color: '#555' }}>
+                <h2 className="projects-modalTitle">{selected.name}</h2>
+                <div className="projects-modalSub">
                   {selected.city} • {selected.region || '-'} • {selected.phase}
                 </div>
               </div>
 
-              <button
-                onClick={closeModal}
-                style={{
-                  padding: '8px 10px',
-                  border: '1px solid #ddd',
-                  borderRadius: 10,
-                  background: '#fff',
-                  cursor: 'pointer',
-                  height: 40,
-                }}
-              >
+              <button className="projects-btn" onClick={closeModal}>
                 Sulje
               </button>
             </div>
 
-            <hr style={{ margin: '14px 0' }} />
+            <hr className="projects-hr" />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="projects-modalGrid">
               <div>
                 <p>
                   <strong>Maakunta:</strong> {selected.region || '-'}
@@ -561,9 +473,9 @@ export default function Projects() {
               </div>
             </div>
 
-            <hr style={{ margin: '14px 0' }} />
+            <hr className="projects-hr" />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="projects-modalGrid">
               <div>
                 <p>
                   <strong>Rakennesuunnittelu:</strong> {selected.structural_design || '-'}
@@ -591,11 +503,11 @@ export default function Projects() {
 
             {selected.additional_info && (
               <>
-                <hr style={{ margin: '14px 0' }} />
+                <hr className="projects-hr" />
                 <p style={{ marginBottom: 6 }}>
                   <strong>Lisätietoja:</strong>
                 </p>
-                <p style={{ whiteSpace: 'pre-wrap', marginTop: 0 }}>{selected.additional_info}</p>
+                <p className="projects-pre">{selected.additional_info}</p>
               </>
             )}
           </div>
