@@ -1,18 +1,34 @@
 @import "tailwindcss";
 
 /* ===============================
-   PERUS TEEMA
+   PERUS TEEMA (muuttujat)
 ================================= */
 
 :root {
   --background: #f6f7f9;
   --foreground: #171717;
+
+  --surface: #ffffff;        /* korttien tausta */
+  --surface-2: #fafafa;      /* header/vaalea pinta */
+  --border: #e5e7eb;         /* reunat */
+  --muted: #555555;          /* harmaa teksti */
+  --muted-2: #666666;        /* vielä vaaleampi teksti */
+  --input-bg: #ffffff;
+  --btn-bg: #f7f7f7;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0f172a;
     --foreground: #ededed;
+
+    --surface: #111827;      /* tumma kortti */
+    --surface-2: #0b1220;    /* tumma header/pinta */
+    --border: #243244;
+    --muted: #cbd5e1;
+    --muted-2: #94a3b8;
+    --input-bg: #0b1220;
+    --btn-bg: #111827;
   }
 }
 
@@ -29,8 +45,8 @@ body {
 ================================= */
 
 .card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 18px;
 }
@@ -40,7 +56,7 @@ button {
 }
 
 button:hover {
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 /* ===============================
@@ -69,23 +85,23 @@ button:hover {
 }
 
 .marker--planning {
-  background: #2563eb; /* Suunnittelussa - sininen */
+  background: #2563eb;
 }
 
 .marker--active {
-  background: #16a34a; /* Rakentaminen aloitettu - vihreä */
+  background: #16a34a;
 }
 
 .marker--done {
-  background: #6b7280; /* Valmis - harmaa */
+  background: #6b7280;
 }
 
 .marker--tender {
-  background: #f59e0b; /* Kilpailutus - oranssi */
+  background: #f59e0b;
 }
 
 .marker--default {
-  background: #ef4444; /* Muu - punainen */
+  background: #ef4444;
 }
 
 /* ===============================
@@ -105,10 +121,10 @@ button:hover {
 }
 
 .projects-filters-card {
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border);
   padding: 14px;
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface);
   margin-bottom: 18px;
 }
 
@@ -123,23 +139,29 @@ button:hover {
   display: block;
   font-size: 12px;
   margin-bottom: 6px;
-  color: #444;
+  color: var(--muted-2);
 }
 
 .projects-input,
 .projects-select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--input-bg);
+  color: var(--foreground);
+}
+
+.projects-input::placeholder {
+  color: var(--muted-2);
 }
 
 .projects-clear {
   padding: 10px 14px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: #f7f7f7;
+  background: var(--btn-bg);
+  color: var(--foreground);
   cursor: pointer;
   height: 42px;
   white-space: nowrap;
@@ -161,7 +183,7 @@ button:hover {
 
 .projects-counter {
   margin-left: auto;
-  color: #555;
+  color: var(--muted);
 }
 
 .projects-map {
@@ -175,9 +197,9 @@ button:hover {
 }
 
 .projects-tableWrap {
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface);
   overflow: hidden;
 }
 
@@ -187,9 +209,9 @@ button:hover {
   gap: 10px;
   padding: 10px 12px;
   font-size: 12px;
-  color: #666;
-  border-bottom: 1px solid #eee;
-  background: #fafafa;
+  color: var(--muted-2);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
 }
 
 .projects-tableRow {
@@ -197,7 +219,7 @@ button:hover {
   grid-template-columns: 1.6fr 1fr 1fr 1fr auto;
   gap: 10px;
   padding: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.15);
   align-items: center;
 }
 
@@ -214,9 +236,10 @@ button:hover {
 
 .projects-btn {
   padding: 8px 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
+  color: var(--foreground);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -229,20 +252,21 @@ button:hover {
 
 .projects-moreBtn {
   padding: 10px 14px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background: #f7f7f7;
+  background: var(--btn-bg);
+  color: var(--foreground);
   cursor: pointer;
 }
 
 /* Mobiili: korttirivit */
 .projects-cards {
-  display: none; /* desktopilla piilossa */
+  display: none;
 }
 
 .projects-cardRow {
-  border: 1px solid #e5e5e5;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   border-radius: 12px;
   padding: 12px;
   margin-bottom: 10px;
@@ -255,7 +279,7 @@ button:hover {
 
 .projects-cardMeta {
   font-size: 13px;
-  color: #555;
+  color: var(--muted);
   margin-bottom: 10px;
 }
 
@@ -267,7 +291,7 @@ button:hover {
 .projects-modalBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -279,10 +303,11 @@ button:hover {
   width: min(860px, 100%);
   max-height: 85vh;
   overflow: auto;
-  background: #fff;
+  background: var(--surface);
+  color: var(--foreground);
   border-radius: 14px;
   padding: 18px;
-  border: 1px solid #eee;
+  border: 1px solid var(--border);
 }
 
 .projects-modalTop {
@@ -298,11 +323,13 @@ button:hover {
 
 .projects-modalSub {
   margin-top: 6px;
-  color: #555;
+  color: var(--muted);
 }
 
 .projects-hr {
   margin: 14px 0;
+  border: none;
+  border-top: 1px solid var(--border);
 }
 
 .projects-modalGrid {
@@ -314,6 +341,7 @@ button:hover {
 .projects-pre {
   white-space: pre-wrap;
   margin-top: 0;
+  color: var(--foreground);
 }
 
 /* ===============================
@@ -344,15 +372,15 @@ button:hover {
   }
 
   .projects-filters-grid {
-    grid-template-columns: 1fr; /* ✅ allekkain */
+    grid-template-columns: 1fr;
   }
 
   .projects-tableWrap {
-    display: none; /* piilota desktop-taulukko */
+    display: none;
   }
 
   .projects-cards {
-    display: block; /* näytä mobiilikortit */
+    display: block;
   }
 
   .projects-modal {
@@ -361,6 +389,6 @@ button:hover {
   }
 
   .projects-modalGrid {
-    grid-template-columns: 1fr; /* modal allekkain */
+    grid-template-columns: 1fr;
   }
 }
