@@ -26,8 +26,14 @@ type Project = {
   geotechnical_design: string | null
   earthworks_contractor: string | null
   additional_info: string | null
-  latitude: number | null
-  longitude: number | null
+
+  // nykyinen schema
+  latitude?: number | string | null
+  longitude?: number | string | null
+
+  // vanha/mahdollinen schema
+  lat?: number | string | null
+  lng?: number | string | null
 }
 
 function uniqSorted(values: (string | null | undefined)[]) {
@@ -72,8 +78,25 @@ function useIsMobile(breakpoint = 768) {
   return isMobile
 }
 
+function toNumberOrNull(v: unknown): number | null {
+  if (v == null) return null
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null
+  if (typeof v === 'string') {
+    const n = parseFloat(v)
+    return Number.isFinite(n) ? n : null
+  }
+  return null
+}
+
+function getCoords(p: Project): { lat: number | null; lng: number | null } {
+  const lat = toNumberOrNull(p.latitude ?? p.lat)
+  const lng = toNumberOrNull(p.longitude ?? p.lng)
+  return { lat, lng }
+}
+
 function hasCoords(p: Project) {
-  return p.latitude != null && p.longitude != null
+  const { lat, lng } = getCoords(p)
+  return lat != null && lng != null
 }
 
 export default function Projects() {
@@ -141,10 +164,7 @@ export default function Projects() {
 
   const phases = useMemo(() => uniqSorted(projects.map((p) => p.phase)), [projects])
 
-  const propertyTypes = useMemo(
-    () => uniqSorted(projects.map((p) => p.property_type)),
-    [projects]
-  )
+  const propertyTypes = useMemo(() => uniqSorted(projects.map((p) => p.property_type)), [projects])
 
   const filteredProjects = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -176,14 +196,8 @@ export default function Projects() {
   }, [projects, q, region, city, phase, propertyType])
 
   // ✅ Erottele koordinaatilliset / koordinaatittomat suodatetuista
-  const filteredWithCoords = useMemo(
-    () => filteredProjects.filter((p) => hasCoords(p)),
-    [filteredProjects]
-  )
-  const filteredNoCoords = useMemo(
-    () => filteredProjects.filter((p) => !hasCoords(p)),
-    [filteredProjects]
-  )
+  const filteredWithCoords = useMemo(() => filteredProjects.filter((p) => hasCoords(p)), [filteredProjects])
+  const filteredNoCoords = useMemo(() => filteredProjects.filter((p) => !hasCoords(p)), [filteredProjects])
 
   // ✅ Kartan näkymärajauksen suodatus (vain koordinaatilliset)
   const inBoundsWithCoords = useMemo(() => {
@@ -191,9 +205,9 @@ export default function Projects() {
 
     const { south, west, north, east } = mapBounds
     return filteredWithCoords.filter((p) => {
-      const lat = p.latitude as number
-      const lon = p.longitude as number
-      return lat >= south && lat <= north && lon >= west && lon <= east
+      const { lat, lng } = getCoords(p)
+      if (lat == null || lng == null) return false
+      return lat >= south && lat <= north && lng >= west && lng <= east
     })
   }, [filteredWithCoords, limitToMapView, mapBounds])
 
@@ -202,7 +216,6 @@ export default function Projects() {
   // - jos karttarajaus pois -> näytä kaikki suodatetut
   const listProjects = useMemo(() => {
     if (!limitToMapView) return filteredProjects
-    // karttarajaus: koordinaatittomat mukaan (näkyvät listassa)
     return [...inBoundsWithCoords, ...filteredNoCoords]
   }, [limitToMapView, filteredProjects, inBoundsWithCoords, filteredNoCoords])
 
@@ -211,10 +224,7 @@ export default function Projects() {
     setVisibleCount(pageSize)
   }, [q, region, city, phase, propertyType, limitToMapView, mapBounds, pageSize])
 
-  const visibleProjects = useMemo(
-    () => listProjects.slice(0, visibleCount),
-    [listProjects, visibleCount]
-  )
+  const visibleProjects = useMemo(() => listProjects.slice(0, visibleCount), [listProjects, visibleCount])
 
   const clearFilters = () => {
     setQ('')
@@ -288,11 +298,7 @@ export default function Projects() {
 
           <div>
             <label className="projects-label">Maakunta</label>
-            <select
-              className="projects-select"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-            >
+            <select className="projects-select" value={region} onChange={(e) => setRegion(e.target.value)}>
               <option value="">Kaikki</option>
               {regions.map((r) => (
                 <option key={r} value={r}>
@@ -304,11 +310,7 @@ export default function Projects() {
 
           <div>
             <label className="projects-label">Kaupunki</label>
-            <select
-              className="projects-select"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            >
+            <select className="projects-select" value={city} onChange={(e) => setCity(e.target.value)}>
               <option value="">Kaikki</option>
               {cities.map((c) => (
                 <option key={c} value={c}>
@@ -320,11 +322,7 @@ export default function Projects() {
 
           <div>
             <label className="projects-label">Vaihe</label>
-            <select
-              className="projects-select"
-              value={phase}
-              onChange={(e) => setPhase(e.target.value)}
-            >
+            <select className="projects-select" value={phase} onChange={(e) => setPhase(e.target.value)}>
               <option value="">Kaikki</option>
               {phases.map((p) => (
                 <option key={p} value={p}>
@@ -380,7 +378,6 @@ export default function Projects() {
 
       {/* Kartta */}
       <div className="projects-map" style={{ height: mapHeight }}>
-        {/* Kartalle menee edelleen kaikki suodatetut — markerit tulevat vain niille joilla on koordinaatit */}
         <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} />
       </div>
 

@@ -16,8 +16,14 @@ type Project = {
   builder?: string | null
   property_type?: string | null
   construction_start?: string | null
-  latitude: number | null
-  longitude: number | null
+
+  // nykyinen schema
+  latitude?: number | string | null
+  longitude?: number | string | null
+
+  // vanha/mahdollinen schema
+  lat?: number | string | null
+  lng?: number | string | null
 }
 
 export type MapBounds = {
@@ -43,6 +49,23 @@ function makeIcon(className: string) {
     iconAnchor: [7, 7],
     popupAnchor: [0, -8],
   })
+}
+
+function toNumberOrNull(v: unknown): number | null {
+  if (v == null) return null
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null
+  if (typeof v === 'string') {
+    const n = parseFloat(v)
+    return Number.isFinite(n) ? n : null
+  }
+  return null
+}
+
+function getCoords(p: Project): { lat: number | null; lng: number | null } {
+  // tue sekä uusia että vanhoja kenttiä
+  const lat = toNumberOrNull(p.latitude ?? p.lat)
+  const lng = toNumberOrNull(p.longitude ?? p.lng)
+  return { lat, lng }
 }
 
 function BoundsReporter({ onBoundsChange }: { onBoundsChange?: (b: MapBounds) => void }) {
@@ -98,10 +121,14 @@ export default function Map({
     })
   }, [])
 
-  const projectsWithCoords = useMemo(
-    () => projects.filter((p) => p.latitude != null && p.longitude != null),
-    [projects]
-  )
+  const projectsWithCoords = useMemo(() => {
+    return projects
+      .map((p) => {
+        const { lat, lng } = getCoords(p)
+        return { p, lat, lng }
+      })
+      .filter((x) => x.lat != null && x.lng != null)
+  }, [projects])
 
   const defaultCenter: [number, number] = [60.1699, 24.9384]
 
@@ -125,14 +152,10 @@ export default function Map({
           attribution="&copy; OpenStreetMap contributors"
         />
 
-        {projectsWithCoords.map((p) => {
+        {projectsWithCoords.map(({ p, lat, lng }) => {
           const icon = makeIcon(phaseClass(p.phase))
           return (
-            <Marker
-              key={p.id}
-              position={[p.latitude as number, p.longitude as number]}
-              icon={icon}
-            >
+            <Marker key={p.id} position={[lat as number, lng as number]} icon={icon}>
               <Popup>
                 <div style={{ minWidth: 220 }}>
                   <div style={{ fontWeight: 700, marginBottom: 6 }}>{p.name}</div>
