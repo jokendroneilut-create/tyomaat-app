@@ -27,6 +27,8 @@ type Project = {
   earthworks_contractor: string | null
   additional_info: string | null
 
+  created_at: string
+
   // nykyinen schema
   latitude?: number | string | null
   longitude?: number | string | null
@@ -137,10 +139,12 @@ export default function Projects() {
           structural_design, hvac_design, electrical_design, architectural_design,
           geotechnical_design, earthworks_contractor, additional_info,
           latitude, longitude,
-          is_public
+          is_public,
+          created_at
         `
         )
         .eq('is_public', true)
+        .order('created_at', { ascending: false }) // ✅ UUSIMMAT ENSIN
 
       if (error) {
         console.error('Supabase error:', error)
@@ -380,6 +384,39 @@ export default function Projects() {
       <div className="projects-map" style={{ height: mapHeight }}>
         <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} />
       </div>
+
+{/* Karttaselite ja lajittelutieto */}
+<div
+  style={{
+    marginTop: 14,
+    marginBottom: 14,
+    padding: '14px 16px',
+    border: '1px solid #e5e7eb',
+    borderRadius: 12,
+    background: '#ffffff',
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 16,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  }}
+>
+  <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span className="marker-dot marker--planning" />
+      <span style={{ fontSize: 14 }}>Suunnittelussa</span>
+    </div>
+
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span className="marker-dot marker--default" />
+      <span style={{ fontSize: 14 }}>Rakentaminen aloitettu</span>
+    </div>
+  </div>
+
+  <div style={{ fontSize: 14, color: '#374151' }}>
+    <strong>Lajittelu:</strong> Uusimmat hankkeet näkyvät listan alussa.
+  </div>
+</div>
 
       {/* Lista */}
       <div className="projects-list">
