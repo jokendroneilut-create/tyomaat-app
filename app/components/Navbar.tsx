@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -8,12 +9,10 @@ export default function Navbar() {
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
-    // Hae nykyinen sessio
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
     });
 
-    // Kuuntele auth-muutoksia
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -34,13 +33,34 @@ export default function Navbar() {
     <nav
       style={{
         display: "flex",
-        gap: "20px",
         padding: "16px",
         borderBottom: "1px solid #eee",
         alignItems: "center",
       }}
     >
-      <Link href="/projects">Tyomaat.fi PRO © Sippola Enterprises</Link>
+      <Link
+        href="/projects"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          textDecoration: "none",
+          color: "inherit",
+        }}
+      >
+        {/* Logo */}
+        <Image
+          src="/logo_ilman_taustaa.png"
+          alt="Tyomaat.fi logo"
+          width={150}
+          height={45}
+          style={{ height: "32px", width: "auto" }}
+          priority
+        />
+        <span style={{ color: "#666", fontSize: "14px" }}>
+          © Sippola Enterprises
+        </span>
+      </Link>
 
       <div style={{ marginLeft: "auto" }}>
         {!session ? (
