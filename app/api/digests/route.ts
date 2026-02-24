@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic"; // ✅ estää buildin "collect page data" -optimoinnit tälle reitille
+export const dynamic = "force-dynamic"; // estää buildin "collect page data" -optimoinnit tälle reitille
 export const revalidate = 0;
 
 type Watch = {
@@ -15,6 +15,28 @@ type Watch = {
   is_enabled: boolean;
   last_sent_at: string | null;
 };
+
+function escapeHtml(s: string) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function summarizeFilters(filters: any): string {
+  if (!filters || typeof filters !== "object") return "Ei suodattimia";
+
+  const parts: string[] = [];
+  if (filters.q) parts.push(`Haku: ${filters.q}`);
+  if (filters.region) parts.push(`Maakunta: ${filters.region}`);
+  if (filters.city) parts.push(`Kaupunki: ${filters.city}`);
+  if (filters.phase) parts.push(`Vaihe: ${filters.phase}`);
+  if (filters.property_type) parts.push(`Kohdetyyppi: ${filters.property_type}`);
+
+  return parts.length ? parts.join(" • ") : "Ei suodattimia";
+}
 
 function isDue(freq: "daily" | "weekly", lastSentAt: string | null) {
   if (!lastSentAt) return true;
@@ -33,6 +55,7 @@ function applyProjectFilters(q: any, filters: any) {
   if (filters.phase) q = q.eq("phase", filters.phase);
   if (filters.property_type) q = q.eq("property_type", filters.property_type);
 
+  // kevyt tekstihaku (valinnainen)
   if (filters.q && typeof filters.q === "string" && filters.q.trim()) {
     const needle = filters.q.trim().replaceAll('"', '\\"');
     q = q.or(
@@ -44,25 +67,34 @@ function applyProjectFilters(q: any, filters: any) {
 
 export async function GET(req: Request) {
   try {
-    // ✅ suojaa endpoint
+    // suojaa endpoint
     const secret = new URL(req.url).searchParams.get("secret");
     if (!secret || secret !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    // ✅ luetaan envit vasta requestissä (ei build-vaiheessa)
+    // luetaan envit vasta requestissä (ei build-vaiheessa)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const resendKey = process.env.RESEND_API_KEY;
 
     if (!supabaseUrl) {
-      return NextResponse.json({ error: "Missing NEXT_PUBLIC_SUPABASE_URL" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing NEXT_PUBLIC_SUPABASE_URL" },
+        { status: 500 }
+      );
     }
     if (!serviceRoleKey) {
-      return NextResponse.json({ error: "Missing SUPABASE_SERVICE_ROLE_KEY" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing SUPABASE_SERVICE_ROLE_KEY" },
+        { status: 500 }
+      );
     }
     if (!resendKey) {
-      return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing RESEND_API_KEY" },
+        { status: 500 }
+      );
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -71,6 +103,7 @@ export async function GET(req: Request) {
     const appBaseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
     const fromEmail = process.env.MAIL_FROM || "onboarding@resend.dev";
 
+    // hae aktiiviset vahdit
     const { data: watches, error: wErr } = await supabase
       .from("saved_searches")
       .select("id,user_id,name,filters,frequency,is_enabled,last_sent_at")
@@ -90,7 +123,9 @@ export async function GET(req: Request) {
 
       const since = w.last_sent_at
         ? new Date(w.last_sent_at)
-        : new Date(Date.now() - (w.frequency === "daily" ? 24 : 7) * 60 * 60 * 1000);
+        : new Date(
+            Date.now() - (w.frequency === "daily" ? 24 : 7) * 60 * 60 * 1000
+          );
 
       let q = supabase
         .from("projects")
@@ -107,6 +142,7 @@ export async function GET(req: Request) {
         continue;
       }
 
+      // Ei uusia -> ei lähetetä mitään, mutta päivitetään last_sent_at jotta rytmi pysyy
       if (!projects || projects.length === 0) {
         const { error: upErr } = await supabase
           .from("saved_searches")
@@ -116,33 +152,115 @@ export async function GET(req: Request) {
         continue;
       }
 
-      const { data: userData, error: uErr } = await supabase.auth.admin.getUserById(w.user_id);
+      // hae käyttäjän email adminilla
+      const { data: userData, error: uErr } =
+        await supabase.auth.admin.getUserById(w.user_id);
       if (uErr || !userData?.user?.email) {
         console.error("ADMIN getUserById ERROR:", uErr);
         continue;
       }
 
       const email = userData.user.email;
+      const filterSummary = summarizeFilters(w.filters);
+
       const subject = `Uusia hankkeita (${projects.length}) – ${w.name}`;
 
-      const lines = projects
+      const rowsHtml = projects
         .slice(0, 30)
-        .map((p: any) => `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})`)
+        .map((p: any) => {
+          const meta = [p.city, p.region ?? "-", p.phase]
+            .filter(Boolean)
+            .join(" • ");
+          return `
+            <tr>
+              <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
+                <div style="font-weight:700;color:#111827;">${escapeHtml(
+                  p.name
+                )}</div>
+                <div style="font-size:13px;color:#6b7280;margin-top:2px;">
+                  ${escapeHtml(meta)}
+                </div>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      const textLines = projects
+        .slice(0, 30)
+        .map(
+          (p: any) =>
+            `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})`
+        )
         .join("\n");
 
-      const body =
+      const textBody =
         `Hei!\n\n` +
         `Hakuvahti: ${w.name}\n` +
+        `Suodattimet: ${filterSummary}\n\n` +
         `Löytyi ${projects.length} uutta hanketta edellisen koonnin jälkeen.\n\n` +
-        `${lines}\n\n` +
-        `Avaa Työmaat: ${appBaseUrl}/projects\n\n` +
-        `Voit hallita hakuvahteja: ${appBaseUrl}/watchlists\n`;
+        `${textLines}\n\n` +
+        `Avaa Työmaat: ${appBaseUrl}/projects\n` +
+        `Hallinnoi hakuvahteja: ${appBaseUrl}/watchlists\n`;
+
+      const htmlBody = `
+        <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#f9fafb;padding:24px;">
+          <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+            
+            <div style="padding:18px 20px;border-bottom:1px solid #e5e7eb;">
+              <div style="font-size:18px;font-weight:800;color:#111827;">
+                Työmaat.fi
+              </div>
+              <div style="margin-top:6px;color:#374151;">
+                <div style="font-weight:700;">
+                  Uusia hankkeita: ${projects.length}
+                </div>
+                <div style="font-size:13px;color:#6b7280;margin-top:4px;">
+                  Hakuvahti: ${escapeHtml(w.name)}
+                </div>
+                <div style="font-size:13px;color:#6b7280;margin-top:2px;">
+                  Suodattimet: ${escapeHtml(filterSummary)}
+                </div>
+              </div>
+            </div>
+
+            <div style="padding:6px 20px 0 20px;">
+              <table style="width:100%;border-collapse:collapse;">
+                ${rowsHtml}
+              </table>
+
+              ${
+                projects.length > 30
+                  ? `<div style="font-size:13px;color:#6b7280;margin-top:10px;">
+                      Näytetään 30 / ${projects.length}. Avaa palvelu nähdäksesi kaikki.
+                     </div>`
+                  : ``
+              }
+
+              <div style="margin:18px 0 6px 0;">
+                <a href="${appBaseUrl}/projects"
+                  style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:12px 14px;border-radius:10px;font-weight:800;">
+                  Avaa Työmaat
+                </a>
+              </div>
+
+              <div style="margin:10px 0 18px 0;font-size:13px;color:#6b7280;">
+                Hallinnoi hakuvahteja:
+                <a href="${appBaseUrl}/watchlists" style="color:#2563eb;text-decoration:none;">
+                  ${appBaseUrl}/watchlists
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
 
       const sendRes = await resend.emails.send({
         from: fromEmail,
         to: email,
         subject,
-        text: body,
+        text: textBody,
+        html: htmlBody,
       });
 
       if ((sendRes as any)?.error) {
@@ -162,6 +280,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: true, checked, sent });
   } catch (err: any) {
     console.error("DIGEST ERROR:", err);
-    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+    return NextResponse.json(
+      { error: err?.message || String(err) },
+      { status: 500 }
+    );
   }
 }
