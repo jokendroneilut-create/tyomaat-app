@@ -3,20 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// Debug (voit poistaa kun toimii)
-console.log(
-  "RESEND startsWith re_:",
-  (process.env.RESEND_API_KEY || "").startsWith("re_")
-);
-console.log("RESEND length:", (process.env.RESEND_API_KEY || "").length);
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
+export const dynamic = "force-dynamic"; // ✅ estää buildin "collect page data" -optimoinnit tälle reitille
+export const revalidate = 0;
 
 type Watch = {
   id: string;
@@ -45,7 +33,6 @@ function applyProjectFilters(q: any, filters: any) {
   if (filters.phase) q = q.eq("phase", filters.phase);
   if (filters.property_type) q = q.eq("property_type", filters.property_type);
 
-  // kevyt tekstihaku (valinnainen)
   if (filters.q && typeof filters.q === "string" && filters.q.trim()) {
     const needle = filters.q.trim().replaceAll('"', '\\"');
     q = q.or(
@@ -57,17 +44,33 @@ function applyProjectFilters(q: any, filters: any) {
 
 export async function GET(req: Request) {
   try {
-    // suojaa endpoint
+    // ✅ suojaa endpoint
     const secret = new URL(req.url).searchParams.get("secret");
     if (!secret || secret !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    const appBaseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
-    const fromEmail =
-      process.env.MAIL_FROM || "Tyomaat.fi <no-reply@tyomaat.fi>";
+    // ✅ luetaan envit vasta requestissä (ei build-vaiheessa)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const resendKey = process.env.RESEND_API_KEY;
 
-    // hae aktiiviset vahdit
+    if (!supabaseUrl) {
+      return NextResponse.json({ error: "Missing NEXT_PUBLIC_SUPABASE_URL" }, { status: 500 });
+    }
+    if (!serviceRoleKey) {
+      return NextResponse.json({ error: "Missing SUPABASE_SERVICE_ROLE_KEY" }, { status: 500 });
+    }
+    if (!resendKey) {
+      return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const resend = new Resend(resendKey);
+
+    const appBaseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
+    const fromEmail = process.env.MAIL_FROM || "onboarding@resend.dev";
+
     const { data: watches, error: wErr } = await supabase
       .from("saved_searches")
       .select("id,user_id,name,filters,frequency,is_enabled,last_sent_at")
@@ -87,10 +90,7 @@ export async function GET(req: Request) {
 
       const since = w.last_sent_at
         ? new Date(w.last_sent_at)
-        : new Date(
-            Date.now() -
-              (w.frequency === "daily" ? 24 : 7) * 60 * 60 * 1000
-          );
+        : new Date(Date.now() - (w.frequency === "daily" ? 24 : 7) * 60 * 60 * 1000);
 
       let q = supabase
         .from("projects")
@@ -107,40 +107,27 @@ export async function GET(req: Request) {
         continue;
       }
 
-      // päivitä last_sent_at myös jos ei löytynyt osumia (rytmi pysyy)
       if (!projects || projects.length === 0) {
         const { error: upErr } = await supabase
           .from("saved_searches")
           .update({ last_sent_at: new Date().toISOString() })
           .eq("id", w.id);
-
         if (upErr) console.error("UPDATE last_sent_at ERROR:", upErr);
         continue;
       }
 
-      // hae käyttäjän email adminilla
-      const { data: userData, error: uErr } =
-        await supabase.auth.admin.getUserById(w.user_id);
-
-      if (uErr) {
+      const { data: userData, error: uErr } = await supabase.auth.admin.getUserById(w.user_id);
+      if (uErr || !userData?.user?.email) {
         console.error("ADMIN getUserById ERROR:", uErr);
-        continue;
-      }
-      if (!userData?.user?.email) {
-        console.error("No email for user:", w.user_id);
         continue;
       }
 
       const email = userData.user.email;
-
       const subject = `Uusia hankkeita (${projects.length}) – ${w.name}`;
 
       const lines = projects
         .slice(0, 30)
-        .map(
-          (p: any) =>
-            `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})`
-        )
+        .map((p: any) => `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})`)
         .join("\n");
 
       const body =
@@ -158,16 +145,8 @@ export async function GET(req: Request) {
         text: body,
       });
 
-      // jos Resend palauttaa virheen, loggaa ja jatka
-      // (Resend SDK voi heittää tai palauttaa { error } – siksi varmistus)
-if ((sendRes as any)?.error) {
-  console.error("RESEND SEND ERROR:", (sendRes as any).error);
-  continue;
-}      if (sendRes?.error) {
-if ((sendRes as any)?.error) {
-  console.error("RESEND SEND ERROR:", (sendRes as any).error);
-  continue;
-}        console.error("RESEND SEND ERROR:", sendRes.error);
+      if ((sendRes as any)?.error) {
+        console.error("RESEND SEND ERROR:", (sendRes as any).error);
         continue;
       }
 
@@ -175,7 +154,6 @@ if ((sendRes as any)?.error) {
         .from("saved_searches")
         .update({ last_sent_at: new Date().toISOString() })
         .eq("id", w.id);
-
       if (upErr2) console.error("UPDATE last_sent_at ERROR:", upErr2);
 
       sent++;
@@ -184,9 +162,6 @@ if ((sendRes as any)?.error) {
     return NextResponse.json({ ok: true, checked, sent });
   } catch (err: any) {
     console.error("DIGEST ERROR:", err);
-    return NextResponse.json(
-      { error: err?.message || String(err) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
   }
 }
