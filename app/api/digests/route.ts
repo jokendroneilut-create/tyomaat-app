@@ -1,3 +1,4 @@
+// TRACE_VERSION_1
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
