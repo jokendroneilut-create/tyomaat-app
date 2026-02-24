@@ -294,7 +294,7 @@ export async function GET(req: Request) {
         <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#f9fafb;padding:24px;">
           <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
             <div style="padding:18px 20px;border-bottom:1px solid #e5e7eb;">
-              <div style="font-size:18px;font-weight:800;color:#111827;">Työmaat.fi</div>
+              <div style="font-size:18px;font-weight:800;color:#111827;">Tyomaat.fi</div>
               <div style="margin-top:6px;color:#374151;">
                 <div style="font-weight:700;">Uusia hankkeita: ${projects.length}</div>
                 <div style="font-size:13px;color:#6b7280;margin-top:4px;">Hakuvahti: ${escapeHtml(
