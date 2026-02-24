@@ -26,7 +26,6 @@ type Project = {
   geotechnical_design: string | null
   earthworks_contractor: string | null
   additional_info: string | null
-
   created_at: string
 
   // nykyinen schema
@@ -126,6 +125,84 @@ export default function Projects() {
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [limitToMapView, setLimitToMapView] = useState(true)
 
+  // Hakuvahti (tallenna haku)
+  const [watchOpen, setWatchOpen] = useState(false)
+  const [watchName, setWatchName] = useState('')
+  const [watchFrequency, setWatchFrequency] = useState<'daily' | 'weekly'>('weekly')
+  const [watchSaving, setWatchSaving] = useState(false)
+  const [watchError, setWatchError] = useState<string | null>(null)
+  const [watchSuccess, setWatchSuccess] = useState<string | null>(null)
+
+  const openWatch = () => {
+    setWatchError(null)
+    setWatchSuccess(null)
+    setWatchFrequency('weekly')
+
+    const parts = [region || null, city || null, phase || null, propertyType || null].filter(Boolean) as string[]
+    const suggested = parts.length ? parts.join(' – ') : 'Hakuvahti'
+    setWatchName(suggested)
+
+    setWatchOpen(true)
+  }
+
+  const closeWatch = () => {
+    setWatchOpen(false)
+    setWatchSaving(false)
+    setWatchError(null)
+  }
+
+  const saveWatch = async () => {
+    setWatchError(null)
+    setWatchSuccess(null)
+
+    const name = watchName.trim()
+    if (!name) {
+      setWatchError('Anna hakuvahtille nimi.')
+      return
+    }
+
+    setWatchSaving(true)
+
+    try {
+      const { data: userRes, error: userErr } = await supabase.auth.getUser()
+      if (userErr || !userRes?.user?.id) {
+        setWatchError('Kirjaudu sisään tallentaaksesi hakuvahdin.')
+        setWatchSaving(false)
+        return
+      }
+
+      const filters = {
+        q: q.trim() || null,
+        region: region || null,
+        city: city || null,
+        phase: phase || null,
+        property_type: propertyType || null,
+      }
+
+      const { error: insErr } = await supabase.from('saved_searches').insert({
+        user_id: userRes.user.id,
+        name,
+        filters,
+        frequency: watchFrequency,
+        is_enabled: true,
+        last_sent_at: null,
+      })
+
+      if (insErr) {
+        setWatchError(insErr.message)
+        setWatchSaving(false)
+        return
+      }
+
+      setWatchSaving(false)
+      setWatchSuccess('Hakuvahti tallennettu!')
+      setWatchOpen(false)
+    } catch (e: any) {
+      setWatchError(e?.message || 'Tallennus epäonnistui.')
+      setWatchSaving(false)
+    }
+  }
+
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true)
@@ -199,11 +276,9 @@ export default function Projects() {
     })
   }, [projects, q, region, city, phase, propertyType])
 
-  // ✅ Erottele koordinaatilliset / koordinaatittomat suodatetuista
   const filteredWithCoords = useMemo(() => filteredProjects.filter((p) => hasCoords(p)), [filteredProjects])
   const filteredNoCoords = useMemo(() => filteredProjects.filter((p) => !hasCoords(p)), [filteredProjects])
 
-  // ✅ Kartan näkymärajauksen suodatus (vain koordinaatilliset)
   const inBoundsWithCoords = useMemo(() => {
     if (!limitToMapView || !mapBounds) return filteredWithCoords
 
@@ -215,15 +290,11 @@ export default function Projects() {
     })
   }, [filteredWithCoords, limitToMapView, mapBounds])
 
-  // ✅ Lopullinen lista:
-  // - jos karttarajaus päällä -> näytä kartassa olevat + lisäksi kaikki koordinaatittomat
-  // - jos karttarajaus pois -> näytä kaikki suodatetut
   const listProjects = useMemo(() => {
     if (!limitToMapView) return filteredProjects
     return [...inBoundsWithCoords, ...filteredNoCoords]
   }, [limitToMapView, filteredProjects, inBoundsWithCoords, filteredNoCoords])
 
-  // Kun filtteri vaihtuu tai mobiili/desktop vaihtuu, aloita lista alusta
   useEffect(() => {
     setVisibleCount(pageSize)
   }, [q, region, city, phase, propertyType, limitToMapView, mapBounds, pageSize])
@@ -238,7 +309,6 @@ export default function Projects() {
     setPropertyType('')
   }
 
-  // Kun maakunta vaihtuu, ja valittu kaupunki ei enää ole saatavilla, tyhjennä kaupunki
   useEffect(() => {
     if (!city) return
     const ok = cities.includes(city)
@@ -257,7 +327,6 @@ export default function Projects() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selected])
 
-  // laskurit UI:hin
   const mapCount = limitToMapView ? inBoundsWithCoords.length : filteredWithCoords.length
   const noCoordsCount = filteredNoCoords.length
 
@@ -352,8 +421,17 @@ export default function Projects() {
             </select>
           </div>
 
-          <button className="projects-clear" onClick={clearFilters}>
+          <button type="button" className="projects-clear" onClick={clearFilters}>
             Tyhjennä
+          </button>
+
+          <button
+            type="button"
+            className="projects-clear"
+            onClick={openWatch}
+            style={{ borderColor: '#cbd5e1' }}
+          >
+            Tallenna hakuvahti
           </button>
         </div>
       </div>
@@ -385,38 +463,38 @@ export default function Projects() {
         <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} />
       </div>
 
-{/* Karttaselite ja lajittelutieto */}
-<div
-  style={{
-    marginTop: 14,
-    marginBottom: 14,
-    padding: '14px 16px',
-    border: '1px solid #e5e7eb',
-    borderRadius: 12,
-    background: '#ffffff',
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: 16,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  }}
->
-  <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span className="marker-dot marker--planning" />
-      <span style={{ fontSize: 14 }}>Suunnittelussa</span>
-    </div>
+      {/* Karttaselite ja lajittelutieto */}
+      <div
+        style={{
+          marginTop: 14,
+          marginBottom: 14,
+          padding: '14px 16px',
+          border: '1px solid #e5e7eb',
+          borderRadius: 12,
+          background: '#ffffff',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 16,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="marker-dot marker--planning" />
+            <span style={{ fontSize: 14 }}>Suunnittelussa</span>
+          </div>
 
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span className="marker-dot marker--default" />
-      <span style={{ fontSize: 14 }}>Rakentaminen aloitettu</span>
-    </div>
-  </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="marker-dot marker--default" />
+            <span style={{ fontSize: 14 }}>Rakentaminen aloitettu</span>
+          </div>
+        </div>
 
-  <div style={{ fontSize: 14, color: '#374151' }}>
-    <strong>Lajittelu:</strong> Uusimmat hankkeet näkyvät listan alussa.
-  </div>
-</div>
+        <div style={{ fontSize: 14, color: '#374151' }}>
+          <strong>Lajittelu:</strong> Uusimmat hankkeet näkyvät listan alussa.
+        </div>
+      </div>
 
       {/* Lista */}
       <div className="projects-list">
@@ -511,7 +589,7 @@ export default function Projects() {
         )}
       </div>
 
-      {/* MODAL */}
+      {/* PROJEKTI MODAL */}
       {selected && (
         <div
           onMouseDown={(e) => {
@@ -610,6 +688,76 @@ export default function Projects() {
                 <p className="projects-pre">{selected.additional_info}</p>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* HAKUVAHTI MODAL */}
+      {watchOpen && (
+        <div
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeWatch()
+          }}
+          className="projects-modalBackdrop"
+        >
+          <div className="projects-modal" style={{ maxWidth: 560 }}>
+            <div className="projects-modalTop">
+              <div>
+                <h2 className="projects-modalTitle">Tallenna hakuvahti</h2>
+                <div className="projects-modalSub">
+                  Saat sähköpostin uusista hankkeista valituilla suodattimilla.
+                </div>
+              </div>
+
+              <button className="projects-btn" onClick={closeWatch} type="button">
+                Sulje
+              </button>
+            </div>
+
+            <hr className="projects-hr" />
+
+            <div className="projects-modalGrid" style={{ gridTemplateColumns: '1fr', gap: 12 }}>
+              <div>
+                <label className="projects-label">Hakuvahtin nimi</label>
+                <input
+                  className="projects-input"
+                  value={watchName}
+                  onChange={(e) => setWatchName(e.target.value)}
+                  placeholder="Esim. Uusimaa – Suunnittelu"
+                />
+              </div>
+
+              <div>
+                <label className="projects-label">Lähetysväli</label>
+                <select
+                  className="projects-select"
+                  value={watchFrequency}
+                  onChange={(e) => setWatchFrequency(e.target.value as 'daily' | 'weekly')}
+                >
+                  <option value="weekly">Viikoittain</option>
+                  <option value="daily">Päivittäin</option>
+                </select>
+              </div>
+
+              {watchError && <div style={{ color: '#b91c1c', fontSize: 14 }}>{watchError}</div>}
+
+              {watchSuccess && <div style={{ color: '#15803d', fontSize: 14 }}>{watchSuccess}</div>}
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button className="projects-btn" onClick={closeWatch} disabled={watchSaving} type="button">
+                  Peruuta
+                </button>
+                <button
+                  className="projects-btn"
+                  onClick={saveWatch}
+                  disabled={watchSaving}
+                  style={{ fontWeight: 700 }}
+                  type="button"
+                >
+                  {watchSaving ? 'Tallennetaan…' : 'Tallenna'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

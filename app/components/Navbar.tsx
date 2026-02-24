@@ -62,13 +62,25 @@ export default function Navbar() {
         </span>
       </Link>
 
-      <div style={{ marginLeft: "auto" }}>
+      <div
+        style={{
+          marginLeft: "auto",
+          display: "flex",
+          alignItems: "center",
+          gap: "16px",
+        }}
+      >
         {!session ? (
-          <Link href="/login">Login</Link>
+          <Link href="/login"></Link>
         ) : (
-          <button onClick={handleLogout} style={{ cursor: "pointer" }}>
-            Logout
-          </button>
+          <>
+            <Link href="/watchlists" style={{ textDecoration: "none" }}>
+              Hakuvahdit
+            </Link>
+            <button onClick={handleLogout} style={{ cursor: "pointer" }}>
+              Kirjaudu ulos
+            </button>
+          </>
         )}
       </div>
     </nav>
