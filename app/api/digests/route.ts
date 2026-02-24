@@ -1,7 +1,9 @@
-// TRACE_VERSION_1
+// TRACE_VERSION_2
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+
+const ROUTE_VERSION = "trace-v2-2026-02-24";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,30 +71,38 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const secret = url.searchParams.get("secret");
-    const debug = url.searchParams.get("debug") === "1";
+    const debug = url.searchParams.get("debug") === "1"; // ei lähetä, vain raportoi
+    const trace = url.searchParams.get("trace") === "1"; // yrittää lähettää ja raportoi
 
     if (!secret || secret !== process.env.CRON_SECRET) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "unauthorized", routeVersion: ROUTE_VERSION },
+        { status: 401 }
+      );
     }
 
+    // luetaan envit vasta requestissä
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const resendKey = process.env.RESEND_API_KEY;
 
     if (!supabaseUrl) {
       return NextResponse.json(
-        { error: "Missing NEXT_PUBLIC_SUPABASE_URL" },
+        { error: "Missing NEXT_PUBLIC_SUPABASE_URL", routeVersion: ROUTE_VERSION },
         { status: 500 }
       );
     }
     if (!serviceRoleKey) {
       return NextResponse.json(
-        { error: "Missing SUPABASE_SERVICE_ROLE_KEY" },
+        { error: "Missing SUPABASE_SERVICE_ROLE_KEY", routeVersion: ROUTE_VERSION },
         { status: 500 }
       );
     }
     if (!resendKey) {
-      return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing RESEND_API_KEY", routeVersion: ROUTE_VERSION },
+        { status: 500 }
+      );
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -107,13 +117,17 @@ export async function GET(req: Request) {
       .eq("is_enabled", true);
 
     if (wErr) {
-      return NextResponse.json({ error: wErr.message }, { status: 500 });
+      return NextResponse.json(
+        { error: wErr.message, routeVersion: ROUTE_VERSION },
+        { status: 500 }
+      );
     }
 
     let checked = 0;
     let sent = 0;
 
     const debugRows: any[] = [];
+    const traceRows: any[] = [];
 
     for (const w of (watches as Watch[]) || []) {
       checked++;
@@ -127,9 +141,16 @@ export async function GET(req: Request) {
             frequency: w.frequency,
             last_sent_at: w.last_sent_at,
             due,
-            since: null,
-            filters: w.filters,
-            projects_found: null,
+            note: "Skipped (not due)",
+          });
+        }
+        if (trace) {
+          traceRows.push({
+            watch_id: w.id,
+            name: w.name,
+            frequency: w.frequency,
+            last_sent_at: w.last_sent_at,
+            due,
             note: "Skipped (not due)",
           });
         }
@@ -153,12 +174,22 @@ export async function GET(req: Request) {
 
       if (pErr) {
         console.error("PROJECTS QUERY ERROR:", pErr);
+
         if (debug) {
           debugRows.push({
             watch_id: w.id,
             name: w.name,
-            frequency: w.frequency,
-            last_sent_at: w.last_sent_at,
+            due,
+            since: since.toISOString(),
+            filters: w.filters,
+            projects_found: null,
+            note: `Projects query error: ${pErr.message}`,
+          });
+        }
+        if (trace) {
+          traceRows.push({
+            watch_id: w.id,
+            name: w.name,
             due,
             since: since.toISOString(),
             filters: w.filters,
@@ -183,18 +214,44 @@ export async function GET(req: Request) {
         continue; // debug-tilassa ei lähetetä eikä päivitetä last_sent_at
       }
 
+      // Ei uusia -> ei lähetetä mitään, mutta päivitetään last_sent_at (rytmi pysyy)
       if (!projects || projects.length === 0) {
         const { error: upErr } = await supabase
           .from("saved_searches")
           .update({ last_sent_at: new Date().toISOString() })
           .eq("id", w.id);
         if (upErr) console.error("UPDATE last_sent_at ERROR:", upErr);
+
+        if (trace) {
+          traceRows.push({
+            watch_id: w.id,
+            name: w.name,
+            due,
+            since: since.toISOString(),
+            filters: w.filters,
+            projects_found: 0,
+            note: "No projects -> updated last_sent_at",
+          });
+        }
         continue;
       }
 
+      // Haetaan käyttäjän email adminilla (service role key tarvitaan)
       const { data: userData, error: uErr } = await supabase.auth.admin.getUserById(w.user_id);
       if (uErr || !userData?.user?.email) {
         console.error("ADMIN getUserById ERROR:", uErr);
+
+        if (trace) {
+          traceRows.push({
+            watch_id: w.id,
+            name: w.name,
+            due,
+            since: since.toISOString(),
+            filters: w.filters,
+            projects_found: projects.length,
+            note: `User email missing / admin error: ${uErr?.message || "no email"}`,
+          });
+        }
         continue;
       }
 
@@ -288,8 +345,21 @@ export async function GET(req: Request) {
         html: htmlBody,
       });
 
-      if ((sendRes as any)?.error) {
-        console.error("RESEND SEND ERROR:", (sendRes as any).error);
+      const sendError = (sendRes as any)?.error;
+      if (sendError) {
+        console.error("RESEND SEND ERROR:", sendError);
+
+        if (trace) {
+          traceRows.push({
+            watch_id: w.id,
+            name: w.name,
+            email,
+            due,
+            since: since.toISOString(),
+            projects_found: projects.length,
+            note: `Resend error: ${sendError?.message || JSON.stringify(sendError)}`,
+          });
+        }
         continue;
       }
 
@@ -300,15 +370,34 @@ export async function GET(req: Request) {
       if (upErr2) console.error("UPDATE last_sent_at ERROR:", upErr2);
 
       sent++;
+
+      if (trace) {
+        traceRows.push({
+          watch_id: w.id,
+          name: w.name,
+          email,
+          due,
+          since: since.toISOString(),
+          projects_found: projects.length,
+          note: "Sent OK",
+        });
+      }
     }
 
     if (debug) {
-      return NextResponse.json({ ok: true, checked, sent, debugRows });
+      return NextResponse.json({ ok: true, checked, sent, debugRows, routeVersion: ROUTE_VERSION });
     }
 
-    return NextResponse.json({ ok: true, checked, sent });
+    if (trace) {
+      return NextResponse.json({ ok: true, checked, sent, traceRows, routeVersion: ROUTE_VERSION });
+    }
+
+    return NextResponse.json({ ok: true, checked, sent, routeVersion: ROUTE_VERSION });
   } catch (err: any) {
     console.error("DIGEST ERROR:", err);
-    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+    return NextResponse.json(
+      { error: err?.message || String(err), routeVersion: ROUTE_VERSION },
+      { status: 500 }
+    );
   }
 }
