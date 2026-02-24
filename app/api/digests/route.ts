@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic"; // estää buildin "collect page data" -optimoinnit tälle reitille
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type Watch = {
@@ -55,7 +55,6 @@ function applyProjectFilters(q: any, filters: any) {
   if (filters.phase) q = q.eq("phase", filters.phase);
   if (filters.property_type) q = q.eq("property_type", filters.property_type);
 
-  // kevyt tekstihaku (valinnainen)
   if (filters.q && typeof filters.q === "string" && filters.q.trim()) {
     const needle = filters.q.trim().replaceAll('"', '\\"');
     q = q.or(
@@ -67,13 +66,14 @@ function applyProjectFilters(q: any, filters: any) {
 
 export async function GET(req: Request) {
   try {
-    // suojaa endpoint
-    const secret = new URL(req.url).searchParams.get("secret");
+    const url = new URL(req.url);
+    const secret = url.searchParams.get("secret");
+    const debug = url.searchParams.get("debug") === "1";
+
     if (!secret || secret !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    // luetaan envit vasta requestissä (ei build-vaiheessa)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const resendKey = process.env.RESEND_API_KEY;
@@ -91,10 +91,7 @@ export async function GET(req: Request) {
       );
     }
     if (!resendKey) {
-      return NextResponse.json(
-        { error: "Missing RESEND_API_KEY" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -103,7 +100,6 @@ export async function GET(req: Request) {
     const appBaseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
     const fromEmail = process.env.MAIL_FROM || "onboarding@resend.dev";
 
-    // hae aktiiviset vahdit
     const { data: watches, error: wErr } = await supabase
       .from("saved_searches")
       .select("id,user_id,name,filters,frequency,is_enabled,last_sent_at")
@@ -116,16 +112,32 @@ export async function GET(req: Request) {
     let checked = 0;
     let sent = 0;
 
+    const debugRows: any[] = [];
+
     for (const w of (watches as Watch[]) || []) {
       checked++;
 
-      if (!isDue(w.frequency, w.last_sent_at)) continue;
+      const due = isDue(w.frequency, w.last_sent_at);
+      if (!due) {
+        if (debug) {
+          debugRows.push({
+            watch_id: w.id,
+            name: w.name,
+            frequency: w.frequency,
+            last_sent_at: w.last_sent_at,
+            due,
+            since: null,
+            filters: w.filters,
+            projects_found: null,
+            note: "Skipped (not due)",
+          });
+        }
+        continue;
+      }
 
       const since = w.last_sent_at
         ? new Date(w.last_sent_at)
-        : new Date(
-            Date.now() - (w.frequency === "daily" ? 24 : 7) * 60 * 60 * 1000
-          );
+        : new Date(Date.now() - (w.frequency === "daily" ? 24 : 7) * 60 * 60 * 1000);
 
       let q = supabase
         .from("projects")
@@ -137,12 +149,39 @@ export async function GET(req: Request) {
       q = applyProjectFilters(q, w.filters);
 
       const { data: projects, error: pErr } = await q;
+
       if (pErr) {
         console.error("PROJECTS QUERY ERROR:", pErr);
+        if (debug) {
+          debugRows.push({
+            watch_id: w.id,
+            name: w.name,
+            frequency: w.frequency,
+            last_sent_at: w.last_sent_at,
+            due,
+            since: since.toISOString(),
+            filters: w.filters,
+            projects_found: null,
+            note: `Projects query error: ${pErr.message}`,
+          });
+        }
         continue;
       }
 
-      // Ei uusia -> ei lähetetä mitään, mutta päivitetään last_sent_at jotta rytmi pysyy
+      if (debug) {
+        debugRows.push({
+          watch_id: w.id,
+          name: w.name,
+          frequency: w.frequency,
+          last_sent_at: w.last_sent_at,
+          due,
+          since: since.toISOString(),
+          filters: w.filters,
+          projects_found: projects?.length ?? 0,
+        });
+        continue; // debug-tilassa ei lähetetä eikä päivitetä last_sent_at
+      }
+
       if (!projects || projects.length === 0) {
         const { error: upErr } = await supabase
           .from("saved_searches")
@@ -152,9 +191,7 @@ export async function GET(req: Request) {
         continue;
       }
 
-      // hae käyttäjän email adminilla
-      const { data: userData, error: uErr } =
-        await supabase.auth.admin.getUserById(w.user_id);
+      const { data: userData, error: uErr } = await supabase.auth.admin.getUserById(w.user_id);
       if (uErr || !userData?.user?.email) {
         console.error("ADMIN getUserById ERROR:", uErr);
         continue;
@@ -162,21 +199,16 @@ export async function GET(req: Request) {
 
       const email = userData.user.email;
       const filterSummary = summarizeFilters(w.filters);
-
       const subject = `Uusia hankkeita (${projects.length}) – ${w.name}`;
 
       const rowsHtml = projects
         .slice(0, 30)
         .map((p: any) => {
-          const meta = [p.city, p.region ?? "-", p.phase]
-            .filter(Boolean)
-            .join(" • ");
+          const meta = [p.city, p.region ?? "-", p.phase].filter(Boolean).join(" • ");
           return `
             <tr>
               <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
-                <div style="font-weight:700;color:#111827;">${escapeHtml(
-                  p.name
-                )}</div>
+                <div style="font-weight:700;color:#111827;">${escapeHtml(p.name)}</div>
                 <div style="font-size:13px;color:#6b7280;margin-top:2px;">
                   ${escapeHtml(meta)}
                 </div>
@@ -188,10 +220,7 @@ export async function GET(req: Request) {
 
       const textLines = projects
         .slice(0, 30)
-        .map(
-          (p: any) =>
-            `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})`
-        )
+        .map((p: any) => `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})`)
         .join("\n");
 
       const textBody =
@@ -206,21 +235,16 @@ export async function GET(req: Request) {
       const htmlBody = `
         <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#f9fafb;padding:24px;">
           <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-            
             <div style="padding:18px 20px;border-bottom:1px solid #e5e7eb;">
-              <div style="font-size:18px;font-weight:800;color:#111827;">
-                Työmaat.fi
-              </div>
+              <div style="font-size:18px;font-weight:800;color:#111827;">Työmaat.fi</div>
               <div style="margin-top:6px;color:#374151;">
-                <div style="font-weight:700;">
-                  Uusia hankkeita: ${projects.length}
-                </div>
-                <div style="font-size:13px;color:#6b7280;margin-top:4px;">
-                  Hakuvahti: ${escapeHtml(w.name)}
-                </div>
-                <div style="font-size:13px;color:#6b7280;margin-top:2px;">
-                  Suodattimet: ${escapeHtml(filterSummary)}
-                </div>
+                <div style="font-weight:700;">Uusia hankkeita: ${projects.length}</div>
+                <div style="font-size:13px;color:#6b7280;margin-top:4px;">Hakuvahti: ${escapeHtml(
+                  w.name
+                )}</div>
+                <div style="font-size:13px;color:#6b7280;margin-top:2px;">Suodattimet: ${escapeHtml(
+                  filterSummary
+                )}</div>
               </div>
             </div>
 
@@ -239,7 +263,7 @@ export async function GET(req: Request) {
 
               <div style="margin:18px 0 6px 0;">
                 <a href="${appBaseUrl}/projects"
-                  style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:12px 14px;border-radius:10px;font-weight:800;">
+                   style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:12px 14px;border-radius:10px;font-weight:800;">
                   Avaa Työmaat
                 </a>
               </div>
@@ -277,12 +301,13 @@ export async function GET(req: Request) {
       sent++;
     }
 
+    if (debug) {
+      return NextResponse.json({ ok: true, checked, sent, debugRows });
+    }
+
     return NextResponse.json({ ok: true, checked, sent });
   } catch (err: any) {
     console.error("DIGEST ERROR:", err);
-    return NextResponse.json(
-      { error: err?.message || String(err) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
   }
 }
