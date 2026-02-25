@@ -26,6 +26,7 @@ type Project = {
   geotechnical_design: string | null
   earthworks_contractor: string | null
   additional_info: string | null
+
   created_at: string
 
   // nykyinen schema
@@ -118,12 +119,15 @@ export default function Projects() {
   // listan sivutus / “lataa lisää”
   const [visibleCount, setVisibleCount] = useState(pageSize)
 
-  // modal
+  // modal (projekti)
   const [selected, setSelected] = useState<Project | null>(null)
 
   // kartta rajaa listaa
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [limitToMapView, setLimitToMapView] = useState(true)
+
+  // ✅ “Näytä kartalla” zoom target
+  const [zoomTarget, setZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
 
   // Hakuvahti (tallenna haku)
   const [watchOpen, setWatchOpen] = useState(false)
@@ -203,6 +207,12 @@ export default function Projects() {
     }
   }
 
+  const zoomToProject = (p: Project) => {
+    const { lat, lng } = getCoords(p)
+    if (lat == null || lng == null) return
+    setZoomTarget({ lat, lng })
+  }
+
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true)
@@ -276,9 +286,11 @@ export default function Projects() {
     })
   }, [projects, q, region, city, phase, propertyType])
 
+  // Erottele koordinaatilliset / koordinaatittomat suodatetuista
   const filteredWithCoords = useMemo(() => filteredProjects.filter((p) => hasCoords(p)), [filteredProjects])
   const filteredNoCoords = useMemo(() => filteredProjects.filter((p) => !hasCoords(p)), [filteredProjects])
 
+  // Kartan näkymärajauksen suodatus (vain koordinaatilliset)
   const inBoundsWithCoords = useMemo(() => {
     if (!limitToMapView || !mapBounds) return filteredWithCoords
 
@@ -290,11 +302,15 @@ export default function Projects() {
     })
   }, [filteredWithCoords, limitToMapView, mapBounds])
 
+  // Lopullinen lista:
+  // - jos karttarajaus päällä -> näytä kartassa olevat + lisäksi kaikki koordinaatittomat
+  // - jos karttarajaus pois -> näytä kaikki suodatetut
   const listProjects = useMemo(() => {
     if (!limitToMapView) return filteredProjects
     return [...inBoundsWithCoords, ...filteredNoCoords]
   }, [limitToMapView, filteredProjects, inBoundsWithCoords, filteredNoCoords])
 
+  // Kun filtteri vaihtuu tai mobiili/desktop vaihtuu, aloita lista alusta
   useEffect(() => {
     setVisibleCount(pageSize)
   }, [q, region, city, phase, propertyType, limitToMapView, mapBounds, pageSize])
@@ -309,6 +325,7 @@ export default function Projects() {
     setPropertyType('')
   }
 
+  // Kun maakunta vaihtuu, ja valittu kaupunki ei enää ole saatavilla, tyhjennä kaupunki
   useEffect(() => {
     if (!city) return
     const ok = cities.includes(city)
@@ -327,6 +344,7 @@ export default function Projects() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selected])
 
+  // laskurit UI:hin
   const mapCount = limitToMapView ? inBoundsWithCoords.length : filteredWithCoords.length
   const noCoordsCount = filteredNoCoords.length
 
@@ -425,12 +443,7 @@ export default function Projects() {
             Tyhjennä
           </button>
 
-          <button
-            type="button"
-            className="projects-clear"
-            onClick={openWatch}
-            style={{ borderColor: '#cbd5e1' }}
-          >
+          <button type="button" className="projects-clear" onClick={openWatch} style={{ borderColor: '#cbd5e1' }}>
             Tallenna hakuvahti
           </button>
         </div>
@@ -460,7 +473,7 @@ export default function Projects() {
 
       {/* Kartta */}
       <div className="projects-map" style={{ height: mapHeight }}>
-        <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} />
+        <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} zoomTo={zoomTarget} />
       </div>
 
       {/* Karttaselite ja lajittelutieto */}
@@ -536,9 +549,21 @@ export default function Projects() {
                   <div>{p.city}</div>
                   <div>{p.region || '-'}</div>
                   <div>{p.phase}</div>
-                  <div className="projects-actions">
+
+                  <div className="projects-actions" style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                     <button className="projects-btn" onClick={() => setSelected(p)}>
                       Näytä tiedot
+                    </button>
+
+                    <button
+                      className="projects-btn"
+                      type="button"
+                      onClick={() => zoomToProject(p)}
+                      disabled={!hasCoords(p)}
+                      title={!hasCoords(p) ? 'Ei koordinaatteja' : 'Zoomaa kartalla kohteeseen'}
+                      style={!hasCoords(p) ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+                    >
+                      Näytä kartalla
                     </button>
                   </div>
                 </div>
@@ -571,9 +596,22 @@ export default function Projects() {
                   <div className="projects-cardMeta">
                     {p.city} • {p.region || '-'} • {p.phase}
                   </div>
-                  <button className="projects-btn projects-btnFull" onClick={() => setSelected(p)}>
-                    Näytä tiedot
-                  </button>
+
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button className="projects-btn projects-btnFull" onClick={() => setSelected(p)}>
+                      Näytä tiedot
+                    </button>
+
+                    <button
+                      className="projects-btn projects-btnFull"
+                      type="button"
+                      onClick={() => zoomToProject(p)}
+                      disabled={!hasCoords(p)}
+                      style={!hasCoords(p) ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+                    >
+                      Näytä kartalla
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -679,7 +717,7 @@ export default function Projects() {
               </div>
             </div>
 
-            {selected.additional_info && (
+            {selected.additional_info ? (
               <>
                 <hr className="projects-hr" />
                 <p style={{ marginBottom: 6 }}>
@@ -687,7 +725,7 @@ export default function Projects() {
                 </p>
                 <p className="projects-pre">{selected.additional_info}</p>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       )}
@@ -704,12 +742,10 @@ export default function Projects() {
             <div className="projects-modalTop">
               <div>
                 <h2 className="projects-modalTitle">Tallenna hakuvahti</h2>
-                <div className="projects-modalSub">
-                  Saat sähköpostin uusista hankkeista valituilla suodattimilla.
-                </div>
+                <div className="projects-modalSub">Saat sähköpostin uusista hankkeista valituilla suodattimilla.</div>
               </div>
 
-              <button className="projects-btn" onClick={closeWatch} type="button">
+              <button className="projects-btn" onClick={closeWatch}>
                 Sulje
               </button>
             </div>
@@ -740,20 +776,13 @@ export default function Projects() {
               </div>
 
               {watchError && <div style={{ color: '#b91c1c', fontSize: 14 }}>{watchError}</div>}
-
               {watchSuccess && <div style={{ color: '#15803d', fontSize: 14 }}>{watchSuccess}</div>}
 
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                <button className="projects-btn" onClick={closeWatch} disabled={watchSaving} type="button">
+                <button className="projects-btn" onClick={closeWatch} disabled={watchSaving}>
                   Peruuta
                 </button>
-                <button
-                  className="projects-btn"
-                  onClick={saveWatch}
-                  disabled={watchSaving}
-                  style={{ fontWeight: 700 }}
-                  type="button"
-                >
+                <button className="projects-btn" onClick={saveWatch} disabled={watchSaving} style={{ fontWeight: 700 }}>
                   {watchSaving ? 'Tallennetaan…' : 'Tallenna'}
                 </button>
               </div>

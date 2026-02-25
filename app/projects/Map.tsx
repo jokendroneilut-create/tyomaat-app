@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useMemo } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import type { ZoomTarget } from './MapClient'
 
 type Project = {
   id: string
@@ -17,11 +18,9 @@ type Project = {
   property_type?: string | null
   construction_start?: string | null
 
-  // nykyinen schema
   latitude?: number | string | null
   longitude?: number | string | null
 
-  // vanha/mahdollinen schema
   lat?: number | string | null
   lng?: number | string | null
 }
@@ -62,7 +61,6 @@ function toNumberOrNull(v: unknown): number | null {
 }
 
 function getCoords(p: Project): { lat: number | null; lng: number | null } {
-  // tue sekä uusia että vanhoja kenttiä
   const lat = toNumberOrNull(p.latitude ?? p.lat)
   const lng = toNumberOrNull(p.longitude ?? p.lng)
   return { lat, lng }
@@ -104,15 +102,27 @@ function BoundsReporter({ onBoundsChange }: { onBoundsChange?: (b: MapBounds) =>
   return null
 }
 
+function FlyTo({ target }: { target?: ZoomTarget }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!target) return
+    map.flyTo([target.lat, target.lng], 13, { duration: 0.8 })
+  }, [target, map])
+
+  return null
+}
+
 export default function Map({
   projects,
   onBoundsChange,
+  zoomTo,
 }: {
   projects: Project[]
   onBoundsChange?: (b: MapBounds) => void
+  zoomTo?: ZoomTarget
 }) {
   useEffect(() => {
-    // varalla (vaikka käytetään divIconia)
     delete (L.Icon.Default.prototype as any)._getIconUrl
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -146,6 +156,7 @@ export default function Map({
         }}
       >
         <BoundsReporter onBoundsChange={onBoundsChange} />
+        <FlyTo target={zoomTo} />
 
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
