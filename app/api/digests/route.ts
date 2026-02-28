@@ -76,15 +76,7 @@ export async function GET(req: Request) {
 
     if (!secret || secret !== process.env.CRON_SECRET) {
   return NextResponse.json(
-    {
-      error: "unauthorized",
-      routeVersion: ROUTE_VERSION,
-      receivedSecret: secret ? `${secret.slice(0, 4)}…${secret.slice(-4)}` : null,
-      envHasCronSecret: !!process.env.CRON_SECRET,
-      envCronSecretPreview: process.env.CRON_SECRET
-        ? `${process.env.CRON_SECRET.slice(0, 4)}…${process.env.CRON_SECRET.slice(-4)}`
-        : null,
-    },
+    { error: "unauthorized", routeVersion: ROUTE_VERSION },
     { status: 401 }
   );
 }
