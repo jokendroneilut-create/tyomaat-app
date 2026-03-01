@@ -136,6 +136,52 @@ export default function Projects() {
   const [watchSaving, setWatchSaving] = useState(false)
   const [watchError, setWatchError] = useState<string | null>(null)
   const [watchSuccess, setWatchSuccess] = useState<string | null>(null)
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  const [statuses, setStatuses] = useState<Record<string, string>>({})
+  
+const toggleFavorite = async (projectId: string) => {
+  const { data: userRes } = await supabase.auth.getUser()
+  const userId = userRes?.user?.id
+  if (!userId) return
+
+  if (favorites.has(projectId)) {
+    await supabase
+      .from('user_project_favorites')
+      .delete()
+      .eq('user_id', userId)
+      .eq('project_id', projectId)
+
+    const next = new Set(favorites)
+    next.delete(projectId)
+    setFavorites(next)
+  } else {
+    await supabase
+      .from('user_project_favorites')
+      .insert({ user_id: userId, project_id: projectId })
+
+    const next = new Set(favorites)
+    next.add(projectId)
+    setFavorites(next)
+  }
+}
+
+const setProjectStatus = async (projectId: string, status: string) => {
+  const { data: userRes } = await supabase.auth.getUser()
+  const userId = userRes?.user?.id
+  if (!userId) return
+
+  await supabase
+    .from('user_project_status')
+    .upsert(
+      { user_id: userId, project_id: projectId, status },
+      { onConflict: 'user_id,project_id' }
+    )
+
+  setStatuses((prev) => ({
+    ...prev,
+    [projectId]: status,
+  }))
+}
 
   const openWatch = () => {
     setWatchError(null)
@@ -226,6 +272,7 @@ export default function Projects() {
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true)
+  
 
       const { data, error } = await supabase
         .from('projects')
@@ -255,7 +302,28 @@ export default function Projects() {
 
     fetchProjects()
   }, [])
+useEffect(() => {
+    const fetchCRM = async () => {
+    const { data: userRes } = await supabase.auth.getUser()
+    const userId = userRes?.user?.id
+    if (!userId) return
 
+    const [{ data: favs }, { data: stats }] = await Promise.all([
+      supabase.from('user_project_favorites').select('project_id').eq('user_id', userId),
+      supabase.from('user_project_status').select('project_id,status').eq('user_id', userId),
+    ])
+
+    setFavorites(new Set((favs ?? []).map((r: any) => r.project_id)))
+
+    const m: Record<string, string> = {}
+    ;(stats ?? []).forEach((r: any) => {
+      m[r.project_id] = r.status
+    })
+    setStatuses(m)
+  }
+
+  fetchCRM()
+}, [])
   const regions = useMemo(() => uniqSorted(projects.map((p) => p.region)), [projects])
 
   const cities = useMemo(() => {
@@ -575,6 +643,27 @@ export default function Projects() {
                     >
                       Näytä kartalla
                     </button>
+                    <button
+  className="projects-btn"
+  type="button"
+  onClick={() => toggleFavorite(p.id)}
+  title="Lisää omiin"
+>
+  {favorites.has(p.id) ? '★ Omat' : '☆ Omiin'}
+</button>
+
+<select
+  className="projects-select"
+  value={statuses[p.id] ?? 'new'}
+  onChange={(e) => setProjectStatus(p.id, e.target.value)}
+  style={{ maxWidth: 170 }}
+>
+  <option value="new">Uusi</option>
+  <option value="contacted">Kontaktoitu</option>
+  <option value="offer_sent">Tarjous lähetetty</option>
+  <option value="won">Voitettu</option>
+  <option value="lost">Hävitty</option>
+</select>
                   </div>
                 </div>
               ))}
