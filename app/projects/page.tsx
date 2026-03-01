@@ -156,62 +156,72 @@ export default function Projects() {
   }
 
   const saveWatch = async () => {
-    setWatchError(null)
-    setWatchSuccess(null)
+  setWatchError(null)
+  setWatchSuccess(null)
 
-    const name = watchName.trim()
-    if (!name) {
-      setWatchError('Anna hakuvahtille nimi.')
+  const name = watchName.trim()
+  if (!name) {
+    setWatchError('Anna hakuvahtille nimi.')
+    return
+  }
+
+  setWatchSaving(true)
+
+  try {
+    const { data: userRes, error: userErr } = await supabase.auth.getUser()
+    if (userErr || !userRes?.user?.id) {
+      setWatchError('Kirjaudu sisään tallentaaksesi hakuvahdin.')
+      setWatchSaving(false)
       return
     }
 
-    setWatchSaving(true)
-
-    try {
-      const { data: userRes, error: userErr } = await supabase.auth.getUser()
-      if (userErr || !userRes?.user?.id) {
-        setWatchError('Kirjaudu sisään tallentaaksesi hakuvahdin.')
-        setWatchSaving(false)
-        return
-      }
-
-      const filters = {
-        q: q.trim() || null,
-        region: region || null,
-        city: city || null,
-        phase: phase || null,
-        property_type: propertyType || null,
-      }
-
-      const { error: insErr } = await supabase.from('saved_searches').insert({
-        user_id: userRes.user.id,
-        name,
-        filters,
-        frequency: watchFrequency,
-        is_enabled: true,
-        last_sent_at: null,
-      })
-
-      if (insErr) {
-        setWatchError(insErr.message)
-        setWatchSaving(false)
-        return
-      }
-
-      setWatchSaving(false)
-      setWatchSuccess('Hakuvahti tallennettu!')
-      setWatchOpen(false)
-    } catch (e: any) {
-      setWatchError(e?.message || 'Tallennus epäonnistui.')
-      setWatchSaving(false)
+    const filters = {
+      q: q.trim() || null,
+      region: region || null,
+      city: city || null,
+      phase: phase || null,
+      property_type: propertyType || null,
     }
+
+    const { error: insErr } = await supabase
+      .from('saved_searches')
+      .upsert(
+        {
+          user_id: userRes.user.id,
+          name,
+          filters,
+          frequency: watchFrequency,
+          is_enabled: true,
+          last_sent_at: null,
+        },
+        {
+          onConflict: 'user_id,frequency,name,filters',
+          ignoreDuplicates: true,
+        }
+      )
+
+    if (insErr) {
+      setWatchError(insErr.message)
+      setWatchSaving(false)
+      return
+    }
+
+    setWatchSaving(false)
+    setWatchSuccess('Hakuvahti tallennettu!')
+    setWatchOpen(false)
+  } catch (e: any) {
+    setWatchError(e?.message || 'Tallennus epäonnistui.')
+    setWatchSaving(false)
   }
+}
+
+      
 
   const zoomToProject = (p: Project) => {
-    const { lat, lng } = getCoords(p)
-    if (lat == null || lng == null) return
-    setZoomTarget({ lat, lng })
-  }
+  const { lat, lng } = getCoords(p)
+  if (lat == null || lng == null) return
+  setZoomTarget({ lat, lng })
+}
 
   useEffect(() => {
     const fetchProjects = async () => {
