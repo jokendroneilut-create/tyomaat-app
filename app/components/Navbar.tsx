@@ -74,13 +74,22 @@ export default function Navbar() {
           <Link href="/login"></Link>
         ) : (
           <>
-            <Link href="/watchlists" style={{ textDecoration: "none" }}>
-              Hakuvahdit
-            </Link>
-            <button onClick={handleLogout} style={{ cursor: "pointer" }}>
-              Kirjaudu ulos
-            </button>
-          </>
+  <Link href="/watchlists" style={{ textDecoration: "none" }}>
+    Hakuvahdit
+  </Link>
+
+  <Link href="/crm" style={{ textDecoration: "none" }}>
+    Omat
+  </Link>
+
+  <Link href="/tasks" style={{ textDecoration: "none" }}>
+    Tehtävät
+  </Link>
+
+  <button onClick={handleLogout} style={{ cursor: "pointer" }}>
+    Kirjaudu ulos
+  </button>
+</>
         )}
       </div>
     </nav>
