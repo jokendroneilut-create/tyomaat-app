@@ -82,31 +82,38 @@ export default function Navbar() {
       }}
     >
       <Link
-        href="/projects"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          textDecoration: "none",
-          color: "inherit",
-          minWidth: 0,
-        }}
-        onClick={() => setOpen(false)}
-      >
-        <Image
-          src="/logo_ilman_taustaa.png"
-          alt="Tyomaat.fi logo"
-          width={150}
-          height={45}
-          style={{ height: "32px", width: "auto" }}
-          priority
-        />
-        {!isMobile && (
-          <span style={{ color: "#666", fontSize: "14px", whiteSpace: "nowrap" }}>
-            © Sippola Enterprises
-          </span>
-        )}
-      </Link>
+  href="/projects"
+  onClick={() => setOpen(false)}
+  style={{
+    display: "flex",
+    flexDirection: isMobile ? "column" : "row",
+    alignItems: isMobile ? "flex-start" : "center",
+    gap: isMobile ? "4px" : "12px",
+    textDecoration: "none",
+    color: "inherit",
+    minWidth: 0,
+  }}
+>
+  <Image
+    src="/logo_ilman_taustaa.png"
+    alt="Tyomaat.fi logo"
+    width={150}
+    height={45}
+    style={{ height: "32px", width: "auto" }}
+    priority
+  />
+
+  <span
+    style={{
+      color: "#666",
+      fontSize: isMobile ? "12px" : "14px",
+      lineHeight: "1.2",
+      whiteSpace: "nowrap",
+    }}
+  >
+    © Sippola Enterprises
+  </span>
+</Link>
 
       <div style={{ marginLeft: "auto" }}>
         {!session ? (
