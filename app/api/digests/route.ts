@@ -27,7 +27,25 @@ function escapeHtml(s: string) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+function humanizeField(field: string): string {
+  const map: Record<string, string> = {
+    name: "Nimi",
+    city: "Kaupunki",
+    region: "Maakunta",
+    phase: "Vaihe",
+    location: "Sijainti",
+    developer: "Rakennuttaja",
+    builder: "Rakennusliike",
+    property_type: "Kohdetyyppi",
+    apartments: "Asuntojen määrä",
+    floor_area: "Kerrosala",
+    estimated_cost: "Arvioitu kustannus",
+    construction_start: "Rakentamisen aloitus",
+    additional_info: "Lisätietoja",
+  };
 
+  return map[field] ?? field;
+}
 function summarizeFilters(filters: any): string {
   if (!filters || typeof filters !== "object") return "Ei suodattimia";
 
@@ -132,7 +150,9 @@ export async function GET(req: Request) {
     for (const w of (watches as Watch[]) || []) {
       checked++;
 
-      const due = isDue(w.frequency, w.last_sent_at);
+      const force = url.searchParams.get("force") === "1";
+const due = force ? true : isDue(w.frequency, w.last_sent_at);
+
       if (!due) {
         if (debug) {
           debugRows.push({
@@ -169,72 +189,145 @@ export async function GET(req: Request) {
         .order("created_at", { ascending: false });
 
       q = applyProjectFilters(q, w.filters);
+// ✅ Päivitykset: projektit joita on muokattu "since" jälkeen
+let cq = supabase
+  .from("project_changes")
+  .select("project_id,changed_at,changed_fields,after")
+  .gt("changed_at", since.toISOString())
+  .order("changed_at", { ascending: false });
 
-      const { data: projects, error: pErr } = await q;
+// Suodatetaan päivitykset vahdin filttereillä käyttämällä "after"-snapshotia
+cq = applyProjectChangeFilters(cq, w.filters);
 
-      if (pErr) {
-        console.error("PROJECTS QUERY ERROR:", pErr);
+// 1) Uudet projektit
+const { data: newProjects, error: pErr } = await q;
 
-        if (debug) {
-          debugRows.push({
-            watch_id: w.id,
-            name: w.name,
-            due,
-            since: since.toISOString(),
-            filters: w.filters,
-            projects_found: null,
-            note: `Projects query error: ${pErr.message}`,
-          });
-        }
-        if (trace) {
-          traceRows.push({
-            watch_id: w.id,
-            name: w.name,
-            due,
-            since: since.toISOString(),
-            filters: w.filters,
-            projects_found: null,
-            note: `Projects query error: ${pErr.message}`,
-          });
-        }
-        continue;
-      }
+if (pErr) {
+  console.error("PROJECTS QUERY ERROR:", pErr);
 
-      if (debug) {
-        debugRows.push({
-          watch_id: w.id,
-          name: w.name,
-          frequency: w.frequency,
-          last_sent_at: w.last_sent_at,
-          due,
-          since: since.toISOString(),
-          filters: w.filters,
-          projects_found: projects?.length ?? 0,
-        });
-        continue; // debug-tilassa ei lähetetä eikä päivitetä last_sent_at
-      }
+  if (debug) {
+    debugRows.push({
+      watch_id: w.id,
+      name: w.name,
+      due,
+      since: since.toISOString(),
+      filters: w.filters,
+      projects_found: null,
+      updates_found: null,
+      note: `Projects query error: ${pErr.message}`,
+    });
+  }
+  if (trace) {
+    traceRows.push({
+      watch_id: w.id,
+      name: w.name,
+      due,
+      since: since.toISOString(),
+      filters: w.filters,
+      projects_found: null,
+      updates_found: null,
+      note: `Projects query error: ${pErr.message}`,
+    });
+  }
+  continue;
+}
 
-      // Ei uusia -> ei lähetetä mitään, mutta päivitetään last_sent_at (rytmi pysyy)
-      if (!projects || projects.length === 0) {
-        const { error: upErr } = await supabase
-          .from("saved_searches")
-          .update({ last_sent_at: new Date().toISOString() })
-          .eq("id", w.id);
-        if (upErr) console.error("UPDATE last_sent_at ERROR:", upErr);
+// 2) Päivitykset (project_changes)
+const { data: changeRows, error: cErr } = await cq;
 
-        if (trace) {
-          traceRows.push({
-            watch_id: w.id,
-            name: w.name,
-            due,
-            since: since.toISOString(),
-            filters: w.filters,
-            projects_found: 0,
-            note: "No projects -> updated last_sent_at",
-          });
-        }
-        continue;
-      }
+if (cErr) {
+  console.error("CHANGES QUERY ERROR:", cErr);
+
+  if (debug) {
+    debugRows.push({
+      watch_id: w.id,
+      name: w.name,
+      due,
+      since: since.toISOString(),
+      filters: w.filters,
+      projects_found: (newProjects as any[])?.length ?? 0,
+      updates_found: null,
+      note: `Changes query error: ${cErr.message}`,
+    });
+  }
+  if (trace) {
+    traceRows.push({
+      watch_id: w.id,
+      name: w.name,
+      due,
+      since: since.toISOString(),
+      filters: w.filters,
+      projects_found: (newProjects as any[])?.length ?? 0,
+      updates_found: null,
+      note: `Changes query error: ${cErr.message}`,
+    });
+  }
+  continue;
+}
+
+// Muotoile päivitykset projekteiksi (käytetään 'after' snapshotia)
+const updatedProjects =
+  (changeRows ?? []).map((r: any) => ({
+    id: r.project_id,
+    name: r.after?.name ?? "(nimetön)",
+    city: r.after?.city ?? "",
+    region: r.after?.region ?? null,
+    phase: r.after?.phase ?? "",
+    changed_fields: r.changed_fields ?? [],
+    changed_at: r.changed_at,
+  })) ?? [];
+
+// Vältä tuplia: jos projekti on sekä “uusi” että “päivitetty”, pidä se uutena (ja tiputa päivityksistä)
+const newIds = new Set(((newProjects as any[]) ?? []).map((p: any) => p.id));
+const updatedOnly = updatedProjects.filter((p: any) => !newIds.has(p.id));
+
+const hasNew = ((newProjects as any[]) ?? []).length > 0;
+const hasUpdates = updatedOnly.length > 0;
+
+if (debug) {
+  debugRows.push({
+    watch_id: w.id,
+    name: w.name,
+    frequency: w.frequency,
+    last_sent_at: w.last_sent_at,
+    due,
+    since: since.toISOString(),
+    filters: w.filters,
+    projects_found: ((newProjects as any[]) ?? []).length,
+    updates_found: updatedOnly.length,
+    note: "Debug (no send)",
+  });
+  continue; // debug-tilassa ei lähetetä eikä päivitetä last_sent_at
+}
+
+if (!hasNew && !hasUpdates) {
+  if (trace) {
+    traceRows.push({
+      watch_id: w.id,
+      name: w.name,
+      due,
+      since: since.toISOString(),
+      filters: w.filters,
+      projects_found: 0,
+      updates_found: 0,
+      note: "No new or updates -> skipped (last_sent_at not changed)",
+    });
+  }
+  continue;
+}
+
+if (trace) {
+  traceRows.push({
+    watch_id: w.id,
+    name: w.name,
+    due,
+    since: since.toISOString(),
+    filters: w.filters,
+    projects_found: ((newProjects as any[]) ?? []).length,
+    updates_found: updatedOnly.length,
+    note: "Will send digest",
+  });
+}
 
       // Haetaan käyttäjän email adminilla (service role key tarvitaan)
       const { data: userData, error: uErr } = await supabase.auth.admin.getUserById(w.user_id);
@@ -248,7 +341,7 @@ export async function GET(req: Request) {
             due,
             since: since.toISOString(),
             filters: w.filters,
-            projects_found: projects.length,
+            projects_found: newProjects.length,
             note: `User email missing / admin error: ${uErr?.message || "no email"}`,
           });
         }
@@ -257,26 +350,56 @@ export async function GET(req: Request) {
 
       const email = userData.user.email;
       const filterSummary = summarizeFilters(w.filters);
-      const subject = `Uusia hankkeita (${projects.length}) – ${w.name}`;
+      const subject =
+  updatedOnly.length > 0
+    ? `Uusia hankkeita (${newProjects.length}) + päivityksiä (${updatedOnly.length}) – ${w.name}`
+    : `Uusia hankkeita (${newProjects.length}) – ${w.name}`;
 
-      const rowsHtml = projects
-        .slice(0, 30)
-        .map((p: any) => {
-          const meta = [p.city, p.region ?? "-", p.phase].filter(Boolean).join(" • ");
-          return `
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
-                <div style="font-weight:700;color:#111827;">${escapeHtml(p.name)}</div>
-                <div style="font-size:13px;color:#6b7280;margin-top:2px;">
-                  ${escapeHtml(meta)}
-                </div>
-              </td>
-            </tr>
-          `;
-        })
-        .join("");
+      const rowsHtml = newProjects
+        const updatesRowsHtml = updatedOnly
+  .slice(0, 30)
+  .map((p: any) => {
+    const meta = [p.city, p.region ?? "-", p.phase].filter(Boolean).join(" • ");
+    const fields =
+  (p.changed_fields ?? []).length > 0
+    ? `Päivitys: ${(p.changed_fields as string[])
+        .map(humanizeField)
+        .join(", ")}`
+    : "Päivitys";
+    return `
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+            <div>
+              <div style="font-weight:700;color:#111827;">${escapeHtml(p.name)}</div>
+              <div style="font-size:13px;color:#6b7280;margin-top:2px;">
+                ${escapeHtml(meta)}
+              </div>
+              <div style="font-size:12px;color:#b45309;margin-top:6px;font-weight:700;">
+                ${escapeHtml(fields)}
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  })
+  .join("");
 
-      const textLines = projects
+const updatesTextLines = updatedOnly
+  .slice(0, 30)
+  .map((p: any) => {
+    const fields =
+  (p.changed_fields ?? []).length > 0
+    ? ` | Päivitys: ${(p.changed_fields as string[])
+        .map(humanizeField)
+        .join(", ")}`
+    : "";
+    return `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})${fields}`;
+  })
+  .join("\n");
+
+      const textLines = newProjects
         .slice(0, 30)
         .map((p: any) => `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})`)
         .join("\n");
@@ -285,8 +408,11 @@ export async function GET(req: Request) {
         `Hei!\n\n` +
         `Hakuvahti: ${w.name}\n` +
         `Suodattimet: ${filterSummary}\n\n` +
-        `Löytyi ${projects.length} uutta hanketta edellisen koonnin jälkeen.\n\n` +
-        `${textLines}\n\n` +
+        `Löytyi ${newProjects.length} uutta hanketta edellisen koonnin jälkeen.\n\n` +
+`${textLines}\n\n` +
+(updatedOnly.length > 0
+  ? `Lisäksi löytyi ${updatedOnly.length} päivitystä olemassa oleviin hankkeisiin:\n\n${updatesTextLines}\n\n`
+  : ``) +
         `Avaa Työmaat: ${appBaseUrl}/projects\n` +
         `Hallinnoi hakuvahteja: ${appBaseUrl}/watchlists\n`;
 
@@ -296,7 +422,7 @@ export async function GET(req: Request) {
             <div style="padding:18px 20px;border-bottom:1px solid #e5e7eb;">
               <div style="font-size:18px;font-weight:800;color:#111827;">Tyomaat.fi</div>
               <div style="margin-top:6px;color:#374151;">
-                <div style="font-weight:700;">Uusia hankkeita: ${projects.length}</div>
+                <div style="font-weight:700;">Uusia hankkeita: ${newProjects.length}</div>
                 <div style="font-size:13px;color:#6b7280;margin-top:4px;">Hakuvahti: ${escapeHtml(
                   w.name
                 )}</div>
@@ -310,11 +436,32 @@ export async function GET(req: Request) {
               <table style="width:100%;border-collapse:collapse;">
                 ${rowsHtml}
               </table>
+              ${
+  updatedOnly.length > 0
+    ? `
+      <div style="margin-top:18px;border-top:1px solid #e5e7eb;padding-top:14px;">
+        <div style="font-weight:800;color:#111827;margin-bottom:6px;">
+          Päivitykset (${updatedOnly.length})
+        </div>
+        <table style="width:100%;border-collapse:collapse;">
+          ${updatesRowsHtml}
+        </table>
+        ${
+          updatedOnly.length > 30
+            ? `<div style="font-size:13px;color:#6b7280;margin-top:10px;">
+                Näytetään 30 / ${updatedOnly.length}. Avaa palvelu nähdäksesi kaikki.
+               </div>`
+            : ``
+        }
+      </div>
+    `
+    : ``
+}
 
               ${
-                projects.length > 30
+                newProjects.length > 30
                   ? `<div style="font-size:13px;color:#6b7280;margin-top:10px;">
-                      Näytetään 30 / ${projects.length}. Avaa palvelu nähdäksesi kaikki.
+                      Näytetään 30 / ${newProjects.length}. Avaa palvelu nähdäksesi kaikki.
                      </div>`
                   : ``
               }
@@ -356,7 +503,7 @@ export async function GET(req: Request) {
             email,
             due,
             since: since.toISOString(),
-            projects_found: projects.length,
+            projects_found: newProjects.length,
             note: `Resend error: ${sendError?.message || JSON.stringify(sendError)}`,
           });
         }
@@ -378,7 +525,7 @@ export async function GET(req: Request) {
           email,
           due,
           since: since.toISOString(),
-          projects_found: projects.length,
+          projects_found: newProjects.length,
           note: "Sent OK",
         });
       }
@@ -400,4 +547,20 @@ export async function GET(req: Request) {
       { status: 500 }
     );
   }
+}
+function applyProjectChangeFilters(q: any, filters: any) {
+  // "after" on jsonb, joten suodatetaan sitä vasten
+  if (!filters) return q;
+
+  if (filters.q) {
+    // kevyt: haetaan myöhemmin tarkempi osuma (tässä vain jätetään pois)
+    // voit halutessa toteuttaa tekstihaku myöhemmin
+  }
+
+  if (filters.region) q = q.eq("after->>region", filters.region);
+  if (filters.city) q = q.eq("after->>city", filters.city);
+  if (filters.phase) q = q.eq("after->>phase", filters.phase);
+  if (filters.property_type) q = q.eq("after->>property_type", filters.property_type);
+
+  return q;
 }

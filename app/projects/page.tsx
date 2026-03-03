@@ -710,6 +710,25 @@ useEffect(() => {
                     >
                       Näytä kartalla
                     </button>
+                    <button
+  className="projects-btn projects-btnFull"
+  type="button"
+  onClick={() => toggleFavorite(p.id)}
+>
+  {favorites.has(p.id) ? '★ Omat' : '☆ Omiin'}
+</button>
+
+<select
+  className="projects-select"
+  value={statuses[p.id] ?? 'new'}
+  onChange={(e) => setProjectStatus(p.id, e.target.value)}
+>
+  <option value="new">Uusi</option>
+  <option value="contacted">Kontaktoitu</option>
+  <option value="offer_sent">Tarjous lähetetty</option>
+  <option value="won">Voitettu</option>
+  <option value="lost">Hävitty</option>
+</select>
                   </div>
                 </div>
               ))}
