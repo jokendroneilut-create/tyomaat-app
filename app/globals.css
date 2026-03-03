@@ -287,6 +287,17 @@ button:hover {
   flex: 1 1 calc(50% - 4px);
 }
 
+/* Mobiili: nappirivi kortissa */
+.projects-cardActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.projects-cardActions .projects-btnFull {
+  flex: 1 1 calc(50% - 4px);
+}
+
 /* MODAL */
 .projects-modalBackdrop {
   position: fixed;
@@ -390,5 +401,16 @@ button:hover {
 
   .projects-modalGrid {
     grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .projects-cardActions {
+    flex-direction: column;
+  }
+
+  .projects-cardActions .projects-btnFull,
+  .projects-cardActions select {
+    width: 100%;
+    flex: 1 1 100%;
   }
 }
