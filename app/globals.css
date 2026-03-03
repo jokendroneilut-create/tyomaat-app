@@ -284,7 +284,7 @@ button:hover {
 }
 
 .projects-btnFull {
-  width: 100%;
+  flex: 1 1 calc(50% - 4px);
 }
 
 /* MODAL */

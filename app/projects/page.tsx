@@ -696,7 +696,7 @@ useEffect(() => {
                     {p.city} • {p.region || '-'} • {p.phase}
                   </div>
 
-                  <div style={{ display: 'flex', gap: 10 }}>
+                  <div className="projects-cardActions">
                     <button className="projects-btn projects-btnFull" onClick={() => setSelected(p)}>
                       Näytä tiedot
                     </button>
