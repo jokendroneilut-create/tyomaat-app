@@ -413,4 +413,173 @@ button:hover {
     width: 100%;
     flex: 1 1 100%;
   }
+  /* --- Admin/Dashboard UI helpers --- */
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+  color: #111827;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .formGrid.twoCols {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 15px;
+  background: #fff;
+  outline: none;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
+}
+
+.textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.btnPrimary {
+  background: #111827;
+  color: #fff;
+  border: 1px solid #111827;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btnPrimary:hover {
+  filter: brightness(1.05);
+}
+
+.btnSecondary {
+  background: #fff;
+  color: #111827;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btnSecondary:hover {
+  background: #f9fafb;
+}
+/* DASHBOARD */
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 15px;
+  background: #fff;
+}
+
+.textarea {
+  min-height: 100px;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #111827;
+}
+
+.formGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.twoCols {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 800px) {
+  .twoCols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btnPrimary {
+  background: #111827;
+  color: white;
+  border: none;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btnSecondary {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+/* TESTI: jos tämä ei näy, luokka ei ole käytössä */
+.input {
+  border: 6px solid red !important;
+  background: yellow !important;
+}
 }
