@@ -12,6 +12,23 @@ type Project = {
   created_at: string
 }
 
+function humanizeStatus(status: string) {
+  switch (status) {
+    case 'new':
+      return 'Uusi'
+    case 'contacted':
+      return 'Kontaktoitu'
+    case 'offer_sent':
+      return 'Tarjous lähetetty'
+    case 'won':
+      return 'Voitettu'
+    case 'lost':
+      return 'Hävitty'
+    default:
+      return status
+  }
+}
+
 export default function CRMPage() {
   const [loading, setLoading] = useState(true)
   const [projects, setProjects] = useState<Project[]>([])
@@ -110,7 +127,7 @@ export default function CRMPage() {
             >
               <div style={{ fontWeight: 800 }}>{p.name}</div>
               <div style={{ fontSize: 14, color: '#374151' }}>
-                {p.city} • {p.region || '-'} • {p.phase} • <strong>{statuses[p.id] ?? 'new'}</strong>
+                {p.city} • {p.region || '-'} • {p.phase} • <strong>{humanizeStatus(statuses[p.id] ?? 'new')}</strong>
               </div>
             </div>
           ))}
