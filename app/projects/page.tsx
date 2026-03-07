@@ -336,15 +336,22 @@ useEffect(() => {
   const propertyTypes = useMemo(() => uniqSorted(projects.map((p) => p.property_type)), [projects])
 
   const filteredProjects = useMemo(() => {
-    const needle = q.trim().toLowerCase()
+  const needle = q.trim().toLowerCase()
 
-    return projects.filter((p) => {
-      if (region && (p.region || '') !== region) return false
-      if (city && p.city !== city) return false
-      if (phase && p.phase !== phase) return false
-      if (propertyType && (p.property_type || '') !== propertyType) return false
+  return projects.filter((p) => {
+    if (region && (p.region || '') !== region) return false
+    if (city && p.city !== city) return false
+    if (phase && p.phase !== phase) return false
 
-      if (!needle) return true
+    if (
+      propertyType &&
+      !(p.property_type || '')
+        .toLowerCase()
+        .includes(propertyType.toLowerCase())
+    )
+      return false
+
+    if (!needle) return true
 
       const haystack = [
         p.name,
@@ -503,18 +510,18 @@ useEffect(() => {
 
           <div>
             <label className="projects-label">Kohdetyyppi</label>
-            <select
-              className="projects-select"
-              value={propertyType}
-              onChange={(e) => setPropertyType(e.target.value)}
-            >
-              <option value="">Kaikki</option>
-              {propertyTypes.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+            <input
+  type="text"
+  placeholder="Hae kohdetyyppiä..."
+  value={propertyType}
+  onChange={(e) => setPropertyType(e.target.value)}
+  style={{
+    padding: "10px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    width: "200px",
+  }}
+/>
           </div>
 
           <button type="button" className="projects-clear" onClick={clearFilters}>
