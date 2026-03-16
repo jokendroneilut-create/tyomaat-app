@@ -6,10 +6,11 @@ import { supabase } from '../../lib/supabaseClient'
 type Project = {
   id: string
   name: string
-  city: string
+  city: string | null
   region: string | null
   phase: string
   is_public: boolean
+  needs_review: boolean
 
   location: string | null
   developer: string | null
@@ -125,6 +126,7 @@ export default function Dashboard() {
   const [filterRegion, setFilterRegion] = useState('')
   const [filterPhase, setFilterPhase] = useState('')
   const [filterVisibility, setFilterVisibility] = useState<'all' | 'public' | 'hidden'>('all')
+  const [filterNeedsReview, setFilterNeedsReview] = useState(false)
 
   const emptyForm = {
     name: '',
@@ -288,12 +290,28 @@ export default function Dashboard() {
     setProjects((prev) => prev.filter((p) => p.id !== id))
   }
 
+  async function approveReview(id: string) {
+  setSubmitError(null)
+
+  const { error } = await supabase
+    .from('projects')
+    .update({ needs_review: false })
+    .eq('id', id)
+
+  if (error) return showErrorUI('Tarkistuksen hyväksyntä epäonnistui', error)
+
+  setProjects((prev) =>
+    prev.map((p) => (p.id === id ? { ...p, needs_review: false } : p))
+  )
+}
+
   function startEdit(project: Project) {
     setSubmitError(null)
     setEditingId(project.id)
     setForm({
       ...project,
       region: project.region || '',
+      city: project.city ?? '',
       phase: PHASE_OPTIONS.includes(project.phase as any) ? project.phase : PHASE_OPTIONS[0],
       apartments: project.apartments != null ? String(project.apartments) : '',
       floor_area: project.floor_area != null ? String(project.floor_area) : '',
@@ -608,6 +626,17 @@ export default function Dashboard() {
     </select>
   </div>
 
+  <div style={{ display: 'flex', alignItems: 'end' }}>
+  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
+    <input
+      type="checkbox"
+      checked={filterNeedsReview}
+      onChange={(e) => setFilterNeedsReview(e.target.checked)}
+    />
+    Vain tarkistettavat
+  </label>
+</div>
+
   <button
     type="button"
     className="btnSecondary"
@@ -629,6 +658,7 @@ export default function Dashboard() {
     if (filterPhase && p.phase !== filterPhase) return false
     if (filterVisibility === 'public' && !p.is_public) return false
     if (filterVisibility === 'hidden' && p.is_public) return false
+    if (filterNeedsReview && !p.needs_review) return false
 
     const needle = filterQ.trim().toLowerCase()
     if (!needle) return true
@@ -652,7 +682,24 @@ export default function Dashboard() {
   .map((p) => (
             <div key={p.id} className="dashRow">
               <div>
-                <div className="dashRowTitle">{p.name}</div>
+                <div className="dashRowTitle" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+  <span>{p.name}</span>
+  {p.needs_review && (
+    <span
+      style={{
+        fontSize: 12,
+        fontWeight: 800,
+        padding: '4px 8px',
+        borderRadius: 999,
+        background: '#fef3c7',
+        color: '#92400e',
+        border: '1px solid #fcd34d',
+      }}
+    >
+      Tarkistettava
+    </span>
+  )}
+</div>
                 <div className="dashRowMeta">
                   {(p.city || '') + (p.region ? ` • ${p.region}` : '') + ` • ${p.phase}`}
                 </div>
@@ -666,6 +713,11 @@ export default function Dashboard() {
                 <button className="btnSecondary" onClick={() => startEdit(p)}>
                   Muokkaa
                 </button>
+                {p.needs_review && (
+                <button className="btnSecondary" onClick={() => approveReview(p.id)}>
+                  Hyväksy tarkistus
+                </button>
+                 )}
                 <button
                   className="btnSecondary"
                   onClick={() => deleteProject(p.id)}
