@@ -6,10 +6,12 @@ export const runtime = "nodejs"
 
 export async function POST() {
   try {
-    const lapti = await fetchTestSource()
-const yit = await fetchYitSource()
+    const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000"
 
-const candidates = [...lapti, ...yit]
+const discoverRes = await fetch(`${baseUrl}/api/agent/discover`)
+const discoverJson = await discoverRes.json()
+
+const candidates = discoverJson.candidates || []
 
     const results: any[] = []
 

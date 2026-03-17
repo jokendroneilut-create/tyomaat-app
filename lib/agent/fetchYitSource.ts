@@ -17,6 +17,7 @@ const projectKeywords = [
   "rakentaa",
   "rakentaminen",
   "rakennus",
+  "rakentuu",
   "hanke",
   "koulu",
   "päiväkoti",
@@ -39,6 +40,17 @@ if (!projectKeywords.some((k) => lowerTitle.includes(k))) {
 
   const city = detectCityFromText(title)
 
+const completedKeywords = [
+  "valmistui",
+  "valmistunut",
+  "otettu käyttöön",
+  "avautui",
+]
+
+const completed = completedKeywords.some((k) =>
+  lowerTitle.includes(k)
+)
+
 results.push({
   name: title,
   city,
@@ -49,7 +61,7 @@ results.push({
       ? href
       : `https://www.yitgroup.com${href}`,
     confidence: 0.6,
-    completed: false,
+    completed,
     source_name: "yit",
   })
 })

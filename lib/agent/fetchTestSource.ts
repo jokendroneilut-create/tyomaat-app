@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio"
-import { detectCityFromText } from "./detectCityFromText"
+import { detectCityFromText } from "@/lib/agent/detectCityFromText"
 
 export type FetchedCandidate = {
   name: string
@@ -26,11 +26,11 @@ export async function fetchTestSource(): Promise<FetchedCandidate[]> {
 const projectKeywords = [
   "rakentaminen",
   "rakennus",
+  "rakentuu",
   "koulu",
   "päiväkoti",
   "hanke",
   "rakennetaan",
-  "rakentuu",
   "avautuu",
   "laajennus",
   "sairaala",
