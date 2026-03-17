@@ -74,9 +74,19 @@ const summary = results.reduce((acc: any, row: any) => {
 
   return acc
 }, {})
+const totalProcessed = results.filter(
+  (r) => r.status !== "skipped_seen_source"
+).length
+const sourceCounts = candidates.reduce((acc: any, candidate: any) => {
+  const source = candidate.source_name || "unknown"
+  acc[source] = (acc[source] || 0) + 1
+  return acc
+}, {})
     return NextResponse.json({
   ok: true,
   count: candidates.length,
+  processed: totalProcessed,
+  source_counts: sourceCounts,
   summary,
   results,
 })
