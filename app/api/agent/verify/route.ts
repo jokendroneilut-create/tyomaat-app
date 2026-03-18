@@ -21,10 +21,21 @@ export async function POST() {
   (project: any) => project.project_sources && project.project_sources.length > 0
 )
 
-const enrichedProjects = verifiableProjects.map((project: any) => ({
-  ...project,
-  source_count: project.project_sources?.length || 0,
-}))
+const now = Date.now()
+const hours24 = 24 * 60 * 60 * 1000
+
+const enrichedProjects = verifiableProjects
+  .filter((project: any) => project.status !== "completed")
+  .filter((project: any) => {
+    if (!project.last_verified_at) return true
+
+    const lastVerifiedAt = new Date(project.last_verified_at).getTime()
+    return now - lastVerifiedAt >= hours24
+  })
+  .map((project: any) => ({
+    ...project,
+    source_count: project.project_sources?.length || 0,
+  }))
 
 const verifiedAt = new Date().toISOString()
 for (const project of enrichedProjects) {
