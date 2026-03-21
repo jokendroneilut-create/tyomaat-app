@@ -8,6 +8,7 @@ import { fetchFiraSource } from "./fetchFiraSource"
 import { fetchSkanskaSource } from "./fetchSkanskaSource"
 import { fetchNccSource } from "./fetchNccSource"
 import { fetchPeabSource } from "./fetchPeabSource"
+import { fetchHartelaSource } from "./fetchHartelaSource"
 
 export const sources = [
   { name: "lapti", fetch: fetchTestSource },
@@ -20,4 +21,5 @@ export const sources = [
   { name: "skanska", fetch: fetchSkanskaSource },
   { name: "ncc", fetch: fetchNccSource },
   { name: "peab", fetch: fetchPeabSource },
+  { name: "hartela", fetch: fetchHartelaSource },
 ]

@@ -1,36 +1,41 @@
-import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 
-export async function fetchPeabSource() {
+export async function fetchHartelaSource() {
   const results: any[] = []
-  const seenUrls = new Set<string>()
 
   const cutoffDate = new Date()
   cutoffDate.setMonth(cutoffDate.getMonth() - 24)
 
-  for (let page = 1; page <= 5; page++) {
-    const url =
-      page === 1
-  ? "https://peab.fi/peab/ajankohtaista/"
-  : `https://peab.fi/peab/ajankohtaista/?page=${page}`
-    const res = await fetch(url)
+  for (let page = 0; page < 6; page++) {
+    const res = await fetch(
+      `https://www.sttinfo.fi/public-website-api/pressroom/1812/releases/20/${page}`,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          "Accept": "application/json, text/plain, */*",
+          "Referer": "https://www.sttinfo.fi/uutishuone/1812/hartela",
+        },
+      }
+    )
+
     if (!res.ok) break
 
-    const html = await res.text()
-    const $ = cheerio.load(html)
+    const data = await res.json()
+    const releases = data?.releases || []
 
-    $("a").each((_, el) => {
-      const title = $(el).text().trim()
-const href = $(el).attr("href")
+    if (!releases.length) break
 
-      if (!title || !href) return
+    for (const release of releases) {
+      const fi = release?.versions?.fi
+      const title = (fi?.title || "").trim()
+      const relativeUrl = fi?.url || ""
 
-      const absoluteHref = href.startsWith("http")
-        ? href
-        : `https://www.peab.fi${href}`
+      if (!title || !relativeUrl) continue
 
-      if (!absoluteHref.includes("/peab/media/tiedotteet/")) return
-      if (/^\d+$/.test(title)) return
+      const releaseDate = release?.date ? new Date(release.date) : null
+      if (releaseDate && releaseDate < cutoffDate) {
+        continue
+      }
 
       const lowerTitle = title.toLowerCase()
 
@@ -53,12 +58,10 @@ const href = $(el).attr("href")
         "koulu",
         "päiväkoti",
         "sairaala",
-        "datakeskus",
-        "teollisuus",
-        "liikuntahalli",
-        "kehitysvaihe",
-        "uudis",
-        "korjausrakennushanke",
+        "palvelukortteli",
+        "palvelutalo",
+        "hoivakoti",
+        "uudiskohde",
       ]
 
       const excludeKeywords = [
@@ -67,21 +70,16 @@ const href = $(el).attr("href")
         "tilinpäätös",
         "markkina",
         "tulos",
-        "työturvallisuuskilpailu",
-        "sertifikaatin",
-        "leed",
+        "vastuullisuus",
+        "johtaja",
       ]
 
-      if (!projectKeywords.some((k) => lowerTitle.includes(k))) return
-      if (excludeKeywords.some((k) => lowerTitle.includes(k))) return
+      if (!projectKeywords.some((k) => lowerTitle.includes(k))) continue
+      if (excludeKeywords.some((k) => lowerTitle.includes(k))) continue
 
-      const dateText = $(el).text()
-      const dateMatch = dateText.match(/(\d{1,2}\.\d{1,2}\.\d{4})/)
-      if (dateMatch) {
-        const [day, month, year] = dateMatch[1].split(".").map(Number)
-        const articleDate = new Date(year, month - 1, day)
-        if (articleDate < cutoffDate) return
-      }
+      const absoluteHref = relativeUrl.startsWith("http")
+        ? relativeUrl
+        : `https://www.sttinfo.fi${relativeUrl}`
 
       const completedKeywords = [
         "valmistui",
@@ -93,8 +91,6 @@ const href = $(el).attr("href")
       const completed = completedKeywords.some((k) =>
         lowerTitle.includes(k)
       )
-if (seenUrls.has(absoluteHref)) return
-seenUrls.add(absoluteHref)
 
       results.push({
         name: title,
@@ -105,9 +101,9 @@ seenUrls.add(absoluteHref)
         source_url: absoluteHref,
         confidence: 0.6,
         completed,
-        source_name: "peab",
+        source_name: "hartela",
       })
-    })
+    }
   }
 
   return results
