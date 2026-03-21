@@ -13,6 +13,7 @@ import { fetchGrkSource } from "./fetchGrkSource"
 import { fetchSenaattiSource } from "./fetchSenaattiSource"
 import { fetchKreateSource } from "./fetchKreateSource"
 import { fetchTekovaSource } from "./fetchTekovaSource"
+import { fetchJatkeSource } from "./fetchJatkeSource"
 
 export const sources = [
   { name: "lapti", fetch: fetchTestSource },
@@ -30,5 +31,6 @@ export const sources = [
   { name: "senaatti", fetch: fetchSenaattiSource },
   { name: "kreate", fetch: fetchKreateSource },
   { name: "tekova", fetch: fetchTekovaSource },
+  { name: "jatke", fetch: fetchJatkeSource },
   
 ]
