@@ -7,6 +7,16 @@ export const runtime = "nodejs"
 export async function POST(req: Request) {
   try {
     const body = await req.json()
+    if (!body.name || body.name.trim().length < 5) {
+  return NextResponse.json({ status: "invalid_name" })
+}
+
+if (/^\d+$/.test(body.name.trim())) {
+  return NextResponse.json({ status: "invalid_name" })
+}
+if (body.name.trim().toLowerCase() === "lue lisää") {
+  return NextResponse.json({ status: "invalid_name" })
+}
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -111,6 +121,7 @@ export async function POST(req: Request) {
         location: body.location,
         phase: body.phase || "Suunnittelussa",
         is_public: true,
+        source_confidence: body.confidence ?? null,
       })
       .select()
       .single()

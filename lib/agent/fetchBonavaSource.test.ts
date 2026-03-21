@@ -1,0 +1,8 @@
+import { fetchBonavaSource } from "./fetchBonavaSource"
+
+async function main() {
+  const results = await fetchBonavaSource()
+  console.log(JSON.stringify(results.slice(0, 10), null, 2))
+}
+
+main().catch(console.error)

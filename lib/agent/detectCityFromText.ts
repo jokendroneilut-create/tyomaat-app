@@ -20,6 +20,15 @@ export function detectCityFromText(text: string): string | null {
     "tuusula",
     "järvenpää",
     "kaarina",
+    "kangasala",
+    "siuntio",
+    "hyvinkää",
+    "ii",
+    "nurmijärvi",
+    "kokkola",
+    "porvoo",
+    "naantali",
+    "lieto",
   ]
 
   const lower = text.toLowerCase()
@@ -28,7 +37,23 @@ export function detectCityFromText(text: string): string | null {
     "kempeleessä": "Kempele",
     "ylöjärvellä": "Ylöjärvi",
     "hämeenlinnan": "Hämeenlinna",
+    "tampereen": "Tampere",
     "kaarinaan": "Kaarina",
+    "kangasalan": "Kangasala",
+    "siuntion": "Siuntio",
+    "helsingin": "Helsinki",
+    "helsingistä": "Helsinki",
+    "helsingissä": "Helsinki",
+    "hyvinkäälle": "Hyvinkää",
+    "iissä": "Ii",
+    "turun": "Turku",
+    "klaukkalaan": "Nurmijärvi",
+    "nihdin": "Helsinki",
+    "lahteen": "Lahti",
+    "lahdessa": "Lahti",
+    "turussa": "Turku",
+    "liedon": "Lieto",
+    "ouluun": "Oulu",
   }
 
   for (const [alias, city] of Object.entries(cityAliases)) {
@@ -37,9 +62,10 @@ export function detectCityFromText(text: string): string | null {
 
   for (const city of cities) {
     const regex = new RegExp(
-      `\\b${city}(ssa|ssä|sta|stä|seen|lla|llä|lta|ltä|lle|na|nä|n|in|en)?\\b`,
+      `\\b${city}(ssa|ssä|sta|stä|seen|lla|ella|llä|lta|ltä|lle|na|nä|n|in|en)?\\b`,
       "i"
     )
+
     if (regex.test(lower)) {
       return city.charAt(0).toUpperCase() + city.slice(1)
     }

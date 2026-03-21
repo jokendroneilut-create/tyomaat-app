@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server"
-import { fetchTestSource } from "@/lib/agent/fetchTestSource"
-import { fetchYitSource } from "@/lib/agent/fetchYitSource"
+import { sources } from "@/lib/agent/sources"
 
 export const runtime = "nodejs"
 
 export async function GET() {
   try {
-    const lapti = await fetchTestSource()
-    const yit = await fetchYitSource()
+    const sourceResults = await Promise.all(
+  sources.map(async (source) => {
+    const candidates = await source.fetch()
+    return candidates
+  })
+)
 
-    const candidates = [...lapti, ...yit]
+const candidates = sourceResults.flat()
 
     return NextResponse.json({
       ok: true,
