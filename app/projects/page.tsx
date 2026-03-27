@@ -29,11 +29,8 @@ type Project = {
 
   created_at: string
 
-  // nykyinen schema
   latitude?: number | string | null
   longitude?: number | string | null
-
-  // vanha/mahdollinen schema
   lat?: number | string | null
   lng?: number | string | null
 }
@@ -65,7 +62,6 @@ function formatM2(n: number | null | undefined) {
   }
 }
 
-/** Kevyt mobile-aware: käytä näytön leveyttä (ei user-agentia) */
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false)
 
@@ -109,27 +105,21 @@ export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Filtterit
   const [q, setQ] = useState('')
-  const [region, setRegion] = useState<string>('') // '' = kaikki
-  const [city, setCity] = useState<string>('') // '' = kaikki
-  const [phase, setPhase] = useState<string>('') // '' = kaikki
-  const [propertyType, setPropertyType] = useState<string>('') // '' = kaikki
+  const [region, setRegion] = useState<string>('')
+  const [city, setCity] = useState<string>('')
+  const [phase, setPhase] = useState<string>('')
+  const [propertyType, setPropertyType] = useState<string>('')
 
-  // listan sivutus / “lataa lisää”
   const [visibleCount, setVisibleCount] = useState(pageSize)
 
-  // modal (projekti)
   const [selected, setSelected] = useState<Project | null>(null)
 
-  // kartta rajaa listaa
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [limitToMapView, setLimitToMapView] = useState(true)
 
-  // ✅ “Näytä kartalla” zoom target
   const [zoomTarget, setZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
 
-  // Hakuvahti (tallenna haku)
   const [watchOpen, setWatchOpen] = useState(false)
   const [watchName, setWatchName] = useState('')
   const [watchFrequency, setWatchFrequency] = useState<'daily' | 'weekly'>('weekly')
@@ -138,50 +128,45 @@ export default function Projects() {
   const [watchSuccess, setWatchSuccess] = useState<string | null>(null)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [statuses, setStatuses] = useState<Record<string, string>>({})
-  
-const toggleFavorite = async (projectId: string) => {
-  const { data: userRes } = await supabase.auth.getUser()
-  const userId = userRes?.user?.id
-  if (!userId) return
 
-  if (favorites.has(projectId)) {
-    await supabase
-      .from('user_project_favorites')
-      .delete()
-      .eq('user_id', userId)
-      .eq('project_id', projectId)
+  const toggleFavorite = async (projectId: string) => {
+    const { data: userRes } = await supabase.auth.getUser()
+    const userId = userRes?.user?.id
+    if (!userId) return
 
-    const next = new Set(favorites)
-    next.delete(projectId)
-    setFavorites(next)
-  } else {
-    await supabase
-      .from('user_project_favorites')
-      .insert({ user_id: userId, project_id: projectId })
+    if (favorites.has(projectId)) {
+      await supabase
+        .from('user_project_favorites')
+        .delete()
+        .eq('user_id', userId)
+        .eq('project_id', projectId)
 
-    const next = new Set(favorites)
-    next.add(projectId)
-    setFavorites(next)
+      const next = new Set(favorites)
+      next.delete(projectId)
+      setFavorites(next)
+    } else {
+      await supabase.from('user_project_favorites').insert({ user_id: userId, project_id: projectId })
+
+      const next = new Set(favorites)
+      next.add(projectId)
+      setFavorites(next)
+    }
   }
-}
 
-const setProjectStatus = async (projectId: string, status: string) => {
-  const { data: userRes } = await supabase.auth.getUser()
-  const userId = userRes?.user?.id
-  if (!userId) return
+  const setProjectStatus = async (projectId: string, status: string) => {
+    const { data: userRes } = await supabase.auth.getUser()
+    const userId = userRes?.user?.id
+    if (!userId) return
 
-  await supabase
-    .from('user_project_status')
-    .upsert(
-      { user_id: userId, project_id: projectId, status },
-      { onConflict: 'user_id,project_id' }
-    )
+    await supabase
+      .from('user_project_status')
+      .upsert({ user_id: userId, project_id: projectId, status }, { onConflict: 'user_id,project_id' })
 
-  setStatuses((prev) => ({
-    ...prev,
-    [projectId]: status,
-  }))
-}
+    setStatuses((prev) => ({
+      ...prev,
+      [projectId]: status,
+    }))
+  }
 
   const openWatch = () => {
     setWatchError(null)
@@ -202,36 +187,34 @@ const setProjectStatus = async (projectId: string, status: string) => {
   }
 
   const saveWatch = async () => {
-  setWatchError(null)
-  setWatchSuccess(null)
+    setWatchError(null)
+    setWatchSuccess(null)
 
-  const name = watchName.trim()
-  if (!name) {
-    setWatchError('Anna hakuvahtille nimi.')
-    return
-  }
-
-  setWatchSaving(true)
-
-  try {
-    const { data: userRes, error: userErr } = await supabase.auth.getUser()
-    if (userErr || !userRes?.user?.id) {
-      setWatchError('Kirjaudu sisään tallentaaksesi hakuvahdin.')
-      setWatchSaving(false)
+    const name = watchName.trim()
+    if (!name) {
+      setWatchError('Anna hakuvahtille nimi.')
       return
     }
 
-    const filters = {
-      q: q.trim() || null,
-      region: region || null,
-      city: city || null,
-      phase: phase || null,
-      property_type: propertyType || null,
-    }
+    setWatchSaving(true)
 
-    const { error: insErr } = await supabase
-      .from('saved_searches')
-      .upsert(
+    try {
+      const { data: userRes, error: userErr } = await supabase.auth.getUser()
+      if (userErr || !userRes?.user?.id) {
+        setWatchError('Kirjaudu sisään tallentaaksesi hakuvahdin.')
+        setWatchSaving(false)
+        return
+      }
+
+      const filters = {
+        q: q.trim() || null,
+        region: region || null,
+        city: city || null,
+        phase: phase || null,
+        property_type: propertyType || null,
+      }
+
+      const { error: insErr } = await supabase.from('saved_searches').upsert(
         {
           user_id: userRes.user.id,
           name,
@@ -246,33 +229,30 @@ const setProjectStatus = async (projectId: string, status: string) => {
         }
       )
 
-    if (insErr) {
-      setWatchError(insErr.message)
+      if (insErr) {
+        setWatchError(insErr.message)
+        setWatchSaving(false)
+        return
+      }
+
       setWatchSaving(false)
-      return
+      setWatchSuccess('Hakuvahti tallennettu!')
+      setWatchOpen(false)
+    } catch (e: any) {
+      setWatchError(e?.message || 'Tallennus epäonnistui.')
+      setWatchSaving(false)
     }
-
-    setWatchSaving(false)
-    setWatchSuccess('Hakuvahti tallennettu!')
-    setWatchOpen(false)
-  } catch (e: any) {
-    setWatchError(e?.message || 'Tallennus epäonnistui.')
-    setWatchSaving(false)
   }
-}
-
-      
 
   const zoomToProject = (p: Project) => {
-  const { lat, lng } = getCoords(p)
-  if (lat == null || lng == null) return
-  setZoomTarget({ lat, lng })
-}
+    const { lat, lng } = getCoords(p)
+    if (lat == null || lng == null) return
+    setZoomTarget({ lat, lng })
+  }
 
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true)
-  
 
       const { data, error } = await supabase
         .from('projects')
@@ -288,7 +268,7 @@ const setProjectStatus = async (projectId: string, status: string) => {
         `
         )
         .eq('is_public', true)
-        .order('created_at', { ascending: false }) // ✅ UUSIMMAT ENSIN
+        .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Supabase error:', error)
@@ -302,28 +282,45 @@ const setProjectStatus = async (projectId: string, status: string) => {
 
     fetchProjects()
   }, [])
-useEffect(() => {
+
+  useEffect(() => {
     const fetchCRM = async () => {
-    const { data: userRes } = await supabase.auth.getUser()
-    const userId = userRes?.user?.id
-    if (!userId) return
+      const { data: userRes } = await supabase.auth.getUser()
+      const userId = userRes?.user?.id
+      if (!userId) return
 
-    const [{ data: favs }, { data: stats }] = await Promise.all([
-      supabase.from('user_project_favorites').select('project_id').eq('user_id', userId),
-      supabase.from('user_project_status').select('project_id,status').eq('user_id', userId),
-    ])
+      const [{ data: favs }, { data: stats }] = await Promise.all([
+        supabase.from('user_project_favorites').select('project_id').eq('user_id', userId),
+        supabase.from('user_project_status').select('project_id,status').eq('user_id', userId),
+      ])
 
-    setFavorites(new Set((favs ?? []).map((r: any) => r.project_id)))
+      setFavorites(new Set((favs ?? []).map((r: any) => r.project_id)))
 
-    const m: Record<string, string> = {}
-    ;(stats ?? []).forEach((r: any) => {
-      m[r.project_id] = r.status
-    })
-    setStatuses(m)
-  }
+      const m: Record<string, string> = {}
+      ;(stats ?? []).forEach((r: any) => {
+        m[r.project_id] = r.status
+      })
+      setStatuses(m)
+    }
 
-  fetchCRM()
-}, [])
+    fetchCRM()
+  }, [])
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const customEvent = event as CustomEvent<Project>
+      if (customEvent.detail) {
+        setSelected(customEvent.detail)
+      }
+    }
+
+    window.addEventListener('open-project-from-map', handler)
+
+    return () => {
+      window.removeEventListener('open-project-from-map', handler)
+    }
+  }, [])
+
   const regions = useMemo(() => uniqSorted(projects.map((p) => p.region)), [projects])
 
   const cities = useMemo(() => {
@@ -336,22 +333,22 @@ useEffect(() => {
   const propertyTypes = useMemo(() => uniqSorted(projects.map((p) => p.property_type)), [projects])
 
   const filteredProjects = useMemo(() => {
-  const needle = q.trim().toLowerCase()
+    const needle = q.trim().toLowerCase()
 
-  return projects.filter((p) => {
-    if (region && (p.region || '') !== region) return false
-    if (city && p.city !== city) return false
-    if (phase && p.phase !== phase) return false
+    return projects.filter((p) => {
+      if (region && (p.region || '') !== region) return false
+      if (city && p.city !== city) return false
+      if (phase && p.phase !== phase) return false
 
-    if (
-      propertyType &&
-      !(p.property_type || '')
-        .toLowerCase()
-        .includes(propertyType.toLowerCase())
-    )
-      return false
+      if (
+        propertyType &&
+        !(p.property_type || '')
+          .toLowerCase()
+          .includes(propertyType.toLowerCase())
+      )
+        return false
 
-    if (!needle) return true
+      if (!needle) return true
 
       const haystack = [
         p.name,
@@ -371,11 +368,9 @@ useEffect(() => {
     })
   }, [projects, q, region, city, phase, propertyType])
 
-  // Erottele koordinaatilliset / koordinaatittomat suodatetuista
   const filteredWithCoords = useMemo(() => filteredProjects.filter((p) => hasCoords(p)), [filteredProjects])
   const filteredNoCoords = useMemo(() => filteredProjects.filter((p) => !hasCoords(p)), [filteredProjects])
 
-  // Kartan näkymärajauksen suodatus (vain koordinaatilliset)
   const inBoundsWithCoords = useMemo(() => {
     if (!limitToMapView || !mapBounds) return filteredWithCoords
 
@@ -387,15 +382,11 @@ useEffect(() => {
     })
   }, [filteredWithCoords, limitToMapView, mapBounds])
 
-  // Lopullinen lista:
-  // - jos karttarajaus päällä -> näytä kartassa olevat + lisäksi kaikki koordinaatittomat
-  // - jos karttarajaus pois -> näytä kaikki suodatetut
   const listProjects = useMemo(() => {
     if (!limitToMapView) return filteredProjects
     return [...inBoundsWithCoords, ...filteredNoCoords]
   }, [limitToMapView, filteredProjects, inBoundsWithCoords, filteredNoCoords])
 
-  // Kun filtteri vaihtuu tai mobiili/desktop vaihtuu, aloita lista alusta
   useEffect(() => {
     setVisibleCount(pageSize)
   }, [q, region, city, phase, propertyType, limitToMapView, mapBounds, pageSize])
@@ -410,7 +401,6 @@ useEffect(() => {
     setPropertyType('')
   }
 
-  // Kun maakunta vaihtuu, ja valittu kaupunki ei enää ole saatavilla, tyhjennä kaupunki
   useEffect(() => {
     if (!city) return
     const ok = cities.includes(city)
@@ -429,7 +419,6 @@ useEffect(() => {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selected])
 
-  // laskurit UI:hin
   const mapCount = limitToMapView ? inBoundsWithCoords.length : filteredWithCoords.length
   const noCoordsCount = filteredNoCoords.length
 
@@ -437,7 +426,6 @@ useEffect(() => {
 
   return (
     <div className="projects-page">
-      {/* Leaflet z-index varmistus */}
       <style jsx global>{`
         .leaflet-container {
           z-index: 0 !important;
@@ -459,7 +447,6 @@ useEffect(() => {
 
       <h1 className="projects-title">Työmaat</h1>
 
-      {/* Filtterit */}
       <div className="projects-filters-card">
         <div className="projects-filters-grid">
           <div>
@@ -511,17 +498,17 @@ useEffect(() => {
           <div>
             <label className="projects-label">Kohdetyyppi</label>
             <input
-  type="text"
-  placeholder="Hae kohdetyyppiä..."
-  value={propertyType}
-  onChange={(e) => setPropertyType(e.target.value)}
-  style={{
-    padding: "10px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-    width: "200px",
-  }}
-/>
+              type="text"
+              placeholder="Hae kohdetyyppiä..."
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
+              style={{
+                padding: '10px',
+                borderRadius: '8px',
+                border: '1px solid #ccc',
+                width: '200px',
+              }}
+            />
           </div>
 
           <button type="button" className="projects-clear" onClick={clearFilters}>
@@ -534,7 +521,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Kartta-rajauksen toggle + laskuri */}
       <div className="projects-topbar">
         <label className="projects-checkbox">
           <input
@@ -556,12 +542,14 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Kartta */}
       <div className="projects-map" style={{ height: mapHeight }}>
-        <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} zoomTo={zoomTarget} />
+        <MapClient
+  projects={filteredProjects}
+  onBoundsChange={setMapBounds}
+  zoomTo={zoomTarget}
+/>
       </div>
 
-      {/* Karttaselite ja lajittelutieto */}
       <div
         style={{
           marginTop: 14,
@@ -594,13 +582,11 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Lista */}
       <div className="projects-list">
         {listProjects.length === 0 && <p>Ei projekteja valituilla filttereillä.</p>}
 
         {listProjects.length > 0 && (
           <>
-            {/* Desktop-table */}
             <div className="projects-tableWrap">
               <div className="projects-tableHead">
                 <div>Nimi</div>
@@ -650,33 +636,33 @@ useEffect(() => {
                     >
                       Näytä kartalla
                     </button>
-                    <button
-  className="projects-btn"
-  type="button"
-  onClick={() => toggleFavorite(p.id)}
-  title="Lisää omiin"
->
-  {favorites.has(p.id) ? '★ Omat' : '☆ Omiin'}
-</button>
 
-<select
-  className="projects-select"
-  value={statuses[p.id] ?? 'new'}
-  onChange={(e) => setProjectStatus(p.id, e.target.value)}
-  style={{ maxWidth: 170 }}
->
-  <option value="new">Uusi</option>
-  <option value="contacted">Kontaktoitu</option>
-  <option value="offer_sent">Tarjous lähetetty</option>
-  <option value="won">Voitettu</option>
-  <option value="lost">Hävitty</option>
-</select>
+                    <button
+                      className="projects-btn"
+                      type="button"
+                      onClick={() => toggleFavorite(p.id)}
+                      title="Lisää omiin"
+                    >
+                      {favorites.has(p.id) ? '★ Omat' : '☆ Omiin'}
+                    </button>
+
+                    <select
+                      className="projects-select"
+                      value={statuses[p.id] ?? 'new'}
+                      onChange={(e) => setProjectStatus(p.id, e.target.value)}
+                      style={{ maxWidth: 170 }}
+                    >
+                      <option value="new">Uusi</option>
+                      <option value="contacted">Kontaktoitu</option>
+                      <option value="offer_sent">Tarjous lähetetty</option>
+                      <option value="won">Voitettu</option>
+                      <option value="lost">Hävitty</option>
+                    </select>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Mobile-cards */}
             <div className="projects-cards">
               {visibleProjects.map((p) => (
                 <div key={p.id} className="projects-cardRow">
@@ -717,25 +703,26 @@ useEffect(() => {
                     >
                       Näytä kartalla
                     </button>
-                    <button
-  className="projects-btn projects-btnFull"
-  type="button"
-  onClick={() => toggleFavorite(p.id)}
->
-  {favorites.has(p.id) ? '★ Omat' : '☆ Omiin'}
-</button>
 
-<select
-  className="projects-select"
-  value={statuses[p.id] ?? 'new'}
-  onChange={(e) => setProjectStatus(p.id, e.target.value)}
->
-  <option value="new">Uusi</option>
-  <option value="contacted">Kontaktoitu</option>
-  <option value="offer_sent">Tarjous lähetetty</option>
-  <option value="won">Voitettu</option>
-  <option value="lost">Hävitty</option>
-</select>
+                    <button
+                      className="projects-btn projects-btnFull"
+                      type="button"
+                      onClick={() => toggleFavorite(p.id)}
+                    >
+                      {favorites.has(p.id) ? '★ Omat' : '☆ Omiin'}
+                    </button>
+
+                    <select
+                      className="projects-select"
+                      value={statuses[p.id] ?? 'new'}
+                      onChange={(e) => setProjectStatus(p.id, e.target.value)}
+                    >
+                      <option value="new">Uusi</option>
+                      <option value="contacted">Kontaktoitu</option>
+                      <option value="offer_sent">Tarjous lähetetty</option>
+                      <option value="won">Voitettu</option>
+                      <option value="lost">Hävitty</option>
+                    </select>
                   </div>
                 </div>
               ))}
@@ -752,7 +739,6 @@ useEffect(() => {
         )}
       </div>
 
-      {/* PROJEKTI MODAL */}
       {selected && (
         <div
           onMouseDown={(e) => {
@@ -855,7 +841,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* HAKUVAHTI MODAL */}
       {watchOpen && (
         <div
           onMouseDown={(e) => {

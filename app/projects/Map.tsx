@@ -117,10 +117,12 @@ export default function Map({
   projects,
   onBoundsChange,
   zoomTo,
+  onOpenProject,
 }: {
   projects: Project[]
   onBoundsChange?: (b: MapBounds) => void
   zoomTo?: ZoomTarget
+  onOpenProject: (project: any) => void
 }) {
   useEffect(() => {
     delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -165,6 +167,9 @@ export default function Map({
 
         {projectsWithCoords.map(({ p, lat, lng }) => {
           const icon = makeIcon(phaseClass(p.phase))
+          const projectUrl =
+            typeof window !== 'undefined' ? `${window.location.origin}/projects` : '/projects'
+
           return (
             <Marker key={p.id} position={[lat as number, lng as number]} icon={icon}>
               <Popup>
@@ -212,6 +217,54 @@ export default function Map({
                       </div>
                     ) : null}
                   </div>
+
+                  <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+                    <button
+  type="button"
+  onClick={() => {
+    window.dispatchEvent(
+      new CustomEvent('open-project-from-map', {
+        detail: p,
+      })
+    )
+  }}
+  style={{
+    flex: 1,
+    textAlign: 'center',
+    padding: '6px 8px',
+    background: '#2563eb',
+    color: 'white',
+    borderRadius: 6,
+    border: 'none',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+  }}
+>
+  Avaa hankekortti
+</button>
+
+                    <a
+                      href={`mailto:info@tyomaat.fi?subject=${encodeURIComponent(
+                        `Palaute kohteesta: ${p.name}`
+                      )}&body=${encodeURIComponent(
+                        `Kohde: ${p.name}\nID: ${p.id}\nLinkki: ${projectUrl}\n\nKirjoita palaute tähän:`
+                      )}`}
+                      style={{
+                        flex: 1,
+                        textAlign: 'center',
+                        padding: '6px 8px',
+                        background: '#e5e7eb',
+                        color: '#111827',
+                        borderRadius: 6,
+                        textDecoration: 'none',
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Anna palautetta
+                    </a>
+                  </div>
                 </div>
               </Popup>
             </Marker>
@@ -219,5 +272,5 @@ export default function Map({
         })}
       </MapContainer>
     </div>
-  )
+      )
 }
