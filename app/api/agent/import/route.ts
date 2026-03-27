@@ -112,6 +112,23 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
       }
     }
 
+  if (body.completed) {
+      await supabase.from("project_import_events").insert({
+        source_name: body.source_name || "agent",
+        source_url: body.source_url || null,
+        normalized_payload: body,
+        match_status: "completed_source",
+        matched_project_id: null,
+        action_taken: "skipped",
+        reason: "completed project not inserted as new",
+      })
+
+      return NextResponse.json({
+        status: "skipped_completed",
+        reason: "completed project not inserted as new",
+      })
+    }
+
     const { data: inserted } = await supabase
       .from("projects")
       .insert({
