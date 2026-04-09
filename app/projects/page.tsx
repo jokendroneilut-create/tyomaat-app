@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import MapClient from './MapClient'
 import type { MapBounds } from './Map'
@@ -115,17 +114,19 @@ export default function Projects() {
   const [visibleCount, setVisibleCount] = useState(pageSize)
 
   const [selected, setSelected] = useState<Project | null>(null)
-const searchParams = useSearchParams()
 
 useEffect(() => {
-  const openId = searchParams.get('open')
-  if (!openId || projects.length === 0) return
+  if (projects.length === 0) return
 
-  const found = projects.find((p) => p.id === openId)
+  const params = new URLSearchParams(window.location.search)
+  const openId = params.get('open')
+  if (!openId) return
+
+  const found = projects.find((p) => String(p.id) === openId)
   if (found) {
     setSelected(found)
   }
-}, [searchParams, projects])
+}, [projects])
 
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [limitToMapView, setLimitToMapView] = useState(true)
