@@ -118,70 +118,101 @@ function applyProjectChangeFilters(q: any, filters: any) {
   return q;
 }
 
-function buildNewProjectsRowsHtml(projects: ProjectRow[]) {
+function buildNewProjectsRowsHtml(projects: ProjectRow[], appBaseUrl: string) {
   return projects
     .slice(0, 30)
     .map((p) => {
-      const meta = [p.city, p.region ?? "-", p.phase].filter(Boolean).join(" • ");
+      const meta = [p.city, p.region ?? "-", p.phase].filter(Boolean).join(" • ")
+      const projectUrl = `${appBaseUrl}/projects?open=${encodeURIComponent(p.id)}`
+
       return `
         <tr>
           <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
-            <div style="font-weight:700;color:#111827;">${escapeHtml(p.name)}</div>
+            <div style="font-weight:700;color:#111827;">
+              <a href="${projectUrl}" style="color:#111827;text-decoration:none;">
+                ${escapeHtml(p.name)}
+              </a>
+            </div>
             <div style="font-size:13px;color:#6b7280;margin-top:2px;">
               ${escapeHtml(meta)}
             </div>
+            <div style="margin-top:8px;">
+              <a
+                href="${projectUrl}"
+                style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:700;"
+              >
+                Avaa hanke
+              </a>
+            </div>
           </td>
         </tr>
-      `;
+      `
     })
-    .join("");
+    .join("")
 }
 
-function buildNewProjectsTextLines(projects: ProjectRow[]) {
+function buildNewProjectsTextLines(projects: ProjectRow[], appBaseUrl: string) {
   return projects
     .slice(0, 30)
-    .map((p) => `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})`)
-    .join("\n");
+    .map((p) => {
+      const projectUrl = `${appBaseUrl}/projects?open=${encodeURIComponent(p.id)}`
+      return `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})\n  ${projectUrl}`
+    })
+    .join("\n")
 }
 
-function buildUpdatedProjectsRowsHtml(updatedOnly: UpdatedProjectRow[]) {
+function buildUpdatedProjectsRowsHtml(updatedOnly: UpdatedProjectRow[], appBaseUrl: string) {
   return updatedOnly
     .slice(0, 30)
     .map((p) => {
-      const meta = [p.city, p.region ?? "-", p.phase].filter(Boolean).join(" • ");
+      const meta = [p.city, p.region ?? "-", p.phase].filter(Boolean).join(" • ")
       const fields =
         (p.changed_fields ?? []).length > 0
           ? `Päivitys: ${(p.changed_fields as string[]).map(humanizeField).join(", ")}`
-          : "Päivitys";
+          : "Päivitys"
+      const projectUrl = `${appBaseUrl}/projects?open=${encodeURIComponent(p.id)}`
 
       return `
         <tr>
           <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
-            <div style="font-weight:700;color:#111827;">${escapeHtml(p.name)}</div>
+            <div style="font-weight:700;color:#111827;">
+              <a href="${projectUrl}" style="color:#111827;text-decoration:none;">
+                ${escapeHtml(p.name)}
+              </a>
+            </div>
             <div style="font-size:13px;color:#6b7280;margin-top:2px;">
               ${escapeHtml(meta)}
             </div>
             <div style="font-size:12px;color:#b45309;margin-top:6px;font-weight:700;">
               ${escapeHtml(fields)}
             </div>
+            <div style="margin-top:8px;">
+              <a
+                href="${projectUrl}"
+                style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:700;"
+              >
+                Avaa hanke
+              </a>
+            </div>
           </td>
         </tr>
-      `;
+      `
     })
-    .join("");
+    .join("")
 }
 
-function buildUpdatedProjectsTextLines(updatedOnly: UpdatedProjectRow[]) {
+function buildUpdatedProjectsTextLines(updatedOnly: UpdatedProjectRow[], appBaseUrl: string) {
   return updatedOnly
     .slice(0, 30)
     .map((p) => {
       const fields =
         (p.changed_fields ?? []).length > 0
           ? ` | Päivitys: ${(p.changed_fields as string[]).map(humanizeField).join(", ")}`
-          : "";
-      return `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})${fields}`;
+          : ""
+      const projectUrl = `${appBaseUrl}/projects?open=${encodeURIComponent(p.id)}`
+      return `• ${p.name} – ${p.city} – ${p.region ?? "-"} (${p.phase})${fields}\n  ${projectUrl}`
     })
-    .join("\n");
+    .join("\n")
 }
 
 export async function GET(req: Request) {
@@ -442,10 +473,10 @@ export async function GET(req: Request) {
           ? `Uusia hankkeita (${newProjects.length}) + päivityksiä (${updatedOnly.length}) – ${w.name}`
           : `Uusia hankkeita (${newProjects.length}) – ${w.name}`;
 
-      const rowsHtml = buildNewProjectsRowsHtml(newProjects);
-      const textLines = buildNewProjectsTextLines(newProjects);
-      const updatesRowsHtml = buildUpdatedProjectsRowsHtml(updatedOnly);
-      const updatesTextLines = buildUpdatedProjectsTextLines(updatedOnly);
+      const rowsHtml = buildNewProjectsRowsHtml(newProjects, appBaseUrl);
+const textLines = buildNewProjectsTextLines(newProjects, appBaseUrl);
+const updatesRowsHtml = buildUpdatedProjectsRowsHtml(updatedOnly, appBaseUrl);
+const updatesTextLines = buildUpdatedProjectsTextLines(updatedOnly, appBaseUrl);
 
       const textBody =
         `Hei!\n\n` +
