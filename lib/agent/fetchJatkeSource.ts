@@ -1,4 +1,5 @@
 import { detectCityFromText } from "./detectCityFromText"
+import { fetchJsonWithFallback } from "./fetchJsonWithFallback"
 
 export async function fetchJatkeSource() {
   const results: any[] = []
@@ -7,21 +8,12 @@ export async function fetchJatkeSource() {
   cutoffDate.setMonth(cutoffDate.getMonth() - 24)
 
   for (let page = 0; page < 6; page++) {
-    const res = await fetch(
-      `https://www.sttinfo.fi/public-website-api/pressroom/69820730/releases/20/${page}`,
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-          "Accept": "application/json, text/plain, */*",
-          "Referer": "https://www.sttinfo.fi/uutishuone/69820730/jatke",
-        },
-      }
-    )
+  const data = await fetchJsonWithFallback(
+    `https://www.sttinfo.fi/public-website-api/pressroom/69820730/releases/20/${page}`,
+    "https://www.sttinfo.fi/uutishuone/69820730/jatke"
+  )
 
-    if (!res.ok) break
-
-    const data = await res.json()
-    const releases = data?.releases || []
+  const releases = data?.releases || []
 
     if (!releases.length) break
 

@@ -4,27 +4,38 @@ import { sources } from "@/lib/agent/sources"
 export const runtime = "nodejs"
 
 export async function GET() {
-  try {
-    const sourceResults = await Promise.all(
-  sources.map(async (source) => {
-    const candidates = await source.fetch()
-    return candidates
-  })
-)
+  const allCandidates: any[] = []
+  const sourceStatus: any[] = []
 
-const candidates = sourceResults.flat()
+  for (const source of sources) {
+    try {
+      console.log(`RUNNING SOURCE: ${source.name}`)
 
-    return NextResponse.json({
-      ok: true,
-      count: candidates.length,
-      candidates,
-    })
-  } catch (err: any) {
-    console.error(err)
+      const candidates = await source.fetch()
 
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    )
+      console.log(`SOURCE OK: ${source.name} (${candidates?.length ?? 0})`)
+
+      allCandidates.push(...(candidates || []))
+      sourceStatus.push({
+        source: source.name,
+        ok: true,
+        count: candidates?.length ?? 0,
+      })
+    } catch (err: any) {
+      console.error(`SOURCE FAILED: ${source.name}`, err)
+
+      sourceStatus.push({
+        source: source.name,
+        ok: false,
+        error: err?.message || String(err),
+      })
+    }
   }
+
+  return NextResponse.json({
+    ok: true,
+    count: allCandidates.length,
+    candidates: allCandidates,
+    source_status: sourceStatus,
+  })
 }

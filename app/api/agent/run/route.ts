@@ -5,9 +5,16 @@ export const runtime = "nodejs"
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
-    const secret = url.searchParams.get("secret")
+    const querySecret = url.searchParams.get("secret")
+    const authHeader = req.headers.get("authorization")
 
-    if (!secret || secret !== process.env.CRON_SECRET) {
+    const isManualRun =
+      !!querySecret && querySecret === process.env.CRON_SECRET
+
+    const isCronRun =
+      !!authHeader && authHeader === `Bearer ${process.env.CRON_SECRET}`
+
+    if (!isManualRun && !isCronRun) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 })
     }
 
@@ -20,10 +27,10 @@ export async function GET(req: Request) {
     const json = await res.json()
 
     return NextResponse.json({
-  ok: true,
-  ran_at: new Date().toISOString(),
-  result: json,
-})
+      ok: true,
+      ran_at: new Date().toISOString(),
+      result: json,
+    })
   } catch (err: any) {
     console.error(err)
 

@@ -3,6 +3,10 @@
     {
       "path": "/api/digests?secret=jufyrht594eorbjjfkdsaqwerrr",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/agent/run",
+      "schedule": "0 2 * * *"
     }
   ]
 }
