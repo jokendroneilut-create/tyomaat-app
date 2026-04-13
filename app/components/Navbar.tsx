@@ -21,22 +21,67 @@ function useIsMobile(breakpoint = 768) {
 
 export default function Navbar() {
   const [session, setSession] = useState<any>(null);
-  const [open, setOpen] = useState(false);
-  const isMobile = useIsMobile(768);
+const [isAdmin, setIsAdmin] = useState(false);
+const [open, setOpen] = useState(false);
+const isMobile = useIsMobile(768);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
+  const loadSessionAndAdmin = async () => {
+    const { data } = await supabase.auth.getSession();
+    const currentSession = data.session;
+    setSession(currentSession);
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+    const token = currentSession?.access_token;
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+    if (!token) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/is-admin", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+      setIsAdmin(json.isAdmin === true);
+    } catch {
+      setIsAdmin(false);
+    }
+  };
+
+  loadSessionAndAdmin();
+
+  const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    setSession(session);
+
+    const token = session?.access_token;
+
+    if (!token) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/is-admin", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+      setIsAdmin(json.isAdmin === true);
+    } catch {
+      setIsAdmin(false);
+    }
+  });
+
+  return () => {
+    listener.subscription.unsubscribe();
+  };
+}, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -46,6 +91,11 @@ export default function Navbar() {
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
     <>
+    {isAdmin && (
+      <Link href="/dashboard" style={{ textDecoration: "none" }} onClick={onClick}>
+       Dashboard
+       </Link>
+       )}
       <Link href="/watchlists" style={{ textDecoration: "none" }} onClick={onClick}>
         Hakuvahdit
       </Link>
@@ -55,6 +105,11 @@ export default function Navbar() {
       <Link href="/tasks" style={{ textDecoration: "none" }} onClick={onClick}>
         Tehtävät
       </Link>
+      {isAdmin && (
+  <Link href="/dashboard/messages" style={{ textDecoration: "none" }} onClick={onClick}>
+    Viestit
+  </Link>
+)}
       <button
         onClick={() => {
           onClick?.();

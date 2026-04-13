@@ -1,0 +1,108 @@
+import { NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
+import { Resend } from "resend"
+
+export const runtime = "nodejs"
+
+function parseAdminEmails(value: string | undefined) {
+  return (value || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean)
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json()
+const subject = String(body.subject || "").trim()
+const message = String(body.message || "").trim()
+const testOnly = body.testOnly === true
+
+    if (!subject) {
+      return NextResponse.json({ error: "subject missing" }, { status: 400 })
+    }
+
+    if (!message) {
+      return NextResponse.json({ error: "message missing" }, { status: 400 })
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const authHeader = req.headers.get("authorization")
+
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json({ error: "missing auth token" }, { status: 401 })
+    }
+
+    const token = authHeader.replace("Bearer ", "").trim()
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token)
+
+    if (userError || !user) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 })
+    }
+
+    const admins = parseAdminEmails(process.env.ADMIN_EMAILS)
+    const userEmail = (user.email || "").toLowerCase()
+
+    if (!admins.includes(userEmail)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 })
+    }
+
+    const { data: users, error: listError } = await supabase.auth.admin.listUsers()
+
+    if (listError) {
+      return NextResponse.json({ error: listError.message }, { status: 500 })
+    }
+
+    const allRecipients = (users.users || [])
+  .map((u) => u.email?.trim().toLowerCase())
+  .filter((email): email is string => !!email)
+
+const recipients = testOnly
+  ? [userEmail]
+  : allRecipients
+
+if (recipients.length === 0) {
+  return NextResponse.json({ error: "no recipients found" }, { status: 400 })
+}
+
+    const resend = new Resend(process.env.RESEND_API_KEY!)
+    const fromEmail = process.env.MAIL_FROM || "onboarding@resend.dev"
+
+    const sendResult = await resend.emails.send({
+      from: fromEmail,
+      to: recipients,
+      subject,
+      text: message,
+      html: `<div style="font-family:Arial,sans-serif;white-space:pre-wrap;">${message}</div>`,
+    })
+
+    const sendError = (sendResult as any)?.error
+    if (sendError) {
+      return NextResponse.json(
+        { error: sendError.message || "send failed" },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+  ok: true,
+  sent: recipients.length,
+  testOnly,
+})
+  } catch (err: any) {
+    console.error("SEND BROADCAST ERROR:", err)
+
+    return NextResponse.json(
+      { error: err?.message || "unknown error" },
+      { status: 500 }
+    )
+  }
+}
