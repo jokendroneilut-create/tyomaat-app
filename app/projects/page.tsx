@@ -26,9 +26,7 @@ type Project = {
   geotechnical_design: string | null
   earthworks_contractor: string | null
   additional_info: string | null
-
   created_at: string
-
   latitude?: number | string | null
   longitude?: number | string | null
   lat?: number | string | null
@@ -97,6 +95,40 @@ function hasCoords(p: Project) {
   return lat != null && lng != null
 }
 
+function humanizeStatus(status: string) {
+  switch (status) {
+    case 'new':
+      return 'Uusi'
+    case 'contacted':
+      return 'Kontaktoitu'
+    case 'offer_sent':
+      return 'Tarjous lähetetty'
+    case 'won':
+      return 'Voitettu'
+    case 'lost':
+      return 'Hävitty'
+    default:
+      return status
+  }
+}
+
+function getStatusStyle(status: string) {
+  switch (status) {
+    case 'new':
+      return { background: '#f3f4f6', color: '#374151' }
+    case 'contacted':
+      return { background: '#dbeafe', color: '#1d4ed8' }
+    case 'offer_sent':
+      return { background: '#fef3c7', color: '#b45309' }
+    case 'won':
+      return { background: '#dcfce7', color: '#166534' }
+    case 'lost':
+      return { background: '#fee2e2', color: '#991b1b' }
+    default:
+      return { background: '#f3f4f6', color: '#374151' }
+  }
+}
+
 export default function Projects() {
   const isMobile = useIsMobile(768)
   const pageSize = isMobile ? 15 : 30
@@ -115,18 +147,18 @@ export default function Projects() {
 
   const [selected, setSelected] = useState<Project | null>(null)
 
-useEffect(() => {
-  if (projects.length === 0) return
+  useEffect(() => {
+    if (projects.length === 0) return
 
-  const params = new URLSearchParams(window.location.search)
-  const openId = params.get('open')
-  if (!openId) return
+    const params = new URLSearchParams(window.location.search)
+    const openId = params.get('open')
+    if (!openId) return
 
-  const found = projects.find((p) => String(p.id) === openId)
-  if (found) {
-    setSelected(found)
-  }
-}, [projects])
+    const found = projects.find((p) => String(p.id) === openId)
+    if (found) {
+      setSelected(found)
+    }
+  }, [projects])
 
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [limitToMapView, setLimitToMapView] = useState(true)
@@ -353,13 +385,7 @@ useEffect(() => {
       if (city && p.city !== city) return false
       if (phase && p.phase !== phase) return false
 
-      if (
-        propertyType &&
-        !(p.property_type || '')
-          .toLowerCase()
-          .includes(propertyType.toLowerCase())
-      )
-        return false
+      if (propertyType && !(p.property_type || '').toLowerCase().includes(propertyType.toLowerCase())) return false
 
       if (!needle) return true
 
@@ -556,11 +582,7 @@ useEffect(() => {
       </div>
 
       <div className="projects-map" style={{ height: mapHeight }}>
-        <MapClient
-  projects={filteredProjects}
-  onBoundsChange={setMapBounds}
-  zoomTo={zoomTarget}
-/>
+        <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} zoomTo={zoomTarget} />
       </div>
 
       <div
@@ -663,7 +685,14 @@ useEffect(() => {
                       className="projects-select"
                       value={statuses[p.id] ?? 'new'}
                       onChange={(e) => setProjectStatus(p.id, e.target.value)}
-                      style={{ maxWidth: 170 }}
+                      style={{
+                        maxWidth: 170,
+                        padding: '8px 10px',
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                        fontWeight: 700,
+                        ...getStatusStyle(statuses[p.id] ?? 'new'),
+                      }}
                     >
                       <option value="new">Uusi</option>
                       <option value="contacted">Kontaktoitu</option>
@@ -698,8 +727,24 @@ useEffect(() => {
                       </span>
                     ) : null}
                   </div>
+
                   <div className="projects-cardMeta">
                     {p.city} • {p.region || '-'} • {p.phase}
+                  </div>
+
+                  <div style={{ marginTop: 6 }}>
+                    <span
+                      style={{
+                        ...getStatusStyle(statuses[p.id] ?? 'new'),
+                        padding: '4px 10px',
+                        borderRadius: 999,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        display: 'inline-block',
+                      }}
+                    >
+                      {humanizeStatus(statuses[p.id] ?? 'new')}
+                    </span>
                   </div>
 
                   <div className="projects-cardActions">
@@ -767,31 +812,59 @@ useEffect(() => {
                   {selected.city} • {selected.region || '-'} • {selected.phase}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-  <select
-    className="projects-select"
-    value={statuses[selected.id] ?? 'new'}
-    onChange={(e) => setProjectStatus(selected.id, e.target.value)}
-    style={{ maxWidth: 180 }}
-  >
-    <option value="new">Uusi</option>
-    <option value="contacted">Kontaktoitu</option>
-    <option value="offer_sent">Tarjous lähetetty</option>
-    <option value="won">Voitettu</option>
-    <option value="lost">Hävitty</option>
-  </select>
 
-  <button
-    className="projects-btn"
-    onClick={() => toggleFavorite(selected.id)}
-  >
-    {favorites.has(selected.id) ? '★ Omat' : '☆ Omiin'}
-  </button>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <select
+                  className="projects-select"
+                  value={statuses[selected.id] ?? 'new'}
+                  onChange={(e) => setProjectStatus(selected.id, e.target.value)}
+                  style={{
+                    minWidth: 160,
+                    maxWidth: 220,
+                    padding: '8px 10px',
+                    borderRadius: 10,
+                    border: '1px solid #e5e7eb',
+                    fontWeight: 700,
+                    ...getStatusStyle(statuses[selected.id] ?? 'new'),
+                  }}
+                >
+                  <option value="new">Uusi</option>
+                  <option value="contacted">Kontaktoitu</option>
+                  <option value="offer_sent">Tarjous lähetetty</option>
+                  <option value="won">Voitettu</option>
+                  <option value="lost">Hävitty</option>
+                </select>
 
-  <button className="projects-btn" onClick={closeModal}>
-    Sulje
-  </button>
-</div>
+                <button className="projects-btn" onClick={() => toggleFavorite(selected.id)}>
+                  {favorites.has(selected.id) ? '★ Omat' : '☆ Omiin'}
+                </button>
+
+                <button className="projects-btn" onClick={closeModal}>
+                  Sulje
+                </button>
+
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                  <span
+                    style={{
+                      ...getStatusStyle(statuses[selected.id] ?? 'new'),
+                      padding: '4px 10px',
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {humanizeStatus(statuses[selected.id] ?? 'new')}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <hr className="projects-hr" />

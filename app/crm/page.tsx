@@ -29,6 +29,23 @@ function humanizeStatus(status: string) {
   }
 }
 
+function getStatusStyle(status: string) {
+  switch (status) {
+    case 'new':
+      return { background: '#f3f4f6', color: '#374151' }
+    case 'contacted':
+      return { background: '#dbeafe', color: '#1d4ed8' }
+    case 'offer_sent':
+      return { background: '#fef3c7', color: '#b45309' }
+    case 'won':
+      return { background: '#dcfce7', color: '#166534' }
+    case 'lost':
+      return { background: '#fee2e2', color: '#991b1b' }
+    default:
+      return { background: '#f3f4f6', color: '#374151' }
+  }
+}
+
 export default function CRMPage() {
   const [loading, setLoading] = useState(true)
   const [projects, setProjects] = useState<Project[]>([])
@@ -97,8 +114,9 @@ export default function CRMPage() {
 
     if (favorites.has(projectId)) {
       if (!confirm('Haluatko varmasti poistaa tämän omista?')) {
-  return
-}
+        return
+      }
+
       const { error } = await supabase
         .from('user_project_favorites')
         .delete()
@@ -127,21 +145,6 @@ export default function CRMPage() {
       const next = new Set(favorites)
       next.add(projectId)
       setFavorites(next)
-
-      const { data: proj, error: projError } = await supabase
-        .from('projects')
-        .select('id,name,city,region,phase,created_at')
-        .eq('id', projectId)
-        .single()
-
-      if (projError) {
-        console.error(projError)
-        return
-      }
-
-      if (proj) {
-        setProjects((prev) => [proj as Project, ...prev.filter((p) => p.id !== projectId)])
-      }
     }
   }
 
@@ -217,7 +220,18 @@ export default function CRMPage() {
               <div style={{ fontWeight: 800, marginBottom: 6 }}>{p.name}</div>
 
               <div style={{ fontSize: 14, color: '#374151', marginBottom: 10 }}>
-                {p.city} • {p.region || '-'} • {p.phase} • <strong>{humanizeStatus(statuses[p.id] ?? 'new')}</strong>
+                {p.city} • {p.region || '-'} • {p.phase} •{' '}
+                <span
+                  style={{
+                    ...getStatusStyle(statuses[p.id] ?? 'new'),
+                    padding: '4px 8px',
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {humanizeStatus(statuses[p.id] ?? 'new')}
+                </span>
               </div>
 
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -232,7 +246,7 @@ export default function CRMPage() {
                     fontWeight: 600,
                   }}
                 >
-                  {favorites.has(p.id) ? '★ Poista omista' : '☆ Omiin'}
+                  ★ Poista omista
                 </button>
 
                 <select
