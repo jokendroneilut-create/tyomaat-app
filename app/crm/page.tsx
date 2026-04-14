@@ -33,7 +33,8 @@ export default function CRMPage() {
   const [loading, setLoading] = useState(true)
   const [projects, setProjects] = useState<Project[]>([])
   const [statuses, setStatuses] = useState<Record<string, string>>({})
-  const [statusFilter, setStatusFilter] = useState<string>('') // '' = kaikki
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  const [statusFilter, setStatusFilter] = useState<string>('')
 
   useEffect(() => {
     const run = async () => {
@@ -41,9 +42,11 @@ export default function CRMPage() {
 
       const { data: userRes } = await supabase.auth.getUser()
       const userId = userRes?.user?.id
+
       if (!userId) {
         setProjects([])
         setStatuses({})
+        setFavorites(new Set())
         setLoading(false)
         return
       }
@@ -54,8 +57,12 @@ export default function CRMPage() {
       ])
 
       const favIds = (favs ?? []).map((r: any) => r.project_id)
+      setFavorites(new Set(favIds))
+
       const m: Record<string, string> = {}
-      ;(stats ?? []).forEach((r: any) => (m[r.project_id] = r.status))
+      ;(stats ?? []).forEach((r: any) => {
+        m[r.project_id] = r.status
+      })
       setStatuses(m)
 
       if (favIds.length === 0) {
@@ -82,6 +89,88 @@ export default function CRMPage() {
 
     run()
   }, [])
+
+  const toggleFavorite = async (projectId: string) => {
+    const { data: userRes } = await supabase.auth.getUser()
+    const userId = userRes?.user?.id
+    if (!userId) return
+
+    if (favorites.has(projectId)) {
+      if (!confirm('Haluatko varmasti poistaa tämän omista?')) {
+  return
+}
+      const { error } = await supabase
+        .from('user_project_favorites')
+        .delete()
+        .eq('user_id', userId)
+        .eq('project_id', projectId)
+
+      if (error) {
+        console.error(error)
+        return
+      }
+
+      const next = new Set(favorites)
+      next.delete(projectId)
+      setFavorites(next)
+      setProjects((prev) => prev.filter((p) => p.id !== projectId))
+    } else {
+      const { error } = await supabase
+        .from('user_project_favorites')
+        .insert({ user_id: userId, project_id: projectId })
+
+      if (error) {
+        console.error(error)
+        return
+      }
+
+      const next = new Set(favorites)
+      next.add(projectId)
+      setFavorites(next)
+
+      const { data: proj, error: projError } = await supabase
+        .from('projects')
+        .select('id,name,city,region,phase,created_at')
+        .eq('id', projectId)
+        .single()
+
+      if (projError) {
+        console.error(projError)
+        return
+      }
+
+      if (proj) {
+        setProjects((prev) => [proj as Project, ...prev.filter((p) => p.id !== projectId)])
+      }
+    }
+  }
+
+  const setProjectStatus = async (projectId: string, status: string) => {
+    const { data: userRes } = await supabase.auth.getUser()
+    const userId = userRes?.user?.id
+    if (!userId) return
+
+    const { error } = await supabase.from('user_project_status').upsert(
+      {
+        user_id: userId,
+        project_id: projectId,
+        status,
+      },
+      {
+        onConflict: 'user_id,project_id',
+      }
+    )
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    setStatuses((prev) => ({
+      ...prev,
+      [projectId]: status,
+    }))
+  }
 
   const filtered = useMemo(() => {
     if (!statusFilter) return projects
@@ -125,9 +214,44 @@ export default function CRMPage() {
                 padding: 12,
               }}
             >
-              <div style={{ fontWeight: 800 }}>{p.name}</div>
-              <div style={{ fontSize: 14, color: '#374151' }}>
+              <div style={{ fontWeight: 800, marginBottom: 6 }}>{p.name}</div>
+
+              <div style={{ fontSize: 14, color: '#374151', marginBottom: 10 }}>
                 {p.city} • {p.region || '-'} • {p.phase} • <strong>{humanizeStatus(statuses[p.id] ?? 'new')}</strong>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => toggleFavorite(p.id)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    padding: '8px 12px',
+                    background: '#fff',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  {favorites.has(p.id) ? '★ Poista omista' : '☆ Omiin'}
+                </button>
+
+                <select
+                  value={statuses[p.id] ?? 'new'}
+                  onChange={(e) => setProjectStatus(p.id, e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    padding: '8px 10px',
+                    background: '#fff',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="new">Uusi</option>
+                  <option value="contacted">Kontaktoitu</option>
+                  <option value="offer_sent">Tarjous lähetetty</option>
+                  <option value="won">Voitettu</option>
+                  <option value="lost">Hävitty</option>
+                </select>
               </div>
             </div>
           ))}

@@ -55,13 +55,31 @@ const testOnly = body.testOnly === true
       return NextResponse.json({ error: "forbidden" }, { status: 403 })
     }
 
-    const { data: users, error: listError } = await supabase.auth.admin.listUsers()
+    let allUsers: any[] = []
+let page = 1
+const perPage = 100
 
-    if (listError) {
-      return NextResponse.json({ error: listError.message }, { status: 500 })
-    }
+while (true) {
+  const { data, error } = await supabase.auth.admin.listUsers({
+    page,
+    perPage,
+  })
 
-    const allRecipients = (users.users || [])
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  const usersBatch = data.users || []
+  allUsers = allUsers.concat(usersBatch)
+
+  if (usersBatch.length < perPage) {
+    break
+  }
+
+  page++
+}
+
+const allRecipients = allUsers
   .map((u) => u.email?.trim().toLowerCase())
   .filter((email): email is string => !!email)
 
@@ -77,12 +95,13 @@ if (recipients.length === 0) {
     const fromEmail = process.env.MAIL_FROM || "onboarding@resend.dev"
 
     const sendResult = await resend.emails.send({
-      from: fromEmail,
-      to: recipients,
-      subject,
-      text: message,
-      html: `<div style="font-family:Arial,sans-serif;white-space:pre-wrap;">${message}</div>`,
-    })
+  from: fromEmail,
+  to: fromEmail,
+  bcc: recipients,
+  subject,
+  text: message,
+  html: `<div style="font-family:Arial,sans-serif;white-space:pre-wrap;">${message}</div>`,
+})
 
     const sendError = (sendResult as any)?.error
     if (sendError) {

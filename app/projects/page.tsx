@@ -767,10 +767,31 @@ useEffect(() => {
                   {selected.city} • {selected.region || '-'} • {selected.phase}
                 </div>
               </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+  <select
+    className="projects-select"
+    value={statuses[selected.id] ?? 'new'}
+    onChange={(e) => setProjectStatus(selected.id, e.target.value)}
+    style={{ maxWidth: 180 }}
+  >
+    <option value="new">Uusi</option>
+    <option value="contacted">Kontaktoitu</option>
+    <option value="offer_sent">Tarjous lähetetty</option>
+    <option value="won">Voitettu</option>
+    <option value="lost">Hävitty</option>
+  </select>
 
-              <button className="projects-btn" onClick={closeModal}>
-                Sulje
-              </button>
+  <button
+    className="projects-btn"
+    onClick={() => toggleFavorite(selected.id)}
+  >
+    {favorites.has(selected.id) ? '★ Omat' : '☆ Omiin'}
+  </button>
+
+  <button className="projects-btn" onClick={closeModal}>
+    Sulje
+  </button>
+</div>
             </div>
 
             <hr className="projects-hr" />
