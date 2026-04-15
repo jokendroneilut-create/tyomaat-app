@@ -14,9 +14,9 @@ function parseAdminEmails(value: string | undefined) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-const subject = String(body.subject || "").trim()
-const message = String(body.message || "").trim()
-const testOnly = body.testOnly === true
+    const subject = String(body.subject || "").trim()
+    const message = String(body.message || "").trim()
+    const testOnly = body.testOnly === true
 
     if (!subject) {
       return NextResponse.json({ error: "subject missing" }, { status: 400 })
@@ -56,66 +56,73 @@ const testOnly = body.testOnly === true
     }
 
     let allUsers: any[] = []
-let page = 1
-const perPage = 100
+    let page = 1
+    const perPage = 100
 
-while (true) {
-  const { data, error } = await supabase.auth.admin.listUsers({
-    page,
-    perPage,
-  })
+    while (true) {
+      const { data, error } = await supabase.auth.admin.listUsers({
+        page,
+        perPage,
+      })
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
 
-  const usersBatch = data.users || []
-  allUsers = allUsers.concat(usersBatch)
+      const usersBatch = data.users || []
+      allUsers = allUsers.concat(usersBatch)
 
-  if (usersBatch.length < perPage) {
-    break
-  }
+      if (usersBatch.length < perPage) {
+        break
+      }
 
-  page++
-}
+      page++
+    }
 
-const allRecipients = allUsers
-  .map((u) => u.email?.trim().toLowerCase())
-  .filter((email): email is string => !!email)
+    const allRecipients = allUsers
+      .map((u) => u.email?.trim().toLowerCase())
+      .filter((email): email is string => !!email)
 
-const recipients = testOnly
-  ? [userEmail]
-  : allRecipients
+    const recipients = testOnly ? [userEmail] : allRecipients
 
-if (recipients.length === 0) {
-  return NextResponse.json({ error: "no recipients found" }, { status: 400 })
-}
+    if (recipients.length === 0) {
+      return NextResponse.json({ error: "no recipients found" }, { status: 400 })
+    }
 
     const resend = new Resend(process.env.RESEND_API_KEY!)
     const fromEmail = process.env.MAIL_FROM || "onboarding@resend.dev"
 
-    const sendResult = await resend.emails.send({
-  from: fromEmail,
-  to: fromEmail,
-  bcc: recipients,
-  subject,
-  text: message,
-  html: `<div style="font-family:Arial,sans-serif;white-space:pre-wrap;">${message}</div>`,
-})
+    const chunkSize = 50
+    const chunks: string[][] = []
 
-    const sendError = (sendResult as any)?.error
-    if (sendError) {
-      return NextResponse.json(
-        { error: sendError.message || "send failed" },
-        { status: 500 }
-      )
+    for (let i = 0; i < recipients.length; i += chunkSize) {
+      chunks.push(recipients.slice(i, i + chunkSize))
+    }
+
+    for (const chunk of chunks) {
+      const sendResult = await resend.emails.send({
+        from: fromEmail,
+        to: fromEmail,
+        bcc: chunk,
+        subject,
+        text: message,
+        html: `<div style="font-family:Arial,sans-serif;white-space:pre-wrap;">${message}</div>`,
+      })
+
+      const sendError = (sendResult as any)?.error
+      if (sendError) {
+        return NextResponse.json(
+          { error: sendError.message || "send failed" },
+          { status: 500 }
+        )
+      }
     }
 
     return NextResponse.json({
-  ok: true,
-  sent: recipients.length,
-  testOnly,
-})
+      ok: true,
+      sent: recipients.length,
+      testOnly,
+    })
   } catch (err: any) {
     console.error("SEND BROADCAST ERROR:", err)
 

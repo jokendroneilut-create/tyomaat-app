@@ -96,6 +96,9 @@ const isMobile = useIsMobile(768);
        Dashboard
        </Link>
        )}
+       <Link href="/projects" style={{ textDecoration: "none" }} onClick={onClick}>
+      Kartta
+    </Link>
       <Link href="/watchlists" style={{ textDecoration: "none" }} onClick={onClick}>
         Hakuvahdit
       </Link>
