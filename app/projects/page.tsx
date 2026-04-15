@@ -851,18 +851,20 @@ export default function Projects() {
                   Sulje
                 </button>
 
+                <a
+  href={`mailto:info@tyomaat.fi?subject=${encodeURIComponent(
+    `Palaute kohteesta: ${selected.name}`
+  )}&body=${encodeURIComponent(
+    `Kohde: ${selected.name}\nID: ${selected.id}\nLinkki: ${window.location.origin}/projects?open=${selected.id}\n\nKirjoita palaute tähän:`
+  )}`}
+  className="projects-btn"
+  style={{ background: '#e5e7eb', textDecoration: 'none' }}
+>
+  Anna palautetta
+</a>
+
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                  <span
-                    style={{
-                      ...getStatusStyle(statuses[selected.id] ?? 'new'),
-                      padding: '4px 10px',
-                      borderRadius: 999,
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {humanizeStatus(statuses[selected.id] ?? 'new')}
-                  </span>
+                  
                 </div>
               </div>
             </div>
