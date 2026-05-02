@@ -23,6 +23,7 @@ type Project = {
 
   lat?: number | string | null
   lng?: number | string | null
+  owner_id?: string | null
 }
 
 export type MapBounds = {
@@ -39,6 +40,12 @@ function phaseClass(phase: string) {
   if (p.includes('valmis') || p.includes('valmist')) return 'marker--done'
   if (p.includes('kilpail') || p.includes('hank')) return 'marker--tender'
   return 'marker--default'
+}
+
+function ownerClass(ownerId?: string | null, currentUserId?: string | null) {
+  if (!ownerId) return 'marker--unassigned'
+  if (currentUserId && ownerId === currentUserId) return 'marker--mine'
+  return 'marker--team'
 }
 
 function makeIcon(className: string) {
@@ -117,12 +124,14 @@ export default function Map({
   projects,
   onBoundsChange,
   zoomTo,
-  onOpenProject,
+  currentUserId,
+  teamModeEnabled,
 }: {
   projects: Project[]
   onBoundsChange?: (b: MapBounds) => void
   zoomTo?: ZoomTarget
-  onOpenProject: (project: any) => void
+  currentUserId?: string | null
+teamModeEnabled?: boolean
 }) {
   useEffect(() => {
     delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -166,7 +175,11 @@ export default function Map({
         />
 
         {projectsWithCoords.map(({ p, lat, lng }) => {
-          const icon = makeIcon(phaseClass(p.phase))
+          const ownerClassName = teamModeEnabled
+  ? ownerClass(p.owner_id, currentUserId)
+  : ''
+
+const icon = makeIcon(`${phaseClass(p.phase)} ${ownerClassName}`)
           const projectUrl =
             typeof window !== 'undefined' ? `${window.location.origin}/projects` : '/projects'
 

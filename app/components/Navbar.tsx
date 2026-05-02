@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -21,67 +20,90 @@ function useIsMobile(breakpoint = 768) {
 
 export default function Navbar() {
   const [session, setSession] = useState<any>(null);
-const [isAdmin, setIsAdmin] = useState(false);
-const [open, setOpen] = useState(false);
-const isMobile = useIsMobile(768);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [hasTeam, setHasTeam] = useState(false);
+  const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile(768);
 
   useEffect(() => {
-  const loadSessionAndAdmin = async () => {
-    const { data } = await supabase.auth.getSession();
-    const currentSession = data.session;
-    setSession(currentSession);
+    const load = async () => {
+      const { data } = await supabase.auth.getSession();
+      const currentSession = data.session;
+      setSession(currentSession);
 
-    const token = currentSession?.access_token;
+      const userId = currentSession?.user?.id;
+      const token = currentSession?.access_token;
 
-    if (!token) {
-      setIsAdmin(false);
-      return;
-    }
+      if (userId) {
+        const { data: memberRow } = await supabase
+          .from("team_members")
+          .select("team_id")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-    try {
-      const res = await fetch("/api/admin/is-admin", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        setHasTeam(!!memberRow);
+      } else {
+        setHasTeam(false);
+      }
 
-      const json = await res.json();
-      setIsAdmin(json.isAdmin === true);
-    } catch {
-      setIsAdmin(false);
-    }
-  };
+      if (!token) {
+        setIsAdmin(false);
+        return;
+      }
 
-  loadSessionAndAdmin();
+      try {
+        const res = await fetch("/api/admin/is-admin", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-  const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-    setSession(session);
+        const json = await res.json();
+        setIsAdmin(json.isAdmin === true);
+      } catch {
+        setIsAdmin(false);
+      }
+    };
 
-    const token = session?.access_token;
+    load();
 
-    if (!token) {
-      setIsAdmin(false);
-      return;
-    }
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
 
-    try {
-      const res = await fetch("/api/admin/is-admin", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const userId = session?.user?.id;
+      const token = session?.access_token;
 
-      const json = await res.json();
-      setIsAdmin(json.isAdmin === true);
-    } catch {
-      setIsAdmin(false);
-    }
-  });
+      if (userId) {
+        const { data: memberRow } = await supabase
+          .from("team_members")
+          .select("team_id")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-  return () => {
-    listener.subscription.unsubscribe();
-  };
-}, []);
+        setHasTeam(!!memberRow);
+      } else {
+        setHasTeam(false);
+      }
+
+      if (!token) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/admin/is-admin", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const json = await res.json();
+        setIsAdmin(json.isAdmin === true);
+      } catch {
+        setIsAdmin(false);
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -89,39 +111,60 @@ const isMobile = useIsMobile(768);
     window.location.href = "/login";
   };
 
-  const NavLinks = ({ onClick }: { onClick?: () => void }) => (
+  const NavItem = ({
+    href,
+    children,
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => (
+    <a
+      href={href}
+      onClick={() => setOpen(false)}
+      style={linkStyle}
+    >
+      {children}
+    </a>
+  );
+
+  const NavLinks = () => (
     <>
-    {isAdmin && (
-      <Link href="/dashboard" style={{ textDecoration: "none" }} onClick={onClick}>
-       Dashboard
-       </Link>
-       )}
-       <Link href="/projects" style={{ textDecoration: "none" }} onClick={onClick}>
-      Kartta
-    </Link>
-      <Link href="/watchlists" style={{ textDecoration: "none" }} onClick={onClick}>
-        Hakuvahdit
-      </Link>
-      <Link href="/crm" style={{ textDecoration: "none" }} onClick={onClick}>
-        Omat
-      </Link>
-      <Link href="/tasks" style={{ textDecoration: "none" }} onClick={onClick}>
-        Tehtävät
-      </Link>
-      {isAdmin && (
-  <Link href="/dashboard/messages" style={{ textDecoration: "none" }} onClick={onClick}>
-    Viestit
-  </Link>
-)}
+      {isAdmin && <NavItem href="/dashboard">Dashboard</NavItem>}
+
+      <NavItem href="/projects">Kartta</NavItem>
+      <NavItem href="/watchlists">Hakuvahdit</NavItem>
+      <NavItem href="/crm">Omat</NavItem>
+      <NavItem href="/tasks">Tehtävät</NavItem>
+
+      {hasTeam ? (
+        <NavItem href="/team">Tiiminäkymä</NavItem>
+      ) : (
+        <NavItem href="/team">Luo tiimi</NavItem>
+      )}
+
+      {isAdmin && <NavItem href="/dashboard/messages">Viestit</NavItem>}
+
       <button
-        onClick={() => {
-          onClick?.();
-          handleLogout();
-        }}
-        style={{ cursor: "pointer" }}
+        onClick={handleLogout}
+        style={logoutStyle}
       >
         Kirjaudu ulos
       </button>
+
+      <div
+        style={{
+          borderTop: "1px solid #e5e7eb",
+          paddingTop: 10,
+          marginTop: 4,
+          fontSize: 12,
+          color: "#6b7280",
+          wordBreak: "break-word",
+        }}
+      >
+        Kirjautunut:
+        <br />
+        <strong>{session?.user?.email || "-"}</strong>
+      </div>
     </>
   );
 
@@ -139,47 +182,51 @@ const isMobile = useIsMobile(768);
         zIndex: 20,
       }}
     >
-      <Link
-  href="/projects"
-  onClick={() => setOpen(false)}
-  style={{
-    display: "flex",
-    flexDirection: isMobile ? "column" : "row",
-    alignItems: isMobile ? "flex-start" : "center",
-    gap: isMobile ? "4px" : "12px",
-    textDecoration: "none",
-    color: "inherit",
-    minWidth: 0,
-  }}
->
-  <Image
-    src="/logo_ilman_taustaa.png"
-    alt="Tyomaat.fi logo"
-    width={150}
-    height={45}
-    style={{ height: "32px", width: "auto" }}
-    priority
-  />
+      <a
+        href="/projects"
+        onClick={() => setOpen(false)}
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "flex-start" : "center",
+          gap: isMobile ? "4px" : "12px",
+          textDecoration: "none",
+          color: "inherit",
+          minWidth: 0,
+        }}
+      >
+        <Image
+          src="/logo_ilman_taustaa.png"
+          alt="Tyomaat.fi logo"
+          width={150}
+          height={45}
+          style={{ height: "32px", width: "auto" }}
+          priority
+        />
 
-  <span
-    style={{
-      color: "#666",
-      fontSize: isMobile ? "12px" : "14px",
-      lineHeight: "1.2",
-      whiteSpace: "nowrap",
-    }}
-  >
-    © Sippola Enterprises
-  </span>
-</Link>
+        <span
+          style={{
+            color: "#666",
+            fontSize: isMobile ? "12px" : "14px",
+            lineHeight: "1.2",
+            whiteSpace: "nowrap",
+          }}
+        >
+          © Sippola Enterprises
+        </span>
+      </a>
 
-      <div style={{ marginLeft: "auto" }}>
+      <div style={{ marginLeft: "auto", position: "relative" }}>
         {!session ? (
-          <Link href="/login" onClick={() => setOpen(false)} style={{ textDecoration: "none" }}>
+          <a
+            href="/login"
+            onClick={() => setOpen(false)}
+            style={{ textDecoration: "none", color: "#111827", fontWeight: 700 }}
+          >
             Kirjaudu
-          </Link>
-        ) : isMobile ? (
-          <div style={{ position: "relative" }}>
+          </a>
+        ) : (
+          <>
             <button
               onClick={() => setOpen((v) => !v)}
               style={{
@@ -204,22 +251,34 @@ const isMobile = useIsMobile(768);
                   border: "1px solid #e5e7eb",
                   borderRadius: 12,
                   padding: 10,
-                  minWidth: 180,
+                  minWidth: 220,
                   boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
                   display: "grid",
                   gap: 10,
                 }}
               >
-                <NavLinks onClick={() => setOpen(false)} />
+                <NavLinks />
               </div>
             )}
-          </div>
-        ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <NavLinks />
-          </div>
+          </>
         )}
       </div>
     </nav>
   );
 }
+
+const linkStyle: React.CSSProperties = {
+  textDecoration: "none",
+  color: "#111827",
+  fontWeight: 600,
+};
+
+const logoutStyle: React.CSSProperties = {
+  cursor: "pointer",
+  border: "none",
+  background: "transparent",
+  padding: 0,
+  textAlign: "left",
+  color: "#b91c1c",
+  fontWeight: 700,
+};

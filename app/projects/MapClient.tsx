@@ -10,6 +10,8 @@ export type MapClientProps = {
   projects: any[]
   onBoundsChange?: (b: MapBounds) => void
   zoomTo?: ZoomTarget
+  currentUserId?: string | null
+  teamModeEnabled?: boolean
 }
 
 const DynamicMap = dynamic(() => import('./Map'), {

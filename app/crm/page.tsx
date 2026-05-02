@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import ConfirmModal from '../components/ConfirmModal'
 
 type Project = {
   id: string
@@ -52,6 +53,8 @@ export default function CRMPage() {
   const [statuses, setStatuses] = useState<Record<string, string>>({})
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
+const [confirmProjectId, setConfirmProjectId] = useState<string | null>(null)
 
   useEffect(() => {
     const run = async () => {
@@ -113,25 +116,11 @@ export default function CRMPage() {
     if (!userId) return
 
     if (favorites.has(projectId)) {
-      if (!confirm('Haluatko varmasti poistaa tämän omista?')) {
-        return
-      }
+      setConfirmProjectId(projectId)
+setConfirmOpen(true)
+return
 
-      const { error } = await supabase
-        .from('user_project_favorites')
-        .delete()
-        .eq('user_id', userId)
-        .eq('project_id', projectId)
-
-      if (error) {
-        console.error(error)
-        return
-      }
-
-      const next = new Set(favorites)
-      next.delete(projectId)
-      setFavorites(next)
-      setProjects((prev) => prev.filter((p) => p.id !== projectId))
+      
     } else {
       const { error } = await supabase
         .from('user_project_favorites')
@@ -147,6 +136,33 @@ export default function CRMPage() {
       setFavorites(next)
     }
   }
+
+const confirmRemoveFavorite = async () => {
+  if (!confirmProjectId) return
+
+  const { data: userRes } = await supabase.auth.getUser()
+  const userId = userRes?.user?.id
+  if (!userId) return
+
+  const { error } = await supabase
+    .from('user_project_favorites')
+    .delete()
+    .eq('user_id', userId)
+    .eq('project_id', confirmProjectId)
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  const next = new Set(favorites)
+  next.delete(confirmProjectId)
+  setFavorites(next)
+  setProjects((prev) => prev.filter((p) => p.id !== confirmProjectId))
+
+  setConfirmOpen(false)
+  setConfirmProjectId(null)
+}
 
   const setProjectStatus = async (projectId: string, status: string) => {
     const { data: userRes } = await supabase.auth.getUser()
@@ -271,6 +287,19 @@ export default function CRMPage() {
           ))}
         </div>
       )}
+     <ConfirmModal
+        open={confirmOpen}
+        title="Poista omista?"
+        message="Haluatko varmasti poistaa tämän projektin omista?"
+        confirmText="Poista"
+        cancelText="Peruuta"
+        danger
+        onCancel={() => {
+          setConfirmOpen(false)
+          setConfirmProjectId(null)
+        }}
+        onConfirm={confirmRemoveFavorite}
+      />
     </div>
   )
 }

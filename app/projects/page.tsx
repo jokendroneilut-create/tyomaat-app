@@ -31,6 +31,7 @@ type Project = {
   longitude?: number | string | null
   lat?: number | string | null
   lng?: number | string | null
+  owner_id?: string | null
 }
 
 function uniqSorted(values: (string | null | undefined)[]) {
@@ -136,6 +137,9 @@ export default function Projects() {
 
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [teamModeEnabled, setTeamModeEnabled] = useState(false)
+  const [showTeamHighlights, setShowTeamHighlights] = useState(true)
 
   const [q, setQ] = useState('')
   const [region, setRegion] = useState<string>('')
@@ -296,37 +300,79 @@ export default function Projects() {
   }
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      setLoading(true)
+  const fetchProjects = async () => {
+    setLoading(true)
 
-      const { data, error } = await supabase
-        .from('projects')
-        .select(
-          `
-          id, name, city, region, phase, location, developer, builder, property_type,
-          apartments, floor_area, estimated_cost, construction_start,
-          structural_design, hvac_design, electrical_design, architectural_design,
-          geotechnical_design, earthworks_contractor, additional_info,
-          latitude, longitude,
-          is_public,
-          created_at
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    setCurrentUserId(user?.id || null)
+
+    const { data: projectsData, error } = await supabase
+      .from('projects')
+      .select(
         `
-        )
-        .eq('is_public', true)
-        .order('created_at', { ascending: false })
+        id, name, city, region, phase, location, developer, builder, property_type,
+        apartments, floor_area, estimated_cost, construction_start,
+        structural_design, hvac_design, electrical_design, architectural_design,
+        geotechnical_design, earthworks_contractor, additional_info,
+        latitude, longitude,
+        is_public,
+        created_at
+      `
+      )
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('Supabase error:', error)
-        setProjects([])
-      } else {
-        setProjects((data as Project[]) || [])
-      }
-
+    if (error) {
+      console.error('Supabase error:', error)
+      setProjects([])
       setLoading(false)
+      return
     }
 
-    fetchProjects()
-  }, [])
+    if (!user) {
+      setProjects((projectsData as Project[]) || [])
+      setLoading(false)
+      return
+    }
+
+    const { data: memberRow } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!memberRow) {
+      setProjects((projectsData as Project[]) || [])
+      setLoading(false)
+      setTeamModeEnabled(false)
+      return
+    }
+setTeamModeEnabled(true)
+    const { data: assignmentsData } = await supabase
+      .from('project_assignments')
+      .select('project_id, owner_id')
+      .eq('team_id', memberRow.team_id)
+
+    const assignmentMap = new Map(
+      (assignmentsData || []).map((a: any) => [a.project_id, a.owner_id])
+    )
+
+    const projectsWithOwners = ((projectsData as Project[]) || []).map((project) => ({
+      ...project,
+      owner_id: assignmentMap.has(project.id)
+        ? assignmentMap.get(project.id)
+        : null,
+    }))
+
+    setProjects(projectsWithOwners)
+    setLoading(false)
+  }
+
+  fetchProjects()
+}, [])
 
   useEffect(() => {
     const fetchCRM = async () => {
@@ -582,7 +628,13 @@ export default function Projects() {
       </div>
 
       <div className="projects-map" style={{ height: mapHeight }}>
-        <MapClient projects={filteredProjects} onBoundsChange={setMapBounds} zoomTo={zoomTarget} />
+        <MapClient
+  projects={filteredProjects}
+  onBoundsChange={setMapBounds}
+  zoomTo={zoomTarget}
+  currentUserId={currentUserId}
+  teamModeEnabled={teamModeEnabled && showTeamHighlights}
+/>
       </div>
 
       <div
@@ -606,15 +658,51 @@ export default function Projects() {
             <span style={{ fontSize: 14 }}>Suunnittelussa</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span className="marker-dot marker--default" />
             <span style={{ fontSize: 14 }}>Rakentaminen aloitettu</span>
           </div>
         </div>
+        
+{teamModeEnabled && (
+  <>
+    <div style={{ width: 1, height: 20, background: '#e5e7eb' }} />
 
-        <div style={{ fontSize: 14, color: '#374151' }}>
-          <strong>Lajittelu:</strong> Uusimmat hankkeet näkyvät listan alussa.
-        </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span className="marker-dot marker--planning marker--mine" />
+      <span style={{ fontSize: 14 }}>Oma hanke</span>
+    </div>
+
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span className="marker-dot marker--planning marker--unassigned" />
+      <span style={{ fontSize: 14 }}>Ei omistajaa</span>
+    </div>
+
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span className="marker-dot marker--planning marker--team" />
+      <span style={{ fontSize: 14 }}>Toisen tiimiläisen hanke</span>
+    </div>
+  </>
+)}
+
+          
+
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+  {teamModeEnabled && (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
+      <input
+        type="checkbox"
+        checked={showTeamHighlights}
+        onChange={(e) => setShowTeamHighlights(e.target.checked)}
+      />
+      Näytä tiimikorostukset
+    </label>
+  )}
+
+  <div style={{ fontSize: 14, color: '#374151' }}>
+    <strong>Lajittelu:</strong> Uusimmat hankkeet näkyvät listan alussa.
+  </div>
+</div>
       </div>
 
       <div className="projects-list">

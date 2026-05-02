@@ -1,18 +1,17 @@
 @import "tailwindcss";
 
 /* ===============================
-   PERUS TEEMA (muuttujat)
+   PERUS TEEMA
 ================================= */
 
 :root {
   --background: #f6f7f9;
   --foreground: #171717;
-
-  --surface: #ffffff;        /* korttien tausta */
-  --surface-2: #fafafa;      /* header/vaalea pinta */
-  --border: #e5e7eb;         /* reunat */
-  --muted: #555555;          /* harmaa teksti */
-  --muted-2: #666666;        /* vielä vaaleampi teksti */
+  --surface: #ffffff;
+  --surface-2: #fafafa;
+  --border: #e5e7eb;
+  --muted: #555555;
+  --muted-2: #666666;
   --input-bg: #ffffff;
   --btn-bg: #f7f7f7;
 }
@@ -21,9 +20,8 @@
   :root {
     --background: #0f172a;
     --foreground: #ededed;
-
-    --surface: #111827;      /* tumma kortti */
-    --surface-2: #0b1220;    /* tumma header/pinta */
+    --surface: #111827;
+    --surface-2: #0b1220;
     --border: #243244;
     --muted: #cbd5e1;
     --muted-2: #94a3b8;
@@ -40,17 +38,6 @@ body {
   padding: 0;
 }
 
-/* ===============================
-   PERUS KORTIT & GRID
-================================= */
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 18px;
-}
-
 button {
   transition: all 0.15s ease;
 }
@@ -60,7 +47,89 @@ button:hover {
 }
 
 /* ===============================
-   LEAFLET KORJAUKSET
+   YLEISET KOMPONENTIT
+================================= */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+  color: var(--foreground);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.formGrid.twoCols,
+.twoCols {
+  grid-template-columns: 1fr 1fr;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 15px;
+  background: var(--input-bg);
+  color: var(--foreground);
+  outline: none;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
+}
+
+.textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.btnPrimary {
+  background: #111827;
+  color: #fff;
+  border: 1px solid #111827;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btnSecondary {
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ===============================
+   LEAFLET
 ================================= */
 
 .leaflet-container {
@@ -73,39 +142,71 @@ button:hover {
 }
 
 /* ===============================
-   MARKER DOT -TYYLI
+   MARKER DOT - PERUSVÄRIT
 ================================= */
 
 .marker-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  border: 2px solid white;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 999px !important;
+  border: 2px solid white !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35) !important;
 }
 
 .marker--planning {
-  background: #2563eb;
+  background: #2563eb !important;
 }
 
 .marker--active {
-  background: #16a34a;
+  background: #16a34a !important;
 }
 
 .marker--done {
-  background: #6b7280;
+  background: #6b7280 !important;
 }
 
 .marker--tender {
-  background: #f59e0b;
+  background: #f59e0b !important;
 }
 
 .marker--default {
-  background: #ef4444;
+  background: #ef4444 !important;
 }
 
 /* ===============================
-   PROJECTS-SIVU (RESPONSIIVINEN)
+   TEAM OWNER -KOROSTUKSET KARTALLA
+================================= */
+
+/* Oma hanke */
+.marker-dot.marker--mine,
+.marker--mine {
+  border: 4px solid #22c55e !important;
+  width: 20px !important;
+  height: 20px !important;
+  box-shadow:
+    0 0 0 4px rgba(34, 197, 94, 0.35),
+    0 3px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Ei omistajaa */
+.marker-dot.marker--unassigned,
+.marker--unassigned {
+  border: 4px solid #facc15 !important;
+  width: 18px !important;
+  height: 18px !important;
+  box-shadow:
+    0 0 0 4px rgba(250, 204, 21, 0.35),
+    0 3px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Toisen tiimiläisen hanke */
+.marker-dot.marker--team,
+.marker--team {
+  border: 2px solid white !important;
+}
+
+/* ===============================
+   PROJECTS-SIVU
 ================================= */
 
 .projects-page {
@@ -191,7 +292,6 @@ button:hover {
   overflow: hidden;
 }
 
-/* Lista: desktop table */
 .projects-list {
   margin-top: 16px;
 }
@@ -259,7 +359,6 @@ button:hover {
   cursor: pointer;
 }
 
-/* Mobiili: korttirivit */
 .projects-cards {
   display: none;
 }
@@ -287,18 +386,16 @@ button:hover {
   flex: 1 1 calc(50% - 4px);
 }
 
-/* Mobiili: nappirivi kortissa */
 .projects-cardActions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.projects-cardActions .projects-btnFull {
-  flex: 1 1 calc(50% - 4px);
-}
+/* ===============================
+   MODAL
+================================= */
 
-/* MODAL */
 .projects-modalBackdrop {
   position: fixed;
   inset: 0;
@@ -371,6 +468,11 @@ button:hover {
   .projects-topbar {
     flex-wrap: wrap;
   }
+
+  .formGrid.twoCols,
+  .twoCols {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 520px) {
@@ -402,8 +504,7 @@ button:hover {
   .projects-modalGrid {
     grid-template-columns: 1fr;
   }
-}
-@media (max-width: 520px) {
+
   .projects-cardActions {
     flex-direction: column;
   }
@@ -413,173 +514,4 @@ button:hover {
     width: 100%;
     flex: 1 1 100%;
   }
-  /* --- Admin/Dashboard UI helpers --- */
-.card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-
-.sectionTitle {
-  font-size: 18px;
-  font-weight: 800;
-  margin: 0 0 10px 0;
-  color: #111827;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-@media (min-width: 900px) {
-  .formGrid.twoCols {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #374151;
-  margin-bottom: 6px;
-  display: block;
-}
-
-.input,
-.select,
-.textarea {
-  width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 15px;
-  background: #fff;
-  outline: none;
-}
-
-.input:focus,
-.select:focus,
-.textarea:focus {
-  border-color: #111827;
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
-}
-
-.textarea {
-  min-height: 110px;
-  resize: vertical;
-}
-
-.btnPrimary {
-  background: #111827;
-  color: #fff;
-  border: 1px solid #111827;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.btnPrimary:hover {
-  filter: brightness(1.05);
-}
-
-.btnSecondary {
-  background: #fff;
-  color: #111827;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btnSecondary:hover {
-  background: #f9fafb;
-}
-/* DASHBOARD */
-
-.card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 18px;
-}
-
-.sectionTitle {
-  font-size: 18px;
-  font-weight: 800;
-  margin-bottom: 12px;
-}
-
-.label {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.input,
-.select,
-.textarea {
-  width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  padding: 10px;
-  font-size: 15px;
-  background: #fff;
-}
-
-.textarea {
-  min-height: 100px;
-}
-
-.input:focus,
-.select:focus,
-.textarea:focus {
-  outline: none;
-  border-color: #111827;
-}
-
-.formGrid {
-  display: grid;
-  gap: 12px;
-}
-
-.twoCols {
-  grid-template-columns: 1fr 1fr;
-}
-
-@media (max-width: 800px) {
-  .twoCols {
-    grid-template-columns: 1fr;
-  }
-}
-
-.btnPrimary {
-  background: #111827;
-  color: white;
-  border: none;
-  padding: 12px 14px;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btnSecondary {
-  background: white;
-  border: 1px solid #ddd;
-  padding: 12px 14px;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-}
-/* TESTI: jos tämä ei näy, luokka ei ole käytössä */
-.input {
-  border: 6px solid red !important;
-  background: yellow !important;
-}
 }
