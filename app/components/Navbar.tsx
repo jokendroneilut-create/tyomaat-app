@@ -21,31 +21,11 @@ function useIsMobile(breakpoint = 768) {
 export default function Navbar() {
   const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [hasTeam, setHasTeam] = useState(false);
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile(768);
 
   useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase.auth.getSession();
-      const currentSession = data.session;
-      setSession(currentSession);
-
-      const userId = currentSession?.user?.id;
-      const token = currentSession?.access_token;
-
-      if (userId) {
-        const { data: memberRow } = await supabase
-          .from("team_members")
-          .select("team_id")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        setHasTeam(!!memberRow);
-      } else {
-        setHasTeam(false);
-      }
-
+    const checkAdmin = async (token?: string) => {
       if (!token) {
         setIsAdmin(false);
         return;
@@ -63,41 +43,18 @@ export default function Navbar() {
       }
     };
 
+    const load = async () => {
+      const { data } = await supabase.auth.getSession();
+      const currentSession = data.session;
+      setSession(currentSession);
+      await checkAdmin(currentSession?.access_token);
+    };
+
     load();
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
-
-      const userId = session?.user?.id;
-      const token = session?.access_token;
-
-      if (userId) {
-        const { data: memberRow } = await supabase
-          .from("team_members")
-          .select("team_id")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        setHasTeam(!!memberRow);
-      } else {
-        setHasTeam(false);
-      }
-
-      if (!token) {
-        setIsAdmin(false);
-        return;
-      }
-
-      try {
-        const res = await fetch("/api/admin/is-admin", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const json = await res.json();
-        setIsAdmin(json.isAdmin === true);
-      } catch {
-        setIsAdmin(false);
-      }
+      await checkAdmin(session?.access_token);
     });
 
     return () => {
@@ -118,11 +75,7 @@ export default function Navbar() {
     href: string;
     children: React.ReactNode;
   }) => (
-    <a
-      href={href}
-      onClick={() => setOpen(false)}
-      style={linkStyle}
-    >
+    <a href={href} onClick={() => setOpen(false)} style={linkStyle}>
       {children}
     </a>
   );
@@ -135,19 +88,11 @@ export default function Navbar() {
       <NavItem href="/watchlists">Hakuvahdit</NavItem>
       <NavItem href="/crm">Omat</NavItem>
       <NavItem href="/tasks">Tehtävät</NavItem>
-
-      {hasTeam ? (
-        <NavItem href="/team">Tiiminäkymä</NavItem>
-      ) : (
-        <NavItem href="/team">Luo tiimi</NavItem>
-      )}
+      <NavItem href="/team">Tiiminäkymä</NavItem>
 
       {isAdmin && <NavItem href="/dashboard/messages">Viestit</NavItem>}
 
-      <button
-        onClick={handleLogout}
-        style={logoutStyle}
-      >
+      <button onClick={handleLogout} style={logoutStyle}>
         Kirjaudu ulos
       </button>
 

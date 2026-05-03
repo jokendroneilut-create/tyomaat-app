@@ -137,6 +137,7 @@ export default function Projects() {
 
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadDebug, setLoadDebug] = useState('Aloitetaan lataus...')
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [teamModeEnabled, setTeamModeEnabled] = useState(false)
   const [showTeamHighlights, setShowTeamHighlights] = useState(true)
@@ -302,12 +303,14 @@ export default function Projects() {
   useEffect(() => {
   const fetchProjects = async () => {
     setLoading(true)
+    setLoadDebug('Haetaan käyttäjää...')
 
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
     setCurrentUserId(user?.id || null)
+    setLoadDebug(`Käyttäjä: ${user?.email || 'ei kirjautunut'}. Haetaan projekteja...`)
 
     const { data: projectsData, error } = await supabase
       .from('projects')
@@ -324,6 +327,8 @@ export default function Projects() {
       )
       .eq('is_public', true)
       .order('created_at', { ascending: false })
+
+setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
 
     if (error) {
       console.error('Supabase error:', error)
@@ -507,7 +512,16 @@ setTeamModeEnabled(true)
   const mapCount = limitToMapView ? inBoundsWithCoords.length : filteredWithCoords.length
   const noCoordsCount = filteredNoCoords.length
 
-  if (loading) return <p style={{ padding: 20 }}>Ladataan...</p>
+  if (loading) {
+  return (
+    <div style={{ padding: 20 }}>
+      <p>Ladataan...</p>
+      {process.env.NODE_ENV === 'development' && (
+  <pre style={{ color: '#6b7280', fontSize: 12 }}>{loadDebug}</pre>
+)}
+    </div>
+  )
+}
 
   return (
     <div className="projects-page">
