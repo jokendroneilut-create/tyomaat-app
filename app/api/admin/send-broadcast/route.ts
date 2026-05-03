@@ -11,6 +11,13 @@ function parseAdminEmails(value: string | undefined) {
     .filter(Boolean)
 }
 
+function formatMessageHtml(message: string) {
+  return message
+    .split("\n\n")
+    .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+    .join("")
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -100,6 +107,8 @@ export async function POST(req: Request) {
       )
     }
 
+    const htmlMessage = formatMessageHtml(message)
+
     // Resend sallii max 50 vastaanottajaa yhteensä.
     // Tässä käytetään to + bcc, joten bcc-erän koko saa olla max 49.
     const chunkSize = 49
@@ -116,7 +125,7 @@ export async function POST(req: Request) {
         bcc: chunk,
         subject,
         text: message,
-        html: `<div style="font-family:Arial,sans-serif;white-space:pre-wrap;">${message}</div>`,
+        html: `<div style="font-family:Arial,sans-serif;">${htmlMessage}</div>`,
       })
 
       const sendError = (sendResult as any)?.error
