@@ -60,6 +60,7 @@ export default function TeamPage() {
   const [team, setTeam] = useState<Team | null>(null)
   const [selectedAreas, setSelectedAreas] = useState<string[]>([])
   const [useWholeFinland, setUseWholeFinland] = useState(false)
+
   const [members, setMembers] = useState<TeamMember[]>([])
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [projects, setProjects] = useState<any[]>([])
@@ -75,17 +76,22 @@ export default function TeamPage() {
 
   const [loading, setLoading] = useState(true)
   const [debug, setDebug] = useState<string>('')
+
   const [confirmOpen, setConfirmOpen] = useState(false)
-const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null)
-const [confirmMessage, setConfirmMessage] = useState('')
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null)
+  const [confirmMessage, setConfirmMessage] = useState('')
+
   const [showTeamSettings, setShowTeamSettings] = useState(false)
+
   const [newTeamName, setNewTeamName] = useState('')
-const [newTeamArea, setNewTeamArea] = useState('uusimaa')
-const [creatingTeam, setCreatingTeam] = useState(false)
-const [createTeamError, setCreateTeamError] = useState<string | null>(null)
-const [inviteEmail, setInviteEmail] = useState('')
-const [inviteError, setInviteError] = useState<string | null>(null)
-const [inviting, setInviting] = useState(false)
+  const [newTeamAreas, setNewTeamAreas] = useState<string[]>([])
+  const [newTeamWholeFinland, setNewTeamWholeFinland] = useState(true)
+  const [creatingTeam, setCreatingTeam] = useState(false)
+  const [createTeamError, setCreateTeamError] = useState<string | null>(null)
+
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteError, setInviteError] = useState<string | null>(null)
+  const [inviting, setInviting] = useState(false)
 
   const getProfileName = (userId: string | null) => {
     if (!userId) return 'Ei omistajaa'
@@ -599,13 +605,22 @@ const handleCreateTeam = async () => {
   full_name: user.email?.split('@')[0] || user.email,
 })
 
-  const { data: teamData, error: teamError } = await supabase
-    .from('teams')
-    .insert({
-      name,
-      area: newTeamArea,
-      leader_id: user.id,
-    })
+  const areasToSave = newTeamWholeFinland ? [] : newTeamAreas
+
+if (!newTeamWholeFinland && areasToSave.length === 0) {
+  setCreateTeamError('Valitse vähintään yksi maakunta tai Koko Suomi.')
+  setCreatingTeam(false)
+  return
+}
+
+const { data: teamData, error: teamError } = await supabase
+  .from('teams')
+  .insert({
+    name,
+    area: newTeamWholeFinland ? 'finland' : areasToSave[0].toLowerCase(),
+    areas: areasToSave,
+    leader_id: user.id,
+  })
     .select('*')
     .single()
 
@@ -708,20 +723,47 @@ const ownerBadgeStyle = (ownerId: string | null): React.CSSProperties => {
               Seuranta-alue
             </label>
 
-            <select
-              value={newTeamArea}
-              onChange={(e) => setNewTeamArea(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: 10,
-                border: '1px solid #e5e7eb',
-                background: '#ffffff',
-              }}
-            >
-              <option value="uusimaa">Uusimaa</option>
-              <option value="finland">Koko Suomi</option>
-            </select>
+            <div style={{ marginBottom: 12 }}>
+  <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+    <input
+      type="checkbox"
+      checked={newTeamWholeFinland}
+      onChange={(e) => setNewTeamWholeFinland(e.target.checked)}
+    />
+    Koko Suomi
+  </label>
+</div>
+
+<div
+  style={{
+    display: 'grid',
+    gap: 8,
+    opacity: newTeamWholeFinland ? 0.45 : 1,
+  }}
+>
+  {FINNISH_REGIONS.map((region) => (
+    <label
+      key={region}
+      style={{ display: 'flex', gap: 8, alignItems: 'center' }}
+    >
+      <input
+        type="checkbox"
+        disabled={newTeamWholeFinland}
+        checked={newTeamAreas.includes(region)}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setNewTeamAreas((current) => [...current, region])
+          } else {
+            setNewTeamAreas((current) =>
+              current.filter((r) => r !== region)
+            )
+          }
+        }}
+      />
+      {region}
+    </label>
+  ))}
+</div>
           </div>
 
           {createTeamError && (
