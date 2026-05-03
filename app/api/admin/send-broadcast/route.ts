@@ -90,9 +90,19 @@ export async function POST(req: Request) {
     }
 
     const resend = new Resend(process.env.RESEND_API_KEY!)
-    const fromEmail = process.env.MAIL_FROM || "onboarding@resend.dev"
 
-    const chunkSize = 50
+    const fromEmail = process.env.MAIL_FROM
+
+    if (!fromEmail) {
+      return NextResponse.json(
+        { error: "MAIL_FROM missing" },
+        { status: 500 }
+      )
+    }
+
+    // Resend sallii max 50 vastaanottajaa yhteensä.
+    // Tässä käytetään to + bcc, joten bcc-erän koko saa olla max 49.
+    const chunkSize = 49
     const chunks: string[][] = []
 
     for (let i = 0; i < recipients.length; i += chunkSize) {
@@ -110,6 +120,7 @@ export async function POST(req: Request) {
       })
 
       const sendError = (sendResult as any)?.error
+
       if (sendError) {
         return NextResponse.json(
           { error: sendError.message || "send failed" },
