@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { enrichCandidate } from "./enrichCandidate"
+import { calculateCandidateQuality } from "../quality"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -69,6 +70,16 @@ export async function linkSignalToCandidate(signal: ProjectSignal) {
     }
   }
 
+  const quality = calculateCandidateQuality({
+    title: signal.title,
+    summary: signal.title,
+    reason: signal.classification_reason,
+    candidate_type: signal.normalized_signal_type,
+    city: signal.city,
+    signal_count: 1,
+    source_count: 1,
+  })
+
   const { data: newCandidate, error: insertError } = await supabaseAdmin
     .from("candidate_projects")
     .insert({
@@ -78,6 +89,8 @@ export async function linkSignalToCandidate(signal: ProjectSignal) {
       candidate_type: signal.normalized_signal_type,
       confidence: signal.relevance_score,
       score: signal.relevance_score,
+      candidate_quality: quality.quality,
+      candidate_quality_reason: quality.reason,
       signal_count: 1,
       source_count: 1,
       status: "open",

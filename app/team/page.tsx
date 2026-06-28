@@ -708,7 +708,7 @@ const ownerBadgeStyle = (ownerId: string | null): React.CSSProperties => {
             <input
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}
-              placeholder="Esim. Koneunion myyntitiimi"
+              placeholder="Esim. Yritys Oy myyntitiimi"
               style={{
                 width: '100%',
                 padding: '10px 12px',

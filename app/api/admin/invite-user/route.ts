@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     )
 
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: "https://tyomaat-app.vercel.app/auth/callback",
+      redirectTo: "https://app.tyomaat.fi/auth/callback",
     })
 
     if (error) {

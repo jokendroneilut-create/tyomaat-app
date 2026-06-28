@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { calculateCandidateQuality } from "../quality"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +25,8 @@ export async function enrichCandidate({
 
   if (candidateError) throw candidateError
 
+  const nextSignalCount = Number(candidate.signal_count ?? 0) + 1
+
   const nextScore = Math.max(
     Number(candidate.score ?? 0),
     Number(relevanceScore ?? 0)
@@ -34,14 +37,26 @@ export async function enrichCandidate({
     Number(relevanceScore ?? 0)
   )
 
+  const quality = calculateCandidateQuality({
+    title: candidate.title,
+    summary: candidate.summary,
+    reason: candidate.reason,
+    candidate_type: candidate.candidate_type,
+    city: candidate.city,
+    signal_count: nextSignalCount,
+    source_count: candidate.source_count,
+  })
+
   const { data: updatedCandidate, error: updateError } = await supabaseAdmin
     .from("candidate_projects")
     .update({
       updated_at: new Date().toISOString(),
       last_signal_at: new Date().toISOString(),
-      signal_count: Number(candidate.signal_count ?? 0) + 1,
+      signal_count: nextSignalCount,
       score: nextScore,
       confidence: nextConfidence,
+      candidate_quality: quality.quality,
+      candidate_quality_reason: quality.reason,
     })
     .eq("id", candidateId)
     .select()
