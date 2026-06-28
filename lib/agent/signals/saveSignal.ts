@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Signal } from "../pipeline/types"
 import { classifySignal } from "../pipeline/classifySignal"
+import { linkSignalToCandidate } from "../pipeline/linkSignalToCandidate"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -61,6 +62,18 @@ export async function saveSignal(signal: Signal) {
     .single()
 
   if (error) throw error
+
+  if (classification.reviewStatus !== "ignored") {
+  await linkSignalToCandidate({
+    id: data.id,
+    title: data.title,
+    city: data.city,
+    location: data.location,
+    normalized_signal_type: data.normalized_signal_type,
+    relevance_score: data.relevance_score,
+    classification_reason: data.classification_reason,
+  })
+}
 
   return {
     ...data,

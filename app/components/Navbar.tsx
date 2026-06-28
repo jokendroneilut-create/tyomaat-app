@@ -157,7 +157,7 @@ export default function Navbar() {
             whiteSpace: "nowrap",
           }}
         >
-          © Sippola Enterprises
+          © Sippola Enterprises Oy
         </span>
       </a>
 
