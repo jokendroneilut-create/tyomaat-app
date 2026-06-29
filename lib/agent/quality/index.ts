@@ -1,11 +1,24 @@
+import {
+  negativeCandidateQualityRules,
+  positiveCandidateQualityRules,
+} from "./rules/candidateQualityRules"
+import { scoreKeywords } from "./scorers/keywordScorer"
+import { scoreSource } from "./scorers/sourceScorer"
+import { scoreEntities } from "./scorers/entityScorer"
+
 export type CandidateQualityInput = {
   title: string
   summary?: string | null
   reason?: string | null
   candidate_type?: string | null
   city?: string | null
+  source_name?: string | null
   signal_count?: number | null
   source_count?: number | null
+  entities?: {
+    buildingTypes?: string[]
+    projectStages?: string[]
+  } | null
 }
 
 export type CandidateQualityResult = {
@@ -13,83 +26,21 @@ export type CandidateQualityResult = {
   reason: string
 }
 
-type RuleResult = {
-  points: number
-  reason: string
-}
+function scoreSignalStrength(input: CandidateQualityInput) {
+  const results = []
 
-function includesAny(text: string, terms: string[]) {
-  return terms.some((term) => text.includes(term))
-}
-
-function scoreNegativeKeywords(text: string): RuleResult[] {
-  const results: RuleResult[] = []
-
-  const privateSmallTerms = [
-    "omakotitalo",
-    "autotalli",
-    "autokatos",
-    "sauna",
-    "terassi",
-    "piharakennus",
-    "varasto",
-    "laajennus",
-  ]
-
-  if (includesAny(text, privateSmallTerms)) {
+  if ((input.signal_count ?? 0) >= 2) {
     results.push({
-      points: -50,
-      reason: "Pieni yksityinen tai vähäarvoinen rakennuskohde",
+      points: 10,
+      reason: "Useampi signaali samasta hankkeesta",
     })
   }
 
-  return results
-}
-
-function scorePositiveKeywords(text: string): RuleResult[] {
-  const results: RuleResult[] = []
-
-  if (includesAny(text, ["datakeskus", "data center"])) {
-    results.push({ points: 45, reason: "Datakeskukseen liittyvä hanke" })
-  }
-
-  if (includesAny(text, ["koulu", "päiväkoti", "sairaala"])) {
-    results.push({ points: 30, reason: "Julkinen palvelurakennus" })
-  }
-
-  if (
-    includesAny(text, [
-      "kerrostalo",
-      "toimitila",
-      "liikerakennus",
-      "logistiikkakeskus",
-      "teollisuushalli",
-      "varastohalli",
-    ])
-  ) {
-    results.push({ points: 30, reason: "Relevantti rakennustyyppi" })
-  }
-
-  if (includesAny(text, ["rakennuslupa", "rakentaminen", "rakennetaan"])) {
-    results.push({ points: 20, reason: "Rakentamiseen liittyvä konkreettinen signaali" })
-  }
-
-  if (includesAny(text, ["tarjouspyyntö", "urakkalaskenta", "hankintailmoitus"])) {
-    results.push({ points: 35, reason: "Tarjousmahdollisuus havaittu" })
-  }
-
-  return results
-}
-
-function scoreSignalStrength(input: CandidateQualityInput): RuleResult[] {
-  const results: RuleResult[] = []
-
-  if ((input.signal_count ?? 0) >= 2) {
-    results.push({ points: 10, reason: "Useampi signaali samasta hankkeesta" })
-  }
-
   if ((input.source_count ?? 0) >= 2) {
-    results.push({ points: 15, reason: "Useampi lähde tukee havaintoa" })
+    results.push({
+      points: 15,
+      reason: "Useampi lähde tukee havaintoa",
+    })
   }
 
   return results
@@ -110,8 +61,10 @@ export function calculateCandidateQuality(
     .toLowerCase()
 
   const ruleResults = [
-    ...scoreNegativeKeywords(text),
-    ...scorePositiveKeywords(text),
+    ...scoreKeywords(text, positiveCandidateQualityRules),
+    ...scoreKeywords(text, negativeCandidateQualityRules),
+    ...scoreSource(input.source_name),
+    ...scoreEntities(input.entities),
     ...scoreSignalStrength(input),
   ]
 
@@ -120,7 +73,12 @@ export function calculateCandidateQuality(
 
   const reason =
     ruleResults.length > 0
-      ? ruleResults.map((rule) => `${rule.points > 0 ? "+" : ""}${rule.points}: ${rule.reason}`).join("; ")
+      ? ruleResults
+          .map(
+            (rule) =>
+              `${rule.points > 0 ? "+" : ""}${rule.points}: ${rule.reason}`
+          )
+          .join("; ")
       : "Ei laatupisteisiin vaikuttavia sääntöosumia"
 
   return {

@@ -10,12 +10,14 @@ type CandidateInput = {
   candidateId: string
   signalId: string
   relevanceScore: number | null
+  sourceName: string | null
 }
 
 export async function enrichCandidate({
   candidateId,
   signalId,
   relevanceScore,
+  sourceName,
 }: CandidateInput) {
   const { data: candidate, error: candidateError } = await supabaseAdmin
     .from("candidate_projects")
@@ -37,12 +39,16 @@ export async function enrichCandidate({
     Number(relevanceScore ?? 0)
   )
 
+  const extractedEntities = candidate.candidate_entities ?? {}
+
   const quality = calculateCandidateQuality({
     title: candidate.title,
     summary: candidate.summary,
     reason: candidate.reason,
     candidate_type: candidate.candidate_type,
     city: candidate.city,
+    source_name: sourceName,
+    entities: extractedEntities,
     signal_count: nextSignalCount,
     source_count: candidate.source_count,
   })

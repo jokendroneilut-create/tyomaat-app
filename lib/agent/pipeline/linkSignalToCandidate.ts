@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { enrichCandidate } from "./enrichCandidate"
 import { calculateCandidateQuality } from "../quality"
+import { extractEntities } from "../entities/extractEntities"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,7 @@ type ProjectSignal = {
   title: string
   city: string | null
   location: string | null
+  source_name: string | null
   normalized_signal_type: string | null
   relevance_score: number | null
   classification_reason: string | null
@@ -62,6 +64,7 @@ export async function linkSignalToCandidate(signal: ProjectSignal) {
       candidateId: existingCandidate.id,
       signalId: signal.id,
       relevanceScore: signal.relevance_score,
+      sourceName: signal.source_name,
     })
 
     return {
@@ -70,15 +73,28 @@ export async function linkSignalToCandidate(signal: ProjectSignal) {
     }
   }
 
+  const extractedEntities = extractEntities(
+    [
+      signal.title,
+      signal.location,
+      signal.normalized_signal_type,
+      signal.classification_reason,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  )
+
   const quality = calculateCandidateQuality({
-    title: signal.title,
-    summary: signal.title,
-    reason: signal.classification_reason,
-    candidate_type: signal.normalized_signal_type,
-    city: signal.city,
-    signal_count: 1,
-    source_count: 1,
-  })
+  title: signal.title,
+  summary: signal.title,
+  reason: signal.classification_reason,
+  candidate_type: signal.normalized_signal_type,
+  city: signal.city,
+  source_name: signal.source_name,
+  entities: extractedEntities,
+  signal_count: 1,
+  source_count: 1,
+})
 
   const { data: newCandidate, error: insertError } = await supabaseAdmin
     .from("candidate_projects")
@@ -91,6 +107,7 @@ export async function linkSignalToCandidate(signal: ProjectSignal) {
       score: signal.relevance_score,
       candidate_quality: quality.quality,
       candidate_quality_reason: quality.reason,
+      candidate_entities: extractedEntities,
       signal_count: 1,
       source_count: 1,
       status: "open",

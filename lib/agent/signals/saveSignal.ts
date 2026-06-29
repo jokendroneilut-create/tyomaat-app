@@ -64,16 +64,17 @@ export async function saveSignal(signal: Signal) {
   if (error) throw error
 
   if (classification.reviewStatus !== "ignored") {
-  await linkSignalToCandidate({
-    id: data.id,
-    title: data.title,
-    city: data.city,
-    location: data.location,
-    normalized_signal_type: data.normalized_signal_type,
-    relevance_score: data.relevance_score,
-    classification_reason: data.classification_reason,
-  })
-}
+    await linkSignalToCandidate({
+      id: data.id,
+      title: data.title,
+      city: data.city,
+      location: data.location,
+      source_name: data.source_name,
+      normalized_signal_type: data.normalized_signal_type,
+      relevance_score: data.relevance_score,
+      classification_reason: data.classification_reason,
+    })
+  }
 
   return {
     ...data,
