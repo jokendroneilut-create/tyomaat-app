@@ -1,8 +1,15 @@
 import { buildingTypes } from "../knowledge/buildingTypes"
 import { projectStages } from "../knowledge/projectStages"
+import { companies } from "../knowledge/companies"
+
+export type ExtractedCompany = {
+  name: string
+  role: string
+  confidence: number
+}
 
 export type ExtractedEntities = {
-  companies: string[]
+  companies: ExtractedCompany[]
   buildingTypes: string[]
   projectStages: string[]
   money: string[]
@@ -10,22 +17,38 @@ export type ExtractedEntities = {
   dates: string[]
 }
 
+function includesFlexible(text: string, keyword: string) {
+  const normalizedKeyword = keyword.toLowerCase()
+  return (
+    text.includes(normalizedKeyword) ||
+    text.includes(normalizedKeyword.slice(0, -1))
+  )
+}
+
 export function extractEntities(text: string): ExtractedEntities {
   const normalized = text.toLowerCase()
 
   const buildingTypeMatches = buildingTypes
-    .filter((item) => {
-  const keyword = item.keyword.toLowerCase()
-  return normalized.includes(keyword) || normalized.includes(keyword.slice(0, -1))
-})
-    .map(item => item.keyword)
+    .filter((item) => includesFlexible(normalized, item.keyword))
+    .map((item) => item.keyword)
 
   const stageMatches = projectStages
-    .filter((item) => {
-  const keyword = item.keyword.toLowerCase()
-  return normalized.includes(keyword) || normalized.includes(keyword.slice(0, -1))
-})
-    .map(item => item.stage)
+    .filter((item) => includesFlexible(normalized, item.keyword))
+    .map((item) => item.stage)
+
+  const companyMatches = companies
+    .filter((company) => {
+      const names = [company.name, ...(company.aliases ?? [])]
+
+      return names.some((name) =>
+        normalized.includes(name.toLowerCase())
+      )
+    })
+    .map((company) => ({
+      name: company.name,
+      role: company.role,
+      confidence: company.confidence,
+    }))
 
   const moneyMatches =
     text.match(/\d+(?:[.,]\d+)?\s?(?:M€|miljoonaa|milj\.)/gi) ?? []
@@ -34,7 +57,7 @@ export function extractEntities(text: string): ExtractedEntities {
     text.match(/\d+(?:[.,]\d+)?\s?(?:m²|m2|kem²|k-m²)/gi) ?? []
 
   return {
-    companies: [],
+    companies: companyMatches,
     buildingTypes: [...new Set(buildingTypeMatches)],
     projectStages: [...new Set(stageMatches)],
     money: [...new Set(moneyMatches)],
