@@ -65,6 +65,15 @@ export default async function SourceDocumentPage({ params }: Props) {
           {document.raw_text ?? "Ei sisältöä"}
         </pre>
       </section>
+      
+      <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+  <h2 className="text-xl font-semibold">Extracted Text</h2>
+
+  <pre className="mt-4 max-h-[700px] overflow-auto rounded bg-gray-100 p-4 text-xs whitespace-pre-wrap">
+    {document.extracted_text ?? "Ei purettua tekstiä"}
+  </pre>
+</section>
+      
     </main>
   )
 }

@@ -15,6 +15,7 @@ export type SourceDocumentDetail = {
   status: string | null
   raw_text: string | null
   raw_payload: any
+  extracted_text: string | null
 }
 
 export async function getSourceDocument(

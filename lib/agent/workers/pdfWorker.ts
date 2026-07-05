@@ -11,6 +11,8 @@ function hashContent(value: Buffer) {
 }
 
 export async function runPdfWorker() {
+  const startedAt = Date.now()
+
   const { data: job, error: jobError } = await supabaseAdmin
     .from("agent_jobs")
     .select("*")
@@ -28,6 +30,24 @@ export async function runPdfWorker() {
       message: "No pending PDF jobs",
     }
   }
+
+  const { data: run, error: runError } = await supabaseAdmin
+    .from("agent_runs")
+    .insert({
+      agent_type: "pdf_worker",
+      source_id: job.payload?.sourceId ?? null,
+      source_name: job.payload?.sourceName ?? null,
+      status: "started",
+      started_at: new Date().toISOString(),
+      payload: {
+        jobId: job.id,
+        pdfUrl: job.payload?.pdfUrl,
+      },
+    })
+    .select()
+    .single()
+
+  if (runError) throw runError
 
   await supabaseAdmin
     .from("agent_jobs")
@@ -69,7 +89,7 @@ export async function runPdfWorker() {
         {
           source_id: job.payload.sourceId,
           source_name: job.payload.sourceName,
-          title: pdfUrl.split("/").pop() ?? "PDF document",
+          title: decodeURIComponent(pdfUrl.split("/").pop() ?? "PDF document"),
           document_url: pdfUrl,
           document_type: "pdf",
           content_hash: contentHash,
@@ -89,6 +109,8 @@ export async function runPdfWorker() {
 
     if (documentError) throw documentError
 
+    const durationMs = Date.now() - startedAt
+
     await supabaseAdmin
       .from("agent_jobs")
       .update({
@@ -98,14 +120,35 @@ export async function runPdfWorker() {
       })
       .eq("id", job.id)
 
+    await supabaseAdmin
+      .from("agent_runs")
+      .update({
+        status: "success",
+        finished_at: new Date().toISOString(),
+        duration_ms: durationMs,
+        pdf_found: 1,
+        pdf_saved: 1,
+        payload: {
+          jobId: job.id,
+          pdfUrl,
+          documentId: document.id,
+          sizeBytes: buffer.length,
+        },
+      })
+      .eq("id", run.id)
+
     return {
       ok: true,
       jobId: job.id,
+      runId: run.id,
       documentId: document.id,
       pdfUrl,
       sizeBytes: buffer.length,
+      durationMs,
     }
   } catch (error: any) {
+    const durationMs = Date.now() - startedAt
+
     await supabaseAdmin
       .from("agent_jobs")
       .update({
@@ -116,10 +159,22 @@ export async function runPdfWorker() {
       })
       .eq("id", job.id)
 
+    await supabaseAdmin
+      .from("agent_runs")
+      .update({
+        status: "error",
+        finished_at: new Date().toISOString(),
+        duration_ms: durationMs,
+        error_message: error.message,
+      })
+      .eq("id", run.id)
+
     return {
       ok: false,
       jobId: job.id,
+      runId: run.id,
       error: error.message,
+      durationMs,
     }
   }
 }
