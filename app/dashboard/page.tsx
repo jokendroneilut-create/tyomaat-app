@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
+import { geocodeProjectLocation } from "@/lib/geo/geocode"
 
 type Project = {
   id: string
@@ -197,29 +198,6 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  function buildGeocodeQuery() {
-    const parts = [(form.location || '').trim(), (form.city || '').trim(), (form.region || '').trim(), 'Finland'].filter(
-      Boolean
-    )
-    return parts.join(', ')
-  }
-
-  async function geocodeAddress(query: string) {
-    if (!query) return { lat: null as number | null, lon: null as number | null }
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`
-      const res = await fetch(url, { headers: { 'Accept-Language': 'fi,en;q=0.8' } })
-      const data = await res.json()
-      if (Array.isArray(data) && data.length > 0 && data[0]?.lat && data[0]?.lon) {
-        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) }
-      }
-      return { lat: null, lon: null }
-    } catch (err) {
-      console.error('Geocoding error:', err)
-      return { lat: null, lon: null }
-    }
-  }
-
   function setDigitsField(field: 'apartments' | 'floor_area' | 'estimated_cost', raw: string) {
     setForm((prev: any) => ({ ...prev, [field]: onlyDigits(raw) }))
   }
@@ -228,18 +206,14 @@ export default function Dashboard() {
     e.preventDefault()
     setSubmitError(null)
 
-    const q1 = buildGeocodeQuery()
-    let coords = await geocodeAddress(q1)
-
-    if ((coords.lat == null || coords.lon == null) && (form.city || '').trim()) {
-      coords = await geocodeAddress(`${(form.city || '').trim()}, Finland`)
-    }
-    if ((coords.lat == null || coords.lon == null) && (form.region || '').trim()) {
-      coords = await geocodeAddress(`${(form.region || '').trim()}, Finland`)
-    }
+   const coords = await geocodeProjectLocation({
+  location: form.location,
+  city: form.city,
+  region: form.region,
+})
 
     if (coords.lat == null || coords.lon == null) {
-      setSubmitError(`Osoitetta ei löytynyt kartalta. Lisää tarkempi osoite.\nHaku: "${q1}"`)
+      setSubmitError(`Osoitetta ei löytynyt kartalta. Lisää tarkempi osoite.\nHaku: "${[form.location, form.city, form.region, 'Finland'].filter(Boolean).join(', ')}"`)
       return
     }
 

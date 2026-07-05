@@ -52,10 +52,12 @@ export default function Navbar() {
 
     load();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      await checkAdmin(session?.access_token);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+        await checkAdmin(session?.access_token);
+      }
+    );
 
     return () => {
       listener.subscription.unsubscribe();
@@ -68,29 +70,101 @@ export default function Navbar() {
     window.location.href = "/login";
   };
 
+  const NavSection = ({ children }: { children: React.ReactNode }) => (
+  <div
+    style={{
+      display: "grid",
+      gap: 4,
+      paddingTop: 4,
+      paddingBottom: 6,
+    }}
+  >
+    {children}
+  </div>
+);
+
+  const NavHeading = ({ children }: { children: React.ReactNode }) => (
+  <div
+    style={{
+      borderTop: "1px solid #f0f0f0",
+      paddingTop: 8,
+      marginTop: 4,
+      marginBottom: 2,
+      fontSize: 11,
+      fontWeight: 700,
+      color: "#9ca3af",
+      letterSpacing: "0.08em",
+      textTransform: "uppercase",
+    }}
+  >
+    {children}
+  </div>
+);
+
   const NavItem = ({
     href,
     children,
+    disabled = false,
   }: {
     href: string;
     children: React.ReactNode;
-  }) => (
-    <a href={href} onClick={() => setOpen(false)} style={linkStyle}>
-      {children}
-    </a>
-  );
+    disabled?: boolean;
+  }) => {
+    if (disabled) {
+      return (
+        <span
+          style={{
+            ...linkStyle,
+            color: "#9ca3af",
+            cursor: "not-allowed",
+          }}
+        >
+          {children}
+        </span>
+      );
+    }
+
+    return (
+      <a href={href} onClick={() => setOpen(false)} style={linkStyle}>
+        {children}
+      </a>
+    );
+  };
 
   const NavLinks = () => (
     <>
-      {isAdmin && <NavItem href="/dashboard">Dashboard</NavItem>}
 
-      <NavItem href="/projects">Kartta</NavItem>
-      <NavItem href="/watchlists">Hakuvahdit</NavItem>
-      <NavItem href="/crm">Omat</NavItem>
-      <NavItem href="/tasks">Tehtävät</NavItem>
-      <NavItem href="/team">Tiiminäkymä</NavItem>
+      <NavSection>
+        <NavItem href="/projects">Hankkeet / Kartta</NavItem>
+        <NavItem href="/watchlists">Hakuvahdit</NavItem>
+        <NavItem href="/crm">Omat</NavItem>
+        <NavItem href="/tasks">Tehtävät</NavItem>
+        <NavItem href="/team">Tiiminäkymä</NavItem>
+      </NavSection>
 
-      {isAdmin && <NavItem href="/dashboard/messages">Viestit</NavItem>}
+      {isAdmin && (
+        <>
+          <NavHeading>⚙️ Admin</NavHeading>
+          <NavSection>
+            <NavItem href="/dashboard">Dashboard</NavItem>
+            <NavItem href="/dashboard/messages">Viestit</NavItem>
+            <NavItem href="/tic">Työmaat Intelligence Center</NavItem>
+          </NavSection>
+
+          <NavHeading>🚧 Tulossa</NavHeading>
+          <NavSection>
+            <NavItem href="#" disabled>
+              Tänään
+            </NavItem>
+            <NavItem href="#" disabled>
+              CRM
+            </NavItem>
+            <NavItem href="#" disabled>
+              Raportit
+            </NavItem>
+          </NavSection>
+        </>
+      )}
 
       <button onClick={handleLogout} style={logoutStyle}>
         Kirjaudu ulos
@@ -196,10 +270,10 @@ export default function Navbar() {
                   border: "1px solid #e5e7eb",
                   borderRadius: 12,
                   padding: 10,
-                  minWidth: 220,
+                  minWidth: 280,
                   boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
                   display: "grid",
-                  gap: 10,
+                  gap: 2,
                 }}
               >
                 <NavLinks />
@@ -216,6 +290,8 @@ const linkStyle: React.CSSProperties = {
   textDecoration: "none",
   color: "#111827",
   fontWeight: 600,
+  fontSize: 15,
+  padding: "4px 0",
 };
 
 const logoutStyle: React.CSSProperties = {

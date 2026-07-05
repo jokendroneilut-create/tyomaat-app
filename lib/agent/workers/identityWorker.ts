@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
+import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,6 +64,8 @@ export async function runIdentityWorker(documentId: string) {
     const permitNumber = metadata.permit_number ?? null
     const address = metadata.address ?? null
     const district = metadata.district ?? null
+    const operation = metadata.operation ?? null
+    const decisionMaker = metadata.decision_maker ?? null
 
     const propertyFact = decisionFacts.find(
       (fact) => fact.fact_type === "property_id"
@@ -70,11 +73,19 @@ export async function runIdentityWorker(documentId: string) {
 
     const propertyId = propertyFact?.fact_value ?? null
 
-    const title = address
-      ? `Rakennuslupa: ${address}`
-      : permitNumber
-        ? `Rakennuslupa: ${permitNumber}`
-        : "Rakennuslupa"
+    const classification = classifyProject({
+      operation,
+      address,
+      title: permitNumber ? `Rakennuslupa ${permitNumber}` : null,
+    })
+
+    const title = operation
+      ? `${operation}: ${address ?? permitNumber ?? "rakennuslupa"}`
+      : address
+        ? `Rakennuslupa: ${address}`
+        : permitNumber
+          ? `Rakennuslupa: ${permitNumber}`
+          : "Rakennuslupa"
 
     const result = await resolvePotentialProject({
       title,
@@ -87,8 +98,18 @@ export async function runIdentityWorker(documentId: string) {
         source_document_id: documentId,
         decision_index: decisionIndex,
         district,
+        operation,
+        decision_maker: decisionMaker,
         fact_count: decisionFacts.length,
         resolver: "identityWorker",
+
+        construction_type: classification.construction_type,
+        building_type: classification.building_type,
+        size_class: classification.size_class,
+        business_value: classification.business_value,
+        recommended_action: classification.recommended_action,
+        classification_confidence: classification.confidence,
+        classification_reasons: classification.reasons,
       },
     })
 
@@ -99,6 +120,8 @@ export async function runIdentityWorker(documentId: string) {
       title: result.potentialProject.title,
       address: result.potentialProject.address,
       permitNumber: result.potentialProject.permit_number,
+      operation,
+      classification,
     })
   }
 
