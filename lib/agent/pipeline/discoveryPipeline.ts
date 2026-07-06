@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { runSourceWorker } from "@/lib/agent/workers/sourceWorker"
+import { collectArticleDocument } from "@/lib/agent/discovery/collectors/articleCollector"
 import { runPdfWorker } from "@/lib/agent/workers/pdfWorker"
 import { runTextExtractionWorker } from "@/lib/agent/workers/textExtractionWorker"
 import { runFactWorker } from "@/lib/agent/workers/factWorker"
@@ -12,6 +13,7 @@ const supabaseAdmin = createClient(
 
 type PipelineOptions = {
   maxSourceCount?: number
+  maxArticleJobs?: number
   maxPdfJobs?: number
   maxTextJobs?: number
   maxFactJobs?: number
@@ -21,11 +23,13 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   const startedAt = Date.now()
 
   const maxSourceCount = options.maxSourceCount ?? 10
+  const maxArticleJobs = options.maxArticleJobs ?? 20
   const maxPdfJobs = options.maxPdfJobs ?? 20
   const maxTextJobs = options.maxTextJobs ?? 20
   const maxFactJobs = options.maxFactJobs ?? 20
 
   const sourceResults = []
+  const articleResults = []
   const pdfResults = []
   const textResults = []
   const factResults = []
@@ -40,11 +44,45 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
 
   if (sourcesError) throw sourcesError
 
+  //
+  // 1. Source Worker
+  //
   for (const source of sources ?? []) {
     const result = await runSourceWorker(source.id)
     sourceResults.push(result)
   }
 
+  //
+  // 2. Kerää HTML-artikkeleista PDF-linkit
+  //
+  for (let i = 0; i < maxArticleJobs; i++) {
+    const { data: document, error } = await supabaseAdmin
+      .from("source_documents")
+      .select("id")
+      .eq("document_type", "html")
+      .is("raw_payload->>articleFetchedAt", null)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    if (error) throw error
+
+    if (!document) {
+      articleResults.push({
+        ok: true,
+        message: "No HTML article documents waiting for collection",
+      })
+      break
+    }
+
+    const result = await collectArticleDocument(document.id)
+
+articleResults.push(result)
+  }
+
+  //
+  // 3. PDF Worker
+  //
   for (let i = 0; i < maxPdfJobs; i++) {
     const result = await runPdfWorker()
     pdfResults.push(result)
@@ -52,18 +90,26 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
     if (result.message === "No pending PDF jobs") break
   }
 
+  //
+  // 4. Text Worker
+  //
   for (let i = 0; i < maxTextJobs; i++) {
     const result = await runTextExtractionWorker()
     textResults.push(result)
 
-    if (result.message === "No PDF documents waiting for text extraction") break
+    if (result.message === "No PDF documents waiting for text extraction")
+      break
   }
 
+  //
+  // 5. Fact Worker + Identity Worker
+  //
   for (let i = 0; i < maxFactJobs; i++) {
     const result = await runFactWorker()
     factResults.push(result)
 
-    if (result.message === "No documents waiting for fact extraction") break
+    if (result.message === "No documents waiting for fact extraction")
+      break
 
     if (result.ok && result.documentId) {
       const identityResult = await runIdentityWorker(result.documentId)
@@ -76,12 +122,16 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   return {
     ok: true,
     durationMs,
+
     sourcesRun: sourceResults.length,
+    articleRuns: articleResults.length,
     pdfRuns: pdfResults.length,
     textRuns: textResults.length,
     factRuns: factResults.length,
     identityRuns: identityResults.length,
+
     sourceResults,
+    articleResults,
     pdfResults,
     textResults,
     factResults,

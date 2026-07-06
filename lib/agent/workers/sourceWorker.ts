@@ -36,13 +36,22 @@ export async function runSourceWorker(sourceId: string) {
   try {
     let result
 
-    if (source.type === "api") {
-      result = await collectApiSource(source)
-    } else if (source.type === "html") {
-      result = await collectHtmlSource(source)
-    } else {
-      throw new Error(`Unsupported source type: ${source.type}`)
-    }
+    const collectors: Record<string, (source: any) => Promise<any>> = {
+  htmlCollector: collectHtmlSource,
+  apiCollector: collectApiSource,
+}
+
+const collectorName = source.collector ?? (
+  source.type === "api" ? "apiCollector" :
+  source.type === "html" ? "htmlCollector" :
+  null
+)
+
+if (!collectorName || !collectors[collectorName]) {
+  throw new Error(`Unsupported collector: ${collectorName ?? source.type}`)
+}
+
+result = await collectors[collectorName](source)
 
     await supabaseAdmin
       .from("discovery_runs")

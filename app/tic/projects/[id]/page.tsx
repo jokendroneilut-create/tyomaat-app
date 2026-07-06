@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCandidate } from "../../services/getCandidate"
-import CandidateActions from "./CandidateActions"
+import ProjectActions from "./ProjectActions"
 
 export const dynamic = "force-dynamic"
 
@@ -58,7 +58,7 @@ export default async function CandidateDetailPage({ params }: Props) {
     prioriteetti
   </div>
 
-  <CandidateActions candidateId={candidate.id} />
+  <ProjectActions candidateId={candidate.id} />
 </div>
         </div>
 
