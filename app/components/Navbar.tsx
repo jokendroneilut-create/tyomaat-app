@@ -146,6 +146,7 @@ export default function Navbar() {
         <>
           <NavHeading>⚙️ Admin</NavHeading>
           <NavSection>
+            <NavItem href="/today">Tänään</NavItem>
             <NavItem href="/dashboard">Dashboard</NavItem>
             <NavItem href="/dashboard/messages">Viestit</NavItem>
             <NavItem href="/tic">Työmaat Intelligence Center</NavItem>
@@ -153,9 +154,6 @@ export default function Navbar() {
 
           <NavHeading>🚧 Tulossa</NavHeading>
           <NavSection>
-            <NavItem href="#" disabled>
-              Tänään
-            </NavItem>
             <NavItem href="#" disabled>
               CRM
             </NavItem>

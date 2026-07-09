@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
-import { extractFacts } from "@/lib/agent/facts/extractFacts"
-import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
+import { resolveFacts } from "@/lib/agent/facts/resolveFacts"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,16 +9,21 @@ const supabaseAdmin = createClient(
 export async function runFactWorker() {
   const startedAt = Date.now()
 
-  const { data: document, error: documentError } = await supabaseAdmin
+  const { data: documents, error: documentError } = await supabaseAdmin
     .from("source_documents")
     .select("*")
-    .not("extracted_text", "is", null)
     .is("facts_extracted_at", null)
-    .order("text_extracted_at", { ascending: true })
-    .limit(1)
-    .maybeSingle()
+    .order("created_at", { ascending: false })
+    .limit(100)
 
   if (documentError) throw documentError
+
+  const document =
+    (documents ?? []).find((d) =>
+      d.source_name === "Hilma"
+        ? !!(d.raw_payload?.original || d.raw_text)
+        : !!d.extracted_text
+    ) ?? null
 
   if (!document) {
     return {
@@ -52,54 +56,9 @@ export async function runFactWorker() {
       .delete()
       .eq("document_id", document.id)
 
-    const fullText = document.extracted_text ?? ""
-    const decisions = splitEspooPermitNoticeText(fullText)
+    const { decisions, facts } = resolveFacts(document)
 
     console.log("Decision count:", decisions.length)
-
-    let allFacts: ReturnType<typeof extractFacts> = []
-
-    for (const decision of decisions) {
-      console.log(
-        "Decision:",
-        decision.index,
-        decision.sectionNumber,
-        decision.address,
-        decision.permitNumber
-      )
-
-      const decisionFacts = extractFacts({
-        documentId: document.id,
-        sourceName: document.source_name,
-        text: decision.rawText,
-      })
-
-      const factsWithDecisionMetadata = decisionFacts.map((fact) => ({
-        ...fact,
-        metadata: {
-          ...(fact.metadata ?? {}),
-          decision_index: decision.index,
-          section_number: decision.sectionNumber,
-          permit_number: decision.permitNumber,
-          address: decision.address,
-          property_ids: decision.propertyIds,
-          district: decision.district,
-          operation: decision.operation,
-          decision_maker: decision.decisionMaker,
-        },
-      }))
-
-      allFacts = [...allFacts, ...factsWithDecisionMetadata]
-    }
-
-    const facts =
-      decisions.length > 0
-        ? allFacts
-        : extractFacts({
-            documentId: document.id,
-            sourceName: document.source_name,
-            text: fullText,
-          })
 
     let savedCount = 0
 

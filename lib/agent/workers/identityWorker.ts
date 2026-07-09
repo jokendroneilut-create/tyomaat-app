@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
+import { resolveHilmaProject } from "@/lib/agent/identity/resolvers/hilmaResolver"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,7 +43,7 @@ export async function runIdentityWorker(documentId: string) {
   if (factsError) throw factsError
 
   const grouped = new Map<string, any[]>()
-
+  
   for (const fact of facts ?? []) {
     const decisionIndex = fact.metadata?.decision_index
     if (!decisionIndex) continue
@@ -58,6 +59,17 @@ export async function runIdentityWorker(documentId: string) {
 
   const results = []
 
+  const sourceName = String(document.source_name ?? "").trim().toLowerCase()
+
+if (sourceName === "hilma") {
+    const result = await resolveHilmaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else {
+
   for (const [decisionIndex, decisionFacts] of grouped.entries()) {
     const metadata = decisionFacts[0]?.metadata ?? {}
 
@@ -66,6 +78,7 @@ export async function runIdentityWorker(documentId: string) {
     const district = metadata.district ?? null
     const operation = metadata.operation ?? null
     const decisionMaker = metadata.decision_maker ?? null
+    const municipality = metadata.municipality ?? "Espoo"
 
     const propertyFact = decisionFacts.find(
       (fact) => fact.fact_type === "property_id"
@@ -89,7 +102,7 @@ export async function runIdentityWorker(documentId: string) {
 
     const result = await resolvePotentialProject({
       title,
-      municipality: "Espoo",
+      municipality,
       address,
       propertyId,
       permitNumber,
@@ -123,7 +136,7 @@ export async function runIdentityWorker(documentId: string) {
       operation,
       classification,
     })
-  }
+  }}
 
   await supabaseAdmin
     .from("source_documents")
