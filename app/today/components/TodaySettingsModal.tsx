@@ -305,8 +305,8 @@ export default function TodaySettingsModal() {
           aria-modal="true"
           aria-labelledby="today-settings-title"
         >
-          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-            <div className="border-b px-6 py-5">
+          <div className="flex h-[min(90vh,760px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className="shrink-0 border-b px-6 py-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-sm text-gray-500">
@@ -341,7 +341,7 @@ export default function TodaySettingsModal() {
               </div>
             </div>
 
-            <div className="min-h-[420px] flex-1 overflow-y-auto px-6 py-6">
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
               {loading ? (
                 <div className="flex min-h-[320px] items-center justify-center text-sm text-gray-500">
                   Ladataan asetuksia...
@@ -357,7 +357,7 @@ export default function TodaySettingsModal() {
               )}
             </div>
 
-            <div className="flex items-center justify-between gap-3 border-t px-6 py-5">
+            <div className="shrink-0 flex items-center justify-between gap-3 border-t bg-white px-6 py-5">
               <button
                 type="button"
                 onClick={previousStep}
