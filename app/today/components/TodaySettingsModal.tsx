@@ -1,333 +1,367 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 
-const companyProfiles = [
-  "Rakennusliike",
-  "Talotekniikka",
-  "Sähköurakoitsija",
-  "Rakennustuotteet",
-  "Arkkitehti",
-  "Rakennesuunnittelu",
-  "Infra",
-  "Kiinteistönomistaja",
-  "Muu",
-]
+import StepCompanyProfile from "./settings/StepCompanyProfile"
+import StepFinished from "./settings/StepFinished"
+import StepMaxProjects from "./settings/StepMaxProjects"
+import StepRegion from "./settings/StepRegion"
+import StepSalesMoment from "./settings/StepSalesMoment"
+import StepSources from "./settings/StepSources"
+import StepWelcome from "./settings/StepWelcome"
 
-const salesMoments = [
-  "Kaavoitus",
-  "Ideointi",
-  "Suunnittelu",
-  "Rakennuslupa",
-  "Kilpailutus",
-  "Rakenteilla",
-  "Valmistumassa",
-]
-
-const sources = [
-  "Rakennusluvat",
-  "Hilma",
-  "Kaavoitus",
-  "Kuntapäätökset",
-  "Yritysuutiset",
-]
-
-const maxProjectOptions = [20, 40, 60, 100]
+import {
+  regions,
+  todaySources,
+} from "./settings/todaySettingsConfig"
 
 export default function TodaySettingsModal() {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
 
   const [companyProfile, setCompanyProfile] = useState<string | null>(null)
+
   const [wholeFinland, setWholeFinland] = useState(true)
-  const [selectedSalesMoments, setSelectedSalesMoments] = useState<string[]>([])
-  const [selectedSources, setSelectedSources] = useState<string[]>([
-    "Rakennusluvat",
-    "Hilma",
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([
+    ...regions,
   ])
+
+  const [selectedSalesMoments, setSelectedSalesMoments] = useState<string[]>([])
+
+  const [selectedSources, setSelectedSources] = useState<string[]>([
+    ...todaySources,
+  ])
+
   const [maxProjects, setMaxProjects] = useState(40)
+
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const totalSteps = 6
 
-  function toggleValue(
-    value: string,
-    values: string[],
-    setter: (nextValues: string[]) => void
-  ) {
-    setter(
-      values.includes(value)
-        ? values.filter((item) => item !== value)
-        : [...values, value]
-    )
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadSettings() {
+      setLoading(true)
+
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser()
+
+        if (userError) {
+          throw userError
+        }
+
+        if (!user) {
+          throw new Error("Kirjautunutta käyttäjää ei löytynyt.")
+        }
+
+        const response = await fetch(
+          `/api/today/preferences?userId=${encodeURIComponent(user.id)}`,
+          {
+            method: "GET",
+            cache: "no-store",
+          }
+        )
+
+        const result = await response.json()
+
+        if (!response.ok || !result.ok) {
+          throw new Error(
+            result.error ?? "Asetusten lataaminen epäonnistui."
+          )
+        }
+
+        if (cancelled || !result.settings) {
+          return
+        }
+
+        const settings = result.settings
+
+        setCompanyProfile(settings.companyProfile ?? null)
+
+        const savedRegions = Array.isArray(settings.regions)
+          ? settings.regions
+          : []
+
+        const hasWholeFinland = savedRegions.includes("Koko Suomi")
+
+        setWholeFinland(hasWholeFinland)
+
+        setSelectedRegions(
+          hasWholeFinland
+            ? [...regions]
+            : savedRegions.filter((region: string) =>
+                regions.includes(
+                  region as (typeof regions)[number]
+                )
+              )
+        )
+
+        setSelectedSalesMoments(
+          Array.isArray(settings.bestSalesMoments)
+            ? settings.bestSalesMoments
+            : []
+        )
+
+        setSelectedSources(
+          Array.isArray(settings.sources)
+            ? settings.sources
+            : [...todaySources]
+        )
+
+        setMaxProjects(Number(settings.maxProjects ?? 40))
+      } catch (loadError: any) {
+        if (!cancelled) {
+          console.error("TODAY SETTINGS LOAD ERROR:", loadError)
+
+          setError(
+            loadError?.message ?? "Asetusten lataaminen epäonnistui."
+          )
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadSettings()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  function openModal() {
+    setError(null)
+    setStep(0)
+    setOpen(true)
   }
 
   function closeModal() {
+    if (saving) {
+      return
+    }
+
     setOpen(false)
     setStep(0)
+    setError(null)
   }
 
   function nextStep() {
+    setError(null)
     setStep((current) => Math.min(current + 1, totalSteps))
   }
 
   function previousStep() {
+    setError(null)
     setStep((current) => Math.max(current - 1, 0))
   }
 
   async function saveSettings() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    setSaving(true)
+    setError(null)
 
-  if (!user) {
-    alert("Kirjautunutta käyttäjää ei löytynyt.")
-    return
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError) {
+        throw userError
+      }
+
+      if (!user) {
+        throw new Error("Kirjautunutta käyttäjää ei löytynyt.")
+      }
+
+      const response = await fetch("/api/today/preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          settings: {
+            companyProfile,
+
+            regions: wholeFinland
+              ? ["Koko Suomi"]
+              : selectedRegions,
+
+            municipalities: [],
+
+            projectStages: [],
+            constructionTypes: [],
+            buildingTypes: [],
+
+            bestSalesMoments: selectedSalesMoments,
+            sources: selectedSources,
+            maxProjects,
+
+            showRejected: false,
+            showArchived: false,
+          },
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.ok) {
+        throw new Error(
+          result.error ?? "Asetusten tallennus epäonnistui."
+        )
+      }
+
+      setOpen(false)
+      setStep(0)
+
+      window.location.reload()
+    } catch (saveError: any) {
+      setError(
+        saveError?.message ?? "Asetusten tallennus epäonnistui."
+      )
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const response = await fetch("/api/today/preferences", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      userId: user.id,
-      settings: {
-        companyProfile,
-        regions: wholeFinland ? ["Koko Suomi"] : [],
-        municipalities: [],
-        projectStages: [],
-        constructionTypes: [],
-        buildingTypes: [],
-        bestSalesMoments: selectedSalesMoments,
-        sources: selectedSources,
-        maxProjects,
-        showRejected: false,
-        showArchived: false,
-      },
-    }),
-  })
+  function renderStep() {
+    switch (step) {
+      case 0:
+        return <StepWelcome />
 
-  const result = await response.json()
+      case 1:
+        return (
+          <StepCompanyProfile
+            selectedProfile={companyProfile}
+            onChange={setCompanyProfile}
+          />
+        )
 
-  if (!response.ok || !result.ok) {
-    alert(result.error ?? "Asetusten tallennus epäonnistui.")
-    return
+      case 2:
+        return (
+          <StepRegion
+            wholeFinland={wholeFinland}
+            selectedRegions={selectedRegions}
+            onWholeFinlandChange={setWholeFinland}
+            onRegionsChange={setSelectedRegions}
+          />
+        )
+
+      case 3:
+        return (
+          <StepSalesMoment
+            selectedMoments={selectedSalesMoments}
+            onChange={setSelectedSalesMoments}
+          />
+        )
+
+      case 4:
+        return (
+          <StepSources
+            selectedSources={selectedSources}
+            onChange={setSelectedSources}
+          />
+        )
+
+      case 5:
+        return (
+          <StepMaxProjects
+            selectedValue={maxProjects}
+            onChange={setMaxProjects}
+          />
+        )
+
+      case 6:
+        return <StepFinished />
+
+      default:
+        return <StepWelcome />
+    }
   }
-
-  closeModal()
-}
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openModal}
         className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-gray-50"
       >
         Mukauta näkymää
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="today-settings-title"
+        >
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="border-b px-6 py-5">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-sm text-gray-500">
                     Vaihe {step + 1} / {totalSteps + 1}
                   </div>
 
-                  <h2 className="text-2xl font-bold">
-                    Mukauta Tänään-näkymää
+                  <h2
+                    id="today-settings-title"
+                    className="mt-1 text-2xl font-bold text-gray-900"
+                  >
+                    Mukauta näkymää
                   </h2>
                 </div>
 
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-lg border px-3 py-2 text-sm font-semibold hover:bg-gray-50"
+                  disabled={saving}
+                  className="rounded-lg border px-3 py-2 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
                 >
                   Sulje
                 </button>
               </div>
+
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className="h-full rounded-full bg-gray-900 transition-all"
+                  style={{
+                    width: `${((step + 1) / (totalSteps + 1)) * 100}%`,
+                  }}
+                />
+              </div>
             </div>
 
-            <div className="min-h-[420px] px-6 py-6">
-              {step === 0 && (
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Tervetuloa Tänään-näkymään
-                  </h3>
-
-                  <p className="mt-4 text-gray-600">
-                    Rakennamme juuri sinun yrityksellesi sopivan näkymän.
-                  </p>
-
-                  <p className="mt-3 text-gray-600">
-                    Tämä vie alle minuutin. Voit muuttaa asetuksia myöhemmin.
-                  </p>
+            <div className="min-h-[420px] flex-1 overflow-y-auto px-6 py-6">
+              {loading ? (
+                <div className="flex min-h-[320px] items-center justify-center text-sm text-gray-500">
+                  Ladataan asetuksia...
                 </div>
+              ) : (
+                renderStep()
               )}
 
-              {step === 1 && (
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Mikä kuvaa yritystäsi parhaiten?
-                  </h3>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    {companyProfiles.map((profile) => (
-                      <button
-                        key={profile}
-                        type="button"
-                        onClick={() => setCompanyProfile(profile)}
-                        className={`rounded-lg border px-4 py-3 text-left text-sm font-semibold ${
-                          companyProfile === profile
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "hover:bg-gray-50"
-                        }`}
-                      >
-                        {profile}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Missä toimit?
-                  </h3>
-
-                  <label className="mt-5 flex items-center gap-3 rounded-lg border p-4">
-                    <input
-                      type="checkbox"
-                      checked={wholeFinland}
-                      onChange={(event) => setWholeFinland(event.target.checked)}
-                    />
-                    <span className="font-semibold">Koko Suomi</span>
-                  </label>
-
-                  <p className="mt-3 text-sm text-gray-600">
-                    Maakunta- ja kuntavalinnat lisätään seuraavaksi.
-                  </p>
-                </div>
-              )}
-
-              {step === 3 && (
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Paras myyntihetki
-                    </h3>
-
-                    <span
-                      title="Valitse missä hankkeen vaiheessa haluat nähdä sen Tänään-näkymässä."
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-full border text-xs font-bold text-gray-600"
-                    >
-                      ?
-                    </span>
-                  </div>
-
-                  <p className="mt-2 text-gray-600">
-                    Voit valita useamman vaiheen.
-                  </p>
-
-                  <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                    {salesMoments.map((moment) => (
-                      <label
-                        key={moment}
-                        className="flex items-center gap-2 rounded-lg border p-3 text-sm"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedSalesMoments.includes(moment)}
-                          onChange={() =>
-                            toggleValue(
-                              moment,
-                              selectedSalesMoments,
-                              setSelectedSalesMoments
-                            )
-                          }
-                        />
-                        {moment}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {step === 4 && (
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Mistä lähteistä Tänään saa etsiä hankkeita?
-                  </h3>
-
-                  <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                    {sources.map((source) => (
-                      <label
-                        key={source}
-                        className="flex items-center gap-2 rounded-lg border p-3 text-sm"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedSources.includes(source)}
-                          onChange={() =>
-                            toggleValue(source, selectedSources, setSelectedSources)
-                          }
-                        />
-                        {source}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {step === 5 && (
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Kuinka paljon haluat nähdä?
-                  </h3>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-4">
-                    {maxProjectOptions.map((value) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => setMaxProjects(value)}
-                        className={`rounded-lg border px-4 py-3 text-sm font-semibold ${
-                          maxProjects === value
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "hover:bg-gray-50"
-                        }`}
-                      >
-                        {value}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {step === 6 && (
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Tänään-näkymä on valmis!
-                  </h3>
-
-                  <p className="mt-4 text-gray-600">
-                    Näytämme tästä lähtien juuri sinulle sopivat hankkeet.
-                  </p>
+              {error && (
+                <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  {error}
                 </div>
               )}
             </div>
 
-            <div className="flex justify-between border-t px-6 py-5">
+            <div className="flex items-center justify-between gap-3 border-t px-6 py-5">
               <button
                 type="button"
                 onClick={previousStep}
-                disabled={step === 0}
+                disabled={step === 0 || saving || loading}
                 className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-gray-50 disabled:opacity-40"
               >
                 Takaisin
@@ -337,7 +371,8 @@ export default function TodaySettingsModal() {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white"
+                  disabled={saving || loading}
+                  className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   {step === 0 ? "Aloitetaan" : "Seuraava"}
                 </button>
@@ -345,9 +380,12 @@ export default function TodaySettingsModal() {
                 <button
                   type="button"
                   onClick={saveSettings}
-                  className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white"
+                  disabled={saving || loading}
+                  className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  Aloita Tänään-näkymän käyttö
+                  {saving
+                    ? "Tallennetaan..."
+                    : "Aloita Tänään-näkymän käyttö"}
                 </button>
               )}
             </div>

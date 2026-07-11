@@ -12,7 +12,7 @@ export default function AuthCallbackPage() {
       const params = new URLSearchParams(window.location.search)
       const token_hash = params.get('token_hash')
       const type = params.get('type')
-      const next = params.get('next') || '/projects'
+      const next = params.get("next") || "/today"
 
       if (!token_hash || !type) {
         router.push('/login')

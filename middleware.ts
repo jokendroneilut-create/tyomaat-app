@@ -1,9 +1,9 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from "next/server"
+import { createServerClient } from "@supabase/ssr"
 
 function parseAdminEmails(value: string | undefined) {
-  return (value || '')
-    .split(',')
+  return (value || "")
+    .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean)
 }
@@ -32,27 +32,27 @@ export async function middleware(request: NextRequest) {
   const user = error ? null : data.user
 
   const pathname = request.nextUrl.pathname
-  const isDashboard = pathname.startsWith('/dashboard')
-  const isProjects = pathname.startsWith('/projects')
 
-  // Suojataan nämä reitit kirjautumisella
-  const isProtected = isDashboard || isProjects
+  const isDashboard = pathname.startsWith("/dashboard")
+  const isProjects = pathname.startsWith("/projects")
+  const isToday = pathname.startsWith("/today")
+
+  const isProtected = isDashboard || isProjects || isToday
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('next', pathname)
+    url.pathname = "/login"
+    url.searchParams.set("next", pathname)
     return NextResponse.redirect(url)
   }
 
-  // ✅ Dashboard vain admin-emailille
   if (isDashboard) {
     const admins = parseAdminEmails(process.env.ADMIN_EMAILS)
-    const userEmail = (user?.email || '').toLowerCase()
+    const userEmail = (user?.email || "").toLowerCase()
 
     if (!admins.includes(userEmail)) {
       const url = request.nextUrl.clone()
-      url.pathname = '/projects' // tai '/' jos haluat
+      url.pathname = "/projects"
       return NextResponse.redirect(url)
     }
   }
@@ -61,5 +61,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard', '/dashboard/:path*', '/projects', '/projects/:path*'],
+  matcher: [
+    "/dashboard",
+    "/dashboard/:path*",
+    "/projects",
+    "/projects/:path*",
+    "/today",
+    "/today/:path*",
+  ],
 }

@@ -1,9 +1,12 @@
-import { createClient } from "@supabase/supabase-js"
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getTodayProjects } from "./getTodayProjects"
+import { getTodaySettings } from "./getTodaySettings"
+import {
+  matchesBestSalesMoments,
+  matchesSources,
+  matchesRegions,
+  projectSource,
+} from "./todayFilters"
+import { rankTodayProjects } from "./todayRanking"
 
 function daysAgoIso(days: number) {
   const now = new Date()
@@ -13,63 +16,57 @@ function daysAgoIso(days: number) {
   return start.toISOString()
 }
 
-export async function getTodaySummary() {
+export async function getTodaySummary(userId?: string | null) {
   const sevenDaysAgo = daysAgoIso(7)
 
-  const { data: approvedProjects, error: approvedError } = await supabaseAdmin
-    .from("projects")
-    .select(`
-      id,
-      created_at,
-      name,
-      city,
-      region,
-      location,
-      property_type,
-      phase,
-      additional_info,
-      metadata
-    `)
-    .eq("status", "active")
-    .gte("created_at", sevenDaysAgo)
-    .order("created_at", { ascending: false })
-    .limit(20)
+  const settings = await getTodaySettings(userId)
+  const maxProjects = Number(settings.maxProjects ?? 20)
 
-  if (approvedError) throw approvedError
+  const allProjects = await getTodayProjects()
 
-  const { data: newPotentialProjects, error: potentialError } =
-    await supabaseAdmin
-      .from("potential_projects")
-      .select(`
-        id,
-        created_at,
-        title,
-        municipality,
-        address,
-        confidence,
-        status,
-        metadata
-      `)
-      .eq("status", "new")
-      .gte("created_at", sevenDaysAgo)
-      .order("created_at", { ascending: false })
-      .limit(50)
+  const filteredProjects = allProjects
+  .filter((project: any) =>
+    matchesRegions(project, settings.regions)
+  )
+  .filter((project: any) =>
+    matchesSources(project, settings.sources)
+  )
+  .filter((project: any) =>
+    matchesBestSalesMoments(project, settings.bestSalesMoments)
+  )
 
-  if (potentialError) throw potentialError
+  const rankedProjects = rankTodayProjects(
+    filteredProjects,
+    settings
+  )
 
-  const highValueProjects = (approvedProjects ?? []).filter(
-    (project: any) => project.metadata?.business_value === "high"
+  const recentProjects = rankedProjects.filter(
+    (project: any) =>
+      new Date(project.created_at) >= new Date(sevenDaysAgo)
+  )
+
+  const highValueProjects = rankedProjects.filter(
+    (project: any) =>
+      project.metadata?.business_value === "high"
   )
 
   return {
-  metrics: {
-    newProjects: approvedProjects?.length ?? 0,
-    approvedToday: approvedProjects?.length ?? 0,
-    highValue: highValueProjects.length,
-    tenders: 0,
-  },
-    approvedProjects: approvedProjects ?? [],
-    newPotentialProjects: newPotentialProjects ?? [],
-    recommendedProjects: highValueProjects.slice(0, 10),
+    settings,
+
+    metrics: {
+      newProjects: recentProjects.length,
+      approvedToday: recentProjects.length,
+      highValue: highValueProjects.length,
+
+      tenders: rankedProjects.filter((project: any) =>
+        projectSource(project).includes("hilma")
+      ).length,
+    },
+
+    approvedProjects: recentProjects.slice(0, maxProjects),
+
+    newPotentialProjects: [],
+
+    recommendedProjects: rankedProjects.slice(0, maxProjects),
   }
 }

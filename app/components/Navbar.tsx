@@ -132,58 +132,76 @@ export default function Navbar() {
   };
 
   const NavLinks = () => (
-    <>
+  <>
+    <NavSection>
+      <NavItem href="/today">
+        Tänään{" "}
+        <span
+          style={{
+            marginLeft: 6,
+            padding: "2px 6px",
+            borderRadius: 999,
+            background: "#dbeafe",
+            color: "#1d4ed8",
+            fontSize: 10,
+            fontWeight: 700,
+          }}
+        >
+          BETA
+        </span>
+      </NavItem>
 
-      <NavSection>
-        <NavItem href="/projects">Hankkeet / Kartta</NavItem>
-        <NavItem href="/watchlists">Hakuvahdit</NavItem>
-        <NavItem href="/crm">Omat</NavItem>
-        <NavItem href="/tasks">Tehtävät</NavItem>
-        <NavItem href="/team">Tiiminäkymä</NavItem>
-      </NavSection>
+      <NavItem href="/projects">Hankkeet / Kartta</NavItem>
+      <NavItem href="/watchlists">Hakuvahdit</NavItem>
+      <NavItem href="/crm">Omat</NavItem>
+      <NavItem href="/tasks">Tehtävät</NavItem>
+      <NavItem href="/team">Tiiminäkymä</NavItem>
+    </NavSection>
 
-      {isAdmin && (
-        <>
-          <NavHeading>⚙️ Admin</NavHeading>
-          <NavSection>
-            <NavItem href="/today">Tänään</NavItem>
-            <NavItem href="/dashboard">Dashboard</NavItem>
-            <NavItem href="/dashboard/messages">Viestit</NavItem>
-            <NavItem href="/tic">Työmaat Intelligence Center</NavItem>
-          </NavSection>
+    {isAdmin && (
+      <>
+        <NavHeading>⚙️ Admin</NavHeading>
 
-          <NavHeading>🚧 Tulossa</NavHeading>
-          <NavSection>
-            <NavItem href="#" disabled>
-              CRM
-            </NavItem>
-            <NavItem href="#" disabled>
-              Raportit
-            </NavItem>
-          </NavSection>
-        </>
-      )}
+        <NavSection>
+          <NavItem href="/dashboard">Dashboard</NavItem>
+          <NavItem href="/dashboard/messages">Viestit</NavItem>
+          <NavItem href="/tic">Työmaat Intelligence Center</NavItem>
+        </NavSection>
 
-      <button onClick={handleLogout} style={logoutStyle}>
-        Kirjaudu ulos
-      </button>
+        <NavHeading>🚧 Tulossa</NavHeading>
 
-      <div
-        style={{
-          borderTop: "1px solid #e5e7eb",
-          paddingTop: 10,
-          marginTop: 4,
-          fontSize: 12,
-          color: "#6b7280",
-          wordBreak: "break-word",
-        }}
-      >
-        Kirjautunut:
-        <br />
-        <strong>{session?.user?.email || "-"}</strong>
-      </div>
-    </>
-  );
+        <NavSection>
+          <NavItem href="#" disabled>
+            CRM
+          </NavItem>
+
+          <NavItem href="#" disabled>
+            Raportit
+          </NavItem>
+        </NavSection>
+      </>
+    )}
+
+    <button onClick={handleLogout} style={logoutStyle}>
+      Kirjaudu ulos
+    </button>
+
+    <div
+      style={{
+        borderTop: "1px solid #e5e7eb",
+        paddingTop: 10,
+        marginTop: 4,
+        fontSize: 12,
+        color: "#6b7280",
+        wordBreak: "break-word",
+      }}
+    >
+      Kirjautunut:
+      <br />
+      <strong>{session?.user?.email || "-"}</strong>
+    </div>
+  </>
+);
 
   return (
     <nav
@@ -200,7 +218,7 @@ export default function Navbar() {
       }}
     >
       <a
-        href="/projects"
+        href="/today"
         onClick={() => setOpen(false)}
         style={{
           display: "flex",

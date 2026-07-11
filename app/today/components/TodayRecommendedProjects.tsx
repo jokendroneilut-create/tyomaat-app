@@ -13,45 +13,57 @@ export default function TodayRecommendedProjects({
 
       {projects.length === 0 ? (
         <p className="mt-4 text-gray-500">
-          Ei uusia korkean prioriteetin hankkeita.
+          Asetuksiasi vastaavia hankkeita ei löytynyt.
         </p>
       ) : (
         <div className="mt-6 space-y-4">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="rounded-lg border p-4"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg">
-                    {project.name}
-                  </h3>
+          {projects.map((project) => {
+            const location =
+              project.location ||
+              [project.city, project.region].filter(Boolean).join(", ")
 
-                  <p className="text-gray-600">
-                    {project.location}
-                  </p>
+            return (
+              <div
+                key={project.id}
+                className="rounded-lg border p-4"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold">
+                      {project.name}
+                    </h3>
 
-                  <div className="mt-2 flex gap-2 text-sm">
-                    <span className="rounded bg-blue-100 px-2 py-1">
-                      {project.phase}
-                    </span>
+                    {location && (
+                      <p className="mt-1 text-gray-600">
+                        {location}
+                      </p>
+                    )}
 
-                    <span className="rounded bg-green-100 px-2 py-1">
-                      {project.metadata?.business_value ?? "-"}
-                    </span>
+                    <div className="mt-2 flex flex-wrap gap-2 text-sm">
+                      {project.phase && (
+                        <span className="rounded bg-blue-100 px-2 py-1">
+                          {project.phase}
+                        </span>
+                      )}
+
+                      {project.metadata?.business_value && (
+                        <span className="rounded bg-green-100 px-2 py-1">
+                          {project.metadata.business_value}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <Link
-                  href={`/projects/${project.id}`}
-                  className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
-                >
-                  Avaa
-                </Link>
+                  <Link
+                    href={`/projects?open=${encodeURIComponent(project.id)}`}
+                    className="shrink-0 rounded-lg border px-3 py-2 text-sm font-semibold hover:bg-gray-50"
+                  >
+                    Avaa
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </section>
