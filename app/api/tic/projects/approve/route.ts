@@ -8,152 +8,365 @@ const supabaseAdmin = createClient(
 )
 
 export async function POST(request: Request) {
-  const body = await request.json()
-  const potentialProjectId = body.potentialProjectId
+  try {
+    const body = await request.json()
+    const potentialProjectId = body.potentialProjectId
 
-  if (!potentialProjectId) {
-    return NextResponse.json(
-      { ok: false, error: "Missing potentialProjectId" },
-      { status: 400 }
-    )
-  }
+    if (!potentialProjectId) {
+      return NextResponse.json(
+        { ok: false, error: "Missing potentialProjectId" },
+        { status: 400 }
+      )
+    }
 
-  const { data: potentialProject, error: potentialError } = await supabaseAdmin
-    .from("potential_projects")
-    .select("*")
-    .eq("id", potentialProjectId)
-    .single()
+    const { data: potentialProject, error: potentialError } =
+      await supabaseAdmin
+        .from("potential_projects")
+        .select("*")
+        .eq("id", potentialProjectId)
+        .single()
 
-  if (potentialError || !potentialProject) {
-    return NextResponse.json(
-      { ok: false, error: "Potential project not found" },
-      { status: 404 }
-    )
-  }
+    if (potentialError || !potentialProject) {
+      return NextResponse.json(
+        { ok: false, error: "Potential project not found" },
+        { status: 404 }
+      )
+    }
 
-  const metadata = potentialProject.metadata ?? {}
-const region = getRegionForMunicipality(potentialProject.municipality)
-const location = buildProjectLocation(potentialProject)
+    const metadata = potentialProject.metadata ?? {}
 
-const coords = await geocodeProjectLocation({
-  location,
-  city: potentialProject.municipality,
-  region,
-})
+    const { data: sourceDocument, error: sourceDocumentError } =
+      metadata.source_document_id
+        ? await supabaseAdmin
+            .from("source_documents")
+            .select("document_url, source_name")
+            .eq("id", metadata.source_document_id)
+            .maybeSingle()
+        : { data: null, error: null }
 
-  const { data: project, error: projectError } = await supabaseAdmin
-  .from("projects")
-  .insert({
-    name: buildCustomerProjectName(potentialProject),
-    city: potentialProject.municipality,
-    region,
-    location,
+    if (sourceDocumentError) {
+      throw sourceDocumentError
+    }
 
-    lat: coords.lat,
-    lng: coords.lon,
-    latitude: coords.lat,
-    longitude: coords.lon,
+    const sourceName =
+      sourceDocument?.source_name ??
+      metadata.source_name ??
+      metadata.firstSourceName ??
+      metadata.lastSourceName ??
+      metadata.source ??
+      null
 
-    property_type: metadata.building_type ?? null,
-    phase: "Suunnittelussa",
-    source_confidence: potentialProject.confidence,
-    is_public: true,
-    needs_review: false,
-    status: "active",
-    additional_info: metadata.operation ?? null,
+    const isHilma =
+      normalize(sourceName) === "hilma" ||
+      normalize(metadata.resolver) === "hilmaresolver"
 
-    metadata: {
-      source: "discovery_agent",
+    /*
+     * Hilman potentialProject.address on tällä hetkellä yleensä
+     * hankintayksikön toimisto-osoite, ei rakennuskohteen osoite.
+     *
+     * Sitä ei siksi saa käyttää karttasijaintina.
+     */
+    const buyerAddress = isHilma
+      ? potentialProject.address ?? null
+      : metadata.buyer_address ?? null
+
+    const projectAddress = isHilma
+      ? metadata.project_address ??
+        metadata.site_address ??
+        metadata.worksite_address ??
+        null
+      : potentialProject.address ?? null
+
+    const city = isHilma
+      ? metadata.project_municipality ??
+        metadata.site_municipality ??
+        potentialProject.municipality ??
+        null
+      : potentialProject.municipality ?? null
+
+    const region =
+      metadata.region ??
+      getRegionForMunicipality(city)
+
+    const location = buildProjectLocation({
+      address: projectAddress,
+      city,
+    })
+
+    const coords =
+      location || city || region
+        ? await geocodeProjectLocation({
+            location,
+            city,
+            region,
+          })
+        : {
+            lat: null,
+            lon: null,
+          }
+
+    const sourceUrl =
+      sourceDocument?.document_url ??
+      metadata.source_url ??
+      null
+
+    const documentsUrl =
+      metadata.documents_url ??
+      metadata.document_url ??
+      null
+
+    const deadline =
+      metadata.deadline ??
+      null
+
+    const developer =
+      metadata.developer ??
+      null
+
+    const phase =
+  metadata.phase_hint ??
+  (isHilma
+    ? "Kilpailutus"
+    : "Suunnittelussa")
+
+    const { data: project, error: projectError } = await supabaseAdmin
+      .from("projects")
+      .insert({
+        name: buildCustomerProjectName({
+          potentialProject,
+          isHilma,
+          projectAddress,
+        }),
+
+        city,
+        region,
+        location,
+
+        lat: coords.lat,
+        lng: coords.lon,
+        latitude: coords.lat,
+        longitude: coords.lon,
+
+        developer,
+
+        property_type: metadata.building_type ?? null,
+        phase,
+        source_confidence: potentialProject.confidence,
+        is_public: true,
+        needs_review: false,
+        status: "active",
+
+        additional_info:
+          metadata.description ??
+          metadata.operation ??
+          null,
+
+        metadata: {
+  /*
+   * Säilytetään kaikki potentiaalisen hankkeen metadata.
+   * Näin uusien agenttikenttien lisääminen ei vaadi aina
+   * approve-reitin muuttamista.
+   */
+  ...metadata,
+
+  /*
+   * Alla olevat kentät kirjoitetaan tarkoituksella spreadin jälkeen,
+   * jotta hyväksyntävaiheessa muodostetut canonical-arvot voittavat.
+   */
+  source: sourceName ?? metadata.source ?? "discovery_agent",
+  source_name: sourceName,
+  source_url: sourceUrl,
+  documents_url: documentsUrl,
+
+  potential_project_id: potentialProject.id,
+  source_document_id: metadata.source_document_id ?? null,
+
+  permit_number: potentialProject.permit_number,
+  notice_number:
+    metadata.notice_number ??
+    potentialProject.permit_number ??
+    null,
+  notice_id: metadata.notice_id ?? null,
+
+  deadline,
+  date_published: metadata.date_published ?? null,
+  procurement_type_code:
+    metadata.procurement_type_code ?? null,
+
+  developer,
+  buyer_address: buyerAddress,
+  project_address: projectAddress,
+
+  operation: metadata.operation ?? null,
+  description: metadata.description ?? null,
+  district: metadata.district ?? null,
+
+  property_id: potentialProject.property_id,
+
+  construction_type:
+    metadata.construction_type ?? null,
+  building_type:
+    metadata.building_type ?? null,
+  business_value:
+    metadata.business_value ?? null,
+  recommended_action:
+    metadata.recommended_action ?? null,
+  classification_confidence:
+    metadata.classification_confidence ?? null,
+  classification_reasons:
+    metadata.classification_reasons ?? [],
+
+  resolver: metadata.resolver ?? null,
+
+  approved_at: new Date().toISOString(),
+  approved_from: "tic",
+},
+      })
+      .select()
+      .single()
+
+    if (projectError) {
+      return NextResponse.json(
+        { ok: false, error: projectError.message },
+        { status: 500 }
+      )
+    }
+
+    await supabaseAdmin.from("project_imports").insert({
       potential_project_id: potentialProject.id,
-      permit_number: potentialProject.permit_number,
-      property_id: potentialProject.property_id,
-      source_document_id: metadata.source_document_id ?? null,
-      operation: metadata.operation ?? null,
-      district: metadata.district ?? null,
-      construction_type: metadata.construction_type ?? null,
-      building_type: metadata.building_type ?? null,
-      business_value: metadata.business_value ?? null,
-      recommended_action: metadata.recommended_action ?? null,
-      classification_reasons: metadata.classification_reasons ?? [],
-    },
-  })
-  .select()
-  .single()
+      project_id: project.id,
+      action: "create_project",
+      source_document_id:
+        metadata.source_document_id ?? null,
+      source_name: sourceName,
 
-  if (projectError) {
+      changes: {
+        created_project: {
+          name: project.name,
+          city: project.city,
+          region: project.region,
+          location: project.location,
+          property_type: project.property_type,
+          phase: project.phase,
+        },
+      },
+
+      metadata: {
+        approved_from: "tic",
+        source_url: sourceUrl,
+        documents_url: documentsUrl,
+        deadline,
+        permit_number: potentialProject.permit_number,
+        property_id: potentialProject.property_id,
+        construction_type:
+          metadata.construction_type ?? null,
+        building_type:
+          metadata.building_type ?? null,
+        region,
+      },
+    })
+
+    await supabaseAdmin
+      .from("potential_projects")
+      .update({
+        status: "approved",
+        updated_at: new Date().toISOString(),
+        metadata: {
+          ...metadata,
+          approved_at: new Date().toISOString(),
+          approved_project_id: project.id,
+          approved_region: region,
+          approved_source_url: sourceUrl,
+          approved_documents_url: documentsUrl,
+        },
+      })
+      .eq("id", potentialProject.id)
+
+    return NextResponse.json({
+      ok: true,
+      action: "created_project",
+      projectId: project.id,
+      potentialProjectId: potentialProject.id,
+      geocoded: Boolean(coords.lat && coords.lon),
+      sourceUrl,
+      documentsUrl,
+    })
+  } catch (error: any) {
     return NextResponse.json(
-      { ok: false, error: projectError.message },
+      {
+        ok: false,
+        error: error?.message ?? "Unknown error",
+      },
       { status: 500 }
     )
   }
-
-  await supabaseAdmin.from("project_imports").insert({
-    potential_project_id: potentialProject.id,
-    project_id: project.id,
-    action: "create_project",
-    source_document_id: metadata.source_document_id ?? null,
-    source_name: metadata.firstSourceName ?? metadata.lastSourceName ?? null,
-    changes: {
-      created_project: {
-        name: project.name,
-        city: project.city,
-        region: project.region,
-        location: project.location,
-        property_type: project.property_type,
-        phase: project.phase,
-      },
-    },
-    metadata: {
-      approved_from: "tic",
-      permit_number: potentialProject.permit_number,
-      property_id: potentialProject.property_id,
-      construction_type: metadata.construction_type ?? null,
-      building_type: metadata.building_type ?? null,
-      region,
-    },
-  })
-
-  await supabaseAdmin
-    .from("potential_projects")
-    .update({
-      status: "approved",
-      updated_at: new Date().toISOString(),
-      metadata: {
-        ...metadata,
-        approved_at: new Date().toISOString(),
-        approved_project_id: project.id,
-        approved_region: region,
-      },
-    })
-    .eq("id", potentialProject.id)
-
-  return NextResponse.json({
-    ok: true,
-    action: "created_project",
-    projectId: project.id,
-    potentialProjectId: potentialProject.id,
-  })
 }
 
-function buildCustomerProjectName(potentialProject: any) {
+function normalize(value: unknown) {
+  return String(value ?? "").trim().toLowerCase()
+}
+
+function buildCustomerProjectName({
+  potentialProject,
+  isHilma,
+  projectAddress,
+}: {
+  potentialProject: any
+  isHilma: boolean
+  projectAddress: string | null
+}) {
   const metadata = potentialProject.metadata ?? {}
   const operation = metadata.operation
-  const address = potentialProject.address
 
-  if (operation && address) {
-    return `${operation}, ${address}`
+  /*
+   * Hilma-hankkeen nimeen ei lisätä hankintayksikön
+   * toimisto-osoitetta.
+   */
+  if (isHilma) {
+    return (
+      operation ??
+      potentialProject.title ??
+      "Hankintailmoitus"
+    )
+  }
+
+  if (operation && projectAddress) {
+    return `${operation}, ${projectAddress}`
   }
 
   if (operation) return operation
-  if (address) return `Rakennushanke, ${address}`
+
+  if (projectAddress) {
+    return `Rakennushanke, ${projectAddress}`
+  }
 
   return potentialProject.title ?? "Rakennushanke"
 }
 
-function getRegionForMunicipality(municipality: string | null) {
+function buildProjectLocation({
+  address,
+  city,
+}: {
+  address: string | null
+  city: string | null
+}) {
+  if (
+    address &&
+    city &&
+    !normalize(address).includes(normalize(city))
+  ) {
+    return `${address}, ${city}`
+  }
+
+  return address ?? null
+}
+
+function getRegionForMunicipality(
+  municipality: string | null
+) {
   if (!municipality) return null
 
-  const normalized = municipality.trim().toLowerCase()
+  const normalized = normalize(municipality)
 
   const uusimaa = [
     "espoo",
@@ -184,18 +397,9 @@ function getRegionForMunicipality(municipality: string | null) {
     "askola",
   ]
 
-  if (uusimaa.includes(normalized)) return "Uusimaa"
-
-  return null
-}
-
-function buildProjectLocation(potentialProject: any) {
-  const address = potentialProject.address
-  const city = potentialProject.municipality
-
-  if (address && city && !address.toLowerCase().includes(city.toLowerCase())) {
-    return `${address}, ${city}`
+  if (uusimaa.includes(normalized)) {
+    return "Uusimaa"
   }
 
-  return address ?? null
+  return null
 }

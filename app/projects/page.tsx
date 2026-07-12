@@ -32,6 +32,20 @@ type Project = {
   lat?: number | string | null
   lng?: number | string | null
   owner_id?: string | null
+
+  metadata?: {
+    source?: string | null
+    source_name?: string | null
+    source_url?: string | null
+    documents_url?: string | null
+    deadline?: string | null
+    notice_number?: string | null
+    notice_id?: string | null
+    developer?: string | null
+    buyer_address?: string | null
+    project_address?: string | null
+    [key: string]: unknown
+  } | null
 }
 
 function uniqSorted(values: (string | null | undefined)[]) {
@@ -320,7 +334,8 @@ export default function Projects() {
         apartments, floor_area, estimated_cost, construction_start,
         structural_design, hvac_design, electrical_design, architectural_design,
         geotechnical_design, earthworks_contractor, additional_info,
-        latitude, longitude,
+         latitude, longitude,
+        metadata,
         is_public,
         created_at
       `
@@ -1038,6 +1053,80 @@ setTeamModeEnabled(true)
                 </p>
               </div>
             </div>
+
+ {selected.metadata?.deadline ||
+            selected.metadata?.source_url ||
+            selected.metadata?.documents_url ? (
+              <>
+                <hr className="projects-hr" />
+
+                <div>
+                  <p style={{ marginBottom: 8 }}>
+                    <strong>Hankintatiedot</strong>
+                  </p>
+
+                  {selected.metadata?.source_name ? (
+                    <p>
+                      <strong>Lähde:</strong>{" "}
+                      {selected.metadata.source_name}
+                    </p>
+                  ) : null}
+
+                  {selected.metadata?.notice_number ? (
+                    <p>
+                      <strong>Ilmoitusnumero:</strong>{" "}
+                      {selected.metadata.notice_number}
+                    </p>
+                  ) : null}
+
+                  {selected.metadata?.deadline ? (
+                    <p>
+                      <strong>Tarjousten määräaika:</strong>{" "}
+                      {new Date(
+                        selected.metadata.deadline
+                      ).toLocaleString("fi-FI")}
+                    </p>
+                  ) : null}
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 10,
+                      marginTop: 12,
+                    }}
+                  >
+                    {selected.metadata?.source_url &&
+!(
+  selected.metadata?.source_name?.toLowerCase() === "hilma" &&
+  selected.metadata?.documents_url
+) ? (
+  <a
+    href={selected.metadata.source_url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="projects-btn"
+    style={{ textDecoration: "none" }}
+  >
+    Avaa alkuperäinen ilmoitus
+  </a>
+) : null}
+
+                    {selected.metadata?.documents_url ? (
+                      <a
+                        href={selected.metadata.documents_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="projects-btn"
+                        style={{ textDecoration: "none" }}
+                      >
+                        Avaa Hilma / tarjousasiakirjat
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              </>
+            ) : null}
 
             {selected.additional_info ? (
               <>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
 export default function LoginPage() {
-  const [nextPath, setNextPath] = useState('/dashboard')
+  const [nextPath, setNextPath] = useState('/today')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -14,7 +14,10 @@ export default function LoginPage() {
     try {
       const params = new URLSearchParams(window.location.search)
       const next = params.get('next')
-      if (next) setNextPath(next)
+
+      if (next && next.startsWith('/')) {
+        setNextPath(next)
+      }
     } catch {}
   }, [])
 
@@ -23,7 +26,10 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
     setLoading(false)
 
@@ -32,7 +38,7 @@ export default function LoginPage() {
       return
     }
 
-    // ✅ täysi reload varmistaa että middleware näkee uudet cookiet heti
+    // Täysi reload varmistaa, että middleware näkee uudet evästeet heti.
     window.location.href = nextPath
   }
 
@@ -62,6 +68,7 @@ export default function LoginPage() {
           style={{ width: '100%', padding: 10, marginTop: 8 }}
           autoComplete="email"
         />
+
         <input
           placeholder="Salasana"
           type="password"
@@ -70,7 +77,11 @@ export default function LoginPage() {
           style={{ width: '100%', padding: 10, marginTop: 8 }}
           autoComplete="current-password"
         />
-        <button disabled={loading} style={{ marginTop: 12, padding: 10, width: '100%' }}>
+
+        <button
+          disabled={loading}
+          style={{ marginTop: 12, padding: 10, width: '100%' }}
+        >
           {loading ? 'Kirjaudutaan…' : 'Kirjaudu'}
         </button>
       </form>
