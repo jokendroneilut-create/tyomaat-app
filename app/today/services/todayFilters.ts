@@ -16,8 +16,10 @@ const ALL_SALES_MOMENT_OPTIONS = [
   "suunnittelu",
   "rakennuslupa",
   "kilpailutus",
+  "sopimus myönnetty",
   "rakenteilla",
   "valmistumassa",
+  "valmistunut",
 ]
 
 function containsAllOptions(
@@ -183,6 +185,12 @@ export function matchesBestSalesMoments(
           text.includes("works")
         )
 
+      case "sopimus myönnetty":
+        return (
+          text.includes("sopimus") ||
+          text.includes("urakoitsija valittu")
+        )
+
       case "rakenteilla":
         return (
           text.includes("rakenteilla") ||
@@ -192,8 +200,14 @@ export function matchesBestSalesMoments(
 
       case "valmistumassa":
         return (
-          text.includes("valmist") ||
+          text.includes("valmistumassa") ||
           text.includes("käyttöönot")
+        )
+
+      case "valmistunut":
+        return (
+          text.includes("valmistunut") ||
+          text.includes("valmistui")
         )
 
       default:

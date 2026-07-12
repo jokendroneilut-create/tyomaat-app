@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import MapClient from './MapClient'
 import type { MapBounds } from './Map'
+import PhaseTimeline from './PhaseTimeline'
+import { displayPhaseLabel } from '@/lib/projects/phases'
 
 type Project = {
   id: string
@@ -165,6 +167,9 @@ export default function Projects() {
   const [visibleCount, setVisibleCount] = useState(pageSize)
 
   const [selected, setSelected] = useState<Project | null>(null)
+  const [phaseHistory, setPhaseHistory] = useState<
+    { phase: string; created_at: string }[]
+  >([])
 
   useEffect(() => {
     if (projects.length === 0) return
@@ -178,6 +183,28 @@ export default function Projects() {
       setSelected(found)
     }
   }, [projects])
+
+  useEffect(() => {
+    if (!selected?.id) {
+      setPhaseHistory([])
+      return
+    }
+
+    let cancelled = false
+
+    supabase
+      .from('project_phase_history')
+      .select('phase, created_at')
+      .eq('project_id', selected.id)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (!cancelled) setPhaseHistory(data ?? [])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [selected?.id])
 
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [limitToMapView, setLimitToMapView] = useState(true)
@@ -926,8 +953,9 @@ setTeamModeEnabled(true)
               <div>
                 <h2 className="projects-modalTitle">{selected.name}</h2>
                 <div className="projects-modalSub">
-                  {selected.city} • {selected.region || '-'} • {selected.phase}
+                  {selected.city} • {selected.region || '-'} • {displayPhaseLabel(selected.phase)}
                 </div>
+                <PhaseTimeline rawPhase={selected.phase} history={phaseHistory} />
               </div>
 
               <div

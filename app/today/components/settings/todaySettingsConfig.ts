@@ -1,3 +1,5 @@
+import { CANONICAL_PHASES } from "@/lib/projects/phases"
+
 export const companyProfiles = [
   "Rakennusliike",
   "Talotekniikka",
@@ -10,15 +12,9 @@ export const companyProfiles = [
   "Muu",
 ] as const
 
-export const salesMoments = [
-  "Kaavoitus",
-  "Ideointi",
-  "Suunnittelu",
-  "Rakennuslupa",
-  "Kilpailutus",
-  "Rakenteilla",
-  "Valmistumassa",
-] as const
+export const salesMoments = CANONICAL_PHASES.filter((p) => !p.terminal).map(
+  (p) => p.label
+)
 
 export const todaySources = [
   "Rakennusluvat",

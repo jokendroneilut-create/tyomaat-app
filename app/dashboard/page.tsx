@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
+import { CANONICAL_PHASES } from "@/lib/projects/phases"
 
 type Project = {
   id: string
@@ -57,7 +58,7 @@ const FINNISH_REGIONS = [
   'Varsinais-Suomi',
 ]
 
-const PHASE_OPTIONS = ['Suunnittelussa', 'Rakentaminen aloitettu'] as const
+const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
 
 function onlyDigits(value: string) {
   return (value || '').replace(/[^\d]/g, '')
@@ -122,6 +123,7 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingOriginalPhase, setEditingOriginalPhase] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [filterQ, setFilterQ] = useState('')
   const [filterRegion, setFilterRegion] = useState('')
@@ -236,17 +238,53 @@ export default function Dashboard() {
       const { error } = await supabase.from('projects').update(payload).eq('id', editingId)
       if (error) return showErrorUI('Päivitys epäonnistui', error)
 
+      await notifyPhaseChange(editingId, payload.phase, editingOriginalPhase)
+
       setEditingId(null)
+      setEditingOriginalPhase(null)
       setForm(emptyForm)
       await fetchProjects()
       return
     }
 
-    const { error } = await supabase.from('projects').insert([payload])
+    const { data: insertedRow, error } = await supabase
+      .from('projects')
+      .insert([payload])
+      .select()
+      .single()
     if (error) return showErrorUI('Lisäys epäonnistui', error)
+
+    if (insertedRow?.id) {
+      await notifyPhaseChange(insertedRow.id, payload.phase, null)
+    }
 
     setForm(emptyForm)
     await fetchProjects()
+  }
+
+  async function notifyPhaseChange(
+    projectId: string,
+    newPhase: string | null,
+    previousPhase: string | null
+  ) {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session?.access_token) return
+
+      await fetch('/api/projects/record-phase-change', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ projectId, newPhase, previousPhase }),
+      })
+    } catch {
+      // best-effort only, never block the save
+    }
   }
 
   async function togglePublic(id: string, current: boolean) {
@@ -282,11 +320,12 @@ export default function Dashboard() {
   function startEdit(project: Project) {
     setSubmitError(null)
     setEditingId(project.id)
+    setEditingOriginalPhase(project.phase ?? null)
     setForm({
       ...project,
       region: project.region || '',
       city: project.city ?? '',
-      phase: PHASE_OPTIONS.includes(project.phase as any) ? project.phase : PHASE_OPTIONS[0],
+      phase: project.phase || PHASE_OPTIONS[0],
       apartments: project.apartments != null ? String(project.apartments) : '',
       floor_area: project.floor_area != null ? String(project.floor_area) : '',
       estimated_cost: project.estimated_cost != null ? String(project.estimated_cost) : '',
@@ -308,6 +347,7 @@ export default function Dashboard() {
   function cancelEdit() {
     setSubmitError(null)
     setEditingId(null)
+    setEditingOriginalPhase(null)
     setForm(emptyForm)
   }
 
@@ -379,6 +419,9 @@ export default function Dashboard() {
                   value={form.phase}
                   onChange={(e) => setForm({ ...form, phase: e.target.value })}
                 >
+                  {form.phase && !PHASE_OPTIONS.includes(form.phase) && (
+                    <option value={form.phase}>{form.phase} (tuntematon)</option>
+                  )}
                   {PHASE_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}

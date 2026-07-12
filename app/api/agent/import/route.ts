@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
+import { inferPhaseFromText } from "@/lib/projects/inferPhaseFromText"
+import { PHASE_LABELS } from "@/lib/projects/phases"
+import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 
 export const runtime = "nodejs"
 
@@ -56,6 +59,7 @@ const match =
 
     if (match) {
       const matchedProjectId = match.id
+      const matchedNewPhase = body.phase || match.phase
 
       await supabase
         .from("projects")
@@ -107,6 +111,15 @@ const match =
           },
         })
         .eq("id", matchedProjectId)
+
+      await recordPhaseChange({
+        supabase,
+        projectId: matchedProjectId,
+        newPhase: matchedNewPhase,
+        previousPhase: match.phase,
+        source: "agent_import",
+        sourceName: body.source_name || "agent",
+      })
 
       await supabase.from("project_import_events").insert({
         source_name: body.source_name || "agent",
@@ -187,6 +200,18 @@ const match =
       })
     }
 
+    const inferredPhaseKey = !body.phase
+      ? inferPhaseFromText(
+          body.name,
+          body.metadata?.description ?? body.metadata?.operation,
+          body.metadata
+        )
+      : null
+
+    const insertPhase =
+      body.phase ||
+      (inferredPhaseKey ? PHASE_LABELS[inferredPhaseKey] : "Suunnittelussa")
+
     const { data: inserted } = await supabase
       .from("projects")
       .insert({
@@ -196,7 +221,7 @@ const match =
         location: body.location,
         developer: body.developer || null,
         property_type: body.property_type ?? body.building_type ?? null,
-        phase: body.phase || "Suunnittelussa",
+        phase: insertPhase,
         is_public: true,
         source_confidence: body.confidence ?? null,
         metadata: {
@@ -216,6 +241,18 @@ const match =
       })
       .select()
       .single()
+
+    if (inserted?.id) {
+      await recordPhaseChange({
+        supabase,
+        projectId: inserted.id,
+        newPhase: insertPhase,
+        previousPhase: null,
+        source: "agent_import",
+        sourceName: body.source_name || "agent",
+        metadata: { inferred: Boolean(inferredPhaseKey) },
+      })
+    }
 
     await supabase.from("project_import_events").insert({
       source_name: body.source_name || "agent",

@@ -1,5 +1,6 @@
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
+import { PHASE_LABELS } from "@/lib/projects/phases"
 
 function findFact(
   facts: any[],
@@ -148,8 +149,8 @@ export async function resolveHilmaProject({
     metadata.is_contract_award === true
 
   const phaseHint = isContractAward
-    ? "Sopimus myönnetty"
-    : "Kilpailutus"
+    ? PHASE_LABELS.contract_awarded
+    : PHASE_LABELS.tender
 
   const classification = classifyProject({
     operation,

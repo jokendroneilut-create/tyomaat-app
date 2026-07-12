@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
+import { PHASE_LABELS } from "@/lib/projects/phases"
+import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -126,8 +128,8 @@ export async function POST(request: Request) {
     const phase =
   metadata.phase_hint ??
   (isHilma
-    ? "Kilpailutus"
-    : "Suunnittelussa")
+    ? PHASE_LABELS.tender
+    : PHASE_LABELS.planning)
 
     const { data: project, error: projectError } = await supabaseAdmin
       .from("projects")
@@ -231,6 +233,15 @@ export async function POST(request: Request) {
         { status: 500 }
       )
     }
+
+    await recordPhaseChange({
+      supabase: supabaseAdmin,
+      projectId: project.id,
+      newPhase: project.phase,
+      previousPhase: null,
+      source: "tic_approve",
+      sourceName: sourceName ?? "tic",
+    })
 
     await supabaseAdmin.from("project_imports").insert({
       potential_project_id: potentialProject.id,
