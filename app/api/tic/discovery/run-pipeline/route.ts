@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server"
 import { runDiscoveryPipeline } from "@/lib/agent/pipeline/discoveryPipeline"
 
+export const runtime = "nodejs"
+export const maxDuration = 60
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
 
   const result = await runDiscoveryPipeline({
     maxSourceCount: body.maxSourceCount,
+    maxArticleJobs: body.maxArticleJobs,
     maxPdfJobs: body.maxPdfJobs,
     maxTextJobs: body.maxTextJobs,
     maxFactJobs: body.maxFactJobs,

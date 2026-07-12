@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import { findProjectMatch } from "@/lib/agent/projectMatcher"
+import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 
 export const runtime = "nodejs"
 
@@ -28,13 +28,31 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
       city: body.city || null,
       region: body.region || null,
       location: body.location || null,
+      permitNumber: body.permit_number ?? body.metadata?.permit_number ?? null,
+      propertyId: body.property_id ?? body.metadata?.property_id ?? null,
+      developer: body.developer ?? body.metadata?.developer ?? null,
+      buildingType:
+        body.property_type ??
+        body.building_type ??
+        body.metadata?.building_type ??
+        null,
     }
 
     const { data: projects } = await supabase
       .from("projects")
-      .select("id,name,city,region,location,phase,completed_at,status")
+      .select(
+        "id,name,city,region,location,phase,completed_at,status,developer,property_type,metadata"
+      )
 
-    const match = findProjectMatch(projects || [], candidate)
+    const detailedMatch = findProjectMatchDetailed(
+  projects || [],
+  candidate
+)
+
+const match =
+  detailedMatch && detailedMatch.confidence >= 70
+    ? detailedMatch.project
+    : null
 
     if (match) {
       const matchedProjectId = match.id
@@ -47,12 +65,46 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
           region: body.region || match.region || null,
           location: body.location || match.location || null,
           phase: body.phase || match.phase || undefined,
+          developer: body.developer || match.developer || null,
+          property_type:
+            body.property_type ||
+            body.building_type ||
+            match.property_type ||
+            null,
           needs_review: body.completed ? true : false,
           source_confidence: body.confidence ?? null,
           status: body.completed ? "completed" : match.status ?? "active",
           completed_at: body.completed
             ? new Date().toISOString()
             : match.completed_at ?? null,
+          metadata: {
+            ...(match.metadata ?? {}),
+            ...(body.metadata ?? {}),
+            permit_number:
+              body.permit_number ??
+              body.metadata?.permit_number ??
+              match.metadata?.permit_number ??
+              null,
+            property_id:
+              body.property_id ??
+              body.metadata?.property_id ??
+              match.metadata?.property_id ??
+              null,
+            developer:
+              body.developer ??
+              body.metadata?.developer ??
+              match.metadata?.developer ??
+              null,
+            building_type:
+              body.building_type ??
+              body.property_type ??
+              body.metadata?.building_type ??
+              match.metadata?.building_type ??
+              null,
+            last_source_name: body.source_name || "agent",
+            last_source_url: body.source_url || null,
+            last_imported_at: new Date().toISOString(),
+          },
         })
         .eq("id", matchedProjectId)
 
@@ -63,6 +115,8 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
         match_status: "matched",
         matched_project_id: matchedProjectId,
         action_taken: "verified",
+        match_confidence: detailedMatch?.confidence ?? null,
+        match_reasons: detailedMatch?.reasons ?? [],
       })
 
       if (body.source_url) {
@@ -103,6 +157,8 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
           matched_project_id: null,
           action_taken: "skipped",
           reason: "source_url already imported",
+          match_confidence: detailedMatch?.confidence ?? null,
+          match_reasons: detailedMatch?.reasons ?? [],
         })
 
         return NextResponse.json({
@@ -121,6 +177,8 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
         matched_project_id: null,
         action_taken: "skipped",
         reason: "completed project not inserted as new",
+        match_confidence: detailedMatch?.confidence ?? null,
+        match_reasons: detailedMatch?.reasons ?? [],
       })
 
       return NextResponse.json({
@@ -136,9 +194,25 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
         city: body.city,
         region: body.region,
         location: body.location,
+        developer: body.developer || null,
+        property_type: body.property_type ?? body.building_type ?? null,
         phase: body.phase || "Suunnittelussa",
         is_public: true,
         source_confidence: body.confidence ?? null,
+        metadata: {
+          ...(body.metadata ?? {}),
+          permit_number: body.permit_number ?? body.metadata?.permit_number ?? null,
+          property_id: body.property_id ?? body.metadata?.property_id ?? null,
+          developer: body.developer ?? body.metadata?.developer ?? null,
+          building_type:
+            body.building_type ??
+            body.property_type ??
+            body.metadata?.building_type ??
+            null,
+          first_source_name: body.source_name || "agent",
+          first_source_url: body.source_url || null,
+          first_imported_at: new Date().toISOString(),
+        },
       })
       .select()
       .single()
@@ -150,6 +224,8 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
       match_status: "new",
       matched_project_id: inserted?.id,
       action_taken: "inserted",
+      match_confidence: detailedMatch?.confidence ?? null,
+      match_reasons: detailedMatch?.reasons ?? [],
     })
 
     if (inserted?.id && body.source_url) {
