@@ -1,14 +1,14 @@
 import { CANONICAL_PHASES } from "@/lib/projects/phases"
 
 export const companyProfiles = [
-  "Rakennusliike",
-  "Talotekniikka",
-  "Sähköurakoitsija",
-  "Rakennustuotteet",
   "Arkkitehti",
-  "Rakennesuunnittelu",
   "Infra",
   "Kiinteistönomistaja",
+  "Rakennesuunnittelu",
+  "Rakennusliike",
+  "Rakennustuotteet",
+  "Sähköurakoitsija",
+  "Talotekniikka",
   "Muu",
 ] as const
 
