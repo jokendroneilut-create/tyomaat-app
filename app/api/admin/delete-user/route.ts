@@ -20,10 +20,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "invalid or empty json body" }, { status: 400 })
     }
 
-    const email = String(body.email || "").trim().toLowerCase()
+    const userId = String(body.userId || "").trim()
 
-    if (!email) {
-      return NextResponse.json({ error: "email missing" }, { status: 400 })
+    if (!userId) {
+      return NextResponse.json({ error: "userId missing" }, { status: 400 })
     }
 
     const supabase = createClient(
@@ -54,21 +54,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 })
     }
 
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: "https://app.tyomaat.fi/auth/callback",
-    })
+    if (userId === caller.id) {
+      return NextResponse.json(
+        { error: "et voi poistaa omaa tunnustasi" },
+        { status: 400 }
+      )
+    }
+
+    const { error } = await supabase.auth.admin.deleteUser(userId)
 
     if (error) {
-      console.error("INVITE ERROR:", error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    return NextResponse.json({
-      ok: true,
-      user: data.user ?? null,
-    })
+    return NextResponse.json({ ok: true })
   } catch (err: any) {
-    console.error("INVITE ROUTE ERROR:", err)
+    console.error("DELETE USER ERROR:", err)
 
     return NextResponse.json(
       { error: err?.message || "unknown error" },

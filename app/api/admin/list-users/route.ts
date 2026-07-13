@@ -10,22 +10,8 @@ function parseAdminEmails(value: string | undefined) {
     .filter(Boolean)
 }
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   try {
-    let body: any = {}
-
-    try {
-      body = await req.json()
-    } catch {
-      return NextResponse.json({ error: "invalid or empty json body" }, { status: 400 })
-    }
-
-    const email = String(body.email || "").trim().toLowerCase()
-
-    if (!email) {
-      return NextResponse.json({ error: "email missing" }, { status: 400 })
-    }
-
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -54,21 +40,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 })
     }
 
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: "https://app.tyomaat.fi/auth/callback",
-    })
+    let allUsers: any[] = []
+    let page = 1
+    const perPage = 100
 
-    if (error) {
-      console.error("INVITE ERROR:", error)
-      return NextResponse.json({ error: error.message }, { status: 400 })
+    while (true) {
+      const { data, error } = await supabase.auth.admin.listUsers({
+        page,
+        perPage,
+      })
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      const usersBatch = data.users || []
+      allUsers = allUsers.concat(usersBatch)
+
+      if (usersBatch.length < perPage) {
+        break
+      }
+
+      page++
     }
 
-    return NextResponse.json({
-      ok: true,
-      user: data.user ?? null,
-    })
+    const users = allUsers
+      .map((u) => ({
+        id: u.id,
+        email: u.email ?? null,
+        created_at: u.created_at,
+        last_sign_in_at: u.last_sign_in_at ?? null,
+        confirmed: Boolean(u.email_confirmed_at),
+      }))
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+
+    return NextResponse.json({ ok: true, users })
   } catch (err: any) {
-    console.error("INVITE ROUTE ERROR:", err)
+    console.error("LIST USERS ERROR:", err)
 
     return NextResponse.json(
       { error: err?.message || "unknown error" },
