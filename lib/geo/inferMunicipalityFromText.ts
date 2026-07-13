@@ -14,15 +14,26 @@ function escapeRegex(value: string) {
 }
 
 /*
- * Yksinkertainen suomen genetiivimuotojen arvaus (esim. "Espoo" ->
- * "Espoon", "Lappajärvi" -> "Lappajärven"). Ei kata astevaihtelua
- * (esim. "Loppi" -> "Lopen"), mutta laajentaa kattavuutta ilman
- * täyttä kielioppimallia.
+ * Yksinkertainen suomen sijamuotojen arvaus (genetiivi ja inessiivi),
+ * mukaan lukien yleisimmät astevaihtelutapaukset (esim. "Riihimäki" ->
+ * "Riihimäen", "Loppi" -> "Lopen"). Ei kata kaikkia poikkeuksia, mutta
+ * laajentaa kattavuutta ilman täyttä kielioppimallia.
  */
 function genitiveVariants(name: string): string[] {
-  const variants = [name + "n"]
+  const variants = [name + "n", name + "ssa", name + "ssä"]
 
-  if (name.endsWith("i")) {
+  const lastChar = name.slice(-1).toLowerCase()
+  if ("aeiouyäöå".includes(lastChar)) {
+    variants.push(name + lastChar + "n")
+  }
+
+  if (name.endsWith("ppi")) {
+    variants.push(name.slice(0, -3) + "pen")
+  } else if (name.endsWith("kki")) {
+    variants.push(name.slice(0, -3) + "kin")
+  } else if (name.endsWith("ki")) {
+    variants.push(name.slice(0, -2) + "en")
+  } else if (name.endsWith("i")) {
     variants.push(name.slice(0, -1) + "en")
   }
 
