@@ -193,7 +193,7 @@ export default function UsersPage() {
       <div style={{ marginTop: 16, padding: 16, border: '1px solid #e5e7eb', borderRadius: 8 }}>
         <label style={{ fontWeight: 700 }}>Lisää uusi käyttäjä</label>
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
           <input
             type="email"
             placeholder="sahkoposti@esimerkki.fi"
@@ -248,7 +248,8 @@ export default function UsersPage() {
           </button>
         </div>
 
-        <table style={{ width: '100%', marginTop: 12, borderCollapse: 'collapse' }}>
+        <div style={{ marginTop: 12, overflowX: 'auto' }}>
+          <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>
               <SortHeader column="email" label="Sähköposti" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
@@ -301,6 +302,7 @@ export default function UsersPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )
