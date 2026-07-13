@@ -186,7 +186,7 @@ async function collectHilmaSource(source: DiscoverySource) {
   for (const notice of notices) {
     const noticeId = notice.noticeId ?? notice.id
     const documentUrl = noticeId
-      ? `https://www.hankintailmoitukset.fi/fi/public/procurement/${noticeId}/notice/overview`
+      ? `https://www.hankintailmoitukset.fi/fi/public/procurement/${noticeId}/notice/overview/overview`
       : source.url
 
     const rawText = JSON.stringify(notice)
