@@ -2,6 +2,7 @@ import { extractFacts } from "@/lib/agent/facts/extractFacts"
 import { extractHilmaFacts } from "@/lib/agent/facts/extractHilmaFacts"
 import { extractLupapisteFacts } from "@/lib/agent/facts/extractLupapisteFacts"
 import { extractVantaaKaavaFacts } from "@/lib/agent/facts/extractVantaaKaavaFacts"
+import { extractHelsinkiKaavaFacts } from "@/lib/agent/facts/extractHelsinkiKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -48,6 +49,23 @@ export function resolveFacts(document: any) {
         hakija,
         contacts,
         description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Helsingin vireillä olevat kaavat") {
+    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const center = document.raw_payload?.center ?? null
+    const districtName = document.raw_payload?.district_name ?? null
+
+    return {
+      decisions: [],
+      facts: extractHelsinkiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        feature,
+        center,
+        districtName,
       }),
     }
   }

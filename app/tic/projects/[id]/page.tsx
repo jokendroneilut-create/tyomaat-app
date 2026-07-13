@@ -108,6 +108,9 @@ export default async function CandidateDetailPage({ params }: Props) {
           <p><strong>🏗️ Rakennuttaja:</strong> {metadata.developer ?? "-"}</p>
           <p><strong>🏢 Kohdetyyppi:</strong> {metadata.building_type ?? "-"}</p>
           <p><strong>Vaihe:</strong> {metadata.phase_hint ?? metadata.decision_status ?? "-"}</p>
+          {typeof metadata.site_area_m2 === "number" && (
+            <p><strong>📐 Kaava-alueen pinta-ala:</strong> {Math.round(metadata.site_area_m2).toLocaleString("fi-FI")} m²</p>
+          )}
         </div>
 
         {contactPersons.length > 0 && (

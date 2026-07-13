@@ -22,6 +22,7 @@ export async function runFactWorker() {
     "Hilma",
     "Lupapiste kuulutukset",
     "Vantaan vireillä olevat kaavat",
+    "Helsingin vireillä olevat kaavat",
   ]
 
   const document =

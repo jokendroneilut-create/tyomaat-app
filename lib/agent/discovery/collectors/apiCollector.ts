@@ -466,6 +466,97 @@ async function collectVantaaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HELSINKI_DISTRICTS_URL =
+  "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=avoindata:Kaupunginosajako&outputFormat=application/json"
+
+async function fetchHelsinkiDistrictNames(): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+
+  try {
+    const response = await fetch(HELSINKI_DISTRICTS_URL, { cache: "no-store" })
+    if (!response.ok) return map
+
+    const json = await response.json()
+    for (const feature of json.features ?? []) {
+      const code = String(Number(feature.properties?.tunnus))
+      const name = feature.properties?.nimi_fi
+      if (code && name) map.set(code, name)
+    }
+  } catch {
+    // Piirijaon nimet eivät ole kriittisiä — jatketaan ilman niitä.
+  }
+
+  return map
+}
+
+/*
+ * Helsingin vireillä-rajapinnassa ei ole kaavan omaa nimeä, hakijaa eikä
+ * kuvaustekstiä (toisin kuin Vantaalla) — vain kaavatunnus, käsittelyvaihe,
+ * pinta-ala ja sijainti. Yksi WFS-haku riittää, ei sivutusta eikä
+ * per-kaava-sivuhakuja tarvita.
+ */
+async function collectHelsinkiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Helsingin kaavarajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const json = await response.json()
+  const features = Array.isArray(json.features) ? json.features : []
+  const districtNames = await fetchHelsinkiDistrictNames()
+
+  let saved = 0
+
+  for (const feature of features) {
+    const properties = feature.properties ?? {}
+    const kaavaTunnus = properties.kaavatunnus ?? properties.id
+    const documentUrl = `${source.url}#${kaavaTunnus}`
+
+    const districtCode = properties.sijaintialue
+      ? String(Number(properties.sijaintialue))
+      : null
+    const districtName = districtCode ? districtNames.get(districtCode) ?? null : null
+
+    const rawText = JSON.stringify(feature)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: `Kaava ${properties.kaavatunnus ?? properties.id}${districtName ? ` – ${districtName}` : ""}`,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            center: boundingBoxCenter(feature.geometry),
+            district_name: districtName,
+            original: feature,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: features.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "hilmaParser") {
     return collectHilmaSource(source)
@@ -477,6 +568,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "vantaaKaavaParser") {
     return collectVantaaKaavaSource(source)
+  }
+
+  if (source.parser === "helsinkiKaavaParser") {
+    return collectHelsinkiKaavaSource(source)
   }
 
   const response = await fetch(source.url, {
