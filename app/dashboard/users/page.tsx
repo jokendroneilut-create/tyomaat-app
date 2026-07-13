@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 
 type AdminUser = {
@@ -10,6 +10,9 @@ type AdminUser = {
   last_sign_in_at: string | null
   confirmed: boolean
 }
+
+type SortColumn = 'email' | 'created_at' | 'last_sign_in_at' | 'confirmed'
+type SortDirection = 'asc' | 'desc'
 
 function formatDate(value: string | null) {
   if (!value) return '-'
@@ -26,6 +29,38 @@ export default function UsersPage() {
   const [inviteResult, setInviteResult] = useState<string | null>(null)
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const [sortColumn, setSortColumn] = useState<SortColumn>('created_at')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const sortedUsers = useMemo(() => {
+    const sorted = [...users].sort((a, b) => {
+      let cmp = 0
+
+      if (sortColumn === 'email') {
+        cmp = (a.email ?? '').localeCompare(b.email ?? '', 'fi')
+      } else if (sortColumn === 'confirmed') {
+        cmp = Number(a.confirmed) - Number(b.confirmed)
+      } else {
+        const aVal = a[sortColumn] ?? ''
+        const bVal = b[sortColumn] ?? ''
+        cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+      }
+
+      return sortDirection === 'asc' ? cmp : -cmp
+    })
+
+    return sorted
+  }, [users, sortColumn, sortDirection])
 
   const getToken = async () => {
     const {
@@ -216,16 +251,16 @@ export default function UsersPage() {
         <table style={{ width: '100%', marginTop: 12, borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>
-              <th style={{ padding: '8px 4px' }}>Sähköposti</th>
-              <th style={{ padding: '8px 4px' }}>Luotu</th>
-              <th style={{ padding: '8px 4px' }}>Viimeksi kirjautunut</th>
-              <th style={{ padding: '8px 4px' }}>Tila</th>
+              <SortHeader column="email" label="Sähköposti" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="created_at" label="Luotu" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="last_sign_in_at" label="Viimeksi kirjautunut" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="confirmed" label="Tila" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <th style={{ padding: '8px 4px' }} />
             </tr>
           </thead>
 
           <tbody>
-            {users.map((u) => (
+            {sortedUsers.map((u) => (
               <tr key={u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                 <td style={{ padding: '8px 4px' }}>{u.email}</td>
                 <td style={{ padding: '8px 4px' }}>{formatDate(u.created_at)}</td>
@@ -268,5 +303,42 @@ export default function UsersPage() {
         </table>
       </div>
     </div>
+  )
+}
+
+function SortHeader({
+  column,
+  label,
+  sortColumn,
+  sortDirection,
+  onSort,
+}: {
+  column: SortColumn
+  label: string
+  sortColumn: SortColumn
+  sortDirection: SortDirection
+  onSort: (column: SortColumn) => void
+}) {
+  const active = sortColumn === column
+  const arrow = active ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''
+
+  return (
+    <th style={{ padding: '8px 4px' }}>
+      <button
+        onClick={() => onSort(column)}
+        style={{
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          font: 'inherit',
+          fontWeight: active ? 800 : 700,
+          cursor: 'pointer',
+          color: 'inherit',
+        }}
+      >
+        {label}
+        {arrow}
+      </button>
+    </th>
   )
 }
