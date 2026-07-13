@@ -1,10 +1,15 @@
-import Link from "next/link"
+"use client"
+
+import { useState } from "react"
+import TodayProjectModal from "./TodayProjectModal"
 
 export default function TodayRecommendedProjects({
   projects,
 }: {
   projects: any[]
 }) {
+  const [openId, setOpenId] = useState<string | null>(null)
+
   return (
     <section className="mt-10 rounded-xl border bg-white p-6 shadow-sm">
       <h2 className="text-xl font-semibold">
@@ -54,17 +59,22 @@ export default function TodayRecommendedProjects({
                     </div>
                   </div>
 
-                  <Link
-                    href={`/projects?open=${encodeURIComponent(project.id)}`}
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(project.id)}
                     className="shrink-0 rounded-lg border px-3 py-2 text-sm font-semibold hover:bg-gray-50"
                   >
                     Avaa
-                  </Link>
+                  </button>
                 </div>
               </div>
             )
           })}
         </div>
+      )}
+
+      {openId && (
+        <TodayProjectModal projectId={openId} onClose={() => setOpenId(null)} />
       )}
     </section>
   )
