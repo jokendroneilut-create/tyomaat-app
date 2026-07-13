@@ -1,3 +1,8 @@
+import {
+  normalizeAddress as norm,
+  normalizeIdentifierValue as normalizeIdentifier,
+} from "@/lib/projects/identity"
+
 export type NormalizedProjectCandidate = {
   name?: string | null
   city?: string | null
@@ -70,21 +75,9 @@ const GENERIC_TITLE_WORDS = new Set([
   "jälkiilmoitus",
 ])
 
-function norm(value: string | null | undefined) {
-  return String(value ?? "")
-    .toLowerCase()
-    .trim()
-    .replace(/[–—−]/g, "-")
-    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
-    .replace(/\s+/g, " ")
-}
-
-function normalizeIdentifier(value: string | null | undefined) {
-  return norm(value).replace(/\s+/g, "")
-}
 
 function titleWords(value: string | null | undefined) {
-  return norm(value)
+  return (norm(value) ?? "")
     .split(" ")
     .map((word) => word.trim())
     .filter((word) => word.length >= 4)

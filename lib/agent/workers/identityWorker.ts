@@ -115,6 +115,10 @@ if (sourceName === "hilma") {
       propertyId,
       permitNumber,
       sourceName: decisionFacts[0]?.source_name ?? null,
+      identifiers: [
+        { type: "espoo_permit_number", value: permitNumber },
+        { type: "property_id", value: propertyId },
+      ],
       metadata: {
         source_document_id: documentId,
         decision_index: decisionIndex,

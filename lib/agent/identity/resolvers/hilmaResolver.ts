@@ -172,6 +172,12 @@ export async function resolveHilmaProject({
     permitNumber: noticeNumber,
     sourceName: document.source_name,
 
+    identifiers: [
+      { type: "hilma_notice_number", value: noticeNumber },
+      { type: "hilma_notice_number", value: parentNoticeId },
+      { type: "hilma_notice_number", value: linkedNotices },
+    ],
+
     metadata: {
       source: "Hilma",
       source_name: document.source_name,

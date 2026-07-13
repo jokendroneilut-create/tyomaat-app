@@ -1,4 +1,9 @@
 import { createClient } from "@supabase/supabase-js"
+import {
+  findByIdentifiers,
+  linkIdentifier,
+  type IdentifierType,
+} from "@/lib/projects/identity"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +18,7 @@ export type ResolvePotentialProjectInput = {
   permitNumber?: string | null
   sourceName?: string | null
   metadata?: Record<string, unknown>
+  identifiers?: { type: IdentifierType; value: string | null | undefined }[]
 }
 
 function normalizeValue(value: string | null | undefined) {
@@ -29,8 +35,34 @@ export async function resolvePotentialProject(
   const permitNumber = normalizeValue(input.permitNumber)
 
   let existing = null
+  let matchedExistingProjectId: string | null = null
 
-  if (permitNumber) {
+  /*
+   * Tarkka taso: tyypitetyt tunnisteet (esim. Lupapisteen lupanumero,
+   * kiinteistötunnus, Hilman ilmoitusnumero mukaan lukien sen
+   * parent_notice_id/linked_notices) ohittavat alla olevan vanhan
+   * kaskadin, joka pysyy muuttumattomana varajärjestelmänä.
+   */
+  if (input.identifiers?.length) {
+    const found = await findByIdentifiers(input.identifiers, supabaseAdmin)
+
+    if (found?.potentialProjectId) {
+      const { data, error } = await supabaseAdmin
+        .from("potential_projects")
+        .select("*")
+        .eq("id", found.potentialProjectId)
+        .maybeSingle()
+
+      if (error) throw error
+      existing = data
+    }
+
+    if (found?.projectId) {
+      matchedExistingProjectId = found.projectId
+    }
+  }
+
+  if (!existing && permitNumber) {
     const { data, error } = await supabaseAdmin
       .from("potential_projects")
       .select("*")
@@ -80,6 +112,9 @@ export async function resolvePotentialProject(
           ...(existing.metadata ?? {}),
           ...(input.metadata ?? {}),
           lastSourceName: input.sourceName ?? null,
+          matched_existing_project_id:
+            existing.metadata?.matched_existing_project_id ??
+            matchedExistingProjectId,
         },
       })
       .eq("id", existing.id)
@@ -87,6 +122,8 @@ export async function resolvePotentialProject(
       .single()
 
     if (error) throw error
+
+    await linkIdentifiers(input.identifiers, updated.id)
 
     return {
       action: "updated_existing",
@@ -112,6 +149,7 @@ export async function resolvePotentialProject(
       metadata: {
         ...(input.metadata ?? {}),
         firstSourceName: input.sourceName ?? null,
+        matched_existing_project_id: matchedExistingProjectId,
       },
     })
     .select()
@@ -119,8 +157,24 @@ export async function resolvePotentialProject(
 
   if (error) throw error
 
+  await linkIdentifiers(input.identifiers, created.id)
+
   return {
     action: "created_new",
     potentialProject: created,
+  }
+}
+
+async function linkIdentifiers(
+  identifiers: ResolvePotentialProjectInput["identifiers"],
+  potentialProjectId: string
+) {
+  for (const identifier of identifiers ?? []) {
+    await linkIdentifier({
+      type: identifier.type,
+      value: identifier.value,
+      potentialProjectId,
+      supabase: supabaseAdmin,
+    })
   }
 }

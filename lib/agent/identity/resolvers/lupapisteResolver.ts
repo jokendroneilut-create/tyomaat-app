@@ -50,6 +50,11 @@ export async function resolveLupapisteProject({
     permitNumber,
     sourceName: document.source_name,
 
+    identifiers: [
+      { type: "lupapiste_permit_number", value: permitNumber },
+      { type: "property_id", value: propertyId },
+    ],
+
     metadata: {
       source: "Lupapiste",
       source_name: document.source_name,

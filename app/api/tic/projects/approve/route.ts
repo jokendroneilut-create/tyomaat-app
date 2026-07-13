@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
-import { PHASE_LABELS } from "@/lib/projects/phases"
+import {
+  PHASE_LABELS,
+  PHASE_KEYS_IN_ORDER,
+  CANONICAL_PHASES,
+  normalizeLegacyPhase,
+} from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { inferMunicipalityFromText } from "@/lib/geo/inferMunicipalityFromText"
+import {
+  findByIdentifiers,
+  linkIdentifier,
+  type IdentifierType,
+} from "@/lib/projects/identity"
+import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,6 +74,29 @@ export async function POST(request: Request) {
     const isHilma =
       normalize(sourceName) === "hilma" ||
       normalize(metadata.resolver) === "hilmaresolver"
+
+    const isLupapiste = normalize(metadata.resolver) === "lupapisteresolver"
+
+    const permitIdentifierType: IdentifierType = isHilma
+      ? "hilma_notice_number"
+      : isLupapiste
+        ? "lupapiste_permit_number"
+        : "espoo_permit_number"
+
+    const candidateIdentifiers: {
+      type: IdentifierType
+      value: string | null | undefined
+    }[] = [
+      { type: permitIdentifierType, value: potentialProject.permit_number },
+      { type: "property_id", value: potentialProject.property_id },
+    ]
+
+    if (isHilma) {
+      candidateIdentifiers.push(
+        { type: "hilma_notice_number", value: metadata.parent_notice_id },
+        { type: "hilma_notice_number", value: metadata.linked_notices }
+      )
+    }
 
     /*
      * Hilman potentialProject.address on tällä hetkellä yleensä
@@ -167,14 +201,190 @@ export async function POST(request: Request) {
     ? PHASE_LABELS.tender
     : PHASE_LABELS.planning)
 
+    const projectName = buildCustomerProjectName({
+      potentialProject,
+      isHilma,
+      projectAddress,
+    })
+
+    function phaseOrder(rawPhase: string | null | undefined) {
+      const key = normalizeLegacyPhase(rawPhase)
+      if (!key) return null
+      return CANONICAL_PHASES.find((p) => p.key === key)?.order ?? null
+    }
+
+    /*
+     * Duplikaattitarkistus ennen uuden hankkeen luomista.
+     * 1) Tarkka taso: tyypitetyt tunnisteet (project_identifiers), tai
+     *    resolvePotentialProject.ts:n jo aiemmin löytämä osuma.
+     * 2) Sumea varataso vain jos tarkka taso ei löydä mitään: sama
+     *    pisteytetty matcheri jota /api/agent/import käyttää.
+     */
+    const exactMatch = await findByIdentifiers(candidateIdentifiers, supabaseAdmin)
+    const exactMatchedProjectId =
+      exactMatch?.projectId ?? metadata.matched_existing_project_id ?? null
+
+    let fuzzyDetailed: ReturnType<typeof findProjectMatchDetailed> = null
+
+    if (!exactMatchedProjectId) {
+      const { data: existingProjects, error: existingProjectsError } =
+        await supabaseAdmin
+          .from("projects")
+          .select(
+            "id,name,city,region,location,phase,completed_at,status,developer,property_type,metadata"
+          )
+
+      if (existingProjectsError) throw existingProjectsError
+
+      fuzzyDetailed = findProjectMatchDetailed(existingProjects ?? [], {
+        name: projectName,
+        city,
+        region,
+        location,
+        permitNumber: potentialProject.permit_number,
+        propertyId: potentialProject.property_id,
+        developer,
+        buildingType: metadata.building_type ?? null,
+      })
+    }
+
+    const fuzzyMatchedProjectId =
+      fuzzyDetailed && fuzzyDetailed.confidence >= 70 ? fuzzyDetailed.project.id : null
+
+    const possibleDuplicateOf =
+      !exactMatchedProjectId &&
+      !fuzzyMatchedProjectId &&
+      fuzzyDetailed &&
+      fuzzyDetailed.confidence >= 40
+        ? fuzzyDetailed.project.id
+        : null
+
+    const matchedProjectId = exactMatchedProjectId ?? fuzzyMatchedProjectId
+
+    if (matchedProjectId) {
+      const { data: existingProject, error: existingProjectFetchError } =
+        await supabaseAdmin
+          .from("projects")
+          .select("*")
+          .eq("id", matchedProjectId)
+          .single()
+
+      if (existingProjectFetchError) throw existingProjectFetchError
+
+      const existingOrder = phaseOrder(existingProject.phase)
+      const newOrder = phaseOrder(phase)
+      const phaseAdvances =
+        newOrder != null && (existingOrder == null || newOrder > existingOrder)
+
+      const mergedPhase = phaseAdvances ? phase : existingProject.phase
+
+      const alsoKnownAs = new Set<string>(
+        existingProject.metadata?.also_known_as ?? []
+      )
+      if (existingProject.name !== projectName) alsoKnownAs.add(projectName)
+
+      const mergedMetadata = {
+        ...metadata,
+        ...(existingProject.metadata ?? {}),
+        also_known_as: Array.from(alsoKnownAs),
+        source_count: Number(existingProject.metadata?.source_count ?? 1) + 1,
+        last_seen_at: new Date().toISOString(),
+        last_source_name:
+          sourceName ?? existingProject.metadata?.last_source_name ?? null,
+      }
+
+      const { data: updatedProject, error: updateError } = await supabaseAdmin
+        .from("projects")
+        .update({
+          city: existingProject.city ?? city,
+          region: existingProject.region ?? region,
+          location: existingProject.location ?? location,
+          developer: existingProject.developer ?? developer,
+          property_type:
+            existingProject.property_type ?? metadata.building_type ?? null,
+          latitude: existingProject.latitude ?? coords.lat,
+          longitude: existingProject.longitude ?? coords.lon,
+          lat: existingProject.lat ?? coords.lat,
+          lng: existingProject.lng ?? coords.lon,
+          phase: mergedPhase,
+          last_verified_at: new Date().toISOString(),
+          metadata: mergedMetadata,
+        })
+        .eq("id", matchedProjectId)
+        .select()
+        .single()
+
+      if (updateError) throw updateError
+
+      if (phaseAdvances) {
+        await recordPhaseChange({
+          supabase: supabaseAdmin,
+          projectId: matchedProjectId,
+          newPhase: mergedPhase,
+          previousPhase: existingProject.phase,
+          source: "tic_approve",
+          sourceName: sourceName ?? "tic",
+        })
+      }
+
+      for (const identifier of candidateIdentifiers) {
+        await linkIdentifier({
+          type: identifier.type,
+          value: identifier.value,
+          projectId: matchedProjectId,
+          sourceName,
+          supabase: supabaseAdmin,
+        })
+      }
+
+      await supabaseAdmin.from("project_imports").insert({
+        potential_project_id: potentialProject.id,
+        project_id: matchedProjectId,
+        action: "matched_existing_project",
+        source_document_id: metadata.source_document_id ?? null,
+        source_name: sourceName,
+        changes: {
+          matched_existing_project: {
+            matchedVia: exactMatchedProjectId ? "identifier" : "fuzzy_match",
+            confidence: fuzzyDetailed?.confidence ?? null,
+            phaseAdvanced: phaseAdvances,
+          },
+        },
+        metadata: {
+          approved_from: "tic",
+          source_url: sourceUrl,
+          documents_url: documentsUrl,
+        },
+      })
+
+      await supabaseAdmin
+        .from("potential_projects")
+        .update({
+          status: "approved",
+          updated_at: new Date().toISOString(),
+          metadata: {
+            ...metadata,
+            approved_at: new Date().toISOString(),
+            approved_project_id: matchedProjectId,
+          },
+        })
+        .eq("id", potentialProject.id)
+
+      return NextResponse.json({
+        ok: true,
+        action: "matched_existing_project",
+        projectId: matchedProjectId,
+        potentialProjectId: potentialProject.id,
+        matchedVia: exactMatchedProjectId ? "identifier" : "fuzzy_match",
+        confidence: fuzzyDetailed?.confidence ?? null,
+        geocoded: Boolean(coords.lat && coords.lon),
+      })
+    }
+
     const { data: project, error: projectError } = await supabaseAdmin
       .from("projects")
       .insert({
-        name: buildCustomerProjectName({
-          potentialProject,
-          isHilma,
-          projectAddress,
-        }),
+        name: projectName,
 
         city,
         region,
@@ -191,7 +401,7 @@ export async function POST(request: Request) {
         phase,
         source_confidence: potentialProject.confidence,
         is_public: true,
-        needs_review: false,
+        needs_review: Boolean(possibleDuplicateOf),
         status: "active",
 
         additional_info:
@@ -255,6 +465,7 @@ export async function POST(request: Request) {
     metadata.classification_reasons ?? [],
 
   resolver: metadata.resolver ?? null,
+  possible_duplicate_of: possibleDuplicateOf,
 
   approved_at: new Date().toISOString(),
   approved_from: "tic",
@@ -268,6 +479,16 @@ export async function POST(request: Request) {
         { ok: false, error: projectError.message },
         { status: 500 }
       )
+    }
+
+    for (const identifier of candidateIdentifiers) {
+      await linkIdentifier({
+        type: identifier.type,
+        value: identifier.value,
+        projectId: project.id,
+        sourceName,
+        supabase: supabaseAdmin,
+      })
     }
 
     await recordPhaseChange({

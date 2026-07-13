@@ -4,6 +4,25 @@ import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { inferPhaseFromText } from "@/lib/projects/inferPhaseFromText"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
+import {
+  findByIdentifiers,
+  linkIdentifier,
+  type IdentifierType,
+} from "@/lib/projects/identity"
+
+/*
+ * Tämän putken lähde (yritysten lehdistötiedotteet) ei anna luotettavaa
+ * tietoa lupanumeron alkuperästä, joten tyyppi päätellään parhaan
+ * yrityksen mukaan tunnetuista muodoista. Jos mikään ei täsmää, lupa­
+ * numeroa ei tyypitetä tarkkaan tunnistetauluun — sumea matcheri
+ * (findProjectMatchDetailed) hoitaa täsmäytyksen silloin edelleen.
+ */
+function guessPermitIdentifierType(value: string | null): IdentifierType | null {
+  if (!value) return null
+  if (/^LP-\d+-\d{4}-\d+$/i.test(value)) return "lupapiste_permit_number"
+  if (/^\d{4}-\d+$/.test(value)) return "hilma_notice_number"
+  return null
+}
 
 export const runtime = "nodejs"
 
@@ -41,16 +60,41 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
         null,
     }
 
+    const candidateIdentifiers: { type: IdentifierType; value: string | null }[] = [
+      { type: "property_id", value: candidate.propertyId },
+    ]
+
+    const permitIdentifierType = guessPermitIdentifierType(candidate.permitNumber)
+    if (permitIdentifierType) {
+      candidateIdentifiers.push({
+        type: permitIdentifierType,
+        value: candidate.permitNumber,
+      })
+    }
+
+    const exactMatch = await findByIdentifiers(candidateIdentifiers, supabase)
+
     const { data: projects } = await supabase
       .from("projects")
       .select(
         "id,name,city,region,location,phase,completed_at,status,developer,property_type,metadata"
       )
 
-    const detailedMatch = findProjectMatchDetailed(
+    let detailedMatch = findProjectMatchDetailed(
   projects || [],
   candidate
 )
+
+if (exactMatch?.projectId) {
+  const exactProject = (projects || []).find((p) => p.id === exactMatch.projectId)
+  if (exactProject) {
+    detailedMatch = {
+      project: exactProject,
+      confidence: 100,
+      reasons: ["same_permit_number"],
+    }
+  }
+}
 
 const match =
   detailedMatch && detailedMatch.confidence >= 70
@@ -111,6 +155,16 @@ const match =
           },
         })
         .eq("id", matchedProjectId)
+
+      for (const identifier of candidateIdentifiers) {
+        await linkIdentifier({
+          type: identifier.type,
+          value: identifier.value,
+          projectId: matchedProjectId,
+          sourceName: body.source_name || "agent",
+          supabase,
+        })
+      }
 
       await recordPhaseChange({
         supabase,
@@ -243,6 +297,16 @@ const match =
       .single()
 
     if (inserted?.id) {
+      for (const identifier of candidateIdentifiers) {
+        await linkIdentifier({
+          type: identifier.type,
+          value: identifier.value,
+          projectId: inserted.id,
+          sourceName: body.source_name || "agent",
+          supabase,
+        })
+      }
+
       await recordPhaseChange({
         supabase,
         projectId: inserted.id,
