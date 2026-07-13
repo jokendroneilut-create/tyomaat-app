@@ -36,8 +36,9 @@ export async function middleware(request: NextRequest) {
   const isDashboard = pathname.startsWith("/dashboard")
   const isProjects = pathname.startsWith("/projects")
   const isToday = pathname.startsWith("/today")
+  const isTic = pathname.startsWith("/tic")
 
-  const isProtected = isDashboard || isProjects || isToday
+  const isProtected = isDashboard || isProjects || isToday || isTic
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
@@ -46,7 +47,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (isDashboard) {
+  if (isDashboard || isTic) {
     const admins = parseAdminEmails(process.env.ADMIN_EMAILS)
     const userEmail = (user?.email || "").toLowerCase()
 
@@ -68,5 +69,7 @@ export const config = {
     "/projects/:path*",
     "/today",
     "/today/:path*",
+    "/tic",
+    "/tic/:path*",
   ],
 }
