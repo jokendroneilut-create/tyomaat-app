@@ -326,3 +326,20 @@ export function getMunicipality(code: string | null | undefined): Municipality |
   if (!code) return null
   return MUNICIPALITIES[code.padStart(3, "0")] ?? null
 }
+
+const MUNICIPALITIES_BY_NAME: Record<string, Municipality> = Object.values(
+  MUNICIPALITIES
+).reduce(
+  (acc, m) => {
+    acc[m.name.toLowerCase()] = m
+    return acc
+  },
+  {} as Record<string, Municipality>
+)
+
+export function getMunicipalityByName(
+  name: string | null | undefined
+): Municipality | null {
+  if (!name) return null
+  return MUNICIPALITIES_BY_NAME[name.trim().toLowerCase()] ?? null
+}

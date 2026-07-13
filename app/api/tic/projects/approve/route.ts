@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js"
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
+import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import { inferMunicipalityFromText } from "@/lib/geo/inferMunicipalityFromText"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -79,16 +81,31 @@ export async function POST(request: Request) {
         null
       : potentialProject.address ?? null
 
+    /*
+     * Osa Hilma-ilmoituksista ei sisällä rakenteista kuntatietoa
+     * lainkaan — kunta saattaa silti esiintyä otsikossa vapaana
+     * tekstinä (esim. "Juva, tehtaan laajennus..."), joten se
+     * yritetään päätellä tekstistä ennen kuin sijainti jää tyhjäksi.
+     */
+    const inferredMunicipality = isHilma
+      ? inferMunicipalityFromText(
+          metadata.operation ?? potentialProject.title ?? null
+        )
+      : null
+
     const city = isHilma
       ? metadata.project_municipality ??
         metadata.site_municipality ??
         potentialProject.municipality ??
+        inferredMunicipality?.name ??
         null
       : potentialProject.municipality ?? null
 
     const region =
       metadata.region ??
-      getRegionForMunicipality(city)
+      getMunicipalityByName(city)?.region ??
+      inferredMunicipality?.region ??
+      null
 
     const location = buildProjectLocation({
       address: projectAddress,
@@ -381,45 +398,3 @@ function buildProjectLocation({
   return address ?? null
 }
 
-function getRegionForMunicipality(
-  municipality: string | null
-) {
-  if (!municipality) return null
-
-  const normalized = normalize(municipality)
-
-  const uusimaa = [
-    "espoo",
-    "helsinki",
-    "vantaa",
-    "kauniainen",
-    "kirkkonummi",
-    "vihti",
-    "nurmijärvi",
-    "tuusula",
-    "kerava",
-    "järvenpää",
-    "sipoo",
-    "porvoo",
-    "lohja",
-    "raasepori",
-    "hanko",
-    "inkoo",
-    "siuntio",
-    "pornainen",
-    "mäntsälä",
-    "hyvinkää",
-    "karkkila",
-    "lapinjärvi",
-    "loviisa",
-    "myrskylä",
-    "pukkila",
-    "askola",
-  ]
-
-  if (uusimaa.includes(normalized)) {
-    return "Uusimaa"
-  }
-
-  return null
-}
