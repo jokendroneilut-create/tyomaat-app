@@ -5,7 +5,9 @@ import { supabase } from '@/lib/supabaseClient'
 import MapClient from './MapClient'
 import type { MapBounds } from './Map'
 import PhaseTimeline from './PhaseTimeline'
-import { displayPhaseLabel } from '@/lib/projects/phases'
+import { CANONICAL_PHASES, displayPhaseLabel } from '@/lib/projects/phases'
+
+const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
 
 type Project = {
   id: string
@@ -469,7 +471,7 @@ setTeamModeEnabled(true)
     return uniqSorted(base.map((p) => p.city))
   }, [projects, region])
 
-  const phases = useMemo(() => uniqSorted(projects.map((p) => p.phase)), [projects])
+  const phases = PHASE_OPTIONS
 
   const propertyTypes = useMemo(() => uniqSorted(projects.map((p) => p.property_type)), [projects])
 
@@ -479,7 +481,7 @@ setTeamModeEnabled(true)
     return projects.filter((p) => {
       if (region && (p.region || '') !== region) return false
       if (city && p.city !== city) return false
-      if (phase && p.phase !== phase) return false
+      if (phase && displayPhaseLabel(p.phase) !== phase) return false
 
       if (propertyType && !(p.property_type || '').toLowerCase().includes(propertyType.toLowerCase())) return false
 
@@ -801,7 +803,7 @@ setTeamModeEnabled(true)
                   </div>
                   <div>{p.city}</div>
                   <div>{p.region || '-'}</div>
-                  <div>{p.phase}</div>
+                  <div>{displayPhaseLabel(p.phase)}</div>
 
                   <div className="projects-actions" style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                     <button className="projects-btn" onClick={() => setSelected(p)}>
@@ -876,7 +878,7 @@ setTeamModeEnabled(true)
                   </div>
 
                   <div className="projects-cardMeta">
-                    {p.city} • {p.region || '-'} • {p.phase}
+                    {p.city} • {p.region || '-'} • {displayPhaseLabel(p.phase)}
                   </div>
 
                   <div style={{ marginTop: 6 }}>
