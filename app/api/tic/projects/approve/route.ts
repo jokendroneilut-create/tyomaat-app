@@ -83,15 +83,21 @@ export async function POST(request: Request) {
 
     /*
      * Osa Hilma-ilmoituksista ei sisällä rakenteista kuntatietoa
-     * lainkaan — kunta saattaa silti esiintyä otsikossa tai
-     * kuvaustekstissä vapaana tekstinä (esim. "Juva, tehtaan
-     * laajennus..." tai "Helsingin kaupungin ... Stara pyytää..."),
+     * lainkaan — kunta saattaa silti esiintyä otsikossa, kuvaus­
+     * tekstissä tai rakennuttajan nimessä vapaana tekstinä (esim.
+     * "Juva, tehtaan laajennus...", "Helsingin kaupungin ... Stara
+     * pyytää..." tai rakennuttaja "Kotkan Julkiset Kiinteistöt Oy"),
      * joten se yritetään päätellä tekstistä ennen kuin sijainti jää
      * tyhjäksi.
      */
     const inferredMunicipality = isHilma
       ? inferMunicipalityFromText(
-          [metadata.operation, potentialProject.title, metadata.description]
+          [
+            metadata.operation,
+            potentialProject.title,
+            metadata.description,
+            metadata.developer,
+          ]
             .filter(Boolean)
             .join(" ")
         )
