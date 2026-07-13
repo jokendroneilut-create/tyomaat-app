@@ -19,6 +19,8 @@ import {
 export default function TodaySettingsModal() {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
+  const [mode, setMode] = useState<"summary" | "wizard">("wizard")
+  const [hasSavedPreferences, setHasSavedPreferences] = useState(false)
 
   const [companyProfile, setCompanyProfile] = useState<string | null>(null)
 
@@ -81,6 +83,8 @@ export default function TodaySettingsModal() {
           return
         }
 
+        setHasSavedPreferences(true)
+
         const settings = result.settings
 
         setCompanyProfile(settings.companyProfile ?? null)
@@ -140,8 +144,21 @@ export default function TodaySettingsModal() {
 
   function openModal() {
     setError(null)
-    setStep(0)
+
+    if (hasSavedPreferences) {
+      setMode("summary")
+    } else {
+      setMode("wizard")
+      setStep(0)
+    }
+
     setOpen(true)
+  }
+
+  function startEditing() {
+    setError(null)
+    setMode("wizard")
+    setStep(1)
   }
 
   function closeModal() {
@@ -151,6 +168,7 @@ export default function TodaySettingsModal() {
 
     setOpen(false)
     setStep(0)
+    setMode("wizard")
     setError(null)
   }
 
@@ -233,6 +251,54 @@ export default function TodaySettingsModal() {
     }
   }
 
+  function renderSummary() {
+    const rows: { label: string; value: string }[] = [
+      {
+        label: "Yritysprofiili",
+        value: companyProfile ?? "Ei valittu",
+      },
+      {
+        label: "Alueet",
+        value: wholeFinland
+          ? "Koko Suomi"
+          : selectedRegions.length > 0
+            ? selectedRegions.join(", ")
+            : "Ei alueita valittu",
+      },
+      {
+        label: "Parhaat myyntihetket",
+        value:
+          selectedSalesMoments.length > 0
+            ? selectedSalesMoments.join(", ")
+            : "Ei valittu",
+      },
+      {
+        label: "Lähteet",
+        value:
+          selectedSources.length > 0
+            ? selectedSources.join(", ")
+            : "Ei valittu",
+      },
+      {
+        label: "Näytettävien hankkeiden enimmäismäärä",
+        value: String(maxProjects),
+      },
+    ]
+
+    return (
+      <div className="space-y-4">
+        {rows.map((row) => (
+          <div key={row.label} className="border-b pb-3">
+            <div className="text-sm font-semibold text-gray-500">
+              {row.label}
+            </div>
+            <div className="mt-1 text-base text-gray-900">{row.value}</div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   function renderStep() {
     switch (step) {
       case 0:
@@ -309,15 +375,19 @@ export default function TodaySettingsModal() {
             <div className="shrink-0 border-b px-6 py-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-sm text-gray-500">
-                    Vaihe {step + 1} / {totalSteps + 1}
-                  </div>
+                  {mode === "wizard" && (
+                    <div className="text-sm text-gray-500">
+                      Vaihe {step + 1} / {totalSteps + 1}
+                    </div>
+                  )}
 
                   <h2
                     id="today-settings-title"
                     className="mt-1 text-2xl font-bold text-gray-900"
                   >
-                    Mukauta näkymää
+                    {mode === "summary"
+                      ? "Nykyiset asetuksesi"
+                      : "Mukauta näkymää"}
                   </h2>
                 </div>
 
@@ -331,14 +401,16 @@ export default function TodaySettingsModal() {
                 </button>
               </div>
 
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100">
-                <div
-                  className="h-full rounded-full bg-gray-900 transition-all"
-                  style={{
-                    width: `${((step + 1) / (totalSteps + 1)) * 100}%`,
-                  }}
-                />
-              </div>
+              {mode === "wizard" && (
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className="h-full rounded-full bg-gray-900 transition-all"
+                    style={{
+                      width: `${((step + 1) / (totalSteps + 1)) * 100}%`,
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
@@ -346,6 +418,8 @@ export default function TodaySettingsModal() {
                 <div className="flex min-h-[320px] items-center justify-center text-sm text-gray-500">
                   Ladataan asetuksia...
                 </div>
+              ) : mode === "summary" ? (
+                renderSummary()
               ) : (
                 renderStep()
               )}
@@ -357,38 +431,53 @@ export default function TodaySettingsModal() {
               )}
             </div>
 
-            <div className="shrink-0 flex items-center justify-between gap-3 border-t bg-white px-6 py-5">
-              <button
-                type="button"
-                onClick={previousStep}
-                disabled={step === 0 || saving || loading}
-                className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-gray-50 disabled:opacity-40"
-              >
-                Takaisin
-              </button>
+            {mode === "summary" ? (
+              <div className="shrink-0 flex items-center justify-end gap-3 border-t bg-white px-6 py-5">
+                <button
+                  type="button"
+                  onClick={startEditing}
+                  disabled={loading}
+                  className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  Muokkaa valintoja
+                </button>
+              </div>
+            ) : (
+              <div className="shrink-0 flex items-center justify-between gap-3 border-t bg-white px-6 py-5">
+                <button
+                  type="button"
+                  onClick={previousStep}
+                  disabled={step === 0 || saving || loading}
+                  className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Takaisin
+                </button>
 
-              {step < totalSteps ? (
-                <button
-                  type="button"
-                  onClick={nextStep}
-                  disabled={saving || loading}
-                  className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {step === 0 ? "Aloitetaan" : "Seuraava"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={saveSettings}
-                  disabled={saving || loading}
-                  className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {saving
-                    ? "Tallennetaan..."
-                    : "Aloita Tänään-näkymän käyttö"}
-                </button>
-              )}
-            </div>
+                {step < totalSteps ? (
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    disabled={saving || loading}
+                    className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {step === 0 ? "Aloitetaan" : "Seuraava"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={saveSettings}
+                    disabled={saving || loading}
+                    className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {saving
+                      ? "Tallennetaan..."
+                      : hasSavedPreferences
+                        ? "Tallenna asetukset"
+                        : "Aloita Tänään-näkymän käyttö"}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
