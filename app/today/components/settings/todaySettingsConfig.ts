@@ -17,10 +17,10 @@ export const salesMoments = CANONICAL_PHASES.filter((p) => !p.terminal).map(
 )
 
 export const todaySources = [
-  "Rakennusluvat",
   "Hilma",
   "Kaavoitus",
   "Kuntapäätökset",
+  "Rakennusluvat",
   "Yritysuutiset",
 ] as const
 
