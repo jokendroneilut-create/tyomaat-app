@@ -18,9 +18,15 @@ export async function runFactWorker() {
 
   if (documentError) throw documentError
 
+  const JSON_ONLY_SOURCES = [
+    "Hilma",
+    "Lupapiste kuulutukset",
+    "Vantaan vireillä olevat kaavat",
+  ]
+
   const document =
     (documents ?? []).find((d) =>
-      d.source_name === "Hilma" || d.source_name === "Lupapiste kuulutukset"
+      JSON_ONLY_SOURCES.includes(d.source_name)
         ? !!(d.raw_payload?.original || d.raw_text)
         : !!d.extracted_text
     ) ?? null

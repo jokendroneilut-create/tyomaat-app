@@ -1,6 +1,7 @@
 import { extractFacts } from "@/lib/agent/facts/extractFacts"
 import { extractHilmaFacts } from "@/lib/agent/facts/extractHilmaFacts"
 import { extractLupapisteFacts } from "@/lib/agent/facts/extractLupapisteFacts"
+import { extractVantaaKaavaFacts } from "@/lib/agent/facts/extractVantaaKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -26,6 +27,21 @@ export function resolveFacts(document: any) {
         documentId: document.id,
         sourceName: document.source_name,
         notice,
+      }),
+    }
+  }
+
+  if (document.source_name === "Vantaan vireillä olevat kaavat") {
+    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const center = document.raw_payload?.center ?? null
+
+    return {
+      decisions: [],
+      facts: extractVantaaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        feature,
+        center,
       }),
     }
   }

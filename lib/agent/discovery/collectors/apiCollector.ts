@@ -236,6 +236,90 @@ async function collectHilmaSource(source: DiscoverySource) {
   }
 }
 
+function boundingBoxCenter(geometry: any): { x: number; y: number } | null {
+  if (!geometry?.coordinates) return null
+
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+
+  function visit(coords: any): void {
+    if (typeof coords[0] === "number") {
+      const [x, y] = coords
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (y < minY) minY = y
+      if (y > maxY) maxY = y
+      return
+    }
+
+    for (const item of coords) visit(item)
+  }
+
+  visit(geometry.coordinates)
+
+  if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
+    return null
+  }
+
+  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+}
+
+async function collectVantaaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Vantaan kaavarajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const json = await response.json()
+  const features = Array.isArray(json.features) ? json.features : []
+
+  let saved = 0
+
+  for (const feature of features) {
+    const properties = feature.properties ?? {}
+    const documentUrl = properties.kaavalinkki || `${source.url}#${properties.kaavatunnus}`
+
+    const rawText = JSON.stringify(feature)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: properties.kaavanimi1 ?? properties.kaavatunnus ?? "Vantaan kaava",
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            center: boundingBoxCenter(feature.geometry),
+            original: feature,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: features.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "hilmaParser") {
     return collectHilmaSource(source)
@@ -243,6 +327,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "lupapisteParser") {
     return collectLupapisteSource(source)
+  }
+
+  if (source.parser === "vantaaKaavaParser") {
+    return collectVantaaKaavaSource(source)
   }
 
   const response = await fetch(source.url, {
