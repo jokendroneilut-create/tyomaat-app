@@ -115,8 +115,8 @@ export default function PotentialProjectsReviewList({
               key={project.id}
               className="rounded-xl border border-gray-200 p-4"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <div className="text-sm font-semibold text-gray-500">
                     {metadata.business_value === "high"
                       ? "★★★★★ High"
@@ -152,7 +152,7 @@ export default function PotentialProjectsReviewList({
                   </div>
                 </div>
 
-                <div className="flex shrink-0 flex-col gap-2">
+                <div className="flex flex-row flex-wrap gap-2 sm:w-auto sm:shrink-0 sm:flex-col">
                   <Link
                     href={`/tic/projects/${project.id}`}
                     className="rounded-lg border px-3 py-2 text-center text-sm font-semibold hover:bg-gray-50"

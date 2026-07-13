@@ -14,8 +14,8 @@ export default function CandidateCard({ candidate }: Props) {
   return (
     <article className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300 hover:shadow-md">
       <Link href={`/tic/candidate/${candidate.id}`} className="block">
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0">
             <h3 className="text-lg font-semibold text-gray-900">
               {candidate.title}
             </h3>
@@ -26,7 +26,7 @@ export default function CandidateCard({ candidate }: Props) {
             </p>
           </div>
 
-          <div className="text-right">
+          <div className="sm:text-right">
             <div className="text-2xl font-bold text-gray-900">
               {candidate.score ?? 0}
             </div>
@@ -34,7 +34,7 @@ export default function CandidateCard({ candidate }: Props) {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+        <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
           <div>
             <div className="text-gray-500">Luottamus</div>
             <div className="font-semibold">{candidate.confidence ?? 0}%</div>
@@ -58,7 +58,7 @@ export default function CandidateCard({ candidate }: Props) {
         )}
       </Link>
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         <button className="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white">
           Luo projekti
         </button>
