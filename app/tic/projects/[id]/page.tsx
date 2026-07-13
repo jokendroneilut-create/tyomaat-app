@@ -25,6 +25,9 @@ export default async function CandidateDetailPage({ params }: Props) {
   }
 
   const { candidate, signals } = detail
+  const metadata = candidate.metadata ?? {}
+  const contactPersons: { name: string; title: string | null; phone: string | null; email: string | null }[] =
+    Array.isArray(metadata.contact_persons) ? metadata.contact_persons : []
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-8">
@@ -91,6 +94,69 @@ export default async function CandidateDetailPage({ params }: Props) {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-semibold text-gray-900">
+          Esikatselu — näin hanke näkyisi hyväksynnän jälkeen
+        </h2>
+
+        <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-sm text-gray-800 md:grid-cols-2">
+          <p><strong>Maakunta:</strong> {metadata.region ?? "-"}</p>
+          <p><strong>Kaupunki:</strong> {candidate.city ?? "-"}</p>
+          <p><strong>Sijainti / osoite:</strong> {candidate.location ?? "-"}</p>
+          <p><strong>🏗️ Rakennuttaja:</strong> {metadata.developer ?? "-"}</p>
+          <p><strong>🏢 Kohdetyyppi:</strong> {metadata.building_type ?? "-"}</p>
+          <p><strong>Vaihe:</strong> {metadata.phase_hint ?? metadata.decision_status ?? "-"}</p>
+        </div>
+
+        {contactPersons.length > 0 && (
+          <div className="mt-6 border-t border-gray-100 pt-4">
+            <p className="mb-2 font-semibold text-gray-900">Yhteyshenkilöt</p>
+            {contactPersons.map((contact, i) => (
+              <p key={i} className="text-sm text-gray-800">
+                {contact.name}
+                {contact.title ? `, ${contact.title}` : ""}
+                {contact.phone ? ` — ${contact.phone}` : ""}
+                {contact.email ? ` — ${contact.email}` : ""}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {(metadata.description || metadata.operation) && (
+          <div className="mt-6 border-t border-gray-100 pt-4">
+            <p className="mb-2 font-semibold text-gray-900">Lisätietoja</p>
+            <p className="whitespace-pre-line text-sm text-gray-700">
+              {metadata.description ?? metadata.operation}
+            </p>
+          </div>
+        )}
+
+        {(metadata.source_url || metadata.documents_url) && (
+          <div className="mt-6 flex flex-wrap gap-3 border-t border-gray-100 pt-4">
+            {metadata.source_url && (
+              <a
+                href={metadata.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-gray-900 underline"
+              >
+                Avaa alkuperäinen ilmoitus →
+              </a>
+            )}
+            {metadata.documents_url && (
+              <a
+                href={metadata.documents_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-gray-900 underline"
+              >
+                Avaa lähdesivu / asiakirjat →
+              </a>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="mt-8">

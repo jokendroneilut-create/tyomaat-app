@@ -20,8 +20,11 @@ export async function resolveVantaaKaavaProject({
   const vaihe = findFact(facts, "decision_status")?.fact_value ?? null
   const kaavalinkki = findFact(facts, "documents_url")?.fact_value ?? null
   const kasitPvm = findFact(facts, "decision_date")?.fact_date ?? null
+  const hakija = findFact(facts, "developer")?.fact_value ?? null
 
   const metadata = facts[0]?.metadata ?? {}
+  const contactPersons = metadata.contacts ?? []
+  const description = metadata.description ?? null
   const municipality = getMunicipalityByName("Vantaa")
 
   const coordinates = metadata.coordinates ?? null
@@ -62,6 +65,28 @@ export async function resolveVantaaKaavaProject({
       documents_url: kaavalinkki,
       date_published: kasitPvm,
 
+      /*
+       * "Hakija" Vantaan kaavan omalta sivulta — usein vain "Yksityinen"
+       * tai "Yritys", joskus yrityksen nimi. Ei henkilön yhteystietoja,
+       * mutta paras saatavilla oleva signaali siitä kuka hanketta ajaa.
+       */
+      developer: hakija,
+
+      /*
+       * Kaavan omalta sivulta poimitut kaupungin yhteyshenkilöt
+       * (kaavoittaja/arkkitehti) — ei hakijan omia yhteystietoja,
+       * mutta paras saatavilla oleva suora kontakti hankkeeseen.
+       */
+      contact_persons: contactPersons,
+
+      /*
+       * Kaavan sivun kuvausteksti (sijainti, kaavamuutoksen sisältö,
+       * osallistaminen, päätöskäsittely) — sisältää usein arvokkaita
+       * päivämääriä. approve-reitti käyttää tätä additional_info-kentän
+       * lähteenä, jos description on asetettu.
+       */
+      description,
+
       lupapiste_coordinates: coordinates,
       lupapiste_coordinates_wgs84: wgs84,
 
@@ -84,6 +109,7 @@ export async function resolveVantaaKaavaProject({
     kaavaTunnus,
     municipality: municipality?.name ?? "Vantaa",
     vaihe,
+    hakija,
     phaseHint,
     classification,
   }

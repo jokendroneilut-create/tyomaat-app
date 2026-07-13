@@ -1,4 +1,5 @@
 import crypto from "crypto"
+import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
 import type { DiscoverySource } from "../registry/sources"
 
@@ -266,6 +267,104 @@ function boundingBoxCenter(geometry: any): { x: number; y: number } | null {
   return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
 }
 
+const VANTAA_MAX_HAKIJA_FETCHES_PER_RUN = 30
+
+export type VantaaContact = {
+  name: string
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+/*
+ * Kaavan oma sivu ohjaa usein läpi meta-refresh-uudelleenohjauksen ennen
+ * varsinaista sisältöä (osoiteslugi voi muuttua). fetch() ei seuraa tätä
+ * automaattisesti, joten se puretaan käsin.
+ */
+async function fetchVantaaPlanDetails(
+  planUrl: string
+): Promise<{ hakija: string | null; contacts: VantaaContact[]; description: string | null }> {
+  try {
+    let url = planUrl
+    let html = await (await fetch(url, { cache: "no-store" })).text()
+
+    const metaRefreshMatch = html.match(
+      /<meta[^>]+http-equiv=["']refresh["'][^>]+url=['"]([^'"]+)['"]/i
+    )
+
+    if (metaRefreshMatch) {
+      url = metaRefreshMatch[1]
+      html = await (await fetch(url, { cache: "no-store" })).text()
+    }
+
+    const $ = cheerio.load(html)
+    let hakija: string | null = null
+    let hakijaLisatiedot: string | null = null
+
+    $("dt.point__term").each((_, el) => {
+      const label = $(el).text().trim().toLowerCase()
+      const value = $(el).next("dd.point__description").text().trim()
+
+      if (label === "hakija") {
+        hakija = value.length > 0 ? value : null
+      }
+
+      if (label === "lisätietoja hakijasta") {
+        hakijaLisatiedot = value.length > 0 ? value : null
+      }
+    })
+
+    /*
+     * Kaavan sivun "Lisätietoja"-osio listaa kaupungin yhteyshenkilöt
+     * (kaavoittaja/arkkitehti), ei hakijan omia yhteystietoja.
+     */
+    const contacts: VantaaContact[] = []
+
+    $("div.info-contact").each((_, el) => {
+      const name = $(el).find(".info-contact__heading").first().text().trim()
+      if (!name) return
+
+      const title = $(el).find(".info-contact__job").first().text().trim() || null
+      const phoneHref = $(el).find('a[href^="tel:"]').first().attr("href") ?? null
+      const emailHref = $(el).find('a[href^="mailto:"]').first().attr("href") ?? null
+
+      contacts.push({
+        name,
+        title,
+        phone: phoneHref ? phoneHref.replace(/^tel:/i, "").trim() : null,
+        email: emailHref ? emailHref.replace(/^mailto:/i, "").trim() : null,
+      })
+    })
+
+    /*
+     * Kaavan kuvausteksti (sijainti, kaavamuutoksen sisältö, päätöskäsittely
+     * jne.) sisältää runsaasti päivämääriä ja taustaa, joita ei ole muualla
+     * rakenteisesti saatavilla. Poimitaan otsikot ja kappaleet erillisinä
+     * riveinä, jotta jäsentely säilyy luettavana.
+     */
+    const bodyParagraphs: string[] = []
+
+    $(".field--body .field__item")
+      .first()
+      .find("h2, h3, h4, p, li")
+      .each((_, el) => {
+        const text = $(el).text().replace(/\s+/g, " ").trim()
+        if (text) bodyParagraphs.push(text)
+      })
+
+    const descriptionParts = [
+      hakijaLisatiedot ? `Lisätietoja hakijasta: ${hakijaLisatiedot}` : null,
+      ...bodyParagraphs,
+    ].filter((part): part is string => Boolean(part))
+
+    const description = descriptionParts.length > 0 ? descriptionParts.join("\n\n") : null
+
+    return { hakija, contacts, description }
+  } catch {
+    return { hakija: null, contacts: [], description: null }
+  }
+}
+
 async function collectVantaaKaavaSource(source: DiscoverySource) {
   const response = await fetch(source.url, { cache: "no-store" })
 
@@ -276,11 +375,57 @@ async function collectVantaaKaavaSource(source: DiscoverySource) {
   const json = await response.json()
   const features = Array.isArray(json.features) ? json.features : []
 
+  /*
+   * Kaavan hakija, yhteyshenkilöt ja kuvausteksti eivät muutu jälkikäteen,
+   * joten sivua ei haeta uudelleen niille kaavoille joille tämä on jo
+   * kertaalleen selvitetty. Merkkinä käytetään "description"-kenttää (uusin
+   * lisätty kenttä), jotta ennen tätä ominaisuutta haetut rivit haetaan
+   * automaattisesti kertaalleen uudelleen.
+   */
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<
+    string,
+    { hakija: string | null; contacts: VantaaContact[]; description: string | null }
+  >()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description !== undefined) {
+      knownDetails.set(row.document_url, {
+        hakija: row.raw_payload.hakija ?? null,
+        contacts: row.raw_payload.contacts ?? [],
+        description: row.raw_payload.description ?? null,
+      })
+    }
+  }
+
   let saved = 0
+  let hakijaFetches = 0
 
   for (const feature of features) {
     const properties = feature.properties ?? {}
     const documentUrl = properties.kaavalinkki || `${source.url}#${properties.kaavatunnus}`
+
+    const known = knownDetails.get(documentUrl)
+    let hakija: string | null = known?.hakija ?? null
+    let contacts: VantaaContact[] = known?.contacts ?? []
+    let description: string | null = known?.description ?? null
+    let detailsAttempted = knownDetails.has(documentUrl)
+
+    if (
+      !detailsAttempted &&
+      properties.kaavalinkki &&
+      hakijaFetches < VANTAA_MAX_HAKIJA_FETCHES_PER_RUN
+    ) {
+      const details = await fetchVantaaPlanDetails(properties.kaavalinkki)
+      hakija = details.hakija
+      contacts = details.contacts
+      description = details.description
+      hakijaFetches += 1
+      detailsAttempted = true
+    }
 
     const rawText = JSON.stringify(feature)
     const contentHash = hashContent(rawText)
@@ -301,6 +446,7 @@ async function collectVantaaKaavaSource(source: DiscoverySource) {
             parser: source.parser,
             priority: source.priority,
             center: boundingBoxCenter(feature.geometry),
+            ...(detailsAttempted ? { hakija, contacts, description } : {}),
             original: feature,
           },
           processed_at: new Date().toISOString(),

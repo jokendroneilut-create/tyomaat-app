@@ -24,16 +24,29 @@ function toIsoDate(value: unknown): string | null {
   return isNaN(parsed.getTime()) ? null : iso
 }
 
+export type VantaaContact = {
+  name: string
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
 export function extractVantaaKaavaFacts({
   documentId,
   sourceName,
   feature,
   center,
+  hakija,
+  contacts,
+  description,
 }: {
   documentId: string
   sourceName: string
   feature: any
   center: { x: number; y: number } | null
+  hakija?: string | null
+  contacts?: VantaaContact[] | null
+  description?: string | null
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
   const properties = feature.properties ?? {}
@@ -44,6 +57,7 @@ export function extractVantaaKaavaFacts({
   const kaavalinkki = clean(properties.kaavalinkki)
   const kasitPvm = toIsoDate(properties.kasit_pvm)
   const oasPvm = toIsoDate(properties.oas_pvm)
+  const hakijaClean = clean(hakija)
 
   const commonMetadata = {
     source_document_id: documentId,
@@ -56,6 +70,8 @@ export function extractVantaaKaavaFacts({
     kasit_pvm: kasitPvm,
     oas_pvm: oasPvm,
     coordinates: center,
+    contacts: contacts ?? [],
+    description: clean(description),
   }
 
   if (kaavaTunnus) {
@@ -104,6 +120,16 @@ export function extractVantaaKaavaFacts({
       fact_key: "kasit_pvm",
       fact_date: kasitPvm,
       confidence: 0.9,
+      metadata: commonMetadata,
+    })
+  }
+
+  if (hakijaClean) {
+    facts.push({
+      fact_type: "developer",
+      fact_key: "hakija",
+      fact_value: hakijaClean,
+      confidence: 0.8,
       metadata: commonMetadata,
     })
   }

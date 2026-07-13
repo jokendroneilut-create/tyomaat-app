@@ -46,6 +46,9 @@ type Project = {
     developer?: string | null
     buyer_address?: string | null
     project_address?: string | null
+    contact_persons?:
+      | { name: string; title: string | null; phone: string | null; email: string | null }[]
+      | null
     [key: string]: unknown
   } | null
 }
@@ -1153,6 +1156,33 @@ setTeamModeEnabled(true)
                     ) : null}
                   </div>
                 </div>
+              </>
+            ) : null}
+
+            {selected.metadata?.contact_persons && selected.metadata.contact_persons.length > 0 ? (
+              <>
+                <hr className="projects-hr" />
+                <p style={{ marginBottom: 8 }}>
+                  <strong>Yhteyshenkilöt</strong>
+                </p>
+                {selected.metadata.contact_persons.map((contact, i) => (
+                  <p key={i}>
+                    {contact.name}
+                    {contact.title ? `, ${contact.title}` : ''}
+                    {contact.phone ? (
+                      <>
+                        {' — '}
+                        <a href={`tel:${contact.phone}`}>{contact.phone}</a>
+                      </>
+                    ) : null}
+                    {contact.email ? (
+                      <>
+                        {' — '}
+                        <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                      </>
+                    ) : null}
+                  </p>
+                ))}
               </>
             ) : null}
 

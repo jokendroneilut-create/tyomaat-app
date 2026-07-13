@@ -34,6 +34,9 @@ export function resolveFacts(document: any) {
   if (document.source_name === "Vantaan vireillä olevat kaavat") {
     const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
     const center = document.raw_payload?.center ?? null
+    const hakija = document.raw_payload?.hakija ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+    const description = document.raw_payload?.description ?? null
 
     return {
       decisions: [],
@@ -42,6 +45,9 @@ export function resolveFacts(document: any) {
         sourceName: document.source_name,
         feature,
         center,
+        hakija,
+        contacts,
+        description,
       }),
     }
   }
