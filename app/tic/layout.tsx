@@ -16,19 +16,19 @@ export default function TicLayout({
   ]
 
   return (
-    <div className="mx-auto flex max-w-7xl gap-8 px-6 py-8">
-      <aside className="w-64 shrink-0">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:flex-row sm:gap-8 sm:px-6 sm:py-8">
+      <aside className="w-full sm:w-64 sm:shrink-0">
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
           <h2 className="mb-4 text-lg font-bold">
             Tyomaat Intelligence Center
           </h2>
 
-          <nav className="space-y-2">
+          <nav className="flex gap-2 overflow-x-auto sm:block sm:space-y-2 sm:overflow-visible">
             {nav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100"
+                className="block shrink-0 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 sm:shrink"
               >
                 {item.label}
               </Link>
