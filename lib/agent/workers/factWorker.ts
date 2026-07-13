@@ -20,7 +20,7 @@ export async function runFactWorker() {
 
   const document =
     (documents ?? []).find((d) =>
-      d.source_name === "Hilma"
+      d.source_name === "Hilma" || d.source_name === "Lupapiste kuulutukset"
         ? !!(d.raw_payload?.original || d.raw_text)
         : !!d.extracted_text
     ) ?? null

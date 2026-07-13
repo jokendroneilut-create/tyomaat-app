@@ -1,5 +1,6 @@
 import { extractFacts } from "@/lib/agent/facts/extractFacts"
 import { extractHilmaFacts } from "@/lib/agent/facts/extractHilmaFacts"
+import { extractLupapisteFacts } from "@/lib/agent/facts/extractLupapisteFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -9,6 +10,19 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractHilmaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        notice,
+      }),
+    }
+  }
+
+  if (document.source_name === "Lupapiste kuulutukset") {
+    const notice = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+
+    return {
+      decisions: [],
+      facts: extractLupapisteFacts({
         documentId: document.id,
         sourceName: document.source_name,
         notice,

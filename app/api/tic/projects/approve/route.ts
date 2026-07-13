@@ -95,17 +95,26 @@ export async function POST(request: Request) {
       city,
     })
 
+    /*
+     * Lupapiste antaa tarkat koordinaatit valmiiksi (ETRS-TM35FIN, muunnettu
+     * WGS84:ksi jo tunnistusvaiheessa) — käytetään niitä suoraan sen sijaan
+     * että osoite geokoodattaisiin uudelleen Nominatimin kautta.
+     */
+    const lupapisteCoords = metadata.lupapiste_coordinates_wgs84
+
     const coords =
-      location || city || region
-        ? await geocodeProjectLocation({
-            location,
-            city,
-            region,
-          })
-        : {
-            lat: null,
-            lon: null,
-          }
+      lupapisteCoords?.lat != null && lupapisteCoords?.lon != null
+        ? { lat: lupapisteCoords.lat, lon: lupapisteCoords.lon }
+        : location || city || region
+          ? await geocodeProjectLocation({
+              location,
+              city,
+              region,
+            })
+          : {
+              lat: null,
+              lon: null,
+            }
 
     const sourceUrl =
       sourceDocument?.document_url ??

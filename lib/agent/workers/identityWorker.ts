@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolveHilmaProject } from "@/lib/agent/identity/resolvers/hilmaResolver"
+import { resolveLupapisteProject } from "@/lib/agent/identity/resolvers/lupapisteResolver"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,6 +64,13 @@ export async function runIdentityWorker(documentId: string) {
 
 if (sourceName === "hilma") {
     const result = await resolveHilmaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "lupapiste kuulutukset") {
+    const result = await resolveLupapisteProject({
       document,
       facts: facts ?? [],
     })
