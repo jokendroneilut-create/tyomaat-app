@@ -6,6 +6,7 @@ import MapClient from './MapClient'
 import type { MapBounds } from './Map'
 import PhaseTimeline from './PhaseTimeline'
 import { CANONICAL_PHASES, displayPhaseLabel } from '@/lib/projects/phases'
+import { trackEvent } from '@/lib/analytics/trackEvent'
 
 const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
 
@@ -208,6 +209,12 @@ export default function Projects() {
 
     return () => {
       cancelled = true
+    }
+  }, [selected?.id])
+
+  useEffect(() => {
+    if (selected?.id) {
+      trackEvent({ event_type: 'project_open', project_id: selected.id })
     }
   }, [selected?.id])
 

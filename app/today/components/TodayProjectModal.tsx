@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import PhaseTimeline from "@/app/projects/PhaseTimeline"
 import { displayPhaseLabel } from "@/lib/projects/phases"
+import { trackEvent } from "@/lib/analytics/trackEvent"
 
 type Project = {
   id: string
@@ -130,6 +131,7 @@ export default function TodayProjectModal({
       }
 
       setProject(data as Project)
+      trackEvent({ event_type: "project_open", project_id: projectId })
 
       const { data: historyData } = await supabase
         .from("project_phase_history")

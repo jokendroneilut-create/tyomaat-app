@@ -138,6 +138,18 @@ export async function POST(req: Request) {
       }
     }
 
+    const { error: logError } = await supabase.from("broadcast_message_log").insert({
+      sent_by: user.id,
+      subject,
+      recipient_count: recipients.length,
+      recipients,
+      test_only: testOnly,
+    })
+
+    if (logError) {
+      console.error("BROADCAST LOG INSERT ERROR:", logError)
+    }
+
     return NextResponse.json({
       ok: true,
       sent: recipients.length,

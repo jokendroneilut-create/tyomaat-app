@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
@@ -22,6 +23,7 @@ export default function Navbar() {
   const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const isMobile = useIsMobile(768);
 
   useEffect(() => {
@@ -56,6 +58,10 @@ export default function Navbar() {
       async (_event, session) => {
         setSession(session);
         await checkAdmin(session?.access_token);
+
+        if (_event === "SIGNED_IN") {
+          trackEvent({ event_type: "login" });
+        }
       }
     );
 
@@ -160,26 +166,54 @@ export default function Navbar() {
 
     {isAdmin && (
       <>
-        <NavHeading>⚙️ Admin</NavHeading>
+        <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 8, marginTop: 4 }}>
+          <button
+            type="button"
+            onClick={() => setAdminOpen((v) => !v)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              background: "none",
+              border: "none",
+              padding: "4px 0",
+              cursor: "pointer",
+              fontSize: 11,
+              fontWeight: 700,
+              color: "#9ca3af",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
+            <span>⚙️ Admin</span>
+            <span>{adminOpen ? "▲" : "▼"}</span>
+          </button>
+        </div>
 
-        <NavSection>
-          <NavItem href="/dashboard">Dashboard</NavItem>
-          <NavItem href="/dashboard/users">Käyttäjät</NavItem>
-          <NavItem href="/dashboard/messages">Viestit</NavItem>
-          <NavItem href="/tic">Työmaat Intelligence Center</NavItem>
-        </NavSection>
+        {adminOpen && (
+          <>
+            <NavSection>
+              <NavItem href="/dashboard">Dashboard</NavItem>
+              <NavItem href="/dashboard/users">Käyttäjät</NavItem>
+              <NavItem href="/dashboard/analytics">Analytiikka</NavItem>
+              <NavItem href="/dashboard/messages">Viestit</NavItem>
+              <NavItem href="/tic">Työmaat Intelligence Center</NavItem>
+            </NavSection>
 
-        <NavHeading>🚧 Tulossa</NavHeading>
+            <NavHeading>🚧 Tulossa</NavHeading>
 
-        <NavSection>
-          <NavItem href="#" disabled>
-            CRM
-          </NavItem>
+            <NavSection>
+              <NavItem href="#" disabled>
+                CRM
+              </NavItem>
 
-          <NavItem href="#" disabled>
-            Raportit
-          </NavItem>
-        </NavSection>
+              <NavItem href="#" disabled>
+                Raportit
+              </NavItem>
+            </NavSection>
+          </>
+        )}
       </>
     )}
 
