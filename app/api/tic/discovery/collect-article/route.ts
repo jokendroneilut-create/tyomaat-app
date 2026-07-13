@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server"
 import { collectArticleDocument } from "@/lib/agent/discovery/collectors/articleCollector"
+import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 export async function POST(request: Request) {
   try {
+    const auth = await verifyAdminRequest(request)
+    if (!auth.ok) {
+      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
+    }
+
     const { documentId } = await request.json()
 
     if (!documentId) {

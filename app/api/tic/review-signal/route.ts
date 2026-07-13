@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 export const runtime = "nodejs"
 
@@ -10,6 +11,11 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: Request) {
   try {
+    const auth = await verifyAdminRequest(req)
+    if (!auth.ok) {
+      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
+    }
+
     const body = await req.json()
 
     const signalId = body.signalId as string

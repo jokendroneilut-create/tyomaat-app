@@ -27,6 +27,7 @@ export async function GET(req: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.CRON_SECRET}`,
       },
       body: JSON.stringify({
         maxSourceCount: 5,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -7,6 +8,11 @@ const supabaseAdmin = createClient(
 )
 
 export async function POST(request: Request) {
+  const auth = await verifyAdminRequest(request)
+  if (!auth.ok) {
+    return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
+  }
+
   const body = await request.json()
   const potentialProjectId = body.potentialProjectId
   const reason = body.reason ?? null

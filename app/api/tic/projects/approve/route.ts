@@ -16,6 +16,7 @@ import {
   type IdentifierType,
 } from "@/lib/projects/identity"
 import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
+import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +25,11 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
+    const auth = await verifyAdminRequest(request)
+    if (!auth.ok) {
+      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
+    }
+
     const body = await request.json()
     const potentialProjectId = body.potentialProjectId
 
