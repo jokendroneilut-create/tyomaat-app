@@ -3,6 +3,7 @@ import { extractHilmaFacts } from "@/lib/agent/facts/extractHilmaFacts"
 import { extractLupapisteFacts } from "@/lib/agent/facts/extractLupapisteFacts"
 import { extractVantaaKaavaFacts } from "@/lib/agent/facts/extractVantaaKaavaFacts"
 import { extractHelsinkiKaavaFacts } from "@/lib/agent/facts/extractHelsinkiKaavaFacts"
+import { extractTampereKaavaFacts } from "@/lib/agent/facts/extractTampereKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -70,6 +71,33 @@ export function resolveFacts(document: any) {
         districtName,
         description,
         selostusUrl,
+      }),
+    }
+  }
+
+  if (document.source_name === "Tampereen vireillä olevat kaavat") {
+    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const center = document.raw_payload?.center ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const diaarinumero = document.raw_payload?.diaarinumero ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const decisionMaker = document.raw_payload?.decision_maker ?? null
+    const planTitle = document.raw_payload?.plan_title ?? null
+
+    return {
+      decisions: [],
+      facts: extractTampereKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        feature,
+        center,
+        kaavaTunnus,
+        diaarinumero,
+        phase,
+        description,
+        decisionMaker,
+        planTitle,
       }),
     }
   }

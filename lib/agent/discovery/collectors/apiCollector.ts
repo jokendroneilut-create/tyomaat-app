@@ -654,6 +654,171 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
   }
 }
 
+// Ks. VANTAA_MAX_HAKIJA_FETCHES_PER_RUN yllä — sama syy pieneen rajaan.
+const TAMPERE_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+/*
+ * Tampereen kaavan omalta sivulta (tampere.fi/kaavat/{nro}) poimitaan
+ * vaiheen tila ja kuvausteksti. Diaarinumero ja päätöksentekijä ovat
+ * upotettuina kuvaustekstin loppuun ("... Diaarinumero: TRE:xxx
+ * Päätöksentekijä: Yhdyskuntalautakunta"), ei omina kenttinään, joten ne
+ * puretaan kuvauksesta erilleen.
+ */
+async function fetchTampereKaavaDetails(planUrl: string): Promise<{
+  phase: string | null
+  description: string | null
+  diaarinumero: string | null
+  decisionMaker: string | null
+  title: string | null
+}> {
+  try {
+    let url = planUrl
+    let html = await (await fetch(url, { cache: "no-store" })).text()
+
+    const metaRefreshMatch = html.match(
+      /<meta[^>]+http-equiv=["']refresh["'][^>]+url=['"]([^'"]+)['"]/i
+    )
+
+    if (metaRefreshMatch) {
+      url = new URL(metaRefreshMatch[1], url).toString()
+      html = await (await fetch(url, { cache: "no-store" })).text()
+    }
+
+    const $ = cheerio.load(html)
+    const title = $("h1").first().text().trim() || null
+    const phase = $(".field-phase").first().text().trim() || null
+    const rawDescription =
+      $(".field-description").first().text().replace(/\s+/g, " ").trim() || null
+
+    let description = rawDescription
+    let diaarinumero: string | null = null
+    let decisionMaker: string | null = null
+
+    if (rawDescription) {
+      const diaariMatch = rawDescription.match(/Diaarinumero:\s*(.+?)\s*Päätöksentekijä:/)
+      const paatoksentekijaMatch = rawDescription.match(/Päätöksentekijä:\s*(.+)$/)
+
+      diaarinumero = diaariMatch?.[1]?.trim() ?? null
+      decisionMaker = paatoksentekijaMatch?.[1]?.trim() ?? null
+      description = rawDescription.replace(/\s*Diaarinumero:.*$/, "").trim()
+    }
+
+    return { phase, description, diaarinumero, decisionMaker, title }
+  } catch {
+    return { phase: null, description: null, diaarinumero: null, decisionMaker: null, title: null }
+  }
+}
+
+async function collectTampereKaavaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Tampereen kaavarajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const json = await response.json()
+  const features = Array.isArray(json.features) ? json.features : []
+
+  /*
+   * Sama malli kuin Helsingin selostushaussa: vain onnistuneet haut
+   * jäävät muistiin, epäonnistuneita yritetään joka ajolla uudelleen.
+   */
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<
+    string,
+    { phase: string | null; description: string | null; diaarinumero: string | null; decisionMaker: string | null; title: string | null }
+  >()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description) {
+      knownDetails.set(row.document_url, {
+        phase: row.raw_payload.phase ?? null,
+        description: row.raw_payload.description,
+        diaarinumero: row.raw_payload.diaarinumero ?? null,
+        decisionMaker: row.raw_payload.decision_maker ?? null,
+        title: row.raw_payload.plan_title ?? null,
+      })
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  for (const feature of features) {
+    const properties = feature.properties ?? {}
+    const planUrl = String(properties.KAAVAN_VERKKOSIVU_JA_DOKUMENTIT ?? "").match(/href="([^"]+)"/)?.[1] ?? null
+    const kaavaTunnus = planUrl?.match(/\/kaavat\/(\d+)/)?.[1] ?? null
+    const documentUrl = planUrl || `${source.url}#${properties.ID}`
+
+    const known = knownDetails.get(documentUrl)
+    let phase: string | null = known?.phase ?? null
+    let description: string | null = known?.description ?? null
+    let diaarinumero: string | null = known?.diaarinumero ?? properties.DIAARINRO ?? null
+    let decisionMaker: string | null = known?.decisionMaker ?? null
+    let planTitle: string | null = known?.title ?? null
+    let detailsAttempted = knownDetails.has(documentUrl)
+
+    if (
+      !detailsAttempted &&
+      planUrl &&
+      detailFetches < TAMPERE_MAX_DETAIL_FETCHES_PER_RUN
+    ) {
+      const details = await fetchTampereKaavaDetails(planUrl)
+      phase = details.phase
+      description = details.description
+      diaarinumero = details.diaarinumero ?? properties.DIAARINRO ?? null
+      decisionMaker = details.decisionMaker
+      planTitle = details.title
+      detailFetches += 1
+      detailsAttempted = details.description !== null
+    }
+
+    const rawText = JSON.stringify(feature)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: planTitle ?? `Asemakaava nro ${kaavaTunnus ?? properties.ID}`,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            center: boundingBoxCenter(feature.geometry),
+            kaava_tunnus: kaavaTunnus,
+            diaarinumero,
+            ...(detailsAttempted
+              ? { phase, description, decision_maker: decisionMaker, plan_title: planTitle }
+              : {}),
+            original: feature,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: features.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "hilmaParser") {
     return collectHilmaSource(source)
@@ -665,6 +830,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "vantaaKaavaParser") {
     return collectVantaaKaavaSource(source)
+  }
+
+  if (source.parser === "tampereKaavaParser") {
+    return collectTampereKaavaSource(source)
   }
 
   if (source.parser === "helsinkiKaavaParser") {
