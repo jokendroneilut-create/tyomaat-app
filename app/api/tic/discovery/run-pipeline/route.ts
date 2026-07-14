@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     maxPdfJobs: body.maxPdfJobs,
     maxTextJobs: body.maxTextJobs,
     maxFactJobs: body.maxFactJobs,
+    stages: body.stages,
   })
 
   return NextResponse.json(result)

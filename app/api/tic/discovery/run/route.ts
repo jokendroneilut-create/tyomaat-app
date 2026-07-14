@@ -21,21 +21,46 @@ export async function GET(req: Request) {
 
     const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000"
 
-    // Hobby-tason 60s aikarajan sisällä pysymiseksi ajetaan yöllinen
-    // cron pienemmällä erällä kuin käsin ajettu oletuserä.
+    /*
+     * Koko putki yhdessä pyynnössä ylitti toistuvasti Hobby-tason 60s
+     * aikarajan (mitattu n. 63-65s), jolloin faktat/tunnistus eivät
+     * ehtineet käynnistyä lainkaan ja dokumentit jäivät pysyvästi jonoon.
+     * vercel.json ajastaa nyt kaksi erillistä kutsua eri kellonaikoina:
+     * "collect" (keräys) ja muutama minuutti myöhemmin "process"
+     * (faktat+tunnistus) — kumpikin omalla 60s-budjetillaan. Käsiajo
+     * (admin-paneelin "secret"-parametrilla) ajaa edelleen kaiken kerralla.
+     */
+    const stage = url.searchParams.get("stage")
+
+    const body =
+      stage === "collect"
+        ? {
+            stages: ["sources", "articles", "pdfs", "texts"],
+            maxSourceCount: 5,
+            maxArticleJobs: 5,
+            maxPdfJobs: 5,
+            maxTextJobs: 5,
+          }
+        : stage === "process"
+          ? {
+              stages: ["facts"],
+              maxFactJobs: 15,
+            }
+          : {
+              maxSourceCount: 5,
+              maxArticleJobs: 5,
+              maxPdfJobs: 5,
+              maxTextJobs: 5,
+              maxFactJobs: 5,
+            }
+
     const res = await fetch(`${baseUrl}/api/tic/discovery/run-pipeline`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.CRON_SECRET}`,
       },
-      body: JSON.stringify({
-        maxSourceCount: 5,
-        maxArticleJobs: 5,
-        maxPdfJobs: 5,
-        maxTextJobs: 5,
-        maxFactJobs: 5,
-      }),
+      body: JSON.stringify(body),
     })
 
     const json = await res.json()

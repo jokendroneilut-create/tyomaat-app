@@ -11,16 +11,40 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+type PipelineStage = "sources" | "articles" | "pdfs" | "texts" | "facts"
+
+const ALL_STAGES: PipelineStage[] = [
+  "sources",
+  "articles",
+  "pdfs",
+  "texts",
+  "facts",
+]
+
 type PipelineOptions = {
   maxSourceCount?: number
   maxArticleJobs?: number
   maxPdfJobs?: number
   maxTextJobs?: number
   maxFactJobs?: number
+  stages?: PipelineStage[]
 }
 
+/*
+ * Koko putki (kaikki vaiheet peräkkäin samassa pyynnössä) ylittää helposti
+ * Vercelin Hobby-tason 60s suoritusrajan, jolloin myöhemmät vaiheet
+ * (faktat, tunnistus) eivät ehdi käynnistyä lainkaan — dokumentit jäävät
+ * pysyvästi jonoon ilman ihmisen manuaalista väliintuloa. Siksi yöllinen
+ * cron kutsuu tätä kahdessa erillisessä ajastetussa pyynnössä (ks.
+ * vercel.json): ensin "sources+articles+pdfs+texts" (keräys), muutaman
+ * minuutin päästä "facts" (käsittely) — kumpikin oma 60s-budjettinsa.
+ * `stages`-parametri mahdollistaa tämän ilman että käsiajo (admin-paneeli)
+ * menettää nykyisen "aja kaikki" -käytöksensä.
+ */
 export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   const startedAt = Date.now()
+
+  const stages = new Set(options.stages ?? ALL_STAGES)
 
   const maxSourceCount = options.maxSourceCount ?? 10
   const maxArticleJobs = options.maxArticleJobs ?? 20
@@ -35,27 +59,29 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   const factResults = []
   const identityResults = []
 
-  const { data: sources, error: sourcesError } = await supabaseAdmin
-    .from("discovery_sources")
-    .select("*")
-    .order("priority", { ascending: false })
-    .order("last_run_at", { ascending: true, nullsFirst: true })
-    .limit(maxSourceCount)
-
-  if (sourcesError) throw sourcesError
-
   //
   // 1. Source Worker
   //
-  for (const source of sources ?? []) {
-    const result = await runSourceWorker(source.id)
-    sourceResults.push(result)
+  if (stages.has("sources")) {
+    const { data: sources, error: sourcesError } = await supabaseAdmin
+      .from("discovery_sources")
+      .select("*")
+      .order("priority", { ascending: false })
+      .order("last_run_at", { ascending: true, nullsFirst: true })
+      .limit(maxSourceCount)
+
+    if (sourcesError) throw sourcesError
+
+    for (const source of sources ?? []) {
+      const result = await runSourceWorker(source.id)
+      sourceResults.push(result)
+    }
   }
 
   //
   // 2. Kerää HTML-artikkeleista PDF-linkit
   //
-  for (let i = 0; i < maxArticleJobs; i++) {
+  for (let i = 0; stages.has("articles") && i < maxArticleJobs; i++) {
     const { data: document, error } = await supabaseAdmin
       .from("source_documents")
       .select("id")
@@ -83,7 +109,7 @@ articleResults.push(result)
   //
   // 3. PDF Worker
   //
-  for (let i = 0; i < maxPdfJobs; i++) {
+  for (let i = 0; stages.has("pdfs") && i < maxPdfJobs; i++) {
     const result = await runPdfWorker()
     pdfResults.push(result)
 
@@ -93,7 +119,7 @@ articleResults.push(result)
   //
   // 4. Text Worker
   //
-  for (let i = 0; i < maxTextJobs; i++) {
+  for (let i = 0; stages.has("texts") && i < maxTextJobs; i++) {
     const result = await runTextExtractionWorker()
     textResults.push(result)
 
@@ -104,7 +130,7 @@ articleResults.push(result)
   //
   // 5. Fact Worker + Identity Worker
   //
-  for (let i = 0; i < maxFactJobs; i++) {
+  for (let i = 0; stages.has("facts") && i < maxFactJobs; i++) {
     const result = await runFactWorker()
     factResults.push(result)
 

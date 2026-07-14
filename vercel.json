@@ -9,8 +9,12 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/tic/discovery/run",
+      "path": "/api/tic/discovery/run?stage=collect",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/tic/discovery/run?stage=process",
+      "schedule": "15 3 * * *"
     }
   ]
 }

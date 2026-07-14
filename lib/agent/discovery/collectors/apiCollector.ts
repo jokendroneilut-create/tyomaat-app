@@ -267,7 +267,13 @@ function boundingBoxCenter(geometry: any): { x: number; y: number } | null {
   return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
 }
 
-const VANTAA_MAX_HAKIJA_FETCHES_PER_RUN = 30
+/*
+ * Pieni raja, koska tämä haku tehdään osana yöllistä croneja, jolla on
+ * tiukka (60s) kokonaisaikaraja koko putkelle — jokainen haku vie sekunteja,
+ * joten iso raja täällä syö budjettia myöhemmiltä vaiheilta (faktat,
+ * tunnistus). Loput kaavat käsitellään seuraavilla ajokerroilla.
+ */
+const VANTAA_MAX_HAKIJA_FETCHES_PER_RUN = 5
 
 export type VantaaContact = {
   name: string
@@ -489,7 +495,8 @@ async function fetchHelsinkiDistrictNames(): Promise<Map<string, string>> {
   return map
 }
 
-const HELSINKI_MAX_SELOSTUS_FETCHES_PER_RUN = 30
+// Ks. VANTAA_MAX_HAKIJA_FETCHES_PER_RUN yllä — sama syy pieneen rajaan.
+const HELSINKI_MAX_SELOSTUS_FETCHES_PER_RUN = 5
 
 /*
  * Vireillä olevan kaavan asemakaavaselostus-PDF löytyy luotettavasti tästä
