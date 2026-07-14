@@ -66,6 +66,8 @@ const summary = await getTodaySummary(user?.id)
 
       <TodayRecommendedProjects
          projects={summary.recommendedProjects}
+         userId={user?.id ?? null}
+         feedback={summary.feedback}
       />
 
       

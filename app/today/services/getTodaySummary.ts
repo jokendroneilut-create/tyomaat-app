@@ -1,5 +1,6 @@
 import { getTodayProjects } from "./getTodayProjects"
 import { getTodaySettings } from "./getTodaySettings"
+import { getUserFeedbackContext } from "./getUserFeedbackContext"
 import {
   matchesBestSalesMoments,
   matchesSources,
@@ -22,7 +23,10 @@ export async function getTodaySummary(userId?: string | null) {
   const settings = await getTodaySettings(userId)
   const maxProjects = Number(settings.maxProjects ?? 20)
 
-  const allProjects = await getTodayProjects()
+  const [allProjects, feedbackContext] = await Promise.all([
+    getTodayProjects(),
+    getUserFeedbackContext(userId),
+  ])
 
   const filteredProjects = allProjects
   .filter((project: any) =>
@@ -34,10 +38,14 @@ export async function getTodaySummary(userId?: string | null) {
   .filter((project: any) =>
     matchesBestSalesMoments(project, settings.bestSalesMoments)
   )
+  .filter((project: any) =>
+    settings.showRejected || !feedbackContext.downvotedProjectIds.has(project.id)
+  )
 
   const rankedProjects = rankTodayProjects(
     filteredProjects,
-    settings
+    settings,
+    feedbackContext
   )
 
   const recentProjects = rankedProjects.filter(
@@ -52,6 +60,7 @@ export async function getTodaySummary(userId?: string | null) {
 
   return {
     settings,
+    feedback: feedbackContext.ratings,
 
     metrics: {
       newProjects: recentProjects.length,

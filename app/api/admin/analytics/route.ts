@@ -41,7 +41,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [users, eventsRes, savedSearchesRes, favoritesRes, teamMembersRes] =
+    const [users, eventsRes, savedSearchesRes, favoritesRes, teamMembersRes, feedbackRes] =
       await Promise.all([
         fetchAllUsers(),
         supabaseAdmin
@@ -51,12 +51,20 @@ export async function GET(request: Request) {
         supabaseAdmin.from("saved_searches").select("user_id"),
         supabaseAdmin.from("user_project_favorites").select("project_id"),
         supabaseAdmin.from("team_members").select("user_id, team_id"),
+        supabaseAdmin
+          .from("project_feedback")
+          .select(
+            "project_id, rating, reason_category, reason_text, region, size_class, source_name, created_at"
+          )
+          .order("created_at", { ascending: false })
+          .limit(5000),
       ])
 
     if (eventsRes.error) throw eventsRes.error
     if (savedSearchesRes.error) throw savedSearchesRes.error
     if (favoritesRes.error) throw favoritesRes.error
     if (teamMembersRes.error) throw teamMembersRes.error
+    if (feedbackRes.error) throw feedbackRes.error
 
     const userEmail = new Map(users.map((u) => [u.id, u.email ?? u.id]))
     const events = eventsRes.data ?? []
@@ -122,11 +130,46 @@ export async function GET(request: Request) {
       new Set((teamMembersRes.data ?? []).map((row) => row.user_id).filter(Boolean))
     )
 
-    // Poimitaan hankkeiden nimet niille joita tarvitaan (avatut + suosikit)
+    // Hanke-palaute (peukku ylös/alas)
+    const feedback = feedbackRes.data ?? []
+
+    let totalUp = 0
+    let totalDown = 0
+    const downvotesByProject = new Map<string, number>()
+    const downvotesByRegion = new Map<string, number>()
+    const downvotesBySizeClass = new Map<string, number>()
+    const downvotesBySource = new Map<string, number>()
+
+    for (const row of feedback) {
+      if (row.rating === "up") totalUp += 1
+
+      if (row.rating === "down") {
+        totalDown += 1
+        downvotesByProject.set(row.project_id, (downvotesByProject.get(row.project_id) ?? 0) + 1)
+        if (row.region) downvotesByRegion.set(row.region, (downvotesByRegion.get(row.region) ?? 0) + 1)
+        if (row.size_class) downvotesBySizeClass.set(row.size_class, (downvotesBySizeClass.get(row.size_class) ?? 0) + 1)
+        if (row.source_name) downvotesBySource.set(row.source_name, (downvotesBySource.get(row.source_name) ?? 0) + 1)
+      }
+    }
+
+    const recentReasons = feedback
+      .filter((row) => row.reason_category || row.reason_text)
+      .slice(0, 20)
+      .map((row) => ({
+        projectId: row.project_id,
+        rating: row.rating,
+        reasonCategory: row.reason_category,
+        reasonText: row.reason_text,
+        createdAt: row.created_at,
+      }))
+
+    // Poimitaan hankkeiden nimet niille joita tarvitaan (avatut + suosikit + hylätyt)
     const neededProjectIds = Array.from(
       new Set([
         ...Array.from(projectOpenCounts.keys()),
         ...Array.from(favoriteCounts.keys()),
+        ...Array.from(downvotesByProject.keys()),
+        ...recentReasons.map((r) => r.projectId),
       ])
     )
 
@@ -181,6 +224,16 @@ export async function GET(request: Request) {
       devicePercentages,
       totalUsers: users.length,
       totalEvents: events.length,
+
+      feedbackTotals: { up: totalUp, down: totalDown },
+      mostDownvotedProjects: mapProjects(topN(downvotesByProject, 5), "downvoteCount"),
+      downvotesByRegion: topN(downvotesByRegion, 5).map(([region, count]) => ({ region, count })),
+      downvotesBySizeClass: topN(downvotesBySizeClass, 5).map(([sizeClass, count]) => ({ sizeClass, count })),
+      downvotesBySource: topN(downvotesBySource, 5).map(([source, count]) => ({ source, count })),
+      recentFeedbackReasons: recentReasons.map((r) => ({
+        ...r,
+        projectName: projectNames.get(r.projectId) ?? "(poistettu hanke)",
+      })),
     })
   } catch (err: any) {
     console.error("ANALYTICS ROUTE ERROR:", err)

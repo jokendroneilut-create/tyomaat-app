@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient"
 import PhaseTimeline from "@/app/projects/PhaseTimeline"
 import { displayPhaseLabel } from "@/lib/projects/phases"
 import { trackEvent } from "@/lib/analytics/trackEvent"
+import TodayFeedbackButtons from "./TodayFeedbackButtons"
 
 type Project = {
   id: string
@@ -239,6 +240,20 @@ export default function TodayProjectModal({
                   {displayPhaseLabel(project.phase)}
                 </div>
                 <PhaseTimeline rawPhase={project.phase} history={phaseHistory} />
+
+                <TodayFeedbackButtons
+                  projectId={project.id}
+                  attributes={{
+                    region: project.region ?? null,
+                    phase: project.phase ?? null,
+                    property_type: project.property_type ?? null,
+                    business_value: (project.metadata?.business_value as string | null) ?? null,
+                    construction_type: (project.metadata?.construction_type as string | null) ?? null,
+                    building_type: (project.metadata?.building_type as string | null) ?? null,
+                    size_class: (project.metadata?.size_class as string | null) ?? null,
+                    source_name: (project.metadata?.source_name as string | null) ?? null,
+                  }}
+                />
               </div>
 
               <div

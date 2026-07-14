@@ -2,11 +2,16 @@
 
 import { useState } from "react"
 import TodayProjectModal from "./TodayProjectModal"
+import TodayFeedbackButtons from "./TodayFeedbackButtons"
 
 export default function TodayRecommendedProjects({
   projects,
+  userId,
+  feedback,
 }: {
   projects: any[]
+  userId?: string | null
+  feedback?: Record<string, "up" | "down">
 }) {
   const [openId, setOpenId] = useState<string | null>(null)
 
@@ -67,6 +72,23 @@ export default function TodayRecommendedProjects({
                     Avaa
                   </button>
                 </div>
+
+                {userId && (
+                  <TodayFeedbackButtons
+                    projectId={project.id}
+                    initialRating={feedback?.[project.id] ?? null}
+                    attributes={{
+                      region: project.region ?? null,
+                      phase: project.phase ?? null,
+                      property_type: project.property_type ?? null,
+                      business_value: project.metadata?.business_value ?? null,
+                      construction_type: project.metadata?.construction_type ?? null,
+                      building_type: project.metadata?.building_type ?? null,
+                      size_class: project.metadata?.size_class ?? null,
+                      source_name: project.metadata?.source_name ?? null,
+                    }}
+                  />
+                )}
               </div>
             )
           })}

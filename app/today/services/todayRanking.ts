@@ -1,5 +1,9 @@
 import type { TodaySettings } from "./getTodaySettings"
 import { projectSource, projectPhaseText } from "./todayFilters"
+import type { FeedbackContext } from "./getUserFeedbackContext"
+
+const FEEDBACK_ATTRIBUTE_WEIGHT = 5
+const FEEDBACK_SCORE_CAP = 30
 
 function daysSince(dateValue: string | null | undefined) {
   if (!dateValue) return 999
@@ -63,20 +67,54 @@ function salesMomentScore(project: any, settings: TodaySettings) {
   return Math.min(score, 30)
 }
 
-export function calculateTodayScore(project: any, settings: TodaySettings) {
+function feedbackAffinityScore(project: any, feedbackContext?: FeedbackContext) {
+  if (!feedbackContext) return 0
+
+  const attrs: Record<string, string | null | undefined> = {
+    region: project.region,
+    business_value: project.metadata?.business_value,
+    construction_type: project.metadata?.construction_type,
+    building_type: project.metadata?.building_type,
+    size_class: project.metadata?.size_class,
+    source_name: project.metadata?.source_name,
+  }
+
+  let score = 0
+
+  for (const key of Object.keys(attrs)) {
+    const value = attrs[key]
+    if (!value) continue
+
+    const net = feedbackContext.affinity[key]?.[value]
+    if (net) score += net * FEEDBACK_ATTRIBUTE_WEIGHT
+  }
+
+  return Math.max(-FEEDBACK_SCORE_CAP, Math.min(FEEDBACK_SCORE_CAP, score))
+}
+
+export function calculateTodayScore(
+  project: any,
+  settings: TodaySettings,
+  feedbackContext?: FeedbackContext
+) {
   return (
     businessValueScore(project) +
     freshnessScore(project) +
     sourceScore(project) +
-    salesMomentScore(project, settings)
+    salesMomentScore(project, settings) +
+    feedbackAffinityScore(project, feedbackContext)
   )
 }
 
-export function rankTodayProjects(projects: any[], settings: TodaySettings) {
+export function rankTodayProjects(
+  projects: any[],
+  settings: TodaySettings,
+  feedbackContext?: FeedbackContext
+) {
   return [...projects]
     .map((project) => ({
       ...project,
-      today_score: calculateTodayScore(project, settings),
+      today_score: calculateTodayScore(project, settings, feedbackContext),
     }))
     .sort((a, b) => {
       if (b.today_score !== a.today_score) {

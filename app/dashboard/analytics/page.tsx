@@ -16,6 +16,20 @@ type AnalyticsData = {
   devicePercentages: { device: string; count: number; percentage: number }[]
   totalUsers: number
   totalEvents: number
+
+  feedbackTotals: { up: number; down: number }
+  mostDownvotedProjects: ProjectRow[]
+  downvotesByRegion: { region: string; count: number }[]
+  downvotesBySizeClass: { sizeClass: string; count: number }[]
+  downvotesBySource: { source: string; count: number }[]
+  recentFeedbackReasons: {
+    projectId: string
+    projectName: string
+    rating: 'up' | 'down'
+    reasonCategory: string | null
+    reasonText: string | null
+    createdAt: string
+  }[]
 }
 
 function formatDuration(seconds: number) {
@@ -229,6 +243,68 @@ export default function AnalyticsPage() {
               <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14 }}>
                 {data.teamUsers.map((u) => (
                   <li key={u.userId}>{u.email}</li>
+                ))}
+              </ul>
+            )}
+          </Section>
+
+          <Section title="👍👎 Hankepalaute">
+            <div style={{ display: 'flex', gap: 24, fontSize: 14, marginBottom: 16 }}>
+              <div>👍 <strong>{data.feedbackTotals.up}</strong></div>
+              <div>👎 <strong>{data.feedbackTotals.down}</strong></div>
+            </div>
+
+            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Eniten hylätyt hankkeet</p>
+            <Table
+              rows={data.mostDownvotedProjects}
+              emptyText="Ei vielä hylkäyksiä."
+              columns={[
+                { label: 'Hanke', render: (r) => r.name },
+                { label: 'Hylkäyksiä', render: (r) => r.downvoteCount },
+              ]}
+            />
+
+            <p style={{ fontSize: 13, fontWeight: 700, marginTop: 16, marginBottom: 6 }}>Hylkäykset alueen mukaan</p>
+            <Table
+              rows={data.downvotesByRegion}
+              emptyText="Ei dataa."
+              columns={[
+                { label: 'Alue', render: (r) => r.region },
+                { label: 'Hylkäyksiä', render: (r) => r.count },
+              ]}
+            />
+
+            <p style={{ fontSize: 13, fontWeight: 700, marginTop: 16, marginBottom: 6 }}>Hylkäykset kokoluokan mukaan</p>
+            <Table
+              rows={data.downvotesBySizeClass}
+              emptyText="Ei dataa."
+              columns={[
+                { label: 'Kokoluokka', render: (r) => r.sizeClass },
+                { label: 'Hylkäyksiä', render: (r) => r.count },
+              ]}
+            />
+
+            <p style={{ fontSize: 13, fontWeight: 700, marginTop: 16, marginBottom: 6 }}>Hylkäykset lähteen mukaan</p>
+            <Table
+              rows={data.downvotesBySource}
+              emptyText="Ei dataa."
+              columns={[
+                { label: 'Lähde', render: (r) => r.source },
+                { label: 'Hylkäyksiä', render: (r) => r.count },
+              ]}
+            />
+
+            <p style={{ fontSize: 13, fontWeight: 700, marginTop: 16, marginBottom: 6 }}>Viimeisimmät syyt</p>
+            {data.recentFeedbackReasons.length === 0 ? (
+              <p style={{ color: '#6b7280', fontSize: 14 }}>Ei vielä kirjoitettuja syitä.</p>
+            ) : (
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+                {data.recentFeedbackReasons.map((r, i) => (
+                  <li key={i} style={{ marginBottom: 6 }}>
+                    {r.rating === 'up' ? '👍' : '👎'} <strong>{r.projectName}</strong>
+                    {r.reasonCategory ? ` — ${r.reasonCategory}` : ''}
+                    {r.reasonText ? `: ${r.reasonText}` : ''}
+                  </li>
                 ))}
               </ul>
             )}
