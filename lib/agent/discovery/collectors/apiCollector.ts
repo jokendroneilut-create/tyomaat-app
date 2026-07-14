@@ -106,7 +106,7 @@ async function collectLupapisteSource(source: DiscoverySource) {
       for (const notice of result.data) {
         found += 1
 
-        const documentUrl = `https://julkipano.lupapiste.fi/muutoksenhaku/${notice.id}`
+        const documentUrl = `https://julkipano.lupapiste.fi/app/fi/bulletins#!/bulletin/${notice.id}`
         const rawText = JSON.stringify(notice)
         const contentHash = hashContent(rawText)
 
