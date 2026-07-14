@@ -726,9 +726,24 @@ setTeamModeEnabled(true)
             <span style={{ fontSize: 14 }}>Suunnittelussa</span>
           </div>
 
-<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="marker-dot marker--tender" />
+            <span style={{ fontSize: 14 }}>Kilpailutus / lupa</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="marker-dot marker--active" />
+            <span style={{ fontSize: 14 }}>Rakenteilla</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="marker-dot marker--done" />
+            <span style={{ fontSize: 14 }}>Valmistunut</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span className="marker-dot marker--default" />
-            <span style={{ fontSize: 14 }}>Rakentaminen aloitettu</span>
+            <span style={{ fontSize: 14 }}>Peruttu / muu</span>
           </div>
         </div>
         

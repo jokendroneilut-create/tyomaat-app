@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 're
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import type { ZoomTarget } from './MapClient'
+import { normalizeLegacyPhase, type PhaseKey } from '@/lib/projects/phases'
 
 type Project = {
   id: string
@@ -33,13 +34,27 @@ export type MapBounds = {
   east: number
 }
 
+/*
+ * Karttamerkin väri perustuu kanoniseen vaiheavaimeen (lib/projects/phases.ts)
+ * raa'an tekstin osamerkkijonohaun sijaan — muuten esim. "Rakennuslupa"
+ * täsmäisi vahingossa samaan "käynnissä"-hakuun kuin "Rakenteilla".
+ */
+const PHASE_MARKER_CLASS: Record<PhaseKey, string> = {
+  idea: 'marker--planning',
+  zoning: 'marker--planning',
+  planning: 'marker--planning',
+  permit: 'marker--tender',
+  tender: 'marker--tender',
+  contract_awarded: 'marker--active',
+  construction: 'marker--active',
+  nearing_completion: 'marker--done',
+  completed: 'marker--done',
+  cancelled: 'marker--default',
+}
+
 function phaseClass(phase: string) {
-  const p = (phase || '').toLowerCase()
-  if (p.includes('suunn')) return 'marker--planning'
-  if (p.includes('käynn') || p.includes('rakenn')) return 'marker--active'
-  if (p.includes('valmis') || p.includes('valmist')) return 'marker--done'
-  if (p.includes('kilpail') || p.includes('hank')) return 'marker--tender'
-  return 'marker--default'
+  const key = normalizeLegacyPhase(phase)
+  return key ? PHASE_MARKER_CLASS[key] : 'marker--default'
 }
 
 function ownerClass(ownerId?: string | null, currentUserId?: string | null) {
