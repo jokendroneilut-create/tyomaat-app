@@ -1,6 +1,7 @@
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
+import { getMunicipalityByName } from "@/lib/geo/municipalities"
 
 function findFact(
   facts: any[],
@@ -26,6 +27,41 @@ function normalize(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
+}
+
+/*
+ * Hankintayksikön osoite on Suomessa aina muotoa "<katu> <postinumero>
+ * <kaupunki> FIN" — kaupunki on nimessä perusmuodossa, joten se on
+ * poimittavissa luotettavasti toisin kuin vapaan tekstin taivutusmuodot.
+ */
+function extractCityFromBuyerAddress(
+  buyerAddress: string | null
+): string | null {
+  if (!buyerAddress) return null
+
+  const match = buyerAddress.match(
+    /\d{5}\s+([A-ZÅÄÖ][a-zåäöA-ZÅÄÖ\-]*(?:\s[A-ZÅÄÖ][a-zåäöA-ZÅÄÖ\-]*)*)\s+FIN\s*$/
+  )
+
+  return match?.[1]?.trim() ?? null
+}
+
+/*
+ * Hankintayksikön osoite ei aina ole sama kuin työmaan sijainti — esim.
+ * valtakunnalliset virastot voivat kilpailuttaa hankkeita missä päin
+ * Suomea tahansa. Käytetään hankintayksikön kaupunkia vain kun
+ * ilmoituksen oma teksti (kuvaus tai organisaation nimi) tukee samaa
+ * kaupunkia, mikä pätee luotettavasti paikallisiin toimijoihin (kunnat,
+ * seurakunnat, kuntayhtymät). Taivutusmuotojen takia (esim. "Orivesi" ->
+ * "Oriveden") verrataan vain nimen alkuosaa, ei koko sanaa.
+ */
+function isCityCorroboratedByText(
+  city: string,
+  ...texts: (string | null)[]
+): boolean {
+  const stem = city.toLowerCase().slice(0, Math.min(5, city.length))
+
+  return texts.some((text) => text && text.toLowerCase().includes(stem))
 }
 
 export async function resolveHilmaProject({
@@ -54,6 +90,9 @@ export async function resolveHilmaProject({
   const buyerAddress =
     findFact(facts, "buyer_address")?.fact_value ??
     null
+
+  const buyerCity = extractCityFromBuyerAddress(buyerAddress)
+  const buyerMunicipality = getMunicipalityByName(buyerCity)
 
   /*
    * Mahdollinen oikea rakennuskohteen osoite voidaan
@@ -158,14 +197,21 @@ export async function resolveHilmaProject({
     title: operation,
   })
 
+  /*
+   * Hankintayksikön osoitetta ei tallenneta työmaan osoitteeksi (voi
+   * poiketa työmaasta esim. valtakunnallisilla toimijoilla), mutta sen
+   * kaupunkia voidaan käyttää hankkeen sijaintikuntana kun ilmoituksen
+   * oma teksti tukee samaa kaupunkia (ks. isCityCorroboratedByText).
+   */
+  const municipality =
+    buyerMunicipality &&
+    isCityCorroboratedByText(buyerMunicipality.name, description, developer)
+      ? buyerMunicipality.name
+      : null
+
   const result = await resolvePotentialProject({
     title: operation,
-
-    /*
-     * Hilman organisaatio-osoitetta ei enää tallenneta
-     * työmaan osoitteeksi.
-     */
-    municipality: null,
+    municipality,
     address: projectAddress,
     propertyId: null,
 
@@ -187,6 +233,8 @@ export async function resolveHilmaProject({
       operation,
       description,
       developer,
+
+      region: municipality ? buyerMunicipality?.region ?? null : null,
 
       buyer_address: buyerAddress,
       project_address: projectAddress,
