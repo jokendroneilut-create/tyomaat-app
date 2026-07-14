@@ -4,6 +4,7 @@ import {
   linkIdentifier,
   type IdentifierType,
 } from "@/lib/projects/identity"
+import { syncApprovedProject } from "@/lib/projects/syncApprovedProject"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -124,6 +125,21 @@ export async function resolvePotentialProject(
     if (error) throw error
 
     await linkIdentifiers(input.identifiers, updated.id)
+
+    /*
+     * Jo hyväksytty ehdokas ei enää palaa hyväksyntäjonoon, joten uusi
+     * tieto (esim. Hilman jatkoilmoitus samasta kilpailutuksesta) ei
+     * muuten koskaan päätyisi julkiseen hankkeeseen asti.
+     */
+    const approvedProjectId = existing.metadata?.approved_project_id
+    if (existing.status === "approved" && approvedProjectId) {
+      await syncApprovedProject({
+        supabase: supabaseAdmin,
+        projectId: approvedProjectId,
+        newMetadata: input.metadata ?? {},
+        sourceName: input.sourceName,
+      })
+    }
 
     return {
       action: "updated_existing",

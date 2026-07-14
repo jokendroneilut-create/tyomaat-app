@@ -1,7 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { normalizeLegacyPhase } from "./phases"
 
-export type PhaseChangeSource = "agent_import" | "tic_approve" | "dashboard_admin"
+export type PhaseChangeSource =
+  | "agent_import"
+  | "tic_approve"
+  | "dashboard_admin"
+  | "auto_sync"
 
 export async function recordPhaseChange(input: {
   supabase: SupabaseClient
