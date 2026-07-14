@@ -19,13 +19,31 @@ export async function resolveLupapisteProject({
   const propertyId = findFact(facts, "property_id")?.fact_value ?? null
   const address = findFact(facts, "address")?.fact_value ?? null
   const municipalityCode = findFact(facts, "municipality_code")?.fact_value ?? null
-  const operation = findFact(facts, "operation")?.fact_value ?? document.title
+  const rawOperation = findFact(facts, "operation")?.fact_value ?? document.title
+  const operation = rawOperation ? rawOperation.replace(/\s*\n+\s*/g, " ").trim() : rawOperation
   const decisionStatus = findFact(facts, "decision_status")?.fact_value ?? null
   const decisionText = findFact(facts, "decision_text")?.fact_value ?? null
   const deadline = findFact(facts, "deadline")?.fact_date ?? null
 
   const metadata = facts[0]?.metadata ?? {}
   const municipality = getMunicipality(municipalityCode)
+
+  const title = [operation, address].filter(Boolean).join(": ") || operation
+
+  /*
+   * Lupapisten oma operaatiokuvaus (bulletinOpDescription) on usein vain
+   * prosessin yleinen nimike (esim. "Poikkeamispäätös: Poikkeaminen") eikä
+   * kerro mitä hankkeessa oikeasti tehdään — varsinainen sisältö on vain
+   * päätöstekstissä. Näytetään koko päätösteksti Lisätietoja-kentässä.
+   */
+  const description = [
+    propertyId ? `Kiinteistötunnus: ${propertyId}` : null,
+    address ? `Osoite: ${address}` : null,
+    operation ? `Toimenpide: ${operation}` : null,
+    decisionText ? `Päätös:\n${decisionText}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n")
 
   const coordinates = metadata.coordinates ?? null
   const wgs84 =
@@ -43,7 +61,7 @@ export async function resolveLupapisteProject({
   })
 
   const result = await resolvePotentialProject({
-    title: operation,
+    title,
     municipality: municipality?.name ?? municipalityCode,
     address,
     propertyId,
@@ -62,6 +80,7 @@ export async function resolveLupapisteProject({
       resolver: "lupapisteResolver",
 
       operation,
+      description,
       municipality_code: municipalityCode,
       region: municipality?.region ?? null,
 
