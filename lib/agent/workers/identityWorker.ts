@@ -124,6 +124,17 @@ if (sourceName === "hilma") {
           ? `Rakennuslupa: ${permitNumber}`
           : "Rakennuslupa"
 
+    const description = [
+      propertyId ? `Kiinteistötunnus: ${propertyId}` : null,
+      district ? `Kaupunginosa: ${district}` : null,
+      address ? `Osoite: ${address}` : null,
+      operation ? `Toimenpide: ${operation}` : null,
+      decisionMaker ? `Päätöksentekijä: ${decisionMaker}` : null,
+      permitNumber ? `Lupatunnus: ${permitNumber}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n")
+
     const result = await resolvePotentialProject({
       title,
       municipality,
@@ -141,6 +152,7 @@ if (sourceName === "hilma") {
         district,
         operation,
         decision_maker: decisionMaker,
+        description,
         fact_count: decisionFacts.length,
         resolver: "identityWorker",
 

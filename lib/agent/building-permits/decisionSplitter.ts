@@ -69,8 +69,13 @@ function parseEspooDecisionBlock(
   const decisionMaker =
     block.match(/päätöksentekijä:\s*(.+)/i)?.[1]?.trim() ?? null
 
+  /*
+   * Kiinteistön osoite ei aina ole Espoossa (esim. kuntarajan tuntumassa
+   * olevat kohteet, tai postiosoite eri kunnassa kuin lupaprosessi) —
+   * ei rajata pelkkään "ESPOO"-loppuiseen riviin.
+   */
   const postalLineIndex = lines.findIndex((line) =>
-    /^\d{5}\s+ESPOO$/i.test(line)
+    /^\d{5}\s+[A-ZÅÄÖ][A-ZÅÄÖ\s-]*$/.test(line)
   )
 
   const address = postalLineIndex > 0 ? lines[postalLineIndex - 1] : null
