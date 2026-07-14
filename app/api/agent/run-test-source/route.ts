@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server"
-
+import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 export const runtime = "nodejs"
 
-export async function POST() {
+export async function POST(request: Request) {
+  const auth = await verifyAdminRequest(request)
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
+  const internalAuthHeaders = {
+    Authorization: `Bearer ${process.env.CRON_SECRET}`,
+  }
+
   try {
     const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000"
 
-const discoverRes = await fetch(`${baseUrl}/api/agent/discover`)
+const discoverRes = await fetch(`${baseUrl}/api/agent/discover`, {
+  headers: internalAuthHeaders,
+})
 const discoverJson = await discoverRes.json()
 
 const candidates = discoverJson.candidates || []
@@ -22,6 +33,7 @@ const existingRes = await fetch(
   `${baseUrl}/api/agent/seen-source?source_url=${encodeURIComponent(candidate.source_url)}`,
   {
     method: "GET",
+    headers: internalAuthHeaders,
   }
 )
 
@@ -42,6 +54,7 @@ if (existingJson.seen) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...internalAuthHeaders,
       },
       body: JSON.stringify(candidate),
     })

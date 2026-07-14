@@ -22,6 +22,9 @@ export async function GET(req: Request) {
 
     const res = await fetch(`${baseUrl}/api/agent/run-test-source`, {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.CRON_SECRET}`,
+      },
     })
 
     const json = await res.json()

@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server"
 import { sources } from "@/lib/agent/sources"
+import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 export const runtime = "nodejs"
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = await verifyAdminRequest(request)
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
   const allCandidates: any[] = []
   const sourceStatus: any[] = []
 

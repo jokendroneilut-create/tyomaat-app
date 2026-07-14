@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 export const runtime = "nodejs"
 
 export async function GET(req: Request) {
+  const auth = await verifyAdminRequest(req)
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
   try {
     const url = new URL(req.url)
     const sourceUrl = url.searchParams.get("source_url")

@@ -9,6 +9,7 @@ import {
   linkIdentifier,
   type IdentifierType,
 } from "@/lib/projects/identity"
+import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 /*
  * Tämän putken lähde (yritysten lehdistötiedotteet) ei anna luotettavaa
@@ -27,6 +28,11 @@ function guessPermitIdentifierType(value: string | null): IdentifierType | null 
 export const runtime = "nodejs"
 
 export async function POST(req: Request) {
+  const auth = await verifyAdminRequest(req)
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
   try {
     const body = await req.json()
     if (!body.name || body.name.trim().length < 5) {
