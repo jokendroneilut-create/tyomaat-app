@@ -10,6 +10,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetMessage, setResetMessage] = useState<string | null>(null)
+  const [resetError, setResetError] = useState<string | null>(null)
+
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
@@ -40,6 +46,28 @@ export default function LoginPage() {
 
     // Täysi reload varmistaa, että middleware näkee uudet evästeet heti.
     window.location.href = nextPath
+  }
+
+  async function onResetSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setResetError(null)
+    setResetMessage(null)
+    setResetLoading(true)
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/set-password`,
+    })
+
+    setResetLoading(false)
+
+    if (error) {
+      setResetError(error.message)
+      return
+    }
+
+    setResetMessage(
+      'Jos sähköpostiosoite löytyy järjestelmästämme, olemme lähettäneet siihen linkin salasanan vaihtamista varten.'
+    )
   }
 
   return (
@@ -85,6 +113,89 @@ export default function LoginPage() {
           {loading ? 'Kirjaudutaan…' : 'Kirjaudu'}
         </button>
       </form>
+
+      <div style={{ marginTop: 16, textAlign: 'center' }}>
+        <button
+          type="button"
+          onClick={() => {
+            setShowForgotPassword(!showForgotPassword)
+            setResetMessage(null)
+            setResetError(null)
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            color: '#2563eb',
+            fontSize: 14,
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+        >
+          Unohditko salasanasi?
+        </button>
+      </div>
+
+      {showForgotPassword && (
+        <form
+          onSubmit={onResetSubmit}
+          style={{
+            marginTop: 16,
+            padding: 16,
+            border: '1px solid #e5e7eb',
+            borderRadius: 8,
+            background: '#f9fafb',
+          }}
+        >
+          <p style={{ marginTop: 0, marginBottom: 8, fontSize: 14, color: '#374151' }}>
+            Syötä sähköpostiosoitteesi, niin lähetämme linkin jolla voit asettaa uuden salasanan.
+          </p>
+
+          <input
+            placeholder="Sähköposti"
+            type="email"
+            value={resetEmail}
+            onChange={(e) => setResetEmail(e.target.value)}
+            style={{
+              width: '100%',
+              padding: 10,
+              background: '#fff',
+              border: '1px solid #d1d5db',
+              borderRadius: 6,
+            }}
+            autoComplete="email"
+          />
+
+          <button
+            disabled={resetLoading || !resetEmail}
+            style={{
+              marginTop: 10,
+              padding: 10,
+              width: '100%',
+              background: '#111827',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            {resetLoading ? 'Lähetetään…' : 'Lähetä palautuslinkki'}
+          </button>
+
+          {resetMessage && (
+            <div style={{ marginTop: 10, fontSize: 13, color: '#166534' }}>
+              {resetMessage}
+            </div>
+          )}
+
+          {resetError && (
+            <div style={{ marginTop: 10, fontSize: 13, color: '#b91c1c' }}>
+              {resetError}
+            </div>
+          )}
+        </form>
+      )}
     </div>
   )
 }
