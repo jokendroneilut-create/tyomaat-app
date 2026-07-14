@@ -1,10 +1,14 @@
 import PotentialProjectsReviewList from "../components/PotentialProjectsReviewList"
 import { getPotentialProjectsForReview } from "../services/getPotentialProjectsForReview"
+import { getPendingReviewCount } from "../services/getPendingReviewCount"
 
 export const dynamic = "force-dynamic"
 
 export default async function TicProjectsPage() {
-  const potentialProjects = await getPotentialProjectsForReview()
+  const [potentialProjects, pendingReviewCount] = await Promise.all([
+    getPotentialProjectsForReview(),
+    getPendingReviewCount(),
+  ])
 
   return (
     <div>
@@ -18,7 +22,10 @@ export default async function TicProjectsPage() {
         </p>
       </section>
 
-      <PotentialProjectsReviewList projects={potentialProjects} />
+      <PotentialProjectsReviewList
+        projects={potentialProjects}
+        totalCount={pendingReviewCount}
+      />
     </div>
   )
 }
