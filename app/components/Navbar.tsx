@@ -165,34 +165,51 @@ export default function Navbar() {
     </NavSection>
 
     {isAdmin && (
-      <>
-        <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 8, marginTop: 4 }}>
-          <button
-            type="button"
-            onClick={() => setAdminOpen((v) => !v)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-              background: "none",
-              border: "none",
-              padding: "4px 0",
-              cursor: "pointer",
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#9ca3af",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
-          >
-            <span>⚙️ Admin</span>
-            <span>{adminOpen ? "▲" : "▼"}</span>
-          </button>
-        </div>
+      <div style={{ position: isMobile ? "static" : "relative", borderTop: "1px solid #f0f0f0", paddingTop: 8, marginTop: 4 }}>
+        <button
+          type="button"
+          onClick={() => setAdminOpen((v) => !v)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+            background: "none",
+            border: "none",
+            padding: "4px 0",
+            cursor: "pointer",
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#9ca3af",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          <span>⚙️ Admin</span>
+          <span>{isMobile ? (adminOpen ? "▲" : "▼") : "◀"}</span>
+        </button>
 
         {adminOpen && (
-          <>
+          <div
+            style={
+              isMobile
+                ? undefined
+                : {
+                    position: "absolute",
+                    top: 0,
+                    right: "100%",
+                    marginRight: 8,
+                    background: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 12,
+                    padding: 10,
+                    minWidth: 240,
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                    display: "grid",
+                    gap: 2,
+                  }
+            }
+          >
             <NavSection>
               <NavItem href="/dashboard">Dashboard</NavItem>
               <NavItem href="/dashboard/users">Käyttäjät</NavItem>
@@ -212,9 +229,9 @@ export default function Navbar() {
                 Raportit
               </NavItem>
             </NavSection>
-          </>
+          </div>
         )}
-      </>
+      </div>
     )}
 
     <button onClick={handleLogout} style={logoutStyle}>

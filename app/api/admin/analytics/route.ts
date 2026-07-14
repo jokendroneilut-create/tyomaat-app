@@ -165,15 +165,15 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      mostLoggedInUsers: mapUsers(topN(loginCounts, 10), "loginCount"),
-      mostTimeSpentUsers: mapUsers(topN(userTimeSpent, 10), "seconds"),
-      mostViewedPages: topN(pageTimeSpent, 10).map(([path, seconds]) => ({ path, seconds })),
+      mostLoggedInUsers: mapUsers(topN(loginCounts, 5), "loginCount"),
+      mostTimeSpentUsers: mapUsers(topN(userTimeSpent, 5), "seconds"),
+      mostViewedPages: topN(pageTimeSpent, 5).map(([path, seconds]) => ({ path, seconds })),
       searchWatchUsers: mapUsers(
-        topN(savedSearchCounts, 50),
+        topN(savedSearchCounts, 5),
         "watchCount"
       ),
-      mostOpenedProjects: mapProjects(topN(projectOpenCounts, 10), "openCount"),
-      mostFavoritedProjects: mapProjects(topN(favoriteCounts, 10), "favoriteCount"),
+      mostOpenedProjects: mapProjects(topN(projectOpenCounts, 5), "openCount"),
+      mostFavoritedProjects: mapProjects(topN(favoriteCounts, 5), "favoriteCount"),
       teamUsers: teamUserIds.map((userId) => ({
         userId,
         email: userEmail.get(userId) ?? userId,
