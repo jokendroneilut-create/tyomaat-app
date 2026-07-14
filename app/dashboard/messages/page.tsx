@@ -112,7 +112,14 @@ export default function MessagesPage() {
         <input
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          style={{ width: '100%', padding: 8, marginTop: 4 }}
+          style={{
+            width: '100%',
+            padding: 8,
+            marginTop: 4,
+            background: '#fff',
+            border: '1px solid #d1d5db',
+            borderRadius: 6,
+          }}
         />
       </div>
 
@@ -122,7 +129,14 @@ export default function MessagesPage() {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={6}
-          style={{ width: '100%', padding: 8, marginTop: 4 }}
+          style={{
+            width: '100%',
+            padding: 8,
+            marginTop: 4,
+            background: '#fff',
+            border: '1px solid #d1d5db',
+            borderRadius: 6,
+          }}
         />
       </div>
 
