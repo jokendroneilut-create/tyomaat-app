@@ -4,10 +4,16 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
+function formatArea(value: number) {
+  return `${Math.round(value).toLocaleString("fi-FI")} m²`
+}
+
 export default function PotentialProjectsReviewList({
   projects,
+  totalCount,
 }: {
   projects: any[]
+  totalCount?: number
 }) {
   const router = useRouter()
   const [loadingId, setLoadingId] = useState<string | null>(null)
@@ -97,7 +103,10 @@ export default function PotentialProjectsReviewList({
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h2 className="text-xl font-semibold text-gray-900">
-        Ehdokkaat ({projects.length})
+        Ehdokkaat{" "}
+        {typeof totalCount === "number" && totalCount > projects.length
+          ? `(näytetään ${projects.length} / ${totalCount})`
+          : `(${projects.length})`}
       </h2>
 
       {error && (
@@ -109,6 +118,7 @@ export default function PotentialProjectsReviewList({
       <div className="mt-4 space-y-4">
         {projects.map((project) => {
           const metadata = project.metadata ?? {}
+          const isZoning = metadata.phase_hint === "Kaavoitus"
 
           return (
             <article
@@ -130,26 +140,51 @@ export default function PotentialProjectsReviewList({
                   </h3>
 
                   <p className="mt-1 text-gray-600">
-                    {project.address}, {project.municipality}
+                    {[project.address, project.municipality]
+                      .filter(Boolean)
+                      .join(", ")}
                   </p>
 
-                  <div className="mt-3 grid gap-2 text-sm text-gray-700 md:grid-cols-2">
-                    <div>
-                      <strong>Rakennustyyppi:</strong>{" "}
-                      {metadata.building_type ?? "-"}
+                  {isZoning ? (
+                    <div className="mt-3 text-sm text-gray-700">
+                      <div className="grid gap-2 md:grid-cols-2">
+                        <div>
+                          <strong>Kaava-alue:</strong>{" "}
+                          {typeof metadata.site_area_m2 === "number"
+                            ? formatArea(metadata.site_area_m2)
+                            : "-"}
+                        </div>
+                        <div>
+                          <strong>Kaupunginosa:</strong>{" "}
+                          {metadata.district_name ?? "-"}
+                        </div>
+                      </div>
+
+                      <p className="mt-2 text-gray-600">
+                        {metadata.description
+                          ? `${metadata.description.slice(0, 180).trim()}…`
+                          : "Kuvausta ei vielä saatavilla — kaava on liian varhaisessa vaiheessa."}
+                      </p>
                     </div>
-                    <div>
-                      <strong>Toimenpide:</strong>{" "}
-                      {metadata.construction_type ?? "-"}
+                  ) : (
+                    <div className="mt-3 grid gap-2 text-sm text-gray-700 md:grid-cols-2">
+                      <div>
+                        <strong>Rakennustyyppi:</strong>{" "}
+                        {metadata.building_type ?? "-"}
+                      </div>
+                      <div>
+                        <strong>Toimenpide:</strong>{" "}
+                        {metadata.construction_type ?? "-"}
+                      </div>
+                      <div>
+                        <strong>Lupa:</strong> {project.permit_number ?? "-"}
+                      </div>
+                      <div>
+                        <strong>Kiinteistö:</strong>{" "}
+                        {project.property_id ?? "-"}
+                      </div>
                     </div>
-                    <div>
-                      <strong>Lupa:</strong> {project.permit_number ?? "-"}
-                    </div>
-                    <div>
-                      <strong>Kiinteistö:</strong>{" "}
-                      {project.property_id ?? "-"}
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="flex flex-row flex-wrap gap-2 sm:w-auto sm:shrink-0 sm:flex-col">
