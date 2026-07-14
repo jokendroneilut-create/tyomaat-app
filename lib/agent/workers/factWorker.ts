@@ -6,31 +6,44 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function runFactWorker() {
+export async function runFactWorker(documentId?: string) {
   const startedAt = Date.now()
 
-  const { data: documents, error: documentError } = await supabaseAdmin
-    .from("source_documents")
-    .select("*")
-    .is("facts_extracted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(100)
+  let document: any = null
 
-  if (documentError) throw documentError
+  if (documentId) {
+    const { data, error } = await supabaseAdmin
+      .from("source_documents")
+      .select("*")
+      .eq("id", documentId)
+      .maybeSingle()
 
-  const JSON_ONLY_SOURCES = [
-    "Hilma",
-    "Lupapiste kuulutukset",
-    "Vantaan vireillä olevat kaavat",
-    "Helsingin vireillä olevat kaavat",
-  ]
+    if (error) throw error
+    document = data
+  } else {
+    const { data: documents, error: documentError } = await supabaseAdmin
+      .from("source_documents")
+      .select("*")
+      .is("facts_extracted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(100)
 
-  const document =
-    (documents ?? []).find((d) =>
-      JSON_ONLY_SOURCES.includes(d.source_name)
-        ? !!(d.raw_payload?.original || d.raw_text)
-        : !!d.extracted_text
-    ) ?? null
+    if (documentError) throw documentError
+
+    const JSON_ONLY_SOURCES = [
+      "Hilma",
+      "Lupapiste kuulutukset",
+      "Vantaan vireillä olevat kaavat",
+      "Helsingin vireillä olevat kaavat",
+    ]
+
+    document =
+      (documents ?? []).find((d) =>
+        JSON_ONLY_SOURCES.includes(d.source_name)
+          ? !!(d.raw_payload?.original || d.raw_text)
+          : !!d.extracted_text
+      ) ?? null
+  }
 
   if (!document) {
     return {

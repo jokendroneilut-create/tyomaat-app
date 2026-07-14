@@ -489,11 +489,55 @@ async function fetchHelsinkiDistrictNames(): Promise<Map<string, string>> {
   return map
 }
 
+const HELSINKI_MAX_SELOSTUS_FETCHES_PER_RUN = 30
+
+/*
+ * Vireillä olevan kaavan asemakaavaselostus-PDF löytyy luotettavasti tästä
+ * vuosikansiottomasta osoitteesta niin kauan kuin kaava on vielä käsittelyssä
+ * — vasta valmistuneet/lainvoimaiset kaavat arkistoidaan myöhemmin
+ * vuosikohtaisiin kansioihin. Koska tämä lähde kerää nimenomaan vain
+ * "vireillä"-tilassa olevia kaavoja, tämä osoite osuu oikeaan lähes aina.
+ */
+async function fetchHelsinkiKaavaSelostus(
+  kaavaTunnus: string
+): Promise<{ description: string | null; selostusUrl: string | null }> {
+  const selostusUrl = `https://www.hel.fi/static/ksv/kaava/ak${kaavaTunnus}_selostus.pdf`
+
+  try {
+    const response = await fetch(selostusUrl, {
+      headers: {
+        accept: "application/pdf,*/*",
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      return { description: null, selostusUrl: null }
+    }
+
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default
+    const parsed = await pdfParse(buffer)
+    const text = parsed.text?.trim() ?? ""
+
+    return {
+      description: text.length > 0 ? text.slice(0, 8000) : null,
+      selostusUrl,
+    }
+  } catch {
+    return { description: null, selostusUrl: null }
+  }
+}
+
 /*
  * Helsingin vireillä-rajapinnassa ei ole kaavan omaa nimeä, hakijaa eikä
  * kuvaustekstiä (toisin kuin Vantaalla) — vain kaavatunnus, käsittelyvaihe,
- * pinta-ala ja sijainti. Yksi WFS-haku riittää, ei sivutusta eikä
- * per-kaava-sivuhakuja tarvita.
+ * pinta-ala ja sijainti. Kuvausteksti haetaan erikseen kaavan omasta
+ * asemakaavaselostus-PDF:stä (ks. fetchHelsinkiKaavaSelostus).
  */
 async function collectHelsinkiKaavaSource(source: DiscoverySource) {
   const response = await fetch(source.url, { cache: "no-store" })
@@ -506,7 +550,31 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
   const features = Array.isArray(json.features) ? json.features : []
   const districtNames = await fetchHelsinkiDistrictNames()
 
+  /*
+   * Selostusteksti ei muutu jälkikäteen, joten sitä ei haeta uudelleen
+   * kaavoille joille tämä on jo kertaalleen selvitetty (sama malli kuin
+   * Vantaan hakija-haussa).
+   */
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<
+    string,
+    { description: string | null; selostusUrl: string | null }
+  >()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description !== undefined) {
+      knownDetails.set(row.document_url, {
+        description: row.raw_payload.description ?? null,
+        selostusUrl: row.raw_payload.selostus_url ?? null,
+      })
+    }
+  }
+
   let saved = 0
+  let selostusFetches = 0
 
   for (const feature of features) {
     const properties = feature.properties ?? {}
@@ -517,6 +585,23 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
       ? String(Number(properties.sijaintialue))
       : null
     const districtName = districtCode ? districtNames.get(districtCode) ?? null : null
+
+    const known = knownDetails.get(documentUrl)
+    let description: string | null = known?.description ?? null
+    let selostusUrl: string | null = known?.selostusUrl ?? null
+    let detailsAttempted = knownDetails.has(documentUrl)
+
+    if (
+      !detailsAttempted &&
+      properties.kaavatunnus &&
+      selostusFetches < HELSINKI_MAX_SELOSTUS_FETCHES_PER_RUN
+    ) {
+      const details = await fetchHelsinkiKaavaSelostus(String(properties.kaavatunnus))
+      description = details.description
+      selostusUrl = details.selostusUrl
+      selostusFetches += 1
+      detailsAttempted = true
+    }
 
     const rawText = JSON.stringify(feature)
     const contentHash = hashContent(rawText)
@@ -538,6 +623,7 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
             priority: source.priority,
             center: boundingBoxCenter(feature.geometry),
             district_name: districtName,
+            ...(detailsAttempted ? { description, selostus_url: selostusUrl } : {}),
             original: feature,
           },
           processed_at: new Date().toISOString(),

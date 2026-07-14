@@ -57,6 +57,8 @@ export function resolveFacts(document: any) {
     const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
     const center = document.raw_payload?.center ?? null
     const districtName = document.raw_payload?.district_name ?? null
+    const description = document.raw_payload?.description ?? null
+    const selostusUrl = document.raw_payload?.selostus_url ?? null
 
     return {
       decisions: [],
@@ -66,6 +68,8 @@ export function resolveFacts(document: any) {
         feature,
         center,
         districtName,
+        description,
+        selostusUrl,
       }),
     }
   }

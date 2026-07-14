@@ -8,7 +8,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
 
-  const result = await runFactWorker()
+  const body = await request.json().catch(() => ({}))
+  const result = await runFactWorker(body?.documentId)
 
   return NextResponse.json(result)
 }

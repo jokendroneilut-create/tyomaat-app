@@ -19,8 +19,10 @@ export async function resolveHelsinkiKaavaProject({
   const operation = findFact(facts, "operation")?.fact_value ?? document.title
   const luokka = findFact(facts, "decision_status")?.fact_value ?? null
   const siteAreaM2 = findFact(facts, "site_area_m2")?.fact_number ?? null
+  const selostusUrl = findFact(facts, "documents_url")?.fact_value ?? null
 
   const metadata = facts[0]?.metadata ?? {}
+  const description = metadata.description ?? null
   const municipality = getMunicipalityByName("Helsinki")
 
   const coordinates = metadata.coordinates ?? null
@@ -62,12 +64,16 @@ export async function resolveHelsinkiKaavaProject({
       date_published: null,
 
       /*
-       * Helsingin vireillä-rajapinnassa ei ole hakijan nimeä, yhteystietoja
-       * eikä kuvaustekstiä toisin kuin Vantaalla — vain kaavatunnus, vaihe,
-       * pinta-ala ja sijainti. Ks. keskustelu: Helsingin kaavasivut ovat
-       * raskaan JS-karttasovelluksen takana, ei suoraan poimittavissa.
+       * Helsingin vireillä-rajapinnassa itsessään ei ole hakijan nimeä,
+       * yhteystietoja eikä kuvaustekstiä toisin kuin Vantaalla — vain
+       * kaavatunnus, vaihe, pinta-ala ja sijainti. Kuvausteksti haetaan
+       * kaavan omasta asemakaavaselostus-PDF:stä (ks. apiCollector.ts:n
+       * fetchHelsinkiKaavaSelostus), joka on julkinen niin kauan kuin kaava
+       * on vielä vireillä.
        */
       site_area_m2: siteAreaM2,
+      description,
+      documents_url: selostusUrl,
 
       lupapiste_coordinates: coordinates,
       lupapiste_coordinates_wgs84: wgs84,

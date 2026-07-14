@@ -21,12 +21,16 @@ export function extractHelsinkiKaavaFacts({
   feature,
   center,
   districtName,
+  description,
+  selostusUrl,
 }: {
   documentId: string
   sourceName: string
   feature: any
   center: { x: number; y: number } | null
   districtName?: string | null
+  description?: string | null
+  selostusUrl?: string | null
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
   const properties = feature.properties ?? {}
@@ -52,6 +56,17 @@ export function extractHelsinkiKaavaFacts({
     hyvaksymispvm,
     site_area_m2: pintaala,
     coordinates: center,
+    description: clean(description ?? null),
+  }
+
+  if (selostusUrl) {
+    facts.push({
+      fact_type: "documents_url",
+      fact_key: "selostus_url",
+      fact_value: selostusUrl,
+      confidence: 0.9,
+      metadata: commonMetadata,
+    })
   }
 
   if (kaavaTunnus) {
