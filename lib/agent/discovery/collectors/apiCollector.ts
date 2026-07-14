@@ -552,7 +552,11 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
 
   /*
    * Selostusteksti ei muutu jälkikäteen, joten sitä ei haeta uudelleen
-   * kaavoille joille tämä on jo kertaalleen selvitetty (sama malli kuin
+   * kaavoille joille selostus on jo kertaalleen löytynyt onnistuneesti.
+   * Epäonnistuneita hakuja (selostusta ei vielä julkaistu, kaava on liian
+   * varhaisessa vaiheessa) EI merkitä pysyvästi käsitellyksi, koska
+   * selostus voi ilmestyä myöhemmin kaavaprosessin edetessä — nämä
+   * yritetään siis uudelleen jokaisella keräysajolla (sama malli kuin
    * Vantaan hakija-haussa).
    */
   const { data: existingRows } = await supabaseAdmin
@@ -565,9 +569,9 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
     { description: string | null; selostusUrl: string | null }
   >()
   for (const row of existingRows ?? []) {
-    if (row.raw_payload?.description !== undefined) {
+    if (row.raw_payload?.description) {
       knownDetails.set(row.document_url, {
-        description: row.raw_payload.description ?? null,
+        description: row.raw_payload.description,
         selostusUrl: row.raw_payload.selostus_url ?? null,
       })
     }
@@ -600,7 +604,7 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
       description = details.description
       selostusUrl = details.selostusUrl
       selostusFetches += 1
-      detailsAttempted = true
+      detailsAttempted = details.description !== null
     }
 
     const rawText = JSON.stringify(feature)
