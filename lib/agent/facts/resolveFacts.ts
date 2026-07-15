@@ -5,6 +5,7 @@ import { extractVantaaKaavaFacts } from "@/lib/agent/facts/extractVantaaKaavaFac
 import { extractHelsinkiKaavaFacts } from "@/lib/agent/facts/extractHelsinkiKaavaFacts"
 import { extractTampereKaavaFacts } from "@/lib/agent/facts/extractTampereKaavaFacts"
 import { extractTurkuKaavaFacts } from "@/lib/agent/facts/extractTurkuKaavaFacts"
+import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -127,6 +128,27 @@ export function resolveFacts(document: any) {
         documentsUrl: document.document_url,
         description,
         identifyingInfo,
+      }),
+    }
+  }
+
+  if (document.source_name === "Kreate hankkeet") {
+    const post = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const title = document.raw_payload?.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const category = document.raw_payload?.category ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractKreateFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        post,
+        title,
+        phase,
+        category,
+        contacts,
       }),
     }
   }

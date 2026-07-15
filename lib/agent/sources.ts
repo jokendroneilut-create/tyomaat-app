@@ -11,7 +11,6 @@ import { fetchPeabSource } from "./fetchPeabSource"
 import { fetchHartelaSource } from "./fetchHartelaSource"
 import { fetchGrkSource } from "./fetchGrkSource"
 import { fetchSenaattiSource } from "./fetchSenaattiSource"
-import { fetchKreateSource } from "./fetchKreateSource"
 import { fetchTekovaSource } from "./fetchTekovaSource"
 import { fetchJatkeSource } from "./fetchJatkeSource"
 import { fetchEspoonAsunnotSource } from "./fetchEspoonAsunnotSource"
@@ -31,7 +30,6 @@ export const sources = [
   { name: "hartela", fetch: fetchHartelaSource },
   { name: "grk", fetch: fetchGrkSource },
   { name: "senaatti", fetch: fetchSenaattiSource },
-  { name: "kreate", fetch: fetchKreateSource },
   { name: "tekova", fetch: fetchTekovaSource },
   { name: "jatke", fetch: fetchJatkeSource },
   { name: "espoon_asunnot", fetch: fetchEspoonAsunnotSource },

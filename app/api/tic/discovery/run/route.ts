@@ -36,17 +36,19 @@ export async function GET(req: Request) {
       stage === "collect"
         ? {
             /*
-             * maxSourceCount pienennetty 4:stä 3:een Turun lisäyksen
-             * jälkeen (7 lähdettä yhteensä) — 4 lähteen erä mitattiin
-             * 50-54s, liian lähellä 60s rajaa jos Lupapiste (hitain
-             * yksittäinen lähde) osuu samaan erään. Kaikki lähteet
-             * kiertävät silti läpi last_run_at-järjestyksen mukaan,
-             * vain hitaammin. Jos lähteitä lisätään vielä enemmän,
-             * seuraava askel on jakaa "collect"-vaihe kahdeksi erilliseksi
-             * ajastetuksi kutsuksi yhden pienentämisen sijaan.
+             * maxSourceCount pienennetty 3:sta 2:een Kreaten lisäyksen
+             * jälkeen (8 lähdettä yhteensä) — 3 lähteen erä osui 55s:iin
+             * kun Lupapiste (hitain yksittäinen lähde) osui samaan erään
+             * kahden kaavarajapinnan kanssa. Kaikki lähteet kiertävät
+             * silti läpi last_run_at-järjestyksen mukaan, vain hitaammin
+             * (8 lähdettä / 2 per ajo = 4 yötä per täysi kierros). Jos
+             * lähteitä lisätään vielä, kannattaa jakaa "collect"-vaihe
+             * kahdeksi erilliseksi ajastetuksi kutsuksi (sama logiikka,
+             * eri kellonaika — last_run_at-järjestys hoitaa loput
+             * automaattisesti) yhden pienentämisen sijaan.
              */
             stages: ["sources", "articles", "pdfs", "texts"],
-            maxSourceCount: 3,
+            maxSourceCount: 2,
             maxArticleJobs: 5,
             maxPdfJobs: 5,
             maxTextJobs: 5,

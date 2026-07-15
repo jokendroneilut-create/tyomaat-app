@@ -1050,6 +1050,164 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KREATE_PROJECTS_PER_RUN = 30
+
+type KreateContact = {
+  title: string | null
+  name: string | null
+  phone: string | null
+  email: string | null
+}
+
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&#8211;/g, "–")
+    .replace(/&#8217;/g, "’")
+    .replace(/&amp;/g, "&")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&quot;/g, '"')
+    .trim()
+}
+
+/*
+ * Kreate.fi on WordPress, ja projektien REST-rajapinta antaa sekä listan
+ * että jokaisen hankkeen sisällön (yhteystietotaulukko mukaan lukien)
+ * SAMASSA vastauksessa — ei erillistä sivukohtaista hakua toisin kuin
+ * kaupunkien kaavarajapinnoissa. Haetaan vain uusimman muokkauspäivän
+ * mukaan järjestetty ensimmäinen sivu (ei kaikkia ~250 hanketta joka
+ * ajolla), jotta muutokset (esim. vaiheen vaihtuminen) huomataan
+ * nopeasti eikä yöllinen ajo hidastu turhaan.
+ */
+async function fetchKreateTaxonomy(
+  taxonomy: "project_status" | "project_category"
+): Promise<Map<number, string>> {
+  const map = new Map<number, string>()
+
+  try {
+    const response = await fetch(
+      `https://kreate.fi/wp-json/wp/v2/${taxonomy}?per_page=100`,
+      { cache: "no-store" }
+    )
+    if (!response.ok) return map
+
+    const terms = await response.json()
+    for (const term of terms ?? []) {
+      if (term?.id && term?.name) map.set(term.id, term.name)
+    }
+  } catch {
+    // Taksonomian nimet eivät ole kriittisiä — jatketaan ilman niitä.
+  }
+
+  return map
+}
+
+function kreatePhaseFromStatusNames(statusNames: string[]): string | null {
+  const normalized = statusNames.map((s) => s.toLowerCase())
+  if (normalized.some((s) => s === "valmistuneet" || s === "completed")) {
+    return "Valmistunut"
+  }
+  if (normalized.some((s) => s === "käynnissä" || s === "ongoing")) {
+    return "Rakenteilla"
+  }
+  return null
+}
+
+function parseKreateContacts(contentHtml: string): KreateContact[] {
+  const $ = cheerio.load(contentHtml)
+  const contacts: KreateContact[] = []
+
+  $(".row").each((_, el) => {
+    const row = $(el)
+    const name = row.find(".name").first().text().trim()
+    if (!name) return
+
+    contacts.push({
+      title: row.find(".job").first().text().trim() || null,
+      name,
+      phone: row.find(".tel").first().text().trim() || null,
+      email: row.find(".email").first().text().trim() || null,
+    })
+  })
+
+  return contacts
+}
+
+async function collectKreateSource(source: DiscoverySource) {
+  const [statusNames, categoryNames] = await Promise.all([
+    fetchKreateTaxonomy("project_status"),
+    fetchKreateTaxonomy("project_category"),
+  ])
+
+  const response = await fetch(
+    `https://kreate.fi/wp-json/wp/v2/project?per_page=${KREATE_PROJECTS_PER_RUN}&lang=fi&orderby=modified&order=desc`,
+    { cache: "no-store" }
+  )
+
+  if (!response.ok) {
+    throw new Error(`Kreaten hankerajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const posts = await response.json()
+
+  let saved = 0
+
+  for (const post of posts ?? []) {
+    const title = decodeHtmlEntities(post.title?.rendered ?? "")
+    const contentHtml = post.content?.rendered ?? ""
+    const contacts = parseKreateContacts(contentHtml)
+
+    const statusList = (post.project_status ?? [])
+      .map((id: number) => statusNames.get(id))
+      .filter(Boolean) as string[]
+    const categoryList = (post.project_category ?? [])
+      .map((id: number) => categoryNames.get(id))
+      .filter(Boolean) as string[]
+
+    const phase = kreatePhaseFromStatusNames(statusList)
+
+    const rawText = JSON.stringify(post)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: title || `Kreate-hanke ${post.id}`,
+          document_url: post.link,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            kreate_post_id: post.id,
+            title,
+            phase,
+            category: categoryList[0] ?? null,
+            contacts,
+            modified: post.modified,
+            original: post,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: posts?.length ?? 0,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "hilmaParser") {
     return collectHilmaSource(source)
@@ -1057,6 +1215,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "lupapisteParser") {
     return collectLupapisteSource(source)
+  }
+
+  if (source.parser === "kreateParser") {
+    return collectKreateSource(source)
   }
 
   if (source.parser === "vantaaKaavaParser") {

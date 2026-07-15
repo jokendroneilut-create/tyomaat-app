@@ -7,6 +7,7 @@ import { resolveVantaaKaavaProject } from "@/lib/agent/identity/resolvers/vantaa
 import { resolveHelsinkiKaavaProject } from "@/lib/agent/identity/resolvers/helsinkiKaavaResolver"
 import { resolveTampereKaavaProject } from "@/lib/agent/identity/resolvers/tampereKaavaResolver"
 import { resolveTurkuKaavaProject } from "@/lib/agent/identity/resolvers/turkuKaavaResolver"
+import { resolveKreateProject } from "@/lib/agent/identity/resolvers/kreateResolver"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -105,6 +106,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "turun vireillä olevat kaavat") {
     const result = await resolveTurkuKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "kreate hankkeet") {
+    const result = await resolveKreateProject({
       document,
       facts: facts ?? [],
     })
