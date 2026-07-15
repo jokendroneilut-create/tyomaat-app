@@ -16,6 +16,7 @@ import { extractJyvaskylaKaavaFacts } from "@/lib/agent/facts/extractJyvaskylaKa
 import { extractHameenlinnaKaavaFacts } from "@/lib/agent/facts/extractHameenlinnaKaavaFacts"
 import { extractJoensuuKaavaFacts } from "@/lib/agent/facts/extractJoensuuKaavaFacts"
 import { extractVaasaKaavaFacts } from "@/lib/agent/facts/extractVaasaKaavaFacts"
+import { extractKouvolaKaavaFacts } from "@/lib/agent/facts/extractKouvolaKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -293,6 +294,27 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractVaasaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Kouvolan ajankohtaiset asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractKouvolaKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

@@ -18,6 +18,7 @@ import { resolveJyvaskylaKaavaProject } from "@/lib/agent/identity/resolvers/jyv
 import { resolveHameenlinnaKaavaProject } from "@/lib/agent/identity/resolvers/hameenlinnaKaavaResolver"
 import { resolveJoensuuKaavaProject } from "@/lib/agent/identity/resolvers/joensuuKaavaResolver"
 import { resolveVaasaKaavaProject } from "@/lib/agent/identity/resolvers/vaasaKaavaResolver"
+import { resolveKouvolaKaavaProject } from "@/lib/agent/identity/resolvers/kouvolaKaavaResolver"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -193,6 +194,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "vaasan vireillä olevat asemakaavat") {
     const result = await resolveVaasaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "kouvolan ajankohtaiset asemakaavat") {
+    const result = await resolveKouvolaKaavaProject({
       document,
       facts: facts ?? [],
     })

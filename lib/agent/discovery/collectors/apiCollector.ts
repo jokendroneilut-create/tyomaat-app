@@ -3271,7 +3271,240 @@ async function collectVaasaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Kouvolan "ajankohtaiset asemakaavat" -listaussivu on WordPress-
+ * sivupuun sivupalkki (ei erillinen listaus-widget) — 41 hankesivua
+ * löytyy suodattamalla kaikki linkit jotka osuvat listaussivun omaan
+ * URL-poikkuun. Jokainen hankesivu antaa muodollisen tunnuksen
+ * kuvaustekstin sisällä ("kaava nro 01/040"), ja vaihe päätellään
+ * ensimmäisestä <h3>-otsikosta "Suunnittelun vaihe"-otsikon jälkeen —
+ * osiot ovat käänteisessä aikajärjestyksessä (uusin ensin), joten
+ * ensimmäinen h3 on aina nykyinen vaihe. Jos se on "Voimaantulo",
+ * hanke on jo lainvoimainen eikä enää aktiivinen liidi (completed).
+ * Yhteystiedot ovat sekaisin desimaali- ja heksadesimaalimuotoisina
+ * HTML-merkkiviitteinä (&#97; / &#x69;) leipätekstin sisällä — cheerio
+ * purkaa nämä automaattisesti tavallisen HTML-jäsennyksen osana, joten
+ * erillistä dekoodausta ei tarvita (toisin kuin Väylävirasto/
+ * Jyväskylä/Joensuun Cloudflare-obfuskointi).
+ */
+const KOUVOLA_LISTING_URL =
+  "https://www.kouvola.fi/asuminen-ja-ymparisto/kaavoitus-ja-kaupunkisuunnittelu/ajankohtaiset-asemakaavat/"
+const KOUVOLA_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+type KouvolaListingItem = {
+  url: string
+  title: string
+}
+
+async function fetchKouvolaListing(): Promise<KouvolaListingItem[]> {
+  const response = await fetch(KOUVOLA_LISTING_URL, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(
+      `Kouvolan kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`
+    )
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: KouvolaListingItem[] = []
+  const seen = new Set<string>()
+
+  $("a[href*='/ajankohtaiset-asemakaavat/']").each((_, a) => {
+    const $a = $(a)
+    const href = $a.attr("href")
+    if (!href) return
+    if (!/\/ajankohtaiset-asemakaavat\/[a-z0-9-]+\/?$/.test(href)) return
+    if (seen.has(href)) return
+
+    const title = $a.text().trim()
+    if (!title) return
+
+    seen.add(href)
+    items.push({ url: href, title })
+  })
+
+  return items
+}
+
+type KouvolaContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+function splitKouvolaTitleAndName(value: string): { title: string | null; name: string } {
+  const match = value.match(
+    /^(.*?)\s*([A-ZÄÖÅ][\wäöåÄÖÅ'-]*(?:-[A-ZÄÖÅ][\wäöåÄÖÅ'-]*)?\s+[A-ZÄÖÅ][\wäöåÄÖÅ'-]*(?:-[A-ZÄÖÅ][\wäöåÄÖÅ'-]*)?)$/
+  )
+  if (match && match[2]) return { title: match[1].trim() || null, name: match[2].trim() }
+  return { title: null, name: value.trim() }
+}
+
+type KouvolaDetails = {
+  kaavaTunnus: string | null
+  description: string | null
+  phase: string | null
+  completed: boolean
+  contacts: KouvolaContact[]
+}
+
+async function fetchKouvolaDetails(url: string): Promise<KouvolaDetails> {
+  const empty: KouvolaDetails = {
+    kaavaTunnus: null,
+    description: null,
+    phase: null,
+    completed: false,
+    contacts: [],
+  }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const description = $(".page-ingress p").first().text().replace(/\s+/g, " ").trim() || null
+    const kaavaTunnus = description?.match(/kaava\s*nro\s*([\d/]+)/i)?.[1] ?? null
+
+    let phaseHeading = $("#suunnittelunvaihe")
+    if (phaseHeading.length === 0) {
+      phaseHeading = $("h2.wp-block-heading").filter(
+        (_, el) => $(el).text().trim() === "Suunnittelun vaihe"
+      )
+    }
+
+    const phase =
+      phaseHeading.nextUntil("h2.wp-block-heading", "h3.wp-block-heading").first().text().trim() ||
+      null
+
+    const completed = phase?.toLowerCase() === "voimaantulo"
+
+    const contacts: KouvolaContact[] = []
+
+    $(".page-content-wrapper p").each((_, p) => {
+      const $p = $(p)
+      const text = $p.text().replace(/\s+/g, " ").trim()
+
+      const match = text.match(/Lisätietoja:?\s*([^,]+),/)
+      if (!match) return
+
+      const { title, name } = splitKouvolaTitleAndName(match[1].trim())
+      if (!name || !/^[A-ZÄÖÅ][\wäöåÄÖÅ'-]*\s+[A-ZÄÖÅ][\wäöåÄÖÅ'-]*$/.test(name)) return
+
+      const email = $p.find("a[href^='mailto:']").first().attr("href")?.replace("mailto:", "").trim() || null
+      const phone = $p.find("a[href^='tel:']").first().attr("href")?.replace("tel:", "").trim() || null
+
+      contacts.push({ name, title, phone, email })
+    })
+
+    return { kaavaTunnus, description, phase, completed, contacts: contacts.slice(0, 1) }
+  } catch {
+    return empty
+  }
+}
+
+async function collectKouvolaSource(source: DiscoverySource) {
+  const items = await fetchKouvolaListing()
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description || row.raw_payload?.completed) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  for (const item of items) {
+    const known = knownDetails.get(item.url)
+
+    let details: KouvolaDetails | null = known
+      ? {
+          kaavaTunnus: known.kaava_tunnus ?? null,
+          description: known.description ?? null,
+          phase: known.phase ?? null,
+          completed: known.completed ?? false,
+          contacts: known.contacts ?? [],
+        }
+      : null
+
+    let detailsAttempted = Boolean(known)
+
+    if (!detailsAttempted && detailFetches < KOUVOLA_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchKouvolaDetails(item.url)
+      detailFetches += 1
+      detailsAttempted = details.description !== null || details.completed
+    }
+
+    const isCompleted = detailsAttempted && details?.completed === true
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            ...(detailsAttempted && details
+              ? {
+                  kaava_tunnus: details.kaavaTunnus,
+                  description: details.description,
+                  phase: details.phase,
+                  contacts: details.contacts,
+                  completed: details.completed,
+                }
+              : {}),
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(isCompleted
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "kouvolaKaavaParser") {
+    return collectKouvolaSource(source)
+  }
+
   if (source.parser === "vaasaKaavaParser") {
     return collectVaasaSource(source)
   }
