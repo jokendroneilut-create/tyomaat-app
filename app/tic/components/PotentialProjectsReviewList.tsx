@@ -18,6 +18,7 @@ export default function PotentialProjectsReviewList({
   const router = useRouter()
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [confirmingRejectId, setConfirmingRejectId] = useState<string | null>(null)
 
   async function approveProject(projectId: string) {
     const confirmed = window.confirm(
@@ -55,12 +56,7 @@ export default function PotentialProjectsReviewList({
   }
 
  async function rejectProject(projectId: string) {
-    const confirmed = window.confirm(
-      "Hylätäänkö tämä hanke? Se poistuu hyväksyntäjonosta."
-    )
-
-    if (!confirmed) return
-
+    setConfirmingRejectId(null)
     setLoadingId(projectId)
     setError(null)
 
@@ -204,14 +200,37 @@ export default function PotentialProjectsReviewList({
                     {loadingId === project.id ? "Hyväksytään..." : "Hyväksy"}
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => rejectProject(project.id)}
-                    disabled={loadingId === project.id}
-                    className="rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                  >
-                    {loadingId === project.id ? "Käsitellään..." : "Hylkää"}
-                  </button>
+                  {confirmingRejectId === project.id ? (
+                    <div className="flex flex-row gap-1">
+                      <button
+                        type="button"
+                        onClick={() => rejectProject(project.id)}
+                        disabled={loadingId === project.id}
+                        autoFocus
+                        className="rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-50"
+                      >
+                        {loadingId === project.id ? "Käsitellään..." : "Vahvista hylkäys"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingRejectId(null)}
+                        disabled={loadingId === project.id}
+                        className="rounded-lg border px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Peruuta
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingRejectId(project.id)}
+                      disabled={loadingId === project.id}
+                      className="rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      Hylkää
+                    </button>
+                  )}
                 </div>
               </div>
             </article>
