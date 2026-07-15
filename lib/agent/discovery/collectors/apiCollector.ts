@@ -2716,7 +2716,158 @@ async function collectJyvaskylaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Hämeenlinnan "vireillä olevat kaavat" -sivu on poikkeuksellisen
+ * kattava: koko 48 hankkeen lista on YHDELLÄ sivulla accordion-
+ * laatikkoina, ja jokaisessa on jo valmiina kuvaus, tunnus,
+ * yhteyshenkilön nimi ja täysi "Vaiheet"-tapahtumahistoria — ei siis
+ * yhtään erillistä yksityiskohtahakua tarvita (toisin kuin Lahti/Pori/
+ * Oulu/Jyväskylä). "Vaiheet"-lista on staattinen kaikkien vaiheiden
+ * nimistä; ne joissa on päivämäärä ovat jo tapahtuneet, ne ilman
+ * päivämäärää ovat vielä tulevia — viimeinen päivätty vaihe on siis
+ * hankkeen nykyinen vaihe. Jos viimeinen päivätty vaihe on
+ * "Lainvoimainen", hanke on jo kokonaan valmis eikä enää aktiivinen
+ * liidi (sama completed-malli kuin Lahdella/Oululla/Jyväskylällä).
+ * Sivulla on vain yksi yhteinen yleiskartta koko listalle, ei
+ * per-hanke-koordinaatteja — ei siis poimita.
+ */
+const HAMEENLINNA_LISTING_URL =
+  "https://www.hameenlinna.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat/"
+
+function parseHameenlinnaTunnus(rawTitle: string): { title: string; tunnus: string | null } {
+  const match = rawTitle.match(/^(.*?)\s*\(((?:ak|akm|rak|rakm|ak ja akm)\s*\d+)\)\s*.*$/i)
+  if (match) {
+    return { title: match[1].trim(), tunnus: match[2].replace(/\s+/g, " ").trim() }
+  }
+  return { title: rawTitle.trim(), tunnus: null }
+}
+
+async function collectHameenlinnaSource(source: DiscoverySource) {
+  const response = await fetch(HAMEENLINNA_LISTING_URL, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(
+      `Hämeenlinnan kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`
+    )
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  let saved = 0
+  let found = 0
+
+  const boxes = $(".b-single-accordion-box").toArray()
+
+  for (const box of boxes) {
+    const $box = $(box)
+    const rawTitle = $box.find(".b-single-accordion-box__toggle-btn").first().text().trim()
+    if (!rawTitle) continue
+
+    found += 1
+
+    const { title, tunnus } = parseHameenlinnaTunnus(rawTitle)
+    const $content = $box.find(".b-single-accordion-box__content").first()
+    const contentId = $content.attr("id") || null
+
+    let description: string | null = null
+    let contactName: string | null = null
+
+    $content.children("p").each((_, p) => {
+      const text = $(p).text().replace(/\s+/g, " ").trim()
+      if (!text) return
+
+      const contactMatch = text.match(/^Yhteyshenkilö:\s*(.+)$/i)
+      if (contactMatch) {
+        contactName = contactMatch[1].trim()
+        return
+      }
+
+      if (!description) description = text
+    })
+
+    const steps: { label: string; dated: boolean }[] = []
+
+    $content.find("h2, h3").each((_, heading) => {
+      if ($(heading).text().trim() !== "Vaiheet") return
+
+      $(heading)
+        .next("ul")
+        .find("li")
+        .each((_, li) => {
+          const text = $(li).text().replace(/\s+/g, " ").trim()
+          if (!text) return
+
+          const digitIdx = text.search(/\d/)
+          const dated = digitIdx !== -1
+          const label = dated
+            ? text.slice(0, digitIdx).trim().replace(/[,/]$/, "").trim()
+            : text.trim()
+
+          steps.push({ label, dated })
+        })
+    })
+
+    const datedSteps = steps.filter((s) => s.dated)
+    const currentStep = datedSteps[datedSteps.length - 1] ?? null
+    const phase = currentStep?.label || null
+    const completed = phase?.toLowerCase().startsWith("lainvoimainen") ?? false
+
+    const documentUrl = `${HAMEENLINNA_LISTING_URL}#${contentId ?? encodeURIComponent(rawTitle)}`
+
+    const rawText = JSON.stringify({ rawTitle, title, tunnus, description, contactName, steps })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: tunnus,
+            description,
+            contact_name: contactName,
+            phase,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "hameenlinnaKaavaParser") {
+    return collectHameenlinnaSource(source)
+  }
+
   if (source.parser === "jyvaskylaKaavaParser") {
     return collectJyvaskylaSource(source)
   }

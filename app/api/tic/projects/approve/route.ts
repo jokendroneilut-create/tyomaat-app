@@ -94,6 +94,7 @@ export async function POST(request: Request) {
     const isPoriKaava = normalize(metadata.resolver) === "porikaavaresolver"
     const isOuluKaava = normalize(metadata.resolver) === "oulukaavaresolver"
     const isJyvaskylaKaava = normalize(metadata.resolver) === "jyvaskylakaavaresolver"
+    const isHameenlinnaKaava = normalize(metadata.resolver) === "hameenlinnakaavaresolver"
 
     const permitIdentifierType: IdentifierType = isHilma
       ? "hilma_notice_number"
@@ -176,6 +177,13 @@ export async function POST(request: Request) {
       candidateIdentifiers.push({
         type: "jyvaskyla_kaava_id",
         value: metadata.documents_url,
+      })
+    }
+
+    if (isHameenlinnaKaava) {
+      candidateIdentifiers.push({
+        type: "hameenlinna_kaava_tunnus",
+        value: metadata.kaava_tunnus,
       })
     }
 
