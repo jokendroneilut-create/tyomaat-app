@@ -1431,7 +1431,181 @@ async function collectVaylaSource(source: DiscoverySource) {
   }
 }
 
+const SENAATTI_MAX_DETAIL_FETCHES_PER_RUN = 10
+
+/*
+ * Senaatti.fi on myös WordPress, mutta REST-rajapinnan content.rendered
+ * on raakaa WPBakery-lyhytkoodia (esim. [senaatti_hero heading="..."
+ * text="..."]), ei valmista HTML:ää. Kuvausteksti poimitaan hero-lohkon
+ * text-attribuutista suoraan sen sijaan että koko lyhytkoodi jäsennettäisiin.
+ */
+async function fetchSenaattiTaxonomy(
+  taxonomy: "senaatti_tprojects" | "senaatti_tprojectl" | "senaatti_tprojectt"
+): Promise<Map<number, string>> {
+  const map = new Map<number, string>()
+
+  try {
+    const response = await fetch(
+      `https://www.senaatti.fi/wp-json/wp/v2/${taxonomy}?per_page=100`,
+      { cache: "no-store" }
+    )
+    if (!response.ok) return map
+
+    const terms = await response.json()
+    for (const term of terms ?? []) {
+      if (term?.id && term?.name) map.set(term.id, term.name)
+    }
+  } catch {
+    // Taksonomian nimet eivät ole kriittisiä — jatketaan ilman niitä.
+  }
+
+  return map
+}
+
+function extractSenaattiHeroText(contentHtml: string): string | null {
+  const match = contentHtml.match(/text=(?:&#8221;|")([^"&]*(?:&(?!#8221;)[^"&]*)*)(?:&#8221;|")/)
+  if (!match) return null
+
+  return match[1]
+    .replace(/&#8211;/g, "–")
+    .replace(/&#8217;/g, "’")
+    .replace(/&amp;/g, "&")
+    .trim() || null
+}
+
+/*
+ * Yhteystieto ei tule REST-rajapinnasta lainkaan — se on laskettu vain
+ * hankkeen omalle sivulle upotettuun Google Tag Manager -dataLayeriin
+ * ("hankkeen_yhteystiedot"-kenttä), joten se vaatii erillisen
+ * sivukohtaisen haun.
+ */
+async function fetchSenaattiContact(projectUrl: string): Promise<{
+  name: string | null
+  title: string | null
+  email: string | null
+} | null> {
+  try {
+    const html = await (await fetch(projectUrl, { cache: "no-store" })).text()
+    const match = html.match(/"hankkeen_yhteystiedot"\s*:\s*"([^"]*)"/)
+    if (!match) return null
+
+    const lines = match[1]
+      .split(/\\r\\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .filter((line) => line !== "Lisätietoja" && line !== "Senaatti-kiinteistöt")
+
+    const email = lines.find((line) => line.includes("@")) ?? null
+    const name = lines.find((line) => line !== email) ?? null
+    const title = lines.find((line) => line !== email && line !== name) ?? null
+
+    if (!name && !email) return null
+
+    return { name, title, email }
+  } catch {
+    return null
+  }
+}
+
+async function collectSenaattiSource(source: DiscoverySource) {
+  const [phaseNames, locationNames, typeNames] = await Promise.all([
+    fetchSenaattiTaxonomy("senaatti_tprojects"),
+    fetchSenaattiTaxonomy("senaatti_tprojectl"),
+    fetchSenaattiTaxonomy("senaatti_tprojectt"),
+  ])
+
+  const response = await fetch(
+    "https://www.senaatti.fi/wp-json/wp/v2/senaatti_project?per_page=100",
+    { cache: "no-store" }
+  )
+
+  if (!response.ok) {
+    throw new Error(`Senaatin hankerajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const posts = await response.json()
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownContacts = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.contact) {
+      knownContacts.set(row.document_url, row.raw_payload.contact)
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  for (const post of posts ?? []) {
+    const title = post.title?.rendered ?? null
+    const description = extractSenaattiHeroText(post.content?.rendered ?? "")
+
+    const phase = (post.senaatti_tprojects ?? []).map((id: number) => phaseNames.get(id)).find(Boolean) ?? null
+    const location = (post.senaatti_tprojectl ?? []).map((id: number) => locationNames.get(id)).find(Boolean) ?? null
+    const buildingType = (post.senaatti_tprojectt ?? []).map((id: number) => typeNames.get(id)).find(Boolean) ?? null
+
+    const known = knownContacts.get(post.link)
+    let contact = known ?? null
+    const detailsAttempted = Boolean(known)
+
+    if (!detailsAttempted && detailFetches < SENAATTI_MAX_DETAIL_FETCHES_PER_RUN) {
+      contact = await fetchSenaattiContact(post.link)
+      detailFetches += 1
+    }
+
+    const rawText = JSON.stringify(post)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: title || `Senaatti-hanke ${post.id}`,
+          document_url: post.link,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            senaatti_post_id: post.id,
+            title,
+            description,
+            phase,
+            location,
+            building_type: buildingType,
+            ...(contact ? { contact } : {}),
+            original: post,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: posts?.length ?? 0,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "senaattiParser") {
+    return collectSenaattiSource(source)
+  }
+
   if (source.parser === "hilmaParser") {
     return collectHilmaSource(source)
   }

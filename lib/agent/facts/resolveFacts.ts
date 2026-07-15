@@ -7,6 +7,7 @@ import { extractTampereKaavaFacts } from "@/lib/agent/facts/extractTampereKaavaF
 import { extractTurkuKaavaFacts } from "@/lib/agent/facts/extractTurkuKaavaFacts"
 import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
 import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
+import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -177,6 +178,31 @@ export function resolveFacts(document: any) {
         phase,
         contact,
         progress,
+      }),
+    }
+  }
+
+  if (document.source_name === "Senaatti-kiinteistöt hankkeet") {
+    const post = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const title = document.raw_payload?.title ?? null
+    const description = document.raw_payload?.description ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const location = document.raw_payload?.location ?? null
+    const buildingType = document.raw_payload?.building_type ?? null
+    const contact = document.raw_payload?.contact ?? null
+
+    return {
+      decisions: [],
+      facts: extractSenaattiFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        post,
+        title,
+        description,
+        phase,
+        location,
+        buildingType,
+        contact,
       }),
     }
   }
