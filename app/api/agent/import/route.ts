@@ -9,6 +9,7 @@ import {
   linkIdentifier,
   type IdentifierType,
 } from "@/lib/projects/identity"
+import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 /*
@@ -270,84 +271,57 @@ const match =
 
     const insertPhase =
       body.phase ||
-      (inferredPhaseKey ? PHASE_LABELS[inferredPhaseKey] : "Suunnittelussa")
+      (inferredPhaseKey ? PHASE_LABELS[inferredPhaseKey] : PHASE_LABELS.planning)
 
-    const { data: inserted } = await supabase
-      .from("projects")
-      .insert({
-        name: body.name,
-        city: body.city,
-        region: body.region,
-        location: body.location,
-        developer: body.developer || null,
-        property_type: body.property_type ?? body.building_type ?? null,
-        phase: insertPhase,
-        is_public: true,
-        source_confidence: body.confidence ?? null,
-        metadata: {
-          ...(body.metadata ?? {}),
-          permit_number: body.permit_number ?? body.metadata?.permit_number ?? null,
-          property_id: body.property_id ?? body.metadata?.property_id ?? null,
-          developer: body.developer ?? body.metadata?.developer ?? null,
-          building_type:
-            body.building_type ??
-            body.property_type ??
-            body.metadata?.building_type ??
-            null,
-          first_source_name: body.source_name || "agent",
-          first_source_url: body.source_url || null,
-          first_imported_at: new Date().toISOString(),
-        },
-      })
-      .select()
-      .single()
-
-    if (inserted?.id) {
-      for (const identifier of candidateIdentifiers) {
-        await linkIdentifier({
-          type: identifier.type,
-          value: identifier.value,
-          projectId: inserted.id,
-          sourceName: body.source_name || "agent",
-          supabase,
-        })
-      }
-
-      await recordPhaseChange({
-        supabase,
-        projectId: inserted.id,
-        newPhase: insertPhase,
-        previousPhase: null,
-        source: "agent_import",
-        sourceName: body.source_name || "agent",
-        metadata: { inferred: Boolean(inferredPhaseKey) },
-      })
-    }
+    /*
+     * Ei täsmäytystä olemassa olevaan julkiseen hankkeeseen — aiemmin
+     * tämä kirjoitti suoraan projects-tauluun (is_public: true) ilman
+     * ihmisen katselua. Nyt reititetään sama TIC-hyväksyntäjonon läpi
+     * kuin kaikki muutkin lähteet: resolvePotentialProject tekee oman
+     * täsmäytyksensä potential_projects-taulua vasten (tunniste/lupa-
+     * numero/kiinteistötunnus/osoite), joten sama hanke ei monistu
+     * jonoon useasta yrityssivun tiedotteesta tai muusta lähteestä.
+     */
+    const result = await resolvePotentialProject({
+      title: body.name,
+      municipality: body.city,
+      address: body.location,
+      propertyId: candidate.propertyId,
+      permitNumber: candidate.permitNumber,
+      sourceName: body.source_name || "agent",
+      identifiers: candidateIdentifiers,
+      metadata: {
+        ...(body.metadata ?? {}),
+        source: body.source_name || "agent",
+        source_name: body.source_name || "agent",
+        source_url: body.source_url || null,
+        resolver: "legacyCompanyResolver",
+        operation: body.name,
+        developer: candidate.developer,
+        building_type: candidate.buildingType,
+        region: body.region || null,
+        permit_number: candidate.permitNumber,
+        property_id: candidate.propertyId,
+        phase_hint: insertPhase,
+      },
+    })
 
     await supabase.from("project_import_events").insert({
       source_name: body.source_name || "agent",
       source_url: body.source_url || null,
       normalized_payload: body,
-      match_status: "new",
-      matched_project_id: inserted?.id,
-      action_taken: "inserted",
+      match_status: result.action === "updated_existing" ? "matched_candidate" : "new",
+      matched_project_id: null,
+      action_taken: "queued_for_review",
+      reason: null,
       match_confidence: detailedMatch?.confidence ?? null,
       match_reasons: detailedMatch?.reasons ?? [],
     })
 
-    if (inserted?.id && body.source_url) {
-      await supabase.from("project_sources").upsert({
-        project_id: inserted.id,
-        source_name: body.source_name || "agent",
-        source_url: body.source_url,
-        last_seen_at: new Date().toISOString(),
-        confidence: body.confidence ?? null,
-      })
-    }
-
     return NextResponse.json({
-      status: "inserted",
-      project_id: inserted?.id,
+      status: "queued_for_review",
+      potential_project_id: result.potentialProject.id,
+      action: result.action,
     })
   } catch (err: any) {
     console.error(err)

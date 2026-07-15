@@ -7,10 +7,10 @@ export default function TicLayout({
 }) {
   const nav = [
     { href: "/tic", label: "🏠 Etusivu" },
-    { href: "/tic/projects", label: "📋 Potentiaaliset hankkeet" },
     { href: "/tic/operations", label: "🧭 Operations" },
     { href: "/tic/discovery", label: "🔍 Discovery" },
     { href: "/tic/discovery/documents", label: "📄 Dokumentit" },
+    { href: "/tic/discovery/merges", label: "🔗 Yhdistymiset" },
     { href: "/tic/discovery/analytics", label: "📈 Analytics" },
     { href: "/tic/discovery/health", label: "🩺 Health" },
   ]
