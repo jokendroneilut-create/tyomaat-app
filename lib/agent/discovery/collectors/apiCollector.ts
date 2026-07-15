@@ -3051,7 +3051,231 @@ async function collectJoensuuSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Vaasan "vireillä olevat asemakaavat" -listaussivu antaa vain
+ * kuvatiilen otsikon+linkin (jossa muodollinen tunnus, esim.
+ * "Ahventie 20 (ak1146)") — kuvaus, vaihe ja yhteystiedot vaativat
+ * rate-limitoidun yksityiskohtahaun (sama malli kuin Lahti/Pori/
+ * Oulu/Jyväskylä). Vaihe päätellään samalla "viimeinen päivätty
+ * timeline-rivi" -heuristiikalla kuin Hämeenlinnalla (rivit ilman
+ * päivämäärää ovat vielä tulevia) — jos viimeinen päivätty rivi on
+ * "Lainvoimainen", hanke on jo valmis eikä enää aktiivinen liidi
+ * (completed). Sähköposti ei ole obfuskoitu.
+ */
+const VAASA_LISTING_URL =
+  "https://www.vaasa.fi/tietoa-vaasasta-ja-seudusta/kehittyva-vaasa/kaupunkisuunnittelu/kaavoitus/vireilla-olevat-asemakaavat/"
+const VAASA_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+type VaasaListingItem = {
+  url: string
+  title: string
+  tunnus: string | null
+}
+
+function parseVaasaTunnus(rawTitle: string): { title: string; tunnus: string | null } {
+  const match = rawTitle.match(/^(.*?)\s*\((ak\s*\d+)\)\s*$/i)
+  if (match) {
+    return { title: match[1].trim(), tunnus: match[2].replace(/\s+/g, "").trim() }
+  }
+  return { title: rawTitle.trim(), tunnus: null }
+}
+
+async function fetchVaasaListing(): Promise<VaasaListingItem[]> {
+  const response = await fetch(VAASA_LISTING_URL, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(
+      `Vaasan kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`
+    )
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: VaasaListingItem[] = []
+
+  $(".childpage-thumbnails__item").each((_, li) => {
+    const $li = $(li)
+    const $link = $li.find("a.js-thumbnail-title").first()
+    const url = $link.attr("href")
+    if (!url) return
+
+    const rawTitle = $link.find(".hyphen").first().text().trim()
+    if (!rawTitle) return
+
+    const { title, tunnus } = parseVaasaTunnus(rawTitle)
+    items.push({ url, title, tunnus })
+  })
+
+  return items
+}
+
+type VaasaContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+type VaasaDetails = {
+  description: string | null
+  phase: string | null
+  completed: boolean
+  contacts: VaasaContact[]
+}
+
+async function fetchVaasaDetails(url: string): Promise<VaasaDetails> {
+  const empty: VaasaDetails = { description: null, phase: null, completed: false, contacts: [] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const description =
+      $(".content-header").next(".wysiwyg").find("p").text().replace(/\s+/g, " ").trim() || null
+
+    const datedLabels: string[] = []
+
+    $(".timeline__content__single__text__title").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (!text) return
+
+      const digitIdx = text.search(/\d/)
+      if (digitIdx === -1) return
+
+      datedLabels.push(text.slice(0, digitIdx).trim())
+    })
+
+    const phase = datedLabels[datedLabels.length - 1] ?? null
+    const completed = phase?.toLowerCase().startsWith("lainvoimainen") ?? false
+
+    const contacts: VaasaContact[] = []
+    $("#contacts .search-contact-card").each((_, li) => {
+      const $li = $(li)
+      const name = $li.find(".search-contact-card__content__info__nameandtitle__heading").first().text().replace(/\s+/g, " ").trim() || null
+      if (!name) return
+
+      const title =
+        $li
+          .find(".search-contact-card__content__info__nameandtitle__title")
+          .first()
+          .text()
+          .replace(/\s+/g, " ")
+          .replace(/\s+,/g, ",")
+          .trim() || null
+      const phone =
+        $li.find(".contact-list-item--phone .contact-list-item__text").first().text().trim() || null
+      const email = $li.find("a[href^='mailto:']").first().attr("href")?.replace("mailto:", "") ?? null
+
+      contacts.push({ name, title, phone, email })
+    })
+
+    return { description, phase, completed, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectVaasaSource(source: DiscoverySource) {
+  const items = await fetchVaasaListing()
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description || row.raw_payload?.completed) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  for (const item of items) {
+    const known = knownDetails.get(item.url)
+
+    let details: VaasaDetails | null = known
+      ? {
+          description: known.description ?? null,
+          phase: known.phase ?? null,
+          completed: known.completed ?? false,
+          contacts: known.contacts ?? [],
+        }
+      : null
+
+    let detailsAttempted = Boolean(known)
+
+    if (!detailsAttempted && detailFetches < VAASA_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchVaasaDetails(item.url)
+      detailFetches += 1
+      detailsAttempted = details.description !== null || details.completed
+    }
+
+    const isCompleted = detailsAttempted && details?.completed === true
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: item.tunnus,
+            ...(detailsAttempted && details
+              ? {
+                  description: details.description,
+                  phase: details.phase,
+                  contacts: details.contacts,
+                  completed: details.completed,
+                }
+              : {}),
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(isCompleted
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "vaasaKaavaParser") {
+    return collectVaasaSource(source)
+  }
+
   if (source.parser === "joensuuKaavaParser") {
     return collectJoensuuSource(source)
   }

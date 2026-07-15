@@ -15,6 +15,7 @@ import { extractOuluKaavaFacts } from "@/lib/agent/facts/extractOuluKaavaFacts"
 import { extractJyvaskylaKaavaFacts } from "@/lib/agent/facts/extractJyvaskylaKaavaFacts"
 import { extractHameenlinnaKaavaFacts } from "@/lib/agent/facts/extractHameenlinnaKaavaFacts"
 import { extractJoensuuKaavaFacts } from "@/lib/agent/facts/extractJoensuuKaavaFacts"
+import { extractVaasaKaavaFacts } from "@/lib/agent/facts/extractVaasaKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -276,6 +277,27 @@ export function resolveFacts(document: any) {
         documentUrl: document.document_url,
         district,
         status,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Vaasan vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractVaasaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
         description,
         contacts,
       }),
