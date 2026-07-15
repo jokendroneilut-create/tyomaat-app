@@ -14,6 +14,7 @@ import { extractPoriKaavaFacts } from "@/lib/agent/facts/extractPoriKaavaFacts"
 import { extractOuluKaavaFacts } from "@/lib/agent/facts/extractOuluKaavaFacts"
 import { extractJyvaskylaKaavaFacts } from "@/lib/agent/facts/extractJyvaskylaKaavaFacts"
 import { extractHameenlinnaKaavaFacts } from "@/lib/agent/facts/extractHameenlinnaKaavaFacts"
+import { extractJoensuuKaavaFacts } from "@/lib/agent/facts/extractJoensuuKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -255,6 +256,28 @@ export function resolveFacts(document: any) {
         phase,
         description,
         contactName,
+      }),
+    }
+  }
+
+  if (document.source_name === "Joensuun laadinnassa olevat kaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const status = document.raw_payload?.status ?? null
+    const district = document.raw_payload?.district ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractJoensuuKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        documentUrl: document.document_url,
+        district,
+        status,
+        description,
+        contacts,
       }),
     }
   }

@@ -2863,7 +2863,199 @@ async function collectHameenlinnaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Joensuun "laadinnassa olevat kaavat" -listaussivu antaa jo listalta
+ * otsikon, vaiheen (data-status-attribuutti), kuvauksen ja kaupungin-
+ * osan ilman erillistä hakua — vain yhteystiedot vaativat rate-
+ * limitoidun yksityiskohtahaun (sama malli kuin Tampere/Turku/
+ * Väylävirasto). Ei muodollista kaavatunnusta (sama tilanne kuin
+ * Jyväskylällä) — tunnistus URL:n varassa. data-status sisältää myös
+ * jo lainvoimaisia ("lainvoimainen") ja keskeytettyjä ("keskeytetty")
+ * hankkeita suoraan listalla — molemmat merkitään completed:iksi ja
+ * jätetään pysyvästi faktojen/tunnistuksen ulkopuolelle, koska ne
+ * eivät enää ole aktiivisia liidejä. Sähköposti on Cloudflaren XOR-
+ * obfuskoima samalla menetelmällä kuin Väylävirastolla/Jyväskylällä —
+ * decodeCloudflareEmail() uudelleenkäytetty.
+ */
+const JOENSUU_LISTING_URL =
+  "https://www.joensuu.fi/kaupunki-ja-kehitys/suunnittelu-ja-rakentaminen/kaavoitus/laadinnassa-olevat-kaavat/"
+const JOENSUU_MAX_DETAIL_FETCHES_PER_RUN = 5
+const JOENSUU_COMPLETED_STATUSES = ["lainvoimainen", "keskeytetty"]
+
+type JoensuuListingItem = {
+  url: string
+  title: string
+  status: string | null
+  district: string | null
+  description: string | null
+}
+
+async function fetchJoensuuListing(): Promise<JoensuuListingItem[]> {
+  const response = await fetch(JOENSUU_LISTING_URL, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(
+      `Joensuun kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`
+    )
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: JoensuuListingItem[] = []
+
+  $("li[data-status]").each((_, li) => {
+    const $li = $(li)
+    const status = ($li.attr("data-status") ?? "").trim() || null
+    const url = $li.find("a").first().attr("href")
+    if (!url) return
+
+    const title = $li.find("h3").first().text().replace(/\s+/g, " ").trim()
+    if (!title) return
+
+    let description: string | null = null
+    let district: string | null = null
+
+    $li.find("p").each((_, p) => {
+      const text = $(p).text().replace(/\s+/g, " ").trim()
+      if (!text) return
+
+      const districtMatch = text.match(/^Kaupunginosa:\s*(.+)$/i)
+      if (districtMatch) {
+        district = districtMatch[1].trim()
+        return
+      }
+
+      if (!description) description = text
+    })
+
+    items.push({ url, title, status, district, description })
+  })
+
+  return items
+}
+
+type JoensuuContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+async function fetchJoensuuContacts(url: string): Promise<JoensuuContact[]> {
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return []
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const contacts: JoensuuContact[] = []
+
+    $(".block-contact-cards li").each((_, li) => {
+      const $li = $(li)
+      const $paragraphs = $li.find("p")
+
+      const name = $paragraphs.eq(0).find("strong").first().text().trim() || null
+      if (!name) return
+
+      const title = $paragraphs.eq(1).text().trim() || null
+      const phone = $li.find("a[href^='tel:']").first().attr("href")?.replace("tel:", "") ?? null
+      const cfEmail = $li.find(".__cf_email__").first().attr("data-cfemail")
+      const email = cfEmail ? decodeCloudflareEmail(cfEmail) : null
+
+      contacts.push({ name, title, phone, email })
+    })
+
+    return contacts
+  } catch {
+    return []
+  }
+}
+
+async function collectJoensuuSource(source: DiscoverySource) {
+  const items = await fetchJoensuuListing()
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownContacts = new Map<string, JoensuuContact[]>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.contacts?.length > 0) {
+      knownContacts.set(row.document_url, row.raw_payload.contacts)
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  for (const item of items) {
+    const completed = Boolean(item.status && JOENSUU_COMPLETED_STATUSES.includes(item.status))
+
+    const known = knownContacts.get(item.url)
+    let contacts: JoensuuContact[] = known ?? []
+    const contactsAttempted = Boolean(known) || completed
+
+    if (!contactsAttempted && detailFetches < JOENSUU_MAX_DETAIL_FETCHES_PER_RUN) {
+      contacts = await fetchJoensuuContacts(item.url)
+      detailFetches += 1
+    }
+
+    const rawText = JSON.stringify({ item, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            status: item.status,
+            district: item.district,
+            description: item.description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "joensuuKaavaParser") {
+    return collectJoensuuSource(source)
+  }
+
   if (source.parser === "hameenlinnaKaavaParser") {
     return collectHameenlinnaSource(source)
   }
