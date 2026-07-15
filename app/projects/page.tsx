@@ -365,31 +365,48 @@ export default function Projects() {
     setCurrentUserId(user?.id || null)
     setLoadDebug(`Käyttäjä: ${user?.email || 'ei kirjautunut'}. Haetaan projekteja...`)
 
-    const { data: projectsData, error } = await supabase
-      .from('projects')
-      .select(
+    /*
+     * Supabase/PostgREST palauttaa oletuksena korkeintaan 1000 riviä per
+     * kysely (db-max-rows), vaikka .limit()-kutsua ei olisikaan — tämä
+     * katkaisi projektilistan hiljaisesti kun julkisten hankkeiden määrä
+     * ylitti 1000. Haetaan siis sivutettuna 1000 rivin erissä kunnes
+     * kaikki on saatu.
+     */
+    const PAGE_SIZE = 1000
+    const projectsData: Project[] = []
+
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data: pageData, error: pageError } = await supabase
+        .from('projects')
+        .select(
+          `
+          id, name, city, region, phase, location, developer, builder, property_type,
+          apartments, floor_area, estimated_cost, construction_start,
+          structural_design, hvac_design, electrical_design, architectural_design,
+          geotechnical_design, earthworks_contractor, additional_info,
+           latitude, longitude,
+          metadata,
+          is_public,
+          created_at
         `
-        id, name, city, region, phase, location, developer, builder, property_type,
-        apartments, floor_area, estimated_cost, construction_start,
-        structural_design, hvac_design, electrical_design, architectural_design,
-        geotechnical_design, earthworks_contractor, additional_info,
-         latitude, longitude,
-        metadata,
-        is_public,
-        created_at
-      `
-      )
-      .eq('is_public', true)
-      .order('created_at', { ascending: false })
+        )
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .range(from, from + PAGE_SIZE - 1)
+
+      if (pageError) {
+        console.error('Supabase error:', pageError)
+        setProjects([])
+        setLoading(false)
+        return
+      }
+
+      projectsData.push(...((pageData as Project[]) || []))
+
+      if (!pageData || pageData.length < PAGE_SIZE) break
+    }
 
 setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
-
-    if (error) {
-      console.error('Supabase error:', error)
-      setProjects([])
-      setLoading(false)
-      return
-    }
 
     if (!user) {
       setProjects((projectsData as Project[]) || [])

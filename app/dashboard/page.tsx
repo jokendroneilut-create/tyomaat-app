@@ -182,21 +182,33 @@ export default function Dashboard() {
     setLoading(true)
     setSubmitError(null)
 
-    const res1 = await supabase.from('projects').select('*').order('created_at', { ascending: false })
-    if (!res1.error) {
-      setProjects((res1.data as Project[]) || [])
-      setLoading(false)
-      return
+    /*
+     * Supabase/PostgREST palauttaa oletuksena korkeintaan 1000 riviä per
+     * kysely (db-max-rows) — haetaan siis sivutettuna kunnes kaikki on
+     * saatu, ettei hankelista katkea hiljaisesti 1000 rivin kohdalla.
+     */
+    const PAGE_SIZE = 1000
+    const all: Project[] = []
+
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const res = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, from + PAGE_SIZE - 1)
+
+      if (res.error) {
+        showErrorUI('Virhe haussa', res.error)
+        setProjects([])
+        setLoading(false)
+        return
+      }
+
+      all.push(...((res.data as Project[]) || []))
+      if (!res.data || res.data.length < PAGE_SIZE) break
     }
 
-    const res2 = await supabase.from('projects').select('*')
-    if (res2.error) {
-      showErrorUI('Virhe haussa', res2.error)
-      setProjects([])
-    } else {
-      setProjects((res2.data as Project[]) || [])
-    }
-
+    setProjects(all)
     setLoading(false)
   }
 
