@@ -41,7 +41,8 @@ export async function resolveHelsinkiKaavaProject({
   const result = await resolvePotentialProject({
     title: operation,
     municipality: municipality?.name ?? "Helsinki",
-    address: null,
+    // Kaavan nimi on usein katuosoite/paikannimi eikä lähde tarjoa muuta osoitetta.
+    address: operation,
     propertyId: null,
     permitNumber: null,
     sourceName: document.source_name,

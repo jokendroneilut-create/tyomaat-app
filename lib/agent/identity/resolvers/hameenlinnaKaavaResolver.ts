@@ -45,7 +45,13 @@ export async function resolveHameenlinnaKaavaProject({
   const result = await resolvePotentialProject({
     title: operation,
     municipality: municipality?.name ?? "Hämeenlinna",
-    address: null,
+    /*
+     * Lähde ei anna erillistä osoitekenttää eikä per-hanke-koordinaatteja
+     * — kaavan nimi on kuitenkin käytännössä useimmiten katuosoite tai
+     * paikannimi (esim. "Vanajantie 7"), joten käytetään sitä osoitteena
+     * tyhjän sijaan.
+     */
+    address: operation,
     propertyId: null,
     permitNumber: null,
     sourceName: document.source_name,
