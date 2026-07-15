@@ -33,7 +33,18 @@ export default function SourceMonitorTable({
 
         <tbody>
           {sources.map((source) => {
-            const hasCurrentError = Boolean(source.last_error_message)
+            /*
+             * last_error_message ei koskaan tyhjene onnistuneen ajon
+             * jälkeen (ks. lib/agent/workers/sourceWorker.ts), joten
+             * pelkkä sen olemassaolo näyttäisi ikuisesti "Error"-tilaa
+             * yhdenkin kertaalleen sattuneen, jo itsestään korjautuneen
+             * virheen jälkeen. Verrataan sen sijaan ajankohtia — vain jos
+             * viimeisin virhe on tuoreempi kuin viimeisin onnistuminen.
+             */
+            const hasCurrentError =
+              Boolean(source.last_error_at) &&
+              (!source.last_success_at ||
+                source.last_error_at > source.last_success_at)
 
             return (
               <tr key={source.id} className="border-t">

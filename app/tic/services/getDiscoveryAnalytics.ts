@@ -73,11 +73,33 @@ export async function getDiscoveryAnalytics(): Promise<DiscoveryAnalytics> {
   const sum = (key: keyof (typeof rows)[number]) =>
     rows.reduce((total, row) => total + Number(row[key] ?? 0), 0)
 
+  /*
+   * Lähteiden keräys (runSourceWorker) kirjoittaa document-tilastonsa
+   * discovery_runs-tauluun, ei agent_runs-tauluun, joten se on laskettava
+   * erikseen — muuten "Dokumentteja"-luku näyttäisi aina nollaa vaikka
+   * keräys toimisi (ks. Source Monitor -sivun "Ajot"-sarake).
+   */
+  const { data: discoveryRuns, error: discoveryRunsError } = await supabaseAdmin
+    .from("discovery_runs")
+    .select("documents_found, documents_saved")
+    .limit(5000)
+
+  if (discoveryRunsError) throw discoveryRunsError
+
+  const discoveryTotals = (discoveryRuns ?? []).reduce(
+    (acc, row) => {
+      acc.found += Number(row.documents_found ?? 0)
+      acc.saved += Number(row.documents_saved ?? 0)
+      return acc
+    },
+    { found: 0, saved: 0 }
+  )
+
   return {
     totals: {
       runs: rows.length,
-      documentsFound: sum("documents_found"),
-      documentsSaved: sum("documents_saved"),
+      documentsFound: sum("documents_found") + discoveryTotals.found,
+      documentsSaved: sum("documents_saved") + discoveryTotals.saved,
       pdfFound: sum("pdf_found"),
       pdfSaved: sum("pdf_saved"),
       signalsFound: sum("signals_found"),

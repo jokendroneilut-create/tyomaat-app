@@ -13,6 +13,8 @@ const supabaseAdmin = createClient(
 )
 
 export async function runIdentityWorker(documentId: string) {
+  const startedAt = Date.now()
+
   const { data: document, error: documentError } = await supabaseAdmin
     .from("source_documents")
     .select("*")
@@ -193,6 +195,26 @@ if (sourceName === "hilma") {
       updated_at: new Date().toISOString(),
     })
     .eq("id", documentId)
+
+  const candidatesCreated = results.filter(
+    (result) => result.action === "created_new"
+  ).length
+
+  await supabaseAdmin.from("agent_runs").insert({
+    agent_type: "identity_worker",
+    source_id: document.source_id,
+    source_name: document.source_name,
+    status: "success",
+    started_at: new Date(startedAt).toISOString(),
+    finished_at: new Date().toISOString(),
+    duration_ms: Date.now() - startedAt,
+    candidates_created: candidatesCreated,
+    payload: {
+      documentId,
+      decisionsResolved: results.length,
+      candidatesCreated,
+    },
+  })
 
   return {
     ok: true,

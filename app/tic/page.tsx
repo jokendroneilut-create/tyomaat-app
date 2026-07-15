@@ -1,4 +1,3 @@
-import CandidateList from "./components/CandidateList"
 import PotentialProjectsReviewList from "./components/PotentialProjectsReviewList"
 import { getPotentialProjectsForReview } from "./services/getPotentialProjectsForReview"
 import { getPendingReviewCount } from "./services/getPendingReviewCount"
@@ -42,14 +41,6 @@ export default async function TicPage() {
           projects={potentialProjects}
           totalCount={pendingReviewCount}
         />
-      </section>
-
-      <section>
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">
-          Vanha Candidate-lista
-        </h2>
-
-        <CandidateList />
       </section>
     </main>
   )
