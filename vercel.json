@@ -15,6 +15,10 @@
     {
       "path": "/api/tic/discovery/run?stage=process",
       "schedule": "15 3 * * *"
+    },
+    {
+      "path": "/api/admin/scan-duplicates?mode=incremental",
+      "schedule": "0 4 * * 1"
     }
   ]
 }

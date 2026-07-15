@@ -11,6 +11,7 @@ export default function TicLayout({
     { href: "/tic/discovery", label: "🔍 Discovery" },
     { href: "/tic/discovery/documents", label: "📄 Dokumentit" },
     { href: "/tic/discovery/merges", label: "🔗 Yhdistymiset" },
+    { href: "/tic/discovery/duplicates", label: "🧬 Kaksoiskappaleet" },
     { href: "/tic/discovery/analytics", label: "📈 Analytics" },
     { href: "/tic/discovery/health", label: "🩺 Health" },
   ]

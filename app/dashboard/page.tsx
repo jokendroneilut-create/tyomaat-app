@@ -4,6 +4,19 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
 import { CANONICAL_PHASES } from "@/lib/projects/phases"
+import { findProjectMatchDetailed, type ProjectMatchResult } from "@/lib/agent/projectMatcher"
+
+const DUPLICATE_REASON_LABELS: Record<string, string> = {
+  same_permit_number: "sama lupanumero",
+  same_property_id: "sama kiinteistötunnus",
+  same_location: "sama osoite",
+  same_city: "sama kaupunki",
+  same_region: "sama maakunta",
+  exact_title: "sama nimi",
+  similar_title: "samankaltainen nimi",
+  same_developer: "sama rakennuttaja",
+  same_building_type: "sama rakennustyyppi",
+}
 
 type Project = {
   id: string
@@ -125,6 +138,7 @@ export default function Dashboard() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingOriginalPhase, setEditingOriginalPhase] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [duplicateWarning, setDuplicateWarning] = useState<ProjectMatchResult | null>(null)
   const [filterQ, setFilterQ] = useState('')
   const [filterRegion, setFilterRegion] = useState('')
   const [filterPhase, setFilterPhase] = useState('')
@@ -219,6 +233,28 @@ export default function Dashboard() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitError(null)
+
+    if (!editingId) {
+      const match = findProjectMatchDetailed(projects as any, {
+        name: form.name,
+        city: form.city,
+        region: form.region,
+        location: form.location,
+        developer: form.developer,
+        buildingType: form.property_type,
+      })
+
+      if (match && match.confidence >= 40) {
+        setDuplicateWarning(match)
+        return
+      }
+    }
+
+    await performSubmit()
+  }
+
+  async function performSubmit() {
+    setDuplicateWarning(null)
 
    const coords = await geocodeProjectLocation({
   location: form.location,
@@ -375,6 +411,47 @@ export default function Dashboard() {
           <h2 className="dashTitle">{editingId ? 'Muokkaa projektia' : 'Lisää projekti'}</h2>
 
           {submitError && <div className="dashError">Tallennusvirhe: {submitError}</div>}
+
+          {duplicateWarning && (
+            <div
+              style={{
+                background: '#fffbeb',
+                border: '1px solid #f59e0b',
+                borderRadius: 10,
+                padding: 14,
+                marginBottom: 14,
+              }}
+            >
+              <div style={{ fontWeight: 800, color: '#92400e', marginBottom: 4 }}>
+                ⚠️ Löytyi mahdollinen kaksoiskappale ({duplicateWarning.confidence}%)
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                Tämä muistuttaa jo olemassa olevaa hanketta{' '}
+                <strong>{duplicateWarning.project.name}</strong>
+                {duplicateWarning.project.city ? ` (${duplicateWarning.project.city})` : ''}:{' '}
+                {duplicateWarning.reasons
+                  .map((r) => DUPLICATE_REASON_LABELS[r] ?? r)
+                  .join(', ')}
+                .
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  className="btnPrimary"
+                  onClick={performSubmit}
+                >
+                  Tallenna silti uutena hankkeena
+                </button>
+                <button
+                  type="button"
+                  className="btnSecondary"
+                  onClick={() => setDuplicateWarning(null)}
+                >
+                  Peruuta
+                </button>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="dashGrid twoCols">

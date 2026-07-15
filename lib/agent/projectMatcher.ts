@@ -152,7 +152,7 @@ function getProjectBuildingType(project: MatchableProject) {
   )
 }
 
-function calculateMatch(
+export function calculateMatch(
   project: MatchableProject,
   candidate: NormalizedProjectCandidate
 ): ProjectMatchResult | null {
