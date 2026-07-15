@@ -36,6 +36,7 @@ export async function runFactWorker(documentId?: string) {
       "Vantaan vireillä olevat kaavat",
       "Helsingin vireillä olevat kaavat",
       "Tampereen vireillä olevat kaavat",
+      "Turun vireillä olevat kaavat",
     ]
 
     document =

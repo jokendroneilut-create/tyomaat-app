@@ -85,6 +85,7 @@ export async function POST(request: Request) {
     const isVantaaKaava = normalize(metadata.resolver) === "vantaakaavaresolver"
     const isHelsinkiKaava = normalize(metadata.resolver) === "helsinkikaavaresolver"
     const isTampereKaava = normalize(metadata.resolver) === "tamperekaavaresolver"
+    const isTurkuKaava = normalize(metadata.resolver) === "turkukaavaresolver"
 
     const permitIdentifierType: IdentifierType = isHilma
       ? "hilma_notice_number"
@@ -124,6 +125,13 @@ export async function POST(request: Request) {
     if (isTampereKaava) {
       candidateIdentifiers.push({
         type: "tampere_kaava_tunnus",
+        value: metadata.kaava_tunnus,
+      })
+    }
+
+    if (isTurkuKaava) {
+      candidateIdentifiers.push({
+        type: "turku_kaava_tunnus",
         value: metadata.kaava_tunnus,
       })
     }

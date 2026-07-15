@@ -4,6 +4,7 @@ import { extractLupapisteFacts } from "@/lib/agent/facts/extractLupapisteFacts"
 import { extractVantaaKaavaFacts } from "@/lib/agent/facts/extractVantaaKaavaFacts"
 import { extractHelsinkiKaavaFacts } from "@/lib/agent/facts/extractHelsinkiKaavaFacts"
 import { extractTampereKaavaFacts } from "@/lib/agent/facts/extractTampereKaavaFacts"
+import { extractTurkuKaavaFacts } from "@/lib/agent/facts/extractTurkuKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -98,6 +99,34 @@ export function resolveFacts(document: any) {
         description,
         decisionMaker,
         planTitle,
+      }),
+    }
+  }
+
+  if (document.source_name === "Turun vireillä olevat kaavat") {
+    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const center = document.raw_payload?.center ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const kaavanNimi = document.raw_payload?.kaavan_nimi ?? null
+    const kaavalaji = document.raw_payload?.kaavalaji ?? null
+    const kaavatilanne = document.raw_payload?.kaavatilanne ?? null
+    const description = document.raw_payload?.description ?? null
+    const identifyingInfo = document.raw_payload?.identifying_info ?? {}
+
+    return {
+      decisions: [],
+      facts: extractTurkuKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        feature,
+        center,
+        kaavaTunnus,
+        kaavanNimi,
+        kaavalaji,
+        kaavatilanne,
+        documentsUrl: document.document_url,
+        description,
+        identifyingInfo,
       }),
     }
   }

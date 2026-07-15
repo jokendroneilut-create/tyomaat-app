@@ -8,6 +8,7 @@ export type IdentifierType =
   | "vantaa_kaava_tunnus"
   | "helsinki_kaava_tunnus"
   | "tampere_kaava_tunnus"
+  | "turku_kaava_tunnus"
 
 export const IDENTIFIER_TYPES: IdentifierType[] = [
   "property_id",
@@ -17,6 +18,7 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "vantaa_kaava_tunnus",
   "helsinki_kaava_tunnus",
   "tampere_kaava_tunnus",
+  "turku_kaava_tunnus",
 ]
 
 /*

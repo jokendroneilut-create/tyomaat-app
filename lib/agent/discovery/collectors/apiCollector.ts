@@ -819,6 +819,237 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
   }
 }
 
+// Ks. VANTAA_MAX_HAKIJA_FETCHES_PER_RUN yllä — sama syy pieneen rajaan.
+const TURKU_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+function unescapeXml(value: string): string {
+  return value
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+}
+
+function xmlTag(block: string, tag: string): string | null {
+  const match = block.match(new RegExp(`<GIS:${tag}>([^<]*)</GIS:${tag}>`))
+  const value = match?.[1]?.trim()
+  return value ? unescapeXml(value) : null
+}
+
+/*
+ * Turku käyttää vanhempaa Tekla-pohjaista WFS-palvelinta (ei GeoServer
+ * kuten Helsinki/Vantaa/Tampere) joka ei tue JSON-ulostuloa — vastaus
+ * puretaan siis GML/XML-tekstinä yksinkertaisilla säännöllisillä
+ * lausekkeilla, koska kenttärakenne on tasainen eikä sisäkkäinen
+ * (DescribeFeatureType vahvisti kentät etukäteen).
+ */
+function parseTurkuFeatures(xml: string): {
+  kaavaTunnus: string | null
+  kaavanNimi: string | null
+  kaavalaji: string | null
+  kaavatilanne: string | null
+  planUrl: string | null
+  center: { x: number; y: number } | null
+}[] {
+  const blocks =
+    xml.match(
+      /<GIS:Akaava_Asemakaava_alueet_vireilla>[\s\S]*?<\/GIS:Akaava_Asemakaava_alueet_vireilla>/g
+    ) ?? []
+
+  return blocks.map((block) => {
+    const coordsMatch = block.match(/<gml:coordinates>([^<]*)<\/gml:coordinates>/)
+
+    let center: { x: number; y: number } | null = null
+
+    if (coordsMatch) {
+      const pairs = coordsMatch[1]
+        .trim()
+        .split(/\s+/)
+        .map((pair) => pair.split(",").map(Number))
+        .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y))
+
+      if (pairs.length > 0) {
+        const xs = pairs.map((p) => p[0])
+        const ys = pairs.map((p) => p[1])
+        center = {
+          x: (Math.min(...xs) + Math.max(...xs)) / 2,
+          y: (Math.min(...ys) + Math.max(...ys)) / 2,
+        }
+      }
+    }
+
+    return {
+      kaavaTunnus: xmlTag(block, "Kaavatunnus"),
+      kaavanNimi: xmlTag(block, "KaavanNimi"),
+      kaavalaji: xmlTag(block, "Kaavalaji"),
+      kaavatilanne: xmlTag(block, "Kaavatilanne"),
+      planUrl: xmlTag(block, "URL"),
+      center,
+    }
+  })
+}
+
+/*
+ * Turun kaavan omalta sivulta (turku.fi/kaavoitus/{slug}, uudelleen-
+ * ohjautuu HTTP 301:llä ilman meta-refresh-käsittelyä toisin kuin
+ * Tampere/Vantaa) poimitaan kuvausteksti ja kaavan tunnistetietolaatikon
+ * kaikki rivit ("Diaarinumero: ...", "Vastuuhenkilö: ..." jne.) —
+ * kenttien määrä ja nimet vaihtelevat kaavoittain, joten ne kerätään
+ * yleisesti "Otsikko: Arvo" -pareina, ei kiinteinä nimettyinä kenttinä.
+ */
+async function fetchTurkuKaavaDetails(planUrl: string): Promise<{
+  description: string | null
+  identifyingInfo: Record<string, string>
+}> {
+  try {
+    const html = await (await fetch(planUrl, { cache: "no-store" })).text()
+    const $ = cheerio.load(html)
+
+    const description =
+      $(".city-plan-content").first().children().first().text().replace(/\s+/g, " ").trim() ||
+      null
+
+    const identifyingInfo: Record<string, string> = {}
+
+    $(".map-information__item").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      const separatorIndex = text.indexOf(":")
+      if (separatorIndex === -1) return
+
+      const label = text.slice(0, separatorIndex).trim()
+      const value = text.slice(separatorIndex + 1).trim()
+      if (label && value) identifyingInfo[label] = value
+    })
+
+    return { description, identifyingInfo }
+  } catch {
+    return { description: null, identifyingInfo: {} }
+  }
+}
+
+async function collectTurkuKaavaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Turun kaavarajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const xml = await response.text()
+
+  /*
+   * Turun WFS-rajapinta on yhteinen Turun ja Kaarinan kanssa
+   * (Kaavatunnus alkaa kuntanumerolla — Turku 853, Kaarina 202).
+   * Kaarinan kaavat rajataan pois, koska niillä on eri verkkosivu
+   * (kaarina.fi, eri rakenne) eikä tämä lähde ole tarkoitettu niille —
+   * muuten ne päätyisivät virheellisesti "Turku"-kunnaksi.
+   */
+  const features = parseTurkuFeatures(xml).filter((feature) =>
+    feature.kaavaTunnus?.trim().startsWith("853")
+  )
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<
+    string,
+    { description: string | null; identifyingInfo: Record<string, string> }
+  >()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description) {
+      knownDetails.set(row.document_url, {
+        description: row.raw_payload.description,
+        identifyingInfo: row.raw_payload.identifying_info ?? {},
+      })
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  /*
+   * Yksi kaava voi koostua useasta erillisestä alueesta (usea
+   * gml:featureMember jakaa saman Kaavatunnuksen/URL:n) — ilman tätä
+   * välimuistia sama sivu haettaisiin turhaan monta kertaa saman ajon
+   * sisällä, mikä söi koko ajon budjetin yhdeltä kaavalta.
+   */
+  const inRunDetails = new Map<
+    string,
+    { description: string | null; identifyingInfo: Record<string, string> }
+  >()
+
+  for (const feature of features) {
+    const documentUrl =
+      feature.planUrl || `${source.url}#${feature.kaavaTunnus ?? "unknown"}`
+
+    const known = knownDetails.get(documentUrl) ?? inRunDetails.get(documentUrl)
+    let description: string | null = known?.description ?? null
+    let identifyingInfo: Record<string, string> = known?.identifyingInfo ?? {}
+    let detailsAttempted = Boolean(known)
+
+    if (
+      !detailsAttempted &&
+      feature.planUrl &&
+      detailFetches < TURKU_MAX_DETAIL_FETCHES_PER_RUN
+    ) {
+      const details = await fetchTurkuKaavaDetails(feature.planUrl)
+      description = details.description
+      identifyingInfo = details.identifyingInfo
+      detailFetches += 1
+      detailsAttempted = details.description !== null
+
+      if (detailsAttempted) {
+        inRunDetails.set(documentUrl, { description, identifyingInfo })
+      }
+    }
+
+    const rawText = JSON.stringify(feature)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: feature.kaavanNimi ?? `Asemakaava ${feature.kaavaTunnus ?? "?"}`,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            center: feature.center,
+            kaava_tunnus: feature.kaavaTunnus,
+            kaavan_nimi: feature.kaavanNimi,
+            kaavalaji: feature.kaavalaji,
+            kaavatilanne: feature.kaavatilanne,
+            ...(detailsAttempted
+              ? { description, identifying_info: identifyingInfo }
+              : {}),
+            original: feature,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: features.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "hilmaParser") {
     return collectHilmaSource(source)
@@ -834,6 +1065,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "tampereKaavaParser") {
     return collectTampereKaavaSource(source)
+  }
+
+  if (source.parser === "turkuKaavaParser") {
+    return collectTurkuKaavaSource(source)
   }
 
   if (source.parser === "helsinkiKaavaParser") {
