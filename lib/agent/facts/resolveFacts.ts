@@ -8,6 +8,7 @@ import { extractTurkuKaavaFacts } from "@/lib/agent/facts/extractTurkuKaavaFacts
 import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
 import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
 import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
+import { extractKuopioKaavaFacts } from "@/lib/agent/facts/extractKuopioKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -102,6 +103,35 @@ export function resolveFacts(document: any) {
         description,
         decisionMaker,
         planTitle,
+      }),
+    }
+  }
+
+  if (document.source_name === "Kuopion vireillä olevat kaavat") {
+    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const planName = document.raw_payload?.plan_name ?? null
+    const planNumber = document.raw_payload?.plan_number ?? null
+    const recordNumber = document.raw_payload?.record_number ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const planType = document.raw_payload?.plan_type ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+    const center = document.raw_payload?.center ?? null
+
+    return {
+      decisions: [],
+      facts: extractKuopioKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        feature,
+        planName,
+        planNumber,
+        recordNumber,
+        phase,
+        planType,
+        description,
+        contacts,
+        center,
       }),
     }
   }
