@@ -17,6 +17,7 @@ import { extractHameenlinnaKaavaFacts } from "@/lib/agent/facts/extractHameenlin
 import { extractJoensuuKaavaFacts } from "@/lib/agent/facts/extractJoensuuKaavaFacts"
 import { extractVaasaKaavaFacts } from "@/lib/agent/facts/extractVaasaKaavaFacts"
 import { extractKouvolaKaavaFacts } from "@/lib/agent/facts/extractKouvolaKaavaFacts"
+import { extractLappeenrantaKaavaFacts } from "@/lib/agent/facts/extractLappeenrantaKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -322,6 +323,28 @@ export function resolveFacts(document: any) {
         phase,
         description,
         contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Lappeenrannan vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+    const center = document.raw_payload?.center ?? null
+
+    return {
+      decisions: [],
+      facts: extractLappeenrantaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        documentUrl: document.document_url,
+        phase,
+        description,
+        contacts,
+        center,
       }),
     }
   }

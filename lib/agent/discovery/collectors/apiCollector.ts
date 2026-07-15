@@ -3500,7 +3500,240 @@ async function collectKouvolaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Lappeenrannan "vireillä olevat asemakaavat" -listaussivu (Kentico/
+ * InfoWeb) antaa vain otsikon+linkin — jokainen ~900 kt:n hankesivu
+ * vaatii rate-limitoidun yksityiskohtahaun (sama malli kuin Lahti/
+ * Pori/Oulu/Jyväskylä/Vaasa). Vaihe päätellään "Kaavaprosessin
+ * vaiheet" -osion process-ympyröiden täyttöasteesta: täytetty ympyrä
+ * (ei "border-secondary"-luokkaa) tarkoittaa saavutettua vaihetta,
+ * ontto ympyrä tulevaa — viimeinen saavutettu vaihe on nykyinen. Jos
+ * kaikki vaiheet (myös viimeinen, Hyväksymisvaihe) on saavutettu,
+ * hanke on käytännössä hyväksytty eikä enää aktiivinen liidi
+ * (completed). Ei muodollista kaavatunnusta — tunnistus URL:n
+ * varassa. Yhteystiedot eivät ole obfuskoituja. Karttalinkin "cp"-
+ * parametri on GK28FIN-muodossa (pohjoinen,itä).
+ */
+const LAPPEENRANTA_LISTING_URL =
+  "https://www.lappeenranta.fi/fi/asuminen-ja-rakentaminen/kaavoitus/asemakaavoitus/vireilla-olevat-asemakaavat"
+const LAPPEENRANTA_BASE_URL = "https://www.lappeenranta.fi"
+const LAPPEENRANTA_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+type LappeenrantaListingItem = {
+  url: string
+  title: string
+}
+
+async function fetchLappeenrantaListing(): Promise<LappeenrantaListingItem[]> {
+  const response = await fetch(LAPPEENRANTA_LISTING_URL, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(
+      `Lappeenrannan kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`
+    )
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: LappeenrantaListingItem[] = []
+  const seen = new Set<string>()
+
+  $("a[href*='/vireilla-olevat-asemakaavat/']").each((_, a) => {
+    const $a = $(a)
+    const href = $a.attr("href")
+    if (!href) return
+    if (!/\/vireilla-olevat-asemakaavat\/[a-z0-9-]+$/.test(href)) return
+
+    const url = href.startsWith("http") ? href : `${LAPPEENRANTA_BASE_URL}${href}`
+    if (seen.has(url)) return
+
+    const title = $a.text().replace(/\s+/g, " ").trim()
+    if (!title) return
+
+    seen.add(url)
+    items.push({ url, title })
+  })
+
+  return items
+}
+
+type LappeenrantaContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+type LappeenrantaDetails = {
+  description: string | null
+  phase: string | null
+  completed: boolean
+  contacts: LappeenrantaContact[]
+  center: { x: number; y: number } | null
+}
+
+async function fetchLappeenrantaDetails(url: string): Promise<LappeenrantaDetails> {
+  const empty: LappeenrantaDetails = {
+    description: null,
+    phase: null,
+    completed: false,
+    contacts: [],
+    center: null,
+  }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    let description: string | null = null
+    $("h2, h3").each((_, h) => {
+      if (description) return
+      if ($(h).text().trim() === "Tavoite") {
+        description = $(h).next("p").text().replace(/\s+/g, " ").trim() || null
+      }
+    })
+
+    const steps: { heading: string; reached: boolean }[] = []
+    $(".process-body").each((_, body) => {
+      const $body = $(body)
+      const heading = $body.find("h2, h3").first().text().trim()
+      if (!heading) return
+
+      const circle = $body.closest(".row").find(".process-number .ratio").first()
+      const reached = circle.length > 0 && !circle.hasClass("border-secondary")
+
+      steps.push({ heading, reached })
+    })
+
+    const reachedSteps = steps.filter((s) => s.reached)
+    const phase = reachedSteps[reachedSteps.length - 1]?.heading ?? null
+    const completed = steps.length > 0 && reachedSteps.length === steps.length
+
+    const mapHref = $("a[href*='kartta.lappeenranta.fi']").first().attr("href") ?? ""
+    const cpMatch = mapHref.match(/cp=([\d.]+),([\d.]+)/)
+    const center = cpMatch ? { y: parseFloat(cpMatch[1]), x: parseFloat(cpMatch[2]) } : null
+
+    const contacts: LappeenrantaContact[] = []
+    $(".iwc-page-section-contacts .card").each((_, card) => {
+      const $card = $(card)
+      const name = $card.find(".card-title").first().text().trim() || null
+      if (!name) return
+
+      const title = $card.find("p").first().text().trim() || null
+      const email = $card.find("a[href^='mailto:']").first().attr("href")?.replace("mailto:", "").trim() ?? null
+      const phone = $card.find("a[href^='tel:']").first().attr("href")?.replace("tel:", "").trim() ?? null
+
+      contacts.push({ name, title, phone, email })
+    })
+
+    return { description, phase, completed, contacts, center }
+  } catch {
+    return empty
+  }
+}
+
+async function collectLappeenrantaSource(source: DiscoverySource) {
+  const items = await fetchLappeenrantaListing()
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description || row.raw_payload?.completed) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  for (const item of items) {
+    const known = knownDetails.get(item.url)
+
+    let details: LappeenrantaDetails | null = known
+      ? {
+          description: known.description ?? null,
+          phase: known.phase ?? null,
+          completed: known.completed ?? false,
+          contacts: known.contacts ?? [],
+          center: known.center ?? null,
+        }
+      : null
+
+    let detailsAttempted = Boolean(known)
+
+    if (!detailsAttempted && detailFetches < LAPPEENRANTA_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchLappeenrantaDetails(item.url)
+      detailFetches += 1
+      detailsAttempted = details.description !== null || details.completed
+    }
+
+    const isCompleted = detailsAttempted && details?.completed === true
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            ...(detailsAttempted && details
+              ? {
+                  description: details.description,
+                  phase: details.phase,
+                  contacts: details.contacts,
+                  center: details.center,
+                  completed: details.completed,
+                }
+              : {}),
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(isCompleted
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "lappeenrantaKaavaParser") {
+    return collectLappeenrantaSource(source)
+  }
+
   if (source.parser === "kouvolaKaavaParser") {
     return collectKouvolaSource(source)
   }
