@@ -1,31 +1,5 @@
-import PotentialProjectsReviewList from "../components/PotentialProjectsReviewList"
-import { getPotentialProjectsForReview } from "../services/getPotentialProjectsForReview"
-import { getPendingReviewCount } from "../services/getPendingReviewCount"
+import { redirect } from "next/navigation"
 
-export const dynamic = "force-dynamic"
-
-export default async function TicProjectsPage() {
-  const [potentialProjects, pendingReviewCount] = await Promise.all([
-    getPotentialProjectsForReview(),
-    getPendingReviewCount(),
-  ])
-
-  return (
-    <div>
-      <section className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Potentiaaliset rakennushankkeet
-        </h1>
-
-        <p className="mt-2 text-gray-600">
-          Discovery Agentin löytämät hankkeet, jotka odottavat hyväksyntää.
-        </p>
-      </section>
-
-      <PotentialProjectsReviewList
-        projects={potentialProjects}
-        totalCount={pendingReviewCount}
-      />
-    </div>
-  )
+export default function TicProjectsPage() {
+  redirect("/tic")
 }

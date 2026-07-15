@@ -13,27 +13,9 @@ export default async function TicPage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-8">
       <section className="mb-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Työmaat Intelligence Center
-            </h1>
-
-            <p className="mt-2 text-gray-600">
-              Admin-näkymä uusien hankkeiden hyväksyntään, datan laatuun ja
-              discovery-putken seurantaan.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-gray-200 bg-white px-6 py-4 text-right shadow-sm">
-            <div className="text-3xl font-bold text-gray-900">
-              {pendingReviewCount}
-            </div>
-            <div className="text-sm text-gray-500">
-              hanketta odottaa hyväksyntää/hylkäystä
-            </div>
-          </div>
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Työmaat Intelligence Center
+        </h1>
       </section>
 
       <section className="mb-8">
