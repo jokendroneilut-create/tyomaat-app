@@ -47,28 +47,45 @@ export async function getDiscoveryAnalytics(): Promise<DiscoveryAnalytics> {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const { data: runs, error } = await supabaseAdmin
-    .from("agent_runs")
-    .select(`
-      id,
-      created_at,
-      source_name,
-      agent_type,
-      status,
-      documents_found,
-      documents_saved,
-      pdf_found,
-      pdf_saved,
-      signals_found,
-      candidates_created,
-      duration_ms
-    `)
-    .order("created_at", { ascending: false })
-    .limit(500)
+  /*
+   * agent_runs on kasvanut yli 500 rivin (tuhansia), ja aiempi .limit(500)
+   * rajasi sekä "Ajot yhteensä" -kokonaismäärän että kaikki aikaväli-
+   * suodattimet (tänään/7pv/30pv/365pv) samaan 500 viimeisimpään riviin.
+   * Kun yhtenä päivänä syntyy paljon ajoja (esim. uuden lähteen
+   * taustatäyttö), tuo 500 rivin ikkuna täyttyy kokonaan sen yhden päivän
+   * riveistä, jolloin "Tänään" näytti virheellisesti saman luvun kuin
+   * "Ajot yhteensä" — molemmat olivat vain saman katkaistun otoksen koko.
+   * Haetaan siis KAIKKI rivit sivutettuna, jotta summat ja aikavälit
+   * lasketaan oikeasta kokonaismäärästä.
+   */
+  const PAGE_SIZE = 1000
+  const rows: any[] = []
 
-  if (error) throw error
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabaseAdmin
+      .from("agent_runs")
+      .select(`
+        id,
+        created_at,
+        source_name,
+        agent_type,
+        status,
+        documents_found,
+        documents_saved,
+        pdf_found,
+        pdf_saved,
+        signals_found,
+        candidates_created,
+        duration_ms
+      `)
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1)
 
-  const rows = runs ?? []
+    if (error) throw error
+
+    rows.push(...(data ?? []))
+    if (!data || data.length < PAGE_SIZE) break
+  }
 
   const sum = (key: keyof (typeof rows)[number]) =>
     rows.reduce((total, row) => total + Number(row[key] ?? 0), 0)
@@ -111,6 +128,6 @@ export async function getDiscoveryAnalytics(): Promise<DiscoveryAnalytics> {
       last30Days: rows.filter((row) => row.created_at >= daysAgo(30)).length,
       last365Days: rows.filter((row) => row.created_at >= daysAgo(365)).length,
     },
-    recentRuns: rows as DiscoveryAnalytics["recentRuns"],
+    recentRuns: rows.slice(0, 30) as DiscoveryAnalytics["recentRuns"],
   }
 }
