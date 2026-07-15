@@ -9,6 +9,8 @@ import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
 import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
 import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
 import { extractKuopioKaavaFacts } from "@/lib/agent/facts/extractKuopioKaavaFacts"
+import { extractLahtiKaavaFacts } from "@/lib/agent/facts/extractLahtiKaavaFacts"
+import { extractPoriKaavaFacts } from "@/lib/agent/facts/extractPoriKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -132,6 +134,58 @@ export function resolveFacts(document: any) {
         description,
         contacts,
         center,
+      }),
+    }
+  }
+
+  if (document.source_name === "Lahden kaavatyökohteet") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const planType = document.raw_payload?.plan_type ?? null
+    const vireilletulo = document.raw_payload?.vireilletulo ?? null
+    const applicant = document.raw_payload?.applicant ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+    const center = document.raw_payload?.center ?? null
+
+    return {
+      decisions: [],
+      facts: extractLahtiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        planType,
+        vireilletulo,
+        applicant,
+        phase,
+        description,
+        contacts,
+        center,
+      }),
+    }
+  }
+
+  if (document.source_name === "Porin vireillä olevat kaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const decisionMaker = document.raw_payload?.decision_maker ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractPoriKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
+        decisionMaker,
+        contacts,
       }),
     }
   }

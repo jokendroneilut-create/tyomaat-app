@@ -13,6 +13,8 @@ export type IdentifierType =
   | "vayla_project_id"
   | "senaatti_project_id"
   | "kuopio_kaava_tunnus"
+  | "lahti_kaava_tunnus"
+  | "pori_kaava_tunnus"
 
 export const IDENTIFIER_TYPES: IdentifierType[] = [
   "property_id",
@@ -27,6 +29,8 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "vayla_project_id",
   "senaatti_project_id",
   "kuopio_kaava_tunnus",
+  "lahti_kaava_tunnus",
+  "pori_kaava_tunnus",
 ]
 
 /*

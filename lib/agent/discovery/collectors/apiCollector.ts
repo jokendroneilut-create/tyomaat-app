@@ -1735,7 +1735,529 @@ async function collectKuopioSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
+ * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
+ * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
+ * yksityiskohtahaku-malli kuin Tampereella/Turulla. Osa listatuista
+ * linkeistä on jo edennyt lainvoimaiseksi ja uudelleenohjautuu polkuun
+ * "/asemakaavoitus/lainvoimaiset-asemakaavat/" — nämä merkitään
+ * completed:iksi ja jätetään pysyvästi faktojen/tunnistuksen
+ * ulkopuolelle (facts_extracted_at/identity_resolved_at asetetaan
+ * suoraan), koska ne eivät enää ole aktiivisia liidejä.
+ */
+const LAHTI_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+type LahtiContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+type LahtiDetails = {
+  completed: boolean
+  kaavaTunnus: string | null
+  planType: string | null
+  vireilletulo: string | null
+  applicant: string | null
+  phase: string | null
+  description: string | null
+  contacts: LahtiContact[]
+  center: { x: number; y: number } | null
+}
+
+async function fetchLahtiDetails(url: string): Promise<LahtiDetails> {
+  const empty: LahtiDetails = {
+    completed: false,
+    kaavaTunnus: null,
+    planType: null,
+    vireilletulo: null,
+    applicant: null,
+    phase: null,
+    description: null,
+    contacts: [],
+    center: null,
+  }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const completed = response.url.includes("/lainvoimaiset-asemakaavat/")
+    const $ = cheerio.load(html)
+
+    const table: Record<string, string> = {}
+    $("table.tablepress tr").each((_, tr) => {
+      const cells = $(tr).find("td")
+      const label = $(cells[0]).text().trim()
+      const value = $(cells[1]).text().trim()
+      if (label) table[label] = value
+    })
+
+    const stages: { title: string; status: string | null }[] = []
+    $("li.accordion-row.phases-single .accordion-title-text").each((_, el) => {
+      const $el = $(el)
+      const status = $el.find(".phase-description").text().trim() || null
+      const clone = $el.clone()
+      clone.find(".phase-description").remove()
+      const title = clone.text().trim()
+      if (title) stages.push({ title, status })
+    })
+
+    const phase =
+      stages.find((s) => s.status === "Meneillään")?.title ??
+      (completed ? "Voimaantulo" : null)
+
+    const description = $(".acf-block-text-content .content p").first().text().trim() || null
+
+    const contacts: LahtiContact[] = []
+    $("li.contact-card").each((_, li) => {
+      const $li = $(li)
+      const name =
+        $li.find(".contact-card__name p.has-text-weight-semibold.contact-detail").first().text().trim() ||
+        null
+      const title =
+        $li.find(".contact-card__name p.contact-detail.is-size-6").first().text().trim() || null
+      const phone = $li.find("a[href^='tel:']").attr("href")?.replace("tel:", "") ?? null
+      const email = $li.find("a[href^='mailto:']").attr("href")?.replace("mailto:", "") ?? null
+      if (name) contacts.push({ name, title, phone, email })
+    })
+
+    /*
+     * Karttaupotuksen "cp"-parametri on muotoa pohjoinen,itä
+     * (GK26FIN-yksiköissä), eli päinvastainen järjestys kuin
+     * gk26ToWgs84(x, y) odottaa.
+     */
+    const iframeSrc =
+      $("iframe[data-src*='kartta.lahti.fi']").attr("data-src") ??
+      $("iframe[src*='kartta.lahti.fi']").attr("src") ??
+      ""
+    const cpMatch = iframeSrc.match(/cp=([\d.]+),([\d.]+)/)
+    const center = cpMatch ? { y: parseFloat(cpMatch[1]), x: parseFloat(cpMatch[2]) } : null
+
+    return {
+      completed,
+      kaavaTunnus: table["Kaavatunnus"] || null,
+      planType: table["Kaavatyön tyyppi"] || null,
+      vireilletulo: table["Vireilletulo"] || null,
+      applicant: table["Kaava-aloitteen tekijä"] || null,
+      phase,
+      description,
+      contacts,
+      center,
+    }
+  } catch {
+    return empty
+  }
+}
+
+async function collectLahtiSource(source: DiscoverySource) {
+  const listingResponse = await fetch(source.url, { cache: "no-store" })
+
+  if (!listingResponse.ok) {
+    throw new Error(
+      `Lahden kaavalistan haku epäonnistui: ${listingResponse.status} ${listingResponse.statusText}`
+    )
+  }
+
+  const listingHtml = await listingResponse.text()
+  const $listing = cheerio.load(listingHtml)
+
+  const items: { url: string; title: string }[] = []
+  const seen = new Set<string>()
+
+  $listing("a[href*='/asemakaavoitus/kaavatyokohteet/']").each((_, el) => {
+    const href = $listing(el).attr("href")
+    if (!href) return
+
+    const url = href.startsWith("http") ? href : `https://www.lahti.fi${href}`
+    if (!/\/asemakaavoitus\/kaavatyokohteet\/[a-z0-9-]+\/?$/.test(url)) return
+    if (seen.has(url)) return
+
+    const title = $listing(el).text().trim()
+    if (!title) return
+
+    seen.add(url)
+    items.push({ url, title })
+  })
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description || row.raw_payload?.completed) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  for (const item of items) {
+    const known = knownDetails.get(item.url)
+
+    let details: LahtiDetails | null = known
+      ? {
+          completed: known.completed ?? false,
+          kaavaTunnus: known.kaava_tunnus ?? null,
+          planType: known.plan_type ?? null,
+          vireilletulo: known.vireilletulo ?? null,
+          applicant: known.applicant ?? null,
+          phase: known.phase ?? null,
+          description: known.description ?? null,
+          contacts: known.contacts ?? [],
+          center: known.center ?? null,
+        }
+      : null
+
+    let detailsAttempted = Boolean(known)
+
+    if (!detailsAttempted && detailFetches < LAHTI_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchLahtiDetails(item.url)
+      detailFetches += 1
+      detailsAttempted = details.description !== null || details.completed
+    }
+
+    const isCompleted = detailsAttempted && details?.completed === true
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            ...(detailsAttempted && details
+              ? {
+                  kaava_tunnus: details.kaavaTunnus,
+                  plan_type: details.planType,
+                  vireilletulo: details.vireilletulo,
+                  applicant: details.applicant,
+                  phase: details.phase,
+                  description: details.description,
+                  contacts: details.contacts,
+                  center: details.center,
+                  completed: details.completed,
+                }
+              : {}),
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(isCompleted
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
+ * Porin "vireillä olevat asemakaavat" -listaussivu (WordPress) ryhmittelee
+ * kaavat vaiheittain otsikoiden VIREILLETULOVAIHE/LUONNOSVAIHE/EHDOTUSVAIHE
+ * alle — vaihe saadaan siis suoraan listalta, ilman yksityiskohtahakua.
+ * Yksityiskohtasivut (vanha ASP.NET-sovellus pori.cloudnc.fi) ovat
+ * poikkeuksellisen suuria (n. 2-3 Mt, upotettu base64-kuva), joten
+ * niistä ei koskaan tallenneta koko HTML:ää — vain poimitut kentät.
+ */
+const PORI_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+type PoriContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+/*
+ * "Yhteyshenkilö"-kenttä on vapaamuotoista tekstiä jonka muoto vaihtelee
+ * hankkeittain — havaittu ainakin: "Titteli Nimi p. puhelin",
+ * "Titteli Nimi, p. puhelin" ja "Nimi, Titteli, puhelin". Useampi
+ * henkilö on eroteltu "/"-merkillä. Koska titteli ja nimi eivät ole
+ * aina samassa järjestyksessä, nimi tunnistetaan rakenteesta (kaksi
+ * isolla alkukirjaimella alkavaa sanaa) sen sijaan että oletettaisiin
+ * kiinteä sijainti.
+ */
+function isPoriPersonName(value: string): boolean {
+  return /^[A-ZÄÖÅ][\wäöåÄÖÅ'-]*(?:-[A-ZÄÖÅ][\wäöåÄÖÅ'-]*)?\s+[A-ZÄÖÅ][\wäöåÄÖÅ'-]*(?:-[A-ZÄÖÅ][\wäöåÄÖÅ'-]*)?$/.test(
+    value.trim()
+  )
+}
+
+function splitPoriTitleAndName(value: string): { title: string | null; name: string } {
+  const match = value.match(
+    /^(.*?)\s*([A-ZÄÖÅ][\wäöåÄÖÅ'-]*(?:-[A-ZÄÖÅ][\wäöåÄÖÅ'-]*)?\s+[A-ZÄÖÅ][\wäöåÄÖÅ'-]*(?:-[A-ZÄÖÅ][\wäöåÄÖÅ'-]*)?)$/
+  )
+  if (match && match[2]) return { title: match[1].trim() || null, name: match[2].trim() }
+  return { title: null, name: value.trim() }
+}
+
+function parsePoriContacts(text: string | null): PoriContact[] {
+  if (!text || !text.trim()) return []
+
+  return text
+    .split("/")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const commaParts = part.split(",").map((s) => s.trim()).filter(Boolean)
+
+      if (commaParts.length >= 2) {
+        const last = commaParts[commaParts.length - 1]
+        const phoneMatch = last.match(/^(?:p\.?\s*)?(\d[\d\s]{4,})$/)
+
+        if (phoneMatch) {
+          const phone = phoneMatch[1].replace(/\s+/g, " ").trim()
+          const rest = commaParts.slice(0, -1)
+
+          if (rest.length === 2) {
+            if (isPoriPersonName(rest[0]) && !isPoriPersonName(rest[1])) {
+              return { name: rest[0], title: rest[1] || null, phone, email: null }
+            }
+            if (isPoriPersonName(rest[1]) && !isPoriPersonName(rest[0])) {
+              return { name: rest[1], title: rest[0] || null, phone, email: null }
+            }
+          }
+
+          const { title, name } = splitPoriTitleAndName(rest.join(" "))
+          return { name, title, phone, email: null }
+        }
+      }
+
+      const spaceMatch = part.match(/^(.*?)\s+p\.?\s*(\d[\d\s]{4,})$/)
+      if (spaceMatch) {
+        const { title, name } = splitPoriTitleAndName(spaceMatch[1].trim())
+        return { name, title, phone: spaceMatch[2].replace(/\s+/g, " ").trim(), email: null }
+      }
+
+      return { name: part, title: null, phone: null, email: null }
+    })
+}
+
+type PoriDetails = {
+  kaavaTunnus: string | null
+  applicant: string | null
+  sijainti: string | null
+  tavoitteet: string | null
+  decisionMaker: string | null
+  contacts: PoriContact[]
+}
+
+async function fetchPoriDetails(url: string): Promise<PoriDetails> {
+  const empty: PoriDetails = {
+    kaavaTunnus: null,
+    applicant: null,
+    sijainti: null,
+    tavoitteet: null,
+    decisionMaker: null,
+    contacts: [],
+  }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const kaavaTunnus = $(".kaavatunnus-info").first().text().trim() || null
+    const yhteyshenkilo = $(".yhteyshenkilo-info").first().text().trim() || null
+
+    const sections: Record<string, string> = {}
+    $(".basic-content h2").each((_, h2) => {
+      const label = $(h2).text().trim()
+      const value = $(h2).next("p").text().trim()
+      if (label) sections[label] = value
+    })
+
+    return {
+      kaavaTunnus,
+      applicant: null,
+      sijainti: sections["Sijainti"] || null,
+      tavoitteet: sections["Kaavan tavoitteet"] || null,
+      decisionMaker: sections["Hyväksyvä taho"] || null,
+      contacts: parsePoriContacts(yhteyshenkilo),
+    }
+  } catch {
+    return empty
+  }
+}
+
+async function collectPoriSource(source: DiscoverySource) {
+  const listingResponse = await fetch(source.url, { cache: "no-store" })
+
+  if (!listingResponse.ok) {
+    throw new Error(
+      `Porin kaavalistan haku epäonnistui: ${listingResponse.status} ${listingResponse.statusText}`
+    )
+  }
+
+  const listingHtml = await listingResponse.text()
+  const $listing = cheerio.load(listingHtml)
+
+  const PHASE_HEADINGS: Record<string, string> = {
+    VIREILLETULOVAIHE: "Vireilletulovaihe",
+    LUONNOSVAIHE: "Luonnosvaihe",
+    EHDOTUSVAIHE: "Ehdotusvaihe",
+  }
+
+  const items: { url: string; title: string; phase: string }[] = []
+
+  let currentPhase: string | null = null
+
+  $listing(".wp-block-heading, ul.wp-block-list li").each((_, el) => {
+    const $el = $listing(el)
+
+    if ($el.is("h3")) {
+      const headingText = $el.text().trim().toUpperCase()
+      if (PHASE_HEADINGS[headingText]) {
+        currentPhase = PHASE_HEADINGS[headingText]
+      }
+      return
+    }
+
+    if (!currentPhase) return
+
+    const link = $el.find("a[href*='/Kaavat/Asemakaava_vireilla/']").first()
+    const href = link.attr("href")
+    if (!href) return
+
+    const url = href.split("(")[0]
+    const title = $el.text().replace(/\s+/g, " ").trim()
+    if (!title) return
+
+    items.push({ url, title, phase: currentPhase })
+  })
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.kaava_tunnus) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+  const seenUrls = new Set<string>()
+
+  for (const item of items) {
+    if (seenUrls.has(item.url)) continue
+    seenUrls.add(item.url)
+
+    const known = knownDetails.get(item.url)
+
+    let details: PoriDetails | null = known
+      ? {
+          kaavaTunnus: known.kaava_tunnus ?? null,
+          applicant: known.applicant ?? null,
+          sijainti: known.sijainti ?? null,
+          tavoitteet: known.tavoitteet ?? null,
+          decisionMaker: known.decision_maker ?? null,
+          contacts: known.contacts ?? [],
+        }
+      : null
+
+    let detailsAttempted = Boolean(known)
+
+    if (!detailsAttempted && detailFetches < PORI_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchPoriDetails(item.url)
+      detailFetches += 1
+      detailsAttempted = details.kaavaTunnus !== null
+    }
+
+    const description = [details?.sijainti, details?.tavoitteet].filter(Boolean).join("\n\n") || null
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            phase: item.phase,
+            ...(detailsAttempted && details
+              ? {
+                  kaava_tunnus: details.kaavaTunnus,
+                  sijainti: details.sijainti,
+                  tavoitteet: details.tavoitteet,
+                  description,
+                  decision_maker: details.decisionMaker,
+                  contacts: details.contacts,
+                }
+              : {}),
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "poriKaavaParser") {
+    return collectPoriSource(source)
+  }
+
+  if (source.parser === "lahtiKaavaParser") {
+    return collectLahtiSource(source)
+  }
+
   if (source.parser === "kuopioKaavaParser") {
     return collectKuopioSource(source)
   }
