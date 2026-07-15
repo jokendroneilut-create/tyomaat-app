@@ -13,6 +13,7 @@ import { resolveSenaattiProject } from "@/lib/agent/identity/resolvers/senaattiR
 import { resolveKuopioKaavaProject } from "@/lib/agent/identity/resolvers/kuopioKaavaResolver"
 import { resolveLahtiKaavaProject } from "@/lib/agent/identity/resolvers/lahtiKaavaResolver"
 import { resolvePoriKaavaProject } from "@/lib/agent/identity/resolvers/poriKaavaResolver"
+import { resolveOuluKaavaProject } from "@/lib/agent/identity/resolvers/ouluKaavaResolver"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -153,6 +154,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "porin vireillä olevat kaavat") {
     const result = await resolvePoriKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "oulun vireillä olevat kaavat") {
+    const result = await resolveOuluKaavaProject({
       document,
       facts: facts ?? [],
     })

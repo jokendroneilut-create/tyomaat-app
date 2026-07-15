@@ -2249,7 +2249,250 @@ async function collectPoriSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Oulun "suunnitelmat ja kaavahankkeet" -listaussivu (Drupal Views,
+ * ?type=73=asemakaava) antaa jo listalta tunnuksen ja kaupunginosan
+ * ilman yksityiskohtahakua. Sivutuksessa ei ole "viimeksi muokattu"
+ * -järjestystä (kuten ei Väylävirastollakaan), joten koko ~167 hankkeen
+ * katalogi kierrätetään päivämäärään sidotulla kiertävällä
+ * sivuosoittimella. Yksityiskohtasivulta haetaan kuvaus, nykyinen vaihe
+ * (paragraph jolla luokka "ongoing") ja yhteystiedot — jos yhtään
+ * vaihetta ei ole "ongoing" tai "upcoming" (kaikki "ready"), hanke on jo
+ * valmis eikä enää aktiivinen liidi, joten se merkitään completed:iksi
+ * ja jätetään pysyvästi faktojen/tunnistuksen ulkopuolelle. Karttaupotus
+ * käyttää tuntematonta paikallista koordinaattimuotoa (esim.
+ * "cp=7204888,472056" ei vastaa TM35FIN:iä eikä muiden kaupunkien
+ * GK-vyöhykemuotoa) — koordinaatteja ei siksi poimita, samaan tapaan
+ * kuin Kreatella/Väylävirastolla.
+ */
+const OULU_LISTING_BASE = "https://www.ouka.fi/suunnitelmat-ja-kaavahankkeet"
+const OULU_PAGES_PER_RUN = 2
+const OULU_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+type OuluListingItem = {
+  url: string
+  title: string
+  kaavaTunnus: string | null
+  region: string | null
+}
+
+async function fetchOuluListingPage(
+  page: number
+): Promise<{ items: OuluListingItem[]; totalPages: number }> {
+  const response = await fetch(`${OULU_LISTING_BASE}?type=73&page=${page}`, { cache: "no-store" })
+  if (!response.ok) return { items: [], totalPages: page + 1 }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: OuluListingItem[] = []
+  $(".views-row a.project-card").each((_, el) => {
+    const $el = $(el)
+    const href = $el.attr("href")
+    if (!href) return
+
+    const url = href.startsWith("http") ? href : `https://www.ouka.fi${href}`
+    const title = $el.find(".project-card__title").text().trim()
+    const kaavaTunnus =
+      $el.find(".project-card__planning-number .field__item").first().text().trim() || null
+    const region =
+      $el.find(".project-card__regions").text().replace(/\s+/g, " ").trim() || null
+
+    if (title) items.push({ url, title, kaavaTunnus, region })
+  })
+
+  let totalPages = page + 1
+  $("a[href*='page=']").each((_, el) => {
+    const href = $(el).attr("href") ?? ""
+    const match = href.match(/page=(\d+)/)
+    if (match) totalPages = Math.max(totalPages, Number(match[1]) + 1)
+  })
+
+  return { items, totalPages }
+}
+
+type OuluContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+type OuluDetails = {
+  description: string | null
+  phase: string | null
+  completed: boolean
+  contacts: OuluContact[]
+}
+
+async function fetchOuluDetails(url: string): Promise<OuluDetails> {
+  const empty: OuluDetails = { description: null, phase: null, completed: false, contacts: [] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const description =
+      $("#project-description .field--name-field-description").first().text().trim() || null
+
+    let phase: string | null = null
+    let hasOngoing = false
+    let hasUpcoming = false
+
+    $(".paragraph--type--project-phase").each((_, el) => {
+      const $el = $(el)
+      const classes = $el.attr("class") ?? ""
+      const title = $el.find(".phase__title .field--name-field-title").first().text().trim()
+
+      if (classes.includes("ongoing")) {
+        phase = title
+        hasOngoing = true
+      }
+      if (classes.includes("upcoming")) hasUpcoming = true
+    })
+
+    const completed = !hasOngoing && !hasUpcoming
+
+    const contacts: OuluContact[] = []
+    $("#project-contacts .contact-card").each((_, el) => {
+      const $el = $(el)
+      const title = $el.find(".contact-card__title").first().text().trim() || null
+      const name = $el.find(".contact-card__name").first().text().trim() || null
+      const phone = $el.find("a[href^='tel:']").attr("href")?.replace("tel:", "") ?? null
+      const email = $el.find("a[href^='mailto:']").attr("href")?.replace("mailto:", "") ?? null
+      if (name) contacts.push({ name, title, phone, email })
+    })
+
+    return { description, phase, completed, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectOuluSource(source: DiscoverySource) {
+  const { totalPages: discoveredTotal } = await fetchOuluListingPage(0)
+  const totalPages = Math.max(discoveredTotal, 1)
+
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+  )
+  const startPage = dayOfYear % totalPages
+
+  const pagesToFetch = Array.from(
+    { length: OULU_PAGES_PER_RUN },
+    (_, i) => (startPage + i) % totalPages
+  )
+
+  const allItems: OuluListingItem[] = []
+  const seenUrls = new Set<string>()
+
+  for (const page of pagesToFetch) {
+    const { items } = await fetchOuluListingPage(page)
+    for (const item of items) {
+      if (seenUrls.has(item.url)) continue
+      seenUrls.add(item.url)
+      allItems.push(item)
+    }
+  }
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description || row.raw_payload?.completed) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  for (const item of allItems) {
+    const known = knownDetails.get(item.url)
+
+    let details: OuluDetails | null = known
+      ? {
+          description: known.description ?? null,
+          phase: known.phase ?? null,
+          completed: known.completed ?? false,
+          contacts: known.contacts ?? [],
+        }
+      : null
+
+    let detailsAttempted = Boolean(known)
+
+    if (!detailsAttempted && detailFetches < OULU_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchOuluDetails(item.url)
+      detailFetches += 1
+      detailsAttempted = details.description !== null || details.completed
+    }
+
+    const isCompleted = detailsAttempted && details?.completed === true
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: item.kaavaTunnus,
+            region: item.region,
+            ...(detailsAttempted && details
+              ? {
+                  description: details.description,
+                  phase: details.phase,
+                  contacts: details.contacts,
+                  completed: details.completed,
+                }
+              : {}),
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(isCompleted
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: allItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "ouluKaavaParser") {
+    return collectOuluSource(source)
+  }
+
   if (source.parser === "poriKaavaParser") {
     return collectPoriSource(source)
   }
