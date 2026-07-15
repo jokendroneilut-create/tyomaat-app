@@ -87,6 +87,7 @@ export async function POST(request: Request) {
     const isTampereKaava = normalize(metadata.resolver) === "tamperekaavaresolver"
     const isTurkuKaava = normalize(metadata.resolver) === "turkukaavaresolver"
     const isKreate = normalize(metadata.resolver) === "kreateresolver"
+    const isVayla = normalize(metadata.resolver) === "vaylaresolver"
 
     const permitIdentifierType: IdentifierType = isHilma
       ? "hilma_notice_number"
@@ -141,6 +142,13 @@ export async function POST(request: Request) {
       candidateIdentifiers.push({
         type: "kreate_project_id",
         value: metadata.kreate_post_id,
+      })
+    }
+
+    if (isVayla) {
+      candidateIdentifiers.push({
+        type: "vayla_project_id",
+        value: metadata.documents_url,
       })
     }
 

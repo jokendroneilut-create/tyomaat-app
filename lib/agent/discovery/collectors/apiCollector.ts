@@ -1208,6 +1208,229 @@ async function collectKreateSource(source: DiscoverySource) {
   }
 }
 
+const VAYLA_PAGES_PER_RUN = 2
+const VAYLA_MAX_DETAIL_FETCHES_PER_RUN = 5
+const VAYLA_LISTING_BASE =
+  "https://vayla.fi/suunnittelu-rakentaminen/-/project/c/35402106-35402107"
+
+type VaylaListingItem = {
+  title: string | null
+  link: string | null
+  description: string | null
+  hankeType: string | null
+  region: string | null
+  phase: string | null
+}
+
+/*
+ * Väylävirasto on Liferay-portaali — pelkkä ?...cur=N -kyselyparametri
+ * ilman "friendly URL" -polkuosaa (/-/project/c/{id}) palauttaa
+ * epävakaan/väärän sivun sisällön. Kokonaissivumäärä (~26) luetaan
+ * itse sivutuslinkeistä, ei kovakoodata, koska hankkeiden määrä
+ * vaihtelee ajan myötä.
+ */
+async function fetchVaylaListingPage(page: number): Promise<{
+  items: VaylaListingItem[]
+  totalPages: number
+}> {
+  const response = await fetch(
+    `${VAYLA_LISTING_BASE}?_fi_yja_vayla_hanke_web_search_portlet_delta=15&_fi_yja_vayla_hanke_web_search_portlet_cur=${page}`,
+    { cache: "no-store" }
+  )
+
+  if (!response.ok) {
+    throw new Error(`Väyläviraston hankelistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: VaylaListingItem[] = []
+
+  $("table.articleIterator tr").each((_, row) => {
+    const el = $(row)
+    const link = el.find("h2.title a.projectPage").first().attr("href") ?? null
+    const title = el.find("h2.title a.projectPage").first().text().trim() || null
+    if (!link || !title) return
+
+    items.push({
+      title,
+      link,
+      description: el.find(".shortDescription").first().text().replace(/\s+/g, " ").trim() || null,
+      hankeType: el.find(".category.hanke").first().text().trim() || null,
+      region: el.find(".category.alue").first().text().trim() || null,
+      phase: el.find(".category.hankkeen-vaihe").first().text().trim() || null,
+    })
+  })
+
+  let totalPages = page
+  $("a").each((_, a) => {
+    const href = $(a).attr("href") ?? ""
+    const match = href.match(/portlet_cur=(\d+)/)
+    if (match) totalPages = Math.max(totalPages, Number(match[1]))
+  })
+
+  return { items, totalPages }
+}
+
+/*
+ * Väylävirasto suojaa sähköpostiosoitteet Cloudflaren "email protection"
+ * -obfuskaatiolla (ensimmäinen tavu on XOR-avain, loput ovat sillä
+ * XOR:attuja hex-pareja) — tämä on täysin dokumentoitu, julkinen
+ * purkualgoritmi, ei botti-esto jota pitäisi kiertää salaa.
+ */
+function decodeCloudflareEmail(encoded: string): string | null {
+  try {
+    const key = parseInt(encoded.substring(0, 2), 16)
+    let email = ""
+    for (let i = 2; i < encoded.length; i += 2) {
+      email += String.fromCharCode(parseInt(encoded.substring(i, i + 2), 16) ^ key)
+    }
+    return email || null
+  } catch {
+    return null
+  }
+}
+
+async function fetchVaylaProjectDetails(projectUrl: string): Promise<{
+  contact: { organization: string | null; title: string | null; name: string | null; phone: string | null; email: string | null } | null
+  progress: string | null
+}> {
+  try {
+    const html = await (await fetch(projectUrl, { cache: "no-store" })).text()
+    const $ = cheerio.load(html)
+
+    const contactBox = $(".contact-information .contact").first()
+    let contact = null
+
+    if (contactBox.length) {
+      const emailEncoded = contactBox.find(".__cf_email__").first().attr("data-cfemail")
+
+      contact = {
+        organization: contactBox.find(".organization").first().text().trim() || null,
+        title: contactBox.find(".title").first().text().trim() || null,
+        name: contactBox.find(".full-name").first().text().trim() || null,
+        phone: contactBox.find(".phones li").first().text().trim() || null,
+        email: emailEncoded ? decodeCloudflareEmail(emailEncoded) : null,
+      }
+    }
+
+    const progress =
+      $("[class*=project__progress]").first().text().replace(/\s+/g, " ").trim() || null
+
+    return { contact, progress }
+  } catch {
+    return { contact: null, progress: null }
+  }
+}
+
+async function collectVaylaSource(source: DiscoverySource) {
+  const { totalPages } = await fetchVaylaListingPage(1)
+
+  /*
+   * Ei tunnistetietoa "viimeksi muokattu" -järjestyksestä (toisin kuin
+   * Kreatella), joten koko ~390 hankkeen katalogi kierrätetään ajan
+   * mittaan päivämäärään sidotulla kiertävällä sivuosoittimella sen
+   * sijaan että sama alkupää haettaisiin joka yö uudelleen.
+   */
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+  )
+  const startPage = (dayOfYear % totalPages) + 1
+
+  const pagesToFetch = Array.from(
+    { length: VAYLA_PAGES_PER_RUN },
+    (_, i) => ((startPage - 1 + i) % totalPages) + 1
+  )
+
+  const allItems: VaylaListingItem[] = []
+  for (const page of pagesToFetch) {
+    const { items } = await fetchVaylaListingPage(page)
+    allItems.push(...items)
+  }
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, { contact: any; progress: string | null }>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.contact || row.raw_payload?.progress) {
+      knownDetails.set(row.document_url, {
+        contact: row.raw_payload.contact ?? null,
+        progress: row.raw_payload.progress ?? null,
+      })
+    }
+  }
+
+  const inRunDetails = new Map<string, { contact: any; progress: string | null }>()
+  let saved = 0
+  let detailFetches = 0
+
+  for (const item of allItems) {
+    if (!item.link) continue
+
+    const known = knownDetails.get(item.link) ?? inRunDetails.get(item.link)
+    let contact = known?.contact ?? null
+    let progress = known?.progress ?? null
+    let detailsAttempted = Boolean(known)
+
+    if (!detailsAttempted && detailFetches < VAYLA_MAX_DETAIL_FETCHES_PER_RUN) {
+      const details = await fetchVaylaProjectDetails(item.link)
+      contact = details.contact
+      progress = details.progress
+      detailFetches += 1
+      detailsAttempted = Boolean(details.contact || details.progress)
+
+      if (detailsAttempted) {
+        inRunDetails.set(item.link, { contact, progress })
+      }
+    }
+
+    const rawText = JSON.stringify(item)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.link,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            description: item.description,
+            hanke_type: item.hankeType,
+            region: item.region,
+            phase: item.phase,
+            ...(detailsAttempted ? { contact, progress } : {}),
+            original: item,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: allItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "hilmaParser") {
     return collectHilmaSource(source)
@@ -1219,6 +1442,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kreateParser") {
     return collectKreateSource(source)
+  }
+
+  if (source.parser === "vaylaParser") {
+    return collectVaylaSource(source)
   }
 
   if (source.parser === "vantaaKaavaParser") {

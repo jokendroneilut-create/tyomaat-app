@@ -8,6 +8,7 @@ import { resolveHelsinkiKaavaProject } from "@/lib/agent/identity/resolvers/hels
 import { resolveTampereKaavaProject } from "@/lib/agent/identity/resolvers/tampereKaavaResolver"
 import { resolveTurkuKaavaProject } from "@/lib/agent/identity/resolvers/turkuKaavaResolver"
 import { resolveKreateProject } from "@/lib/agent/identity/resolvers/kreateResolver"
+import { resolveVaylaProject } from "@/lib/agent/identity/resolvers/vaylaResolver"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -113,6 +114,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kreate hankkeet") {
     const result = await resolveKreateProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "väylävirasto hankkeet") {
+    const result = await resolveVaylaProject({
       document,
       facts: facts ?? [],
     })

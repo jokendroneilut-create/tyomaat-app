@@ -6,6 +6,7 @@ import { extractHelsinkiKaavaFacts } from "@/lib/agent/facts/extractHelsinkiKaav
 import { extractTampereKaavaFacts } from "@/lib/agent/facts/extractTampereKaavaFacts"
 import { extractTurkuKaavaFacts } from "@/lib/agent/facts/extractTurkuKaavaFacts"
 import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
+import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -149,6 +150,33 @@ export function resolveFacts(document: any) {
         phase,
         category,
         contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Väylävirasto hankkeet") {
+    const item = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const title = document.raw_payload?.title ?? null
+    const description = document.raw_payload?.description ?? null
+    const hankeType = document.raw_payload?.hanke_type ?? null
+    const region = document.raw_payload?.region ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const contact = document.raw_payload?.contact ?? null
+    const progress = document.raw_payload?.progress ?? null
+
+    return {
+      decisions: [],
+      facts: extractVaylaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        item,
+        title,
+        description,
+        hankeType,
+        region,
+        phase,
+        contact,
+        progress,
       }),
     }
   }
