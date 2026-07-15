@@ -2488,7 +2488,239 @@ async function collectOuluSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Jyväskylän "vireillä olevat kaavat" -listaussivu ryhmittelee hankkeet
+ * kaupunginosittain (accordion), mutta antaa vain otsikon+linkin — ei
+ * muodollista kaavatunnusta lainkaan (identifiointi siis pelkän URL:n
+ * varassa, sama malli kuin Väylävirastolla). Vaihe päätellään
+ * yksityiskohtasivun 4-vaiheisesta accordionista: viimeinen vaihe jolla
+ * on sisältöä (kuvausteksti/liitteet) on nykyinen vaihe — jos jopa
+ * "Hyväksymisvaihe" on jo täytetty, hanke on valmis eikä enää aktiivinen
+ * liidi (completed, sama malli kuin Lahdella/Oululla). Yhteystietojen
+ * sähköposti on Cloudflaren XOR-obfuskoima (sama menetelmä kuin
+ * Väylävirastolla, decodeCloudflareEmail() uudelleenkäytetty).
+ * Karttaupotuksen koordinaattimuoto on tuntematon (sama tilanne kuin
+ * Oulu) — ei poimita.
+ */
+const JYVASKYLA_LISTING_URL = "https://www.jyvaskyla.fi/kaavoitus/vireilla"
+const JYVASKYLA_MAX_DETAIL_FETCHES_PER_RUN = 5
+const JYVASKYLA_PHASES = ["Aloitusvaihe", "Luonnosvaihe", "Ehdotusvaihe", "Hyväksymisvaihe"]
+
+type JyvaskylaListingItem = {
+  url: string
+  title: string
+  district: string | null
+}
+
+async function fetchJyvaskylaListing(): Promise<JyvaskylaListingItem[]> {
+  const response = await fetch(JYVASKYLA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) {
+    throw new Error(
+      `Jyväskylän kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`
+    )
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: JyvaskylaListingItem[] = []
+  const seen = new Set<string>()
+
+  $(".accordion__item").each((_, el) => {
+    const $el = $(el)
+    const district = $el.find(".field-accordion-title").first().text().trim() || null
+
+    $el.find("a[href*='/vireilla/'], a[href*='/vireilla-olevat-asemakaavat/']").each((_, a) => {
+      const $a = $(a)
+      const href = $a.attr("href")
+      if (!href) return
+
+      const url = href.startsWith("http") ? href : `https://www.jyvaskyla.fi${href}`
+      if (seen.has(url)) return
+
+      const title = $a.text().trim()
+      if (!title) return
+
+      seen.add(url)
+      items.push({ url, title, district })
+    })
+  })
+
+  return items
+}
+
+type JyvaskylaContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+type JyvaskylaDetails = {
+  description: string | null
+  phase: string | null
+  completed: boolean
+  contacts: JyvaskylaContact[]
+}
+
+function jyvaskylaFragmentText(html: string): string {
+  return cheerio.load(`<div>${html}</div>`)("div").text().trim()
+}
+
+async function fetchJyvaskylaDetails(url: string): Promise<JyvaskylaDetails> {
+  const empty: JyvaskylaDetails = { description: null, phase: null, completed: false, contacts: [] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const description =
+      $(".body.field--name-body").first().text().replace(/\s+/g, " ").trim() || null
+
+    let phase: string | null = null
+    let lastPhaseIndex = -1
+
+    $(".accordion__item").each((_, el) => {
+      const $el = $(el)
+      const titleText = $el.find(".field-accordion-title").first().text().trim()
+      const canonical = JYVASKYLA_PHASES.find((p) => titleText.startsWith(p))
+      if (!canonical) return
+
+      const contentText = $el.find(".accordion__content").first().text().trim()
+      if (contentText.length > 0) {
+        phase = canonical
+        lastPhaseIndex = JYVASKYLA_PHASES.indexOf(canonical)
+      }
+    })
+
+    const completed = lastPhaseIndex === JYVASKYLA_PHASES.length - 1
+
+    const contacts: JyvaskylaContact[] = []
+    $(".infobox--bottom .content p").each((_, p) => {
+      const innerHtml = $(p).html() ?? ""
+      const parts = innerHtml.split(/<br\s*\/?>/i)
+      if (parts.length < 2) return
+
+      const name = jyvaskylaFragmentText(parts[0])
+      if (!name) return
+
+      const title = parts[1] ? jyvaskylaFragmentText(parts[1]) || null : null
+      const phoneText = parts[2] ? jyvaskylaFragmentText(parts[2]) : ""
+      const phone = phoneText.replace(/^p\.?\s*/i, "").trim() || null
+
+      const $emailFragment = cheerio.load(`<div>${parts[3] ?? ""}</div>`)
+      const cfEmail = $emailFragment(".__cf_email__").attr("data-cfemail")
+      const email = cfEmail ? decodeCloudflareEmail(cfEmail) : null
+
+      contacts.push({ name, title, phone, email })
+    })
+
+    return { description, phase, completed, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectJyvaskylaSource(source: DiscoverySource) {
+  const items = await fetchJyvaskylaListing()
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description || row.raw_payload?.completed) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let saved = 0
+  let detailFetches = 0
+
+  for (const item of items) {
+    const known = knownDetails.get(item.url)
+
+    let details: JyvaskylaDetails | null = known
+      ? {
+          description: known.description ?? null,
+          phase: known.phase ?? null,
+          completed: known.completed ?? false,
+          contacts: known.contacts ?? [],
+        }
+      : null
+
+    let detailsAttempted = Boolean(known)
+
+    if (!detailsAttempted && detailFetches < JYVASKYLA_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchJyvaskylaDetails(item.url)
+      detailFetches += 1
+      detailsAttempted = details.description !== null || details.completed
+    }
+
+    const isCompleted = detailsAttempted && details?.completed === true
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            district: item.district,
+            ...(detailsAttempted && details
+              ? {
+                  description: details.description,
+                  phase: details.phase,
+                  contacts: details.contacts,
+                  completed: details.completed,
+                }
+              : {}),
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(isCompleted
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "jyvaskylaKaavaParser") {
+    return collectJyvaskylaSource(source)
+  }
+
   if (source.parser === "ouluKaavaParser") {
     return collectOuluSource(source)
   }
