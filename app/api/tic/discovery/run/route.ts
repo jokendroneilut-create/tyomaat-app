@@ -35,8 +35,14 @@ export async function GET(req: Request) {
     const body =
       stage === "collect"
         ? {
+            /*
+             * maxSourceCount pienennetty 5:stä 4:ään Tampereen lisäyksen
+             * jälkeen (6 lähdettä yhteensä) — 5 lähteen erä mitattiin
+             * 54-58s, liian lähellä 60s rajaa. Kaikki lähteet kiertävät
+             * silti läpi muutaman yön sisällä (last_run_at-järjestys).
+             */
             stages: ["sources", "articles", "pdfs", "texts"],
-            maxSourceCount: 5,
+            maxSourceCount: 4,
             maxArticleJobs: 5,
             maxPdfJobs: 5,
             maxTextJobs: 5,
