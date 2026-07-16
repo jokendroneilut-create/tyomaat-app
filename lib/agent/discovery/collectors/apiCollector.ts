@@ -1560,6 +1560,16 @@ async function collectSenaattiSource(source: DiscoverySource) {
     const rawText = JSON.stringify(post)
     const contentHash = hashContent(rawText)
 
+    /*
+     * Senaatin hankerajapinta listaa kaikki hankkeet, myös vuosia sitten
+     * valmistuneet (esim. "Valmistunut" 2023) — ilman tätä ne päätyisivät
+     * TIC-hyväksyntäjonoon aivan kuten uudetkin hankkeet. Sama
+     * "merkitse jo käsitellyksi keräyshetkellä" -malli kuin muillakin
+     * lähteillä (esim. Hämeenlinna), jotta ne eivät koskaan luo
+     * kandidaattia.
+     */
+    const completed = (phase ?? "").toLowerCase() === "valmistunut"
+
     const { error } = await supabaseAdmin
       .from("source_documents")
       .upsert(
@@ -1586,6 +1596,12 @@ async function collectSenaattiSource(source: DiscoverySource) {
           },
           processed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
         },
         { onConflict: "document_url" }
       )
