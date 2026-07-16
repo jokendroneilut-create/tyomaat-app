@@ -16,6 +16,7 @@ import { extractMikkeliKaavaFacts } from "@/lib/agent/facts/extractMikkeliKaavaF
 import { extractKotkaKaavaFacts } from "@/lib/agent/facts/extractKotkaKaavaFacts"
 import { extractSaloKaavaFacts } from "@/lib/agent/facts/extractSaloKaavaFacts"
 import { extractPorvooKaavaFacts } from "@/lib/agent/facts/extractPorvooKaavaFacts"
+import { extractKokkolaKaavaFacts } from "@/lib/agent/facts/extractKokkolaKaavaFacts"
 import { extractLahtiKaavaFacts } from "@/lib/agent/facts/extractLahtiKaavaFacts"
 import { extractPoriKaavaFacts } from "@/lib/agent/facts/extractPoriKaavaFacts"
 import { extractOuluKaavaFacts } from "@/lib/agent/facts/extractOuluKaavaFacts"
@@ -297,6 +298,27 @@ export function resolveFacts(document: any) {
         kaavaTunnus,
         phase,
         description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Kokkolan asemakaavatyöt") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contactName = document.raw_payload?.contact_name ?? null
+
+    return {
+      decisions: [],
+      facts: extractKokkolaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
+        contactName,
       }),
     }
   }

@@ -18,6 +18,7 @@ import { resolveMikkeliKaavaProject } from "@/lib/agent/identity/resolvers/mikke
 import { resolveKotkaKaavaProject } from "@/lib/agent/identity/resolvers/kotkaKaavaResolver"
 import { resolveSaloKaavaProject } from "@/lib/agent/identity/resolvers/saloKaavaResolver"
 import { resolvePorvooKaavaProject } from "@/lib/agent/identity/resolvers/porvooKaavaResolver"
+import { resolveKokkolaKaavaProject } from "@/lib/agent/identity/resolvers/kokkolaKaavaResolver"
 import { resolveLahtiKaavaProject } from "@/lib/agent/identity/resolvers/lahtiKaavaResolver"
 import { resolvePoriKaavaProject } from "@/lib/agent/identity/resolvers/poriKaavaResolver"
 import { resolveOuluKaavaProject } from "@/lib/agent/identity/resolvers/ouluKaavaResolver"
@@ -202,6 +203,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "porvoon asemakaavat") {
     const result = await resolvePorvooKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "kokkolan asemakaavatyöt") {
+    const result = await resolveKokkolaKaavaProject({
       document,
       facts: facts ?? [],
     })

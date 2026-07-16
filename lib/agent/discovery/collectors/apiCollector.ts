@@ -2787,6 +2787,126 @@ async function collectPorvooSource(source: DiscoverySource) {
 }
 
 /*
+ * Kokkolassa kaikki käynnissä olevat asemakaavatyöt on listattu YHDELLE
+ * sivulle "accordion"-elementteinä (<li class="accordion-row"> sisältää
+ * <h3> otsikon ja <div class="accordion-content"> rungon), ei erillisinä
+ * alisivuina kuten muualla. Käsittelyvaiheet on vapaamuotoista proosaa
+ * ("Käsittelyvaiheet: X. Y. Z.") eikä listaelementtejä, joten viimeinen
+ * lause otetaan nykyiseksi vaiheeksi (etenevä aikajärjestys, kuten
+ * Hämeenlinnassa). Kaavatunnusta ei ole, joten otsikosta muodostettu
+ * slug kelpaa yksilöivänä tunnisteena.
+ */
+function kokkolaSlugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function collectKokkolaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Kokkolan kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  let saved = 0
+
+  const rows = $("li.accordion-row").toArray()
+
+  for (const row of rows) {
+    const $row = $(row)
+    const title = $row.find(".accordion-title-text").first().text().replace(/\s+/g, " ").trim()
+    if (!title) continue
+
+    const bodyText = $row.find(".accordion-content").text().replace(/\s+/g, " ").trim()
+
+    const kasittelyIdx = bodyText.indexOf("Käsittelyvaiheet:")
+    const yhteysIdx = bodyText.indexOf("Yhteyshenkilö:")
+
+    const description = (kasittelyIdx >= 0 ? bodyText.slice(0, kasittelyIdx) : bodyText).trim() || null
+
+    const stagesText =
+      kasittelyIdx >= 0
+        ? bodyText.slice(kasittelyIdx + "Käsittelyvaiheet:".length, yhteysIdx >= 0 ? yhteysIdx : undefined).trim()
+        : null
+
+    const contactName = yhteysIdx >= 0 ? bodyText.slice(yhteysIdx + "Yhteyshenkilö:".length).trim() || null : null
+
+    /*
+     * Lyhennetyt päivämääräväli ("2.5. – 1.6.2026") sisältää pisteen ja
+     * välilyönnin kesken virkkeen, joten pelkkä ". "-jako pilkkoisi väärin.
+     * Oikea virkkeen loppu tunnistetaan siitä, että seuraava sana alkaa
+     * isolla kirjaimella (suomenkielinen hallintoproosa aloittaa virkkeet
+     * aina isolla, päivämäärät eivät koskaan).
+     */
+    const sentences = stagesText
+      ? stagesText
+          .split(/\.\s+(?=[A-ZÄÖÅ])/)
+          .map((s) => (s.endsWith(".") ? s : `${s}.`))
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : []
+    const phase = sentences[sentences.length - 1] ?? null
+    const completed = phase !== null && /lainvoimainen|tullut voimaan/i.test(phase)
+
+    const kaavaTunnus = kokkolaSlugify(title)
+    const url = `${source.url}#${kaavaTunnus}`
+
+    const rawText = JSON.stringify({ title, phase, description, contactName })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contact_name: contactName,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: rows.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -4847,6 +4967,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "porvooKaavaParser") {
     return collectPorvooSource(source)
+  }
+
+  if (source.parser === "kokkolaKaavaParser") {
+    return collectKokkolaSource(source)
   }
 
   if (source.parser === "senaattiParser") {
