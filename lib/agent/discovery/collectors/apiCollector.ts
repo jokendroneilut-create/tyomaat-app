@@ -2071,6 +2071,186 @@ async function collectSeinajokiSource(source: DiscoverySource) {
 }
 
 /*
+ * Rovaniemen "Kaavatori" on RSS-syötteenä saatava kaavaportaali. Toisin
+ * kuin Seinäjoella, "Uusin vaihe" -kenttä EI koskaan näytä valmistunutta
+ * lopputilaa (voimaantulo) — vaikuttaa siltä että lainvoimaiset kaavat
+ * poistuvat Kaavatorista kokonaan eivätkä vain jää viimeiseksi vaiheeksi.
+ * Sen sijaan osa listatuista kaavoista on vuosikymmenen takaa eikä niiden
+ * vaihetta ole koskaan päivitetty (todennäköisesti hylätty/jäissä).
+ * Koska selkeää valmistumismerkkiä ei ole, käytetään "Uusin vaihe"
+ * -tekstistä poimittua viimeisintä vuosilukua: jos se on yli kaksi vuotta
+ * vanha, kaava merkitään jäätyneeksi ("stale") eikä siitä luoda kandidaattia.
+ */
+const ROVANIEMI_MAX_DETAIL_FETCHES_PER_RUN = 8
+const ROVANIEMI_STALE_YEARS = 2
+
+type RovaniemiDetails = {
+  address: string | null
+  phase: string | null
+  decisionNumber: string | null
+  stale: boolean
+}
+
+function rovaniemiExtractLastYear(text: string): number | null {
+  const matches = text.match(/\d{4}/g)
+  if (!matches || matches.length === 0) return null
+  return parseInt(matches[matches.length - 1], 10)
+}
+
+async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
+  const empty: RovaniemiDetails = { address: null, phase: null, decisionNumber: null, stale: false }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    let address: string | null = null
+    let phase: string | null = null
+
+    $("h3").each((_, el) => {
+      const text = $(el).text().trim()
+      if (text.includes("Sijainti")) {
+        address = $(el).next().text().replace(/\s+/g, " ").trim() || null
+      }
+      if (text.includes("Uusin vaihe")) {
+        phase = $(el).next().text().replace(/\s+/g, " ").trim() || null
+      }
+    })
+
+    let decisionNumber: string | null = null
+    $("span.label").each((_, el) => {
+      if ($(el).text().trim() === "Päätösnumero") {
+        decisionNumber = $(el).next().text().trim() || null
+      }
+    })
+
+    const lastYear = phase ? rovaniemiExtractLastYear(phase) : null
+    const currentYear = new Date().getFullYear()
+    const stale = lastYear !== null && lastYear <= currentYear - ROVANIEMI_STALE_YEARS
+
+    return { address, phase, decisionNumber, stale }
+  } catch {
+    return empty
+  }
+}
+
+function stripHtmlToText(html: string): string {
+  return cheerio
+    .load(`<div>${html}</div>`)("div")
+    .text()
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+async function collectRovaniemiSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Rovaniemen Kaavatori-syötteen haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const xml = await response.text()
+  const $rss = cheerio.load(xml, { xmlMode: true })
+
+  const items: { title: string; description: string | null; url: string; guid: string }[] = []
+
+  $rss("item").each((_, el) => {
+    const title = $rss(el).find("title").text().trim()
+    const link = $rss(el).find("link").text().trim()
+    const guid = $rss(el).find("guid").text().trim()
+    const descriptionHtml = $rss(el).find("description").text()
+
+    if (!title || !link || !guid) return
+
+    items.push({
+      title,
+      description: descriptionHtml ? stripHtmlToText(descriptionHtml) : null,
+      url: link,
+      guid,
+    })
+  })
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, RovaniemiDetails>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.phase) {
+      knownDetails.set(row.document_url, {
+        address: row.raw_payload.address ?? null,
+        phase: row.raw_payload.phase,
+        decisionNumber: row.raw_payload.decision_number ?? null,
+        stale: row.raw_payload.stale ?? false,
+      })
+    }
+  }
+
+  let detailFetches = 0
+  let saved = 0
+
+  for (const item of items) {
+    let details = knownDetails.get(item.url) ?? null
+
+    if (!details && detailFetches < ROVANIEMI_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchRovaniemiDetails(item.url)
+      detailFetches += 1
+    }
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: item.guid,
+            address: details?.address ?? null,
+            phase: details?.phase ?? null,
+            decision_number: details?.decisionNumber ?? null,
+            stale: details?.stale ?? false,
+            description: item.description,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(details?.stale
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -4111,6 +4291,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "seinajokiKaavaParser") {
     return collectSeinajokiSource(source)
+  }
+
+  if (source.parser === "rovaniemiKaavaParser") {
+    return collectRovaniemiSource(source)
   }
 
   if (source.parser === "senaattiParser") {
