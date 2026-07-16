@@ -17,6 +17,7 @@ import { resolveRovaniemiKaavaProject } from "@/lib/agent/identity/resolvers/rov
 import { resolveMikkeliKaavaProject } from "@/lib/agent/identity/resolvers/mikkeliKaavaResolver"
 import { resolveKotkaKaavaProject } from "@/lib/agent/identity/resolvers/kotkaKaavaResolver"
 import { resolveSaloKaavaProject } from "@/lib/agent/identity/resolvers/saloKaavaResolver"
+import { resolvePorvooKaavaProject } from "@/lib/agent/identity/resolvers/porvooKaavaResolver"
 import { resolveLahtiKaavaProject } from "@/lib/agent/identity/resolvers/lahtiKaavaResolver"
 import { resolvePoriKaavaProject } from "@/lib/agent/identity/resolvers/poriKaavaResolver"
 import { resolveOuluKaavaProject } from "@/lib/agent/identity/resolvers/ouluKaavaResolver"
@@ -194,6 +195,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "salon ajankohtaiset asemakaavat") {
     const result = await resolveSaloKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "porvoon asemakaavat") {
+    const result = await resolvePorvooKaavaProject({
       document,
       facts: facts ?? [],
     })
