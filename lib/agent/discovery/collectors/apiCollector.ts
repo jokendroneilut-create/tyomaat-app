@@ -2251,6 +2251,246 @@ async function collectRovaniemiSource(source: DiscoverySource) {
 }
 
 /*
+ * Mikkelin "Vireillä ja nähtävillä olevat kaavat" -sivu listaa WordPress-
+ * alisivuina VAIN sillä hetkellä aktiiviset kaavat (WP REST API:n parent-
+ * suodatus rajaa tarkasti tämän sivun lapsisivuihin, ei koko sivuston
+ * navigaatioon kuten Seinäjoella) — joten erillistä valmistumis-/
+ * jäätymistunnistusta ei tarvita, listalla olo itsessään merkitsee
+ * aktiivisuutta. Kenttäotsikot (TUNNISTETIEDOT/TAVOITE/SUUNNITTELUN
+ * VAIHEET) vaihtelevat kirjoitusasultaan sivujen välillä (esim.
+ * "TAVOITE" vs. "TAVOITTEET", "MliDNRO" vs. "MliDnro"), joten haku
+ * tehdään case-insensitiivisesti koko sivun <p>-elementeistä eikä
+ * luoteta kiinteään HTML-rakenteeseen.
+ */
+const MIKKELI_MAX_DETAIL_FETCHES_PER_RUN = 8
+
+type MikkeliContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+type MikkeliDetails = {
+  kaavaTunnus: string | null
+  decisionNumber: string | null
+  phase: string | null
+  description: string | null
+  contact: MikkeliContact | null
+}
+
+function parseMikkeliContact(text: string | null): MikkeliContact | null {
+  if (!text || !text.trim()) return null
+
+  const emailMatch = text.match(/[\w.+-]+@[\w.-]+\.\w+/)
+  const emailRaw = emailMatch ? emailMatch[0] : null
+  // "etunimi.sukunimi@..." on täyttämätön lomakepohja, ei oikea osoite.
+  const email = emailRaw && !/^etunimi\.sukunimi@/i.test(emailRaw) ? emailRaw : null
+  const withoutEmail = emailRaw ? text.replace(emailRaw, "") : text
+
+  const phoneMatch = withoutEmail.match(/\d[\d\s]{6,}\d/)
+  const phone = phoneMatch ? phoneMatch[0].replace(/\s+/g, " ").trim() : null
+  const withoutPhone = phone ? withoutEmail.replace(phoneMatch![0], "") : withoutEmail
+
+  /*
+   * Yhteyshenkilön muoto vaihtelee sivuittain ("Nimi puhelin, sähköposti"
+   * vs. "Titteli Nimi, p. puhelin. sähköposti"), joten puhelin/sähköposti
+   * poistetaan ensin osoitteesta ja jäljelle jäävä teksti siivotaan
+   * kaikista pilkuista/pisteistä/"p."-lyhenteestä ennen sanajakoa —
+   * muuten irralliset välimerkit päätyvät virheellisesti nimen tilalle.
+   */
+  const cleaned = withoutPhone
+    .replace(/\bp(uh)?\.?\s*/gi, " ")
+    .replace(/[,.]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+
+  const words = cleaned.split(/\s+/).filter(Boolean)
+  const name = words.length >= 2 ? words.slice(-2).join(" ") : cleaned || null
+  const title = words.length > 2 ? words.slice(0, -2).join(" ") : null
+
+  if (!name && !phone && !email) return null
+
+  return { name, title, phone, email }
+}
+
+function findMikkeliSection($: cheerio.CheerioAPI, labelPattern: RegExp) {
+  let label: any = null
+  $("p").each((_, el) => {
+    if (label) return
+    if (labelPattern.test($(el).text().trim())) label = $(el)
+  })
+  return label ? $(label).next() : null
+}
+
+async function fetchMikkeliDetails(pageId: number): Promise<MikkeliDetails> {
+  const empty: MikkeliDetails = { kaavaTunnus: null, decisionNumber: null, phase: null, description: null, contact: null }
+
+  try {
+    const response = await fetch(
+      `https://mikkeli.fi/wp-json/wp/v2/pages/${pageId}?_fields=id,content`,
+      { cache: "no-store" }
+    )
+    if (!response.ok) return empty
+
+    const data = await response.json()
+    const html = data?.content?.rendered
+    if (!html) return empty
+
+    const $ = cheerio.load(html)
+
+    let kaavaTunnus: string | null = null
+    let decisionNumber: string | null = null
+    let contactRaw: string | null = null
+
+    $("li").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (/kaavatunnus/i.test(text)) {
+        kaavaTunnus = text.replace(/^.*?kaavatunnus\s*:?\s*/i, "").trim() || null
+      } else if (/mlidnro/i.test(text)) {
+        decisionNumber = text.replace(/^.*?mlidnro\s*:?\s*/i, "").trim() || null
+      } else if (/laatija|yhteyshenkilö/i.test(text)) {
+        contactRaw = text.replace(/^.*?(laatija\s*\/\s*yhteyshenkilö|yhteyshenkilö)\s*:?\s*/i, "").trim() || null
+      }
+    })
+
+    const tavoite = findMikkeliSection($, /^TAVOITTEET?$/i)
+    const description = tavoite ? tavoite.text().replace(/\s+/g, " ").trim() || null : null
+
+    const vaiheetList = findMikkeliSection($, /^SUUNNITTELUN VAIHEET$/i)
+    const stages: string[] = []
+    vaiheetList?.find("li").each((_, li) => {
+      const text = $(li).text().replace(/\s+/g, " ").trim()
+      if (text) stages.push(text)
+    })
+    const phase = stages[stages.length - 1] ?? null
+
+    return {
+      kaavaTunnus,
+      decisionNumber,
+      phase,
+      description,
+      contact: parseMikkeliContact(contactRaw),
+    }
+  } catch {
+    return empty
+  }
+}
+
+async function collectMikkeliSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Mikkelin kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const listItems: { id: number; title: string; url: string }[] = await response.json().then((items: any[]) =>
+    items.map((item) => ({
+      id: item.id,
+      title: item.title?.rendered ?? "",
+      url: item.link ?? "",
+    }))
+  )
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, MikkeliDetails>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.phase || row.raw_payload?.kaava_tunnus) {
+      knownDetails.set(row.document_url, {
+        kaavaTunnus: row.raw_payload.kaava_tunnus ?? null,
+        decisionNumber: row.raw_payload.decision_number ?? null,
+        phase: row.raw_payload.phase ?? null,
+        description: row.raw_payload.description ?? null,
+        contact: row.raw_payload.contact ?? null,
+      })
+    }
+  }
+
+  let detailFetches = 0
+  let saved = 0
+
+  for (const item of listItems) {
+    if (!item.title || !item.url) continue
+
+    let details = knownDetails.get(item.url) ?? null
+
+    if (!details && detailFetches < MIKKELI_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchMikkeliDetails(item.id)
+      detailFetches += 1
+
+      // Osa sivuista ei sisällä TUNNISTETIEDOT-listaa lainkaan, mutta
+      // kaavatunnus näkyy silti otsikon lopussa suluissa, esim. "(957)".
+      if (details && !details.kaavaTunnus) {
+        const titleTunnusMatch = item.title.match(/\((\d+)\)\s*$/)
+        if (titleTunnusMatch) {
+          details = { ...details, kaavaTunnus: titleTunnusMatch[1] }
+        }
+      }
+    }
+
+    /*
+     * Osa "nahtavilla-olevat-kaavat"-sivun lapsisivuista on kategoria-
+     * indeksejä (esim. "Vireillä olevat yleiskaavat") eikä yksittäisiä
+     * kaavoja — jos sivu on faktisesti haettu eikä siitä silti löydy
+     * kaavatunnusta (ei listasta eikä otsikosta), se ei ole oikea kaava
+     * ja jätetään pysyvästi pois faktojen/tunnistuksen ulkopuolelle.
+     */
+    const isNonPlanPage = details !== null && !details.kaavaTunnus
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: details?.kaavaTunnus ?? null,
+            decision_number: details?.decisionNumber ?? null,
+            phase: details?.phase ?? null,
+            description: details?.description ?? null,
+            contact: details?.contact ?? null,
+            is_non_plan_page: isNonPlanPage,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(isNonPlanPage
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: listItems.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -4295,6 +4535,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "rovaniemiKaavaParser") {
     return collectRovaniemiSource(source)
+  }
+
+  if (source.parser === "mikkeliKaavaParser") {
+    return collectMikkeliSource(source)
   }
 
   if (source.parser === "senaattiParser") {

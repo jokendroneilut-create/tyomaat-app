@@ -14,6 +14,7 @@ import { resolveKuopioKaavaProject } from "@/lib/agent/identity/resolvers/kuopio
 import { resolveHyvinkaaKaavaProject } from "@/lib/agent/identity/resolvers/hyvinkaaKaavaResolver"
 import { resolveSeinajokiKaavaProject } from "@/lib/agent/identity/resolvers/seinajokiKaavaResolver"
 import { resolveRovaniemiKaavaProject } from "@/lib/agent/identity/resolvers/rovaniemiKaavaResolver"
+import { resolveMikkeliKaavaProject } from "@/lib/agent/identity/resolvers/mikkeliKaavaResolver"
 import { resolveLahtiKaavaProject } from "@/lib/agent/identity/resolvers/lahtiKaavaResolver"
 import { resolvePoriKaavaProject } from "@/lib/agent/identity/resolvers/poriKaavaResolver"
 import { resolveOuluKaavaProject } from "@/lib/agent/identity/resolvers/ouluKaavaResolver"
@@ -170,6 +171,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "rovaniemen kaavatori") {
     const result = await resolveRovaniemiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "mikkelin vireillä olevat kaavat") {
+    const result = await resolveMikkeliKaavaProject({
       document,
       facts: facts ?? [],
     })
