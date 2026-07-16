@@ -42,6 +42,7 @@ export async function runFactWorker(documentId?: string) {
       "Senaatti-kiinteistöt hankkeet",
       "Kuopion vireillä olevat kaavat",
       "Hyvinkään vireillä olevat kaavat",
+      "Seinäjoen ajankohtaiset asemakaavat",
       "Lahden kaavatyökohteet",
       "Porin vireillä olevat kaavat",
       "Oulun vireillä olevat kaavat",

@@ -1872,6 +1872,205 @@ async function collectHyvinkaaSource(source: DiscoverySource) {
 }
 
 /*
+ * Seinäjoen "ajankohtaiset asemakaavat" -sivun navigointipalkki listaa
+ * KAIKKI alasivut, myös jo vuosia sitten lainvoimaiset kaavat — vaihe
+ * selviää vain jokaisen kaavan omalta sivulta ("Käsittelyvaiheet:"
+ * -otsikon jälkeinen <ul>-lista, viimeinen päivätty rivi on nykyinen
+ * vaihe), joten sama rate-limitoitu yksityiskohtahaku-malli kuin
+ * Lahdella/Tampereella. Tunnus on otsikon lopussa suluissa, esim.
+ * "Alakylä, korttelit 19 (osa) ja 118, Valion alue (09036)".
+ */
+const SEINAJOKI_MAX_DETAIL_FETCHES_PER_RUN = 8
+
+type SeinajokiDetails = {
+  completed: boolean
+  phase: string | null
+  description: string | null
+}
+
+async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
+  const empty: SeinajokiDetails = { completed: false, phase: null, description: null }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    /*
+     * H1 ei ole kuvaustekstin suora sisarelementti (kääritty omaan
+     * div-säiliöönsä), joten kuvaus haetaan dokumenttijärjestyksessä
+     * ensimmäisenä <p>-elementtinä H1:n jälkeen, ei sisaruksena.
+     */
+    let description: string | null = null
+    let sawH1 = false
+    $("body *").each((_, el) => {
+      if (description) return
+      const $el = $(el)
+      if ($el.is("h1")) {
+        sawH1 = true
+        return
+      }
+      if (sawH1 && $el.is("p")) {
+        const text = $el.text().trim()
+        if (text) description = text
+      }
+    })
+
+    const stages: string[] = []
+    $("h1.wp-block-heading, h2.wp-block-heading, h3.wp-block-heading, h4.wp-block-heading, h5.wp-block-heading, h6.wp-block-heading").each((_, el) => {
+      if (!$(el).text().trim().startsWith("Käsittelyvaiheet")) return
+      const $next = $(el).next()
+
+      if ($next.is("ul.wp-block-list")) {
+        $next.find("li").each((_, li) => {
+          const text = $(li).text().replace(/\s+/g, " ").trim()
+          if (text) stages.push(text)
+        })
+      } else if ($next.is("p")) {
+        /*
+         * Osalla sivuista käsittelyvaiheet eivät ole <ul><li>-listana vaan
+         * yhtenä <p>-elementtinä <br>-erotettuna (esim. Falanderinkadun jatke).
+         */
+        const fragments = ($next.html() ?? "").split(/<br\s*\/?>/i)
+        for (const fragment of fragments) {
+          const text = cheerio
+            .load(`<div>${fragment}</div>`)("div")
+            .text()
+            .replace(/\s+/g, " ")
+            .trim()
+          if (text) stages.push(text)
+        }
+      }
+    })
+
+    /*
+     * Käsittelyvaiheet-lista sisältää KAIKKI vaiheet mallipohjana etukäteen,
+     * myös ne jotka eivät ole vielä tapahtuneet — vain toteutuneilla vaiheilla
+     * on päivämäärä edessä. Siksi viimeinen listan alkio ei kelpaa sellaisenaan,
+     * vaan täytyy ottaa viimeinen PÄIVÄTTY vaihe.
+     */
+    const datedStages = stages.filter((stage) => /^\d/.test(stage))
+    const lastStage = datedStages[datedStages.length - 1] ?? null
+    const phase = lastStage ? lastStage.replace(/^[\d.\s–-]+/, "").trim() : null
+    const completed = /voimaantulopäivä|lainvoimaisuuspäivä|lainvoimaisuuskuulutus|lopetettu|kumonnut/i.test(lastStage ?? "")
+
+    return { completed, phase: phase || null, description }
+  } catch {
+    return empty
+  }
+}
+
+async function collectSeinajokiSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Seinäjoen kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: { title: string; tunnus: string | null; url: string }[] = []
+  const seenUrls = new Set<string>()
+
+  $("a.page-nav-lvl-4__link").each((_, el) => {
+    const href = $(el).attr("href")
+    const text = $(el).text().trim()
+    if (!href || !text) return
+    /*
+     * page-nav-lvl-4__link on koko sivuston vasemman navigaation luokka,
+     * ei tälle sivulle rajattu — täytyy suodattaa href:n polulla, muuten
+     * mukaan tulee koko sivuston valikko (eläinlääkärit, elintarvikevalvonta jne).
+     */
+    if (!href.includes("/ajankohtaiset-asemakaavat/")) return
+    if (href.endsWith("/ajankohtaiset-asemakaavat/")) return
+    if (seenUrls.has(href)) return
+    seenUrls.add(href)
+
+    const match = text.match(/^(.*?)\s*\(([\w.:-]+)\)\s*$/)
+    const title = match ? match[1].trim() : text
+    const tunnus = match ? match[2].trim() : null
+
+    items.push({ title, tunnus, url: href })
+  })
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, SeinajokiDetails>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.phase) {
+      knownDetails.set(row.document_url, {
+        completed: row.raw_payload.completed ?? false,
+        phase: row.raw_payload.phase,
+        description: row.raw_payload.description ?? null,
+      })
+    }
+  }
+
+  let detailFetches = 0
+  let saved = 0
+
+  for (const item of items) {
+    let details = knownDetails.get(item.url) ?? null
+
+    if (!details && detailFetches < SEINAJOKI_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchSeinajokiDetails(item.url)
+      detailFetches += 1
+    }
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: item.tunnus,
+            phase: details?.phase ?? null,
+            description: details?.description ?? null,
+            completed: details?.completed ?? false,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(details?.completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -3908,6 +4107,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "hyvinkaaKaavaParser") {
     return collectHyvinkaaSource(source)
+  }
+
+  if (source.parser === "seinajokiKaavaParser") {
+    return collectSeinajokiSource(source)
   }
 
   if (source.parser === "senaattiParser") {
