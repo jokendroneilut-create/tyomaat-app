@@ -1,17 +1,29 @@
 import Link from "next/link"
+import { getPendingReviewCount } from "./services/getPendingReviewCount"
+import { getPendingDuplicateCount } from "./services/getDuplicateCandidates"
 
-export default function TicLayout({
+export const dynamic = "force-dynamic"
+
+export default async function TicLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const [pendingReviewCount, pendingDuplicateCount] = await Promise.all([
+    getPendingReviewCount(),
+    getPendingDuplicateCount(),
+  ])
+
   const nav = [
-    { href: "/tic", label: "🏠 Etusivu" },
+    { href: "/tic", label: `🏠 Etusivu (${pendingReviewCount})` },
     { href: "/tic/operations", label: "🧭 Operations" },
     { href: "/tic/discovery", label: "🔍 Discovery" },
     { href: "/tic/discovery/documents", label: "📄 Dokumentit" },
     { href: "/tic/discovery/merges", label: "🔗 Yhdistymiset" },
-    { href: "/tic/discovery/duplicates", label: "🧬 Kaksoiskappaleet" },
+    {
+      href: "/tic/discovery/duplicates",
+      label: `🧬 Kaksoiskappaleet (${pendingDuplicateCount})`,
+    },
     { href: "/tic/discovery/analytics", label: "📈 Analytics" },
     { href: "/tic/discovery/health", label: "🩺 Health" },
   ]
