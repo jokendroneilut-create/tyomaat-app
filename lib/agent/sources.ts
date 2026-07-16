@@ -17,6 +17,7 @@ import { fetchMeijouSource } from "./fetchMeijouSource"
 import { fetchMangroveSource } from "./fetchMangroveSource"
 import { fetchSrvSource } from "./fetchSrvSource"
 import { fetchYsaatioSource } from "./fetchYsaatioSource"
+import { fetchRajukiviSource } from "./fetchRajukiviSource"
 
 export const sources = [
   { name: "lapti", fetch: fetchTestSource },
@@ -38,4 +39,5 @@ export const sources = [
   { name: "mangrove", fetch: fetchMangroveSource },
   { name: "srv", fetch: fetchSrvSource },
   { name: "ysaatio", fetch: fetchYsaatioSource },
+  { name: "rajukivi", fetch: fetchRajukiviSource },
 ]
