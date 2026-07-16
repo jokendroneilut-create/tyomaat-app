@@ -18,6 +18,15 @@ import { fetchMangroveSource } from "./fetchMangroveSource"
 import { fetchSrvSource } from "./fetchSrvSource"
 import { fetchYsaatioSource } from "./fetchYsaatioSource"
 import { fetchRajukiviSource } from "./fetchRajukiviSource"
+import { fetchPohjolaRakennusSource } from "./fetchPohjolaRakennusSource"
+import { fetchVarteSource } from "./fetchVarteSource"
+import { fetchLujataloSource } from "./fetchLujataloSource"
+import { fetchKasSource } from "./fetchKasSource"
+import { fetchHausiaSource } from "./fetchHausiaSource"
+import { fetchRakennustehoSource } from "./fetchRakennustehoSource"
+import { fetchMarveaSource } from "./fetchMarveaSource"
+import { fetchMarttilanSource } from "./fetchMarttilanSource"
+import { fetchBrandToimitilatSource } from "./fetchBrandToimitilatSource"
 
 export const sources = [
   { name: "lapti", fetch: fetchTestSource },
@@ -40,4 +49,13 @@ export const sources = [
   { name: "srv", fetch: fetchSrvSource },
   { name: "ysaatio", fetch: fetchYsaatioSource },
   { name: "rajukivi", fetch: fetchRajukiviSource },
+  { name: "pohjola_rakennus", fetch: fetchPohjolaRakennusSource },
+  { name: "varte", fetch: fetchVarteSource },
+  { name: "lujatalo", fetch: fetchLujataloSource },
+  { name: "kas_asunnot", fetch: fetchKasSource },
+  { name: "hausia", fetch: fetchHausiaSource },
+  { name: "rakennusteho", fetch: fetchRakennustehoSource },
+  { name: "marvea", fetch: fetchMarveaSource },
+  { name: "marttilan", fetch: fetchMarttilanSource },
+  { name: "brand_toimitilat", fetch: fetchBrandToimitilatSource },
 ]
