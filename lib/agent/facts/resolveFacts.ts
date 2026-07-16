@@ -14,6 +14,7 @@ import { extractSeinajokiKaavaFacts } from "@/lib/agent/facts/extractSeinajokiKa
 import { extractRovaniemiKaavaFacts } from "@/lib/agent/facts/extractRovaniemiKaavaFacts"
 import { extractMikkeliKaavaFacts } from "@/lib/agent/facts/extractMikkeliKaavaFacts"
 import { extractKotkaKaavaFacts } from "@/lib/agent/facts/extractKotkaKaavaFacts"
+import { extractSaloKaavaFacts } from "@/lib/agent/facts/extractSaloKaavaFacts"
 import { extractLahtiKaavaFacts } from "@/lib/agent/facts/extractLahtiKaavaFacts"
 import { extractPoriKaavaFacts } from "@/lib/agent/facts/extractPoriKaavaFacts"
 import { extractOuluKaavaFacts } from "@/lib/agent/facts/extractOuluKaavaFacts"
@@ -251,6 +252,25 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractKotkaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Salon ajankohtaiset asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractSaloKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

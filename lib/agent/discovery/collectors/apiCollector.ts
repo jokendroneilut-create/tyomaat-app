@@ -2591,6 +2591,116 @@ async function collectKotkaSource(source: DiscoverySource) {
 }
 
 /*
+ * Salon kaavasivut käyttävät ACF-sisältölohkoja (acf.everblox_v1[].columns[].content),
+ * ei tavallista content.rendered-kenttää. Käsittelyvaiheet (Hyväksymisvaihe,
+ * Ehdotusvaihe, Laatimisvaihe, Aloitusvaihe) on listattu KÄÄNTEISESSÄ
+ * aikajärjestyksessä — uusin vaihe ensin, toisin kuin Seinäjoella — joten
+ * ensimmäinen <h2> on suoraan nykyinen vaihe. Kaavatunnusta ei ole missään
+ * (ei numerosarjaa otsikossa toisin kuin Mikkelillä/Kotkalla), joten WP:n
+ * sivu-ID kelpaa yksilöivänä tunnisteena. "Hyväksymisvaihe"-osiossa mainittu
+ * "lainvoimainen"/"tullut voimaan" tarkoittaa kaava on jo valmis.
+ */
+function saloExtractSectionText($: cheerio.CheerioAPI, heading: any): string {
+  let text = ""
+  let el = $(heading).next()
+  while (el.length && !el.is("h2")) {
+    text += " " + el.text()
+    el = el.next()
+  }
+  return text
+}
+
+async function collectSaloSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Salon kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const items: any[] = await response.json()
+
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title?.rendered ?? ""
+    const url = item.link ?? ""
+    const html = item.acf?.everblox_v1?.[0]?.columns?.[0]?.content ?? ""
+
+    if (!title || !url) continue
+
+    const $ = cheerio.load(html)
+    const h2s = $("h2").toArray()
+
+    let phase: string | null = null
+    let completed = false
+
+    if (h2s.length > 0) {
+      const firstH2 = h2s[0]
+      phase = $(firstH2).text().replace(/\s+/g, " ").trim() || null
+
+      const sectionText = saloExtractSectionText($, firstH2)
+      completed = /lainvoimainen|tullut voimaan/i.test(sectionText)
+    }
+
+    let description: string | null = null
+    if (h2s.length > 0) {
+      const lastH2 = h2s[h2s.length - 1]
+      description = $(lastH2).nextAll("p").first().text().replace(/\s+/g, " ").trim() || null
+    }
+    if (!description) {
+      description = $("p").first().text().replace(/\s+/g, " ").trim() || null
+    }
+
+    const kaavaTunnus = item.id ? String(item.id) : null
+
+    const rawText = JSON.stringify({ title, url, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -4643,6 +4753,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kotkaKaavaParser") {
     return collectKotkaSource(source)
+  }
+
+  if (source.parser === "saloKaavaParser") {
+    return collectSaloSource(source)
   }
 
   if (source.parser === "senaattiParser") {
