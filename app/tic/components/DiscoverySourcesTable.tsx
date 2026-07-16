@@ -11,6 +11,8 @@ export default function DiscoverySourcesTable({ sources }: Props) {
   const [runningId, setRunningId] = useState<string | null>(null)
   const [result, setResult] = useState<any>(null)
 
+  const enabledCount = sources.filter((source) => source.enabled).length
+
   async function runSource(sourceId: string) {
     setRunningId(sourceId)
     setResult(null)
@@ -33,10 +35,13 @@ export default function DiscoverySourcesTable({ sources }: Props) {
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-200 p-4">
+      <div className="flex items-center justify-between border-b border-gray-200 p-4">
         <h2 className="text-lg font-semibold text-gray-900">
           Discovery Sources
         </h2>
+        <span className="text-sm font-semibold text-green-700">
+          käytössä {enabledCount}/{sources.length}
+        </span>
       </div>
 
       <div className="divide-y divide-gray-200">
