@@ -2491,6 +2491,106 @@ async function collectMikkeliSource(source: DiscoverySource) {
 }
 
 /*
+ * Kotkan "Vireillä olevat asemakaavat" -sivu on WP:n lapsisivuina — sama
+ * malli kuin Mikkelillä, mutta vielä siistimpi: jokaisen kaavan sivulla
+ * on "Asiakirjat ja liitteet" -osiossa käsittelyvaiheiden otsikkoketju,
+ * jossa TULEVAT (ei vielä tapahtuneet) vaiheet on tyylitelty harmaaksi
+ * (style="color: #808080") — viimeinen EI-harmaa otsikko on siis suoraan
+ * nykyinen vaihe, ei tarvitse päätellä päivämääristä kuten Rovaniemellä.
+ * Koska sivu listaa vain vireillä olevia (lainvoimaiset ovat omalla
+ * erillisellä "lainvoimaiset-asemakaavat"-sivullaan sivuston puolella),
+ * erillistä jäätymis-/valmistumistunnistusta ei tarvita — paitsi jos
+ * "Kaava lainvoimainen" joskus itse näkyisi ei-harmaana, mikä merkitään
+ * silti varmuuden vuoksi valmiiksi.
+ */
+async function collectKotkaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Kotkan kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const items: any[] = await response.json()
+
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title?.rendered ?? ""
+    const url = item.link ?? ""
+    const html = item.content?.rendered ?? ""
+
+    if (!title || !url) continue
+
+    const $ = cheerio.load(html)
+
+    let phase: string | null = null
+    let description: string | null = null
+
+    const firstP = $("p").first()
+    description = firstP.text().replace(/\s+/g, " ").trim() || null
+
+    $("h2, h3, h4").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (!text || text === "Asiakirjat ja liitteet") return
+
+      const style = $(el).attr("style") ?? ""
+      const isFuture = /#808080/i.test(style)
+      if (!isFuture) phase = text
+    })
+
+    const completed = phase !== null && /kaava lainvoimainen/i.test(phase)
+
+    const titleTunnusMatch = title.match(/\((\d+)\)\s*$/)
+    const kaavaTunnus = titleTunnusMatch ? titleTunnusMatch[1] : null
+
+    const rawText = JSON.stringify({ title, url, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -4539,6 +4639,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "mikkeliKaavaParser") {
     return collectMikkeliSource(source)
+  }
+
+  if (source.parser === "kotkaKaavaParser") {
+    return collectKotkaSource(source)
   }
 
   if (source.parser === "senaattiParser") {
