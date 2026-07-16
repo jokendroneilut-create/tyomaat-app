@@ -1752,6 +1752,126 @@ async function collectKuopioSource(source: DiscoverySource) {
 }
 
 /*
+ * Hyvinkää käyttää täsmälleen samaa Trimble/Tekla "sukka"-taustarajapintaa
+ * kuin Kuopio (sama GeoJSON-muoto, sama koordinaattijärjestelmä GK25),
+ * vain eri layer-nimellä ("sukka_asemakaava_user" Kuopion
+ * "sukka_all_plans" sijaan) ja eri phase_id-numeroinnilla.
+ */
+function hyvinkaaPhaseLabel(phaseId: number | null): string | null {
+  switch (phaseId) {
+    case 1:
+      return "Vireilletulo"
+    case 2:
+      return "Vireilletulo"
+    case 3:
+      return "Valmisteluvaihe"
+    case 4:
+      return "Ehdotusvaihe"
+    case 5:
+      return "Hyväksytty"
+    case 6:
+      return "Lainvoimainen"
+    default:
+      return null
+  }
+}
+
+type HyvinkaaContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
+function parseHyvinkaaContacts(contact: string | null): HyvinkaaContact[] {
+  if (!contact || !contact.trim()) return []
+
+  const blocks = contact
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+
+  return blocks.map((block) => {
+    const parts = block.includes(",")
+      ? block.split(",").map((p) => p.trim())
+      : block.split("\n").map((p) => p.trim())
+
+    const name = parts[0] || null
+    const rest = parts.slice(1)
+    const emailRaw = rest.find((p) => p.includes("@") || p.includes("(at)"))
+    const email = emailRaw ? emailRaw.replace("(at)", "@").trim() : null
+    const phone = rest.find((p) => p !== emailRaw && /\d/.test(p)) ?? null
+
+    return { name, title: null, phone, email }
+  })
+}
+
+async function collectHyvinkaaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Hyvinkään kaavarajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const json = await response.json()
+  const allFeatures = Array.isArray(json.features) ? json.features : []
+
+  const features = allFeatures.filter((feature: any) => !feature.properties?.date_legal)
+
+  let saved = 0
+
+  for (const feature of features) {
+    const properties = feature.properties ?? {}
+    const id = properties.id
+    const documentUrl = `https://kartta.hyvinkaa.fi/Applications/sukka/dist/#/viewplan/1/sukka_asemakaava_user/${id}`
+
+    const rawText = JSON.stringify(feature)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: properties.plan_name || `Kaava ${properties.plan_number ?? id}`,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            hyvinkaa_plan_id: id,
+            plan_name: properties.plan_name,
+            plan_number: properties.plan_number || null,
+            record_number: properties.record_number || null,
+            phase: hyvinkaaPhaseLabel(properties.phase_id),
+            plan_type: kuopioPlanTypeLabel(properties.plan_type_id),
+            description: properties.description || null,
+            contacts: parseHyvinkaaContacts(properties.contact),
+            center: boundingBoxCenter(feature.geometry),
+            original: feature,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: features.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -3784,6 +3904,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kuopioKaavaParser") {
     return collectKuopioSource(source)
+  }
+
+  if (source.parser === "hyvinkaaKaavaParser") {
+    return collectHyvinkaaSource(source)
   }
 
   if (source.parser === "senaattiParser") {

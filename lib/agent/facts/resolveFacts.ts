@@ -9,6 +9,7 @@ import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
 import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
 import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
 import { extractKuopioKaavaFacts } from "@/lib/agent/facts/extractKuopioKaavaFacts"
+import { extractHyvinkaaKaavaFacts } from "@/lib/agent/facts/extractHyvinkaaKaavaFacts"
 import { extractLahtiKaavaFacts } from "@/lib/agent/facts/extractLahtiKaavaFacts"
 import { extractPoriKaavaFacts } from "@/lib/agent/facts/extractPoriKaavaFacts"
 import { extractOuluKaavaFacts } from "@/lib/agent/facts/extractOuluKaavaFacts"
@@ -133,6 +134,33 @@ export function resolveFacts(document: any) {
         documentId: document.id,
         sourceName: document.source_name,
         feature,
+        planName,
+        planNumber,
+        recordNumber,
+        phase,
+        planType,
+        description,
+        contacts,
+        center,
+      }),
+    }
+  }
+
+  if (document.source_name === "Hyvinkään vireillä olevat kaavat") {
+    const planName = document.raw_payload?.plan_name ?? null
+    const planNumber = document.raw_payload?.plan_number ?? null
+    const recordNumber = document.raw_payload?.record_number ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const planType = document.raw_payload?.plan_type ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+    const center = document.raw_payload?.center ?? null
+
+    return {
+      decisions: [],
+      facts: extractHyvinkaaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
         planName,
         planNumber,
         recordNumber,
