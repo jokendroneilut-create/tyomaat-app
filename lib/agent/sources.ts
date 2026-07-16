@@ -14,6 +14,7 @@ import { fetchTekovaSource } from "./fetchTekovaSource"
 import { fetchJatkeSource } from "./fetchJatkeSource"
 import { fetchEspoonAsunnotSource } from "./fetchEspoonAsunnotSource"
 import { fetchMeijouSource } from "./fetchMeijouSource"
+import { fetchMangroveSource } from "./fetchMangroveSource"
 
 export const sources = [
   { name: "lapti", fetch: fetchTestSource },
@@ -32,5 +33,5 @@ export const sources = [
   { name: "jatke", fetch: fetchJatkeSource },
   { name: "espoon_asunnot", fetch: fetchEspoonAsunnotSource },
   { name: "meijou", fetch: fetchMeijouSource },
-  
+  { name: "mangrove", fetch: fetchMangroveSource },
 ]

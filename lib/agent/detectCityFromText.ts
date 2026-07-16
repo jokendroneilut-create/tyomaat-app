@@ -31,6 +31,8 @@ export function detectCityFromText(text: string): string | null {
     "lieto",
     "valkeakoski",
     "heinola",
+    "pirkkala",
+    "kirkkonummi",
   ]
 
   const lower = text.toLowerCase()
@@ -57,6 +59,9 @@ export function detectCityFromText(text: string): string | null {
     "liedon": "Lieto",
     "ouluun": "Oulu",
     "valkeakoskelle": "Valkeakoski",
+    "kirkkonummen": "Kirkkonummi",
+    "kirkkonummelle": "Kirkkonummi",
+    "ylöjärven": "Ylöjärvi",
   }
 
   for (const [alias, city] of Object.entries(cityAliases)) {
