@@ -1,10 +1,18 @@
 import { getDiscoverySources } from "./services/getDiscoverySources"
+import { getLegacySourceHealth } from "./services/getLegacySourceHealth"
 import SourceMonitorTable from "./components/SourceMonitorTable"
 
 export const dynamic = "force-dynamic"
 
+function formatDate(value: string | null) {
+  return value ? new Date(value).toLocaleString("fi-FI") : "-"
+}
+
 export default async function DiscoveryOperationsPage() {
-  const sources = await getDiscoverySources()
+  const [sources, legacySources] = await Promise.all([
+    getDiscoverySources(),
+    getLegacySourceHealth(),
+  ])
 
   const enabledCount = sources.filter((s) => s.enabled).length
   const warningCount = sources.filter(
@@ -68,6 +76,43 @@ export default async function DiscoveryOperationsPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-10">
+        <h2 className="text-xl font-semibold text-gray-900">
+          Yritysten lehdistötiedote-lähteet
+        </h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Vanha putki (lib/agent/sources.ts) ei ole discovery_sources-taulussa
+          eikä sillä ole omaa ajo-käsitettä — tiedot perustuvat
+          project_import_events-tapahtumalokiin viimeisen 30 päivän ajalta.
+        </p>
+
+        <div className="mt-4 overflow-hidden rounded-xl border bg-white shadow-sm">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr className="text-left">
+                <th className="px-4 py-3">Lähde</th>
+                <th className="px-4 py-3">Viime havainto</th>
+                <th className="px-4 py-3">Tapahtumia (30 pv)</th>
+                <th className="px-4 py-3">Jonoon</th>
+                <th className="px-4 py-3">Ohitettu</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {legacySources.map((source) => (
+                <tr key={source.name} className="border-t">
+                  <td className="px-4 py-3 font-semibold">{source.name}</td>
+                  <td className="px-4 py-3">{formatDate(source.lastSeen)}</td>
+                  <td className="px-4 py-3">{source.eventsLast30Days}</td>
+                  <td className="px-4 py-3">{source.queuedForReview}</td>
+                  <td className="px-4 py-3">{source.skipped}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   )
