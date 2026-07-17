@@ -2286,7 +2286,8 @@ function parseMikkeliContact(text: string | null): MikkeliContact | null {
   const emailMatch = text.match(/[\w.+-]+@[\w.-]+\.\w+/)
   const emailRaw = emailMatch ? emailMatch[0] : null
   // "etunimi.sukunimi@..." on täyttämätön lomakepohja, ei oikea osoite.
-  const email = emailRaw && !/^etunimi\.sukunimi@/i.test(emailRaw) ? emailRaw : null
+  const placeholderMatch = emailRaw ? emailRaw.match(/^etunimi\.sukunimi(@.+)$/i) : null
+  const email = emailRaw && !placeholderMatch ? emailRaw : null
   const withoutEmail = emailRaw ? text.replace(emailRaw, "") : text
 
   const phoneMatch = withoutEmail.match(/\d[\d\s]{6,}\d/)
@@ -2310,9 +2311,25 @@ function parseMikkeliContact(text: string | null): MikkeliContact | null {
   const name = words.length >= 2 ? words.slice(-2).join(" ") : cleaned || null
   const title = words.length > 2 ? words.slice(0, -2).join(" ") : null
 
-  if (!name && !phone && !email) return null
+  /*
+   * Lomakepohjan domain-osa ("@mikkeli.fi") on aito, vain etunimi.sukunimi
+   * on täyttämätön — nimestä voi siis päätellä todellisen osoitteen
+   * luotettavasti sivun itsensä kertoman muotoilun mukaisesti.
+   */
+  const derivedEmail =
+    !email && placeholderMatch && name
+      ? name
+          .toLowerCase()
+          .replace(/ä/g, "a")
+          .replace(/ö/g, "o")
+          .replace(/å/g, "a")
+          .split(/\s+/)
+          .join(".") + placeholderMatch[1].toLowerCase()
+      : null
 
-  return { name, title, phone, email }
+  if (!name && !phone && !email && !derivedEmail) return null
+
+  return { name, title, phone, email: email ?? derivedEmail }
 }
 
 function findMikkeliSection($: cheerio.CheerioAPI, labelPattern: RegExp) {
@@ -2355,7 +2372,7 @@ async function fetchMikkeliDetails(pageId: number): Promise<MikkeliDetails> {
       }
     })
 
-    const tavoite = findMikkeliSection($, /^TAVOITTEET?$/i)
+    const tavoite = findMikkeliSection($, /^TAVOIT(E|TEET)$/i)
     const description = tavoite ? tavoite.text().replace(/\s+/g, " ").trim() || null : null
 
     const vaiheetList = findMikkeliSection($, /^SUUNNITTELUN VAIHEET$/i)
