@@ -49,6 +49,7 @@ export async function runFactWorker(documentId?: string) {
       "Salon ajankohtaiset asemakaavat",
       "Porvoon asemakaavat",
       "Kokkolan asemakaavatyöt",
+      "Kirkkonummen kaavoitus",
       "Lahden kaavatyökohteet",
       "Porin vireillä olevat kaavat",
       "Oulun vireillä olevat kaavat",

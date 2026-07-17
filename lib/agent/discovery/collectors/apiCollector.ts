@@ -2907,6 +2907,115 @@ async function collectKokkolaSource(source: DiscoverySource) {
 }
 
 /*
+ * Kirkkonummi jakaa kaavat neljälle alueelliselle alisivulle (eteläinen,
+ * itäinen, keskinen, pohjoinen Kirkkonummi) — jokaisen kaavan sivulla on
+ * suoraan "Tilanne: {vaihe} ({pvm})" -kenttä, mutta se ei aina ole sivun
+ * ensimmäinen kappale (osalla sivuista on ensin otsikkokappale), joten
+ * kaikki <p>-elementit käydään läpi eikä luoteta ensimmäiseen. Valmis-
+ * tumissanasto vaihtelee taivutusmuodoittain (lainvoimainen,
+ * lainvoimaiseksi, lainvoiman) — tunnistus tehdään sanavartaloa vasten.
+ */
+const KIRKKONUMMI_REGION_PARENT_IDS = [19717, 19715, 19697, 19719]
+
+async function collectKirkkonummiSource(source: DiscoverySource) {
+  const allItems: { id: number; title: string; url: string; html: string }[] = []
+
+  for (const parentId of KIRKKONUMMI_REGION_PARENT_IDS) {
+    const listUrl = `https://kirkkonummi.fi/wp-json/wp/v2/pages?parent=${parentId}&per_page=100&_fields=id,title,link,content`
+    const response = await fetch(listUrl, { cache: "no-store" })
+
+    if (!response.ok) {
+      throw new Error(`Kirkkonummen kaavalistan haku epäonnistui (${parentId}): ${response.status} ${response.statusText}`)
+    }
+
+    const items: any[] = await response.json()
+    for (const item of items) {
+      allItems.push({
+        id: item.id,
+        title: item.title?.rendered ?? "",
+        url: item.link ?? "",
+        html: item.content?.rendered ?? "",
+      })
+    }
+  }
+
+  let saved = 0
+
+  for (const item of allItems) {
+    if (!item.title || !item.url) continue
+
+    const $ = cheerio.load(item.html)
+
+    let phase: string | null = null
+    $("p").each((_, el) => {
+      if (phase) return
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (text.startsWith("Tilanne:")) {
+        phase = text.replace(/^Tilanne:\s*/, "").trim() || null
+      }
+    })
+
+    let description: string | null = null
+    $("p").each((_, el) => {
+      if (description) return
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (text.length > 60 && !text.startsWith("Tilanne:")) {
+        description = text
+      }
+    })
+
+    const completed = phase !== null && /lainvoima|tullut voimaan|voimaantulo/i.test(phase)
+
+    const kaavaTunnus = String(item.id)
+
+    const rawText = JSON.stringify({ title: item.title, url: item.url, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: allItems.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -4971,6 +5080,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kokkolaKaavaParser") {
     return collectKokkolaSource(source)
+  }
+
+  if (source.parser === "kirkkonummiKaavaParser") {
+    return collectKirkkonummiSource(source)
   }
 
   if (source.parser === "senaattiParser") {
