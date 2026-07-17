@@ -20,6 +20,7 @@ import { extractKokkolaKaavaFacts } from "@/lib/agent/facts/extractKokkolaKaavaF
 import { extractKirkkonummiKaavaFacts } from "@/lib/agent/facts/extractKirkkonummiKaavaFacts"
 import { extractKeravaKaavaFacts } from "@/lib/agent/facts/extractKeravaKaavaFacts"
 import { extractTuusulaKaavaFacts } from "@/lib/agent/facts/extractTuusulaKaavaFacts"
+import { extractNurmijarviKaavaFacts } from "@/lib/agent/facts/extractNurmijarviKaavaFacts"
 import { extractLahtiKaavaFacts } from "@/lib/agent/facts/extractLahtiKaavaFacts"
 import { extractPoriKaavaFacts } from "@/lib/agent/facts/extractPoriKaavaFacts"
 import { extractOuluKaavaFacts } from "@/lib/agent/facts/extractOuluKaavaFacts"
@@ -383,6 +384,25 @@ export function resolveFacts(document: any) {
         description,
         contact,
         center,
+      }),
+    }
+  }
+
+  if (document.source_name === "Nurmijärven ajankohtaiset asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractNurmijarviKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
       }),
     }
   }

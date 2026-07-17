@@ -3295,6 +3295,94 @@ async function collectTuusulaSource(source: DiscoverySource) {
 }
 
 /*
+ * Nurmijärven "Ajankohtaiset asemakaavat" -sivu listaa WordPress-
+ * alisivuina VAIN aktiiviset kaavat (valmistuneet ovat omalla erillisellä
+ * "Voimaan tulleet asemakaavat" -sivullaan), joten valmistumistunnistusta
+ * ei periaatteessa tarvita — mutta tehdään silti varmuuden vuoksi samalla
+ * tavalla kuin Kotkalla. Käsittelyvaiheet on käänteisessä aikajärjestyksessä
+ * (uusin ensin, kuten Salolla), joten ensimmäinen <li> on nykyinen vaihe.
+ * Kaavatunnus on suoraan otsikon alussa, esim. "6-027 Herontie 1".
+ */
+async function collectNurmijarviSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Nurmijärven kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const items: any[] = await response.json()
+
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title?.rendered ?? ""
+    const url = item.link ?? ""
+    const html = item.content?.rendered ?? ""
+
+    if (!title || !url) continue
+
+    const $ = cheerio.load(html)
+
+    const phase = $("ul.wp-block-list li").first().text().replace(/\s+/g, " ").trim() || null
+    const completed = phase !== null && /lainvoima|tullut voimaan|voimaantulo/i.test(phase)
+
+    const description =
+      $("p")
+        .toArray()
+        .map((el) => $(el).text().replace(/\s+/g, " ").trim())
+        .find((text) => text.length > 40) ?? null
+
+    const titleTunnusMatch = title.match(/^(\d+-\d+)\s+/)
+    const kaavaTunnus = titleTunnusMatch ? titleTunnusMatch[1] : null
+
+    const rawText = JSON.stringify({ title, url, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -5371,6 +5459,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "tuusulaKaavaParser") {
     return collectTuusulaSource(source)
+  }
+
+  if (source.parser === "nurmijarviKaavaParser") {
+    return collectNurmijarviSource(source)
   }
 
   if (source.parser === "senaattiParser") {
