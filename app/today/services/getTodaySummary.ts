@@ -6,9 +6,18 @@ import {
   matchesBestSalesMoments,
   matchesSources,
   matchesRegions,
-  projectSource,
 } from "./todayFilters"
 import { rankTodayProjects } from "./todayRanking"
+
+function toMetricProject(project: any) {
+  return {
+    id: project.id,
+    name: project.name,
+    city: project.city,
+    region: project.region,
+    phase: project.phase,
+  }
+}
 
 function daysAgoIso(days: number) {
   const now = new Date()
@@ -25,7 +34,7 @@ export async function getTodaySummary(userId?: string | null) {
   const maxProjects = Number(settings.maxProjects ?? 20)
 
   const [allProjects, feedbackContext, favoritesContext] = await Promise.all([
-    getTodayProjects(),
+    getTodayProjects(settings.regions),
     getUserFeedbackContext(userId),
     getUserFavoritesContext(userId),
   ])
@@ -71,13 +80,15 @@ export async function getTodaySummary(userId?: string | null) {
     ),
 
     metrics: {
+      regionTotal: allProjects.length,
       newProjects: recentProjects.length,
       approvedToday: recentProjects.length,
       highValue: highValueProjects.length,
+    },
 
-      tenders: rankedProjects.filter((project: any) =>
-        projectSource(project).includes("hilma")
-      ).length,
+    metricProjects: {
+      new: recentProjects.slice(0, 50).map(toMetricProject),
+      highValue: highValueProjects.slice(0, 50).map(toMetricProject),
     },
 
     approvedProjects: recentProjects.slice(0, maxProjects),

@@ -62,7 +62,11 @@ const summary = await getTodaySummary(user?.id)
   Mukauta näkymää valitsemalla alueet, hankkeen vaiheet ja tietolähteet.
 </p>
 
-      <TodayMetrics metrics={summary.metrics} />
+      <TodayMetrics
+        metrics={summary.metrics}
+        metricProjects={summary.metricProjects}
+        regions={summary.settings.regions}
+      />
 
       <TodayRecommendedProjects
          projects={summary.recommendedProjects}

@@ -88,7 +88,7 @@ export function matchesSources(
   if (
     normalizedSources.includes("kaavoitus") &&
     (
-      source.includes("kaavoitus") ||
+      source.includes("kaava") ||
       source.includes("zoning")
     )
   ) {

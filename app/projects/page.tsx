@@ -191,6 +191,12 @@ export default function Projects() {
   }, [projects])
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const regionParam = params.get('region')
+    if (regionParam) setRegion(regionParam)
+  }, [])
+
+  useEffect(() => {
     if (!selected?.id) {
       setPhaseHistory([])
       return
