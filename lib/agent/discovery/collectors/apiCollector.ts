@@ -3383,6 +3383,116 @@ async function collectNurmijarviSource(source: DiscoverySource) {
 }
 
 /*
+ * Sipoon "Vireillä olevat asemakaavat" -sivun alisivuilla on VÄHINTÄÄN
+ * neljä erilaista pohjarakennetta nykyisen vaiheen ilmoittamiseen (otsikko
+ * "Tässä mennään nyt"/"Tässä ollaan nyt"/"Missä mennään nyt?", eri
+ * otsikkotasoilla, joskus "Aikaisemmat vaiheet" -välikerroksen takana).
+ * Siksi haetaan ankkuriotsikon jälkeen ENSIMMÄINEN tunnettu vaihesana
+ * (Aloitusvaihe/Valmisteluvaihe/jne.) mistä tahansa myöhemmästä otsikosta,
+ * ja jos mikään ei täsmää, otetaan varalta ankkuria seuraava otsikko
+ * sellaisenaan (esim. vapaamuotoinen tilannekuvaus).
+ */
+const SIPOO_PHASE_ANCHOR = /^(Tässä|Missä) (mennään|ollaan) nyt\??$/i
+const SIPOO_PHASE_WORD =
+  /^(Aloitusvaihe|Valmisteluvaihe|Luonnosvaihe|Ehdotusvaihe|Hyväksymisvaihe|Hyväksyminen|Voimaantulo|Lainvoimainen|Asemakaavatyön keskeyttäminen)$/i
+
+async function collectSipooSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Sipoon kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const items: any[] = await response.json()
+
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title?.rendered ?? ""
+    const url = item.link ?? ""
+    const html = item.content?.rendered ?? ""
+
+    if (!title || !url) continue
+
+    const $ = cheerio.load(html)
+
+    let foundAnchor = false
+    let phase: string | null = null
+    let fallback: string | null = null
+
+    $("h1, h2, h3, h4, h5, h6").each((_, el) => {
+      if (phase) return
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+
+      if (!foundAnchor) {
+        if (SIPOO_PHASE_ANCHOR.test(text)) foundAnchor = true
+        return
+      }
+
+      if (!fallback) fallback = text
+      if (SIPOO_PHASE_WORD.test(text)) phase = text
+    })
+
+    const finalPhase = phase ?? fallback
+    const completed = finalPhase !== null && /lainvoima|tullut voimaan|voimaantulo/i.test(finalPhase)
+
+    const description =
+      $(".summary-content p")
+        .toArray()
+        .map((el) => $(el).text().replace(/\s+/g, " ").trim())
+        .find((text) => text.length > 20) ?? null
+
+    const titleTunnusMatch = title.match(/^([A-ZÄÖÅ]+\s?\d+[A-ZÄÖÅ]*)\s+/)
+    const kaavaTunnus = titleTunnusMatch ? titleTunnusMatch[1].trim() : null
+
+    const rawText = JSON.stringify({ title, url, phase: finalPhase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: kaavaTunnus,
+            phase: finalPhase,
+            description,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -5463,6 +5573,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "nurmijarviKaavaParser") {
     return collectNurmijarviSource(source)
+  }
+
+  if (source.parser === "sipooKaavaParser") {
+    return collectSipooSource(source)
   }
 
   if (source.parser === "senaattiParser") {
