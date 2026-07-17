@@ -1902,11 +1902,14 @@ async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
     /*
      * H1 ei ole kuvaustekstin suora sisarelementti (kääritty omaan
      * div-säiliöönsä), joten kuvaus haetaan dokumenttijärjestyksessä
-     * ensimmäisenä <p>-elementtinä H1:n jälkeen, ei sisaruksena.
+     * ensimmäisenä <p>-elementtinä H1:n jälkeen, ei sisaruksena. Haku on
+     * rajattava <article>-elementtiin, koska muuten se voi jatkua sivun
+     * <aside>-sivupalkkiin (esim. "Tästä pääset kaavoituskatsauksen 3d
+     * kaupunkimalliin" -linkki), joka ei liity kyseiseen kaavaan mitenkään.
      */
     let description: string | null = null
     let sawH1 = false
-    $("body *").each((_, el) => {
+    $("article *").each((_, el) => {
       if (description) return
       const $el = $(el)
       if ($el.is("h1")) {
@@ -1956,6 +1959,15 @@ async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
     const lastStage = datedStages[datedStages.length - 1] ?? null
     const phase = lastStage ? lastStage.replace(/^[\d.\s–-]+/, "").trim() : null
     const completed = /voimaantulopäivä|lainvoimaisuuspäivä|lainvoimaisuuskuulutus|lopetettu|kumonnut/i.test(lastStage ?? "")
+
+    /*
+     * Osalla sivuista ei ole lainkaan varsinaista kuvaustekstiä artikkelin
+     * rungossa — silloin koko Käsittelyvaiheet-lista kelpaa kuvaukseksi,
+     * koska se on ainoa hankekohtainen sisältö sivulla.
+     */
+    if (!description && stages.length > 0) {
+      description = `Käsittelyvaiheet:\n${stages.map((s) => `• ${s}`).join("\n")}`
+    }
 
     return { completed, phase: phase || null, description }
   } catch {
