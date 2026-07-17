@@ -10,6 +10,7 @@ import { resolveTurkuKaavaProject } from "@/lib/agent/identity/resolvers/turkuKa
 import { resolveKreateProject } from "@/lib/agent/identity/resolvers/kreateResolver"
 import { resolveVaylaProject } from "@/lib/agent/identity/resolvers/vaylaResolver"
 import { resolveSenaattiProject } from "@/lib/agent/identity/resolvers/senaattiResolver"
+import { resolvePuolustuskiinteistotProject } from "@/lib/agent/identity/resolvers/puolustuskiinteistotResolver"
 import { resolveKuopioKaavaProject } from "@/lib/agent/identity/resolvers/kuopioKaavaResolver"
 import { resolveHyvinkaaKaavaProject } from "@/lib/agent/identity/resolvers/hyvinkaaKaavaResolver"
 import { resolveSeinajokiKaavaProject } from "@/lib/agent/identity/resolvers/seinajokiKaavaResolver"
@@ -153,6 +154,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "senaatti-kiinteistöt hankkeet") {
     const result = await resolveSenaattiProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "puolustuskiinteistöt uutiset") {
+    const result = await resolvePuolustuskiinteistotProject({
       document,
       facts: facts ?? [],
     })

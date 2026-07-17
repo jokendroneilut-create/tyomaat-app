@@ -3780,6 +3780,215 @@ async function collectJarvenpaaSource(source: DiscoverySource) {
 }
 
 /*
+ * Puolustuskiinteistöjen uutiset/artikkelit-sivu (eri sisältövirta kuin
+ * senaatti_project-hankelistaus — ei siis päällekkäistä) renderöityy
+ * admin-ajax.php-kutsulla (action=senaatti_defense_news_with_filters,
+ * s_page=N), joka palauttaa HTML-fragmentin JSON:n "data"-kentässä. Listaus
+ * sisältää sekä yksittäisiä rakennushankkeita että yleisiä tiedotteita
+ * (tilinpäätökset, asiakastyytyväisyys), joten otsikko+ingressi
+ * suodatetaan avainsanoilla ennen kuin hankkeen omalta sivulta haetaan
+ * koko kuvaus (rate-limitoitu kuten Järvenpäällä/Lahdessa).
+ */
+const PUOLUSTUSKIINTEISTOT_MAX_DETAIL_FETCHES_PER_RUN = 15
+const PUOLUSTUSKIINTEISTOT_MAX_LIST_PAGES = 20
+
+const PUOLUSTUSKIINTEISTOT_INCLUDE_KEYWORDS = [
+  "peruskorja",
+  "rakennu",
+  "rakenneta",
+  "rakennuttaa",
+  "rakentaminen",
+  "korjataan",
+  "puretaan",
+  "purku",
+  "harjakorkeu",
+  "käyttöönot",
+  "kunnostetaan",
+  "kunnostus",
+  "laajenn",
+  "uudisrakenn",
+]
+
+const PUOLUSTUSKIINTEISTOT_EXCLUDE_KEYWORDS = [
+  "asiakastyytyväisyys",
+  "tilinpäätös",
+  "energiansäästö",
+  "kestävyysraportti",
+  "vuoropuhelu",
+  "riskinarvio",
+  "infotilaisuu",
+  "kustannustehokkuus",
+]
+
+function puolustuskiinteistotIsProjectArticle(title: string, excerpt: string): boolean {
+  const text = `${title} ${excerpt}`.toLowerCase()
+  if (PUOLUSTUSKIINTEISTOT_EXCLUDE_KEYWORDS.some((k) => text.includes(k))) return false
+  return PUOLUSTUSKIINTEISTOT_INCLUDE_KEYWORDS.some((k) => text.includes(k))
+}
+
+async function collectPuolustuskiinteistotSource(source: DiscoverySource) {
+  const items: { title: string; url: string; excerpt: string }[] = []
+  const seenUrls = new Set<string>()
+
+  for (let page = 1; page <= PUOLUSTUSKIINTEISTOT_MAX_LIST_PAGES; page++) {
+    const response = await fetch(
+      `${source.url}?action=senaatti_defense_news_with_filters&s_page=${page}`,
+      { cache: "no-store" }
+    )
+    if (!response.ok) break
+
+    const json = await response.json()
+    const html = json?.data ?? ""
+    if (!html) break
+
+    const $ = cheerio.load(html)
+    const articles = $("article").toArray()
+    if (articles.length === 0) break
+
+    let newOnPage = 0
+    for (const el of articles) {
+      const $el = $(el)
+      const link = $el.find("a").first().attr("href") ?? ""
+      const title = $el.find(".latest-posts-article__title").text().replace(/\s+/g, " ").trim()
+      const excerpt = $el.find(".latest-posts-article__excerpt").text().replace(/\s+/g, " ").trim()
+
+      if (!link || !title || seenUrls.has(link)) continue
+      seenUrls.add(link)
+      newOnPage += 1
+
+      if (puolustuskiinteistotIsProjectArticle(title, excerpt)) {
+        items.push({ title, url: link, excerpt })
+      }
+    }
+
+    if (newOnPage === 0) break
+  }
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let detailFetches = 0
+  let saved = 0
+
+  for (const item of items) {
+    const known = knownDetails.get(item.url)
+
+    if (known) {
+      const rawText = JSON.stringify({ item, ...known })
+      const contentHash = hashContent(rawText)
+
+      const { error } = await supabaseAdmin
+        .from("source_documents")
+        .upsert(
+          {
+            source_id: source.id,
+            source_name: source.name,
+            title: item.title,
+            document_url: item.url,
+            document_type: "api",
+            content_hash: contentHash,
+            status: "downloaded",
+            raw_text: rawText,
+            raw_payload: known,
+            processed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            ...(known.completed
+              ? {
+                  facts_extracted_at: new Date().toISOString(),
+                  identity_resolved_at: new Date().toISOString(),
+                }
+              : {}),
+          },
+          { onConflict: "document_url" }
+        )
+
+      if (error) throw error
+      saved += 1
+      continue
+    }
+
+    if (detailFetches >= PUOLUSTUSKIINTEISTOT_MAX_DETAIL_FETCHES_PER_RUN) continue
+    detailFetches += 1
+
+    const detailResponse = await fetch(item.url, { cache: "no-store" })
+    if (!detailResponse.ok) continue
+
+    const detailHtml = await detailResponse.text()
+    const $ = cheerio.load(detailHtml)
+    $("style, script").remove()
+
+    const description =
+      $("article p")
+        .toArray()
+        .map((el) => $(el).text().replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+        .join(" ") || item.excerpt
+
+    /*
+     * Artikkelin runko mainitsee usein alkuperäisen rakennuksen
+     * valmistumisvuoden ("vuonna 1966 valmistunut rakennus"), joten
+     * "valmistui"-haku koko tekstistä antaisi vääriä positiivisia —
+     * vain otsikko kertoo luotettavasti onko JUURI TÄMÄ hanke valmis.
+     */
+    const completed = /valmistui|peruskorjattu|uudistettu|otettu käyttöön|käyttöönotto/i.test(item.title)
+    const publishedAt = $("time").first().attr("datetime") ?? null
+
+    const rawText = JSON.stringify({ item, description, completed, publishedAt })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            description,
+            published_at: publishedAt,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -5872,6 +6081,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "senaattiParser") {
     return collectSenaattiSource(source)
+  }
+
+  if (source.parser === "puolustuskiinteistotParser") {
+    return collectPuolustuskiinteistotSource(source)
   }
 
   if (source.parser === "hilmaParser") {

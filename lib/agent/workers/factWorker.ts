@@ -40,6 +40,7 @@ export async function runFactWorker(documentId?: string) {
       "Kreate hankkeet",
       "Väylävirasto hankkeet",
       "Senaatti-kiinteistöt hankkeet",
+      "Puolustuskiinteistöt uutiset",
       "Kuopion vireillä olevat kaavat",
       "Hyvinkään vireillä olevat kaavat",
       "Seinäjoen ajankohtaiset asemakaavat",

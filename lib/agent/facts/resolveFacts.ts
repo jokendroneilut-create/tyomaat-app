@@ -8,6 +8,7 @@ import { extractTurkuKaavaFacts } from "@/lib/agent/facts/extractTurkuKaavaFacts
 import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
 import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
 import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
+import { extractPuolustuskiinteistotFacts } from "@/lib/agent/facts/extractPuolustuskiinteistotFacts"
 import { extractKuopioKaavaFacts } from "@/lib/agent/facts/extractKuopioKaavaFacts"
 import { extractHyvinkaaKaavaFacts } from "@/lib/agent/facts/extractHyvinkaaKaavaFacts"
 import { extractSeinajokiKaavaFacts } from "@/lib/agent/facts/extractSeinajokiKaavaFacts"
@@ -758,6 +759,25 @@ export function resolveFacts(document: any) {
         location,
         buildingType,
         contact,
+      }),
+    }
+  }
+
+  if (document.source_name === "Puolustuskiinteistöt uutiset") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const description = document.raw_payload?.description ?? null
+    const publishedAt = document.raw_payload?.published_at ?? null
+    const completed = document.raw_payload?.completed ?? false
+
+    return {
+      decisions: [],
+      facts: extractPuolustuskiinteistotFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        description,
+        publishedAt,
+        completed,
       }),
     }
   }

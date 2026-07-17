@@ -89,6 +89,7 @@ export async function POST(request: Request) {
     const isKreate = normalize(metadata.resolver) === "kreateresolver"
     const isVayla = normalize(metadata.resolver) === "vaylaresolver"
     const isSenaatti = normalize(metadata.resolver) === "senaattiresolver"
+    const isPuolustuskiinteistot = normalize(metadata.resolver) === "puolustuskiinteistotresolver"
     const isKuopioKaava = normalize(metadata.resolver) === "kuopiokaavaresolver"
     const isHyvinkaaKaava = normalize(metadata.resolver) === "hyvinkaakaavaresolver"
     const isSeinajokiKaava = normalize(metadata.resolver) === "seinajokikaavaresolver"
@@ -349,6 +350,13 @@ export async function POST(request: Request) {
       candidateIdentifiers.push({
         type: "senaatti_project_id",
         value: metadata.senaatti_post_id,
+      })
+    }
+
+    if (isPuolustuskiinteistot) {
+      candidateIdentifiers.push({
+        type: "puolustuskiinteistot_article_url",
+        value: metadata.documents_url,
       })
     }
 
