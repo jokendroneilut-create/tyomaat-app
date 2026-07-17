@@ -3,17 +3,23 @@
 import { useState } from "react"
 import TodayProjectModal from "./TodayProjectModal"
 import TodayFeedbackButtons from "./TodayFeedbackButtons"
+import TodayFavoriteActions from "./TodayFavoriteActions"
 
 export default function TodayRecommendedProjects({
   projects,
   userId,
   feedback,
+  favorites,
 }: {
   projects: any[]
   userId?: string | null
   feedback?: Record<string, "up" | "down">
+  favorites?: Record<string, boolean>
 }) {
   const [openId, setOpenId] = useState<string | null>(null)
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
+
+  const visibleProjects = projects.filter((p) => !hiddenIds.has(p.id))
 
   return (
     <section className="mt-10 rounded-xl border bg-white p-6 shadow-sm">
@@ -21,13 +27,13 @@ export default function TodayRecommendedProjects({
         🔥 Päivän tärkeimmät hankkeet
       </h2>
 
-      {projects.length === 0 ? (
+      {visibleProjects.length === 0 ? (
         <p className="mt-4 text-gray-500">
           Asetuksiasi vastaavia hankkeita ei löytynyt.
         </p>
       ) : (
         <div className="mt-6 space-y-4">
-          {projects.map((project) => {
+          {visibleProjects.map((project) => {
             const location =
               project.location ||
               [project.city, project.region].filter(Boolean).join(", ")
@@ -87,6 +93,16 @@ export default function TodayRecommendedProjects({
                       size_class: project.metadata?.size_class ?? null,
                       source_name: project.metadata?.source_name ?? null,
                     }}
+                  />
+                )}
+
+                {userId && (
+                  <TodayFavoriteActions
+                    projectId={project.id}
+                    initialFavorite={!!favorites?.[project.id]}
+                    onHide={() =>
+                      setHiddenIds((prev) => new Set(prev).add(project.id))
+                    }
                   />
                 )}
               </div>

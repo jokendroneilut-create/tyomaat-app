@@ -96,6 +96,7 @@ export default function TodayProjectModal({
 
   const [userId, setUserId] = useState<string | null>(null)
   const [favorite, setFavorite] = useState(false)
+  const [hidden, setHidden] = useState(false)
   const [status, setStatus] = useState("new")
 
   useEffect(() => {
@@ -145,12 +146,15 @@ export default function TodayProjectModal({
       if (uid) {
         const { data: favRow } = await supabase
           .from("user_project_favorites")
-          .select("project_id")
+          .select("project_id, hidden_from_today")
           .eq("user_id", uid)
           .eq("project_id", projectId)
           .maybeSingle()
 
-        if (!cancelled) setFavorite(!!favRow)
+        if (!cancelled) {
+          setFavorite(!!favRow)
+          setHidden(!!favRow?.hidden_from_today)
+        }
 
         const { data: statusRow } = await supabase
           .from("user_project_status")
@@ -183,6 +187,7 @@ export default function TodayProjectModal({
         .eq("project_id", project.id)
 
       setFavorite(false)
+      setHidden(false)
     } else {
       await supabase
         .from("user_project_favorites")
@@ -190,6 +195,18 @@ export default function TodayProjectModal({
 
       setFavorite(true)
     }
+  }
+
+  async function hideFromToday() {
+    if (!userId || !project) return
+
+    await supabase
+      .from("user_project_favorites")
+      .update({ hidden_from_today: true })
+      .eq("user_id", userId)
+      .eq("project_id", project.id)
+
+    setHidden(true)
   }
 
   async function changeStatus(next: string) {
@@ -289,6 +306,17 @@ export default function TodayProjectModal({
                 <button className="projects-btn" onClick={toggleFavorite}>
                   {favorite ? "★ Omat" : "☆ Omiin"}
                 </button>
+
+                {favorite && (
+                  <button
+                    className="projects-btn"
+                    onClick={hideFromToday}
+                    disabled={hidden}
+                    title="Hanke on jo seurannassa — piilota se Tänään-näkymästä ettei se nouse joka päivä listan kärkeen"
+                  >
+                    {hidden ? "🙈 Piilotettu" : "🙈 Piilota Tänään"}
+                  </button>
+                )}
 
                 <button className="projects-btn" onClick={onClose}>
                   Sulje

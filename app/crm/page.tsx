@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import ConfirmModal from '../components/ConfirmModal'
+import TodayProjectModal from '../today/components/TodayProjectModal'
 
 type Project = {
   id: string
@@ -55,6 +56,7 @@ export default function CRMPage() {
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [confirmOpen, setConfirmOpen] = useState(false)
 const [confirmProjectId, setConfirmProjectId] = useState<string | null>(null)
+  const [openId, setOpenId] = useState<string | null>(null)
 
   useEffect(() => {
     const run = async () => {
@@ -252,6 +254,20 @@ const confirmRemoveFavorite = async () => {
 
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
+                  onClick={() => setOpenId(p.id)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    padding: '8px 12px',
+                    background: '#fff',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Näytä tiedot
+                </button>
+
+                <button
                   onClick={() => toggleFavorite(p.id)}
                   style={{
                     border: '1px solid #d1d5db',
@@ -300,6 +316,10 @@ const confirmRemoveFavorite = async () => {
         }}
         onConfirm={confirmRemoveFavorite}
       />
+
+      {openId && (
+        <TodayProjectModal projectId={openId} onClose={() => setOpenId(null)} />
+      )}
     </div>
   )
 }
