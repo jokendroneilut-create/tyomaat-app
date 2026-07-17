@@ -245,6 +245,10 @@ export default function Navbar() {
       </div>
     )}
 
+    <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 8, marginTop: 4 }}>
+      <NavItem href="/settings">⚙️ Asetukset</NavItem>
+    </div>
+
     <button onClick={handleLogout} style={logoutStyle} className="tm-nav-item">
       Kirjaudu ulos
     </button>
