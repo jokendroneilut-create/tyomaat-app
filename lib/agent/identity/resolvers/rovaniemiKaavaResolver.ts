@@ -21,7 +21,24 @@ export async function resolveRovaniemiKaavaProject({
   const metadata = facts[0]?.metadata ?? {}
   const address = metadata.address ?? null
   const decisionNumber = metadata.decision_number ?? null
-  const description = metadata.description ?? null
+  const processingSteps = metadata.processing_steps ?? null
+  const contact: { name: string | null; title: string | null; phone: string | null; email: string | null } | null =
+    metadata.contact ?? null
+
+  const description = [metadata.description, processingSteps ? `Käsittelyvaiheet: ${processingSteps}` : null]
+    .filter(Boolean)
+    .join(" ") || null
+
+  const contactPersons = contact?.name
+    ? [
+        {
+          name: contact.name,
+          title: contact.title,
+          phone: contact.phone,
+          email: contact.email,
+        },
+      ]
+    : []
 
   const municipality = getMunicipalityByName("Rovaniemi")
 
@@ -59,6 +76,7 @@ export async function resolveRovaniemiKaavaProject({
       documents_url: document.document_url,
 
       description,
+      contact_persons: contactPersons,
 
       phase_hint: phaseHint,
 

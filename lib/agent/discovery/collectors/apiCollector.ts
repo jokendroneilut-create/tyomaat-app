@@ -2085,10 +2085,19 @@ async function collectSeinajokiSource(source: DiscoverySource) {
 const ROVANIEMI_MAX_DETAIL_FETCHES_PER_RUN = 8
 const ROVANIEMI_STALE_YEARS = 2
 
+type RovaniemiContact = {
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+}
+
 type RovaniemiDetails = {
   address: string | null
   phase: string | null
   decisionNumber: string | null
+  processingSteps: string | null
+  contact: RovaniemiContact | null
   stale: boolean
 }
 
@@ -2098,8 +2107,38 @@ function rovaniemiExtractLastYear(text: string): number | null {
   return parseInt(matches[matches.length - 1], 10)
 }
 
+function parseRovaniemiContact(text: string | null): RovaniemiContact | null {
+  if (!text) return null
+
+  const withoutPrefix = text.replace(/^Lisätietoja\s*:?\s*/i, "")
+
+  const emailMatch = withoutPrefix.match(/[\w.+-]+@[\w.-]+\.\w+/)
+  const email = emailMatch ? emailMatch[0] : null
+  const withoutEmail = email ? withoutPrefix.replace(email, "") : withoutPrefix
+
+  const phoneMatch = withoutEmail.match(/puh\.?\s*([\d\s,()+-]+)/i)
+  const phone = phoneMatch ? phoneMatch[1].trim().replace(/[,.]+$/, "").replace(/\s+/g, " ") : null
+  const withoutPhone = phoneMatch ? withoutEmail.replace(phoneMatch[0], "") : withoutEmail
+
+  const cleaned = withoutPhone.replace(/[,.]+$/, "").trim()
+  const words = cleaned.split(/\s+/).filter(Boolean)
+  const name = words.length >= 2 ? words.slice(-2).join(" ") : cleaned || null
+  const title = words.length > 2 ? words.slice(0, -2).join(" ") : null
+
+  if (!name && !phone && !email) return null
+
+  return { name, title, phone, email }
+}
+
 async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
-  const empty: RovaniemiDetails = { address: null, phase: null, decisionNumber: null, stale: false }
+  const empty: RovaniemiDetails = {
+    address: null,
+    phase: null,
+    decisionNumber: null,
+    processingSteps: null,
+    contact: null,
+    stale: false,
+  }
 
   try {
     const response = await fetch(url, { cache: "no-store" })
@@ -2122,9 +2161,34 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
     })
 
     let decisionNumber: string | null = null
+    let processingSteps: string | null = null
+    let contact: RovaniemiContact | null = null
+
     $("span.label").each((_, el) => {
-      if ($(el).text().trim() === "Päätösnumero") {
+      const label = $(el).text().trim()
+
+      if (label === "Päätösnumero") {
         decisionNumber = $(el).next().text().trim() || null
+      }
+
+      /*
+       * "Käsittelyvaiheet" on span.label, jonka jälkeen seuraava sisarus
+       * (div) sisältää sekä varsinaiset käsittelyvaiheet että usein myös
+       * "Lisätietoja: ..." yhteystietokappaleen samassa säiliössä.
+       */
+      if (label === "Käsittelyvaiheet") {
+        const paragraphs = $(el)
+          .next()
+          .find("p")
+          .toArray()
+          .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+
+        const contactParagraph = paragraphs.find((p) => /^Lisätietoja/i.test(p)) ?? null
+        const stepParagraphs = paragraphs.filter((p) => p !== contactParagraph)
+
+        processingSteps = stepParagraphs.join(" ") || null
+        contact = parseRovaniemiContact(contactParagraph)
       }
     })
 
@@ -2132,7 +2196,7 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
     const currentYear = new Date().getFullYear()
     const stale = lastYear !== null && lastYear <= currentYear - ROVANIEMI_STALE_YEARS
 
-    return { address, phase, decisionNumber, stale }
+    return { address, phase, decisionNumber, processingSteps, contact, stale }
   } catch {
     return empty
   }
@@ -2181,11 +2245,15 @@ async function collectRovaniemiSource(source: DiscoverySource) {
 
   const knownDetails = new Map<string, RovaniemiDetails>()
   for (const row of existingRows ?? []) {
-    if (row.raw_payload?.phase) {
+    // processingSteps/contact lisättiin myöhemmin — vanhat rivit haetaan
+    // siis uudelleen kunnes nekin sisältävät nämä kentät.
+    if (row.raw_payload?.phase && row.raw_payload?.processing_steps !== undefined) {
       knownDetails.set(row.document_url, {
         address: row.raw_payload.address ?? null,
         phase: row.raw_payload.phase,
         decisionNumber: row.raw_payload.decision_number ?? null,
+        processingSteps: row.raw_payload.processing_steps ?? null,
+        contact: row.raw_payload.contact ?? null,
         stale: row.raw_payload.stale ?? false,
       })
     }
@@ -2225,6 +2293,8 @@ async function collectRovaniemiSource(source: DiscoverySource) {
             address: details?.address ?? null,
             phase: details?.phase ?? null,
             decision_number: details?.decisionNumber ?? null,
+            processing_steps: details?.processingSteps ?? null,
+            contact: details?.contact ?? null,
             stale: details?.stale ?? false,
             description: item.description,
           },

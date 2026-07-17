@@ -213,6 +213,8 @@ export function resolveFacts(document: any) {
     const address = document.raw_payload?.address ?? null
     const decisionNumber = document.raw_payload?.decision_number ?? null
     const description = document.raw_payload?.description ?? null
+    const processingSteps = document.raw_payload?.processing_steps ?? null
+    const contact = document.raw_payload?.contact ?? null
 
     return {
       decisions: [],
@@ -225,6 +227,8 @@ export function resolveFacts(document: any) {
         address,
         decisionNumber,
         description,
+        processingSteps,
+        contact,
       }),
     }
   }
