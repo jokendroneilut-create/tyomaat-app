@@ -93,6 +93,9 @@ export default function TodayRecommendedProjects({
                       size_class: project.metadata?.size_class ?? null,
                       source_name: project.metadata?.source_name ?? null,
                     }}
+                    onDownvote={() =>
+                      setHiddenIds((prev) => new Set(prev).add(project.id))
+                    }
                   />
                 )}
 

@@ -20,10 +20,12 @@ export default function TodayFeedbackButtons({
   projectId,
   attributes,
   initialRating,
+  onDownvote,
 }: {
   projectId: string
   attributes: ProjectAttributes
   initialRating?: "up" | "down" | null
+  onDownvote?: () => void
 }) {
   const [rating, setRating] = useState<"up" | "down" | null>(initialRating ?? null)
   const [showReason, setShowReason] = useState(false)
@@ -98,6 +100,13 @@ export default function TodayFeedbackButtons({
 
     setSaved(true)
     setShowReason(false)
+
+    if (rating === "down") onDownvote?.()
+  }
+
+  function skipReason() {
+    setShowReason(false)
+    if (rating === "down") onDownvote?.()
   }
 
   return (
@@ -196,7 +205,7 @@ export default function TodayFeedbackButtons({
 
             <button
               type="button"
-              onClick={() => setShowReason(false)}
+              onClick={skipReason}
               style={{
                 fontSize: 12,
                 padding: "4px 10px",
