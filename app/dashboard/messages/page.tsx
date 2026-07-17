@@ -87,10 +87,14 @@ export default function MessagesPage() {
       if (!res.ok) {
   setResult(`Virhe: ${json.error}`)
 } else {
+  const baseMessage = json.testOnly
+    ? 'Testiviesti lähetetty sinulle'
+    : `Viesti lähetetty ${json.sent} käyttäjälle`
+
   setResult(
-    json.testOnly
-      ? 'Testiviesti lähetetty sinulle'
-      : `Viesti lähetetty ${json.sent} käyttäjälle`
+    json.logFailed
+      ? `${baseMessage} — HUOM: lokiin kirjaus epäonnistui, viesti ei näy alla olevassa listassa`
+      : baseMessage
   )
   setSubject('')
   setMessage('')

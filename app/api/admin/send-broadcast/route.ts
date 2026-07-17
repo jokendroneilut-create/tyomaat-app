@@ -154,6 +154,7 @@ export async function POST(req: Request) {
       ok: true,
       sent: recipients.length,
       testOnly,
+      logFailed: !!logError,
     })
   } catch (err: any) {
     console.error("SEND BROADCAST ERROR:", err)
