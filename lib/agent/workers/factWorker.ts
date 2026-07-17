@@ -51,6 +51,7 @@ export async function runFactWorker(documentId?: string) {
       "Kokkolan asemakaavatyöt",
       "Kirkkonummen kaavoitus",
       "Keravan kaavahankkeet",
+      "Tuusulan vireillä olevat kaavat",
       "Lahden kaavatyökohteet",
       "Porin vireillä olevat kaavat",
       "Oulun vireillä olevat kaavat",

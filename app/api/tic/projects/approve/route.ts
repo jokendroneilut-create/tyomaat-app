@@ -100,6 +100,7 @@ export async function POST(request: Request) {
     const isKokkolaKaava = normalize(metadata.resolver) === "kokkolakaavaresolver"
     const isKirkkonummiKaava = normalize(metadata.resolver) === "kirkkonummikaavaresolver"
     const isKeravaKaava = normalize(metadata.resolver) === "keravakaavaresolver"
+    const isTuusulaKaava = normalize(metadata.resolver) === "tuusulakaavaresolver"
     const isLahtiKaava = normalize(metadata.resolver) === "lahtikaavaresolver"
     const isPoriKaava = normalize(metadata.resolver) === "porikaavaresolver"
     const isOuluKaava = normalize(metadata.resolver) === "oulukaavaresolver"
@@ -233,6 +234,13 @@ export async function POST(request: Request) {
       candidateIdentifiers.push({
         type: "kerava_kaava_tunnus",
         value: metadata.kaava_tunnus,
+      })
+    }
+
+    if (isTuusulaKaava) {
+      candidateIdentifiers.push({
+        type: "tuusula_kaava_tunnus",
+        value: metadata.kaava_tunnus ?? metadata.record_number,
       })
     }
 
@@ -820,7 +828,12 @@ function buildCustomerProjectName({
     )
   }
 
-  if (operation && projectAddress) {
+  /*
+   * Osa lähteistä ei tarjoa erillistä osoitetta, joten address on
+   * asetettu samaksi kuin operation (kaavan nimi) — silloin liite
+   * toistaisi saman tekstin kahdesti ("Kartano I, Kartano I").
+   */
+  if (operation && projectAddress && projectAddress !== operation) {
     return `${operation}, ${projectAddress}`
   }
 

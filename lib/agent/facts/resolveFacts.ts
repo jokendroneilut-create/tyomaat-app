@@ -19,6 +19,7 @@ import { extractPorvooKaavaFacts } from "@/lib/agent/facts/extractPorvooKaavaFac
 import { extractKokkolaKaavaFacts } from "@/lib/agent/facts/extractKokkolaKaavaFacts"
 import { extractKirkkonummiKaavaFacts } from "@/lib/agent/facts/extractKirkkonummiKaavaFacts"
 import { extractKeravaKaavaFacts } from "@/lib/agent/facts/extractKeravaKaavaFacts"
+import { extractTuusulaKaavaFacts } from "@/lib/agent/facts/extractTuusulaKaavaFacts"
 import { extractLahtiKaavaFacts } from "@/lib/agent/facts/extractLahtiKaavaFacts"
 import { extractPoriKaavaFacts } from "@/lib/agent/facts/extractPoriKaavaFacts"
 import { extractOuluKaavaFacts } from "@/lib/agent/facts/extractOuluKaavaFacts"
@@ -359,6 +360,29 @@ export function resolveFacts(document: any) {
         kaavaTunnus,
         phase,
         description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Tuusulan vireillä olevat kaavat") {
+    const planName = document.raw_payload?.plan_name ?? null
+    const recordNumber = document.raw_payload?.record_number ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contact = document.raw_payload?.contact ?? null
+    const center = document.raw_payload?.center ?? null
+
+    return {
+      decisions: [],
+      facts: extractTuusulaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        planName,
+        recordNumber,
+        phase,
+        description,
+        contact,
+        center,
       }),
     }
   }

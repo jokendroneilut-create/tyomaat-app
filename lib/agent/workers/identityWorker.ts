@@ -21,6 +21,7 @@ import { resolvePorvooKaavaProject } from "@/lib/agent/identity/resolvers/porvoo
 import { resolveKokkolaKaavaProject } from "@/lib/agent/identity/resolvers/kokkolaKaavaResolver"
 import { resolveKirkkonummiKaavaProject } from "@/lib/agent/identity/resolvers/kirkkonummiKaavaResolver"
 import { resolveKeravaKaavaProject } from "@/lib/agent/identity/resolvers/keravaKaavaResolver"
+import { resolveTuusulaKaavaProject } from "@/lib/agent/identity/resolvers/tuusulaKaavaResolver"
 import { resolveLahtiKaavaProject } from "@/lib/agent/identity/resolvers/lahtiKaavaResolver"
 import { resolvePoriKaavaProject } from "@/lib/agent/identity/resolvers/poriKaavaResolver"
 import { resolveOuluKaavaProject } from "@/lib/agent/identity/resolvers/ouluKaavaResolver"
@@ -226,6 +227,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "keravan kaavahankkeet") {
     const result = await resolveKeravaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "tuusulan vireillä olevat kaavat") {
+    const result = await resolveTuusulaKaavaProject({
       document,
       facts: facts ?? [],
     })

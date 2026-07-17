@@ -3186,6 +3186,115 @@ async function collectKeravaSource(source: DiscoverySource) {
 }
 
 /*
+ * Tuusula käyttää samaa Trimble/Tekla "sukka"-GIS-taustajärjestelmää kuin
+ * Kuopio ja Hyvinkää (kartta.tuusula.fi, layer "sukka_asemakaava_user",
+ * koordinaatit GK25). Toisin kuin Hyvinkäällä, phase_id ei ole luotettava
+ * nykyisen vaiheen indikaattori täällä (esim. phase_id=6 esiintyy sekä
+ * vireillä että jo lainvoimaisilla kaavoilla) — description-kenttä on
+ * sen sijaan kronologinen kertomus, joten nykyinen vaihe poimitaan sen
+ * viimeisenä virkkeenä. date_legal-kentän olemassaolo on ainoa luotettava
+ * valmistumismerkki, joten sitä käytetään poissulkuun (kuten Hyvinkäällä).
+ */
+/*
+ * Kuvausteksti sisältää usein loppuun asti tavoite- tai ohjeistus-
+ * lauseita ("Voit jättää mielipiteen...") varsinaisen tilannepäivityksen
+ * jälkeen, joten pelkkä viimeinen virke ei riitä — nykyinen vaihe on
+ * viimeinen virke joka sisältää päivämäärän, koska aidot tilanne-
+ * päivitykset ovat lähes aina päivättyjä ("hyväksytty valtuustossa
+ * 29.5.2017"), toisin kuin tavoite-/ohjeistuslauseet.
+ */
+function tuusulaExtractLastSentence(description: string | null): string | null {
+  if (!description) return null
+
+  const cleaned = description.replace(/\s+/g, " ").trim()
+  if (!cleaned) return null
+
+  const sentences = cleaned
+    .split(/\.\s+(?=[A-ZÄÖÅ])/)
+    .map((s) => (s.endsWith(".") ? s : `${s}.`))
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+  const datePattern = /\d{1,2}\.\d{1,2}\.(?:\d{2,4})?/
+  const datedSentences = sentences.filter((s) => datePattern.test(s))
+
+  return datedSentences[datedSentences.length - 1] ?? sentences[sentences.length - 1] ?? null
+}
+
+async function collectTuusulaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Tuusulan kaavarajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const json = await response.json()
+  const features = Array.isArray(json.features) ? json.features : []
+
+  let saved = 0
+
+  for (const feature of features) {
+    const properties = feature.properties ?? {}
+    const id = properties.id
+    const documentUrl = `https://kartta.tuusula.fi/Applications/sukka/dist/#/viewplan/1/sukka_asemakaava_user/${id}`
+
+    const planName = properties.plan_name ? String(properties.plan_name).trim() : null
+    const recordNumber = properties.record_number ? String(properties.record_number).trim() : null
+    const description = properties.description ?? null
+    const phase = tuusulaExtractLastSentence(description)
+    const completed = !!properties.date_legal
+    const center = boundingBoxCenter(feature.geometry)
+
+    const rawText = JSON.stringify(feature)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: planName ?? `Kaava ${recordNumber ?? id}`,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            plan_name: planName,
+            record_number: recordNumber,
+            phase,
+            description,
+            contact: properties.contact ?? null,
+            center,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: features.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -5258,6 +5367,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "keravaKaavaParser") {
     return collectKeravaSource(source)
+  }
+
+  if (source.parser === "tuusulaKaavaParser") {
+    return collectTuusulaSource(source)
   }
 
   if (source.parser === "senaattiParser") {
