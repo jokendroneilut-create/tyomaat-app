@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 
@@ -25,6 +25,21 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const isMobile = useIsMobile(768);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpen(false);
+        setAdminOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
 
   useEffect(() => {
     const checkAdmin = async (token?: string) => {
@@ -131,7 +146,12 @@ export default function Navbar() {
     }
 
     return (
-      <a href={href} onClick={() => setOpen(false)} style={linkStyle}>
+      <a
+        href={href}
+        onClick={() => setOpen(false)}
+        style={linkStyle}
+        className="tm-nav-item"
+      >
         {children}
       </a>
     );
@@ -165,25 +185,16 @@ export default function Navbar() {
     </NavSection>
 
     {isAdmin && (
-      <div style={{ position: isMobile ? "static" : "relative", borderTop: "1px solid #f0f0f0", paddingTop: 8, marginTop: 4 }}>
+      <div
+        style={{ position: isMobile ? "static" : "relative", borderTop: "1px solid #f0f0f0", paddingTop: 8, marginTop: 4 }}
+        onMouseEnter={() => !isMobile && setAdminOpen(true)}
+        onMouseLeave={() => !isMobile && setAdminOpen(false)}
+      >
         <button
           type="button"
           onClick={() => setAdminOpen((v) => !v)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
-            background: "none",
-            border: "none",
-            padding: "4px 0",
-            cursor: "pointer",
-            fontSize: 11,
-            fontWeight: 700,
-            color: "#9ca3af",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
+          style={adminButtonStyle}
+          className="tm-nav-item"
         >
           <span>⚙️ Admin</span>
           <span>{isMobile ? (adminOpen ? "▲" : "▼") : "◀"}</span>
@@ -234,7 +245,7 @@ export default function Navbar() {
       </div>
     )}
 
-    <button onClick={handleLogout} style={logoutStyle}>
+    <button onClick={handleLogout} style={logoutStyle} className="tm-nav-item">
       Kirjaudu ulos
     </button>
 
@@ -269,6 +280,18 @@ export default function Navbar() {
         zIndex: 20,
       }}
     >
+      <style jsx global>{`
+        .tm-nav-item {
+          background: none;
+          border-radius: 8px;
+          transition: background-color 0.1s ease;
+        }
+        .tm-nav-item:hover,
+        .tm-nav-item:focus-visible {
+          background-color: #f3f4f6;
+        }
+      `}</style>
+
       <a
         href="/today"
         onClick={() => setOpen(false)}
@@ -303,7 +326,7 @@ export default function Navbar() {
         </span>
       </a>
 
-      <div style={{ marginLeft: "auto", position: "relative" }}>
+      <div ref={menuRef} style={{ marginLeft: "auto", position: "relative" }}>
         {!session ? (
           <a
             href="/login"
@@ -355,19 +378,37 @@ export default function Navbar() {
 }
 
 const linkStyle: React.CSSProperties = {
+  display: "block",
   textDecoration: "none",
   color: "#111827",
   fontWeight: 600,
   fontSize: 15,
-  padding: "4px 0",
+  padding: "8px 10px",
+};
+
+const adminButtonStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: "100%",
+  border: "none",
+  padding: "8px 10px",
+  cursor: "pointer",
+  fontSize: 11,
+  fontWeight: 700,
+  color: "#9ca3af",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
 };
 
 const logoutStyle: React.CSSProperties = {
+  display: "block",
+  width: "100%",
   cursor: "pointer",
   border: "none",
-  background: "transparent",
-  padding: 0,
+  padding: "8px 10px",
   textAlign: "left",
   color: "#b91c1c",
   fontWeight: 700,
+  fontSize: 15,
 };
