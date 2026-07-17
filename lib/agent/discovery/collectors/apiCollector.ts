@@ -1,4 +1,5 @@
 import crypto from "crypto"
+import https from "https"
 import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
 import type { DiscoverySource } from "../registry/sources"
@@ -3016,6 +3017,175 @@ async function collectKirkkonummiSource(source: DiscoverySource) {
 }
 
 /*
+ * Keravan sivusto käyttää mukautettua "project"-artikkelityyppiä
+ * kaavoitus-taksonomialla (project-type-tax=116 "Kaava") ja siistiä
+ * phase-tax-taksonomiaa vaiheelle — ei tarvitse tekstipäättelyä.
+ * Node.js:n fetch (undici) törmää ajoittain palvelimen esto-/WAF-
+ * käytäntöön (satunnaisia HTTP 500 -vastauksia), vaikka sama pyyntö
+ * curlilla onnistuu aina — siksi jokainen pyyntö tehdään uudelleen-
+ * yrityksellä ja selaimen kaltaisella User-Agentilla.
+ */
+const KERAVA_FETCH_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  Accept: "application/json",
+}
+
+const KERAVA_PHASE_TAX_NAMES: Record<number, string> = {
+  130: "Aloitusvaihe",
+  112: "Ehdotus",
+  134: "Ehdotusvaihe",
+  124: "Hyväksyminen",
+  136: "Hyväksymisvaihe",
+  126: "Luonnos",
+  132: "Luonnosvaihe",
+  140: "Rakentaminen",
+  128: "Suunnittelu",
+  142: "Valmis",
+  138: "Voimaantulo",
+}
+
+const KERAVA_MAX_DETAIL_FETCHES_PER_RUN = 8
+
+/*
+ * Node.js:n fetch (undici) törmää järjestelmällisesti Keravan sivuston
+ * esto-/WAF-käytäntöön (aina HTTP 500), vaikka identtinen pyyntö onnistuu
+ * aina curlilla ja Node.js:n perinteisellä https-moduulilla — kyse on siis
+ * undicin TLS-/HTTP-sormenjäljen torjunnasta, ei satunnaisesta kuormasta,
+ * joten pelkkä fetch-uudelleenyritys ei riitä. Siksi Kerava käyttää https-
+ * moduulia suoraan fetchin sijaan.
+ */
+function keravaHttpsGet(url: string): Promise<{ status: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, { headers: KERAVA_FETCH_HEADERS }, (res) => {
+        let body = ""
+        res.on("data", (chunk) => (body += chunk))
+        res.on("end", () => resolve({ status: res.statusCode ?? 0, body }))
+      })
+      .on("error", reject)
+  })
+}
+
+async function fetchKeravaJson(url: string, attempts = 4): Promise<any> {
+  let lastError: unknown = null
+
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const { status, body } = await keravaHttpsGet(url)
+      if (status === 200) {
+        return JSON.parse(body)
+      }
+      lastError = new Error(`HTTP ${status}`)
+    } catch (error) {
+      lastError = error
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400 + i * 200))
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Keravan haku epäonnistui")
+}
+
+async function collectKeravaSource(source: DiscoverySource) {
+  const listItems: any[] = await fetchKeravaJson(
+    "https://www.kerava.fi/wp-json/wp/v2/project?project-type-tax=116&per_page=100&_fields=id,title,link,phase-tax"
+  )
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDescriptions = new Map<string, string | null>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.description_fetched) {
+      knownDescriptions.set(row.document_url, row.raw_payload.description ?? null)
+    }
+  }
+
+  let detailFetches = 0
+  let saved = 0
+
+  for (const item of listItems) {
+    const title = item.title?.rendered ?? ""
+    const url = item.link ?? ""
+    if (!title || !url) continue
+
+    const phaseIds: number[] = item["phase-tax"] ?? []
+    const phase = phaseIds.map((id) => KERAVA_PHASE_TAX_NAMES[id]).filter(Boolean).join(", ") || null
+    const completed = phaseIds.some((id) => KERAVA_PHASE_TAX_NAMES[id] === "Valmis" || KERAVA_PHASE_TAX_NAMES[id] === "Voimaantulo")
+
+    const titleTunnusMatch = title.match(/\(([\w-]+)\)\s*$/)
+    const kaavaTunnus = titleTunnusMatch ? titleTunnusMatch[1] : null
+
+    let description: string | null = null
+    let descriptionFetched = knownDescriptions.has(url)
+
+    if (descriptionFetched) {
+      description = knownDescriptions.get(url) ?? null
+    } else if (detailFetches < KERAVA_MAX_DETAIL_FETCHES_PER_RUN) {
+      try {
+        const detail = await fetchKeravaJson(
+          `https://www.kerava.fi/wp-json/wp/v2/project/${item.id}?_fields=content`
+        )
+        const $ = cheerio.load(detail?.content?.rendered ?? "")
+        description = $("p").first().text().replace(/\s+/g, " ").trim() || null
+        descriptionFetched = true
+      } catch {
+        // jätetään yrittämättä uudelleen seuraavalla ajolla
+      }
+      detailFetches += 1
+    }
+
+    const rawText = JSON.stringify({ title, url, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            description_fetched: descriptionFetched,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: listItems.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -5084,6 +5254,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kirkkonummiKaavaParser") {
     return collectKirkkonummiSource(source)
+  }
+
+  if (source.parser === "keravaKaavaParser") {
+    return collectKeravaSource(source)
   }
 
   if (source.parser === "senaattiParser") {
