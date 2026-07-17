@@ -20,6 +20,8 @@ export async function resolvePorvooKaavaProject({
 
   const metadata = facts[0]?.metadata ?? {}
   const description = metadata.description ?? null
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] =
+    metadata.contacts ?? []
 
   const municipality = getMunicipalityByName("Porvoo")
 
@@ -56,6 +58,7 @@ export async function resolvePorvooKaavaProject({
       documents_url: document.document_url,
 
       description,
+      contact_persons: contacts,
 
       phase_hint: phaseHint,
 

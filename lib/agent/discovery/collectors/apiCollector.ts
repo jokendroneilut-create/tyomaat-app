@@ -2611,6 +2611,40 @@ function saloExtractSectionText($: cheerio.CheerioAPI, heading: any): string {
   return text
 }
 
+/*
+ * Yhteystiedot eivät sisälly ACF-bulkkihakuun (relative_contacts viittaa
+ * vain sisäiseen ID:hen, ei renderöityyn sisältöön) — ne pitää hakea
+ * jokaisen hankkeen omalta sivulta erikseen ".c-contact"-lohkosta, siksi
+ * sama rate-limitoitu yksityiskohtahaku-malli kuin Järvenpäällä/Lahdessa.
+ */
+const SALO_MAX_CONTACT_FETCHES_PER_RUN = 15
+
+async function fetchSaloContacts(url: string) {
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return []
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    $(".c-contact").each((_, el) => {
+      const card = $(el)
+      const name = card.find(".c-contact__title").first().text().trim() || null
+      const contactTitle = card.find(".c-contact__job-title").first().text().trim() || null
+      const phoneHref = card.find("a[href^='tel:']").first().attr("href")
+      const phone = phoneHref ? phoneHref.replace(/^tel:/, "") : null
+      const emailHref = card.find("a[href^='mailto:']").first().attr("href")
+      const email = emailHref ? emailHref.replace(/^mailto:/, "") : null
+      if (name) contacts.push({ name, title: contactTitle, phone, email })
+    })
+
+    return contacts
+  } catch {
+    return []
+  }
+}
+
 async function collectSaloSource(source: DiscoverySource) {
   const response = await fetch(source.url, { cache: "no-store" })
 
@@ -2620,6 +2654,19 @@ async function collectSaloSource(source: DiscoverySource) {
 
   const items: any[] = await response.json()
 
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownContacts = new Map<string, any[]>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.contacts?.length) {
+      knownContacts.set(row.document_url, row.raw_payload.contacts)
+    }
+  }
+
+  let contactFetches = 0
   let saved = 0
 
   for (const item of items) {
@@ -2646,7 +2693,16 @@ async function collectSaloSource(source: DiscoverySource) {
     let description: string | null = null
     if (h2s.length > 0) {
       const lastH2 = h2s[h2s.length - 1]
-      description = $(lastH2).nextAll("p").first().text().replace(/\s+/g, " ").trim() || null
+      description =
+        $(lastH2)
+          .nextAll("p")
+          .toArray()
+          // OAS/liite-linkkikappaleet sisältävät vain latauslinkin ("c-file"),
+          // ei varsinaista kuvaustekstiä, joten ne suodatetaan pois.
+          .filter((p) => $(p).find("a.c-file").length === 0)
+          .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+          .join(" ") || null
     }
     if (!description) {
       description = $("p").first().text().replace(/\s+/g, " ").trim() || null
@@ -2654,7 +2710,14 @@ async function collectSaloSource(source: DiscoverySource) {
 
     const kaavaTunnus = item.id ? String(item.id) : null
 
-    const rawText = JSON.stringify({ title, url, phase, description })
+    let contacts = knownContacts.get(url)
+    if (!contacts && contactFetches < SALO_MAX_CONTACT_FETCHES_PER_RUN) {
+      contactFetches += 1
+      contacts = await fetchSaloContacts(url)
+    }
+    contacts = contacts ?? []
+
+    const rawText = JSON.stringify({ title, url, phase, description, contacts })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin
@@ -2676,6 +2739,7 @@ async function collectSaloSource(source: DiscoverySource) {
             kaava_tunnus: kaavaTunnus,
             phase,
             description,
+            contacts,
             completed,
           },
           processed_at: new Date().toISOString(),
@@ -2740,7 +2804,19 @@ async function collectPorvooSource(source: DiscoverySource) {
     const titleTunnusMatch = title.match(/^(?:AK|DP)\s*([\d/]+)/i)
     const kaavaTunnus = titleTunnusMatch ? titleTunnusMatch[1] : null
 
-    const rawText = JSON.stringify({ title, url, phase, description })
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    $(".wp-block-contact-listing .mt-6.flex.flex-wrap > div").each((_, el) => {
+      const card = $(el)
+      const contactName = card.find("h5").first().text().replace(/\s+/g, " ").trim() || null
+      const contactTitle = card.find("p").first().text().replace(/\s+/g, " ").trim() || null
+      const phoneHref = card.find("a[href^='tel:']").first().attr("href")
+      const phone = phoneHref ? phoneHref.replace(/^tel:/, "") : null
+      const emailHref = card.find("a[href^='mailto:']").first().attr("href")
+      const email = emailHref ? emailHref.replace(/^mailto:/, "") : null
+      if (contactName) contacts.push({ name: contactName, title: contactTitle, phone, email })
+    })
+
+    const rawText = JSON.stringify({ title, url, phase, description, contacts })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin
@@ -2762,6 +2838,7 @@ async function collectPorvooSource(source: DiscoverySource) {
             kaava_tunnus: kaavaTunnus,
             phase,
             description,
+            contacts,
             completed,
           },
           processed_at: new Date().toISOString(),

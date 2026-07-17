@@ -275,6 +275,7 @@ export function resolveFacts(document: any) {
     const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
     const phase = document.raw_payload?.phase ?? null
     const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
 
     return {
       decisions: [],
@@ -285,6 +286,7 @@ export function resolveFacts(document: any) {
         kaavaTunnus,
         phase,
         description,
+        contacts,
       }),
     }
   }
@@ -294,6 +296,7 @@ export function resolveFacts(document: any) {
     const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
     const phase = document.raw_payload?.phase ?? null
     const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
 
     return {
       decisions: [],
@@ -304,6 +307,7 @@ export function resolveFacts(document: any) {
         kaavaTunnus,
         phase,
         description,
+        contacts,
       }),
     }
   }

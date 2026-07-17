@@ -22,6 +22,7 @@ export function extractPorvooKaavaFacts({
   kaavaTunnus,
   phase,
   description,
+  contacts,
 }: {
   documentId: string
   sourceName: string
@@ -29,6 +30,7 @@ export function extractPorvooKaavaFacts({
   kaavaTunnus: string | null
   phase: string | null
   description: string | null
+  contacts?: { name: string | null; title: string | null; phone: string | null; email: string | null }[]
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
 
@@ -42,6 +44,7 @@ export function extractPorvooKaavaFacts({
     decision_index: kaavaTunnus ?? title ?? "porvoo-kaava",
 
     description: clean(description),
+    contacts: contacts ?? [],
   }
 
   if (kaavaTunnus) {
