@@ -22,6 +22,7 @@ import { extractKeravaKaavaFacts } from "@/lib/agent/facts/extractKeravaKaavaFac
 import { extractTuusulaKaavaFacts } from "@/lib/agent/facts/extractTuusulaKaavaFacts"
 import { extractNurmijarviKaavaFacts } from "@/lib/agent/facts/extractNurmijarviKaavaFacts"
 import { extractSipooKaavaFacts } from "@/lib/agent/facts/extractSipooKaavaFacts"
+import { extractJarvenpaaKaavaFacts } from "@/lib/agent/facts/extractJarvenpaaKaavaFacts"
 import { extractLahtiKaavaFacts } from "@/lib/agent/facts/extractLahtiKaavaFacts"
 import { extractPoriKaavaFacts } from "@/lib/agent/facts/extractPoriKaavaFacts"
 import { extractOuluKaavaFacts } from "@/lib/agent/facts/extractOuluKaavaFacts"
@@ -423,6 +424,31 @@ export function resolveFacts(document: any) {
         kaavaTunnus,
         phase,
         description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Järvenpään vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const decisionNumber = document.raw_payload?.decision_number ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const address = document.raw_payload?.address ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractJarvenpaaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        decisionNumber,
+        phase,
+        address,
+        description,
+        contacts,
       }),
     }
   }

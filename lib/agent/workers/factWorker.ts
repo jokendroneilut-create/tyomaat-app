@@ -54,6 +54,7 @@ export async function runFactWorker(documentId?: string) {
       "Tuusulan vireillä olevat kaavat",
       "Nurmijärven ajankohtaiset asemakaavat",
       "Sipoon vireillä olevat asemakaavat",
+      "Järvenpään vireillä olevat asemakaavat",
       "Lahden kaavatyökohteet",
       "Porin vireillä olevat kaavat",
       "Oulun vireillä olevat kaavat",

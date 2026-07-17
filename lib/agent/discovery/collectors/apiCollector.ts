@@ -3493,6 +3493,216 @@ async function collectSipooSource(source: DiscoverySource) {
 }
 
 /*
+ * Järvenpään sivusto on staattisesti generoitu headless-WordPress +
+ * Next.js -sivusto (ei live-GraphQL-rajapintaa julkisesti saatavilla,
+ * CloudFront estää POST-pyynnöt) — sisältö haetaan siis tavallisella
+ * palvelinpuolen renderöidyllä HTML:llä, aivan kuten muillakin
+ * WordPress-lähteillä. Nykyinen vaihe ilmaistaan KUVABADGEINA (esim.
+ * ".../valmistelu.png"), ei tekstinä — badget on käänteisessä
+ * aikajärjestyksessä (uusin ensin), joten ensimmäinen badge on nykyinen
+ * vaihe. "lainvoima"-badge ensimmäisenä tarkoittaa kaavan olevan jo
+ * lainvoimainen, vaikka se näkyy "Vireillä olevat asemakaavat" -sivulla.
+ */
+const JARVENPAA_PHASE_LABELS: Record<string, string> = {
+  aloitus: "Aloitusvaihe",
+  valmistelu: "Valmisteluvaihe",
+  luonnos: "Luonnosvaihe",
+  ehdotus: "Ehdotusvaihe",
+  hyvaksyminen: "Hyväksymisvaihe",
+  voimaantulo: "Voimaantulo",
+  lainvoima: "Lainvoimainen",
+}
+
+const JARVENPAA_MAX_DETAIL_FETCHES_PER_RUN = 10
+
+async function collectJarvenpaaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Järvenpään kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const html = await response.text()
+  const $list = cheerio.load(html)
+
+  const items: { title: string; url: string }[] = []
+  const seenUrls = new Set<string>()
+
+  $list("a").each((_, el) => {
+    const href = $list(el).attr("href")
+    const text = $list(el).text().trim()
+    if (!href || !text) return
+    if (!href.includes("/vireilla-olevat-asemakaavat/")) return
+    if (href.endsWith("/vireilla-olevat-asemakaavat")) return
+
+    const absoluteUrl = href.startsWith("http") ? href : `https://www.jarvenpaa.fi${href}`
+    if (seenUrls.has(absoluteUrl)) return
+    seenUrls.add(absoluteUrl)
+
+    items.push({ title: text, url: absoluteUrl })
+  })
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.phase || row.raw_payload?.kaava_tunnus) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let detailFetches = 0
+  let saved = 0
+
+  for (const item of items) {
+    const known = knownDetails.get(item.url)
+
+    if (known) {
+      const rawText = JSON.stringify({ item, ...known })
+      const contentHash = hashContent(rawText)
+
+      const { error } = await supabaseAdmin
+        .from("source_documents")
+        .upsert(
+          {
+            source_id: source.id,
+            source_name: source.name,
+            title: item.title,
+            document_url: item.url,
+            document_type: "api",
+            content_hash: contentHash,
+            status: "downloaded",
+            raw_text: rawText,
+            raw_payload: known,
+            processed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            ...(known.completed
+              ? {
+                  facts_extracted_at: new Date().toISOString(),
+                  identity_resolved_at: new Date().toISOString(),
+                }
+              : {}),
+          },
+          { onConflict: "document_url" }
+        )
+
+      if (error) throw error
+      saved += 1
+      continue
+    }
+
+    if (detailFetches >= JARVENPAA_MAX_DETAIL_FETCHES_PER_RUN) continue
+    detailFetches += 1
+
+    const detailResponse = await fetch(item.url, { cache: "no-store" })
+    if (!detailResponse.ok) continue
+
+    const detailHtml = await detailResponse.text()
+    const $ = cheerio.load(detailHtml)
+    $("style, script").remove()
+
+    const description =
+      $("p")
+        .toArray()
+        .map((el) => $(el).text().replace(/\s+/g, " ").trim())
+        // Murupolku ("Etusivu/.../Sivun nimi") renderöityy myös <p>-elementiksi
+        // ja on usein yli 60 merkkiä pitkä, joten se pitää suodattaa erikseen.
+        .find((text) => text.length > 60 && !text.startsWith("Etusivu/")) ?? null
+
+    let decisionNumber: string | null = null
+    let kaavaTunnus: string | null = null
+    $("p").each((_, el) => {
+      if (kaavaTunnus) return
+      const html = $(el).html() ?? ""
+      if (!/Kaavatunnus/i.test(html)) return
+      const lines = html
+        .split(/<br\s*\/?>/i)
+        .map((l) => $.load(`<div>${l}</div>`)("div").text().trim())
+        .filter(Boolean)
+      const tunnusLine = lines.find((l) => /Kaavatunnus/i.test(l))
+      kaavaTunnus = tunnusLine ? tunnusLine.replace(/^.*Kaavatunnus\s*:?\s*/i, "").trim() || null : null
+      const otherLine = lines.find((l) => l !== tunnusLine)
+      decisionNumber = otherLine || null
+    })
+
+    const phaseBadges: string[] = []
+    $("img[src*='.png']").each((_, el) => {
+      const src = $(el).attr("src") ?? ""
+      const match = src.match(/\/([a-z]+)\.png/i)
+      if (match && JARVENPAA_PHASE_LABELS[match[1].toLowerCase()]) {
+        phaseBadges.push(match[1].toLowerCase())
+      }
+    })
+    const currentPhaseKey = phaseBadges[0] ?? null
+    const phase = currentPhaseKey ? JARVENPAA_PHASE_LABELS[currentPhaseKey] : null
+    const completed = currentPhaseKey === "lainvoima"
+
+    const addressMatch = description?.match(/osoitteessa\s+([^.,]+)/i)
+    const address = addressMatch ? addressMatch[1].trim() : null
+
+    const contactTitle = $(".ContactWrapper__ContactTitle").first().text().trim() || null
+    const contactName = $(".ContactWrapper__Name").first().text().trim() || null
+    const contactEmail = $(".ContactWrapper__Email").first().text().trim() || null
+    const contactPhone = $(".ContactWrapper__Phone").first().text().trim() || null
+    const contacts =
+      contactName || contactEmail || contactPhone
+        ? [{ name: contactName, title: contactTitle, phone: contactPhone, email: contactEmail }]
+        : []
+
+    const rawText = JSON.stringify({ item, decisionNumber, kaavaTunnus, phase, description, address, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: kaavaTunnus,
+            decision_number: decisionNumber,
+            phase,
+            address,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -5577,6 +5787,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "sipooKaavaParser") {
     return collectSipooSource(source)
+  }
+
+  if (source.parser === "jarvenpaaKaavaParser") {
+    return collectJarvenpaaSource(source)
   }
 
   if (source.parser === "senaattiParser") {
