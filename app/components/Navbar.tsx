@@ -209,7 +209,7 @@ export default function Navbar() {
                     position: "absolute",
                     top: 0,
                     right: "100%",
-                    marginRight: 8,
+                    marginRight: 0,
                     background: "#fff",
                     border: "1px solid #e5e7eb",
                     borderRadius: 12,
