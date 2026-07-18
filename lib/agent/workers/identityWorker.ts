@@ -14,6 +14,7 @@ import { resolvePuolustuskiinteistotProject } from "@/lib/agent/identity/resolve
 import { resolveEspooKaavaProject } from "@/lib/agent/identity/resolvers/espooKaavaResolver"
 import { resolveLohjaKaavaProject } from "@/lib/agent/identity/resolvers/lohjaKaavaResolver"
 import { resolveRaumaKaavaProject } from "@/lib/agent/identity/resolvers/raumaKaavaResolver"
+import { resolveKaarinaKaavaProject } from "@/lib/agent/identity/resolvers/kaarinaKaavaResolver"
 import { resolveKuopioKaavaProject } from "@/lib/agent/identity/resolvers/kuopioKaavaResolver"
 import { resolveHyvinkaaKaavaProject } from "@/lib/agent/identity/resolvers/hyvinkaaKaavaResolver"
 import { resolveSeinajokiKaavaProject } from "@/lib/agent/identity/resolvers/seinajokiKaavaResolver"
@@ -185,6 +186,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "rauman vireillä olevat asemakaavat") {
     const result = await resolveRaumaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "kaarinan vireillä olevat asemakaavat") {
+    const result = await resolveKaarinaKaavaProject({
       document,
       facts: facts ?? [],
     })

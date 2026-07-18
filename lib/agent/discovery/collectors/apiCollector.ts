@@ -4620,6 +4620,144 @@ async function collectRaumaKaavaSource(source: DiscoverySource) {
 }
 
 /*
+ * Kaarina käyttää Drupalia (ei WordPressiä kuten muut tämän session
+ * kaupungit) eikä JSON:API-rajapinta ole julkisesti auki, joten
+ * hankesivut löydetään sitemap.xml:stä (URL-polku sisältää aina
+ * "kaavoitus-ja-kaupunkisuunnittelu/a<tunnus>-..."). Vain n. 20
+ * hanketta, joten kaikki haetaan joka ajolla ilman rate-limitointia.
+ * "Kaavan vaiheet" -osio listaa KAIKKI mahdolliset vaiheet mallipohjana
+ * etukäteen — vain toteutuneilla on kaksoispiste + päivämäärä perässä,
+ * joten viimeinen päivätty rivi kertoo nykyisen vaiheen (sama malli
+ * kuin Rovaniemellä/Sipoossa).
+ */
+async function fetchKaarinaSitemapUrls(): Promise<string[]> {
+  const response = await fetch("https://kaarina.fi/sitemap.xml", { cache: "no-store" })
+  if (!response.ok) return []
+
+  const xml = await response.text()
+  const urls = [...xml.matchAll(/<loc>([^<]*kaavoitus-ja-kaupunkisuunnittelu\/a\d[^<]*)<\/loc>/gi)].map(
+    (m) => m[1]
+  )
+  return [...new Set(urls)]
+}
+
+async function fetchKaarinaKaavaDetails(url: string) {
+  const empty = {
+    title: null as string | null,
+    phase: null as string | null,
+    description: null as string | null,
+    contacts: [] as { name: string | null; title: string | null; phone: string | null; email: string | null }[],
+  }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const title = $("h1").first().text().replace(/\s+/g, " ").trim() || null
+
+    const findSection = (headingText: RegExp) => {
+      let heading: any = null
+      $("h2").each((_, el) => {
+        if (heading) return
+        if (headingText.test($(el).text().trim())) heading = el
+      })
+      return heading ? $(heading).parent().next() : null
+    }
+
+    const goalsSection = findSection(/Suunnittelun tavoitteet/i)
+    const description = goalsSection ? goalsSection.text().replace(/\s+/g, " ").trim() || null : null
+
+    const stagesSection = findSection(/Kaavan vaiheet/i)
+    const stages: string[] = []
+    stagesSection?.find("li").each((_, li) => {
+      const text = $(li).text().replace(/\s+/g, " ").trim()
+      if (text) stages.push(text)
+    })
+    const datedStages = stages.filter((s) => /:\s*\S/.test(s))
+    const lastDated = datedStages[datedStages.length - 1] ?? null
+    const phase = lastDated ? lastDated.split(":")[0].trim() : null
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    $(".node--type-contact-card, article.contact").each((_, el) => {
+      const $el = $(el)
+      const name = $el.find("h3").first().text().replace(/\s+/g, " ").trim() || null
+      const contactTitle =
+        $el.find("[class*='contact-person-title']").first().text().replace(/\s+/g, " ").trim() || null
+      const phone = $el.find("a[href^='tel:']").first().attr("href")?.replace(/^tel:/, "") ?? null
+      const email = $el.find("[class*='contact-email']").first().text().replace(/\s+/g, " ").trim() || null
+      if (name || phone || email) contacts.push({ name, title: contactTitle, phone, email })
+    })
+
+    return { title, phase, description, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectKaarinaKaavaSource(source: DiscoverySource) {
+  const urls = await fetchKaarinaSitemapUrls()
+
+  let saved = 0
+
+  for (const url of urls) {
+    const details = await fetchKaarinaKaavaDetails(url)
+    if (!details.title) continue
+
+    const kaavaTunnus = details.title.match(/^(A\d+[A-Za-z]?)/)?.[1] ?? null
+    const completed = /lainvoimainen|voimaantulo/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ url, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: details.title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: details.title,
+            kaava_tunnus: kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: urls.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -6728,6 +6866,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "raumaKaavaParser") {
     return collectRaumaKaavaSource(source)
+  }
+
+  if (source.parser === "kaarinaKaavaParser") {
+    return collectKaarinaKaavaSource(source)
   }
 
   if (source.parser === "hilmaParser") {
