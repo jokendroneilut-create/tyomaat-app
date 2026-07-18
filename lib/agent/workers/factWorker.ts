@@ -43,6 +43,7 @@ export async function runFactWorker(documentId?: string) {
       "Puolustuskiinteistöt uutiset",
       "Espoon ajankohtaiset asemakaavat",
       "Lohjan ajankohtaiset kaavat",
+      "Rauman vireillä olevat asemakaavat",
       "Kuopion vireillä olevat kaavat",
       "Hyvinkään vireillä olevat kaavat",
       "Seinäjoen ajankohtaiset asemakaavat",

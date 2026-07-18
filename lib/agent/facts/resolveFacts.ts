@@ -11,6 +11,7 @@ import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
 import { extractPuolustuskiinteistotFacts } from "@/lib/agent/facts/extractPuolustuskiinteistotFacts"
 import { extractEspooKaavaFacts } from "@/lib/agent/facts/extractEspooKaavaFacts"
 import { extractLohjaKaavaFacts } from "@/lib/agent/facts/extractLohjaKaavaFacts"
+import { extractRaumaKaavaFacts } from "@/lib/agent/facts/extractRaumaKaavaFacts"
 import { extractKuopioKaavaFacts } from "@/lib/agent/facts/extractKuopioKaavaFacts"
 import { extractHyvinkaaKaavaFacts } from "@/lib/agent/facts/extractHyvinkaaKaavaFacts"
 import { extractSeinajokiKaavaFacts } from "@/lib/agent/facts/extractSeinajokiKaavaFacts"
@@ -810,6 +811,27 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractLohjaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Rauman vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractRaumaKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

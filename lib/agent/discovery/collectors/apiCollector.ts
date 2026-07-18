@@ -4479,6 +4479,147 @@ async function collectLohjaKaavaSource(source: DiscoverySource) {
 }
 
 /*
+ * Rauman kaavasivut ovat lohkopohjaisia (Gutenberg) — kaavatunnus (esim.
+ * "22-005") on jo WP-otsikossa, ja koko sisältö tulee bulkkihaussa
+ * (content.rendered), joten erillistä sivuhakua ei tarvita. Sivun oma
+ * "todellinen" otsikko ja nykyinen vaihe ovat molemmat <h2>-otsikkoina
+ * ilman luotettavaa erottavaa CSS-luokkaa, joten ne erotetaan sisällön
+ * perusteella: vaihe-otsikko täsmää tunnettuun sanastoon
+ * (Vireilletulo/Valmistelu/Ehdotus/Hyväksytty/Voimaantulo/Lainvoimainen),
+ * muut kelpaavat otsikoksi. Yhteystiedot ovat "Lisätietoja antaa"
+ * -osion jälkeisissä kontaktikorteissa (Nimi-otsikko, sitten titteli/
+ * puhelin/sähköposti omina <p>-elementteinään).
+ */
+const RAUMA_PHASE_HEADING_PATTERN = /^(Vireilletulo|Valmistelu|Ehdotus|Hyväksytty|Voimaantulo|Lainvoimainen)/i
+const RAUMA_NON_TITLE_HEADING_PATTERN = /^(Lisätietoja|Materiaali|Selvitykset)/i
+
+function raumaParseContacts($: cheerio.CheerioAPI) {
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+
+  let afterLisatiedot = false
+  $("h2, li").each((_, el) => {
+    const $el = $(el)
+    if ($el.is("h2")) {
+      if (/^Lisätietoja/i.test($el.text().trim())) afterLisatiedot = true
+      return
+    }
+    if (!afterLisatiedot) return
+    if (!$el.hasClass("contact") && !$el.find(".contact").length && !/contact/i.test($el.attr("class") ?? "")) return
+
+    const name = $el.find("h2").first().text().trim() || null
+    const paragraphs = $el
+      .find("p")
+      .toArray()
+      .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+
+    const email = paragraphs.find((p) => p.includes("@")) ?? null
+    const phone = paragraphs.find((p) => /puh\.?\s*[\d\s-]+/i.test(p))?.replace(/^puh\.?\s*/i, "") ?? null
+    const title = paragraphs.find((p) => p !== email && p !== phone && !/puh\.?\s*[\d\s-]+/i.test(p)) ?? null
+
+    if (name || email || phone) {
+      contacts.push({ name, title, phone, email })
+    }
+  })
+
+  return contacts
+}
+
+async function collectRaumaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Rauman kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const items: any[] = await response.json()
+
+  let saved = 0
+
+  for (const item of items) {
+    const wpTitle = (item.title?.rendered ?? "").trim()
+    const url = item.link ?? ""
+    const html = item.content?.rendered ?? ""
+
+    if (!wpTitle || !url) continue
+
+    const kaavaTunnus = wpTitle.match(/(\d{2}[-–]\d{3})/)?.[1]?.replace("–", "-") ?? null
+
+    const $ = cheerio.load(html)
+
+    const headings: { text: string; el: any }[] = []
+    $("h2").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (text) headings.push({ text, el })
+    })
+
+    const phaseHeadings = headings.filter((h) => RAUMA_PHASE_HEADING_PATTERN.test(h.text))
+    const phase = phaseHeadings[phaseHeadings.length - 1]?.text ?? null
+
+    const titleHeading = headings.find(
+      (h) => !RAUMA_PHASE_HEADING_PATTERN.test(h.text) && !RAUMA_NON_TITLE_HEADING_PATTERN.test(h.text)
+    )
+    const title = titleHeading?.text ?? wpTitle
+
+    const descriptionParts: string[] = []
+    $("p").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (text && text.length > 15 && !text.includes("@")) descriptionParts.push(text)
+    })
+    const description = descriptionParts.slice(0, 4).join(" ").slice(0, 3000) || null
+
+    const completed = /voimaantulo|lainvoima/i.test(phase ?? "")
+    const contacts = raumaParseContacts($)
+
+    const rawText = JSON.stringify({ title, url, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -6583,6 +6724,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "lohjaKaavaParser") {
     return collectLohjaKaavaSource(source)
+  }
+
+  if (source.parser === "raumaKaavaParser") {
+    return collectRaumaKaavaSource(source)
   }
 
   if (source.parser === "hilmaParser") {
