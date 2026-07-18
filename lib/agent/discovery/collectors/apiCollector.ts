@@ -4904,6 +4904,135 @@ async function collectNokiaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KAJAANI_LISTING_URL = "https://kajaani.cloudnc.fi/fi-FI/Kaavat"
+const KAJAANI_CONTACT_PATTERN =
+  /([A-Za-zÅÄÖåäö][^,]*?),?\s*(?:p\.\s*)?(\d[\d\s-]{4,14}\d)[,\s]+([\w.+-]+@[\w.-]+\.\w+)/g
+
+function kajaaniSplitNameTitle(raw: string): { name: string | null; title: string | null } {
+  const cleaned = raw.replace(/^(ja|tai)\s+/i, "").trim()
+  const tokens = cleaned.split(/\s+/)
+  if (tokens.length <= 2) return { name: cleaned || null, title: null }
+
+  const name = tokens.slice(-2).join(" ")
+  const title = tokens.slice(0, -2).join(" ")
+  return { name: name || null, title: title || null }
+}
+
+async function fetchKajaaniKaavaDetails(url: string) {
+  const empty = { kaavaTunnus: null, phase: null, description: null, contacts: [] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const kaavaTunnus = $(".kaavatunnus-info").first().text().replace(/\s+/g, " ").trim() || null
+    const description = $(".kuulutus-info").first().text().replace(/\s+/g, " ").trim() || null
+
+    const phase = $(".phase.box").first().find(".phase-header b").first().text().replace(/\s+/g, " ").trim() || null
+
+    const contactsRaw = $(".yhteyshenkilo-info")
+      .first()
+      .text()
+      .replace(/\(at\)/gi, "@")
+      .replace(/\s+/g, " ")
+      .trim()
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    for (const match of contactsRaw.matchAll(KAJAANI_CONTACT_PATTERN)) {
+      const { name, title } = kajaaniSplitNameTitle(match[1])
+      contacts.push({
+        name,
+        title,
+        phone: match[2].trim(),
+        email: match[3].trim(),
+      })
+    }
+
+    return { kaavaTunnus, phase, description, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectKajaaniKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KAJAANI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: { title: string; url: string; completed: boolean }[] = []
+
+  $("a[href*='content/']").each((_, el) => {
+    const href = $(el).attr("href")
+    const text = $(el).text().replace(/\s+/g, " ").trim()
+    if (!href || !text) return
+
+    const match = text.match(/^(Vireille tulleet asemakaavat|Voimaan tulleet asemakaavat):\s*(.+)$/)
+    if (!match) return
+
+    const title = match[2].replace(/\s*-\s*\d{1,2}\.\d{1,2}\.\d{4}$/, "").trim()
+    const url = new URL(href, "https://kajaani.cloudnc.fi").toString()
+    const completed = match[1] === "Voimaan tulleet asemakaavat"
+
+    items.push({ title, url, completed })
+  })
+
+  let saved = 0
+
+  for (const item of items) {
+    const details = await fetchKajaaniKaavaDetails(item.url)
+
+    const rawText = JSON.stringify({ item, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: details.kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed: item.completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(item.completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 /*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
@@ -7021,6 +7150,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "nokiaKaavaParser") {
     return collectNokiaKaavaSource(source)
+  }
+
+  if (source.parser === "kajaaniKaavaParser") {
+    return collectKajaaniKaavaSource(source)
   }
 
   if (source.parser === "hilmaParser") {
