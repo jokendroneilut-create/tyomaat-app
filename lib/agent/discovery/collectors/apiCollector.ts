@@ -5625,6 +5625,156 @@ async function collectRaisioKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Lempäälän kaavasivut ovat WordPress-sivun 3309 lapsisivuja, ja
+ * wp-json:in content.rendered-kenttä sisältää KOKO sivuston
+ * navigaatiovalikon <li>-elementteinä ennen varsinaista sisältöä —
+ * siksi kuvaus/vaihe/yhteystiedot poimitaan vain h1-h5/p-elementeistä,
+ * ei <li>:stä. Vaiheotsikot (h4, esim. "Ehdotus:", "Luonnos:") eivät
+ * ole luotettavasti kronologisessa järjestyksessä sivulla, joten
+ * nykyinen vaihe päätellään edistyneimmästä otsikosta prioriteetti-
+ * järjestyksessä, ei sijainnista.
+ */
+const LEMPAALA_PARENT_PAGE_ID = 3309
+
+function lempaalaPhaseFromHeadings(headings: string[]): string {
+  const combined = headings.join(" ").toLowerCase()
+  if (/voimaan|lainvoima/.test(combined)) return "Voimaantulo"
+  if (/hyväksy/.test(combined)) return "Hyväksyminen"
+  if (/ehdotus/.test(combined)) return "Ehdotus"
+  if (/luonnos/.test(combined)) return "Luonnos"
+  if (/osallistumis|arviointi|arvionti/.test(combined)) return "Osallistumis- ja arviointisuunnitelma"
+  return "Vireilletulo"
+}
+
+async function fetchLempaalaPlanPages(): Promise<{ title: string; url: string; slug: string; content: string }[]> {
+  const response = await fetch(
+    `https://www.lempaala.fi/wp-json/wp/v2/pages?parent=${LEMPAALA_PARENT_PAGE_ID}&per_page=100&_fields=id,slug,link,title,content`,
+    { cache: "no-store" }
+  )
+  if (!response.ok) return []
+
+  const pages = (await response.json()) as any[]
+  return pages
+    .map((p) => ({
+      title: (p.title?.rendered ?? "").trim(),
+      url: p.link,
+      slug: p.slug,
+      content: p.content?.rendered ?? "",
+    }))
+    .filter((p) => p.title && p.url)
+}
+
+function parseLempaalaKaavaDetails(content: string) {
+  const empty = { title: null, description: null, phase: "Vireilletulo", contacts: [] }
+
+  try {
+    const $ = cheerio.load(content)
+
+    const title = $("h1").first().text().replace(/\s+/g, " ").trim() || null
+
+    const descriptionParts: string[] = []
+    let el = $("h1").first().length ? $("h1").first() : $("h2").first()
+    el = el.next()
+    while (el.length && el[0].tagName !== "h3" && el[0].tagName !== "h4") {
+      if (el[0].tagName === "p") {
+        const text = $(el).text().replace(/\s+/g, " ").trim()
+        if (text && !/^oheisista|^tutustu|^lataa\b|pdf-tiedosto(sta)?$/i.test(text)) {
+          descriptionParts.push(text)
+        }
+      }
+      el = el.next()
+    }
+    const description = descriptionParts.join(" ").trim() || null
+
+    const phaseHeadings = $("h4")
+      .map((_, h) => $(h).text().replace(/\s+/g, " ").trim())
+      .get()
+      .filter((t) => !/^tiedotteet|^aineistot/i.test(t))
+    const phase = lempaalaPhaseFromHeadings(phaseHeadings)
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    $(".gb-sidebar-contact-card").each((_, card) => {
+      const $card = $(card)
+      const rawName = $card.find(".person-name").first().text().replace(/\s+/g, " ").trim()
+      const tokens = rawName.split(" ")
+      const name = tokens.length === 2 ? `${tokens[1]} ${tokens[0]}` : rawName || null
+      const contactTitle = $card.find(".person-title").first().text().replace(/\s+/g, " ").trim() || null
+      const phone = $card.find("a[href^='tel:']").first().text().trim() || null
+      const email =
+        $card
+          .find("a")
+          .filter((_, a) => /^mailto:/i.test($(a).attr("href") ?? ""))
+          .first()
+          .attr("href")
+          ?.replace(/^mailto:/i, "") ?? null
+      if (name || phone || email) contacts.push({ name, title: contactTitle, phone, email })
+    })
+
+    return { title, description, phase, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectLempaalaKaavaSource(source: DiscoverySource) {
+  const links = await fetchLempaalaPlanPages()
+
+  let saved = 0
+
+  for (const link of links) {
+    const details = parseLempaalaKaavaDetails(link.content)
+    const title = details.title ?? link.title
+    const completed = /voimaan|lainvoima/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ link, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: link.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: link.slug,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 const KAJAANI_LISTING_URL = "https://kajaani.cloudnc.fi/fi-FI/Kaavat"
 const KAJAANI_CONTACT_PATTERN =
   /([A-Za-zÅÄÖåäö][^,]*?),?\s*(?:p\.\s*)?(\d[\d\s-]{4,14}\d)[,\s]+([\w.+-]+@[\w.-]+\.\w+)/g
@@ -8335,6 +8485,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "raisioKaavaParser") {
     return collectRaisioKaavaSource(source)
+  }
+
+  if (source.parser === "lempaalaKaavaParser") {
+    return collectLempaalaKaavaSource(source)
   }
 
   if (source.parser === "savonlinnaKaavaParser") {
