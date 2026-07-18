@@ -22,6 +22,8 @@ export function extractHelsinkiKaavaFacts({
   center,
   districtName,
   description,
+  planName,
+  address,
   selostusUrl,
 }: {
   documentId: string
@@ -30,6 +32,8 @@ export function extractHelsinkiKaavaFacts({
   center: { x: number; y: number } | null
   districtName?: string | null
   description?: string | null
+  planName?: string | null
+  address?: string | null
   selostusUrl?: string | null
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
@@ -40,9 +44,9 @@ export function extractHelsinkiKaavaFacts({
   const hyvaksymispvm = clean(properties.hyvaksymispvm)
   const pintaala = typeof properties.pintaala === "number" ? properties.pintaala : null
 
-  const operation = kaavaTunnus
-    ? `Kaava ${kaavaTunnus}${districtName ? ` – ${districtName}` : ""}`
-    : districtName
+  const operation =
+    clean(planName ?? null) ??
+    (kaavaTunnus ? `Kaava ${kaavaTunnus}${districtName ? ` – ${districtName}` : ""}` : districtName)
 
   const commonMetadata = {
     source_document_id: documentId,
@@ -57,6 +61,7 @@ export function extractHelsinkiKaavaFacts({
     site_area_m2: pintaala,
     coordinates: center,
     description: clean(description ?? null),
+    address: clean(address ?? null),
   }
 
   if (selostusUrl) {

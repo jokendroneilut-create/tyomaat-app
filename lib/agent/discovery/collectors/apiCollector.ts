@@ -496,8 +496,11 @@ async function fetchHelsinkiDistrictNames(): Promise<Map<string, string>> {
   return map
 }
 
-// Ks. VANTAA_MAX_HAKIJA_FETCHES_PER_RUN yllä — sama syy pieneen rajaan.
-const HELSINKI_MAX_SELOSTUS_FETCHES_PER_RUN = 5
+// Ks. VANTAA_MAX_HAKIJA_FETCHES_PER_RUN yllä — sama syy pieneen rajaan. PDF-
+// jäsennys on hieman raskaampi kuin tavallinen HTML-haku, joten raja on
+// silti maltillinen, mutta korkeampi kuin ennen (91 kaavaa / 5 per ajo olisi
+// vienyt lähes 3 viikkoa täyteen taustatietoon).
+const HELSINKI_MAX_SELOSTUS_FETCHES_PER_RUN = 10
 
 /*
  * Vireillä olevan kaavan asemakaavaselostus-PDF löytyy luotettavasti tästä
@@ -505,11 +508,22 @@ const HELSINKI_MAX_SELOSTUS_FETCHES_PER_RUN = 5
  * — vasta valmistuneet/lainvoimaiset kaavat arkistoidaan myöhemmin
  * vuosikohtaisiin kansioihin. Koska tämä lähde kerää nimenomaan vain
  * "vireillä"-tilassa olevia kaavoja, tämä osoite osuu oikeaan lähes aina.
+ *
+ * Selostus-PDF:n koko tekstidumppi (ensimmäiset merkit) on lähes
+ * lukukelvoton (sisällysluettelo, lakiteksti, sivunumerot), joten siitä
+ * poimitaan lisäksi kolme rakenteista kenttää joita PDF:n vakiomuotoilu
+ * lähes aina sisältää: "Kaavan nimi:" (oikea otsikko, ei pelkkä
+ * kaavatunnus), "osoitteessa X" (katuosoite) ja Tiivistelmä-kappale
+ * (ihmisluettava yhteenveto koko selostuksen sijaan).
  */
-async function fetchHelsinkiKaavaSelostus(
-  kaavaTunnus: string
-): Promise<{ description: string | null; selostusUrl: string | null }> {
+async function fetchHelsinkiKaavaSelostus(kaavaTunnus: string): Promise<{
+  description: string | null
+  planName: string | null
+  address: string | null
+  selostusUrl: string | null
+}> {
   const selostusUrl = `https://www.hel.fi/static/ksv/kaava/ak${kaavaTunnus}_selostus.pdf`
+  const empty = { description: null, planName: null, address: null, selostusUrl: null }
 
   try {
     const response = await fetch(selostusUrl, {
@@ -522,7 +536,7 @@ async function fetchHelsinkiKaavaSelostus(
     })
 
     if (!response.ok) {
-      return { description: null, selostusUrl: null }
+      return empty
     }
 
     const arrayBuffer = await response.arrayBuffer()
@@ -532,12 +546,33 @@ async function fetchHelsinkiKaavaSelostus(
     const parsed = await pdfParse(buffer)
     const text = parsed.text?.trim() ?? ""
 
+    if (!text) return empty
+
+    const planNameMatch = text.match(/Kaavan nimi:\s*([^\n]+)/)
+    const planName = planNameMatch ? planNameMatch[1].replace(/\s+/g, " ").trim() || null : null
+
+    /*
+     * Osoitetta seuraa usein suoraan kuvaileva sivulause ilman pilkkua
+     * ("osoitteessa Hopeatie 2 sijaitseva liike- ja toimistorakennus..."),
+     * joten pysähdytään heti ensimmäiseen numeroon (talon numero) sen
+     * sijaan että kaapattaisiin koko lause seuraavaan pilkkuun asti.
+     */
+    const addressMatch = text.match(/osoitteessa\s+([A-ZÄÖÅ][^\d\n]*?\d+)/)
+    const address = addressMatch ? addressMatch[1].replace(/\s+/g, " ").trim() || null : null
+
+    const summaryMatch = text.match(/Tiivistelmä\s*\n([\s\S]*?)\n\s*\n\s*\d+\s*\n/)
+    const summary = summaryMatch
+      ? summaryMatch[1].replace(/-\n/g, "").replace(/\s+/g, " ").trim()
+      : null
+
     return {
-      description: text.length > 0 ? text.slice(0, 8000) : null,
+      description: (summary && summary.length > 40 ? summary : text.slice(0, 8000)) || null,
+      planName,
+      address,
       selostusUrl,
     }
   } catch {
-    return { description: null, selostusUrl: null }
+    return empty
   }
 }
 
@@ -574,12 +609,14 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
 
   const knownDetails = new Map<
     string,
-    { description: string | null; selostusUrl: string | null }
+    { description: string | null; planName: string | null; address: string | null; selostusUrl: string | null }
   >()
   for (const row of existingRows ?? []) {
     if (row.raw_payload?.description) {
       knownDetails.set(row.document_url, {
         description: row.raw_payload.description,
+        planName: row.raw_payload.plan_name ?? null,
+        address: row.raw_payload.address ?? null,
         selostusUrl: row.raw_payload.selostus_url ?? null,
       })
     }
@@ -600,6 +637,8 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
 
     const known = knownDetails.get(documentUrl)
     let description: string | null = known?.description ?? null
+    let planName: string | null = known?.planName ?? null
+    let address: string | null = known?.address ?? null
     let selostusUrl: string | null = known?.selostusUrl ?? null
     let detailsAttempted = knownDetails.has(documentUrl)
 
@@ -610,6 +649,8 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
     ) {
       const details = await fetchHelsinkiKaavaSelostus(String(properties.kaavatunnus))
       description = details.description
+      planName = details.planName
+      address = details.address
       selostusUrl = details.selostusUrl
       selostusFetches += 1
       detailsAttempted = details.description !== null
@@ -624,7 +665,9 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
         {
           source_id: source.id,
           source_name: source.name,
-          title: `Kaava ${properties.kaavatunnus ?? properties.id}${districtName ? ` – ${districtName}` : ""}`,
+          title:
+            planName ??
+            `Kaava ${properties.kaavatunnus ?? properties.id}${districtName ? ` – ${districtName}` : ""}`,
           document_url: documentUrl,
           document_type: "api",
           content_hash: contentHash,
@@ -635,7 +678,9 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
             priority: source.priority,
             center: boundingBoxCenter(feature.geometry),
             district_name: districtName,
-            ...(detailsAttempted ? { description, selostus_url: selostusUrl } : {}),
+            ...(detailsAttempted
+              ? { description, plan_name: planName, address, selostus_url: selostusUrl }
+              : {}),
             original: feature,
           },
           processed_at: new Date().toISOString(),

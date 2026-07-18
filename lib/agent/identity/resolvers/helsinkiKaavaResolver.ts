@@ -23,6 +23,7 @@ export async function resolveHelsinkiKaavaProject({
 
   const metadata = facts[0]?.metadata ?? {}
   const description = metadata.description ?? null
+  const address = metadata.address ?? null
   const municipality = getMunicipalityByName("Helsinki")
 
   const coordinates = metadata.coordinates ?? null
@@ -41,8 +42,8 @@ export async function resolveHelsinkiKaavaProject({
   const result = await resolvePotentialProject({
     title: operation,
     municipality: municipality?.name ?? "Helsinki",
-    // Kaavan nimi on usein katuosoite/paikannimi eikä lähde tarjoa muuta osoitetta.
-    address: operation,
+    // Selostus-PDF:stä poimittu katuosoite, jos löytyi — muuten kaavan nimi kelpaa varakenttänä.
+    address: address ?? operation,
     propertyId: null,
     permitNumber: null,
     sourceName: document.source_name,
@@ -74,6 +75,7 @@ export async function resolveHelsinkiKaavaProject({
        */
       site_area_m2: siteAreaM2,
       description,
+      project_address: address,
       documents_url: selostusUrl,
 
       lupapiste_coordinates: coordinates,

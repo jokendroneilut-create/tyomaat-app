@@ -90,6 +90,8 @@ export function resolveFacts(document: any) {
     const districtName = document.raw_payload?.district_name ?? null
     const description = document.raw_payload?.description ?? null
     const selostusUrl = document.raw_payload?.selostus_url ?? null
+    const planName = document.raw_payload?.plan_name ?? null
+    const address = document.raw_payload?.address ?? null
 
     return {
       decisions: [],
@@ -100,6 +102,8 @@ export function resolveFacts(document: any) {
         center,
         districtName,
         description,
+        planName,
+        address,
         selostusUrl,
       }),
     }
