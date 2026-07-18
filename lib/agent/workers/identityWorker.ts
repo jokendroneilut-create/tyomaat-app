@@ -12,6 +12,7 @@ import { resolveVaylaProject } from "@/lib/agent/identity/resolvers/vaylaResolve
 import { resolveSenaattiProject } from "@/lib/agent/identity/resolvers/senaattiResolver"
 import { resolvePuolustuskiinteistotProject } from "@/lib/agent/identity/resolvers/puolustuskiinteistotResolver"
 import { resolveEspooKaavaProject } from "@/lib/agent/identity/resolvers/espooKaavaResolver"
+import { resolveLohjaKaavaProject } from "@/lib/agent/identity/resolvers/lohjaKaavaResolver"
 import { resolveKuopioKaavaProject } from "@/lib/agent/identity/resolvers/kuopioKaavaResolver"
 import { resolveHyvinkaaKaavaProject } from "@/lib/agent/identity/resolvers/hyvinkaaKaavaResolver"
 import { resolveSeinajokiKaavaProject } from "@/lib/agent/identity/resolvers/seinajokiKaavaResolver"
@@ -169,6 +170,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "espoon ajankohtaiset asemakaavat") {
     const result = await resolveEspooKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "lohjan ajankohtaiset kaavat") {
+    const result = await resolveLohjaKaavaProject({
       document,
       facts: facts ?? [],
     })

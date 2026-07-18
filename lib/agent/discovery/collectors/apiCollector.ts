@@ -4335,6 +4335,150 @@ async function collectEspooKaavaSource(source: DiscoverySource) {
 }
 
 /*
+ * Lohjan kaavalistaus sekoittaa varsinaisia asemakaavoja (otsikko alkaa
+ * tunnisteella L/K/RA/Y + numero, esim. "L80 Puu-Anttila...") muihin
+ * hankesivuihin (visiot, katuselvitykset, ulkoiset infrahankkeet) —
+ * vain tunnistekoodilla alkavat hyväksytään. Koko sisältö tulee jo
+ * WP:n bulkkihaussa (content.rendered), joten erillistä sivuhakua ei
+ * tarvita. Yhteystiedot ovat "Lisätiedot: Nimi (at) domain p.numero"
+ * -muodossa, usein useampi <br>-erotettuna samassa kappaleessa.
+ */
+const LOHJA_PLAN_CODE_PATTERN = /^(L|K|RA|Y)\d+[a-z]?\b/
+
+function lohjaParseContacts($: cheerio.CheerioAPI) {
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+
+  $("p").each((_, el) => {
+    const html = $(el).html() ?? ""
+    if (!/Lisätiedot/i.test(html)) return
+
+    const withoutLabel = html.replace(/^[\s\S]*?Lisätiedot:?\s*/i, "")
+    const fragments = withoutLabel.split(/<br\s*\/?>/i)
+
+    for (const fragment of fragments) {
+      const line = cheerio.load(`<div>${fragment}</div>`)("div").text().replace(/\s+/g, " ").trim()
+      if (!line) continue
+
+      const emailMatch = line.match(/([\w.+-]+)\(at\)([\w.-]+\.\w+)/i)
+      const email = emailMatch ? `${emailMatch[1]}@${emailMatch[2]}` : null
+      const phoneMatch = line.match(/p\.?\s*(\d[\d\s-]{6,}\d)/i)
+      const phone = phoneMatch ? phoneMatch[1].replace(/\s+/g, " ").trim() : null
+
+      let rest = line
+      if (emailMatch) rest = rest.replace(emailMatch[0], "")
+      if (phoneMatch) rest = rest.replace(phoneMatch[0], "")
+      rest = rest
+        .replace(/^Kaupunginarkkitehti:?/i, "")
+        .replace(/[,|]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+
+      if (rest || email || phone) {
+        contacts.push({ name: rest || null, title: null, phone, email })
+      }
+    }
+  })
+
+  return contacts
+}
+
+async function collectLohjaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error(`Lohjan kaavalistan haku epäonnistui: ${response.status} ${response.statusText}`)
+  }
+
+  const items: any[] = await response.json()
+
+  let saved = 0
+
+  for (const item of items) {
+    const title = (item.title?.rendered ?? "").trim()
+    const url = item.link ?? ""
+    const html = item.content?.rendered ?? ""
+
+    if (!title || !url) continue
+    if (!LOHJA_PLAN_CODE_PATTERN.test(title)) continue
+
+    const kaavaTunnus = title.match(LOHJA_PLAN_CODE_PATTERN)?.[0] ?? null
+
+    const $ = cheerio.load(html)
+
+    const descriptionParts: string[] = []
+    $("body")
+      .children()
+      .each((_, el) => {
+        const $el = $(el)
+        if ($el.is("h2, h3, h4, h5, h6")) return false
+        if ($el.is("p")) {
+          const text = $el.text().replace(/\s+/g, " ").trim()
+          if (text && !/Lisätiedot/i.test(text)) descriptionParts.push(text)
+        }
+      })
+    const description = descriptionParts.join(" ").slice(0, 3000) || null
+
+    const headings: string[] = []
+    $("h4.wp-block-heading, h3.wp-block-heading").each((_, el) => {
+      const text = $(el).text().trim()
+      if (text) headings.push(text)
+    })
+    const phase = headings[headings.length - 1] ?? null
+
+    const completed =
+      /hyväksytty/i.test(title) || /hyväksy|voimaantulo|lainvoima/i.test(phase ?? "")
+
+    const contacts = lohjaParseContacts($)
+
+    const rawText = JSON.stringify({ title, url, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -6435,6 +6579,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "espooKaavaParser") {
     return collectEspooKaavaSource(source)
+  }
+
+  if (source.parser === "lohjaKaavaParser") {
+    return collectLohjaKaavaSource(source)
   }
 
   if (source.parser === "hilmaParser") {
