@@ -5209,8 +5209,7 @@ async function fetchYlojarviKaavaDetails(url: string) {
     const html = await response.text()
     const $ = cheerio.load(html)
 
-    let goalPara: string | null = null
-    let firstPara: string | null = null
+    const candidates: string[] = []
     const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
 
     $("p").each((_, el) => {
@@ -5220,11 +5219,15 @@ async function fetchYlojarviKaavaDetails(url: string) {
       contacts.push(...ylojarviParseContactsFromParagraph(text))
 
       if (/^(Jaa|Kopioi|Löysitkö|Ylöjärven kaupunki \|)/i.test(text)) return
-      if (!firstPara) firstPara = text
-      if (!goalPara && /tavoit/i.test(text)) goalPara = text
+      if (/nähtävillä|yleisötilaisuus|valmistelee|valmistellaan|lisätietoja.*antaa|lisätietoja.*antavat|viimeksi muokattu|päätti.*käynnistää|vireille tulee|hyväksytty:\s*$/i.test(text)) return
+
+      candidates.push(text)
     })
 
-    const description = goalPara ?? firstPara ?? null
+    const description =
+      candidates.length > 0
+        ? candidates.reduce((longest, current) => (current.length > longest.length ? current : longest))
+        : null
 
     const kaavaAineistoHeading = $("h3")
       .filter((_, el) => $(el).text().trim() === "Kaava-aineisto")
