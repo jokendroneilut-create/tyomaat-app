@@ -5301,6 +5301,181 @@ async function collectRiihimakiKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Raasepori (raseborg.fi) on kaksikielinen, ja jokainen kaavahanke on
+ * kahtena erillisenä wp-json "planer"-tyypin tietueena — suomeksi
+ * (slug "kaava-NNNN") ja ruotsiksi (slug "plan-NNNN"), samalla
+ * nelinumeroisella hanketunnuksella. Kerätään vain lang==="fi" jotta
+ * sama hanke ei tuota kahta kandidaattia. Käsittelyvaihe-osiossa
+ * näytetään VAIN jo saavutetut vaiheet (ei tulevaa vaihetta
+ * paikkamerkkinä), uusin ensin — joten ensimmäinen otsikko kertoo
+ * nykyisen vaiheen.
+ */
+const RAASEPORI_TITLE_NAME_PATTERN =
+  /((?:johtava\s+)?(?:kaavakonsultt\w*|kaavoitusinsinööri|kaavoituspäällikkö|kaupunginarkkitehti|maankäyttö\w*|arkkitehti))\s+(\p{Lu}[\p{L}-]+(?:\s\p{Lu}[\p{L}-]+)?)/giu
+const RAASEPORI_PHONE_PATTERN = /(?:puh\.?|p\.)\s*(\d[\d\s]{5,12}\d)/gi
+const RAASEPORI_EMAIL_PATTERN = /([\w.+-]+@[\w.-]+\.\w+)/g
+
+async function fetchRaaseporiPlanLinks(): Promise<{ title: string; url: string; slug: string }[]> {
+  const links: { title: string; url: string; slug: string }[] = []
+
+  for (let page = 1; page <= 5; page++) {
+    const response = await fetch(
+      `https://www.raseborg.fi/wp-json/wp/v2/planer?per_page=100&page=${page}&_fields=id,slug,link,lang,title`,
+      { cache: "no-store" }
+    )
+    if (!response.ok) break
+
+    const items = (await response.json()) as any[]
+    if (!Array.isArray(items) || items.length === 0) break
+
+    for (const item of items) {
+      if (item.lang !== "fi") continue
+      const title = (item.title?.rendered ?? "").replace(/&#8211;/g, "–").trim()
+      if (!title || !item.link) continue
+      links.push({ title, url: item.link, slug: item.slug })
+    }
+
+    if (items.length < 100) break
+  }
+
+  return links
+}
+
+async function fetchRaaseporiKaavaDetails(url: string) {
+  const empty = { description: null, phase: "Kaavoituksen aloitus", contacts: [] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+    $("script, style, nav, footer, header").remove()
+
+    /*
+     * h1 elää eri lohkossa (sivun yläbanneri) kuin varsinainen sisältö
+     * (kuvaus, yhteystiedot, käsittelyvaihe), joten niitä ei voi kävellä
+     * h1:n sisaruksina — sen sijaan käydään läpi litteä lista <main>-
+     * elementin sisällä olevista otsikko-/kappale-elementeistä.
+     */
+    const items = $("main").first().find("h1,h2,h3,h4,p,li").toArray()
+
+    const descriptionParts: string[] = []
+    let contactText = ""
+    let inContacts = false
+
+    for (const item of items) {
+      const tag = item.tagName
+      if (tag === "h1") continue
+
+      const text = $(item).text().replace(/\s+/g, " ").trim()
+
+      if ((tag === "h2" || tag === "h4") && /lisätietoja/i.test(text)) {
+        inContacts = true
+        continue
+      }
+      if (tag === "h2") break
+
+      if (inContacts) {
+        contactText += " " + text
+      } else if (tag === "p" && text && !/^etusivu/i.test(text)) {
+        descriptionParts.push(text)
+      }
+    }
+
+    const description = descriptionParts.join(" ").trim() || null
+
+    const kasittelyHeading = $("h2")
+      .filter((_, el2) => /käsittelyvaihe/i.test($(el2).text()))
+      .first()
+    const currentPhaseHeading = kasittelyHeading.length ? kasittelyHeading.next() : null
+    const phase =
+      currentPhaseHeading && currentPhaseHeading.length && currentPhaseHeading[0].tagName === "h4"
+        ? currentPhaseHeading.text().replace(/\s+/g, " ").trim()
+        : "Kaavoituksen aloitus"
+
+    const normalizedContactText = contactText.replace(/\((?:at|ät)\)/gi, "@")
+
+    const names = [...contactText.matchAll(RAASEPORI_TITLE_NAME_PATTERN)]
+    const phones = [...contactText.matchAll(RAASEPORI_PHONE_PATTERN)].map((m) => m[1].trim())
+    const emails = [...normalizedContactText.matchAll(RAASEPORI_EMAIL_PATTERN)].map((m) => m[1])
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] =
+      names.map((match, index) => ({
+        name: match[2].trim(),
+        title: match[1],
+        phone: phones[index] ?? null,
+        email: emails[index] ?? null,
+      }))
+
+    if (contacts.length === 0 && emails.length > 0) {
+      contacts.push({ name: null, title: "Kaavoitus", phone: phones[0] ?? null, email: emails[0] })
+    }
+
+    return { description, phase, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectRaaseporiKaavaSource(source: DiscoverySource) {
+  const links = await fetchRaaseporiPlanLinks()
+
+  let saved = 0
+
+  for (const link of links) {
+    const details = await fetchRaaseporiKaavaDetails(link.url)
+    const completed = /lainvoima|voimaantulo/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ link, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: link.title,
+          document_url: link.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: link.title,
+            kaava_tunnus: link.slug,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 const KAJAANI_LISTING_URL = "https://kajaani.cloudnc.fi/fi-FI/Kaavat"
 const KAJAANI_CONTACT_PATTERN =
   /([A-Za-zÅÄÖåäö][^,]*?),?\s*(?:p\.\s*)?(\d[\d\s-]{4,14}\d)[,\s]+([\w.+-]+@[\w.-]+\.\w+)/g
@@ -8003,6 +8178,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "riihimakiKaavaParser") {
     return collectRiihimakiKaavaSource(source)
+  }
+
+  if (source.parser === "raaseporiKaavaParser") {
+    return collectRaaseporiKaavaSource(source)
   }
 
   if (source.parser === "savonlinnaKaavaParser") {
