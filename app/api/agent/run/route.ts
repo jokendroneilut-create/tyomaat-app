@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
 export const runtime = "nodejs"
+export const maxDuration = 300
 
 export async function GET(req: Request) {
   try {

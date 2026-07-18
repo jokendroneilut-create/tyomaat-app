@@ -3,6 +3,23 @@ import { sources } from "@/lib/agent/sources"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 export const runtime = "nodejs"
+export const maxDuration = 300
+
+/*
+ * ~29 yrityslähdettä käydään läpi peräkkäin yhdessä palvelinkutsussa, ja
+ * havaittu käytännössä ehtii käsitellä vain n. 17-18 kappaletta ennen kuin
+ * kutsu jostain syystä katkeaa — jos taulukon järjestys olisi aina sama,
+ * viimeiset lähteet eivät koskaan pääsisi vuoroon. Kierrättämällä
+ * aloituskohtaa päivän mukaan jokainen lähde ehtii käsittelyyn muutaman
+ * päivän sisällä riippumatta siitä missä todellinen aikaraja menee.
+ */
+function rotateSourcesForToday<T>(list: T[]): T[] {
+  if (list.length === 0) return list
+  const dayIndex = Math.floor(Date.now() / 86400000)
+  const step = Math.ceil(list.length / 2)
+  const offset = (dayIndex * step) % list.length
+  return [...list.slice(offset), ...list.slice(0, offset)]
+}
 
 export async function GET(request: Request) {
   const auth = await verifyAdminRequest(request)
@@ -13,7 +30,7 @@ export async function GET(request: Request) {
   const allCandidates: any[] = []
   const sourceStatus: any[] = []
 
-  for (const source of sources) {
+  for (const source of rotateSourcesForToday(sources)) {
     try {
       console.log(`RUNNING SOURCE: ${source.name}`)
 
