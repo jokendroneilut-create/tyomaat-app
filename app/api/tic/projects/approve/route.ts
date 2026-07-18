@@ -90,6 +90,7 @@ export async function POST(request: Request) {
     const isVayla = normalize(metadata.resolver) === "vaylaresolver"
     const isSenaatti = normalize(metadata.resolver) === "senaattiresolver"
     const isPuolustuskiinteistot = normalize(metadata.resolver) === "puolustuskiinteistotresolver"
+    const isEspooKaava = normalize(metadata.resolver) === "espookaavaresolver"
     const isKuopioKaava = normalize(metadata.resolver) === "kuopiokaavaresolver"
     const isHyvinkaaKaava = normalize(metadata.resolver) === "hyvinkaakaavaresolver"
     const isSeinajokiKaava = normalize(metadata.resolver) === "seinajokikaavaresolver"
@@ -357,6 +358,13 @@ export async function POST(request: Request) {
       candidateIdentifiers.push({
         type: "puolustuskiinteistot_article_url",
         value: metadata.documents_url,
+      })
+    }
+
+    if (isEspooKaava) {
+      candidateIdentifiers.push({
+        type: "espoo_kaava_tunnus",
+        value: metadata.kaava_tunnus,
       })
     }
 

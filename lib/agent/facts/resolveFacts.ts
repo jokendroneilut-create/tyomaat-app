@@ -9,6 +9,7 @@ import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
 import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
 import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
 import { extractPuolustuskiinteistotFacts } from "@/lib/agent/facts/extractPuolustuskiinteistotFacts"
+import { extractEspooKaavaFacts } from "@/lib/agent/facts/extractEspooKaavaFacts"
 import { extractKuopioKaavaFacts } from "@/lib/agent/facts/extractKuopioKaavaFacts"
 import { extractHyvinkaaKaavaFacts } from "@/lib/agent/facts/extractHyvinkaaKaavaFacts"
 import { extractSeinajokiKaavaFacts } from "@/lib/agent/facts/extractSeinajokiKaavaFacts"
@@ -763,6 +764,33 @@ export function resolveFacts(document: any) {
         location,
         buildingType,
         contact,
+      }),
+    }
+  }
+
+  if (document.source_name === "Espoon ajankohtaiset asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const planType = document.raw_payload?.plan_type ?? null
+    const description = document.raw_payload?.description ?? null
+    const area = document.raw_payload?.area ?? null
+    const changeApplicant = document.raw_payload?.change_applicant ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractEspooKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        planType,
+        description,
+        area,
+        changeApplicant,
+        contacts,
       }),
     }
   }

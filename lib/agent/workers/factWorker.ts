@@ -41,6 +41,7 @@ export async function runFactWorker(documentId?: string) {
       "Väylävirasto hankkeet",
       "Senaatti-kiinteistöt hankkeet",
       "Puolustuskiinteistöt uutiset",
+      "Espoon ajankohtaiset asemakaavat",
       "Kuopion vireillä olevat kaavat",
       "Hyvinkään vireillä olevat kaavat",
       "Seinäjoen ajankohtaiset asemakaavat",

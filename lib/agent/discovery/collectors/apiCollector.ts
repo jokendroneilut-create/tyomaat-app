@@ -4088,6 +4088,208 @@ async function collectPuolustuskiinteistotSource(source: DiscoverySource) {
 }
 
 /*
+ * Espoon hakusivu on Next.js/Elasticsearch-pohjainen — sekä hakutulossivu
+ * että hankkeen omat sivut upottavat täyden JSON-datan sivun
+ * __NEXT_DATA__-scriptiin, joten mitään ei tarvitse päätellä CSS-
+ * selektoreilla. Hakuparametrilla projectPhase suodatetaan jo
+ * palvelinpuolella pois "Lainvoimainen"-vaiheen kaavat, joten kerääjä
+ * näkee valmiiksi vain aktiiviset ~180 hanketta. Listaussivu antaa jo
+ * otsikon/kuvauksen/alueen, mutta kaavatunnus, tarkka vaihe ja
+ * yhteystiedot pitää hakea jokaisen hankkeen omalta sivulta erikseen
+ * (rate-limitoitu, kuten Lahdella/Järvenpäällä).
+ */
+const ESPOO_MAX_DETAIL_FETCHES_PER_RUN = 15
+const ESPOO_MAX_LIST_PAGES = 25
+
+function espooExtractNextData(html: string): any | null {
+  const match = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
+  if (!match) return null
+  try {
+    return JSON.parse(match[1])
+  } catch {
+    return null
+  }
+}
+
+async function fetchEspooDetails(url: string) {
+  const empty = {
+    kaavaTunnus: null as string | null,
+    phase: null as string | null,
+    planType: null as string | null,
+    changeApplicant: null as string | null,
+    contacts: [] as { name: string | null; title: string | null; phone: string | null; email: string | null }[],
+  }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const nextData = espooExtractNextData(html)
+    const gqlState = nextData?.props?.graphQLState ?? {}
+
+    let project: any = null
+    for (const entry of Object.values(gqlState) as any[]) {
+      if (entry?.data?.Project) {
+        project = entry.data.Project
+        break
+      }
+    }
+    if (!project) return empty
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    for (const block of project.content ?? []) {
+      if (block.type !== "ContactParagraph") continue
+      for (const person of block.content ?? []) {
+        contacts.push({
+          name: person.title ?? null,
+          title: person.label ?? null,
+          phone: person.phone ?? null,
+          email: person.email ?? null,
+        })
+      }
+    }
+
+    return {
+      kaavaTunnus: project.projectNumber ?? null,
+      phase: project.meta?.phase?.[0]?.name ?? null,
+      planType: project.meta?.plan?.[0]?.name ?? null,
+      changeApplicant: project.changeApplicant ?? null,
+      contacts,
+    }
+  } catch {
+    return empty
+  }
+}
+
+async function collectEspooKaavaSource(source: DiscoverySource) {
+  const items: {
+    id: string
+    title: string
+    url: string
+    lead: string | null
+    area: string | null
+  }[] = []
+  const seenIds = new Set<string>()
+
+  for (let page = 1; page <= ESPOO_MAX_LIST_PAGES; page++) {
+    const response = await fetch(`${source.url}&page=${page}`, { cache: "no-store" })
+    if (!response.ok) break
+
+    const html = await response.text()
+    const nextData = espooExtractNextData(html)
+    const hits = nextData?.props?.pageProps?.initialData?.hits ?? []
+    if (hits.length === 0) break
+
+    let newOnPage = 0
+    for (const hit of hits) {
+      const src = hit._source
+      if (!src?.id || !src?.path || seenIds.has(src.id)) continue
+      seenIds.add(src.id)
+      newOnPage += 1
+
+      items.push({
+        id: src.id,
+        title: (src.title ?? "").trim(),
+        url: `https://www.espoo.fi${src.path}`,
+        lead: src.lead ?? null,
+        area: Array.isArray(src.greaterAreas) ? src.greaterAreas.join(", ") : null,
+      })
+    }
+
+    if (newOnPage === 0) break
+  }
+
+  const { data: existingRows } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+
+  const knownDetails = new Map<string, any>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.kaava_tunnus || row.raw_payload?.phase) {
+      knownDetails.set(row.document_url, row.raw_payload)
+    }
+  }
+
+  let detailFetches = 0
+  let saved = 0
+
+  for (const item of items) {
+    if (!item.title || !item.url) continue
+
+    const known = knownDetails.get(item.url)
+
+    let details = known
+      ? {
+          kaavaTunnus: known.kaava_tunnus ?? null,
+          phase: known.phase ?? null,
+          planType: known.plan_type ?? null,
+          changeApplicant: known.change_applicant ?? null,
+          contacts: known.contacts ?? [],
+        }
+      : null
+
+    if (!details && detailFetches < ESPOO_MAX_DETAIL_FETCHES_PER_RUN) {
+      details = await fetchEspooDetails(item.url)
+      detailFetches += 1
+    }
+
+    const phase = details?.phase ?? null
+    const completed = (phase ?? "").toLowerCase() === "lainvoimainen"
+
+    const rawText = JSON.stringify({ item, details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: details?.kaavaTunnus ?? null,
+            phase,
+            plan_type: details?.planType ?? null,
+            change_applicant: details?.changeApplicant ?? null,
+            description: item.lead,
+            area: item.area,
+            contacts: details?.contacts ?? [],
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -6184,6 +6386,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "puolustuskiinteistotParser") {
     return collectPuolustuskiinteistotSource(source)
+  }
+
+  if (source.parser === "espooKaavaParser") {
+    return collectEspooKaavaSource(source)
   }
 
   if (source.parser === "hilmaParser") {
