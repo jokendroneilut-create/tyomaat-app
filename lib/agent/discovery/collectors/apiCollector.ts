@@ -4757,6 +4757,153 @@ async function collectKaarinaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const NOKIA_ZONING_PAGE_SLUG = "vireilla-olevat-kaavat"
+const NOKIA_PHASE_ORDER = [
+  "Vireille",
+  "Osallistumis- ja arviointisuunnitelma",
+  "Luonnos",
+  "Ehdotus",
+  "Hyväksyminen",
+  "Voimaantulo",
+]
+
+function nokiaCurrentPhase(aikatauluText: string | null): string | null {
+  if (!aikatauluText) return null
+
+  const lines = aikatauluText
+    .split(/<br\s*\/?>/i)
+    .map((line) => line.replace(/<[^>]+>/g, "").trim())
+    .filter(Boolean)
+
+  let current: string | null = null
+
+  for (const line of lines) {
+    const hasDate = /\d{1,2}\.\d{1,2}\.\d{4}/.test(line)
+    if (!hasDate) continue
+
+    const label = NOKIA_PHASE_ORDER.find((phase) => line.startsWith(phase))
+    if (label) current = label
+  }
+
+  return current
+}
+
+async function collectNokiaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(
+    `https://www.nokiankaupunki.fi/wp-json/wp/v2/pages?slug=${NOKIA_ZONING_PAGE_SLUG}&_fields=id,title,link,content`,
+    { cache: "no-store" }
+  )
+
+  if (!response.ok) {
+    return { documentsFound: 0, documentsSaved: 0 }
+  }
+
+  const pages = (await response.json()) as any[]
+  const page = pages[0]
+  if (!page) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(page.content.rendered)
+  const items = $(".block-child-accordion-item")
+
+  let found = 0
+  let saved = 0
+
+  for (const el of items.toArray()) {
+    const $item = $(el)
+    const rawTitle = $item.find("summary .title").first().text().replace(/\s+/g, " ").trim()
+
+    const tunnusMatch = rawTitle.match(/^(\d+:\d+),\s*(.+)$/)
+    if (!tunnusMatch) continue
+
+    found += 1
+
+    const kaavaTunnus = tunnusMatch[1]
+    const address = tunnusMatch[2].trim()
+
+    const detailsId = $item.find("details").first().attr("id")
+    const documentUrl = `${page.link}#${detailsId ?? kaavaTunnus.replace(/:/g, "-")}`
+
+    const content = $item.find(".child-content")
+    const leadHtml = content.find("p.is-style-lead").first().html() ?? ""
+    const diaarinumero = leadHtml.match(/Diaarinumero:\s*([^)<]+)/)?.[1]?.trim() ?? null
+    const description =
+      leadHtml
+        .replace(/\(Diaarinumero:[^)]*\)/i, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim() || null
+
+    const aikatauluHeading = content
+      .find("h2")
+      .filter((_, h) => $(h).text().trim() === "Aikataulu")
+      .first()
+    const aikatauluHtml = aikatauluHeading.length ? aikatauluHeading.next().html() : null
+    const phase = nokiaCurrentPhase(aikatauluHtml)
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    content.find(".card-contact").each((_, card) => {
+      const $card = $(card)
+      const name =
+        $card.find(".card-contact__item--content-name").first().text().replace(/\s+/g, " ").trim() || null
+      const contactTitle =
+        $card.find(".card-contact__item--content-job-title").first().text().replace(/\s+/g, " ").trim() || null
+      const phone = $card.find("a[href^='tel:']").first().attr("href")?.replace(/^tel:/, "") ?? null
+      const email = $card.find("a[href^='mailto:']").first().attr("href")?.replace(/^mailto:/, "") ?? null
+      if (name || phone || email) contacts.push({ name, title: contactTitle, phone, email })
+    })
+
+    const completed = /voimaantulo/i.test(phase ?? "")
+
+    const rawText = JSON.stringify({ documentUrl, rawTitle, kaavaTunnus, address, phase, description, diaarinumero, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: rawTitle,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: rawTitle,
+            kaava_tunnus: kaavaTunnus,
+            address,
+            phase,
+            description,
+            diaarinumero,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 /*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
@@ -6870,6 +7017,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kaarinaKaavaParser") {
     return collectKaarinaKaavaSource(source)
+  }
+
+  if (source.parser === "nokiaKaavaParser") {
+    return collectNokiaKaavaSource(source)
   }
 
   if (source.parser === "hilmaParser") {
