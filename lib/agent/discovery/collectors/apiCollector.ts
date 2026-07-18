@@ -5314,6 +5314,159 @@ async function collectYlojarviKaavaSource(source: DiscoverySource) {
 }
 
 /*
+ * Savonlinnan kaavamuutokset eivät elä yhdellä "vireillä"-listaussivulla,
+ * vaan jokainen vaihe (vireille, nähtävillä, voimaantulo) julkaistaan
+ * omana erillisenä kuulutus-postauksenaan (custom post type
+ * "announcements", ei erillistä per-kaava-sivua). Sama hanke voi siis
+ * esiintyä feedissä useaan kertaan eri ajankohtina samalla otsikolla
+ * mutta eri slugilla (esim. "asemakaavan-muutos-savola-2" ja "...-3").
+ * Koska feedissä on vuosikausien historiaa ilman luotettavaa signaalia
+ * siitä, onko vanha (ilman myöhempää voimaantulo-kuulutusta jäänyt)
+ * hanke yhä oikeasti vireillä vai vain unohtunut kuulutusjärjestelmästä,
+ * rajataan poiminta tuoreisiin kuulutuksiin (viimeiset ~15 kk) datan
+ * laadun varmistamiseksi — vanhempi historia jätetään tarkoituksella
+ * pois sen sijaan että arvattaisiin niiden tila väärin. "Voimaantulo"-
+ * ja "poikkeamis"-otsikot suodatetaan pois kokonaan (jo lainvoimaiset
+ * kaavat / eri asiatyyppi), ja mahdolliset toistuvat postaukset samasta
+ * hankkeesta karsitaan pitämällä vain tuorein otsikkoa kohden.
+ */
+const SAVONLINNA_ANNOUNCEMENTS_URL =
+  "https://www.savonlinna.fi/wp-json/wp/v2/announcements?search=asemakaava&per_page=100&_fields=id,slug,title,link,date,content"
+const SAVONLINNA_MAX_AGE_MONTHS = 15
+
+const SAVONLINNA_PHASE_ORDER = [
+  { pattern: /hyväksy|voimaan|lainvoima/i, label: "Hyväksyminen" },
+  { pattern: /ehdotus/i, label: "Kaavaehdotus" },
+  { pattern: /luonnos/i, label: "Kaavaluonnos" },
+  { pattern: /osallistumis/i, label: "Osallistumis- ja arviointisuunnitelma" },
+]
+
+function savonlinnaPhaseFromText(text: string): string | null {
+  for (const stage of SAVONLINNA_PHASE_ORDER) {
+    if (stage.pattern.test(text)) return stage.label
+  }
+  return null
+}
+
+const SAVONLINNA_NAME_PHONE_PATTERN = /([\p{Lu}][\p{L}-]+\s[\p{Lu}][\p{L}-]+)\s*,?\s*p\.?\s*(\d[\d\s]{4,12}\d)/u
+
+function savonlinnaParseContacts(bodyText: string) {
+  const match = bodyText.match(/Lisätietoja:?\s*([^\n]+)/i)
+  if (!match) return []
+
+  const segments = match[1].split(";").map((segment) => segment.trim())
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+
+  for (const segment of segments) {
+    const nameMatch = segment.match(SAVONLINNA_NAME_PHONE_PATTERN)
+    if (!nameMatch) continue
+
+    const emailMatch = segment.match(/([\w.-]+@[\w.-]+\.\w+)/)
+    contacts.push({
+      name: nameMatch[1].trim(),
+      title: null,
+      phone: nameMatch[2].trim(),
+      email: emailMatch ? emailMatch[1] : null,
+    })
+  }
+
+  return contacts
+}
+
+async function collectSavonlinnaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SAVONLINNA_ANNOUNCEMENTS_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const posts = (await response.json()) as any[]
+
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - SAVONLINNA_MAX_AGE_MONTHS)
+
+  const relevant = posts.filter((post) => {
+    const title = post.title?.rendered ?? ""
+    if (/voimaantulo|poikkeamis/i.test(title)) return false
+    return new Date(post.date) >= cutoff
+  })
+
+  const latestByTitle = new Map<string, any>()
+  for (const post of relevant) {
+    const key = (post.title?.rendered ?? "").trim()
+    const existing = latestByTitle.get(key)
+    if (!existing || new Date(post.date) > new Date(existing.date)) {
+      latestByTitle.set(key, post)
+    }
+  }
+
+  let saved = 0
+
+  for (const post of latestByTitle.values()) {
+    const title = (post.title?.rendered ?? "").trim()
+    if (!title) continue
+
+    const $ = cheerio.load(post.content?.rendered ?? "")
+    const bodyText = $.root().text().replace(/\s+/g, " ").trim()
+
+    let description: string | null = null
+    $("p").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (description) return
+      if (text.length < 20) return
+      if (/^(Lisätietoja|Mahdolliset|Savonlinnassa)/i.test(text)) return
+      description = text
+    })
+
+    const phase = savonlinnaPhaseFromText(bodyText)
+    const completed = /voimaan|lainvoima/i.test(phase ?? "")
+    const contacts = savonlinnaParseContacts(bodyText)
+
+    const rawText = JSON.stringify({ title, url: post.link, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: post.link,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: latestByTitle.size,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
  * jokaisen hankkeen omalta sivulta, siksi sama rate-limitoitu
@@ -7442,6 +7595,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "ylojarviKaavaParser") {
     return collectYlojarviKaavaSource(source)
+  }
+
+  if (source.parser === "savonlinnaKaavaParser") {
+    return collectSavonlinnaKaavaSource(source)
   }
 
   if (source.parser === "hilmaParser") {
