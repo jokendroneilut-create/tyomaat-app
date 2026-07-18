@@ -5033,6 +5033,119 @@ async function collectKajaaniKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KANGASALA_PHASE_HEADING_ORDER = [
+  { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
+  { pattern: /hyväksy/i, label: "Hyväksyminen" },
+  { pattern: /ehdotus/i, label: "Kaavaehdotus" },
+  { pattern: /luonnos|selostus/i, label: "Kaavaluonnos" },
+  { pattern: /osallistumis/i, label: "Osallistumis- ja arviointisuunnitelma" },
+]
+
+function kangasalaPhaseFromHeadings(headings: string[]): string | null {
+  for (const stage of KANGASALA_PHASE_HEADING_ORDER) {
+    if (headings.some((h) => stage.pattern.test(h))) return stage.label
+  }
+  return null
+}
+
+async function collectKangasalaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(
+    "https://www.kangasala.fi/wp-json/wp/v2/pages?parent=843&per_page=100&_fields=id,title,link,content",
+    { cache: "no-store" }
+  )
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const pages = (await response.json()) as any[]
+
+  let saved = 0
+
+  for (const page of pages) {
+    const title = (page.title?.rendered ?? "").replace(/\s+/g, " ").trim()
+    if (!title) continue
+
+    const kaavaTunnus = title.match(/^(\d+)\s/)?.[1] ?? null
+    const url = page.link as string
+
+    const $ = cheerio.load(page.content?.rendered ?? "")
+
+    const headings: string[] = []
+    $("h2").each((_, el) => {
+      headings.push($(el).text().replace(/\s+/g, " ").trim())
+    })
+    const phase = kangasalaPhaseFromHeadings(headings)
+
+    let goalPara: string | null = null
+    let firstPara: string | null = null
+    $("p").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (text.length < 20 || /^(Jaa|Kopioi)/i.test(text)) return
+      if (!firstPara) firstPara = text
+      if (!goalPara && /tavoit/i.test(text)) goalPara = text
+    })
+    const description = goalPara ?? firstPara ?? null
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    $(".card-contact").each((_, card) => {
+      const $card = $(card)
+      const name =
+        $card.find(".card-contact__item--content-name").first().text().replace(/\s+/g, " ").trim() || null
+      const contactTitle =
+        $card.find(".card-contact__item--content-job-title").first().text().replace(/\s+/g, " ").trim() || null
+      const phone = $card.find("a[href^='tel:']").first().attr("href")?.replace(/^tel:/, "") ?? null
+      const email = $card.find("a[href^='mailto:']").first().attr("href")?.replace(/^mailto:/, "") ?? null
+      if (name || phone || email) contacts.push({ name, title: contactTitle, phone, email })
+    })
+
+    const completed = /voimaan|lainvoima/i.test(phase ?? "")
+
+    const rawText = JSON.stringify({ url, title, kaavaTunnus, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: pages.length,
+    documentsSaved: saved,
+  }
+}
+
 /*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
@@ -7154,6 +7267,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kajaaniKaavaParser") {
     return collectKajaaniKaavaSource(source)
+  }
+
+  if (source.parser === "kangasalaKaavaParser") {
+    return collectKangasalaKaavaSource(source)
   }
 
   if (source.parser === "hilmaParser") {
