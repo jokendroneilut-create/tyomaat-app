@@ -5146,6 +5146,173 @@ async function collectKangasalaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const YLOJARVI_LISTING_URL = "https://www.ylojarvi.fi/asemakaavat-vireilla/"
+const YLOJARVI_PHASE_ORDER = [
+  { pattern: /hyväksymisvaihe|hyväksymispäätös|voimaan|lainvoima/i, label: "Hyväksymisvaihe" },
+  { pattern: /ehdotusvaihe/i, label: "Ehdotusvaihe" },
+  { pattern: /luonnosvaihe/i, label: "Luonnosvaihe" },
+  { pattern: /aloitusvaihe/i, label: "Aloitusvaihe" },
+  { pattern: /osallistumis/i, label: "Osallistumis- ja arviointisuunnitelma" },
+]
+
+function ylojarviPhaseFromText(text: string): string | null {
+  for (const stage of YLOJARVI_PHASE_ORDER) {
+    if (stage.pattern.test(text)) return stage.label
+  }
+  return null
+}
+
+const YLOJARVI_TITLE_NAME_PATTERN =
+  /(kaavasuunnittelija|kaavoitusarkkitehti|projektiarkkitehti|kaavoituspäällikkö|maisemasuunnittelija|kaupunginarkkitehti)\s+(\p{Lu}[\p{L}-]+(?:\s\p{Lu}[\p{L}-]+)+)/gu
+const YLOJARVI_PHONE_PATTERN = /\b(0\d{2}[\s-]?\d{3,4}[\s-]?\d{3,4})\b/g
+
+function ylojarviStripDiacritics(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/ä/g, "a")
+    .replace(/ö/g, "o")
+    .replace(/å/g, "a")
+}
+
+function ylojarviDeriveEmail(name: string) {
+  return name.trim().split(/\s+/).map(ylojarviStripDiacritics).join(".") + "@ylojarvi.fi"
+}
+
+function ylojarviParseContactsFromParagraph(
+  text: string
+): { name: string | null; title: string | null; phone: string | null; email: string | null }[] {
+  const people = [...text.matchAll(YLOJARVI_TITLE_NAME_PATTERN)]
+  if (people.length === 0) return []
+
+  const phones = [...text.matchAll(YLOJARVI_PHONE_PATTERN)].map((m) => m[1].trim())
+  const emailMatch = text.match(/([\w.-]+@ylojarvi\.fi)/)
+  const genericEmail =
+    emailMatch && emailMatch[1] !== "etunimi.sukunimi@ylojarvi.fi" ? emailMatch[1] : null
+
+  return people.map((match, index) => ({
+    name: match[2].trim(),
+    title: match[1],
+    phone: phones[index] ?? phones[0] ?? null,
+    email: genericEmail ?? ylojarviDeriveEmail(match[2]),
+  }))
+}
+
+async function fetchYlojarviKaavaDetails(url: string) {
+  const empty = { phase: null, description: null, contacts: [] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    let goalPara: string | null = null
+    let firstPara: string | null = null
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+
+    $("p").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (text.length < 20) return
+
+      contacts.push(...ylojarviParseContactsFromParagraph(text))
+
+      if (/^(Jaa|Kopioi|Löysitkö|Ylöjärven kaupunki \|)/i.test(text)) return
+      if (!firstPara) firstPara = text
+      if (!goalPara && /tavoit/i.test(text)) goalPara = text
+    })
+
+    const description = goalPara ?? firstPara ?? null
+
+    const kaavaAineistoHeading = $("h3")
+      .filter((_, el) => $(el).text().trim() === "Kaava-aineisto")
+      .first()
+    const kaavaAineistoText = kaavaAineistoHeading.length
+      ? kaavaAineistoHeading.nextAll().slice(0, 8).text().replace(/\s+/g, " ")
+      : ""
+    const phase = ylojarviPhaseFromText(`${kaavaAineistoText} ${description ?? ""}`)
+
+    return { phase, description, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectYlojarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(YLOJARVI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: { title: string; url: string; slug: string }[] = []
+  $(".sub-page-list .sub-page-item a").each((_, el) => {
+    const href = $(el).attr("href")
+    const title = $(el).text().replace(/\s+/g, " ").trim()
+    if (!href || !title) return
+
+    const slug = href.replace(/\/$/, "").split("/").pop() ?? null
+    if (!slug) return
+
+    items.push({ title, url: href, slug })
+  })
+
+  let saved = 0
+
+  for (const item of items) {
+    const details = await fetchYlojarviKaavaDetails(item.url)
+    const completed = /voimaan|lainvoima/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ item, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: item.slug,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 /*
  * Lahden "kaavatyökohteet"-listaussivu antaa vain otsikon ja linkin —
  * kaikki muu tieto (tunnus, vaihe, kuvaus, yhteystiedot) pitää hakea
@@ -7271,6 +7438,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kangasalaKaavaParser") {
     return collectKangasalaKaavaSource(source)
+  }
+
+  if (source.parser === "ylojarviKaavaParser") {
+    return collectYlojarviKaavaSource(source)
   }
 
   if (source.parser === "hilmaParser") {
