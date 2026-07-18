@@ -20,6 +20,8 @@ export async function fetchNccSource() {
     const html = await res.text()
     const $ = cheerio.load(html)
 
+    const seenBeforePage = seenUrls.size
+
     $("a").each((_, el) => {
       const title = $(el).find("h2, h3").first().text().trim()
       const href = $(el).attr("href")
@@ -30,7 +32,7 @@ export async function fetchNccSource() {
         ? href
         : `https://www.ncc.fi${href}`
 
-      if (!absoluteHref.includes("/media/pressrelease-container/")) return
+      if (!absoluteHref.includes("/media/lehdistotiedotteet/pressrelease/")) return
       if (/^\d+$/.test(title)) return
 
       const lowerTitle = title.toLowerCase()
@@ -109,6 +111,10 @@ seenUrls.add(absoluteHref)
         source_name: "ncc",
       })
     })
+
+    // Sivutusparametri ei aina tuota uutta sisältöä (sama lista toistuu) —
+    // lopetetaan turhat pyynnöt jos sivu ei tuonut yhtään uutta osumaa.
+    if (seenUrls.size === seenBeforePage) break
   }
 
   return results
