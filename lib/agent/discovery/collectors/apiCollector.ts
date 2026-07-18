@@ -4904,6 +4904,212 @@ async function collectNokiaKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Vihdin "vireillä olevat asemakaavat" -sivusto jakautuu neljään
+ * taajamaan (Nummela, Ojakkala, Vihdin kirkonkylä, Otalampi), mutta
+ * jokaisella sivulla on jaettu vasen sivupalkki, joka listaa KAIKKIEN
+ * taajamien yksittäiset kaavat kerralla — riittää siis hakea yksi
+ * sivu saadakseen koko linkkilistan. Yksittäisen kaavan sivun
+ * "vaihe"-kappaleiden järjestys ei ole luotettavasti kronologinen eri
+ * sivujen välillä (osa uusin-ensin, osa vanhin-ensin), ja teksti voi
+ * mainita SISARKAAVAN (esim. V47a) saavuttaman lainvoiman kaavan V47b
+ * omalla sivulla — siksi vaihe päätellään "Kaava-aineisto"-osion
+ * materiaalimaininnoista prioriteettijärjestyksessä (edistynein
+ * mainittu vaihe voittaa) sen sijaan, että luotettaisiin tekstin
+ * järjestykseen. Koska lähde kattaa vain "vireillä olevat" (ei vielä
+ * lainvoimaisia) kaavoja, completed on aina false tälle lähteelle.
+ */
+/*
+ * Jaettu sivupalkki laajentaa HTML:ssä vain SEN taajaman alilistan,
+ * jonka sivulla parhaillaan ollaan (muiden taajamien alilistat jäävät
+ * pois DOM:sta kokonaan, ei vain CSS:llä piilotettuna) — siksi kaikki
+ * neljä taajamasivua pitää hakea erikseen kattavuuden varmistamiseksi.
+ */
+const VIHTI_DISTRICT_URLS = [
+  "https://www.vihti.fi/asuminen-ja-ymparisto/kaavoitus/asemakaavoitus/vireilla-olevat-asemakaavat/nummela-vireilla-olevat-asemakaavat/",
+  "https://www.vihti.fi/asuminen-ja-ymparisto/kaavoitus/asemakaavoitus/vireilla-olevat-asemakaavat/ojakkala/",
+  "https://www.vihti.fi/asuminen-ja-ymparisto/kaavoitus/asemakaavoitus/vireilla-olevat-asemakaavat/vihdin-kirkonkyla/",
+  "https://www.vihti.fi/asuminen-ja-ymparisto/kaavoitus/asemakaavoitus/vireilla-olevat-asemakaavat/5057-2/",
+]
+const VIHTI_PLAN_TITLE_PATTERN = /^([A-Za-z]{1,3}\d{1,4}[a-z]?)\s+(.+)$/
+
+async function fetchVihtiPlanLinks(): Promise<{ title: string; url: string }[]> {
+  const seen = new Set<string>()
+  const links: { title: string; url: string }[] = []
+
+  for (const districtUrl of VIHTI_DISTRICT_URLS) {
+    const response = await fetch(districtUrl, { cache: "no-store" })
+    if (!response.ok) continue
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    $(".sidebar-nav__list a").each((_, el) => {
+      const href = $(el).attr("href")
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (!href || !text) return
+      if (!VIHTI_PLAN_TITLE_PATTERN.test(text)) return
+      if (seen.has(href)) return
+
+      seen.add(href)
+      links.push({ title: text, url: href })
+    })
+  }
+
+  return links
+}
+
+function vihtiPhaseFromText(text: string): string {
+  if (/hyväksy/i.test(text)) return "Hyväksyminen"
+  if (/ehdotus/i.test(text)) return "Ehdotus"
+  if (/luonnos/i.test(text)) return "Luonnos"
+  if (/osallistumis|arviointi/i.test(text)) return "Osallistumis- ja arviointisuunnitelma"
+  return "Vireilletulo"
+}
+
+async function fetchVihtiKaavaDetails(url: string) {
+  const empty = { description: null, phase: "Vireilletulo", contacts: [] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const contactBoxText = $(".s-content-box__contacts").text().replace(/\s+/g, " ").trim()
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    const emailMatch = contactBoxText.match(/([\w.-]+)\((?:a|ät|at)\)([\w.-]+\.\w+)/i)
+    if (emailMatch) {
+      contacts.push({
+        name: null,
+        title: "Kaavoitus",
+        phone: null,
+        email: `${emailMatch[1]}@${emailMatch[2]}`,
+      })
+    }
+
+    $(".sidebar-left").remove()
+
+    const findSection = (headingPattern: RegExp) => {
+      let heading: any = null
+      $("h4").each((_, el) => {
+        if (heading) return
+        if (headingPattern.test($(el).text().trim())) heading = el
+      })
+      if (!heading) return ""
+
+      let text = ""
+      let el = $(heading).next()
+      while (el.length && el[0].tagName !== "h4") {
+        text += " " + $(el).text().replace(/\s+/g, " ").trim()
+        el = el.next()
+      }
+      return text.trim()
+    }
+
+    /*
+     * Osa sivuista ei käytä h4-otsikoita lainkaan, vaan sama tieto on
+     * yhden <p>:n sisällä <strong>Otsikko<br></strong>leipäteksti-muodossa.
+     */
+    const findInlineSection = (labelPattern: RegExp) => {
+      let result = ""
+      $("p").each((_, el) => {
+        const strong = $(el).find("strong").first()
+        if (!strong.length) return
+        const label = strong.text().trim()
+        if (!labelPattern.test(label)) return
+
+        const fullText = $(el).text().replace(/\s+/g, " ").trim()
+        const afterLabel = fullText.slice(label.length).trim()
+        if (afterLabel) result = afterLabel
+      })
+      return result
+    }
+
+    /*
+     * Harvinaisin sivuvariantti: ei h4-otsikkoa eikä <strong>-etikettiä,
+     * pelkkä ensimmäinen leipätekstikappale kuvauksena ilman minkäänlaista
+     * otsikkoa. Käytetään vasta viimeisenä keinona.
+     */
+    const findFirstParagraphFallback = () => {
+      let result = ""
+      $("p").each((_, el) => {
+        if (result) return
+        const text = $(el).text().replace(/\s+/g, " ").trim()
+        if (text.length < 30) return
+        if (/viimeksi päivitetty|osallistumis- ja arviointisuunnitelma$|vaihde \(|postiosoite|palautekanava|kunnanvirasto/i.test(text)) return
+        result = text
+      })
+      return result
+    }
+
+    const description =
+      findSection(/tarkoitus/i) || findInlineSection(/tarkoitus/i) || findFirstParagraphFallback() || null
+    const aineistoText = findSection(/aineisto/i) || findInlineSection(/aineisto/i)
+    const vaiheText = findSection(/vaihe/i) || findInlineSection(/vaihe/i)
+    const phase = vihtiPhaseFromText(`${aineistoText} ${vaiheText} ${description ?? ""}`)
+
+    return { description, phase, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectVihtiKaavaSource(source: DiscoverySource) {
+  const links = await fetchVihtiPlanLinks()
+
+  let saved = 0
+
+  for (const link of links) {
+    const titleMatch = link.title.match(VIHTI_PLAN_TITLE_PATTERN)
+    if (!titleMatch) continue
+
+    const kaavaTunnus = titleMatch[1]
+    const details = await fetchVihtiKaavaDetails(link.url)
+
+    const rawText = JSON.stringify({ link, kaavaTunnus, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: link.title,
+          document_url: link.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: link.title,
+            kaava_tunnus: kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed: false,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 const KAJAANI_LISTING_URL = "https://kajaani.cloudnc.fi/fi-FI/Kaavat"
 const KAJAANI_CONTACT_PATTERN =
   /([A-Za-zÅÄÖåäö][^,]*?),?\s*(?:p\.\s*)?(\d[\d\s-]{4,14}\d)[,\s]+([\w.+-]+@[\w.-]+\.\w+)/g
@@ -7598,6 +7804,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "ylojarviKaavaParser") {
     return collectYlojarviKaavaSource(source)
+  }
+
+  if (source.parser === "vihtiKaavaParser") {
+    return collectVihtiKaavaSource(source)
   }
 
   if (source.parser === "savonlinnaKaavaParser") {

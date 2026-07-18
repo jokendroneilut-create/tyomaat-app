@@ -46,6 +46,7 @@ export type IdentifierType =
   | "kangasala_kaava_tunnus"
   | "ylojarvi_kaava_slug"
   | "savonlinna_kaava_title"
+  | "vihti_kaava_tunnus"
 
 export const IDENTIFIER_TYPES: IdentifierType[] = [
   "property_id",

@@ -17,6 +17,7 @@ import { extractNokiaKaavaFacts } from "@/lib/agent/facts/extractNokiaKaavaFacts
 import { extractKajaaniKaavaFacts } from "@/lib/agent/facts/extractKajaaniKaavaFacts"
 import { extractKangasalaKaavaFacts } from "@/lib/agent/facts/extractKangasalaKaavaFacts"
 import { extractYlojarviKaavaFacts } from "@/lib/agent/facts/extractYlojarviKaavaFacts"
+import { extractVihtiKaavaFacts } from "@/lib/agent/facts/extractVihtiKaavaFacts"
 import { extractSavonlinnaKaavaFacts } from "@/lib/agent/facts/extractSavonlinnaKaavaFacts"
 import { extractKuopioKaavaFacts } from "@/lib/agent/facts/extractKuopioKaavaFacts"
 import { extractHyvinkaaKaavaFacts } from "@/lib/agent/facts/extractHyvinkaaKaavaFacts"
@@ -905,6 +906,27 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractKangasalaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Vihdin vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractVihtiKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
