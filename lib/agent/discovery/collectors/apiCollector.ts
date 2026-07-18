@@ -5110,6 +5110,197 @@ async function collectVihtiKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Riihimäen kaavasivut palauttavat wp-json:sta tyhjän content.rendered-
+ * kentän (sivunrakennustyökalu ei tue oletus-REST-kenttää), joten
+ * wp-json:ia käytetään vain listaamiseen (parent=1543 palauttaa kaikki
+ * yksittäiset kaavasivut), ja itse sisältö haetaan jokaisen sivun
+ * renderöidystä HTML:stä erikseen. Sivulla EI ole erillistä kaava-
+ * tunnusta — ainoa mahdollinen koodi ("kohdetunnuksella A1") on upotettu
+ * vapaaseen leipätekstiin ja uudelleenkäytetään vuosittain eri kaavoille,
+ * joten se ei kelpaa luotettavaksi tunnisteeksi. Sen sijaan käytetään
+ * URL-slugia tunnisteena. Vaihe päätellään siitä, MIKÄ vaiheotsikoista
+ * (Aloitusvaihe/Luonnosvaihe/Ehdotusvaihe/Hyväksyminen/Lainvoimaisuus)
+ * sisältää oikean vuosiluvun (20xx) — myöhemmät, vielä saavuttamattomat
+ * vaiheet sisältävät vain yleisluontoista tekstiä prosessista ilman
+ * konkreettista päivämäärää.
+ */
+const RIIHIMAKI_PARENT_PAGE_ID = 1543
+const RIIHIMAKI_PHASE_ORDER = ["Aloitusvaihe", "Luonnosvaihe", "Ehdotusvaihe", "Hyväksyminen", "Lainvoimaisuus"]
+
+/*
+ * riihimaki.fi:n WAF palauttaa 500:n Node-fetchin (undici) TLS-
+ * sormenjäljelle, mutta hyväksyy Node:n ydin-https-moduulin — siksi
+ * kaikki tämän lähteen haut tehdään sillä eikä globaalilla fetch():lla.
+ */
+function riihimakiHttpsGet(url: string): Promise<{ ok: boolean; text: () => Promise<string> }> {
+  return new Promise((resolve, reject) => {
+    https
+      .get(
+        url,
+        {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          },
+        },
+        (res) => {
+          let data = ""
+          res.on("data", (chunk) => {
+            data += chunk
+          })
+          res.on("end", () => {
+            const status = res.statusCode ?? 0
+            resolve({ ok: status >= 200 && status < 300, text: async () => data })
+          })
+        }
+      )
+      .on("error", reject)
+  })
+}
+
+async function fetchRiihimakiPlanLinks(): Promise<{ title: string; url: string; slug: string }[]> {
+  const response = await riihimakiHttpsGet(
+    `https://www.riihimaki.fi/wp-json/wp/v2/pages?parent=${RIIHIMAKI_PARENT_PAGE_ID}&per_page=50&_fields=id,slug,title,link`
+  )
+  if (!response.ok) return []
+
+  const pages = JSON.parse(await response.text()) as any[]
+  return pages
+    .map((p) => ({
+      title: (p.title?.rendered ?? "").replace(/&#8211;/g, "–").trim(),
+      url: p.link,
+      slug: p.slug,
+    }))
+    .filter((p) => p.title && p.url)
+}
+
+async function fetchRiihimakiKaavaDetails(url: string) {
+  const empty = { title: null, description: null, phase: "Aloitusvaihe", contacts: [] }
+
+  try {
+    const response = await riihimakiHttpsGet(url)
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+    $("script, style, nav, footer, header").remove()
+
+    const title = $("h1").first().text().replace(/\s+/g, " ").trim() || null
+
+    const firstH2 = $("h2").first()
+    const descriptionParts: string[] = []
+    if (firstH2.length) {
+      let el = firstH2.next()
+      while (el.length && el[0].tagName !== "h2" && el[0].tagName !== "h3") {
+        const text = $(el).text().replace(/\s+/g, " ").trim()
+        if (text) descriptionParts.push(text)
+        el = el.next()
+      }
+    }
+    const description = descriptionParts.join(" ").trim() || null
+
+    let currentPhase = "Aloitusvaihe"
+    const headings = $("h2, h3").toArray()
+    for (let i = 0; i < headings.length; i++) {
+      const headingText = $(headings[i]).text().trim()
+      const matchedPhase = RIIHIMAKI_PHASE_ORDER.find((p) => headingText === p)
+      if (!matchedPhase) continue
+
+      let sectionText = ""
+      let el = $(headings[i]).next()
+      while (el.length && !(el[0].tagName === "h2" || (el[0].tagName === "h3" && RIIHIMAKI_PHASE_ORDER.includes($(el).text().trim())))) {
+        sectionText += " " + $(el).text().replace(/\s+/g, " ").trim()
+        el = el.next()
+      }
+
+      if (/20\d{2}/.test(sectionText)) currentPhase = matchedPhase
+    }
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    $("article.contact-person").each((_, article) => {
+      const $article = $(article)
+      const rawName = $article
+        .find(".contact-person__personal__name")
+        .first()
+        .text()
+        .replace(/\s+/g, " ")
+        .trim()
+      const tokens = rawName.split(" ")
+      const name = tokens.length === 2 ? `${tokens[1]} ${tokens[0]}` : rawName || null
+
+      const title =
+        $article.find(".contact-person__personal__title").first().text().replace(/\s+/g, " ").trim() || null
+      const phone = $article.find("a[href^='tel:']").first().attr("href")?.replace(/^tel:/, "") ?? null
+      const email = $article.find("a[href^='mailto:']").first().attr("href")?.replace(/^mailto:/, "") ?? null
+
+      if (name || phone || email) contacts.push({ name, title, phone, email })
+    })
+
+    return { title, description, phase: currentPhase, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectRiihimakiKaavaSource(source: DiscoverySource) {
+  const links = await fetchRiihimakiPlanLinks()
+
+  let saved = 0
+
+  for (const link of links) {
+    const details = await fetchRiihimakiKaavaDetails(link.url)
+    const title = details.title ?? link.title
+    const completed = /lainvoimaisuus/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ link, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: link.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: link.slug,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 const KAJAANI_LISTING_URL = "https://kajaani.cloudnc.fi/fi-FI/Kaavat"
 const KAJAANI_CONTACT_PATTERN =
   /([A-Za-zÅÄÖåäö][^,]*?),?\s*(?:p\.\s*)?(\d[\d\s-]{4,14}\d)[,\s]+([\w.+-]+@[\w.-]+\.\w+)/g
@@ -7808,6 +7999,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "vihtiKaavaParser") {
     return collectVihtiKaavaSource(source)
+  }
+
+  if (source.parser === "riihimakiKaavaParser") {
+    return collectRiihimakiKaavaSource(source)
   }
 
   if (source.parser === "savonlinnaKaavaParser") {
