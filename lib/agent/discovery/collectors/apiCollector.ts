@@ -5476,6 +5476,155 @@ async function collectRaaseporiKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Raisio (Drupal) listaa "valmisteilla olevat asemakaavat" -linkit
+ * tavallisena <li><a>-listana kaavoitussivun rungossa (ei erillistä
+ * API:a eikä sitemapia jossa kaikki olisivat mukana). Sivuilla ei ole
+ * erillistä vaihe-osiota — kaavan tilanne kerrotaan proosana kuvaus-
+ * kappaleessa (esim. "Kaava on tullut vireille 2012..."), joten vaihe
+ * päätellään samasta tekstistä avainsanahaulla.
+ */
+const RAISIO_LISTING_URL =
+  "https://raisio.fi/fi/asuminen-ja-ymparisto/kaupunkisuunnittelu/kaavoitus-ja-maankaytto/asemakaavoitus"
+
+function raisioNormalizeUrl(href: string): string {
+  if (href.startsWith("/")) return `https://raisio.fi${href}`
+  return href.replace(/^https?:\/\/(www\.)?raisio\.fi/, "https://raisio.fi")
+}
+
+function raisioPhaseFromText(text: string): string {
+  if (/lainvoima|voimaantulo/i.test(text)) return "Lainvoimainen"
+  if (/hyväksy/i.test(text)) return "Hyväksyminen"
+  if (/ehdotus/i.test(text)) return "Ehdotus"
+  if (/luonnos/i.test(text)) return "Luonnos"
+  if (/osallistumis|arviointi/i.test(text)) return "Osallistumis- ja arviointisuunnitelma"
+  if (/vireille/i.test(text)) return "Vireilletulo"
+  return "Vireilletulo"
+}
+
+async function fetchRaisioPlanLinks(): Promise<{ title: string; url: string; slug: string }[]> {
+  const response = await fetch(RAISIO_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return []
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const seen = new Set<string>()
+  const links: { title: string; url: string; slug: string }[] = []
+
+  $("li a").each((_, el) => {
+    const href = $(el).attr("href")
+    const title = $(el).text().replace(/\s+/g, " ").trim()
+    if (!href || !title) return
+    if (!/asemakaava/i.test(href)) return
+
+    const url = raisioNormalizeUrl(href)
+    if (seen.has(url)) return
+    seen.add(url)
+
+    const slug = url.replace(/\/$/, "").split("/").pop() ?? title
+    links.push({ title, url, slug })
+  })
+
+  return links
+}
+
+async function fetchRaisioKaavaDetails(url: string) {
+  const empty = { title: null, description: null, phase: "Vireilletulo", contacts: [] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const title = $("h1").first().text().replace(/\s+/g, " ").trim() || null
+
+    const description =
+      $(".field--name-body p")
+        .map((_, el) => $(el).text().replace(/\s+/g, " ").trim())
+        .get()
+        .join(" ")
+        .trim() || null
+
+    const phase = raisioPhaseFromText(description ?? "")
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    $(".contact-card").each((_, card) => {
+      const $card = $(card)
+      const name = $card.find(".contact-card__title").first().text().replace(/\s+/g, " ").trim() || null
+      const contactTitle =
+        $card.find(".contact-card__subtitle").first().text().replace(/\s+/g, " ").trim() || null
+      const phone = $card.find("a[href^='tel:']").first().attr("href")?.replace(/^tel:/, "") ?? null
+      const email = $card.find("a[href^='mailto:']").first().attr("href")?.replace(/^mailto:/, "") ?? null
+      if (name || phone || email) contacts.push({ name, title: contactTitle, phone, email })
+    })
+
+    return { title, description, phase, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectRaisioKaavaSource(source: DiscoverySource) {
+  const links = await fetchRaisioPlanLinks()
+
+  let saved = 0
+
+  for (const link of links) {
+    const details = await fetchRaisioKaavaDetails(link.url)
+    const title = details.title ?? link.title
+    const completed = /lainvoima|voimaantulo/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ link, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: link.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: link.slug,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 const KAJAANI_LISTING_URL = "https://kajaani.cloudnc.fi/fi-FI/Kaavat"
 const KAJAANI_CONTACT_PATTERN =
   /([A-Za-zÅÄÖåäö][^,]*?),?\s*(?:p\.\s*)?(\d[\d\s-]{4,14}\d)[,\s]+([\w.+-]+@[\w.-]+\.\w+)/g
@@ -8182,6 +8331,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "raaseporiKaavaParser") {
     return collectRaaseporiKaavaSource(source)
+  }
+
+  if (source.parser === "raisioKaavaParser") {
+    return collectRaisioKaavaSource(source)
   }
 
   if (source.parser === "savonlinnaKaavaParser") {
