@@ -24,6 +24,7 @@ export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const isMobile = useIsMobile(768);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -34,6 +35,7 @@ export default function Navbar() {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpen(false);
         setAdminOpen(false);
+        setSettingsOpen(false);
       }
     };
 
@@ -245,8 +247,47 @@ export default function Navbar() {
       </div>
     )}
 
-    <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 8, marginTop: 4 }}>
-      <NavItem href="/settings">⚙️ Asetukset</NavItem>
+    <div
+      style={{ position: isMobile ? "static" : "relative", borderTop: "1px solid #f0f0f0", paddingTop: 8, marginTop: 4 }}
+      onMouseEnter={() => !isMobile && setSettingsOpen(true)}
+      onMouseLeave={() => !isMobile && setSettingsOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setSettingsOpen((v) => !v)}
+        style={adminButtonStyle}
+        className="tm-nav-item"
+      >
+        <span>⚙️ Asetukset</span>
+        <span>{isMobile ? (settingsOpen ? "▲" : "▼") : "◀"}</span>
+      </button>
+
+      {settingsOpen && (
+        <div
+          style={
+            isMobile
+              ? undefined
+              : {
+                  position: "absolute",
+                  top: 0,
+                  right: "100%",
+                  marginRight: 0,
+                  background: "#fff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 12,
+                  padding: 10,
+                  minWidth: 240,
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                  display: "grid",
+                  gap: 2,
+                }
+          }
+        >
+          <NavSection>
+            <NavItem href="/settings">Salasana</NavItem>
+          </NavSection>
+        </div>
+      )}
     </div>
 
     <button onClick={handleLogout} style={logoutStyle} className="tm-nav-item">
