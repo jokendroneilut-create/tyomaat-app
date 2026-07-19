@@ -11,6 +11,7 @@ import {
 } from "@/lib/projects/identity"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
+import { stripCompanyPrefixFromHeadline } from "@/lib/agent/stripCompanyPrefix"
 
 /*
  * Tämän putken lähde (yritysten lehdistötiedotteet) ei anna luotettavaa
@@ -282,8 +283,10 @@ const match =
      * numero/kiinteistötunnus/osoite), joten sama hanke ei monistu
      * jonoon useasta yrityssivun tiedotteesta tai muusta lähteestä.
      */
+    const cleanedTitle = stripCompanyPrefixFromHeadline(body.name)
+
     const result = await resolvePotentialProject({
-      title: body.name,
+      title: cleanedTitle,
       municipality: body.city,
       address: body.location,
       propertyId: candidate.propertyId,
@@ -296,7 +299,7 @@ const match =
         source_name: body.source_name || "agent",
         source_url: body.source_url || null,
         resolver: "legacyCompanyResolver",
-        operation: body.name,
+        operation: cleanedTitle,
         developer: candidate.developer,
         building_type: candidate.buildingType,
         region: body.region || null,
