@@ -66,6 +66,8 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
         body.building_type ??
         body.metadata?.building_type ??
         null,
+      estimatedCompletion:
+        body.estimated_completion ?? body.metadata?.estimated_completion ?? null,
     }
 
     const candidateIdentifiers: { type: IdentifierType; value: string | null }[] = [
@@ -85,7 +87,7 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
     const { data: projects } = await supabase
       .from("projects")
       .select(
-        "id,name,city,region,location,phase,completed_at,status,developer,property_type,metadata"
+        "id,name,city,region,location,phase,completed_at,status,developer,property_type,estimated_completion,metadata"
       )
 
     let detailedMatch = findProjectMatchDetailed(
@@ -126,6 +128,11 @@ const match =
             body.property_type ||
             body.building_type ||
             match.property_type ||
+            null,
+          estimated_completion:
+            body.estimated_completion ||
+            body.metadata?.estimated_completion ||
+            match.estimated_completion ||
             null,
           needs_review: body.completed ? true : false,
           source_confidence: body.confidence ?? null,
@@ -306,6 +313,7 @@ const match =
         permit_number: candidate.permitNumber,
         property_id: candidate.propertyId,
         phase_hint: insertPhase,
+        estimated_completion: candidate.estimatedCompletion,
       },
     })
 

@@ -24,6 +24,7 @@ type Project = {
   floor_area: number | null
   estimated_cost: number | null
   construction_start: string | null
+  estimated_completion: string | null
   structural_design: string | null
   hvac_design: string | null
   electrical_design: string | null
@@ -387,7 +388,7 @@ export default function Projects() {
         .select(
           `
           id, name, city, region, phase, location, developer, builder, property_type,
-          apartments, floor_area, estimated_cost, construction_start,
+          apartments, floor_area, estimated_cost, construction_start, estimated_completion,
           structural_design, hvac_design, electrical_design, architectural_design,
           geotechnical_design, earthworks_contractor, additional_info,
            latitude, longitude,
@@ -1100,6 +1101,9 @@ setTeamModeEnabled(true)
                 </p>
                 <p>
                   <strong>📅 Rakentamisen aloitus:</strong> {selected.construction_start || '-'}
+                </p>
+                <p>
+                  <strong>📅 Arvioitu valmistuminen:</strong> {selected.estimated_completion || '-'}
                 </p>
               </div>
             </div>

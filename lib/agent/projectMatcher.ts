@@ -25,6 +25,7 @@ export type MatchableProject = {
   status?: string | null
   developer?: string | null
   property_type?: string | null
+  estimated_completion?: string | null
 
   metadata?: {
     permit_number?: string | null

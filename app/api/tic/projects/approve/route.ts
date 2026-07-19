@@ -673,6 +673,10 @@ export async function POST(request: Request) {
       metadata.developer ??
       null
 
+    const estimatedCompletion =
+      metadata.estimated_completion ??
+      null
+
     const phase =
   metadata.phase_hint ??
   (isHilma
@@ -780,6 +784,8 @@ export async function POST(request: Request) {
           developer: existingProject.developer ?? developer,
           property_type:
             existingProject.property_type ?? metadata.building_type ?? null,
+          estimated_completion:
+            existingProject.estimated_completion ?? estimatedCompletion,
           latitude: existingProject.latitude ?? coords.lat,
           longitude: existingProject.longitude ?? coords.lon,
           lat: existingProject.lat ?? coords.lat,
@@ -876,6 +882,7 @@ export async function POST(request: Request) {
         developer,
 
         property_type: metadata.building_type ?? null,
+        estimated_completion: estimatedCompletion,
         phase,
         source_confidence: potentialProject.confidence,
         is_public: true,

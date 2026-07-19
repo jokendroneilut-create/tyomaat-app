@@ -35,6 +35,7 @@ type Project = {
   floor_area: number | null
   estimated_cost: number | null
   construction_start: string | null
+  estimated_completion: string | null
 
   structural_design: string | null
   hvac_design: string | null
@@ -161,6 +162,7 @@ export default function Dashboard() {
     floor_area: '',
     estimated_cost: '',
     construction_start: '',
+    estimated_completion: '',
 
     structural_design: '',
     hvac_design: '',
@@ -278,6 +280,7 @@ export default function Dashboard() {
       estimated_cost: digitsToNumberOrNull(form.estimated_cost),
 
       construction_start: form.construction_start?.trim() ? form.construction_start.trim() : null,
+      estimated_completion: form.estimated_completion?.trim() ? form.estimated_completion.trim() : null,
       latitude: coords.lat,
       longitude: coords.lon,
     }
@@ -378,6 +381,7 @@ export default function Dashboard() {
       floor_area: project.floor_area != null ? String(project.floor_area) : '',
       estimated_cost: project.estimated_cost != null ? String(project.estimated_cost) : '',
       construction_start: project.construction_start ?? '',
+      estimated_completion: project.estimated_completion ?? '',
       location: project.location ?? '',
       developer: project.developer ?? '',
       builder: project.builder ?? '',
@@ -600,6 +604,16 @@ export default function Dashboard() {
                   type="date"
                   value={form.construction_start}
                   onChange={(e) => setForm({ ...form, construction_start: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="dashLabel">📅 Arvioitu valmistuminen</label>
+                <input
+                  className="dashInput"
+                  type="date"
+                  value={form.estimated_completion}
+                  onChange={(e) => setForm({ ...form, estimated_completion: e.target.value })}
                 />
               </div>
             </div>

@@ -1,4 +1,6 @@
+import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
+import { parseEstimatedCompletionDate } from "./parseFinnishCompletionDate"
 
 /*
  * Lujatalon "ajankohtaista"-sivu on Gatsby-sovellus (kuten SRV), mutta
@@ -19,6 +21,30 @@ const EXCLUDE_KEYWORDS = [
 ]
 
 const COMPLETED_KEYWORDS = ["valmistui", "valmistunut", "valmis"]
+
+/*
+ * Listasivun otsikko ei useinkaan sisällä kaupunkia tai valmistumis-
+ * ajankohtaa (esim. "hanke valmistuu lokakuussa 2026" on vain artikkelin
+ * leipätekstissä) — haetaan artikkelisivu. Sivun lopussa on "Sinua
+ * saattaisi kiinnostaa" -palkki, joka listaa MUIDEN artikkeleiden
+ * otsikoita — leikataan pois, jottei väärä kaupunki/päivämäärä poimiudu
+ * naapuriartikkelista.
+ */
+async function fetchArticleBodyText(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return null
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+    $("script, style").remove()
+
+    const fullText = $("body").text().replace(/\s+/g, " ").trim()
+    return fullText.split(/sinua saattaisi kiinnostaa/i)[0]?.trim() || null
+  } catch {
+    return null
+  }
+}
 
 export async function fetchLujataloSource() {
   const results: any[] = []
@@ -54,17 +80,23 @@ export async function fetchLujataloSource() {
       if (EXCLUDE_KEYWORDS.some((k) => combinedText.includes(k))) continue
 
       const completed = COMPLETED_KEYWORDS.some((k) => combinedText.includes(k))
+      const sourceUrl = `${BASE}${uri}`
+
+      const bodyText = await fetchArticleBodyText(sourceUrl)
+      const city = detectCityFromText(title) ?? (bodyText ? detectCityFromText(bodyText) : null)
+      const estimatedCompletion = bodyText ? parseEstimatedCompletionDate(bodyText) : null
 
       results.push({
         name: title,
-        city: detectCityFromText(title),
+        city,
         region: null,
         location: null,
         phase: completed ? "Valmistunut" : "Suunnittelussa",
-        source_url: `${BASE}${uri}`,
+        source_url: sourceUrl,
         confidence: 0.6,
         completed,
         source_name: "lujatalo",
+        estimated_completion: estimatedCompletion,
       })
     }
   }
