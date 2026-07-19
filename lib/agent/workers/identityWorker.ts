@@ -30,6 +30,7 @@ import { resolveMantsalaKaavaProject } from "@/lib/agent/identity/resolvers/mant
 import { resolveTornioKaavaProject } from "@/lib/agent/identity/resolvers/tornioKaavaResolver"
 import { resolveLietoKaavaProject } from "@/lib/agent/identity/resolvers/lietoKaavaResolver"
 import { resolveNaantaliKaavaProject } from "@/lib/agent/identity/resolvers/naantaliKaavaResolver"
+import { resolveIisalmiKaavaProject } from "@/lib/agent/identity/resolvers/iisalmiKaavaResolver"
 import { resolveRiihimakiKaavaProject } from "@/lib/agent/identity/resolvers/riihimakiKaavaResolver"
 import { resolveRaaseporiKaavaProject } from "@/lib/agent/identity/resolvers/raaseporiKaavaResolver"
 import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisioKaavaResolver"
@@ -283,6 +284,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "mäntsälän vireillä olevat asemakaavat") {
     const result = await resolveMantsalaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "iisalmen vireillä olevat asemakaavat") {
+    const result = await resolveIisalmiKaavaProject({
       document,
       facts: facts ?? [],
     })

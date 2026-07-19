@@ -7438,6 +7438,140 @@ async function collectNaantaliKaavaSource(source: DiscoverySource) {
   }
 }
 
+const IISALMI_LISTING_URL = "https://iisalmi.fi/asuminen-ja-ymparisto/kaupunkisuunnittelu-ja-kaavoitus/asemakaavoitus/"
+const IISALMI_PENDING_HEADING = "Vireillä olevat asemakaavamuutokset"
+const IISALMI_TUNNUS_PATTERN = /AK[\s-]?(\d{3})/i
+const IISALMI_PHASE_ALT_PATTERN = /Nyt olemme ([\wäöåÄÖÅ]+)vaiheessa/i
+
+function iisalmiPhaseFromLabel(rawPhase: string): string {
+  const normalized = rawPhase.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksymis|hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus|ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonnos|luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function fetchIisalmiKaavaDetails(url: string) {
+  const empty = {
+    description: null as string | null,
+    phase: "Vireilletulo",
+    kaavaTunnus: null as string | null,
+    contacts: [] as { name: string | null; title: string | null; phone: string | null; email: string | null }[],
+  }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const $ = cheerio.load(await response.text())
+
+    const description = $(".page-header__lead p").first().text().replace(/\s+/g, " ").trim() || null
+
+    const bodyText = $("body").text()
+    const tunnusMatch = bodyText.match(IISALMI_TUNNUS_PATTERN)
+    const kaavaTunnus = tunnusMatch ? `AK ${tunnusMatch[1]}` : null
+
+    const phaseAlt = $("img[alt*='Nyt olemme']").first().attr("alt") ?? ""
+    const phaseMatch = phaseAlt.match(IISALMI_PHASE_ALT_PATTERN)
+    const phase = phaseMatch ? iisalmiPhaseFromLabel(phaseMatch[1]) : "Vireilletulo"
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    $("article.contact").each((_, el) => {
+      const $el = $(el)
+      const name = $el.find(".contact__name").text().replace(/\s+/g, " ").trim() || null
+      if (!name) return
+      const contactTitle = $el.find(".contact__title").text().replace(/\s+/g, " ").trim() || null
+      const phone = $el.find(".contact__phone").text().replace(/\s+/g, " ").trim() || null
+      const email = $el.find(".contact__email").text().replace(/\s+/g, " ").trim() || null
+      contacts.push({ name, title: contactTitle, phone, email })
+    })
+
+    return { description, phase, kaavaTunnus, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectIisalmiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(IISALMI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const pendingHeading = $(".link-repeater__heading")
+    .filter((_, el) => $(el).text().replace(/\s+/g, " ").trim() === IISALMI_PENDING_HEADING)
+    .first()
+  const pendingRepeater = pendingHeading.closest(".link-repeater")
+
+  const items: { title: string; url: string }[] = []
+  const seen = new Set<string>()
+
+  pendingRepeater.find("a").each((_, a) => {
+    const $a = $(a)
+    const href = $a.attr("href")
+    const title = $a.text().replace(/\s+/g, " ").trim()
+    if (!href || !title || seen.has(href)) return
+    seen.add(href)
+    items.push({ title, url: href })
+  })
+
+  let saved = 0
+
+  for (const item of items) {
+    const details = await fetchIisalmiKaavaDetails(item.url)
+    const completed = /voimaantulo|lainvoima/i.test(details.phase)
+
+    const displayTitle = details.kaavaTunnus ? `${details.kaavaTunnus} ${item.title}` : item.title
+
+    const rawText = JSON.stringify({ title: item.title, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: displayTitle,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: displayTitle,
+            kaava_tunnus: details.kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -10023,6 +10157,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "naantaliKaavaParser") {
     return collectNaantaliKaavaSource(source)
+  }
+
+  if (source.parser === "iisalmiKaavaParser") {
+    return collectIisalmiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
