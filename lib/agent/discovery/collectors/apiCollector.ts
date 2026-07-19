@@ -5251,6 +5251,194 @@ async function collectImatraKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Raahen kaavasivun "Vireillä olevat" -listaus jakautuu Drupalin
+ * sivutukseen (?page=0, ?page=1, ...) — kummallakin sivulla on oma
+ * "Vireillä olevat" -otsikko ja linkkilista, joten molemmat haetaan ja
+ * yhdistetään. Yksittäisen kaavan sivulla nykyinen vaihe on suoraan
+ * "Ajankohtaista"-otsikon ALLA oleva ENSIMMÄINEN h3-otsikko (esim.
+ * "Hyväksyminen") — sivu näyttää tämän aina erillään "Aiemmat
+ * suunnitteluvaiheet" -osiosta, joten vaihetta ei tarvitse päätellä
+ * tekstistä kuten useimmilla muilla sivustoilla.
+ */
+const RAAHE_LISTING_URLS = [
+  "https://raahe.fi/elinymparisto/kaavoitus",
+  "https://raahe.fi/elinymparisto/kaavoitus?page=1",
+]
+const RAAHE_TUNNUS_PATTERN = /^(AK|AKM)\s*(\d+)/i
+
+async function fetchRaahePlanLinks(): Promise<{ title: string; url: string; kaavaTunnus: string | null }[]> {
+  const seen = new Set<string>()
+  const links: { title: string; url: string; kaavaTunnus: string | null }[] = []
+
+  for (const listingUrl of RAAHE_LISTING_URLS) {
+    const response = await fetch(listingUrl, { cache: "no-store" })
+    if (!response.ok) continue
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const heading = $("h2")
+      .filter((_, el) => $(el).text().trim() === "Vireillä olevat")
+      .last()
+    if (!heading.length) continue
+
+    let el = heading.next()
+    while (el.length && el[0].tagName !== "h2") {
+      el.find("a")
+        .addBack("a")
+        .each((_, a) => {
+          const href = $(a).attr("href")
+          const text = $(a).text().replace(/\s+/g, " ").trim()
+          if (!href || !text) return
+          if (!href.startsWith("/kaavoitus/")) return
+
+          const absoluteUrl = `https://raahe.fi${href}`
+          if (seen.has(absoluteUrl)) return
+          seen.add(absoluteUrl)
+
+          const tunnusMatch = text.match(RAAHE_TUNNUS_PATTERN)
+          const kaavaTunnus = tunnusMatch ? `${tunnusMatch[1].toUpperCase()}${tunnusMatch[2]}` : null
+
+          links.push({ title: text, url: absoluteUrl, kaavaTunnus })
+        })
+      el = el.next()
+    }
+  }
+
+  return links
+}
+
+async function fetchRaaheKaavaDetails(url: string) {
+  const empty = { title: null as string | null, description: null, phase: "Vireilletulo", contacts: [] as any[] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const title = $("h1").first().text().replace(/\s+/g, " ").trim() || null
+
+    const textUntilNextH2 = (heading: any) => {
+      let text = ""
+      let el = $(heading).next()
+      while (el.length && el[0].tagName !== "h2") {
+        text += ` ${$(el).text().replace(/\s+/g, " ").trim()}`
+        el = el.next()
+      }
+      return text.trim()
+    }
+
+    /*
+     * Kuvausotsikko vaihtelee suunnitelmatyypin mukaan (asemakaavoilla
+     * "Asemakaava", yleiskaavoilla "Osayleiskaava", jne.) — sen sijaan
+     * että arvattaisiin otsikon teksti, käytetään sijaintia: kuvaus on
+     * aina ensimmäinen h2 "Ajankohtaista"-osion JÄLKEEN.
+     */
+    const ajankohtaistaHeading = $("h2")
+      .filter((_, el) => $(el).text().trim() === "Ajankohtaista")
+      .first()
+    const descriptionHeading = ajankohtaistaHeading.length
+      ? ajankohtaistaHeading.nextAll("h2").first()
+      : null
+    const description =
+      descriptionHeading && descriptionHeading.length ? textUntilNextH2(descriptionHeading) || null : null
+
+    const firstH3 = ajankohtaistaHeading.length
+      ? $(ajankohtaistaHeading).nextAll("h3").first()
+      : null
+    const phase = firstH3 && firstH3.length ? firstH3.text().replace(/\s+/g, " ").trim() : "Vireilletulo"
+
+    /*
+     * "Lisätietoja"-kappaleen sisältö vaihtelee: yleensä yksi otsikko +
+     * nimi ("Kaavasuunnittelija" + "Mathias Holmén"), joskus useampi
+     * henkilö samassa kappaleessa. Ilman luotettavaa erotinta useamman
+     * henkilön tapaus ei erotu varmasti otsikko/nimi-parista, joten
+     * poimitaan vain ENSIMMÄINEN pari (otsikko, sitten nimi) ja
+     * jätetään mahdolliset lisähenkilöt pois — puhelin/sähköposti ei
+     * ole tällä sivustolla muutenkaan saatavilla.
+     */
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    const lisatietojaLabel = $("strong")
+      .filter((_, el) => $(el).text().trim() === "Lisätietoja")
+      .first()
+    if (lisatietojaLabel.length) {
+      const paragraph = lisatietojaLabel.closest("p")
+      const fullText = paragraph.text().replace(/\s+/g, " ").trim()
+      const rest = fullText.replace(/^Lisätietoja\s*/, "").trim()
+      const parts = rest.split(/\s*(?:\r?\n|(?<=[a-zäöå])(?=[A-ZÄÖÅ]))/).filter(Boolean)
+
+      if (parts.length >= 2 && !/henkilöstöhaku|yhteystiedot/i.test(parts[0])) {
+        contacts.push({ name: parts[1], title: parts[0], phone: null, email: null })
+      }
+    }
+
+    return { title, description, phase, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectRaaheKaavaSource(source: DiscoverySource) {
+  const links = await fetchRaahePlanLinks()
+
+  let saved = 0
+
+  for (const link of links) {
+    const details = await fetchRaaheKaavaDetails(link.url)
+    const title = details.title ?? link.title
+    const completed = /voimaantulo|lainvoima/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ link, ...details, title })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: link.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            kaava_tunnus: link.kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 async function collectVihtiKaavaSource(source: DiscoverySource) {
   const links = await fetchVihtiPlanLinks()
 
@@ -8668,6 +8856,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "vihtiKaavaParser") {
     return collectVihtiKaavaSource(source)
+  }
+
+  if (source.parser === "raaheKaavaParser") {
+    return collectRaaheKaavaSource(source)
   }
 
   if (source.parser === "imatraKaavaParser") {
