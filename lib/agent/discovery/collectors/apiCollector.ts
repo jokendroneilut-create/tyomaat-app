@@ -7281,6 +7281,163 @@ async function collectLietoKaavaSource(source: DiscoverySource) {
   }
 }
 
+const NAANTALI_LISTING_URL = "https://www.naantali.fi/fi/asuminen-ja-ymparisto/kaupunkisuunnittelu/kaavoitus/asemakaavat"
+const NAANTALI_TUNNUS_PATTERN = /Ak-\d+/
+const NAANTALI_PROCEDURAL_PATTERN = /kaupunginhallitus|kaupunginvaltuusto|valitus|muistutus/i
+const NAANTALI_FAKE_EMAIL = "etunimi.sukunimi@naantali.fi"
+
+function naantaliPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno|valmistelu/.test(normalized)) return "Luonnos"
+  if (/vireille|käynnist/.test(normalized)) return "Vireilletulo"
+  return "Vireilletulo"
+}
+
+async function fetchNaantaliMetaRefreshed(url: string, depth = 0): Promise<string | null> {
+  const response = await fetch(url, { cache: "no-store" })
+  if (!response.ok) return null
+  const html = await response.text()
+  if (depth < 3) {
+    const match = html.match(/<meta http-equiv="refresh" content="0;url='([^']+)'"/i)
+    if (match) return fetchNaantaliMetaRefreshed(match[1], depth + 1)
+  }
+  return html
+}
+
+async function fetchNaantaliKaavaDetails(url: string) {
+  const empty = {
+    description: null as string | null,
+    phase: "Vireilletulo",
+    kaavaTunnus: null as string | null,
+    contacts: [] as { name: string | null; title: string | null; phone: string | null; email: string | null }[],
+  }
+
+  const html = await fetchNaantaliMetaRefreshed(url)
+  if (!html) return empty
+
+  const $ = cheerio.load(html)
+  const body = $(".field--name-body").first()
+
+  const paragraphs = body
+    .find("p")
+    .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+    .get()
+    .filter(Boolean)
+
+  const candidates = paragraphs.filter((p) => p.length > 40 && !NAANTALI_PROCEDURAL_PATTERN.test(p))
+  const description = candidates.length ? candidates.reduce((a, b) => (b.length > a.length ? b : a)) : null
+
+  const liftupTitles = $("article.liftup")
+    .map((_, el) => $(el).find("h2").first().text().replace(/\s+/g, " ").trim())
+    .get()
+
+  const combinedText = [...paragraphs, ...liftupTitles].join(" ")
+  const phase = naantaliPhaseFromText(combinedText)
+
+  let kaavaTunnus: string | null = null
+  for (const a of $("a").toArray()) {
+    const label = $(a).attr("title") ?? $(a).text()
+    const match = label.match(NAANTALI_TUNNUS_PATTERN)
+    if (match) {
+      kaavaTunnus = match[0]
+      break
+    }
+  }
+
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+  const namedCard = $(".contact-card")
+    .filter((_, el) => $(el).find(".contact-card__title a[href*='/yhteystiedot/']").length > 0)
+    .first()
+  if (namedCard.length) {
+    const name = namedCard.find(".contact-card__title").text().replace(/\s+/g, " ").trim() || null
+    const contactTitle = namedCard.find(".contact-card__subtitle").text().replace(/\s+/g, " ").trim() || null
+    const phone = namedCard.find("a[href^='tel:']").first().text().trim() || null
+    const emailText = namedCard.find(".field--name-field-contact-email .field__item").first().text().trim()
+    const email = emailText && emailText !== NAANTALI_FAKE_EMAIL ? emailText : null
+
+    if (name) contacts.push({ name, title: contactTitle, phone, email })
+  }
+
+  return { description, phase, kaavaTunnus, contacts }
+}
+
+async function collectNaantaliKaavaSource(source: DiscoverySource) {
+  const response = await fetch(NAANTALI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items: { title: string; url: string }[] = []
+  const seen = new Set<string>()
+
+  for (const el of $("article.liftup").toArray()) {
+    const $el = $(el)
+    const title = $el.find("h2").first().text().replace(/\s+/g, " ").trim()
+    const href = $el.find("a").first().attr("href")
+    if (!title || !href || seen.has(href)) continue
+    seen.add(href)
+    items.push({ title, url: href })
+  }
+
+  let saved = 0
+
+  for (const item of items) {
+    const details = await fetchNaantaliKaavaDetails(item.url)
+    const completed = /voimaantulo|lainvoima/i.test(details.phase)
+
+    const displayTitle = details.kaavaTunnus ? `${details.kaavaTunnus} ${item.title}` : item.title
+
+    const rawText = JSON.stringify({ title: item.title, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: displayTitle,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: displayTitle,
+            kaava_tunnus: details.kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -9862,6 +10019,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "lietoKaavaParser") {
     return collectLietoKaavaSource(source)
+  }
+
+  if (source.parser === "naantaliKaavaParser") {
+    return collectNaantaliKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
