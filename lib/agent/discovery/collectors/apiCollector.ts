@@ -6425,6 +6425,131 @@ async function collectKajaaniKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Hollola käyttää samaa CloudNC-alustaa kuin Kajaani (samat CSS-luokat:
+ * .kaavatunnus-info, .yhteyshenkilo-info, .phase.box .phase-header b),
+ * mutta kuvaus on eri paikassa — .kuulutus-info sisältää AJANKOHTAISTA-
+ * tilapäivityksen, ei tavoitekuvausta, joka löytyy sen sijaan omasta
+ * .basic-content-lohkosta.
+ */
+const HOLLOLA_LISTING_URL = "https://hollola.cloudnc.fi/fi-FI/Kaavat/Aktiiviset"
+const HOLLOLA_LINK_PATTERN = /^\/fi-FI\/content\/\d+\/12722$/
+const HOLLOLA_PHONE_PATTERN = /Lisätietoja antaa[^.]*?puh\.?\s*(\d[\d ]{6,14}\d)/i
+
+async function fetchHollolaKaavaDetails(url: string) {
+  const empty = { kaavaTunnus: null as string | null, phase: null as string | null, description: null as string | null, contacts: [] as any[] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const kaavaTunnus = $(".kaavatunnus-info").first().text().replace(/\s+/g, " ").trim() || null
+
+    const description =
+      $(".basic-content p")
+        .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+        .get()
+        .filter(Boolean)
+        .slice(0, 3)
+        .join(" ") || null
+
+    const phase =
+      $(".phase.box").first().find(".phase-header b").first().text().replace(/\s+/g, " ").trim() || null
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    const yhteyshenkiloText = $(".yhteyshenkilo-info").first().text().replace(/\s+/g, " ").trim()
+    if (yhteyshenkiloText) {
+      const { name, title } = kajaaniSplitNameTitle(yhteyshenkiloText)
+      const phoneMatch = $("body").text().match(HOLLOLA_PHONE_PATTERN)
+      contacts.push({ name, title, phone: phoneMatch ? phoneMatch[1].trim() : null, email: null })
+    }
+
+    return { kaavaTunnus, phase, description, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectHollolaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HOLLOLA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: { title: string; url: string }[] = []
+  const seen = new Set<string>()
+
+  $("a[href*='content/']").each((_, el) => {
+    const href = $(el).attr("href")
+    const text = $(el).text().replace(/\s+/g, " ").trim()
+    if (!href || !text) return
+    if (!HOLLOLA_LINK_PATTERN.test(href)) return
+    if (seen.has(href)) return
+
+    seen.add(href)
+    const url = new URL(href, "https://hollola.cloudnc.fi").toString()
+    items.push({ title: text, url })
+  })
+
+  let saved = 0
+
+  for (const item of items) {
+    const details = await fetchHollolaKaavaDetails(item.url)
+    const kaavaTunnus = details.kaavaTunnus ?? item.url.match(/content\/(\d+)/)?.[1] ?? null
+    const completed = /voimaantulo|lainvoima/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ item, ...details, kaavaTunnus })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: item.title,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: item.title,
+            kaava_tunnus: kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -8982,6 +9107,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kajaaniKaavaParser") {
     return collectKajaaniKaavaSource(source)
+  }
+
+  if (source.parser === "hollolaKaavaParser") {
+    return collectHollolaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {

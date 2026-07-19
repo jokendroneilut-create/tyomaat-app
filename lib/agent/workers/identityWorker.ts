@@ -23,6 +23,7 @@ import { resolveVihtiKaavaProject } from "@/lib/agent/identity/resolvers/vihtiKa
 import { resolveImatraKaavaProject } from "@/lib/agent/identity/resolvers/imatraKaavaResolver"
 import { resolveRaaheKaavaProject } from "@/lib/agent/identity/resolvers/raaheKaavaResolver"
 import { resolveSastamalaKaavaProject } from "@/lib/agent/identity/resolvers/sastamalaKaavaResolver"
+import { resolveHollolaKaavaProject } from "@/lib/agent/identity/resolvers/hollolaKaavaResolver"
 import { resolveRiihimakiKaavaProject } from "@/lib/agent/identity/resolvers/riihimakiKaavaResolver"
 import { resolveRaaseporiKaavaProject } from "@/lib/agent/identity/resolvers/raaseporiKaavaResolver"
 import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisioKaavaResolver"
@@ -248,6 +249,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "sastamalan vireillä ja nähtävillä olevat kaavat") {
     const result = await resolveSastamalaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "hollolan aktiiviset kaavat") {
+    const result = await resolveHollolaKaavaProject({
       document,
       facts: facts ?? [],
     })
