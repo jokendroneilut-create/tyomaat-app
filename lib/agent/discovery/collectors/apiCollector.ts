@@ -7135,6 +7135,152 @@ async function collectTornioKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LIETO_LISTING_URL =
+  "https://www.lieto.fi/palvelut-ja-asiointi/kaavoitus-ja-maankaytto/asemakaavat/vireilla-olevat-asemakaavat/"
+const LIETO_PARENT_URL = "https://www.lieto.fi/palvelut-ja-asiointi/kaavoitus-ja-maankaytto/asemakaavat/"
+const LIETO_CODE_PATTERN = /^(\d\.\d{2})\s*(.+)$/
+
+function lietoPhaseFromLabel(rawPhase: string): string {
+  const normalized = rawPhase.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function fetchLietoKaavaDescription(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return null
+
+    const $ = cheerio.load(await response.text())
+    const article = $("article, main").first()
+
+    const paragraphs: string[] = []
+    for (const el of article.find("p").toArray()) {
+      const text = $(el).text().replace(/[\x00-\x1F ]/g, " ").replace(/\s+/g, " ").trim()
+      if (!text) continue
+      if (/nähtävilläoloaika/i.test(text)) break
+      if (/jaa tämä sivu/i.test(text)) break
+      paragraphs.push(text)
+    }
+
+    return paragraphs.join(" ") || null
+  } catch {
+    return null
+  }
+}
+
+async function collectLietoKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LIETO_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const contactResponse = await fetch(LIETO_PARENT_URL, { cache: "no-store" })
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+  if (contactResponse.ok) {
+    const $$ = cheerio.load(await contactResponse.text())
+    const firstCol = $$(".block-contacts .col-12").first()
+    if (firstCol.length) {
+      const contactTitle = firstCol.find("> div").first().text().trim() || null
+      const nameRaw = firstCol.find("a strong").first().text().trim()
+      const nameParts = nameRaw.split(/\s+/).filter(Boolean)
+      const contactName = nameParts.length === 2 ? `${nameParts[1]} ${nameParts[0]}` : nameRaw || null
+      const fullText = firstCol.text().replace(/\s+/g, " ")
+      const phoneMatch = fullText.match(/(\d{7,12})/)
+      const emailMatch = fullText.match(/([\w.-]+@[\w.-]+)/)
+      if (contactName) {
+        contacts.push({
+          name: contactName,
+          title: contactTitle,
+          phone: phoneMatch ? phoneMatch[1] : null,
+          email: emailMatch ? emailMatch[1] : null,
+        })
+      }
+    }
+  }
+
+  const items: { title: string; kaavaTunnus: string | null; phase: string; url: string }[] = []
+  const seen = new Set<string>()
+
+  for (const acc of $(".accordion__content").toArray()) {
+    for (const h2 of $(acc).find("h2.wp-block-heading").toArray()) {
+      const $h2 = $(h2)
+      const a = $h2.find("a").first()
+      const href = a.attr("href")
+      const text = a.text().replace(/ /g, " ").replace(/\s+/g, " ").trim()
+      if (!href || !text || seen.has(href)) continue
+      seen.add(href)
+
+      const match = text.match(LIETO_CODE_PATTERN)
+      const kaavaTunnus = match ? match[1] : null
+      const name = match ? match[2] : text
+
+      const phaseLabel = $h2.next("p").find("em").first().text().trim()
+      const phase = lietoPhaseFromLabel(phaseLabel)
+
+      items.push({ title: name, kaavaTunnus, phase, url: href })
+    }
+  }
+
+  let saved = 0
+
+  for (const item of items) {
+    const description = await fetchLietoKaavaDescription(item.url)
+    const completed = /voimaantulo|lainvoima/i.test(item.phase)
+
+    const displayTitle = item.kaavaTunnus ? `${item.kaavaTunnus} ${item.title}` : item.title
+
+    const rawText = JSON.stringify({ title: item.title, kaavaTunnus: item.kaavaTunnus, phase: item.phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: displayTitle,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: displayTitle,
+            kaava_tunnus: item.kaavaTunnus,
+            phase: item.phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -9712,6 +9858,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "tornioKaavaParser") {
     return collectTornioKaavaSource(source)
+  }
+
+  if (source.parser === "lietoKaavaParser") {
+    return collectLietoKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
