@@ -6829,6 +6829,193 @@ async function collectSiilinjarviKaavaSource(source: DiscoverySource) {
   }
 }
 
+const MANTSALA_LISTING_URL =
+  "https://www.mantsala.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/asemakaavat/vireilla-olevat-asemakaavat/"
+const MANTSALA_TUNNUS_PATTERN = /(?:asemakaavan?|kaavan)\s+(?:muutosehdotuksen\s+)?(?:nro\.?\s*)?(\d{2,4})\b/i
+const MANTSALA_SIGNATURE_PATTERN = /^\d{1,2}\.\d{1,2}\.\d{4}\s+Mäntsälän kunta/i
+const MANTSALA_EXCLUDE_PATTERN =
+  /^(Asiakaspalvelu palvelee|Osallisilla ja kunnan jäsenillä|Oheismateriaali|Kirjalliset)/i
+const MANTSALA_DECISION_REF_PATTERN =
+  /(Kunnanhallitus|Kuntakehityslautakunta|Ympäristölautakunta) on päätöksellään/i
+
+function mantsalaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/käynnist|osallistumis|arviointi/.test(normalized)) return "Vireilletulo"
+  return "Vireilletulo"
+}
+
+async function fetchMantsalaKaavaDetails(url: string) {
+  const empty = {
+    description: null as string | null,
+    phase: null as string | null,
+    kaavaTunnus: null as string | null,
+    contacts: [] as { name: string | null; title: string | null; phone: string | null; email: string | null }[],
+  }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const $ = cheerio.load(await response.text())
+    const article = $("article, main").first()
+    const paragraphs = article
+      .find("p")
+      .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+      .get()
+      .filter(Boolean)
+
+    if (!paragraphs.length) return empty
+
+    const firstRoundEnd = paragraphs.findIndex((p) => MANTSALA_SIGNATURE_PATTERN.test(p))
+    const firstRound = firstRoundEnd >= 0 ? paragraphs.slice(0, firstRoundEnd) : paragraphs.slice(0, 10)
+
+    const headline = firstRound[0] ?? ""
+    const phase = mantsalaPhaseFromText(headline)
+
+    const fullText = paragraphs.join(" ")
+    const tunnusMatch = fullText.match(MANTSALA_TUNNUS_PATTERN)
+    const kaavaTunnus = tunnusMatch ? tunnusMatch[1] : null
+
+    const candidates = firstRound.filter(
+      (p, i) =>
+        i > 0 &&
+        p.length > 40 &&
+        !MANTSALA_EXCLUDE_PATTERN.test(p) &&
+        !MANTSALA_DECISION_REF_PATTERN.test(p) &&
+        !/^Lisätietoja/i.test(p) &&
+        !/@/.test(p)
+    )
+    const description = candidates.length
+      ? candidates.reduce((a, b) => (b.length > a.length ? b : a))
+      : null
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    const contactIndex = firstRound.findIndex((p) => /^Lisätietoja/i.test(p))
+    const contactPara =
+      contactIndex >= 0
+        ? /^Lisätietoja:?\s*$/i.test(firstRound[contactIndex])
+          ? (firstRound[contactIndex + 1] ?? null)
+          : firstRound[contactIndex]
+        : null
+    if (contactPara) {
+      const emailMatch = contactPara.match(/([\w.-]+@[\w.-]+)/)
+      const phoneMatch = contactPara.match(/\b(?:puh|p)\.?\s*(\d[\d ]{0,14})/i)
+      let rest = contactPara.replace(/^Lisätietoja:?\s*/i, "")
+      if (emailMatch) rest = rest.replace(emailMatch[0], "")
+      if (phoneMatch) rest = rest.replace(phoneMatch[0], "")
+      rest = rest.trim()
+
+      const words = rest.split(/\s+/).filter(Boolean)
+      const title = words[0] ?? null
+      const name = words.slice(1).join(" ") || null
+
+      if (name) {
+        contacts.push({
+          name,
+          title,
+          phone: phoneMatch ? phoneMatch[1].trim() : null,
+          email: emailMatch ? emailMatch[1] : null,
+        })
+      }
+    }
+
+    return { description, phase, kaavaTunnus, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectMantsalaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(MANTSALA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: { url: string; slug: string }[] = []
+  const seen = new Set<string>()
+
+  $(`a[href*='vireilla-olevat-asemakaavat/']`).each((_, el) => {
+    const href = $(el).attr("href")
+    if (!href) return
+    if (href.endsWith("vireilla-olevat-asemakaavat/")) return
+    if (seen.has(href)) return
+
+    const slugMatch = href.match(/\/([^/]+)\/?$/)
+    if (!slugMatch) return
+
+    seen.add(href)
+    items.push({ url: href, slug: slugMatch[1] })
+  })
+
+  let saved = 0
+
+  for (const item of items) {
+    const response2 = await fetch(item.url, { cache: "no-store" })
+    if (!response2.ok) continue
+
+    const $$ = cheerio.load(await response2.text())
+    const title = $$("h1").first().text().replace(/\s+/g, " ").trim()
+    if (!title) continue
+
+    const details = await fetchMantsalaKaavaDetails(item.url)
+    const completed = /voimaantulo|lainvoima/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ title, slug: item.slug, ...details })
+    const contentHash = hashContent(rawText)
+
+    const displayTitle = details.kaavaTunnus ? `${details.kaavaTunnus} ${title}` : title
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: displayTitle,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: displayTitle,
+            slug: item.slug,
+            kaava_tunnus: details.kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -9398,6 +9585,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "siilinjarviKaavaParser") {
     return collectSiilinjarviKaavaSource(source)
+  }
+
+  if (source.parser === "mantsalaKaavaParser") {
+    return collectMantsalaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
