@@ -5056,6 +5056,201 @@ async function fetchVihtiKaavaDetails(url: string) {
   }
 }
 
+/*
+ * Imatran kaavasivut ovat Drupalin vapaamuotoista WYSIWYG-tekstiä
+ * (.field--name-body), ei strukturoitua otsikkohierarkiaa — osa
+ * sivuista käyttää h2/h3-otsikkoja, osa <p><strong>Otsikko:</strong>...
+ * -muotoa saman sivun sisällä. Kerätään molemmat "Vireillä olevat" ja
+ * "Nähtävillä olevat" -osiot listaussivulta (kaikki ei-vielä-lainvoimaiset
+ * kaavat); "Valmiit asemakaavat" -osio jätetään tarkoituksella pois.
+ */
+const IMATRA_LISTING_URL = "https://www.imatra.fi/asuminen-ja-ymparisto/kaavoitus/asemakaavat"
+const IMATRA_LINK_TITLE_PATTERN = /,\s*kaava\s+(\d+)/i
+
+async function fetchImatraPlanLinks(): Promise<{ title: string; url: string; kaavaTunnus: string }[]> {
+  const response = await fetch(IMATRA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return []
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const collectSection = (headingText: string) => {
+    const heading = $("h2")
+      .filter((_, el) => $(el).text().trim() === headingText)
+      .first()
+    if (!heading.length) return []
+
+    const links: { title: string; url: string; kaavaTunnus: string }[] = []
+    let el = heading.next()
+    while (el.length && el[0].tagName !== "h2") {
+      el.find("a")
+        .addBack("a")
+        .each((_, a) => {
+          const href = $(a).attr("href")
+          const text = $(a).text().replace(/\s+/g, " ").trim()
+          if (!href || !text) return
+
+          const tunnusMatch = text.match(IMATRA_LINK_TITLE_PATTERN)
+          if (!tunnusMatch) return
+
+          const absoluteUrl = href.startsWith("http") ? href : `https://www.imatra.fi${href}`
+          links.push({ title: text, url: absoluteUrl, kaavaTunnus: tunnusMatch[1] })
+        })
+      el = el.next()
+    }
+    return links
+  }
+
+  const seen = new Set<string>()
+  const links: { title: string; url: string; kaavaTunnus: string }[] = []
+  for (const link of [
+    ...collectSection("Nähtävillä olevat asemakaavat"),
+    ...collectSection("Vireillä olevat asemakaavat"),
+  ]) {
+    if (seen.has(link.url)) continue
+    seen.add(link.url)
+    links.push(link)
+  }
+
+  return links
+}
+
+function imatraPhaseFromText(text: string): string {
+  if (/voimaantulo|lainvoima/i.test(text)) return "Lainvoimaisuus"
+  if (/hyväksy/i.test(text)) return "Hyväksyminen"
+  if (/ehdotus/i.test(text)) return "Ehdotus"
+  if (/luonnos/i.test(text)) return "Luonnos"
+  if (/osallistumis|arviointi/i.test(text)) return "Osallistumis- ja arviointisuunnitelma"
+  if (/vireille/i.test(text)) return "Vireilletulo"
+  return "Vireilletulo"
+}
+
+async function fetchImatraKaavaDetails(url: string) {
+  const empty = { description: null, phase: "Vireilletulo", contacts: [] as any[] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    const spamspan = $(".spamspan").first()
+    if (spamspan.length) {
+      const user = spamspan.find(".u").text().trim()
+      const domain = spamspan.find(".d").text().trim()
+      if (user && domain) {
+        contacts.push({ name: null, title: "Kaavoitus", phone: null, email: `${user}@${domain}` })
+      }
+    }
+
+    const body = $(".field--name-body").first()
+
+    let currentLabel: string | null = null
+    const sections: Record<string, string> = {}
+    let leadText = ""
+
+    body.children().each((_, el) => {
+      const tag = el.tagName?.toLowerCase()
+      const $el = $(el)
+
+      if (tag === "h2" || tag === "h3" || tag === "h4") {
+        currentLabel = $el.text().replace(/\s+/g, " ").trim().replace(/:$/, "")
+        if (currentLabel && !(currentLabel in sections)) sections[currentLabel] = ""
+        return
+      }
+
+      if (tag !== "p") return
+
+      const strong = $el.find("strong").first()
+      const strongText = strong.length ? strong.text().replace(/\s+/g, " ").trim() : ""
+      const fullText = $el.text().replace(/\s+/g, " ").trim()
+
+      if (strongText && /:$/.test(strongText) && fullText.startsWith(strongText)) {
+        currentLabel = strongText.replace(/:$/, "")
+        if (!(currentLabel in sections)) sections[currentLabel] = ""
+        sections[currentLabel] += ` ${fullText.slice(strongText.length).trim()}`
+        return
+      }
+
+      if (currentLabel) {
+        sections[currentLabel] += ` ${fullText}`
+      } else {
+        leadText += ` ${fullText}`
+      }
+    })
+
+    const descriptionKey = Object.keys(sections).find((k) => /tavoite/i.test(k))
+    const phaseKey = Object.keys(sections).find((k) => /käsittelyvaihe|vaihe/i.test(k))
+
+    const description = (descriptionKey ? sections[descriptionKey].trim() : "") || leadText.trim() || null
+    const phaseText = phaseKey ? sections[phaseKey] : ""
+    const phase = imatraPhaseFromText(phaseText)
+
+    return { description, phase, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectImatraKaavaSource(source: DiscoverySource) {
+  const links = await fetchImatraPlanLinks()
+
+  let saved = 0
+
+  for (const link of links) {
+    const details = await fetchImatraKaavaDetails(link.url)
+    const completed = /voimaantulo|lainvoima/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ link, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: link.title,
+          document_url: link.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: link.title,
+            kaava_tunnus: link.kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 async function collectVihtiKaavaSource(source: DiscoverySource) {
   const links = await fetchVihtiPlanLinks()
 
@@ -8473,6 +8668,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "vihtiKaavaParser") {
     return collectVihtiKaavaSource(source)
+  }
+
+  if (source.parser === "imatraKaavaParser") {
+    return collectImatraKaavaSource(source)
   }
 
   if (source.parser === "riihimakiKaavaParser") {
