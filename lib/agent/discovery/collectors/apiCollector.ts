@@ -7016,6 +7016,125 @@ async function collectMantsalaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const TORNIO_LISTING_URL = "https://www.tornio.fi/asuminen-ja-ymparisto/kaavoitus-ja-mittaus/kaavatori/"
+const TORNIO_EXCLUDE_PATTERN = /tuulivoima|yleiskaava/i
+const TORNIO_SUMMARY_PATTERN = /^(\d+)(?:\s+(X\d+))?\s+(.+?)\s*\(([^)]+)\)\s*$/
+
+function tornioDecodeSoftHyphens(text: string): string {
+  return text.replace(/­/g, "")
+}
+
+function tornioPhaseFromLabel(rawPhase: string): string {
+  const normalized = rawPhase.toLowerCase()
+  if (/lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function tornioSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function collectTornioKaavaSource(source: DiscoverySource) {
+  const response = await fetch(TORNIO_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const contactBlock = $(".wp-block-valu-contact-lift").first()
+  const contactNameRaw = contactBlock.find(".wp-block-valu-contact-lift__title").first().text().trim()
+  const contactTitle = contactBlock.find(".wp-block-valu-contact-lift__job-title").first().text().trim() || null
+  const contactPhone = contactBlock.find(".wp-block-valu-contact-lift__phone").first().text().trim() || null
+  const contactEmail = contactBlock.find(".wp-block-valu-contact-lift__email").first().text().trim() || null
+  const nameParts = contactNameRaw.split(/\s+/).filter(Boolean)
+  const contactName = nameParts.length === 2 ? `${nameParts[1]} ${nameParts[0]}` : contactNameRaw || null
+  const contacts = contactName
+    ? [{ name: contactName, title: contactTitle, phone: contactPhone, email: contactEmail }]
+    : []
+
+  let found = 0
+  let saved = 0
+
+  for (const el of $("details.wp-block-details").toArray()) {
+    const $el = $(el)
+    const summaryText = tornioDecodeSoftHyphens($el.find("summary").first().text().replace(/\s+/g, " ").trim())
+    if (TORNIO_EXCLUDE_PATTERN.test(summaryText)) continue
+
+    const match = summaryText.match(TORNIO_SUMMARY_PATTERN)
+    if (!match) continue
+
+    const [, municipalityCode, xCode, name, rawPhase] = match
+
+    found += 1
+
+    const title = tornioDecodeSoftHyphens(name)
+    const kaavaTunnus = xCode ? `${municipalityCode} ${xCode}` : null
+    const phase = tornioPhaseFromLabel(rawPhase)
+    const completed = /voimaantulo|lainvoima/i.test(phase)
+
+    const description =
+      tornioDecodeSoftHyphens($el.find("p").first().text().replace(/\s+/g, " ").trim()) || null
+
+    const anchor = tornioSlug(kaavaTunnus ?? title)
+    const documentUrl = `${TORNIO_LISTING_URL}#${anchor}`
+
+    const displayTitle = kaavaTunnus ? `${kaavaTunnus} ${title}` : title
+
+    const rawText = JSON.stringify({ title, kaavaTunnus, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: displayTitle,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: displayTitle,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -9589,6 +9708,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "mantsalaKaavaParser") {
     return collectMantsalaKaavaSource(source)
+  }
+
+  if (source.parser === "tornioKaavaParser") {
+    return collectTornioKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
