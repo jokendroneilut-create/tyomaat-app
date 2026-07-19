@@ -6674,6 +6674,161 @@ async function collectPirkkalaKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Siilinjärven kaavat ovat kaikki yhdellä WordPress-sivulla h3-otsikkoina
+ * (ei accordion-, ei erillissivuja). Otsikko on muotoa
+ * "NIMI<br>Tyyppi<br>Kaavatunnus NNN NNNN" — <br>-rajat luetaan DOM:sta
+ * suoraan cheerion contents()-metodilla flatten-tekstin sijaan, koska
+ * <br>-tagit eivät tuota välilyöntiä .text()-tulosteessa (nimi ja tyyppi
+ * muuten sulautuisivat yhteen). Ensimmäinen kappale on
+ * <strong>vaihe-/tilalabel</strong><br>kuvausteksti.
+ */
+const SIILINJARVI_PAGE_URL = "https://siilinjarvi.fi/asuminen-ja-ymparisto/kaavoitus/nahtavilla-ja-vireilla-olevat-kaavat/"
+
+function siilinjarviSplitByBr($: any, el: any): string[] {
+  const parts: string[] = []
+  let current = ""
+  $(el)
+    .contents()
+    .each((_: number, node: any) => {
+      if (node.type === "tag" && node.name === "br") {
+        if (current.trim()) parts.push(current.trim())
+        current = ""
+      } else {
+        current += $(node).text()
+      }
+    })
+  if (current.trim()) parts.push(current.trim())
+  return parts
+}
+
+function siilinjarviPhaseFromLabel(label: string | null): string {
+  const normalized = (label ?? "").toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectSiilinjarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SIILINJARVI_PAGE_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  let found = 0
+  let saved = 0
+
+  for (const el of $("h3").toArray()) {
+    const $heading = $(el)
+    const headingParts = siilinjarviSplitByBr($, $heading)
+    const title = headingParts[0] ?? null
+    if (!title) continue
+
+    found += 1
+
+    const tunnusMatch = headingParts.join(" ").match(/Kaavatunnus\s+([\d\s]+\d)/)
+    const kaavaTunnus = tunnusMatch ? tunnusMatch[1].replace(/\s+/g, " ").trim() : null
+
+    let description: string | null = null
+    let phaseLabel: string | null = null
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+
+    let sibling = $heading.next()
+    let steps = 0
+    while (sibling.length && sibling[0].tagName !== "h3" && steps < 8) {
+      const parts = siilinjarviSplitByBr($, sibling)
+
+      if (!phaseLabel && parts.length > 1 && sibling.find("strong").length) {
+        phaseLabel = parts[0]
+        description = parts.slice(1).join(" ").trim() || null
+      }
+
+      const joined = parts.join(" ")
+      if (/Lisätiedot/i.test(joined)) {
+        // Poimitaan ENSIMMÄINEN yhteystieto (kunnan oma virkahenkilö) - "Lisätiedot:" voi listata useamman rivin, joista myöhemmät ovat usein ulkopuolisia asiantuntijoita.
+        const contactText = parts.length > 1 ? parts[1] : joined.replace(/Lisätiedot:?/i, "").trim()
+        const phoneMatch = contactText.match(/(\d[\d ]{6,14}\d)/)
+        let rest = contactText
+        if (phoneMatch) rest = rest.replace(phoneMatch[1], "")
+        rest = rest.replace(/,/g, " ").trim()
+
+        const nameMatch = rest.match(/([A-ZÄÖÅ][\wäöåÄÖÅ'-]+(?:\s+[A-ZÄÖÅ][\wäöåÄÖÅ'-]+)?)/)
+        if (nameMatch) {
+          contacts.push({
+            name: nameMatch[1].trim(),
+            title: rest.replace(nameMatch[1], "").trim() || null,
+            phone: phoneMatch ? phoneMatch[1].trim() : null,
+            email: null,
+          })
+        }
+      }
+
+      sibling = sibling.next()
+      steps += 1
+    }
+
+    const phase = siilinjarviPhaseFromLabel(phaseLabel)
+    const completed = /voimaantulo|lainvoima/i.test(phase)
+
+    const anchor = title
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+    const documentUrl = `${SIILINJARVI_PAGE_URL}#${anchor}`
+
+    const rawText = JSON.stringify({ title, kaavaTunnus, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: kaavaTunnus ? `${kaavaTunnus} ${title}` : title,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: kaavaTunnus ? `${kaavaTunnus} ${title}` : title,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -9239,6 +9394,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "pirkkalaKaavaParser") {
     return collectPirkkalaKaavaSource(source)
+  }
+
+  if (source.parser === "siilinjarviKaavaParser") {
+    return collectSiilinjarviKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
