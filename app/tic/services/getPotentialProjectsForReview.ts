@@ -5,14 +5,18 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function getPotentialProjectsForReview() {
+const PAGE_SIZE = 50
+
+export async function getPotentialProjectsForReview(page = 1) {
+  const offset = (page - 1) * PAGE_SIZE
+
   const { data, error } = await supabaseAdmin
     .from("potential_projects")
     .select("*")
     .eq("status", "new")
-    .neq("metadata->>recommended_action", "ignore")
+    .or("metadata->>recommended_action.neq.ignore,metadata->>recommended_action.is.null")
     .order("created_at", { ascending: false })
-    .limit(50)
+    .range(offset, offset + PAGE_SIZE - 1)
 
   if (error) throw error
 

@@ -10,7 +10,7 @@ export async function getPendingReviewCount() {
     .from("potential_projects")
     .select("*", { count: "exact", head: true })
     .eq("status", "new")
-    .neq("metadata->>recommended_action", "ignore")
+    .or("metadata->>recommended_action.neq.ignore,metadata->>recommended_action.is.null")
 
   if (error) throw error
 

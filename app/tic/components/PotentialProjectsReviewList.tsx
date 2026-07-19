@@ -8,12 +8,16 @@ function formatArea(value: number) {
   return `${Math.round(value).toLocaleString("fi-FI")} m²`
 }
 
+const PAGE_SIZE = 50
+
 export default function PotentialProjectsReviewList({
   projects,
   totalCount,
+  page = 1,
 }: {
   projects: any[]
   totalCount?: number
+  page?: number
 }) {
   const router = useRouter()
   const [loadingId, setLoadingId] = useState<string | null>(null)
@@ -86,18 +90,30 @@ export default function PotentialProjectsReviewList({
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-gray-900">Ehdokkaat</h2>
         <p className="mt-2 text-gray-600">
-          Ei uusia hyväksyntää odottavia hankkeita.
+          {page > 1
+            ? "Ei ehdokkaita tällä sivulla."
+            : "Ei uusia hyväksyntää odottavia hankkeita."}
         </p>
+        {page > 1 && (
+          <Link
+            href="/tic"
+            className="mt-3 inline-block rounded-lg border px-3 py-2 text-sm font-semibold hover:bg-gray-50"
+          >
+            ← Takaisin sivulle 1
+          </Link>
+        )}
       </div>
     )
   }
+
+  const totalPages = typeof totalCount === "number" ? Math.max(1, Math.ceil(totalCount / PAGE_SIZE)) : null
 
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h2 className="text-xl font-semibold text-gray-900">
         Ehdokkaat{" "}
         {typeof totalCount === "number" && totalCount > projects.length
-          ? `(näytetään ${projects.length} / ${totalCount})`
+          ? `(sivu ${page}${totalPages ? ` / ${totalPages}` : ""}, yhteensä ${totalCount})`
           : `(${projects.length})`}
       </h2>
 
@@ -262,6 +278,36 @@ export default function PotentialProjectsReviewList({
           )
         })}
       </div>
+
+      {totalPages !== null && totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between gap-2 border-t pt-4">
+          {page > 1 ? (
+            <Link
+              href={page - 1 === 1 ? "/tic" : `/tic?page=${page - 1}`}
+              className="rounded-lg border px-3 py-2 text-sm font-semibold hover:bg-gray-50"
+            >
+              ← Edellinen
+            </Link>
+          ) : (
+            <span />
+          )}
+
+          <span className="text-sm text-gray-500">
+            Sivu {page} / {totalPages}
+          </span>
+
+          {page < totalPages ? (
+            <Link
+              href={`/tic?page=${page + 1}`}
+              className="rounded-lg border px-3 py-2 text-sm font-semibold hover:bg-gray-50"
+            >
+              Seuraava →
+            </Link>
+          ) : (
+            <span />
+          )}
+        </div>
+      )}
     </section>
   )
 }

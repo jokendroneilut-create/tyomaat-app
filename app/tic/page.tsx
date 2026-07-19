@@ -4,9 +4,16 @@ import { getPendingReviewCount } from "./services/getPendingReviewCount"
 
 export const dynamic = "force-dynamic"
 
-export default async function TicPage() {
+export default async function TicPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const { page: pageParam } = await searchParams
+  const page = Math.max(1, Number(pageParam) || 1)
+
   const [potentialProjects, pendingReviewCount] = await Promise.all([
-    getPotentialProjectsForReview(),
+    getPotentialProjectsForReview(page),
     getPendingReviewCount(),
   ])
 
@@ -22,6 +29,7 @@ export default async function TicPage() {
         <PotentialProjectsReviewList
           projects={potentialProjects}
           totalCount={pendingReviewCount}
+          page={page}
         />
       </section>
     </main>
