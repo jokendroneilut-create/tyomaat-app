@@ -7572,6 +7572,131 @@ async function collectIisalmiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const MUSTASAARI_CHILDREN_API_URL =
+  "https://mustasaari.fi/wp-json/wp/v2/pages?parent=3111&per_page=100&_fields=id,slug,title,link"
+
+function mustasaariPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function fetchMustasaariKaavaDetails(url: string) {
+  const empty = {
+    description: null as string | null,
+    phase: "Vireilletulo",
+    contacts: [] as { name: string | null; title: string | null; phone: string | null; email: string | null }[],
+  }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const $ = cheerio.load(await response.text())
+    const content = $(".page-content").first()
+
+    // Sivun kappaleet ovat käänteiskronologisessa järjestyksessä (uusin ensin),
+    // mutta <hr>-erottimet eivät luotettavasti merkitse kierrosten rajoja - osalla
+    // sivuista on ylimääräinen <hr> heti otsikon jälkeen ennen yleistä infokappaletta.
+    // Siksi käydään läpi KAIKKI kappaleet dokumenttijärjestyksessä sen sijaan, että
+    // rajoituttaisiin ensimmäiseen <hr>:ään asti.
+    const paragraphs = content
+      .find("p")
+      .map((_, el) => $(el).text().replace(/\s+/g, " ").trim())
+      .get()
+      .filter(Boolean)
+
+    const phaseIndex = paragraphs.findIndex((p) => /nähtävillä|nähtävänä/i.test(p))
+    const phaseParagraph = phaseIndex >= 0 ? paragraphs[phaseIndex] : null
+    const phase = mustasaariPhaseFromText(phaseParagraph ?? paragraphs.join(" "))
+
+    const descriptionCandidates = phaseIndex >= 0 ? paragraphs.slice(0, phaseIndex) : paragraphs
+    const description = descriptionCandidates.find((p) => p.length > 20) ?? null
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    const sidebar = $(".sidebar-right .widget-contact-person").first()
+    if (sidebar.length) {
+      const name = sidebar.find(".person-card-name").first().text().trim() || null
+      const contactTitle = sidebar.find(".person-card-title.fin").first().text().trim() || null
+      const phone = sidebar.find(".person-card-phone a").first().text().trim() || null
+      const email = sidebar.find(".person-card-email.fin a").first().text().trim() || null
+      if (name) contacts.push({ name, title: contactTitle, phone, email })
+    }
+
+    return { description, phase, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectMustasaariKaavaSource(source: DiscoverySource) {
+  const response = await fetch(MUSTASAARI_CHILDREN_API_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const children = (await response.json()) as any[]
+
+  let saved = 0
+
+  for (const child of children) {
+    const title = (child.title?.rendered ?? "").replace(/\s+/g, " ").trim()
+    const url = child.link
+    if (!title || !url) continue
+
+    const details = await fetchMustasaariKaavaDetails(url)
+    const completed = /voimaantulo|lainvoima/i.test(details.phase)
+
+    const rawText = JSON.stringify({ title, slug: child.slug, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            slug: child.slug,
+            kaava_tunnus: null,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: children.length,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -10161,6 +10286,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "iisalmiKaavaParser") {
     return collectIisalmiKaavaSource(source)
+  }
+
+  if (source.parser === "mustasaariKaavaParser") {
+    return collectMustasaariKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
