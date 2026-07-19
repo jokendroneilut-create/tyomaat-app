@@ -5439,6 +5439,144 @@ async function collectRaaheKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Sastamalan kaavasivu on yksi WordPress-sivu (id 295), jonka koko
+ * sisältö on haitari (accordion): jokainen kaava on oma <button>+<div>
+ * -pari, eikä erillisiä alasivuja ole. Alaotsikot (<h5>) esiintyvät
+ * UUSIN ENSIN -järjestyksessä (esim. "Luonnos" ennen "Osallistumis- ja
+ * arviointisuunnitelma", vaikka OAS tapahtuu aina ensin kronologisesti),
+ * joten ENSIMMÄINEN <h5> ("Yhteystiedot" pois lukien) on aina nykyinen
+ * vaihe.
+ */
+const SASTAMALA_PAGE_URL =
+  "https://sastamala.fi/wp-json/wp/v2/pages/295?_fields=id,slug,link,title,content"
+const SASTAMALA_TUNNUS_PATTERN = /^([ARY]_?\d+)\s+(.+)$/i
+
+/*
+ * "Lisätietoja antaa" -lause ei aina noudata samaa sanajärjestystä —
+ * joskus nimi tulee ennen tehtävänimikettä ("Jasmin Broman
+ * kaavoitusarkkitehti"), joskus toisin päin ("maankäyttöjohtaja Ilmari
+ * Mattila") — joten nimeä ei etsitä kiinteästä positiosta, vaan isolla
+ * alkukirjaimella alkavana 1-2 sanan pätkänä (ISOT/pienet kirjaimet
+ * erottavat nimen ja nimikkeen, joten regex ei saa olla /i-tilassa).
+ */
+function parseSastamalaContact(text: string) {
+  const emailMatch = text.match(/([\w.-]+@[\w.-]+)/)
+  const phoneMatch = text.match(/puh\.?\s*([\d\s]+?)(?:,|\s*$)/)
+
+  let remaining = text.replace(/Lisätietoja antaa\s*/i, "")
+  if (emailMatch) remaining = remaining.replace(emailMatch[0], "")
+  remaining = remaining.replace(/puh\.?[\d\s,]+/, "").trim()
+
+  const nameMatch = remaining.match(/([A-ZÄÖÅ][\wäöåÄÖÅ'-]+(?:\s+[A-ZÄÖÅ][\wäöåÄÖÅ'-]+)?)/)
+  if (!nameMatch) return null
+
+  return {
+    name: nameMatch[1].trim(),
+    title: remaining.replace(nameMatch[1], "").trim() || null,
+    phone: phoneMatch ? phoneMatch[1].trim() : null,
+    email: emailMatch ? emailMatch[1] : null,
+  }
+}
+
+async function collectSastamalaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SASTAMALA_PAGE_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const page = (await response.json()) as any
+  if (!page?.content?.rendered) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(page.content.rendered)
+  const items = $(".b-single-accordion-box")
+
+  let found = 0
+  let saved = 0
+
+  for (const el of items.toArray()) {
+    const $item = $(el)
+    const rawTitle = $item
+      .find(".b-single-accordion-box__toggle-btn")
+      .first()
+      .text()
+      .replace(/\s+/g, " ")
+      .trim()
+
+    const tunnusMatch = rawTitle.match(SASTAMALA_TUNNUS_PATTERN)
+    if (!tunnusMatch) continue
+
+    found += 1
+
+    const kaavaTunnus = tunnusMatch[1].toUpperCase()
+    const planTitle = tunnusMatch[2].trim()
+
+    const content = $item.find(".b-single-accordion-box__content").first()
+    const description = content.find("p").first().text().replace(/\s+/g, " ").trim() || null
+
+    const h5s = content.find("h5")
+    const phaseHeading = h5s
+      .filter((_, h) => !/yhteystiedot/i.test($(h).text()))
+      .first()
+    const phase = phaseHeading.length ? phaseHeading.text().replace(/\s+/g, " ").trim() : "Vireilletulo"
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    const yhteystiedotHeading = h5s.filter((_, h) => /yhteystiedot/i.test($(h).text())).first()
+    if (yhteystiedotHeading.length) {
+      const contactText = yhteystiedotHeading.next("p").text().replace(/\s+/g, " ").trim()
+      const contact = parseSastamalaContact(contactText)
+      if (contact) contacts.push(contact)
+    }
+
+    const completed = /voimaantulo|lainvoima/i.test(phase)
+
+    const documentUrl = `${page.link}#${kaavaTunnus.toLowerCase()}`
+    const rawText = JSON.stringify({ documentUrl, rawTitle, kaavaTunnus, planTitle, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: planTitle,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: planTitle,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 async function collectVihtiKaavaSource(source: DiscoverySource) {
   const links = await fetchVihtiPlanLinks()
 
@@ -8860,6 +8998,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "raaheKaavaParser") {
     return collectRaaheKaavaSource(source)
+  }
+
+  if (source.parser === "sastamalaKaavaParser") {
+    return collectSastamalaKaavaSource(source)
   }
 
   if (source.parser === "imatraKaavaParser") {

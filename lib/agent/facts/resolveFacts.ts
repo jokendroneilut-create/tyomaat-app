@@ -20,6 +20,7 @@ import { extractYlojarviKaavaFacts } from "@/lib/agent/facts/extractYlojarviKaav
 import { extractVihtiKaavaFacts } from "@/lib/agent/facts/extractVihtiKaavaFacts"
 import { extractImatraKaavaFacts } from "@/lib/agent/facts/extractImatraKaavaFacts"
 import { extractRaaheKaavaFacts } from "@/lib/agent/facts/extractRaaheKaavaFacts"
+import { extractSastamalaKaavaFacts } from "@/lib/agent/facts/extractSastamalaKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
 import { extractRaaseporiKaavaFacts } from "@/lib/agent/facts/extractRaaseporiKaavaFacts"
 import { extractRaisioKaavaFacts } from "@/lib/agent/facts/extractRaisioKaavaFacts"
@@ -1038,6 +1039,27 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractRaaheKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Sastamalan vireillä ja nähtävillä olevat kaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractSastamalaKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
