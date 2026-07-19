@@ -6550,6 +6550,130 @@ async function collectHollolaKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * Pirkkalan yksittäisen kaavan sivulla vaiheotsikot (h2) esiintyvät
+ * UUSIN ENSIN -järjestyksessä (esim. "Ehdotus" ennen "Luonnos" ennen
+ * "Osallistumis- ja arviointisuunnitelma"), samoin kuin Sastamalassa/
+ * Hollolassa — joten ensimmäinen tunnistettu vaiheotsikko on nykyinen
+ * vaihe. Sivulla on myös muita h2-otsikoita (tapahtumailmoituksia,
+ * palautewidgetti), jotka suodatetaan pois vaihesanaston avulla.
+ */
+const PIRKKALA_LISTING_URL = "https://www.pirkkala.fi/kehita-pirkkalaa/kaavat/vireilla-olevat-asemakaavat/"
+const PIRKKALA_TITLE_PATTERN = /^(\d+),?\s*(.+)$/
+const PIRKKALA_PHASE_VOCAB = /ehdotus|luonnos|osallistumis|arviointi|hyväksy|voimaantulo|lainvoima/i
+const PIRKKALA_CONTACT_PATTERN = /Kaava-asiaa hoitaa\s+([\wäöåÄÖÅ'-]+(?:\s+[\wäöåÄÖÅ'-]+)*?),?\s*puh\.?\s*(\d[\d ]{6,14}\d)/i
+
+async function fetchPirkkalaKaavaDetails(url: string) {
+  const empty = { description: null as string | null, phase: null as string | null, contacts: [] as any[] }
+
+  try {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return empty
+
+    const $ = cheerio.load(await response.text())
+    const article = $("article, main").first()
+
+    const description =
+      article.find("p.wp-block-paragraph").first().text().replace(/\s+/g, " ").trim() || null
+
+    const phaseHeading = article
+      .find("h2, h3, h4")
+      .filter((_, el) => PIRKKALA_PHASE_VOCAB.test($(el).text()) && !/löysitkö/i.test($(el).text()))
+      .first()
+    const phase = phaseHeading.length ? phaseHeading.text().replace(/\s+/g, " ").trim() : null
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    const bodyText = article.text().replace(/\s+/g, " ")
+    const contactMatch = bodyText.match(PIRKKALA_CONTACT_PATTERN)
+    if (contactMatch) {
+      const { name, title } = kajaaniSplitNameTitle(contactMatch[1])
+      contacts.push({ name, title, phone: contactMatch[2].trim(), email: null })
+    }
+
+    return { description, phase, contacts }
+  } catch {
+    return empty
+  }
+}
+
+async function collectPirkkalaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PIRKKALA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  const items: { title: string; url: string; kaavaTunnus: string; planTitle: string }[] = []
+  const seen = new Set<string>()
+
+  $("a[href*='vireilla-olevat-asemakaavat/']").each((_, el) => {
+    const href = $(el).attr("href")
+    const text = $(el).text().replace(/\s+/g, " ").trim()
+    if (!href || !text) return
+    if (href.endsWith("/vireilla-olevat-asemakaavat/")) return
+    if (seen.has(href)) return
+
+    const titleMatch = text.match(PIRKKALA_TITLE_PATTERN)
+    if (!titleMatch) return
+
+    seen.add(href)
+    items.push({ title: text, url: href, kaavaTunnus: titleMatch[1], planTitle: titleMatch[2].trim() })
+  })
+
+  let saved = 0
+
+  for (const item of items) {
+    const details = await fetchPirkkalaKaavaDetails(item.url)
+    const completed = /voimaantulo|lainvoima/i.test(details.phase ?? "")
+
+    const rawText = JSON.stringify({ item, ...details })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: `${item.kaavaTunnus} ${item.planTitle}`,
+          document_url: item.url,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: `${item.kaavaTunnus} ${item.planTitle}`,
+            kaava_tunnus: item.kaavaTunnus,
+            phase: details.phase,
+            description: details.description,
+            contacts: details.contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -9111,6 +9235,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "hollolaKaavaParser") {
     return collectHollolaKaavaSource(source)
+  }
+
+  if (source.parser === "pirkkalaKaavaParser") {
+    return collectPirkkalaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
