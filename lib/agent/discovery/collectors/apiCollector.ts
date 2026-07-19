@@ -7697,6 +7697,124 @@ async function collectMustasaariKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KEMPELE_LISTING_URL = "https://kempele.fi/kaavoitus-ja-maankaytto/nahtavilla-olevat-kaavat/"
+const KEMPELE_HUB_URL = "https://kempele.fi/kaavoitus-ja-maankaytto/"
+const KEMPELE_SUMMARY_PATTERN = /^(.*?)\s*\(([^)]*)\)\s*$/
+
+function kempelePhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function kempeleSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function collectKempeleKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KEMPELE_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const contactResponse = await fetch(KEMPELE_HUB_URL, { cache: "no-store" })
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+  if (contactResponse.ok) {
+    const $$ = cheerio.load(await contactResponse.text())
+    const contactLi = $$("li")
+      .filter((_, el) => /kaavoituspäällikkö/i.test($$(el).text()))
+      .first()
+    const text = contactLi.text().replace(/\s+/g, " ").trim()
+    const match = text.match(/^([^,]+),\s*([^:]+):\s*(.+)$/)
+    if (match) {
+      contacts.push({ name: match[2].trim(), title: match[1].trim(), phone: match[3].trim(), email: null })
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const el of $("details.wp-block-details").toArray()) {
+    const $el = $(el)
+    const summaryText = $el.find("summary").first().text().replace(/\s+/g, " ").trim()
+    if (!summaryText || !/kaava/i.test(summaryText) || /rakennusjärjestys/i.test(summaryText)) continue
+
+    found += 1
+
+    const match = summaryText.match(KEMPELE_SUMMARY_PATTERN)
+    const title = match ? match[1].trim() : summaryText
+
+    const paragraphs = $el
+      .find("p")
+      .filter((_, p) => $(p).parents("form, .gform_wrapper").length === 0)
+      .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+      .get()
+      .filter(Boolean)
+
+    const phase = kempelePhaseFromText(paragraphs.join(" "))
+    const completed = /voimaantulo|lainvoima/i.test(phase)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+
+    const slug = kempeleSlug(title)
+    const documentUrl = `${KEMPELE_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            slug,
+            kaava_tunnus: null,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -10290,6 +10408,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "mustasaariKaavaParser") {
     return collectMustasaariKaavaSource(source)
+  }
+
+  if (source.parser === "kempeleKaavaParser") {
+    return collectKempeleKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
