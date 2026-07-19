@@ -222,11 +222,11 @@ export default function Navbar() {
             }
           >
             <NavSection>
+              <NavItem href="/tic">Työmaat Intelligence Center</NavItem>
               <NavItem href="/dashboard">Dashboard</NavItem>
               <NavItem href="/dashboard/users">Käyttäjät</NavItem>
               <NavItem href="/dashboard/analytics">Analytiikka</NavItem>
               <NavItem href="/dashboard/messages">Viestit</NavItem>
-              <NavItem href="/tic">Työmaat Intelligence Center</NavItem>
             </NavSection>
 
             <NavHeading>🚧 Tulossa</NavHeading>
