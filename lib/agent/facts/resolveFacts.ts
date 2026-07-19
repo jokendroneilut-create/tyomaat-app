@@ -31,6 +31,7 @@ import { extractNaantaliKaavaFacts } from "@/lib/agent/facts/extractNaantaliKaav
 import { extractIisalmiKaavaFacts } from "@/lib/agent/facts/extractIisalmiKaavaFacts"
 import { extractMustasaariKaavaFacts } from "@/lib/agent/facts/extractMustasaariKaavaFacts"
 import { extractKempeleKaavaFacts } from "@/lib/agent/facts/extractKempeleKaavaFacts"
+import { extractValkeakoskiKaavaFacts } from "@/lib/agent/facts/extractValkeakoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
 import { extractRaaseporiKaavaFacts } from "@/lib/agent/facts/extractRaaseporiKaavaFacts"
 import { extractRaisioKaavaFacts } from "@/lib/agent/facts/extractRaisioKaavaFacts"
@@ -1280,6 +1281,27 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractKempeleKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Valkeakosken vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractValkeakoskiKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

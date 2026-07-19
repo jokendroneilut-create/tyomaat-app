@@ -33,6 +33,7 @@ import { resolveNaantaliKaavaProject } from "@/lib/agent/identity/resolvers/naan
 import { resolveIisalmiKaavaProject } from "@/lib/agent/identity/resolvers/iisalmiKaavaResolver"
 import { resolveMustasaariKaavaProject } from "@/lib/agent/identity/resolvers/mustasaariKaavaResolver"
 import { resolveKempeleKaavaProject } from "@/lib/agent/identity/resolvers/kempeleKaavaResolver"
+import { resolveValkeakoskiKaavaProject } from "@/lib/agent/identity/resolvers/valkeakoskiKaavaResolver"
 import { resolveRiihimakiKaavaProject } from "@/lib/agent/identity/resolvers/riihimakiKaavaResolver"
 import { resolveRaaseporiKaavaProject } from "@/lib/agent/identity/resolvers/raaseporiKaavaResolver"
 import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisioKaavaResolver"
@@ -293,6 +294,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kempeleen vireillä olevat asemakaavat") {
     const result = await resolveKempeleKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "valkeakosken vireillä olevat asemakaavat") {
+    const result = await resolveValkeakoskiKaavaProject({
       document,
       facts: facts ?? [],
     })

@@ -7815,6 +7815,161 @@ async function collectKempeleKaavaSource(source: DiscoverySource) {
   }
 }
 
+// valkeakoski.fi's origin server returns a static 500 to every request made
+// via undici's fetch() (used everywhere else in this file), but responds
+// normally to requests made via Node's classic https module -- so this one
+// source fetches through https.get() instead of fetch().
+function fetchTextViaHttpsModule(url: string): Promise<{ ok: boolean; status: number; text: string }> {
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, (res) => {
+        const chunks: Buffer[] = []
+        res.on("data", (chunk) => chunks.push(chunk))
+        res.on("end", () => {
+          const status = res.statusCode ?? 0
+          resolve({
+            ok: status >= 200 && status < 300,
+            status,
+            text: Buffer.concat(chunks).toString("utf-8"),
+          })
+        })
+      })
+      .on("error", reject)
+  })
+}
+
+const VALKEAKOSKI_LISTING_URL = "https://www.valkeakoski.fi/asuminen-ja-ymparisto/kaupunkisuunnittelu/asemakaavoitus/"
+const VALKEAKOSKI_KAAVA_NUMBER_PATTERN = /[0-9a-f]{6,8}-(\d{3,4})[_-]/
+
+function valkeakoskiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function valkeakoskiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function collectValkeakoskiKaavaSource(source: DiscoverySource) {
+  const response = await fetchTextViaHttpsModule(VALKEAKOSKI_LISTING_URL)
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(response.text)
+
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+  const contactItem = $(".block-list__item")
+    .filter((_, el) => /kaavoitus(arkkitehti|päällikkö|suunnittelija)/i.test($(el).text()))
+    .first()
+  if (contactItem.length) {
+    const name = contactItem.find(".block-list__item-title").first().text().replace(/\s+/g, " ").trim() || null
+    const title = contactItem.find("em").first().text().trim() || null
+    const phone = contactItem.find('a[href^="tel:"]').first().text().trim() || null
+    const email = contactItem.find('a[href^="mailto:"]').first().text().trim() || null
+    contacts.push({ name, title, phone, email })
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const el of $(".accordion-card").toArray()) {
+    const $el = $(el)
+    const title = $el.find(".accordion-card__heading").first().text().replace(/\s+/g, " ").trim()
+    if (!title || /rakennusjärjestys/i.test(title)) continue
+
+    found += 1
+
+    const teaser = $el
+      .find(".accordion-card__main-content > p")
+      .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+      .get()
+      .filter(Boolean)
+
+    const content = $el.find(".accordion-card__content")
+    const bodyParagraphs = content
+      .find("p")
+      .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+      .get()
+      .filter(Boolean)
+
+    const paragraphs = [...teaser, ...bodyParagraphs]
+    const phase = valkeakoskiPhaseFromText(paragraphs.join(" "))
+    const completed = /voimaantulo|lainvoima/i.test(phase)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+
+    const pdfHrefs = content
+      .find('a[href$=".pdf"]')
+      .map((_, a) => $(a).attr("href") ?? "")
+      .get()
+    let kaavaTunnus: string | null = null
+    for (const href of pdfHrefs) {
+      const match = href.match(VALKEAKOSKI_KAAVA_NUMBER_PATTERN)
+      if (match) {
+        kaavaTunnus = match[1]
+        break
+      }
+    }
+
+    const slug = valkeakoskiSlug(title)
+    const documentUrl = `${VALKEAKOSKI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, kaavaTunnus, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            slug,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -10412,6 +10567,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kempeleKaavaParser") {
     return collectKempeleKaavaSource(source)
+  }
+
+  if (source.parser === "valkeakoskiKaavaParser") {
+    return collectValkeakoskiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
