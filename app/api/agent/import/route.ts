@@ -220,7 +220,7 @@ const match =
         .from("project_import_events")
         .select("id")
         .eq("source_url", body.source_url)
-        .eq("action_taken", "inserted")
+        .eq("action_taken", "queued_for_review")
         .limit(1)
 
       if (existing && existing.length > 0) {
