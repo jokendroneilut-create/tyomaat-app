@@ -8248,6 +8248,153 @@ async function collectKurikkaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const VARKAUS_LISTING_URL =
+  "https://www.varkaus.fi/fi/sivu/kaavoitus/suunnittelukohteet-kaavoituskatsaus"
+const VARKAUS_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+
+function varkausDetectPhaseInBlock(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function varkausPhaseFromParagraphs(paragraphs: string[]): string {
+  let best = "Vireilletulo"
+  for (const paragraph of paragraphs) {
+    // only paragraphs with an actual date/pykälä count as a "reached" stage --
+    // otherwise a paragraph merely naming a future phase (e.g. "Ehdotusvaihe:
+    // päätetään myöhemmin") would be misread as already having happened
+    if (!/\d/.test(paragraph)) continue
+    const phase = varkausDetectPhaseInBlock(paragraph)
+    if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
+  }
+  return best
+}
+
+function varkausSlugFromUrl(url: string): string {
+  const path = new URL(url).pathname.split("/").filter(Boolean)
+  return path[path.length - 1] ?? url
+}
+
+async function collectVarkausKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(VARKAUS_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  const seen = new Set<string>()
+  const planLinks = listing$("a[href*='/suunnittelukohteet-kaavoituskatsaus/']")
+    .toArray()
+    .map((el) => listing$(el).attr("href") ?? "")
+    .filter((href) => href && !href.endsWith("/suunnittelukohteet-kaavoituskatsaus"))
+    .map((href) => new URL(href, VARKAUS_LISTING_URL).toString())
+    .filter((href) => {
+      if (seen.has(href)) return false
+      seen.add(href)
+      return true
+    })
+
+  let found = 0
+  let saved = 0
+
+  for (const href of planLinks) {
+    const planResponse = await fetch(href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+    const article = $("main").first()
+
+    const fullText = article.text().replace(/\s+/g, " ").trim()
+    const classificationWindow = fullText.slice(0, 400)
+    // Varkaus mixes buildable asemakaava cases with strategic osayleiskaava
+    // (area-wide) plans and unrelated development initiatives on the same
+    // listing page; only pages that identify themselves as an asemakaava
+    // near the top of their own body text are collected
+    const isAsemakaava =
+      /asemakaava/i.test(classificationWindow) && !/osayleiskaava/i.test(classificationWindow)
+    if (!isAsemakaava) continue
+
+    found += 1
+
+    const title = article.find("h1").first().text().replace(/\s+/g, " ").trim()
+    if (!title) continue
+
+    const paragraphs = article
+      .find("p")
+      .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+      .get()
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const phase = varkausPhaseFromParagraphs(paragraphs)
+    const completed = phase === "Voimaantulo"
+
+    const contacts = $(".contact-card__list-item")
+      .toArray()
+      .map((el) => {
+        const $el = $(el)
+        const name = $el.find(".contact-card__name").first().text().replace(/\s+/g, " ").trim() || null
+        const text = $el.find(".contact-card__text").first().text().replace(/\s+/g, " ").trim()
+        const emailMatch = text.match(/[\w.+-]+@[\w.-]+/)
+        const email = emailMatch ? emailMatch[0] : null
+        const phone = (email ? text.replace(email, "") : text).trim() || null
+        return { name, title: null, phone, email }
+      })
+      .filter((contact) => contact.name)
+
+    const slug = varkausSlugFromUrl(href)
+
+    const rawText = JSON.stringify({ title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: href,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            slug,
+            kaava_tunnus: null,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -10857,6 +11004,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kurikkaKaavaParser") {
     return collectKurikkaKaavaSource(source)
+  }
+
+  if (source.parser === "varkausKaavaParser") {
+    return collectVarkausKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
