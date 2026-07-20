@@ -9920,6 +9920,125 @@ async function collectOrimattilaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const YLIVIESKA_LISTING_URL =
+  "https://www.ylivieska.fi/asuminen-ja-ymparisto/kaavoitus-ja-kaupunkisuunnittelu/laadinnassa-olevat-kaavat/"
+// pending asemakaava plans are split across two headings on the same page;
+// the site's own bucketing doesn't reliably track actual phase (a plan can
+// sit under "Vireillä" while its own page already shows an ehdotus status),
+// so both are treated as one pool and phase is derived per-page instead
+const YLIVIESKA_SECTION_HEADINGS = ["nähtävillä olevat kaavat", "vireillä olevat asemakaavat"]
+
+function ylivieskaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectYlivieskaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(YLIVIESKA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  const planLinks: { href: string; title: string }[] = []
+  const seen = new Set<string>()
+  for (const h2 of listing$("h2").toArray()) {
+    const heading = listing$(h2).text().replace(/\s+/g, " ").trim().toLowerCase()
+    if (!YLIVIESKA_SECTION_HEADINGS.includes(heading)) continue
+
+    for (const el of listing$(h2).nextUntil("h2").toArray()) {
+      const link = listing$(el).find("a").first()
+      const href = link.attr("href") ?? ""
+      const title = link.text().replace(/\s+/g, " ").trim()
+      if (!href || !title || seen.has(href)) continue
+      seen.add(href)
+      planLinks.push({ href, title })
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const link of planLinks) {
+    found += 1
+
+    const planResponse = await fetch(link.href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+    const content = $(".entry-content").first()
+
+    const paragraphs = content
+      .find("p")
+      .toArray()
+      .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const statusLine = paragraphs[0] ?? ""
+    const description = paragraphs.find((p, index) => index > 0 && p.length > 40) ?? null
+    const phase = ylivieskaPhaseFromText(content.text())
+    const completed = phase === "Voimaantulo"
+
+    const email = content.text().match(/[\w.-]+@ylivieska\.fi/)?.[0] ?? null
+    const contacts = email
+      ? [{ name: "Ylivieskan kaupunki, kaavoitus", title: "Kaavoitus", phone: null, email }]
+      : []
+
+    const slugMatch = link.href.match(/\/([^/]+)\/?$/)
+    const slug = slugMatch ? slugMatch[1] : null
+
+    const rawText = JSON.stringify({ title: link.title, phase, description: description ?? statusLine, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: link.title,
+        document_url: link.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: link.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: description ?? statusLine,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -12577,6 +12696,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "orimattilaKaavaParser") {
     return collectOrimattilaKaavaSource(source)
+  }
+
+  if (source.parser === "ylivieskaKaavaParser") {
+    return collectYlivieskaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
