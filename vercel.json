@@ -9,12 +9,8 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/tic/discovery/collect",
+      "path": "/api/tic/discovery/run",
       "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/tic/discovery/run?stage=process",
-      "schedule": "15 3 * * *"
     },
     {
       "path": "/api/admin/scan-duplicates?mode=incremental",

@@ -22,49 +22,19 @@ export async function GET(req: Request) {
     const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000"
 
     /*
-     * Koko putki yhdessä pyynnössä ylitti toistuvasti Hobby-tason 60s
-     * aikarajan (mitattu n. 63-65s), jolloin faktat/tunnistus eivät
-     * ehtineet käynnistyä lainkaan ja dokumentit jäivät pysyvästi jonoon.
-     * vercel.json ajastaa nyt kaksi erillistä kutsua eri kellonaikoina:
-     * "collect" (keräys) ja muutama minuutti myöhemmin "process"
-     * (faktat+tunnistus) — kumpikin omalla 60s-budjetillaan. Käsiajo
-     * (admin-paneelin "secret"-parametrilla) ajaa edelleen kaiken kerralla.
+     * Koko putki ajettiin aiemmin kahtena erillisenä ajastettuna kutsuna
+     * (collect + process) koska Hobby-tason 60s ei riittänyt koko putkeen
+     * kerralla (mitattu n. 63-65s). Vercel Pro -päivityksen jälkeen
+     * (maxDuration 280) koko putki mahtuu taas yhteen kutsuun -- mitattu
+     * n. 187s maxSourceCount:illa 8 ja maxFactJobs:illa 30 tuotannossa.
      */
-    const stage = url.searchParams.get("stage")
-
-    const body =
-      stage === "collect"
-        ? {
-            /*
-             * maxSourceCount pienennetty 3:sta 2:een Kreaten lisäyksen
-             * jälkeen (8 lähdettä yhteensä) — 3 lähteen erä osui 55s:iin
-             * kun Lupapiste (hitain yksittäinen lähde) osui samaan erään
-             * kahden kaavarajapinnan kanssa. Kaikki lähteet kiertävät
-             * silti läpi last_run_at-järjestyksen mukaan, vain hitaammin
-             * (8 lähdettä / 2 per ajo = 4 yötä per täysi kierros). Jos
-             * lähteitä lisätään vielä, kannattaa jakaa "collect"-vaihe
-             * kahdeksi erilliseksi ajastetuksi kutsuksi (sama logiikka,
-             * eri kellonaika — last_run_at-järjestys hoitaa loput
-             * automaattisesti) yhden pienentämisen sijaan.
-             */
-            stages: ["sources", "articles", "pdfs", "texts"],
-            maxSourceCount: 2,
-            maxArticleJobs: 5,
-            maxPdfJobs: 5,
-            maxTextJobs: 5,
-          }
-        : stage === "process"
-          ? {
-              stages: ["facts"],
-              maxFactJobs: 15,
-            }
-          : {
-              maxSourceCount: 5,
-              maxArticleJobs: 5,
-              maxPdfJobs: 5,
-              maxTextJobs: 5,
-              maxFactJobs: 5,
-            }
+    const body = {
+      maxSourceCount: 8,
+      maxArticleJobs: 8,
+      maxPdfJobs: 8,
+      maxTextJobs: 8,
+      maxFactJobs: 30,
+    }
 
     const res = await fetch(`${baseUrl}/api/tic/discovery/run-pipeline`, {
       method: "POST",
