@@ -10437,6 +10437,120 @@ async function collectKauhavaKaavaSource(source: DiscoverySource) {
   }
 }
 
+// Lapua's kaavoitus page is a thin WordPress shell over a third-party
+// "Karttatiimi/sukka" planning platform -- every plan detail lives behind
+// client-side JS with no server-rendered content, but the app itself calls
+// a plain REST/GeoJSON backend that can be queried directly, structured and
+// far more reliable than any HTML-scraped free text
+const LAPUA_API_URL =
+  "https://lapua.karttatiimi.fi/services/rest.ashx?layer=sukka_asemakaava_user&query=&order=&max=&skip=0"
+// discovered via the platform's own phase reference layer (sukka_attachment_per_phase)
+const LAPUA_PHASE_MAP: Record<number, string> = {
+  2: "Vireilletulo", // Aloitusvaihe
+  10: "Luonnos",
+  4: "Ehdotus", // Ehdotusvaihe
+  5: "Hyväksyminen", // Hyväksymisvaihe
+  6: "Voimaantulo",
+}
+
+function lapuaContactsFromText(
+  text: string
+): { name: string | null; title: string | null; phone: string | null; email: string | null }[] {
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+  for (let i = 0; i < lines.length; i += 2) {
+    const nameLine = lines[i]
+    const detailLine = lines[i + 1] ?? ""
+    const phone = detailLine.match(/p\.?\s*([\d\s]{6,})/)?.[1]?.trim() ?? null
+    const email = detailLine.match(/[\w.-]+@[\w.-]+/)?.[0] ?? null
+    const nameMatch = nameLine.match(/([A-ZÄÖÅ][a-zäöå]+\s[A-ZÄÖÅ][a-zäöå-]+)$/)
+    const name = nameMatch ? nameMatch[1] : nameLine
+    const title = nameMatch ? nameLine.slice(0, nameMatch.index).trim() || null : null
+    contacts.push({ name, title, phone, email })
+  }
+  return contacts.filter((contact) => contact.name)
+}
+
+async function collectLapuaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LAPUA_API_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const data = await response.json()
+  const features = Array.isArray(data.features) ? data.features : []
+
+  let found = 0
+  let saved = 0
+
+  for (const feature of features) {
+    const props = feature.properties ?? {}
+    // the city's own site only publishes a plan once real planning material
+    // exists (i.e. past "Aloitusvaihe") -- matching that same cutoff here
+    // keeps this in step with what Lapua itself considers public
+    if (props.phase_id === 2 || !LAPUA_PHASE_MAP[props.phase_id]) continue
+
+    const title = String(props.plan_name ?? "").replace(/\s+/g, " ").trim()
+    if (!title) continue
+
+    found += 1
+
+    const phase = LAPUA_PHASE_MAP[props.phase_id]
+    const completed = phase === "Voimaantulo"
+    const description = String(props.description ?? "").trim() || null
+    const contacts = lapuaContactsFromText(String(props.contact ?? ""))
+    const kaavaTunnus = props.plan_number ? String(props.plan_number) : null
+    const slug = props.record_number ? String(props.record_number) : String(props.id)
+    const documentUrl = `https://lapua.karttatiimi.fi/?sukkaId=${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, kaavaTunnus })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: kaavaTunnus,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -13110,6 +13224,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kauhavaKaavaParser") {
     return collectKauhavaKaavaSource(source)
+  }
+
+  if (source.parser === "lapuaKaavaParser") {
+    return collectLapuaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
