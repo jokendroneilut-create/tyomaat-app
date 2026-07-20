@@ -11427,6 +11427,114 @@ async function collectLiperiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LIEKSA_LISTING_URL = "https://www.lieksa.fi/asuminen-ja-ymparisto/maankaytto-ja-kaavoitus/laadinnassa-olevat-kaavat/"
+
+function lieksaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectLieksaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(LIEKSA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  const sectionHeading = listing$("h3")
+    .toArray()
+    .find((el) => listing$(el).text().replace(/­/g, "").replace(/\s+/g, " ").trim() === "Vireillä olevat asemakaavamuutokset")
+
+  const planLinks: { href: string; title: string }[] = []
+  if (sectionHeading) {
+    const queryBlock = listing$(sectionHeading).next(".wp-block-query")
+    for (const el of queryBlock.find("h2.wp-block-post-title a").toArray()) {
+      const href = listing$(el).attr("href") ?? ""
+      const title = listing$(el).text().replace(/­/g, "").replace(/\s+/g, " ").trim()
+      if (!href || !title) continue
+      planLinks.push({ href, title })
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const link of planLinks) {
+    found += 1
+
+    const planResponse = await fetch(link.href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+    const main = $("main.wp-block-group").first()
+
+    const title = $("h1").first().text().replace(/­/g, "").replace(/\s+/g, " ").trim() || link.title
+
+    const paragraphs = main
+      .find("p, h2")
+      .toArray()
+      .map((p) => $(p).text().replace(/­/g, "").replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40 && p !== title) ?? null
+    const phase = lieksaPhaseFromText(main.text().replace(/­/g, ""))
+    const completed = phase === "Voimaantulo"
+
+    const slugMatch = link.href.match(/\/([^/]+)\/?$/)
+    const slug = slugMatch ? slugMatch[1] : null
+
+    const rawText = JSON.stringify({ title, phase, description, contacts: [] })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: link.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -14132,6 +14240,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "liperiKaavaParser") {
     return collectLiperiKaavaSource(source)
+  }
+
+  if (source.parser === "lieksaKaavaParser") {
+    return collectLieksaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
