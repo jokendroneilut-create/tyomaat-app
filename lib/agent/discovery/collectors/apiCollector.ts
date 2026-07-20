@@ -11789,6 +11789,174 @@ async function collectKalajokiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const NIVALA_LISTING_URL = "https://www.nivala.fi/asuminen-ja-ymparisto/kaavoitus"
+
+const NIVALA_PHASE_RANK: Record<string, number> = {
+  Vireilletulo: 1,
+  Luonnos: 2,
+  Ehdotus: 3,
+  Hyväksyminen: 4,
+  Voimaantulo: 5,
+}
+
+function nivalaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectNivalaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(NIVALA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const contact = {
+    name: "Juha Peltomaa",
+    title: "Maankäyttöpäällikkö",
+    phone: "040 344 7285",
+    email: "juha.peltomaa@nivala.fi",
+  }
+  const contacts = [contact]
+
+  const field = $(".field--name-field-sivupalsta-yla").first()
+
+  // the page bundles a "currently on display" section (h3 per plan) and a
+  // separate "council-approved" section under its own h2 -- the latter's
+  // h3 only covers its first plan, with further plans appearing as bare
+  // <strong> paragraphs (Kitee-style) rather than their own heading
+  type Block = { title: string; phase: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+  let section: "vireilla" | "hyvaksytty" | "none" = "none"
+
+  for (const el of field.children().toArray()) {
+    if (el.name === "h2") {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (/nähtävillä olevat kaavat/i.test(text)) section = "vireilla"
+      else if (/valtuuston hyväksymät asemakaavat/i.test(text)) section = "hyvaksytty"
+      else section = "none"
+      current = null
+      continue
+    }
+
+    if (el.name === "h3" && section !== "none") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      // "hyvaksytty" section's own h2 already asserts everything under it
+      // is asemakaava -- only "vireilla" mixes in osayleiskaava items that
+      // must be filtered out by their own heading text
+      const isEligible =
+        section === "hyvaksytty" || (/asemakaava/i.test(title) && !/yleiskaava/i.test(title))
+      if (title && isEligible) {
+        current = {
+          title,
+          phase: section === "hyvaksytty" ? "Hyväksyminen" : "Vireilletulo",
+          nodes: [],
+        }
+        blocks.push(current)
+      } else {
+        current = null
+      }
+      continue
+    }
+
+    if (el.name === "p" && section === "hyvaksytty") {
+      const strongEl = $(el).find("strong").first()
+      const strongText = strongEl.text().replace(/\s+/g, " ").trim()
+      const strongIsLinked = strongEl.parent().is("a")
+      if (strongText && !strongIsLinked && !/yleiskaava/i.test(strongText)) {
+        current = { title: strongText, phase: "Hyväksyminen", nodes: [] }
+        blocks.push(current)
+        continue
+      }
+    }
+
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    const bodyText = block.nodes
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .join(" ")
+
+    const scannedPhase = nivalaPhaseFromText(`${block.title} ${bodyText}`)
+    const phase =
+      NIVALA_PHASE_RANK[scannedPhase] > NIVALA_PHASE_RANK[block.phase]
+        ? scannedPhase
+        : block.phase
+    const completed = phase === "Voimaantulo"
+
+    const attachments = block.nodes
+      .flatMap((node) => $(node).find("a").toArray())
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", NIVALA_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${NIVALA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description: bodyText, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: bodyText,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -14506,6 +14674,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kalajokiKaavaParser") {
     return collectKalajokiKaavaSource(source)
+  }
+
+  if (source.parser === "nivalaKaavaParser") {
+    return collectNivalaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
