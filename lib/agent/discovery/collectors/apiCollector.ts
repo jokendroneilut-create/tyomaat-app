@@ -11535,6 +11535,131 @@ async function collectLieksaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KITEE_LISTING_URL = "https://www.kitee.fi/vireill%C3%A4-olevat-kaavat"
+
+function kiteePhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKiteeKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KITEE_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // the page assembles its body from several independent Liferay content
+  // portlets -- the one with the actual plan list is identified by its own
+  // intro sentence, not by any stable class name
+  const article = $(".journal-content-article")
+    .toArray()
+    .find((el) => /tällä hetkellä vireillä ovat seuraavat kaavat/i.test($(el).text()))
+  if (!article) return { documentsFound: 0, documentsSaved: 0 }
+
+  const email = "tekninen.kirjaamo@kitee.fi"
+  const contacts = [{ name: "Kiteen kaupunki, tekninen kirjaamo", title: "Tekninen kirjaamo", phone: null, email }]
+
+  type Block = { title: string; phaseHint: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  for (const el of $(article).find("> p, > ul").toArray()) {
+    if (el.name === "p") {
+      const fullText = $(el).text().replace(/\s+/g, " ").trim()
+      if (/selvitykset/i.test(fullText)) {
+        current = null
+        continue
+      }
+      const strongEl = $(el).find("strong").first()
+      const strongText = strongEl.text().replace(/\s+/g, " ").trim()
+      // genuine title paragraphs have a bare <strong> title; paragraphs that
+      // merely reference an already-listed plan (e.g. council decision
+      // notices) wrap their <strong> inside a link instead
+      const strongIsLinked = strongEl.parent().is("a")
+      if (
+        strongText &&
+        /asemakaava/i.test(strongText) &&
+        !/yleiskaava/i.test(strongText) &&
+        !strongIsLinked
+      ) {
+        const index = fullText.indexOf(strongText)
+        const phaseHint = index >= 0 ? fullText.slice(index + strongText.length).trim() : ""
+        current = { title: strongText, phaseHint, nodes: [] }
+        blocks.push(current)
+        continue
+      }
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    found += 1
+
+    const phase = kiteePhaseFromText(block.phaseHint)
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${KITEE_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description: null, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: null,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -14244,6 +14369,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "lieksaKaavaParser") {
     return collectLieksaKaavaSource(source)
+  }
+
+  if (source.parser === "kiteeKaavaParser") {
+    return collectKiteeKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
