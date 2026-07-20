@@ -10159,6 +10159,158 @@ async function collectLoimaaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KONTIOLAHTI_LISTING_URL =
+  "https://www.kontiolahti.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-ja-nahtavilla-olevat-kaavat/"
+// each plan lists EVERY possible stage as an accordion, including ones not
+// yet reached (a generic "will be worked on later" placeholder with only a
+// bare year, e.g. "vuoden 2026") -- only a stage whose own content contains
+// a full day.month.year date has actually happened
+const KONTIOLAHTI_STAGE_TO_PHASE: { pattern: RegExp; phase: string }[] = [
+  { pattern: /voimaantulo|lainvoima/i, phase: "Voimaantulo" },
+  { pattern: /hyväksymisvaihe|hyväksytty/i, phase: "Hyväksyminen" },
+  { pattern: /ehdotusvaihe/i, phase: "Ehdotus" },
+  { pattern: /valmisteluvaihe/i, phase: "Luonnos" },
+  { pattern: /osallistumis-?\s*ja\s*arviointisuunnitelma/i, phase: "Vireilletulo" },
+]
+const KONTIOLAHTI_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+
+function kontiolahtiContacts($: cheerio.CheerioAPI) {
+  return $("h2.pwdb-contact-highlight__title")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const name = $el.text().replace(/\s+/g, " ").trim()
+      const details = $el.next(".pwdb-contact-highlight__details")
+      const title = details.find("p").first().text().replace(/\s+/g, " ").trim() || null
+      const links = details.next(".pwdb-contact-highlight__links")
+      const phone = links.find('a[href^="tel:"]').first().text().replace(/\s+/g, " ").trim() || null
+      const email = links.find('a[href^="mailto:"]').attr("href")?.replace("mailto:", "") ?? null
+      return { name, title, phone, email }
+    })
+    .filter((contact) => contact.name && (contact.email || contact.phone))
+}
+
+async function collectKontiolahtiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KONTIOLAHTI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const contacts = kontiolahtiContacts($)
+
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+  let recording = false
+
+  for (const el of $("h2, h3, h4").toArray()) {
+    const text = $(el).text().replace(/\s+/g, " ").trim()
+    if (el.name === "h2") {
+      recording = text === "Nähtävillä olevat kaavat"
+      continue
+    }
+    if (el.name === "h3") {
+      if (text.toUpperCase() === "ASEMAKAAVAT") recording = true
+      else if (text.toUpperCase() === "YLEISKAAVAT") recording = false
+      continue
+    }
+    if (!recording) continue
+    current = { title: text, nodes: [] }
+    blocks.push(current)
+  }
+
+  // re-walk to attach each h4's sibling content (paragraphs + accordions)
+  // up to the next heading -- cheerio has no "collect until" for arbitrary
+  // heading levels, so this is done via a second pass keyed by h4 text
+  for (const block of blocks) {
+    const h4 = $("h4")
+      .toArray()
+      .find((el) => $(el).text().replace(/\s+/g, " ").trim() === block.title)
+    if (!h4) continue
+    let sib = $(h4).next()
+    while (sib.length && !["H2", "H3", "H4"].includes((sib.prop("tagName") as string) ?? "")) {
+      block.nodes.push(sib.get(0))
+      sib = sib.next()
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    found += 1
+
+    const paragraphs = block.nodes
+      .filter((node) => node.name === "p")
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+
+    let phase = "Vireilletulo"
+    for (const node of block.nodes) {
+      if (!$(node).hasClass("wp-block-pwdb-accordion")) continue
+      const label = $(node).find("h5").first().text().replace(/\s+/g, " ").trim()
+      const content = $(node).find(".accordion__content-inner").first().text().replace(/\s+/g, " ").trim()
+      if (!/\d{1,2}\.\d{1,2}\.\d{4}/.test(content)) continue
+      const match = KONTIOLAHTI_STAGE_TO_PHASE.find((stage) => stage.pattern.test(label))
+      if (!match) continue
+      if (KONTIOLAHTI_PHASE_ORDER.indexOf(match.phase) > KONTIOLAHTI_PHASE_ORDER.indexOf(phase)) {
+        phase = match.phase
+      }
+    }
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${KONTIOLAHTI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -12824,6 +12976,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "loimaaKaavaParser") {
     return collectLoimaaKaavaSource(source)
+  }
+
+  if (source.parser === "kontiolahtiKaavaParser") {
+    return collectKontiolahtiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
