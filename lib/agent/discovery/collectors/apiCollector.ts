@@ -13957,6 +13957,131 @@ async function collectLoppiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HATTULA_LISTING_URL =
+  "https://hattula.fi/palvelut/asuminen-ja-ymparisto/maankayton-palvelut/vireilla-olevat-kaavahankkeet/"
+
+// both read directly off the site's own kaavahankkeet page footer contact
+// block (verified, not guessed)
+const HATTULA_CONTACTS = [
+  { name: "Hans Nielsen", title: "Maankäyttöpäällikkö", phone: "040 6201 946", email: "hans.nielsen@hattula.fi" },
+  { name: "Juha Kervinen", title: "Kaavoittaja", phone: "040 5626 250", email: "juha.kervinen@hattula.fi" },
+]
+
+function hattulaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  // "hyväksyä kaavahanketta koskevan maankäyttösopimuksen" approves a
+  // separate LAND-USE AGREEMENT, not the plan itself, and "hyväksynyt ...
+  // ehdotuksen/luonnoksen ... nähtäville" approves releasing a DRAFT for
+  // display -- neither is a real final approval of the plan
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  // stem match, not "luonnos" -- Finnish consonant gradation turns the
+  // genitive into "luonnoksen" (kaavaluonnoksen), which doesn't contain
+  // the literal substring "luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectHattulaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HATTULA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $(".wp-block-pb-accordion-item").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const itemEl of items) {
+    const item = $(itemEl)
+    const title = item.find(".c-accordion__title").first().text().replace(/\s+/g, " ").trim()
+    // the site's own title text has at least one typo ("Poransaaren
+    // asemaakaavamuutos", double "a"), so the match tolerates one extra
+    // vowel between "asema" and "kaava"
+    if (!title || !/asemaa?kaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemaa?kaava/i.test(title)) {
+      continue
+    }
+
+    const contentEl = item.find(".c-accordion__content").first()
+    const description = contentEl.text().replace(/\s+/g, " ").trim()
+
+    const phase = hattulaPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = HATTULA_CONTACTS
+
+    const attachments = contentEl
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", HATTULA_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(title)
+    const documentUrl = `${HATTULA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -16734,6 +16859,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "loppiKaavaParser") {
     return collectLoppiKaavaSource(source)
+  }
+
+  if (source.parser === "hattulaKaavaParser") {
+    return collectHattulaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
