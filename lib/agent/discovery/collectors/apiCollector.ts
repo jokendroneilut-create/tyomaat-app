@@ -8395,6 +8395,158 @@ async function collectVarkausKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KEMI_LISTING_URL =
+  "https://www.kemi.fi/asuminen-ja-ymparisto/rakentaminen-ja-ymparisto/kaavoitus/vireilla/"
+const KEMI_SECTION_START = "nähtävillä ja vireillä olevat kaavat"
+const KEMI_SECTION_END = "hyväksytyt kaavat"
+
+function kemiPhaseFromParagraphs(paragraphs: string[]): string {
+  let best = "Vireilletulo"
+  for (const paragraph of paragraphs) {
+    if (!/\d/.test(paragraph)) continue
+    const normalized = paragraph.toLowerCase()
+    let phase = "Vireilletulo"
+    if (/voimaantulo|lainvoima/.test(normalized)) phase = "Voimaantulo"
+    // "hyväksymän kaavoituskatsauksen" is routine approval of the yearly
+    // zoning-review catalog, not a decision on this specific plan
+    else if (/hyväksy/.test(normalized) && !/hyväksy[a-zäöå]*\s+kaavoituskatsau/.test(normalized))
+      phase = "Hyväksyminen"
+    else if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
+    else if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
+
+    if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
+  }
+  return best
+}
+
+function kemiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function collectKemiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KEMI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const main = $("main").first()
+
+  const contacts = $("li.type-contact")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const ps = $el.find("p").toArray().map((p) => $(p).text().trim())
+      const name = [ps[0], ps[1]].filter(Boolean).join(" ") || null
+      const title = ps[2] || null
+      const email = $el.find('a[href^="mailto:"]').attr("href")?.replace("mailto:", "") ?? null
+      const phone = $el.find('a[href^="tel:"]').first().text().trim() || null
+      return { name, title, phone, email }
+    })
+    .filter((contact) => contact.name && !/kirjaamo/i.test(contact.name))
+
+  // the "vireillä" listing runs as a flat feed of h2/h3 headings on one page;
+  // items are collected only while inside the "Nähtävillä ja vireillä olevat
+  // kaavat" section, stopping once the "Hyväksytyt kaavat" (already decided,
+  // historical) section begins -- named sub-sections like "Kemi East ..." in
+  // between are still part of the pending scope, just an extra h2 grouping
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+  let recording = false
+
+  for (const el of main.find("h2, h3, p, li").toArray()) {
+    const $el = $(el)
+    if (el.name === "h2") {
+      const heading = $el.text().replace(/\s+/g, " ").trim().toLowerCase()
+      if (heading === KEMI_SECTION_START) recording = true
+      else if (heading === KEMI_SECTION_END) recording = false
+      continue
+    }
+    if (!recording) continue
+    if (el.name === "h3") {
+      current = { title: $el.text().replace(/\s+/g, " ").trim(), nodes: [] }
+      blocks.push(current)
+      continue
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    // Kemi mixes buildable asemakaava items with osayleiskaava (area-wide)
+    // plan announcements in the same feed; only the former are collected
+    const isAsemakaava = /asemakaava/i.test(block.title) && !/osayleiskaava/i.test(block.title)
+    if (!isAsemakaava) continue
+
+    found += 1
+
+    const paragraphs = block.nodes
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const phase = kemiPhaseFromParagraphs(paragraphs)
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${KEMI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: block.title,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: block.title,
+            slug,
+            kaava_tunnus: null,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -11008,6 +11160,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "varkausKaavaParser") {
     return collectVarkausKaavaSource(source)
+  }
+
+  if (source.parser === "kemiKaavaParser") {
+    return collectKemiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
