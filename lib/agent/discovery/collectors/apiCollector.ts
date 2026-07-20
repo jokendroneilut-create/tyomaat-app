@@ -8964,6 +8964,155 @@ async function collectLaukaaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HEINOLA_LISTING_URL =
+  "https://www.heinola.fi/asuminen-ja-ymparisto/kaavoitus-ja-kehittamishankkeet/asemakaavat/"
+const HEINOLA_LINK_PATTERN = /^(\d{1,3})\s+(.+)$/
+// each plan page has an explicit, ordered "Kaavatyön eteneminen" stage
+// checklist (Aloitusvaihe/Luonnosvaihe/Ehdotusvaihe/Hyväksymisvaihe/
+// Voimaantulo), each marked "(valmis)"/"(meneillään)" once reached or left
+// bare ("Tulossa") while still upcoming -- far more reliable than scanning
+// free text for phase keywords like every other city's collector has to
+const HEINOLA_VAIHE_TO_PHASE: Record<string, string> = {
+  aloitusvaihe: "Vireilletulo",
+  luonnosvaihe: "Luonnos",
+  ehdotusvaihe: "Ehdotus",
+  hyväksymisvaihe: "Hyväksyminen",
+  voimaantulo: "Voimaantulo",
+}
+
+async function collectHeinolaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(HEINOLA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  let recording = false
+  const planLinks: { href: string; tunnus: string; title: string }[] = []
+  for (const el of listing$("main").find("h2, h3, a").toArray()) {
+    if (el.name === "h2" || el.name === "h3") {
+      recording = listing$(el).text().trim() === "Vireillä olevat asemakaavat"
+      continue
+    }
+    if (!recording) continue
+
+    const href = listing$(el).attr("href") ?? ""
+    // the same section also contains a duplicate "Nähtävillä olevat OAS"
+    // list of plain PDF links (plus a few stray osayleiskaava items that
+    // only appear there) -- skip anything that isn't the plan's own page
+    if (!href || href.endsWith(".pdf")) continue
+
+    const text = listing$(el).text().replace(/\s+/g, " ").trim()
+    const match = text.match(HEINOLA_LINK_PATTERN)
+    if (!match) continue
+
+    planLinks.push({ href, tunnus: match[1], title: match[2] })
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const link of planLinks) {
+    found += 1
+
+    const planResponse = await fetch(link.href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+    const main = $("main")
+
+    const title = main.find("h1").first().text().replace(/\s+/g, " ").trim() || link.title
+
+    const paragraphs: string[] = []
+    let beforeStages = true
+    for (const el of main.find("h3, p").toArray()) {
+      if (el.name === "h3") {
+        if ($(el).text().trim() === "Kaavatyön eteneminen") beforeStages = false
+        continue
+      }
+      if (beforeStages) {
+        const text = $(el).text().replace(/\s+/g, " ").trim()
+        if (text) paragraphs.push(text)
+      }
+    }
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+
+    let phase = "Vireilletulo"
+    for (const el of main.find("details.wp-block-details").toArray()) {
+      const summary = $(el).find("summary").first().text().replace(/\s+/g, " ").trim()
+      const vaiheMatch = summary.match(/^([a-zäöå]+vaihe|voimaantulo)/i)
+      if (!vaiheMatch) continue
+      const mappedPhase = HEINOLA_VAIHE_TO_PHASE[vaiheMatch[1].toLowerCase()]
+      if (!mappedPhase) continue
+      // only a stage marked "(valmis)" or "(meneillään)" has actually been
+      // reached -- a bare stage name means its body just says "Tulossa"
+      if (/\((valmis|meneillään)\)/i.test(summary)) phase = mappedPhase
+    }
+    const completed = phase === "Voimaantulo"
+
+    const contactCard = main.find("li.type-contact").first()
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    if (contactCard.length) {
+      const name = contactCard.find("h2").first().text().replace(/\s+/g, " ").trim() || null
+      const ps = contactCard
+        .find("p")
+        .toArray()
+        .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+      const contactTitle = ps.find((p) => !/^[\d\s()+-]+$/.test(p) && !p.includes("@")) ?? null
+      const phone = ps.find((p) => /^[\d\s()+-]{6,}$/.test(p)) ?? null
+      const email = ps.find((p) => p.includes("@")) ?? null
+      contacts.push({ name, title: contactTitle, phone, email })
+    }
+
+    const rawText = JSON.stringify({ title, phase, description, kaavaTunnus: link.tunnus, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: link.href,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            slug: null,
+            kaava_tunnus: link.tunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -11593,6 +11742,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "laukaaKaavaParser") {
     return collectLaukaaKaavaSource(source)
+  }
+
+  if (source.parser === "heinolaKaavaParser") {
+    return collectHeinolaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
