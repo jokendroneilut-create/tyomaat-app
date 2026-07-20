@@ -13312,6 +13312,130 @@ async function collectSomeroKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HUITTINEN_LISTING_URL =
+  "https://www.huittinen.fi/asuminen-ja-ymparisto/kaavoitus-maankaytto-ja-rakentaminen/kaavoitus-2/vireillaolevatkaavat/"
+
+const HUITTINEN_CONTACT = {
+  name: "Huittisten kaupunki, kaavoitus",
+  title: "Kirjaamo",
+  phone: null as string | null,
+  email: "kaupunki@huittinen.fi",
+}
+
+function huittinenPhaseFromLabel(label: string): string | null {
+  const normalized = label.toLowerCase()
+  if (/lainvoima|voimaantulo/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/vireilletulo/.test(normalized)) return "Vireilletulo"
+  return null
+}
+
+async function collectHuittinenKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HUITTINEN_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // each plan is a native <details>/<summary> accordion, with one nested
+  // <details>/<summary> per reached stage -- a stage only gets its own
+  // element once actually reached, so the last (chronologically latest)
+  // recognized stage label wins
+  const planDetails = $("main").first().children("details.wp-block-details").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const planEl of planDetails) {
+    const plan = $(planEl)
+    const title = plan.children("summary").first().text().replace(/\s+/g, " ").trim()
+    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title)) continue
+
+    const stages = plan.children("details.wp-block-details").toArray()
+
+    let phase = "Vireilletulo"
+    let description = ""
+    const attachments: { label: string; url: string }[] = []
+
+    for (const stageEl of stages) {
+      const stage = $(stageEl)
+      const label = stage.children("summary").first().text().replace(/\s+/g, " ").trim()
+      const stageText = stage.text().replace(/\s+/g, " ").trim()
+
+      const mappedPhase = huittinenPhaseFromLabel(label)
+      if (mappedPhase) {
+        phase = mappedPhase
+        description = stageText
+      }
+
+      attachments.push(
+        ...stage
+          .find("a.pwdb-file__link")
+          .toArray()
+          .map((a) => ({
+            label: $(a).text().replace(/\s+/g, " ").trim(),
+            url: new URL($(a).attr("href") ?? "", HUITTINEN_LISTING_URL).toString(),
+          }))
+      )
+    }
+
+    const completed = phase === "Voimaantulo"
+    const contacts = [HUITTINEN_CONTACT]
+
+    found += 1
+
+    const slug = kemiSlug(title)
+    const documentUrl = `${HUITTINEN_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -16069,6 +16193,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "someroKaavaParser") {
     return collectSomeroKaavaSource(source)
+  }
+
+  if (source.parser === "huittinenKaavaParser") {
+    return collectHuittinenKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
