@@ -16117,6 +16117,167 @@ async function collectLaihiaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const AHTARI_LISTING_URL =
+  "https://www.ahtari.fi/index.php/asuminen-ja-rakentaminen/kaavoitus-ja-maankaeyttoe/ajankohtaista-kaavoituksesta"
+
+const AHTARI_CONTACT = {
+  name: "Ähtärin kaupunki, kirjaamo/kaavoituspalvelut",
+  title: "Kirjaamo",
+  phone: null as string | null,
+  email: "kirjaamo@ahtari.fi",
+}
+
+function ahtariSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function ahtariPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Ähtäri's page has flat "VIREILLÄ OLEVAT X" all-caps bold paragraphs
+// marking category sections (RANTA-ASEMAKAAVAT / OSAYLEISKAAVAT /
+// ASEMAKAAVAT / TUULIVOIMAOSAYLEISKAAVAT), each followed by bold plan-
+// title paragraphs and their <ul><li><a> attachment lists. We track the
+// current category while walking the flat run and only collect items
+// while inside the plain "ASEMAKAAVAT" category (not the ranta- variant).
+async function collectAhtariKaavaSource(source: DiscoverySource) {
+  const response = await fetch(AHTARI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const container = $('div[itemprop="articleBody"]').first()
+  if (container.length === 0) return { documentsFound: 0, documentsSaved: 0 }
+
+  type Block = { title: string; links: { label: string; url: string }[] }
+
+  const blocks: Block[] = []
+  let currentCategory: string | null = null
+  let current: Block | null = null
+
+  container
+    .children()
+    .toArray()
+    .forEach((el) => {
+      if (el.tagName === "p") {
+        const $el = $(el)
+        const text = $el.text().trim()
+        if (!text) return
+
+        if (/^VIREILLÄ OLEVAT\b/i.test(text)) {
+          if (current) blocks.push(current)
+          current = null
+          currentCategory = text.toLowerCase()
+          return
+        }
+
+        if ($el.children("a").length > 0) return
+
+        if (current) blocks.push(current)
+        const inAsemakaavatCategory =
+          !!currentCategory && currentCategory.includes("asemakaavat") && !currentCategory.includes("ranta")
+        current = inAsemakaavatCategory ? { title: text, links: [] } : null
+      } else if (el.tagName === "ul" && current) {
+        $(el)
+          .find("a")
+          .each((_, a) => {
+            current!.links.push({
+              label: $(a).text().replace(/\s+/g, " ").trim(),
+              url: new URL($(a).attr("href") ?? "", AHTARI_LISTING_URL).toString(),
+            })
+          })
+      }
+    })
+
+  if (current) blocks.push(current)
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    const title = block.title
+    if (!title) continue
+
+    const description = block.links.map((l) => l.label).join(" ")
+    const phase = ahtariPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [AHTARI_CONTACT]
+    const attachments = block.links
+
+    found += 1
+
+    const slug = ahtariSlug(title)
+    const documentUrl = `${AHTARI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -18958,6 +19119,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "laihiaKaavaParser") {
     return collectLaihiaKaavaSource(source)
+  }
+
+  if (source.parser === "ahtariKaavaParser") {
+    return collectAhtariKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
