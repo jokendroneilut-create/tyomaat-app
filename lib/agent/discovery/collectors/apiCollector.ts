@@ -10971,6 +10971,121 @@ async function collectUusikaupunkiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PAIMIO_SITEMAP_URL = "https://www.paimio.fi/sitemap.xml"
+const PAIMIO_PLAN_PATH = "/asuminen-ja-ymparisto/kaavoitus-ja-paikkatieto/valmisteilla-olevat-kaavat/"
+const PAIMIO_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+const PAIMIO_STAGE_TO_PHASE: { pattern: RegExp; phase: string }[] = [
+  { pattern: /voimaantulo/i, phase: "Voimaantulo" },
+  { pattern: /hyväksymisvaihe/i, phase: "Hyväksyminen" },
+  { pattern: /ehdotusvaihe/i, phase: "Ehdotus" },
+  { pattern: /valmisteluvaihe/i, phase: "Luonnos" },
+  { pattern: /aloitusvaihe/i, phase: "Vireilletulo" },
+]
+
+async function collectPaimioKaavaSource(source: DiscoverySource) {
+  // undici's fetch() gets a bare HTTP 500 from paimio.fi on every request
+  // (same fingerprinting quirk seen on valkeakoski.fi) while curl/Node's
+  // https module succeed -- fetchTextViaHttpsModule works around it
+  const sitemapResponse = await fetchTextViaHttpsModule(PAIMIO_SITEMAP_URL)
+  if (!sitemapResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const planUrls = Array.from(
+    new Set(
+      (sitemapResponse.text.match(/https:\/\/www\.paimio\.fi[^<\s]*/g) ?? []).filter(
+        (url) => url.includes(PAIMIO_PLAN_PATH) && !url.endsWith(PAIMIO_PLAN_PATH)
+      )
+    )
+  )
+
+  let found = 0
+  let saved = 0
+
+  for (const planUrl of planUrls) {
+    found += 1
+
+    const planResponse = await fetchTextViaHttpsModule(planUrl)
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(planResponse.text)
+    const content = $("div.column.article-content").first()
+
+    const title = $("h1").first().text().replace(/\s+/g, " ").trim()
+    if (!title) continue
+
+    const paragraphs = content
+      .find("p")
+      .toArray()
+      .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+
+    // each accordion row is titled with the stage it represents, and rows
+    // only exist for stages the plan has actually reached -- so the most
+    // advanced row present is the current phase
+    let phase = "Vireilletulo"
+    for (const li of content.find("ul.accordion-list > li.accordion-row").toArray()) {
+      const label = $(li).find(".accordion-title-text").first().text().replace(/\s+/g, " ").trim()
+      const match = PAIMIO_STAGE_TO_PHASE.find((stage) => stage.pattern.test(label))
+      if (!match) continue
+      if (PAIMIO_PHASE_ORDER.indexOf(match.phase) > PAIMIO_PHASE_ORDER.indexOf(phase)) phase = match.phase
+    }
+    const completed = phase === "Voimaantulo"
+
+    const email = planResponse.text.match(/[\w.-]+@paimio\.fi/)?.[0] ?? null
+    const contacts = email
+      ? [{ name: "Paimion kaupunki, kaavoitus", title: "Kaavoitus", phone: null, email }]
+      : []
+
+    const slugMatch = planUrl.match(/\/([^/]+)\/?$/)
+    const slug = slugMatch ? slugMatch[1] : null
+
+    const rawText = JSON.stringify({ title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: planUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -13660,6 +13775,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "uusikaupunkiKaavaParser") {
     return collectUusikaupunkiKaavaSource(source)
+  }
+
+  if (source.parser === "paimioKaavaParser") {
+    return collectPaimioKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
