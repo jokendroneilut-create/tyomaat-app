@@ -62,6 +62,7 @@ import { resolveKankaanpaaKaavaProject } from "@/lib/agent/identity/resolvers/ka
 import { resolveLiperiKaavaProject } from "@/lib/agent/identity/resolvers/liperiKaavaResolver"
 import { resolveLieksaKaavaProject } from "@/lib/agent/identity/resolvers/lieksaKaavaResolver"
 import { resolveKiteeKaavaProject } from "@/lib/agent/identity/resolvers/kiteeKaavaResolver"
+import { resolveKalajokiKaavaProject } from "@/lib/agent/identity/resolvers/kalajokiKaavaResolver"
 import { resolveRiihimakiKaavaProject } from "@/lib/agent/identity/resolvers/riihimakiKaavaResolver"
 import { resolveRaaseporiKaavaProject } from "@/lib/agent/identity/resolvers/raaseporiKaavaResolver"
 import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisioKaavaResolver"
@@ -525,6 +526,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kiteen vireillä olevat asemakaavat") {
     const result = await resolveKiteeKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "kalajoen vireillä olevat asemakaavat") {
+    const result = await resolveKalajokiKaavaProject({
       document,
       facts: facts ?? [],
     })

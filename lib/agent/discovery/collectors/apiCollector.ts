@@ -11660,6 +11660,135 @@ async function collectKiteeKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KALAJOKI_LISTING_URL =
+  "https://www.kalajoki.fi/fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat"
+
+function kalajokiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function kalajokiContactFromText(text: string) {
+  // scope extraction to right after the "kaavoituspäällikkö" mention --
+  // searching the whole paragraph risks picking up an earlier general
+  // registry email (kirjaamo@) or a Teams meeting-ID digit sequence
+  // instead of the actual named contact's details
+  const titleIndex = text.toLowerCase().indexOf("kaavoituspäällikkö")
+  const window = titleIndex >= 0 ? text.slice(titleIndex, titleIndex + 150) : ""
+
+  const nameMatch = window.match(
+    /kaavoituspäällikkö\s+([A-ZÄÖÅ][\wäöåÄÖÅ-]+\s[A-ZÄÖÅ][\wäöåÄÖÅ-]+)/i
+  )
+  const phoneMatch = window.match(/(\d{2,3}\s?\d{3,4}\s?\d{3,4})/)
+  const emailMatch = window.match(/[\w.-]+@kalajoki\.fi/i)
+
+  return {
+    name: nameMatch?.[1] ?? "Jaana Pekkala",
+    title: "Kaavoituspäällikkö",
+    phone: phoneMatch?.[1]?.trim() ?? "044 4691 225",
+    email: emailMatch?.[0]?.toLowerCase() ?? "jaana.pekkala@kalajoki.fi",
+  }
+}
+
+async function collectKalajokiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KALAJOKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // the plan list is a <details> accordion -- each item's <summary> is the
+  // plan title and its body holds a description widget plus an attachments
+  // widget; osayleiskaava/yleiskaava items live in the same accordion and
+  // are excluded since only asemakaava is in scope
+  const details = $("main").find("details.accordion-item").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const detail of details) {
+    const title = $(detail).find("summary").first().text().replace(/\s+/g, " ").trim()
+    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title)) continue
+
+    const description = $(detail)
+      .find(".iwc-widget-editor-widget .iwc-editor")
+      .first()
+      .text()
+      .replace(/\s+/g, " ")
+      .trim()
+
+    const phase = kalajokiPhaseFromText(description)
+    const completed = phase === "Voimaantulo"
+    const contact = kalajokiContactFromText(description)
+    const contacts = [contact]
+
+    const attachments = $(detail)
+      .find(".iwc-widget-attachments-widget a.stretched-link")
+      .toArray()
+      .map((a) => ({
+        label: $(a).find(".file-name").text().trim(),
+        url: new URL($(a).attr("href") ?? "", KALAJOKI_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(title)
+    const documentUrl = `${KALAJOKI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -14373,6 +14502,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kiteeKaavaParser") {
     return collectKiteeKaavaSource(source)
+  }
+
+  if (source.parser === "kalajokiKaavaParser") {
+    return collectKalajokiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
