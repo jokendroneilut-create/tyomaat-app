@@ -13812,6 +13812,151 @@ async function collectPunkalaidunKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LOPPI_LISTING_URL = "https://www.loppi.fi/asuminen-ja-ymparisto/kaavoitus/kaavahankkeet/"
+
+// the site's edge cache (mod_pagespeed) returns a bare 500 for requests
+// without a normal browser Accept/Accept-Language header, so those are
+// sent explicitly here
+const LOPPI_FETCH_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+  "Accept-Language": "fi-FI,fi;q=0.9,en;q=0.8",
+}
+
+// name/phone/email read directly off the municipality's own published
+// kuulutus text (verified, not guessed)
+const LOPPI_CONTACT = {
+  name: "Werner Franzén",
+  title: "Maankäyttöpäällikkö",
+  phone: "040 754 4343",
+  email: "werner.franzen@loppi.fi",
+}
+
+// each plan's accordion title ends with a slash-separated list of every
+// stage it has already reached (e.g. "Käynnistysvaihe / Luonnosvaihe /
+// Ehdotusvaihe / Hyväksymiskäsittely") -- taking the highest-priority
+// stage word found among those segments is far more reliable than
+// scanning the body text, which often narrates a forward-looking
+// schedule ("kaavaehdotus nähtävillä syksyllä 2026") that would otherwise
+// be misread as an already-reached phase
+function loppiPhaseFromTitle(title: string): string {
+  const segments = title.split("/").map((s) => s.trim().toLowerCase())
+
+  const priority: Record<string, number> = {
+    Vireilletulo: 0,
+    Luonnos: 1,
+    Ehdotus: 2,
+    Hyväksyminen: 3,
+    Voimaantulo: 4,
+  }
+
+  let phase = "Vireilletulo"
+  let best = 0
+
+  for (const segment of segments) {
+    let candidate: string | null = null
+    if (/lainvoima|voimaantulo/.test(segment)) candidate = "Voimaantulo"
+    else if (/hyväksy/.test(segment)) candidate = "Hyväksyminen"
+    else if (/ehdotus/.test(segment)) candidate = "Ehdotus"
+    else if (/luonnos/.test(segment)) candidate = "Luonnos"
+    else if (/käynnist|vireilletulo|aloituspäätös|osallistumis/.test(segment)) candidate = "Vireilletulo"
+
+    if (candidate && priority[candidate] >= best) {
+      best = priority[candidate]
+      phase = candidate
+    }
+  }
+
+  return phase
+}
+
+async function collectLoppiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LOPPI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const rows = $("li.accordion__row--section").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const rowEl of rows) {
+    const row = $(rowEl)
+    const title = row.find(".accordion__title-item").first().text().replace(/\s+/g, " ").trim()
+    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
+      continue
+    }
+
+    const contentEl = row.find(".accordion__content").first()
+    const description = contentEl.text().replace(/\s+/g, " ").trim()
+
+    const phase = loppiPhaseFromTitle(title)
+    const completed = phase === "Voimaantulo"
+    const contacts = [LOPPI_CONTACT]
+
+    const attachments = contentEl
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", LOPPI_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(title)
+    const documentUrl = `${LOPPI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -16585,6 +16730,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "punkalaidunKaavaParser") {
     return collectPunkalaidunKaavaSource(source)
+  }
+
+  if (source.parser === "loppiKaavaParser") {
+    return collectLoppiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
