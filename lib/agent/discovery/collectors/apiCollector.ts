@@ -9556,6 +9556,150 @@ async function collectAkaaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const FORSSA_LISTING_URL =
+  "https://www.forssa.fi/asuminen-ja-ymparisto/tekniset-palvelut/kaavoitus/valmisteilla-olevat-kaavat1279323991/"
+
+// each plan page names its current-phase document with a <strong> label
+// ("OSALLISTUMIS- JA ARVIOINTISUUNNITELMA" / "LUONNOSVAIHEEN MATERIAALI" /
+// "EHDOTUSVAIHEEN MATERIAALI") rather than stating the phase in free text
+function forssaPhaseFromLabels(labels: string[]): string {
+  let best = "Vireilletulo"
+  for (const label of labels) {
+    const normalized = label.toLowerCase()
+    let phase: string | null = null
+    if (/voimaantulo|lainvoima/.test(normalized)) phase = "Voimaantulo"
+    else if (/hyväksymisvaiheen materiaali|hyväksytty/.test(normalized)) phase = "Hyväksyminen"
+    else if (/ehdotusvaiheen materiaali/.test(normalized)) phase = "Ehdotus"
+    else if (/luonnosvaiheen materiaali/.test(normalized)) phase = "Luonnos"
+    else if (/osallistumis-?\s*ja\s*arviointisuunnitelma/.test(normalized)) phase = "Vireilletulo"
+    if (!phase) continue
+    if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
+  }
+  return best
+}
+
+function forssaContactFromText(
+  text: string
+): { name: string | null; title: string | null; phone: string | null; email: string | null }[] {
+  // the mailto: href next to this sentence is a stale copy-paste artifact
+  // on several of the site's own pages (it points at a different person
+  // than the visible text) -- the plain text is the trustworthy source
+  const match = text.match(
+    /Lisätietoja antaa\s+([a-zäöå]+)\s+([A-ZÄÖÅ][a-zäöåé]+(?:\s[A-ZÄÖÅ][a-zäöåé]+)+),?\s*p\.?\s*([\d\s]{6,12}),?\s*([\w.]+@[\w.-]+)/i
+  )
+  if (!match) return []
+  return [{ name: match[2].trim(), title: match[1].trim(), phone: match[3].trim(), email: match[4].trim() }]
+}
+
+async function collectForssaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(FORSSA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  const accordionLink = listing$("a.foxy-accordion-link")
+    .toArray()
+    .find((el) =>
+      listing$(el).text().replace(/\s+/g, " ").trim().startsWith("Valmisteilla olevat asemakaavat")
+    )
+
+  const planLinks: { href: string; title: string }[] = []
+  if (accordionLink) {
+    const panel = listing$(accordionLink).next(".foxy-accordion")
+    for (const li of panel.find("li").toArray()) {
+      const $li = listing$(li)
+      const href = $li.find("a").first().attr("href") ?? ""
+      const title = $li.text().replace(/\s+/g, " ").trim()
+      if (!href || !title) continue
+      // hrefs are site-root-relative but lack a leading slash, so they must
+      // be resolved against the domain root, not against the listing page's
+      // own URL (which would otherwise double the shared path prefix)
+      planLinks.push({ href: new URL(href, "https://www.forssa.fi/").toString(), title })
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const link of planLinks) {
+    found += 1
+
+    const planResponse = await fetch(link.href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+    const content = $("div.main").first()
+
+    const title = link.title || content.find("h1").first().text().replace(/\s+/g, " ").trim()
+
+    const paragraphs = content
+      .find("p")
+      .toArray()
+      .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40 && !/^-?\s*lisätietoja antaa/i.test(p)) ?? null
+
+    const contactSource = paragraphs.find((p) => /lisätietoja antaa/i.test(p)) ?? ""
+    const contacts = forssaContactFromText(contactSource)
+
+    const labels = content
+      .find("strong")
+      .toArray()
+      .map((el) => $(el).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const phase = forssaPhaseFromLabels(labels)
+    const completed = phase === "Voimaantulo"
+
+    const slugMatch = link.href.match(/\/([^/]+)\/?$/)
+    const slug = slugMatch ? slugMatch[1] : null
+
+    const rawText = JSON.stringify({ title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: link.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -12201,6 +12345,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "akaaKaavaParser") {
     return collectAkaaKaavaSource(source)
+  }
+
+  if (source.parser === "forssaKaavaParser") {
+    return collectForssaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
