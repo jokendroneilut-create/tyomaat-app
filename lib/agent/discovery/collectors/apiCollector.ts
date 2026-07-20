@@ -14645,6 +14645,139 @@ async function collectKannusKaavaSource(source: DiscoverySource) {
   }
 }
 
+const TOHOLAMPI_LISTING_URL = "https://www.toholampi.fi/kaavoitus-ja-kartat/"
+
+// name/title/phone/email read directly off the teknisen osaston
+// yhteystiedot page (verified, not guessed)
+const TOHOLAMPI_CONTACT = {
+  name: "Mikko Polet",
+  title: "Tekninen johtaja",
+  phone: "040 150 5302",
+  email: "mikko.polet@toholampi.fi",
+}
+
+function toholampiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectToholampiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(TOHOLAMPI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const container = $(".entry-content").first()
+
+  // a plan whose title names BOTH an osayleiskaava and an asemakaava
+  // together under one shared OAS document (no separate per-plan link)
+  // can't be reliably split into just its asemakaava portion, so any
+  // title containing "yleiskaava" is excluded even when "asemakaava"
+  // also appears in it
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  for (const el of container.children().toArray()) {
+    if (el.name === "h3") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      if (title && /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)) {
+        current = { title, nodes: [] }
+        blocks.push(current)
+      } else {
+        current = null
+      }
+    } else if (current) {
+      current.nodes.push(el)
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    const bodyText = block.nodes
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .join(" ")
+
+    const phase = toholampiPhaseFromText(`${block.title} ${bodyText}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [TOHOLAMPI_CONTACT]
+
+    const attachments = block.nodes
+      .flatMap((node) => $(node).find("a").toArray())
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", TOHOLAMPI_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${TOHOLAMPI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description: bodyText, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: bodyText,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -17442,6 +17575,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kannusKaavaParser") {
     return collectKannusKaavaSource(source)
+  }
+
+  if (source.parser === "toholampiKaavaParser") {
+    return collectToholampiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
