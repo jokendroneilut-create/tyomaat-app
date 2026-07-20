@@ -12420,6 +12420,186 @@ async function collectSaarijarviKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KEURUU_LISTING_URL = "https://keuruu.fi/asuminen-ja-ymparisto/kaavoitus/asemakaava/"
+
+const KEURUU_CONTACT = {
+  name: "Keuruun kaupunki, kaavoitus",
+  title: "Kirjaamo",
+  phone: null as string | null,
+  email: "keuruu@keuruu.fi",
+}
+
+function keuruuPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function keuruuIsAsemakaavaTitle(title: string): boolean {
+  return /asemakaava/i.test(title) && !/yleiskaava|ranta-asemakaava/i.test(title)
+}
+
+async function collectKeuruuKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KEURUU_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const article = $("article.main-content-area").first()
+
+  // the page has a brief "Kartalla näkyvät vireillä olevat asemakaavat"
+  // h4 list, followed later by full per-plan h3 sections whose reached
+  // stages each get their own accordion (e.g. "Ehdotusvaihe",
+  // "Valmisteluvaihe", "Vireilletulo") -- most plans appear in both, so
+  // brief entries are only kept for titles that never get a full section
+  type Block = { title: string; nodes: any[] }
+  const briefEntries: { title: string; note: string }[] = []
+  const detailBlocks: Block[] = []
+
+  let mode: "none" | "brief" | "detail" | "excluded" = "none"
+  let current: Block | null = null
+
+  for (const el of article.children().toArray()) {
+    if (el.name === "h2") {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      mode = /^ranta-asemakaavat$/i.test(text) ? "excluded" : "none"
+      current = null
+      continue
+    }
+
+    if (el.name === "h3") {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (/^kartalla näkyvät/i.test(text)) {
+        mode = "brief"
+        current = null
+        continue
+      }
+      if (mode === "excluded" || !keuruuIsAsemakaavaTitle(text)) {
+        current = null
+        continue
+      }
+      current = { title: text, nodes: [] }
+      detailBlocks.push(current)
+      mode = "detail"
+      continue
+    }
+
+    if (el.name === "h4" && mode === "brief") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      const noteEl = $(el).next()
+      const note = noteEl.get(0)?.name === "p" ? noteEl.text().replace(/\s+/g, " ").trim() : ""
+      if (title && keuruuIsAsemakaavaTitle(title)) briefEntries.push({ title, note })
+      continue
+    }
+
+    if (mode === "detail" && current) current.nodes.push(el)
+  }
+
+  const plans = detailBlocks.map((block) => {
+    const descriptionNode = block.nodes.find((n) => n.name === "p")
+    const description = descriptionNode
+      ? $(descriptionNode).text().replace(/\s+/g, " ").trim()
+      : ""
+
+    return {
+      title: block.title,
+      description,
+      phaseText: block.nodes.map((n) => $(n).text().replace(/\s+/g, " ").trim()).join(" "),
+      attachments: block.nodes
+        .flatMap((n) => $(n).find("a.pwd-attachment").toArray())
+        .map((a) => ({
+          label:
+            $(a).find("span").first().text().replace(/\s+/g, " ").trim() ||
+            $(a).text().replace(/\s+/g, " ").trim(),
+          url: $(a).attr("href") ?? "",
+        })),
+    }
+  })
+
+  // titles between the brief list and the full sections occasionally
+  // differ by a typo (e.g. "Ketvelrannnan" vs "Ketvelrannan") -- collapse
+  // runs of 3+ repeated letters before comparing so a stray extra
+  // character doesn't defeat the dedup and create a duplicate document
+  const normalizeForDedup = (value: string) =>
+    value.toLowerCase().replace(/(.)\1{2,}/g, "$1$1")
+
+  for (const brief of briefEntries) {
+    if (plans.some((p) => normalizeForDedup(p.title) === normalizeForDedup(brief.title))) continue
+    plans.push({ title: brief.title, description: brief.note, phaseText: brief.note, attachments: [] })
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const plan of plans) {
+    const phase = keuruuPhaseFromText(plan.phaseText)
+    const completed = phase === "Voimaantulo"
+    const contacts = [KEURUU_CONTACT]
+
+    found += 1
+
+    const slug = kemiSlug(plan.title)
+    const documentUrl = `${KEURUU_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({
+      title: plan.title,
+      phase,
+      description: plan.description,
+      contacts,
+      attachments: plan.attachments,
+    })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: plan.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: plan.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: plan.description,
+          contacts,
+          attachments: plan.attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -15153,6 +15333,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "saarijarviKaavaParser") {
     return collectSaarijarviKaavaSource(source)
+  }
+
+  if (source.parser === "keuruuKaavaParser") {
+    return collectKeuruuKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
