@@ -6163,7 +6163,7 @@ function lempaalaPhaseFromHeadings(headings: string[]): string {
   if (/voimaan|lainvoima/.test(combined)) return "Voimaantulo"
   if (/hyväksy/.test(combined)) return "Hyväksyminen"
   if (/ehdotus/.test(combined)) return "Ehdotus"
-  if (/luonnos/.test(combined)) return "Luonnos"
+  if (/luonno/.test(combined)) return "Luonnos"
   if (/osallistumis|arviointi|arvionti/.test(combined)) return "Osallistumis- ja arviointisuunnitelma"
   return "Vireilletulo"
 }
@@ -6707,7 +6707,7 @@ function siilinjarviPhaseFromLabel(label: string | null): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotus/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -8124,7 +8124,7 @@ function kurikkaPhaseFromText(text: string): string {
   // approval step in this site's process list -- it never spells out "hyväksy"
   if (/kaupunginvaltuusto/.test(normalized)) return "Hyväksyminen"
   if (/ehdotus/.test(normalized) && /nähtävillä/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized) && /nähtävillä/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized) && /nähtävillä/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -8257,7 +8257,7 @@ function varkausDetectPhaseInBlock(text: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -8412,7 +8412,7 @@ function kemiPhaseFromParagraphs(paragraphs: string[]): string {
     else if (/hyväksy/.test(normalized) && !/hyväksy[a-zäöå]*\s+kaavoituskatsau/.test(normalized))
       phase = "Hyväksyminen"
     else if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
-    else if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
+    else if (/luonno/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
 
     if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
   }
@@ -8557,7 +8557,7 @@ function haminaPhaseFromText(text: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -8673,7 +8673,7 @@ function jamsaPhaseFromItems(items: string[]): string {
     if (/voimaantulo|lainvoima/.test(normalized)) phase = "Voimaantulo"
     else if (/hyväksy/.test(normalized)) phase = "Hyväksyminen"
     else if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
-    else if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
+    else if (/luonno/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
 
     if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
   }
@@ -8829,7 +8829,7 @@ function laukaaPhaseFromParagraphs(paragraphs: string[]): string {
     if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) phase = "Voimaantulo"
     else if (/hyväksy/.test(normalized)) phase = "Hyväksyminen"
     else if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
-    else if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
+    else if (/luonno/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
 
     if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
   }
@@ -12119,7 +12119,7 @@ function muuramePhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -12263,7 +12263,7 @@ function saarijarviPhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -12437,7 +12437,7 @@ function keuruuPhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -12618,7 +12618,7 @@ function loviisaPhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -12734,7 +12734,7 @@ function kuusamoPhaseFromLabel(label: string): string | null {
   if (/lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotus/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   if (/vireilletulo/.test(normalized)) return "Vireilletulo"
   return null
 }
@@ -12871,7 +12871,7 @@ function kauniainenPhaseFromLabel(label: string): string | null {
   if (/lainvoima|voimaantulo/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotus/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   if (/aloitus|vireilletulo/.test(normalized)) return "Vireilletulo"
   return null
 }
@@ -13036,7 +13036,7 @@ function parainenPhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -13198,7 +13198,7 @@ function someroPhaseFromText(text: string): string {
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -13325,7 +13325,7 @@ function huittinenPhaseFromLabel(label: string): string | null {
   if (/lainvoima|voimaantulo/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotus/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   if (/vireilletulo/.test(normalized)) return "Vireilletulo"
   return null
 }
@@ -13451,7 +13451,7 @@ function kokemakiPhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -13570,7 +13570,7 @@ function urjalaPhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -13710,7 +13710,7 @@ function punkalaidunPhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -13859,7 +13859,7 @@ function loppiPhaseFromTitle(title: string): string {
     if (/lainvoima|voimaantulo/.test(segment)) candidate = "Voimaantulo"
     else if (/hyväksy/.test(segment)) candidate = "Hyväksyminen"
     else if (/ehdotus/.test(segment)) candidate = "Ehdotus"
-    else if (/luonnos/.test(segment)) candidate = "Luonnos"
+    else if (/luonno/.test(segment)) candidate = "Luonnos"
     else if (/käynnist|vireilletulo|aloituspäätös|osallistumis/.test(segment)) candidate = "Vireilletulo"
 
     if (candidate && priority[candidate] >= best) {
