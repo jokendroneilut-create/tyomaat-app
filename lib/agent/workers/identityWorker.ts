@@ -88,6 +88,7 @@ import { resolveKuhmoKaavaProject } from "@/lib/agent/identity/resolvers/kuhmoKa
 import { resolveSuomussalmiKaavaProject } from "@/lib/agent/identity/resolvers/suomussalmiKaavaResolver"
 import { resolveKittilaKaavaProject } from "@/lib/agent/identity/resolvers/kittilaKaavaResolver"
 import { resolveKemijarviKaavaProject } from "@/lib/agent/identity/resolvers/kemijarviKaavaResolver"
+import { resolveRautjarviKaavaProject } from "@/lib/agent/identity/resolvers/rautjarviKaavaResolver"
 import { resolveRiihimakiKaavaProject } from "@/lib/agent/identity/resolvers/riihimakiKaavaResolver"
 import { resolveRaaseporiKaavaProject } from "@/lib/agent/identity/resolvers/raaseporiKaavaResolver"
 import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisioKaavaResolver"
@@ -733,6 +734,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kemijärven vireillä olevat asemakaavat") {
     const result = await resolveKemijarviKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "rautjärven vireillä olevat asemakaavat") {
+    const result = await resolveRautjarviKaavaProject({
       document,
       facts: facts ?? [],
     })
