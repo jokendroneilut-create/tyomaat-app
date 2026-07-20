@@ -119,6 +119,7 @@ export async function runFactWorker(documentId?: string) {
       "Lapinlahden vireillä olevat asemakaavat",
       "Kannuksen vireillä olevat asemakaavat",
       "Toholammin vireillä olevat asemakaavat",
+      "Kuhmon vireillä olevat asemakaavat",
       "Kuopion vireillä olevat kaavat",
       "Hyvinkään vireillä olevat kaavat",
       "Seinäjoen ajankohtaiset asemakaavat",
