@@ -12858,6 +12858,167 @@ async function collectKuusamoKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KAUNIAINEN_LISTING_URL =
+  "https://www.kauniainen.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/kaavoitus/kaavoitushankkeet/"
+
+// maps only the accordion item's OWN label -- not its content -- to a
+// phase, and returns null for non-phase items like "Selvitykset"
+// (background studies). Scanning combined label+content instead would let
+// a later, unrelated item's neutral text silently reset an already
+//-detected later-stage phase back to the default.
+function kauniainenPhaseFromLabel(label: string): string | null {
+  const normalized = label.toLowerCase()
+  if (/lainvoima|voimaantulo/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/aloitus|vireilletulo/.test(normalized)) return "Vireilletulo"
+  return null
+}
+
+async function collectKauniainenKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(KAUNIAINEN_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+  const container = listing$(".page-content").first()
+
+  // only "Nähtävillä olevat asemakaavat" and "Vireillä olevat
+  // asemakaavat" are in scope -- "Kartalla" is just a map widget intro,
+  // and the separate "hyväksytyt ja voimaan tulleet" archive page is a
+  // full historical registry, not a recent-activity bucket, so it's
+  // never linked from here and stays out of scope entirely
+  const planLinks: { title: string; url: string }[] = []
+  let collecting = false
+
+  for (const el of container.children().toArray()) {
+    if (el.name === "h2") {
+      const text = listing$(el).text().replace(/\s+/g, " ").trim()
+      collecting = /^(nähtävillä olevat asemakaavat|vireillä olevat asemakaavat)$/i.test(text)
+      continue
+    }
+    if (el.name === "p" && collecting) {
+      const link = listing$(el).find("a").first()
+      const title = link.text().replace(/\s+/g, " ").trim()
+      const href = link.attr("href")
+      if (title && href) planLinks.push({ title, url: href })
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const plan of planLinks) {
+    const detailResponse = await fetch(plan.url, { cache: "no-store" })
+    if (!detailResponse.ok) continue
+
+    const $ = cheerio.load(await detailResponse.text())
+
+    // unlike some cities, stages that haven't been reached yet simply
+    // don't get an accordion item at all here, so every item present is
+    // a reached stage and the last one (chronological order) wins
+    const items = $(".wp-block-accordion-item").toArray()
+    let phase = "Vireilletulo"
+    let description = ""
+    const attachments: { label: string; url: string }[] = []
+
+    for (const item of items) {
+      const label = $(item)
+        .find(".wp-block-accordion-heading__toggle-title")
+        .first()
+        .text()
+        .replace(/\s+/g, " ")
+        .trim()
+      const panel = $(item).find(".wp-block-accordion-panel").first()
+      const panelText = panel.text().replace(/\s+/g, " ").trim()
+
+      const mappedPhase = kauniainenPhaseFromLabel(label)
+      if (mappedPhase) {
+        phase = mappedPhase
+        description = panelText
+      }
+
+      attachments.push(
+        ...panel
+          .find("a.b-downloadable-files-lift-item")
+          .toArray()
+          .map((a) => ({
+            label: $(a).text().replace(/\s+/g, " ").trim(),
+            url: $(a).attr("href") ?? "",
+          }))
+      )
+    }
+
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    $(".b-contact-card").each((_, card) => {
+      const $card = $(card)
+      const name = $card.find(".b-contact-card__name").first().text().replace(/\s+/g, " ").trim() || null
+      const contactTitle =
+        $card.find(".b-contact-card__job-title").first().text().replace(/\s+/g, " ").trim() || null
+      // phone digits are deliberately broken up with stray spaces on the
+      // source page (anti-scraping obfuscation) -- stripping all
+      // whitespace reconstructs the real digit sequence
+      const phone = $card.find(".b-contact-card__phone").first().text().replace(/\s+/g, "") || null
+      const email =
+        $card.find(".b-contact-card__email").first().attr("href")?.replace(/^mailto:\s*/i, "").trim() || null
+      if (name || phone || email) contacts.push({ name, title: contactTitle, phone, email })
+    })
+
+    const completed = phase === "Voimaantulo"
+
+    found += 1
+
+    const slug = kemiSlug(plan.title)
+    const documentUrl = plan.url
+
+    const rawText = JSON.stringify({ title: plan.title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: plan.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: plan.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -15603,6 +15764,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kuusamoKaavaParser") {
     return collectKuusamoKaavaSource(source)
+  }
+
+  if (source.parser === "kauniainenKaavaParser") {
+    return collectKauniainenKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
