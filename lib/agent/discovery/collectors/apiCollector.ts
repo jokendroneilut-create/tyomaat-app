@@ -10311,6 +10311,132 @@ async function collectKontiolahtiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KAUHAVA_LISTING_URL =
+  "https://kauhava.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-ja-nahtavilla-olevat-kaavat/"
+
+function kauhavaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function kauhavaContacts($: cheerio.CheerioAPI) {
+  return $(".contact-lift__content")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const name = $el.find("h2").first().text().replace(/\s+/g, " ").trim() || null
+      const title = $el.find("p").first().text().replace(/\s+/g, " ").trim() || null
+      const email = $el.find('a[href^="mailto:"]').attr("href")?.replace("mailto:", "") ?? null
+      const baseText = $el.find(".contact-lift__base_content").first().text().replace(/\s+/g, " ").trim()
+      const phone = baseText.match(/[\d\s]{6,}/)?.[0]?.trim() ?? null
+      return { name, title, phone, email }
+    })
+    .filter((contact) => contact.name)
+}
+
+async function collectKauhavaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KAUHAVA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const content = $("article.main-content-area").first()
+  const contacts = kauhavaContacts($)
+
+  // this page mixes real plan headings with generic section headings
+  // ("Asemakaavan selvitykset" background-study list, a link to the map
+  // service, contact cards) inside one flat h2/p stream -- only headings
+  // that name a specific plan (not a shared resource label) start a block
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  for (const el of content.find("h2, p, ul").toArray()) {
+    if (el.name === "h2") {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      // "selvitys" (singular) is not a substring of "selvitykset" (plural)
+      // -- Finnish -Vs nouns insert a k before the plural ending, so the
+      // shorter "selvity" stem is used to match both inflected forms
+      const isPlan = /asemakaava/i.test(text) && !/selvity|voimassaolevat/i.test(text)
+      current = isPlan ? { title: text, nodes: [] } : null
+      if (current) blocks.push(current)
+      continue
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    found += 1
+
+    const paragraphs = block.nodes
+      .filter((node) => node.name === "p")
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const phase = kauhavaPhaseFromText(block.nodes.map((node) => $(node).text()).join(" "))
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${KAUHAVA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -12980,6 +13106,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kontiolahtiKaavaParser") {
     return collectKontiolahtiKaavaSource(source)
+  }
+
+  if (source.parser === "kauhavaKaavaParser") {
+    return collectKauhavaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
