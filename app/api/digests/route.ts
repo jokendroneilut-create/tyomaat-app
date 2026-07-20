@@ -8,6 +8,7 @@ const ROUTE_VERSION = "trace-v3-2026-03-06";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const maxDuration = 60;
 
 type Watch = {
   id: string;
@@ -219,11 +220,16 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const secret = url.searchParams.get("secret");
+    const authHeader = req.headers.get("authorization");
     const debug = url.searchParams.get("debug") === "1";
     const trace = url.searchParams.get("trace") === "1";
     const force = url.searchParams.get("force") === "1";
 
-    if (!secret || secret !== process.env.CRON_SECRET) {
+    const isManualRun = !!secret && secret === process.env.CRON_SECRET;
+    const isCronRun =
+      !!authHeader && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+
+    if (!isManualRun && !isCronRun) {
       return NextResponse.json(
         { error: "unauthorized", routeVersion: ROUTE_VERSION },
         { status: 401 }

@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/digests?secret=jufyrht594eorbjjfkdsaqwerrr",
+      "path": "/api/digests",
       "schedule": "0 7 * * *"
     },
     {
@@ -9,7 +9,7 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/tic/discovery/run?stage=collect",
+      "path": "/api/tic/discovery/collect",
       "schedule": "0 3 * * *"
     },
     {
