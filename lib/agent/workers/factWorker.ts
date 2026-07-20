@@ -81,6 +81,7 @@ export async function runFactWorker(documentId?: string) {
       "Pieksämäen vireillä olevat asemakaavat",
       "Akaan vireillä olevat asemakaavat",
       "Forssan vireillä olevat asemakaavat",
+      "Janakkalan vireillä olevat asemakaavat",
       "Kuopion vireillä olevat kaavat",
       "Hyvinkään vireillä olevat kaavat",
       "Seinäjoen ajankohtaiset asemakaavat",

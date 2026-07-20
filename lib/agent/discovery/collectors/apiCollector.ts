@@ -9700,6 +9700,119 @@ async function collectForssaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const JANAKKALA_LISTING_URL =
+  "https://www.janakkala.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat/asemakaavat-2/"
+
+function janakkalaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectJanakkalaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(JANAKKALA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const contactText = $(".footer__contact-info").first().text().replace(/\s+/g, " ").trim()
+  const contactEmail = contactText.match(/[\w.-]+@[\w.-]+/)?.[0] ?? null
+  const contactPhone = contactText.match(/\d[\d\s]{6,}/)?.[0]?.trim() ?? null
+  const contacts = contactEmail
+    ? [{ name: "Janakkalan kunta, kirjaamo", title: "Kirjaamo", phone: contactPhone, email: contactEmail }]
+    : []
+
+  let found = 0
+  let saved = 0
+
+  for (const block of $(".b-accordion__ContentWrap").toArray()) {
+    const $block = $(block)
+    const title = $block.find(".b-accordion__Button").first().text().replace(/\s+/g, " ").trim()
+    if (!title) continue
+
+    found += 1
+
+    // each plan is a chronological, append-only log of milestones already
+    // reached (dated) plus a trailing "Lähtötietoaineistoa" (background
+    // material) section that isn't part of the phase timeline
+    const contentBottom = $block.find(".b-accordion__ContentBottom").first()
+    const lines: string[] = []
+    let pastMilestones = false
+    for (const child of contentBottom.children().toArray()) {
+      const text = $(child).text().replace(/\s+/g, " ").trim()
+      if (!text) continue
+      if (text === "Lähtötietoaineistoa:") {
+        pastMilestones = true
+        continue
+      }
+      if (pastMilestones) continue
+      if (child.name === "p") {
+        lines.push(text)
+      } else if (child.name === "ul") {
+        for (const li of $(child).find("> li").toArray()) {
+          const liText = $(li).text().replace(/\s+/g, " ").trim()
+          if (liText) lines.push(liText)
+        }
+      }
+    }
+
+    const description = lines.join("; ") || null
+    const phase = janakkalaPhaseFromText(lines.join(" "))
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(title)
+    const documentUrl = `${JANAKKALA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -12349,6 +12462,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "forssaKaavaParser") {
     return collectForssaKaavaSource(source)
+  }
+
+  if (source.parser === "janakkalaKaavaParser") {
+    return collectJanakkalaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
