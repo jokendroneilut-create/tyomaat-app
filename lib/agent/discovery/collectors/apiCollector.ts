@@ -13019,6 +13019,156 @@ async function collectKauniainenKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PARAINEN_LISTING_URL = "https://www.pargas.fi/fi/asemakaavat"
+
+const PARAINEN_CONTACT = {
+  name: "Paraisten kaupunki, kaavoitus",
+  title: "Kirjaamo",
+  phone: null as string | null,
+  email: "parainen@parainen.fi",
+}
+
+function parainenPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectParainenKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PARAINEN_LISTING_URL, {
+    cache: "no-store",
+    headers: { "Accept-Language": "fi" },
+  })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const h1 = $("h1")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Asemakaavat")
+  if (!h1) return { documentsFound: 0, documentsSaved: 0 }
+
+  const container = $(h1).parent()
+
+  // one flat content block: a bare-<strong> title paragraph (prefixed
+  // with "- ") followed by one or more phase-update paragraphs until the
+  // next <hr> -- a block can carry several dated updates (e.g. repeated
+  // "Kaavaehdotus on ollut julkisesti nähtävänä ..." notices), so the
+  // whole block's text is scanned together for the most advanced phase
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  for (const el of container.children().toArray()) {
+    if (el.name === "hr") {
+      current = null
+      continue
+    }
+    if (el.name !== "p") continue
+
+    const strongEl = $(el).find("strong").first()
+    const strongText = strongEl.text().replace(/\s+/g, " ").trim()
+    const strongIsLinked = strongEl.parent().is("a")
+
+    if (strongText && !strongIsLinked) {
+      const title = strongText.replace(/^-\s*/, "")
+      current = { title, nodes: [] }
+      blocks.push(current)
+      continue
+    }
+
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    const bodyText = block.nodes
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .join(" ")
+
+    // phase detection must use only the <u> announcement lead-in text
+    // (e.g. "Kaavaehdotus on ollut julkisesti nähtävänä ...") -- the full
+    // paragraph also includes attachment link labels like "Kaavaluonnos
+    // merkkienselityksineen" (a document name), whose "luonnos" would
+    // otherwise outrank a genuinely later "Aloitusvaihe" announcement
+    const phaseHintText = block.nodes
+      .flatMap((node) => $(node).find("u").toArray())
+      .map((u) => $(u).text().replace(/\s+/g, " ").trim())
+      .join(" ")
+
+    const phase = parainenPhaseFromText(phaseHintText || `${block.title} ${bodyText}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [PARAINEN_CONTACT]
+
+    const attachments = block.nodes
+      .flatMap((node) => $(node).find("a").toArray())
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", PARAINEN_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${PARAINEN_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description: bodyText, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: bodyText,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -15768,6 +15918,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kauniainenKaavaParser") {
     return collectKauniainenKaavaSource(source)
+  }
+
+  if (source.parser === "parainenKaavaParser") {
+    return collectParainenKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
