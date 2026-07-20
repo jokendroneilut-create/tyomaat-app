@@ -13169,6 +13169,149 @@ async function collectParainenKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SOMERO_LISTING_URL =
+  "https://www.somero.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/asemakaavat/"
+
+const SOMERO_CONTACT = {
+  name: "Jyrki Virtanen",
+  title: "Maankäyttöinsinööri",
+  phone: "044 779 1237",
+  email: "jyrki.virtanen@somero.fi",
+}
+
+function someroPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  // "hyväksynyt ... kaavaehdotuksen ja asettaa ... nähtäville" approves
+  // releasing a DRAFT for display, not the final plan -- only treat
+  // "hyväksy" as final approval when it's not immediately about an
+  // ehdotus/luonnos being put on display
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLooking = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta)/.test(window)
+    if (!isForwardLooking) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectSomeroKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SOMERO_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // only "Nähtävillä olevat kaavat" (currently on public display) holds
+  // real, dated, documented plans -- "Suunnitteilla olevat asemakaavat"
+  // and "Ei aktiivisessa valmistelussa" are the city's own bare-title
+  // roadmap/paused buckets, explicitly not yet "vireillä", so they're
+  // out of scope
+  const h2 = $("h2")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Nähtävillä olevat kaavat")
+  if (!h2) return { documentsFound: 0, documentsSaved: 0 }
+
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  let el = $(h2).next()
+  while (el.length && el.get(0).name !== "h2") {
+    if (el.get(0).name === "h3") {
+      const title = el.text().replace(/\s+/g, " ").trim()
+      if (title && /asemakaava/i.test(title) && !/yleiskaava/i.test(title)) {
+        current = { title, nodes: [] }
+        blocks.push(current)
+      } else {
+        current = null
+      }
+    } else if (el.get(0).name !== "hr" && current) {
+      current.nodes.push(el.get(0))
+    }
+    el = el.next()
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    const bodyText = block.nodes
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .join(" ")
+
+    const phase = someroPhaseFromText(`${block.title} ${bodyText}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [SOMERO_CONTACT]
+
+    const attachments = block.nodes
+      .flatMap((node) => $(node).find("a").toArray())
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", SOMERO_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${SOMERO_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description: bodyText, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: bodyText,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -15922,6 +16065,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "parainenKaavaParser") {
     return collectParainenKaavaSource(source)
+  }
+
+  if (source.parser === "someroKaavaParser") {
+    return collectSomeroKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
