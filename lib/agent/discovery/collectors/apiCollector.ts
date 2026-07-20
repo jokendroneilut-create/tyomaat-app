@@ -11176,6 +11176,152 @@ async function collectUlvilaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KANKAANPAA_LISTING_URL = "https://www.kankaanpaa.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/asemakaavat/"
+const KANKAANPAA_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+const KANKAANPAA_AK_TITLE_PATTERN = /^Ak\s?(\d+)\s+(.+)$/i
+
+// "hyväksyi ... luonnoksen/ehdotuksen" only approves releasing that draft
+// for display, not the plan itself -- only an unguarded "hyväksyi" (no
+// luonnos/ehdotus object within the same paragraph) means real
+// Hyväksyminen. Checked per-paragraph with a plain character window
+// rather than splitting into "sentences", because Finnish ordinal dates
+// ("25. toukokuuta") contain a period that a naive sentence-splitter
+// would misread as a sentence boundary, severing "hyväksyi" from its
+// true object
+function kankaanpaaHasUnguardedHyväksy(paragraphs: string[]): boolean {
+  for (const paragraph of paragraphs) {
+    const normalized = paragraph.toLowerCase()
+    const index = normalized.indexOf("hyväksy")
+    if (index === -1) continue
+    const window = normalized.slice(index, index + 250)
+    if (!/(luonnoksen|luonnosta|ehdotuksen|ehdotusta)/.test(window)) return true
+  }
+  return false
+}
+
+function kankaanpaaPhaseFromText(paragraphs: string[]): string {
+  const normalized = paragraphs.join(" ").toLowerCase()
+  let best = "Vireilletulo"
+
+  const labelChecks: { pattern: RegExp; phase: string }[] = [
+    { pattern: /lainvoimainen kaava|voimaantulo/i, phase: "Voimaantulo" },
+    { pattern: /ehdotusvaiheen aineisto/i, phase: "Ehdotus" },
+    { pattern: /luonnosvaiheen aineisto/i, phase: "Luonnos" },
+    { pattern: /valmisteluvaiheen aineisto/i, phase: "Vireilletulo" },
+  ]
+  for (const check of labelChecks) {
+    if (check.pattern.test(normalized) && KANKAANPAA_PHASE_ORDER.indexOf(check.phase) > KANKAANPAA_PHASE_ORDER.indexOf(best)) {
+      best = check.phase
+    }
+  }
+
+  if (
+    kankaanpaaHasUnguardedHyväksy(paragraphs) &&
+    KANKAANPAA_PHASE_ORDER.indexOf("Hyväksyminen") > KANKAANPAA_PHASE_ORDER.indexOf(best)
+  ) {
+    best = "Hyväksyminen"
+  }
+
+  return best
+}
+
+async function collectKankaanpaaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KANKAANPAA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const email = $("a[href^=\"mailto:\"]").first().attr("href")?.replace("mailto:", "") ?? null
+  const contacts = email ? [{ name: "Kankaanpään kaupunki, kaavoitus", title: "Kaavoitus", phone: null, email }] : []
+
+  type Block = { kaavaTunnus: string; title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+  let recording = false
+
+  for (const el of $("h2, p").toArray()) {
+    if (el.name === "h2") {
+      recording = $(el).text().replace(/\s+/g, " ").trim() === "Vireillä olevat asemakaavat"
+      continue
+    }
+    if (!recording) continue
+
+    const text = $(el).text().replace(/\s+/g, " ").trim()
+    // document-reference paragraphs ("Ak 5219 Hakakujan ... selostus") also
+    // start with the tunnus pattern, but only the real block title is a
+    // bare <p> with no <a> child -- every reference paragraph wraps one
+    const titleMatch = $(el).find("a").length === 0 ? text.match(KANKAANPAA_AK_TITLE_PATTERN) : null
+    if (titleMatch) {
+      current = { kaavaTunnus: `Ak ${titleMatch[1]}`, title: titleMatch[2].trim(), nodes: [] }
+      blocks.push(current)
+      continue
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    found += 1
+
+    const paragraphs = block.nodes.map((node) => $(node).text().replace(/\s+/g, " ").trim()).filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40 && !/aineisto:$/i.test(p)) ?? null
+    const phase = kankaanpaaPhaseFromText(paragraphs)
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(`${block.kaavaTunnus} ${block.title}`)
+    const documentUrl = `${KANKAANPAA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts, kaavaTunnus: block.kaavaTunnus })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: block.kaavaTunnus,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -13873,6 +14019,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "ulvilaKaavaParser") {
     return collectUlvilaKaavaSource(source)
+  }
+
+  if (source.parser === "kankaanpaaKaavaParser") {
+    return collectKankaanpaaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
