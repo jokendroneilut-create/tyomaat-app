@@ -13222,20 +13222,18 @@ async function collectSomeroKaavaSource(source: DiscoverySource) {
   const blocks: Block[] = []
   let current: Block | null = null
 
-  let el = $(h2).next()
-  while (el.length && el.get(0).name !== "h2") {
-    if (el.get(0).name === "h3") {
-      const title = el.text().replace(/\s+/g, " ").trim()
+  for (const el of $(h2).nextUntil("h2").toArray()) {
+    if (el.name === "h3") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
       if (title && /asemakaava/i.test(title) && !/yleiskaava/i.test(title)) {
         current = { title, nodes: [] }
         blocks.push(current)
       } else {
         current = null
       }
-    } else if (el.get(0).name !== "hr" && current) {
-      current.nodes.push(el.get(0))
+    } else if (el.name !== "hr" && current) {
+      current.nodes.push(el)
     }
-    el = el.next()
   }
 
   let found = 0
