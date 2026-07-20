@@ -9113,6 +9113,160 @@ async function collectHeinolaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const AANEKOSKI_LISTING_URL = "https://www.aanekoski.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevia-kaavoja"
+// the section headers that bound the pending-plan lists on the page --
+// "Nähtävillä olevat" (currently on public display) and "Vireillä olevat
+// kaavat" (the full grouped-by-district list) both need to be read, while
+// "Hyväksytyt kaavat" (already decided), "Keskeytetty kaavahanke" (halted),
+// "Rakennuskieltoalueet" and the schedule PDF link must not be
+const AANEKOSKI_START_HEADINGS = [/^nähtävillä olevat/i, /^vireillä olevat kaavat$/i]
+const AANEKOSKI_STOP_HEADINGS = [/hyväksytyt kaavat/i, /keskeytetty/i, /rakennuskieltoalueet/i, /kaavoitusohjelman/i]
+const AANEKOSKI_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+const AANEKOSKI_STAGE_TO_PHASE: { pattern: RegExp; phase: string }[] = [
+  { pattern: /voimaantulo/i, phase: "Voimaantulo" },
+  { pattern: /hyväksy/i, phase: "Hyväksyminen" },
+  { pattern: /ehdotu/i, phase: "Ehdotus" },
+  { pattern: /luonno/i, phase: "Luonnos" },
+  { pattern: /vireille/i, phase: "Vireilletulo" },
+]
+
+function aanekoskiParseTitle(rawText: string): { title: string; tunnus: string | null } {
+  let text = rawText.replace(/,\s*(ehdotus|luonnos|vireilletulo)\s*$/i, "").trim()
+  const tunnusMatch = text.match(/\b(992\s+\d+(?:\/\d+)?)\b/)
+  const tunnus = tunnusMatch ? tunnusMatch[1] : null
+  if (tunnusMatch) text = text.replace(tunnusMatch[0], "").replace(/,\s*$/, "").trim()
+  return { title: text, tunnus }
+}
+
+// each plan's own page has an explicit "Kaavan vaiheet" HTML table (one row
+// per milestone, in chronological order) with the milestone's decision/date
+// filled in once reached and left empty (a literal &nbsp;) while still
+// upcoming -- read directly instead of scanning free text for keywords
+function aanekoskiPhaseFromTable($: cheerio.CheerioAPI, table: any): string {
+  let phase = "Vireilletulo"
+  for (const row of $(table).find("tr").toArray()) {
+    const cells = $(row).find("td")
+    if (cells.length < 2) continue
+    const label = $(cells[0]).text().replace(/\s+/g, " ").trim()
+    const content = $(cells[1]).text().replace(/ /g, "").replace(/\s+/g, " ").trim()
+    if (!content) continue
+
+    const match = AANEKOSKI_STAGE_TO_PHASE.find((stage) => stage.pattern.test(label))
+    if (!match) continue
+    if (AANEKOSKI_PHASE_ORDER.indexOf(match.phase) > AANEKOSKI_PHASE_ORDER.indexOf(phase)) phase = match.phase
+  }
+  return phase
+}
+
+async function collectAanekoskiKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(AANEKOSKI_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  let recording = false
+  const seen = new Set<string>()
+  const planLinks: { href: string; title: string; tunnus: string | null }[] = []
+
+  for (const el of listing$("main").find("h2, h3, a").toArray()) {
+    if (el.name === "h2" || el.name === "h3") {
+      const heading = listing$(el).text().trim()
+      if (AANEKOSKI_STOP_HEADINGS.some((re) => re.test(heading))) recording = false
+      else if (AANEKOSKI_START_HEADINGS.some((re) => re.test(heading))) recording = true
+      continue
+    }
+    if (!recording) continue
+
+    const text = listing$(el).text().replace(/\s+/g, " ").trim()
+    if (!/asemakaava/i.test(text) || /osayleiskaava/i.test(text)) continue
+
+    const href = listing$(el).attr("href") ?? ""
+    if (!href || href.endsWith(".pdf")) continue
+
+    const absoluteHref = new URL(href, AANEKOSKI_LISTING_URL).toString()
+    if (seen.has(absoluteHref)) continue
+    seen.add(absoluteHref)
+
+    const { title, tunnus } = aanekoskiParseTitle(text)
+    if (!title) continue
+
+    planLinks.push({ href: absoluteHref, title, tunnus })
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const link of planLinks) {
+    found += 1
+
+    const planResponse = await fetch(link.href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+    const main = $("main").length ? $("main") : $("body")
+
+    const title = main.find("h1").first().text().replace(/\s+/g, " ").trim() || link.title
+
+    const table = main.find("table.table-style-simple").first()
+    const phase = table.length ? aanekoskiPhaseFromTable($, table) : "Vireilletulo"
+    const completed = phase === "Voimaantulo"
+
+    const description =
+      main
+        .find("p")
+        .toArray()
+        .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+        .find((p) => p.length > 40) ?? null
+
+    const rawText = JSON.stringify({ title, phase, description, kaavaTunnus: link.tunnus })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: link.href,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            slug: null,
+            kaava_tunnus: link.tunnus,
+            phase,
+            description,
+            contacts: [],
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -11746,6 +11900,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "heinolaKaavaParser") {
     return collectHeinolaKaavaSource(source)
+  }
+
+  if (source.parser === "aanekoskiKaavaParser") {
+    return collectAanekoskiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {

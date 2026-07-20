@@ -40,6 +40,7 @@ import { extractHaminaKaavaFacts } from "@/lib/agent/facts/extractHaminaKaavaFac
 import { extractJamsaKaavaFacts } from "@/lib/agent/facts/extractJamsaKaavaFacts"
 import { extractLaukaaKaavaFacts } from "@/lib/agent/facts/extractLaukaaKaavaFacts"
 import { extractHeinolaKaavaFacts } from "@/lib/agent/facts/extractHeinolaKaavaFacts"
+import { extractAanekoskiKaavaFacts } from "@/lib/agent/facts/extractAanekoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
 import { extractRaaseporiKaavaFacts } from "@/lib/agent/facts/extractRaaseporiKaavaFacts"
 import { extractRaisioKaavaFacts } from "@/lib/agent/facts/extractRaisioKaavaFacts"
@@ -1475,6 +1476,25 @@ export function resolveFacts(document: any) {
         phase,
         description,
         contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Äänekosken vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractAanekoskiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        kaavaTunnus,
+        phase,
+        description,
       }),
     }
   }
