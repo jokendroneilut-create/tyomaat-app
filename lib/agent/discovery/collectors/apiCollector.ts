@@ -14220,6 +14220,154 @@ async function collectSavitaipaleKaavaSource(source: DiscoverySource) {
   }
 }
 
+const JUVA_LISTING_URL = "https://www.juva.fi/kaavat-nähtävillä"
+
+// name/phone/email read directly off a verified OAS PDF's own contact
+// block on the site (not guessed)
+const JUVA_CONTACT = {
+  name: "Vesa Kankkunen",
+  title: "Tekninen johtaja",
+  phone: "0400-136 209",
+  email: "vesa.kankkunen@juva.fi",
+}
+
+function juvaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectJuvaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(JUVA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  type PlanBlock = { title: string; phase: string; attachments: { label: string; url: string }[] }
+  const blocks: PlanBlock[] = []
+
+  // the page has one content <div> per section: a "Vahvistuneita kaavoja"
+  // div bundling several already-finalized decisions as plain paragraph
+  // lines under one shared kuulutus link, and one div per currently
+  // on-display plan (its own <h3> + attachment links)
+  for (const divEl of $('div[class^="item-"]').toArray()) {
+    const div = $(divEl)
+    const h2Text = div.children("h2").first().text().replace(/\s+/g, " ").trim()
+    const h3Text = div.children("h3").first().text().replace(/\s+/g, " ").trim()
+
+    if (h2Text === "Vahvistuneita kaavoja") {
+      const sharedAttachments = div
+        .find("a")
+        .toArray()
+        .map((a) => ({
+          label: $(a).text().replace(/\s+/g, " ").trim(),
+          url: new URL($(a).attr("href") ?? "", JUVA_LISTING_URL).toString(),
+        }))
+
+      for (const p of div.children("p").toArray()) {
+        const text = $(p).text().replace(/\s+/g, " ").trim()
+        if (text && /asemakaava/i.test(text) && !/yleiskaava/i.test(text) && !/ranta-asemakaava/i.test(text)) {
+          blocks.push({ title: text, phase: "Voimaantulo", attachments: sharedAttachments })
+        }
+      }
+    } else if (
+      h3Text &&
+      /asemakaava/i.test(h3Text) &&
+      !/yleiskaava/i.test(h3Text) &&
+      !/ranta-asemakaava/i.test(h3Text)
+    ) {
+      const attachments = div
+        .find("a")
+        .toArray()
+        .map((a) => ({
+          label: $(a).text().replace(/\s+/g, " ").trim(),
+          url: new URL($(a).attr("href") ?? "", JUVA_LISTING_URL).toString(),
+        }))
+
+      blocks.push({ title: h3Text, phase: juvaPhaseFromText(h3Text), attachments })
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    const completed = block.phase === "Voimaantulo"
+    const contacts = [JUVA_CONTACT]
+    const description = block.attachments.map((a) => a.label).join(", ")
+
+    found += 1
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${JUVA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({
+      title: block.title,
+      phase: block.phase,
+      description,
+      contacts,
+      attachments: block.attachments,
+    })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase: block.phase,
+          description,
+          contacts,
+          attachments: block.attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -17005,6 +17153,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "savitaipaleKaavaParser") {
     return collectSavitaipaleKaavaSource(source)
+  }
+
+  if (source.parser === "juvaKaavaParser") {
+    return collectJuvaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
