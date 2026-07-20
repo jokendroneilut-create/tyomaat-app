@@ -61,6 +61,7 @@ import { extractKiteeKaavaFacts } from "@/lib/agent/facts/extractKiteeKaavaFacts
 import { extractKalajokiKaavaFacts } from "@/lib/agent/facts/extractKalajokiKaavaFacts"
 import { extractNivalaKaavaFacts } from "@/lib/agent/facts/extractNivalaKaavaFacts"
 import { extractLimingaKaavaFacts } from "@/lib/agent/facts/extractLimingaKaavaFacts"
+import { extractMuurameKaavaFacts } from "@/lib/agent/facts/extractMuurameKaavaFacts"
 import { extractHeinolaKaavaFacts } from "@/lib/agent/facts/extractHeinolaKaavaFacts"
 import { extractAanekoskiKaavaFacts } from "@/lib/agent/facts/extractAanekoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
@@ -1935,6 +1936,25 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractLimingaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Muuramen vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractMuurameKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

@@ -12102,6 +12102,149 @@ async function collectLimingaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const MUURAME_LISTING_URL = "https://www.muurame.fi/palvelut/vireilla-olevat-kaavat/"
+
+const MUURAME_CONTACT = {
+  name: "Julia Virtanen",
+  title: "Kaavoitusjohtaja",
+  phone: "040 143 4558",
+  email: "julia.virtanen@muurame.fi",
+}
+
+function muuramePhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectMuurameKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(MUURAME_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+  const entry = listing$(".entry-content").first()
+
+  // plans live on their own dedicated pages -- the listing only has an h2
+  // "Asemakaavat" section (h2 "Yleiskaavat" excluded) whose h3 children
+  // link out to each plan's detail page, which carries the actual
+  // multi-stage timeline
+  const planLinks: { title: string; url: string }[] = []
+  let inAsemakaavat = false
+
+  for (const el of entry.children().toArray()) {
+    if (el.name === "h2") {
+      inAsemakaavat = /^asemakaavat$/i.test(listing$(el).text().replace(/\s+/g, " ").trim())
+      continue
+    }
+    if (el.name === "h3" && inAsemakaavat) {
+      const link = listing$(el).find("a").first()
+      const title = link.text().replace(/\s+/g, " ").trim()
+      const href = link.attr("href")
+      if (title && href) {
+        planLinks.push({ title, url: new URL(href, MUURAME_LISTING_URL).toString() })
+      }
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const plan of planLinks) {
+    const detailResponse = await fetch(plan.url, { cache: "no-store" })
+    if (!detailResponse.ok) continue
+
+    const $ = cheerio.load(await detailResponse.text())
+    const detailEntry = $(".entry-content").first()
+    const paragraphs = detailEntry.find("p").toArray()
+
+    // the reached-stages timeline paragraph is labelled either "Työvaihe"
+    // or "Kaavoituksen kulku" (also seen misspelled "Kaavaoituksen
+    // kulku") -- deliberately NOT "Seuraava työvaihe", which describes an
+    // upcoming stage not yet reached and would falsely elevate the phase
+    const timelineP = paragraphs.find((p) => {
+      const label = $(p).find("strong").first().text().replace(/\s+/g, " ").trim()
+      return /^(työvaihe|kaava?oituksen kulku)$/i.test(label)
+    })
+    const timelineText = timelineP ? $(timelineP).text().replace(/\s+/g, " ").trim() : ""
+
+    const descriptionP = paragraphs.find((p) => {
+      const text = $(p).text().replace(/\s+/g, " ").trim()
+      return text.length > 0 && $(p).find("strong").length === 0 && !/sijainti kartalla/i.test(text)
+    })
+    const description = descriptionP ? $(descriptionP).text().replace(/\s+/g, " ").trim() : ""
+
+    const phase = muuramePhaseFromText(timelineText)
+    const completed = phase === "Voimaantulo"
+    const contacts = [MUURAME_CONTACT]
+
+    const attachments = detailEntry
+      .find("a")
+      .toArray()
+      .filter((a) => ($(a).attr("href") ?? "").includes("/wp-content/uploads/"))
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", plan.url).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(plan.title)
+    const documentUrl = plan.url
+
+    const rawText = JSON.stringify({ title: plan.title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: plan.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: plan.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -14827,6 +14970,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "limingaKaavaParser") {
     return collectLimingaKaavaSource(source)
+  }
+
+  if (source.parser === "muurameKaavaParser") {
+    return collectMuurameKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
