@@ -13981,7 +13981,7 @@ function hattulaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14105,7 +14105,7 @@ function savitaipalePhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14241,7 +14241,7 @@ function juvaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14389,7 +14389,7 @@ function lapinlahtiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14528,7 +14528,7 @@ function kannusPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14666,7 +14666,7 @@ function toholampiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14799,7 +14799,7 @@ function kuhmoPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14919,7 +14919,7 @@ function suomussalmiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -15037,7 +15037,7 @@ function kittilaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -15096,6 +15096,144 @@ async function collectKittilaKaavaSource(source: DiscoverySource) {
 
     const slug = kemiSlug(block.title)
     const documentUrl = `${KITTILA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description: bodyText, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: bodyText,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
+const KEMIJARVI_LISTING_URL = "https://kemijarvi.fi/asuminen-ja-ymparisto/kaupunkisuunnittelu/asemakaavat/"
+
+// both read directly off the page's own repeated per-kuulutus contact
+// lines (verified, not guessed)
+const KEMIJARVI_CONTACTS = [
+  { name: "Martti Valkola", title: "Maankäyttöpäällikkö", phone: "040 544 8015", email: "martti.valkola@kemijarvi.fi" },
+  { name: "Erkki Välikangas", title: "Kaavoittaja", phone: "040 159 2313", email: "erkki.valikangas@kemijarvi.fi" },
+]
+
+function kemijarviPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKemijarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KEMIJARVI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // "Vireillä olevat asemakaavat" is one of several h2 sections on the
+  // page (alongside "Ajantasa-asemakaavat"); only h3 kuulutus posts
+  // under that specific h2 are in scope
+  const h2 = $("h2")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Vireillä olevat asemakaavat")
+  if (!h2) return { documentsFound: 0, documentsSaved: 0 }
+
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  for (const el of $(h2).nextUntil("h2").toArray()) {
+    if (el.name === "h3") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      if (title && /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)) {
+        current = { title, nodes: [] }
+        blocks.push(current)
+      } else {
+        current = null
+      }
+    } else if (el.name === "p" && /^[-–—\s]+$/.test($(el).text())) {
+      // the page uses a plain "– – – –" paragraph as an ad-hoc section
+      // break instead of a proper heading in at least one spot, trailing
+      // an old, unrelated plan onto the end of the article with no <h3>
+      // of its own -- treat it the same as a new (unmatched) heading
+      current = null
+    } else if (current) {
+      current.nodes.push(el)
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    const bodyText = block.nodes
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .join(" ")
+
+    const phase = kemijarviPhaseFromText(`${block.title} ${bodyText}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = KEMIJARVI_CONTACTS
+
+    const attachments = block.nodes
+      .flatMap((node) => $(node).find("a").toArray())
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", KEMIJARVI_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${KEMIJARVI_LISTING_URL}#${slug}`
 
     const rawText = JSON.stringify({ title: block.title, phase, description: bodyText, contacts, attachments })
     const contentHash = hashContent(rawText)
@@ -17958,6 +18096,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kittilaKaavaParser") {
     return collectKittilaKaavaSource(source)
+  }
+
+  if (source.parser === "kemijarviKaavaParser") {
+    return collectKemijarviKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
