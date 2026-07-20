@@ -8547,6 +8547,116 @@ async function collectKemiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HAMINA_LISTING_URL =
+  "https://www.hamina.fi/asuminen-ymparisto/kaavoitus/asemakaavoitus/vireilla-olevat-asemakaavat/"
+const HAMINA_TITLE_PATTERN = /^(\d+):\s*(.+)$/
+const HAMINA_CONTACT_PATTERN = /Lisätietoja antaa\s+([^,]+?),\s*puhelin\s+([\d\s]+)\./
+
+function haminaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function haminaSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function collectHaminaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HAMINA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const main = $("main").first()
+
+  const contactMatch = main.text().match(HAMINA_CONTACT_PATTERN)
+  const contacts = contactMatch
+    ? [{ name: contactMatch[1].trim(), title: null, phone: contactMatch[2].trim(), email: null }]
+    : []
+
+  let found = 0
+  let saved = 0
+
+  for (const el of $(".large-content-showcases.block--has-description").toArray()) {
+    const $el = $(el)
+    const fullTitle = $el.find("h2.block__title").first().text().replace(/\s+/g, " ").trim()
+    if (!fullTitle) continue
+
+    found += 1
+
+    const titleMatch = fullTitle.match(HAMINA_TITLE_PATTERN)
+    const kaavaTunnus = titleMatch ? titleMatch[1] : null
+    const title = titleMatch ? titleMatch[2] : fullTitle
+
+    const phaseSentence = $el.find(".block__description p").text().replace(/\s+/g, " ").trim()
+    const phase = haminaPhaseFromText(phaseSentence)
+    const completed = phase === "Voimaantulo"
+
+    const description =
+      $el.find(".large-content-showcase__paragraph p").first().text().replace(/\s+/g, " ").trim() ||
+      phaseSentence ||
+      null
+
+    const slug = haminaSlug(fullTitle)
+    const documentUrl = `${HAMINA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, kaavaTunnus, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            slug,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -11164,6 +11274,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kemiKaavaParser") {
     return collectKemiKaavaSource(source)
+  }
+
+  if (source.parser === "haminaKaavaParser") {
+    return collectHaminaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
