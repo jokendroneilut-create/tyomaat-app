@@ -10551,6 +10551,140 @@ async function collectLapuaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KAUHAJOKI_LISTING_URL = "https://kauhajoki.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat/"
+
+function kauhajokiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  // this site narrates a whole roadmap in one block, including stages that
+  // haven't happened yet ("hyväksyttäväksi" = still awaiting approval, "sen
+  // jälkeen ... kaavaehdotus" = the ehdotus step comes after the current
+  // one) -- only completed-action verb forms count as the stage having
+  // actually been reached
+  const negatedEhdotus = /sen jälkeen[^.]{0,60}ehdotu/.test(normalized)
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksyi|hyväksynyt|hyväksytty|hyväksymä\b/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized) && !negatedEhdotus) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function kauhajokiContactFromText(
+  text: string
+): { name: string | null; title: string | null; phone: string | null; email: string | null }[] {
+  const rawEmail = text.match(/[\w.-]+@[\w.-]+/)?.[0] ?? null
+  const phone = text.match(/\d{2,3}[\s]\d{3}[\s]?\d{3,4}/)?.[0]?.trim() ?? null
+  const nameMatch = text.match(/([A-ZÄÖÅ][a-zäöå]+\s[A-ZÄÖÅ][a-zäöå-]+)/)
+  const name = nameMatch ? nameMatch[1] : null
+  // the site's own markup literally reads "etunimi.sukunimi@kauhajoki.fi" as
+  // an unfilled placeholder on several plan pages rather than a real address
+  const isPlaceholder = !!rawEmail && /^etunimi\.sukunimi@/i.test(rawEmail)
+  const asciiName = name
+    ?.normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, ".")
+  const email = isPlaceholder && asciiName ? `${asciiName}@kauhajoki.fi` : rawEmail
+  return name ? [{ name, title: null, phone, email }] : []
+}
+
+async function collectKauhajokiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KAUHAJOKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const content = $("main").length ? $("main") : $("body")
+
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+  let recording = false
+
+  for (const el of content.find("h2, h3, p, ul").toArray()) {
+    if (el.name === "h2") {
+      recording = $(el).text().replace(/\s+/g, " ").trim().toLowerCase() === "asemakaavat"
+      current = null
+      continue
+    }
+    if (!recording) continue
+    if (el.name === "h3") {
+      current = { title: $(el).text().replace(/\s+/g, " ").trim(), nodes: [] }
+      blocks.push(current)
+      continue
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    found += 1
+
+    const paragraphs = block.nodes
+      .filter((node) => node.name === "p")
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const contactParagraph = paragraphs.find((p) => /lisätie/i.test(p)) ?? ""
+    const contacts = kauhajokiContactFromText(contactParagraph)
+    const phase = kauhajokiPhaseFromText(paragraphs.join(" "))
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${KAUHAJOKI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -13228,6 +13362,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "lapuaKaavaParser") {
     return collectLapuaKaavaSource(source)
+  }
+
+  if (source.parser === "kauhajokiKaavaParser") {
+    return collectKauhajokiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
