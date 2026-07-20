@@ -9400,6 +9400,162 @@ async function collectPieksamakiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const AKAA_LISTING_URL =
+  "https://akaa.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/ajankohtaista/"
+// the section heading text that starts the "asemakaava" scope; the next
+// h3 after it ("Lastumäen asemakaava todettu vanhentuneeksi...") ends it
+const AKAA_SECTION_START = "asemakaavahankkeet"
+
+function akaaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|voimaan tullut|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy|vahvistettu/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function akaaStripStatusSuffix(text: string): string {
+  return text
+    .replace(
+      /\s*[,.]?\s*(ehdotusvaihe|luonnosvaihe|oas[- ]?vaihe|tullut vireille|vahvistettu|hyväksytty|voimaantullut|voimaan tullut).*$/i,
+      ""
+    )
+    .trim()
+}
+
+function akaaContacts($: cheerio.CheerioAPI) {
+  return $(".contact-container")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const title = $el.find("strong").first().text().replace(/\s+/g, " ").trim() || null
+      const rawHtml = $el.find("p").first().html() ?? ""
+      const lines = rawHtml
+        .split(/<br\s*\/?>/i)
+        .map((line) => cheerio.load(`<div>${line}</div>`)("div").text().replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+      const email = lines.find((line) => line.includes("@")) ?? null
+      const phone = lines.find((line) => /^(?:puh\.?\s*)?[\d\s()+-]{6,}$/i.test(line)) ?? null
+      const namePattern = /^[A-ZÄÖÅ][a-zäöå]+(\s[A-ZÄÖÅ][a-zäöå-]+)+$/
+      const name = lines.find((line) => namePattern.test(line)) ?? title
+      return { name, title, phone, email }
+    })
+    .filter((contact) => contact.name)
+}
+
+async function collectAkaaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(AKAA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  let recording = false
+  let sectionParagraph: any = null
+  for (const el of listing$(".entry-content").find("h3, p").toArray()) {
+    if (el.name === "h3") {
+      recording = listing$(el).text().replace(/\s+/g, " ").trim().toLowerCase() === AKAA_SECTION_START
+      continue
+    }
+    if (recording && !sectionParagraph) sectionParagraph = el
+  }
+
+  const planLinks: { href: string; title: string; statusText: string }[] = []
+  if (sectionParagraph) {
+    const rawHtml = listing$(sectionParagraph).html() ?? ""
+    const seen = new Set<string>()
+    for (const fragment of rawHtml.split(/<br\s*\/?>/i)) {
+      const frag$ = cheerio.load(`<div>${fragment}</div>`)
+      const href = frag$("a").attr("href") ?? ""
+      const text = frag$("div").text().replace(/\s+/g, " ").trim()
+      if (!href || !text) continue
+      // several announcements in this section are osayleiskaava (area-wide)
+      // or unrelated project pages -- only asemakaava items are in scope
+      if (!/asemakaava/i.test(text) || /osayleiskaava/i.test(text)) continue
+      if (seen.has(href)) continue
+      seen.add(href)
+      planLinks.push({ href, title: akaaStripStatusSuffix(text), statusText: text })
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const link of planLinks) {
+    found += 1
+
+    const planResponse = await fetch(link.href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+    const content = $(".entry-content").first()
+
+    const title = content.find("h1").first().text().replace(/\s+/g, " ").trim() || link.title
+
+    const paragraphs = content
+      .find("p")
+      .toArray()
+      .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const phase = akaaPhaseFromText(link.statusText)
+    const completed = phase === "Voimaantulo"
+
+    const contacts = akaaContacts($)
+
+    const slugMatch = link.href.match(/\/([^/]+)\/?$/)
+    const slug = slugMatch ? slugMatch[1] : null
+
+    const rawText = JSON.stringify({ title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: link.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -12041,6 +12197,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "pieksamakiKaavaParser") {
     return collectPieksamakiKaavaSource(source)
+  }
+
+  if (source.parser === "akaaKaavaParser") {
+    return collectAkaaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {

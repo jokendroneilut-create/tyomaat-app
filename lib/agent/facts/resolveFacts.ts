@@ -40,6 +40,7 @@ import { extractHaminaKaavaFacts } from "@/lib/agent/facts/extractHaminaKaavaFac
 import { extractJamsaKaavaFacts } from "@/lib/agent/facts/extractJamsaKaavaFacts"
 import { extractLaukaaKaavaFacts } from "@/lib/agent/facts/extractLaukaaKaavaFacts"
 import { extractPieksamakiKaavaFacts } from "@/lib/agent/facts/extractPieksamakiKaavaFacts"
+import { extractAkaaKaavaFacts } from "@/lib/agent/facts/extractAkaaKaavaFacts"
 import { extractHeinolaKaavaFacts } from "@/lib/agent/facts/extractHeinolaKaavaFacts"
 import { extractAanekoskiKaavaFacts } from "@/lib/agent/facts/extractAanekoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
@@ -1509,6 +1510,25 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractPieksamakiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Akaan vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractAkaaKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
