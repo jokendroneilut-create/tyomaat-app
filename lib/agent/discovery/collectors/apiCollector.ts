@@ -8801,6 +8801,169 @@ async function collectJamsaKaavaSource(source: DiscoverySource) {
   }
 }
 
+// Laukaa organizes its pending asemakaava plans across four separate
+// per-taajama (population centre) pages rather than one central listing
+const LAUKAA_LISTING_URLS = [
+  "https://www.laukaa.fi/asukkaat/asuminen-ja-ymparisto/maankaytto-ja-kaavoitus/taajamien-maankayttosuunnitelmat/kirkonkylan-maankayttosuunnitelmat/",
+  "https://www.laukaa.fi/asukkaat/asuminen-ja-ymparisto/maankaytto-ja-kaavoitus/taajamien-maankayttosuunnitelmat/leppaveden-maankayttosuunnitelmat/",
+  "https://www.laukaa.fi/asukkaat/asuminen-ja-ymparisto/maankaytto-ja-kaavoitus/taajamien-maankayttosuunnitelmat/lievestuoreen-maankayttosuunnitelmat/",
+  "https://www.laukaa.fi/asukkaat/asuminen-ja-ymparisto/maankaytto-ja-kaavoitus/taajamien-maankayttosuunnitelmat/vihtavuoren-maankayttosuunnitelmat/",
+]
+
+function laukaaPhaseFromParagraphs(paragraphs: string[]): string {
+  let best = "Vireilletulo"
+  for (const paragraph of paragraphs) {
+    if (!/\d/.test(paragraph)) continue
+    const normalized = paragraph.toLowerCase()
+    // "eikä päätös ole vielä lainvoimainen" -- a decision that has been
+    // appealed and is explicitly NOT YET in force must not be read as
+    // having reached Voimaantulo just because the word appears
+    // \b treats ä/ö/å as non-word characters, so a literal \b right after
+    // "eikä" falls one character early and never matches -- same class of
+    // bug fixed earlier for detectCityFromText.ts's city-name boundaries
+    const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+      normalized
+    )
+
+    let phase = "Vireilletulo"
+    if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) phase = "Voimaantulo"
+    else if (/hyväksy/.test(normalized)) phase = "Hyväksyminen"
+    else if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
+    else if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
+
+    if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
+  }
+  return best
+}
+
+function laukaaSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function collectLaukaaKaavaSource(source: DiscoverySource) {
+  let found = 0
+  let saved = 0
+
+  for (const listingUrl of LAUKAA_LISTING_URLS) {
+    const response = await fetch(listingUrl, { cache: "no-store" })
+    if (!response.ok) continue
+
+    const $ = cheerio.load(await response.text())
+    const main = $(".page-content").length ? $(".page-content") : $("main")
+
+    const contactCard = $(".b-contact-card").first()
+    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    if (contactCard.length) {
+      const name = contactCard.find(".b-contact-card__title").first().text().replace(/\s+/g, " ").trim() || null
+      const ps = contactCard
+        .find(".b-contact-card__content p")
+        .toArray()
+        .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+      const title = ps.find((p) => !/^\d|@|,/.test(p)) ?? null
+      const phone = ps.find((p) => /^[\d\s()+-]{6,}$/.test(p)) ?? null
+      const rawEmail = ps.find((p) => p.includes("@")) ?? null
+      // the site's own markup literally has "etunimi.sukunimi@laukaa.fi" as
+      // an unfilled placeholder rather than a real address on every contact
+      // card -- reconstructed from the contact's actual name instead
+      const email =
+        rawEmail && !/^etunimi\.sukunimi@/i.test(rawEmail) && rawEmail.includes("@")
+          ? rawEmail
+          : name
+            ? `${laukaaSlug(name).replace(/-/g, ".")}@laukaa.fi`
+            : null
+      contacts.push({ name, title, phone, email })
+    }
+
+    type Block = { title: string; nodes: any[] }
+    const blocks: Block[] = []
+    let current: Block | null = null
+    let recording = false
+
+    for (const el of main.find("h2, .b-single-accordion-box").toArray()) {
+      const $el = $(el)
+      if (el.name === "h2") {
+        recording = /vireillä olevat/i.test($el.text().trim())
+        continue
+      }
+      if (!recording) continue
+      current = {
+        title: $el.find(".b-single-accordion-box__toggle-btn").first().text().replace(/\s+/g, " ").trim(),
+        nodes: $el.find(".b-single-accordion-box__content p").toArray(),
+      }
+      blocks.push(current)
+    }
+
+    for (const block of blocks) {
+      if (!block.title) continue
+
+      found += 1
+
+      const paragraphs = block.nodes
+        .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+      const description = paragraphs.find((p) => p.length > 40) ?? null
+      const phase = laukaaPhaseFromParagraphs(paragraphs)
+      const completed = phase === "Voimaantulo"
+
+      const slug = laukaaSlug(block.title)
+      const documentUrl = `${listingUrl}#${slug}`
+
+      const rawText = JSON.stringify({ title: block.title, phase, description, contacts })
+      const contentHash = hashContent(rawText)
+
+      const { error } = await supabaseAdmin
+        .from("source_documents")
+        .upsert(
+          {
+            source_id: source.id,
+            source_name: source.name,
+            title: block.title,
+            document_url: documentUrl,
+            document_type: "api",
+            content_hash: contentHash,
+            status: "downloaded",
+            raw_text: rawText,
+            raw_payload: {
+              parser: source.parser,
+              priority: source.priority,
+              title: block.title,
+              slug,
+              kaava_tunnus: null,
+              phase,
+              description,
+              contacts,
+              completed,
+            },
+            processed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            ...(completed
+              ? {
+                  facts_extracted_at: new Date().toISOString(),
+                  identity_resolved_at: new Date().toISOString(),
+                }
+              : {}),
+          },
+          { onConflict: "document_url" }
+        )
+
+      if (error) throw error
+
+      saved += 1
+    }
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -11426,6 +11589,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "jamsaKaavaParser") {
     return collectJamsaKaavaSource(source)
+  }
+
+  if (source.parser === "laukaaKaavaParser") {
+    return collectLaukaaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
