@@ -8657,6 +8657,150 @@ async function collectHaminaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const JAMSA_LISTING_URL =
+  "https://jamsa.fi/asuminen-ja-ymparisto/asuminen/rakentaminen-ja-tontit/kaavoitus/vireilla-olevat-kaavat/"
+// osayleiskaava ("Yleiskaavat") entries on the same listing are excluded;
+// ranta-asemakaava (shoreline detailed plans) are the same regulatory tier
+// as asemakaava and are kept
+const JAMSA_INCLUDE_SECTIONS = new Set(["asemakaavat", "ranta-asemakaavat"])
+
+function jamsaPhaseFromItems(items: string[]): string {
+  let best = "Vireilletulo"
+  for (const item of items) {
+    if (!/\d/.test(item)) continue
+    const normalized = item.toLowerCase()
+    let phase = "Vireilletulo"
+    if (/voimaantulo|lainvoima/.test(normalized)) phase = "Voimaantulo"
+    else if (/hyväksy/.test(normalized)) phase = "Hyväksyminen"
+    else if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
+    else if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
+
+    if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
+  }
+  return best
+}
+
+function jamsaSlugFromUrl(url: string): string {
+  const path = new URL(url).pathname.split("/").filter(Boolean)
+  return path[path.length - 1] ?? url
+}
+
+async function collectJamsaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(JAMSA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+  const main = listing$("main").length ? listing$("main") : listing$("body")
+
+  const planLinks: { title: string; href: string }[] = []
+  let recording = false
+  for (const el of main.find("h3, h4").toArray()) {
+    const $el = listing$(el)
+    if (el.name === "h3") {
+      recording = JAMSA_INCLUDE_SECTIONS.has($el.text().trim().toLowerCase())
+      continue
+    }
+    if (el.name === "h4" && recording) {
+      const href = $el.find("a").first().attr("href")
+      const title = $el.text().replace(/\s+/g, " ").trim()
+      if (href && title) planLinks.push({ title, href })
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const link of planLinks) {
+    found += 1
+
+    const planResponse = await fetch(link.href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+    const article = $("main").length ? $("main") : $("body")
+
+    const title = article.find("h1").first().text().replace(/\s+/g, " ").trim() || link.title
+
+    const goalsHeading = article
+      .find("h4")
+      .filter((_, el) => $(el).text().trim() === "Kaavan tavoitteet")
+      .first()
+    const description =
+      goalsHeading.length
+        ? goalsHeading
+            .nextUntil("h4")
+            .filter("p")
+            .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+            .get()
+            .find((p) => p.length > 20) ?? null
+        : null
+
+    const stagesHeading = article
+      .find("h4")
+      .filter((_, el) => $(el).text().trim() === "Kaavan vaiheet")
+      .first()
+    const stageItems = stagesHeading.length
+      ? stagesHeading
+          .nextUntil("h4")
+          .filter("ul")
+          .find("li")
+          .map((_, li) => $(li).text().replace(/\s+/g, " ").trim())
+          .get()
+      : []
+    const phase = jamsaPhaseFromItems(stageItems)
+    const completed = phase === "Voimaantulo"
+
+    const slug = jamsaSlugFromUrl(link.href)
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: link.href,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            slug,
+            kaava_tunnus: null,
+            phase,
+            description,
+            contacts: [],
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -11278,6 +11422,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "haminaKaavaParser") {
     return collectHaminaKaavaSource(source)
+  }
+
+  if (source.parser === "jamsaKaavaParser") {
+    return collectJamsaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
