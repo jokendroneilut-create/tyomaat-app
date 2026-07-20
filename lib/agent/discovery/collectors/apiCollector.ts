@@ -7970,6 +7970,150 @@ async function collectValkeakoskiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PIETARSAARI_LISTING_URL =
+  "https://pietarsaari.fi/asuminen-ja-ymparisto/tekniset-palvelut/kaavoitus/vireilla-olevat-asemakaavahankkeet"
+const PIETARSAARI_KAAVA_NUMBER_PATTERN = /kaava\s+(\d{2,4})\b/i
+const PIETARSAARI_STOP_HEADINGS = new Set(["katso myös nämä"])
+
+function pietarsaariPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  // the site's own copy has a typo ("voimaaan") on at least one plan, so the
+  // vowel run after "voim" is matched loosely rather than as a literal "voimaan"
+  if (/tullut voima+n|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus.{0,20}nähtävillä|nähtävillä.{0,20}ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonnos.{0,20}nähtävillä|nähtävillä.{0,20}luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function pietarsaariSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function collectPietarsaariKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PIETARSAARI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const container = $("div.page-content").first()
+  const children = container.children().toArray()
+
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  for (const el of children) {
+    const $el = $(el)
+    if (el.name === "h2") {
+      const heading = $el.text().replace(/\s+/g, " ").trim()
+      // "Katso myös nämä" and everything after it are unrelated "see also"
+      // links, not more plans -- stop reading the page entirely here
+      if (PIETARSAARI_STOP_HEADINGS.has(heading.toLowerCase())) break
+      current = { title: heading, nodes: [] }
+      blocks.push(current)
+      continue
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    found += 1
+
+    const paragraphs = block.nodes
+      .filter((node) => node.name === "p")
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+      .filter((text) => !/\.pdf$/i.test(text))
+
+    // phase and kaava-number signals sometimes live in the h4 sub-headings
+    // themselves (e.g. "Asemakaavaehdotus on ollut nähtävillä ...", "Asemakaava
+    // on tullut voimaaan ..."), not just in the body paragraphs
+    const headings = block.nodes
+      .filter((node) => node.name === "h4")
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+
+    const signalText = [...headings, ...paragraphs].join(" ")
+    const phase = pietarsaariPhaseFromText(signalText)
+    const completed = phase === "Voimaantulo"
+    const description = paragraphs.find((p) => p.length > 40 && !/^\.?suunnittelun tarkoitus$/i.test(p)) ?? null
+
+    const kaavaMatch = signalText.match(PIETARSAARI_KAAVA_NUMBER_PATTERN)
+    const kaavaTunnus = kaavaMatch ? kaavaMatch[1] : null
+
+    let plannerName: string | null = null
+    for (let i = 0; i < block.nodes.length; i++) {
+      const node = block.nodes[i]
+      if (node.name === "h4" && /suunnittelija/i.test($(node).text())) {
+        const next = block.nodes.slice(i + 1).find((n) => n.name === "p")
+        if (next) plannerName = $(next).text().replace(/\s+/g, " ").trim()
+        break
+      }
+    }
+    const contacts = plannerName ? [{ name: plannerName, title: "Suunnittelija", phone: null, email: null }] : []
+
+    const slug = pietarsaariSlug(block.title)
+    const documentUrl = `${PIETARSAARI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, kaavaTunnus, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: block.title,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: block.title,
+            slug,
+            kaava_tunnus: kaavaTunnus,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -10571,6 +10715,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "valkeakoskiKaavaParser") {
     return collectValkeakoskiKaavaSource(source)
+  }
+
+  if (source.parser === "pietarsaariKaavaParser") {
+    return collectPietarsaariKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
