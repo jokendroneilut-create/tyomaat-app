@@ -14507,6 +14507,144 @@ async function collectLapinlahtiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KANNUS_LISTING_URL = "https://kannus.fi/asuminen-ja-ymparisto/kaavoitus-ja-kartat/kaavahankkeet/"
+
+// name/title/phone/email read directly off the page's own contact card
+// (verified, not guessed)
+const KANNUS_CONTACT = {
+  name: "Helmi Pölkki",
+  title: "Yhdyskuntapäällikkö",
+  phone: "+358 44 474 5247",
+  email: "helmi.polkki@kannus.fi",
+}
+
+function kannusPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKannusKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KANNUS_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // the site injects soft-hyphen characters (U+00AD) throughout its own
+  // text for line-wrapping hints, so every piece of text pulled from
+  // this page has them stripped before use
+  const stripSoftHyphens = (text: string) => text.replace(/­/g, "")
+
+  // every plan is its own flat <p>: bolded title, then one <a> per
+  // attachment separated by <br> -- stripping the <a> tags out of a
+  // clone leaves just the title text (works even for the two paragraphs
+  // where the site's own markup slipped the leading letter outside the
+  // <strong> tag)
+  const h2 = $("h2")
+    .toArray()
+    .find((el) => stripSoftHyphens($(el).text()).trim() === "Vireillä olevat kaavahankkeet")
+  if (!h2) return { documentsFound: 0, documentsSaved: 0 }
+
+  let found = 0
+  let saved = 0
+
+  for (const pEl of $(h2).nextUntil("h2").filter("p").toArray()) {
+    const original = $(pEl)
+    const attachments = original
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: stripSoftHyphens($(a).text()).replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", KANNUS_LISTING_URL).toString(),
+      }))
+
+    // the title is always the first line, but a couple of paragraphs
+    // have a stray letter sitting outside the <a> tag partway through
+    // (a site markup slip -- e.g. "...<br>K<a>aavaselostus...") that
+    // would otherwise leak into a naive "strip all <a> tags" extraction,
+    // so only text nodes/tags before the first <br> are taken
+    const titleParts: string[] = []
+    for (const node of original.contents().toArray()) {
+      if (node.type === "tag" && node.name === "br") break
+      titleParts.push($(node).text())
+    }
+    const title = stripSoftHyphens(titleParts.join("")).replace(/\s+/g, " ").trim()
+
+    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
+      continue
+    }
+
+    const description = attachments.map((a) => a.label).join(", ")
+    const phase = kannusPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [KANNUS_CONTACT]
+
+    found += 1
+
+    const slug = kemiSlug(title)
+    const documentUrl = `${KANNUS_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -17300,6 +17438,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "lapinlahtiKaavaParser") {
     return collectLapinlahtiKaavaSource(source)
+  }
+
+  if (source.parser === "kannusKaavaParser") {
+    return collectKannusKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
