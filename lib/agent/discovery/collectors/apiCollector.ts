@@ -12600,6 +12600,125 @@ async function collectKeuruuKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LOVIISA_LISTING_URL =
+  "https://www.loviisa.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/kaavoitus/asemakaavoitus/vireilla-olevat-asemakaavahankkeet/"
+
+const LOVIISA_CONTACT = {
+  name: "Lotta Qvis",
+  title: "Kaavoitusarkkitehti",
+  phone: "040 555 0455",
+  email: "lotta.qvis@loviisa.fi",
+}
+
+function loviisaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectLoviisaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(LOVIISA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  // every card on this index is already scoped to asemakaava by the page
+  // itself ("Vireillä olevat asemakaavahankkeet") -- most titles don't
+  // even contain the word "asemakaava" -- except a handful of
+  // "Ranta-asemakaava, ..." cards for a different plan type mixed into
+  // the same listing, which must be excluded explicitly
+  const planLinks = listing$(".child-page h3 a")
+    .toArray()
+    .map((a) => ({
+      title: listing$(a).text().replace(/\s+/g, " ").trim(),
+      url: listing$(a).attr("href") ?? "",
+    }))
+    .filter((plan) => plan.title && plan.url && !/ranta-asemakaava/i.test(plan.title))
+
+  let found = 0
+  let saved = 0
+
+  for (const plan of planLinks) {
+    const detailResponse = await fetch(plan.url, { cache: "no-store" })
+    if (!detailResponse.ok) continue
+
+    const $ = cheerio.load(await detailResponse.text())
+    const container = $(".acf-innerblocks-container").first()
+
+    const description = container.find("p").first().text().replace(/\s+/g, " ").trim()
+    const phaseText = container.text().replace(/\s+/g, " ").trim()
+    const phase = loviisaPhaseFromText(phaseText)
+    const completed = phase === "Voimaantulo"
+    const contacts = [LOVIISA_CONTACT]
+
+    const attachments = container
+      .find("a")
+      .toArray()
+      .filter((a) => ($(a).attr("href") ?? "").includes("/wp-content/uploads/"))
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", plan.url).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(plan.title)
+    const documentUrl = plan.url
+
+    const rawText = JSON.stringify({ title: plan.title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: plan.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: plan.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -15337,6 +15456,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "keuruuKaavaParser") {
     return collectKeuruuKaavaSource(source)
+  }
+
+  if (source.parser === "loviisaKaavaParser") {
+    return collectLoviisaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
