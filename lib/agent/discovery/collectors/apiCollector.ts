@@ -12245,6 +12245,181 @@ async function collectMuurameKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SAARIJARVI_LISTING_URL =
+  "https://saarijarvi.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/vireilla-ja-voimassa-olevat-kaavat/"
+
+const SAARIJARVI_CONTACT = {
+  name: "Saarijärven kaupunki, kaavoitus",
+  title: "Kirjaamo",
+  phone: null as string | null,
+  email: "kirjaamo@saarijarvi.fi",
+}
+
+function saarijarviPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function saarijarviCollectAsemakaavaLinks(
+  $: cheerio.CheerioAPI,
+  panelBody: any
+): { title: string; url: string | null }[] {
+  const plans: { title: string; url: string | null }[] = []
+  let inAsemakaavat = false
+
+  for (const el of $(panelBody).children().toArray()) {
+    if (el.name === "h4") {
+      const label = $(el).text().replace(/\s+/g, " ").trim()
+      inAsemakaavat = /^asemakaavat:?$/i.test(label)
+      continue
+    }
+    if (el.name !== "p" || !inAsemakaavat) continue
+
+    const text = $(el).text().replace(/\s+/g, " ").trim()
+    if (!text || /^käynnistymässä olevia kaavahankkeita:?$/i.test(text)) continue
+
+    const link = $(el).find("a").first()
+    if (link.length > 0) {
+      const title = link.text().replace(/\s+/g, " ").trim()
+      const href = link.attr("href")
+      if (title && href) plans.push({ title, url: href })
+    } else if (!/yleiskaava/i.test(text)) {
+      plans.push({ title: text, url: null })
+    }
+  }
+
+  return plans
+}
+
+async function collectSaarijarviKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(SAARIJARVI_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  // two accordion panels matter: "Nähtävillä olevat kaavat" (currently on
+  // display) and "Vireillä olevat kaavat ja maankäytön suunnitelmat",
+  // the latter splitting into "Yleiskaavat:"/"Asemakaavat:" sub-lists via
+  // h4 labels inside the same panel body -- only "Asemakaavat:" is in scope
+  const panels = listing$(".panel.panel-default").toArray()
+  const planLinks: { title: string; url: string | null }[] = []
+
+  for (const panel of panels) {
+    const heading = listing$(panel).find(".panel-heading").first().text().replace(/\s+/g, " ").trim()
+    if (!/^(nähtävillä olevat kaavat|vireillä olevat kaavat ja maankäytön suunnitelmat)$/i.test(heading)) {
+      continue
+    }
+    const body = listing$(panel).find(".panel-body").first()
+    planLinks.push(...saarijarviCollectAsemakaavaLinks(listing$, body))
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const plan of planLinks) {
+    const detailUrl = plan.url ? new URL(plan.url, SAARIJARVI_LISTING_URL).toString() : null
+
+    let phase = "Vireilletulo"
+    let description = ""
+    let attachments: { label: string; url: string }[] = []
+
+    if (detailUrl) {
+      const detailResponse = await fetch(detailUrl, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $ = cheerio.load(await detailResponse.text())
+
+        // each reached stage gets its own accordion panel (e.g.
+        // "Vireilletulovaihe", "Luonnosvaihe", "Ehdotusvaihe",
+        // "Hyväksytty kaava-aineisto ...") -- stages not yet reached simply
+        // don't have a panel, so scanning all panel headings for the most
+        // advanced phase keyword is reliable
+        const timelineHeadings = $(".panel-group.question-list")
+          .first()
+          .find(".panel.panel-default .panel-heading")
+          .toArray()
+          .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+          .join(" ")
+        phase = saarijarviPhaseFromText(timelineHeadings)
+
+        const descriptionP = $(".col-text.col-content")
+          .first()
+          .find("p")
+          .toArray()
+          .find((p) => $(p).text().replace(/\s+/g, " ").trim().length > 0)
+        description = descriptionP ? $(descriptionP).text().replace(/\s+/g, " ").trim() : ""
+
+        attachments = $("a[href$='.pdf']")
+          .toArray()
+          .map((a) => ({
+            label: $(a).text().replace(/\s+/g, " ").trim(),
+            url: new URL($(a).attr("href") ?? "", detailUrl).toString(),
+          }))
+      }
+    }
+
+    const completed = phase === "Voimaantulo"
+    const contacts = [SAARIJARVI_CONTACT]
+
+    found += 1
+
+    const slug = kemiSlug(plan.title)
+    const documentUrl = detailUrl ?? `${SAARIJARVI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: plan.title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: plan.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: plan.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -14974,6 +15149,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "muurameKaavaParser") {
     return collectMuurameKaavaSource(source)
+  }
+
+  if (source.parser === "saarijarviKaavaParser") {
+    return collectSaarijarviKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
