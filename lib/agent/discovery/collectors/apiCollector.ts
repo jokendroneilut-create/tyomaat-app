@@ -10823,6 +10823,154 @@ async function collectIlmajokiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const UUSIKAUPUNKI_LISTING_URL = "https://www.uusikaupunki.fi/fi/kaavoja-vireilla"
+const UUSIKAUPUNKI_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+const UUSIKAUPUNKI_STAGE_TO_PHASE: { pattern: RegExp; phase: string }[] = [
+  { pattern: /voimaantulo/i, phase: "Voimaantulo" },
+  { pattern: /hyväksy/i, phase: "Hyväksyminen" },
+  { pattern: /ehdotu/i, phase: "Ehdotus" },
+  { pattern: /luonno/i, phase: "Luonnos" },
+  { pattern: /vireilletulo|osallistumis/i, phase: "Vireilletulo" },
+]
+
+// each plan lists every stage as a bare li ("Kaavaluonnos") that only gets
+// a trailing date once that stage has actually been reached -- items
+// without a date are still upcoming
+function uusikaupunkiPhaseFromTimeline($: cheerio.CheerioAPI, list: any): string {
+  let best = "Vireilletulo"
+  for (const li of $(list).find("> li").toArray()) {
+    const text = $(li).text().replace(/\s+/g, " ").trim()
+    if (!/\d{1,2}\.\d{1,2}\.\d{4}/.test(text)) continue
+    const match = UUSIKAUPUNKI_STAGE_TO_PHASE.find((stage) => stage.pattern.test(text))
+    if (!match) continue
+    if (UUSIKAUPUNKI_PHASE_ORDER.indexOf(match.phase) > UUSIKAUPUNKI_PHASE_ORDER.indexOf(best)) {
+      best = match.phase
+    }
+  }
+  return best
+}
+
+async function collectUusikaupunkiKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(UUSIKAUPUNKI_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  const sectionHeading = listing$("h2")
+    .toArray()
+    .find((el) => listing$(el).text().trim() === "Vireillä olevat asemakaavat")
+
+  const planLinks: { href: string; title: string }[] = []
+  if (sectionHeading) {
+    // the site wraps each heading and each link list in its own sibling
+    // "paragraph" block rather than nesting the list under the heading, so
+    // the actual <ul> lives in the NEXT paragraph block, not as a direct
+    // sibling of the h2 itself
+    const list = listing$(sectionHeading).closest(".paragraph").next(".paragraph").find("ul.link-list").first()
+    for (const el of list.find("a").toArray()) {
+      const href = listing$(el).attr("href") ?? ""
+      const title = listing$(el).text().replace(/\s+/g, " ").trim()
+      if (!href || !title) continue
+      planLinks.push({ href: new URL(href, UUSIKAUPUNKI_LISTING_URL).toString(), title })
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const link of planLinks) {
+    found += 1
+
+    const planResponse = await fetch(link.href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+
+    const title = $("h1").first().text().replace(/\s+/g, " ").trim() || link.title
+
+    const tunnusHeading = $("h2")
+      .toArray()
+      .find((el) => $(el).text().trim() === "Kaavan tunnus")
+    const kaavaTunnus = tunnusHeading
+      ? $(tunnusHeading).nextUntil("h2").first().text().replace(/\s+/g, " ").trim() || null
+      : null
+
+    const phaseHeading = $("h2")
+      .toArray()
+      .find((el) => $(el).text().trim() === "Kaavan vaiheet")
+    const phaseList = phaseHeading ? $(phaseHeading).nextUntil("h2", "ul").first() : null
+    const phase = phaseList && phaseList.length ? uusikaupunkiPhaseFromTimeline($, phaseList) : "Vireilletulo"
+    const completed = phase === "Voimaantulo"
+
+    const descriptionHeading = $("h2")
+      .toArray()
+      .find((el) => $(el).text().trim() === "Kuvaus kaavasta")
+    const description = descriptionHeading
+      ? $(descriptionHeading)
+          .nextUntil("h2", "p")
+          .toArray()
+          .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+          .find((p) => p.length > 40) ?? null
+      : null
+
+    const contactBlock = $(".field-name-field-contact-person").first()
+    const contactTitle = contactBlock.find(".location__title").first().text().replace(/\s+/g, " ").trim() || null
+    const contactPhone = contactBlock.find('a[href^="tel:"]').first().text().replace(/\s+/g, " ").trim() || null
+    const contactEmail = contactBlock.find('a[href^="mailto:"]').first().attr("href")?.replace("mailto:", "") ?? null
+    const contacts = contactEmail || contactPhone
+      ? [{ name: contactTitle ? `Uudenkaupungin ${contactTitle.toLowerCase()}` : "Uudenkaupungin kaavoitus", title: contactTitle, phone: contactPhone, email: contactEmail }]
+      : []
+
+    const slugMatch = link.href.match(/\/([^/]+)\/?$/)
+    const slug = slugMatch ? slugMatch[1] : null
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, kaavaTunnus })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: link.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: kaavaTunnus,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -13508,6 +13656,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "ilmajokiKaavaParser") {
     return collectIlmajokiKaavaSource(source)
+  }
+
+  if (source.parser === "uusikaupunkiKaavaParser") {
+    return collectUusikaupunkiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
