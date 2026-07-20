@@ -16278,6 +16278,165 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ENONKOSKI_LISTING_URL = "https://enonkoski.fi/asukkaille/asuminen-ja-ymparisto/kaavoitus/"
+
+const ENONKOSKI_CONTACT = {
+  name: "Enonkosken kunta, tekninen toimi",
+  title: "Tekninen toimi",
+  phone: "044 345 3026",
+  email: "tekninen.toimisto@enonkoski.fi",
+}
+
+function enonkoskiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function enonkoskiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// The "Nähtävillä olevat kaavat" heading is followed by true document-flow
+// sibling <p>/<ul> nodes (until the next h2). Title-marker paragraphs have
+// no direct <a> child; content paragraphs and <ul> lists carry attachment
+// links for the current block.
+async function collectEnonkoskiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ENONKOSKI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("h2")
+    .filter((_, el) => $(el).text().trim() === "Nähtävillä olevat kaavat")
+    .first()
+  if (heading.length === 0) return { documentsFound: 0, documentsSaved: 0 }
+
+  type Block = { title: string; links: { label: string; url: string }[] }
+
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  heading
+    .nextUntil("h2")
+    .toArray()
+    .forEach((el) => {
+      if (el.tagName === "p") {
+        const $el = $(el)
+        const text = $el.text().trim()
+        if (!text) return
+
+        const directLink = $el.children("a").first()
+        if (directLink.length > 0) {
+          if (current) {
+            current.links.push({
+              label: directLink.text().replace(/\s+/g, " ").trim(),
+              url: new URL(directLink.attr("href") ?? "", ENONKOSKI_LISTING_URL).toString(),
+            })
+          }
+          return
+        }
+
+        if (current) blocks.push(current)
+        current = { title: text.replace(/:$/, ""), links: [] }
+      } else if (el.tagName === "ul" && current) {
+        $(el)
+          .find("a")
+          .each((_, a) => {
+            current!.links.push({
+              label: $(a).text().replace(/\s+/g, " ").trim(),
+              url: new URL($(a).attr("href") ?? "", ENONKOSKI_LISTING_URL).toString(),
+            })
+          })
+      }
+    })
+
+  if (current) blocks.push(current)
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    const title = block.title
+    if (!title || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) continue
+
+    const description = block.links.map((l) => l.label).join(" ")
+    const phase = enonkoskiPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [ENONKOSKI_CONTACT]
+    const attachments = block.links
+
+    found += 1
+
+    const slug = enonkoskiSlug(title)
+    const documentUrl = `${ENONKOSKI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -19123,6 +19282,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "ahtariKaavaParser") {
     return collectAhtariKaavaSource(source)
+  }
+
+  if (source.parser === "enonkoskiKaavaParser") {
+    return collectEnonkoskiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {

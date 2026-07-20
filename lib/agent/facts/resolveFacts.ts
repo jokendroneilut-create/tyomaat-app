@@ -91,6 +91,7 @@ import { extractIsokyroKaavaFacts } from "@/lib/agent/facts/extractIsokyroKaavaF
 import { extractKuortaneKaavaFacts } from "@/lib/agent/facts/extractKuortaneKaavaFacts"
 import { extractLaihiaKaavaFacts } from "@/lib/agent/facts/extractLaihiaKaavaFacts"
 import { extractAhtariKaavaFacts } from "@/lib/agent/facts/extractAhtariKaavaFacts"
+import { extractEnonkoskiKaavaFacts } from "@/lib/agent/facts/extractEnonkoskiKaavaFacts"
 import { extractHeinolaKaavaFacts } from "@/lib/agent/facts/extractHeinolaKaavaFacts"
 import { extractAanekoskiKaavaFacts } from "@/lib/agent/facts/extractAanekoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
@@ -2535,6 +2536,25 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractAhtariKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Enonkosken vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractEnonkoskiKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
