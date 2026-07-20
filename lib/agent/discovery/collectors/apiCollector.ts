@@ -14082,6 +14082,144 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SAVITAIPALE_LISTING_URL = "https://www.savitaipale.fi/fi/asuminen-ja-ymparisto/asuminen/kaavoitus"
+
+// no named kaavoitus contact published; Tammelin's name/phone come from a
+// verified kokous document, but his personal email was not published
+// anywhere, so the verified general registry email is used instead of
+// guessing one
+const SAVITAIPALE_CONTACT = {
+  name: "Timo Tammelin",
+  title: "Tekninen johtaja",
+  phone: "070 503 8088",
+  email: "kunta@savitaipale.fi",
+}
+
+function savitaipalePhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectSavitaipaleKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SAVITAIPALE_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // every plan's title (h3) and its files/paragraphs live as flat
+  // siblings inside a single WYSIWYG container, with some h3 elements
+  // being empty (a stray progress-arrow image wrapped in its own <h3>) --
+  // those are skipped rather than treated as plan boundaries
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  for (const el of $("main").find("h3").first().parent().children().toArray()) {
+    if (el.name === "h3") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      // an empty h3 (the stray progress-arrow image wrapped in its own
+      // heading) is purely decorative and must not clear the block a
+      // real title h3 just opened
+      if (!title) continue
+      if (/asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)) {
+        current = { title, nodes: [] }
+        blocks.push(current)
+      } else {
+        current = null
+      }
+    } else if (current) {
+      current.nodes.push(el)
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    const bodyText = block.nodes
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .join(" ")
+
+    const phase = savitaipalePhaseFromText(`${block.title} ${bodyText}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [SAVITAIPALE_CONTACT]
+
+    const attachments = block.nodes
+      .flatMap((node) => $(node).find("a").toArray())
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", SAVITAIPALE_LISTING_URL).toString(),
+      }))
+
+    const description = attachments.map((a) => a.label).join(", ")
+
+    found += 1
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${SAVITAIPALE_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -16863,6 +17001,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "hattulaKaavaParser") {
     return collectHattulaKaavaSource(source)
+  }
+
+  if (source.parser === "savitaipaleKaavaParser") {
+    return collectSavitaipaleKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
