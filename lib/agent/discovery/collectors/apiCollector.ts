@@ -15400,6 +15400,164 @@ async function collectRautjarviKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ALAJARVI_LISTING_URL =
+  "https://alajarvi.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/vireilla-olevat-kaavat/"
+
+// name/title/phone/email read directly off the published kaavoitus contact list
+const ALAJARVI_CONTACTS = [
+  {
+    name: "Kirsi Haapa-aho",
+    title: "Kaavoituspäällikkö",
+    phone: "044 2970 264",
+    email: "kirsi.haapa-aho@alajarvi.fi",
+  },
+  {
+    name: "Emmi Peltomäki",
+    title: "Toimisto-/kaavoitussihteeri",
+    phone: "040 739 6009",
+    email: "emmi.peltomaki@alajarvi.fi",
+  },
+]
+
+function alajarviSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function alajarviPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Alajärvi's page groups plans under three top-level <details> accordions
+// (Yleiskaavat / Asemakaavat / Ranta-asemakaavat); we only descend into the
+// "Asemakaavat" one. A couple of plans are markup-nested inside a sibling
+// plan's <details> rather than being flat siblings (a site editing quirk,
+// not a real hierarchy) — cloning and stripping nested <details> before
+// reading each item's own body avoids bleeding the nested plan's content
+// into its "parent" while still visiting the nested plan as its own item.
+async function collectAlajarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ALAJARVI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const topDetails = $("main, article").first().find("details").toArray()
+  let asemakaavatDetails: any = null
+  for (const d of topDetails) {
+    const summary = $(d).children("summary").first().text().trim()
+    if (summary === "Asemakaavat") {
+      asemakaavatDetails = d
+      break
+    }
+  }
+  if (!asemakaavatDetails) return { documentsFound: 0, documentsSaved: 0 }
+
+  const items = $(asemakaavatDetails).find("details").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const itemEl of items) {
+    const item = $(itemEl)
+    const clone = item.clone()
+    clone.find("details").remove()
+
+    const title = clone.children("summary").first().text().replace(/\s+/g, " ").trim()
+    // Already scoped to the "Asemakaavat" accordion (osayleiskaava/ranta-
+    // asemakaava live in their own sibling accordions), so no title
+    // substring check is needed here — some genuine items use word forms
+    // like "asemakaavoitus" that don't literally contain "asemakaava".
+    if (!title) {
+      continue
+    }
+
+    clone.children("summary").remove()
+    const description = clone.text().replace(/\s+/g, " ").trim()
+
+    const phase = alajarviPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = ALAJARVI_CONTACTS
+
+    const attachments = clone
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", ALAJARVI_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = alajarviSlug(title)
+    const documentUrl = `${ALAJARVI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -18221,6 +18379,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "rautjarviKaavaParser") {
     return collectRautjarviKaavaSource(source)
+  }
+
+  if (source.parser === "alajarviKaavaParser") {
+    return collectAlajarviKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
