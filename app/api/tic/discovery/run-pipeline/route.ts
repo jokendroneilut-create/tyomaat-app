@@ -3,7 +3,7 @@ import { runDiscoveryPipeline } from "@/lib/agent/pipeline/discoveryPipeline"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 export const runtime = "nodejs"
-export const maxDuration = 280
+export const maxDuration = 500
 
 export async function POST(request: Request) {
   const auth = await verifyAdminRequest(request)
