@@ -12719,6 +12719,145 @@ async function collectLoviisaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KUUSAMO_LISTING_URL =
+  "https://www.kuusamo.fi/asuminen-ja-ymparisto/kaavoitus/laadinnassa-olevat-kaavat/asemakaava/"
+
+const KUUSAMO_CONTACT = {
+  name: "Petra Koskinen",
+  title: "Suunnitteluavustaja",
+  phone: "040 860 8412",
+  email: "petra.koskinen@kuusamo.fi",
+}
+
+function kuusamoPhaseFromLabel(label: string): string | null {
+  const normalized = label.toLowerCase()
+  if (/lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  if (/vireilletulo/.test(normalized)) return "Vireilletulo"
+  return null
+}
+
+async function collectKuusamoKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetchTextViaHttpsModule(KUUSAMO_LISTING_URL)
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(listingResponse.text)
+
+  // the "Laadinnassa olevat asemakaavat" header block is immediately
+  // followed by a sibling link-list block with the actual plan links
+  const header = listing$(".acf-block-header")
+    .toArray()
+    .find((el) => /laadinnassa olevat asemakaavat/i.test(listing$(el).text()))
+  const list = header ? listing$(header).next() : listing$()
+
+  const planLinks = list
+    .find("a")
+    .toArray()
+    .map((a) => ({
+      title: listing$(a).text().replace(/\s+/g, " ").trim(),
+      url: listing$(a).attr("href") ?? "",
+    }))
+    .filter((plan) => plan.title && plan.url)
+
+  let found = 0
+  let saved = 0
+
+  for (const plan of planLinks) {
+    const detailResponse = await fetchTextViaHttpsModule(plan.url)
+    if (!detailResponse.ok) continue
+
+    const $ = cheerio.load(detailResponse.text)
+
+    // every stage gets its own accordion row regardless of whether it has
+    // been reached -- an unreached row's content is a literal "." placeholder,
+    // so only rows with real content count; rows are in chronological order,
+    // so the last reached row with a recognized phase label wins
+    let phase = "Vireilletulo"
+    let description = ""
+    const attachments: { label: string; url: string }[] = []
+
+    for (const row of $(".accordion-row").toArray()) {
+      const label = $(row).find(".accordion-title-text").first().text().replace(/\s+/g, " ").trim()
+      const contentEl = $(row).find(".accordion-content").first()
+      const contentText = contentEl.text().replace(/\s+/g, " ").trim()
+      const reached = contentText.length > 0 && contentText !== "."
+      if (!reached) continue
+
+      const mappedPhase = kuusamoPhaseFromLabel(label)
+      if (mappedPhase) {
+        phase = mappedPhase
+        description = contentText
+      }
+
+      attachments.push(
+        ...contentEl
+          .find("a")
+          .toArray()
+          .map((a) => ({
+            label: $(a).text().replace(/\s+/g, " ").trim(),
+            url: new URL($(a).attr("href") ?? "", plan.url).toString(),
+          }))
+      )
+    }
+
+    const completed = phase === "Voimaantulo"
+    const contacts = [KUUSAMO_CONTACT]
+
+    found += 1
+
+    const slug = kemiSlug(plan.title)
+    const documentUrl = plan.url
+
+    const rawText = JSON.stringify({ title: plan.title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: plan.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: plan.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -15460,6 +15599,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "loviisaKaavaParser") {
     return collectLoviisaKaavaSource(source)
+  }
+
+  if (source.parser === "kuusamoKaavaParser") {
+    return collectKuusamoKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
