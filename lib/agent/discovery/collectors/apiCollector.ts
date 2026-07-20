@@ -15558,6 +15558,147 @@ async function collectAlajarviKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ALAVUS_HUB_URL =
+  "https://www.alavus.fi/fi/asuminen-ja-ymparisto/kaavoitus/ajankohtaista-kaavoituksessa.html"
+
+const ALAVUS_CONTACT = {
+  name: "Alavuden kaupunki, kaavoitus",
+  title: "Kirjaamo",
+  phone: "(06) 2525 1000",
+  email: "info@alavus.fi",
+}
+
+function alavusSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function alavusPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima|tulee voimaan/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Alavus has no single "vireillä olevat kaavat" listing page — instead a
+// hub page ("Ajankohtaista kaavoituksessa") whose site-nav sidebar lists
+// each individual plan as its own static detail page. We read the hub's
+// own nav container (found via its self-link) for the list of sub-pages,
+// then fetch each matching detail page directly.
+async function collectAlavusKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ALAVUS_HUB_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const selfLink = $('a[href$="ajankohtaista-kaavoituksessa.html"]').first()
+  const container = selfLink.parent().parent()
+
+  const items = container
+    .find("a")
+    .toArray()
+    .filter((el) => {
+      const href = $(el).attr("href") ?? ""
+      const title = $(el).text().trim()
+      return href.includes("/ajankohtaista-kaavoituksessa/") && /asemakaava/i.test(title)
+    })
+
+  let found = 0
+  let saved = 0
+
+  for (const el of items) {
+    const title = $(el).text().replace(/\s+/g, " ").trim()
+    const detailUrl = $(el).attr("href")
+    if (!title || !detailUrl) continue
+
+    const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const $$ = cheerio.load(await detailResponse.text())
+    const mainContent = $$("#main-content").first()
+    const description = mainContent.text().replace(/\s+/g, " ").trim()
+
+    const phase = alavusPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [ALAVUS_CONTACT]
+
+    const attachments = mainContent
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $$(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($$(a).attr("href") ?? "", detailUrl).toString(),
+      }))
+
+    found += 1
+
+    const slug = alavusSlug(title)
+    const documentUrl = detailUrl
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -18383,6 +18524,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "alajarviKaavaParser") {
     return collectAlajarviKaavaSource(source)
+  }
+
+  if (source.parser === "alavusKaavaParser") {
+    return collectAlavusKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
