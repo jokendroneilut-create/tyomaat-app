@@ -10685,6 +10685,144 @@ async function collectKauhajokiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ILMAJOKI_LISTING_URL = "https://ilmajoki.fi/asuminen-ja-ymparisto/kaavoitus-ja-mittaus/vireilla-olevat-kaavat/"
+const ILMAJOKI_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+
+function ilmajokiContacts($: cheerio.CheerioAPI) {
+  return $(".person-info")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const name = $el.find(".title").first().text().replace(/\s+/g, " ").trim() || null
+      const title = $el.find(".person-title").first().text().replace(/\s+/g, " ").trim() || null
+      const phone = $el.find(".person-phonenumbers a").first().text().replace(/\s+/g, " ").trim() || null
+      return { name, title, phone, email: null }
+    })
+    .filter((contact) => contact.name)
+}
+
+// each plan lists an explicit checklist of every stage
+// (Kaavoituspäätös/OAS/Luonnos/Ehdotus/Hyväksyminen/Voimaantulo) as
+// "Label: value" list items -- an empty value means that stage hasn't
+// been reached yet, so only items with a value count toward the phase
+function ilmajokiPhaseFromTimeline($: cheerio.CheerioAPI, list: any): string {
+  let best = "Vireilletulo"
+  for (const li of $(list).find("> li").toArray()) {
+    const text = $(li).text().replace(/\s+/g, " ").trim()
+    const colonIndex = text.lastIndexOf(":")
+    const label = colonIndex >= 0 ? text.slice(0, colonIndex) : text
+    const value = colonIndex >= 0 ? text.slice(colonIndex + 1).trim() : ""
+    if (!value) continue
+
+    const normalized = label.toLowerCase()
+    let phase: string | null = null
+    if (/voimaantulo/.test(normalized)) phase = "Voimaantulo"
+    else if (/hyväksy/.test(normalized)) phase = "Hyväksyminen"
+    else if (/ehdotu/.test(normalized)) phase = "Ehdotus"
+    else if (/luonno/.test(normalized)) phase = "Luonnos"
+    else if (/osallistumis|kaavoituspäätös/.test(normalized)) phase = "Vireilletulo"
+    if (!phase) continue
+
+    if (ILMAJOKI_PHASE_ORDER.indexOf(phase) > ILMAJOKI_PHASE_ORDER.indexOf(best)) best = phase
+  }
+  return best
+}
+
+async function collectIlmajokiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ILMAJOKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const contacts = ilmajokiContacts($)
+
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+  let recording = false
+
+  for (const el of $("h2, h3, p, ul").toArray()) {
+    if (el.name === "h2") {
+      recording = $(el).text().replace(/\s+/g, " ").trim() === "Vireillä olevat asemakaavat"
+      current = null
+      continue
+    }
+    if (!recording) continue
+    if (el.name === "h3") {
+      current = { title: $(el).text().replace(/\s+/g, " ").trim(), nodes: [] }
+      blocks.push(current)
+      continue
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    found += 1
+
+    const paragraphs = block.nodes
+      .filter((node) => node.name === "p" && $(node).text().replace(/\s+/g, " ").trim().toLowerCase() !== "aikajana")
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+
+    const timeline = block.nodes.find((node) => node.name === "ul")
+    const phase = timeline ? ilmajokiPhaseFromTimeline($, timeline) : "Vireilletulo"
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${ILMAJOKI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -13366,6 +13504,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kauhajokiKaavaParser") {
     return collectKauhajokiKaavaSource(source)
+  }
+
+  if (source.parser === "ilmajokiKaavaParser") {
+    return collectIlmajokiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
