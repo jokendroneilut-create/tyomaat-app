@@ -14368,6 +14368,145 @@ async function collectJuvaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LAPINLAHTI_LISTING_URL = "https://lapinlahti.fi/fi/asuminen-ja-ymparisto/kaavoitus/ajankohtaiset-kaavahankkeet"
+
+// name/phone/email read directly off the page's own contact card
+// (verified, not guessed)
+const LAPINLAHTI_CONTACT = {
+  name: "Rami Linna",
+  title: "Tekninen johtaja",
+  phone: "040 488 3701",
+  email: "rami.linna@lapinlahti.fi",
+}
+
+function lapinlahtiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimus)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectLapinlahtiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LAPINLAHTI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // each plan is an "editor" InfoWebCore widget (H2 title + description)
+  // immediately followed by its own "attachments" widget -- pairing them
+  // by DOM order rather than a shared container, since the two widget
+  // types live in separate sibling <div class="col-md-12"> wrappers
+  type Block = { title: string; description: string; attachments: { label: string; url: string }[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  for (const el of $(".iwc-widget").toArray()) {
+    const widget = $(el)
+
+    if (widget.hasClass("iwc-widget-editor-widget")) {
+      const h2 = widget.find(".iwc-widget-header H2").first()
+      if (!h2.length) continue
+
+      const title = h2.text().replace(/\s+/g, " ").trim()
+      if (title && /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)) {
+        const description = widget.find(".iwc-widget-body").first().text().replace(/\s+/g, " ").trim()
+        current = { title, description, attachments: [] }
+        blocks.push(current)
+      } else {
+        current = null
+      }
+    } else if (widget.hasClass("iwc-widget-attachments-widget") && current) {
+      current.attachments.push(
+        ...widget
+          .find("a")
+          .toArray()
+          .map((a) => ({
+            label: $(a).find(".file-name").first().text().replace(/\s+/g, " ").trim(),
+            url: new URL($(a).attr("href") ?? "", LAPINLAHTI_LISTING_URL).toString(),
+          }))
+      )
+    }
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    const phase = lapinlahtiPhaseFromText(`${block.title} ${block.description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [LAPINLAHTI_CONTACT]
+
+    found += 1
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${LAPINLAHTI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({
+      title: block.title,
+      phase,
+      description: block.description,
+      contacts,
+      attachments: block.attachments,
+    })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: block.description,
+          contacts,
+          attachments: block.attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -17157,6 +17296,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "juvaKaavaParser") {
     return collectJuvaKaavaSource(source)
+  }
+
+  if (source.parser === "lapinlahtiKaavaParser") {
+    return collectLapinlahtiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
