@@ -55,6 +55,7 @@ import { extractUusikaupunkiKaavaFacts } from "@/lib/agent/facts/extractUusikaup
 import { extractPaimioKaavaFacts } from "@/lib/agent/facts/extractPaimioKaavaFacts"
 import { extractUlvilaKaavaFacts } from "@/lib/agent/facts/extractUlvilaKaavaFacts"
 import { extractKankaanpaaKaavaFacts } from "@/lib/agent/facts/extractKankaanpaaKaavaFacts"
+import { extractLiperiKaavaFacts } from "@/lib/agent/facts/extractLiperiKaavaFacts"
 import { extractHeinolaKaavaFacts } from "@/lib/agent/facts/extractHeinolaKaavaFacts"
 import { extractAanekoskiKaavaFacts } from "@/lib/agent/facts/extractAanekoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
@@ -1818,6 +1819,25 @@ export function resolveFacts(document: any) {
         sourceName: document.source_name,
         title,
         kaavaTunnus,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Liperin vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractLiperiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
         phase,
         description,
         contacts,

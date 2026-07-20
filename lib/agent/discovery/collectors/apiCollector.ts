@@ -11322,6 +11322,111 @@ async function collectKankaanpaaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LIPERI_LISTING_URL = "https://www.liperi.fi/asuminen-ja-ymparisto/kaavoitus/kaavahankkeet-ja-yleissuunnitelmat/"
+const LIPERI_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+const LIPERI_STAGE_TO_PHASE: { pattern: RegExp; phase: string }[] = [
+  { pattern: /voimaantulo|lainvoima/i, phase: "Voimaantulo" },
+  { pattern: /hyväksymisvaihe/i, phase: "Hyväksyminen" },
+  { pattern: /ehdotusvaihe/i, phase: "Ehdotus" },
+  { pattern: /luonnosvaihe/i, phase: "Luonnos" },
+  { pattern: /valmisteluvaihe/i, phase: "Vireilletulo" },
+]
+
+// the site hyphenates long words for line-wrapping using literal soft
+// hyphen characters (U+00AD) inserted mid-word, which silently breaks any
+// substring match run against the raw text (e.g. "asema­kaa­van" no longer
+// contains "asemakaava")
+function liperiStripSoftHyphens(text: string): string {
+  return text.replace(/­/g, "")
+}
+
+async function collectLiperiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LIPERI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  let found = 0
+  let saved = 0
+
+  for (const heading of $("h3.wp-block-accordion-heading").toArray()) {
+    const title = liperiStripSoftHyphens(
+      $(heading).find(".wp-block-accordion-heading__toggle-title").first().text()
+    )
+      .replace(/\s+/g, " ")
+      .trim()
+    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title)) continue
+
+    found += 1
+
+    const panel = $(heading).next(".wp-block-accordion-panel")
+
+    const paragraphs = panel
+      .find("> p.wp-block-paragraph")
+      .toArray()
+      .map((p) => liperiStripSoftHyphens($(p).text()).replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+
+    let phase = "Vireilletulo"
+    for (const stageHeading of panel.find("> h3.wp-block-heading").toArray()) {
+      const label = liperiStripSoftHyphens($(stageHeading).text()).replace(/\s+/g, " ").trim()
+      const match = LIPERI_STAGE_TO_PHASE.find((stage) => stage.pattern.test(label))
+      if (!match) continue
+      if (LIPERI_PHASE_ORDER.indexOf(match.phase) > LIPERI_PHASE_ORDER.indexOf(phase)) phase = match.phase
+    }
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(title)
+    const documentUrl = `${LIPERI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts: [] })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -14023,6 +14128,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kankaanpaaKaavaParser") {
     return collectKankaanpaaKaavaSource(source)
+  }
+
+  if (source.parser === "liperiKaavaParser") {
+    return collectLiperiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
