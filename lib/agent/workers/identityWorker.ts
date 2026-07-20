@@ -75,6 +75,7 @@ import { resolveParainenKaavaProject } from "@/lib/agent/identity/resolvers/para
 import { resolveSomeroKaavaProject } from "@/lib/agent/identity/resolvers/someroKaavaResolver"
 import { resolveHuittinenKaavaProject } from "@/lib/agent/identity/resolvers/huittinenKaavaResolver"
 import { resolveKokemakiKaavaProject } from "@/lib/agent/identity/resolvers/kokemakiKaavaResolver"
+import { resolveUrjalaKaavaProject } from "@/lib/agent/identity/resolvers/urjalaKaavaResolver"
 import { resolveRiihimakiKaavaProject } from "@/lib/agent/identity/resolvers/riihimakiKaavaResolver"
 import { resolveRaaseporiKaavaProject } from "@/lib/agent/identity/resolvers/raaseporiKaavaResolver"
 import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisioKaavaResolver"
@@ -629,6 +630,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kokemäen vireillä olevat asemakaavat") {
     const result = await resolveKokemakiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "urjalan vireillä olevat asemakaavat") {
+    const result = await resolveUrjalaKaavaProject({
       document,
       facts: facts ?? [],
     })

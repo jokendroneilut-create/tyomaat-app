@@ -13548,6 +13548,149 @@ async function collectKokemakiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const URJALA_LISTING_URL =
+  "https://www.urjala.fi/asu-ja-rakenna/kaavoitus-ja-kartat/kaavoitus/vireilla-olevat-asemakaavat/"
+
+// name and phone read directly off the source page's own "Lisätietoja
+// asemakaavasta" contact line; no personal email was published anywhere
+// on the site, so the verified general registry address is used instead
+// of guessing one
+const URJALA_CONTACT = {
+  name: "Annu Kuusisto",
+  title: null as string | null,
+  phone: "040 335 4200",
+  email: "urjalan.kunta@urjala.fi",
+}
+
+function urjalaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectUrjalaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(URJALA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  const planLinks = listing$("a[href*='vireilla-olevat-asemakaavat/']")
+    .toArray()
+    .map((a) => ({
+      title: listing$(a).text().replace(/\s+/g, " ").trim(),
+      url: listing$(a).attr("href") ?? "",
+    }))
+    .filter(
+      (plan) =>
+        plan.title &&
+        plan.url &&
+        !plan.url.endsWith("/vireilla-olevat-asemakaavat/") &&
+        !/ranta-asemakaava/i.test(plan.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const plan of planLinks) {
+    const detailUrl = new URL(plan.url, "https://www.urjala.fi").toString()
+    const detailResponse = await fetch(detailUrl, { cache: "no-store" })
+    if (!detailResponse.ok) continue
+
+    const $ = cheerio.load(await detailResponse.text())
+    const contentDiv = $(".contents_lr .clr_left.voice-intuitive").first()
+
+    // a couple of pages bundle a distinct ranta-asemakaava announcement
+    // on the same page as the actual (in-scope) asemakaava -- when h2
+    // subsections are present, any subsection headed by a
+    // "ranta-asemakaava" title is skipped so it can't leak into this
+    // plan's phase/description/attachments
+    const h2s = contentDiv.children("h2").toArray()
+    const nodes: any[] = []
+
+    if (h2s.length === 0) {
+      nodes.push(...contentDiv.children().toArray())
+    } else {
+      let skip = false
+      for (const el of contentDiv.children().toArray()) {
+        if (el.name === "h2") {
+          const heading = $(el).text().replace(/\s+/g, " ").trim()
+          skip = /ranta-asemakaava/i.test(heading)
+        }
+        if (!skip) nodes.push(el)
+      }
+    }
+
+    const description = nodes.map((n) => $(n).text().replace(/\s+/g, " ").trim()).join(" ")
+    const phase = urjalaPhaseFromText(`${plan.title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [URJALA_CONTACT]
+
+    const attachments = nodes
+      .flatMap((n) => $(n).find("a").toArray())
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", detailUrl).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(plan.title)
+    const documentUrl = detailUrl
+
+    const rawText = JSON.stringify({ title: plan.title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: plan.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: plan.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -16313,6 +16456,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kokemakiKaavaParser") {
     return collectKokemakiKaavaSource(source)
+  }
+
+  if (source.parser === "urjalaKaavaParser") {
+    return collectUrjalaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
