@@ -15987,6 +15987,136 @@ async function collectKuortaneKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LAIHIA_LISTING_URL = "https://laihia.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat/"
+
+const LAIHIA_CONTACT = {
+  name: "Anna Annila",
+  title: "Maanmittausinsinööri",
+  phone: "0500 868 127",
+  email: "anna.annila@laihia.fi",
+}
+
+function laihiaSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function laihiaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Laihia's page mixes asemakaava and osayleiskaava items as sibling
+// <div class="accordion"> blocks. Several genuine asemakaava items don't
+// use the word "asemakaava" in their title at all (e.g. "Korttelin 299
+// muutos"), so we can't positively match on that — instead we exclude
+// only the unambiguous osayleiskaava/tuulivoima/ranta-asemakaava titles
+// and keep everything else on this already-scoped "vireillä olevat
+// kaavat" listing.
+async function collectLaihiaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LAIHIA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $(".accordion").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const itemEl of items) {
+    const item = $(itemEl)
+    const title = item.find(".accordion__heading h2").first().text().replace(/\s+/g, " ").trim()
+    if (!title || /yleiskaava/i.test(title) || /tuulivoima/i.test(title) || /ranta-asemakaava/i.test(title)) {
+      continue
+    }
+
+    const contentEl = item.find(".accordion__content").first()
+    const description = contentEl.text().replace(/\s+/g, " ").trim()
+
+    const phase = laihiaPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [LAIHIA_CONTACT]
+
+    const attachments = contentEl
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", LAIHIA_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = laihiaSlug(title)
+    const documentUrl = `${LAIHIA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -18824,6 +18954,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kuortaneKaavaParser") {
     return collectKuortaneKaavaSource(source)
+  }
+
+  if (source.parser === "laihiaKaavaParser") {
+    return collectLaihiaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
