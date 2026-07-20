@@ -9813,6 +9813,113 @@ async function collectJanakkalaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ORIMATTILA_LISTING_URL =
+  "https://orimattila.fi/asuminen-ja-ymparisto/nahtavilla-olevat-suunnitelmat/asemakaavat/"
+const ORIMATTILA_SECTION_START = "vireillä olevat asemakaavahankkeet"
+const ORIMATTILA_SECTION_STOP = "lainvoimaisia asemakaavahankkeita"
+
+function orimattilaPhaseFromText(text: string): string {
+  // "Kaavoituspäällikkö on hyväksynyt kaavaa koskevan osallistumis- ja
+  // arviointisuunnitelman" approves the OAS document, not the plan itself
+  // -- stripped out first so it can't be misread as reaching Hyväksyminen
+  const normalized = text
+    .toLowerCase()
+    .replace(/hyväksy\w*\s+\S+\s+koskevan\s+osallistumis-?\s*ja\s*arviointisuunnitelman/gi, "")
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectOrimattilaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ORIMATTILA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  let recording = false
+  const blocks: { title: string; href: string; wrap: any }[] = []
+  for (const el of $("h2").toArray()) {
+    const text = $(el).text().replace(/\s+/g, " ").trim().toLowerCase()
+    if (text === ORIMATTILA_SECTION_START) {
+      recording = true
+      continue
+    }
+    if (text === ORIMATTILA_SECTION_STOP) {
+      recording = false
+      continue
+    }
+    if (!recording) continue
+    if (!$(el).hasClass("toggle-content-title")) continue
+
+    const title = $(el).text().replace(/\s+/g, " ").trim()
+    const href = $(el).find("a.toggle-content-link").attr("href") ?? ""
+    if (!title || !href) continue
+    blocks.push({ title, href, wrap: $(el).closest(".toggle-content") })
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    found += 1
+
+    const text = block.wrap.text().replace(/\s+/g, " ").trim()
+    const description = text.length > block.title.length + 10 ? text.slice(block.title.length).trim() : null
+    const phase = orimattilaPhaseFromText(text)
+    const completed = phase === "Voimaantulo"
+
+    const slug = block.href.replace(/^#/, "")
+    const documentUrl = `${ORIMATTILA_LISTING_URL}${block.href}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts: [] })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -12466,6 +12573,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "janakkalaKaavaParser") {
     return collectJanakkalaKaavaSource(source)
+  }
+
+  if (source.parser === "orimattilaKaavaParser") {
+    return collectOrimattilaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
