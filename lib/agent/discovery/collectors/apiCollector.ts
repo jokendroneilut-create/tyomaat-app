@@ -11086,6 +11086,96 @@ async function collectPaimioKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ULVILA_LISTING_URL =
+  "https://www.ulvila.fi/palvelut-ja-asuminen/kaupunkisuunnittelu/kaavoitus/vireilla-olevat-kaavahankkeet/"
+
+function ulvilaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectUlvilaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ULVILA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const list = $("ol.wp-block-list").first()
+
+  let found = 0
+  let saved = 0
+
+  for (const li of list.find("> li").toArray()) {
+    const $li = $(li)
+    const title = $li.find("strong").first().text().replace(/\s+/g, " ").trim()
+    if (!title) continue
+
+    const fullText = $li.text().replace(/\s+/g, " ").trim()
+    // three plans in this list are explicitly marked "(keskeytynyt)"
+    // (discontinued) rather than actively progressing -- not in scope
+    if (/keskeytynyt/i.test(fullText)) continue
+
+    found += 1
+
+    const phase = ulvilaPhaseFromText(fullText)
+    const completed = phase === "Voimaantulo"
+
+    const slug = kemiSlug(title)
+    const documentUrl = `${ULVILA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description: null, contacts: [] })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -13779,6 +13869,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "paimioKaavaParser") {
     return collectPaimioKaavaSource(source)
+  }
+
+  if (source.parser === "ulvilaKaavaParser") {
+    return collectUlvilaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
