@@ -11957,6 +11957,151 @@ async function collectNivalaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LIMINKA_LISTING_URL =
+  "https://www.liminka.fi/asuminen-ja-rakentaminen/kaavoitus/vireilla-olevat-kaavat/"
+
+function limingaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  // "luonnos" (draft), not the shorter "luonno" stem -- that also matches
+  // "luonnon"/"luonnossa" (nature, unrelated), a false positive seen when a
+  // block's text mentions the natural environment (e.g. "luonnon
+  // monimuotoisuutta")
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function limingaContactFromText(text: string) {
+  const index = text.toLowerCase().indexOf("arkkitehti")
+  const window = index >= 0 ? text.slice(index, index + 100) : ""
+
+  const nameMatch = window.match(/arkkitehti\s+([A-ZÄÖÅ][\wäöåÄÖÅ-]+\s[A-ZÄÖÅ][\wäöåÄÖÅ-]+)/i)
+  const emailMatch = window.match(/[\w.-]+@liminka\.fi/i)
+  const phoneMatch = window.match(/(\d[\d\s]{6,12}\d)/)
+
+  return {
+    name: nameMatch?.[1] ?? "Aatu Jämsä",
+    title: "Kunnanarkkitehti",
+    phone: phoneMatch?.[1]?.replace(/\s+/g, " ").trim() ?? null,
+    email: emailMatch?.[0]?.toLowerCase() ?? "aatu.jamsa@liminka.fi",
+  }
+}
+
+async function collectLimingaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LIMINKA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // the plan list is one flat content block -- an h3 per plan, several
+  // <p> siblings for body/attachments/contact until the next h3; several
+  // sibling sections share the "content-section" class so pick the one
+  // that actually holds h3-level plan headings
+  const section = $(".content-section")
+    .toArray()
+    .find((el) => $(el).children("h3").length > 0)
+  if (!section) return { documentsFound: 0, documentsSaved: 0 }
+
+  type Block = { title: string; nodes: any[] }
+  const blocks: Block[] = []
+  let current: Block | null = null
+
+  for (const el of $(section).children().toArray()) {
+    if (el.name === "h3") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      if (title && /asemakaava/i.test(title) && !/yleiskaava/i.test(title)) {
+        current = { title, nodes: [] }
+        blocks.push(current)
+      } else {
+        current = null
+      }
+      continue
+    }
+
+    if (current) current.nodes.push(el)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const block of blocks) {
+    if (!block.title) continue
+
+    const bodyText = block.nodes
+      .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+      .join(" ")
+
+    const phase = limingaPhaseFromText(`${block.title} ${bodyText}`)
+    const completed = phase === "Voimaantulo"
+    const contact = limingaContactFromText(bodyText)
+    const contacts = [contact]
+
+    const attachments = block.nodes
+      .flatMap((node) => $(node).find("a").toArray())
+      .filter((a) => !($(a).attr("href") ?? "").startsWith("mailto:"))
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", LIMINKA_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = kemiSlug(block.title)
+    const documentUrl = `${LIMINKA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description: bodyText, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: bodyText,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -14678,6 +14823,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "nivalaKaavaParser") {
     return collectNivalaKaavaSource(source)
+  }
+
+  if (source.parser === "limingaKaavaParser") {
+    return collectLimingaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
