@@ -33,6 +33,7 @@ import { extractMustasaariKaavaFacts } from "@/lib/agent/facts/extractMustasaari
 import { extractKempeleKaavaFacts } from "@/lib/agent/facts/extractKempeleKaavaFacts"
 import { extractValkeakoskiKaavaFacts } from "@/lib/agent/facts/extractValkeakoskiKaavaFacts"
 import { extractPietarsaariKaavaFacts } from "@/lib/agent/facts/extractPietarsaariKaavaFacts"
+import { extractKurikkaKaavaFacts } from "@/lib/agent/facts/extractKurikkaKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
 import { extractRaaseporiKaavaFacts } from "@/lib/agent/facts/extractRaaseporiKaavaFacts"
 import { extractRaisioKaavaFacts } from "@/lib/agent/facts/extractRaisioKaavaFacts"
@@ -1328,6 +1329,25 @@ export function resolveFacts(document: any) {
         sourceName: document.source_name,
         title,
         kaavaTunnus,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Kurikan vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractKurikkaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
         phase,
         description,
         contacts,

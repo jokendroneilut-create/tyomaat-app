@@ -8114,6 +8114,140 @@ async function collectPietarsaariKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KURIKKA_LISTING_URL =
+  "https://kurikka.fi/asuminen-ja-ymparisto/tontit-kaavoitus-ja-maankaytto/kaavoitus/ajankohtaiset-kaavasuunnitelmat/"
+
+function kurikkaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "kaupunginvaltuusto" reached (with a dated/numbered entry) is the final
+  // approval step in this site's process list -- it never spells out "hyväksy"
+  if (/kaupunginvaltuusto/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized) && /nähtävillä/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized) && /nähtävillä/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function kurikkaSlugFromUrl(url: string): string {
+  const path = new URL(url).pathname.split("/").filter(Boolean)
+  return path[path.length - 1] ?? url
+}
+
+async function collectKurikkaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(KURIKKA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+
+  const planLinks = listing$(".sub-pages a[href]")
+    .toArray()
+    .map((el) => ({
+      href: listing$(el).attr("href") ?? "",
+      title: listing$(el).text().replace(/\s+/g, " ").trim(),
+    }))
+    // "Osayleiskaava" entries are strategic area-wide plans, not buildable
+    // asemakaava plots -- only "AK ..." titled entries are collected
+    .filter((link) => link.href && /^ak\b/i.test(link.title))
+
+  let found = 0
+  let saved = 0
+
+  for (const link of planLinks) {
+    found += 1
+
+    const planResponse = await fetch(link.href, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const $ = cheerio.load(await planResponse.text())
+    const article = $("article.content").first()
+
+    const title = article.find("h1").first().text().replace(/\s+/g, " ").trim() || link.title
+
+    const paragraphs = article
+      .find("p")
+      .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+      .get()
+      .filter(Boolean)
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+
+    const reachedText = article
+      .find("ol.wp-block-list li")
+      .toArray()
+      .map((li) => $(li).text().replace(/\s+/g, " ").trim())
+      // only stage entries actually filled in with a date/pykälä number
+      // count as "reached" -- the site's strong/em styling for reached vs.
+      // upcoming stages isn't consistently maintained across plan pages
+      .filter((text) => /\d/.test(text))
+      .join(" | ")
+    const phase = kurikkaPhaseFromText(reachedText)
+    const completed = phase === "Voimaantulo"
+
+    const contacts = article
+      .find(".contacts__content")
+      .toArray()
+      .map((el) => {
+        const $el = $(el)
+        const divs = $el.find("div").toArray().map((d) => $(d).text().trim()).filter(Boolean)
+        return {
+          name: $el.find("a").first().text().trim() || null,
+          title: divs[0] ?? null,
+          phone: divs.find((d) => /^[\d\s()+-]+$/.test(d)) ?? null,
+          email: divs.find((d) => d.includes("@")) ?? null,
+        }
+      })
+      .filter((contact) => contact.name && !/kirjaamo/i.test(contact.name))
+
+    const slug = kurikkaSlugFromUrl(link.href)
+
+    const rawText = JSON.stringify({ title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title,
+          document_url: link.href,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title,
+            slug,
+            kaava_tunnus: null,
+            phase,
+            description,
+            contacts,
+            completed,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(completed
+            ? {
+                facts_extracted_at: new Date().toISOString(),
+                identity_resolved_at: new Date().toISOString(),
+              }
+            : {}),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -10719,6 +10853,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "pietarsaariKaavaParser") {
     return collectPietarsaariKaavaSource(source)
+  }
+
+  if (source.parser === "kurikkaKaavaParser") {
+    return collectKurikkaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
