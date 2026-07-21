@@ -19590,11 +19590,13 @@ async function collectPihtipudasKaavaSource(source: DiscoverySource) {
       title: $(el).find(".elementor-button-text").text().replace(/\s+/g, " ").trim(),
       href: $(el).attr("href") ?? "",
     }))
-    .filter((item) =>
-      item.title && item.href &&
-      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
-      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
-    )
+    .filter((item) => {
+      if (!item.title || !item.href) return false
+      const isAsemakaava =
+        /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) && !/ranta-asemakaav/i.test(item.title)
+      const isEnergyProject = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(item.title)
+      return isAsemakaava || isEnergyProject
+    })
 
   let found = 0
   let saved = 0
