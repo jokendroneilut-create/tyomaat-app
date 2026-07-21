@@ -29150,7 +29150,112 @@ async function collectAlavieskaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HAILUOTO_LISTING_URL = "https://hailuoto.fi/rakentaminen/keskeneraiset-kaavahankkeet/"
+
+function hailuotoPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/hyväksy|voimaantulo|tullut voimaan|lainvoima/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectHailuotoKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HAILUOTO_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  type HailuotoProject = { title: string; suffixes: string[] }
+  const projects = new Map<string, HailuotoProject>()
+
+  $("h3.package-title a").each((_, el) => {
+    const rawTitle = $(el).text().replace(/­/g, "").replace(/\s+/g, " ").trim()
+    if (!rawTitle) return
+
+    // titles follow "<Project> asemakaavan <document type>" -- only asemakaava
+    // documents are real projects here (yleiskaava selvitykset are background
+    // studies, not standalone projects, and are naturally excluded)
+    const match = rawTitle.match(/^(.*?)\s+asemakaavan\s+(.*)$/i)
+    if (!match) return
+
+    const [, prefix, suffix] = match
+    const key = prefix.toLowerCase()
+    const projectTitle = `${prefix} asemakaava`
+
+    const existing = projects.get(key)
+    if (existing) {
+      existing.suffixes.push(suffix)
+    } else {
+      projects.set(key, { title: projectTitle, suffixes: [suffix] })
+    }
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const project of projects.values()) {
+    const description = project.suffixes.join(", ")
+    const phase = hailuotoPhaseFromText(description)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(project.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${HAILUOTO_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: project.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: project.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: project.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: projects.size,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "hailuotoKaavaParser") {
+    return collectHailuotoKaavaSource(source)
+  }
+
   if (source.parser === "alavieskaKaavaParser") {
     return collectAlavieskaKaavaSource(source)
   }
