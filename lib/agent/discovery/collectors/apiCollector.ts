@@ -28996,7 +28996,165 @@ async function collectIiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ALAVIESKA_LISTING_URL = "https://www.alavieska.fi/asuminen-ja-ymparisto/kaavoitus-ja-tontit"
+
+function alavieskaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 20), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+
+  if (
+    matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+      /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    )
+  ) {
+    return "Voimaantulo"
+  }
+
+  if (
+    matchesUnguarded(/hyväksy/, (window) =>
+      /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen/.test(window)
+    )
+  ) {
+    return "Hyväksyminen"
+  }
+
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+
+  return "Vireilletulo"
+}
+
+async function collectAlavieskaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ALAVIESKA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // "Kivihaan alue" (h3) holds asemakaava items; "Tuulivoimapuistot" (h3)
+  // groups wind/solar osayleiskaavat as h4s -- several of those titles are
+  // bare place names with no energy keyword of their own, so membership in
+  // that section is itself the energy signal, same as Vaala's URL grouping
+  type AlavieskaBlock = { title: string; nodes: any[]; isEnergySection: boolean }
+  const blocks: AlavieskaBlock[] = []
+  let current: AlavieskaBlock | null = null
+  let inEnergySection = false
+
+  for (const el of $("h3, h4, h5, p").toArray()) {
+    if (el.name === "h3") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      inEnergySection = /tuulivoimapuistot/i.test(title)
+      // the section header itself may be the project ("Kivihaan alue" has
+      // no h4 of its own -- its one paragraph sits directly under the h3)
+      if (title && !inEnergySection && title !== "Kaavoitus ja tontit") {
+        current = { title, nodes: [], isEnergySection: false }
+        blocks.push(current)
+      } else {
+        current = null
+      }
+      continue
+    }
+    if (el.name === "h5") {
+      // "Yhteystiedot" contact section marks the end of real content
+      current = null
+      inEnergySection = false
+      continue
+    }
+    if (el.name === "h4") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      if (title && title !== "Tonttien myyntihinnat") {
+        current = { title, nodes: [], isEnergySection: inEnergySection }
+        blocks.push(current)
+      } else {
+        current = null
+      }
+      continue
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  const projectItems = blocks
+    .map((block) => ({
+      title: block.title,
+      text: block.nodes.map((node) => $(node).text().replace(/\s+/g, " ").trim()).join(" ").trim(),
+      isEnergySection: block.isEnergySection,
+    }))
+    .filter((item) => item.isEnergySection || /asemakaava/i.test(item.title) || /asemakaava/i.test(item.text))
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of projectItems) {
+    const phase = alavieskaPhaseFromText(`${item.title} ${item.text}`)
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${ALAVIESKA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.text })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.text,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: projectItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "alavieskaKaavaParser") {
+    return collectAlavieskaKaavaSource(source)
+  }
+
   if (source.parser === "iiKaavaParser") {
     return collectIiKaavaSource(source)
   }

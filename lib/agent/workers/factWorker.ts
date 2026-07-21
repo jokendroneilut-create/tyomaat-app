@@ -169,6 +169,7 @@ export async function runFactWorker(documentId?: string) {
       "Siikajoen kaavoitus",
       "Siikalatvan kaavoitus",
       "Iin kaavoitus",
+      "Alavieskan kaavoitus",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",
