@@ -21740,6 +21740,170 @@ async function collectSodankylaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PELLO_LISTING_URL = "https://www.pello.fi/asuminen-ja-rakentaminen/kaavoitus-ja-maankaytto.html"
+
+const PELLO_CONTACT = {
+  name: "Pellon kunta",
+  title: "Tekniset palvelut",
+  phone: "040 712 4401",
+  email: "teknisetpalvelut@pello.fi",
+}
+
+function pelloSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function pelloPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että)|aineiston viimeistelyssä|viimeistelyssä)/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Pello lists each pending item as a bare <h3> title followed by <p>
+// attachment-link paragraphs, between "Vireillä olevat kaavat" and the
+// next h2 ("Voimassa olevat kaavat"). Phase is inferred from which
+// document types (OAS/luonnos/ehdotus/etc) are linked, since there's no
+// free-text status description.
+async function collectPelloKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PELLO_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("h2")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Vireillä olevat kaavat")
+  if (!heading) return { documentsFound: 0, documentsSaved: 0 }
+
+  type Item = { title: string; links: { label: string; href: string }[] }
+  const items: Item[] = []
+  let current: Item | null = null
+
+  let node = $(heading).next()
+  while (node.length && (node.prop("tagName") || "").toLowerCase() !== "h2") {
+    const tag = (node.prop("tagName") || "").toLowerCase()
+    if (tag === "h3") {
+      const title = node.text().replace(/\s+/g, " ").trim()
+      if (title) {
+        current = { title, links: [] }
+        items.push(current)
+      } else {
+        current = null
+      }
+    } else if (tag === "p" && current) {
+      node.find("a").each((_: number, a: any) => {
+        current!.links.push({ label: $(a).text().replace(/\s+/g, " ").trim(), href: $(a).attr("href") ?? "" })
+      })
+    }
+    node = node.next()
+  }
+
+  const filtered = items.filter((item) =>
+    item.title &&
+    /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+    !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
+  )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of filtered) {
+    const title = item.title
+    const labelText = item.links.map((l) => l.label).join(" ")
+    const phase = pelloPhaseFromText(`${title} ${labelText}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [PELLO_CONTACT]
+    const description = labelText
+    const attachments = item.links
+      .filter((l) => l.href.startsWith("http"))
+      .map((l) => ({ label: l.label, url: l.href }))
+
+    found += 1
+
+    const slug = pelloSlug(title)
+    const documentUrl = `${PELLO_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -24701,6 +24865,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "sodankylaKaavaParser") {
     return collectSodankylaKaavaSource(source)
+  }
+
+  if (source.parser === "pelloKaavaParser") {
+    return collectPelloKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
