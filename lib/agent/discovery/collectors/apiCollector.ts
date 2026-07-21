@@ -28596,7 +28596,142 @@ async function collectVaalaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SIIKAJOKI_LISTING_URL = "https://www.siikajoki.fi/vireilla-olevat-kaavahankkeet"
+
+function siikajokiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 20), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+
+  // "hyväksyi hanketta koskevan osallistumis- ja arviointisuunnitelman" is
+  // the board signing off on displaying the OAS, not the plan itself being
+  // approved
+  if (
+    matchesUnguarded(/hyväksy/, (window) =>
+      /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen/.test(window)
+    )
+  ) {
+    return "Hyväksyminen"
+  }
+
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+
+  return "Vireilletulo"
+}
+
+async function collectSiikajokiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SIIKAJOKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  // the page repeats the same ".field--name-body" class for an unrelated
+  // nav-links block near the top -- only the one containing the project h2s
+  // is the real article body
+  const container = $(".field--name-body")
+    .filter((_, el) => $(el).find("h2").length > 0)
+    .first()
+
+  type SiikajokiBlock = { title: string; nodes: any[] }
+  const blocks: SiikajokiBlock[] = []
+  let current: SiikajokiBlock | null = null
+
+  for (const el of container.children("h2, h3, p, hr, ul").toArray()) {
+    if (el.name === "h2") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      if (title) {
+        current = { title, nodes: [] }
+        blocks.push(current)
+      }
+      continue
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  const projectItems = blocks
+    .map((block) => ({
+      title: block.title,
+      text: block.nodes.map((node) => $(node).text().replace(/\s+/g, " ").trim()).join(" ").trim(),
+    }))
+    .filter((item) => /asemakaava/i.test(item.title) || energyPattern.test(item.title))
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of projectItems) {
+    const phase = siikajokiPhaseFromText(`${item.title} ${item.text}`)
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${SIIKAJOKI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.text })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.text,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: projectItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "siikajokiKaavaParser") {
+    return collectSiikajokiKaavaSource(source)
+  }
+
   if (source.parser === "vaalaKaavaParser") {
     return collectVaalaKaavaSource(source)
   }
