@@ -158,6 +158,7 @@ export async function runFactWorker(documentId?: string) {
       "Euran kaavoitus ja maapolitiikka",
       "Siikaisten kaavoitus",
       "Joutsan kaavoitus",
+      "Pielaveden kaavoitus",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",

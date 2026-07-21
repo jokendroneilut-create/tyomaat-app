@@ -27639,7 +27639,165 @@ async function collectJoutsaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PIELAVESI_LISTING_URL =
+  "https://pielavesi.fi/sujuva-arki/asuminen-rakentaminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat/"
+
+function pielavesiPhaseFromText(text: string, imgAlt: string | null): string {
+  // the wind/solar accordions each open with a progress-diagram image
+  // whose alt text names the current stage directly -- far more reliable
+  // than trying to infer it from the surrounding narrative, which mixes
+  // in dates from every past stage the project has already been through
+  const normalizedAlt = (imgAlt ?? "").toLowerCase()
+  if (/hyväksymisvaihe/.test(normalizedAlt)) return "Hyväksyminen"
+  if (/voimaantulovaihe|lainvoima/.test(normalizedAlt)) return "Voimaantulo"
+  if (/ehdotusvaihe/.test(normalizedAlt)) return "Ehdotus"
+  if (/luonnosvaihe|valmisteluvaihe/.test(normalizedAlt)) return "Luonnos"
+  if (/vireilletulovaihe|aloitusvaihe/.test(normalizedAlt)) return "Vireilletulo"
+
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const hyvaksyIndex = normalized.search(/hyväksy/)
+  if (hyvaksyIndex >= 0) {
+    // accordions without a progress image are still early-stage narrative
+    // text describing the environmental board "hyväksyä[n] kaavoitusaloite"
+    // (approving the kick-off INITIATIVE) -- not the plan itself reaching
+    // the approval phase
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 80)
+    const isProceduralApproval = /aloit/.test(window)
+    if (!isProceduralApproval) return "Hyväksyminen"
+  }
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectPielavesiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PIELAVESI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  type PielavesiItem = { title: string; phase: string; description: string | null }
+  const items: PielavesiItem[] = []
+
+  // wind/solar osayleiskaava projects: accordion widgets, one per project
+  $(".block-accordion").each((_, accordion) => {
+    const title = $(accordion)
+      .find(".accordion__trigger")
+      .first()
+      .contents()
+      .filter((__, node) => node.type === "text")
+      .text()
+      .replace(/\s+/g, " ")
+      .trim()
+    if (!title || !energyPattern.test(title)) return
+
+    const content = $(accordion).find(".accordion__content").first()
+    const imgAlt = content.find("img").first().attr("alt") ?? null
+    const bodyText = content.text().replace(/\s+/g, " ").trim()
+
+    items.push({
+      title,
+      phase: pielavesiPhaseFromText(bodyText, imgAlt),
+      description: bodyText || null,
+    })
+  })
+
+  // asemakaava projects: a plain h3-per-project section, no accordion
+  const asemakaavaHeading = $("h2.wp-block-heading")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Vireillä olevat asema- ja ranta-asemakaavat")
+  if (asemakaavaHeading) {
+    const scoped = $(asemakaavaHeading).nextUntil("h2.wp-block-heading")
+    let current: { title: string; nodes: any[] } | null = null
+    const blocks: { title: string; nodes: any[] }[] = []
+
+    scoped.filter("h3, p").each((_, el) => {
+      if (el.name === "h3") {
+        const title = $(el).text().replace(/\s+/g, " ").trim()
+        if (title) {
+          current = { title, nodes: [] }
+          blocks.push(current)
+        }
+        return
+      }
+      if (current) current.nodes.push(el)
+    })
+
+    for (const block of blocks) {
+      if (!/asemakaava/i.test(block.title) && !energyPattern.test(block.title)) continue
+      const bodyText = block.nodes.map((node) => $(node).text().replace(/\s+/g, " ").trim()).join(" ").trim()
+      items.push({
+        title: block.title,
+        phase: pielavesiPhaseFromText(bodyText, null),
+        description: bodyText || null,
+      })
+    }
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const completed = item.phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${PIELAVESI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase: item.phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase: item.phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "pielavesiKaavaParser") {
+    return collectPielavesiKaavaSource(source)
+  }
+
   if (source.parser === "joutsaKaavaParser") {
     return collectJoutsaKaavaSource(source)
   }
