@@ -21894,11 +21894,13 @@ async function collectPelloKaavaSource(source: DiscoverySource) {
     node = node.next()
   }
 
-  const filtered = items.filter((item) =>
-    item.title &&
-    /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
-    !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
-  )
+  const filtered = items.filter((item) => {
+    if (!item.title) return false
+    const isAsemakaava =
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) && !/ranta-asemakaav/i.test(item.title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(item.title)
+    return isAsemakaava || isEnergyProject
+  })
 
   let found = 0
   let saved = 0
