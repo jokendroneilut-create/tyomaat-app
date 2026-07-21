@@ -14666,7 +14666,10 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
     // the site's own title text has at least one typo ("Poransaaren
     // asemaakaavamuutos", double "a"), so the match tolerates one extra
     // vowel between "asema" and "kaava"
-    if (!title || !/asemaa?kaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemaa?kaava/i.test(title)) {
+    const isAsemakaava =
+      /asemaa?kaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemaa?kaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)
+    if (!title || (!isAsemakaava && !isEnergyProject)) {
       continue
     }
 
