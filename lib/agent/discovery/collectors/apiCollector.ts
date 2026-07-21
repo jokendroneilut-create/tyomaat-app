@@ -10724,14 +10724,37 @@ function kauhajokiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "asettaa ... rakennuskieltoon kaavan lainvoimaiseksi tuloon saakka" is
+  // the temporary building ban's duration ("until the plan gains legal
+  // force") -- it hasn't gained legal force yet.
+  const isBuildingBanReference =
+    lainvoimaMatchIndex >= 0 &&
+    /rakennuskiel/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 60), lainvoimaMatchIndex))
+  // "... ovat tulleet voimaan MRL:n 202 §:n perusteella ennen kuin päätös on
+  // saanut lainvoiman" -- the building ban itself took effect under a
+  // different provision, explicitly BEFORE the plan gained legal force.
+  const isBeforeLainvoimaClause =
+    lainvoimaMatchIndex >= 0 &&
+    /ennen kuin[^.]{0,40}$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 60), lainvoimaMatchIndex))
   // this site narrates a whole roadmap in one block, including stages that
   // haven't happened yet ("hyväksyttäväksi" = still awaiting approval, "sen
   // jälkeen ... kaavaehdotus" = the ehdotus step comes after the current
-  // one) -- only completed-action verb forms count as the stage having
-  // actually been reached
-  const negatedEhdotus = /sen jälkeen[^.]{0,60}ehdotu/.test(normalized)
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
-  if (/hyväksyi|hyväksynyt|hyväksytty|hyväksymä\b/.test(normalized)) return "Hyväksyminen"
+  // one, "kaavaehdotuksen valmistumiseen saakka" = kept available UNTIL the
+  // proposal is finished, i.e. it isn't yet) -- only completed-action verb
+  // forms count as the stage having actually been reached
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  const negatedEhdotus =
+    /sen jälkeen[^.]{0,60}ehdotu/.test(normalized) ||
+    (ehdotuIndex >= 0 && /saakka/.test(normalized.slice(ehdotuIndex, ehdotuIndex + 45)))
+  if (!negatedLainvoima && !isBuildingBanReference && !isBeforeLainvoimaClause && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const hyvaksyMatch = normalized.match(/hyväksyi|hyväksynyt|hyväksytty|hyväksymä\b/)
+  // "Tekninen lautakunta hyväksyi ... luonnoksen julkisesti nähtäville
+  // pantavaksi" is approving the DRAFT for display, not the plan itself.
+  const isProceduralApproval =
+    !!hyvaksyMatch &&
+    /luonno[sk]/.test(normalized.slice(hyvaksyMatch.index! + hyvaksyMatch[0].length, hyvaksyMatch.index! + hyvaksyMatch[0].length + 60))
+  if (hyvaksyMatch && !isProceduralApproval) return "Hyväksyminen"
   if (/ehdotu/.test(normalized) && !negatedEhdotus) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
@@ -10767,16 +10790,27 @@ async function collectKauhajokiKaavaSource(source: DiscoverySource) {
   const blocks: Block[] = []
   let current: Block | null = null
   let recording = false
+  // Wind/solar projects are zoned as yleiskaavat, listed under their own
+  // heading alongside unrelated general yleiskaava items (e.g. an
+  // industrial park) -- only energy-project titles from there are in scope.
+  let recordingEnergyOnly = false
 
   for (const el of content.find("h2, h3, p, ul").toArray()) {
     if (el.name === "h2") {
-      recording = $(el).text().replace(/\s+/g, " ").trim().toLowerCase() === "asemakaavat"
+      const heading = $(el).text().replace(/\s+/g, " ").trim().toLowerCase()
+      recording = heading === "asemakaavat"
+      recordingEnergyOnly = heading === "yleiskaavat"
       current = null
       continue
     }
-    if (!recording) continue
+    if (!recording && !recordingEnergyOnly) continue
     if (el.name === "h3") {
-      current = { title: $(el).text().replace(/\s+/g, " ").trim(), nodes: [] }
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      if (recordingEnergyOnly && !/tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)) {
+        current = null
+        continue
+      }
+      current = { title, nodes: [] }
       blocks.push(current)
       continue
     }
