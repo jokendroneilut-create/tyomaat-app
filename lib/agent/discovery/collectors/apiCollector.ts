@@ -17521,6 +17521,143 @@ async function collectPuolankaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HAUSJARVI_LISTING_URL =
+  "https://www.hausjarvi.fi/asuminen-ja-rakentaminen/kaavoitus/asemakaavat/vireilla-olevat-asemakaavat/"
+
+const HAUSJARVI_CONTACT = {
+  name: "Pekka Säteri",
+  title: "Kaavoittaja",
+  phone: "019 758 6560",
+  email: "pekka.sateri@hausjarvi.fi",
+}
+
+function hausjarviPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Hausjärvi's hub page links out to a real, dedicated detail page per
+// plan (not anchors on the hub itself). Each detail page repeats the same
+// sidebar card-list of siblings, which we strip before reading content.
+async function collectHausjarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HAUSJARVI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $("main, article")
+    .first()
+    .find("a")
+    .toArray()
+    .map((el) => ({
+      title: $(el).text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter(
+      (item) =>
+        item.href.startsWith(HAUSJARVI_LISTING_URL) &&
+        item.href !== HAUSJARVI_LISTING_URL &&
+        item.title &&
+        /asemakaava/i.test(item.title) &&
+        !/yleiskaava/i.test(item.title) &&
+        !/ranta-asemakaava/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const detailResponse = await fetch(item.href, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const $$ = cheerio.load(await detailResponse.text())
+    $$("nav, aside, img, script, style").remove()
+
+    const main = $$("main, article").first()
+    const title = $$("h1").first().text().replace(/\s+/g, " ").trim() || item.title
+    const description = main.text().replace(/\s+/g, " ").trim()
+
+    const phase = hausjarviPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [HAUSJARVI_CONTACT]
+
+    const attachments = main
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $$(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($$(a).attr("href") ?? "", item.href).toString(),
+      }))
+      .filter((a) => !a.url.startsWith(HAUSJARVI_LISTING_URL))
+
+    found += 1
+
+    const slug = item.href.replace(/\/$/, "").split("/").pop() ?? null
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: item.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -20398,6 +20535,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "puolankaKaavaParser") {
     return collectPuolankaKaavaSource(source)
+  }
+
+  if (source.parser === "hausjarviKaavaParser") {
+    return collectHausjarviKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
