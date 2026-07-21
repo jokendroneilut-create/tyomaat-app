@@ -15154,8 +15154,17 @@ async function collectLapinlahtiKaavaSource(source: DiscoverySource) {
       if (!h2.length) continue
 
       const title = h2.text().replace(/\s+/g, " ").trim()
-      if (title && /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)) {
-        const description = widget.find(".iwc-widget-body").first().text().replace(/\s+/g, " ").trim()
+      const isAsemakaava = /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+      const isEnergyProject = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)
+      const description = widget.find(".iwc-widget-body").first().text().replace(/\s+/g, " ").trim()
+      if (title && isEnergyProject && current && /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(current.title)) {
+        // A second energy-titled H2 immediately after the first one is a
+        // continuation section (e.g. "... kaavaehdotus ja valmisteluaineisto"),
+        // not a distinct project -- its title/body carries the phase signal
+        // the main block's own body lacks, so fold it in rather than
+        // starting a second document for the same real-world project.
+        current.description = `${current.description} ${title} ${description}`.trim()
+      } else if (title && (isAsemakaava || isEnergyProject)) {
         current = { title, description, attachments: [] }
         blocks.push(current)
       } else {
