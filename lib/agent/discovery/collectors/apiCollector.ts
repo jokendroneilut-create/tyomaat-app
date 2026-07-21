@@ -12602,24 +12602,31 @@ function saarijarviCollectAsemakaavaLinks(
 ): { title: string; url: string | null }[] {
   const plans: { title: string; url: string | null }[] = []
   let inAsemakaavat = false
+  // Wind/solar projects are zoned as yleiskaavat, listed in their own
+  // "Yleiskaavat:" sub-list alongside unrelated general yleiskaava items --
+  // only energy-project titles from there are in scope.
+  let inYleiskaavat = false
 
   for (const el of $(panelBody).children().toArray()) {
     if (el.name === "h4") {
       const label = $(el).text().replace(/\s+/g, " ").trim()
       inAsemakaavat = /^asemakaavat:?$/i.test(label)
+      inYleiskaavat = /^yleiskaavat:?$/i.test(label)
       continue
     }
-    if (el.name !== "p" || !inAsemakaavat) continue
+    if (el.name !== "p" || (!inAsemakaavat && !inYleiskaavat)) continue
 
     const text = $(el).text().replace(/\s+/g, " ").trim()
     if (!text || /^käynnistymässä olevia kaavahankkeita:?$/i.test(text)) continue
+
+    if (inYleiskaavat && !/tuulivoima|aurinkovoima/i.test(text)) continue
 
     const link = $(el).find("a").first()
     if (link.length > 0) {
       const title = link.text().replace(/\s+/g, " ").trim()
       const href = link.attr("href")
       if (title && href) plans.push({ title, url: href })
-    } else if (!/yleiskaava/i.test(text)) {
+    } else if (inYleiskaavat || !/yleiskaava/i.test(text)) {
       plans.push({ title: text, url: null })
     }
   }
