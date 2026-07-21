@@ -22372,6 +22372,160 @@ async function collectIkaalinenKaavaSource(source: DiscoverySource) {
   }
 }
 
+const MANTTAVILPPULA_LISTING_URL = "https://manttavilppula.fi/asuminen-ja-ymparisto/kaupunkisuunnittelu-ja-kaavoitus/vireilla-olevat-kaavat-ja-suunnitelmat/"
+
+const MANTTAVILPPULA_CONTACT = {
+  name: "Pinja Ahola",
+  title: "Kaupunkisuunnittelupäällikkö",
+  phone: "044 035 4320",
+  email: "pinja.ahola@taidekaupunki.fi",
+}
+
+function manttavilppulaSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function manttavilppulaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(normalized)
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima|tul(?:lut|leet) voimaan/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (
+    !negatedLainvoima &&
+    !isHistoricalYearReference &&
+    !isAttachmentReference &&
+    /voimaantulo|lainvoima|tul(?:lut|leet) voimaan/.test(normalized)
+  )
+    return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että)|aineiston viimeistelyssä|viimeistelyssä)/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// All pending plans live on ONE page as accordion items
+// (div[data-aab-accordion-id] > h5.aab__accordion_title + .aab__accordion_body),
+// each body containing the full current status text plus attachment links.
+async function collectManttaVilppulaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(MANTTAVILPPULA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $("[data-aab-accordion-id]")
+    .toArray()
+    .map((el) => {
+      const title = $(el).find("h5.aab__accordion_title").first().text().replace(/\s+/g, " ").trim()
+      const body = $(el).find(".aab__accordion_body").first()
+      return { title, body }
+    })
+    .filter(
+      (item) =>
+        item.title &&
+        /asemakaav/i.test(item.title) &&
+        !/yleiskaav/i.test(item.title) &&
+        !/ranta-asemakaav/i.test(item.title) &&
+        !/tuulivoima/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+    const bodyText = item.body.text().replace(/\s+/g, " ").trim()
+    const description = item.body.find("p").first().text().replace(/\s+/g, " ").trim() || null
+    const attachments = item.body
+      .find("a")
+      .toArray()
+      .map((a: any) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: $(a).attr("href") ?? "",
+      }))
+      .filter((a: { url: string }) => a.url.startsWith("http"))
+
+    const phase = manttavilppulaPhaseFromText(bodyText)
+    const completed = phase === "Voimaantulo"
+    const contacts = [MANTTAVILPPULA_CONTACT]
+
+    found += 1
+
+    const slug = manttavilppulaSlug(title)
+    const documentUrl = `${MANTTAVILPPULA_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -25349,6 +25503,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "ikaalinenKaavaParser") {
     return collectIkaalinenKaavaSource(source)
+  }
+
+  if (source.parser === "manttavilppulaKaavaParser") {
+    return collectManttaVilppulaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {

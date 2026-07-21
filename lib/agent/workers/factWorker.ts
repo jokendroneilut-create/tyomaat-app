@@ -163,6 +163,7 @@ export async function runFactWorker(documentId?: string) {
       "Ylitornion vireillä olevat asemakaavat",
       "Hämeenkyrön vireillä olevat asemakaavat",
       "Ikaalisten vireillä olevat asemakaavat",
+      "Mänttä-Vilppulan vireillä olevat asemakaavat",
       "Äänekosken vireillä olevat asemakaavat",
       "Kuopion vireillä olevat kaavat",
       "Hyvinkään vireillä olevat kaavat",
