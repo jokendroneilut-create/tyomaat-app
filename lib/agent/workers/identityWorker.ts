@@ -101,6 +101,7 @@ import { resolveHirvensalmiKaavaProject } from "@/lib/agent/identity/resolvers/h
 import { resolvePuumalaKaavaProject } from "@/lib/agent/identity/resolvers/puumalaKaavaResolver"
 import { resolveSulkavaKaavaProject } from "@/lib/agent/identity/resolvers/sulkavaKaavaResolver"
 import { resolveHyrynsalmiKaavaProject } from "@/lib/agent/identity/resolvers/hyrynsalmiKaavaResolver"
+import { resolvePaltamoKaavaProject } from "@/lib/agent/identity/resolvers/paltamoKaavaResolver"
 import { resolveRiihimakiKaavaProject } from "@/lib/agent/identity/resolvers/riihimakiKaavaResolver"
 import { resolveRaaseporiKaavaProject } from "@/lib/agent/identity/resolvers/raaseporiKaavaResolver"
 import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisioKaavaResolver"
@@ -837,6 +838,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "hyrynsalmen vireillä olevat asemakaavat") {
     const result = await resolveHyrynsalmiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "paltamon vireillä olevat asemakaavat") {
+    const result = await resolvePaltamoKaavaProject({
       document,
       facts: facts ?? [],
     })

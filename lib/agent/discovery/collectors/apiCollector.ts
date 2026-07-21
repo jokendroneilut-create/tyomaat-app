@@ -13981,8 +13981,13 @@ function hattulaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -14105,8 +14110,13 @@ function savitaipalePhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -14241,8 +14251,13 @@ function juvaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -14389,8 +14404,13 @@ function lapinlahtiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -14528,8 +14548,13 @@ function kannusPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -14666,8 +14691,13 @@ function toholampiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -14799,8 +14829,13 @@ function kuhmoPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -14919,8 +14954,13 @@ function suomussalmiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -15037,8 +15077,13 @@ function kittilaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -15164,8 +15209,13 @@ function kemijarviPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -15305,8 +15355,13 @@ function rautjarviPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -15438,8 +15493,13 @@ function alajarviPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -15587,8 +15647,13 @@ function alavusPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -15728,8 +15793,13 @@ function isokyroPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -15892,8 +15962,13 @@ function kuortanePhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -16015,8 +16090,13 @@ function laihiaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -16146,8 +16226,13 @@ function ahtariPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -16306,8 +16391,13 @@ function enonkoskiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -16465,8 +16555,13 @@ function heinavesiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -16598,8 +16693,13 @@ function hirvensalmiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -16855,8 +16955,13 @@ function sulkavaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -16979,8 +17084,13 @@ function hyrynsalmiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
@@ -17044,6 +17154,199 @@ async function collectHyrynsalmiKaavaSource(source: DiscoverySource) {
 
     const slug = hyrynsalmiSlug(`${dateMatch[1]}-${title}`)
     const documentUrl = `${HYRYNSALMI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
+const PALTAMO_LISTING_URL = "https://www.paltamo.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto.html"
+
+// name/title/phone/email read directly off the published kaavoitus contact
+// (Paltamo shares a kaavoittaja with the neighboring Sotkamo municipality,
+// hence the @sotkamo.fi domain — verified, not a typo)
+const PALTAMO_CONTACT = {
+  name: "Mika Hakkarainen",
+  title: "Kaavoittaja",
+  phone: "040 187 7970",
+  email: "mika.hakkarainen@sotkamo.fi",
+}
+
+function paltamoSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function paltamoPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
+    // pre-existing baseline plan being changed, not the current muutos
+    // process reaching approval.
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function paltamoIsAsemakaavaOnly(title: string): boolean {
+  return /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/tuulivoima/i.test(title) && !/ranta-asemakaava/i.test(title)
+}
+
+// Paltamo's single all-in-one kaavoitus page uses Bootstrap-collapse
+// accordions (<a href="#collapseX"> triggering <div id="collapseX">, not
+// <details>) for each top-level "Vireillä: ..." item, plus a further
+// "Muut vireillä olevat tai suunnitellut kaavoitukset" collapse block whose
+// own sub-items are flat bold-paragraph markers (same shape as Ähtäri).
+async function collectPaltamoKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PALTAMO_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  type Item = { title: string; description: string; attachments: { label: string; url: string }[] }
+  const items: Item[] = []
+
+  $('a[href^="#collapse"]')
+    .toArray()
+    .forEach((el) => {
+      const trigger = $(el)
+      const triggerText = trigger.text().replace(/\s+/g, " ").trim()
+      if (!triggerText.startsWith("Vireillä")) return
+
+      const title = triggerText.replace(/^Vireillä:?\s*/, "").trim()
+      if (!paltamoIsAsemakaavaOnly(title)) return
+
+      const href = trigger.attr("href") ?? ""
+      const panel = $(href)
+      if (panel.length === 0) return
+
+      const description = panel.text().replace(/\s+/g, " ").trim()
+      const attachments = panel
+        .find("a")
+        .toArray()
+        .map((a) => ({
+          label: $(a).text().replace(/\s+/g, " ").trim(),
+          url: new URL($(a).attr("href") ?? "", PALTAMO_LISTING_URL).toString(),
+        }))
+
+      items.push({ title, description, attachments })
+    })
+
+  const otherPanel = $('a[href^="#collapse"]')
+    .toArray()
+    .map((el) => $(el))
+    .find((trigger) => trigger.text().trim() === "Muut vireillä olevat tai suunnitellut kaavoitukset")
+
+  if (otherPanel) {
+    const panel = $(otherPanel.attr("href") ?? "")
+    let current: Item | null = null
+
+    panel
+      .find(".Editor")
+      .first()
+      .children("p")
+      .toArray()
+      .forEach((el) => {
+        const $el = $(el)
+        const text = $el.text().trim()
+        if (!text) return
+
+        const isTitleMarker = $el.children("strong").length > 0 && $el.children("a").length === 0
+        if (isTitleMarker) {
+          if (current && paltamoIsAsemakaavaOnly(current.title)) items.push(current)
+          current = { title: text, description: "", attachments: [] }
+          return
+        }
+
+        if (current) {
+          current.description = `${current.description} ${text}`.trim()
+          $el.find("a").each((_, a) => {
+            current!.attachments.push({
+              label: $(a).text().replace(/\s+/g, " ").trim(),
+              url: new URL($(a).attr("href") ?? "", PALTAMO_LISTING_URL).toString(),
+            })
+          })
+        }
+      })
+
+    if (current && paltamoIsAsemakaavaOnly((current as Item).title)) items.push(current)
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const { title, description, attachments } = item
+    if (!title) continue
+
+    const phase = paltamoPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [PALTAMO_CONTACT]
+
+    found += 1
+
+    const slug = paltamoSlug(title)
+    const documentUrl = `${PALTAMO_LISTING_URL}#${slug}`
 
     const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
     const contentHash = hashContent(rawText)
@@ -19962,6 +20265,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "hyrynsalmiKaavaParser") {
     return collectHyrynsalmiKaavaSource(source)
+  }
+
+  if (source.parser === "paltamoKaavaParser") {
+    return collectPaltamoKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
