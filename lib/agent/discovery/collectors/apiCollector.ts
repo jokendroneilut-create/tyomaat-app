@@ -17311,7 +17311,9 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
         if (current) blocks.push(current)
         const inAsemakaavatCategory =
           !!currentCategory && currentCategory.includes("asemakaavat") && !currentCategory.includes("ranta")
-        current = inAsemakaavatCategory ? { title: text, links: [] } : null
+        const inEnergyCategory =
+          !!currentCategory && /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/.test(currentCategory)
+        current = inAsemakaavatCategory || inEnergyCategory ? { title: text, links: [] } : null
       } else if (el.tagName === "ul" && current) {
         $(el)
           .find("a")
