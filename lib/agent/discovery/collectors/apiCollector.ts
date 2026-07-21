@@ -11661,6 +11661,22 @@ async function collectLieksaKaavaSource(source: DiscoverySource) {
     }
   }
 
+  // Wind/solar projects are zoned as yleiskaavat, listed under their own
+  // "Vireillä olevat yleiskaavat" heading -- only pull energy-project
+  // titles from there, not general yleiskaava items (out of scope here).
+  const energyHeading = listing$("h3")
+    .toArray()
+    .find((el) => listing$(el).text().replace(/­/g, "").replace(/\s+/g, " ").trim() === "Vireillä olevat yleiskaavat")
+  if (energyHeading) {
+    const queryBlock = listing$(energyHeading).next(".wp-block-query")
+    for (const el of queryBlock.find("h2.wp-block-post-title a").toArray()) {
+      const href = listing$(el).attr("href") ?? ""
+      const title = listing$(el).text().replace(/­/g, "").replace(/\s+/g, " ").trim()
+      if (!href || !title || !/tuulivoima|aurinkovoima/i.test(title)) continue
+      planLinks.push({ href, title })
+    }
+  }
+
   let found = 0
   let saved = 0
 
