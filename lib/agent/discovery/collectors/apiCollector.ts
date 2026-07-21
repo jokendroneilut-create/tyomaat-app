@@ -11972,7 +11972,10 @@ async function collectKalajokiKaavaSource(source: DiscoverySource) {
 
   for (const detail of details) {
     const title = $(detail).find("summary").first().text().replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title)) continue
+    if (!title) continue
+    const isAsemakaava = /asemakaava/i.test(title) && !/yleiskaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const description = $(detail)
       .find(".iwc-widget-editor-widget .iwc-editor")
