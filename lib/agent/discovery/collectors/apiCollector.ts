@@ -10070,13 +10070,18 @@ async function collectYlivieskaKaavaSource(source: DiscoverySource) {
   const seen = new Set<string>()
   for (const h2 of listing$("h2").toArray()) {
     const heading = listing$(h2).text().replace(/\s+/g, " ").trim().toLowerCase()
-    if (!YLIVIESKA_SECTION_HEADINGS.includes(heading)) continue
+    // Wind/solar projects are zoned as yleiskaavat, listed under their own
+    // heading alongside unrelated general yleiskaava items -- only
+    // energy-project titles from that heading are in scope.
+    const isEnergyOnlySection = heading === "vireillä olevat yleiskaavat"
+    if (!YLIVIESKA_SECTION_HEADINGS.includes(heading) && !isEnergyOnlySection) continue
 
     for (const el of listing$(h2).nextUntil("h2").toArray()) {
       const link = listing$(el).find("a").first()
       const href = link.attr("href") ?? ""
       const title = link.text().replace(/\s+/g, " ").trim()
       if (!href || !title || seen.has(href)) continue
+      if (isEnergyOnlySection && !/tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)) continue
       seen.add(href)
       planLinks.push({ href, title })
     }
