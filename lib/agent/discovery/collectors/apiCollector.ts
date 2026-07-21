@@ -22708,6 +22708,155 @@ async function collectOrivesiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PALKANE_LISTING_URL = "https://www.palkane.fi/asuminen-ja-ymparisto/kaavoitus-ja-yleisten-alueiden-suunnittelu/vireilla-olevat-kaavat/"
+
+const PALKANE_CONTACT = {
+  name: "Aarni-Pekka Jakonen",
+  title: "Maankäytön suunnittelija",
+  phone: "040 737 5390",
+  email: "Aarni-Pekka.Jakonen@palkane.fi",
+}
+
+function palkaneSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// Each project is an explicit sequence of stage headings ("Kaavaehdotus oli
+// nähtävillä ...", "Asemakaavan hyväksyminen:", etc.) in reverse-chronological
+// order, so the phase is read directly off the FIRST (most recent) stage
+// heading rather than scanned from narrative text.
+function palkanePhaseFromHeading(headingText: string): string | null {
+  const normalized = headingText.toLowerCase()
+  if (/voimaantulo|tullut voimaan|saanut lainvoiman/.test(normalized)) return "Voimaantulo"
+  if (/hyväksyminen/.test(normalized)) return "Hyväksyminen"
+  if (/kaavaehdotus/.test(normalized)) return "Ehdotus"
+  if (/kaavaluonnos/.test(normalized)) return "Luonnos"
+  if (/osallistumis/.test(normalized)) return "Vireilletulo"
+  return null
+}
+
+// Each pending plan is a <section class="paragraph-section"> containing an
+// <h2 id="..."> title (the id matches a page-top TOC anchor) plus a
+// description paragraph, immediately followed by one or more sibling
+// <section class="subpage-toggle-container"> accordion sections — one per
+// stage, newest first — until the next paragraph-section (next project).
+async function collectPalkaneKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PALKANE_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const sections = $("section.paragraph-section")
+    .toArray()
+    .filter((el) => $(el).find("h2[id]").length > 0)
+
+  let found = 0
+  let saved = 0
+
+  for (const sec of sections) {
+    const $sec = $(sec)
+    const title = $sec.find("h2[id]").first().text().replace(/\s+/g, " ").trim()
+
+    if (
+      !title ||
+      !/asemakaav/i.test(title) ||
+      /yleiskaav/i.test(title) ||
+      /ranta-asemakaav/i.test(title) ||
+      /tuulivoima/i.test(title)
+    )
+      continue
+
+    const paragraphs = $sec
+      .find("p")
+      .toArray()
+      .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const description = paragraphs[0] || null
+
+    let phase: string | null = null
+    const attachments: { label: string; url: string }[] = []
+
+    let node = $sec.next()
+    while (node.length && !node.is("section.paragraph-section")) {
+      if (node.is("section.subpage-toggle-container")) {
+        const link = node.find("a.toggle-content-link").first().clone()
+        link.find("i").remove()
+        const stageText = link.text().replace(/\s+/g, " ").trim()
+        const stagePhase = palkanePhaseFromHeading(stageText)
+        if (stagePhase && !phase) phase = stagePhase
+
+        node.find(".toggle-content-container a").each((_: number, a: any) => {
+          const href = $(a).attr("href") ?? ""
+          if (href.startsWith("http")) {
+            attachments.push({ label: $(a).text().replace(/\s+/g, " ").trim(), url: href })
+          }
+        })
+      }
+      node = node.next()
+    }
+
+    if (!phase) continue
+
+    const completed = phase === "Voimaantulo"
+    const contacts = [PALKANE_CONTACT]
+
+    found += 1
+
+    const slug = palkaneSlug(title)
+    const documentUrl = `${PALKANE_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -25693,6 +25842,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "orivesiKaavaParser") {
     return collectOrivesiKaavaSource(source)
+  }
+
+  if (source.parser === "palkaneKaavaParser") {
+    return collectPalkaneKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {

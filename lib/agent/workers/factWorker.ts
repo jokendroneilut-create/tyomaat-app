@@ -165,6 +165,7 @@ export async function runFactWorker(documentId?: string) {
       "Ikaalisten vireillä olevat asemakaavat",
       "Mänttä-Vilppulan vireillä olevat asemakaavat",
       "Oriveden vireillä olevat asemakaavat",
+      "Pälkäneen vireillä olevat asemakaavat",
       "Äänekosken vireillä olevat asemakaavat",
       "Kuopion vireillä olevat kaavat",
       "Hyvinkään vireillä olevat kaavat",
