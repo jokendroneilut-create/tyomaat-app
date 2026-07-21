@@ -21381,11 +21381,38 @@ async function collectRanuaKaavaSource(source: DiscoverySource) {
 
   const items = segments
     .map((seg) => ({ title: seg.title, description: seg.parts.join(" "), links: seg.links }))
-    .filter((item) =>
-      item.title &&
-      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
-      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
-    )
+    .filter((item) => item.title && /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) && !/ranta-asemakaav/i.test(item.title))
+
+  // Wind/solar power projects live under their own "tuulivoimaosayleiskaavat"
+  // h2, structured differently from the asemakaava section above: runs of
+  // <p> narrative paragraphs followed by a <div class="wp-block-buttons">
+  // whose first attachment link's own label IS the project's canonical
+  // title, rather than a <strong> title tag inside the paragraph itself.
+  const energyHeading = $("h2")
+    .toArray()
+    .find((el) => $(el).text().trim().toLowerCase() === "tuulivoimaosayleiskaavat")
+  if (energyHeading) {
+    let pendingDescription: string[] = []
+    let node = $(energyHeading).next()
+    while (node.length && (node.prop("tagName") || "").toLowerCase() !== "h2") {
+      const tag = (node.prop("tagName") || "").toLowerCase()
+      if (tag === "p") {
+        const text = node.text().replace(/\s+/g, " ").trim()
+        if (text) pendingDescription.push(text)
+      } else if (tag === "div" && node.hasClass("wp-block-buttons")) {
+        const links = node
+          .find("a")
+          .toArray()
+          .map((a) => ({ label: $(a).text().replace(/\s+/g, " ").trim(), href: $(a).attr("href") ?? "" }))
+        const title = links[0]?.label ?? ""
+        if (title && /tuulivoima|aurinkovoima/i.test(title)) {
+          items.push({ title, description: pendingDescription.join(" "), links })
+        }
+        pendingDescription = []
+      }
+      node = node.next()
+    }
+  }
 
   let found = 0
   let saved = 0
