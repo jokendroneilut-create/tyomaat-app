@@ -6842,7 +6842,15 @@ function mantsalaPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   if (/käynnist|osallistumis|arviointi/.test(normalized)) return "Vireilletulo"
   return "Vireilletulo"
@@ -7028,7 +7036,15 @@ function tornioPhaseFromLabel(rawPhase: string): string {
   const normalized = rawPhase.toLowerCase()
   if (/lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/valmistelu/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -7144,7 +7160,15 @@ function lietoPhaseFromLabel(rawPhase: string): string {
   const normalized = rawPhase.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -7290,7 +7314,15 @@ function naantaliPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno|valmistelu/.test(normalized)) return "Luonnos"
   if (/vireille|käynnist/.test(normalized)) return "Vireilletulo"
   return "Vireilletulo"
@@ -7579,7 +7611,15 @@ function mustasaariPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -7705,7 +7745,15 @@ function kempelePhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -7845,7 +7893,15 @@ function valkeakoskiPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -9296,7 +9352,15 @@ function pieksamakiPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -9424,7 +9488,15 @@ function akaaPhaseFromText(text: string): string {
   )
   if (!negatedLainvoima && /voimaantulo|voimaan tullut|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy|vahvistettu/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -9718,7 +9790,15 @@ function janakkalaPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -9838,7 +9918,15 @@ function orimattilaPhaseFromText(text: string): string {
     .replace(/hyväksy\w*\s+\S+\s+koskevan\s+osallistumis-?\s*ja\s*arviointisuunnitelman/gi, "")
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -9957,7 +10045,15 @@ function ylivieskaPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -10084,7 +10180,15 @@ function loimaaPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -10365,7 +10469,15 @@ function kauhavaPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -11151,7 +11263,15 @@ function ulvilaPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -11502,7 +11622,15 @@ function lieksaPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -11621,7 +11749,15 @@ function kiteePhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -11758,7 +11894,15 @@ function kalajokiPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -11905,7 +12049,15 @@ function nivalaPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -12077,7 +12229,15 @@ function limingaPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   // "luonnos" (draft), not the shorter "luonno" stem -- that also matches
   // "luonnon"/"luonnossa" (nature, unrelated), a false positive seen when a
   // block's text mentions the natural environment (e.g. "luonnon
@@ -12239,7 +12399,15 @@ function muuramePhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -12394,7 +12562,15 @@ function saarijarviPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -12579,7 +12755,15 @@ function keuruuPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -12771,7 +12955,15 @@ function loviisaPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -13200,7 +13392,15 @@ function parainenPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -13373,7 +13573,15 @@ function someroPhaseFromText(text: string): string {
     if (!isForwardLooking) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -13637,7 +13845,15 @@ function kokemakiPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -13767,7 +13983,15 @@ function urjalaPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -13918,7 +14142,15 @@ function punkalaidunPhaseFromText(text: string): string {
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
   if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -14210,7 +14442,15 @@ function hattulaPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   // stem match, not "luonnos" -- Finnish consonant gradation turns the
   // genitive into "luonnoksen" (kaavaluonnoksen), which doesn't contain
   // the literal substring "luonnos"
@@ -14350,7 +14590,15 @@ function savitaipalePhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -14502,7 +14750,15 @@ function juvaPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -14666,7 +14922,15 @@ function lapinlahtiPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -14821,7 +15085,15 @@ function kannusPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -14975,7 +15247,15 @@ function toholampiPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -15124,7 +15404,15 @@ function kuhmoPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -15260,7 +15548,15 @@ function suomussalmiPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -15394,7 +15690,15 @@ function kittilaPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -15537,7 +15841,15 @@ function kemijarviPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -15694,7 +16006,15 @@ function rautjarviPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -15843,7 +16163,15 @@ function alajarviPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -15997,7 +16325,15 @@ function alavusPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -16154,7 +16490,15 @@ function isokyroPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -16334,7 +16678,15 @@ function kuortanePhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -16473,7 +16825,15 @@ function laihiaPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -16620,7 +16980,15 @@ function ahtariPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -16796,7 +17164,15 @@ function enonkoskiPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -16971,7 +17347,15 @@ function heinavesiPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -17120,7 +17504,15 @@ function hirvensalmiPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -17393,7 +17785,15 @@ function sulkavaPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -17533,7 +17933,15 @@ function hyrynsalmiPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -17694,7 +18102,15 @@ function paltamoPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -17892,7 +18308,15 @@ function puolankaPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -18020,7 +18444,15 @@ function hausjarviPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -18177,7 +18609,15 @@ function jokioinenPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -18313,7 +18753,15 @@ function veteliPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -18449,7 +18897,15 @@ function multiaPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -18604,7 +19060,15 @@ function petajavesiPhaseFromText(text: string): string {
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
-  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
   // Petäjävesi's own stage vocabulary calls the draft stage "Valmisteluvaihe"
   // rather than "Luonnosvaihe" used elsewhere; treat it as the same signal.
   if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
@@ -18665,6 +19129,169 @@ async function collectPetajavesiKaavaSource(source: DiscoverySource) {
         source_name: source.name,
         title,
         document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
+const PIHTIPUDAS_LISTING_URL = "https://pihtipudas.fi/asuminen-ja-ymparisto/kaavoitus-ja-mittaus/"
+
+const PIHTIPUDAS_CONTACT = {
+  name: "Henri Haapaniemi",
+  title: "Kaavoitusarkkitehti",
+  phone: "040 525 9577",
+  email: "henri.haapaniemi@pihtipudas.fi",
+}
+
+function pihtipudasSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function pihtipudasPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    // "Kaavaehdotuksen valmistelu on meneillään. Tavoitteena on asettaa
+    // kaavaehdotus nähtäville..." describes a still-upcoming proposal
+    // phase, not the plan currently being on display as a proposal.
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  // Pihtipudas describes the draft stage as "kaavaehdotuksen valmistelu"/
+  // "kaava on valmistelussa" rather than using the word "luonnos" at all.
+  if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Pihtipudas' kaavoitus hub links to real per-plan detail pages
+// (elementor button widgets under the "Vireillä olevat kaavat" heading).
+// Each detail page has its own .entry-content with description, phase
+// signals, and a shared, site-wide contact block.
+async function collectPihtipudasKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PIHTIPUDAS_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("h2")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Vireillä olevat kaavat")
+  if (!heading) return { documentsFound: 0, documentsSaved: 0 }
+
+  const section = $(heading).closest("section.elementor-top-section").next("section.elementor-top-section")
+
+  const items = section
+    .find("a.elementor-button")
+    .toArray()
+    .map((el) => ({
+      title: $(el).find(".elementor-button-text").text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter((item) =>
+      item.title && item.href &&
+      /asemakaava/i.test(item.title) && !/yleiskaava/i.test(item.title) &&
+      !/ranta-asemakaava/i.test(item.title) && !/tuulivoima/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const detailUrl = new URL(item.href, PIHTIPUDAS_LISTING_URL).toString()
+    const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const $$ = cheerio.load(await detailResponse.text())
+    const main = $$(".entry-content").first()
+    const title = item.title
+    const description = main.text().replace(/\s+/g, " ").trim()
+    const phase = pihtipudasPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [PIHTIPUDAS_CONTACT]
+
+    const attachments = main
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $$(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($$(a).attr("href") ?? "", detailUrl).toString(),
+      }))
+      .filter((a) => a.url.startsWith("http") && !a.url.includes("mailto:"))
+
+    found += 1
+
+    const slug = pihtipudasSlug(title)
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: detailUrl,
         document_type: "api",
         content_hash: contentHash,
         status: "downloaded",
@@ -21601,6 +22228,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "petajavesiKaavaParser") {
     return collectPetajavesiKaavaSource(source)
+  }
+
+  if (source.parser === "pihtipudasKaavaParser") {
+    return collectPihtipudasKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
