@@ -27042,6 +27042,122 @@ async function collectInkooKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KARKKILA_LISTING_URL = "https://karkkila.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavahankkeet/"
+
+function karkkilaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+
+  // a stage keyword right next to "kumottu"/"palautettu" describes a step
+  // that was later undone (an approval overturned on appeal, a proposal
+  // sent back for further preparation) rather than one that actually holds
+  const isReturnedNear = (index: number) => {
+    if (index < 0) return false
+    const window = normalized.slice(Math.max(0, index - 20), index + 150)
+    return /kumottu|kumosi|palautettu|palautuu|palautui/.test(window)
+  }
+
+  const voimaanIndex = normalized.search(/voimaantul|lainvoima/)
+  if (voimaanIndex >= 0 && !isReturnedNear(voimaanIndex)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.search(/hyväksy/)
+  if (hyvaksyIndex >= 0 && !isReturnedNear(hyvaksyIndex)) return "Hyväksyminen"
+
+  const ehdotusIndex = normalized.search(/ehdotus/)
+  if (ehdotusIndex >= 0 && !isReturnedNear(ehdotusIndex)) return "Ehdotus"
+
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKarkkilaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KARKKILA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  type KarkkilaItem = { title: string; id: string; text: string }
+  const items: KarkkilaItem[] = []
+
+  // the listing nests individual project accordions inside a few
+  // container-level accordions ("...aluekehityskuva", "...kaavarunko") that
+  // are area-wide vision documents, not projects of their own -- selecting
+  // every accordion picks up both levels flatly, so those containers are
+  // filtered out by title and only the real per-project items remain
+  $("details.e-n-accordion-item").each((_, el) => {
+    const $el = $(el)
+    const title = $el
+      .children("summary")
+      .find(".e-n-accordion-item-title-text")
+      .first()
+      .text()
+      .replace(/\s+/g, " ")
+      .trim()
+    const id = $el.attr("id")
+    if (!title || !id) return
+    if (/aluekehityskuva|kaavarunko/i.test(title)) return
+
+    const clone = $el.clone()
+    clone.find("summary").remove()
+    clone.find("details").remove()
+    const bodyText = clone.text().replace(/\s+/g, " ").trim()
+
+    items.push({ title, id, text: `${title} ${bodyText}` })
+  })
+
+  let saved = 0
+
+  for (const item of items) {
+    const phase = karkkilaPhaseFromText(item.text)
+    const completed = phase === "Voimaantulo"
+    const slug = kemiSlug(item.title)
+    const documentUrl = `${KARKKILA_LISTING_URL}#${item.id}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "lappeenrantaKaavaParser") {
     return collectLappeenrantaSource(source)
@@ -27705,6 +27821,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "inkooKaavaParser") {
     return collectInkooKaavaSource(source)
+  }
+
+  if (source.parser === "karkkilaKaavaParser") {
+    return collectKarkkilaKaavaSource(source)
   }
 
   const response = await fetch(source.url, {

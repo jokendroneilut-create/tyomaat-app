@@ -153,6 +153,7 @@ export async function runFactWorker(documentId?: string) {
       "Pornaisten vireillä olevat kaavat",
       "Hangon ajankohtaiset kaavat",
       "Inkoon ajankohtainen kaavoitus",
+      "Karkkilan vireillä olevat kaavahankkeet",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",
