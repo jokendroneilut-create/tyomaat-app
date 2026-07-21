@@ -21970,6 +21970,8 @@ async function collectPelloKaavaSource(source: DiscoverySource) {
 
 const YLITORNIO_LISTING_URL = "https://ylitornio.fi/asuminen-ja-ymparisto/kaavoitus-ja-tontit/vireilla-olevat-kaavat-ja-kaavoituksen-vaikuttaminen/"
 
+const YLITORNIO_TUULIVOIMA_URL = "https://ylitornio.fi/asuminen-ja-ymparisto/kaavoitus-ja-tontit/tuulivoimahankkeet-ja-kaavoittaminen/"
+
 // The site's own markup literally shows "etunimi.sukunimi@ylitornio.fi" as
 // an unfilled form template, not a real address.
 const YLITORNIO_FAKE_EMAIL = "etunimi.sukunimi@ylitornio.fi"
@@ -22000,6 +22002,33 @@ function ylitornioPhaseFromFilename(filename: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/ehdotus/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// The wind-power sub-page presents each project as an accordion item with
+// free narrative text, unlike the filename-based asemakaava listing above.
+function ylitornioTuulivoimaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    // Kept short (unlike the 250-char windows used elsewhere in this file)
+    // because paragraphs here get concatenated with no separators, so a
+    // wide window can sweep in an unrelated later sentence — e.g. an
+    // attachment list mentioning "arviointisuunnitelma" several sentences
+    // after a genuine, already-happened approval.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    // "...osayleiskaava voidaan hyväksyä 2027 alussa" is a schedule estimate,
+    // not an actual approval.
+    const isForwardLookingApproval = /voidaan\s*$/.test(beforeWindow)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    if (!isForwardLookingApproval && !isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonnos|valmistelu/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -22091,6 +22120,96 @@ async function collectYlitornioKaavaSource(source: DiscoverySource) {
     if (error) throw error
 
     saved += 1
+  }
+
+  // Wind power projects live on a separate sub-page, structured as
+  // accordion items ("Location, Company" title + narrative panel text)
+  // rather than the bare Tweb PDF buttons the asemakaava listing uses.
+  try {
+    const tuulivoimaResponse = await fetch(YLITORNIO_TUULIVOIMA_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (tuulivoimaResponse.ok) {
+      const $tuuli = cheerio.load(await tuulivoimaResponse.text())
+
+      type TuulivoimaItem = { title: string; description: string; attachments: { label: string; url: string }[] }
+      const tuulivoimaItems: TuulivoimaItem[] = []
+
+      $tuuli(".bde-accordion__content-wrapper").each((_: number, wrapper: any) => {
+        const accordionTitle = $tuuli(wrapper).find(".bde-accordion__title").first().text().replace(/\s+/g, " ").trim()
+        // Genuine project items are titled "Location, Company Oy"; the page
+        // also has non-project accordion sections (intro, plain-language
+        // summary) that happen to mention tuulivoima in passing.
+        if (!accordionTitle || !accordionTitle.includes(",")) return
+
+        const panelContent = $tuuli(wrapper).find(".bde-accordion__panel-content")
+        const description = panelContent.text().replace(/\s+/g, " ").trim()
+        if (!/tuulivoima|aurinkovoima/i.test(`${accordionTitle} ${description}`)) return
+
+        const attachments = panelContent
+          .find("a")
+          .toArray()
+          .map((a: any) => ({ label: $tuuli(a).text().replace(/\s+/g, " ").trim(), url: $tuuli(a).attr("href") ?? "" }))
+          .filter((a: { label: string; url: string }) => a.url.startsWith("http"))
+
+        tuulivoimaItems.push({ title: accordionTitle, description, attachments })
+      })
+
+      for (const item of tuulivoimaItems) {
+        const title = item.title
+        const description = item.description
+        const attachments = item.attachments
+        const phase = ylitornioTuulivoimaPhaseFromText(`${title} ${description}`)
+        const completed = phase === "Voimaantulo"
+        const contacts = [YLITORNIO_CONTACT]
+
+        found += 1
+
+        const slug = ylitornioSlug(title)
+        const documentUrl = `${YLITORNIO_TUULIVOIMA_URL}#${slug}`
+        const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+        const contentHash = hashContent(rawText)
+
+        const { error } = await supabaseAdmin.from("source_documents").upsert(
+          {
+            source_id: source.id,
+            source_name: source.name,
+            title,
+            document_url: documentUrl,
+            document_type: "api",
+            content_hash: contentHash,
+            status: "downloaded",
+            raw_text: rawText,
+            raw_payload: {
+              parser: source.parser,
+              priority: source.priority,
+              title,
+              slug,
+              kaava_tunnus: null,
+              phase,
+              description,
+              contacts,
+              attachments,
+              completed,
+            },
+            processed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            ...(completed
+              ? {
+                  facts_extracted_at: new Date().toISOString(),
+                  identity_resolved_at: new Date().toISOString(),
+                }
+              : {}),
+          },
+          { onConflict: "document_url" }
+        )
+
+        if (error) throw error
+
+        saved += 1
+      }
+    }
+  } catch {
+    // Non-fatal: the asemakaava items above are still saved even if the
+    // wind-power sub-page is temporarily unavailable.
   }
 
   return {
