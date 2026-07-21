@@ -19632,6 +19632,169 @@ async function collectUurainenKaavaSource(source: DiscoverySource) {
   }
 }
 
+const VIITASAARI_LISTING_URL = "https://viitasaari.fi/asuminen-ja-ymparisto/kaavoitus-ja-tiet/viitasaaren-kaavat/vireilla-olevat-kaavat/vireilla-olevat-asemakaavat/"
+
+const VIITASAARI_CONTACT = {
+  name: "Viitasaaren kaavoitus",
+  title: null as string | null,
+  phone: null as string | null,
+  email: "kirjaamo@viitasaari.fi",
+}
+
+function viitasaariSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function viitasaariPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Viitasaari lists all pending items for a kaava category on ONE page as
+// a sequence of bold/underlined ALL-CAPS title paragraphs inside a shared
+// .text-block, each followed by <ul> sub-items until the next title
+// paragraph (confirmed against the sibling "nähtävillä olevat kaavat"
+// page, which uses the same theme/markup but for tuulivoima items).
+async function collectViitasaariKaavaSource(source: DiscoverySource) {
+  const response = await fetch(VIITASAARI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  type Segment = { title: string; parts: string[] }
+  const segments: Segment[] = []
+
+  $(".text-block").each((_, block) => {
+    let current: Segment | null = null
+
+    $(block)
+      .children()
+      .each((__, child) => {
+        const $child = $(child)
+        const isTitleParagraph =
+          child.tagName === "p" &&
+          $child.find("strong").length === 1 &&
+          $child.find("strong").text().replace(/\s+/g, " ").trim() === $child.text().replace(/\s+/g, " ").trim() &&
+          $child.text().trim().length > 0
+
+        if (isTitleParagraph) {
+          current = { title: $child.text().replace(/\s+/g, " ").trim(), parts: [] }
+          segments.push(current)
+        } else if (current) {
+          const text = $child.text().replace(/\s+/g, " ").trim()
+          if (text) current.parts.push(text)
+          $child.find("a").each((___, a) => {
+            current!.parts.push($(a).attr("href") ? `[[LINK:${$(a).attr("href")}|${$(a).text().trim()}]]` : "")
+          })
+        }
+      })
+  })
+
+  const items = segments
+    .map((seg) => ({ title: seg.title, description: seg.parts.filter((p) => !p.startsWith("[[LINK:")).join(" ") }))
+    .filter((item) =>
+      item.title &&
+      /asemakaava/i.test(item.title) && !/yleiskaava/i.test(item.title) &&
+      !/ranta-asemakaava/i.test(item.title) && !/tuulivoima/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+    const description = item.description
+    const phase = viitasaariPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [VIITASAARI_CONTACT]
+    const attachments: { label: string; url: string }[] = []
+
+    found += 1
+
+    const slug = viitasaariSlug(title)
+    const documentUrl = `${VIITASAARI_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -22541,6 +22704,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "uurainenKaavaParser") {
     return collectUurainenKaavaSource(source)
+  }
+
+  if (source.parser === "viitasaariKaavaParser") {
+    return collectViitasaariKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
