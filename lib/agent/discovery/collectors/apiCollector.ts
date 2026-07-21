@@ -20323,6 +20323,158 @@ async function collectPyhtaaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const VIROLAHTI_LISTING_URL = "https://virolahti.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat/"
+
+const VIROLAHTI_CONTACT = {
+  name: "Ilkka Jantunen",
+  title: "Tekninen johtaja",
+  phone: "040 199 1222",
+  email: "ilkka.jantunen@virolahti.fi",
+}
+
+function virolahtiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function virolahtiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Virolahti embeds each pending kaava as a WordPress wp:embed block
+// linking to the item's own dated blog post; currently only osayleiskaava
+// items are listed (filtered out below), but the same embed markup would
+// apply to a future asemakaava post.
+async function collectVirolahtiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(VIROLAHTI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $("blockquote.wp-embedded-content a")
+    .toArray()
+    .map((el) => ({
+      title: $(el).text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter((item, index, all) => all.findIndex((other) => other.href === item.href) === index)
+    .filter((item) =>
+      item.title && item.href &&
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const detailUrl = new URL(item.href, VIROLAHTI_LISTING_URL).toString()
+    const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const $$ = cheerio.load(await detailResponse.text())
+    const main = $$(".entry-content").first()
+    const title = item.title
+    const description = main.text().replace(/\s+/g, " ").trim()
+    const phase = virolahtiPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [VIROLAHTI_CONTACT]
+
+    const attachments = main
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $$(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($$(a).attr("href") ?? "", detailUrl).toString(),
+      }))
+      .filter((a) => a.url.startsWith("http") && !a.url.includes("mailto:"))
+
+    found += 1
+
+    const slug = virolahtiSlug(title)
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: detailUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -23248,6 +23400,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "pyhtaaKaavaParser") {
     return collectPyhtaaKaavaSource(source)
+  }
+
+  if (source.parser === "virolahtiKaavaParser") {
+    return collectVirolahtiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
