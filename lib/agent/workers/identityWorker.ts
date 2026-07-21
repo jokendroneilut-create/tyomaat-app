@@ -121,6 +121,7 @@ import { resolveInkooKaavaProject } from "@/lib/agent/identity/resolvers/inkooKa
 import { resolveKarkkilaKaavaProject } from "@/lib/agent/identity/resolvers/karkkilaKaavaResolver"
 import { resolveSiuntioKaavaProject } from "@/lib/agent/identity/resolvers/siuntioKaavaResolver"
 import { resolveEuraKaavaProject } from "@/lib/agent/identity/resolvers/euraKaavaResolver"
+import { resolveSiikainenKaavaProject } from "@/lib/agent/identity/resolvers/siikainenKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1017,6 +1018,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "euran kaavoitus ja maapolitiikka") {
     const result = await resolveEuraKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "siikaisten kaavoitus") {
+    const result = await resolveSiikainenKaavaProject({
       document,
       facts: facts ?? [],
     })

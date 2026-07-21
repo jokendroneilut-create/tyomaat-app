@@ -27379,7 +27379,129 @@ async function collectEuraKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SIIKAINEN_LISTING_URL = "https://siikainen.fi/asuminen-ja-ymparisto/asuminen-ja-rakentaminen/kaavoitus/"
+// the site never spells out "tuulivoima" in visible text for these two --
+// only inside a PDF filename/href for Heikinneva, and not at all for
+// Santakangas -- both are known wind-farm osayleiskaava projects that would
+// otherwise be silently dropped by the asemakaava-or-energy title filter
+const SIIKAINEN_KNOWN_ENERGY_TITLES = /^(santakangas|heikinneva)$/i
+
+function siikainenPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectSiikainenKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SIIKAINEN_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  // this page mixes two layouts for the same kind of block: some paragraphs
+  // hold a bare <strong> title with the attachment links in the very same
+  // <p> (title paragraph doubles as content), others hold ONLY the title
+  // with the links following in a separate sibling <p> -- either way, a
+  // bare (non-linked) <strong> marks the start of a new project
+  type SiikainenBlock = { title: string; nodes: any[] }
+  const blocks: SiikainenBlock[] = []
+  let current: SiikainenBlock | null = null
+
+  $("article p").each((_, p) => {
+    const strongEl = $(p).find("strong").first()
+    const strongText = strongEl.text().replace(/\s+/g, " ").trim()
+    const strongIsLinked = strongEl.parent().is("a")
+    if (strongText && !strongIsLinked && strongText.length < 150) {
+      current = { title: strongText, nodes: [p] }
+      blocks.push(current)
+      return
+    }
+    if (current) current.nodes.push(p)
+  })
+
+  const projectItems = blocks
+    .map((block) => ({
+      title: block.title,
+      text: block.nodes
+        .map((node) => $(node).text().replace(/\s+/g, " ").trim())
+        .join(" ")
+        .trim(),
+    }))
+    .filter(
+      (item) =>
+        /asemakaava/i.test(item.title) ||
+        energyPattern.test(item.title) ||
+        energyPattern.test(item.text) ||
+        SIIKAINEN_KNOWN_ENERGY_TITLES.test(item.title)
+    )
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of projectItems) {
+    const phase = siikainenPhaseFromText(`${item.title} ${item.text}`)
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${SIIKAINEN_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: projectItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "siikainenKaavaParser") {
+    return collectSiikainenKaavaSource(source)
+  }
+
   if (source.parser === "lappeenrantaKaavaParser") {
     return collectLappeenrantaSource(source)
   }
