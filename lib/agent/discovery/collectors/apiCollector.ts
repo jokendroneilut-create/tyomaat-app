@@ -11418,6 +11418,43 @@ function kankaanpaaHasUnguardedHyväksy(paragraphs: string[]): boolean {
   return false
 }
 
+// Wind power projects each get their own dedicated page under Yleiskaavat,
+// linked from the site's nav menu rather than embedded in the asemakaava
+// listing this collector otherwise scrapes.
+const KANKAANPAA_ENERGY_PROJECTS = [
+  {
+    title: "Paholammin tuulivoimaosayleiskaava",
+    url: "https://www.kankaanpaa.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/yleiskaavat/paholammin-tuulivoimaosayleiskaava/",
+  },
+  {
+    title: "Marjakeitaan tuulivoimaosayleiskaava",
+    url: "https://www.kankaanpaa.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/yleiskaavat/marjakeitaan-tuulivoimaosayleiskaava/",
+  },
+  {
+    title: "Haukkasalon tuulivoimaosayleiskaava",
+    url: "https://www.kankaanpaa.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/yleiskaavat/haukkasalon-tuulivoimaosayleiskaava/",
+  },
+]
+
+function kankaanpaaEnergyPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/lainvoiman|voimaantulo|astuu voimaan/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyMatch = normalized.match(/hyväksy[a-zäöå]*/)
+  // "päätti ... hyväksyä Neoenin tekemän kaavoitusaloitteen" is approving
+  // the INITIATIVE to start the process, not the plan itself.
+  const isProceduralApproval =
+    !!hyvaksyMatch &&
+    /^[^.]{0,40}(aloitteen|aloite|oas\b|luonnoksen|luonnosta)/.test(
+      normalized.slice(hyvaksyMatch.index! + hyvaksyMatch[0].length, hyvaksyMatch.index! + hyvaksyMatch[0].length + 60)
+    )
+  if (hyvaksyMatch && !isProceduralApproval) return "Hyväksyminen"
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
 function kankaanpaaPhaseFromText(paragraphs: string[]): string {
   const normalized = paragraphs.join(" ").toLowerCase()
   let best = "Vireilletulo"
@@ -11531,6 +11568,67 @@ async function collectKankaanpaaKaavaSource(source: DiscoverySource) {
     )
 
     if (error) throw error
+
+    saved += 1
+  }
+
+  for (const project of KANKAANPAA_ENERGY_PROJECTS) {
+    const planResponse = await fetch(project.url, { cache: "no-store" })
+    if (!planResponse.ok) continue
+
+    const plan$ = cheerio.load(await planResponse.text())
+    const content = plan$(".content.entry").first()
+    const description = content
+      .find("p")
+      .toArray()
+      .map((p) => plan$(p).text().replace(/\s+/g, " ").trim())
+      .filter((p) => p.length > 40)
+      .join(" ")
+
+    const phase = kankaanpaaEnergyPhaseFromText(description)
+    const completed = phase === "Voimaantulo"
+
+    found += 1
+
+    const slug = kemiSlug(project.title)
+    const documentUrl = `${project.url}#${slug}`
+    const rawText = JSON.stringify({ title: project.title, phase, description, contacts })
+    const contentHash = hashContent(rawText)
+
+    const { error: energyError } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: project.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: project.title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (energyError) throw energyError
 
     saved += 1
   }
