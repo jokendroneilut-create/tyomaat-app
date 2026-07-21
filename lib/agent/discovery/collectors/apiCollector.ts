@@ -13903,7 +13903,10 @@ async function collectHuittinenKaavaSource(source: DiscoverySource) {
   for (const planEl of planDetails) {
     const plan = $(planEl)
     const title = plan.children("summary").first().text().replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title)) continue
+    if (!title) continue
+    const isAsemakaava = /asemakaava/i.test(title) && !/yleiskaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const stages = plan.children("details.wp-block-details").toArray()
 
@@ -13931,6 +13934,20 @@ async function collectHuittinenKaavaSource(source: DiscoverySource) {
             url: new URL($(a).attr("href") ?? "", HUITTINEN_LISTING_URL).toString(),
           }))
       )
+    }
+
+    // Some plans also carry a short status note as a direct child <p>
+    // (not its own nested stage) right after the summary, e.g. "Kaupunginvaltuusto
+    // hyväksynyt kaavan ..., kaavasta valitettu ..." -- a genuine approval
+    // (with appeal) that never got its own "Hyväksymisvaihe" stage element.
+    // Some go further still, e.g. "... päätös on lainvoimainen 8.7.2026".
+    const topLevelNote = plan.children("p").first().text().replace(/\s+/g, " ").trim()
+    if (phase !== "Voimaantulo" && /lainvoima|voimaantulo/i.test(topLevelNote)) {
+      phase = "Voimaantulo"
+      description = topLevelNote || description
+    } else if (phase !== "Voimaantulo" && /hyväksy/i.test(topLevelNote)) {
+      phase = "Hyväksyminen"
+      description = topLevelNote || description
     }
 
     const completed = phase === "Voimaantulo"
