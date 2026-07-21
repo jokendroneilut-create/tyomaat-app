@@ -23317,6 +23317,186 @@ async function collectRuovesiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const VIRRAT_LISTING_URL = "https://www.virrat.fi/asuminen-ja-ymparisto/kaavoitus-ja-rakentaminen/kaavoitus/"
+const VIRRAT_ORIGIN = "https://www.virrat.fi"
+
+const VIRRAT_CONTACTS = [
+  { name: "Mika Aalto", title: "Kaavoitus- ja kehittämispäällikkö", phone: "03 485 1250", email: "mika.aalto@virrat.fi" },
+  { name: "Teija Lukula", title: "Kiinteistösihteeri", phone: "044 715 1257", email: "teija.lukula@virrat.fi" },
+]
+
+function virratSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function virratPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(normalized)
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima|tul(?:lut|leet) voimaan/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  const isBuildingBanReference =
+    lainvoimaMatchIndex >= 0 &&
+    /rakennuskiel/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 150), lainvoimaMatchIndex))
+  if (
+    !negatedLainvoima &&
+    !isHistoricalYearReference &&
+    !isAttachmentReference &&
+    !isBuildingBanReference &&
+    /voimaantulo|lainvoima|tul(?:lut|leet) voimaan/.test(normalized)
+  )
+    return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|ehdotusvaiheen|luonnoksen|luonnosta|luonnosvaiheen|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että)|aineiston viimeistelyssä|viimeistelyssä)/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// The main "Vireillä olevat kaavat:" section currently has no genuine
+// asemakaava or energy-project items (only ranta-asemakaava/osayleiskaava),
+// so this collector is scoped to the page's separate "Tuulivoima" section,
+// which links out to one dedicated sub-page per wind-power project.
+async function collectVirratKaavaSource(source: DiscoverySource) {
+  const response = await fetch(VIRRAT_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const tuulivoimaHeading = $("h2")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Tuulivoima")
+  if (!tuulivoimaHeading) return { documentsFound: 0, documentsSaved: 0 }
+
+  // The "Tuulivoima" heading is directly followed by its own nested
+  // "Vireillä olevat kaavat:" h2, whose immediate next sibling is a single
+  // <ul> of per-project links — taken directly rather than an open-ended
+  // sibling walk, since there's no further heading boundary before the
+  // page's unrelated trailing sections (inline teaser content, footer nav).
+  const seen = new Set<string>()
+  const items: { title: string; href: string }[] = []
+
+  let listNode = $(tuulivoimaHeading).next()
+  if (listNode.length && (listNode.prop("tagName") || "").toLowerCase() === "h2") {
+    listNode = listNode.next()
+  }
+  if (listNode.length && (listNode.prop("tagName") || "").toLowerCase() === "ul") {
+    listNode.find("a").each((_: number, a: any) => {
+      const title = $(a).text().replace(/\s+/g, " ").trim()
+      const href = $(a).attr("href") ?? ""
+      if (!title || !href || seen.has(href)) return
+      seen.add(href)
+      items.push({ title, href })
+    })
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const detailUrl = item.href.startsWith("http") ? item.href : `${VIRRAT_ORIGIN}${item.href}`
+
+    const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const detail$ = cheerio.load(await detailResponse.text())
+    const title = detail$("h1").first().text().replace(/\s+/g, " ").trim() || item.title
+    const main = detail$("#foxyedit-3")
+
+    const description = main.find("p").first().text().replace(/\s+/g, " ").trim() || null
+
+    const bodyForPhase = detail$("body").clone()
+    bodyForPhase.find("script,style,nav,header,footer").remove()
+    const phase = virratPhaseFromText(bodyForPhase.text().replace(/\s+/g, " ").trim())
+    const completed = phase === "Voimaantulo"
+
+    const contacts = VIRRAT_CONTACTS
+    const attachments = main
+      .find("a")
+      .toArray()
+      .map((a: any) => {
+        const href = detail$(a).attr("href") ?? ""
+        if (!href.includes("/client/")) return null
+        const url = href.startsWith("http") ? href : `${VIRRAT_ORIGIN}${href}`
+        return { label: detail$(a).text().replace(/\s+/g, " ").trim(), url }
+      })
+      .filter((a): a is { label: string; url: string } => a !== null)
+
+    found += 1
+
+    const slug = virratSlug(title)
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: detailUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 function kangasalaPhaseFromHeadings(headings: string[]): string | null {
   for (const stage of KANGASALA_PHASE_HEADING_ORDER) {
     if (headings.some((h) => stage.pattern.test(h))) return stage.label
@@ -26310,6 +26490,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "ruovesiKaavaParser") {
     return collectRuovesiKaavaSource(source)
+  }
+
+  if (source.parser === "virratKaavaParser") {
+    return collectVirratKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
