@@ -27793,7 +27793,165 @@ async function collectPielavesiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KIURUVESI_LISTING_URL =
+  "https://kiuruvesi.fi/palvelut/asuminen-rakentaminen-ja-maankaytto/kaavoitus/vireilla-olevat-kaavat/"
+
+// each project's page lays its content out as a flat run of ".gutentor-text"
+// elements (h3 heading, then p's) rather than nesting content inside its
+// heading's own container -- group by "most recent h3 seen" to recover the
+// per-section text
+function kiuruvesiExtractSections($: cheerio.CheerioAPI): Record<string, string> {
+  const sections: Record<string, string> = {}
+  let currentHeading: string | null = null
+
+  $(".gutentor-text").each((_, el) => {
+    const text = $(el).text().replace(/\s+/g, " ").trim()
+    if (el.name === "h3") {
+      currentHeading = text || null
+      if (currentHeading && !(currentHeading in sections)) sections[currentHeading] = ""
+      return
+    }
+    if (currentHeading && text) {
+      sections[currentHeading] = `${sections[currentHeading]} ${text}`.trim()
+    }
+  })
+
+  return sections
+}
+
+function kiuruvesiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  // these narratives run chronologically and often state a future target
+  // ("tavoitteena on, että hyväksymiskäsittely olisi... 2025") before the
+  // actual event they're building up to -- a stage keyword only counts if
+  // NONE of its occurrences are guarded as forward-looking or procedural
+  const isForwardLooking = (index: number) => {
+    const window = normalized.slice(Math.max(0, index - 60), index + 100)
+    return /valmistellaan|valmistelussa|valmistelu on|tavoitteena on|asetetaan nähtäville|tullaan asettamaan|olisi\s/.test(
+      window
+    )
+  }
+
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (isForwardLooking(index)) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 20), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+
+  // "hyväksyi kaavoitusaloitteen/sopimuksen/OAS:n" are procedural sign-offs
+  // on kicking the process off, not the plan itself being approved
+  if (
+    matchesUnguarded(/hyväksy/, (window) =>
+      /aloit|osallistumis|arviointisuunnitelm|sopimuksen/.test(window)
+    )
+  ) {
+    return "Hyväksyminen"
+  }
+
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+
+  return "Vireilletulo"
+}
+
+async function collectKiuruvesiKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(KIURUVESI_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  const projectUrls = new Set<string>()
+  listing$(".gutentor-button").each((_, el) => {
+    const href = listing$(el).attr("href")
+    if (href && href.startsWith(KIURUVESI_LISTING_URL) && href !== KIURUVESI_LISTING_URL) {
+      projectUrls.add(href)
+    }
+  })
+
+  let saved = 0
+  let found = 0
+
+  for (const url of projectUrls) {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) continue
+
+    const $ = cheerio.load(await response.text())
+    const title = $("h1").first().text().replace(/\s+/g, " ").trim()
+    if (!title) continue
+    if (!/asemakaava/i.test(title) && !energyPattern.test(title)) continue
+
+    const sections = kiuruvesiExtractSections($)
+    const statusText =
+      sections["Tämänhetkinen tilanne"] ??
+      sections["Aikataulu"] ??
+      Object.values(sections).join(" ")
+    const phase = kiuruvesiPhaseFromText(statusText)
+    const completed = phase === "Voimaantulo"
+
+    found += 1
+
+    const rawText = JSON.stringify({ title, phase, description: statusText || null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug: kemiSlug(title),
+          phase,
+          description: statusText || null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "kiuruvesiKaavaParser") {
+    return collectKiuruvesiKaavaSource(source)
+  }
+
   if (source.parser === "pielavesiKaavaParser") {
     return collectPielavesiKaavaSource(source)
   }
