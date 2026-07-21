@@ -27947,7 +27947,123 @@ async function collectKiuruvesiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const AURA_LISTING_URL = "https://www.aura.fi/asuminen-ja-ymparisto/rakentaminen/kaavoitus/vireilla-olevat-kaavat/"
+
+function auraPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  for (const match of normalized.matchAll(/hyväksy/g)) {
+    const index = match.index ?? -1
+    if (index < 0) continue
+    const window = normalized.slice(Math.max(0, index - 20), index + 90)
+    // "hyväksynyt kaavoitushakemuksen/OAS:n" are procedural sign-offs on
+    // kicking the process off or displaying the OAS, not the plan itself
+    // reaching approval
+    const isProcedural = /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen/.test(window)
+    if (!isProcedural) return "Hyväksyminen"
+  }
+
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectAuraKaavaSource(source: DiscoverySource) {
+  const response = await fetch(AURA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  type AuraBlock = { title: string; nodes: any[] }
+  const blocks: AuraBlock[] = []
+  let current: AuraBlock | null = null
+
+  $("h1, h2, p").each((_, el) => {
+    if (el.name === "h1") {
+      current = null
+      return
+    }
+    if (el.name === "h2") {
+      const title = $(el).text().replace(/\s+/g, " ").trim()
+      if (title) {
+        current = { title, nodes: [] }
+        blocks.push(current)
+      }
+      return
+    }
+    if (current) current.nodes.push(el)
+  })
+
+  const projectItems = blocks.filter(
+    (block) => /asemakaava/i.test(block.title) || energyPattern.test(block.title)
+  )
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const block of projectItems) {
+    const bodyText = block.nodes.map((node) => $(node).text().replace(/\s+/g, " ").trim()).join(" ").trim()
+    const phase = auraPhaseFromText(`${block.title} ${bodyText}`)
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(block.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${AURA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: block.title, phase, description: bodyText || null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: block.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: block.title,
+          slug,
+          phase,
+          description: bodyText || null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: projectItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "auraKaavaParser") {
+    return collectAuraKaavaSource(source)
+  }
+
   if (source.parser === "kiuruvesiKaavaParser") {
     return collectKiuruvesiKaavaSource(source)
   }
