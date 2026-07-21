@@ -28259,7 +28259,119 @@ async function collectLaitilaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KUSTAVI_LISTING_URL = "https://kustavi.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/"
+
+function kustaviPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|tuli voimaan|tullut voimaan/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKustaviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KUSTAVI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  const heading = $("h1")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Vireillä olevat kaavat")
+  if (!heading) return { documentsFound: 0, documentsSaved: 0 }
+
+  type KustaviBlock = { title: string; nodes: any[] }
+  const blocks: KustaviBlock[] = []
+  let current: KustaviBlock | null = null
+
+  for (const el of $(heading).nextAll("h2, p").toArray()) {
+    if (el.name === "h2" && $(el).text().trim() === "Asemakaavat") break
+
+    if (el.name === "p") {
+      const strongEl = $(el).find("strong").first()
+      const strongText = strongEl.text().replace(/\s+/g, " ").trim()
+      const strongIsLinked = strongEl.parent().is("a")
+      if (strongText && !strongIsLinked) {
+        current = { title: strongText, nodes: [el] }
+        blocks.push(current)
+        continue
+      }
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  const projectItems = blocks
+    .map((block) => ({
+      title: block.title,
+      text: block.nodes.map((node) => $(node).text().replace(/\s+/g, " ").trim()).join(" ").trim(),
+    }))
+    .filter((item) => /asemakaava/i.test(item.title) || energyPattern.test(item.title))
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of projectItems) {
+    const phase = kustaviPhaseFromText(item.text)
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${KUSTAVI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.text })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.text,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: projectItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "kustaviKaavaParser") {
+    return collectKustaviKaavaSource(source)
+  }
+
   if (source.parser === "laitilaKaavaParser") {
     return collectLaitilaKaavaSource(source)
   }
