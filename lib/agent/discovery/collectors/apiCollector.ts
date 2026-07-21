@@ -23001,6 +23001,161 @@ async function collectVesilahtiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KASKINEN_LISTING_URL = "https://www.kaskinen.fi/fi/asuminen-ja-ymparisto/rakentaminen/kaavoitus"
+
+const KASKINEN_CONTACTS = [
+  { name: "Timo Ketola", title: "Tekninen johtaja", phone: "050 475 6196", email: null as string | null },
+  { name: "Juha-Pekka Korpela", title: "Kaupungininsinööri", phone: "040 620 1510", email: null as string | null },
+]
+
+function kaskinenSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function kaskinenPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(normalized)
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima|tul\w* voimaan/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (
+    !negatedLainvoima &&
+    !isHistoricalYearReference &&
+    !isAttachmentReference &&
+    /voimaantulo|lainvoima|tul\w* voimaan/.test(normalized)
+  )
+    return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|ehdotusvaiheen|luonnoksen|luonnosta|luonnosvaiheen|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että)|aineiston viimeistelyssä|viimeistelyssä)/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Each pending item is a Drupal "paragraphs" entity
+// (.entity-paragraphs-item.paragraphs-item-attachments) with a title, a
+// description, and a files field all inside the same container — but the
+// page's static section labels ("Asemakaavat" etc.) use the exact same
+// paragraph-entity markup with an empty files field, so genuine items are
+// distinguished by requiring at least one attachment.
+async function collectKaskinenKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KASKINEN_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  let found = 0
+  let saved = 0
+
+  const candidates = $(".entity-paragraphs-item.paragraphs-item-attachments").toArray()
+
+  for (const el of candidates) {
+    const $el = $(el)
+    const title = $el.find(".field-name-field-paragraph-title h4").first().text().replace(/\s+/g, " ").trim()
+
+    const attachments = $el
+      .find(".field-name-field-paragraph-files a")
+      .toArray()
+      .map((a: any) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: $(a).attr("href") ?? "",
+      }))
+      .filter((a: { url: string }) => a.url.startsWith("http"))
+
+    if (
+      !title ||
+      !/asemakaav/i.test(title) ||
+      /yleiskaav/i.test(title) ||
+      /ranta-asemakaav/i.test(title) ||
+      /tuulivoima/i.test(title) ||
+      attachments.length === 0
+    )
+      continue
+
+    const description =
+      $el.find(".field-name-field-paragraph-description p").first().text().replace(/\s+/g, " ").trim() || null
+    const fullText = $el.find(".field-name-field-paragraph-description").text().replace(/\s+/g, " ").trim()
+
+    const phase = kaskinenPhaseFromText(fullText)
+    const completed = phase === "Voimaantulo"
+    const contacts = KASKINEN_CONTACTS
+
+    found += 1
+
+    const slug = kaskinenSlug(title)
+    const documentUrl = `${KASKINEN_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 function kangasalaPhaseFromHeadings(headings: string[]): string | null {
   for (const stage of KANGASALA_PHASE_HEADING_ORDER) {
     if (headings.some((h) => stage.pattern.test(h))) return stage.label
@@ -25986,6 +26141,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "vesilahtiKaavaParser") {
     return collectVesilahtiKaavaSource(source)
+  }
+
+  if (source.parser === "kaskinenKaavaParser") {
+    return collectKaskinenKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
