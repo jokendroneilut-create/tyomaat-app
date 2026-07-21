@@ -16693,6 +16693,140 @@ async function collectHirvensalmiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PUUMALA_LISTING_URL = "https://puumala.cloudnc.fi/fi-FI/Kaavat/Kasittelyssa_olevat"
+
+const PUUMALA_CONTACT = {
+  name: "Kimmo Hagman",
+  title: "Tekninen johtaja",
+  phone: "0500 654 590",
+  email: "kimmo.hagman@puumala.fi",
+}
+
+const PUUMALA_PHASE_LABELS: Record<string, string> = {
+  vireilletulovaihe: "Vireilletulo",
+  luonnosvaihe: "Luonnos",
+  ehdotusvaihe: "Ehdotus",
+  päätöksenteko: "Hyväksyminen",
+  lainvoimaisuus: "Voimaantulo",
+}
+
+function puumalaSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// This CloudNC-platform site renders an explicit phase-stepper on each
+// plan's own page instead of free text: only the steps reached so far are
+// present in the DOM at all (future steps aren't rendered), so the last
+// <b> label inside .header-info is always the current phase — a more
+// reliable signal than regex-matching free text.
+async function collectPuumalaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PUUMALA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $('a[href*="/content/"]')
+    .toArray()
+    .map((el) => ({
+      title: $(el).text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter(
+      (item) =>
+        item.title &&
+        item.href &&
+        /asemakaava/i.test(item.title) &&
+        !/yleiskaava/i.test(item.title) &&
+        !/ranta-asemakaava/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const detailUrl = new URL(item.href, PUUMALA_LISTING_URL).toString()
+    const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const $$ = cheerio.load(await detailResponse.text())
+    const title = $$("h1").first().text().replace(/\s+/g, " ").trim() || item.title
+
+    const phaseLabels = $$(".header-info b")
+      .toArray()
+      .map((b) => $$(b).text().trim())
+    const lastPhaseLabel = phaseLabels[phaseLabels.length - 1] ?? ""
+    const phase = PUUMALA_PHASE_LABELS[lastPhaseLabel.toLowerCase()] ?? "Vireilletulo"
+    const completed = phase === "Voimaantulo"
+
+    const description = $$(".basic-content").first().text().replace(/\s+/g, " ").trim()
+    const contacts = [PUUMALA_CONTACT]
+
+    const attachments = $$(".basic-content")
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $$(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($$(a).attr("href") ?? "", detailUrl).toString(),
+      }))
+
+    found += 1
+
+    const slug = puumalaSlug(title)
+    const documentUrl = detailUrl
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -19550,6 +19684,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "hirvensalmiKaavaParser") {
     return collectHirvensalmiKaavaSource(source)
+  }
+
+  if (source.parser === "puumalaKaavaParser") {
+    return collectPuumalaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
