@@ -22925,8 +22925,11 @@ async function collectVesilahtiKaavaSource(source: DiscoverySource) {
       href: item.href,
     }))
     .filter((item) => {
-      if (!item.title || !/asemakaav/i.test(item.title) || /yleiskaav/i.test(item.title)) return false
-      if (/ranta-asemakaav/i.test(item.title) || /tuulivoima/i.test(item.title)) return false
+      if (!item.title) return false
+      const isAsemakaava =
+        /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) && !/ranta-asemakaav/i.test(item.title)
+      const isEnergyProject = /tuulivoima|aurinkovoima/i.test(item.title)
+      if (!isAsemakaava && !isEnergyProject) return false
       if (!item.href || seen.has(item.href)) return false
       seen.add(item.href)
       return true
