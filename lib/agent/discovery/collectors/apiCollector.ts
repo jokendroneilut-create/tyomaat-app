@@ -21587,6 +21587,159 @@ async function collectSimoKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SODANKYLA_LISTING_URL = "https://sodtekninen.solinum.fi/public/webfolder.php?cid=55"
+const SODANKYLA_PAGE_URL = "https://www.sodankyla.fi/asuminen-ja-ymparisto/kaavoitus-ja-mittaus/kaavat/vireilla-olevat-kaavat/"
+
+const SODANKYLA_CONTACT = {
+  name: "Sodankylän kunta",
+  title: "Tekninen osasto",
+  phone: "0400 618 870",
+  email: "kirjaamo@sodankyla.fi",
+}
+
+function sodankylaSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function sodankylaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että)|aineiston viimeistelyssä|viimeistelyssä)/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Sodankylä's "vireillä olevat kaavat" page embeds a legacy Solinum
+// "webfolder" document browser via iframe (ISO-8859-1 encoded, not
+// UTF-8) rather than rendering the list itself. Each row's description
+// cell includes an explicit "Uusin vaihe:" (latest stage) block — we
+// derive phase from that block specifically rather than the whole
+// description, since the leading project summary can mention unrelated
+// stage words.
+async function collectSodankylaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SODANKYLA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const buffer = await response.arrayBuffer()
+  const html = new TextDecoder("iso-8859-1").decode(buffer)
+  const $ = cheerio.load(html)
+
+  const rows = $("tr.share_list_tr_odd, tr.share_list_tr_even").toArray()
+
+  const items = rows
+    .map((tr) => {
+      const tds = $(tr).find("td")
+      const titleCell = $(tds[0])
+      const descCell = $(tds[1])
+      const title = titleCell.find("a").text().replace(/\s+/g, " ").trim()
+      const fullDescription = descCell.text().replace(/\s+/g, " ").trim()
+      const stageIndex = fullDescription.indexOf("Uusin vaihe:")
+      const latestStage = stageIndex >= 0 ? fullDescription.slice(stageIndex + "Uusin vaihe:".length) : fullDescription
+      const summary = stageIndex >= 0 ? fullDescription.slice(0, stageIndex) : fullDescription
+      const detailHref = titleCell.find("a").attr("href") ?? ""
+      return { title, summary, latestStage, detailHref }
+    })
+    .filter((item) =>
+      item.title &&
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+    const description = `${item.summary} Uusin vaihe: ${item.latestStage}`.trim()
+    const phase = sodankylaPhaseFromText(item.latestStage)
+    const completed = phase === "Voimaantulo"
+    const contacts = [SODANKYLA_CONTACT]
+    const attachments: { label: string; url: string }[] = []
+
+    found += 1
+
+    const slug = sodankylaSlug(title)
+    const documentUrl = `${SODANKYLA_PAGE_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -24544,6 +24697,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "simoKaavaParser") {
     return collectSimoKaavaSource(source)
+  }
+
+  if (source.parser === "sodankylaKaavaParser") {
+    return collectSodankylaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
