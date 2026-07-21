@@ -18971,18 +18971,15 @@ async function collectMultiaKaavaSource(source: DiscoverySource) {
       title: $(el).text().replace(/\s+/g, " ").trim(),
       href: $(el).attr("href") ?? "",
     }))
-    .filter(
-      (item) =>
-        item.title &&
-        item.href &&
-        item.href !== "/asuminen-ja-ymparisto/kaavoitus" &&
-        !item.href.includes("aluearkkitehtipalvelut") &&
-        !item.href.includes("lainvoimaiset-kaavat") &&
-        /asemakaav/i.test(item.title) &&
-        !/yleiskaav/i.test(item.title) &&
-        !/ranta-asemakaav/i.test(item.title) &&
-        !/tuulivoima/i.test(item.title)
-    )
+    .filter((item) => {
+      if (!item.title || !item.href) return false
+      if (item.href === "/asuminen-ja-ymparisto/kaavoitus") return false
+      if (item.href.includes("aluearkkitehtipalvelut") || item.href.includes("lainvoimaiset-kaavat")) return false
+      const isAsemakaava =
+        /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) && !/ranta-asemakaav/i.test(item.title)
+      const isEnergyProject = /tuulivoima|aurinkovoima/i.test(item.title)
+      return isAsemakaava || isEnergyProject
+    })
     .filter((item, index, all) => all.findIndex((other) => other.href === item.href) === index)
 
   let found = 0
