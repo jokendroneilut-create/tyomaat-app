@@ -22526,6 +22526,188 @@ async function collectManttaVilppulaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ORIVESI_LISTING_URL = "https://orivesi.fi/asukkaalle/asuminen-rakentaminen-ja-ymparisto/kaavoitus-ja-maankaytto/asemakaavat/"
+
+const ORIVESI_CONTACTS = [
+  { name: "Dennis Somelar", title: "Maankäyttöpäällikkö", phone: "040 133 9087", email: null as string | null },
+  { name: "Julia Valkeejärvi", title: "Maankäyttösuunnittelija", phone: "050 329 5303", email: null as string | null },
+  { name: "Sarianna Sillanpää", title: "Rakennus- ja maankäyttöasiantuntija", phone: "040 133 9134", email: null as string | null },
+]
+
+function orivesiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// Same hardened pattern as the rest of the session, with two Orivesi-specific
+// additions: (1) "ehdotusvaiheen"/"luonnosvaiheen" added to the hyväksy
+// forward-looking exclusion, since this site phrases "hyväksynyt
+// ehdotusvaiheen aineiston nähtäville" (approved putting the PROPOSAL-STAGE
+// MATERIALS on display) which is a procedural publish-approval, not final
+// plan approval, and doesn't match the existing "ehdotuksen/ehdotusta"
+// literal-substring guard; (2) the building-ban lainvoima guard window
+// widened from 25 to 150 chars, since Kuusitie's building-ban revocation
+// text puts "rakennuskiellon" much further before its own "lainvoiman"
+// reference than other cities' phrasing.
+function orivesiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(normalized)
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima|tul\w* voimaan/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  const isBuildingBanReference =
+    lainvoimaMatchIndex >= 0 &&
+    /rakennuskiel/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 150), lainvoimaMatchIndex))
+  if (
+    !negatedLainvoima &&
+    !isHistoricalYearReference &&
+    !isAttachmentReference &&
+    !isBuildingBanReference &&
+    /voimaantulo|lainvoima|tul\w* voimaan/.test(normalized)
+  )
+    return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|ehdotusvaiheen|luonnoksen|luonnosta|luonnosvaiheen|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että)|aineiston viimeistelyssä|viimeistelyssä)/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Pending items live under the "Vireillä olevat asemakaavahankkeet" h2 as a
+// sequence of sibling .acf-accordion divs, terminated by the next h2
+// ("Viime vuosina voimaan tulleet asemakaavat" — a separate archive of
+// already-enacted plans, deliberately excluded since it's not the pending
+// list this source is meant to track).
+async function collectOrivesiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ORIVESI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("h2")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Vireillä olevat asemakaavahankkeet")
+  if (!heading) return { documentsFound: 0, documentsSaved: 0 }
+
+  type Item = { title: string; body: any }
+  const items: Item[] = []
+
+  let node = $(heading).next()
+  while (node.length && (node.prop("tagName") || "").toLowerCase() !== "h2") {
+    if (node.hasClass("acf-accordion")) {
+      const h3 = node.find("h3").first().clone()
+      h3.find("button").remove()
+      const title = h3.text().replace(/\s+/g, " ").trim()
+      const body = node.find(".wysiwyg").first()
+      if (title) items.push({ title, body })
+    }
+    node = node.next()
+  }
+
+  const filtered = items.filter(
+    (item) =>
+      item.title &&
+      /asemakaav/i.test(item.title) &&
+      !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) &&
+      !/tuulivoima/i.test(item.title)
+  )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of filtered) {
+    const title = item.title
+    const bodyText = item.body.text().replace(/\s+/g, " ").trim()
+    const description = item.body.find("p").first().text().replace(/\s+/g, " ").trim() || null
+    const attachments = item.body
+      .find("a")
+      .toArray()
+      .map((a: any) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: $(a).attr("href") ?? "",
+      }))
+      .filter((a: { url: string }) => a.url.startsWith("http"))
+
+    const phase = orivesiPhaseFromText(bodyText)
+    const completed = phase === "Voimaantulo"
+    const contacts = ORIVESI_CONTACTS
+
+    found += 1
+
+    const slug = orivesiSlug(title)
+    const documentUrl = `${ORIVESI_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -25507,6 +25689,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "manttavilppulaKaavaParser") {
     return collectManttaVilppulaKaavaSource(source)
+  }
+
+  if (source.parser === "orivesiKaavaParser") {
+    return collectOrivesiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
