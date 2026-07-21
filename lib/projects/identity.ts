@@ -153,6 +153,7 @@ export type IdentifierType =
   | "siuntio_kaava_slug"
   | "eura_kaava_slug"
   | "siikainen_kaava_slug"
+  | "joutsa_kaava_slug"
   | "virolahti_kaava_slug"
   | "enontekio_kaava_slug"
   | "inari_kaava_slug"

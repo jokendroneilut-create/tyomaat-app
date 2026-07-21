@@ -27497,7 +27497,153 @@ async function collectSiikainenKaavaSource(source: DiscoverySource) {
   }
 }
 
+const JOUTSA_LISTING_URL = "https://www.joutsa.fi/asuminen-ja-ymparisto/kaavoitus/"
+// the newest two projects were pasted at the top of "Ajankohtaista" without
+// the <strong> title paragraph every older entry uses -- match their file
+// links by a keyword instead of relying on a title block
+const JOUTSA_UNLABELED_PROJECTS: { pattern: RegExp; title: string }[] = [
+  { pattern: /oravakiv/i, title: "Oravakiven asemakaavan muutos" },
+  { pattern: /leivonm[aä]/i, title: "Leivonmäen liittymän asemakaavan muutos" },
+]
+
+function joutsaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectJoutsaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(JOUTSA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  const heading = $("h2.wp-block-heading")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Ajankohtaista")
+  if (!heading) return { documentsFound: 0, documentsSaved: 0 }
+
+  const scoped = $(heading).nextUntil("h2.wp-block-heading")
+
+  type JoutsaBlock = { title: string; nodes: any[] }
+  const blocks: JoutsaBlock[] = []
+  let current: JoutsaBlock | null = null
+  let seenLabeledTitle = false
+
+  scoped
+    .filter("p.wp-block-paragraph, div.wp-block-file")
+    .each((_, el) => {
+      if (el.name === "p" && $(el).find("strong").length) {
+        seenLabeledTitle = true
+        const title = $(el).text().replace(/\s+/g, " ").trim()
+        if (title) {
+          current = { title, nodes: [] }
+          blocks.push(current)
+          return
+        }
+      }
+
+      // the leading, unlabeled section is matched by keyword on every
+      // element (not just until the first hit) so consecutive projects in
+      // that section -- Oravakiven, then Leivonmäen -- each get their own
+      // block instead of the first match swallowing everything after it
+      if (!seenLabeledTitle) {
+        const linkText = $(el).find("a").first().text().replace(/\s+/g, " ").trim()
+        const known = JOUTSA_UNLABELED_PROJECTS.find((p) => p.pattern.test(linkText))
+        if (known) {
+          const existing = blocks.find((b) => b.title === known.title)
+          if (existing) {
+            existing.nodes.push(el)
+          } else {
+            blocks.push({ title: known.title, nodes: [el] })
+          }
+        }
+        return
+      }
+
+      if (current) current.nodes.push(el)
+    })
+
+  const projectItems = blocks
+    .map((block) => ({
+      title: block.title,
+      text: block.nodes.map((node) => $(node).text().replace(/\s+/g, " ").trim()).join(" ").trim(),
+    }))
+    .filter(
+      (item) =>
+        /asemakaava/i.test(item.title) ||
+        /asemakaava/i.test(item.text) ||
+        energyPattern.test(item.title) ||
+        energyPattern.test(item.text)
+    )
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of projectItems) {
+    const phase = joutsaPhaseFromText(`${item.title} ${item.text}`)
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${JOUTSA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: projectItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "joutsaKaavaParser") {
+    return collectJoutsaKaavaSource(source)
+  }
+
   if (source.parser === "siikainenKaavaParser") {
     return collectSiikainenKaavaSource(source)
   }
