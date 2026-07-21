@@ -26748,6 +26748,163 @@ async function collectPornainenKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HANKO_LISTING_URL =
+  "https://hanko.fi/asuminen-ja-ymparisto/kaavoitus-ja-kiinteistonmuodostus/kaavoitus/ajankohtaiset-kaavat/"
+
+type HankoStageEntry = { label: string; value: string }
+
+// each individual plan page carries its own progress summary, either as a
+// <table> of <tr><td>Label:</td><td>value</td></tr> rows or as a single
+// <p> of "Label: value" lines joined by <br> -- labels vary slightly
+// ("nähtävillä" vs "nähtäville", "Kaupunginvaltuusto" vs "Kaupunginhallitus",
+// and one restarted plan uses "Kaavoituksen uudelleen käynnistäminen"
+// instead of "Vireilletulo") so stages are matched by stem, not exact text
+function hankoExtractStages($: cheerio.CheerioAPI): HankoStageEntry[] {
+  const entries: HankoStageEntry[] = []
+
+  $("table").each((_, table) => {
+    $(table)
+      .find("tr")
+      .each((_, tr) => {
+        const tds = $(tr).find("td")
+        if (tds.length < 2) return
+        const label = $(tds[0]).text().replace(/\s+/g, " ").trim().replace(/:$/, "")
+        const value = $(tds[1]).text().replace(/\s+/g, " ").trim()
+        if (/vireil|luonnos|ehdotus|valtuusto|hallitus|voimaan|käynnist/i.test(label)) {
+          entries.push({ label: label.toLowerCase(), value })
+        }
+      })
+  })
+
+  if (entries.length === 0) {
+    $("p").each((_, p) => {
+      const text = $(p).text()
+      if (!/(ehdotus n[äa]htäv|kaupunginvaltuusto|kaupunginhallitus|voimaantulo)/i.test(text)) return
+      const html = $(p).html() ?? ""
+      for (const lineHtml of html.split(/<br\s*\/?>/i)) {
+        const lineText = cheerio
+          .load(`<div>${lineHtml}</div>`)("div")
+          .text()
+          .replace(/&nbsp;/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+        const match = lineText.match(/^([^:]+):\s*(.*)$/)
+        if (match) entries.push({ label: match[1].toLowerCase().trim(), value: match[2].trim() })
+      }
+    })
+  }
+
+  return entries
+}
+
+function hankoPhaseFromStages(entries: HankoStageEntry[]): string {
+  const valueFor = (pattern: RegExp) =>
+    entries.find((entry) => pattern.test(entry.label))?.value.trim() ?? ""
+
+  if (valueFor(/voimaan/)) return "Voimaantulo"
+  if (valueFor(/valtuusto|hallitus/)) return "Hyväksyminen"
+  if (valueFor(/ehdotus/)) return "Ehdotus"
+  if (valueFor(/luonnos/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectHankoKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HANKO_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  type LinkItem = { title: string; url: string }
+  const links: LinkItem[] = []
+
+  $(".block-accordion").each((_, block) => {
+    const heading = $(block).find(".accordion__trigger").first().text().replace(/\s+/g, " ").trim()
+    // only the general-plan (yleiskaava) accordion is restricted to energy
+    // projects -- asemakaava and ranta-asemakaava accordions are both
+    // binding local plans and are included wholesale
+    const isYleiskaava = /^yleiskaavaprojektit/i.test(heading)
+
+    $(block)
+      .find("ul.wp-block-list > li > a")
+      .each((_, a) => {
+        const title = $(a).text().replace(/\s+/g, " ").trim()
+        const href = $(a).attr("href")
+        if (!title || !href) return
+        if (isYleiskaava && !energyPattern.test(title)) return
+        links.push({ title, url: href })
+      })
+  })
+
+  let found = 0
+  let saved = 0
+
+  for (const link of links) {
+    found += 1
+
+    let phase = "Vireilletulo"
+    let description: string | null = null
+
+    try {
+      const detailResponse = await fetch(link.url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const detail$ = cheerio.load(await detailResponse.text())
+        phase = hankoPhaseFromStages(hankoExtractStages(detail$))
+        description = detail$(".ingress-area").first().text().replace(/\s+/g, " ").trim() || null
+      }
+    } catch {
+      // keep the Vireilletulo default if the detail page can't be fetched
+    }
+
+    const completed = phase === "Voimaantulo"
+    const slug = kemiSlug(link.title)
+
+    const rawText = JSON.stringify({ title: link.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: link.title,
+        document_url: link.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: link.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "lappeenrantaKaavaParser") {
     return collectLappeenrantaSource(source)
@@ -27403,6 +27560,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "pornainenKaavaParser") {
     return collectPornainenKaavaSource(source)
+  }
+
+  if (source.parser === "hankoKaavaParser") {
+    return collectHankoKaavaSource(source)
   }
 
   const response = await fetch(source.url, {

@@ -163,6 +163,7 @@ import { extractVaasaKaavaFacts } from "@/lib/agent/facts/extractVaasaKaavaFacts
 import { extractKouvolaKaavaFacts } from "@/lib/agent/facts/extractKouvolaKaavaFacts"
 import { extractLappeenrantaKaavaFacts } from "@/lib/agent/facts/extractLappeenrantaKaavaFacts"
 import { extractPornainenKaavaFacts } from "@/lib/agent/facts/extractPornainenKaavaFacts"
+import { extractHankoKaavaFacts } from "@/lib/agent/facts/extractHankoKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -2974,6 +2975,23 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractPornainenKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Hangon ajankohtaiset kaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractHankoKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
