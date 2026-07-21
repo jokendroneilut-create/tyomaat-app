@@ -120,6 +120,7 @@ import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/eno
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
 import { resolveKeminmaaKaavaProject } from "@/lib/agent/identity/resolvers/keminmaaKaavaResolver"
 import { resolveMuonioKaavaProject } from "@/lib/agent/identity/resolvers/muonioKaavaResolver"
+import { resolvePelkosenniemiKaavaProject } from "@/lib/agent/identity/resolvers/pelkosenniemiKaavaResolver"
 import { resolveRiihimakiKaavaProject } from "@/lib/agent/identity/resolvers/riihimakiKaavaResolver"
 import { resolveRaaseporiKaavaProject } from "@/lib/agent/identity/resolvers/raaseporiKaavaResolver"
 import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisioKaavaResolver"
@@ -989,6 +990,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "muonion vireillä olevat asemakaavat") {
     const result = await resolveMuonioKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "pelkosenniemen vireillä olevat asemakaavat") {
+    const result = await resolvePelkosenniemiKaavaProject({
       document,
       facts: facts ?? [],
     })

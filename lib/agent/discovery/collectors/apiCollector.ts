@@ -21075,6 +21075,179 @@ async function collectMuonioKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PELKOSENNIEMI_LISTING_URL = "https://pelkosenniemi.fi/asuminen-ja-ymparisto/tekniset-palvelut/kaavoitus-ja-maankaytto/"
+
+const PELKOSENNIEMI_CONTACT = {
+  name: "Pelkosenniemen kunta",
+  title: "Kirjaamo",
+  phone: null as string | null,
+  email: "kirjaamo@pelkosenniemi.fi",
+}
+
+const PELKOSENNIEMI_STAGE_PATTERN =
+  /(vireilletulon|valmisteluvaiheen|ehdotusvaiheen|hyväksymisvaiheen|voimaantulon)\s+nähtävilläolo|(kaavaehdotu(?:s|ksen))\s+(?:uudelleen\s+)?nähtävillä/i
+const PELKOSENNIEMI_STAGE_MAP: Record<string, string> = {
+  vireilletulon: "Vireilletulo",
+  valmisteluvaiheen: "Luonnos",
+  ehdotusvaiheen: "Ehdotus",
+  hyväksymisvaiheen: "Hyväksyminen",
+  voimaantulon: "Voimaantulo",
+}
+const PELKOSENNIEMI_PHASE_RANK: Record<string, number> = {
+  Vireilletulo: 0,
+  Luonnos: 1,
+  Ehdotus: 2,
+  Hyväksyminen: 3,
+  Voimaantulo: 4,
+}
+
+function pelkosenniemiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// Pelkosenniemi's "Vireillä olevat asemakaavat" accordion lists every
+// kuulutus (announcement) event inline as its own description paragraph
+// immediately followed by a link paragraph — the same project appears
+// multiple times as it moves through stages over the years, each event
+// stating its own stage explicitly ("Valmisteluvaiheen nähtävilläolo",
+// "Kaavaehdotuksen nähtävilläolo", etc). We dedupe only exact-title
+// repeats (keeping the most advanced phase); differently-worded mentions
+// of the same underlying project are left for the platform's identity
+// matcher to merge, consistent with how Miehikkälä's kuulutukset feed
+// is handled.
+function pelkosenniemiExtractTitleAndPhase(text: string): { title: string; phase: string } {
+  const match = text.match(PELKOSENNIEMI_STAGE_PATTERN)
+  if (!match) return { title: text.split(".")[0].trim(), phase: "Vireilletulo" }
+  const title = text.slice(0, match.index).replace(/\.\s*$/, "").trim()
+  const phase = match[1] ? PELKOSENNIEMI_STAGE_MAP[match[1].toLowerCase()] : "Ehdotus"
+  return { title: title || text.split(".")[0].trim(), phase }
+}
+
+async function collectPelkosenniemiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PELKOSENNIEMI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("li.relative button")
+    .toArray()
+    .find((el) => $(el).text().replace(/\s+/g, " ").trim() === "Vireillä olevat asemakaavat")
+  if (!heading) return { documentsFound: 0, documentsSaved: 0 }
+
+  const container = $(heading).closest("li.relative").find(".p-8").first()
+  const paragraphs = container.children("p").toArray()
+
+  type Segment = { description: string; links: { label: string; href: string }[] }
+  const segments: Segment[] = []
+  let current: Segment | null = null
+
+  paragraphs.forEach((p) => {
+    const $p = $(p)
+    const links = $p
+      .find("a")
+      .toArray()
+      .map((a) => ({ label: $(a).text().replace(/\s+/g, " ").trim(), href: $(a).attr("href") ?? "" }))
+    const textOnly = $p.clone().find("a").remove().end().text().replace(/\s+/g, " ").trim()
+    if (textOnly) {
+      current = { description: textOnly, links: [] }
+      segments.push(current)
+    }
+    if (links.length && current) current.links.push(...links)
+  })
+
+  const parsed = segments
+    .map((seg) => {
+      const { title, phase } = pelkosenniemiExtractTitleAndPhase(seg.description)
+      return { title, phase, description: seg.description, links: seg.links }
+    })
+    .filter((item) =>
+      item.title &&
+      // Most items say "asemakaavan muutos", but a few in this section
+      // shorten it to bare "kaavamuutos" — both are safe to include here
+      // since the whole container is already scoped to asemakaava items.
+      (/asemakaav/i.test(item.title) || /kaavamuutos/i.test(item.title)) &&
+      !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
+    )
+
+  const byTitle = new Map<string, (typeof parsed)[number]>()
+  for (const item of parsed) {
+    const existing = byTitle.get(item.title)
+    if (!existing || PELKOSENNIEMI_PHASE_RANK[item.phase] > PELKOSENNIEMI_PHASE_RANK[existing.phase]) {
+      byTitle.set(item.title, item)
+    }
+  }
+  const items = Array.from(byTitle.values())
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+    const phase = item.phase
+    const completed = phase === "Voimaantulo"
+    const contacts = [PELKOSENNIEMI_CONTACT]
+    const attachments = item.links
+      .filter((l) => l.href.startsWith("http"))
+      .map((l) => ({ label: l.label, url: l.href }))
+
+    found += 1
+
+    const slug = pelkosenniemiSlug(title)
+    const documentUrl = `${PELKOSENNIEMI_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description: item.description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description: item.description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -24020,6 +24193,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "muonioKaavaParser") {
     return collectMuonioKaavaSource(source)
+  }
+
+  if (source.parser === "pelkosenniemiKaavaParser") {
+    return collectPelkosenniemiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
