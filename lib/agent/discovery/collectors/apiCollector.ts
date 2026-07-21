@@ -16887,7 +16887,9 @@ async function collectLaihiaKaavaSource(source: DiscoverySource) {
   for (const itemEl of items) {
     const item = $(itemEl)
     const title = item.find(".accordion__heading h2").first().text().replace(/\s+/g, " ").trim()
-    if (!title || /yleiskaava/i.test(title) || /tuulivoima/i.test(title) || /ranta-asemakaava/i.test(title)) {
+    if (!title) continue
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isEnergyProject && (/yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title))) {
       continue
     }
 
@@ -18157,7 +18159,10 @@ function paltamoPhaseFromText(text: string): string {
 }
 
 function paltamoIsAsemakaavaOnly(title: string): boolean {
-  return /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/tuulivoima/i.test(title) && !/ranta-asemakaava/i.test(title)
+  const isAsemakaava =
+    /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+  const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+  return isAsemakaava || isEnergyProject
 }
 
 // Paltamo's single all-in-one kaavoitus page uses Bootstrap-collapse
@@ -18247,7 +18252,14 @@ async function collectPaltamoKaavaSource(source: DiscoverySource) {
     const { title, description, attachments } = item
     if (!title) continue
 
-    const phase = paltamoPhaseFromText(`${title} ${description}`)
+    // Some panels end with a bare-text "Vaihe" stepper listing every
+    // possible stage name in order ("Vaihe Päätös kaavoituksen
+    // aloituksesta ... Ehdotus Hyväksyminen Valitus Lainvoimaisuus") which
+    // is a static checklist template, not an indication of which stage has
+    // actually been reached — stripped before phase detection.
+    const phaseText = description.replace(/\s*vaihe\s+päätös\s+kaavoituksen\s+aloituksesta[\s\S]*$/i, "")
+
+    const phase = paltamoPhaseFromText(`${title} ${phaseText}`)
     const completed = phase === "Voimaantulo"
     const contacts = [PALTAMO_CONTACT]
 
