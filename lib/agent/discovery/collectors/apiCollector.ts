@@ -17658,6 +17658,132 @@ async function collectHausjarviKaavaSource(source: DiscoverySource) {
   }
 }
 
+const JOKIOINEN_LISTING_URL =
+  "https://www.jokioinen.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/ajankohtainen-kaavoitus/"
+
+const JOKIOINEN_CONTACT = {
+  name: "Janna Stenberg",
+  title: "Kiinteistöpäällikkö (vs. tekninen johtaja)",
+  phone: "044 767 4525",
+  email: "janna.stenberg@jokioinen.fi",
+}
+
+function jokioinenSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function jokioinenPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectJokioinenKaavaSource(source: DiscoverySource) {
+  const response = await fetch(JOKIOINEN_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const headings = $("#foxy-target-content").first().find("h2").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const headingEl of headings) {
+    const heading = $(headingEl)
+    const title = heading.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
+    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
+      continue
+    }
+
+    const blockNodes = heading.nextUntil("h2")
+    const description = blockNodes.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
+
+    const phase = jokioinenPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [JOKIOINEN_CONTACT]
+
+    const attachments = blockNodes
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", JOKIOINEN_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = jokioinenSlug(title)
+    const documentUrl = `${JOKIOINEN_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -20539,6 +20665,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "hausjarviKaavaParser") {
     return collectHausjarviKaavaSource(source)
+  }
+
+  if (source.parser === "jokioinenKaavaParser") {
+    return collectJokioinenKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
