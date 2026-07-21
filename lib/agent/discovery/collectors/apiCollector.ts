@@ -9289,7 +9289,12 @@ function pieksamakiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -9945,7 +9950,12 @@ function ylivieskaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -10067,7 +10077,12 @@ function loimaaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -10343,7 +10358,12 @@ function kauhavaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -11124,7 +11144,12 @@ function ulvilaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -11470,7 +11495,12 @@ function lieksaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -11584,7 +11614,12 @@ function kiteePhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -11716,7 +11751,12 @@ function kalajokiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -11858,7 +11898,12 @@ function nivalaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -12025,7 +12070,12 @@ function limingaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   // "luonnos" (draft), not the shorter "luonno" stem -- that also matches
@@ -12182,7 +12232,12 @@ function muuramePhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -12332,7 +12387,12 @@ function saarijarviPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -12512,7 +12572,12 @@ function keuruuPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -12699,7 +12764,12 @@ function loviisaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -13123,7 +13193,12 @@ function parainenPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -13280,7 +13355,12 @@ function someroPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   // "hyväksynyt ... kaavaehdotuksen ja asettaa ... nähtäville" approves
   // releasing a DRAFT for display, not the final plan -- only treat
@@ -13550,7 +13630,12 @@ function kokemakiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -13675,7 +13760,12 @@ function urjalaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -13821,7 +13911,12 @@ function punkalaidunPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -14092,7 +14187,12 @@ function hattulaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   // "hyväksyä kaavahanketta koskevan maankäyttösopimuksen" approves a
   // separate LAND-USE AGREEMENT, not the plan itself, and "hyväksynyt ...
@@ -14231,7 +14331,12 @@ function savitaipalePhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -14378,7 +14483,12 @@ function juvaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -14537,7 +14647,12 @@ function lapinlahtiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -14687,7 +14802,12 @@ function kannusPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -14836,7 +14956,12 @@ function toholampiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -14980,7 +15105,12 @@ function kuhmoPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -15111,7 +15241,12 @@ function suomussalmiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -15240,7 +15375,12 @@ function kittilaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -15378,7 +15518,12 @@ function kemijarviPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -15530,7 +15675,12 @@ function rautjarviPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -15674,7 +15824,12 @@ function alajarviPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -15980,7 +16135,12 @@ function isokyroPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -16155,7 +16315,12 @@ function kuortanePhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -16289,7 +16454,12 @@ function laihiaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -16431,7 +16601,12 @@ function ahtariPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -16602,7 +16777,12 @@ function enonkoskiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -16772,7 +16952,12 @@ function heinavesiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -16916,7 +17101,12 @@ function hirvensalmiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -17184,7 +17374,12 @@ function sulkavaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -17319,7 +17514,12 @@ function hyrynsalmiPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -17475,7 +17675,12 @@ function paltamoPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -17671,7 +17876,12 @@ function puolankaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -17794,7 +18004,12 @@ function hausjarviPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -17946,7 +18161,12 @@ function jokioinenPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -18077,7 +18297,12 @@ function veteliPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -18208,7 +18433,12 @@ function multiaPhaseFromText(text: string): string {
   const isHistoricalYearReference =
     lainvoimaMatchIndex >= 0 &&
     /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "Liite: Ote lainvoimaisesta kaavasta" is an attachment label referencing
+  // the existing baseline plan document, not this plan reaching voimaantulo.
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -18294,6 +18524,147 @@ async function collectMultiaKaavaSource(source: DiscoverySource) {
         source_name: source.name,
         title,
         document_url: detailUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
+const PETAJAVESI_LISTING_URL = "https://www.petajavesi.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat/"
+
+const PETAJAVESI_CONTACT = {
+  name: "Päivi Muhonen",
+  title: "Aluearkkitehti",
+  phone: "044 4598 434",
+  email: "paivi.muhonen@saarijarvi.fi",
+}
+
+function petajavesiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function petajavesiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  // Petäjävesi's own stage vocabulary calls the draft stage "Valmisteluvaihe"
+  // rather than "Luonnosvaihe" used elsewhere; treat it as the same signal.
+  if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Petäjävesi's page uses <details> accordions whose <summary> is a short
+// label ("Kortteli 43"), while the real title is the first bold paragraph
+// inside ("Kortteli 43 asemakaavamuutos"). Each item also nests its own
+// phase-stage sub-accordion, but since those panels stay in the DOM
+// regardless of open/closed state, reading the whole <details> element's
+// text already captures every phase-stage word for the standard regex.
+async function collectPetajavesiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PETAJAVESI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $("details").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const itemEl of items) {
+    const item = $(itemEl)
+    const titleEl = item.find("> p > strong").first()
+    const title = (titleEl.length > 0 ? titleEl.text() : item.children("summary").first().text())
+      .replace(/\s+/g, " ")
+      .trim()
+    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
+      continue
+    }
+
+    const description = item.text().replace(/\s+/g, " ").trim()
+    const phase = petajavesiPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [PETAJAVESI_CONTACT]
+
+    const attachments = item
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", PETAJAVESI_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = petajavesiSlug(title)
+    const documentUrl = `${PETAJAVESI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
         document_type: "api",
         content_hash: contentHash,
         status: "downloaded",
@@ -21226,6 +21597,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "multiaKaavaParser") {
     return collectMultiaKaavaSource(source)
+  }
+
+  if (source.parser === "petajavesiKaavaParser") {
+    return collectPetajavesiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
