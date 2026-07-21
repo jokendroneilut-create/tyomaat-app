@@ -28473,7 +28473,134 @@ async function collectSieviKaavaSource(source: DiscoverySource) {
   }
 }
 
+// the listing page itself has no per-project content -- each project lives
+// on its own page, reachable only via the shared sidebar nav tree, so the
+// project set is enumerated here rather than parsed from a listing page
+const VAALA_PROJECT_URLS = [
+  "https://www.vaala.fi/kaavoitus/vireilla-olevat-kaava/teeriniemen-ranta-asemakaavan-muutos-ja-laajennus/",
+  "https://www.vaala.fi/kaavoitus/vireilla-olevat-kaava/vaalanlammen-rannan-kaavamuutokset/",
+  "https://www.vaala.fi/kaavoitus/vireilla-olevat-kaava/tuulivoima/honkalankankaan-tuulivoimahanke/",
+  "https://www.vaala.fi/kaavoitus/vireilla-olevat-kaava/tuulivoima/hanke/",
+  "https://www.vaala.fi/kaavoitus/vireilla-olevat-kaava/tuulivoima/paatinkankaan-energiapuisto/",
+  "https://www.vaala.fi/kaavoitus/vireilla-olevat-kaava/tuulivoima/susisuon-tuulivoimahanke/",
+  "https://www.vaala.fi/kaavoitus/vireilla-olevat-kaava/tuulivoima/haarasuonkankaan-tuulivoimahanke/",
+  "https://www.vaala.fi/kaavoitus/vireilla-olevat-kaava/tuulivoima/painuan-kanavan-tuulivoimahanke/",
+  "https://www.vaala.fi/kaavoitus/vireilla-olevat-kaava/tuulivoima/turkkiselka/",
+]
+
+function vaalaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  // "etenee kohti kaavaluonnosta" (progressing TOWARDS the draft) describes
+  // a still-upcoming step, not the plan currently sitting at that stage
+  const isForwardLooking = (index: number) => {
+    const window = normalized.slice(Math.max(0, index - 60), index + 60)
+    return /kohti|tavoitteena on|valmistellaan|asetetaan nähtäville|tullaan/.test(window)
+  }
+
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (isForwardLooking(index)) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 20), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+
+  if (
+    matchesUnguarded(/hyväksy/, (window) =>
+      /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen/.test(window)
+    )
+  ) {
+    return "Hyväksyminen"
+  }
+
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+
+  return "Vireilletulo"
+}
+
+async function collectVaalaKaavaSource(source: DiscoverySource) {
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto|energiapuisto/i
+
+  let saved = 0
+  let found = 0
+
+  for (const url of VAALA_PROJECT_URLS) {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) continue
+
+    const $ = cheerio.load(await response.text())
+    const title = $("#main-content h1").first().text().replace(/\s+/g, " ").trim()
+    if (!title) continue
+
+    const bodyText = $("#main-content #ifb-wrapper").first().text().replace(/\s+/g, " ").trim()
+    if (!/asemakaava/i.test(title) && !/asemakaava/i.test(bodyText) && !energyPattern.test(title) && !energyPattern.test(bodyText))
+      continue
+
+    const phase = vaalaPhaseFromText(`${title} ${bodyText}`)
+    const completed = phase === "Voimaantulo"
+
+    found += 1
+
+    const rawText = JSON.stringify({ title, phase, description: bodyText || null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug: kemiSlug(title),
+          phase,
+          description: bodyText || null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "vaalaKaavaParser") {
+    return collectVaalaKaavaSource(source)
+  }
+
   if (source.parser === "sieviKaavaParser") {
     return collectSieviKaavaSource(source)
   }

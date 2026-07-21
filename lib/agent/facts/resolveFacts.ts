@@ -177,6 +177,7 @@ import { extractVehmaaKaavaFacts } from "@/lib/agent/facts/extractVehmaaKaavaFac
 import { extractLaitilaKaavaFacts } from "@/lib/agent/facts/extractLaitilaKaavaFacts"
 import { extractKustaviKaavaFacts } from "@/lib/agent/facts/extractKustaviKaavaFacts"
 import { extractSieviKaavaFacts } from "@/lib/agent/facts/extractSieviKaavaFacts"
+import { extractVaalaKaavaFacts } from "@/lib/agent/facts/extractVaalaKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -3226,6 +3227,23 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractSieviKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Vaalan kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractVaalaKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
