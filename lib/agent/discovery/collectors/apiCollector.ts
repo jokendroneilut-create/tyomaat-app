@@ -22865,6 +22865,142 @@ const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /osallistumis/i, label: "Osallistumis- ja arviointisuunnitelma" },
 ]
 
+const VESILAHTI_LISTING_URL = "https://vesilahti.cloudnc.fi/fi-FI/Kaavat"
+const VESILAHTI_ORIGIN = "https://vesilahti.cloudnc.fi"
+
+function vesilahtiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// CloudNC's own stepper marks the CURRENT stage with a bold name inside the
+// topmost .phase.box (blue = in progress, green = its display period has
+// closed but no later stage has started yet — either way it's still the
+// most-advanced stage reached), so the phase is read directly off that
+// stage name rather than scanned from narrative text.
+function vesilahtiPhaseFromStageName(stageName: string): string {
+  const normalized = stageName.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/valmistelu|luonnos/.test(normalized)) return "Luonnos"
+  if (/osallistumis/.test(normalized)) return "Vireilletulo"
+  return "Vireilletulo"
+}
+
+async function collectVesilahtiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(VESILAHTI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const seen = new Set<string>()
+  const items = $("a")
+    .toArray()
+    .map((el) => ({
+      title: $(el).text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter((item) => item.title.startsWith("Vireillä olevat:"))
+    .map((item) => ({
+      title: item.title
+        .replace(/^Vireillä olevat:\s*/, "")
+        .replace(/\s*-\s*\d{1,2}\.\d{1,2}\.\d{4}\s*$/, "")
+        .trim(),
+      href: item.href,
+    }))
+    .filter((item) => {
+      if (!item.title || !/asemakaav/i.test(item.title) || /yleiskaav/i.test(item.title)) return false
+      if (/ranta-asemakaav/i.test(item.title) || /tuulivoima/i.test(item.title)) return false
+      if (!item.href || seen.has(item.href)) return false
+      seen.add(item.href)
+      return true
+    })
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+    const detailUrl = `${VESILAHTI_ORIGIN}${item.href}`
+
+    const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const detail$ = cheerio.load(await detailResponse.text())
+
+    const stageName = detail$(".phase.box").first().find("b").first().text().replace(/\s+/g, " ").trim()
+    const phase = vesilahtiPhaseFromStageName(stageName)
+    const completed = phase === "Voimaantulo"
+
+    const description = detail$(".basic-content p").first().text().replace(/\s+/g, " ").trim() || null
+
+    const contactText = detail$(".yhteyshenkilo-info").first().text().replace(/\s+/g, " ").trim()
+    const contacts = contactText ? [{ name: contactText, title: null, phone: null, email: null }] : []
+
+    const attachments = detail$("p.attachment a")
+      .toArray()
+      .map((a: any) => {
+        const href = detail$(a).attr("href") ?? ""
+        const url = href.startsWith("http") ? href : `${VESILAHTI_ORIGIN}${href}`
+        return { label: detail$(a).text().replace(/\s+/g, " ").trim(), url }
+      })
+
+    found += 1
+
+    const slug = vesilahtiSlug(title)
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: detailUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 function kangasalaPhaseFromHeadings(headings: string[]): string | null {
   for (const stage of KANGASALA_PHASE_HEADING_ORDER) {
     if (headings.some((h) => stage.pattern.test(h))) return stage.label
@@ -25846,6 +25982,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "palkaneKaavaParser") {
     return collectPalkaneKaavaSource(source)
+  }
+
+  if (source.parser === "vesilahtiKaavaParser") {
+    return collectVesilahtiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {

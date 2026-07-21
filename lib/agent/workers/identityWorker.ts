@@ -131,6 +131,7 @@ import { resolveIkaalinenKaavaProject } from "@/lib/agent/identity/resolvers/ika
 import { resolveManttaVilppulaKaavaProject } from "@/lib/agent/identity/resolvers/manttaVilppulaKaavaResolver"
 import { resolveOrivesiKaavaProject } from "@/lib/agent/identity/resolvers/orivesiKaavaResolver"
 import { resolvePalkaneKaavaProject } from "@/lib/agent/identity/resolvers/palkaneKaavaResolver"
+import { resolveVesilahtiKaavaProject } from "@/lib/agent/identity/resolvers/vesilahtiKaavaResolver"
 import { resolveRiihimakiKaavaProject } from "@/lib/agent/identity/resolvers/riihimakiKaavaResolver"
 import { resolveRaaseporiKaavaProject } from "@/lib/agent/identity/resolvers/raaseporiKaavaResolver"
 import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisioKaavaResolver"
@@ -1077,6 +1078,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "pälkäneen vireillä olevat asemakaavat") {
     const result = await resolvePalkaneKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "vesilahden vireillä olevat asemakaavat") {
+    const result = await resolveVesilahtiKaavaProject({
       document,
       facts: facts ?? [],
     })
