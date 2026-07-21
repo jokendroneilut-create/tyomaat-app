@@ -11540,7 +11540,10 @@ async function collectLiperiKaavaSource(source: DiscoverySource) {
     )
       .replace(/\s+/g, " ")
       .trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title)) continue
+    if (!title) continue
+    const isAsemakaava = /asemakaava/i.test(title) && !/yleiskaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     found += 1
 
