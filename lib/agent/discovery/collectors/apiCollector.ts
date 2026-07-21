@@ -27269,6 +27269,116 @@ async function collectSiuntioKaavaSource(source: DiscoverySource) {
   }
 }
 
+const EURA_LISTING_URL =
+  "https://www.eura.fi/asuminen-ja-ymparisto/rakentaminen-ymparisto-ja-luvat/kaavoitus-ja-maapolitiikka/"
+
+function euraPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectEuraKaavaSource(source: DiscoverySource) {
+  const response = await fetch(EURA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  // most projects on this page are a single flat <p> -- a bare <strong>
+  // title (a direct child of the <p>, not wrapped in a link) immediately
+  // followed by <br>-separated status text and attachment links -- but a
+  // few paragraphs run two projects together with just a "<br><br>" between
+  // them and no new <p>, so each <strong> direct-child starts a new item
+  // rather than trusting one item per <p>
+  type EuraItem = { title: string; text: string }
+  const items: EuraItem[] = []
+
+  $("#content p").each((_, p) => {
+    let current: EuraItem | null = null
+
+    for (const node of $(p).contents().toArray()) {
+      if (node.type === "tag" && node.name === "strong") {
+        const title = $(node).text().replace(/\s+/g, " ").trim()
+        if (title) {
+          if (current) items.push(current)
+          current = { title, text: title }
+          continue
+        }
+      }
+      if (current) {
+        const nodeText = $(node).text().replace(/\s+/g, " ").trim()
+        if (nodeText) current.text += ` ${nodeText}`
+      }
+    }
+    if (current) items.push(current)
+  })
+
+  const projectItems = items.filter(
+    (item) => /asemakaava/i.test(item.title) || energyPattern.test(item.title)
+  )
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of projectItems) {
+    const phase = euraPhaseFromText(item.text)
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${EURA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: projectItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "lappeenrantaKaavaParser") {
     return collectLappeenrantaSource(source)
@@ -27940,6 +28050,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "siuntioKaavaParser") {
     return collectSiuntioKaavaSource(source)
+  }
+
+  if (source.parser === "euraKaavaParser") {
+    return collectEuraKaavaSource(source)
   }
 
   const response = await fetch(source.url, {

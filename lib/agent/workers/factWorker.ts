@@ -155,6 +155,7 @@ export async function runFactWorker(documentId?: string) {
       "Inkoon ajankohtainen kaavoitus",
       "Karkkilan vireillä olevat kaavahankkeet",
       "Siuntion vireillä olevat asemakaavat",
+      "Euran kaavoitus ja maapolitiikka",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",

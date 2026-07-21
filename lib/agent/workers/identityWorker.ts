@@ -120,6 +120,7 @@ import { resolveHankoKaavaProject } from "@/lib/agent/identity/resolvers/hankoKa
 import { resolveInkooKaavaProject } from "@/lib/agent/identity/resolvers/inkooKaavaResolver"
 import { resolveKarkkilaKaavaProject } from "@/lib/agent/identity/resolvers/karkkilaKaavaResolver"
 import { resolveSiuntioKaavaProject } from "@/lib/agent/identity/resolvers/siuntioKaavaResolver"
+import { resolveEuraKaavaProject } from "@/lib/agent/identity/resolvers/euraKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1009,6 +1010,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "siuntion vireillä olevat asemakaavat") {
     const result = await resolveSiuntioKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "euran kaavoitus ja maapolitiikka") {
+    const result = await resolveEuraKaavaProject({
       document,
       facts: facts ?? [],
     })

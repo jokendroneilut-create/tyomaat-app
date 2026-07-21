@@ -167,6 +167,7 @@ import { extractHankoKaavaFacts } from "@/lib/agent/facts/extractHankoKaavaFacts
 import { extractInkooKaavaFacts } from "@/lib/agent/facts/extractInkooKaavaFacts"
 import { extractKarkkilaKaavaFacts } from "@/lib/agent/facts/extractKarkkilaKaavaFacts"
 import { extractSiuntioKaavaFacts } from "@/lib/agent/facts/extractSiuntioKaavaFacts"
+import { extractEuraKaavaFacts } from "@/lib/agent/facts/extractEuraKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -3046,6 +3047,23 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractSiuntioKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Euran kaavoitus ja maapolitiikka") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractEuraKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
