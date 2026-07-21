@@ -19928,7 +19928,14 @@ function iittiPhaseFromText(text: string): string {
   const isBuildingBanReference =
     lainvoimaMatchIndex >= 0 &&
     /rakennuskiel/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 25), lainvoimaMatchIndex))
-  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && !isBuildingBanReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  // "voimassa, kunnes kaavan hyväksymispäätös on saanut lainvoiman" states
+  // a future condition for the building ban to lift — the plan has NOT yet
+  // gained legal force, "kunnes" (until) just isn't right next to the
+  // building-ban keyword the way isBuildingBanReference expects.
+  const isConditionalUntilClause =
+    lainvoimaMatchIndex >= 0 &&
+    /\bkunnes\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 60), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && !isBuildingBanReference && !isConditionalUntilClause && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.lastIndexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
@@ -19940,7 +19947,11 @@ function iittiPhaseFromText(text: string): string {
     // plan proposal itself — a genuine Hyväksyminen signal that the generic
     // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
     const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
-    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "tekninen johtaja hyväksyi ... OAS:n noudatettavaksi" is a civil
+    // servant signing off on the OAS document for internal use, not the
+    // council approving the plan itself.
+    const isOasApproval = /\boas\b/.test(window.slice(0, 50))
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference && !isOasApproval) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -19975,11 +19986,13 @@ async function collectIittiKaavaSource(source: DiscoverySource) {
         .toArray()
         .map((a) => ({ label: $(a).text().replace(/\s+/g, " ").trim(), href: $(a).attr("href") ?? "" })),
     }))
-    .filter((item) =>
-      item.title &&
-      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
-      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
-    )
+    .filter((item) => {
+      if (!item.title) return false
+      const isAsemakaava =
+        /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) && !/ranta-asemakaav/i.test(item.title)
+      const isEnergyProject = /tuulivoima|aurinkovoima/i.test(item.title)
+      return isAsemakaava || isEnergyProject
+    })
 
   let found = 0
   let saved = 0
