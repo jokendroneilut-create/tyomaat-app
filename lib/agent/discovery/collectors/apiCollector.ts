@@ -26905,6 +26905,143 @@ async function collectHankoKaavaSource(source: DiscoverySource) {
   }
 }
 
+const INKOO_ASEMAKAAVAT_URL =
+  "https://www.inkoo.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/ajankohtainen-kaavoitus/asemakaavat/"
+const INKOO_RANTA_ASEMAKAAVAT_URL =
+  "https://www.inkoo.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/ajankohtainen-kaavoitus/ranta-asemakaavat/"
+const INKOO_OSAYLEISKAAVAT_URL =
+  "https://www.inkoo.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/ajankohtainen-kaavoitus/osayleiskaavat/"
+
+type InkooStage = { label: string; hasDate: boolean }
+
+// each plan page lists its process as a stack of accordions (newest stage
+// first), but several accordions are generic template sections that are
+// present on every page regardless of progress (an "Aloitusvaihe" intro,
+// a "Voimaantulo/lainvoimaisuus" placeholder explaining what that notice
+// will look like, FAQ entries) -- those never carry a date range in their
+// title, so only date-bearing titles are treated as stages actually reached
+function inkooExtractStages($: cheerio.CheerioAPI): InkooStage[] {
+  const stages: InkooStage[] = []
+
+  $(".accordion__trigger").each((_, btn) => {
+    const clone = $(btn).clone()
+    clone.find("span").remove()
+    const label = clone.text().replace(/\s+/g, " ").trim()
+    if (!label) return
+    const hasDate = /\d{1,2}\.\d{1,2}(\.\d{2,4})?/.test(label)
+    stages.push({ label: label.toLowerCase(), hasDate })
+  })
+
+  return stages
+}
+
+function inkooPhaseFromStages(stages: InkooStage[]): string {
+  const dated = stages.filter((stage) => stage.hasDate)
+  const matches = (pattern: RegExp) => dated.some((stage) => pattern.test(stage.label))
+
+  if (matches(/voimaantulo|lainvoima/)) return "Voimaantulo"
+  if (matches(/hyväksy/)) return "Hyväksyminen"
+  if (matches(/ehdotus/)) return "Ehdotus"
+  if (matches(/valmistelu|luonnos/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function inkooCollectLinks(
+  url: string,
+  energyOnly: boolean
+): Promise<{ title: string; url: string }[]> {
+  const response = await fetch(url, { cache: "no-store" })
+  if (!response.ok) return []
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  const links: { title: string; url: string }[] = []
+
+  $(".grid--3 h3 a").each((_, a) => {
+    const title = $(a).text().replace(/\s+/g, " ").trim()
+    const href = $(a).attr("href")
+    if (!title || !href) return
+    if (energyOnly && !energyPattern.test(title)) return
+    links.push({ title, url: href })
+  })
+
+  return links
+}
+
+async function collectInkooKaavaSource(source: DiscoverySource) {
+  const [asemakaavaLinks, rantaLinks, energyYleiskaavaLinks] = await Promise.all([
+    inkooCollectLinks(INKOO_ASEMAKAAVAT_URL, false),
+    inkooCollectLinks(INKOO_RANTA_ASEMAKAAVAT_URL, false),
+    inkooCollectLinks(INKOO_OSAYLEISKAAVAT_URL, true),
+  ])
+
+  const links = [...asemakaavaLinks, ...rantaLinks, ...energyYleiskaavaLinks]
+
+  let saved = 0
+
+  for (const link of links) {
+    let phase = "Vireilletulo"
+
+    try {
+      const detailResponse = await fetch(link.url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const detail$ = cheerio.load(await detailResponse.text())
+        phase = inkooPhaseFromStages(inkooExtractStages(detail$))
+      }
+    } catch {
+      // keep the Vireilletulo default if the detail page can't be fetched
+    }
+
+    const completed = phase === "Voimaantulo"
+    const slug = kemiSlug(link.title)
+
+    const rawText = JSON.stringify({ title: link.title, phase, description: null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: link.title,
+        document_url: link.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: link.title,
+          slug,
+          phase,
+          description: null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "lappeenrantaKaavaParser") {
     return collectLappeenrantaSource(source)
@@ -27564,6 +27701,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "hankoKaavaParser") {
     return collectHankoKaavaSource(source)
+  }
+
+  if (source.parser === "inkooKaavaParser") {
+    return collectInkooKaavaSource(source)
   }
 
   const response = await fetch(source.url, {
