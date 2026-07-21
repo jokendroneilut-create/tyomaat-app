@@ -16569,6 +16569,130 @@ async function collectHeinavesiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HIRVENSALMI_LISTING_URL =
+  "https://www.hirvensalmi.fi/hirvensalmi-info/rakentaminen-ja-tekniset-palvelut/kaavoitus/"
+
+const HIRVENSALMI_CONTACT = {
+  name: "Asko Viljanen",
+  title: "Tekninen johtaja",
+  phone: "050 300 0444",
+  email: "asko.viljanen@hirvensalmi.fi",
+}
+
+function hirvensalmiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function hirvensalmiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectHirvensalmiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HIRVENSALMI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const headings = $(".entry-content").find("h4").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const headingEl of headings) {
+    const heading = $(headingEl)
+    const title = heading.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
+    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
+      continue
+    }
+
+    const blockNodes = heading.nextUntil("h2, h3, h4")
+    const description = blockNodes.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
+
+    const phase = hirvensalmiPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [HIRVENSALMI_CONTACT]
+
+    const attachments = blockNodes
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", HIRVENSALMI_LISTING_URL).toString(),
+      }))
+
+    found += 1
+
+    const slug = hirvensalmiSlug(title)
+    const documentUrl = `${HIRVENSALMI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -19422,6 +19546,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "heinavesiKaavaParser") {
     return collectHeinavesiKaavaSource(source)
+  }
+
+  if (source.parser === "hirvensalmiKaavaParser") {
+    return collectHirvensalmiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
