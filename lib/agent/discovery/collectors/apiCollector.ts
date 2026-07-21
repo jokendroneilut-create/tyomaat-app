@@ -15907,7 +15907,9 @@ async function collectKittilaKaavaSource(source: DiscoverySource) {
       // an empty h3 ("&nbsp;" spacer) is purely decorative and must not
       // clear the block a real title h3 just opened
       if (!title) continue
-      if (/asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)) {
+      const isAsemakaava = /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+      const isEnergyProject = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)
+      if (isAsemakaava || isEnergyProject) {
         current = { title, nodes: [] }
         blocks.push(current)
       } else {
