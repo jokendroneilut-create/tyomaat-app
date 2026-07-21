@@ -226,6 +226,7 @@ export async function POST(request: Request) {
     const isVirolahtiKaava = normalize(metadata.resolver) === "virolahtikaavaresolver"
     const isEnontekioKaava = normalize(metadata.resolver) === "enontekiokaavaresolver"
     const isInariKaava = normalize(metadata.resolver) === "inarikaavaresolver"
+    const isKeminmaaKaava = normalize(metadata.resolver) === "keminmaakaavaresolver"
 
     const permitIdentifierType: IdentifierType = isHilma
       ? "hilma_notice_number"
@@ -1245,6 +1246,13 @@ export async function POST(request: Request) {
     if (isInariKaava) {
       candidateIdentifiers.push({
         type: "inari_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isKeminmaaKaava) {
+      candidateIdentifiers.push({
+        type: "keminmaa_kaava_slug",
         value: metadata.slug,
       })
     }

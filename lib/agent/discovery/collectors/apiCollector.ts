@@ -20801,6 +20801,132 @@ async function collectInariKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KEMINMAA_LISTING_URL = "https://www.keminmaa.fi/asuminen-ja-ymparisto/rakentaminen-ja-ymparisto/kaavoitus/"
+
+const KEMINMAA_CONTACT = {
+  name: "Hannu Juopperi",
+  title: "Maankäyttöpäällikkö",
+  phone: "0407314559",
+  email: "hannu.juopperi@keminmaa.fi",
+}
+
+function keminmaaSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// Keminmaa's "Vireillä olevat kaavat" section (already segregated from a
+// separate "Tuulivoima-osayleiskaavat" section above it) lists each item as
+// a bare <details><summary>title</summary></details> with no free-text
+// description at all — only a following .buttons block of attachment
+// links whose LABELS name the document type ("...asemakaavaehdotus",
+// "...asemakaavaluonnos", plain "OAS"). Phase is inferred from which of
+// those document types is present, most-advanced first.
+async function collectKeminmaaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KEMINMAA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("h2")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Vireillä olevat kaavat")
+  if (!heading) return { documentsFound: 0, documentsSaved: 0 }
+
+  const items: { title: string; links: { label: string; href: string }[] }[] = []
+  let node = $(heading).next()
+  while (node.length && (node.prop("tagName") || "").toLowerCase() !== "h2") {
+    if ((node.prop("tagName") || "").toLowerCase() === "details") {
+      const title = node.find("summary").first().text().replace(/\s+/g, " ").trim()
+      const links: { label: string; href: string }[] = []
+      let sibling = node.next()
+      while (sibling.length && (sibling.prop("tagName") || "").toLowerCase() !== "details" && (sibling.prop("tagName") || "").toLowerCase() !== "h2") {
+        sibling.find("a").each((_: number, a: any) => {
+          links.push({ label: $(a).text().replace(/\s+/g, " ").trim(), href: $(a).attr("href") ?? "" })
+        })
+        sibling = sibling.next()
+      }
+      if (title) items.push({ title, links })
+    }
+    node = node.next()
+  }
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+    const labelText = item.links.map((l) => l.label).join(" ").toLowerCase()
+
+    let phase = "Vireilletulo"
+    if (/voimaantulo|lainvoima/.test(labelText)) phase = "Voimaantulo"
+    else if (/hyväksy/.test(labelText)) phase = "Hyväksyminen"
+    else if (/ehdotu/.test(labelText)) phase = "Ehdotus"
+    else if (/luonno/.test(labelText)) phase = "Luonnos"
+
+    const completed = phase === "Voimaantulo"
+    const contacts = [KEMINMAA_CONTACT]
+    const description = item.links.map((l) => l.label).join(", ")
+    const attachments = item.links
+      .filter((l) => l.href.startsWith("http"))
+      .map((l) => ({ label: l.label, url: l.href }))
+
+    found += 1
+
+    const slug = keminmaaSlug(title)
+    const documentUrl = `${KEMINMAA_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -23738,6 +23864,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "inariKaavaParser") {
     return collectInariKaavaSource(source)
+  }
+
+  if (source.parser === "keminmaaKaavaParser") {
+    return collectKeminmaaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
