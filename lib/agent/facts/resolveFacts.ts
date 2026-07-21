@@ -115,6 +115,7 @@ import { extractVirolahtiKaavaFacts } from "@/lib/agent/facts/extractVirolahtiKa
 import { extractEnontekioKaavaFacts } from "@/lib/agent/facts/extractEnontekioKaavaFacts"
 import { extractInariKaavaFacts } from "@/lib/agent/facts/extractInariKaavaFacts"
 import { extractKeminmaaKaavaFacts } from "@/lib/agent/facts/extractKeminmaaKaavaFacts"
+import { extractMuonioKaavaFacts } from "@/lib/agent/facts/extractMuonioKaavaFacts"
 import { extractHeinolaKaavaFacts } from "@/lib/agent/facts/extractHeinolaKaavaFacts"
 import { extractAanekoskiKaavaFacts } from "@/lib/agent/facts/extractAanekoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
@@ -3015,6 +3016,25 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractKeminmaaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Muonion vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractMuonioKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
