@@ -8750,15 +8750,23 @@ async function collectJamsaKaavaSource(source: DiscoverySource) {
 
   const planLinks: { title: string; href: string }[] = []
   let recording = false
+  // Wind/solar projects are zoned as yleiskaavat, listed alongside
+  // unrelated general yleiskaava items -- only energy-project titles from
+  // that section are in scope, unlike asemakaavat/ranta-asemakaavat where
+  // every item is included.
+  let energyOnly = false
   for (const el of main.find("h3, h4").toArray()) {
     const $el = listing$(el)
     if (el.name === "h3") {
-      recording = JAMSA_INCLUDE_SECTIONS.has($el.text().trim().toLowerCase())
+      const heading = $el.text().trim().toLowerCase()
+      recording = JAMSA_INCLUDE_SECTIONS.has(heading) || heading === "yleiskaavat"
+      energyOnly = heading === "yleiskaavat"
       continue
     }
     if (el.name === "h4" && recording) {
       const href = $el.find("a").first().attr("href")
       const title = $el.text().replace(/\s+/g, " ").trim()
+      if (energyOnly && !/tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)) continue
       if (href && title) planLinks.push({ title, href })
     }
   }
