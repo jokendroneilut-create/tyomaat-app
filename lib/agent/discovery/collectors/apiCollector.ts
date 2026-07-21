@@ -19985,6 +19985,8 @@ async function collectUurainenKaavaSource(source: DiscoverySource) {
 
 const VIITASAARI_LISTING_URL = "https://viitasaari.fi/asuminen-ja-ymparisto/kaavoitus-ja-tiet/viitasaaren-kaavat/vireilla-olevat-kaavat/vireilla-olevat-asemakaavat/"
 
+const VIITASAARI_TUULIVOIMA_URL = "https://viitasaari.fi/asuminen-ja-ymparisto/kaavoitus-ja-tiet/viitasaaren-kaavat/vireilla-olevat-kaavat/vireilla-olevat-tuulivoimaosayleiskaavat/"
+
 const VIITASAARI_CONTACT = {
   name: "Viitasaaren kaavoitus",
   title: null as string | null,
@@ -20084,8 +20086,27 @@ async function collectViitasaariKaavaSource(source: DiscoverySource) {
     .filter((item) =>
       item.title &&
       /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
-      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
+      !/ranta-asemakaav/i.test(item.title)
     )
+
+  // Wind power projects live on a separate dedicated page, structured as
+  // an <h3> title (with a "(vireilletulo)"-style suffix that isn't
+  // reliably kept in sync with the actual narrative below it, so the
+  // phase is still computed from the full text rather than trusted from
+  // the label) followed by a sibling text-block with the narrative.
+  const tuulivoimaResponse = await fetch(VIITASAARI_TUULIVOIMA_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (tuulivoimaResponse.ok) {
+    const $$ = cheerio.load(await tuulivoimaResponse.text())
+    $$("h3").each((_, h3El) => {
+      const $h3 = $$(h3El)
+      const rawTitle = $h3.text().replace(/\s+/g, " ").trim()
+      if (!rawTitle || !/tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(rawTitle)) return
+      const title = rawTitle.replace(/\s*\([^)]*\)\s*$/, "").trim()
+      const container = $h3.closest(".text-block.block")
+      const description = (container.length ? container.text() : $h3.text()).replace(/\s+/g, " ").trim()
+      items.push({ title, description })
+    })
+  }
 
   let found = 0
   let saved = 0
