@@ -13981,7 +13981,7 @@ function hattulaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14105,7 +14105,7 @@ function savitaipalePhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14241,7 +14241,7 @@ function juvaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14389,7 +14389,7 @@ function lapinlahtiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14528,7 +14528,7 @@ function kannusPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14666,7 +14666,7 @@ function toholampiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14799,7 +14799,7 @@ function kuhmoPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -14919,7 +14919,7 @@ function suomussalmiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -15037,7 +15037,7 @@ function kittilaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -15164,7 +15164,7 @@ function kemijarviPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -15305,7 +15305,7 @@ function rautjarviPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -15438,7 +15438,7 @@ function alajarviPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -15587,7 +15587,7 @@ function alavusPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -15728,7 +15728,7 @@ function isokyroPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -15892,7 +15892,7 @@ function kuortanePhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -16015,7 +16015,7 @@ function laihiaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -16146,7 +16146,7 @@ function ahtariPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -16306,7 +16306,7 @@ function enonkoskiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -16465,7 +16465,7 @@ function heinavesiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -16598,7 +16598,7 @@ function hirvensalmiPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -16855,7 +16855,7 @@ function sulkavaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
     if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
@@ -16901,6 +16901,149 @@ async function collectSulkavaKaavaSource(source: DiscoverySource) {
 
     const slug = sulkavaSlug(title)
     const documentUrl = `${SULKAVA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
+const HYRYNSALMI_LISTING_URL =
+  "https://hyrynsalmi.fi/asuminen-ja-ymparisto/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat/"
+
+const HYRYNSALMI_CONTACT = {
+  name: "Niina Kinnunen",
+  title: "Teknisten palvelujen päällikkö",
+  phone: "044 710 4434",
+  email: "niina.kinnunen@hyrynsalmi.fi",
+}
+
+function hyrynsalmiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function hyrynsalmiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    if (!isForwardLookingOrUnrelated) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Hyrynsalmi splits each plan across two columns: a dated heading with
+// description in the main content, and a matching "Liitteet {date}, ..."
+// heading with the attachment links in a separate sidebar widget. The two
+// are joined here by their shared leading date.
+async function collectHyrynsalmiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HYRYNSALMI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const attachmentsByDate = new Map<string, { label: string; url: string }[]>()
+  $("h2.sidebar-section-title").each((_, el) => {
+    const heading = $(el)
+    const headingText = heading.text().trim()
+    const dateMatch = headingText.match(/Liitteet\s+(\d{1,2}\.\d{1,2}\.\d{4})/)
+    if (!dateMatch) return
+
+    const links = heading
+      .next("ul.sidebar-forms")
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($(a).attr("href") ?? "", HYRYNSALMI_LISTING_URL).toString(),
+      }))
+    attachmentsByDate.set(dateMatch[1], links)
+  })
+
+  const headings = $("main.site-main").find("h2").toArray()
+
+  let found = 0
+  let saved = 0
+
+  for (const headingEl of headings) {
+    const heading = $(headingEl)
+    const headingText = heading.text().replace(/\s+/g, " ").trim()
+    const dateMatch = headingText.match(/^(\d{1,2}\.\d{1,2}\.\d{4})\s+(.+)$/)
+    if (!dateMatch) continue
+
+    const title = dateMatch[2].trim()
+    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
+      continue
+    }
+
+    const blockNodes = heading.nextUntil("h2")
+    const description = blockNodes.text().replace(/\s+/g, " ").trim()
+
+    const phase = hyrynsalmiPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [HYRYNSALMI_CONTACT]
+    const attachments = attachmentsByDate.get(dateMatch[1]) ?? []
+
+    found += 1
+
+    const slug = hyrynsalmiSlug(`${dateMatch[1]}-${title}`)
+    const documentUrl = `${HYRYNSALMI_LISTING_URL}#${slug}`
 
     const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
     const contentHash = hashContent(rawText)
@@ -19815,6 +19958,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "sulkavaKaavaParser") {
     return collectSulkavaKaavaSource(source)
+  }
+
+  if (source.parser === "hyrynsalmiKaavaParser") {
+    return collectHyrynsalmiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
