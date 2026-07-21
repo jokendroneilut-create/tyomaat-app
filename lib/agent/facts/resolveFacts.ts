@@ -129,6 +129,7 @@ import { extractOrivesiKaavaFacts } from "@/lib/agent/facts/extractOrivesiKaavaF
 import { extractPalkaneKaavaFacts } from "@/lib/agent/facts/extractPalkaneKaavaFacts"
 import { extractVesilahtiKaavaFacts } from "@/lib/agent/facts/extractVesilahtiKaavaFacts"
 import { extractKaskinenKaavaFacts } from "@/lib/agent/facts/extractKaskinenKaavaFacts"
+import { extractRuovesiKaavaFacts } from "@/lib/agent/facts/extractRuovesiKaavaFacts"
 import { extractHeinolaKaavaFacts } from "@/lib/agent/facts/extractHeinolaKaavaFacts"
 import { extractAanekoskiKaavaFacts } from "@/lib/agent/facts/extractAanekoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
@@ -3276,6 +3277,25 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractKaskinenKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Ruoveden vireillä olevat kaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractRuovesiKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

@@ -23170,6 +23170,153 @@ async function collectKaskinenKaavaSource(source: DiscoverySource) {
   }
 }
 
+const RUOVESI_LISTING_URL = "https://www.ruovesi.fi/asuminen-ja-ymparisto/tontit-ja-rakentaminen/vireilla-olevat-kaavatkaavamuutokset"
+
+const RUOVESI_CONTACT = {
+  name: "Ruoveden kunta",
+  title: "Ympäristölautakunta",
+  phone: null as string | null,
+  email: "kirjaamo@ruovesi.fi",
+}
+
+function ruovesiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// Each item's very first paragraph is a literal stage label ("Kaavaehdotus",
+// "Luonnosvaihe"), so the phase is read directly from it rather than scanned
+// from narrative text — the page has no narrative text at all, just the
+// stage label, a "Kuulutusaika" display-period line, and attachment links.
+function ruovesiPhaseFromStageLabel(label: string): string {
+  const normalized = label.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonnos|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Only wind/solar power osayleiskaava projects are in scope here — the
+// other two items on this page (a rantaosayleiskaava muutos and a taajama
+// osayleiskaava) are neither asemakaava nor energy projects.
+async function collectRuovesiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(RUOVESI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("h1")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Vireillä olevat kaavamuutokset")
+  if (!heading) return { documentsFound: 0, documentsSaved: 0 }
+
+  type Item = { title: string; stageLabel: string; kuulutusaika: string | null; attachments: { label: string; url: string }[] }
+  const items: Item[] = []
+  let current: Item | null = null
+
+  let node = $(heading).next()
+  while (node.length && (node.prop("tagName") || "").toLowerCase() !== "h1") {
+    const tag = (node.prop("tagName") || "").toLowerCase()
+    if (tag === "h2") {
+      const title = node.text().replace(/\s+/g, " ").trim()
+      if (title) {
+        current = { title, stageLabel: "", kuulutusaika: null, attachments: [] }
+        items.push(current)
+      } else {
+        current = null
+      }
+    } else if (tag === "p" && current) {
+      const links = node.find("a").toArray()
+      if (links.length > 0) {
+        for (const a of links) {
+          const href = $(a).attr("href") ?? ""
+          const url = href.startsWith("http") ? href : `https://www.ruovesi.fi${href}`
+          current.attachments.push({ label: $(a).text().replace(/\s+/g, " ").trim(), url })
+        }
+      } else {
+        const text = node.text().replace(/\s+/g, " ").trim()
+        if (text && !current.stageLabel) current.stageLabel = text
+        else if (text && /kuulutusaika/i.test(text) && !current.kuulutusaika) current.kuulutusaika = text
+      }
+    }
+    node = node.next()
+  }
+
+  const filtered = items.filter((item) => {
+    const isAsemakaava =
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) && !/ranta-asemakaav/i.test(item.title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(item.title)
+    return isAsemakaava || isEnergyProject
+  })
+
+  let found = 0
+  let saved = 0
+
+  for (const item of filtered) {
+    const title = item.title
+    const phase = ruovesiPhaseFromStageLabel(item.stageLabel)
+    const completed = phase === "Voimaantulo"
+    const contacts = [RUOVESI_CONTACT]
+    const description = [item.stageLabel, item.kuulutusaika].filter(Boolean).join(" — ") || null
+    const attachments = item.attachments
+
+    found += 1
+
+    const slug = ruovesiSlug(title)
+    const documentUrl = `${RUOVESI_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 function kangasalaPhaseFromHeadings(headings: string[]): string | null {
   for (const stage of KANGASALA_PHASE_HEADING_ORDER) {
     if (headings.some((h) => stage.pattern.test(h))) return stage.label
@@ -26159,6 +26306,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kaskinenKaavaParser") {
     return collectKaskinenKaavaSource(source)
+  }
+
+  if (source.parser === "ruovesiKaavaParser") {
+    return collectRuovesiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
