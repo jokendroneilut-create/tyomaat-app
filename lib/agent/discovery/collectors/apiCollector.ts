@@ -14439,7 +14439,8 @@ function hattulaPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -14587,7 +14588,8 @@ function savitaipalePhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -14747,7 +14749,8 @@ function juvaPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -14919,7 +14922,8 @@ function lapinlahtiPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -15082,7 +15086,8 @@ function kannusPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -15244,7 +15249,8 @@ function toholampiPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -15401,7 +15407,8 @@ function kuhmoPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -15545,7 +15552,8 @@ function suomussalmiPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -15687,7 +15695,8 @@ function kittilaPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -15838,7 +15847,8 @@ function kemijarviPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -16003,7 +16013,8 @@ function rautjarviPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -16160,7 +16171,8 @@ function alajarviPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -16322,7 +16334,8 @@ function alavusPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -16487,7 +16500,8 @@ function isokyroPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -16675,7 +16689,8 @@ function kuortanePhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -16822,7 +16837,8 @@ function laihiaPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -16977,7 +16993,8 @@ function ahtariPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -17161,7 +17178,8 @@ function enonkoskiPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -17344,7 +17362,8 @@ function heinavesiPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -17501,7 +17520,8 @@ function hirvensalmiPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -17782,7 +17802,8 @@ function sulkavaPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -17930,7 +17951,8 @@ function hyrynsalmiPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -18099,7 +18121,8 @@ function paltamoPhaseFromText(text: string): string {
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -18305,7 +18328,11 @@ function puolankaPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -18441,7 +18468,11 @@ function hausjarviPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -18606,7 +18637,11 @@ function jokioinenPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -18750,7 +18785,11 @@ function veteliPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -18894,7 +18933,11 @@ function multiaPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -19057,7 +19100,11 @@ function petajavesiPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -19206,7 +19253,11 @@ function pihtipudasPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -19369,7 +19420,11 @@ function toivakkaPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -19519,7 +19574,11 @@ function uurainenPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -19670,7 +19729,11 @@ function viitasaariPhaseFromText(text: string): string {
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
-    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -19747,6 +19810,159 @@ async function collectViitasaariKaavaSource(source: DiscoverySource) {
 
     const slug = viitasaariSlug(title)
     const documentUrl = `${VIITASAARI_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
+const IITTI_LISTING_URL = "https://www.iitti.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/kaavat/"
+
+const IITTI_CONTACT = {
+  name: "Iitin kunta",
+  title: "Kirjaamo",
+  phone: "020 615 9600",
+  email: "kirjaamo@iitti.fi",
+}
+
+function iittiSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function iittiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  // "rakennuskiellon voimaantulosta" is the temporary building ban taking
+  // effect, not the asemakaava itself reaching legal force.
+  const isBuildingBanReference =
+    lainvoimaMatchIndex >= 0 &&
+    /rakennuskiel/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 25), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && !isAttachmentReference && !isBuildingBanReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.lastIndexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    // "hyväksyi ... kaavaehdotuksen" is the council directly approving the
+    // plan proposal itself — a genuine Hyväksyminen signal that the generic
+    // "ehdotuksen" exclusion above would otherwise incorrectly suppress.
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Iitti lists each pending kaava as its own <section class="editor-content">
+// with an <h3> title followed by chronologically-ordered <p> updates
+// (oldest first, unlike most other cities) — using lastIndexOf("hyväksy")
+// picks the most recent approval mention instead of an earlier, possibly
+// unrelated one.
+async function collectIittiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(IITTI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $("section.editor-content")
+    .toArray()
+    .map((el) => ({
+      title: $(el).find("h3").first().text().replace(/\s+/g, " ").trim(),
+      description: $(el).find("p").text().replace(/\s+/g, " ").trim(),
+      links: $(el)
+        .find("a")
+        .toArray()
+        .map((a) => ({ label: $(a).text().replace(/\s+/g, " ").trim(), href: $(a).attr("href") ?? "" })),
+    }))
+    .filter((item) =>
+      item.title &&
+      /asemakaava/i.test(item.title) && !/yleiskaava/i.test(item.title) &&
+      !/ranta-asemakaava/i.test(item.title) && !/tuulivoima/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+    const description = item.description
+    const phase = iittiPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [IITTI_CONTACT]
+    const attachments = item.links
+      .filter((l) => l.href.startsWith("http") && !l.href.includes("mailto:"))
+      .map((l) => ({ label: l.label, url: l.href }))
+
+    found += 1
+
+    const slug = iittiSlug(title)
+    const documentUrl = `${IITTI_LISTING_URL}#${slug}`
     const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
     const contentHash = hashContent(rawText)
 
@@ -22708,6 +22924,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "viitasaariKaavaParser") {
     return collectViitasaariKaavaSource(source)
+  }
+
+  if (source.parser === "iittiKaavaParser") {
+    return collectIittiKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
