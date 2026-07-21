@@ -28059,7 +28059,111 @@ async function collectAuraKaavaSource(source: DiscoverySource) {
   }
 }
 
+const VEHMAA_LISTING_URL = "https://www.vehmaa.fi/asuminen-ja-rakentaminen/kaavoitus-ja-kartat/kaavoitus/"
+
+function vehmaaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  // some entries just state "Voimaan <date>." with no verb at all
+  if (/voimaantulo|tuli voimaan|tullut voimaan|voimaan tulle|(^|[^a-zäöå])voimaan\s+\d/.test(normalized))
+    return "Voimaantulo"
+
+  // "OAS nähtäville kaavaehdotuksen valmistumiseen asti" describes the
+  // proposal as a still-upcoming milestone, not the plan currently being
+  // at that stage
+  const isForwardLooking = (index: number) => {
+    const window = normalized.slice(Math.max(0, index - 60), index + 60)
+    return /valmistumiseen asti|valmistuttua|tullaan/.test(window)
+  }
+
+  const ehdotusIndex = normalized.search(/ehdotus/)
+  if (ehdotusIndex >= 0 && !isForwardLooking(ehdotusIndex)) return "Ehdotus"
+
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  return "Vireilletulo"
+}
+
+async function collectVehmaaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(VEHMAA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  const seenTitles = new Set<string>()
+  const items: { title: string; text: string }[] = []
+
+  $(".foxy-accordion_text").each((_, el) => {
+    const heading = $(el).find("h3, h4").first()
+    const title = heading.text().replace(/\s+/g, " ").trim()
+    if (!title || seenTitles.has(title)) return
+    seenTitles.add(title)
+
+    if (!/asemakaava/i.test(title) && !energyPattern.test(title)) return
+
+    const text = $(el).text().replace(/\s+/g, " ").trim()
+    items.push({ title, text })
+  })
+
+  let saved = 0
+
+  for (const item of items) {
+    const phase = vehmaaPhaseFromText(item.text)
+    const completed = phase === "Voimaantulo"
+    const slug = kemiSlug(item.title)
+    const documentUrl = `${VEHMAA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.text })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.text,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "vehmaaKaavaParser") {
+    return collectVehmaaKaavaSource(source)
+  }
+
   if (source.parser === "auraKaavaParser") {
     return collectAuraKaavaSource(source)
   }
