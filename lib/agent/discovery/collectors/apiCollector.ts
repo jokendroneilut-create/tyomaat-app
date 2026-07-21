@@ -21904,6 +21904,137 @@ async function collectPelloKaavaSource(source: DiscoverySource) {
   }
 }
 
+const YLITORNIO_LISTING_URL = "https://ylitornio.fi/asuminen-ja-ymparisto/kaavoitus-ja-tontit/vireilla-olevat-kaavat-ja-kaavoituksen-vaikuttaminen/"
+
+// The site's own markup literally shows "etunimi.sukunimi@ylitornio.fi" as
+// an unfilled form template, not a real address.
+const YLITORNIO_FAKE_EMAIL = "etunimi.sukunimi@ylitornio.fi"
+
+const YLITORNIO_CONTACT = {
+  name: "Jarmo Jaako",
+  title: "Tekninen johtaja",
+  phone: "040 584 4046",
+  email: null as string | null,
+}
+
+function ylitornioSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// The listing page renders each pending plan as a bare button link to a
+// Tweb document-management PDF, with no phase text anywhere on the page.
+// The linked PDF's filename (from Content-Disposition) is the only
+// available phase signal, e.g. "oas_..." vs "luonnos_..." / "ehdotus_...".
+function ylitornioPhaseFromFilename(filename: string): string {
+  const normalized = filename.toLowerCase()
+  if (/hyvaksy|hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonnos/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectYlitornioKaavaSource(source: DiscoverySource) {
+  const response = await fetch(YLITORNIO_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $("a.button-atom")
+    .toArray()
+    .map((el) => ({
+      title: $(el).text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter(
+      (item) =>
+        item.title &&
+        /asemakaav/i.test(item.title) &&
+        !/yleiskaav/i.test(item.title) &&
+        !/ranta-asemakaav/i.test(item.title) &&
+        !/tuulivoima/i.test(item.title) &&
+        item.href.includes("tweb.fi")
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+
+    let filename = ""
+    try {
+      const headResponse = await fetch(item.href, { method: "HEAD", headers: LOPPI_FETCH_HEADERS })
+      const disposition = headResponse.headers.get("content-disposition") ?? ""
+      const match = disposition.match(/filename=([^;]+)/i)
+      filename = match ? match[1].trim() : ""
+    } catch {
+      filename = ""
+    }
+
+    const phase = ylitornioPhaseFromFilename(filename)
+    const completed = phase === "Voimaantulo"
+    const contacts = [YLITORNIO_CONTACT]
+    const description = null
+    const attachments = [{ label: title, url: item.href }]
+
+    found += 1
+
+    const slug = ylitornioSlug(title)
+    const documentUrl = `${YLITORNIO_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -24869,6 +25000,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "pelloKaavaParser") {
     return collectPelloKaavaSource(source)
+  }
+
+  if (source.parser === "ylitornioKaavaParser") {
+    return collectYlitornioKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
