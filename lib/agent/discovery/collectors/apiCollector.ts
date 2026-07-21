@@ -13747,7 +13747,11 @@ function someroPhaseFromText(text: string): string {
   // ehdotus/luonnos being put on display
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const isForwardLooking = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta)/.test(window)
     if (!isForwardLooking) return "Hyväksyminen"
   }
@@ -14630,7 +14634,11 @@ function hattulaPhaseFromText(text: string): string {
   // display -- neither is a real final approval of the plan
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -14782,7 +14790,11 @@ function savitaipalePhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -14943,7 +14955,11 @@ function juvaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -15116,7 +15132,11 @@ function lapinlahtiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -15289,7 +15309,11 @@ function kannusPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -15454,7 +15478,11 @@ function toholampiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -15614,7 +15642,11 @@ function kuhmoPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -15761,7 +15793,11 @@ function suomussalmiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -15906,7 +15942,11 @@ function kittilaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -16060,7 +16100,11 @@ function kemijarviPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -16068,7 +16112,10 @@ function kemijarviPhaseFromText(text: string): string {
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
-    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "elinvoimalautakunta on hyväksynyt aloitteen" is approving the
+    // kick-off INITIATIVE to start the process, not the plan itself.
+    const isProceduralApproval = /^hyväksy[a-zäöå]*\s+(aloitteen|aloite)\b/.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference && !isProceduralApproval) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -16226,7 +16273,11 @@ function rautjarviPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -16590,7 +16641,11 @@ function alavusPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -16756,7 +16811,11 @@ function isokyroPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -16945,7 +17004,11 @@ function kuortanePhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -17095,7 +17158,11 @@ function laihiaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -17253,7 +17320,11 @@ function ahtariPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -17440,7 +17511,11 @@ function enonkoskiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -17448,7 +17523,12 @@ function enonkoskiPhaseFromText(text: string): string {
     // process reaching approval.
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
-    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+    // "...asemakaavan hyväksytyt asiakirjat" (the plan's approved
+    // documents) is an adjective describing an already-completed state --
+    // unambiguous regardless of what unrelated attachment-type words
+    // happen to follow within the window.
+    const isApprovedStateAdjective = /^hyväksyt(ty|yt)\b/.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus || isApprovedStateAdjective) && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   const ehdotuIndex = normalized.search(/ehdotu/)
@@ -17624,7 +17704,11 @@ function heinavesiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -17782,7 +17866,11 @@ function hirvensalmiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -18066,7 +18154,11 @@ function sulkavaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -18217,7 +18309,11 @@ function hyrynsalmiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -18389,7 +18485,11 @@ function paltamoPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -18609,7 +18709,11 @@ function puolankaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -18751,7 +18855,11 @@ function hausjarviPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -18920,7 +19028,11 @@ function jokioinenPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -19070,7 +19182,11 @@ function veteliPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -19220,7 +19336,11 @@ function multiaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -19384,7 +19504,11 @@ function petajavesiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -19539,7 +19663,11 @@ function pihtipudasPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -19708,7 +19836,11 @@ function toivakkaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -19862,7 +19994,11 @@ function uurainenPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -20019,7 +20155,11 @@ function viitasaariPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -20217,7 +20357,11 @@ function iittiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.lastIndexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -20388,7 +20532,11 @@ function miehikkalaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -20685,7 +20833,11 @@ function virolahtiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -20986,7 +21138,11 @@ function inariPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.lastIndexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -21289,7 +21445,11 @@ function muonioPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -21610,7 +21770,11 @@ function ranuaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -21806,7 +21970,11 @@ function simoPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -21977,7 +22145,11 @@ function sodankylaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -22129,7 +22301,11 @@ function pelloPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -22560,7 +22736,11 @@ function hameenkyroPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -22734,7 +22914,11 @@ function ikaalinenPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -22897,7 +23081,11 @@ function manttavilppulaPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -23064,7 +23252,11 @@ function orivesiPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|ehdotusvaiheen|luonnoksen|luonnosta|luonnosvaiheen|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -23527,7 +23719,11 @@ function kaskinenPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (rather than a wide 250-char slice) because a long
+    // attachment list right after a genuine approval note can otherwise
+    // sweep in an unrelated later mention (e.g. "Liite: Osallistumis- ja
+    // arviointisuunnitelma") and wrongly suppress it.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|ehdotusvaiheen|luonnoksen|luonnosta|luonnosvaiheen|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
@@ -23834,6 +24030,13 @@ function virratPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
+    // NOTE: unlike the other cities using this pattern, this function's
+    // input is the ENTIRE page body (nav/footer included, see
+    // collectVirratKaavaSource's bodyForPhase), not just a scoped
+    // title+description -- kept at the original wider window here since
+    // narrowing it produced an unverifiable phase change with no
+    // "hyväksy" mention findable anywhere on the live page, unlike the
+    // scoped-text cities where the narrow window was confirmed correct.
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|ehdotusvaiheen|luonnoksen|luonnosta|luonnosvaiheen|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
