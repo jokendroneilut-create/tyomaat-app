@@ -17670,9 +17670,9 @@ async function collectPuumalaKaavaSource(source: DiscoverySource) {
       (item) =>
         item.title &&
         item.href &&
-        /asemakaava/i.test(item.title) &&
-        !/yleiskaava/i.test(item.title) &&
-        !/ranta-asemakaava/i.test(item.title)
+        /asemakaav/i.test(item.title) &&
+        !/yleiskaav/i.test(item.title) &&
+        !/ranta-asemakaav/i.test(item.title)
     )
 
   let found = 0
@@ -18510,9 +18510,9 @@ async function collectHausjarviKaavaSource(source: DiscoverySource) {
         item.href.startsWith(HAUSJARVI_LISTING_URL) &&
         item.href !== HAUSJARVI_LISTING_URL &&
         item.title &&
-        /asemakaava/i.test(item.title) &&
-        !/yleiskaava/i.test(item.title) &&
-        !/ranta-asemakaava/i.test(item.title)
+        /asemakaav/i.test(item.title) &&
+        !/yleiskaav/i.test(item.title) &&
+        !/ranta-asemakaav/i.test(item.title)
     )
 
   let found = 0
@@ -18978,9 +18978,9 @@ async function collectMultiaKaavaSource(source: DiscoverySource) {
         item.href !== "/asuminen-ja-ymparisto/kaavoitus" &&
         !item.href.includes("aluearkkitehtipalvelut") &&
         !item.href.includes("lainvoimaiset-kaavat") &&
-        /asemakaava/i.test(item.title) &&
-        !/yleiskaava/i.test(item.title) &&
-        !/ranta-asemakaava/i.test(item.title) &&
+        /asemakaav/i.test(item.title) &&
+        !/yleiskaav/i.test(item.title) &&
+        !/ranta-asemakaav/i.test(item.title) &&
         !/tuulivoima/i.test(item.title)
     )
     .filter((item, index, all) => all.findIndex((other) => other.href === item.href) === index)
@@ -19302,8 +19302,8 @@ async function collectPihtipudasKaavaSource(source: DiscoverySource) {
     }))
     .filter((item) =>
       item.title && item.href &&
-      /asemakaava/i.test(item.title) && !/yleiskaava/i.test(item.title) &&
-      !/ranta-asemakaava/i.test(item.title) && !/tuulivoima/i.test(item.title)
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
     )
 
   let found = 0
@@ -19456,8 +19456,8 @@ async function collectToivakkaKaavaSource(source: DiscoverySource) {
     }))
     .filter((item) =>
       item.title && item.href &&
-      /asemakaava/i.test(item.title) && !/yleiskaava/i.test(item.title) &&
-      !/ranta-asemakaava/i.test(item.title) && !/tuulivoima/i.test(item.title)
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
     )
 
   let found = 0
@@ -19611,8 +19611,8 @@ async function collectUurainenKaavaSource(source: DiscoverySource) {
     .filter((item, index, all) => all.findIndex((other) => other.href === item.href) === index)
     .filter((item) =>
       item.title &&
-      /asemakaava/i.test(item.title) && !/yleiskaava/i.test(item.title) &&
-      !/ranta-asemakaava/i.test(item.title) && !/tuulivoima/i.test(item.title)
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
     )
 
   let found = 0
@@ -19791,8 +19791,8 @@ async function collectViitasaariKaavaSource(source: DiscoverySource) {
     .map((seg) => ({ title: seg.title, description: seg.parts.filter((p) => !p.startsWith("[[LINK:")).join(" ") }))
     .filter((item) =>
       item.title &&
-      /asemakaava/i.test(item.title) && !/yleiskaava/i.test(item.title) &&
-      !/ranta-asemakaava/i.test(item.title) && !/tuulivoima/i.test(item.title)
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
     )
 
   let found = 0
@@ -19942,8 +19942,8 @@ async function collectIittiKaavaSource(source: DiscoverySource) {
     }))
     .filter((item) =>
       item.title &&
-      /asemakaava/i.test(item.title) && !/yleiskaava/i.test(item.title) &&
-      !/ranta-asemakaava/i.test(item.title) && !/tuulivoima/i.test(item.title)
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
     )
 
   let found = 0
@@ -20102,8 +20102,8 @@ async function collectMiehikkalaKaavaSource(source: DiscoverySource) {
     .filter((item, index, all) => all.findIndex((other) => other.href === item.href) === index)
     .filter((item) =>
       item.title && item.href &&
-      /asemakaava/i.test(item.title) && !/yleiskaava/i.test(item.title) &&
-      !/ranta-asemakaava/i.test(item.title) && !/tuulivoima/i.test(item.title)
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
     )
 
   let found = 0
@@ -20134,6 +20134,147 @@ async function collectMiehikkalaKaavaSource(source: DiscoverySource) {
     found += 1
 
     const slug = miehikkalaSlug(title)
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: detailUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
+const PYHTAA_LISTING_URL = "https://www.pyhtaa.fi/fi/asuminen-ymparisto/kaavoitus/vireilla-olevat-kaavoitustyot"
+
+const PYHTAA_CONTACT = {
+  name: "Laura Lahti",
+  title: "Elinvoimapäällikkö",
+  phone: "050 345 6495",
+  email: "laura.lahti@pyhtaa.fi",
+}
+
+function pyhtaaSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+const PYHTAA_PHASE_LABELS: { pattern: RegExp; label: string }[] = [
+  { pattern: /^kaava lainvoimainen/, label: "Voimaantulo" },
+  { pattern: /^hyväksyminen/, label: "Hyväksyminen" },
+  { pattern: /^kaavaehdotus/, label: "Ehdotus" },
+  { pattern: /^kaavaluonnos/, label: "Luonnos" },
+  { pattern: /^vireilletulo/, label: "Vireilletulo" },
+]
+
+// Pyhtää lists every phase-stage as its own paragraph in order, but only
+// bolds (<strong>) the stage actually reached — later stages stay as
+// plain, dateless placeholder text (even when they mention a future
+// date, e.g. "Kaavaehdotus tulossa nähtäville syksyllä 2026"). Reading
+// the bolded paragraph is far more reliable here than free-text keyword
+// matching, which would misread that forward-looking placeholder line.
+function pyhtaaPhaseFromBoldParagraphs(boldParagraphTexts: string[]): string {
+  for (const text of boldParagraphTexts) {
+    const normalized = text.toLowerCase()
+    const match = PYHTAA_PHASE_LABELS.find((stage) => stage.pattern.test(normalized))
+    if (match) return match.label
+  }
+
+  return "Vireilletulo"
+}
+
+async function collectPyhtaaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PYHTAA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $("a[href*='/vireilla-olevat-kaavoitustyot/']")
+    .toArray()
+    .map((el) => ({
+      title: $(el).text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter((item, index, all) => all.findIndex((other) => other.href === item.href) === index)
+    .filter((item) =>
+      item.title && item.href &&
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const detailUrl = new URL(item.href, PYHTAA_LISTING_URL).toString()
+    const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const $$ = cheerio.load(await detailResponse.text())
+    const main = $$("article").first()
+    const title = item.title
+    const description = main.text().replace(/\s+/g, " ").trim()
+    const boldParagraphTexts = main
+      .find("p > strong")
+      .toArray()
+      .map((el) => $$(el).text().replace(/\s+/g, " ").trim())
+    const phase = pyhtaaPhaseFromBoldParagraphs(boldParagraphTexts)
+    const completed = phase === "Voimaantulo"
+    const contacts = [PYHTAA_CONTACT]
+
+    const attachments = main
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $$(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($$(a).attr("href") ?? "", detailUrl).toString(),
+      }))
+      .filter((a) => a.url.startsWith("http") && !a.url.includes("mailto:"))
+
+    found += 1
+
+    const slug = pyhtaaSlug(title)
     const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
     const contentHash = hashContent(rawText)
 
@@ -23103,6 +23244,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "miehikkalaKaavaParser") {
     return collectMiehikkalaKaavaSource(source)
+  }
+
+  if (source.parser === "pyhtaaKaavaParser") {
+    return collectPyhtaaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
