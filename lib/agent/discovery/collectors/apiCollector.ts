@@ -27158,6 +27158,117 @@ async function collectKarkkilaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SIUNTIO_LISTING_URL =
+  "https://www.siuntio.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-asema-ja-ranta-asemakaavahankkeet/"
+
+type SiuntioStage = { label: string; hasDate: boolean }
+
+// same pattern as Inkoo: the plan page is a stack of accordions (one per
+// process stage), but some are generic buckets ("Aineisto", "Aineistot",
+// "Käsittelyvaiheet") present regardless of progress -- only a heading that
+// itself carries a date range reflects a stage actually reached
+function siuntioExtractStages($: cheerio.CheerioAPI): SiuntioStage[] {
+  const stages: SiuntioStage[] = []
+
+  $(".pwdb-accordion__heading").each((_, heading) => {
+    const label = $(heading).text().replace(/\s+/g, " ").trim()
+    if (!label) return
+    const hasDate = /\d{1,2}\.\d{1,2}(\.\d{2,4})?/.test(label)
+    stages.push({ label: label.toLowerCase(), hasDate })
+  })
+
+  return stages
+}
+
+function siuntioPhaseFromStages(stages: SiuntioStage[]): string {
+  const dated = stages.filter((stage) => stage.hasDate)
+  const matches = (pattern: RegExp) => dated.some((stage) => pattern.test(stage.label))
+
+  if (matches(/voimaantul|lainvoima/)) return "Voimaantulo"
+  if (matches(/hyväksy/)) return "Hyväksyminen"
+  if (matches(/ehdotus/)) return "Ehdotus"
+  if (matches(/luonnos|valmistelu/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectSiuntioKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SIUNTIO_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const links: { title: string; url: string }[] = []
+  $("a.pwdb-nav-sub-page__list-link").each((_, a) => {
+    const title = $(a).text().replace(/\s+/g, " ").trim()
+    const href = $(a).attr("href")
+    if (!title || !href) return
+    links.push({ title, url: new URL(href, SIUNTIO_LISTING_URL).toString() })
+  })
+
+  let saved = 0
+
+  for (const link of links) {
+    let phase = "Vireilletulo"
+
+    try {
+      const detailResponse = await fetch(link.url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const detail$ = cheerio.load(await detailResponse.text())
+        phase = siuntioPhaseFromStages(siuntioExtractStages(detail$))
+      }
+    } catch {
+      // keep the Vireilletulo default if the detail page can't be fetched
+    }
+
+    const completed = phase === "Voimaantulo"
+    const slug = kemiSlug(link.title)
+
+    const rawText = JSON.stringify({ title: link.title, phase, description: null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: link.title,
+        document_url: link.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: link.title,
+          slug,
+          phase,
+          description: null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "lappeenrantaKaavaParser") {
     return collectLappeenrantaSource(source)
@@ -27825,6 +27936,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "karkkilaKaavaParser") {
     return collectKarkkilaKaavaSource(source)
+  }
+
+  if (source.parser === "siuntioKaavaParser") {
+    return collectSiuntioKaavaSource(source)
   }
 
   const response = await fetch(source.url, {

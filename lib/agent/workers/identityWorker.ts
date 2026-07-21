@@ -119,6 +119,7 @@ import { resolvePornainenKaavaProject } from "@/lib/agent/identity/resolvers/por
 import { resolveHankoKaavaProject } from "@/lib/agent/identity/resolvers/hankoKaavaResolver"
 import { resolveInkooKaavaProject } from "@/lib/agent/identity/resolvers/inkooKaavaResolver"
 import { resolveKarkkilaKaavaProject } from "@/lib/agent/identity/resolvers/karkkilaKaavaResolver"
+import { resolveSiuntioKaavaProject } from "@/lib/agent/identity/resolvers/siuntioKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1001,6 +1002,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "karkkilan vireillä olevat kaavahankkeet") {
     const result = await resolveKarkkilaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "siuntion vireillä olevat asemakaavat") {
+    const result = await resolveSiuntioKaavaProject({
       document,
       facts: facts ?? [],
     })
