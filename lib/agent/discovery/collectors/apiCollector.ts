@@ -16378,7 +16378,12 @@ function alajarviPhaseFromText(text: string): string {
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
-    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    // Kept short (unlike the 250-char windows elsewhere in this file)
+    // because a long attachment list right after an approval note (e.g.
+    // "Hyväksytty osayleiskaavakartta ... Liite 1: Osallistumis- ja
+    // arviointisuunnitelma") can sweep in "arviointisuunnitelm" and
+    // wrongly suppress a genuine, already-happened approval.
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 100)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
     const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
@@ -16417,48 +16422,84 @@ async function collectAlajarviKaavaSource(source: DiscoverySource) {
 
   const topDetails = $("main, article").first().find("details").toArray()
   let asemakaavatDetails: any = null
+  let yleiskaavatDetails: any = null
   for (const d of topDetails) {
     const summary = $(d).children("summary").first().text().trim()
-    if (summary === "Asemakaavat") {
-      asemakaavatDetails = d
-      break
-    }
+    if (summary === "Asemakaavat") asemakaavatDetails = d
+    if (summary === "Yleiskaavat") yleiskaavatDetails = d
   }
   if (!asemakaavatDetails) return { documentsFound: 0, documentsSaved: 0 }
 
-  const items = $(asemakaavatDetails).find("details").toArray()
-
-  let found = 0
-  let saved = 0
-
-  for (const itemEl of items) {
-    const item = $(itemEl)
-    const clone = item.clone()
-    clone.find("details").remove()
-
-    const title = clone.children("summary").first().text().replace(/\s+/g, " ").trim()
+  type PlanItem = { title: string; description: string; attachments: { label: string; url: string }[] }
+  const planItems: PlanItem[] = $(asemakaavatDetails)
+    .find("details")
+    .toArray()
+    .map((itemEl) => {
+      const item = $(itemEl)
+      const clone = item.clone()
+      clone.find("details").remove()
+      const title = clone.children("summary").first().text().replace(/\s+/g, " ").trim()
+      clone.children("summary").remove()
+      const description = clone.text().replace(/\s+/g, " ").trim()
+      const attachments = clone
+        .find("a")
+        .toArray()
+        .map((a) => ({
+          label: $(a).text().replace(/\s+/g, " ").trim(),
+          url: new URL($(a).attr("href") ?? "", ALAJARVI_LISTING_URL).toString(),
+        }))
+      return { title, description, attachments }
+    })
     // Already scoped to the "Asemakaavat" accordion (osayleiskaava/ranta-
     // asemakaava live in their own sibling accordions), so no title
     // substring check is needed here — some genuine items use word forms
     // like "asemakaavoitus" that don't literally contain "asemakaava".
-    if (!title) {
-      continue
+    .filter((p) => p.title)
+
+  // Wind/solar projects are zoned as yleiskaavat, listed under their own
+  // accordion alongside unrelated general yleiskaava items. Each project's
+  // successive stages ("Name/Hyväksymisvaihe" etc) are separate SIBLING
+  // <details> rather than nested ones, so entries sharing the same
+  // base name (before the "/") are merged into one plan here.
+  if (yleiskaavatDetails) {
+    const energyByBaseTitle = new Map<string, PlanItem>()
+    for (const itemEl of $(yleiskaavatDetails).children("details").toArray()) {
+      const item = $(itemEl)
+      const clone = item.clone()
+      clone.find("details").remove()
+      const rawTitle = clone.children("summary").first().text().replace(/\s+/g, " ").trim()
+      if (!rawTitle) continue
+      const baseTitle = rawTitle.replace(/\s*\/\s*[^/]+$/, "").trim()
+      if (!/tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(baseTitle)) continue
+
+      clone.children("summary").remove()
+      const text = clone.text().replace(/\s+/g, " ").trim()
+      const attachments = clone
+        .find("a")
+        .toArray()
+        .map((a) => ({
+          label: $(a).text().replace(/\s+/g, " ").trim(),
+          url: new URL($(a).attr("href") ?? "", ALAJARVI_LISTING_URL).toString(),
+        }))
+
+      const existing = energyByBaseTitle.get(baseTitle)
+      if (existing) {
+        existing.description = `${existing.description} ${rawTitle} ${text}`.trim()
+        existing.attachments.push(...attachments)
+      } else {
+        energyByBaseTitle.set(baseTitle, { title: baseTitle, description: `${rawTitle} ${text}`.trim(), attachments })
+      }
     }
+    planItems.push(...energyByBaseTitle.values())
+  }
 
-    clone.children("summary").remove()
-    const description = clone.text().replace(/\s+/g, " ").trim()
+  let found = 0
+  let saved = 0
 
+  for (const { title, description, attachments } of planItems) {
     const phase = alajarviPhaseFromText(`${title} ${description}`)
     const completed = phase === "Voimaantulo"
     const contacts = ALAJARVI_CONTACTS
-
-    const attachments = clone
-      .find("a")
-      .toArray()
-      .map((a) => ({
-        label: $(a).text().replace(/\s+/g, " ").trim(),
-        url: new URL($(a).attr("href") ?? "", ALAJARVI_LISTING_URL).toString(),
-      }))
 
     found += 1
 
