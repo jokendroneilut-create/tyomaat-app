@@ -7025,7 +7025,7 @@ async function collectMantsalaKaavaSource(source: DiscoverySource) {
 }
 
 const TORNIO_LISTING_URL = "https://www.tornio.fi/asuminen-ja-ymparisto/kaavoitus-ja-mittaus/kaavatori/"
-const TORNIO_EXCLUDE_PATTERN = /tuulivoima|yleiskaava/i
+const TORNIO_EXCLUDE_PATTERN = /yleiskaava/i
 const TORNIO_SUMMARY_PATTERN = /^(\d+)(?:\s+(X\d+))?\s+(.+?)\s*\(([^)]+)\)\s*$/
 
 function tornioDecodeSoftHyphens(text: string): string {
