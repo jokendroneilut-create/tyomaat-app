@@ -9234,7 +9234,9 @@ async function collectAanekoskiKaavaSource(source: DiscoverySource) {
     if (!recording) continue
 
     const text = listing$(el).text().replace(/\s+/g, " ").trim()
-    if (!/asemakaava/i.test(text) || /osayleiskaava/i.test(text)) continue
+    const isAsemakaava = /asemakaava/i.test(text) && !/osayleiskaava/i.test(text)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(text)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const href = listing$(el).attr("href") ?? ""
     if (!href || href.endsWith(".pdf")) continue
@@ -10207,8 +10209,11 @@ async function collectLoimaaKaavaSource(source: DiscoverySource) {
     const title = listing$(el).text().replace(/\s+/g, " ").trim()
     if (!href || !title) continue
     // several announcements in this section are osayleiskaava (area-wide)
-    // or unrelated PDF attachments -- only asemakaava items are in scope
-    if (!/asemakaava/i.test(title) || /osayleiskaava/i.test(title)) continue
+    // or unrelated PDF attachments -- only asemakaava and energy-project
+    // items are in scope
+    const isAsemakaava = /asemakaava/i.test(title) && !/osayleiskaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
     if (seen.has(href)) continue
     seen.add(href)
     planLinks.push({ href, title })
