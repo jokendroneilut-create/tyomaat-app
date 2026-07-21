@@ -98,6 +98,7 @@ import { extractPuumalaKaavaFacts } from "@/lib/agent/facts/extractPuumalaKaavaF
 import { extractSulkavaKaavaFacts } from "@/lib/agent/facts/extractSulkavaKaavaFacts"
 import { extractHyrynsalmiKaavaFacts } from "@/lib/agent/facts/extractHyrynsalmiKaavaFacts"
 import { extractPaltamoKaavaFacts } from "@/lib/agent/facts/extractPaltamoKaavaFacts"
+import { extractPuolankaKaavaFacts } from "@/lib/agent/facts/extractPuolankaKaavaFacts"
 import { extractHeinolaKaavaFacts } from "@/lib/agent/facts/extractHeinolaKaavaFacts"
 import { extractAanekoskiKaavaFacts } from "@/lib/agent/facts/extractAanekoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
@@ -2675,6 +2676,25 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractPaltamoKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Puolangan vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractPuolankaKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
