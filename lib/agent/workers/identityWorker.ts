@@ -136,6 +136,7 @@ import { resolveSiikalatvaKaavaProject } from "@/lib/agent/identity/resolvers/si
 import { resolveIiKaavaProject } from "@/lib/agent/identity/resolvers/iiKaavaResolver"
 import { resolveAlavieskaKaavaProject } from "@/lib/agent/identity/resolvers/alavieskaKaavaResolver"
 import { resolveHailuotoKaavaProject } from "@/lib/agent/identity/resolvers/hailuotoKaavaResolver"
+import { resolveOulainenKaavaProject } from "@/lib/agent/identity/resolvers/oulainenKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1137,6 +1138,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "hailuodon kaavoitus") {
     const result = await resolveHailuotoKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "oulaisten kaavoitus") {
+    const result = await resolveOulainenKaavaProject({
       document,
       facts: facts ?? [],
     })
