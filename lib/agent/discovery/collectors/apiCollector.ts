@@ -22035,6 +22035,182 @@ async function collectYlitornioKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HAMEENKYRO_LISTING_URL = "https://hameenkyro.fi/palvelut/asuminen-ja-elinymparisto/kaavoitus-ja-maankaytto/vireilla-ja-nahtavilla-olevat-kaavat/"
+
+const HAMEENKYRO_CONTACT = {
+  name: "Anna-Maria Niilo-Rämä",
+  title: "Kaavasuunnittelija",
+  phone: "044 486 0028",
+  email: null as string | null,
+}
+
+function hameenkyroSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// Same hardened pattern used across the session, extended with
+// "tul(?:lut|leet) voimaan" — Hämeenkyrö's completion wording is "Asemakaava
+// on tullut voimaan" (singular) or "Asemakaavan muutokset ovat tulleet
+// voimaan" (plural), neither of which contains the bare noun "voimaantulo".
+function hameenkyroPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(normalized)
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima|tul(?:lut|leet) voimaan/)
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  const isAttachmentReference =
+    lainvoimaMatchIndex >= 0 &&
+    /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  if (
+    !negatedLainvoima &&
+    !isHistoricalYearReference &&
+    !isAttachmentReference &&
+    /voimaantulo|lainvoima|tul(?:lut|leet) voimaan/.test(normalized)
+  )
+    return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  const ehdotuIndex = normalized.search(/ehdotu/)
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että)|aineiston viimeistelyssä|viimeistelyssä)/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) return "Ehdotus"
+  }
+
+  if (/luonno[sk]|valmistelu/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Each pending plan has its own dedicated sub-page (linked from the index
+// page). The sub-page renders its FULL history in reverse-chronological
+// order (newest first), with older phases pushed below a
+// "Kaavan vanhempia aineistoja" (older materials) <h2> heading — so the
+// current phase is isolated by stripping everything from that heading
+// onward, rather than relying on keyword-priority scanning of the full text.
+async function collectHameenkyroKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HAMEENKYRO_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const seen = new Set<string>()
+  const items = $("a")
+    .toArray()
+    .map((el) => ({
+      title: $(el).text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter((item) => {
+      if (!item.title || !item.href.includes("/vireilla-ja-nahtavilla-olevat-kaavat/")) return false
+      if (item.href === HAMEENKYRO_LISTING_URL) return false
+      if (!/asemakaav/i.test(item.title) || /yleiskaav/i.test(item.title)) return false
+      if (/ranta-asemakaav/i.test(item.title) || /tuulivoima/i.test(item.title)) return false
+      if (seen.has(item.href)) return false
+      seen.add(item.href)
+      return true
+    })
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+
+    const detailResponse = await fetch(item.href, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const detail$ = cheerio.load(await detailResponse.text())
+    const wysiwyg = detail$(".wysiwyg").first().clone()
+    const olderHeading = wysiwyg
+      .find("h2")
+      .filter((_: number, el: any) => detail$(el).text().trim() === "Kaavan vanhempia aineistoja")
+      .first()
+    if (olderHeading.length) {
+      olderHeading.nextAll().remove()
+      olderHeading.remove()
+    }
+    const currentText = wysiwyg.text().replace(/\s+/g, " ").trim()
+
+    const phase = hameenkyroPhaseFromText(currentText || title)
+    const completed = phase === "Voimaantulo"
+    const contacts = [HAMEENKYRO_CONTACT]
+    const description = currentText || null
+    const attachments = wysiwyg
+      .find("a.acf-internal-link")
+      .toArray()
+      .map((a: any) => ({
+        label: detail$(a).text().replace(/\s+/g, " ").trim(),
+        url: detail$(a).attr("href") ?? "",
+      }))
+      .filter((a: { url: string }) => a.url.startsWith("http"))
+
+    found += 1
+
+    const slug = hameenkyroSlug(title)
+    const documentUrl = item.href
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -25004,6 +25180,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "ylitornioKaavaParser") {
     return collectYlitornioKaavaSource(source)
+  }
+
+  if (source.parser === "hameenkyroKaavaParser") {
+    return collectHameenkyroKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
