@@ -28367,7 +28367,117 @@ async function collectKustaviKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SIEVI_LISTING_URL = "https://www.sievi.fi/vireilla-olevat-kaavat"
+
+function sieviPhaseFromHeadings(headings: string[]): string {
+  const joined = headings.join(" ").toLowerCase()
+  // each project page accumulates a heading per stage it has passed
+  // through, in no guaranteed order -- scan for the most-advanced stage
+  // present rather than trusting document order
+  if (/voimaantulovaihe|voimaantulo|lainvoima/.test(joined)) return "Voimaantulo"
+  if (/hyväksymisvaihe|hyväksy/.test(joined)) return "Hyväksyminen"
+  if (/ehdotusvaihe|ehdotus/.test(joined)) return "Ehdotus"
+  if (/valmisteluvaihe|luonnosvaihe|luonno[sk]/.test(joined)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectSieviKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(SIEVI_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  const heading = listing$("h2")
+    .toArray()
+    .filter((el) =>
+      /vireillä olevat asemakaavat|vireillä olevat yleiskaavat/i.test(listing$(el).text())
+    )
+
+  const projects: { title: string; url: string }[] = []
+  for (const h2 of heading) {
+    for (const link of listing$(h2).nextUntil("h2", "p").find("a").toArray()) {
+      const title = listing$(link).text().replace(/\s+/g, " ").trim()
+      const href = listing$(link).attr("href")
+      if (title && href) projects.push({ title, url: href })
+    }
+  }
+
+  let saved = 0
+  let found = 0
+
+  for (const project of projects) {
+    if (!/asemakaava/i.test(project.title) && !energyPattern.test(project.title)) continue
+
+    const response = await fetch(project.url, { cache: "no-store" })
+    if (!response.ok) continue
+
+    const $ = cheerio.load(await response.text())
+    // the page has several ".field-name-body" blocks (sidebar/related
+    // content included) -- only ".field-node--body" is the actual article
+    const bodyField = $(".field-node--body").first()
+    const headings = bodyField
+      .find("h3, h4")
+      .toArray()
+      .map((el) => $(el).text().replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+    const phase = sieviPhaseFromHeadings(headings)
+    const completed = phase === "Voimaantulo"
+    const description = bodyField.text().replace(/\s+/g, " ").trim()
+
+    found += 1
+
+    const rawText = JSON.stringify({ title: project.title, phase, description: description || null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: project.title,
+        document_url: project.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: project.title,
+          slug: kemiSlug(project.title),
+          phase,
+          description: description || null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "sieviKaavaParser") {
+    return collectSieviKaavaSource(source)
+  }
+
   if (source.parser === "kustaviKaavaParser") {
     return collectKustaviKaavaSource(source)
   }
