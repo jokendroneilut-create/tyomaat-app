@@ -20475,6 +20475,138 @@ async function collectVirolahtiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ENONTEKIO_LISTING_URL = "https://enontekio.cloudnc.fi/fi-FI/Kaavat/Vireilla"
+
+const ENONTEKIO_CONTACT = {
+  name: "Kai Takkunen",
+  title: "Kaavoittaja",
+  phone: null as string | null,
+  email: null as string | null,
+}
+
+const ENONTEKIO_PHASE_LABELS: Record<string, string> = {
+  vireilletulo: "Vireilletulo",
+  vireilletulovaihe: "Vireilletulo",
+  valmisteluvaihe: "Luonnos",
+  ehdotusvaihe: "Ehdotus",
+  hyväksymisvaihe: "Hyväksyminen",
+  päätöksenteko: "Hyväksyminen",
+  lainvoimaisuus: "Voimaantulo",
+}
+
+function enontekioSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// Same CloudNC platform/theme as Puumala: each plan page renders a phase
+// stepper in .header-info. Unlike Puumala, Enontekiö renders every reached
+// stage (not just the current one), marking the in-progress one "(Käynnissä)"
+// — but since future stages still aren't rendered at all, the last <b>
+// label is still always the current phase either way.
+async function collectEnontekioKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ENONTEKIO_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $("li.decision .decision-title a")
+    .toArray()
+    .map((el) => ({
+      title: $(el).text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter((item) =>
+      item.title && item.href &&
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const detailUrl = new URL(item.href, ENONTEKIO_LISTING_URL).toString()
+    const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const $$ = cheerio.load(await detailResponse.text())
+    const title = $$("h1").first().text().replace(/\s+/g, " ").trim() || item.title
+
+    const phaseLabels = $$(".header-info b")
+      .toArray()
+      .map((b) => $$(b).text().trim())
+    const lastPhaseLabel = phaseLabels[phaseLabels.length - 1] ?? ""
+    const phase = ENONTEKIO_PHASE_LABELS[lastPhaseLabel.toLowerCase()] ?? "Vireilletulo"
+    const completed = phase === "Voimaantulo"
+
+    const description = $$(".basic-content").first().text().replace(/\s+/g, " ").trim()
+    const contacts = [ENONTEKIO_CONTACT]
+
+    const attachments = $$("a[href*='/download/']")
+      .toArray()
+      .map((a) => ({
+        label: $$(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($$(a).attr("href") ?? "", detailUrl).toString(),
+      }))
+
+    found += 1
+
+    const slug = enontekioSlug(title)
+    const documentUrl = detailUrl
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -23404,6 +23536,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "virolahtiKaavaParser") {
     return collectVirolahtiKaavaSource(source)
+  }
+
+  if (source.parser === "enontekioKaavaParser") {
+    return collectEnontekioKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
