@@ -28159,7 +28159,111 @@ async function collectVehmaaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LAITILA_LISTING_URL = "https://www.laitila.fi/asuminen-ja-ymparisto/kaavoitus/kaavahankkeet/"
+
+function laitilaPhaseFromHeading(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectLaitilaKaavaSource(source: DiscoverySource) {
+  const listingResponse = await fetch(LAITILA_LISTING_URL, { cache: "no-store" })
+  if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const listing$ = cheerio.load(await listingResponse.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  const projectUrls = new Set<string>()
+  listing$('a[href*="/kaavoitus/kaavahankkeet/"]').each((_, el) => {
+    const href = listing$(el).attr("href")
+    if (href && href !== LAITILA_LISTING_URL && href.startsWith(LAITILA_LISTING_URL)) {
+      projectUrls.add(href)
+    }
+  })
+
+  let saved = 0
+  let found = 0
+
+  for (const url of projectUrls) {
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) continue
+
+    const $ = cheerio.load(await response.text())
+    const title = $("h1").first().text().replace(/\s+/g, " ").trim()
+    if (!title) continue
+    if (!/asemakaava/i.test(title) && !energyPattern.test(title)) continue
+
+    // each dated milestone ("OAS nähtävillä...", "...luonnos nähtävillä...")
+    // gets its own heading in chronological order -- the last one is the
+    // current stage; a project with none yet is still at vireilletulo
+    const milestoneHeadings = $("h2.wp-block-heading")
+      .toArray()
+      .map((el) => $(el).text().replace(/\s+/g, " ").trim())
+      .filter((text) => text && !/evästeasetukset/i.test(text))
+
+    const statusText = milestoneHeadings.length
+      ? milestoneHeadings[milestoneHeadings.length - 1]
+      : $("article, main").first().text().replace(/\s+/g, " ").trim()
+    const phase = laitilaPhaseFromHeading(statusText)
+    const completed = phase === "Voimaantulo"
+
+    found += 1
+
+    const rawText = JSON.stringify({ title, phase, description: statusText || null })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug: kemiSlug(title),
+          phase,
+          description: statusText || null,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "laitilaKaavaParser") {
+    return collectLaitilaKaavaSource(source)
+  }
+
   if (source.parser === "vehmaaKaavaParser") {
     return collectVehmaaKaavaSource(source)
   }
