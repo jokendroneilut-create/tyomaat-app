@@ -137,6 +137,7 @@ export type IdentifierType =
   | "hausjarvi_kaava_slug"
   | "jokioinen_kaava_slug"
   | "veteli_kaava_slug"
+  | "multia_kaava_slug"
 
 export const IDENTIFIER_TYPES: IdentifierType[] = [
   "property_id",
@@ -275,6 +276,7 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "hausjarvi_kaava_slug",
   "jokioinen_kaava_slug",
   "veteli_kaava_slug",
+  "multia_kaava_slug",
 ]
 
 /*

@@ -6843,7 +6843,7 @@ function mantsalaPhaseFromText(text: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   if (/käynnist|osallistumis|arviointi/.test(normalized)) return "Vireilletulo"
   return "Vireilletulo"
 }
@@ -7145,7 +7145,7 @@ function lietoPhaseFromLabel(rawPhase: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -7580,7 +7580,7 @@ function mustasaariPhaseFromText(text: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -7706,7 +7706,7 @@ function kempelePhaseFromText(text: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -7846,7 +7846,7 @@ function valkeakoskiPhaseFromText(text: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -9283,10 +9283,16 @@ function pieksamakiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -9414,7 +9420,7 @@ function akaaPhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|voimaan tullut|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy|vahvistettu/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -9708,7 +9714,7 @@ function janakkalaPhaseFromText(text: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -9828,7 +9834,7 @@ function orimattilaPhaseFromText(text: string): string {
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -9933,10 +9939,16 @@ function ylivieskaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -10049,10 +10061,16 @@ function loimaaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -10319,10 +10337,16 @@ function kauhavaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -10567,7 +10591,7 @@ function kauhajokiPhaseFromText(text: string): string {
   if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksyi|hyväksynyt|hyväksytty|hyväksymä\b/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized) && !negatedEhdotus) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -11094,10 +11118,16 @@ function ulvilaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -11434,10 +11464,16 @@ function lieksaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -11542,10 +11578,16 @@ function kiteePhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -11668,10 +11710,16 @@ function kalajokiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -11804,10 +11852,16 @@ function nivalaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -11965,7 +12019,13 @@ function limingaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   // "luonnos" (draft), not the shorter "luonno" stem -- that also matches
@@ -12116,7 +12176,13 @@ function muuramePhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -12260,7 +12326,13 @@ function saarijarviPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -12434,7 +12506,13 @@ function keuruuPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -12615,7 +12693,13 @@ function loviisaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -13033,7 +13117,13 @@ function parainenPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -13184,7 +13274,13 @@ function someroPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   // "hyväksynyt ... kaavaehdotuksen ja asettaa ... nähtäville" approves
   // releasing a DRAFT for display, not the final plan -- only treat
@@ -13448,7 +13544,13 @@ function kokemakiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -13567,7 +13669,13 @@ function urjalaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -13707,7 +13815,13 @@ function punkalaidunPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -13972,7 +14086,13 @@ function hattulaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   // "hyväksyä kaavahanketta koskevan maankäyttösopimuksen" approves a
   // separate LAND-USE AGREEMENT, not the plan itself, and "hyväksynyt ...
@@ -13982,11 +14102,11 @@ function hattulaPhaseFromText(text: string): string {
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
@@ -13994,7 +14114,7 @@ function hattulaPhaseFromText(text: string): string {
   // stem match, not "luonnos" -- Finnish consonant gradation turns the
   // genitive into "luonnoksen" (kaavaluonnoksen), which doesn't contain
   // the literal substring "luonnos"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -14105,22 +14225,28 @@ function savitaipalePhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -14246,22 +14372,28 @@ function juvaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -14399,22 +14531,28 @@ function lapinlahtiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -14543,22 +14681,28 @@ function kannusPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -14686,22 +14830,28 @@ function toholampiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -14824,22 +14974,28 @@ function kuhmoPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -14949,22 +15105,28 @@ function suomussalmiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -15072,22 +15234,28 @@ function kittilaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -15204,22 +15372,28 @@ function kemijarviPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -15350,22 +15524,28 @@ function rautjarviPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -15488,22 +15668,28 @@ function alajarviPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -15648,16 +15834,16 @@ function alavusPhaseFromText(text: string): string {
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -15788,22 +15974,28 @@ function isokyroPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -15957,22 +16149,28 @@ function kuortanePhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -16085,22 +16283,28 @@ function laihiaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -16221,22 +16425,28 @@ function ahtariPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -16386,22 +16596,28 @@ function enonkoskiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -16550,22 +16766,28 @@ function heinavesiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -16688,22 +16910,28 @@ function hirvensalmiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -16950,22 +17178,28 @@ function sulkavaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -17079,22 +17313,28 @@ function hyrynsalmiPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -17229,22 +17469,28 @@ function paltamoPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
     // "Voimassa oleva asemakaava on hyväksytty {vanha pvm}" describes the
     // pre-existing baseline plan being changed, not the current muutos
     // process reaching approval.
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -17419,19 +17665,25 @@ function puolankaPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -17536,19 +17788,25 @@ function hausjarviPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -17682,19 +17940,25 @@ function jokioinenPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -17807,19 +18071,25 @@ function veteliPhaseFromText(text: string): string {
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
   )
-  if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const hyvaksyIndex = normalized.indexOf("hyväksy")
   if (hyvaksyIndex >= 0) {
     const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
     const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
-    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm)/.test(window)
-    const isHistoricalBaselineReference = /voimassa oleva/.test(beforeWindow)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
     if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
   }
 
   if (/ehdotu/.test(normalized)) return "Ehdotus"
-  if (/luonno/.test(normalized)) return "Luonnos"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
 
@@ -17870,6 +18140,160 @@ async function collectVeteliKaavaSource(source: DiscoverySource) {
         source_name: source.name,
         title,
         document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
+const MULTIA_LISTING_URL = "https://multia.fi/asuminen-ja-ymparisto/kaavoitus"
+
+const MULTIA_CONTACT = {
+  name: "Päivi Muhonen",
+  title: "Aluearkkitehti",
+  phone: "044 4598 434",
+  email: "paivi.muhonen@saarijarvi.fi",
+}
+
+function multiaSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function multiaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
+    normalized
+  )
+  const lainvoimaMatchIndex = normalized.search(/voimaantulo|lainvoima/)
+  // "Vuonna {vuosi} lainvoiman saaneessa kaavassa" describes a different,
+  // older plan referenced as background, not this plan reaching voimaantulo.
+  const isHistoricalYearReference =
+    lainvoimaMatchIndex >= 0 &&
+    /\b(19|20)\d{2}\b/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 40), lainvoimaMatchIndex))
+  if (!negatedLainvoima && !isHistoricalYearReference && /voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
+
+  const hyvaksyIndex = normalized.indexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    if (!isForwardLookingOrUnrelated && !isHistoricalBaselineReference) return "Hyväksyminen"
+  }
+
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+// Multia's kaavoitus hub links to real per-plan Joomla article pages
+// (.com-content-article__body). Each page reports its own progress
+// either as an h2 phase-stage heading directly, or under a "Tapahtumat:"
+// heading with bold phase-stage sub-markers — rather than special-case
+// that heading shape, we just run the standard phase regex over the
+// full body text, which already contains the phase-stage words either way.
+async function collectMultiaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(MULTIA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $("a[href*='/asuminen-ja-ymparisto/kaavoitus/']")
+    .toArray()
+    .map((el) => ({
+      title: $(el).text().replace(/\s+/g, " ").trim(),
+      href: $(el).attr("href") ?? "",
+    }))
+    .filter(
+      (item) =>
+        item.title &&
+        item.href &&
+        item.href !== "/asuminen-ja-ymparisto/kaavoitus" &&
+        !item.href.includes("aluearkkitehtipalvelut") &&
+        !item.href.includes("lainvoimaiset-kaavat") &&
+        /asemakaava/i.test(item.title) &&
+        !/yleiskaava/i.test(item.title) &&
+        !/ranta-asemakaava/i.test(item.title) &&
+        !/tuulivoima/i.test(item.title)
+    )
+    .filter((item, index, all) => all.findIndex((other) => other.href === item.href) === index)
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const detailUrl = new URL(item.href, MULTIA_LISTING_URL).toString()
+    const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+    if (!detailResponse.ok) continue
+
+    const $$ = cheerio.load(await detailResponse.text())
+    const main = $$(".com-content-article__body").first()
+    const title = $$("h1").first().text().replace(/\s+/g, " ").trim() || item.title
+    const description = main.text().replace(/\s+/g, " ").trim()
+
+    const phase = multiaPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [MULTIA_CONTACT]
+
+    const attachments = main
+      .find("a")
+      .toArray()
+      .map((a) => ({
+        label: $$(a).text().replace(/\s+/g, " ").trim(),
+        url: new URL($$(a).attr("href") ?? "", detailUrl).toString(),
+      }))
+
+    found += 1
+
+    const slug = multiaSlug(title)
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: detailUrl,
         document_type: "api",
         content_hash: contentHash,
         status: "downloaded",
@@ -20798,6 +21222,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "veteliKaavaParser") {
     return collectVeteliKaavaSource(source)
+  }
+
+  if (source.parser === "multiaKaavaParser") {
+    return collectMultiaKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
