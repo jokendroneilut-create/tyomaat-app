@@ -22067,10 +22067,17 @@ function hameenkyroPhaseFromText(text: string): string {
   const isAttachmentReference =
     lainvoimaMatchIndex >= 0 &&
     /(^|[^a-zäöå])ote\s*$/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 20), lainvoimaMatchIndex))
+  // "rakennuskiellon, joka on voimassa ... siihen asti, että kaava on saanut
+  // lainvoiman" describes a temporary BUILDING BAN's duration condition, not
+  // the plan itself having gained legal force (Konikallion tuulivoimapuisto).
+  const isBuildingBanReference =
+    lainvoimaMatchIndex >= 0 &&
+    /rakennuskiel/.test(normalized.slice(Math.max(0, lainvoimaMatchIndex - 150), lainvoimaMatchIndex))
   if (
     !negatedLainvoima &&
     !isHistoricalYearReference &&
     !isAttachmentReference &&
+    !isBuildingBanReference &&
     /voimaantulo|lainvoima|tul(?:lut|leet) voimaan/.test(normalized)
   )
     return "Voimaantulo"
@@ -22118,8 +22125,10 @@ async function collectHameenkyroKaavaSource(source: DiscoverySource) {
     .filter((item) => {
       if (!item.title || !item.href.includes("/vireilla-ja-nahtavilla-olevat-kaavat/")) return false
       if (item.href === HAMEENKYRO_LISTING_URL) return false
-      if (!/asemakaav/i.test(item.title) || /yleiskaav/i.test(item.title)) return false
-      if (/ranta-asemakaav/i.test(item.title) || /tuulivoima/i.test(item.title)) return false
+      const isAsemakaava =
+        /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) && !/ranta-asemakaav/i.test(item.title)
+      const isEnergyProject = /tuulivoima|aurinkovoima/i.test(item.title)
+      if (!isAsemakaava && !isEnergyProject) return false
       if (seen.has(item.href)) return false
       seen.add(item.href)
       return true
