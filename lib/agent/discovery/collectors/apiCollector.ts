@@ -14326,9 +14326,11 @@ async function collectLoppiKaavaSource(source: DiscoverySource) {
   for (const rowEl of rows) {
     const row = $(rowEl)
     const title = row.find(".accordion__title-item").first().text().replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const contentEl = row.find(".accordion__content").first()
     const description = contentEl.text().replace(/\s+/g, " ").trim()
@@ -15149,9 +15151,11 @@ async function collectKannusKaavaSource(source: DiscoverySource) {
     }
     const title = stripSoftHyphens(titleParts.join("")).replace(/\s+/g, " ").trim()
 
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const description = attachments.map((a) => a.label).join(", ")
     const phase = kannusPhaseFromText(`${title} ${description}`)
@@ -15445,9 +15449,11 @@ async function collectKuhmoKaavaSource(source: DiscoverySource) {
 
   for (const pEl of titleParagraphs) {
     const title = $(pEl).text().replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const list = $(pEl).next("ul.wp-block-list")
     const attachments = list
@@ -15583,9 +15589,11 @@ async function collectSuomussalmiKaavaSource(source: DiscoverySource) {
   for (const itemEl of items) {
     const item = $(itemEl)
     const title = item.find("summary").first().text().replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const bodyEl = item.find(".accordion-body").first()
     const description = bodyEl.text().replace(/\s+/g, " ").trim()
@@ -16044,9 +16052,11 @@ async function collectRautjarviKaavaSource(source: DiscoverySource) {
   for (const itemEl of items) {
     const item = $(itemEl)
     const title = item.find("summary").first().text().replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const bodyEl = item.find(".accordion-body").first()
     const description = bodyEl.text().replace(/\s+/g, " ").trim()
@@ -16720,9 +16730,11 @@ async function collectKuortaneKaavaSource(source: DiscoverySource) {
   for (const headingEl of headings) {
     const heading = $(headingEl)
     const title = heading.text().replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const blockNodes = heading.nextUntil("h2")
     const description = blockNodes.text().replace(/\s+/g, " ").trim()
@@ -17551,9 +17563,11 @@ async function collectHirvensalmiKaavaSource(source: DiscoverySource) {
   for (const headingEl of headings) {
     const heading = $(headingEl)
     const title = heading.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const blockNodes = heading.nextUntil("h2, h3, h4")
     const description = blockNodes.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
@@ -17833,9 +17847,11 @@ async function collectSulkavaKaavaSource(source: DiscoverySource) {
   for (const headingEl of headings) {
     const heading = $(headingEl)
     const title = heading.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const blockNodes = heading.nextUntil("h2")
     const description = blockNodes.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
@@ -18008,9 +18024,11 @@ async function collectHyrynsalmiKaavaSource(source: DiscoverySource) {
     if (!dateMatch) continue
 
     const title = dateMatch[2].trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const blockNodes = heading.nextUntil("h2")
     const description = blockNodes.text().replace(/\s+/g, " ").trim()
@@ -18362,9 +18380,11 @@ async function collectPuolankaKaavaSource(source: DiscoverySource) {
   for (const headingEl of headings) {
     const heading = $(headingEl)
     const title = heading.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const blockNodes = heading.nextUntil("h2, h3")
     const description = blockNodes.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
@@ -18671,9 +18691,11 @@ async function collectJokioinenKaavaSource(source: DiscoverySource) {
   for (const headingEl of headings) {
     const heading = $(headingEl)
     const title = heading.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const blockNodes = heading.nextUntil("h2")
     const description = blockNodes.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
@@ -18819,9 +18841,11 @@ async function collectVeteliKaavaSource(source: DiscoverySource) {
   for (const headingEl of headings) {
     const heading = $(headingEl)
     const title = heading.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const blockNodes = heading.nextUntil("h2")
     const description = blockNodes.text().replace(/­/g, "").replace(/\s+/g, " ").trim()
@@ -19142,9 +19166,11 @@ async function collectPetajavesiKaavaSource(source: DiscoverySource) {
     const title = (titleEl.length > 0 ? titleEl.text() : item.children("summary").first().text())
       .replace(/\s+/g, " ")
       .trim()
-    if (!title || !/asemakaava/i.test(title) || /yleiskaava/i.test(title) || /ranta-asemakaava/i.test(title)) {
-      continue
-    }
+    if (!title) continue
+    const isAsemakaava =
+      /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+    const isEnergyProject = /tuulivoima|aurinkovoima/i.test(title)
+    if (!isAsemakaava && !isEnergyProject) continue
 
     const description = item.text().replace(/\s+/g, " ").trim()
     const phase = petajavesiPhaseFromText(`${title} ${description}`)
