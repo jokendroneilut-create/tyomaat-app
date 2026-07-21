@@ -15490,7 +15490,9 @@ async function collectToholampiKaavaSource(source: DiscoverySource) {
   for (const el of container.children().toArray()) {
     if (el.name === "h3") {
       const title = $(el).text().replace(/\s+/g, " ").trim()
-      if (title && /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)) {
+      const isAsemakaava = /asemakaava/i.test(title) && !/yleiskaava/i.test(title) && !/ranta-asemakaava/i.test(title)
+      const isEnergyProject = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i.test(title)
+      if (title && (isAsemakaava || isEnergyProject)) {
         current = { title, nodes: [] }
         blocks.push(current)
       } else {
