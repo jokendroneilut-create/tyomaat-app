@@ -20607,6 +20607,200 @@ async function collectEnontekioKaavaSource(source: DiscoverySource) {
   }
 }
 
+const INARI_LISTING_URL = "https://www.inari.fi/fi/palvelut/tekniset-palvelut/kaavoitus/vireilla-olevat-kaavat.html"
+
+const INARI_CONTACT = {
+  name: "Inarin kunta",
+  title: "Kaavoitus",
+  phone: null as string | null,
+  email: "inari@inari.fi",
+}
+
+function inariSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// Inari lists each item's whole history inline in strict chronological
+// order, including occasional reversals ("Valtuusto palautti kaavaehdotuksen
+// uudelleen valmisteluun" — sent back to an earlier stage). The standard
+// fixed keyword-priority regex would latch onto the highest-priority
+// keyword regardless of where it falls in that history; here we instead
+// take whichever valid signal appears LAST (rightmost) in the text, since
+// that best matches this site's narrative structure.
+function inariPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+
+  const candidates: { index: number; phase: string }[] = []
+
+  const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(normalized)
+  const lainvoimaIndex = normalized.lastIndexOf("voimaantulo")
+  const lainvoimaIndex2 = normalized.lastIndexOf("lainvoima")
+  const voimaantuloIndex = Math.max(lainvoimaIndex, lainvoimaIndex2)
+  if (voimaantuloIndex >= 0 && !negatedLainvoima) {
+    const isHistoricalYearReference = /\b(19|20)\d{2}\b/.test(
+      normalized.slice(Math.max(0, voimaantuloIndex - 40), voimaantuloIndex)
+    )
+    const isAttachmentReference = /(^|[^a-zäöå])ote\s*$/.test(
+      normalized.slice(Math.max(0, voimaantuloIndex - 20), voimaantuloIndex)
+    )
+    const isBuildingBanReference = /rakennuskiel/.test(
+      normalized.slice(Math.max(0, voimaantuloIndex - 25), voimaantuloIndex)
+    )
+    if (!isHistoricalYearReference && !isAttachmentReference && !isBuildingBanReference) {
+      candidates.push({ index: voimaantuloIndex, phase: "Voimaantulo" })
+    }
+  }
+
+  const hyvaksyIndex = normalized.lastIndexOf("hyväksy")
+  if (hyvaksyIndex >= 0) {
+    const window = normalized.slice(hyvaksyIndex, hyvaksyIndex + 250)
+    const beforeWindow = normalized.slice(Math.max(0, hyvaksyIndex - 60), hyvaksyIndex)
+    const isForwardLookingOrUnrelated = /(ehdotuksen|ehdotusta|luonnoksen|luonnosta|sopimu|arviointisuunnitelm|kaavoituskatsau)/.test(window)
+    const isHistoricalBaselineReference = /voimassa oleva|kaavoituskatsau/.test(beforeWindow)
+    const isDirectApprovalOfEhdotus = /hyväksy[a-zäöå]*[\s\S]{0,90}?(kaava)?ehdotu(kse|sta)/i.test(window)
+    if ((!isForwardLookingOrUnrelated || isDirectApprovalOfEhdotus) && !isHistoricalBaselineReference) {
+      candidates.push({ index: hyvaksyIndex, phase: "Hyväksyminen" })
+    }
+  }
+
+  const ehdotuIndex = normalized.lastIndexOf("ehdotu")
+  if (ehdotuIndex >= 0) {
+    const ehdotuWindow = normalized.slice(Math.max(0, ehdotuIndex - 60), ehdotuIndex + 200)
+    const isForwardLookingEhdotus = /(valmistelussa|valmistelu on (meneillään|käynnissä)|tavoitteena on (asettaa|että))/.test(ehdotuWindow)
+    if (!isForwardLookingEhdotus) {
+      candidates.push({ index: ehdotuIndex, phase: "Ehdotus" })
+    }
+  }
+
+  const luonnoIndex = Math.max(normalized.lastIndexOf("luonnos"), normalized.lastIndexOf("luonnok"))
+  if (luonnoIndex >= 0) {
+    candidates.push({ index: luonnoIndex, phase: "Luonnos" })
+  }
+
+  if (candidates.length === 0) return "Vireilletulo"
+
+  candidates.sort((a, b) => b.index - a.index)
+  return candidates[0].phase
+}
+
+// Inari packs every pending item into one flat page: an <h2> divides
+// asemakaava/yleiskaava/ranta-asemakaava sections, and within a section
+// each item is a run of <p> content starting at a <strong> title marker
+// (multiple items often share one <p>, separated by <br><br>).
+async function collectInariKaavaSource(source: DiscoverySource) {
+  const response = await fetch(INARI_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("h2")
+    .toArray()
+    .find((el) => $(el).text().trim() === "Vireillä olevat asemakaavat")
+  if (!heading) return { documentsFound: 0, documentsSaved: 0 }
+
+  const paragraphs: any[] = []
+  let node = $(heading).next()
+  while (node.length && !["h2", "h3"].includes((node.prop("tagName") || "").toLowerCase())) {
+    if ((node.prop("tagName") || "").toLowerCase() === "p") paragraphs.push(node)
+    node = node.next()
+  }
+
+  type Segment = { title: string; parts: string[]; links: { label: string; href: string }[] }
+  const segments: Segment[] = []
+
+  paragraphs.forEach((p) => {
+    let current: Segment | null = null
+    p.contents().each((_: number, child: any) => {
+      if (child.type === "tag" && child.tagName === "strong") {
+        current = { title: $(child).text().replace(/\s+/g, " ").trim(), parts: [], links: [] }
+        segments.push(current)
+      } else if (child.type === "tag" && child.tagName === "a") {
+        if (current) current.links.push({ label: $(child).text().trim(), href: $(child).attr("href") ?? "" })
+      } else {
+        const text = $(child).text().replace(/\s+/g, " ").trim()
+        if (text && current) current.parts.push(text)
+      }
+    })
+  })
+
+  const items = segments
+    .map((seg) => ({ title: seg.title, description: seg.parts.join(" "), links: seg.links }))
+    .filter((item) =>
+      item.title &&
+      /asemakaav/i.test(item.title) && !/yleiskaav/i.test(item.title) &&
+      !/ranta-asemakaav/i.test(item.title) && !/tuulivoima/i.test(item.title)
+    )
+
+  let found = 0
+  let saved = 0
+
+  for (const item of items) {
+    const title = item.title
+    const description = item.description
+    const phase = inariPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+    const contacts = [INARI_CONTACT]
+    const attachments = item.links
+      .filter((l) => l.href.startsWith("http"))
+      .map((l) => ({ label: l.label, url: l.href }))
+
+    found += 1
+
+    const slug = inariSlug(title)
+    const documentUrl = `${INARI_LISTING_URL}#${slug}`
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          kaava_tunnus: null,
+          phase,
+          description,
+          contacts,
+          attachments,
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
@@ -23540,6 +23734,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "enontekioKaavaParser") {
     return collectEnontekioKaavaSource(source)
+  }
+
+  if (source.parser === "inariKaavaParser") {
+    return collectInariKaavaSource(source)
   }
 
   if (source.parser === "kangasalaKaavaParser") {
