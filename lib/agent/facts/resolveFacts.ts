@@ -109,6 +109,7 @@ import { extractToivakkaKaavaFacts } from "@/lib/agent/facts/extractToivakkaKaav
 import { extractUurainenKaavaFacts } from "@/lib/agent/facts/extractUurainenKaavaFacts"
 import { extractViitasaariKaavaFacts } from "@/lib/agent/facts/extractViitasaariKaavaFacts"
 import { extractIittiKaavaFacts } from "@/lib/agent/facts/extractIittiKaavaFacts"
+import { extractMiehikkalaKaavaFacts } from "@/lib/agent/facts/extractMiehikkalaKaavaFacts"
 import { extractHeinolaKaavaFacts } from "@/lib/agent/facts/extractHeinolaKaavaFacts"
 import { extractAanekoskiKaavaFacts } from "@/lib/agent/facts/extractAanekoskiKaavaFacts"
 import { extractRiihimakiKaavaFacts } from "@/lib/agent/facts/extractRiihimakiKaavaFacts"
@@ -2895,6 +2896,25 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractIittiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+        contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Miehikkälän vireillä olevat asemakaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+    const contacts = document.raw_payload?.contacts ?? []
+
+    return {
+      decisions: [],
+      facts: extractMiehikkalaKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
