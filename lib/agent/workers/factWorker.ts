@@ -150,6 +150,7 @@ export async function runFactWorker(documentId?: string) {
       "Iitin vireillä olevat asemakaavat",
       "Miehikkälän vireillä olevat asemakaavat",
       "Pyhtään vireillä olevat asemakaavat",
+      "Pornaisten vireillä olevat kaavat",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",

@@ -162,6 +162,7 @@ import { extractJoensuuKaavaFacts } from "@/lib/agent/facts/extractJoensuuKaavaF
 import { extractVaasaKaavaFacts } from "@/lib/agent/facts/extractVaasaKaavaFacts"
 import { extractKouvolaKaavaFacts } from "@/lib/agent/facts/extractKouvolaKaavaFacts"
 import { extractLappeenrantaKaavaFacts } from "@/lib/agent/facts/extractLappeenrantaKaavaFacts"
+import { extractPornainenKaavaFacts } from "@/lib/agent/facts/extractPornainenKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -2961,6 +2962,23 @@ export function resolveFacts(document: any) {
         phase,
         description,
         contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Pornaisten vireillä olevat kaavat") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractPornainenKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
       }),
     }
   }

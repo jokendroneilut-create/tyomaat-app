@@ -115,6 +115,7 @@ import { resolveViitasaariKaavaProject } from "@/lib/agent/identity/resolvers/vi
 import { resolveIittiKaavaProject } from "@/lib/agent/identity/resolvers/iittiKaavaResolver"
 import { resolveMiehikkalaKaavaProject } from "@/lib/agent/identity/resolvers/miehikkalaKaavaResolver"
 import { resolvePyhtaaKaavaProject } from "@/lib/agent/identity/resolvers/pyhtaaKaavaResolver"
+import { resolvePornainenKaavaProject } from "@/lib/agent/identity/resolvers/pornainenKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -969,6 +970,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "pyhtään vireillä olevat asemakaavat") {
     const result = await resolvePyhtaaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "pornaisten vireillä olevat kaavat") {
+    const result = await resolvePornainenKaavaProject({
       document,
       facts: facts ?? [],
     })

@@ -26598,6 +26598,156 @@ async function collectLappeenrantaSource(source: DiscoverySource) {
   }
 }
 
+const PORNAINEN_ASEMAKAAVA_URL = "https://pornainen.fi/kuntalaiset/maankaytto-ja-kaavoitus/asemakaavat/"
+const PORNAINEN_YLEISKAAVA_URL = "https://pornainen.fi/kuntalaiset/maankaytto-ja-kaavoitus/osayleiskaavat/"
+
+function pornainenPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  // besides "tullut voimaan"/"lainvoimainen", older notices phrase this as
+  // "saanut lain voiman" / "saanut lainvoiman" -- match the "lain voima"
+  // root loosely so both spacings and inflections are caught
+  if (/tullut voimaan|voimaantulo|lainvoimai|lain\s*voima/.test(normalized)) return "Voimaantulo"
+  if (/hyväksymisvaihe|hyväksytty|hyväksy/.test(normalized)) return "Hyväksyminen"
+  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/luonno[sk]/.test(normalized)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+type PornainenBlock = { title: string; nodes: any[] }
+
+// each section is a flat run of <p>/<ul> elements; a bare <p><strong> (not
+// wrapped in a link -- linked strongs are just cross-references inside a
+// later notice) starts a new plan block, everything after it belongs to
+// that block until the next title paragraph
+function pornainenExtractBlocks($: cheerio.CheerioAPI, sectionId: string): PornainenBlock[] {
+  const container = $(`#${sectionId} .text`).first()
+  const blocks: PornainenBlock[] = []
+  let current: PornainenBlock | null = null
+
+  for (const el of container.children("p, ul").toArray()) {
+    if (el.name === "p") {
+      const strongEl = $(el).find("strong").first()
+      const strongText = strongEl.text().replace(/\s+/g, " ").trim()
+      const strongIsLinked = strongEl.parent().is("a")
+      if (strongText && !strongIsLinked) {
+        current = { title: strongText, nodes: [] }
+        blocks.push(current)
+        continue
+      }
+    }
+    if (current) current.nodes.push(el)
+  }
+
+  return blocks
+}
+
+async function pornainenFetchBlocks(
+  url: string,
+  sectionIds: string[],
+  energyOnly: boolean
+): Promise<{ title: string; phase: string; description: string | null }[]> {
+  const response = await fetch(url, { cache: "no-store" })
+  if (!response.ok) return []
+
+  const $ = cheerio.load(await response.text())
+  const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
+
+  const results: { title: string; phase: string; description: string | null }[] = []
+
+  for (const sectionId of sectionIds) {
+    for (const block of pornainenExtractBlocks($, sectionId)) {
+      if (energyOnly && !energyPattern.test(block.title)) continue
+
+      const bodyText = block.nodes.map((node) => $(node).text().replace(/\s+/g, " ").trim()).join(" ")
+      const fullText = `${block.title} ${bodyText}`
+      results.push({
+        title: block.title,
+        phase: pornainenPhaseFromText(fullText),
+        description: bodyText || null,
+      })
+    }
+  }
+
+  return results
+}
+
+async function collectPornainenKaavaSource(source: DiscoverySource) {
+  const [asemakaavaItems, yleiskaavaEnergyItems] = await Promise.all([
+    pornainenFetchBlocks(
+      PORNAINEN_ASEMAKAAVA_URL,
+      ["vireilla-oleva-asemakaavan-muutos-asemakaava", "hyvaksytyt-voimaan-tulleet-asemakaavat"],
+      false
+    ),
+    pornainenFetchBlocks(
+      PORNAINEN_YLEISKAAVA_URL,
+      ["vireilla-olevat-osayleiskaavat", "hyvaksytyt-voimaan-tulleet-osayleiskaavat"],
+      true
+    ),
+  ])
+
+  const items = [...asemakaavaItems, ...yleiskaavaEnergyItems]
+
+  let saved = 0
+  // the municipality has reused the same plan-change name for genuinely
+  // different projects over the years (e.g. two separate "Kotojärvenranta,
+  // asemakaavan muutos" amendments) -- disambiguate the slug so they don't
+  // collide on document_url and silently overwrite each other
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const completed = item.phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${PORNAINEN_ASEMAKAAVA_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase: item.phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase: item.phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
   if (source.parser === "lappeenrantaKaavaParser") {
     return collectLappeenrantaSource(source)
@@ -27249,6 +27399,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "helsinkiKaavaParser") {
     return collectHelsinkiKaavaSource(source)
+  }
+
+  if (source.parser === "pornainenKaavaParser") {
+    return collectPornainenKaavaSource(source)
   }
 
   const response = await fetch(source.url, {
