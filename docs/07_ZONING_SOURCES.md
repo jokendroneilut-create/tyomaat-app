@@ -13,14 +13,14 @@ tiedostosta, ei istunnon tehtävälistasta — ks. luotettavuushuomio lopussa.
 
 - Manner-Suomen kuntia yhteensä: 292 (Ahvenanmaan 16 kuntaa rajattu pois, ei toistaiseksi
   tavoitteena).
-- Katettu (rekisteröity lähde): **220**
-- Ei vielä katettu: **72**
-  - joista syy tiedossa ja dokumentoitu (ks. alla): 22
-  - loput (50) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+- Katettu (rekisteröity lähde): **221**
+- Ei vielä katettu: **71**
+  - joista syy tiedossa ja dokumentoitu (ks. alla): 25
+  - loput (46) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
-  - Satakunta ja Pohjois-Savo on nyt käyty läpi kokonaan (kaikki kunnat joko katettu tai
-    todettu ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu" -listalla näiltä
-    maakunnilta.
+  - Satakunta, Pohjois-Savo ja Etelä-Karjala on nyt käyty läpi kokonaan (kaikki kunnat
+    joko katettu tai todettu ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu"
+    -listalla näiltä maakunnilta.
 - Valtakunnallisia / usean kunnan lähteitä (ei kuntakohtaisia, ei mukana yllä olevissa
   luvuissa): Hilma, Lupapiste kuulutukset, Väylävirasto hankkeet, Senaatti-kiinteistöt
   hankkeet, Puolustuskiinteistöt uutiset, Kreate hankkeet.
@@ -29,8 +29,8 @@ tiedostosta, ei istunnon tehtävälistasta — ks. luotettavuushuomio lopussa.
 
 Muoto: `Kunta: discovery_sources.name`
 
-### Etelä-Karjala (5)
-Imatra, Lappeenranta, Lemi, Rautjärvi, Savitaipale
+### Etelä-Karjala (6)
+Imatra, Lappeenranta, Lemi, Rautjärvi, Savitaipale, Taipalsaari
 
 ### Etelä-Pohjanmaa (14)
 Alajärvi, Alavus, Ilmajoki, Isojoki, Isokyrö, Kauhajoki, Kauhava, Kuortane, Kurikka,
@@ -126,6 +126,9 @@ Somero, Taivassalo, Turku, Uusikaupunki, Vehmaa
 | Rautavaara | Pohjois-Savo | Vain yleiskaava/asemakaava/ranta-asemakaava-PDF:t, ei vireillä-osiota |
 | Tervo | Pohjois-Savo | Vain yleistekstiä, ei aktiivista listaa |
 | Vesanto | Pohjois-Savo | "Vireillä olevat kaavat" -osio on vanhentunutta sisältöä vuosilta 2018-2020, ja teksti itse toteaa ettei mitään ole tällä hetkellä vireillä |
+| Luumäki | Etelä-Karjala | Ei kaavoitus-alasivua lainkaan, vain ulkoinen karttatiimi.fi-linkki |
+| Parikkala | Etelä-Karjala | "Vireillä olevat kaavat" -sivu on täysin tyhjä (vain otsikko) |
+| Ruokolahti | Etelä-Karjala | Vain yleistekstiä + kaavoituskatsaus-PDF, ei aktiivista listaa |
 
 Huom: Pertunmaa (Etelä-Savo) ei ole omalla rivillään kuntalistassa — se liittyi
 Mäntyharjuun 1.1.2025, joten sitä ei lasketa erilliseksi katteettomaksi kunnaksi.
@@ -138,7 +141,6 @@ Nämä eivät ole "todettu toteuttamiskelvottomiksi" — ne on vain rajattu pois
 `discovery_sources`-taulun perusteella, eikä niitä ole (varmuudella) käyty läpi tässä
 istunnossa. Osa saattaa olla helpostikin toteutettavissa, osa ei.
 
-- **Etelä-Karjala:** Luumäki, Parikkala, Ruokolahti, Taipalsaari
 - **Etelä-Savo:** Joroinen, Rantasalmi
 - **Kanta-Häme:** Humppila, Ypäjä
 - **Keski-Pohjanmaa:** Halsua, Kaustinen
