@@ -281,6 +281,11 @@ export async function POST(request: Request) {
     const isJamijarviKaava = normalize(metadata.resolver) === "jamijarvikaavaresolver"
     const isNakkilaKaava = normalize(metadata.resolver) === "nakkilakaavaresolver"
     const isSakylaKaava = normalize(metadata.resolver) === "sakylakaavaresolver"
+    const isKeiteleKaava = normalize(metadata.resolver) === "keitelekaavaresolver"
+    const isSonkajarviKaava = normalize(metadata.resolver) === "sonkajarvikaavaresolver"
+    const isSuonenjokiKaava = normalize(metadata.resolver) === "suonenjokikaavaresolver"
+    const isTuusniemiKaava = normalize(metadata.resolver) === "tuusniemikaavaresolver"
+    const isVieremaKaava = normalize(metadata.resolver) === "vieremakaavaresolver"
     const isVirolahtiKaava = normalize(metadata.resolver) === "virolahtikaavaresolver"
     const isEnontekioKaava = normalize(metadata.resolver) === "enontekiokaavaresolver"
     const isInariKaava = normalize(metadata.resolver) === "inarikaavaresolver"
@@ -1705,6 +1710,41 @@ export async function POST(request: Request) {
     if (isSakylaKaava) {
       candidateIdentifiers.push({
         type: "sakyla_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isKeiteleKaava) {
+      candidateIdentifiers.push({
+        type: "keitele_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isSonkajarviKaava) {
+      candidateIdentifiers.push({
+        type: "sonkajarvi_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isSuonenjokiKaava) {
+      candidateIdentifiers.push({
+        type: "suonenjoki_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isTuusniemiKaava) {
+      candidateIdentifiers.push({
+        type: "tuusniemi_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isVieremaKaava) {
+      candidateIdentifiers.push({
+        type: "vierema_kaava_slug",
         value: metadata.slug,
       })
     }

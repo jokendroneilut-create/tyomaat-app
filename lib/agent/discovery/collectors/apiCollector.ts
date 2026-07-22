@@ -33800,7 +33800,487 @@ async function collectSakylaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const POHJOISSAVO_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+
+function pohjoisSavoPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+function pohjoisSavoPhaseFromItems(items: string[]): string {
+  let best = "Vireilletulo"
+  for (const item of items) {
+    const t = item.toLowerCase()
+    let candidate: string | null = null
+    if (/voimaantulo|lainvoima|tullut voimaan/.test(t)) candidate = "Voimaantulo"
+    else if (/hyväksy/.test(t)) candidate = "Hyväksyminen"
+    else if (/ehdotu/.test(t)) candidate = "Ehdotus"
+    else if (/luonno/.test(t)) candidate = "Luonnos"
+    if (candidate && POHJOISSAVO_PHASE_ORDER.indexOf(candidate) > POHJOISSAVO_PHASE_ORDER.indexOf(best)) {
+      best = candidate
+    }
+  }
+  return best
+}
+
+const KEITELE_LISTING_URL = "https://keitele.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/vireilla-olevat-kaavat/"
+
+async function collectKeiteleKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KEITELE_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items: { title: string; description: string }[] = []
+  $(".accordion").each((_, el) => {
+    const $el = $(el)
+    const title = $el.find(".accordion__heading h2").first().text().replace(/\s+/g, " ").trim()
+    if (!title) return
+    const description = $el.find(".accordion__content").first().text().replace(/\s+/g, " ").trim()
+    items.push({ title, description })
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = pohjoisSavoPhaseFromText(`${item.title} ${item.description}`)
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${KEITELE_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+const SONKAJARVI_LISTING_URL = "https://www.sonkajarvi.fi/fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat"
+const SONKAJARVI_BASE_URL = "https://www.sonkajarvi.fi"
+const SONKAJARVI_LINK_PATTERN = /\/vireilla-olevat-kaavat\/[a-z0-9-]+$/i
+
+async function collectSonkajarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SONKAJARVI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const urls = new Set<string>()
+  $("a[href]").each((_, el) => {
+    const href = ($(el).attr("href") ?? "").trim()
+    if (!SONKAJARVI_LINK_PATTERN.test(href)) return
+    const url = href.startsWith("http") ? href : `${SONKAJARVI_BASE_URL}${href.startsWith("/") ? "" : "/"}${href}`
+    urls.add(url)
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const url of urls) {
+    let title = ""
+    let description = ""
+    let attachmentTitles: string[] = []
+    try {
+      const detailResponse = await fetch(url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        title = $$("h1").first().text().replace(/\s+/g, " ").trim()
+        description = $$("main, article")
+          .first()
+          .text()
+          .replace(/\s+/g, " ")
+          .trim()
+        attachmentTitles = $$("a[href*='.pdf']")
+          .map((_, a) => $$(a).text().replace(/\s+/g, " ").trim())
+          .get()
+          .filter(Boolean)
+      }
+    } catch {
+      // Skip documents whose detail page fails to load.
+    }
+
+    if (!title) continue
+
+    // Attachment titles carry an explicit phase tag (e.g. "(luonnosvaihe)"), which is a much more
+    // reliable signal than scanning the whole page's prose — the aikataulu section routinely
+    // mentions later phases in future tense ("tavoitteena on... hyväksymismenettely... 2027"),
+    // which the guarded text scanner can misread as the current phase.
+    const phase = attachmentTitles.length > 0
+      ? pohjoisSavoPhaseFromItems([title, ...attachmentTitles])
+      : pohjoisSavoPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: urls.size,
+    documentsSaved: saved,
+  }
+}
+
+const SUONENJOKI_LISTING_URL =
+  "https://www.suonenjoki.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/kaavoitus/vireilla-olevat-kaavat/"
+
+async function collectSuonenjokiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SUONENJOKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items: { title: string; description: string }[] = []
+  $(".block-link-list").each((_, el) => {
+    const $el = $(el)
+    const title = $el.find("h2").first().text().replace(/\s+/g, " ").trim()
+    if (!title) return
+    const links = $el
+      .find(".link-list-links a span")
+      .map((_, span) => $(span).text().replace(/\s+/g, " ").trim())
+      .get()
+    items.push({ title, description: links.join(" ") })
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = pohjoisSavoPhaseFromItems([item.title, item.description])
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${SUONENJOKI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+const TUUSNIEMI_LISTING_URL = "https://www.tuusniemi.fi/kaavoitus"
+
+async function collectTuusniemiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(TUUSNIEMI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const container = $(".journal-content-article").first()
+  const text = container.text().replace(/\s+/g, " ").trim()
+  const marker = "Kunnassa vireillä olevat kaavat:"
+  const idx = text.indexOf(marker)
+  const activeText = idx >= 0 ? text.slice(idx + marker.length) : ""
+
+  const items: { title: string; description: string }[] = []
+  // Split on "Kuulutus"/"Kaavakuulutus" occurrences to separate the announcements, keeping the marker text with each segment.
+  const segments = activeText.split(/(?=\bKaavakuulutus\b|\bKuulutus\b)/i).filter((s) => s.trim().length > 0)
+
+  for (const segment of segments) {
+    const trimmed = segment.trim()
+    if (!trimmed) continue
+    const titleMatch = trimmed.match(
+      /(?:Kaavakuulutus|Kuulutus)\s+(.+?)\s+(?:nähtäville|nähtävillä|ehdotusvaiheen|luonnosvaiheen|kh\s\d|\d{1,2}\.\d{1,2}\.\d{4})/i
+    )
+    const title = titleMatch ? titleMatch[1].trim() : trimmed.slice(0, 80)
+    items.push({ title, description: trimmed })
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    if (!item.title) continue
+    const phase = pohjoisSavoPhaseFromText(item.description)
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${TUUSNIEMI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+const VIEREMA_LISTING_URL = "https://vierema.fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat/"
+
+async function collectVieremaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(VIEREMA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const container = $(".main-content-area").first()
+  const h1Text = container.find("h1").first().text().replace(/\s+/g, " ").trim()
+  const paragraphs = container
+    .find("p")
+    .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
+    .get()
+    .filter(Boolean)
+
+  const title = paragraphs[0] ?? h1Text
+  const description = paragraphs.join(" ")
+
+  if (!title) return { documentsFound: 0, documentsSaved: 0 }
+
+  const phase = pohjoisSavoPhaseFromText(`${title} ${description}`)
+  const completed = phase === "Voimaantulo"
+
+  const slug = kemiSlug(title)
+  const url = `${VIEREMA_LISTING_URL}#${slug}`
+
+  const rawText = JSON.stringify({ title, phase, description })
+  const contentHash = hashContent(rawText)
+
+  const { error } = await supabaseAdmin.from("source_documents").upsert(
+    {
+      source_id: source.id,
+      source_name: source.name,
+      title,
+      document_url: url,
+      document_type: "api",
+      content_hash: contentHash,
+      status: "downloaded",
+      raw_text: rawText,
+      raw_payload: {
+        parser: source.parser,
+        priority: source.priority,
+        title,
+        slug,
+        phase,
+        description,
+        contacts: [],
+        completed,
+      },
+      processed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...(completed
+        ? {
+            facts_extracted_at: new Date().toISOString(),
+            identity_resolved_at: new Date().toISOString(),
+          }
+        : {}),
+    },
+    { onConflict: "document_url" }
+  )
+
+  if (error) throw error
+
+  return {
+    documentsFound: 1,
+    documentsSaved: 1,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "keiteleKaavaParser") {
+    return collectKeiteleKaavaSource(source)
+  }
+
+  if (source.parser === "sonkajarviKaavaParser") {
+    return collectSonkajarviKaavaSource(source)
+  }
+
+  if (source.parser === "suonenjokiKaavaParser") {
+    return collectSuonenjokiKaavaSource(source)
+  }
+
+  if (source.parser === "tuusniemiKaavaParser") {
+    return collectTuusniemiKaavaSource(source)
+  }
+
+  if (source.parser === "vieremaKaavaParser") {
+    return collectVieremaKaavaSource(source)
+  }
+
   if (source.parser === "jamijarviKaavaParser") {
     return collectJamijarviKaavaSource(source)
   }

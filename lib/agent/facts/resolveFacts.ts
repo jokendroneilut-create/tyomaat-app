@@ -220,6 +220,11 @@ import { extractVimpeliKaavaFacts } from "@/lib/agent/facts/extractVimpeliKaavaF
 import { extractJamijarviKaavaFacts } from "@/lib/agent/facts/extractJamijarviKaavaFacts"
 import { extractNakkilaKaavaFacts } from "@/lib/agent/facts/extractNakkilaKaavaFacts"
 import { extractSakylaKaavaFacts } from "@/lib/agent/facts/extractSakylaKaavaFacts"
+import { extractKeiteleKaavaFacts } from "@/lib/agent/facts/extractKeiteleKaavaFacts"
+import { extractSonkajarviKaavaFacts } from "@/lib/agent/facts/extractSonkajarviKaavaFacts"
+import { extractSuonenjokiKaavaFacts } from "@/lib/agent/facts/extractSuonenjokiKaavaFacts"
+import { extractTuusniemiKaavaFacts } from "@/lib/agent/facts/extractTuusniemiKaavaFacts"
+import { extractVieremaKaavaFacts } from "@/lib/agent/facts/extractVieremaKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -4000,6 +4005,91 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractSakylaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Keiteleen kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractKeiteleKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Sonkajärven kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractSonkajarviKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Suonenjoen kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractSuonenjokiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Tuusniemen kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractTuusniemiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Vieremän kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractVieremaKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

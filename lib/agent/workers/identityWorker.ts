@@ -173,6 +173,11 @@ import { resolveVimpeliKaavaProject } from "@/lib/agent/identity/resolvers/vimpe
 import { resolveJamijarviKaavaProject } from "@/lib/agent/identity/resolvers/jamijarviKaavaResolver"
 import { resolveNakkilaKaavaProject } from "@/lib/agent/identity/resolvers/nakkilaKaavaResolver"
 import { resolveSakylaKaavaProject } from "@/lib/agent/identity/resolvers/sakylaKaavaResolver"
+import { resolveKeiteleKaavaProject } from "@/lib/agent/identity/resolvers/keiteleKaavaResolver"
+import { resolveSonkajarviKaavaProject } from "@/lib/agent/identity/resolvers/sonkajarviKaavaResolver"
+import { resolveSuonenjokiKaavaProject } from "@/lib/agent/identity/resolvers/suonenjokiKaavaResolver"
+import { resolveTuusniemiKaavaProject } from "@/lib/agent/identity/resolvers/tuusniemiKaavaResolver"
+import { resolveVieremaKaavaProject } from "@/lib/agent/identity/resolvers/vieremaKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1433,6 +1438,41 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "säkylän kaavoitus") {
     const result = await resolveSakylaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "keiteleen kaavoitus") {
+    const result = await resolveKeiteleKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "sonkajärven kaavoitus") {
+    const result = await resolveSonkajarviKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "suonenjoen kaavoitus") {
+    const result = await resolveSuonenjokiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "tuusniemen kaavoitus") {
+    const result = await resolveTuusniemiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "vieremän kaavoitus") {
+    const result = await resolveVieremaKaavaProject({
       document,
       facts: facts ?? [],
     })

@@ -204,6 +204,11 @@ export type IdentifierType =
   | "jamijarvi_kaava_slug"
   | "nakkila_kaava_slug"
   | "sakyla_kaava_slug"
+  | "keitele_kaava_slug"
+  | "sonkajarvi_kaava_slug"
+  | "suonenjoki_kaava_slug"
+  | "tuusniemi_kaava_slug"
+  | "vierema_kaava_slug"
   | "virolahti_kaava_slug"
   | "enontekio_kaava_slug"
   | "inari_kaava_slug"
@@ -429,6 +434,11 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "jamijarvi_kaava_slug",
   "nakkila_kaava_slug",
   "sakyla_kaava_slug",
+  "keitele_kaava_slug",
+  "sonkajarvi_kaava_slug",
+  "suonenjoki_kaava_slug",
+  "tuusniemi_kaava_slug",
+  "vierema_kaava_slug",
   "virolahti_kaava_slug",
   "enontekio_kaava_slug",
   "inari_kaava_slug",
