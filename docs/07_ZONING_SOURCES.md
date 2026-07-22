@@ -5,9 +5,9 @@ Tämä tiedosto listaa, mistä kunnista tyomaat.fi kerää kaavoitustietoa (`dis
 toteutettua. Tarkoitus on välttää saman kunnan turhaa uudelleentutkimista tulevissa
 istunnoissa.
 
-**Tilanne 22.7.2026 (päivitetty — Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo,
-Kanta-Häme, Keski-Pohjanmaa, Pohjanmaa, Keski-Suomi, Pohjois-Karjala, Pohjois-Pohjanmaa ja
-Päijät-Häme läpikäyty kokonaan).** Luvut on generoitu suoraan
+**Tilanne 23.7.2026 (päivitetty — Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo,
+Kanta-Häme, Keski-Pohjanmaa, Pohjanmaa, Keski-Suomi, Pohjois-Karjala, Pohjois-Pohjanmaa,
+Päijät-Häme ja Uusimaa läpikäyty kokonaan).** Luvut on generoitu suoraan
 Supabasen `discovery_sources`-taulusta ja
 `lib/geo/municipalities.ts`-tiedostosta, ei istunnon tehtävälistasta — ks.
 luotettavuushuomio lopussa.
@@ -18,13 +18,14 @@ luotettavuushuomio lopussa.
   tavoitteena).
 - Katettu (rekisteröity lähde): **240**
 - Ei vielä katettu: **52**
-  - joista syy tiedossa ja dokumentoitu (ks. alla): 45
-  - loput (7) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+  - joista syy tiedossa ja dokumentoitu (ks. alla): 48
+  - loput (4) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
   - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa,
-    Pohjanmaa, Keski-Suomi, Pohjois-Karjala, Pohjois-Pohjanmaa ja Päijät-Häme on nyt
-    käyty läpi kokonaan (kaikki kunnat joko katettu tai todettu ei-toteutettavaksi) —
-    ei enää rivejä "ei vielä tutkittu" -listalla näiltä maakunnilta.
+    Pohjanmaa, Keski-Suomi, Pohjois-Karjala, Pohjois-Pohjanmaa, Päijät-Häme ja Uusimaa
+    on nyt käyty läpi kokonaan (kaikki kunnat joko katettu tai todettu
+    ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu" -listalla näiltä
+    maakunnilta.
 - Valtakunnallisia / usean kunnan lähteitä (ei kuntakohtaisia, ei mukana yllä olevissa
   luvuissa): Hilma, Lupapiste kuulutukset, Väylävirasto hankkeet, Senaatti-kiinteistöt
   hankkeet, Puolustuskiinteistöt uutiset, Kreate hankkeet.
@@ -155,6 +156,9 @@ Somero, Taivassalo, Turku, Uusikaupunki, Vehmaa
 | Polvijärvi | Pohjois-Karjala | Vain jo voimassa olevien kaavojen ja vanhojen (2018) ranta-asemakaavojen PDF-viitteitä, ei vireillä-listaa |
 | Rääkkylä | Pohjois-Karjala | Kaavoituskatsaus toteaa suoraan "Rääkkylän kunnan alueella ei ole kaavoja vireillä eikä uusia kaavoja ole tiedossa" |
 | Utajärvi | Pohjois-Pohjanmaa | Aiemmin löytynyt "Vireillä olevat kaavat" -sivu ei enää resolvoidu erilliseksi sisällöksi (ohjautuu yleiselle laskeutumissivulle); Tuulivoima-sivu sisältää vain yleistä markkinointi-/koulutustekstiä 7 hankkeesta ilman yksilöityjä hankenimiä tai -tiloja |
+| Pukkila | Uusimaa | Asemakaavat-sivu toteaa suoraan "Ei vireillä olevia asemakaavoja"; yleiskaavat-osiossa vain kolme jo voimassa olevaa (2003/2007) referenssikaavaa, ei tuulivoima-/aurinkovoimasisältöä |
+| Lapinjärvi | Uusimaa | Sivustolla vain kaksi kaava-aiheista sisältösivua: jo voimassa olevat yleiskaavat (2001/2002) ja yksi arkistoitunut yksittäishanke (Ingermaninkylän yritysalue, hyväksytty valtuustossa jo 13.2.2019) — ei ajantasaista vireillä-listaa |
+| Myrskylä | Uusimaa | Ei kaavoitussisältöä sivustolla lainkaan (koko sivukartta, tekniset palvelut -osio ja rakennusvalvontasivu käyty läpi); ainoat kaavaviitteet ovat karttatiimi.fi-linkit jo voimassa oleviin osayleiskaavoihin |
 
 Huom: Pertunmaa (Etelä-Savo) ei ole omalla rivillään kuntalistassa — se liittyi
 Mäntyharjuun 1.1.2025, joten sitä ei lasketa erilliseksi katteettomaksi kunnaksi.
@@ -167,7 +171,6 @@ Nämä eivät ole "todettu toteuttamiskelvottomiksi" — ne on vain rajattu pois
 `discovery_sources`-taulun perusteella, eikä niitä ole (varmuudella) käyty läpi tässä
 istunnossa. Osa saattaa olla helpostikin toteutettavissa, osa ei.
 
-- **Uusimaa:** Lapinjärvi, Myrskylä, Pukkila
 - **Varsinais-Suomi:** Koski Tl, Nousiainen, Oripää, Sauvo
 
 ## Luotettavuushuomio: istunnon tehtävälista ei ole totuudenmukainen
