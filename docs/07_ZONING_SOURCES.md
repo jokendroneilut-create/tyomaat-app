@@ -15,18 +15,15 @@ luotettavuushuomio lopussa.
 
 - Manner-Suomen kuntia yhteensä: 292 (Ahvenanmaan 16 kuntaa rajattu pois, ei toistaiseksi
   tavoitteena).
-- Katettu (rekisteröity lähde): **232**
-- Ei vielä katettu: **60**
-  - joista syy tiedossa ja dokumentoitu (ks. alla): 44
-  - loput (16) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+- Katettu (rekisteröity lähde): **235**
+- Ei vielä katettu: **57**
+  - joista syy tiedossa ja dokumentoitu (ks. alla): 45
+  - loput (12) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
-  - Pohjois-Pohjanmaa on kesken: Haapajärvi, Haapavesi, Kärsämäki, Lumijoki, Merijärvi,
-    Muhos, Pyhäjoki, Pyhäjärvi ja Pyhäntä on lisätty, 4 kuntaa vielä tutkimatta
-    (Pudasjärvi, Reisjärvi, Tyrnävä, Utajärvi).
   - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa,
-    Pohjanmaa, Keski-Suomi ja Pohjois-Karjala on nyt käyty läpi kokonaan (kaikki kunnat
-    joko katettu tai todettu ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu"
-    -listalla näiltä maakunnilta.
+    Pohjanmaa, Keski-Suomi, Pohjois-Karjala ja Pohjois-Pohjanmaa on nyt käyty läpi
+    kokonaan (kaikki kunnat joko katettu tai todettu ei-toteutettavaksi) — ei enää
+    rivejä "ei vielä tutkittu" -listalla näiltä maakunnilta.
 - Valtakunnallisia / usean kunnan lähteitä (ei kuntakohtaisia, ei mukana yllä olevissa
   luvuissa): Hilma, Lupapiste kuulutukset, Väylävirasto hankkeet, Senaatti-kiinteistöt
   hankkeet, Puolustuskiinteistöt uutiset, Kreate hankkeet.
@@ -79,10 +76,11 @@ Pedersören kunta, Pietarsaari, Uusikaarlepyy, Vaasa, Vöyri
 ### Pohjois-Karjala (8)
 Ilomantsi, Joensuu, Kitee, Kontiolahti, Lieksa, Liperi, Nurmes, Tohmajärvi
 
-### Pohjois-Pohjanmaa (26)
+### Pohjois-Pohjanmaa (29)
 Alavieska, Haapajärvi, Haapavesi, Hailuoto, Ii, Kalajoki, Kempele, Kuusamo, Kärsämäki,
-Liminka, Lumijoki, Merijärvi, Muhos, Nivala, Oulainen, Oulu, Pyhäjoki, Pyhäjärvi, Pyhäntä,
-Raahe, Sievi, Siikajoki, Siikalatva, Taivalkoski, Vaala, Ylivieska
+Liminka, Lumijoki, Merijärvi, Muhos, Nivala, Oulainen, Oulu, Pudasjärvi, Pyhäjoki,
+Pyhäjärvi, Pyhäntä, Raahe, Reisjärvi, Sievi, Siikajoki, Siikalatva, Taivalkoski, Tyrnävä,
+Vaala, Ylivieska
 
 ### Pohjois-Savo (12)
 Iisalmi, Keitele, Kiuruvesi, Kuopio, Lapinlahti, Pielavesi, Siilinjärvi, Sonkajärvi,
@@ -155,6 +153,7 @@ Somero, Taivassalo, Turku, Uusikaupunki, Vehmaa
 | Outokumpu | Pohjois-Karjala | "Laadinnassa olevat kaavat" -osio on olemassa mutta täysin tyhjä, ei yhtään aktiivista hanketta |
 | Polvijärvi | Pohjois-Karjala | Vain jo voimassa olevien kaavojen ja vanhojen (2018) ranta-asemakaavojen PDF-viitteitä, ei vireillä-listaa |
 | Rääkkylä | Pohjois-Karjala | Kaavoituskatsaus toteaa suoraan "Rääkkylän kunnan alueella ei ole kaavoja vireillä eikä uusia kaavoja ole tiedossa" |
+| Utajärvi | Pohjois-Pohjanmaa | Aiemmin löytynyt "Vireillä olevat kaavat" -sivu ei enää resolvoidu erilliseksi sisällöksi (ohjautuu yleiselle laskeutumissivulle); Tuulivoima-sivu sisältää vain yleistä markkinointi-/koulutustekstiä 7 hankkeesta ilman yksilöityjä hankenimiä tai -tiloja |
 
 Huom: Pertunmaa (Etelä-Savo) ei ole omalla rivillään kuntalistassa — se liittyi
 Mäntyharjuun 1.1.2025, joten sitä ei lasketa erilliseksi katteettomaksi kunnaksi.
