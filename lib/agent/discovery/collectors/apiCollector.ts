@@ -30248,6 +30248,122 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const UUSIKAARLEPYY_LISTING_URL = "https://www.nykarleby.fi/bo-i-nykarleby/byggande/pagaende-planarenden/"
+
+// Same false-positive risk as the other Pohjanmaa wind-project sources.
+function uusikaarlepyyPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/i kraft|laga kraft/, (window) =>
+    /inte |ej |ännu inte/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/godkänd|godkänt/, (window) =>
+    /ska godkänna|kommer att godkänna|bör godkänna|bemöt|utlåtande|kommentar/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/förslag/, (window) =>
+    /nästa skede|kommande skede|planeras/.test(window)
+  )) return "Ehdotus"
+  if (matchesUnguarded(/utkast/, (window) =>
+    /presenteras|sätts till påseende|planeras|kommer att/.test(window)
+  )) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectUusikaarlepyyKaavaSource(source: DiscoverySource) {
+  const response = await fetch(UUSIKAARLEPYY_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const article = $("article").first()
+
+  type Item = { title: string; description: string }
+  const items: Item[] = []
+
+  article.find(".Widget-box").each((_, el) => {
+    const $box = $(el)
+    const title = $box.find(".widget-title").first().text().replace(/\s+/g, " ").trim()
+    if (!title) return
+
+    const description = $box
+      .find(".widget-content")
+      .first()
+      .text()
+      .replace(/\s+/g, " ")
+      .trim()
+
+    items.push({ title, description })
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = uusikaarlepyyPhaseFromText(`${item.title} ${item.description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${UUSIKAARLEPYY_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const PEDERSORE_BASE_URL = "https://www.pedersore.fi"
 const PEDERSORE_LISTING_URL = `${PEDERSORE_BASE_URL}/sv/boende-och-miljo/planer-och-kartor/pagaende-planaerenden/`
 
@@ -31259,6 +31375,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "uusikaarlepyyKaavaParser") {
+    return collectUusikaarlepyyKaavaSource(source)
+  }
+
   if (source.parser === "pedersoreKaavaParser") {
     return collectPedersoreKaavaSource(source)
   }
