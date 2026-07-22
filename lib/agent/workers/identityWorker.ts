@@ -181,6 +181,7 @@ import { resolveVieremaKaavaProject } from "@/lib/agent/identity/resolvers/viere
 import { resolveTaipalsaariKaavaProject } from "@/lib/agent/identity/resolvers/taipalsaariKaavaResolver"
 import { resolveKinnulaKaavaProject } from "@/lib/agent/identity/resolvers/kinnulaKaavaResolver"
 import { resolveNurmesKaavaProject } from "@/lib/agent/identity/resolvers/nurmesKaavaResolver"
+import { resolveMerijarviKaavaProject } from "@/lib/agent/identity/resolvers/merijarviKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1497,6 +1498,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "nurmeksen kaavoitus") {
     const result = await resolveNurmesKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "merijärven kaavoitus") {
+    const result = await resolveMerijarviKaavaProject({
       document,
       facts: facts ?? [],
     })
