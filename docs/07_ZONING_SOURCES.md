@@ -6,22 +6,22 @@ toteutettua. Tarkoitus on välttää saman kunnan turhaa uudelleentutkimista tul
 istunnoissa.
 
 **Tilanne 22.7.2026 (päivitetty — Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo,
-Kanta-Häme, Keski-Pohjanmaa ja Pohjanmaa läpikäyty kokonaan).** Luvut on generoitu suoraan
-Supabasen `discovery_sources`-taulusta ja `lib/geo/municipalities.ts`-tiedostosta, ei
-istunnon tehtävälistasta — ks. luotettavuushuomio lopussa.
+Kanta-Häme, Keski-Pohjanmaa, Pohjanmaa ja Keski-Suomi läpikäyty kokonaan).** Luvut on
+generoitu suoraan Supabasen `discovery_sources`-taulusta ja `lib/geo/municipalities.ts`-
+tiedostosta, ei istunnon tehtävälistasta — ks. luotettavuushuomio lopussa.
 
 ## Yhteenveto
 
 - Manner-Suomen kuntia yhteensä: 292 (Ahvenanmaan 16 kuntaa rajattu pois, ei toistaiseksi
   tavoitteena).
-- Katettu (rekisteröity lähde): **221**
-- Ei vielä katettu: **71**
-  - joista syy tiedossa ja dokumentoitu (ks. alla): 32
-  - loput (39) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+- Katettu (rekisteröity lähde): **222**
+- Ei vielä katettu: **70**
+  - joista syy tiedossa ja dokumentoitu (ks. alla): 40
+  - loput (30) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
-  - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa ja
-    Pohjanmaa on nyt käyty läpi kokonaan (kaikki kunnat joko katettu tai todettu
-    ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu" -listalla näiltä
+  - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa,
+    Pohjanmaa ja Keski-Suomi on nyt käyty läpi kokonaan (kaikki kunnat joko katettu tai
+    todettu ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu" -listalla näiltä
     maakunnilta.
 - Valtakunnallisia / usean kunnan lähteitä (ei kuntakohtaisia, ei mukana yllä olevissa
   luvuissa): Hilma, Lupapiste kuulutukset, Väylävirasto hankkeet, Senaatti-kiinteistöt
@@ -51,9 +51,9 @@ Forssa, Hattula, Hausjärvi, Hämeenlinna, Janakkala, Jokioinen, Loppi, Riihimä
 ### Keski-Pohjanmaa (6)
 Kannus, Kokkola, Lestijärvi, Perho, Toholampi, Veteli
 
-### Keski-Suomi (14)
-Joutsa, Jyväskylä, Jämsä, Keuruu, Laukaa, Multia, Muurame, Petäjävesi, Pihtipudas,
-Saarijärvi, Toivakka, Uurainen, Viitasaari, Äänekoski
+### Keski-Suomi (15)
+Joutsa, Jyväskylä, Jämsä, Keuruu, Kinnula, Laukaa, Multia, Muurame, Petäjävesi,
+Pihtipudas, Saarijärvi, Toivakka, Uurainen, Viitasaari, Äänekoski
 
 ### Kymenlaakso (7)
 Hamina, Iitti, Kotka, Kouvola, Miehikkälä, Pyhtää, Virolahti
@@ -138,6 +138,14 @@ Somero, Taivassalo, Turku, Uusikaupunki, Vehmaa
 | Halsua | Keski-Pohjanmaa | Ei kaavoitussisältöä sivustolla lainkaan (vanha, suppea page_id-pohjainen WP-sivusto) |
 | Kaustinen | Keski-Pohjanmaa | Vain vanhoja (2006-2021) PDF-kaavatiedostoja, ei vireillä-osiota |
 | Närpiö (Närpes) | Pohjanmaa | Vain yleistekstiä ruotsiksi + ulkoinen karttalinkki, ei aktiivista listaa |
+| Hankasalmi | Keski-Suomi | Vain staattista selitystekstiä + jo lainvoimaisten kaavojen PDF-viitteitä, ei vireillä-listausta |
+| Kannonkoski | Keski-Suomi | Vain jo lainvoimaisten kaavojen kaavakartta-arkisto; iso vireillä oleva tuulivoimahanke (Vuorijärvet) elää vain erillisissä uutispostauksissa, ei pysyvässä listausrakenteessa |
+| Karstula | Keski-Suomi | Ei omaa vireillä-asemakaavat-sivua, vain vuosittainen kaavoituskatsaus-PDF ja tuulivoima-osio |
+| Kivijärvi | Keski-Suomi | Vain kaavoituskatsaus-PDF ja katuluettelo, ei vireillä-sisältöä |
+| Konnevesi | Keski-Suomi | Vain kaavakartta-/kaavamääräysviitemateriaalia, ei vireillä-sisältöä |
+| Kuhmoinen | Keski-Suomi | Sivusto ohjaa JS-pohjaisen näytönleveys-uudelleenohjauksen ja evästetarkistuksen kautta — palvelinpuolen fetch ei pääse sisällön läpi |
+| Kyyjärvi | Keski-Suomi | Sivulla ei ole muuta sisältöä kuin vuosittainen kaavoituskatsaus-viite |
+| Luhanka | Keski-Suomi | "Kaavat ja alueet" -sivu on tosiasiassa yleinen kylä-/tapahtumasivu; varsinaiset kaava-asiakirjat ovat vain Google Drive -kansiossa |
 
 Huom: Pertunmaa (Etelä-Savo) ei ole omalla rivillään kuntalistassa — se liittyi
 Mäntyharjuun 1.1.2025, joten sitä ei lasketa erilliseksi katteettomaksi kunnaksi.
@@ -150,8 +158,6 @@ Nämä eivät ole "todettu toteuttamiskelvottomiksi" — ne on vain rajattu pois
 `discovery_sources`-taulun perusteella, eikä niitä ole (varmuudella) käyty läpi tässä
 istunnossa. Osa saattaa olla helpostikin toteutettavissa, osa ei.
 
-- **Keski-Suomi:** Hankasalmi, Kannonkoski, Karstula, Kinnula, Kivijärvi, Konnevesi,
-  Kuhmoinen, Kyyjärvi, Luhanka
 - **Pohjois-Karjala:** Juuka, Nurmes, Outokumpu, Polvijärvi, Rääkkylä
 - **Pohjois-Pohjanmaa:** Haapajärvi, Haapavesi, Kärsämäki, Lumijoki, Merijärvi, Muhos,
   Pudasjärvi, Pyhäjoki, Pyhäjärvi, Pyhäntä, Reisjärvi, Tyrnävä, Utajärvi
