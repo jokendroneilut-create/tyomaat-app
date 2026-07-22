@@ -34373,6 +34373,176 @@ async function collectTaipalsaariKaavaSource(source: DiscoverySource) {
   }
 }
 
+const NURMES_URL = "https://www.nurmes.fi/asuminen-ja-ymparisto/maankaytto/kaavoitus/"
+
+function nurmesPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  if (/aloitetaan alusta|aloitetaan uudelleen/.test(normalized)) return "Vireilletulo"
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectNurmesKaavaSource(source: DiscoverySource) {
+  const response = await fetch(NURMES_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const panelIdForHeading = (headingText: string): string | null => {
+    let id: string | null = null
+    $(".wp-block-accordion-heading__toggle-title").each((_, el) => {
+      if ($(el).text().trim() === headingText) {
+        id = $(el).closest("button").attr("aria-controls") ?? null
+      }
+    })
+    return id
+  }
+
+  const cleanText = (value: string) =>
+    value.replace(/­/g, "").replace(/\s+/g, " ").trim()
+
+  const extractPanelItems = (panelId: string, excludeCategory: RegExp | null) => {
+    const items: { title: string; description: string }[] = []
+    let category = ""
+    let current: { title: string; description: string } | null = null
+
+    $(`#${panelId}`)
+      .find("h2,h3,p")
+      .each((_, el) => {
+        if (el.tagName === "h3") {
+          category = cleanText($(el).text())
+          current = null
+          return
+        }
+
+        const $el = $(el)
+        const meaningfulContents = $el
+          .contents()
+          .toArray()
+          .filter((node: any) => {
+            if (node.type === "text") return cleanText($(node).text()).length > 0
+            return true
+          })
+        const strongOnly =
+          meaningfulContents.length === 1 &&
+          meaningfulContents[0].type === "tag" &&
+          meaningfulContents[0].tagName === "strong"
+
+        const isTitle = el.tagName === "h2" || strongOnly
+
+        if (isTitle) {
+          if (excludeCategory && excludeCategory.test(category)) {
+            current = null
+            return
+          }
+          current = { title: cleanText($el.text()), description: "" }
+          items.push(current)
+          return
+        }
+
+        if (current) {
+          const text = cleanText($el.text())
+          if (text) current.description = `${current.description} ${text}`.trim()
+        }
+      })
+
+    return items
+  }
+
+  const items: { title: string; description: string }[] = []
+
+  const laadinnassaPanelId = panelIdForHeading("Laadinnassa olevat kaavat")
+  if (laadinnassaPanelId) {
+    items.push(...extractPanelItems(laadinnassaPanelId, /maakunta/i))
+  }
+
+  $(".wp-block-accordion-heading__toggle-title").each((_, el) => {
+    const headingText = $(el).text().trim()
+    if (headingText === "Laadinnassa olevat kaavat" || !/\(laadinnassa\)/i.test(headingText)) return
+    const panelId = $(el).closest("button").attr("aria-controls")
+    if (panelId) items.push(...extractPanelItems(panelId, null))
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    if (!item.title) continue
+
+    const phase = nurmesPhaseFromText(`${item.title} ${item.description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${NURMES_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KINNULA_LISTING_URL = "https://www.kinnula.fi/palautetta-tekniselle-toimialalle/palautetta-tekniselle-toimialalle/rakentaminen/kaavat.html"
 
 function kinnulaPhaseFromText(text: string): string {
@@ -34466,6 +34636,10 @@ async function collectKinnulaKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "nurmesKaavaParser") {
+    return collectNurmesKaavaSource(source)
+  }
+
   if (source.parser === "kinnulaKaavaParser") {
     return collectKinnulaKaavaSource(source)
   }
