@@ -234,6 +234,7 @@ export async function runFactWorker(documentId?: string) {
       "Padasjoen kaavoitus",
       "Sysmän kaavoitus",
       "Kosken Tl kaavoitus",
+      "Rajukivi Oy",
       "Heinäveden vireillä olevat asemakaavat",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",

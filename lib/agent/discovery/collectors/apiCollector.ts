@@ -3,6 +3,8 @@ import https from "https"
 import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
 import type { DiscoverySource } from "../registry/sources"
+import { detectCityFromText } from "../../detectCityFromText"
+import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34748,6 +34750,179 @@ async function collectAsikkalaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const RAJUKIVI_LISTING_BASE = "https://rajukivi.fi/category/aajankohtaista/"
+const RAJUKIVI_MAX_LIST_PAGES = 4
+
+const RAJUKIVI_VAGUE_TITLE_PATTERN = /^(kuulumisia|tapahtuu|toiminta laajenee|uutisia)/i
+
+/*
+ * Osa "Ajankohtaista"-osion tiedotteista ei kuvaa mitään yksittäistä
+ * työmaata lainkaan (rekrytointisertifikaatit, juhlapyhätoivotukset,
+ * yleiset yritysesittelysivut) — nämä eivät ole hankkeita eivätkä
+ * kuulu kandidaattijonoon lainkaan.
+ */
+const RAJUKIVI_EXCLUDE_KEYWORDS = [
+  "olemme ylpeitä",
+  "arvomme",
+  "tavoitteemme on luoda",
+  "hyvää joulua",
+  "joulua",
+  "avoimet työpaikat",
+  "arvostettu työpaikka",
+  "sertifikaatin arvoinen",
+  "rakennamme tulevaisuuden",
+]
+
+function rajukiviToSentenceCase(value: string): string {
+  const lower = value.toLowerCase().trim()
+  return lower.charAt(0).toUpperCase() + lower.slice(1)
+}
+
+/*
+ * Rajukiven tiedotteiden otsikot vaihtelevat suuresti — osa on jo
+ * valmiiksi hyviä työmaan nimiä ("Säterinkalliossa kiilaustyöt
+ * käynnissä"), osa täysin epäinformatiivisia ("Kuulumisia
+ * vehkalasta"). Näille poimitaan parempi nimi leipätekstistä, koska
+ * artikkelien vakiofraasit ("Rajukivi toimii pääurakoitsijana X
+ * -alueella", "X asemakaava-alue sijaitsee", jne.) sisältävät lähes
+ * aina varsinaisen kohteen nimen selkeästi.
+ */
+function rajukiviExtractWorksiteName(bodyText: string): string | null {
+  const patterns = [
+    /rajukivi\s+toimii\s+pääurakoitsijana\s+(.+?)\s*-?alueella\b/i,
+    /rajukivi\s+oy\s+vastaa\s+alueen\s+(.+?)\s+toteutuksesta/i,
+    /(\S+(?:\s+\S+){0,4})\s+asemakaava-alue(?:en)?\s+sijaitsee/i,
+    /rajukivi\s+vastaa\s+(.+?)\s+\S*(?:töistä|rakenteista)/i,
+    /rajukivi\s+(?:on\s+)?valittu\s+toteuttamaan\s+(.+?)(?:\s+kokonaisurakkaa|\.)/i,
+    /rajukivi\s+(?:on\s+)?mukana\s+(.+?)(?:-hankkeessa|hankkeessa|-projektissa)\b/i,
+    /rajukivi\s+osallistui\s+(.+?)\s+vaiheen\s+rakentamiseen/i,
+  ]
+  for (const pattern of patterns) {
+    const match = bodyText.match(pattern)
+    if (match?.[1]) {
+      const cleaned = match[1].trim().replace(/^(uuden|uutta|uusi)\s+/i, "")
+      if (cleaned.length >= 6) return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+    }
+  }
+  return null
+}
+
+function rajukiviTitle(rawTitle: string, bodyText: string): string {
+  const sentenceCase = rajukiviToSentenceCase(rawTitle)
+  const stripped = stripCompanyPrefixFromHeadline(sentenceCase)
+  if (!RAJUKIVI_VAGUE_TITLE_PATTERN.test(stripped) && stripped.length >= 8) {
+    return stripped
+  }
+  return rajukiviExtractWorksiteName(bodyText) ?? stripped
+}
+
+/*
+ * Rajukivi on aina rakentava osapuoli kun se mainitaan, joten oletus
+ * on "Rakenteilla" — vain selkeä loppuun toimittamisen kieli
+ * ("luovutettiin", "kokonaisuudessaan urakka valmistui/on valmis")
+ * ilman tulevaa päivämäärää ("valmistuu <pvm>") nostetaan
+ * "Valmistunut"-vaiheeksi.
+ */
+function rajukiviPhaseKey(text: string): "construction" | "completed" {
+  const normalized = text.toLowerCase()
+  if (/luovutettiin|luovutettu/.test(normalized)) return "completed"
+  if (/kokonaisuudessaan\s+urakka\s+(valmistui|on\s+valmis)\b/.test(normalized)) return "completed"
+  return "construction"
+}
+
+async function collectRajukiviSource(source: DiscoverySource) {
+  const items: { title: string; url: string }[] = []
+  const seenUrls = new Set<string>()
+
+  for (let page = 1; page <= RAJUKIVI_MAX_LIST_PAGES; page++) {
+    const url = page === 1 ? RAJUKIVI_LISTING_BASE : `${RAJUKIVI_LISTING_BASE}page/${page}/`
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) break
+
+    const $ = cheerio.load(await response.text())
+    const articles = $("article[id^='post-']")
+    if (articles.length === 0) break
+
+    articles.each((_, el) => {
+      const titleLink = $(el).find("h2.entry-title a").first()
+      const rawTitle = titleLink.text().trim()
+      const href = titleLink.attr("href")
+      if (!rawTitle || !href || seenUrls.has(href)) return
+      seenUrls.add(href)
+      items.push({ title: rawTitle, url: href })
+    })
+  }
+
+  let found = 0
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    let description = ""
+    try {
+      const detailResponse = await fetch(item.url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        description = $$(".et_pb_post_content").first().text().replace(/\s+/g, " ").trim()
+      }
+    } catch {
+      // Skip documents whose detail page fails to load.
+    }
+
+    const combinedLower = `${item.title} ${description}`.toLowerCase()
+    if (RAJUKIVI_EXCLUDE_KEYWORDS.some((keyword) => combinedLower.includes(keyword))) continue
+
+    found += 1
+    const title = rajukiviTitle(item.title, description)
+    const municipality = detectCityFromText(`${title} ${description}`)
+    const phase = rajukiviPhaseKey(`${title} ${description}`)
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description, municipality })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: item.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          municipality,
+          contacts: [],
+          completed: phase === "completed",
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: found,
+    documentsSaved: saved,
+  }
+}
+
 const KOSKI_TL_URL = "https://koski.fi/asuminen/vireilla-olevat-kaavat/"
 
 function koskiTlPhaseFromText(text: string): string {
@@ -36749,6 +36924,10 @@ async function collectMerijarviKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "rajukiviParser") {
+    return collectRajukiviSource(source)
+  }
+
   if (source.parser === "koskiTlKaavaParser") {
     return collectKoskiTlKaavaSource(source)
   }
