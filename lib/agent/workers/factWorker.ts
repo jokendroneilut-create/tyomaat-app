@@ -176,6 +176,7 @@ export async function runFactWorker(documentId?: string) {
       "Pöytyän kaavoitus",
       "Maskun kaavoitus",
       "Ruskon kaavoitus",
+      "Mynämäen kaavoitus",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",
