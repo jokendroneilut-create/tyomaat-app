@@ -196,6 +196,7 @@ import { resolveTyrnavaKaavaProject } from "@/lib/agent/identity/resolvers/tyrna
 import { resolveAsikkalaKaavaProject } from "@/lib/agent/identity/resolvers/asikkalaKaavaResolver"
 import { resolveHartolaKaavaProject } from "@/lib/agent/identity/resolvers/hartolaKaavaResolver"
 import { resolveKarkolaKaavaProject } from "@/lib/agent/identity/resolvers/karkolaKaavaResolver"
+import { resolvePadasjokiKaavaProject } from "@/lib/agent/identity/resolvers/padasjokiKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1617,6 +1618,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kärkölän kaavoitus") {
     const result = await resolveKarkolaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "padasjoen kaavoitus") {
+    const result = await resolvePadasjokiKaavaProject({
       document,
       facts: facts ?? [],
     })

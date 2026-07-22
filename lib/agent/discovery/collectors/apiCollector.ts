@@ -34748,6 +34748,132 @@ async function collectAsikkalaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PADASJOKI_LISTING_URL = "https://padasjoki.cloudnc.fi/fi-FI/Kaavat"
+const PADASJOKI_ORIGIN = "https://padasjoki.cloudnc.fi"
+
+function padasjokiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}|ei ole vielä|ei vielä|ei ole saanut|ei saanut/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|esittää|luonno|hyväksyttäväksi|hyväksymisestä|voimassa|vuonna|tavoitteet|aluerajauksen|viitesuunnitelma/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/, (window) =>
+    /valmistumiseen asti|valmistuttua|tullaan/.test(window)
+  )) return "Ehdotus"
+  if (matchesUnguarded(/valmisteluvaihe|luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectPadasjokiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PADASJOKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items: { title: string; url: string }[] = []
+  const seen = new Set<string>()
+  $("a[href*='/content/']").each((_, el) => {
+    const text = $(el).text().replace(/\s+/g, " ").trim()
+    const href = $(el).attr("href")
+    if (!href || !text.startsWith("Padasjoki Aktiiviset:")) return
+
+    const title = text
+      .replace(/^Padasjoki Aktiiviset:\s*/, "")
+      .replace(/\s*-\s*\d{1,2}\.\d{1,2}\.\d{4}\s*$/, "")
+      .trim()
+    if (!title || seen.has(href)) return
+    seen.add(href)
+
+    items.push({ title, url: new URL(href, PADASJOKI_ORIGIN).toString() })
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    let description = ""
+    try {
+      const detailResponse = await fetch(item.url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        const parts: string[] = []
+        $$(".hanke-additional-information").each((_, el) => {
+          parts.push($$(el).text())
+        })
+        description = parts.join(" ").replace(/\s+/g, " ").trim()
+      }
+    } catch {
+      // Skip documents whose detail page fails to load.
+    }
+
+    const phase = padasjokiPhaseFromText(`${item.title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title: item.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: item.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KARKOLA_AK_URL = "https://karkola.fi/palvelut/tekninen-toimi/kaavoituspalvelut-2/vireilla-olevat-asemakaavatyot/"
 const KARKOLA_YK_URL = "https://karkola.fi/palvelut/tekninen-toimi/kaavoituspalvelut-2/vireilla-olevat-yleiskaavatyot/"
 
@@ -36374,6 +36500,10 @@ async function collectMerijarviKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "padasjokiKaavaParser") {
+    return collectPadasjokiKaavaSource(source)
+  }
+
   if (source.parser === "karkolaKaavaParser") {
     return collectKarkolaKaavaSource(source)
   }
