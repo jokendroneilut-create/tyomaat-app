@@ -5,19 +5,22 @@ Tämä tiedosto listaa, mistä kunnista tyomaat.fi kerää kaavoitustietoa (`dis
 toteutettua. Tarkoitus on välttää saman kunnan turhaa uudelleentutkimista tulevissa
 istunnoissa.
 
-**Tilanne 22.7.2026.** Luvut on generoitu suoraan Supabasen `discovery_sources`-taulusta ja
-`lib/geo/municipalities.ts`-tiedostosta, ei istunnon tehtävälistasta — ks. luotettavuushuomio
-lopussa.
+**Tilanne 22.7.2026 (päivitetty, Satakunta + Pohjois-Savo läpikäyty kokonaan).** Luvut on
+generoitu suoraan Supabasen `discovery_sources`-taulusta ja `lib/geo/municipalities.ts`-
+tiedostosta, ei istunnon tehtävälistasta — ks. luotettavuushuomio lopussa.
 
 ## Yhteenveto
 
 - Manner-Suomen kuntia yhteensä: 292 (Ahvenanmaan 16 kuntaa rajattu pois, ei toistaiseksi
   tavoitteena).
-- Katettu (rekisteröity lähde): **212**
-- Ei vielä katettu: **80**
-  - joista syy tiedossa ja dokumentoitu (ks. alla): 11
-  - loput (69) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+- Katettu (rekisteröity lähde): **220**
+- Ei vielä katettu: **72**
+  - joista syy tiedossa ja dokumentoitu (ks. alla): 22
+  - loput (50) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
+  - Satakunta ja Pohjois-Savo on nyt käyty läpi kokonaan (kaikki kunnat joko katettu tai
+    todettu ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu" -listalla näiltä
+    maakunnilta.
 - Valtakunnallisia / usean kunnan lähteitä (ei kuntakohtaisia, ei mukana yllä olevissa
   luvuissa): Hilma, Lupapiste kuulutukset, Väylävirasto hankkeet, Senaatti-kiinteistöt
   hankkeet, Puolustuskiinteistöt uutiset, Kreate hankkeet.
@@ -74,14 +77,16 @@ Ilomantsi, Joensuu, Kitee, Kontiolahti, Lieksa, Liperi, Tohmajärvi
 Alavieska, Hailuoto, Ii, Kalajoki, Kempele, Kuusamo, Liminka, Nivala, Oulainen, Oulu,
 Raahe, Sievi, Siikajoki, Siikalatva, Taivalkoski, Vaala, Ylivieska
 
-### Pohjois-Savo (7)
-Iisalmi, Kiuruvesi, Kuopio, Lapinlahti, Pielavesi, Siilinjärvi, Varkaus
+### Pohjois-Savo (12)
+Iisalmi, Keitele, Kiuruvesi, Kuopio, Lapinlahti, Pielavesi, Siilinjärvi, Sonkajärvi,
+Suonenjoki, Tuusniemi, Varkaus, Vieremä
 
 ### Päijät-Häme (4)
 Heinola, Hollola, Lahti, Orimattila
 
-### Satakunta (8)
-Eura, Huittinen, Kankaanpää, Kokemäki, Pori, Rauma, Siikainen, Ulvila
+### Satakunta (11)
+Eura, Huittinen, Jämijärvi, Kankaanpää, Kokemäki, Nakkila, Pori, Rauma, Siikainen,
+Säkylä, Ulvila
 
 ### Uusimaa (22)
 Espoo, Hanko, Helsinki, Hyvinkää, Inkoo, Järvenpää, Karkkila, Kauniainen, Kerava,
@@ -110,6 +115,17 @@ Somero, Taivassalo, Turku, Uusikaupunki, Vehmaa
 | Lappajärvi | Etelä-Pohjanmaa | Vain yleistekstiä, ei aktiivista listaa |
 | Soini | Etelä-Pohjanmaa | Vain PDF-tiedostoja (`kunta.soini.fi`), ei rakenteista listaa |
 | Teuva | Etelä-Pohjanmaa | Vain "voimassa olevat kaavat" -PDF-listaus, ei vireillä-osiota |
+| Eurajoki | Satakunta | Cloudflare-bottitunnistus palauttaa haasteen ("Just a moment...") kaikille palvelinpuolen hauille — ei UA-ongelma vaan TLS/HTTP-fingerprint, ei korjattavissa header-yhdistelmällä |
+| Harjavalta | Satakunta | Vain yleistekstiä + karttapalvelulinkki, ei aktiivista listaa |
+| Karvia | Satakunta | Vain markkinointitekstiä + ulkoinen karttapalvelulinkki (karttatiimi.fi) |
+| Merikarvia | Satakunta | Ei ylläpidettyä vireillä-listaa; yksittäiset kaava-uutiset julkaistaan yleisessä 332-postauksen "Ajankohtaista"-blogissa ilman kaavoitus-kategoriaa |
+| Pomarkku | Satakunta | Vain ajantasakaava- ja kaavoituskatsaus-PDF, ei aktiivista listaa |
+| Kaavi | Pohjois-Savo | Vain iso litania kaikkia (enimmäkseen jo lainvoimaisia) kaavoja, ei erillistä vireillä-osiota |
+| Leppävirta | Pohjois-Savo | Vain voimassa olevien kaavojen PDF-listaus, ei vireillä-osiota |
+| Rautalampi | Pohjois-Savo | Kuulutukset ohjautuvat JS-renderöityyn cloudnc.fi-portaaliin, vaatisi Kangasniemen tapaisen erillisen reverse-engineering-työn |
+| Rautavaara | Pohjois-Savo | Vain yleiskaava/asemakaava/ranta-asemakaava-PDF:t, ei vireillä-osiota |
+| Tervo | Pohjois-Savo | Vain yleistekstiä, ei aktiivista listaa |
+| Vesanto | Pohjois-Savo | "Vireillä olevat kaavat" -osio on vanhentunutta sisältöä vuosilta 2018-2020, ja teksti itse toteaa ettei mitään ole tällä hetkellä vireillä |
 
 Huom: Pertunmaa (Etelä-Savo) ei ole omalla rivillään kuntalistassa — se liittyi
 Mäntyharjuun 1.1.2025, joten sitä ei lasketa erilliseksi katteettomaksi kunnaksi.
@@ -132,11 +148,7 @@ istunnossa. Osa saattaa olla helpostikin toteutettavissa, osa ei.
 - **Pohjois-Karjala:** Juuka, Nurmes, Outokumpu, Polvijärvi, Rääkkylä
 - **Pohjois-Pohjanmaa:** Haapajärvi, Haapavesi, Kärsämäki, Lumijoki, Merijärvi, Muhos,
   Pudasjärvi, Pyhäjoki, Pyhäjärvi, Pyhäntä, Reisjärvi, Tyrnävä, Utajärvi
-- **Pohjois-Savo:** Kaavi, Keitele, Leppävirta, Rautalampi, Rautavaara, Sonkajärvi,
-  Suonenjoki, Tervo, Tuusniemi, Vesanto, Vieremä
 - **Päijät-Häme:** Asikkala, Hartola, Kärkölä, Padasjoki, Sysmä
-- **Satakunta:** Eurajoki, Harjavalta, Jämijärvi, Karvia, Merikarvia, Nakkila, Pomarkku,
-  Säkylä
 - **Uusimaa:** Lapinjärvi, Myrskylä, Pukkila
 - **Varsinais-Suomi:** Koski Tl, Nousiainen, Oripää, Sauvo
 
