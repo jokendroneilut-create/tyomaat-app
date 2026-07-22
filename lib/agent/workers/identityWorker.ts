@@ -165,6 +165,9 @@ import { resolveKihnioKaavaProject } from "@/lib/agent/identity/resolvers/kihnio
 import { resolveRistijarviKaavaProject } from "@/lib/agent/identity/resolvers/ristijarviKaavaResolver"
 import { resolveKolariKaavaProject } from "@/lib/agent/identity/resolvers/kolariKaavaResolver"
 import { resolveSallaKaavaProject } from "@/lib/agent/identity/resolvers/sallaKaavaResolver"
+import { resolveTervolaKaavaProject } from "@/lib/agent/identity/resolvers/tervolaKaavaResolver"
+import { resolveSavukoskiKaavaProject } from "@/lib/agent/identity/resolvers/savukoskiKaavaResolver"
+import { resolveUtsjokiKaavaProject } from "@/lib/agent/identity/resolvers/utsjokiKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1369,6 +1372,27 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "sallan kaavoitus") {
     const result = await resolveSallaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "tervolan kaavoitus") {
+    const result = await resolveTervolaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "savukosken kaavoitus") {
+    const result = await resolveSavukoskiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "utsjoen kaavoitus") {
+    const result = await resolveUtsjokiKaavaProject({
       document,
       facts: facts ?? [],
     })

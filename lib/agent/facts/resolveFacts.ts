@@ -212,6 +212,9 @@ import { extractKihnioKaavaFacts } from "@/lib/agent/facts/extractKihnioKaavaFac
 import { extractRistijarviKaavaFacts } from "@/lib/agent/facts/extractRistijarviKaavaFacts"
 import { extractKolariKaavaFacts } from "@/lib/agent/facts/extractKolariKaavaFacts"
 import { extractSallaKaavaFacts } from "@/lib/agent/facts/extractSallaKaavaFacts"
+import { extractTervolaKaavaFacts } from "@/lib/agent/facts/extractTervolaKaavaFacts"
+import { extractSavukoskiKaavaFacts } from "@/lib/agent/facts/extractSavukoskiKaavaFacts"
+import { extractUtsjokiKaavaFacts } from "@/lib/agent/facts/extractUtsjokiKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -3856,6 +3859,57 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractSallaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Tervolan kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractTervolaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Savukosken kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractSavukoskiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Utsjoen kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractUtsjokiKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

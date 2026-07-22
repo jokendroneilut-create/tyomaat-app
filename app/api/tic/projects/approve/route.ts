@@ -273,6 +273,9 @@ export async function POST(request: Request) {
     const isRistijarviKaava = normalize(metadata.resolver) === "ristijarvikaavaresolver"
     const isKolariKaava = normalize(metadata.resolver) === "kolarikaavaresolver"
     const isSallaKaava = normalize(metadata.resolver) === "sallakaavaresolver"
+    const isTervolaKaava = normalize(metadata.resolver) === "tervolakaavaresolver"
+    const isSavukoskiKaava = normalize(metadata.resolver) === "savukoskikaavaresolver"
+    const isUtsjokiKaava = normalize(metadata.resolver) === "utsjokikaavaresolver"
     const isVirolahtiKaava = normalize(metadata.resolver) === "virolahtikaavaresolver"
     const isEnontekioKaava = normalize(metadata.resolver) === "enontekiokaavaresolver"
     const isInariKaava = normalize(metadata.resolver) === "inarikaavaresolver"
@@ -1641,6 +1644,27 @@ export async function POST(request: Request) {
     if (isSallaKaava) {
       candidateIdentifiers.push({
         type: "salla_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isTervolaKaava) {
+      candidateIdentifiers.push({
+        type: "tervola_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isSavukoskiKaava) {
+      candidateIdentifiers.push({
+        type: "savukoski_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isUtsjokiKaava) {
+      candidateIdentifiers.push({
+        type: "utsjoki_kaava_slug",
         value: metadata.slug,
       })
     }

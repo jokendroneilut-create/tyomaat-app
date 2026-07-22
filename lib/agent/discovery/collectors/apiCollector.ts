@@ -32979,7 +32979,366 @@ async function collectSallaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const TERVOLA_LISTING_URL =
+  "https://tervola.fi/asuminen-ja-rakentaminen/kaavoitus/vireilla-olevat-kaavoitushankkeet/"
+const TERVOLA_PROJECT_LINK_PATTERN =
+  /^https:\/\/tervola\.fi\/asuminen-ja-rakentaminen\/kaavoitus\/vireilla-olevat-kaavoitushankkeet\/[a-z0-9-]+\/$/i
+
+function tervolaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectTervolaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(TERVOLA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const urls = new Set<string>()
+  $("a[href]").each((_, el) => {
+    const href = ($(el).attr("href") ?? "").trim()
+    if (TERVOLA_PROJECT_LINK_PATTERN.test(href)) urls.add(href)
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const url of urls) {
+    let title = ""
+    let description = ""
+    try {
+      const detailResponse = await fetch(url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        title = $$("h1").first().text().replace(/\s+/g, " ").trim()
+        const paragraphs = $$(".editor-container")
+          .toArray()
+          .map((el) => $$(el).text().replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+        const attachmentTitles = $$(".link-text")
+          .toArray()
+          .map((el) => $$(el).text().replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+        description = [...paragraphs, ...attachmentTitles].join(" ")
+      }
+    } catch {
+      // Skip documents whose detail page fails to load.
+    }
+
+    if (!title) continue
+
+    const phase = tervolaPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: urls.size,
+    documentsSaved: saved,
+  }
+}
+
+const SAVUKOSKI_LISTING_URL = "https://www.savukoski.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/"
+
+function savukoskiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectSavukoskiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SAVUKOSKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items: { title: string; description: string }[] = []
+  $("section.editor-container").each((_, el) => {
+    const $el = $(el)
+    const heading = $el.find("h3").first().text().replace(/\s+/g, " ").trim()
+    if (!/nähtäville|nähtävillä|vireillä|vireilletulo/i.test(heading)) return
+
+    const text = $el.text().replace(/\s+/g, " ").trim()
+    const match = text.match(/nähtävill[äa][^:]*:\s*([^.]+)\./i)
+    const title = (match?.[1] ?? heading).trim()
+    if (!title) return
+
+    items.push({ title, description: text })
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = savukoskiPhaseFromText(`${item.title} ${item.description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${SAVUKOSKI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+const UTSJOKI_LISTING_URL = "https://www.utsjoki.fi/asuminen-ja-ymparisto-2/kaavat/"
+
+function utsjokiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectUtsjokiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(UTSJOKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("h2")
+    .filter((_, el) => /vireill[äa] olevat kaavat/i.test($(el).text()))
+    .first()
+  const section = heading.closest("section")
+
+  const items: { title: string; description: string }[] = []
+  let current: { title: string; body: string[] } | null = null
+  section.find("p").each((_, el) => {
+    const $p = $(el)
+    const strongOnly =
+      $p.children("strong").length > 0 && $p.text().trim() === $p.children("strong").first().text().trim()
+    if (strongOnly) {
+      if (current) items.push({ title: current.title, description: current.body.join(" ") })
+      current = { title: $p.text().replace(/\s+/g, " ").trim(), body: [] }
+    } else if (current) {
+      const text = $p.text().replace(/\s+/g, " ").trim()
+      if (text) current.body.push(text)
+    }
+  })
+  if (current) {
+    const finished = current as { title: string; body: string[] }
+    items.push({ title: finished.title, description: finished.body.join(" ") })
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    if (!item.title) continue
+
+    const phase = utsjokiPhaseFromText(`${item.title} ${item.description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${UTSJOKI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "tervolaKaavaParser") {
+    return collectTervolaKaavaSource(source)
+  }
+
+  if (source.parser === "savukoskiKaavaParser") {
+    return collectSavukoskiKaavaSource(source)
+  }
+
+  if (source.parser === "utsjokiKaavaParser") {
+    return collectUtsjokiKaavaSource(source)
+  }
+
   if (source.parser === "sallaKaavaParser") {
     return collectSallaKaavaSource(source)
   }
