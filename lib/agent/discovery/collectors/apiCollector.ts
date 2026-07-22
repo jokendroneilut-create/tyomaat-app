@@ -31749,7 +31749,140 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ILOMANTSI_LISTING_URL =
+  "https://www.ilomantsi.fi/asuminen-ja-ymparisto/rakentaminen-ja-asuminen/kaavoitus-ja-tontit/"
+
+function ilomantsiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectIlomantsiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ILOMANTSI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // The listing page mixes a "Kaavoitus" intro block and a "Tontit" (lots
+  // for sale) block among the actual pending-plan blocks; only blocks with
+  // their own project heading and a "Lue lisää" detail link are real items.
+  const EXCLUDED_HEADINGS = new Set(["kaavoitus", "tontit"])
+
+  const items = $(".wp-block-media-text__content")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const title = $el.find("h2").first().text().replace(/\s+/g, " ").trim()
+      const href = $el
+        .find("a.wp-element-button")
+        .filter((_, a) => /lue lisää/i.test($(a).text()))
+        .first()
+        .attr("href")
+      const description = $el
+        .find("p")
+        .toArray()
+        .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+        .join(" ")
+      return { title, href: (href ?? "").trim(), description }
+    })
+    .filter((item) => item.title && item.href && !EXCLUDED_HEADINGS.has(item.title.toLowerCase()))
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    let description = item.description
+    try {
+      const detailResponse = await fetch(item.href, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        const detailText = $$(".entry-content").first().text().replace(/\s+/g, " ").trim()
+        if (detailText) description = detailText
+      }
+    } catch {
+      // Fall back to the listing-page description if the detail page fails.
+    }
+
+    const phase = ilomantsiPhaseFromText(`${item.title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title: item.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: item.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "ilomantsiKaavaParser") {
+    return collectIlomantsiKaavaSource(source)
+  }
+
   if (source.parser === "lestijarviKaavaParser") {
     return collectLestijarviKaavaSource(source)
   }
