@@ -16,10 +16,10 @@ luotettavuushuomio lopussa.
 
 - Manner-Suomen kuntia yhteensä: 292 (Ahvenanmaan 16 kuntaa rajattu pois, ei toistaiseksi
   tavoitteena).
-- Katettu (rekisteröity lähde): **238**
-- Ei vielä katettu: **54**
+- Katettu (rekisteröity lähde): **239**
+- Ei vielä katettu: **53**
   - joista syy tiedossa ja dokumentoitu (ks. alla): 45
-  - loput (9) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+  - loput (8) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
   - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa,
     Pohjanmaa, Keski-Suomi, Pohjois-Karjala ja Pohjois-Pohjanmaa on nyt käyty läpi
@@ -87,8 +87,8 @@ Vaala, Ylivieska
 Iisalmi, Keitele, Kiuruvesi, Kuopio, Lapinlahti, Pielavesi, Siilinjärvi, Sonkajärvi,
 Suonenjoki, Tuusniemi, Varkaus, Vieremä
 
-### Päijät-Häme (7)
-Asikkala, Hartola, Heinola, Hollola, Kärkölä, Lahti, Orimattila
+### Päijät-Häme (8)
+Asikkala, Hartola, Heinola, Hollola, Kärkölä, Lahti, Orimattila, Padasjoki
 
 ### Satakunta (11)
 Eura, Huittinen, Jämijärvi, Kankaanpää, Kokemäki, Nakkila, Pori, Rauma, Siikainen,
@@ -167,7 +167,7 @@ Nämä eivät ole "todettu toteuttamiskelvottomiksi" — ne on vain rajattu pois
 `discovery_sources`-taulun perusteella, eikä niitä ole (varmuudella) käyty läpi tässä
 istunnossa. Osa saattaa olla helpostikin toteutettavissa, osa ei.
 
-- **Päijät-Häme:** Padasjoki, Sysmä
+- **Päijät-Häme:** Sysmä
 - **Uusimaa:** Lapinjärvi, Myrskylä, Pukkila
 - **Varsinais-Suomi:** Koski Tl, Nousiainen, Oripää, Sauvo
 
