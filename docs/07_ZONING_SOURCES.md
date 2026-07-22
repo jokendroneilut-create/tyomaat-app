@@ -5,10 +5,9 @@ Tämä tiedosto listaa, mistä kunnista tyomaat.fi kerää kaavoitustietoa (`dis
 toteutettua. Tarkoitus on välttää saman kunnan turhaa uudelleentutkimista tulevissa
 istunnoissa.
 
-**Tilanne 23.7.2026 (päivitetty — Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo,
-Kanta-Häme, Keski-Pohjanmaa, Pohjanmaa, Keski-Suomi, Pohjois-Karjala, Pohjois-Pohjanmaa,
-Päijät-Häme ja Uusimaa läpikäyty kokonaan).** Luvut on generoitu suoraan
-Supabasen `discovery_sources`-taulusta ja
+**Tilanne 23.7.2026 — kaikki Manner-Suomen maakunnat on nyt käyty läpi kokonaan,
+eikä yhdessäkään maakunnassa ole enää "ei vielä tutkittu" -kuntia.**
+Luvut on generoitu suoraan Supabasen `discovery_sources`-taulusta ja
 `lib/geo/municipalities.ts`-tiedostosta, ei istunnon tehtävälistasta — ks.
 luotettavuushuomio lopussa.
 
@@ -16,16 +15,11 @@ luotettavuushuomio lopussa.
 
 - Manner-Suomen kuntia yhteensä: 292 (Ahvenanmaan 16 kuntaa rajattu pois, ei toistaiseksi
   tavoitteena).
-- Katettu (rekisteröity lähde): **240**
-- Ei vielä katettu: **52**
-  - joista syy tiedossa ja dokumentoitu (ks. alla): 48
-  - loput (4) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
-    aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
-  - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa,
-    Pohjanmaa, Keski-Suomi, Pohjois-Karjala, Pohjois-Pohjanmaa, Päijät-Häme ja Uusimaa
-    on nyt käyty läpi kokonaan (kaikki kunnat joko katettu tai todettu
-    ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu" -listalla näiltä
-    maakunnilta.
+- Katettu (rekisteröity lähde): **241**
+- Ei vielä katettu: **51**
+  - kaikilla 51:lla syy on nyt tiedossa ja dokumentoitu (ks. alla) — kaikki
+    Manner-Suomen maakunnat on käyty läpi kokonaan, ei enää "ei vielä tutkittu"
+    -kuntia missään maakunnassa.
 - Valtakunnallisia / usean kunnan lähteitä (ei kuntakohtaisia, ei mukana yllä olevissa
   luvuissa): Hilma, Lupapiste kuulutukset, Väylävirasto hankkeet, Senaatti-kiinteistöt
   hankkeet, Puolustuskiinteistöt uutiset, Kreate hankkeet.
@@ -100,8 +94,8 @@ Espoo, Hanko, Helsinki, Hyvinkää, Inkoo, Järvenpää, Karkkila, Kauniainen, K
 Kirkkonummi, Lohja, Loviisa, Mäntsälä, Nurmijärvi, Pornainen, Porvoo, Raasepori,
 Sipoo, Siuntio, Tuusula, Vantaa, Vihti
 
-### Varsinais-Suomi (23)
-Aura, Kaarina, Kemiönsaari, Kustavi, Laitila, Lieto, Loimaa, Marttila, Masku,
+### Varsinais-Suomi (24)
+Aura, Kaarina, Kemiönsaari, Koski Tl, Kustavi, Laitila, Lieto, Loimaa, Marttila, Masku,
 Mynämäki, Naantali, Paimio, Parainen, Pyhäranta, Pöytyä, Raisio, Rusko, Salo,
 Somero, Taivassalo, Turku, Uusikaupunki, Vehmaa
 
@@ -159,6 +153,9 @@ Somero, Taivassalo, Turku, Uusikaupunki, Vehmaa
 | Pukkila | Uusimaa | Asemakaavat-sivu toteaa suoraan "Ei vireillä olevia asemakaavoja"; yleiskaavat-osiossa vain kolme jo voimassa olevaa (2003/2007) referenssikaavaa, ei tuulivoima-/aurinkovoimasisältöä |
 | Lapinjärvi | Uusimaa | Sivustolla vain kaksi kaava-aiheista sisältösivua: jo voimassa olevat yleiskaavat (2001/2002) ja yksi arkistoitunut yksittäishanke (Ingermaninkylän yritysalue, hyväksytty valtuustossa jo 13.2.2019) — ei ajantasaista vireillä-listaa |
 | Myrskylä | Uusimaa | Ei kaavoitussisältöä sivustolla lainkaan (koko sivukartta, tekniset palvelut -osio ja rakennusvalvontasivu käyty läpi); ainoat kaavaviitteet ovat karttatiimi.fi-linkit jo voimassa oleviin osayleiskaavoihin |
+| Nousiainen | Varsinais-Suomi | Asemakaavat- ja Yleiskaava-sivut sisältävät vain yleistä määritelmätekstiä ja jo hyväksyttyjä referenssikaavoja; kaavoituskatsaus-sivu toteaa vireillä olevien hankkeiden löytyvän vain katsaus-PDF:stä, ei erillistä vireillä-listaa verkkosivulla |
+| Oripää | Varsinais-Suomi | Vain kaavoituskatsaus-PDF:iä (2016-2026) sekä nimettyjä tonttimarkkinointisivuja (Reinosen/Urponmäen/Uitonmäen/Toimintaloman alue) — ei rakenteista vireillä-kaava-sisältöä |
+| Sauvo | Varsinais-Suomi | Kaavat ja kaavamääräykset -sivu sisältää vain yleistä määritelmätekstiä asemakaavasta/rantaosayleiskaavasta/maakuntakaavasta, ei yksilöityjä vireillä olevia hankkeita |
 
 Huom: Pertunmaa (Etelä-Savo) ei ole omalla rivillään kuntalistassa — se liittyi
 Mäntyharjuun 1.1.2025, joten sitä ei lasketa erilliseksi katteettomaksi kunnaksi.
@@ -167,11 +164,9 @@ kautta.
 
 ### Ei vielä tutkittu (tai tutkinnan tulos ei ole tallessa)
 
-Nämä eivät ole "todettu toteuttamiskelvottomiksi" — ne on vain rajattu pois
-`discovery_sources`-taulun perusteella, eikä niitä ole (varmuudella) käyty läpi tässä
-istunnossa. Osa saattaa olla helpostikin toteutettavissa, osa ei.
-
-- **Varsinais-Suomi:** Koski Tl, Nousiainen, Oripää, Sauvo
+Kaikki Manner-Suomen maakunnat on nyt käyty läpi kokonaan — jäljellä olevat 51
+katteetonta kuntaa ovat kaikki dokumentoituja infeasibility-tapauksia yllä olevassa
+taulukossa, ei enää "ei vielä tutkittu" -kuntia.
 
 ## Luotettavuushuomio: istunnon tehtävälista ei ole totuudenmukainen
 
