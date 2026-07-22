@@ -34635,6 +34635,119 @@ async function collectKinnulaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ASIKKALA_URL = "https://asikkala.fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/vireilla-olevat-kaavat-2/"
+const ASIKKALA_LINK_PATTERN = /\/vireilla-olevat-kaavat-2\/[a-z0-9-]+\/?$/i
+
+function asikkalaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectAsikkalaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ASIKKALA_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const urls = new Set<string>()
+  $("a[href]").each((_, el) => {
+    const href = ($(el).attr("href") ?? "").trim()
+    if (ASIKKALA_LINK_PATTERN.test(href)) urls.add(href)
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const url of urls) {
+    let title = ""
+    let description = ""
+    try {
+      const detailResponse = await fetch(url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        title = $$("h1").first().text().replace(/\s+/g, " ").trim()
+        description = $$("article.main-content-area").first().text().replace(/\s+/g, " ").trim()
+      }
+    } catch {
+      // Skip documents whose detail page fails to load.
+    }
+
+    if (!title) continue
+
+    const phase = asikkalaPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: urls.size,
+    documentsSaved: saved,
+  }
+}
+
 const TYRNAVA_URL = "https://www.tyrnava.fi/asuminen-ja-ymparisto/kaavoitus/yleis-ja-osayleiskaavat/tyrnavan-yleiskaava.html"
 
 function tyrnavaPhaseFromText(text: string): string {
@@ -36022,6 +36135,10 @@ async function collectMerijarviKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "asikkalaKaavaParser") {
+    return collectAsikkalaKaavaSource(source)
+  }
+
   if (source.parser === "tyrnavaKaavaParser") {
     return collectTyrnavaKaavaSource(source)
   }
