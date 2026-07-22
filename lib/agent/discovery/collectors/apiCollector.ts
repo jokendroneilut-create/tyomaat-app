@@ -32028,7 +32028,159 @@ async function collectTohmajarviKaavaSource(source: DiscoverySource) {
   }
 }
 
+const TAMMELA_KUULUTUKSET_URL = "https://www.tammela.fi/kuulutukset"
+// The kuulutukset archive mixes every kind of municipal notice (mineral
+// exploration permits, environmental permits, building inspection, street
+// naming, council meetings); only titles naming a real municipal-level plan
+// type are zoning projects.
+const TAMMELA_TITLE_PATTERN = /asemakaava|osayleiskaava/i
+// Each zoning project can have several notices over time (OAS, ehdotus,
+// hyväksyminen...); the area name is recovered from the title itself since
+// there's no separate project identifier, then only the most recent notice
+// per area is kept as that project's current state.
+const TAMMELA_AREA_PATTERN =
+  /([A-ZÄÖÅ][a-zäöåé]+(?:\s+[A-ZÄÖÅ][a-zäöåé]+)*)\s+([a-zäöå-]*(?:asemakaava|osayleiskaava))/
+
+function tammelaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectTammelaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(TAMMELA_KUULUTUKSET_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const notices = $(".views-row")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const $link = $el.find(".views-field-nothing a").first()
+      const title = $link.text().replace(/\s+/g, " ").trim()
+      const href = ($link.attr("href") ?? "").trim()
+      const datetime = $el.find(".views-field-created time").first().attr("datetime") ?? ""
+      return { title, href, datetime }
+    })
+    .filter((item) => item.title && item.href && TAMMELA_TITLE_PATTERN.test(item.title))
+    .map((item) => ({
+      ...item,
+      url: item.href.startsWith("http") ? item.href : `https://www.tammela.fi${item.href}`,
+    }))
+
+  const byArea = new Map<string, { area: string; type: string; title: string; url: string; datetime: string }>()
+
+  for (const notice of notices) {
+    const withoutPrefix = notice.title.replace(/^kuulutus\s+/i, "")
+    const match = withoutPrefix.match(TAMMELA_AREA_PATTERN)
+    if (!match) continue
+
+    const area = match[1]
+    const type = match[2].toLowerCase()
+    const key = area.toLowerCase()
+    const title = `${area} ${type}`
+
+    const existing = byArea.get(key)
+    if (!existing || notice.datetime > existing.datetime) {
+      byArea.set(key, { area, type, title, url: notice.url, datetime: notice.datetime })
+    }
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const project of byArea.values()) {
+    let description = ""
+    try {
+      const detailResponse = await fetch(project.url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        description =
+          $$('meta[property="og:description"]').attr("content")?.replace(/\s+/g, " ").trim() ?? ""
+      }
+    } catch {
+      // Fall back to an empty description if the detail page fails.
+    }
+
+    const phase = tammelaPhaseFromText(`${project.title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(project.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title: project.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: project.title,
+        document_url: project.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: project.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: byArea.size,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "tammelaKaavaParser") {
+    return collectTammelaKaavaSource(source)
+  }
+
   if (source.parser === "tohmajarviKaavaParser") {
     return collectTohmajarviKaavaSource(source)
   }
