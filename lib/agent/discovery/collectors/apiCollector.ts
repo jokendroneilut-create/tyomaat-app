@@ -30021,7 +30021,135 @@ async function collectKemionsaariKaavaSource(source: DiscoverySource) {
   }
 }
 
+const MARTTILA_LISTING_URL = "https://marttila.fi/asuminen-ja-ymparisto/kaavoitus/"
+
+function marttilaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  // only kunnanvaltuusto (council) can adopt a plan -- kunnanhallitus (the
+  // executive board) approving an aloite/OAS/luonnos for display is procedural
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhallit|esittää/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectMarttilaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(MARTTILA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const pane = $("h3")
+    .filter((_, el) => $(el).text().trim() === "Vireillä olevat kaavat Marttilan kunnassa")
+    .first()
+    .parent()
+
+  type MarttilaBlock = { title: string; nodes: any[] }
+  const blocks: MarttilaBlock[] = []
+  let current: MarttilaBlock | null = null
+
+  pane.children("p").each((_, p) => {
+    const $p = $(p)
+    const soleStrong = $p.children().length === 1 && $p.children().first().is("strong")
+    const isTitleLine = soleStrong && $p.text().trim() === $p.children().first().text().trim()
+
+    if (isTitleLine) {
+      const title = $p.text().trim()
+      current = title ? { title, nodes: [] } : null
+      if (current) blocks.push(current)
+      return
+    }
+    if (current) current.nodes.push(p)
+  })
+
+  const projectItems = blocks
+    .map((block) => ({
+      title: block.title,
+      text: block.nodes.map((node) => $(node).text().replace(/\s+/g, " ").trim()).join(" ").trim(),
+    }))
+    .filter((item) => item.text.length > 0)
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of projectItems) {
+    const phase = marttilaPhaseFromText(`${item.title} ${item.text}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${MARTTILA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.text })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.text,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: projectItems.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "marttilaKaavaParser") {
+    return collectMarttilaKaavaSource(source)
+  }
+
   if (source.parser === "kemionsaariKaavaParser") {
     return collectKemionsaariKaavaSource(source)
   }
