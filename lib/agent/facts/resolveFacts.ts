@@ -242,6 +242,7 @@ import { extractReisjarviKaavaFacts } from "@/lib/agent/facts/extractReisjarviKa
 import { extractTyrnavaKaavaFacts } from "@/lib/agent/facts/extractTyrnavaKaavaFacts"
 import { extractAsikkalaKaavaFacts } from "@/lib/agent/facts/extractAsikkalaKaavaFacts"
 import { extractHartolaKaavaFacts } from "@/lib/agent/facts/extractHartolaKaavaFacts"
+import { extractKarkolaKaavaFacts } from "@/lib/agent/facts/extractKarkolaKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -4396,6 +4397,23 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractHartolaKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Kärkölän kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractKarkolaKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

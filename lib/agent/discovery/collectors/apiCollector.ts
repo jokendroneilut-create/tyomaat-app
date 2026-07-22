@@ -34748,6 +34748,141 @@ async function collectAsikkalaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KARKOLA_AK_URL = "https://karkola.fi/palvelut/tekninen-toimi/kaavoituspalvelut-2/vireilla-olevat-asemakaavatyot/"
+const KARKOLA_YK_URL = "https://karkola.fi/palvelut/tekninen-toimi/kaavoituspalvelut-2/vireilla-olevat-yleiskaavatyot/"
+
+function karkolaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}|ei ole vielä|ei vielä|ei ole saanut|ei saanut/.test(window)
+  )) return "Voimaantulo"
+  // Unlike most collectors, this does not blanket-guard on "kunnanvaltuusto"/
+  // "kunnanhallitus" — Kärkölä's pages phrase genuine approvals as
+  // "Kärkölän kunnanvaltuusto päätti ... § NN hyväksyä ...", so that guard
+  // would hide real decisions. Instead it targets the specific phrasings
+  // that actually signal "not yet approved" or "approved something else"
+  // (preliminary targets/reference plans, historical background, generic
+  // process descriptions).
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|esittää|luonno|hyväksyttäväksi|hyväksymisestä|voimassa|vuonna|tavoitteet|aluerajauksen|viitesuunnitelma/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/, (window) =>
+    /valmistumiseen asti|valmistuttua|tullaan/.test(window)
+  )) return "Ehdotus"
+  if (matchesUnguarded(/valmisteluvaihe|luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKarkolaKaavaSource(source: DiscoverySource) {
+  const items: { title: string; description: string; url: string }[] = []
+
+  try {
+    const akResponse = await fetch(KARKOLA_AK_URL, { cache: "no-store" })
+    if (akResponse.ok) {
+      const $ = cheerio.load(await akResponse.text())
+      $("h2").each((_, el) => {
+        const title = $(el).text().replace(/\s+/g, " ").trim()
+        if (!title) return
+        const description = $(el).nextUntil("h2").text().replace(/\s+/g, " ").trim()
+        items.push({ title, description, url: KARKOLA_AK_URL })
+      })
+    }
+  } catch {
+    // Skip the asemakaava page if it fails to load.
+  }
+
+  try {
+    const ykResponse = await fetch(KARKOLA_YK_URL, { cache: "no-store" })
+    if (ykResponse.ok) {
+      const $ = cheerio.load(await ykResponse.text())
+      let description = ""
+      $("h2").each((_, el) => {
+        description += ` ${$(el).text()} ${$(el).nextUntil("h2").text()}`
+      })
+      description = description.replace(/\s+/g, " ").trim()
+      if (description) {
+        items.push({
+          title: "Kärkölän osayleiskaavan päivitystyö",
+          description,
+          url: KARKOLA_YK_URL,
+        })
+      }
+    }
+  } catch {
+    // Skip the yleiskaava page if it fails to load.
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = karkolaPhaseFromText(`${item.title} ${item.description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${item.url}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const HARTOLA_URL = "https://hartola.fi/asuminen-ja-rakentaminen/kaavoitus-maankaytto-ja-rakentaminen/kaavoitus/vireilla-olevat-kaavahankkeet/"
 
 function hartolaPhaseFromText(text: string): string {
@@ -36239,6 +36374,10 @@ async function collectMerijarviKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "karkolaKaavaParser") {
+    return collectKarkolaKaavaSource(source)
+  }
+
   if (source.parser === "hartolaKaavaParser") {
     return collectHartolaKaavaSource(source)
   }
