@@ -30248,6 +30248,208 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PEDERSORE_BASE_URL = "https://www.pedersore.fi"
+const PEDERSORE_LISTING_URL = `${PEDERSORE_BASE_URL}/sv/boende-och-miljo/planer-och-kartor/pagaende-planaerenden/`
+
+// Same false-positive risk as the other Pohjanmaa wind-project sources
+// ("vindkraft*" contains "kraft"), plus two traps found only on this site:
+// (1) "Planen har inte trätt i kraft" negates completion but still contains
+// the literal "i kraft" substring; (2) "Bemötanden ... godkändes" approves a
+// response document, not the plan itself (mirrors Kristinestad's "avtalet
+// ska godkännas" trap, but past-tense here instead of future/conditional).
+function pedersorePhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/i kraft|laga kraft/, (window) =>
+    /inte |ej |ännu inte/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/godkänd|godkänt/, (window) =>
+    /ska godkänna|kommer att godkänna|bör godkänna|bemöt|utlåtande|kommentar/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/förslag/, (window) =>
+    /nästa skede|kommande skede|planeras/.test(window)
+  )) return "Ehdotus"
+  if (matchesUnguarded(/utkast/, (window) =>
+    /presenteras|sätts till påseende|planeras|kommer att/.test(window)
+  )) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectPedersoreKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PEDERSORE_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+  const container = $(".content-element__content").first()
+
+  type Item = { title: string; description: string; detailHref: string | null }
+  const items: Item[] = []
+  let pendingUl: any = null
+
+  const pushItem = (title: string, description: string, $unit: any) => {
+    const trimmedTitle = title.replace(/\.$/, "").trim()
+    if (!trimmedTitle) return
+    const detailLink = $unit
+      .find("a")
+      .toArray()
+      .map((a: any) => $(a).attr("href") ?? "")
+      .find((href: string) => /\/pagaende-planaerenden\/[a-z0-9-]+\/?$/.test(href))
+    items.push({
+      title: trimmedTitle,
+      description: description.trim(),
+      detailHref: detailLink ?? null,
+    })
+  }
+
+  container.children().each((_, el) => {
+    const tag = (el as any).tagName?.toLowerCase()
+    const $el = $(el)
+
+    if (tag === "h2") {
+      pendingUl = null
+      return
+    }
+
+    if (tag === "h4") {
+      const title = $el.text().replace(/\s+/g, " ").trim()
+      if (title) pushItem(title, "", $el)
+      pendingUl = null
+      return
+    }
+
+    if (tag === "ul") {
+      // A <ul> immediately after a title-less <p> (e.g. "Revidering av
+      // Ytteresse delgeneralplan") holds that item's actual link/content.
+      if (pendingUl === "attach-to-last" && items.length > 0) {
+        const text = $el.text().replace(/\s+/g, " ").trim()
+        const last = items[items.length - 1]
+        last.description = `${last.description} ${text}`.trim()
+        if (!last.detailHref) {
+          const href = $el
+            .find("a")
+            .toArray()
+            .map((a: any) => $(a).attr("href") ?? "")
+            .find((href: string) => /\/pagaende-planaerenden\/[a-z0-9-]+\/?$/.test(href))
+          if (href) last.detailHref = href
+        }
+      }
+      pendingUl = null
+      return
+    }
+
+    if (tag !== "p") return
+
+    const hasStrong = $el.find("strong").length > 0
+    if (!hasStrong) {
+      pendingUl = null
+      return
+    }
+
+    const fullText = $el.text().replace(/\s+/g, " ").trim()
+    // The recurring "Ge respons" contact callout also wraps its email
+    // address in <strong>, which otherwise looks like a project paragraph.
+    if (!fullText || /^ge respons\b/i.test(fullText)) return
+
+    const splitIndex = fullText.indexOf(". ")
+    const title = splitIndex >= 0 ? fullText.slice(0, splitIndex) : fullText
+    const description = splitIndex >= 0 ? fullText.slice(splitIndex + 2) : ""
+
+    pushItem(title, description, $el)
+    pendingUl = "attach-to-last"
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    let detailText = ""
+    let detailUrl: string | null = null
+    if (item.detailHref) {
+      detailUrl = item.detailHref.startsWith("http")
+        ? item.detailHref
+        : `${PEDERSORE_BASE_URL}${item.detailHref.startsWith("/") ? "" : "/"}${item.detailHref}`
+      try {
+        const detailResponse = await fetch(detailUrl, { cache: "no-store" })
+        if (detailResponse.ok) {
+          const $$ = cheerio.load(await detailResponse.text())
+          detailText = $$(".content-element__content")
+            .first()
+            .text()
+            .replace(/\s+/g, " ")
+            .trim()
+        }
+      } catch {
+        // Dead/unreachable sub-page -- fall back to the listing's own text.
+      }
+    }
+
+    const description = detailText.length > item.description.length ? detailText : item.description
+    const phase = pedersorePhaseFromText(`${item.title} ${item.description} ${detailText}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = detailUrl ?? `${PEDERSORE_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const MAALAHTI_BASE_URL = "https://www.malax.fi"
 const MAALAHTI_PAGES = [
   `${MAALAHTI_BASE_URL}/boende-och-miljo/markplanering/framlagda-planer/`,
@@ -31057,6 +31259,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "pedersoreKaavaParser") {
+    return collectPedersoreKaavaSource(source)
+  }
+
   if (source.parser === "maalahtiKaavaParser") {
     return collectMaalahtiKaavaSource(source)
   }
