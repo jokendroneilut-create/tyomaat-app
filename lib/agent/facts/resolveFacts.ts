@@ -208,6 +208,7 @@ import { extractTohmajarviKaavaFacts } from "@/lib/agent/facts/extractTohmajarvi
 import { extractTammelaKaavaFacts } from "@/lib/agent/facts/extractTammelaKaavaFacts"
 import { extractLemiKaavaFacts } from "@/lib/agent/facts/extractLemiKaavaFacts"
 import { extractKangasniemiKaavaFacts } from "@/lib/agent/facts/extractKangasniemiKaavaFacts"
+import { extractKihnioKaavaFacts } from "@/lib/agent/facts/extractKihnioKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -3784,6 +3785,23 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractKangasniemiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Kihniön tuulivoimahankkeet") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractKihnioKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

@@ -32461,7 +32461,158 @@ async function collectKangasniemiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KIHNIO_LISTING_URL =
+  "https://www.kihnio.fi/fi/asuminen-ja-ymparisto/maankaytto-ja-rakennusvalvonta/tuulivoimahankkeet"
+const KIHNIO_TITLE_PATTERN = /tuulivoimahanke/i
+
+function kihnioPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  // "ehdotus" undergoes consonant gradation in genitive ("ehdotuksen"), so
+  // the bare stem is needed rather than the full nominative word.
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKihnioKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KIHNIO_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // Each wind-project heading and its "Liitetiedostot" attachment accordion
+  // are rendered as separate sibling widgets (editor widget, then accordion
+  // widget), not nested — the accordion belongs to whichever heading
+  // immediately precedes it.
+  const items: { title: string; url: string; parts: string[] }[] = []
+
+  $(".iwc-widget-editor-widget, .iwc-widget-accordion-widget")
+    .toArray()
+    .forEach((el) => {
+      const $el = $(el)
+      if ($el.hasClass("iwc-widget-editor-widget")) {
+        const h2 = $el.find("h2").first()
+        const title = h2.text().replace(/\s+/g, " ").trim()
+        if (!title || !KIHNIO_TITLE_PATTERN.test(title)) return
+
+        const paragraphText = $el
+          .find("p")
+          .toArray()
+          .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+          .join(" ")
+
+        const detailLink = $el
+          .find("a")
+          .toArray()
+          .map((a) => $(a).attr("href") ?? "")
+          .find((href) => /\/ilmoitustaulu\/kuulutus-/i.test(href))
+
+        const url = detailLink
+          ? detailLink.startsWith("http")
+            ? detailLink
+            : `https://www.kihnio.fi${detailLink}`
+          : `${KIHNIO_LISTING_URL}#${kemiSlug(title)}`
+
+        items.push({ title, url, parts: [paragraphText] })
+        return
+      }
+
+      // Accordion widget: attach its attachment link texts to the most
+      // recently started item, since it's that item's Liitetiedostot list.
+      const current = items[items.length - 1]
+      if (!current) return
+      const attachmentText = $el
+        .find(".file-name")
+        .toArray()
+        .map((span) => $(span).text().replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+        .join(" ")
+      if (attachmentText) current.parts.push(attachmentText)
+    })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const description = item.parts.join(" ")
+    const phase = kihnioPhaseFromText(`${item.title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title: item.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: item.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "kihnioKaavaParser") {
+    return collectKihnioKaavaSource(source)
+  }
+
   if (source.parser === "kangasniemiKaavaParser") {
     return collectKangasniemiKaavaSource(source)
   }

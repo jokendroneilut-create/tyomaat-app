@@ -161,6 +161,7 @@ import { resolveTohmajarviKaavaProject } from "@/lib/agent/identity/resolvers/to
 import { resolveTammelaKaavaProject } from "@/lib/agent/identity/resolvers/tammelaKaavaResolver"
 import { resolveLemiKaavaProject } from "@/lib/agent/identity/resolvers/lemiKaavaResolver"
 import { resolveKangasniemiKaavaProject } from "@/lib/agent/identity/resolvers/kangasniemiKaavaResolver"
+import { resolveKihnioKaavaProject } from "@/lib/agent/identity/resolvers/kihnioKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1337,6 +1338,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kangasniemen kaavoitus") {
     const result = await resolveKangasniemiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "kihniön tuulivoimahankkeet") {
+    const result = await resolveKihnioKaavaProject({
       document,
       facts: facts ?? [],
     })

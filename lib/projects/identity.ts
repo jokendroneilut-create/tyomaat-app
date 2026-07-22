@@ -192,6 +192,7 @@ export type IdentifierType =
   | "tammela_kaava_slug"
   | "lemi_kaava_slug"
   | "kangasniemi_kaava_slug"
+  | "kihnio_kaava_slug"
   | "virolahti_kaava_slug"
   | "enontekio_kaava_slug"
   | "inari_kaava_slug"
@@ -405,6 +406,7 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "tammela_kaava_slug",
   "lemi_kaava_slug",
   "kangasniemi_kaava_slug",
+  "kihnio_kaava_slug",
   "virolahti_kaava_slug",
   "enontekio_kaava_slug",
   "inari_kaava_slug",
