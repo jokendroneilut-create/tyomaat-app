@@ -15,14 +15,14 @@ luotettavuushuomio lopussa.
 
 - Manner-Suomen kuntia yhteensä: 292 (Ahvenanmaan 16 kuntaa rajattu pois, ei toistaiseksi
   tavoitteena).
-- Katettu (rekisteröity lähde): **231**
-- Ei vielä katettu: **61**
+- Katettu (rekisteröity lähde): **232**
+- Ei vielä katettu: **60**
   - joista syy tiedossa ja dokumentoitu (ks. alla): 44
-  - loput (17) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+  - loput (16) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
   - Pohjois-Pohjanmaa on kesken: Haapajärvi, Haapavesi, Kärsämäki, Lumijoki, Merijärvi,
-    Muhos, Pyhäjoki ja Pyhäjärvi on lisätty, 5 kuntaa vielä tutkimatta (Pudasjärvi,
-    Pyhäntä, Reisjärvi, Tyrnävä, Utajärvi).
+    Muhos, Pyhäjoki, Pyhäjärvi ja Pyhäntä on lisätty, 4 kuntaa vielä tutkimatta
+    (Pudasjärvi, Reisjärvi, Tyrnävä, Utajärvi).
   - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa,
     Pohjanmaa, Keski-Suomi ja Pohjois-Karjala on nyt käyty läpi kokonaan (kaikki kunnat
     joko katettu tai todettu ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu"
@@ -79,10 +79,10 @@ Pedersören kunta, Pietarsaari, Uusikaarlepyy, Vaasa, Vöyri
 ### Pohjois-Karjala (8)
 Ilomantsi, Joensuu, Kitee, Kontiolahti, Lieksa, Liperi, Nurmes, Tohmajärvi
 
-### Pohjois-Pohjanmaa (25)
+### Pohjois-Pohjanmaa (26)
 Alavieska, Haapajärvi, Haapavesi, Hailuoto, Ii, Kalajoki, Kempele, Kuusamo, Kärsämäki,
-Liminka, Lumijoki, Merijärvi, Muhos, Nivala, Oulainen, Oulu, Pyhäjoki, Pyhäjärvi, Raahe,
-Sievi, Siikajoki, Siikalatva, Taivalkoski, Vaala, Ylivieska
+Liminka, Lumijoki, Merijärvi, Muhos, Nivala, Oulainen, Oulu, Pyhäjoki, Pyhäjärvi, Pyhäntä,
+Raahe, Sievi, Siikajoki, Siikalatva, Taivalkoski, Vaala, Ylivieska
 
 ### Pohjois-Savo (12)
 Iisalmi, Keitele, Kiuruvesi, Kuopio, Lapinlahti, Pielavesi, Siilinjärvi, Sonkajärvi,
