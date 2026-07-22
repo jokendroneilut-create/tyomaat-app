@@ -34635,6 +34635,98 @@ async function collectKinnulaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const TYRNAVA_URL = "https://www.tyrnava.fi/asuminen-ja-ymparisto/kaavoitus/yleis-ja-osayleiskaavat/tyrnavan-yleiskaava.html"
+
+function tyrnavaPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectTyrnavaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(TYRNAVA_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const title = $("h1")
+    .filter((_, el) => $(el).text().trim().length > 0)
+    .last()
+    .text()
+    .replace(/\s+/g, " ")
+    .trim()
+  if (!title) return { documentsFound: 0, documentsSaved: 0 }
+
+  const description = $("main").first().text().replace(/\s+/g, " ").trim()
+
+  const phase = tyrnavaPhaseFromText(`${title} ${description}`)
+  const completed = phase === "Voimaantulo"
+
+  const slug = kemiSlug(title)
+  const url = `${TYRNAVA_URL}#${slug}`
+
+  const rawText = JSON.stringify({ title, phase, description })
+  const contentHash = hashContent(rawText)
+
+  const { error } = await supabaseAdmin.from("source_documents").upsert(
+    {
+      source_id: source.id,
+      source_name: source.name,
+      title,
+      document_url: url,
+      document_type: "api",
+      content_hash: contentHash,
+      status: "downloaded",
+      raw_text: rawText,
+      raw_payload: {
+        parser: source.parser,
+        priority: source.priority,
+        title,
+        slug,
+        phase,
+        description,
+        contacts: [],
+        completed,
+      },
+      processed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...(completed
+        ? {
+            facts_extracted_at: new Date().toISOString(),
+            identity_resolved_at: new Date().toISOString(),
+          }
+        : {}),
+    },
+    { onConflict: "document_url" }
+  )
+
+  if (error) throw error
+
+  return {
+    documentsFound: 1,
+    documentsSaved: 1,
+  }
+}
+
 const REISJARVI_URL = "https://www.reisjarvi.fi/vireilla-olevat-kaavoitushankkeet"
 
 function reisjarviPhaseFromText(text: string): string {
@@ -35930,6 +36022,10 @@ async function collectMerijarviKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "tyrnavaKaavaParser") {
+    return collectTyrnavaKaavaSource(source)
+  }
+
   if (source.parser === "reisjarviKaavaParser") {
     return collectReisjarviKaavaSource(source)
   }
