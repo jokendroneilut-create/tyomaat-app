@@ -30248,6 +30248,137 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const VOYRI_BASE_URL = "https://www.vora.fi"
+const VOYRI_SUBMENU_URL = `${VOYRI_BASE_URL}/sv/tjanster/RenderSubmenu`
+
+// Same false-positive risk as the other Pohjanmaa wind-project sources.
+function voyriPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/i kraft|laga kraft/, (window) =>
+    /inte |ej |ännu inte/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/godkänd|godkänt/, (window) =>
+    /ska godkänna|kommer att godkänna|bör godkänna|bemöt|utlåtande|kommentar/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/förslag/, (window) =>
+    /nästa skede|kommande skede|planeras/.test(window)
+  )) return "Ehdotus"
+  if (matchesUnguarded(/utkast/, (window) =>
+    /presenteras|sätts till påseende|planeras|kommer att/.test(window)
+  )) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectVoyriKaavaSource(source: DiscoverySource) {
+  const menuResponse = await fetch(VOYRI_SUBMENU_URL, { cache: "no-store" })
+  if (!menuResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $menu = cheerio.load(await menuResponse.text())
+
+  // The "Aktuella planer" link's sibling <ul> holds exactly its own child
+  // links -- siblings like "Godkända planer" sit outside this subtree.
+  const aktuellaPlanerLink = $menu('a[href="tjanster/planlaggning/aktuella-planer"]').first()
+  const submenu = aktuellaPlanerLink.parent().children(".navigation.sub-navigation").first()
+
+  const links = submenu
+    .find("a.menu-link")
+    .toArray()
+    .map((el) => {
+      const $el = $menu(el)
+      const href = ($el.attr("href") ?? "").trim()
+      const title = ($el.attr("data-title") ?? $el.text() ?? "").replace(/\s+/g, " ").trim()
+      return { href, title }
+    })
+    .filter((item) => item.href && item.title)
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const link of links) {
+    const detailUrl = `${VOYRI_BASE_URL}/sv/${link.href.replace(/^\/+/, "")}/`
+    const detailResponse = await fetch(detailUrl, { cache: "no-store" })
+    if (!detailResponse.ok) continue
+
+    const $ = cheerio.load(await detailResponse.text())
+    const article = $("article").first()
+    const title =
+      article.find(".breadcrumbs-inner a").last().text().replace(/\s+/g, " ").trim() ||
+      link.title
+
+    const description = article
+      .find(".text-container")
+      .toArray()
+      .map((el) => $(el).text().replace(/\s+/g, " ").trim())
+      .filter((text) => text.length > 0)
+      .join(" ")
+      .trim()
+
+    const phase = voyriPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: detailUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 const UUSIKAARLEPYY_LISTING_URL = "https://www.nykarleby.fi/bo-i-nykarleby/byggande/pagaende-planarenden/"
 
 // Same false-positive risk as the other Pohjanmaa wind-project sources.
@@ -31375,6 +31506,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "voyriKaavaParser") {
+    return collectVoyriKaavaSource(source)
+  }
+
   if (source.parser === "uusikaarlepyyKaavaParser") {
     return collectUusikaarlepyyKaavaSource(source)
   }
