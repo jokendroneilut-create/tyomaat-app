@@ -34635,6 +34635,140 @@ async function collectKinnulaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const HAAPAJARVI_URL = "https://www.haapajarvi.fi/vireilla-olevat-kaavoitushankkeet"
+
+function haapajarviPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectHaapajarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(HAAPAJARVI_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  let container: any = null
+  let bestCount = 0
+  $(".field__item").each((_, el) => {
+    const count = $(el).find("h3").length
+    if (count > bestCount) {
+      bestCount = count
+      container = el
+    }
+  })
+  if (!container) return { documentsFound: 0, documentsSaved: 0 }
+
+  const rawItems: { title: string; description: string }[] = []
+  let current: { title: string; description: string } | null = null
+
+  $(container)
+    .children()
+    .each((_, el) => {
+      if (el.tagName === "h3") {
+        const title = $(el).text().replace(/\s+/g, " ").trim()
+        if (!title) {
+          current = null
+          return
+        }
+        current = { title, description: "" }
+        rawItems.push(current)
+        return
+      }
+      if (current) {
+        const text = $(el).text().replace(/\s+/g, " ").trim()
+        if (text) current.description = `${current.description} ${text}`.trim()
+      }
+    })
+
+  const currentYear = new Date().getFullYear()
+  const items = rawItems.filter((item) => {
+    if (!/kaava/i.test(item.title)) return false
+    const years = [...item.description.matchAll(/\b(20\d{2})\b/g)].map((m) => parseInt(m[1], 10))
+    if (!years.length) return false
+    const maxYear = Math.max(...years)
+    return maxYear >= currentYear - 1
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = haapajarviPhaseFromText(`${item.title} ${item.description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${HAAPAJARVI_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const MERIJARVI_URL = "https://www.merijarvi.fi/asuminen-ja-rakentaminen/kaavoitus-ja-tontit/vireilla-olevat-kaavat"
 
 function merijarviPhaseFromText(text: string): string {
@@ -34743,6 +34877,10 @@ async function collectMerijarviKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "haapajarviKaavaParser") {
+    return collectHaapajarviKaavaSource(source)
+  }
+
   if (source.parser === "merijarviKaavaParser") {
     return collectMerijarviKaavaSource(source)
   }
