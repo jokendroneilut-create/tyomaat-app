@@ -209,6 +209,7 @@ import { extractTammelaKaavaFacts } from "@/lib/agent/facts/extractTammelaKaavaF
 import { extractLemiKaavaFacts } from "@/lib/agent/facts/extractLemiKaavaFacts"
 import { extractKangasniemiKaavaFacts } from "@/lib/agent/facts/extractKangasniemiKaavaFacts"
 import { extractKihnioKaavaFacts } from "@/lib/agent/facts/extractKihnioKaavaFacts"
+import { extractRistijarviKaavaFacts } from "@/lib/agent/facts/extractRistijarviKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -3802,6 +3803,23 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractKihnioKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Ristijärven kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractRistijarviKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,

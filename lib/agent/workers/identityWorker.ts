@@ -162,6 +162,7 @@ import { resolveTammelaKaavaProject } from "@/lib/agent/identity/resolvers/tamme
 import { resolveLemiKaavaProject } from "@/lib/agent/identity/resolvers/lemiKaavaResolver"
 import { resolveKangasniemiKaavaProject } from "@/lib/agent/identity/resolvers/kangasniemiKaavaResolver"
 import { resolveKihnioKaavaProject } from "@/lib/agent/identity/resolvers/kihnioKaavaResolver"
+import { resolveRistijarviKaavaProject } from "@/lib/agent/identity/resolvers/ristijarviKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1345,6 +1346,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kihniön tuulivoimahankkeet") {
     const result = await resolveKihnioKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "ristijärven kaavoitus") {
+    const result = await resolveRistijarviKaavaProject({
       document,
       facts: facts ?? [],
     })
