@@ -5,9 +5,10 @@ Tämä tiedosto listaa, mistä kunnista tyomaat.fi kerää kaavoitustietoa (`dis
 toteutettua. Tarkoitus on välttää saman kunnan turhaa uudelleentutkimista tulevissa
 istunnoissa.
 
-**Tilanne 22.7.2026 (päivitetty, Satakunta + Pohjois-Savo läpikäyty kokonaan).** Luvut on
-generoitu suoraan Supabasen `discovery_sources`-taulusta ja `lib/geo/municipalities.ts`-
-tiedostosta, ei istunnon tehtävälistasta — ks. luotettavuushuomio lopussa.
+**Tilanne 22.7.2026 (päivitetty — Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo,
+Kanta-Häme, Keski-Pohjanmaa ja Pohjanmaa läpikäyty kokonaan).** Luvut on generoitu suoraan
+Supabasen `discovery_sources`-taulusta ja `lib/geo/municipalities.ts`-tiedostosta, ei
+istunnon tehtävälistasta — ks. luotettavuushuomio lopussa.
 
 ## Yhteenveto
 
@@ -15,12 +16,13 @@ tiedostosta, ei istunnon tehtävälistasta — ks. luotettavuushuomio lopussa.
   tavoitteena).
 - Katettu (rekisteröity lähde): **221**
 - Ei vielä katettu: **71**
-  - joista syy tiedossa ja dokumentoitu (ks. alla): 25
-  - loput (46) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+  - joista syy tiedossa ja dokumentoitu (ks. alla): 32
+  - loput (39) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
-  - Satakunta, Pohjois-Savo ja Etelä-Karjala on nyt käyty läpi kokonaan (kaikki kunnat
-    joko katettu tai todettu ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu"
-    -listalla näiltä maakunnilta.
+  - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa ja
+    Pohjanmaa on nyt käyty läpi kokonaan (kaikki kunnat joko katettu tai todettu
+    ei-toteutettavaksi) — ei enää rivejä "ei vielä tutkittu" -listalla näiltä
+    maakunnilta.
 - Valtakunnallisia / usean kunnan lähteitä (ei kuntakohtaisia, ei mukana yllä olevissa
   luvuissa): Hilma, Lupapiste kuulutukset, Väylävirasto hankkeet, Senaatti-kiinteistöt
   hankkeet, Puolustuskiinteistöt uutiset, Kreate hankkeet.
@@ -129,6 +131,13 @@ Somero, Taivassalo, Turku, Uusikaupunki, Vehmaa
 | Luumäki | Etelä-Karjala | Ei kaavoitus-alasivua lainkaan, vain ulkoinen karttatiimi.fi-linkki |
 | Parikkala | Etelä-Karjala | "Vireillä olevat kaavat" -sivu on täysin tyhjä (vain otsikko) |
 | Ruokolahti | Etelä-Karjala | Vain yleistekstiä + kaavoituskatsaus-PDF, ei aktiivista listaa |
+| Joroinen | Etelä-Savo | "Vireillä olevat kaavat" ohjaa kuulutussivulle jonka suodatus on client-puolen JS:ää — palvelinpuolen haussa ei näy yhtään kaava-kuulutusta |
+| Rantasalmi | Etelä-Savo | Yksi aktiivinen hanke (sisäjärvien yleiskaavamuutos) mainitaan, mutta vain irrallisena lauseena juoksevassa tekstissä ilman otsikkoa tai liitteitä — liian hauras luotettavaan poimintaan |
+| Humppila | Kanta-Häme | "Valmisteilla olevat kaavat" -osio on rakenteeltaan hyvä mutta sisältö toteaa suoraan "Ei valmisteilla olevia kaavoja" — ei voi vahvistaa poimintalogiikkaa ilman oikeaa esimerkkiä |
+| Ypäjä | Kanta-Häme | "Vireillä olevat kaavahankkeet" -osiossa vain kaavoituskatsaus-PDF, ei yksittäisiä hankkeita |
+| Halsua | Keski-Pohjanmaa | Ei kaavoitussisältöä sivustolla lainkaan (vanha, suppea page_id-pohjainen WP-sivusto) |
+| Kaustinen | Keski-Pohjanmaa | Vain vanhoja (2006-2021) PDF-kaavatiedostoja, ei vireillä-osiota |
+| Närpiö (Närpes) | Pohjanmaa | Vain yleistekstiä ruotsiksi + ulkoinen karttalinkki, ei aktiivista listaa |
 
 Huom: Pertunmaa (Etelä-Savo) ei ole omalla rivillään kuntalistassa — se liittyi
 Mäntyharjuun 1.1.2025, joten sitä ei lasketa erilliseksi katteettomaksi kunnaksi.
@@ -141,12 +150,8 @@ Nämä eivät ole "todettu toteuttamiskelvottomiksi" — ne on vain rajattu pois
 `discovery_sources`-taulun perusteella, eikä niitä ole (varmuudella) käyty läpi tässä
 istunnossa. Osa saattaa olla helpostikin toteutettavissa, osa ei.
 
-- **Etelä-Savo:** Joroinen, Rantasalmi
-- **Kanta-Häme:** Humppila, Ypäjä
-- **Keski-Pohjanmaa:** Halsua, Kaustinen
 - **Keski-Suomi:** Hankasalmi, Kannonkoski, Karstula, Kinnula, Kivijärvi, Konnevesi,
   Kuhmoinen, Kyyjärvi, Luhanka
-- **Pohjanmaa:** Närpiö
 - **Pohjois-Karjala:** Juuka, Nurmes, Outokumpu, Polvijärvi, Rääkkylä
 - **Pohjois-Pohjanmaa:** Haapajärvi, Haapavesi, Kärsämäki, Lumijoki, Merijärvi, Muhos,
   Pudasjärvi, Pyhäjoki, Pyhäjärvi, Pyhäntä, Reisjärvi, Tyrnävä, Utajärvi
