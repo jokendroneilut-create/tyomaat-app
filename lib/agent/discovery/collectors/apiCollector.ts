@@ -33522,7 +33522,297 @@ async function collectVimpeliKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SATAKUNTA_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+
+function satakuntaPhaseFromItems(items: string[]): string {
+  let best = "Vireilletulo"
+  for (const item of items) {
+    const t = item.toLowerCase()
+    let candidate: string | null = null
+    if (/voimaantulo|lainvoima|tullut voimaan/.test(t)) candidate = "Voimaantulo"
+    else if (/hyväksy/.test(t)) candidate = "Hyväksyminen"
+    else if (/ehdotu/.test(t)) candidate = "Ehdotus"
+    else if (/luonno/.test(t)) candidate = "Luonnos"
+    if (candidate && SATAKUNTA_PHASE_ORDER.indexOf(candidate) > SATAKUNTA_PHASE_ORDER.indexOf(best)) {
+      best = candidate
+    }
+  }
+  return best
+}
+
+const JAMIJARVI_LISTING_URL = "https://jamijarvi.fi/asuminen-ja-rakentaminen/kaavoitus/"
+
+async function collectJamijarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(JAMIJARVI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items: { title: string; description: string }[] = []
+  $(".wp-block-empa-accordion-item").each((_, el) => {
+    const $el = $(el)
+    const title = $el
+      .find(".accordion-item-title button")
+      .first()
+      .text()
+      .replace(/\s+/g, " ")
+      .trim()
+    if (!title) return
+    const fileNames = $el
+      .find(".file-name")
+      .map((_, fn) => {
+        const clone = $(fn).clone()
+        clone.find("a").remove()
+        return clone.text().replace(/\s+/g, " ").trim()
+      })
+      .get()
+      .filter(Boolean)
+    items.push({ title, description: fileNames.join(" ") })
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = satakuntaPhaseFromItems([item.title, item.description])
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${JAMIJARVI_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+const NAKKILA_LISTING_URL = "https://nakkila.fi/palvelut/asuminen-ja-kaavoitus/kaavoitus/"
+
+async function collectNakkilaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(NAKKILA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const tabTitle = $("[role=tab]")
+    .filter((_, el) => $(el).text().trim() === "Vireillä olevat asemakaavat")
+    .first()
+  const panelId = tabTitle.attr("aria-controls")
+  const panel = panelId ? $(`#${panelId}`) : $()
+
+  const items: { title: string; description: string }[] = []
+  panel.find("h4").each((_, h4) => {
+    const $h4 = $(h4)
+    const title = $h4.text().replace(/\s+/g, " ").trim()
+    if (!title) return
+    const ul = $h4.next("ul")
+    const links = ul
+      .find("a")
+      .map((_, a) => $(a).text().replace(/\s+/g, " ").trim())
+      .get()
+    items.push({ title, description: links.join(" ") })
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = satakuntaPhaseFromItems([item.title, item.description])
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${NAKKILA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
+const SAKYLA_LISTING_URL = "https://www.sakyla.fi/tekniset/kaavoitus/kaavoitushankkeet/"
+
+async function collectSakylaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SAKYLA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const container = $(".entry-content").first()
+  const h2 = container
+    .children("h2")
+    .filter((_, el) => $(el).text().trim() === "Vireillä")
+    .first()
+
+  const items: { title: string; description: string }[] = []
+  let el = h2.next()
+  while (el.length && el.prop("tagName") !== "H2") {
+    if (el.prop("tagName") === "H3") {
+      const title = el.text().replace(/\s+/g, " ").trim()
+      const ul = el.next("ul")
+      const links = ul
+        .find("a")
+        .map((_, a) => $(a).text().replace(/\s+/g, " ").trim())
+        .get()
+      if (title) items.push({ title, description: links.join(" ") })
+    }
+    el = el.next()
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = satakuntaPhaseFromItems([item.title, item.description])
+    const completed = phase === "Voimaantulo"
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const url = `${SAKYLA_LISTING_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "jamijarviKaavaParser") {
+    return collectJamijarviKaavaSource(source)
+  }
+
+  if (source.parser === "nakkilaKaavaParser") {
+    return collectNakkilaKaavaSource(source)
+  }
+
+  if (source.parser === "sakylaKaavaParser") {
+    return collectSakylaKaavaSource(source)
+  }
+
   if (source.parser === "isojokiKaavaParser") {
     return collectIsojokiKaavaSource(source)
   }

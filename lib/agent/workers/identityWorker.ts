@@ -170,6 +170,9 @@ import { resolveSavukoskiKaavaProject } from "@/lib/agent/identity/resolvers/sav
 import { resolveUtsjokiKaavaProject } from "@/lib/agent/identity/resolvers/utsjokiKaavaResolver"
 import { resolveIsojokiKaavaProject } from "@/lib/agent/identity/resolvers/isojokiKaavaResolver"
 import { resolveVimpeliKaavaProject } from "@/lib/agent/identity/resolvers/vimpeliKaavaResolver"
+import { resolveJamijarviKaavaProject } from "@/lib/agent/identity/resolvers/jamijarviKaavaResolver"
+import { resolveNakkilaKaavaProject } from "@/lib/agent/identity/resolvers/nakkilaKaavaResolver"
+import { resolveSakylaKaavaProject } from "@/lib/agent/identity/resolvers/sakylaKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1409,6 +1412,27 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "vimpelin kaavoitus") {
     const result = await resolveVimpeliKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "jämijärven kaavoitus") {
+    const result = await resolveJamijarviKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "nakkilan kaavoitus") {
+    const result = await resolveNakkilaKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "säkylän kaavoitus") {
+    const result = await resolveSakylaKaavaProject({
       document,
       facts: facts ?? [],
     })
