@@ -4961,7 +4961,7 @@ async function fetchVihtiPlanLinks(): Promise<{ title: string; url: string }[]> 
 
 function vihtiPhaseFromText(text: string): string {
   if (/hyväksy/i.test(text)) return "Hyväksyminen"
-  if (/ehdotus/i.test(text)) return "Ehdotus"
+  if (/ehdotu/i.test(text)) return "Ehdotus"
   if (/luonnos/i.test(text)) return "Luonnos"
   if (/osallistumis|arviointi/i.test(text)) return "Osallistumis- ja arviointisuunnitelma"
   return "Vireilletulo"
@@ -5118,7 +5118,7 @@ async function fetchImatraPlanLinks(): Promise<{ title: string; url: string; kaa
 function imatraPhaseFromText(text: string): string {
   if (/voimaantulo|lainvoima/i.test(text)) return "Lainvoimaisuus"
   if (/hyväksy/i.test(text)) return "Hyväksyminen"
-  if (/ehdotus/i.test(text)) return "Ehdotus"
+  if (/ehdotu/i.test(text)) return "Ehdotus"
   if (/luonnos/i.test(text)) return "Luonnos"
   if (/osallistumis|arviointi/i.test(text)) return "Osallistumis- ja arviointisuunnitelma"
   if (/vireille/i.test(text)) return "Vireilletulo"
@@ -6016,7 +6016,7 @@ function raisioNormalizeUrl(href: string): string {
 function raisioPhaseFromText(text: string): string {
   if (/lainvoima|voimaantulo/i.test(text)) return "Lainvoimainen"
   if (/hyväksy/i.test(text)) return "Hyväksyminen"
-  if (/ehdotus/i.test(text)) return "Ehdotus"
+  if (/ehdotu/i.test(text)) return "Ehdotus"
   if (/luonnos/i.test(text)) return "Luonnos"
   if (/osallistumis|arviointi/i.test(text)) return "Osallistumis- ja arviointisuunnitelma"
   if (/vireille/i.test(text)) return "Vireilletulo"
@@ -6162,7 +6162,7 @@ function lempaalaPhaseFromHeadings(headings: string[]): string {
   const combined = headings.join(" ").toLowerCase()
   if (/voimaan|lainvoima/.test(combined)) return "Voimaantulo"
   if (/hyväksy/.test(combined)) return "Hyväksyminen"
-  if (/ehdotus/.test(combined)) return "Ehdotus"
+  if (/ehdotu/.test(combined)) return "Ehdotus"
   if (/luonnos/.test(combined)) return "Luonnos"
   if (/osallistumis|arviointi|arvionti/.test(combined)) return "Osallistumis- ja arviointisuunnitelma"
   return "Vireilletulo"
@@ -6706,7 +6706,7 @@ function siilinjarviPhaseFromLabel(label: string | null): string {
   const normalized = (label ?? "").toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -8179,7 +8179,7 @@ function kurikkaPhaseFromText(text: string): string {
   // "kaupunginvaltuusto" reached (with a dated/numbered entry) is the final
   // approval step in this site's process list -- it never spells out "hyväksy"
   if (/kaupunginvaltuusto/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized) && /nähtävillä/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized) && /nähtävillä/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized) && /nähtävillä/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -8312,7 +8312,7 @@ function varkausDetectPhaseInBlock(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -8467,7 +8467,7 @@ function kemiPhaseFromParagraphs(paragraphs: string[]): string {
     // zoning-review catalog, not a decision on this specific plan
     else if (/hyväksy/.test(normalized) && !/hyväksy[a-zäöå]*\s+kaavoituskatsau/.test(normalized))
       phase = "Hyväksyminen"
-    else if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
+    else if (/ehdotu/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
     else if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
 
     if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
@@ -8612,7 +8612,7 @@ function haminaPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -8728,7 +8728,7 @@ function jamsaPhaseFromItems(items: string[]): string {
     let phase = "Vireilletulo"
     if (/voimaantulo|lainvoima/.test(normalized)) phase = "Voimaantulo"
     else if (/hyväksy/.test(normalized)) phase = "Hyväksyminen"
-    else if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
+    else if (/ehdotu/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
     else if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
 
     if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
@@ -8892,7 +8892,7 @@ function laukaaPhaseFromParagraphs(paragraphs: string[]): string {
     let phase = "Vireilletulo"
     if (!negatedLainvoima && /voimaantulo|lainvoima/.test(normalized)) phase = "Voimaantulo"
     else if (/hyväksy/.test(normalized)) phase = "Hyväksyminen"
-    else if (/ehdotus/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
+    else if (/ehdotu/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Ehdotus"
     else if (/luonnos/.test(normalized) && /(nähtävillä|nähtävänä)/.test(normalized)) phase = "Luonnos"
 
     if (VARKAUS_PHASE_ORDER.indexOf(phase) > VARKAUS_PHASE_ORDER.indexOf(best)) best = phase
@@ -13258,7 +13258,7 @@ function kuusamoPhaseFromLabel(label: string): string | null {
   const normalized = label.toLowerCase()
   if (/lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
   if (/vireilletulo/.test(normalized)) return "Vireilletulo"
   return null
@@ -13395,7 +13395,7 @@ function kauniainenPhaseFromLabel(label: string): string | null {
   const normalized = label.toLowerCase()
   if (/lainvoima|voimaantulo/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
   if (/aloitus|vireilletulo/.test(normalized)) return "Vireilletulo"
   return null
@@ -13891,7 +13891,7 @@ function huittinenPhaseFromLabel(label: string): string | null {
   const normalized = label.toLowerCase()
   if (/lainvoima|voimaantulo/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
   if (/vireilletulo/.test(normalized)) return "Vireilletulo"
   return null
@@ -14499,7 +14499,7 @@ function loppiPhaseFromTitle(title: string): string {
     let candidate: string | null = null
     if (/lainvoima|voimaantulo/.test(segment)) candidate = "Voimaantulo"
     else if (/hyväksy/.test(segment)) candidate = "Hyväksyminen"
-    else if (/ehdotus/.test(segment)) candidate = "Ehdotus"
+    else if (/ehdotu/.test(segment)) candidate = "Ehdotus"
     else if (/luonnos/.test(segment)) candidate = "Luonnos"
     else if (/käynnist|vireilletulo|aloituspäätös|osallistumis/.test(segment)) candidate = "Vireilletulo"
 
@@ -20513,7 +20513,7 @@ function miehikkalaPhaseFromText(text: string): string {
     const label = explicitLabelMatch[1]
     if (/voimaantulo|lainvoima/.test(label)) return "Voimaantulo"
     if (/hyväksy/.test(label)) return "Hyväksyminen"
-    if (/ehdotus/.test(label)) return "Ehdotus"
+    if (/ehdotu/.test(label)) return "Ehdotus"
     if (/luonnos/.test(label)) return "Luonnos"
     return "Vireilletulo"
   }
@@ -22469,7 +22469,7 @@ function ylitornioPhaseFromFilename(filename: string): string {
   const normalized = filename.toLowerCase()
   if (/hyvaksy|hyväksy/.test(normalized)) return "Hyväksyminen"
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -22496,7 +22496,7 @@ function ylitornioTuulivoimaPhaseFromText(text: string): string {
     if (!isForwardLookingApproval && !isForwardLookingOrUnrelated) return "Hyväksyminen"
   }
 
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos|valmistelu/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -23539,7 +23539,7 @@ async function collectPalkaneKaavaSource(source: DiscoverySource) {
 const KANGASALA_PHASE_HEADING_ORDER = [
   { pattern: /voimaan|lainvoima/i, label: "Voimaantulo" },
   { pattern: /hyväksy/i, label: "Hyväksyminen" },
-  { pattern: /ehdotus/i, label: "Kaavaehdotus" },
+  { pattern: /ehdotu/i, label: "Kaavaehdotus" },
   { pattern: /luonnos|selostus/i, label: "Kaavaluonnos" },
   { pattern: /osallistumis/i, label: "Osallistumis- ja arviointisuunnitelma" },
 ]
@@ -23565,7 +23565,7 @@ function vesilahtiPhaseFromStageName(stageName: string): string {
   const normalized = stageName.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/valmistelu|luonnos/.test(normalized)) return "Luonnos"
   if (/osallistumis/.test(normalized)) return "Vireilletulo"
   return "Vireilletulo"
@@ -23868,7 +23868,7 @@ function ruovesiPhaseFromStageLabel(label: string): string {
   const normalized = label.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos|valmistelu/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -24474,7 +24474,7 @@ const SAVONLINNA_MAX_AGE_MONTHS = 15
 
 const SAVONLINNA_PHASE_ORDER = [
   { pattern: /hyväksy|voimaan|lainvoima/i, label: "Hyväksyminen" },
-  { pattern: /ehdotus/i, label: "Kaavaehdotus" },
+  { pattern: /ehdotu/i, label: "Kaavaehdotus" },
   { pattern: /luonnos/i, label: "Kaavaluonnos" },
   { pattern: /osallistumis/i, label: "Osallistumis- ja arviointisuunnitelma" },
 ]
@@ -26608,7 +26608,7 @@ function pornainenPhaseFromText(text: string): string {
   // root loosely so both spacings and inflections are caught
   if (/tullut voimaan|voimaantulo|lainvoimai|lain\s*voima/.test(normalized)) return "Voimaantulo"
   if (/hyväksymisvaihe|hyväksytty|hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -26803,7 +26803,7 @@ function hankoPhaseFromStages(entries: HankoStageEntry[]): string {
 
   if (valueFor(/voimaan/)) return "Voimaantulo"
   if (valueFor(/valtuusto|hallitus/)) return "Hyväksyminen"
-  if (valueFor(/ehdotus/)) return "Ehdotus"
+  if (valueFor(/ehdotu/)) return "Ehdotus"
   if (valueFor(/luonnos/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -26941,7 +26941,7 @@ function inkooPhaseFromStages(stages: InkooStage[]): string {
 
   if (matches(/voimaantulo|lainvoima/)) return "Voimaantulo"
   if (matches(/hyväksy/)) return "Hyväksyminen"
-  if (matches(/ehdotus/)) return "Ehdotus"
+  if (matches(/ehdotu/)) return "Ehdotus"
   if (matches(/valmistelu|luonnos/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -27062,7 +27062,7 @@ function karkkilaPhaseFromText(text: string): string {
   const hyvaksyIndex = normalized.search(/hyväksy/)
   if (hyvaksyIndex >= 0 && !isReturnedNear(hyvaksyIndex)) return "Hyväksyminen"
 
-  const ehdotusIndex = normalized.search(/ehdotus/)
+  const ehdotusIndex = normalized.search(/ehdotu/)
   if (ehdotusIndex >= 0 && !isReturnedNear(ehdotusIndex)) return "Ehdotus"
 
   if (/luonnos/.test(normalized)) return "Luonnos"
@@ -27186,7 +27186,7 @@ function siuntioPhaseFromStages(stages: SiuntioStage[]): string {
 
   if (matches(/voimaantul|lainvoima/)) return "Voimaantulo"
   if (matches(/hyväksy/)) return "Hyväksyminen"
-  if (matches(/ehdotus/)) return "Ehdotus"
+  if (matches(/ehdotu/)) return "Ehdotus"
   if (matches(/luonnos|valmistelu/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -27276,7 +27276,7 @@ function euraPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -27390,7 +27390,7 @@ function siikainenPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -27510,7 +27510,7 @@ function joutsaPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -27666,7 +27666,7 @@ function pielavesiPhaseFromText(text: string, imgAlt: string | null): string {
     const isProceduralApproval = /aloit/.test(window)
     if (!isProceduralApproval) return "Hyväksyminen"
   }
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -27858,7 +27858,7 @@ function kiuruvesiPhaseFromText(text: string): string {
     return "Hyväksyminen"
   }
 
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
 
   return "Vireilletulo"
@@ -27964,7 +27964,7 @@ function auraPhaseFromText(text: string): string {
     if (!isProcedural) return "Hyväksyminen"
   }
 
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -28075,7 +28075,7 @@ function vehmaaPhaseFromText(text: string): string {
     return /valmistumiseen asti|valmistuttua|tullaan/.test(window)
   }
 
-  const ehdotusIndex = normalized.search(/ehdotus/)
+  const ehdotusIndex = normalized.search(/ehdotu/)
   if (ehdotusIndex >= 0 && !isForwardLooking(ehdotusIndex)) return "Ehdotus"
 
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
@@ -28165,7 +28165,7 @@ function laitilaPhaseFromHeading(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -28265,7 +28265,7 @@ function kustaviPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/voimaantulo|tuli voimaan|tullut voimaan/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -28521,7 +28521,7 @@ function vaalaPhaseFromText(text: string): string {
     return "Hyväksyminen"
   }
 
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
 
   return "Vireilletulo"
@@ -28626,7 +28626,7 @@ function siikajokiPhaseFromText(text: string): string {
     return "Hyväksyminen"
   }
 
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
 
   return "Vireilletulo"
@@ -28764,7 +28764,7 @@ function siikalatvaPhaseFromText(text: string): string {
     return "Hyväksyminen"
   }
 
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
 
   return "Vireilletulo"
@@ -28898,7 +28898,7 @@ function iiPhaseFromText(text: string): string {
     return "Hyväksyminen"
   }
 
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
 
   return "Vireilletulo"
@@ -29030,7 +29030,7 @@ function alavieskaPhaseFromText(text: string): string {
     return "Hyväksyminen"
   }
 
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
 
   return "Vireilletulo"
@@ -29155,7 +29155,7 @@ const HAILUOTO_LISTING_URL = "https://hailuoto.fi/rakentaminen/keskeneraiset-kaa
 function hailuotoPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   if (/hyväksy|voimaantulo|tullut voimaan|lainvoima/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonnos/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -29273,7 +29273,7 @@ function oulainenPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|vireille|käynnist/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -29374,7 +29374,7 @@ function taivalkoskiPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -29507,7 +29507,7 @@ function poytyaPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -29608,7 +29608,7 @@ function maskuPhaseFromStageName(stageName: string): string {
   const normalized = stageName.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -29720,7 +29720,7 @@ function ruskoPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhallit/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -29836,7 +29836,7 @@ function mynamakiPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhallit|esittää/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -29936,7 +29936,7 @@ function kemionsaariPhaseFromStageLabel(stageLabel: string): string {
   const normalized = stageLabel.toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return "Voimaantulo"
   if (/hyväksy/.test(normalized)) return "Hyväksyminen"
-  if (/ehdotus/.test(normalized)) return "Ehdotus"
+  if (/ehdotu/.test(normalized)) return "Ehdotus"
   if (/luonno[sk]/.test(normalized)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -30045,7 +30045,7 @@ function marttilaPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhallit|esittää/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -30169,7 +30169,7 @@ function pyharantaPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhallit|esittää/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -30276,7 +30276,7 @@ function lestijarviPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -31662,7 +31662,7 @@ function taivassaloPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -31772,7 +31772,7 @@ function ilomantsiPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -31903,7 +31903,7 @@ function tohmajarviPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -32061,7 +32061,7 @@ function tammelaPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -32209,7 +32209,7 @@ function lemiPhaseFromText(text: string): string {
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
   )) return "Hyväksyminen"
-  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
   if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
   return "Vireilletulo"
 }
@@ -32351,7 +32351,7 @@ const KANGASNIEMI_EXCLUDED_TITLE_PATTERN = /maakuntakaava/i
 const KANGASNIEMI_PHASE_STEMS: [RegExp, string][] = [
   [/voimaantulo|lainvoima/, "Voimaantulo"],
   [/hyväksymis/, "Hyväksyminen"],
-  [/ehdotus/, "Ehdotus"],
+  [/ehdotu/, "Ehdotus"],
   [/luonno/, "Luonnos"],
   [/vireilletulo/, "Vireilletulo"],
 ]
