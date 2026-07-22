@@ -190,6 +190,7 @@ export async function runFactWorker(documentId?: string) {
       "Uusikaarlepyyn kaavoitus",
       "Vöyrin kaavoitus",
       "Perhon kaavoitus",
+      "Lestijärven kaavoitus",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",

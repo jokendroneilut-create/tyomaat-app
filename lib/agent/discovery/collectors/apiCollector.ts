@@ -30248,6 +30248,124 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LESTIJARVI_KUULUTUKSET_URL = "https://lestijarvi.fi/kategoria/kuulutukset/"
+// The kuulutukset category mixes every kind of municipal notice (council
+// meetings, court decisions, waste management); only titles naming a real
+// municipal-level plan type are zoning projects. "maakuntakaava" (the
+// regional council's plan, not the municipality's own) doesn't match either
+// pattern, so it's naturally excluded rather than needing its own guard.
+const LESTIJARVI_TITLE_PATTERN = /osayleiskaava|asemakaava/i
+
+function lestijarviPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectLestijarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LESTIJARVI_KUULUTUKSET_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const links = $("article.post")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const title = $el.find(".card-title").first().text().replace(/\s+/g, " ").trim()
+      const href = ($el.find("a.stretched-link").first().attr("href") ?? "").trim()
+      return { title, href }
+    })
+    .filter((item) => item.title && item.href && LESTIJARVI_TITLE_PATTERN.test(item.title))
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const link of links) {
+    let description = ""
+    try {
+      const detailResponse = await fetch(link.href, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        description = $$(".entry-content").first().text().replace(/\s+/g, " ").trim()
+      }
+    } catch {
+      // Fall back to an empty description if the detail page fails.
+    }
+
+    const phase = lestijarviPhaseFromText(`${link.title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(link.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title: link.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: link.title,
+        document_url: link.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: link.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 const PERHO_BASE_URL = "https://perho.com"
 const PERHO_TUULIVOIMA_URL = `${PERHO_BASE_URL}/tuulivoimahankkeet-perhossa/`
 
@@ -31632,6 +31750,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "lestijarviKaavaParser") {
+    return collectLestijarviKaavaSource(source)
+  }
+
   if (source.parser === "perhoKaavaParser") {
     return collectPerhoKaavaSource(source)
   }
