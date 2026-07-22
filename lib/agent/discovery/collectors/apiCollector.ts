@@ -34635,6 +34635,98 @@ async function collectKinnulaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LUMIJOKI_URL = "https://www.lumijoki.fi/asuminen-rakentaminen-ja-ymparisto/rakentaminen/kaavoitus-ja-maankaytto/"
+
+function lumijokiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectLumijokiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LUMIJOKI_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const link = $("a")
+    .filter((_, el) => /^osallistumis- ja arviointisuunnitelma/i.test($(el).text().replace(/\s+/g, " ").trim()))
+    .first()
+  if (!link.length) return { documentsFound: 0, documentsSaved: 0 }
+
+  const linkText = link.text().replace(/\s+/g, " ").trim()
+  const title = linkText.replace(/^osallistumis- ja arviointisuunnitelma\s*/i, "").trim()
+  if (!title) return { documentsFound: 0, documentsSaved: 0 }
+
+  const description = linkText
+  const phase = lumijokiPhaseFromText(`${title} ${description}`)
+  const completed = phase === "Voimaantulo"
+
+  const slug = kemiSlug(title)
+  const url = `${LUMIJOKI_URL}#${slug}`
+
+  const rawText = JSON.stringify({ title, phase, description })
+  const contentHash = hashContent(rawText)
+
+  const { error } = await supabaseAdmin.from("source_documents").upsert(
+    {
+      source_id: source.id,
+      source_name: source.name,
+      title,
+      document_url: url,
+      document_type: "api",
+      content_hash: contentHash,
+      status: "downloaded",
+      raw_text: rawText,
+      raw_payload: {
+        parser: source.parser,
+        priority: source.priority,
+        title,
+        slug,
+        phase,
+        description,
+        contacts: [],
+        completed,
+      },
+      processed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...(completed
+        ? {
+            facts_extracted_at: new Date().toISOString(),
+            identity_resolved_at: new Date().toISOString(),
+          }
+        : {}),
+    },
+    { onConflict: "document_url" }
+  )
+
+  if (error) throw error
+
+  return {
+    documentsFound: 1,
+    documentsSaved: 1,
+  }
+}
+
 const KARSAMAKI_TUULIVOIMA_URL = "https://karsamaki.fi/asuminen-ja-rakentaminen/tontit-kartat-ja-kaavoitus/tuulivoima/"
 const KARSAMAKI_MUUTOKSET_URL = "https://karsamaki.fi/asuminen-ja-rakentaminen/tontit-kartat-ja-kaavoitus/kaavamuutokset/"
 
@@ -35124,6 +35216,10 @@ async function collectMerijarviKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "lumijokiKaavaParser") {
+    return collectLumijokiKaavaSource(source)
+  }
+
   if (source.parser === "karsamakiKaavaParser") {
     return collectKarsamakiKaavaSource(source)
   }

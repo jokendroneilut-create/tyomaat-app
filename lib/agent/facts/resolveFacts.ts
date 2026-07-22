@@ -232,6 +232,7 @@ import { extractMerijarviKaavaFacts } from "@/lib/agent/facts/extractMerijarviKa
 import { extractHaapajarviKaavaFacts } from "@/lib/agent/facts/extractHaapajarviKaavaFacts"
 import { extractHaapavesiKaavaFacts } from "@/lib/agent/facts/extractHaapavesiKaavaFacts"
 import { extractKarsamakiKaavaFacts } from "@/lib/agent/facts/extractKarsamakiKaavaFacts"
+import { extractLumijokiKaavaFacts } from "@/lib/agent/facts/extractLumijokiKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -4216,6 +4217,23 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractKarsamakiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Lumijoen kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractLumijokiKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
