@@ -183,6 +183,7 @@ export async function runFactWorker(documentId?: string) {
       "Taivassalon kaavoitus",
       "Kristiinankaupungin kaavoitus",
       "Korsnäsin kaavoitus",
+      "Kruunupyyn kaavoitus",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",

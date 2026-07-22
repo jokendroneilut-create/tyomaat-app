@@ -30248,6 +30248,163 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KRUUNUPYY_OVERSIKT_URL = "https://www.kronoby.fi/sv/bygga-bo-and-miljoe/planlaeggning-och-kartor/planlaeggningsoeversikt/"
+const KRUUNUPYY_INCLUDED_SECTIONS = new Set(["vindkraftprojekt", "detaljplaner"])
+
+// Same false-positive risk as Korsnäs (compound "vindkraft*" words contain
+// "kraft"), plus a second trap here: this page states scheduled-but-not-yet-
+// reached dates ("utkast ... presenteras/sätts till påseende under <year>")
+// for several projects -- guard those the same way as a reached stage.
+function kruunupyyPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/i kraft|laga kraft/)) return "Voimaantulo"
+  if (matchesUnguarded(/godkänd|godkänt/, (window) =>
+    /ska godkänna|kommer att godkänna|bör godkänna/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/förslag/, (window) =>
+    /nästa skede|kommande skede|planeras/.test(window)
+  )) return "Ehdotus"
+  if (matchesUnguarded(/utkast/, (window) =>
+    /presenteras|sätts till påseende|planeras|kommer att/.test(window)
+  )) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKruunupyyKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KRUUNUPYY_OVERSIKT_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const container = $("h1")
+    .filter((_, el) => $(el).text().trim() === "Planläggningsöversikt")
+    .first()
+    .closest(".content-element__content")
+
+  type Item = { title: string; parts: string[] }
+  const items: Item[] = []
+  let currentSection = ""
+  let current: Item | null = null
+
+  container.children().each((_, el) => {
+    const tag = (el as any).tagName?.toLowerCase()
+    const $el = $(el)
+
+    if (tag === "h2") {
+      currentSection = $el.text().replace(/\s+/g, " ").trim().toLowerCase()
+      current = null
+      return
+    }
+
+    if (tag !== "p") return
+
+    // Skip leading <br>/whitespace nodes before checking for a title --
+    // some paragraphs here open with a stray <br> before the <strong>.
+    const contents = $el.contents().toArray()
+    let leadIndex = 0
+    while (leadIndex < contents.length) {
+      const node = contents[leadIndex] as any
+      const isBr = node.tagName?.toLowerCase() === "br"
+      const isWhitespaceText = node.type === "text" && !(node.data ?? "").trim()
+      if (isBr || isWhitespaceText) {
+        leadIndex += 1
+        continue
+      }
+      break
+    }
+    const leadNode = contents[leadIndex]
+    const strong = $el.find("strong").first()
+    const strongText = strong.text().replace(/\s+/g, " ").trim()
+    const startsWithStrong = strongText.length > 0 && Boolean(leadNode) && $(leadNode).is("strong")
+
+    if (startsWithStrong && KRUUNUPYY_INCLUDED_SECTIONS.has(currentSection)) {
+      current = { title: strongText, parts: [] }
+      items.push(current)
+      const rest = $el.text().replace(/\s+/g, " ").trim().slice(strongText.length).trim()
+      if (rest) current.parts.push(rest)
+      return
+    }
+
+    if (current && KRUUNUPYY_INCLUDED_SECTIONS.has(currentSection)) {
+      const text = $el.text().replace(/\s+/g, " ").trim()
+      if (text) current.parts.push(text)
+    } else if (!startsWithStrong) {
+      current = null
+    }
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const description = item.parts.join(" ").trim()
+    const phase = kruunupyyPhaseFromText(`${item.title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${KRUUNUPYY_OVERSIKT_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KORSNAS_LISTING_URL = "https://www.korsnas.fi/boende-och-narmiljo/planlaggning/planlaggningsoversikt/"
 
 // All of Korsnäs's currently pending plans are wind-power projects, so a bare
@@ -30607,6 +30764,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "kruunupyyKaavaParser") {
+    return collectKruunupyyKaavaSource(source)
+  }
+
   if (source.parser === "korsnasKaavaParser") {
     return collectKorsnasKaavaSource(source)
   }
