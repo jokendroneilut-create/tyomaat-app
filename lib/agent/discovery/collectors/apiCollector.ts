@@ -34260,7 +34260,124 @@ async function collectVieremaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const TAIPALSAARI_LISTING_URL =
+  "https://www.taipalsaari.fi/fi/asuminen-ja-ymparisto/kaavoitus-ja-maankaytto/nahtavilla-olevat-kaavat"
+const TAIPALSAARI_BASE_URL = "https://www.taipalsaari.fi"
+const TAIPALSAARI_LINK_PATTERN = /\/nahtavilla-olevat-kaavat\/[a-z0-9-]+$/i
+const TAIPALSAARI_PHASE_ORDER = ["Vireilletulo", "Luonnos", "Ehdotus", "Hyväksyminen", "Voimaantulo"]
+
+function taipalsaariPhaseFromItems(items: string[]): string {
+  let best = "Vireilletulo"
+  for (const item of items) {
+    const t = item.toLowerCase()
+    let candidate: string | null = null
+    if (/voimaantulo|lainvoima|tullut voimaan/.test(t)) candidate = "Voimaantulo"
+    else if (/hyväksy/.test(t)) candidate = "Hyväksyminen"
+    else if (/ehdotu/.test(t)) candidate = "Ehdotus"
+    else if (/luonno/.test(t)) candidate = "Luonnos"
+    if (candidate && TAIPALSAARI_PHASE_ORDER.indexOf(candidate) > TAIPALSAARI_PHASE_ORDER.indexOf(best)) {
+      best = candidate
+    }
+  }
+  return best
+}
+
+async function collectTaipalsaariKaavaSource(source: DiscoverySource) {
+  const response = await fetch(TAIPALSAARI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const urls = new Set<string>()
+  $("a[href]").each((_, el) => {
+    const href = ($(el).attr("href") ?? "").trim()
+    if (!TAIPALSAARI_LINK_PATTERN.test(href)) return
+    const url = href.startsWith("http") ? href : `${TAIPALSAARI_BASE_URL}${href.startsWith("/") ? "" : "/"}${href}`
+    urls.add(url)
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const url of urls) {
+    let title = ""
+    let attachmentTitles: string[] = []
+    try {
+      const detailResponse = await fetch(url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        title = $$(".iwc-page-title").first().text().replace(/\s+/g, " ").trim()
+        attachmentTitles = $$("a[href*='.pdf']")
+          .map((_, a) => $$(a).text().replace(/\s+/g, " ").trim())
+          .get()
+          .filter(Boolean)
+      }
+    } catch {
+      // Skip documents whose detail page fails to load.
+    }
+
+    if (!title) continue
+
+    const description = attachmentTitles.join(" ")
+    const phase = taipalsaariPhaseFromItems([title, ...attachmentTitles])
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: urls.size,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "taipalsaariKaavaParser") {
+    return collectTaipalsaariKaavaSource(source)
+  }
+
   if (source.parser === "keiteleKaavaParser") {
     return collectKeiteleKaavaSource(source)
   }
