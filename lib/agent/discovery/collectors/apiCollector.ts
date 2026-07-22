@@ -31878,7 +31878,161 @@ async function collectIlomantsiKaavaSource(source: DiscoverySource) {
   }
 }
 
+// The site's own markup double-encodes the ä in this path (literal "%25c3%25a4"
+// in the href, not "%c3%a4"); requesting the "correctly" decoded URL 404s, so
+// the literal double-encoded string must be used as-is.
+const TOHMAJARVI_VIREILLA_URL = "https://www.tohmajarvi.fi/vireill%25c3%25a4-olevat-kaavat"
+
+function tohmajarviPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectTohmajarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(TOHMAJARVI_VIREILLA_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  // Every project on this Liferay page is rendered as its own
+  // JournalContentPortlet, but each title shows up in TWO separate portlet
+  // instances (an accordion-header stub and the real content) — group by
+  // heading text and merge, rather than assuming a fixed position.
+  const EXCLUDED_TITLES = new Set([
+    "vireillä olevat kaavat (sivu päivittyy)",
+    "eteneminen",
+    "näytä sijainti",
+    "footer 2021",
+  ])
+  const KEMI_INTRO_TITLE = "vireillä olevat kaavat"
+
+  const groups = new Map<string, { texts: string[]; h3: string | null }>()
+
+  $(".portlet-boundary.portlet-journal-content").each((_, el) => {
+    const $el = $(el)
+    const heading = $el.find("h2.portlet-title-text").first().text().replace(/\s+/g, " ").trim()
+    if (!heading) return
+    const key = heading.toLowerCase()
+    if (EXCLUDED_TITLES.has(key)) return
+
+    const $article = $el.find(".journal-content-article").first()
+    const text = $article.text().replace(/\s+/g, " ").trim()
+    if (!text) return
+
+    const h3 = $article.find("h3").first().text().replace(/\s+/g, " ").trim() || null
+
+    const existing = groups.get(key)
+    if (existing) {
+      existing.texts.push(text)
+      if (h3 && !existing.h3) existing.h3 = h3
+    } else {
+      groups.set(key, { texts: [text], h3 })
+    }
+  })
+
+  const items: { title: string; description: string }[] = []
+
+  for (const [key, group] of groups) {
+    const description = group.texts.join(" ").replace(/\s+/g, " ").trim()
+
+    if (key === KEMI_INTRO_TITLE) {
+      // The "Kemi" project has no dedicated portlet of its own — it's the
+      // free-text intro directly under the page's own "Vireillä olevat
+      // kaavat" heading. Its area name is recovered from the body text
+      // itself (e.g. "Kemien asemakaavamuutokset...").
+      const areaMatch = description.match(/([A-ZÄÖÅ][a-zäöåé]+n)\s+asemakaavamuuto/)
+      const title = areaMatch ? `${areaMatch[1]} asemakaavamuutos` : "Kemien asemakaavamuutos"
+      items.push({ title, description })
+      continue
+    }
+
+    items.push({ title: group.h3 ?? key, description })
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = tohmajarviPhaseFromText(`${item.title} ${item.description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${TOHMAJARVI_VIREILLA_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "tohmajarviKaavaParser") {
+    return collectTohmajarviKaavaSource(source)
+  }
+
   if (source.parser === "ilomantsiKaavaParser") {
     return collectIlomantsiKaavaSource(source)
   }
