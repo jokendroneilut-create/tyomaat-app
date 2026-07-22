@@ -6,8 +6,8 @@ toteutettua. Tarkoitus on välttää saman kunnan turhaa uudelleentutkimista tul
 istunnoissa.
 
 **Tilanne 22.7.2026 (päivitetty — Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo,
-Kanta-Häme, Keski-Pohjanmaa, Pohjanmaa, Keski-Suomi, Pohjois-Karjala ja Pohjois-Pohjanmaa
-läpikäyty kokonaan; Päijät-Häme käynnissä — Asikkala lisätty).** Luvut on generoitu suoraan
+Kanta-Häme, Keski-Pohjanmaa, Pohjanmaa, Keski-Suomi, Pohjois-Karjala, Pohjois-Pohjanmaa ja
+Päijät-Häme läpikäyty kokonaan).** Luvut on generoitu suoraan
 Supabasen `discovery_sources`-taulusta ja
 `lib/geo/municipalities.ts`-tiedostosta, ei istunnon tehtävälistasta — ks.
 luotettavuushuomio lopussa.
@@ -16,15 +16,15 @@ luotettavuushuomio lopussa.
 
 - Manner-Suomen kuntia yhteensä: 292 (Ahvenanmaan 16 kuntaa rajattu pois, ei toistaiseksi
   tavoitteena).
-- Katettu (rekisteröity lähde): **239**
-- Ei vielä katettu: **53**
+- Katettu (rekisteröity lähde): **240**
+- Ei vielä katettu: **52**
   - joista syy tiedossa ja dokumentoitu (ks. alla): 45
-  - loput (8) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+  - loput (7) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
   - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa,
-    Pohjanmaa, Keski-Suomi, Pohjois-Karjala ja Pohjois-Pohjanmaa on nyt käyty läpi
-    kokonaan (kaikki kunnat joko katettu tai todettu ei-toteutettavaksi) — ei enää
-    rivejä "ei vielä tutkittu" -listalla näiltä maakunnilta.
+    Pohjanmaa, Keski-Suomi, Pohjois-Karjala, Pohjois-Pohjanmaa ja Päijät-Häme on nyt
+    käyty läpi kokonaan (kaikki kunnat joko katettu tai todettu ei-toteutettavaksi) —
+    ei enää rivejä "ei vielä tutkittu" -listalla näiltä maakunnilta.
 - Valtakunnallisia / usean kunnan lähteitä (ei kuntakohtaisia, ei mukana yllä olevissa
   luvuissa): Hilma, Lupapiste kuulutukset, Väylävirasto hankkeet, Senaatti-kiinteistöt
   hankkeet, Puolustuskiinteistöt uutiset, Kreate hankkeet.
@@ -87,8 +87,8 @@ Vaala, Ylivieska
 Iisalmi, Keitele, Kiuruvesi, Kuopio, Lapinlahti, Pielavesi, Siilinjärvi, Sonkajärvi,
 Suonenjoki, Tuusniemi, Varkaus, Vieremä
 
-### Päijät-Häme (8)
-Asikkala, Hartola, Heinola, Hollola, Kärkölä, Lahti, Orimattila, Padasjoki
+### Päijät-Häme (9)
+Asikkala, Hartola, Heinola, Hollola, Kärkölä, Lahti, Orimattila, Padasjoki, Sysmä
 
 ### Satakunta (11)
 Eura, Huittinen, Jämijärvi, Kankaanpää, Kokemäki, Nakkila, Pori, Rauma, Siikainen,
@@ -167,7 +167,6 @@ Nämä eivät ole "todettu toteuttamiskelvottomiksi" — ne on vain rajattu pois
 `discovery_sources`-taulun perusteella, eikä niitä ole (varmuudella) käyty läpi tässä
 istunnossa. Osa saattaa olla helpostikin toteutettavissa, osa ei.
 
-- **Päijät-Häme:** Sysmä
 - **Uusimaa:** Lapinjärvi, Myrskylä, Pukkila
 - **Varsinais-Suomi:** Koski Tl, Nousiainen, Oripää, Sauvo
 
