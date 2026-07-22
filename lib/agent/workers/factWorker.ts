@@ -194,6 +194,7 @@ export async function runFactWorker(documentId?: string) {
       "Ilomantsin kaavoitus",
       "Tohmajärven kaavoitus",
       "Tammelan kaavoitus",
+      "Lemin kaavoitus",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",

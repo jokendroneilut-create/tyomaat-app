@@ -32176,7 +32176,170 @@ async function collectTammelaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LEMI_TIEDOTUKSET_URL = "https://lemi.fi/?page_id=12"
+// The Tiedotukset archive mixes every kind of municipal notice (building
+// permits, waste management, conscription, private-road subsidies); only
+// titles naming a real municipal-level plan type are zoning projects.
+// Genitive plural inflects "kaava" to "kaavo" (e.g. "osayleiskaavojen"), so
+// the trailing "a" is dropped here too rather than requiring the full word.
+const LEMI_TITLE_PATTERN = /asemakaav|osayleiskaav/i
+// Genitive plural inflects the "kaava" stem to "kaavo" (e.g.
+// "osayleiskaavojen"), so the type suffix must accept either vowel; the
+// captured type is normalized back to "kaava" before use.
+const LEMI_AREA_PATTERN =
+  /([A-ZÄÖÅ][a-zäöåé]+(?:\s+[A-ZÄÖÅ][a-zäöåé]+)*)\s+([a-zäöå-]*(?:ranta-)?(?:asema|osayleis)kaav[ao])/
+
+function lemiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotus/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectLemiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LEMI_TIEDOTUKSET_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const notices = $("article.nosto_allekain")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const title = $el.find(".nosto_allekain_otsikko").first().text().replace(/\s+/g, " ").trim()
+      const href = $el.find("a.nosto_allekain_url").first().attr("href") ?? ""
+      const dateText = $el.find(".nosto_allekain_meta").first().text().trim()
+      const dateMatch = dateText.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+      const sortableDate = dateMatch
+        ? `${dateMatch[3]}-${dateMatch[2].padStart(2, "0")}-${dateMatch[1].padStart(2, "0")}`
+        : ""
+      return { title, url: href.trim(), sortableDate }
+    })
+    .filter((item) => item.title && item.url && LEMI_TITLE_PATTERN.test(item.title))
+
+  const byProject = new Map<string, { title: string; url: string; sortableDate: string }>()
+
+  for (const notice of notices) {
+    const withoutPrefix = notice.title.replace(/^kuulutus\s+/i, "")
+    const match = withoutPrefix.match(LEMI_AREA_PATTERN)
+
+    let key: string
+    let title: string
+    if (match) {
+      const area = match[1]
+      const type = match[2].toLowerCase().replace(/kaavo$/, "kaava")
+      key = area.toLowerCase()
+      title = `${area} ${type}`
+    } else if (/asemakaavamuuto/i.test(notice.title)) {
+      // The municipality-wide batch of amendments has no single place name
+      // in its title ("Kuulutus asemakaavamuutosten 2026 ehdotusvaihe...").
+      const yearMatch = notice.title.match(/(\d{4})/)
+      const year = yearMatch ? yearMatch[1] : ""
+      key = `lemin-asemakaavamuutokset-${year}`
+      title = `Lemin asemakaavamuutokset${year ? ` ${year}` : ""}`
+    } else {
+      continue
+    }
+
+    const existing = byProject.get(key)
+    if (!existing || notice.sortableDate > existing.sortableDate) {
+      byProject.set(key, { title, url: notice.url, sortableDate: notice.sortableDate })
+    }
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const project of byProject.values()) {
+    let description = ""
+    try {
+      const detailResponse = await fetch(project.url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        description =
+          $$('meta[property="og:description"]').attr("content")?.replace(/\s+/g, " ").trim() ?? ""
+      }
+    } catch {
+      // Fall back to an empty description if the detail page fails.
+    }
+
+    const phase = lemiPhaseFromText(`${project.title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(project.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title: project.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: project.title,
+        document_url: project.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: project.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: byProject.size,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "lemiKaavaParser") {
+    return collectLemiKaavaSource(source)
+  }
+
   if (source.parser === "tammelaKaavaParser") {
     return collectTammelaKaavaSource(source)
   }
