@@ -30248,6 +30248,135 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const MAALAHTI_BASE_URL = "https://www.malax.fi"
+const MAALAHTI_PAGES = [
+  `${MAALAHTI_BASE_URL}/boende-och-miljo/markplanering/framlagda-planer/`,
+  `${MAALAHTI_BASE_URL}/boende-och-miljo/markplanering/pagaende-delgeneralplaner/`,
+  `${MAALAHTI_BASE_URL}/boende-och-miljo/markplanering/pagaende-detaljplaner/`,
+]
+
+// Same false-positive risk as Korsnäs/Kruunupyy -- "vindkraft" is a fused
+// compound word containing "kraft", so only the literal "i kraft"/"laga
+// kraft" (in force) phrase counts as a real completion signal.
+function maalahtiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/i kraft|laga kraft/)) return "Voimaantulo"
+  if (matchesUnguarded(/godkänd|godkänt/, (window) =>
+    /ska godkänna|kommer att godkänna|bör godkänna/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/förslag/, (window) =>
+    /nästa skede|kommande skede|planeras/.test(window)
+  )) return "Ehdotus"
+  if (matchesUnguarded(/utkast/, (window) =>
+    /presenteras|sätts till påseende|planeras|kommer att/.test(window)
+  )) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectMaalahtiKaavaSource(source: DiscoverySource) {
+  type Item = { title: string; description: string; pageUrl: string }
+  const items: Item[] = []
+
+  for (const pageUrl of MAALAHTI_PAGES) {
+    const response = await fetch(pageUrl, { cache: "no-store" })
+    if (!response.ok) continue
+
+    const $ = cheerio.load(await response.text())
+    const article = $("article").first()
+
+    // Each project widget is its own ".text-container" div, but the site's
+    // editors have used two different title markups within it (h1.block-title
+    // on some pages, div.heading-3>strong on others) -- rather than chase every
+    // variant, just take the container's first child element as the title.
+    article.find(".text-container").each((_, container) => {
+      const $container = $(container)
+      const titleEl = $container.children().first()
+      const title = titleEl.text().replace(/\s+/g, " ").trim()
+      if (!title) return
+
+      const description = $container
+        .find("p")
+        .toArray()
+        .map((p) => $(p).text().replace(/\s+/g, " ").trim())
+        .filter((text) => text.length > 0)
+        .join(" ")
+        .trim()
+
+      items.push({ title, description, pageUrl })
+    })
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const phase = maalahtiPhaseFromText(`${item.title} ${item.description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${item.pageUrl}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description: item.description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const LUOTO_PASEENDE_URL = "https://larsmo.fi/boende-och-miljo/planlaggning/planer-till-paseende/"
 // "Planläggning – byggförbud" is a blanket building-prohibition notice
 // covering existing plan areas, not a trackable zoning-plan project itself.
@@ -30928,6 +31057,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "maalahtiKaavaParser") {
+    return collectMaalahtiKaavaSource(source)
+  }
+
   if (source.parser === "luotoKaavaParser") {
     return collectLuotoKaavaSource(source)
   }
