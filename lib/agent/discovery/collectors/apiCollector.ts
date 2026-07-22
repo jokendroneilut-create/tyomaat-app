@@ -32857,7 +32857,133 @@ async function collectKolariKaavaSource(source: DiscoverySource) {
   }
 }
 
+const SALLA_LISTING_URL = "https://www.salla.fi/palvelut/asuminen-rakentaminen-ja-ymparisto/kaavoitus/"
+const SALLA_PROJECT_LINK_PATTERN =
+  /^https:\/\/www\.salla\.fi\/palvelut\/asuminen-rakentaminen-ja-ymparisto\/kaavoitus\/[a-z0-9-]+\/$/i
+
+const SALLA_PHASE_STEMS: { pattern: RegExp; phase: string }[] = [
+  { pattern: /^vireilletulo/i, phase: "Vireilletulo" },
+  { pattern: /^luonnos/i, phase: "Luonnos" },
+  { pattern: /^ehdotus/i, phase: "Ehdotus" },
+  { pattern: /^hyväksy/i, phase: "Hyväksyminen" },
+  { pattern: /^voimaantulo/i, phase: "Voimaantulo" },
+]
+
+function sallaPhaseFromStepper($: cheerio.CheerioAPI): { phase: string; description: string } {
+  let phase = "Vireilletulo"
+  let description = ""
+
+  $(".accordion-grid details").each((_, el) => {
+    const $el = $(el)
+    const titleText = $el.find(".acc-title-text").first().text().replace(/\s+/g, " ").trim()
+    const contentText = $el.find(".acc-content").first().text().replace(/\s+/g, " ").trim()
+    const hasContent = contentText.length > 0 && contentText !== "–" && contentText !== "-"
+    if (!hasContent) return
+
+    for (const stem of SALLA_PHASE_STEMS) {
+      if (stem.pattern.test(titleText)) {
+        phase = stem.phase
+        description = contentText
+        break
+      }
+    }
+  })
+
+  return { phase, description }
+}
+
+async function collectSallaKaavaSource(source: DiscoverySource) {
+  const response = await fetch(SALLA_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const urls = new Set<string>()
+  $("a[href]").each((_, el) => {
+    const href = ($(el).attr("href") ?? "").trim()
+    if (SALLA_PROJECT_LINK_PATTERN.test(href)) urls.add(href)
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const url of urls) {
+    let title = ""
+    let phase = "Vireilletulo"
+    let description = ""
+    try {
+      const detailResponse = await fetch(url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        title = $$("h1").first().text().replace(/\s+/g, " ").trim()
+        const result = sallaPhaseFromStepper($$)
+        phase = result.phase
+        description = result.description
+      }
+    } catch {
+      // Skip documents whose detail page fails to load.
+    }
+
+    if (!title) continue
+
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: urls.size,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "sallaKaavaParser") {
+    return collectSallaKaavaSource(source)
+  }
+
   if (source.parser === "kolariKaavaParser") {
     return collectKolariKaavaSource(source)
   }
