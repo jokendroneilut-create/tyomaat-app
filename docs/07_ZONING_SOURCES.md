@@ -6,8 +6,9 @@ toteutettua. Tarkoitus on välttää saman kunnan turhaa uudelleentutkimista tul
 istunnoissa.
 
 **Tilanne 22.7.2026 (päivitetty — Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo,
-Kanta-Häme, Keski-Pohjanmaa, Pohjanmaa, Keski-Suomi ja Pohjois-Karjala läpikäyty
-kokonaan).** Luvut on generoitu suoraan Supabasen `discovery_sources`-taulusta ja
+Kanta-Häme, Keski-Pohjanmaa, Pohjanmaa, Keski-Suomi, Pohjois-Karjala ja Pohjois-Pohjanmaa
+läpikäyty kokonaan; Päijät-Häme käynnissä — Asikkala lisätty).** Luvut on generoitu suoraan
+Supabasen `discovery_sources`-taulusta ja
 `lib/geo/municipalities.ts`-tiedostosta, ei istunnon tehtävälistasta — ks.
 luotettavuushuomio lopussa.
 
@@ -15,10 +16,10 @@ luotettavuushuomio lopussa.
 
 - Manner-Suomen kuntia yhteensä: 292 (Ahvenanmaan 16 kuntaa rajattu pois, ei toistaiseksi
   tavoitteena).
-- Katettu (rekisteröity lähde): **235**
-- Ei vielä katettu: **57**
+- Katettu (rekisteröity lähde): **236**
+- Ei vielä katettu: **56**
   - joista syy tiedossa ja dokumentoitu (ks. alla): 45
-  - loput (12) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
+  - loput (11) ovat joko tutkimatta kokonaan tai niiden tutkinnan tulos on kadonnut
     aiemman (tiivistetyn) istunnon mukana — ei tarkoita automaattisesti "toteutettavissa".
   - Satakunta, Pohjois-Savo, Etelä-Karjala, Etelä-Savo, Kanta-Häme, Keski-Pohjanmaa,
     Pohjanmaa, Keski-Suomi, Pohjois-Karjala ja Pohjois-Pohjanmaa on nyt käyty läpi
@@ -86,8 +87,8 @@ Vaala, Ylivieska
 Iisalmi, Keitele, Kiuruvesi, Kuopio, Lapinlahti, Pielavesi, Siilinjärvi, Sonkajärvi,
 Suonenjoki, Tuusniemi, Varkaus, Vieremä
 
-### Päijät-Häme (4)
-Heinola, Hollola, Lahti, Orimattila
+### Päijät-Häme (5)
+Asikkala, Heinola, Hollola, Lahti, Orimattila
 
 ### Satakunta (11)
 Eura, Huittinen, Jämijärvi, Kankaanpää, Kokemäki, Nakkila, Pori, Rauma, Siikainen,
@@ -166,9 +167,7 @@ Nämä eivät ole "todettu toteuttamiskelvottomiksi" — ne on vain rajattu pois
 `discovery_sources`-taulun perusteella, eikä niitä ole (varmuudella) käyty läpi tässä
 istunnossa. Osa saattaa olla helpostikin toteutettavissa, osa ei.
 
-- **Pohjois-Pohjanmaa:** Lumijoki, Muhos, Pudasjärvi, Pyhäjoki, Pyhäjärvi, Pyhäntä,
-  Reisjärvi, Tyrnävä, Utajärvi
-- **Päijät-Häme:** Asikkala, Hartola, Kärkölä, Padasjoki, Sysmä
+- **Päijät-Häme:** Hartola, Kärkölä, Padasjoki, Sysmä
 - **Uusimaa:** Lapinjärvi, Myrskylä, Pukkila
 - **Varsinais-Suomi:** Koski Tl, Nousiainen, Oripää, Sauvo
 
