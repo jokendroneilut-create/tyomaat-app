@@ -182,6 +182,7 @@ export async function runFactWorker(documentId?: string) {
       "Pyhärannan kaavoitus",
       "Taivassalon kaavoitus",
       "Kristiinankaupungin kaavoitus",
+      "Korsnäsin kaavoitus",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",

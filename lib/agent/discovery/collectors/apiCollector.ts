@@ -30248,6 +30248,132 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KORSNAS_LISTING_URL = "https://www.korsnas.fi/boende-och-narmiljo/planlaggning/planlaggningsoversikt/"
+
+// All of Korsnäs's currently pending plans are wind-power projects, so a bare
+// "kraft" match would false-positive constantly ("vindkraftpark",
+// "havsvindkraftspark" all contain it) -- require the actual "in force" phrase.
+function korsnasPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/i kraft|laga kraft/)) return "Voimaantulo"
+  if (matchesUnguarded(/godkänd|godkänt/, (window) =>
+    /ska godkänna|kommer att godkänna|bör godkänna/.test(window)
+  )) return "Hyväksyminen"
+  // "Nästa skede är planförslaget" (next stage is the proposal) describes a
+  // future step, not a reached one -- same future-tense trap as Mynämäki's
+  // "esittää ... että valtuusto hyväksyy" earlier this session.
+  if (matchesUnguarded(/förslag/, (window) =>
+    /nästa skede|näste skede|kommande skede/.test(window)
+  )) return "Ehdotus"
+  if (matchesUnguarded(/utkast/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKorsnasKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KORSNAS_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const outerItem = $("li")
+    .filter((_, el) => ($(el).attr("style") ?? "").includes("list-style-type: none"))
+    .first()
+
+  const items = outerItem
+    .find("> ul > li")
+    .toArray()
+    .map((el) => {
+      const anchor = $(el).find("a").first()
+      const href = (anchor.attr("href") ?? "").trim()
+      const linkText = anchor.text().replace(/\s+/g, " ").trim()
+      const fullText = $(el).text().replace(/\s+/g, " ").trim()
+      return { href, linkText, fullText }
+    })
+    .filter((item) => item.href && item.linkText)
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    let detailText = ""
+    try {
+      const detailResponse = await fetch(item.href, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        detailText = $$("body").text().replace(/\s+/g, " ").trim()
+      }
+    } catch {
+      // Dead/unreachable link -- fall back to the listing's own text below.
+    }
+
+    const title = item.linkText
+    const description = detailText.length > item.fullText.length ? detailText : item.fullText
+    const phase = korsnasPhaseFromText(`${item.fullText} ${detailText}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: item.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KRISTIINANKAUPUNKI_BASE_URL = "https://www.kristinestad.fi"
 const KRISTIINANKAUPUNKI_LISTING_URL = `${KRISTIINANKAUPUNKI_BASE_URL}/boende-och-miljo/planlaggning-och-matningsverksamhet/aktuella-planer`
 
@@ -30481,6 +30607,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "korsnasKaavaParser") {
+    return collectKorsnasKaavaSource(source)
+  }
+
   if (source.parser === "kristiinankaupunkiKaavaParser") {
     return collectKristiinankaupunkiKaavaSource(source)
   }
