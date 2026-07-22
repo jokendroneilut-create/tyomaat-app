@@ -142,6 +142,7 @@ import { resolvePoytyaKaavaProject } from "@/lib/agent/identity/resolvers/poytya
 import { resolveMaskuKaavaProject } from "@/lib/agent/identity/resolvers/maskuKaavaResolver"
 import { resolveRuskoKaavaProject } from "@/lib/agent/identity/resolvers/ruskoKaavaResolver"
 import { resolveMynamakiKaavaProject } from "@/lib/agent/identity/resolvers/mynamakiKaavaResolver"
+import { resolveKemionsaariKaavaProject } from "@/lib/agent/identity/resolvers/kemionsaariKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1185,6 +1186,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "mynämäen kaavoitus") {
     const result = await resolveMynamakiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "kemiönsaaren kaavoitus") {
+    const result = await resolveKemionsaariKaavaProject({
       document,
       facts: facts ?? [],
     })
