@@ -30248,6 +30248,126 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KRISTIINANKAUPUNKI_BASE_URL = "https://www.kristinestad.fi"
+const KRISTIINANKAUPUNKI_LISTING_URL = `${KRISTIINANKAUPUNKI_BASE_URL}/boende-och-miljo/planlaggning-och-matningsverksamhet/aktuella-planer`
+
+// Headings on Kristinestad's detail pages list plan stages most-recent-first,
+// mixed in with procedural "kommunstyrelsen/stadsstyrelsen ... beslut" notices
+// (board decisions on negotiations, not plan adoption). Scanning only heading
+// text for the Swedish stage vocabulary -- never full paragraph prose -- avoids
+// misreading those procedural notices (e.g. "avtalet ska godkännas" refers to a
+// negotiation agreement, not the plan) as a real phase change.
+function kristiinankaupunkiPhaseFromHeadings(headings: string[]): string {
+  for (const heading of headings) {
+    const normalized = heading.toLowerCase()
+    // "i kraft"/"laga kraft" (in force), not bare "kraft" -- energy project
+    // titles like "solkraftspark"/"vindkraftpark" contain "kraft" as a fused
+    // compound-word substring and would otherwise false-match here.
+    if (/i kraft|laga kraft/.test(normalized)) return "Voimaantulo"
+    if (/godkänd|godkänt/.test(normalized)) return "Hyväksyminen"
+    if (/förslag/.test(normalized)) return "Ehdotus"
+    if (/utkast/.test(normalized)) return "Luonnos"
+  }
+  return "Vireilletulo"
+}
+
+async function collectKristiinankaupunkiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KRISTIINANKAUPUNKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const currentItem = $("li.current")
+    .filter((_, el) => ($(el).children("a").first().attr("href") ?? "").endsWith("/aktuella-planer"))
+    .first()
+  const list = currentItem.children("ul.sub").first()
+
+  const links = list
+    .children("li")
+    .toArray()
+    .map((el) => {
+      const anchor = $(el).children("a").first()
+      const href = (anchor.attr("href") ?? "").trim()
+      const title = anchor.text().replace(/\s+/g, " ").trim()
+      return { href, title }
+    })
+    // "Nordi - Undantagslov och avgörande av planeringsbehov" is a building
+    // exemption-permit case, not a zoning plan project -- exclude it.
+    .filter((item) => item.href && item.title && !/undantagslov/i.test(item.href))
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const link of links) {
+    const detailUrl = `${KRISTIINANKAUPUNKI_BASE_URL}/${link.href}`
+    const detailResponse = await fetch(detailUrl, { cache: "no-store" })
+    if (!detailResponse.ok) continue
+
+    const $$ = cheerio.load(await detailResponse.text())
+    const article = $$("article").first()
+    const title = article.find("h1#PageTitle").first().text().replace(/\s+/g, " ").trim() || link.title
+
+    const headings = article
+      .find("h2, h3, h4")
+      .toArray()
+      .map((el) => $$(el).text().replace(/\s+/g, " ").trim())
+      .filter((text) => text.length > 0)
+
+    const phase = kristiinankaupunkiPhaseFromHeadings(headings)
+    const completed = phase === "Voimaantulo"
+    const description = article.text().replace(/\s+/g, " ").trim()
+
+    const baseSlug = kemiSlug(link.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: detailUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 const TAIVASSALO_LISTING_URL = "https://www.taivassalo.fi/asuminen/rakentaminen/kaavoitus-ja-paikkatieto"
 
 function taivassaloPhaseFromText(text: string): string {
@@ -30361,6 +30481,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "kristiinankaupunkiKaavaParser") {
+    return collectKristiinankaupunkiKaavaSource(source)
+  }
+
   if (source.parser === "taivassaloKaavaParser") {
     return collectTaivassaloKaavaSource(source)
   }
