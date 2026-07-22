@@ -30248,6 +30248,132 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PERHO_BASE_URL = "https://perho.com"
+const PERHO_TUULIVOIMA_URL = `${PERHO_BASE_URL}/tuulivoimahankkeet-perhossa/`
+
+// Perho's own page groups each wind-power project under explicit stage
+// headings (unlike every other collector this session, no text-guessing
+// needed) -- checked in this order since "lainvoimaiset" (plural, no
+// negation) must be distinguished from "ei vielä lainvoimainen" (singular,
+// negated) before falling through to the more generic "hyväksytyt" check.
+const PERHO_STAGE_HEADINGS: { pattern: RegExp; phase: string }[] = [
+  { pattern: /lainvoimaiset/i, phase: "Voimaantulo" },
+  { pattern: /hyväksytyt/i, phase: "Hyväksyminen" },
+  { pattern: /ehdotusvaiheessa/i, phase: "Ehdotus" },
+  { pattern: /luonnosvaiheessa/i, phase: "Luonnos" },
+  { pattern: /aloitusvaiheessa/i, phase: "Vireilletulo" },
+]
+
+function perhoPhaseFromHeading(heading: string): string | null {
+  for (const { pattern, phase } of PERHO_STAGE_HEADINGS) {
+    if (pattern.test(heading)) return phase
+  }
+  return null
+}
+
+async function collectPerhoKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PERHO_TUULIVOIMA_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const startHeading = $("h3")
+    .filter((_, el) => $(el).text().trim() === "Kaavoituksessa olevat tuulivoimapuistot")
+    .first()
+
+  type Item = { title: string; phase: string; href: string }
+  const items: Item[] = []
+  let currentPhase: string | null = null
+
+  let node = startHeading.next()
+  while (node.length > 0 && !node.is("h3")) {
+    if (node.is("p")) {
+      const strongText = node.find("strong").first().text().replace(/\s+/g, " ").trim()
+      if (strongText) {
+        const phase = perhoPhaseFromHeading(strongText)
+        if (phase) currentPhase = phase
+      } else if (currentPhase) {
+        node.find("a").each((_, a) => {
+          const $a = $(a)
+          const href = ($a.attr("href") ?? "").trim()
+          const title = $a.text().replace(/\s+/g, " ").trim()
+          if (href && title) {
+            items.push({ title, phase: currentPhase as string, href })
+          }
+        })
+      }
+    }
+    node = node.next()
+  }
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    let description = ""
+    try {
+      const detailResponse = await fetch(item.href, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        description = $$(".entry-content").first().text().replace(/\s+/g, " ").trim()
+      }
+    } catch {
+      // Fall back to an empty description if the project's own page fails.
+    }
+
+    const completed = item.phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title: item.title, phase: item.phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: item.href,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase: item.phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const VOYRI_BASE_URL = "https://www.vora.fi"
 const VOYRI_SUBMENU_URL = `${VOYRI_BASE_URL}/sv/tjanster/RenderSubmenu`
 
@@ -31506,6 +31632,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "perhoKaavaParser") {
+    return collectPerhoKaavaSource(source)
+  }
+
   if (source.parser === "voyriKaavaParser") {
     return collectVoyriKaavaSource(source)
   }

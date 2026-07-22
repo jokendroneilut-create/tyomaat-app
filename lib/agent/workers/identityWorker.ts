@@ -154,6 +154,7 @@ import { resolveMaalahtiKaavaProject } from "@/lib/agent/identity/resolvers/maal
 import { resolvePedersoreKaavaProject } from "@/lib/agent/identity/resolvers/pedersoreKaavaResolver"
 import { resolveUusikaarlepyyKaavaProject } from "@/lib/agent/identity/resolvers/uusikaarlepyyKaavaResolver"
 import { resolveVoyriKaavaProject } from "@/lib/agent/identity/resolvers/voyriKaavaResolver"
+import { resolvePerhoKaavaProject } from "@/lib/agent/identity/resolvers/perhoKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1281,6 +1282,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "vöyrin kaavoitus") {
     const result = await resolveVoyriKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "perhon kaavoitus") {
+    const result = await resolvePerhoKaavaProject({
       document,
       facts: facts ?? [],
     })
