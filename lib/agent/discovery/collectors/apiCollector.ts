@@ -34635,6 +34635,129 @@ async function collectKinnulaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const PUDASJARVI_TUULIVOIMA_URL = "https://www.pudasjarvi.fi/tuulivoima/tuulivoimahankkeet/"
+
+const PUDASJARVI_STAGE_PHASE_MAP: { pattern: RegExp; phase: string }[] = [
+  { pattern: /kaavoituksen käynnistäminen/i, phase: "Vireilletulo" },
+  { pattern: /osallistumis- ja arviointisuunnitelma/i, phase: "Vireilletulo" },
+  { pattern: /valmisteluvaihe/i, phase: "Luonnos" },
+  { pattern: /ehdotusvaihe/i, phase: "Ehdotus" },
+  { pattern: /hyväksymisvaihe/i, phase: "Hyväksyminen" },
+  { pattern: /voimaan ?tulo|tullut voimaan/i, phase: "Voimaantulo" },
+]
+
+function pudasjarviPhaseFromAccordion($: cheerio.CheerioAPI): { phase: string; description: string } {
+  let phase = "Vireilletulo"
+  let description = ""
+
+  $(".e-n-accordion-item").each((_, el) => {
+    const $el = $(el)
+    const summary = $el.find("summary").first().text().replace(/\s+/g, " ").trim()
+    const separatorIndex = summary.lastIndexOf(" - ")
+    if (separatorIndex < 0) return
+    const stageTitle = summary.slice(0, separatorIndex).trim()
+    const status = summary.slice(separatorIndex + 3).trim()
+    if (/tulossa/i.test(status)) return
+
+    const stem = PUDASJARVI_STAGE_PHASE_MAP.find((s) => s.pattern.test(stageTitle))
+    if (!stem) return
+
+    phase = stem.phase
+    const bodyText = $el.find(".elementor-widget-container").first().text().replace(/\s+/g, " ").trim()
+    if (bodyText) description = bodyText
+  })
+
+  return { phase, description }
+}
+
+async function collectPudasjarviKaavaSource(source: DiscoverySource) {
+  const response = await fetch(PUDASJARVI_TUULIVOIMA_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const urls = new Set<string>()
+  $("a[href*='/tuulivoima/']").each((_, el) => {
+    const href = ($(el).attr("href") ?? "").trim()
+    if (!href || !/tuulivoimahanke\/?$/i.test(href)) return
+    urls.add(href)
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const url of urls) {
+    let title = ""
+    let phase = "Vireilletulo"
+    let description = ""
+    try {
+      const detailResponse = await fetch(url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        title = $$("h1").first().text().replace(/\s+/g, " ").trim()
+        const result = pudasjarviPhaseFromAccordion($$)
+        phase = result.phase
+        description = result.description
+      }
+    } catch {
+      // Skip documents whose detail page fails to load.
+    }
+
+    if (!title) continue
+
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: urls.size,
+    documentsSaved: saved,
+  }
+}
+
 const PYHANTA_URL = "https://www.pyhanta.fi/kaavoitus"
 
 function pyhantaPhaseFromText(text: string): string {
@@ -35679,6 +35802,10 @@ async function collectMerijarviKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "pudasjarviKaavaParser") {
+    return collectPudasjarviKaavaSource(source)
+  }
+
   if (source.parser === "pyhantaKaavaParser") {
     return collectPyhantaKaavaSource(source)
   }
