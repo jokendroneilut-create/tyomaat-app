@@ -268,6 +268,7 @@ export async function POST(request: Request) {
     const isTohmajarviKaava = normalize(metadata.resolver) === "tohmajarvikaavaresolver"
     const isTammelaKaava = normalize(metadata.resolver) === "tammelakaavaresolver"
     const isLemiKaava = normalize(metadata.resolver) === "lemikaavaresolver"
+    const isKangasniemiKaava = normalize(metadata.resolver) === "kangasniemikaavaresolver"
     const isVirolahtiKaava = normalize(metadata.resolver) === "virolahtikaavaresolver"
     const isEnontekioKaava = normalize(metadata.resolver) === "enontekiokaavaresolver"
     const isInariKaava = normalize(metadata.resolver) === "inarikaavaresolver"
@@ -1601,6 +1602,13 @@ export async function POST(request: Request) {
     if (isLemiKaava) {
       candidateIdentifiers.push({
         type: "lemi_kaava_slug",
+        value: metadata.slug,
+      })
+    }
+
+    if (isKangasniemiKaava) {
+      candidateIdentifiers.push({
+        type: "kangasniemi_kaava_slug",
         value: metadata.slug,
       })
     }

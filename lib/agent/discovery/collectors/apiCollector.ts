@@ -32335,7 +32335,137 @@ async function collectLemiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KANGASNIEMI_LISTING_URL = "https://kangasniemi.cloudnc.fi/fi-FI/Kaavat/Vireillaolevat"
+const KANGASNIEMI_BASE_URL = "https://kangasniemi.cloudnc.fi"
+// Regional ("maakunta") plans are the region council's, not the
+// municipality's own, so they're excluded like everywhere else this session.
+const KANGASNIEMI_EXCLUDED_TITLE_PATTERN = /maakuntakaava/i
+
+// Each stage in the phase-stepper header renders only once the case has
+// reached it (earlier stages are bg-green, the current one is bg-blue and
+// suffixed "(Käynnissä)"); stages beyond the current one simply aren't
+// rendered yet. So the LAST stage name in the stepper is always the current
+// phase — but non-MRL stages like "Muutoksenhaku (valitus)" (an appeal
+// track) can also appear in the stepper and must be skipped since they
+// don't map to any canonical phase.
+const KANGASNIEMI_PHASE_STEMS: [RegExp, string][] = [
+  [/voimaantulo|lainvoima/, "Voimaantulo"],
+  [/hyväksymis/, "Hyväksyminen"],
+  [/ehdotus/, "Ehdotus"],
+  [/luonno/, "Luonnos"],
+  [/vireilletulo/, "Vireilletulo"],
+]
+
+function kangasniemiPhaseFromStepper($: cheerio.CheerioAPI): string {
+  const stageNames = $(".header-info .status")
+    .toArray()
+    .map((el) => $(el).parent().find("b").first().text().trim().toLowerCase())
+    .filter(Boolean)
+
+  for (let i = stageNames.length - 1; i >= 0; i -= 1) {
+    for (const [pattern, phase] of KANGASNIEMI_PHASE_STEMS) {
+      if (pattern.test(stageNames[i])) return phase
+    }
+  }
+
+  return "Vireilletulo"
+}
+
+async function collectKangasniemiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KANGASNIEMI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const items = $(".decision-title a")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const title = $el.text().replace(/\s+/g, " ").trim()
+      const href = $el.attr("href") ?? ""
+      const url = href.startsWith("http") ? href : `${KANGASNIEMI_BASE_URL}${href}`
+      return { title, url }
+    })
+    .filter((item) => item.title && item.url && !KANGASNIEMI_EXCLUDED_TITLE_PATTERN.test(item.title))
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    let phase = "Vireilletulo"
+    let description = ""
+    try {
+      const detailResponse = await fetch(item.url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        phase = kangasniemiPhaseFromStepper($$)
+
+        const latestAction = $$(".phase-action h3").first().text().replace(/\s+/g, " ").trim()
+        const contact = $$(".yhteyshenkilo-info").first().text().replace(/\s+/g, " ").trim()
+        description = [latestAction, contact].filter(Boolean).join(" — ")
+      }
+    } catch {
+      // Fall back to defaults if the detail page fails.
+    }
+
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title: item.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: item.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "kangasniemiKaavaParser") {
+    return collectKangasniemiKaavaSource(source)
+  }
+
   if (source.parser === "lemiKaavaParser") {
     return collectLemiKaavaSource(source)
   }
