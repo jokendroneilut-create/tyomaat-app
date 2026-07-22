@@ -30248,6 +30248,170 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
   }
 }
 
+const LUOTO_PASEENDE_URL = "https://larsmo.fi/boende-och-miljo/planlaggning/planer-till-paseende/"
+// "Planläggning – byggförbud" is a blanket building-prohibition notice
+// covering existing plan areas, not a trackable zoning-plan project itself.
+const LUOTO_EXCLUDED_TITLE_PATTERN = /byggförbud|rakennuskielto/i
+
+function luotoPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/i kraft|laga kraft/)) return "Voimaantulo"
+  if (matchesUnguarded(/godkänd|godkänt/, (window) =>
+    /ska godkänna|kommer att godkänna|bör godkänna/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/förslag/, (window) =>
+    /nästa skede|kommande skede|planeras/.test(window)
+  )) return "Ehdotus"
+  if (matchesUnguarded(/utkast/, (window) =>
+    /presenteras|sätts till påseende|planeras|kommer att/.test(window)
+  )) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectLuotoKaavaSource(source: DiscoverySource) {
+  const response = await fetch(LUOTO_PASEENDE_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const container = $("h1")
+    .filter((_, el) => $(el).text().trim() === "Planer till påseende")
+    .first()
+    .closest(".page-content")
+
+  type Item = { title: string; parts: string[] }
+  const items: Item[] = []
+  let cohort: Item[] = []
+  let cohortOpen = false
+
+  container.children("p").each((_, el) => {
+    const $el = $(el)
+
+    // Skip leading <br>/whitespace nodes before checking for a title.
+    const contents = $el.contents().toArray()
+    let leadIndex = 0
+    while (leadIndex < contents.length) {
+      const node = contents[leadIndex] as any
+      const isBr = node.tagName?.toLowerCase() === "br"
+      const isWhitespaceText = node.type === "text" && !(node.data ?? "").trim()
+      if (isBr || isWhitespaceText) {
+        leadIndex += 1
+        continue
+      }
+      break
+    }
+    const leadNode = contents[leadIndex]
+    const strong = $el.find("strong").first()
+    // <br> produces no whitespace in .text() -- these titles are two lines
+    // (Swedish/Finnish) joined by <br>, so without this they'd run together.
+    strong.find("br").each((_, br) => {
+      $(br).replaceWith(" ")
+    })
+    const strongText = strong.text().replace(/\s+/g, " ").trim()
+    const hasLinks = $el.find("a").length > 0
+    const isTitleMarker =
+      strongText.length > 0 && !hasLinks && Boolean(leadNode) && $(leadNode).is("strong")
+
+    if (isTitleMarker) {
+      if (LUOTO_EXCLUDED_TITLE_PATTERN.test(strongText)) {
+        cohort = []
+        cohortOpen = false
+        return
+      }
+
+      const item: Item = { title: strongText, parts: [] }
+      items.push(item)
+      // Some announcements cover two projects adopted together (e.g. a
+      // shared council decision) -- consecutive title paragraphs with no
+      // content between them share the description that follows.
+      if (cohortOpen) {
+        cohort.push(item)
+      } else {
+        cohort = [item]
+        cohortOpen = true
+      }
+      return
+    }
+
+    const text = $el.text().replace(/\s+/g, " ").trim()
+    if (text && cohort.length > 0) {
+      for (const it of cohort) it.parts.push(text)
+      cohortOpen = false
+    }
+  })
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const item of items) {
+    const description = item.parts.join(" ").trim()
+    const phase = luotoPhaseFromText(`${item.title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(item.title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+    const documentUrl = `${LUOTO_PASEENDE_URL}#${slug}`
+
+    const rawText = JSON.stringify({ title: item.title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: item.title,
+        document_url: documentUrl,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title: item.title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: items.length,
+    documentsSaved: saved,
+  }
+}
+
 const KRUUNUPYY_OVERSIKT_URL = "https://www.kronoby.fi/sv/bygga-bo-and-miljoe/planlaeggning-och-kartor/planlaeggningsoeversikt/"
 const KRUUNUPYY_INCLUDED_SECTIONS = new Set(["vindkraftprojekt", "detaljplaner"])
 
@@ -30764,6 +30928,10 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
 }
 
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "luotoKaavaParser") {
+    return collectLuotoKaavaSource(source)
+  }
+
   if (source.parser === "kruunupyyKaavaParser") {
     return collectKruunupyyKaavaSource(source)
   }

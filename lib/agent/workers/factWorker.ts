@@ -184,6 +184,7 @@ export async function runFactWorker(documentId?: string) {
       "Kristiinankaupungin kaavoitus",
       "Korsnäsin kaavoitus",
       "Kruunupyyn kaavoitus",
+      "Luodon kaavoitus",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",
       "Inarin vireillä olevat asemakaavat",
