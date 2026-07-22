@@ -198,6 +198,7 @@ export async function runFactWorker(documentId?: string) {
       "Kangasniemen kaavoitus",
       "Kihniön tuulivoimahankkeet",
       "Ristijärven kaavoitus",
+      "Kolarin kaavoitus",
       "Heinäveden vireillä olevat asemakaavat",
       "Virolahden vireillä olevat asemakaavat",
       "Enontekiön vireillä olevat asemakaavat",

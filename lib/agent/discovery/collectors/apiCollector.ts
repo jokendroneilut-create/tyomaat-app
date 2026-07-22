@@ -32736,7 +32736,132 @@ async function collectRistijarviKaavaSource(source: DiscoverySource) {
   }
 }
 
+const KOLARI_LISTING_URL = "https://www.kolari.fi/fi/asuminen-ja-ymparisto/kaavoitus/vireilla-olevat-kaavat"
+const KOLARI_BASE_URL = "https://www.kolari.fi"
+
+function kolariPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectKolariKaavaSource(source: DiscoverySource) {
+  const response = await fetch(KOLARI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const links = $("a.card-title")
+    .toArray()
+    .map((el) => {
+      const $el = $(el)
+      const title = $el.text().replace(/\s+/g, " ").trim()
+      const href = ($el.attr("href") ?? "").trim()
+      const url = href.startsWith("http") ? href : `${KOLARI_BASE_URL}/${href.replace(/^\/+/, "")}`
+      return { title, url }
+    })
+    .filter((item) => item.title && item.url)
+
+  let saved = 0
+  const slugCounts = new Map<string, number>()
+
+  for (const link of links) {
+    let title = link.title
+    let description = ""
+    try {
+      const detailResponse = await fetch(link.url, { cache: "no-store" })
+      if (detailResponse.ok) {
+        const $$ = cheerio.load(await detailResponse.text())
+        const h1Text = $$(".iwc-page-title").first().text().replace(/\s+/g, " ").trim()
+        if (h1Text) title = h1Text
+        description = $$(".iwc-attachemts .file-name")
+          .toArray()
+          .map((span) => $$(span).text().replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+          .join(" ")
+      }
+    } catch {
+      // Fall back to the listing-page title if the detail page fails.
+    }
+
+    const phase = kolariPhaseFromText(`${title} ${description}`)
+    const completed = phase === "Voimaantulo"
+
+    const baseSlug = kemiSlug(title)
+    const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
+    slugCounts.set(baseSlug, occurrence)
+    const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
+
+    const rawText = JSON.stringify({ title, phase, description })
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title,
+        document_url: link.url,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          title,
+          slug,
+          phase,
+          description,
+          contacts: [],
+          completed,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...(completed
+          ? {
+              facts_extracted_at: new Date().toISOString(),
+              identity_resolved_at: new Date().toISOString(),
+            }
+          : {}),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: links.length,
+    documentsSaved: saved,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "kolariKaavaParser") {
+    return collectKolariKaavaSource(source)
+  }
+
   if (source.parser === "ristijarviKaavaParser") {
     return collectRistijarviKaavaSource(source)
   }
