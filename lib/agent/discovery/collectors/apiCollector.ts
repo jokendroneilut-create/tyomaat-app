@@ -33326,7 +33326,211 @@ async function collectUtsjokiKaavaSource(source: DiscoverySource) {
   }
 }
 
+const ISOJOKI_LISTING_URL = "https://isojoki.fi/asuminen-ja-ymparisto/kaavoitus-ja-kartat/nahtavilla-olevat-kaavat/"
+
+function isojokiPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectIsojokiKaavaSource(source: DiscoverySource) {
+  const response = await fetch(ISOJOKI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const container = $(".entry-content").first()
+  const firstStrong = container.find("p strong").first().text().replace(/\s+/g, " ").trim()
+  const title = firstStrong.replace(/\.$/, "").trim()
+  const description = container.text().replace(/\s+/g, " ").trim()
+
+  if (!title) return { documentsFound: 0, documentsSaved: 0 }
+
+  const phase = isojokiPhaseFromText(`${title} ${description}`)
+  const completed = phase === "Voimaantulo"
+
+  const slug = kemiSlug(title)
+  const url = `${ISOJOKI_LISTING_URL}#${slug}`
+
+  const rawText = JSON.stringify({ title, phase, description })
+  const contentHash = hashContent(rawText)
+
+  const { error } = await supabaseAdmin.from("source_documents").upsert(
+    {
+      source_id: source.id,
+      source_name: source.name,
+      title,
+      document_url: url,
+      document_type: "api",
+      content_hash: contentHash,
+      status: "downloaded",
+      raw_text: rawText,
+      raw_payload: {
+        parser: source.parser,
+        priority: source.priority,
+        title,
+        slug,
+        phase,
+        description,
+        contacts: [],
+        completed,
+      },
+      processed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...(completed
+        ? {
+            facts_extracted_at: new Date().toISOString(),
+            identity_resolved_at: new Date().toISOString(),
+          }
+        : {}),
+    },
+    { onConflict: "document_url" }
+  )
+
+  if (error) throw error
+
+  return {
+    documentsFound: 1,
+    documentsSaved: 1,
+  }
+}
+
+const VIMPELI_LISTING_URL = "https://www.vimpeli.fi/asuminen-ja-ymparisto/kaavat"
+
+function vimpeliPhaseFromText(text: string): string {
+  const normalized = text.toLowerCase()
+  const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
+    for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
+      const index = match.index ?? -1
+      if (index < 0) continue
+      if (extraGuard) {
+        const window = normalized.slice(Math.max(0, index - 80), index + 90)
+        if (extraGuard(window)) continue
+      }
+      return true
+    }
+    return false
+  }
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
+  if (matchesUnguarded(/hyväksy/, (window) =>
+    /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
+  )) return "Hyväksyminen"
+  if (matchesUnguarded(/ehdotu/)) return "Ehdotus"
+  if (matchesUnguarded(/luonno[sk]/)) return "Luonnos"
+  return "Vireilletulo"
+}
+
+async function collectVimpeliKaavaSource(source: DiscoverySource) {
+  const response = await fetch(VIMPELI_LISTING_URL, { cache: "no-store" })
+  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  const $ = cheerio.load(await response.text())
+
+  const heading = $("p")
+    .filter((_, el) => {
+      const $el = $(el)
+      return $el.children("strong").length > 0 && /vireill[äa] olevat kaavahankkeet/i.test($el.text())
+    })
+    .first()
+
+  const bodyParagraphs: string[] = []
+  let el = heading.next()
+  while (el.length) {
+    if (el.is("p")) {
+      const text = el.text().replace(/\s+/g, " ").trim()
+      if (text) bodyParagraphs.push(text)
+    }
+    el = el.next()
+  }
+  const description = bodyParagraphs.join(" ")
+
+  if (!description) return { documentsFound: 0, documentsSaved: 0 }
+
+  const titleMatch = description.match(
+    /asettanut\s+(.+?)\s+(osayleiskaava|asemakaava|yleiskaava|ranta-asemakaava)(?:luonnoksen|ehdotuksen|muutoksen)/i
+  )
+  const title = titleMatch ? `${titleMatch[1]} ${titleMatch[2]}` : "Vimpelin vireillä oleva kaavahanke"
+
+  const phase = vimpeliPhaseFromText(`${title} ${description}`)
+  const completed = phase === "Voimaantulo"
+
+  const slug = kemiSlug(title)
+  const url = `${VIMPELI_LISTING_URL}#${slug}`
+
+  const rawText = JSON.stringify({ title, phase, description })
+  const contentHash = hashContent(rawText)
+
+  const { error } = await supabaseAdmin.from("source_documents").upsert(
+    {
+      source_id: source.id,
+      source_name: source.name,
+      title,
+      document_url: url,
+      document_type: "api",
+      content_hash: contentHash,
+      status: "downloaded",
+      raw_text: rawText,
+      raw_payload: {
+        parser: source.parser,
+        priority: source.priority,
+        title,
+        slug,
+        phase,
+        description,
+        contacts: [],
+        completed,
+      },
+      processed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...(completed
+        ? {
+            facts_extracted_at: new Date().toISOString(),
+            identity_resolved_at: new Date().toISOString(),
+          }
+        : {}),
+    },
+    { onConflict: "document_url" }
+  )
+
+  if (error) throw error
+
+  return {
+    documentsFound: 1,
+    documentsSaved: 1,
+  }
+}
+
 export async function collectApiSource(source: DiscoverySource) {
+  if (source.parser === "isojokiKaavaParser") {
+    return collectIsojokiKaavaSource(source)
+  }
+
+  if (source.parser === "vimpeliKaavaParser") {
+    return collectVimpeliKaavaSource(source)
+  }
+
   if (source.parser === "tervolaKaavaParser") {
     return collectTervolaKaavaSource(source)
   }

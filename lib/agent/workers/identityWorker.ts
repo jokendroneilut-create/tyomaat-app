@@ -168,6 +168,8 @@ import { resolveSallaKaavaProject } from "@/lib/agent/identity/resolvers/sallaKa
 import { resolveTervolaKaavaProject } from "@/lib/agent/identity/resolvers/tervolaKaavaResolver"
 import { resolveSavukoskiKaavaProject } from "@/lib/agent/identity/resolvers/savukoskiKaavaResolver"
 import { resolveUtsjokiKaavaProject } from "@/lib/agent/identity/resolvers/utsjokiKaavaResolver"
+import { resolveIsojokiKaavaProject } from "@/lib/agent/identity/resolvers/isojokiKaavaResolver"
+import { resolveVimpeliKaavaProject } from "@/lib/agent/identity/resolvers/vimpeliKaavaResolver"
 import { resolveVirolahtiKaavaProject } from "@/lib/agent/identity/resolvers/virolahtiKaavaResolver"
 import { resolveEnontekioKaavaProject } from "@/lib/agent/identity/resolvers/enontekioKaavaResolver"
 import { resolveInariKaavaProject } from "@/lib/agent/identity/resolvers/inariKaavaResolver"
@@ -1393,6 +1395,20 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "utsjoen kaavoitus") {
     const result = await resolveUtsjokiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "isojoen kaavoitus") {
+    const result = await resolveIsojokiKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "vimpelin kaavoitus") {
+    const result = await resolveVimpeliKaavaProject({
       document,
       facts: facts ?? [],
     })

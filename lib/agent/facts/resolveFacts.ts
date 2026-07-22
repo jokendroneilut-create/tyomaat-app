@@ -215,6 +215,8 @@ import { extractSallaKaavaFacts } from "@/lib/agent/facts/extractSallaKaavaFacts
 import { extractTervolaKaavaFacts } from "@/lib/agent/facts/extractTervolaKaavaFacts"
 import { extractSavukoskiKaavaFacts } from "@/lib/agent/facts/extractSavukoskiKaavaFacts"
 import { extractUtsjokiKaavaFacts } from "@/lib/agent/facts/extractUtsjokiKaavaFacts"
+import { extractIsojokiKaavaFacts } from "@/lib/agent/facts/extractIsojokiKaavaFacts"
+import { extractVimpeliKaavaFacts } from "@/lib/agent/facts/extractVimpeliKaavaFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
 export function resolveFacts(document: any) {
@@ -3910,6 +3912,40 @@ export function resolveFacts(document: any) {
     return {
       decisions: [],
       facts: extractUtsjokiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Isojoen kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractIsojokiKaavaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title,
+        phase,
+        description,
+      }),
+    }
+  }
+
+  if (document.source_name === "Vimpelin kaavoitus") {
+    const title = document.raw_payload?.title ?? document.title ?? null
+    const phase = document.raw_payload?.phase ?? null
+    const description = document.raw_payload?.description ?? null
+
+    return {
+      decisions: [],
+      facts: extractVimpeliKaavaFacts({
         documentId: document.id,
         sourceName: document.source_name,
         title,
