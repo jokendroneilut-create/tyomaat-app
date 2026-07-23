@@ -13,8 +13,45 @@ const FINNISH_MONTHS: [string, number][] = [
   ["joulukuu", 12],
 ]
 
+/*
+ * Osa tiedotteista ei mainitse kuukautta lainkaan, vain vuodenajan
+ * ("hankkeen arvioidaan valmistuvan loppuvuodesta 2025"). Jokainen
+ * vuodenaika-ilmaus kartoitetaan sen MYÖHÄISIMPÄÄN mahdolliseen
+ * kuukauteen - näin päivämäärä ei koskaan arvioi valmistumista
+ * todellista aikaisemmaksi, mikä pitäisi virhesuunnan turvallisena
+ * (myöhemmin toteava sijaan liian aikaisin toteava).
+ */
+const FINNISH_SEASONS: [string, number][] = [
+  ["alkuvuodesta", 4],
+  ["kevätkaudella", 5],
+  ["keväällä", 5],
+  ["kesäkaudella", 8],
+  ["kesällä", 8],
+  ["syyskaudella", 11],
+  ["syksyllä", 11],
+  ["loppuvuodesta", 12],
+]
+
 function lastDayOfMonth(year: number, month: number): string {
   return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10)
+}
+
+function findGuardedDate(
+  text: string,
+  regex: RegExp,
+  resolveMonth: (matchedWord: string) => number | undefined
+): string | null {
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(text))) {
+    const precedingWindow = text.slice(Math.max(0, match.index - 40), match.index)
+    if (!/valmis/.test(precedingWindow)) continue
+
+    const month = resolveMonth(match[1])
+    if (!month) continue
+
+    return lastDayOfMonth(parseInt(match[2], 10), month)
+  }
+  return null
 }
 
 /*
@@ -39,20 +76,20 @@ export function inferCompletionDateFromText(
   const normalized = text.toLowerCase()
 
   const monthPattern = FINNISH_MONTHS.map(([name]) => name).join("|")
-  const regex = new RegExp(`(${monthPattern})ssa\\s+(\\d{4})`, "g")
+  const monthMatch = findGuardedDate(
+    normalized,
+    new RegExp(`(${monthPattern})ssa\\s+(\\d{4})`, "g"),
+    (word) => FINNISH_MONTHS.find(([name]) => name === word)?.[1]
+  )
+  if (monthMatch) return monthMatch
 
-  let match: RegExpExecArray | null
-  while ((match = regex.exec(normalized))) {
-    const precedingWindow = normalized.slice(Math.max(0, match.index - 40), match.index)
-    if (!/valmis/.test(precedingWindow)) continue
-
-    const monthName = match[1]
-    const year = parseInt(match[2], 10)
-    const month = FINNISH_MONTHS.find(([name]) => name === monthName)?.[1]
-    if (!month) continue
-
-    return lastDayOfMonth(year, month)
-  }
+  const seasonPattern = FINNISH_SEASONS.map(([name]) => name).join("|")
+  const seasonMatch = findGuardedDate(
+    normalized,
+    new RegExp(`(${seasonPattern})\\s+(\\d{4})`, "g"),
+    (word) => FINNISH_SEASONS.find(([name]) => name === word)?.[1]
+  )
+  if (seasonMatch) return seasonMatch
 
   return null
 }

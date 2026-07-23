@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { inferPhaseFromText } from "@/lib/projects/inferPhaseFromText"
+import { inferCompletionDateFromText, isPastDate } from "@/lib/projects/inferCompletionDateFromText"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import {
@@ -250,7 +251,20 @@ const match =
       }
     }
 
-  if (body.completed) {
+  /*
+   * Yrityksen lehdistötiedote saattaa itse kuulostaa käynnissä olevalta
+   * ("Työt käynnistyvät tammikuussa 2025...") vaikka tekstissä mainittu
+   * arvioitu valmistumisaika on jo mennyt kokoamishetkellä - lähdesivu ei
+   * itse päivity. body.completed kattaa vain lähteen OMAN tilamerkinnän;
+   * tämä poimii vielä leipätekstistä mainitun päivämäärän ja estää yhtä
+   * lailla jo vanhentuneiden hankkeiden päätymisen TIC-jonoon.
+   */
+  const inferredCompletionDate = inferCompletionDateFromText(
+    `${body.name ?? ""} ${body.metadata?.description ?? ""}`
+  )
+  const isStaleCompletion = isPastDate(inferredCompletionDate)
+
+  if (body.completed || isStaleCompletion) {
       await supabase.from("project_import_events").insert({
         source_name: body.source_name || "agent",
         source_url: body.source_url || null,
@@ -258,14 +272,18 @@ const match =
         match_status: "completed_source",
         matched_project_id: null,
         action_taken: "skipped",
-        reason: "completed project not inserted as new",
+        reason: isStaleCompletion && !body.completed
+          ? `estimated completion (${inferredCompletionDate}) already passed`
+          : "completed project not inserted as new",
         match_confidence: detailedMatch?.confidence ?? null,
         match_reasons: detailedMatch?.reasons ?? [],
       })
 
       return NextResponse.json({
         status: "skipped_completed",
-        reason: "completed project not inserted as new",
+        reason: isStaleCompletion && !body.completed
+          ? `estimated completion (${inferredCompletionDate}) already passed`
+          : "completed project not inserted as new",
       })
     }
 
