@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { DISCOVERY_CRON_CONFIG } from "@/lib/agent/pipeline/cronConfig"
 
 export const runtime = "nodejs"
 export const maxDuration = 500
@@ -28,13 +29,7 @@ export async function GET(req: Request) {
      * (maxDuration 280) koko putki mahtuu taas yhteen kutsuun -- mitattu
      * n. 187s maxSourceCount:illa 8 ja maxFactJobs:illa 30 tuotannossa.
      */
-    const body = {
-      maxSourceCount: 8,
-      maxArticleJobs: 8,
-      maxPdfJobs: 8,
-      maxTextJobs: 8,
-      maxFactJobs: 30,
-    }
+    const body = DISCOVERY_CRON_CONFIG
 
     const res = await fetch(`${baseUrl}/api/tic/discovery/run-pipeline`, {
       method: "POST",

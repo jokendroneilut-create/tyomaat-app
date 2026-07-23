@@ -13,26 +13,39 @@ type SortColumn =
 
 type SortDirection = "asc" | "desc"
 
-/*
- * "Tila" ei ole suoraan kentän arvo vaan pääteltävä useasta kentästä
- * (ks. hasCurrentError alla) - sille annetaan oma järjestysarvo
- * (Error > Healthy > Disabled), jotta lajittelu on mielekäs eikä pelkkää
- * aakkosjärjestystä satunnaisten badge-tekstien mukaan.
- */
-function statusRank(source: any): number {
-  const hasCurrentError =
+function hasCurrentError(source: any): boolean {
+  return (
     Boolean(source.last_error_at) &&
     (!source.last_success_at || source.last_error_at > source.last_success_at)
+  )
+}
 
-  if (hasCurrentError) return 0
-  if (source.enabled) return 1
-  return 2
+function daysSince(value: string | null): number | null {
+  if (!value) return null
+  return (Date.now() - new Date(value).getTime()) / (24 * 3600 * 1000)
+}
+
+/*
+ * "Tila" ei ole suoraan kentän arvo vaan pääteltävä useasta kentästä -
+ * sille annetaan oma järjestysarvo (Error > Myöhässä > Healthy >
+ * Disabled), jotta lajittelu on mielekäs eikä pelkkää aakkosjärjestystä
+ * satunnaisten badge-tekstien mukaan.
+ */
+function statusRank(source: any, staleThresholdDays: number): number {
+  if (hasCurrentError(source)) return 0
+
+  const gap = daysSince(source.last_run_at)
+  if (source.enabled && gap !== null && gap > staleThresholdDays) return 1
+  if (source.enabled) return 2
+  return 3
 }
 
 export default function SourceMonitorTable({
   sources,
+  staleThresholdDays,
 }: {
   sources: any[]
+  staleThresholdDays: number
 }) {
   const [sortColumn, setSortColumn] = useState<SortColumn>("name")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
@@ -51,7 +64,7 @@ export default function SourceMonitorTable({
       let cmp = 0
 
       if (sortColumn === "status") {
-        cmp = statusRank(a) - statusRank(b)
+        cmp = statusRank(a, staleThresholdDays) - statusRank(b, staleThresholdDays)
       } else if (sortColumn === "name") {
         cmp = (a.name ?? "").localeCompare(b.name ?? "", "fi")
       } else if (sortColumn === "collector") {
@@ -70,7 +83,7 @@ export default function SourceMonitorTable({
     })
 
     return sorted
-  }, [sources, sortColumn, sortDirection])
+  }, [sources, sortColumn, sortDirection, staleThresholdDays])
 
   if (!sources.length) {
     return (
@@ -110,10 +123,10 @@ export default function SourceMonitorTable({
              * virheen jälkeen. Verrataan sen sijaan ajankohtia — vain jos
              * viimeisin virhe on tuoreempi kuin viimeisin onnistuminen.
              */
-            const hasCurrentError =
-              Boolean(source.last_error_at) &&
-              (!source.last_success_at ||
-                source.last_error_at > source.last_success_at)
+            const isError = hasCurrentError(source)
+            const gap = daysSince(source.last_run_at)
+            const isStale =
+              !isError && source.enabled && gap !== null && gap > staleThresholdDays
 
             return (
               <tr key={source.id} className="border-t">
@@ -125,9 +138,13 @@ export default function SourceMonitorTable({
                 </td>
 
                 <td className="px-4 py-3">
-                  {hasCurrentError ? (
+                  {isError ? (
                     <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">
                       Error
+                    </span>
+                  ) : isStale ? (
+                    <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+                      Myöhässä
                     </span>
                   ) : source.enabled ? (
                     <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">

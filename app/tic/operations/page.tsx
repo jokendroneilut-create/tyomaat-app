@@ -1,6 +1,8 @@
 import { getDiscoverySources } from "./services/getDiscoverySources"
 import { getLegacySourceHealth } from "./services/getLegacySourceHealth"
 import SourceMonitorTable from "./components/SourceMonitorTable"
+import CadenceSummary from "./components/CadenceSummary"
+import { DISCOVERY_CRON_CONFIG } from "@/lib/agent/pipeline/cronConfig"
 
 export const dynamic = "force-dynamic"
 
@@ -22,6 +24,10 @@ export default async function DiscoveryOperationsPage() {
     (s) => s.last_error_message !== null
   ).length
 
+  const sourcesPerRun = DISCOVERY_CRON_CONFIG.maxSourceCount
+  const fullCycleDays = Math.ceil(enabledCount / sourcesPerRun)
+  const staleThresholdDays = Math.round(fullCycleDays * 1.5)
+
   return (
     <main className="mx-auto max-w-7xl px-6 py-8">
       <h1 className="text-3xl font-bold text-gray-900">
@@ -33,7 +39,16 @@ export default async function DiscoveryOperationsPage() {
       </p>
 
       <div className="mt-10">
-      <SourceMonitorTable sources={sources} />
+        <CadenceSummary
+          enabledCount={enabledCount}
+          sourcesPerRun={sourcesPerRun}
+          fullCycleDays={fullCycleDays}
+          staleThresholdDays={staleThresholdDays}
+        />
+      </div>
+
+      <div className="mt-6">
+        <SourceMonitorTable sources={sources} staleThresholdDays={staleThresholdDays} />
       </div>
 
       <div className="mt-10 overflow-hidden rounded-xl border bg-white shadow-sm">
