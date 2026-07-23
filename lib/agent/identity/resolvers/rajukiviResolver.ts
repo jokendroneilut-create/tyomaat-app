@@ -3,6 +3,7 @@ import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { syncApprovedProject } from "@/lib/projects/syncApprovedProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
+import { inferCompletionDateFromText, isPastDate } from "@/lib/projects/inferCompletionDateFromText"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -191,9 +192,19 @@ export async function resolveRajukiviProject({
   const municipality = metadata.municipality ?? null
   const slug = document.raw_payload?.slug ?? null
 
-  const phaseLabel = phaseKey === "completed" ? PHASE_LABELS.completed : PHASE_LABELS.construction
-
   const combinedText = `${title}. ${description ?? ""}`
+
+  /*
+   * Rajukiven tiedote saattaa itse pysyä "käynnissä"-muodossa vaikka
+   * tekstissä mainittu valmistumispäivä on jo mennyt (ks.
+   * inferCompletionDateFromText.ts) - tarkistetaan tämä ennen phaseLabelin
+   * päättämistä, jotta hanke ei jää virheellisesti "Rakenteilla"-vaiheeseen
+   * kuukausiksi/vuosiksi sen jälkeen kun se on tosiasiassa valmistunut.
+   */
+  const inferredCompletionDate = inferCompletionDateFromText(combinedText)
+  const isAlreadyCompleted = phaseKey === "completed" || isPastDate(inferredCompletionDate)
+  const phaseLabel = isAlreadyCompleted ? PHASE_LABELS.completed : PHASE_LABELS.construction
+
   const stems = rajukiviCandidateStems(combinedText)
   const secondaryStems = rajukiviSecondaryStems(combinedText)
   const matchedProject = stems.length
@@ -206,6 +217,8 @@ export async function resolveRajukiviProject({
       projectId: matchedProject.id,
       newMetadata: {
         phase_hint: phaseLabel,
+        estimated_completion: inferredCompletionDate,
+        completed: isAlreadyCompleted,
         rajukivi_note: description,
         rajukivi_source_url: document.document_url,
         rajukivi_updated_at: new Date().toISOString(),
@@ -262,7 +275,8 @@ export async function resolveRajukiviProject({
       contact_persons: [],
 
       phase_hint: phaseLabel,
-      completed: phaseKey === "completed",
+      completed: isAlreadyCompleted,
+      estimated_completion: inferredCompletionDate,
       builder: "Rajukivi Oy",
 
       construction_type: classification.construction_type,
