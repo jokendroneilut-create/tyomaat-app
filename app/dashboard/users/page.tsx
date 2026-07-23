@@ -70,14 +70,22 @@ export default function UsersPage() {
     return session?.access_token ?? null
   }
 
-  const fetchUsers = async () => {
+  /*
+   * silent: käytetään kutsun lähetyksen jälkeisessä automaattisessa
+   * päivityksessä. Kutsu itse on siinä vaiheessa jo onnistunut - jos
+   * pelkkä listan haku kaatuu (esim. hetkellinen istunto-ongelma heti
+   * uudelleenkirjautumisen jälkeen), sitä ei pidä näyttää hälyttävänä
+   * virheenä joka sekoittuu onnistuneen kutsun ilmoitukseen. Lista
+   * päivittyy joka tapauksessa seuraavalla "Päivitä"-klikkauksella.
+   */
+  const fetchUsers = async (silent = false) => {
     setLoading(true)
-    setError(null)
+    if (!silent) setError(null)
 
     const token = await getToken()
 
     if (!token) {
-      setError('Et ole kirjautunut sisään')
+      if (!silent) setError('Et ole kirjautunut sisään')
       setLoading(false)
       return
     }
@@ -90,12 +98,12 @@ export default function UsersPage() {
       const json = await res.json()
 
       if (!res.ok) {
-        setError(json.error || 'Käyttäjien haku epäonnistui')
+        if (!silent) setError(json.error || 'Käyttäjien haku epäonnistui')
       } else {
         setUsers(json.users)
       }
     } catch {
-      setError('Käyttäjien haku epäonnistui')
+      if (!silent) setError('Käyttäjien haku epäonnistui')
     }
 
     setLoading(false)
@@ -137,7 +145,7 @@ export default function UsersPage() {
       } else {
         setInviteResult(`Kutsu lähetetty osoitteeseen ${email}`)
         setInviteEmail('')
-        await fetchUsers()
+        await fetchUsers(true)
       }
     } catch {
       setInviteResult('Virhe kutsun lähetyksessä')
@@ -234,7 +242,7 @@ export default function UsersPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={{ fontSize: 18 }}>Kaikki käyttäjät ({users.length})</h2>
           <button
-            onClick={fetchUsers}
+            onClick={() => fetchUsers()}
             disabled={loading}
             style={{
               padding: '6px 12px',
