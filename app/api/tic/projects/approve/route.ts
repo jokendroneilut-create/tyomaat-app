@@ -2161,6 +2161,10 @@ export async function POST(request: Request) {
       metadata.developer ??
       null
 
+    const builder =
+      metadata.builder ??
+      null
+
     const estimatedCompletion =
       metadata.estimated_completion ??
       null
@@ -2270,6 +2274,7 @@ export async function POST(request: Request) {
           region: existingProject.region ?? region,
           location: existingProject.location ?? location,
           developer: existingProject.developer ?? developer,
+          builder: existingProject.builder ?? builder,
           property_type:
             existingProject.property_type ?? metadata.building_type ?? null,
           estimated_completion:
@@ -2368,6 +2373,7 @@ export async function POST(request: Request) {
         longitude: coords.lon,
 
         developer,
+        builder,
 
         property_type: metadata.building_type ?? null,
         estimated_completion: estimatedCompletion,
