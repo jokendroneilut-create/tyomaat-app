@@ -25,7 +25,22 @@ export default async function DiscoveryOperationsPage() {
   ).length
 
   const sourcesPerRun = DISCOVERY_CRON_CONFIG.maxSourceCount
-  const fullCycleDays = Math.ceil(enabledCount / sourcesPerRun)
+
+  /*
+   * Lähteet joiden priority > 10 (perustaso) valitaan aina ensin
+   * jokaisessa ajossa, joten ne varaavat kiinteän paikan eivätkä
+   * koskaan kierrä muiden mukana. "Täysi kierros" pitää siis laskea
+   * VAIN jäljelle jäävälle perustason joukolle ja jäljelle jäävillä
+   * paikoilla - muuten luku näyttäisi kaikille virheellisen
+   * optimistista sen jälkeen kun esim. Hilma ajetaan joka yö.
+   */
+  const guaranteedCount = sources.filter(
+    (s) => s.enabled && s.priority > 10
+  ).length
+  const regularCount = enabledCount - guaranteedCount
+  const regularSlotsPerRun = Math.max(1, sourcesPerRun - guaranteedCount)
+
+  const fullCycleDays = Math.ceil(regularCount / regularSlotsPerRun)
   const staleThresholdDays = Math.round(fullCycleDays * 1.5)
 
   return (
@@ -44,6 +59,7 @@ export default async function DiscoveryOperationsPage() {
           sourcesPerRun={sourcesPerRun}
           fullCycleDays={fullCycleDays}
           staleThresholdDays={staleThresholdDays}
+          guaranteedCount={guaranteedCount}
         />
       </div>
 

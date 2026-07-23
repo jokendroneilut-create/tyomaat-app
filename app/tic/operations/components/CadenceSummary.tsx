@@ -7,12 +7,16 @@ export default function CadenceSummary({
   sourcesPerRun,
   fullCycleDays,
   staleThresholdDays,
+  guaranteedCount,
 }: {
   enabledCount: number
   sourcesPerRun: number
   fullCycleDays: number
   staleThresholdDays: number
+  guaranteedCount: number
 }) {
+  const regularCount = enabledCount - guaranteedCount
+  const regularSlotsPerRun = Math.max(1, sourcesPerRun - guaranteedCount)
   const [showInfo, setShowInfo] = useState(false)
 
   return (
@@ -55,17 +59,24 @@ export default function CadenceSummary({
           <p>
             Yöllinen ajo (klo 03:00) käsittelee vain {sourcesPerRun} lähdettä
             kerrallaan, vaikka lähteiden oma "refresh_minutes"-asetus toivoisi
-            useimmille päivittäistä ajoa. Kaikilla lähteillä on sama
-            prioriteetti, joten ne käydään käytännössä läpi vuorotellen sen
+            useimmille päivittäistä ajoa. Muutamalla lähteellä on muita
+            korkeampi prioriteetti (esim. Hilma, koska sen tarjousajat ovat
+            usein lyhyempiä kuin muiden lähteiden ajovälit) — ne valitaan
+            aina ensin ja varaavat siis kiinteän paikan joka yö. Loput{" "}
+            {regularCount} lähdettä ovat keskenään samalla perustasolla ja
+            kiertävät jäljelle jäävillä {regularSlotsPerRun} paikalla sen
             mukaan mikä on odottanut pisimpään.
           </p>
           <p className="mt-2">
-            {enabledCount} lähdettä ÷ {sourcesPerRun}/yö = täysi kierros
-            kestää noin {fullCycleDays} päivää. Tämä on normaali väli
-            yksittäisen lähteen kahden ajon välillä — ei merkki ongelmasta.
-            Source Monitor -taulukossa lähde merkitään "Myöhässä" vasta jos
-            väli on merkittävästi (1,5x) tätä pidempi, eli yli{" "}
-            {staleThresholdDays} päivää.
+            {regularCount} lähdettä ÷ {regularSlotsPerRun}/yö = täysi kierros
+            kestää noin {fullCycleDays} päivää{" "}
+            {guaranteedCount > 0
+              ? `(${guaranteedCount} korkean prioriteetin lähdettä jäävät tämän ulkopuolelle, koska ne ajetaan joka yö)`
+              : ""}
+            . Tämä on normaali väli yksittäisen perustason lähteen kahden
+            ajon välillä — ei merkki ongelmasta. Source Monitor -taulukossa
+            lähde merkitään "Myöhässä" vasta jos väli on merkittävästi (1,5x)
+            tätä pidempi, eli yli {staleThresholdDays} päivää.
           </p>
         </div>
       )}
