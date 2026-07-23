@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 import MapClient from './MapClient'
 import type { MapBounds } from './Map'
 import PhaseTimeline from './PhaseTimeline'
-import { CANONICAL_PHASES, displayPhaseLabel } from '@/lib/projects/phases'
+import { CANONICAL_PHASES, displayPhaseLabel, normalizeLegacyPhase } from '@/lib/projects/phases'
 import { trackEvent } from '@/lib/analytics/trackEvent'
 
 const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
@@ -413,10 +413,19 @@ export default function Projects() {
       if (!pageData || pageData.length < PAGE_SIZE) break
     }
 
+    /*
+     * Valmistuneet hankkeet eivät ole tälle näkymälle relevantteja -
+     * käyttäjä ei voi tehdä mitään jo valmistuneella työmaalla, joten ne
+     * suodatetaan pois heti haun jälkeen sekä listasta että kartasta.
+     */
+    const activeProjectsData = projectsData.filter(
+      (p) => normalizeLegacyPhase(p.phase) !== 'completed'
+    )
+
 setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
 
     if (!user) {
-      setProjects((projectsData as Project[]) || [])
+      setProjects(activeProjectsData)
       setLoading(false)
       return
     }
@@ -428,7 +437,7 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
       .maybeSingle()
 
     if (!memberRow) {
-      setProjects((projectsData as Project[]) || [])
+      setProjects(activeProjectsData)
       setLoading(false)
       setTeamModeEnabled(false)
       return
@@ -443,7 +452,7 @@ setTeamModeEnabled(true)
       (assignmentsData || []).map((a: any) => [a.project_id, a.owner_id])
     )
 
-    const projectsWithOwners = ((projectsData as Project[]) || []).map((project) => ({
+    const projectsWithOwners = activeProjectsData.map((project) => ({
       ...project,
       owner_id: assignmentMap.has(project.id)
         ? assignmentMap.get(project.id)
