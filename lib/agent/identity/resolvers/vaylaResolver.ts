@@ -82,7 +82,13 @@ export async function resolveVaylaProject({
       resolver: "vaylaResolver",
 
       operation,
-      builder: "Väylävirasto",
+      /*
+       * Väylävirasto on aina tilaaja/rakennuttaja, ei koskaan fyysinen
+       * urakoitsija - approve-reitti lukee rakennuttajan metadata.developer-
+       * kentästä, joten se kirjoitetaan tähän eikä harhaanjohtavaan
+       * metadata.builder-kenttään (jota mikään koodi ei muutenkaan lue).
+       */
+      developer: "Väylävirasto",
       region: region ?? inferredMunicipality?.region ?? null,
       construction_type: hankeType,
 
@@ -95,7 +101,14 @@ export async function resolveVaylaProject({
 
       phase_hint: phaseHint,
 
-      building_type: classification.building_type,
+      /*
+       * classifyProject() on viritetty rakennusten (kerrostalo, koulu jne.)
+       * tunnistamiseen tekstistä eikä koskaan tunnista tie-/silta-/rata-
+       * hankkeita - ilman oletusarvoa nämä jäisivät aina kohdetyypittä.
+       * Kaikki Väylävirasto-lähteen sisältö on infrahanketta, joten se
+       * kelpaa yleiseksi oletukseksi kun tarkempaa tyyppiä ei tunnistettu.
+       */
+      building_type: classification.building_type ?? "Infrahanke",
       size_class: classification.size_class,
       business_value: classification.business_value,
       recommended_action: classification.recommended_action,
