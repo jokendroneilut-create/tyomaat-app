@@ -1,14 +1,8 @@
 import { getDiscoverySources } from "./services/getDiscoverySources"
 import { getLegacySourceHealth } from "./services/getLegacySourceHealth"
-import { getRecentPipelineRuns } from "./services/getRecentPipelineRuns"
 import SourceMonitorTable from "./components/SourceMonitorTable"
 import CadenceSummary from "./components/CadenceSummary"
-import PipelineRunsTable from "./components/PipelineRunsTable"
-import {
-  DISCOVERY_CRON_CONFIG,
-  DISCOVERY_MAX_DURATION_SECONDS,
-  DISCOVERY_PLATFORM_HARD_LIMIT_SECONDS,
-} from "@/lib/agent/pipeline/cronConfig"
+import { DISCOVERY_CRON_CONFIG } from "@/lib/agent/pipeline/cronConfig"
 
 export const dynamic = "force-dynamic"
 
@@ -17,10 +11,9 @@ function formatDate(value: string | null) {
 }
 
 export default async function DiscoveryOperationsPage() {
-  const [sources, legacySources, pipelineRuns] = await Promise.all([
+  const [sources, legacySources] = await Promise.all([
     getDiscoverySources(),
     getLegacySourceHealth(),
-    getRecentPipelineRuns(30),
   ])
 
   const enabledCount = sources.filter((s) => s.enabled).length
@@ -72,14 +65,6 @@ export default async function DiscoveryOperationsPage() {
 
       <div className="mt-6">
         <SourceMonitorTable sources={sources} staleThresholdDays={staleThresholdDays} />
-      </div>
-
-      <div className="mt-6">
-        <PipelineRunsTable
-          runs={pipelineRuns}
-          maxDurationSeconds={DISCOVERY_MAX_DURATION_SECONDS}
-          platformHardLimitSeconds={DISCOVERY_PLATFORM_HARD_LIMIT_SECONDS}
-        />
       </div>
 
       <div className="mt-10 overflow-hidden rounded-xl border bg-white shadow-sm">

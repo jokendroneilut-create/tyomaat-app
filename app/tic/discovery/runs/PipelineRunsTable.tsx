@@ -81,7 +81,6 @@ export default function PipelineRunsTable({
   if (!runs.length) {
     return (
       <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold">Ajot</h2>
         {budgetNote}
         <p className="mt-2 text-gray-600">
           Ei vielä tallennettuja ajoja. Seuraava yöajo (klo 03:00) tallentaa
@@ -94,7 +93,6 @@ export default function PipelineRunsTable({
   return (
     <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
       <div className="border-b bg-gray-50 px-4 py-3">
-        <h2 className="text-xl font-semibold">Ajot</h2>
         {budgetNote}
       </div>
 
