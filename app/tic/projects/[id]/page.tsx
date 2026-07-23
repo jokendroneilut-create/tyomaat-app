@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCandidate } from "../../services/getCandidate"
 import ProjectActions from "./ProjectActions"
+import EditableCandidate from "./EditableCandidate"
 
 export const dynamic = "force-dynamic"
 
@@ -101,17 +102,24 @@ export default async function CandidateDetailPage({ params }: Props) {
           Esikatselu — näin hanke näkyisi hyväksynnän jälkeen
         </h2>
 
-        <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-sm text-gray-800 md:grid-cols-2">
-          <p><strong>Maakunta:</strong> {metadata.region ?? "-"}</p>
-          <p><strong>Kaupunki:</strong> {candidate.city ?? "-"}</p>
-          <p><strong>Sijainti / osoite:</strong> {candidate.location ?? "-"}</p>
-          <p><strong>🏗️ Rakennuttaja:</strong> {metadata.developer ?? "-"}</p>
-          <p><strong>🏢 Kohdetyyppi:</strong> {metadata.building_type ?? "-"}</p>
-          <p><strong>Vaihe:</strong> {metadata.phase_hint ?? metadata.decision_status ?? "-"}</p>
-          {typeof metadata.site_area_m2 === "number" && (
-            <p><strong>📐 Kaava-alueen pinta-ala:</strong> {Math.round(metadata.site_area_m2).toLocaleString("fi-FI")} m²</p>
-          )}
-        </div>
+        <EditableCandidate
+          candidateId={candidate.id}
+          initial={{
+            title: metadata.operation ?? candidate.title ?? "",
+            region: metadata.region ?? "",
+            city: candidate.city ?? "",
+            address: candidate.location ?? "",
+            developer: metadata.developer ?? "",
+            buildingType: metadata.building_type ?? "",
+            phaseHint: metadata.phase_hint ?? metadata.decision_status ?? "",
+          }}
+        />
+
+        {typeof metadata.site_area_m2 === "number" && (
+          <p className="mt-2 text-sm text-gray-800">
+            <strong>📐 Kaava-alueen pinta-ala:</strong> {Math.round(metadata.site_area_m2).toLocaleString("fi-FI")} m²
+          </p>
+        )}
 
         {contactPersons.length > 0 && (
           <div className="mt-6 border-t border-gray-100 pt-4">
