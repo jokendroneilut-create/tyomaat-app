@@ -20,6 +20,7 @@ export default async function TicLayout({
     { href: "/tic/discovery", label: "🔍 Discovery" },
     { href: "/tic/discovery/documents", label: "📄 Dokumentit" },
     { href: "/tic/discovery/merges", label: "🔗 Yhdistymiset" },
+    { href: "/tic/discovery/enrichment", label: "✨ Rikastus" },
     {
       href: "/tic/discovery/duplicates",
       label: `🧬 Kaksoiskappaleet (${pendingDuplicateCount})`,
