@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { CANONICAL_PHASES } from "@/lib/projects/phases"
+import { REGIONS } from "@/lib/geo/municipalities"
 
 const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
 
@@ -133,11 +134,18 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
 
         <label className="text-sm">
           <span className="mb-1 block font-semibold text-gray-700">Maakunta</span>
-          <input
+          <select
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             value={region}
             onChange={(e) => setRegion(e.target.value)}
-          />
+          >
+            <option value="">-</option>
+            {REGIONS.map((label) => (
+              <option key={label} value={label}>
+                {label}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="text-sm">

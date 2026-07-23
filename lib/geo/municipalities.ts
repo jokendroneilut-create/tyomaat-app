@@ -322,6 +322,10 @@ export const MUNICIPALITIES: Record<string, Municipality> = {
   "992": { code: "992", name: "Äänekoski", region: "Keski-Suomi" },
 }
 
+export const REGIONS: string[] = Array.from(
+  new Set(Object.values(MUNICIPALITIES).map((m) => m.region))
+).sort((a, b) => a.localeCompare(b, "fi"))
+
 export function getMunicipality(code: string | null | undefined): Municipality | null {
   if (!code) return null
   return MUNICIPALITIES[code.padStart(3, "0")] ?? null
