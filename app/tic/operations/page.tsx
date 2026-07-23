@@ -7,6 +7,7 @@ import PipelineRunsTable from "./components/PipelineRunsTable"
 import {
   DISCOVERY_CRON_CONFIG,
   DISCOVERY_MAX_DURATION_SECONDS,
+  DISCOVERY_PLATFORM_HARD_LIMIT_SECONDS,
 } from "@/lib/agent/pipeline/cronConfig"
 
 export const dynamic = "force-dynamic"
@@ -77,6 +78,7 @@ export default async function DiscoveryOperationsPage() {
         <PipelineRunsTable
           runs={pipelineRuns}
           maxDurationSeconds={DISCOVERY_MAX_DURATION_SECONDS}
+          platformHardLimitSeconds={DISCOVERY_PLATFORM_HARD_LIMIT_SECONDS}
         />
       </div>
 

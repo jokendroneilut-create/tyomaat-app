@@ -31,11 +31,11 @@ export const DISCOVERY_CRON_CONFIG = {
  * tämä käsin samaksi, muuten Operations-sivun "% budjetista" alkaa
  * valehdella.
  *
- * Huom: Vercelin Pro-tason vakioraja on 300s ilman Fluid Compute -
- * ominaisuutta, 800s sen kanssa (oletuksena päällä uusimmilla tileillä).
- * 500s-arvo on toiminut tuotannossa (Vercel ei olisi hyväksynyt sitä
- * deployssa jos se ylittäisi tilin todellisen katon), mikä viittaa
- * Fluid Compute -rajaan, mutta tätä ei ole varmistettu suoraan Vercelin
- * hallintapaneelista.
+ * Vahvistettu Vercelin hallintapaneelista (Project Settings -> Functions):
+ * Fluid Compute on päällä tässä projektissa, joten todellinen kova katto
+ * on 800s eikä Pro-tason 300s vakioraja. 500s on siis tarkoituksella
+ * asetettu turvamarginaaliksi selvästi 800s:n alle, ei itse alustan
+ * pakottama raja.
  */
 export const DISCOVERY_MAX_DURATION_SECONDS = 500
+export const DISCOVERY_PLATFORM_HARD_LIMIT_SECONDS = 800

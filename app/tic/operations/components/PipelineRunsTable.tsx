@@ -37,9 +37,11 @@ function percentColor(pct: number): string {
 export default function PipelineRunsTable({
   runs,
   maxDurationSeconds,
+  platformHardLimitSeconds,
 }: {
   runs: PipelineRun[]
   maxDurationSeconds: number
+  platformHardLimitSeconds: number
 }) {
   const [sortColumn, setSortColumn] = useState<SortColumn>("created_at")
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
@@ -66,10 +68,21 @@ export default function PipelineRunsTable({
     return sorted
   }, [runs, sortColumn, sortDirection])
 
+  const budgetNote = (
+    <p className="mt-1 text-sm text-gray-600">
+      Koko yöajon (kaikki vaiheet) kokonaiskesto suhteessa asetettuun{" "}
+      <strong>{maxDurationSeconds}s</strong> turvarajaan. Vercelin todellinen
+      kova katto (Fluid Compute päällä) on <strong>{platformHardLimitSeconds}s</strong> —
+      {" "}{maxDurationSeconds}s on siis tarkoituksella jätetty selvästi sen
+      alle, ei itse alusta rajoita tähän.
+    </p>
+  )
+
   if (!runs.length) {
     return (
       <div className="rounded-xl border bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold">Ajot</h2>
+        {budgetNote}
         <p className="mt-2 text-gray-600">
           Ei vielä tallennettuja ajoja. Seuraava yöajo (klo 03:00) tallentaa
           ensimmäisen rivin tähän.
@@ -82,10 +95,7 @@ export default function PipelineRunsTable({
     <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
       <div className="border-b bg-gray-50 px-4 py-3">
         <h2 className="text-xl font-semibold">Ajot</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Koko yöajon (kaikki vaiheet) kokonaiskesto suhteessa{" "}
-          {maxDurationSeconds}s aikarajaan.
-        </p>
+        {budgetNote}
       </div>
 
       <table className="min-w-full text-sm">
