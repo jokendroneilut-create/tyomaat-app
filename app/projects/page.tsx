@@ -535,6 +535,7 @@ setTeamModeEnabled(true)
         p.location ?? '',
         p.developer ?? '',
         p.builder ?? '',
+        p.earthworks_contractor ?? '',
         p.property_type ?? '',
         p.additional_info ?? '',
       ]

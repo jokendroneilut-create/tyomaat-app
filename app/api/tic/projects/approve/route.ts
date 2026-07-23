@@ -2165,6 +2165,10 @@ export async function POST(request: Request) {
       metadata.builder ??
       null
 
+    const earthworksContractor =
+      metadata.earthworks_contractor ??
+      null
+
     const estimatedCompletion =
       metadata.estimated_completion ??
       null
@@ -2275,6 +2279,8 @@ export async function POST(request: Request) {
           location: existingProject.location ?? location,
           developer: existingProject.developer ?? developer,
           builder: existingProject.builder ?? builder,
+          earthworks_contractor:
+            existingProject.earthworks_contractor ?? earthworksContractor,
           property_type:
             existingProject.property_type ?? metadata.building_type ?? null,
           estimated_completion:
@@ -2374,6 +2380,7 @@ export async function POST(request: Request) {
 
         developer,
         builder,
+        earthworks_contractor: earthworksContractor,
 
         property_type: metadata.building_type ?? null,
         estimated_completion: estimatedCompletion,

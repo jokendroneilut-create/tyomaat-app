@@ -148,7 +148,7 @@ async function findMatchingProject(
   for (const stem of stems) {
     const { data, error } = await supabaseAdmin
       .from("projects")
-      .select("id, name, city, phase, builder, metadata")
+      .select("id, name, city, phase, earthworks_contractor, metadata")
       .ilike("name", `%${stem}%`)
 
     if (error) throw error
@@ -226,13 +226,18 @@ export async function resolveRajukiviProject({
       sourceName: document.source_name,
     })
 
-    if (!matchedProject.builder) {
-      const { error: builderError } = await supabaseAdmin
+    /*
+     * Rajukivi on maanrakennusliike, ei talonrakentaja - se kirjataan
+     * earthworks_contractor ("Maanrakentaja") -kenttään, ei yleiseen
+     * builder ("Rakennusliike") -kenttään.
+     */
+    if (!matchedProject.earthworks_contractor) {
+      const { error: earthworksError } = await supabaseAdmin
         .from("projects")
-        .update({ builder: "Rajukivi Oy" })
+        .update({ earthworks_contractor: "Rajukivi Oy" })
         .eq("id", matchedProject.id)
 
-      if (builderError) throw builderError
+      if (earthworksError) throw earthworksError
     }
 
     return {
@@ -277,7 +282,12 @@ export async function resolveRajukiviProject({
       phase_hint: phaseLabel,
       completed: isAlreadyCompleted,
       estimated_completion: inferredCompletionDate,
-      builder: "Rajukivi Oy",
+      /*
+       * Rajukivi on maanrakennusliike, ei talonrakentaja - approve-reitti
+       * lukee tämän earthworks_contractor ("Maanrakentaja") -kenttään,
+       * ei yleiseen builder ("Rakennusliike") -kenttään.
+       */
+      earthworks_contractor: "Rajukivi Oy",
 
       construction_type: classification.construction_type,
       building_type: classification.building_type,

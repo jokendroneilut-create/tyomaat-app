@@ -87,7 +87,12 @@ export async function resolvePuolustuskiinteistotProject({
       resolver: "puolustuskiinteistotResolver",
 
       operation,
-      builder: "Puolustuskiinteistöt",
+      /*
+       * Puolustuskiinteistöt on valtion tilaajaorganisaatio, ei koskaan
+       * fyysinen urakoitsija - approve-reitti lukee rakennuttajan
+       * metadata.developer-kentästä, ei metadata.builder-kentästä.
+       */
+      developer: "Puolustuskiinteistöt",
       region: municipality?.region ?? null,
 
       decision_status: decisionStatus,

@@ -68,7 +68,12 @@ export async function resolveSenaattiProject({
       resolver: "senaattiResolver",
 
       operation,
-      builder: "Senaatti-kiinteistöt",
+      /*
+       * Senaatti-kiinteistöt on valtion tilaajaorganisaatio, ei koskaan
+       * fyysinen urakoitsija - approve-reitti lukee rakennuttajan
+       * metadata.developer-kentästä, ei metadata.builder-kentästä.
+       */
+      developer: "Senaatti-kiinteistöt",
       senaatti_post_id: metadata.decision_index ?? null,
       region: municipality?.region ?? null,
       building_type: buildingType,
