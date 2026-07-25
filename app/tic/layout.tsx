@@ -25,6 +25,7 @@ export default async function TicLayout({
       href: "/tic/discovery/duplicates",
       label: `🧬 Kaksoiskappaleet (${pendingDuplicateCount})`,
     },
+    { href: "/tic/discovery/ai-relevance", label: "🤖 AI-suodatus" },
     { href: "/tic/discovery/analytics", label: "📈 Analytics" },
     { href: "/tic/discovery/health", label: "🩺 Health" },
     { href: "/tic/discovery/runs", label: "⏱️ Ajot" },
