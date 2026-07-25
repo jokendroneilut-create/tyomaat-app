@@ -2,6 +2,7 @@ import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import { extractWorksite } from "@/lib/agent/identity/extractWorksiteAddress"
 
 function findFact(
   facts: any[],
@@ -203,16 +204,33 @@ export async function resolveHilmaProject({
    * kaupunkia voidaan käyttää hankkeen sijaintikuntana kun ilmoituksen
    * oma teksti tukee samaa kaupunkia (ks. isCityCorroboratedByText).
    */
-  const municipality =
+  let municipality =
     buyerMunicipality &&
     isCityCorroboratedByText(buyerMunicipality.name, description, developer)
       ? buyerMunicipality.name
       : null
 
+  let resolvedAddress = projectAddress
+
+  /*
+   * Työmaan osoite/kaupunki on Hilmassa usein vain vapaassa kuvaustekstissä
+   * (rakenteinen osoite = hankintayksikkö). Poimitaan se kun rakenteinen
+   * kaupunki tai osoite puuttuu: deterministinen jäsennin ensin, LLM varalle.
+   */
+  if (!municipality || !resolvedAddress) {
+    const worksite = await extractWorksite(description)
+    if (!municipality && worksite.city) municipality = worksite.city
+    if (!resolvedAddress && worksite.address) resolvedAddress = worksite.address
+  }
+
+  const municipalityObj = municipality
+    ? getMunicipalityByName(municipality)
+    : null
+
   const result = await resolvePotentialProject({
     title: operation,
     municipality,
-    address: projectAddress,
+    address: resolvedAddress,
     propertyId: null,
 
     permitNumber: noticeNumber,
@@ -234,10 +252,10 @@ export async function resolveHilmaProject({
       description,
       developer,
 
-      region: municipality ? buyerMunicipality?.region ?? null : null,
+      region: municipalityObj?.region ?? null,
 
       buyer_address: buyerAddress,
-      project_address: projectAddress,
+      project_address: resolvedAddress,
 
       deadline,
       expiration_date: expirationDate,
