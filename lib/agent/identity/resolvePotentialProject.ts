@@ -26,6 +26,64 @@ function normalizeValue(value: string | null | undefined) {
   return value?.trim() || null
 }
 
+export type SourceHistoryEntry = {
+  source_name: string | null
+  source_document_id: string | null
+  document_url: string | null
+  notice_type: string | null
+  main_type: string | null
+  date_published: string | null
+  is_contract_award: boolean
+  winners: string[] | null
+  seen_at: string
+}
+
+/*
+ * Kokoaa hankkeelle kumulatiivisen lähdehistorian metadata.source_history-
+ * taulukkoon. Aiemmin metadata.source_document_id oli yksi osoitin joka
+ * ylikirjoittui aina uusimmalla lähteellä, joten esim. tarjousilmoitus katosi
+ * näkyvistä heti kun sama kilpailutus sai jälki-ilmoituksen (voittajan). Tämä
+ * lukee vain geneerisiä metadata-kenttiä, joten se toimii kaikille resolvereille.
+ * Dedup source_document_id:llä: sama dokumentti ei kerry moneen kertaan, mutta
+ * sen seen_at päivittyy.
+ */
+function buildSourceHistory(
+  existingHistory: unknown,
+  input: ResolvePotentialProjectInput
+): SourceHistoryEntry[] {
+  const history: SourceHistoryEntry[] = Array.isArray(existingHistory)
+    ? [...(existingHistory as SourceHistoryEntry[])]
+    : []
+
+  const md = (input.metadata ?? {}) as Record<string, any>
+
+  const entry: SourceHistoryEntry = {
+    source_name: input.sourceName ?? md.source_name ?? null,
+    source_document_id: md.source_document_id ?? null,
+    document_url: md.documents_url ?? md.source_url ?? null,
+    notice_type: md.notice_type ?? null,
+    main_type: md.main_type ?? null,
+    date_published: md.date_published ?? null,
+    is_contract_award: md.is_contract_award === true,
+    winners: Array.isArray(md.winners) && md.winners.length > 0 ? md.winners : null,
+    seen_at: new Date().toISOString(),
+  }
+
+  const existingIndex = entry.source_document_id
+    ? history.findIndex(
+        (h) => h.source_document_id === entry.source_document_id
+      )
+    : -1
+
+  if (existingIndex >= 0) {
+    history[existingIndex] = { ...history[existingIndex], ...entry }
+  } else {
+    history.push(entry)
+  }
+
+  return history
+}
+
 export async function resolvePotentialProject(
   input: ResolvePotentialProjectInput
 ) {
@@ -98,6 +156,11 @@ export async function resolvePotentialProject(
   }
 
   if (existing) {
+    const sourceHistory = buildSourceHistory(
+      existing.metadata?.source_history,
+      input
+    )
+
     const { data: updated, error } = await supabaseAdmin
       .from("potential_projects")
       .update({
@@ -112,6 +175,7 @@ export async function resolvePotentialProject(
         metadata: {
           ...(existing.metadata ?? {}),
           ...(input.metadata ?? {}),
+          source_history: sourceHistory,
           lastSourceName: input.sourceName ?? null,
           matched_existing_project_id:
             existing.metadata?.matched_existing_project_id ??
@@ -136,7 +200,7 @@ export async function resolvePotentialProject(
       await syncApprovedProject({
         supabase: supabaseAdmin,
         projectId: approvedProjectId,
-        newMetadata: input.metadata ?? {},
+        newMetadata: { ...(input.metadata ?? {}), source_history: sourceHistory },
         sourceName: input.sourceName,
       })
     }
@@ -164,6 +228,7 @@ export async function resolvePotentialProject(
       status: "new",
       metadata: {
         ...(input.metadata ?? {}),
+        source_history: buildSourceHistory(null, input),
         firstSourceName: input.sourceName ?? null,
         matched_existing_project_id: matchedExistingProjectId,
       },

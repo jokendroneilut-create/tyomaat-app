@@ -39,6 +39,11 @@ type Project = {
     deadline?: string | null
     notice_number?: string | null
     notice_id?: string | null
+    winners?: string[] | null
+    winner_organisations?: string | null
+    contract_value?: number | null
+    contract_currency?: string | null
+    received_tender_count?: number | null
     contact_persons?:
       | { name: string; title: string | null; phone: string | null; email: string | null }[]
       | null
@@ -415,6 +420,57 @@ export default function TodayProjectModal({
                 </p>
               </div>
             </div>
+
+            {(() => {
+              const winners =
+                Array.isArray(project.metadata?.winners) &&
+                project.metadata.winners.length > 0
+                  ? project.metadata.winners
+                  : project.metadata?.winner_organisations
+                    ? [project.metadata.winner_organisations]
+                    : []
+
+              if (winners.length === 0) return null
+
+              return (
+                <>
+                  <hr className="projects-hr" />
+
+                  <div>
+                    <p style={{ marginBottom: 8 }}>
+                      <strong>Mukana olevat yritykset</strong>
+                    </p>
+
+                    <p>
+                      <strong>
+                        {winners.length > 1
+                          ? "Voittaneet urakoitsijat:"
+                          : "Voittanut urakoitsija:"}
+                      </strong>{" "}
+                      {winners.join(", ")}
+                    </p>
+
+                    {project.metadata?.contract_value != null ? (
+                      <p>
+                        <strong>Urakkasumma:</strong>{" "}
+                        {formatEUR(project.metadata.contract_value)}
+                        {project.metadata?.contract_currency &&
+                        project.metadata.contract_currency !== "EUR"
+                          ? ` (${project.metadata.contract_currency})`
+                          : ""}
+                      </p>
+                    ) : null}
+
+                    {project.metadata?.received_tender_count != null ? (
+                      <p>
+                        <strong>Saatuja tarjouksia:</strong>{" "}
+                        {project.metadata.received_tender_count}
+                      </p>
+                    ) : null}
+                  </div>
+                </>
+              )
+            })()}
 
             {project.metadata?.deadline ||
             project.metadata?.source_url ||

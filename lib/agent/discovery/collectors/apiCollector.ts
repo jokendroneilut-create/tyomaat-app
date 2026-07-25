@@ -153,22 +153,33 @@ async function collectLupapisteSource(source: DiscoverySource) {
   }
 }
 
-async function collectHilmaSource(source: DiscoverySource) {
-  const apiKey = process.env.HILMA_API_KEY
+/*
+ * Aiemmin haettiin vain 20 tuoreinta ilmoitusta. Se jätti mm. jälki-
+ * ilmoitukset (ContractAwardNotices = tarjouskilpailun voittaja) lähes
+ * aina hakematta, koska ne julkaistaan kuukausia kilpailutuksen jälkeen
+ * eivätkä osuneet top-20:een. Nyt haetaan koko aikaikkunan ilmoitukset
+ * sivuttamalla, jolloin saman päivän jälki-ilmoitukset tulevat mukaan ja
+ * rikastusketju (hilmaResolver -> syncApprovedProject) osaa loput.
+ *
+ * cpvCodes:(45*) palauttaa myös jälki-ilmoitukset (nekin kantavat CPV 45*
+ * -koodin), joten erillistä mainType-hakua ei tarvita.
+ */
+const HILMA_PAGE_SIZE = 100
+const HILMA_LOOKBACK_DAYS = 2 // varmuusmarginaali jos yöllinen ajo jää väliin
+const HILMA_MAX_PAGES = 20 // turvakatto ettei poikkeuspäivä karkaa 60s-budjetissa
+const HILMA_UPSERT_CHUNK = 100
 
-  if (!apiKey) {
-    throw new Error("HILMA_API_KEY missing")
-  }
-
+async function fetchHilmaPage(url: string, apiKey: string, skip: number) {
   const body = {
     search: "cpvCodes:(45*)",
-    top: 20,
+    top: HILMA_PAGE_SIZE,
+    skip,
     count: true,
     searchMode: "any",
     orderby: "datePublished desc",
   }
 
-  const response = await fetch(source.url, {
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -182,61 +193,113 @@ async function collectHilmaSource(source: DiscoverySource) {
     throw new Error(`Hilma API fetch failed: ${response.status} ${response.statusText}`)
   }
 
-  const json = await response.json()
-  const notices = Array.isArray(json.value) ? json.value : []
+  return response.json()
+}
 
-  let saved = 0
+async function collectHilmaSource(source: DiscoverySource) {
+  const apiKey = process.env.HILMA_API_KEY
 
-  for (const notice of notices) {
+  if (!apiKey) {
+    throw new Error("HILMA_API_KEY missing")
+  }
+
+  const cutoff = new Date()
+  cutoff.setUTCDate(cutoff.getUTCDate() - HILMA_LOOKBACK_DAYS)
+
+  const collected: any[] = []
+  let odataCount: number | null = null
+
+  // Ilmoitukset tulevat datePublished desc -järjestyksessä (uusin ensin),
+  // joten heti kun sivun ilmoitus menee cutoffin taakse, kaikki loput ovat
+  // vanhempia ja sivutus voidaan lopettaa.
+  for (let page = 0; page < HILMA_MAX_PAGES; page++) {
+    const json = await fetchHilmaPage(source.url, apiKey, page * HILMA_PAGE_SIZE)
+
+    if (odataCount == null) {
+      odataCount = json["@odata.count"] ?? null
+    }
+
+    const notices = Array.isArray(json.value) ? json.value : []
+    if (notices.length === 0) break
+
+    let reachedCutoff = false
+
+    for (const notice of notices) {
+      const published = notice.datePublished
+        ? new Date(notice.datePublished)
+        : null
+
+      // Päiväämättömät ilmoitukset otetaan varmuuden vuoksi mukaan (harvinaisia).
+      if (published && published < cutoff) {
+        reachedCutoff = true
+        continue
+      }
+
+      collected.push(notice)
+    }
+
+    if (reachedCutoff || notices.length < HILMA_PAGE_SIZE) break
+  }
+
+  // Rakennetaan rivit ja dedupataan document_url:n mukaan: Postgres-upsert ei
+  // voi osua samaan conflict-riviin kahdesti samassa kutsussa (esim. jos
+  // useammalta ilmoitukselta puuttuu noticeId ja url putoaa source.url:ksi).
+  const rowsByUrl = new Map<string, any>()
+
+  for (const notice of collected) {
     const noticeId = notice.noticeId ?? notice.id
     const documentUrl = noticeId
       ? `https://www.hankintailmoitukset.fi/fi/public/procurement/${noticeId}/notice/overview/overview`
       : source.url
 
     const rawText = JSON.stringify(notice)
-    const contentHash = hashContent(rawText)
+
+    rowsByUrl.set(documentUrl, {
+      source_id: source.id,
+      source_name: source.name,
+      title: getTitleFromHilmaNotice(notice),
+      document_url: documentUrl,
+      document_type: "api",
+      content_hash: hashContent(rawText),
+      status: "downloaded",
+      raw_text: rawText,
+      raw_payload: {
+        parser: source.parser,
+        category: source.category,
+        priority: source.priority,
+        noticeId,
+        noticeNumber: notice.noticeNumber ?? null,
+        datePublished: notice.datePublished ?? null,
+        organisationName: notice.organisationNameFi ?? null,
+        cpvCodes: notice.cpvCodes ?? null,
+        procurementDocumentsUrl: notice.procurementDocumentsUrl ?? null,
+        original: notice,
+      },
+      processed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+  }
+
+  const rows = [...rowsByUrl.values()]
+
+  let saved = 0
+
+  for (let i = 0; i < rows.length; i += HILMA_UPSERT_CHUNK) {
+    const chunk = rows.slice(i, i + HILMA_UPSERT_CHUNK)
 
     const { error } = await supabaseAdmin
       .from("source_documents")
-      .upsert(
-        {
-          source_id: source.id,
-          source_name: source.name,
-          title: getTitleFromHilmaNotice(notice),
-          document_url: documentUrl,
-          document_type: "api",
-          content_hash: contentHash,
-          status: "downloaded",
-          raw_text: rawText,
-          raw_payload: {
-            parser: source.parser,
-            category: source.category,
-            priority: source.priority,
-            noticeId,
-            noticeNumber: notice.noticeNumber ?? null,
-            datePublished: notice.datePublished ?? null,
-            organisationName: notice.organisationNameFi ?? null,
-            cpvCodes: notice.cpvCodes ?? null,
-            procurementDocumentsUrl: notice.procurementDocumentsUrl ?? null,
-            original: notice,
-          },
-          processed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "document_url",
-        }
-      )
+      .upsert(chunk, { onConflict: "document_url" })
 
     if (error) throw error
 
-    saved += 1
+    saved += chunk.length
   }
 
   return {
-    documentsFound: notices.length,
+    documentsFound: collected.length,
     documentsSaved: saved,
-    count: json["@odata.count"] ?? null,
+    count: odataCount,
   }
 }
 

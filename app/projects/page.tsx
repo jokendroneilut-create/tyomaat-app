@@ -16,6 +16,7 @@ type Project = {
   city: string
   region: string | null
   phase: string
+  status?: string | null
   location: string | null
   developer: string | null
   builder: string | null
@@ -387,7 +388,7 @@ export default function Projects() {
         .from('projects')
         .select(
           `
-          id, name, city, region, phase, location, developer, builder, property_type,
+          id, name, city, region, phase, status, location, developer, builder, property_type,
           apartments, floor_area, estimated_cost, construction_start, estimated_completion,
           structural_design, hvac_design, electrical_design, architectural_design,
           geotechnical_design, earthworks_contractor, additional_info,
@@ -417,9 +418,15 @@ export default function Projects() {
      * Valmistuneet hankkeet eivät ole tälle näkymälle relevantteja -
      * käyttäjä ei voi tehdä mitään jo valmistuneella työmaalla, joten ne
      * suodatetaan pois heti haun jälkeen sekä listasta että kartasta.
+     * Samoin vanhentuneet kilpailutukset (status = "expired"): tarjous-
+     * ilmoituksesta on kulunut yli vuosi eikä hanke ole enää relevantti.
+     * Vain "expired" suodatetaan statuksen perusteella, jottei esim.
+     * null-statuksisia legacy-hankkeita katoa vahingossa.
      */
     const activeProjectsData = projectsData.filter(
-      (p) => normalizeLegacyPhase(p.phase) !== 'completed'
+      (p) =>
+        normalizeLegacyPhase(p.phase) !== 'completed' &&
+        p.status !== 'expired'
     )
 
 setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')

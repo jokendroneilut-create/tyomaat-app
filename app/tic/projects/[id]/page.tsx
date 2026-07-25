@@ -25,7 +25,7 @@ export default async function CandidateDetailPage({ params }: Props) {
     notFound()
   }
 
-  const { candidate, signals } = detail
+  const { candidate, signals, sourceHistory } = detail
   const metadata = candidate.metadata ?? {}
   const contactPersons: { name: string; title: string | null; phone: string | null; email: string | null }[] =
     Array.isArray(metadata.contact_persons) ? metadata.contact_persons : []
@@ -169,6 +169,60 @@ export default async function CandidateDetailPage({ params }: Props) {
           </div>
         )}
       </section>
+
+      {sourceHistory.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Lähdehistoria
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Kaikki hanketta koskeneet ilmoitukset aikajärjestyksessä (uusin ensin).
+          </p>
+
+          <ol className="mt-4 space-y-3">
+            {[...sourceHistory]
+              .sort((a, b) => {
+                const at = new Date(a.date_published ?? a.seen_at).getTime()
+                const bt = new Date(b.date_published ?? b.seen_at).getTime()
+                return bt - at
+              })
+              .map((entry, i) => (
+                <li
+                  key={entry.source_document_id ?? `${entry.seen_at}-${i}`}
+                  className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-gray-900">
+                      {entry.source_name ?? "Tuntematon lähde"}
+                    </span>
+                    {entry.is_contract_award && (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                        Voittaja ratkennut
+                      </span>
+                    )}
+                    {entry.notice_type && (
+                      <span className="text-sm text-gray-500">
+                        {entry.notice_type}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    {entry.date_published
+                      ? `Julkaistu ${formatDate(entry.date_published)}`
+                      : `Havaittu ${formatDate(entry.seen_at)}`}
+                  </p>
+
+                  {entry.winners && entry.winners.length > 0 && (
+                    <p className="mt-2 text-sm text-gray-800">
+                      <strong>Voittaja:</strong> {entry.winners.join(", ")}
+                    </p>
+                  )}
+                </li>
+              ))}
+          </ol>
+        </section>
+      )}
 
       <section className="mt-8">
         <h2 className="text-xl font-semibold text-gray-900">

@@ -17,9 +17,22 @@ export type CandidateSignal = {
   classification_reason: string | null
 }
 
+export type CandidateSourceHistoryEntry = {
+  source_name: string | null
+  source_document_id: string | null
+  document_url: string | null
+  notice_type: string | null
+  main_type: string | null
+  date_published: string | null
+  is_contract_award: boolean
+  winners: string[] | null
+  seen_at: string
+}
+
 export type CandidateDetail = {
   candidate: any
   signals: CandidateSignal[]
+  sourceHistory: CandidateSourceHistoryEntry[]
 }
 
 export async function getCandidate(id: string): Promise<CandidateDetail | null> {
@@ -36,29 +49,52 @@ export async function getCandidate(id: string): Promise<CandidateDetail | null> 
   }
 
   const metadata = potentialProject.metadata ?? {}
-  const sourceDocumentId = metadata.source_document_id ?? null
 
-  let sourceDocument: any = null
+  const sourceHistory: CandidateSourceHistoryEntry[] = Array.isArray(
+    metadata.source_history
+  )
+    ? metadata.source_history
+    : []
 
-  if (sourceDocumentId) {
+  /*
+   * Faktat haetaan KAIKILTA hankkeen lähteiltä (source_history), ei vain
+   * viimeisimmältä source_document_id:ltä. Näin esim. tarjousilmoituksen ja
+   * jälki-ilmoituksen (voittajan) tiedot näkyvät molemmat kumulatiivisesti.
+   * Legacy: mukaan otetaan myös metadata.source_document_id niille vanhoille
+   * hankkeille joilla source_history-taulukkoa ei vielä ole.
+   */
+  const documentIds = Array.from(
+    new Set(
+      [
+        ...sourceHistory.map((entry) => entry.source_document_id),
+        metadata.source_document_id ?? null,
+      ].filter((value): value is string => Boolean(value))
+    )
+  )
+
+  const sourceDocumentsById = new Map<string, any>()
+
+  if (documentIds.length > 0) {
     const { data, error } = await supabaseAdmin
       .from("source_documents")
-      .select("*")
-      .eq("id", sourceDocumentId)
-      .maybeSingle()
+      .select("id, document_url, source_name")
+      .in("id", documentIds)
 
     if (error) throw error
-    sourceDocument = data
+
+    for (const doc of data ?? []) {
+      sourceDocumentsById.set(doc.id, doc)
+    }
   }
 
-  const { data: facts, error: factsError } = sourceDocumentId
-    ? await supabaseAdmin
-        .from("project_facts")
-        .select("*")
-        .eq("document_id", sourceDocumentId)
-        .eq("metadata->>decision_index", String(metadata.decision_index))
-        .order("created_at", { ascending: false })
-    : { data: [], error: null }
+  const { data: facts, error: factsError } =
+    documentIds.length > 0
+      ? await supabaseAdmin
+          .from("project_facts")
+          .select("*")
+          .in("document_id", documentIds)
+          .order("created_at", { ascending: false })
+      : { data: [], error: null }
 
   if (factsError) throw factsError
 
@@ -68,7 +104,8 @@ export async function getCandidate(id: string): Promise<CandidateDetail | null> 
       created_at: potentialProject.created_at,
       title: metadata.operation ?? potentialProject.title ?? "Ehdokas",
       source_name: metadata.firstSourceName ?? metadata.lastSourceName ?? potentialProject.source_name ?? null,
-      source_url: sourceDocument?.document_url ?? null,
+      source_url:
+        sourceDocumentsById.get(metadata.source_document_id)?.document_url ?? null,
       normalized_signal_type: metadata.construction_type ?? "potential_project",
       relevance_score: potentialProject.confidence ?? null,
       review_status: potentialProject.status ?? null,
@@ -80,8 +117,12 @@ export async function getCandidate(id: string): Promise<CandidateDetail | null> 
       id: fact.id,
       created_at: fact.created_at,
       title: `${fact.fact_type}: ${fact.fact_value ?? fact.fact_number ?? fact.fact_date ?? "-"}`,
-      source_name: fact.source_name ?? potentialProject.source_name ?? null,
-      source_url: sourceDocument?.document_url ?? null,
+      source_name:
+        fact.source_name ??
+        sourceDocumentsById.get(fact.document_id)?.source_name ??
+        potentialProject.source_name ??
+        null,
+      source_url: sourceDocumentsById.get(fact.document_id)?.document_url ?? null,
       normalized_signal_type: fact.fact_type ?? null,
       relevance_score: fact.confidence ?? null,
       review_status: potentialProject.status ?? null,
@@ -104,5 +145,6 @@ export async function getCandidate(id: string): Promise<CandidateDetail | null> 
       metadata,
     },
     signals,
+    sourceHistory,
   }
 }
