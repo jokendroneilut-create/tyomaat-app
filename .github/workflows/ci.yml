@@ -13,5 +13,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # npm install (ei npm ci): Windowsilla generoitu package-lock ei sisällä
+      # kaikkia Linuxin optionaalisia alustapaketteja, joten tiukka npm ci
+      # kaatuu Linux-runnerilla. npm install hakee oikeat binäärit itse.
+      - run: npm install --no-audit --no-fund
       - run: npm test
