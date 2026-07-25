@@ -3,6 +3,8 @@ import { notFound } from "next/navigation"
 import { getCandidate } from "../../services/getCandidate"
 import ProjectActions from "./ProjectActions"
 import EditableCandidate from "./EditableCandidate"
+import { normalizeLegacyPhase } from "@/lib/projects/phases"
+import { tenderExpiry, isTenderEnriched } from "@/lib/projects/tenderExpiry"
 
 export const dynamic = "force-dynamic"
 
@@ -120,6 +122,22 @@ export default async function CandidateDetailPage({ params }: Props) {
             <strong>📐 Kaava-alueen pinta-ala:</strong> {Math.round(metadata.site_area_m2).toLocaleString("fi-FI")} m²
           </p>
         )}
+
+        {(() => {
+          if (normalizeLegacyPhase(metadata.phase_hint) !== "tender") return null
+          if (isTenderEnriched(metadata)) return null
+          const exp = tenderExpiry(metadata, candidate.last_signal_at)
+          if (!exp) return null
+          return (
+            <p className="mt-2 text-sm text-gray-800">
+              <strong>⏳ Vanhenee:</strong>{" "}
+              {exp.date.toLocaleDateString("fi-FI")}{" "}
+              <span className="text-gray-500">
+                (hyväksynnän jälkeen, ellei voittajaa selviä sitä ennen)
+              </span>
+            </p>
+          )
+        })()}
 
         {contactPersons.length > 0 && (
           <div className="mt-6 border-t border-gray-100 pt-4">

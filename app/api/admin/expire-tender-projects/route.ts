@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { PHASE_LABELS } from "@/lib/projects/phases"
+import {
+  tenderExpiry,
+  isTenderEnriched,
+  TENDER_EXPIRY_YEARS,
+} from "@/lib/projects/tenderExpiry"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -12,41 +17,18 @@ const supabaseAdmin = createClient(
 
 /*
  * Kilpailutus-vaiheen hanke perustuu tarjousilmoitukseen, joka vanhenee:
- * vuoden kuluttua julkaisusta tarjouskilpailu on lähes varmasti ratkennut
- * (tai rauennut), eikä vanha "Kilpailutus"-hanke ole enää myyntimielessä
- * relevantti. Jos voittaja on selvinnyt, jälki-ilmoitus on jo edistänyt
- * vaiheen "Sopimus myönnetty" -tilaan, jolloin hanke EI ole enää tässä
- * haarukassa (phase = Kilpailutus) — eli rikastuneita hankkeita ei vanheteta.
+ * vuoden kuluttua tarjousten määräajasta kilpailu on lähes varmasti
+ * ratkennut (tai rauennut), eikä vanha "Kilpailutus"-hanke ole enää
+ * myyntimielessä relevantti. Jos voittaja on selvinnyt, jälki-ilmoitus on jo
+ * edistänyt vaiheen "Sopimus myönnetty" -tilaan, jolloin hanke EI ole enää
+ * tässä haarukassa (phase = Kilpailutus) — rikastuneita hankkeita ei vanheteta
+ * (isTenderEnriched-turvavyö varmistaa tämän myös reunatapauksissa).
  *
  * Vanheneminen piilottaa hankkeen aktiivisista näkymistä asettamalla
- * status = "expired" (Today suodattaa status = "active"; projects-sivu
- * suodattaa niin ikään aktiiviset). Vaihe jätetään ennalleen historian
- * vuoksi. Referenssipäivä: ilmoituksen julkaisu (metadata.date_published),
- * toissijaisesti tarjousten määräaika tai hankkeen luontipäivä.
+ * status = "expired". Vaihe jätetään ennalleen historian vuoksi.
+ * Vanhenemispäivä lasketaan lib/projects/tenderExpiry.ts:ssä (sama logiikka
+ * kuin hankekorteilla): määräaika ensin, sitten julkaisu, sitten luontipäivä.
  */
-const EXPIRY_YEARS = 1
-
-function referenceDate(project: any): { iso: string; source: string } | null {
-  const md = project.metadata ?? {}
-  const published = md.date_published ?? null
-  const deadline = md.deadline ?? null
-  const created = project.created_at ?? null
-
-  const raw = published ?? deadline ?? created
-  if (!raw) return null
-
-  const parsed = new Date(raw)
-  if (Number.isNaN(parsed.getTime())) return null
-
-  const source = published
-    ? "date_published"
-    : deadline
-      ? "deadline"
-      : "created_at"
-
-  return { iso: parsed.toISOString(), source }
-}
-
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
@@ -61,8 +43,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 })
     }
 
-    const cutoff = new Date()
-    cutoff.setFullYear(cutoff.getFullYear() - EXPIRY_YEARS)
+    const now = new Date()
 
     const { data: tenderProjects, error: fetchError } = await supabaseAdmin
       .from("projects")
@@ -77,20 +58,13 @@ export async function GET(req: Request) {
     for (const project of tenderProjects ?? []) {
       const md = project.metadata ?? {}
 
-      /*
-       * Turvavyö: jos voittaja on jostain syystä rikastanut hankkeen ilman
-       * että vaihe eteni, ei vanheteta.
-       */
-      const enriched =
-        md.is_contract_award === true ||
-        (Array.isArray(md.winners) && md.winners.length > 0)
+      if (isTenderEnriched(md)) continue
 
-      if (enriched) continue
+      const exp = tenderExpiry(md, project.created_at)
+      if (!exp) continue
 
-      const ref = referenceDate(project)
-      if (!ref) continue
-
-      if (new Date(ref.iso) >= cutoff) continue
+      // Ei vielä vanhentunut.
+      if (exp.date > now) continue
 
       const { error: updateError } = await supabaseAdmin
         .from("projects")
@@ -98,8 +72,10 @@ export async function GET(req: Request) {
           status: "expired",
           metadata: {
             ...md,
-            expired_at: new Date().toISOString(),
-            expired_reason: `Ilmoituksesta yli ${EXPIRY_YEARS} v (${ref.source} ${ref.iso.slice(0, 10)})`,
+            expired_at: now.toISOString(),
+            expired_reason: `Määräajasta yli ${TENDER_EXPIRY_YEARS} v (${exp.source}, vanheni ${exp.date
+              .toISOString()
+              .slice(0, 10)})`,
           },
         })
         .eq("id", project.id)
@@ -109,7 +85,12 @@ export async function GET(req: Request) {
         continue
       }
 
-      results.push({ projectId: project.id, ok: true, referenceDate: ref.iso.slice(0, 10) })
+      results.push({
+        projectId: project.id,
+        ok: true,
+        expiresOn: exp.date.toISOString().slice(0, 10),
+        source: exp.source,
+      })
     }
 
     return NextResponse.json({

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import PhaseTimeline from "@/app/projects/PhaseTimeline"
-import { displayPhaseLabel } from "@/lib/projects/phases"
+import { displayPhaseLabel, normalizeLegacyPhase } from "@/lib/projects/phases"
+import { tenderExpiry, isTenderEnriched } from "@/lib/projects/tenderExpiry"
 import { trackEvent } from "@/lib/analytics/trackEvent"
 import TodayFeedbackButtons from "./TodayFeedbackButtons"
 
@@ -504,6 +505,27 @@ export default function TodayProjectModal({
                       )}
                     </p>
                   ) : null}
+
+                  {(() => {
+                    if (normalizeLegacyPhase(project.phase) !== "tender")
+                      return null
+                    if (isTenderEnriched(project.metadata)) return null
+                    const exp = tenderExpiry(
+                      project.metadata,
+                      project.created_at
+                    )
+                    if (!exp) return null
+                    return (
+                      <p>
+                        <strong>Vanhenee:</strong>{" "}
+                        {exp.date.toLocaleDateString("fi-FI")}
+                        <span style={{ color: "#6b7280" }}>
+                          {" "}
+                          (ellei voittajaa selviä sitä ennen)
+                        </span>
+                      </p>
+                    )
+                  })()}
 
                   <div
                     style={{
