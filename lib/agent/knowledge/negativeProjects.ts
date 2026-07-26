@@ -110,3 +110,18 @@ export function isNonConstructionZoning(
   const t = text.toLowerCase()
   return NON_CONSTRUCTION_ZONING_KEYWORDS.some((k) => t.includes(k))
 }
+
+/*
+ * Osa ajantasaistamis-kaavoista on nimetty pelkän kaupunginosan mukaan
+ * ("Kaartinkaupunki, Kaartinkaupungin alueita"), jolloin nimessä ei ole
+ * "ajantasaist"-vartaloa — mutta KUVAUS sisältää lähes aina lähteen oman
+ * paljastavan lauseen "…ei koske uudisrakentamisen hankkeita". Tämä on
+ * turvallinen tunniste myös kuvaukseen, koska oikea rakennushanke ei koskaan
+ * totea näin (varmistettu: oikeilla asemakaavamuutoksilla lausetta ei ole).
+ */
+export function hasNonConstructionZoningDisclaimer(
+  text: string | null | undefined
+): boolean {
+  if (!text) return false
+  return /ei koske uudisrakentamis/i.test(text)
+}

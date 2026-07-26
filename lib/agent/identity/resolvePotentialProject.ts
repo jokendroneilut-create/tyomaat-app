@@ -9,7 +9,10 @@ import {
   inferCompletionDateFromText,
   isPastDate,
 } from "@/lib/projects/inferCompletionDateFromText"
-import { isNonConstructionZoning } from "@/lib/agent/knowledge/negativeProjects"
+import {
+  isNonConstructionZoning,
+  hasNonConstructionZoningDisclaimer,
+} from "@/lib/agent/knowledge/negativeProjects"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -122,7 +125,9 @@ export async function resolvePotentialProject(
    * kuvaukseen (kaavan nimi kertoo tarkoituksen luotettavasti).
    */
   const nonConstructionZoning =
-    isNonConstructionZoning(input.title) || isNonConstructionZoning(md.operation)
+    isNonConstructionZoning(input.title) ||
+    isNonConstructionZoning(md.operation) ||
+    hasNonConstructionZoningDisclaimer(md.description)
 
   let completionMetadata: Record<string, unknown> = {}
   if (staleCompleted) {
