@@ -1950,6 +1950,51 @@ function parseHelsinkiSukkaContacts(
   return [{ name, title, phone, email }]
 }
 
+/*
+ * Osalla SUKKA-kaavoista feature-datan description on tyhjä, mutta kaavan
+ * osallistumis- ja arviointisuunnitelma (OAS) -PDF sisältää kuvauksen otsikon
+ * "Suunnittelun tavoitteet ja alue" alla. Poimitaan se otsikon jälkeinen teksti
+ * seuraavaan pääotsikkoon asti. Sivunumerot (omalla rivillä olevat luvut)
+ * siivotaan pois. Rajataan ~600 merkkiin (kortin kuvaus).
+ */
+function extractOasDescription(pdfText: string): string | null {
+  const clean = pdfText.replace(/\r/g, "").replace(/-\n/g, "").replace(/[ \t]+/g, " ")
+  const heading = clean.match(/Suunnittelun tavoit[a-zä]*(?:\s+ja\s+alue)?/i)
+  if (!heading) return null
+  let after = clean.slice(heading.index! + heading[0].length)
+  const stop = after.search(
+    /\n\s*(Osallistuminen|Vaikutusten arviointi|Aikataulu|Kaavan valmistelu|Nykytilanne|Lisätiedot|Mielipiteet|Kaavoituksen|Suunnittelun taustaa)/i
+  )
+  if (stop > 0) after = after.slice(0, stop)
+  const desc = after
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !/^\d{1,3}$/.test(l))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim()
+  return desc ? desc.slice(0, 600) : null
+}
+
+async function fetchOasDescription(pdfUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(pdfUrl, {
+      headers: { accept: "application/pdf,*/*" },
+      cache: "no-store",
+    })
+    if (!res.ok) return null
+    const buffer = Buffer.from(await res.arrayBuffer())
+    const { default: pdfParse } = await import("pdf-parse/lib/pdf-parse.js")
+    const { text } = await pdfParse(buffer)
+    return extractOasDescription(text)
+  } catch (err) {
+    console.error("OAS-kuvauksen haku epäonnistui (jatketaan):", err)
+    return null
+  }
+}
+
+const HELSINKI_SUKKA_MAX_OAS_FETCHES_PER_RUN = 8
+
 async function collectHelsinkiSukkaSource(source: DiscoverySource) {
   const response = await fetch(source.url, {
     method: "POST",
@@ -1980,6 +2025,7 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
    * laajan bbox:n. Epäonnistuminen ei kaada keräystä (liitteet ovat lisä).
    */
   const attachmentTitlesByPlan = new Map<number, string[]>()
+  const oasUrlByPlan = new Map<number, string>()
   try {
     const attUrl = source.url.replace("sukka_asemakaava_user", "sukka_attachment")
     const attRes = await fetch(attUrl, {
@@ -1997,6 +2043,12 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
           const list = attachmentTitlesByPlan.get(pid) ?? []
           if (!list.includes(title)) list.push(title)
           attachmentTitlesByPlan.set(pid, list)
+
+          // Talteen kaavan OAS-PDF:n URL kuvauksen varapoimintaa varten.
+          if (!oasUrlByPlan.has(pid) && /osallistumis.*arviointisuunnitelma/i.test(title)) {
+            const url = (att.properties?.url ?? "").replace(/&#x2F;/g, "/").trim()
+            if (url) oasUrlByPlan.set(pid, url)
+          }
         }
       }
     }
@@ -2005,12 +2057,27 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
   }
 
   let saved = 0
+  let oasFetches = 0
 
   for (const feature of features) {
     const properties = feature.properties ?? {}
     const id = properties.id
     const recordNumber = properties.record_number || null
     const attachmentTitles = attachmentTitlesByPlan.get(id) ?? []
+
+    /*
+     * Kuvaus: ensisijaisesti feature-datasta. Jos se on tyhjä mutta kaavalla on
+     * OAS-liite, poimitaan kuvaus sen PDF:stä (harvinaista, joten haku on halpa;
+     * rajattu HELSINKI_SUKKA_MAX_OAS_FETCHES_PER_RUN per ajo).
+     */
+    let description: string | null = properties.description || null
+    if (!description && oasFetches < HELSINKI_SUKKA_MAX_OAS_FETCHES_PER_RUN) {
+      const oasUrl = oasUrlByPlan.get(id)
+      if (oasUrl) {
+        oasFetches += 1
+        description = await fetchOasDescription(oasUrl)
+      }
+    }
 
     // sukkaId-URL-parametri = diaarinumero (record_number); varalla feature-id.
     const documentUrl = `https://kartta.hel.fi/?sukkaId=${recordNumber ?? id}`
@@ -2042,7 +2109,7 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
             hanke_number: properties.hanke_number || null,
             phase: helsinkiSukkaPhaseLabel(properties.phase_id),
             plan_type: helsinkiSukkaPlanTypeLabel(properties.plan_type_id),
-            description: properties.description || null,
+            description,
             contacts: parseHelsinkiSukkaContacts(
               properties.contact,
               properties.contact_emails
