@@ -31,6 +31,14 @@ export default async function CandidateDetailPage({ params }: Props) {
   const contactPersons: { name: string; title: string | null; phone: string | null; email: string | null }[] =
     Array.isArray(metadata.contact_persons) ? metadata.contact_persons : []
 
+  const consultants: { name: string; role: string | null }[] = Array.isArray(
+    metadata.consultants
+  )
+    ? metadata.consultants.filter(
+        (c: any) => c && typeof c.name === "string" && c.name.trim()
+      )
+    : []
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-8">
       <Link href="/tic" className="text-sm text-gray-600 hover:text-gray-900">
@@ -148,6 +156,20 @@ export default async function CandidateDetailPage({ params }: Props) {
                 {contact.title ? `, ${contact.title}` : ""}
                 {contact.phone ? ` — ${contact.phone}` : ""}
                 {contact.email ? ` — ${contact.email}` : ""}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {consultants.length > 0 && (
+          <div className="mt-6 border-t border-gray-100 pt-4">
+            <p className="mb-2 font-semibold text-gray-900">
+              Selvitykset ja konsultit
+            </p>
+            {consultants.map((c, i) => (
+              <p key={i} className="text-sm text-gray-800">
+                {c.name}
+                {c.role ? ` — ${c.role}` : ""}
               </p>
             ))}
           </div>

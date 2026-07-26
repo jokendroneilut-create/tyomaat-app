@@ -1972,12 +1972,45 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
       !feature.properties?.date_legal && feature.properties?.phase_id !== 6
   )
 
+  /*
+   * Liitteet (sukka_attachment) haetaan kerralla ja ryhmitellään plan_id:llä.
+   * Liiteotsikoissa on mukana olevat konsultti-/arkkitehtitoimistot muodossa
+   * "<kaava>, <selvitystyyppi>, <Yritys> <pvm>" — ne poimitaan myöhemmin
+   * LLM:llä (resolverissa). Liitteillä ei ole geometriaa, joten haku vaatii
+   * laajan bbox:n. Epäonnistuminen ei kaada keräystä (liitteet ovat lisä).
+   */
+  const attachmentTitlesByPlan = new Map<number, string[]>()
+  try {
+    const attUrl = source.url.replace("sukka_asemakaava_user", "sukka_attachment")
+    const attRes = await fetch(attUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ bbox: [0, 0, 99999999, 99999999], srs: "EPSG:3879" }),
+      cache: "no-store",
+    })
+    if (attRes.ok) {
+      const attJson = await attRes.json()
+      for (const att of attJson.features ?? []) {
+        const pid = att.properties?.plan_id
+        const title = (att.properties?.name_fi ?? "").trim()
+        if (typeof pid === "number" && title) {
+          const list = attachmentTitlesByPlan.get(pid) ?? []
+          if (!list.includes(title)) list.push(title)
+          attachmentTitlesByPlan.set(pid, list)
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Helsingin sukka-liitteiden haku epäonnistui (jatketaan):", err)
+  }
+
   let saved = 0
 
   for (const feature of features) {
     const properties = feature.properties ?? {}
     const id = properties.id
     const recordNumber = properties.record_number || null
+    const attachmentTitles = attachmentTitlesByPlan.get(id) ?? []
 
     // sukkaId-URL-parametri = diaarinumero (record_number); varalla feature-id.
     const documentUrl = `https://kartta.hel.fi/?sukkaId=${recordNumber ?? id}`
@@ -2016,6 +2049,7 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
             ),
             building_start_date: properties.building_start_date || null,
             building_end_date: properties.building_end_date || null,
+            attachment_titles: attachmentTitles,
             center: boundingBoxCenter(feature.geometry),
             original: feature,
           },

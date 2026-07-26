@@ -86,6 +86,7 @@ export async function POST(request: Request) {
     const isLupapiste = normalize(metadata.resolver) === "lupapisteresolver"
     const isVantaaKaava = normalize(metadata.resolver) === "vantaakaavaresolver"
     const isHelsinkiKaava = normalize(metadata.resolver) === "helsinkikaavaresolver"
+    const isHelsinkiSukka = normalize(metadata.resolver) === "helsinkisukkaresolver"
     const isTampereKaava = normalize(metadata.resolver) === "tamperekaavaresolver"
     const isTurkuKaava = normalize(metadata.resolver) === "turkukaavaresolver"
     const isKreate = normalize(metadata.resolver) === "kreateresolver"
@@ -362,6 +363,13 @@ export async function POST(request: Request) {
       candidateIdentifiers.push({
         type: "helsinki_kaava_tunnus",
         value: metadata.kaava_tunnus,
+      })
+    }
+
+    if (isHelsinkiSukka) {
+      candidateIdentifiers.push({
+        type: "helsinki_diaarinumero",
+        value: metadata.record_number ?? metadata.hanke_number,
       })
     }
 

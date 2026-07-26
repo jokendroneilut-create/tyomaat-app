@@ -35,6 +35,7 @@ export function extractHelsinkiSukkaFacts({
   contacts,
   buildingStartDate,
   buildingEndDate,
+  attachmentTitles,
   center,
 }: {
   documentId: string
@@ -49,6 +50,7 @@ export function extractHelsinkiSukkaFacts({
   contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[]
   buildingStartDate: string | null
   buildingEndDate: string | null
+  attachmentTitles: string[]
   center: { x: number; y: number } | null
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
@@ -70,6 +72,7 @@ export function extractHelsinkiSukkaFacts({
     building_end_date: clean(buildingEndDate),
     description: clean(description),
     contacts,
+    attachment_titles: Array.isArray(attachmentTitles) ? attachmentTitles : [],
     coordinates: center,
   }
 

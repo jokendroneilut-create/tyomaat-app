@@ -473,6 +473,35 @@ export default function TodayProjectModal({
               )
             })()}
 
+            {(() => {
+              const consultants = Array.isArray(project.metadata?.consultants)
+                ? project.metadata.consultants.filter(
+                    (c: any) => c && typeof c.name === "string" && c.name.trim()
+                  )
+                : []
+
+              if (consultants.length === 0) return null
+
+              return (
+                <>
+                  <hr className="projects-hr" />
+
+                  <div>
+                    <p style={{ marginBottom: 8 }}>
+                      <strong>Selvitykset ja konsultit</strong>
+                    </p>
+
+                    {consultants.map((c: any, i: number) => (
+                      <p key={`${c.name}-${i}`}>
+                        <strong>{c.name}</strong>
+                        {c.role ? ` — ${c.role}` : ""}
+                      </p>
+                    ))}
+                  </div>
+                </>
+              )
+            })()}
+
             {project.metadata?.deadline ||
             project.metadata?.source_url ||
             project.metadata?.documents_url ? (

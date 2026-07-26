@@ -226,6 +226,7 @@ import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisio
 import { resolveLempaalaKaavaProject } from "@/lib/agent/identity/resolvers/lempaalaKaavaResolver"
 import { resolveSavonlinnaKaavaProject } from "@/lib/agent/identity/resolvers/savonlinnaKaavaResolver"
 import { resolveKuopioKaavaProject } from "@/lib/agent/identity/resolvers/kuopioKaavaResolver"
+// Helsingin sukka-resolveri (kaavaliitteistä myös konsultit).
 import { resolveHelsinkiSukkaProject } from "@/lib/agent/identity/resolvers/helsinkiSukkaResolver"
 import { resolveHyvinkaaKaavaProject } from "@/lib/agent/identity/resolvers/hyvinkaaKaavaResolver"
 import { resolveSeinajokiKaavaProject } from "@/lib/agent/identity/resolvers/seinajokiKaavaResolver"

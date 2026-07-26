@@ -328,6 +328,7 @@ export async function runFactWorker(documentId?: string) {
     console.log("Decision count:", decisions.length)
 
     let savedCount = 0
+    let skippedCount = 0
 
     for (const fact of facts) {
       const { error } = await supabaseAdmin.from("project_facts").insert({
@@ -342,7 +343,21 @@ export async function runFactWorker(documentId?: string) {
         metadata: fact.metadata ?? {},
       })
 
-      if (error) throw error
+      /*
+       * Yksittäisen faktan insert-virhe (esim. liian pitkä fact_value joka ei
+       * mahdu btree-indeksiin: "index row size ... exceeds ... maximum") EI saa
+       * kaataa koko dokumenttia — muuten dokumentti jää ikuisesti jonon kärkeen
+       * merkitsemättömänä ja blokkaa kaikki sen takana olevat (head-of-line
+       * blocking, myös yöcron). Ohitetaan viallinen fakta ja jatketaan; muut
+       * faktat tallentuvat ja dokumentti merkitään käsitellyksi lopussa.
+       */
+      if (error) {
+        console.error(
+          `project_facts insert skipped (doc ${document.id}, type ${fact.fact_type}): ${error.message}`
+        )
+        skippedCount += 1
+        continue
+      }
       savedCount += 1
     }
 

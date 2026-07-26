@@ -3,6 +3,7 @@ import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialPr
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { gk25ToWgs84 } from "@/lib/geo/gk25"
+import { extractConsultantsFromAttachments } from "@/lib/agent/identity/extractConsultantsFromAttachments"
 
 function findFact(facts: any[], type: string) {
   return facts.find((fact) => fact.fact_type === type)
@@ -46,6 +47,17 @@ export async function resolveHelsinkiSukkaProject({
       : null
 
   const phaseHint = PHASE_LABELS.zoning
+
+  /*
+   * Kaavan liiteasiakirjojen otsikoista poimitaan mukana olevat konsultti-/
+   * arkkitehtitoimistot (esim. Ramboll, Saatsi Arkkitehdit). Nämä ovat
+   * kaavavaiheen selvitysten tekijöitä — näytetään kortilla erillisenä
+   * "Selvitykset/konsultit" -osiona, ei sekoitettuna urakoitsijoihin.
+   */
+  const attachmentTitles: string[] = Array.isArray(metadata.attachment_titles)
+    ? metadata.attachment_titles
+    : []
+  const consultants = await extractConsultantsFromAttachments(attachmentTitles)
 
   const classification = classifyProject({
     operation,
@@ -93,6 +105,7 @@ export async function resolveHelsinkiSukkaProject({
 
       description,
       contact_persons: contactPersons,
+      consultants,
 
       construction_start: buildingStartDate,
       construction_end: buildingEndDate,

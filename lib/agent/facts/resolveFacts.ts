@@ -395,6 +395,7 @@ export function resolveFacts(document: any) {
         contacts: document.raw_payload?.contacts ?? [],
         buildingStartDate: document.raw_payload?.building_start_date ?? null,
         buildingEndDate: document.raw_payload?.building_end_date ?? null,
+        attachmentTitles: document.raw_payload?.attachment_titles ?? [],
         center: document.raw_payload?.center ?? null,
       }),
     }
