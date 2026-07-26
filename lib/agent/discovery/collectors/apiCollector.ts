@@ -4127,7 +4127,7 @@ async function collectJarvenpaaSource(source: DiscoverySource) {
             raw_payload: known,
             processed_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            ...(known.completed
+            ...(known.completed || known.too_old
               ? {
                   facts_extracted_at: new Date().toISOString(),
                   identity_resolved_at: new Date().toISOString(),
@@ -4297,6 +4297,33 @@ function puolustuskiinteistotIsProjectArticle(title: string, excerpt: string): b
   return PUOLUSTUSKIINTEISTOT_INCLUDE_KEYWORDS.some((k) => text.includes(k))
 }
 
+/*
+ * Uutistiedotteet ovat ajankohtaisia liidejä vain vähän aikaa: yli kaksi
+ * vuotta vanha rakennusuutinen kuvaa käytännössä jo valmistunutta tai
+ * pitkälle edennyttä hanketta, joten sitä ei kannata nostaa tuoreena liidinä
+ * (Senaatti-listaus palauttaa myös vuosien takaisia juttuja). Julkaisupäivä
+ * luetaan ensisijaisesti article:published_time-metasta (ISO), varalla
+ * <time datetime="pp.kk.vvvv">-kentästä (Senaatin suomalainen muoto).
+ */
+const PUOLUSTUSKIINTEISTOT_MAX_AGE_MONTHS = 24
+
+function parseFinnishDate(value: string | null | undefined): string | null {
+  if (!value) return null
+  const m = value.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/)
+  if (!m) return null
+  const [, d, mo, y] = m
+  return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`
+}
+
+function isArticleTooOld(publishedIso: string | null): boolean {
+  if (!publishedIso) return false
+  const published = new Date(publishedIso)
+  if (isNaN(published.getTime())) return false
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - PUOLUSTUSKIINTEISTOT_MAX_AGE_MONTHS)
+  return published < cutoff
+}
+
 async function collectPuolustuskiinteistotSource(source: DiscoverySource) {
   const items: { title: string; url: string; excerpt: string }[] = []
   const seenUrls = new Set<string>()
@@ -4372,7 +4399,7 @@ async function collectPuolustuskiinteistotSource(source: DiscoverySource) {
             raw_payload: known,
             processed_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            ...(known.completed
+            ...(known.completed || known.too_old
               ? {
                   facts_extracted_at: new Date().toISOString(),
                   identity_resolved_at: new Date().toISOString(),
@@ -4411,9 +4438,13 @@ async function collectPuolustuskiinteistotSource(source: DiscoverySource) {
      * vain otsikko kertoo luotettavasti onko JUURI TÄMÄ hanke valmis.
      */
     const completed = /valmistui|peruskorjattu|uudistettu|otettu käyttöön|käyttöönotto/i.test(item.title)
-    const publishedAt = $("time").first().attr("datetime") ?? null
+    const publishedAt =
+      $('meta[property="article:published_time"]').attr("content") ??
+      parseFinnishDate($("time").first().attr("datetime")) ??
+      null
+    const tooOld = isArticleTooOld(publishedAt)
 
-    const rawText = JSON.stringify({ item, description, completed, publishedAt })
+    const rawText = JSON.stringify({ item, description, completed, publishedAt, tooOld })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin
@@ -4435,10 +4466,12 @@ async function collectPuolustuskiinteistotSource(source: DiscoverySource) {
             description,
             published_at: publishedAt,
             completed,
+            too_old: tooOld,
           },
           processed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          ...(completed
+          // Valmistunut TAI yli 24 kk vanha -> ei nosteta tuoreena liidinä.
+          ...(completed || tooOld
             ? {
                 facts_extracted_at: new Date().toISOString(),
                 identity_resolved_at: new Date().toISOString(),
