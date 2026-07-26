@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useMemo } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import L from 'leaflet'
+import 'leaflet.markercluster'
 import type { ZoomTarget } from './MapClient'
 import { normalizeLegacyPhase, type PhaseKey } from '@/lib/projects/phases'
 
@@ -135,6 +138,116 @@ function FlyTo({ target }: { target?: ZoomTarget }) {
   return null
 }
 
+/*
+ * Popup rakennetaan DOM-elementtinä vasta kun se avataan (bindPopup saa
+ * funktion), jolloin 3862 hankkeelle ei koskaan luoda popup-sisältöä
+ * ennakkoon. "Avaa hankekortti" -nappiin kiinnitetään oikea click-kuuntelija,
+ * jossa hanke on suljettuna sulkeumassa (sama CustomEvent kuin ennen).
+ */
+function buildPopupEl(p: Project): HTMLElement {
+  const wrap = document.createElement('div')
+  wrap.style.minWidth = '220px'
+
+  const title = document.createElement('div')
+  title.style.cssText = 'font-weight:700;margin-bottom:6px'
+  title.textContent = p.name
+  wrap.appendChild(title)
+
+  const body = document.createElement('div')
+  body.style.cssText = 'font-size:13px;line-height:1.35'
+  const row = (label: string, value?: string | null, mt = false) => {
+    if (value == null || value === '') return
+    const d = document.createElement('div')
+    if (mt) d.style.marginTop = '6px'
+    const b = document.createElement('strong')
+    b.textContent = `${label}: `
+    d.appendChild(b)
+    d.appendChild(document.createTextNode(value))
+    body.appendChild(d)
+  }
+  row('Maakunta', p.region || '-')
+  row('Kaupunki', p.city || '-')
+  row('Vaihe', p.phase || '-')
+  row('Sijainti', p.location, true)
+  row('Kohdetyyppi', p.property_type, true)
+  row('Rakennuttaja', p.developer, true)
+  row('Rakennusliike', p.builder, true)
+  row('Aloitus', p.construction_start, true)
+  wrap.appendChild(body)
+
+  const actions = document.createElement('div')
+  actions.style.cssText = 'margin-top:10px;display:flex;gap:8px'
+
+  const openBtn = document.createElement('button')
+  openBtn.type = 'button'
+  openBtn.textContent = 'Avaa hankekortti'
+  openBtn.style.cssText =
+    'flex:1;text-align:center;padding:6px 8px;background:#2563eb;color:white;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer'
+  openBtn.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('open-project-from-map', { detail: p }))
+  })
+  actions.appendChild(openBtn)
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const feedback = document.createElement('a')
+  feedback.textContent = 'Anna palautetta'
+  feedback.href = `mailto:info@tyomaat.fi?subject=${encodeURIComponent(
+    `Palaute kohteesta: ${p.name}`
+  )}&body=${encodeURIComponent(
+    `Kohde: ${p.name}\nID: ${p.id}\nLinkki: ${origin}/projects\n\nKirjoita palaute tähän:`
+  )}`
+  feedback.style.cssText =
+    'flex:1;text-align:center;padding:6px 8px;background:#e5e7eb;color:#111827;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600'
+  actions.appendChild(feedback)
+
+  wrap.appendChild(actions)
+  return wrap
+}
+
+/*
+ * Klusterikerros: kaikki markerit lisätään yhteen L.markerClusterGroupiin,
+ * joka ryhmittää lähekkäiset pisteet yhdeksi palloksi. Näin kartalla on
+ * kerrallaan vain kymmeniä DOM-elementtejä tuhansien sijaan, ja panorointi/
+ * zoom pysyy sujuvana myös tuhansilla hankkeilla. chunkedLoading pilkkoo
+ * markerien lisäyksen, jottei UI jäädy alkulatauksessa.
+ */
+function ClusterLayer({
+  points,
+  currentUserId,
+  teamModeEnabled,
+}: {
+  points: { p: Project; lat: number | null; lng: number | null }[]
+  currentUserId?: string | null
+  teamModeEnabled?: boolean
+}) {
+  const map = useMap()
+
+  useEffect(() => {
+    const cluster = (L as any).markerClusterGroup({
+      chunkedLoading: true,
+      maxClusterRadius: 60,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+    })
+
+    for (const { p, lat, lng } of points) {
+      if (lat == null || lng == null) continue
+      const ownerClassName = teamModeEnabled ? ownerClass(p.owner_id, currentUserId) : ''
+      const icon = makeIcon(`${phaseClass(p.phase)} ${ownerClassName}`)
+      const marker = L.marker([lat, lng], { icon })
+      marker.bindPopup(() => buildPopupEl(p), { minWidth: 220 })
+      cluster.addLayer(marker)
+    }
+
+    map.addLayer(cluster)
+    return () => {
+      map.removeLayer(cluster)
+    }
+  }, [map, points, currentUserId, teamModeEnabled])
+
+  return null
+}
+
 export default function Map({
   projects,
   onBoundsChange,
@@ -189,115 +302,11 @@ teamModeEnabled?: boolean
           attribution="&copy; OpenStreetMap contributors"
         />
 
-        {projectsWithCoords.map(({ p, lat, lng }) => {
-          const ownerClassName = teamModeEnabled
-  ? ownerClass(p.owner_id, currentUserId)
-  : ''
-
-const icon = makeIcon(`${phaseClass(p.phase)} ${ownerClassName}`)
-          const projectUrl =
-            typeof window !== 'undefined' ? `${window.location.origin}/projects` : '/projects'
-
-          return (
-            <Marker key={p.id} position={[lat as number, lng as number]} icon={icon}>
-              <Popup>
-                <div style={{ minWidth: 220 }}>
-                  <div style={{ fontWeight: 700, marginBottom: 6 }}>{p.name}</div>
-
-                  <div style={{ fontSize: 13, lineHeight: 1.35 }}>
-                    <div>
-                      <strong>Maakunta:</strong> {p.region || '-'}
-                    </div>
-                    <div>
-                      <strong>Kaupunki:</strong> {p.city || '-'}
-                    </div>
-                    <div>
-                      <strong>Vaihe:</strong> {p.phase || '-'}
-                    </div>
-
-                    {p.location ? (
-                      <div style={{ marginTop: 6 }}>
-                        <strong>Sijainti:</strong> {p.location}
-                      </div>
-                    ) : null}
-
-                    {p.property_type ? (
-                      <div style={{ marginTop: 6 }}>
-                        <strong>Kohdetyyppi:</strong> {p.property_type}
-                      </div>
-                    ) : null}
-
-                    {p.developer ? (
-                      <div style={{ marginTop: 6 }}>
-                        <strong>Rakennuttaja:</strong> {p.developer}
-                      </div>
-                    ) : null}
-
-                    {p.builder ? (
-                      <div style={{ marginTop: 6 }}>
-                        <strong>Rakennusliike:</strong> {p.builder}
-                      </div>
-                    ) : null}
-
-                    {p.construction_start ? (
-                      <div style={{ marginTop: 6 }}>
-                        <strong>Aloitus:</strong> {p.construction_start}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-                    <button
-  type="button"
-  onClick={() => {
-    window.dispatchEvent(
-      new CustomEvent('open-project-from-map', {
-        detail: p,
-      })
-    )
-  }}
-  style={{
-    flex: 1,
-    textAlign: 'center',
-    padding: '6px 8px',
-    background: '#2563eb',
-    color: 'white',
-    borderRadius: 6,
-    border: 'none',
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: 'pointer',
-  }}
->
-  Avaa hankekortti
-</button>
-
-                    <a
-                      href={`mailto:info@tyomaat.fi?subject=${encodeURIComponent(
-                        `Palaute kohteesta: ${p.name}`
-                      )}&body=${encodeURIComponent(
-                        `Kohde: ${p.name}\nID: ${p.id}\nLinkki: ${projectUrl}\n\nKirjoita palaute tähän:`
-                      )}`}
-                      style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        padding: '6px 8px',
-                        background: '#e5e7eb',
-                        color: '#111827',
-                        borderRadius: 6,
-                        textDecoration: 'none',
-                        fontSize: 12,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Anna palautetta
-                    </a>
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          )
-        })}
+        <ClusterLayer
+          points={projectsWithCoords}
+          currentUserId={currentUserId}
+          teamModeEnabled={teamModeEnabled}
+        />
       </MapContainer>
     </div>
       )
