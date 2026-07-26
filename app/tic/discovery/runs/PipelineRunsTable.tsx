@@ -100,6 +100,7 @@ export default function PipelineRunsTable({
         {budgetNote}
       </div>
 
+      <div className="overflow-x-auto">
       <table className="min-w-full text-sm">
         <thead className="bg-gray-50">
           <tr className="text-left">
@@ -107,9 +108,9 @@ export default function PipelineRunsTable({
             <SortHeader column="duration_ms" label="Kesto" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
             <th className="px-4 py-3">% budjetista</th>
             <SortHeader column="sources_run" label="Lähteitä" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-            <SortHeader column="article_runs" label="Artikkelit" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-            <SortHeader column="pdf_runs" label="PDF:t" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-            <SortHeader column="text_runs" label="Tekstit" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader column="article_runs" label="Artikkelit" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} className="hidden sm:table-cell" />
+            <SortHeader column="pdf_runs" label="PDF:t" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} className="hidden sm:table-cell" />
+            <SortHeader column="text_runs" label="Tekstit" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} className="hidden sm:table-cell" />
             <SortHeader column="fact_runs" label="Faktat" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
             <SortHeader column="identity_runs" label="Tunnistus" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
             <SortHeader column="pending_facts" label="Jono" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
@@ -137,9 +138,9 @@ export default function PipelineRunsTable({
                   </span>
                 </td>
                 <td className="px-4 py-3">{run.sources_run}</td>
-                <td className="px-4 py-3">{run.article_runs}</td>
-                <td className="px-4 py-3">{run.pdf_runs}</td>
-                <td className="px-4 py-3">{run.text_runs}</td>
+                <td className="hidden px-4 py-3 sm:table-cell">{run.article_runs}</td>
+                <td className="hidden px-4 py-3 sm:table-cell">{run.pdf_runs}</td>
+                <td className="hidden px-4 py-3 sm:table-cell">{run.text_runs}</td>
                 <td className="px-4 py-3">{run.fact_runs}</td>
                 <td className="px-4 py-3">{run.identity_runs}</td>
                 <td className="px-4 py-3 font-semibold">
@@ -150,6 +151,7 @@ export default function PipelineRunsTable({
           })}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }
@@ -160,18 +162,20 @@ function SortHeader({
   sortColumn,
   sortDirection,
   onSort,
+  className,
 }: {
   column: SortColumn
   label: string
   sortColumn: SortColumn
   sortDirection: SortDirection
   onSort: (column: SortColumn) => void
+  className?: string
 }) {
   const active = sortColumn === column
   const arrow = active ? (sortDirection === "asc" ? " ▲" : " ▼") : ""
 
   return (
-    <th className="px-4 py-3">
+    <th className={`px-4 py-3 ${className ?? ""}`}>
       <button
         type="button"
         onClick={() => onSort(column)}
