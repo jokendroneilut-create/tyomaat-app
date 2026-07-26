@@ -5,6 +5,10 @@ import {
   type IdentifierType,
 } from "@/lib/projects/identity"
 import { syncApprovedProject } from "@/lib/projects/syncApprovedProject"
+import {
+  inferCompletionDateFromText,
+  isPastDate,
+} from "@/lib/projects/inferCompletionDateFromText"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -93,6 +97,31 @@ export async function resolvePotentialProject(
   const propertyId = normalizeValue(input.propertyId)
   const permitNumber = normalizeValue(input.permitNumber)
 
+  /*
+   * Vanhat uutiset/tiedotteet: jos lähdetekstissä mainitaan jo mennyt
+   * valmistumisaika (esim. "Perusparannus valmistuu arviolta kesäkuussa
+   * 2025"), hanke on käytännössä valmistunut eikä ole tuore liidi. Poimitaan
+   * arvioitu valmistumispäivä estimated_completion-kenttään (auto-complete-
+   * cron hyödyntää sitä hyväksytyille hankkeille) ja jos päivä on jo mennyt,
+   * lasketaan kandidaatti "ignore"-tasolle, jotta se ei täytä tuoreiden
+   * liidien jonoa. Detektio on konservatiivinen (haku vain "valmis"-sanan
+   * lähellä), joten hankkeet ilman selkeää mennyttä valmistumista pysyvät
+   * ennallaan. Tämä on keskitetty tänne, joten se koskee kaikkia lähteitä.
+   */
+  const md = (input.metadata ?? {}) as Record<string, any>
+  const completionText = [input.title, md.description, md.operation]
+    .filter(Boolean)
+    .join(" ")
+  const inferredCompletion = inferCompletionDateFromText(completionText)
+  const staleCompleted = !!inferredCompletion && isPastDate(inferredCompletion)
+
+  const completionMetadata: Record<string, unknown> = staleCompleted
+    ? {
+        recommended_action: "ignore",
+        auto_ignored_reason: `valmistunut_menneisyydessa:${inferredCompletion}`,
+      }
+    : {}
+
   let existing = null
   let matchedExistingProjectId: string | null = null
 
@@ -173,8 +202,12 @@ export async function resolvePotentialProject(
         last_seen: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         metadata: {
+          ...(inferredCompletion
+            ? { estimated_completion: inferredCompletion }
+            : {}),
           ...(existing.metadata ?? {}),
           ...(input.metadata ?? {}),
+          ...completionMetadata,
           source_history: sourceHistory,
           lastSourceName: input.sourceName ?? null,
           matched_existing_project_id:
@@ -227,7 +260,11 @@ export async function resolvePotentialProject(
       evidence_count: 0,
       status: "new",
       metadata: {
+        ...(inferredCompletion
+          ? { estimated_completion: inferredCompletion }
+          : {}),
         ...(input.metadata ?? {}),
+        ...completionMetadata,
         source_history: buildSourceHistory(null, input),
         firstSourceName: input.sourceName ?? null,
         matched_existing_project_id: matchedExistingProjectId,
