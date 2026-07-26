@@ -2741,7 +2741,38 @@ function findMikkeliSection($: cheerio.CheerioAPI, labelPattern: RegExp) {
   return label ? $(label).next() : null
 }
 
-async function fetchMikkeliDetails(pageId: number): Promise<MikkeliDetails> {
+/*
+ * Poimii kaavan kuvauksen (tavoitteen) live-sivun HTML:stä. Mikkelin
+ * WP-REST-rajapinnan content.rendered on epäluotettava näillä sivuilla
+ * (palauttaa toisinaan tyhjän tai eri sisällön kuin varsinainen sivu),
+ * joten kun REST ei anna kuvausta, luetaan se suoraan julkaistulta sivulta.
+ * Kuvaus on .entry-content-alueen kappaleissa; ensisijaisesti "tavoit"-
+ * lause (esim. "Suunnittelun tavoitteena on…"), muuten ensimmäiset kuvaavat
+ * kappaleet. Ei-kaavasivujen (ei kaavatunnusta) mahdollinen roskateksti
+ * suodattuu joka tapauksessa pois faktavaiheessa (is_non_plan_page).
+ */
+async function fetchMikkeliDescriptionFromPage(pageUrl: string): Promise<string | null> {
+  try {
+    const response = await fetch(pageUrl, { cache: "no-store" })
+    if (!response.ok) return null
+    const $ = cheerio.load(await response.text())
+
+    const paragraphs: string[] = []
+    $(".entry-content p").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim()
+      if (!text || text.length < 25) return
+      if (/^(kaavatunnus|mlidnro|yhteyshenkilö|laatija|diaarinumero|hyväksytty|kuulutettu|nähtävillä)\b/i.test(text)) return
+      paragraphs.push(text)
+    })
+
+    const tavoite = paragraphs.find((p) => /tavoit/i.test(p))
+    return tavoite ?? (paragraphs.slice(0, 2).join(" ") || null)
+  } catch {
+    return null
+  }
+}
+
+async function fetchMikkeliDetails(pageId: number, pageUrl?: string): Promise<MikkeliDetails> {
   const empty: MikkeliDetails = { kaavaTunnus: null, decisionNumber: null, phase: null, description: null, contact: null }
 
   try {
@@ -2753,7 +2784,11 @@ async function fetchMikkeliDetails(pageId: number): Promise<MikkeliDetails> {
 
     const data = await response.json()
     const html = data?.content?.rendered
-    if (!html) return empty
+    if (!html) {
+      // REST antoi tyhjän — kuvaus voidaan silti lukea live-sivulta.
+      const description = pageUrl ? await fetchMikkeliDescriptionFromPage(pageUrl) : null
+      return { ...empty, description }
+    }
 
     const $ = cheerio.load(html)
 
@@ -2773,7 +2808,16 @@ async function fetchMikkeliDetails(pageId: number): Promise<MikkeliDetails> {
     })
 
     const tavoite = findMikkeliSection($, /^TAVOIT(E|TEET)$/i)
-    const description = tavoite ? tavoite.text().replace(/\s+/g, " ").trim() || null : null
+    let description = tavoite ? tavoite.text().replace(/\s+/g, " ").trim() || null : null
+
+    /*
+     * Osalla sivuista (mm. yleiskaavat) kuvaus on sarakelayoutissa ilman
+     * "TAVOITE"-otsikkoa, jolloin REST-jäsennys ei löydä sitä — luetaan
+     * kuvaus tällöin live-sivulta varakeinona.
+     */
+    if (!description && pageUrl) {
+      description = await fetchMikkeliDescriptionFromPage(pageUrl)
+    }
 
     const vaiheetList = findMikkeliSection($, /^SUUNNITTELUN VAIHEET$/i)
     const stages: string[] = []
@@ -2817,7 +2861,17 @@ async function collectMikkeliSource(source: DiscoverySource) {
 
   const knownDetails = new Map<string, MikkeliDetails>()
   for (const row of existingRows ?? []) {
-    if (row.raw_payload?.phase || row.raw_payload?.kaava_tunnus) {
+    const hasIdentity = row.raw_payload?.phase || row.raw_payload?.kaava_tunnus
+    /*
+     * Oikea kaava jolta puuttuu kuvaus haetaan uudelleen (ei oteta cachesta),
+     * jotta live-sivu-fallback ehtii täyttää kuvauksen. Ei-kaavasivut ja jo
+     * kuvauksen saaneet pysyvät cachessa, ettei joka ajossa haeta turhaan.
+     */
+    const missingDescription =
+      !!row.raw_payload?.kaava_tunnus &&
+      !row.raw_payload?.is_non_plan_page &&
+      !(row.raw_payload?.description ?? "").trim()
+    if (hasIdentity && !missingDescription) {
       knownDetails.set(row.document_url, {
         kaavaTunnus: row.raw_payload.kaava_tunnus ?? null,
         decisionNumber: row.raw_payload.decision_number ?? null,
@@ -2837,7 +2891,7 @@ async function collectMikkeliSource(source: DiscoverySource) {
     let details = knownDetails.get(item.url) ?? null
 
     if (!details && detailFetches < MIKKELI_MAX_DETAIL_FETCHES_PER_RUN) {
-      details = await fetchMikkeliDetails(item.id)
+      details = await fetchMikkeliDetails(item.id, item.url)
       detailFetches += 1
 
       // Osa sivuista ei sisällä TUNNISTETIEDOT-listaa lainkaan, mutta
