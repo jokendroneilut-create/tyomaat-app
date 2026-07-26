@@ -1,5 +1,6 @@
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
+import { isSmallPrivateProject } from "@/lib/agent/knowledge/negativeProjects"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { getMunicipality } from "@/lib/geo/municipalities"
 import { tm35finToWgs84 } from "@/lib/geo/tm35fin"
@@ -53,6 +54,26 @@ export async function resolveLupapisteProject({
 
   const isFinal = decisionStatus === "final" || decisionStatus === "myonnetty"
   const phaseHint = PHASE_LABELS.permit
+
+  /*
+   * Pienet yksityiskohteet (vapaa-ajan asunnot, omakotitalot, piharakennukset
+   * yms.) ovat liian pieniä TICin katselmointijonoon — ohitetaan kokonaan
+   * ennen ehdokkaan luontia. Tarkistetaan sekä toimenpide että otsikko.
+   */
+  if (isSmallPrivateProject(operation) || isSmallPrivateProject(title)) {
+    return {
+      action: "skipped_small_private",
+      potentialProjectId: null,
+      title,
+      address,
+      permitNumber,
+      operation,
+      municipality: municipality?.name ?? municipalityCode,
+      decisionStatus,
+      phaseHint,
+      classification: null,
+    }
+  }
 
   const classification = classifyProject({
     operation,

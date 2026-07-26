@@ -56,3 +56,38 @@ export const negativeProjects: NegativeProjectKnowledge[] = [
     reason: "Kattoremontit ovat yleensä rajattuja korjaushankkeita",
   }
 ]
+
+/*
+ * Pienet yksityiskohteet joita ei oteta TICin katselmointijonoon lainkaan —
+ * vapaa-ajan asunnot, omakotitalot, piharakennukset yms. ovat hankkeina liian
+ * pieniä Työmaat.fi:n kohderyhmälle. Käytetään lupapisteResolverissa
+ * suodattamaan rakennusluvat ennen ehdokkaan luontia.
+ */
+/*
+ * Vartaloita (ei koko sanoja), jotta suomen taivutusmuodot osuvat myös
+ * (esim. "loma-asunnon", "talousrakennuksen", "autokatoksen").
+ */
+const SMALL_PRIVATE_KEYWORDS = [
+  "vapaa-ajanasu",
+  "vapaa-ajan asu",
+  "loma-asu",
+  "lomarakennu",
+  "mökki",
+  "omakotitalo",
+  "talousrakennu",
+  "piharakennu",
+  "autotalli",
+  "autokato",
+  "sauna",
+  "terassi",
+  "grillikato",
+  "aitta",
+]
+
+export function isSmallPrivateProject(
+  text: string | null | undefined
+): boolean {
+  if (!text) return false
+  const t = text.toLowerCase()
+  return SMALL_PRIVATE_KEYWORDS.some((k) => t.includes(k))
+}
