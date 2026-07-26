@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     .from("discovery_pipeline_runs")
     .insert({
       duration_ms: result.durationMs,
+      pending_facts: result.pendingFacts ?? null,
       sources_run: result.sourcesRun,
       article_runs: result.articleRuns,
       pdf_runs: result.pdfRuns,

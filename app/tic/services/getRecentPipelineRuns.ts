@@ -17,14 +17,16 @@ export type PipelineRun = {
   identity_runs: number
   max_source_count: number | null
   source_ids: string[]
+  // Ajon jälkeinen faktajonon syvyys. Vain uusissa ajoissa (lisätty myöhemmin),
+  // joten valinnainen — vanhoilla riveillä undefined.
+  pending_facts?: number | null
 }
 
 export async function getRecentPipelineRuns(limit = 30): Promise<PipelineRun[]> {
+  // "*" jotta sivu ei hajoa vaikka pending_facts-saraketta ei olisi vielä luotu.
   const { data, error } = await supabaseAdmin
     .from("discovery_pipeline_runs")
-    .select(
-      "id, created_at, duration_ms, sources_run, article_runs, pdf_runs, text_runs, fact_runs, identity_runs, max_source_count, source_ids"
-    )
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(limit)
 

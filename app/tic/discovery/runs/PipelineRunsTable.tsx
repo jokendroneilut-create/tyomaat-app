@@ -11,6 +11,7 @@ type SortColumn =
   | "text_runs"
   | "fact_runs"
   | "identity_runs"
+  | "pending_facts"
 
 type SortDirection = "asc" | "desc"
 
@@ -26,6 +27,7 @@ type PipelineRun = {
   identity_runs: number
   max_source_count: number | null
   source_ids: string[]
+  pending_facts?: number | null
 }
 
 function percentColor(pct: number): string {
@@ -75,6 +77,8 @@ export default function PipelineRunsTable({
       kova katto (Fluid Compute päällä) on <strong>{platformHardLimitSeconds}s</strong> —
       {" "}{maxDurationSeconds}s on siis tarkoituksella jätetty selvästi sen
       alle, ei itse alusta rajoita tähän.
+      {" "}<strong>Jono</strong> = montako dokumenttia odotti yhä faktapoimintaa
+      ajon jälkeen. Laskeva luku = jono purkautuu, nouseva = kasvaa.
     </p>
   )
 
@@ -108,6 +112,7 @@ export default function PipelineRunsTable({
             <SortHeader column="text_runs" label="Tekstit" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
             <SortHeader column="fact_runs" label="Faktat" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
             <SortHeader column="identity_runs" label="Tunnistus" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader column="pending_facts" label="Jono" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
           </tr>
         </thead>
 
@@ -137,6 +142,9 @@ export default function PipelineRunsTable({
                 <td className="px-4 py-3">{run.text_runs}</td>
                 <td className="px-4 py-3">{run.fact_runs}</td>
                 <td className="px-4 py-3">{run.identity_runs}</td>
+                <td className="px-4 py-3 font-semibold">
+                  {run.pending_facts ?? "–"}
+                </td>
               </tr>
             )
           })}

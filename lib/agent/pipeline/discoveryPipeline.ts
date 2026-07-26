@@ -145,9 +145,20 @@ articleResults.push(result)
 
   const durationMs = Date.now() - startedAt
 
+  /*
+   * Faktakäsittelyn jono ajon JÄLKEEN: montako dokumenttia odottaa yhä
+   * faktapoimintaa. Lokitetaan per ajo, jotta Ajot-sivulta näkee purkautuuko
+   * jono vai kasvaako se. (COUNT head-only, ei mukana kestomittauksessa.)
+   */
+  const { count: pendingFacts } = await supabaseAdmin
+    .from("source_documents")
+    .select("*", { count: "exact", head: true })
+    .is("facts_extracted_at", null)
+
   return {
     ok: true,
     durationMs,
+    pendingFacts: pendingFacts ?? null,
 
     sourcesRun: sourceResults.length,
     articleRuns: articleResults.length,
