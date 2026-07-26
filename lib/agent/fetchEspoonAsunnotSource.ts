@@ -24,6 +24,14 @@ export async function fetchEspoonAsunnotSource() {
 
       if (!title || !relativeUrl) continue
 
+      // STT:n lista tarjoaa valmiin tiivistelmän (metadescription) — käytetään
+      // se kuvauksena, ettei tarvitse hakea koko tiedotteen leipätekstiä.
+      const description =
+        (fi?.metadescription || "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim() || null
+
       const releaseDate = release?.date ? new Date(release.date) : null
       if (releaseDate && releaseDate < cutoffDate) {
         continue
@@ -89,6 +97,7 @@ export async function fetchEspoonAsunnotSource() {
 
       results.push({
         name: title,
+        description,
         city: detectCityFromText(title),
         region: null,
         location: null,

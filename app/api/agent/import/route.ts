@@ -325,6 +325,7 @@ const match =
         source_url: body.source_url || null,
         resolver: "legacyCompanyResolver",
         operation: cleanedTitle,
+        description: body.description ?? body.metadata?.description ?? null,
         developer: candidate.developer,
         building_type: candidate.buildingType,
         region: body.region || null,
