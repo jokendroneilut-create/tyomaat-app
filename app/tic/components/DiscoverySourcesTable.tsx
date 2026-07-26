@@ -46,7 +46,9 @@ export default function DiscoverySourcesTable({ sources }: Props) {
   const [onlyProblems, setOnlyProblems] = useState(false)
 
   const enabledCount = sources.filter((s) => s.enabled).length
-  const problemCount = sources.filter((s) => sourceStatus(s) !== "ok").length
+  // "Ongelma" = oikeasti rikki (virheitä). Tarkoituksella pois kytketty lähde
+  // (esim. WFS korvattu SUKKAlla) EI ole ongelma, vaikka status !== "ok".
+  const failingCount = sources.filter((s) => sourceStatus(s) === "failing").length
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -59,7 +61,7 @@ export default function DiscoverySourcesTable({ sources }: Props) {
 
   const visible = useMemo(() => {
     const filtered = onlyProblems
-      ? sources.filter((s) => sourceStatus(s) !== "ok")
+      ? sources.filter((s) => sourceStatus(s) === "failing")
       : sources
 
     const sorted = [...filtered].sort((a, b) => {
@@ -113,8 +115,8 @@ export default function DiscoverySourcesTable({ sources }: Props) {
           <span className="font-semibold text-green-700">
             käytössä {enabledCount}/{sources.length}
           </span>
-          {problemCount > 0 && (
-            <span className="font-semibold text-red-700">ongelmia {problemCount}</span>
+          {failingCount > 0 && (
+            <span className="font-semibold text-red-700">ongelmia {failingCount}</span>
           )}
         </div>
       </div>
