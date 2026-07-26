@@ -112,16 +112,27 @@ export function isNonConstructionZoning(
 }
 
 /*
- * Osa ajantasaistamis-kaavoista on nimetty pelkän kaupunginosan mukaan
- * ("Kaartinkaupunki, Kaartinkaupungin alueita"), jolloin nimessä ei ole
- * "ajantasaist"-vartaloa — mutta KUVAUS sisältää lähes aina lähteen oman
- * paljastavan lauseen "…ei koske uudisrakentamisen hankkeita". Tämä on
- * turvallinen tunniste myös kuvaukseen, koska oikea rakennushanke ei koskaan
- * totea näin (varmistettu: oikeilla asemakaavamuutoksilla lausetta ei ole).
+ * Osa hallinnollisista kaavamuutoksista ei tuo rakentamista lainkaan, ja kuvaus
+ * usein sanoo sen suoraan. Nämä lauseet ovat turvallisia tunnisteita myös
+ * kuvaukseen, koska oikea rakennushanke ei totea näin (varmistettu koko datasta:
+ * ei yhtään väärää osumaa oikeisiin hankkeisiin):
+ *
+ * 1. Kaavan ajantasaistaminen — "…ei koske uudisrakentamisen hankkeita".
+ *    (Osa näistä on nimetty pelkän kaupunginosan mukaan, esim. "Kaartinkaupunki,
+ *    Kaartinkaupungin alueita", jolloin nimessä ei ole "ajantasaist"-vartaloa.)
+ * 2. Tiealueen kaavatekninen muutos kaduksi (esim. "Itäväylän katukaava") —
+ *    "kaavatekninen ja hallinnollinen muutos" / "ei aiheuta muutostarpeita
+ *    … liikennejärjestelyihin (tai ympäristöön)". Pelkkä "tiealue katualueeksi"
+ *    tai "kadunpitopäätös" EI riitä signaaliksi, koska ne esiintyvät myös
+ *    oikeissa katu-/risteyshankkeissa (perusparannus, pysäkin rakentaminen).
  */
 export function hasNonConstructionZoningDisclaimer(
   text: string | null | undefined
 ): boolean {
   if (!text) return false
-  return /ei koske uudisrakentamis/i.test(text)
+  return (
+    /ei koske uudisrakentamis/i.test(text) ||
+    /kaavatekninen ja hallinnollinen muutos/i.test(text) ||
+    /ei aiheuta muutostarpeita[^.]{0,80}(liikennejärjest|ympäristö)/i.test(text)
+  )
 }
