@@ -20,6 +20,11 @@ export async function fetchJatkeSource() {
     for (const release of releases) {
       const fi = release?.versions?.fi
       const title = (fi?.title || "").trim()
+      const description =
+        (fi?.metadescription || "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim() || null
       const relativeUrl = fi?.url || ""
 
       if (!title || !relativeUrl) continue
@@ -89,6 +94,7 @@ export async function fetchJatkeSource() {
 
       results.push({
         name: title,
+        description,
         city: detectCityFromText(title),
         region: null,
         location: null,
