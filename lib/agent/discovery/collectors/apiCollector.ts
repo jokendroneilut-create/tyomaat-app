@@ -1863,6 +1863,180 @@ async function collectKuopioSource(source: DiscoverySource) {
 }
 
 /*
+ * Helsingin kartta.hel.fi ajaa samaa Sitowise/Oskari "sukka"-taustaa kuin
+ * Kuopio/Hyvinkää/Tuusula, mutta eri rajapintakutsulla: feature-haku on POST
+ * (/api-sw/layer/<layer>/feature) jolle annetaan bbox EPSG:3879:ssä — ei
+ * GET rest.ashx kuten muilla sukka-kaupungeilla. Vastaus on silti sama
+ * GeoJSON-muoto, ja se on rikkaampi kuin Helsingin nykyinen WFS-lähde:
+ * mukana selkokielinen kuvaus, yhteyshenkilö, käsittelyvaihe (phase_id),
+ * diaarinumero (record_number) ja hankenumero. Lainvoimaiset (date_legal
+ * asetettu / phase_id=6) suodatetaan pois kuten Kuopiossa.
+ *
+ * phase_id-koodit ("Käsittelyvaihe" enum-constraint layer-asetuksissa):
+ *   2 = Aloitus, 10 = Kaavaluonnos, 4 = Kaavaehdotus,
+ *   5 = Hyväksyminen, 6 = Tullut voimaan (= lainvoimainen, suodatetaan pois)
+ *
+ * bbox kattaa koko Helsingin EPSG:3879 (ETRS-GK25FIN) -tasokoordinaatistossa;
+ * yksi haku palauttaa kaikki vireillä olevat asemakaavat (~216 kpl).
+ */
+const HELSINKI_SUKKA_BBOX = [25480000, 6660000, 25525000, 6695000]
+
+function helsinkiSukkaPhaseLabel(phaseId: number | null): string | null {
+  switch (phaseId) {
+    case 2:
+      return "Aloitus"
+    case 10:
+      return "Kaavaluonnos"
+    case 4:
+      return "Kaavaehdotus"
+    case 5:
+      return "Hyväksyminen"
+    case 6:
+      return "Tullut voimaan"
+    default:
+      return null
+  }
+}
+
+function helsinkiSukkaPlanTypeLabel(planTypeId: number | null): string | null {
+  if (planTypeId === 1) return "Asemakaava"
+  if (planTypeId === 2) return "Yleiskaava"
+  return null
+}
+
+/*
+ * Helsingin "contact" on vapaamuotoista tekstiä, esim.
+ * "Arkkitehti Ulla Jaakonaho, p. (09) 310 37113". Poimitaan puhelin ja
+ * sähköposti regexillä ja erotetaan mahdollinen ammattinimike nimen edestä.
+ * Sähköposti tulee joko erillisestä contact_emails-kentästä tai itse
+ * tekstistä.
+ */
+function parseHelsinkiSukkaContacts(
+  contact: string | null,
+  contactEmails: string | null
+): KuopioContact[] {
+  const raw = (contact ?? "").trim()
+  if (!raw && !contactEmails) return []
+
+  const email =
+    ((contactEmails ?? "").trim().replace("(at)", "@") || null) ??
+    (raw.match(/[\w.\-]+@[\w.\-]+\.\w+/)?.[0] ?? null)
+
+  const phone =
+    (raw.match(/(?:puhelin|puh\.?|tel\.?|p\.?)\s*([\d\s()+\-]{5,})/i)?.[1] ??
+      raw.match(/\(?\d[\d\s()+\-]{5,}/)?.[0] ??
+      null)
+      ?.replace(/[.\s]+$/, "")
+      .trim() ?? null
+
+  let namePart = raw
+    .replace(/(?:puhelin|puh\.?|tel\.?|p\.?)\s*[\d\s()+\-]{5,}.*$/i, "")
+    .replace(/[\w.\-]+@[\w.\-]+\.\w+/g, "")
+    .replace(/[,;.\s]*$/, "")
+    .trim()
+
+  let title: string | null = null
+  let name: string | null = namePart || null
+
+  const titleMatch = namePart.match(
+    /^(Kaavoitusarkkitehti|Maisema-arkkitehti|Yleiskaavasuunnittelija|Kaavasuunnittelija|Projektipäällikkö|Liikenneinsinööri|Arkkitehti|Suunnittelija|Insinööri)\s+(.+)$/i
+  )
+  if (titleMatch) {
+    title = titleMatch[1]
+    name = titleMatch[2].trim()
+  }
+
+  if (!name && !phone && !email) return []
+  return [{ name, title, phone, email }]
+}
+
+async function collectHelsinkiSukkaSource(source: DiscoverySource) {
+  const response = await fetch(source.url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ bbox: HELSINKI_SUKKA_BBOX, srs: "EPSG:3879" }),
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      `Helsingin sukka-rajapinnan haku epäonnistui: ${response.status} ${response.statusText}`
+    )
+  }
+
+  const json = await response.json()
+  const allFeatures = Array.isArray(json.features) ? json.features : []
+
+  const features = allFeatures.filter(
+    (feature: any) =>
+      !feature.properties?.date_legal && feature.properties?.phase_id !== 6
+  )
+
+  let saved = 0
+
+  for (const feature of features) {
+    const properties = feature.properties ?? {}
+    const id = properties.id
+    const recordNumber = properties.record_number || null
+
+    // sukkaId-URL-parametri = diaarinumero (record_number); varalla feature-id.
+    const documentUrl = `https://kartta.hel.fi/?sukkaId=${recordNumber ?? id}`
+
+    const rawText = JSON.stringify(feature)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title:
+            properties.plan_name ||
+            `Kaava ${properties.plan_number || recordNumber || id}`,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: contentHash,
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            helsinki_plan_id: id,
+            plan_name: properties.plan_name || null,
+            plan_number: properties.plan_number || null,
+            record_number: recordNumber,
+            hanke_number: properties.hanke_number || null,
+            phase: helsinkiSukkaPhaseLabel(properties.phase_id),
+            plan_type: helsinkiSukkaPlanTypeLabel(properties.plan_type_id),
+            description: properties.description || null,
+            contacts: parseHelsinkiSukkaContacts(
+              properties.contact,
+              properties.contact_emails
+            ),
+            building_start_date: properties.building_start_date || null,
+            building_end_date: properties.building_end_date || null,
+            center: boundingBoxCenter(feature.geometry),
+            original: feature,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+
+    saved += 1
+  }
+
+  return {
+    documentsFound: features.length,
+    documentsSaved: saved,
+  }
+}
+
+/*
  * Hyvinkää käyttää täsmälleen samaa Trimble/Tekla "sukka"-taustarajapintaa
  * kuin Kuopio (sama GeoJSON-muoto, sama koordinaattijärjestelmä GK25),
  * vain eri layer-nimellä ("sukka_asemakaava_user" Kuopion
@@ -37391,6 +37565,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kuopioKaavaParser") {
     return collectKuopioSource(source)
+  }
+
+  if (source.parser === "helsinkiSukkaParser") {
+    return collectHelsinkiSukkaSource(source)
   }
 
   if (source.parser === "hyvinkaaKaavaParser") {

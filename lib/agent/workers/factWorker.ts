@@ -258,6 +258,7 @@ export async function runFactWorker(documentId?: string) {
       "Virtain vireillä olevat kaavat",
       "Äänekosken vireillä olevat asemakaavat",
       "Kuopion vireillä olevat kaavat",
+      "Helsingin vireillä olevat asemakaavat (SUKKA)",
       "Hyvinkään vireillä olevat kaavat",
       "Seinäjoen ajankohtaiset asemakaavat",
       "Rovaniemen Kaavatori",

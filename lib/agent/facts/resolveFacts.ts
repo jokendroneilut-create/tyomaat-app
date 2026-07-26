@@ -139,6 +139,7 @@ import { extractRaisioKaavaFacts } from "@/lib/agent/facts/extractRaisioKaavaFac
 import { extractLempaalaKaavaFacts } from "@/lib/agent/facts/extractLempaalaKaavaFacts"
 import { extractSavonlinnaKaavaFacts } from "@/lib/agent/facts/extractSavonlinnaKaavaFacts"
 import { extractKuopioKaavaFacts } from "@/lib/agent/facts/extractKuopioKaavaFacts"
+import { extractHelsinkiSukkaFacts } from "@/lib/agent/facts/extractHelsinkiSukkaFacts"
 import { extractHyvinkaaKaavaFacts } from "@/lib/agent/facts/extractHyvinkaaKaavaFacts"
 import { extractSeinajokiKaavaFacts } from "@/lib/agent/facts/extractSeinajokiKaavaFacts"
 import { extractRovaniemiKaavaFacts } from "@/lib/agent/facts/extractRovaniemiKaavaFacts"
@@ -374,6 +375,27 @@ export function resolveFacts(document: any) {
         description,
         contacts,
         center,
+      }),
+    }
+  }
+
+  if (document.source_name === "Helsingin vireillä olevat asemakaavat (SUKKA)") {
+    return {
+      decisions: [],
+      facts: extractHelsinkiSukkaFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        planName: document.raw_payload?.plan_name ?? null,
+        planNumber: document.raw_payload?.plan_number ?? null,
+        recordNumber: document.raw_payload?.record_number ?? null,
+        hankeNumber: document.raw_payload?.hanke_number ?? null,
+        phase: document.raw_payload?.phase ?? null,
+        planType: document.raw_payload?.plan_type ?? null,
+        description: document.raw_payload?.description ?? null,
+        contacts: document.raw_payload?.contacts ?? [],
+        buildingStartDate: document.raw_payload?.building_start_date ?? null,
+        buildingEndDate: document.raw_payload?.building_end_date ?? null,
+        center: document.raw_payload?.center ?? null,
       }),
     }
   }

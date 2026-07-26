@@ -2,6 +2,7 @@ export type ProjectClassificationInput = {
   operation?: string | null
   title?: string | null
   address?: string | null
+  description?: string | null
 }
 
 export type ProjectClassification = {
@@ -17,7 +18,7 @@ export type ProjectClassification = {
 export function classifyProject(
   input: ProjectClassificationInput
 ): ProjectClassification {
-  const text = [input.operation, input.title, input.address]
+  const text = [input.operation, input.title, input.address, input.description]
     .filter(Boolean)
     .join(" ")
     .toLowerCase()

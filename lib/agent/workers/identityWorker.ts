@@ -226,6 +226,7 @@ import { resolveRaisioKaavaProject } from "@/lib/agent/identity/resolvers/raisio
 import { resolveLempaalaKaavaProject } from "@/lib/agent/identity/resolvers/lempaalaKaavaResolver"
 import { resolveSavonlinnaKaavaProject } from "@/lib/agent/identity/resolvers/savonlinnaKaavaResolver"
 import { resolveKuopioKaavaProject } from "@/lib/agent/identity/resolvers/kuopioKaavaResolver"
+import { resolveHelsinkiSukkaProject } from "@/lib/agent/identity/resolvers/helsinkiSukkaResolver"
 import { resolveHyvinkaaKaavaProject } from "@/lib/agent/identity/resolvers/hyvinkaaKaavaResolver"
 import { resolveSeinajokiKaavaProject } from "@/lib/agent/identity/resolvers/seinajokiKaavaResolver"
 import { resolveRovaniemiKaavaProject } from "@/lib/agent/identity/resolvers/rovaniemiKaavaResolver"
@@ -1880,6 +1881,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kuopion vireillä olevat kaavat") {
     const result = await resolveKuopioKaavaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "helsingin vireillä olevat asemakaavat (sukka)") {
+    const result = await resolveHelsinkiSukkaProject({
       document,
       facts: facts ?? [],
     })

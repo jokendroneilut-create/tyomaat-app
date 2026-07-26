@@ -7,6 +7,7 @@ export type IdentifierType =
   | "espoo_permit_number"
   | "vantaa_kaava_tunnus"
   | "helsinki_kaava_tunnus"
+  | "helsinki_diaarinumero"
   | "tampere_kaava_tunnus"
   | "turku_kaava_tunnus"
   | "kreate_project_id"
@@ -258,6 +259,7 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "espoo_permit_number",
   "vantaa_kaava_tunnus",
   "helsinki_kaava_tunnus",
+  "helsinki_diaarinumero",
   "tampere_kaava_tunnus",
   "turku_kaava_tunnus",
   "kreate_project_id",
