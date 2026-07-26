@@ -25338,7 +25338,9 @@ async function collectOuluSource(source: DiscoverySource) {
     .eq("source_id", source.id)
 
   const knownDetails = new Map<string, any>()
+  const existingUrls = new Set<string>()
   for (const row of existingRows ?? []) {
+    existingUrls.add(row.document_url)
     if (row.raw_payload?.description || row.raw_payload?.completed) {
       knownDetails.set(row.document_url, row.raw_payload)
     }
@@ -25368,6 +25370,19 @@ async function collectOuluSource(source: DiscoverySource) {
     }
 
     const isCompleted = detailsAttempted && details?.completed === true
+
+    /*
+     * Kohde tallennettiin aiemmin tynkänä (detaljihaun ajokohtainen raja täynnä)
+     * ja kuvaus saatiin vasta nyt. Nollataan facts_extracted_at, jotta faktat
+     * poimitaan uudelleen ja kuvaus valuu hankkeelle asti. Fakta-worker poistaa
+     * vanhat faktat ennen uudelleenpoimintaa, joten duplikaatteja ei tule.
+     */
+    const backfilledDescription =
+      existingUrls.has(item.url) &&
+      !known &&
+      detailsAttempted &&
+      details?.description != null &&
+      !isCompleted
 
     const rawText = JSON.stringify({ item, details })
     const contentHash = hashContent(rawText)
@@ -25406,7 +25421,12 @@ async function collectOuluSource(source: DiscoverySource) {
                 facts_extracted_at: new Date().toISOString(),
                 identity_resolved_at: new Date().toISOString(),
               }
-            : {}),
+            : backfilledDescription
+              ? {
+                  facts_extracted_at: null,
+                  identity_resolved_at: null,
+                }
+              : {}),
         },
         { onConflict: "document_url" }
       )

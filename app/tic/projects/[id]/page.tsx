@@ -55,16 +55,15 @@ export default async function CandidateDetailPage({ params }: Props) {
           </div>
 
           <div className="text-right">
-  <div className="text-4xl font-bold text-gray-900">
-    {candidate.score ?? 0}
-  </div>
+            <div className="text-4xl font-bold text-gray-900">
+              {candidate.score ?? 0}
+            </div>
+            <div className="text-sm text-gray-500">prioriteetti</div>
+          </div>
+        </div>
 
-  <div className="mb-4 text-sm text-gray-500">
-    prioriteetti
-  </div>
-
-  <ProjectActions candidateId={candidate.id} />
-</div>
+        <div className="mt-6 border-t border-gray-100 pt-4">
+          <ProjectActions candidateId={candidate.id} />
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
