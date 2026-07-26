@@ -9,6 +9,7 @@ import {
   inferCompletionDateFromText,
   isPastDate,
 } from "@/lib/projects/inferCompletionDateFromText"
+import { isNonConstructionZoning } from "@/lib/agent/knowledge/negativeProjects"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -115,12 +116,26 @@ export async function resolvePotentialProject(
   const inferredCompletion = inferCompletionDateFromText(completionText)
   const staleCompleted = !!inferredCompletion && isPastDate(inferredCompletion)
 
-  const completionMetadata: Record<string, unknown> = staleCompleted
-    ? {
-        recommended_action: "ignore",
-        auto_ignored_reason: `valmistunut_menneisyydessa:${inferredCompletion}`,
-      }
-    : {}
+  /*
+   * Kaavan ajantasaistaminen (vanhan asemakaavan päivitys, ei uudisrakentamista)
+   * ei ole rakennushanke — täsmätään lähteen nimeen/operaatioon, ei koko
+   * kuvaukseen (kaavan nimi kertoo tarkoituksen luotettavasti).
+   */
+  const nonConstructionZoning =
+    isNonConstructionZoning(input.title) || isNonConstructionZoning(md.operation)
+
+  let completionMetadata: Record<string, unknown> = {}
+  if (staleCompleted) {
+    completionMetadata = {
+      recommended_action: "ignore",
+      auto_ignored_reason: `valmistunut_menneisyydessa:${inferredCompletion}`,
+    }
+  } else if (nonConstructionZoning) {
+    completionMetadata = {
+      recommended_action: "ignore",
+      auto_ignored_reason: "kaavan_ajantasaistaminen",
+    }
+  }
 
   let existing = null
   let matchedExistingProjectId: string | null = null

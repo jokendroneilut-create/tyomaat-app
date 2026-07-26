@@ -91,3 +91,22 @@ export function isSmallPrivateProject(
   const t = text.toLowerCase()
   return SMALL_PRIVATE_KEYWORDS.some((k) => t.includes(k))
 }
+
+/*
+ * Kaavan "ajantasaistaminen" (vanhan asemakaavan päivitys vastaamaan jo
+ * rakennettua tilannetta) EI ole rakennushanke — se ei tuo uutta rakentamista,
+ * vaan mahdolliset muutokset vaativat aina erillisen asemakaavamuutoksen. Näitä
+ * ei nosteta TICin katselmointijonoon. Sama koskee ajantasakaavaa (kunnan
+ * yhdistelmäkaava-arkisto). Vartaloita, jotta taivutusmuodot osuvat
+ * (ajantasaistaminen/-us/-etaan). Täsmätään lähteen NIMEEN/operaatioon, koska
+ * kaavan nimi kertoo sen tarkoituksen luotettavasti.
+ */
+const NON_CONSTRUCTION_ZONING_KEYWORDS = ["ajantasaist", "ajantasakaav"]
+
+export function isNonConstructionZoning(
+  text: string | null | undefined
+): boolean {
+  if (!text) return false
+  const t = text.toLowerCase()
+  return NON_CONSTRUCTION_ZONING_KEYWORDS.some((k) => t.includes(k))
+}
