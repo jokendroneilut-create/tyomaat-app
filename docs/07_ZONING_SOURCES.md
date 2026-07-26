@@ -24,6 +24,25 @@ luotettavuushuomio lopussa.
   luvuissa): Hilma, Lupapiste kuulutukset, Väylävirasto hankkeet, Senaatti-kiinteistöt
   hankkeet, Puolustuskiinteistöt uutiset, Kreate hankkeet.
 
+## Lähdekohtaisia päivityksiä (2026-07)
+
+Kuntakohtainen **kattavuus** (alla) ei ole muuttunut, mutta muutamaa olemassa
+olevaa lähdettä on parannettu:
+
+- **Helsinki**: vanha WFS-lähde (`helsinki-kaavat-vireilla`, `helsinkiKaavaParser`,
+  `kartta.hel.fi/ws/geoserver/...`) korvattu **SUKKA-rajapinnalla**
+  (`helsinki-asemakaavat-sukka`, `kartta.hel.fi/api-sw/layer/sukka_asemakaava_user`).
+  Uusi antaa kuvauksen, yhteyshenkilön, vaiheen ja diaarinumeron sekä
+  liiteotsikoista poimitut konsultit. Vanha WFS jätetty kantaan
+  `enabled=false` -varalle — jos SUKKA joskus hajoaa, se voidaan kytkeä takaisin.
+  (Näkyy Operations-sivulla "pois"-tilassa; se on tarkoituksellista, ei ongelma.)
+- **Mikkeli**: WP-REST-rajapinnan `content.rendered` on epäluotettava (palauttaa
+  toisinaan tyhjän tai otsikottoman sisällön, mm. yleiskaavasivut). Kuvaus
+  luetaan nyt varakeinona julkaistun sivun `.entry-content`-kappaleista.
+
+Uusia **ei-kuntakohtaisia** lähteitä: **hel.fi/uutiset** (Helsingin kaupungin
+uutissyöte, rakennus/kaava-suodatin).
+
 ## Katetut kunnat maakunnittain
 
 Muoto: `Kunta: discovery_sources.name`
