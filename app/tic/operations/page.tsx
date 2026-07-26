@@ -2,7 +2,10 @@ import { getDiscoverySources } from "./services/getDiscoverySources"
 import { getLegacySourceHealth } from "./services/getLegacySourceHealth"
 import SourceMonitorTable from "./components/SourceMonitorTable"
 import CadenceSummary from "./components/CadenceSummary"
-import { DISCOVERY_CRON_CONFIG } from "@/lib/agent/pipeline/cronConfig"
+import {
+  DISCOVERY_CRON_CONFIG,
+  DISCOVERY_RUNS_PER_DAY,
+} from "@/lib/agent/pipeline/cronConfig"
 
 export const dynamic = "force-dynamic"
 
@@ -40,7 +43,13 @@ export default async function DiscoveryOperationsPage() {
   const regularCount = enabledCount - guaranteedCount
   const regularSlotsPerRun = Math.max(1, sourcesPerRun - guaranteedCount)
 
-  const fullCycleDays = Math.ceil(regularCount / regularSlotsPerRun)
+  /*
+   * Ajo tapahtuu 6h välein (DISCOVERY_RUNS_PER_DAY = 4), ei kerran yössä,
+   * joten perustason paikkoja on käytettävissä 4× enemmän vuorokaudessa.
+   * Ilman tätä täysi kierros näyttäisi 4× liian pitkältä.
+   */
+  const regularSlotsPerDay = regularSlotsPerRun * DISCOVERY_RUNS_PER_DAY
+  const fullCycleDays = Math.ceil(regularCount / regularSlotsPerDay)
   const staleThresholdDays = Math.round(fullCycleDays * 1.5)
 
   return (
@@ -57,6 +66,7 @@ export default async function DiscoveryOperationsPage() {
         <CadenceSummary
           enabledCount={enabledCount}
           sourcesPerRun={sourcesPerRun}
+          runsPerDay={DISCOVERY_RUNS_PER_DAY}
           fullCycleDays={fullCycleDays}
           staleThresholdDays={staleThresholdDays}
           guaranteedCount={guaranteedCount}

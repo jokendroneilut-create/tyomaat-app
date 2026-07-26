@@ -5,18 +5,22 @@ import { useState } from "react"
 export default function CadenceSummary({
   enabledCount,
   sourcesPerRun,
+  runsPerDay,
   fullCycleDays,
   staleThresholdDays,
   guaranteedCount,
 }: {
   enabledCount: number
   sourcesPerRun: number
+  runsPerDay: number
   fullCycleDays: number
   staleThresholdDays: number
   guaranteedCount: number
 }) {
   const regularCount = enabledCount - guaranteedCount
   const regularSlotsPerRun = Math.max(1, sourcesPerRun - guaranteedCount)
+  const sourcesPerDay = sourcesPerRun * runsPerDay
+  const regularSlotsPerDay = regularSlotsPerRun * runsPerDay
   const [showInfo, setShowInfo] = useState(false)
 
   return (
@@ -29,8 +33,11 @@ export default function CadenceSummary({
           </div>
 
           <div>
-            <div className="text-sm text-gray-500">Ajetaan yössä</div>
-            <div className="mt-1 text-2xl font-bold">{sourcesPerRun}</div>
+            <div className="text-sm text-gray-500">Lähteitä / vrk</div>
+            <div className="mt-1 text-2xl font-bold">{sourcesPerDay}</div>
+            <div className="text-xs text-gray-400">
+              {sourcesPerRun}/ajo × {runsPerDay} ajoa (6h välein)
+            </div>
           </div>
 
           <div>
@@ -57,21 +64,23 @@ export default function CadenceSummary({
       {showInfo && (
         <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
           <p>
-            Yöllinen ajo (klo 03:00) käsittelee vain {sourcesPerRun} lähdettä
-            kerrallaan, vaikka lähteiden oma "refresh_minutes"-asetus toivoisi
-            useimmille päivittäistä ajoa. Muutamalla lähteellä on muita
-            korkeampi prioriteetti (esim. Hilma, koska sen tarjousajat ovat
-            usein lyhyempiä kuin muiden lähteiden ajovälit) — ne valitaan
-            aina ensin ja varaavat siis kiinteän paikan joka yö. Loput{" "}
-            {regularCount} lähdettä ovat keskenään samalla perustasolla ja
-            kiertävät jäljelle jäävillä {regularSlotsPerRun} paikalla sen
-            mukaan mikä on odottanut pisimpään.
+            Ajo tapahtuu {runsPerDay} kertaa vuorokaudessa (6 tunnin välein,
+            klo 0/6/12/18) ja käsittelee {sourcesPerRun} lähdettä kerrallaan
+            eli {sourcesPerDay} lähdettä päivässä, vaikka lähteiden oma
+            "refresh_minutes"-asetus toivoisi useimmille päivittäistä ajoa.
+            Muutamalla lähteellä on muita korkeampi prioriteetti (esim. Hilma,
+            koska sen tarjousajat ovat usein lyhyempiä kuin muiden lähteiden
+            ajovälit) — ne valitaan aina ensin ja varaavat siis kiinteän
+            paikan joka ajossa. Loput {regularCount} lähdettä ovat keskenään
+            samalla perustasolla ja kiertävät jäljelle jäävillä{" "}
+            {regularSlotsPerRun} paikalla per ajo ({regularSlotsPerDay}/vrk)
+            sen mukaan mikä on odottanut pisimpään.
           </p>
           <p className="mt-2">
-            {regularCount} lähdettä ÷ {regularSlotsPerRun}/yö = täysi kierros
+            {regularCount} lähdettä ÷ {regularSlotsPerDay}/vrk = täysi kierros
             kestää noin {fullCycleDays} päivää{" "}
             {guaranteedCount > 0
-              ? `(${guaranteedCount} korkean prioriteetin lähdettä jäävät tämän ulkopuolelle, koska ne ajetaan joka yö)`
+              ? `(${guaranteedCount} korkean prioriteetin lähdettä jäävät tämän ulkopuolelle, koska ne ajetaan joka ajossa)`
               : ""}
             . Tämä on normaali väli yksittäisen perustason lähteen kahden
             ajon välillä — ei merkki ongelmasta. Source Monitor -taulukossa

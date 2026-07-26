@@ -23,6 +23,16 @@ export const DISCOVERY_CRON_CONFIG = {
 }
 
 /*
+ * Kuinka monta discovery-ajoa vuorokaudessa. Vastaa vercel.jsonin cronia
+ * "/api/tic/discovery/run", joka ajetaan kuuden tunnin välein = 4 kertaa/vrk
+ * (klo 0, 6, 12, 18). Operations-sivun "täysi kierros" -laskenta tarvitsee tämän:
+ * yksittäinen
+ * perustason lähde ehtii vuoroon (lähdemäärä ÷ paikat/ajo ÷ ajot/vrk) päivässä.
+ * Jos vercel.jsonin cron-aikataulua muutetaan, päivitä tämä samaksi.
+ */
+export const DISCOVERY_RUNS_PER_DAY = 4
+
+/*
  * Sama luku kuin `export const maxDuration` app/api/tic/discovery/run/
  * route.ts:ssä JA run-pipeline/route.ts:ssä - Next.js vaatii että
  * maxDuration on kirjaimellinen literaali reitin omassa tiedostossa
