@@ -8,6 +8,7 @@ import {
   normalizeLegacyPhase,
 } from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
+import { computeManualExpiry } from "@/lib/projects/tenderExpiry"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { inferMunicipalityFromText } from "@/lib/geo/inferMunicipalityFromText"
 import {
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const potentialProjectId = body.potentialProjectId
+    const autoExpire = body.autoExpire === true
 
     if (!potentialProjectId) {
       return NextResponse.json(
@@ -2426,6 +2428,14 @@ export async function POST(request: Request) {
   date_published: metadata.date_published ?? null,
   procurement_type_code:
     metadata.procurement_type_code ?? null,
+
+  /*
+   * Manuaalinen "aseta vanhenemaan vuoden kuluttua" -valinta hyväksynnässä
+   * (pienet hankkeet). Vanhennuscron ja kortit lukevat expire_at-kenttää.
+   */
+  expire_at: autoExpire
+    ? computeManualExpiry(metadata, new Date().toISOString())
+    : metadata.expire_at ?? null,
 
   developer,
   buyer_address: buyerAddress,

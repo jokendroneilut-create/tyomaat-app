@@ -3,8 +3,7 @@ import { notFound } from "next/navigation"
 import { getCandidate } from "../../services/getCandidate"
 import ProjectActions from "./ProjectActions"
 import EditableCandidate from "./EditableCandidate"
-import { normalizeLegacyPhase } from "@/lib/projects/phases"
-import { tenderExpiry, isTenderEnriched } from "@/lib/projects/tenderExpiry"
+import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 
 export const dynamic = "force-dynamic"
 
@@ -124,9 +123,11 @@ export default async function CandidateDetailPage({ params }: Props) {
         )}
 
         {(() => {
-          if (normalizeLegacyPhase(metadata.phase_hint) !== "tender") return null
-          if (isTenderEnriched(metadata)) return null
-          const exp = tenderExpiry(metadata, candidate.last_signal_at)
+          const exp = resolveExpiry(
+            metadata,
+            metadata.phase_hint,
+            candidate.last_signal_at
+          )
           if (!exp) return null
           return (
             <p className="mt-2 text-sm text-gray-800">

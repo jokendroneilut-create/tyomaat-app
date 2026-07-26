@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import PhaseTimeline from "@/app/projects/PhaseTimeline"
-import { displayPhaseLabel, normalizeLegacyPhase } from "@/lib/projects/phases"
-import { tenderExpiry, isTenderEnriched } from "@/lib/projects/tenderExpiry"
+import { displayPhaseLabel } from "@/lib/projects/phases"
+import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 import { trackEvent } from "@/lib/analytics/trackEvent"
 import TodayFeedbackButtons from "./TodayFeedbackButtons"
 
@@ -507,11 +507,9 @@ export default function TodayProjectModal({
                   ) : null}
 
                   {(() => {
-                    if (normalizeLegacyPhase(project.phase) !== "tender")
-                      return null
-                    if (isTenderEnriched(project.metadata)) return null
-                    const exp = tenderExpiry(
+                    const exp = resolveExpiry(
                       project.metadata,
+                      project.phase,
                       project.created_at
                     )
                     if (!exp) return null

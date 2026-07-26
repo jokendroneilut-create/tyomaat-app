@@ -11,6 +11,7 @@ export default function ProjectActions({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [autoExpire, setAutoExpire] = useState(false)
 
   async function approveProject() {
     const confirmed = window.confirm(
@@ -30,6 +31,7 @@ export default function ProjectActions({
         },
         body: JSON.stringify({
           potentialProjectId: candidateId,
+          autoExpire,
         }),
       })
 
@@ -85,7 +87,19 @@ export default function ProjectActions({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-3">
+      <label className="flex items-center gap-2 text-sm text-gray-800">
+        <input
+          type="checkbox"
+          checked={autoExpire}
+          onChange={(e) => setAutoExpire(e.target.checked)}
+          className="h-4 w-4"
+        />
+        ⏳ Aseta vanhenemaan vuoden kuluttua (pienet hankkeet: maalaus,
+        maalämpö, katon uusinta…)
+      </label>
+
+      <div className="flex flex-wrap gap-2">
       <button
         type="button"
         onClick={approveProject}
@@ -103,8 +117,9 @@ export default function ProjectActions({
       >
         {loading ? "Hylätään..." : "Hylkää"}
       </button>
+      </div>
 
-      {error && <div className="w-full text-sm text-red-700">{error}</div>}
+      {error && <div className="text-sm text-red-700">{error}</div>}
     </div>
   )
 }

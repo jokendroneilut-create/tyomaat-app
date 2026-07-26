@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { PHASE_LABELS } from "@/lib/projects/phases"
-import {
-  tenderExpiry,
-  isTenderEnriched,
-  TENDER_EXPIRY_YEARS,
-} from "@/lib/projects/tenderExpiry"
+import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -45,27 +41,29 @@ export async function GET(req: Request) {
 
     const now = new Date()
 
-    const { data: tenderProjects, error: fetchError } = await supabaseAdmin
+    /*
+     * Ehdokkaat: Kilpailutus-vaiheen hankkeet (automaattinen vanheneminen)
+     * SEKÄ mikä tahansa hanke jolle on hyväksynnässä valittu manuaalinen
+     * expire_at. resolveExpiry ratkaisee kumman sääntö pätee.
+     */
+    const { data: candidates, error: fetchError } = await supabaseAdmin
       .from("projects")
       .select("id, phase, status, created_at, metadata")
       .eq("status", "active")
-      .eq("phase", PHASE_LABELS.tender)
+      .or(`phase.eq.${PHASE_LABELS.tender},metadata->>expire_at.not.is.null`)
 
     if (fetchError) throw fetchError
 
     const results: any[] = []
 
-    for (const project of tenderProjects ?? []) {
-      const md = project.metadata ?? {}
-
-      if (isTenderEnriched(md)) continue
-
-      const exp = tenderExpiry(md, project.created_at)
+    for (const project of candidates ?? []) {
+      const exp = resolveExpiry(project.metadata, project.phase, project.created_at)
       if (!exp) continue
 
       // Ei vielä vanhentunut.
       if (exp.date > now) continue
 
+      const md = project.metadata ?? {}
       const { error: updateError } = await supabaseAdmin
         .from("projects")
         .update({
@@ -73,9 +71,9 @@ export async function GET(req: Request) {
           metadata: {
             ...md,
             expired_at: now.toISOString(),
-            expired_reason: `Määräajasta yli ${TENDER_EXPIRY_YEARS} v (${exp.source}, vanheni ${exp.date
-              .toISOString()
-              .slice(0, 10)})`,
+            expired_reason: exp.manual
+              ? `Manuaalinen vanheneminen (${exp.date.toISOString().slice(0, 10)})`
+              : `Kilpailutus vanheni määräajasta (${exp.date.toISOString().slice(0, 10)})`,
           },
         })
         .eq("id", project.id)
@@ -89,13 +87,13 @@ export async function GET(req: Request) {
         projectId: project.id,
         ok: true,
         expiresOn: exp.date.toISOString().slice(0, 10),
-        source: exp.source,
+        manual: exp.manual,
       })
     }
 
     return NextResponse.json({
       ok: true,
-      checked: (tenderProjects ?? []).length,
+      checked: (candidates ?? []).length,
       expired: results.filter((r) => r.ok).length,
       results,
     })

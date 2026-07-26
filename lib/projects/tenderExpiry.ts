@@ -1,3 +1,5 @@
+import { normalizeLegacyPhase } from "./phases"
+
 /*
  * Yksi totuus kilpailutushankkeen vanhenemispäivälle. Käytetään sekä
  * vanhennuscronissa (api/admin/expire-tender-projects) että hankekorteilla,
@@ -41,4 +43,46 @@ export function isTenderEnriched(
     md.is_contract_award === true ||
     (Array.isArray(md.winners) && md.winners.length > 0)
   )
+}
+
+/*
+ * Hyväksynnässä valittavan "aseta vanhenemaan" -lipun päivä. Sama vuosi-
+ * määräajasta-logiikka kuin kilpailutuksilla; jos referenssiä ei ole, vuosi
+ * hyväksynnästä. Tallennetaan metadata.expire_at-kenttään ISO-merkkijonona.
+ */
+export function computeManualExpiry(
+  metadata: Record<string, any> | null | undefined,
+  createdAt?: string | null
+): string {
+  const t = tenderExpiry(metadata, createdAt)
+  if (t) return t.date.toISOString()
+  const d = new Date()
+  d.setFullYear(d.getFullYear() + TENDER_EXPIRY_YEARS)
+  return d.toISOString()
+}
+
+/*
+ * Hankkeen tosiasiallinen vanhenemispäivä korteille ja cronille — yhdistää
+ * manuaalisen (metadata.expire_at, mikä tahansa vaihe) ja automaattisen
+ * (Kilpailutus-vaihe) säännön. Rikastuneet (voittaja selvinnyt) eivät vanhene.
+ */
+export function resolveExpiry(
+  metadata: Record<string, any> | null | undefined,
+  phase: string | null | undefined,
+  createdAt?: string | null
+): { date: Date; manual: boolean } | null {
+  const md = metadata ?? {}
+  if (isTenderEnriched(md)) return null
+
+  if (md.expire_at) {
+    const d = new Date(md.expire_at)
+    if (!Number.isNaN(d.getTime())) return { date: d, manual: true }
+  }
+
+  if (normalizeLegacyPhase(phase) === "tender") {
+    const t = tenderExpiry(md, createdAt)
+    if (t) return { date: t.date, manual: false }
+  }
+
+  return null
 }
