@@ -1,33 +1,105 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import type { DiscoverySourceRow } from "../services/getDiscoverySources"
 
 type Props = {
   sources: DiscoverySourceRow[]
 }
 
+type SourceStatus = "failing" | "disabled" | "ok"
+type SortKey = "status" | "name" | "run_count" | "error_count" | "last_success_at"
+
+function sourceStatus(s: DiscoverySourceRow): SourceStatus {
+  if (!s.enabled) return "disabled"
+  if (
+    s.last_error_at &&
+    (!s.last_success_at || new Date(s.last_error_at) > new Date(s.last_success_at))
+  ) {
+    return "failing"
+  }
+  return "ok"
+}
+
+// Toimimattomat (rikki, sitten pois) ensin.
+const STATUS_RANK: Record<SourceStatus, number> = { failing: 0, disabled: 1, ok: 2 }
+
+const STATUS_LABEL: Record<SourceStatus, string> = {
+  failing: "🔴 rikki",
+  disabled: "⚪ pois",
+  ok: "🟢 ok",
+}
+
+const SORTS: { key: SortKey; label: string }[] = [
+  { key: "status", label: "Tila" },
+  { key: "name", label: "Nimi" },
+  { key: "run_count", label: "Ajot" },
+  { key: "error_count", label: "Virheet" },
+  { key: "last_success_at", label: "Viim. onnistuminen" },
+]
+
 export default function DiscoverySourcesTable({ sources }: Props) {
   const [runningId, setRunningId] = useState<string | null>(null)
   const [result, setResult] = useState<any>(null)
+  const [sortKey, setSortKey] = useState<SortKey>("status")
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
+  const [onlyProblems, setOnlyProblems] = useState(false)
 
-  const enabledCount = sources.filter((source) => source.enabled).length
+  const enabledCount = sources.filter((s) => s.enabled).length
+  const problemCount = sources.filter((s) => sourceStatus(s) !== "ok").length
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+    } else {
+      setSortKey(key)
+      setSortDir("asc")
+    }
+  }
+
+  const visible = useMemo(() => {
+    const filtered = onlyProblems
+      ? sources.filter((s) => sourceStatus(s) !== "ok")
+      : sources
+
+    const sorted = [...filtered].sort((a, b) => {
+      let cmp = 0
+      switch (sortKey) {
+        case "status":
+          cmp = STATUS_RANK[sourceStatus(a)] - STATUS_RANK[sourceStatus(b)]
+          break
+        case "name":
+          cmp = a.name.localeCompare(b.name)
+          break
+        case "run_count":
+          cmp = (a.run_count ?? 0) - (b.run_count ?? 0)
+          break
+        case "error_count":
+          cmp = (a.error_count ?? 0) - (b.error_count ?? 0)
+          break
+        case "last_success_at":
+          cmp =
+            new Date(a.last_success_at ?? 0).getTime() -
+            new Date(b.last_success_at ?? 0).getTime()
+          break
+      }
+      if (cmp === 0) cmp = a.name.localeCompare(b.name)
+      return sortDir === "asc" ? cmp : -cmp
+    })
+
+    return sorted
+  }, [sources, sortKey, sortDir, onlyProblems])
 
   async function runSource(sourceId: string) {
     setRunningId(sourceId)
     setResult(null)
-
     try {
       const response = await fetch("/api/tic/discovery/run-source", {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ sourceId }),
       })
-
-      const json = await response.json()
-      setResult(json)
+      setResult(await response.json())
     } finally {
       setRunningId(null)
     }
@@ -35,45 +107,90 @@ export default function DiscoverySourcesTable({ sources }: Props) {
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-gray-200 p-4">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Discovery Sources
-        </h2>
-        <span className="text-sm font-semibold text-green-700">
-          käytössä {enabledCount}/{sources.length}
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 p-4">
+        <h2 className="text-lg font-semibold text-gray-900">Discovery Sources</h2>
+        <div className="flex items-center gap-3 text-sm">
+          <span className="font-semibold text-green-700">
+            käytössä {enabledCount}/{sources.length}
+          </span>
+          {problemCount > 0 && (
+            <span className="font-semibold text-red-700">ongelmia {problemCount}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Sorttaus + suodatin */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2 text-sm">
+        <span className="text-gray-500">Järjestä:</span>
+        {SORTS.map((s) => {
+          const active = sortKey === s.key
+          return (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => toggleSort(s.key)}
+              className={
+                "rounded-lg px-2 py-1 " +
+                (active ? "bg-gray-900 text-white" : "bg-white text-gray-700 hover:bg-gray-100")
+              }
+            >
+              {s.label}
+              {active ? (sortDir === "asc" ? " ▲" : " ▼") : ""}
+            </button>
+          )
+        })}
+        <label className="ml-auto flex items-center gap-2 text-gray-700">
+          <input
+            type="checkbox"
+            checked={onlyProblems}
+            onChange={(e) => setOnlyProblems(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Vain ongelmat
+        </label>
       </div>
 
       <div className="divide-y divide-gray-200">
-        {sources.map((source) => (
-          <div
-            key={source.id}
-            className="grid grid-cols-1 gap-4 p-4 md:grid-cols-6 md:items-center"
-          >
-            <div className="md:col-span-2">
-              <div className="font-semibold text-gray-900">{source.name}</div>
-              <div className="text-sm text-gray-500">{source.id}</div>
-            </div>
-
-            <div className="text-sm text-gray-700">{source.type}</div>
-
-            <div className="text-sm text-gray-700">
-              {source.enabled ? "🟢 käytössä" : "⚪ pois"}
-            </div>
-
-            <div className="text-sm text-gray-700">
-              Ajot: {source.run_count ?? 0}
-            </div>
-
-            <button
-              onClick={() => runSource(source.id)}
-              disabled={runningId === source.id}
-              className="rounded-lg bg-gray-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+        {visible.map((source) => {
+          const status = sourceStatus(source)
+          return (
+            <div
+              key={source.id}
+              className="grid grid-cols-1 gap-2 p-4 md:grid-cols-6 md:items-center md:gap-4"
             >
-              {runningId === source.id ? "Ajetaan..." : "Aja nyt"}
-            </button>
-          </div>
-        ))}
+              <div className="md:col-span-2">
+                <div className="font-semibold text-gray-900">{source.name}</div>
+                <div className="text-sm text-gray-500">{source.id}</div>
+                {status === "failing" && source.last_error_message && (
+                  <div className="mt-1 text-xs text-red-700">
+                    {source.last_error_message}
+                  </div>
+                )}
+              </div>
+
+              <div className="text-sm text-gray-700">{source.type}</div>
+
+              <div className="text-sm font-medium text-gray-800">
+                {STATUS_LABEL[status]}
+              </div>
+
+              <div className="text-sm text-gray-700">
+                Ajot: {source.run_count ?? 0}
+                {(source.error_count ?? 0) > 0 && (
+                  <span className="text-red-700"> · virh. {source.error_count}</span>
+                )}
+              </div>
+
+              <button
+                onClick={() => runSource(source.id)}
+                disabled={runningId === source.id}
+                className="rounded-lg bg-gray-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+              >
+                {runningId === source.id ? "Ajetaan..." : "Aja nyt"}
+              </button>
+            </div>
+          )
+        })}
       </div>
 
       {result && (
