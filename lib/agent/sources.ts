@@ -28,6 +28,7 @@ import { fetchMarttilanSource } from "./fetchMarttilanSource"
 import { fetchBrandToimitilatSource } from "./fetchBrandToimitilatSource"
 import { fetchHelsinkiUutisetSource } from "./fetchHelsinkiUutisetSource"
 import { fetchRakennuslehtiSource } from "./fetchRakennuslehtiSource"
+import { fetchSttHakuSource } from "./fetchSttHakuSource"
 
 export const sources = [
   { name: "lapti", fetch: fetchTestSource },
@@ -60,4 +61,5 @@ export const sources = [
   { name: "brand_toimitilat", fetch: fetchBrandToimitilatSource },
   { name: "helsinki_uutiset", fetch: fetchHelsinkiUutisetSource },
   { name: "rakennuslehti", fetch: fetchRakennuslehtiSource },
+  { name: "stt_haku", fetch: fetchSttHakuSource },
 ]
