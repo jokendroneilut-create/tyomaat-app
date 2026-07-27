@@ -64,3 +64,33 @@ High
 
 Status:
 Partially represented in customerProfiles.ts.
+
+---
+
+### KL-003 – Kuntien vuokrataloyhtiöiden nimi kertoo kunnan
+
+Observation:
+Kuntien vuokrataloyhtiöt rakennuttavat käytännössä vain oman kuntansa alueella,
+ja niiden nimi/lyhenne kertoo kunnan luotettavasti. Esim. **VAV** (VAV Asunnot Oy
+= Vantaan Vuokra-asunnot) → kaikki hankkeet Vantaalla. Vastaavia: Heka (Helsinki),
+TVT (Turku), TA/Y-Säätiö ovat valtakunnallisia (eivät päde), Kojamo/Lumo
+valtakunnallinen.
+
+Why it matters:
+Hilma-ilmoituksen työmaan kaupunki puuttuu usein rakenteisesta datasta ja
+vapaasta tekstistä (tilaajan osoite = hankintayksikkö, ei työmaa). Tilaajan nimi
+on tällöin luotettavin sijaintivihje. Ilman kaupunkia hanke ei näy alueittain
+suodatetuissa näkymissä (mm. Tänään).
+
+Possible system use:
+`hilmaResolver.ts` → `KNOWN_LOCAL_BUYER_CITIES` -taulukko (sanarajalla `\bvav\b`,
+ettei "Nivavaara"/"Rovavaara" osu). Laajennettavissa uusilla varmennetuilla
+paikallistoimijoilla. Lisäksi resolveri päättelee kaupungin, jos työmaa on
+samalla kadulla kuin tilaajan osoite (kiinteistönomistaja remontoi omaa taloaan).
+
+Confidence:
+High (VAV varmistettu käyttäjältä). Uusia yhtiöitä lisättävä vain kun kunta on
+varma — valtakunnalliset toimijat eivät päde.
+
+Status:
+VAV toteutettu koodissa; muut lisätään tapauskohtaisesti.

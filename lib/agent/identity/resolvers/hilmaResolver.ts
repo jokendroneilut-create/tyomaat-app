@@ -65,6 +65,55 @@ function isCityCorroboratedByText(
   return texts.some((text) => text && text.toLowerCase().includes(stem))
 }
 
+/*
+ * Kadun nimi osoitteesta: katuosuus ennen ensimmäistä talonumeroa.
+ * "Veturikuja 9" -> "veturikuja"; "Veturikuja 7 01300 Vantaa FIN" -> "veturikuja".
+ */
+function streetName(address: string | null): string | null {
+  if (!address) return null
+  const m = address.trim().match(/^([A-Za-zÅÄÖåäö\-.\s]+?)\s+\d/)
+  return m ? m[1].trim().toLowerCase() : null
+}
+
+/*
+ * Jos työmaan osoite on samalla kadulla kuin hankintayksikön osoite, työmaa
+ * on käytännössä samassa kunnassa (esim. kiinteistönomistaja kilpailuttaa oman
+ * talonsa remontin: tilaaja "Veturikuja 7", työmaa "Veturikuja 9"). Tällöin
+ * hankintayksikön kaupunkia voidaan käyttää sijaintikuntana, vaikka ilmoituksen
+ * teksti ei mainitsisi kaupungin nimeä. Turvallinen: sama katu + sama ilmoitus
+ * tarkoittaa lähes aina samaa katua eikä kahta samannimistä eri kunnissa.
+ */
+function isWorksiteOnBuyerStreet(
+  projectAddress: string | null,
+  buyerAddress: string | null
+): boolean {
+  const a = streetName(projectAddress)
+  const b = streetName(buyerAddress)
+  if (!a || !b || a.length < 4) return false
+  return a === b || a.startsWith(b) || b.startsWith(a)
+}
+
+/*
+ * Tilaajat joiden nimi kertoo kunnan luotettavasti — tyypillisesti kuntien
+ * vuokrataloyhtiöt, jotka rakennuttavat vain omassa kunnassaan. Näille kaupunki
+ * voidaan päätellä suoraan nimestä, vaikka ilmoituksen teksti ei mainitsisi
+ * kaupunkia (esim. VAV / Veturikuja 9, jonka kuvaus ei sano "Vantaa").
+ * Sanarajalla (\bvav\b) jotta osamerkkijonot kuten "Nivavaara"/"Rovavaara"
+ * eivät osu. Laajennettavissa muilla tunnistettavilla paikallistoimijoilla.
+ */
+const KNOWN_LOCAL_BUYER_CITIES: [RegExp, string][] = [
+  [/\bvav\b/i, "Vantaa"], // VAV = Vantaan Vuokra-asunnot Oy
+]
+
+function cityFromKnownLocalBuyer(...texts: (string | null)[]): string | null {
+  const joined = texts.filter(Boolean).join(" ")
+  if (!joined) return null
+  for (const [pattern, city] of KNOWN_LOCAL_BUYER_CITIES) {
+    if (pattern.test(joined)) return city
+  }
+  return null
+}
+
 export async function resolveHilmaProject({
   document,
   facts,
@@ -205,10 +254,12 @@ export async function resolveHilmaProject({
    * oma teksti tukee samaa kaupunkia (ks. isCityCorroboratedByText).
    */
   let municipality =
-    buyerMunicipality &&
-    isCityCorroboratedByText(buyerMunicipality.name, description, developer)
+    cityFromKnownLocalBuyer(operation, developer, buyerAddress) ??
+    (buyerMunicipality &&
+    (isCityCorroboratedByText(buyerMunicipality.name, description, developer) ||
+      isWorksiteOnBuyerStreet(projectAddress, buyerAddress))
       ? buyerMunicipality.name
-      : null
+      : null)
 
   let resolvedAddress = projectAddress
 
