@@ -72,9 +72,9 @@ Partially represented in customerProfiles.ts.
 Observation:
 Kuntien vuokrataloyhtiöt rakennuttavat käytännössä vain oman kuntansa alueella,
 ja niiden nimi/lyhenne kertoo kunnan luotettavasti. Esim. **VAV** (VAV Asunnot Oy
-= Vantaan Vuokra-asunnot) → kaikki hankkeet Vantaalla. Vastaavia: Heka (Helsinki),
-TVT (Turku), TA/Y-Säätiö ovat valtakunnallisia (eivät päde), Kojamo/Lumo
-valtakunnallinen.
+= Vantaan Vuokra-asunnot) → kaikki hankkeet Vantaalla. Vastaavia: Heka
+(Helsinki), TVT (Turku), Espoon Asunnot (Espoo). HUOM: TA/Y-Säätiö, Kojamo/Lumo,
+SATO ym. ovat valtakunnallisia (eivät päde) — lisää vain kunnat jotka ovat varmoja.
 
 Why it matters:
 Hilma-ilmoituksen työmaan kaupunki puuttuu usein rakenteisesta datasta ja
@@ -93,4 +93,5 @@ High (VAV varmistettu käyttäjältä). Uusia yhtiöitä lisättävä vain kun k
 varma — valtakunnalliset toimijat eivät päde.
 
 Status:
-VAV toteutettu koodissa; muut lisätään tapauskohtaisesti.
+VAV (Vantaa), Heka (Helsinki), TVT (Turku) ja Espoon Asunnot (Espoo) toteutettu
+koodissa; muut lisätään tapauskohtaisesti kun kunta on varma.

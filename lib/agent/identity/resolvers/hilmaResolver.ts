@@ -103,6 +103,9 @@ function isWorksiteOnBuyerStreet(
  */
 const KNOWN_LOCAL_BUYER_CITIES: [RegExp, string][] = [
   [/\bvav\b/i, "Vantaa"], // VAV = Vantaan Vuokra-asunnot Oy
+  [/\bheka\b/i, "Helsinki"], // Heka = Helsingin kaupungin asunnot Oy
+  [/\btvt\b/i, "Turku"], // TVT = TVT Asunnot Oy (Turun kaupungin vuokra-asunnot)
+  [/espoon asunnot/i, "Espoo"], // Espoon Asunnot Oy
 ]
 
 function cityFromKnownLocalBuyer(...texts: (string | null)[]): string | null {
