@@ -27,6 +27,7 @@ import { fetchMarveaSource } from "./fetchMarveaSource"
 import { fetchMarttilanSource } from "./fetchMarttilanSource"
 import { fetchBrandToimitilatSource } from "./fetchBrandToimitilatSource"
 import { fetchHelsinkiUutisetSource } from "./fetchHelsinkiUutisetSource"
+import { fetchRakennuslehtiSource } from "./fetchRakennuslehtiSource"
 
 export const sources = [
   { name: "lapti", fetch: fetchTestSource },
@@ -58,4 +59,5 @@ export const sources = [
   { name: "marttilan", fetch: fetchMarttilanSource },
   { name: "brand_toimitilat", fetch: fetchBrandToimitilatSource },
   { name: "helsinki_uutiset", fetch: fetchHelsinkiUutisetSource },
+  { name: "rakennuslehti", fetch: fetchRakennuslehtiSource },
 ]
