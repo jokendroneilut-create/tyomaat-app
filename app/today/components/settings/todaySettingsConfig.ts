@@ -22,6 +22,8 @@ export const todaySources = [
   "Kuntapäätökset",
   "Rakennusluvat",
   "Yritysuutiset",
+  "Ympäristö & YVA",
+  "Suunnittelukilpailut",
 ] as const
 
 export const regions = [

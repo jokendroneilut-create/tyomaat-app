@@ -8,6 +8,65 @@ const ALL_SOURCE_OPTIONS = [
   "kaavoitus",
   "kuntapäätökset",
   "yritysuutiset",
+  "ympäristö & yva",
+  "suunnittelukilpailut",
+]
+
+// Yhdistää projektin source_name -> näkyviin lähdekategorioihin.
+// Kategorian avain vastaa normalisoitua wizard-valintaa (todaySources).
+// Järjestys ei vaikuta lopputulokseen; jokainen matcher arvioidaan erikseen.
+const SOURCE_CATEGORY_MATCHERS: {
+  key: string
+  matches: (source: string, hasPermitNumber: boolean) => boolean
+}[] = [
+  {
+    key: "ympäristö & yva",
+    matches: (source) =>
+      source.includes("yva") || source.includes("ymparistolupa"),
+  },
+  {
+    key: "suunnittelukilpailut",
+    matches: (source) => source.includes("suunnittelukilpailu"),
+  },
+  {
+    key: "rakennusluvat",
+    matches: (source, hasPermitNumber) =>
+      source.includes("rakennuslupa") ||
+      source.includes("espoon kuulutukset") ||
+      source.includes("permit") ||
+      source.includes("building") ||
+      source.includes("discovery_agent") ||
+      // permit_number leimaa rakennusluvaksi vain jos lähteellä ei ole
+      // omaa kategoriaa (ymparistolupa/yva kuuluvat "Ympäristö & YVA":iin).
+      (hasPermitNumber &&
+        !source.includes("ymparistolupa") &&
+        !source.includes("yva")),
+  },
+  {
+    key: "hilma",
+    matches: (source) => source.includes("hilma"),
+  },
+  {
+    key: "kaavoitus",
+    matches: (source) =>
+      source.includes("kaava") || source.includes("zoning"),
+  },
+  {
+    key: "kuntapäätökset",
+    matches: (source) =>
+      source.includes("kunta") ||
+      source.includes("lautakunta") ||
+      source.includes("committee"),
+  },
+  {
+    key: "yritysuutiset",
+    matches: (source) =>
+      source.includes("stt") ||
+      source.includes("uutiset") ||
+      source.includes("news") ||
+      source.includes("rakennuslehti") ||
+      source.includes("lehti"),
+  },
 ]
 
 const ALL_SALES_MOMENT_OPTIONS = [
@@ -64,60 +123,20 @@ export function matchesSources(
   const source = projectSource(project)
   const hasPermitNumber = Boolean(project.metadata?.permit_number)
 
-  if (
-    normalizedSources.includes("rakennusluvat") &&
-    (
-      hasPermitNumber ||
-      source.includes("rakennuslupa") ||
-      source.includes("espoon kuulutukset") ||
-      source.includes("permit") ||
-      source.includes("building") ||
-      source.includes("discovery_agent")
-    )
-  ) {
+  const matchedCategories = SOURCE_CATEGORY_MATCHERS.filter((matcher) =>
+    matcher.matches(source, hasPermitNumber)
+  ).map((matcher) => matcher.key)
+
+  // FAIL-OPEN: jos lähde ei osu mihinkään tunnettuun kategoriaan, sitä ei
+  // voi valita eikä sulkea pois -> näytetään aina. Estää tulevien lähteiden
+  // äänettömän katoamisen suodatuksessa.
+  if (matchedCategories.length === 0) {
     return true
   }
 
-  if (
-    normalizedSources.includes("hilma") &&
-    source.includes("hilma")
-  ) {
-    return true
-  }
-
-  if (
-    normalizedSources.includes("kaavoitus") &&
-    (
-      source.includes("kaava") ||
-      source.includes("zoning")
-    )
-  ) {
-    return true
-  }
-
-  if (
-    normalizedSources.includes("kuntapäätökset") &&
-    (
-      source.includes("kunta") ||
-      source.includes("lautakunta") ||
-      source.includes("committee")
-    )
-  ) {
-    return true
-  }
-
-  if (
-    normalizedSources.includes("yritysuutiset") &&
-    (
-      source.includes("stt") ||
-      source.includes("uutiset") ||
-      source.includes("news")
-    )
-  ) {
-    return true
-  }
-
-  return false
+  return matchedCategories.some((category) =>
+    normalizedSources.includes(category)
+  )
 }
 
 export function projectPhaseText(project: any) {
