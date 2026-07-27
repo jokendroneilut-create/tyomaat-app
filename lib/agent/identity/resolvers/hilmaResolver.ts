@@ -121,6 +121,26 @@ function cityFromKnownLocalBuyer(...texts: (string | null)[]): string | null {
   return null
 }
 
+/*
+ * Tunnettuja paikkoja/kaupunginosia jotka kuuluvat yksiselitteisesti tiettyyn
+ * kuntaan, mutta joita ei ole kuntarekisterissä omana kuntanaan (joten
+ * työmaan osoitteen poiminta ei tunnista niitä). Esim. valtakunnallisen
+ * toimijan (Museovirasto) ilmoitus "Suomenlinna C52-C53…" -> Helsinki.
+ * Vain yksiselitteiset paikat; laajennettavissa.
+ */
+const KNOWN_PLACE_CITIES: [RegExp, string][] = [
+  [/suomenlinna/i, "Helsinki"], // Suomenlinnan merilinnoitus
+]
+
+function cityFromKnownPlace(...texts: (string | null)[]): string | null {
+  const joined = texts.filter(Boolean).join(" ")
+  if (!joined) return null
+  for (const [pattern, city] of KNOWN_PLACE_CITIES) {
+    if (pattern.test(joined)) return city
+  }
+  return null
+}
+
 export async function resolveHilmaProject({
   document,
   facts,
@@ -132,9 +152,17 @@ export async function resolveHilmaProject({
     findFact(facts, "operation")?.fact_value ??
     document.title
 
+  /*
+   * Kuvaus ensisijaisesti faktasta. Varalla suoraan ilmoituksen
+   * original.descriptionFi:stä: Hilma-ilmoitusta voidaan päivittää julkaisun
+   * jälkeen (kuvaus lisätään myöhemmin), jolloin faktat voivat olla vanhentuneet
+   * mutta re-keräyksen päivittämä raw_payload on ajan tasalla.
+   */
   const description =
     findFact(facts, "description")?.fact_value ??
-    null
+    (document.raw_payload?.original?.descriptionFi
+      ? String(document.raw_payload.original.descriptionFi).slice(0, 3000)
+      : null)
 
   const developer =
     findFact(facts, "developer")?.fact_value ??
@@ -262,6 +290,7 @@ export async function resolveHilmaProject({
    */
   let municipality =
     cityFromKnownLocalBuyer(operation, developer, buyerAddress) ??
+    cityFromKnownPlace(operation, description) ??
     (buyerMunicipality &&
     (isCityCorroboratedByText(buyerMunicipality.name, description, developer) ||
       isWorksiteOnBuyerStreet(projectAddress, buyerAddress))
