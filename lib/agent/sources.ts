@@ -30,6 +30,7 @@ import { fetchHelsinkiUutisetSource } from "./fetchHelsinkiUutisetSource"
 import { fetchRakennuslehtiSource } from "./fetchRakennuslehtiSource"
 import { fetchSttHakuSource } from "./fetchSttHakuSource"
 import { fetchYmparistolupaSource } from "./fetchYmparistolupaSource"
+import { fetchYvaSource } from "./fetchYvaSource"
 
 export const sources = [
   { name: "lapti", fetch: fetchTestSource },
@@ -64,4 +65,5 @@ export const sources = [
   { name: "rakennuslehti", fetch: fetchRakennuslehtiSource },
   { name: "stt_haku", fetch: fetchSttHakuSource },
   { name: "ymparistolupa", fetch: fetchYmparistolupaSource },
+  { name: "yva", fetch: fetchYvaSource },
 ]
