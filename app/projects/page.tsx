@@ -549,7 +549,15 @@ setTeamModeEnabled(true)
         .join(' ')
         .toLowerCase()
 
-      return haystack.includes(needle)
+      /*
+       * Sanahaku: jokaisen hakusanan on löydyttävä (JA), mutta eri kentistä ja
+       * missä järjestyksessä tahansa. Esim. "forssa data" löytää hankkeen jonka
+       * kaupunki on Forssa ja kohdetyyppi Datakeskus, vaikka "forssa data" ei
+       * esiinny yhtenäisenä jonona missään kentässä. Osamerkkijono kattaa myös
+       * taivutuksen (esim. "forssa" löytyy sanasta "Forssaan").
+       */
+      const terms = needle.split(/\s+/).filter(Boolean)
+      return terms.every((term) => haystack.includes(term))
     })
   }, [projects, q, region, city, phase, propertyType])
 
