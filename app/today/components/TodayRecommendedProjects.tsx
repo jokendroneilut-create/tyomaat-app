@@ -68,6 +68,23 @@ export default function TodayRecommendedProjects({
                         </span>
                       )}
                     </div>
+
+                    {Array.isArray(project.today_reasons) &&
+                      project.today_reasons.length > 0 && (
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-sm">
+                          <span className="font-medium text-gray-500">
+                            Miksi sinulle:
+                          </span>
+                          {project.today_reasons.map((reason: string) => (
+                            <span
+                              key={reason}
+                              className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-800 ring-1 ring-amber-200"
+                            >
+                              {reason}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                   </div>
 
                   <button

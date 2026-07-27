@@ -1,9 +1,29 @@
 import type { TodaySettings } from "./getTodaySettings"
 import { projectSource, projectPhaseText } from "./todayFilters"
 import type { FeedbackContext } from "./getUserFeedbackContext"
+import { PHASE_LABELS, type PhaseKey } from "@/lib/projects/phases"
+import { projectPhaseKey } from "@/lib/opportunity/projectPhaseKey"
+import {
+  roleStageWeight,
+  ROLE_DATIVE_LABEL,
+} from "@/lib/opportunity/roleStageMatrix"
 
 const FEEDBACK_ATTRIBUTE_WEIGHT = 5
 const FEEDBACK_SCORE_CAP = 30
+const ROLE_STAGE_MAX_POINTS = 40
+
+/*
+ * Pisteytysmoduuli palauttaa pisteet + valinnaisen ihmisluettavan syyn
+ * ("miksi tämä sopii sinulle"). Syyt kootaan kortille (P1, §4–§5).
+ */
+type ScoreResult = { points: number; reason?: string }
+
+type OpportunityContext = {
+  project: any
+  phaseKey: PhaseKey | null
+  settings: TodaySettings
+  feedback?: FeedbackContext
+}
 
 function daysSince(dateValue: string | null | undefined) {
   if (!dateValue) return 999
@@ -15,43 +35,62 @@ function daysSince(dateValue: string | null | undefined) {
   return Math.max(0, Math.floor((now - created) / (1000 * 60 * 60 * 24)))
 }
 
-function businessValueScore(project: any) {
-  const value = project.metadata?.business_value
+/*
+ * ⭐ Rooli → elinkaaren vaihe. P1:n ydinmoduuli: yritysprofiili ohjaa
+ * pisteytystä (aiemmin inertti). Ks. `lib/opportunity/roleStageMatrix.ts`.
+ */
+function roleStageFit(ctx: OpportunityContext): ScoreResult {
+  const weight = roleStageWeight(ctx.settings.companyProfile, ctx.phaseKey)
+  if (weight <= 0) return { points: 0 }
 
-  if (value === "high") return 50
-  if (value === "medium") return 25
-  if (value === "low") return 5
+  const points = Math.round(weight * ROLE_STAGE_MAX_POINTS)
+  const phaseLabel = ctx.phaseKey ? PHASE_LABELS[ctx.phaseKey] : ""
+  const dative =
+    ROLE_DATIVE_LABEL[ctx.settings.companyProfile ?? ""] ?? "sinulle"
 
-  return 0
+  return { points, reason: `${phaseLabel} — sopii ${dative}` }
 }
 
-function freshnessScore(project: any) {
-  const age = daysSince(project.created_at)
+function businessValue(ctx: OpportunityContext): ScoreResult {
+  const value = ctx.project.metadata?.business_value
 
-  if (age <= 1) return 25
-  if (age <= 3) return 15
-  if (age <= 7) return 8
+  if (value === "high") return { points: 50, reason: "Suuri hanke" }
+  if (value === "medium") return { points: 25, reason: "Keskikokoinen hanke" }
+  if (value === "low") return { points: 5 }
 
-  return 0
+  return { points: 0 }
 }
 
-function sourceScore(project: any) {
-  const source = projectSource(project)
+function freshness(ctx: OpportunityContext): ScoreResult {
+  const age = daysSince(ctx.project.created_at)
 
-  if (source.includes("hilma")) return 15
-  if (source.includes("rakennuslupa")) return 12
-  if (source.includes("espoon kuulutukset")) return 12
-  if (source.includes("kaavoitus")) return 10
+  if (age <= 1) return { points: 25, reason: "Uusi tänään" }
+  if (age <= 3) return { points: 15, reason: "Uusi tällä viikolla" }
+  if (age <= 7) return { points: 8 }
 
-  return 0
+  return { points: 0 }
 }
 
-function salesMomentScore(project: any, settings: TodaySettings) {
-  const moments = settings.bestSalesMoments ?? []
-  if (!moments.length) return 0
+function sourceQuality(ctx: OpportunityContext): ScoreResult {
+  const source = projectSource(ctx.project)
 
-  const text = projectPhaseText(project)
+  if (source.includes("hilma")) return { points: 15 }
+  if (source.includes("rakennuslupa")) return { points: 12 }
+  if (source.includes("espoon kuulutukset")) return { points: 12 }
+  if (source.includes("kaavoitus")) return { points: 10 }
 
+  return { points: 0 }
+}
+
+/*
+ * Käyttäjän manuaalisesti valitsema myyntihetki (override roolin oletukselle).
+ * Säilytetään; V2 johtaa oletukset roolista automaattisesti.
+ */
+function salesMomentFit(ctx: OpportunityContext): ScoreResult {
+  const moments = ctx.settings.bestSalesMoments ?? []
+  if (!moments.length) return { points: 0 }
+
+  const text = projectPhaseText(ctx.project)
   let score = 0
 
   for (const moment of moments) {
@@ -64,12 +103,17 @@ function salesMomentScore(project: any, settings: TodaySettings) {
     if (normalized === "suunnittelu" && text.includes("suunnittel")) score += 20
   }
 
-  return Math.min(score, 30)
+  const points = Math.min(score, 30)
+  return points > 0
+    ? { points, reason: "Sopii valitsemaasi myyntihetkeen" }
+    : { points: 0 }
 }
 
-function feedbackAffinityScore(project: any, feedbackContext?: FeedbackContext) {
-  if (!feedbackContext) return 0
+function feedbackAffinity(ctx: OpportunityContext): ScoreResult {
+  const feedbackContext = ctx.feedback
+  if (!feedbackContext) return { points: 0 }
 
+  const project = ctx.project
   const attrs: Record<string, string | null | undefined> = {
     region: project.region,
     business_value: project.metadata?.business_value,
@@ -89,21 +133,89 @@ function feedbackAffinityScore(project: any, feedbackContext?: FeedbackContext) 
     if (net) score += net * FEEDBACK_ATTRIBUTE_WEIGHT
   }
 
-  return Math.max(-FEEDBACK_SCORE_CAP, Math.min(FEEDBACK_SCORE_CAP, score))
+  const points = Math.max(-FEEDBACK_SCORE_CAP, Math.min(FEEDBACK_SCORE_CAP, score))
+  return points > 0
+    ? { points, reason: "Muistuttaa hankkeita joista pidit" }
+    : { points }
 }
 
+const SCORE_MODULES: ((ctx: OpportunityContext) => ScoreResult)[] = [
+  roleStageFit,
+  businessValue,
+  freshness,
+  sourceQuality,
+  salesMomentFit,
+  feedbackAffinity,
+]
+
+export type OpportunityBreakdownItem = {
+  module: string
+  points: number
+  reason?: string
+}
+
+export type OpportunityScore = {
+  score: number
+  breakdown: OpportunityBreakdownItem[]
+}
+
+/*
+ * Laskee hankkeen asiakaskohtaisen relevanssin: kokonaispisteet + erittely
+ * moduuleittain (selityksiä varten). Vaihe ratkaistaan kerran per hanke.
+ */
+export function scoreOpportunity(
+  project: any,
+  settings: TodaySettings,
+  feedback?: FeedbackContext
+): OpportunityScore {
+  const ctx: OpportunityContext = {
+    project,
+    phaseKey: projectPhaseKey(project),
+    settings,
+    feedback,
+  }
+
+  const breakdown: OpportunityBreakdownItem[] = SCORE_MODULES.map((mod) => {
+    const { points, reason } = mod(ctx)
+    return { module: mod.name, points, reason }
+  })
+
+  const score = breakdown.reduce((sum, item) => sum + item.points, 0)
+
+  return { score, breakdown }
+}
+
+/*
+ * Top-syyt kortille: positiivisen kontribuution moduulit suurin ensin,
+ * enintään `limit`, tekstiltään uniikit.
+ */
+export function topReasons(
+  breakdown: OpportunityBreakdownItem[],
+  limit = 3
+): string[] {
+  const seen = new Set<string>()
+  const reasons: string[] = []
+
+  for (const item of [...breakdown].sort((a, b) => b.points - a.points)) {
+    if (item.points <= 0 || !item.reason) continue
+    if (seen.has(item.reason)) continue
+    seen.add(item.reason)
+    reasons.push(item.reason)
+    if (reasons.length >= limit) break
+  }
+
+  return reasons
+}
+
+/*
+ * Taaksepäin yhteensopiva: paljas kokonaispistemäärä.
+ */
 export function calculateTodayScore(
   project: any,
   settings: TodaySettings,
   feedbackContext?: FeedbackContext
 ) {
-  return (
-    businessValueScore(project) +
-    freshnessScore(project) +
-    sourceScore(project) +
-    salesMomentScore(project, settings) +
-    feedbackAffinityScore(project, feedbackContext)
-  )
+  return scoreOpportunity(project, settings, feedbackContext).score
 }
 
 export function rankTodayProjects(
@@ -112,10 +224,19 @@ export function rankTodayProjects(
   feedbackContext?: FeedbackContext
 ) {
   return [...projects]
-    .map((project) => ({
-      ...project,
-      today_score: calculateTodayScore(project, settings, feedbackContext),
-    }))
+    .map((project) => {
+      const { score, breakdown } = scoreOpportunity(
+        project,
+        settings,
+        feedbackContext
+      )
+
+      return {
+        ...project,
+        today_score: score,
+        today_reasons: topReasons(breakdown),
+      }
+    })
     .sort((a, b) => {
       if (b.today_score !== a.today_score) {
         return b.today_score - a.today_score
