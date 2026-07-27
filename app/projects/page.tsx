@@ -6,6 +6,7 @@ import MapClient from './MapClient'
 import type { MapBounds } from './Map'
 import PhaseTimeline from './PhaseTimeline'
 import { CANONICAL_PHASES, displayPhaseLabel, normalizeLegacyPhase } from '@/lib/projects/phases'
+import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
 import { trackEvent } from '@/lib/analytics/trackEvent'
 
 const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
@@ -557,7 +558,9 @@ setTeamModeEnabled(true)
        * taivutuksen (esim. "forssa" löytyy sanasta "Forssaan").
        */
       const terms = needle.split(/\s+/).filter(Boolean)
-      return terms.every((term) => haystack.includes(term))
+      return terms.every((term) =>
+        expandSearchTerm(term).some((syn) => haystack.includes(syn))
+      )
     })
   }, [projects, q, region, city, phase, propertyType])
 
