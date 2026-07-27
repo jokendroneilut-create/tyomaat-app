@@ -5,6 +5,27 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-012 – Tontinluovutukset jätetty väliin (ei siistiä lähdettä)
+Selvitetty kilpailija-aukkona: ei kansallista eikä siistiä kaupunkikohtaista
+rajapintaa. Helsingin `tontit.hel.fi` on poistettu, ja tonttiasiat ovat nyt
+yleisissä päätösjärjestelmissä (`paatokset.hel.fi` ym.) yksittäisinä
+pöytäkirjoina kaiken muun seassa — signaali/kohina huono, rakennuttajan/tontin
+louhinta epäluotettavaa, ja tieto hajallaan joka kaupungissa erikseen. Menee
+myös päällekkäin kaavan (jo poimitaan) ja rakennuslupien kanssa. **Päätös:**
+kohiseva päätös-scraperi haittaisi TIC-jonoa enemmän kuin hyödyttäisi → ei
+rakenneta ennen kuin löytyy siisti, korkean signaalin lähde.
+
+### D-011 – Varhaisen vaiheen lähteet kilpailija-aukon sulkemiseen
+Metroc/RPT Smart poimivat isot hankkeet aikaisin. Aukon sulkevat lähteet jotka
+osuvat hankkeen KAIKKEIN aikaisimpaan julkiseen signaaliin, ennen rakennuslupaa
+ja urakkakilpailutusta: **YVA** (ympäristövaikutusten arviointi — suurimmat
+energia-/teollisuus-/infrahankkeet), **ympäristölupa** (isot yksityiset
+laitokset ilman julkista kilpailutusta, esim. datakeskukset) ja
+**suunnittelukilpailu** (SAFA — merkittävät julkiset rakennukset konseptivaiheessa,
+myös Hilman ulkopuoliset kutsukilpailut). Kriteeri uudelle lähteelle: korkea
+signaali/kohina ja aikaisempi vaihe kuin nykylähteet — ei volyymi volyymin
+vuoksi (vrt. [D-012]).
+
 ### D-010 – Duplikaatteja yhdistettäessä säilytä hanke jolla on käyttäjädataa
 Suosikit (`user_project_favorites`) ja omistajuus viittaavat `project_id`:hen.
 Jos yhdistettäessä poistetaan väärä hanke, käyttäjien suosikit eivät seuraa

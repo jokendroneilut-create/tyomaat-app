@@ -13,6 +13,41 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ### Discovery – lähteet ja tiedonkeruu
 
+Uudet varhaisen vaiheen lähteet (kilpailija-aukon sulkeminen, Metroc/RPT Smart):
+isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
+
+- **YVA-lähde** (`fetchYvaSource`, ymparisto.fi): ympäristövaikutusten arviointi
+  on pakollinen suurille hankkeille (tuuli-/aurinko-/ydinvoima, kaivokset,
+  datakeskukset, tehtaat, akkumateriaali, biojalostamot, voimajohdot, suuret
+  väylät) ja käynnistyy hankkeen KAIKKEIN aikaisimmassa vaiheessa — usein vuosia
+  ennen rakennuslupaa. Hakee helfi-Elasticsearch-proxysta (`POST
+  /fi/app/search/query`) `type=yva_project` julkaisuajan mukaan, suodattaa vain
+  Suomen kuntiin (pudottaa rajat ylittävät YVA:t), tuoreisiin (18 kk) ja pois
+  turve/SOVA-arvioinnit. ~100 tuoretta hanketta. (95f39e3)
+- **Ympäristölupa-lähde** (`fetchYmparistolupaSource`, Lupa- ja
+  valvontaviraston tietopalvelu): isot yksityiset teollisuus-, energia- ja
+  datakeskushankkeet näkyvät lupavaiheessa aikaisin — usein ennen rakennuslupaa
+  ja ilman julkista kilpailutusta (juuri se aukko jonka takia Forssan
+  datakeskus jäi aiemmin ohi). Hakee korkean arvon hanketyypeillä, suodattaa
+  pois olemassa olevien laitosten lupamuutokset/valvonnan ja vesirakentamisen,
+  deduplikoi diaarinumerolla. (79980ec)
+- **Suunnittelukilpailu-lähde** (`fetchSuunnittelukilpailuSource`, SAFA):
+  arkkitehtuurikilpailu on merkittävän julkisen rakennuksen (kampus, museo,
+  kirjasto, terminaali, kirkko) aikaisin julkinen signaali — vuosia ennen
+  rakennuslupaa, ja osa kutsukilpailuista ei näy Hilmassa lainkaan. Poimii
+  `/kilpailut/`-sivun käynnissä olevat kilpailut, kunkin kilpailusivun otsikon +
+  og:descriptionin (järjestäjä, aikataulu), päättelee kaupungin. Matala
+  volyymi, korkea arvo. (268cca9)
+- **Rakennuslehti-lähde** (`fetchRakennuslehtiSource`): alan uutissyöte (RSS)
+  hanke-avainsanoilla, pois yrityskaupat/talousuutiset. (7f87384)
+- **STT-avainsanahaku** (`fetchSttHakuSource`): hakee KAIKISTA STT:n
+  tiedotteista rakentamiseen liittyvät (~30 hakusanaa, oikea parametri `search`,
+  ei `query`), 12 kk tuoreus, dedup id:llä. Täydentää yhtiökohtaisia
+  STT-lähteitä. (65783b6)
+- **Tontinluovutukset arvioitu, jätetty väliin**: ei kansallista eikä siistiä
+  kaupunkikohtaista rajapintaa (Helsingin `tontit.hel.fi` poistettu, data
+  hajallaan kohisevissa päätösjärjestelmissä, päällekkäistä kaavan kanssa).
+  Kohiseva päätös-scraperi olisi haitannut TIC-jonoa enemmän kuin hyödyttänyt.
 - **Helsinki: SUKKA-kaavalähde** korvasi vanhan WFS-lähteen. Uusi rajapinta
   (`kartta.hel.fi/api-sw`, Sitowise/Oskari) antaa yhdellä bbox-kutsulla kaikki
   vireillä olevat asemakaavat kuvauksineen, yhteyshenkilöineen, vaiheineen ja
@@ -59,6 +94,12 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
   vuoden kuluttua" -tick box pienille hankkeille. (f05f1b3, 0642613)
 - **Kumulatiivinen lähdehistoria** (`metadata.source_history`) — hanke muistaa
   kaikki lähteet joista se on rikastunut.
+- **Kuvausteksti-samankaltaisuus matcheriin**: eri lähteiden signaalit yhdistetään
+  samaan hankkeeseen myös kuvaustekstin perusteella (merkkitrigrammit → Jaccard,
+  kestää suomen taivutukset). Mahdollistaa mm. "Forssan datakeskus valmistui"
+  -uutisen yhdistämisen olemassa olevaan hankkeeseen → hanke merkitään valmiiksi.
+  Heikon tekstiosuman varmistus vaatii saman kaupungin/sijainnin/rakennuttajan.
+  (4cc7b9e)
 
 ### AI / LLM
 
@@ -85,6 +126,10 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 - **Karttamerkit klusteroitu** (`leaflet.markercluster`): ~3862 yksittäistä
   DOM-markeria → kymmeniä klustereita, popupit rakennetaan vasta avattaessa.
   Poisti tökkimisen tuhansilla hankkeilla. (69f0ada)
+- **Haku: monisanaisuus + synonyymit** (`/projects`): hakusana pilkotaan sanoiksi
+  (kaikkien osuttava, AND) ja jokainen laajennetaan synonyymeillä
+  (`searchSynonyms.ts`, esim. konesali↔datakeskus, terveyskeskus↔sairaala).
+  Nyt esim. "forssa data" löytää Forssan datakeskushankkeen. (ee8d6e2, 3902d94)
 
 ### Infra / laatu
 
