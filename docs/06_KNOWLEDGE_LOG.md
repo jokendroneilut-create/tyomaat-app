@@ -93,5 +93,9 @@ High (VAV varmistettu käyttäjältä). Uusia yhtiöitä lisättävä vain kun k
 varma — valtakunnalliset toimijat eivät päde.
 
 Status:
-VAV (Vantaa), Heka (Helsinki), TVT (Turku) ja Espoon Asunnot (Espoo) toteutettu
-koodissa; muut lisätään tapauskohtaisesti kun kunta on varma.
+Koodissa (KNOWN_LOCAL_BUYER_CITIES): VAV (Vantaa), Heka (Helsinki), TVT (Turku),
+Espoon Asunnot (Espoo), Sivakka (Oulu), Niiralan Kulma (Kuopio), VTS-Kodit
+(Tampere), Kirkkonummen Vuokra-asunnot (Kirkkonummi). Kaikki varmistettu
+olemassa oleviksi ja yhden kunnan toimijoiksi. Muut lisätään tapauskohtaisesti
+kun kunta on varma — esim. JVA (Jyväskylä), Lahden Talot, Pikipruukki (Vaasa)
+ovat todennäköisiä mutta vahvistamatta.

@@ -106,6 +106,10 @@ const KNOWN_LOCAL_BUYER_CITIES: [RegExp, string][] = [
   [/\bheka\b/i, "Helsinki"], // Heka = Helsingin kaupungin asunnot Oy
   [/\btvt\b/i, "Turku"], // TVT = TVT Asunnot Oy (Turun kaupungin vuokra-asunnot)
   [/espoon asunnot/i, "Espoo"], // Espoon Asunnot Oy
+  [/\bsivakka\b/i, "Oulu"], // Sivakka = Oulun Sivakka Oy (Oulun suurin vuokranantaja)
+  [/niiralan kulma/i, "Kuopio"], // Niiralan Kulma Oy = Kuopion kaupungin vuokra-asunnot
+  [/\bvts\b/i, "Tampere"], // VTS-Kodit Oy (Tampereen Vuokratalosäätiö)
+  [/kirkkonummen vuokra-asunno/i, "Kirkkonummi"], // Kirkkonummen Vuokra-asunnot Oy
 ]
 
 function cityFromKnownLocalBuyer(...texts: (string | null)[]): string | null {
