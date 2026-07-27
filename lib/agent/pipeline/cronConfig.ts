@@ -9,17 +9,21 @@
  *    arvot muuttuvat vain route.ts:ssä, sivun näyttämä "normaali väli"
  *    vanhenee huomaamatta.
  *
- * Mitattu tuotannossa n. 187s/ajo näillä arvoilla (maxDuration 500,
- * Vercel Pro). Jos näitä nostetaan, mittaa uusi kesto ennen kuin
- * luotat siihen ettei 500s-kattoa ylitetä - kesto ei skaalaudu
- * täysin lineaarisesti (osa vaiheista on kiinteän kokoisia).
+ * Kestomittaus: arvoilla 8/8/8/8/30 ajot kestivät ~75-230s (ka ~140s) 500s
+ * turvabudjetista, eli runsaasti pelivaraa. Nostettu 2026-07 työmäärää per ajo
+ * (ei ajotiheyttä), jotta perustason lähteen kierto lyhenee ~9 pv -> ~4,5 pv
+ * ILMAN lisää cron-kutsuja. Lähdemäärän kanssa nostettiin myös välivaiheet ja
+ * faktat samassa suhteessa, ettei mikään jono ala kasvaa (enemmän lähteitä =
+ * enemmän dokumentteja = enemmän faktoja). Jos näitä nostetaan lisää, MITTAA
+ * uusi kesto Ajot-sivulta - kesto ei skaalaudu täysin lineaarisesti (osa
+ * vaiheista on kiinteän kokoisia) eikä 500s-kattoa saa ylittää.
  */
 export const DISCOVERY_CRON_CONFIG = {
-  maxSourceCount: 8,
-  maxArticleJobs: 8,
-  maxPdfJobs: 8,
-  maxTextJobs: 8,
-  maxFactJobs: 30,
+  maxSourceCount: 14,
+  maxArticleJobs: 14,
+  maxPdfJobs: 14,
+  maxTextJobs: 14,
+  maxFactJobs: 45,
 }
 
 /*
