@@ -55,16 +55,24 @@ export default function TodayRecommendedProjects({
                       </p>
                     )}
 
-                    <div className="mt-2 flex flex-wrap gap-2 text-sm">
-                      {project.phase && (
-                        <span className="rounded bg-blue-100 px-2 py-1">
-                          {project.phase}
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                      {typeof project.today_match === "number" && (
+                        <span
+                          className={`rounded-full px-2.5 py-1 font-semibold ${
+                            project.today_match >= 70
+                              ? "bg-emerald-100 text-emerald-800"
+                              : project.today_match >= 40
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {project.today_match} % osuma
                         </span>
                       )}
 
-                      {project.metadata?.business_value && (
-                        <span className="rounded bg-green-100 px-2 py-1">
-                          {project.metadata.business_value}
+                      {project.phase && (
+                        <span className="rounded bg-blue-100 px-2 py-1">
+                          {project.phase}
                         </span>
                       )}
                     </div>

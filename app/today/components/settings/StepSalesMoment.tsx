@@ -5,11 +5,13 @@ import { salesMoments } from "./todaySettingsConfig"
 type StepSalesMomentProps = {
   selectedMoments: string[]
   onChange: (moments: string[]) => void
+  derivedFromRole?: string | null
 }
 
 export default function StepSalesMoment({
   selectedMoments,
   onChange,
+  derivedFromRole,
 }: StepSalesMomentProps) {
   const allSelected = selectedMoments.length === salesMoments.length
 
@@ -43,6 +45,14 @@ export default function StepSalesMoment({
       <p className="mt-2 text-gray-600">
         Voit valita yhden tai useamman vaiheen.
       </p>
+
+      {derivedFromRole && selectedMoments.length > 0 && (
+        <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+          Johdettu roolistasi ({derivedFromRole}):{" "}
+          <span className="font-semibold">{selectedMoments.join(", ")}</span>.
+          Voit muokata valintaa vapaasti.
+        </div>
+      )}
 
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
         <label className="flex items-center gap-2 rounded-lg border p-3 text-sm font-semibold">

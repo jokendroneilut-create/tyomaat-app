@@ -1,4 +1,8 @@
-import type { PhaseKey } from "@/lib/projects/phases"
+import {
+  PHASE_KEYS_IN_ORDER,
+  PHASE_LABELS,
+  type PhaseKey,
+} from "@/lib/projects/phases"
 
 /*
  * Rooli → elinkaaren vaihe -relevanssimatriisi (P1 Opportunity Engine, §2).
@@ -56,4 +60,24 @@ export function roleStageWeight(
 ): number {
   if (!companyProfile || !phaseKey) return 0
   return ROLE_STAGE_MATRIX[companyProfile]?.[phaseKey] ?? 0
+}
+
+/*
+ * Roolista johdetut myyntihetket (vaihe-labelit) — käytetään asetusten
+ * oletuksena, jottei käyttäjän tarvitse valita niitä käsin (P1 V2). Palauttaa
+ * vaiheet joilla on merkittävä paino (>= 0.6), elinkaaren järjestyksessä.
+ * Labelit vastaavat `todaySettingsConfig.ts`:n `salesMoments`ia.
+ */
+const SALES_MOMENT_WEIGHT_THRESHOLD = 0.6
+
+export function salesMomentsForRole(
+  companyProfile: string | null | undefined
+): string[] {
+  if (!companyProfile) return []
+  const weights = ROLE_STAGE_MATRIX[companyProfile]
+  if (!weights) return []
+
+  return PHASE_KEYS_IN_ORDER.filter(
+    (key) => (weights[key] ?? 0) >= SALES_MOMENT_WEIGHT_THRESHOLD
+  ).map((key) => PHASE_LABELS[key])
 }

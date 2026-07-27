@@ -13,6 +13,18 @@ const FEEDBACK_SCORE_CAP = 30
 const ROLE_STAGE_MAX_POINTS = 40
 
 /*
+ * Viitemaksimi 0–100 match-%:n normalisointiin (P1 V2): erinomainen osuma =
+ * rooli-huippu (40) + suuri hanke (50) + uusi tänään (25) + hyvä lähde (15) +
+ * myyntihetki (30). Lähde-/palautemoduulit voivat nostaa hieman yli, siksi
+ * clampataan 0–100.
+ */
+const MATCH_REFERENCE_MAX = 160
+
+export function matchPercent(score: number): number {
+  return Math.max(0, Math.min(100, Math.round((score / MATCH_REFERENCE_MAX) * 100)))
+}
+
+/*
  * Pisteytysmoduuli palauttaa pisteet + valinnaisen ihmisluettavan syyn
  * ("miksi tämä sopii sinulle"). Syyt kootaan kortille (P1, §4–§5).
  */
@@ -234,6 +246,7 @@ export function rankTodayProjects(
       return {
         ...project,
         today_score: score,
+        today_match: matchPercent(score),
         today_reasons: topReasons(breakdown),
       }
     })

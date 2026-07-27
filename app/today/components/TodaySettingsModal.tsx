@@ -15,6 +15,7 @@ import {
   regions,
   todaySources,
 } from "./settings/todaySettingsConfig"
+import { salesMomentsForRole } from "@/lib/opportunity/roleStageMatrix"
 
 export default function TodaySettingsModal() {
   const [open, setOpen] = useState(false)
@@ -30,6 +31,13 @@ export default function TodaySettingsModal() {
   ])
 
   const [selectedSalesMoments, setSelectedSalesMoments] = useState<string[]>([])
+
+  /*
+   * Kun tosi, myyntihetket johdetaan automaattisesti roolista (P1 V2). Käyttäjän
+   * oma valinta (tai tallennettu ei-tyhjä valinta) kytkee tämän pois → oletus ei
+   * enää ylikirjoita hänen valintaansa.
+   */
+  const [salesMomentsAuto, setSalesMomentsAuto] = useState(true)
 
   const [selectedSources, setSelectedSources] = useState<string[]>([
     ...todaySources,
@@ -107,11 +115,13 @@ export default function TodaySettingsModal() {
               )
         )
 
-        setSelectedSalesMoments(
-          Array.isArray(settings.bestSalesMoments)
-            ? settings.bestSalesMoments
-            : []
-        )
+        const savedMoments = Array.isArray(settings.bestSalesMoments)
+          ? settings.bestSalesMoments
+          : []
+
+        setSelectedSalesMoments(savedMoments)
+        // Tallennettu ei-tyhjä valinta on käyttäjän oma → ei ylikirjoiteta.
+        setSalesMomentsAuto(savedMoments.length === 0)
 
         setSelectedSources(
           Array.isArray(settings.sources)
@@ -141,6 +151,22 @@ export default function TodaySettingsModal() {
       cancelled = true
     }
   }, [])
+
+  /*
+   * Rooli valittu: jos myyntihetket ovat vielä automaattiset, johdetaan ne
+   * roolista. Käyttäjä voi silti ohittaa myyntihetki-stepissä.
+   */
+  function handleProfileChange(profile: string | null) {
+    setCompanyProfile(profile)
+    if (salesMomentsAuto) {
+      setSelectedSalesMoments(salesMomentsForRole(profile))
+    }
+  }
+
+  function handleSalesMomentsChange(moments: string[]) {
+    setSalesMomentsAuto(false)
+    setSelectedSalesMoments(moments)
+  }
 
   function openModal() {
     setError(null)
@@ -308,7 +334,7 @@ export default function TodaySettingsModal() {
         return (
           <StepCompanyProfile
             selectedProfile={companyProfile}
-            onChange={setCompanyProfile}
+            onChange={handleProfileChange}
           />
         )
 
@@ -326,7 +352,8 @@ export default function TodaySettingsModal() {
         return (
           <StepSalesMoment
             selectedMoments={selectedSalesMoments}
-            onChange={setSelectedSalesMoments}
+            onChange={handleSalesMomentsChange}
+            derivedFromRole={salesMomentsAuto ? companyProfile : null}
           />
         )
 
