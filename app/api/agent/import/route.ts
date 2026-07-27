@@ -69,6 +69,7 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
         null,
       estimatedCompletion:
         body.estimated_completion ?? body.metadata?.estimated_completion ?? null,
+      description: body.description ?? body.metadata?.description ?? null,
     }
 
     const candidateIdentifiers: { type: IdentifierType; value: string | null }[] = [
@@ -88,7 +89,7 @@ if (body.name.trim().toLowerCase() === "lue lisää") {
     const { data: projects } = await supabase
       .from("projects")
       .select(
-        "id,name,city,region,location,phase,completed_at,status,developer,property_type,estimated_completion,metadata"
+        "id,name,city,region,location,phase,completed_at,status,developer,property_type,estimated_completion,additional_info,metadata"
       )
 
     let detailedMatch = findProjectMatchDetailed(

@@ -12,6 +12,7 @@ export type NormalizedProjectCandidate = {
   propertyId?: string | null
   developer?: string | null
   buildingType?: string | null
+  description?: string | null
 }
 
 export type MatchableProject = {
@@ -26,6 +27,7 @@ export type MatchableProject = {
   developer?: string | null
   property_type?: string | null
   estimated_completion?: string | null
+  additional_info?: string | null
 
   metadata?: {
     permit_number?: string | null
@@ -44,6 +46,7 @@ export type ProjectMatchReason =
   | "same_region"
   | "exact_title"
   | "similar_title"
+  | "similar_description"
   | "same_developer"
   | "same_building_type"
 
@@ -121,6 +124,60 @@ function titleSimilarity(
   ]).size
 
   return unionSize > 0 ? sharedCount / unionSize : 0
+}
+
+/*
+ * Kuvaustekstien deterministinen samankaltaisuus MERKKI-TRIGRAMMEILLA (per sana,
+ * ei sanarajan yli). Trigrammit kestävät suomen taivutuksen — esim.
+ * "ratasmäkeen" ja "ratasmäen" jakavat suurimman osan trigrammeistaan, kun taas
+ * pelkkä sanajoukko-vertailu pitäisi ne eri sanoina. Nappaa saman hankkeen eri
+ * signaaleista kun kuvaukset jakavat paikannimiä, rakennuttajan ja kohdetiedot
+ * — vaikka nimi/otsikko eroaisi (esim. valmistumisuutinen vs. alkuperäinen
+ * kuvaus). Ei semanttinen; täysin eri sanoin kirjoitetut jäävät kiinni
+ * ottamatta (siihen tarvittaisiin embeddings).
+ */
+function textTrigrams(text: string | null | undefined): Set<string> {
+  const grams = new Set<string>()
+  if (!text) return grams
+  const cleaned = text
+    .toLowerCase()
+    .replace(/[^a-zåäö0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+  for (const word of cleaned.split(" ")) {
+    if (word.length < 3) continue
+    for (let i = 0; i <= word.length - 3; i++) {
+      grams.add(word.slice(i, i + 3))
+    }
+  }
+  return grams
+}
+
+function descriptionSimilarity(
+  first: string | null | undefined,
+  second: string | null | undefined
+) {
+  const a = textTrigrams(first)
+  const b = textTrigrams(second)
+
+  // Liian lyhyet kuvaukset eivät anna luotettavaa signaalia.
+  if (a.size < 10 || b.size < 10) return 0
+
+  let sharedCount = 0
+  for (const gram of a) {
+    if (b.has(gram)) sharedCount += 1
+  }
+
+  const unionSize = new Set([...a, ...b]).size
+  return unionSize > 0 ? sharedCount / unionSize : 0
+}
+
+function getProjectDescription(project: MatchableProject) {
+  return (
+    project.additional_info ??
+    (project.metadata?.description as string | null | undefined) ??
+    null
+  )
 }
 
 function getProjectPermitNumber(project: MatchableProject) {
@@ -289,6 +346,19 @@ export function calculateMatch(
     reasons.push("same_building_type")
   }
 
+  const descriptionSim = descriptionSimilarity(
+    candidate.description,
+    getProjectDescription(project)
+  )
+
+  if (descriptionSim >= 0.5) {
+    confidence += 30
+    reasons.push("similar_description")
+  } else if (descriptionSim >= 0.3) {
+    confidence += 18
+    reasons.push("similar_description")
+  }
+
   /*
    * Pelkkä sama maakunta ei riitä osumaksi.
    * Myöskään pelkkä sama kaupunki ei saa yhdistää hankkeita.
@@ -300,25 +370,32 @@ export function calculateMatch(
   const hasStrongLocation =
     reasons.includes("same_location")
 
-  const hasTitleEvidence =
+  const hasTextEvidence =
     reasons.includes("exact_title") ||
-    reasons.includes("similar_title")
+    reasons.includes("similar_title") ||
+    reasons.includes("similar_description")
 
   if (
     !hasStrongIdentifier &&
     !hasStrongLocation &&
-    !hasTitleEvidence
+    !hasTextEvidence
   ) {
     return null
   }
 
   /*
-   * Jos nimi on vain heikosti samankaltainen, tarvitaan lisäksi
-   * sama sijainti, kaupunki tai rakennuttaja.
+   * Jos todiste on vain heikosti samankaltainen nimi/kuvaus, tarvitaan
+   * lisäksi sama sijainti, kaupunki tai rakennuttaja — muuten pelkkä
+   * geneerinen tekstiosuma yhdistäisi eri hankkeita.
    */
+  const onlyWeakText =
+    (reasons.includes("similar_title") ||
+      reasons.includes("similar_description")) &&
+    !reasons.includes("exact_title")
+
   if (
-    reasons.includes("similar_title") &&
-    confidence < 35 &&
+    onlyWeakText &&
+    confidence < 45 &&
     !reasons.includes("same_city") &&
     !reasons.includes("same_location") &&
     !reasons.includes("same_developer")
