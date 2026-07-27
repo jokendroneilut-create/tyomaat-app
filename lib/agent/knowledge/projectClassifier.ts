@@ -91,6 +91,35 @@ export function classifyProject(
     reasons.push("Purku voi ennakoida tulevaa rakentamista")
   }
 
+  /*
+   * Rajattu piha-/ulkoaluetyö EI ole koko rakennuksen hanke, vaikka nimessä
+   * esiintyisi arvokas rakennustyyppi. Esim. "Päiväkoti Pellava, leikkipihan
+   * perusparannus" osui aiemmin "high":iin pelkän "päiväkoti"-sanan takia,
+   * vaikka kohteena on leikkipiha. Pudotetaan tällöin high -> medium.
+   */
+  const minorScopeSignals = [
+    "leikkipiha",
+    "leikkipuisto",
+    "leikkialue",
+    "leikkikenttä",
+    "leikkiväline",
+    "piha-alue",
+    "pihan perusparannus",
+    "pihatyö",
+    "pihaurakka",
+    "ulkoalue",
+    "viheralue",
+    "viherrakenta",
+    "pysäköintialue",
+    "paikoitusalue",
+    "salaojitus",
+  ]
+
+  if (business_value === "high" && containsAny(text, minorScopeSignals)) {
+    business_value = "medium"
+    reasons.push("Rajattu piha-/ulkoaluetyö – ei koko rakennus")
+  }
+
   return {
     construction_type,
     building_type,
