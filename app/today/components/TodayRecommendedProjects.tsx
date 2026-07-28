@@ -75,6 +75,17 @@ export default function TodayRecommendedProjects({
                           {project.phase}
                         </span>
                       )}
+
+                      {project.team_owner_id &&
+                        (project.team_owner_id === userId ? (
+                          <span className="rounded-full bg-emerald-100 px-2.5 py-1 font-semibold text-emerald-800">
+                            🟢 Sinä
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-blue-100 px-2.5 py-1 font-semibold text-blue-800">
+                            🔵 Omistaja: {project.team_owner_name ?? "tiimin jäsen"}
+                          </span>
+                        ))}
                     </div>
 
                     {Array.isArray(project.today_reasons) &&

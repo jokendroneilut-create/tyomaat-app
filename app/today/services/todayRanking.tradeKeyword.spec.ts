@@ -18,6 +18,8 @@ const baseSettings: TodaySettings = {
   showArchived: false,
   companyProfile: null,
   opportunityAlerts: true,
+  teamModeInToday: false,
+  hideTeammateOwned: true,
 }
 
 function settings(overrides: Partial<TodaySettings>): TodaySettings {

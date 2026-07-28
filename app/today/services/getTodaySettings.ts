@@ -21,6 +21,11 @@ export type TodaySettings = {
   // P2: sähköpostihälytys kun hanke etenee roolin huippuvaiheeseen.
   // Opt-out: oletuksena päällä (edellyttää roolia). Ks. /api/opportunity-alerts.
   opportunityAlerts: boolean
+  // Tiimi-integraatio /today:hin. Opt-in (oletus off), näkyy vain jos käyttäjä
+  // kuuluu tiimiin. Kun päällä + hideTeammateOwned, kollegan omistamat hankkeet
+  // piilotetaan syötteestä. Ks. getTeamOwnership + TeamModeToggle.
+  teamModeInToday: boolean
+  hideTeammateOwned: boolean
 }
 
 export const defaultTodaySettings: TodaySettings = {
@@ -37,6 +42,8 @@ export const defaultTodaySettings: TodaySettings = {
   showArchived: false,
   companyProfile: null,
   opportunityAlerts: true,
+  teamModeInToday: false,
+  hideTeammateOwned: true,
 }
 
 export async function getTodaySettings(userId?: string | null) {

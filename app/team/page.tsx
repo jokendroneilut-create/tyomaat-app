@@ -215,7 +215,13 @@ if (ownerFilter) {
           .select('*')
           .in('id', memberIds)
 
-        let projectQuery = supabase.from('projects').select('*')
+        let projectQuery = supabase
+          .from('projects')
+          .select('*')
+          // Perussuodatus kuten kartta/Tänään: valmistuneet ja vanhentuneet
+          // hankkeet eivät ole myyntimielessä relevantteja jaettavaksi.
+          .neq('phase', 'Valmistunut')
+          .neq('status', 'expired')
 
         const teamAreas = teamData.areas || []
 
