@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
+import { getMunicipalityByName } from "@/lib/geo/municipalities"
 
 export async function fetchYitSource() {
   const res = await fetch("https://www.yitgroup.com/fi/media?categories=250A64D624AE4B9EA64BE14A53473EA9%2C4E7ACD1B892840F9906B87E64775B521%2C1FE3FC08D0DA4C32B14F0420DB875149")
@@ -54,7 +55,7 @@ const completed = completedKeywords.some((k) =>
 results.push({
   name: title,
   city,
-    region: null,
+    region: getMunicipalityByName(city)?.region ?? null,
     location: null,
     phase: "Suunnittelussa",
     source_url: href.startsWith("http")
