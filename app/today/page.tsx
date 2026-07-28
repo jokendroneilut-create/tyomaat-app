@@ -90,6 +90,9 @@ const summary = await getTodaySummary(user?.id)
          userId={user?.id ?? null}
          feedback={summary.feedback}
          favorites={summary.favorites}
+         teamMode={Boolean(
+           summary.team?.inTeam && summary.settings.teamModeInToday
+         )}
       />
 
       
