@@ -8,7 +8,7 @@ function findFact(facts: any[], type: string) {
 
 function mapKajaaniPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
-  if (/tiedoksianto/.test(normalized)) return PHASE_LABELS.permit
+  if (/tiedoksianto/.test(normalized)) return PHASE_LABELS.zoning
   if (/ehdotus/.test(normalized)) return PHASE_LABELS.planning
   if (/luonnos|valmistelu/.test(normalized)) return PHASE_LABELS.planning
   if (/vireille/.test(normalized)) return PHASE_LABELS.zoning
