@@ -33,6 +33,16 @@ export const maxDuration = 60
  * ?hours=N — ikkuna taaksepäin (oletus 30h, kattaa vrk-ajon + marginaali).
  */
 
+// PostgREST hylkää liian pitkän URL:n (satojen id:iden .in() -lista ->
+// 400 Bad Request), joten haetaan id-listat paloissa.
+const ID_CHUNK = 100
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = []
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
+  return out
+}
+
 function escapeHtml(s: string) {
   return String(s)
     .replaceAll("&", "&amp;")
@@ -162,16 +172,17 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: true, windowHours: hours, changedProjects: 0, sent: 0 })
     }
 
-    // 2. Hankkeiden tiedot.
-    const { data: projectRows, error: pErr } = await supabase
-      .from("projects")
-      .select("id, name, city, region, metadata, is_public")
-      .in("id", projectIds)
-    if (pErr) throw pErr
-
+    // 2. Hankkeiden tiedot (id-lista paloissa, ks. ID_CHUNK).
     const projectById = new Map<string, any>()
-    for (const p of projectRows ?? []) {
-      if ((p as any).is_public !== false) projectById.set((p as any).id, p)
+    for (const ids of chunk(projectIds, ID_CHUNK)) {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, name, city, region, metadata, is_public")
+        .in("id", ids)
+      if (error) throw error
+      for (const p of data ?? []) {
+        if ((p as any).is_public !== false) projectById.set((p as any).id, p)
+      }
     }
 
     // 3. Käyttäjäasetukset.
@@ -180,26 +191,32 @@ export async function GET(req: Request) {
       .select("user_id, settings")
     if (prefErr) throw prefErr
 
-    // 4. Jo lähetetyt (dedup).
-    const { data: existing, error: exErr } = await supabase
-      .from("opportunity_alerts")
-      .select("user_id, project_id, phase_key")
-      .in("project_id", projectIds)
-    if (exErr && !dry) {
+    // 4. Jo lähetetyt (dedup) — id-lista paloissa.
+    const alreadySent = new Set<string>()
+    let alertsTableError: string | null = null
+    for (const ids of chunk(projectIds, ID_CHUNK)) {
+      const { data, error } = await supabase
+        .from("opportunity_alerts")
+        .select("user_id, project_id, phase_key")
+        .in("project_id", ids)
+      if (error) {
+        alertsTableError = error.message
+        break
+      }
+      for (const e of data ?? []) {
+        alreadySent.add(`${e.user_id}:${e.project_id}:${e.phase_key}`)
+      }
+    }
+    if (alertsTableError && !dry) {
       return NextResponse.json(
         {
           error:
             "opportunity_alerts-taulua ei löydy — aja docs/sql/2026-07-28_opportunity_alerts.sql",
-          detail: exErr.message,
+          detail: alertsTableError,
         },
         { status: 500 }
       )
     }
-    const alreadySent = new Set(
-      (existing ?? []).map(
-        (e: any) => `${e.user_id}:${e.project_id}:${e.phase_key}`
-      )
-    )
 
     // 5. Muodosta osumat per käyttäjä (vain roolin huippuvaihe, paino 1.0).
     const perUser = new Map<string, Match[]>()
