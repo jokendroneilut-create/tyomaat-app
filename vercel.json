@@ -5,6 +5,10 @@
       "schedule": "0 7 * * *"
     },
     {
+      "path": "/api/opportunity-alerts",
+      "schedule": "0 8 * * *"
+    },
+    {
       "path": "/api/agent/run",
       "schedule": "0 2 * * *"
     },
