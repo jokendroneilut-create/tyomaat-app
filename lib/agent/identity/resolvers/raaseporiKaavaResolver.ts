@@ -10,8 +10,8 @@ function mapRaaseporiPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
   if (/lainvoima|voimaantulo/.test(normalized)) return PHASE_LABELS.zoning
   if (/hyväksy/.test(normalized)) return PHASE_LABELS.zoning
-  if (/ehdotus/.test(normalized)) return PHASE_LABELS.planning
-  if (/luonnos/.test(normalized)) return PHASE_LABELS.planning
+  if (/ehdotus/.test(normalized)) return PHASE_LABELS.zoning
+  if (/luonnos/.test(normalized)) return PHASE_LABELS.zoning
   if (/aloitus|vireille/.test(normalized)) return PHASE_LABELS.zoning
   return PHASE_LABELS.zoning
 }

@@ -10,8 +10,8 @@ function mapNokiaPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
   if (/voimaantulo/.test(normalized)) return PHASE_LABELS.zoning
   if (/hyväksy/.test(normalized)) return PHASE_LABELS.zoning
-  if (/ehdotus/.test(normalized)) return PHASE_LABELS.planning
-  if (/luonnos|osallistumis|arviointi/.test(normalized)) return PHASE_LABELS.planning
+  if (/ehdotus/.test(normalized)) return PHASE_LABELS.zoning
+  if (/luonnos|osallistumis|arviointi/.test(normalized)) return PHASE_LABELS.zoning
   if (/vireille/.test(normalized)) return PHASE_LABELS.zoning
   return PHASE_LABELS.zoning
 }

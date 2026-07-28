@@ -16,9 +16,9 @@ function mapImatraPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return PHASE_LABELS.zoning
   if (/hyväksy/.test(normalized)) return PHASE_LABELS.zoning
-  if (/ehdotus/.test(normalized)) return PHASE_LABELS.planning
-  if (/luonnos/.test(normalized)) return PHASE_LABELS.planning
-  if (/osallistumis|arviointi/.test(normalized)) return PHASE_LABELS.planning
+  if (/ehdotus/.test(normalized)) return PHASE_LABELS.zoning
+  if (/luonnos/.test(normalized)) return PHASE_LABELS.zoning
+  if (/osallistumis|arviointi/.test(normalized)) return PHASE_LABELS.zoning
   if (/vireille/.test(normalized)) return PHASE_LABELS.zoning
   return PHASE_LABELS.zoning
 }

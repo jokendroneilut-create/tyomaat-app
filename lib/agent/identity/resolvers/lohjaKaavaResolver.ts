@@ -9,8 +9,8 @@ function findFact(facts: any[], type: string) {
 function mapLohjaPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
   if (/voimaantulo|lainvoima|hyväksy/.test(normalized)) return PHASE_LABELS.zoning
-  if (/ehdotus/.test(normalized)) return PHASE_LABELS.planning
-  if (/valmistelu/.test(normalized)) return PHASE_LABELS.planning
+  if (/ehdotus/.test(normalized)) return PHASE_LABELS.zoning
+  if (/valmistelu/.test(normalized)) return PHASE_LABELS.zoning
   if (/vireilletulo/.test(normalized)) return PHASE_LABELS.zoning
   return PHASE_LABELS.zoning
 }

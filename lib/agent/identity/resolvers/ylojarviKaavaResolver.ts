@@ -10,8 +10,8 @@ function mapYlojarviPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
   if (/voimaan|lainvoima/.test(normalized)) return PHASE_LABELS.zoning
   if (/hyväksymisvaihe/.test(normalized)) return PHASE_LABELS.zoning
-  if (/ehdotusvaihe/.test(normalized)) return PHASE_LABELS.planning
-  if (/luonnosvaihe/.test(normalized)) return PHASE_LABELS.planning
+  if (/ehdotusvaihe/.test(normalized)) return PHASE_LABELS.zoning
+  if (/luonnosvaihe/.test(normalized)) return PHASE_LABELS.zoning
   if (/aloitusvaihe|osallistumis/.test(normalized)) return PHASE_LABELS.zoning
   return PHASE_LABELS.zoning
 }
