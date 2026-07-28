@@ -11,6 +11,8 @@ import {
 const FEEDBACK_ATTRIBUTE_WEIGHT = 5
 const FEEDBACK_SCORE_CAP = 30
 const ROLE_STAGE_MAX_POINTS = 40
+const TRADE_KEYWORD_POINTS_PER_HIT = 12
+const TRADE_KEYWORD_MAX_POINTS = 25
 
 /*
  * Viitemaksimi 0–100 match-%:n normalisointiin (P1 V2): erinomainen osuma =
@@ -121,6 +123,83 @@ function salesMomentFit(ctx: OpportunityContext): ScoreResult {
     : { points: 0 }
 }
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+/*
+ * Koko hankkeen teksti, jota vasten käyttäjän avainsanat tarkistetaan.
+ */
+function projectKeywordText(project: any): string {
+  return [
+    project.name,
+    project.metadata?.description,
+    project.additional_info,
+    project.metadata?.operation,
+    project.metadata?.building_type,
+    project.metadata?.construction_type,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+}
+
+function keywordMatches(text: string, keyword: string): boolean {
+  const needle = keyword.trim().toLowerCase()
+  if (needle.length < 2) return false
+
+  /*
+   * Pitkät sanat: alimerkkijono käy — suomen taivutus/yhdyssanat toimivat
+   * eduksi ("sähkö" osuu sanoihin "sähköistys", "sähköurakka"). Lyhyet
+   * (esim. "iv", "lvi") vaativat sananrajan, etteivät osu yhdyssanan sisään.
+   */
+  if (needle.length >= 4) return text.includes(needle)
+
+  const boundary = "\\wäöåÄÖÅ"
+  const re = new RegExp(
+    `(?<![${boundary}])${escapeRegex(needle)}(?![${boundary}])`,
+    "i"
+  )
+  return re.test(text)
+}
+
+/*
+ * V3: käyttäjän oma avainsana-/toimialalista. Antaa lisäpisteitä + selityksen
+ * kun hankkeen tekstissä osuu käyttäjän erikoisalan sanoihin (esim.
+ * sähköurakoitsija: "sähkö, valaistus"). Deterministinen, fail-open:
+ * tyhjä lista ei vaikuta mihinkään.
+ */
+function tradeKeywordFit(ctx: OpportunityContext): ScoreResult {
+  const keywords = ctx.settings.keywords ?? []
+  if (!keywords.length) return { points: 0 }
+
+  const text = projectKeywordText(ctx.project)
+  if (!text) return { points: 0 }
+
+  const matched: string[] = []
+  const seen = new Set<string>()
+
+  for (const keyword of keywords) {
+    const label = keyword.trim()
+    const key = label.toLowerCase()
+    if (!label || seen.has(key)) continue
+    if (keywordMatches(text, label)) {
+      matched.push(label)
+      seen.add(key)
+    }
+  }
+
+  if (!matched.length) return { points: 0 }
+
+  const points = Math.min(
+    matched.length * TRADE_KEYWORD_POINTS_PER_HIT,
+    TRADE_KEYWORD_MAX_POINTS
+  )
+  const shown = matched.slice(0, 2).join(", ")
+
+  return { points, reason: `${shown} mainittu` }
+}
+
 function feedbackAffinity(ctx: OpportunityContext): ScoreResult {
   const feedbackContext = ctx.feedback
   if (!feedbackContext) return { points: 0 }
@@ -157,6 +236,7 @@ const SCORE_MODULES: ((ctx: OpportunityContext) => ScoreResult)[] = [
   freshness,
   sourceQuality,
   salesMomentFit,
+  tradeKeywordFit,
   feedbackAffinity,
 ]
 

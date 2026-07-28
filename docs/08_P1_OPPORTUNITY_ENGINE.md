@@ -83,7 +83,7 @@ type ScoreModule = (ctx: OpportunityContext) => { points: number; reason?: strin
 | `businessValue` | on | "Suuri hanke (datakeskus)" |
 | `freshness` | on | "Uusi tänään" |
 | `feedbackAffinity` | on (per-käyttäjä) | "Muistuttaa hankkeita joista pidit" |
-| `tradeKeywordFit` | UUSI (V3) | "Sähkötyöt mainittu" |
+| `tradeKeywordFit` | ✅ V3 | "sähkö, valaistus mainittu" |
 | `sourceQuality` | on | — (sisäinen) |
 
 Summa → **normalisoi 0–100** (jaa teoreettisella maksimilla, clamp). Palauta
@@ -112,12 +112,16 @@ fallbackina. `todayFilters.ts`:n myyntihetki-suodatus voi käyttää samaa.
 
 ## 8. Vaiheistus (jokainen erikseen deployattava)
 
-| Versio | Sisältö | Arvo / riski |
-|---|---|---|
-| **V1** ⭐ | `projectPhaseKey()` + `roleStageFit` + moduulien `reason`-breakdown + selitys kortilla | Suurin arvo, ei skeemamuutosta |
-| **V2** | Rooli johtaa myyntihetki-oletukset; asetusten UX; 0–100 normalisointi näkyviin | Keskisuuri |
-| **V3** | Avainsana/toimiala-matchays (`keywords text[]` + `tradeKeywordFit`) | Tarkkuus |
-| **V4** | Persistoi `opportunity_score` per (käyttäjä, hanke) → pohja P2-hälytyksille + analytiikka | Avaa P2:n |
+| Versio | Sisältö | Arvo / riski | Tila |
+|---|---|---|---|
+| **V1** ⭐ | `projectPhaseKey()` + `roleStageFit` + moduulien `reason`-breakdown + selitys kortilla | Suurin arvo, ei skeemamuutosta | ✅ Tehty |
+| **V2** | Rooli johtaa myyntihetki-oletukset; asetusten UX; 0–100 normalisointi näkyviin | Keskisuuri | ✅ Tehty |
+| **V3** | Avainsana/toimiala-matchays (`tradeKeywordFit` + `keywords` asetuksissa) | Tarkkuus | ✅ Tehty |
+| **V4** | Persistoi `opportunity_score` per (käyttäjä, hanke) → pohja P2-hälytyksille + analytiikka | Avaa P2:n | ⬜ Tekemättä |
+
+**V3-huom:** `keywords` talletetaan `user_today_preferences.settings`-JSON-blobiin
+(ei erillistä `text[]`-saraketta) — ei skeemamuutosta. Lyhyet avainsanat (< 4 mkt)
+matchataan sananrajalla, pitkät alimerkkijonona (suomen taivutus eduksi).
 
 ## 9. Mittarit
 

@@ -9,6 +9,7 @@ import StepMaxProjects from "./settings/StepMaxProjects"
 import StepRegion from "./settings/StepRegion"
 import StepSalesMoment from "./settings/StepSalesMoment"
 import StepSources from "./settings/StepSources"
+import StepKeywords from "./settings/StepKeywords"
 import StepWelcome from "./settings/StepWelcome"
 
 import {
@@ -43,13 +44,15 @@ export default function TodaySettingsModal() {
     ...todaySources,
   ])
 
+  const [keywords, setKeywords] = useState<string[]>([])
+
   const [maxProjects, setMaxProjects] = useState(40)
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const totalSteps = 6
+  const totalSteps = 7
 
   useEffect(() => {
     let cancelled = false
@@ -127,6 +130,10 @@ export default function TodaySettingsModal() {
           Array.isArray(settings.sources)
             ? settings.sources
             : [...todaySources]
+        )
+
+        setKeywords(
+          Array.isArray(settings.keywords) ? settings.keywords : []
         )
 
         setMaxProjects(Number(settings.maxProjects ?? 40))
@@ -248,6 +255,7 @@ export default function TodaySettingsModal() {
 
             bestSalesMoments: selectedSalesMoments,
             sources: selectedSources,
+            keywords,
             maxProjects,
 
             showRejected: false,
@@ -304,6 +312,10 @@ export default function TodaySettingsModal() {
           selectedSources.length > 0
             ? selectedSources.join(", ")
             : "Ei valittu",
+      },
+      {
+        label: "Oman alan avainsanat",
+        value: keywords.length > 0 ? keywords.join(", ") : "Ei asetettu",
       },
       {
         label: "Näytettävien hankkeiden enimmäismäärä",
@@ -374,6 +386,14 @@ export default function TodaySettingsModal() {
         )
 
       case 6:
+        return (
+          <StepKeywords
+            keywords={keywords}
+            onChange={setKeywords}
+          />
+        )
+
+      case 7:
         return <StepFinished />
 
       default:

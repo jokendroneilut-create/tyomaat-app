@@ -59,6 +59,12 @@ export async function POST(request: Request) {
       buildingTypes: settings?.buildingTypes ?? [],
       bestSalesMoments: settings?.bestSalesMoments ?? [],
       sources: settings?.sources ?? [],
+      keywords: Array.isArray(settings?.keywords)
+        ? settings.keywords
+            .map((k: unknown) => String(k ?? "").trim())
+            .filter((k: string) => k.length > 0)
+            .slice(0, 30)
+        : [],
       maxProjects: settings?.maxProjects ?? 40,
       showRejected: settings?.showRejected ?? false,
       showArchived: settings?.showArchived ?? false,
