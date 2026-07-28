@@ -21,6 +21,9 @@ export async function getTodayProjects(regions?: string[]) {
       metadata
     `)
     .eq("status", "active")
+    // Valmistuneet työmaat eivät ole mahdollisuuksia — pois syötteestä (sama
+    // rajaus kuin karttasivulla + getRegionProjectCountissa).
+    .neq("phase", "Valmistunut")
 
   /*
    * Rajataan alueen mukaan jo tietokantatasolla, jos käyttäjä on valinnut
@@ -64,6 +67,9 @@ export async function getRegionProjectCount(regions?: string[]): Promise<number>
     .from("projects")
     .select("*", { count: "exact", head: true })
     .eq("status", "active")
+    // Valmistunut työmaa ei ole enää mahdollisuus — suodatetaan pois, jotta
+    // luku vastaa karttasivua (joka jättää valmistuneet/vanhentuneet pois).
+    .neq("phase", "Valmistunut")
 
   const effectiveRegions = (regions ?? []).filter(
     (r) => r && r.toLowerCase() !== "koko suomi"
