@@ -1,23 +1,32 @@
 import Link from "next/link"
 import { getPendingReviewCount } from "./services/getPendingReviewCount"
 import { getPendingDuplicateCount } from "./services/getDuplicateCandidates"
+import { getRecentRunErrorCount } from "./services/getRecentRunErrorCount"
 
 export const dynamic = "force-dynamic"
+
+type NavItem = {
+  href: string
+  label: string
+  alertCount?: number
+}
 
 export default async function TicLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [pendingReviewCount, pendingDuplicateCount] = await Promise.all([
-    getPendingReviewCount(),
-    getPendingDuplicateCount(),
-  ])
+  const [pendingReviewCount, pendingDuplicateCount, recentErrorCount] =
+    await Promise.all([
+      getPendingReviewCount(),
+      getPendingDuplicateCount(),
+      getRecentRunErrorCount(),
+    ])
 
-  const nav = [
+  const nav: NavItem[] = [
     { href: "/tic", label: `🏠 Etusivu (${pendingReviewCount})` },
-    { href: "/tic/operations", label: "🧭 Operations" },
-    { href: "/tic/discovery", label: "🔍 Discovery" },
+    { href: "/tic/operations", label: "🧭 Tapahtumat" },
+    { href: "/tic/discovery", label: "🔍 Keräimet" },
     { href: "/tic/discovery/documents", label: "📄 Dokumentit" },
     { href: "/tic/discovery/merges", label: "🔗 Yhdistymiset" },
     { href: "/tic/discovery/enrichment", label: "✨ Rikastus" },
@@ -27,7 +36,11 @@ export default async function TicLayout({
     },
     { href: "/tic/discovery/ai-relevance", label: "🤖 AI-suodatus" },
     { href: "/tic/discovery/analytics", label: "📈 Analytics" },
-    { href: "/tic/discovery/health", label: "🩺 Health" },
+    {
+      href: "/tic/discovery/health",
+      label: "🩺 Health",
+      alertCount: recentErrorCount,
+    },
     { href: "/tic/discovery/runs", label: "⏱️ Ajot" },
   ]
 
@@ -44,9 +57,17 @@ export default async function TicLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className="block shrink-0 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 sm:shrink"
+                className="flex shrink-0 items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 sm:shrink"
               >
-                {item.label}
+                <span>{item.label}</span>
+                {item.alertCount ? (
+                  <span
+                    title={`${item.alertCount} virheajoa viimeisen 24 h aikana`}
+                    className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white"
+                  >
+                    !
+                  </span>
+                ) : null}
               </Link>
             ))}
           </nav>

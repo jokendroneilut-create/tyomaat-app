@@ -18,7 +18,7 @@ export default async function DiscoveryPage() {
     <main className="mx-auto max-w-6xl px-6 py-8">
       <section className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Discovery Center
+          Keräimien tila
         </h1>
 
         <p className="mt-2 text-gray-600">
