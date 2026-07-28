@@ -70,6 +70,7 @@ export default async function DiscoveryOperationsPage() {
           fullCycleDays={fullCycleDays}
           staleThresholdDays={staleThresholdDays}
           guaranteedCount={guaranteedCount}
+          legacyCount={legacySources.length}
         />
       </div>
 

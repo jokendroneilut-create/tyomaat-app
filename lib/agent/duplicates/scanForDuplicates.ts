@@ -121,6 +121,7 @@ export async function scanForDuplicates(
 
       const match = calculateMatch(b, {
         name: a.name,
+        sourceTitle: (a.metadata?.source_title as string | null) ?? null,
         city: a.city,
         region: a.region,
         location: a.location,

@@ -9,6 +9,7 @@ export default function CadenceSummary({
   fullCycleDays,
   staleThresholdDays,
   guaranteedCount,
+  legacyCount = 0,
 }: {
   enabledCount: number
   sourcesPerRun: number
@@ -16,6 +17,7 @@ export default function CadenceSummary({
   fullCycleDays: number
   staleThresholdDays: number
   guaranteedCount: number
+  legacyCount?: number
 }) {
   const regularCount = enabledCount - guaranteedCount
   const regularSlotsPerRun = Math.max(1, sourcesPerRun - guaranteedCount)
@@ -29,7 +31,14 @@ export default function CadenceSummary({
         <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
           <div>
             <div className="text-sm text-gray-500">Lähteitä käytössä</div>
-            <div className="mt-1 text-2xl font-bold">{enabledCount}</div>
+            <div className="mt-1 text-2xl font-bold">
+              {enabledCount + legacyCount}
+            </div>
+            {legacyCount > 0 && (
+              <div className="text-xs text-gray-400">
+                {enabledCount} discovery + {legacyCount} legacy
+              </div>
+            )}
           </div>
 
           <div>
@@ -87,6 +96,15 @@ export default function CadenceSummary({
             lähde merkitään "Myöhässä" vasta jos väli on merkittävästi (1,5x)
             tätä pidempi, eli yli {staleThresholdDays} päivää.
           </p>
+          {legacyCount > 0 && (
+            <p className="mt-2">
+              Lisäksi käytössä on {legacyCount} legacy-lähdettä (vanha
+              yritys-/varhaislähdeputki, lib/agent/sources.ts). Ne ajetaan eri
+              mekanismilla eikä niillä ole per-lähde ajastusta, joten ne eivät
+              sisälly yllä olevaan kierros-/myöhässä-arvioon — vain lähdemäärään.
+              Niiden tila näkyy sivun alaosan legacy-taulukossa.
+            </p>
+          )}
         </div>
       )}
     </div>

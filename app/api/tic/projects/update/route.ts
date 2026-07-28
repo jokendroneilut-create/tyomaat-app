@@ -65,6 +65,19 @@ export async function POST(request: Request) {
 
   const existingMetadata = potentialProject.metadata ?? {}
 
+  /*
+   * Säilytä lähteen alkuperäinen otsikko ensimmäisellä käsin muokkauskerralla.
+   * Duplikaattivertailu (projectMatcher) nojaa monilla lähteillä (uutiset,
+   * tiedotteet, kilpailut) pelkkään otsikkoon, koska niillä ei ole permit-/
+   * kiinteistötunnusta. Ilman tätä muokattu otsikko katkaisisi saman hankkeen
+   * tunnistamisen muista lähteistä. Kirjoitetaan vain kerran eikä koskaan
+   * ylikirjoiteta jo talletettua alkuperäisotsikkoa.
+   */
+  const titleChanged = title != null && title !== potentialProject.title
+  const sourceTitle: string | null =
+    (existingMetadata.source_title as string | null | undefined) ??
+    (titleChanged ? potentialProject.title : null)
+
   const { data: updated, error: updateError } = await supabaseAdmin
     .from("potential_projects")
     .update({
@@ -79,6 +92,7 @@ export async function POST(request: Request) {
         building_type: buildingType,
         developer,
         phase_hint: phaseHint,
+        ...(sourceTitle ? { source_title: sourceTitle } : {}),
         manually_edited_at: new Date().toISOString(),
       },
     })
