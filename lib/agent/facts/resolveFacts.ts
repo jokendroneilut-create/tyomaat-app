@@ -250,9 +250,26 @@ import { extractKoskiTlKaavaFacts } from "@/lib/agent/facts/extractKoskiTlKaavaF
 import { extractRajukiviFacts } from "@/lib/agent/facts/extractRajukiviFacts"
 import { splitEspooPermitNoticeText } from "@/lib/agent/building-permits/decisionSplitter"
 
+/*
+ * Osa dokumenteista on tallentunut virheellisenä — esim. HTML-sivu JSONin
+ * sijaan, kun keräin sai SPA-kuoren (`<!DOCTYPE ...`) oikean JSON-vastauksen
+ * sijaan (mm. Lupapiste kuulutukset). Suora JSON.parse kaataisi koko
+ * fact_workerin, jolloin dokumentti jäisi ikuisesti jonoon re-erroroitumaan
+ * (havaittu satoja virheajoja/vrk). Palautetaan {} jolloin dokumentti
+ * käsitellään 0 faktalla ja merkitään valmiiksi eikä blokkaa jonoa.
+ */
+function safeJsonParse(raw: string | null | undefined): any {
+  if (!raw) return {}
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return {}
+  }
+}
+
 export function resolveFacts(document: any) {
   if (document.source_name === "Hilma") {
-    const notice = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const notice = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
 
     return {
       decisions: [],
@@ -265,7 +282,7 @@ export function resolveFacts(document: any) {
   }
 
   if (document.source_name === "Lupapiste kuulutukset") {
-    const notice = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const notice = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
 
     return {
       decisions: [],
@@ -278,7 +295,7 @@ export function resolveFacts(document: any) {
   }
 
   if (document.source_name === "Vantaan vireillä olevat kaavat") {
-    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const feature = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
     const center = document.raw_payload?.center ?? null
     const hakija = document.raw_payload?.hakija ?? null
     const contacts = document.raw_payload?.contacts ?? []
@@ -299,7 +316,7 @@ export function resolveFacts(document: any) {
   }
 
   if (document.source_name === "Helsingin vireillä olevat kaavat") {
-    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const feature = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
     const center = document.raw_payload?.center ?? null
     const districtName = document.raw_payload?.district_name ?? null
     const description = document.raw_payload?.description ?? null
@@ -324,7 +341,7 @@ export function resolveFacts(document: any) {
   }
 
   if (document.source_name === "Tampereen vireillä olevat kaavat") {
-    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const feature = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
     const center = document.raw_payload?.center ?? null
     const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
     const diaarinumero = document.raw_payload?.diaarinumero ?? null
@@ -351,7 +368,7 @@ export function resolveFacts(document: any) {
   }
 
   if (document.source_name === "Kuopion vireillä olevat kaavat") {
-    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const feature = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
     const planName = document.raw_payload?.plan_name ?? null
     const planNumber = document.raw_payload?.plan_number ?? null
     const recordNumber = document.raw_payload?.record_number ?? null
@@ -908,7 +925,7 @@ export function resolveFacts(document: any) {
   }
 
   if (document.source_name === "Turun vireillä olevat kaavat") {
-    const feature = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const feature = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
     const center = document.raw_payload?.center ?? null
     const kaavaTunnus = document.raw_payload?.kaava_tunnus ?? null
     const kaavanNimi = document.raw_payload?.kaavan_nimi ?? null
@@ -936,7 +953,7 @@ export function resolveFacts(document: any) {
   }
 
   if (document.source_name === "Kreate hankkeet") {
-    const post = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const post = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
     const title = document.raw_payload?.title ?? null
     const phase = document.raw_payload?.phase ?? null
     const category = document.raw_payload?.category ?? null
@@ -957,7 +974,7 @@ export function resolveFacts(document: any) {
   }
 
   if (document.source_name === "Väylävirasto hankkeet") {
-    const item = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const item = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
     const title = document.raw_payload?.title ?? null
     const description = document.raw_payload?.description ?? null
     const hankeType = document.raw_payload?.hanke_type ?? null
@@ -984,7 +1001,7 @@ export function resolveFacts(document: any) {
   }
 
   if (document.source_name === "Senaatti-kiinteistöt hankkeet") {
-    const post = document.raw_payload?.original ?? JSON.parse(document.raw_text ?? "{}")
+    const post = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
     const title = document.raw_payload?.title ?? null
     const description = document.raw_payload?.description ?? null
     const phase = document.raw_payload?.phase ?? null
