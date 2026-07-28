@@ -46,6 +46,8 @@ export default function TodaySettingsModal() {
 
   const [keywords, setKeywords] = useState<string[]>([])
 
+  const [opportunityAlerts, setOpportunityAlerts] = useState(true)
+
   const [maxProjects, setMaxProjects] = useState(40)
 
   const [loading, setLoading] = useState(true)
@@ -135,6 +137,8 @@ export default function TodaySettingsModal() {
         setKeywords(
           Array.isArray(settings.keywords) ? settings.keywords : []
         )
+
+        setOpportunityAlerts(settings.opportunityAlerts !== false)
 
         setMaxProjects(Number(settings.maxProjects ?? 40))
       } catch (loadError: any) {
@@ -256,6 +260,7 @@ export default function TodaySettingsModal() {
             bestSalesMoments: selectedSalesMoments,
             sources: selectedSources,
             keywords,
+            opportunityAlerts,
             maxProjects,
 
             showRejected: false,
@@ -316,6 +321,10 @@ export default function TodaySettingsModal() {
       {
         label: "Oman alan avainsanat",
         value: keywords.length > 0 ? keywords.join(", ") : "Ei asetettu",
+      },
+      {
+        label: "Sähköpostihälytykset",
+        value: opportunityAlerts ? "Päällä" : "Pois",
       },
       {
         label: "Näytettävien hankkeiden enimmäismäärä",
@@ -390,6 +399,8 @@ export default function TodaySettingsModal() {
           <StepKeywords
             keywords={keywords}
             onChange={setKeywords}
+            opportunityAlerts={opportunityAlerts}
+            onAlertsChange={setOpportunityAlerts}
           />
         )
 

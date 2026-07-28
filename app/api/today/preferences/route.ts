@@ -69,6 +69,7 @@ export async function POST(request: Request) {
       showRejected: settings?.showRejected ?? false,
       showArchived: settings?.showArchived ?? false,
       companyProfile: settings?.companyProfile ?? null,
+      opportunityAlerts: settings?.opportunityAlerts ?? true,
     }
 
     const { data, error } = await supabaseAdmin

@@ -5,6 +5,8 @@ import { useState } from "react"
 type StepKeywordsProps = {
   keywords: string[]
   onChange: (keywords: string[]) => void
+  opportunityAlerts: boolean
+  onAlertsChange: (enabled: boolean) => void
 }
 
 const MAX_KEYWORDS = 30
@@ -12,6 +14,8 @@ const MAX_KEYWORDS = 30
 export default function StepKeywords({
   keywords,
   onChange,
+  opportunityAlerts,
+  onAlertsChange,
 }: StepKeywordsProps) {
   const [draft, setDraft] = useState("")
 
@@ -106,6 +110,29 @@ export default function StepKeywords({
         <p className="mt-3 text-xs text-gray-400">
           {keywords.length}/{MAX_KEYWORDS} avainsanaa
         </p>
+      </div>
+
+      <div className="mt-8 border-t pt-6">
+        <h4 className="text-base font-bold text-gray-900">
+          Sähköpostihälytykset
+        </h4>
+
+        <label className="mt-3 flex items-start gap-3 rounded-lg border p-3 text-sm">
+          <input
+            type="checkbox"
+            checked={opportunityAlerts}
+            onChange={(event) => onAlertsChange(event.target.checked)}
+            className="mt-0.5 h-4 w-4"
+          />
+          <span className="text-gray-700">
+            <span className="font-semibold text-gray-900">
+              Ilmoita kun hanke etenee sinulle otolliseen vaiheeseen.
+            </span>{" "}
+            Saat sähköpostin kun kiinnostavan alueesi hanke saavuttaa juuri
+            roolillesi osuvimman vaiheen (esim. materiaalitoimittaja, kun
+            rakentaminen alkaa). Edellyttää valittua yritysprofiilia.
+          </span>
+        </label>
       </div>
     </div>
   )

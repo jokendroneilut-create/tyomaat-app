@@ -17,6 +17,7 @@ const baseSettings: TodaySettings = {
   showRejected: false,
   showArchived: false,
   companyProfile: null,
+  opportunityAlerts: true,
 }
 
 function settings(overrides: Partial<TodaySettings>): TodaySettings {
