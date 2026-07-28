@@ -1,4 +1,4 @@
-import { getTodayProjects } from "./getTodayProjects"
+import { getTodayProjects, getRegionProjectCount } from "./getTodayProjects"
 import { getTodaySettings } from "./getTodaySettings"
 import { getUserFeedbackContext } from "./getUserFeedbackContext"
 import { getUserFavoritesContext } from "./getUserFavoritesContext"
@@ -34,11 +34,13 @@ export async function getTodaySummary(userId?: string | null) {
   const settings = await getTodaySettings(userId)
   const maxProjects = Number(settings.maxProjects ?? 20)
 
-  const [allProjects, feedbackContext, favoritesContext] = await Promise.all([
-    getTodayProjects(settings.regions),
-    getUserFeedbackContext(userId),
-    getUserFavoritesContext(userId),
-  ])
+  const [allProjects, feedbackContext, favoritesContext, regionTotal] =
+    await Promise.all([
+      getTodayProjects(settings.regions),
+      getUserFeedbackContext(userId),
+      getUserFavoritesContext(userId),
+      getRegionProjectCount(settings.regions),
+    ])
 
   const filteredProjects = allProjects
   .filter((project: any) =>
@@ -85,7 +87,7 @@ export async function getTodaySummary(userId?: string | null) {
     ),
 
     metrics: {
-      regionTotal: allProjects.length,
+      regionTotal,
       newProjects: recentProjects.length,
       approvedToday: recentProjects.length,
       highValue: highValueProjects.length,

@@ -129,7 +129,9 @@ export default function TodaySettingsModal() {
         setSalesMomentsAuto(savedMoments.length === 0)
 
         setSelectedSources(
-          Array.isArray(settings.sources)
+          // Tyhjä lista = "kaikki" (matchesSources päästää tyhjällä kaiken
+          // läpi), joten näytetään kaikki valittuna eikä "kaikki pois päältä".
+          Array.isArray(settings.sources) && settings.sources.length > 0
             ? settings.sources
             : [...todaySources]
         )

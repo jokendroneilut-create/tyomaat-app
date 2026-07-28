@@ -1,7 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { companyProfiles, regions as ALL_REGIONS } from "./settings/todaySettingsConfig"
+import {
+  companyProfiles,
+  salesMoments,
+  regions as ALL_REGIONS,
+  todaySources,
+} from "./settings/todaySettingsConfig"
 
 type Props = {
   userId: string
@@ -11,19 +16,34 @@ type Props = {
 }
 
 /*
- * Aktivointi-onboarding: pakollinen roolivalinta ensimmäisellä /today-käynnillä
- * (näytetään kunnes companyProfile on asetettu). Rooli avaa P1-relevanssin ja
- * P2-hälytykset, jotka ovat muuten pimeinä. Kysytään vain olennaiset — rooli
- * (pakollinen) + alue (valinnainen, oletus koko Suomi) — jotta kynnys on matala.
+ * Aktivointi-onboarding: pakolliset valinnat ensimmäisellä /today-käynnillä
+ * (näytetään kunnes companyProfile on asetettu). Rooli + paras myyntihetki
+ * ovat PAKOLLISIA — ilman niitä näkymä ei suodatu/pisteydy oikein. Alue on
+ * valinnainen (oletus koko Suomi). Lähteet asetetaan oletuksena KAIKKI päälle.
  */
 export default function RoleActivationModal({ userId, initialSettings }: Props) {
   const [role, setRole] = useState<string | null>(
     initialSettings?.companyProfile ?? null
   )
+  const [selectedMoments, setSelectedMoments] = useState<string[]>(
+    Array.isArray(initialSettings?.bestSalesMoments)
+      ? initialSettings.bestSalesMoments
+      : []
+  )
   const [wholeFinland, setWholeFinland] = useState(true)
   const [selectedRegions, setSelectedRegions] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const canSave = Boolean(role) && selectedMoments.length > 0
+
+  function toggleMoment(moment: string) {
+    setSelectedMoments((current) =>
+      current.includes(moment)
+        ? current.filter((m) => m !== moment)
+        : [...current, moment]
+    )
+  }
 
   function toggleRegion(region: string) {
     setWholeFinland(false)
@@ -35,7 +55,7 @@ export default function RoleActivationModal({ userId, initialSettings }: Props) 
   }
 
   async function save() {
-    if (!role) return
+    if (!canSave) return
     setSaving(true)
     setError(null)
 
@@ -45,6 +65,13 @@ export default function RoleActivationModal({ userId, initialSettings }: Props) 
           ? ["Koko Suomi"]
           : selectedRegions
 
+      // Lähteet: oletuksena KAIKKI päälle (säilytä olemassa olevat jos on).
+      const sources =
+        Array.isArray(initialSettings?.sources) &&
+        initialSettings.sources.length > 0
+          ? initialSettings.sources
+          : [...todaySources]
+
       const response = await fetch("/api/today/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,7 +80,9 @@ export default function RoleActivationModal({ userId, initialSettings }: Props) 
           settings: {
             ...initialSettings,
             companyProfile: role,
+            bestSalesMoments: selectedMoments,
             regions,
+            sources,
           },
         }),
       })
@@ -79,8 +108,8 @@ export default function RoleActivationModal({ userId, initialSettings }: Props) 
             Tervetuloa Tänään-näkymään 👋
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Valitse roolisi, niin näytämme juuri sinulle sopivimmat hankkeet ja
-            lähetämme hälytyksen, kun hanke etenee sinulle otolliseen
+            Kerro roolisi ja parhaat myyntihetkesi, niin näytämme juuri sinulle
+            sopivimmat hankkeet ja hälytämme, kun hanke etenee sinulle otolliseen
             vaiheeseen.
           </p>
         </div>
@@ -105,6 +134,33 @@ export default function RoleActivationModal({ userId, initialSettings }: Props) 
                 {profile}
               </button>
             ))}
+          </div>
+
+          <label className="mt-6 block text-sm font-semibold text-gray-700">
+            Parhaat myyntihetket <span className="text-red-600">*</span>
+          </label>
+          <p className="mt-1 text-xs text-gray-500">
+            Missä hankkeen vaiheessa haluat tarttua? Valitse vähintään yksi.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {salesMoments.map((moment) => {
+              const active = selectedMoments.includes(moment)
+              return (
+                <button
+                  key={moment}
+                  type="button"
+                  onClick={() => toggleMoment(moment)}
+                  className={
+                    "rounded-full border px-2.5 py-1 text-xs " +
+                    (active
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50")
+                  }
+                >
+                  {moment}
+                </button>
+              )
+            })}
           </div>
 
           <label className="mt-6 block text-sm font-semibold text-gray-700">
@@ -159,14 +215,14 @@ export default function RoleActivationModal({ userId, initialSettings }: Props) 
           <button
             type="button"
             onClick={save}
-            disabled={!role || saving}
+            disabled={!canSave || saving}
             className="w-full rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {saving ? "Tallennetaan..." : "Tallenna ja jatka"}
           </button>
-          {!role && (
+          {!canSave && (
             <p className="mt-2 text-center text-xs text-gray-400">
-              Valitse rooli jatkaaksesi
+              Valitse rooli ja vähintään yksi myyntihetki jatkaaksesi
             </p>
           )}
         </div>
