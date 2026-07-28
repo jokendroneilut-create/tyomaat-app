@@ -52,8 +52,10 @@ export async function middleware(request: NextRequest) {
     const userEmail = (user?.email || "").toLowerCase()
 
     if (!admins.includes(userEmail)) {
+      // Ei-admin ohjataan asiakaskotiin. Aiemmin /projects (vanha koti);
+      // nyt /today on asiakasnäkymän etusivu.
       const url = request.nextUrl.clone()
-      url.pathname = "/projects"
+      url.pathname = "/today"
       return NextResponse.redirect(url)
     }
   }
