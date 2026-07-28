@@ -58,6 +58,12 @@ export default function WelcomeInfoModal({
             niin näkymä palvelee parhaiten.
           </p>
 
+          <p className="mt-3">
+            👍👎 Anna hankekorteilla <strong>peukku ylös tai alas</strong> — näkymä
+            oppii mieltymyksistäsi ja nostaa jatkossa sinulle sopivampia hankkeita
+            ylemmäs. Mitä enemmän annat palautetta, sitä osuvammaksi se muuttuu.
+          </p>
+
           <p className="mt-4 font-semibold text-gray-900">
             Muut ominaisuudet lyhyesti:
           </p>
