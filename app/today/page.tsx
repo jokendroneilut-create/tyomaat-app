@@ -3,6 +3,7 @@ import { getTodaySummary } from "./services/getTodaySummary"
 import TodayRecommendedProjects from "./components/TodayRecommendedProjects"
 import TodaySettingsModal from "./components/TodaySettingsModal"
 import FeedbackButton from "../components/FeedbackButton"
+import RoleActivationModal from "./components/RoleActivationModal"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -15,8 +16,17 @@ const {
 } = await supabase.auth.getUser()
 
 const summary = await getTodaySummary(user?.id)
+  const needsRoleActivation = Boolean(user?.id) && !summary.settings.companyProfile
+
   return (
     <main className="mx-auto max-w-7xl px-6 py-8">
+      {needsRoleActivation && user?.id && (
+        <RoleActivationModal
+          userId={user.id}
+          initialSettings={summary.settings}
+        />
+      )}
+
       <div className="flex items-center gap-3">
   <h1 className="text-3xl font-bold text-gray-900">
     Tänään

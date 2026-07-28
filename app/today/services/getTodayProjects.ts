@@ -29,8 +29,18 @@ export async function getTodayProjects(regions?: string[]) {
    * paljon, ja käyttäjän oman alueen osumat putoavat ikkunasta pois
    * kokonaan vaikka niitä olisi runsaasti koko datassa.
    */
-  if (regions && regions.length > 0) {
-    query = query.in("region", regions)
+  /*
+   * "Koko Suomi" on velhon sentinel-arvo koko maalle — sitä EI saa antaa
+   * .in("region", ...):lle, koska mikään hanke ei ole maakunnassa "Koko Suomi"
+   * (johtaisi tyhjään syötteeseen). Suodatetaan sentinel pois; jos jäljelle
+   * jää oikeita maakuntia, rajataan niihin, muuten ei aluerajausta.
+   */
+  const effectiveRegions = (regions ?? []).filter(
+    (r) => r && r.toLowerCase() !== "koko suomi"
+  )
+
+  if (effectiveRegions.length > 0) {
+    query = query.in("region", effectiveRegions)
   }
 
   const { data, error } = await query
