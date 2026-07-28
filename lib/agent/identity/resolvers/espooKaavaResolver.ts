@@ -10,8 +10,8 @@ function mapEspooPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
   if (normalized === "lainvoimainen") return PHASE_LABELS.zoning
   if (normalized === "hyväksymisvaihe") return PHASE_LABELS.zoning
-  if (normalized === "ehdotusvaihe") return PHASE_LABELS.planning
-  if (normalized === "valmisteluvaihe") return PHASE_LABELS.planning
+  if (normalized === "ehdotusvaihe") return PHASE_LABELS.zoning
+  if (normalized === "valmisteluvaihe") return PHASE_LABELS.zoning
   if (normalized === "aloitusvaihe") return PHASE_LABELS.zoning
   return PHASE_LABELS.zoning
 }
