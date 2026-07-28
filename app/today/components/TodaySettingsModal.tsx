@@ -48,6 +48,11 @@ export default function TodaySettingsModal() {
 
   const [opportunityAlerts, setOpportunityAlerts] = useState(true)
 
+  // Tiimi-asetukset: ei UI:ta täällä (oma TeamModeToggle), mutta kannetaan
+  // mukana tallennuksessa ettei velho nollaa niitä.
+  const [teamModeInToday, setTeamModeInToday] = useState(false)
+  const [hideTeammateOwned, setHideTeammateOwned] = useState(true)
+
   const [maxProjects, setMaxProjects] = useState(40)
 
   const [loading, setLoading] = useState(true)
@@ -141,6 +146,9 @@ export default function TodaySettingsModal() {
         )
 
         setOpportunityAlerts(settings.opportunityAlerts !== false)
+
+        setTeamModeInToday(settings.teamModeInToday === true)
+        setHideTeammateOwned(settings.hideTeammateOwned !== false)
 
         setMaxProjects(Number(settings.maxProjects ?? 40))
       } catch (loadError: any) {
@@ -263,6 +271,8 @@ export default function TodaySettingsModal() {
             sources: selectedSources,
             keywords,
             opportunityAlerts,
+            teamModeInToday,
+            hideTeammateOwned,
             maxProjects,
 
             showRejected: false,

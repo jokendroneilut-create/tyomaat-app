@@ -70,6 +70,8 @@ export async function POST(request: Request) {
       showArchived: settings?.showArchived ?? false,
       companyProfile: settings?.companyProfile ?? null,
       opportunityAlerts: settings?.opportunityAlerts ?? true,
+      teamModeInToday: settings?.teamModeInToday === true,
+      hideTeammateOwned: settings?.hideTeammateOwned !== false,
     }
 
     const { data, error } = await supabaseAdmin

@@ -5,6 +5,7 @@ import TodaySettingsModal from "./components/TodaySettingsModal"
 import FeedbackButton from "../components/FeedbackButton"
 import RoleActivationModal from "./components/RoleActivationModal"
 import WelcomeInfoModal from "./components/WelcomeInfoModal"
+import TeamModeToggle from "./components/TeamModeToggle"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -73,6 +74,10 @@ const summary = await getTodaySummary(user?.id)
 <p className="mt-3 text-sm text-gray-500">
   Mukauta näkymää valitsemalla alueet, hankkeen vaiheet ja tietolähteet.
 </p>
+
+{summary.team?.inTeam && user?.id && (
+  <TeamModeToggle userId={user.id} initialSettings={summary.settings} />
+)}
 
       <TodayMetrics
         metrics={summary.metrics}

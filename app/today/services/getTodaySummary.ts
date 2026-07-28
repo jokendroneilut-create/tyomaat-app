@@ -8,6 +8,7 @@ import {
   matchesRegions,
 } from "./todayFilters"
 import { rankTodayProjects } from "./todayRanking"
+import { getTeamOwnership } from "./getTeamOwnership"
 import { persistOpportunityScores } from "@/lib/opportunity/persistScores"
 
 function toMetricProject(project: any) {
@@ -34,13 +35,21 @@ export async function getTodaySummary(userId?: string | null) {
   const settings = await getTodaySettings(userId)
   const maxProjects = Number(settings.maxProjects ?? 20)
 
-  const [allProjects, feedbackContext, favoritesContext, regionTotal] =
-    await Promise.all([
-      getTodayProjects(settings.regions),
-      getUserFeedbackContext(userId),
-      getUserFavoritesContext(userId),
-      getRegionProjectCount(settings.regions),
-    ])
+  const teamModeOn = settings.teamModeInToday === true
+
+  const [
+    allProjects,
+    feedbackContext,
+    favoritesContext,
+    regionTotal,
+    teamOwnership,
+  ] = await Promise.all([
+    getTodayProjects(settings.regions),
+    getUserFeedbackContext(userId),
+    getUserFavoritesContext(userId),
+    getRegionProjectCount(settings.regions),
+    getTeamOwnership(userId, teamModeOn),
+  ])
 
   const filteredProjects = allProjects
   .filter((project: any) =>
@@ -68,6 +77,35 @@ export async function getTodaySummary(userId?: string | null) {
   // V4: persistoi asiakaskohtaiset relevanssipisteet (best-effort, ei estä
   // näkymää). Pohja P2-hälytyksille + analytiikka.
   await persistOpportunityScores(userId, rankedProjects)
+
+  /*
+   * Tiimi-integraatio (opt-in): liitä hankkeeseen omistaja tiimistä. Oletuksena
+   * kollegan omistamat piilotetaan syötteestä (hideTeammateOwned) — omistajuus
+   * on jo jonkun, joten sitä ei näytetä päällekkäin. Omat + jakamattomat jäävät.
+   * Jos hideTeammateOwned = false, kollegan omistamat näkyvät badgella.
+   */
+  const teamRankedProjects =
+    teamModeOn && teamOwnership.inTeam
+      ? rankedProjects
+          .map((project: any) => {
+            const ownerId =
+              teamOwnership.ownerByProject.get(project.id) ?? null
+            return {
+              ...project,
+              team_owner_id: ownerId,
+              team_owner_name: ownerId
+                ? teamOwnership.nameByOwner.get(ownerId) ?? null
+                : null,
+            }
+          })
+          .filter((project: any) => {
+            if (settings.hideTeammateOwned === false) return true
+            // Piilota kollegan omistamat (omat ja jakamattomat jäävät).
+            return !(
+              project.team_owner_id && project.team_owner_id !== userId
+            )
+          })
+      : rankedProjects
 
   const recentProjects = rankedProjects.filter(
     (project: any) =>
@@ -102,6 +140,9 @@ export async function getTodaySummary(userId?: string | null) {
 
     newPotentialProjects: [],
 
-    recommendedProjects: rankedProjects.slice(0, maxProjects),
+    recommendedProjects: teamRankedProjects.slice(0, maxProjects),
+
+    // Ohjaa opt-in-kytkimen näkymisen /today-sivulla.
+    team: { inTeam: teamOwnership.inTeam },
   }
 }
