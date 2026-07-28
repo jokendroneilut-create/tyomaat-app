@@ -2226,6 +2226,7 @@ export async function POST(request: Request) {
 
       fuzzyDetailed = findProjectMatchDetailed(existingProjects ?? [], {
         name: projectName,
+        sourceTitle: (metadata.source_title as string | null) ?? null,
         city,
         region,
         location,

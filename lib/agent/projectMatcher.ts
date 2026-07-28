@@ -5,6 +5,10 @@ import {
 
 export type NormalizedProjectCandidate = {
   name?: string | null
+  // Lähteen alkuperäinen otsikko ennen mahdollista käsin muokkausta.
+  // Vertaillaan nimen ohella, jotta editoitu otsikko ei katkaise
+  // duplikaattilöydettävyyttä.
+  sourceTitle?: string | null
   city?: string | null
   region?: string | null
   location?: string | null
@@ -210,6 +214,24 @@ function getProjectBuildingType(project: MatchableProject) {
   )
 }
 
+/*
+ * Hankkeen kaikki tunnetut otsikkomuunnelmat, joita vasten ehdokkaan
+ * otsikko(t) vertaillaan: näkyvä nimi, lähteen alkuperäinen otsikko
+ * (metadata.source_title, säilytetään kun otsikkoa muokataan käsin) ja
+ * aiemmista yhdistetyistä lähteistä kertyneet aliakset (also_known_as).
+ * Näin käsin muokattu otsikko ei estä saman hankkeen tunnistamista.
+ */
+function getProjectTitles(
+  project: MatchableProject
+): (string | null | undefined)[] {
+  const aka = project.metadata?.also_known_as
+  return [
+    project.name,
+    project.metadata?.source_title as string | null | undefined,
+    ...(Array.isArray(aka) ? (aka as string[]) : []),
+  ]
+}
+
 export function calculateMatch(
   project: MatchableProject,
   candidate: NormalizedProjectCandidate
@@ -251,21 +273,32 @@ export function calculateMatch(
     reasons.push("same_property_id")
   }
 
-  const candidateName = norm(candidate.name)
-  const projectName = norm(project.name)
+  // Vertaillaan ehdokkaan otsikkomuunnelmia (näkyvä nimi + lähteen
+  // alkuperäinen otsikko) hankkeen kaikkia otsikkomuunnelmia vasten ja
+  // otetaan paras osuma. Näin käsin muokattu otsikko ei katkaise
+  // duplikaattilöydettävyyttä.
+  const candidateTitles = [candidate.name, candidate.sourceTitle]
+  const projectTitles = getProjectTitles(project)
 
-  if (
-    candidateName &&
-    projectName &&
-    candidateName === projectName
-  ) {
+  const hasExactTitle = candidateTitles.some((candidateTitle) => {
+    const normalizedCandidate = norm(candidateTitle)
+    if (!normalizedCandidate) return false
+    return projectTitles.some(
+      (projectTitle) => normalizedCandidate === norm(projectTitle)
+    )
+  })
+
+  if (hasExactTitle) {
     confidence += 55
     reasons.push("exact_title")
   } else {
-    const similarity = titleSimilarity(
-      candidate.name,
-      project.name
-    )
+    let similarity = 0
+    for (const candidateTitle of candidateTitles) {
+      for (const projectTitle of projectTitles) {
+        const score = titleSimilarity(candidateTitle, projectTitle)
+        if (score > similarity) similarity = score
+      }
+    }
 
     if (similarity >= 0.75) {
       confidence += 40
