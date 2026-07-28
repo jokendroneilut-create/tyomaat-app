@@ -1,6 +1,8 @@
 import PotentialProjectsReviewList from "./components/PotentialProjectsReviewList"
+import TicDailySummary from "./components/TicDailySummary"
 import { getPotentialProjectsForReview } from "./services/getPotentialProjectsForReview"
 import { getPendingReviewCount } from "./services/getPendingReviewCount"
+import { getTicDailySummary } from "./services/getTicDailySummary"
 
 export const dynamic = "force-dynamic"
 
@@ -12,9 +14,10 @@ export default async function TicPage({
   const { page: pageParam } = await searchParams
   const page = Math.max(1, Number(pageParam) || 1)
 
-  const [potentialProjects, pendingReviewCount] = await Promise.all([
+  const [potentialProjects, pendingReviewCount, summary] = await Promise.all([
     getPotentialProjectsForReview(page),
     getPendingReviewCount(),
+    getTicDailySummary(),
   ])
 
   return (
@@ -25,7 +28,9 @@ export default async function TicPage({
         </h1>
       </section>
 
-      <section className="mb-8">
+      <TicDailySummary {...summary} />
+
+      <section id="review" className="mb-8">
         <PotentialProjectsReviewList
           projects={potentialProjects}
           totalCount={pendingReviewCount}
