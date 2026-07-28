@@ -107,6 +107,11 @@ async function collectLupapisteSource(source: DiscoverySource) {
       if (!result.data || result.data.length === 0) break
 
       for (const notice of result.data) {
+        // Ilman id:tä ei voi muodostaa kelvollista dokumentti-URLia
+        // (.../bulletin/undefined) — ohitetaan viallinen rivi, ettei synny
+        // roskadokumenttia joka jää fakta­jonoon.
+        if (!notice?.id) continue
+
         found += 1
 
         const documentUrl = `https://julkipano.lupapiste.fi/app/fi/bulletins#!/bulletin/${notice.id}`
