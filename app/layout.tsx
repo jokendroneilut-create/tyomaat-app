@@ -3,6 +3,7 @@ import type { Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Navbar from "./components/Navbar";
 import AnalyticsTracker from "./components/AnalyticsTracker";
+import FeedbackModal from "./components/FeedbackModal";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,6 +47,7 @@ export default function RootLayout({
         <AnalyticsTracker />
         <Navbar />
         {children}
+        <FeedbackModal />
       </body>
     </html>
   );

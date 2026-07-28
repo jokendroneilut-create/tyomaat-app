@@ -2,6 +2,7 @@ import TodayMetrics from "./components/TodayMetrics"
 import { getTodaySummary } from "./services/getTodaySummary"
 import TodayRecommendedProjects from "./components/TodayRecommendedProjects"
 import TodaySettingsModal from "./components/TodaySettingsModal"
+import FeedbackButton from "../components/FeedbackButton"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -44,12 +45,10 @@ const summary = await getTodaySummary(user?.id)
       </p>
     </div>
 
-    <a
-  href="mailto:info@tyomaat.fi?subject=Tänään-näkymän palaute"
-  className="rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
->
-  Anna palautetta
-</a>
+    <FeedbackButton
+      context="Tänään-näkymän palaute"
+      className="rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+    />
 
   </div>
 </div>
