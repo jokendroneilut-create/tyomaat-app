@@ -90,12 +90,12 @@ lifecycle-vaiheen muutos + asiakkaan P1-relevanssi → laukaisu.
 
 **Riippuvuus:** hyötyy P1:n relevanssipisteytyksestä (kenelle laukaistaan).
 
-**Tila (2026-07-28):** 🟡 Rakennettu, cron ei vielä päällä. Endpoint
-`app/api/opportunity-alerts` laukaisee kun hanke etenee roolin huippuvaiheeseen
-(paino 1.0), alue-suodatus huomioiden. Opt-out `settings.opportunityAlerts`
-(oletus päällä, edellyttää roolia). Dedup taulu `opportunity_alerts`
-(docs/sql/2026-07-28_opportunity_alerts.sql). `?dry=1` esikatselee lähettämättä.
-**Seuraava:** aja SQL + dry-run, sen jälkeen lisää Vercel-cron (kerran/vrk).
+**Tila (2026-07-28):** 🟢 Live. Endpoint `app/api/opportunity-alerts` laukaisee
+kun hanke etenee roolin huippuvaiheeseen (paino 1.0), alue-suodatus huomioiden.
+Opt-out `settings.opportunityAlerts` (oletus päällä, edellyttää roolia). Dedup
+taulu `opportunity_alerts`. Vercel-cron kerran/vrk klo 8 (30h ikkuna). `?dry=1`
+esikatselee lähettämättä. Huom: `.in()`-id-listat pilkotaan 100:n paloihin
+(iso lista -> PostgREST 400).
 
 ## P3 — TIC "mitä minun pitäisi tehdä tänään" (operaattori)
 
