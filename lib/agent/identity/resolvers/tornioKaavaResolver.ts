@@ -8,7 +8,7 @@ function findFact(facts: any[], type: string) {
 
 function mapTornioPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
-  if (/voimaantulo|lainvoima/.test(normalized)) return PHASE_LABELS.completed
+  if (/voimaantulo|lainvoima/.test(normalized)) return PHASE_LABELS.zoning
   if (/hyväksy/.test(normalized)) return PHASE_LABELS.permit
   if (/ehdotu/.test(normalized)) return PHASE_LABELS.planning
   if (/luonno|valmistelu/.test(normalized)) return PHASE_LABELS.planning
@@ -30,7 +30,7 @@ export async function resolveTornioKaavaProject({
   const description = metadata.description ?? null
   const contacts = metadata.contacts ?? []
 
-  const completed = /voimaantulo|lainvoima/i.test(phase ?? "")
+  const completed = false
   const phaseHint = mapTornioPhase(phase)
 
   const classification = classifyProject({

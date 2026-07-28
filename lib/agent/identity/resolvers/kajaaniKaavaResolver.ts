@@ -30,7 +30,7 @@ export async function resolveKajaaniKaavaProject({
   const description = metadata.description ?? null
   const contacts = metadata.contacts ?? []
 
-  const completed = document.raw_payload?.completed === true
+  const completed = false
   const phaseHint = mapKajaaniPhase(phase)
 
   const classification = classifyProject({
