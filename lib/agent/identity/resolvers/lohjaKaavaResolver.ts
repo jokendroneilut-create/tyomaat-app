@@ -8,7 +8,7 @@ function findFact(facts: any[], type: string) {
 
 function mapLohjaPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
-  if (/voimaantulo|lainvoima|hyväksy/.test(normalized)) return PHASE_LABELS.completed
+  if (/voimaantulo|lainvoima|hyväksy/.test(normalized)) return PHASE_LABELS.zoning
   if (/ehdotus/.test(normalized)) return PHASE_LABELS.planning
   if (/valmistelu/.test(normalized)) return PHASE_LABELS.planning
   if (/vireilletulo/.test(normalized)) return PHASE_LABELS.zoning
@@ -30,7 +30,7 @@ export async function resolveLohjaKaavaProject({
   const description = metadata.description ?? null
   const contacts = metadata.contacts ?? []
 
-  const completed = /voimaantulo|lainvoima|hyväksy/i.test(phase ?? "")
+  const completed = false
   const phaseHint = mapLohjaPhase(phase)
 
   const classification = classifyProject({

@@ -8,7 +8,7 @@ function findFact(facts: any[], type: string) {
 
 function mapSiikalatvaPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
-  if (/voimaantulo|lainvoima/.test(normalized)) return PHASE_LABELS.completed
+  if (/voimaantulo|lainvoima/.test(normalized)) return PHASE_LABELS.zoning
   if (/hyväksy/.test(normalized)) return PHASE_LABELS.permit
   if (/ehdotu/.test(normalized)) return PHASE_LABELS.planning
   if (/luonno/.test(normalized)) return PHASE_LABELS.planning
@@ -29,7 +29,7 @@ export async function resolveSiikalatvaKaavaProject({
   const description = metadata.description ?? null
   const slug = document.raw_payload?.slug ?? null
 
-  const completed = /voimaantulo|lainvoima/i.test(phase ?? "")
+  const completed = false
   const phaseHint = mapSiikalatvaPhase(phase)
 
   const classification = classifyProject({

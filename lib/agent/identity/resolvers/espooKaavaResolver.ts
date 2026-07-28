@@ -8,7 +8,7 @@ function findFact(facts: any[], type: string) {
 
 function mapEspooPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
-  if (normalized === "lainvoimainen") return PHASE_LABELS.completed
+  if (normalized === "lainvoimainen") return PHASE_LABELS.zoning
   if (normalized === "hyväksymisvaihe") return PHASE_LABELS.permit
   if (normalized === "ehdotusvaihe") return PHASE_LABELS.planning
   if (normalized === "valmisteluvaihe") return PHASE_LABELS.planning
@@ -34,7 +34,7 @@ export async function resolveEspooKaavaProject({
   const changeApplicant = metadata.change_applicant ?? null
   const contacts = metadata.contacts ?? []
 
-  const completed = (phase ?? "").toLowerCase() === "lainvoimainen"
+  const completed = false
   const phaseHint = mapEspooPhase(phase)
 
   const classification = classifyProject({
