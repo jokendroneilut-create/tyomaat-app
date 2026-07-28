@@ -9,7 +9,7 @@ function findFact(facts: any[], type: string) {
 function mapNokiaPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
   if (/voimaantulo/.test(normalized)) return PHASE_LABELS.zoning
-  if (/hyväksy/.test(normalized)) return PHASE_LABELS.permit
+  if (/hyväksy/.test(normalized)) return PHASE_LABELS.zoning
   if (/ehdotus/.test(normalized)) return PHASE_LABELS.planning
   if (/luonnos|osallistumis|arviointi/.test(normalized)) return PHASE_LABELS.planning
   if (/vireille/.test(normalized)) return PHASE_LABELS.zoning

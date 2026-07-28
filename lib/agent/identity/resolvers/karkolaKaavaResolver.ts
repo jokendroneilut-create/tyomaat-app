@@ -9,7 +9,7 @@ function findFact(facts: any[], type: string) {
 function mapKarkolaPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return PHASE_LABELS.zoning
-  if (/hyväksy/.test(normalized)) return PHASE_LABELS.permit
+  if (/hyväksy/.test(normalized)) return PHASE_LABELS.zoning
   if (/ehdotu/.test(normalized)) return PHASE_LABELS.planning
   if (/luonno/.test(normalized)) return PHASE_LABELS.planning
   return PHASE_LABELS.zoning

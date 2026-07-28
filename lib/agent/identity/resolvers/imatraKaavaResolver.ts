@@ -15,7 +15,7 @@ function findFact(facts: any[], type: string) {
 function mapImatraPhase(rawPhase: string | null): string {
   const normalized = (rawPhase ?? "").toLowerCase()
   if (/voimaantulo|lainvoima/.test(normalized)) return PHASE_LABELS.zoning
-  if (/hyväksy/.test(normalized)) return PHASE_LABELS.permit
+  if (/hyväksy/.test(normalized)) return PHASE_LABELS.zoning
   if (/ehdotus/.test(normalized)) return PHASE_LABELS.planning
   if (/luonnos/.test(normalized)) return PHASE_LABELS.planning
   if (/osallistumis|arviointi/.test(normalized)) return PHASE_LABELS.planning
