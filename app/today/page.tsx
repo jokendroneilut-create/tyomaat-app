@@ -45,7 +45,7 @@ const summary = await getTodaySummary(user?.id)
     </div>
 
     <a
-  href="mailto:palautteet@tyomaat.fi?subject=Tänään-näkymän palaute"
+  href="mailto:info@tyomaat.fi?subject=Tänään-näkymän palaute"
   className="rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
 >
   Anna palautetta

@@ -103,8 +103,12 @@ esikatselee lähettämättä. Huom: `.in()`-id-listat pilkotaan 100:n paloihin
 prioriteetin hanketta löytyi, 3 lähdettä kaatui, 12 ehdokasta valmiina
 tarkistukseen." Listat toissijaisia, päätökset ensisijaisia.
 
-**Tila:** osin olemassa (TIC-näkymät, discovery health, runs). Työ = koota
-päivän toimenpiteet yhdeksi päätösnäkymäksi.
+**Tila (2026-07-28):** 🟢 v1 live. `TicDailySummary` kytketty TIC-etusivulle
+(`app/tic/page.tsx`), luvut `getTicDailySummary()`-palvelusta: päätöstä vaativat
+(ei-ohitetut), korkea prioriteetti, tarjoukset, kaavoitus, auto-suodatetut,
+kaatuneet lähteet. Kortit linkittävät tarkistuslistaan / operationsiin.
+**Seuraava (v2):** korttien suodatettu porautuminen (esim. "tarjoukset" ->
+vain ne listassa), ja mahdollinen roolikohtainen priorisointi jonossa.
 
 ## P4 — Proaktiivinen markkinatieto / trendit
 
