@@ -53,3 +53,27 @@ export async function getTodayProjects(regions?: string[]) {
 
   return data ?? []
 }
+
+/*
+ * Todellinen määrä aktiivisia hankkeita käyttäjän alueella — EI rajattu
+ * 1000:een (getTodayProjects hakee vain 1000 pisteytystä varten, mutta
+ * "Kaikki hankkeet alueellasi" -mittarin pitää näyttää oikea kokonaisluku).
+ */
+export async function getRegionProjectCount(regions?: string[]): Promise<number> {
+  let query = supabaseAdmin
+    .from("projects")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "active")
+
+  const effectiveRegions = (regions ?? []).filter(
+    (r) => r && r.toLowerCase() !== "koko suomi"
+  )
+
+  if (effectiveRegions.length > 0) {
+    query = query.in("region", effectiveRegions)
+  }
+
+  const { count, error } = await query
+  if (error) throw error
+  return count ?? 0
+}
