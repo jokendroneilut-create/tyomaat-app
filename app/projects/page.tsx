@@ -8,6 +8,7 @@ import PhaseTimeline from './PhaseTimeline'
 import { CANONICAL_PHASES, displayPhaseLabel, normalizeLegacyPhase } from '@/lib/projects/phases'
 import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
 import { trackEvent } from '@/lib/analytics/trackEvent'
+import FeedbackButton from '../components/FeedbackButton'
 
 const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
 
@@ -1075,17 +1076,13 @@ setTeamModeEnabled(true)
                   Sulje
                 </button>
 
-                <a
-  href={`mailto:info@tyomaat.fi?subject=${encodeURIComponent(
-    `Palaute kohteesta: ${selected.name}`
-  )}&body=${encodeURIComponent(
-    `Kohde: ${selected.name}\nID: ${selected.id}\nLinkki: ${window.location.origin}/projects?open=${selected.id}\n\nKirjoita palaute tähän:`
-  )}`}
+                <FeedbackButton
+  context="Hankepalaute"
+  projectId={selected.id}
+  projectName={selected.name}
   className="projects-btn"
-  style={{ background: '#e5e7eb', textDecoration: 'none' }}
->
-  Anna palautetta
-</a>
+  style={{ background: '#e5e7eb' }}
+/>
 
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                   

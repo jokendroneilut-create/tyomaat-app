@@ -7,6 +7,7 @@ import { displayPhaseLabel } from "@/lib/projects/phases"
 import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 import { trackEvent } from "@/lib/analytics/trackEvent"
 import TodayFeedbackButtons from "./TodayFeedbackButtons"
+import FeedbackButton from "@/app/components/FeedbackButton"
 
 type Project = {
   id: string
@@ -329,17 +330,13 @@ export default function TodayProjectModal({
                   Sulje
                 </button>
 
-                <a
-                  href={`mailto:info@tyomaat.fi?subject=${encodeURIComponent(
-                    `Palaute kohteesta: ${project.name}`
-                  )}&body=${encodeURIComponent(
-                    `Kohde: ${project.name}\nID: ${project.id}\nLinkki: ${window.location.origin}/projects?open=${project.id}\n\nKirjoita palaute tähän:`
-                  )}`}
+                <FeedbackButton
+                  context="Hankepalaute"
+                  projectId={project.id}
+                  projectName={project.name}
                   className="projects-btn"
-                  style={{ background: "#e5e7eb", textDecoration: "none" }}
-                >
-                  Anna palautetta
-                </a>
+                  style={{ background: "#e5e7eb" }}
+                />
               </div>
             </div>
 

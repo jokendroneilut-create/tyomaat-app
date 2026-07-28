@@ -188,16 +188,23 @@ function buildPopupEl(p: Project): HTMLElement {
   })
   actions.appendChild(openBtn)
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const feedback = document.createElement('a')
+  const feedback = document.createElement('button')
+  feedback.type = 'button'
   feedback.textContent = 'Anna palautetta'
-  feedback.href = `mailto:info@tyomaat.fi?subject=${encodeURIComponent(
-    `Palaute kohteesta: ${p.name}`
-  )}&body=${encodeURIComponent(
-    `Kohde: ${p.name}\nID: ${p.id}\nLinkki: ${origin}/projects\n\nKirjoita palaute tähän:`
-  )}`
   feedback.style.cssText =
-    'flex:1;text-align:center;padding:6px 8px;background:#e5e7eb;color:#111827;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600'
+    'flex:1;text-align:center;padding:6px 8px;background:#e5e7eb;color:#111827;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer'
+  feedback.addEventListener('click', () => {
+    // Avaa sovelluksen sisäinen palauteluukku (FeedbackModal kuuntelee tätä).
+    window.dispatchEvent(
+      new CustomEvent('open-feedback', {
+        detail: {
+          context: 'Hankepalaute',
+          projectId: p.id,
+          projectName: p.name,
+        },
+      }),
+    )
+  })
   actions.appendChild(feedback)
 
   wrap.appendChild(actions)
