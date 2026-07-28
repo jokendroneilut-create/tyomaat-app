@@ -4,6 +4,7 @@ import TodayRecommendedProjects from "./components/TodayRecommendedProjects"
 import TodaySettingsModal from "./components/TodaySettingsModal"
 import FeedbackButton from "../components/FeedbackButton"
 import RoleActivationModal from "./components/RoleActivationModal"
+import WelcomeInfoModal from "./components/WelcomeInfoModal"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -26,6 +27,8 @@ const summary = await getTodaySummary(user?.id)
           initialSettings={summary.settings}
         />
       )}
+
+      {user?.id && <WelcomeInfoModal suppressed={needsRoleActivation} />}
 
       <div className="flex items-center gap-3">
   <h1 className="text-3xl font-bold text-gray-900">
