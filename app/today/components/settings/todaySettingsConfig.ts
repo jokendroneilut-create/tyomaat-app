@@ -55,5 +55,6 @@ export type TodaySettingsFormState = {
   selectedRegions: string[]
   selectedSalesMoments: string[]
   selectedSources: string[]
+  keywords: string[]
   maxProjects: number
 }
