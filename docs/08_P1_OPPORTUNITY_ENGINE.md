@@ -117,7 +117,11 @@ fallbackina. `todayFilters.ts`:n myyntihetki-suodatus voi käyttää samaa.
 | **V1** ⭐ | `projectPhaseKey()` + `roleStageFit` + moduulien `reason`-breakdown + selitys kortilla | Suurin arvo, ei skeemamuutosta | ✅ Tehty |
 | **V2** | Rooli johtaa myyntihetki-oletukset; asetusten UX; 0–100 normalisointi näkyviin | Keskisuuri | ✅ Tehty |
 | **V3** | Avainsana/toimiala-matchays (`tradeKeywordFit` + `keywords` asetuksissa) | Tarkkuus | ✅ Tehty |
-| **V4** | Persistoi `opportunity_score` per (käyttäjä, hanke) → pohja P2-hälytyksille + analytiikka | Avaa P2:n | ⬜ Tekemättä |
+| **V4** | Persistoi `opportunity_score` per (käyttäjä, hanke) → pohja P2-hälytyksille + analytiikka | Avaa P2:n | ✅ Tehty |
+
+**V4-huom:** taulu `opportunity_scores` (user × hanke), kirjoitetaan
+kysyntähetkellä /today-latauksessa (`lib/opportunity/persistScores.ts`),
+best-effort (ei kaada näkymää). DDL: `docs/sql/2026-07-28_opportunity_scores.sql`.
 
 **V3-huom:** `keywords` talletetaan `user_today_preferences.settings`-JSON-blobiin
 (ei erillistä `text[]`-saraketta) — ei skeemamuutosta. Lyhyet avainsanat (< 4 mkt)

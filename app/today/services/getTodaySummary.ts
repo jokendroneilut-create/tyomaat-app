@@ -8,6 +8,7 @@ import {
   matchesRegions,
 } from "./todayFilters"
 import { rankTodayProjects } from "./todayRanking"
+import { persistOpportunityScores } from "@/lib/opportunity/persistScores"
 
 function toMetricProject(project: any) {
   return {
@@ -61,6 +62,10 @@ export async function getTodaySummary(userId?: string | null) {
     settings,
     feedbackContext
   )
+
+  // V4: persistoi asiakaskohtaiset relevanssipisteet (best-effort, ei estä
+  // näkymää). Pohja P2-hälytyksille + analytiikka.
+  await persistOpportunityScores(userId, rankedProjects)
 
   const recentProjects = rankedProjects.filter(
     (project: any) =>
