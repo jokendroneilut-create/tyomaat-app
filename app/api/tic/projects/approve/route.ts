@@ -2171,8 +2171,24 @@ export async function POST(request: Request) {
       metadata.developer ??
       null
 
+    /*
+     * Kilpailutuksen voittaja (Hilman jälki-ilmoitus) on urakoitsija ->
+     * viedään strukturoituun builder-kenttään, ei vain metadata.winnersiin.
+     * Muuten voittaja ei näy "Rakennusliike"-kentässä eikä löydy haulla
+     * (hankehaku tutkii builder-saraketta, ei metadataa).
+     */
+    const winnerName: string | null = (() => {
+      const wo = metadata.winner_organisations
+      if (typeof wo === "string" && wo.trim()) return wo.trim()
+      if (Array.isArray(metadata.winners) && metadata.winners.length > 0) {
+        return metadata.winners.filter(Boolean).join(", ") || null
+      }
+      return null
+    })()
+
     const builder =
       metadata.builder ??
+      winnerName ??
       null
 
     const earthworksContractor =
