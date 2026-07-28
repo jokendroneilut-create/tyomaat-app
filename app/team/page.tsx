@@ -34,6 +34,27 @@ function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
+/*
+ * Muotoile näyttönimi sähköpostin etuliitteestä kun oikeaa nimeä ei ole:
+ * "johannes.sippola@..." -> "Johannes Sippola". Sama muotoilu kuin
+ * profiles-autoluonti-triggerissä, jotta nimet ovat yhtenäisiä.
+ */
+function formatNameFromEmail(email: string | null | undefined): string {
+  const prefix = (email ?? "").split("@")[0]
+  if (!prefix) return email ?? ""
+  return prefix
+    .replace(/[._]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .map((word) =>
+      word
+        .split("-")
+        .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : part))
+        .join("-")
+    )
+    .join(" ")
+}
+
 const FINNISH_REGIONS = [
   'Uusimaa',
   'Varsinais-Suomi',
@@ -624,11 +645,15 @@ const handleCreateTeam = async () => {
 
   setCreatingTeam(true)
 
-  await supabase.from('profiles').upsert({
-  id: user.id,
-  email: user.email,
-  full_name: user.email?.split('@')[0] || user.email,
-})
+  await supabase.from('profiles').upsert(
+    {
+      id: user.id,
+      email: user.email,
+      full_name: formatNameFromEmail(user.email),
+    },
+    // Älä ylikirjoita triggerin/olemassa olevaa nimeä pelkällä etuliitteellä.
+    { onConflict: 'id', ignoreDuplicates: true }
+  )
 
   const areasToSave = newTeamWholeFinland ? [] : newTeamAreas
 
