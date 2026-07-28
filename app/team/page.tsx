@@ -215,21 +215,40 @@ if (ownerFilter) {
           .select('*')
           .in('id', memberIds)
 
-        let projectQuery = supabase
-          .from('projects')
-          .select('*')
-          // Perussuodatus kuten kartta/Tänään: valmistuneet ja vanhentuneet
-          // hankkeet eivät ole myyntimielessä relevantteja jaettavaksi.
-          .neq('phase', 'Valmistunut')
-          .neq('status', 'expired')
-
         const teamAreas = teamData.areas || []
 
-if (teamAreas.length > 0) {
-  projectQuery = projectQuery.in('region', teamAreas)
-}
+        /*
+         * PostgREST palauttaa oletuksena max 1000 riviä per kysely, joten
+         * ilman sivutusta iso alue (esim. koko Suomi) katkesi 1000:een. Haetaan
+         * sivutettuna kunnes kaikki on saatu. Perussuodatus kuten kartta/Tänään:
+         * valmistuneet ja vanhentuneet eivät ole jaettavaksi relevantteja.
+         */
+        const PAGE_SIZE = 1000
+        const projectsData: any[] = []
 
-        const { data: projectsData } = await projectQuery
+        for (let from = 0; ; from += PAGE_SIZE) {
+          let projectQuery = supabase
+            .from('projects')
+            .select('*')
+            .neq('phase', 'Valmistunut')
+            .neq('status', 'expired')
+            .order('created_at', { ascending: false })
+
+          if (teamAreas.length > 0) {
+            projectQuery = projectQuery.in('region', teamAreas)
+          }
+
+          const { data: pageData, error: pageError } = await projectQuery.range(
+            from,
+            from + PAGE_SIZE - 1
+          )
+
+          if (pageError) break
+
+          projectsData.push(...((pageData as any[]) || []))
+
+          if (!pageData || pageData.length < PAGE_SIZE) break
+        }
 
         const { data: assignmentsData } = await supabase
           .from('project_assignments')
