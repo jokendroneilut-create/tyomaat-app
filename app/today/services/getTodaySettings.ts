@@ -18,6 +18,9 @@ export type TodaySettings = {
   showRejected: boolean
   showArchived: boolean
   companyProfile: string | null
+  // P2: sähköpostihälytys kun hanke etenee roolin huippuvaiheeseen.
+  // Opt-out: oletuksena päällä (edellyttää roolia). Ks. /api/opportunity-alerts.
+  opportunityAlerts: boolean
 }
 
 export const defaultTodaySettings: TodaySettings = {
@@ -33,6 +36,7 @@ export const defaultTodaySettings: TodaySettings = {
   showRejected: false,
   showArchived: false,
   companyProfile: null,
+  opportunityAlerts: true,
 }
 
 export async function getTodaySettings(userId?: string | null) {
