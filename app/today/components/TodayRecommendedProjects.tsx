@@ -10,11 +10,13 @@ export default function TodayRecommendedProjects({
   userId,
   feedback,
   favorites,
+  teamMode = false,
 }: {
   projects: any[]
   userId?: string | null
   feedback?: Record<string, "up" | "down">
   favorites?: Record<string, boolean>
+  teamMode?: boolean
 }) {
   const [openId, setOpenId] = useState<string | null>(null)
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
@@ -76,14 +78,18 @@ export default function TodayRecommendedProjects({
                         </span>
                       )}
 
-                      {project.team_owner_id &&
+                      {teamMode &&
                         (project.team_owner_id === userId ? (
                           <span className="rounded-full bg-emerald-100 px-2.5 py-1 font-semibold text-emerald-800">
                             🟢 Sinä
                           </span>
-                        ) : (
+                        ) : project.team_owner_id ? (
                           <span className="rounded-full bg-blue-100 px-2.5 py-1 font-semibold text-blue-800">
                             🔵 Omistaja: {project.team_owner_name ?? "tiimin jäsen"}
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-gray-100 px-2.5 py-1 font-semibold text-gray-600">
+                            ⚪ Vapaa
                           </span>
                         ))}
                     </div>

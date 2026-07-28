@@ -1017,11 +1017,32 @@ const ownerBadgeStyle = (ownerId: string | null): React.CSSProperties => {
       {members.map((m) => {
         const count = distribution[m.user_id] || 0
         const percent = counts.assigned > 0 ? Math.round((count / counts.assigned) * 100) : 0
+        const active = ownerFilter === m.user_id
 
         return (
-          <div key={m.user_id}>
+          <div
+            key={m.user_id}
+            role="button"
+            title={`Näytä vain ${getProfileName(m.user_id)} -omistamat hankkeet`}
+            onClick={() => {
+              // Suodata hankelista tähän jäseneen; 'all' jotta suodatin
+              // ei tyhjene "ei omistajaa" -välilehden takia.
+              setOwnerFilter(active ? null : m.user_id)
+              setFilterMode('all')
+            }}
+            style={{
+              cursor: 'pointer',
+              borderRadius: 10,
+              padding: 8,
+              border: active ? '1px solid #111827' : '1px solid transparent',
+              background: active ? '#f3f4f6' : 'transparent',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-              <strong>{getProfileName(m.user_id)}</strong>
+              <strong>
+                {getProfileName(m.user_id)}
+                {active ? ' • suodatettu' : ''}
+              </strong>
               <span>
                 {count} kpl • {percent} %
               </span>
