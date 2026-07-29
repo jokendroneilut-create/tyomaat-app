@@ -284,12 +284,58 @@ export async function runFactWorker(documentId?: string) {
       "Lappeenrannan vireillä olevat asemakaavat",
     ]
 
-    document =
-      (documents ?? []).find((d) =>
-        JSON_ONLY_SOURCES.includes(d.source_name)
-          ? !!(d.raw_payload?.original || d.raw_text)
-          : !!d.extracted_text
-      ) ?? null
+    const isProcessable = (d: any) =>
+      JSON_ONLY_SOURCES.includes(d.source_name)
+        ? !!(d.raw_payload?.original || d.raw_text)
+        : !!d.extracted_text
+
+    /*
+     * Terminaalinen dokumentti = ei koskaan tule käsiteltäväksi, koska sen oma
+     * louhintavaihe on jo ajettu tuloksetta. Ilman tätä nämä jäivät ikuisesti
+     * jonoon (fact_worker vain ohitti ne .find():ssä eikä koskaan merkinnyt
+     * valmiiksi), mikä piti "Jono"-mittarin pysyvästi harhaanjohtavana ja kasasi
+     * kuollutta backlogia. Merkitään valmiiksi 0 faktalla, jolloin jono valuu
+     * tyhjäksi eikä sisällöttömiä dokumentteja kerry uudelleen.
+     */
+    const isTerminal = (d: any) => {
+      if (isProcessable(d)) return false
+      // Kuvapohjainen PDF: tekstinpoiminta on ajettu mutta tulos on tyhjä ("").
+      // (extracted_text === null tarkoittaa "ei vielä poimittu" -> ei terminaali.)
+      if (d.document_type === "pdf") return d.extracted_text === ""
+      // HTML-ilmoitussivu (ei JSON-lähde): artikkeli on haettu, mutta sivun
+      // rungosta ei synny koskaan extracted_textiä — mahdollinen hyötydata on
+      // linkatussa PDF:ssä, joka käsitellään omana dokumenttinaan.
+      if (
+        d.document_type === "html" &&
+        !JSON_ONLY_SOURCES.includes(d.source_name)
+      ) {
+        return !!d.raw_payload?.articleFetchedAt
+      }
+      // JSON-lähde ilman hyötykuormaa: keräys tuotti tyhjän -> ei louhittavaa.
+      if (JSON_ONLY_SOURCES.includes(d.source_name)) {
+        return !d.raw_payload?.original && !d.raw_text
+      }
+      return false
+    }
+
+    const batch = (documents ?? []) as any[]
+    const terminalDocs = batch.filter(isTerminal)
+
+    if (terminalDocs.length > 0) {
+      const nowIso = new Date().toISOString()
+      await supabaseAdmin
+        .from("source_documents")
+        .update({ facts_extracted_at: nowIso, updated_at: nowIso })
+        .in(
+          "id",
+          terminalDocs.map((d) => d.id)
+        )
+      console.log(
+        `fact worker: merkitty ${terminalDocs.length} terminaalista dokumenttia valmiiksi (0 faktaa, ei louhittavaa sisältöä)`
+      )
+    }
+
+    document = batch.find(isProcessable) ?? null
   }
 
   if (!document) {
