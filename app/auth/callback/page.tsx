@@ -22,7 +22,7 @@ export default function AuthCallbackPage() {
         return
       }
 
-      const { error: verifyError } = await supabase.auth.verifyOtp({
+      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
         token_hash,
         type: type as any,
       })
@@ -33,6 +33,17 @@ export default function AuthCallbackPage() {
           'Linkki ei ole enää voimassa. Se on voinut jo vanhentua, tulla käytettyä kertaalleen, tai avautua eri laitteella/selaimella kuin millä sitä yritetään käyttää nyt.'
         )
         return
+      }
+
+      /*
+       * Varmista että istunto on todella asettunut clientille ennen kuin
+       * ohjataan eteenpäin. Ilman tätä mobiilissa ehti käydä niin, että
+       * seuraava sivu (/set-password) latautui ja kutsui updateUser ENNEN
+       * kuin verifyOtp:n istunto oli tallentunut evästeeseen → "Auth session
+       * missing". getSession pakottaa hydroinnin loppuun.
+       */
+      if (!verifyData?.session) {
+        await supabase.auth.getSession()
       }
 
       /*

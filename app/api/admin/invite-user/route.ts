@@ -10,6 +10,26 @@ function parseAdminEmails(value: string | undefined) {
     .filter(Boolean)
 }
 
+/*
+ * Supabasen virheviestit ovat englanniksi ja tekniset. Käännetään yleisimmät
+ * selkokielelle + toimintaohjeeksi, jotta kutsua lähettävä ei säikähdä eikä
+ * jää arvailemaan mitä tehdä. Tuntemattomat virheet menevät läpi sellaisenaan.
+ */
+function humanizeInviteError(message: string): string {
+  const m = message.toLowerCase()
+
+  if (m.includes("already") && m.includes("registered")) {
+    return "Tälle osoitteelle on jo tili. Jos käyttäjä ei ole vielä aktivoitunut, poista hänet listalta ja lähetä kutsu uudelleen — tai käyttäjä voi asettaa salasanan 'Unohditko salasanasi?' -linkillä kirjautumissivulla."
+  }
+  if (m.includes("rate") || m.includes("limit") || m.includes("too many")) {
+    return "Kutsuja on lähetetty liian tiheään (sähköpostipalvelun raja). Odota hetki ja yritä uudelleen. Jos tämä toistuu, sähköpostin lähetysasetukset (SMTP) kannattaa tarkistaa."
+  }
+  if (m.includes("invalid") && m.includes("email")) {
+    return "Sähköpostiosoite ei ole kelvollinen. Tarkista kirjoitusasu."
+  }
+  return message
+}
+
 export async function POST(req: Request) {
   try {
     let body: any = {}
@@ -60,7 +80,10 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("INVITE ERROR:", error)
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      return NextResponse.json(
+        { error: humanizeInviteError(error.message) },
+        { status: 400 }
+      )
     }
 
     return NextResponse.json({
