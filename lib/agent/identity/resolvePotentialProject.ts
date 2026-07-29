@@ -142,6 +142,19 @@ export async function resolvePotentialProject(
     }
   }
 
+  /*
+   * Auto-ohitetut ehdokkaat (CQE:n recommended_action="ignore" tai yllä olevat
+   * keskitetyt ignore-säännöt) viimeistellään suoraan terminaaliseen "ignored"-
+   * tilaan sen sijaan että jäisivät "new":ksi. Muuten ne jäivät ikuisesti
+   * "new"-jonoon — piilotettuna katselmoinnista mutta TicDailySummaryn laskurissa
+   * pysyvästi kasvaen ("suodatettiin pois automaattisesti" ei koskaan tyhjentynyt).
+   */
+  const effectiveRecommendedAction =
+    (completionMetadata as Record<string, any>).recommended_action ??
+    (input.metadata as Record<string, any>)?.recommended_action ??
+    null
+  const autoIgnored = effectiveRecommendedAction === "ignore"
+
   let existing = null
   let matchedExistingProjectId: string | null = null
 
@@ -213,6 +226,16 @@ export async function resolvePotentialProject(
     const { data: updated, error } = await supabaseAdmin
       .from("potential_projects")
       .update({
+        // Viimeistele auto-ohitetut myös päivityksessä: jos ehdokas on yhä
+        // "new" mutta efektiivinen suositus on ignore (uusi tai aiempi tieto),
+        // siirretään terminaaliin "ignored"-tilaan. Hyväksyttyjä/hylättyjä ei
+        // koskettaa.
+        ...(existing.status === "new" &&
+        (effectiveRecommendedAction === "ignore" ||
+          (existing.metadata as Record<string, any>)?.recommended_action ===
+            "ignore")
+          ? { status: "ignored" }
+          : {}),
         title: existing.title ?? title,
         municipality: existing.municipality ?? municipality,
         address: existing.address ?? address,
@@ -278,7 +301,7 @@ export async function resolvePotentialProject(
       confidence,
       source_count: 1,
       evidence_count: 0,
-      status: "new",
+      status: autoIgnored ? "ignored" : "new",
       metadata: {
         ...(inferredCompletion
           ? { estimated_completion: inferredCompletion }

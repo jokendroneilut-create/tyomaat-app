@@ -63,7 +63,7 @@ export default function TicDailySummary({
         </Card>
 
         <Card>
-          ⚪ <strong>{ignored}</strong> signaalia suodatettiin pois automaattisesti
+          ⚪ <strong>{ignored}</strong> signaalia suodatettiin pois automaattisesti viimeisen 24 h aikana
         </Card>
 
         <Card href="/tic/operations">
