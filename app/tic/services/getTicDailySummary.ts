@@ -66,10 +66,22 @@ export async function getTicDailySummary(): Promise<TicDailySummaryData> {
         q.or(NOT_IGNORED).eq("metadata->>phase_hint", "Kaavoitus")
       ),
 
-      // Automaattisesti suodatetut (ohitetut).
-      countNewCandidates((q) =>
-        q.eq("metadata->>recommended_action", "ignore")
-      ),
+      // Automaattisesti suodatetut VIIMEISEN 24 H aikana. Ei "new"-sidonnainen:
+      // auto-ohitetut viimeistellään suoraan "ignored"-tilaan (ks.
+      // resolvePotentialProject), joten näytetään tuoreena lukuna eikä kaikkien
+      // aikojen kertymänä, joka ei koskaan tyhjentynyt.
+      (async () => {
+        const since = new Date(
+          Date.now() - 24 * 60 * 60 * 1000
+        ).toISOString()
+        const { count, error } = await supabaseAdmin
+          .from("potential_projects")
+          .select("*", { count: "exact", head: true })
+          .eq("metadata->>recommended_action", "ignore")
+          .gte("created_at", since)
+        if (error) throw error
+        return count ?? 0
+      })(),
 
       getDiscoverySources(),
     ])
