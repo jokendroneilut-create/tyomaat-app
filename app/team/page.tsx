@@ -4,12 +4,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import ConfirmModal from '../components/ConfirmModal'
 
+type DistributionFilters = {
+  phases?: string[]
+  keyword?: string
+}
+
 type Team = {
   id: string
   name: string
   area: string
   areas: string[] | null
   leader_id: string
+  distribution_filters: DistributionFilters | null
 }
 
 type TeamMember = {
@@ -104,6 +110,14 @@ export default function TeamPage() {
 
   const [showTeamSettings, setShowTeamSettings] = useState(false)
 
+  // Osa 2: esihenkilön määrittelemät jakosuodattimet (teams.distribution_filters).
+  // Rajaavat vain jaettavaa poolia ("Ei omistajaa" + "Jaa tiimille" / "Ota itselle").
+  // Jo jaetut hankkeet pysyvät koskemattomina.
+  const [distPhases, setDistPhases] = useState<string[]>([])
+  const [distKeyword, setDistKeyword] = useState('')
+  const [savingDistFilters, setSavingDistFilters] = useState(false)
+  const [distFiltersMsg, setDistFiltersMsg] = useState<string | null>(null)
+
   const [newTeamName, setNewTeamName] = useState('')
   const [newTeamAreas, setNewTeamAreas] = useState<string[]>([])
   const [newTeamWholeFinland, setNewTeamWholeFinland] = useState(true)
@@ -132,14 +146,56 @@ export default function TeamPage() {
     }))
   }, [projects, assignments])
 
+  // Osa 2: onko esihenkilön jakosuodatin aktiivinen?
+  const hasDistFilter = distPhases.length > 0 || distKeyword.trim().length > 0
+
+  /*
+   * Kuuluuko hanke jaettavaan joukkoon esihenkilön suodattimen mukaan.
+   * Käytetään VAIN vapaan poolin ("Ei omistajaa") näyttöön ja jakoon
+   * ("Jaa tiimille" / "Ota itselle"). Ei koske jo vastuutettuja hankkeita.
+   */
+  const matchesDistribution = (p: any): boolean => {
+    if (distPhases.length > 0 && !distPhases.includes(p.phase)) return false
+    const kw = distKeyword.trim().toLowerCase()
+    if (kw) {
+      const hay = [
+        p.name,
+        p.title,
+        p.city,
+        p.region,
+        p.metadata?.description,
+        p.metadata?.summary,
+        p.additional_info,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      if (!hay.includes(kw)) return false
+    }
+    return true
+  }
+
   const counts = useMemo(() => {
     const all = projectsWithOwners.length
-    const unassigned = projectsWithOwners.filter((p) => !p.owner_id).length
+    // "Ei omistajaa" -laskuri kuvaa jaettavaa poolia -> huomioi jakosuodatin.
+    const unassigned = projectsWithOwners.filter(
+      (p) => !p.owner_id && matchesDistribution(p)
+    ).length
     const assigned = projectsWithOwners.filter((p) => !!p.owner_id).length
     const mine = projectsWithOwners.filter((p) => p.owner_id === user?.id).length
 
     return { all, unassigned, assigned, mine }
-  }, [projectsWithOwners, user])
+  }, [projectsWithOwners, user, distPhases, distKeyword])
+
+  // Vaiheet jotka oikeasti esiintyvät ladatuissa hankkeissa -> jakosuodattimen
+  // valittavat vaiheet (varmistaa että suodatin osuu todelliseen dataan).
+  const availablePhases = useMemo(
+    () =>
+      [...new Set(projects.map((p) => p.phase).filter(Boolean))].sort((a, b) =>
+        String(a).localeCompare(String(b), 'fi')
+      ),
+    [projects]
+  )
 
 const distribution = useMemo(() => {
   const map: Record<string, number> = {}
@@ -155,7 +211,8 @@ const distribution = useMemo(() => {
   const filteredProjects = useMemo(() => {
     let list = [...projectsWithOwners]
 
-    if (filterMode === 'unassigned') list = list.filter((p) => !p.owner_id)
+    if (filterMode === 'unassigned')
+      list = list.filter((p) => !p.owner_id && matchesDistribution(p))
     if (filterMode === 'assigned') list = list.filter((p) => !!p.owner_id)
     if (filterMode === 'mine') list = list.filter((p) => p.owner_id === user?.id)
 if (ownerFilter) {
@@ -185,7 +242,16 @@ if (ownerFilter) {
     }
 
     return list
-  }, [projectsWithOwners, filterMode, ownerFilter, search, user, profiles])
+  }, [
+    projectsWithOwners,
+    filterMode,
+    ownerFilter,
+    search,
+    user,
+    profiles,
+    distPhases,
+    distKeyword,
+  ])
 
   const visibleProjects = filteredProjects.slice(0, visibleCount)
 
@@ -271,12 +337,59 @@ if (ownerFilter) {
           if (!pageData || pageData.length < PAGE_SIZE) break
         }
 
-        const { data: assignmentsData } = await supabase
-          .from('project_assignments')
-          .select('*')
-          .eq('team_id', memberRow.team_id)
+        /*
+         * Vastuutukset sivutettuna: ilman sivutusta PostgREST katkaisee 1000:een,
+         * jolloin tiimin kasvaessa yli 1000 vastuutuksen osa jäsenistä menetti
+         * omistamiaan hankkeita "Omat"-näkymästä (katkaisujärjestys on lisäksi
+         * määrittelemätön, joten juuri jaetut saattoivat pudota pois).
+         */
+        const assignmentsData: any[] = []
+        for (let from = 0; ; from += PAGE_SIZE) {
+          const { data: aPage, error: aErr } = await supabase
+            .from('project_assignments')
+            .select('*')
+            .eq('team_id', memberRow.team_id)
+            .range(from, from + PAGE_SIZE - 1)
+
+          if (aErr) break
+
+          assignmentsData.push(...((aPage as any[]) || []))
+
+          if (!aPage || aPage.length < PAGE_SIZE) break
+        }
+
+        /*
+         * Varmista, että kaikki vastuutetut hankkeet latautuvat, vaikka ne eivät
+         * kuuluisi jaettavaan pooliin (valmistunut / vanhentunut / eri alue).
+         * Muuten "Omat"- ja "Vastuutetut"-näkymistä katoaisi hankkeita heti kun
+         * ne valmistuvat tai siirtyvät alueen ulkopuolelle. Jaettava pooli
+         * ("Ei omistajaa") pysyy silti perussuodatettuna, koska nämä lisätyt
+         * hankkeet ovat aina jonkun omistuksessa.
+         */
+        const loadedIds = new Set(projectsData.map((p) => p.id))
+        const missingAssignedIds = [
+          ...new Set(
+            assignmentsData
+              .map((a) => a.project_id)
+              .filter((id) => id && !loadedIds.has(id))
+          ),
+        ]
+        for (let i = 0; i < missingAssignedIds.length; i += 100) {
+          const chunk = missingAssignedIds.slice(i, i + 100)
+          const { data: extra } = await supabase
+            .from('projects')
+            .select('*')
+            .in('id', chunk)
+          if (extra) projectsData.push(...(extra as any[]))
+        }
 
         setTeam(teamData)
+
+        // Osa 2: lataa esihenkilön jakosuodattimet (rajaa vain jaettavaa poolia).
+        const df = ((teamData as any).distribution_filters || {}) as DistributionFilters
+        setDistPhases(Array.isArray(df.phases) ? df.phases : [])
+        setDistKeyword(typeof df.keyword === 'string' ? df.keyword : '')
+
         const areas = teamData.areas || []
 
 if (areas.length === 0) {
@@ -301,6 +414,27 @@ if (areas.length === 0) {
     fetchData()
   }, [])
 
+/*
+ * Hae kaikki tiimin vastuutukset sivutettuna. Jaon jälkeisissä päivityksissä
+ * ilman sivutusta PostgREST katkaisi 1000:een, jolloin osa vastuutuksista
+ * katosi näkymästä heti jaon jälkeen.
+ */
+const refreshAssignments = async (teamId: string) => {
+  const PAGE = 1000
+  const out: any[] = []
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('project_assignments')
+      .select('*')
+      .eq('team_id', teamId)
+      .range(from, from + PAGE - 1)
+    if (error) return { data: null as any, error }
+    out.push(...((data as any[]) || []))
+    if (!data || data.length < PAGE) break
+  }
+  return { data: out, error: null as any }
+}
+
 const handleAutoAssignToTeam = async () => {
   if (!team || !user?.id) {
     setDebug('Tiimiä tai käyttäjää ei löytynyt.')
@@ -315,7 +449,7 @@ const handleAutoAssignToTeam = async () => {
   }
 
   const unassignedProjects = projectsWithOwners
-    .filter((p) => !p.owner_id)
+    .filter((p) => !p.owner_id && matchesDistribution(p))
     .slice(0, autoAssignCount)
 
   if (unassignedProjects.length === 0) {
@@ -343,10 +477,7 @@ const handleAutoAssignToTeam = async () => {
     return
   }
 
-  const { data, error: refreshError } = await supabase
-    .from('project_assignments')
-    .select('*')
-    .eq('team_id', team.id)
+  const { data, error: refreshError } = await refreshAssignments(team.id)
 
   if (refreshError) {
     setDebug(`Päivitys epäonnistui: ${refreshError.message}`)
@@ -365,7 +496,7 @@ const handleTakeNextTen = async () => {
   }
 
   const unassignedProjects = projectsWithOwners
-    .filter((p) => !p.owner_id)
+    .filter((p) => !p.owner_id && matchesDistribution(p))
     .slice(0, takeCount)
 
   if (unassignedProjects.length === 0) {
@@ -389,10 +520,7 @@ const handleTakeNextTen = async () => {
     return
   }
 
-  const { data, error: refreshError } = await supabase
-    .from('project_assignments')
-    .select('*')
-    .eq('team_id', team.id)
+  const { data, error: refreshError } = await refreshAssignments(team.id)
 
   if (refreshError) {
     setDebug(`Päivitys epäonnistui: ${refreshError.message}`)
@@ -437,10 +565,7 @@ const handleTakeNextTen = async () => {
     }
   }
 
-  const { data, error: refreshError } = await supabase
-    .from('project_assignments')
-    .select('*')
-    .eq('team_id', team.id)
+  const { data, error: refreshError } = await refreshAssignments(team.id)
 
   if (refreshError) {
     setDebug(`Päivitys epäonnistui: ${refreshError.message}`)
@@ -482,6 +607,38 @@ const handleSaveTeamAreas = async () => {
 
   setDebug('Tiimin alueet tallennettu.')
   window.location.reload()
+}
+
+/*
+ * Osa 2: tallenna esihenkilön jakosuodattimet. Rajaa vain jaettavaa poolia
+ * ("Ei omistajaa" + "Jaa tiimille" / "Ota itselle"); jo vastuutetut hankkeet
+ * pysyvät koskemattomina.
+ */
+const handleSaveDistributionFilters = async () => {
+  if (!team) return
+
+  setSavingDistFilters(true)
+  setDistFiltersMsg(null)
+
+  const filters: DistributionFilters = {
+    phases: distPhases,
+    keyword: distKeyword.trim(),
+  }
+
+  const { error } = await supabase
+    .from('teams')
+    .update({ distribution_filters: filters })
+    .eq('id', team.id)
+
+  setSavingDistFilters(false)
+
+  if (error) {
+    setDistFiltersMsg(`Suodattimien tallennus epäonnistui: ${error.message}`)
+    return
+  }
+
+  setTeam({ ...team, distribution_filters: filters })
+  setDistFiltersMsg('Jakosuodattimet tallennettu.')
 }
 
 const handleRemoveMember = async (userId: string) => {
@@ -977,6 +1134,126 @@ const ownerBadgeStyle = (ownerId: string | null): React.CSSProperties => {
 >
   Tallenna alueet
 </button>
+
+    <div
+      style={{
+        marginTop: 18,
+        paddingTop: 16,
+        borderTop: '1px solid #e5e7eb',
+      }}
+    >
+      <h3 style={{ margin: '0 0 4px' }}>Jaettavan joukon rajaus</h3>
+      <p style={{ margin: '0 0 12px', color: '#6b7280', fontSize: 13 }}>
+        Rajaa mitä hankkeita jaetaan tiimille. Vaikuttaa vain vapaaseen
+        pooliin ("Ei omistajaa") ja jakonappeihin — jo vastuutetut hankkeet
+        pysyvät koskemattomina.
+      </p>
+
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>
+          Vaiheet (tyhjä = kaikki)
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {availablePhases.map((phase) => {
+            const checked = distPhases.includes(phase)
+            return (
+              <label
+                key={phase}
+                style={{
+                  display: 'flex',
+                  gap: 6,
+                  alignItems: 'center',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 999,
+                  padding: '4px 10px',
+                  background: checked ? '#eef2ff' : '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setDistPhases((cur) => [...cur, phase])
+                    } else {
+                      setDistPhases((cur) => cur.filter((p) => p !== phase))
+                    }
+                  }}
+                />
+                {phase}
+              </label>
+            )
+          })}
+          {availablePhases.length === 0 && (
+            <span style={{ color: '#9ca3af', fontSize: 13 }}>
+              Ei ladattuja hankkeita.
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>
+          Avainsana (nimessä tai kuvauksessa)
+        </div>
+        <input
+          value={distKeyword}
+          onChange={(e) => setDistKeyword(e.target.value)}
+          placeholder="esim. koulu, sähkö, saneeraus..."
+          style={{
+            width: '100%',
+            maxWidth: 420,
+            padding: '10px 12px',
+            borderRadius: 10,
+            border: '1px solid #e5e7eb',
+          }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button
+          onClick={handleSaveDistributionFilters}
+          disabled={savingDistFilters}
+          style={{
+            border: '1px solid #111827',
+            background: '#111827',
+            color: '#ffffff',
+            borderRadius: 12,
+            padding: '10px 14px',
+            fontWeight: 800,
+            cursor: 'pointer',
+          }}
+        >
+          {savingDistFilters ? 'Tallennetaan...' : 'Tallenna jakosuodattimet'}
+        </button>
+
+        {hasDistFilter && (
+          <button
+            onClick={() => {
+              setDistPhases([])
+              setDistKeyword('')
+            }}
+            style={{
+              border: '1px solid #e5e7eb',
+              background: '#ffffff',
+              color: '#374151',
+              borderRadius: 12,
+              padding: '10px 14px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Tyhjennä
+          </button>
+        )}
+
+        {distFiltersMsg && (
+          <span style={{ color: '#6b7280', fontSize: 13 }}>{distFiltersMsg}</span>
+        )}
+      </div>
+    </div>
   </div>
 )}
 
@@ -1170,6 +1447,24 @@ const ownerBadgeStyle = (ownerId: string | null): React.CSSProperties => {
             }}
           />
         </div>
+
+{isLeader && hasDistFilter && (
+  <div
+    style={{
+      marginBottom: 12,
+      padding: '8px 12px',
+      borderRadius: 10,
+      background: '#eef2ff',
+      color: '#3730a3',
+      fontSize: 13,
+    }}
+  >
+    Jaettavaa joukkoa on rajattu
+    {distPhases.length > 0 && <> · vaiheet: {distPhases.join(', ')}</>}
+    {distKeyword.trim() && <> · avainsana: "{distKeyword.trim()}"</>}
+    {' '}({counts.unassigned} jaettavaa)
+  </div>
+)}
 
 {isLeader && counts.unassigned > 0 && (
   <div style={{ marginBottom: 14, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
