@@ -20,12 +20,6 @@ export default async function DiscoveryOperationsPage() {
   ])
 
   const enabledCount = sources.filter((s) => s.enabled).length
-  const warningCount = sources.filter(
-    (s) => s.last_error_message === null && s.error_count > 0
-  ).length
-  const errorCount = sources.filter(
-    (s) => s.last_error_message !== null
-  ).length
 
   const sourcesPerRun = DISCOVERY_CRON_CONFIG.maxSourceCount
 
@@ -161,20 +155,5 @@ export default async function DiscoveryOperationsPage() {
         </div>
       </div>
     </main>
-  )
-}
-
-function MetricCard({
-  title,
-  value,
-}: {
-  title: string
-  value: number
-}) {
-  return (
-    <div className="rounded-xl border bg-white p-5 shadow-sm">
-      <div className="text-sm text-gray-500">{title}</div>
-      <div className="mt-2 text-3xl font-bold">{value}</div>
-    </div>
   )
 }
