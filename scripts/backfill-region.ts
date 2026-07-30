@@ -62,6 +62,15 @@ const LLM_MODEL = process.argv
   ?.split("=")[1]
 
 /*
+ * Statusrajaus. Maakunnattomista potential_projects-riveistä valtaosa on
+ * hylättyjä (105/138 mittaushetkellä) - niitä kukaan ei katso, joten
+ * mallikutsut kannattaa rajata niihin joilla on merkitystä.
+ */
+const STATUS = process.argv
+  .find((a) => a.startsWith("--status="))
+  ?.split("=")[1]
+
+/*
  * Malliajo rinnakkain muutamalla pyynnöllä: 300 riviä peräkkäin kestäisi
  * turhaan minuutteja, mutta korkea rinnakkaisuus törmäisi rate limitteihin.
  */
@@ -165,11 +174,17 @@ async function backfillPotentialProjects() {
   const rows: Row[] = []
   const PAGE = 1000
 
+  if (STATUS) console.log(`rajaus: status = ${STATUS}`)
+
   for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabase
+    let query = supabase
       .from("potential_projects")
       .select("id, title, municipality, metadata")
       .is("metadata->>region", null)
+
+    if (STATUS) query = query.eq("status", STATUS)
+
+    const { data, error } = await query
       .order("id", { ascending: true })
       .range(from, from + PAGE - 1)
 

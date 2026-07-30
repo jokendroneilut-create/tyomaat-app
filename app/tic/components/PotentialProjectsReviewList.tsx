@@ -108,6 +108,10 @@ export default function PotentialProjectsReviewList({
 
   const totalPages = typeof totalCount === "number" ? Math.max(1, Math.ceil(totalCount / PAGE_SIZE)) : null
 
+  const missingRegionCount = projects.filter(
+    (project) => !(project.metadata ?? {}).region
+  ).length
+
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h2 className="text-xl font-semibold text-gray-900">
@@ -116,6 +120,13 @@ export default function PotentialProjectsReviewList({
           ? `(sivu ${page}${totalPages ? ` / ${totalPages}` : ""}, yhteensä ${totalCount})`
           : `(${projects.length})`}
       </h2>
+
+      {missingRegionCount > 0 && (
+        <p className="mt-1 text-sm text-amber-700">
+          {missingRegionCount} tällä sivulla ilman maakuntaa — täydennä se
+          hyväksynnän yhteydessä.
+        </p>
+      )}
 
       {error && (
         <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -147,11 +158,26 @@ export default function PotentialProjectsReviewList({
                     {metadata.operation ?? project.title}
                   </h3>
 
-                  <p className="mt-1 text-gray-600">
-                    {[project.address, project.municipality]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <p className="text-gray-600">
+                      {[project.address, project.municipality]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+
+                    {/*
+                      * Maakunta ohjaa sitä kenen syötteeseen hanke päätyy, ja
+                      * se jää tyhjäksi kun ilmoitus ei kerro sijaintia
+                      * rakenteisesti. Merkintä tekee näistä työlistan: ne
+                      * korjataan tarkistuksessa käsin, koska hyväksyjä näkee
+                      * alkuperäisen ilmoituksen eikä joudu arvaamaan.
+                      */}
+                    {!metadata.region && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                        Maakunta puuttuu
+                      </span>
+                    )}
+                  </div>
 
                   {isZoning ? (
                     <div className="mt-3 text-sm text-gray-700">
