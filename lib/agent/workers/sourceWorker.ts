@@ -91,6 +91,15 @@ result = await collectors[collectorName](source)
         last_success_at: new Date().toISOString(),
         run_count: Number(source.run_count ?? 0) + 1,
         success_count: Number(source.success_count ?? 0) + 1,
+        /*
+         * Onnistuminen tyhjentää virhetilan, jotta lähdelistan "Virheet"
+         * kertoo nykytilan (peräkkäiset epäonnistumiset) eikä koko elinkaaren
+         * historiaa - itsestään korjautunut lähde näytti muuten ikuisesti
+         * kymmeniä virheitä. Kumulatiivinen historia ei katoa: jokainen ajo
+         * tuloksineen jää discovery_runs-tauluun.
+         */
+        last_error_message: null,
+        error_count: 0,
         updated_at: new Date().toISOString(),
       })
       .eq("id", source.id)

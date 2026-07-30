@@ -122,12 +122,12 @@ export default function SourceMonitorTable({
           <tbody>
             {sortedSources.map((source) => {
               /*
-               * last_error_message ei koskaan tyhjene onnistuneen ajon
-               * jälkeen (ks. lib/agent/workers/sourceWorker.ts), joten
-               * pelkkä sen olemassaolo näyttäisi ikuisesti "Error"-tilaa
-               * yhdenkin kertaalleen sattuneen, jo itsestään korjautuneen
-               * virheen jälkeen. Verrataan sen sijaan ajankohtia — vain jos
-               * viimeisin virhe on tuoreempi kuin viimeisin onnistuminen.
+               * Tila päätellään ajankohdista, ei virhekenttien olemassaolosta:
+               * lähde on rikki vain jos viimeisin virhe on tuoreempi kuin
+               * viimeisin onnistuminen. last_error_at jää talteen senkin
+               * jälkeen kun onnistunut ajo on tyhjentänyt virheviestin ja
+               * -laskurin (ks. lib/agent/workers/sourceWorker.ts), joten
+               * vertailu toimii myös itsestään korjautuneilla lähteillä.
                */
               const isError = hasCurrentError(source)
               const gap = daysSince(source.last_run_at)
