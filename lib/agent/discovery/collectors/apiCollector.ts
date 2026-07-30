@@ -1,5 +1,6 @@
 import crypto from "crypto"
 import https from "https"
+import tls from "tls"
 import zlib from "zlib"
 import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
@@ -30507,12 +30508,15 @@ async function collectKemionsaariKaavaSource(source: DiscoverySource) {
 const MARTTILA_LISTING_URL = "https://marttila.fi/asuminen-ja-ymparisto/kaavoitus/"
 
 /*
- * marttila.fi on Sucuri CloudProxy -palomuurin takana, joka katkaisee
- * Vercelistä tulevan paljaan fetch-pyynnön (undici, ei User-Agentia) jo
- * TCP/TLS-tasolla - virhe on "fetch failed" nollassa sekunnissa, ei HTTP-
- * statusta, vaikka identtinen pyyntö onnistuu tavallisesta verkosta. Sama
- * ilmiö kuin Keravalla (ks. keravaHttpsGet), joten hoidetaan samoin: https-
- * moduuli selainmaisilla otsakkeilla ja uudelleenyrityksillä.
+ * marttila.fi (Sucuri CloudProxy) lähettää osasta reunapalvelimiaan
+ * vajaan varmenneketjun: pelkän palvelinvarmenteen ilman Let's Encryptin
+ * välivarmennetta. Suomalaisesta verkosta ketju tulee kokonaisena, mutta
+ * Vercelin reitiltä ei - siksi TLS-kättely kaatuu virheeseen "unable to
+ * verify the first certificate" (undicin läpi pelkkänä "fetch failed").
+ * Ratkaisu on sama kuin selaimilla: puuttuva välivarmenne haetaan
+ * varmenteen AIA-kentän osoitteesta ja annetaan luottamusankkuriksi
+ * juurivarmenteiden rinnalle - ketju siis edelleen varmennetaan, sitä ei
+ * ohiteta.
  */
 const MARTTILA_FETCH_HEADERS = {
   "User-Agent":
@@ -30534,11 +30538,69 @@ function marttilaDecodeBody(buffer: Buffer, encoding: string): string {
   return buffer.toString("utf8")
 }
 
-function marttilaHttpsGet(url: string): Promise<{ status: number; body: string }> {
+/*
+ * Haetaan palvelimen tarjoaman varmenteen AIA-kentästä ("CA Issuers")
+ * se välivarmenne, jonka palvelin jätti lähettämättä. Kättely tehdään
+ * tässä ilman varmennusta, koska juuri varmennus on se mikä ei onnistu -
+ * turvallisuus ei silti heikenny: haettu välivarmenne kelpaa vain jos se
+ * ketjuttuu järjestelmän juurivarmenteeseen, mikä tarkistetaan
+ * varsinaisessa pyynnössä normaalisti.
+ *
+ * Haetaan vain yksi taso, koska Marttilan ketjusta puuttuu täsmälleen yksi
+ * välivarmenne (Let's Encrypt R13 -> ISRG Root X1). Jos ketjusta puuttuisi
+ * useampi taso, pyyntö kaatuisi edelleen - silloin virhekoodi vaihtuu
+ * muotoon UNABLE_TO_GET_ISSUER_CERT ja kertoo sen.
+ */
+let marttilaIssuerPem: string | null = null
+
+async function fetchMarttilaIssuerCertificate(): Promise<string | null> {
+  if (marttilaIssuerPem) return marttilaIssuerPem
+
+  const host = new URL(MARTTILA_LISTING_URL).hostname
+
+  const issuerUrl = await new Promise<string | null>((resolve) => {
+    const socket = tls.connect(
+      { host, port: 443, servername: host, rejectUnauthorized: false, timeout: 10000 },
+      () => {
+        const uri =
+          socket.getPeerCertificate()?.infoAccess?.["CA Issuers - URI"]?.[0] ?? null
+        socket.end()
+        resolve(uri)
+      }
+    )
+    socket.on("timeout", () => {
+      socket.destroy()
+      resolve(null)
+    })
+    socket.on("error", () => resolve(null))
+  })
+
+  if (!issuerUrl) return null
+
+  const response = await fetch(issuerUrl, { cache: "no-store" })
+  if (!response.ok) return null
+
+  // AIA palauttaa varmenteen DER-muodossa, joka on käännettävä PEM:ksi
+  marttilaIssuerPem = new crypto.X509Certificate(
+    Buffer.from(await response.arrayBuffer())
+  ).toString()
+
+  return marttilaIssuerPem
+}
+
+function marttilaHttpsGet(
+  url: string,
+  extraCa: string | null
+): Promise<{ status: number; body: string }> {
   return new Promise((resolve, reject) => {
     const request = https.get(
       url,
-      { headers: MARTTILA_FETCH_HEADERS, timeout: 15000 },
+      {
+        headers: MARTTILA_FETCH_HEADERS,
+        timeout: 15000,
+        // ca korvaa oletusvarmenteet, joten juuret on lueteltava mukaan
+        ...(extraCa ? { ca: [...tls.rootCertificates, extraCa] } : {}),
+      },
       (res) => {
         const chunks: Buffer[] = []
         res.on("data", (chunk) => chunks.push(chunk))
@@ -30566,16 +30628,29 @@ function marttilaHttpsGet(url: string): Promise<{ status: number; body: string }
   })
 }
 
+const MARTTILA_MISSING_CHAIN_CODES = [
+  "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+  "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+]
+
 async function fetchMarttilaListing(attempts = 3): Promise<string> {
   let lastError: unknown = null
+  let extraCa: string | null = null
 
   for (let i = 0; i < attempts; i++) {
     try {
-      const { status, body } = await marttilaHttpsGet(MARTTILA_LISTING_URL)
+      const { status, body } = await marttilaHttpsGet(MARTTILA_LISTING_URL, extraCa)
       if (status === 200) return body
       lastError = new Error(`HTTP ${status}`)
-    } catch (error) {
+    } catch (error: any) {
       lastError = error
+
+      // vajaa varmenneketju: haetaan puuttuva välivarmenne ja yritetään
+      // uudelleen sen kanssa
+      if (!extraCa && MARTTILA_MISSING_CHAIN_CODES.includes(error?.code)) {
+        extraCa = await fetchMarttilaIssuerCertificate()
+        if (extraCa) continue
+      }
     }
     await new Promise((resolve) => setTimeout(resolve, 400 + i * 200))
   }
