@@ -24,6 +24,10 @@ export type DiscoveryHealth = {
     success: number
     error: number
   }
+  queue: {
+    pendingFacts: number
+    stuckJobs: number
+  }
   recentRuns: {
     id: string
     created_at: string
@@ -43,6 +47,14 @@ export async function getDiscoveryHealth(): Promise<DiscoveryHealth> {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  /*
+   * Työ katsotaan jumiin jääneeksi kun se on ollut "running"-tilassa yli
+   * tunnin: pdfWorker poimii vain "pending"-rivejä eikä mikään palauta
+   * running-riviä takaisin jonoon, joten kesken kuollut ajo jättää rivin
+   * ikuisesti roikkumaan. Tunti on reilusti yli normaalin keston (~1,5 s).
+   */
+  const stuckThreshold = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+
   const [
     sourcesResult,
     documentsResult,
@@ -54,6 +66,8 @@ export async function getDiscoveryHealth(): Promise<DiscoveryHealth> {
     runningJobsResult,
     successJobsResult,
     errorJobsResult,
+    pendingFactsResult,
+    stuckJobsResult,
     recentRunsResult,
   ] = await Promise.all([
     supabaseAdmin.from("discovery_sources").select("id, enabled"),
@@ -90,6 +104,15 @@ export async function getDiscoveryHealth(): Promise<DiscoveryHealth> {
       .from("agent_jobs")
       .select("id", { count: "exact", head: true })
       .eq("status", "error"),
+    supabaseAdmin
+      .from("source_documents")
+      .select("id", { count: "exact", head: true })
+      .is("facts_extracted_at", null),
+    supabaseAdmin
+      .from("agent_jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "running")
+      .lt("started_at", stuckThreshold),
     supabaseAdmin
       .from("agent_runs")
       .select(`
@@ -129,6 +152,10 @@ export async function getDiscoveryHealth(): Promise<DiscoveryHealth> {
       running: runningJobsResult.count ?? 0,
       success: successJobsResult.count ?? 0,
       error: errorJobsResult.count ?? 0,
+    },
+    queue: {
+      pendingFacts: pendingFactsResult.count ?? 0,
+      stuckJobs: stuckJobsResult.count ?? 0,
     },
     recentRuns: (recentRunsResult.data ?? []) as DiscoveryHealth["recentRuns"],
   }

@@ -47,11 +47,29 @@ export default async function DiscoveryHealthPage() {
           </div>
         </div>
 
+        {/*
+          * Aiemmin tässä näkyi agent_jobs-taulun "pending"-määrä, joka on
+          * käytännössä aina 0: sama putkiajo sekä luo PDF-työt (vaihe 2) että
+          * tyhjentää ne sekunteja myöhemmin (vaihe 3), joten jono on olemassa
+          * vain ajon sisällä. Faktapoiminnan jono sen sijaan säilyy ajojen
+          * välissä - se kasvaa jos putki ei pysy perässä ja purkautuu kun pysyy.
+          */}
         <div className="rounded-2xl border bg-white p-5 shadow-sm">
-          <div className="text-sm text-gray-500">Jobs</div>
-          <div className="mt-2 text-3xl font-bold">{health.jobs.pending}</div>
+          <div className="text-sm text-gray-500">Jonossa</div>
+          <div className="mt-2 text-3xl font-bold">
+            {health.queue.pendingFacts}
+          </div>
           <div className="mt-1 text-sm text-gray-600">
-            pending · {health.jobs.error} virhettä
+            odottaa faktapoimintaa
+          </div>
+          <div
+            className={`mt-1 text-sm ${
+              health.queue.stuckJobs > 0
+                ? "font-semibold text-red-600"
+                : "text-gray-600"
+            }`}
+          >
+            {health.queue.stuckJobs} jumissa · {health.jobs.error} virhettä
           </div>
         </div>
       </section>
@@ -79,6 +97,12 @@ export default async function DiscoveryHealthPage() {
 
       <section className="mt-8 rounded-2xl border bg-white p-5 shadow-sm">
         <h2 className="text-xl font-semibold">Queue status</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          PDF-latausjono (agent_jobs). Putkiajo luo ja tyhjentää jonon samassa
+          ajossa, joten Pending on lepotilassa 0 - Success on kertymä kaikilta
+          ajoilta. Running-luku, joka ei laske nollaan, tarkoittaa kesken
+          kuollutta ajoa: sitä ei yritetä automaattisesti uudelleen.
+        </p>
 
         <div className="mt-4 grid gap-4 md:grid-cols-4">
           <div>
