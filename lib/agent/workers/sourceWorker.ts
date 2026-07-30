@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { collectApiSource } from "@/lib/agent/discovery/collectors/apiCollector"
 import { collectHtmlSource } from "@/lib/agent/discovery/collectors/htmlCollector"
+import { collectLegacySource } from "@/lib/agent/discovery/collectors/legacyFetchCollector"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,6 +61,7 @@ export async function runSourceWorker(sourceId: string) {
     const collectors: Record<string, (source: any) => Promise<any>> = {
   htmlCollector: collectHtmlSource,
   apiCollector: collectApiSource,
+  legacyFetchCollector: collectLegacySource,
 }
 
 const collectorName = source.collector ?? (
