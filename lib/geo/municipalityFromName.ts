@@ -28,6 +28,7 @@ const POSTAL_PLACE_MUNICIPALITIES: Record<string, string> = {
   onttola: "Kontiolahti",
   immola: "Imatra",
   nauvo: "Parainen", // kuntaliitos 2009
+  kuusankoski: "Kouvola", // kuntaliitos 2009
 }
 
 /*
@@ -88,6 +89,17 @@ export function municipalityFromGenitive(
   )
 
   return matches.length === 1 ? matches[0] : null
+}
+
+/*
+ * Kuntakenttä sellaisena kuin se aineistossa esiintyy: perusmuoto, kylän tai
+ * lakanneen kunnan nimi, tai genetiivi ("Helsingin"). Kaupunki-sarakkeeseen
+ * on päätynyt kaikkia näitä, koska se on poimittu vapaasta tekstistä.
+ */
+export function getMunicipalityByAnyForm(
+  name: string | null | undefined
+): Municipality | null {
+  return getMunicipalityByPlaceName(name) ?? municipalityFromGenitive(name)
 }
 
 const BUYER_NAME_RE =

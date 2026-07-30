@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   getMunicipalityByPlaceName,
+  getMunicipalityByAnyForm,
   municipalityFromGenitive,
   municipalityFromBuyerName,
   isCityCorroboratedByText,
@@ -88,11 +89,25 @@ describe("getMunicipalityByPlaceName", () => {
     expect(getMunicipalityByPlaceName("Onttola")?.name).toBe("Kontiolahti")
     expect(getMunicipalityByPlaceName("Immola")?.name).toBe("Imatra")
     expect(getMunicipalityByPlaceName("Nauvo")?.name).toBe("Parainen")
+    expect(getMunicipalityByPlaceName("Kuusankoski")?.name).toBe("Kouvola")
   })
 
   it("ei tunnista tuntematonta paikkaa", () => {
     expect(getMunicipalityByPlaceName("Mordor")).toBeNull()
     expect(getMunicipalityByPlaceName(null)).toBeNull()
+  })
+})
+
+describe("getMunicipalityByAnyForm", () => {
+  it("hyväksyy perusmuodon, kylän ja genetiivin", () => {
+    expect(getMunicipalityByAnyForm("Helsinki")?.name).toBe("Helsinki")
+    expect(getMunicipalityByAnyForm("Kuusankoski")?.name).toBe("Kouvola")
+    expect(getMunicipalityByAnyForm("Helsingin")?.name).toBe("Helsinki")
+  })
+
+  it("ei arvaa tuntemattomasta", () => {
+    expect(getMunicipalityByAnyForm("Rakennuksen")).toBeNull()
+    expect(getMunicipalityByAnyForm(null)).toBeNull()
   })
 })
 
