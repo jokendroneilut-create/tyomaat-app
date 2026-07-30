@@ -1,7 +1,12 @@
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
-import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import {
+  getMunicipalityByPlaceName,
+  municipalityFromBuyerName,
+  isCityCorroboratedByText,
+  extractCityFromBuyerAddress,
+} from "@/lib/geo/municipalityFromName"
 import { extractWorksite } from "@/lib/agent/identity/extractWorksiteAddress"
 
 function findFact(
@@ -28,41 +33,6 @@ function normalize(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
-}
-
-/*
- * Hankintayksikön osoite on Suomessa aina muotoa "<katu> <postinumero>
- * <kaupunki> FIN" — kaupunki on nimessä perusmuodossa, joten se on
- * poimittavissa luotettavasti toisin kuin vapaan tekstin taivutusmuodot.
- */
-function extractCityFromBuyerAddress(
-  buyerAddress: string | null
-): string | null {
-  if (!buyerAddress) return null
-
-  const match = buyerAddress.match(
-    /\d{5}\s+([A-ZÅÄÖ][a-zåäöA-ZÅÄÖ\-]*(?:\s[A-ZÅÄÖ][a-zåäöA-ZÅÄÖ\-]*)*)\s+FIN\s*$/
-  )
-
-  return match?.[1]?.trim() ?? null
-}
-
-/*
- * Hankintayksikön osoite ei aina ole sama kuin työmaan sijainti — esim.
- * valtakunnalliset virastot voivat kilpailuttaa hankkeita missä päin
- * Suomea tahansa. Käytetään hankintayksikön kaupunkia vain kun
- * ilmoituksen oma teksti (kuvaus tai organisaation nimi) tukee samaa
- * kaupunkia, mikä pätee luotettavasti paikallisiin toimijoihin (kunnat,
- * seurakunnat, kuntayhtymät). Taivutusmuotojen takia (esim. "Orivesi" ->
- * "Oriveden") verrataan vain nimen alkuosaa, ei koko sanaa.
- */
-function isCityCorroboratedByText(
-  city: string,
-  ...texts: (string | null)[]
-): boolean {
-  const stem = city.toLowerCase().slice(0, Math.min(5, city.length))
-
-  return texts.some((text) => text && text.toLowerCase().includes(stem))
 }
 
 /*
@@ -176,8 +146,12 @@ export async function resolveHilmaProject({
     findFact(facts, "buyer_address")?.fact_value ??
     null
 
+  /*
+   * Osoitteen "kaupunki" on postitoimipaikka, ei aina kunta ("14200 Turenki"
+   * = Janakkala), joten haku tehdään postitoimipaikat tuntevalla haulla.
+   */
   const buyerCity = extractCityFromBuyerAddress(buyerAddress)
-  const buyerMunicipality = getMunicipalityByName(buyerCity)
+  const buyerMunicipality = getMunicipalityByPlaceName(buyerCity)
 
   /*
    * Mahdollinen oikea rakennuskohteen osoite voidaan
@@ -310,9 +284,18 @@ export async function resolveHilmaProject({
     if (!resolvedAddress && worksite.address) resolvedAddress = worksite.address
   }
 
-  const municipalityObj = municipality
-    ? getMunicipalityByName(municipality)
-    : null
+  /*
+   * Viimeinen keino: kunta tilaajan nimestä ("Janakkalan kunta" -> Janakkala).
+   * Vasta tässä vaiheessa, jotta ilmoituksen tekstistä löytyvä oikea työmaan
+   * kaupunki voittaa aina tilaajan kotikunnan. Osalla hankkeista työmaan
+   * osoitetta ei ole olemassakaan (päällysteurakka kattaa kunnan katuverkon),
+   * jolloin ilman tätä sijainti - ja siten maakunta - jää kokonaan tyhjäksi.
+   */
+  if (!municipality) {
+    municipality = municipalityFromBuyerName(developer)?.name ?? null
+  }
+
+  const municipalityObj = getMunicipalityByPlaceName(municipality)
 
   const result = await resolvePotentialProject({
     title: operation,
