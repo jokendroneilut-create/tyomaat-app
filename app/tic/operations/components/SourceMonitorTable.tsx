@@ -100,79 +100,86 @@ export default function SourceMonitorTable({
         <h2 className="text-xl font-semibold">Source Monitor</h2>
       </div>
 
-      <table className="min-w-full text-sm">
-        <thead className="bg-gray-50">
-          <tr className="text-left">
-            <SortHeader column="name" label="Lähde" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-            <SortHeader column="status" label="Tila" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-            <SortHeader column="collector" label="Collector" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-            <SortHeader column="parser" label="Parser" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-            <SortHeader column="last_run_at" label="Viime ajo" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-            <SortHeader column="run_count" label="Ajot" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-            <SortHeader column="error_count" label="Virheet" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-          </tr>
-        </thead>
+      {/*
+       * Ulompi laatikko on overflow-hidden pyöristettyjen kulmien takia,
+       * joten vaakavieritys tarvitsee oman kääreensä - muuten mobiilissa
+       * oikeanpuoleiset sarakkeet jäävät kokonaan näkymättömiin.
+       */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[820px] text-sm">
+          <thead className="bg-gray-50">
+            <tr className="text-left">
+              <SortHeader column="name" label="Lähde" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="status" label="Tila" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="collector" label="Collector" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="parser" label="Parser" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="last_run_at" label="Viime ajo" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="run_count" label="Ajot" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="error_count" label="Virheet" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+            </tr>
+          </thead>
 
-        <tbody>
-          {sortedSources.map((source) => {
-            /*
-             * last_error_message ei koskaan tyhjene onnistuneen ajon
-             * jälkeen (ks. lib/agent/workers/sourceWorker.ts), joten
-             * pelkkä sen olemassaolo näyttäisi ikuisesti "Error"-tilaa
-             * yhdenkin kertaalleen sattuneen, jo itsestään korjautuneen
-             * virheen jälkeen. Verrataan sen sijaan ajankohtia — vain jos
-             * viimeisin virhe on tuoreempi kuin viimeisin onnistuminen.
-             */
-            const isError = hasCurrentError(source)
-            const gap = daysSince(source.last_run_at)
-            const isStale =
-              !isError && source.enabled && gap !== null && gap > staleThresholdDays
+          <tbody>
+            {sortedSources.map((source) => {
+              /*
+               * last_error_message ei koskaan tyhjene onnistuneen ajon
+               * jälkeen (ks. lib/agent/workers/sourceWorker.ts), joten
+               * pelkkä sen olemassaolo näyttäisi ikuisesti "Error"-tilaa
+               * yhdenkin kertaalleen sattuneen, jo itsestään korjautuneen
+               * virheen jälkeen. Verrataan sen sijaan ajankohtia — vain jos
+               * viimeisin virhe on tuoreempi kuin viimeisin onnistuminen.
+               */
+              const isError = hasCurrentError(source)
+              const gap = daysSince(source.last_run_at)
+              const isStale =
+                !isError && source.enabled && gap !== null && gap > staleThresholdDays
 
-            return (
-              <tr key={source.id} className="border-t">
-                <td className="px-4 py-3">
-                  <div className="font-semibold">{source.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {source.category}
-                  </div>
-                </td>
+              return (
+                <tr key={source.id} className="border-t">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold">{source.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {source.category}
+                    </div>
+                  </td>
 
-                <td className="px-4 py-3">
-                  {isError ? (
-                    <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">
-                      Error
-                    </span>
-                  ) : isStale ? (
-                    <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-                      Myöhässä
-                    </span>
-                  ) : source.enabled ? (
-                    <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
-                      Healthy
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
-                      Disabled
-                    </span>
-                  )}
-                </td>
+                  <td className="px-4 py-3">
+                    {isError ? (
+                      <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">
+                        Error
+                      </span>
+                    ) : isStale ? (
+                      <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+                        Myöhässä
+                      </span>
+                    ) : source.enabled ? (
+                      <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
+                        Healthy
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
+                        Disabled
+                      </span>
+                    )}
+                  </td>
 
-                <td className="px-4 py-3">{source.collector}</td>
-                <td className="px-4 py-3">{source.parser}</td>
+                  <td className="px-4 py-3">{source.collector}</td>
+                  <td className="px-4 py-3">{source.parser}</td>
 
-                <td className="px-4 py-3">
-                  {source.last_run_at
-                    ? new Date(source.last_run_at).toLocaleString("fi-FI")
-                    : "-"}
-                </td>
+                  <td className="px-4 py-3">
+                    {source.last_run_at
+                      ? new Date(source.last_run_at).toLocaleString("fi-FI")
+                      : "-"}
+                  </td>
 
-                <td className="px-4 py-3">{source.run_count ?? 0}</td>
-                <td className="px-4 py-3">{source.error_count ?? 0}</td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+                  <td className="px-4 py-3">{source.run_count ?? 0}</td>
+                  <td className="px-4 py-3">{source.error_count ?? 0}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

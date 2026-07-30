@@ -79,45 +79,47 @@ export default async function DiscoveryOperationsPage() {
       </div>
 
       <div className="mt-10 overflow-hidden rounded-xl border bg-white shadow-sm">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-left">
-              <th className="px-4 py-3">Lähde</th>
-              <th className="px-4 py-3">Collector</th>
-              <th className="px-4 py-3">Parser</th>
-              <th className="px-4 py-3">Viime ajo</th>
-              <th className="px-4 py-3">Ajot</th>
-              <th className="px-4 py-3">Virheet</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {sources.map((source) => (
-              <tr key={source.id} className="border-t">
-                <td className="px-4 py-3">
-                  <div className="font-semibold">{source.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {source.category}
-                  </div>
-                </td>
-
-                <td className="px-4 py-3">{source.collector}</td>
-
-                <td className="px-4 py-3">{source.parser}</td>
-
-                <td className="px-4 py-3">
-                  {source.last_run_at
-                    ? new Date(source.last_run_at).toLocaleString("fi-FI")
-                    : "-"}
-                </td>
-
-                <td className="px-4 py-3">{source.run_count}</td>
-
-                <td className="px-4 py-3">{source.error_count}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="bg-gray-50">
+              <tr className="text-left">
+                <th className="px-4 py-3">Lähde</th>
+                <th className="px-4 py-3">Collector</th>
+                <th className="px-4 py-3">Parser</th>
+                <th className="px-4 py-3">Viime ajo</th>
+                <th className="px-4 py-3">Ajot</th>
+                <th className="px-4 py-3">Virheet</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {sources.map((source) => (
+                <tr key={source.id} className="border-t">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold">{source.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {source.category}
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3">{source.collector}</td>
+
+                  <td className="px-4 py-3">{source.parser}</td>
+
+                  <td className="px-4 py-3">
+                    {source.last_run_at
+                      ? new Date(source.last_run_at).toLocaleString("fi-FI")
+                      : "-"}
+                  </td>
+
+                  <td className="px-4 py-3">{source.run_count}</td>
+
+                  <td className="px-4 py-3">{source.error_count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="mt-10">
@@ -131,29 +133,31 @@ export default async function DiscoveryOperationsPage() {
         </p>
 
         <div className="mt-4 overflow-hidden rounded-xl border bg-white shadow-sm">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr className="text-left">
-                <th className="px-4 py-3">Lähde</th>
-                <th className="px-4 py-3">Viime havainto</th>
-                <th className="px-4 py-3">Tapahtumia (30 pv)</th>
-                <th className="px-4 py-3">Jonoon</th>
-                <th className="px-4 py-3">Ohitettu</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {legacySources.map((source) => (
-                <tr key={source.name} className="border-t">
-                  <td className="px-4 py-3 font-semibold">{source.name}</td>
-                  <td className="px-4 py-3">{formatDate(source.lastSeen)}</td>
-                  <td className="px-4 py-3">{source.eventsLast30Days}</td>
-                  <td className="px-4 py-3">{source.queuedForReview}</td>
-                  <td className="px-4 py-3">{source.skipped}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead className="bg-gray-50">
+                <tr className="text-left">
+                  <th className="px-4 py-3">Lähde</th>
+                  <th className="px-4 py-3">Viime havainto</th>
+                  <th className="px-4 py-3">Tapahtumia (30 pv)</th>
+                  <th className="px-4 py-3">Jonoon</th>
+                  <th className="px-4 py-3">Ohitettu</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {legacySources.map((source) => (
+                  <tr key={source.name} className="border-t">
+                    <td className="px-4 py-3 font-semibold">{source.name}</td>
+                    <td className="px-4 py-3">{formatDate(source.lastSeen)}</td>
+                    <td className="px-4 py-3">{source.eventsLast30Days}</td>
+                    <td className="px-4 py-3">{source.queuedForReview}</td>
+                    <td className="px-4 py-3">{source.skipped}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </main>
