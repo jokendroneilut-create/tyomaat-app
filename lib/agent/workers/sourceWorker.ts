@@ -7,6 +7,27 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+/*
+ * Node.js:n fetch kääntää kaikki verkkovirheet samaksi viestiksi "fetch
+ * failed" ja jättää oikean syyn (ECONNRESET, ETIMEDOUT, ENOTFOUND, EPROTO...)
+ * error.cause-kenttään. Ilman tätä lokista ei näe, onko kyse esimerkiksi
+ * palomuurin katkaisemasta yhteydestä vai nimipalveluvirheestä. Yhteysvirheet
+ * tulevat usein AggregateErrorina (yksi yritys per IP-osoite), jolloin koodi
+ * on vasta cause.errors-listan ensimmäisessä alkiossa.
+ */
+function describeError(error: any): string {
+  const message = String(error?.message ?? error)
+  const cause: any = error?.cause
+  if (!cause) return message
+
+  const detail =
+    cause.code ??
+    cause.errors?.find((e: any) => e?.code)?.code ??
+    cause.message
+
+  return detail ? `${message} (${detail})` : message
+}
+
 export async function runSourceWorker(sourceId: string) {
   const { data: source, error: sourceError } = await supabaseAdmin
     .from("discovery_sources")
@@ -81,11 +102,13 @@ result = await collectors[collectorName](source)
       result,
     }
   } catch (error: any) {
+    const errorMessage = describeError(error)
+
     await supabaseAdmin
       .from("discovery_runs")
       .update({
         status: "error",
-        error_message: error.message,
+        error_message: errorMessage,
         finished_at: new Date().toISOString(),
       })
       .eq("id", run.id)
@@ -95,7 +118,7 @@ result = await collectors[collectorName](source)
       .update({
         last_run_at: new Date().toISOString(),
         last_error_at: new Date().toISOString(),
-        last_error_message: error.message,
+        last_error_message: errorMessage,
         run_count: Number(source.run_count ?? 0) + 1,
         error_count: Number(source.error_count ?? 0) + 1,
         updated_at: new Date().toISOString(),
@@ -106,7 +129,7 @@ result = await collectors[collectorName](source)
       ok: false,
       sourceId: source.id,
       source: source.name,
-      error: error.message,
+      error: errorMessage,
     }
   }
 }

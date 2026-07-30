@@ -1,5 +1,6 @@
 import crypto from "crypto"
 import https from "https"
+import zlib from "zlib"
 import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
 import type { DiscoverySource } from "../registry/sources"
@@ -30505,6 +30506,83 @@ async function collectKemionsaariKaavaSource(source: DiscoverySource) {
 
 const MARTTILA_LISTING_URL = "https://marttila.fi/asuminen-ja-ymparisto/kaavoitus/"
 
+/*
+ * marttila.fi on Sucuri CloudProxy -palomuurin takana, joka katkaisee
+ * Vercelistä tulevan paljaan fetch-pyynnön (undici, ei User-Agentia) jo
+ * TCP/TLS-tasolla - virhe on "fetch failed" nollassa sekunnissa, ei HTTP-
+ * statusta, vaikka identtinen pyyntö onnistuu tavallisesta verkosta. Sama
+ * ilmiö kuin Keravalla (ks. keravaHttpsGet), joten hoidetaan samoin: https-
+ * moduuli selainmaisilla otsakkeilla ja uudelleenyrityksillä.
+ */
+const MARTTILA_FETCH_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+  "Accept-Language": "fi-FI,fi;q=0.9,en;q=0.8",
+  "Accept-Encoding": "gzip, deflate, br",
+}
+
+/*
+ * Toisin kuin fetch, https-moduuli ei pura pakattua vastausta - ja tämä
+ * palvelin lähettää brotlia myös "Accept-Encoding: identity" -pyyntöön,
+ * joten purku on tehtävä itse.
+ */
+function marttilaDecodeBody(buffer: Buffer, encoding: string): string {
+  if (encoding === "br") return zlib.brotliDecompressSync(buffer).toString("utf8")
+  if (encoding === "gzip") return zlib.gunzipSync(buffer).toString("utf8")
+  if (encoding === "deflate") return zlib.inflateSync(buffer).toString("utf8")
+  return buffer.toString("utf8")
+}
+
+function marttilaHttpsGet(url: string): Promise<{ status: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const request = https.get(
+      url,
+      { headers: MARTTILA_FETCH_HEADERS, timeout: 15000 },
+      (res) => {
+        const chunks: Buffer[] = []
+        res.on("data", (chunk) => chunks.push(chunk))
+        res.on("error", reject)
+        // puskurit ketjutetaan ja dekoodataan vasta lopuksi, jotta ääkkönen
+        // ei katkea kahden chunkin väliin
+        res.on("end", () => {
+          try {
+            const encoding = (res.headers["content-encoding"] ?? "").toString().toLowerCase()
+            resolve({
+              status: res.statusCode ?? 0,
+              body: marttilaDecodeBody(Buffer.concat(chunks), encoding),
+            })
+          } catch (error) {
+            reject(error)
+          }
+        })
+      }
+    )
+
+    request.on("timeout", () =>
+      request.destroy(new Error("Marttilan haku aikakatkaistiin (15 s)"))
+    )
+    request.on("error", reject)
+  })
+}
+
+async function fetchMarttilaListing(attempts = 3): Promise<string> {
+  let lastError: unknown = null
+
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const { status, body } = await marttilaHttpsGet(MARTTILA_LISTING_URL)
+      if (status === 200) return body
+      lastError = new Error(`HTTP ${status}`)
+    } catch (error) {
+      lastError = error
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400 + i * 200))
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Marttilan haku epäonnistui")
+}
+
 function marttilaPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
@@ -30533,10 +30611,9 @@ function marttilaPhaseFromText(text: string): string {
 }
 
 async function collectMarttilaKaavaSource(source: DiscoverySource) {
-  const response = await fetch(MARTTILA_LISTING_URL, { cache: "no-store" })
-  if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
-
-  const $ = cheerio.load(await response.text())
+  // epäonnistunut haku heitetään (ei hiljaista "0 dokumenttia" -paluuta),
+  // jotta esto näkyy Source Monitorissa virheenä eikä tyhjänä onnistumisena
+  const $ = cheerio.load(await fetchMarttilaListing())
 
   const pane = $("h3")
     .filter((_, el) => $(el).text().trim() === "Vireillä olevat kaavat Marttilan kunnassa")
