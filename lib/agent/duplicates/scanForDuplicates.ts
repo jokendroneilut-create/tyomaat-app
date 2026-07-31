@@ -55,7 +55,9 @@ function passesDuplicateQualityBar(match: ProjectMatchResult): boolean {
   if (hasStrongIdentifier) return true
 
   const hasTitleEvidence =
-    match.reasons.includes("exact_title") || match.reasons.includes("similar_title")
+    match.reasons.includes("exact_title") ||
+    match.reasons.includes("exact_distinctive_title") ||
+    match.reasons.includes("similar_title")
 
   return hasTitleEvidence && match.reasons.includes("same_city")
 }
