@@ -49,6 +49,7 @@ export type ProjectMatchReason =
   | "same_city"
   | "same_region"
   | "exact_title"
+  | "exact_distinctive_title"
   | "similar_title"
   | "similar_description"
   | "same_developer"
@@ -280,17 +281,44 @@ export function calculateMatch(
   const candidateTitles = [candidate.name, candidate.sourceTitle]
   const projectTitles = getProjectTitles(project)
 
+  /*
+   * Osuneen otsikon pituus talteen, koska pisteytys riippuu siitä onko
+   * otsikko erottuva (ks. alla).
+   */
+  let exactTitleLength = 0
+
   const hasExactTitle = candidateTitles.some((candidateTitle) => {
     const normalizedCandidate = norm(candidateTitle)
     if (!normalizedCandidate) return false
-    return projectTitles.some(
+
+    const hit = projectTitles.some(
       (projectTitle) => normalizedCandidate === norm(projectTitle)
     )
+
+    if (hit) exactTitleLength = Math.max(exactTitleLength, normalizedCandidate.length)
+
+    return hit
   })
 
   if (hasExactTitle) {
-    confidence += 55
-    reasons.push("exact_title")
+    /*
+     * Merkki merkiltä sama pitkä otsikko riittää yksin tunnistamaan hankkeen.
+     * Aiemmin exact_title antoi 55 pistettä, mikä jäi alle 70:n kynnyksen -
+     * eli kandidaatti jolla on VAIN otsikko ei voinut koskaan täsmätä, vaikka
+     * nimi olisi identtinen. Se on tavallista yritysten lehdistötiedotteissa,
+     * joissa kaupunkia tai rakennuttajaa ei ole eritelty, ja johti siihen että
+     * jo tunnetusta hankkeesta kertova uutinen päätyi uutena ehdokkaana jonoon.
+     *
+     * Pituusehto on tarpeen, koska aineistossa on geneerisiä otsikoita
+     * ("Mastojen rakentaminen", "Puitesopimushankinta sopimuskaudella
+     * 5/2026-5/2027") joissa identtinen nimi EI todista samaa hanketta.
+     * Lyhyet otsikot pitävät siis vanhan 55 pisteen painon ja tarvitsevat
+     * edelleen tuekseen kaupungin, osoitteen tai rakennuttajan.
+     */
+    const distinctive = exactTitleLength >= 25
+
+    confidence += distinctive ? 75 : 55
+    reasons.push(distinctive ? "exact_distinctive_title" : "exact_title")
   } else {
     let similarity = 0
     for (const candidateTitle of candidateTitles) {
@@ -405,6 +433,7 @@ export function calculateMatch(
 
   const hasTextEvidence =
     reasons.includes("exact_title") ||
+    reasons.includes("exact_distinctive_title") ||
     reasons.includes("similar_title") ||
     reasons.includes("similar_description")
 
@@ -424,7 +453,8 @@ export function calculateMatch(
   const onlyWeakText =
     (reasons.includes("similar_title") ||
       reasons.includes("similar_description")) &&
-    !reasons.includes("exact_title")
+    !reasons.includes("exact_title") &&
+    !reasons.includes("exact_distinctive_title")
 
   if (
     onlyWeakText &&
@@ -471,7 +501,35 @@ export function findProjectMatchDetailed(
       return b.reasons.length - a.reasons.length
     })
 
-  return matches[0] ?? null
+  const best = matches[0]
+  if (!best) return null
+
+  /*
+   * Pitkä identtinen otsikko riittää yksin osumaksi (exact_distinctive_title),
+   * mutta vain jos se osoittaa YHTEEN hankkeeseen. Aineistossa on eri
+   * hankkeita samalla nimellä - esimerkiksi useita rivejä nimellä
+   * "Rakentamista valmisteleva puiden kaato tontilta, ..." - ja niiden
+   * välillä otsikko ei kerro kummasta on kyse. Silloin on parempi jättää
+   * ehdokas ihmisen arvioitavaksi kuin päivittää umpimähkään toista.
+   *
+   * Koskee vain tätä yhtä perustetta: jos osumalla on muutakin todistetta
+   * (lupanumero, osoite, kaupunki), sitä ei tarvitse hylätä.
+   */
+  if (
+    best.reasons.length === 1 &&
+    best.reasons[0] === "exact_distinctive_title"
+  ) {
+    const equallyGood = matches.filter(
+      (match) =>
+        match.confidence === best.confidence &&
+        match.reasons.length === 1 &&
+        match.reasons[0] === "exact_distinctive_title"
+    )
+
+    if (equallyGood.length > 1) return null
+  }
+
+  return best
 }
 
 /*

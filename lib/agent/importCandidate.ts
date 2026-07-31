@@ -5,6 +5,10 @@ import {
   inferCompletionDateFromText,
   isPastDate,
 } from "@/lib/projects/inferCompletionDateFromText"
+import {
+  textIndicatesCompletion,
+  stripCompletionWords,
+} from "@/lib/projects/detectCompletionFromText"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import {
@@ -267,8 +271,28 @@ export async function importCandidate(
 
   const supabase = getSupabase()
 
+  /*
+   * Valmistumisesta kertova tiedote tunnistetaan tekstistä, koska yksikään
+   * yritysfetcher ei aseta completed-lippua itse. Lippu ohjaa alempana
+   * osuneen hankkeen tilan valmiiksi - samaa polkua kuin lähteen oma
+   * merkintä käyttäisi.
+   */
+  const completionFromText = textIndicatesCompletion(
+    body.name,
+    body.metadata?.description
+  )
+
+  const isCompleted = Boolean(body.completed) || completionFromText
+
+  /*
+   * Täsmäytys tehdään otsikolla josta valmistumissana on poistettu: se sana
+   * pudotti muuten identtisen otsikon osumasta pois, eli uutinen jo tunnetun
+   * hankkeen valmistumisesta ei löytänyt sitä hanketta.
+   */
+  const matchTitle = stripCompletionWords(body.name)
+
   const candidate = {
-    name: body.name || null,
+    name: matchTitle || body.name || null,
     city: body.city || null,
     region: body.region || null,
     location: body.location || null,
@@ -346,10 +370,15 @@ export async function importCandidate(
           body.metadata?.estimated_completion ||
           match.estimated_completion ||
           null,
-        needs_review: body.completed ? true : false,
+        /*
+         * needs_review nousee kun hanke merkitään valmiiksi, jotta ihminen
+         * vahvistaa päätelmän - erityisesti kun se tuli tekstistä eikä
+         * lähteen omasta tilamerkinnästä.
+         */
+        needs_review: isCompleted ? true : false,
         source_confidence: body.confidence ?? null,
-        status: body.completed ? "completed" : match.status ?? "active",
-        completed_at: body.completed
+        status: isCompleted ? "completed" : match.status ?? "active",
+        completed_at: isCompleted
           ? new Date().toISOString()
           : match.completed_at ?? null,
         metadata: {
@@ -472,9 +501,16 @@ export async function importCandidate(
   )
   const isStaleCompletion = isPastDate(inferredCompletionDate)
 
-  if (body.completed || isStaleCompletion) {
-    const reason =
-      isStaleCompletion && !body.completed
+  /*
+   * Tänne päädytään vain kun täsmäävää hanketta EI löytynyt. Valmistumisesta
+   * kertova uutinen tuntemattomasta hankkeesta ei ole mahdollisuus, joten
+   * sitä ei viedä jonoon - sama päätös kuin ennenkin, nyt myös silloin kun
+   * valmistuminen tunnistettiin sanamuodosta eikä lähteen lipusta.
+   */
+  if (isCompleted || isStaleCompletion) {
+    const reason = completionFromText && !body.completed
+      ? "text indicates project already completed"
+      : isStaleCompletion && !body.completed
         ? `estimated completion (${inferredCompletionDate}) already passed`
         : "completed project not inserted as new"
 
