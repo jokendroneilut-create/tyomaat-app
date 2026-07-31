@@ -127,6 +127,9 @@ export default async function CandidateDetailPage({ params }: Props) {
             address: candidate.location ?? "",
             developer: metadata.developer ?? "",
             builder: metadata.builder ?? metadata.winner_organisations?.[0] ?? "",
+            relatedCompanies: Array.isArray(metadata.related_companies)
+              ? metadata.related_companies.join(", ")
+              : "",
             buildingType: metadata.building_type ?? "",
             phaseHint: metadata.phase_hint ?? metadata.decision_status ?? "",
           }}

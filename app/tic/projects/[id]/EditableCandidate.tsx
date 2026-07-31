@@ -16,6 +16,7 @@ type Props = {
     address: string
     developer: string
     builder: string
+    relatedCompanies: string
     buildingType: string
     phaseHint: string
   }
@@ -33,6 +34,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
   const [address, setAddress] = useState(initial.address)
   const [developer, setDeveloper] = useState(initial.developer)
   const [builder, setBuilder] = useState(initial.builder)
+  const [relatedCompanies, setRelatedCompanies] = useState(initial.relatedCompanies)
   const [buildingType, setBuildingType] = useState(initial.buildingType)
   const [phaseHint, setPhaseHint] = useState(initial.phaseHint)
 
@@ -43,6 +45,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
     setAddress(initial.address)
     setDeveloper(initial.developer)
     setBuilder(initial.builder)
+    setRelatedCompanies(initial.relatedCompanies)
     setBuildingType(initial.buildingType)
     setPhaseHint(initial.phaseHint)
     setError(null)
@@ -65,6 +68,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
           address,
           developer,
           builder,
+          relatedCompanies,
           buildingType,
           phaseHint,
         }),
@@ -94,6 +98,9 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
           <p><strong>Sijainti / osoite:</strong> {address || "-"}</p>
           <p><strong>🏗️ Rakennuttaja:</strong> {developer || "-"}</p>
           <p><strong>👷 Pääurakoitsija:</strong> {builder || "-"}</p>
+          <p className="md:col-span-2">
+            <strong>🏢 Liittyvät yritykset:</strong> {relatedCompanies || "-"}
+          </p>
           <p><strong>🏢 Kohdetyyppi:</strong> {buildingType || "-"}</p>
           <p><strong>Vaihe:</strong> {phaseHint || "-"}</p>
         </div>
@@ -193,6 +200,23 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
             value={builder}
             onChange={(e) => setBuilder(e.target.value)}
             placeholder="esim. Lujatalo"
+          />
+        </label>
+
+        {/*
+          * Muut hankkeeseen liittyvät yritykset vapaana listana. Urakkalajeja
+          * on enemmän kuin sarakkeita, joten osaurakoitsijat (talotekniikka,
+          * purku, ...) kirjataan tänne eikä omiin kenttiinsä.
+          */}
+        <label className="text-sm md:col-span-2">
+          <span className="mb-1 block font-semibold text-gray-700">
+            🏢 Liittyvät yritykset
+          </span>
+          <input
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            value={relatedCompanies}
+            onChange={(e) => setRelatedCompanies(e.target.value)}
+            placeholder="Pilkulla eroteltuna, esim. Bravida (talotekniikka), Ramboll"
           />
         </label>
 

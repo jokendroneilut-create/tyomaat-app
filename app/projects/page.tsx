@@ -1305,6 +1305,22 @@ setTeamModeEnabled(true)
               </>
             ) : null}
 
+            {/*
+              * Hankkeeseen liittyvät yritykset joilla ei ole omaa saraketta -
+              * esimerkiksi talotekniikkaurakoitsija. Ilman tätä tieto olisi
+              * vain kirjoitettu kantaan eikä näkyisi missään.
+              */}
+            {Array.isArray(selected.metadata?.related_companies) &&
+            selected.metadata.related_companies.length > 0 ? (
+              <>
+                <hr className="projects-hr" />
+                <p style={{ marginBottom: 6 }}>
+                  <strong>Liittyvät yritykset:</strong>{' '}
+                  {(selected.metadata.related_companies as string[]).join(', ')}
+                </p>
+              </>
+            ) : null}
+
             {selected.additional_info ? (
               <>
                 <hr className="projects-hr" />

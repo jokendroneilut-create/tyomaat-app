@@ -72,6 +72,20 @@ export async function POST(request: Request) {
   const builder = cleanString(body.builder)
   const phaseHint = cleanString(body.phaseHint)
 
+  /*
+   * Hankkeeseen liittyvät yritykset vapaana listana, pilkulla eroteltuna.
+   *
+   * Urakkalajeja on enemmän kuin sarakkeita (pää-, maanrakennus-, talotekniikka-,
+   * purku-, ...), eikä jokaiselle kannata lisätä omaa saraketta - malli
+   * laajenisi nopeasti hallitsemattomaksi. Tämä pitää tiedon tallessa ilman
+   * skeemamuutosta: esimerkiksi talotekniikkaurakoitsija Bravida kuuluu tänne,
+   * ei builder-sarakkeeseen joka tarkoittaa pääurakoitsijaa.
+   */
+  const relatedCompanies = String(body.relatedCompanies ?? "")
+    .split(",")
+    .map((name: string) => name.trim())
+    .filter(Boolean)
+
   const existingMetadata = potentialProject.metadata ?? {}
 
   /*
@@ -101,6 +115,7 @@ export async function POST(request: Request) {
         building_type: buildingType,
         developer,
         builder,
+        related_companies: relatedCompanies,
         phase_hint: phaseHint,
         ...(sourceTitle ? { source_title: sourceTitle } : {}),
         manually_edited_at: new Date().toISOString(),

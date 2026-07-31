@@ -2326,10 +2326,26 @@ export async function POST(request: Request) {
       )
       if (existingProject.name !== projectName) alsoKnownAs.add(projectName)
 
+      /*
+       * Liittyvät yritykset yhdistetään, ei korvata: hankkeeseen kertyy tietoa
+       * monesta lähteestä (pääurakoitsija yhdestä uutisesta, talotekniikka-
+       * urakoitsija toisesta). Normalisoidaan vertailu pieniksi kirjaimiksi,
+       * jotta "Bravida" ja "bravida" eivät päädy listalle kahdesti.
+       */
+      const relatedCompanies = new Map<string, string>()
+      for (const name of [
+        ...((existingProject.metadata?.related_companies as string[]) ?? []),
+        ...((metadata.related_companies as string[]) ?? []),
+      ]) {
+        const trimmed = String(name ?? "").trim()
+        if (trimmed) relatedCompanies.set(trimmed.toLowerCase(), trimmed)
+      }
+
       const mergedMetadata = {
         ...metadata,
         ...(existingProject.metadata ?? {}),
         also_known_as: Array.from(alsoKnownAs),
+        related_companies: Array.from(relatedCompanies.values()),
         source_count: Number(existingProject.metadata?.source_count ?? 1) + 1,
         last_seen_at: new Date().toISOString(),
         last_source_name:
