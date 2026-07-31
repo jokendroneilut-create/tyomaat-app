@@ -104,6 +104,56 @@ export async function POST(request: Request) {
 
     const best = findProjectMatchDetailed(projects, normalized as any)
 
+    /*
+     * Vapaa haku ja kaupunkiperäinen varalista.
+     *
+     * calculateMatch hylkää tarkoituksella osuman jossa ainoa todiste on sama
+     * kaupunki - muuten kaikki saman kaupungin hankkeet yhdistyisivät
+     * toisiinsa. Se on oikein automaattiselle yhdistämiselle, mutta ehdotus-
+     * lista nojasi samaan funktioon, joten se ei näyttänyt mitään juuri
+     * silloin kun ihmistä eniten tarvitaan: uutisotsikko ei muistuta hankkeen
+     * nimeä eikä muita kenttiä ole täytetty.
+     *
+     * Mitattu tapaus: "Datakeskuksen Kouvolaan - tilaajalle jo neljäs kohde
+     * Suomessa" ja hanke "FIN04A Datakeskus" (Kouvola) ovat sama kohde, mutta
+     * yhteistä on vain kaupunki ja maakunta.
+     *
+     * Nämä eivät ole osumia vaan selattavaa: ihminen päättää.
+     */
+    const suggestedIds = new Set(scored.map((row) => row.project.id))
+    const query = String(body.query ?? "").trim().toLowerCase()
+
+    const browse = projects
+      .filter((project) => {
+        if (suggestedIds.has(project.id)) return false
+
+        if (query) {
+          return [project.name, project.city, project.developer, project.builder]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(query))
+        }
+
+        // Ilman hakusanaa tarjotaan saman kaupungin hankkeet.
+        const city = normalized.city
+        return (
+          !!city &&
+          String(project.city ?? "").toLowerCase() === String(city).toLowerCase()
+        )
+      })
+      .slice(0, 25)
+      .map((project) => ({
+        projectId: project.id,
+        name: project.name,
+        city: project.city,
+        region: project.region,
+        phase: project.phase,
+        status: project.status,
+        developer: project.developer,
+        builder: project.builder,
+        confidence: calculateMatch(project, normalized as any)?.confidence ?? null,
+        reasons: calculateMatch(project, normalized as any)?.reasons ?? [],
+      }))
+
     return NextResponse.json({
       ok: true,
       /*
@@ -113,6 +163,16 @@ export async function POST(request: Request) {
        */
       autoMergeThreshold: 70,
       bestConfidence: best?.confidence ?? null,
+      /*
+       * browse on selattava lista, ei osumia: joko hakusanan tulokset tai
+       * saman kaupungin hankkeet. Käyttöliittymä erottaa nämä ehdotuksista.
+       */
+      browse,
+      browseLabel: query
+        ? `Hakutulokset: "${query}"`
+        : normalized.city
+          ? `Muut hankkeet kaupungissa ${normalized.city}`
+          : null,
       suggestions: scored.map(({ project, match }) => ({
         projectId: project.id,
         name: project.name,
