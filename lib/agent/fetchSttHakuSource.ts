@@ -15,6 +15,72 @@ import { getMunicipalityByName } from "@/lib/geo/municipalities"
  * TIC:issä. Sama palautusmuoto kuin muut yrityslähteet (sources.ts).
  */
 
+/*
+ * Tiedotteen julkaisija EI ole rakennuttaja silloin kun julkaisija on lupa- tai
+ * valvontaviranomainen: se tiedottaa MUIDEN hankkeista. Esimerkiksi
+ * "Lupa- ja valvontavirasto" julkaisee YVA-kuulutuksia, jolloin rakennuttajaksi
+ * päätyi systemaattisesti virasto eikä hankkeen toteuttaja - mitattuna
+ * 9 ehdokasta.
+ *
+ * Lista on tarkoituksella kapea: viranomainen voi myös olla aito rakennuttaja
+ * (Väylävirasto, Senaatti-kiinteistöt, Puolustuskiinteistöt), joten tänne
+ * kuuluvat vain ne jotka käsittelevät lupia ja kuulutuksia.
+ */
+const AUTHORITY_PUBLISHERS = [
+  /lupa-\s*ja\s*valvontavirasto/i,
+  /aluehallintovirasto/i,
+  /\bavi\b/i,
+  /ely-keskus/i,
+  /elinkeino-,?\s*liikenne-\s*ja\s*ympäristökeskus/i,
+  /ympäristöministeriö/i,
+]
+
+/*
+ * Yritysnimi otsikosta tai kuvauksesta, kun julkaisija on viranomainen.
+ * Kuulutuksissa hankkeen toteuttaja mainitaan lähes aina heti alussa:
+ * "Bull Team Oy:n ja WeKas Oy:n laajennuksen YVA-menettely käynnistyy" tai
+ * "Bull Team Oy ja WeKas Oy on toimittanut ... virastolle".
+ *
+ * Poimitaan vain yhtiömuodon sisältävät nimet, jottei tartu satunnaisiin
+ * isoihin alkukirjaimiin. Useampi nimi yhdistetään, koska hankkeella voi olla
+ * monta toteuttajaa.
+ */
+const COMPANY_NAME =
+  /\b([A-ZÅÄÖ][\wåäöÅÄÖ&.\-]*(?:\s+[A-ZÅÄÖ][\wåäöÅÄÖ&.\-]*)*\s+(?:Oy|Oyj|Ab|Ky|Ltd))\b/g
+
+function extractCompaniesFromText(...texts: (string | null | undefined)[]): string | null {
+  const joined = texts.filter(Boolean).join(" ")
+  if (!joined) return null
+
+  const found = new Map<string, string>()
+
+  for (const match of joined.matchAll(COMPANY_NAME)) {
+    const name = match[1].replace(/:n$/i, "").trim()
+    if (name.length >= 4) found.set(name.toLowerCase(), name)
+  }
+
+  const names = Array.from(found.values()).slice(0, 3)
+  return names.length > 0 ? names.join(", ") : null
+}
+
+export function resolveDeveloper(
+  publisher: string | null,
+  title: string | null,
+  description: string | null
+): string | null {
+  if (!publisher) return extractCompaniesFromText(title, description)
+
+  const isAuthority = AUTHORITY_PUBLISHERS.some((pattern) => pattern.test(publisher))
+  if (!isAuthority) return publisher
+
+  /*
+   * Viranomaisjulkaisija hylätään aina. Jos toteuttajaa ei saada tekstistä,
+   * kenttä jää tyhjäksi - se on parempi kuin väärä rakennuttaja, jonka
+   * ihminen joutuu huomaamaan ja korjaamaan.
+   */
+  return extractCompaniesFromText(title, description)
+}
+
 const SEARCH_TERMS = [
   // Yleiset rakennushanke-termit
   "rakennushanke",
@@ -145,7 +211,7 @@ export async function fetchSttHakuSource() {
         city,
         region,
         location: null,
-        developer: release?.publisher?.name ?? null,
+        developer: resolveDeveloper(release?.publisher?.name ?? null, title, description),
         phase: completed ? "Valmistunut" : "Suunnittelussa",
         source_url: absoluteHref,
         confidence: 0.5,
