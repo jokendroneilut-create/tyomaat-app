@@ -75,6 +75,46 @@ export async function isSourceUrlSeenRecently(
   return Date.now() - new Date(lastSeenAt).getTime() < 24 * 60 * 60 * 1000
 }
 
+/*
+ * Sama tarkistus koko erälle yhdellä kyselyllä. Yksi lähde voi tuottaa
+ * satoja kandidaatteja (stt_haku 253), ja yksitellen kysyttynä pelkkä
+ * nähty-tarkistus oli satoja peräkkäisiä tietokantakierroksia.
+ *
+ * .in() pilkotaan sadan palasiin, koska pitkä IN-lista kasvattaa URL:n
+ * yli PostgRESTin rajan.
+ */
+export async function findRecentlySeenSourceUrls(
+  urls: (string | null | undefined)[]
+): Promise<Set<string>> {
+  const unique = [...new Set(urls.filter((u): u is string => !!u))]
+  const seen = new Set<string>()
+
+  if (unique.length === 0) return seen
+
+  const supabase = getSupabase()
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000
+
+  for (let i = 0; i < unique.length; i += 100) {
+    const chunk = unique.slice(i, i + 100)
+
+    const { data, error } = await supabase
+      .from("project_sources")
+      .select("source_url,last_seen_at")
+      .in("source_url", chunk)
+
+    if (error) throw error
+
+    for (const row of data ?? []) {
+      if (!row.last_seen_at) continue
+      if (new Date(row.last_seen_at).getTime() >= cutoff) {
+        seen.add(row.source_url)
+      }
+    }
+  }
+
+  return seen
+}
+
 export type ImportResult = {
   status: string
   reason?: string

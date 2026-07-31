@@ -1,7 +1,7 @@
 import { sources as legacySources } from "@/lib/agent/sources"
 import {
   importCandidate,
-  isSourceUrlSeenRecently,
+  findRecentlySeenSourceUrls,
   loadProjectsForMatching,
 } from "@/lib/agent/importCandidate"
 
@@ -37,6 +37,39 @@ function findLegacySource(key: string | null | undefined) {
   return legacySources.find((source) => source.name === key) ?? null
 }
 
+/*
+ * Kandidaatit käsitellään rinnakkain, koska kustannus on lähes kokonaan
+ * peräkkäisiä tietokantakierroksia: mittauksessa stt_haku vei 216 s
+ * ajobudjetista (500 s) 253 kandidaatilla, eli n. 0,85 s per kandidaatti
+ * lähes pelkkää odottamista. Haku itse kesti 36 s.
+ *
+ * Rinnakkaisuus on maltillinen tarkoituksella. Tuonti lukee ja kirjoittaa
+ * samoja tauluja, joten kaksi samaa hanketta koskevaa kandidaattia voi
+ * teoriassa luoda kaksi ehdokasriviä sen sijaan että jälkimmäinen
+ * täsmäisi ensimmäiseen. Se on hyväksytty riski: duplikaattien tunnistus
+ * on jo olemassa (scan-duplicates-cron ja TIC:n duplikaattinäkymä), ja
+ * vaihtoehto - ajon katkeaminen kesken - hukkaa koko lähteen tuotoksen.
+ */
+const CANDIDATE_CONCURRENCY = 6
+
+async function processWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  handler: (item: T) => Promise<void>
+): Promise<void> {
+  let next = 0
+
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (true) {
+        const index = next++
+        if (index >= items.length) return
+        await handler(items[index])
+      }
+    })
+  )
+}
+
 export async function collectLegacySource(source: any) {
   const legacy = findLegacySource(source.parser)
 
@@ -55,23 +88,27 @@ export async function collectLegacySource(source: any) {
    */
   const projects = candidates.length > 0 ? await loadProjectsForMatching() : []
 
+  /*
+   * Sama 24 tunnin ikkuna kuin vanhassa ajossa: jo nähtyä osoitetta ei
+   * tuoda uudelleen. Ilman tätä jokainen ajo kirjaisi saman tiedotteen
+   * uudelleen project_import_events-tauluun. Haetaan koko erälle kerralla.
+   */
+  const seenUrls = await findRecentlySeenSourceUrls(
+    candidates.map((candidate: any) => candidate?.source_url)
+  )
+
   let saved = 0
   let skipped = 0
 
-  for (const candidate of candidates) {
+  await processWithConcurrency(candidates, CANDIDATE_CONCURRENCY, async (candidate: any) => {
     if (!candidate?.source_url) {
       skipped++
-      continue
+      return
     }
 
-    /*
-     * Sama 24 tunnin ikkuna kuin vanhassa ajossa: jo nähtyä osoitetta ei
-     * tuoda uudelleen. Ilman tätä jokainen ajo kirjaisi saman tiedotteen
-     * uudelleen project_import_events-tauluun.
-     */
-    if (await isSourceUrlSeenRecently(candidate.source_url)) {
+    if (seenUrls.has(candidate.source_url)) {
       skipped++
-      continue
+      return
     }
 
     try {
@@ -105,7 +142,7 @@ export async function collectLegacySource(source: any) {
       )
       skipped++
     }
-  }
+  })
 
   return {
     documentsFound: candidates.length,
