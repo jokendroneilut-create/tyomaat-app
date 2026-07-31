@@ -62,11 +62,12 @@ export async function POST(request: Request) {
   const buildingType = cleanString(body.buildingType)
   const developer = cleanString(body.developer)
   /*
-   * Urakoitsija. Iso osa yritysten tiedotteista kertoo nimenomaan urakan
-   * voittamisesta ("Bravida nappasi 200 miljoonan datakeskusurakan"), mutta
-   * kenttää ei ollut lomakkeessa, joten tieto ei päätynyt mihinkään.
-   * Hyväksyntä lukee tämän metadata.builder-kentästä ja kirjoittaa sen
-   * hankkeen builder-sarakkeeseen.
+   * PÄÄurakoitsija. Hyväksyntä lukee tämän metadata.builder-kentästä ja
+   * kirjoittaa hankkeen builder-sarakkeeseen.
+   *
+   * Osaurakoitsijat eivät kuulu tähän. Talotekniikka (LVIS) on oma urakkansa
+   * eikä sille ole saraketta - mallissa LVIS esiintyy vain suunnitteluna
+   * (hvac_design, electrical_design), ei urakointina.
    */
   const builder = cleanString(body.builder)
   const phaseHint = cleanString(body.phaseHint)

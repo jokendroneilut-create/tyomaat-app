@@ -93,7 +93,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
           <p><strong>Kaupunki:</strong> {city || "-"}</p>
           <p><strong>Sijainti / osoite:</strong> {address || "-"}</p>
           <p><strong>🏗️ Rakennuttaja:</strong> {developer || "-"}</p>
-          <p><strong>👷 Urakoitsija:</strong> {builder || "-"}</p>
+          <p><strong>👷 Pääurakoitsija:</strong> {builder || "-"}</p>
           <p><strong>🏢 Kohdetyyppi:</strong> {buildingType || "-"}</p>
           <p><strong>Vaihe:</strong> {phaseHint || "-"}</p>
         </div>
@@ -181,16 +181,18 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
         </label>
 
         {/*
-          * Urakoitsija: iso osa tiedotteista kertoo juuri urakan voittamisesta,
-          * ja hyväksyntä kirjoittaa tämän hankkeen builder-sarakkeeseen.
+          * builder tarkoittaa PÄÄurakoitsijaa, ja kenttä on nimettävä sen
+          * mukaan. Pelkkä "Urakoitsija" houkuttelee kirjaamaan tähän myös
+          * osaurakoitsijat - esimerkiksi talotekniikkaurakoitsijan (LVIS),
+          * joka ei ole sama asia. Sellaiselle ei ole vielä omaa kenttää.
           */}
         <label className="text-sm">
-          <span className="mb-1 block font-semibold text-gray-700">👷 Urakoitsija</span>
+          <span className="mb-1 block font-semibold text-gray-700">👷 Pääurakoitsija</span>
           <input
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             value={builder}
             onChange={(e) => setBuilder(e.target.value)}
-            placeholder="esim. Bravida"
+            placeholder="esim. Lujatalo"
           />
         </label>
 
