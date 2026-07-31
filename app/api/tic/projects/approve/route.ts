@@ -2231,16 +2231,32 @@ export async function POST(request: Request) {
     let fuzzyDetailed: ReturnType<typeof findProjectMatchDetailed> = null
 
     if (!exactMatchedProjectId) {
-      const { data: existingProjects, error: existingProjectsError } =
-        await supabaseAdmin
+      /*
+       * Sivutus on pakollinen: PostgREST palauttaa enintään 1000 riviä myös
+       * ilman .limit()-kutsua. Ilman tätä hyväksyntä täsmäsi vain neljäsosaan
+       * hankekannasta (1000/4099 mitattuna), jolloin jo olemassa oleva hanke
+       * jäi löytymättä ja hyväksyntä loi duplikaatin.
+       */
+      const existingProjects: any[] = []
+      const PAGE = 1000
+
+      for (let from = 0; ; from += PAGE) {
+        const { data, error: existingProjectsError } = await supabaseAdmin
           .from("projects")
           .select(
             "id,name,city,region,location,phase,completed_at,status,developer,property_type,metadata"
           )
+          .order("id", { ascending: true })
+          .range(from, from + PAGE - 1)
 
-      if (existingProjectsError) throw existingProjectsError
+        if (existingProjectsError) throw existingProjectsError
+        if (!data?.length) break
 
-      fuzzyDetailed = findProjectMatchDetailed(existingProjects ?? [], {
+        existingProjects.push(...data)
+        if (data.length < PAGE) break
+      }
+
+      fuzzyDetailed = findProjectMatchDetailed(existingProjects, {
         name: projectName,
         sourceTitle: (metadata.source_title as string | null) ?? null,
         city,

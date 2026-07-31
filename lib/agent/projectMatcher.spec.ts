@@ -30,6 +30,93 @@ const project = (id: string, name: string, extra: Record<string, any> = {}) => (
   ...extra,
 })
 
+describe("findProjectMatchDetailed — sijainnin tarkkuus", () => {
+  /*
+   * Käsin täydennetty oikea tieto ei saa huonontaa tulosta. Kun osoitteeksi
+   * merkitään pelkkä kunnan nimi, se ei ole todiste samasta kohteesta -
+   * muuten kaksi saman kaupungin eri hanketta yhdistyisivät.
+   */
+  it("ei yhdistä eri hankkeita pelkän kaupunginnimen perusteella", () => {
+    const projects = [
+      project("a", "Kaksi asuinkerrostaloa Pukimon kortteliin Kouvolassa", {
+        city: "Kouvola",
+        region: "Kymenlaakso",
+        location: "Kouvola",
+      }),
+    ]
+
+    const match = findProjectMatchDetailed(projects as any, {
+      ...BLANK,
+      name: "Bravida nappasi 200 miljoonan datakeskusurakan",
+      city: "Kouvola",
+      region: "Kymenlaakso",
+      location: "Kouvola",
+    } as any)
+
+    expect(match?.reasons ?? []).not.toContain("same_location")
+    expect(match?.confidence ?? 0).toBeLessThan(70)
+  })
+
+  /*
+   * Käsin täydennetyn tiedon pitää auttaa: sama rakennuttaja samassa
+   * kaupungissa nostaa hankkeen esiin mahdollisena duplikaattina, vaikka
+   * uutisotsikko ei muistuta hankkeen nimeä.
+   */
+  it("tunnistaa mahdollisen duplikaatin rakennuttajasta ja kaupungista", () => {
+    const projects = [
+      project("a", "FIN04A Datakeskus", {
+        city: "Kouvola",
+        region: "Kymenlaakso",
+        developer: "Atnorth",
+      }),
+    ]
+
+    const match = findProjectMatchDetailed(projects as any, {
+      ...BLANK,
+      name: "Bravida nappasi 200 miljoonan datakeskusurakan",
+      city: "Kouvola",
+      region: "Kymenlaakso",
+      developer: "AtNorth",
+    } as any)
+
+    expect(match?.project.id).toBe("a")
+    expect(match?.reasons).toContain("same_developer")
+    // Riittää mahdolliseksi duplikaatiksi (>= 40) muttei yhdistämiseen (>= 70)
+    expect(match!.confidence).toBeGreaterThanOrEqual(40)
+    expect(match!.confidence).toBeLessThan(70)
+  })
+
+  it("ei nosta pelkän rakennuttajan perusteella eri kaupungissa", () => {
+    const projects = [
+      project("a", "Aivan muu hanke", { city: "Oulu", developer: "Atnorth" }),
+    ]
+
+    const match = findProjectMatchDetailed(projects as any, {
+      ...BLANK,
+      name: "Bravida nappasi 200 miljoonan datakeskusurakan",
+      city: "Kouvola",
+      developer: "AtNorth",
+    } as any)
+
+    expect(match).toBeNull()
+  })
+
+  it("yhdistää edelleen kun osoite on katutarkkuudella sama", () => {
+    const projects = [
+      project("a", "Kohde A", { city: "Kouvola", location: "Kauppakatu 12, Kouvola" }),
+    ]
+
+    const match = findProjectMatchDetailed(projects as any, {
+      ...BLANK,
+      name: "Kohde B",
+      city: "Kouvola",
+      location: "Kauppakatu 12, Kouvola",
+    } as any)
+
+    expect(match?.reasons).toContain("same_location")
+  })
+})
+
 describe("findProjectMatchDetailed — erottuva otsikko", () => {
   /*
    * Kandidaatilla on usein vain otsikko (yritysten lehdistötiedotteet).

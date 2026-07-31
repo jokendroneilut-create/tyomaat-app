@@ -2,6 +2,7 @@ import {
   normalizeAddress as norm,
   normalizeIdentifierValue as normalizeIdentifier,
 } from "@/lib/projects/identity"
+import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
 
 export type NormalizedProjectCandidate = {
   name?: string | null
@@ -40,6 +41,30 @@ export type MatchableProject = {
     building_type?: string | null
     [key: string]: unknown
   } | null
+}
+
+/*
+ * Onko sijainti katuosoitteen tarkkuudella vai pelkkä paikkakunta?
+ *
+ * Katuosoitteessa on lähes aina talonumero, joten numero riittää yksin
+ * osoittamaan tarkkuuden. Ilman numeroa kelpuutetaan vain sellainen teksti
+ * joka ei ole pelkkä kunnan nimi eikä sama kuin hankkeen oma kaupunki -
+ * esimerkiksi kaupunginosa tai kohteen nimi käy, "Kouvola" ei.
+ */
+export function isSpecificLocation(
+  location: string | null | undefined,
+  city: string | null | undefined
+): boolean {
+  const normalized = norm(location)
+  if (!normalized) return false
+
+  if (/\d/.test(normalized)) return true
+
+  if (city && normalized === norm(city)) return false
+
+  if (getMunicipalityByAnyForm(location)) return false
+
+  return true
 }
 
 export type ProjectMatchReason =
@@ -343,10 +368,31 @@ export function calculateMatch(
   const candidateLocation = norm(candidate.location)
   const projectLocation = norm(project.location)
 
+  /*
+   * same_location on tarkoitettu todisteeksi SAMASTA KATUOSOITTEESTA, ja
+   * +45 pistettä riittää lähes yksin osumaan. Osoitekenttään päätyy kuitenkin
+   * usein pelkkä kunnan nimi - joko lähteestä tai käsin täydennettäessä - ja
+   * silloin kaksi saman kaupungin täysin eri hanketta näyttivät osuvan
+   * toisiinsa.
+   *
+   * Mitattu tapaus: datakeskusuutinen jonka osoitteeksi oli merkitty
+   * "Kouvola" sai 73 pistettä asuinkerrostalohankkeesta samassa kaupungissa
+   * (same_location + same_city + same_region), eli olisi yhdistynyt siihen.
+   * Käsin lisätty OIKEA tieto siis huononsi tulosta - juuri päinvastoin kuin
+   * pitäisi.
+   *
+   * Kaupunkitason sijainti ei siksi kelpaa vahvaksi todisteeksi. same_city
+   * kattaa sen jo omalla painollaan, joten pisteitä ei anneta kahdesti.
+   */
+  const bothLocationsSpecific =
+    isSpecificLocation(candidate.location, candidate.city) &&
+    isSpecificLocation(project.location, project.city)
+
   if (
     candidateLocation &&
     projectLocation &&
-    candidateLocation === projectLocation
+    candidateLocation === projectLocation &&
+    bothLocationsSpecific
   ) {
     confidence += 45
     reasons.push("same_location")
@@ -437,10 +483,29 @@ export function calculateMatch(
     reasons.includes("similar_title") ||
     reasons.includes("similar_description")
 
+  /*
+   * Sama rakennuttaja samassa kaupungissa on todiste vaikka nimet eivät
+   * muistuttaisi toisiaan: uutisotsikko ("Bravida nappasi 200 miljoonan
+   * datakeskusurakan") ei koskaan muistuta hankkeen nimeä ("FIN04A
+   * Datakeskus"), mutta AtNorth + Kouvola kertoo silti että kyse voi olla
+   * samasta kohteesta.
+   *
+   * Pisteitä tämä ei lisää - yhdistelmä jää 48:aan eli selvästi alle 70:n
+   * kynnyksen, joten automaattista yhdistämistä ei tapahdu. Se riittää
+   * kuitenkin nostamaan osuman esiin mahdollisena duplikaattina (>= 40),
+   * jolloin ihminen näkee sen hyväksynnän yhteydessä. Ilman tätä käsin
+   * täydennetty oikea tieto ei tuottanut mitään.
+   *
+   * Pelkkä sama rakennuttaja ei riitä: iso urakoitsija rakentaa ympäri maata.
+   */
+  const hasDeveloperAndCity =
+    reasons.includes("same_developer") && reasons.includes("same_city")
+
   if (
     !hasStrongIdentifier &&
     !hasStrongLocation &&
-    !hasTextEvidence
+    !hasTextEvidence &&
+    !hasDeveloperAndCity
   ) {
     return null
   }
