@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import MapClient from './MapClient'
 import type { MapBounds } from './Map'
@@ -171,7 +171,15 @@ export default function Projects() {
   const [q, setQ] = useState('')
   const [region, setRegion] = useState<string>('')
   const [city, setCity] = useState<string>('')
-  const [phase, setPhase] = useState<string>('')
+  /*
+   * Vaihesuodatin on monivalinta: käyttäjä haluaa nähdä esimerkiksi
+   * rakenteilla olevat JA valmistumassa olevat samassa näkymässä ilman
+   * jo valmistuneita. Yksittäisvalinnalla vaihtoehtoja oli vain "kaikki"
+   * tai yksi kerrallaan. Tyhjä lista = ei rajausta.
+   */
+  const [phase, setPhase] = useState<string[]>([])
+  const [phaseOpen, setPhaseOpen] = useState(false)
+  const phaseRef = useRef<HTMLDivElement | null>(null)
   const [propertyType, setPropertyType] = useState<string>('')
 
   const [visibleCount, setVisibleCount] = useState(pageSize)
@@ -319,7 +327,12 @@ export default function Projects() {
     setWatchSuccess(null)
     setWatchFrequency('weekly')
 
-    const parts = [region || null, city || null, phase || null, propertyType || null].filter(Boolean) as string[]
+    const parts = [
+      region || null,
+      city || null,
+      phase.length > 0 ? phase.join(', ') : null,
+      propertyType || null,
+    ].filter(Boolean) as string[]
     const suggested = parts.length ? parts.join(' – ') : 'Hakuvahti'
     setWatchName(suggested)
 
@@ -356,7 +369,11 @@ export default function Projects() {
         q: q.trim() || null,
         region: region || null,
         city: city || null,
-        phase: phase || null,
+        /*
+         * Hakuvahdille lista. /api/digests osaa lukea sekä yksittäisen
+         * merkkijonon (vanhat tallennetut haut) että listan.
+         */
+        phase: phase.length > 0 ? phase : null,
         property_type: propertyType || null,
       }
 
@@ -573,7 +590,7 @@ setTeamModeEnabled(true)
     return projects.filter((p) => {
       if (region && (p.region || '') !== region) return false
       if (city && p.city !== city) return false
-      if (phase && displayPhaseLabel(p.phase) !== phase) return false
+      if (phase.length > 0 && !phase.includes(displayPhaseLabel(p.phase))) return false
 
       if (propertyType && !(p.property_type || '').toLowerCase().includes(propertyType.toLowerCase())) return false
 
@@ -637,9 +654,33 @@ setTeamModeEnabled(true)
     setQ('')
     setRegion('')
     setCity('')
-    setPhase('')
+    setPhase([])
     setPropertyType('')
   }
+
+  /*
+   * Paneeli sulkeutuu kun klikataan sen ulkopuolelle. Ilman tätä avattu
+   * valikko jäisi auki ja peittäisi kartan.
+   */
+  useEffect(() => {
+    if (!phaseOpen) return
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!phaseRef.current?.contains(event.target as Node)) setPhaseOpen(false)
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPhaseOpen(false)
+    }
+
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [phaseOpen])
 
   useEffect(() => {
     if (!city) return
@@ -732,16 +773,54 @@ setTeamModeEnabled(true)
             </select>
           </div>
 
-          <div>
+          <div className="projects-multiselect" ref={phaseRef}>
             <label className="projects-label">Vaihe</label>
-            <select className="projects-select" value={phase} onChange={(e) => setPhase(e.target.value)}>
-              <option value="">Kaikki</option>
-              {phases.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+
+            <button
+              type="button"
+              className="projects-multiselect-toggle"
+              onClick={() => setPhaseOpen((open) => !open)}
+              aria-expanded={phaseOpen}
+            >
+              <span>
+                {phase.length === 0
+                  ? 'Kaikki'
+                  : phase.length === 1
+                    ? phase[0]
+                    : `${phase.length} valittu`}
+              </span>
+              <span aria-hidden>▾</span>
+            </button>
+
+            {phaseOpen && (
+              <div className="projects-multiselect-panel">
+                <div className="projects-multiselect-actions">
+                  <button type="button" onClick={() => setPhase([...phases])}>
+                    Valitse kaikki
+                  </button>
+                  <button type="button" onClick={() => setPhase([])}>
+                    Tyhjennä
+                  </button>
+                </div>
+
+                {phases.map((p) => (
+                  <label key={p} className="projects-multiselect-option">
+                    <input
+                      type="checkbox"
+                      checked={phase.includes(p)}
+                      onChange={(e) =>
+                        setPhase((current) =>
+                          e.target.checked
+                            ? [...current, p]
+                            : current.filter((value) => value !== p)
+                        )
+                      }
+                    />
+                    {p}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

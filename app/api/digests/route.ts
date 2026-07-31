@@ -75,7 +75,11 @@ function summarizeFilters(filters: any): string {
   if (filters.q) parts.push(`Haku: ${filters.q}`);
   if (filters.region) parts.push(`Maakunta: ${filters.region}`);
   if (filters.city) parts.push(`Kaupunki: ${filters.city}`);
-  if (filters.phase) parts.push(`Vaihe: ${filters.phase}`);
+  if (Array.isArray(filters.phase)) {
+    if (filters.phase.length > 0) parts.push(`Vaihe: ${filters.phase.join(", ")}`);
+  } else if (filters.phase) {
+    parts.push(`Vaihe: ${filters.phase}`);
+  }
   if (filters.property_type) parts.push(`Kohdetyyppi: ${filters.property_type}`);
 
   return parts.length ? parts.join(" • ") : "Ei suodattimia";
@@ -90,12 +94,26 @@ function isDue(freq: "daily" | "weekly", lastSentAt: string | null) {
   return now - last >= delta;
 }
 
+/*
+ * Vaihe voi olla yksittäinen merkkijono (ennen monivalintaa tallennetut
+ * hakuvahdit) tai lista. Vanhat rivit jäävät kantaan sellaisenaan, joten
+ * molemmat muodot on osattava lukea.
+ */
+function applyPhaseFilter(q: any, phase: unknown) {
+  if (Array.isArray(phase)) {
+    const values = phase.filter((value) => typeof value === "string" && value)
+    return values.length > 0 ? q.in("phase", values) : q
+  }
+
+  return phase ? q.eq("phase", phase) : q
+}
+
 function applyProjectFilters(q: any, filters: any) {
   if (!filters || typeof filters !== "object") return q;
 
   if (filters.region) q = q.eq("region", filters.region);
   if (filters.city) q = q.eq("city", filters.city);
-  if (filters.phase) q = q.eq("phase", filters.phase);
+  q = applyPhaseFilter(q, filters.phase);
   if (filters.property_type) q = q.eq("property_type", filters.property_type);
 
   if (filters.q && typeof filters.q === "string" && filters.q.trim()) {
@@ -113,7 +131,14 @@ function applyProjectChangeFilters(q: any, filters: any) {
 
   if (filters.region) q = q.eq("after->>region", filters.region);
   if (filters.city) q = q.eq("after->>city", filters.city);
-  if (filters.phase) q = q.eq("after->>phase", filters.phase);
+
+  if (Array.isArray(filters.phase)) {
+    const values = filters.phase.filter((value: unknown) => typeof value === "string" && value)
+    if (values.length > 0) q = q.in("after->>phase", values)
+  } else if (filters.phase) {
+    q = q.eq("after->>phase", filters.phase)
+  }
+
   if (filters.property_type) q = q.eq("after->>property_type", filters.property_type);
 
   return q;

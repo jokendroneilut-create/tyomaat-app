@@ -50,7 +50,12 @@ function summarizeFilters(filters: any): string {
   if (filters.q) parts.push(`Haku: ${filters.q}`)
   if (filters.region) parts.push(`Maakunta: ${filters.region}`)
   if (filters.city) parts.push(`Kaupunki: ${filters.city}`)
-  if (filters.phase) parts.push(`Vaihe: ${filters.phase}`)
+  // Vaihe voi olla lista (monivalinta) tai merkkijono (vanhat hakuvahdit).
+  if (Array.isArray(filters.phase)) {
+    if (filters.phase.length > 0) parts.push(`Vaihe: ${filters.phase.join(', ')}`)
+  } else if (filters.phase) {
+    parts.push(`Vaihe: ${filters.phase}`)
+  }
   if (filters.property_type) parts.push(`Kohdetyyppi: ${filters.property_type}`)
 
   return parts.length ? parts.join(' • ') : 'Ei suodattimia'

@@ -265,6 +265,79 @@ button:hover {
   color: var(--muted-2);
 }
 
+/*
+ * Monivalintasuodatin (vaihe). Natiivi <select multiple> on työpöydällä
+ * kömpelö ja mobiilissa lähes käyttökelvoton, joten avattava paneeli
+ * valintaruuduilla. Ulkoasu noudattaa .projects-select-tyyliä, jotta
+ * suodatinrivi pysyy yhtenäisenä.
+ */
+.projects-multiselect {
+  position: relative;
+}
+
+.projects-multiselect-toggle {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--foreground);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.projects-multiselect-panel {
+  position: absolute;
+  z-index: 1000;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.projects-multiselect-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--foreground);
+}
+
+.projects-multiselect-option:hover {
+  background: var(--btn-bg);
+}
+
+.projects-multiselect-actions {
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.projects-multiselect-actions button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  color: var(--muted-2);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .projects-clear {
   padding: 10px 14px;
   border: 1px solid var(--border);

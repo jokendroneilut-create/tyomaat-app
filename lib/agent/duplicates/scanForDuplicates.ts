@@ -146,15 +146,35 @@ export async function scanForDuplicates(
     }
   }
 
-  if (toInsert.length > 0) {
+  /*
+   * Kirjoitus paloissa. Täysi skannaus (mode=full) voi löytää satoja tai
+   * tuhansia pareja, ja koko joukon työntäminen yhtenä upsertina kaatoi ajon
+   * - virhe tuli vasta minuuttien vertailutyön jälkeen, jolloin kaikki tulos
+   * meni hukkaan. Paloittain kirjoitettuna aiemmat erät jäävät talteen.
+   *
+   * Inkrementaalisessa viikkoajossa pareja on vähän eikä tällä ole väliä,
+   * mutta sama koodi palvelee molempia.
+   */
+  const INSERT_CHUNK = 500
+  let inserted = 0
+
+  for (let from = 0; from < toInsert.length; from += INSERT_CHUNK) {
+    const chunk = toInsert.slice(from, from + INSERT_CHUNK)
+
     const { error: insertError } = await supabaseAdmin
       .from("project_duplicate_candidates")
-      .upsert(toInsert, {
+      .upsert(chunk, {
         onConflict: "project_id_a,project_id_b",
         ignoreDuplicates: true,
       })
 
-    if (insertError) throw insertError
+    if (insertError) {
+      throw new Error(
+        `Duplikaattiparien kirjoitus epäonnistui (${inserted}/${toInsert.length} kirjoitettu): ${insertError.message}`
+      )
+    }
+
+    inserted += chunk.length
   }
 
   return {
