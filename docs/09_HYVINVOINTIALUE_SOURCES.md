@@ -122,6 +122,29 @@ Nämä ovat matalataajuisia (kerran vuodessa) mutta erittäin korkean signaalin
 lähteitä: ne listaavat nimetyt hankkeet euroineen ja vuosineen. Hyvä ensiaskel
 jos halutaan tulos pienellä työllä ennen kuin 21 aluetta integroidaan.
 
+## Avoin kysymys — miksi tätä ei ole päätetty (1.8.2026)
+
+Perustelu "aikaisempi vaihe kuin nykylähteet" ei kestä lähempää tarkastelua.
+Kartoituksen oma esimerkki (Pirkanmaa § 188) oli sopimus siitä että
+**asemakaavoitus aloitetaan** — sama hanke ilmestyy Ylöjärven kaavalähteeseen
+joka tapauksessa muutaman kuukauden kuluttua. Etumatka on kuukausia, ei vuosia,
+ja hintana on duplikaatti katselmointijonoon.
+
+Aito aukko on kapeampi ja koskee **kattavuutta, ei aikaa**:
+
+- **Peruskorjaukset.** Sairaalan tai terveysaseman perusparannus ei vaadi
+  kaavamuutosta, joten kaavalähteet eivät näe sitä koskaan. Hyppää suoraan
+  hankesuunnitelmasta Hilmaan.
+- **Vuokrahankkeet.** Yli 12 kk vuokrasopimus lasketaan investoinniksi.
+  Kaavoitus näkyy rakennuttajan nimissä, ei sote-hankkeena, joten emme yhdistä
+  niitä hyvinvointialueeseen.
+
+**Tätä väitettä ei ole todennettu.** Ennen kuin yhtään parseria kirjoitetaan,
+mittaa se: ota yhden alueen viimeiset 12 kk aluehallituksen pykäliä, poimi
+rakentamiseen liittyvät, ja laske montako **jo on** kannassa kaavan tai Hilman
+kautta. Korkea päällekkäisyys = asia on ratkaistu kielteisesti, matala = aukko
+on todellinen ja kokoluokka tiedossa. Parin tunnin työ, ei vaadi parseria.
+
 ## Arvio työmäärästä
 
 1. **Kansalliset PDF:t** (Tilakeskus + VM) — pieni. Kertaluontoinen poimija,
