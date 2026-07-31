@@ -26,7 +26,24 @@ export default function DuplicateCandidatesReviewList({
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  /*
+   * Kaikki kolme toimintoa vaativat toisen klikkauksen. Ne ovat vaikeita
+   * peruuttaa: vahvistettu tai hylätty duplikaattipari katoaa listalta, ja
+   * piilotettu hanke poistuu julkiselta kartalta - vahingossa osuneen
+   * napin jäljittäminen jälkikäteen on työlästä.
+   *
+   * Sama kuvio kuin hyväksyntäjonossa (PotentialProjectsReviewList), jotta
+   * käyttötapa on sama molemmissa näkymissä.
+   */
+  const [pending, setPending] = useState<{
+    candidateId: string
+    kind: "confirmed_duplicate" | "not_duplicate" | "hide"
+    projectId?: string
+    label: string
+  } | null>(null)
+
   async function review(id: string, status: "confirmed_duplicate" | "not_duplicate") {
+    setPending(null)
     setLoadingId(id)
     setError(null)
 
@@ -49,6 +66,7 @@ export default function DuplicateCandidatesReviewList({
   }
 
   async function hideProject(id: string, projectId: string) {
+    setPending(null)
     setLoadingId(id)
     setError(null)
 
@@ -124,15 +142,48 @@ export default function DuplicateCandidatesReviewList({
                         </span>
                       )}
                     </div>
-                    {p.is_public && (
-                      <button
-                        disabled={busy}
-                        onClick={() => hideProject(c.id, p.id)}
-                        className="mt-2 rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
-                      >
-                        Piilota tämä
-                      </button>
-                    )}
+                    {p.is_public &&
+                      (pending?.candidateId === c.id &&
+                      pending.kind === "hide" &&
+                      pending.projectId === p.id ? (
+                        <div className="mt-2 rounded-lg border border-red-300 bg-red-50 p-2">
+                          <p className="text-xs font-semibold text-red-800">
+                            Piilotetaanko tämä hanke julkiselta kartalta?
+                          </p>
+                          <div className="mt-2 flex gap-2">
+                            <button
+                              autoFocus
+                              disabled={busy}
+                              onClick={() => hideProject(c.id, p.id)}
+                              className="rounded-lg bg-red-700 px-2 py-1 text-xs font-semibold text-white hover:bg-red-800 disabled:opacity-50"
+                            >
+                              {busy ? "Piilotetaan…" : "Kyllä, piilota"}
+                            </button>
+                            <button
+                              disabled={busy}
+                              onClick={() => setPending(null)}
+                              className="rounded-lg border px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                              Peruuta
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            setPending({
+                              candidateId: c.id,
+                              kind: "hide",
+                              projectId: p.id,
+                              label: "Piilota hanke",
+                            })
+                          }
+                          className="mt-2 rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          Piilota tämä
+                        </button>
+                      ))}
                   </div>
                 ) : (
                   <div key={idx} className="rounded-xl border border-gray-200 p-3 text-sm text-gray-400">
@@ -142,22 +193,68 @@ export default function DuplicateCandidatesReviewList({
               )}
             </div>
 
-            <div className="mt-4 flex gap-2">
-              <button
-                disabled={busy}
-                onClick={() => review(c.id, "confirmed_duplicate")}
-                className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
-              >
-                Vahvista kaksoiskappale
-              </button>
-              <button
-                disabled={busy}
-                onClick={() => review(c.id, "not_duplicate")}
-                className="rounded-lg border px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-              >
-                Ei sama hanke
-              </button>
-            </div>
+            {pending?.candidateId === c.id && pending.kind !== "hide" ? (
+              <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3">
+                <p className="text-sm font-semibold text-amber-900">
+                  {pending.label}
+                </p>
+                <p className="mt-1 text-sm text-amber-800">
+                  Pari poistuu listalta tämän jälkeen. Vahvista tai peruuta.
+                </p>
+
+                <div className="mt-3 flex gap-2">
+                  <button
+                    autoFocus
+                    disabled={busy}
+                    onClick={() =>
+                      review(
+                        c.id,
+                        pending.kind as "confirmed_duplicate" | "not_duplicate"
+                      )
+                    }
+                    className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                  >
+                    {busy ? "Tallennetaan…" : "Kyllä, vahvista"}
+                  </button>
+                  <button
+                    disabled={busy}
+                    onClick={() => setPending(null)}
+                    className="rounded-lg border px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Peruuta
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 flex gap-2">
+                <button
+                  disabled={busy}
+                  onClick={() =>
+                    setPending({
+                      candidateId: c.id,
+                      kind: "confirmed_duplicate",
+                      label: "Merkitäänkö nämä samaksi hankkeeksi?",
+                    })
+                  }
+                  className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                >
+                  Vahvista kaksoiskappale
+                </button>
+                <button
+                  disabled={busy}
+                  onClick={() =>
+                    setPending({
+                      candidateId: c.id,
+                      kind: "not_duplicate",
+                      label: "Merkitäänkö nämä eri hankkeiksi?",
+                    })
+                  }
+                  className="rounded-lg border px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Ei sama hanke
+                </button>
+              </div>
+            )}
           </div>
         )
       })}
