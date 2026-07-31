@@ -158,22 +158,48 @@ export async function scanForDuplicates(
   const INSERT_CHUNK = 500
   let inserted = 0
 
-  for (let from = 0; from < toInsert.length; from += INSERT_CHUNK) {
-    const chunk = toInsert.slice(from, from + INSERT_CHUNK)
+  /*
+   * Uudelleenyritys verkkovirheelle. Täysi skannaus vertailee miljoonia
+   * pareja ja kestää kymmeniä minuutteja, joten kirjoitus tapahtuu vasta
+   * pitkän ajon päätteeksi - siinä vaiheessa yksi katkennut yhteys hukkaisi
+   * koko työn. Mitattu tapaus: "TypeError: fetch failed" 35 parin
+   * kirjoituksessa ~20 minuutin laskennan jälkeen.
+   */
+  async function writeChunk(chunk: typeof toInsert): Promise<void> {
+    let lastError: unknown = null
 
-    const { error: insertError } = await supabaseAdmin
-      .from("project_duplicate_candidates")
-      .upsert(chunk, {
-        onConflict: "project_id_a,project_id_b",
-        ignoreDuplicates: true,
-      })
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const { error } = await supabaseAdmin
+          .from("project_duplicate_candidates")
+          .upsert(chunk, {
+            onConflict: "project_id_a,project_id_b",
+            ignoreDuplicates: true,
+          })
 
-    if (insertError) {
-      throw new Error(
-        `Duplikaattiparien kirjoitus epäonnistui (${inserted}/${toInsert.length} kirjoitettu): ${insertError.message}`
-      )
+        if (!error) return
+        lastError = error
+      } catch (err) {
+        lastError = err
+      }
+
+      if (attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 3000))
+      }
     }
 
+    const message =
+      (lastError as any)?.message ?? String(lastError ?? "tuntematon virhe")
+
+    throw new Error(
+      `Duplikaattiparien kirjoitus epäonnistui kolmen yrityksen jälkeen ` +
+        `(${inserted}/${toInsert.length} kirjoitettu): ${message}`
+    )
+  }
+
+  for (let from = 0; from < toInsert.length; from += INSERT_CHUNK) {
+    const chunk = toInsert.slice(from, from + INSERT_CHUNK)
+    await writeChunk(chunk)
     inserted += chunk.length
   }
 
