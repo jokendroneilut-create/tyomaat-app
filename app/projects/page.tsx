@@ -194,6 +194,39 @@ export default function Projects() {
     }
   }, [projects])
 
+  /*
+   * Valitun hankkeen metadata haetaan vasta tässä, koska listakysely jättää
+   * sen pois egressin takia (ks. kommentti latauksen yhteydessä). Tulos
+   * sulautetaan selected-olioon, jolloin paneelin selected.metadata?.x
+   * -viittaukset toimivat muuttumattomina. Ennen hakua ne ovat undefined,
+   * mikä on sama tila kuin hankkeella jolla ei ole metadataa - paneeli
+   * osaa jo piilottaa kentät silloin.
+   */
+  useEffect(() => {
+    const id = selected?.id
+    if (!id || selected?.metadata !== undefined) return
+
+    let cancelled = false
+
+    supabase
+      .from('projects')
+      .select('metadata')
+      .eq('id', id)
+      .single()
+      .then(({ data }) => {
+        if (cancelled || !data) return
+        setSelected((current) =>
+          current && current.id === id
+            ? { ...current, metadata: data.metadata ?? null }
+            : current
+        )
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [selected?.id, selected?.metadata])
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const regionParam = params.get('region')
@@ -382,6 +415,17 @@ export default function Projects() {
      * ylitti 1000. Haetaan siis sivutettuna 1000 rivin erissä kunnes
      * kaikki on saatu.
      */
+    /*
+     * metadata EI ole mukana sarakelistassa tarkoituksella. Se on raskain
+     * kenttä (6,97 MB koko aineistossa, 58 % latauksen 11,94 megatavusta),
+     * mutta sitä luetaan vain valitun hankkeen paneelissa. Koko listan
+     * hakeminen selaimeen täytti Supabasen 5 GB egress-kiintiön ~429
+     * sivulatauksella. Valitun hankkeen metadata haetaan erikseen alempana.
+     *
+     * additional_info sen sijaan jää: sitä käytetään vapaan tekstihaun
+     * hakukentässä kaikille hankkeille, joten sitä ei voi hakea vain
+     * valitulle.
+     */
     const PAGE_SIZE = 1000
     const projectsData: Project[] = []
 
@@ -395,7 +439,6 @@ export default function Projects() {
           structural_design, hvac_design, electrical_design, architectural_design,
           geotechnical_design, earthworks_contractor, additional_info,
            latitude, longitude,
-          metadata,
           is_public,
           created_at
         `

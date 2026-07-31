@@ -133,16 +133,120 @@ export type ImportResult = {
  * Se on tarkoituksellista - täsmäytys perustuu nimeen, kaupunkiin ja
  * osoitteeseen, joita tuonti ei muuta.
  */
+/*
+ * Täsmäytyslista on sama kaikille saman ajon lähteille, ja yksi haku on
+ * n. 6 MB. Ilman välimuistia kuuden legacy-lähteen ajo hakisi sen kuudesti
+ * eli ~37 MB - Supabasen ilmaistason egress-kiintiö on 5 GB kuukaudessa.
+ *
+ * Elinikä on lyhyt tarkoituksella: ajon aikana tehdyt muutokset eivät näy
+ * välimuistissa, mutta täsmäytys perustuu nimeen, kaupunkiin ja osoitteeseen,
+ * joita tuonti ei muuta. Viisi minuuttia kattaa yhden putkiajon.
+ */
+let matchingCache: { rows: any[]; loadedAt: number } | null = null
+const MATCHING_CACHE_MS = 5 * 60 * 1000
+
+export function clearProjectsForMatchingCache() {
+  matchingCache = null
+}
+
 export async function loadProjectsForMatching(): Promise<any[]> {
+  if (matchingCache && Date.now() - matchingCache.loadedAt < MATCHING_CACHE_MS) {
+    return matchingCache.rows
+  }
+
+  const supabase = getSupabase()
+
+  /*
+   * Sivutus on pakollinen: PostgREST palauttaa enintään 1000 riviä myös
+   * ilman .limit()-kutsua, joten aiempi haku näki vain 1000 hanketta
+   * 4078:sta. Täsmäytys ohitti siis kolme neljäsosaa hankekannasta, ja
+   * kandidaatti joka kuului olemassa olevaan hankkeeseen päätyi silti
+   * uutena ehdokkaana jonoon.
+   *
+   * Koko metadata-kenttää EI haeta, koska se on 58 % siirretystä datasta.
+   * Matcher lukee siitä vain seitsemää avainta (projectMatcher.ts), joten
+   * ne poimitaan JSON-poluilla ja kootaan takaisin metadata-olioksi -
+   * täsmäytys näkee siis saman kuin ennen, mutta siirto on murto-osa.
+   * additional_info jää mukaan, koska matcher käyttää sitä kuvauksena.
+   */
+  const PAGE = 1000
+  const rows: any[] = []
+
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("projects")
+      .select(
+        "id,name,city,region,location,phase,completed_at,status,developer," +
+          "property_type,estimated_completion,additional_info," +
+          "meta_permit_number:metadata->>permit_number," +
+          "meta_property_id:metadata->>property_id," +
+          "meta_developer:metadata->>developer," +
+          "meta_building_type:metadata->>building_type," +
+          "meta_source_title:metadata->>source_title," +
+          "meta_description:metadata->>description," +
+          "meta_also_known_as:metadata->also_known_as"
+      )
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1)
+
+    if (error) throw error
+    if (!data?.length) break
+
+    for (const row of data as any[]) {
+      const {
+        meta_permit_number,
+        meta_property_id,
+        meta_developer,
+        meta_building_type,
+        meta_source_title,
+        meta_description,
+        meta_also_known_as,
+        ...rest
+      } = row
+
+      rows.push({
+        ...rest,
+        metadata: {
+          permit_number: meta_permit_number,
+          property_id: meta_property_id,
+          developer: meta_developer,
+          building_type: meta_building_type,
+          source_title: meta_source_title,
+          description: meta_description,
+          also_known_as: meta_also_known_as,
+        },
+      })
+    }
+
+    if (data.length < PAGE) break
+  }
+
+  matchingCache = { rows, loadedAt: Date.now() }
+
+  return rows
+}
+
+/*
+ * Osuneen hankkeen metadata ja additional_info. Tarvitaan vain silloin kun
+ * kandidaatti täsmää olemassa olevaan hankkeeseen, jolloin vanha metadata
+ * yhdistetään uuteen - eli korkeintaan kerran per kandidaatti eikä koko
+ * listalle.
+ */
+export async function loadProjectDetailsForMerge(
+  projectId: string
+): Promise<{ metadata: any; additional_info: string | null }> {
   const supabase = getSupabase()
 
   const { data } = await supabase
     .from("projects")
-    .select(
-      "id,name,city,region,location,phase,completed_at,status,developer,property_type,estimated_completion,additional_info,metadata"
-    )
+    .select("metadata,additional_info")
+    .eq("id", projectId)
+    .maybeSingle()
 
-  return data ?? []
+  return {
+    metadata: data?.metadata ?? null,
+    additional_info: data?.additional_info ?? null,
+  }
 }
 
 export async function importCandidate(
@@ -216,6 +320,15 @@ export async function importCandidate(
   if (match) {
     const matchedProjectId = match.id
     const matchedNewPhase = body.phase || match.phase
+
+    /*
+     * Täsmäytyslista ei enää kanna metadataa (se oli 58 % siirretystä
+     * datasta), joten olemassa oleva metadata haetaan vasta tässä - eli
+     * vain osuneelle hankkeelle. Ilman tätä yhdistäminen alempana
+     * pyyhkisi vanhat metadata-kentät tyhjiksi.
+     */
+    const existing = await loadProjectDetailsForMerge(matchedProjectId)
+    match.metadata = existing.metadata
 
     await supabase
       .from("projects")
