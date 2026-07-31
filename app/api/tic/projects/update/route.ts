@@ -61,6 +61,14 @@ export async function POST(request: Request) {
   const region = cleanString(body.region)
   const buildingType = cleanString(body.buildingType)
   const developer = cleanString(body.developer)
+  /*
+   * Urakoitsija. Iso osa yritysten tiedotteista kertoo nimenomaan urakan
+   * voittamisesta ("Bravida nappasi 200 miljoonan datakeskusurakan"), mutta
+   * kenttää ei ollut lomakkeessa, joten tieto ei päätynyt mihinkään.
+   * Hyväksyntä lukee tämän metadata.builder-kentästä ja kirjoittaa sen
+   * hankkeen builder-sarakkeeseen.
+   */
+  const builder = cleanString(body.builder)
   const phaseHint = cleanString(body.phaseHint)
 
   const existingMetadata = potentialProject.metadata ?? {}
@@ -91,6 +99,7 @@ export async function POST(request: Request) {
         region,
         building_type: buildingType,
         developer,
+        builder,
         phase_hint: phaseHint,
         ...(sourceTitle ? { source_title: sourceTitle } : {}),
         manually_edited_at: new Date().toISOString(),

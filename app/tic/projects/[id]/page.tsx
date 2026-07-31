@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCandidate } from "../../services/getCandidate"
 import ProjectActions from "./ProjectActions"
+import MergeIntoProject from "./MergeIntoProject"
 import EditableCandidate from "./EditableCandidate"
 import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 
@@ -72,6 +73,13 @@ export default async function CandidateDetailPage({ params }: Props) {
 
         <div className="mt-6 border-t border-gray-100 pt-4">
           <ProjectActions candidateId={candidate.id} />
+
+          {/*
+            * Osa ehdokkaista on uutta tietoa jo tunnetusta hankkeesta - esim.
+            * urakoitsijan valinta - eikä uusi hanke. Ilman tätä sellaisen voi
+            * vain hyväksyä duplikaatiksi tai hylätä, jolloin tieto katoaa.
+            */}
+          <MergeIntoProject candidateId={candidate.id} />
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -118,6 +126,7 @@ export default async function CandidateDetailPage({ params }: Props) {
             city: candidate.city ?? "",
             address: candidate.location ?? "",
             developer: metadata.developer ?? "",
+            builder: metadata.builder ?? metadata.winner_organisations?.[0] ?? "",
             buildingType: metadata.building_type ?? "",
             phaseHint: metadata.phase_hint ?? metadata.decision_status ?? "",
           }}

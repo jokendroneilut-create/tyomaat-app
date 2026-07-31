@@ -2224,9 +2224,31 @@ export async function POST(request: Request) {
      * 2) Sumea varataso vain jos tarkka taso ei löydä mitään: sama
      *    pisteytetty matcheri jota /api/agent/import käyttää.
      */
-    const exactMatch = await findByIdentifiers(candidateIdentifiers, supabaseAdmin)
+    /*
+     * mergeIntoProjectId tulee TIC:n "Liitä hankkeeseen" -toiminnosta: ihminen
+     * on katsonut ehdokkaan ja valinnut kohteen itse. Se ohittaa automaattisen
+     * täsmäytyksen, koska ihmisen päätös on vahvempi todiste kuin pisteytys.
+     *
+     * Tämä on se puuttunut kolmas vaihtoehto hyväksy/hylkää-parin rinnalle:
+     * uutinen joka tuo uutta tietoa jo tunnetusta hankkeesta (esim. urakoitsija
+     * ratkennut) ei ole uusi hanke eikä roskaa, vaan rikastaa olemassa olevaa.
+     * Yhdistämishaara alempana täyttää tyhjät kentät ylikirjoittamatta
+     * olemassa olevia.
+     */
+    const mergeIntoProjectId =
+      typeof body.mergeIntoProjectId === "string" && body.mergeIntoProjectId
+        ? body.mergeIntoProjectId
+        : null
+
+    const exactMatch = mergeIntoProjectId
+      ? null
+      : await findByIdentifiers(candidateIdentifiers, supabaseAdmin)
+
     const exactMatchedProjectId =
-      exactMatch?.projectId ?? metadata.matched_existing_project_id ?? null
+      mergeIntoProjectId ??
+      exactMatch?.projectId ??
+      metadata.matched_existing_project_id ??
+      null
 
     let fuzzyDetailed: ReturnType<typeof findProjectMatchDetailed> = null
 

@@ -15,6 +15,7 @@ type Props = {
     city: string
     address: string
     developer: string
+    builder: string
     buildingType: string
     phaseHint: string
   }
@@ -31,6 +32,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
   const [city, setCity] = useState(initial.city)
   const [address, setAddress] = useState(initial.address)
   const [developer, setDeveloper] = useState(initial.developer)
+  const [builder, setBuilder] = useState(initial.builder)
   const [buildingType, setBuildingType] = useState(initial.buildingType)
   const [phaseHint, setPhaseHint] = useState(initial.phaseHint)
 
@@ -40,6 +42,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
     setCity(initial.city)
     setAddress(initial.address)
     setDeveloper(initial.developer)
+    setBuilder(initial.builder)
     setBuildingType(initial.buildingType)
     setPhaseHint(initial.phaseHint)
     setError(null)
@@ -61,6 +64,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
           municipality: city,
           address,
           developer,
+          builder,
           buildingType,
           phaseHint,
         }),
@@ -89,6 +93,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
           <p><strong>Kaupunki:</strong> {city || "-"}</p>
           <p><strong>Sijainti / osoite:</strong> {address || "-"}</p>
           <p><strong>🏗️ Rakennuttaja:</strong> {developer || "-"}</p>
+          <p><strong>👷 Urakoitsija:</strong> {builder || "-"}</p>
           <p><strong>🏢 Kohdetyyppi:</strong> {buildingType || "-"}</p>
           <p><strong>Vaihe:</strong> {phaseHint || "-"}</p>
         </div>
@@ -172,6 +177,20 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             value={developer}
             onChange={(e) => setDeveloper(e.target.value)}
+          />
+        </label>
+
+        {/*
+          * Urakoitsija: iso osa tiedotteista kertoo juuri urakan voittamisesta,
+          * ja hyväksyntä kirjoittaa tämän hankkeen builder-sarakkeeseen.
+          */}
+        <label className="text-sm">
+          <span className="mb-1 block font-semibold text-gray-700">👷 Urakoitsija</span>
+          <input
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            value={builder}
+            onChange={(e) => setBuilder(e.target.value)}
+            placeholder="esim. Bravida"
           />
         </label>
 
