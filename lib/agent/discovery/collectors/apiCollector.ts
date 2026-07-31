@@ -25585,7 +25585,16 @@ async function collectPoriSource(source: DiscoverySource) {
  */
 const OULU_LISTING_BASE = "https://www.ouka.fi/suunnitelmat-ja-kaavahankkeet"
 const OULU_PAGES_PER_RUN = 2
-const OULU_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+/*
+ * Yksi detaljisivu on ~70 kB ja vastaa ~50 ms:ssä, joten budjetti mitoitetaan
+ * sen mukaan mitä yksi ajo näkee: 2 sivua x 9 kohdetta = 18. Aiempi 5 tarkoitti
+ * että 13 kohdetta 18:sta tallennettiin joka ajossa ilman kuvausta, ja koska
+ * sivuosoitin palaa samalle sivulle vasta 19 päivän päästä, kuvaus saattoi
+ * puuttua kuukausia. Mitattuna 35 dokumenttia 68:sta oli ilman kuvausta ja
+ * 13 ehdokasta oli katselmoinnissa tyhjänä.
+ */
+const OULU_MAX_DETAIL_FETCHES_PER_RUN = 25
 
 type OuluListingItem = {
   url: string
@@ -25637,6 +25646,13 @@ type OuluContact = {
 }
 
 type OuluDetails = {
+  /*
+   * Erottaa "sivu haettiin, kuvausta ei ollut" tapauksesta "sivua ei saatu
+   * haettua". Ilman tätä epäonnistunut haku näytti samalta kuin kuvaukseton
+   * hanke, jolloin kohde joko jäi ikuiseen uudelleenyritykseen tai
+   * tallennettiin pysyvästi tyhjänä sen mukaan kummin päin arvattiin.
+   */
+  ok: boolean
   description: string | null
   phase: string | null
   completed: boolean
@@ -25644,7 +25660,13 @@ type OuluDetails = {
 }
 
 async function fetchOuluDetails(url: string): Promise<OuluDetails> {
-  const empty: OuluDetails = { description: null, phase: null, completed: false, contacts: [] }
+  const empty: OuluDetails = {
+    ok: false,
+    description: null,
+    phase: null,
+    completed: false,
+    contacts: [],
+  }
 
   try {
     const response = await fetch(url, { cache: "no-store" })
@@ -25684,7 +25706,7 @@ async function fetchOuluDetails(url: string): Promise<OuluDetails> {
       if (name) contacts.push({ name, title, phone, email })
     })
 
-    return { description, phase, completed, contacts }
+    return { ok: true, description, phase, completed, contacts }
   } catch {
     return empty
   }
@@ -25718,26 +25740,55 @@ async function collectOuluSource(source: DiscoverySource) {
 
   const { data: existingRows } = await supabaseAdmin
     .from("source_documents")
-    .select("document_url, raw_payload")
+    .select("document_url, title, raw_payload")
     .eq("source_id", source.id)
 
   const knownDetails = new Map<string, any>()
   const existingUrls = new Set<string>()
+  const backlog: OuluListingItem[] = []
+
   for (const row of existingRows ?? []) {
     existingUrls.add(row.document_url)
-    if (row.raw_payload?.description || row.raw_payload?.completed) {
-      knownDetails.set(row.document_url, row.raw_payload)
+
+    const payload = row.raw_payload ?? {}
+    // details_fetched_at on uusi merkintä; vanhat rivit tunnistetaan sisällöstä.
+    const attempted =
+      Boolean(payload.details_fetched_at) ||
+      Boolean(payload.description) ||
+      payload.completed === true
+
+    if (attempted) {
+      knownDetails.set(row.document_url, payload)
+    } else {
+      backlog.push({
+        url: row.document_url,
+        title: payload.title ?? row.title ?? "",
+        kaavaTunnus: payload.kaava_tunnus ?? null,
+        region: payload.region ?? null,
+      })
     }
   }
+
+  /*
+   * Rästit ensin: listaussivun kierto käy saman sivun läpi vasta 19 päivän
+   * päästä, joten sivujärjestyksessä kulutettu budjetti ei koskaan tavoittanut
+   * aiemmin tynkänä tallennettuja kohteita. Rästit eivät ole sidottuja
+   * sivuosoittimeen, joten ne valuvat pois tasaisesti joka ajossa.
+   */
+  const workList: OuluListingItem[] = [
+    ...backlog,
+    ...allItems.filter((item) => !backlog.some((b) => b.url === item.url)),
+  ]
 
   let saved = 0
   let detailFetches = 0
 
-  for (const item of allItems) {
+  for (const item of workList) {
     const known = knownDetails.get(item.url)
 
     let details: OuluDetails | null = known
       ? {
+          ok: true,
           description: known.description ?? null,
           phase: known.phase ?? null,
           completed: known.completed ?? false,
@@ -25750,8 +25801,18 @@ async function collectOuluSource(source: DiscoverySource) {
     if (!detailsAttempted && detailFetches < OULU_MAX_DETAIL_FETCHES_PER_RUN) {
       details = await fetchOuluDetails(item.url)
       detailFetches += 1
-      detailsAttempted = details.description !== null || details.completed
+      detailsAttempted = details.ok
     }
+
+    /*
+     * Kohde ilman onnistunutta detaljihakua jätetään tallentamatta: tynkänä
+     * se päätyisi katselmointijonoon tyhjänä hankekorttina, eikä rästissä
+     * olevan rivin uudelleenkirjoitus samalla sisällöllä tuo mitään uutta.
+     * Kohde tulee vastaan uudelleen seuraavalla kierroksella. Budjetti kattaa
+     * yhden ajon kohteet, joten tähän päädytään vain kun ouka.fi ei vastaa
+     * tai rästejä on poikkeuksellisen paljon.
+     */
+    if (!detailsAttempted) continue
 
     const isCompleted = detailsAttempted && details?.completed === true
 
@@ -25795,6 +25856,10 @@ async function collectOuluSource(source: DiscoverySource) {
                   phase: details.phase,
                   contacts: details.contacts,
                   completed: details.completed,
+                  // Merkitsee haun tehdyksi myös kun sivulla ei ollut kuvausta,
+                  // jottei kohde jää kiertämään rästilistalla ikuisesti.
+                  details_fetched_at:
+                    known?.details_fetched_at ?? new Date().toISOString(),
                 }
               : {}),
           },
@@ -25821,7 +25886,7 @@ async function collectOuluSource(source: DiscoverySource) {
   }
 
   return {
-    documentsFound: allItems.length,
+    documentsFound: workList.length,
     documentsSaved: saved,
   }
 }
