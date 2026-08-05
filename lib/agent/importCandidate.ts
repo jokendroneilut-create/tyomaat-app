@@ -11,6 +11,7 @@ import {
 } from "@/lib/projects/detectCompletionFromText"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
+import { shouldUnexpire } from "@/lib/projects/tenderExpiry"
 import {
   findByIdentifiers,
   linkIdentifier,
@@ -354,6 +355,18 @@ export async function importCandidate(
     const existing = await loadProjectDetailsForMerge(matchedProjectId)
     match.metadata = existing.metadata
 
+    /*
+     * Vanhentunut kilpailutus herää henkiin kun voittaja selviää. Ratkaisu
+     * tehdään yhdistetystä metadatasta, koska voittajatieto tulee juuri tässä
+     * ilmoituksessa (body) eikä ole vielä hankkeella.
+     */
+    const mergedMetadata = {
+      ...(match.metadata ?? {}),
+      ...(body.metadata ?? {}),
+    }
+    const unexpire = shouldUnexpire(match.status, mergedMetadata)
+    const nowIso = new Date().toISOString()
+
     await supabase
       .from("projects")
       .update({
@@ -377,7 +390,11 @@ export async function importCandidate(
          */
         needs_review: isCompleted ? true : false,
         source_confidence: body.confidence ?? null,
-        status: isCompleted ? "completed" : match.status ?? "active",
+        status: isCompleted
+          ? "completed"
+          : unexpire
+            ? "active"
+            : match.status ?? "active",
         completed_at: isCompleted
           ? new Date().toISOString()
           : match.completed_at ?? null,
@@ -408,6 +425,16 @@ export async function importCandidate(
           last_source_name: body.source_name || "agent",
           last_source_url: body.source_url || null,
           last_imported_at: new Date().toISOString(),
+          // Vanhenemismerkinnät pois, jottei kortti väitä hanketta yhä
+          // vanhentuneeksi. Peruste jää talteen unexpired_reason-kenttään.
+          ...(unexpire
+            ? {
+                expired_at: null,
+                expired_reason: null,
+                unexpired_at: nowIso,
+                unexpired_reason: "Voittaja ratkesi vanhenemisen jälkeen",
+              }
+            : {}),
         },
       })
       .eq("id", matchedProjectId)

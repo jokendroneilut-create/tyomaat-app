@@ -62,6 +62,27 @@ export function computeManualExpiry(
 }
 
 /*
+ * Vanhentunut hanke palautetaan aktiiviseksi kun voittaja selviää. Ilman tätä
+ * jälki-ilmoitus rikastaa hankkeen oikein (vaihe etenee, voittaja tallentuu)
+ * mutta status jää "expired":ksi, jolloin hanke pysyy piilossa kartalta,
+ * /today-näkymästä ja tiimilistalta. Piiloon jäisi juuri se hetki joka on
+ * myyjälle arvokkain: urakoitsija on valittu ja rakentaminen alkaa.
+ *
+ * Vanhenemisen jälkeen ratkennut voittaja on tuore tapahtuma riippumatta
+ * siitä milloin tarjouspyyntö julkaistiin — hankkeen vaihe kertoo lukijalle
+ * loput.
+ *
+ * Yksi sääntö kahdelle kutsupaikalle (importCandidate, syncApprovedProject),
+ * jottei sama ehto eriydy niiden välillä.
+ */
+export function shouldUnexpire(
+  status: string | null | undefined,
+  metadata: Record<string, any> | null | undefined
+): boolean {
+  return status === "expired" && isTenderEnriched(metadata)
+}
+
+/*
  * Hankkeen tosiasiallinen vanhenemispäivä korteille ja cronille — yhdistää
  * manuaalisen (metadata.expire_at, mikä tahansa vaihe) ja automaattisen
  * (Kilpailutus-vaihe) säännön. Rikastuneet (voittaja selvinnyt) eivät vanhene.

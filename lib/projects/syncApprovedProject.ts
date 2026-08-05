@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { CANONICAL_PHASES, normalizeLegacyPhase } from "./phases"
 import { recordPhaseChange } from "./recordPhaseChange"
+import { shouldUnexpire } from "./tenderExpiry"
 
 function phaseOrder(rawPhase: string | null | undefined) {
   const key = normalizeLegacyPhase(rawPhase)
@@ -27,7 +28,7 @@ export async function syncApprovedProject(input: {
 }) {
   const { data: project, error } = await input.supabase
     .from("projects")
-    .select("id, phase, metadata")
+    .select("id, phase, status, metadata")
     .eq("id", input.projectId)
     .maybeSingle()
 
@@ -42,15 +43,34 @@ export async function syncApprovedProject(input: {
 
   const mergedPhase = phaseAdvances ? newPhaseHint : project.phase
 
+  const mergedMetadata = {
+    ...(project.metadata ?? {}),
+    ...input.newMetadata,
+  }
+
+  /*
+   * Sama sääntö kuin agentin tuonnissa: vanhentunut kilpailutus palaa
+   * aktiiviseksi kun voittaja selviää. Tämä reitti kattaa jo hyväksytyt
+   * hankkeet, jotka eivät enää palaa katselmointijonoon.
+   */
+  const unexpire = shouldUnexpire(project.status, mergedMetadata)
+  const nowIso = new Date().toISOString()
+
   const { error: updateError } = await input.supabase
     .from("projects")
     .update({
       phase: mergedPhase,
-      last_verified_at: new Date().toISOString(),
-      metadata: {
-        ...(project.metadata ?? {}),
-        ...input.newMetadata,
-      },
+      last_verified_at: nowIso,
+      ...(unexpire ? { status: "active" } : {}),
+      metadata: unexpire
+        ? {
+            ...mergedMetadata,
+            expired_at: null,
+            expired_reason: null,
+            unexpired_at: nowIso,
+            unexpired_reason: "Voittaja ratkesi vanhenemisen jälkeen",
+          }
+        : mergedMetadata,
     })
     .eq("id", input.projectId)
 
