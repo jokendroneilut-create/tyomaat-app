@@ -75,12 +75,97 @@ export type ScanResult = {
 
 
 /*
+ * Ajon kirjaus agent_runsiin. Ilman tätä skannauksen hiljaisuutta ei
+ * erottanut toimimattomuudesta: duplikaattitauluun ei tullut riviäkään
+ * kuukauteen, eikä mistään näkynyt oliko viikkocron ajanut ja löytänyt nolla
+ * paria vai kaatunut aikarajaan (ajo kesti 358 s, maxDuration on 60).
+ *
+ * Rivi näkyy sellaisenaan /tic/discovery/health -sivun ajolistassa, koska se
+ * ei suodata agent_typen mukaan.
+ *
+ * Kirjauksen epäonnistuminen ei kaada skannausta - seuranta ei saa estää
+ * varsinaista työtä. Tässä poiketaan tarkoituksella fact/identity-workereista,
+ * jotka heittävät jos agent_runs-insert epäonnistuu.
+ */
+async function startRun(mode: "full" | "incremental", targetCount: number | null) {
+  const { data, error } = await supabaseAdmin
+    .from("agent_runs")
+    .insert({
+      agent_type: "duplicate_scan",
+      source_name: mode === "full" ? "Täysi skannaus" : "Viikkoskannaus",
+      status: "started",
+      started_at: new Date().toISOString(),
+      payload: { mode, targetCount },
+    })
+    .select("id")
+    .single()
+
+  if (error) {
+    console.error("duplicate_scan: agent_runs insert epäonnistui", error.message)
+    return null
+  }
+
+  return data.id as string
+}
+
+async function finishRun(
+  runId: string | null,
+  durationMs: number,
+  outcome:
+    | { status: "success"; result: ScanResult }
+    | { status: "error"; message: string }
+) {
+  if (!runId) return
+
+  const { error } = await supabaseAdmin
+    .from("agent_runs")
+    .update({
+      status: outcome.status,
+      finished_at: new Date().toISOString(),
+      duration_ms: durationMs,
+      ...(outcome.status === "success"
+        ? {
+            // documents_* jätetään tyhjäksi: health-sivu otsikoi ne
+            // "Documents", eikä pareja kannata näyttää sen alla.
+            candidates_created: outcome.result.candidatesFound,
+            payload: outcome.result,
+          }
+        : { error_message: outcome.message }),
+    })
+    .eq("id", runId)
+
+  if (error) {
+    console.error("duplicate_scan: agent_runs update epäonnistui", error.message)
+  }
+}
+
+export async function scanForDuplicates(
+  options: { projectIds?: string[] } = {}
+): Promise<ScanResult> {
+  const startedAt = Date.now()
+  const mode = options.projectIds ? "incremental" : "full"
+  const runId = await startRun(mode, options.projectIds?.length ?? null)
+
+  try {
+    const result = await runScan(options)
+    await finishRun(runId, Date.now() - startedAt, { status: "success", result })
+    return result
+  } catch (error: any) {
+    await finishRun(runId, Date.now() - startedAt, {
+      status: "error",
+      message: error?.message ?? String(error),
+    })
+    throw error
+  }
+}
+
+/*
  * projectIds annettuna: verrataan vain näitä hankkeita (esim. viimeisen
  * viikon aikana luotuja/päivitettyjä) kaikkia julkisia hankkeita vastaan.
  * projectIds puuttuu: täysi pareittainen läpikäynti koko julkisesta
  * hankejoukosta (kertaluontoinen alkuskannaus).
  */
-export async function scanForDuplicates(
+async function runScan(
   options: { projectIds?: string[] } = {}
 ): Promise<ScanResult> {
   const allProjects = await fetchAllProjects()
