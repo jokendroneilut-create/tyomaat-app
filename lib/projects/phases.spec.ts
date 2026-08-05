@@ -3,7 +3,63 @@ import {
   PHASE_LABELS,
   normalizeLegacyPhase,
   displayPhaseLabel,
+  phaseAdvances,
+  phaseOrder,
 } from "./phases"
+
+describe("phaseAdvances", () => {
+  it("sallii etenemisen", () => {
+    expect(phaseAdvances("Suunnittelussa", "Rakenteilla")).toBe(true)
+    expect(phaseAdvances("Kaavoitus", "Kilpailutus")).toBe(true)
+    expect(phaseAdvances("Kilpailutus", "Sopimus myönnetty")).toBe(true)
+  })
+
+  /*
+   * Mitattu tuotannosta: 4 vrk:n ikkunassa 29 hanketta siirtyi
+   * Rakenteilla -> Suunnittelussa agentin tuonnista, mm. hanke jonka vaihe
+   * oli asetettu käsin hyväksynnässä.
+   */
+  it("estää peruuttamisen", () => {
+    expect(phaseAdvances("Rakenteilla", "Suunnittelussa")).toBe(false)
+    expect(phaseAdvances("Valmistunut", "Rakenteilla")).toBe(false)
+    expect(phaseAdvances("Rakenteilla", "Rakenteilla")).toBe(false)
+  })
+
+  it("hyväksyy minkä tahansa vaiheen kun nykyistä ei ole", () => {
+    expect(phaseAdvances(null, "Suunnittelussa")).toBe(true)
+    expect(phaseAdvances("jotain tuntematonta", "Rakenteilla")).toBe(true)
+  })
+
+  it("ei ylikirjoita tuntemattomalla tai järjestyksettömällä vaiheella", () => {
+    expect(phaseAdvances("Rakenteilla", null)).toBe(false)
+    expect(phaseAdvances("Rakenteilla", "Peruttu")).toBe(false)
+    expect(phaseAdvances("Suunnittelussa", "Höpöhöpö")).toBe(false)
+  })
+
+  it("ymmärtää vanhat kirjoitusasut molemmin puolin", () => {
+    expect(phaseAdvances("suunnittelussa", "Rakenteilla")).toBe(true)
+    expect(phaseAdvances("rakentaminen aloitettu", "Suunnittelussa")).toBe(false)
+  })
+
+  /*
+   * project_phase_history tallentaa avaimia ja projects.phase otsikoita, joten
+   * vertailu voi saada kumpaa tahansa muotoa.
+   */
+  it("toimii myös kanonisilla avaimilla", () => {
+    expect(phaseAdvances("construction", "planning")).toBe(false)
+    expect(phaseAdvances("planning", "construction")).toBe(true)
+    expect(phaseAdvances("construction", "Suunnittelussa")).toBe(false)
+  })
+})
+
+describe("phaseOrder", () => {
+  it("antaa kanonisen järjestyksen ja null tuntemattomalle", () => {
+    expect(phaseOrder("Suunnittelussa")).toBe(3)
+    expect(phaseOrder("Rakenteilla")).toBe(7)
+    expect(phaseOrder("Peruttu")).toBeNull()
+    expect(phaseOrder(null)).toBeNull()
+  })
+})
 
 describe("normalizeLegacyPhase", () => {
   it("tunnistaa kanonisen labelin suoraan", () => {

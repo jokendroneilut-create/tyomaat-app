@@ -60,10 +60,52 @@ export function normalizeLegacyPhase(
 
   if (exact) return exact.key
 
+  /*
+   * Myös kanoninen avain kelpaa syötteeksi. Kannassa on molempia esityksiä:
+   * projects.phase on otsikko ("Rakenteilla"), project_phase_history.phase on
+   * avain ("construction"). Ilman tätä avaimella kutsuttu vertailu palautti
+   * hiljaa nullin, eli "vaihetta ei tunnistettu" - ja esimerkiksi
+   * phaseAdvances ei olisi tunnistanut peruutusta historiariviltä.
+   */
+  const byKey = CANONICAL_PHASES.find((phase) => phase.key === value)
+  if (byKey) return byKey.key
+
   return LEGACY_PHASE_MAP[value.toLowerCase()] ?? null
 }
 
 export function displayPhaseLabel(raw: string | null | undefined): string {
   const key = normalizeLegacyPhase(raw)
   return key ? PHASE_LABELS[key] : raw?.trim() || "-"
+}
+
+export function phaseOrder(raw: string | null | undefined): number | null {
+  const key = normalizeLegacyPhase(raw)
+  if (!key) return null
+  return CANONICAL_PHASES.find((phase) => phase.key === key)?.order ?? null
+}
+
+/*
+ * Vaihe saa edetä muttei peruuttaa. Vanhentunut tai virheellinen ilmoitus ei
+ * saa siirtää hanketta väärään suuntaan: käynnissä oleva työmaa ei palaa
+ * suunnitteluun siksi että lähde julkaisi vanhan uutisen.
+ *
+ * Sääntö oli aiemmin vain syncApprovedProjectissa (jo hyväksytyt hankkeet),
+ * kun taas agentin tuonti kirjoitti vaiheen ehdoitta. Mitattuna 4 vrk:n
+ * ikkunassa 32 aidosta vaihesiirtymästä 29 oli Rakenteilla -> Suunnittelussa,
+ * ja yhdessä tapauksessa agentti kumosi ihmisen hyväksynnässä asettaman
+ * vaiheen. Nyt molemmat reitit käyttävät tätä samaa sääntöä.
+ *
+ * Tuntematon tai järjestyksetön vaihe (esim. "Peruttu", order = null) ei
+ * ohita nykyistä - se on tarkoituksellista, koska emme voi tietää onko se
+ * edistys.
+ */
+export function phaseAdvances(
+  current: string | null | undefined,
+  next: string | null | undefined
+): boolean {
+  const nextOrder = phaseOrder(next)
+  if (nextOrder == null) return false
+
+  const currentOrder = phaseOrder(current)
+  return currentOrder == null || nextOrder > currentOrder
 }

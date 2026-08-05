@@ -9,7 +9,7 @@ import {
   textIndicatesCompletion,
   stripCompletionWords,
 } from "@/lib/projects/detectCompletionFromText"
-import { PHASE_LABELS } from "@/lib/projects/phases"
+import { PHASE_LABELS, phaseAdvances } from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { shouldUnexpire } from "@/lib/projects/tenderExpiry"
 import {
@@ -344,7 +344,16 @@ export async function importCandidate(
 
   if (match) {
     const matchedProjectId = match.id
-    const matchedNewPhase = body.phase || match.phase
+
+    /*
+     * Vaihe saa vain edetä. Aiemmin uusi arvaus voitti aina, jolloin vanha
+     * uutinen tai suunnitteluvaiheesta kertova tiedote siirsi käynnissä
+     * olevan työmaan takaisin suunnitteluun - myös silloin kun vaihe oli
+     * asetettu käsin hyväksynnässä.
+     */
+    const matchedNewPhase = phaseAdvances(match.phase, body.phase)
+      ? body.phase
+      : match.phase
 
     /*
      * Täsmäytyslista ei enää kanna metadataa (se oli 58 % siirretystä
@@ -374,7 +383,7 @@ export async function importCandidate(
         city: body.city || match.city || null,
         region: body.region || match.region || null,
         location: body.location || match.location || null,
-        phase: body.phase || match.phase || undefined,
+        phase: matchedNewPhase || undefined,
         developer: body.developer || match.developer || null,
         property_type:
           body.property_type || body.building_type || match.property_type || null,

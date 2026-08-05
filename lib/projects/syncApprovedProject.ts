@@ -1,13 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { CANONICAL_PHASES, normalizeLegacyPhase } from "./phases"
+import { phaseAdvances as phaseAdvancesFrom } from "./phases"
 import { recordPhaseChange } from "./recordPhaseChange"
 import { shouldUnexpire } from "./tenderExpiry"
-
-function phaseOrder(rawPhase: string | null | undefined) {
-  const key = normalizeLegacyPhase(rawPhase)
-  if (!key) return null
-  return CANONICAL_PHASES.find((p) => p.key === key)?.order ?? null
-}
 
 /*
  * Kun jo hyväksytyn hankkeen taustalla oleva potentiaalinen hanke saa
@@ -36,10 +30,7 @@ export async function syncApprovedProject(input: {
   if (!project) return null
 
   const newPhaseHint = (input.newMetadata as any)?.phase_hint ?? null
-  const existingOrder = phaseOrder(project.phase)
-  const newOrder = phaseOrder(newPhaseHint)
-  const phaseAdvances =
-    newOrder != null && (existingOrder == null || newOrder > existingOrder)
+  const phaseAdvances = phaseAdvancesFrom(project.phase, newPhaseHint)
 
   const mergedPhase = phaseAdvances ? newPhaseHint : project.phase
 

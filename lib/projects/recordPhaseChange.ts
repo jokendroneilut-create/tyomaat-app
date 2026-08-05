@@ -6,6 +6,8 @@ export type PhaseChangeSource =
   | "tic_approve"
   | "dashboard_admin"
   | "auto_sync"
+  // Kertaluontoinen korjausajo (scripts/), ei osa normaalia putkea.
+  | "manual_correction"
 
 export async function recordPhaseChange(input: {
   supabase: SupabaseClient
