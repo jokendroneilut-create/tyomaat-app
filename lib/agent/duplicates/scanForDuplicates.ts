@@ -4,6 +4,10 @@ import {
   type MatchableProject,
   type ProjectMatchResult,
 } from "@/lib/agent/projectMatcher"
+import {
+  buildComparisonBuckets,
+  comparisonPartners,
+} from "@/lib/agent/duplicates/comparisonBuckets"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -69,6 +73,7 @@ export type ScanResult = {
   candidatesFound: number
 }
 
+
 /*
  * projectIds annettuna: verrataan vain näitä hankkeita (esim. viimeisen
  * viikon aikana luotuja/päivitettyjä) kaikkia julkisia hankkeita vastaan.
@@ -103,21 +108,19 @@ export async function scanForDuplicates(
     reasons: string[]
   }[] = []
 
-  for (let i = 0; i < targets.length; i++) {
-    const a = targets[i]
+  const buckets = buildComparisonBuckets(allProjects)
 
-    // Täydessä skannauksessa targets === allProjects, joten indeksin
-    // jälkeiset riittävät eikä pareja synny kahteen kertaan.
-    const compareAgainst = options.projectIds
-      ? allProjects
-      : allProjects.slice(i + 1)
-
-    for (const b of compareAgainst) {
-      if (b.id === a.id) continue
-
+  for (const a of targets) {
+    /*
+     * Pari käydään läpi vain kerran kumpaankin suuntaan: avain on
+     * järjestetty ja merkitään nähdyksi heti, joten täysi skannaus ei
+     * tarvitse enää erillistä slice(i + 1) -puolitusta.
+     */
+    for (const b of comparisonPartners(a, buckets)) {
       const [idA, idB] = [a.id, b.id].sort()
       const key = `${idA}:${idB}`
       if (seen.has(key)) continue
+      seen.add(key)
 
       pairsCompared++
 
@@ -133,7 +136,6 @@ export async function scanForDuplicates(
         buildingType: a.property_type ?? a.metadata?.building_type ?? null,
       })
 
-      seen.add(key)
       if (!match) continue
       if (!passesDuplicateQualityBar(match)) continue
 
