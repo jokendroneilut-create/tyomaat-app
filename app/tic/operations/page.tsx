@@ -1,5 +1,5 @@
 import { getDiscoverySources } from "./services/getDiscoverySources"
-import { getLegacySourceHealth } from "./services/getLegacySourceHealth"
+import { getSourceYield } from "./services/getSourceYield"
 import SourceMonitorTable from "./components/SourceMonitorTable"
 import CadenceSummary from "./components/CadenceSummary"
 import {
@@ -14,9 +14,9 @@ function formatDate(value: string | null) {
 }
 
 export default async function DiscoveryOperationsPage() {
-  const [sources, legacySources] = await Promise.all([
+  const [sources, sourceYield] = await Promise.all([
     getDiscoverySources(),
-    getLegacySourceHealth(),
+    getSourceYield(),
   ])
 
   const enabledCount = sources.filter((s) => s.enabled).length
@@ -64,7 +64,6 @@ export default async function DiscoveryOperationsPage() {
           fullCycleDays={fullCycleDays}
           staleThresholdDays={staleThresholdDays}
           guaranteedCount={guaranteedCount}
-          legacyCount={legacySources.length}
         />
       </div>
 
@@ -118,12 +117,13 @@ export default async function DiscoveryOperationsPage() {
 
       <div className="mt-10">
         <h2 className="text-xl font-semibold text-gray-900">
-          Yritysten lehdistötiedote-lähteet
+          Yritys- ja varhaislähteiden tuotto
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          Vanha putki (lib/agent/sources.ts) ei ole discovery_sources-taulussa
-          eikä sillä ole omaa ajo-käsitettä — tiedot perustuvat
-          project_import_events-tapahtumalokiin viimeisen 30 päivän ajalta.
+          Montako ehdokasta kukin lähde tuotti ja mihin ne päätyivät, viimeisen
+          30 päivän ajalta (project_import_events). Nämä lähteet ajetaan samassa
+          putkessa muiden kanssa — yllä oleva taulukko kertoo onnistuivatko
+          ajot, tämä kertoo mitä niistä tuli.
         </p>
 
         <div className="mt-4 overflow-hidden rounded-xl border bg-white shadow-sm">
@@ -140,7 +140,7 @@ export default async function DiscoveryOperationsPage() {
               </thead>
 
               <tbody>
-                {legacySources.map((source) => (
+                {sourceYield.map((source) => (
                   <tr key={source.name} className="border-t">
                     <td className="px-4 py-3 font-semibold">{source.name}</td>
                     <td className="px-4 py-3">{formatDate(source.lastSeen)}</td>

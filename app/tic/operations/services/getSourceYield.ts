@@ -6,7 +6,7 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export type LegacySourceHealth = {
+export type SourceYield = {
   name: string
   lastSeen: string | null
   eventsLast30Days: number
@@ -15,12 +15,18 @@ export type LegacySourceHealth = {
 }
 
 /*
- * Vanha yritysten lehdistötiedote-putki (lib/agent/sources.ts) ei ole
- * discovery_sources-taulussa eikä sillä ole omaa "ajo"-käsitettä —
- * ainoa jälki sen toiminnasta on project_import_events, jonne jokainen
- * käsitelty kandidaatti kirjataan riippumatta lopputuloksesta.
+ * Kandidaattituotto per fetcher (lib/agent/sources.ts:n 34 yritys- ja
+ * varhaislähdettä): montako ehdokasta lähde tuotti ja mihin ne päätyivät.
+ *
+ * Tämä on eri asia kuin discovery_sourcesin lähdeterveys, joka kertoo vain
+ * onnistuiko ajo. Nämä lähteet ajetaan nykyään samassa putkessa muiden
+ * kanssa (collector = legacyFetchCollector), mutta niiden tuottoa ei näe
+ * mistään muualta, koska yksi ajo tuottaa vaihtelevan määrän ehdokkaita.
+ *
+ * Lähde on project_import_events, jonne jokainen käsitelty kandidaatti
+ * kirjataan riippumatta lopputuloksesta.
  */
-export async function getLegacySourceHealth(): Promise<LegacySourceHealth[]> {
+export async function getSourceYield(): Promise<SourceYield[]> {
   const thirtyDaysAgo = new Date(
     Date.now() - 30 * 24 * 60 * 60 * 1000
   ).toISOString()

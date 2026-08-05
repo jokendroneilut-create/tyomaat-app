@@ -1,5 +1,5 @@
 import { getDiscoverySources } from "../services/getDiscoverySources"
-import { getLegacySourceHealth } from "../operations/services/getLegacySourceHealth"
+import { getSourceYield } from "../operations/services/getSourceYield"
 import DiscoverySourcesTable from "../components/DiscoverySourcesTable"
 
 export const dynamic = "force-dynamic"
@@ -9,9 +9,9 @@ function formatDate(value: string | null) {
 }
 
 export default async function DiscoveryPage() {
-  const [sources, legacySources] = await Promise.all([
+  const [sources, sourceYield] = await Promise.all([
     getDiscoverySources(),
-    getLegacySourceHealth(),
+    getSourceYield(),
   ])
 
   return (
@@ -30,13 +30,14 @@ export default async function DiscoveryPage() {
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-gray-900">
-          Legacy-lähteet ({legacySources.length})
+          Yritys- ja varhaislähteiden tuotto ({sourceYield.length})
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          Vanha yritys-/varhaislähdeputki (lib/agent/sources.ts) ei ole
-          discovery_sources-taulussa eikä sitä voi ajaa täältä yksittäin — se
-          ajetaan omalla mekanismillaan (/api/agent/discover). Tila perustuu
-          project_import_events-lokiin viimeisen 30 päivän ajalta.
+          Montako ehdokasta kukin lähde tuotti ja mihin ne päätyivät, viimeisen
+          30 päivän ajalta (project_import_events). Nämä lähteet ovat yllä
+          olevassa taulukossa muiden joukossa (collector =
+          legacyFetchCollector) ja niitä voi ajaa sieltä yksittäin — tämä
+          taulukko kertoo vain mitä ajoista tuli.
         </p>
 
         <div className="mt-4 overflow-hidden rounded-xl border bg-white shadow-sm">
@@ -52,7 +53,7 @@ export default async function DiscoveryPage() {
             </thead>
 
             <tbody>
-              {legacySources.map((source) => (
+              {sourceYield.map((source) => (
                 <tr key={source.name} className="border-t">
                   <td className="px-4 py-3 font-semibold">{source.name}</td>
                   <td className="px-4 py-3">{formatDate(source.lastSeen)}</td>
