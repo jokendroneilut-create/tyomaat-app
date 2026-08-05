@@ -9,6 +9,103 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-08 (työ 31.7.–6.8.)
+
+### Lähdeputkien yhdistäminen
+
+- **Vanhat yritys-/varhaislähteet discovery-putkeen.** 34 fetcheriä
+  (`lib/agent/sources.ts`) ajettiin omalla mekanismillaan, jossa kierron
+  aloituskohtia oli kaksi ja ajo kuoli aikaan ennen listan loppua — viisi
+  viimeistä lähdettä ei ollut päässyt kertaakaan vuoroon. Ne siirrettiin
+  `discovery_sources`-tauluun adapterilla (`legacyFetchCollector`), joka
+  kutsuu samoja fetchereitä. Fetchereitä ei kirjoitettu uusiksi. (9bda48e,
+  49903c9, 4bf0688, ks. [D-016](03_DECISIONS.md))
+- **Vanha putki poistettu** kun kaikki 34 oli kiertänyt virheettä ja
+  tuottanut ehdokkaita: `/api/agent/run`, `/api/agent/run-test-source`,
+  `/api/agent/discover`. `lib/agent/sources.ts` jäi, koska uusi kerääjä
+  käyttää sitä. Samalla korjattu Operations-sivun lähdelaskuri, joka
+  laski siirretyt lähteet kahteen kertaan. (0fc2589)
+
+### Discovery – lähdekorjaukset
+
+- **Oulun kaavakuvaukset.** Detaljihakuja sai tehdä 5/ajo, mutta yksi ajo
+  näki 18 kohdetta — loput tallentuivat tynkinä ja etenivät katselmointiin
+  tyhjinä hankekortteina. Sivuosoitin palasi samalle sivulle vasta 19 päivän
+  päästä, joten kuvaus saattoi puuttua kuukausia. Budjetti 25, rästit
+  haetaan ensin, eikä kohdetta tallenneta ennen onnistunutta hakua.
+  35 dokumenttia korjattu takautuvasti. (62654e8)
+- **STT: lupaviranomainen ei ole rakennuttaja.** Julkaisijan käyttö
+  rakennuttajana on oikein yritykselle mutta ei viranomaiselle, joka
+  tiedottaa muiden hankkeista. `resolveDeveloper` poimii toteuttajan
+  tekstistä tai jättää kentän tyhjäksi. (f9c3095)
+- **Kontiolahti: yhteystieto-otsikko ei ole kaava.** Kaavalistan perässä
+  oleva "Yhteystiedot:" oli samalla otsikkotasolla kuin kaavat. Lohkolta
+  vaaditaan nyt vähintään yksi vaihehaitari. (008965d)
+
+### Tunnistus, täsmäytys ja duplikaatit
+
+- **Käsin lisätty tieto ei enää huononna täsmäytystä.** Kaupungin nimi
+  osoitekentässä tuotti `same_location`-osuman kahden eri hankkeen välille.
+  Osoite kelpaa todisteeksi vain kun se on kaupunkia tarkempi; erottuva
+  otsikko sai oman painonsa (`exact_distinctive_title`). (f3de242, c07f8dd)
+- **Valmistumisuutiset** täsmätään olemassa olevaan hankkeeseen ja hanke
+  merkitään valmiiksi ihmisen vahvistettavaksi. (dd06253)
+- **Duplikaattivertailu ryhmitellään** kaupungin ja tunnisteiden mukaan:
+  1 574 279 vertailua / 358 s → 37 598 / 7 s, kun reitin raja on 60 s.
+  Viikkocron ei ollut ehtinyt kertaakaan loppuun. (c8307e2,
+  ks. [D-015](03_DECISIONS.md))
+- **Skannauksen ajot kirjataan** `agent_runs`-tauluun, joten hiljaisuuden
+  erottaa toimimattomuudesta. Näkyy Discovery Health -sivun ajolistassa.
+  (5e8f990)
+- Työkalut: `scripts/scan-duplicates.ts` (ajo ilman aikarajaa + mitoitus),
+  `scripts/diag-duplicate-pair.ts` (miksi pari tunnistuu tai ei). (0c0458b)
+
+### Hankkeen elinkaari
+
+- **Vaihe saa vain edetä.** Agentin tuonti kirjoitti vaiheen ehdoitta, joten
+  vanha uutinen siirsi käynnissä olevan työmaan takaisin suunnitteluun —
+  4 vrk:n ikkunassa 29 kertaa 32:sta, mukaan lukien ihmisen hyväksynnässä
+  asettama vaihe. 38 hanketta palautettu. (2e98ce8,
+  ks. [D-013](03_DECISIONS.md))
+- **Vanhentunut kilpailutus palaa aktiiviseksi** kun voittaja selviää.
+  (3e80cfd, ks. [D-014](03_DECISIONS.md))
+
+### TIC / käyttöliittymä
+
+- **"Liitä hankkeeseen"** kolmantena vaihtoehtona hyväksy/hylkää-parin
+  rinnalle: osa ehdokkaista on uutta tietoa jo tunnetusta hankkeesta, ei
+  uusi hanke. Ehdotukset, haku ja selattava lista. (87a92f4, 453cba5)
+- **Liittyvät yritykset** vapaana listana. Pääurakoitsija-kenttä nimettiin
+  selkeäksi, koska esim. talotekniikkatoimittaja ei ole pääurakoitsija.
+  (31eeabd, d81a25e)
+- **Duplikaattien katselmointi vaatii vahvistuksen** — kaikki kolme
+  toimintoa ovat vaikeita perua. (c257544)
+
+### Kartta ja asiakasnäkymä
+
+- **Vaihesuodatin monivalinnaksi** käyttäjäpalautteen perusteella: käynnissä
+  olevat ja lupavaiheen hankkeet samaan näkymään, päättyneet pois. (e60a78f)
+- **Egress**: karttasivu ei enää hae metadataa listaan (1,93 → 1,14 MB
+  pakattuna per lataus). (ccc001f)
+- **Ilmoitukset omaksi kohdakseen Asetuksiin.** Sähköpostihälytysten kytkin
+  oli /today-näkymän "Mukauta näkymää" -velhon sisällä eli käytännössä
+  löytymättömissä. Sama kenttä, uusi paikka. (f20b360, 18cacec)
+
+### Dokumentaatio
+
+- **Hyvinvointialueet lähteenä** — 21 alueen kartoitus ja avoin kysymys
+  siitä kannattaako niitä lisätä:
+  [`09_HYVINVOINTIALUE_SOURCES.md`](09_HYVINVOINTIALUE_SOURCES.md).
+  (85ccbbf, 18d0c9a)
+
+### Vielä dokumentoimatta
+
+29.–30.7. tehty työ (tiiminäkymän suodattimet ja sivutus, /today-onboarding,
+RLS-kovennus, kaavaresolverien vaihekartoitus, maakunnan päättely tilaajan
+nimestä ja LLM:llä) on toistaiseksi vain commit-viesteissä.
+
+---
+
 ## 2026-07
 
 ### Discovery – lähteet ja tiedonkeruu

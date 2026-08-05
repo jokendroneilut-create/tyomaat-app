@@ -5,6 +5,60 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-016 – Vanhat lähteet ajetaan discovery-putken kautta adapterilla
+`lib/agent/sources.ts`:n 34 fetcheriä ajettiin omalla mekanismillaan, jossa
+kierron aloituskohtia oli vain kaksi ja ajo kuoli aikaan ennen listan loppua:
+viisi viimeistä lähdettä ei ollut päässyt kertaakaan vuoroon. Vaihtoehdot
+olivat (A) kirjoittaa fetcherit discovery-kerääjiksi tai (B) adapteri joka
+kutsuu niitä sellaisenaan. **Päätös: B.** Fetcherit toimivat, ja niiden
+uudelleenkirjoitus olisi ollut riski ilman hyötyä — ongelma oli ajastuksessa,
+ei poiminnassa. Ne ovat nyt `discovery_sources`-taulussa
+(`collector = legacyFetchCollector`), saavat per-lähde ajastuksen ja
+virheseurannan kuten muutkin. **`lib/agent/sources.ts` ei ole vanhentunut
+eikä sitä saa poistaa** — adapteri käyttää sitä; vanhentunut oli vain putki
+sen ympärillä, ja se on poistettu.
+
+### D-015 – Duplikaattivertailu rajataan laatuportin omilla avaimilla
+Skannaus vertasi jokaista muuttunutta hanketta koko julkiseen joukkoon:
+1,57 miljoonaa vertailua ja 358 sekuntia, kun reitin `maxDuration` on 60 —
+viikkocron ei ehtinyt kertaakaan loppuun, eikä sitä huomattu koska tyhjä
+tulos näytti samalta kuin kaatunut ajo. Laatuportti hyväksyy parin vain jos
+sillä on sama lupanumero tai kiinteistötunnus, TAI nimitodiste JA sama
+kaupunki. Eri kaupungeissa olevien, tunnisteettomien hankkeiden vertailu ei
+siis voi koskaan tuottaa ehdokasta. **Päätös:** vertailujoukko rajataan
+näiden kolmen avaimen ryhmiin (`comparisonBuckets.ts`) → 37 598 vertailua,
+7 s. Ryhmittely käyttää samoja normalisointifunktioita kuin `calculateMatch`,
+jottei se voi ajautua matcherista erilleen. Todennettu 79 kirjattua paria
+vastaan: 78 säilyy, ja se yksi joka putoaa ei tuota nykydatalla osumaa
+muutenkaan. Jos laatuporttia joskus löysätään, tämä rajaus on päivitettävä
+samalla.
+
+### D-014 – Vanhentunut kilpailutus palaa aktiiviseksi kun voittaja selviää
+Kilpailutus vanhenee vuosi tarjousten määräajasta (`status = expired`), mikä
+piilottaa sen kartalta, /today-näkymästä ja tiimilistalta. Jos voittaja
+selvisi vasta sen jälkeen, hanke rikastui oikein mutta jäi piiloon — eli
+piiloon jäi juuri se hetki joka on myyjälle arvokkain. **Päätös:** voittajan
+ratkeaminen palauttaa hankkeen aktiiviseksi (`shouldUnexpire`), koska se on
+tuore tapahtuma riippumatta siitä milloin tarjouspyyntö julkaistiin.
+Vastakkainen kanta (kaksi vuotta vanha kilpailutus on vanhaa uutista) on
+puolustettavissa, mutta hankkeen vaihe kertoo lukijalle loput.
+
+### D-013 – Vaihe saa vain edetä, ei peruuttaa
+`syncApprovedProject` on aina estänyt vaiheen peruuttamisen, mutta agentin
+tuonti kirjoitti saman kentän ehdoitta. Vanha uutinen tai suunnitteluvaiheesta
+kertova tiedote siirsi käynnissä olevan työmaan takaisin suunnitteluun:
+mitattuna 4 vrk:n ikkunassa 29 kertaa 32 aidosta vaihesiirtymästä, ja
+agentti kumosi kaikkien kolmen muun päätöslähteen tuloksen (ihmisen
+hyväksyntä, auto_sync, käsin tehty korjaus). **Päätös:** yksi sääntö
+(`phaseAdvances` tiedostossa `lib/projects/phases.ts`) molemmille reiteille.
+Tuntematon tai järjestyksetön vaihe (esim. "Peruttu") ei ohita nykyistä,
+koska emme voi tietää onko se edistys.
+
+**Sivuhavainto:** kannassa on kaksi vaiheen esitystapaa — `projects.phase` on
+otsikko ("Rakenteilla"), `project_phase_history.phase` on avain
+("construction"). `normalizeLegacyPhase` hyväksyy nyt molemmat; aiemmin
+avaimella kutsuttu vertailu palautti hiljaa nullin.
+
 ### D-012 – Tontinluovutukset jätetty väliin (ei siistiä lähdettä)
 Selvitetty kilpailija-aukkona: ei kansallista eikä siistiä kaupunkikohtaista
 rajapintaa. Helsingin `tontit.hel.fi` on poistettu, ja tonttiasiat ovat nyt
