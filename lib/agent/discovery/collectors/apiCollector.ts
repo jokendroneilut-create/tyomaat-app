@@ -10828,6 +10828,21 @@ async function collectKontiolahtiKaavaSource(source: DiscoverySource) {
   for (const block of blocks) {
     if (!block.title) continue
 
+    /*
+     * Sivun jokainen kaava listaa vaiheensa haitareina (myös vielä
+     * saavuttamattomat), joten haitarien puuttuminen tarkoittaa ettei lohko
+     * ole kaava lainkaan. Kaavalistan perässä on "Yhteystiedot:"-otsikko
+     * samalla h4-tasolla kuin kaavat, eikä mikään väliotsikko lopeta
+     * kaavaosiota ennen sitä — ilman tätä se päätyi katselmointiin
+     * hankekorttina, jonka nimi ja osoite olivat "Yhteystiedot:" eikä
+     * kuvausta ollut. Mitattuna: 5 oikeaa kaavaa, joilla kaikilla 3–5
+     * haitaria, ja yksi yhteystieto-lohko jolla 0.
+     */
+    const accordions = block.nodes.filter((node) =>
+      $(node).hasClass("wp-block-pwdb-accordion")
+    )
+    if (accordions.length === 0) continue
+
     found += 1
 
     const paragraphs = block.nodes
@@ -10837,8 +10852,7 @@ async function collectKontiolahtiKaavaSource(source: DiscoverySource) {
     const description = paragraphs.find((p) => p.length > 40) ?? null
 
     let phase = "Vireilletulo"
-    for (const node of block.nodes) {
-      if (!$(node).hasClass("wp-block-pwdb-accordion")) continue
+    for (const node of accordions) {
       const label = $(node).find("h5").first().text().replace(/\s+/g, " ").trim()
       const content = $(node).find(".accordion__content-inner").first().text().replace(/\s+/g, " ").trim()
       if (!/\d{1,2}\.\d{1,2}\.\d{4}/.test(content)) continue
