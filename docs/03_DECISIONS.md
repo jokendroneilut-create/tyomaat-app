@@ -5,6 +5,46 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-018 – Yhdistetty hanke piilotetaan, ei poisteta
+Duplikaattien yhdistämisessä poistuva rivi voisi houkutella poistettavaksi,
+mutta siihen viittaa käyttäjädataa (suosikit, vastuutukset), tuontitapahtumia
+ja vaihehistoriaa. **Päätös:** poistuva rivi merkitään `is_public = false` ja
+saa `metadata.merged_into_project_id`-osoittimen säilyvään; säilyvä saa
+`merged_from_project_ids`. Sama tapa kuin duplikaattinäkymän "Piilota tämä",
+joten päätös on peruttavissa eikä historia katoa.
+
+Kolme sääntöä yhdistämisessä:
+- **Säilyvän arvot voittavat aina**, poistuvalta täydennetään vain tyhjät.
+  Nimeä, kaupunkia, maakuntaa ja vaihetta ei kosketa — ne ovat säilyvän
+  identiteetti, ja vaiheen siirtäminen ohittaisi D-013:n.
+- **Poistuvan nimi tallennetaan `also_known_as`-kenttään**, jota matcher lukee.
+  Ilman sitä saman uutisen toinen otsikkomuoto synnyttäisi duplikaatin
+  uudelleen — juuri niin Espoonlahden pari syntyi.
+- **Vastuutusta ei siirretä jos säilyvällä on jo omistaja.** Hankkeella on yksi
+  vastuullinen, eikä skripti valitse ihmisten välillä; se on esihenkilön päätös.
+  Poistuvan vastuutus poistetaan ja tieto jää metadataan.
+
+Yhdistetty rivi rajataan pois täsmäytyksestä (`loadProjectsForMatching`),
+muuten rikastus kirjautuisi näkymättömälle hankkeelle.
+
+### D-017 – Rakennuttajaa verrataan organisaationimenä, ei merkkijonona
+Sama organisaatio kirjoitetaan lähteissä eri tavoin: genetiivi, sulkeissa oleva
+lyhenne, yhtiömuoto, y-tunnus. Merkkijonovertailu piti niitä eri toimijoina, ja
+koska rakennuttaja+kaupunki on yksi neljästä hyväksytystä todisteesta, osuma
+saattoi jäädä kokonaan syntymättä. Mitattu tapaus: "Pohjois-Pohjanmaan
+hyvinvointialue Pohde" vs "Pohjois-Pohjanmaan hyvinvointialueen (Pohde)" —
+ehdokas ei saanut yhtään pistettä.
+
+**Päätös:** vertailu sanajoukkona (`lib/projects/organizationName.ts`).
+Y-tunnus ja yhtiömuoto pudotetaan, genetiivi puretaan, sanat järjestetään.
+Sanajärjestys ei siis vaikuta eikä sulkeissa olevan lyhenteen tarvitse olla
+suluissa.
+
+**-nen-loppuisia ei typistetä.** "Virtanen" ei ole genetiivi, ja sen purkaminen
+sekoittaisi eri yritykset. Sama periaate kuin muualla täsmäytyksessä: väärä
+yhdistäminen on pahempi kuin osumatta jäänyt, koska ihminen näkee osumattoman
+ehdokkaan jonossa mutta ei väärin yhdistettyä.
+
 ### D-016 – Vanhat lähteet ajetaan discovery-putken kautta adapterilla
 `lib/agent/sources.ts`:n 34 fetcheriä ajettiin omalla mekanismillaan, jossa
 kierron aloituskohtia oli vain kaksi ja ajo kuoli aikaan ennen listan loppua:

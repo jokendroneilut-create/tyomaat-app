@@ -93,6 +93,45 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
   `metadata.related_companies`-kenttään kaikilla kolmella kirjoituspolulla,
   ja 69 vanhaa hanketta täydennetty. (69c9ec9, 6606cf7)
 
+### Täsmäytyksen tarkennukset
+
+Lähtökohta: yksittäinen ehdokas ("OYSin uuden L-talon rakentaminen alkaa")
+ei saanut **yhtään pistettä** vaikka sama hanke oli kannassa. Syy ei ollut
+matala pistemäärä vaan se, ettei yksikään todiste täyttynyt — jokainen eri
+syystä. Kaksi niistä on nyt korjattu.
+
+- **Rakennuttaja tunnistetaan samaksi eri kirjoitusasuissa.**
+  "Pohjois-Pohjanmaan hyvinvointialue Pohde" ja "Pohjois-Pohjanmaan
+  hyvinvointialueen (Pohde)" olivat eri toimijoita, joten rakennuttaja+kaupunki
+  -todiste ei täyttynyt. Vertailu tehdään nyt sanajoukkona
+  (`lib/projects/organizationName.ts`): y-tunnus ja yhtiömuoto pois, genetiivi
+  puretaan, sanajärjestys ei vaikuta. Mitattu: 475 rakennuttajanimestä 33 paria
+  tunnistetaan samaksi. (019a8c2, ks. [D-017](03_DECISIONS.md))
+- **Kaupungiton ehdokas ei voi osua mihinkään.** 12 jonossa ollutta oli ilman
+  kuntaa, kaikki stt_haku-lähteestä — sijainti oli otsikossa muodossa jota
+  merkkijonohaku ei tunnista ("OYSin", "Ruovedelle", "Rissalan tukikohtaan").
+  Sama poimija ja kahden äänen sääntö kuin maakuntatäydennyksessä: 9 ratkesi,
+  0 erimielisyyttä, 3 jäi perustellusti tyhjäksi. (6f7e860)
+- Yhdessä: jonon 148 ehdokkaasta **28 saa nyt ehdotuksen** ja 3 osuisi
+  automaattisesti. Kysytty tapaus nousi 0 → 48, eli näkyviin katselmoijalle.
+
+### Hankkeiden yhdistäminen
+
+- **Työkalu kahden hankkeen yhdistämiseen**
+  (`scripts/merge-duplicate-projects.ts`). Duplikaattinäkymä osasi vain merkitä
+  parin ja piilottaa toisen, jolloin piilotettavan kuvaus, lähdehistoria ja
+  käyttäjädata katosivat. Poistettavaa ei poisteta vaan piilotetaan, säilyvän
+  arvot voittavat, ja poistuvan nimi tallennetaan `also_known_as`-kenttään
+  jottei sama duplikaatti synny uudelleen. (8f87cf3,
+  ks. [D-018](03_DECISIONS.md))
+- Ajettu Espoonlahden parille: kaksi hanketta samasta kohteesta, syntyneet kun
+  tallennettu otsikkomuoto muuttui ja täsmäytys putosi 75:stä 32:een. Skanneri
+  ei olisi löytänyt paria (`similar_title + same_city + same_region` = 60, alle
+  70:n laatuportin).
+- **Yhdistetty hanke ei enää osallistu täsmäytykseen.** Piilotettu rivi sai yhä
+  100 pistettä, jolloin rikastus olisi kirjautunut näkymättömälle hankkeelle.
+  (019a8c2)
+
 ### TIC / käyttöliittymä
 
 - **"Liitä hankkeeseen"** kolmantena vaihtoehtona hyväksy/hylkää-parin
