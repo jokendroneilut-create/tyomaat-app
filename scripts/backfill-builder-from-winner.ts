@@ -58,18 +58,35 @@ async function main() {
     console.log()
   }
 
+  /*
+   * Kaksi tapausta:
+   *
+   * 1. Kenttä on tyhjä vaikka voittaja on metadatassa.
+   * 2. Kenttä sisältää Hilman raakamuodon, jossa yritykset on erotettu
+   *    "//"-merkeillä. Vanha hyväksyntäkoodi suosi merkkijonoa pilkotun
+   *    winners-taulukon sijaan, joten monen urakoitsijan puitejärjestelyt
+   *    näkyvät listalla yhtenä pötkönä. resolveWinnerName lukee taulukon
+   *    ensin, joten uudet hyväksynnät ovat jo siistejä.
+   */
   const plan = rows
-    .filter((r) => !r.builder)
-    .map((r) => ({ row: r, winner: resolveWinnerName(r.metadata) }))
-    .filter((p): p is { row: any; winner: string } => Boolean(p.winner))
+    .filter((r) => !r.builder || String(r.builder).includes("//"))
+    .map((r) => ({
+      row: r,
+      winner: resolveWinnerName(r.metadata),
+      reason: r.builder ? "raakamuoto" : "tyhjä",
+    }))
+    .filter(
+      (p): p is { row: any; winner: string; reason: string } =>
+        Boolean(p.winner) && p.winner !== p.row.builder
+    )
 
   console.log(`hankkeita: ${rows.length}`)
-  console.log(`voittaja tiedossa mutta urakoitsija tyhjä: ${plan.length}\n`)
+  console.log(`korjattavia: ${plan.length}\n`)
 
   for (const p of plan) {
-    console.log(
-      `  ${String(p.row.name).slice(0, 46).padEnd(48)} ${String(p.row.city ?? "-").padEnd(14)} -> ${p.winner}`
-    )
+    console.log(`  [${p.reason}] ${String(p.row.name).slice(0, 44)}`)
+    if (p.row.builder) console.log(`     ennen:  ${String(p.row.builder).slice(0, 110)}`)
+    console.log(`     jälkeen:${p.winner.slice(0, 110)}`)
   }
 
   if (!APPLY) {
