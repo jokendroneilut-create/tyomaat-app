@@ -5,6 +5,33 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-019 – Tekstivertailu sanoina, ei trigrammeina, kun kyse on nimestä
+Nimen etsiminen kuvauksesta (`name_in_description`) toteutettiin ensin
+merkkitrigrammien sisältyvyydellä, koska trigrammit kestävät suomen taivutusta
+ja `descriptionSimilarity` käyttää niitä. **Se ei toimi nimille.**
+
+Suomen yhdyssanat vuotavat toisiinsa: "tuulivoimahanke" sisältyy lähes
+kokonaan tekstiin jossa lukee "tuulivoimapuisto", ja "datakeskus" mihin tahansa
+datakeskusuutiseen. Mitattuna tuotantoa vasten 37 osumasta selvästi yli puolet
+oli vääriä — "Kotaselän tuulivoimahanke" osui hankkeeseen "Asemakeskus" — ja
+yksi väärä ylitti 70:n eli olisi yhdistynyt automaattisesti.
+
+**Päätös:** nimivertailu tehdään kokonaisina sanoina. Taivutus sallitaan vain
+vartalon alusta (6 merkin yhteinen alku molempiin suuntiin), geneeriset sanat
+pudotetaan ja vaaditaan vähintään kaksi erottelevaa sanaa joista 70 % löytyy
+tekstistä. Trigrammit jäävät sinne minne ne sopivat: kahden pitkän
+kuvaustekstin vertailuun, jossa yksittäisen sanan vuoto ei ratkaise.
+
+Mitattu korjatusta versiosta: 42 osumaa, väärät jäävät 58 pisteeseen eli alle
+70:n kynnyksen — ne näkyvät ehdotuksina mutta eivät yhdisty automaattisesti.
+
+**Uusi todistesyy on lisättävä kaikkiin listoihin jotka luettelevat syitä
+nimeltä**: `hasTextEvidence`, `onlyWeakText`, duplikaattiskannerin laatuportti
+ja käyttöliittymän kaksi `REASON_LABELS`-listaa. Tämä on unohtunut kahdesti
+(`exact_distinctive_title`), ja molemmilla kerroilla seuraus oli että
+täsmäytys lakkasi toimimasta hiljaisesti. `name_in_description` jätettiin
+tarkoituksella pois skannerin portista — perustelu on kirjattu koodiin.
+
 ### D-018 – Yhdistetty hanke piilotetaan, ei poisteta
 Duplikaattien yhdistämisessä poistuva rivi voisi houkutella poistettavaksi,
 mutta siihen viittaa käyttäjädataa (suosikit, vastuutukset), tuontitapahtumia

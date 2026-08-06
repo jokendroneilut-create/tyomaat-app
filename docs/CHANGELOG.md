@@ -98,7 +98,7 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 Lähtökohta: yksittäinen ehdokas ("OYSin uuden L-talon rakentaminen alkaa")
 ei saanut **yhtään pistettä** vaikka sama hanke oli kannassa. Syy ei ollut
 matala pistemäärä vaan se, ettei yksikään todiste täyttynyt — jokainen eri
-syystä. Kaksi niistä on nyt korjattu.
+syystä. Kaikki kolme korjattu.
 
 - **Rakennuttaja tunnistetaan samaksi eri kirjoitusasuissa.**
   "Pohjois-Pohjanmaan hyvinvointialue Pohde" ja "Pohjois-Pohjanmaan
@@ -112,8 +112,14 @@ syystä. Kaksi niistä on nyt korjattu.
   merkkijonohaku ei tunnista ("OYSin", "Ruovedelle", "Rissalan tukikohtaan").
   Sama poimija ja kahden äänen sääntö kuin maakuntatäydennyksessä: 9 ratkesi,
   0 erimielisyyttä, 3 jäi perustellusti tyhjäksi. (6f7e860)
-- Yhdessä: jonon 148 ehdokkaasta **28 saa nyt ehdotuksen** ja 3 osuisi
-  automaattisesti. Kysytty tapaus nousi 0 → 48, eli näkyviin katselmoijalle.
+- **Hankkeen nimi tunnistetaan toisen puolen kuvauksesta**
+  (`name_in_description`). `descriptionSimilarity` vertaa kuvausta kuvaukseen,
+  joten se ei auta kun toisella puolella on kuvaus ja toisella vain nimi —
+  uutislähteellä on usein kuvaus mutta geneerinen otsikko, kilpailutuslähteellä
+  täsmällinen nimi mutta ei kuvausta. Tarkistetaan molempiin suuntiin.
+  (e63d303, ks. [D-019](03_DECISIONS.md))
+- Yhdessä: jonon ehdokkaista **56 saa nyt ehdotuksen** (aiemmin muutama) ja
+  17 osuisi automaattisesti. Kysytty tapaus nousi 0 → näkyviin katselmoijalle.
 
 ### Hankkeiden yhdistäminen
 
