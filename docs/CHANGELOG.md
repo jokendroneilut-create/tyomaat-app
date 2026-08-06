@@ -70,6 +70,29 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 - **Vanhentunut kilpailutus palaa aktiiviseksi** kun voittaja selviää.
   (3e80cfd, ks. [D-014](03_DECISIONS.md))
 
+### Hankkeen yritykset
+
+- **Voittaja näkyviin listalta.** Karttasivun lista näytti vain nimen,
+  kaupungin, maakunnan ja vaiheen, joten "Sopimus myönnetty" -suodatuksella
+  selatessa piti avata jokainen hanke nähdäkseen kuka kilpailun voitti.
+  Urakoitsija ja liittyvät yritykset näkyvät nyt nimen alla. (f9b1503)
+- **Yhden kirjaimen urakoitsija.** Hilman `winner_organisations` on merkkijono
+  ja `winners` siitä pilkottu taulukko; katselmointisivu luki merkkijonosta
+  `[0]` eli ensimmäisen kirjaimen ("K" ← "Kuljetuspolar Oy"). Sama sääntö
+  (`lib/projects/winnerName.ts`) molemmille kutsupaikoille. (f9b1503)
+- **Raakamuotoiset urakoitsijalistat siistitty** — Hilman `//`-erotin näkyi
+  sellaisenaan kortilla. 9 hanketta korjattu. (54c6fdf)
+- **Hankekortti ei enää näytä tyhjiä rooleja.** Kiinteät rivit
+  ("Rakennesuunnittelu: -", "LVIA-suunnittelu: -", …) korvattu yhdellä
+  listalla "Hankkeeseen liittyvät yritykset", jossa on vain tiedossa olevat
+  yritykset rooleineen. (69c9ec9)
+- **Usean osaurakan voittajat talteen.** Kun samasta hankinnasta tuli monta
+  voittajailmoitusta, vain ensimmäinen mahtui `builder`-sarakkeeseen ja loput
+  jäivät näkymättä — pahimmillaan 1 näkyvä 4:stä (Kaukametsän
+  kansalaisopisto, Kajaani). Voittajat kirjoitetaan nyt
+  `metadata.related_companies`-kenttään kaikilla kolmella kirjoituspolulla,
+  ja 69 vanhaa hanketta täydennetty. (69c9ec9, 6606cf7)
+
 ### TIC / käyttöliittymä
 
 - **"Liitä hankkeeseen"** kolmantena vaihtoehtona hyväksy/hylkää-parin
