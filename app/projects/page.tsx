@@ -7,7 +7,10 @@ import type { MapBounds } from './Map'
 import PhaseTimeline from './PhaseTimeline'
 import { CANONICAL_PHASES, displayPhaseLabel, normalizeLegacyPhase } from '@/lib/projects/phases'
 import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
-import { collectProjectCompanies } from '@/lib/projects/projectCompanies'
+import {
+  collectProjectCompanies,
+  mergeCompanyNames,
+} from '@/lib/projects/projectCompanies'
 import { trackEvent } from '@/lib/analytics/trackEvent'
 import FeedbackButton from '../components/FeedbackButton'
 
@@ -999,14 +1002,10 @@ setTeamModeEnabled(true)
                        * selatessa ei nähnyt kuka kilpailun voitti — juuri se
                        * tieto jonka takia suodatinta käytetään.
                        */
-                      const companies = [
-                        p.builder,
-                        ...(Array.isArray(p.related_companies)
-                          ? p.related_companies
-                          : []),
-                      ]
-                        .map((c) => String(c ?? '').trim())
-                        .filter(Boolean)
+                      const companies = mergeCompanyNames(
+                        [p.builder],
+                        p.related_companies
+                      )
 
                       if (companies.length === 0) return null
 

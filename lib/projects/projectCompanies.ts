@@ -72,6 +72,54 @@ const FIELD_ROLES: { field: keyof CompanySource; role: string }[] = [
   { field: "earthworks_contractor", role: "Maanrakentaja" },
 ]
 
+/*
+ * Yhdistää yrityslistoja ilman duplikaatteja. Käytetään kun voittajat
+ * kirjoitetaan metadata.related_companies-kenttään: listanäkymä lukee sen
+ * suoraan, kun taas source_history on liian iso haettavaksi listaan.
+ *
+ * Pitää järjestyksen (vanhat ensin) ja valitsee täydellisimmän kirjoitusasun,
+ * jottei y-tunnus katoa kun sama yritys tulee toisesta ilmoituksesta.
+ */
+export function mergeCompanyNames(
+  ...lists: (unknown[] | null | undefined)[]
+): string[] {
+  const found = new Map<string, string>()
+
+  for (const list of lists) {
+    for (const raw of Array.isArray(list) ? list : []) {
+      const value = String(raw ?? "").trim()
+      if (!value || value === "-") continue
+
+      for (const name of splitCompanyField(value)) {
+        const key = dedupeKey(name)
+        if (!key) continue
+
+        const existing = found.get(key)
+        if (!existing || name.length > existing.length) found.set(key, name)
+      }
+    }
+  }
+
+  return [...found.values()]
+}
+
+/*
+ * Voittajat kaikista tähän hankkeeseen osuneista voittajailmoituksista.
+ */
+export function awardWinnersFromMetadata(
+  metadata: Record<string, any> | null | undefined
+): string[] {
+  const md = metadata ?? {}
+  const history = Array.isArray(md.source_history) ? md.source_history : []
+
+  return mergeCompanyNames(
+    history
+      .filter((entry: any) => entry?.is_contract_award)
+      .flatMap((entry: any) => (Array.isArray(entry.winners) ? entry.winners : [])),
+    Array.isArray(md.winners) ? md.winners : []
+  )
+}
+
 export function collectProjectCompanies(
   project: CompanySource | null | undefined
 ): ProjectCompany[] {

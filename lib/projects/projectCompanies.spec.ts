@@ -1,5 +1,52 @@
 import { describe, it, expect } from "vitest"
-import { collectProjectCompanies } from "./projectCompanies"
+import {
+  collectProjectCompanies,
+  mergeCompanyNames,
+  awardWinnersFromMetadata,
+} from "./projectCompanies"
+
+describe("mergeCompanyNames", () => {
+  it("yhdistää listat ilman duplikaatteja", () => {
+    expect(mergeCompanyNames(["A Oy"], ["B Oy", "A Oy"])).toEqual(["A Oy", "B Oy"])
+  })
+
+  it("valitsee täydellisimmän kirjoitusasun", () => {
+    expect(mergeCompanyNames(["Lujatalo Oy"], ["Lujatalo Oy (1234567-8)"])).toEqual([
+      "Lujatalo Oy (1234567-8)",
+    ])
+  })
+
+  it("pilkkoo monta yritystä sisältävät arvot", () => {
+    expect(mergeCompanyNames(["A Oy (1111111-1), B Oy (2222222-2)"])).toEqual([
+      "A Oy (1111111-1)",
+      "B Oy (2222222-2)",
+    ])
+  })
+
+  it("sietää tyhjät ja puuttuvat listat", () => {
+    expect(mergeCompanyNames(null, undefined, ["", "  ", "-"])).toEqual([])
+  })
+})
+
+describe("awardWinnersFromMetadata", () => {
+  it("kokoaa voittajat kaikista voittajailmoituksista", () => {
+    expect(
+      awardWinnersFromMetadata({
+        source_history: [
+          { is_contract_award: true, winners: ["A Oy"] },
+          { is_contract_award: false, winners: ["Ei tama Oy"] },
+          { is_contract_award: true, winners: ["B Oy"] },
+        ],
+        winners: ["A Oy", "C Oy"],
+      })
+    ).toEqual(["A Oy", "B Oy", "C Oy"])
+  })
+
+  it("palauttaa tyhjän kun voittajia ei ole", () => {
+    expect(awardWinnersFromMetadata({})).toEqual([])
+    expect(awardWinnersFromMetadata(null)).toEqual([])
+  })
+})
 
 describe("collectProjectCompanies", () => {
   it("jättää tyhjät roolit pois", () => {

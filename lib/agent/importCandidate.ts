@@ -13,6 +13,10 @@ import { PHASE_LABELS, phaseAdvances } from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { shouldUnexpire } from "@/lib/projects/tenderExpiry"
 import {
+  awardWinnersFromMetadata,
+  mergeCompanyNames,
+} from "@/lib/projects/projectCompanies"
+import {
   findByIdentifiers,
   linkIdentifier,
   type IdentifierType,
@@ -434,6 +438,25 @@ export async function importCandidate(
           last_source_name: body.source_name || "agent",
           last_source_url: body.source_url || null,
           last_imported_at: new Date().toISOString(),
+          /*
+           * Voittajat talteen listanäkymää varten: se lukee
+           * related_companies-kentän suoraan, kun taas source_history on
+           * liian iso haettavaksi listaan. Usean osaurakan hankinnassa vain
+           * ensimmäinen voittaja mahtuu builder-sarakkeeseen.
+           */
+          ...(() => {
+            const related = mergeCompanyNames(
+              Array.isArray(match.metadata?.related_companies)
+                ? match.metadata.related_companies
+                : [],
+              Array.isArray(body.metadata?.related_companies)
+                ? body.metadata.related_companies
+                : [],
+              awardWinnersFromMetadata(match.metadata),
+              awardWinnersFromMetadata(body.metadata)
+            )
+            return related.length > 0 ? { related_companies: related } : {}
+          })(),
           // Vanhenemismerkinnät pois, jottei kortti väitä hanketta yhä
           // vanhentuneeksi. Peruste jää talteen unexpired_reason-kenttään.
           ...(unexpire

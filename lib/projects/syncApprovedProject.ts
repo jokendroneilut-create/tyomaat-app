@@ -2,6 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { phaseAdvances as phaseAdvancesFrom } from "./phases"
 import { recordPhaseChange } from "./recordPhaseChange"
 import { shouldUnexpire } from "./tenderExpiry"
+import {
+  awardWinnersFromMetadata,
+  mergeCompanyNames,
+} from "./projectCompanies"
 
 /*
  * Kun jo hyväksytyn hankkeen taustalla oleva potentiaalinen hanke saa
@@ -34,9 +38,30 @@ export async function syncApprovedProject(input: {
 
   const mergedPhase = phaseAdvances ? newPhaseHint : project.phase
 
-  const mergedMetadata = {
+  const baseMetadata = {
     ...(project.metadata ?? {}),
     ...input.newMetadata,
+  }
+
+  /*
+   * Voittajat talteen related_companies-kenttään. Usean osaurakan hankinnassa
+   * jokainen ilmoitus tuo oman voittajansa, ja aiemmin vain ensimmäinen päätyi
+   * builder-sarakkeeseen — loput jäivät näkymättä. Listanäkymä lukee
+   * related_companies-kentän suoraan, kun taas source_history on liian iso
+   * haettavaksi listaan.
+   */
+  const relatedCompanies = mergeCompanyNames(
+    Array.isArray(baseMetadata.related_companies)
+      ? baseMetadata.related_companies
+      : [],
+    awardWinnersFromMetadata(baseMetadata)
+  )
+
+  const mergedMetadata = {
+    ...baseMetadata,
+    ...(relatedCompanies.length > 0
+      ? { related_companies: relatedCompanies }
+      : {}),
   }
 
   /*

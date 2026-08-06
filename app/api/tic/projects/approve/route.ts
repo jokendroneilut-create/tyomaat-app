@@ -3,6 +3,10 @@ import { createClient } from "@supabase/supabase-js"
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
 import { resolveWinnerName } from "@/lib/projects/winnerName"
 import {
+  awardWinnersFromMetadata,
+  mergeCompanyNames,
+} from "@/lib/projects/projectCompanies"
+import {
   PHASE_LABELS,
   PHASE_KEYS_IN_ORDER,
   CANONICAL_PHASES,
@@ -2326,20 +2330,23 @@ export async function POST(request: Request) {
        * urakoitsija toisesta). Normalisoidaan vertailu pieniksi kirjaimiksi,
        * jotta "Bravida" ja "bravida" eivät päädy listalle kahdesti.
        */
-      const relatedCompanies = new Map<string, string>()
-      for (const name of [
-        ...((existingProject.metadata?.related_companies as string[]) ?? []),
-        ...((metadata.related_companies as string[]) ?? []),
-      ]) {
-        const trimmed = String(name ?? "").trim()
-        if (trimmed) relatedCompanies.set(trimmed.toLowerCase(), trimmed)
-      }
+      const relatedCompanies = mergeCompanyNames(
+        (existingProject.metadata?.related_companies as string[]) ?? [],
+        (metadata.related_companies as string[]) ?? [],
+        /*
+         * Voittajat mukaan: usean osaurakan hankinnassa vain yksi mahtuu
+         * builder-sarakkeeseen, ja listanäkymä lukee related_companies-kentän
+         * suoraan (source_history on liian iso listaan haettavaksi).
+         */
+        awardWinnersFromMetadata(existingProject.metadata),
+        awardWinnersFromMetadata(metadata)
+      )
 
       const mergedMetadata = {
         ...metadata,
         ...(existingProject.metadata ?? {}),
         also_known_as: Array.from(alsoKnownAs),
-        related_companies: Array.from(relatedCompanies.values()),
+        related_companies: relatedCompanies,
         source_count: Number(existingProject.metadata?.source_count ?? 1) + 1,
         last_seen_at: new Date().toISOString(),
         last_source_name:
