@@ -193,8 +193,16 @@ export async function loadProjectsForMatching(): Promise<any[]> {
           "meta_building_type:metadata->>building_type," +
           "meta_source_title:metadata->>source_title," +
           "meta_description:metadata->>description," +
-          "meta_also_known_as:metadata->also_known_as"
+          "meta_also_known_as:metadata->also_known_as," +
+          "meta_merged_into:metadata->>merged_into_project_id"
       )
+      /*
+       * Yhdistetty hanke ei ole enää täsmäytyksen kohde: siihen kirjoitettu
+       * rikastus jäisi piilotetulle riville näkymättä. Säilyvä hanke saa
+       * yhdistämisessä myös poistuvan nimen also_known_as-kenttään, joten
+       * osuma löytyy silti.
+       */
+      .is("metadata->>merged_into_project_id", null)
       .order("id", { ascending: true })
       .range(from, from + PAGE - 1)
 
@@ -210,6 +218,7 @@ export async function loadProjectsForMatching(): Promise<any[]> {
         meta_source_title,
         meta_description,
         meta_also_known_as,
+        meta_merged_into,
         ...rest
       } = row
 

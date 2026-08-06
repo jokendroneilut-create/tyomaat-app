@@ -3,6 +3,7 @@ import {
   normalizeIdentifierValue as normalizeIdentifier,
 } from "@/lib/projects/identity"
 import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
+import { isSameOrganization } from "@/lib/projects/organizationName"
 
 export type NormalizedProjectCandidate = {
   name?: string | null
@@ -422,15 +423,19 @@ export function calculateMatch(
     reasons.push("same_region")
   }
 
-  const candidateDeveloper = norm(candidate.developer)
-  const projectDeveloper = norm(
-    getProjectDeveloper(project)
-  )
-
+  /*
+   * Rakennuttajaa verrataan organisaationimenä eikä merkkijonona: sama
+   * toimija kirjoitetaan lähteissä eri tavoin (genetiivi, sulkeissa oleva
+   * lyhenne, yhtiömuoto, y-tunnus). Mitattu tapaus: "Pohjois-Pohjanmaan
+   * hyvinvointialue Pohde" ja "Pohjois-Pohjanmaan hyvinvointialueen (Pohde)"
+   * jäivät eri toimijoiksi, jolloin rakennuttaja+kaupunki -todiste ei
+   * täyttynyt eikä koko täsmäytys palauttanut mitään.
+   */
   if (
-    candidateDeveloper &&
-    projectDeveloper &&
-    candidateDeveloper === projectDeveloper
+    isSameOrganization(
+      candidate.developer,
+      getProjectDeveloper(project)
+    )
   ) {
     confidence += 20
     reasons.push("same_developer")
