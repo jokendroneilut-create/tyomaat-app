@@ -13,6 +13,7 @@ const REASON_LABELS: Record<string, string> = {
   same_region: "Sama maakunta",
   exact_title: "Sama nimi",
   similar_title: "Samankaltainen nimi",
+  name_in_description: "Nimi mainittu kuvauksessa",
   same_developer: "Sama rakennuttaja",
   same_building_type: "Sama rakennustyyppi",
 }

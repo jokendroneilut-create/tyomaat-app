@@ -38,6 +38,7 @@ const REASON_LABELS: Record<string, string> = {
   exact_distinctive_title: "sama erottuva nimi",
   similar_title: "samankaltainen nimi",
   similar_description: "samankaltainen kuvaus",
+  name_in_description: "nimi mainittu kuvauksessa",
   same_developer: "sama rakennuttaja",
   same_building_type: "sama rakennustyyppi",
 }

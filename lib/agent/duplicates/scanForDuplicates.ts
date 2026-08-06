@@ -58,6 +58,14 @@ function passesDuplicateQualityBar(match: ProjectMatchResult): boolean {
 
   if (hasStrongIdentifier) return true
 
+  /*
+   * name_in_description on tarkoituksella POIS tästä listasta. Se on
+   * täsmäytyksessä pätevä tekstitodiste, mutta skanneri vertaa hankkeita
+   * toisiinsa — ei ehdokasta hankkeeseen — eikä sen vaikutusta pareittaisessa
+   * läpikäynnissä ole mitattu. Lisääminen laajentaisi skannerin porttia
+   * mittaamatta, mikä on juuri se virhe joka on aiemmin tuottanut vääriä
+   * pareja. Jos tämä otetaan mukaan, mittaa ensin ajamalla täysi skannaus.
+   */
   const hasTitleEvidence =
     match.reasons.includes("exact_title") ||
     match.reasons.includes("exact_distinctive_title") ||

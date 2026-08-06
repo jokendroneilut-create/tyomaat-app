@@ -78,6 +78,7 @@ export type ProjectMatchReason =
   | "exact_distinctive_title"
   | "similar_title"
   | "similar_description"
+  | "name_in_description"
   | "same_developer"
   | "same_building_type"
 
@@ -201,6 +202,62 @@ function descriptionSimilarity(
 
   const unionSize = new Set([...a, ...b]).size
   return unionSize > 0 ? sharedCount / unionSize : 0
+}
+
+/*
+ * Osuuko toisen puolen NIMI toisen puolen KUVAUKSEEN?
+ *
+ * descriptionSimilarity vertaa kuvausta kuvaukseen, joten se ei auta kun
+ * toisella puolella on kuvaus ja toisella vain nimi. Mitattu tapaus: ehdokkaan
+ * kuvaus "...rakennetaan tilat lastenpsykiatrialle ja sairaalakoululle" ja
+ * hankkeen nimi "L-rakennus lastenpsykiatrialle ja sairaalakoululle Oulun
+ * sairaala-alueella" — ihminen näkee osuman heti, mutta hankkeella ei ollut
+ * kuvausta lainkaan, joten mikään tekstivertailu ei voinut osua.
+ *
+ * Mitta on SISÄLTYVYYS eikä Jaccard: pitkä kuvaus laimentaisi Jaccardin
+ * lähelle nollaa, vaikka nimi olisi kokonaan sen sisällä. Kysymys on
+ * "onko nimi tekstissä", ei "ovatko tekstit samanpituisia".
+ *
+ * Geneeriset sanat pudotetaan (titleWords), jottei "rakentaminen" tai
+ * "peruskorjaus" tuota osumaa mihin tahansa kuvaukseen.
+ */
+const NAME_IN_TEXT_THRESHOLD = 0.7
+const NAME_IN_TEXT_MIN_WORDS = 2
+
+function nameWithinText(
+  name: string | null | undefined,
+  text: string | null | undefined
+): boolean {
+  const distinctiveWords = titleWords(name)
+  if (distinctiveWords.length < NAME_IN_TEXT_MIN_WORDS) return false
+
+  const textWords = new Set(
+    (norm(text) ?? "").split(" ").filter((word) => word.length >= 4)
+  )
+  if (textWords.size < 5) return false
+
+  /*
+   * Vertailu KOKONAISINA SANOINA eikä trigrammeina. Trigrammeilla mitattuna
+   * suomen yhdyssanat vuotavat toisiinsa: "tuulivoimahanke" sisältyy lähes
+   * kokonaan tekstiin jossa lukee "tuulivoimapuisto", jolloin eri hankkeet
+   * osuivat toisiinsa. Mitattuna 37 osumasta selvästi yli puolet oli vääriä
+   * (esim. "Kotaselän tuulivoimahanke" -> "Asemakeskus").
+   *
+   * Taivutus sallitaan vain vartalon alusta: sana kelpaa jos jokin tekstin
+   * sana alkaa sillä tai se alkaa tekstin sanalla, vähintään 6 merkin
+   * yhteisellä alulla.
+   */
+  let foundCount = 0
+  for (const word of distinctiveWords) {
+    const found = [...textWords].some(
+      (textWord) =>
+        textWord === word ||
+        (word.length >= 6 && textWord.startsWith(word.slice(0, 6)) && word.startsWith(textWord.slice(0, 6)))
+    )
+    if (found) foundCount += 1
+  }
+
+  return foundCount / distinctiveWords.length >= NAME_IN_TEXT_THRESHOLD
 }
 
 function getProjectDescription(project: MatchableProject) {
@@ -472,6 +529,23 @@ export function calculateMatch(
   }
 
   /*
+   * Nimi toisen puolen kuvauksessa. Tarkistetaan molempiin suuntiin, koska
+   * kumman tahansa puolen kuvaus voi puuttua: uutislähteellä on usein kuvaus
+   * mutta geneerinen otsikko, kilpailutuslähteellä täsmällinen nimi mutta ei
+   * kuvausta.
+   *
+   * Ei anneta pisteitä kahdesti, jos kuvausvertailu osui jo.
+   */
+  if (
+    !reasons.includes("similar_description") &&
+    (nameWithinText(project.name, candidate.description) ||
+      nameWithinText(candidate.name, getProjectDescription(project)))
+  ) {
+    confidence += 30
+    reasons.push("name_in_description")
+  }
+
+  /*
    * Pelkkä sama maakunta ei riitä osumaksi.
    * Myöskään pelkkä sama kaupunki ei saa yhdistää hankkeita.
    */
@@ -486,7 +560,8 @@ export function calculateMatch(
     reasons.includes("exact_title") ||
     reasons.includes("exact_distinctive_title") ||
     reasons.includes("similar_title") ||
-    reasons.includes("similar_description")
+    reasons.includes("similar_description") ||
+    reasons.includes("name_in_description")
 
   /*
    * Sama rakennuttaja samassa kaupungissa on todiste vaikka nimet eivät
@@ -522,7 +597,8 @@ export function calculateMatch(
    */
   const onlyWeakText =
     (reasons.includes("similar_title") ||
-      reasons.includes("similar_description")) &&
+      reasons.includes("similar_description") ||
+      reasons.includes("name_in_description")) &&
     !reasons.includes("exact_title") &&
     !reasons.includes("exact_distinctive_title")
 
