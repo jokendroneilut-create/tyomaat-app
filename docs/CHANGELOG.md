@@ -121,15 +121,119 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
   [`09_HYVINVOINTIALUE_SOURCES.md`](09_HYVINVOINTIALUE_SOURCES.md).
   (85ccbbf, 18d0c9a)
 
-### Vielä dokumentoimatta
+---
 
-29.–30.7. tehty työ (tiiminäkymän suodattimet ja sivutus, /today-onboarding,
-RLS-kovennus, kaavaresolverien vaihekartoitus, maakunnan päättely tilaajan
-nimestä ja LLM:llä) on toistaiseksi vain commit-viesteissä.
+## 2026-07 (loppukuu, 29.–30.7.)
+
+### Sijaintitieto — maakunta
+
+Maakunta ratkaisee kenen syötteeseen hanke päätyy: `getTodayProjects` ja
+digest-reitti suodattavat sen SQL-vertailulla, eikä NULL täsmää koskaan.
+Maakunnaton hanke ei siis osu kaikkiin hakuvahteihin vaan **putoaa pois
+kaikilta** jotka ovat valinneet maakuntansa.
+
+- **Kunta päätellään myös tilaajan nimestä ja postitoimipaikasta.** Kunta jäi
+  tunnistamatta aina kun ilmoituksessa ei ollut postinumerollista
+  työmaaosoitetta. Uusi `lib/geo/municipalityFromName.ts`: "Janakkalan kunta"
+  → Janakkala, genetiivi poikkeuslistalla ja vartalonmuutoksilla,
+  postitoimipaikat jotka eivät ole kuntia (Turenki → Janakkala, Ivalo →
+  Inari). Tilaajan nimi on vasta viimeinen keino, jotta oikea työmaakaupunki
+  voittaa. Ajettu: 1080 → 255 puuttuvaa. (4490b77)
+- **LLM-poiminta lopuille.** Merkkijonohaku ei riitä: kokeilussa Kuusankoski
+  tulkittiin Kuusamoksi ja "Sonkakoti Oy" Sonkajärveksi. Kolme suojaa —
+  vastaus validoidaan kuntarekisteriä vasten, tyhjä on hyväksytty tulos, ja
+  backfill kysyy jokaisen rivin kahdesti hyväksyen vain yksimielisen
+  vastauksen. Malli `claude-opus-5` tarkoituksella: Haiku 4.5 sijoitti
+  ~12 % väärin (Kolmenkulma → Helsinki, Kimola → Jämsä). Ajettu: projects
+  55 → 15, potential_projects 255 → 138. (842111d)
+- **"Maakunta puuttuu" -merkintä TIC-listaan.** Maakunnaton ehdokas näytti
+  jonossa samalta kuin muut, eikä hyväksynnän jälkeen palaa tarkistukseen.
+  Käsin korjaaminen on tässä oikea ratkaisu: 105/138 maakunnattomasta oli
+  hylättyjä, eli mallipäättely ingest-vaiheessa maksaisi pääosin hankkeista
+  jotka päätyvät roskiin. (24b100c)
+- Viisi käsin asetettua maakuntaa kirjattu
+  [`docs/sql/2026-07-30_manual_region_fixes.sql`](sql/2026-07-30_manual_region_fixes.sql):ään.
+  (1b4e6b1)
+
+### Kaavavaiheiden korjaus (211 resolveria)
+
+- **Kaavan lainvoima ei ole hankkeen valmistuminen.** Jokainen
+  `mapXxxKaavaPhase` mäppäsi kaavan voimaantulon `completed`-vaiheeseen,
+  joten kaavahankkeet katosivat näkyvistä valmistuneina. Kaavan
+  valmistuminen on hankkeelle **aikainen** signaali — kaava valmis,
+  rakentaminen voi alkaa. 211 tiedostoa. (30318b1)
+- Kaavan hyväksyntä ei myöskään ole rakennuslupa (`permit` → `zoning`), eikä
+  luonnos/ehdotus/OAS ole "Suunnittelu". Kaikki kaavan tilat kuuluvat
+  Kaavoitus-vaiheeseen. (c300118, eb1914b)
+
+### Tiiminäkymä
+
+- **Perussuodatus ja /today-integraatio**, täysin opt-in eikä skeemamuutoksia:
+  `teamModeInToday` (oletus off) ja `hideTeammateOwned` (oletus true).
+  Kytkin näkyy vain tiimiin kuuluvalle. (254d45c)
+- **Jakosuodattimet**: esihenkilö voi rajata jaettavaa poolia vaiheella ja
+  avainsanalla. Jo vastuutetut hankkeet pysyvät koskemattomina. (d67bd28)
+- **Kaksi 1000-rivin katkoa korjattu.** Hankehaku ja `project_assignments`
+  haettiin ilman sivutusta: 1120 vastuutuksella 120 katosi "Omat"-näkymästä,
+  ja katkaisujärjestys on määrittelemätön, joten juuri jaetut saattoivat
+  pudota. (783b6f5, d67bd28)
+- "Vapaa"-badge jakamattomille ja jäsenkohtainen suodatin jakaumasta.
+  (09c6abc)
+- Profiilinimet ihmisluettaviksi ("johannes.sippola" → "Johannes Sippola"),
+  myös autoluonti-trigger uusille käyttäjille. (2b68c38, e186dd9)
+
+### /today
+
+- Onboarding: lähteet oletuksena kaikki päälle, myyntihetki pakolliseksi,
+  todellinen aluemäärä. (d8cc0af)
+- Kertaalleen näytettävä tervetuloesittely, versioitu localStoragessa; ei näy
+  päällekkäin roolimodaalin kanssa. Mukana selitys peukuista, jotka opettavat
+  näkymää. (f8eb71c, 323e901)
+- **Valmistuneet pois syötteestä** — 68 hanketta oli `status=active` mutta
+  `phase=Valmistunut`, joten Tänään näytti 4043 ja kartta 3975. Nyt molemmat
+  3975. (057daba)
+
+### Putken itsetyhjentyvyys
+
+- **Faktajono jumissa 24:ssä**, koska fact_worker vain ohitti dokumentit joita
+  se ei voi käsitellä eikä koskaan merkinnyt niitä valmiiksi. Terminaaliset
+  dokumentit (kuvapohjainen PDF, sisällötön HTML-kuori) merkitään nyt
+  valmiiksi. (791473c)
+- **Sama kuvio ehdokkaissa**: auto-ohitetut jäivät ikuisesti `new`-tilaan,
+  joten "suodatettiin pois automaattisesti" -kortti näytti koko heinäkuun
+  kertymää. Nyt terminaalitila `ignored`, ja kortti näyttää 24 h. (ca0003f)
+
+### Lähdeterveys
+
+- **Onnistunut ajo tyhjentää virhetilan.** Itsestään korjautunut lähde näytti
+  kymmeniä virheitä vaikka oli kunnossa. Historia säilyy
+  `discovery_runs`-taulussa. (3081799)
+- **Discovery Health**: kolmas kortti näytti `agent_jobs.pending`-lukua, joka
+  on lepotilassa aina 0 — jono on olemassa vain ajon sisällä. Tilalle
+  faktapoimintaa odottavat dokumentit + yli tunnin jumissa olleet työt.
+  (6d8a013)
+- **Marttila**: haku epäonnistui 7/8 ajossa. Syy ei ollut palomuuri vaan
+  vajaa varmenneketju — sivusto lähettää osasta reunapalvelimia pelkän
+  palvelinvarmenteen ilman välivarmennetta, joten TLS-kättely kaatuu
+  Vercelin reitiltä mutta onnistuu Suomesta. Puuttuva välivarmenne haetaan
+  nyt AIA-kentän osoitteesta kuten selaimet tekevät; ketjua ei ohiteta.
+  (428fe90, dc2cca0)
+- Kuollutta koodia pois Operations-sivulta, taulukoiden vaakavieritys
+  korjattu mobiilissa. (28b7d18, f52ed68)
+
+### Tietoturva ja kutsut
+
+- **RLS**: 16 anon-avaimelle avointa taulua suljettu, työkalu ja SQL kirjattu
+  `docs/sql/2026-07-30`-tiedostoihin. Funktioiden kovennus (Advisor WARN)
+  dokumentoitu erikseen. (5cd198f, e86ae6b)
+- **set-password mobiilissa**: Androidilla sivu ehti kutsua `updateUser`
+  ennen kuin istunto oli hydratoitu evästeestä → "Auth session missing".
+  Nyt odotetaan vahvistus ja yritetään `refreshSession()`. Koko kutsuketjun
+  todistava `scripts/diag-invite.mjs` lisätty. (d4794a8)
 
 ---
 
-## 2026-07
+## 2026-07 (alkukuu)
 
 ### Discovery – lähteet ja tiedonkeruu
 
