@@ -7,6 +7,7 @@ import type { MapBounds } from './Map'
 import PhaseTimeline from './PhaseTimeline'
 import { CANONICAL_PHASES, displayPhaseLabel, normalizeLegacyPhase } from '@/lib/projects/phases'
 import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
+import { collectProjectCompanies } from '@/lib/projects/projectCompanies'
 import { trackEvent } from '@/lib/analytics/trackEvent'
 import FeedbackButton from '../components/FeedbackButton'
 
@@ -1259,63 +1260,82 @@ setTeamModeEnabled(true)
                 <p>
                   <strong>Sijainti / osoite:</strong> {selected.location || '-'}
                 </p>
-                <p>
-                  <strong>🏗️ Rakennuttaja:</strong> {selected.developer || '-'}
-                </p>
-                <p>
-                  <strong>👷 Rakennusliike:</strong> {selected.builder || '-'}
-                </p>
-                <p>
-                  <strong>🏢 Kohdetyyppi:</strong> {selected.property_type || '-'}
-                </p>
+                {selected.property_type ? (
+                  <p>
+                    <strong>🏢 Kohdetyyppi:</strong> {selected.property_type}
+                  </p>
+                ) : null}
               </div>
 
               <div>
-                <p>
-                  <strong>🏠 Asuntoja:</strong> {selected.apartments ?? '-'}
-                </p>
-                <p>
-                  <strong>📐 Kerrosala:</strong> {formatM2(selected.floor_area)}
-                </p>
-                <p>
-                  <strong>💰 Arvioitu kustannus:</strong> {formatEUR(selected.estimated_cost)}
-                </p>
-                <p>
-                  <strong>📅 Rakentamisen aloitus:</strong> {selected.construction_start || '-'}
-                </p>
-                <p>
-                  <strong>📅 Arvioitu valmistuminen:</strong> {selected.estimated_completion || '-'}
-                </p>
+                {/*
+                  * Tyhjät kentät jätetään pois. Aiemmin jokainen rivi
+                  * näytettiin aina, joten hankekortti oli enimmäkseen
+                  * viivoja ("Asuntoja: -", "Kerrosala: -", ...) ja näytti
+                  * tyhjältä vaikka tiedossa olisi ollut olennaista.
+                  */}
+                {selected.apartments != null ? (
+                  <p>
+                    <strong>🏠 Asuntoja:</strong> {selected.apartments}
+                  </p>
+                ) : null}
+                {selected.floor_area != null ? (
+                  <p>
+                    <strong>📐 Kerrosala:</strong> {formatM2(selected.floor_area)}
+                  </p>
+                ) : null}
+                {selected.estimated_cost != null ? (
+                  <p>
+                    <strong>💰 Arvioitu kustannus:</strong>{' '}
+                    {formatEUR(selected.estimated_cost)}
+                  </p>
+                ) : null}
+                {selected.construction_start ? (
+                  <p>
+                    <strong>📅 Rakentamisen aloitus:</strong>{' '}
+                    {selected.construction_start}
+                  </p>
+                ) : null}
+                {selected.estimated_completion ? (
+                  <p>
+                    <strong>📅 Arvioitu valmistuminen:</strong>{' '}
+                    {selected.estimated_completion}
+                  </p>
+                ) : null}
               </div>
             </div>
 
             <hr className="projects-hr" />
 
-            <div className="projects-modalGrid">
-              <div>
-                <p>
-                  <strong>Rakennesuunnittelu:</strong> {selected.structural_design || '-'}
-                </p>
-                <p>
-                  <strong>LVIA-suunnittelu:</strong> {selected.hvac_design || '-'}
-                </p>
-                <p>
-                  <strong>Sähkösuunnittelu:</strong> {selected.electrical_design || '-'}
-                </p>
-              </div>
+            {/*
+              * Hankkeeseen liittyvät yritykset yhtenä listana rooleineen sen
+              * sijaan että jokainen rooli olisi oma rivinsä myös tyhjänä.
+              * Kokoaa myös usean osaurakan voittajat, jotka jäivät ennen
+              * näkymättä kun vain yksi mahtui builder-kenttään.
+              */}
+            {(() => {
+              const companies = collectProjectCompanies(selected)
 
-              <div>
-                <p>
-                  <strong>Arkkitehtisuunnittelu:</strong> {selected.architectural_design || '-'}
-                </p>
-                <p>
-                  <strong>Pohjarakennesuunnittelu:</strong> {selected.geotechnical_design || '-'}
-                </p>
-                <p>
-                  <strong>Maanrakentaja:</strong> {selected.earthworks_contractor || '-'}
-                </p>
-              </div>
-            </div>
+              return (
+                <div>
+                  <p style={{ marginBottom: 8 }}>
+                    <strong>Hankkeeseen liittyvät yritykset</strong>
+                  </p>
+
+                  {companies.length === 0 ? (
+                    <p style={{ color: '#6b7280' }}>Ei vielä tiedossa.</p>
+                  ) : (
+                    <div className="projects-companyList">
+                      {companies.map((company) => (
+                        <p key={`${company.role}-${company.name}`}>
+                          <strong>{company.role}:</strong> {company.name}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
  {selected.metadata?.deadline ||
             selected.metadata?.source_url ||
@@ -1423,16 +1443,6 @@ setTeamModeEnabled(true)
               * esimerkiksi talotekniikkaurakoitsija. Ilman tätä tieto olisi
               * vain kirjoitettu kantaan eikä näkyisi missään.
               */}
-            {Array.isArray(selected.metadata?.related_companies) &&
-            selected.metadata.related_companies.length > 0 ? (
-              <>
-                <hr className="projects-hr" />
-                <p style={{ marginBottom: 6 }}>
-                  <strong>Liittyvät yritykset:</strong>{' '}
-                  {(selected.metadata.related_companies as string[]).join(', ')}
-                </p>
-              </>
-            ) : null}
 
             {selected.additional_info ? (
               <>

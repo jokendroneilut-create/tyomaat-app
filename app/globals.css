@@ -417,6 +417,22 @@ button:hover {
 }
 
 /*
+ * Hankkeeseen liittyvät yritykset hankekortilla. Kahdessa sarakkeessa kun
+ * tilaa on, jotta pitkä lista ei venytä korttia turhaan.
+ */
+.projects-companyList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px 24px;
+}
+
+@media (min-width: 640px) {
+  .projects-companyList {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/*
  * Urakoitsija ja liittyvät yritykset hankkeen nimen alla. Omana rivinään
  * eikä uutena sarakkeena, jotta taulukon leveys ja mobiilinäkymä pysyvät
  * ennallaan.
