@@ -120,6 +120,18 @@ syystä. Kaikki kolme korjattu.
   (e63d303, ks. [D-019](03_DECISIONS.md))
 - Yhdessä: jonon ehdokkaista **56 saa nyt ehdotuksen** (aiemmin muutama) ja
   17 osuisi automaattisesti. Kysytty tapaus nousi 0 → näkyviin katselmoijalle.
+- **Työlista jonosta** (`scripts/report-queue-matches.ts`): ajaa saman
+  täsmäytyksen kuin agentti ja jakaa jonon kolmeen nippuun (yhdistettävissä /
+  tarkistettava / todennäköisesti uusi) linkkeineen. Ei muuta mitään — kertoo
+  vain mitkä kortit kannattaa avata ensin. TIC laskee ehdotukset joka tapauksessa
+  sivun latauksessa, joten uusi logiikka näkyy korteilla ilman ajoa.
+
+**Tunnettu väärä osuma:** saman kunnan tuulivoimahankkeet muistuttavat
+toisiaan sekä nimeltä että kuvaukseltaan, joten yhdistelmä `similar_title +
+same_city + same_region + similar_description` voi ylittää 70:n eri hankkeilla
+(mitattu: Tervakangas ja Tulijokila osuivat Ukonkankaaseen, kaikki Puolangalla).
+Ei liity `name_in_description`-lisäykseen — vanhaa käytöstä, joka paljastui
+vasta kun koko jono listattiin kerralla.
 
 ### Hankkeiden yhdistäminen
 
