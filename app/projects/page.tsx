@@ -22,6 +22,14 @@ type Project = {
   location: string | null
   developer: string | null
   builder: string | null
+  /*
+   * Haetaan listaan omana JSON-polkuna eikä koko metadatana: metadata oli
+   * 58 % karttasivun siirretystä datasta ja pudotettiin siksi pois. Yritykset
+   * ovat kuitenkin se tieto jonka takia "Sopimus myönnetty" -suodatinta
+   * käytetään, joten ne pitää nähdä listalta ilman että jokainen hanke
+   * avataan erikseen.
+   */
+  related_companies: string[] | null
   property_type: string | null
   apartments: number | null
   floor_area: number | null
@@ -455,6 +463,7 @@ export default function Projects() {
           apartments, floor_area, estimated_cost, construction_start, estimated_completion,
           structural_design, hvac_design, electrical_design, architectural_design,
           geotechnical_design, earthworks_contractor, additional_info,
+          related_companies:metadata->related_companies,
            latitude, longitude,
           is_public,
           created_at
@@ -981,6 +990,31 @@ setTeamModeEnabled(true)
                 <div key={p.id} className="projects-tableRow">
                   <div className="projects-name">
                     {p.name}{' '}
+                    {(() => {
+                      /*
+                       * Urakoitsija ja liittyvät yritykset suoraan riville:
+                       * aiemmin ne näkyivät vain hankekortin avaamisen
+                       * jälkeen, joten "Sopimus myönnetty" -suodatuksella
+                       * selatessa ei nähnyt kuka kilpailun voitti — juuri se
+                       * tieto jonka takia suodatinta käytetään.
+                       */
+                      const companies = [
+                        p.builder,
+                        ...(Array.isArray(p.related_companies)
+                          ? p.related_companies
+                          : []),
+                      ]
+                        .map((c) => String(c ?? '').trim())
+                        .filter(Boolean)
+
+                      if (companies.length === 0) return null
+
+                      return (
+                        <div className="projects-companies">
+                          👷 {companies.join(' · ')}
+                        </div>
+                      )
+                    })()}
                     {!hasCoords(p) ? (
                       <span
                         style={{

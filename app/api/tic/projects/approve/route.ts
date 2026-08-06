@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
+import { resolveWinnerName } from "@/lib/projects/winnerName"
 import {
   PHASE_LABELS,
   PHASE_KEYS_IN_ORDER,
@@ -2177,14 +2178,7 @@ export async function POST(request: Request) {
      * Muuten voittaja ei näy "Rakennusliike"-kentässä eikä löydy haulla
      * (hankehaku tutkii builder-saraketta, ei metadataa).
      */
-    const winnerName: string | null = (() => {
-      const wo = metadata.winner_organisations
-      if (typeof wo === "string" && wo.trim()) return wo.trim()
-      if (Array.isArray(metadata.winners) && metadata.winners.length > 0) {
-        return metadata.winners.filter(Boolean).join(", ") || null
-      }
-      return null
-    })()
+    const winnerName = resolveWinnerName(metadata)
 
     const builder =
       metadata.builder ??

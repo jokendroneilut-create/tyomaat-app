@@ -5,6 +5,7 @@ import ProjectActions from "./ProjectActions"
 import MergeIntoProject from "./MergeIntoProject"
 import EditableCandidate from "./EditableCandidate"
 import { resolveExpiry } from "@/lib/projects/tenderExpiry"
+import { resolveWinnerName } from "@/lib/projects/winnerName"
 
 export const dynamic = "force-dynamic"
 
@@ -126,7 +127,7 @@ export default async function CandidateDetailPage({ params }: Props) {
             city: candidate.city ?? "",
             address: candidate.location ?? "",
             developer: metadata.developer ?? "",
-            builder: metadata.builder ?? metadata.winner_organisations?.[0] ?? "",
+            builder: metadata.builder ?? resolveWinnerName(metadata) ?? "",
             relatedCompanies: Array.isArray(metadata.related_companies)
               ? metadata.related_companies.join(", ")
               : "",

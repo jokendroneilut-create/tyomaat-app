@@ -416,6 +416,19 @@ button:hover {
   line-height: 1.25;
 }
 
+/*
+ * Urakoitsija ja liittyvät yritykset hankkeen nimen alla. Omana rivinään
+ * eikä uutena sarakkeena, jotta taulukon leveys ja mobiilinäkymä pysyvät
+ * ennallaan.
+ */
+.projects-companies {
+  margin-top: 3px;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted-2);
+  line-height: 1.35;
+}
+
 .projects-actions {
   display: flex;
   align-items: center;
