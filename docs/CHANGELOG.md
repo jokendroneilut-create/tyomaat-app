@@ -33,6 +33,55 @@ väärän kuvan.
 `yva`-lähteestä, ja 141:llä ei ole lainkaan luokittelua. Uusi AI-portti korjaa
 tämän vain eteenpäin — se ajetaan luontihetkellä, ei jo jonossa oleville.
 
+### YVA-lähde: haettu sisältö otettiin käyttöön
+
+Lähtökohtana havainto katselmointijonosta: YVA-ehdokkailla ei ollut mitään
+tietoja — ei sijaintia, rakennuttajaa, kohdetyyppiä. Syitä oli kaksi, eri
+kohdissa samaa poimijaa.
+
+**1. Haettu sisältö heitettiin pois.** `_source`-listassa pyydettiin kentät
+`content` ja `projectType`, mutta kumpaakaan ei käytetty, ja
+`developer`/`property_type` oli kovakoodattu nulliksi. Mitattu "Halmemäen
+tuulivoimahanke, Kärsämäki": tiivistelmä 78 merkkiä, `content` **8 639
+merkkiä** — ja jälkimmäisessä voimaloiden määrä, teho, tornin korkeus,
+hankealueen pinta-ala ja sijainti suhteessa keskustaajamaan. Data oli siis jo
+haettu samassa vastauksessa ja jätetty lukematta.
+
+Nyt `content` on kuvaus ja `subjectArea` kohdetyyppi (otoksessa 25/25
+täytetty; `projectType` oli 0/25 eli aina tyhjä). Rakennuttaja poimitaan
+leipätekstistä — `organization` on viranomainen eikä kelpaa, mikä oli jo
+todettu tiedostokommentissa.
+
+Poiminta vaatii yhtiömuodon, koska kuvio "X suunnittelee" on löyhä. Kaksi
+mitattua virhekaappausta korjattiin: sivun lyhytosoite liittyi nimeen
+(`...rikastushiekka-YVA Dragon Mining Oy`) ja pienellä alkava nimi katkesi
+(`wpd Suomi Oy` → `Suomi Oy`). Jälkimmäinen hylätään nyt kokonaan — mieluummin
+tyhjä kuin väärä rakennuttaja. Kaikki 61 poimittua nimeä tarkistettiin käsin.
+
+**2. `size: 150` katkaisi haun ennen tuoreusikkunaa.** Ks.
+[D-026](03_DECISIONS.md). Aineistossa on 1337 hanketta, joten haku ulottui vain
+kolme kuukautta taaksepäin ja 3–18 kuukauden ikäiset hankkeet jäivät hakematta.
+Haku sivuttaa nyt tuoreusrajaan asti: **103 → 312 hanketta**, 1052 ms.
+
+Vanhat ehdokkaat täydennettiin (`scripts/backfill-yva-details.ts`, täyttää vain
+tyhjät kentät ja korvaa kuvauksen vain jos uusi on pidempi):
+
+| | ennen | jälkeen |
+|---|---|---|
+| kuvauksen mediaani | 78 merkkiä | **5 049** |
+| rakennuttaja | 0/123 | **74** |
+| kohdetyyppi | 0/123 | **122** |
+
+Sivutus tuo seuraavassa ajossa noin 200 uutta ehdokasta jonoon. Se on lähteen
+dokumentoitu tarkoitus, ja 18 kuukauden ikkuna päätettiin pitää ennallaan.
+Osa niistä on vanhoja YVA-menettelyjä jotka ovat jo edenneet rakennusluvaksi
+tai kilpailutukseksi, eli sama hanke voi olla kannassa toisesta lähteestä —
+ne nousevat esiin päivittäisessä duplikaattiskannauksessa tai hyväksynnän
+täsmäytyksessä.
+
+Yritysnimen muoto ja siivous siirrettiin jaettuun moduuliin
+`lib/agent/companyName.ts`, koska YVA ja STT tarvitsevat saman.
+
 ### Duplikaattiskannaus: päivittäin, ja numerot huomioidaan
 
 Skannauksen tiheys ei ollut varsinainen ongelma — inkrementaalinen ajo löysi

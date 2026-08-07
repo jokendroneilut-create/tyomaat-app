@@ -5,6 +5,21 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-026 – Sivutettu haku, kun aineisto on lähteen päätettävissä
+YVA-haku pyysi 150 uusinta osumaa ja luotti siihen että se kattaa 18 kuukauden
+tuoreusikkunan. Aineistossa on **1337 hanketta**, joten 150 riitti vain kolmeen
+kuukauteen: `RECENCY_MONTHS = 18` oli kuollutta koodia ja 3–18 kuukauden
+ikäiset hankkeet jäivät kokonaan hakematta. Juuri se ikkuna on lähteen koko
+arvo — YVA on varhaisin signaali, vuosia ennen kilpailutusta.
+
+Vika oli näkymätön, koska haku onnistui joka kerta ja palautti täydeltä
+näyttävän tuloksen. Sääntö: **kun aineiston koko on lähteen päätettävissä,
+kiinteä `size` on hiljainen katkaisu.** Sivutetaan kunnes sivun vanhin osuma
+ylittää tuoreusrajan, ja pidetään yläraja turvaventtiilinä.
+
+Sama pätee PostgRESTin 1000 rivin kattoon, joka on tässä koodikannassa
+toistunut vika: molemmissa kysely onnistuu ja vastaus näyttää oikealta.
+
 ### D-025 – Ajastetun työn ikkuna on pidempi kuin ajoväli
 Duplikaattiskannauksen inkrementaalinen ajo vertasi viimeisen **7 päivän**
 aikana luotuja tai päivitettyjä hankkeita, ja cron ajoi **7 päivän** välein.
