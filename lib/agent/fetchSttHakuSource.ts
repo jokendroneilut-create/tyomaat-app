@@ -98,7 +98,15 @@ const CLIENT_PATTERNS = [
  * sisällä ("As. Oy"), joten se siivotaan vasta lopusta.
  */
 function cleanCompanyName(raw: string): string {
-  return raw
+  /*
+   * Nimi katkaistaan yhtiömuotoon. Ilman tätä kaappaus jatkuu seuraavaan
+   * virkkeeseen, koska piste kuuluu nimimerkkeihin ("As. Oy") ja seuraava
+   * sana on usein iso alkukirjain: mitattu "HMT-Areena Oy. Tilaajien".
+   */
+  const withForm = raw.match(/^(.*?\b(?:Oy|Oyj|Ab|Ky|Ltd))\b/)
+  const name = withForm?.[1] ?? raw
+
+  return name
     .replace(/:n$/i, "")
     .replace(/[.,;:]+$/, "")
     .trim()
@@ -168,6 +176,122 @@ export function resolveDeveloper(
   description: string | null
 ): string | null {
   return resolveParties(publisher, title, description).developer
+}
+
+/*
+ * Tiedotteen koko teksti.
+ *
+ * Hakurajapinta palauttaa vain otsikon, URL:n ja metadescriptionin
+ * (150-250 merkkiä). Kaikki hankkeen kannalta arvokas on leipätekstissä:
+ * mitattuna Siilinjärven palloiluhallin tiedotteessa 3 200 merkkiä, joissa
+ * osoite, bruttoala, kustannusarvio, aikataulu, urakkamuoto ja tilaaja -
+ * kannassa niistä ei ollut yhtäkään.
+ *
+ * Sivu haetaan siksi erikseen. Haku on kallis (yksi pyyntö per tiedote),
+ * joten kutsuja rajaa määrän ja hakee vain vielä näkemättömille.
+ */
+export async function fetchSttReleaseBody(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: {
+        "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)",
+        accept: "text/html",
+      },
+    })
+    if (!response.ok) return null
+
+    const html = await response.text()
+
+    /*
+     * Leipäteksti on JSON-LD:n articleBody-kentässä. Se on luotettavampi kuin
+     * DOM-rakenne, joka vaihtelee julkaisijan mallin mukaan.
+     */
+    const jsonLd = html.match(
+      /"articleBody"\s*:\s*"((?:[^"\\]|\\.)*)"/
+    )?.[1]
+
+    if (jsonLd) {
+      const decoded = jsonLd
+        .replace(/\\n/g, " ")
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, "\\")
+        .replace(/\\u([0-9a-fA-F]{4})/g, (_, code) =>
+          String.fromCharCode(parseInt(code, 16))
+        )
+        .replace(/\s+/g, " ")
+        .trim()
+
+      if (decoded.length > 100) return decoded
+    }
+
+    // Varalla: tiedotteen runko-osa ilman skriptejä ja navigaatiota.
+    const body = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .match(/<article[\s\S]*?<\/article>/i)?.[0]
+
+    if (!body) return null
+
+    const text = body
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\s+/g, " ")
+      .trim()
+      /*
+       * Sivun otsikkopalkki pois: "23.6.2026 14:51:21 EEST | Julkaisija |
+       * Tiedote Jaa". Se ei kerro hankkeesta mitään ja veisi kortilla tilan
+       * varsinaiselta tekstiltä.
+       */
+      .replace(
+        /^.*?\d{1,2}\.\d{1,2}\.\d{4}\s+\d{1,2}:\d{2}:\d{2}[^|]*\|[^|]*\|\s*Tiedote\s*(?:Jaa)?\s*/i,
+        ""
+      )
+      .trim()
+
+    return text.length > 100 ? text : null
+  } catch {
+    return null
+  }
+}
+
+/*
+ * Täydentää kandidaatin tiedotteen tekstillä: kuvaus, tilaaja/urakoitsija ja
+ * työmaan osoite. Palauttaa kandidaatin sellaisenaan jos haku ei onnistu -
+ * puuttuva lisätieto on parempi kuin kaatunut ajo.
+ */
+export async function enrichSttCandidate(candidate: any): Promise<any> {
+  if (!candidate?.source_url) return candidate
+
+  const body = await fetchSttReleaseBody(candidate.source_url)
+  if (!body) return candidate
+
+  const publisher = candidate.builder ?? candidate.developer ?? null
+  const parties = resolveParties(publisher, candidate.name, body)
+
+  return {
+    ...candidate,
+    description: body.slice(0, 4000),
+    developer: parties.developer ?? candidate.developer ?? null,
+    builder: parties.builder ?? candidate.builder ?? null,
+    location: candidate.location ?? extractStreetAddress(body),
+  }
+}
+
+/*
+ * Katuosoite tekstistä: nimi + numero. Vaaditaan numero, jottei pelkkä
+ * paikannimi mene osoitteeksi - kaupunkitason sijainti ei kelpaa
+ * täsmäytyksen todisteeksi (ks. isSpecificLocation projectMatcherissa).
+ */
+export function extractStreetAddress(text: string | null): string | null {
+  if (!text) return null
+
+  const match = text.match(
+    /\b([A-ZÅÄÖ][a-zåäö]+(?:katu|tie|kuja|polku|väylä|kaari|raitti|rinne|aukio|puisto|ranta)\s+\d+[a-zA-Z]?)\b/
+  )
+
+  return match?.[1] ?? null
 }
 
 const SEARCH_TERMS = [

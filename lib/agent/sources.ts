@@ -28,7 +28,7 @@ import { fetchMarttilanSource } from "./fetchMarttilanSource"
 import { fetchBrandToimitilatSource } from "./fetchBrandToimitilatSource"
 import { fetchHelsinkiUutisetSource } from "./fetchHelsinkiUutisetSource"
 import { fetchRakennuslehtiSource } from "./fetchRakennuslehtiSource"
-import { fetchSttHakuSource } from "./fetchSttHakuSource"
+import { fetchSttHakuSource, enrichSttCandidate } from "./fetchSttHakuSource"
 import { fetchYmparistolupaSource } from "./fetchYmparistolupaSource"
 import { fetchYvaSource } from "./fetchYvaSource"
 import { fetchSuunnittelukilpailuSource } from "./fetchSuunnittelukilpailuSource"
@@ -64,7 +64,7 @@ export const sources = [
   { name: "brand_toimitilat", fetch: fetchBrandToimitilatSource },
   { name: "helsinki_uutiset", fetch: fetchHelsinkiUutisetSource },
   { name: "rakennuslehti", fetch: fetchRakennuslehtiSource },
-  { name: "stt_haku", fetch: fetchSttHakuSource },
+  { name: "stt_haku", fetch: fetchSttHakuSource, enrich: enrichSttCandidate },
   { name: "ymparistolupa", fetch: fetchYmparistolupaSource },
   { name: "yva", fetch: fetchYvaSource },
   { name: "suunnittelukilpailu", fetch: fetchSuunnittelukilpailuSource },

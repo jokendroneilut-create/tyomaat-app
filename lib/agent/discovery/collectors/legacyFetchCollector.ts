@@ -52,6 +52,14 @@ function findLegacySource(key: string | null | undefined) {
  */
 const CANDIDATE_CONCURRENCY = 6
 
+/*
+ * Sivuhakuja per ajo. Yksi tiedotesivu on ~50 kB ja vastaa nopeasti, mutta
+ * lähde voi palauttaa satoja kandidaatteja - mitattuna stt_haku 253 - ja
+ * ajobudjetti on 500 s koko putkelle. 40 riittää tuoreisiin: uusia
+ * tiedotteita tulee päivässä selvästi vähemmän, joten rästiä ei kerry.
+ */
+const ENRICH_PER_RUN = 40
+
 async function processWithConcurrency<T>(
   items: T[],
   limit: number,
@@ -99,6 +107,19 @@ export async function collectLegacySource(source: any) {
 
   let saved = 0
   let skipped = 0
+  let enriched = 0
+
+  /*
+   * Osa lähteistä tarjoaa listauksessa vain otsikon ja tiivistelmän, ja
+   * varsinainen sisältö on erillisellä sivulla. Sellaiselle lähteelle
+   * määritellään enrich(), jota kutsutaan VAIN vielä näkemättömille
+   * kandidaateille - jo tuotua tiedotetta ei haeta uudelleen.
+   *
+   * Budjetti rajaa ajon keston: yksi sivuhaku per kandidaatti, ja lähde voi
+   * palauttaa satoja. Loput tulevat seuraavilla ajoilla, koska niiden
+   * osoitteet eivät ole vielä nähtyjen joukossa.
+   */
+  const enrichBudget = typeof legacy.enrich === "function" ? ENRICH_PER_RUN : 0
 
   await processWithConcurrency(candidates, CANDIDATE_CONCURRENCY, async (candidate: any) => {
     if (!candidate?.source_url) {
@@ -111,11 +132,25 @@ export async function collectLegacySource(source: any) {
       return
     }
 
+    let prepared = candidate
+
+    if (enriched < enrichBudget) {
+      enriched++
+      try {
+        prepared = await legacy.enrich!(candidate)
+      } catch (error: any) {
+        console.error(
+          `legacyFetchCollector: täydennys epäonnistui (${legacy.name}):`,
+          error?.message ?? error
+        )
+      }
+    }
+
     try {
       const result = await importCandidate(
         {
-          ...candidate,
-          source_name: candidate.source_name || legacy.name,
+          ...prepared,
+          source_name: prepared.source_name || legacy.name,
         },
         { projects }
       )

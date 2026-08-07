@@ -1,5 +1,31 @@
 import { describe, it, expect } from "vitest"
-import { resolveDeveloper, resolveParties } from "./fetchSttHakuSource"
+import {
+  resolveDeveloper,
+  resolveParties,
+  extractStreetAddress,
+} from "./fetchSttHakuSource"
+
+describe("extractStreetAddress", () => {
+  it("poimii katuosoitteen numeroineen", () => {
+    expect(
+      extractStreetAddress("Kohde sijaitsee osoitteessa Jokisuuntie 12, Siilinjärvi")
+    ).toBe("Jokisuuntie 12")
+    expect(extractStreetAddress("Mannerheimintie 14, Helsinki")).toBe("Mannerheimintie 14")
+  })
+
+  /*
+   * Numero vaaditaan, jottei pelkkä paikannimi mene osoitteeksi:
+   * kaupunkitason sijainti ei kelpaa täsmäytyksen todisteeksi.
+   */
+  it("ei poimi osoitetta ilman numeroa", () => {
+    expect(extractStreetAddress("Rakennustyöt Siilinjärven Jokisuuntiellä")).toBeNull()
+    expect(extractStreetAddress("Hanke toteutetaan Siilinjärvellä")).toBeNull()
+  })
+
+  it("sietää tyhjän", () => {
+    expect(extractStreetAddress(null)).toBeNull()
+  })
+})
 
 describe("resolveParties", () => {
   /*
@@ -27,6 +53,20 @@ describe("resolveParties", () => {
 
     expect(parties.developer).toBe("Oulun Tilapalvelut Oy")
     expect(parties.builder).toBe("Lujatalo Oy")
+  })
+
+  /*
+   * Nimi katkaistaan yhtiömuotoon. Ilman sitä kaappaus jatkui seuraavaan
+   * virkkeeseen: mitattu leipätekstistä "HMT-Areena Oy. Tilaajien".
+   */
+  it("ei kaappaa seuraavaa virkettä nimeen", () => {
+    const parties = resolveParties(
+      "Rakennusliike Soimu Oy",
+      "Rakennusliike Soimu rakentaa palloiluhallin",
+      "Hankkeen tilaajana toimii HMT-Areena Oy. Tilaajien vahva tahtotila näkyy."
+    )
+
+    expect(parties.developer).toBe("HMT-Areena Oy")
   })
 
   /*
