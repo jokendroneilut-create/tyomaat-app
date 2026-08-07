@@ -33,6 +33,55 @@ väärän kuvan.
 `yva`-lähteestä, ja 141:llä ei ole lainkaan luokittelua. Uusi AI-portti korjaa
 tämän vain eteenpäin — se ajetaan luontihetkellä, ei jo jonossa oleville.
 
+### Neljä yrityslähdettä tuotti kuvauksettomia ehdokkaita
+
+Lähtökohtana yksi ehdokas (Pikkuapollo, srv): kuvaus ja lähteen tiedot
+puuttuivat. Syy osoittautui järjestelmälliseksi, ja se selittää samalla
+hylkäysasteet joita oli aiemmin pidetty lähteen laadun mittarina — ks.
+[D-027](03_DECISIONS.md).
+
+**srv, pohjola_rakennus, kas_asunnot ja lujatalo** laskivat rungon tai otteen
+avainsanasuodatusta varten mutta jättivät sen palauttamatta. Data oli siis jo
+haettu. Sama vika oli aiemmin mangrovessa. Koko kannassa 1125/5338 (21 %)
+ehdokasta oli ilman kuvausta.
+
+Poimijat korjattiin ja ajettiin livenä — kaikilla 140 uudella ehdokkaalla on
+nyt kuvaus:
+
+```
+srv               82 ehdokasta   kuvaus mediaani 4 542 merkkiä
+lujatalo          25             kuvaus mediaani 2 624
+pohjola_rakennus  26             kuvaus mediaani   141
+kas_asunnot        7             kuvaus mediaani   195
+```
+
+**Lujatalon runko oli sivukalustetta.** `fetchArticleBodyText` luki koko
+`<body>`:n, mikä kelpasi kaupungin ja päivämäärän päättelyyn mutta ei
+näytettäväksi: mitattu ensimmäinen rivi oli
+`<iframe src=googletagmanager...>Toggle nav`. Nyt luetaan artikkelielementti ja
+poistetaan nav/header/footer/iframe.
+
+**Vanhat täydennettiin hakemalla artikkelisivut.** Toisin kuin YVA:ssa runko ei
+tule listaushaussa, joten `scripts/backfill-company-descriptions.ts` noutaa
+jokaisen ehdokkaan `source_url`:n erikseen (250 ms tauko pyyntöjen välissä —
+lähteet ovat pieniä yrityssivustoja):
+
+| | ennen | jälkeen |
+|---|---|---|
+| täydennetty | — | **453 / 453**, nolla epäonnistumista |
+| katuosoite poimittu | — | 59 |
+| koko kanta ilman kuvausta | 1125 (21 %) | **672 (13 %)** |
+
+Cisionin sivutunniste (`... 09.00 CET Report this content`) päätyi ensin
+kuvauksen alkuun 291 rivillä. `stripLeadIn` pudottaa alustan tunnisteen ja
+kaiken sitä ennen — mutta vain jos se osuu tekstin alkuun, jottei myöhempi
+osuma hukkaa leipätekstiä. Vanhat rivit siivottiin paikan päällä ilman uutta
+hakua.
+
+Artikkelin rungon poiminta on nyt jaettu moduuli
+(`lib/agent/fetchArticleBody.ts`), samoin HTML:n riisuminen
+(`lib/agent/stripHtml.ts`) — kolme lähdettä tarvitsee jälkimmäistä.
+
 ### YVA-lähde: haettu sisältö otettiin käyttöön
 
 Lähtökohtana havainto katselmointijonosta: YVA-ehdokkailla ei ollut mitään

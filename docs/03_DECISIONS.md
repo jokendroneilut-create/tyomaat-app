@@ -5,6 +5,28 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-027 – Kuvaukseton ehdokas on hylätty ehdokas
+Mitattu koko kannasta, ja korrelaatio on jyrkkä:
+
+| lähde | ehdokkaita | ilman kuvausta | hylätty |
+|---|---|---|---|
+| srv | 291 | 100 % | **96 %** |
+| mangrove | 91 | 100 % | 100 % |
+| lujatalo | 72 | 100 % | 93 % |
+| pohjola_rakennus | 75 | 100 % | 73 % |
+| stt_haku | 240 | **0 %** | 61 % |
+| yva | 123 | **0 %** | 2 % |
+
+Pelkän otsikon perusteella korttia ei voi arvioida, joten se hylätään. Lähteen
+"laatu" ei siis ollut se mitä hylkäysaste mittasi — se mittasi poimijan
+puutetta. Tämä on syytä muistaa ennen kuin jokin lähde suljetaan huonona:
+**tarkista ensin tuottaako se kuvauksen.**
+
+Käytännön sääntö poimijoille: jos runko tai ote lasketaan avainsanasuodatusta
+varten, se on myös palautettava. Neljässä poimijassa se oli laskettu ja
+heitetty pois — data oli jo haettu, joten kuvaus ei maksanut yhtään
+lisäpyyntöä. Sama vika oli aiemmin mangrovessa (ks. 7.8.).
+
 ### D-026 – Sivutettu haku, kun aineisto on lähteen päätettävissä
 YVA-haku pyysi 150 uusinta osumaa ja luotti siihen että se kattaa 18 kuukauden
 tuoreusikkunan. Aineistossa on **1337 hanketta**, joten 150 riitti vain kolmeen
