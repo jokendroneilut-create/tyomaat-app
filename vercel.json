@@ -14,7 +14,7 @@
     },
     {
       "path": "/api/admin/scan-duplicates?mode=incremental",
-      "schedule": "0 4 * * 1"
+      "schedule": "0 4 * * *"
     },
     {
       "path": "/api/admin/auto-complete-projects",

@@ -27,10 +27,21 @@ export async function GET(req: Request) {
     }
 
     /*
-     * Viikoittainen ajo: verrataan vain viimeisen 7 päivän aikana luotuja
-     * tai päivitettyjä (last_verified_at) julkisia hankkeita KOKO
-     * julkiseen hankejoukkoon — ei täyttä pareittaista läpikäyntiä joka
-     * kerta, koska kertaskannaus (mode=full) on jo käyty läpi kerran.
+     * Päivittäinen ajo: verrataan vain viimeisen 7 päivän aikana luotuja tai
+     * päivitettyjä (last_verified_at) julkisia hankkeita KOKO julkiseen
+     * hankejoukkoon — ei täyttä pareittaista läpikäyntiä joka kerta, koska
+     * kertaskannaus (mode=full) on jo käyty läpi kerran.
+     *
+     * IKKUNA ON TARKOITUKSELLA PIDEMPI KUIN AJOVÄLI. Cron ajoi aiemmen kerran
+     * viikossa ja ikkuna oli 7 päivää, eli päällekkäisyyttä ei ollut lainkaan:
+     * yksi väliin jäänyt ajo — deploy, aikaraja, cron-häiriö — jätti sen
+     * viikon hankkeet (169 uutta + 212 päivittynyttä) pysyvästi
+     * skannaamatta, koska mikään ei palaa taaksepäin. Sama vikaluokka kuin
+     * tunnistusjonossa (D-022): vaihe joka ei voi toipua ohituksesta.
+     *
+     * Päivittäisellä ajolla sama ikkuna antaa seitsenkertaisen
+     * päällekkäisyyden. Hinta on olematon: kaupunkiryhmittelyn jälkeen ajo
+     * kesti 5,9 s ja 37 598 vertailua.
      */
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
