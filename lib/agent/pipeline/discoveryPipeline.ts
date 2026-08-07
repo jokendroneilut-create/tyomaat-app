@@ -27,6 +27,7 @@ type PipelineOptions = {
   maxPdfJobs?: number
   maxTextJobs?: number
   maxFactJobs?: number
+  maxIdentityCatchUpJobs?: number
   stages?: PipelineStage[]
 }
 
@@ -51,6 +52,12 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   const maxPdfJobs = options.maxPdfJobs ?? 20
   const maxTextJobs = options.maxTextJobs ?? 20
   const maxFactJobs = options.maxFactJobs ?? 20
+  /*
+   * Kiinniotto on pienempi kuin faktabudjetti: jono on normaalisti tyhjä,
+   * joten tämä varaa vain pienen siivun 60s-budjetista eikä syö uusien
+   * dokumenttien käsittelyä. Kertyneen jonon purkuun riittää muutama ajo.
+   */
+  const maxIdentityCatchUpJobs = options.maxIdentityCatchUpJobs ?? 5
 
   const sourceResults = []
   const articleResults = []
@@ -128,7 +135,62 @@ articleResults.push(result)
   }
 
   //
-  // 5. Fact Worker + Identity Worker
+  // 5a. Identity-jonon kiinniotto
+  //
+  /*
+   * Tunnistus ajettiin aiemmin VAIN heti faktapoiminnan perässä samassa
+   * silmukkakierroksessa. Jos kierros katkesi siihen väliin - aikaraja,
+   * faktatyöläisen virhe, uudelleendeploy - dokumentille jäi
+   * facts_extracted_at mutta ei identity_resolved_at, eikä mikään palannut
+   * siihen koskaan: jonoa "faktat poimittu, tunnistus kesken" ei ollut
+   * olemassa. Mitattu: 31 dokumenttia jumissa, vanhin 35 vuorokautta, ja
+   * kahdella niistä oli oikeaa sisältöä (mm. 7800 k-m² kulttuurirakennus)
+   * joka ei koskaan päätynyt ehdokkaaksi.
+   *
+   * Kiinniotto ajetaan ENNEN uusia faktoja, jotta jono purkautuu eikä
+   * kasva ohi. Vanhin ensin.
+   */
+  for (let i = 0; stages.has("facts") && i < maxIdentityCatchUpJobs; i++) {
+    const { data: pending } = await supabaseAdmin
+      .from("source_documents")
+      .select("id")
+      .not("facts_extracted_at", "is", null)
+      .is("identity_resolved_at", null)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    if (!pending) break
+
+    /*
+     * Yksittäinen kaatuva dokumentti ei saa pysäyttää jonon purkua, mutta
+     * se ei myöskään saa jäädä ikuiseen silmukkaan: virhetapauksessa
+     * merkitään käsitellyksi ja jätetään jälki, jolloin seuraava kierros
+     * siirtyy seuraavaan dokumenttiin.
+     */
+    try {
+      identityResults.push(await runIdentityWorker(pending.id))
+    } catch (error) {
+      await supabaseAdmin
+        .from("source_documents")
+        .update({
+          identity_resolved_at: new Date().toISOString(),
+          error_message: `identity_catch_up: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        })
+        .eq("id", pending.id)
+
+      identityResults.push({
+        ok: false,
+        documentId: pending.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  //
+  // 5b. Fact Worker + Identity Worker
   //
   for (let i = 0; stages.has("facts") && i < maxFactJobs; i++) {
     const result = await runFactWorker()
@@ -155,10 +217,22 @@ articleResults.push(result)
     .select("*", { count: "exact", head: true })
     .is("facts_extracted_at", null)
 
+  /*
+   * Sama mittari tunnistusjonolle. Ilman tätä jono oli näkymätön: mikään
+   * sivu ei paljastanut 31:tä jumissa ollutta dokumenttia, koska niiden
+   * status oli yhä "downloaded" kuten kaikilla muillakin.
+   */
+  const { count: pendingIdentity } = await supabaseAdmin
+    .from("source_documents")
+    .select("*", { count: "exact", head: true })
+    .not("facts_extracted_at", "is", null)
+    .is("identity_resolved_at", null)
+
   return {
     ok: true,
     durationMs,
     pendingFacts: pendingFacts ?? null,
+    pendingIdentity: pendingIdentity ?? null,
 
     sourcesRun: sourceResults.length,
     articleRuns: articleResults.length,
