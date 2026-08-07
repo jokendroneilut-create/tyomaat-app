@@ -5,6 +5,33 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-023 – Taivutusvertailu suhteellisena, ei kiinteänä merkkimääränä
+`nameWithinText` salli taivutuksen kuuden merkin yhteisellä alulla. Lyhyille
+sanoille se on tiukka, pitkille yhdyssanoille aivan liian löyhä:
+`kansallismuseolle` ja `kansallisarkiston` jakavat alun "kansal" ja kelpasivat
+toisikseen. Mitattu tuotannosta — Kansallismuseon uutisen paras osuma koko
+kannasta oli Kansallisarkiston peruskorjaus.
+
+Yhteisen alun on nyt katettava **70 % pidemmästä sanasta**. Suhteellinen mitta
+on oikea, koska taivutuspääte on lyhyt suhteessa vartaloon: aito pari ylittää
+rajan helposti (`kansallismuseon`/`kansallismuseolle` = 14/17), eri sanat
+jäävät alle (`kansallis` = 9/17). Sama raja pudottaa myös D-019:ssä mitatun
+vuodon `tuulivoimahanke`/`tuulivoimapuisto` = 10/16.
+
+Hinta on kirjattava: kolme jonon paria putosi automaattiyhdistämisestä
+ehdotukseksi, koska ne nojasivat juuri tuohon vuotoon. Ne näkyvät yhä 45 %:n
+ehdotuksina, eli ihminen päättää.
+
+**Yksi erottuva sana riittää, jos se on pitkä ja loput nimestä löytyvät.**
+Geneeristen sanojen karsinta (`titleWords`) jätti nimestä "Kansallismuseon
+peruskorjaus ja laajennus" vain yhden sanan, jolloin `NAME_IN_TEXT_MIN_WORDS`
+= 2 kieltäytyi katsomasta tekstiä lainkaan — vaikka kuvauksessa esiintyivät
+nimen kaikki kolme sanaa. Nyt yhden sanan nimi kelpaa kun sana on ≥ 12
+merkkiä, nimessä on muutakin, ja tekstistä löytyy nimen jokainen sana myös
+geneeriset mukaan lukien. Karsittu sana on huono todiste yksin mutta hyvä
+vahvistus sille joka kantaa merkityksen. Pituusraja erottaa
+`kansallismuseon` (15) sanasta `koulun` (6).
+
 ### D-022 – Jokaisella putken vaiheella on oma jono, ei vain edeltäjän paluuarvo
 Tunnistus (`runIdentityWorker`) ajettiin vain heti faktapoiminnan perässä
 samassa silmukkakierroksessa: `if (result.ok && result.documentId)`. Se toimii

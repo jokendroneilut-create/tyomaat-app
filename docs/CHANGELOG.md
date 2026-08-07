@@ -33,6 +33,43 @@ väärän kuvan.
 `yva`-lähteestä, ja 141:llä ei ole lainkaan luokittelua. Uusi AI-portti korjaa
 tämän vain eteenpäin — se ajetaan luontihetkellä, ei jo jonossa oleville.
 
+### Nimivertailu: yksi pitkä sana ja tiukempi vartalo
+
+Lähtökohtana yksi ehdokas: Kansallismuseon uudisosan luovutusuutinen ei
+tunnistanut jo olemassa olevaa hanketta "Kansallismuseon peruskorjaus ja
+laajennus", vaikka kuvauksessa esiintyivät nimen **kaikki kolme sanaa** —
+`kansallismuseolle`, `peruskorjauksen`, `laajennusosa`. Tulos oli 0 %.
+
+Syy: `peruskorjaus` ja `laajennus` ovat geneerisiä sanoja ja karsitaan pois,
+joten nimestä jäi yksi erottuva sana. Sääntö vaati kaksi ja palautti epätoden
+katsomatta tekstiä lainkaan.
+
+Korjauksen mittaus tuotantoa vasten paljasti **toisen, jo olemassa olleen
+vian**: parhaaksi osumaksi koko kannasta tuli "Kansallisarkiston
+peruskorjaus". Taivutusta verrattiin kuuden merkin yhteisellä alulla, joten
+`kansallismuseolle` ja `kansallisarkiston` kelpasivat toisikseen.
+
+Molemmat korjattiin, ks. [D-023](03_DECISIONS.md). Vaikutus 137 ehdokkaan
+jonossa:
+
+| | ennen | jälkeen |
+|---|---|---|
+| Kansallismuseo-pari | 0 % | **50 %**, paras osuma koko kannasta |
+| Kansallisarkisto-vääräosuma | 50 % | 0 % |
+| Rovaniemen pääpoliisiasema | osui virastotaloon | osuu oikeaan hankkeeseen |
+| automaattiosumat | 11 | 7 |
+
+Pari jää 50 %:iin eikä ylitä 70:n yhdistämiskynnystä, mutta ylittää 40:n eli
+merkitään hyväksynnässä mahdolliseksi duplikaatiksi. Se on tarkoituksellista:
+lehdistötiedotteen sulauttaminen olemassa olevaan hankkeeseen ilman ihmisen
+katsetta on isompi riski kuin yksi ylimääräinen katselmointi.
+
+Kolme paria (FIN04A Ph2, Mustasuo-Tynnyrikorpi, Sydänmaankylä) putosi
+automaattiyhdistämisestä 45 %:n ehdotukseksi. Ne nojasivat samaan
+vartalovuotoon: niiden kuvauksissa ei lue hankkeen nimeä, vain sukulaissana
+(`tuulivoimapuisto` sanan `tuulivoimahanke` tilalla) — juuri se vuoto jonka
+D-019 mittasi vääräksi.
+
 ### Näkymätön jono: 31 dokumenttia jumissa tunnistuksessa
 
 Tunnistus ajettiin **vain heti faktapoiminnan perässä samassa
