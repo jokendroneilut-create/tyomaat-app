@@ -45,6 +45,14 @@ const TRADE_STEMS: { trade: ContractTrade; stems: string[] }[] = [
       "lvi",
       "lvia",
       "lvis",
+      /*
+       * LV = lämpö ja vesi, vakiintunut lyhenne siinä missä LVI ja IV. Ilman
+       * omaa vartaloaan "LV-työt" jäi kokonaan ilman lajia, jolloin veto ei
+       * voinut laueta (se vaatii lajin molemmilta puolilta). Mitattu:
+       * "Puitejärjestely, LV-työt" ja "Puitejärjestely, rakennusautomaatiotyöt"
+       * saivat 95 % eivätkä erottuneet toisistaan.
+       */
+      "lv",
       "iv",
       "ilmanvaihto",
       "putki",

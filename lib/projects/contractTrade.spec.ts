@@ -116,6 +116,22 @@ describe("haveDifferentTrades", () => {
     expect([...detectTrades("Rakennusautomaatiourakka")]).toEqual(["rakennus"])
   })
 
+  /*
+   * LV (lämpö-vesi) on vakiintunut lyhenne siinä missä LVI ja IV. Ilman omaa
+   * vartaloaan se jäi tunnistamatta, jolloin veto ei lauennut lainkaan -
+   * se vaatii lajin molemmilta puolilta.
+   */
+  it("tunnistaa LV-lyhenteen omana lajinaan", () => {
+    expect([...detectTrades("LV-työt")]).toEqual(["lvi"])
+    expect([...detectTrades("LV-urakka")]).toEqual(["lvi"])
+    expect(
+      haveDifferentTrades(
+        "Puitejärjestely, LV-työt vuosisopimusperusteisesti",
+        "Puitejärjestely, rakennusautomaatiotyöt"
+      )
+    ).toBe(true)
+  })
+
   it("sietää tyhjät", () => {
     expect(haveDifferentTrades(null, "Sähköurakka")).toBe(false)
     expect(haveDifferentTrades("", "")).toBe(false)
