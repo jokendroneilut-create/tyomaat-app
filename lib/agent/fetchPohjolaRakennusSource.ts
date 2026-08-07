@@ -71,6 +71,12 @@ export async function fetchPohjolaRakennusSource() {
 
       results.push({
         name: title,
+        /*
+         * Ote laskettiin avainsanasuodatusta varten mutta jäi pois
+         * palautuksesta, joten kaikki 75 ehdokasta syntyivät ilman kuvausta
+         * ja 73 % hylättiin.
+         */
+        description: excerpt || null,
         city: detectCityFromText(title) ?? detectCityFromText(combinedText),
         region: null,
         location: null,

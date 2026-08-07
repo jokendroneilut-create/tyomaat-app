@@ -1,4 +1,6 @@
 import { detectCityFromText } from "./detectCityFromText"
+import { stripHtml } from "./stripHtml"
+import { extractStreetAddress } from "./extractStreetAddress"
 
 /*
  * SRV:n oma "ajankohtaista"-sivu on Gatsby-sovellus, jonka HTML ei
@@ -112,11 +114,21 @@ export async function fetchSrvSource() {
      * (esim. yhtiön yleiskuvaus), jolloin ensimmäinen osuma rungosta
      * olisi usein väärä.
      */
+    /*
+     * Cisionin runko on HTML. Se laskettiin avainsanasuodatusta varten mutta
+     * jäi pois palautuksesta, joten kaikki 291 ehdokasta syntyivät ilman
+     * kuvausta - ja 96 % hylättiin, koska pelkän otsikon perusteella korttia
+     * ei voi arvioida. Runko on tiedotteen koko teksti: kohteen nimi,
+     * asuntomäärä, aikataulu ja tilaaja.
+     */
+    const description = stripHtml(body) || null
+
     results.push({
       name: title,
+      description,
       city: detectCityFromText(title) ?? detectCityFromText(combinedText),
       region: null,
-      location: null,
+      location: extractStreetAddress(description),
       phase: completed ? "Valmistunut" : "Suunnittelussa",
       source_url: url,
       confidence: 0.6,

@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio"
+import { extractStreetAddress } from "./extractStreetAddress"
 import { detectCityFromText } from "./detectCityFromText"
 import { parseEstimatedCompletionDate } from "./parseFinnishCompletionDate"
 
@@ -37,9 +38,19 @@ async function fetchArticleBodyText(url: string): Promise<string | null> {
 
     const html = await response.text()
     const $ = cheerio.load(html)
-    $("script, style").remove()
+    $("script, style, noscript, nav, header, footer, iframe, form").remove()
 
-    const fullText = $("body").text().replace(/\s+/g, " ").trim()
+    /*
+     * Ensin varsinainen artikkelielementti, vasta sitten koko body. Pelkkä
+     * body kelpasi kaupungin päättelyyn ja päivämäärän poimintaan, mutta ei
+     * käyttäjälle näytettäväksi kuvaukseksi: mitattu ensimmäinen rivi oli
+     * "<iframe src=googletagmanager...>Toggle nav", eli sivun kalusteet.
+     */
+    const article = $("article, main, .article__content, .content__main")
+      .first()
+      .text()
+    const fullText = (article || $("body").text()).replace(/\s+/g, " ").trim()
+
     return fullText.split(/sinua saattaisi kiinnostaa/i)[0]?.trim() || null
   } catch {
     return null
@@ -88,9 +99,16 @@ export async function fetchLujataloSource() {
 
       results.push({
         name: title,
+        /*
+         * Artikkelin runko haettiin jo kaupungin ja valmistumisajan
+         * päättelyä varten, mutta sitä ei palautettu kuvauksena - joten
+         * kaikki 72 ehdokasta syntyivät tyhjinä ja 93 % hylättiin. Haku on
+         * jo tehty, joten tämä ei maksa yhtään lisäpyyntöä.
+         */
+        description: bodyText || null,
         city,
         region: null,
-        location: null,
+        location: extractStreetAddress(bodyText),
         phase: completed ? "Valmistunut" : "Suunnittelussa",
         source_url: sourceUrl,
         confidence: 0.6,

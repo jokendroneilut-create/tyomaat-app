@@ -1,4 +1,5 @@
 import { detectCityFromText } from "./detectCityFromText"
+import { stripHtml } from "./stripHtml"
 
 /*
  * KAS asuntojen WordPress REST-rajapinta on avoinna suoraan (ei tarvitse
@@ -37,15 +38,6 @@ const EXCLUDE_KEYWORDS = [
 
 const COMPLETED_KEYWORDS = ["valmistui", "valmistunut"]
 
-function stripHtml(value: string) {
-  return value
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&#8211;/g, "–")
-    .replace(/&amp;/g, "&")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
 export async function fetchKasSource() {
   const results: any[] = []
   const cutoffDate = new Date()
@@ -74,6 +66,12 @@ export async function fetchKasSource() {
 
     results.push({
       name: title,
+      /*
+       * Ote laskettiin avainsanasuodatusta varten mutta jäi pois
+       * palautuksesta, joten ehdokkaat syntyivät ilman kuvausta - eikä
+       * pelkän otsikon perusteella korttia voi arvioida.
+       */
+      description: excerpt || null,
       city: detectCityFromText(title) ?? detectCityFromText(combinedText),
       region: null,
       location: null,
