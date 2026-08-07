@@ -43,12 +43,32 @@ const SEASONS: Record<string, number> = {
 }
 const SEASON_ALTERNATION = Object.keys(SEASONS).join("|")
 
-// Keyword joka osoittaa VALMISTUMISTA (ei esim. rakentamisen alkua) —
-// päivämäärä haetaan vain tämän sanan jälkeisestä lyhyestä ikkunasta,
-// jottei tekstissä aiemmin mainittu esim. rakentamisen aloituspäivä
-// poimiudu vahingossa valmistumispäiväksi.
+/*
+ * Keyword joka osoittaa VALMISTUMISTA (ei esim. rakentamisen alkua) —
+ * päivämäärä haetaan vain tämän sanan jälkeisestä lyhyestä ikkunasta,
+ * jottei tekstissä aiemmin mainittu esim. rakentamisen aloituspäivä
+ * poimiudu vahingossa valmistumispäiväksi.
+ *
+ * Muodot ovat vartaloita eikä kokonaisia sanoja: "valmistuva" kattaa myös
+ * "valmistuvan" ja "valmistuvat". Puuttuva "valmistuvan" oli mitattu aukko -
+ * "kohteen arvioidaan valmistuvan lokakuussa 2026" on suomen tavallisin tapa
+ * ilmaista arvio, eikä se osunut lainkaan.
+ *
+ * MENNYT AIKAMUOTO EI KELPAA. "valmistui" ja "valmistunut" on jätetty pois
+ * tarkoituksella: mitattuna 4412 hankkeen kuvauksista menneen muodon
+ * osumista ei yksikään koskenut hanketta itseään vaan purettavaa vanhaa
+ * rakennusta, valmistunutta kaavaselvitystä tai naapurirakennusta.
+ */
 const COMPLETION_KEYWORD =
-  "valmistuu|valmistunee|valmistumassa|valmistuvat|valmistuminen|luovutetaan|käyttöönotto"
+  "valmistuu|valmistuva|valmistunee|valmistumas|valmistumi|luovutetaan|käyttöönotto"
+
+/*
+ * Väli valmistumissanan ja päivämäärän välillä. Piste on suljettu pois,
+ * koska ikkuna ylitti muuten virkkeen rajan ja poimi seuraavan virkkeen
+ * aloituspäivän: mitattu "Kohde valmistuu aikanaan. Rakennustyöt
+ * käynnistyivät tammikuussa 2025" -> valmistumisajaksi tuli 2025-01-31.
+ */
+const GAP = "[^.\\d]{0,40}?"
 
 function lastDayOfMonth(year: number, month: number): string {
   const day = new Date(year, month, 0).getDate()
@@ -59,7 +79,7 @@ export function parseEstimatedCompletionDate(text: string): string | null {
   const normalized = text.replace(/\s+/g, " ")
 
   const monthYearRegex = new RegExp(
-    `(?:${COMPLETION_KEYWORD})\\D{0,40}?(${MONTH_ALTERNATION})ssa\\s+(\\d{4})`,
+    `(?:${COMPLETION_KEYWORD})${GAP}(${MONTH_ALTERNATION})ssa\\s+(\\d{4})`,
     "i"
   )
   const monthYearMatch = normalized.match(monthYearRegex)
@@ -70,7 +90,7 @@ export function parseEstimatedCompletionDate(text: string): string | null {
   }
 
   const seasonYearRegex = new RegExp(
-    `(?:${COMPLETION_KEYWORD})\\D{0,40}?(${SEASON_ALTERNATION})\\s+(\\d{4})`,
+    `(?:${COMPLETION_KEYWORD})${GAP}(${SEASON_ALTERNATION})\\s+(\\d{4})`,
     "i"
   )
   const seasonYearMatch = normalized.match(seasonYearRegex)
@@ -81,7 +101,7 @@ export function parseEstimatedCompletionDate(text: string): string | null {
   }
 
   const yearOnlyRegex = new RegExp(
-    `(?:${COMPLETION_KEYWORD})\\D{0,40}?vuo(?:nna|den)\\s+(\\d{4})`,
+    `(?:${COMPLETION_KEYWORD})${GAP}vuo(?:nna|den)\\s+(\\d{4})`,
     "i"
   )
   const yearOnlyMatch = normalized.match(yearOnlyRegex)

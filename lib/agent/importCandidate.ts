@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { inferPhaseFromText } from "@/lib/projects/inferPhaseFromText"
+import { parseEstimatedCompletionDate } from "@/lib/agent/parseFinnishCompletionDate"
 import {
   inferCompletionDateFromText,
   isPastDate,
@@ -305,6 +306,15 @@ export async function importCandidate(
    */
   const matchTitle = stripCompletionWords(body.name)
 
+  /*
+   * Valmistumisaika leipätekstistä. Poimitaan kerran ja käytetään sekä uuden
+   * hankkeen luonnissa että olemassa olevan täydennyksessä.
+   */
+  const textCompletionDate =
+    parseEstimatedCompletionDate(
+      `${body.name ?? ""} ${body.description ?? body.metadata?.description ?? ""}`
+    ) ?? null
+
   const candidate = {
     name: matchTitle || body.name || null,
     city: body.city || null,
@@ -325,8 +335,25 @@ export async function importCandidate(
       body.building_type ??
       body.metadata?.building_type ??
       null,
+    /*
+     * Lähde ei useinkaan anna valmistumisaikaa erillisenä kenttänä, vaikka se
+     * lukee leipätekstissä ("kohde valmistuu keväällä 2027"). Mitattu ennen
+     * tätä: estimated_completion oli täytetty 24 hankkeella 4412:sta (1 %),
+     * kun teksti antoi sen 109:lle.
+     *
+     * Kenttää tarvitaan, koska auto-complete-projects-cron siirtää hankkeen
+     * valmistuneeksi vasta kun päivä on mennyt - ilman päivämäärää hanke jää
+     * ikuisesti rakenteille.
+     *
+     * parseEstimatedCompletionDate vaatii TULEVAN aikamuodon ("valmistuu",
+     * ei "valmistui"), mikä on tässä oikea rajaus: mitattuna menneen muodon
+     * osumista yksikään ei koskenut hanketta itseään vaan purettavaa vanhaa
+     * rakennusta, kaavaselvitystä tai naapurirakennusta.
+     */
     estimatedCompletion:
-      body.estimated_completion ?? body.metadata?.estimated_completion ?? null,
+      body.estimated_completion ??
+      body.metadata?.estimated_completion ??
+      textCompletionDate,
     description: body.description ?? body.metadata?.description ?? null,
   }
 
@@ -409,10 +436,15 @@ export async function importCandidate(
         builder: match.builder || candidate.builder || null,
         property_type:
           body.property_type || body.building_type || match.property_type || null,
+        /*
+         * Tekstistä poimittu aika on viimeisenä: tunnettua arviota ei
+         * ylikirjoiteta, vain tyhjä täytetään.
+         */
         estimated_completion:
           body.estimated_completion ||
           body.metadata?.estimated_completion ||
           match.estimated_completion ||
+          textCompletionDate ||
           null,
         /*
          * needs_review nousee kun hanke merkitään valmiiksi, jotta ihminen
