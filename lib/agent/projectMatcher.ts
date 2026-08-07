@@ -5,6 +5,7 @@ import {
 import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
 import { isSameOrganization } from "@/lib/projects/organizationName"
 import { haveDifferentTrades } from "@/lib/projects/contractTrade"
+import { haveDifferentNameNumbers } from "@/lib/projects/nameNumbers"
 
 export type NormalizedProjectCandidate = {
   name?: string | null
@@ -87,6 +88,18 @@ export type ProjectMatchReason =
   | "name_in_description"
   | "same_developer"
   | "same_building_type"
+  /*
+   * Negatiivinen syy: nimien numerot eroavat, joten varmuus on painettu
+   * yhdistämiskynnyksen alle. Näkyy katselmoinnissa muiden syiden rinnalla,
+   * jotta ihminen näkee MIKSI varma näyttävä pari jäi ehdotukseksi.
+   */
+  | "different_name_numbers"
+
+/*
+ * Yhdistämiskynnys on 70, joten 65 jättää parin ehdotukseksi mutta ei
+ * yhdistä. Ei nolla: numeroero on vahva vihje eri kohteesta, ei todiste.
+ */
+const NUMBER_MISMATCH_CAP = 65
 
 export type ProjectMatchResult = {
   project: MatchableProject
@@ -718,6 +731,30 @@ export function calculateMatch(
     !reasons.includes("same_developer")
   ) {
     return null
+  }
+
+  /*
+   * Eri numero nimessä = eri kohde. Kaavoituksessa ja katuosoitteissa numero
+   * on identiteetti, mutta titleWords pudottaa alle neljän merkin sanat,
+   * joten "Vellamonkatu 11" ja "Vellamonkatu 8" näyttivät täsmälleen samalta.
+   *
+   * Rajoitetaan sen sijaan että estettäisiin: varmuus painetaan
+   * yhdistämiskynnyksen alle, jolloin pari jää ihmisen katsottavaksi. Numero
+   * ei aina ole tunniste - uutisotsikossa voi lukea "48 asuntoa" ja toisessa
+   * lähteessä "50 asuntoa" samasta hankkeesta - joten absoluuttinen veto
+   * hukkaisi aitoja osumia.
+   *
+   * Tunniste (lupanumero, kiinteistötunnus) voittaa tämän: se on suora
+   * todiste samasta kohteesta, eikä nimen numero kumoa sitä.
+   */
+  const cappedByNumbers =
+    !reasons.includes("same_permit_number") &&
+    !reasons.includes("same_property_id") &&
+    haveDifferentNameNumbers(project.name, candidate.name)
+
+  if (cappedByNumbers) {
+    confidence = Math.min(confidence, NUMBER_MISMATCH_CAP)
+    reasons.push("different_name_numbers")
   }
 
   return {
