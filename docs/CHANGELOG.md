@@ -11,7 +11,51 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 7.8.)
 
-### TIC:n kolmen seurantasivun tarkastus
+### TIC:n koko sivupalkin tarkastus
+
+Kaikki yksitoista kohtaa käytiin läpi kannasta asti. Putki itsessään osoittautui
+terveeksi — 285 lähdettä, 392 ajoa seitsemässä vuorokaudessa, **nolla virhettä,
+nolla seisonutta lähdettä** — mutta kolme seurantasivua kertoi väärää tarinaa ja
+yksi jono oli kokonaan näkymätön.
+
+**Terveiksi todetut:** Keräimet, Ajot, Health (`agent_jobs` 128 riviä, kaikki
+onnistuneita), Kaksoiskappaleet (jono aidosti tyhjä). Tapahtumat käyttää samoja
+palveluita kuin Keräimet, joten sillä ei ole omaa datalähdettä.
+
+**Analytics näyttää historiaa nykytilana.** 10 547 ajosta 941 on virheitä (~9 %),
+mutta **kaikki ovat ennen 28.7.** eikä viimeisen viikon aikana ole yhtään. Kaksi
+syytä: 488 kertaa Postgresin btree-indeksin kokoraja (`index row size 2888
+exceeds maximum 2704`) ja 452 kertaa HTML JSONin sijasta (Lupapiste 432, Hilma).
+Molemmat lakkasivat itsestään. Sivu ei erottele aikaikkunaa, joten luku antaa
+väärän kuvan.
+
+**Katselmointijono on kaksi kolmasosaa YVA:a.** 103 ehdokasta 155:stä tulee
+`yva`-lähteestä, ja 141:llä ei ole lainkaan luokittelua. Uusi AI-portti korjaa
+tämän vain eteenpäin — se ajetaan luontihetkellä, ei jo jonossa oleville.
+
+### Näkymätön jono: 31 dokumenttia jumissa tunnistuksessa
+
+Tunnistus ajettiin **vain heti faktapoiminnan perässä samassa
+silmukkakierroksessa**. Jonoa "faktat poimittu, tunnistus kesken" ei ollut
+olemassa, joten jos kierros katkesi siihen väliin — aikaraja, faktatyöläisen
+virhe, uudelleendeploy — dokumentti jäi orvoksi eikä mikään palannut siihen
+koskaan.
+
+Ongelma ehti kasvaa **35 vuorokautta** koska jono oli näkymätön: dokumenttien
+`status` oli `downloaded` kuten kaikilla muillakin, eikä yksikään sivu
+erotellut niitä.
+
+29 dokumenttia 31:stä oli tyhjiä — faktapoiminta oli oikein todennut ettei
+"Kuulutus: Ajoneuvojen siirrot Espoossa" ole rakennushanke. Kahdella oli
+oikeaa sisältöä, ja molemmat ratkesivat hankkeiksi asti: **7800 k-m²
+kolmikerroksinen kulttuuritoimintarakennus Vantaalla** sekä talousrakennus.
+
+Putkeen lisättiin kiinniottovaihe (ennen uusia faktoja, vanhin ensin, budjetti
+5 per ajo) ja `pendingIdentity`-mittari paluuarvoon. Kaatuva dokumentti
+merkitään käsitellyksi ja virheviesti jää talteen, jottei yksi rikkinäinen rivi
+jumita jonoa ikuiseen silmukkaan. Ks. [D-022](03_DECISIONS.md).
+
+### Kolmen seurantasivun korjaukset
 
 Yhdistymiset, Rikastus ja AI-suodatus käytiin läpi kannasta asti. Kaksi
 kolmesta oli rikki tavalla jota sivu itse ei paljastanut.
@@ -53,6 +97,18 @@ kolmesta oli rikki tavalla jota sivu itse ei paljastanut.
   vartalolla `vesi` (LVI) ja `vesikatto` (katto), jolloin se luokittui
   molemmiksi — eivätkä lajijoukot enää olleet erilliset, joten veto ei estänyt
   vesikatto- ja putkiurakan yhdistämistä.
+
+  `LV` (lämpö-vesi) lisättiin omaksi vartalokseen: listalla oli vain `lvi`,
+  joten `LV-työt` jäi kokonaan ilman lajia eikä veto voinut lauata — se vaatii
+  lajin molemmilta puolilta. Mitattu kaksoiskappaleskannerista:
+  "Puitejärjestely, LV-työt" ja "Puitejärjestely, rakennusautomaatiotyöt"
+  saivat 95 %. Kaksikirjaiminen vartalo tarkistettiin tuotantodataa vasten:
+  9651 nimestä vain kolme muotoa alkaa `lv`:llä ja kaikki ovat aitoja
+  LVI-perheen nimityksiä.
+
+  **Rakennusautomaatiourakka pysyy rakennusurakkana** — alan käytäntö,
+  varmistettu testillä. Ensimmäinen yritys luokitteli sen sähköurakaksi, mikä
+  oli väärin.
 
 - **Rikastussivu on lähes tyhjä, ja se on totuudenmukaista.** 19
   `auto_sync`-tapahtumaa koko historiassa (vertailuksi `tic_approve` 3583),

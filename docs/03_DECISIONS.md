@@ -5,6 +5,27 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-022 – Jokaisella putken vaiheella on oma jono, ei vain edeltäjän paluuarvo
+Tunnistus (`runIdentityWorker`) ajettiin vain heti faktapoiminnan perässä
+samassa silmukkakierroksessa: `if (result.ok && result.documentId)`. Se toimii
+niin kauan kuin kierros menee loppuun, mutta **vaihe ilman omaa jonoa ei voi
+toipua mistään**. Kun kierros katkesi väliin — aikaraja, faktatyöläisen virhe,
+uudelleendeploy — dokumentille jäi `facts_extracted_at` mutta ei
+`identity_resolved_at`, eikä mikään palannut siihen koskaan.
+
+Mitattu: 31 dokumenttia jumissa, vanhin 35 vuorokautta, ja kahdella niistä oli
+oikeaa sisältöä joka ei päätynyt minnekään.
+
+Sääntö: **vaiheen kelpoisuusehto luetaan kannasta, ei edellisen vaiheen
+paluuarvosta.** Kiinniotto ajetaan ennen uutta työtä (vanhin ensin), jotta jono
+purkautuu eikä kasva ohi, ja jonon pituus palautetaan mittarina — muuten sama
+vika on taas näkymätön, koska dokumentin `status` pysyy `downloaded` kuten
+kaikilla muillakin.
+
+Kaatuva dokumentti merkitään käsitellyksi ja virheviesti jää talteen. Muuten
+yksi rikkinäinen rivi jumittaisi jonon ikuiseen silmukkaan — vanhin ensin
+-järjestys takaisi että se valitaan joka kierroksella uudelleen.
+
 ### D-021 – AI-relevanssiportti kytketään ehdokkaan luontiin, ei signaaliin
 Portti (`llmRelevanceScorer`) oli rakennettu mutta ei kytkettynä: ainoa kutsuja
 oli `lib/agent/pipeline/runSource.ts`, jota kutsui vain `/api/agent/run-source`
