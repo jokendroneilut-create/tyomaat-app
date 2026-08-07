@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
+import { extractStreetAddress } from "./extractStreetAddress"
 
 /*
  * Mangroven "Ajankohtaista"-sivu lataa koko historian yhdellä kertaa
@@ -119,9 +120,17 @@ export async function fetchMangroveSource() {
 
     results.push({
       name: title,
+      /*
+       * Kuvaus laskettiin avainsanasuodatusta varten mutta jäi pois
+       * palautuksesta, joten kaikki 91 ehdokasta syntyivät ilman kuvausta -
+       * ja hylättiin, koska pelkän otsikon perusteella korttia ei voi
+       * arvioida. Listauksen kappale on hyvä: se kertoo tilaajan,
+       * asuntomäärän, osoitteen ja aikataulun.
+       */
+      description: description || null,
       city: detectCityFromText(combinedText),
       region: null,
-      location: null,
+      location: extractStreetAddress(description),
       phase: completed ? "Valmistunut" : "Suunnittelussa",
       source_url: href,
       confidence: 0.6,

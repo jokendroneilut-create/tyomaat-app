@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js"
 import { collectApiSource } from "@/lib/agent/discovery/collectors/apiCollector"
 import { collectHtmlSource } from "@/lib/agent/discovery/collectors/htmlCollector"
 import { collectLegacySource } from "@/lib/agent/discovery/collectors/legacyFetchCollector"
+import { collectCompanyMentionSource } from "@/lib/agent/discovery/collectors/companyMentionCollector"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,6 +63,12 @@ export async function runSourceWorker(sourceId: string) {
   htmlCollector: collectHtmlSource,
   apiCollector: collectApiSource,
   legacyFetchCollector: collectLegacySource,
+  /*
+   * Rikastuslähde: ei luo ehdokkaita vaan liittää yrityksen olemassa olevaan
+   * hankkeeseen. Yritys tiedottaa siitä missä hankkeissa se on mukana, ei
+   * omista hankkeistaan.
+   */
+  companyMentionCollector: collectCompanyMentionSource,
 }
 
 const collectorName = source.collector ?? (

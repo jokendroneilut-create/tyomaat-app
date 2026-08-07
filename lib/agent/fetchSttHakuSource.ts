@@ -1,5 +1,6 @@
 import { detectCityFromText } from "./detectCityFromText"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import { extractStreetAddress } from "./extractStreetAddress"
 
 /*
  * STT Info -hakulähde. Toisin kuin nimetyt yrityslähteet (jotka lukevat yhden
@@ -277,21 +278,6 @@ export async function enrichSttCandidate(candidate: any): Promise<any> {
     builder: parties.builder ?? candidate.builder ?? null,
     location: candidate.location ?? extractStreetAddress(body),
   }
-}
-
-/*
- * Katuosoite tekstistä: nimi + numero. Vaaditaan numero, jottei pelkkä
- * paikannimi mene osoitteeksi - kaupunkitason sijainti ei kelpaa
- * täsmäytyksen todisteeksi (ks. isSpecificLocation projectMatcherissa).
- */
-export function extractStreetAddress(text: string | null): string | null {
-  if (!text) return null
-
-  const match = text.match(
-    /\b([A-ZÅÄÖ][a-zåäö]+(?:katu|tie|kuja|polku|väylä|kaari|raitti|rinne|aukio|puisto|ranta)\s+\d+[a-zA-Z]?)\b/
-  )
-
-  return match?.[1] ?? null
 }
 
 const SEARCH_TERMS = [

@@ -1,9 +1,6 @@
 import { describe, it, expect } from "vitest"
-import {
-  resolveDeveloper,
-  resolveParties,
-  extractStreetAddress,
-} from "./fetchSttHakuSource"
+import { resolveDeveloper, resolveParties } from "./fetchSttHakuSource"
+import { extractStreetAddress } from "./extractStreetAddress"
 
 describe("extractStreetAddress", () => {
   it("poimii katuosoitteen numeroineen", () => {
