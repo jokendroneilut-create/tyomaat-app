@@ -4,6 +4,7 @@ import {
 } from "@/lib/projects/identity"
 import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
 import { isSameOrganization } from "@/lib/projects/organizationName"
+import { haveDifferentTrades } from "@/lib/projects/contractTrade"
 
 export type NormalizedProjectCandidate = {
   name?: string | null
@@ -321,6 +322,22 @@ export function calculateMatch(
   candidate: NormalizedProjectCandidate
 ): ProjectMatchResult | null {
   const reasons: ProjectMatchReason[] = []
+  /*
+   * Eri urakkalaji = eri hanke, vaikka kohde olisi sama. Sama rakennus
+   * kilpailutetaan usein rakennus-, sähkö- ja LVI-urakkana erikseen, ja ne
+   * ovat eri hankkeita käyttäjän kannalta: LVI-alan myyjä etsii omaansa,
+   * sähköurakoitsija omaansa. Mitattu tapaus: Kuhmon terveysaseman
+   * uudisrakennus neljänä urakkana, joilla sama kaupunki, lähes sama nimi ja
+   * sama rakennuttaja - täsmäytykselle ne näyttivät duplikaateilta.
+   *
+   * Veto on ehdoton ja tarkistetaan ensin: yhdistäminen hävittäisi kokonaisen
+   * urakan näkyvistä, kun taas estetty osuma jättää molemmat listalle ihmisen
+   * nähtäväksi.
+   */
+  if (haveDifferentTrades(candidate.name, project.name)) {
+    return null
+  }
+
   let confidence = 0
 
   const candidatePermitNumber = normalizeIdentifier(
