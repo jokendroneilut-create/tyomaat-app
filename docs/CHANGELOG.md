@@ -9,6 +9,60 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-08 (työ 7.8.)
+
+### TIC:n kolmen seurantasivun tarkastus
+
+Yhdistymiset, Rikastus ja AI-suodatus käytiin läpi kannasta asti. Kaksi
+kolmesta oli rikki tavalla jota sivu itse ei paljastanut.
+
+- **AI-suodatus näytti nollaa, koska portti ei ollut kytketty.**
+  `llm_relevance_log` oli tyhjä koko olemassaolonsa ajan. Polku
+  `runSource → saveSignal → scoreRelevance` oli olemassa, mutta `runSource`in
+  ainoa kutsuja `/api/agent/run-source` oli itse kutsujaton: ei cronissa
+  (`vercel.json`), ei käyttöliittymässä (TIC:in nappi menee reittiin
+  `/api/tic/discovery/run-source`), eikä missään skriptissä. Reitti luki
+  lisäksi poistetun putken `agent_sources`-taulua. Portti kytkettiin
+  `resolvePotentialProject`in luontihaaraan (`gateCandidateRelevance`), jossa
+  ehdokkaat oikeasti syntyvät. Ks. [D-021](03_DECISIONS.md).
+
+- **16 väärää yhdistymistä purettiin.** Kaikki alle 80 %:n sumeat
+  täsmäytykset käytiin läpi käsin: 17:stä yksi oli oikein. Loput olivat joko
+  saman rakennuksen eri urakkalajeja (Rovaniemen pelastusaseman sähkö-, LVIJ-
+  ja rakennusautomaatiourakka sulautuivat rakennusurakkaan) tai täysin eri
+  hankkeita samassa kaupungissa ("Kampusrakennus Sivistyksen talo Lyyra"
+  yhdistyi Rajakummun hautausmaan huoltorakennukseen). Purku poistaa
+  `also_known_as`-aliaksen, irrottaa väärin linkitetyt tunnisteet ja palauttaa
+  ehdokkaan katselmointijonoon (`scripts/unmerge-wrong-matches.ts`).
+
+  Vahinko oli rajattu, koska hyväksyntä kirjoittaa muodossa
+  `olemassaoleva ?? uusi` eikä ylikirjoita. Vakavinta oli **aliasten
+  kertyminen**: väärä otsikko `also_known_as`-kentässä osuu seuraavaan
+  vertailuun merkki merkiltä ja antaa 75 pistettä, eli yksi virhe ruokkii
+  seuraavia. Sama otsikkopari puhtaana antoi 0 %.
+
+- **Syy löytyi ja korjattiin: maantieteen kolminkertainen laskenta.**
+  `same_location` + `same_city` + `same_region` = 45 + 20 + 8 = **73**, eli
+  kaikki 16 väärää yhdistymistä olivat samaa pistesummaa. Maantiede
+  pisteytetään nyt kerran, tarkimmalla tasollaan, ja katuosoite erotetaan
+  aluenimestä talonumeron perusteella. Ks. [D-020](03_DECISIONS.md).
+  Vaikutus samoihin 16 pariin: 16 → 6 → **4** yhdistyisi enää.
+
+- **Urakkalajien tunnistus: pisin vartalo voittaa.** Vartalot ovat
+  etuliitteitä, joten lyhyempi osui pidemmän alkuun: `vesikattourakka` alkaa
+  vartalolla `vesi` (LVI) ja `vesikatto` (katto), jolloin se luokittui
+  molemmiksi — eivätkä lajijoukot enää olleet erilliset, joten veto ei estänyt
+  vesikatto- ja putkiurakan yhdistämistä.
+
+- **Rikastussivu on lähes tyhjä, ja se on totuudenmukaista.** 19
+  `auto_sync`-tapahtumaa koko historiassa (vertailuksi `tic_approve` 3583),
+  joista 11 tuli Rajukiveltä yhtenä päivänä. Rajukiven rikastuspolku katkesi
+  kun lähde vaihdettiin `companyMentionCollector`iin, joka ei kirjoita
+  `source_documents`-tauluun — tietoinen valinta, koska lähde tuotti 48
+  hylättyä ehdokasta ja nolla hyväksyttyä.
+
+---
+
 ## 2026-08 (työ 31.7.–6.8.)
 
 ### Lähdeputkien yhdistäminen

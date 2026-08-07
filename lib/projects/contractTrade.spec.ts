@@ -94,6 +94,28 @@ describe("haveDifferentTrades", () => {
     expect(haveDifferentTrades("Gropintien rakentaminen", "Gropintien rakentaminen")).toBe(false)
   })
 
+  /*
+   * Vartalot ovat etuliitteitä, joten lyhyempi osuu pidemmän alkuun.
+   * "vesikattourakka" alkaa vartalolla "vesi" (lvi) ja "vesikatto" (katto),
+   * jolloin se luokittui molemmiksi - eivätkä lajijoukot enää olleet
+   * erilliset, joten veto ei estänyt vesikatto- ja putkiurakan yhdistämistä.
+   * Pisin vartalo voittaa.
+   */
+  it("ei sekoita vesikattourakkaa putkiurakkaan", () => {
+    expect([...detectTrades("Vesikattourakka")]).toEqual(["katto"])
+    expect(haveDifferentTrades("Vesikattourakka, Kuhmo", "Putkiurakka, Kuhmo")).toBe(
+      true
+    )
+  })
+
+  /*
+   * Rakennusautomaatio kuuluu rakennusurakkaan, ei sähköurakkaan. Tämä on
+   * alan käytäntö eikä seuraa vartaloista, joten se varmistetaan testillä.
+   */
+  it("pitää rakennusautomaatiourakan rakennusurakkana", () => {
+    expect([...detectTrades("Rakennusautomaatiourakka")]).toEqual(["rakennus"])
+  })
+
   it("sietää tyhjät", () => {
     expect(haveDifferentTrades(null, "Sähköurakka")).toBe(false)
     expect(haveDifferentTrades("", "")).toBe(false)

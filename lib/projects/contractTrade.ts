@@ -104,10 +104,29 @@ export function detectTrades(
    */
   let pendingStems: string[] = []
 
+  /*
+   * Pisin osuva vartalo voittaa. Vartalot ovat etuliitteitä, joten lyhyempi
+   * voi osua vahingossa pidemmän alkuun: "rakennusautomaatiourakka" osuu sekä
+   * vartaloon "rakennus" että "rakennusautomaatio", ja vain jälkimmäinen on
+   * oikea laji. Tasapisteissä otetaan kaikki, jotta aidosti monilajiset
+   * nimitykset ("lvis-urakka") eivät kavennu yhteen.
+   */
   function classify(word: string) {
+    let bestLength = 0
+    const best: ContractTrade[] = []
+
     for (const { trade, stems } of TRADE_STEMS) {
-      if (stems.some((stem) => word.startsWith(stem))) trades.add(trade)
+      for (const stem of stems) {
+        if (!word.startsWith(stem)) continue
+        if (stem.length > bestLength) {
+          bestLength = stem.length
+          best.length = 0
+        }
+        if (stem.length === bestLength && !best.includes(trade)) best.push(trade)
+      }
     }
+
+    for (const trade of best) trades.add(trade)
   }
 
   for (const raw of tokenize(text)) {

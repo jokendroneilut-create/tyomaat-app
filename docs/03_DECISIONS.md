@@ -5,6 +5,39 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-021 – AI-relevanssiportti kytketään ehdokkaan luontiin, ei signaaliin
+Portti (`llmRelevanceScorer`) oli rakennettu mutta ei kytkettynä: ainoa kutsuja
+oli `lib/agent/pipeline/runSource.ts`, jota kutsui vain `/api/agent/run-source`
+— reitti jolla ei ollut yhtään kutsujaa (ei cronissa, ei käyttöliittymässä) ja
+joka luki vanhaa `agent_sources`-taulua. `llm_relevance_log` oli siksi tyhjä ja
+TIC:in AI-suodatus-sivu näytti nollaa koko olemassaolonsa ajan.
+
+Portti kytkettiin sinne missä ehdokkaat oikeasti syntyvät:
+`resolvePotentialProject`, luontihaaraan. **Vain uusille ehdokkaille ja vain
+kun sääntö ei sanonut mitään** (`recommended_action` puuttuu) — olemassa
+olevalle ehdokkaalle päätös on tehty kertaalleen, eikä samaa otsikkoa kannata
+kysyä uudelleen jokaisella lähdesignaalilla.
+
+Portti voi vain **suodattaa jonon ulkopuolelle, ei koskaan hyväksyä
+julkiseksi**. Suunta on tarkoituksellinen: väärä suodatus piilottaa yhden
+liidin, väärä hyväksyntä veisi roskaa käyttäjille asti. Fail-open kauttaaltaan.
+
+### D-020 – Maantiede pisteytetään kerran, tarkimmalla tasollaan
+`same_location` (45) + `same_city` (20) + `same_region` (8) laskettiin yhteen,
+jolloin yksi ja sama todiste laskettiin kolmesti: sijainti sisältää kaupungin,
+kaupunki sisältää maakunnan. Summa 73 ylitti 70:n yhdistämiskynnyksen **ilman
+minkäänlaista todistetta samasta hankkeesta**. Mitattu: 16 väärää yhdistymistä
+sai täsmälleen 73 pistettä.
+
+Nyt pisteitä annetaan vain tarkimmalta osuneelta tasolta. Katuosoite (60) ja
+aluenimi (30) erotetaan toisistaan talonumeron perusteella: "Mannerheimintie
+14" osoittaa yhden rakennuksen, "Kruunuvuorenranta" on kaupunginosa jossa on
+kymmeniä hankkeita. Kumpikaan ei yksin riitä 70:een, joten sijainti tarvitsee
+aina tuekseen otsikko-, rakennuttaja- tai kuvaustodisteen.
+
+Syyt (`reasons`) kirjataan edelleen kaikilta tasoilta, koska todisteportti ja
+duplikaattiskannerin laatuvaatimus lukevat niitä.
+
 ### D-019 – Tekstivertailu sanoina, ei trigrammeina, kun kyse on nimestä
 Nimen etsiminen kuvauksesta (`name_in_description`) toteutettiin ensin
 merkkitrigrammien sisältyvyydellä, koska trigrammit kestävät suomen taivutusta

@@ -5,6 +5,7 @@ import {
   type IdentifierType,
 } from "@/lib/projects/identity"
 import { syncApprovedProject } from "@/lib/projects/syncApprovedProject"
+import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
 import {
   inferCompletionDateFromText,
   isPastDate,
@@ -149,10 +150,18 @@ export async function resolvePotentialProject(
    * "new"-jonoon — piilotettuna katselmoinnista mutta TicDailySummaryn laskurissa
    * pysyvästi kasvaen ("suodatettiin pois automaattisesti" ei koskaan tyhjentynyt).
    */
-  const effectiveRecommendedAction =
+  const ruleRecommendedAction =
     (completionMetadata as Record<string, any>).recommended_action ??
     (input.metadata as Record<string, any>)?.recommended_action ??
     null
+
+  /*
+   * Harmaa alue: sääntö ei sanonut mitään, joten kysytään mallilta pääseekö
+   * ehdokas katselmointijonoon. Portti ajetaan vasta alempana, luontihaarassa:
+   * jo olemassa olevalle ehdokkaalle päätös on tehty kertaalleen eikä samaa
+   * otsikkoa kannata kysyä mallilta uudelleen jokaisella lähdesignaalilla.
+   */
+  const effectiveRecommendedAction = ruleRecommendedAction
   const autoIgnored = effectiveRecommendedAction === "ignore"
 
   let existing = null
@@ -290,6 +299,18 @@ export async function resolvePotentialProject(
   const confidence =
     permitNumber || propertyId ? 90 : address && municipality ? 70 : 40
 
+  /*
+   * Harmaan alueen LLM-portti: ajetaan vain uusille ehdokkaille ja vain kun
+   * sääntö ei sanonut mitään. Portti voi suodattaa jonon ulkopuolelle, ei
+   * koskaan hyväksyä julkiseksi. Fail-open: virheessä ehdokas menee jonoon.
+   */
+  const relevanceGate = await gateCandidateRelevance({
+    title,
+    description: md.description ?? md.operation ?? null,
+    sourceName: input.sourceName ?? null,
+    ruleRecommendedAction,
+  })
+
   const { data: created, error } = await supabaseAdmin
     .from("potential_projects")
     .insert({
@@ -301,13 +322,14 @@ export async function resolvePotentialProject(
       confidence,
       source_count: 1,
       evidence_count: 0,
-      status: autoIgnored ? "ignored" : "new",
+      status: autoIgnored || relevanceGate.ignored ? "ignored" : "new",
       metadata: {
         ...(inferredCompletion
           ? { estimated_completion: inferredCompletion }
           : {}),
         ...(input.metadata ?? {}),
         ...completionMetadata,
+        ...relevanceGate.metadata,
         source_history: buildSourceHistory(null, input),
         firstSourceName: input.sourceName ?? null,
         matched_existing_project_id: matchedExistingProjectId,

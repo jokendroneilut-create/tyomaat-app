@@ -468,38 +468,61 @@ export function calculateMatch(
     isSpecificLocation(candidate.location, candidate.city) &&
     isSpecificLocation(project.location, project.city)
 
-  if (
+  const sameLocation = Boolean(
     candidateLocation &&
-    projectLocation &&
-    candidateLocation === projectLocation &&
-    bothLocationsSpecific
-  ) {
-    confidence += 45
-    reasons.push("same_location")
-  }
+      projectLocation &&
+      candidateLocation === projectLocation &&
+      bothLocationsSpecific
+  )
 
   const candidateCity = norm(candidate.city)
   const projectCity = norm(project.city)
-
-  if (
-    candidateCity &&
-    projectCity &&
-    candidateCity === projectCity
-  ) {
-    confidence += 20
-    reasons.push("same_city")
-  }
+  const sameCity = Boolean(
+    candidateCity && projectCity && candidateCity === projectCity
+  )
 
   const candidateRegion = norm(candidate.region)
   const projectRegion = norm(project.region)
+  const sameRegion = Boolean(
+    candidateRegion && projectRegion && candidateRegion === projectRegion
+  )
 
-  if (
-    candidateRegion &&
-    projectRegion &&
-    candidateRegion === projectRegion
-  ) {
+  if (sameLocation) reasons.push("same_location")
+  if (sameCity) reasons.push("same_city")
+  if (sameRegion) reasons.push("same_region")
+
+  /*
+   * Maantiede pisteytetään KERRAN, tarkimmalla osuneella tasollaan.
+   *
+   * Aiemmin tasot laskettiin yhteen, jolloin yksi ja sama todiste laskettiin
+   * kolmesti: sijainti sisältää kaupungin, kaupunki sisältää maakunnan. Siitä
+   * syntyi 45 + 20 + 8 = 73 pistettä pelkän maantieteen perusteella - yli 70:n
+   * yhdistämiskynnyksen ilman minkäänlaista todistetta siitä että kyse on
+   * samasta hankkeesta. Mitattu: 16 väärää yhdistymistä sai täsmälleen 73
+   * pistettä (mm. "Kruunuvuorenrannan monitoimitalo Helmi" yhdistyi Hartelan
+   * asuinkerrostaloon, koska molempien sijainti oli "Kruunuvuorenranta,
+   * Helsinki"). Ne purettiin scripts/unmerge-wrong-matches.ts:llä.
+   *
+   * Katuosoite ja aluenimi erotetaan toisistaan, koska ne ovat eri vahvuisia
+   * todisteita. "Mannerheimintie 14" osoittaa yhden rakennuksen; "Tapiola" tai
+   * "Kruunuvuorenranta" on kaupunginosa, jossa on kymmeniä eri hankkeita.
+   * Talonumero riittää erottimeksi: katuosoitteessa on lähes aina numero,
+   * kaupunginosan nimessä ei koskaan.
+   *
+   * Kumpikaan taso ei yksin riitä 70:een, joten sijainti tarvitsee aina
+   * tuekseen otsikko-, rakennuttaja- tai kuvaustodisteen.
+   */
+  const hasHouseNumber = (value: string | null | undefined) =>
+    /\d/.test(norm(value) ?? "")
+
+  if (sameLocation) {
+    const streetLevel =
+      hasHouseNumber(candidate.location) && hasHouseNumber(project.location)
+    confidence += streetLevel ? 60 : 30
+  } else if (sameCity) {
+    confidence += 20
+  } else if (sameRegion) {
     confidence += 8
-    reasons.push("same_region")
   }
 
   /*
