@@ -1,5 +1,6 @@
 import { detectCityFromText } from "./detectCityFromText"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import { NAME, cleanCompanyName, looksLikeCompany } from "./companyName"
 
 /*
  * YVA-lähde (ympäristövaikutusten arviointi, ymparisto.fi).
@@ -65,7 +66,97 @@ const ES_QUERY = {
   ],
   query: { bool: { filter: [{ term: { type: "yva_project" } }] } },
   sort: [{ publishTime: { order: "desc" } }],
-  size: 150,
+}
+
+/*
+ * Sivutus: aineistossa on yli 1300 YVA-hanketta, ja kiinteä size katkaisi
+ * haun ennen tuoreusikkunan reunaa. Mitattu ennen korjausta: size 150 ulottui
+ * vain kolmen kuukauden taakse (vanhin 2026-05-08), joten RECENCY_MONTHS = 18
+ * oli kuollutta koodia ja 3-18 kuukauden ikäiset hankkeet jäivät kokonaan
+ * hakematta - juuri se ikkuna jonka vuoksi lähde on olemassa. Yksittäinen
+ * mitattu tapaus: "Halmemäen tuulivoimahanke, Kärsämäki" jäi rajan taakse.
+ *
+ * Haetaan sivu kerrallaan kunnes sivun vanhin osuma ylittää tuoreusrajan.
+ * Yläraja on turvaventtiili: aineiston koko on lähteen päätettävissä, eikä
+ * yksi ajo saa jumittua tuhansiin sivupyyntöihin.
+ */
+const PAGE_SIZE = 150
+const MAX_PAGES = 12
+
+/*
+ * Hankkeesta vastaava YVA-tekstistä.
+ *
+ * `organization` on viranomainen (ELY / Lupa- ja valvontavirasto), EI
+ * rakennuttaja — se on todettu jo tiedostokommentissa. Rakennuttaja lukee
+ * leipätekstissä, ja mitatussa 25 hankkeen otoksessa kuvio "X suunnittelee"
+ * esiintyi 22:ssa ja "hankkeesta vastaa" 8:ssa.
+ *
+ * Yhtiömuotoa vaaditaan, koska kuvio on löyhä: ilman sitä "Yhtiö suunnittelee"
+ * tai "Hanke suunnittelee" poimisi nimeksi yleissanan. Otoksen jokaisessa
+ * hankkeessa mainittiin Oy, Oyj, Ab tai Ky, joten rajaus ei maksa mitään.
+ */
+const DEVELOPER_PATTERNS = [
+  // "Hankkeesta vastaavana toimiva Eolus Energy Oy suunnittelee..."
+  new RegExp(`\\bhankkeesta\\s+vastaa(?:vana\\s+toimiva)?\\s+(${NAME})`, "i"),
+  new RegExp(`\\bhankevastaava(?:na)?\\s+(?:toimii\\s+|on\\s+)?(${NAME})`, "i"),
+  // "Infinergies Finland Oy suunnittelee enintään 68 tuulivoimalan..."
+  new RegExp(`(${NAME})\\s+(?:suunnittelee|selvittää|hakee|toteuttaa)`),
+]
+
+/*
+ * Sivun lyhytosoite on leipätekstin seassa ja päättyy usein isoihin
+ * kirjaimiin, jolloin se liittyy heti perässä olevaan nimeen: mitattu
+ * "...rikastushiekka-YVA Dragon Mining Oy suunnittelee" -> nimeksi tuli
+ * "YVA Dragon Mining Oy". Osoitteet pudotetaan ennen poimintaa.
+ */
+const URL_PATTERN = /\b(?:https?:\/\/|www\.)\S+/gi
+
+/*
+ * Pelkkä maa + yhtiömuoto on aina katkennut nimi, ei yritys. Syntyy kun
+ * nimi alkaa pienellä kirjaimella eikä siksi mahdu NAME-kuvioon: mitattu
+ * "wpd Suomi Oy" -> "Suomi Oy". Mieluummin tyhjä kuin väärä rakennuttaja.
+ */
+const TRUNCATED_NAME = /^(?:Suomi|Finland|Sverige|Norge)\s+(?:Oy|Oyj|Ab|Ky)$/i
+
+export function extractYvaDeveloper(text: string | null | undefined): string | null {
+  if (!text) return null
+
+  const cleaned = text.replace(URL_PATTERN, " ")
+
+  for (const pattern of DEVELOPER_PATTERNS) {
+    const match = cleaned.match(pattern)
+    if (!match?.[1]) continue
+
+    const name = cleanCompanyName(match[1])
+    if (name.length < 4) continue
+    if (!looksLikeCompany(name)) continue
+    if (TRUNCATED_NAME.test(name)) continue
+
+    return name
+  }
+
+  return null
+}
+
+/*
+ * Hakuvastauksen `content` on koko sivun leipäteksti HTML-entiteetteineen ja
+ * rivinvaihtoineen. Otsikko toistuu sen alussa, joten se pudotetaan.
+ */
+export function cleanYvaContent(
+  raw: string | null | undefined,
+  title: string
+): string | null {
+  if (!raw) return null
+
+  const text = raw
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim()
+
+  const withoutTitle = text.startsWith(title) ? text.slice(title.length).trim() : text
+
+  return withoutTitle || null
 }
 
 function firstFinnishMunicipality(raw: unknown): string | null {
@@ -83,23 +174,47 @@ export async function fetchYvaSource() {
   const cutoffDate = new Date()
   cutoffDate.setMonth(cutoffDate.getMonth() - RECENCY_MONTHS)
 
-  let hits: any[] = []
+  const hits: any[] = []
   try {
-    const res = await fetch(SEARCH_URL, {
-      method: "POST",
-      cache: "no-store",
-      headers: {
-        "content-type": "application/json",
-        accept: "application/json",
-        "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)",
-      },
-      body: JSON.stringify(ES_QUERY),
-    })
-    if (!res.ok) return []
-    const json = await res.json()
-    hits = Array.isArray(json?.hits?.hits) ? json.hits.hits : []
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const res = await fetch(SEARCH_URL, {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+          "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)",
+        },
+        body: JSON.stringify({
+          ...ES_QUERY,
+          from: page * PAGE_SIZE,
+          size: PAGE_SIZE,
+        }),
+      })
+      if (!res.ok) break
+
+      const json = await res.json()
+      const pageHits = Array.isArray(json?.hits?.hits) ? json.hits.hits : []
+      if (pageHits.length === 0) break
+
+      hits.push(...pageHits)
+
+      /*
+       * Tulokset ovat julkaisuajan mukaan uusimmasta, joten sivun viimeinen
+       * on sen vanhin. Kun se ylittää tuoreusrajan, loput sivut ovat vielä
+       * vanhempia eikä niitä tarvitse hakea.
+       */
+      const oldest = pageHits[pageHits.length - 1]?._source?.publishTime
+      if (oldest && new Date(oldest * 1000) < cutoffDate) break
+      if (pageHits.length < PAGE_SIZE) break
+    }
   } catch {
-    return []
+    /*
+     * Virhe kesken sivutuksen: pidetään jo haetut sivut. Osittainen tulos on
+     * parempi kuin tyhjä, koska ehdokkaat täydentyvät joka tapauksessa
+     * seuraavilla ajoilla.
+     */
+    if (hits.length === 0) return []
   }
 
   const results: any[] = []
@@ -134,20 +249,36 @@ export async function fetchYvaSource() {
     seen.add(key)
 
     const region = getMunicipalityByName(city)?.region ?? null
-    const description = (s.description || "").replace(/\s+/g, " ").trim()
+    const summary = (s.description || "").replace(/\s+/g, " ").trim()
     const subjectLabel = Array.isArray(s.subjectArea) ? s.subjectArea.join(", ") : ""
+
+    /*
+     * `content` on koko hankekuvaus ja tulee samassa hakuvastauksessa - sitä
+     * pyydettiin jo _source-listassa mutta ei käytetty, joten ehdokas syntyi
+     * pelkän tiivistelmän varassa. Mitattu tapaus "Halmemäen tuulivoimahanke":
+     * tiivistelmä 78 merkkiä, content 8 639 merkkiä, ja jälkimmäisessä on
+     * voimaloiden määrä, teho, korkeus, hankealueen pinta-ala ja sijainti
+     * suhteessa keskustaajamaan. Otoksessa content oli 25/25 hankkeessa.
+     */
+    const body = cleanYvaContent(s.content, title)
 
     results.push({
       name: title,
       description:
-        description ||
+        body ||
+        summary ||
         `YVA-hanke${subjectLabel ? ` (${subjectLabel})` : ""}. Ympäristövaikutusten arviointi käynnissä.`,
       city,
       region,
       location: null,
-      developer: null,
+      developer: extractYvaDeveloper(body ?? summary),
       permit_number: null,
-      property_type: null,
+      /*
+       * subjectArea on hanketyyppi ("Tuulivoimalahankkeet"). projectType on
+       * mitatussa otoksessa 0/25 eli aina tyhjä, joten sitä ei käytetä.
+       */
+      property_type:
+        (Array.isArray(s.subjectArea) ? s.subjectArea[0] : null) || null,
       phase: "Suunnittelussa",
       business_value: "high",
       source_url: PROJECT_URL(s.link),

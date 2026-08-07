@@ -1,6 +1,7 @@
 import { detectCityFromText } from "./detectCityFromText"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { extractStreetAddress } from "./extractStreetAddress"
+import { NAME, cleanCompanyName } from "./companyName"
 
 /*
  * STT Info -hakulähde. Toisin kuin nimetyt yrityslähteet (jotka lukevat yhden
@@ -78,8 +79,10 @@ function extractCompaniesFromText(...texts: (string | null | undefined)[]): stri
  * (Bonava, Pohjola Rakennus, YIT) on omissa kohteissaan oikeasti myös
  * rakennuttaja.
  */
-const NAME_PART = "[A-ZÅÄÖ][A-Za-z0-9åäöÅÄÖ&.\\-]*"
-const NAME = `${NAME_PART}(?:\\s+${NAME_PART})*`
+/*
+ * Nimen muoto ja siivous ovat lib/agent/companyName.ts:ssä, koska YVA-lähde
+ * tarvitsee saman. Vain kuviot (kuka on tilaaja) ovat lähdekohtaisia.
+ */
 
 const CLIENT_PATTERNS = [
   // "tilaajana toimii Oulun Tilapalvelut Oy"
@@ -93,25 +96,6 @@ const CLIENT_PATTERNS = [
   // "NCC:n toimeksiannosta"
   new RegExp(`\\b(${NAME})\\s*:n\\s+toimeksiannosta`),
 ]
-
-/*
- * Nimen perässä oleva välimerkki ei kuulu nimeen. Piste sallitaan sanan
- * sisällä ("As. Oy"), joten se siivotaan vasta lopusta.
- */
-function cleanCompanyName(raw: string): string {
-  /*
-   * Nimi katkaistaan yhtiömuotoon. Ilman tätä kaappaus jatkuu seuraavaan
-   * virkkeeseen, koska piste kuuluu nimimerkkeihin ("As. Oy") ja seuraava
-   * sana on usein iso alkukirjain: mitattu "HMT-Areena Oy. Tilaajien".
-   */
-  const withForm = raw.match(/^(.*?\b(?:Oy|Oyj|Ab|Ky|Ltd))\b/)
-  const name = withForm?.[1] ?? raw
-
-  return name
-    .replace(/:n$/i, "")
-    .replace(/[.,;:]+$/, "")
-    .trim()
-}
 
 export function extractClientFromText(
   title: string | null,
