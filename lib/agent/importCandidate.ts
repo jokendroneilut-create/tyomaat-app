@@ -185,7 +185,7 @@ export async function loadProjectsForMatching(): Promise<any[]> {
     const { data, error } = await supabase
       .from("projects")
       .select(
-        "id,name,city,region,location,phase,completed_at,status,developer," +
+        "id,name,city,region,location,phase,completed_at,status,developer,builder," +
           "property_type,estimated_completion,additional_info," +
           "meta_permit_number:metadata->>permit_number," +
           "meta_property_id:metadata->>property_id," +
@@ -313,6 +313,13 @@ export async function importCandidate(
     permitNumber: body.permit_number ?? body.metadata?.permit_number ?? null,
     propertyId: body.property_id ?? body.metadata?.property_id ?? null,
     developer: body.developer ?? body.metadata?.developer ?? null,
+    /*
+     * Urakoitsija erikseen rakennuttajasta: lähde voi tietää molemmat, esim.
+     * kun rakennusliike tiedottaa omasta urakastaan ja tilaaja mainitaan
+     * tekstissä. Ilman tätä kenttä katosi eikä pääurakoitsija näkynyt
+     * hankekortilla.
+     */
+    builder: body.builder ?? body.metadata?.builder ?? null,
     buildingType:
       body.property_type ??
       body.building_type ??
@@ -398,6 +405,8 @@ export async function importCandidate(
         location: body.location || match.location || null,
         phase: matchedNewPhase || undefined,
         developer: body.developer || match.developer || null,
+        // Tunnettua urakoitsijaa ei ylikirjoiteta; vain tyhjä täytetään.
+        builder: match.builder || candidate.builder || null,
         property_type:
           body.property_type || body.building_type || match.property_type || null,
         estimated_completion:
@@ -637,6 +646,7 @@ export async function importCandidate(
       operation: cleanedTitle,
       description: body.description ?? body.metadata?.description ?? null,
       developer: candidate.developer,
+      builder: candidate.builder,
       building_type: candidate.buildingType,
       region: body.region || null,
       permit_number: candidate.permitNumber,

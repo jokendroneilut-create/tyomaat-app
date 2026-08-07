@@ -32,6 +32,11 @@ export type MatchableProject = {
   completed_at?: string | null
   status?: string | null
   developer?: string | null
+  /*
+   * Pääurakoitsija. Ei käytetä täsmäytyksessä, mutta kulkee mukana jotta
+   * tuonti voi täydentää tyhjän kentän ylikirjoittamatta tunnettua.
+   */
+  builder?: string | null
   property_type?: string | null
   estimated_completion?: string | null
   additional_info?: string | null

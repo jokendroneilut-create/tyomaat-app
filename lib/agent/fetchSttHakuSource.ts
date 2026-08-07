@@ -63,22 +63,111 @@ function extractCompaniesFromText(...texts: (string | null | undefined)[]): stri
   return names.length > 0 ? names.join(", ") : null
 }
 
+/*
+ * Tilaaja tiedotteen tekstistä.
+ *
+ * Urakoitsija tiedottaa omasta urakastaan, jolloin julkaisija on
+ * PÄÄURAKOITSIJA eikä rakennuttaja. Tilaaja mainitaan tällöin lähes aina
+ * tekstissä, ja juuri se erottaa urakan omasta perustajaurakoinnista:
+ * "Skanska rakentaa Garminille toimitilat" on urakka, "Bonava rakentaa
+ * Espooseen" on oma tuotanto jossa julkaisija todella on rakennuttaja.
+ *
+ * Tunnistus perustuu siis TILAAJAMAININTAAN eikä julkaisijan nimeen. Nimen
+ * perusteella arvaaminen menisi väärin, koska perustajaurakoitsija
+ * (Bonava, Pohjola Rakennus, YIT) on omissa kohteissaan oikeasti myös
+ * rakennuttaja.
+ */
+const NAME_PART = "[A-ZÅÄÖ][A-Za-z0-9åäöÅÄÖ&.\\-]*"
+const NAME = `${NAME_PART}(?:\\s+${NAME_PART})*`
+
+const CLIENT_PATTERNS = [
+  // "tilaajana toimii Oulun Tilapalvelut Oy"
+  new RegExp(`\\btilaajana\\s+(?:toimii\\s+)?(${NAME})`),
+  // "rakennuttajana on Senaatti-kiinteistöt"
+  new RegExp(`\\brakennuttajana\\s+(?:toimii\\s+|on\\s+)?(${NAME})`),
+  // "HMT-Areena Oy:n merkittävä hanke"
+  new RegExp(
+    `\\b(${NAME}\\s+(?:Oy|Oyj|Ab|Ky|Ltd)):n\\s+(?:[A-Za-zåäöÅÄÖ]+\\s+)?(?:hanke|hanketta|toimeksianto|tilaus)`
+  ),
+  // "NCC:n toimeksiannosta"
+  new RegExp(`\\b(${NAME})\\s*:n\\s+toimeksiannosta`),
+]
+
+/*
+ * Nimen perässä oleva välimerkki ei kuulu nimeen. Piste sallitaan sanan
+ * sisällä ("As. Oy"), joten se siivotaan vasta lopusta.
+ */
+function cleanCompanyName(raw: string): string {
+  return raw
+    .replace(/:n$/i, "")
+    .replace(/[.,;:]+$/, "")
+    .trim()
+}
+
+export function extractClientFromText(
+  title: string | null,
+  description: string | null
+): string | null {
+  const joined = [title, description].filter(Boolean).join(" ")
+  if (!joined) return null
+
+  for (const pattern of CLIENT_PATTERNS) {
+    const match = joined.match(pattern)
+    if (!match?.[1]) continue
+
+    const name = cleanCompanyName(match[1])
+    if (name.length >= 4) return name
+  }
+
+  return null
+}
+
+export type SttParties = {
+  developer: string | null
+  builder: string | null
+}
+
+export function resolveParties(
+  publisher: string | null,
+  title: string | null,
+  description: string | null
+): SttParties {
+  if (!publisher) {
+    return { developer: extractCompaniesFromText(title, description), builder: null }
+  }
+
+  const isAuthority = AUTHORITY_PUBLISHERS.some((pattern) => pattern.test(publisher))
+
+  /*
+   * Viranomaisjulkaisija hylätään aina: se tiedottaa MUIDEN hankkeista. Jos
+   * toteuttajaa ei saada tekstistä, kenttä jää tyhjäksi - se on parempi kuin
+   * väärä rakennuttaja, jonka ihminen joutuu huomaamaan ja korjaamaan.
+   */
+  if (isAuthority) {
+    return { developer: extractCompaniesFromText(title, description), builder: null }
+  }
+
+  /*
+   * Tilaaja mainittu -> julkaisija on urakoitsija. Mitattu tapaus:
+   * "Rakennusliike Soimu rakentaa Siilinjärvelle uuden palloiluhallin",
+   * tilaajana HMT-Areena Oy. Kannassa luki rakennuttajana Soimu, joka on
+   * pääurakoitsija.
+   */
+  const client = extractClientFromText(title, description)
+  if (client && client.toLowerCase() !== publisher.toLowerCase()) {
+    return { developer: client, builder: publisher }
+  }
+
+  return { developer: publisher, builder: null }
+}
+
+/** Säilytetään vanha rajapinta; palauttaa vain rakennuttajan. */
 export function resolveDeveloper(
   publisher: string | null,
   title: string | null,
   description: string | null
 ): string | null {
-  if (!publisher) return extractCompaniesFromText(title, description)
-
-  const isAuthority = AUTHORITY_PUBLISHERS.some((pattern) => pattern.test(publisher))
-  if (!isAuthority) return publisher
-
-  /*
-   * Viranomaisjulkaisija hylätään aina. Jos toteuttajaa ei saada tekstistä,
-   * kenttä jää tyhjäksi - se on parempi kuin väärä rakennuttaja, jonka
-   * ihminen joutuu huomaamaan ja korjaamaan.
-   */
-  return extractCompaniesFromText(title, description)
+  return resolveParties(publisher, title, description).developer
 }
 
 const SEARCH_TERMS = [
@@ -205,13 +294,20 @@ export async function fetchSttHakuSource() {
       const region = city ? getMunicipalityByName(city)?.region ?? null : null
       const completed = COMPLETED_KEYWORDS.some((k) => haystack.includes(k))
 
+      const parties = resolveParties(
+        release?.publisher?.name ?? null,
+        title,
+        description
+      )
+
       results.push({
         name: title,
         description,
         city,
         region,
         location: null,
-        developer: resolveDeveloper(release?.publisher?.name ?? null, title, description),
+        developer: parties.developer,
+        builder: parties.builder,
         phase: completed ? "Valmistunut" : "Suunnittelussa",
         source_url: absoluteHref,
         confidence: 0.5,

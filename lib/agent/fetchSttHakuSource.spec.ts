@@ -1,5 +1,71 @@
 import { describe, it, expect } from "vitest"
-import { resolveDeveloper } from "./fetchSttHakuSource"
+import { resolveDeveloper, resolveParties } from "./fetchSttHakuSource"
+
+describe("resolveParties", () => {
+  /*
+   * Mitattu tapaus: "Rakennusliike Soimu rakentaa Siilinjärvelle uuden
+   * palloiluhallin", tilaajana HMT-Areena Oy. Kannassa luki rakennuttajana
+   * Soimu, joka on pääurakoitsija.
+   */
+  it("siirtää julkaisijan urakoitsijaksi kun tilaaja mainitaan", () => {
+    const parties = resolveParties(
+      "Rakennusliike Soimu Oy",
+      "Rakennusliike Soimu rakentaa Siilinjärvelle uuden palloiluhallin",
+      "HMT-Areena Oy:n merkittävä hanke edistää alueen liikuntaolosuhteita."
+    )
+
+    expect(parties.developer).toBe("HMT-Areena Oy")
+    expect(parties.builder).toBe("Rakennusliike Soimu Oy")
+  })
+
+  it("tunnistaa tilaajan myös tilaajana-muodosta", () => {
+    const parties = resolveParties(
+      "Lujatalo Oy",
+      "Lujatalo rakentaa koulun Ouluun",
+      "Hankkeen tilaajana toimii Oulun Tilapalvelut Oy."
+    )
+
+    expect(parties.developer).toBe("Oulun Tilapalvelut Oy")
+    expect(parties.builder).toBe("Lujatalo Oy")
+  })
+
+  /*
+   * Perustajaurakointi: yhtiö rakentaa omaan lukuunsa, jolloin se todella ON
+   * rakennuttaja. Tilaajaa ei mainita, joten sääntö ei laukea. Julkaisijan
+   * nimeen perustuva arvaus olisi mennyt tässä väärin.
+   */
+  it("ei koske omaan lukuun rakentamiseen", () => {
+    const parties = resolveParties(
+      "Bonava Suomi Oy",
+      "Bonava rakentaa Espooseen uuden asuinkerrostalon",
+      "Kohde valmistuu vuonna 2027."
+    )
+
+    expect(parties.developer).toBe("Bonava Suomi Oy")
+    expect(parties.builder).toBeNull()
+  })
+
+  it("ei aseta julkaisijaa urakoitsijaksi jos tilaaja on sama yritys", () => {
+    const parties = resolveParties(
+      "Peab Oy",
+      "Peab rakentaa",
+      "Peab Oy:n hanke etenee aikataulussa."
+    )
+
+    expect(parties.builder).toBeNull()
+  })
+
+  it("viranomaisjulkaisija ei ole rakennuttaja eikä urakoitsija", () => {
+    const parties = resolveParties(
+      "Lupa- ja valvontavirasto",
+      "Bull Team Oy:n laajennuksen YVA-menettely käynnistyy",
+      null
+    )
+
+    expect(parties.developer).toContain("Bull Team Oy")
+    expect(parties.builder).toBeNull()
+  })
+})
 
 describe("resolveDeveloper", () => {
   it("käyttää julkaisijaa kun se on yritys", () => {
