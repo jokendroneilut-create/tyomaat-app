@@ -116,4 +116,73 @@ describe("name_in_description", () => {
     expect(match!.reasons).toContain("similar_description")
     expect(match!.reasons).not.toContain("name_in_description")
   })
+
+  /*
+   * Mitattu tapaus: "Kansallismuseon peruskorjaus ja laajennus". Geneeristen
+   * sanojen karsinta jättää vain yhden erottuvan sanan, jolloin sääntö
+   * kieltäytyi katsomasta tekstiä lainkaan - vaikka kuvauksessa esiintyivät
+   * nimen kaikki kolme sanaa. Ehdokas sai 0 % eikä näkynyt missään.
+   */
+  it("hyväksyy yhden pitkän erottuvan sanan kun nimen kaikki sanat löytyvät", () => {
+    const match = calculateMatch(
+      project({
+        name: "Kansallismuseon peruskorjaus ja laajennus",
+        city: "Helsinki",
+      }),
+      {
+        name: "Kansallismuseon uudisosa luovutettu museon käyttöön",
+        city: "Helsinki",
+        description:
+          "Peruskorjauksen läpi käynyt historiallinen päärakennus luovutetaan " +
+          "Suomen kansallismuseolle elokuussa. Uusi laajennusosa avautuu " +
+          "yleisölle huhtikuussa 2027 tontilla jatkuvien töiden jälkeen.",
+      }
+    )
+
+    expect(match!.reasons).toContain("name_in_description")
+  })
+
+  /*
+   * Sama sääntö ei saa laueta lyhyestä erottuvasta sanasta: "koulun" osoittaa
+   * tuhatta rakennusta, joten "Koulun peruskorjaus" ei kelpaa tunnisteeksi.
+   */
+  it("ei hyväksy lyhyttä yksittäistä erottuvaa sanaa", () => {
+    const match = calculateMatch(
+      project({ name: "Koulun peruskorjaus", city: "Espoo" }),
+      {
+        name: "Espoossa alkaa koulun remontti",
+        city: "Espoo",
+        description:
+          "Koulun peruskorjaus alkaa kesällä ja kohteessa tehdään laajat " +
+          "sisätyöt sekä julkisivun kunnostus aikataulun mukaisesti.",
+      }
+    )
+
+    expect(match?.reasons ?? []).not.toContain("name_in_description")
+  })
+
+  /*
+   * Taivutusvertailu tehtiin ennen kuuden merkin yhteisellä alulla, mikä on
+   * liian löyhä pitkille yhdyssanoille: "kansallismuseolle" ja
+   * "kansallisarkiston" jakavat alun "kansal". Mitattu tuotannosta -
+   * Kansallismuseon uutinen osui parhaiten Kansallisarkiston peruskorjaukseen.
+   */
+  it("ei sekoita eri yhdyssanoja joilla on sama alku", () => {
+    const match = calculateMatch(
+      project({
+        name: "Kansallisarkiston peruskorjaus Helsingissä",
+        city: "Helsinki",
+      }),
+      {
+        name: "Kansallismuseon uudisosa luovutettu museon käyttöön",
+        city: "Helsinki",
+        description:
+          "Peruskorjauksen läpi käynyt päärakennus luovutetaan Suomen " +
+          "kansallismuseolle elokuussa Helsingissä. Museo avautuu yleisölle " +
+          "huhtikuussa 2027 kun sisätyöt saadaan valmiiksi.",
+      }
+    )
+
+    expect(match?.reasons ?? []).not.toContain("name_in_description")
+  })
 })

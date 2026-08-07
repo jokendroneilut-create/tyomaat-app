@@ -230,17 +230,88 @@ function descriptionSimilarity(
 const NAME_IN_TEXT_THRESHOLD = 0.7
 const NAME_IN_TEXT_MIN_WORDS = 2
 
+/*
+ * Pitkä yhdyssana kelpaa yksinään erottimeksi, lyhyt ei. Suomessa pituus on
+ * kelvollinen mittari täsmällisyydelle: "kansallismuseon" (15) osoittaa yhden
+ * rakennuksen, "koulun" (6) tuhatta. Raja on tarkoituksella korkea.
+ */
+const SINGLE_WORD_MIN_LENGTH = 12
+
+/*
+ * Sama sana taivutettuna?
+ *
+ * Taivutus muuttaa suomessa sanan loppua, joten vertailu tehdään yhteisestä
+ * alusta. Aiemmin riitti kuuden merkin yhteinen alku, mikä on liian löyhä
+ * pitkille yhdyssanoille: "kansallismuseolle" ja "kansallisarkiston" jakavat
+ * alun "kansal" ja kelpasivat toisikseen. Mitattu tuotannosta - Kansallismuseon
+ * uutinen osui parhaiten Kansallisarkiston peruskorjaukseen.
+ *
+ * Nyt yhteisen alun on katettava valtaosa PIDEMMÄSTÄ sanasta. Taivutuspääte on
+ * lyhyt suhteessa vartaloon, joten aito taivutuspari ylittää rajan helposti
+ * ("kansallismuseon" / "kansallismuseolle" = 14/17), kun taas eri sanat jäävät
+ * alle ("kansallis" = 9/17). Sama raja pudottaa myös D-019:n mittaaman
+ * vuodon: "tuulivoimahanke" / "tuulivoimapuisto" = 10/16.
+ */
+const STEM_RATIO = 0.7
+
+function sameStem(first: string, second: string): boolean {
+  const longest = Math.max(first.length, second.length)
+  if (Math.min(first.length, second.length) < 6) return false
+
+  let shared = 0
+  while (
+    shared < first.length &&
+    shared < second.length &&
+    first[shared] === second[shared]
+  ) {
+    shared += 1
+  }
+
+  return shared / longest >= STEM_RATIO
+}
+
 function nameWithinText(
   name: string | null | undefined,
   text: string | null | undefined
 ): boolean {
   const distinctiveWords = titleWords(name)
-  if (distinctiveWords.length < NAME_IN_TEXT_MIN_WORDS) return false
+  const allWords = (norm(name) ?? "")
+    .split(" ")
+    .map((word) => word.trim())
+    .filter((word) => word.length >= 4)
 
   const textWords = new Set(
     (norm(text) ?? "").split(" ").filter((word) => word.length >= 4)
   )
   if (textWords.size < 5) return false
+
+  const foundInText = (word: string) =>
+    [...textWords].some(
+      (textWord) => textWord === word || sameStem(word, textWord)
+    )
+
+  /*
+   * Nimi jossa on vain YKSI erottuva sana. Geneeristen sanojen karsinta on
+   * tarpeen ("rakentaminen" ei saa osua mihin tahansa kuvaukseen), mutta se
+   * vie joskus liikaa: "Kansallismuseon peruskorjaus ja laajennus" kutistuu
+   * yhteen sanaan, jolloin sääntö kieltäytyi katsomasta tekstiä lainkaan -
+   * vaikka kuvauksessa luki "Peruskorjauksen läpi käynyt ... luovutetaan
+   * Suomen kansallismuseolle" ja "laajennusosa", eli nimen KAIKKI sanat.
+   *
+   * Tällöin vaaditaan enemmän: erottuvan sanan on oltava pitkä, nimessä on
+   * oltava muutakin, ja tekstistä on löydyttävä nimen jokainen sana - myös
+   * geneeriset. Karsittu sana on yhä huono todiste yksin, mutta hyvä
+   * vahvistus sille joka kantaa merkityksen.
+   */
+  if (distinctiveWords.length === 1) {
+    return (
+      distinctiveWords[0].length >= SINGLE_WORD_MIN_LENGTH &&
+      allWords.length >= 2 &&
+      allWords.every(foundInText)
+    )
+  }
+
+  if (distinctiveWords.length < NAME_IN_TEXT_MIN_WORDS) return false
 
   /*
    * Vertailu KOKONAISINA SANOINA eikä trigrammeina. Trigrammeilla mitattuna
@@ -253,15 +324,7 @@ function nameWithinText(
    * sana alkaa sillä tai se alkaa tekstin sanalla, vähintään 6 merkin
    * yhteisellä alulla.
    */
-  let foundCount = 0
-  for (const word of distinctiveWords) {
-    const found = [...textWords].some(
-      (textWord) =>
-        textWord === word ||
-        (word.length >= 6 && textWord.startsWith(word.slice(0, 6)) && word.startsWith(textWord.slice(0, 6)))
-    )
-    if (found) foundCount += 1
-  }
+  const foundCount = distinctiveWords.filter(foundInText).length
 
   return foundCount / distinctiveWords.length >= NAME_IN_TEXT_THRESHOLD
 }
