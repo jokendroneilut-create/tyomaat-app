@@ -9,7 +9,46 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
-## 2026-08 (työ 7.8.)
+## 2026-08 (työ 7.–8.8.)
+
+### Selvitys ilman muutosta: Helsingin vanha kaavalähde
+
+Kuvauksettomien ehdokkaiden korjaussarjan jälkeen suurin jäljellä oleva ryhmä
+oli "Helsingin vireillä olevat kaavat" (91 ehdokasta, 61 ilman kuvausta, 99 %
+hylätty). **Tälle ei tehty mitään, ja syy kannattaa tietää**, jottei sitä
+tutkita uudelleen.
+
+Toisin kuin ne neljä yrityslähdettä, tämä ei ole poimijavika. Lähde on
+karttapalvelun WFS-taso eli geometriahakemisto, ja sen koko sisältö per kaava
+on `luokka`, `tyyppi`, `pintaala`, `kaavatunnus`, päivämäärät ja polygoni.
+**Kuvausta ei ole olemassa**, eikä ehdokkailla ole `source_url`:ia, joten
+artikkelisivua ei voi hakea. Lähde on lisäksi jo pois käytöstä ja korvattu
+SUKKA-lähteellä (217 ehdokasta, 4 % hylätty, oikeat kuvaukset). Kaikki 91
+ehdokasta syntyivät yhtenä päivänä 13.7., 90 on hylätty, yksikään ei ole
+jonossa.
+
+Kattavuus tarkistettiin siltä varalta että sulkeminen olisi menettänyt jotain:
+
+```
+WFS "vireillä"    83 kaavaa      SUKKA   105 kaavaa
+molemmissa        72
+vain WFS:ssä      11             vain SUKKAssa  33 (myöhempiä vaiheita)
+```
+
+SUKKA ei siis ole ylijoukko — 11 kaavaa on vain vanhassa lähteessä. Ne ovat
+kaavahakemistossa vireillä mutta ilman aktiivista SUKKA-tietuetta, ja
+päivämäärät selittävät miksi: kahdeksaa ei ole koskettu kahteen vuoteen ja
+Kluuvin kaava 11803 on ollut vireillä vuodesta 2008 (viimeksi muokattu 2013).
+Ne ovat vireillä paperilla, eivät valmistelussa.
+
+Kaksi poikkeusta joissa on tuoretta liikettä eikä hanketta kannassa:
+**12245 Mellunkylä** (89 948 m², muokattu 2025-04) ja **12273 Pukinmäki**
+(19 632 m², muokattu 2023-11).
+
+Lähdettä ei kannata avata uudelleen: WFS ei sisällä kuvausta, joten ne 11
+tulisivat sisään muodossa `Kaava 12245 – MELLUNKYLÄ` — samanlaisina riveinä
+joista 99 % hylättiin — ja mukana tulisi 72 päällekkäistä. Jos nuo kaksi
+liikkuvaa kaavaa kiinnostavat, ne ovat kertaluontoista käsityötä.
 
 ### TIC:n koko sivupalkin tarkastus
 
