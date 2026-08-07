@@ -33,6 +33,49 @@ väärän kuvan.
 `yva`-lähteestä, ja 141:llä ei ole lainkaan luokittelua. Uusi AI-portti korjaa
 tämän vain eteenpäin — se ajetaan luontihetkellä, ei jo jonossa oleville.
 
+### Duplikaattiskannaus: päivittäin, ja numerot huomioidaan
+
+Skannauksen tiheys ei ollut varsinainen ongelma — inkrementaalinen ajo löysi
+viimeksi **nolla paria** 37 598 vertailusta, koska hyväksyntähetken täsmäytys
+nappaa duplikaatit jo ennen skanneria. Ongelma oli ikkuna: ajo vertasi
+viimeisen 7 päivän hankkeita ja cron ajoi 7 päivän välein, eli yksi väliin
+jäänyt ajo jätti sen viikon hankkeet pysyvästi skannaamatta. Cron on nyt
+päivittäinen, ks. [D-025](03_DECISIONS.md).
+
+Samalla ajettiin kertaalleen `mode=full` uusilla pisteytyssäännöillä (47 s,
+180 131 vertailua): **65 uutta katselmoitavaa paria**. Niistä 48 oli
+kaavapareja ja 34:llä numero erosi:
+
+```
+[90%] Levin kortteleiden 207 ja 208 asemakaavamuutos
+      Levin kortteleiden  57 ja  58 asemakaavamuutos
+
+[75%] XVI (Tammela), Vellamonkatu 11, täydennysrakentaminen
+      XVI (Tammela), Vellamonkatu  8, täydennysrakentaminen
+```
+
+Syy: `titleWords` pudottaa alle neljän merkin sanat, joten `11`, `8`, `295` ja
+`XVI` katosivat ennen vertailua ja nimistä jäi täsmälleen sama sanajoukko.
+Kaavoituksessa ja katuosoitteissa numero on kuitenkin koko identiteetti.
+
+Uusi sääntö ([D-024](03_DECISIONS.md)) **rajoittaa eikä estä**: varmuus
+painetaan 65:een eli yhdistämiskynnyksen alle, jolloin pari jää ihmisen
+katsottavaksi. Numero ei aina ole tunniste — uutisotsikossa voi lukea "48
+asuntoa" ja toisessa lähteessä "50 asuntoa" samasta hankkeesta.
+
+| | ennen | jälkeen |
+|---|---|---|
+| kaksoiskappalejono | 65 | **26** |
+| ehdokasjonon automaattiosumat | 7 | **7** |
+
+39 paria poistettiin kannasta. Poistoehto oli "nykyinen pisteytys antaa alle
+70", ei "kaikki katselmoimattomat" — arvioidut rivit säilyivät.
+
+Jäljelle jääneissä 26:ssa on aitoja löytöjä joita hyväksyntähetken täsmäytys
+ei nappaa (`Pyhäaamu asemakaavan muutos` ↔ `Asemakaavan muutos Pyhäaamu`,
+sanajärjestys) sekä pari tunnistettua väärää osumaa (`Tampereen
+selviämishoitoasema` ↔ `pääpoliisiasema`), jotka eivät liity numeroihin.
+
 ### Nimivertailu: yksi pitkä sana ja tiukempi vartalo
 
 Lähtökohtana yksi ehdokas: Kansallismuseon uudisosan luovutusuutinen ei

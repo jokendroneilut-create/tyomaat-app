@@ -5,6 +5,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-025 – Ajastetun työn ikkuna on pidempi kuin ajoväli
+Duplikaattiskannauksen inkrementaalinen ajo vertasi viimeisen **7 päivän**
+aikana luotuja tai päivitettyjä hankkeita, ja cron ajoi **7 päivän** välein.
+Ikkuna ja ajoväli olivat identtiset, eli päällekkäisyyttä ei ollut lainkaan:
+yksi väliin jäänyt ajo — deploy, aikaraja, cron-häiriö — jätti sen viikon
+hankkeet (169 uutta + 212 päivittynyttä) pysyvästi skannaamatta, koska mikään
+ei palaa taaksepäin.
+
+Sama vikaluokka kuin D-022:ssa, eri paikassa. Sääntö: **ajastetun työn ikkuna
+mitoitetaan niin että peräkkäiset ajot menevät päällekkäin.** Päivittäisellä
+ajolla sama 7 päivän ikkuna antaa seitsenkertaisen redundanssin, ja hinta on
+olematon — kaupunkiryhmittelyn jälkeen ajo kestää 5,9 s.
+
+Perustelu asuu reitin kommentissa, koska `vercel.json` ei salli kommentteja.
+
+### D-024 – Eri numero nimessä rajoittaa, ei estä
+Kaavoituksessa ja katuosoitteissa numero on identiteetti: "Vellamonkatu 11" ja
+"Vellamonkatu 8" ovat eri tontti, "295 Pereen asemakaavan muutos" ja "289
+Pereen asemakaavan muutos" eri kaava. Täsmäytys ei nähnyt tätä lainkaan, koska
+`titleWords` pudottaa alle neljän merkin sanat — "11", "8", "295" ja "XVI"
+katosivat ennen vertailua ja nimistä jäi jäljelle täsmälleen sama sanajoukko.
+Mitattu täydestä skannauksesta: 65 katselmoitavasta parista 48 oli kaavapareja
+ja **34:llä numero erosi**.
+
+Vaikutus on **rajoittava, ei estävä** — tässä poiketaan tarkoituksella
+[contractTrade](../lib/projects/contractTrade.ts):n vetosta, joka nollaa
+osuman. Varmuus painetaan 65:een eli yhdistämiskynnyksen alle, jolloin pari
+jää ihmisen katsottavaksi. Numero ei nimittäin aina ole tunniste:
+uutisotsikossa voi lukea "48 asuntoa" ja toisessa lähteessä "50 asuntoa"
+samasta hankkeesta. Lupanumero ja kiinteistötunnus voittavat säännön, koska ne
+ovat suoraa todistetta samasta kohteesta.
+
+Kolme yksityiskohtaa jotka ratkaisivat mitatut tapaukset:
+
+- **Vertailu koko joukkona, ei leikkauksena.** "Asemakaava 853 14/2021" ja
+  "853 5/2021" jakavat numerot 853 ja 2021 mutta ovat eri kaava.
+- **Molemmilla on oltava numeroita.** Vain toisessa oleva on yleensä
+  tarkennus: "Oulun elämysareena ja ympäristö, Rata-aukio 2" vs "Oulun
+  elämysareena".
+- **Sanan sisäistä numeroa ei poimita**, jottei "FIN04A" tai "Ph2" pilkkoudu.
+
 ### D-023 – Taivutusvertailu suhteellisena, ei kiinteänä merkkimääränä
 `nameWithinText` salli taivutuksen kuuden merkin yhteisellä alulla. Lyhyille
 sanoille se on tiukka, pitkille yhdyssanoille aivan liian löyhä:
