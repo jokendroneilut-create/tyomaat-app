@@ -5,6 +5,32 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-028 – Valmistumista ei päätellä menneestä aikamuodosta
+Hankkeen valmistumista **ei voi päätellä kuvaustekstistä**. Mitattu 4412
+julkisesta hankkeesta: sana "valmistui"/"valmistunut" esiintyi 69:llä, ja
+tiukennuksen jälkeen (pois asiakirjat, viereiset rakennukset, vanhat
+vuosiluvut molemmin puolin sanaa) jäljelle jäi 12 — joista **yksikään ei
+koskenut hanketta itseään**. Ne kertoivat purettavasta vanhasta rakennuksesta,
+valmistuneesta kaavaselvityksestä tai naapurirakennuksesta, tai olivat
+konditionaaleja tulevaisuudesta ("valmistuisi syksyllä 2029").
+
+Siksi `parseEstimatedCompletionDate` hyväksyy vain **tulevan aikamuodon**
+(`valmistuu`, `valmistuva`, `valmistumassa`) eikä koskaan mennyttä. Rajaus on
+tarkoituksellinen, ei puute — ilman tätä merkintää joku lisää `valmistui`-muodon
+takaisin hyvässä uskossa.
+
+Käyttökelpoinen signaali on siis **arvioitu valmistumisaika**, ei todettu
+valmistuminen. Arvio + aika riittää, koska `auto-complete-projects`-cron
+siirtää hankkeen valmistuneeksi vasta kun päivä on mennyt. Varmennettu
+valmistuminen (loppukatselmus) vaatisi rakennusrekisterin, joka ei ole avointa
+dataa; Lupapisteen julkipano ei kelpaa, koska se julkaisee päätöksiä eikä
+katselmuksia eikä julkaise lupaa uudelleen tilan muuttuessa (mitattu: 366
+lupatunnusta, 0 tilanmuutosta).
+
+Vuodenaika arvioidaan aina kauden **viimeiseen** kuukauteen. Liian aikainen
+arvio piilottaisi käynnissä olevan hankkeen asiakkailta, koska valmistuneet
+suodatetaan listasta ja kartalta.
+
 ### D-027 – Kuvaukseton ehdokas on hylätty ehdokas
 Mitattu koko kannasta, ja korrelaatio on jyrkkä:
 

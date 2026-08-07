@@ -11,6 +11,56 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 7.–8.8.)
 
+### Valmistumistieto: mikä toimii ja mikä ei
+
+Lähtökohtana kysymys siitä, saadaanko rakennusvalvonnasta tieto valmistumisesta
+(loppukatselmus, käyttöönotto). Vastaus mitattiin, ja se on kaksiosainen.
+
+**Varmennettua valmistumista ei ole saatavilla.** Aineistossa oli 9 mainintaa
+sanasta "loppukatselmus" ja 2 sanasta "käyttöönottokatselmus", kaikki
+satunnaisia mainintoja leipätekstissä. Lupapisteen julkipano ei kelpaa: se
+julkaisee päätöksiä eikä katselmuksia, eikä julkaise lupaa uudelleen tilan
+muuttuessa (366 lupatunnusta, 1 toisto, **0 tilanmuutosta**). Kansallinen avoin
+data antaa koko Suomesta 6 aineistoa haulla "rakennusluvat". Ks.
+[D-028](03_DECISIONS.md).
+
+**Arvioitu valmistumisaika sen sijaan toimii, eikä sitä käytetty.**
+`parseFinnishCompletionDate` on ollut olemassa ja toimii, mutta sitä ei ajettu
+koskaan hankkeiden kuvauksia vasten: `estimated_completion` oli täytetty **24
+hankkeella 4412:sta (1 %)**.
+
+Kenttä on tärkeä, koska `auto-complete-projects`-cron siirtää hankkeen
+valmistuneeksi vasta kun päivä on mennyt — ilman päivämäärää hanke jää
+ikuisesti rakenteille.
+
+| | ennen | jälkeen |
+|---|---|---|
+| `estimated_completion` täytetty | 24 (1 %) | **166** |
+| määräpäivä jo mennyt | 0 | 11 |
+
+Poiminta kytkettiin myös tuontipolkuun (`importCandidate`), jottei tämä jää
+kertaluontoiseksi. Se ajetaan viimeisenä vaihtoehtona, joten lähteen omaa tai
+käsin korjattua arviota ei ylikirjoiteta.
+
+**Testien kirjoittaminen paljasti kaksi vikaa jäsentäjässä:**
+
+- `valmistuvan` puuttui avainsanoista, eli *"kohteen arvioidaan valmistuvan
+  lokakuussa 2026"* — suomen tavallisin tapa ilmaista arvio — ei osunut
+  lainkaan. Muodot muutettiin vartaloiksi.
+- 40 merkin ikkuna ylitti virkkeen rajan: *"Kohde valmistuu aikanaan.
+  Rakennustyöt käynnistyivät tammikuussa 2025"* antoi valmistumisajaksi
+  **2025-01-31** eli aloituspäivän. Piste suljettiin pois välistä.
+
+Korjaukset toivat 33 lisäosumaa, eikä yksikään jo asetetuista 133 arviosta
+osoittautunut virkerajan yli poimituksi.
+
+**Peruttu työ:** aloitin 69 hankkeen merkitsemisestä valmistuneiksi tekstin
+perusteella. Todisteet luettuani se osoittautui virheelliseksi — laskin
+mainintoja, en valmistumisia. Ks. D-028. Tarkistin myös ne 30 hanketta jotka on
+jo merkitty valmiiksi ja piilotettu asiakkailta: ne ovat kunnossa, koska ne
+tulevat lähteen rakenteesta (Senaatti-kiinteistöjen eksplisiittinen teksti,
+Kreaten ja Väyläviraston referenssilistat) eivätkä heikosta tekstihausta.
+
 ### Selvitys ilman muutosta: Helsingin vanha kaavalähde
 
 Kuvauksettomien ehdokkaiden korjaussarjan jälkeen suurin jäljellä oleva ryhmä
