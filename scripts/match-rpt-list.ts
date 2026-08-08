@@ -183,7 +183,7 @@ async function main() {
       id: index,
       rptNimi: b.rpt.name,
       kaupunki: b.rpt.city,
-      vaihtoehdot: b.shortlist.map((s, si) => ({
+      vaihtoehdot: b.shortlist.map((s: Ours, si: number) => ({
         n: si,
         nimi: s.name,
         tyyppi: s.kind,
