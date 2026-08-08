@@ -740,8 +740,10 @@ kannattaa toistaa kun jokainen lähde on ajanut muutaman kerran.
    Helsinki toimii. Espoo ja Kuopio ovat Dynastyn RSS:n varassa ja tuottavat
    selvästi vähemmän — se kannattaa selvittää ennen kuin perheeseen lisätään
    lisää kuntia.
-2. **Pullonkaula on siirtymässä keräämisestä katselmointiin.** 21 osumaa
-   odottaa jonossa. Kerääminen ei enää ole se mikä estää hanketta näkymästä.
+2. **Jono ei ole pullonkaula.** 21 osumaa odottaa katselmointia, ja jono
+   kasvoi kerralla paljon kun Helsingin lähde tuli tuotantoon. Purkunopeus
+   kuitenkin skaalautuu määrän mukana, joten jonon pituus ei ole syy hidastaa
+   lähteiden lisäämistä — se on kertaluontoinen piikki, ei rakenteellinen este.
 3. **Uusintamittaus vasta kun uudet lähteet ovat ajaneet.** Aja
    `node scripts/rpt-rematch.mjs` uudelleen; menetelmä on nyt vakio, joten
    seuraava vertailu on aito.
