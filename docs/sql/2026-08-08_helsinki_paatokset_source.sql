@@ -13,15 +13,22 @@
 --
 -- Kulkee legacyFetchCollectorin kautta kuten muut fetch-pohjaiset lähteet.
 
-insert into discovery_sources (name, type, category, url, priority, enabled, refresh_minutes, collector, parser)
-values (
+-- HUOM konventio: id ei ole uuid vaan ihmisluettava slug, eika silla ole
+-- oletusarvoa. Ensimmainen yritys kaatui virheeseen 23502 (null value in
+-- column "id"). Muut legacyFetchCollector-lahteet noudattavat muotoa
+-- legacy-<parser>, priority 10 ja refresh_minutes 1440.
+
+insert into discovery_sources (
+  id, name, type, category, url, priority, enabled, refresh_minutes, collector, parser
+) values (
+  'legacy-helsinki-paatokset',
   'Helsingin päätökset',
   'api',
-  'kunta',
+  'municipality_decisions',
   'https://paatokset-elastic-proxy.api.hel.ninja/paatokset_decisions/_search',
-  2,
+  10,
   true,
-  360,
+  1440,
   'legacyFetchCollector',
   'helsinki_paatokset'
 );
