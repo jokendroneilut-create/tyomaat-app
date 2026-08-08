@@ -11,6 +11,7 @@ import {
   fetchYlojarviPaatoksetSource,
 } from "./fetchDynastySource"
 import { fetchTamperePaatoksetSource } from "./fetchCaseMSource"
+import { fetchTurkuPaatoksetSource } from "./fetchTurkuSource"
 import { fetchYitSource } from "./fetchYitSource"
 import { fetchAsuntosaatioSource } from "./fetchAsuntosaatioSource"
 import { fetchAsuraSource } from "./fetchAsuraSource"
@@ -74,6 +75,7 @@ export const sources = [
   { name: "tornio_paatokset", fetch: fetchTornioPaatoksetSource },
   { name: "ylojarvi_paatokset", fetch: fetchYlojarviPaatoksetSource },
   { name: "tampere_paatokset", fetch: fetchTamperePaatoksetSource },
+  { name: "turku_paatokset", fetch: fetchTurkuPaatoksetSource },
   { name: "ysaatio", fetch: fetchYsaatioSource },
   { name: "pohjola_rakennus", fetch: fetchPohjolaRakennusSource },
   { name: "varte", fetch: fetchVarteSource },
