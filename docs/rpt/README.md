@@ -395,3 +395,52 @@ tulee parien vähentämisestä, ei parin halventamisesta — esimerkiksi
 esikarsinnalla kuten duplikaattiskannerissa. Se on kuitenkin herkkä paikka:
 tuonnin todisteportti sallii osuman ilman samaa kaupunkia (tunniste, osoite,
 tekstitodiste), joten kaupunkiryhmittely hukkaisi osumia.
+
+---
+
+# Dynasty-alusta (Espoo, Kuopio, Lahti + 5 muuta)
+
+Toinen kaupunki aloitettu. `espoo.oncloudos.com` on **Dynasty 7.00.030** ja sen
+klassinen CGI-rajapinta vastaa palvelinpuolen HTML:llä:
+
+```
+/cgi/DREQUEST.PHP?page=meeting_frames        toimielinluettelo
+/cgi/DREQUEST.PHP?page=meetings&id=<orgId>   kokouslista (87 kokousta)
+/cgi/DREQUEST.PHP?page=meeting&id=<mtgId>    asialista (16 asiaa, 28 kt)
+/cgi/DREQUEST.PHP?page=meetingitem&id=<id>   yksittäinen asia
+```
+
+Etusivu palauttaa tyhjän rungon (vaatii JS), mutta CGI-polut toimivat ilman
+sitä. **Hakutoimintoa ei ole** — `page=search`, `fsearch`, `search_start` ja
+`asiakirjahaku` palauttavat kaikki nolla tavua.
+
+## Olennainen ero Helsinkiin
+
+| | Helsinki | Dynasty |
+|---|---|---|
+| rajapinta | Elasticsearch | HTML-läpikäynti |
+| suodatus | lähteen oma kategoria | otsikon perusteella |
+| pyyntöjä / ajo | **1** | **~230** |
+| kuvaus | valmiina samassa vastauksessa | erillinen pyyntö per asia |
+
+Helsingin lähde on yksi kysely. Dynasty vaatii ketjun: toimielimet →
+kokoukset → asialistat → asiat. Karkea arvio Espoolle 18 kk ikkunalla on noin
+230 pyyntöä ja reilu minuutti — mahtuu 800 sekuntiin, mutta kahdeksan
+Dynasty-kuntaa samassa ajossa ei mahdu.
+
+## Mitä tämä tarkoittaa toteutukselle
+
+Yksi jäsentäjä kattaa **kahdeksan kuntaa** (espoo, kuopio, lahti, kirkkonummi,
+tuusula, savonlinna, tornio, ylöjärvi), koska polut ovat identtiset ja vain
+verkkotunnus vaihtuu. Se on paras tuotto per työtunti koko 18 kaupungin
+listalla.
+
+Kuntakohtainen ajo kannattaa kuitenkin tehdä **omana lähteenään**
+(`discovery_sources`-rivi per kunta), jotta putken oma vuorottelu jakaa ne eri
+ajoihin eikä yksi kunta syö koko budjettia. Sama kuvio kuin kaavalähteillä.
+
+**Avoin kysymys ennen rakentamista:** riittääkö asialistan otsikko
+suodatukseen, vai pitääkö jokainen asia hakea erikseen kuvauksen vuoksi
+(D-027). Otsikot ovat muotoa "12 § Hankesuunnitelman hyväksyminen…", joten
+suodatus onnistuu niistä — mutta kuvaus vaatii oman pyyntönsä, ja se määrää
+pyyntöjen määrän.
