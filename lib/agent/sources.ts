@@ -28,7 +28,7 @@ import { fetchBonavaSource } from "./fetchBonavaSource"
 import { fetchFiraSource } from "./fetchFiraSource"
 import { fetchSkanskaSource } from "./fetchSkanskaSource"
 import { fetchNccSource } from "./fetchNccSource"
-import { fetchPeabSource } from "./fetchPeabSource"
+import { fetchPeabSource, enrichPeabCandidate } from "./fetchPeabSource"
 import { fetchHartelaSource } from "./fetchHartelaSource"
 import { fetchGrkSource } from "./fetchGrkSource"
 import { fetchTekovaSource } from "./fetchTekovaSource"
@@ -64,7 +64,7 @@ export const sources = [
   { name: "fira", fetch: fetchFiraSource },
   { name: "skanska", fetch: fetchSkanskaSource },
   { name: "ncc", fetch: fetchNccSource },
-  { name: "peab", fetch: fetchPeabSource },
+  { name: "peab", fetch: fetchPeabSource, enrich: enrichPeabCandidate },
   { name: "hartela", fetch: fetchHartelaSource },
   { name: "grk", fetch: fetchGrkSource },
   { name: "tekova", fetch: fetchTekovaSource },

@@ -56,6 +56,70 @@ export function cleanCompanyName(raw: string): string {
 }
 
 /*
+ * Allatiivi takaisin perusmuotoon: "Senaatti-kiinteistöille" -> "Senaatti-
+ * kiinteistöt".
+ *
+ * Tilaaja mainitaan urakoitsijan tiedotteessa lähes aina allatiivissa
+ * ("Peab toteuttaa Senaatti-kiinteistöille..."), mutta kantaan halutaan
+ * perusmuoto. Suomen taivutus ei ole mekaanista, joten tässä käsitellään
+ * vain ne päätteet joista muoto on yksikäsitteinen — kaikessa muussa
+ * palautetaan null.
+ *
+ * Null on tarkoituksellinen lopputulos eikä puute: tyhjä rakennuttaja on
+ * parempi kuin väärä, jonka ihminen joutuu huomaamaan ja korjaamaan. Sama
+ * periaate kuin viranomaisjulkaisijan hylkäämisessä (fetchSttHakuSource).
+ */
+const ALLATIVE_ENDINGS: [RegExp, string][] = [
+  [/öille$/, "öt"],   // kiinteistöille -> kiinteistöt
+  [/oille$/, "ot"],   // taloille -> talot
+  [/uille$/, "ut"],   // palveluille -> palvelut
+  [/yille$/, "yt"],
+  [/eille$/, "et"],   // liikkeille -> liikkeet
+  [/aille$/, "at"],
+  [/äille$/, "ät"],
+  [/iille$/, "it"],
+]
+
+/*
+ * Yleissanat jotka eivät ole yrityksen nimiä vaikka osuisivat kuvioon.
+ * Isolla kirjaimella ne esiintyvät virkkeen alussa.
+ *
+ * Mukana ovat myös ne joiden perusmuotoa EI voi päätellä päätteestä
+ * astevaihtelun takia ("kaupungille" -> kaupunki, ei "kaupungi"). Kuvio on
+ * ankkuroitu alkuun, joten yhdyssanaiset oikeat nimet säilyvät:
+ * "Asuntosäätiölle" ei osu sääntöön "^säätiöl".
+ */
+const NOT_A_CLIENT =
+  /^(asiakkaa|tilaaja|käyttäji|asukkai|osakkai|kaikil|muil|niil|kaupungi|kunnal|valtiol|yhtiöl|säätiöl|seurakunnal|yhdistyksel|hankkeel|urakoitsijal)/i
+
+export function allativeToNominative(raw: string): string | null {
+  const word = raw.trim()
+  if (!word.endsWith("lle") || NOT_A_CLIENT.test(word)) return null
+
+  for (const [ending, replacement] of ALLATIVE_ENDINGS) {
+    if (ending.test(word)) return word.replace(ending, replacement)
+  }
+
+  /*
+   * Konsonanttiin päättyvä nimi saa sidevokaalin: "Peabille" -> "Peab".
+   * Tämä on tarkistettava ENNEN vokaalisääntöä, muuten "Peabille" osuu
+   * siihen ja jättää sidevokaalin nimeen ("Peabi").
+   */
+  const consonantStem = word.match(/^(.*[bcdfghjklmnpqrstvwxz])ille$/i)
+  if (consonantStem) return consonantStem[1]
+
+  /*
+   * Vokaaliin päättyvä nimi ottaa päätteen sellaisenaan: "Kojamolle" ->
+   * "Kojamo". Vokaali vaaditaan, jotta astevaihtelulliset ("kaupungille"
+   * -> kaupunki) eivät osu - niiden perusmuotoa ei voi päätellä.
+   */
+  const vowelStem = word.match(/^(.*[aeiouyåäö])lle$/i)
+  if (vowelStem) return vowelStem[1]
+
+  return null
+}
+
+/*
  * Onko nimi tunnistettavasti yritys?
  *
  * Tätä käytetään portteina siellä missä kuvio on löyhä. Esimerkiksi

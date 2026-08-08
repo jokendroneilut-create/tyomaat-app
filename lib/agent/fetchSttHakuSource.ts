@@ -1,7 +1,7 @@
 import { detectCityFromText } from "./detectCityFromText"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { extractStreetAddress } from "./extractStreetAddress"
-import { NAME, cleanCompanyName } from "./companyName"
+import { NAME, cleanCompanyName, allativeToNominative } from "./companyName"
 
 /*
  * STT Info -hakulähde. Toisin kuin nimetyt yrityslähteet (jotka lukevat yhden
@@ -95,6 +95,18 @@ const CLIENT_PATTERNS = [
   ),
   // "NCC:n toimeksiannosta"
   new RegExp(`\\b(${NAME})\\s*:n\\s+toimeksiannosta`),
+  /*
+   * "Peab toteuttaa Senaatti-kiinteistöille..." - urakoitsijan tiedotteessa
+   * tilaaja on lähes aina allatiivissa, eikä yksikään yllä olevista kuvioista
+   * tunnistanut sitä. Mitattu tapaus jäi ilman rakennuttajaa kokonaan.
+   *
+   * Nimi palautetaan perusmuodossa allativeToNominative-funktiolla, joka
+   * palauttaa nullin jos muotoa ei voi päätellä yksikäsitteisesti - silloin
+   * tämä kuvio ohitetaan eikä kirjoiteta väärää nimeä.
+   */
+  new RegExp(
+    `\\b(?:toteuttaa|toteutti|rakentaa|rakensi|rakentanut|peruskorjaa|saneeraa|urakoi)\\s+(${NAME}lle)\\b`
+  ),
 ]
 
 export function extractClientFromText(
@@ -108,7 +120,17 @@ export function extractClientFromText(
     const match = joined.match(pattern)
     if (!match?.[1]) continue
 
-    const name = cleanCompanyName(match[1])
+    const raw = match[1]
+
+    /*
+     * Allatiivikuvio palauttaa taivutetun muodon, joka on käännettävä
+     * perusmuotoon. Jos käännöstä ei voi tehdä yksikäsitteisesti, kuvio
+     * ohitetaan - väärä nimi olisi huonompi kuin tyhjä kenttä.
+     */
+    const base = raw.endsWith("lle") ? allativeToNominative(raw) : raw
+    if (!base) continue
+
+    const name = cleanCompanyName(base)
     if (name.length >= 4) return name
   }
 

@@ -1,5 +1,160 @@
 import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
+import { extractStreetAddress } from "./extractStreetAddress"
+import { parseEstimatedCompletionDate } from "./parseFinnishCompletionDate"
+import { resolveParties } from "./fetchSttHakuSource"
+import { PHASE_LABELS } from "@/lib/projects/phases"
+
+/*
+ * Peabin tiedotteet. Listaussivulta saadaan vain otsikko ja osoite, joten
+ * varsinainen sisältö haetaan tiedotesivulta enrich()-koukussa - samoin kuin
+ * STT:llä ja Lujatalolla.
+ *
+ * MIKSI TÄMÄ KORJATTIIN. Ehdokas "Vanhan Vaasan sairaalan F- ja T-rakennukset"
+ * syntyi tyhjänä: kuvaus null, rakennuttaja null, urakoitsija null, vaihe
+ * "Suunnittelussa". Tiedotteessa oli kaikki: Peab toteuttaa Senaatti-
+ * kiinteistöille suojeltujen rakennusten peruskorjauksen, urakkasumma
+ * 14,5 M€. Vaihe oli väärin nimenomaan siksi ettei tekstiä luettu - urakka
+ * on jo myönnetty, ei suunnitteilla.
+ *
+ * Sama tyhjän ehdokkaan vika korjattiin aiemmin neljälle yrityslähteelle
+ * (ks. fetchLujataloSource: 72 ehdokasta tyhjänä, 93 % hylättiin). Peab jäi
+ * silloin väliin.
+ */
+
+const BASE = "https://www.peab.fi"
+
+const PROJECT_KEYWORDS = [
+  "rakentaa", "rakentaminen", "rakentuu", "toteuttaa", "peruskorjaus",
+  "peruskorjauksen", "peruskorjaa", "hanke", "kohde", "asunto", "asuntoa",
+  "asunnot", "kodit", "kortteli", "toimitila", "toimitilat", "koulu",
+  "päiväkoti", "sairaala", "datakeskus", "teollisuus", "liikuntahalli",
+  "kehitysvaihe", "uudis", "korjausrakennushanke", "urakka", "urakan",
+]
+
+const EXCLUDE_KEYWORDS = [
+  "nimity", "osavuosikatsaus", "tilinpäätös", "markkina", "tulos",
+  "työturvallisuuskilpailu", "sertifikaatin", "leed",
+]
+
+const COMPLETED_KEYWORDS = ["valmistui", "valmistunut", "luovutettu", "otettu käyttöön"]
+
+/*
+ * Urakan myöntämisen merkit. Urakoitsija tiedottaa tyypillisesti vasta kun
+ * sopimus on tehty, joten oletusvaihe "Suunnittelu" on useimmiten väärä -
+ * mitattu tapaus oli Vanhan Vaasan sairaala, jossa tiedotteessa luki
+ * urakkasumma mutta kantaan meni "Suunnittelussa".
+ *
+ * Pelkkä "toteuttaa" ei riitä merkiksi, koska se esiintyy myös
+ * suunnitteluvaiheen tiedotteissa ("kehitysvaihe käynnistyy"). Vaaditaan
+ * joko rahallinen arvo, sopimussana tai tilaajan maininta allatiivissa.
+ */
+const CONTRACT_PATTERNS = [
+  /urakkasumma/i,
+  /urakan\s+arvo/i,
+  /sopimuksen\s+arvo/i,
+  /urakkasopimu/i,
+  /allekirjoitti(?:vat)?\s+(?:urakka)?sopimuksen/i,
+  /solmi(?:vat)?\s+(?:urakka)?sopimuksen/i,
+  /\btilaus\b/i,
+  /valittiin\s+urakoitsijaksi/i,
+  /(?:toteuttaa|rakentaa|peruskorjaa|saneeraa)\s+[A-ZÅÄÖ][\wÅÄÖåäö-]*(?:\s+[\wÅÄÖåäö-]+)?:?lle\b/,
+]
+
+const CONSTRUCTION_PATTERNS = [
+  /rakennustyöt\s+(?:ovat\s+)?(?:alkaneet|käynnissä)/i,
+  /rakentaminen\s+on\s+(?:alkanut|käynnissä)/i,
+  /harjannostajaisia/i,
+  /peruskivi/i,
+]
+
+/*
+ * Vaihe päätellään otsikosta JA leipätekstistä. Järjestys on tarkoituksellinen:
+ * valmistuminen voittaa rakentamisen ja rakentaminen voittaa sopimuksen,
+ * koska tiedote mainitsee usein aiemmat vaiheet taustana ("Peab on aiemmin
+ * rakentanut ... Rakennus valmistui marraskuussa 2025").
+ */
+export function inferPeabPhase(title: string, body: string | null): string {
+  const head = (title ?? "").toLowerCase()
+
+  // Valmistuminen luetaan vain otsikosta: leipätekstin "valmistui" viittaa
+  // tyypillisesti AIEMPAAN kohteeseen, ei tiedotteen omaan hankkeeseen.
+  if (COMPLETED_KEYWORDS.some((k) => head.includes(k))) return PHASE_LABELS.completed
+
+  const text = `${title ?? ""} ${body ?? ""}`
+  if (CONSTRUCTION_PATTERNS.some((re) => re.test(text))) return PHASE_LABELS.construction
+  if (CONTRACT_PATTERNS.some((re) => re.test(text))) return PHASE_LABELS.contract_awarded
+  return PHASE_LABELS.planning
+}
+
+/*
+ * Tiedotesivun leipäteksti. Sivun runko on täynnä navigaatiota (mitattu:
+ * ensimmäiset 1200 merkkiä olivat pelkkää valikkoa), joten otetaan ensin
+ * artikkelielementti ja vasta viimeisenä koko body. Murupolku "You are here:"
+ * on luotettava katkaisukohta silloin kun artikkelielementtiä ei löydy.
+ */
+export function extractPeabBody(html: string): string | null {
+  const $ = cheerio.load(html)
+  $("script, style, noscript, nav, header, footer, iframe, form").remove()
+
+  const article = $("article, main, .article, .article__body, .news-article")
+    .first()
+    .text()
+
+  let text = (article || $("body").text()).replace(/\s+/g, " ").trim()
+
+  const crumb = text.indexOf("You are here:")
+  if (crumb >= 0) {
+    const after = text.slice(crumb).split("/").slice(3).join("/").trim()
+    if (after.length > 200) text = after
+  }
+
+  return text.length >= 120 ? text.slice(0, 4000) : null
+}
+
+async function fetchReleaseHtml(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { cache: "no-store" })
+    if (!res.ok) return null
+    return await res.text()
+  } catch {
+    return null
+  }
+}
+
+/*
+ * Kutsutaan vain vielä näkemättömille ehdokkaille (legacyFetchCollector),
+ * joten yksi sivuhaku per uusi tiedote.
+ */
+export async function enrichPeabCandidate(candidate: any): Promise<any> {
+  if (!candidate?.source_url) return candidate
+
+  const html = await fetchReleaseHtml(candidate.source_url)
+  if (!html) return candidate
+
+  const body = extractPeabBody(html)
+  if (!body) return candidate
+
+  /*
+   * Julkaisija on Peab, joten resolveParties palauttaa Peabin urakoitsijana
+   * ja tekstistä löytyvän tilaajan rakennuttajana. Ilman tilaajamainintaa
+   * Peab jää rakennuttajaksi - se on oikein omaperusteisessa
+   * asuntotuotannossa, jota Peabilla on paljon.
+   */
+  const parties = resolveParties("Peab", candidate.name, body)
+
+  return {
+    ...candidate,
+    description: body,
+    city: candidate.city ?? detectCityFromText(body),
+    location: candidate.location ?? extractStreetAddress(body),
+    developer: parties.developer ?? candidate.developer ?? null,
+    builder: parties.builder ?? candidate.builder ?? null,
+    phase: inferPeabPhase(candidate.name, body),
+    estimated_completion:
+      candidate.estimated_completion ?? parseEstimatedCompletionDate(body),
+  }
+}
 
 export async function fetchPeabSource() {
   const results: any[] = []
@@ -11,8 +166,9 @@ export async function fetchPeabSource() {
   for (let page = 1; page <= 5; page++) {
     const url =
       page === 1
-  ? "https://peab.fi/peab/ajankohtaista/"
-  : `https://peab.fi/peab/ajankohtaista/?page=${page}`
+        ? `${BASE}/peab/ajankohtaista/`
+        : `${BASE}/peab/ajankohtaista/?page=${page}`
+
     const res = await fetch(url)
     if (!res.ok) break
 
@@ -21,87 +177,41 @@ export async function fetchPeabSource() {
 
     $("a").each((_, el) => {
       const title = $(el).text().trim()
-const href = $(el).attr("href")
-
+      const href = $(el).attr("href")
       if (!title || !href) return
 
-      const absoluteHref = href.startsWith("http")
-        ? href
-        : `https://www.peab.fi${href}`
-
+      const absoluteHref = href.startsWith("http") ? href : `${BASE}${href}`
       if (!absoluteHref.includes("/peab/media/tiedotteet/")) return
       if (/^\d+$/.test(title)) return
 
       const lowerTitle = title.toLowerCase()
+      if (!PROJECT_KEYWORDS.some((k) => lowerTitle.includes(k))) return
+      if (EXCLUDE_KEYWORDS.some((k) => lowerTitle.includes(k))) return
 
-      const projectKeywords = [
-        "rakentaa",
-        "rakentaminen",
-        "rakentuu",
-        "toteuttaa",
-        "peruskorjaus",
-        "peruskorjauksen",
-        "hanke",
-        "kohde",
-        "asunto",
-        "asuntoa",
-        "asunnot",
-        "kodit",
-        "kortteli",
-        "toimitila",
-        "toimitilat",
-        "koulu",
-        "päiväkoti",
-        "sairaala",
-        "datakeskus",
-        "teollisuus",
-        "liikuntahalli",
-        "kehitysvaihe",
-        "uudis",
-        "korjausrakennushanke",
-      ]
-
-      const excludeKeywords = [
-        "nimity",
-        "osavuosikatsaus",
-        "tilinpäätös",
-        "markkina",
-        "tulos",
-        "työturvallisuuskilpailu",
-        "sertifikaatin",
-        "leed",
-      ]
-
-      if (!projectKeywords.some((k) => lowerTitle.includes(k))) return
-      if (excludeKeywords.some((k) => lowerTitle.includes(k))) return
-
-      const dateText = $(el).text()
-      const dateMatch = dateText.match(/(\d{1,2}\.\d{1,2}\.\d{4})/)
+      const dateMatch = $(el).text().match(/(\d{1,2}\.\d{1,2}\.\d{4})/)
       if (dateMatch) {
         const [day, month, year] = dateMatch[1].split(".").map(Number)
-        const articleDate = new Date(year, month - 1, day)
-        if (articleDate < cutoffDate) return
+        if (new Date(year, month - 1, day) < cutoffDate) return
       }
 
-      const completedKeywords = [
-        "valmistui",
-        "valmistunut",
-        "luovutettu",
-        "otettu käyttöön",
-      ]
+      if (seenUrls.has(absoluteHref)) return
+      seenUrls.add(absoluteHref)
 
-      const completed = completedKeywords.some((k) =>
-        lowerTitle.includes(k)
-      )
-if (seenUrls.has(absoluteHref)) return
-seenUrls.add(absoluteHref)
+      const completed = COMPLETED_KEYWORDS.some((k) => lowerTitle.includes(k))
 
       results.push({
         name: title,
+        description: null,
         city: detectCityFromText(title),
         region: null,
         location: null,
-        phase: completed ? "Valmistunut" : "Suunnittelussa",
+        /*
+         * Otsikkopohjainen arvaus. enrich() korvaa tämän leipätekstistä
+         * pääteltävällä vaiheella; tämä jää voimaan vain jos sivuhaku
+         * epäonnistuu tai täydennysbudjetti loppuu kesken.
+         */
+        phase: inferPeabPhase(title, null),
+        builder: "Peab",
         source_url: absoluteHref,
         confidence: 0.6,
         completed,
