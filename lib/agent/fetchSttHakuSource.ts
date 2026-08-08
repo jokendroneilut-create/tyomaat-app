@@ -303,6 +303,33 @@ const SEARCH_TERMS = [
   "voimalaitos",
   "aurinkovoimala",
   "biokaasulaitos",
+  /*
+   * Tuulivoima puuttui kokonaan, vaikka se on YVA-aineiston suurin
+   * hankeluokka (120/312 hanketta). Molemmat kirjoitusasut ovat käytössä.
+   */
+  "tuulivoimahanke",
+  "tuulivoimapuisto",
+  /*
+   * Kunnan investointipäätösketju. RPT-listan läpikäynti paljasti että
+   * juuri tämä vaihe puuttuu meiltä: hanke on nimetty ja päätetty mutta
+   * ei vielä kilpailutettu, joten se ei näy Hilmassa eikä urakoitsijan
+   * tiedotteissa. Mitatut kärkiosumat ovat kaupunginvaltuuston ja
+   * lautakuntien päätöksiä.
+   *
+   * "perusparannus" on kuntien vakiotermi peruskorjaukselle - sen
+   * puuttuminen oli mitattu aukko (Töölön kisahalli, Helsingin RPT-
+   * listan sija 13).
+   */
+  "hankesuunnitelma",
+  "tarveselvitys",
+  "perusparannus",
+  "investointipäätös",
+  // Kohdetyypit joiden kärkiosumat mitattiin puhtaiksi
+  "monitoimitalo",
+  "pysäköintilaitos",
+  "purku-urakka",
+  "siltaurakka",
+  "ratahanke",
 ]
 
 // Kevyt poissulku: tiedote joka on selvästi talous-/hallintouutinen, ei hanke.
