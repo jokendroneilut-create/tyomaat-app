@@ -500,3 +500,32 @@ vaadi erillistä poimintalogiikkaa.
 
 Hakusanat kannattaa ottaa Dynastyn `CONSTRUCTION_SIGNALS`-listasta —
 se on jo mitattu toimivaksi kuuden kunnan aineistolla.
+
+---
+
+# Turku — SPA, kartoitus kesken
+
+`paatokset.turku.fi` palauttaa **jokaiselle polulle saman 622 tavun sivun**:
+etusivu, `/api/meetings`, `/rss` ja keksityt polut antavat identtisen
+vastauksen. Kyseessä on JavaScript-sovelluksen kuori, eikä alustaa voi
+tunnistaa HTML:stä (ei Drupalia, Dynastya, CaseMia eikä Twebia).
+
+Rajapinta löytyy samalla menetelmällä kuin Helsingissä ja Tampereella:
+avaa sivu selaimessa, asenna `fetch`-tallennin, tee haku ja lue kutsut.
+Se on nyt toiminut kahdesti kahdesta, ja molemmilla kerroilla arvailu
+epäonnistui ensin.
+
+# Tilanne alustoittain
+
+| alusta | kunnat | tila |
+|---|---|---|
+| Ahjo (Elasticsearch) | Helsinki | tuotannossa |
+| Dynasty (RSS) | Espoo, Tuusula, Kuopio, Kirkkonummi, Savonlinna, Tornio | tuotannossa |
+| CaseM (GET-haku) | Tampere | tuotannossa |
+| oma SPA | Turku | kartoitus kesken |
+| Tweb | Jyväskylä | kartoittamatta |
+
+**Kahdeksan kaupunkia kahdeksastatoista katettu kolmella jäsentäjällä.**
+Jäljelle jäävät kaupungit jakautuvat samoihin perheisiin, joten seuraavat
+lisäykset ovat pääosin konfiguraatiota — paitsi Turku ja Jyväskylä, jotka
+ovat omia alustojaan.
