@@ -444,3 +444,39 @@ suodatukseen, vai pitääkö jokainen asia hakea erikseen kuvauksen vuoksi
 (D-027). Otsikot ovat muotoa "12 § Hankesuunnitelman hyväksyminen…", joten
 suodatus onnistuu niistä — mutta kuvaus vaatii oman pyyntönsä, ja se määrää
 pyyntöjen määrän.
+
+---
+
+# CaseM-alusta (Tampere) — kesken
+
+Kolmas alustaperhe aloitettu. `tampere.cloudnc.fi` on CaseM, ja se poikkeaa
+molemmista edellisistä: **ei RSS:ää eikä JSON-rajapintaa.**
+
+## Mitä on selvitetty
+
+| polku | tulos |
+|---|---|
+| `/fi-FI/Toimielimet` | 200, listaa **15 tuoreinta asiaa** linkkeinä |
+| `/fi-FI/content/<a>/<b>` | 200, **yksittäinen asia täydellä tekstillä** (38 kt) |
+| `/fi-FI/Haku?searchtext=…` | 200, 101 kt, mutta **nolla tuloslinkkiä** |
+| `/api/v1/sitesearchautocomplete` | 404 |
+| `/rss`, `/fi-FI/rss`, `/api/meetings` | 404 |
+
+Sisältösivut ovat palvelinpuolen HTML:ää ja sisältävät koko asiatekstin, eli
+jäsentäminen onnistuu. Ongelma on **enumerointi**: listaus antaa vain 15
+tuoreinta, eikä hakua ole saatu tuottamaan tuloksia.
+
+Huomaa että `/fi-FI/content/504368/23978` EI ole toimielinsivu vaan
+yksittäinen asia ("Valtuustoaloite perusteettomista määräaikaisista
+työsopimuksista"). Toimielimet-sivu listaa siis suoraan asioita.
+
+## Seuraava askel
+
+Hakusivu palauttaa täyden sivun mutta ei tuloksia, joten parametri on
+todennäköisesti väärä tai haku tehdään POST:illa. Sama menetelmä kuin
+Helsingissä toimisi: avaa hakusivu selaimessa, tee haku ja tallenna
+`fetch`-kutsut. Se paljasti Helsingin Elasticsearch-proxyn kun bundlen
+grep ei riittänyt.
+
+Jos hakua ei saa toimimaan, varasuunnitelma on 15 tuoreimman asian
+listaus päivittäin — se ei kata takautuvasti mutta pysyy ajan tasalla.
