@@ -89,6 +89,13 @@ export type DynastyConfig = {
   host: string
   city: string
   region: string
+  /*
+   * Rakennuttajan nimi kirjoitetaan auki eikä johdeta kaupungin nimestä.
+   * Suomen genetiivi ei ole säännöllinen (Lahti -> Lahden, Tornio ->
+   * Tornion), eivätkä kaikki ole kaupunkeja: Kirkkonummi ja Tuusula ovat
+   * kuntia. Automaattinen johtaminen tuotti "Lahtin kaupunki".
+   */
+  developer: string
   sourceName: string
 }
 
@@ -233,7 +240,7 @@ export function createDynastyFetcher(config: DynastyConfig) {
         city: config.city,
         region: config.region,
         location: extractStreetAddress(subject) ?? extractStreetAddress(description),
-        developer: `${config.city}n kaupunki`,
+        developer: config.developer,
         permit_number: itemId,
         property_type: null,
         phase: /urak/i.test(subject) ? "Sopimus myönnetty" : "Suunnittelussa",
@@ -250,9 +257,47 @@ export function createDynastyFetcher(config: DynastyConfig) {
   }
 }
 
+/*
+ * Kahdeksan kuntaa samalla alustalla. Jokainen on oma lähteensä
+ * discovery_sourcesissa, jotta putken vuorottelu jakaa ne eri ajoihin eikä
+ * yksi kunta syö koko aikabudjettia - sama kuvio kuin kaavalähteillä.
+ */
 export const fetchEspooPaatoksetSource = createDynastyFetcher({
-  host: "espoo",
-  city: "Espoo",
-  region: "Uusimaa",
-  sourceName: "espoo_paatokset",
+  host: "espoo", city: "Espoo", region: "Uusimaa",
+  developer: "Espoon kaupunki", sourceName: "espoo_paatokset",
+})
+
+export const fetchKuopioPaatoksetSource = createDynastyFetcher({
+  host: "kuopio", city: "Kuopio", region: "Pohjois-Savo",
+  developer: "Kuopion kaupunki", sourceName: "kuopio_paatokset",
+})
+
+export const fetchLahtiPaatoksetSource = createDynastyFetcher({
+  host: "lahti", city: "Lahti", region: "Päijät-Häme",
+  developer: "Lahden kaupunki", sourceName: "lahti_paatokset",
+})
+
+export const fetchKirkkonummiPaatoksetSource = createDynastyFetcher({
+  host: "kirkkonummi", city: "Kirkkonummi", region: "Uusimaa",
+  developer: "Kirkkonummen kunta", sourceName: "kirkkonummi_paatokset",
+})
+
+export const fetchTuusulaPaatoksetSource = createDynastyFetcher({
+  host: "tuusula", city: "Tuusula", region: "Uusimaa",
+  developer: "Tuusulan kunta", sourceName: "tuusula_paatokset",
+})
+
+export const fetchSavonlinnaPaatoksetSource = createDynastyFetcher({
+  host: "savonlinna", city: "Savonlinna", region: "Etelä-Savo",
+  developer: "Savonlinnan kaupunki", sourceName: "savonlinna_paatokset",
+})
+
+export const fetchTornioPaatoksetSource = createDynastyFetcher({
+  host: "tornio", city: "Tornio", region: "Lappi",
+  developer: "Tornion kaupunki", sourceName: "tornio_paatokset",
+})
+
+export const fetchYlojarviPaatoksetSource = createDynastyFetcher({
+  host: "ylojarvi", city: "Ylöjärvi", region: "Pirkanmaa",
+  developer: "Ylöjärven kaupunki", sourceName: "ylojarvi_paatokset",
 })

@@ -1,6 +1,15 @@
 import { fetchTestSource } from "./fetchTestSource"
 import { fetchHelsinkiPaatoksetSource } from "./fetchHelsinkiPaatoksetSource"
-import { fetchEspooPaatoksetSource } from "./fetchDynastySource"
+import {
+  fetchEspooPaatoksetSource,
+  fetchKuopioPaatoksetSource,
+  fetchLahtiPaatoksetSource,
+  fetchKirkkonummiPaatoksetSource,
+  fetchTuusulaPaatoksetSource,
+  fetchSavonlinnaPaatoksetSource,
+  fetchTornioPaatoksetSource,
+  fetchYlojarviPaatoksetSource,
+} from "./fetchDynastySource"
 import { fetchYitSource } from "./fetchYitSource"
 import { fetchAsuntosaatioSource } from "./fetchAsuntosaatioSource"
 import { fetchAsuraSource } from "./fetchAsuraSource"
@@ -56,6 +65,13 @@ export const sources = [
   { name: "srv", fetch: fetchSrvSource },
   { name: "helsinki_paatokset", fetch: fetchHelsinkiPaatoksetSource },
   { name: "espoo_paatokset", fetch: fetchEspooPaatoksetSource },
+  { name: "kuopio_paatokset", fetch: fetchKuopioPaatoksetSource },
+  { name: "lahti_paatokset", fetch: fetchLahtiPaatoksetSource },
+  { name: "kirkkonummi_paatokset", fetch: fetchKirkkonummiPaatoksetSource },
+  { name: "tuusula_paatokset", fetch: fetchTuusulaPaatoksetSource },
+  { name: "savonlinna_paatokset", fetch: fetchSavonlinnaPaatoksetSource },
+  { name: "tornio_paatokset", fetch: fetchTornioPaatoksetSource },
+  { name: "ylojarvi_paatokset", fetch: fetchYlojarviPaatoksetSource },
   { name: "ysaatio", fetch: fetchYsaatioSource },
   { name: "pohjola_rakennus", fetch: fetchPohjolaRakennusSource },
   { name: "varte", fetch: fetchVarteSource },
