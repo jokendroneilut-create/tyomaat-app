@@ -279,3 +279,45 @@ hankkeet ovat.
 Työmäärä on silti tuntuva: 18 kaupunkia jakautuu 4–5 alustaperheeseen, eli
 noin viisi jäsentäjää ja 18 lähdemäärittelyä. Helsinki on suurin yksittäinen
 hyöty (67 puuttuvaa) ja samalla ainoa jonka rajapinta on vielä auki.
+
+## Helsingin rajapinta löytyi
+
+Vanha Open Ahjo (`dev.hel.fi/paatokset/v1`) on kuollut — DNS ei vastaa.
+Nykyinen rajapinta löytyi ajamalla haku selaimessa ja tallentamalla
+`fetch`-kutsut:
+
+```
+POST https://paatokset-elastic-proxy.api.hel.ninja/paatokset_decisions/_search
+```
+
+Puhdas Elasticsearch, **ei tunnistautumista**, toimii selaimen ulkopuolelta.
+Sama muoto kuin ymparisto.fi:n YVA-proxy jota jo käytämme, eli tekninen polku
+on tuttu.
+
+| | |
+|---|---|
+| päätöksiä indeksissä | **143 221** |
+| osumia haulla "hankesuunnitelma" | 1 666 |
+
+Kentät ovat poikkeuksellisen hyvät. Mitattu esimerkki *Pukinmäenkaaren
+peruskoulun perusparannuksen hankesuunnitelma* — joka on RPT:n puuttuvien
+listalla:
+
+| kenttä | sisältö |
+|---|---|
+| `subject` | nimi **ja osoite**: "…(Kenttäkuja 12, Pukinmäki)" |
+| `decision_content` | 704 merkkiä päätöstekstiä |
+| `decision_motion` | **28 192 merkkiä** esittelijän perusteluja: tausta, tarve, laajuus, kustannus, aikataulu |
+| `category_name` | "Rakennusten ja rakennelmien suunnittelu ja toteutus" |
+| `unique_issue_id` | `HEL-2025-008563`, pysyvä tunniste |
+| `organization_name` | päättävä toimielin |
+| `meeting_date` | unix-aika |
+
+Tämä ratkaisee myös [D-027](../03_DECISIONS.md):n vaatimuksen: lähde tuottaa
+kuvauksen, joten ehdokkaat ovat arvioitavissa. `category_name` mahdollistaa
+suodatuksen **ilman hakusana-arvailua** — toisin kuin STT, jossa löyhä
+kokotekstihaku pakotti positiiviseen sanalistaan (D-029).
+
+**Avoin toteutusyksityiskohta:** kategoriasuodatus ei toiminut
+`category_name.keyword`-kentällä (0 osumaa), joten kenttäkartoitus pitää
+tarkistaa `_mapping`-kutsulla ennen kerääjän rakentamista.
