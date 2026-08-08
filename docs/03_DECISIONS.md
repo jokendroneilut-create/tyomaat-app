@@ -34,19 +34,37 @@ kerätä, koska **neljä viidestä mitatusta Tweb-asennuksesta julkaisee
 (`asianhallintavhp.hyvinkaa.fi`) ja Jyväskylä (`julkinen.jkl.fi`). Kielto
 tulee tuotteen mukana eikä kunnan päätöksestä, mutta se on silti kielto.
 
-**Vantaa on poikkeus:** `paatokset.vantaa.fi` on samaa Tweb-tuotetta mutta
-sillä ei ole `robots.txt`-tiedostoa lainkaan (404). Vantaa on siis avoinna, ja
-se on samalla suurin yksittäinen jäljellä oleva kaupunki (46 puuttuvaa RPT:n
-hanketta).
+**Kielto on toimittajan vakio, ei kunnan kanta.** Kolmen kunnan
+`robots.txt` on tavulleen sama tiedosto (26 tavua, sha1 `7b17ed8d`), ja
+Oulun ja Hyvinkään `Last-Modified` on sama sekunnilleen — *Thu, 11 Nov 2021
+08:16:41 GMT*. Sama tiedosto on siis kopioitu asennuspaketista, ei kirjoitettu
+kunnassa. Jyväskylän versio eroaa yhdellä välilyönnillä ja on vuodelta 2019,
+eli se on saman mallin vanhempi sukupolvi.
 
-Vertailu muihin: Helsingin `paatokset.hel.fi` sallii asiasivut nimenomaisesti,
-CaseM kieltää vain RSS:n ja ASP.NET-resurssit, Dynastylla ei ole
-`robots.txt`-tiedostoa lainkaan. Nämä kerätään.
+**Vantaa ei ole poikkeus, vaikka ensin siltä näytti.** `paatokset.vantaa.fi`
+ei tarjoa `robots.txt`-tiedostoa (404), mutta **jokainen viiden asennuksen
+sivu — Vantaa mukaan lukien — sisältää `<meta name="robots" content="noindex,
+nofollow" />`.** Sama ohje siis annetaan, vain eri tasolla. Vantaan
+palvelimelta puuttuu tiedosto, ei tahtotila.
 
-Sääntö: **lähteen tekninen helppous ei ohita robots.txt:ää.** Jos kielto
-halutaan ohittaa, se on ihmisen päätös ja se kirjataan tänne — ei jotain
-minkä kerääjä ratkaisee hiljaa. Kolmelle kieltävälle kunnalle (Oulu, Vaasa,
-Hyvinkää) haetaan mieluummin lupa kunnalta tai vaihtoehtoinen lähde.
+Miksi toimittaja tekee näin: kunnan pöytäkirjat ovat julkisia, mutta ne
+sisältävät henkilötietoja — nimiä, osoitteita ja yksittäistä ihmistä koskevia
+asioita. Vakiintunut suomalainen käytäntö on että ne ovat luettavissa mutta
+eivät hakukoneella löydettävissä eivätkä massana haravoitavissa. Lisäksi Tweb
+on `dbisa.dll`-CGI jossa jokainen sivu on id-parametrilla generoitu: se on
+sekä hakurobotin ansa että kallis palvelimelle.
+
+Vertailu muihin: Helsingin `paatokset.hel.fi` sallii asiasivut nimenomaisesti
+ja tarjoaa avoimen Elasticsearch-rajapinnan, CaseM kieltää vain RSS:n ja
+ASP.NET-resurssit, Dynastylla ei ole `robots.txt`-tiedostoa eikä
+meta-ohjetta. Ero ei siis ole laissa vaan toimittajan valinnassa.
+
+Sääntö: **lähteen tekninen helppous ei ohita robots-ohjetta, oli se
+`robots.txt`:ssä tai sivun metatiedossa.** Jos kielto halutaan ohittaa, se on
+ihmisen päätös ja se kirjataan tänne — ei jotain minkä kerääjä ratkaisee
+hiljaa. Neljälle Tweb-kunnalle (Vantaa, Oulu, Vaasa, Hyvinkää) haetaan
+mieluummin lupa kunnalta tai vaihtoehtoinen lähde. Vantaa on niistä tärkein:
+46 puuttuvaa RPT:n hanketta, eniten koko listalla.
 
 ### D-030 – Vakio silmukan sisällä lasketaan kerran
 `findProjectMatchDetailed` vertaa **yhtä** ehdokasta kaikkiin 4412

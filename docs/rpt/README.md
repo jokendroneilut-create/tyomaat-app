@@ -572,20 +572,31 @@ jäsentäjää. Päätelmä on kirjattu [D-032](../03_DECISIONS.md):ksi.
 ## Tweb löytyi, mutta robots.txt kieltää
 
 Viides alustaperhe on olemassa ja kattaa viisi kaupunkia. Se on teknisesti
-helpoin kaikista — palvelinpuolen HTML, vakiopolut — mutta neljä viidestä
-kieltää haun:
+helpoin kaikista — palvelinpuolen HTML, vakiopolut — mutta kaikki viisi
+kieltävät haun:
 
-| kaupunki | osoite | robots.txt |
-|---|---|---|
-| Oulu | `asiakirjat.ouka.fi` | `Disallow: /` |
-| Vaasa | `tweb.vaasa.fi` | `Disallow: /` |
-| Hyvinkää | `asianhallintavhp.hyvinkaa.fi` | `Disallow: /` |
-| Jyväskylä | `julkinen.jkl.fi` | `Disallow: /` (ei tarvita, CaseM kattaa) |
-| **Vantaa** | `paatokset.vantaa.fi` | **ei robots.txt:tä** |
+| kaupunki | osoite | robots.txt | meta-robots sivulla |
+|---|---|---|---|
+| Oulu | `asiakirjat.ouka.fi` | `Disallow: /` | `noindex, nofollow` |
+| Vaasa | `tweb.vaasa.fi` | `Disallow: /` | `noindex, nofollow` |
+| Hyvinkää | `asianhallintavhp.hyvinkaa.fi` | `Disallow: /` | `noindex, nofollow` |
+| Jyväskylä | `julkinen.jkl.fi` | `Disallow: /` | `noindex, nofollow` |
+| Vantaa | `paatokset.vantaa.fi` | ei tiedostoa (404) | `noindex, nofollow` |
 
-Vantaa on siis auki, ja se on samalla suurin jäljellä oleva kaupunki: 46
-puuttuvaa hanketta. Se on seuraava työ. Kolmelle muulle tarvitaan joko kunnan
-lupa tai vaihtoehtoinen lähde — ks. [D-031](../03_DECISIONS.md).
+**Vantaa näytti ensin poikkeukselta** — ei `robots.txt`-tiedostoa lainkaan —
+mutta sivun metatiedossa on sama ohje kuin muilla. Palvelimelta puuttuu
+tiedosto, ei tahtotila.
+
+Kielto on toimittajan vakio eikä kunnan kanta: kolmen kunnan `robots.txt` on
+tavulleen sama tiedosto (26 tavua, sama sha1), ja Oulun ja Hyvinkään
+`Last-Modified` on sama sekunnilleen. Syy vakioon on ilmeinen — pöytäkirjat
+ovat julkisia mutta sisältävät henkilötietoja, ja vakiintunut käytäntö on että
+ne ovat luettavissa mutta eivät hakukoneella löydettävissä. Perustelut
+[D-031](../03_DECISIONS.md):ssä.
+
+Kaikille viidelle tarvitaan siis kunnan lupa tai vaihtoehtoinen lähde.
+Jyväskylä ei sitä kaipaa, koska CaseM kattaa sen. Vantaa on tärkein: 46
+puuttuvaa hanketta, eniten koko listalla.
 
 ## Tilanne alustoittain
 
@@ -597,12 +608,11 @@ lupa tai vaihtoehtoinen lähde — ks. [D-031](../03_DECISIONS.md).
 | CaseM (GET-haku) | Tampere | tuotannossa |
 | CaseM (GET-haku) | Jyväskylä, Rovaniemi, Pori | SQL ajamatta |
 | oma SPA | Turku | tuotannossa |
-| Tweb | Vantaa | rakentamatta, sallittu |
-| Tweb | Oulu, Vaasa, Hyvinkää | robots.txt kieltää |
+| Tweb | Vantaa, Oulu, Vaasa, Hyvinkää | robots-ohje kieltää |
 
 **Kolmetoista kaupunkia kahdeksastatoista katettu neljällä jäsentäjällä.**
-Jäljellä ovat Vantaa (Tweb, rakennettava), Oulu, Vaasa ja Hyvinkää (Tweb,
-estetty) sekä Lappeenranta, Kouvola, Seinäjoki ja Porvoo, joiden
+Jäljellä ovat Vantaa, Oulu, Vaasa ja Hyvinkää (Tweb, estetty) sekä
+Lappeenranta, Kouvola, Seinäjoki ja Porvoo, joiden
 päätösjärjestelmää ei vielä löytynyt: niiden `paatoksenteko`-sivut eivät
 sisällä ulkoista linkkiä järjestelmään, joten ne vaativat sivun oman
 läpikäynnin.
