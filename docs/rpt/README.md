@@ -226,3 +226,56 @@ osumia. Karsinnasta poistettiin kaupunkien nimet ja rakentamisen yleissanasto.
 
 **Tämä ei vastaa siihen ovatko hankkeet ajankohtaisia** — se vaatii
 hankekohtaisen selvityksen, joka jatkuu yllä olevassa läpikäynnissä.
+
+---
+
+# Selvitys: kuntien päätösjärjestelmät lähteenä
+
+Kolmen hankkeen läpikäynti osoitti että puuttuva vaihe on **kunnan
+investointipäätös** ja se asuu päätösjärjestelmässä. Selvitettiin voisiko
+siitä tehdä lähteen — ja voisiko sen tehdä kerralla koko Suomelle.
+
+## Helsinki: paatokset.hel.fi
+
+Drupal-sivusto, sisältö palvelinpuolella HTML:nä. Yksittäinen asiasivu on
+haettavissa ja sisältää päätöstekstin (todennettu: Töölön kisahallin
+tarveselvitys). Hakusivu `/fi/asia` on sen sijaan React-sovellus jonka takana
+on Elasticsearch — bundlesta löytyivät kenttänimet `decision_content`,
+`field_is_decision`, `field_decision_section`, mutta proxyn osoite ei ollut
+suoraan luettavissa.
+
+`robots.txt` estää vain `/core/`, `/admin/`, `/search/` ja käyttäjäpolut —
+asiasivut ovat sallittuja.
+
+## "Kaikille kunnille" ei onnistu — alustoja on monta
+
+Testattiin 11 kaupungin päätösjärjestelmä:
+
+| alusta | kaupungit |
+|---|---|
+| Drupal / Ahjo | Helsinki |
+| Dynasty (`oncloudos.com`) | Espoo, Kuopio, Lahti |
+| CaseM (`cloudnc.fi`) | Tampere |
+| oma (`paatokset.turku.fi`) | Turku |
+| Tweb (`ktwebbin`) | Jyväskylä |
+
+Toiveena oli että `oncloudos.com` kattaisi valtaosan. **Se ei kata:** 40
+testatusta kunnasta vain 8 vastasi (espoo, kuopio, lahti, kirkkonummi,
+tuusula, savonlinna, tornio, ylöjärvi). Loput 32 — mm. Vantaa, Joensuu, Pori,
+Kouvola, Lappeenranta, Vaasa — ovat muualla, tyypillisesti kunnan omalla
+verkkotunnuksella.
+
+Alustaperheitä on siis 4–5, mutta **osoitteet eivät noudata yhtä kaavaa**,
+joten jokainen kunta pitää löytää erikseen. Sama työ on jo tehty kerran:
+kaavalähteitä on 248 ja ne rakennettiin kunta kerrallaan.
+
+## Suositus: 18 kaupunkia, ei 309 kuntaa
+
+Puuttuvat 552 hanketta ovat **18 kaupungissa**, ja ne ovat RPT:n mukaan
+kunkin kaupungin suurimpia. Koko Suomen kattaminen ei ole tarpeen tämän
+aukon paikkaamiseksi — riittää että katetaan ne kaupungit joissa isot
+hankkeet ovat.
+
+Työmäärä on silti tuntuva: 18 kaupunkia jakautuu 4–5 alustaperheeseen, eli
+noin viisi jäsentäjää ja 18 lähdemäärittelyä. Helsinki on suurin yksittäinen
+hyöty (67 puuttuvaa) ja samalla ainoa jonka rajapinta on vielä auki.
