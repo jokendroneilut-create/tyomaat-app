@@ -75,6 +75,56 @@ const CONTRACT_PATTERNS = [
  */
 const OWN_DEVELOPMENT = /omaperustei|vapaarahoittei|oma\s+tuotanto|Peab\s+Kodit/i
 
+/*
+ * Kohdetyyppi otsikosta ja leipätekstistä.
+ *
+ * Kentän sanasto on kannassa vapaata tekstiä (yli 200 eri arvoa, 3148
+ * hanketta 4400:sta ilman arvoa), joten tässä käytetään yleisimpiä jo
+ * käytössä olevia nimikkeitä eikä keksitä uusia. Järjestys ratkaisee:
+ * tarkin ensin, koska "koulu ja kirjasto" on ennen kaikkea koulu.
+ *
+ * Epävarmassa tapauksessa palautetaan null. Väärä kohdetyyppi ohjaa
+ * asiakassuodatusta väärin, tyhjä ei ohjaa mihinkään.
+ */
+/*
+ * Kuviot katkaistaan vartaloon, koska otsikossa sana on lähes aina
+ * taivutettu. Astevaihtelu syö päätteen: "kulttuurikeskuksen" EI sisällä
+ * merkkijonoa "keskus" (keskus -> keskuksen), joten täysi sana ei osu.
+ * Mitattu: Iisalmen kulttuurikeskus sai tyypin "Kirjasto", koska otsikko ei
+ * osunut ja runko mainitsi kirjaston.
+ */
+const BUILDING_TYPES: [RegExp, string][] = [
+  [/datakesku/i, "Datakeskus"],
+  [/sairaal/i, "Sairaala"],
+  [/kulttuurikesku|teatteri|museo|konserttital/i, "Kulttuurirakennus"],
+  [/päiväkoti|päiväkodi/i, "Päiväkoti"],
+  [/\bkoulu|lukio|kampus|oppilaitos/i, "Koulu"],
+  [/kirjasto/i, "Kirjasto"],
+  [/uimahalli|liikuntahalli|jäähalli|urheiluhalli/i, "Liikuntapaikka"],
+  [/hoivakoti|palvelutalo|asumisyksik|senioritalo/i, "Hoivakoti"],
+  [/logistiikk|varastorakennu|terminaal/i, "Logistiikka"],
+  [/hotelli/i, "Hotelli"],
+  [/toimitila|toimistorakennu|toimistotalo/i, "Toimitila"],
+  [/kerrostalo|asuntohank|asuinrakennu|asunto\s+oy/i, "Kerrostalo"],
+  [/\bsilta\b|siltaa|ratahank|raitiotie|katusaneeraus/i, "Infrahanke"],
+]
+
+/*
+ * Otsikko ratkaistaan ensin kokonaan, vasta sitten leipäteksti. Muuten
+ * runko voittaa: "Peab peruskorjaa ja uudistaa Iisalmen kulttuurikeskuksen"
+ * sai tyypin "Kirjasto", koska kulttuurikeskuksessa sattuu olemaan kirjasto.
+ * Otsikko kertoo mistä hankkeessa on kyse, runko mitä siihen sisältyy.
+ */
+export function inferBuildingType(title: string, body: string | null): string | null {
+  for (const source of [title, body]) {
+    if (!source) continue
+    for (const [pattern, label] of BUILDING_TYPES) {
+      if (pattern.test(source)) return label
+    }
+  }
+  return null
+}
+
 const CONSTRUCTION_PATTERNS = [
   /rakennustyöt\s+(?:ovat\s+)?(?:alkaneet|käynnissä)/i,
   /rakentaminen\s+on\s+(?:alkanut|käynnissä)/i,
@@ -174,6 +224,7 @@ export async function enrichPeabCandidate(candidate: any): Promise<any> {
     location: candidate.location ?? extractStreetAddress(body),
     developer: client ?? (ownDevelopment ? "Peab" : null),
     builder: "Peab",
+    property_type: candidate.property_type ?? inferBuildingType(candidate.name, body),
     phase: inferPeabPhase(candidate.name, body),
     estimated_completion:
       candidate.estimated_completion ?? parseEstimatedCompletionDate(body),
@@ -227,7 +278,9 @@ export async function fetchPeabSource() {
         name: title,
         description: null,
         city: detectCityFromText(title),
+        /* Maakunta johdetaan kunnasta tuonnissa (importCandidate). */
         region: null,
+        property_type: inferBuildingType(title, null),
         location: null,
         /*
          * Otsikkopohjainen arvaus. enrich() korvaa tämän leipätekstistä

@@ -55,6 +55,7 @@ async function main() {
   const { enrichPeabCandidate } = await import("../lib/agent/fetchPeabSource")
   const { stripCompanyPrefixFromHeadline } = await import("../lib/agent/stripCompanyPrefix")
   const { detectCityFromText } = await import("../lib/agent/detectCityFromText")
+  const { getMunicipalityByName } = await import("../lib/geo/municipalities")
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -93,9 +94,13 @@ async function main() {
     })
 
     const title = stripCompanyPrefixFromHeadline(headline)
+    const city = row.municipality ?? enriched.city ?? null
+    const region = md.region ?? getMunicipalityByName(city)?.region ?? null
 
     console.log(`### ${row.title}`)
     console.log(`  otsikko:      ${title}`)
+    console.log(`  maakunta:     ${md.region ?? "-"} -> ${region ?? "-"}`)
+    console.log(`  kohdetyyppi:  ${md.building_type ?? "-"} -> ${enriched.property_type ?? "-"}`)
     console.log(`  vaihe:        ${md.phase_hint ?? "-"} -> ${enriched.phase}`)
     console.log(`  rakennuttaja: ${md.developer ?? "-"} -> ${enriched.developer ?? "-"}`)
     console.log(`  urakoitsija:  ${md.builder ?? "-"} -> ${enriched.builder ?? "-"}`)
@@ -114,11 +119,19 @@ async function main() {
       .from("potential_projects")
       .update({
         title,
-        municipality: row.municipality ?? enriched.city ?? null,
+        municipality: city,
         address: row.address ?? enriched.location ?? null,
         metadata: {
           ...md,
           operation: title,
+          region,
+          /*
+           * Uudelleen laskettu arvo voittaa vanhan. Toisin päin kirjoitettuna
+           * ajo ei korjaa aiemman version virheitä - mitattu: Iisalmen
+           * kulttuurikeskukselle jäi "Kirjasto", vaikka tuloste näytti jo
+           * oikean arvon.
+           */
+          building_type: enriched.property_type ?? md.building_type ?? null,
           description: enriched.description ?? md.description ?? null,
           developer: enriched.developer ?? md.developer ?? null,
           builder: enriched.builder ?? md.builder ?? null,

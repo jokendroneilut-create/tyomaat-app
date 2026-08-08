@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { inferPeabPhase, extractPeabBody } from "./fetchPeabSource"
+import { inferPeabPhase, extractPeabBody, inferBuildingType } from "./fetchPeabSource"
 import { allativeToNominative } from "./companyName"
 import { extractClientFromText } from "./fetchSttHakuSource"
 
@@ -106,6 +106,46 @@ describe("inferPeabPhase — sopimuksen merkit", () => {
         "Peab ja Evijärven kunta ovat sopineet rakentamisesta. Urakka sisältää suunnittelun."
       )
     ).toBe("Sopimus myönnetty")
+  })
+})
+
+describe("inferBuildingType", () => {
+  it("päättelee tyypin otsikosta", () => {
+    expect(
+      inferBuildingType("Peab peruskorjaa Vanhan Vaasan sairaalan F- ja T-rakennukset", VAASA_BODY)
+    ).toBe("Sairaala")
+  })
+
+  /*
+   * Otsikko ratkaistaan ennen runkoa. Ilman sitä "Iisalmen kulttuurikeskus"
+   * sai tyypin "Kirjasto", koska keskuksessa on kirjasto.
+   *
+   * Rungossa EI saa olla kulttuurisanaa, muuten testi menee läpi väärästä
+   * syystä - juuri niin kävi ensimmäisellä versiolla, ja se peitti sen että
+   * otsikko ei osunut lainkaan.
+   */
+  it("antaa otsikolle etusijan runkoon nähden", () => {
+    expect(
+      inferBuildingType(
+        "Peab peruskorjaa ja uudistaa Iisalmen kulttuurikeskuksen",
+        "Rakennuksessa toimii kirjasto."
+      )
+    ).toBe("Kulttuurirakennus")
+  })
+
+  /*
+   * Astevaihtelu: "keskus" -> "keskuksen". Täysi sana ei osu taivutettuun
+   * muotoon, joten kuvio on katkaistava vartaloon.
+   */
+  it("tunnistaa tyypin myös taivutetusta muodosta", () => {
+    expect(inferBuildingType("FIN04A-datakeskuksen rakentaminen", null)).toBe("Datakeskus")
+    expect(inferBuildingType("Iisalmen kulttuurikeskuksen uudistus", null)).toBe(
+      "Kulttuurirakennus"
+    )
+  })
+
+  it("palauttaa nullin kun tyyppiä ei tunnisteta", () => {
+    expect(inferBuildingType("Peab investoi uuteen kalustoon", null)).toBeNull()
   })
 })
 

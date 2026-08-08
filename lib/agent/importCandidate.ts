@@ -24,6 +24,7 @@ import {
 } from "@/lib/projects/identity"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { stripCompanyPrefixFromHeadline } from "@/lib/agent/stripCompanyPrefix"
+import { getMunicipalityByName } from "@/lib/geo/municipalities"
 
 /*
  * Yrityslähteiden kandidaatin tuonti. Logiikka oli aiemmin suoraan
@@ -318,7 +319,14 @@ export async function importCandidate(
   const candidate = {
     name: matchTitle || body.name || null,
     city: body.city || null,
-    region: body.region || null,
+    /*
+     * Maakunta johdetaan kunnasta silloin kun lähde ei sitä anna. Valtaosa
+     * lähteistä palauttaa region: null, koska tiedotteessa lukee vain
+     * kaupunki - ja kenttä jäi silloin pysyvästi tyhjäksi, vaikka kunta oli
+     * tiedossa. Sama johtaminen tehdään jo jälkikäteen
+     * (scripts/backfill-region.ts); tämä estää aukon syntymisen.
+     */
+    region: body.region || getMunicipalityByName(body.city)?.region || null,
     location: body.location || null,
     permitNumber: body.permit_number ?? body.metadata?.permit_number ?? null,
     propertyId: body.property_id ?? body.metadata?.property_id ?? null,
@@ -680,7 +688,7 @@ export async function importCandidate(
       developer: candidate.developer,
       builder: candidate.builder,
       building_type: candidate.buildingType,
-      region: body.region || null,
+      region: candidate.region,
       permit_number: candidate.permitNumber,
       property_id: candidate.propertyId,
       phase_hint: insertPhase,
