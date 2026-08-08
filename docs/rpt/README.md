@@ -115,3 +115,67 @@ kuvaus — pelkkä nimi hylätään katselmoinnissa, mikä on mitattu
 ([D-027](../03_DECISIONS.md)).
 
 Löydetyt lähteet lisätään sitä mukaa kun ne varmistuvat.
+
+---
+
+# Läpikäynti
+
+## Tutkitut hankkeet
+
+### Helsinki #3 — Meriveden lämmöntalteenottohanke, tunnelit
+
+**Tila:** kehitysvaihe, toteutuspäätöstä ei ole tehty. YVA-ohjelma 2021,
+YVA-selostus 2023. Vesienottotunneli n. 17 km, purkutunneli n. 9 km,
+lämpöpumppulaitos Salmisaareen. Rakennuttaja Helen Oy.
+
+**Lähde löytyi:** `ymparisto.fi` YVA-sivu + `helen.fi`.
+
+**Miksi puuttuu:** YVA julkaistiin **2023-10-17**, ja YVA-poimijamme
+tuoreusraja on 18 kuukautta eli 2025-02-08. Hanke on 16 kuukautta liian
+vanha. Lähde on siis meillä, ikkuna ei riitä.
+
+### Helsinki #13 — Töölön kisahallin perusparannus
+
+**Tila:** suunnitteilla. Tarveselvitys valmistui 10/2025, hankesuunnitelma
+odotetaan 6/2026, rakentaminen talonrakennusohjelmassa **6/2028–7/2031**.
+Yli 75-vuotias rakennus, vaippa ja talotekniikka käyttöikänsä päässä.
+
+**Lähde löytyi:** `paatokset.hel.fi` (tarveselvityspäätös),
+`hel.fi/.../rakennushankkeet` (hankesivu), `sttinfo.fi` (kaupungin tiedotteet).
+
+**Miksi puuttuu:** ei ole missään kannassamme. Kaupungin oma
+investointipäätösketju ei ole meillä lähteenä.
+
+## Lähdehavainnot
+
+Kaksi hanketta riitti tuottamaan neljä havaintoa. Kaksi ensimmäistä ovat
+uusia lähdeaihioita, kaksi jälkimmäistä vikoja jo olemassa olevissa.
+
+**1. `paatokset.hel.fi` — vahvin aihio.** Helsingin päätösjärjestelmä sisältää
+tarveselvitys- ja hankesuunnitelmapäätökset jokaisesta kaupungin
+talonrakennushankkeesta. Se on täsmälleen se **nimetty investointipäätösvaihe**
+jonka puuttuminen tunnistettiin. Vastaava järjestelmä on muillakin
+kaupungeilla.
+
+**2. `hel.fi`-karttapalvelun tilahankkeet.** Suodatettava hankerekisteri
+(katu-, puisto- ja tilahankkeet). Sama palvelin `kartta.hel.fi` josta jo
+haemme SUKKA-kaavoja, eli tekninen polku on tuttu.
+
+**3. YVA:n tuoreusikkuna rajaa liikaa — mutta selittää vain kourallisen.**
+Vertasin kaikki 552 puuttuvaa YVA:n koko 1337 hankkeen aineistoon.
+Mekaaninen vertailu antoi 32 ehdokasta, mutta käsin tarkistettuna aitoja on
+muutama: Meriveden lämmöntalteenotto, Vaasan satamatie ja Länsirata
+(= Espoo–Salo-oikorata). Syy on rakenteellinen: YVA koskee vain isoja
+ympäristövaikutteisia hankkeita, ei Töölön kisahallin kaltaisia
+talonrakennuskohteita. **Ikkunan kasvattaminen ei siis ole ratkaisu tähän
+listaan**, vaikka se toisi muutaman ison infrahankkeen.
+
+**4. STT-haku hakee murto-osan aineistosta.** Rajapinta kertoo hakusanalle
+"peruskorjaus" **1397 osumaa** mutta palauttaa **10 tiedotetta** — eikä
+`count`, `offset` tai `page` muuta sitä. Poimijamme pyytää `count=20` ja
+uskoo saavansa 20. Noin 34 hakusanalla katamme siis korkeintaan ~340
+tiedotetta.
+
+Tämä on sama vikaluokka kuin [D-026](../03_DECISIONS.md): pyyntö onnistuu,
+vastaus näyttää täydeltä, ja katkaisu on näkymätön. Vaatii oman
+selvityksensä — oikea sivutusparametri tai eri rajapinta.
