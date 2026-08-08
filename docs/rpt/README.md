@@ -259,6 +259,10 @@ Testattiin 11 kaupungin päätösjärjestelmä:
 | oma (`paatokset.turku.fi`) | Turku |
 | Tweb (`ktwebbin`) | Jyväskylä |
 
+> Tämä taulukko on tilanne siltä hetkeltä. Jyväskylän rivi osoittautui
+> myöhemmin harhaanjohtavaksi: kaupungilla on Tweb-asennus, mutta päätökset
+> ovat myös CaseM:ssä. Ks. alempaa "Jyväskylä EI ollut viides alustaperhe".
+
 Toiveena oli että `oncloudos.com` kattaisi valtaosan. **Se ei kata:** 40
 testatusta kunnasta vain 8 vastasi (espoo, kuopio, lahti, kirkkonummi,
 tuusula, savonlinna, tornio, ylöjärvi). Loput 32 — mm. Vantaa, Joensuu, Pori,
@@ -529,31 +533,97 @@ riippumatta (kokeiltu `q`, `s`, `hakusana`, `teksti`, `search`, `query`,
 `text`, `term` sekä ilman parametria). POST antaa 404, joten reitti on
 GET-only.
 
-## Seuraava askel
+## Ratkaisu: toimielinketju, ei hakua
 
-Kaksi vaihtoehtoa:
+Vaihtoehtoja oli kaksi — ajaa haku selaimessa ja tallentaa kutsu, tai
+rakentaa ketju toimielinten kautta. Jälkimmäinen valittiin, koska
+`/api/toimielimet` toimi jo eikä se vaadi selainta, ja koska hakupäätepiste
+voi olla rikki palvelimen päässä eikä vain väärin kutsuttu.
 
-1. **Selain uudelleen.** Sivu jumittui kerran, mutta menetelmä on
-   toiminut kahdesti kahdesta ja se näyttäisi tarkan kutsun. Kannattaa
-   yrittää uudella välilehdellä.
-2. **Rakenna toimielinten kautta.** `/api/toimielimet` toimii jo, joten
-   ketju toimielin -> pöytäkirja (`/poytakirja/:id`) -> asiat on
-   todennäköisesti auki ilman hakua. Tämä ei vaadi selainta lainkaan.
+Ketju toimielin -> `/poytakirja/:id` -> pykälät osoittautui auki olevaksi.
+Turku on tuotannossa (`lib/agent/fetchTurkuSource.ts`).
 
-Vaihtoehto 2 on todennäköisesti nopeampi, koska hakupäätepiste voi olla
-myös rikki palvelimen päässä eikä vain väärin kutsuttu.
+# Jyväskylä EI ollut viides alustaperhe
 
-# Tilanne alustoittain
+Suunnitelma oli rakentaa Tweb-jäsentäjä Jyväskylää varten. Kartoitus kumosi
+sen: Jyväskylän päätökset ovat **CaseM:ssä** (`jyvaskyla.cloudnc.fi`), jota jo
+jäsennämme. Kaupungilla on kyllä Tweb-asennus (`julkinen.jkl.fi`), mutta se ei
+ole ainoa eikä välttämättä edes ensisijainen.
+
+Kun kaikki 12 jäljellä ollutta kaupunkia ajettiin läpi samalla tavalla — ensin
+aliverkkotunnusarvaus, sitten kunnan oman sivun `paatoksenteko`-linkit — löytyi
+kolme muutakin jotka olivat jo katettujen perheiden sisällä:
+
+| kaupunki | löytyi | alusta |
+|---|---|---|
+| Jyväskylä | `jyvaskyla.cloudnc.fi` | CaseM |
+| Rovaniemi | `rovaniemi.cloudnc.fi` | CaseM |
+| Pori | `pori.cloudnc.fi` | CaseM |
+| Joensuu | `dynastyjulkaisu.pohjoiskarjala.net/joensuu/` | Dynasty |
+
+Joensuu oli jäänyt löytymättä siksi että aiempi 40 kunnan testi haki vain
+muotoa `<kunta>.oncloudos.com`. Joensuun Dynasty on maakunnallisessa
+asennuksessa, jossa kunta on **polussa** eikä aliverkkotunnuksessa, ja
+palvelimen juuri vastaa 403:lla. Jäsentäjään lisättiin valinnainen `cgiBase`.
+
+Nämä neljä maksoivat yhteensä yhden konfiguraatiokierroksen, eivät neljää
+jäsentäjää. Päätelmä on kirjattu [D-032](../03_DECISIONS.md):ksi.
+
+## Tweb löytyi, mutta robots.txt kieltää
+
+Viides alustaperhe on olemassa ja kattaa viisi kaupunkia. Se on teknisesti
+helpoin kaikista — palvelinpuolen HTML, vakiopolut — mutta neljä viidestä
+kieltää haun:
+
+| kaupunki | osoite | robots.txt |
+|---|---|---|
+| Oulu | `asiakirjat.ouka.fi` | `Disallow: /` |
+| Vaasa | `tweb.vaasa.fi` | `Disallow: /` |
+| Hyvinkää | `asianhallintavhp.hyvinkaa.fi` | `Disallow: /` |
+| Jyväskylä | `julkinen.jkl.fi` | `Disallow: /` (ei tarvita, CaseM kattaa) |
+| **Vantaa** | `paatokset.vantaa.fi` | **ei robots.txt:tä** |
+
+Vantaa on siis auki, ja se on samalla suurin jäljellä oleva kaupunki: 46
+puuttuvaa hanketta. Se on seuraava työ. Kolmelle muulle tarvitaan joko kunnan
+lupa tai vaihtoehtoinen lähde — ks. [D-031](../03_DECISIONS.md).
+
+## Tilanne alustoittain
 
 | alusta | kunnat | tila |
 |---|---|---|
 | Ahjo (Elasticsearch) | Helsinki | tuotannossa |
 | Dynasty (RSS) | Espoo, Tuusula, Kuopio, Kirkkonummi, Savonlinna, Tornio | tuotannossa |
+| Dynasty (RSS) | Joensuu | SQL ajamatta |
 | CaseM (GET-haku) | Tampere | tuotannossa |
-| oma SPA | Turku | kartoitus kesken |
-| Tweb | Jyväskylä | kartoittamatta |
+| CaseM (GET-haku) | Jyväskylä, Rovaniemi, Pori | SQL ajamatta |
+| oma SPA | Turku | tuotannossa |
+| Tweb | Vantaa | rakentamatta, sallittu |
+| Tweb | Oulu, Vaasa, Hyvinkää | robots.txt kieltää |
 
-**Kahdeksan kaupunkia kahdeksastatoista katettu kolmella jäsentäjällä.**
-Jäljelle jäävät kaupungit jakautuvat samoihin perheisiin, joten seuraavat
-lisäykset ovat pääosin konfiguraatiota — paitsi Turku ja Jyväskylä, jotka
-ovat omia alustojaan.
+**Kolmetoista kaupunkia kahdeksastatoista katettu neljällä jäsentäjällä.**
+Jäljellä ovat Vantaa (Tweb, rakennettava), Oulu, Vaasa ja Hyvinkää (Tweb,
+estetty) sekä Lappeenranta, Kouvola, Seinäjoki ja Porvoo, joiden
+päätösjärjestelmää ei vielä löytynyt: niiden `paatoksenteko`-sivut eivät
+sisällä ulkoista linkkiä järjestelmään, joten ne vaativat sivun oman
+läpikäynnin.
+
+## Mitä suodatuksesta opittiin samalla
+
+CaseM:n haku on **kokotekstihaku**, joten hakusana osuu asiakirjan runkoon eikä
+otsikkoon. Pelkkä poissulkulista ei siksi riittänyt: `peruskorjaus` palautti
+otsikot *"Ajankohtaiset asiat"*, *"Ilmoitusasiat / Tekninen lautakunta"* ja
+*"Viranhaltijapäätösten otto-oikeus"*. Suodatus siirrettiin Dynastyn
+positiiviseen listaan (D-029:n kuvio). Vaikutus hakutulosten otsikkoihin:
+
+| kaupunki | ennen | jälkeen |
+|---|---|---|
+| Tampere | 311 | 168 |
+| Jyväskylä | 46 | 21 |
+| Rovaniemi | 116 | 56 |
+| Pori | 74 | 19 |
+
+Karsinta mitattiin myös toiseen suuntaan: listasta puuttui kolme sanaa jotka
+pudottivat aitoja hankkeita — *"Pirkkala-Linnainmaa -raitiotien
+allianssisopimus"*, *"Lentokenttäalueen rakennushanke"* ja *"Neljän tuulen
+koulun toteutusmuoto"*. Ne lisättiin. **Positiivista listaa ei voi arvioida
+katsomalla vain mitä se päästää läpi.**

@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { decodeEntities, extractItemText, parseSearchResults } from "./fetchCaseMSource"
+import {
+  decodeEntities,
+  extractItemText,
+  isConstructionSubject,
+  parseSearchResults,
+} from "./fetchCaseMSource"
 
 describe("decodeEntities", () => {
   /*
@@ -36,6 +41,52 @@ describe("extractItemText", () => {
 
   it("palauttaa null liian lyhyestä tekstistä", () => {
     expect(extractItemText("<p>Lyhyt</p>").text).toBeNull()
+  })
+})
+
+describe("isConstructionSubject", () => {
+  /*
+   * CaseM:n haku on kokotekstihaku, joten hakusana osuu asiakirjan runkoon
+   * eika otsikkoon. Kaikki alla olevat tulivat oikeista hakutuloksista
+   * sanalla "peruskorjaus" tai "tarveselvitys".
+   */
+  it("hylkaa otsikot joissa ei ole rakentamisen sanastoa", () => {
+    for (const title of [
+      "Ajankohtaiset asiat",
+      "Ilmoitusasiat / Tekninen lautakunta",
+      "Viranhaltijapäätösten otto-oikeus",
+      "Vuoden 2026 talousarvion täytäntöönpano, tekninen lautakunta",
+      "Tilapalvelu-liikelaitoksen neljännesvuosikatsaus 6/2025",
+      "Hankeavustuksen myöntäminen, Satakunnan Sininauha ry",
+    ]) {
+      expect(isConstructionSubject(title), title).toBe(false)
+    }
+  })
+
+  it("hylkaa nimitys-, kunnossapito- ja kaava-asiat", () => {
+    for (const title of [
+      "Nuorisovaltuuston jäsenen nimeäminen Zillarin nuorisotilan tarveselvitystyöryhmään",
+      "LISÄPYKÄLÄ: Vammaisneuvoston edustaja Korundin peruskorjauksen suunnitteluun",
+      "Itä-Porin aurausurakka vuosille 2025 - 2026",
+      "Pohjois-Porin nurmikoiden ja puhtaanapidon hoitourakka 2026 - 2027",
+      "Mäntyluoto 65. kaupunginosan asemakaavan laajennus",
+      "Poikkeamishakemus tontille Rimminkatu 17, Ala-Pispala, omakotitalon rakentaminen",
+    ]) {
+      expect(isConstructionSubject(title), title).toBe(false)
+    }
+  })
+
+  it("pitaa hankepaatokset", () => {
+    for (const title of [
+      "Kilpisen koulun peruskorjauksen hankesuunnitelma",
+      "Kauramäen päiväkotikoulun hankesuunnitelma",
+      "Pirkkala-Linnainmaa -raitiotien allianssisopimus",
+      "Lentokenttäalueen rakennushankkeen rahoitus",
+      "Neljän tuulen koulun toteutusmuoto ja kilpailutuksen toteuttaminen",
+      "Hankintapäätös rakennusten purku-urakasta, Koulutie 12, Säynätsalo, Jyväskylä",
+    ]) {
+      expect(isConstructionSubject(title), title).toBe(true)
+    }
   })
 })
 

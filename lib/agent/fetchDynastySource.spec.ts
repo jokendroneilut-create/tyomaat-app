@@ -1,5 +1,23 @@
 import { describe, it, expect } from "vitest"
-import { parseRssTitle, isConstructionSubject } from "./fetchDynastySource"
+import { cdata, parseRssTitle, isConstructionSubject } from "./fetchDynastySource"
+
+describe("cdata", () => {
+  /*
+   * Mitattu Joensuussa: purkamaton &ndash; jai hankkeen nimeen ja siita
+   * edelleen tasmaytykseen.
+   */
+  it("purkaa muutkin kuin kolme perusentiteettia", () => {
+    expect(cdata("<![CDATA[Tikkarinne 9 keitti&ouml;n peruskorjaus &ndash; hyv&auml;ksyminen]]>")).toBe(
+      "Tikkarinne 9 keittiön peruskorjaus – hyväksyminen"
+    )
+  })
+
+  it("sailyttaa linkin parametrit", () => {
+    expect(cdata("<![CDATA[https://x.fi/cgi/D.PHP?page=meetingitem&amp;id=12]]>")).toBe(
+      "https://x.fi/cgi/D.PHP?page=meetingitem&id=12"
+    )
+  })
+})
 
 describe("parseRssTitle", () => {
   /*

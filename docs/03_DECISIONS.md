@@ -5,6 +5,49 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-032 – Alustaa ei pääteltä yhdestä osoitteesta
+Jyväskylä oli kirjattu Tweb-kunnaksi ja **viidenneksi alustaperheeksi**, koska
+kaupungilta löytyi Tweb-asennus (`julkinen.jkl.fi`). Päätelmä oli väärä: samat
+päätökset ovat myös CaseM:ssä (`jyvaskyla.cloudnc.fi`), jota jo jäsennämme.
+Uutta jäsentäjää ei tarvittu, ja Tweb-reitti olisi ollut sitäkin turhempi
+koska sen `robots.txt` kieltää haun kokonaan.
+
+Sama kartoitus toi mukanaan Rovaniemen ja Porin, jotka olivat CaseM:ssä ilman
+että sitä osattiin epäillä — ja Joensuun, joka on Dynasty mutta
+**maakunnallisessa asennuksessa** jossa kunta on polussa
+(`dynastyjulkaisu.pohjoiskarjala.net/joensuu/`) eikä aliverkkotunnuksessa.
+Se oli jäänyt löytymättä, koska aiempi 40 kunnan testi haki vain
+`<kunta>.oncloudos.com`-muotoa. Palvelimen juuri vastaa lisäksi 403:lla.
+
+Sääntö: **kunnan alusta selvitetään kaikilta tunnetuilta alustoilta, ei
+ensimmäisestä löytyneestä osoitteesta.** Yksi löydetty järjestelmä ei ole
+todiste siitä että se on ainoa tai edes se käytetyin. Nimeämiskaava on
+heuristiikka löytämiseen, ei kartta: neljä kuudesta uudesta kunnasta oli
+osoitteessa jota kaavasta ei olisi arvannut.
+
+### D-031 – robots.txt ratkaisee, ei alustan tekninen soveltuvuus
+Tweb-alusta on teknisesti helpoin kaikista viidestä: palvelinpuolen HTML,
+ei JS-vaatimusta, vakiopolut `/ktwebbin/dbisa.dll/ktwebscr/`. Sitä ei silti
+kerätä, koska **neljä viidestä mitatusta Tweb-asennuksesta julkaisee
+`robots.txt`-tiedoston jossa lukee `Disallow: /`**: Oulu
+(`asiakirjat.ouka.fi`), Vaasa (`tweb.vaasa.fi`), Hyvinkää
+(`asianhallintavhp.hyvinkaa.fi`) ja Jyväskylä (`julkinen.jkl.fi`). Kielto
+tulee tuotteen mukana eikä kunnan päätöksestä, mutta se on silti kielto.
+
+**Vantaa on poikkeus:** `paatokset.vantaa.fi` on samaa Tweb-tuotetta mutta
+sillä ei ole `robots.txt`-tiedostoa lainkaan (404). Vantaa on siis avoinna, ja
+se on samalla suurin yksittäinen jäljellä oleva kaupunki (46 puuttuvaa RPT:n
+hanketta).
+
+Vertailu muihin: Helsingin `paatokset.hel.fi` sallii asiasivut nimenomaisesti,
+CaseM kieltää vain RSS:n ja ASP.NET-resurssit, Dynastylla ei ole
+`robots.txt`-tiedostoa lainkaan. Nämä kerätään.
+
+Sääntö: **lähteen tekninen helppous ei ohita robots.txt:ää.** Jos kielto
+halutaan ohittaa, se on ihmisen päätös ja se kirjataan tänne — ei jotain
+minkä kerääjä ratkaisee hiljaa. Kolmelle kieltävälle kunnalle (Oulu, Vaasa,
+Hyvinkää) haetaan mieluummin lupa kunnalta tai vaihtoehtoinen lähde.
+
 ### D-030 – Vakio silmukan sisällä lasketaan kerran
 `findProjectMatchDetailed` vertaa **yhtä** ehdokasta kaikkiin 4412
 hankkeeseen. `descriptionSimilarity` saa ehdokkaan kuvauksen ensimmäisenä

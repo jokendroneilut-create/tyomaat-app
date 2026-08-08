@@ -35,7 +35,7 @@ const MAX_DETAIL_FETCHES_PER_RUN = 60
  * positiivisella listalla kuten STT:ssä (D-029). Poissulkulista ei riittäisi:
  * poissuljettavia aiheita on ääretön määrä, rakentamisen sanastoa ei.
  */
-const CONSTRUCTION_SIGNALS = [
+export const CONSTRUCTION_SIGNALS = [
   "hankesuunnitel",
   "tarveselvit",
   "toteutussuunnitel",
@@ -59,6 +59,16 @@ const CONSTRUCTION_SIGNALS = [
   "katusuunnitel",
   "siltasuunnitel",
   "kunnallistekni",
+  /*
+   * Kolme viimeista lisattiin kun sama lista otettiin kayttoon CaseM:ssa.
+   * Ne loytyivat mittaamalla mita positiivinen lista karsii vaarin: ilman
+   * niita jaivat pois "Pirkkala-Linnainmaa -raitiotien allianssisopimus"
+   * (Tampere), "Lentokenttaalueen rakennushanke" (Pori) ja "Neljan tuulen
+   * koulun toteutusmuoto" (Rovaniemi) - kaikki aitoja hankepaatoksia.
+   */
+  "allianssisopimu",
+  "rakennushank",
+  "toteutusmuoto",
 ]
 
 /*
@@ -87,6 +97,13 @@ const EXCLUDE_PATTERNS = [
 export type DynastyConfig = {
   /** Aliverkkotunnus oncloudos.com-alustalla, esim. "espoo". */
   host: string
+  /*
+   * Koko CGI-osoite niille asennuksille jotka eivat ole oncloudos.com:issa.
+   * Joensuu on maakunnallisessa asennuksessa, jossa kunta on POLUSSA eika
+   * aliverkkotunnuksessa: dynastyjulkaisu.pohjoiskarjala.net/joensuu/cgi/...
+   * Juuri vastaa 403:lla, joten asennus loytyi vasta polkua kokeilemalla.
+   */
+  cgiBase?: string
   city: string
   region: string
   /*
@@ -119,12 +136,23 @@ async function fetchLatin1(url: string): Promise<string | null> {
   }
 }
 
-function cdata(value: string | undefined): string {
+/*
+ * RSS:n CDATA-sisalto on itsekin entiteettikoodattua. Kolme perusentiteettia
+ * ei riita: mitattu "Tikkarinne 9 keittion peruskorjaus &ndash;
+ * hankesuunnitelman ja kustannusarvion hyvaksyminen" (Joensuu), jossa
+ * purkamaton &ndash; jai hankkeen nimeen ja siita edelleen tasmaytykseen.
+ */
+const RSS_ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+  ndash: "–", mdash: "—", auml: "ä", Auml: "Ä", ouml: "ö", Ouml: "Ö",
+  aring: "å", Aring: "Å",
+}
+
+export function cdata(value: string | undefined): string {
   return (value ?? "")
     .replace(/<!\[CDATA\[|\]\]>/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
+    .replace(/&([a-zA-Z]+);/g, (m, name) => RSS_ENTITIES[name] ?? m)
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
     .replace(/\s+/g, " ")
     .trim()
 }
@@ -182,7 +210,8 @@ function extractItemText(html: string): string | null {
 
 export function createDynastyFetcher(config: DynastyConfig) {
   return async function fetchDynasty() {
-    const base = `https://${config.host}.oncloudos.com/cgi/DREQUEST.PHP`
+    const base =
+      config.cgiBase ?? `https://${config.host}.oncloudos.com/cgi/DREQUEST.PHP`
     const rss = await fetchLatin1(`${base}?page=rss/meetingitems&show=${RSS_ITEMS}`)
     if (!rss) return []
 
@@ -300,4 +329,16 @@ export const fetchTornioPaatoksetSource = createDynastyFetcher({
 export const fetchYlojarviPaatoksetSource = createDynastyFetcher({
   host: "ylojarvi", city: "Ylöjärvi", region: "Pirkanmaa",
   developer: "Ylöjärven kaupunki", sourceName: "ylojarvi_paatokset",
+})
+
+/*
+ * Joensuu ei ollut niiden 40 kunnan joukossa jotka testattiin
+ * oncloudos.com:issa, koska se ei ole siella. Asennus on maakunnallinen ja
+ * kunta on polussa - siksi cgiBase.
+ */
+export const fetchJoensuuPaatoksetSource = createDynastyFetcher({
+  host: "joensuu",
+  cgiBase: "https://dynastyjulkaisu.pohjoiskarjala.net/joensuu/cgi/DREQUEST.PHP",
+  city: "Joensuu", region: "Pohjois-Karjala",
+  developer: "Joensuun kaupunki", sourceName: "joensuu_paatokset",
 })

@@ -1,4 +1,5 @@
 import { extractStreetAddress } from "./extractStreetAddress"
+import { CONSTRUCTION_SIGNALS } from "./fetchDynastySource"
 
 /*
  * CaseM-päätösjärjestelmä (cloudnc.fi), käytössä mm. Tampereella.
@@ -42,12 +43,45 @@ const EXCLUDE_PATTERNS = [
   /valtuustoaloit/i,
   /kuntalaisaloit/i,
   /viranhaltijoiden\s+päätökset/i,
+  /*
+   * Alla olevat lisattiin kolmen uuden kunnan mittauksesta. Jokainen on
+   * otsikkotyyppi joka lapaisee positiivisen listan mutta ei ole hanke.
+   */
+  // Toimielinten nimitysasiat: "Nuorisovaltuuston jasenen nimeaminen Zillarin
+  // nuorisotilan tarveselvitystyoryhmaan" (Rovaniemi, kolme osumaa).
+  /jäsenen\s+nimeämi/i,
+  /jäsenen\s+valinta/i,
+  /työryhmän\s+nimeämi/i,
+  /\bedustaja(n|ksi)?\b/i,
+  // Kunnossapito, ei rakentaminen: "Ita-Porin aurausurakka",
+  // "Pohjois-Porin nurmikoiden ja puhtaanapidon hoitourakka" (Pori).
+  /hoitourakka/i,
+  /auraus/i,
+  /puhtaanapi/i,
+  // Rakennuslupatason poikkeamiset, tyypillisesti yksittainen omakotitalo.
+  /poikkeamishakemu/i,
+  /poikkeamispäätö/i,
+  /*
+   * Kaavoitus on jo katettu 248 omalla lahteella (07_ZONING_SOURCES), joten
+   * paatosjarjestelmasta poimittu kaava-asia olisi kaksoiskappale.
+   * Mitattu: "Mantyluoto 65. kaupunginosan asemakaavan laajennus" (Pori)
+   * lapaisi listan sanalla "laajennu".
+   */
+  /asemakaav/i,
+  // Valmistuneen hankkeen tilinpaatos, ei tuleva tyo.
+  /lopputilitys/i,
 ]
 
 export type CaseMConfig = {
   /** Aliverkkotunnus cloudnc.fi-alustalla, esim. "tampere". */
   host: string
-  /** Sivuston numero hakuosoitteessa (n-parametri). */
+  /*
+   * Sivuston numero hakuosoitteessa (n-parametri). Sama 23 kaikilla neljalla
+   * mitatulla asennuksella, ja sama luku toistuu asiapolussa
+   * /fi-FI/content/<id>/23 - se on siis alustan vakio eika kuntakohtainen.
+   * Jatetaan silti konfiguraatioon, koska yksi poikkeus riittaisi rikkomaan
+   * oletuksen hiljaisesti (nolla osumaa nayttaa samalta kuin tyhja kunta).
+   */
   siteId: number
   city: string
   region: string
@@ -87,8 +121,23 @@ async function getHtml(url: string): Promise<string | null> {
   }
 }
 
+/*
+ * Suodatus tehtiin ensin pelkalla poissululla, koska hakusanan luultiin
+ * rajaavan tuloksen jo riittavasti. Se ei riita: CaseM:n haku on
+ * KOKOTEKSTIHAKU, joten sana osuu asiakirjan runkoon eika otsikkoon.
+ * Mitattu kolmella uudella kunnalla - "peruskorjaus" palautti otsikot
+ * "Ajankohtaiset asiat", "Ilmoitusasiat / Tekninen lautakunta" ja
+ * "Viranhaltijapaatosten otto-oikeus", jotka kaikki lapaisivat poissulun.
+ *
+ * Siirrytaan siis samaan positiiviseen listaan kuin Dynastyssa ja STT:ssa
+ * (D-029). Lista jaetaan Dynastyn kanssa eika kopioida: se on jo mitattu
+ * kuuden kunnan aineistolla, ja kahden rinnakkaisen listan yllapito eriyttaisi
+ * ne aikaa myoten.
+ */
 export function isConstructionSubject(subject: string): boolean {
-  return !EXCLUDE_PATTERNS.some((re) => re.test(subject))
+  if (EXCLUDE_PATTERNS.some((re) => re.test(subject))) return false
+  const text = subject.toLowerCase()
+  return CONSTRUCTION_SIGNALS.some((k) => text.includes(k))
 }
 
 /*
@@ -235,4 +284,38 @@ export const fetchTamperePaatoksetSource = createCaseMFetcher({
   region: "Pirkanmaa",
   developer: "Tampereen kaupunki",
   sourceName: "tampere_paatokset",
+})
+
+/*
+ * Jyvaskyla, Rovaniemi ja Pori loytyivat samalta alustalta. Jyvaskyla oli
+ * kirjattu Tweb-kunnaksi ja viidenneksi alustaperheeksi, mutta se osoittautui
+ * vaaraksi: kaupungilla on kylla Tweb-asennus (julkinen.jkl.fi), mutta
+ * paatokset ovat myos CaseM:ssa. Tweb-reitti olisi ollut turhaa tyota ja
+ * lisaksi robots.txt kieltaa sen kokonaan.
+ */
+export const fetchJyvaskylaPaatoksetSource = createCaseMFetcher({
+  host: "jyvaskyla",
+  siteId: 23,
+  city: "Jyväskylä",
+  region: "Keski-Suomi",
+  developer: "Jyväskylän kaupunki",
+  sourceName: "jyvaskyla_paatokset",
+})
+
+export const fetchRovaniemiPaatoksetSource = createCaseMFetcher({
+  host: "rovaniemi",
+  siteId: 23,
+  city: "Rovaniemi",
+  region: "Lappi",
+  developer: "Rovaniemen kaupunki",
+  sourceName: "rovaniemi_paatokset",
+})
+
+export const fetchPoriPaatoksetSource = createCaseMFetcher({
+  host: "pori",
+  siteId: 23,
+  city: "Pori",
+  region: "Satakunta",
+  developer: "Porin kaupunki",
+  sourceName: "pori_paatokset",
 })
