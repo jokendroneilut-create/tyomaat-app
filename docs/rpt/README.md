@@ -470,13 +470,33 @@ Huomaa että `/fi-FI/content/504368/23978` EI ole toimielinsivu vaan
 yksittäinen asia ("Valtuustoaloite perusteettomista määräaikaisista
 työsopimuksista"). Toimielimet-sivu listaa siis suoraan asioita.
 
-## Seuraava askel
+## Enumerointi ratkesi
 
-Hakusivu palauttaa täyden sivun mutta ei tuloksia, joten parametri on
-todennäköisesti väärä tai haku tehdään POST:illa. Sama menetelmä kuin
-Helsingissä toimisi: avaa hakusivu selaimessa, tee haku ja tallenna
-`fetch`-kutsut. Se paljasti Helsingin Elasticsearch-proxyn kun bundlen
-grep ei riittänyt.
+Hakusivu löytyi selaimen kautta: sivusto on ASP.NET WebForms, ja haku on
+postback (`ctl00$txtSearchText`). Postback kuitenkin **ohjaa tavalliseen
+GET-osoitteeseen**, joka toimii ilman istuntoa:
 
-Jos hakua ei saa toimimaan, varasuunnitelma on 15 tuoreimman asian
-listaus päivittäin — se ei kata takautuvasti mutta pysyy ajan tasalla.
+```
+/fi-FI/haku?n=23&d=1&s=<hakusana>&o=Rank&page=<n>
+```
+
+20 osumaa per sivu, sivutus toimii (todennettu sivuilla 1 ja 5).
+Osumat ovat `/fi-FI/content/<id>/23` -linkkejä eli suoraan asiasivuja,
+joissa on koko teksti.
+
+Aiempi yritys `/fi-FI/Haku?searchtext=` epäonnistui kahdesta syystä:
+**väärä kirjainkoko ja väärä parametri**. Polku on `haku` pienellä ja
+hakusana on `s`.
+
+Kärkiosumat ovat aitoja hankkeita: *Nekalan koulun sisäilmakorjaus*,
+*Tammelan koulun rakennuksen 2 peruskorjaus*, *Lielahti–Ylöjärvi
+-raitiotien hankesuunnitelma*.
+
+## Toteutus
+
+CaseM on nyt sama kuvio kuin STT: hae hakusanoilla, sivuta, hae kuvaus
+osumille. Erona on että asiasivu sisältää koko tekstin, joten kuvaus ei
+vaadi erillistä poimintalogiikkaa.
+
+Hakusanat kannattaa ottaa Dynastyn `CONSTRUCTION_SIGNALS`-listasta —
+se on jo mitattu toimivaksi kuuden kunnan aineistolla.
