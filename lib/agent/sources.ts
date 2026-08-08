@@ -1,4 +1,5 @@
 import { fetchTestSource } from "./fetchTestSource"
+import { fetchHelsinkiPaatoksetSource } from "./fetchHelsinkiPaatoksetSource"
 import { fetchYitSource } from "./fetchYitSource"
 import { fetchAsuntosaatioSource } from "./fetchAsuntosaatioSource"
 import { fetchAsuraSource } from "./fetchAsuraSource"
@@ -52,6 +53,7 @@ export const sources = [
   { name: "meijou", fetch: fetchMeijouSource },
   { name: "mangrove", fetch: fetchMangroveSource },
   { name: "srv", fetch: fetchSrvSource },
+  { name: "helsinki_paatokset", fetch: fetchHelsinkiPaatoksetSource },
   { name: "ysaatio", fetch: fetchYsaatioSource },
   { name: "pohjola_rakennus", fetch: fetchPohjolaRakennusSource },
   { name: "varte", fetch: fetchVarteSource },
