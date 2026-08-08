@@ -5,6 +5,39 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-029 – Löyhää hakua vastaan tarvitaan positiivinen sisältövaatimus
+STT:n hakurajapinta on **kokotekstihaku eikä fraasihaku**, ja se on
+relevanssijärjestetty. Hakusana `koulurakennus` palauttaa 181 osumaa joiden
+otsikoissa lukee vain "koulu"; `päiväkoti` antaa 2269 osumaa joissa on
+koiraturvallisuutta ja Ukrainan uutisia.
+
+Kun sivutus korjattiin (ks. alla), tulos kasvoi 82 → 1855 mutta otoksesta
+mitattuna **65 % oli kohinaa**. Tutkin ensin hypoteesin että aiempi katkaisu
+olisi vahingossa toiminut relevanssisuodattimena — **mittaus ei tukenut sitä**:
+kohina oli suunnilleen sama sijoilla 0–9, 10–29 ja 30–99. Ongelma ei ole
+syvyys vaan haun löysyys.
+
+Sääntö: **kun lähteen haku on löyhä, poissulkulista ei riitä.** Poissuljettavia
+aiheita on ääretön määrä, toimialan sanastoa ei. Vaaditaan positiivinen osuma
+rakentamiseen viittaavaan sanaan. Tulos 1855 → 780, kohina 65 % → 40 %.
+
+Positiivinen lista on myös vaarallinen jos se on vajaa: ensimmäinen versio
+pudotti Töölön kisahallin, koska listalla oli `peruskorja` muttei
+`perusparann` — kuntien vakiotermi. Vika löytyi vain koska kisahallia
+käytettiin nimettynä testitapauksena.
+
+**Hakusanat ja sisältösignaalit ovat eri asia.** Hakusanat määräävät mitä
+lähteestä *haetaan*, signaalit mitä *säilytetään*. Signaalilistalla oleva sana
+ei tuo yhtään uutta tiedotetta — tämä sekaantui kerran, kun `purkutyö` ja
+`investoi` olivat vain signaaleissa ja näyttivät siltä että ne olisi katettu.
+
+**Sivutusparametrit selvitetään kokeilemalla, ei olettamalla.** Poimija pyysi
+`count=20` ja uskoi saavansa 20. Rajapinta ei tunne `count`-parametria
+lainkaan, joten se ohitettiin hiljaa ja vastauksena tuli oletusmäärä 10 —
+0,7 % siitä mitä `totalCount` lupasi. Toimivat parametrit ovat `size` ja
+`page`. Sama vikaluokka kuin D-026:ssa: pyyntö onnistuu, vastaus näyttää
+täydeltä.
+
 ### D-028 – Valmistumista ei päätellä menneestä aikamuodosta
 Hankkeen valmistumista **ei voi päätellä kuvaustekstistä**. Mitattu 4412
 julkisesta hankkeesta: sana "valmistui"/"valmistunut" esiintyi 69:llä, ja

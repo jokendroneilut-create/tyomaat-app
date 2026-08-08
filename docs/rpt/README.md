@@ -179,3 +179,26 @@ tiedotetta.
 Tämä on sama vikaluokka kuin [D-026](../03_DECISIONS.md): pyyntö onnistuu,
 vastaus näyttää täydeltä, ja katkaisu on näkymätön. Vaatii oman
 selvityksensä — oikea sivutusparametri tai eri rajapinta.
+
+## Sivupolku: kattaisiko korjattu STT puuttuvia?
+
+Läpikäynnin aikana löytyi vika STT-poimijasta (ks. [D-029](../03_DECISIONS.md)),
+ja korjauksen jälkeen se hakee 883 tiedotetta aiemman 82:n sijaan. Oli siis
+syytä tarkistaa kattaisiko se osan puuttuvista.
+
+**Vastaus: ~18 hanketta 552:sta, eli 3 %.** Oikeita osumia mm. Rikhardinkadun
+kirjaston perusparannus, OSAO:n Kampus 2030, Muuran yhtenäiskoulu Vantaalla,
+Vaaralan varikon infraurakka ja Kelan pääkonttorin peruskorjaus. Tulokset ovat
+`stt-coverage.json`:issa.
+
+Vain **varmuus ≥ 0.90 kelpaa**: 0.80–0.89 -kaista tarkistettiin näytteellä ja
+se oli valtaosin väärin (*"Tapiolan kirkon piharakennusten peruskorjaus"* ->
+*"Tapiolan kirkko täyttää 60 vuotta"*).
+
+Ensimmäinen ajo tuotti 61 osumaa mutta oli kelvoton: esikarsinta laski
+sanapäällekkäisyyden ≥5 merkin sanoista, jolloin `espoo`, `helsinkiin` ja
+`peruskorjaus` hallitsivat ja malli sai eteensä pelkkiä saman kaupungin
+osumia. Karsinnasta poistettiin kaupunkien nimet ja rakentamisen yleissanasto.
+
+**Tämä ei vastaa siihen ovatko hankkeet ajankohtaisia** — se vaatii
+hankekohtaisen selvityksen, joka jatkuu yllä olevassa läpikäynnissä.
