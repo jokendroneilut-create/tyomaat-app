@@ -204,11 +204,45 @@ function textTrigrams(text: string | null | undefined): Set<string> {
   return grams
 }
 
+/*
+ * Yhden alkion muisti trigrammeille.
+ *
+ * findProjectMatchDetailed vertaa YHTÄ ehdokasta kaikkiin hankkeisiin, ja
+ * descriptionSimilarity saa ehdokkaan kuvauksen ensimmäisenä argumenttina.
+ * Se on siis sama merkkijono koko silmukan ajan, mutta tokenisoitiin
+ * uudelleen jokaiselle hankkeelle - 4412 kertaa yhtä ehdokasta kohden.
+ *
+ * Mitattu eristetysti, jokainen variantti omassa prosessissaan:
+ *
+ *   täysi                    14674 ms / ehdokas
+ *   hankkeen kuvaus pois     14159 ms   <- ei vaikutusta
+ *   EHDOKKAAN kuvaus pois     1924 ms   <- 7,6x
+ *
+ * Kustannus on siis kokonaan ehdokkaan puolella. Aiemmin päättelin syyksi
+ * kuvausten pituuden ja rajasin vertailun 1500 merkkiin; se ei nopeuttanut
+ * lainkaan, koska mittaus oli tehty samassa prosessissa peräkkäin ja
+ * myöhemmät variantit hyötyivät JIT-lämmittelystä. Ks. docs/rpt/README.md.
+ *
+ * Yksi alkio riittää eikä vie muistia: hankkeiden puoli vaihtuu joka
+ * kutsulla, ehdokkaan ei.
+ */
+let cachedTrigramText: string | null | undefined
+let cachedTrigrams: Set<string> | null = null
+
+function textTrigramsCached(text: string | null | undefined): Set<string> {
+  if (cachedTrigrams && text === cachedTrigramText) return cachedTrigrams
+
+  const grams = textTrigrams(text)
+  cachedTrigramText = text
+  cachedTrigrams = grams
+  return grams
+}
+
 function descriptionSimilarity(
   first: string | null | undefined,
   second: string | null | undefined
 ) {
-  const a = textTrigrams(first)
+  const a = textTrigramsCached(first)
   const b = textTrigrams(second)
 
   // Liian lyhyet kuvaukset eivät anna luotettavaa signaalia.
