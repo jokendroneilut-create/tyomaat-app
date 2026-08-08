@@ -149,6 +149,15 @@ describe("inferBuildingType", () => {
     )
   })
 
+  it("ei sekoita koulutusta kouluun", () => {
+    expect(
+      inferBuildingType(
+        "Hyvinkää Areena - uusi urheilu-, koulutus- ja tapahtumakeskus",
+        null
+      )
+    ).not.toBe("Koulu")
+  })
+
   it("palauttaa nullin kun tyyppiä ei tunnisteta", () => {
     expect(inferBuildingType("Peab investoi uuteen kalustoon", null)).toBeNull()
   })
@@ -171,6 +180,29 @@ describe("createCompanyEnricher — rooli", () => {
     const enrich = createCompanyEnricher({ publisher: "Varte" })
     const candidate = { name: "Kohde", source_url: null }
     expect(await enrich(candidate)).toBe(candidate)
+  })
+})
+
+describe("ingressirajaus", () => {
+  /*
+   * Mitatut virheet koko sivun lukemisesta: tilaajaksi poimiutui
+   * naapuriartikkelin yritys ja kohdetyypiksi lahipalvelu.
+   */
+  const LEAD = "Skanska ja Iin kunta ovat allekirjoittaneet urakkasopimuksen uudesta koulusta. "
+  const TAIL = " ".repeat(800) + "Skanska rakentaa Garminille toimitilat Espooseen."
+
+  it("ei poimi tilaajaa sivun lopun tiedotelistasta", () => {
+    expect(extractClientFromText(null, (LEAD + TAIL).slice(0, 700))).not.toBe("Garmin")
+  })
+
+  it("ei paattele kohdetyyppia lahipalvelumaininnasta", () => {
+    const body =
+      "Asunto Oy Helsingin Hellikkiin valmistuu 34 uutta kotia." +
+      " ".repeat(800) +
+      "Lahella on paivakoti ja koulu."
+    expect(inferBuildingType("Pohjola Rakennus rakentaa 34 uutta Hitas-kotia", body)).not.toBe(
+      "Paivakoti"
+    )
   })
 })
 

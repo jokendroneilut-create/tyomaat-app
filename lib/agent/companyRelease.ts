@@ -89,7 +89,11 @@ const BUILDING_TYPES: [RegExp, string][] = [
   [/sairaal/i, "Sairaala"],
   [/kulttuurikesku|teatteri|museo|konserttital/i, "Kulttuurirakennus"],
   [/päiväkoti|päiväkodi/i, "Päiväkoti"],
-  [/\bkoulu|lukio|kampus|oppilaitos/i, "Koulu"],
+  /*
+   * "koulutus" ei ole koulu. Mitattu: "Hyvinkää Areena - uusi urheilu-,
+   * koulutus- ja tapahtumakeskus" sai tyypin "Koulu".
+   */
+  [/\bkoulu(?!tus)|lukio|kampus|oppilaitos/i, "Koulu"],
   [/kirjasto/i, "Kirjasto"],
   [/uimahalli|liikuntahalli|jäähalli|urheiluhalli/i, "Liikuntapaikka"],
   [/hoivakoti|palvelutalo|asumisyksik|senioritalo/i, "Hoivakoti"],
@@ -113,7 +117,14 @@ const BUILDING_TYPES: [RegExp, string][] = [
  * asiakassuodatusta väärin, tyhjä ei ohjaa mihinkään.
  */
 export function inferBuildingType(title: string, body: string | null): string | null {
-  for (const source of [title, body]) {
+  /*
+   * Rungosta katsotaan vain INGRESSI, ei koko sivua. Tiedotteen loppu
+   * kuvaa ympäristöä ja luettelee muita tiedotteita, ja niistä poimittu
+   * sana on lähes aina väärä. Mitattu: asuntokohteet "Niittykummun
+   * Neuvokas" ja "34 Hitas-kotia Etelä-Haagaan" saivat tyypin "Päiväkoti",
+   * koska teksti mainitsi lähipalvelut ("lähellä on päiväkoti ja koulu").
+   */
+  for (const source of [title, body?.slice(0, LEAD_LENGTH) ?? null]) {
     if (!source) continue
     for (const [pattern, label] of BUILDING_TYPES) {
       if (pattern.test(source)) return label
@@ -129,6 +140,23 @@ export function inferBuildingType(title: string, body: string | null): string | 
  * löydy.
  */
 const CRUMB_MARKERS = ["You are here:", "Olet tässä:", "Etusivu /"]
+
+/*
+ * Sivun alusta poistettava kalusto. Nämä eivät ole navigaatioelementteinä
+ * vaan tekstinä, joten selektoripoisto ei niitä tavoita.
+ */
+const LEADING_JUNK =
+  /^(skip to content|mene sisältöön|siirry sisältöön|hyppää sisältöön|report this content)\s*/i
+
+/*
+ * Ingressin pituus. Tiedotteen kärki kertoo mistä hankkeessa on kyse ja
+ * kuka sen tilasi; loppuosa kuvaa ympäristöä, siteeraa johtajia ja
+ * luettelee muita tiedotteita. Osapuolet ja kohdetyyppi luetaan siksi vain
+ * tästä osasta - koko sivulta luettuna tuloksena oli naapuriartikkelin
+ * yritys ("Garmin" Skanskan tiedotteessa) tai lähipalvelu ("päiväkoti"
+ * asuntokohteessa).
+ */
+export const LEAD_LENGTH = 700
 
 export function extractReleaseBody(html: string): string | null {
   const $ = cheerio.load(html)
@@ -157,7 +185,10 @@ export function extractReleaseBody(html: string): string | null {
    * otsikoita - leikataan pois, jottei väärä kaupunki tai päivämäärä
    * poimiudu naapuriartikkelista.
    */
-  text = text.split(/sinua saattaisi kiinnostaa|lue myös|muita uutisia/i)[0].trim()
+  text = text
+    .split(/sinua saattaisi kiinnostaa|lue myös|muita uutisia|muut tiedotteet|aiheeseen liittyvät/i)[0]
+    .trim()
+    .replace(LEADING_JUNK, "")
 
   return text.length >= 120 ? text.slice(0, 4000) : null
 }
@@ -215,9 +246,16 @@ export function createCompanyEnricher({
      * vain jäi jäsentämättä. Poikkeus on aito omaperusteinen tuotanto,
      * jonka teksti kertoo.
      */
-    const parties = resolveParties(publisher, candidate.name, body)
+    /*
+     * Osapuolet luetaan vain ingressistä. Koko sivulta luettuna tilaajaksi
+     * poimiutui naapuriartikkelin yritys - mitattu "Garmin" Skanskan
+     * koulu-urakassa ja "Robonic" Hartelan hoivahankkeessa, molemmat sivun
+     * lopun tiedotelistasta.
+     */
+    const lead = body.slice(0, LEAD_LENGTH)
+    const parties = resolveParties(publisher, candidate.name, lead)
     const client = parties.builder ? parties.developer : null
-    const ownDevelopment = OWN_DEVELOPMENT.test(body)
+    const ownDevelopment = OWN_DEVELOPMENT.test(lead)
 
     const developer =
       role === "developer"

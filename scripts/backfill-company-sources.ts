@@ -18,6 +18,7 @@
  *   npx tsx scripts/backfill-company-sources.ts
  *   npx tsx scripts/backfill-company-sources.ts --apply
  *   npx tsx scripts/backfill-company-sources.ts --apply --only=srv,varte
+ *   npx tsx scripts/backfill-company-sources.ts --include-rejected --show --limit=50
  *   npx tsx scripts/backfill-company-sources.ts --apply --include-rejected
  *
  * Oletuksena hylättyjä rivejä ei kosketa: ne on jo katselmoitu, eikä
@@ -28,6 +29,8 @@ import { readFileSync } from "node:fs"
 
 const APPLY = process.argv.includes("--apply")
 const INCLUDE_REJECTED = process.argv.includes("--include-rejected")
+/* --show tulostaa jokaisen rivin, jotta lopputuloksen voi arvioida silmällä. */
+const SHOW = process.argv.includes("--show")
 const ONLY = process.argv
   .find((a) => a.startsWith("--only="))
   ?.split("=")[1]
@@ -147,6 +150,16 @@ async function main() {
         if (!md.building_type && enriched.property_type) stats.tyyppi++
         if ((!md.developer && enriched.developer) || (!md.builder && enriched.builder)) {
           stats.osapuoli++
+        }
+
+        if (SHOW) {
+          console.log(`\n[${source}${row.status === "rejected" ? " · HYLÄTTY" : ""}] ${row.title}`)
+          console.log(
+            `  ${md.phase_hint ?? "-"} -> ${enriched.phase}` +
+              ` · ${enriched.property_type ?? "tyyppi ?"}` +
+              ` · ${enriched.developer ?? "-"} / ${enriched.builder ?? "-"}`
+          )
+          console.log(`  ${String(enriched.description).slice(0, 160).replace(/\s+/g, " ")}...`)
         }
 
         if (!APPLY) return
