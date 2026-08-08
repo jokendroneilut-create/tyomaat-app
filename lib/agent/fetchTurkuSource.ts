@@ -1,4 +1,5 @@
 import { extractStreetAddress } from "./extractStreetAddress"
+import { inferBuildingType } from "./buildingType"
 
 /*
  * Turun päätösjärjestelmä. Neljäs alustaperhe: oma React-sovellus, ei
@@ -183,7 +184,7 @@ export async function fetchTurkuPaatoksetSource() {
             extractStreetAddress(title) ?? extractStreetAddress(description),
           developer: "Turun kaupunki",
           permit_number: String(pykala?.tktviiteId ?? meetingId),
-          property_type: null,
+          property_type: inferBuildingType(title, description),
           phase: /urak/i.test(title) ? "Sopimus myönnetty" : "Suunnittelussa",
           business_value: "high",
           source_url: `https://paatokset.turku.fi/poytakirja/${meetingId}`,

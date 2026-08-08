@@ -1,4 +1,5 @@
 import { extractStreetAddress } from "./extractStreetAddress"
+import { inferBuildingType } from "./buildingType"
 import { stripHtml } from "./stripHtml"
 
 /*
@@ -194,7 +195,7 @@ export async function fetchHelsinkiPaatoksetSource() {
          * kelpaa tunnisteeksi täsmäytyksessä.
          */
         permit_number: issueId,
-        property_type: null,
+        property_type: inferBuildingType(subject, description),
         phase: inferPhase(subject),
         business_value: "high",
         source_url: relativeUrl.startsWith("http")

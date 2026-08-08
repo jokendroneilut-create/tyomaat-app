@@ -1,4 +1,5 @@
 import { extractStreetAddress } from "./extractStreetAddress"
+import { inferBuildingType } from "./buildingType"
 
 /*
  * Dynasty-päätösjärjestelmä (Innofactor), käytössä kahdeksalla kunnalla
@@ -131,10 +132,16 @@ export type DynastyConfig = {
 }
 
 /*
- * Dynasty tarjoilee RSS:n latin1-koodattuna eikä UTF-8:na, joten ääkköset
- * hajoavat jos vastaus luetaan tekstinä. Puretaan tavuista.
+ * Dynasty tarjoilee RSS:n ja asiasivun ERI KOODAUKSELLA samalta palvelimelta:
+ * RSS on iso-8859-1 (kuten XML-esittelyssä lukee), asiasivu UTF-8 (kuten
+ * vastauksen content-type kertoo). Koodaus luetaan siksi vastauksesta eikä
+ * oleteta.
+ *
+ * Ennen tätä molemmat purettiin latin1:nä, jolloin asiasivun ääkköset
+ * hajosivat: "Liitteenä" -> "LiitteenÃ¤". Vika koski KAIKKIA 73 Dynasty-
+ * ehdokasta - kuvaus oli lukukelvoton ihmiselle ja täsmäytykselle.
  */
-async function fetchLatin1(url: string): Promise<string | null> {
+export async function fetchDecoded(url: string, fallback = "utf-8"): Promise<string | null> {
   try {
     const res = await fetch(url, {
       cache: "no-store",
@@ -144,16 +151,25 @@ async function fetchLatin1(url: string): Promise<string | null> {
       },
     })
     if (!res.ok) return null
-    return new TextDecoder("iso-8859-1").decode(await res.arrayBuffer())
+
+    const buffer = await res.arrayBuffer()
+    const declared = res.headers.get("content-type")?.match(/charset=([\w-]+)/i)?.[1]
+
+    try {
+      return new TextDecoder(declared ?? fallback).decode(buffer)
+    } catch {
+      /* Tuntematon koodausnimi: puretaan oletuksella eikä kaadeta ajoa. */
+      return new TextDecoder(fallback).decode(buffer)
+    }
   } catch {
     return null
   }
 }
 
 /*
- * RSS:n CDATA-sisalto on itsekin entiteettikoodattua. Kolme perusentiteettia
- * ei riita: mitattu "Tikkarinne 9 keittion peruskorjaus &ndash;
- * hankesuunnitelman ja kustannusarvion hyvaksyminen" (Joensuu), jossa
+ * RSS:n CDATA-sisalto ja asiasivun HTML ovat itsekin entiteettikoodattuja.
+ * Kolme perusentiteettia ei riita: mitattu "Tikkarinne 9 keittion
+ * peruskorjaus &ndash; hankesuunnitelman hyvaksyminen" (Joensuu), jossa
  * purkamaton &ndash; jai hankkeen nimeen ja siita edelleen tasmaytykseen.
  */
 const RSS_ENTITIES: Record<string, string> = {
@@ -206,13 +222,21 @@ export function isConstructionSubject(subject: string): boolean {
  * alkaa vasta valikoiden jälkeen, joten alku katkaistaan tunnetusta
  * vakiotekstistä.
  */
-function extractItemText(html: string): string | null {
+export function extractItemText(html: string): string | null {
   const text = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
+    /*
+     * Numeeriset entiteetit purettava nimettyjen lisäksi. Dynasty käyttää
+     * runsaasti sitkeää välilyöntiä muodossa &#xa0;, ja purkamattomana se
+     * jäi kuvaukseen sellaisenaan: "osan mukaisena. &#xa0; Liitteenä".
+     */
+    .replace(/&([a-zA-Z]+);/g, (m, name) => RSS_ENTITIES[name] ?? m)
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    /* Puretut sitkeät välilyönnit tavallisiksi. */
+    .replace(/ /g, " ")
     .replace(/\s+/g, " ")
     .trim()
 
@@ -226,7 +250,7 @@ export function createDynastyFetcher(config: DynastyConfig) {
   return async function fetchDynasty() {
     const base =
       config.cgiBase ?? `https://${config.host}.oncloudos.com/cgi/DREQUEST.PHP`
-    const rss = await fetchLatin1(`${base}?page=rss/meetingitems&show=${RSS_ITEMS}`)
+    const rss = await fetchDecoded(`${base}?page=rss/meetingitems&show=${RSS_ITEMS}`)
     if (!rss) return []
 
     const cutoff = new Date()
@@ -266,7 +290,7 @@ export function createDynastyFetcher(config: DynastyConfig) {
       let description: string | null = null
       if (detailFetches < MAX_DETAIL_FETCHES_PER_RUN) {
         detailFetches++
-        const html = await fetchLatin1(link)
+        const html = await fetchDecoded(link)
         if (html) description = extractItemText(html)
       }
 
@@ -285,7 +309,7 @@ export function createDynastyFetcher(config: DynastyConfig) {
         location: extractStreetAddress(subject) ?? extractStreetAddress(description),
         developer: config.developer,
         permit_number: itemId,
-        property_type: null,
+        property_type: inferBuildingType(subject, description),
         phase: /urak/i.test(subject) ? "Sopimus myönnetty" : "Suunnittelussa",
         business_value: "high",
         source_url: link,
