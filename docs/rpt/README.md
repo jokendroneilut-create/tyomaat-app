@@ -503,17 +503,45 @@ se on jo mitattu toimivaksi kuuden kunnan aineistolla.
 
 ---
 
-# Turku — SPA, kartoitus kesken
+# Turku — rajapinta löytyi, haku kesken
 
-`paatokset.turku.fi` palauttaa **jokaiselle polulle saman 622 tavun sivun**:
-etusivu, `/api/meetings`, `/rss` ja keksityt polut antavat identtisen
-vastauksen. Kyseessä on JavaScript-sovelluksen kuori, eikä alustaa voi
-tunnistaa HTML:stä (ei Drupalia, Dynastya, CaseMia eikä Twebia).
+`paatokset.turku.fi` on React-sovellus jonka kuori on 622 tavua. Selain
+jumittui sivulla (navigointi aikakatkaisi 300 s), joten rajapinta
+etsittiin JS-nipusta — ja se löytyi sieltä:
 
-Rajapinta löytyy samalla menetelmällä kuin Helsingissä ja Tampereella:
-avaa sivu selaimessa, asenna `fetch`-tallennin, tee haku ja lue kutsut.
-Se on nyt toiminut kahdesti kahdesta, ja molemmilla kerroilla arvailu
-epäonnistui ensin.
+```
+base:  https://paatokset.turku.fi/api
+```
+
+Nippu paljasti myös sovelluksen reitit: `/haku`, `/toimielimet`,
+`/asiaryhmat`, `/poytakirja/:id`.
+
+## Toimivat päätepisteet
+
+| polku | tulos |
+|---|---|
+| `/api/toimielimet` | 200 JSON, 6,8 kt — kaupunginvaltuusto, kaupunginhallitus, lautakunnat, seudulliset lautakunnat, vaikuttajaryhmät, lakkautetut |
+| `/api/asiaryhmat` | 200 JSON, taulukko 15 asiaryhmää |
+| `/api/haku` | **500** `{"message":"Error fetching data"}` |
+
+Hakupäätepiste on olemassa mutta palauttaa saman 500:n parametreista
+riippumatta (kokeiltu `q`, `s`, `hakusana`, `teksti`, `search`, `query`,
+`text`, `term` sekä ilman parametria). POST antaa 404, joten reitti on
+GET-only.
+
+## Seuraava askel
+
+Kaksi vaihtoehtoa:
+
+1. **Selain uudelleen.** Sivu jumittui kerran, mutta menetelmä on
+   toiminut kahdesti kahdesta ja se näyttäisi tarkan kutsun. Kannattaa
+   yrittää uudella välilehdellä.
+2. **Rakenna toimielinten kautta.** `/api/toimielimet` toimii jo, joten
+   ketju toimielin -> pöytäkirja (`/poytakirja/:id`) -> asiat on
+   todennäköisesti auki ilman hakua. Tämä ei vaadi selainta lainkaan.
+
+Vaihtoehto 2 on todennäköisesti nopeampi, koska hakupäätepiste voi olla
+myös rikki palvelimen päässä eikä vain väärin kutsuttu.
 
 # Tilanne alustoittain
 
