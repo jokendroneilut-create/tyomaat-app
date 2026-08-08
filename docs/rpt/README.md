@@ -665,6 +665,87 @@ tapaus: sen RSS:ssä on 206 tuoretta asiaa mutta pelkkiä otsikoita kuten
 molemmat jäljellä olevat alustaperheet (Tweb, M-Files) esiintyvät vain
 kielletyillä sivustoilla.
 
+---
+
+# Uusintamittaus: sulkiko kuntien päätöslähteiden rakentaminen aukon?
+
+Kun yksitoista kaupunkia oli katettu, 552 puuttuvaa ajettiin uudelleen samalla
+kaksivaiheisella menetelmällä. Skripti on nyt tallessa
+(`scripts/rpt-rematch.mjs`) — alkuperäinen oli väliaikaistiedosto ja katosi,
+minkä vuoksi menetelmä piti rakentaa uudelleen. Se osoittautui mittauksen
+tärkeimmäksi havainnoksi.
+
+## Otsikkoluku on 165/552, ja se on väärä
+
+Ajo löysi 165 osumaa varmuudella ≥ 0,7. Luku ei kelpaa, ja syy näkyy vasta kun
+osumat jaetaan sen mukaan **milloin vastapuolen rivi on luotu**:
+
+| osumatyyppi | kpl | rivi luotu |
+|---|---|---|
+| hanke | 70 | **kaikki ennen alkuperäistä mittausta** (2026-02…2026-07) |
+| katselmointijono | 68 | ennen mittausta |
+| katselmointijono | 27 | mittauksen jälkeen |
+
+**Ne 70 hanketta ovat menetelmäharhaa, eivät edistystä.** Alkuperäisellä ajolla
+oli täsmälleen sama data käytössään ja se sanoi "ei osumaa". Uusi
+toteutukseni sanoo "osuma". Pistokoe kertoo kumpi on oikeassa:
+
+```
+0.90  "Hotelli Veska Pirkkalaan"        -> "Pohjolankatu 31 ja 33, Hotelli Kaupin alue"
+0.95  "Toimistotalo Kristiinankatu 2"   -> "...Kristiinankatu 5-7 ja Linnankatu 15-17"
+0.70  "Kerrostalo ja toimitilat Otokylä ry Ouluun"      -> "Kerrostalo Ouluun"
+0.70  "Kerrostalon saneeraus ASO Peltolankaari 13"      -> "Kerrostalo Ouluun"
+0.70  "Kerrostalon saneeraus ASO Peltolankaari 3"       -> "Kerrostalo Ouluun"
+```
+
+Eri hotelli eri kunnassa, eri katuosoite, ja yksi geneerinen *"Kerrostalo
+Ouluun"* imee kolme eri RPT-hanketta. Tämä on sama vikaluokka jonka
+alkuperäinenkin ajo raportoi ("22 tapausta, joissa useampi RPT-nimi osui samaan
+hankkeeseemme") — nyt vain isompana, koska esikarsintani päästää mukaan
+kaava- ja kiinteistörivit, jotka osuvat osoitteella.
+
+**Opetus: täsmäytysajoa ei voi verrata toiseen, jos menetelmä on rakennettu
+uudelleen välissä.** Mittausskripti on osa mittausta. Siksi se on nyt
+committoitu eikä scratchpadissa.
+
+## Mikä luku kelpaa: 21
+
+Ainoa vertailukelpoinen tulos saadaan kysymällä eri kysymys — **mistä lähteestä
+osuma tuli**. Katselmointijonon 95 osumasta kuntien päätöslähteistä on 21:
+
+| kunta | osumaa | kaupungin puuttuvista |
+|---|---|---|
+| Helsinki | 17 | 67 |
+| Espoo | 3 | 66 |
+| Kuopio | 1 | 29 |
+
+**Helsingin lähde on kattanut neljäsosan Helsingin aukosta.** Se on koko
+linjan todiste: yksi kunnan päätösjärjestelmä, yksi jäsentäjä, 25 % kaupungin
+puuttuvista hankkeista. Loput 74 jono-osumaa tulevat lähteistä jotka olivat jo
+tuotannossa ennen tätä työtä (kaavoitus, Hilma, yritysten tiedotteet, STT).
+
+**Kaikki 21 ovat yhä tilassa `new`** — katselmoimatta. Lähde on siis tuonut ne
+sisään, mutta ne eivät vielä näy asiakkaalle.
+
+## Kahdeksan uutta kuntaa: nolla, ja se on odotettua
+
+Jyväskylä, Rovaniemi, Pori, Joensuu, Kouvola ja Porvoo eivät tuottaneet
+yhtäkään osumaa. Niiden SQL ajettiin vasta äsken eivätkä lähteet ole vielä
+pyörineet kertaakaan. Mittaus on siis liian aikainen niiden osalta — se
+kannattaa toistaa kun jokainen lähde on ajanut muutaman kerran.
+
+## Mitä tästä seuraa
+
+1. **Suunta on oikea, mutta todiste on toistaiseksi yhden kaupungin varassa.**
+   Helsinki toimii. Espoo ja Kuopio ovat Dynastyn RSS:n varassa ja tuottavat
+   selvästi vähemmän — se kannattaa selvittää ennen kuin perheeseen lisätään
+   lisää kuntia.
+2. **Pullonkaula on siirtymässä keräämisestä katselmointiin.** 21 osumaa
+   odottaa jonossa. Kerääminen ei enää ole se mikä estää hanketta näkymästä.
+3. **Uusintamittaus vasta kun uudet lähteet ovat ajaneet.** Aja
+   `node scripts/rpt-rematch.mjs` uudelleen; menetelmä on nyt vakio, joten
+   seuraava vertailu on aito.
+
 ## Mitä suodatuksesta opittiin samalla
 
 CaseM:n haku on **kokotekstihaku**, joten hakusana osuu asiakirjan runkoon eikä

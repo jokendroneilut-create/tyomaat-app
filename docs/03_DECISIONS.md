@@ -5,6 +5,29 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-033 – Mittausskripti on osa mittausta
+RPT-täsmäytys ajettiin uudelleen sen selvittämiseksi, sulkiko kuntien
+päätöslähteiden rakentaminen aukon. Alkuperäinen skripti oli väliaikaistiedosto
+ja oli kadonnut, joten menetelmä rakennettiin uudelleen kuvauksen perusteella.
+
+Tulos näytti hyvältä — 165 osumaa 552:sta, kun ensimmäinen ajo löysi nolla —
+kunnes osumat jaettiin sen mukaan **milloin vastapuolen rivi oli luotu**.
+Kaikki 70 hanke-osumaa osuivat riveihin jotka olivat olleet kannassa jo
+alkuperäisen mittauksen aikaan. Sama data, eri vastaus: ero tuli menetelmästä,
+ei uudesta tiedosta. Pistokoe vahvisti että uusi menetelmä oli löyhempi — eri
+hotelli eri kunnassa, eri katuosoite, ja yksi geneerinen "Kerrostalo Ouluun"
+kolmen eri RPT-hankkeen osumana.
+
+Sääntö: **ennen/jälkeen-vertailu vaatii että menetelmä on bittiä myöten sama.**
+Jos mittausskripti ei ole versionhallinnassa, vertailua ei voi tehdä — luku
+mittaa silloin skriptin muutosta, ei maailman muutosta. `scripts/rpt-rematch.mjs`
+on siksi committoitu.
+
+Toinen sääntö samasta ajosta: **kun luku yllättää positiivisesti, etsi ensin
+selitys joka ei ole edistystä.** Luontiaikajako oli halpa tarkistus ja se kumosi
+otsikkoluvun kokonaan. Vertailukelpoiseksi jäi 21 osumaa, jotka pystyttiin
+osoittamaan kuntien päätöslähteistä tulleiksi.
+
 ### D-032 – Alustaa ei pääteltä yhdestä osoitteesta
 Jyväskylä oli kirjattu Tweb-kunnaksi ja **viidenneksi alustaperheeksi**, koska
 kaupungilta löytyi Tweb-asennus (`julkinen.jkl.fi`). Päätelmä oli väärä: samat
