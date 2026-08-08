@@ -306,6 +306,53 @@ const SEARCH_TERMS = [
 ]
 
 // Kevyt poissulku: tiedote joka on selvästi talous-/hallintouutinen, ei hanke.
+/*
+ * Positiivinen vaatimus: tekstissä on oltava rakentamiseen viittaava sana.
+ *
+ * STT:n haku on löyhä kokotekstihaku eikä fraasihaku - mitattu: hakusana
+ * "koulurakennus" antaa 181 osumaa joiden otsikoissa lukee vain "koulu", ja
+ * "päiväkoti" antaa 2269 osumaa joissa on mm. koiraturvallisuutta. Kun haku
+ * sivutettiin oikein, tulos kasvoi 82 -> 1855 mutta otoksesta mitattuna
+ * 65 % oli kohinaa: nimitysuutisia, tutkimuksia, tapahtumia.
+ *
+ * Pelkkä EXCLUDE-lista ei riitä tällaista kirjoa vastaan - poissuljettavia
+ * aiheita on ääretön määrä, rakentamisen sanastoa ei. Siksi vaaditaan
+ * positiivinen osuma.
+ */
+const CONSTRUCTION_SIGNALS = [
+  "rakenn", // rakennus, rakentaa, rakennetaan, rakennuttaja, rakenteilla
+  "urakka",
+  "urakoi",
+  "urakan",
+  "peruskorja",
+  /*
+   * "perusparannus" on kuntien vakiotermi peruskorjaukselle - Helsinki
+   * käyttää sitä johdonmukaisesti. Puuttuminen pudotti mitatusti Töölön
+   * kisahallin, joka on Helsingin RPT-listalla sijalla 13.
+   */
+  "perusparann",
+  "tarveselvit",
+  "hankesuunnitel",
+  "korjaushank",
+  "kunnostu",
+  "saneera",
+  "laajenn",
+  "uudisko",
+  "uudisra",
+  "investoi",
+  "purkutyö",
+  "valmistuu",
+  "valmistui",
+  "harjannostajais",
+  "kaavamuutos",
+  "asemakaav",
+  "tontin",
+  "tontille",
+  "kiinteistökehit",
+  "toimitila",
+  "työmaa",
+]
+
 const EXCLUDE_KEYWORDS = [
   "osavuosikatsaus",
   "tilinpäätös",
@@ -329,20 +376,39 @@ const COMPLETED_KEYWORDS = [
   "avattiin",
 ]
 
-export async function fetchSttHakuSource() {
-  const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 12)
+/*
+ * Yhden hakusanan tiedotteet, sivutettuna tuoreusrajaan asti.
+ *
+ * Aiemmin haettiin `count=20` ilman sivutusta. STT ei tunne `count`-
+ * parametria lainkaan, joten se ohitettiin hiljaa ja vastauksena tuli
+ * oletusmäärä 10. Mitattu: hakusana "peruskorjaus" ilmoittaa
+ * `totalCount: 1397` ja palautti meille 10 - eli noin 0,7 %. Noin 34
+ * hakusanalla katoimme korkeintaan ~340 tiedotetta.
+ *
+ * Oikeat parametrit ovat `size` (testattu toimivaksi 500:aan asti) ja
+ * `page` (0-alkuinen). Neljä 50 kappaleen sivua tuotti 200 eri tiedotetta
+ * ilman yhtään päällekkäisyyttä, eli sivutus on johdonmukainen.
+ *
+ * Sama vikaluokka kuin YVA-haussa (D-026): pyyntö onnistuu, vastaus näyttää
+ * täydeltä, ja katkaisu on näkymätön. Siksi tässä pysähdytään
+ * tuoreusrajaan eikä kiinteään määrään.
+ */
+const STT_PAGE_SIZE = 100
+const STT_MAX_PAGES = 10
 
-  const results: any[] = []
-  const seen = new Set<string>()
+async function fetchTermReleases(
+  term: string,
+  cutoffDate: Date
+): Promise<any[]> {
+  const collected: any[] = []
 
-  for (const term of SEARCH_TERMS) {
+  for (let page = 0; page < STT_MAX_PAGES; page++) {
     let data: any = null
     try {
       const res = await fetch(
         `https://www.sttinfo.fi/public-website-api/releases?search=${encodeURIComponent(
           term
-        )}&count=20&language=fi`,
+        )}&language=fi&size=${STT_PAGE_SIZE}&page=${page}`,
         {
           cache: "no-store",
           headers: {
@@ -351,13 +417,41 @@ export async function fetchSttHakuSource() {
           },
         }
       )
-      if (!res.ok) continue
+      if (!res.ok) break
       data = await res.json()
     } catch {
-      continue
+      break
     }
 
-    for (const release of data?.releases ?? []) {
+    const releases = data?.releases ?? []
+    if (releases.length === 0) break
+
+    collected.push(...releases)
+
+    /*
+     * Tulokset ovat uusimmasta vanhimpaan, joten sivun viimeinen on sen
+     * vanhin. Kun se ylittää tuoreusrajan, loput sivut ovat vielä
+     * vanhempia eikä niitä tarvitse hakea.
+     */
+    const oldest = releases[releases.length - 1]?.date
+    if (oldest && new Date(oldest) < cutoffDate) break
+    if (releases.length < STT_PAGE_SIZE) break
+  }
+
+  return collected
+}
+
+export async function fetchSttHakuSource() {
+  const cutoffDate = new Date()
+  cutoffDate.setMonth(cutoffDate.getMonth() - 12)
+
+  const results: any[] = []
+  const seen = new Set<string>()
+
+  for (const term of SEARCH_TERMS) {
+    const releases = await fetchTermReleases(term, cutoffDate)
+
+    for (const release of releases) {
       const id = String(release?.id ?? "")
       if (!id || seen.has(id)) continue
 
@@ -377,6 +471,7 @@ export async function fetchSttHakuSource() {
 
       const haystack = `${title} ${description ?? ""}`.toLowerCase()
       if (EXCLUDE_KEYWORDS.some((k) => haystack.includes(k))) continue
+      if (!CONSTRUCTION_SIGNALS.some((k) => haystack.includes(k))) continue
 
       seen.add(id)
 
