@@ -737,9 +737,8 @@ kannattaa toistaa kun jokainen lähde on ajanut muutaman kerran.
 ## Mitä tästä seuraa
 
 1. **Suunta on oikea, mutta todiste on toistaiseksi yhden kaupungin varassa.**
-   Helsinki toimii. Espoo ja Kuopio ovat Dynastyn RSS:n varassa ja tuottavat
-   selvästi vähemmän — se kannattaa selvittää ennen kuin perheeseen lisätään
-   lisää kuntia.
+   Helsinki toimii. Espoon ja Kuopion pienempi osumamäärä EI ole merkki
+   heikommasta lähteestä — ks. alla.
 2. **Jono ei ole pullonkaula.** 21 osumaa odottaa katselmointia, ja jono
    kasvoi kerralla paljon kun Helsingin lähde tuli tuotantoon. Purkunopeus
    kuitenkin skaalautuu määrän mukana, joten jonon pituus ei ole syy hidastaa
@@ -747,6 +746,42 @@ kannattaa toistaa kun jokainen lähde on ajanut muutaman kerran.
 3. **Uusintamittaus vasta kun uudet lähteet ovat ajaneet.** Aja
    `node scripts/rpt-rematch.mjs` uudelleen; menetelmä on nyt vakio, joten
    seuraava vertailu on aito.
+
+## Miksi Espoo ja Kuopio tuottivat vähemmän: ne ovat ajaneet kerran
+
+Osumamäärien vertailu johti harhaan, koska lähteet ovat eri-ikäisiä. Todellinen
+tuotos katselmointijonossa:
+
+| lähde | ehdokkaita | ajoja | RPT-osumaa | osumaa / ehdokas |
+|---|---|---|---|---|
+| helsinki_paatokset | 848 | monta (kehitysajoja 9 vrk) | 17 | **2,0 %** |
+| espoo_paatokset | 18 | **1** | 3 | **16,7 %** |
+| kuopio_paatokset | 13 | **1** | 1 | **7,7 %** |
+| tuusula_paatokset | 17 | 1 | 0 | — |
+| kirkkonummi_paatokset | 13 | 1 | 0 | — |
+| tornio / savonlinna | 6 / 6 | 1 | 0 | — |
+
+**Ehdokasta kohden Dynasty on Ahjoa selvästi tarkempi**, ei heikompi. Espoo
+tuotti kolme RPT-osumaa kahdeksastatoista ehdokkaasta; Helsinki tarvitsi 848
+ehdokasta seitsemäätoista varten. Ero absoluuttisissa luvuissa on
+ajokertojen ero, ei lähteen laatu.
+
+Dynasty myös toimittaa täsmälleen sen mitä ennen käyttöönottoa mitattiin:
+Tuusula 17→17, Kuopio 13→13, Kirkkonummi 13→13, Tornio 6→6, Savonlinna 7→6.
+Mikään ei ole rikki.
+
+`discovery_sources.run_count` on **1 jokaisella lähteellä, myös Helsingillä** —
+Helsingin 848 ehdokasta syntyivät kehityksen aikaisissa käsiajoissa jotka eivät
+kirjautuneet. Kirjanpito ei siis kerro lähteen todellista historiaa.
+
+**Kaksi asiaa jäi auki:**
+
+* **Tampere:** mitattu 10 ehdokasta, jonossa 1. Yhdeksän ei ole
+  `source_documents`-taulussa eikä jonossa. Todennäköisin selitys on että ne
+  täsmäytyivät olemassa oleviin hankkeisiin eivätkä luoneet uutta ehdokasta,
+  mutta sitä ei ole todennettu.
+* **Turku:** rekisteröity, mutta `run_count = 0` — ei ole ajanut kertaakaan.
+  Kannattaa tarkistaa että se lähtee seuraavassa syklissä.
 
 ## Mitä suodatuksesta opittiin samalla
 
