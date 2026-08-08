@@ -5,6 +5,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-035 – Ingressi kertoo hankkeen, loppuosa kertoo ympäristön
+Yrityslähteiden täydennys luki aluksi koko tiedotesivun. Se tuotti kaksi
+virhettä, jotka näkyivät vasta kun 50 rivin otos katsottiin ennen kirjoitusta:
+
+```
+tilaaja "Garmin"      <- Skanskan koulu-urakka Iin kunnalle
+tilaaja "Robonic"     <- Hartelan hoivahanke Attendolle
+tyyppi  "Päiväkoti"   <- asuntokohde, teksti mainitsi lähipalvelut
+```
+
+Yritysten nimet tulivat sivun lopun tiedotelistasta, kohdetyyppi lauseesta
+"lähellä on päiväkoti ja koulu". Kummassakaan tapauksessa lähde ei ollut
+rikki — luin väärää osaa sivusta.
+
+Sääntö: **tiedotteen kärki kertoo mistä hankkeessa on kyse ja kuka sen
+tilasi; loppuosa kuvaa ympäristöä, siteeraa johtajia ja luettelee muita
+tiedotteita.** Osapuolet ja kohdetyyppi luetaan ensimmäisestä 700 merkistä
+(`LEAD_LENGTH`), kuvaukseksi jää koko teksti.
+
+Yleisempi opetus: **kun täydennysajo koskee satoja rivejä, katso otos ennen
+kuin kirjoitat.** Otos maksoi yhden ajon ja esti väärän tiedon 745 riville.
+
+### D-034 – Julkaisijan rooli on osa lähteen määrittelyä
+Yrityslähteiden jaettu täydennys (`lib/agent/companyRelease.ts`) merkitsi
+ensin julkaisijan aina **urakoitsijaksi**, koska valtaosa lähteistä on
+rakennusliikkeitä. Se olisi kirjannut Y-Säätiön ja Asuntosäätiön
+urakoitsijoiksi, vaikka ne ovat rakennuttajia: ne tiedottavat omista
+hankkeistaan, eivät saamistaan urakoista.
+
+Rooli on siksi lähteen ominaisuus (`role: "builder" | "developer"`), ei
+pääteltävä asia. Neljä lähdettä on rakennuttajarooleja: asuntosaatio,
+ysaatio, espoon_asunnot, kas_asunnot.
+
+**Rakennuttaja jää tyhjäksi kun tilaajaa ei saada tekstistä.** Julkaisijan
+kirjaaminen molempiin väittäisi hanketta omaperusteiseksi, ja se on väärä
+tieto silloin kun tilaaja vain jäi jäsentämättä. Poikkeus on aito
+omaperusteinen tuotanto, jonka teksti kertoo ("omaperusteinen",
+"vapaarahoitteinen"). Tästä seuraa että rakennuttaja on täytetty vain 20 %
+riveistä — se on tavoiteltu tulos, ei puute. Sama periaate kuin
+viranomaisjulkaisijan hylkäämisessä ja allatiivin kääntämisessä: **tyhjä on
+parempi kuin väärä.**
+
 ### D-033 – Tarkista onko työkalu jo olemassa ennen kuin rakennat sen uudelleen
 RPT-täsmäytys ajettiin uudelleen sen selvittämiseksi, sulkiko kuntien
 päätöslähteiden rakentaminen aukon.

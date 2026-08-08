@@ -9,6 +9,66 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-08 (työ 9.8.)
+
+### Yrityslähteet tuottivat tyhjiä ehdokkaita — 25 lähdettä korjattu kerralla
+
+Lähti liikkeelle yhdestä TIC-jonon rivistä: Peabin tiedotteesta oli poimittu
+vain kaupunki ja vaihe "Suunnittelussa", vaikka urakka oli jo myönnetty ja
+urakkasumma 14,5 M€ luki tekstissä. Syy oli että lähde luki vain listaussivun
+otsikon eikä hakenut tiedotesivua lainkaan.
+
+**Sama vika oli 25 lähteessä.** Mitattiin ajamalla ne läpi
+(`scripts/audit-company-sources.ts`): 13 lähdettä tuotti ehdokkaita **ilman
+kuvausta**, ja niistä 80–100 % hylättiin katselmoinnissa — kuvaukseton
+ehdokas ei ole arvioitavissa ([D-027](03_DECISIONS.md)). Rakennuttaja,
+urakoitsija ja kohdetyyppi olivat 0 % kaikilla, ja vaihe lähes aina
+"Suunnittelussa" vaikka urakoitsija tiedottaa tyypillisesti vasta kun sopimus
+on tehty.
+
+Korjaus yleistettiin jaetuksi moduuliksi `lib/agent/companyRelease.ts`, joka
+kokoaa neljä asiaa: tiedotesivun haku, vaiheen päättely urakkamerkeistä,
+osapuolten ratkaisu ja kohdetyyppi. Kytketty 25 lähteeseen enrich-koukkuna,
+jota kerääjä kutsuu vain vielä näkemättömille ehdokkaille.
+
+Jonossa olleet 819 riviä täydennettiin jälkikäteen
+(`scripts/backfill-company-sources.ts`):
+
+| kenttä | ennen | jälkeen |
+|---|---|---|
+| kuvaus | 33 % | 100 % |
+| maakunta | 91 % | 98 % |
+| kohdetyyppi | 1 % | 69 % |
+| urakoitsija | 1 % | 95 % |
+
+Vaihe oli ennen "Suunnittelussa" käytännössä kaikilla. Jälkeen: Suunnittelu
+517, **Sopimus myönnetty 187, Rakenteilla 111**, Valmistunut 4 — eli 302
+hanketta oli tosiasiassa jo sopimus- tai rakennusvaiheessa.
+
+Kaksi päätöstä matkan varrelta: [D-034](03_DECISIONS.md) (julkaisijan rooli on
+lähteen ominaisuus, ei pääteltävä) ja [D-035](03_DECISIONS.md) (osapuolet ja
+kohdetyyppi luetaan ingressistä, ei koko sivulta).
+
+### Maakunta johdetaan kunnasta tuonnissa
+
+Valtaosa lähteistä palauttaa `region: null`, koska tiedotteessa lukee vain
+kaupunki — ja kenttä jäi silloin pysyvästi tyhjäksi vaikka kunta oli tiedossa.
+Johtaminen siirrettiin `importCandidate`iin, joten se koskee kaikkia lähteitä.
+Sama johtaminen tehtiin ennen jälkikäteen `backfill-region.ts`:llä.
+
+### Otsikon katkaisu rikkoi lauseita
+
+`stripCompanyPrefixFromHeadline` poisti yrityksen ja verbin otsikon alusta,
+mutta suomen objekti on genetiivissä — verbin poisto jättää lauseenpätkän
+("Koulun ja kirjaston Evijärvelle"). Rinnasteisesta predikaatista tunnistettiin
+lisäksi vain ensimmäinen verbi, jolloin otsikko alkoi konjunktiolla ("Ja
+uudistaa Iisalmen kulttuurikeskuksen").
+
+Katkaisu hylätään nyt kun jäljelle jäisi konjunktio, pienellä alkava genetiivi
+tai saaja allatiivissa; silloin säilytetään koko uutisotsikko. Kokonainen
+otsikko on huonompi hankenimenä kuin siisti katkelma, mutta parempi kuin
+rikkinäinen.
+
 ## 2026-08 (työ 7.–8.8.)
 
 ### Valmistumistieto: mikä toimii ja mikä ei
