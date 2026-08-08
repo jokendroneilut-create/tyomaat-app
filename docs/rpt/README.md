@@ -321,3 +321,54 @@ kokotekstihaku pakotti positiiviseen sanalistaan (D-029).
 **Avoin toteutusyksityiskohta:** kategoriasuodatus ei toiminut
 `category_name.keyword`-kentällä (0 osumaa), joten kenttäkartoitus pitää
 tarkistaa `_mapping`-kutsulla ennen kerääjän rakentamista.
+
+---
+
+# Mittaus: miksi tuonti on hidas (ja mikä EI ollut syy)
+
+Helsingin lähde toi 1039 ehdokasta, ja tuonti käsitteli niitä **7,6 s
+kappaleelta** — noin 2,2 tuntia koko erälle. Aika menee kokonaan
+täsmäytykseen (`findProjectMatchDetailed`), joka vertaa jokaisen ehdokkaan
+kaikkiin 4412 hankkeeseen.
+
+## Hypoteesi joka osoittautui vääräksi
+
+Ensimmäinen mittaus näytti että kuvauksen pituus on syy:
+
+```
+täysi kuvaus     7657 ms / ehdokas
+1000 merkkiä     2234 ms
+ei kuvausta       777 ms
+```
+
+Päättelin että trigrammien laskenta pitkistä kuvauksista on pullonkaula, ja
+rajasin vertailun 1500 merkkiin. **Rajaus ei nopeuttanut lainkaan** — 8888 ms
+eli sama kuin ennen.
+
+Syy oli mittausvirhe: ajoin kolme varianttia peräkkäin samassa prosessissa
+kiinteässä järjestyksessä, joten myöhemmät hyötyivät V8:n lämmittelystä ja
+JIT-optimoinnista. Ero ei johtunut kuvauksen pituudesta vaan
+suoritusjärjestyksestä.
+
+Muutos peruttiin, koska se oli häviöllinen ilman hyötyä: verifiointi 16 000
+parilla osoitti että 2,23 % vaihtaa pisteytystasoa, aina alaspäin.
+
+**Opetus mittaamiseen:** varianttien vertailu samassa prosessissa peräkkäin ei
+kelpaa. Järjestys pitää satunnaistaa tai jokainen variantti ajaa omassa
+prosessissaan.
+
+## Mitä tiedetään varmasti
+
+- Täsmäytys on 100 % ajasta; lähteen haku (4,6 s) ja hankelistan lataus
+  (4,3 s) ovat kertaluontoisia per ajo.
+- Kustannus on `ehdokkaat × hankkeet` = 1039 × 4412 ≈ 4,6 miljoonaa
+  paria per ajo.
+- Keskeytys on turvallinen: ehdokkaat kirjoitetaan yksi kerrallaan ja
+  24 tunnin `source_url`-suoja ohittaa jo tuodut. Todettu käytännössä —
+  katkaistu ajo jätti 79 ehjää ehdokasta, ei yhtään puolittaista.
+
+## Seuraava askel
+
+Oikea mittaus: jokainen variantti omassa prosessissaan, ja profilointi sen
+sijaan että arvataan mikä osa `calculateMatch`ista on kallis. Vasta sitten
+optimointi.
