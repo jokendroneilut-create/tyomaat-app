@@ -24,7 +24,13 @@ export const LEAD_LENGTH = 700
 const BUILDING_TYPES: [RegExp, string][] = [
   [/datakesku/i, "Datakeskus"],
   [/sairaal/i, "Sairaala"],
-  [/kulttuurikesku|teatteri|museo|konserttital/i, "Kulttuurirakennus"],
+  /*
+   * "museo" vaatii sananrajan: "Kaupunginmuseo" on lupapäätöksen
+   * lausunnonantaja, ei hankkeen kohde. Mitattu: Pohjantie 3:n
+   * asuinkerrostalohanke sai tyypin "Kulttuurirakennus", koska
+   * lausunnoissa mainittiin Espoon kaupunginmuseo.
+   */
+  [/kulttuurikesku|teatteri|\bmuseo|konserttital/i, "Kulttuurirakennus"],
   [/päiväkoti|päiväkodi/i, "Päiväkoti"],
   /*
    * "koulutus" ei ole koulu. Mitattu: "Hyvinkää Areena - uusi urheilu-,
@@ -53,7 +59,26 @@ const BUILDING_TYPES: [RegExp, string][] = [
  * uusia. Epävarmassa tapauksessa null: väärä kohdetyyppi ohjaa
  * asiakassuodatusta väärin, tyhjä ei ohjaa mihinkään.
  */
+/*
+ * Käyttötarkoituksen muutoksessa ratkaisee KOHDE, ei lähtötilanne.
+ * "Toimistorakennuksen muuttaminen asuinkerrostaloksi" on kerrostalohanke,
+ * ei toimitilahanke - mutta sanalistalla toimisto osuu ensin. Poimitaan
+ * translatiivi ("...ksi") ja ratkaistaan tyyppi siitä.
+ */
+const CONVERSION = /muut(?:taminen|os|etaan)\s+(.{4,60}?)ksi\b/i
+
 export function inferBuildingType(title: string, body: string | null): string | null {
+  const conversion = `${title ?? ""} ${body?.slice(0, LEAD_LENGTH) ?? ""}`.match(CONVERSION)?.[1]
+  if (conversion) {
+    for (const [pattern, label] of BUILDING_TYPES) {
+      if (pattern.test(conversion)) return label
+    }
+  }
+
+  return inferFromWholeText(title, body)
+}
+
+function inferFromWholeText(title: string, body: string | null): string | null {
   /*
    * Rungosta katsotaan vain INGRESSI, ei koko sivua. Tiedotteen loppu
    * kuvaa ympäristöä ja luettelee muita tiedotteita, ja niistä poimittu

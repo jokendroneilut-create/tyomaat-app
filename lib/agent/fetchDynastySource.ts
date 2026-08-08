@@ -246,6 +246,32 @@ export function extractItemText(html: string): string | null {
   return body.length >= 40 ? body : null
 }
 
+/*
+ * Lupapäätöksen otsikko on pelkkä lupatunnus ja osoite ("Laajennuslupa
+ * 49-2024-260, Pohjantie 3"), josta ei näe mistä hankkeessa on kyse.
+ * Päätöstekstissä lukee kuitenkin toimenpide sellaisenaan:
+ *
+ *   "Toimenpide Toimistorakennuksen muuttaminen asuinkerrostaloksi"
+ *
+ * Nostetaan se otsikoksi ja säilytetään osoite perässä, koska se erottaa
+ * saman kunnan samankaltaiset luvat toisistaan.
+ */
+const PERMIT_TITLE = /^(rakennus|laajennus|toimenpide|purkamis|maisematyö)lupa\s+[\d/-]/i
+
+const OPERATION =
+  /\bToimenpide\s+(.{10,150}?)\s+(?:Pääsuunnittelija|Rakennuspaikka|Hakija|Lausunnot|Paloluokka|Rakenteellinen|Hakemuksen)/
+
+export function upgradePermitTitle(title: string, body: string | null): string {
+  if (!title || !body || !PERMIT_TITLE.test(title)) return title
+
+  const operation = body.match(OPERATION)?.[1]?.trim()
+  if (!operation) return title
+
+  /* Osoite on lupatunnuksen jälkeen pilkulla erotettuna. */
+  const address = title.split(",").slice(1).join(",").trim()
+  return address ? `${operation}, ${address}` : operation
+}
+
 export function createDynastyFetcher(config: DynastyConfig) {
   return async function fetchDynasty() {
     const base =
@@ -302,7 +328,7 @@ export function createDynastyFetcher(config: DynastyConfig) {
       if (!description) continue
 
       results.push({
-        name: subject,
+        name: upgradePermitTitle(subject, description),
         description,
         city: config.city,
         region: config.region,

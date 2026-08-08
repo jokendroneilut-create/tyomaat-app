@@ -53,7 +53,9 @@ const CONCURRENCY = 4
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { inferBuildingType } = await import("../lib/agent/buildingType")
-  const { fetchDecoded, extractItemText } = await import("../lib/agent/fetchDynastySource")
+  const { fetchDecoded, extractItemText, upgradePermitTitle } = await import(
+    "../lib/agent/fetchDynastySource"
+  )
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -76,9 +78,12 @@ async function main() {
     const source = r.metadata?.source ?? ""
     if (!/_paatokset$/.test(source)) return false
     if (ONLY && !ONLY.includes(source)) return false
-    const broken = MOJIBAKE.test(r.metadata?.description ?? "")
-    const missingType = !r.metadata?.building_type
-    return broken || missingType
+    /*
+     * Kaikki päätösrivit käydään läpi. Kohdetyyppi lasketaan uudelleen, ja
+     * kirjoitus tapahtuu vain kun arvo muuttuu - muuten aiemman ajon väärä
+     * arvo jäisi voimaan, koska rivi ei enää täytä "puuttuu"-ehtoa.
+     */
+    return true
   })
 
   const broken = targets.filter((r) => MOJIBAKE.test(r.metadata?.description ?? ""))
@@ -89,7 +94,7 @@ async function main() {
   console.log(`  joista sekoittunut teksti: ${broken.length} (haetaan uudelleen)\n`)
   if (targets.length === 0) return
 
-  const stats = { teksti: 0, tyyppi: 0, epaonnistui: 0 }
+  const stats = { teksti: 0, tyyppi: 0, otsikko: 0, epaonnistui: 0 }
   const types: Record<string, number> = {}
 
   for (let i = 0; i < targets.length; i += CONCURRENCY) {
@@ -111,10 +116,18 @@ async function main() {
           }
         }
 
-        const buildingType = md.building_type ?? inferBuildingType(row.title, description)
-        if (!md.building_type && buildingType) {
+        const title = upgradePermitTitle(row.title, description)
+        if (title !== row.title) stats.otsikko++
+
+        /*
+         * Kohdetyyppi lasketaan aina uudelleen: aiempi ajo saattoi kirjata
+         * väärän arvon (lausunnonantaja "Kaupunginmuseo" -> Kulttuurirakennus).
+         */
+        const buildingType = inferBuildingType(title, description)
+        if (buildingType !== md.building_type) {
           stats.tyyppi++
-          types[buildingType] = (types[buildingType] ?? 0) + 1
+          const label = buildingType ?? "(tyhjennetty)"
+          types[label] = (types[label] ?? 0) + 1
         }
 
         if (!APPLY) return
@@ -122,6 +135,7 @@ async function main() {
         const { error } = await supabase
           .from("potential_projects")
           .update({
+            title,
             metadata: { ...md, description, building_type: buildingType ?? null },
           })
           .eq("id", row.id)
@@ -136,7 +150,8 @@ async function main() {
 
   console.log("\n")
   console.log(`teksti korjattu:     ${stats.teksti}`)
-  console.log(`kohdetyyppi lisätty: ${stats.tyyppi}`)
+  console.log(`kohdetyyppi muuttui: ${stats.tyyppi}`)
+  console.log(`otsikko korjattu:    ${stats.otsikko}`)
   console.log(`epäonnistui:         ${stats.epaonnistui}`)
   console.log("\nKohdetyypit:")
   for (const [t, n] of Object.entries(types).sort((a, b) => b[1] - a[1])) {

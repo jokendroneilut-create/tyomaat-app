@@ -238,12 +238,37 @@ function textTrigramsCached(text: string | null | undefined): Set<string> {
   return grams
 }
 
+/*
+ * Vertailtavan tekstin katto.
+ *
+ * Merkkitrigrammien Jaccard KYLLÄSTYY pitkillä teksteillä: kaksi pitkää
+ * suomenkielistä hallintotekstiä jakaa lähes kaikki trigrammit riippumatta
+ * siitä mistä hankkeesta ne kertovat. Mitta alkaa mitata kieltä eikä
+ * hanketta.
+ *
+ * Mitattu 1770 parilla eri kuntapäätöksiä (eri hankkeita joka pari):
+ *
+ *   koko teksti   keskiarvo 0,373   yli 0,5 kynnyksen 12 % pareista
+ *   3000 merkkiä  keskiarvo 0,330   2 %
+ *   1500 merkkiä  keskiarvo 0,273   1 %
+ *
+ * Eli joka kahdeksas eri hankkeiden pari sai +30 pistettä pelkästä
+ * hallintokielestä. Mitattu tapaus: rakennuslupa "Pohjantie 3" ja
+ * "Espoonlahden uintikeskuksen tarveselvitys" ylsivät yhdessä samaan
+ * kaupunkiin ja rakennuttajaan tasan 70:een eli automaattisen
+ * yhdistämisen rajalle.
+ *
+ * Alku riittää: päätöstekstin kärki kertoo kohteen, loppu on ehtoja ja
+ * katselmuksia jotka ovat samat joka päätöksessä.
+ */
+const DESCRIPTION_COMPARE_LIMIT = 1500
+
 function descriptionSimilarity(
   first: string | null | undefined,
   second: string | null | undefined
 ) {
-  const a = textTrigramsCached(first)
-  const b = textTrigrams(second)
+  const a = textTrigramsCached(first?.slice(0, DESCRIPTION_COMPARE_LIMIT))
+  const b = textTrigrams(second?.slice(0, DESCRIPTION_COMPARE_LIMIT))
 
   // Liian lyhyet kuvaukset eivät anna luotettavaa signaalia.
   if (a.size < 10 || b.size < 10) return 0

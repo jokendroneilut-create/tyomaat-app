@@ -158,6 +158,23 @@ describe("inferBuildingType", () => {
     ).not.toBe("Koulu")
   })
 
+  /*
+   * Kayttotarkoituksen muutoksessa ratkaisee kohde, ei lahtotilanne.
+   * Mitattu: "Toimistorakennuksen muuttaminen asuinkerrostaloksi" sai
+   * tyypin "Toimitila".
+   */
+  it("kayttaa muutoksen kohdetta eika lahtotilannetta", () => {
+    expect(
+      inferBuildingType("Toimistorakennuksen muuttaminen asuinkerrostaloksi, Pohjantie 3", null)
+    ).toBe("Kerrostalo")
+  })
+
+  it("ei sekoita lausunnonantajaa hankkeen kohteeseen", () => {
+    expect(
+      inferBuildingType("Laajennuslupa 49-2024-260, Pohjantie 3", "Lausunnot Kaupunginmuseo Ehdollinen")
+    ).toBeNull()
+  })
+
   it("palauttaa nullin kun tyyppiä ei tunnisteta", () => {
     expect(inferBuildingType("Peab investoi uuteen kalustoon", null)).toBeNull()
   })

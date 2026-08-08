@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { cdata, parseRssTitle, isConstructionSubject } from "./fetchDynastySource"
+import {
+  cdata,
+  parseRssTitle,
+  isConstructionSubject,
+  upgradePermitTitle,
+} from "./fetchDynastySource"
 
 describe("cdata", () => {
   /*
@@ -101,5 +106,35 @@ describe("isConstructionSubject", () => {
         "Liikunta- ja hyvinvointilautakunnan lausunto Kivenlahden pukutilojen hankesuunnitelmasta"
       )
     ).toBe(false)
+  })
+})
+
+describe("upgradePermitTitle", () => {
+  /*
+   * Lupapaatoksen otsikko on pelkka lupatunnus ja osoite, josta ei nae
+   * mista hankkeessa on kyse. Mitattu tapaus Espoosta: otsikko
+   * "Laajennuslupa 49-2024-260, Pohjantie 3", kun tekstissa luki
+   * toimenpiteena toimistorakennuksen muuttaminen asuinkerrostaloksi.
+   */
+  const BODY =
+    "Rakennuspaikka 49-12-2-17 Pohjantie 3 TAPIOLA Hakija Kiinteistö Oy Raitinlukko " +
+    "Toimenpide Toimistorakennuksen muuttaminen asuinkerrostaloksi " +
+    "Pääsuunnittelija: arkkitehti Rakenteellinen paloturvallisuus"
+
+  it("nostaa toimenpiteen otsikoksi ja sailyttaa osoitteen", () => {
+    expect(upgradePermitTitle("Laajennuslupa 49-2024-260, Pohjantie 3", BODY)).toBe(
+      "Toimistorakennuksen muuttaminen asuinkerrostaloksi, Pohjantie 3"
+    )
+  })
+
+  it("jattaa muun kuin lupaotsikon rauhaan", () => {
+    expect(
+      upgradePermitTitle("Espoonlahden uintikeskuksen tarveselvitys", BODY)
+    ).toBe("Espoonlahden uintikeskuksen tarveselvitys")
+  })
+
+  it("sailyttaa otsikon kun toimenpidetta ei loydy", () => {
+    const title = "Rakennuslupa 49-2024-999, Testitie 1"
+    expect(upgradePermitTitle(title, "Ei toimenpidekenttaa tassa tekstissa.")).toBe(title)
   })
 })
