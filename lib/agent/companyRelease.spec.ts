@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { inferPeabPhase, extractPeabBody, inferBuildingType } from "./fetchPeabSource"
+import {
+  inferCompanyPhase,
+  extractReleaseBody,
+  inferBuildingType,
+  createCompanyEnricher,
+} from "./companyRelease"
 import { allativeToNominative } from "./companyName"
 import { extractClientFromText } from "./fetchSttHakuSource"
 
@@ -16,19 +21,19 @@ const VAASA_BODY =
   "Rakennus valmistui marraskuussa 2025. Projekti käynnistyy elokuussa 2026 " +
   "ja valmistuu maaliskuussa 2028."
 
-describe("inferPeabPhase", () => {
+describe("inferCompanyPhase", () => {
   /*
    * Tämä oli varsinainen virhe: urakkasumma on tiedotteessa, mutta koska
    * leipätekstiä ei luettu lainkaan, vaiheeksi tuli "Suunnittelussa".
    */
   it("tunnistaa myönnetyn urakan leipätekstistä", () => {
     expect(
-      inferPeabPhase("Peab peruskorjaa Vanhan Vaasan sairaalan F- ja T-rakennukset", VAASA_BODY)
+      inferCompanyPhase("Peab peruskorjaa Vanhan Vaasan sairaalan F- ja T-rakennukset", VAASA_BODY)
     ).toBe("Sopimus myönnetty")
   })
 
   it("tunnistaa tilaajan allatiivista ilman urakkasummaa", () => {
-    expect(inferPeabPhase("Peab rakentaa koulun", "Peab toteuttaa Kojamolle koulun.")).toBe(
+    expect(inferCompanyPhase("Peab rakentaa koulun", "Peab toteuttaa Kojamolle koulun.")).toBe(
       "Sopimus myönnetty"
     )
   })
@@ -40,15 +45,15 @@ describe("inferPeabPhase", () => {
    * asiakasnäkymästä.
    */
   it("ei merkitse valmistuneeksi leipätekstin menneen muodon perusteella", () => {
-    expect(inferPeabPhase("Peab peruskorjaa sairaalan", VAASA_BODY)).not.toBe("Valmistunut")
+    expect(inferCompanyPhase("Peab peruskorjaa sairaalan", VAASA_BODY)).not.toBe("Valmistunut")
   })
 
   it("merkitsee valmistuneeksi otsikon perusteella", () => {
-    expect(inferPeabPhase("Peabin rakentama koulu valmistui Ouluun", null)).toBe("Valmistunut")
+    expect(inferCompanyPhase("Peabin rakentama koulu valmistui Ouluun", null)).toBe("Valmistunut")
   })
 
   it("palauttaa suunnitteluvaiheen kun merkkejä ei ole", () => {
-    expect(inferPeabPhase("Peab mukaan hankkeen kehitysvaiheeseen", null)).toBe("Suunnittelu")
+    expect(inferCompanyPhase("Peab mukaan hankkeen kehitysvaiheeseen", null)).toBe("Suunnittelu")
   })
 })
 
@@ -98,10 +103,10 @@ describe("extractClientFromText", () => {
   })
 })
 
-describe("inferPeabPhase — sopimuksen merkit", () => {
+describe("inferCompanyPhase — sopimuksen merkit", () => {
   it("tunnistaa sopimisen ilman urakkasummaa", () => {
     expect(
-      inferPeabPhase(
+      inferCompanyPhase(
         "Peab rakentaa koulun ja kirjaston Evijärvelle",
         "Peab ja Evijärven kunta ovat sopineet rakentamisesta. Urakka sisältää suunnittelun."
       )
@@ -149,17 +154,37 @@ describe("inferBuildingType", () => {
   })
 })
 
-describe("extractPeabBody", () => {
+describe("createCompanyEnricher — rooli", () => {
+  /*
+   * Rakennuttaja ja urakoitsija eivät ole vaihdettavissa. Y-Säätiö ja
+   * Asuntosäätiö tiedottavat omista hankkeistaan; oletusrooli olisi
+   * kirjannut ne urakoitsijaksi, mikä on väärä tieto.
+   */
+  it("erottaa rakennuttajaroolin urakoitsijaroolista", () => {
+    const builder = createCompanyEnricher({ publisher: "Varte" })
+    const developer = createCompanyEnricher({ publisher: "Y-Säätiö", role: "developer" })
+    expect(typeof builder).toBe("function")
+    expect(typeof developer).toBe("function")
+  })
+
+  it("palauttaa ehdokkaan muuttumattomana ilman osoitetta", async () => {
+    const enrich = createCompanyEnricher({ publisher: "Varte" })
+    const candidate = { name: "Kohde", source_url: null }
+    expect(await enrich(candidate)).toBe(candidate)
+  })
+})
+
+describe("extractReleaseBody", () => {
   it("pudottaa sivukalusteet ja palauttaa leipätekstin", () => {
     const html =
       "<html><body><nav>Tätä tarjoamme Asunnot Toimitilat</nav>" +
       `<article><p>${VAASA_BODY}</p></article></body></html>`
-    const body = extractPeabBody(html)
+    const body = extractReleaseBody(html)
     expect(body).toMatch(/^Peab toteuttaa Senaatti-kiinteistöille/)
     expect(body).not.toMatch(/Tätä tarjoamme/)
   })
 
   it("palauttaa nullin liian lyhyestä sivusta", () => {
-    expect(extractPeabBody("<html><body><p>Lyhyt</p></body></html>")).toBeNull()
+    expect(extractReleaseBody("<html><body><p>Lyhyt</p></body></html>")).toBeNull()
   })
 })

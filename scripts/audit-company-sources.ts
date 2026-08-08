@@ -18,6 +18,16 @@ const ONLY = process.argv
   ?.split(",")
   .map((s) => s.trim())
 
+/*
+ * --enrich ajaa lähteen enrich-koukun muutamalle ensimmäiselle ehdokkaalle.
+ * Ilman sitä taulukko mittaa tuotoksen ENNEN koukkua, jolloin kuvaus on 0 %
+ * myös niillä lähteillä joilla koukku toimii.
+ */
+const ENRICH = process.argv.includes("--enrich")
+const SAMPLE = Number(
+  process.argv.find((a) => a.startsWith("--sample="))?.split("=")[1] ?? 3
+)
+
 async function main() {
   const { sources } = await import("../lib/agent/sources")
 
@@ -52,6 +62,19 @@ async function main() {
     if (rows.length === 0) {
       console.log(`${source.name.padEnd(20)}${String(0).padStart(5)}   (ei tuotosta)`)
       continue
+    }
+
+    if (ENRICH && typeof source.enrich === "function") {
+      rows = rows.slice(0, SAMPLE)
+      for (let i = 0; i < rows.length; i++) {
+        try {
+          rows[i] = await source.enrich(rows[i])
+        } catch {
+          /* Yksittäinen sivuhaku voi epäonnistua; mitataan loput silti. */
+        }
+      }
+    } else if (ENRICH) {
+      rows = rows.slice(0, SAMPLE)
     }
 
     const pct = (n: number) => `${Math.round((n / rows.length) * 100)}%`
