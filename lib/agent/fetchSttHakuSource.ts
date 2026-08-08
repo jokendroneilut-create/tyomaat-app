@@ -107,6 +107,15 @@ const CLIENT_PATTERNS = [
   new RegExp(
     `\\b(?:toteuttaa|toteutti|rakentaa|rakensi|rakentanut|peruskorjaa|saneeraa|urakoi)\\s+(${NAME}lle)\\b`
   ),
+  /*
+   * "Peab ja Evijärven kunta ovat sopineet..." - urakoitsija ja tilaaja
+   * rinnasteisina. Organisaatiosana on pienellä eikä kuulu NAME-kuvioon,
+   * joten se sallitaan erikseen; ilman sitä tilaajaksi jäisi pelkkä
+   * paikannimen genetiivi "Evijärven".
+   */
+  new RegExp(
+    `\\bja\\s+(${NAME}(?:\\s+(?:kunta|kaupunki|seurakunta|kuntayhtymä|konserni))?)\\s+(?:ovat|on)\\s+sopi`
+  ),
 ]
 
 export function extractClientFromText(

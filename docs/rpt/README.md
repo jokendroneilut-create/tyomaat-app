@@ -669,11 +669,17 @@ kielletyillä sivustoilla.
 
 # Uusintamittaus: sulkiko kuntien päätöslähteiden rakentaminen aukon?
 
-Kun yksitoista kaupunkia oli katettu, 552 puuttuvaa ajettiin uudelleen samalla
-kaksivaiheisella menetelmällä. Skripti on nyt tallessa
-(`scripts/rpt-rematch.mjs`) — alkuperäinen oli väliaikaistiedosto ja katosi,
-minkä vuoksi menetelmä piti rakentaa uudelleen. Se osoittautui mittauksen
-tärkeimmäksi havainnoksi.
+Kun yksitoista kaupunkia oli katettu, 552 puuttuvaa ajettiin uudelleen
+kaksivaiheisella menetelmällä.
+
+> **Tämä ajo tehtiin väärällä välineellä.** Oletin että alkuperäinen skripti
+> oli kadonnut ja rakensin menetelmän uudelleen (`scripts/rpt-rematch.mjs`).
+> Alkuperäinen oli koko ajan versionhallinnassa nimellä
+> `scripts/match-rpt-list.ts`. Uudelleenrakennettu versio oli löyhempi, ja
+> juuri se tuotti alla kuvatun menetelmäharhan — luvut eivät siis ole
+> vertailukelpoisia lähtötason kanssa. Ajo kannattaa toistaa oikealla
+> välineellä: `npx tsx scripts/match-rpt-list.ts`. Ks.
+> [D-033](../03_DECISIONS.md).
 
 ## Otsikkoluku on 165/552, ja se on väärä
 
@@ -743,9 +749,9 @@ kannattaa toistaa kun jokainen lähde on ajanut muutaman kerran.
    kasvoi kerralla paljon kun Helsingin lähde tuli tuotantoon. Purkunopeus
    kuitenkin skaalautuu määrän mukana, joten jonon pituus ei ole syy hidastaa
    lähteiden lisäämistä — se on kertaluontoinen piikki, ei rakenteellinen este.
-3. **Uusintamittaus vasta kun uudet lähteet ovat ajaneet.** Aja
-   `node scripts/rpt-rematch.mjs` uudelleen; menetelmä on nyt vakio, joten
-   seuraava vertailu on aito.
+3. **Uusintamittaus vasta kun uudet lähteet ovat ajaneet** — ja alkuperäisellä
+   välineellä: `npx tsx scripts/match-rpt-list.ts`. Vain sama skripti tuottaa
+   lähtötason kanssa vertailukelpoisen luvun.
 
 ## Miksi Espoo ja Kuopio tuottivat vähemmän: ne ovat ajaneet kerran
 

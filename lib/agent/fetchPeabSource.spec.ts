@@ -82,6 +82,31 @@ describe("extractClientFromText", () => {
   it("poimii tilaajan allatiivimuodosta perusmuotoisena", () => {
     expect(extractClientFromText(null, VAASA_BODY)).toBe("Senaatti-kiinteistöt")
   })
+
+  /*
+   * Evijärven tiedote: tilaaja rinnasteisena urakoitsijan kanssa.
+   * Organisaatiosana on pienellä eikä kuulu nimikuvioon, joten ilman
+   * erillistä sallintaa tilaajaksi jäisi pelkkä "Evijärven".
+   */
+  it("poimii tilaajan rinnasteisesta sopimuslauseesta", () => {
+    expect(
+      extractClientFromText(
+        null,
+        "Peab ja Evijärven kunta ovat sopineet uuden koulu- ja kirjastorakennuksen rakentamisesta."
+      )
+    ).toBe("Evijärven kunta")
+  })
+})
+
+describe("inferPeabPhase — sopimuksen merkit", () => {
+  it("tunnistaa sopimisen ilman urakkasummaa", () => {
+    expect(
+      inferPeabPhase(
+        "Peab rakentaa koulun ja kirjaston Evijärvelle",
+        "Peab ja Evijärven kunta ovat sopineet rakentamisesta. Urakka sisältää suunnittelun."
+      )
+    ).toBe("Sopimus myönnetty")
+  })
 })
 
 describe("extractPeabBody", () => {

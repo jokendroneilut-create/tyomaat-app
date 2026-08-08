@@ -5,10 +5,20 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
-### D-033 – Mittausskripti on osa mittausta
+### D-033 – Tarkista onko työkalu jo olemassa ennen kuin rakennat sen uudelleen
 RPT-täsmäytys ajettiin uudelleen sen selvittämiseksi, sulkiko kuntien
-päätöslähteiden rakentaminen aukon. Alkuperäinen skripti oli väliaikaistiedosto
-ja oli kadonnut, joten menetelmä rakennettiin uudelleen kuvauksen perusteella.
+päätöslähteiden rakentaminen aukon.
+
+**Menetelmä rakennettiin uudelleen turhaan.** Oletin että alkuperäinen skripti
+oli väliaikaistiedosto joka oli kadonnut, enkä tarkistanut asiaa. Se oli koko
+ajan versionhallinnassa nimellä `scripts/match-rpt-list.ts` — samassa kansiossa
+kuin kaksitoista muuta samaa konventiota noudattavaa huoltoskriptiä. Uusi
+`scripts/rpt-rematch.mjs` on siis päällekkäinen toteutus, ja **juuri sen
+erilaisuus tuotti alla kuvatun menetelmäharhan.** Harha oli itse aiheutettu ja
+kokonaan vältettävissä.
+
+Sääntö: **ennen kuin rakennat mittausvälineen uudelleen, listaa `scripts/`.**
+Puuttuvaksi oletettu työkalu on halpa tarkistaa ja kallis rakentaa väärin.
 
 Tulos näytti hyvältä — 165 osumaa 552:sta, kun ensimmäinen ajo löysi nolla —
 kunnes osumat jaettiin sen mukaan **milloin vastapuolen rivi oli luotu**.
@@ -19,9 +29,9 @@ hotelli eri kunnassa, eri katuosoite, ja yksi geneerinen "Kerrostalo Ouluun"
 kolmen eri RPT-hankkeen osumana.
 
 Sääntö: **ennen/jälkeen-vertailu vaatii että menetelmä on bittiä myöten sama.**
-Jos mittausskripti ei ole versionhallinnassa, vertailua ei voi tehdä — luku
-mittaa silloin skriptin muutosta, ei maailman muutosta. `scripts/rpt-rematch.mjs`
-on siksi committoitu.
+Eri skripti mittaa skriptin muutosta, ei maailman muutosta. Oikea tapa ajaa
+tämä uudelleen on `npx tsx scripts/match-rpt-list.ts`, sama väline jolla
+lähtötaso mitattiin — `scripts/rpt-rematch.mjs` jää käyttämättä.
 
 Toinen sääntö samasta ajosta: **kun luku yllättää positiivisesti, etsi ensin
 selitys joka ei ole edistystä.** Luontiaikajako oli halpa tarkistus ja se kumosi

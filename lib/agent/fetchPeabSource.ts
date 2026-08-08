@@ -59,7 +59,21 @@ const CONTRACT_PATTERNS = [
   /\btilaus\b/i,
   /valittiin\s+urakoitsijaksi/i,
   /(?:toteuttaa|rakentaa|peruskorjaa|saneeraa)\s+[A-ZÅÄÖ][\wÅÄÖåäö-]*(?:\s+[\wÅÄÖåäö-]+)?:?lle\b/,
+  /*
+   * Mitattu Evijärven tiedotteesta: "Peab ja Evijärven kunta ovat sopineet
+   * uuden koulu- ja kirjastorakennuksen rakentamisesta". Sopimus on tehty,
+   * mutta yksikään ylläolevista ei tunnistanut sitä - vaiheeksi jäi
+   * "Suunnittelu".
+   */
+  /(?:ovat\s+sopineet|on\s+sopinut)/i,
+  /urakka\s+(?:sisältää|käsittää)/i,
 ]
+
+/*
+ * Omaperusteinen tuotanto: Peab on tällöin aidosti sekä rakennuttaja että
+ * urakoitsija. Ilman tätä merkkiä samaa yritystä ei kirjata molempiin.
+ */
+const OWN_DEVELOPMENT = /omaperustei|vapaarahoittei|oma\s+tuotanto|Peab\s+Kodit/i
 
 const CONSTRUCTION_PATTERNS = [
   /rakennustyöt\s+(?:ovat\s+)?(?:alkaneet|käynnissä)/i,
@@ -136,20 +150,30 @@ export async function enrichPeabCandidate(candidate: any): Promise<any> {
   if (!body) return candidate
 
   /*
-   * Julkaisija on Peab, joten resolveParties palauttaa Peabin urakoitsijana
-   * ja tekstistä löytyvän tilaajan rakennuttajana. Ilman tilaajamainintaa
-   * Peab jää rakennuttajaksi - se on oikein omaperusteisessa
-   * asuntotuotannossa, jota Peabilla on paljon.
+   * Peab on tiedotteen julkaisija ja käytännössä aina urakoitsija.
+   * Rakennuttaja otetaan tekstistä löytyvästä tilaajasta.
+   *
+   * JOS TILAAJAA EI LÖYDY, rakennuttaja jää tyhjäksi - ei Peabiksi.
+   * resolveParties palauttaisi oletuksena julkaisijan, mikä on oikein
+   * yleisessä STT-tapauksessa mutta väärin tässä: kun urakoitsija on jo
+   * tiedossa, saman yrityksen kirjaaminen myös rakennuttajaksi väittäisi
+   * hanketta omaperusteiseksi. Mitattu: Evijärven koulun tilaaja on kunta
+   * ja atNorthin datakeskuksen atNorth, mutta molempiin oli tulossa Peab.
+   *
+   * Poikkeus on aito omaperusteinen tuotanto, jonka teksti kertoo - silloin
+   * Peab on molempia.
    */
   const parties = resolveParties("Peab", candidate.name, body)
+  const client = parties.builder ? parties.developer : null
+  const ownDevelopment = OWN_DEVELOPMENT.test(body)
 
   return {
     ...candidate,
     description: body,
     city: candidate.city ?? detectCityFromText(body),
     location: candidate.location ?? extractStreetAddress(body),
-    developer: parties.developer ?? candidate.developer ?? null,
-    builder: parties.builder ?? candidate.builder ?? null,
+    developer: client ?? (ownDevelopment ? "Peab" : null),
+    builder: "Peab",
     phase: inferPeabPhase(candidate.name, body),
     estimated_completion:
       candidate.estimated_completion ?? parseEstimatedCompletionDate(body),
