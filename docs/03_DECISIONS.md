@@ -62,9 +62,16 @@ meta-ohjetta. Ero ei siis ole laissa vaan toimittajan valinnassa.
 Sääntö: **lähteen tekninen helppous ei ohita robots-ohjetta, oli se
 `robots.txt`:ssä tai sivun metatiedossa.** Jos kielto halutaan ohittaa, se on
 ihmisen päätös ja se kirjataan tänne — ei jotain minkä kerääjä ratkaisee
-hiljaa. Neljälle Tweb-kunnalle (Vantaa, Oulu, Vaasa, Hyvinkää) haetaan
-mieluummin lupa kunnalta tai vaihtoehtoinen lähde. Vantaa on niistä tärkein:
-46 puuttuvaa RPT:n hanketta, eniten koko listalla.
+hiljaa. Kuudelle kunnalle haetaan mieluummin lupa tai vaihtoehtoinen lähde:
+Vantaa, Oulu, Vaasa, Hyvinkää ja Seinäjoki (Tweb) sekä Lappeenranta, joka on
+**M-Files**-dokumenttienhallinnassa ja kieltää samalla tavalla. Vantaa on
+niistä tärkein: 46 puuttuvaa RPT:n hanketta, eniten koko listalla.
+
+Huomionarvoista on että kielto seuraa **tuotetta, ei kuntaa**. Kaikki neljä
+kerättävää alustaa (Ahjo, Dynasty, CaseM, Turun oma) sallivat, ja molemmat
+kieltävät (Tweb, M-Files) kieltävät joka ainoalla asennuksella. Kunnan koko,
+sijainti tai avoimuuslinjaus ei ennusta mitään — toimittajan valinta ennustaa
+kaiken.
 
 ### D-030 – Vakio silmukan sisällä lasketaan kerran
 `findProjectMatchDetailed` vertaa **yhtä** ehdokasta kaikkiin 4412

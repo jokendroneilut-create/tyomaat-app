@@ -598,24 +598,72 @@ Kaikille viidelle tarvitaan siis kunnan lupa tai vaihtoehtoinen lähde.
 Jyväskylä ei sitä kaipaa, koska CaseM kattaa sen. Vantaa on tärkein: 46
 puuttuvaa hanketta, eniten koko listalla.
 
+## Neljä viimeistä kaupunkia: kaksi auki, kaksi kiinni
+
+Lappeenranta, Kouvola, Seinäjoki ja Porvoo eivät löytyneet automaattisesti,
+koska niiden `paatoksenteko`-sivuilla ei ole linkkiä järjestelmään. Linkki on
+**alasivulla** "Esityslistat ja pöytäkirjat". Kolmas taso riitti kaikille
+neljälle:
+
+| kaupunki | järjestelmä | alusta | robots |
+|---|---|---|---|
+| Kouvola | `ep10.kouvola.fi` | Dynasty | ei tiedostoa |
+| Porvoo | `porvoofi.oncloudos.com` | Dynasty | ei tiedostoa |
+| Seinäjoki | `listat.seinajoki.fi` | Tweb | `Disallow: /` |
+| Lappeenranta | `mfiles.lappeenranta.fi` | **M-Files** | `Disallow: /` |
+
+**Porvoo oli koko ajan oncloudos.com:issa** — aliverkkotunnus on vain
+`porvoofi` eikä `porvoo`, joten aiempi 40 kunnan testi meni ohi yhden tavun
+takia. Kouvolalla on oma verkkotunnus.
+
+Lappeenranta on **kuudes alustaperhe**: M-Files, dokumenttienhallinta eikä
+päätösjärjestelmä. Sitä ei tarvitse selvittää pidemmälle ennen kuin robots-
+kysymys on ratkaistu, koska se kieltää haun samalla tavalla kuin Tweb.
+
+Mitattu ennen käyttöönottoa: Kouvola 30 ehdokasta (mediaani 6065 merkkiä),
+Porvoo 3 ehdokasta (mediaani 4671). Kouvola on paras yksittäinen
+Dynasty-kunta tähän mennessä — Monitoimiareenan urakoitsijan valinta,
+Kuusankosken yhtenäiskoulu, pääkirjaston peruskorjaus, uusi keskuskeittiö.
+
+Suodatin tiukkeni samalla kahdella mitatulla kuviolla: valtion
+perusparannusavustus yksityistielle ei ole kaupungin hanke (kolme osumaa
+Kouvolassa), eikä **sopimuksen** purkaminen ole rakennuksen purkamista
+(*"yhteistyösopimuksen (TYM) purkaminen"*, Porvoo).
+
 ## Tilanne alustoittain
 
 | alusta | kunnat | tila |
 |---|---|---|
 | Ahjo (Elasticsearch) | Helsinki | tuotannossa |
 | Dynasty (RSS) | Espoo, Tuusula, Kuopio, Kirkkonummi, Savonlinna, Tornio | tuotannossa |
-| Dynasty (RSS) | Joensuu | SQL ajamatta |
-| CaseM (GET-haku) | Tampere | tuotannossa |
-| CaseM (GET-haku) | Jyväskylä, Rovaniemi, Pori | SQL ajamatta |
+| Dynasty (RSS) | Joensuu | tuotannossa |
+| Dynasty (RSS) | Kouvola, Porvoo | SQL ajamatta |
+| CaseM (GET-haku) | Tampere, Jyväskylä, Rovaniemi, Pori | tuotannossa |
 | oma SPA | Turku | tuotannossa |
-| Tweb | Vantaa, Oulu, Vaasa, Hyvinkää | robots-ohje kieltää |
+| Tweb | Vantaa, Oulu, Vaasa, Hyvinkää, Seinäjoki | robots-ohje kieltää |
+| M-Files | Lappeenranta | robots-ohje kieltää |
 
-**Kolmetoista kaupunkia kahdeksastatoista katettu neljällä jäsentäjällä.**
-Jäljellä ovat Vantaa, Oulu, Vaasa ja Hyvinkää (Tweb, estetty) sekä
-Lappeenranta, Kouvola, Seinäjoki ja Porvoo, joiden
-päätösjärjestelmää ei vielä löytynyt: niiden `paatoksenteko`-sivut eivät
-sisällä ulkoista linkkiä järjestelmään, joten ne vaativat sivun oman
-läpikäynnin.
+**Kaikki 18 kaupunkia on nyt kartoitettu.** Neljällä jäsentäjällä katetaan
+**yksitoista**: Helsinki, Espoo, Kuopio, Tampere, Turku, Jyväskylä,
+Rovaniemi, Pori, Joensuu, Kouvola ja Porvoo — sekä viisi pienempää kuntaa
+jotka tulivat Dynastyn mukana.
+
+Seitsemän jää ulkopuolelle, ja vain yhdellä syy on tekninen:
+
+| kaupunki | syy |
+|---|---|
+| Vantaa, Oulu, Vaasa, Hyvinkää, Seinäjoki | Tweb, robots-ohje kieltää |
+| Lappeenranta | M-Files, robots-ohje kieltää |
+| Lahti | Dynasty toimii, mutta julkaisee vain menettelyasioita |
+
+Kuudessa tapauksessa ei siis ole enää teknistä työtä tehtävänä — kysymys on
+luvasta. Vantaa on niistä suurin (46 puuttuvaa hanketta). Lahti on eri
+tapaus: sen RSS:ssä on 206 tuoretta asiaa mutta pelkkiä otsikoita kuten
+*"Laillisuus ja päätösvaltaisuus"*, eli sisältö julkaistaan muualla.
+
+**Uutta jäsentäjää ei kannata rakentaa ennen kuin lupa-asia ratkeaa**, koska
+molemmat jäljellä olevat alustaperheet (Tweb, M-Files) esiintyvät vain
+kielletyillä sivustoilla.
 
 ## Mitä suodatuksesta opittiin samalla
 

@@ -71,6 +71,30 @@ describe("isConstructionSubject", () => {
    * kuvio ei riittänyt: kolme viidestä ensimmäisestä osumasta pääsi läpi ja
    * ne olisivat kaksinkertaistaneet hankkeen jonossa.
    */
+  /*
+   * Kaksi kuviota jotka positiivinen lista paasti lapi vaarin perustein.
+   * Molemmat oikeista otsikoista: Kouvola ja Porvoo.
+   */
+  it("pudottaa yksityistien avustuksen ja sopimuksen purkamisen", () => {
+    expect(
+      isConstructionSubject(
+        "Perusparannusavustuksen myöntäminen valtion avustuspäätöksen saaneelle yksityistielle: Amerikan yksityistie"
+      )
+    ).toBe(false)
+    expect(
+      isConstructionSubject(
+        "Työllistymistä edistävän monialaisen tuen yhteistyösopimuksen (TYM) purkaminen ja uuden yhteistyösopimuksen valmistelu"
+      )
+    ).toBe(false)
+  })
+
+  it("ei pudota rakennuksen purkamista", () => {
+    expect(isConstructionSubject("Puuppolan hoivasairaalan purkaminen")).toBe(true)
+    expect(
+      isConstructionSubject("Kouvolan teatterin laajennus sekä vanhan teatterin purkaminen")
+    ).toBe(true)
+  })
+
   it("pudottaa lausunnon myös otsikon keskeltä", () => {
     expect(
       isConstructionSubject(

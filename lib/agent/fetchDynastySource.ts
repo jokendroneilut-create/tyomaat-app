@@ -92,6 +92,20 @@ const EXCLUDE_PATTERNS = [
   /pöytäkirjan\s+tarkast/i,
   /kokouksen\s+laillisuu/i,
   /valtuustoaloit/i,
+  /*
+   * Kaksi kuviota jotka positiivinen lista paastaa lapi vaarin perustein.
+   * Molemmat mitattu Kouvolasta ja Porvoosta.
+   *
+   * 1. Valtion perusparannusavustus yksityistielle ei ole kaupungin hanke
+   *    vaan avustuspaatos yksityiselle tiekunnalle - kolme osumaa
+   *    Kouvolassa. Sana "perusparann" osuu, kohde ei.
+   * 2. Sopimuksen purkaminen ei ole rakennuksen purkamista:
+   *    "Tyollistymista edistavan monialaisen tuen yhteistyosopimuksen (TYM)
+   *    purkaminen" (Porvoo). Sulkeiden takia valissa on sanoja, joten kuvio
+   *    sallii niita rajatusti.
+   */
+  /perusparannusavustu/i,
+  /sopimuksen[^,;.]{0,40}purkami/i,
 ]
 
 export type DynastyConfig = {
@@ -341,4 +355,33 @@ export const fetchJoensuuPaatoksetSource = createDynastyFetcher({
   cgiBase: "https://dynastyjulkaisu.pohjoiskarjala.net/joensuu/cgi/DREQUEST.PHP",
   city: "Joensuu", region: "Pohjois-Karjala",
   developer: "Joensuun kaupunki", sourceName: "joensuu_paatokset",
+})
+
+/*
+ * Kouvolalla on oma Dynasty-asennus omalla verkkotunnuksella. Se ei loytynyt
+ * aliverkkotunnusarvauksella eika kunnan paatoksenteko-sivulta, vaan vasta
+ * sen alta "Esityslistat ja poytakirjat" -sivulta.
+ */
+export const fetchKouvolaPaatoksetSource = createDynastyFetcher({
+  host: "kouvola",
+  cgiBase: "https://ep10.kouvola.fi/cgi/DREQUEST.PHP",
+  city: "Kouvola", region: "Kymenlaakso",
+  developer: "Kouvolan kaupunki", sourceName: "kouvola_paatokset",
+})
+
+/*
+ * Porvoo ON oncloudos.com:issa, mutta aliverkkotunnus on "porvoofi" eika
+ * "porvoo". Siksi se ei ollut niiden 8 joukossa jotka vastasivat aiemmasta
+ * 40 kunnan testista - kaava ei osunut yhden tavun takia.
+ *
+ * HUOM: syotteessa on Porvoon isannoiman ymparistoterveysjaoston asioita,
+ * jotka koskevat naapurikuntia (Loviisa, Sipoo, Askola, Lapinjarvi). Ne ovat
+ * paaosin lausuntoja ja terveysvalvonnan maarayksia, jotka poissulkulista ja
+ * rakentamisen sanasto pudottavat. Jos kaupunkikentta alkaa nayttaa vaaralta,
+ * syy on tassa.
+ */
+export const fetchPorvooPaatoksetSource = createDynastyFetcher({
+  host: "porvoofi",
+  city: "Porvoo", region: "Uusimaa",
+  developer: "Porvoon kaupunki", sourceName: "porvoo_paatokset",
 })
