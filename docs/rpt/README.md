@@ -367,8 +367,31 @@ prosessissaan.
   24 tunnin `source_url`-suoja ohittaa jo tuodut. Todettu käytännössä —
   katkaistu ajo jätti 79 ehjää ehdokasta, ei yhtään puolittaista.
 
-## Seuraava askel
+## Oikea syy löytyi
 
-Oikea mittaus: jokainen variantti omassa prosessissaan, ja profilointi sen
-sijaan että arvataan mikä osa `calculateMatch`ista on kallis. Vasta sitten
-optimointi.
+Kun jokainen variantti ajettiin **omassa prosessissaan**, kuva oli toinen:
+
+| variantti | ms / ehdokas |
+|---|---|
+| täysi | 14674 |
+| hankkeen kuvaus pois | 14159 — ei vaikutusta |
+| **ehdokkaan kuvaus pois** | **1924** |
+| molemmat pois | 550 |
+
+Kustannus on kokonaan **ehdokkaan puolella**, ei hankkeiden. Syy on
+kutsujärjestyksessä: `descriptionSimilarity` saa ehdokkaan kuvauksen
+ensimmäisenä argumenttina, joten se on sama merkkijono koko silmukan ajan —
+mutta se tokenisoitiin uudelleen jokaiselle 4412 hankkeelle.
+
+Korjaus on yhden alkion muisti, ks. [D-030](../03_DECISIONS.md). Häviötön ja
+algoritmisesti varma, vaikka kellotettu nopeutus (1,7×) jäi selvästi alle sen
+mitä eristetty mittaus lupasi — hajonta ajojen välillä on ±2×.
+
+## Seuraava askel jos nopeutta tarvitaan lisää
+
+Yksittäisen parin kustannus on nyt pienempi, mutta **parien määrä** on
+ennallaan: 1039 ehdokasta × 4412 hanketta ≈ 4,6 miljoonaa. Seuraava voitto
+tulee parien vähentämisestä, ei parin halventamisesta — esimerkiksi
+esikarsinnalla kuten duplikaattiskannerissa. Se on kuitenkin herkkä paikka:
+tuonnin todisteportti sallii osuman ilman samaa kaupunkia (tunniste, osoite,
+tekstitodiste), joten kaupunkiryhmittely hukkaisi osumia.

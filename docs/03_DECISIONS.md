@@ -5,6 +5,43 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-030 – Vakio silmukan sisällä lasketaan kerran
+`findProjectMatchDetailed` vertaa **yhtä** ehdokasta kaikkiin 4412
+hankkeeseen. `descriptionSimilarity` saa ehdokkaan kuvauksen ensimmäisenä
+argumenttina, eli se on sama merkkijono koko silmukan ajan — mutta se
+tokenisoitiin uudelleen jokaiselle hankkeelle. 4412 turhaa laskentaa yhtä
+ehdokasta kohden.
+
+Korjaus on yhden alkion muisti. Häviötön: sama merkkijono tuottaa saman
+trigrammijoukon, ja osumapisteet ovat identtiset ennen ja jälkeen.
+
+**Mittaus on tehtävä eristetysti.** Ensin päättelin syyksi kuvausten
+pituuden, koska mittasin kolme varianttia peräkkäin samassa prosessissa:
+7657 ms täydellä, 2234 ms tuhannella merkillä, 777 ms ilman kuvausta.
+Rajasin vertailun 1500 merkkiin — ja se ei nopeuttanut lainkaan. Ero oli
+tullut V8:n JIT-lämmittelystä, ei kuvauksen pituudesta.
+
+Omissa prosesseissaan ajettuna kuva oli toinen:
+
+| variantti | ms / ehdokas |
+|---|---|
+| täysi | 14674 |
+| hankkeen kuvaus pois | 14159 (ei vaikutusta) |
+| **ehdokkaan kuvaus pois** | **1924** |
+
+Kaksi sääntöä tästä:
+
+1. **Varianttien vertailu samassa prosessissa peräkkäin ei kelpaa.** Järjestys
+   pitää satunnaistaa tai jokainen variantti ajaa omassa prosessissaan.
+2. **Yhden ajon kellotukseen ei voi luottaa.** Samalle variantille mitattiin
+   7657, 8888, 14674 ja 8733 ms eli hajonta ±2×. Siksi tämä muutos
+   perustellaan algoritmisesti — turha työ jää tekemättä kuormasta
+   riippumatta — eikä kellolla.
+
+Peruttu rajaus oli lisäksi häviöllinen: 16 000 parin verifiointi osoitti että
+2,23 % vaihtaisi pisteytystasoa, aina alaspäin. Häviöllinen muutos ilman
+mitattua hyötyä ei kuulu koodiin.
+
 ### D-029 – Löyhää hakua vastaan tarvitaan positiivinen sisältövaatimus
 STT:n hakurajapinta on **kokotekstihaku eikä fraasihaku**, ja se on
 relevanssijärjestetty. Hakusana `koulurakennus` palauttaa 181 osumaa joiden
