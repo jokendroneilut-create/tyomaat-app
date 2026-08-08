@@ -146,6 +146,21 @@ Yli 75-vuotias rakennus, vaippa ja talotekniikka käyttöikänsä päässä.
 **Miksi puuttuu:** ei ole missään kannassamme. Kaupungin oma
 investointipäätösketju ei ole meillä lähteenä.
 
+### Helsinki #5 — Viikin-Malmin pikaraitiotie
+
+**Tila:** yleissuunnitelma hyväksytty **16.4.2025**. Hankesuunnitelma
+valmistellaan 2025–2026, päätös siitä 2026. Rakentaminen suunniteltu
+alkavaksi **2028**, liikennöinti **2032**. Ensimmäinen vaihe Kumpulasta
+Viikin ja Malminkentän kautta Malmin sairaalalle; toisessa vaiheessa
+Jakomäki. Kustannusarvio 340 M€ + 100 M€.
+
+**Lähde löytyi:** `paatokset.hel.fi` (kaupunginhallitus, yleissuunnitelman
+hyväksyntä), `sttinfo.fi` (kaupungin tiedote), `infraohjelmahelsinki.fi`.
+
+**Miksi puuttuu:** sama syy kuin kisahallilla — kaupungin päätösketju ei ole
+lähteenä. STT-tiedote on olemassa, mutta se on vanhempi kuin korjatun haun
+12 kuukauden ikkuna.
+
 ## Lähdehavainnot
 
 Kaksi hanketta riitti tuottamaan neljä havaintoa. Kaksi ensimmäistä ovat
@@ -179,6 +194,15 @@ tiedotetta.
 Tämä on sama vikaluokka kuin [D-026](../03_DECISIONS.md): pyyntö onnistuu,
 vastaus näyttää täydeltä, ja katkaisu on näkymätön. Vaatii oman
 selvityksensä — oikea sivutusparametri tai eri rajapinta.
+
+**5. `infraohjelmahelsinki.fi` tarkistettu — liian kapea.** Sivustolla on vain
+kolme hanketta (Länsiratikat, Länsisataman pikaraitiotie, Viikin–Malmin
+pikaraitiotie). Se on allianssiohjelman esittelysivusto, ei hankerekisteri.
+
+**Kuvio kolmen hankkeen jälkeen:** `paatokset.hel.fi` esiintyi kahdessa
+kolmesta ja on ainoa lähde joka kattaisi molemmat. Se vahvistaa alkuperäisen
+päätelmän — puuttuva vaihe on kunnan investointipäätös, ja se asuu
+päätösjärjestelmässä.
 
 ## Sivupolku: kattaisiko korjattu STT puuttuvia?
 
