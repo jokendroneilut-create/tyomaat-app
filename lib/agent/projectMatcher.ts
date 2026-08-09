@@ -161,6 +161,50 @@ function crudeStem(word: string): string {
 }
 
 /*
+ * OMA TOKENISOINTI, EI titleWords.
+ *
+ * titleWords pudottaa alle neljän merkin sanat, koska nimivertailussa ne
+ * ovat kohinaa. Erottavana sanana ne ovat kuitenkin juuri se tieto joka
+ * kertoo kohteen: asunto-osakeyhtiöiden nimet ovat usein lyhyitä.
+ *
+ *   "Asunto Oy Helsingin Pyy"  vs  "Asunto Oy Helsingin Evia"
+ *
+ * "Pyy" katosi tokenisoinnissa, jolloin erottavia sanoja jäi vain toiselle
+ * puolelle eikä sääntö lauennut - kaksi eri taloyhtiötä sai varmuuden 75.
+ * Raja on siksi kolme merkkiä TÄSSÄ säännössä; nimivertailun oma viritys
+ * jää koskematta.
+ *
+ * Yhtiömuodot ja sidesanat on pudotettava erikseen, koska ne mahtuvat nyt
+ * rajan yli. Puhtaat luvut jätetään pois, koska niillä on jo oma
+ * sääntönsä (different_name_numbers) - muuten sama ero kapittaisi parin
+ * kahdesti ja hämärtäisi syyn.
+ */
+const SUBJECT_STOPWORDS = new Set([
+  "oyj",
+  "abp",
+  "tmi",
+  "sekä",
+  "sen",
+  "että",
+  "myös",
+  "asunto",
+  "asuntoosakeyhtiö",
+  "kiinteistö",
+])
+
+const MIN_SUBJECT_WORD = 3
+
+function subjectWords(value: string | null | undefined): string[] {
+  return (norm(value) ?? "")
+    .split(" ")
+    .map((word) => word.trim())
+    .filter((word) => word.length >= MIN_SUBJECT_WORD)
+    .filter((word) => !GENERIC_TITLE_WORDS.has(word))
+    .filter((word) => !SUBJECT_STOPWORDS.has(word))
+    .filter((word) => !/^\d+$/.test(word))
+}
+
+/*
  * EROAVATKO NIMIEN ERI OSAT?
  *
  * Nimivertailu painottaa yhteistä osaa, ja kunnan aineistossa yhteinen osa
@@ -185,8 +229,8 @@ function haveDifferentNameSubjects(
   first: string | null | undefined,
   second: string | null | undefined
 ): boolean {
-  const a = new Set(titleWords(first))
-  const b = new Set(titleWords(second))
+  const a = new Set(subjectWords(first))
+  const b = new Set(subjectWords(second))
 
   const onlyA = [...a].filter((word) => !b.has(word))
   const onlyB = [...b].filter((word) => !a.has(word))

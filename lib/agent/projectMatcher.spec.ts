@@ -245,6 +245,34 @@ describe("different_name_subjects", () => {
   })
 
   /*
+   * LYHYT EROTTAVA SANA ON SILTI EROTTAVA. Nimivertailun tokenisointi
+   * pudottaa alle neljan merkin sanat kohinana, mutta asunto-osakeyhtioiden
+   * nimet ovat usein lyhyita. Mitattu: "Asunto Oy Helsingin Pyy" ja
+   * "... Evia" saivat varmuuden 75, koska "Pyy" katosi eika erottavia
+   * sanoja jaanyt molemmille puolille.
+   */
+  it("laukeaa myos lyhyesta erottavasta sanasta", () => {
+    const match = findProjectMatchDetailed(
+      [project("1", "Asunto Oy Helsingin Pyy", { city: "Helsinki" })],
+      { ...BLANK, name: "Asunto Oy Helsingin Evia", city: "Helsinki" }
+    )
+    expect(match?.reasons).toContain("different_name_subjects")
+    expect(match!.confidence).toBeLessThan(70)
+  })
+
+  /*
+   * Yhtiomuoto ja "Asunto" ovat jokaisessa taloyhtion nimessa, joten ne
+   * eivat saa olla erottavia sanoja.
+   */
+  it("ei pida yhtiomuotoa erottavana sanana", () => {
+    const match = findProjectMatchDetailed(
+      [project("1", "Asunto Oy Helsingin Pyy", { city: "Helsinki" })],
+      { ...BLANK, name: "Asunto Oyj Helsingin Pyy", city: "Helsinki" }
+    )
+    expect(match?.reasons ?? []).not.toContain("different_name_subjects")
+  })
+
+  /*
    * Tunniste voittaa: lupanumero on suora todiste samasta kohteesta, eikä
    * nimien sanaero kumoa sitä.
    */

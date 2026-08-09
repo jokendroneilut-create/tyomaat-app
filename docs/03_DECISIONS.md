@@ -48,13 +48,27 @@ Kaksi ehtoa pitävät säännön turvallisena:
 
 Tunniste (lupanumero, kiinteistötunnus) voittaa säännön, kuten numeroerossa.
 
-Sääntö käyttää matcherin omaa `titleWords`-tokenisointia eikä omaa
-sanalistaa, jottei geneeristen sanojen luettelo kahdennu.
+**Sääntö tarvitsee OMAN tokenisointinsa.** Ensimmäinen versio käytti
+matcherin `titleWords`-funktiota, joka pudottaa alle neljän merkin sanat
+kohinana. Nimivertailussa se on oikein, mutta erottavana sanana lyhyt sana
+on juuri se tieto joka kertoo kohteen — asunto-osakeyhtiöiden nimet ovat
+usein lyhyitä:
 
-**Tunnetut aukot:** alle neljän merkin erottava sana katoaa tokenisoinnissa
-("Asunto Oy Helsingin **Pyy**" vs "… **Evia**"), ja vartaloetuliite päästää
-läpi osan pareista ("Kaskia" vs "Kaskenmäen"). Molemmat jäivät 71:n
-joukkoon.
+> "Asunto Oy Helsingin **Pyy**" vs "Asunto Oy Helsingin **Evia**" → 75
+
+"Pyy" katosi, jolloin erottavia sanoja jäi vain toiselle puolelle eikä
+sääntö lauennut. Raja on tässä säännössä **kolme merkkiä**, ja
+nimivertailun oma viritys jää koskematta. Yhtiömuodot ja sidesanat
+pudotetaan erikseen, koska ne mahtuvat nyt rajan yli. Puhtaat luvut
+jätetään pois, koska niillä on jo oma sääntönsä — muuten sama ero
+kapittaisi parin kahdesti ja hämärtäisi syyn.
+
+Vaikutus: yhdistämiskynnyksen ylittäviä pareja 71 → **65**.
+
+**Tunnettu aukko:** vartaloetuliite päästää läpi osan pareista ("Kaskia"
+vs "Kaskenmäen" — vartalo "kask" on "kaskenm":n alku). Karkea vartalointi
+on tietoinen kompromissi: oikea morfologia estäisi tämän, mutta hinta olisi
+sanastoriippuvuus.
 
 ### D-044 – Otsikko on kahdessa paikassa, ja vain toinen näkyy listassa
 Otsikon siivous ([D-042](#d-042--otsikko-nimeää-päätöksen-hanke-tarvitsee-oman-nimen))

@@ -27,7 +27,7 @@ yhdistämiskynnyksen alle, jolloin se jää ihmisen katsottavaksi — sama
 rajoittava malli kuin numeroerossa, ei estävä. Ks.
 [D-045](03_DECISIONS.md).
 
-Mitattu 4 472 hankkeella: yhdistämiskynnyksen ylittäviä pareja **267 → 71**.
+Mitattu 4 472 hankkeella: yhdistämiskynnyksen ylittäviä pareja **267 → 65**.
 Väärä yhdistäminen purettiin myös kannasta.
 
 ### Otsikko nimeää hankkeen, ei päätöstä
