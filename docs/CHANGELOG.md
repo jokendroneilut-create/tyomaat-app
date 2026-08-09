@@ -57,6 +57,15 @@ Jonossa olleet päätösrivit korjattiin
 urakoitsijakentän; puitesopimuksessa kenttä jätetään tyhjäksi, koska yhtä
 pääurakoitsijaa ei ole.
 
+**Täydennys:** viides lausemuoto lisättiin — monikkorooli mutta yksi
+voittaja, perustelu verbin ja nimen välissä ("sopimustoimittajiksi valitaan
+hinnaltaan halvimman kokonaistarjouksen jättänyt Lapin Timanttisahaus Oy").
+Se paljasti samalla, että kuvion `i`-lippu mitätöi nimen kirjainkokoehdon:
+kantaan oli päätynyt voittajina "kokonaistaloudellisesti edullisimman
+tarjouksen jättänyt Oteran Oy" ja "halvimman tarjoushinnan tehnyt Lappset
+Group Oy". Korjauksen jälkeen voittaja on 35 rivillä (ennen 27), eikä
+yhdelläkään nimessä ole enää pienellä alkavaa etuliitettä.
+
 Backfill-skriptin säilytyssääntö käännettiin samalla: uusi laskenta voittaa
 myös tyhjänä. Aiemmin `winners.length ? winners : md.winners` olisi jättänyt
 väärät voittajat voimaan — sama ansa oli kaatanut kohdetyypin kahdesti.

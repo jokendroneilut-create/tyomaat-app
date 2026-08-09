@@ -66,6 +66,22 @@ Uudelleenmittaus samalla otoksella: 9/9 oikein (kaksi riviä joilla ei ole
 voittajaa tyhjeni oikein). Koko aineistossa 1003 päätösrivistä 27:llä on
 voittaja: 24 yksittäistä urakoitsijaa ja 3 puitesopimusta.
 
+**Viides muoto ja i-lippu (lisätty myöhemmin).** Pienhankinnassa lukee
+"sopimustoimittajiksi valitaan hinnaltaan halvimman kokonaistarjouksen
+jättänyt Lapin Timanttisahaus Oy": monikkorooli mutta yksi voittaja, ja
+verbin ja nimen välissä on perustelu. Roolin luku ei siis kerro voittajien
+määrää — se ratkaisee vain kumpaa reittiä yritetään ensin. Välisanat
+sallitaan verbin jälkeen, rajattuna viiteen ja vain pienellä alkavina.
+
+Tämä paljasti pahemman vian: **kuvio ei voi käyttää i-lippua.** Se tekee myös
+nimen kuviosta `[A-ZÅÄÖ]` kirjainkoosta riippumattoman, jolloin isolla
+alkava sana lakkaa olemasta vaatimus — ja juuri se erottaa yritysnimen sitä
+edeltävistä perustelusanoista. Kantaan oli päätynyt voittajina
+"kokonaistaloudellisesti edullisimman tarjouksen jättänyt Oteran Oy" ja
+"halvimman tarjoushinnan tehnyt Lappset Group Oy". Roolit ja verbi
+kirjoitetaan siksi molemmilla alkukirjaimilla (`[Vv]alit`,
+`[Uu]rakoitsijaksi`) eikä lipulla.
+
 Ks. `lib/agent/decisionWinners.ts`. Sama ilmiö kuin
 [D-035](#d-035--ingressi-kertoo-hankkeen-loppuosa-kertoo-ympäristön):
 täsmällinen merkki ei ole sama asia kuin oikea merkki.

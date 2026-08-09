@@ -119,6 +119,50 @@ describe("extractDecisionWinners", () => {
     ).toEqual([])
   })
 
+  /*
+   * Viides lausemuoto: monikkorooli mutta yksi voittaja, ja verbin ja nimen
+   * välissä on perustelu. Roolin luku ei siis kerro voittajien määrää.
+   */
+  it("poimii voittajan kun verbin ja nimen välissä on perustelu", () => {
+    expect(
+      extractDecisionWinners(
+        "Päätän, että edellä mainituilla perusteilla Sipolantien 9 " +
+          "purku-urakkahankinnan sopimustoimittajiksi valitaan hinnaltaan " +
+          "halvimman kokonaistarjouksen jättänyt Lapin Timanttisahaus Oy, " +
+          "jonka kokonaishinta on 16 500,00 € alv 0 %."
+      )
+    ).toEqual(["Lapin Timanttisahaus Oy"])
+  })
+
+  /*
+   * Perustelusanat EIVÄT saa päätyä nimeen. Kuvio ei siksi voi käyttää
+   * i-lippua: se tekisi myös nimen kuviosta [A-ZÅÄÖ] kirjainkoosta
+   * riippumattoman. Mitattu: kantaan päätyi voittajaksi
+   * "kokonaistaloudellisesti edullisimman tarjouksen jättänyt Oteran Oy".
+   */
+  it("ei liitä perustelusanoja yrityksen nimeen", () => {
+    expect(
+      extractDecisionWinners(
+        "Kaupunkikehityslautakunta päätti, että Aleksanterinkadun sillan " +
+          "perusparantamisen urakoitsijaksi valitaan kokonaistaloudellisesti " +
+          "edullisimman tarjouksen jättänyt Oteran Oy."
+      )
+    ).toEqual(["Oteran Oy"])
+  })
+
+  /*
+   * Ilman verbiä nimen on seurattava roolia heti. Muuten kuvio poimisi
+   * minkä tahansa lähellä olevan yrityksen.
+   */
+  it("ei hyppää roolista kaukaiseen yritykseen ilman valintaverbiä", () => {
+    expect(
+      extractDecisionWinners(
+        "Urakoitsijaksi soveltuvan yrityksen tulee täyttää tarjouspyynnön " +
+          "ehdot. Tarjouksen jätti Rakennus Oy."
+      )
+    ).toEqual([])
+  })
+
   it("ei toista samaa yritystä kahdesti", () => {
     expect(extractDecisionWinners(`${PUITESOPIMUS} Päätös: ${PUITESOPIMUS}`)).toHaveLength(8)
   })

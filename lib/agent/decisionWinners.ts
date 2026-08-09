@@ -101,17 +101,55 @@ const REJECTION_WINDOW = 60
 /*
  * Yksikköroolit. Etuliite on sallittu, koska rooli esiintyy yhdyssanana:
  * "KVR-urakoitsijaksi", "pääurakoitsijaksi".
+ *
+ * MYÖS MONIKKOROOLIT kelpaavat tähän. Roolin luku ei kerro voittajien
+ * määrää: pienhankinnassa lukee "sopimustoimittajiksi valitaan ... Lapin
+ * Timanttisahaus Oy" vaikka voittajia on yksi. Monikko ratkaisee vain sen,
+ * kumpaa reittiä yritetään ensin - luettelo ajetaan aina ennen tätä, ja
+ * tänne päädytään vain jos luetteloa ei ollut.
  */
-const SINGLE_ROLES = `${NAME_CHAR}*urakoitsijaksi|toimittajaksi|palveluntuottajaksi|sopimuskumppaniksi`
+/*
+ * KUVIO ON KIRJAINKOKOHERKKÄ, ja siksi roolit ja verbi kirjoitetaan
+ * molemmilla alkukirjaimilla. Kuvio ei voi käyttää i-lippua: se tekisi myös
+ * nimen kuviosta [A-ZÅÄÖ] kirjainkoosta riippumattoman, jolloin isolla
+ * alkava sana lakkaisi olemasta vaatimus - ja juuri se erottaa yritysnimen
+ * sitä edeltävistä perustelusanoista. Mitattu: kannassa oli voittajina
+ * "kokonaistaloudellisesti edullisimman tarjouksen jättänyt Oteran Oy" ja
+ * "halvimman tarjoushinnan tehnyt Lappset Group Oy".
+ */
+const SINGLE_ROLES = [
+  `${NAME_CHAR}*[Uu]rakoitsijaksi`,
+  "[Tt]oimittajaksi",
+  "[Pp]alveluntuottajaksi",
+  "[Ss]opimuskumppaniksi",
+  "[Pp]uitesopimuskumppaneiksi",
+  "[Ss]opimuskumppaneiksi",
+  `${NAME_CHAR}*[Uu]rakoitsijoiksi`,
+  `${NAME_CHAR}*[Tt]oimittajiksi`,
+  "[Pp]alveluntuottajiksi",
+  "[Pp]alveluntarjoajiksi",
+].join("|")
+
+/*
+ * Verbin ja nimen väliin mahtuu perustelu: "valitaan hinnaltaan halvimman
+ * kokonaistarjouksen jättänyt Lapin Timanttisahaus Oy". Välisanat saavat
+ * alkaa vain pienellä, joten kuvio ei voi ohittaa yritysnimeä ja tarttua
+ * seuraavaan. Määrä on rajattu, koska rajaamaton väli yhdistäisi roolin ja
+ * nimen eri virkkeistä.
+ */
+const FILLER = `(?:[a-zåäö]${FI_WORD}*\\s+){0,5}`
 
 /*
  * Nimi voi olla roolisanan kummalla puolen tahansa:
  *   "urakoitsijaksi valitaan MVR-Yhtymä Oy"
  *   "KVR-urakoitsijaksi Varte Lahti Oy:n, käyttäen ..."
+ *
+ * Välisanat sallitaan vain verbin jälkeen. Ilman verbiä nimen on seurattava
+ * roolia heti, muuten kuvio poimisi minkä tahansa lähellä olevan yrityksen.
  */
 const SINGLE_ANCHOR = new RegExp(
-  `(?:${SINGLE_ROLES})${FI_BOUNDARY}\\s+(?:valit${FI_WORD}+\\s+)?(${NAME})`,
-  "gi"
+  `(?:${SINGLE_ROLES})${FI_BOUNDARY}\\s+(?:[Vv]alit${FI_WORD}+\\s+${FILLER})?(${NAME})`,
+  "g"
 )
 
 /*
