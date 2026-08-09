@@ -228,3 +228,59 @@ describe("extractDecisionWinners", () => {
     expect(extractDecisionWinners("")).toEqual([])
   })
 })
+
+describe("extractDecisionWinners – y-tunnukseton luettelo", () => {
+  /*
+   * Kuopion päätös. Kolme syytä miksi aiemmat kuviot eivät osuneet: rooli
+   * on ennen verbiä, verbin perässä on kaksoispiste, eikä yhdelläkään
+   * yrityksellä ole y-tunnusta - eikä yhdellä ole edes yhtiömuotoa.
+   */
+  const KUOPIO =
+    "Kaupunkirakennelautakunta päättää, että Kunnallisteknisten- ja " +
+    "talonrakennustöiden pienkohteet 2026 - 2027 " +
+    "puitejärjestelysopimuskumppaneiksi valitaan: Koneurakointi M. Niiranen Oy, " +
+    "Oteran Oy, Maansiirto Eero Huttunen Oy, Koneurakointi Jarkko Kosunen ja " +
+    "KoneNeliö Oy. Päätös Päätösehdotus hyväksyttiin yksimielisesti."
+
+  it("poimii kaikki viisi ilman y-tunnuksia", () => {
+    expect(extractDecisionWinners(KUOPIO)).toEqual([
+      "Koneurakointi M. Niiranen Oy",
+      "Oteran Oy",
+      "Maansiirto Eero Huttunen Oy",
+      "Koneurakointi Jarkko Kosunen",
+      "KoneNeliö Oy",
+    ])
+  })
+
+  /*
+   * Nimen sisäinen piste ei saa katkaista luetteloa: "Koneurakointi
+   * M. Niiranen Oy" jäisi muotoon "Koneurakointi M".
+   */
+  it("ei katkaise luetteloa nimen alkukirjaimen pisteeseen", () => {
+    expect(extractDecisionWinners(KUOPIO)).toContain("Koneurakointi M. Niiranen Oy")
+  })
+
+  /*
+   * Yhden nimen tapauksessa yksittäisvoittajan kuvio on tarkempi: se osaa
+   * ohittaa perustelusanat, joita pilkkujako ei erota.
+   */
+  it("jättää perustelulauseen yksittäisvoittajan kuviolle", () => {
+    expect(
+      extractDecisionWinners(
+        "Päätän, että hankinnan sopimustoimittajiksi valitaan hinnaltaan " +
+          "halvimman kokonaistarjouksen jättänyt Lapin Timanttisahaus Oy, " +
+          "jonka kokonaishinta on 16 500,00 € alv 0 %."
+      )
+    ).toEqual(["Lapin Timanttisahaus Oy"])
+  })
+
+  /* "Tarjoajiksi" ei ole voittajarooli, vaikka luettelo näyttää samalta. */
+  it("ei poimi tarjoajaluetteloa", () => {
+    expect(
+      extractDecisionWinners(
+        "Tarjoajiksi valittiin seuraavat kolme (3) ehdokasta: Lujatalo Oy, " +
+          "Rakennusliike Lapti Oy ja Varte Lahti Oy."
+      )
+    ).toEqual([])
+  })
+})

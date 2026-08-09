@@ -439,6 +439,30 @@ yhtiömuotoon. Sivutuotteena myös etuliitteinen "Oy Sähkö-Vendelin Ab"
 toimii, ja puitesopimuslistasta korjaantui katkennut "Kvl Putki- ja
 Poltinhuolto Oy" (oli "Poltinhuolto Oy").
 
+**Seitsemäs muoto: y-tunnukseton luettelo (lisätty myöhemmin).**
+
+> "…puitejärjestely**sopimuskumppaneiksi valitaan:** Koneurakointi
+> M. Niiranen Oy, Oteran Oy, Maansiirto Eero Huttunen Oy, Koneurakointi
+> Jarkko Kosunen ja KoneNeliö Oy."
+
+Kolme syytä miksi mikään aiemmista kuvioista ei osunut: **rooli on ennen
+verbiä**, verbin perässä on **kaksoispiste**, eikä yhdelläkään yrityksellä
+ole **y-tunnusta** — eikä yhdellä ole edes yhtiömuotoa ("Koneurakointi
+Jarkko Kosunen"). Luettelo rajataan siksi virkkeeseen ja pilkotaan
+erottimista, ja jokainen pala tarkistetaan erikseen.
+
+Kaksi ehtoa pitävät sen turvallisena:
+
+- **Vähintään kaksi kelvollista nimeä.** Yhden nimen tapauksessa
+  yksittäisvoittajan kuvio on tarkempi: se osaa ohittaa perustelusanat
+  ("valitaan hinnaltaan halvimman tarjouksen jättänyt X Oy"), joita
+  pilkkujako ei erota.
+- **Piste ei lopeta virkettä jos sitä edeltää yksi iso kirjain.** Se on
+  nimen alkukirjain, ja siihen katkaistuna luettelo jäisi muotoon
+  "Koneurakointi M".
+
+Mitattu koko aineistolla: 1 uusi rivi, 0 muuttunutta, 0 poistunutta.
+
 **Ostoverbin passiivi (lisätty myöhemmin).** Ablatiivin vartija tunsi vain
 aktiivin `hankkii`, mutta aineistossa passiivi `hankitaan` on lähes yhtä
 yleinen — ks. [D-039](#d-039--kuvion-muodot-luetaan-aineistosta-ei-muistista).

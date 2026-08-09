@@ -115,6 +115,50 @@ const REJECTION = /hylät|hylkä|suljetaan|ei\s+täytä|poissuljet/i
 const REJECTION_WINDOW = 60
 
 /*
+ * LUETTELO ILMAN Y-TUNNUKSIA, rooli ennen verbiä.
+ *
+ *   "…puitejärjestelysopimuskumppaneiksi valitaan: Koneurakointi
+ *    M. Niiranen Oy, Oteran Oy, Maansiirto Eero Huttunen Oy,
+ *    Koneurakointi Jarkko Kosunen ja KoneNeliö Oy."
+ *
+ * Kolme syytä miksi aiemmat kuviot eivät osuneet: rooli on ennen verbiä,
+ * verbin perässä on kaksoispiste, eikä yhdelläkään yrityksellä ole
+ * y-tunnusta - eikä yhdellä ole edes yhtiömuotoa ("Koneurakointi Jarkko
+ * Kosunen").
+ *
+ * "Tarjoajiksi" ja "ehdokkaiksi" EIVÄT ole tässä roolistossa: ne nimeävät
+ * kilpailuun päässeet, eivät valittuja.
+ */
+const INLINE_LIST_ANCHOR = new RegExp(
+  `${NAME_CHAR}*(?:kumppaneiksi|urakoitsijoiksi|toimittajiksi|palveluntuottajiksi)` +
+    `\\s+(?:valit|hyväks)${FI_WORD}+\\s*:?\\s*`,
+  "gi"
+)
+
+/*
+ * Virkkeen loppu. Piste EI kelpaa lopuksi jos sitä edeltää yksi iso
+ * kirjain: se on nimen alkukirjain ("Koneurakointi M. Niiranen Oy"), ja
+ * siihen katkaistuna luettelo jäisi kesken.
+ */
+const SENTENCE_END = /(?<![A-ZÅÄÖ])\.(?=\s|$)/
+
+/*
+ * Luettelon erotin: pilkku tai "ja". Molemmat esiintyvät samassa
+ * luettelossa, viimeinen jäsen on tyypillisesti ja-sanan takana.
+ */
+const LIST_SEPARATOR = /\s*,\s*|\s+ja\s+/
+
+/*
+ * Kelpaako pala yrityksen nimeksi? Jokaisen sanan on alettava isolla tai
+ * oltava numero - näin perustelulause ("hinnaltaan halvimman tarjouksen
+ * jättänyt…") ei kelpaa, vaikka se sattuisi olemaan pilkkujen välissä.
+ */
+const NAME_LIKE = new RegExp(
+  `^[A-ZÅÄÖ]${NAME_CHAR}*(?:\\s+(?:[A-ZÅÄÖ0-9&]${NAME_CHAR}*|ja))*$`
+)
+const MAX_NAME_WORDS = 5
+
+/*
  * Yksikköroolit. Etuliite on sallittu, koska rooli esiintyy yhdyssanana:
  * "KVR-urakoitsijaksi", "pääurakoitsijaksi".
  *
@@ -219,6 +263,19 @@ export function extractDecisionWinners(description: string | null | undefined): 
   }
 
   /*
+   * Y-tunnukseton luettelo. Vaaditaan VÄHINTÄÄN KAKSI kelvollista nimeä:
+   * yhden nimen tapauksessa yksittäisvoittajan kuvio on tarkempi, koska se
+   * osaa ohittaa perustelusanat ("valitaan hinnaltaan halvimman tarjouksen
+   * jättänyt X Oy"), joita pilkkujako ei erota.
+   */
+  if (found.length === 0) {
+    for (const anchor of text.matchAll(INLINE_LIST_ANCHOR)) {
+      const names = collectInlineList(text, (anchor.index ?? 0) + anchor[0].length)
+      if (names.length >= 2) found.push(...names)
+    }
+  }
+
+  /*
    * Yksittäisvoittajat luetaan vain jos puitesopimusluetteloa ei ollut.
    * Muuten sama teksti tuottaisi molemmat: puitesopimuspäätöksessä lukee
    * myös "toimeksiantoon urakoitsija valitaan ... keskuudesta".
@@ -267,6 +324,33 @@ export function extractDecisionWinners(description: string | null | undefined): 
  * se on aina mukana ja ilman sitä poiminta jatkuisi luettelon ohi seuraavaan
  * kappaleeseen.
  */
+/*
+ * Luettelon poiminta ankkurin jälkeen kun y-tunnuksia ei ole. Rajataan
+ * virkkeeseen ja pilkotaan erottimista; jokainen pala tarkistetaan
+ * erikseen, jottei perustelulause pääse mukaan.
+ */
+function collectInlineList(text: string, from: number): string[] {
+  const rest = text.slice(from)
+  const end = rest.search(SENTENCE_END)
+  const segment = (end >= 0 ? rest.slice(0, end) : rest).trim()
+
+  /* Ilman rajaa kuvio söisi koko loppudokumentin jos pistettä ei löydy. */
+  if (!segment || segment.length > 400) return []
+
+  const names: string[] = []
+
+  for (const raw of segment.split(LIST_SEPARATOR)) {
+    const part = raw.trim().replace(/[.,;:]+$/, "")
+    if (!part) continue
+    if (part.split(/\s+/).length > MAX_NAME_WORDS) return names
+    if (!NAME_LIKE.test(part)) return names
+    if (REJECTION.test(part)) continue
+    names.push(part)
+  }
+
+  return names
+}
+
 function collectList(text: string, from: number): string[] {
   const names: string[] = []
   let cursor = from
