@@ -57,6 +57,18 @@ const PERIOD =
   /sopimuskausi\s+on\s+(\d{1,2})\.(\d{1,2})\.(\d{4})?\s*[-–—]\s*(\d{1,2})\.(\d{1,2})\.(\d{4})/i
 
 /*
+ * "Sopimuskausi on 04-12.2025" - pelkät KUUKAUDET ja yksi vuosi.
+ *
+ * Päivämäärämuotoinen kuvio ei osu tähän, joten kausi jäi lukematta ja
+ * hanke näytti myönnetyltä sopimukselta vielä puoli vuotta päättymisen
+ * jälkeen. Kausi päättyy loppukuukauden viimeisenä päivänä.
+ *
+ * Ajetaan päivämääräkuvion JÄLKEEN, jottei "1.5.2026 – 30.9.2026" osu
+ * tähän vahingossa.
+ */
+const MONTH_RANGE = /sopimuskausi\s+on\s+(\d{1,2})\s*[-–—]\s*(\d{1,2})\.(\d{4})/i
+
+/*
  * "Kohteen töiden tulee olla täysin valmiit ja luovutettavissa tilaajalle
  * viimeistään 31.5.2026." Antaa vain loppupäivän, mutta se riittää:
  * valmistumisaika on se mitä vaiheesta halutaan tietää.
@@ -88,6 +100,27 @@ export function extractContractPeriod(
   if (period) {
     const [, d1, m1, y1, d2, m2, y2] = period
     return { start: toDate(d1, m1, y1 ?? y2), end: toDate(d2, m2, y2) }
+  }
+
+  const months = text.match(MONTH_RANGE)
+  if (months) {
+    const [, m1, m2, y] = months
+    const startMonth = Number(m1)
+    const endMonth = Number(m2)
+    const endYear = Number(y)
+
+    /*
+     * Vuodenvaihteen ylittävä kausi ("11-03.2026") alkaa edellisenä
+     * vuonna. Ilman tätä alku olisi loppua myöhempi ja vaihe menisi
+     * "Sopimus myönnetty" vaikka kausi olisi jo käynnissä.
+     */
+    const startYear = startMonth <= endMonth ? endYear : endYear - 1
+
+    return {
+      start: new Date(startYear, startMonth - 1, 1),
+      /* Kuukauden viimeinen päivä: seuraavan kuun päivä 0. */
+      end: new Date(endYear, endMonth, 0),
+    }
   }
 
   const deadline = text.match(DEADLINE)

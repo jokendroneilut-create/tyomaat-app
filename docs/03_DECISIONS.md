@@ -278,6 +278,14 @@ Kumpikaan ei ole otsikossa, joten otsikkopäättely jää viimeiseksi varalle �
 Helsingillä se on rikkaampi kuin muilla (hankesuunnitelma, tarveselvitys,
 rakentamispäätös), eikä sitä haluta menettää.
 
+**Kuukausiväli (lisätty myöhemmin).** Sopimuskausi kirjoitetaan myös
+pelkkinä kuukausina: "Sopimuskausi on 04-12.2025". Päivämääräkuvio ei osu
+siihen, joten kausi jäi lukematta ja hanke näytti myönnetyltä sopimukselta
+vielä puoli vuotta päättymisen jälkeen. Kausi päättyy loppukuukauden
+viimeisenä päivänä, ja vuodenvaihteen ylittävä väli ("11-03.2026") alkaa
+edellisenä vuonna — ilman sitä alku olisi loppua myöhempi. Kuvio ajetaan
+päivämääräkuvion JÄLKEEN, jottei "1.5.2026 – 30.9.2026" osu siihen.
+
 **Tietoisesti pois: "toteutusaikataulu" ja "urakka-aika".**
 Toteutusaikataulu on lähes aina ALUSTAVA ja kuvaa suunnitteluvaiheita
 ("hankesuunnitelman hyväksyminen 6/2026, toteutussuunnittelu 8/2026–2/2027"),

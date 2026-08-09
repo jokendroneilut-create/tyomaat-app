@@ -173,3 +173,44 @@ describe("phaseFromTitle – kilpailutuksen aloitus", () => {
     )
   })
 })
+
+describe("extractContractPeriod – kuukausiväli", () => {
+  /*
+   * Mitattu rivi: "Sopimuskausi on 04-12.2025". Päivämääräkuvio ei osu
+   * pelkkiin kuukausiin, joten kausi jäi lukematta ja hanke näytti
+   * myönnetyltä sopimukselta vielä puoli vuotta päättymisen jälkeen.
+   */
+  it("lukee kuukausivälin ja päättää kuun viimeiseen päivään", () => {
+    const p = extractContractPeriod("Sopimuskausi on 04-12.2025 ja se alkaa, kun päätös on lainvoimainen.")
+    expect(p?.start?.getFullYear()).toBe(2025)
+    expect(p?.start?.getMonth()).toBe(3) /* huhtikuu */
+    expect(p?.end.getMonth()).toBe(11) /* joulukuu */
+    expect(p?.end.getDate()).toBe(31)
+  })
+
+  it("päättelee vuodenvaihteen ylittävän kauden alkuvuoden", () => {
+    const p = extractContractPeriod("Sopimuskausi on 11-03.2026")
+    expect(p?.start?.getFullYear()).toBe(2025)
+    expect(p?.end.getFullYear()).toBe(2026)
+    expect(p?.end.getDate()).toBe(31) /* maaliskuu */
+  })
+
+  /* Päivämäärämuoto ajetaan ensin, joten se ei saa osua kuukausikuvioon. */
+  it("ei sekoita päivämäärämuotoa kuukausiväliksi", () => {
+    const p = extractContractPeriod("Hankinnan sopimuskausi on 1.5.2026 – 30.9.2026.")
+    expect(p?.start?.getMonth()).toBe(4)
+    expect(p?.end.getMonth()).toBe(8)
+    expect(p?.end.getDate()).toBe(30)
+  })
+
+  it("päättynyt kuukausikausi tarkoittaa valmista", () => {
+    expect(
+      inferDecisionPhase({
+        description: "Sopimuskausi on 04-12.2025 ja se alkaa, kun päätös on lainvoimainen.",
+        hasWinner: true,
+        fallback: "Sopimus myönnetty",
+        now: NYT,
+      })
+    ).toBe("Valmistunut")
+  })
+})
