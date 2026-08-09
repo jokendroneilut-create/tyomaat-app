@@ -53,3 +53,6 @@ ab-*.json
 **/.claude/settings.local.json
 **/.claude/worktrees/
 **/.claude/scheduled_tasks.lock
+# app/.claude/launch.json toistaa juuren konfiguraation mutta kovakoodatulla
+# absoluuttisella polulla (--prefix C:\Users\...), joten se on koneriippuva.
+app/.claude/launch.json
