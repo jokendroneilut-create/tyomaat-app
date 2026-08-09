@@ -30,6 +30,31 @@ Jos kunta joskus pyytää poistamaan jonkin asian, se hoidetaan
 lähdekohtaisesti — sama menettely kuin robots.txt-kiellon kanssa
 ([D-031](#d-031--robotstxt-ratkaisee-ei-alustan-tekninen-soveltuvuus)).
 
+### D-044 – Otsikko on kahdessa paikassa, ja vain toinen näkyy listassa
+Otsikon siivous ([D-042](#d-042--otsikko-nimeää-päätöksen-hanke-tarvitsee-oman-nimen))
+näkyi hankesivulla mutta EI TIC:n listassa. Syy: tuonti kirjoittaa saman
+arvon kahteen paikkaan (`title`-sarake ja `metadata.operation`), ja lista
+renderöi `metadata.operation ?? title`.
+
+**Operationia ei silti saa ylikirjoittaa sokeasti.** Mitattu ennen
+korjausta:
+
+| lähde | `title` | `metadata.operation` |
+|---|---|---|
+| Lupapiste (304 riviä) | "Rakennuslupa: Vanha-Stens 5" | "Urheilukentän rakentaminen tontille" |
+
+Lupapisteellä operation on **parempi** kuin otsikko — siksi UI suosii sitä.
+Päätösriveilläkin 62 eroaa aidosti: sama ehdokas on täsmätty useasta
+lähteestä, ja operation kantaa toisen lähteen otsikkoa.
+
+Sääntö: **päivitä operation vain kun se on vanhentunut kopio otsikosta.**
+Testinä se, että siivottuna se antaa täsmälleen nykyisen otsikon.
+
+Ensimmäinen ehto `operation === row.title` ei osunut kertaakaan, koska
+`row.title` oli jo siivottu edellisessä ajossa. Ajo raportoi 0 muutosta ja
+näytti onnistuneelta — virhe löytyi vain koska tulos mitattiin ajon
+jälkeen, samoin kuin [D-041](#d-041--alustan-tunnus-on-päätepiste-ei-verkkotunnus-luokkanimi-ei-ole-rakenne).
+
 ### D-042 – Otsikko nimeää päätöksen, hanke tarvitsee oman nimen
 Kunnan otsikko kuvaa kokouksen asiaa, ei rakennuskohdetta:
 

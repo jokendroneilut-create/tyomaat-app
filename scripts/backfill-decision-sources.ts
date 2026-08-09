@@ -115,7 +115,7 @@ async function main() {
   console.log(`  joista sekoittunut teksti: ${broken.length} (haetaan uudelleen)\n`)
   if (targets.length === 0) return
 
-  const stats = { teksti: 0, tyyppi: 0, otsikko: 0, voittajat: 0, vaihe: 0, epaonnistui: 0 }
+  const stats = { teksti: 0, tyyppi: 0, otsikko: 0, operation: 0, voittajat: 0, vaihe: 0, epaonnistui: 0 }
   const types: Record<string, number> = {}
 
   for (let i = 0; i < targets.length; i += CONCURRENCY) {
@@ -191,6 +191,18 @@ async function main() {
         })
         if (phase !== md.phase_hint) stats.vaihe++
 
+        /*
+         * Onko operation vanhentunut kopio otsikosta? Vertailua ei voi
+         * tehdä nykyiseen otsikkoon, koska se on jo siivottu - ehto
+         * `operation === row.title` ei osunut kertaakaan. Oikea testi on
+         * siivota operation ja katsoa antaako se saman otsikon.
+         */
+        const operationIsStaleTitle =
+          typeof md.operation === "string" &&
+          md.operation !== title &&
+          genericizeDecisionTitle(md.operation) === title
+        if (operationIsStaleTitle) stats.operation++
+
         const buildingType = inferBuildingType(title, description)
         if (buildingType !== md.building_type) {
           stats.tyyppi++
@@ -207,6 +219,21 @@ async function main() {
             metadata: {
               ...md,
               description,
+              /*
+               * OTSIKKO ON KAHDESSA PAIKASSA. Tuonti kirjoittaa saman
+               * arvon sekä title-sarakkeeseen että metadata.operationiin,
+               * ja TIC:n lista renderöi `metadata.operation ?? title` -
+               * joten pelkkä title-päivitys näkyi vain hankesivulla, ei
+               * listassa.
+               *
+               * Operation päivitetään VAIN jos se oli synkassa vanhan
+               * otsikon kanssa. Muualla se kantaa aidosti eri tekstiä:
+               * Lupapisteellä title on lupatunnus ("Rakennuslupa:
+               * Vanha-Stens 5") ja operation kertoo mitä rakennetaan
+               * ("Urheilukentän rakentaminen tontille"). Sen
+               * ylikirjoittaminen hävittäisi paremman tiedon 304 riviltä.
+               */
+              operation: operationIsStaleTitle ? title : (md.operation ?? null),
               phase_hint: phase,
               building_type: buildingType ?? null,
               /*
@@ -245,6 +272,7 @@ async function main() {
   console.log(`otsikko korjattu:    ${stats.otsikko}`)
   console.log(`voittajat poimittu:  ${stats.voittajat}`)
   console.log(`vaihe korjattu:      ${stats.vaihe}`)
+  console.log(`operation synkattu:  ${stats.operation}`)
   console.log(`epäonnistui:         ${stats.epaonnistui}`)
   console.log("\nKohdetyypit:")
   for (const [t, n] of Object.entries(types).sort((a, b) => b[1] - a[1])) {

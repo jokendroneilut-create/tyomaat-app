@@ -28,6 +28,14 @@ ks. [D-042](03_DECISIONS.md).
 duplikaattiparia** löytyi: Puhjon risteyssilta ja Asfalttiurakka, molemmat
 sama hanke kilpailutus- ja hankintapäätöksenä.
 
+**Korjaus näkyi ensin vain hankesivulla, ei listassa.** Otsikko on
+kahdessa paikassa (`title` ja `metadata.operation`), ja lista renderöi
+jälkimmäisen. Operation synkataan nyt — mutta vain kun se on vanhentunut
+kopio otsikosta: Lupapisteellä se on tarkoituksella eri ja parempi
+("Rakennuslupa: Vanha-Stens 5" vs. "Urheilukentän rakentaminen tontille").
+21 riviä synkattu, Lupapisteen 304 riviä koskematta. Ks.
+[D-044](03_DECISIONS.md).
+
 Samalla korjaantui vaihe: kilpailutuksen **aloituspäätös** oli merkitty
 "Sopimus myönnetty", koska otsikossa on sana "urakka". Urakoitsijaa ei ole
 vielä valittu, joten vaihe on nyt "Kilpailutus" (2 riviä).
