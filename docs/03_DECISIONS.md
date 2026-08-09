@@ -5,31 +5,6 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
-### D-043 – Salassapitomerkintä koskee liitettä, ei asiaa
-Kahden Kouvolan päätöksen otsikossa on "(salassa pidettävä, julkisuuslaki
-6.1 § 2)". Merkintä ei tarkoita että asia olisi salainen:
-
-- **Asiasivu on kunnan itse julkaisema ja julkinen.** Se on avoimessa
-  verkossa ilman tunnistautumista, ja sen teksti sisältää hankkeen
-  laajuuden, kustannusarvion ja aikataulun.
-- **Merkintä koskee LIITETTÄ.** JulkL 6 § 1 mom 2 kohdan mukaan
-  tarjouspyyntöasiakirjat tulevat julkisiksi vasta kun hankinta on tehty.
-  Salassa on siis tarjouspyyntö, ei päätös siitä että kilpailutus
-  aloitetaan.
-- **Liitteitä ei haeta.** Tarkistettu: yksikään neljästä päätösjäsentäjästä
-  ei lataa PDF-liitteitä, vain asiasivun HTML:n.
-
-Näitä ei siis jätetä keräämättä. Ne ovat päinvastoin aineiston
-**aikaisimpia** signaaleja: päätös kilpailutuksen aloittamisesta tulee
-ennen hankintailmoitusta.
-
-Merkintä poistetaan otsikosta, koska se kertoo liitteestä eikä hankkeesta
-([D-042](#d-042--otsikko-nimeää-päätöksen-hanke-tarvitsee-oman-nimen)).
-
-Jos kunta joskus pyytää poistamaan jonkin asian, se hoidetaan
-lähdekohtaisesti — sama menettely kuin robots.txt-kiellon kanssa
-([D-031](#d-031--robotstxt-ratkaisee-ei-alustan-tekninen-soveltuvuus)).
-
 ### D-044 – Otsikko on kahdessa paikassa, ja vain toinen näkyy listassa
 Otsikon siivous ([D-042](#d-042--otsikko-nimeää-päätöksen-hanke-tarvitsee-oman-nimen))
 näkyi hankesivulla mutta EI TIC:n listassa. Syy: tuonti kirjoittaa saman
@@ -54,6 +29,31 @@ Ensimmäinen ehto `operation === row.title` ei osunut kertaakaan, koska
 `row.title` oli jo siivottu edellisessä ajossa. Ajo raportoi 0 muutosta ja
 näytti onnistuneelta — virhe löytyi vain koska tulos mitattiin ajon
 jälkeen, samoin kuin [D-041](#d-041--alustan-tunnus-on-päätepiste-ei-verkkotunnus-luokkanimi-ei-ole-rakenne).
+
+### D-043 – Salassapitomerkintä koskee liitettä, ei asiaa
+Kahden Kouvolan päätöksen otsikossa on "(salassa pidettävä, julkisuuslaki
+6.1 § 2)". Merkintä ei tarkoita että asia olisi salainen:
+
+- **Asiasivu on kunnan itse julkaisema ja julkinen.** Se on avoimessa
+  verkossa ilman tunnistautumista, ja sen teksti sisältää hankkeen
+  laajuuden, kustannusarvion ja aikataulun.
+- **Merkintä koskee LIITETTÄ.** JulkL 6 § 1 mom 2 kohdan mukaan
+  tarjouspyyntöasiakirjat tulevat julkisiksi vasta kun hankinta on tehty.
+  Salassa on siis tarjouspyyntö, ei päätös siitä että kilpailutus
+  aloitetaan.
+- **Liitteitä ei haeta.** Tarkistettu: yksikään neljästä päätösjäsentäjästä
+  ei lataa PDF-liitteitä, vain asiasivun HTML:n.
+
+Näitä ei siis jätetä keräämättä. Ne ovat päinvastoin aineiston
+**aikaisimpia** signaaleja: päätös kilpailutuksen aloittamisesta tulee
+ennen hankintailmoitusta.
+
+Merkintä poistetaan otsikosta, koska se kertoo liitteestä eikä hankkeesta
+([D-042](#d-042--otsikko-nimeää-päätöksen-hanke-tarvitsee-oman-nimen)).
+
+Jos kunta joskus pyytää poistamaan jonkin asian, se hoidetaan
+lähdekohtaisesti — sama menettely kuin robots.txt-kiellon kanssa
+([D-031](#d-031--robotstxt-ratkaisee-ei-alustan-tekninen-soveltuvuus)).
 
 ### D-042 – Otsikko nimeää päätöksen, hanke tarvitsee oman nimen
 Kunnan otsikko kuvaa kokouksen asiaa, ei rakennuskohdetta:
