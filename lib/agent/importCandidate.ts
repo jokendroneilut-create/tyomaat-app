@@ -25,6 +25,7 @@ import {
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { stripCompanyPrefixFromHeadline } from "@/lib/agent/stripCompanyPrefix"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import { decodeHtmlEntities } from "@/lib/agent/htmlEntities"
 
 /*
  * Yrityslähteiden kandidaatin tuonti. Logiikka oli aiemmin suoraan
@@ -667,7 +668,14 @@ export async function importCandidate(
    * numero/kiinteistötunnus/osoite), joten sama hanke ei monistu
    * jonoon useasta yrityssivun tiedotteesta tai muusta lähteestä.
    */
-  const cleanedTitle = stripCompanyPrefixFromHeadline(body.name)
+  /*
+   * Entiteetit puretaan keskitetysti ennen otsikon siistimistä. Jokainen
+   * jäsentäjä purki aiemmin vain ne entiteetit jotka sen omassa aineistossa
+   * oli sattumalta nähty, joten uusi entiteetti päätyi otsikkoon
+   * sellaisenaan - mitattu "Soukankuja 10&ndash;12" (Espoo),
+   * "Kuopion yleiskaava &#x2F; ..." (kaavalähde).
+   */
+  const cleanedTitle = stripCompanyPrefixFromHeadline(decodeHtmlEntities(body.name))
 
   const result = await resolvePotentialProject({
     title: cleanedTitle,
