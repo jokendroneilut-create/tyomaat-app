@@ -29053,7 +29053,6 @@ const VAALA_PROJECT_URLS = [
 
 function vaalaPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
-  if (/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/.test(normalized)) return "Voimaantulo"
 
   // "etenee kohti kaavaluonnosta" (progressing TOWARDS the draft) describes
   // a still-upcoming step, not the plan currently sitting at that stage
@@ -29075,6 +29074,10 @@ function vaalaPhaseFromText(text: string): string {
     }
     return false
   }
+
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
 
   if (
     matchesUnguarded(/hyväksy/, (window) =>
@@ -29163,7 +29166,6 @@ const SIIKAJOKI_LISTING_URL = "https://www.siikajoki.fi/vireilla-olevat-kaavahan
 
 function siikajokiPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
-  if (/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/.test(normalized)) return "Voimaantulo"
 
   const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
     for (const match of normalized.matchAll(new RegExp(pattern, "g"))) {
@@ -29177,6 +29179,10 @@ function siikajokiPhaseFromText(text: string): string {
     }
     return false
   }
+
+  if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
+  )) return "Voimaantulo"
 
   // "hyväksyi hanketta koskevan osallistumis- ja arviointisuunnitelman" is
   // the board signing off on displaying the OAS, not the plan itself being
@@ -29313,7 +29319,7 @@ function siikalatvaPhaseFromText(text: string): string {
   // legal force
   if (
     matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-      /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+      /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
     )
   ) {
     return "Voimaantulo"
@@ -29447,7 +29453,7 @@ function iiPhaseFromText(text: string): string {
 
   if (
     matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-      /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+      /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
     )
   ) {
     return "Voimaantulo"
@@ -29579,7 +29585,7 @@ function alavieskaPhaseFromText(text: string): string {
 
   if (
     matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-      /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+      /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
     )
   ) {
     return "Voimaantulo"
@@ -29831,7 +29837,7 @@ function oulainenPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|vireille|käynnist/.test(window)
@@ -29932,7 +29938,7 @@ function taivalkoskiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen/.test(window)
@@ -30065,7 +30071,7 @@ function poytyaPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen/.test(window)
@@ -30275,7 +30281,7 @@ function ruskoPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   // only kunnanvaltuusto (council) can adopt a plan -- kunnanhallitus (the
   // executive board) approving material "for display" is a procedural step,
@@ -30391,7 +30397,7 @@ function mynamakiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   // kunnanhallitus can only approve draft/proposal material for display, and
   // "esittää ... että valtuusto hyväksyy" is a future-tense proposal, not an
@@ -30752,7 +30758,7 @@ function marttilaPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   // only kunnanvaltuusto (council) can adopt a plan -- kunnanhallitus (the
   // executive board) approving an aloite/OAS/luonnos for display is procedural
@@ -30875,7 +30881,7 @@ function pyharantaPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   // only kunnanvaltuusto (council) can adopt a plan -- kunnanhallitus (the
   // executive board) approving an aloite/OAS/luonnos for display is procedural
@@ -30984,7 +30990,7 @@ function lestijarviPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -32367,7 +32373,7 @@ function taivassaloPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   // "kunnanhalli" (not "-hallit") also matches a live typo on the site
   // ("kunnanhalliuksessa"); "luonno" catches "OAS ja luonnos hyväksytty" --
@@ -32480,7 +32486,7 @@ function ilomantsiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -32611,7 +32617,7 @@ function tohmajarviPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -32769,7 +32775,7 @@ function tammelaPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -32917,7 +32923,7 @@ function lemiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -33193,7 +33199,7 @@ function kihnioPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -33343,7 +33349,7 @@ function ristijarviPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -33467,7 +33473,7 @@ function kolariPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -33712,7 +33718,7 @@ function tervolaPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -33832,7 +33838,7 @@ function savukoskiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -33938,7 +33944,7 @@ function utsjokiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -34056,7 +34062,7 @@ function isojokiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -34145,7 +34151,7 @@ function vimpeliPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -34530,7 +34536,7 @@ function pohjoisSavoPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -35104,7 +35110,7 @@ function nurmesPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -35273,7 +35279,7 @@ function kinnulaPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|esittää|luonno/.test(window)
@@ -36093,7 +36099,7 @@ function tyrnavaPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -36185,7 +36191,7 @@ function reisjarviPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -36436,7 +36442,7 @@ function pyhantaPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -36554,7 +36560,7 @@ function pyhajarviPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -36669,7 +36675,7 @@ function pyhajokiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -36792,7 +36798,7 @@ function muhosPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -36899,7 +36905,7 @@ function lumijokiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -36992,7 +36998,7 @@ function karsamakiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -37107,7 +37113,7 @@ function haapavesiPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -37238,7 +37244,7 @@ function haapajarviPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
@@ -37372,7 +37378,7 @@ function merijarviPhaseFromText(text: string): string {
     return false
   }
   if (matchesUnguarded(/voimaantulo|tuli voimaan|tullut voimaan|lainvoima/, (window) =>
-    /mrl|maankäyttö- ja rakennuslai|\d+\/\d{4}/.test(window)
+    /mrl|maankäyttö- ja rakennuslai|rakentamislai|\d+\/\d{4}/.test(window)
   )) return "Voimaantulo"
   if (matchesUnguarded(/hyväksy/, (window) =>
     /aloit|osallistumis|arviointisuunnitelm|sopimuksen|hakemuksen|kunnanhalli|kunnanvaltuusto|kaupunginvaltuusto|esittää|luonno/.test(window)
