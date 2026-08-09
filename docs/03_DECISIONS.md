@@ -5,6 +5,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-040 – Lähteen kirjoitusvirhe tuodaan sellaisenaan
+Jyväskylän hankintapäätös lukee sanatarkasti "hankitaan edullisimman
+tarjouksen jättäneeltä **Mansiirto** Harry Mäkelä Oy:ltä". Sama yritys
+esiintyy muissa päätöksissä oikein kirjoitettuna ("Maansiirto"), joten
+virhe on ilmeinen ja korjaus olisi helppo tehdä.
+
+Sitä ei tehdä. Poiminnan tehtävä on kertoa mitä päätöksessä lukee, ei mitä
+siinä oletettavasti pitäisi lukea. Nimen "korjaaminen" olisi tiedon
+keksimistä, ja se rikkoisi jäljitettävyyden: käyttäjä joka avaa
+lähdelinkin näkisi eri nimen kuin sovelluksessa. Sama koskee päivämääriä
+ja summia.
+
+Jos virheellinen kirjoitusasu haittaa täsmäytystä, ratkaisu on
+täsmäytyksen sumeus (`lib/projects/identity`), ei lähdetiedon muokkaus.
+
+Vahvistettu 9.8.2026: "ihan oikein tuo kirjoitusvirhe pitää tuoda
+sellaisena kun se on."
+
+### D-039 – Kuvion muodot luetaan aineistosta, ei muistista
+Ablatiivin ostoverbi tunsi vain aktiivin `hankkii`. Kun kaikki
+ablatiiviesiintymät haettiin ja niitä edeltävät verbit laskettiin, kuva oli
+toinen:
+
+| verbi | rivejä |
+|---|---|
+| hankkii | 14 |
+| **hankitaan** (passiivi) | **9** |
+| tilata / tilaa / tilataan | 3 |
+
+Passiivi oli lähes yhtä yleinen kuin aktiivi, eikä se ollut kuviossa —
+kuvio vaati kaksois-k:n. Sama toistui koko session ajan: voittajan
+päätöslauseita löytyi kuusi eri muotoa, joista neljä ensimmäistä löytyi
+vasta kun aineisto luettiin läpi muoto kerrallaan.
+
+Sääntö: **kun kirjoitat suomen kielen kuviota, laske muodot aineistosta
+ennen kuin kirjoitat kuvion.** Yksi hakuajo maksaa minuutin ja kertoo mitä
+muotoja oikeasti esiintyy; muistista listattu kuvio kattaa sen mitä sattuu
+tulemaan mieleen.
+
+Liittyy [D-035](#d-035--ingressi-kertoo-hankkeen-loppuosa-kertoo-ympäristön):
+katso otos ennen kuin kirjoitat.
+
 ### D-038 – Vaihe luetaan päätöstekstistä, otsikko jää varalle
 Vaihe pääteltiin pelkästä otsikosta: `/urak/` → "Sopimus myönnetty", muuten
 "Suunnittelussa". Sama rivi oli kopioituna kolmeen jäsentäjään. Otsikko ei
@@ -146,6 +188,11 @@ yhtiömuotoon. Sivutuotteena myös etuliitteinen "Oy Sähkö-Vendelin Ab"
 toimii, ja puitesopimuslistasta korjaantui katkennut "Kvl Putki- ja
 Poltinhuolto Oy" (oli "Poltinhuolto Oy").
 
+**Ostoverbin passiivi (lisätty myöhemmin).** Ablatiivin vartija tunsi vain
+aktiivin `hankkii`, mutta aineistossa passiivi `hankitaan` on lähes yhtä
+yleinen — ks. [D-039](#d-039--kuvion-muodot-luetaan-aineistosta-ei-muistista).
+11 lisävoittajaa.
+
 Ks. `lib/agent/decisionWinners.ts`. Sama ilmiö kuin
 [D-035](#d-035--ingressi-kertoo-hankkeen-loppuosa-kertoo-ympäristön):
 täsmällinen merkki ei ole sama asia kuin oikea merkki.
@@ -171,6 +218,18 @@ tiedotteita.** Osapuolet ja kohdetyyppi luetaan ensimmäisestä 700 merkistä
 
 Yleisempi opetus: **kun täydennysajo koskee satoja rivejä, katso otos ennen
 kuin kirjoitat.** Otos maksoi yhden ajon ja esti väärän tiedon 745 riville.
+
+**Sama sääntö taulun järjestyksessä (lisätty 9.8.2026).** Ingressin
+rajaaminen ei riitä, kun sana esiintyy kahdessa eri roolissa. Ulkoalueet
+ovat kunnan päätöksessä hankkeen kohde ("Leikkipuisto Trumpetin
+puistosuunnitelma") mutta yrityksen tiedotteessa naapuruston palvelu ("76
+asunnon kohde … lähellä on leikkipuisto"). Kun ne olivat `BUILDING_TYPES`-
+taulun alkupäässä, kaksi asuntokohdetta muuttui leikkipuistoiksi.
+
+Ratkaisu on järjestys, ei uusi sanalista: **hankkeen oma rakennustyyppi
+ratkaistaan ennen ympäristön palvelua.** Liikuntapaikka ja Leikkipuisto
+ovat siksi taulun lopussa, heti infran edellä. Väärät osumat putosivat
+kuudesta kolmeen ilman että yksikään oikea osuma katosi.
 
 ### D-034 – Julkaisijan rooli on osa lähteen määrittelyä
 Yrityslähteiden jaettu täydennys (`lib/agent/companyRelease.ts`) merkitsi
