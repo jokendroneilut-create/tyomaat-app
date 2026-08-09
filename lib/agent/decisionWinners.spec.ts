@@ -163,6 +163,38 @@ describe("extractDecisionWinners", () => {
     ).toEqual([])
   })
 
+  /*
+   * Kuudes muoto: valintaverbi on roolin EDELLÄ, ja roolin ja nimen välissä
+   * on pelkkä perustelu. Lisäksi nimessä on pienellä kirjoitettu "ja", joka
+   * katkaisi isokirjainketjun - kuvio ei osunut koko lauseeseen.
+   */
+  it("poimii voittajan kun valintaverbi on roolin edellä", () => {
+    expect(
+      extractDecisionWinners(
+        "Päätös Päätän valita yhdyskuntatekniikan esityksen mukaisesti " +
+          "Siljotien alueen peruskorjaus nimisen urakan pääurakoitsijaksi " +
+          "kokonaishinnaltaan edullisimman tarjouksen jättäneen Oulun Maa- " +
+          "ja Vesirakennus Oy:n."
+      )
+    ).toEqual(["Oulun Maa- ja Vesirakennus Oy"])
+  })
+
+  /*
+   * "ja" sallitaan nimen sisällä, mutta toisto on laiska, jottei kahta
+   * yritystä yhdistetä yhdeksi. Mitattu: puitesopimuslistassa
+   * "Kvl Putki- ja Poltinhuolto Oy" oli katkennut muotoon
+   * "Poltinhuolto Oy".
+   */
+  it("pitää ja-sanan nimen sisällä muttei yhdistä kahta yritystä", () => {
+    expect(
+      extractDecisionWinners(
+        "Kaupunginhallitus päättää hyväksyä puitesopimuskumppaneiksi " +
+          "seuraavat tarjoajat: Kvl Putki- ja Poltinhuolto Oy (2413450-5) " +
+          "Rakennus Oy (1654027-1) Kone Oy (2245597-0)"
+      )
+    ).toEqual(["Kvl Putki- ja Poltinhuolto Oy", "Rakennus Oy", "Kone Oy"])
+  })
+
   it("ei toista samaa yritystä kahdesti", () => {
     expect(extractDecisionWinners(`${PUITESOPIMUS} Päätös: ${PUITESOPIMUS}`)).toHaveLength(8)
   })

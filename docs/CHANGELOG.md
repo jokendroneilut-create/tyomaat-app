@@ -66,6 +66,16 @@ tarjouksen jättänyt Oteran Oy" ja "halvimman tarjoushinnan tehnyt Lappset
 Group Oy". Korjauksen jälkeen voittaja on 35 rivillä (ennen 27), eikä
 yhdelläkään nimessä ole enää pienellä alkavaa etuliitettä.
 
+**Toinen täydennys:** kuudes lausemuoto, jossa valintaverbi on roolin
+edellä ("Päätän valita … urakan pääurakoitsijaksi kokonaishinnaltaan
+edullisimman tarjouksen jättäneen Oulun Maa- ja Vesirakennus Oy:n").
+Samassa lauseessa paljastui, että nimen sisällä oleva "ja" katkaisi
+isokirjainketjun — kuvio ei osunut koko lauseeseen. Se sallitaan nyt, mutta
+toisto tehtiin laiskaksi, jottei "Rakennus Oy ja Kone Oy" yhdisty yhdeksi
+nimeksi. Korjasi samalla puitesopimuslistan katkenneen nimen
+"Poltinhuolto Oy" → "Kvl Putki- ja Poltinhuolto Oy". Voittaja on nyt
+37 rivillä.
+
 Backfill-skriptin säilytyssääntö käännettiin samalla: uusi laskenta voittaa
 myös tyhjänä. Aiemmin `winners.length ? winners : md.winners` olisi jättänyt
 väärät voittajat voimaan — sama ansa oli kaatanut kohdetyypin kahdesti.

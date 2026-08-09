@@ -82,6 +82,22 @@ edeltävistä perustelusanoista. Kantaan oli päätynyt voittajina
 kirjoitetaan siksi molemmilla alkukirjaimilla (`[Vv]alit`,
 `[Uu]rakoitsijaksi`) eikä lipulla.
 
+**Kuudes muoto ja nimen "ja" (lisätty myöhemmin).** Rovaniemen
+viranhaltijalauseessa valintaverbi on roolin EDELLÄ ja roolin ja nimen
+välissä on pelkkä perustelu: "Päätän valita … urakan pääurakoitsijaksi
+kokonaishinnaltaan edullisimman tarjouksen jättäneen Oulun Maa- ja
+Vesirakennus Oy:n". Verbi kaapataan siksi omaan ryhmäänsä, ja jos sitä ei
+ole roolin jälkeen, se etsitään roolia edeltävästä ikkunasta. Ilman
+valintaverbiä osuma hylätään: rooli on silloin pelkkä maininta.
+
+Samassa lauseessa oli toinen vika: **nimen sisällä oleva "ja"** katkaisi
+isokirjainketjun, eikä kuvio osunut koko lauseeseen. "ja" sallitaan nyt
+nimen sisällä, mutta toisto on **laiska** — ahne toisto yhdistäisi kaksi eri
+yritystä yhdeksi ("Rakennus Oy ja Kone Oy"). Laiska pysähtyy ensimmäiseen
+yhtiömuotoon. Sivutuotteena myös etuliitteinen "Oy Sähkö-Vendelin Ab"
+toimii, ja puitesopimuslistasta korjaantui katkennut "Kvl Putki- ja
+Poltinhuolto Oy" (oli "Poltinhuolto Oy").
+
 Ks. `lib/agent/decisionWinners.ts`. Sama ilmiö kuin
 [D-035](#d-035--ingressi-kertoo-hankkeen-loppuosa-kertoo-ympäristön):
 täsmällinen merkki ei ole sama asia kuin oikea merkki.

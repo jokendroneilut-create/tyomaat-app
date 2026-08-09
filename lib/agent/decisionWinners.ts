@@ -58,11 +58,27 @@ const FI_BOUNDARY = `(?!${FI_WORD})`
 
 /*
  * Yrityksen nimi ilman y-tunnusta: isolla alkavia sanoja, viimeisenä
- * yhtiömuoto. Jokaisen sanan on alettava isolla, jotta poiminta ei syö
- * edeltävää tekstiä - "hankkii ... urakan Peab Industri Oy" pysähtyy
- * oikein "Peab":iin, koska "urakan" on pienellä.
+ * yhtiömuoto. Sanan on alettava isolla, jotta poiminta ei syö edeltävää
+ * tekstiä - "hankkii ... urakan Peab Industri Oy" pysähtyy oikein
+ * "Peab":iin, koska "urakan" on pienellä.
+ *
+ * POIKKEUKSENA "ja", joka on yleinen yhdistelmänimissä: "Oulun Maa- ja
+ * Vesirakennus Oy". Ilman sitä ketju katkesi, eikä nimi osunut lainkaan.
  */
-const NAME = `[A-ZÅÄÖ]${NAME_CHAR}*(?:\\s+[A-ZÅÄÖ0-9&]${NAME_CHAR}*){0,4}\\s+(?:${COMPANY_FORMS})`
+const NAME_WORD = `(?:[A-ZÅÄÖ0-9&]${NAME_CHAR}*|ja)`
+
+/*
+ * TOISTO ON LAISKA. Ahne toisto yhdistäisi kaksi eri yritystä yhdeksi,
+ * koska "ja" kelpaa nyt väliin: "Rakennus Oy ja Kone Oy" tuottaisi yhden
+ * nimen kahden sijaan. Laiska pysähtyy ensimmäiseen yhtiömuotoon, jolloin
+ * "Oulun Maa- ja Vesirakennus Oy" tulee silti kokonaan - sitä ennen ei ole
+ * yhtiömuotoa johon pysähtyä.
+ *
+ * Sivutuotteena myös etuliitteinen muoto toimii: "Oy Sähkö-Vendelin Ab"
+ * pysähtyy vasta Ab:hen, koska ensimmäinen "Oy" on nimen alkusana eikä
+ * toiston sisällä.
+ */
+const NAME = `[A-ZÅÄÖ]${NAME_CHAR}*(?:\\s+${NAME_WORD}){0,5}?\\s+(?:${COMPANY_FORMS})`
 
 /* Nimi + y-tunnus suluissa. Käytetään VAIN luettelon sisällä. */
 const NAME_WITH_ID = new RegExp(
@@ -144,13 +160,21 @@ const FILLER = `(?:[a-zåäö]${FI_WORD}*\\s+){0,5}`
  *   "urakoitsijaksi valitaan MVR-Yhtymä Oy"
  *   "KVR-urakoitsijaksi Varte Lahti Oy:n, käyttäen ..."
  *
- * Välisanat sallitaan vain verbin jälkeen. Ilman verbiä nimen on seurattava
- * roolia heti, muuten kuvio poimisi minkä tahansa lähellä olevan yrityksen.
+ * VALINTAVERBI VOI OLLA MYÖS ROOLIN EDELLÄ, jolloin roolin ja nimen välissä
+ * on pelkkä perustelu: "Päätän valita ... urakan pääurakoitsijaksi
+ * kokonaishinnaltaan edullisimman tarjouksen jättäneen Oulun Maa- ja
+ * Vesirakennus Oy:n". Verbi kaapataan siksi omaan ryhmäänsä, ja jos sitä ei
+ * ole roolin jälkeen, se etsitään roolia edeltävästä ikkunasta. Ilman
+ * valintaverbiä osuma hylätään kokonaan: rooli on silloin pelkkä maininta
+ * ("urakoitsijaksi soveltuvan yrityksen tulee..."), ei päätös.
  */
 const SINGLE_ANCHOR = new RegExp(
-  `(?:${SINGLE_ROLES})${FI_BOUNDARY}\\s+(?:[Vv]alit${FI_WORD}+\\s+${FILLER})?(${NAME})`,
+  `(?:${SINGLE_ROLES})${FI_BOUNDARY}\\s+(?:([Vv]alit${FI_WORD}+)\\s+)?${FILLER}(${NAME})`,
   "g"
 )
+
+const SELECT_VERB = /valit|päät|hyväks/i
+const SELECT_WINDOW = 200
 
 /*
  * Viranhaltijapäätöksen vakiolause. Iso alkukirjain on tarkoituksellinen:
@@ -189,9 +213,24 @@ export function extractDecisionWinners(description: string | null | undefined): 
    * myös "toimeksiantoon urakoitsija valitaan ... keskuudesta".
    */
   if (found.length === 0) {
-    for (const pattern of [SINGLE_ANCHOR, OFFICEHOLDER]) {
-      for (const match of text.matchAll(pattern)) found.push(match[1])
+    for (const match of text.matchAll(SINGLE_ANCHOR)) {
+      const [, inlineVerb, name] = match
+
+      /*
+       * Välisanat on jo sallittu kuviossa, joten valintaverbin olemassaolo
+       * tarkistetaan tässä: joko heti roolin jälkeen tai sitä edeltävästä
+       * ikkunasta. Ilman verbiä rooli on pelkkä maininta, ei päätös.
+       */
+      if (!inlineVerb) {
+        const start = Math.max(0, (match.index ?? 0) - SELECT_WINDOW)
+        if (!SELECT_VERB.test(text.slice(start, match.index))) continue
+      }
+
+      found.push(name)
     }
+
+    for (const match of text.matchAll(OFFICEHOLDER)) found.push(match[1])
+
     for (const match of text.matchAll(ABLATIVE)) {
       const start = Math.max(0, (match.index ?? 0) - PURCHASE_WINDOW)
       if (PURCHASE_VERB.test(text.slice(start, match.index))) found.push(match[1])
