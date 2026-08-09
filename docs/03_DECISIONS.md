@@ -95,6 +95,74 @@ tunnistuu 8 rivillä, joista 4 on jo päättynyt. Ei yhtään väärää osumaa.
 Ks. `lib/agent/decisionPhase.ts` ja
 `lib/projects/inferCompletionDateFromText.ts`.
 
+### D-043 – Salassapitomerkintä koskee liitettä, ei asiaa
+Kahden Kouvolan päätöksen otsikossa on "(salassa pidettävä, julkisuuslaki
+6.1 § 2)". Merkintä ei tarkoita että asia olisi salainen:
+
+- **Asiasivu on kunnan itse julkaisema ja julkinen.** Se on avoimessa
+  verkossa ilman tunnistautumista, ja sen teksti sisältää hankkeen
+  laajuuden, kustannusarvion ja aikataulun.
+- **Merkintä koskee LIITETTÄ.** JulkL 6 § 1 mom 2 kohdan mukaan
+  tarjouspyyntöasiakirjat tulevat julkisiksi vasta kun hankinta on tehty.
+  Salassa on siis tarjouspyyntö, ei päätös siitä että kilpailutus
+  aloitetaan.
+- **Liitteitä ei haeta.** Tarkistettu: yksikään neljästä päätösjäsentäjästä
+  ei lataa PDF-liitteitä, vain asiasivun HTML:n.
+
+Näitä ei siis jätetä keräämättä. Ne ovat päinvastoin aineiston
+**aikaisimpia** signaaleja: päätös kilpailutuksen aloittamisesta tulee
+ennen hankintailmoitusta.
+
+Merkintä poistetaan otsikosta, koska se kertoo liitteestä eikä hankkeesta
+([D-042](#d-042--otsikko-nimeää-päätöksen-hanke-tarvitsee-oman-nimen)).
+
+Jos kunta joskus pyytää poistamaan jonkin asian, se hoidetaan
+lähdekohtaisesti — sama menettely kuin robots.txt-kiellon kanssa
+([D-031](#d-031--robotstxt-ratkaisee-ei-alustan-tekninen-soveltuvuus)).
+
+### D-042 – Otsikko nimeää päätöksen, hanke tarvitsee oman nimen
+Kunnan otsikko kuvaa kokouksen asiaa, ei rakennuskohdetta:
+
+> "Puhjon risteyssilta (W) korjausurakka 2026 (KU), korjausurakan
+> kilpailuttaminen, kilpailutusperiaatteet (salassa pidettävä,
+> julkisuuslaki 6.1 § 2)"
+
+Sama silta on jonossa toisenkin kerran nimellä "Puhjon risteyssilta (W)
+korjausurakka, 2026 (KU) – urakan hankinta". Ne ovat sama hanke kahdessa
+päätösvaiheessa, mutta otsikot eivät täsmää, joten ne näkyvät kahtena.
+
+**Sokea poisto olisi väärin.** Mitattu aineistosta ennen sääntöjen
+kirjoittamista:
+
+| yleisin pilkulla erotettu häntä | kpl |
+|---|---|
+| hankesuunnitelman hyväksyminen | 29 |
+| **Malmi** | 19 |
+| **Vartiokylä / Kaarela** | 15 + 15 |
+| **Jätkäsaari** | 14 |
+
+Yleisin häntä on siis KAUPUNGINOSA, ei päätöslaji — ja se on
+sijaintitietoa. Sulkeissa on samoin osoitteita ja kaupunginosia. Poisto
+perustuu siksi **sanastoon** (päätöslajien luetteloon), ei välimerkkeihin.
+
+Kaksi mittauksessa löytynyttä ansaa:
+
+- **Väliviiva vaatii välilyönnin edellä.** Ilman sitä kuvio osui yhdyssanan
+  sisään: "purku-urakoitsijan valinta" → "purku".
+- **Vuosilukua ei poisteta.** Kokeiltuna se sulautti neljä eri vuoden
+  päällystysurakkaa yhdeksi ("Katujen uudelleenpäällystykset 2021/2023/
+  2025") ja katkaisi ilmauksen "vuodelle 2026". Hyöty oli yksi
+  duplikaattipari, haitta neljä väärää — jätetty valinnaiseksi ja pois
+  päältä.
+
+Tulos: 21 otsikkoa siistiytyi, 0 jäi liian lyhyeksi, ja **kaksi uutta
+oikeaa duplikaattiparia** löytyi (Puhjo ja Asfalttiurakka — molemmat sama
+hanke kilpailutus- ja hankintapäätöksenä).
+
+Vaihe luetaan ALKUPERÄISESTÄ otsikosta, koska siivous poistaa juuri sen
+sanan josta kilpailutus tunnistetaan. Siivotusta luettuna korjaus jäi
+tekemättä: mitattu 0 muutosta, kun niitä piti olla 2.
+
 ### D-041 – Alustan tunnus on päätepiste, ei verkkotunnus; luokkanimi ei ole rakenne
 Dynastyn sivukalusteet piti rajata pois kuvauksesta. Kaksi rajausta meni
 ensin väärin, ja molemmat epäonnistuivat **hiljaisesti** — ajo raportoi

@@ -152,3 +152,24 @@ describe("phaseFromTitle", () => {
     )
   })
 })
+
+describe("phaseFromTitle – kilpailutuksen aloitus", () => {
+  /*
+   * Kilpailutuksen ALOITUSPÄÄTÖS ei ole myönnetty sopimus. Otsikossa on
+   * sana "urakka", joten pelkkä /urak/ antoi vaiheeksi "Sopimus myönnetty"
+   * vaikka urakoitsijaa ei ole vielä valittu.
+   */
+  it("tunnistaa kilpailutusperiaatteet kilpailutukseksi", () => {
+    expect(
+      phaseFromTitle(
+        "Puhjon risteyssilta (W) korjausurakka 2026, korjausurakan kilpailuttaminen, kilpailutusperiaatteet"
+      )
+    ).toBe("Kilpailutus")
+  })
+
+  it("pitää urakoitsijan valinnan yhä myönnettynä sopimuksena", () => {
+    expect(phaseFromTitle("Näsin tekojään perusparantaminen - urakoitsijan valinta")).toBe(
+      "Sopimus myönnetty"
+    )
+  })
+})

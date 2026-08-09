@@ -11,6 +11,32 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 9.8.)
 
+### Otsikko nimeää hankkeen, ei päätöstä
+
+Otsikot kuvasivat kokouksen asiaa: "Puhjon risteyssilta (W) korjausurakka
+2026 (KU), korjausurakan kilpailuttaminen, kilpailutusperiaatteet (salassa
+pidettävä, julkisuuslaki 6.1 § 2)". Sama silta oli jonossa toisenkin
+kerran nimellä "… – urakan hankinta", eivätkä ne täsmänneet keskenään.
+
+Päätöslaji ja salassapitomerkintä poistetaan nyt otsikosta
+(`lib/agent/decisionTitle.ts`). Poisto perustuu **sanastoon eikä
+välimerkkeihin**, koska mitattuna yleisin pilkulla erotettu häntä on
+kaupunginosa (Malmi 19, Vartiokylä 15, Jätkäsaari 14) eli sijaintitietoa —
+ks. [D-042](03_DECISIONS.md).
+
+21 otsikkoa siistiytyi, 0 jäi liian lyhyeksi, ja **kaksi uutta oikeaa
+duplikaattiparia** löytyi: Puhjon risteyssilta ja Asfalttiurakka, molemmat
+sama hanke kilpailutus- ja hankintapäätöksenä.
+
+Samalla korjaantui vaihe: kilpailutuksen **aloituspäätös** oli merkitty
+"Sopimus myönnetty", koska otsikossa on sana "urakka". Urakoitsijaa ei ole
+vielä valittu, joten vaihe on nyt "Kilpailutus" (2 riviä).
+
+Salassapitomerkinnästä: se koskee liitettä (tarjouspyyntö tulee julkiseksi
+vasta kun hankinta on tehty), ei asiaa. Asiasivu on kunnan itse julkaisema
+ja julkinen, eikä yksikään jäsentäjä lataa PDF-liitteitä — tarkistettu.
+Ks. [D-043](03_DECISIONS.md).
+
 ### Dynastyn sivukalusteet ja katkennut lause pois kuvauksesta
 
 Kuvaus alkoi katkenneella lauseella ("tarkastetaan heti.") ja päättyi sivun

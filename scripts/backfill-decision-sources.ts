@@ -70,7 +70,10 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { inferBuildingType } = await import("../lib/agent/buildingType")
   const { extractDecisionWinners } = await import("../lib/agent/decisionWinners")
-  const { inferDecisionPhase } = await import("../lib/agent/decisionPhase")
+  const { inferDecisionPhase, phaseFromTitle, PHASE_TENDER } = await import(
+    "../lib/agent/decisionPhase"
+  )
+  const { genericizeDecisionTitle } = await import("../lib/agent/decisionTitle")
   const { fetchDecoded, extractItemText, upgradePermitTitle } = await import(
     "../lib/agent/fetchDynastySource"
   )
@@ -139,7 +142,7 @@ async function main() {
           }
         }
 
-        const title = upgradePermitTitle(row.title, description)
+        const title = genericizeDecisionTitle(upgradePermitTitle(row.title, description))
         if (title !== row.title) stats.otsikko++
 
         /*
@@ -168,10 +171,23 @@ async function main() {
          * heilahtanut "Suunnittelu" <-> "Suunnittelussa" ilman että mikään
          * niissä oli korjaantunut - se on kohinaa, ei korjaus.
          */
+        /*
+         * Poikkeus varasääntöön: kilpailutuksen aloituspäätös on niin
+         * täsmällinen otsikkosignaali että se saa korjata vanhan arvon.
+         * Nämä rivit oli merkitty myönnetyksi sopimukseksi, koska otsikossa
+         * on sana "urakka" - urakoitsijaa ei kuitenkaan ole vielä valittu.
+         */
+        /*
+         * Vaihe luetaan ALKUPERÄISESTÄ otsikosta: siivous poistaa juuri sen
+         * sanan josta kilpailutus tunnistetaan ("kilpailutusperiaatteet").
+         * Siivotusta otsikosta luettuna signaali katosi ja korjaus jäi
+         * tekemättä - mitattu 0 muutosta, kun niitä piti olla 2.
+         */
+        const titleTender = phaseFromTitle(row.title) === PHASE_TENDER
         const phase = inferDecisionPhase({
           description,
           hasWinner: winners.length > 0,
-          fallback: md.phase_hint ?? "Suunnittelussa",
+          fallback: titleTender ? PHASE_TENDER : (md.phase_hint ?? "Suunnittelussa"),
         })
         if (phase !== md.phase_hint) stats.vaihe++
 

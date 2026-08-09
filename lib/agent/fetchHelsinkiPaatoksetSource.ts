@@ -2,6 +2,7 @@ import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
 import { inferDecisionPhase } from "./decisionPhase"
+import { genericizeDecisionTitle } from "./decisionTitle"
 import { stripHtml } from "./stripHtml"
 
 /*
@@ -182,7 +183,7 @@ export async function fetchHelsinkiPaatoksetSource() {
       const winners = extractDecisionWinners(description)
 
       results.push({
-        name: subject,
+        name: genericizeDecisionTitle(subject),
         description,
         city: "Helsinki",
         region: "Uusimaa",

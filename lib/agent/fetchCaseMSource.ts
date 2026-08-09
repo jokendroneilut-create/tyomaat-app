@@ -2,6 +2,7 @@ import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
 import { inferDecisionPhase, phaseFromTitle } from "./decisionPhase"
+import { genericizeDecisionTitle } from "./decisionTitle"
 import { decodeHtmlEntities } from "./htmlEntities"
 import { CONSTRUCTION_SIGNALS } from "./fetchDynastySource"
 
@@ -310,7 +311,7 @@ export function createCaseMFetcher(config: CaseMConfig) {
           const winners = extractDecisionWinners(description)
 
           results.push({
-            name: hit.title,
+            name: genericizeDecisionTitle(hit.title),
             description,
             city: config.city,
             region: config.region,

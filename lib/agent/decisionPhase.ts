@@ -27,6 +27,7 @@
  * ulkopuolelta ei keksitä uusia arvoja. Mitattu kannasta - "Rakenteilla"
  * 137 kpl, "Sopimus myönnetty" 100, "Valmistunut" 36.
  */
+export const PHASE_TENDER = "Kilpailutus"
 export const PHASE_AWARDED = "Sopimus myönnetty"
 export const PHASE_ONGOING = "Rakenteilla"
 export const PHASE_DONE = "Valmistunut"
@@ -128,6 +129,20 @@ export function inferDecisionPhase(opts: {
  * Otsikkoheuristiikka, joka oli kopioituna CaseM:ssä, Dynastyssa ja Turussa.
  * Jää varalle silloin kun päätöstekstistä ei löydy kumpaakaan signaalia.
  */
+/*
+ * Kilpailutuksen ALOITUSPÄÄTÖS ei ole myönnetty sopimus. Otsikossa on
+ * "urakka", joten pelkkä /urak/ antoi väärän vaiheen:
+ *
+ *   "Puhjon risteyssilta (W) korjausurakka 2026, korjausurakan
+ *    kilpailuttaminen, kilpailutusperiaatteet"  ->  "Sopimus myönnetty"
+ *
+ * Päätös vasta hyväksyy tarjouspyynnön ennen sen julkaisua - urakoitsijaa
+ * ei ole. Tarkistetaan siksi ennen urakkasanaa.
+ */
+const COMPETITION_START =
+  /kilpailutusperiaat|kilpailuttamin|kilpailutuksen\s+aloitt|tarjouspyynnön\s+hyväksy/i
+
 export function phaseFromTitle(title: string): string {
+  if (COMPETITION_START.test(title)) return PHASE_TENDER
   return /urak/i.test(title) ? PHASE_AWARDED : "Suunnittelussa"
 }

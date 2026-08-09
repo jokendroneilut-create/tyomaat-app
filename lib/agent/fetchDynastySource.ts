@@ -2,6 +2,7 @@ import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
 import { inferDecisionPhase, phaseFromTitle } from "./decisionPhase"
+import { genericizeDecisionTitle } from "./decisionTitle"
 import { decodeHtmlEntities } from "./htmlEntities"
 
 /*
@@ -382,7 +383,7 @@ export function createDynastyFetcher(config: DynastyConfig) {
       const winners = extractDecisionWinners(description)
 
       results.push({
-        name: upgradePermitTitle(subject, description),
+        name: genericizeDecisionTitle(upgradePermitTitle(subject, description)),
         description,
         city: config.city,
         region: config.region,

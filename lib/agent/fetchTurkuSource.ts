@@ -2,6 +2,7 @@ import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
 import { inferDecisionPhase, phaseFromTitle } from "./decisionPhase"
+import { genericizeDecisionTitle } from "./decisionTitle"
 
 /*
  * Turun päätösjärjestelmä. Neljäs alustaperhe: oma React-sovellus, ei
@@ -180,7 +181,7 @@ export async function fetchTurkuPaatoksetSource() {
         const winners = extractDecisionWinners(description)
 
         results.push({
-          name: title,
+          name: genericizeDecisionTitle(title),
           description,
           city: "Turku",
           region: "Varsinais-Suomi",
