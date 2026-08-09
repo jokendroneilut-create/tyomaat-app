@@ -47,6 +47,13 @@ ks. [D-042](03_DECISIONS.md).
 duplikaattiparia** löytyi: Puhjon risteyssilta ja Asfalttiurakka, molemmat
 sama hanke kilpailutus- ja hankintapäätöksenä.
 
+**Täydennys:** yleisin hallinnollinen häntä on `<asiakirja>n
+hyväksyminen` (177 otsikkoa). Pelkkä hännän poisto jättäisi genetiivin
+roikkumaan, joten poisto ja sijamuodon muunnos tehdään yhdessä:
+"…korjauksen hankesuunnitelman hyväksyminen" → "…korjauksen
+hankesuunnitelma". Tunnistamattomasta genetiivistä otsikko jätetään
+koskematta (5 riviä). Korjattu 167 ehdokasta ja 10 hyväksyttyä hanketta.
+
 **Korjaus näkyi ensin vain hankesivulla, ei listassa.** Otsikko on
 kahdessa paikassa (`title` ja `metadata.operation`), ja lista renderöi
 jälkimmäisen. Operation synkataan nyt — mutta vain kun se on vanhentunut

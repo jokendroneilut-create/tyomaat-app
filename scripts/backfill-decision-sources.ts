@@ -192,16 +192,24 @@ async function main() {
         if (phase !== md.phase_hint) stats.vaihe++
 
         /*
-         * Onko operation vanhentunut kopio otsikosta? Vertailua ei voi
-         * tehdä nykyiseen otsikkoon, koska se on jo siivottu - ehto
-         * `operation === row.title` ei osunut kertaakaan. Oikea testi on
-         * siivota operation ja katsoa antaako se saman otsikon.
+         * OPERATION SIIVOTAAN PAIKALLAAN, EI KORVATA OTSIKOLLA.
+         *
+         * TIC:n lista renderöi `metadata.operation ?? title`, joten
+         * pelkkä otsikon siivous ei näy siellä. Ensimmäinen versio
+         * korvasi operationin otsikolla silloin kun se oli vanhentunut
+         * kopio - mutta 11 rivillä se kantaa TOISEN LÄHTEEN otsikkoa
+         * (sama ehdokas on täsmätty useasta päätöksestä), eikä korvaus
+         * osunut niihin.
+         *
+         * Sama siivousfunktio omana tekstinään hoitaa molemmat: vanhasta
+         * kopiosta tulee sama kuin otsikosta, ja toisen lähteen otsikko
+         * siistiytyy sisältöään menettämättä. Lupapisteen operation
+         * ("Urheilukentän rakentaminen tontille") ei sisällä päätöslajia,
+         * joten se jää ennalleen - ks. D-044.
          */
-        const operationIsStaleTitle =
-          typeof md.operation === "string" &&
-          md.operation !== title &&
-          genericizeDecisionTitle(md.operation) === title
-        if (operationIsStaleTitle) stats.operation++
+        const operation =
+          typeof md.operation === "string" ? genericizeDecisionTitle(md.operation) : null
+        if (operation && operation !== md.operation) stats.operation++
 
         const buildingType = inferBuildingType(title, description)
         if (buildingType !== md.building_type) {
@@ -233,7 +241,7 @@ async function main() {
                * ("Urheilukentän rakentaminen tontille"). Sen
                * ylikirjoittaminen hävittäisi paremman tiedon 304 riviltä.
                */
-              operation: operationIsStaleTitle ? title : (md.operation ?? null),
+              operation: operation ?? md.operation ?? null,
               phase_hint: phase,
               building_type: buildingType ?? null,
               /*

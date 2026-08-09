@@ -86,8 +86,68 @@ describe("genericizeDecisionTitle", () => {
     ).toBe("Urakoitsijoiden valinta koskien pieniä purkutöitä vuodelle 2026")
   })
 
+  /*
+   * Yleisin hallinnollinen hanta koko aineistossa: 177 otsikkoa paattyy
+   * sanaan "hyvaksyminen", joista 172 muotoa <asiakirja>n hyvaksyminen.
+   * Pelkka hannan poisto jattaisi genetiivin roikkumaan, joten poisto ja
+   * sijamuodon muunnos tehdaan yhdessa.
+   */
+  it("muuttaa hyväksymisen asiakirjan nimeksi", () => {
+    expect(
+      genericizeDecisionTitle(
+        "Tuohimäen päiväkodin elinkaarta jatkavan korjauksen hankesuunnitelman hyväksyminen"
+      )
+    ).toBe("Tuohimäen päiväkodin elinkaarta jatkavan korjauksen hankesuunnitelma")
+  })
+
+  it("osaa monikon ja muut asiakirjatyypit", () => {
+    expect(genericizeDecisionTitle("Alppiharju, puistosuunnitelman hyväksyminen")).toBe(
+      "Alppiharju, puistosuunnitelma"
+    )
+    expect(genericizeDecisionTitle("Katujen katusuunnitelmien hyväksyminen")).toBe(
+      "Katujen katusuunnitelmat"
+    )
+    expect(genericizeDecisionTitle("Koulun tarveselvityksen hyväksyminen")).toBe(
+      "Koulun tarveselvitys"
+    )
+  })
+
+  /*
+   * Tunnistamattomasta genetiivista otsikko jatetaan koskematta: vaara
+   * nominatiivi olisi huonompi kuin pitka otsikko.
+   */
+  it("jattaa tuntemattoman genetiivin rauhaan", () => {
+    const title = "Kokonaiskustannusarvion muutoksen hyväksyminen"
+    expect(genericizeDecisionTitle(title)).toBe(title)
+  })
+
   it("sietää tyhjän otsikon", () => {
     expect(genericizeDecisionTitle(null)).toBe("")
     expect(genericizeDecisionTitle("")).toBe("")
+  })
+})
+
+describe("genericizeDecisionTitle – rinnasteinen asiakirja", () => {
+  /*
+   * "Mikkelänpellon puistosuunnitelman ja sillan siltasuunnitelman
+   * hyväksyminen" jäi muotoon jossa sijamuoto vaihteli saman rinnastuksen
+   * sisällä: "...puistosuunnitelmaN ja ...siltasuunnitelma".
+   */
+  it("muuntaa myös ja-sanaa edeltävän asiakirjan", () => {
+    expect(
+      genericizeDecisionTitle(
+        "Mikkelänpellon puistosuunnitelman ja Mikkelänpellon sillan siltasuunnitelman hyväksyminen"
+      )
+    ).toBe("Mikkelänpellon puistosuunnitelma ja Mikkelänpellon sillan siltasuunnitelma")
+  })
+
+  /*
+   * Rajaus asiakirjatyyppeihin: tavallinen genetiivi ennen ja-sanaa on osa
+   * kohteen nimeä eikä saa muuttua.
+   */
+  it("ei koske kohteen nimen genetiiviin", () => {
+    expect(
+      genericizeDecisionTitle("Koulun ja päiväkodin hankesuunnitelman hyväksyminen")
+    ).toBe("Koulun ja päiväkodin hankesuunnitelma")
   })
 })

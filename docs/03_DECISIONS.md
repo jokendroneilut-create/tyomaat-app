@@ -90,6 +90,16 @@ lähteestä, ja operation kantaa toisen lähteen otsikkoa.
 Sääntö: **päivitä operation vain kun se on vanhentunut kopio otsikosta.**
 Testinä se, että siivottuna se antaa täsmälleen nykyisen otsikon.
 
+**Tarkennus:** parempi sääntö on siivota operation PAIKALLAAN omana
+tekstinään (`operation = genericizeDecisionTitle(operation)`) eikä korvata
+sitä otsikolla. Korvaus osui vain vanhentuneisiin kopioihin, ja 11 rivillä
+operation kantaa toisen lähteen otsikkoa — sama ehdokas on täsmätty
+useasta päätöksestä. Ne jäivät siivoamatta ja näkyivät listassa yhä
+muodossa "…hyväksyminen". Paikallaan siivottuna molemmat hoituvat: vanha
+kopio päätyy samaan kuin otsikko, ja toisen lähteen otsikko siistiytyy
+sisältöään menettämättä. Lupapisteen operation ei sisällä päätöslajia,
+joten sen 304 riviä pysyvät koskemattomina.
+
 Ensimmäinen ehto `operation === row.title` ei osunut kertaakaan, koska
 `row.title` oli jo siivottu edellisessä ajossa. Ajo raportoi 0 muutosta ja
 näytti onnistuneelta — virhe löytyi vain koska tulos mitattiin ajon
@@ -158,6 +168,29 @@ Kaksi mittauksessa löytynyttä ansaa:
 Tulos: 21 otsikkoa siistiytyi, 0 jäi liian lyhyeksi, ja **kaksi uutta
 oikeaa duplikaattiparia** löytyi (Puhjo ja Asfalttiurakka — molemmat sama
 hanke kilpailutus- ja hankintapäätöksenä).
+
+**Hyväksymishäntä ja sijamuoto (lisätty myöhemmin).** Yleisin hallinnollinen
+häntä koko aineistossa on `<asiakirja>n hyväksyminen`: 177 otsikkoa päättyy
+sanaan "hyväksyminen", ja niistä 172 on tätä muotoa (hankesuunnitelman 109,
+puistosuunnitelman 27, katusuunnitelman 10, tarveselvityksen 9).
+
+> "Tuohimäen päiväkodin elinkaarta jatkavan korjauksen **hankesuunnitelman
+> hyväksyminen**" → "…korjauksen **hankesuunnitelma**"
+
+**Pelkkä hännän poisto ei riitä** — se jättäisi genetiivin roikkumaan
+("…korjauksen hankesuunnitelman"). Poisto ja sijamuodon muunnos tehdään
+siksi yhdessä, tai ei ollenkaan: tunnistamattomasta genetiivistä
+("muutoksen hyväksyminen") otsikko jätetään koskematta, koska väärä
+nominatiivi olisi huonompi kuin pitkä otsikko. Viisi riviä jäi näin
+ennalleen.
+
+Rinnasteinen asiakirja muunnetaan myös, muuten sijamuoto vaihtelisi saman
+rinnastuksen sisällä: "Mikkelänpellon puistosuunnitelma**n** ja … sillan
+siltasuunnitelma". Muunnos rajautuu samoihin asiakirjatyyppeihin, joten
+kohteen nimen genetiivi säilyy ("Koulun ja päiväkodin hankesuunnitelma").
+
+Korjattu 167 ehdokasta ja 10 jo hyväksyttyä hanketta
+(`scripts/backfill-projects-titles.ts`).
 
 Vaihe luetaan ALKUPERÄISESTÄ otsikosta, koska siivous poistaa juuri sen
 sanan josta kilpailutus tunnistetaan. Siivotusta luettuna korjaus jäi

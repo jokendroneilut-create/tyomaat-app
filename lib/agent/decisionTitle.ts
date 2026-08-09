@@ -77,6 +77,64 @@ const YEAR_CODE = /\s*,?\s*\d{4}(?:\s*\(\d{4}\))*\s*(?:\([A-ZÅÄÖ]{1,3}\))?\s*
  */
 const YEAR_BELONGS_TO_PHRASE = /\b(?:vuo\w+|kaudel\w+|ajal\w+|mennessä)\s*$/i
 
+/*
+ * "…hankesuunnitelman hyväksyminen" -> "…hankesuunnitelma".
+ *
+ * Yleisin hallinnollinen häntä koko aineistossa: 177 otsikkoa päättyy
+ * sanaan "hyväksyminen", ja niistä 172 on muotoa <asiakirja>n hyväksyminen.
+ * Otsikko nimeää siis kokouksen toimenpiteen, ei hanketta:
+ *
+ *   "Tuohimäen päiväkodin elinkaarta jatkavan korjauksen
+ *    hankesuunnitelman hyväksyminen"
+ *
+ * PELKKÄ HÄNNÄN POISTO EI RIITÄ. Se jättäisi genetiivin roikkumaan
+ * ("...korjauksen hankesuunnitelman"), joten poisto ja sijamuodon muunnos
+ * tehdään yhdessä - tai ei ollenkaan.
+ *
+ * Muunnos rajataan asiakirjatyyppeihin joita aineistossa esiintyy.
+ * Tunnistamattomasta genetiivistä ("muutoksen hyväksyminen") otsikko
+ * jätetään koskematta: väärä nominatiivi olisi huonompi kuin pitkä otsikko.
+ */
+const APPROVAL_TAIL = /\s+hyväksyminen\s*$/i
+
+const GENITIVE_TO_NOMINATIVE: [RegExp, string][] = [
+  [/suunnitelmien$/i, "suunnitelmat"],
+  [/suunnitelman$/i, "suunnitelma"],
+  [/selvityksen$/i, "selvitys"],
+  [/ehdotuksen$/i, "ehdotus"],
+]
+
+function dropApprovalTail(title: string): string {
+  if (!APPROVAL_TAIL.test(title)) return title
+
+  const withoutTail = title.replace(APPROVAL_TAIL, "").trim()
+
+  for (const [genitive, nominative] of GENITIVE_TO_NOMINATIVE) {
+    if (!genitive.test(withoutTail)) continue
+
+    const converted = withoutTail.replace(genitive, nominative)
+
+    /*
+     * RINNASTEINEN ASIAKIRJA MYÖS. "Mikkelänpellon puistosuunnitelman ja
+     * sillan siltasuunnitelman hyväksyminen" jäi muotoon "...puisto-
+     * suunnitelmaN ja ...siltasuunnitelma", eli sijamuoto vaihteli saman
+     * rinnastuksen sisällä. Muunnos rajautuu samoihin asiakirjatyyppeihin,
+     * joten "Koulun ja päiväkodin hankesuunnitelma" ei muutu.
+     */
+    return converted.replace(
+      /([\wåäöÅÄÖ-]*(?:suunnitelman|suunnitelmien|selvityksen|ehdotuksen))(\s+ja\s)/gi,
+      (_, word: string, tail: string) => {
+        for (const [g, n] of GENITIVE_TO_NOMINATIVE) {
+          if (g.test(word)) return word.replace(g, n) + tail
+        }
+        return word + tail
+      }
+    )
+  }
+
+  return title
+}
+
 export type TitleCleanOptions = {
   /*
    * Vuosiluvun poisto on valinnainen, koska se hävittää eron saman kohteen
@@ -102,6 +160,8 @@ export function genericizeDecisionTitle(
     if (next === out) break
     out = next
   }
+
+  out = dropApprovalTail(out.trim())
 
   if (options.dropYear) {
     const ilmanVuotta = out.replace(YEAR_CODE, "")
