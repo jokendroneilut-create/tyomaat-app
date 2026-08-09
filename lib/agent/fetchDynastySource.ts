@@ -2,6 +2,7 @@ import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
 import { inferDecisionPhase, phaseFromTitle } from "./decisionPhase"
+import { decodeHtmlEntities } from "./htmlEntities"
 
 /*
  * Dynasty-päätösjärjestelmä (Innofactor), käytössä kahdeksalla kunnalla
@@ -220,14 +221,56 @@ export function isConstructionSubject(subject: string): boolean {
 }
 
 /*
- * Asian sivu on kokonainen HTML-sivu jossa on sivukalusteet. Leipäteksti
- * alkaa vasta valikoiden jälkeen, joten alku katkaistaan tunnetusta
- * vakiotekstistä.
+ * SIVUKALUSTEET RAJATAAN RAKENTEESTA, EI TEKSTISTÄ.
+ *
+ * Dynasty merkitsee sisältöalueen itse HTML-kommenteilla, ja navigaatio on
+ * omassa taulussaan. Kummankin jättäminen näkyi kuvauksessa suoraan:
+ *
+ *   "...allekirjoitettu. Navigointi Edellinen asia | Seuraava asia
+ *    Muutoksenhakuohje Kokousasia PDF-muodossa &copy;"
+ *
+ * DATAEND jättää alatunnisteen pois, mutta navigaatiotaulu on sen SISÄLLÄ
+ * ja poistetaan siksi erikseen. Sama periaate kuin CaseM:ssä (D-037):
+ * alustan omat tunnisteet ratkaisevat, eivät suomenkieliset avainsanat.
  */
+const DATA_REGION = /<!--DATABEGIN-->([\s\S]*?)<!--DATAEND-->/
+
+/*
+ * NAVIGAATIO TUNNISTETAAN SISÄLLÖSTÄ, EI LUOKKANIMESTÄ. Dynastyn versiot
+ * merkitsevät sen eri tavoin - luokka on siirtynyt taulusta sitä
+ * ympäröivään diviin:
+ *
+ *   10.4.0.260401: <table class='tbl navigation'>
+ *   10.4.0.250317: <div class='data-part page-navigation'><table class='data-part-table'>
+ *
+ * Luokkaan sidottu kuvio siivosi vain vanhemman version: 76 rivistä 57 jäi
+ * roskaiseksi. Molemmissa taulussa on kuitenkin otsake "Navigointi", joten
+ * poistetaan se taulu jonka sisällä sana on. Tempered quantifier estää
+ * kuviota ylittämästä taulun rajaa.
+ */
+const NAVIGATION_TABLE =
+  /<table\b[^>]*>(?:(?!<\/table>)[\s\S])*?Navigointi(?:(?!<\/table>)[\s\S])*?<\/table>/gi
+
+/*
+ * Leipätekstin alku. Sivun yläosassa on kokousmetatietoa, joten teksti
+ * katkaistaan ensimmäisestä osiotunnisteesta.
+ *
+ * KATKAISU, EI PILKKOMINEN. Aiemmin tässä oli split + slice(1).join(),
+ * joka poisti tunnistesanan JOKAISESTA kohdasta tekstiä - myös keskeltä
+ * virkettä. Tulos alkoi katkenneella lauseella:
+ *
+ *   lähde:  "Päätös tarkastetaan heti."
+ *   kuvaus: "tarkastetaan heti."
+ */
+const SECTION_START = /Kokouksen tiedot|Asian otsikko|Selostus|Päätös/i
+
 export function extractItemText(html: string): string | null {
-  const text = html
+  const region = html.match(DATA_REGION)?.[1] ?? html
+
+  const text = region
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(NAVIGATION_TABLE, " ")
     .replace(/<[^>]+>/g, " ")
     /*
      * Numeeriset entiteetit purettava nimettyjen lisäksi. Dynasty käyttää
@@ -242,8 +285,15 @@ export function extractItemText(html: string): string | null {
     .replace(/\s+/g, " ")
     .trim()
 
-  const cut = text.split(/Kokouksen tiedot|Asian otsikko|Selostus|Päätös/i)
-  const body = cut.length > 1 ? cut.slice(1).join(" ").trim() : text
+  /*
+   * Loppusiivous jaetulla purkajalla: oma lista kattoi vain tässä
+   * aineistossa sattumalta nähdyt merkit, ja esimerkiksi &copy; jäi
+   * purkamatta.
+   */
+  const decoded = decodeHtmlEntities(text).replace(/\s+/g, " ").trim()
+
+  const start = decoded.search(SECTION_START)
+  const body = start >= 0 ? decoded.slice(start).trim() : decoded
 
   return body.length >= 40 ? body : null
 }

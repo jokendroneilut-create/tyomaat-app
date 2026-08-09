@@ -4,7 +4,26 @@ import {
   parseRssTitle,
   isConstructionSubject,
   upgradePermitTitle,
+  extractItemText,
 } from "./fetchDynastySource"
+
+/*
+ * Katkelma on Porvoon asiasivun rakenteesta: sisältöalue on merkitty
+ * DATABEGIN/DATAEND-kommenteilla, navigaatio on oma taulunsa alueen
+ * SISÄLLÄ, ja alatunniste on alueen ulkopuolella.
+ */
+const ASIASIVU =
+  "<html><body><div class='header'>Etusivu Haku</div>" +
+  "<!--DATABEGIN-->" +
+  "<table class='tbl navigation'><caption class='caption navigation hidden'>Navigointi</caption>" +
+  "<tr><td><a href='#'>Edellinen asia</a> | <a href='#'>Seuraava asia</a></td>" +
+  "<td><a>Muutoksenhakuohje</a> <a>Kokousasia&nbsp;PDF-muodossa</a></td></tr></table>" +
+  "<div><p><span>P&auml;&auml;t&ouml;s tarkastetaan heti.</span></p>" +
+  "<p><span>Kaupunkikehityslautakunta p&auml;&auml;tti, ett&auml; sillan " +
+  "perusparantamisen urakoitsijaksi valitaan Oteran Oy. Sopimus astuu voimaan, " +
+  "kun p&auml;&auml;t&ouml;s on saanut lainvoiman.</span></p></div>" +
+  "<!--DATAEND-->" +
+  "<div class='footer'><a>&copy;</a></div></body></html>"
 
 describe("cdata", () => {
   /*
@@ -136,5 +155,43 @@ describe("upgradePermitTitle", () => {
   it("sailyttaa otsikon kun toimenpidetta ei loydy", () => {
     const title = "Rakennuslupa 49-2024-999, Testitie 1"
     expect(upgradePermitTitle(title, "Ei toimenpidekenttaa tassa tekstissa.")).toBe(title)
+  })
+})
+
+describe("extractItemText", () => {
+  /*
+   * Navigaatio ja alatunniste päätyivät kuvaukseen sellaisenaan:
+   * "...allekirjoitettu. Navigointi Edellinen asia | Seuraava asia
+   * Muutoksenhakuohje Kokousasia PDF-muodossa &copy;". Mitattu: roska oli
+   * kaikilla 76 Dynasty-rivillä.
+   */
+  it("jättää navigaation ja alatunnisteen pois", () => {
+    const text = extractItemText(ASIASIVU)!
+    expect(text).not.toMatch(/Navigointi|Edellinen asia|Muutoksenhakuohje|PDF-muodossa/)
+    expect(text).not.toMatch(/©|&copy;/)
+  })
+
+  /*
+   * Aiemmin tässä oli split + slice(1).join(), joka poisti tunnistesanan
+   * JOKAISESTA kohdasta tekstiä. Kuvaus alkoi katkenneella lauseella, ja
+   * sana katosi myös keskeltä virkettä: "kun on saanut lainvoiman".
+   */
+  it("ei katkaise lausetta osiotunnisteen kohdalta", () => {
+    const text = extractItemText(ASIASIVU)!
+    expect(text.startsWith("Päätös tarkastetaan heti.")).toBe(true)
+  })
+
+  it("säilyttää tunnistesanan myös keskellä virkettä", () => {
+    expect(extractItemText(ASIASIVU)).toMatch(/kun päätös on saanut lainvoiman/)
+  })
+
+  it("purkaa ääkköset ja sitkeät välilyönnit", () => {
+    const text = extractItemText(ASIASIVU)!
+    expect(text).toMatch(/Kaupunkikehityslautakunta päätti/)
+    expect(text).not.toMatch(/&auml;|&nbsp;/)
+  })
+
+  it("palauttaa null liian lyhyestä sisällöstä", () => {
+    expect(extractItemText("<html><body><p>Lyhyt</p></body></html>")).toBeNull()
   })
 })

@@ -11,6 +11,35 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 9.8.)
 
+### Dynastyn sivukalusteet ja katkennut lause pois kuvauksesta
+
+Kuvaus alkoi katkenneella lauseella ("tarkastetaan heti.") ja päättyi sivun
+navigaatioon ("Navigointi Edellinen asia | Seuraava asia Muutoksenhakuohje
+Kokousasia PDF-muodossa ©"). Kaksi eri vikaa:
+
+**Navigaatio ja alatunniste** jäivät mukaan, koska sivukalusteita ei
+rajattu. Rajaus tehdään nyt alustan omista tunnisteista
+(`<!--DATABEGIN-->`…`<!--DATAEND-->` ja navigaatiotaulu), samalla
+periaatteella kuin CaseM:ssä — ks. [D-041](03_DECISIONS.md).
+
+**Katkennut lause** oli isompi vika kuin miltä näytti: jäsentäjä pilkkoi
+tekstin osiotunnisteista (`split`) ja liitti palat takaisin **ilman
+tunnistesanaa**, jolloin sana katosi myös keskeltä virkettä:
+
+```
+lähde:  "Sopimus astuu voimaan, kun päätös on saanut lainvoiman."
+kuvaus: "Sopimus astuu voimaan, kun on saanut lainvoiman."
+```
+
+Pilkkomisen tilalla on nyt katkaisu, joka säilyttää tekstin ehjänä.
+
+Korjattu kolmessa paikassa: jäsentäjä (jatkossa), 110 Dynasty-riviä
+`potential_projects`-taulussa (`--refetch`-tila) ja 9 jo hyväksyttyä
+hanketta `projects`-taulussa
+(`scripts/backfill-projects-dynasty-text.ts`). Hyväksyttyjen kohdalla
+kirjoitetaan vain kun `additional_info` ja `metadata.description` ovat
+identtiset — ero tarkoittaisi käsin muokattua tekstiä.
+
 ### Ulkoliikuntapaikat ja leikkipuistot puuttuivat kohdetyyppitaulusta
 
 Tekonurmihanke sai kohdetyypin "Koulu", koska ingressissä luki "urakoitsija

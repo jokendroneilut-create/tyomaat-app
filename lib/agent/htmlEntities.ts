@@ -18,6 +18,8 @@ const NAMED: Record<string, string> = {
   laquo: "«", raquo: "»", sect: "§", deg: "°",
   auml: "ä", Auml: "Ä", ouml: "ö", Ouml: "Ö", aring: "å", Aring: "Å",
   eacute: "é", uuml: "ü", szlig: "ß", frasl: "/",
+  copy: "©", reg: "®", trade: "™", middot: "·", bull: "•",
+  times: "×", euro: "€", lsquo: "'", rsquo: "'", ldquo: '"', rdquo: '"',
 }
 
 export function decodeHtmlEntities(text: string | null | undefined): string {

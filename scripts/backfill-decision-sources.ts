@@ -23,6 +23,22 @@
 import { readFileSync } from "node:fs"
 
 const APPLY = process.argv.includes("--apply")
+
+/*
+ * --refetch hakee Dynasty-asiasivut uudelleen vaikka teksti ei olisi
+ * sekoittunut. Tarvittiin kun jäsentäjä alkoi rajata sivukalusteet pois:
+ * navigaatio oli kaikkien 76 rivin kuvauksessa, eikä sitä voi siivota
+ * ilman alkuperäistä HTML:ää.
+ */
+const REFETCH = process.argv.includes("--refetch")
+
+/*
+ * Alusta tunnistetaan CGI-päätepisteestä, EI isännästä. Kunnat ajavat
+ * Dynastya omilla verkkotunnuksillaan (ep10.kouvola.fi,
+ * dynastyjulkaisu.pohjoiskarjala.net), joten oncloudos.com-rajaus ohitti
+ * 34 riviä kahdesta kunnasta.
+ */
+const DYNASTY_SOURCE = /DREQUEST\.PHP/
 const ONLY = process.argv
   .find((a) => a.startsWith("--only="))
   ?.split("=")[1]
@@ -106,12 +122,17 @@ async function main() {
         let description: string = md.description ?? ""
 
         /* Vain rikkinäiset haetaan uudelleen; muille riittää laskenta. */
-        if (MOJIBAKE.test(description) && md.source_url) {
+        const needsRefetch =
+          !!md.source_url &&
+          (MOJIBAKE.test(description) || (REFETCH && DYNASTY_SOURCE.test(md.source_url)))
+
+        if (needsRefetch) {
           const html = await fetchDecoded(md.source_url)
           const fresh = html ? extractItemText(html) : null
           if (fresh && !MOJIBAKE.test(fresh)) {
+            /* Lasketaan vain oikeasti muuttuneet, ei jokaista hakua. */
+            if (fresh !== description) stats.teksti++
             description = fresh
-            stats.teksti++
           } else {
             stats.epaonnistui++
             return

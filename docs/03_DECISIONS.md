@@ -95,6 +95,38 @@ tunnistuu 8 rivillä, joista 4 on jo päättynyt. Ei yhtään väärää osumaa.
 Ks. `lib/agent/decisionPhase.ts` ja
 `lib/projects/inferCompletionDateFromText.ts`.
 
+### D-041 – Alustan tunnus on päätepiste, ei verkkotunnus; luokkanimi ei ole rakenne
+Dynastyn sivukalusteet piti rajata pois kuvauksesta. Kaksi rajausta meni
+ensin väärin, ja molemmat epäonnistuivat **hiljaisesti** — ajo raportoi
+onnistuneensa, mutta osa riveistä jäi siivoamatta:
+
+**1. Isäntä ei kerro alustaa.** Täydennys rajattiin `oncloudos.com`-
+osoitteisiin, koska Dynasty on siellä. Kunnilla on kuitenkin omat
+verkkotunnuksensa (`ep10.kouvola.fi`,
+`dynastyjulkaisu.pohjoiskarjala.net`), joten 34 riviä kahdesta kunnasta
+ohitettiin. Alustan tunnus on sen **CGI-päätepiste** `DREQUEST.PHP`, joka
+on sama kaikilla kahdeksalla isännällä.
+
+**2. Luokkanimi ei ole rakenne.** Navigaatiotaulu poistettiin kuviolla
+`<table class='…navigation…'>`. Dynastyn versiot merkitsevät sen eri
+tavoin — luokka on siirtynyt taulusta sitä ympäröivään diviin:
+
+```
+10.4.0.260401:  <table class='tbl navigation'>
+10.4.0.250317:  <div class='data-part page-navigation'><table class='data-part-table'>
+```
+
+Luokkaan sidottu kuvio siivosi vain vanhemman version: 76 rivistä 57 jäi
+roskaiseksi. Molemmissa taulussa on kuitenkin **otsake "Navigointi"**,
+joten poistetaan se taulu jonka sisällä sana on.
+
+Sääntö: **valitse ankkuriksi se mikä ei vaihdu version mukana.**
+Päätepiste ja näkyvä otsake pysyivät, verkkotunnus ja luokkanimi eivät.
+
+Molemmat löytyivät vasta kun tulos mitattiin ajon jälkeen
+([D-039](#d-039--kuvion-muodot-luetaan-aineistosta-ei-muistista)):
+"teksti korjattu: 76" näytti onnistumiselta.
+
 ### D-037 – Sisältöalue rajataan HTML:n rakenteesta, ei tekstin avainsanoista
 CaseM-asiasivun vasemmassa laidassa on viranhaltijavalikko: linkkilista
 jokaiseen kunnan viranhaltijanimikkeeseen. Rovaniemellä se on 93 nimikettä ja
