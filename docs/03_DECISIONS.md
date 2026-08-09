@@ -5,6 +5,41 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-038 – Vaihe luetaan päätöstekstistä, otsikko jää varalle
+Vaihe pääteltiin pelkästä otsikosta: `/urak/` → "Sopimus myönnetty", muuten
+"Suunnittelussa". Sama rivi oli kopioituna kolmeen jäsentäjään. Otsikko ei
+kerro mitä päätöksessä tehtiin:
+
+> "Keskusurheilukentän tekonurmen peruskorjaus" → **Suunnittelussa**
+
+vaikka päätös on 5.12.2025, urakoitsija valittu ja teksti sanoo "Hankinnan
+sopimuskausi on 15.4.–24.5.2026" — hanke on tänään tehty. Mitattu: 1017
+päätösrivistä 966 oli suunnitteluvaiheessa.
+
+Kaksi vahvempaa signaalia, tässä järjestyksessä:
+
+1. **Sopimuskausi** kertoo missä hanke on juuri nyt — päättynyt kausi
+   tarkoittaa valmista, käynnissä oleva rakenteilla olevaa.
+2. **Voittaja** kertoo että sopimus on myönnetty, vaikka aikaa ei mainita.
+
+Kumpikaan ei ole otsikossa, joten otsikkopäättely jää viimeiseksi varalle —
+Helsingillä se on rikkaampi kuin muilla (hankesuunnitelma, tarveselvitys,
+rakentamispäätös), eikä sitä haluta menettää.
+
+**Tietoisesti pois: "toteutusaikataulu" ja "urakka-aika".**
+Toteutusaikataulu on lähes aina ALUSTAVA ja kuvaa suunnitteluvaiheita
+("hankesuunnitelman hyväksyminen 6/2026, toteutussuunnittelu 8/2026–2/2027"),
+eli hanke on juuri siinä vaiheessa miksi se on merkittykin. Urakka-aika
+mainitaan tyypillisesti ilman päivämäärää ("urakka-aika alkaa kun sopimus on
+allekirjoitettu"). Kummastakin luettu vaihe olisi arvaus.
+
+**Täydennyksen varalla on nykyinen arvo, ei otsikkopäättely.** Otsikosta
+uudelleen laskettuna 28 riviä olisi heilahtanut "Suunnittelu" ↔
+"Suunnittelussa" ilman että mikään niissä korjaantui. Kohina ei ole korjaus,
+joten ilman vahvaa signaalia rivi jää ennalleen. Muutoksia tuli 13.
+
+Ks. `lib/agent/decisionPhase.ts`.
+
 ### D-037 – Sisältöalue rajataan HTML:n rakenteesta, ei tekstin avainsanoista
 CaseM-asiasivun vasemmassa laidassa on viranhaltijavalikko: linkkilista
 jokaiseen kunnan viranhaltijanimikkeeseen. Rovaniemellä se on 93 nimikettä ja

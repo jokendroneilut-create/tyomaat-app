@@ -1,6 +1,7 @@
 import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
+import { inferDecisionPhase, phaseFromTitle } from "./decisionPhase"
 
 /*
  * Turun päätösjärjestelmä. Neljäs alustaperhe: oma React-sovellus, ei
@@ -176,6 +177,8 @@ export async function fetchTurkuPaatoksetSource() {
         // Ilman kuvausta ehdokas hylätään katselmoinnissa (D-027).
         if (!description) continue
 
+        const winners = extractDecisionWinners(description)
+
         results.push({
           name: title,
           description,
@@ -186,8 +189,12 @@ export async function fetchTurkuPaatoksetSource() {
           developer: "Turun kaupunki",
           permit_number: String(pykala?.tktviiteId ?? meetingId),
           property_type: inferBuildingType(title, description),
-        winners: extractDecisionWinners(description),
-          phase: /urak/i.test(title) ? "Sopimus myönnetty" : "Suunnittelussa",
+          winners,
+          phase: inferDecisionPhase({
+            description,
+            hasWinner: winners.length > 0,
+            fallback: phaseFromTitle(title),
+          }),
           business_value: "high",
           source_url: `https://paatokset.turku.fi/poytakirja/${meetingId}`,
           confidence: 0.6,

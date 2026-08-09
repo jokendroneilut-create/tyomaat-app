@@ -1,6 +1,7 @@
 import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
+import { inferDecisionPhase } from "./decisionPhase"
 import { stripHtml } from "./stripHtml"
 
 /*
@@ -178,6 +179,8 @@ export async function fetchHelsinkiPaatoksetSource() {
         String(first(s.decision_motion) ?? "")
       )
 
+      const winners = extractDecisionWinners(description)
+
       results.push({
         name: subject,
         description,
@@ -197,8 +200,16 @@ export async function fetchHelsinkiPaatoksetSource() {
          */
         permit_number: issueId,
         property_type: inferBuildingType(subject, description),
-        winners: extractDecisionWinners(description),
-        phase: inferPhase(subject),
+        winners,
+        /*
+         * Helsingin otsikkopäättely on rikkaampi kuin muiden (hankesuunnitelma,
+         * tarveselvitys, rakentamispäätös), joten se jää varalle sellaisenaan.
+         */
+        phase: inferDecisionPhase({
+          description,
+          hasWinner: winners.length > 0,
+          fallback: inferPhase(subject),
+        }),
         business_value: "high",
         source_url: relativeUrl.startsWith("http")
           ? relativeUrl

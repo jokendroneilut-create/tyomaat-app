@@ -11,6 +11,26 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 9.8.)
 
+### Vaihe luetaan päätöstekstistä, ei otsikosta
+
+Rovaniemen tekonurmihanke oli merkitty "Suunnittelussa", vaikka päätös on
+5.12.2025, urakoitsija valittu ja teksti sanoo "Hankinnan sopimuskausi on
+15.4.–24.5.2026" — hanke on jo tehty. Syy oli otsikkoheuristiikka
+(`/urak/` → sopimus myönnetty), joka oli kopioituna kolmeen jäsentäjään.
+Otsikossa ei ole sanaa urakka, joten rivi jäi suunnitteluvaiheeseen.
+
+Vaihe luetaan nyt päätöstekstistä (`lib/agent/decisionPhase.ts`):
+sopimuskausi kertoo missä hanke on juuri nyt, voittaja kertoo että sopimus
+on myönnetty. Otsikkopäättely jää viimeiseksi varalle. Toteutusaikataulu ja
+päivämäärätön urakka-aika jätettiin tietoisesti pois — ks.
+[D-038](03_DECISIONS.md).
+
+Täydennys muutti 13 riviä: 3 valmistunutta, 2 rakenteilla olevaa ja 8
+sopimuksen saanutta. Varalla on nykyinen arvo, joten ilman vahvaa signaalia
+rivi jää ennalleen — otsikosta uudelleen laskettuna 28 riviä olisi
+heilahtanut "Suunnittelu" ↔ "Suunnittelussa" ilman että mikään niissä
+korjaantui.
+
 ### Viranhaltijavalikko vuoti kuvaukseen ja myrkytti kohdetyypin
 
 CaseM-päätösrivin kuvaus alkoi kymmenillä viranhaltijanimikkeillä

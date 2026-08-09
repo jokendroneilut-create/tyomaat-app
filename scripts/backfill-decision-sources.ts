@@ -54,6 +54,7 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { inferBuildingType } = await import("../lib/agent/buildingType")
   const { extractDecisionWinners } = await import("../lib/agent/decisionWinners")
+  const { inferDecisionPhase } = await import("../lib/agent/decisionPhase")
   const { fetchDecoded, extractItemText, upgradePermitTitle } = await import(
     "../lib/agent/fetchDynastySource"
   )
@@ -95,7 +96,7 @@ async function main() {
   console.log(`  joista sekoittunut teksti: ${broken.length} (haetaan uudelleen)\n`)
   if (targets.length === 0) return
 
-  const stats = { teksti: 0, tyyppi: 0, otsikko: 0, voittajat: 0, epaonnistui: 0 }
+  const stats = { teksti: 0, tyyppi: 0, otsikko: 0, voittajat: 0, vaihe: 0, epaonnistui: 0 }
   const types: Record<string, number> = {}
 
   for (let i = 0; i < targets.length; i += CONCURRENCY) {
@@ -139,6 +140,20 @@ async function main() {
          */
         const builderFromWinners = md.builder != null && oldWinners.includes(md.builder)
 
+        /*
+         * VARALLA ON NYKYINEN ARVO, ei lähteen otsikkopäättely. Ilman
+         * vahvaa signaalia (sopimuskausi tai voittaja) rivi jää siis
+         * ennalleen. Otsikosta uudelleen laskettuna 28 riviä olisi
+         * heilahtanut "Suunnittelu" <-> "Suunnittelussa" ilman että mikään
+         * niissä oli korjaantunut - se on kohinaa, ei korjaus.
+         */
+        const phase = inferDecisionPhase({
+          description,
+          hasWinner: winners.length > 0,
+          fallback: md.phase_hint ?? "Suunnittelussa",
+        })
+        if (phase !== md.phase_hint) stats.vaihe++
+
         const buildingType = inferBuildingType(title, description)
         if (buildingType !== md.building_type) {
           stats.tyyppi++
@@ -155,6 +170,7 @@ async function main() {
             metadata: {
               ...md,
               description,
+              phase_hint: phase,
               building_type: buildingType ?? null,
               /*
                * Uusi laskenta voittaa aina, myös tyhjänä. Jos vanha arvo
@@ -191,6 +207,7 @@ async function main() {
   console.log(`kohdetyyppi muuttui: ${stats.tyyppi}`)
   console.log(`otsikko korjattu:    ${stats.otsikko}`)
   console.log(`voittajat poimittu:  ${stats.voittajat}`)
+  console.log(`vaihe korjattu:      ${stats.vaihe}`)
   console.log(`epäonnistui:         ${stats.epaonnistui}`)
   console.log("\nKohdetyypit:")
   for (const [t, n] of Object.entries(types).sort((a, b) => b[1] - a[1])) {

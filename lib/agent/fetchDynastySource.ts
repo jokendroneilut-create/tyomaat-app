@@ -1,6 +1,7 @@
 import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
+import { inferDecisionPhase, phaseFromTitle } from "./decisionPhase"
 
 /*
  * Dynasty-päätösjärjestelmä (Innofactor), käytössä kahdeksalla kunnalla
@@ -328,6 +329,8 @@ export function createDynastyFetcher(config: DynastyConfig) {
        */
       if (!description) continue
 
+      const winners = extractDecisionWinners(description)
+
       results.push({
         name: upgradePermitTitle(subject, description),
         description,
@@ -337,8 +340,12 @@ export function createDynastyFetcher(config: DynastyConfig) {
         developer: config.developer,
         permit_number: itemId,
         property_type: inferBuildingType(subject, description),
-        winners: extractDecisionWinners(description),
-        phase: /urak/i.test(subject) ? "Sopimus myönnetty" : "Suunnittelussa",
+        winners,
+        phase: inferDecisionPhase({
+          description,
+          hasWinner: winners.length > 0,
+          fallback: phaseFromTitle(subject),
+        }),
         business_value: "high",
         source_url: link,
         confidence: 0.6,

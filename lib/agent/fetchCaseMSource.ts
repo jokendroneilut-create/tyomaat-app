@@ -1,6 +1,7 @@
 import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
+import { inferDecisionPhase, phaseFromTitle } from "./decisionPhase"
 import { decodeHtmlEntities } from "./htmlEntities"
 import { CONSTRUCTION_SIGNALS } from "./fetchDynastySource"
 
@@ -306,6 +307,8 @@ export function createCaseMFetcher(config: CaseMConfig) {
            */
           if (!description) continue
 
+          const winners = extractDecisionWinners(description)
+
           results.push({
             name: hit.title,
             description,
@@ -316,8 +319,12 @@ export function createCaseMFetcher(config: CaseMConfig) {
             developer: config.developer,
             permit_number: hit.path.match(/content\/(\d+)/)?.[1] ?? null,
             property_type: inferBuildingType(hit.title, description),
-        winners: extractDecisionWinners(description),
-            phase: /urak/i.test(hit.title) ? "Sopimus myönnetty" : "Suunnittelussa",
+            winners,
+            phase: inferDecisionPhase({
+              description,
+              hasWinner: winners.length > 0,
+              fallback: phaseFromTitle(hit.title),
+            }),
             business_value: "high",
             source_url: `${base}${hit.path}`,
             confidence: 0.6,
