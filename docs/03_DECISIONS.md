@@ -38,7 +38,20 @@ uudelleen laskettuna 28 riviä olisi heilahtanut "Suunnittelu" ↔
 "Suunnittelussa" ilman että mikään niissä korjaantui. Kohina ei ole korjaus,
 joten ilman vahvaa signaalia rivi jää ennalleen. Muutoksia tuli 13.
 
-Ks. `lib/agent/decisionPhase.ts`.
+**Sopimuskausi kytkettiin myös tuontiin.** `inferCompletionDateFromText`
+esti jo vanhentuneiden hankkeiden pääsyn TIC-jonoon, mutta se tunsi vain
+tiedotteiden sanamuodot ("valmistuu syyskuussa 2025") — kunnan päätös ei
+puhu niin. Sopimuskauden loppu on nyt viimeinen vaihtoehto samassa
+funktiossa, jolloin jo tehty hankinta ei enää päädy jonoon mahdollisuutena.
+Järjestys on tarkoituksellinen: yllä olevat kuviot on viritetty yritysten
+tiedotteiden aineistolla, ja uusi haara ajetaan vasta kun ne eivät löydä
+mitään.
+
+Vaikutus mitattiin ennen kytkentää: koko aineistossa sopimuskausi
+tunnistuu 8 rivillä, joista 4 on jo päättynyt. Ei yhtään väärää osumaa.
+
+Ks. `lib/agent/decisionPhase.ts` ja
+`lib/projects/inferCompletionDateFromText.ts`.
 
 ### D-037 – Sisältöalue rajataan HTML:n rakenteesta, ei tekstin avainsanoista
 CaseM-asiasivun vasemmassa laidassa on viranhaltijavalikko: linkkilista

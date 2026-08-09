@@ -1,3 +1,5 @@
+import { extractContractPeriod } from "@/lib/agent/decisionPhase"
+
 const FINNISH_MONTHS: [string, number][] = [
   ["tammikuu", 1],
   ["helmikuu", 2],
@@ -91,7 +93,31 @@ export function inferCompletionDateFromText(
   )
   if (seasonMatch) return seasonMatch
 
+  /*
+   * SOPIMUSKAUSI VIIMEISENÄ. Kunnan hankintapäätös ei sano "valmistuu
+   * syyskuussa" vaan "Hankinnan sopimuskausi on 15.4.-24.5.2026", ja kauden
+   * loppu on se päivä johon mennessä työn on oltava tehty. Ilman tätä
+   * jo tehty hankinta pääsi TIC-jonoon mahdollisuutena - mitattu rivi oli
+   * päätetty 5.12.2025 ja sen sopimuskausi päättyi 24.5.2026.
+   *
+   * Järjestys on tarkoituksellinen: yllä olevat kuviot on viritetty
+   * yritysten tiedotteiden aineistolla, eikä sitä haluta häiritä. Tämä
+   * vastaa vain silloin kun ne eivät löydä mitään.
+   */
+  const period = extractContractPeriod(text)
+  if (period) return toIsoDate(period.end)
+
   return null
+}
+
+/*
+ * Paikallinen päivä ISO-muotoon. toISOString() siirtäisi aikavyöhykkeen
+ * verran, jolloin 1.1. muuttuisi edellisen vuoden viimeiseksi päiväksi.
+ */
+function toIsoDate(date: Date): string {
+  const kk = String(date.getMonth() + 1).padStart(2, "0")
+  const pp = String(date.getDate()).padStart(2, "0")
+  return `${date.getFullYear()}-${kk}-${pp}`
 }
 
 export function isPastDate(isoDate: string | null): boolean {

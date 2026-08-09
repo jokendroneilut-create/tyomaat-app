@@ -47,6 +47,13 @@ on myönnetty. Otsikkopäättely jää viimeiseksi varalle. Toteutusaikataulu ja
 päivämäärätön urakka-aika jätettiin tietoisesti pois — ks.
 [D-038](03_DECISIONS.md).
 
+Sopimuskausi kytkettiin myös **tuontiin**: `inferCompletionDateFromText`
+esti jo ennestään vanhentuneiden hankkeiden pääsyn TIC-jonoon, mutta se
+tunsi vain tiedotteiden sanamuodot ("valmistuu syyskuussa 2025") — kunnan
+päätös ei puhu niin. Jo tehty hankinta ei siis enää päädy jonoon
+mahdollisuutena. Mitattu ennen kytkentää: sopimuskausi tunnistuu 8 rivillä,
+joista 4 on jo päättynyt, eikä yhtään väärää osumaa.
+
 Täydennys muutti 13 riviä: 3 valmistunutta, 2 rakenteilla olevaa ja 8
 sopimuksen saanutta. Varalla on nykyinen arvo, joten ilman vahvaa signaalia
 rivi jää ennalleen — otsikosta uudelleen laskettuna 28 riviä olisi
