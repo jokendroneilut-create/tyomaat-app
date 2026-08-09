@@ -278,3 +278,60 @@ describe("inferBuildingType – yhdyssanat ja nuorisotila", () => {
     ).toBe("Nuorisotila")
   })
 })
+
+describe("inferBuildingType – ulkoalueet", () => {
+  /*
+   * Mitattu rivi: purku-urakan sijaan tyypiksi tuli "Koulu", koska
+   * ingressissä luki "urakoitsija asentaa vanhaa tekonurmea Rautiosaaren
+   * koulun kentälle".
+   */
+  it("tunnistaa urheilukentän eikä ota tyyppiä rungon koulusta", () => {
+    expect(
+      inferBuildingType(
+        "Keskusurheilukentän tekonurmen peruskorjaus",
+        "Osana hankintaa urakoitsija asentaa vanhaa tekonurmea Rautiosaaren koulun kentälle."
+      )
+    ).toBe("Liikuntapaikka")
+  })
+
+  it("tunnistaa leikkipuiston", () => {
+    expect(
+      inferBuildingType("Leikkipuisto Trumpetin puistosuunnitelman hyväksyminen", null)
+    ).toBe("Leikkipuisto")
+  })
+
+  /*
+   * Lentokenttä ei ole liikuntapaikka, joten pelkkä "kenttä" ei kelpaa
+   * tunnisteeksi - vain yhdyssanat joissa etuosa on liikuntaa.
+   */
+  it("ei pidä lentokenttää liikuntapaikkana", () => {
+    expect(inferBuildingType("Lentokenttäalueen rakennushanke", null)).not.toBe(
+      "Liikuntapaikka"
+    )
+  })
+
+  /*
+   * Ulkoalueet ovat aineistossa kahdessa roolissa: kunnan päätöksessä
+   * hankkeen kohde, yrityksen tiedotteessa naapuruston palvelu. Siksi ne
+   * ratkaistaan vasta rakennustyyppien jälkeen. Mitattu: taulun alkupäässä
+   * nämä veivät kaksi asuntokohdetta leikkipuistoksi.
+   */
+  it("antaa asuinrakennuksen voittaa ympäristön leikkipuiston", () => {
+    expect(
+      inferBuildingType(
+        "ICECAPITAL Housing Fund VII Ky:lle 76 asunnon kohde",
+        "Kohteeseen valmistuu asuinrakennus. Pihan viereen jää leikkipuisto."
+      )
+    ).toBe("Kerrostalo")
+  })
+
+  /* Päiväkoti ratkaistaan yhä ennen ulkoalueita omassa hankkeessaan. */
+  it("pitää päiväkodin päiväkotina vaikka pihassa on leikkipaikka", () => {
+    expect(
+      inferBuildingType(
+        "Päiväkodin uudisrakennuksen hankesuunnitelma",
+        "Hankkeeseen sisältyy leikkipiha ja pallokenttä."
+      )
+    ).toBe("Päiväkoti")
+  })
+})

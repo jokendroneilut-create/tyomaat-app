@@ -52,13 +52,42 @@ const BUILDING_TYPES: [RegExp, string][] = [
    */
   [/koulu(?!t)|lukio|kampus|oppilaitos/i, "Koulu"],
   [/kirjasto/i, "Kirjasto"],
-  [/uimahalli|liikuntahalli|jäähalli|urheiluhalli/i, "Liikuntapaikka"],
   [/hoivakoti|palvelutalo|asumisyksik|senioritalo/i, "Hoivakoti"],
   [/logistiikk|varastorakennu|terminaal/i, "Logistiikka"],
   [/hotelli/i, "Hotelli"],
   [/toimitila|toimistorakennu|toimistotalo/i, "Toimitila"],
   [/kerrostalo|asuntohank|asuinrakennu|asunto\s+oy/i, "Kerrostalo"],
   [/rivitalo/i, "Rivitalo"],
+  /*
+   * ULKOALUEET VIIMEISENÄ, heti infran edellä. Ne ovat aineistossa kahdessa
+   * eri roolissa: kunnan päätöksessä hankkeen kohde ("Leikkipuisto Trumpetin
+   * puistosuunnitelma"), yrityksen tiedotteessa naapuruston palvelu ("76
+   * asunnon kohde ... lähellä on leikkipuisto"). Rakennustyypit ratkaistaan
+   * siksi ensin: hankkeen oma rakennus voittaa ympäristön palvelun.
+   *
+   * Mitattu: taulun alkupäässä nämä veivät kaksi asuntokohdetta
+   * leikkipuistoksi ja yhden uutisartikkelin nuorisotilaksi.
+   */
+  /*
+   * Ulkoliikuntapaikat puuttuivat kokonaan, vaikka kentät ja liikuntapuistot
+   * ovat kunnan päätösaineistossa yleisiä. Ne olivat lähes kaikki tyhjiä, ja
+   * osa sai tyypin rungosta: "Keskusurheilukentän tekonurmen peruskorjaus"
+   * oli "Koulu", koska ingressissä luki "Rautiosaaren koulun kentälle".
+   *
+   * KENTTÄ EI KELPAA YKSIN: "Lentokenttäalueen rakennushanke" ei ole
+   * liikuntapaikka. Siksi vain yhdyssanat joissa etuosa on liikuntaa.
+   */
+  [
+    /uimahalli|liikuntahalli|jäähalli|urheiluhalli|urheilukent|yleisurheilukent|pallokent|pelikent|tekonurmi|tekonurme|tekojääkent|liikuntapuisto|urheilupuisto|urheilukesku|liikuntapaik|kuntorata|skeittipaik|skeittipuisto|uimaranta/i,
+    "Liikuntapaikka",
+  ],
+  /*
+   * Leikkipuisto on Helsingissä valvottu kohde jolla on oma rakennus, ja
+   * niitä on päätösaineistossa 19. Ilman omaa tyyppiä ne poimivat rungosta
+   * mitä sattuu: "Leikkipuisto Trumpetin puistosuunnitelma" oli
+   * "Kerrostalo" ja "Maasälvänpuisto, leikkipuisto Maasälpä" oli "Rivitalo".
+   */
+  [/leikkipuisto|leikkipiha|leikkipaik/i, "Leikkipuisto"],
   [/\bsilta\b|siltaa|ratahank|raitiotie|katusaneeraus/i, "Infrahanke"],
 ]
 

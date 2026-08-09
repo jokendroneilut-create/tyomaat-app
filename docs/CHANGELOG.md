@@ -11,6 +11,28 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 9.8.)
 
+### Ulkoliikuntapaikat ja leikkipuistot puuttuivat kohdetyyppitaulusta
+
+Tekonurmihanke sai kohdetyypin "Koulu", koska ingressissä luki "urakoitsija
+asentaa vanhaa tekonurmea Rautiosaaren **koulun** kentälle". Syy oli
+laajempi kuin yksi rivi: kentät, liikuntapuistot ja leikkipuistot puuttuivat
+taulusta kokonaan, vaikka ne ovat kunnan päätösaineistossa yleisiä. Ne
+olivat lähes kaikki tyhjiä, ja neljä oli aktiivisesti väärin — leikkipuistot
+olivat "Kerrostalo" ja "Rivitalo".
+
+Kaksi uutta tyyppiä: **Liikuntapaikka** (laajennettu kentillä, tekonurmilla
+ja liikuntapuistoilla) ja **Leikkipuisto**. Pelkkä "kenttä" ei kelpaa
+tunnisteeksi — "Lentokenttäalueen rakennushanke" ei ole liikuntapaikka.
+
+**Ulkoalueet ratkaistaan vasta rakennustyyppien jälkeen.** Ne esiintyvät
+kahdessa roolissa: kunnan päätöksessä hankkeen kohde, yrityksen tiedotteessa
+naapuruston palvelu ("76 asunnon kohde … lähellä on leikkipuisto"). Taulun
+alkupäässä ne veivät kaksi asuntokohdetta leikkipuistoksi; loppuun
+siirrettynä hankkeen oma rakennus voittaa ympäristön palvelun.
+
+Täydennys korjasi 72 päätösriviä (40 Liikuntapaikka, 32 Leikkipuisto).
+Kohdetyyppi on nyt 460 rivillä 1017:stä.
+
 ### Vaihe luetaan päätöstekstistä, ei otsikosta
 
 Rovaniemen tekonurmihanke oli merkitty "Suunnittelussa", vaikka päätös on
