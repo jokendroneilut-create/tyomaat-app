@@ -179,6 +179,15 @@ const MAX_NAME_WORDS = 5
  */
 const SINGLE_ROLES = [
   `${NAME_CHAR}*[Uu]rakoitsijaksi`,
+  /*
+   * "…valitsee urakan toteuttajaksi VM-Suomalainen Oy:n". Sama rooli kuin
+   * urakoitsija, eri sana. Mitattu: yksi rivi jäi kokonaan ilman voittajaa.
+   *
+   * Roolistoon EI oteta "valvojaksi": valvoja on rakennuttajan konsultti,
+   * ei urakoitsija, ja yhden voittajan sääntö veisi sen builder-kenttään
+   * hankkeen rakentajaksi.
+   */
+  `${NAME_CHAR}*[Tt]oteuttajaksi`,
   "[Tt]oimittajaksi",
   "[Pp]alveluntuottajaksi",
   "[Ss]opimuskumppaniksi",

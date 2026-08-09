@@ -222,7 +222,7 @@ koska kuvio vaati kaksois-k:n. Aineistossa **passiivi on yleisempi**:
 "hankitaan" 9 rivillä. Verbilista luettiin lähteistä ja laajennettiin
 mitattuihin muotoihin (`hankitaan`, `hankittiin`, `tilata`, `ostetaan`).
 11 uutta voittajaa, ei yhtään muuttunutta tai poistunutta. Voittaja on nyt
-49 päätösrivillä (45 yksittäistä urakoitsijaa, 4 puitesopimusta).
+51 päätösrivillä (47 yksittäistä urakoitsijaa, 4 puitesopimusta).
 
 **Toinen täydennys:** kuudes lausemuoto, jossa valintaverbi on roolin
 edellä ("Päätän valita … urakan pääurakoitsijaksi kokonaishinnaltaan

@@ -284,3 +284,44 @@ describe("extractDecisionWinners – y-tunnukseton luettelo", () => {
     ).toEqual([])
   })
 })
+
+describe("extractDecisionWinners – toteuttaja", () => {
+  /*
+   * "Toteuttaja" on sama rooli kuin urakoitsija, eri sana. Puuttui
+   * roolistosta, joten rivi jäi kokonaan ilman voittajaa.
+   */
+  it("tunnistaa toteuttajan urakoitsijan tapaan", () => {
+    expect(
+      extractDecisionWinners(
+        "Kunnanhallitus päättää käyttää tarjouspyynnön option ja valitsee " +
+          "Lahelanorsi-koulu kunnallistekniikan rakentaminen urakan " +
+          "toteuttajaksi VM-Suomalainen Oy:n kokonaishintaan 8 793 980 euroa."
+      )
+    ).toEqual(["VM-Suomalainen Oy"])
+  })
+
+  /*
+   * Ryhmittymästä poimitaan johtava yritys, kuten "Varte Lahti Oy käyttäen
+   * Varte Lappeenranta Oy:n voimavaroja" -tapauksessa. Molempien poiminta
+   * tyhjentäisi urakoitsijakentän (usean voittajan sääntö), vaikka
+   * kyseessä on yksi toteuttaja.
+   */
+  it("poimii ryhmittymästä johtavan yrityksen", () => {
+    expect(
+      extractDecisionWinners(
+        "Hankintapäätös on tehty ja toteuttajaksi on valittu ryhmittymä " +
+          "YIT Business Premises Oy ja YIT Infra Oy."
+      )
+    ).toEqual(["YIT Business Premises Oy"])
+  })
+
+  /*
+   * Valvoja on rakennuttajan konsultti, ei urakoitsija. Yhden voittajan
+   * sääntö veisi sen builder-kenttään hankkeen rakentajaksi.
+   */
+  it("ei pidä valvojaa urakoitsijana", () => {
+    expect(
+      extractDecisionWinners("Hankkeen valvojaksi valitaan Granlund Oy.")
+    ).toEqual([])
+  })
+})
