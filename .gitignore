@@ -46,3 +46,10 @@ next-env.d.ts
 # Mittausten valiaikaistiedostot
 ab-*.json
 *.tmp.ts
+
+# Claude Code -paikallinen tila. Worktreet ovat kokonaisia repokopioita
+# (4 kpl, 25 MB, 2933 tiedostoa), joten ilman tata "git add -A" veisi
+# repoon toisten haarojen koko lahdepuun.
+**/.claude/settings.local.json
+**/.claude/worktrees/
+**/.claude/scheduled_tasks.lock
