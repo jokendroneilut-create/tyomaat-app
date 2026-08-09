@@ -94,12 +94,23 @@ export type ProjectMatchReason =
    * jotta ihminen näkee MIKSI varma näyttävä pari jäi ehdotukseksi.
    */
   | "different_name_numbers"
+  /*
+   * Negatiivinen syy: nimien ERI OSAT eivät liity toisiinsa. Sama rooli
+   * kuin different_name_numbers, mutta sanoille.
+   */
+  | "different_name_subjects"
 
 /*
  * Yhdistämiskynnys on 70, joten 65 jättää parin ehdotukseksi mutta ei
  * yhdistä. Ei nolla: numeroero on vahva vihje eri kohteesta, ei todiste.
  */
 const NUMBER_MISMATCH_CAP = 65
+
+/*
+ * Sama kynnys sanoille. Nimien erottavat osat eivät ole yhtä vahva todiste
+ * kuin numeroero, mutta vaikutus on sama: pari jää ihmisen katsottavaksi.
+ */
+const SUBJECT_MISMATCH_CAP = 65
 
 export type ProjectMatchResult = {
   project: MatchableProject
@@ -137,6 +148,57 @@ function titleWords(value: string | null | undefined) {
     .map((word) => word.trim())
     .filter((word) => word.length >= 4)
     .filter((word) => !GENERIC_TITLE_WORDS.has(word))
+}
+
+/*
+ * Sanan vartalo karkeasti: loppu pois, vähintään neljä merkkiä jäljelle.
+ * Tarkoitus on tunnistaa TAIVUTUSMUOTO samasta sanasta, ei tehdä oikeaa
+ * morfologiaa - "purkaminen" ja "purkamisen" jakavat vartalon "purkami",
+ * mutta "tikan" ja "tikkakosken" eivät ("tika" vs "tikkakos").
+ */
+function crudeStem(word: string): string {
+  return word.slice(0, Math.max(4, word.length - 3))
+}
+
+/*
+ * EROAVATKO NIMIEN ERI OSAT?
+ *
+ * Nimivertailu painottaa yhteistä osaa, ja kunnan aineistossa yhteinen osa
+ * on usein geneerinen: "Asunto Oy Espoon ...", "... 2026, Nokia",
+ * "... päiväkodin purku-urakka". Erottava sana on juuri se joka kertoo
+ * kohteen, mutta se hukkuu yhteisen massaan.
+ *
+ * Mitattu tapaus: "Tikan päiväkodin purku-urakka" ja "Tikkakosken
+ * päiväkodin purku-urakka" saivat varmuuden 100 ja yhdistyivät, vaikka ovat
+ * eri päiväkoti (JyväskyläDno-2025-1438 ja -1439). Koko hankejoukosta
+ * löytyi 194 vastaavaa paria 267:stä jotka ylittivät yhdistämiskynnyksen.
+ *
+ * VAADITAAN EROTTAVA SANA MOLEMMILLA. Jos vain toisessa on ylimääräistä,
+ * kyse on tarkennuksesta eikä erosta - sama periaate kuin numeroissa
+ * ("Oulun elämysareena" vs "Oulun elämysareena ja ympäristö").
+ *
+ * YHTEINEN VARTALO KUMOAA. Muuten suomen taivutus laukaisisi säännön
+ * jatkuvasti: "rakennuksen purkaminen" ja "rakennusten purkamisen" ovat
+ * sama asia eri sijassa.
+ */
+function haveDifferentNameSubjects(
+  first: string | null | undefined,
+  second: string | null | undefined
+): boolean {
+  const a = new Set(titleWords(first))
+  const b = new Set(titleWords(second))
+
+  const onlyA = [...a].filter((word) => !b.has(word))
+  const onlyB = [...b].filter((word) => !a.has(word))
+
+  if (onlyA.length === 0 || onlyB.length === 0) return false
+
+  const stemsB = onlyB.map(crudeStem)
+
+  return !onlyA.some((word) => {
+    const stem = crudeStem(word)
+    return stemsB.some((other) => stem.startsWith(other) || other.startsWith(stem))
+  })
 }
 
 function titleSimilarity(
@@ -814,6 +876,21 @@ export function calculateMatch(
   if (cappedByNumbers) {
     confidence = Math.min(confidence, NUMBER_MISMATCH_CAP)
     reasons.push("different_name_numbers")
+  }
+
+  /*
+   * Sama rajoitus sanoille. Tunniste voittaa tämänkin: lupanumero tai
+   * kiinteistötunnus on suora todiste samasta kohteesta, eikä nimien
+   * sanaero kumoa sitä.
+   */
+  const cappedBySubjects =
+    !reasons.includes("same_permit_number") &&
+    !reasons.includes("same_property_id") &&
+    haveDifferentNameSubjects(project.name, candidate.name)
+
+  if (cappedBySubjects) {
+    confidence = Math.min(confidence, SUBJECT_MISMATCH_CAP)
+    reasons.push("different_name_subjects")
   }
 
   return {

@@ -187,3 +187,83 @@ describe("findProjectMatchDetailed — erottuva otsikko", () => {
     expect(match?.reasons).toContain("same_city")
   })
 })
+
+describe("different_name_subjects", () => {
+  /*
+   * Mitattu tapaus: "Tikan päiväkodin purku-urakka" ja "Tikkakosken
+   * päiväkodin purku-urakka" saivat varmuuden 100 ja yhdistyivät, vaikka
+   * ovat eri päiväkoti (JyväskyläDno-2025-1438 ja -1439). Yhteinen osa
+   * ("päiväkodin purku-urakka") on geneerinen ja hukuttaa erottavan sanan.
+   *
+   * Koko hankejoukossa vastaavia oli 194 paria 267:stä jotka ylittivät
+   * yhdistämiskynnyksen.
+   */
+  it("painaa eri kohteen kynnyksen alle", () => {
+    const match = findProjectMatchDetailed(
+      [project("1", "Tikan päiväkodin purku-urakka", { city: "Jyväskylä" })],
+      { ...BLANK, name: "Tikkakosken päiväkodin purku-urakka", city: "Jyväskylä" }
+    )
+    expect(match?.reasons).toContain("different_name_subjects")
+    expect(match!.confidence).toBeLessThan(70)
+  })
+
+  /*
+   * RAJOITTAVA, EI ESTÄVÄ: pari jää ihmisen katsottavaksi eikä katoa.
+   * Sama periaate kuin numeroerossa.
+   */
+  it("jättää parin ehdotukseksi eikä pudota nollaan", () => {
+    const match = findProjectMatchDetailed(
+      [project("1", "Tikan päiväkodin purku-urakka", { city: "Jyväskylä" })],
+      { ...BLANK, name: "Tikkakosken päiväkodin purku-urakka", city: "Jyväskylä" }
+    )
+    expect(match!.confidence).toBeGreaterThan(0)
+  })
+
+  /*
+   * Yksipuolinen lisäys on tarkennus, ei ero - sama hanke eri
+   * päätösvaiheessa. Ilman tätä ehtoa jokainen "…, urakoitsijan valinta"
+   * -otsikko olisi irronnut omaksi hankkeekseen.
+   */
+  it("ei laukea kun vain toisessa on ylimääräistä", () => {
+    const match = findProjectMatchDetailed(
+      [project("1", "Nekalan koulun sisäilmakorjaus", { city: "Tampere" })],
+      { ...BLANK, name: "Nekalan koulun sisäilmakorjaus, urakoitsijan valinta", city: "Tampere" }
+    )
+    expect(match?.reasons ?? []).not.toContain("different_name_subjects")
+  })
+
+  /*
+   * Suomen taivutus ei saa laukaista sääntöä: "purkaminen" ja "purkamisen"
+   * ovat sama sana eri sijassa.
+   */
+  it("ei laukea taivutusmuodosta", () => {
+    const match = findProjectMatchDetailed(
+      [project("1", "Rakennuksen purkaminen Pesulatiellä", { city: "Jyväskylä" })],
+      { ...BLANK, name: "Rakennusten purkamisen urakka Pesulatiellä", city: "Jyväskylä" }
+    )
+    expect(match?.reasons ?? []).not.toContain("different_name_subjects")
+  })
+
+  /*
+   * Tunniste voittaa: lupanumero on suora todiste samasta kohteesta, eikä
+   * nimien sanaero kumoa sitä.
+   */
+  it("ei laukea kun lupanumero on sama", () => {
+    const match = findProjectMatchDetailed(
+      [
+        project("1", "Tikan päiväkodin purku-urakka", {
+          city: "Jyväskylä",
+          metadata: { permit_number: "10219" },
+        }),
+      ],
+      {
+        ...BLANK,
+        name: "Tikkakosken päiväkodin purku-urakka",
+        city: "Jyväskylä",
+        permitNumber: "10219",
+      }
+    )
+    expect(match?.reasons ?? []).not.toContain("different_name_subjects")
+    expect(match!.confidence).toBeGreaterThanOrEqual(70)
+  })
+})

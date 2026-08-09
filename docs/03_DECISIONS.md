@@ -5,6 +5,57 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-045 – Nimien erottava sana ratkaisee, ei yhteinen osa
+Kaksi jyväskyläläistä päiväkotia yhdistyi yhdeksi hankkeeksi:
+
+> "Tikan päiväkodin purku-urakka" — JyväskyläDno-2025-**1438**, 15.5.2025
+> "Tikkakosken päiväkodin purku-urakka" — JyväskyläDno-2025-**1439**, 3.6.2025
+
+Täsmäytys antoi näille **varmuuden 100** (`similar_title`), eli yhdistäminen
+oli järjestelmän suositus eikä käyttäjän lipsahdus.
+
+Syy: nimivertailu painottaa YHTEISTÄ osaa, ja kunnan aineistossa yhteinen
+osa on geneerinen — "…päiväkodin purku-urakka", "Asunto Oy Espoon …",
+"… 2026, Nokia". Erottava sana on juuri se joka kertoo kohteen, mutta se
+hukkuu yhteisen massaan.
+
+**Mitattu koko hankejoukolla (4 472 hanketta):**
+
+| | pareja |
+|---|---|
+| varmuus ≥ 70 eli yhdistyisi | 267 |
+| niistä nimien erottavat osat eivät liity toisiinsa | **194** |
+| yhdistämiskynnyksen ylittäviä säännön jälkeen | **71** |
+
+Esimerkkejä jotka olisivat yhdistyneet automaattisesti: "Asunto oy
+puustellinpuisto" ja "Asunto oy Arlanhuippu" (100), "Miharintien AKK
+uusiminen 2026, Nokia" ja "Österbackantien rakentaminen 2026, Nokia" (82).
+
+**Rajoittava, ei estävä** — sama malli kuin
+[`nameNumbers.ts`](../lib/projects/nameNumbers.ts): varmuus painetaan
+kynnyksen alle (65), jolloin pari jää ihmisen katsottavaksi ehdotuksena.
+Absoluuttinen veto hukkaisi aitoja osumia: "Kerrostalo Ruissalontielle
+Turkuun" ja "Uusi kerrostalo rakentuu Ruissalontielle" ovat sama hanke eri
+otsikolla, ja ne jäävät nyt ehdotukseksi.
+
+Kaksi ehtoa pitävät säännön turvallisena:
+
+- **Erottava sana vaaditaan molemmilta.** Yksipuolinen lisäys on tarkennus,
+  ei ero — muuten jokainen "…, urakoitsijan valinta" olisi irronnut omaksi
+  hankkeekseen.
+- **Yhteinen vartalo kumoaa.** Muuten suomen taivutus laukaisisi säännön
+  jatkuvasti: "purkaminen" ja "purkamisen" ovat sama sana eri sijassa.
+
+Tunniste (lupanumero, kiinteistötunnus) voittaa säännön, kuten numeroerossa.
+
+Sääntö käyttää matcherin omaa `titleWords`-tokenisointia eikä omaa
+sanalistaa, jottei geneeristen sanojen luettelo kahdennu.
+
+**Tunnetut aukot:** alle neljän merkin erottava sana katoaa tokenisoinnissa
+("Asunto Oy Helsingin **Pyy**" vs "… **Evia**"), ja vartaloetuliite päästää
+läpi osan pareista ("Kaskia" vs "Kaskenmäen"). Molemmat jäivät 71:n
+joukkoon.
+
 ### D-044 – Otsikko on kahdessa paikassa, ja vain toinen näkyy listassa
 Otsikon siivous ([D-042](#d-042--otsikko-nimeää-päätöksen-hanke-tarvitsee-oman-nimen))
 näkyi hankesivulla mutta EI TIC:n listassa. Syy: tuonti kirjoittaa saman

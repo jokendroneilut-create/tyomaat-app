@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 9.8.)
 
+### Eri kohteet yhdistyivät, koska nimien yhteinen osa on geneerinen
+
+"Tikan päiväkodin purku-urakka" ja "Tikkakosken päiväkodin purku-urakka"
+yhdistyivät yhdeksi hankkeeksi, vaikka ovat eri päiväkoti (JyväskyläDno-
+2025-1438 ja -1439). Täsmäytys antoi niille varmuuden **100**, eli
+yhdistäminen oli järjestelmän suositus.
+
+Syy: nimivertailu painottaa yhteistä osaa, ja se on kunnan aineistossa
+geneerinen ("…päiväkodin purku-urakka", "Asunto Oy Espoon …"). Erottava
+sana kertoo kohteen mutta hukkuu.
+
+Uusi rajoitus `different_name_subjects` painaa tällaisen parin
+yhdistämiskynnyksen alle, jolloin se jää ihmisen katsottavaksi — sama
+rajoittava malli kuin numeroerossa, ei estävä. Ks.
+[D-045](03_DECISIONS.md).
+
+Mitattu 4 472 hankkeella: yhdistämiskynnyksen ylittäviä pareja **267 → 71**.
+Väärä yhdistäminen purettiin myös kannasta.
+
 ### Otsikko nimeää hankkeen, ei päätöstä
 
 Otsikot kuvasivat kokouksen asiaa: "Puhjon risteyssilta (W) korjausurakka
