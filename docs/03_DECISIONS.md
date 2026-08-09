@@ -5,96 +5,6 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
-### D-040 – Lähteen kirjoitusvirhe tuodaan sellaisenaan
-Jyväskylän hankintapäätös lukee sanatarkasti "hankitaan edullisimman
-tarjouksen jättäneeltä **Mansiirto** Harry Mäkelä Oy:ltä". Sama yritys
-esiintyy muissa päätöksissä oikein kirjoitettuna ("Maansiirto"), joten
-virhe on ilmeinen ja korjaus olisi helppo tehdä.
-
-Sitä ei tehdä. Poiminnan tehtävä on kertoa mitä päätöksessä lukee, ei mitä
-siinä oletettavasti pitäisi lukea. Nimen "korjaaminen" olisi tiedon
-keksimistä, ja se rikkoisi jäljitettävyyden: käyttäjä joka avaa
-lähdelinkin näkisi eri nimen kuin sovelluksessa. Sama koskee päivämääriä
-ja summia.
-
-Jos virheellinen kirjoitusasu haittaa täsmäytystä, ratkaisu on
-täsmäytyksen sumeus (`lib/projects/identity`), ei lähdetiedon muokkaus.
-
-Vahvistettu 9.8.2026: "ihan oikein tuo kirjoitusvirhe pitää tuoda
-sellaisena kun se on."
-
-### D-039 – Kuvion muodot luetaan aineistosta, ei muistista
-Ablatiivin ostoverbi tunsi vain aktiivin `hankkii`. Kun kaikki
-ablatiiviesiintymät haettiin ja niitä edeltävät verbit laskettiin, kuva oli
-toinen:
-
-| verbi | rivejä |
-|---|---|
-| hankkii | 14 |
-| **hankitaan** (passiivi) | **9** |
-| tilata / tilaa / tilataan | 3 |
-
-Passiivi oli lähes yhtä yleinen kuin aktiivi, eikä se ollut kuviossa —
-kuvio vaati kaksois-k:n. Sama toistui koko session ajan: voittajan
-päätöslauseita löytyi kuusi eri muotoa, joista neljä ensimmäistä löytyi
-vasta kun aineisto luettiin läpi muoto kerrallaan.
-
-Sääntö: **kun kirjoitat suomen kielen kuviota, laske muodot aineistosta
-ennen kuin kirjoitat kuvion.** Yksi hakuajo maksaa minuutin ja kertoo mitä
-muotoja oikeasti esiintyy; muistista listattu kuvio kattaa sen mitä sattuu
-tulemaan mieleen.
-
-Liittyy [D-035](#d-035--ingressi-kertoo-hankkeen-loppuosa-kertoo-ympäristön):
-katso otos ennen kuin kirjoitat.
-
-### D-038 – Vaihe luetaan päätöstekstistä, otsikko jää varalle
-Vaihe pääteltiin pelkästä otsikosta: `/urak/` → "Sopimus myönnetty", muuten
-"Suunnittelussa". Sama rivi oli kopioituna kolmeen jäsentäjään. Otsikko ei
-kerro mitä päätöksessä tehtiin:
-
-> "Keskusurheilukentän tekonurmen peruskorjaus" → **Suunnittelussa**
-
-vaikka päätös on 5.12.2025, urakoitsija valittu ja teksti sanoo "Hankinnan
-sopimuskausi on 15.4.–24.5.2026" — hanke on tänään tehty. Mitattu: 1017
-päätösrivistä 966 oli suunnitteluvaiheessa.
-
-Kaksi vahvempaa signaalia, tässä järjestyksessä:
-
-1. **Sopimuskausi** kertoo missä hanke on juuri nyt — päättynyt kausi
-   tarkoittaa valmista, käynnissä oleva rakenteilla olevaa.
-2. **Voittaja** kertoo että sopimus on myönnetty, vaikka aikaa ei mainita.
-
-Kumpikaan ei ole otsikossa, joten otsikkopäättely jää viimeiseksi varalle —
-Helsingillä se on rikkaampi kuin muilla (hankesuunnitelma, tarveselvitys,
-rakentamispäätös), eikä sitä haluta menettää.
-
-**Tietoisesti pois: "toteutusaikataulu" ja "urakka-aika".**
-Toteutusaikataulu on lähes aina ALUSTAVA ja kuvaa suunnitteluvaiheita
-("hankesuunnitelman hyväksyminen 6/2026, toteutussuunnittelu 8/2026–2/2027"),
-eli hanke on juuri siinä vaiheessa miksi se on merkittykin. Urakka-aika
-mainitaan tyypillisesti ilman päivämäärää ("urakka-aika alkaa kun sopimus on
-allekirjoitettu"). Kummastakin luettu vaihe olisi arvaus.
-
-**Täydennyksen varalla on nykyinen arvo, ei otsikkopäättely.** Otsikosta
-uudelleen laskettuna 28 riviä olisi heilahtanut "Suunnittelu" ↔
-"Suunnittelussa" ilman että mikään niissä korjaantui. Kohina ei ole korjaus,
-joten ilman vahvaa signaalia rivi jää ennalleen. Muutoksia tuli 13.
-
-**Sopimuskausi kytkettiin myös tuontiin.** `inferCompletionDateFromText`
-esti jo vanhentuneiden hankkeiden pääsyn TIC-jonoon, mutta se tunsi vain
-tiedotteiden sanamuodot ("valmistuu syyskuussa 2025") — kunnan päätös ei
-puhu niin. Sopimuskauden loppu on nyt viimeinen vaihtoehto samassa
-funktiossa, jolloin jo tehty hankinta ei enää päädy jonoon mahdollisuutena.
-Järjestys on tarkoituksellinen: yllä olevat kuviot on viritetty yritysten
-tiedotteiden aineistolla, ja uusi haara ajetaan vasta kun ne eivät löydä
-mitään.
-
-Vaikutus mitattiin ennen kytkentää: koko aineistossa sopimuskausi
-tunnistuu 8 rivillä, joista 4 on jo päättynyt. Ei yhtään väärää osumaa.
-
-Ks. `lib/agent/decisionPhase.ts` ja
-`lib/projects/inferCompletionDateFromText.ts`.
-
 ### D-043 – Salassapitomerkintä koskee liitettä, ei asiaa
 Kahden Kouvolan päätöksen otsikossa on "(salassa pidettävä, julkisuuslaki
 6.1 § 2)". Merkintä ei tarkoita että asia olisi salainen:
@@ -194,6 +104,96 @@ Päätepiste ja näkyvä otsake pysyivät, verkkotunnus ja luokkanimi eivät.
 Molemmat löytyivät vasta kun tulos mitattiin ajon jälkeen
 ([D-039](#d-039--kuvion-muodot-luetaan-aineistosta-ei-muistista)):
 "teksti korjattu: 76" näytti onnistumiselta.
+
+### D-040 – Lähteen kirjoitusvirhe tuodaan sellaisenaan
+Jyväskylän hankintapäätös lukee sanatarkasti "hankitaan edullisimman
+tarjouksen jättäneeltä **Mansiirto** Harry Mäkelä Oy:ltä". Sama yritys
+esiintyy muissa päätöksissä oikein kirjoitettuna ("Maansiirto"), joten
+virhe on ilmeinen ja korjaus olisi helppo tehdä.
+
+Sitä ei tehdä. Poiminnan tehtävä on kertoa mitä päätöksessä lukee, ei mitä
+siinä oletettavasti pitäisi lukea. Nimen "korjaaminen" olisi tiedon
+keksimistä, ja se rikkoisi jäljitettävyyden: käyttäjä joka avaa
+lähdelinkin näkisi eri nimen kuin sovelluksessa. Sama koskee päivämääriä
+ja summia.
+
+Jos virheellinen kirjoitusasu haittaa täsmäytystä, ratkaisu on
+täsmäytyksen sumeus (`lib/projects/identity`), ei lähdetiedon muokkaus.
+
+Vahvistettu 9.8.2026: "ihan oikein tuo kirjoitusvirhe pitää tuoda
+sellaisena kun se on."
+
+### D-039 – Kuvion muodot luetaan aineistosta, ei muistista
+Ablatiivin ostoverbi tunsi vain aktiivin `hankkii`. Kun kaikki
+ablatiiviesiintymät haettiin ja niitä edeltävät verbit laskettiin, kuva oli
+toinen:
+
+| verbi | rivejä |
+|---|---|
+| hankkii | 14 |
+| **hankitaan** (passiivi) | **9** |
+| tilata / tilaa / tilataan | 3 |
+
+Passiivi oli lähes yhtä yleinen kuin aktiivi, eikä se ollut kuviossa —
+kuvio vaati kaksois-k:n. Sama toistui koko session ajan: voittajan
+päätöslauseita löytyi kuusi eri muotoa, joista neljä ensimmäistä löytyi
+vasta kun aineisto luettiin läpi muoto kerrallaan.
+
+Sääntö: **kun kirjoitat suomen kielen kuviota, laske muodot aineistosta
+ennen kuin kirjoitat kuvion.** Yksi hakuajo maksaa minuutin ja kertoo mitä
+muotoja oikeasti esiintyy; muistista listattu kuvio kattaa sen mitä sattuu
+tulemaan mieleen.
+
+Liittyy [D-035](#d-035--ingressi-kertoo-hankkeen-loppuosa-kertoo-ympäristön):
+katso otos ennen kuin kirjoitat.
+
+### D-038 – Vaihe luetaan päätöstekstistä, otsikko jää varalle
+Vaihe pääteltiin pelkästä otsikosta: `/urak/` → "Sopimus myönnetty", muuten
+"Suunnittelussa". Sama rivi oli kopioituna kolmeen jäsentäjään. Otsikko ei
+kerro mitä päätöksessä tehtiin:
+
+> "Keskusurheilukentän tekonurmen peruskorjaus" → **Suunnittelussa**
+
+vaikka päätös on 5.12.2025, urakoitsija valittu ja teksti sanoo "Hankinnan
+sopimuskausi on 15.4.–24.5.2026" — hanke on tänään tehty. Mitattu: 1017
+päätösrivistä 966 oli suunnitteluvaiheessa.
+
+Kaksi vahvempaa signaalia, tässä järjestyksessä:
+
+1. **Sopimuskausi** kertoo missä hanke on juuri nyt — päättynyt kausi
+   tarkoittaa valmista, käynnissä oleva rakenteilla olevaa.
+2. **Voittaja** kertoo että sopimus on myönnetty, vaikka aikaa ei mainita.
+
+Kumpikaan ei ole otsikossa, joten otsikkopäättely jää viimeiseksi varalle —
+Helsingillä se on rikkaampi kuin muilla (hankesuunnitelma, tarveselvitys,
+rakentamispäätös), eikä sitä haluta menettää.
+
+**Tietoisesti pois: "toteutusaikataulu" ja "urakka-aika".**
+Toteutusaikataulu on lähes aina ALUSTAVA ja kuvaa suunnitteluvaiheita
+("hankesuunnitelman hyväksyminen 6/2026, toteutussuunnittelu 8/2026–2/2027"),
+eli hanke on juuri siinä vaiheessa miksi se on merkittykin. Urakka-aika
+mainitaan tyypillisesti ilman päivämäärää ("urakka-aika alkaa kun sopimus on
+allekirjoitettu"). Kummastakin luettu vaihe olisi arvaus.
+
+**Täydennyksen varalla on nykyinen arvo, ei otsikkopäättely.** Otsikosta
+uudelleen laskettuna 28 riviä olisi heilahtanut "Suunnittelu" ↔
+"Suunnittelussa" ilman että mikään niissä korjaantui. Kohina ei ole korjaus,
+joten ilman vahvaa signaalia rivi jää ennalleen. Muutoksia tuli 13.
+
+**Sopimuskausi kytkettiin myös tuontiin.** `inferCompletionDateFromText`
+esti jo vanhentuneiden hankkeiden pääsyn TIC-jonoon, mutta se tunsi vain
+tiedotteiden sanamuodot ("valmistuu syyskuussa 2025") — kunnan päätös ei
+puhu niin. Sopimuskauden loppu on nyt viimeinen vaihtoehto samassa
+funktiossa, jolloin jo tehty hankinta ei enää päädy jonoon mahdollisuutena.
+Järjestys on tarkoituksellinen: yllä olevat kuviot on viritetty yritysten
+tiedotteiden aineistolla, ja uusi haara ajetaan vasta kun ne eivät löydä
+mitään.
+
+Vaikutus mitattiin ennen kytkentää: koko aineistossa sopimuskausi
+tunnistuu 8 rivillä, joista 4 on jo päättynyt. Ei yhtään väärää osumaa.
+
+Ks. `lib/agent/decisionPhase.ts` ja
+`lib/projects/inferCompletionDateFromText.ts`.
 
 ### D-037 – Sisältöalue rajataan HTML:n rakenteesta, ei tekstin avainsanoista
 CaseM-asiasivun vasemmassa laidassa on viranhaltijavalikko: linkkilista
