@@ -11,6 +11,34 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 9.8.)
 
+### Viranhaltijavalikko vuoti kuvaukseen ja myrkytti kohdetyypin
+
+CaseM-päätösrivin kuvaus alkoi kymmenillä viranhaltijanimikkeillä
+("Alueellisten palvelujen päällikkö Apulaisrehtori Korkalovaaran peruskoulu
+Elinkeinopäällikkö…") ennen kuin varsinainen asia alkoi. Kyseessä oli
+asiasivun sivuvalikko, joka tulee HTML:ssä ennen sisältöä.
+
+Seuraus ei ollut vain kosmeettinen: kohdetyyppi luetaan tekstin alusta, ja
+valikossa on kymmenien koulujen rehtorit. **Sipolantien 9 purku-urakka sai
+kohdetyypin "Koulu".** Sisältöalue rajataan nyt alustan omilla tunnisteilla
+— ks. [D-037](03_DECISIONS.md).
+
+Kaikki 59 CaseM-riviä haettiin uudelleen
+(`scripts/backfill-casem-descriptions.ts`): valikko oli kuvauksessa
+jokaisella, ja 22:lla kohdetyyppi korjaantui. Suurin osa korjaantui väärästä
+arvosta tyhjäksi — purku-urakalla ei ole kohdetyyppiä.
+
+Kaksi mittauksessa paljastunutta puutetta `inferBuildingType`:ssä korjattiin
+samalla:
+
+- `\bkoulu` ei osunut yhdyssanaan. "Muurolan **peruskoulun** tarveselvitys"
+  jäi tunnistamatta, jolloin tyyppi luettiin rungosta ja tuloksena oli
+  "Päiväkoti" (teksti mainitsi viereen rakennetun päiväkodin). Sananraja
+  poistettiin ja kielto laajennettiin muotoon `koulu(?!t)`, joka estää yhä
+  "koulutus" ja "kouluttaa" — ja nyt myös katunimen "Koulutie".
+- Nuorisotila puuttui tyyppitaulusta. Sen teksti kuvaa lähes aina nykyisiä
+  ahtaita tiloja koulun yhteydessä, joten runko vei tyypin väärään suuntaan.
+
 ### Urakan voittaja poimitaan hankintapäätöksestä
 
 Kuntien päätösrivit näyttivät urakoitsijakentän tyhjänä silloinkin kun teksti

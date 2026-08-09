@@ -1,6 +1,7 @@
 import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
+import { decodeHtmlEntities } from "./htmlEntities"
 import { CONSTRUCTION_SIGNALS } from "./fetchDynastySource"
 
 /*
@@ -94,17 +95,14 @@ export type CaseMConfig = {
 /*
  * CaseM palauttaa HTML-entiteetit koodattuina (&auml; jne.), joten ne on
  * purettava ennen kuin teksti kelpaa kuvaukseksi tai täsmäytykseen.
+ *
+ * Purku delegoidaan jaetulle moduulille. Tässä oli oma entiteettilista,
+ * joka kattoi vain tässä aineistossa sattumalta nähdyt merkit - juuri se
+ * vika jonka vuoksi jaettu moduuli tehtiin. Puuttuva &sect; jätti
+ * pykälämerkin purkamatta otsikkoriville.
  */
-const ENTITIES: Record<string, string> = {
-  auml: "ä", Auml: "Ä", ouml: "ö", Ouml: "Ö", aring: "å", Aring: "Å",
-  amp: "&", lt: "<", gt: ">", quot: '"', nbsp: " ", ndash: "–", mdash: "—",
-  frasl: "/", eacute: "é", uuml: "ü",
-}
-
 export function decodeEntities(text: string): string {
-  return text
-    .replace(/&([a-zA-Z]+);/g, (m, name) => ENTITIES[name] ?? m)
-    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+  return decodeHtmlEntities(text)
 }
 
 async function getHtml(url: string): Promise<string | null> {
@@ -163,15 +161,47 @@ export function parseSearchResults(
 }
 
 /*
- * Asiasivu on kokonainen HTML-sivu. Leipäteksti alkaa murupolun jälkeen,
- * joten alku katkaistaan siitä - muuten kuvaus alkaisi navigaatiolla
- * ("Hyppää sisältöön Etsi sivustolta Etusivu Toimielimet...").
+ * SISÄLTÖALUE RAJATAAN HTML:STÄ, EI TEKSTISTÄ.
+ *
+ * Asiasivulla on vasemmalla viranhaltijavalikko: linkkilista jokaiseen
+ * kunnan viranhaltijanimikkeeseen. Rovaniemellä se on 93 riviä ja 2 700
+ * merkkiä, ja se tulee HTML:ssä ennen varsinaista asiaa. Murupolusta
+ * katkaisu ei sitä poista, koska valikko on murupolun jälkeen - kuvaus
+ * alkoi siksi luettelolla "Alueellisten palvelujen päällikkö Apulaisrehtori
+ * Korkalovaaran peruskoulu Elinkeinopäällikkö...".
+ *
+ * Vika ei ollut vain kosmeettinen: kohdetyyppi luetaan tekstin alusta, ja
+ * valikossa on kymmenien koulujen rehtorit. Sipolantien purku-urakka sai
+ * siksi kohdetyypin "Koulu".
+ *
+ * Alusta merkitsee alueet itse (`id="ContentStart"`, sivuvalikko
+ * `id="Content_sidenaviArea"`), joten rajaus tehdään niillä eikä
+ * suomenkielisillä avainsanoilla. Tarkistettu Jyväskylän, Porin ja
+ * Rovaniemen asennuksilla: rakenne on sama, ja sivuvalikko on aina ennen
+ * sisältöä.
  */
-export function extractItemText(html: string): {
-  text: string | null
-  meetingDate: Date | null
-} {
-  const text = decodeEntities(
+const MAIN_START = 'id="ContentStart"'
+const MAIN_END = /class="[^"]*right-content|<footer/i
+
+export function extractMainRegion(html: string): string | null {
+  const marker = html.indexOf(MAIN_START)
+  if (marker < 0) return null
+
+  /*
+   * Leikkaus alkaa avaustagin SULKEVASTA merkistä, ei tunnisteesta. Muuten
+   * tagin loppuosa jää mukaan tekstiksi, koska tagien poisto ei tunnista
+   * puolikasta tagia: kuvaus alkoi 'id="ContentStart" role="main">'.
+   */
+  const open = html.indexOf(">", marker)
+  if (open < 0) return null
+
+  const rest = html.slice(open + 1)
+  const end = rest.search(MAIN_END)
+  return end > 0 ? rest.slice(0, end) : rest
+}
+
+function flatten(html: string): string {
+  return decodeEntities(
     html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -179,22 +209,46 @@ export function extractItemText(html: string): {
   )
     .replace(/\s+/g, " ")
     .trim()
+}
+
+/*
+ * Asiasivu on kokonainen HTML-sivu. Leipätekstiksi otetaan sisältöalue;
+ * jos alusta ei sitä merkitse, palataan murupolkukatkaisuun.
+ */
+export function extractItemText(html: string): {
+  text: string | null
+  meetingDate: Date | null
+} {
+  const text = flatten(html)
 
   /*
    * Murupolku on muotoa "Toimielin > Kokous 7.9.2022 > Asian otsikko" ja se
    * antaa kaksi asiaa: kokouspäivän ja kohdan josta leipäteksti alkaa.
    * Ensimmäinen versio katkaisi tekstin merkkijonosta "Toimielimet >", jota
    * asiasivulla ei ole - kuvaus alkoi siksi murupolulla.
+   *
+   * Päivä luetaan KOKO sivulta, koska murupolku on sisältöalueen
+   * ulkopuolella. Sisältöalueesta luettuna tuoreusraja lakkaisi toimimasta
+   * hiljaisesti.
    */
   const dateMatch = text.match(/Kokous\s+(\d{1,2})\.(\d{1,2})\.(\d{4})/)
   const meetingDate = dateMatch
     ? new Date(Number(dateMatch[3]), Number(dateMatch[2]) - 1, Number(dateMatch[1]))
     : null
 
+  const main = extractMainRegion(html)
   const crumbs = text.split(" > ")
-  const body = (crumbs.length > 1 ? crumbs.slice(-1)[0] : text).trim()
+  const body = (
+    main ? flatten(main) : crumbs.length > 1 ? crumbs.slice(-1)[0] : text
+  ).trim()
 
-  return { text: body.length >= 80 ? body : null, meetingDate }
+  /*
+   * Otsikkorivin pykälänumero pois: "§ 4 Sipolantien 9 purku-urakka" ->
+   * kuvaus alkaa asiasta. Numero on jo asiakirjaviitteessä.
+   */
+  const cleaned = body.replace(/^§\s*\d+\s*/, "")
+
+  return { text: cleaned.length >= 80 ? cleaned : null, meetingDate }
 }
 
 export function createCaseMFetcher(config: CaseMConfig) {

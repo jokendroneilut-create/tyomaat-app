@@ -42,6 +42,57 @@ describe("extractItemText", () => {
   it("palauttaa null liian lyhyestä tekstistä", () => {
     expect(extractItemText("<p>Lyhyt</p>").text).toBeNull()
   })
+
+  /*
+   * Asiasivun vasemmassa laidassa on viranhaltijavalikko, joka tulee
+   * HTML:ssä ennen varsinaista asiaa. Rovaniemellä se on 93 nimikettä.
+   * Murupolkukatkaisu ei sitä poistanut, ja koska kohdetyyppi luetaan
+   * tekstin alusta, purku-urakka sai valikon rehtoreista tyypin "Koulu".
+   */
+  it("jättää viranhaltijavalikon pois sisältöalueen ulkopuolelta", () => {
+    const html =
+      '<div id="Content_sidenaviArea"><ul class="nav nav-list">' +
+      "<li><a>Apulaisrehtori Korkalovaaran peruskoulu</a></li>" +
+      "<li><a>Koulunjohtaja Hirvaan koulu</a></li>" +
+      "<li><a>Kirjastonjohtaja</a></li></ul></div>" +
+      '<div class="span6 center-content" id="ContentStart" role="main">' +
+      "<h1> &sect; 4 Sipolantien 9 purku-urakka </h1>" +
+      "<p>Tilapalvelukeskus on kilpailuttanut kokonaisurakkana " +
+      "Sipolantie 9:n purku-urakan. Ty&ouml;t alkavat 13.4.2026.</p></div>" +
+      '<div class="span3 right-content">Palaute Rovaniemen kaupungin kirjaamo</div>'
+    const r = extractItemText(html)
+    expect(r.text).not.toMatch(/Apulaisrehtori|Koulunjohtaja|Kirjastonjohtaja/)
+    expect(r.text).not.toMatch(/right-content|Palaute/)
+    expect(r.text?.startsWith("Sipolantien 9 purku-urakka")).toBe(true)
+  })
+
+  /*
+   * Leikkaus alkaa avaustagin sulkevasta merkistä. Tunnisteesta aloitettuna
+   * tagin loppuosa jäisi tekstiksi: 'id="ContentStart" role="main">'.
+   */
+  it("ei jätä avaustagin loppuosaa tekstiin", () => {
+    const html =
+      '<div id="ContentStart" role="main"><p>Kohteen purku-urakka on ' +
+      "kilpailutettu rajoitettuna menettelyn&auml; kansallisen kynnysarvon " +
+      "alittavana urakkahankintana vuonna 2026.</p></div>"
+    expect(extractItemText(html).text).not.toMatch(/ContentStart|role=/)
+  })
+
+  /*
+   * Kokouspäivä on murupolussa eli sisältöalueen ULKOPUOLELLA. Jos se
+   * luettaisiin rajatusta alueesta, tuoreusraja lakkaisi toimimasta
+   * hiljaisesti.
+   */
+  it("lukee kokouspäivän murupolusta vaikka sisältöalue on rajattu", () => {
+    const html =
+      "<p>Tilajaosto &gt; Kokous 13.9.2023 &gt; Napsun monitoimitalo</p>" +
+      '<div id="ContentStart" role="main"><p>Napsun monitoimitalohankkeen ' +
+      "kehitysvaiheen tulokset ja p&auml;&auml;t&ouml;s toteutusvaiheeseen " +
+      "siirtymisest&auml; k&auml;siteltiin kokouksessa.</p></div>"
+    const r = extractItemText(html)
+    expect(r.meetingDate?.getFullYear()).toBe(2023)
+    expect(r.text).not.toMatch(/Tilajaosto/)
+  })
 })
 
 describe("isConstructionSubject", () => {

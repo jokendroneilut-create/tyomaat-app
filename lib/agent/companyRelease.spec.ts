@@ -237,3 +237,44 @@ describe("extractReleaseBody", () => {
     expect(extractReleaseBody("<html><body><p>Lyhyt</p></body></html>")).toBeNull()
   })
 })
+
+describe("inferBuildingType – yhdyssanat ja nuorisotila", () => {
+  /*
+   * Koulu on suomessa lähes aina yhdyssanan jälkiosa, joten sananrajaa ei
+   * saa vaatia. Mitattu: "Muurolan peruskoulun tarveselvitys" ei osunut,
+   * jolloin tyyppi luettiin rungosta ja tuloksena oli "Päiväkoti".
+   */
+  it("tunnistaa koulun yhdyssanan jälkiosana", () => {
+    expect(
+      inferBuildingType(
+        "Muurolan peruskoulun tarveselvityksen käynnistäminen",
+        "Koulun läheisyyteen on rakennettu uusi päiväkoti."
+      )
+    ).toBe("Koulu")
+  })
+
+  it("ei pidä koulutusta kouluna", () => {
+    expect(
+      inferBuildingType("Hyvinkää Areena - uusi urheilu-, koulutus- ja tapahtumakeskus", null)
+    ).not.toBe("Koulu")
+  })
+
+  it("ei pidä kouluttamista kouluna", () => {
+    expect(inferBuildingType("Henkilöstön kouluttaminen uusiin tiloihin", null)).not.toBe(
+      "Koulu"
+    )
+  })
+
+  /*
+   * Nuorisotilan teksti kuvaa lähes aina nykyisiä ahtaita tiloja koulun
+   * yhteydessä, joten runko veisi tyypin väärään suuntaan.
+   */
+  it("tunnistaa nuorisotilan eikä ota tyyppiä rungon koulusta", () => {
+    expect(
+      inferBuildingType(
+        "Zillarin nuorisotilan tarveselvitys",
+        "Toimintatilat ovat ahtaat ja koulun tarpeisiin sisustetut."
+      )
+    ).toBe("Nuorisotila")
+  })
+})

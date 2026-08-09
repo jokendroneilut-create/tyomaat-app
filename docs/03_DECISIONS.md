@@ -5,6 +5,35 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-037 – Sisältöalue rajataan HTML:n rakenteesta, ei tekstin avainsanoista
+CaseM-asiasivun vasemmassa laidassa on viranhaltijavalikko: linkkilista
+jokaiseen kunnan viranhaltijanimikkeeseen. Rovaniemellä se on 93 nimikettä ja
+2 700 merkkiä, ja HTML:ssä se tulee ennen varsinaista asiaa. Murupolusta
+katkaisu ei sitä poistanut, koska valikko on murupolun jälkeen.
+
+**Vika ei ollut kosmeettinen.** Kohdetyyppi luetaan tekstin alusta
+([D-035](#d-035--ingressi-kertoo-hankkeen-loppuosa-kertoo-ympäristön)), ja
+valikossa on kymmenien koulujen rehtorit, kirjastonjohtaja ja
+museonjohtajat. Sipolantien 9 **purku-urakka** sai kohdetyypin "Koulu".
+Mitattuna kaikilla 59 CaseM-rivillä valikko oli kuvauksessa, ja 22:lla
+kohdetyyppi korjaantui — useimmat väärästä tyhjäksi.
+
+Rajaus tehdään alustan omilla tunnisteilla (`id="ContentStart"`, sivuvalikko
+`id="Content_sidenaviArea"`), ei suomenkielisillä avainsanoilla. Rakenne on
+sama kaikilla neljällä asennuksella. Kaksi asiaa, jotka rajaus rikkoisi
+hiljaisesti, jos ne tehtäisiin väärin:
+
+- **Kokouspäivä luetaan koko sivulta**, koska murupolku on sisältöalueen
+  ulkopuolella. Rajatusta alueesta luettuna tuoreusraja lakkaisi toimimasta
+  ilman että mikään näyttäisi rikkoutuneelta.
+- **Leikkaus alkaa avaustagin sulkevasta merkistä**, ei tunnisteesta. Muuten
+  tagin loppuosa jää tekstiksi: kuvaus alkoi `id="ContentStart" role="main">`.
+
+Samalla poistui CaseM:n oma entiteettilista: se kattoi vain tässä
+aineistossa sattumalta nähdyt merkit, ja puuttuva `&sect;` jätti
+pykälämerkin purkamatta. Purku delegoidaan nyt jaetulle
+`lib/agent/htmlEntities.ts`:lle.
+
 ### D-036 – Voittaja ankkuroidaan päätöslauseeseen, ei y-tunnukseen
 Hankintapäätöksestä poimitaan urakan voittaja. Ensimmäinen versio ankkuroi
 poiminnan y-tunnukseen suluissa, koska se on tekstin täsmällisin merkki.

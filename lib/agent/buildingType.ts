@@ -33,10 +33,24 @@ const BUILDING_TYPES: [RegExp, string][] = [
   [/kulttuurikesku|teatteri|\bmuseo|konserttital/i, "Kulttuurirakennus"],
   [/päiväkoti|päiväkodi/i, "Päiväkoti"],
   /*
-   * "koulutus" ei ole koulu. Mitattu: "Hyvinkää Areena - uusi urheilu-,
-   * koulutus- ja tapahtumakeskus" sai tyypin "Koulu".
+   * Nuorisotila ennen koulua: sen teksti kuvaa lähes aina nykyisiä
+   * ahtaita tiloja koulun yhteydessä. Mitattu: "Zillarin nuorisotilan
+   * tarveselvitys" sai tyypin "Koulu" ingressin lauseesta "toimintatilat
+   * ovat ahtaat ja koulun tarpeisiin sisustetut".
    */
-  [/\bkoulu(?!tus)|lukio|kampus|oppilaitos/i, "Koulu"],
+  [/nuorisotila|nuorisotalo/i, "Nuorisotila"],
+  /*
+   * Sananrajaa EI saa vaatia: koulu on suomessa lähes aina yhdyssanan
+   * jälkiosa. Mitattu: "Muurolan peruskoulun tarveselvitys" ei osunut
+   * kuvioon \bkoulu, joten tyyppi luettiin rungosta ja tuloksena oli
+   * "Päiväkoti" (teksti mainitsi viereen rakennetun päiväkodin).
+   *
+   * Kielto laajennettiin samalla muotoon (?!t): pelkkä (?!tus) päästi läpi
+   * sanat "kouluttaa" ja "koulutettava". "koulutus" ei ole koulu -
+   * mitattu: "Hyvinkää Areena - uusi urheilu-, koulutus- ja
+   * tapahtumakeskus" sai tyypin "Koulu".
+   */
+  [/koulu(?!t)|lukio|kampus|oppilaitos/i, "Koulu"],
   [/kirjasto/i, "Kirjasto"],
   [/uimahalli|liikuntahalli|jäähalli|urheiluhalli/i, "Liikuntapaikka"],
   [/hoivakoti|palvelutalo|asumisyksik|senioritalo/i, "Hoivakoti"],
