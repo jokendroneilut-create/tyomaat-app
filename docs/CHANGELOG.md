@@ -224,6 +224,14 @@ mitattuihin muotoihin (`hankitaan`, `hankittiin`, `tilata`, `ostetaan`).
 11 uutta voittajaa, ei yhtään muuttunutta tai poistunutta. Voittaja on nyt
 51 päätösrivillä (47 yksittäistä urakoitsijaa, 4 puitesopimusta).
 
+**Neljäs täydennys:** rooli "toteuttajaksi" puuttui sanastosta. Koska sama
+puute oli osunut kohdalle jo kahdesti, sanastoa ei täydennetty yhdellä
+sanalla vaan haettiin kaikki translatiivimuodot joita seuraa yritysnimi —
+`toteuttajaksi` oli ainoa aito puute. "Valvojaksi" jätettiin tietoisesti
+pois: valvoja on rakennuttajan konsultti, ei urakoitsija, ja olisi
+päätynyt `builder`-kenttään hankkeen rakentajaksi. Ryhmittymästä poimitaan
+johtava yritys — ks. [D-036](03_DECISIONS.md).
+
 **Toinen täydennys:** kuudes lausemuoto, jossa valintaverbi on roolin
 edellä ("Päätän valita … urakan pääurakoitsijaksi kokonaishinnaltaan
 edullisimman tarjouksen jättäneen Oulun Maa- ja Vesirakennus Oy:n").

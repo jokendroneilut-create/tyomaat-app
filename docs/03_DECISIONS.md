@@ -463,6 +463,38 @@ Kaksi ehtoa pitävät sen turvallisena:
 
 Mitattu koko aineistolla: 1 uusi rivi, 0 muuttunutta, 0 poistunutta.
 
+**Roolisanasto tarkistetaan aineistosta (lisätty myöhemmin).** Rooli
+"toteuttajaksi" puuttui, joten "…valitsee urakan toteuttajaksi
+VM-Suomalainen Oy:n" jäi ilman voittajaa. Koska sama puute oli osunut
+kohdalle jo kahdesti, sanastoa ei täydennetty yhdellä sanalla vaan
+haettiin **kaikki** translatiivimuodot joita seuraa yritysnimi:
+
+| rooli | kpl | tila |
+|---|---|---|
+| urakoitsijaksi (+ purku-, KVR-, ilmanvaihto-, putki-, sähkö-, rakennus-) | 14 | toimi jo |
+| palveluntuottajaksi | 3 | toimi jo |
+| toimittajaksi | 2 | toimi jo |
+| **toteuttajaksi** | 1 | **puuttui** |
+
+Muut osumat (`siirrettäväksi`, `luovutuksensaajaksi`, `maksettavaksi`,
+`pysäköintialueeksi`) eivät ole voittajarooleja.
+
+**"Valvojaksi" jätettiin pois tietoisesti.** Valvoja on rakennuttajan
+konsultti, ei urakoitsija, ja koska yhden voittajan sääntö täyttää
+`builder`-kentän, Granlund Oy olisi päätynyt hankkeen rakentajaksi.
+Säännöstä on oma testi, ettei sitä lisätä myöhemmin vahingossa.
+
+**RYHMITTYMÄSTÄ POIMITAAN JOHTAVA YRITYS.** Sääntö on nyt osunut kahdesti:
+
+> "KVR-urakoitsijaksi valitaan Varte Lahti Oy **käyttäen** Varte
+> Lappeenranta Oy:n ja Varte Oy:n **voimavaroja**"
+> "toteuttajaksi on valittu **ryhmittymä** YIT Business Premises Oy **ja**
+> YIT Infra Oy"
+
+Molempien poiminta tyhjentäisi urakoitsijakentän usean voittajan
+säännöllä, vaikka toteuttajia on yksi. Ensimmäisenä nimetty on
+ryhmittymän vetäjä, ja se on se yritys joka työn tekee.
+
 **Ostoverbin passiivi (lisätty myöhemmin).** Ablatiivin vartija tunsi vain
 aktiivin `hankkii`, mutta aineistossa passiivi `hankitaan` on lähes yhtä
 yleinen — ks. [D-039](#d-039--kuvion-muodot-luetaan-aineistosta-ei-muistista).
