@@ -1,5 +1,6 @@
 import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
+import { extractDecisionWinners } from "./decisionWinners"
 import { stripHtml } from "./stripHtml"
 
 /*
@@ -196,6 +197,7 @@ export async function fetchHelsinkiPaatoksetSource() {
          */
         permit_number: issueId,
         property_type: inferBuildingType(subject, description),
+        winners: extractDecisionWinners(description),
         phase: inferPhase(subject),
         business_value: "high",
         source_url: relativeUrl.startsWith("http")

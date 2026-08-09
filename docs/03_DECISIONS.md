@@ -5,6 +5,42 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-036 – Voittaja ankkuroidaan päätöslauseeseen, ei y-tunnukseen
+Hankintapäätöksestä poimitaan urakan voittaja. Ensimmäinen versio ankkuroi
+poiminnan y-tunnukseen suluissa, koska se on tekstin täsmällisin merkki.
+Ankkuri oli väärä: y-tunnus on myös jokaisella HÄVIÄJÄLLÄ, koska päätös
+sisältää lähes aina tarjousvertailutaulukon.
+
+Mitattu 11 rivin otoksella: **3 oikein, 8 väärin**. Kuusankosken
+yhtenäiskoulusta tuli kolme voittajaa vaikka teksti sanoo
+"KVR-urakoitsijaksi valitaan Varte Lahti Oy" — Lujatalo ja Lapti eivät
+tulleet hylätyiksi, ne vain hävisivät vertailun, joten hylkäyssuodatinkaan ei
+niitä poistanut. Hylkäyssuodatin oli olemassa ja testattu, mutta se mittasi
+väärää asiaa.
+
+Oikea ankkuri on lause jossa päätös tehdään. Muotoja on neljä, kaikki
+aineistosta:
+
+| Muoto | Esimerkki | Tulos |
+|---|---|---|
+| Monikkorooli + luettelo | "hyväksyä puitesopimuskumppaneiksi seuraavat tarjoajat: …" | monta |
+| Yksikkörooli | "urakoitsijaksi valitaan MVR-Yhtymä Oy" | yksi |
+| Viranhaltijan valinta | "Päätös Valitsen Saltex Infra Oy:n hinnaltaan halvimpana." | yksi |
+| Ablatiivi + ostoverbi | "kaupunki hankkii … urakan Peab Industri Oy:ltä" | yksi |
+
+Ratkaisevaa on roolisanan **sija ja luku**: "-kumppaneiksi" ja
+"-urakoitsijoiksi" ovat voittajarooleja, mutta "tarjoajiksi" ja
+"ehdokkaiksi" eivät — "Tarjoajiksi valittiin seuraavat kolme (3) ehdokasta"
+on tarjoajalista, ei päätös. Ilman päätöslausetta tulos on tyhjä.
+
+Uudelleenmittaus samalla otoksella: 9/9 oikein (kaksi riviä joilla ei ole
+voittajaa tyhjeni oikein). Koko aineistossa 1003 päätösrivistä 27:llä on
+voittaja: 24 yksittäistä urakoitsijaa ja 3 puitesopimusta.
+
+Ks. `lib/agent/decisionWinners.ts`. Sama ilmiö kuin
+[D-035](#d-035--ingressi-kertoo-hankkeen-loppuosa-kertoo-ympäristön):
+täsmällinen merkki ei ole sama asia kuin oikea merkki.
+
 ### D-035 – Ingressi kertoo hankkeen, loppuosa kertoo ympäristön
 Yrityslähteiden täydennys luki aluksi koko tiedotesivun. Se tuotti kaksi
 virhettä, jotka näkyivät vasta kun 50 rivin otos katsottiin ennen kirjoitusta:

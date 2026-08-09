@@ -53,6 +53,7 @@ const CONCURRENCY = 4
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { inferBuildingType } = await import("../lib/agent/buildingType")
+  const { extractDecisionWinners } = await import("../lib/agent/decisionWinners")
   const { fetchDecoded, extractItemText, upgradePermitTitle } = await import(
     "../lib/agent/fetchDynastySource"
   )
@@ -94,7 +95,7 @@ async function main() {
   console.log(`  joista sekoittunut teksti: ${broken.length} (haetaan uudelleen)\n`)
   if (targets.length === 0) return
 
-  const stats = { teksti: 0, tyyppi: 0, otsikko: 0, epaonnistui: 0 }
+  const stats = { teksti: 0, tyyppi: 0, otsikko: 0, voittajat: 0, epaonnistui: 0 }
   const types: Record<string, number> = {}
 
   for (let i = 0; i < targets.length; i += CONCURRENCY) {
@@ -123,6 +124,21 @@ async function main() {
          * Kohdetyyppi lasketaan aina uudelleen: aiempi ajo saattoi kirjata
          * väärän arvon (lausunnonantaja "Kaupunginmuseo" -> Kulttuurirakennus).
          */
+        /*
+         * Voittajat poimitaan hankintapäätöksen tekstistä. Kenttä oli tyhjä
+         * silloinkin kun päätös listasi kahdeksan valittua yritystä.
+         */
+        const winners = extractDecisionWinners(description)
+        const oldWinners: string[] = Array.isArray(md.winners) ? md.winners : []
+        if (winners.join("|") !== oldWinners.join("|")) stats.voittajat++
+
+        /*
+         * Urakoitsija tyhjennetään jos se on peräisin aiemmasta - nyt
+         * kumotusta - voittajapoiminnasta. Muualta tullutta arvoa ei
+         * kosketa.
+         */
+        const builderFromWinners = md.builder != null && oldWinners.includes(md.builder)
+
         const buildingType = inferBuildingType(title, description)
         if (buildingType !== md.building_type) {
           stats.tyyppi++
@@ -136,7 +152,29 @@ async function main() {
           .from("potential_projects")
           .update({
             title,
-            metadata: { ...md, description, building_type: buildingType ?? null },
+            metadata: {
+              ...md,
+              description,
+              building_type: buildingType ?? null,
+              /*
+               * Uusi laskenta voittaa aina, myös tyhjänä. Jos vanha arvo
+               * säilytettäisiin tyhjän tuloksen kohdalla, aiemman ajon
+               * väärät voittajat jäisivät voimaan - juuri niin kävi
+               * kohdetyypille kahdesti.
+               */
+              winners: winners.length ? winners : null,
+              /*
+               * Yksi voittaja on pääurakoitsija; useampi on puitesopimus,
+               * eikä yhtä voi silloin nimetä. Sama periaate kuin
+               * collectProjectCompaniesissa.
+               */
+              builder:
+                winners.length === 1
+                  ? winners[0]
+                  : builderFromWinners
+                    ? null
+                    : (md.builder ?? null),
+            },
           })
           .eq("id", row.id)
 
@@ -152,6 +190,7 @@ async function main() {
   console.log(`teksti korjattu:     ${stats.teksti}`)
   console.log(`kohdetyyppi muuttui: ${stats.tyyppi}`)
   console.log(`otsikko korjattu:    ${stats.otsikko}`)
+  console.log(`voittajat poimittu:  ${stats.voittajat}`)
   console.log(`epäonnistui:         ${stats.epaonnistui}`)
   console.log("\nKohdetyypit:")
   for (const [t, n] of Object.entries(types).sort((a, b) => b[1] - a[1])) {

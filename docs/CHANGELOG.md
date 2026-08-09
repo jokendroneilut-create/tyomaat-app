@@ -11,6 +11,28 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 9.8.)
 
+### Urakan voittaja poimitaan hankintapäätöksestä
+
+Kuntien päätösrivit näyttivät urakoitsijakentän tyhjänä silloinkin kun teksti
+listasi kahdeksan valittua yritystä nimellä ja y-tunnuksella. Poiminta
+lisättiin (`lib/agent/decisionWinners.ts`) ja kytkettiin neljään jäsentäjään
+(Dynasty, CaseM, Turku, Helsingin päätökset).
+
+Ensimmäinen versio ankkuroi poiminnan y-tunnukseen ja **osui väärään
+kohteeseen 8 kertaa 11:stä**: päätösteksti listaa y-tunnuksineen myös
+häviäjät. Uudelleen tehtynä ankkurina on päätöslause ja roolisanan sija —
+ks. [D-036](03_DECISIONS.md). Uudelleenmittaus samalla otoksella 9/9 oikein.
+
+Jonossa olleet päätösrivit korjattiin
+(`scripts/backfill-decision-sources.ts`): 1003 rivistä 27:llä on voittaja,
+24 yksittäistä urakoitsijaa ja 3 puitesopimusta. Yksi voittaja täyttää
+urakoitsijakentän; puitesopimuksessa kenttä jätetään tyhjäksi, koska yhtä
+pääurakoitsijaa ei ole.
+
+Backfill-skriptin säilytyssääntö käännettiin samalla: uusi laskenta voittaa
+myös tyhjänä. Aiemmin `winners.length ? winners : md.winners` olisi jättänyt
+väärät voittajat voimaan — sama ansa oli kaatanut kohdetyypin kahdesti.
+
 ### Yrityslähteet tuottivat tyhjiä ehdokkaita — 25 lähdettä korjattu kerralla
 
 Lähti liikkeelle yhdestä TIC-jonon rivistä: Peabin tiedotteesta oli poimittu

@@ -345,6 +345,12 @@ export async function importCandidate(
       body.metadata?.building_type ??
       null,
     /*
+     * Voittajat kulkevat omana kenttänään, koska niitä voi olla monta:
+     * puitesopimuksessa valitaan kerralla kahdeksankin toimittajaa, eikä
+     * yhtä pääurakoitsijaa voi silloin nimetä.
+     */
+    winners: Array.isArray(body.winners) ? body.winners : null,
+    /*
      * Lähde ei useinkaan anna valmistumisaikaa erillisenä kenttänä, vaikka se
      * lukee leipätekstissä ("kohde valmistuu keväällä 2027"). Mitattu ennen
      * tätä: estimated_completion oli täytetty 24 hankkeella 4412:sta (1 %),
@@ -696,6 +702,7 @@ export async function importCandidate(
       developer: candidate.developer,
       builder: candidate.builder,
       building_type: candidate.buildingType,
+      winners: candidate.winners,
       region: candidate.region,
       permit_number: candidate.permitNumber,
       property_id: candidate.propertyId,

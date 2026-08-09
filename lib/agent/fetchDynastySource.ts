@@ -1,5 +1,6 @@
 import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
+import { extractDecisionWinners } from "./decisionWinners"
 
 /*
  * Dynasty-päätösjärjestelmä (Innofactor), käytössä kahdeksalla kunnalla
@@ -336,6 +337,7 @@ export function createDynastyFetcher(config: DynastyConfig) {
         developer: config.developer,
         permit_number: itemId,
         property_type: inferBuildingType(subject, description),
+        winners: extractDecisionWinners(description),
         phase: /urak/i.test(subject) ? "Sopimus myönnetty" : "Suunnittelussa",
         business_value: "high",
         source_url: link,

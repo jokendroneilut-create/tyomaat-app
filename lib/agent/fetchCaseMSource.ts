@@ -1,5 +1,6 @@
 import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
+import { extractDecisionWinners } from "./decisionWinners"
 import { CONSTRUCTION_SIGNALS } from "./fetchDynastySource"
 
 /*
@@ -261,6 +262,7 @@ export function createCaseMFetcher(config: CaseMConfig) {
             developer: config.developer,
             permit_number: hit.path.match(/content\/(\d+)/)?.[1] ?? null,
             property_type: inferBuildingType(hit.title, description),
+        winners: extractDecisionWinners(description),
             phase: /urak/i.test(hit.title) ? "Sopimus myönnetty" : "Suunnittelussa",
             business_value: "high",
             source_url: `${base}${hit.path}`,
