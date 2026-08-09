@@ -18,6 +18,9 @@ const ASIASIVU =
   "<table class='tbl navigation'><caption class='caption navigation hidden'>Navigointi</caption>" +
   "<tr><td><a href='#'>Edellinen asia</a> | <a href='#'>Seuraava asia</a></td>" +
   "<td><a>Muutoksenhakuohje</a> <a>Kokousasia&nbsp;PDF-muodossa</a></td></tr></table>" +
+  "<table class='tbl attachments'><caption>Liitteet</caption>" +
+  "<tr><td><a href='../kokous/1.PDF'>Hankesuunnitelman liite 11: " +
+  "Pohjatutkimusraportti_Tela02042026_kh13042026</a></td></tr></table>" +
   "<div><p><span>P&auml;&auml;t&ouml;s tarkastetaan heti.</span></p>" +
   "<p><span>Kaupunkikehityslautakunta p&auml;&auml;tti, ett&auml; sillan " +
   "perusparantamisen urakoitsijaksi valitaan Oteran Oy. Sopimus astuu voimaan, " +
@@ -193,5 +196,44 @@ describe("extractItemText", () => {
 
   it("palauttaa null liian lyhyestä sisällöstä", () => {
     expect(extractItemText("<html><body><p>Lyhyt</p></body></html>")).toBeNull()
+  })
+})
+
+describe("extractItemText – liitteet ja osiotunniste", () => {
+  /*
+   * Liiteluettelo on oma taulunsa ja tulee ENNEN leipätekstiä, joten
+   * ilman poistoa kuvaus alkoi tiedostonimillä. Otsake on versiokestävä
+   * ankkuri: luokkanimet vaihtelevat (tbl attachments / data-part-table),
+   * mutta <caption>Liitteet</caption> on sama yhdeksällä isännällä.
+   */
+  it("jättää liiteluettelon pois", () => {
+    const text = extractItemText(ASIASIVU)!
+    expect(text).not.toMatch(/Liitteet|Hankesuunnitelman liite|_Tela\d/)
+  })
+
+  /*
+   * Osiotunniste on asiakirjassa aina isolla, mutta liitetiedostojen
+   * nimissä sama sana on pienellä ja yhdyssanan osana. Kirjainkoosta
+   * riippumaton haku katkaisi kuvauksen tiedostonimen sisään - yksi
+   * mitattu kuvaus oli kutistunut 41 merkkiin ("päätös: Merkittiin
+   * tiedoksi.").
+   */
+  it("ei katkaise pienellä kirjoitetusta tiedostonimestä", () => {
+    const html =
+      "<!--DATABEGIN--><div><p>Mansikkam&auml;en koulun ruokalan " +
+      "hankesuunnitelma 5070/10.03.07.00/2023. Liite: huoneselostus_Tela19032026. " +
+      "Hallintos&auml;&auml;nn&ouml;n mukaan lautakunta vastaa palveluista.</p></div>" +
+      "<!--DATAEND-->"
+    const text = extractItemText(html)!
+    expect(text.startsWith("Mansikkamäen koulun ruokalan hankesuunnitelma")).toBe(true)
+  })
+
+  /* Iso alkukirjain sanan alussa katkaisee yhä oikein. */
+  it("katkaisee isolla kirjoitetusta osiotunnisteesta", () => {
+    const html =
+      "<!--DATABEGIN--><div><p>Kokousmetatietoa ja muuta alkurompetta t&auml;ss&auml;. " +
+      "Selostus Hankkeen tavoitteena on korjata koulun sis&auml;ilmaongelmat " +
+      "ja uusia ilmanvaihto kokonaisuudessaan.</p></div><!--DATAEND-->"
+    expect(extractItemText(html)!.startsWith("Selostus Hankkeen tavoitteena")).toBe(true)
   })
 })

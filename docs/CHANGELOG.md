@@ -67,6 +67,19 @@ kuvaus: "Sopimus astuu voimaan, kun on saanut lainvoiman."
 
 Pilkkomisen tilalla on nyt katkaisu, joka säilyttää tekstin ehjänä.
 
+**Täydennys:** myös liiteluettelo tuli mukaan. Se on oma taulunsa ja
+edeltää leipätekstiä, joten kuvaus alkoi tiedostonimillä
+("Hankesuunnitelman liite 11: Pohjatutkimusraportti_Tela02042026…").
+Poisto ankkuroitiin `<caption>`-otsakkeeseen, joka on sama yhdeksällä
+isännällä vaikka luokkanimi vaihtelee.
+
+Samalla paljastui **hiljainen tietohäviö**: osiotunnistetta haettiin
+kirjainkoosta riippumatta, jolloin se osui liitetiedoston nimeen
+("selostus_Tela02042026", "Huoneselostus") ja katkaisi kuvauksen väärästä
+kohdasta. Yksi kuvaus oli kutistunut 41 merkkiin. Korjauksen jälkeen
+useimmat kuvaukset **pitenivät**, koska alkuosa palautui. Liitetiedosto-
+nimiä 31 → 0.
+
 Korjattu kolmessa paikassa: jäsentäjä (jatkossa), 110 Dynasty-riviä
 `potential_projects`-taulussa (`--refetch`-tila) ja 9 jo hyväksyttyä
 hanketta `projects`-taulussa

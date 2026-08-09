@@ -237,20 +237,33 @@ export function isConstructionSubject(subject: string): boolean {
 const DATA_REGION = /<!--DATABEGIN-->([\s\S]*?)<!--DATAEND-->/
 
 /*
- * NAVIGAATIO TUNNISTETAAN SISÄLLÖSTÄ, EI LUOKKANIMESTÄ. Dynastyn versiot
- * merkitsevät sen eri tavoin - luokka on siirtynyt taulusta sitä
- * ympäröivään diviin:
+ * SIVUKALUSTEET TUNNISTETAAN OTSAKKEESTA, EI LUOKKANIMESTÄ. Dynastyn
+ * versiot merkitsevät taulut eri tavoin - luokka on siirtynyt taulusta
+ * sitä ympäröivään diviin:
  *
  *   10.4.0.260401: <table class='tbl navigation'>
  *   10.4.0.250317: <div class='data-part page-navigation'><table class='data-part-table'>
  *
  * Luokkaan sidottu kuvio siivosi vain vanhemman version: 76 rivistä 57 jäi
- * roskaiseksi. Molemmissa taulussa on kuitenkin otsake "Navigointi", joten
- * poistetaan se taulu jonka sisällä sana on. Tempered quantifier estää
- * kuviota ylittämästä taulun rajaa.
+ * roskaiseksi. OTSAKE sen sijaan on sama kaikilla: tarkistettu yhdeksällä
+ * isännällä, jokaisella <caption> on "Navigointi", "Liitteet" tai
+ * "Oheismateriaali".
+ *
+ * Liiteluettelo on oma taulunsa ja se tulee ENNEN leipätekstiä, joten
+ * ilman poistoa kuvaus alkoi tiedostonimillä:
+ *
+ *   "Hankesuunnitelman liite 11: Pohjatutkimusraportti ja
+ *    perustamistapalausunto_Tela02042026_kh13042026_kv11052026 ..."
+ *
+ * Tempered quantifier estää kuviota ylittämästä taulun rajaa.
  */
-const NAVIGATION_TABLE =
-  /<table\b[^>]*>(?:(?!<\/table>)[\s\S])*?Navigointi(?:(?!<\/table>)[\s\S])*?<\/table>/gi
+const CHROME_CAPTIONS = "Navigointi|Liitteet|Oheismateriaali"
+
+const CHROME_TABLE = new RegExp(
+  `<table\\b[^>]*>(?:(?!</table>)[\\s\\S])*?<caption[^>]*>\\s*(?:${CHROME_CAPTIONS})\\s*</caption>` +
+    `(?:(?!</table>)[\\s\\S])*?</table>`,
+  "gi"
+)
 
 /*
  * Leipätekstin alku. Sivun yläosassa on kokousmetatietoa, joten teksti
@@ -263,7 +276,20 @@ const NAVIGATION_TABLE =
  *   lähde:  "Päätös tarkastetaan heti."
  *   kuvaus: "tarkastetaan heti."
  */
-const SECTION_START = /Kokouksen tiedot|Asian otsikko|Selostus|Päätös/i
+/*
+ * KIRJAINKOKOHERKKÄ JA SANAN ALUSSA. Osiotunniste on asiakirjassa aina
+ * isolla, mutta liitetiedostojen nimissä sama sana esiintyy pienellä ja
+ * yhdyssanan osana. Kirjainkoosta riippumaton haku katkaisi kuvauksen
+ * tiedostonimen sisään:
+ *
+ *   liite:  "...Huoneselostus_Tela02042026_kh13042026_kv11052026"
+ *   kuvaus: "selostus_Tela02042026_kh13042026_kv11052026 Hankesuunnitelman
+ *            liite 11: ..."
+ *
+ * Edeltävä kirjain estää osumisen yhdyssanan loppuun ("Huoneselostus").
+ */
+const SECTION_START =
+  /(?<![\wåäöÅÄÖ])(?:Kokouksen tiedot|Asian otsikko|Selostus|Päätös)/
 
 export function extractItemText(html: string): string | null {
   const region = html.match(DATA_REGION)?.[1] ?? html
@@ -271,7 +297,7 @@ export function extractItemText(html: string): string | null {
   const text = region
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(NAVIGATION_TABLE, " ")
+    .replace(CHROME_TABLE, " ")
     .replace(/<[^>]+>/g, " ")
     /*
      * Numeeriset entiteetit purettava nimettyjen lisäksi. Dynasty käyttää

@@ -126,6 +126,26 @@ joten poistetaan se taulu jonka sisällä sana on.
 Sääntö: **valitse ankkuriksi se mikä ei vaihdu version mukana.**
 Päätepiste ja näkyvä otsake pysyivät, verkkotunnus ja luokkanimi eivät.
 
+**Liiteluettelo ja kirjainkoko (lisätty myöhemmin).** Sama sääntö laajeni
+kahdesti:
+
+- **Liiteluettelo on oma taulunsa ja tulee ennen leipätekstiä**, joten
+  kuvaus alkoi tiedostonimillä ("Hankesuunnitelman liite 11:
+  Pohjatutkimusraportti_Tela02042026_kh13042026_kv11052026 …"). Poisto
+  ankkuroitiin `<caption>`-otsakkeeseen (`Navigointi`, `Liitteet`,
+  `Oheismateriaali`) — tarkistettu yhdeksällä isännällä, otsake on sama
+  kaikilla vaikka luokkanimi vaihtelee.
+- **Osiotunniste on kirjainkokoherkkä.** Kirjainkoosta riippumaton haku
+  osui liitetiedoston nimeen: "selostus_Tela02042026" ja "Huoneselostus".
+  Se katkaisi kuvauksen väärästä kohdasta ja **hävitti alkuosan** — yksi
+  mitattu kuvaus oli kutistunut 41 merkkiin ("päätös: Merkittiin
+  tiedoksi."). Tunniste vaaditaan nyt isolla ja sanan alusta.
+
+Jälkimmäinen oli hiljainen tietohäviö, ei kosmetiikkaa: korjauksen jälkeen
+useimmat kuvaukset PITENIVÄT, koska niiden alku oli aiemmin leikattu pois.
+Mitattu lopputulos: liitetiedostonimiä 31 → 0, navigaatiota 0, kuvauksen
+mediaanipituus 2 729 merkkiä.
+
 Molemmat löytyivät vasta kun tulos mitattiin ajon jälkeen
 ([D-039](#d-039--kuvion-muodot-luetaan-aineistosta-ei-muistista)):
 "teksti korjattu: 76" näytti onnistumiselta.
