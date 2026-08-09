@@ -112,6 +112,30 @@ describe("extractDecisionWinners", () => {
     ).toEqual([])
   })
 
+  /*
+   * PASSIIVI ON YLEISEMPI KUIN AKTIIVI: "hankitaan" esiintyy aineistossa 9
+   * rivillä. Ensimmäinen versio tunsi vain "hankkii", koska kuvio vaati
+   * kaksois-k:n, joten passiivimuotoiset päätökset jäivät ilman voittajaa.
+   */
+  it("poimii ablatiivin myös passiivimuodosta", () => {
+    expect(
+      extractDecisionWinners(
+        "Päätän, että rakennusten purku-urakka, Pesulatie 1, Jyväskylä, " +
+          "hankitaan edullisimman tarjouksen jättäneeltä Maansiirto Harry " +
+          "Mäkelä Oy:ltä."
+      )
+    ).toEqual(["Maansiirto Harry Mäkelä Oy"])
+  })
+
+  it("poimii tilaamisen perusmuodosta", () => {
+    expect(
+      extractDecisionWinners(
+        "Yksikön päällikkö päätti tilata katualueiden suunnittelun ja " +
+          "toteutuksen optiourakan muutostyöt YIT Suomi Oy:ltä."
+      )
+    ).toEqual(["YIT Suomi Oy"])
+  })
+
   /* Ablatiivi ilman ostoverbiä on lausunnonantaja, ei toimittaja. */
   it("ei poimi lausunnonantajaa ablatiivista", () => {
     expect(

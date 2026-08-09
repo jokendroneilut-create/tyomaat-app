@@ -188,7 +188,18 @@ const OFFICEHOLDER = new RegExp(`\\bValitsen\\s+(${NAME})`, "g")
  * ("pyydettiin lausunto X Oy:ltä").
  */
 const ABLATIVE = new RegExp(`(${NAME})\\s*:lt[äa]${FI_BOUNDARY}`, "g")
-const PURCHASE_VERB = /\bhankki[iva]|\bostaa|\btilataan|\btilaa\b/i
+/*
+ * Ostoverbin muodot on luettu aineistosta, ei arvattu. PASSIIVI ON
+ * YLEISEMPI KUIN AKTIIVI: "hankitaan" esiintyy 9 rivillä, "hankkii" 14 -
+ * ja ensimmäinen versio tunsi vain jälkimmäisen, koska kuvio vaati
+ * kaksois-k:n. Mitattu: "Järviojan reunapatojen peruskorjaus ... hankitaan
+ * Konetyö Koskimäki Oy:ltä" jäi ilman voittajaa.
+ *
+ * Lista pidetään verbeissä. Substantiivi "hankinta" esiintyy näissä
+ * teksteissä joka kappaleessa, joten se tekisi koko vartijasta hyödyttömän.
+ */
+const PURCHASE_VERB =
+  /\bhank(?:ki[iva]|kia|itaan|ittiin)|\bost(?:aa|etaan|ettiin)|\btilat(?:aan|tiin|a)\b|\btilaa\b/i
 const PURCHASE_WINDOW = 220
 
 export function extractDecisionWinners(description: string | null | undefined): string[] {

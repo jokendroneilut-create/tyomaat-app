@@ -115,6 +115,13 @@ tarjouksen jättänyt Oteran Oy" ja "halvimman tarjoushinnan tehnyt Lappset
 Group Oy". Korjauksen jälkeen voittaja on 35 rivillä (ennen 27), eikä
 yhdelläkään nimessä ole enää pienellä alkavaa etuliitettä.
 
+**Kolmas täydennys:** ablatiivin ostoverbi tunsi vain aktiivin `hankkii`,
+koska kuvio vaati kaksois-k:n. Aineistossa **passiivi on yleisempi**:
+"hankitaan" 9 rivillä. Verbilista luettiin lähteistä ja laajennettiin
+mitattuihin muotoihin (`hankitaan`, `hankittiin`, `tilata`, `ostetaan`).
+11 uutta voittajaa, ei yhtään muuttunutta tai poistunutta. Voittaja on nyt
+48 päätösrivillä.
+
 **Toinen täydennys:** kuudes lausemuoto, jossa valintaverbi on roolin
 edellä ("Päätän valita … urakan pääurakoitsijaksi kokonaishinnaltaan
 edullisimman tarjouksen jättäneen Oulun Maa- ja Vesirakennus Oy:n").
