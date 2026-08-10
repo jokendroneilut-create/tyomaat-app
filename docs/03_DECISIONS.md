@@ -599,6 +599,28 @@ lisää yhdellä ajolla:
 | **ruotsinkielinen päätös** | 2 | "beslutade … utse Hoivatilat Oyj:s erbjudande" — koko kieli puuttuu säännöistä |
 | kaupungin oma tuotanto | 2 | "Purkutyön suorittaa **Stara**" — ei yhtiömuotoa, ei kilpailutusta |
 
+**Korjatut muodot (10. ja 11.).** Kartoituksen löydöistä neljä
+toteutettiin:
+
+- **Nimi ennen roolia**: "hyväksyä Louhintahiekka Oy:n urakoitsijaksi",
+  "SRV Rakennus Oy on valittu päätoteuttajaksi". Kaikki aiemmat muodot
+  olettivat roolin tulevan ensin. Väli on enintään kolme sanaa, koska
+  pidempi sallisi poiminnan tarjoajaluettelosta.
+- **Keskeytys välisanoissa**: sulkulause ja luku kelpaavat nyt väliin
+  ("(95,25 pistettä) Recset Oy", "tammikuussa 2023 järjestetyn"). Isolla
+  alkava sana ei edelleenkään kelpaa - se on koko rajauksen ydin.
+
+**Uusi sääntö toi yhden väärän osuman, ja se vaati oman vartijansa.**
+Tukkutorin päätös kertaa hankkeen historian: "Tärkeät Tekijät Oy
+valittiin kokonaisurakoitsijaksi" on kielellisesti moitteeton, mutta sama
+teksti kertoo että kaupunki purki urakkasopimuksen ja otti työmaan
+haltuun. Purettu urakkasopimus kumoaa nyt voittajan kokonaan. Vartija
+paljasti myös aiemmin tiedossa olleen vanhentuneen arvon (Siklatilat Oy /
+Päiväkoti Perhonen), joka poistui.
+
+Lopputulos: 4 uutta voittajaa, 1 poistunut vanhentunut. Voittaja 63
+rivillä.
+
 **Miksi oma mittaukseni ei löytänyt näitä:** rajasin ehdokasjoukon omilla
 säännöillä. "Epäillyt puutteet" haettiin regexillä joka vaati
 hankintakieltä, ja ehdokasjoukko vaati yhtiömuodon (`Oy|Ab|Ky`) — mikä

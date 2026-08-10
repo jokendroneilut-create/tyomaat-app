@@ -216,7 +216,19 @@ const SINGLE_ROLES = [
  * Väärentymisriski pysyy pienenä, koska välisanat saavat alkaa vain
  * pienellä: kuvio ei voi ohittaa yritysnimeä matkalla.
  */
-const FILLER = `(?:[a-zåäö]${FI_WORD}*\\s+){0,8}`
+/*
+ * Välisanaksi kelpaa myös LUKU ja SULKULAUSE. Pelkkä pienellä alkava sana
+ * ei riitä: LLM-kartoitus paljasti kaksi riviä joilla tuttu muoto katkesi
+ * keskeytykseen.
+ *
+ *   "…suurimmat kokonaispisteet saaneen (95,25 pistettä) Recset Oy"
+ *   "…toimittajaksi tammikuussa 2023 järjestetyn kilpailutuksen voittajan"
+ *
+ * Isolla alkava sana ei edelleenkään kelpaa väliin, joten kuvio ei voi
+ * ohittaa yritysnimeä matkalla - se on koko rajauksen ydin.
+ */
+const FILLER_TOKEN = `(?:[a-zåäö]${FI_WORD}*|\\d[\\d.,]*|\\([^)]{0,40}\\))`
+const FILLER = `(?:${FILLER_TOKEN}\\s+){0,8}`
 
 /*
  * Nimi voi olla roolisanan kummalla puolen tahansa:
@@ -250,6 +262,23 @@ const OFFICEHOLDER = new RegExp(`\\bValitsen\\s+(${NAME})`, "g")
  * samasta virkkeestä, muuten "Oy:ltä" osuisi myös lausunnon pyytämiseen
  * ("pyydettiin lausunto X Oy:ltä").
  */
+/*
+ * NIMI ENNEN ROOLIA. Kymmenes muoto, sanajärjestys käännettynä:
+ *
+ *   "…päättää hyväksyä Louhintahiekka Oy:n urakoitsijaksi hankkeeseen"
+ *   "SRV Rakennus Oy on valittu päätoteuttajaksi teknisen johtajan
+ *    päätöksellä"
+ *
+ * Kaikki aiemmat muodot olettivat roolin tulevan ensin. Väli on lyhyt
+ * (enintään kolme pientä sanaa), koska pidempi väli sallisi kuvion
+ * poimia tarjoajaluettelosta nimen, jota seuraa roolisana vasta
+ * seuraavassa virkkeessä.
+ */
+const NAME_BEFORE_ROLE = new RegExp(
+  `(${NAME})(?::n)?\\s+((?:${FILLER_TOKEN}\\s+){0,3})(?:${SINGLE_ROLES})${FI_BOUNDARY}`,
+  "g"
+)
+
 /*
  * PARTISIIPPI + GENETIIVIOBJEKTI. Kahdeksas lausemuoto, eikä siinä ole
  * roolisanaa lainkaan:
@@ -306,8 +335,31 @@ const PURCHASE_VERB =
   /\bhank(?:ki[iva]|kia|itaan|ittiin)|\bost(?:aa|etaan|ettiin)|\btilat(?:aan|tiin|a)\b|\btilaa\b/i
 const PURCHASE_WINDOW = 220
 
+/*
+ * PURETTU URAKKASOPIMUS KUMOAA VOITTAJAN.
+ *
+ * Osa päätöksistä kertaa hankkeen historian, ja siihen sisältyy
+ * kielellisesti moitteeton valintalause yrityksestä joka EI enää ole
+ * urakoitsija:
+ *
+ *   "Tärkeät Tekijät Oy valittiin kokonaisurakoitsijaksi …
+ *    Helsingin kaupunki purki 18.11.2022 urakkasopimuksen …
+ *    tilaaja valitsi Stara Rakennustekniikan uudeksi …"
+ *
+ * Poiminta on tällöin oikein mutta tieto vanhentunut, ja väärä urakoitsija
+ * on huonompi kuin tyhjä kenttä. Uusi urakoitsija jää poimimatta, koska
+ * sitä ei nimetä päätöslauseessa vaan selostuksessa.
+ *
+ * Välissä saa olla pisteitä: purkupäivä on tyypillisesti juuri siinä
+ * ("purki 18.11.2022 urakkasopimuksen"), ja pisteettömäksi rajattu kuvio
+ * osui vain toiseen kahdesta rivistä.
+ */
+const CONTRACT_TERMINATED =
+  /purki\s+.{0,40}?urakkasopimu|urakkasopimu\w*\s+purettiin|sopimus\s+purettiin|purkanut\s+urakkasopimu/i
+
 export function extractDecisionWinners(description: string | null | undefined): string[] {
   if (!description) return []
+  if (CONTRACT_TERMINATED.test(description)) return []
 
   /*
    * Rivinvaihdot ja tuplavälit pois: päätöslause katkeaa aineistossa usein
@@ -362,6 +414,17 @@ export function extractDecisionWinners(description: string | null | undefined): 
     for (const match of text.matchAll(ABLATIVE)) {
       const start = Math.max(0, (match.index ?? 0) - PURCHASE_WINDOW)
       if (PURCHASE_VERB.test(text.slice(start, match.index))) found.push(match[1])
+    }
+
+    for (const match of text.matchAll(NAME_BEFORE_ROLE)) {
+      const start = Math.max(0, (match.index ?? 0) - SELECT_WINDOW)
+      /*
+       * Valintaverbi saa olla joko nimen EDELLÄ ("hyväksyä X Oy:n
+       * urakoitsijaksi") tai nimen ja roolin VÄLISSÄ ("X Oy on valittu
+       * päätoteuttajaksi"), joten molemmat katsotaan.
+       */
+      const before = text.slice(start, match.index) + match[2]
+      if (SELECT_VERB.test(before)) found.push(match[1])
     }
 
     for (const match of text.matchAll(PARTICIPLE_OBJECT)) {

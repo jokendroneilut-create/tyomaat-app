@@ -416,3 +416,90 @@ describe("extractDecisionWinners – partisiippi ja pitkä väli", () => {
     ).toEqual(["Louhintahiekka Oy"])
   })
 })
+
+describe("extractDecisionWinners – nimi ennen roolia ja keskeytykset", () => {
+  /*
+   * Kymmenes muoto: sanajärjestys käännettynä. Kaikki aiemmat olettivat
+   * roolin tulevan ensin. LLM-kartoitus löysi molemmat variantit.
+   */
+  it("poimii nimen kun se on ennen roolia", () => {
+    expect(
+      extractDecisionWinners(
+        "Kuntakehityksen lautakunta päättää hyväksyä Louhintahiekka Oy:n " +
+          "urakoitsijaksi hankkeeseen Mt 11227 Överbyntien parantaminen."
+      )
+    ).toEqual(["Louhintahiekka Oy"])
+  })
+
+  it("poimii nimen kun verbi on nimen ja roolin välissä", () => {
+    expect(
+      extractDecisionWinners(
+        "SRV Rakennus Oy on valittu päätoteuttajaksi teknisen johtajan " +
+          "päätöksellä 23.4.2021 § 104."
+      )
+    ).toEqual(["SRV Rakennus Oy"])
+  })
+
+  /*
+   * Ilman valintaverbiä nimi ja roolisana voivat olla vierekkäin ilman
+   * että kyseessä on päätös.
+   */
+  it("ei poimi nimeä ilman valintaverbiä", () => {
+    expect(
+      extractDecisionWinners(
+        "Rakennus Oy:n urakoitsijaksi soveltuvuutta arvioidaan erikseen."
+      )
+    ).toEqual([])
+  })
+
+  /*
+   * Sulkulause ja luku eivät saa katkaista välisanoja: tuttu muoto jäi
+   * poimimatta koska pisteytys oli sulkeissa juuri ennen nimeä.
+   */
+  it("sietää sulkulauseen välisanoissa", () => {
+    expect(
+      extractDecisionWinners(
+        "Kuntakehityksen lautakunta päättää hyväksyä Keskustan " +
+          "yleisurheilukentän perusparannuksen urakoitsijaksi kelpoisuusehdot " +
+          "täyttävien tarjousten joukosta suurimmat kokonaispisteet saaneen " +
+          "(95,25 pistettä) Recset Oy:n."
+      )
+    ).toEqual(["Recset Oy"])
+  })
+
+  it("sietää luvun välisanoissa", () => {
+    expect(
+      extractDecisionWinners(
+        "Jaosto päätti valita vuokrapaviljongin toimittajaksi tammikuussa " +
+          "2023 järjestetyn kilpailutuksen voittajan KoskiRent Oy:n."
+      )
+    ).toEqual(["KoskiRent Oy"])
+  })
+})
+
+describe("extractDecisionWinners – purettu urakkasopimus", () => {
+  /*
+   * Päätös kertaa hankkeen historian: valintalause on kielellisesti
+   * moitteeton, mutta sopimus purettiin ja urakoitsija vaihdettiin.
+   * Väärä urakoitsija on huonompi kuin tyhjä kenttä.
+   */
+  it("ei poimi voittajaa kun sopimus on purettu", () => {
+    expect(
+      extractDecisionWinners(
+        "Tärkeät Tekijät Oy valittiin kokonaisurakoitsijaksi ja sen kanssa " +
+          "tehtiin urakkasopimus 18.8.2021. Helsingin kaupunki purki 18.11.2022 " +
+          "urakkasopimuksen ja otti työmaan haltuun."
+      )
+    ).toEqual([])
+  })
+
+  /* Purkupäivän pisteet eivät saa katkaista vartijaa. */
+  it("tunnistaa purun myös päivämäärän takaa", () => {
+    expect(
+      extractDecisionWinners(
+        "Urakoitsijaksi valittiin Siklatilat Oy. Väliaikainen sopimus " +
+          "purettiin teknisen johtajan päätöksellä tammikuussa 2023."
+      )
+    ).toEqual([])
+  })
+})
