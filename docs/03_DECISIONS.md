@@ -540,6 +540,25 @@ Kaksi ehtoa pitävät sen turvallisena:
 
 Mitattu koko aineistolla: 1 uusi rivi, 0 muuttunutta, 0 poistunutta.
 
+**Allatiivi (seitsemäs muoto).** Työ voidaan myös *antaa* yritykselle:
+"…suunnittelu **annetaan** … tarjouksen jättäneelle **Insinööritoimisto
+Lepistö Oy:lle**". Ablatiivin peilikuva.
+
+Sääntö on tarkoituksella kapea, koska `Oy:lle` esiintyy aineistossa 50
+kertaa mutta lähes aina muussa roolissa:
+
+| konteksti | kpl |
+|---|---|
+| vuokraus, tonttivaraus, omistus | ~35 |
+| kustannusten korvaus | 10 |
+| **urakan/suunnittelun antaminen** | **2** (sama rivi kahdesti) |
+
+Siksi vaaditaan sekä luovutusverbi (`annetaan`) että kilpailutuskonteksti
+(`tarjous`, `urakka`, `hankinta`). Kumpikaan yksin ei riitä: verbi yksin
+osuisi lausunnon antamiseen, kilpailutussana yksin vuokraukseen samassa
+päätöksessä. Vuokralainen, korvauksen saaja ja lausunnon saaja on kukin
+testattu erikseen.
+
 **Roolisanasto tarkistetaan aineistosta (lisätty myöhemmin).** Rooli
 "toteuttajaksi" puuttui, joten "…valitsee urakan toteuttajaksi
 VM-Suomalainen Oy:n" jäi ilman voittajaa. Koska sama puute oli osunut

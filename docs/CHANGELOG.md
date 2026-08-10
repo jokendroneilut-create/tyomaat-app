@@ -259,7 +259,14 @@ koska kuvio vaati kaksois-k:n. Aineistossa **passiivi on yleisempi**:
 "hankitaan" 9 rivillä. Verbilista luettiin lähteistä ja laajennettiin
 mitattuihin muotoihin (`hankitaan`, `hankittiin`, `tilata`, `ostetaan`).
 11 uutta voittajaa, ei yhtään muuttunutta tai poistunutta. Voittaja on nyt
-51 päätösrivillä (47 yksittäistä urakoitsijaa, 4 puitesopimusta).
+52 päätösrivillä (48 yksittäistä urakoitsijaa, 4 puitesopimusta).
+
+**Viides taydennys:** allatiivi eli tyon antaminen yritykselle
+("suunnittelu annetaan ... tarjouksen jattaneelle Insinooritoimisto
+Lepisto Oy:lle"). Saanto on kapea: "Oy:lle" esiintyy 50 kertaa mutta
+lahes aina vuokrauksena, tonttivarauksena tai kustannusten korvauksena.
+Siksi vaaditaan seka luovutusverbi etta kilpailutuskonteksti - kumpikaan
+yksin ei riita. Voittaja nyt 52 paatosrivilla.
 
 **Neljäs täydennys:** rooli "toteuttajaksi" puuttui sanastosta. Koska sama
 puute oli osunut kohdalle jo kahdesti, sanastoa ei täydennetty yhdellä

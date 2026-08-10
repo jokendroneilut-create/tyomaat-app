@@ -325,3 +325,53 @@ describe("extractDecisionWinners – toteuttaja", () => {
     ).toEqual([])
   })
 })
+
+describe("extractDecisionWinners – allatiivi", () => {
+  /*
+   * Ablatiivin peilikuva: työ annetaan yritykselle. Mitattu rivi jäi
+   * kokonaan ilman voittajaa.
+   */
+  it("poimii voittajan allatiivista", () => {
+    expect(
+      extractDecisionWinners(
+        "Tekninen lautakunta päättää, että tarjouspyynnön mukainen " +
+          "suunnittelu annetaan tarjouskilpailun mukaisesti " +
+          "kokonaistaloudellisesti edullisimman tarjouksen jättäneelle " +
+          "Insinööritoimisto Lepistö Oy:lle hintaan 164 900,00 euroa (alv 0 %)."
+      )
+    ).toEqual(["Insinööritoimisto Lepistö Oy"])
+  })
+
+  /*
+   * "Oy:lle" esiintyy aineistossa 50 kertaa, mutta lähes aina muussa
+   * roolissa kuin voittajana. Nämä kolme ovat mitattuja muotoja, eikä
+   * yksikään saa tuottaa voittajaa.
+   */
+  it("ei pidä vuokralaista voittajana", () => {
+    expect(
+      extractDecisionWinners(
+        "Sopimus olisi määräaikainen 25 vuotta. Aikuiskoulutussäätiö " +
+          "vuokraisi tilat Suomen Ilmailuopisto Oy:lle."
+      )
+    ).toEqual([])
+  })
+
+  it("ei pidä korvauksen saajaa voittajana", () => {
+    expect(
+      extractDecisionWinners(
+        "Kaupunki korvaa putkiston siirrosta aiheutuvat " +
+          "suunnittelukustannukset suoraan Gasgrid Finland Oy:lle."
+      )
+    ).toEqual([])
+  })
+
+  /*
+   * Luovutusverbi yksin ei riitä: kilpailutuskonteksti vaaditaan, jottei
+   * lausunnon antaminen kelpaa voitoksi.
+   */
+  it("ei pidä lausunnon saajaa voittajana", () => {
+    expect(
+      extractDecisionWinners("Asiasta annetaan lausunto Ramboll Finland Oy:lle.")
+    ).toEqual([])
+  })
+})

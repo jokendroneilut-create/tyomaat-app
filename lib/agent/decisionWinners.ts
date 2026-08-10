@@ -240,6 +240,26 @@ const OFFICEHOLDER = new RegExp(`\\bValitsen\\s+(${NAME})`, "g")
  * samasta virkkeestä, muuten "Oy:ltä" osuisi myös lausunnon pyytämiseen
  * ("pyydettiin lausunto X Oy:ltä").
  */
+/*
+ * ALLATIIVI: työ annetaan yritykselle. Ablatiivin peilikuva.
+ *
+ *   "…suunnittelu annetaan tarjouskilpailun mukaisesti
+ *    kokonaistaloudellisesti edullisimman tarjouksen jättäneelle
+ *    Insinööritoimisto Lepistö Oy:lle hintaan 164 900,00 euroa"
+ *
+ * SÄÄNTÖ ON TARKOITUKSELLA KAPEA. "Oy:lle" esiintyy aineistossa 50 kertaa,
+ * mutta lähes aina muussa kuin voittajan roolissa: tiloja vuokrataan,
+ * kustannuksia korvataan, tontteja varataan. Ainoa aito luovutusverbi on
+ * "annetaan" (2 osumaa, molemmat samalta riviltä).
+ *
+ * Kilpailutuskonteksti vaaditaan lisäksi, jottei "annetaan lausunto
+ * X Oy:lle" kelpaa.
+ */
+const ALLATIVE = new RegExp(`(${NAME})\\s*:lle${FI_BOUNDARY}`, "g")
+const AWARD_GIVE_VERB = /\bannet[at]\w*/i
+const AWARD_CONTEXT = /tarjous|tarjouskilpailu|urak|hankinta|kilpailut/i
+const GIVE_WINDOW = 260
+
 const ABLATIVE = new RegExp(`(${NAME})\\s*:lt[äa]${FI_BOUNDARY}`, "g")
 /*
  * Ostoverbin muodot on luettu aineistosta, ei arvattu. PASSIIVI ON
@@ -311,6 +331,19 @@ export function extractDecisionWinners(description: string | null | undefined): 
     for (const match of text.matchAll(ABLATIVE)) {
       const start = Math.max(0, (match.index ?? 0) - PURCHASE_WINDOW)
       if (PURCHASE_VERB.test(text.slice(start, match.index))) found.push(match[1])
+    }
+
+    for (const match of text.matchAll(ALLATIVE)) {
+      const start = Math.max(0, (match.index ?? 0) - GIVE_WINDOW)
+      const before = text.slice(start, match.index)
+      /*
+       * Molemmat vaaditaan: luovutusverbi yksin osuisi myös lausunnon
+       * antamiseen, ja kilpailutussana yksin vuokraukseen samassa
+       * päätöksessä.
+       */
+      if (AWARD_GIVE_VERB.test(before) && AWARD_CONTEXT.test(before)) {
+        found.push(match[1])
+      }
     }
   }
 
