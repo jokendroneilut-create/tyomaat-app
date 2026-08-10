@@ -388,6 +388,30 @@ Kumpikaan ei ole otsikossa, joten otsikkopäättely jää viimeiseksi varalle �
 Helsingillä se on rikkaampi kuin muilla (hankesuunnitelma, tarveselvitys,
 rakentamispäätös), eikä sitä haluta menettää.
 
+**Vanhentuneet rivit pois jonosta.** Numeromuotoisen valmistumisajan
+löytyminen paljasti 43 riviä joiden valmistumisaika oli yli vuosi sitten -
+vanhimmat vuodelta 2019. Ne siirrettiin `ignored`-tilaan ja merkittiin
+valmistuneiksi (`scripts/ignore-stale-completed.ts`).
+
+**Vuoden raja on tarkoituksellinen.** Suunniteltu valmistuminen ei ole
+todiste toteutuneesta: kolme kuukautta myöhässä oleva hanke on
+todennäköisesti yhä kesken, yli vuoden vanha ei. Rajan alle jäi 9 riviä,
+jotka jätettiin näkyviin.
+
+**Epäuskottava päivä ei kelpaa perusteeksi.** Yhdellä rivillä oli arvo
+`1914-12-31`, vaikka teksti sanoo "alkaa 6/2022 ja valmistua 9/2022".
+Arvo oli kentässä jo ennestään, eikä se tullut tästä kuviosta - mutta
+ilman uskottavuusrajaa rivi olisi ohitettu väärästä syystä. Skripti
+ohittaa nyt vuosisadan ulkopuoliset arvot ja raportoi ne. Koko
+aineistossa niitä oli tasan yksi, ja se korjattiin käsin.
+
+**Hyväksytyt hankkeet tarkistettiin erikseen.** `projects`-taulussa oli
+vain yksi vanhentunut valmistumisaika, eli `auto-complete-projects`-cron
+toimii. Tekstistä luettavissa oli 17 lisää, mutta ne ovat pääosin
+kaavoitusta, jossa "valmistuu 2024" tarkoittaa KAAVAN valmistumista eikä
+rakennusta - sama ansa kuin "hankesuunnitelma valmistui". Niihin ei
+koskettu.
+
 **Numeromuotoinen valmistumisaika (lisätty myöhemmin).** Kuntien
 hankesuunnitelmissa aikataulu kirjoitetaan lähes aina numeroina, ei
 kuukauden nimellä:

@@ -113,7 +113,7 @@ export function inferCompletionDateFromText(
    */
   const numericMatch = findGuardedDate(
     normalized,
-    /(\d{1,2})\s*\/\s*(\d{4})/g,
+    /(\d{1,2})\s*\/\s*(20\d{2})/g,
     (word) => {
       const month = Number(word)
       return month >= 1 && month <= 12 ? month : undefined
