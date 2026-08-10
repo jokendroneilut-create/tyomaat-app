@@ -206,7 +206,17 @@ const SINGLE_ROLES = [
  * seuraavaan. Määrä on rajattu, koska rajaamaton väli yhdistäisi roolin ja
  * nimen eri virkkeistä.
  */
-const FILLER = `(?:[a-zåäö]${FI_WORD}*\\s+){0,5}`
+/*
+ * Raja nostettiin viidestä kahdeksaan mitatun rivin perusteella:
+ *
+ *   "urakoitsijaksi kelpoisuusehdot täyttävien tarjousten joukosta
+ *    suurimmat kokonaispisteet saaneen Louhintahiekka Oy:n"
+ *
+ * Välissä on seitsemän sanaa, eli viiden raja katkaisi juuri ennen nimeä.
+ * Väärentymisriski pysyy pienenä, koska välisanat saavat alkaa vain
+ * pienellä: kuvio ei voi ohittaa yritysnimeä matkalla.
+ */
+const FILLER = `(?:[a-zåäö]${FI_WORD}*\\s+){0,8}`
 
 /*
  * Nimi voi olla roolisanan kummalla puolen tahansa:
@@ -240,6 +250,27 @@ const OFFICEHOLDER = new RegExp(`\\bValitsen\\s+(${NAME})`, "g")
  * samasta virkkeestä, muuten "Oy:ltä" osuisi myös lausunnon pyytämiseen
  * ("pyydettiin lausunto X Oy:ltä").
  */
+/*
+ * PARTISIIPPI + GENETIIVIOBJEKTI. Kahdeksas lausemuoto, eikä siinä ole
+ * roolisanaa lainkaan:
+ *
+ *   "valita tarjouskilpailussa kokonaistaloudellisesti edullisimman
+ *    tarjouksen TEHNEEN Lakeuden Maanrakennus Oy:N"
+ *
+ * Valinnan kohde on genetiivissä ja sitä edeltää partisiippi, joka viittaa
+ * tarjouksen jättämiseen. Ankkurina on partisiippi, koska pelkkä
+ * genetiivimuotoinen yritysnimi esiintyy tekstissä jatkuvasti muissakin
+ * yhteyksissä ("X Oy:n tarjous hylätään").
+ *
+ * Vaaditaan lisäksi valintaverbi edeltä: ilman sitä myös hylkäyslause
+ * "hylätään tarjouksen tehneen X Oy:n tarjous" kelpaisi.
+ */
+const OFFER_PARTICIPLE = /tehneen|antaneen|jättäneen|saaneen/
+const PARTICIPLE_OBJECT = new RegExp(
+  `(?:${OFFER_PARTICIPLE.source})\\s+(${NAME})\\s*:n${FI_BOUNDARY}`,
+  "g"
+)
+
 /*
  * ALLATIIVI: työ annetaan yritykselle. Ablatiivin peilikuva.
  *
@@ -331,6 +362,16 @@ export function extractDecisionWinners(description: string | null | undefined): 
     for (const match of text.matchAll(ABLATIVE)) {
       const start = Math.max(0, (match.index ?? 0) - PURCHASE_WINDOW)
       if (PURCHASE_VERB.test(text.slice(start, match.index))) found.push(match[1])
+    }
+
+    for (const match of text.matchAll(PARTICIPLE_OBJECT)) {
+      const start = Math.max(0, (match.index ?? 0) - SELECT_WINDOW)
+      const before = text.slice(start, match.index)
+      /*
+       * Valintaverbi vaaditaan: partisiippi yksin esiintyy myös
+       * hylkäyslauseessa ("hylätään tarjouksen tehneen X Oy:n tarjous").
+       */
+      if (SELECT_VERB.test(before)) found.push(match[1])
     }
 
     for (const match of text.matchAll(ALLATIVE)) {

@@ -559,6 +559,46 @@ Kaksi ehtoa pitävät sen turvallisena:
 
 Mitattu koko aineistolla: 1 uusi rivi, 0 muuttunutta, 0 poistunutta.
 
+**Kahdeksas ja yhdeksäs muoto — ja missä sääntöpohja loppuu.** Ennen
+näiden kirjoittamista mitattiin paljonko poimittavaa on jäljellä. 1 016
+päätösrivistä 964 oli ilman voittajaa, mutta valtaosassa voittajaa ei ole
+olemassa:
+
+| | rivejä |
+|---|---|
+| ei yritysnimeä koko tekstissä | 657 |
+| yritysnimi mutta ei hankintakieltä | 290 |
+| **epäilty puute** | **17** |
+
+Ne 17 luettiin läpi. Kahdeksan oli oikein tyhjiä (kilpailutus kesken,
+valvoja, ei hankintapäätös) ja yhdeksän jakautui kahteen muotoon:
+
+- **Partisiippi + genetiiviobjekti**, ei roolisanaa lainkaan: "valita …
+  edullisimman tarjouksen **tehneen** Lakeuden Maanrakennus **Oy:n**".
+  Ankkurina on partisiippi, koska genetiivimuotoinen yritysnimi esiintyy
+  tekstissä jatkuvasti muutenkin ("X Oy:n tarjous hylätään"). Valintaverbi
+  vaaditaan edeltä, muuten juuri tuo hylkäyslause kelpaisi.
+- **Liian pitkä väli**: "urakoitsijaksi kelpoisuusehdot täyttävien
+  tarjousten joukosta suurimmat kokonaispisteet saaneen Louhintahiekka
+  Oy:n" — seitsemän välisanaa, kun raja oli viisi. Raja nostettiin
+  kahdeksaan; väärentymisriski pysyy pienenä, koska välisanat saavat alkaa
+  vain pienellä eikä kuvio siksi voi ohittaa yritysnimeä matkalla.
+
+Tulos: 8 uutta voittajaa, 0 muuttunutta, 0 poistunutta. Voittaja on nyt
+60 rivillä.
+
+**SÄÄNTÖPOHJA EI LOPU KESKEN VAAN VALMISTUU.** Tuotto sääntöä kohden:
+muodot 1–4 antoivat 27 voittajaa, viides 11, kuudes 2, seitsemäs 1,
+kahdeksas ja yhdeksäs yhteensä 8. Jäljelle jää nolla tunnettua muotoa, ja
+947 riviä 964:stä ei sisällä voittajaa lainkaan. Osakieli on kapea ja
+hallinnollinen, joten lausemuotoja on kymmenkunta — ei ääretön määrä.
+
+Tämä on se raja jonka toisella puolella kielimalli kannattaisi: ei
+"monimutkaisuudessa" vaan siinä onko muotojen joukko äärellinen.
+Duplikaattien tunnistuksessa se ei ole (mikä tahansa kahden nimen pari),
+ja siellä LLM on oikea työkalu — ks.
+[muistiinpano LLM-skannauksen kustannuksesta](../lib/agent/duplicates/comparisonBuckets.ts).
+
 **Allatiivi (seitsemäs muoto).** Työ voidaan myös *antaa* yritykselle:
 "…suunnittelu **annetaan** … tarjouksen jättäneelle **Insinööritoimisto
 Lepistö Oy:lle**". Ablatiivin peilikuva.

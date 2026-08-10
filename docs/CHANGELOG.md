@@ -261,6 +261,19 @@ mitattuihin muotoihin (`hankitaan`, `hankittiin`, `tilata`, `ostetaan`).
 11 uutta voittajaa, ei yhtään muuttunutta tai poistunutta. Voittaja on nyt
 52 päätösrivillä (48 yksittäistä urakoitsijaa, 4 puitesopimusta).
 
+**Kuudes taydennys — ja poiminnan valmistuminen.** Ennen viimeisia
+saantoja mitattiin paljonko poimittavaa on jaljella: 964 voittajattomasta
+rivista 657:ssa ei ole yritysnimea lainkaan ja 290:ssa ei hankintakielta,
+eli vain 17 oli epailtya puutetta. Ne luettiin lapi: kahdeksan oli oikein
+tyhjia, yhdeksan jakautui kahteen muotoon (partisiippi + genetiiviobjekti,
+seka liian pitka vali roolin ja nimen valilla).
+
+Molemmat toteutettiin: 8 uutta voittajaa, 0 muuttunutta. Voittaja nyt 60
+paatosrivilla.
+
+Saantopohja ei siis lopu kesken vaan valmistuu — tunnettuja muotoja ei jaa
+jaljelle, ja 947 rivia 964:sta ei sisalla voittajaa lainkaan.
+
 **Viides taydennys:** allatiivi eli tyon antaminen yritykselle
 ("suunnittelu annetaan ... tarjouksen jattaneelle Insinooritoimisto
 Lepisto Oy:lle"). Saanto on kapea: "Oy:lle" esiintyy 50 kertaa mutta

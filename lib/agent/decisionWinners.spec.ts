@@ -375,3 +375,44 @@ describe("extractDecisionWinners – allatiivi", () => {
     ).toEqual([])
   })
 })
+
+describe("extractDecisionWinners – partisiippi ja pitkä väli", () => {
+  /*
+   * Kahdeksas muoto: ei roolisanaa lainkaan, vaan valinnan kohde on
+   * genetiivissä partisiipin jäljessä.
+   */
+  it("poimii genetiiviobjektin partisiipin jäljestä", () => {
+    expect(
+      extractDecisionWinners(
+        "Päätösehdotus - valita tarjouskilpailussa kokonaistaloudellisesti " +
+          "edullisimman tarjouksen tehneen Lakeuden Maanrakennus Oy:n " +
+          "Keskustie-Kirjurintie-Syrjätie vesijohdon saneerauksen urakoitsijaksi."
+      )
+    ).toEqual(["Lakeuden Maanrakennus Oy"])
+  })
+
+  /*
+   * Partisiippi yksin ei riitä: sama muoto esiintyy hylkäyslauseessa.
+   */
+  it("ei poimi hylätyn tarjoajan nimeä partisiipista", () => {
+    expect(
+      extractDecisionWinners(
+        "Tarjouksen tehneen Halpa Rakennus Oy:n tarjous hylätään puutteellisena."
+      )
+    ).toEqual([])
+  })
+
+  /*
+   * Yhdeksäs: rooli ja nimi ovat seitsemän sanan päässä toisistaan.
+   * Viiden raja katkaisi juuri ennen nimeä.
+   */
+  it("poimii nimen pitkän perustelun takaa", () => {
+    expect(
+      extractDecisionWinners(
+        "Kuntakehityksen lautakunta päätti hyväksyä Munkinmäentien " +
+          "saneerauksen urakoitsijaksi kelpoisuusehdot täyttävien tarjousten " +
+          "joukosta suurimmat kokonaispisteet saaneen Louhintahiekka Oy:n."
+      )
+    ).toEqual(["Louhintahiekka Oy"])
+  })
+})
