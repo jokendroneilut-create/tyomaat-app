@@ -621,6 +621,21 @@ Päiväkoti Perhonen), joka poistui.
 Lopputulos: 4 uutta voittajaa, 1 poistunut vanhentunut. Voittaja 63
 rivillä.
 
+**AVOINNA (11.8.2026).** Kartoituksen kahta löydöstä ei toteutettu:
+
+- **Kunnalliset liikelaitokset, erityisesti Stara.** `NAME` vaatii
+  yhtiömuodon, joten "Stara" ei voi koskaan osua. Aineistossa 2 riviä
+  ("Purkutyön suorittaa Stara"), ja lisäksi Tukkutorin päätöksessä Stara
+  valittiin korvaavaksi urakoitsijaksi työmaan haltuunoton jälkeen.
+  Helsingin kilpailutussääntöjen muutoksen jälkeen Stara on hävinnyt
+  kilpailutuksia, eli se on aito kilpailija eikä automaattinen sisäinen
+  toimittaja — ratkaisu olisi nimilista, mutta päätös on tekemättä.
+- **Ruotsinkieliset päätökset.** Säännöt ovat suomenkielisiä; kartoitus
+  löysi 2 riviä. Vaatisi oman roolisanaston ja verbit.
+
+Molemmat jäivät löytymättä sääntöjä mittaamalla, koska ehdokasjoukko
+rajattiin yhtiömuotoa vaativalla kuviolla.
+
 **Miksi oma mittaukseni ei löytänyt näitä:** rajasin ehdokasjoukon omilla
 säännöillä. "Epäillyt puutteet" haettiin regexillä joka vaati
 hankintakieltä, ja ehdokasjoukko vaati yhtiömuodon (`Oy|Ab|Ky`) — mikä
