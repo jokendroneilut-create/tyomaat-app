@@ -277,3 +277,57 @@ describe("inferDecisionPhase – kilpailutus tekstistä", () => {
     ).toBe("Suunnittelussa")
   })
 })
+
+describe("inferDecisionPhase – valmistuminen", () => {
+  /*
+   * Mitattu rivi: valmistunut hanke jossa on nimetty urakoitsija näytti
+   * "Sopimus myönnetty", koska voittajasääntö ajoi ennen kaikkea muuta.
+   */
+  it("valmistuminen voittaa voittajan", () => {
+    expect(
+      inferDecisionPhase({
+        description:
+          "Kuntakehityksen lautakunta päättää merkitä tiedoksi hankkeen " +
+          "valmistumisen, vastaanottotarkastuksen pöytäkirjan sekä " +
+          "taloudellisen loppuselvityksen. Urakka valmistui 29.10.2025.",
+        hasWinner: true,
+        fallback: "Sopimus myönnetty",
+        title: "Veikkolan yleisurheilukentän perusparannushankkeen valmistuminen",
+        now: NYT,
+      })
+    ).toBe("Valmistunut")
+  })
+
+  /*
+   * ANSA: aineiston yleisin "valmistui"-muoto on "HANKESUUNNITELMA
+   * valmistui" - asiakirja valmistui, ei rakennus. Kymmenestä
+   * "valmistui"-rivistä kuusi oli suunnitteluvaiheen päätöksiä.
+   */
+  it("ei pidä valmistunutta hankesuunnitelmaa valmiina hankkeena", () => {
+    expect(
+      inferDecisionPhase({
+        description:
+          "Arktes Oy:n laatima hankesuunnitelma valmistui alkuvuodesta 2018. " +
+          "Kaupunginhallitus esitti kaupunginvaltuustolle hankkeen jatkovalmistelua.",
+        hasWinner: false,
+        fallback: "Suunnittelussa",
+        title: "Uuden uimahallin jatkovalmistelu",
+        now: NYT,
+      })
+    ).toBe("Suunnittelussa")
+  })
+
+  /* Luvattu vastaanottotarkastus ei ole tapahtunut luovutus. */
+  it("ei pidä kilpailutusehtojen vastaanottotarkastusta valmistumisena", () => {
+    expect(
+      inferDecisionPhase({
+        description:
+          "Urakkaohjelman mukaan vastaanottotarkastus pidetään töiden valmistuttua.",
+        hasWinner: false,
+        fallback: "Kilpailutus",
+        title: "Puhjon risteyssilta (W) korjausurakka 2026 (KU)",
+        now: NYT,
+      })
+    ).toBe("Kilpailutus")
+  })
+})

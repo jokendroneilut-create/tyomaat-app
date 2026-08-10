@@ -388,6 +388,26 @@ Kumpikaan ei ole otsikossa, joten otsikkopäättely jää viimeiseksi varalle �
 Helsingillä se on rikkaampi kuin muilla (hankesuunnitelma, tarveselvitys,
 rakentamispäätös), eikä sitä haluta menettää.
 
+**Valmistuminen voittaa voittajan (lisätty myöhemmin).** Valmistunut
+hanke jossa on nimetty urakoitsija näytti aina "Sopimus myönnetty", koska
+voittajasääntö ajoi ennen kaikkea muuta paitsi sopimuskautta. Mitattu
+rivi: "Veikkolan yleisurheilukentän perusparannushankkeen valmistuminen",
+jossa teksti sanoo "Urakka valmistui 29.10.2025 ja kohde siirrettiin
+kunnan hoitoon".
+
+**KAKSI RIIPPUMATONTA SIGNAALIA VAADITAAN:**
+
+| signaali | mitä ilman sitä tapahtuu |
+|---|---|
+| A: päätös koskee valmistumista | B yksin osuu kilpailutusehtoihin, joissa vastaanottotarkastus vasta luvataan |
+| B: luovutus on tapahtunut | A yksin osuu hankesuunnitelmapäätöksiin |
+
+**Suurin ansa oli sanan "valmistui" subjekti.** Aineiston yleisin muoto on
+"**hankesuunnitelma** valmistui" — asiakirja valmistui, ei rakennus.
+Kymmenestä "valmistui"-rivistä **kuusi oli suunnitteluvaiheen päätöksiä**,
+joten pelkkään sanaan perustuva sääntö olisi merkinnyt ne valmiiksi.
+Yhdistelmä osuu mitattuna yhteen riviin ja nollaan väärään.
+
 **Kilpailutus voi olla vain tekstissä (lisätty myöhemmin).**
 "Päällystysurakka 2026 + optiot – sisäinen hankintapäätös" ei kerro
 otsikossa mitään kilpailutuksesta, mutta teksti sanoo "Päällystysurakassa

@@ -155,6 +155,19 @@ export function inferDecisionPhase(opts: {
     return PHASE_AWARDED
   }
 
+  const text = description ?? ""
+
+  /*
+   * Valmistuminen ennen voittajaa: valmistunut hanke jossa on urakoitsija
+   * on valmis, ei myönnetty sopimus. Molemmat signaalit vaaditaan.
+   */
+  if (
+    (COMPLETION_DECISION.test(title ?? "") || COMPLETION_DECISION.test(text)) &&
+    HANDOVER_DONE.test(text)
+  ) {
+    return PHASE_DONE
+  }
+
   if (hasWinner) return PHASE_AWARDED
 
   /*
@@ -162,7 +175,6 @@ export function inferDecisionPhase(opts: {
    * eikä voittajaa ole. Tarkistetaan ennen varasääntöä, koska juuri
    * varasääntö (otsikon "urakka") antaa näille väärän vaiheen.
    */
-  const text = description ?? ""
   if (
     COMPETITION_PENDING.test(text) &&
     !COMPETITION_DONE.test(text) &&
@@ -206,6 +218,34 @@ const COMPETITION_START =
  *   3. Otsikossa "urak"  - pudottaa vuokrauspäätöksen, lausunnon ja
  *      toteutusmuotopäätöksen, joissa sana esiintyy sivulauseessa.
  */
+/*
+ * VALMISTUMINEN VOITTAA VOITTAJAN.
+ *
+ * Valmistunut hanke jossa on nimetty urakoitsija näytti aina "Sopimus
+ * myönnetty", koska voittajasääntö ajoi ennen kaikkea muuta paitsi
+ * sopimuskautta. Mitattu rivi: "Veikkolan yleisurheilukentän
+ * perusparannushankkeen valmistuminen", jossa teksti sanoo "Urakka
+ * valmistui 29.10.2025 ja kohde siirrettiin kunnan hoitoon".
+ *
+ * KAKSI RIIPPUMATONTA SIGNAALIA VAADITAAN, koska kumpikin yksin on
+ * vaarallinen:
+ *
+ *   A. Päätös koskee valmistumista (otsikko tai päätöslause).
+ *   B. Luovutus on tapahtunut (vastaanottotarkastus, taloudellinen
+ *      loppuselvitys, "urakka valmistui").
+ *
+ * Yksin A osuu hankesuunnitelmapäätöksiin, yksin B kilpailutusehtoihin
+ * joissa vastaanottotarkastus vasta luvataan. Ja ennen kaikkea: pelkkä
+ * "X valmistui" on ansa, koska aineiston yleisin muoto on
+ * "HANKESUUNNITELMA valmistui" - asiakirja valmistui, ei rakennus.
+ * Mitattu: kymmenestä "valmistui"-rivistä kuusi oli suunnitteluvaiheen
+ * päätöksiä.
+ */
+const COMPLETION_DECISION =
+  /valmistumis\w*\s+(?:merkit|tiedoksi|hyväksy)|hankkeen\s+valmistumin|urakan\s+valmistumin|\bvalmistuminen\s*$/i
+const HANDOVER_DONE =
+  /vastaanottotarkastu|taloudellinen\s+loppuselvity|taloudellisen\s+loppuselvity|urakka\s+valmistui|luovutet\w*\s+tilaajalle/i
+
 const COMPETITION_PENDING = /\bkilpailutetaan\b|kilpailutus\s+(?:käynnistet|aloitet)/i
 const COMPETITION_DONE = /on\s+kilpailutettu|kilpailutettu\s+(?:avointa|rajoitettua|julkisista)/i
 const CONTRACT_TITLE = /urak/i
