@@ -422,6 +422,7 @@ export function createDynastyFetcher(config: DynastyConfig) {
           description,
           hasWinner: winners.length > 0,
           fallback: phaseFromTitle(subject),
+          title: subject,
         }),
         business_value: "high",
         source_url: link,

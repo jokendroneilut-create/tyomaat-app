@@ -188,6 +188,7 @@ async function main() {
           description,
           hasWinner: winners.length > 0,
           fallback: titleTender ? PHASE_TENDER : (md.phase_hint ?? "Suunnittelussa"),
+          title: row.title,
         })
         if (phase !== md.phase_hint) stats.vaihe++
 

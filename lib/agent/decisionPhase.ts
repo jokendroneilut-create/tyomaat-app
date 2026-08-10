@@ -141,9 +141,11 @@ export function inferDecisionPhase(opts: {
   description: string | null | undefined
   hasWinner: boolean
   fallback: string
+  /* Otsikko tarvitaan vain kilpailutuksen vartijaan; ilman sitä se ohittuu. */
+  title?: string | null
   now?: Date
 }): string {
-  const { description, hasWinner, fallback } = opts
+  const { description, hasWinner, fallback, title } = opts
   const now = opts.now ?? new Date()
 
   const period = extractContractPeriod(description)
@@ -154,6 +156,20 @@ export function inferDecisionPhase(opts: {
   }
 
   if (hasWinner) return PHASE_AWARDED
+
+  /*
+   * Kilpailutus on vasta edessä: teksti sanoo että työ kilpailutetaan,
+   * eikä voittajaa ole. Tarkistetaan ennen varasääntöä, koska juuri
+   * varasääntö (otsikon "urakka") antaa näille väärän vaiheen.
+   */
+  const text = description ?? ""
+  if (
+    COMPETITION_PENDING.test(text) &&
+    !COMPETITION_DONE.test(text) &&
+    CONTRACT_TITLE.test(title ?? "")
+  ) {
+    return PHASE_TENDER
+  }
 
   return fallback
 }
@@ -173,7 +189,26 @@ export function inferDecisionPhase(opts: {
  * ei ole. Tarkistetaan siksi ennen urakkasanaa.
  */
 const COMPETITION_START =
-  /kilpailutusperiaat|kilpailuttamin|kilpailutuksen\s+aloitt|tarjouspyynnön\s+hyväksy/i
+  /kilpailutusperiaat|kilpailuttamin|kilpailutuksen\s+aloitt|tarjouspyynnön\s+hyväksy|urakoitsijan\s+kilpailutus/i
+
+/*
+ * KILPAILUTUS VOI OLLA VAIN TEKSTISSÄ. "Päällystysurakka 2026 + optiot –
+ * sisäinen hankintapäätös" ei kerro otsikossa mitään kilpailutuksesta,
+ * mutta teksti sanoo "Päällystysurakassa KILPAILUTETAAN ... työt" - eli
+ * kilpailutus on vasta edessä. Otsikon sana "urakka" antoi vaiheeksi
+ * "Sopimus myönnetty" vaikka mitään ei ole myönnetty.
+ *
+ * KOLME VARTIJAA, koska pelkkä sana "kilpailutetaan" osuu aineistossa
+ * neljään riviin joista vain yksi on kilpailutuspäätös:
+ *
+ *   1. Voittajaa ei ole  - voittaja kumoaa tämän aina.
+ *   2. Ei mennyttä muotoa - "on kilpailutettu" tarkoittaa jo tehtyä.
+ *   3. Otsikossa "urak"  - pudottaa vuokrauspäätöksen, lausunnon ja
+ *      toteutusmuotopäätöksen, joissa sana esiintyy sivulauseessa.
+ */
+const COMPETITION_PENDING = /\bkilpailutetaan\b|kilpailutus\s+(?:käynnistet|aloitet)/i
+const COMPETITION_DONE = /on\s+kilpailutettu|kilpailutettu\s+(?:avointa|rajoitettua|julkisista)/i
+const CONTRACT_TITLE = /urak/i
 
 export function phaseFromTitle(title: string): string {
   if (COMPETITION_START.test(title)) return PHASE_TENDER

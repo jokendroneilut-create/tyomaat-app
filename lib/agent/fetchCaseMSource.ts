@@ -325,6 +325,7 @@ export function createCaseMFetcher(config: CaseMConfig) {
               description,
               hasWinner: winners.length > 0,
               fallback: phaseFromTitle(hit.title),
+              title: hit.title,
             }),
             business_value: "high",
             source_url: `${base}${hit.path}`,

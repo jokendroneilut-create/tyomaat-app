@@ -195,6 +195,7 @@ export async function fetchTurkuPaatoksetSource() {
             description,
             hasWinner: winners.length > 0,
             fallback: phaseFromTitle(title),
+            title,
           }),
           business_value: "high",
           source_url: `https://paatokset.turku.fi/poytakirja/${meetingId}`,

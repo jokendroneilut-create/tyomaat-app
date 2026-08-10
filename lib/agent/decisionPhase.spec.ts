@@ -214,3 +214,66 @@ describe("extractContractPeriod – kuukausiväli", () => {
     ).toBe("Valmistunut")
   })
 })
+
+describe("inferDecisionPhase – kilpailutus tekstistä", () => {
+  /*
+   * Mitattu rivi: "Päällystysurakka 2026 + optiot – sisäinen
+   * hankintapäätös". Otsikon sana "urakka" antoi vaiheeksi "Sopimus
+   * myönnetty", vaikka teksti sanoo että työ vasta kilpailutetaan.
+   */
+  it("tunnistaa tulevan kilpailutuksen tekstistä", () => {
+    expect(
+      inferDecisionPhase({
+        description: "Päällystysurakassa kilpailutetaan kaupungin katujen päällystystyöt.",
+        hasWinner: false,
+        fallback: "Sopimus myönnetty",
+        title: "Päällystysurakka 2026 + optiot (1+1+1) – sisäinen hankintapäätös",
+        now: NYT,
+      })
+    ).toBe("Kilpailutus")
+  })
+
+  /*
+   * Kolme vartijaa, koska sana "kilpailutetaan" osuu aineistossa neljään
+   * riviin joista vain yksi on kilpailutuspäätös.
+   */
+  it("ei laukea kun voittaja on tiedossa", () => {
+    expect(
+      inferDecisionPhase({
+        description: "Urakassa kilpailutetaan työt. Urakoitsijaksi valitaan MVR-Yhtymä Oy.",
+        hasWinner: true,
+        fallback: "Suunnittelussa",
+        title: "Päällystysurakka 2026",
+        now: NYT,
+      })
+    ).toBe("Sopimus myönnetty")
+  })
+
+  it("ei laukea menneestä muodosta", () => {
+    expect(
+      inferDecisionPhase({
+        description: "Hankinta on kilpailutettu avointa menettelyä käyttäen.",
+        hasWinner: false,
+        fallback: "Sopimus myönnetty",
+        title: "Päällystysurakka 2026",
+        now: NYT,
+      })
+    ).toBe("Sopimus myönnetty")
+  })
+
+  /*
+   * Otsikkovartija pudottaa vuokrauspäätöksen ja lausunnon, joissa sana
+   * esiintyy sivulauseessa.
+   */
+  it("ei laukea kun otsikko ei ole urakka", () => {
+    expect(
+      inferDecisionPhase({
+        description: "Tilat kilpailutetaan myöhemmin erikseen.",
+        hasWinner: false,
+        fallback: "Suunnittelussa",
+        title: "Tilapäällikön päätös tilojen vuokraamisesta",
+        now: NYT,
+      })
+    ).toBe("Suunnittelussa")
+  })
+})

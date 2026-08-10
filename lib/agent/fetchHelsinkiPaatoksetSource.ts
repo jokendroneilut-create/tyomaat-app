@@ -210,6 +210,7 @@ export async function fetchHelsinkiPaatoksetSource() {
           description,
           hasWinner: winners.length > 0,
           fallback: inferPhase(subject),
+          title: subject,
         }),
         business_value: "high",
         source_url: relativeUrl.startsWith("http")

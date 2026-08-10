@@ -388,6 +388,25 @@ Kumpikaan ei ole otsikossa, joten otsikkopäättely jää viimeiseksi varalle �
 Helsingillä se on rikkaampi kuin muilla (hankesuunnitelma, tarveselvitys,
 rakentamispäätös), eikä sitä haluta menettää.
 
+**Kilpailutus voi olla vain tekstissä (lisätty myöhemmin).**
+"Päällystysurakka 2026 + optiot – sisäinen hankintapäätös" ei kerro
+otsikossa mitään kilpailutuksesta, mutta teksti sanoo "Päällystysurakassa
+KILPAILUTETAAN ... työt". Otsikon sana "urakka" antoi silti vaiheeksi
+"Sopimus myönnetty", vaikka mitään ei ole myönnetty.
+
+**Kolme vartijaa**, koska pelkkä sana "kilpailutetaan" osuu aineistossa
+neljään riviin joista vain yksi on kilpailutuspäätös — muut ovat
+vuokrauspäätös, lausunto ja toteutusmuotopäätös:
+
+| vartija | pudottaa |
+|---|---|
+| voittajaa ei ole | jo ratkenneet |
+| ei mennyttä muotoa ("on kilpailutettu") | jo kilpailutetut |
+| otsikossa "urak" | vuokraus, lausunto, toteutusmuoto |
+
+Mitattu: 2 riviä korjaantui, 0 väärää. Vaihe "Kilpailutus" on nyt
+4 rivillä.
+
 **Kuukausiväli (lisätty myöhemmin).** Sopimuskausi kirjoitetaan myös
 pelkkinä kuukausina: "Sopimuskausi on 04-12.2025". Päivämääräkuvio ei osu
 siihen, joten kausi jäi lukematta ja hanke näytti myönnetyltä sopimukselta
