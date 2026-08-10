@@ -587,17 +587,32 @@ valvoja, ei hankintapäätös) ja yhdeksän jakautui kahteen muotoon:
 Tulos: 8 uutta voittajaa, 0 muuttunutta, 0 poistunutta. Voittaja on nyt
 60 rivillä.
 
-**SÄÄNTÖPOHJA EI LOPU KESKEN VAAN VALMISTUU.** Tuotto sääntöä kohden:
-muodot 1–4 antoivat 27 voittajaa, viides 11, kuudes 2, seitsemäs 1,
-kahdeksas ja yhdeksäs yhteensä 8. Jäljelle jää nolla tunnettua muotoa, ja
-947 riviä 964:stä ei sisällä voittajaa lainkaan. Osakieli on kapea ja
-hallinnollinen, joten lausemuotoja on kymmenkunta — ei ääretön määrä.
+**VÄITE "SÄÄNTÖPOHJA ON VALMIS" OSOITTAUTUI VÄÄRÄKSI.** Yhdeksän muodon
+jälkeen arvioin että poimittavaa ei enää ole. LLM-kartoitus
+(`scripts/survey-missed-winners.ts`, 273 riviä, 0,5 $) löysi kahdeksan
+lisää yhdellä ajolla:
 
-Tämä on se raja jonka toisella puolella kielimalli kannattaisi: ei
-"monimutkaisuudessa" vaan siinä onko muotojen joukko äärellinen.
-Duplikaattien tunnistuksessa se ei ole (mikä tahansa kahden nimen pari),
-ja siellä LLM on oikea työkalu — ks.
-[muistiinpano LLM-skannauksen kustannuksesta](../lib/agent/duplicates/comparisonBuckets.ts).
+| löydös | rivejä | mitä se on |
+|---|---|---|
+| **nimi ennen roolia** | 2 | "hyväksyä **Louhintahiekka Oy:n** urakoitsijaksi", "**SRV Rakennus Oy** on valittu päätoteuttajaksi" — aidosti uusi muoto |
+| välisanoissa keskeytys | 2 | "(95,25 pistettä) Recset Oy", "tammikuussa **2023** järjestetyn" — tuttu muoto, mutta sulkeet ja luku katkaisevat `FILLER`-kuvion |
+| **ruotsinkielinen päätös** | 2 | "beslutade … utse Hoivatilat Oyj:s erbjudande" — koko kieli puuttuu säännöistä |
+| kaupungin oma tuotanto | 2 | "Purkutyön suorittaa **Stara**" — ei yhtiömuotoa, ei kilpailutusta |
+
+**Miksi oma mittaukseni ei löytänyt näitä:** rajasin ehdokasjoukon omilla
+säännöillä. "Epäillyt puutteet" haettiin regexillä joka vaati
+hankintakieltä, ja ehdokasjoukko vaati yhtiömuodon (`Oy|Ab|Ky`) — mikä
+sulki Staran kokonaan pois ja ruotsin osittain. **Käytin sääntöjä
+päättämään missä säännöt voivat epäonnistua.**
+
+Oikea johtopäätös on kapeampi kuin aiempi: sääntöpohja kattaa *tunnetut*
+muodot täydellisesti ja halvalla, mutta **uusien muotojen löytäminen ei
+onnistu säännöillä**. Siihen LLM on oikea työkalu, ja se maksoi 0,5 $
+kertaluontoisesti. Työnjako on siis: LLM etsii muodot, säännöt ajavat ne.
+
+Tämä ei muuta kustannusvertailua — 273 rivin kartoitus kerran ei ole sama
+asia kuin LLM jokaisessa ajossa — mutta se kumoaa oletuksen että
+sääntöpohjan kattavuutta voisi arvioida sääntöpohjan sisältä.
 
 **Allatiivi (seitsemäs muoto).** Työ voidaan myös *antaa* yritykselle:
 "…suunnittelu **annetaan** … tarjouksen jättäneelle **Insinööritoimisto
