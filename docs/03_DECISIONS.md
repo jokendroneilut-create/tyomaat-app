@@ -388,6 +388,25 @@ Kumpikaan ei ole otsikossa, joten otsikkopäättely jää viimeiseksi varalle �
 Helsingillä se on rikkaampi kuin muilla (hankesuunnitelma, tarveselvitys,
 rakentamispäätös), eikä sitä haluta menettää.
 
+**Numeromuotoinen valmistumisaika (lisätty myöhemmin).** Kuntien
+hankesuunnitelmissa aikataulu kirjoitetaan lähes aina numeroina, ei
+kuukauden nimellä:
+
+> "Rakentaminen alkaa 06 /19, ja työ **valmistuu 12 /2019**."
+
+Valmistumisajan tunnistus osasi kuukausien nimet ja vuodenajat mutta ei
+tätä, joten **43 jonossa olevaa riviä oli vuosia sitten valmistuneita
+hankkeita** merkinnällä "Suunnittelussa" — vanhimmat vuodelta 2020.
+
+Sama "valmis"-vartija kuin muillakin muodoilla: ilman sitä kuvio poimisi
+aloituspäivän, joka on tyypillisesti samassa virkkeessä, ja hanke
+näyttäisi valmistuneen ennen kuin se alkoi. Nelinumeroinen vuosi
+vaaditaan, koska kaksinumeroinen ("06 /19") jäisi vuodeksi 19.
+
+Kenttä ruokkii olemassa olevaa `auto-complete-projects`-cronia, joten
+vaihepäättelyyn ei tarvittu uutta sääntöä. Täydennettynä valmistumisaika
+on 171 päätösrivillä, joista 121 on jo mennyt.
+
 **Valmistuminen voittaa voittajan (lisätty myöhemmin).** Valmistunut
 hanke jossa on nimetty urakoitsija näytti aina "Sopimus myönnetty", koska
 voittajasääntö ajoi ennen kaikkea muuta paitsi sopimuskautta. Mitattu

@@ -88,3 +88,43 @@ describe("isPastDate", () => {
     expect(isPastDate(null)).toBe(false)
   })
 })
+
+describe("numeromuotoinen valmistumisaika", () => {
+  /*
+   * Kuntien hankesuunnitelmissa aikataulu kirjoitetaan lähes aina
+   * numeroina, ei kuukauden nimellä. Mitattu: 52 päätösriviä, joista 39
+   * oli jo mennyt - eli lähes 40 vuosia sitten valmistunutta hanketta
+   * odotti katselmointijonossa merkinnällä "Suunnittelussa".
+   */
+  it("lukee muodon 'valmistuu 12 /2019'", () => {
+    expect(
+      inferCompletionDateFromText(
+        "Aikataulu ja toteutus Rakentaminen alkaa 06 /19, ja työ valmistuu 12 /2019."
+      )
+    ).toBe("2019-12-31")
+  })
+
+  it("lukee muodon ilman välilyöntiä", () => {
+    expect(inferCompletionDateFromText("Hanke valmistuu 9/2022.")).toBe("2022-09-30")
+  })
+
+  /*
+   * Aloituspäivä on tyypillisesti samassa virkkeessä. Ilman
+   * "valmis"-vartijaa kuvio poimisi sen ja hanke näyttäisi valmistuneen
+   * ennen kuin se alkoi.
+   */
+  it("ei poimi pelkkää aloituspäivää", () => {
+    expect(
+      inferCompletionDateFromText("Rakentaminen alkaa 06/2019 ja kestää vuoden.")
+    ).toBeNull()
+  })
+
+  /*
+   * Kaksinumeroinen vuosi jäisi vuodeksi 19, koska päivän rakentaja lukee
+   * luvun sellaisenaan. Vuosisadan arvaaminen olisi turhaa: mitatut
+   * valmistumisajat kirjoitetaan aina nelinumeroisina.
+   */
+  it("ohittaa kaksinumeroisen vuoden", () => {
+    expect(inferCompletionDateFromText("Työ valmistuu 12 /19.")).toBeNull()
+  })
+})

@@ -94,6 +94,34 @@ export function inferCompletionDateFromText(
   if (seasonMatch) return seasonMatch
 
   /*
+   * NUMEROMUOTOINEN KUUKAUSI JA VUOSI: "työ valmistuu 12 /2019".
+   *
+   * Kuntien hankesuunnitelmissa aikataulu kirjoitetaan lähes aina näin,
+   * ei kuukauden nimellä. Mitattu: 52 päätösriviä, joista 39 oli jo
+   * mennyt - eli lähes 40 vuosia sitten valmistunutta hanketta odotti
+   * katselmointijonossa merkinnällä "Suunnittelussa".
+   *
+   * Sama vartija kuin muillakin: "valmis"-kantainen sana enintään 40
+   * merkkiä ennen. Ilman sitä osuisi myös aloituspäivä, joka on
+   * tyypillisesti samassa virkkeessä ("Rakentaminen alkaa 06 /19, ja työ
+   * valmistuu 12 /2019").
+   *
+   * VUOSI VAADITAAN NELINUMEROISENA. Kaksinumeroinen ("06 /19") jäisi
+   * vuodeksi 19, koska päivän rakentaja lukee luvun sellaisenaan - ja
+   * vuosisadan arvaaminen olisi turhaa, sillä mitatut valmistumisajat
+   * kirjoitetaan aina nelinumeroisina.
+   */
+  const numericMatch = findGuardedDate(
+    normalized,
+    /(\d{1,2})\s*\/\s*(\d{4})/g,
+    (word) => {
+      const month = Number(word)
+      return month >= 1 && month <= 12 ? month : undefined
+    }
+  )
+  if (numericMatch) return numericMatch
+
+  /*
    * SOPIMUSKAUSI VIIMEISENÄ. Kunnan hankintapäätös ei sano "valmistuu
    * syyskuussa" vaan "Hankinnan sopimuskausi on 15.4.-24.5.2026", ja kauden
    * loppu on se päivä johon mennessä työn on oltava tehty. Ilman tätä

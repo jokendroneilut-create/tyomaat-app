@@ -74,6 +74,9 @@ async function main() {
     "../lib/agent/decisionPhase"
   )
   const { genericizeDecisionTitle } = await import("../lib/agent/decisionTitle")
+  const { inferCompletionDateFromText } = await import(
+    "../lib/projects/inferCompletionDateFromText"
+  )
   const { fetchDecoded, extractItemText, upgradePermitTitle } = await import(
     "../lib/agent/fetchDynastySource"
   )
@@ -245,6 +248,16 @@ async function main() {
               operation: operation ?? md.operation ?? null,
               phase_hint: phase,
               building_type: buildingType ?? null,
+              /*
+               * Valmistumisaika luetaan tekstistä jos sitä ei ole.
+               * Kuntien hankesuunnitelmissa se on numeromuodossa ("työ
+               * valmistuu 12 /2019"), jota tunnistus ei aiemmin osannut.
+               * Kenttä ruokkii olemassa olevaa auto-complete-cronia, joka
+               * siirtää hankkeen valmiiksi päivän mentyä.
+               */
+              estimated_completion:
+                md.estimated_completion ??
+                inferCompletionDateFromText(`${title} ${description}`),
               /*
                * Uusi laskenta voittaa aina, myös tyhjänä. Jos vanha arvo
                * säilytettäisiin tyhjän tuloksen kohdalla, aiemman ajon
