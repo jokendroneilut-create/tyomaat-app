@@ -39,9 +39,30 @@ veisi väärään paikkaan, mikä on huonompi kuin puuttuva linkki.
 
 Täydennetty 318/320 riville; kahdelta puuttuvat tunnisteet lähteestä.
 
-**Laajempi havainto:** lähdelinkki puuttuu yhä 2 183 riviltä 6 373:sta.
-Hilman lisäksi Lupapiste (316) ja kaikki kaavoituslähteet (yhteensä ~900)
-ovat ilman. Ne ovat eri lähteitä ja eri syitä, eikä niitä ole tutkittu.
+**Muut lähteet (tutkittu jälkikäteen).** Linkki puuttui myös 1 865
+riviltä muista lähteistä, mutta syy oli eri: osoite oli tallessa
+`source_documents.document_url`-kentässä eikä vain kulkenut ehdokkaalle.
+Puute oli **historiallinen** — kaikki puuttuvat rivit ovat heinäkuulta, ja
+elokuun 1 243 rivillä linkki on jokaisella. Putki tuottaa siis linkit jo
+oikein, joten kerääjiin ei tarvittu muutosta.
+
+**Sokea kopiointi olisi silti ollut väärin.** Sama oletus — että
+tallennettu osoite toimii — piilotti Hilman vian. Otos jokaisesta
+lähteestä ajettiin läpi, ja neljä hylättiin:
+
+| lähde | rivejä | vika |
+|---|---|---|
+| Tampere | 129 | osa 404 |
+| Kuopio | 56 | vain 700 tavun SPA-kuori |
+| Kerava | 35 | 500 |
+| Pori | 25 | osa 404; osoitteessa myös purkamaton `&auml;` |
+
+Lisäksi ohitettiin 93 API-päätepistettä (valtaosa Helsingin WFS): ne
+palauttavat XML:ää eivätkä ole ihmiselle avattavia sivuja, mutta menivät
+status- ja kokotarkistuksesta läpi.
+
+Täydennetty 1 522 riviä. Ilman linkkiä jäi 343, joista yksikään ei ole
+katselmointijonossa.
 
 ### D-045 – Nimien erottava sana ratkaisee, ei yhteinen osa
 Kaksi jyväskyläläistä päiväkotia yhdistyi yhdeksi hankkeeksi:

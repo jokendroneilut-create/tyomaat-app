@@ -23,8 +23,21 @@ Virhe ei ollut nakynyt, koska Hilma on yksisivusovellus: vaara polku
 vastaa 200:lla ja samalla 9 656 tavun kuorella kuin oikea. Osoite selvisi
 vain avaamalla sivu selaimessa - ks. [D-046](03_DECISIONS.md).
 
-Linkki taydennetty 318/320 riville. Lahdelinkki puuttuu yha 2 183 rivilta
-6 373:sta (Lupapiste ja kaavoituslahteet), mita ei ole tutkittu.
+Linkki taydennetty 318/320 riville.
+
+**Muut lahteet.** Linkki puuttui myos 1 865 rivilta, mutta syy oli eri:
+osoite oli tallessa `source_documents`-taulussa eika vain kulkenut
+ehdokkaalle. Puute oli historiallinen - kaikki puuttuvat ovat heinakuulta,
+elokuun 1 243 rivilla linkki on jokaisella, joten keraajiin ei tarvittu
+muutosta.
+
+Sokea kopiointi olisi silti ollut vaarin: otos jokaisesta lahteesta
+ajettiin lapi, ja nelja hylattiin (Tampere ja Pori 404, Kuopio pelkka
+SPA-kuori, Kerava 500). Lisaksi ohitettiin 93 API-paatepistetta, jotka
+palauttavat XML:aa mutta menivat status- ja kokotarkistuksesta lapi.
+
+Taydennetty 1 522 rivia. Ilman linkkia jai 343, joista yksikaan ei ole
+katselmointijonossa. Kaikkiaan 2 183 -> 343.
 
 ### Eri kohteet yhdistyivät, koska nimien yhteinen osa on geneerinen
 
