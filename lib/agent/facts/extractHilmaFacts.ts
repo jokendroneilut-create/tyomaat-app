@@ -162,6 +162,12 @@ export function extractHilmaFacts({
       "hilma",
 
     notice_id: noticeId,
+    /*
+     * Ilmoituksen julkinen osoite tarvitsee tämän ilmoitusnumeron lisäksi
+     * (ks. lib/agent/hilmaNoticeUrl.ts), joten se on kuljetettava
+     * metatietoon asti.
+     */
+    procedure_id: notice.procedureId != null ? String(notice.procedureId) : null,
     notice_number: noticeNumber,
     notice_type: noticeType,
     main_type: mainType,

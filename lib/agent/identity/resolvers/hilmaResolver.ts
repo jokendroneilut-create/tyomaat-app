@@ -1,3 +1,4 @@
+import { hilmaNoticeUrl } from "@/lib/agent/hilmaNoticeUrl"
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
@@ -335,6 +336,12 @@ export async function resolveHilmaProject({
 
       notice_number: noticeNumber,
       notice_id: metadata.notice_id ?? null,
+      procedure_id: metadata.procedure_id ?? null,
+      /*
+       * Lähdelinkki puuttui Hilma-riveiltä kokonaan (320/320), joten
+       * "avaa lähde" ei tehnyt mitään. Rakennetaan tunnisteista.
+       */
+      source_url: hilmaNoticeUrl(metadata.procedure_id, metadata.notice_id),
       notice_type: noticeType,
       main_type: mainType,
 

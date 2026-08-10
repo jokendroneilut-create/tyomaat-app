@@ -5,6 +5,44 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-046 – Yksisivusovellus vastaa 200:lla myös väärään osoitteeseen
+Hilma-rivin "avaa lähde" ei tehnyt mitään: `source_url` puuttui **kaikilta
+320 Hilma-ehdokkaalta**, koska resolveri ei rakentanut sitä lainkaan.
+
+Korjatessa paljastui isompi vika. Kerääjä rakensi lähdeasiakirjoille
+osoitteen muodossa
+
+    /fi/public/procurement/{noticeId}/notice/overview/overview
+
+joka vie sivulle **"Ilmoitusta ei löytynyt"**. Oikea muoto tarvitsee myös
+menettelyn tunnisteen:
+
+    /fi/public/procedure/{procedureId}/enotice/{noticeId}/
+
+**Miksi virhe ei ollut näkynyt:** Hilma on yksisivusovellus. Väärä polku
+vastaa `200 OK` ja täsmälleen samalla 9 656 tavun kuorella kuin oikea —
+sisältö haetaan vasta selaimessa. HTTP-status ja vastauksen koko eivät siis
+kerro mitään, ja automaattinen tarkistus näyttäisi vihreää.
+
+Osoite selvisi vain **avaamalla sivu selaimessa**: Hilman oma hakutulos
+(`/fi/search`) paljasti linkkien todellisen muodon. Kokeillut ja
+toimimattomat: pelkkä noticeId, eForms-tunniste (`1f1451f8-…-01`) ja API:n
+palauttama id `EF-54530`.
+
+Sääntö: **kun lähde on yksisivusovellus, linkin toimivuutta ei voi
+todentaa hakemalla — se on avattava.**
+
+Osoitteen rakennus on yhdessä paikassa
+(`lib/agent/hilmaNoticeUrl.ts`), ja se palauttaa `null` jos kumpi tahansa
+tunniste puuttuu: etusivulle ohjaava linkki näyttäisi toimivalta mutta
+veisi väärään paikkaan, mikä on huonompi kuin puuttuva linkki.
+
+Täydennetty 318/320 riville; kahdelta puuttuvat tunnisteet lähteestä.
+
+**Laajempi havainto:** lähdelinkki puuttuu yhä 2 183 riviltä 6 373:sta.
+Hilman lisäksi Lupapiste (316) ja kaikki kaavoituslähteet (yhteensä ~900)
+ovat ilman. Ne ovat eri lähteitä ja eri syitä, eikä niitä ole tutkittu.
+
 ### D-045 – Nimien erottava sana ratkaisee, ei yhteinen osa
 Kaksi jyväskyläläistä päiväkotia yhdistyi yhdeksi hankkeeksi:
 

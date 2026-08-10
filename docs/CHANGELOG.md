@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (työ 9.8.)
 
+### Hilman lahdelinkki puuttui kokonaan - ja rakennettu osoite oli vaara
+
+"Avaa lahde" ei tehnyt mitaan Hilma-riveilla: `source_url` puuttui
+kaikilta 320:lta. Korjatessa paljastui isompi vika - kerajan
+lahdeasiakirjoille rakentama osoite vei sivulle "Ilmoitusta ei loytynyt".
+Oikea muoto tarvitsee myos menettelyn tunnisteen:
+`/fi/public/procedure/{procedureId}/enotice/{noticeId}/`.
+
+Virhe ei ollut nakynyt, koska Hilma on yksisivusovellus: vaara polku
+vastaa 200:lla ja samalla 9 656 tavun kuorella kuin oikea. Osoite selvisi
+vain avaamalla sivu selaimessa - ks. [D-046](03_DECISIONS.md).
+
+Linkki taydennetty 318/320 riville. Lahdelinkki puuttuu yha 2 183 rivilta
+6 373:sta (Lupapiste ja kaavoituslahteet), mita ei ole tutkittu.
+
 ### Eri kohteet yhdistyivät, koska nimien yhteinen osa on geneerinen
 
 "Tikan päiväkodin purku-urakka" ja "Tikkakosken päiväkodin purku-urakka"

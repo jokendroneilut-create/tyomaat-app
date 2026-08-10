@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js"
 import type { DiscoverySource } from "../registry/sources"
 import { detectCityFromText } from "../../detectCityFromText"
 import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
+import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -255,9 +256,12 @@ async function collectHilmaSource(source: DiscoverySource) {
 
   for (const notice of collected) {
     const noticeId = notice.noticeId ?? notice.id
-    const documentUrl = noticeId
-      ? `https://www.hankintailmoitukset.fi/fi/public/procurement/${noticeId}/notice/overview/overview`
-      : source.url
+    /*
+     * Osoite tarvitsee myös procedureId:n - pelkällä ilmoitusnumerolla
+     * rakennettu polku vei "Ilmoitusta ei löytynyt" -sivulle. Ks.
+     * lib/agent/hilmaNoticeUrl.ts.
+     */
+    const documentUrl = hilmaNoticeUrl(notice.procedureId, noticeId) ?? source.url
 
     const rawText = JSON.stringify(notice)
 
