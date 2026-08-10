@@ -55,14 +55,32 @@ lähteestä ajettiin läpi, ja neljä hylättiin:
 | Tampere | 129 | osa 404 |
 | Kuopio | 56 | vain 700 tavun SPA-kuori |
 | Kerava | 35 | 500 |
-| Pori | 25 | osa 404; osoitteessa myös purkamaton `&auml;` |
+| Pori | 25 | osa 404 |
 
 Lisäksi ohitettiin 93 API-päätepistettä (valtaosa Helsingin WFS): ne
 palauttavat XML:ää eivätkä ole ihmiselle avattavia sivuja, mutta menivät
 status- ja kokotarkistuksesta läpi.
 
-Täydennetty 1 522 riviä. Ilman linkkiä jäi 343, joista yksikään ei ole
-katselmointijonossa.
+Täydennetty 1 522 riviä.
+
+**Jokainen linkki tarkistettiin (vaatimus: yksikään ei saa olla rikki).**
+Kaikki 5 886 eri osoitetta molemmista tauluista käytiin läpi. Kolme asiaa
+opittiin:
+
+- **Otos ei riitä perusteeksi hylätä lähdettä.** Neljä lähdettä oli
+  hylätty kolmen osoitteen otoksella. Yksitellen tarkistettuna 169
+  osoitetta toimi — **126 niistä Tampereelta**, jonka olin hylännyt
+  kokonaan.
+- **Yksi tarkistus ei riitä toteamaan linkkiä kuolleeksi.** 162:sta
+  ensimmäisellä kierroksella kaatuneesta **66 toipui** toisella
+  yrityksellä: rinnakkainen ajo törmää nopeusrajoituksiin ja hetkellisiin
+  katkoksiin. Vain kahdesti kaatuneet tyhjennettiin.
+- **Kuollut linkki poistetaan, ei jätetä näkyviin.** Osoite säilyy
+  `dead_source_url`-kentässä jäljitettävyyttä varten; lähde voi palata.
+
+Lopputulos: ehdokkaista **96 % linkillä ja katselmointijonossa 100 %**
+(761/761). Ilman linkkiä jää 252 ehdokasta ja 789 hanketta — niillä ei ole
+toimivaa osoitetta lähteessäkään, joten linkki puuttuu eikä ole rikki.
 
 ### D-045 – Nimien erottava sana ratkaisee, ei yhteinen osa
 Kaksi jyväskyläläistä päiväkotia yhdistyi yhdeksi hankkeeksi:

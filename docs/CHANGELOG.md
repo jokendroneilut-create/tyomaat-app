@@ -36,8 +36,17 @@ ajettiin lapi, ja nelja hylattiin (Tampere ja Pori 404, Kuopio pelkka
 SPA-kuori, Kerava 500). Lisaksi ohitettiin 93 API-paatepistetta, jotka
 palauttavat XML:aa mutta menivat status- ja kokotarkistuksesta lapi.
 
-Taydennetty 1 522 rivia. Ilman linkkia jai 343, joista yksikaan ei ole
-katselmointijonossa. Kaikkiaan 2 183 -> 343.
+Taydennetty 1 522 rivia.
+
+**Jokainen linkki tarkistettiin.** Kaikki 5 886 eri osoitetta kaytiin
+lapi. Otos ei riittanyt perusteeksi hylata lahdetta: yksitellen
+tarkistettuna 169 osoitetta toimi, joista 126 Tampereelta jonka olin
+hylannyt kokonaan. Yksi tarkistus ei myoskaan riita toteamaan linkkia
+kuolleeksi - 162:sta kaatuneesta 66 toipui toisella yrityksella.
+
+Aidosti kuolleet (96 osoitetta, 192 rivia) tyhjennettiin; osoite sailyy
+`dead_source_url`-kentassa jaljitettavyytta varten. Ehdokkaista 96 %
+linkilla ja katselmointijonossa 100 % (761/761).
 
 ### Eri kohteet yhdistyivät, koska nimien yhteinen osa on geneerinen
 

@@ -12,7 +12,11 @@
  * lähdettä hylättiin:
  *
  *   Tampere (129)  osa 404
- *   Pori (25)      osa 404 - osoitteessa myös purkamaton &auml;
+ *   Pori (25)      osa 404
+ *
+ * Porin osoitteissa esiintyvä "auml" EI ole purkamaton entiteetti vaan
+ * sivuston oma slug-muoto: ".../Sepaumlnmaumlki..." vastaa 200:lla ja
+ * ä:ksi purettuna 404:llä. Tarkistettu molemmat.
  *   Kuopio (56)    vain 700 tavun SPA-kuori, ei sisältöä
  *   Kerava (35)    500
  *
