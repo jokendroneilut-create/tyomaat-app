@@ -5,6 +5,39 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-049 – Tilaajan osoite kelpaa kunnaksi vain kun tilaaja on paikallinen
+Hilma-rivit jäivät ilman kuntaa, vaikka `buyer_address` sisälsi
+postitoimipaikan. Houkutus on ilmeinen: lue kunta osoitteesta.
+
+**Mittaus kielsi sen.** 12.8.2026, 298 kunnatonta riviä: kun sekä
+ilmoituksen teksti että tilaajan osoite antoivat kunnan, ne olivat eri
+mieltä **16 kertaa 24:stä**. Tilaajan osoite on valtakunnallisilla
+toimijoilla pääkonttori, ei työmaa – Metsähallitus tilaa Helsingin
+osoitteesta moottorikelkkaurat Lappiin, ELY Oulusta tilusjärjestelyt
+Nivalaan, Museovirasto Helsingistä Olavinlinnan kattoremontin
+Savonlinnaan.
+
+Ketju oli siksi jo valmiiksi varovainen: osoitteen kaupunki kelpasi vain
+jos ilmoituksen teksti vahvisti sen (`isCityCorroboratedByText`). Puuttui
+yksi periaatteellinen poikkeus:
+
+**Yhden kohteen kiinteistöyhtiön osoite ON kohde.** Kiinteistö- ja
+asunto-osakeyhtiö perustetaan yhtä kiinteistöä varten, usein nimeä myöten
+("Kiinteistö Oy Eliel Saarisen tie 41-45"). Sillä ei ole pääkonttoria
+erillään kohteesta, joten vahvistusta ei tarvita. Mitattu tapaus: 13
+Englantilaisen koulun urakkaa samalta tilaajalta, eikä kuvaus mainitse
+Helsinkiä kertaakaan.
+
+Valtakunnalliset suljetaan pois nimen perusteella ennen sääntöä, koska
+esimerkiksi **Puolustuskiinteistöt** sisältää sanan "kiinteistö" mutta
+rakennuttaa koko maahan.
+
+Täydennetty: 150 jonoriviä ja 14 hyväksyttyä hanketta. **148 jätettiin
+tyhjäksi tarkoituksella** – niillä olisi ollut osoite, mutta tilaaja on
+valtakunnallinen eikä kunta olisi ollut hankkeen kunta.
+
+---
+
 ### D-048 – YVA:n "Päättynyt" ei tarkoita valmista hanketta
 YVA-lähteen jokainen rivi sai kovakoodatun vaiheen `"Suunnittelussa"`,
 vaikka lähde kertoo tilan itse. Kenttä `projectPhase` oli haettu

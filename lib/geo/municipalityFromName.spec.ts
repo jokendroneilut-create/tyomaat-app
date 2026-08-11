@@ -5,6 +5,7 @@ import {
   municipalityFromGenitive,
   municipalityFromBuyerName,
   isCityCorroboratedByText,
+  isSinglePropertyCompany,
 } from "./municipalityFromName"
 
 describe("municipalityFromGenitive", () => {
@@ -122,5 +123,39 @@ describe("isCityCorroboratedByText", () => {
   it("hylkää kun teksti ei mainitse kaupunkia", () => {
     expect(isCityCorroboratedByText("Vantaa", "urakka Turussa")).toBe(false)
     expect(isCityCorroboratedByText("Vantaa", null, undefined)).toBe(false)
+  })
+})
+
+describe("isSinglePropertyCompany", () => {
+  /*
+   * Kiinteistöyhtiön rekisteriosoite ON kohde, joten tilaajan osoitteesta
+   * saa kunnan ilman että ilmoituksen teksti mainitsisi kaupunkia.
+   * Mitattu tapaus: 13 Englantilaisen koulun urakkaa jäi ilman kuntaa,
+   * koska kuvaus ei sano "Helsinki" kertaakaan.
+   */
+  it("tunnistaa yhden kohteen kiinteistöyhtiön", () => {
+    expect(isSinglePropertyCompany("Kiinteistö Oy Eliel Saarisen tie 41-45")).toBe(true)
+    expect(isSinglePropertyCompany("Kiinteistö Oy Auroranlinna")).toBe(true)
+    expect(isSinglePropertyCompany("Asunto Oy Helsingin Pyy")).toBe(true)
+    expect(isSinglePropertyCompany("Kotkan Julkiset Kiinteistöt Oy")).toBe(true)
+  })
+
+  /*
+   * VALTAKUNNALLINEN VOITTAA. Puolustuskiinteistöt sisältää sanan
+   * "kiinteistö" mutta rakennuttaa koko maahan: sen Helsingin-osoite veisi
+   * hankkeet väärään kuntaan.
+   */
+  it("ei pidä valtakunnallista toimijaa paikallisena", () => {
+    expect(isSinglePropertyCompany("Puolustuskiinteistöt")).toBe(false)
+    expect(isSinglePropertyCompany("Senaatti-kiinteistöt")).toBe(false)
+    expect(isSinglePropertyCompany("Metsähallitus")).toBe(false)
+    expect(isSinglePropertyCompany("Väylävirasto")).toBe(false)
+  })
+
+  it("ei osu tavalliseen yritykseen tai tyhjään", () => {
+    expect(isSinglePropertyCompany("Lemminkäinen Oy")).toBe(false)
+    expect(isSinglePropertyCompany("Isonkyrön kunta")).toBe(false)
+    expect(isSinglePropertyCompany(null)).toBe(false)
+    expect(isSinglePropertyCompany("")).toBe(false)
   })
 })

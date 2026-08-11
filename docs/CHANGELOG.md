@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Kunta taydennettiin - mutta vain kun tilaaja on paikallinen
+
+Hilma-rivit jaivat ilman kuntaa vaikka tilaajan osoitteessa oli
+postitoimipaikka. Mitattu: kun seka ilmoituksen teksti etta osoite
+antoivat kunnan, ne olivat eri mielta 16 kertaa 24:sta - osoite on
+valtakunnallisilla toimijoilla paakonttori, ei tyomaa.
+
+Lisatty yksi periaatteellinen poikkeus: yhden kohteen kiinteistoyhtion
+osoite ON kohde ("Kiinteisto Oy Eliel Saarisen tie 41-45"), joten sille
+ei vaadita vahvistusta tekstista. Valtakunnalliset suljetaan pois nimen
+perusteella - Puolustuskiinteistot sisaltaa sanan "kiinteisto" mutta
+rakennuttaa koko maahan.
+
+Taydennetty 150 jonorivia ja 14 hyvaksyttya hanketta
+(`backfill-missing-municipality.ts`). 148 jatettiin tyhjaksi
+tarkoituksella.
+
+---
+
 ### YVA-menettelyn tila luetaan nyt lahteesta
 
 Jokainen YVA-rivi sai kovakoodatun vaiheen "Suunnittelussa", vaikka

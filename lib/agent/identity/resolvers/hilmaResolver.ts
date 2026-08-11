@@ -7,6 +7,7 @@ import {
   municipalityFromBuyerName,
   isCityCorroboratedByText,
   extractCityFromBuyerAddress,
+  isSinglePropertyCompany,
 } from "@/lib/geo/municipalityFromName"
 import { extractWorksite } from "@/lib/agent/identity/extractWorksiteAddress"
 
@@ -111,6 +112,7 @@ function cityFromKnownPlace(...texts: (string | null)[]): string | null {
   }
   return null
 }
+
 
 export async function resolveHilmaProject({
   document,
@@ -268,7 +270,8 @@ export async function resolveHilmaProject({
     cityFromKnownPlace(operation, description) ??
     (buyerMunicipality &&
     (isCityCorroboratedByText(buyerMunicipality.name, description, developer) ||
-      isWorksiteOnBuyerStreet(projectAddress, buyerAddress))
+      isWorksiteOnBuyerStreet(projectAddress, buyerAddress) ||
+      isSinglePropertyCompany(developer))
       ? buyerMunicipality.name
       : null)
 

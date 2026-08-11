@@ -158,3 +158,32 @@ export function isCityCorroboratedByText(
 
   return texts.some((text) => text && text.toLowerCase().includes(stem))
 }
+
+/*
+ * YHDEN KOHTEEN KIINTEISTÖYHTIÖ: OSOITE ON KOHDE.
+ *
+ * Kiinteistö- ja asunto-osakeyhtiö perustetaan yhtä kiinteistöä varten, ja
+ * sen rekisteriosoite on se kiinteistö - usein nimeä myöten ("Kiinteistö Oy
+ * Eliel Saarisen tie 41-45"). Tilaajan osoite ei siis ole pääkonttori kuten
+ * valtakunnallisilla toimijoilla, joten kunta voidaan lukea siitä ilman
+ * että ilmoituksen teksti mainitsisi kaupunkia.
+ *
+ * Mitattu 12.8.2026: 298 kunnatonta riviä, joista 13 oli Englantilaisen
+ * koulun urakoita samalta tilaajalta. Kuvaus ei mainitse Helsinkiä
+ * kertaakaan ("Englantilainen koulu-uudisrakennushankkeen varusteurakka"),
+ * joten isCityCorroboratedByText hylkäsi kaupungin ja kunta jäi tyhjäksi.
+ *
+ * VALTAKUNNALLINEN VOITTAA. Puolustuskiinteistöt sisältää sanan
+ * "kiinteistö" mutta rakennuttaa koko maahan: sen Helsingin-osoite veisi
+ * hankkeet väärään kuntaan.
+ */
+const NATIONAL_BUYER =
+  /puolustuskiinteistöt|senaatti|metsähallitus|väylävirasto|liikennevirasto|puolustusvoim|defence\s+force|rajavartio|museovirasto|ely-keskus|hyvinvointialue|sairaanhoitopiiri|yliopisto|fingrid|gasgrid|finavia/i
+
+const SINGLE_PROPERTY_COMPANY = /kiinteistö|asunto\s*oy|\bas\.?\s*oy\b/i
+
+export function isSinglePropertyCompany(buyer: string | null | undefined): boolean {
+  if (!buyer) return false
+  if (NATIONAL_BUYER.test(buyer)) return false
+  return SINGLE_PROPERTY_COMPANY.test(buyer)
+}
