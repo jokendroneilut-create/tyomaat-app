@@ -30,7 +30,15 @@ Jo kannassa olleet parit purettiin erikseen
 (`merge-energy-site-duplicates.ts`): 29 yhdistettiin ja 14 jai jonoon
 ehdotukseksi. Jokainen 29 hankkeesta sai ensin YVA-rivin rakennuttajan
 ja/tai pidemman kuvauksen, joten yhdistaminen ei havittanyt tietoa.
-Jono 805 -> 776.
+Jono 805 -> 762.
+
+Loput 14 luettiin lapi kasin ja yhdistettiin `--min=40`. Kuvaukset
+LIITETAAN, ei korvata: ensimmainen versio otti pidemman tekstin, jolloin
+kaavarivin oma teksti havisi 25 hankkeelta. Kaavateksti kertoo hankkeen
+etenemisen - Ranualla se sisalsi tiedon etta hanketoimija keskeytti
+kaavoituksen 17.4.2026. Tekstit palautettiin lahdedokumenteista
+(`restore-merged-kaava-descriptions.ts`) ja Kupinavaaran vaiheeksi
+merkittiin Peruttu.
 
 ---
 

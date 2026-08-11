@@ -38,7 +38,42 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
   if (!(m[1] in process.env)) process.env[m[1]] = v
 }
 
-const MERGE_THRESHOLD = 70
+/*
+ * Oletuskynnys on sama kuin täsmäytyksen oma yhdistämisraja.
+ *
+ * `--min=40` laskee sen ehdotustasolle, mutta VAIN IHMISEN TARKISTUKSEN
+ * JÄLKEEN. Ajettu kerran näin 12.8.2026: 14 paria, joilla oli vain
+ * paikannimi + kunta, luettiin molempien tekstit kokonaan ja jokainen
+ * varmistui samaksi hankkeeksi. Syy matalaan pisteeseen ei ollut
+ * epävarmuus vaan se, että kaavarivin tallennettu kuvaus oli useassa
+ * tapauksessa käytännössä tyhjä ("Osallistumis- ja arviointisuunnitelma"),
+ * jolloin tekstitodistetta ei ollut mistä laskea.
+ *
+ * Älä aja tätä valitsinta sokkona - matalilla pisteillä on mukana myös
+ * aitoja eri hankkeita.
+ */
+/*
+ * KUVAUKSET YHDISTETÄÄN, EI KORVATA.
+ *
+ * Ensimmäinen versio otti pidemmän tekstin. Se olisi hävittänyt Ranuan
+ * Kupinavaaran kaavarivin lauseen "Hanketoimija on ilmoittanut
+ * keskeyttävänsä ... 17.4.2026" - kaavateksti on lyhyt mutta sisältää
+ * hankkeen tilan, YVA-teksti pitkä mutta kertoo vain suunnitelman.
+ * Kummankin tieto on tarpeen, joten ne laitetaan peräkkäin.
+ */
+function mergeDescriptions(existing: string, incoming: string): string {
+  const a = existing.trim()
+  const b = incoming.trim()
+  if (!a) return b
+  if (!b) return a
+  if (a.includes(b)) return a
+  if (b.includes(a)) return b
+  return `${a}\n\n${b}`
+}
+
+const MERGE_THRESHOLD = Number(
+  process.argv.find((a) => a.startsWith("--min="))?.split("=")[1] ?? "70"
+)
 
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
@@ -119,11 +154,13 @@ async function main() {
 
     const fills: string[] = []
     if (!best.p.developer && q.metadata?.developer) fills.push("developer")
-    if (
-      String(best.p.additional_info ?? "").length <
-      String(q.metadata?.description ?? "").length
-    ) {
-      fills.push("kuvaus (jonorivi pidempi)")
+
+    const combined = mergeDescriptions(
+      String(best.p.additional_info ?? ""),
+      String(q.metadata?.description ?? "")
+    )
+    if (combined !== String(best.p.additional_info ?? "").trim()) {
+      fills.push(`kuvaus (${String(best.p.additional_info ?? "").length} -> ${combined.length} mrk)`)
     }
 
     decisions.push({ q, p: best.p, confidence: best.confidence, fills })
@@ -153,11 +190,13 @@ async function main() {
   for (const d of decisions) {
     const patch: Record<string, any> = {}
     if (!d.p.developer && d.q.metadata?.developer) patch.developer = d.q.metadata.developer
-    if (
-      String(d.p.additional_info ?? "").length <
-      String(d.q.metadata?.description ?? "").length
-    ) {
-      patch.additional_info = d.q.metadata.description
+
+    const combined = mergeDescriptions(
+      String(d.p.additional_info ?? ""),
+      String(d.q.metadata?.description ?? "")
+    )
+    if (combined !== String(d.p.additional_info ?? "").trim()) {
+      patch.additional_info = combined
     }
 
     if (Object.keys(patch).length) {

@@ -61,6 +61,24 @@ Kauhajoki todisti parhaan osuman valinnan tarpeen: Windfarm Palloneva
 Oy:n rivi osui sekä pohjoiseen (95) että eteläiseen (100) puistoon, ja
 valinta meni oikein eteläiseen eli saman yhtiön hankkeeseen.
 
+Loput 14 luettiin läpi käsin (molempien tekstit kokonaan) ja jokainen
+varmistui samaksi hankkeeksi, joten nekin yhdistettiin `--min=40`.
+Matala pistemäärä ei johtunut epävarmuudesta vaan siitä että kaavarivin
+tallennettu kuvaus oli useassa tapauksessa lähes tyhjä - Kannuksella
+koko teksti oli "Osallistumis- ja arviointisuunnitelma". Se on sama
+vika kuin D-047, mutta eri kuntien kerääjissä.
+
+**KUVAUKSIA EI SAA KORVATA, VAIN LIITTÄÄ.** Ensimmäinen versio otti
+pidemmän tekstin kahdesta, ja koska YVA-teksti on lähes aina pidempi,
+kaavarivin oma teksti hävisi 25 hankkeelta. Ero ei ole muodollinen:
+kaavateksti kertoo hankkeen ETENEMISEN (nähtävilläolot, valitukset,
+keskeytykset), YVA-teksti vain suunnitelman. Ranualla juuri kaavateksti
+sisälsi lauseen "Hanketoimija on ilmoittanut keskeyttävänsä ...
+17.4.2026" - 105 voimalan ja 12 520 hehtaarin hankkeesta. Tekstit
+palautettiin lähdedokumenteista
+(`restore-merged-kaava-descriptions.ts`), ja Kupinavaaran vaiheeksi
+merkittiin `Peruttu`.
+
 ---
 
 ### D-049 – Tilaajan osoite kelpaa kunnaksi vain kun tilaaja on paikallinen
