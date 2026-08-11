@@ -5,6 +5,38 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-048 – YVA:n "Päättynyt" ei tarkoita valmista hanketta
+YVA-lähteen jokainen rivi sai kovakoodatun vaiheen `"Suunnittelussa"`,
+vaikka lähde kertoo tilan itse. Kenttä `projectPhase` oli haettu
+ES-vastauksen `_source`-listassa alusta asti mutta jäänyt käyttämättä.
+
+Mitattu 12.8.2026, 1324 hanketta: **"Päättynyt / perusteltu päätelmä
+annettu" 1073, "Vireillä" 251.** Kenttä on rakenteinen ja kattava, joten
+tilaa ei tarvitse jäsentää leipätekstistä.
+
+**"Päättynyt" tarkoittaa että YVA-MENETTELY on päättynyt, ei hanke.**
+Yhteysviranomainen on antanut perustellun päätelmänsä, joka on
+edellytys lupahakemuksille (ympäristölupa, rakennuslupa). Hanke on
+läpäissyt portin ja etenee luvitukseen – se on hankkeen elinkaaren
+myönteinen käännekohta, ei sen loppu. Todiste samasta aineistosta:
+Kirkkonummen datakeskuksen perusteltu päätelmä annettiin 9.7.2024 ja
+hanke on nyt rakenteilla.
+
+**Siksi tilaa ei käännetä vaiheeksi.** Jos "Päättynyt" mäpättäisiin
+vaiheeksi "Valmistunut", yli tuhat elävää hanketta merkittäisiin
+valmiiksi – ja `auto-complete-projects`-cron sekä
+`ignore-stale-completed.ts` siivoaisivat ne pois jonosta ja
+asiakasnäkymästä. Kumpikaan tila ei myöskään kerro onko rakentaminen
+alkanut. Vaihe pysyy suunnitteluna; tila talletetaan omaan kenttäänsä
+`metadata.yva_status` ja kirjoitetaan kuvauksen alkuun, koska
+katselmoija ja asiakas lukevat kuvausta eivät metadataa.
+
+Täydennetty: 288 jonoriviä ja 122 hyväksyttyä hanketta. Jonossa olevista
+151 on jo läpäissyt YVA:n – ne ovat lähempänä rakentamista kuin muut,
+mikä ei aiemmin näkynyt rivillä mitenkään.
+
+---
+
 ### D-047 – Kuvaus kerätään useasta kappaleesta, budjetin verran
 Kirkkonummelle rakentuva **Microsoftin datakeskus** – 50 hehtaaria, kolme
 rakennusta – tuli tietoomme vasta YVA-lähteen kautta 11.8.2026, ja

@@ -11,6 +11,24 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### YVA-menettelyn tila luetaan nyt lahteesta
+
+Jokainen YVA-rivi sai kovakoodatun vaiheen "Suunnittelussa", vaikka
+lahde kertoo tilan itse kentassa `projectPhase` - kentta oli haettu
+alusta asti mutta jaanyt kayttamatta. Mitattu 1324 hanketta:
+"Paattynyt / perusteltu paatelma annettu" 1073, "Vireilla" 251.
+
+Tila EI kaanny vaiheeksi: "paattynyt" tarkoittaa etta YVA-menettely on
+ohi ja hanke etenee luvitukseen, ei etta hanke olisi valmis. Vaiheeksi
+"Valmistunut" mappaaminen olisi siivonnut yli tuhat elavaa hanketta pois
+jonosta ja asiakasnakymasta. Tila talletetaan kenttaan
+`metadata.yva_status` ja kirjoitetaan kuvauksen alkuun.
+
+Taydennetty 288 jonorivia ja 122 hyvaksyttya hanketta
+(`backfill-yva-status.ts`).
+
+---
+
 ### Kaavan kuvaus katkesi ensimmaiseen kappaleeseen - ja piilotti datakeskuksen
 
 Kirkkonummen Microsoft-datakeskus (50 ha) loytyi meilta vasta YVA-lahteen

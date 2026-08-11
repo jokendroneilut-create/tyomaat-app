@@ -1,5 +1,51 @@
 import { describe, it, expect } from "vitest"
-import { extractYvaDeveloper, cleanYvaContent } from "./fetchYvaSource"
+import {
+  extractYvaDeveloper,
+  cleanYvaContent,
+  readYvaStatus,
+  yvaStatusIsConcluded,
+} from "./fetchYvaSource"
+
+describe("readYvaStatus", () => {
+  /*
+   * Kenttä tulee ES-vastauksessa taulukkona, mutta yhden alkion mittaisena
+   * (mitattu 900 hankkeen otoksessa).
+   */
+  it("lukee tilan taulukosta", () => {
+    expect(readYvaStatus(["Vireillä"])).toBe("Vireillä")
+    expect(readYvaStatus(["Päättynyt / perusteltu päätelmä annettu"])).toBe(
+      "Päättynyt / perusteltu päätelmä annettu"
+    )
+  })
+
+  it("lukee tilan myös merkkijonona", () => {
+    expect(readYvaStatus("Vireillä")).toBe("Vireillä")
+  })
+
+  it("palauttaa null tyhjästä", () => {
+    expect(readYvaStatus([])).toBeNull()
+    expect(readYvaStatus(null)).toBeNull()
+    expect(readYvaStatus([""])).toBeNull()
+    expect(readYvaStatus(["   "])).toBeNull()
+  })
+})
+
+describe("yvaStatusIsConcluded", () => {
+  /*
+   * PÄÄTTYNYT YVA EI OLE VALMIS HANKE. Tunnistus on olemassa jotta tila
+   * voidaan näyttää sellaisenaan - ei jotta hanke merkittäisiin valmiiksi.
+   * Jos tämä joskus kytketään vaiheeseen, 644 elävää hanketta katoaisi
+   * jonosta valmistuneina.
+   */
+  it("tunnistaa päättyneen menettelyn", () => {
+    expect(yvaStatusIsConcluded("Päättynyt / perusteltu päätelmä annettu")).toBe(true)
+  })
+
+  it("ei pidä vireillä olevaa päättyneenä", () => {
+    expect(yvaStatusIsConcluded("Vireillä")).toBe(false)
+    expect(yvaStatusIsConcluded(null)).toBe(false)
+  })
+})
 
 describe("extractYvaDeveloper", () => {
   /*

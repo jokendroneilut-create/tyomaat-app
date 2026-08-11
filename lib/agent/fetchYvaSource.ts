@@ -159,6 +159,42 @@ export function cleanYvaContent(
   return withoutTitle || null
 }
 
+/*
+ * YVA-MENETTELYN TILA (`projectPhase`).
+ *
+ * Kenttä on haettu _source-listassa alusta asti mutta jäi käyttämättä:
+ * jokainen YVA-rivi sai kovakoodatun vaiheen "Suunnittelussa". Mitattu
+ * 12.8.2026, 900 hanketta: "Päättynyt / perusteltu päätelmä annettu" 644,
+ * "Vireillä" 242, tyhjä 14. Kenttä on siis rakenteinen ja kattava - tätä
+ * ei tarvitse jäsentää leipätekstistä.
+ *
+ * "PÄÄTTYNYT" EI TARKOITA ETTÄ HANKE OLISI OHI. Se tarkoittaa että
+ * YVA-MENETTELY on päättynyt: yhteysviranomainen on antanut perustellun
+ * päätelmänsä, joka on edellytys lupahakemuksille (ympäristölupa,
+ * rakennuslupa). Hanke on siis läpäissyt portin ja etenee luvitukseen -
+ * se on myönteinen signaali, ei kuolinilmoitus. Todiste samasta
+ * aineistosta: Kirkkonummen datakeskuksen perusteltu päätelmä annettiin
+ * 9.7.2024 ja hanke on nyt rakenteilla.
+ *
+ * SIKSI TILAA EI KÄÄNNETÄ VAIHEEKSI. Jos "Päättynyt" mäpättäisiin
+ * vaiheeksi "Valmistunut", 644 elävää hanketta merkittäisiin valmiiksi -
+ * ja auto-complete-cron sekä `ignore-stale-completed.ts` siivoaisivat ne
+ * pois jonosta ja asiakasnäkymästä. Vaihe pysyy "Suunnittelussa",
+ * koska kumpikaan tila ei kerro onko rakentaminen alkanut; tila
+ * talletetaan omaan kenttäänsä jossa se on luettavissa sellaisenaan.
+ */
+const YVA_STATUS_CONCLUDED = "Päättynyt / perusteltu päätelmä annettu"
+
+export function readYvaStatus(raw: unknown): string | null {
+  const value = Array.isArray(raw) ? raw[0] : raw
+  const text = String(value ?? "").replace(/\s+/g, " ").trim()
+  return text || null
+}
+
+export function yvaStatusIsConcluded(status: string | null): boolean {
+  return status === YVA_STATUS_CONCLUDED
+}
+
 function firstFinnishMunicipality(raw: unknown): string | null {
   const names = Array.isArray(raw)
     ? raw.flatMap((v) => String(v).split(","))
@@ -262,12 +298,23 @@ export async function fetchYvaSource() {
      */
     const body = cleanYvaContent(s.content, title)
 
+    const yvaStatus = readYvaStatus(s.projectPhase)
+
+    /*
+     * Tila kirjoitetaan myös kuvaukseen, koska katselmoija ja asiakas
+     * lukevat kuvausta - pelkkä metadata-kenttä ei näkyisi kummallekaan.
+     */
+    const baseDescription =
+      body ||
+      summary ||
+      `YVA-hanke${subjectLabel ? ` (${subjectLabel})` : ""}. Ympäristövaikutusten arviointi käynnissä.`
+
     results.push({
       name: title,
-      description:
-        body ||
-        summary ||
-        `YVA-hanke${subjectLabel ? ` (${subjectLabel})` : ""}. Ympäristövaikutusten arviointi käynnissä.`,
+      description: yvaStatus
+        ? `YVA-menettelyn tila: ${yvaStatus}.\n\n${baseDescription}`
+        : baseDescription,
+      metadata: { yva_status: yvaStatus },
       city,
       region,
       location: null,
@@ -279,6 +326,11 @@ export async function fetchYvaSource() {
        */
       property_type:
         (Array.isArray(s.subjectArea) ? s.subjectArea[0] : null) || null,
+      /*
+       * Vaihe pysyy suunnitteluna myös päättyneellä YVA:lla - ks. perustelu
+       * `readYvaStatus`-kuvion yhteydessä. Kumpikaan tila ei kerro onko
+       * rakentaminen alkanut, ja "Valmistunut" hävittäisi elävät hankkeet.
+       */
       phase: "Suunnittelussa",
       business_value: "high",
       source_url: PROJECT_URL(s.link),
