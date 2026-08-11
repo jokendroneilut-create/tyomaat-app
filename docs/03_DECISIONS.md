@@ -5,6 +5,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-050 – Tuulipuiston paikannimi tunnistaa saman hankkeen kahdesta menettelystä
+Tuulivoimahanke kulkee rinnakkain kahtena virallisena menettelynä: kunnan
+osayleiskaavana ja ELY:n YVA:na. Meille se tulee kahtena rivinä eri
+nimellä ja eri lähteestä:
+
+    YVA:   "Niinimäen tuulivoimahanke, Hattula, Hämeenlinna"
+    kaava: "Hattulan Niinimäen tuulivoimaosayleiskaava"
+
+**Mitattu ennen korjausta**, viisi varmennettua paria: kaksi ei tuottanut
+täsmäytyksessä osumaa **lainkaan** (`null`) ja loput jäivät 38–50
+pisteeseen, kun yhdistäminen vaatii 70. Yksikään ei olisi yhdistynyt
+koskaan, eikä kahta olisi edes nähnyt ehdotuksena.
+
+Tunnistus perustuu **paikannimeen**, ei hanketyyppiin: tuulipuiston nimi
+on kunnan sisällä yksilöivä. Pelkkä "sama kunta + tuulivoima" ei riitä
+alkuunkaan – Siikalatvalla on seitsemän eri tuulipuistoa.
+
+Kolme asiaa on pudotettava, ja jokainen löytyi mittaamalla:
+
+- **Kuntanimet.** Otsikot luettelevat vaikutusalueen kunnat, joten
+  kuntanimi olisi yhteinen sana kahdella eri saman seudun hankkeella.
+- **Sähkönsiirto.** Otsikko kertoo lähes aina myös liitynnän. Ilman tätä
+  Pihtiputaan Uusimo osui Varisvuoreen (90) ja Leppäkankaaseen (83)
+  pelkän sanan "sähkönsiirto" perusteella – ja väärä osuma oli vielä
+  oikeaa (83) vahvempi.
+- **Ilmansuunta ja laajennus.** Kauhajoella "Pallonevan pohjoinen" ja
+  "Pallonevan eteläinen" ovat eri hankkeita eri yhtiöillä. Kumpikin
+  erottaa vain symmetrisesti: jos toinen puoli ei mainitse suuntaa
+  lainkaan, kyse on samasta hankkeesta (Ranualla kaava kattaa "itäisen ja
+  läntisen", YVA ei sano kumpaakaan).
+
+**Oma aiempi sääntöni oli osa ongelmaa.** `different_name_subjects`
+(D-044, Tikka/Tikkakoski) leikkasi kaikki viisi paria tasan 65:een, koska
+eroavat sanat ovat "tuulivoimahanke" vs "tuulivoimapuiston
+osayleiskaava". Sääntö on kirjoitettu erottamaan eri KOHTEET, mutta tässä
+eroavat sanat kertovat MENETTELYSTÄ. Kappi ohitetaan kun paikannimi on jo
+todistanut kohteen samaksi.
+
+**Painoarvoa ei nostettu niin että maantiede yksin riittäisi.** Koodissa
+on jo maksettu oppi: 16 väärää yhdistymistä sai 73 pistettä pelkästä
+maantieteestä ja ne jouduttiin purkamaan `unmerge-wrong-matches.ts`:llä.
+Siksi paikannimi+kunta jää 65:een eli ehdotukseksi, ja 70 ylittyy vasta
+kun otsikko, kuvaus tai rakennuttaja tukee. Lopputulos koko aineistossa:
+**30 paria yhdistyy, 14 nousee ehdotukseksi** – aiemmin näistä 44:stä
+suurin osa ei näkynyt mitenkään.
+
+---
+
 ### D-049 – Tilaajan osoite kelpaa kunnaksi vain kun tilaaja on paikallinen
 Hilma-rivit jäivät ilman kuntaa, vaikka `buyer_address` sisälsi
 postitoimipaikan. Houkutus on ilmeinen: lue kunta osoitteesta.

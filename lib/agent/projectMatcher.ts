@@ -6,6 +6,7 @@ import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
 import { isSameOrganization } from "@/lib/projects/organizationName"
 import { haveDifferentTrades } from "@/lib/projects/contractTrade"
 import { haveDifferentNameNumbers } from "@/lib/projects/nameNumbers"
+import { haveSameEnergySite } from "@/lib/projects/energySite"
 
 export type NormalizedProjectCandidate = {
   name?: string | null
@@ -99,6 +100,11 @@ export type ProjectMatchReason =
    * kuin different_name_numbers, mutta sanoille.
    */
   | "different_name_subjects"
+  /*
+   * Sama tuuli-/aurinkohanke kahdesta menettelystä (kunnan osayleiskaava ja
+   * ELY:n YVA). Vahva todiste: paikannimi on kunnan sisällä yksilöivä.
+   */
+  | "same_energy_site"
 
 /*
  * Yhdistämiskynnys on 70, joten 65 jättää parin ehdotukseksi mutta ei
@@ -832,6 +838,33 @@ export function calculateMatch(
   }
 
   /*
+   * SAMA TUULI-/AURINKOHANKE KAHDESTA MENETTELYSTÄ.
+   *
+   * Tuulivoimahanke kulkee rinnakkain kunnan osayleiskaavana ja ELY:n
+   * YVA-menettelynä, joten se tulee meille kahtena rivinä eri nimellä:
+   * "Niinimäen tuulivoimahanke, Hattula, Hämeenlinna" ja "Hattulan
+   * Niinimäen tuulivoimaosayleiskaava". Mitattu viidellä varmennetulla
+   * parilla: kaksi ei tuottanut osumaa lainkaan ja loput jäivät 38-50
+   * pisteeseen, joten yksikään ei olisi yhdistynyt koskaan.
+   *
+   * Vaatii saman kaupungin: paikannimi on yksilöivä kunnan sisällä, ei
+   * koko maassa - Niinimäkiä on useassa kunnassa.
+   */
+  if (
+    sameCity &&
+    haveSameEnergySite(
+      candidate.name,
+      project.name,
+      project.city,
+      candidate.description,
+      getProjectDescription(project)
+    )
+  ) {
+    confidence += 45
+    reasons.push("same_energy_site")
+  }
+
+  /*
    * Pelkkä sama maakunta ei riitä osumaksi.
    * Myöskään pelkkä sama kaupunki ei saa yhdistää hankkeita.
    */
@@ -839,8 +872,12 @@ export function calculateMatch(
     reasons.includes("same_permit_number") ||
     reasons.includes("same_property_id")
 
+  /*
+   * Yksiloiva paikannimi kelpaa vahvaksi sijainniksi siina missa
+   * katuosoite: tuulipuiston nimi osoittaa kohteen yhta tarkasti.
+   */
   const hasStrongLocation =
-    reasons.includes("same_location")
+    reasons.includes("same_location") || reasons.includes("same_energy_site")
 
   const hasTextEvidence =
     reasons.includes("exact_title") ||
@@ -926,10 +963,19 @@ export function calculateMatch(
    * Sama rajoitus sanoille. Tunniste voittaa tämänkin: lupanumero tai
    * kiinteistötunnus on suora todiste samasta kohteesta, eikä nimien
    * sanaero kumoa sitä.
+   *
+   * SAMA ENERGIAKOHDE VOITTAA MYÖS. Sääntö on kirjoitettu erottamaan eri
+   * KOHTEET toisistaan ("Tikan" vs "Tikkakosken" päiväkoti), mutta
+   * tuulivoimaparilla eroavat sanat kertovat MENETTELYSTÄ eivät kohteesta:
+   * "tuulivoimahanke" vs "tuulivoimapuiston osayleiskaava". Kohde on jo
+   * todistettu samaksi paikannimellä, joten kappi osuisi väärään asiaan -
+   * mitattuna se piti kaikki viisi varmennettua paria tasan 65:ssä eli
+   * yhdistämiskynnyksen alla.
    */
   const cappedBySubjects =
     !reasons.includes("same_permit_number") &&
     !reasons.includes("same_property_id") &&
+    !reasons.includes("same_energy_site") &&
     haveDifferentNameSubjects(project.name, candidate.name)
 
   if (cappedBySubjects) {

@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Tuulipuiston paikannimi tunnistaa saman hankkeen kahdesta menettelysta
+
+Tuulivoimahanke tulee meille kahtena rivina: kunnan osayleiskaavana ja
+ELY:n YVA:na, eri nimella ja eri lahteesta. Mitattu viidella
+varmennetulla parilla: kaksi ei tuottanut tasmaytyksessa osumaa lainkaan
+ja loput jaivat 38-50 pisteeseen (yhdistys vaatii 70).
+
+Tunnistus perustuu paikannimeen, joka on kunnan sisalla yksiloiva.
+Kuntanimet, sahkonsiirto, ilmansuunta ja laajennus pudotetaan - kukin
+loytyi mittaamalla vaarat osumat. Aiempi different_name_subjects-saanto
+leikkasi kaikki parit 65:een, koska eroavat sanat kertovat menettelysta
+eivat kohteesta; kappi ohitetaan kun paikannimi on todistanut kohteen.
+
+Painoarvoa ei nostettu niin etta maantiede yksin ylittaisi kynnyksen -
+siita on jo maksettu oppi (16 vaaraa yhdistymista 73 pisteella).
+Lopputulos: 30 paria yhdistyy, 14 nousee ehdotukseksi.
+
+---
+
 ### Kunta taydennettiin - mutta vain kun tilaaja on paikallinen
 
 Hilma-rivit jaivat ilman kuntaa vaikka tilaajan osoitteessa oli
