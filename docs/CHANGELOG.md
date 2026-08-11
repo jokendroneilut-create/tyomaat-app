@@ -26,7 +26,11 @@ eivat kohteesta; kappi ohitetaan kun paikannimi on todistanut kohteen.
 
 Painoarvoa ei nostettu niin etta maantiede yksin ylittaisi kynnyksen -
 siita on jo maksettu oppi (16 vaaraa yhdistymista 73 pisteella).
-Lopputulos: 30 paria yhdistyy, 14 nousee ehdotukseksi.
+Jo kannassa olleet parit purettiin erikseen
+(`merge-energy-site-duplicates.ts`): 29 yhdistettiin ja 14 jai jonoon
+ehdotukseksi. Jokainen 29 hankkeesta sai ensin YVA-rivin rakennuttajan
+ja/tai pidemman kuvauksen, joten yhdistaminen ei havittanyt tietoa.
+Jono 805 -> 776.
 
 ---
 

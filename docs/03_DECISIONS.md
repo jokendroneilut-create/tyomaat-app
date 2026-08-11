@@ -47,9 +47,19 @@ todistanut kohteen samaksi.
 on jo maksettu oppi: 16 väärää yhdistymistä sai 73 pistettä pelkästä
 maantieteestä ja ne jouduttiin purkamaan `unmerge-wrong-matches.ts`:llä.
 Siksi paikannimi+kunta jää 65:een eli ehdotukseksi, ja 70 ylittyy vasta
-kun otsikko, kuvaus tai rakennuttaja tukee. Lopputulos koko aineistossa:
-**30 paria yhdistyy, 14 nousee ehdotukseksi** – aiemmin näistä 44:stä
-suurin osa ei näkynyt mitenkään.
+kun otsikko, kuvaus tai rakennuttaja tukee.
+
+Sääntö ajetaan tuonnin yhteydessä, joten jo kannassa olleet parit
+purettiin erikseen (`merge-energy-site-duplicates.ts`): **29 yhdistettiin
+ja 14 jäi jonoon ehdotukseksi.** Jonorivi merkittiin `ignored`-tilaan ja
+linkitettiin hankkeeseen, mutta tieto siirrettiin ensin: jokainen 29
+hankkeesta sai YVA-rivin rakennuttajan ja/tai sen pidemmän kuvauksen,
+jossa on voimaloiden määrä, teho ja hankealueen pinta-ala. Kaavarivi
+jäi näkyväksi, koska se kertoo hankkeen etenemisestä.
+
+Kauhajoki todisti parhaan osuman valinnan tarpeen: Windfarm Palloneva
+Oy:n rivi osui sekä pohjoiseen (95) että eteläiseen (100) puistoon, ja
+valinta meni oikein eteläiseen eli saman yhtiön hankkeeseen.
 
 ---
 
