@@ -13,11 +13,17 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ### Kaavan kuvaus katkesi ensimmaiseen kappaleeseen - ja piilotti datakeskuksen
 
-Kirkkonummen Microsoft-datakeskus (50 ha) loytyi meilta YVA-lahteen kautta
-11.8., vaikka kaavoituslahde oli poiminut sen jo 17.7. nimella
-"Energiakuja". Tallennettu kuvaus katkesi ennen kohtaa jossa lukee
-"Microsoft 3465 Oy:n datakeskuskokonaisuus" - nelja keraajaa poimi vain
-ensimmaisen `<p>`-kappaleen ja hylkasi loput ennen relevanssiluokitusta.
+Kirkkonummen Microsoft-datakeskus (50 ha) loytyi meilta vasta YVA-lahteen
+kautta 11.8. Syyta etsiessa paljastui etta naapurikaavan "Energiakuja"
+kuvaus katkesi ennen kohtaa jossa lukee "Microsoft 3465 Oy:n
+datakeskuskokonaisuus" - nelja keraajaa poimi vain ensimmaisen
+`<p>`-kappaleen ja hylkasi loput ennen relevanssiluokitusta.
+
+Energiakuja ei ole datakeskus vaan sen naapuritontti (8,2 ha), joten
+YVA oli aidosti ensimmainen lahteemme: hanke on yksityinen eika osu
+Hilmaan tai kunnan hankintapaatoksiin. Tekstin laajennus ei siis olisi
+loytanyt datakeskusta aiemmin, mutta naapurin kaavan maininta on
+itsessaan signaali alueen rakentamisesta.
 
 Kuvaus kerataan nyt 1500 merkin budjetin verran useasta kappaleesta, mika
 pitaa mukana kuvailevan alkuosan mutta katkaisee ennen paatoshistoriaa ja

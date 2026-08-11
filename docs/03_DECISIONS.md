@@ -10,16 +10,29 @@ Kirkkonummelle rakentuva **Microsoftin datakeskus** – 50 hehtaaria, kolme
 rakennusta – tuli tietoomme vasta YVA-lähteen kautta 11.8.2026, ja
 kysymys kuului: miten noin iso hanke ei osu mihinkään aiempaan lähteeseen?
 
-Se oli osunut. Kaavoituslähde oli poiminut sen jo **17.7.2026**, lähes
-kuukautta aiemmin, nimellä **"Energiakuja"**. Kaavan nimi ei kerro
-hankkeesta mitään, ja tallennettu kuvaus päättyi sanoihin "hanke on
-luonteeltaan elinkeinopoliittinen". Vasta seuraavassa kappaleessa lukee:
+Etsiessä löytyi naapurikaava **"Energiakuja"**, jonka kuvaus katkesi
+sanoihin "hanke on luonteeltaan elinkeinopoliittinen". Vasta seuraavassa
+kappaleessa lukee:
 
-> lähiympäristössä on toteutumassa useita rakennushankkeita, kuten
-> Microsoft 3465 Oy:n datakeskuskokonaisuus sekä Fortum Oyj:n
-> lämpöpumppulaitos
+> Alue on toistaiseksi rakentamaton, mutta **lähiympäristössä** on
+> toteutumassa useita rakennushankkeita, **kuten** Microsoft 3465 Oy:n
+> datakeskuskokonaisuus sekä Fortum Oyj:n lämpöpumppulaitos
 
-Syy oli neljässä kerääjässä toistuva kuvio: `if (description) return` –
+**Energiakuja ei ole datakeskus vaan sen naapuri** – 8,2 ha ja 16 000 k-m²
+olemassa olevaa rakennusoikeutta, kun datakeskusalue on 50 ha. Datakeskus
+mainitaan siinä vain ympäristön kuvauksena. Vastaus alkuperäiseen
+kysymykseen on siis se epämukavampi: **YVA oli aidosti ensimmäinen
+lähteemme**, koska hanke on yksityinen (ei Hilmaa, ei kunnan
+hankintapäätöksiä), yhtiö on nimeltään "Microsoft 3465 Finland Oy" eikä
+alue tarvinnut uutta kaavaa. Yksityissektorin katvealue on todellinen.
+
+Pidin näitä hetken samana hankkeena ja ehdin piilottaa Energiakujan
+duplikaattina; virhe paljastui vasta kun luin molemmat tekstit kokonaan,
+ja rivi palautettiin näkyviin. Sama ansa kuin Tikka/Tikkakoski: kaksi
+lähekkäistä hanketta, joiden erottava tieto on vain tekstissä.
+
+Itse vika oli silti aito, ja se on korjattu. Neljässä kerääjässä toistui
+kuvio `if (description) return` –
 poimitaan **ensimmäinen** riittävän pitkä `<p>` ja lopetetaan. Loppu sivusta
 heitettiin pois *ennen* relevanssiluokitusta, poimintaa ja hakua, joten
 mikään myöhempi vaihe ei olisi voinut löytää mainintaa.
@@ -31,15 +44,14 @@ verran: se pitää mukana kuvailevan alkuosan ja katkeaa ennen koneistoa.
 Ensimmäinen kappale otetaan aina, vaikka se yksin ylittäisi budjetin.
 
 Mitattu: Kirkkonummen 40 kaavasivulla kuvauksen mediaani 390 → 1262
-merkkiä, ja datakeskusmaininta tuli mukaan. Jo hyväksytyt hankkeet
-täydennettiin erikseen (26 riviä), koska `projects`-rivi on hyväksynnän
-hetken tilannekuva eikä putken uudelleenajo koske siihen.
+merkkiä. Jo hyväksytyt hankkeet täydennettiin erikseen (26 riviä), koska
+`projects`-rivi on hyväksynnän hetken tilannekuva eikä putken
+uudelleenajo koske siihen.
 
-Kaksi asiaa jäi tästä opiksi. Yritysnimi on **"Microsoft 3465 Oy"** –
-hyperskaalaajien vakiotapa, joka ei osu yritysnimihakuun. Ja koska
-sama hanke tuli sisään kahdesta lähteestä eri nimillä, asiakasnäkymään
-jäi siitä kaksi riviä joita yhdistäjä ei osaa liittää: nimissä eikä
-teksteissä ole mitään yhteistä.
+Hyöty ei ole se että datakeskus olisi löytynyt aiemmin – se ei olisi.
+Hyöty on että **naapurin kaavan maininta on itsessään signaali**:
+"lähiympäristössä on toteutumassa useita rakennushankkeita" kertoo että
+alueella tapahtuu, ja se tieto oli aiemmin heitetty pois lukematta.
 
 ---
 
