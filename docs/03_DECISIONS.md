@@ -5,6 +5,44 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-047 – Kuvaus kerätään useasta kappaleesta, budjetin verran
+Kirkkonummelle rakentuva **Microsoftin datakeskus** – 50 hehtaaria, kolme
+rakennusta – tuli tietoomme vasta YVA-lähteen kautta 11.8.2026, ja
+kysymys kuului: miten noin iso hanke ei osu mihinkään aiempaan lähteeseen?
+
+Se oli osunut. Kaavoituslähde oli poiminut sen jo **17.7.2026**, lähes
+kuukautta aiemmin, nimellä **"Energiakuja"**. Kaavan nimi ei kerro
+hankkeesta mitään, ja tallennettu kuvaus päättyi sanoihin "hanke on
+luonteeltaan elinkeinopoliittinen". Vasta seuraavassa kappaleessa lukee:
+
+> lähiympäristössä on toteutumassa useita rakennushankkeita, kuten
+> Microsoft 3465 Oy:n datakeskuskokonaisuus sekä Fortum Oyj:n
+> lämpöpumppulaitos
+
+Syy oli neljässä kerääjässä toistuva kuvio: `if (description) return` –
+poimitaan **ensimmäinen** riittävän pitkä `<p>` ja lopetetaan. Loppu sivusta
+heitettiin pois *ennen* relevanssiluokitusta, poimintaa ja hakua, joten
+mikään myöhempi vaihe ei olisi voinut löytää mainintaa.
+
+**Kaikkia kappaleita ei kuitenkaan oteta.** Energiakujan sivulla on 29
+kappaletta, joista 24 on päätöshistoriaa ja liitelinkkejä ("Kartta 3529",
+lautakuntien pykäläviittaukset). Kuvaus kerätään **1500 merkin budjetin**
+verran: se pitää mukana kuvailevan alkuosan ja katkeaa ennen koneistoa.
+Ensimmäinen kappale otetaan aina, vaikka se yksin ylittäisi budjetin.
+
+Mitattu: Kirkkonummen 40 kaavasivulla kuvauksen mediaani 390 → 1262
+merkkiä, ja datakeskusmaininta tuli mukaan. Jo hyväksytyt hankkeet
+täydennettiin erikseen (26 riviä), koska `projects`-rivi on hyväksynnän
+hetken tilannekuva eikä putken uudelleenajo koske siihen.
+
+Kaksi asiaa jäi tästä opiksi. Yritysnimi on **"Microsoft 3465 Oy"** –
+hyperskaalaajien vakiotapa, joka ei osu yritysnimihakuun. Ja koska
+sama hanke tuli sisään kahdesta lähteestä eri nimillä, asiakasnäkymään
+jäi siitä kaksi riviä joita yhdistäjä ei osaa liittää: nimissä eikä
+teksteissä ole mitään yhteistä.
+
+---
+
 ### D-046 – Yksisivusovellus vastaa 200:lla myös väärään osoitteeseen
 Hilma-rivin "avaa lähde" ei tehnyt mitään: `source_url` puuttui **kaikilta
 320 Hilma-ehdokkaalta**, koska resolveri ei rakentanut sitä lainkaan.

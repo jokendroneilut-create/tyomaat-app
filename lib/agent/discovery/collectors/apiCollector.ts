@@ -2285,6 +2285,46 @@ type SeinajokiDetails = {
   description: string | null
 }
 
+/*
+ * KUVAUS KERÄTÄÄN USEASTA KAPPALEESTA, EI VAIN ENSIMMÄISESTÄ.
+ *
+ * Kerääjät poimivat aiemmin ensimmäisen riittävän pitkän <p>:n ja
+ * lopettivat siihen. Kirkkonummen "Energiakuja" osoitti mitä se maksaa:
+ * kaavan nimi ja ensimmäinen kappale kertovat vain että hanke on
+ * "luonteeltaan elinkeinopoliittinen", ja vasta seuraavassa kappaleessa
+ * lukee että alueelle toteutetaan Microsoftin datakeskuskokonaisuus.
+ * Se kappale hylättiin ennen relevanssiluokitusta, poimintaa ja hakua,
+ * joten 50 hehtaarin datakeskus löytyi meiltä vasta kuukautta myöhemmin
+ * YVA:n kautta - vaikka tieto oli ollut kaavasivulla koko ajan.
+ *
+ * BUDJETTI ON TARKOITUKSELLINEN, EI VAROTOIMI. Kaavasivun loppu on
+ * päätöshistoriaa ja liitelinkkejä ("Kartta 3529", "Kaavaselostus",
+ * lautakuntien pykäläviittaukset) - mitattuna Energiakujan sivulla 24
+ * kappaletta 29:stä. Kaikkien ottaminen tekisi kuvauksesta lukukelvottoman
+ * asiakkaalle. Budjetti pitää mukana kuvailevan alkuosan, jossa hankkeen
+ * sisältö kerrotaan, ja katkaisee ennen koneistoa.
+ *
+ * Ensimmäinen kappale otetaan aina, vaikka se yksin ylittäisi budjetin -
+ * muuten pitkäkuvauksinen sivu jäisi kokonaan ilman kuvausta.
+ */
+const DESCRIPTION_BUDGET = 1500
+
+function collectDescription(paragraphs: string[]): string | null {
+  const kept: string[] = []
+  let length = 0
+
+  for (const raw of paragraphs) {
+    const text = raw.replace(/\s+/g, " ").trim()
+    if (!text || kept.includes(text)) continue
+    if (length > 0 && length + text.length > DESCRIPTION_BUDGET) break
+
+    kept.push(text)
+    length += text.length
+  }
+
+  return kept.length > 0 ? kept.join("\n\n") : null
+}
+
 async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
   const empty: SeinajokiDetails = { completed: false, phase: null, description: null }
 
@@ -2303,10 +2343,9 @@ async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
      * <aside>-sivupalkkiin (esim. "Tästä pääset kaavoituskatsauksen 3d
      * kaupunkimalliin" -linkki), joka ei liity kyseiseen kaavaan mitenkään.
      */
-    let description: string | null = null
+    const paragraphs: string[] = []
     let sawH1 = false
     $("article *").each((_, el) => {
-      if (description) return
       const $el = $(el)
       if ($el.is("h1")) {
         sawH1 = true
@@ -2314,9 +2353,10 @@ async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
       }
       if (sawH1 && $el.is("p")) {
         const text = $el.text().trim()
-        if (text) description = text
+        if (text) paragraphs.push(text)
       }
     })
+    let description = collectDescription(paragraphs)
 
     const stages: string[] = []
     $("h1.wp-block-heading, h2.wp-block-heading, h3.wp-block-heading, h4.wp-block-heading, h5.wp-block-heading, h6.wp-block-heading").each((_, el) => {
@@ -3582,14 +3622,14 @@ async function collectKirkkonummiSource(source: DiscoverySource) {
       }
     })
 
-    let description: string | null = null
+    const paragraphs: string[] = []
     $("p").each((_, el) => {
-      if (description) return
       const text = $(el).text().replace(/\s+/g, " ").trim()
       if (text.length > 60 && !text.startsWith("Tilanne:")) {
-        description = text
+        paragraphs.push(text)
       }
     })
+    const description = collectDescription(paragraphs)
 
     const completed = phase !== null && /lainvoima|tullut voimaan|voimaantulo/i.test(phase)
 
@@ -24996,14 +25036,14 @@ async function collectSavonlinnaKaavaSource(source: DiscoverySource) {
     const $ = cheerio.load(post.content?.rendered ?? "")
     const bodyText = $.root().text().replace(/\s+/g, " ").trim()
 
-    let description: string | null = null
+    const paragraphs: string[] = []
     $("p").each((_, el) => {
       const text = $(el).text().replace(/\s+/g, " ").trim()
-      if (description) return
       if (text.length < 20) return
       if (/^(Lisätietoja|Mahdolliset|Savonlinnassa)/i.test(text)) return
-      description = text
+      paragraphs.push(text)
     })
+    const description = collectDescription(paragraphs)
 
     const phase = savonlinnaPhaseFromText(bodyText)
     const completed = /voimaan|lainvoima/i.test(phase ?? "")
@@ -27028,9 +27068,23 @@ async function fetchLappeenrantaDetails(url: string): Promise<LappeenrantaDetail
     let description: string | null = null
     $("h2, h3").each((_, h) => {
       if (description) return
-      if ($(h).text().trim() === "Tavoite") {
-        description = $(h).next("p").text().replace(/\s+/g, " ").trim() || null
-      }
+      if ($(h).text().trim() !== "Tavoite") return
+
+      /*
+       * Tavoite-osio voi jatkua useaan kappaleeseen. Luetaan otsikon
+       * jälkeiset sisarukset seuraavaan otsikkoon asti - ei vain
+       * ensimmäistä <p>:tä, mutta ei myöskään yli osion rajan.
+       */
+      const paragraphs: string[] = []
+      $(h)
+        .nextAll()
+        .each((_, el) => {
+          const $el = $(el)
+          if ($el.is("h1, h2, h3, h4, h5, h6")) return false
+          if ($el.is("p")) paragraphs.push($el.text())
+        })
+
+      description = collectDescription(paragraphs)
     })
 
     const steps: { heading: string; reached: boolean }[] = []

@@ -9,6 +9,28 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-08 (tyo 12.8.)
+
+### Kaavan kuvaus katkesi ensimmaiseen kappaleeseen - ja piilotti datakeskuksen
+
+Kirkkonummen Microsoft-datakeskus (50 ha) loytyi meilta YVA-lahteen kautta
+11.8., vaikka kaavoituslahde oli poiminut sen jo 17.7. nimella
+"Energiakuja". Tallennettu kuvaus katkesi ennen kohtaa jossa lukee
+"Microsoft 3465 Oy:n datakeskuskokonaisuus" - nelja keraajaa poimi vain
+ensimmaisen `<p>`-kappaleen ja hylkasi loput ennen relevanssiluokitusta.
+
+Kuvaus kerataan nyt 1500 merkin budjetin verran useasta kappaleesta, mika
+pitaa mukana kuvailevan alkuosan mutta katkaisee ennen paatoshistoriaa ja
+liitelinkkeja. Kirkkonummen kaavasivuilla kuvauksen mediaani nousi 390 ->
+1262 merkkiin. Muuttuneet dokumentit (42) ajettiin putken lapi ja jo
+hyvaksytyt hankkeet taydennettiin erikseen (26 rivia).
+
+Uudet skriptit: `recollect-descriptions.ts`, `backfill-kaava-descriptions.ts`.
+Taydennys vain laajentaa - rivi paivitetaan vain jos uusi teksti alkaa
+tasmalleen vanhalla, jolloin kasin tehtya muokkausta ei voi hukata.
+
+---
+
 ## 2026-08 (työ 9.8.)
 
 ### Hilman lahdelinkki puuttui kokonaan - ja rakennettu osoite oli vaara
