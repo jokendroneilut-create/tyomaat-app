@@ -11,6 +11,29 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Kayttoonotto tunnistetaan valmistumiseksi
+
+Jonossa oli tarveselvityksia paivakodeista jotka ovat jo auki. Abraham
+Wetterin tien paivakoti (paatos 8/2021) toimii tanaan nimella Paivakoti
+Kirsikkapuisto, ja sen omassa tekstissa lukee "Uudisrakennus otetaan
+kayttoon kalustettuna elokuuhun 2023 mennessa".
+
+Poimija vaati "valmis"-vartaloisen sanan eika tuntenut kayttoonottoa,
+eika kuukausikuvio tunnistanut illatiivia ("elokuuhun"). Mitattu: 31
+jonorivia kaytti muotoa, ja vain kaksi sai paivan.
+
+Vaistotilan kayttoonotto suljetaan pois - se on painvastainen signaali,
+koska vaistotila otetaan kayttoon kun tyo alkaa. Este luetaan vain
+samasta lauseesta, koska kuvauksissa mainitaan usein etta vaistotiloja
+ei tarvita.
+
+Loysi myos regression: kuukausipaatteen valinnaisuus paasti lapi
+rakennusvuoden (1982-08-31). Vuosi rajattu 2000-luvulle.
+
+155 rivia sai valmistumisajan, jonosta siirtyi 13. Jono 538 -> 525.
+
+---
+
 ### Lyhyet tyot merkitaan valmistuneiksi hanketyypin mukaan
 
 Voiko lahteesta paatella onko hanke paattynyt? Mitattu: ei suoraan.

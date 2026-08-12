@@ -64,9 +64,33 @@ const PLAN_DOCUMENT =
  * elokuussa 2026".
  */
 const PLAN_COMPLETES = new RegExp(
-  `(?:${PLAN_DOCUMENT})(?!\\s+mukaan)[,;:]?(?:\\s+\\S+){0,3}\\s+valmistu`,
+  `(?:${PLAN_DOCUMENT})(?!\\s+mukaan)[,;:]?(?:\\s+\\S+){0,3}\\s+(?:valmistu|otetaan\\s+käyttöön)`,
   "i"
 )
+
+/*
+ * KÄYTTÖÖNOTTO ON VALMISTUMINEN.
+ *
+ * Helsingin tarveselvitys- ja hankesuunnitelmapäätöksissä luovutus
+ * ilmaistaan vakiokaavalla, jossa ei esiinny "valmis"-vartaloa lainkaan:
+ *
+ *   "Uudisrakennus otetaan käyttöön kalustettuna elokuuhun 2023 mennessä."
+ *
+ * Mitattu 12.8.2026: 31 jonoriviä käytti muotoa, ja niistä vain kaksi sai
+ * päivän - loput jäivät ikuisesti suunnitteluvaiheeseen. Yksi mitattu
+ * tapaus on Abraham Wetterin tien päiväkoti, joka on tänään auki
+ * nimellä Päiväkoti Kirsikkapuisto.
+ */
+const COMPLETION_WORD = /valmis|käyttöön/
+
+/*
+ * VÄISTÖTILAN KÄYTTÖÖNOTTO EI OLE HANKKEEN VALMISTUMINEN. Väistötila
+ * otetaan käyttöön kun varsinainen työ ALKAA, joten sen päivä on
+ * päinvastainen signaali. Pelkkä sanan esiintyminen tekstissä ei riitä
+ * esteeksi - kuvauksissa lukee usein "hankkeen toteutuksen yhteydessä ei
+ * tarvita väistötiloja" - joten este tarkistetaan vain samasta lauseesta.
+ */
+const TEMPORARY_PREMISES = /väistötil|väliaikais(?:i|e)/i
 
 function findGuardedDate(
   text: string,
@@ -76,12 +100,17 @@ function findGuardedDate(
   let match: RegExpExecArray | null
   while ((match = regex.exec(text))) {
     /*
-     * Ikkuna on asiakirjatarkistuksessa leveämpi kuin "valmis"-vartijassa,
-     * koska subjekti voi olla kauempana: "kehitys- ja hankesuunnitelmat,
-     * joihin sisältyy toimintojen sijoittuminen, valmistuvat elokuussa".
+     * Ikkuna on asiakirjatarkistuksessa leveämpi kuin valmistumissanan
+     * vartijassa, koska subjekti voi olla kauempana: "kehitys- ja
+     * hankesuunnitelmat, joihin sisältyy toimintojen sijoittuminen,
+     * valmistuvat elokuussa".
      */
     const precedingWindow = text.slice(Math.max(0, match.index - 40), match.index)
-    if (!/valmis/.test(precedingWindow)) continue
+    if (!COMPLETION_WORD.test(precedingWindow)) continue
+
+    /* Este luetaan vain lauseen alusta, ei koko tekstistä. */
+    const clause = precedingWindow.slice(precedingWindow.lastIndexOf(".") + 1)
+    if (TEMPORARY_PREMISES.test(clause)) continue
 
     const subjectWindow = text.slice(Math.max(0, match.index - 120), match.index)
     if (PLAN_COMPLETES.test(subjectWindow)) continue
@@ -116,9 +145,14 @@ export function inferCompletionDateFromText(
   const normalized = text.toLowerCase()
 
   const monthPattern = FINNISH_MONTHS.map(([name]) => name).join("|")
+  /*
+   * Kuukauden sijamuoto vaihtelee verbin mukaan: "valmistuu elokuuSSA"
+   * mutta "otetaan käyttöön elokuuHUN mennessä". Pääte on siksi valinnainen
+   * - kuukauden nimi ja vuosi yhdessä ovat jo riittävän tarkka kuvio.
+   */
   const monthMatch = findGuardedDate(
     normalized,
-    new RegExp(`(${monthPattern})ssa\\s+(\\d{4})`, "g"),
+    new RegExp(`(${monthPattern})(?:ssa|hun)?\\s+(20\\d{2})`, "g"),
     (word) => FINNISH_MONTHS.find(([name]) => name === word)?.[1]
   )
   if (monthMatch) return monthMatch
@@ -126,7 +160,7 @@ export function inferCompletionDateFromText(
   const seasonPattern = FINNISH_SEASONS.map(([name]) => name).join("|")
   const seasonMatch = findGuardedDate(
     normalized,
-    new RegExp(`(${seasonPattern})\\s+(\\d{4})`, "g"),
+    new RegExp(`(${seasonPattern})\\s+(20\\d{2})`, "g"),
     (word) => FINNISH_SEASONS.find(([name]) => name === word)?.[1]
   )
   if (seasonMatch) return seasonMatch

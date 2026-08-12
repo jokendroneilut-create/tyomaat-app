@@ -47,21 +47,44 @@ async function main() {
   )
 
   const rows: any[] = []
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("potential_projects")
-      .select("id, title, status, metadata")
-      .range(from, from + 999)
-    if (error) throw error
-    rows.push(...(data ?? []))
-    if (!data || data.length < 1000) break
+  const page = async (table: string, cols: string) => {
+    const out: any[] = []
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase.from(table).select(cols).range(from, from + 999)
+      if (error) throw error
+      out.push(...(data ?? []))
+      if (!data || data.length < 1000) break
+    }
+    return out
   }
 
+  /*
+   * MOLEMMAT TAULUT. Jonorivillä päivä on pelkkää lisätietoa, mutta
+   * hyväksytyllä hankkeella se ohjaa auto-complete-cronia - asiakasnäkymä
+   * on siis se paikka jossa puuttuva päivä oikeasti maksaa.
+   */
+  rows.push(
+    ...(await page("potential_projects", "id, title, status, metadata")).map((r: any) => ({
+      ...r,
+      table: "potential_projects",
+      label: r.title,
+    })),
+    ...(
+      await page("projects", "id, name, status, estimated_completion, additional_info, metadata")
+    ).map((r: any) => ({ ...r, table: "projects", label: r.name }))
+  )
+
   const hits = rows
-    .filter((r) => r.status === "new" && !r.metadata?.estimated_completion)
+    .filter((r) =>
+      r.table === "potential_projects"
+        ? r.status === "new" && !r.metadata?.estimated_completion
+        : r.status === "active" && !r.estimated_completion
+    )
     .map((r) => ({
       r,
-      date: inferCompletionDateFromText(String(r.metadata?.description ?? "")),
+      date: inferCompletionDateFromText(
+        String(r.metadata?.description ?? r.additional_info ?? "")
+      ),
     }))
     .filter((x): x is { r: any; date: string } => Boolean(x.date))
 
@@ -77,21 +100,23 @@ async function main() {
   )
 
   for (const { r, date } of past) {
-    console.log(`  MENNYT ${date}  ${String(r.title).slice(0, 60)}`)
+    console.log(`  MENNYT ${date}  [${r.table === "projects" ? "nakyva" : "jono"}] ${String(r.label).slice(0, 50)}`)
   }
   console.log("")
   for (const { r, date } of future.slice(0, 12)) {
-    console.log(`  ${date}  ${String(r.title).slice(0, 60)}`)
+    console.log(`  ${date}  [${r.table === "projects" ? "nakyva" : "jono"}] ${String(r.label).slice(0, 50)}`)
   }
 
   if (!APPLY) return
 
   let done = 0
   for (const { r, date } of hits) {
-    const { error } = await supabase
-      .from("potential_projects")
-      .update({ metadata: { ...r.metadata, estimated_completion: date } })
-      .eq("id", r.id)
+    const patch: Record<string, any> =
+      r.table === "projects"
+        ? { estimated_completion: date, metadata: { ...r.metadata, estimated_completion: date } }
+        : { metadata: { ...r.metadata, estimated_completion: date } }
+
+    const { error } = await supabase.from(r.table).update(patch).eq("id", r.id)
     if (error) console.log(`  VIRHE ${r.id}: ${error.message}`)
     else done++
   }

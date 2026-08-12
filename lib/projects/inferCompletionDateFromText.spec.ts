@@ -204,4 +204,68 @@ describe("numeromuotoinen valmistumisaika", () => {
       inferCompletionDateFromText("Hankesuunnitelma valmistuu 5 kk/2021.")
     ).toBeNull()
   })
+
+  /*
+   * KAYTTOONOTTO ON VALMISTUMINEN. Helsingin tarveselvitys- ja
+   * hankesuunnitelmapaatoksissa luovutus ilmaistaan vakiokaavalla jossa
+   * ei esiinny "valmis"-vartaloa lainkaan. Mitattu tapaus: Abraham
+   * Wetterin tien paivakoti, joka on tanaan auki nimella Paivakoti
+   * Kirsikkapuisto mutta oli jonossa vaiheessa "Suunnittelu".
+   */
+  it("poimii kayttoonoton", () => {
+    expect(
+      inferCompletionDateFromText(
+        "Uudisrakennus otetaan käyttöön kalustettuna elokuuhun 2023 mennessä."
+      )
+    ).toBe("2023-08-31")
+
+    expect(
+      inferCompletionDateFromText(
+        "Rakennus otetaan käyttöön kalustettuna tammikuussa 2025."
+      )
+    ).toBe("2025-01-31")
+  })
+
+  /*
+   * VAISTOTILAN KAYTTOONOTTO ON PAINVASTAINEN SIGNAALI: se otetaan
+   * kayttoon kun varsinainen tyo ALKAA.
+   */
+  it("ei poimi vaistotilan kayttoonottoa", () => {
+    expect(
+      inferCompletionDateFromText("Väistötilat otetaan käyttöön elokuuhun 2023 mennessä.")
+    ).toBeNull()
+  })
+
+  /*
+   * Pelkka sanan esiintyminen tekstissa ei saa estaa poimintaa:
+   * kuvauksissa lukee usein etta vaistotiloja EI tarvita.
+   */
+  it("sietaa vaistotilamaininnan toisessa lauseessa", () => {
+    expect(
+      inferCompletionDateFromText(
+        "Hankkeen toteutuksen yhteydessä ei tarvita väistötiloja. " +
+          "Uudisrakennus otetaan käyttöön kalustettuna elokuuhun 2023 mennessä."
+      )
+    ).toBe("2023-08-31")
+  })
+
+  it("ei poimi asiakirjan kayttoonottoa", () => {
+    expect(
+      inferCompletionDateFromText("Hankesuunnitelma otetaan käyttöön elokuuhun 2023 mennessä.")
+    ).toBeNull()
+  })
+})
+
+describe("vuosiraja", () => {
+  /*
+   * KUUKAUSIPAATTEEN VALINNAISUUS PAASTI LAPI RAKENNUSVUODEN. Mitattu
+   * tapaus: rivi sai valmistumisajaksi 1982-08-31 kun teksti kertoi
+   * rakennuksen historiasta. Vuosi rajataan 2000-luvulle, kuten
+   * numeromuotoisessa kuviossa jo oli.
+   */
+  it("ei poimi 1900-luvun vuotta", () => {
+    expect(
+      inferCompletionDateFromText("Rakennus valmistui elokuu 1982 ja on peruskorjattava.")
+    ).toBeNull()
+  })
 })

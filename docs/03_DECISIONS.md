@@ -5,6 +5,43 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-056 – Käyttöönotto on valmistuminen, väistötilan käyttöönotto ei
+Jonossa oli tarveselvityksiä päiväkodeista jotka ovat jo auki. Mitattu
+tapaus: **"Abraham Wetterin tien päiväkodin uudisrakennuksen
+tarveselvitys"** (päätös 8/2021), joka toimii tänään nimellä Päiväkoti
+Kirsikkapuisto - ja jonka omassa tekstissä lukee:
+
+> Uudisrakennus **otetaan käyttöön** kalustettuna **elokuuhun 2023**
+> mennessä.
+
+Päivä oli siis lähteessä koko ajan. Kaksi syytä miksi se jäi poimimatta.
+
+**1. Vartija tunsi vain "valmis"-vartalon.** Helsingin tarveselvitys- ja
+hankesuunnitelmapäätöksissä luovutus ilmaistaan vakiokaavalla, jossa
+sanaa "valmis" ei esiinny lainkaan. Mitattu: **31 jonoriviä käytti
+muotoa, ja niistä vain kaksi sai päivän.**
+
+**2. Kuukausi oli väärässä sijamuodossa.** Kuvio odotti inessiiviä
+("elokuuSSA 2023"), mutta käyttöönotto ilmaistaan illatiivilla
+("elokuuHUN 2023 mennessä"). Pääte on nyt valinnainen.
+
+**VÄISTÖTILAN KÄYTTÖÖNOTTO ON PÄINVASTAINEN SIGNAALI.** Väistötila
+otetaan käyttöön kun varsinainen työ ALKAA. Este tarkistetaan kuitenkin
+vain samasta lauseesta, koska kuvauksissa lukee usein "hankkeen
+toteutuksen yhteydessä ei tarvita väistötiloja" - koko tekstin
+tarkistaminen olisi estänyt poiminnan 25 rivillä 31:stä.
+
+**Löytyi myös regressio.** Kuukausipäätteen tekeminen valinnaiseksi
+päästi läpi rakennusvuoden: yksi rivi sai valmistumisajaksi
+**1982-08-31**. Vuosi on nyt rajattu 2000-luvulle kaikissa kuvioissa,
+kuten numeromuotoisessa jo oli. Tämä näkyi vain siksi että menneet
+päivät luetellaan erikseen ennen kirjoitusta.
+
+Ajettu molempiin tauluihin: **155 riviä sai valmistumisajan**, joista
+111 tulevia ja 44 menneitä. Jonosta siirtyi 13 riviä valmistuneina.
+
+---
+
 ### D-055 – Valmistumista ei voi lukea päätöslähteestä, mutta hanketyypistä voi
 Kysymys oli: voiko lähteestä päätellä onko hanke päättynyt? Mitattu
 vastaus on kolmiosainen.
