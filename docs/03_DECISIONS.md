@@ -5,6 +5,44 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-057 – Luvattu valmistumisaika on tavoite, ei aikataulu
+D-056 alkoi poimia käyttöönottopäiviä Helsingin tarveselvityksistä. Se
+oli oikea poiminta mutta väärä johtopäätös, ja urakoitsijan oma sivu
+todisti sen:
+
+| lähde | mitä sanoo |
+|---|---|
+| kaupungin tarveselvitys 8/2021 | käyttöön **8/2023** mennessä |
+| NCC:n hankesivu | rakentaminen **1/2024–5/2025**, käyttöön **8/2025** |
+
+**Kaksi vuotta myöhässä.** Varhaisen vaiheen päätöksessä esitetty päivä
+on tavoite: hanketta ei ole vielä kilpailutettu eikä urakoitsijaa
+valittu.
+
+Tämä ei ole kosmeettinen ero. `estimated_completion` ei ole lisätieto
+vaan väite - kun päivä menee, auto-complete merkitsee hankkeen
+valmistuneeksi ja se katoaa asiakkaan listalta. Tavoitteen
+kirjoittaminen kenttään olisi piilottanut Kirsikkapuiston työmaan
+juuri kun se oli alkamassa.
+
+Tavoite tunnistetaan kahdesta merkistä: päätöksen tyyppi
+(tarveselvitys, hankesuunnitelma, lausunto) tai **yli 18 kuukauden
+etäisyys** päätöksestä luvattuun päivään. Mitattu jakauma jonossa:
+mediaani 9 kuukautta, mutta 75 riviä 218:sta lupaa yli 18 kuukautta
+eteenpäin.
+
+**Mittaus paljasti myös mahdottomia päiviä.** Ero päätöksestä
+valmistumiseen oli pienimmillään **-124 kuukautta** eli päivä oli
+vuosia ENNEN omaa päätöstään. Ne ovat poimintavirheitä, eivät
+aikatauluja.
+
+Ajettu: **171 riviä siirtyi `metadata.planned_completion`-kenttään**
+(tieto säilyy näytettäväksi mutta ei merkitse valmiiksi) ja **42
+mahdotonta päivää poistettiin**. Näistä **99 oli jo mennyt** eli ne
+olisivat merkinneet hankkeen valmistuneeksi seuraavassa cron-ajossa.
+
+---
+
 ### D-056 – Käyttöönotto on valmistuminen, väistötilan käyttöönotto ei
 Jonossa oli tarveselvityksiä päiväkodeista jotka ovat jo auki. Mitattu
 tapaus: **"Abraham Wetterin tien päiväkodin uudisrakennuksen

@@ -11,6 +11,27 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Luvattu valmistumisaika erotetaan aikataulusta
+
+Kayttoonottopaivien poiminta (edellinen kohta) oli oikea poiminta mutta
+vaara johtopaatos. NCC:n hankesivu todisti: kaupungin tarveselvitys
+lupasi Kirsikkapuiston paivakodin kayttoon 8/2023, mutta rakentaminen
+kesti 1/2024-5/2025 ja kohde luovutettiin 8/2025 - kaksi vuotta
+myohemmin.
+
+`estimated_completion` ohjaa auto-completea, joten tavoitteen
+kirjoittaminen kenttaan olisi piilottanut tyomaan juuri kun se alkoi.
+Tavoite tunnistetaan paatoksen tyypista (tarveselvitys, hankesuunnitelma,
+lausunto) tai yli 18 kuukauden etaisyydesta paatokseen.
+
+Mittaus paljasti myos mahdottomia paivia: pienimmillaan -124 kuukautta
+eli valmistuminen vuosia ennen omaa paatostaan.
+
+171 rivia siirtyi `metadata.planned_completion`-kenttaan ja 42
+mahdotonta paivaa poistettiin. Naista 99 oli jo mennyt.
+
+---
+
 ### Kayttoonotto tunnistetaan valmistumiseksi
 
 Jonossa oli tarveselvityksia paivakodeista jotka ovat jo auki. Abraham
