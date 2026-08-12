@@ -11,6 +11,26 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### STT-tiedotteiden leipateksti ja kustannusarvio
+
+Tiedotteen leipateksti haetaan erikseen, mutta budjetti (40/ajo) kului
+aina listan alkuun koska jarjestys on ajosta toiseen sama - 186 jonorivia
+ja 66 hyvaksyttya oli yha pelkan metadescriptionin varassa. Kandidaatit
+jarjestetaan nyt tallennetun kuvauksen pituuden mukaan, lyhin ensin.
+Olemassa olevat 254 rivia haettiin erikseen (`backfill-stt-bodies.ts`),
+47 sai samalla kunnan.
+
+Uusi kustannuspoimija (`extractCostFromText`) ankkuroi nimettyyn
+lauseeseen eika summan laheisyyteen: laheisyysehdolla 391 osumaa joista
+useita vaaria (koko maan vuosibudjetti, palveluhankinta, tilauskanta),
+ankkuroituna 49 joista jokainen tarkistettu. Hyvaksynta siirtaa arvon nyt
+`estimated_cost`-sarakkeeseen, mika ei aiemmin tapahtunut lainkaan.
+
+Valmistumisaikaa ei taydennetty: teksteissa "hankesuunnitelmat valmistuvat"
+tarkoittaa suunnitelmaa, ei rakennusta.
+
+---
+
 ### Kuvausvika loytyi 19 keraajasta lisaa
 
 D-047 korjasi nelja keraajaa, mutta haku loysi vain yhden kirjoitusasun.

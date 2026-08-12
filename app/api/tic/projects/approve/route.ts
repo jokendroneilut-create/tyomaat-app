@@ -2466,6 +2466,13 @@ export async function POST(request: Request) {
 
         property_type: metadata.building_type ?? null,
         estimated_completion: estimatedCompletion,
+        /*
+         * Kustannusarvio kulkee metadatassa jonoriviltä. Ilman tätä riviä
+         * poimittu summa katosi hyväksynnässä: `estimated_cost` on ollut
+         * olemassa sarakkeena ja näkyy asiakkaalle koosteessa, mutta
+         * mikään ei kirjoittanut siihen mitään.
+         */
+        estimated_cost: metadata.estimated_cost ?? null,
         phase,
         source_confidence: potentialProject.confidence,
         is_public: true,

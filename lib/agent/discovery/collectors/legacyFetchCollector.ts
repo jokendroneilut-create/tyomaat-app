@@ -1,9 +1,51 @@
+import { createClient } from "@supabase/supabase-js"
 import { sources as legacySources } from "@/lib/agent/sources"
 import {
   importCandidate,
   findRecentlySeenSourceUrls,
   loadProjectsForMatching,
 } from "@/lib/agent/importCandidate"
+
+/*
+ * Lähteen jo tallennettujen kuvausten pituudet osoitteittain.
+ *
+ * Käytetään vain täydennysjärjestyksen valintaan, joten epäonnistuminen ei
+ * saa kaataa ajoa - tyhjä kartta tarkoittaa "ei tietoa", jolloin järjestys
+ * on sama kuin ennenkin.
+ */
+async function loadStoredDescriptionLengths(
+  sourceName: string
+): Promise<Map<string, number>> {
+  const lengths = new Map<string, number>()
+
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    )
+
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from("potential_projects")
+        .select("metadata")
+        .eq("metadata->>source_name", sourceName)
+        .range(from, from + 999)
+
+      if (error) throw error
+      for (const row of data ?? []) {
+        const url = (row as any).metadata?.source_url
+        if (!url) continue
+        lengths.set(url, String((row as any).metadata?.description ?? "").length)
+      }
+      if (!data || data.length < 1000) break
+    }
+  } catch {
+    return new Map()
+  }
+
+  return lengths
+}
 
 /*
  * Sovitin, joka tuo vanhat koodissa määritellyt lähteet (lib/agent/sources.ts)
@@ -116,12 +158,34 @@ export async function collectLegacySource(source: any) {
    * kandidaateille - jo tuotua tiedotetta ei haeta uudelleen.
    *
    * Budjetti rajaa ajon keston: yksi sivuhaku per kandidaatti, ja lähde voi
-   * palauttaa satoja. Loput tulevat seuraavilla ajoilla, koska niiden
-   * osoitteet eivät ole vielä nähtyjen joukossa.
+   * palauttaa satoja.
+   *
+   * BUDJETTI ANNETAAN NIILLE JOILTA KUVAUS PUUTTUU. Aiemmin kandidaatit
+   * käsiteltiin lähteen omassa järjestyksessä, joka on ajosta toiseen sama,
+   * joten budjetti kului aina samoihin ensimmäisiin ja häntä jäi ikuisesti
+   * täydentämättä. Mitattu 12.8.2026: 186 jonoriviä ja 66 hyväksyttyä
+   * hanketta oli yhä pelkän hakurajapinnan metadescriptionin varassa
+   * (alle 400 merkkiä), vaikka tiedotteen leipätekstissä on kustannusarvio,
+   * aikataulu ja osalliset yritykset.
+   *
+   * Järjestys tehdään tallennetun kuvauksen pituuden mukaan: lyhin ensin.
+   * Näin jokainen ajo vie jonoa eteenpäin ja jo täydennetyt jäävät rauhaan.
    */
   const enrichBudget = typeof legacy.enrich === "function" ? ENRICH_PER_RUN : 0
 
-  await processWithConcurrency(candidates, CANDIDATE_CONCURRENCY, async (candidate: any) => {
+  const storedDescriptionLength =
+    enrichBudget > 0 ? await loadStoredDescriptionLengths(legacy.name) : new Map()
+
+  const ordered =
+    enrichBudget > 0
+      ? [...candidates].sort(
+          (a: any, b: any) =>
+            (storedDescriptionLength.get(a?.source_url) ?? 0) -
+            (storedDescriptionLength.get(b?.source_url) ?? 0)
+        )
+      : candidates
+
+  await processWithConcurrency(ordered, CANDIDATE_CONCURRENCY, async (candidate: any) => {
     if (!candidate?.source_url) {
       skipped++
       return

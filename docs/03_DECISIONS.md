@@ -5,6 +5,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-052 – Täydennysbudjetti kului aina samoihin, ja kustannus ankkuroidaan lauseeseen
+STT-rivi Huutoniemen sairaala-alueesta oli kannassa 194 merkin mittaisena,
+vaikka tiedotteessa on kustannusarvio 45 M€, aikataulu 2025–2032 ja kolme
+yritystä rooleineen.
+
+**Budjetti kului aina samoihin.** Tiedotteen leipäteksti haetaan erikseen
+(`enrich`), ja budjetti on 40 kandidaattia ajossa. Kandidaatit käsiteltiin
+lähteen omassa järjestyksessä, joka on ajosta toiseen sama, joten budjetti
+kului aina listan alkuun eikä häntä täydentynyt koskaan. Mitattu 12.8.2026:
+**186 jonoriviä ja 66 hyväksyttyä** oli yhä pelkän hakurajapinnan
+metadescriptionin varassa. Kandidaatit järjestetään nyt tallennetun
+kuvauksen pituuden mukaan – lyhin ensin – jolloin jokainen ajo vie jonoa
+eteenpäin. Olemassa olevat 254 riviä haettiin erikseen
+(`backfill-stt-bodies.ts`), ja 47 sai samalla kunnan jota tiivistelmässä
+ei ollut.
+
+**Kustannus: läheisyys ei kelvannut ankkuriksi.** `estimated_cost` on
+ollut sarakkeena ja näkyy asiakkaalle, mutta mikään ei kirjoittanut siihen
+mitään. Ensimmäinen poimija hyväksyi summan jos lähellä oli
+rakentamissana: **391 osumaa, joissa mitattuna mm. Puolustusvoimien koko
+maan vuosi-investoinnit (356 M€), ajoneuvojen huoltoleasingin arvo ja
+yrityksen tilauskanta.** Lisäksi Iin koulun tiedotteesta poimittiin
+Jyväskylän toimistotalon urakkasumma, koska tiedote käsitteli kahta
+hanketta.
+
+Poimija ankkuroi nyt nimettyyn lauseeseen (kustannusarvio, urakan arvo,
+investointikustannus, "X euron rakennushanke") ja lukee vain tekstin
+alusta, jossa tiedotteen oma aihe kerrotaan. **49 osumaa, jokainen
+tarkistettuna oikea.** Loput 620 summamainintaa jäävät poimimatta
+tarkoituksella: väärä kustannus näkyy asiakkaalle numerona jota hän uskoo,
+tyhjä kenttä ei valehtele.
+
+**Valmistumisaikaa EI täydennetty.** Nykyinen poimija antaa Huutoniemen
+riville 2026-08-31, koska tekstissä lukee "kehitys- ja hankesuunnitelmat
+valmistuvat elokuussa 2026" – se on suunnitelman, ei rakennuksen
+valmistuminen, ja työmaavaihe on 2027–2028. Kentän täyttäminen olisi
+johtanut siihen että auto-complete merkitsee 45 M€:n hankkeen valmiiksi
+ensi kuussa. Sama ansa kuin D-048:ssa ja kaavojen valmistumispäivissä.
+
+---
+
 ### D-051 – Sama kuvausvika löytyi 19 kerääjästä lisää, kahdesta syystä
 D-047 korjasi neljä kerääjää, mutta vika oli laajempi. Mitattu 12.8.2026:
 **79 kaavalähteellä 205:stä kuvauksen mediaani oli alle 250 merkkiä**,
