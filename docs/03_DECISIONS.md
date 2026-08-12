@@ -5,6 +5,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-055 – Valmistumista ei voi lukea päätöslähteestä, mutta hanketyypistä voi
+Kysymys oli: voiko lähteestä päätellä onko hanke päättynyt? Mitattu
+vastaus on kolmiosainen.
+
+**1. Valmistuminen ei ole päätös.** Koko Ahjon indeksistä (143 318
+päätöstä): "loppuselvitys" esiintyy 8 otsikossa, "vastaanottotarkastus"
+0:ssa. Kunta päättää hankkeiden ALOITTAMISESTA; valmistuminen ei kulje
+poliittisen päätöksenteon läpi. Meidän 579 jonorivistä yhdessä on
+vastaanottomaininta.
+
+**2. Sana "valmistui" on ansa.** Se esiintyy 38 jonorivin tekstissä,
+mutta katsotuista esimerkeistä valtaosa on kohteen ALKUPERÄINEN
+rakennusvuosi:
+
+> Hietakummun ala-aste **on valmistunut 1959**. Rakennuksessa on todettu…
+
+Sääntö sen varassa merkitsisi peruskorjaushankkeen valmiiksi siksi että
+rakennus on vanha. Sama ansa kuin "hankesuunnitelma valmistuu" (D-053)
+ja YVA:n "Päättynyt" (D-048), mutta kavalampi - sana on identtinen, vain
+subjekti eri.
+
+**3. Hanketyyppi ratkaisee.** Purkupäätös tehdään, työ tehdään
+kuukausissa, eikä siitä tule uutta päätöstä. Peruskorjaus saa aidosti
+kestää vuosia. Siksi sääntö on tyyppikohtainen eikä yleinen ikäraja:
+yleinen raja olisi sulkenut Finlandia-talon perusparannuksen, joka oli
+vuosia kesken ja koko ajan elossa.
+
+Toteutus: `selfCompletingWork.ts` tunnistaa purkuhankkeen otsikosta ja
+merkitsee sen tehdyksi kun päätöksestä on yli **kaksi vuotta**. Raja on
+väljä tarkoituksella - purkutyö kestää kuukausia, joten kaksi vuotta
+antaa tilaa viivästyksille ja uudelleenkilpailutukselle.
+Sopimuksen purkaminen suljetaan pois erikseen; ilman sitä hallinnollinen
+sopimusriita merkittäisiin valmistuneeksi rakennustyöksi.
+
+Ajettu: **27 jonoriviä ja 6 asiakkaille näkyvää hanketta**. Näkyvät
+olivat kaikki vuodelta 2020 ja yhä vaiheessa "Suunnittelussa" - kuusi
+vuotta vanhoja purkuja.
+
+Lista on tarkoituksella lyhyt: vain purku on mitattu. Muita lyhyitä
+tyyppejä lisätään vasta kun ne on mitattu erikseen.
+
+**Mitä jää auki.** Finlandia-talon kokoluokan hankkeen valmistuminen ei
+näy missään nykyisessä lähteessä - ei päätöksissä eikä tiedotteissa
+(jonossa nolla valmistumisilmoitusta Helsingin päätösten ulkopuolelta).
+Se tieto on uutisissa ja kaupunkien hankesivuilla, joita ei lueta.
+
+---
+
 ### D-054 – Helsingin tuoreusraja ei ollut voimassa lainkaan
 Jonossa oli hankkeita vuodelta 2021 - mm. Kannelmäen peruskoulun
 purkaminen (HEL-2021-006032), jonka tekstissä lukee "Työ on suunniteltu

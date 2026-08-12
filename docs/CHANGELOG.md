@@ -11,6 +11,26 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Lyhyet tyot merkitaan valmistuneiksi hanketyypin mukaan
+
+Voiko lahteesta paatella onko hanke paattynyt? Mitattu: ei suoraan.
+Valmistuminen ei ole paatos - koko Ahjon indeksissa (143 318 paatosta)
+"loppuselvitys" esiintyy 8 otsikossa ja "vastaanottotarkastus" 0:ssa.
+Sana "valmistui" paatosteksteissa tarkoittaa lahes aina kohteen
+alkuperaista rakennusvuotta ("Rakennus on valmistunut 1976"), joten
+saanto sen varassa sulkisi peruskorjaushankkeita.
+
+Sen sijaan hanketyyppi kertoo: purkupaatos tehdaan ja tyo tehdaan
+kuukausissa, kun peruskorjaus saa kestaa vuosia. `selfCompletingWork.ts`
+merkitsee purkuhankkeen tehdyksi kun paatoksesta on yli kaksi vuotta.
+Yleinen ikaraja olisi sulkenut Finlandia-talon perusparannuksen, joka
+oli vuosia kesken ja koko ajan elossa.
+
+Ajettu: 27 jonorivia ja 6 asiakkaille nakyvaa hanketta, jotka olivat
+kaikki vuodelta 2020 ja yha vaiheessa "Suunnittelussa".
+
+---
+
 ### Helsingin tuoreusraja ei ollut voimassa lainkaan
 
 Jonoon ilmestyi 2021-vuoden paatoksia. Syyta etsiessa loytyi kaksi vikaa:
