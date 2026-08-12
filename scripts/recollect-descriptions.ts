@@ -22,6 +22,19 @@
 import { readFileSync } from "node:fs"
 
 const APPLY = process.argv.includes("--apply")
+const REFETCH = process.argv.includes("--refetch")
+
+/*
+ * Kerääjät jotka välimuistittavat alasivun haun, ja avain jolla merkintä
+ * mitätöidään. Ilman mitätöintiä kuvaus jää ikuisesti siihen mitä se oli
+ * ensimmäisellä haulla.
+ */
+const CACHE_MARKER: Record<string, string> = {
+  seinajokiKaavaParser: "phase",
+  keravaKaavaParser: "description_fetched",
+}
+
+const DETAIL_FETCHES_PER_RUN = 8
 
 for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
   .replace(/\r/g, "")
@@ -35,11 +48,42 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
   if (!(m[1] in process.env)) process.env[m[1]] = v
 }
 
+/*
+ * Kerääjät jotka poimivat kuvauksen `collectDescription`-budjetilla.
+ *
+ * Lista kasvoi neljästä 23:een kun sama vika löytyi toisessa
+ * kirjoitusasussa: `paragraphs.find((p) => p.length > 40)` teki
+ * täsmälleen saman kuin `if (description) return` - otti ensimmäisen
+ * kappaleen ja hylkäsi loput. Mitattu 12.8.2026: 79 kaavalähteellä
+ * kuvauksen mediaani oli alle 250 merkkiä.
+ *
+ * Pidä tämä synkassa niiden kerääjien kanssa jotka kutsuvat
+ * collectDescription-funktiota.
+ */
 const PARSERS = [
+  "akaaKaavaParser",
+  "heinolaKaavaParser",
+  "hyvinkaaKaavaParser",
+  "ilmajokiKaavaParser",
+  "kauhajokiKaavaParser",
+  "kauhavaKaavaParser",
+  "kemiKaavaParser",
+  "kempeleKaavaParser",
+  "keravaKaavaParser",
   "kirkkonummiKaavaParser",
-  "seinajokiKaavaParser",
-  "savonlinnaKaavaParser",
+  "kontiolahtiKaavaParser",
+  "kurikkaKaavaParser",
   "lappeenrantaKaavaParser",
+  "laukaaKaavaParser",
+  "liperiKaavaParser",
+  "loimaaKaavaParser",
+  "paimioKaavaParser",
+  "pieksamakiKaavaParser",
+  "saloKaavaParser",
+  "savonlinnaKaavaParser",
+  "seinajokiKaavaParser",
+  "valkeakoskiKaavaParser",
+  "varkausKaavaParser",
 ]
 
 async function main() {
@@ -82,6 +126,48 @@ async function main() {
   }
 
   for (const s of sources ?? []) {
+    /*
+     * VÄLIMUISTITETUT YKSITYISKOHTAHAUT.
+     *
+     * Osa kerääjistä hakee kuvauksen erilliseltä alasivulta ja ohittaa
+     * haun kokonaan jos rivillä on jo aiemmin haettu arvo. Pelkkä
+     * uudelleenkeräys ei siis päivitä niitä lainkaan - mitattu 12.8.2026:
+     * Seinäjoen mediaani pysyi 174:ssä ja Keravan 181:ssä, vaikka uusi
+     * poiminta olisi tuottanut samoilta sivuilta 338-872 merkkiä.
+     *
+     * --refetch poistaa välimuistimerkinnän. Haku on rajattu kahdeksaan
+     * sivuun ajoa kohti, joten keräys ajetaan silmukassa.
+     */
+    const markerKey = REFETCH ? CACHE_MARKER[s.parser] : undefined
+
+    if (markerKey) {
+      const { data: rows } = await supabase
+        .from("source_documents")
+        .select("id, raw_payload")
+        .eq("source_id", s.id)
+
+      let cleared = 0
+      for (const row of rows ?? []) {
+        if (row.raw_payload?.[markerKey] === undefined) continue
+        const next = { ...row.raw_payload }
+        delete next[markerKey]
+        const { error: e } = await supabase
+          .from("source_documents")
+          .update({ raw_payload: next })
+          .eq("id", row.id)
+        if (!e) cleared++
+      }
+
+      const rounds = Math.ceil((rows?.length ?? 0) / DETAIL_FETCHES_PER_RUN) + 1
+      console.log(`\n  ${s.name}: valimuisti tyhjennetty ${cleared} rivilta, ${rounds} kierrosta`)
+      for (let i = 0; i < rounds; i++) {
+        process.stdout.write(".")
+        await runSourceWorker(s.id)
+      }
+      console.log(" valmis")
+      continue
+    }
+
     process.stdout.write(`\n  keraan ${s.name} ... `)
     const result = await runSourceWorker(s.id)
     console.log(JSON.stringify(result).slice(0, 160))

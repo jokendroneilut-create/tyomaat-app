@@ -3294,7 +3294,11 @@ async function collectSaloSource(source: DiscoverySource) {
           .join(" ") || null
     }
     if (!description) {
-      description = $("p").first().text().replace(/\s+/g, " ").trim() || null
+      description = collectDescription(
+        $("p")
+          .toArray()
+          .map((p) => $(p).text())
+      )
     }
 
     const kaavaTunnus = item.id ? String(item.id) : null
@@ -3795,7 +3799,11 @@ async function collectKeravaSource(source: DiscoverySource) {
           `https://www.kerava.fi/wp-json/wp/v2/project/${item.id}?_fields=content`
         )
         const $ = cheerio.load(detail?.content?.rendered ?? "")
-        description = $("p").first().text().replace(/\s+/g, " ").trim() || null
+        description = collectDescription(
+          $("p")
+            .toArray()
+            .map((p) => $(p).text())
+        )
         descriptionFetched = true
       } catch {
         // jätetään yrittämättä uudelleen seuraavalla ajolla
@@ -8287,7 +8295,7 @@ async function collectKempeleKaavaSource(source: DiscoverySource) {
 
     const phase = kempelePhaseFromText(paragraphs.join(" "))
     const completed = /voimaantulo|lainvoima/i.test(phase)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
 
     const slug = kempeleSlug(title)
     const documentUrl = `${KEMPELE_LISTING_URL}#${slug}`
@@ -8437,7 +8445,7 @@ async function collectValkeakoskiKaavaSource(source: DiscoverySource) {
     const paragraphs = [...teaser, ...bodyParagraphs]
     const phase = valkeakoskiPhaseFromText(paragraphs.join(" "))
     const completed = /voimaantulo|lainvoima/i.test(phase)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
 
     const pdfHrefs = content
       .find('a[href$=".pdf"]')
@@ -8702,7 +8710,7 @@ async function collectKurikkaKaavaSource(source: DiscoverySource) {
       .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
       .get()
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
 
     const reachedText = article
       .find("ol.wp-block-list li")
@@ -8861,7 +8869,7 @@ async function collectVarkausKaavaSource(source: DiscoverySource) {
       .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
       .get()
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
     const phase = varkausPhaseFromParagraphs(paragraphs)
     const completed = phase === "Voimaantulo"
 
@@ -9025,7 +9033,7 @@ async function collectKemiKaavaSource(source: DiscoverySource) {
     const paragraphs = block.nodes
       .map((node) => $(node).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
     const phase = kemiPhaseFromParagraphs(paragraphs)
     const completed = phase === "Voimaantulo"
 
@@ -9449,7 +9457,7 @@ async function collectLaukaaKaavaSource(source: DiscoverySource) {
       const paragraphs = block.nodes
         .map((node) => $(node).text().replace(/\s+/g, " ").trim())
         .filter(Boolean)
-      const description = paragraphs.find((p) => p.length > 40) ?? null
+      const description = collectDescription(paragraphs.filter((p) => p.length > 40))
       const phase = laukaaPhaseFromParagraphs(paragraphs)
       const completed = phase === "Voimaantulo"
 
@@ -9576,7 +9584,7 @@ async function collectHeinolaKaavaSource(source: DiscoverySource) {
         if (text) paragraphs.push(text)
       }
     }
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
 
     let phase = "Vireilletulo"
     for (const el of main.find("details.wp-block-details").toArray()) {
@@ -9909,7 +9917,7 @@ async function collectPieksamakiKaavaSource(source: DiscoverySource) {
       .toArray()
       .map((p) => $(p).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
     const phase = pieksamakiPhaseFromText(description ?? "")
     const completed = phase === "Voimaantulo"
 
@@ -10071,7 +10079,7 @@ async function collectAkaaKaavaSource(source: DiscoverySource) {
       .toArray()
       .map((p) => $(p).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
     const phase = akaaPhaseFromText(link.statusText)
     const completed = phase === "Voimaantulo"
 
@@ -10729,7 +10737,7 @@ async function collectLoimaaKaavaSource(source: DiscoverySource) {
       .toArray()
       .map((p) => $(p).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
     const phase = loimaaPhaseFromText(article.text())
     const completed = phase === "Voimaantulo"
 
@@ -10893,7 +10901,7 @@ async function collectKontiolahtiKaavaSource(source: DiscoverySource) {
       .filter((node) => node.name === "p")
       .map((node) => $(node).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
 
     let phase = "Vireilletulo"
     for (const node of accordions) {
@@ -11049,7 +11057,7 @@ async function collectKauhavaKaavaSource(source: DiscoverySource) {
       .filter((node) => node.name === "p")
       .map((node) => $(node).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
     const phase = kauhavaPhaseFromText(block.nodes.map((node) => $(node).text()).join(" "))
     const completed = phase === "Voimaantulo"
 
@@ -11329,7 +11337,7 @@ async function collectKauhajokiKaavaSource(source: DiscoverySource) {
       .filter((node) => node.name === "p")
       .map((node) => $(node).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
     const contactParagraph = paragraphs.find((p) => /lisätie/i.test(p)) ?? ""
     const contacts = kauhajokiContactFromText(contactParagraph)
     const phase = kauhajokiPhaseFromText(paragraphs.join(" "))
@@ -11467,7 +11475,7 @@ async function collectIlmajokiKaavaSource(source: DiscoverySource) {
       .filter((node) => node.name === "p" && $(node).text().replace(/\s+/g, " ").trim().toLowerCase() !== "aikajana")
       .map((node) => $(node).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
 
     const timeline = block.nodes.find((node) => node.name === "ul")
     const phase = timeline ? ilmajokiPhaseFromTimeline($, timeline) : "Vireilletulo"
@@ -11717,7 +11725,7 @@ async function collectPaimioKaavaSource(source: DiscoverySource) {
       .toArray()
       .map((p) => $(p).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
 
     // each accordion row is titled with the stage it represents, and rows
     // only exist for stages the plan has actually reached -- so the most
@@ -12186,7 +12194,7 @@ async function collectLiperiKaavaSource(source: DiscoverySource) {
       .toArray()
       .map((p) => liperiStripSoftHyphens($(p).text()).replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40) ?? null
+    const description = collectDescription(paragraphs.filter((p) => p.length > 40))
 
     let phase = "Vireilletulo"
     for (const stageHeading of panel.find("> h3.wp-block-heading").toArray()) {

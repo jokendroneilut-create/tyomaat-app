@@ -5,6 +5,44 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-051 – Sama kuvausvika löytyi 19 kerääjästä lisää, kahdesta syystä
+D-047 korjasi neljä kerääjää, mutta vika oli laajempi. Mitattu 12.8.2026:
+**79 kaavalähteellä 205:stä kuvauksen mediaani oli alle 250 merkkiä**,
+yhteensä 1437 dokumenttia.
+
+**Sama vika, eri kirjoitusasu.** Haku `if (description) return` löysi
+vain neljä kohtaa, koska sama asia oli kirjoitettu myös näin:
+
+    const description = paragraphs.find((p) => p.length > 40) ?? null
+
+`.find()` tekee täsmälleen saman kuin silmukka joka lopettaa
+ensimmäiseen osumaan – ottaa yhden kappaleen ja hylkää loput. Näitä oli
+**16 kappaletta**, plus kaksi `$("p").first()`-muotoa. Yhteensä 23
+kerääjää käyttää nyt samaa budjettikeräintä.
+
+**Uudelleenkeräys ei riittänyt.** Seinäjoki ja Kerava hakevat kuvauksen
+erilliseltä alasivulta ja **ohittavat haun kokonaan** jos rivillä on jo
+arvo (`raw_payload.phase`, `description_fetched`). Ensimmäisen ajon
+jälkeen niiden mediaani oli yhä 174 ja 181 – vaikka uusi poiminta olisi
+tuottanut samoilta sivuilta 338–872 merkkiä. Se ei näkynyt mitenkään
+paitsi siinä että luku ei liikkunut, mikä olisi ollut helppo tulkita
+"näillä sivuilla ei vain ole enempää tekstiä". Välimuistimerkintä on nyt
+mitätöitävissä (`--refetch`), ja koska haku on rajattu kahdeksaan sivuun
+ajoa kohti, keräys ajetaan silmukassa.
+
+Lopputulos: **21 kerääjää 23:sta parani**, 475 dokumenttia. Mitatut
+ennen/jälkeen: Pieksämäki 194 → 1421, Kirkkonummi 390 → 1262,
+Valkeakoski 131 → 516, Kurikka 188 → 482, Paimio 164 → 416, Seinäjoki
+174 → 344, Heinola 137 → 343, Kerava 181 → 276.
+
+Kaksi ei liikkunut, ja kummallakin on syy joka EI ole tämä vika:
+Lappeenrannan "Tavoite"-osio on aidosti yhden kappaleen mittainen, ja
+Ilmajoen sivulla ei ole kuvailevia kappaleita lainkaan vaan pelkkä
+aikajana. Niille ei siis ole mitään poimittavaa – eri ongelma, ei
+korjattavissa kappalebudjetilla.
+
+---
+
 ### D-050 – Tuulipuiston paikannimi tunnistaa saman hankkeen kahdesta menettelystä
 Tuulivoimahanke kulkee rinnakkain kahtena virallisena menettelynä: kunnan
 osayleiskaavana ja ELY:n YVA:na. Meille se tulee kahtena rivinä eri

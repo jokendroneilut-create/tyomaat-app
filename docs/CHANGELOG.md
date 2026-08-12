@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Kuvausvika loytyi 19 keraajasta lisaa
+
+D-047 korjasi nelja keraajaa, mutta haku loysi vain yhden kirjoitusasun.
+Sama asia oli kirjoitettu myos `paragraphs.find((p) => p.length > 40)`
+-muodossa 16 kertaa. Mitattu: 79 kaavalahteella 205:sta kuvauksen
+mediaani oli alle 250 merkkia.
+
+Uudelleenkerays ei yksin riittanyt: Seinajoki ja Kerava valimuistittavat
+alasivun haun ja ohittavat sen kokonaan jos arvo on jo tallessa. Merkinta
+on nyt mitatoitavissa (`--refetch`), ja keraysta ajetaan silmukassa koska
+haku on rajattu kahdeksaan sivuun ajoa kohti.
+
+21 keraajaa 23:sta parani, 475 dokumenttia. Pieksamaki 194 -> 1421,
+Kirkkonummi 390 -> 1262, Valkeakoski 131 -> 516, Seinajoki 174 -> 344.
+Lappeenranta ja Ilmajoki eivat liikkuneet, mutta niilla ei ole sivuilla
+enempaa tekstia poimittavaksi.
+
+---
+
 ### Tuulipuiston paikannimi tunnistaa saman hankkeen kahdesta menettelysta
 
 Tuulivoimahanke tulee meille kahtena rivina: kunnan osayleiskaavana ja
