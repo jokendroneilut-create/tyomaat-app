@@ -178,4 +178,30 @@ describe("numeromuotoinen valmistumisaika", () => {
       inferCompletionDateFromText("Urakka valmistuu kokonaisuudessaan syyskuussa 2025.")
     ).toBe("2025-09-30")
   })
+
+  /*
+   * "KK" LUVUN JA VUODEN VALISSA. Helsingin paatosteksteissa kuukausi
+   * merkitaan yksikkoineen. Mitattu tapaus: Kannelmaen peruskoulun
+   * purkaminen (HEL-2021-006032), joka oli jonossa viisi vuotta
+   * valmistumisajan jalkeen koska muoto jai poimimatta.
+   */
+  it("poimii kuukauden kk-yksikon kanssa", () => {
+    expect(
+      inferCompletionDateFromText("Tyo on suunniteltu valmistuvaksi 5 kk/2021.")
+    ).toBe("2021-05-31")
+
+    expect(
+      inferCompletionDateFromText("Purkutyo valmistuu 01 kk/2023.")
+    ).toBe("2023-01-31")
+
+    expect(
+      inferCompletionDateFromText("Hanke valmistuu 12 kk/2024.")
+    ).toBe("2024-12-31")
+  })
+
+  it("ei sekoa kk-muodossa asiakirjan valmistumiseen", () => {
+    expect(
+      inferCompletionDateFromText("Hankesuunnitelma valmistuu 5 kk/2021.")
+    ).toBeNull()
+  })
 })

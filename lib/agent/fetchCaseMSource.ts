@@ -5,6 +5,7 @@ import { inferDecisionPhase, phaseFromTitle } from "./decisionPhase"
 import { genericizeDecisionTitle } from "./decisionTitle"
 import { decodeHtmlEntities } from "./htmlEntities"
 import { CONSTRUCTION_SIGNALS } from "./fetchDynastySource"
+import { toIsoDate } from "./fetchHelsinkiPaatoksetSource"
 
 /*
  * CaseM-päätösjärjestelmä (cloudnc.fi), käytössä mm. Tampereella.
@@ -311,6 +312,15 @@ export function createCaseMFetcher(config: CaseMConfig) {
           const winners = extractDecisionWinners(description)
 
           results.push({
+            /*
+             * Kokouspäivä on jäsennetty jo asiakirjan otsikkoriviltä
+             * ("Kokous 12.5.2026") tuoreussuodatusta varten. Talletetaan
+             * se, jotta hankkeen ikä on mitattavissa - muuten tiedämme
+             * vain milloin ME näimme päätöksen.
+             */
+            metadata: {
+              decision_date: parsed.meetingDate ? toIsoDate(parsed.meetingDate) : null,
+            },
             name: genericizeDecisionTitle(hit.title),
             description,
             city: config.city,

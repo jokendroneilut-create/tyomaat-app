@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest"
-import { inferPhase, shouldExclude } from "./fetchHelsinkiPaatoksetSource"
+import {
+  inferPhase,
+  shouldExclude,
+  toIsoDate,
+} from "./fetchHelsinkiPaatoksetSource"
 
 describe("inferPhase", () => {
   /*
@@ -54,5 +58,38 @@ describe("shouldExclude", () => {
       false
     )
     expect(shouldExclude("Laajasalon raitiovaunuvarikon toteutussuunnitelma")).toBe(false)
+  })
+})
+
+describe("toIsoDate", () => {
+  /*
+   * PAATOSPAIVA ON MITATTAVUUDEN EHTO. Ahjon meeting_date on unix-sekunteina,
+   * mutta aineistossa esiintyy myos ISO-merkkijono. Vaara paatospaiva olisi
+   * pahempi kuin puuttuva: sen perusteella hanke voitaisiin todeta
+   * vanhentuneeksi ja piilottaa asiakkaalta.
+   */
+  it("lukee unix-sekunnit", () => {
+    expect(toIsoDate(1621209600)).toBe("2021-05-17")
+  })
+
+  it("lukee unix-millisekunnit", () => {
+    expect(toIsoDate(1621209600000)).toBe("2021-05-17")
+  })
+
+  it("lukee ISO-merkkijonon", () => {
+    expect(toIsoDate("2021-05-17T09:00:00Z")).toBe("2021-05-17")
+    expect(toIsoDate("2021-05-17")).toBe("2021-05-17")
+  })
+
+  it("lukee numeron merkkijonona", () => {
+    expect(toIsoDate("1621209600")).toBe("2021-05-17")
+  })
+
+  it("palauttaa null kelvottomasta", () => {
+    expect(toIsoDate(null)).toBeNull()
+    expect(toIsoDate(undefined)).toBeNull()
+    expect(toIsoDate("")).toBeNull()
+    expect(toIsoDate("eilen")).toBeNull()
+    expect(toIsoDate(NaN)).toBeNull()
   })
 })

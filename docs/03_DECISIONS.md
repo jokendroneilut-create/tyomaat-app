@@ -5,6 +5,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-054 – Helsingin tuoreusraja ei ollut voimassa lainkaan
+Jonossa oli hankkeita vuodelta 2021 - mm. Kannelmäen peruskoulun
+purkaminen (HEL-2021-006032), jonka tekstissä lukee "Työ on suunniteltu
+valmistuvaksi 5 kk/2021". Kaksi erillistä vikaa.
+
+**1. Muoto "5 kk/2021" jäi poimimatta.** Numeropoimija odotti muotoa
+`5/2021`, joten yksikkö väliin esti osuman. Mitattu: 22 jonoriviä käytti
+muotoa, ja 18:lla vuosi oli jo mennyt - lähes kaikki Helsingin
+purkupäätöksiä. Korjauksen jälkeen `ignore-stale-completed` siivosi
+17 riviä jonosta ilman uutta politiikkaa.
+
+**2. Tuoreusraja oli tehoton.** `meeting_date` on indeksissä date-kenttä,
+ja Elasticsearch tulkitsee paljaan luvun **epoch-millisekunneiksi**.
+Sekunteina annettu raja (1 739 401 512) tarkoitti sille 21.1.1970.
+Mitattu samalla kyselyllä:
+
+| suodatin | osumia | vanhin |
+|---|---|---|
+| ei suodatinta | 143 318 | 2015-01-23 |
+| **sekunteina (entinen)** | **143 318** | **2015-01-23** |
+| ISO-merkkijonona | 25 943 | 2025-02-13 |
+
+Raja ei siis vuotanut vähän - sitä ei ollut. Lähde on tuonut jonoon
+päätöksiä vuoteen 2015 asti, ja se on suora syy siihen että 2021-vuoden
+asioita ilmestyi hyväksyttäväksi. Raja annetaan nyt ISO-merkkijonona,
+joka ei riipu yksikkötulkinnasta.
+
+**3. Päätöspäivä talteen.** `meeting_date` on ollut haettuna alusta asti
+mutta sitä ei tallennettu, joten emme tienneet milloin päätös tehtiin -
+vain milloin ME näimme sen. Vuosia vanha päätös näytti tuoreelta jos se
+tuotiin kantaan tänään. Nyt `metadata.decision_date` kirjoitetaan
+kaikista kolmesta päätösalustasta (Ahjo, Dynasty, CaseM); kahdessa
+jälkimmäisessä kokouspäivä oli jo jäsennetty tuoreussuodatusta varten
+mutta heitetty pois.
+
+Ikä on siis vasta nyt mitattavissa. Asiatunnuksen vuosi (HEL-2021-...)
+jätettiin tarkoituksella käyttämättä automaattisena sääntönä: iso hanke
+elää vuosia saman tunnuksen alla, joten 304 jonorivin piilottaminen sen
+perusteella olisi vienyt mukanaan eläviä hankkeita.
+
+---
+
 ### D-053 – Asiakirjan valmistuminen ei ole hankkeen valmistuminen
 `inferCompletionDateFromText` vartioi päivää "valmis"-vartaloisella
 sanalla. Se ei riitä, koska hankkeen elinkaaren alussa valmistuu

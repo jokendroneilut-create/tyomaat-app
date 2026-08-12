@@ -149,9 +149,16 @@ export function inferCompletionDateFromText(
    * vuosisadan arvaaminen olisi turhaa, sillä mitatut valmistumisajat
    * kirjoitetaan aina nelinumeroisina.
    */
+  /*
+   * "kk" LUVUN JA VUODEN VÄLISSÄ. Helsingin päätösteksteissä kuukausi
+   * merkitään yksikköineen: "Työ on suunniteltu valmistuvaksi 5 kk/2021".
+   * Ilman tätä muoto jäi kokonaan poimimatta - mitattu 12.8.2026:
+   * 22 jonoriviä käytti sitä, ja 18:lla vuosi oli jo mennyt (mm. neljä
+   * purkuhanketta joiden piti valmistua 2021-2023).
+   */
   const numericMatch = findGuardedDate(
     normalized,
-    /(\d{1,2})\s*\/\s*(20\d{2})/g,
+    /(\d{1,2})\s*(?:kk)?\s*\/\s*(20\d{2})/g,
     (word) => {
       const month = Number(word)
       return month >= 1 && month <= 12 ? month : undefined

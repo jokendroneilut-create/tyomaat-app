@@ -11,6 +11,26 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Helsingin tuoreusraja ei ollut voimassa lainkaan
+
+Jonoon ilmestyi 2021-vuoden paatoksia. Syyta etsiessa loytyi kaksi vikaa:
+muoto "5 kk/2021" jai valmistumisajan poimijalta huomaamatta (22 rivia,
+18 mennytta), ja Helsingin lahteen 18 kuukauden tuoreusraja oli tehoton.
+
+Elasticsearch tulkitsee paljaan luvun epoch-millisekunneiksi, joten
+sekunteina annettu raja tarkoitti sille 21.1.1970. Mitattu: sama kysely
+ilman suodatinta ja sekuntirajalla palautti kummallakin 143 318 osumaa,
+vanhin 2015. ISO-merkkijonolla 25 943, vanhin 2025-02-13.
+
+Lisaksi paatospaiva tallennetaan nyt (`metadata.decision_date`) kaikista
+kolmesta paatosalustasta. Dynastyssa ja CaseM:ssa kokouspaiva oli jo
+jasennetty suodatusta varten mutta heitetty pois, joten hankkeen ikaa ei
+voinut mitata lainkaan.
+
+Jono 596 -> 579.
+
+---
+
 ### Asiakirjan valmistuminen erotetaan hankkeen valmistumisesta
 
 Valmistumisajan poimija vartioi paivaa pelkalla "valmis"-vartalolla, ja

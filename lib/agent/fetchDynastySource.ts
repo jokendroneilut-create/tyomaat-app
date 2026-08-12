@@ -4,6 +4,7 @@ import { extractDecisionWinners } from "./decisionWinners"
 import { inferDecisionPhase, phaseFromTitle } from "./decisionPhase"
 import { genericizeDecisionTitle } from "./decisionTitle"
 import { decodeHtmlEntities } from "./htmlEntities"
+import { toIsoDate } from "./fetchHelsinkiPaatoksetSource"
 
 /*
  * Dynasty-päätösjärjestelmä (Innofactor), käytössä kahdeksalla kunnalla
@@ -409,6 +410,13 @@ export function createDynastyFetcher(config: DynastyConfig) {
       const winners = extractDecisionWinners(description)
 
       results.push({
+        /*
+         * Kokouspäivä on jäsennetty jo RSS-otsikosta tuoreussuodatusta
+         * varten, mutta sitä ei ole tallennettu. Ilman sitä hankkeen ikää
+         * ei voi mitata: tiedämme vain milloin ME näimme päätöksen, joten
+         * vuosia vanha päätös näyttää tuoreelta jos se tuotiin tänään.
+         */
+        metadata: { decision_date: date ? toIsoDate(date) : null },
         name: genericizeDecisionTitle(upgradePermitTitle(subject, description)),
         description,
         city: config.city,

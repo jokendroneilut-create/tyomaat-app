@@ -103,10 +103,52 @@ function buildDescription(content: string, motion: string): string | null {
   return joined || null
 }
 
+/*
+ * Ahjon `meeting_date` on unix-sekunteina, mutta aineistossa esiintyy myös
+ * valmiiksi ISO-muotoinen merkkijono. Molemmat kelpaavat; mikä tahansa muu
+ * palauttaa null, koska väärä päätöspäivä olisi pahempi kuin puuttuva -
+ * sen perusteella hanke voitaisiin todeta vanhentuneeksi.
+ */
+export function toIsoDate(value: unknown): string | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const ms = value > 1e11 ? value : value * 1000
+    const date = new Date(ms)
+    if (Number.isNaN(date.getTime())) return null
+    return date.toISOString().slice(0, 10)
+  }
+
+  if (typeof value === "string") {
+    const iso = value.match(/^(\d{4}-\d{2}-\d{2})/)
+    if (iso) return iso[1]
+
+    const numeric = Number(value)
+    if (Number.isFinite(numeric) && numeric > 0) return toIsoDate(numeric)
+  }
+
+  return null
+}
+
 export async function fetchHelsinkiPaatoksetSource() {
   const cutoff = new Date()
   cutoff.setMonth(cutoff.getMonth() - RECENCY_MONTHS)
-  const cutoffUnix = Math.floor(cutoff.getTime() / 1000)
+
+  /*
+   * TUOREUSRAJA ISO-MUODOSSA, EI SEKUNTEINA.
+   *
+   * `meeting_date` on indeksissä date-kenttä, ja Elasticsearch tulkitsee
+   * paljaan luvun EPOCH-MILLISEKUNNEIKSI. Sekunteina annettu raja
+   * (1 739 401 512) tarkoitti sille 21.1.1970, joten se ei rajannut mitään:
+   * mitattu 12.8.2026, sama kysely ilman suodatinta ja sekuntirajalla
+   * palautti kummallakin 143 318 osumaa ja vanhin oli 23.1.2015.
+   *
+   * Rajan ei siis pitänyt vuotaa hieman - se ei ollut voimassa lainkaan,
+   * ja lähde toi jonoon vuoteen 2015 asti vanhoja päätöksiä. Tämä on
+   * suora syy siihen että jonossa oli 2021-vuoden asioita.
+   *
+   * ISO-merkkijono on yksiselitteinen eikä riipu yksikkötulkinnasta.
+   * Mitattu korjauksen jälkeen: 25 943 osumaa, vanhin 13.2.2025.
+   */
+  const cutoffIso = cutoff.toISOString()
 
   const results: any[] = []
   const seen = new Set<string>()
@@ -127,7 +169,7 @@ export async function fetchHelsinkiPaatoksetSource() {
             bool: {
               filter: [
                 { terms: { category_name: CATEGORIES } },
-                { range: { meeting_date: { gte: cutoffUnix } } },
+                { range: { meeting_date: { gte: cutoffIso } } },
               ],
             },
           },
@@ -183,6 +225,18 @@ export async function fetchHelsinkiPaatoksetSource() {
       const winners = extractDecisionWinners(description)
 
       results.push({
+        /*
+         * PÄÄTÖSPÄIVÄ TALTEEN. `meeting_date` on haettu ES-vastauksessa
+         * alusta asti (suodatus ja lajittelu käyttävät sitä), mutta sitä
+         * ei ole tallennettu mihinkään. Ilman sitä emme tiedä milloin
+         * päätös tehtiin - vain milloin ME näimme sen, eli vuonna 2021
+         * tehty päätös näyttää tuoreelta jos se tuotiin kantaan tänään.
+         *
+         * Mitattu 12.8.2026: jonossa oli 108 riviä joiden asiatunnus on
+         * vuodelta 2021 tai vanhempi, eikä ikää voinut mitata muuten kuin
+         * arvaamalla asiatunnuksen vuodesta tai leipätekstistä.
+         */
+        metadata: { decision_date: toIsoDate(first(s.meeting_date)) },
         name: genericizeDecisionTitle(subject),
         description,
         city: "Helsinki",
