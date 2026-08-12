@@ -27,7 +27,13 @@ kolmesta paatosalustasta. Dynastyssa ja CaseM:ssa kokouspaiva oli jo
 jasennetty suodatusta varten mutta heitetty pois, joten hankkeen ikaa ei
 voinut mitata lainkaan.
 
-Jono 596 -> 579.
+Paivat haettiin myos takautuvasti asiatunnuksella: 1 156 / 1 209 rivia
+(96 %), ja jonon jokaisella 579 rivilla on nyt paatospaiva. Valitaan
+asiatunnuksen UUSIN paatos, ei vanhin - 2021 avatussa asiassa voi olla
+2026 tehty paatos, jolloin hanke on elossa.
+
+Jono 596 -> 579. Jonossa on 211 rivia joiden viimeisin paatos on yli
+kolme vuotta vanha, asiakasnakymassa 74.
 
 ---
 

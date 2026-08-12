@@ -40,10 +40,25 @@ kaikista kolmesta päätösalustasta (Ahjo, Dynasty, CaseM); kahdessa
 jälkimmäisessä kokouspäivä oli jo jäsennetty tuoreussuodatusta varten
 mutta heitetty pois.
 
-Ikä on siis vasta nyt mitattavissa. Asiatunnuksen vuosi (HEL-2021-...)
-jätettiin tarkoituksella käyttämättä automaattisena sääntönä: iso hanke
-elää vuosia saman tunnuksen alla, joten 304 jonorivin piilottaminen sen
-perusteella olisi vienyt mukanaan eläviä hankkeita.
+**4. Päivät haettiin takautuvasti.** Ahjon asiatunnus (HEL-2021-006032)
+on haettavissa suoraan indeksistä sata tunnusta kyselyä kohti; Dynastyn
+ja CaseM:n kokouspäivä luetaan asiasivulta. Tulos: **1 156 / 1 209 riviä
+(96 %)**, ja jonon jokaisella 579 rivillä on nyt päätöspäivä.
+
+**UUSIN PÄÄTÖS, EI VANHIN.** Ensimmäinen versio otti asiatunnuksen
+vanhimman päätöksen sillä perusteella että se kertoo milloin asia tuli
+vireille. Se on väärä valinta: jos 2021 avatussa asiassa on tehty päätös
+2026, hanke on elossa eikä vanhentunut, ja vanhin päivä merkitsisi sen
+viisi vuotta vanhaksi. Mitattu ero: 24 riviä siirtyi vuosilta 2017-2019
+uudempiin. Uusin päätös vastaa siihen mitä vanhentumisesta halutaan
+tietää - milloin asiassa viimeksi tapahtui jotain.
+
+Asiatunnuksen vuosi (HEL-2021-...) jätettiin tarkoituksella käyttämättä
+automaattisena sääntönä: iso hanke elää vuosia saman tunnuksen alla,
+joten 304 jonorivin piilottaminen sen perusteella olisi vienyt mukanaan
+eläviä hankkeita. Nyt kun päätöspäivä on tiedossa, sääntö voidaan
+kirjoittaa oikealle signaalille: **jonossa on 211 riviä joiden viimeisin
+päätös on yli kolme vuotta vanha**, asiakasnäkymässä 74.
 
 ---
 
