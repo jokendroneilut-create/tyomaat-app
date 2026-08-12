@@ -38,6 +38,36 @@ function lastDayOfMonth(year: number, month: number): string {
   return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10)
 }
 
+/*
+ * ASIAKIRJAN VALMISTUMINEN EI OLE HANKKEEN VALMISTUMINEN.
+ *
+ * "valmis"-vartalo yksin ei riitä vartijaksi, koska hankkeen elinkaaren
+ * alussa valmistuu nimenomaan papereita. Mitattu tapaus (Huutoniemen
+ * sairaala-alue, 45 M€): "kehitys- ja hankesuunnitelmat valmistuvat
+ * elokuussa 2026", kun työmaavaihe on 2027-2028. Ilman tätä sääntöä
+ * kenttään olisi kirjoitettu 2026-08-31 ja auto-complete olisi merkinnyt
+ * hankkeen valmiiksi ennen kuin rakentaminen edes alkaa.
+ *
+ * Sama ansa on jo nähty kaavojen valmistumispäivissä ja YVA:n
+ * "Päättynyt"-tilassa: aikainen virstanpylväs näyttää lopulta.
+ *
+ * "SUUNNITELMAN MUKAAN" ON POIKKEUS. Se on adverbiaali, ei subjekti -
+ * "suunnitelman mukaan rakennus valmistuu 12/2027" kertoo rakennuksen
+ * valmistumisesta. Siksi asiakirjasanan jälkeen ei saa seurata "mukaan".
+ */
+const PLAN_DOCUMENT =
+  "(?:hanke|kehitys|toteutus|yleis|tarve|rakennus|asema)?suunnitelm\\w*|kaav\\w*|selvity\\w*|selostu\\w*|osayleiskaav\\w*|auditoin\\w*"
+
+/*
+ * Välimerkki sallitaan asiakirjasanan jälkeen, koska subjekti ja verbi
+ * erottuvat usein sivulauseella: "hankesuunnitelmat, jotka valmistuvat
+ * elokuussa 2026".
+ */
+const PLAN_COMPLETES = new RegExp(
+  `(?:${PLAN_DOCUMENT})(?!\\s+mukaan)[,;:]?(?:\\s+\\S+){0,3}\\s+valmistu`,
+  "i"
+)
+
 function findGuardedDate(
   text: string,
   regex: RegExp,
@@ -45,8 +75,16 @@ function findGuardedDate(
 ): string | null {
   let match: RegExpExecArray | null
   while ((match = regex.exec(text))) {
+    /*
+     * Ikkuna on asiakirjatarkistuksessa leveämpi kuin "valmis"-vartijassa,
+     * koska subjekti voi olla kauempana: "kehitys- ja hankesuunnitelmat,
+     * joihin sisältyy toimintojen sijoittuminen, valmistuvat elokuussa".
+     */
     const precedingWindow = text.slice(Math.max(0, match.index - 40), match.index)
     if (!/valmis/.test(precedingWindow)) continue
+
+    const subjectWindow = text.slice(Math.max(0, match.index - 120), match.index)
+    if (PLAN_COMPLETES.test(subjectWindow)) continue
 
     const month = resolveMonth(match[1])
     if (!month) continue

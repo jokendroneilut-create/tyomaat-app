@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Asiakirjan valmistuminen erotetaan hankkeen valmistumisesta
+
+Valmistumisajan poimija vartioi paivaa pelkalla "valmis"-vartalolla, ja
+hankkeen alussa valmistuu papereita: "kehitys- ja hankesuunnitelmat
+valmistuvat elokuussa 2026" olisi merkinnyt 45 M€:n sairaalahankkeen
+valmiiksi, vaikka tyomaavaihe on 2027-2028.
+
+Paiva hylataan nyt jos valmistuva subjekti on asiakirja (suunnitelma,
+kaava, selvitys, selostus, auditointi). "Suunnitelman mukaan rakennus
+valmistuu" on poikkeus, koska siina suunnitelma on vain viittaus.
+
+Ehdokkaat 87 -> 26, joista 24 tulevia ja 2 menneita (molemmat
+tarkistettu kasin). Kirjoitettu jonoriveille.
+
+---
+
 ### STT-tiedotteiden leipateksti ja kustannusarvio
 
 Tiedotteen leipateksti haetaan erikseen, mutta budjetti (40/ajo) kului

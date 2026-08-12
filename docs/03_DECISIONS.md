@@ -5,6 +5,35 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-053 – Asiakirjan valmistuminen ei ole hankkeen valmistuminen
+`inferCompletionDateFromText` vartioi päivää "valmis"-vartaloisella
+sanalla. Se ei riitä, koska hankkeen elinkaaren alussa valmistuu
+nimenomaan papereita: mitattu tapaus on Huutoniemen sairaala-alue
+(45 M€), jonka tekstissä lukee **"kehitys- ja hankesuunnitelmat
+valmistuvat elokuussa 2026"** kun työmaavaihe on 2027–2028. Kenttään
+olisi kirjoitettu 2026-08-31, ja `auto-complete-projects` olisi
+merkinnyt hankkeen valmiiksi ennen kuin rakentaminen alkaa.
+
+Sääntö hylkää päivän, jos valmistuva subjekti on asiakirja:
+suunnitelma, kaava, selvitys, selostus tai auditointi. Ikkuna on
+leveämpi kuin "valmis"-vartijan (120 vs. 40 merkkiä), koska subjekti voi
+olla kauempana, ja välimerkki sallitaan sivulauseen takia
+("hankesuunnitelmat, jotka valmistuvat elokuussa 2026").
+
+**"Suunnitelman mukaan" on poikkeus.** Se on adverbiaali, ei subjekti –
+"suunnitelman mukaan rakennus valmistuu 12/2027" kertoo rakennuksen
+valmistumisesta, ja sen hylkääminen olisi ollut yhtä väärin toiseen
+suuntaan. Asiakirjasanan jälkeen ei siksi saa seurata "mukaan".
+
+Mitattu: ehdokkaat **87 → 26**. Jäljelle jääneistä 24 on tulevia päiviä
+ja **2 menneitä**. Ero on olennainen: tuleva päivä on lisätietoa
+kortilla, mennyt päivä johtaa siihen että hanke merkitään valmiiksi ja
+katoaa asiakkaan listalta. Molemmat menneet tarkistettiin käsin
+(Onttolan rakennushanke ja Mehiläisen Kemin laajennus, kumpikin
+tosiasiassa valmistunut 3/2026).
+
+---
+
 ### D-052 – Täydennysbudjetti kului aina samoihin, ja kustannus ankkuroidaan lauseeseen
 STT-rivi Huutoniemen sairaala-alueesta oli kannassa 194 merkin mittaisena,
 vaikka tiedotteessa on kustannusarvio 45 M€, aikataulu 2025–2032 ja kolme

@@ -127,4 +127,55 @@ describe("numeromuotoinen valmistumisaika", () => {
   it("ohittaa kaksinumeroisen vuoden", () => {
     expect(inferCompletionDateFromText("Työ valmistuu 12 /19.")).toBeNull()
   })
+
+  /*
+   * ASIAKIRJAN VALMISTUMINEN EI OLE HANKKEEN VALMISTUMINEN.
+   *
+   * Mitattu tapaus: Huutoniemen sairaala-alue (45 M€), jonka tekstissa
+   * lukee "kehitys- ja hankesuunnitelmat valmistuvat elokuussa 2026" kun
+   * tyomaavaihe on 2027-2028. Ilman tata saantoa kenttaan olisi
+   * kirjoitettu 2026-08-31 ja auto-complete olisi merkinnyt hankkeen
+   * valmiiksi ennen kuin rakentaminen alkaa.
+   */
+  it("ei poimi asiakirjan valmistumista", () => {
+    expect(
+      inferCompletionDateFromText(
+        "Aluetta varten laaditaan kehitys- ja hankesuunnitelmat, jotka valmistuvat elokuussa 2026."
+      )
+    ).toBeNull()
+
+    expect(
+      inferCompletionDateFromText("Kaavaselostus valmistuu maaliskuussa 2027.")
+    ).toBeNull()
+
+    expect(
+      inferCompletionDateFromText("Osayleiskaava valmistuu 6/2026.")
+    ).toBeNull()
+
+    expect(
+      inferCompletionDateFromText("Tarveselvitys valmistuu syksylla 2026.")
+    ).toBeNull()
+  })
+
+  /*
+   * "SUUNNITELMAN MUKAAN" ON ADVERBIAALI, EI SUBJEKTI. Talloin
+   * valmistuva asia on rakennus, ja paiva on oikea.
+   */
+  it("poimii paivan kun suunnitelma on vain viittaus", () => {
+    expect(
+      inferCompletionDateFromText("Suunnitelman mukaan rakennus valmistuu 12/2027.")
+    ).toBe("2027-12-31")
+
+    expect(
+      inferCompletionDateFromText(
+        "Suunnitelman mukaan kohde valmistuu joulukuussa 2027."
+      )
+    ).toBe("2027-12-31")
+  })
+
+  it("poimii rakennuksen valmistumisen normaalisti", () => {
+    expect(
+      inferCompletionDateFromText("Urakka valmistuu kokonaisuudessaan syyskuussa 2025.")
+    ).toBe("2025-09-30")
+  })
 })
