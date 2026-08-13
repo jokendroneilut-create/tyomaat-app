@@ -5,6 +5,40 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-061 – STT ei jumittunut vaan oli liian hidas
+D-060 esti jumittunutta lähdettä pysäyttämästä putkea, mutta jätti auki
+miksi STT jumittui. Se ei jumittunut lainkaan: rajapinta vastaa
+moitteetta, lähde on vain liian hidas mahtuakseen ajon budjettiin.
+
+**MITTASIN ENSIN VÄÄRIN.** Arvioin 44 hakusanaa × 10 sivua = 440
+pyyntöä ≈ 200 s, koska käytin koettimessa sivukokoa 20. Todellinen
+`STT_PAGE_SIZE` on 100, jolloin tuoreusraja katkaisee useimmat
+hakusanat ensimmäiseen sivuun. Oikea mittaus: **58 pyyntöä, 59,6 s,
+5 250 tiedotetta**, keskimäärin 1 027 ms per pyyntö.
+
+Kuusikymmentä sekuntia on jo yksin enemmän kuin lähdeajolle jäävä
+budjetti kestää, kun päälle tulee 876 kandidaatin tuonti ja 40
+tiedotesivun täydennys. Ajo ylitti reitin `maxDuration`-rajan, alusta
+tappoi sen kesken, eikä rivi päivittynyt - siitä syntyi ikuinen
+`started`-tila.
+
+**KORJAUS KOHDISTUU PULLONKAULAAN.** Hakusanat ovat toisistaan
+riippumattomia, joten ne haetaan nyt kuusi kerrallaan rinnakkain.
+Mitattu: **59,6 s → 15,1 s**, ja tulos on sama 876 kandidaattia.
+Järjestys säilyy, koska tulokset kootaan hakusanan indeksin mukaan eikä
+siinä järjestyksessä kuin pyynnöt palasivat.
+
+Lisäksi jokaisella pyynnöllä on nyt 15 sekunnin katkaisu. Mitattu tarve:
+hakusana "rakennusurakka" vastasi kerran 15,5 sekunnissa kun mediaani on
+noin sekunti - yksi tällainen riittää kaatamaan ajon aikarajaan.
+
+**Mikä jää auki.** Tuontivaihe (876 kandidaattia täsmäytyksineen) on
+mittaamatta, joten ei ole varmaa mahtuuko koko ajo 90 sekuntiin. Se ei
+kuitenkaan enää ole putken ongelma: D-060:n aikakatkaisu keskeyttää
+liian pitkän ajon, kirjaa virheen ja päästää muut lähteet vuoroon.
+
+---
+
 ### D-060 – Jumittunut lähde pysäytti koko keräysputken kahdeksi päiväksi
 TIC:in ajohistoriasta löytyi umpikuja. Cron ajaa kuuden tunnin välein ja
 käsittelee 14 lähdettä, mutta **11.8.2026 klo 12 alkaen jokainen ajo

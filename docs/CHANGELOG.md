@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### STT-lahde ei jumittunut vaan oli liian hidas
+
+Rajapinta vastaa moitteetta; lahde oli vain liian hidas mahtuakseen ajon
+budjettiin. Mitattu: 58 pyyntoa ja 59,6 s pelkkaan hakuun, keskimaarin
+1 027 ms per pyynto. Ajo ylitti reitin maxDurationin, alusta tappoi sen
+kesken, eika rivi paivittynyt - siita ikuinen "started"-tila.
+
+Hakusanat haetaan nyt kuusi kerrallaan rinnakkain: 59,6 s -> 15,1 s,
+sama 876 kandidaattia. Jokaisella pyynnolla on 15 s katkaisu, koska yksi
+hakusana vastasi kerran 15,5 sekunnissa mediaanin ollessa noin sekunti.
+
+Huom: ensimmainen arvioni (440 pyyntoa, 200 s) oli vaara, koska mittasin
+sivukoolla 20 kun todellinen on 100.
+
+---
+
 ### Jumittunut lahde pysaytti keraysputken kahdeksi paivaksi
 
 Cron kasittelee 14 lahdetta ajossa, mutta 11.8. klo 12 lahtien jokainen

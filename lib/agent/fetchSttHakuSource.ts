@@ -208,14 +208,8 @@ export function resolveDeveloper(
  */
 export async function fetchSttReleaseBody(url: string): Promise<string | null> {
   try {
-    const response = await fetch(url, {
-      cache: "no-store",
-      headers: {
-        "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)",
-        accept: "text/html",
-      },
-    })
-    if (!response.ok) return null
+    const response = await sttFetch(url, "text/html")
+    if (!response || !response.ok) return null
 
     const html = await response.text()
 
@@ -454,6 +448,49 @@ const COMPLETED_KEYWORDS = [
 const STT_PAGE_SIZE = 100
 const STT_MAX_PAGES = 10
 
+/*
+ * HAKU RINNAKKAIN, KOSKA SE ON AJON PULLONKAULA.
+ *
+ * Mitattu 13.8.2026: 44 hakusanaa tuottivat 58 pyyntoa ja
+ * **59,6 sekuntia** perakkain ajettuna, keskimaarin 1 027 ms per pyynto.
+ * Se on yksin enemman kuin lahdeajon koko 90 sekunnin budjetti kestaa,
+ * kun paalle tulee viela taydennys ja tuonti - ja juuri siksi STT-ajo
+ * ylitti reitin aikarajan ja jai tilaan "started" kahdeksi paivaksi.
+ *
+ * Hakusanat ovat toisistaan riippumattomia, joten ne voi hakea
+ * rinnakkain. Kuusi kerrallaan pudottaa hakuvaiheen noin kymmeneen
+ * sekuntiin olematta rajapinnalle epakohtelias.
+ */
+const STT_TERM_CONCURRENCY = 6
+
+/*
+ * YKSI HIDAS PYYNTO EI SAA SYODA BUDJETTIA. Mitattu: hakusana
+ * "rakennusurakka" vastasi kerran 15,5 sekunnissa, kun mediaani on noin
+ * sekunti. Ilman katkaisua yksi tallainen riittaa kaatamaan koko ajon
+ * aikarajaan.
+ */
+const STT_REQUEST_TIMEOUT_MS = 15 * 1000
+
+async function sttFetch(url: string, accept: string): Promise<Response | null> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), STT_REQUEST_TIMEOUT_MS)
+
+  try {
+    return await fetch(url, {
+      cache: "no-store",
+      signal: controller.signal,
+      headers: {
+        "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)",
+        accept,
+      },
+    })
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 async function fetchTermReleases(
   term: string,
   cutoffDate: Date
@@ -463,19 +500,13 @@ async function fetchTermReleases(
   for (let page = 0; page < STT_MAX_PAGES; page++) {
     let data: any = null
     try {
-      const res = await fetch(
+      const res = await sttFetch(
         `https://www.sttinfo.fi/public-website-api/releases?search=${encodeURIComponent(
           term
         )}&language=fi&size=${STT_PAGE_SIZE}&page=${page}`,
-        {
-          cache: "no-store",
-          headers: {
-            "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)",
-            accept: "application/json",
-          },
-        }
+        "application/json"
       )
-      if (!res.ok) break
+      if (!res || !res.ok) break
       data = await res.json()
     } catch {
       break
@@ -506,10 +537,25 @@ export async function fetchSttHakuSource() {
   const results: any[] = []
   const seen = new Set<string>()
 
-  for (const term of SEARCH_TERMS) {
-    const releases = await fetchTermReleases(term, cutoffDate)
+  /*
+   * Hakusanat rinnakkain, tulokset jarjestyksessa: seen-joukko ja
+   * results-taulukko taytetaan vasta kun kaikki on haettu, jotta
+   * lopputulos ei riipu siita missa jarjestyksessa pyynnot palasivat.
+   */
+  const byTerm: any[][] = new Array(SEARCH_TERMS.length)
+  let termCursor = 0
 
-    for (const release of releases) {
+  await Promise.all(
+    Array.from({ length: STT_TERM_CONCURRENCY }, async () => {
+      while (termCursor < SEARCH_TERMS.length) {
+        const index = termCursor++
+        byTerm[index] = await fetchTermReleases(SEARCH_TERMS[index], cutoffDate)
+      }
+    })
+  )
+
+  for (const releases of byTerm) {
+    for (const release of releases ?? []) {
       const id = String(release?.id ?? "")
       if (!id || seen.has(id)) continue
 
