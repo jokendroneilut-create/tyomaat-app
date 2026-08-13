@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Kohdetyyppi LLM:lla: 35 % -> 59 %, 198 arvoa -> 20
+
+Kohdetyyppi on asiakkaan ensisijainen suodatin ja oli kahdella tavalla
+rikki: 3 688 rivilta puuttui, ja asetetuissa oli 198 eri arvoa - "Koulu"
+ja "koulu" erikseen, "Tuulivoima" ja "Aurinkopuisto" erikseen.
+
+Kontrolliajo ennen kirjoitusta 100 rivilla joiden tyyppi tiedetaan
+otsikosta: 94 samaa mielta, 4 tyhjaa, 2 eri mielta. Tarkkuus vastatuissa
+98 %. Saanto ajetaan ensin, LLM vain kun saanto ei osaa.
+
+Sanasto on suljettu (20 arvoa) ja tyhja on sentineli EI_TIEDOSSA.
+
+Lopputulos: 1 907 -> 3 174 rivia (59 %), eri arvoja 198 -> 20.
+
+---
+
 ### Duplikaattien purku ja energiaparien vaimennus
 
 Taysi duplikaattiskannaus massahyvaksynnan jalkeen paljasti kaksi vikaa.

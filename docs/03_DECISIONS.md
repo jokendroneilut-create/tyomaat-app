@@ -5,6 +5,51 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-059 – LLM kohdetyypille: suljettu sanasto ja mitattu ensin
+Kohdetyyppi on asiakkaan ensisijainen suodatin ja se oli kahdella tavalla
+rikki. Mitattu 13.8.2026: **3 688 riviltä puuttui kokonaan**, ja
+asetetuissa oli **198 eri arvoa** 1 907 rivillä - "Koulu" ja "koulu"
+erikseen, "Tuulivoima" / "Tuulivoimalahankkeet" / "Aurinkopuisto"
+erikseen, ja häntänä vapaata tekstiä kuten "Prisma" ja
+"Asiantuntijapalvelut".
+
+Sääntöpohjainen poimija ratkaisi otsikosta 193 riviä. Kuvauksesta se
+ratkaisi 529 lisää, mutta niistä kaksi kolmasosaa oli väärin ("HAM
+Helsingin taidemuseo" -> Logistiikka), koska kuvaus kertoo ympäristöstä
+eikä kohteesta. Juuri tuo ero - mikä tekstissä on KOHDE - on se jonka
+LLM osaa.
+
+**KONTROLLIAJO ENNEN KIRJOITUSTA.** Aineistona rivit joiden tyyppi
+tiedetään otsikosta; malli ei nähnyt tallennettua arvoa.
+
+| | ensimmäinen ohje | säädetty |
+|---|---|---|
+| samaa mieltä | 85 | **94** |
+| jätti tyhjäksi | 14 | 4 |
+| eri mieltä | 1 | 2 |
+
+Tarkkuus vastatuissa 98 %, ja molemmat erimielisyydet puolustettavia
+("Koulun ja päiväkodin peruskorjaus" on aidosti molempia). Ensimmäinen
+ohje jätti turhaan tyhjäksi ilmiselviä tapauksia, koska painotti
+varovaisuutta liikaa; lisäys "otsikko yksin riittää kun se nimeää
+kohteen" pudotti tyhjät 14:stä neljään.
+
+**SANASTO ON SULJETTU JA TYHJÄ ON SENTINELI.** Malli saa palauttaa vain
+20 kanonista arvoa tai `EI_TIEDOSSA`. Skeema `{ type: ["string","null"],
+enum: [...] }` hylätään rajapinnassa, ja sentineli tekee tyhjästä
+vastauksesta mallille nimenomaisen valinnan eikä jotain jonka se jättää
+pois.
+
+**SÄÄNTÖ AJETAAN ENSIN.** Otsikosta luettu tyyppi on mitattu tarkaksi
+eikä maksa mitään, joten LLM:ää kysytään vain kun sääntö ei osaa.
+
+Lopputulos: kohdetyyppi **1 907 → 3 174 riviä (35 % → 59 %)** ja eri
+arvoja **198 → 20 kanonista**, jotka kattavat kaikki paitsi 23 riviä.
+Kaksoiskirjoitusasut yhdistyivät: `Aurinkopuisto`, `Aurinkosähköpuisto`,
+`Tuulivoimahanke` ja `Tuulipuisto` ovat nyt yksi `Energiantuotanto`.
+
+---
+
 ### D-058 – Vahvistus ei ole purku, ja eri paikannimi on veto
 Massahyväksynnän jälkeen ajettiin täysi duplikaattiskannaus. Se paljasti
 kaksi eri vikaa.
