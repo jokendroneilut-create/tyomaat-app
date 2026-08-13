@@ -30,6 +30,112 @@ function describeError(error: any): string {
   return detail ? `${message} (${detail})` : message
 }
 
+/*
+ * AIKAKATKAISU LAHDEAJOLLE.
+ *
+ * Yksikään haku ei saa jumittaa ajoa ikuisesti. Ilman tätä hidas tai
+ * vastaamaton palvelin jätti ajon tilaan "started" pysyvästi: mitattu
+ * 13 tällaista ajoa heinäkuulta asti, eikä yksikään kirjannut virhettä,
+ * koska kumpikaan try/catch-haara ei koskaan suoriutunut.
+ *
+ * RAJA MITOITETAAN AJON BUDJETTIIN, EI YKSITTAISEEN LAHTEESEEN.
+ * Reitin `maxDuration` on 500 s ja yksi ajo käsittelee 14 lähdettä, joten
+ * keskimäärin aikaa on noin 35 s per lähde - mitattu toteuma on ~20 s.
+ * Liian pitkä katkaisu ei siis korjaa mitään: viiden minuutin rajalla
+ * yksi jumittaja söisi 60 % budjetista ja loput jäisivät yhä ajamatta,
+ * mikä on juuri se vika jota korjataan.
+ *
+ * 90 sekuntia on nelinkertainen mitattuun keskiarvoon nähden - riittää
+ * hitaalle alasivuja hakevalle kerääjälle (Seinäjoki, Kerava) mutta
+ * jättää 400 s muille vaikka yksi lähde katkaistaisiin.
+ */
+const SOURCE_TIMEOUT_MS = 90 * 1000
+
+export class SourceTimeoutError extends Error {
+  constructor(sourceName: string, ms: number) {
+    super(`Lähde ei vastannut ${Math.round(ms / 1000)} sekunnissa: ${sourceName}`)
+    this.name = "SourceTimeoutError"
+  }
+}
+
+async function withTimeout<T>(work: Promise<T>, sourceName: string): Promise<T> {
+  let timer: NodeJS.Timeout | undefined
+
+  try {
+    return await Promise.race([
+      work,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new SourceTimeoutError(sourceName, SOURCE_TIMEOUT_MS)),
+          SOURCE_TIMEOUT_MS
+        )
+      }),
+    ])
+  } finally {
+    /*
+     * Ajastin on siivottava myös onnistuneessa haarassa, muuten prosessi
+     * jää elämään viideksi minuutiksi jokaisen ajon jälkeen.
+     */
+    if (timer) clearTimeout(timer)
+  }
+}
+
+/*
+ * VAHTIKOIRA JUMIIN JAANEILLE AJOILLE.
+ *
+ * Aikakatkaisu estää uudet jumit, mutta ei siivoa vanhoja eikä auta jos
+ * koko suoritusympäristö kaatuu kesken ajon (Vercelin aikaraja, deploy).
+ * Silloin rivi jää "started"-tilaan eikä kukaan tiedä siitä: lähteen
+ * `error_count` pysyy nollassa ja tilannekuva näyttää terveeltä.
+ *
+ * Ajetaan putken alussa, jotta edellisen ajon roskat siivoutuvat ennen
+ * kuin uusia valitaan.
+ */
+const STUCK_RUN_AGE_MS = 60 * 60 * 1000
+
+export async function reapStuckRuns(): Promise<number> {
+  const cutoff = new Date(Date.now() - STUCK_RUN_AGE_MS).toISOString()
+
+  const { data: stuck, error } = await supabaseAdmin
+    .from("discovery_runs")
+    .select("id, source_id, source_name, created_at")
+    .eq("status", "started")
+    .lt("created_at", cutoff)
+
+  if (error || !stuck?.length) return 0
+
+  const message = "Ajo jäi kesken (ei päättynyt tunnissa)"
+
+  for (const run of stuck) {
+    await supabaseAdmin
+      .from("discovery_runs")
+      .update({
+        status: "error",
+        error_message: message,
+        finished_at: new Date().toISOString(),
+      })
+      .eq("id", run.id)
+
+    const { data: source } = await supabaseAdmin
+      .from("discovery_sources")
+      .select("error_count")
+      .eq("id", run.source_id)
+      .maybeSingle()
+
+    await supabaseAdmin
+      .from("discovery_sources")
+      .update({
+        last_error_at: new Date().toISOString(),
+        last_error_message: message,
+        error_count: Number(source?.error_count ?? 0) + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", run.source_id)
+  }
+
+  return stuck.length
+}
+
 export async function runSourceWorker(sourceId: string) {
   const { data: source, error: sourceError } = await supabaseAdmin
     .from("discovery_sources")
@@ -56,6 +162,27 @@ export async function runSourceWorker(sourceId: string) {
 
   if (runError) throw runError
 
+  /*
+   * LAST_RUN_AT MERKITAAN HETI, EI VASTA LOPUSSA.
+   *
+   * Putki valitsee lähteet järjestyksessä vanhin ensin. Jos leima
+   * päivitetään vasta onnistuneen ajon lopussa, jumiin jäänyt lähde pysyy
+   * ikuisesti vanhimpana: se valitaan joka ajossa ensimmäisenä, jumittuu
+   * taas, eikä leima päivity koskaan.
+   *
+   * Mitattu 13.8.2026: umpikuja alkoi 11.8. klo 12 ja jokainen sen
+   * jälkeinen cron-ajo käsitteli enää KAKSI lähdettä - Hilman ja yhden
+   * jumittajan (ensin YVA, sitten STT). 70 lähdettä 300:sta jäi ajamatta
+   * viikoksi, koska ajo kuoli jumittajaan eikä ehtinyt lopuille.
+   *
+   * Aloitusleima katkaisee kierteen: jumittunutkin lähde siirtyy jonon
+   * hännille ja muut pääsevät vuoroon.
+   */
+  await supabaseAdmin
+    .from("discovery_sources")
+    .update({ last_run_at: new Date().toISOString() })
+    .eq("id", source.id)
+
   try {
     let result
 
@@ -81,7 +208,10 @@ if (!collectorName || !collectors[collectorName]) {
   throw new Error(`Unsupported collector: ${collectorName ?? source.type}`)
 }
 
-result = await collectors[collectorName](source)
+result = await withTimeout(
+  collectors[collectorName](source),
+  source.name
+)
 
     await supabaseAdmin
       .from("discovery_runs")

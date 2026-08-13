@@ -5,6 +5,53 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-060 – Jumittunut lähde pysäytti koko keräysputken kahdeksi päiväksi
+TIC:in ajohistoriasta löytyi umpikuja. Cron ajaa kuuden tunnin välein ja
+käsittelee 14 lähdettä, mutta **11.8.2026 klo 12 alkaen jokainen ajo
+käsitteli enää kaksi**: Hilman ja yhden jumittajan.
+
+| ajo | lähteitä |
+|---|---|
+| 11.8. klo 00 | 14 |
+| 11.8. klo 06 | 11 |
+| 11.8. klo 12 – 13.8. klo 18 (kaikki 9 ajoa) | **2** |
+
+Jumittajat olivat YVA (3 ajoa) ja sen jälkeen STT-tiedotteet (8 ajoa).
+Ajo kuoli niihin eikä koskaan edennyt lopuille 12:lle lähteelle, joten
+**70 lähdettä 300:sta jäi ajamatta viikoksi** - mukana Helsingin kaavat,
+Väylävirasto ja Rakennuslehti.
+
+**KOLME VIKAA KETJUSSA, JA JOKAINEN YKSIN RIITTI PITÄMÄÄN UMPIKUJAN.**
+
+*1. Haulla ei ollut aikakatkaisua.* Vastaamaton palvelin jumitti ajon
+ikuisesti. Rivi jäi tilaan `started`, `finished_at` tyhjänä - ja koska
+kumpikaan try/catch-haara ei suoriutunut, virhettä ei kirjattu koskaan.
+Lähteen tilannekuva näytti terveeltä: `error_count: 0`,
+`last_success_at` viideltä päivältä sitten.
+
+*2. `last_run_at` päivittyi vain ajon lopussa.* Putki valitsee lähteet
+järjestyksessä vanhin ensin, joten jumittunut lähde pysyi ikuisesti
+vanhimpana ja valittiin joka ajossa ensimmäisenä. Leima kirjoitetaan nyt
+ajon ALUSSA, mikä katkaisee kierteen: jumittunutkin lähde siirtyy jonon
+hännille.
+
+*3. Kesken jäänyttä ajoa ei havainnut mikään.* `started`-tilaan
+jääneitä oli 18 kpl heinäkuulta asti. Vahtikoira merkitsee yli tunnin
+vanhat virheiksi ja kasvattaa lähteen virhelaskuria; se ajetaan putken
+alussa ennen lähteiden valintaa.
+
+**AIKAKATKAISU MITOITETAAN AJON BUDJETTIIN.** Ensimmäinen versio asetti
+rajaksi viisi minuuttia, mikä ei olisi korjannut mitään: reitin
+`maxDuration` on 500 s ja yksi ajo käsittelee 14 lähdettä, joten yksi
+jumittaja olisi syönyt 60 % budjetista ja loput olisivat jääneet yhä
+ajamatta. Raja on 90 s eli nelinkertainen mitattuun toteumaan (~20 s
+per lähde).
+
+Siivottiin 18 kesken jäänyttä ajoa. Sen jälkeen virhelaskuri kertoo
+totuuden: STT 8 virhettä, Helsingin vireillä olevat kaavat 3.
+
+---
+
 ### D-059 – LLM kohdetyypille: suljettu sanasto ja mitattu ensin
 Kohdetyyppi on asiakkaan ensisijainen suodatin ja se oli kahdella tavalla
 rikki. Mitattu 13.8.2026: **3 688 riviltä puuttui kokonaan**, ja

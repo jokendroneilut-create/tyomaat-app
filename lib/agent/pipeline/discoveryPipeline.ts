@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
-import { runSourceWorker } from "@/lib/agent/workers/sourceWorker"
+import { runSourceWorker, reapStuckRuns } from "@/lib/agent/workers/sourceWorker"
 import { collectArticleDocument } from "@/lib/agent/discovery/collectors/articleCollector"
 import { runPdfWorker } from "@/lib/agent/workers/pdfWorker"
 import { runTextExtractionWorker } from "@/lib/agent/workers/textExtractionWorker"
@@ -70,6 +70,16 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   // 1. Source Worker
   //
   if (stages.has("sources")) {
+    /*
+     * Edellisen ajon roskat siivotaan ennen kuin uusia lähteitä valitaan.
+     * Kesken jäänyt ajo ei muuten kirjaa virhettä koskaan, jolloin lähde
+     * näyttää terveeltä vaikka se on jumittanut putken päiväkausia.
+     */
+    const reaped = await reapStuckRuns()
+    if (reaped > 0) {
+      console.log(`discoveryPipeline: siivottiin ${reaped} kesken jäänyttä ajoa`)
+    }
+
     const { data: sources, error: sourcesError } = await supabaseAdmin
       .from("discovery_sources")
       .select("*")

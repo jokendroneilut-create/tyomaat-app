@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Jumittunut lahde pysaytti keraysputken kahdeksi paivaksi
+
+Cron kasittelee 14 lahdetta ajossa, mutta 11.8. klo 12 lahtien jokainen
+ajo kasitteli enaa kaksi: Hilman ja yhden jumittajan (ensin YVA, sitten
+STT). 70 lahdetta 300:sta jai ajamatta viikoksi.
+
+Kolme korjausta: 90 sekunnin aikakatkaisu lahdeajolle, `last_run_at`
+kirjoitetaan ajon ALUSSA (jotta jumittunut lahde ei pysy ikuisesti
+jonon karjessa), ja vahtikoira merkitsee yli tunnin `started`-tilassa
+olleet ajot virheiksi.
+
+Aikakatkaisu mitoitettiin ajon budjettiin: maxDuration on 500 s ja
+lahteita 14, joten viiden minuutin raja olisi syonyt 60 % budjetista
+eika olisi korjannut mitaan.
+
+Siivottiin 18 kesken jaanytta ajoa.
+
+---
+
 ### Kohdetyyppi LLM:lla: 35 % -> 59 %, 198 arvoa -> 20
 
 Kohdetyyppi on asiakkaan ensisijainen suodatin ja oli kahdella tavalla
