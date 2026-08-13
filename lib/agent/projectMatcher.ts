@@ -6,7 +6,10 @@ import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
 import { isSameOrganization } from "@/lib/projects/organizationName"
 import { haveDifferentTrades } from "@/lib/projects/contractTrade"
 import { haveDifferentNameNumbers } from "@/lib/projects/nameNumbers"
-import { haveSameEnergySite } from "@/lib/projects/energySite"
+import {
+  haveSameEnergySite,
+  haveDifferentEnergySites,
+} from "@/lib/projects/energySite"
 
 export type NormalizedProjectCandidate = {
   name?: string | null
@@ -587,6 +590,25 @@ export function calculateMatch(
    * nähtäväksi.
    */
   if (haveDifferentTrades(candidate.name, project.name)) {
+    return null
+  }
+
+  /*
+   * Eri paikannimi samassa kunnassa = eri energiahanke. Veto on ehdoton
+   * samasta syystä kuin urakkalajilla: energiahankkeiden otsikoista neljä
+   * sanaa viidestä on samoja, joten pisteytys ei erota niitä. Mitattu
+   * 13.8.2026: 68 duplikaattiehdokkaasta 51 oli tätä kuviota, ja
+   * Tervolassa kuusi eri tuulipuistoa ristiinpariutui 15 pariksi.
+   */
+  if (
+    haveDifferentEnergySites(
+      candidate.name,
+      project.name,
+      project.city,
+      candidate.description,
+      project.additional_info
+    )
+  ) {
     return null
   }
 

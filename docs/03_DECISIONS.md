@@ -5,6 +5,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-058 – Vahvistus ei ole purku, ja eri paikannimi on veto
+Massahyväksynnän jälkeen ajettiin täysi duplikaattiskannaus. Se paljasti
+kaksi eri vikaa.
+
+**1. Vahvistetut duplikaatit jäivät listalle.** Katselmoinnissa pari
+merkitään `confirmed_duplicate`-tilaan, mutta se on päätös - ei
+toimenpide. Mitattu 13.8.2026: **41 vahvistetusta parista 21:llä
+molemmat rivit olivat yhä asiakkaan listalla.** Nämä olivat siis jo
+tunnistettuja duplikaatteja, jotka vain jäivät purkamatta.
+
+Purussa tieto siirretään ennen piilotusta: jäävä rivi valitaan
+täytettyjen kenttien ja kuvauksen pituuden perusteella, ja puuttuvat
+kentät täydennetään piilotettavalta. Kuvaukset liitetään eikä korvata -
+sama oppi kuin D-057:ssä. 19 riville 21:stä siirtyi tietoa.
+
+**2. Energiahankkeet ristiinpariutuivat.** 68 uudesta ehdokkaasta
+**51 oli samaa kuviota**: kaksi eri tuulipuistoa samassa kunnassa, joiden
+otsikoista neljä sanaa viidestä on samoja.
+
+    "Vitsakankaan tuulivoimaa koskeva osayleiskaava"
+    "Pitkämaan tuulivoimaa koskeva osayleiskaava"
+
+Tervolassa kuusi eri puistoa tuotti 15 paria. `haveDifferentEnergySites`
+on nyt ehdoton veto samalla perusteella kuin urakkalaji: pisteytys ei
+erota niitä, koska erottava tieto on yksi sana.
+
+**Testi paljasti pahemman piilevän vian.** Sääntö ei aluksi lauennut
+lainkaan, ja syy oli pysäytyssanastossa: siinä oli "tuulivoima" mutta ei
+partitiivia "tuulivoimaa", joten yleissana laskettiin PAIKANNIMEKSI
+molemmille. Vika oli vaarallisempi yhdistämissuuntaan: yhteinen
+geneerinen sana riittää `haveSameEnergySite`-ehtoon, joten kaksi eri
+tuulipuistoa saattoi **yhdistyä** sanalla jota ei tarkoitettu
+paikannimeksi. Sanasto perustuu nyt vartaloihin.
+
+Skannauksesta jäi katselmoitavaksi 9 paria, joista aidoiksi
+duplikaateiksi tunnistui yksi (Herttoniemen liikuntapuiston
+huoltorakennus kahdella otsikolla). Loput olivat vääriä pareja tai
+lausuntorivejä, jotka eivät ole hankkeita lainkaan.
+
+---
+
 ### D-057 – Luvattu valmistumisaika on tavoite, ei aikataulu
 D-056 alkoi poimia käyttöönottopäiviä Helsingin tarveselvityksistä. Se
 oli oikea poiminta mutta väärä johtopäätös, ja urakoitsijan oma sivu

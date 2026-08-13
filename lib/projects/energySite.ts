@@ -130,12 +130,33 @@ function directions(words: string[]): Set<string> {
   return found
 }
 
+/*
+ * VARTALO, EI TÄYSI SANA.
+ *
+ * Tarkka sanalista ei kestä suomen taivutusta: listassa oli "tuulivoima"
+ * mutta ei partitiivia "tuulivoimaa", joten "Vitsakankaan TUULIVOIMAA
+ * koskeva osayleiskaava" ja "Pitkämaan TUULIVOIMAA koskeva osayleiskaava"
+ * saivat yhteisen "paikannimen" ja näyttivät samalta kohteelta.
+ *
+ * Vika oli vaarallisempi yhdistämissuuntaan kuin erottamiseen: yhteinen
+ * geneerinen sana riittää `haveSameEnergySite`-ehtoon, joten kaksi eri
+ * tuulipuistoa saattoi yhdistyä sanalla jota ei edes tarkoitettu
+ * paikannimeksi.
+ *
+ * Vartalot on valittu niin etteivät ne ole uskottavia paikannimien
+ * alkuja. Yleissanat kuten "hanke", "puisto" ja "alue" jäävät tarkkaan
+ * listaan, koska ne esiintyvät myös paikannimissä (Hankasalmi).
+ */
+const SITE_STOPWORD_STEM =
+  /^(?:tuulivoim|tuulipuist|aurinkovoim|aurinkopuist|voimalait|voimajoht|sähkönsiirt|sähkösiirt|sähköasem|osayleiskaav|yleiskaav|asemakaav|kaavamuuto|koskev|ympäristövaikutu|arvioint|liitynt|kilovolt|windfarm)/
+
 function siteWords(words: string[], city: string | null | undefined): string[] {
   const cityStem = city ? city.toLowerCase().slice(0, MIN_SHARED_PREFIX) : null
 
   return words.filter((word) => {
     if (word.length < MIN_SITE_WORD) return false
     if (SITE_STOPWORD.has(word)) return false
+    if (SITE_STOPWORD_STEM.test(word)) return false
     if (getMunicipalityByAnyForm(word)) return false
     if (cityStem && word.startsWith(cityStem)) return false
     return true
@@ -201,4 +222,46 @@ export function haveSameEnergySite(
   if (!sitesA.length || !sitesB.length) return false
 
   return sitesA.some((a) => sitesB.some((b) => sharesPrefix(a, b)))
+}
+
+/*
+ * ERI PAIKANNIMI SAMASSA KUNNASSA = ERI HANKE.
+ *
+ * `haveSameEnergySite` yhdistää saman kohteen rivit. Tämä on sen pari
+ * toiseen suuntaan, ja se on yhtä tarpeellinen: energiahankkeiden
+ * otsikot ovat lähes identtisiä, koska erottava tieto on yksi sana.
+ *
+ * Mitattu 13.8.2026 täydellä duplikaattiskannauksella: 68 uudesta
+ * ehdokkaasta **51 oli tätä kuviota**. Tervolassa kuusi eri tuulipuistoa
+ * ristiinpariutui 15 pariksi, koska otsikoista neljä sanaa viidestä on
+ * samoja:
+ *
+ *   "Vitsakankaan tuulivoimaa koskeva osayleiskaava"
+ *   "Pitkämaan tuulivoimaa koskeva osayleiskaava"
+ *
+ * Ilman tätä jokainen täysi skannaus tuottaa saman kohinan, ja
+ * katselmointi menettää merkityksensä - 51 väärää paria hukuttaa alleen
+ * ne kolme aitoa.
+ *
+ * PAIKANNIMEN PUUTTUMINEN EI OLE TODISTE. Jos kummallakaan otsikolla ei
+ * ole tunnistettavaa paikannimeä ("Datakeskus"), palautetaan false eikä
+ * estetä mitään - tyhjä on parempi kuin väärä myös tähän suuntaan.
+ */
+export function haveDifferentEnergySites(
+  nameA: string | null | undefined,
+  nameB: string | null | undefined,
+  city: string | null | undefined,
+  textA?: string | null,
+  textB?: string | null
+): boolean {
+  const energyA = isEnergyProjectName(nameA) || isEnergyProjectName(textA)
+  const energyB = isEnergyProjectName(nameB) || isEnergyProjectName(textB)
+  if (!energyA || !energyB) return false
+  if (!nameA || !nameB) return false
+
+  const sitesA = siteWords(tokenize(nameA), city)
+  const sitesB = siteWords(tokenize(nameB), city)
+  if (!sitesA.length || !sitesB.length) return false
+
+  return !sitesA.some((a) => sitesB.some((b) => sharesPrefix(a, b)))
 }

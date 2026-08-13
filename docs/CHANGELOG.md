@@ -11,6 +11,26 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Duplikaattien purku ja energiaparien vaimennus
+
+Taysi duplikaattiskannaus massahyvaksynnan jalkeen paljasti kaksi vikaa.
+
+41 vahvistetusta duplikaattiparista 21:lla molemmat rivit olivat yha
+asiakkaan listalla - vahvistus on paatos, purku erillinen toimenpide.
+Purettu, ja tieto siirrettiin ennen piilotusta (19 rivia sai lisatietoa).
+
+68 uudesta ehdokkaasta 51 oli energiahankkeiden ristiinpariutumista:
+"Vitsakankaan tuulivoimaa koskeva osayleiskaava" vs "Pitkamaan
+tuulivoimaa koskeva osayleiskaava". Eri paikannimi samassa kunnassa on
+nyt ehdoton veto.
+
+Testi paljasti piilevan vian: pysaytyssanastossa oli "tuulivoima" mutta
+ei partitiivia "tuulivoimaa", joten yleissana laskettiin paikannimeksi.
+Se saattoi YHDISTAA kaksi eri tuulipuistoa. Sanasto perustuu nyt
+vartaloihin.
+
+---
+
 ### Luvattu valmistumisaika erotetaan aikataulusta
 
 Kayttoonottopaivien poiminta (edellinen kohta) oli oikea poiminta mutta

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { haveSameEnergySite, isEnergyProjectName } from "./energySite"
+import { haveSameEnergySite, haveDifferentEnergySites, isEnergyProjectName } from "./energySite"
 
 describe("haveSameEnergySite", () => {
   /*
@@ -209,4 +209,66 @@ describe("haveSameEnergySite", () => {
     ).toBe(true)
   })
 
+})
+
+describe("haveDifferentEnergySites", () => {
+  /*
+   * MITATTU KUVIO. Tervolassa kuusi eri tuulipuistoa ristiinpariutui
+   * 15 duplikaattipariksi, koska otsikoista nelja sanaa viidesta on
+   * samoja. 68 uudesta ehdokkaasta 51 oli tata kuviota.
+   */
+  it("tunnistaa eri tuulipuistot samassa kunnassa", () => {
+    expect(
+      haveDifferentEnergySites(
+        "Vitsakankaan tuulivoimaa koskeva osayleiskaava",
+        "Pitkämaan tuulivoimaa koskeva osayleiskaava",
+        "Tervola"
+      )
+    ).toBe(true)
+
+    expect(
+      haveDifferentEnergySites(
+        "NEITTÄVÄNVAARAN TUULIVOIMAPUISTOHANKE",
+        "ULJUAN TUULIVOIMAPUISTOHANKE",
+        "Siikalatva"
+      )
+    ).toBe(true)
+  })
+
+  /* Sama kohde ei saa laueta - se on haveSameEnergySite:n tapaus. */
+  it("ei laukea samasta kohteesta", () => {
+    expect(
+      haveDifferentEnergySites(
+        "Mustasuo-Tynnyrikorven tuuli- ja aurinkovoimahanke",
+        "Mustasuo-Tynnyrikorven tuuli- ja aurinkovoimahanke, Oulu",
+        "Oulu"
+      )
+    ).toBe(false)
+
+    expect(
+      haveDifferentEnergySites(
+        "Niinimäen tuulivoimahanke, Hattula",
+        "Hattulan Niinimäen tuulivoimaosayleiskaava",
+        "Hattula"
+      )
+    ).toBe(false)
+  })
+
+  it("ei laukea kun toinen ei ole energiahanke", () => {
+    expect(
+      haveDifferentEnergySites(
+        "Vitsakankaan tuulivoimaa koskeva osayleiskaava",
+        "Keskustan päiväkodin peruskorjaus",
+        "Tervola"
+      )
+    ).toBe(false)
+  })
+
+  /*
+   * PAIKANNIMEN PUUTTUMINEN EI OLE TODISTE. Tyhja on parempi kuin
+   * vaara myos tahan suuntaan.
+   */
+  it("ei laukea ilman tunnistettavaa paikannimea", () => {
+    expect(haveDifferentEnergySites("Datakeskus", "Aurinkovoimala", "Kouvola")).toBe(false)
+  })
 })
