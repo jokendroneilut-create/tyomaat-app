@@ -76,21 +76,50 @@ export async function POST(req: Request) {
     try {
       const { data: target } = await supabase
         .from("profiles")
-        .select("email, full_name, created_at")
+        .select("email, full_name")
         .eq("id", userId)
         .maybeSingle()
 
-      const { error: logError } = await supabase.from("account_lifecycle").upsert(
-        {
+      /*
+       * Luontipaiva otetaan auth.usersista, ei profilesista:
+       * profiles.created_at on profiilirivin luontipaiva, ei tilin.
+       * Mitattu 15.8.2026: 40 profiilirivia oli luotu samana paivana
+       * taulun kayttoonoton taydennysajossa, ja suurin ero tilin
+       * todelliseen luontipaivaan oli 78 vuorokautta.
+       */
+      const { data: authTarget } = await supabase.auth.admin.getUserById(userId)
+      const email = authTarget?.user?.email ?? target?.email ?? null
+
+      /*
+       * "created" kirjataan tassa myos: jos tilia ei ole ehditty
+       * synkata, poiston jalkeen luontipaivaa ei saa mistaan - tili
+       * katoaisi kohorttiluvuista kokonaan.
+       */
+      const rows: any[] = []
+
+      if (authTarget?.user?.created_at) {
+        rows.push({
           user_id: userId,
-          email: target?.email ?? null,
+          email,
           full_name: target?.full_name ?? null,
-          event: "deleted",
-          occurred_at: new Date().toISOString(),
-          metadata: { source: "admin_delete_user", deleted_by: caller.email ?? null },
-        },
-        { onConflict: "user_id,event" }
-      )
+          event: "created",
+          occurred_at: authTarget.user.created_at,
+          metadata: { source: "admin_delete_user_backfill" },
+        })
+      }
+
+      rows.push({
+        user_id: userId,
+        email,
+        full_name: target?.full_name ?? null,
+        event: "deleted",
+        occurred_at: new Date().toISOString(),
+        metadata: { source: "admin_delete_user", deleted_by: caller.email ?? null },
+      })
+
+      const { error: logError } = await supabase
+        .from("account_lifecycle")
+        .upsert(rows, { onConflict: "user_id,event", ignoreDuplicates: true })
 
       if (logError) {
         console.error("ACCOUNT LIFECYCLE LOG FAILED:", logError.message)

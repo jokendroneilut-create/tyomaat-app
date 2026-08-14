@@ -3,6 +3,17 @@
 Myynti- ja aktivointitoimenpiteiden vaikutus näkyy vain, jos samat luvut
 lasketaan samalla tavalla eri ajankohtina. Tämä tiedosto on se sarja.
 
+**Kaksi raporttia:**
+
+| komento | vastaa kysymykseen |
+|---|---|
+| `npx tsx scripts/report-accounts.ts` | montako tiliä on luotu, milloin, mille yrityksille |
+| `npx tsx scripts/snapshot-users.ts` | kuka niistä oikeasti käyttää tuotetta |
+
+Hankintaraportti lukee `account_lifecycle`-taulusta, joten **myös
+poistetut tilit ovat mukana**. Aikaikkunan saa vaihdettua:
+`--months 24`.
+
 **Päivitys:** aja `npx tsx scripts/snapshot-users.ts` ja lisää tulos
 kohtaan [Tilannekuvat](#tilannekuvat) uusin ylimmäksi. Älä muuta
 laskentatapaa jälkikäteen — jos mittari on muutettava, kirjaa muutos
@@ -62,6 +73,17 @@ asiakkaiksi" ei voi tuottaa datasta. Lähin korvike on tili + käyttö:
 *luotu helmikuussa, ei jälkeäkään 14.7. jälkeen*. Se on eri asia kuin
 konvertoitumaton trial, koska syy voi yhtä hyvin olla ettei tiliä
 koskaan otettu käyttöön.
+
+**Yritys tunnistetaan vain sähköpostin domainista.** Erillistä
+yrityskenttää ei ole. 21 tiliä 73:sta on ilmaissähköpostissa (gmail 15,
+hotmail 4), eikä niitä voi yhdistää yritykseen millään. Jos yritystieto
+on myynnille tärkeä, se on kysyttävä rekisteröityessä — jälkikäteen
+sitä ei saa mistään.
+
+**Domain säilyy vain niin kauan kuin sähköposti.** Jos `email` nollataan
+GDPR-poistopyynnön takia, myös yritystieto katoaa siltä riviltä. Jos
+yritystason luvut halutaan säilyttää poistojen yli, `account_lifecycle`
+tarvitsee oman `company_domain`-sarakkeen.
 
 **Tunnuksen säilyminen on nyt varmistettu.** `account_lifecycle`-taulu
 otettiin käyttöön 15.8.2026 ja siihen kirjattiin kaikki 73 tiliä
@@ -123,6 +145,18 @@ vielä ole — tämä on lähtötaso.
 
 Tiivistettynä: **helmi–huhtikuun 41 tilistä 9 on aktiivisia (22 %),
 heinä–elokuun 28 tilistä 21 (75 %).**
+
+**Yritykset** (sähköpostin domainin mukaan, kaikki 73 tiliä):
+
+| | |
+|---|---|
+| eri yrityksiä | **23** |
+| tilejä yritysdomainissa | **52** |
+| ilmaissähköpostilla | **21** (ei yhdistettävissä yritykseen) |
+
+Useamman tilin yritykset: `koneunion.fi` 15 (ensimmäinen 19.2.),
+`sarlin.com` 12 (23.3.), `henkilostomestarit.fi` 4 (30.7.),
+`priimamaalaus.fi` 2 (24.7.). Loput 19 yritystä yhden tilin varassa.
 
 **Sitoutuminen** (montako asiakastiliä on tehnyt tämän):
 
