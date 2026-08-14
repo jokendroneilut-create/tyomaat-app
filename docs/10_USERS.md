@@ -25,17 +25,50 @@ koskaan käyttänyt" vaan "ei tapahtumia 14.7. jälkeen". Viikkokäyrän
 nollat ennen heinäkuun puoltaväliä ovat mittarin alku, eivät käyttäjien
 käytös.
 
-**2. Yksi tili tuottaa 93 % tapahtumista.** `jo***@hotmail.com`, 21 356
-tapahtumaa eli 93 % kaikkien asiakastilien tapahtumista.
-Todennäköisesti oma tili — **vahvistettava**. Sen
-mukanaolo tekee kaikista keskiarvoista ja tapahtumajakaumista
-merkityksettömiä, joten skripti erottaa sen automaattisesti (yli 25 %
-osuus) eikä piilota sitä.
+**2. Omat tilit on suljettu pois, ja se on tarkistettava.**
+`johannessippola@hotmail.com` (admin) tuotti yksin 21 367 tapahtumaa eli
+**93 %** kaikista. `jokendroneilut@gmail.com` on testitili. Molemmat on
+lueteltu skriptissä täsmällisinä osoitteina, ei kuviona — kuvio joka ei
+osu jättää tilin hiljaisesti mukaan lukuihin eikä sitä huomaa mistään.
+Juuri niin kävi ensimmäisellä mittauskerralla. Skripti varoittaa, jos
+nimetty osoite katoaa kannasta.
+
+**Vielä ratkaisematta:** `johannes.sippola@koneunion.fi` on kannassa
+erikseen (luotu 28.7.). Se on toistaiseksi laskettu asiakastiliksi —
+lisää poissulkulistaan jos on omasi.
 
 **3. Aktiivisuus mitataan tapahtumista, ei kirjautumisista.**
 `analytics_events` kirjaa `pageview`, `login` ja `project_open`. Auki
 jätetty välilehti voi tuottaa tapahtumia ilman että kukaan käyttää
 tuotetta.
+
+---
+
+## Mitä EI ole tallessa: tilaus- ja trial-tila
+
+Tarkistettu 15.8.2026. Kantaa ei ole tauluja `subscriptions`, `plans`,
+`invoices`, `payments`, `customers`, `trials` eikä `leads`. `profiles`
+sisältää vain `id`, `email`, `full_name`, `created_at`. Maksullisuudesta
+ei ole kenttää missään.
+
+**Tunnus säilyy, tila ei.** Jokainen koskaan luotu tili on tallessa:
+`auth.users` 73 ja `profiles` 73 täsmäävät, orpoja ei ole eikä mitään
+ole poistettu. Sähköpostiosoite ja luontipäivä ovat siis aina
+saatavilla.
+
+**Mutta järjestelmä ei tiedä kuka on trialilla, kenen trial päättyi tai
+kuka maksaa.** Listaa "trialit jotka eivät jääneet maksaviksi
+asiakkaiksi" ei voi tuottaa datasta. Lähin korvike on tili + käyttö:
+*luotu toukokuussa, ei jälkeäkään 14.7. jälkeen*. Se on eri asia kuin
+konvertoitumaton trial, koska syy voi yhtä hyvin olla ettei tiliä
+koskaan otettu käyttöön.
+
+**Vaikutus uusien myyjien aloittaessa.** Ilman tilauskenttää ei voi
+mitata konversiota trialista maksavaksi eikä sanoa kenen kauppa oli
+kenenkin. Käytännössä joko kevyt kenttä `profiles`-tauluun
+(`plan`, `trial_ends_at`, `owner`) tai ulkoinen CRM. Kumpaa tahansa —
+päätös kannattaa tehdä ennen kuin tilimäärä kasvaa, koska takautuvasti
+tietoa ei saa mistään.
 
 ---
 
@@ -48,31 +81,31 @@ vielä ole — tämä on lähtötaso.
 
 | | |
 |---|---|
-| Asiakastilejä | **71** (+2 omaa/testiä) |
-| Nähty 14.7. jälkeen | **31 / 71** (44 %) |
+| Asiakastilejä | **70** (+3 omaa/testiä) |
+| Nähty 14.7. jälkeen | **30 / 70** (43 %) |
 | Ei jälkeäkään jaksolla | **40** |
-| Aktiivinen 7 vrk sisällä | **20** |
-| Aktiivinen 30 vrk sisällä | **31** |
+| Aktiivinen 7 vrk sisällä | **19** |
+| Aktiivinen 30 vrk sisällä | **30** |
 
-**Tilit kuukausittain:** 04/2026: 2 · 05/2026: 40 · 07/2026: 17 ·
+**Tilit kuukausittain:** 04/2026: 2 · 05/2026: 39 · 07/2026: 17 ·
 08/2026: 12 (kesäkuussa ei yhtään)
 
 **Aktiiviset käyttäjät viikoittain** (mittaus alkaa 14.7.):
 
 | viikko alkaen | aktiivisia |
 |---|---|
-| 10.7. | 1 |
-| 17.7. | 6 |
-| 24.7. | 13 |
-| 31.7. | 12 |
-| 7.8. | **20** |
+| 10.7. | 0 |
+| 17.7. | 5 |
+| 24.7. | 12 |
+| 31.7. | 11 |
+| 7.8. | **19** |
 
 **Kohortit** – kuinka moni kuukauden tileistä on yhä aktiivinen:
 
 | rekisteröity | tilejä | nähty jaksolla | osuus |
 |---|---|---|---|
 | 04/2026 | 2 | 2 | 100 % |
-| 05/2026 | 40 | 8 | **20 %** |
+| 05/2026 | 39 | 7 | **18 %** |
 | 07/2026 | 17 | 12 | **71 %** |
 | 08/2026 | 12 | 9 | **75 %** |
 
@@ -80,9 +113,9 @@ vielä ole — tämä on lähtötaso.
 
 | toiminto | tilejä |
 |---|---|
-| Tänään-asetukset säätänyt | 25 |
-| suosikkeja tallentanut | 11 |
-| hankkeen tilaa muuttanut | 8 |
+| Tänään-asetukset säätänyt | 24 |
+| suosikkeja tallentanut | 10 |
+| hankkeen tilaa muuttanut | 7 |
 | tallennettu haku | 4 |
 
 **Tapahtumat 30 vrk** ilman hallitsevaa tiliä, yhteensä 1 660:
@@ -113,8 +146,8 @@ muutokset voi yhdistää tekoihin eikä arvailuun.
 
 ## Havainnot 15.8.2026
 
-**Heinä- ja elokuun tilit aktivoituvat 3,5-kertaisesti toukokuun
-tileihin verrattuna** (71–75 % vs 20 %). Ero on liian iso ollakseen
+**Heinä- ja elokuun tilit aktivoituvat nelinkertaisesti toukokuun
+tileihin verrattuna** (71–75 % vs 18 %). Ero on liian iso ollakseen
 sattumaa. Kolme mahdollista selitystä, eikä data erottele niitä:
 toukokuun erä oli laadultaan toisenlainen (esim. joukkorekisteröinti),
 tuote oli toukokuussa selvästi heikompi, tai toukokuun käyttäjät
@@ -123,18 +156,20 @@ ensimmäinen asia joka kannattaa selvittää ennen kuin uusia myyjiä
 ohjeistetaan** — jos toukokuun erä oli eri kanavasta, sitä ei kannata
 toistaa.
 
-**Aktiivisten määrä lähes kaksinkertaistui viimeisellä viikolla** (12 →
-20). Se osuu samaan aikaan kuin herätteiden laajeneminen ja uudet
+**Aktiivisten määrä lähes kaksinkertaistui viimeisellä viikolla** (11 →
+19). Se osuu samaan aikaan kuin herätteiden laajeneminen ja uudet
 elokuun tilit. Yhden viikon piikki ei vielä ole trendi.
 
-**Herätteet tavoittavat 8 käyttäjää 31 aktiivisesta.** Tämä on
+**Herätteet tavoittavat 8 käyttäjää 30 aktiivisesta.** Tämä on
 aktivoinnin selvin vaje: heräte on ainoa mekanismi joka tuo käyttäjän
 takaisin ilman että hän itse muistaa tulla. Ero 8 ja 31 välillä on
 suoraan tekemättä jäänyttä työtä, ei tuotevirhe.
 
 **40 tiliä ei ole näkynyt kuukauteen.** Näistä 32 on toukokuun erästä.
 Ennen kuin niihin käytetään myyntiaikaa, kannattaa varmistaa ovatko ne
-ylipäätään oikeita liidejä.
+ylipäätään oikeita liidejä. Huomaa myös ettei kannassa ole tietoa siitä,
+oliko kyse trialista joka ei konvertoitunut — ks. [Mitä EI ole
+tallessa](#mitä-ei-ole-tallessa-tilaus--ja-trial-tila).
 
 **Tallennettuja hakuja on 6 ja yksi niistä ei ole koskaan lähtenyt.**
 Pieni määrä, mutta tallennettu haku on sitoutumisen vahvin merkki —
@@ -151,4 +186,5 @@ sarjan hyppy luetaan käyttäjien käytökseksi.
 | pvm | muutos |
 |---|---|
 | 14.7.2026 | `analytics_events` otettu käyttöön — kaikki aktiivisuusluvut alkavat tästä |
-| 15.8.2026 | `scripts/snapshot-users.ts` luotu; hallitseva tili (>25 % tapahtumista) erotellaan omaksi rivikseen |
+| 15.8.2026 | `scripts/snapshot-users.ts` luotu |
+| 15.8.2026 | admin- ja testitili suljettu pois (`johannessippola@hotmail.com`, `jokendroneilut@gmail.com`). Ennen tätä luvut olivat: 71 asiakastiliä, 31 aktiivista, toukokuun kohortti 8/40 |

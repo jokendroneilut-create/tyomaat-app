@@ -32,8 +32,30 @@ const month = (iso: string) => String(iso).slice(0, 7)
 const daysAgo = (iso: string | null | undefined) =>
   iso ? Math.floor((Date.now() - new Date(iso).getTime()) / DAY) : null
 
-/* Omat testitilit eivat kuulu lukuihin. */
-const INTERNAL = /@tyomaat\.fi$|jokendroneilut|^test|\+test@/i
+/*
+ * Omat tilit eivat kuulu lukuihin.
+ *
+ * Lueteltu tasmallisina osoitteina eika kuviona: kuvio joka ei osu jattaa
+ * tilin hiljaisesti mukaan lukuihin, eika sita huomaa mistaan. Nain
+ * skripti myos huomauttaa jos osoite katoaa kannasta.
+ *
+ * Admin-tili tuotti yksin 93 % kaikista tapahtumista, joten ilman
+ * poissulkua jokainen keskiarvo ja tapahtumajakauma kertoi vain siita.
+ */
+const INTERNAL_EMAILS = [
+  "johannessippola@hotmail.com", // admin (vahvistettu 15.8.2026)
+  "jokendroneilut@gmail.com", // testitili (vahvistettu 15.8.2026)
+]
+
+/*
+ * HUOM: johannes.sippola@koneunion.fi on kannassa erikseen. Se on
+ * jatetty mukaan asiakastileihin, koska sita ei ole vahvistettu omaksi
+ * tiliksi - tarkista ja lisaa listaan jos on.
+ */
+const INTERNAL_PATTERN = /@tyomaat\.fi$|^test|\+test@/i
+
+const isInternal = (email: string) =>
+  INTERNAL_EMAILS.includes(email.trim().toLowerCase()) || INTERNAL_PATTERN.test(email)
 
 /*
  * YKSI TILI VOI HUKUTTAA KAIKEN MUUN. Mitattu 14.8.2026: yksi tili
@@ -69,9 +91,20 @@ async function main() {
   const prefs = await page("user_today_preferences", "user_id")
   const searches = await page("saved_searches", "user_id")
 
-  const internal = profiles.filter((p) => INTERNAL.test(String(p.email ?? "")))
-  const users = profiles.filter((p) => !INTERNAL.test(String(p.email ?? "")))
+  const internal = profiles.filter((p) => isInternal(String(p.email ?? "")))
+  const users = profiles.filter((p) => !isInternal(String(p.email ?? "")))
   const internalIds = new Set(internal.map((p) => p.id))
+
+  /*
+   * Jos nimetty osoite ei loydy kannasta, poissulku on hiljaa lakannut
+   * toimimasta - juuri se vika joka tuotti ensimmaisen virheellisen
+   * mittauksen 15.8.2026.
+   */
+  const present = new Set(profiles.map((p) => String(p.email ?? "").trim().toLowerCase()))
+  const missing = INTERNAL_EMAILS.filter((e) => !present.has(e))
+  if (missing.length > 0) {
+    console.log(`VAROITUS: poissuljettua osoitetta ei loydy kannasta: ${missing.join(", ")}\n`)
+  }
 
   /*
    * MITTARIN ALKU ON KERROTTAVA. analytics_events alkoi kerätä dataa
