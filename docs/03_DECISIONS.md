@@ -5,57 +5,57 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
-### D-065 - Urakoitsija otsikosta, artikkelin teksti ja pelkka vuosi
-Kolme puutetta samalta rivilta ("Nyab rakentaa sahkoaseman Forssaan").
+### D-065 – Urakoitsija otsikosta, artikkelin teksti ja pelkkä vuosi
+Kolme puutetta samalta riviltä ("Nyab rakentaa sähköaseman Forssaan").
 
-**1. Urakoitsija jai tyhjaksi.** Yritysten omilla sivuilla se tulee
-julkaisijasta, mutta uutislahteilla julkaisija on toimitus. Otsikon
-rakenne kertoo tekijan silti.
+**1. Urakoitsija jäi tyhjäksi.** Yritysten omilla sivuilla se tulee
+julkaisijasta, mutta uutislähteillä julkaisija on toimitus. Otsikon
+rakenne kertoo tekijän silti.
 
-Pelkka "X rakentaa" ei kuitenkaan riita: omaperusteisessa tuotannossa
-tekija rakentaa itselleen ja on rakennuttaja. Mitatut esimerkit:
-"Espoon Asunnot rakentaa 82 vuokra-asuntoa", "PeeAssa rakentaa
-S-marketin", "Mainiokodit rakentaa asumispalveluyksikon". Siksi
+Pelkkä "X rakentaa" ei kuitenkaan riitä: omaperusteisessa tuotannossa
+tekijä rakentaa itselleen ja on rakennuttaja. Mitatut esimerkit:
+"Espoon Asunnot rakentaa 82 vuokra-asuntoa", "PeeÄssä rakentaa
+S-marketin", "Mainiokodit rakentaa asumispalveluyksikön". Siksi
 vaaditaan tilaaja allatiivissa ("Hartela toteuttaa A-Kruunulle...").
 
-Tarkkuus mitattiin olemassa olevaa dataa vasten: saanto osuu 57 riviin,
+Tarkkuus mitattiin olemassa olevaa dataa vasten: sääntö osuu 57 riviin,
 joista **42:lla urakoitsija oli jo kirjattu ja se on sama nimi**.
 
-Rajaus maksaa kattavuutta: se EI kata sita riviä josta ilmoitus tuli,
-koska uutisotsikko ei nimea tilaajaa lainkaan. Vaara rooli olisi
-pahempi kuin tyhja kentta, koska urakoitsijaa kaytetaan
+Rajaus maksaa kattavuutta: se EI kata sitä riviä josta ilmoitus tuli,
+koska uutisotsikko ei nimeä tilaajaa lainkaan. Väärä rooli olisi
+pahempi kuin tyhjä kenttä, koska urakoitsijaa käytetään
 kilpailija-analyysiin.
 
-**2. Kuvaus oli 56 merkkia.** RSS antaa vain ingressin. Artikkelin alku
-sisaltaa kaiken olennaisen - urakoitsija, tilaaja, kohde, sijainti ja
+**2. Kuvaus oli 56 merkkiä.** RSS antaa vain ingressin. Artikkelin alku
+sisältää kaiken olennaisen - urakoitsija, tilaaja, kohde, sijainti ja
 aikataulu - joten sivu haetaan nyt erikseen.
 
-Maksumuuri on katkaistava: Rakennuslehti nayttaa vain alun ja sen
-jalkeen listaa MUIDEN artikkelien otsikoita. Ilman katkaisua ne
-paatyisivat kuvaukseen, mika on sama saaste joka tuotti vaaria
-kohdetyyppeja ja kustannuksia. Mitattu: 56 -> 223 merkkia, roskaton.
+Maksumuuri on katkaistava: Rakennuslehti näyttää vain alun ja sen
+jälkeen listaa MUIDEN artikkelien otsikoita. Ilman katkaisua ne
+päätyisivät kuvaukseen, mikä on sama saaste joka tuotti vääriä
+kohdetyyppejä ja kustannuksia. Mitattu: 56 -> 223 merkkiä, roskaton.
 
 **3. Valmistumisvuotta ei poimittu.** Kysymys oli aiheellinen: teksti
-sanoo "valmista on vuonna 2028", eika mikaan kuvio poiminut sita, koska
-kaikki vaativat kuukauden. Mitattu 109 rivia samassa tilassa.
+sanoo "valmista on vuonna 2028", eikä mikään kuvio poiminut sitä, koska
+kaikki vaativat kuukauden. Mitattu 109 riviä samassa tilassa.
 
-Pelkka vuosi kartoitetaan vuoden VIIMEISEEN paivaan, samasta syysta
-kuin vuodenajat kartoitetaan myohaisimpaan kuukauteen: hanketta ei
-merkita valmiiksi ennen aikojaan.
+Pelkkä vuosi kartoitetaan vuoden VIIMEISEEN päivään, samasta syystä
+kuin vuodenajat kartoitetaan myöhäisimpään kuukauteen: hanketta ei
+merkitä valmiiksi ennen aikojaan.
 
-Samalla loytyi piileva vika vartijassa: "valmis"-vartalo osuu myos
-sanaan **valmistelu**, joka tarkoittaa painvastaista. "Hankkeen
-valmistelun yhtion kanssa vuoden 2024 aikana" olisi antanut
+Samalla löytyi piilevä vika vartijassa: "valmis"-vartalo osuu myös
+sanaan **valmistelu**, joka tarkoittaa päinvastaista. "Hankkeen
+valmistelun yhtiön kanssa vuoden 2024 aikana" olisi antanut
 valmistumisajaksi 2024.
 
 Ajettu: 15 urakoitsijaa, 277 valmistumisaikaa (joista 96 siirtyi
 tavoitteeksi ja 16 poistettiin mahdottomana).
 
-**Kaksi ohjausmerkkia matkalla.** Regexien muokkaus Python-heredocilla
+**Kaksi ohjausmerkkiä matkalla.** Regexien muokkaus Python-heredocilla
 muunsi `\b`:n kahdesti kirjaimelliseksi backspace-merkiksi (0x08),
-jolloin kuvio vaati tekstilta ohjausmerkkeja eika osunut koskaan.
-Molemmat nayttivat oikealta editorissa ja lapaisivat tyyppitarkistuksen.
-Vika loytyi vasta `cat -A`:lla. Ala muokkaa regexeja heredocilla.
+jolloin kuvio vaati tekstiltä ohjausmerkkejä eikä osunut koskaan.
+Molemmat näyttivät oikealta editorissa ja läpäisivät tyyppitarkistuksen.
+Vika löytyi vasta `cat -A`:lla. Älä muokkaa regexejä heredocilla.
 
 ---
 
