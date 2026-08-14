@@ -25,6 +25,13 @@ export async function POST(request: Request) {
     maxPdfJobs: body.maxPdfJobs,
     maxTextJobs: body.maxTextJobs,
     maxFactJobs: body.maxFactJobs,
+    /*
+     * Tunnistuksen kiinniotto kulkee nyt myös rungosta. Ilman tätä
+     * käsittelyajon oma arvo (`DISCOVERY_PROCESS_CONFIG`) jäi huomiotta ja
+     * kiinniotto käytti oletusta 5 - liian vähän purkamaan kertynyttä
+     * jonoa, mikä oli koko erillisen käsittelyajon tarkoitus.
+     */
+    maxIdentityCatchUpJobs: body.maxIdentityCatchUpJobs,
     stages: body.stages,
   })
 

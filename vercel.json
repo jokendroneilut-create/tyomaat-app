@@ -13,6 +13,10 @@
       "schedule": "0 */6 * * *"
     },
     {
+      "path": "/api/tic/discovery/run?mode=process",
+      "schedule": "10 */6 * * *"
+    },
+    {
       "path": "/api/admin/scan-duplicates?mode=incremental",
       "schedule": "0 4 * * *"
     },

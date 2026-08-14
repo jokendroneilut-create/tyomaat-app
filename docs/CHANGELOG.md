@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Kerays ja kasittely omiin cron-kutsuihinsa
+
+Ajokohtainen budjetti paljasti pullonkaulan heti: 14.8. klo 21 ajo
+paattyi merkintaan `stopped_at: "facts"`. Lahteet veivat 317 s 380
+sekunnin budjetista, faktavaihe ehti 14 tyota ja jono kasvoi 34 -> 41.
+
+Kerays on kunnossa, kasittely ei pysy perassa. Toinen cron ajaa nyt
+kymmenen minuuttia myohemmin (`?mode=process`) omalla budjetillaan:
+120 faktatyota ja 40 tunnistuksen kiinniottoa aiemman 45/5 sijaan.
+
+Jako oli jo kuvattu discoveryPipeline.ts:n kommentissa suunnitelmana
+mutta jaanyt kytkematta vercel.jsoniin.
+
+---
+
 ### Ajokohtainen aikabudjetti
 
 Lahdekohtainen 90 s katkaisu ei riittanyt: 14.8. klo 15 ajossa nelja

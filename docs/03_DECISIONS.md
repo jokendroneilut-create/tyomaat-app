@@ -5,6 +5,44 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-063 – Kerays ja kasittely omiin cron-kutsuihinsa
+Ajokohtainen budjetti (D-062) teki pullonkaulasta nakyvan heti
+ensimmaisessa ajossa: **14.8.2026 klo 21 ajo paattyi merkintaan
+`stopped_at: "facts"`**.
+
+| | |
+|---|---|
+| kesto | 381 s (76 %) |
+| lahteita | 14 (kierto palautui) |
+| lahteet veivat | 317 s |
+| faktavaiheelle jai | ~60 s -> 14 tyota |
+| jono | 34 -> **41** |
+
+Kerays on siis kunnossa; kasittely ei pysy perassa. Ilman
+`stopped_at`-kenttaa tama olisi nayttanyt samalta kuin "hitaat lahteet",
+ja optimointi olisi kohdistunut vaaraan paahan.
+
+**RATKAISU OLI JO KUVATTU KOODISSA MUTTA JAANYT KYTKEMATTA.**
+`discoveryPipeline.ts`:n kommentti kuvaa kahta erillista cron-kutsua
+(kerays, sitten kasittely omalla budjetillaan), mutta `vercel.json`:ssa
+oli vain yksi. Niin kauan kuin vaiheet jakavat saman 380 sekunnin
+budjetin, kasittely saa aina vain sen mita keraykselta jaa yli.
+
+Toinen cron ajaa nyt kymmenen minuuttia myohemmin
+(`?mode=process`), ja se saa oman taydet budjettinsa: 120 faktatyota ja
+40 tunnistuksen kiinniottoa aiemman 45/5 sijaan.
+
+**Sama reitti, ei uutta.** Tunnistus ja lokitus ovat jo
+`/api/tic/discovery/run`:ssa, joten toinen reitti kahdentaisi ne. Moodi
+valitaan kyselyparametrilla kuten `scan-duplicates`-cronissa jo tehdaan.
+
+**Yksi kytkenta puuttui.** `maxIdentityCatchUpJobs` ei kulkenut
+`run-pipeline`-reitin lapi lainkaan, joten kasittelyajon oma arvo olisi
+jaanyt huomiotta ja kiinniotto olisi kayttanyt oletusta 5 - juuri se
+mita erillisella ajolla yritettiin korjata.
+
+---
+
 ### D-062 – Ajokohtainen aikabudjetti: tapettu ajo katoaa tilannekuvasta
 Lähdekohtainen 90 sekunnin katkaisu (D-060) esti yksittäisen jumittajan,
 mutta ei sitä että USEA hidas lähde osuu samaan ajoon. Mitattu

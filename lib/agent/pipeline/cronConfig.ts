@@ -27,6 +27,30 @@ export const DISCOVERY_CRON_CONFIG = {
 }
 
 /*
+ * KASITTELYAJO OMANA KUTSUNAAN.
+ *
+ * Kerays ja kasittely jakoivat saman aikabudjetin, jolloin kasittely sai
+ * aina vain sen mita keraykselta jai yli. Mitattu 14.8.2026 klo 21:
+ * lahteet veivat 317 s 380 sekunnin budjetista, faktavaihe ehti 14 tyota
+ * ja jono kasvoi 34 -> 41. Ajo paattyi merkinnalla `stopped_at: "facts"`.
+ *
+ * Jako kahteen cron-kutsuun oli jo kuvattu discoveryPipeline.ts:n
+ * kommentissa suunnitelmana, mutta toista cronia ei ollut koskaan lisatty
+ * vercel.jsoniin. Nyt se on: kerays klo 0/6/12/18, kasittely kymmenen
+ * minuuttia myohemmin omalla taydella budjetillaan.
+ *
+ * `maxSourceCount` on nolla varmuuden vuoksi - vaiheet on jo rajattu
+ * `stages`-listalla, mutta ilman tata yksi vaara parametri kaynnistaisi
+ * keraysvaiheen uudelleen kesken kasittelyajon.
+ */
+export const DISCOVERY_PROCESS_CONFIG = {
+  stages: ["facts"] as const,
+  maxSourceCount: 0,
+  maxFactJobs: 120,
+  maxIdentityCatchUpJobs: 40,
+}
+
+/*
  * Kuinka monta discovery-ajoa vuorokaudessa. Vastaa vercel.jsonin cronia
  * "/api/tic/discovery/run", joka ajetaan kuuden tunnin välein = 4 kertaa/vrk
  * (klo 0, 6, 12, 18). Operations-sivun "täysi kierros" -laskenta tarvitsee tämän:
