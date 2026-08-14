@@ -66,7 +66,10 @@ async function main() {
     const hits: { r: any; builder: string }[] = []
 
     for (const r of live) {
-      const builder = builderFromHeadline(r[titleKey])
+      const builder = builderFromHeadline(
+        r[titleKey],
+        r.description ?? r.metadata?.description ?? null
+      )
       if (!builder) continue
 
       const current = hasColumn ? r.builder : r.metadata?.builder

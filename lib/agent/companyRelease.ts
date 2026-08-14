@@ -93,12 +93,18 @@ const CRUMB_MARKERS = ["You are here:", "Olet tässä:", "Etusivu /"]
  * vaan tekstinä, joten selektoripoisto ei niitä tavoita.
  */
 const LEADING_JUNK =
-  /^(skip to content|mene sisältöön|siirry sisältöön|hyppää sisältöön|report this content)\s*/i
+  /^(skip to content|mene sisältöön|siirry sisältöön|hyppää sisältöön|report this content|kuuntele juttu)\s*/i
 
 
 export function extractReleaseBody(html: string): string | null {
   const $ = cheerio.load(html)
-  $("script, style, noscript, nav, header, footer, iframe, form").remove()
+  /*
+   * KUVATEKSTI POIS. Se ei ole hankkeen tekstiä vaan kuvaajan krediitti,
+   * ja se on ingressin EDESSÄ: Rakennuslehden sähköasemajutussa teksti
+   * alkoi "Kuvituskuva. Kuva: Nyab ...". Krediitin yritysnimi menisi
+   * osapuolten poimintaan valokuvaajana eikä rakentajana.
+   */
+  $("script, style, noscript, nav, header, footer, iframe, form, figcaption").remove()
 
   const article = $(
     "article, main, .article, .article__body, .article__content, .news-article, .content__main"

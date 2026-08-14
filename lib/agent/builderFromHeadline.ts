@@ -1,5 +1,6 @@
 import { NAME, cleanCompanyName } from "./companyName"
 import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
+import { LEAD_LENGTH } from "./buildingType"
 
 /*
  * URAKOITSIJA UUTISOTSIKOSTA.
@@ -35,8 +36,71 @@ const NOT_A_COMPANY =
 
 const HEADLINE = new RegExp(`^(${NAME})\\s+([a-zåäö]+)`)
 
+/*
+ * TILAAJA ALLATIIVISSA - VAIN OTSIKOSTA.
+ *
+ * Allatiivi ei ole yksiselitteinen tilaajan merkki: se on suomessa myös
+ * MÄÄRÄNPÄÄ. "Fira rakentaa pysäköintitalon Hyvinkäälle" ei nimeä
+ * tilaajaa lainkaan. Mitattu 14.8.2026: 57 osumasta yksi nojasi
+ * paikannimeen, joten paikannimi suljetaan pois.
+ *
+ * Kuvio pidetään otsikossa. Leipätekstissä `-lle` osuu jatkuvasti
+ * yleissanoihin ("tontille", "alueelle", "katolle"), joten siellä
+ * vaaditaan täsmällisempi todiste - ks. leadNamesClient.
+ */
+const ALLATIVE = /([A-Za-zÅÄÖåäö]{2,})(?::)?ll[ea]\b/g
+
+function headlineNamesClient(rest: string): boolean {
+  for (const match of rest.matchAll(ALLATIVE)) {
+    if (getMunicipalityByAnyForm(match[1])) continue
+    return true
+  }
+  return false
+}
+
+/*
+ * TILAAJA LEIPÄTEKSTISTÄ.
+ *
+ * Osa otsikoista ei nimeä tilaajaa vaikka juttu on urakkauutinen:
+ * "Nyab rakentaa sähköaseman Forssaan". Tilaaja on silloin ingressissä:
+ * "Infrarakentaja Nyab on sopinut kantaverkkoyhtiö Fingridin kanssa
+ * ... sähköaseman rakentamisesta."
+ *
+ * Sopimuskumppanin NIMEÄ ei yritetä poimia: genetiivin perusmuotoa ei
+ * voi päätellä yksikäsitteisesti ("Fingridin" -> Fingrid, mutta
+ * "Skanskan" -> Skanska). Tässä riittää TODISTE erillisestä
+ * tilaajasta - nimi on rakennuttaja-kentän asia, ei tämän.
+ *
+ * Vain ingressi luetaan (LEAD_LENGTH), samasta syystä kuin
+ * companyRelease: koko sivulta luettuna osapuoleksi poimiutui
+ * naapuriartikkelin yritys.
+ */
+const CONTRACT_WITH = /\bsopi(?:nut|neet|vat)?\b[^.]{0,120}\bkanssa\b/i
+const ROLE_NAMED = /\b(?:tilaajana|rakennuttajana)\b|:n\s+toimeksiannosta\b/i
+const CONSTRUCTION = /rakenta|rakennut|urak|toteutu|saneera|peruskorja/i
+
+/*
+ * "Yhteistyössä X:n kanssa" on kumppanuus, ei tilaus - siitä ei voi
+ * päätellä kumpi osapuoli on urakoitsija.
+ */
+const PARTNERSHIP = /yhteisty/i
+
+function leadNamesClient(description: string): boolean {
+  const lead = description.slice(0, LEAD_LENGTH)
+  if (ROLE_NAMED.test(lead)) return true
+
+  for (const sentence of lead.split(/(?<=[.!?])\s+/)) {
+    if (!CONTRACT_WITH.test(sentence)) continue
+    if (PARTNERSHIP.test(sentence)) continue
+    if (!CONSTRUCTION.test(sentence)) continue
+    return true
+  }
+  return false
+}
+
 export function builderFromHeadline(
-  title: string | null | undefined
+  title: string | null | undefined,
+  description?: string | null
 ): string | null {
   const text = String(title ?? "").trim()
   if (!text) return null
@@ -79,13 +143,17 @@ export function builderFromHeadline(
    *   "Hartela rakentaa TA:lle kerrostalon"         -> urakoitsija
    *   "Jatke rakentaa TVT Asunnoille"               -> urakoitsija
    *
-   * Allatiivimuotoinen tilaaja on siis se merkki joka tekee tekijästä
+   * Erikseen mainittu tilaaja on siis se merkki joka tekee tekijästä
    * urakoitsijan. Ilman sitä nimi jätetään poimimatta - väärä rooli on
    * pahempi kuin tyhjä kenttä, koska urakoitsijaa käytetään
    * kilpailija-analyysiin.
+   *
+   * Todiste kelpaa otsikosta TAI ingressistä. Pelkkä otsikko jätti
+   * poimimatta juuri sen rivin josta koko sääntö sai alkunsa.
    */
   const rest = text.slice(match[0].length)
-  if (!/[A-Za-zÅÄÖåäö]{2,}(?::)?ll[ea]\b/.test(rest)) return null
+  if (headlineNamesClient(rest)) return name
+  if (description && leadNamesClient(description)) return name
 
-  return name
+  return null
 }

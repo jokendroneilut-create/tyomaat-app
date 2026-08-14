@@ -195,24 +195,34 @@ export async function fetchRakennuslehtiSource() {
  *
  * eli urakoitsija, tilaaja, kohde, sijainti ja aikataulu.
  *
- * MAKSUMUURI ON KATKAISTAVA. Rakennuslehti näyttää vain alun, ja sen
- * jälkeen sivulla on kirjautumiskehotus ja lista MUIDEN artikkelien
- * otsikoita ("Luetuimmat artikkelit: Fira rakentaa ison datakeskuksen
- * hollantilaisyhtiölle..."). Ilman katkaisua ne päätyisivät hankkeen
- * kuvaukseen - sama saaste joka tuotti vääriä kohdetyyppejä ja
+ * ARTIKKELI ON KATKAISTAVA. Sivulla on jutun jälkeen lista MUIDEN
+ * artikkelien otsikoita ("Luetuimmat artikkelit: Fira rakentaa ison
+ * datakeskuksen hollantilaisyhtiölle..."). Ilman katkaisua ne päätyisivät
+ * hankkeen kuvaukseen - sama saaste joka tuotti vääriä kohdetyyppejä ja
  * kustannuksia muissa lähteissä.
+ *
+ * MAKSUMUURI EI OLE AINOA RAJA. Maksuttomissa jutuissa ei ole
+ * kirjautumiskehotusta lainkaan, jolloin poiminta jatkui uutislistaan
+ * asti: "Härmälänojan silta" venyi 4 000 merkkiin ja loppuosa oli
+ * naapuriartikkelien otsikoita ("Rakennusteholle iso OSAO-urakka",
+ * "Tekovalta liikekompleksi Ouluun"). Nuo ovat yritysnimiä ERI
+ * hankkeista, eli juuri sitä evidenssiä jota urakoitsijapoiminta lukee.
+ * Siksi mukana ovat myös lehden omat palkit.
  */
-const PAYWALL_MARKERS = [
+const ARTICLE_END_MARKERS = [
   "Tämä artikkeli on tilaajille",
   "Kirjaudu sisään",
   "Luetuimmat artikkelit",
   "Hyödynnä 1kk",
   "Tilaa Rakennuslehti",
+  "Lue uusin lehti",
+  "Tilaa uutiskirje",
+  "Tuoreimmat uutiset",
 ]
 
-export function trimAtPaywall(text: string): string {
+export function trimAtArticleEnd(text: string): string {
   let cut = text.length
-  for (const marker of PAYWALL_MARKERS) {
+  for (const marker of ARTICLE_END_MARKERS) {
     const at = text.indexOf(marker)
     if (at >= 0 && at < cut) cut = at
   }
@@ -229,7 +239,7 @@ export async function enrichRakennuslehtiCandidate(candidate: any): Promise<any>
     })
     if (!res.ok) return candidate
 
-    const body = trimAtPaywall(extractReleaseBody(await res.text()) ?? "")
+    const body = trimAtArticleEnd(extractReleaseBody(await res.text()) ?? "")
 
     /*
      * Lyhyempi kuin RSS:n ingressi tarkoittaa että poiminta epäonnistui;

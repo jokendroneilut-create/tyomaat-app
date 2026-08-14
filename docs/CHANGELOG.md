@@ -11,6 +11,37 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Urakoitsija myos ingressista, artikkelin loppu ja kuvateksti
+
+Edellinen saanto ei poiminut urakoitsijaa silta rivilta josta se sai
+alkunsa ("Nyab rakentaa sahkoaseman Forssaan"), koska otsikko ei nimea
+tilaajaa. Tilaaja on kuitenkin ingressissa: "Nyab on sopinut Fingridin
+kanssa ... rakentamisesta". Todiste kelpaa nyt myos sielta.
+
+Sopimuskumppanin nimea ei poimita - genetiivin perusmuoto ei ole
+yksikasitteinen. Urakoitsijapaattelyyn riittaa todiste erillisesta
+tilaajasta.
+
+Allatiivi hyvaksytaan enaa otsikossa ja vain jos se ei ole paikannimi:
+"rakentaa pysakointitalon Hyvinkaalle" ei nimea tilaajaa vaan
+maaranpaan. Mitattu 1 tapaus 57:sta.
+
+Artikkelin katkaisu ei enaa nojaa maksumuuriin. Maksuttomassa jutussa
+sita ei ole, jolloin teksti jatkui naapuriartikkelien otsikoihin:
+"Harmalanojan silta" venyi 4 000 merkkiin. Se muuttui vaaralliseksi kun
+kuvauksesta tuli todistusaineistoa - naapurijutun yritysnimi olisi
+vaara urakoitsija. Nyt sama juttu on 2 778 merkkia.
+
+Kuvateksti (figcaption) poistetaan kaikilta tiedotelahteilta. Teksti
+alkoi "Kuvituskuva. Kuva: Nyab", eli valokuvaajan krediitti oli juuri
+siina ikkunassa josta osapuolet luetaan.
+
+Ajettu: 50 kuvausta haettu uudelleen, 2 urakoitsijaa taydennetty.
+Rakennuttaja jaa yha tyhjaksi (Fingrid); se vaatii genetiivin
+perusmuodon paattelyn.
+
+---
+
 ### Urakoitsija otsikosta, artikkelin teksti ja pelkka vuosi
 
 Kolme puutetta samalta rivilta. Urakoitsija poimitaan nyt uutisotsikosta

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
-import { trimAtPaywall } from "./fetchRakennuslehtiSource"
+import { trimAtArticleEnd } from "./fetchRakennuslehtiSource"
 
-describe("trimAtPaywall", () => {
+describe("trimAtArticleEnd", () => {
   /*
    * Rakennuslehti nayttaa vain artikkelin alun, ja sen jalkeen sivulla on
    * kirjautumiskehotus ja lista MUIDEN artikkelien otsikoita. Ilman
@@ -14,16 +14,31 @@ describe("trimAtPaywall", () => {
       "Tämä artikkeli on tilaajille Kirjaudu sisään Luetuimmat artikkelit " +
       "Fira rakentaa ison datakeskuksen hollantilaisyhtiölle"
 
-    expect(trimAtPaywall(text)).toBe(
+    expect(trimAtArticleEnd(text)).toBe(
       "Nyab on sopinut Fingridin kanssa sähköaseman rakentamisesta Forssassa."
     )
   })
 
   it("katkaisee ensimmaiseen merkkiin vaikka niita on useita", () => {
-    expect(trimAtPaywall("Teksti. Luetuimmat artikkelit X Kirjaudu sisään Y")).toBe("Teksti.")
+    expect(trimAtArticleEnd("Teksti. Luetuimmat artikkelit X Kirjaudu sisään Y")).toBe("Teksti.")
   })
 
-  it("palauttaa tekstin sellaisenaan jos muuria ei ole", () => {
-    expect(trimAtPaywall("Pelkkaa leipatekstia.")).toBe("Pelkkaa leipatekstia.")
+  /*
+   * MAKSUTTOMASSA JUTUSSA EI OLE MAKSUMUURIA. Silloin poiminta jatkui
+   * lehden omiin palkkeihin ja uutislistaan asti - mitattu tapaus
+   * "Härmälänojan silta" venyi 4 000 merkkiin, ja hanta oli
+   * naapuriartikkelien otsikoita.
+   */
+  it("katkaisee myos lehden omiin palkkeihin", () => {
+    const text =
+      "Härmälänojan silta avautuu syyskuun aikana. " +
+      "Lue uusin lehti Tilaa uutiskirje Tuoreimmat uutiset " +
+      "Rakennusteholle iso OSAO-urakka Oulussa"
+
+    expect(trimAtArticleEnd(text)).toBe("Härmälänojan silta avautuu syyskuun aikana.")
+  })
+
+  it("palauttaa tekstin sellaisenaan jos rajaa ei ole", () => {
+    expect(trimAtArticleEnd("Pelkkaa leipatekstia.")).toBe("Pelkkaa leipatekstia.")
   })
 })

@@ -5,6 +5,60 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-066 – Urakoitsija myös ingressistä, ja artikkelin loppu on katkaistava ilman maksumuuriakin
+Sääntö ei poiminut urakoitsijaa siltä riviltä josta se sai alkunsa
+("Nyab rakentaa sähköaseman Forssaan"). Rajaus oli tiedossa ja
+dokumentoitu D-065:ssä, mutta se on korjattavissa: tilaaja **on**
+tekstissä, vain ei otsikossa.
+
+**Todiste kelpaa nyt myös ingressistä.** "Infrarakentaja Nyab on sopinut
+kantaverkkoyhtiö Fingridin kanssa ... sähköaseman rakentamisesta."
+Sopimuskumppanin NIMEÄ ei poimita: genetiivin perusmuoto ei ole
+yksikäsitteinen ("Fingridin" → Fingrid, mutta "Skanskan" → Skanska).
+Urakoitsijapäättelyyn riittää todiste erillisestä tilaajasta, eikä sen
+tarvitse tietää tilaajan nimeä.
+
+Kuviot ovat tarkoituksella eri otsikossa ja leipätekstissä. Otsikossa
+kelpaa allatiivi, koska rakenne on lyhyt ja vakiintunut. Leipätekstissä
+`-lle` osuu jatkuvasti yleissanoihin ("tontille", "alueelle"), joten
+siellä vaaditaan sopimusmaininta tai nimetty rooli (tilaajana,
+rakennuttajana, toimeksiannosta). Yhteistyömaininta hylätään:
+kumppanuudesta ei voi päätellä kumpi osapuoli urakoi.
+
+**Allatiivi on suomessa myös määränpää.** "Fira rakentaa
+pysäköintitalon Hyvinkäälle" ei nimeä tilaajaa lainkaan. Mitattu: 57
+osumasta **yksi** nojasi paikannimeen. Lopputulos sattui olemaan oikein
+(Fira on urakoitsija), mutta todiste oli pätemätön, joten paikannimi
+suljetaan pois.
+
+**Maksumuuri ei ollut oikea raja.** D-065 katkaisi tekstin
+kirjautumiskehotukseen. Maksuttomassa jutussa sitä ei ole, jolloin
+poiminta jatkui uutislistaan: "Härmälänojan silta" venyi 4 000 merkkiin
+ja loppuosa oli naapuriartikkelien otsikoita ("Rakennusteholle iso
+OSAO-urakka", "Tekovalta liikekompleksi Ouluun").
+
+Tämä muuttui vaaralliseksi juuri nyt: niin kauan kuin urakoitsija
+luettiin vain otsikosta, roskainen kuvaus oli kosmeettinen haitta. Kun
+sama kuvaus on todistusaineistoa, naapurijutun yritysnimi on väärä
+urakoitsija. Katkaisuun lisättiin lehden omat palkit; sama juttu on nyt
+2 778 merkkiä ja loppuu allianssin kokoonpanoon.
+
+**Kuvateksti ei ole hankkeen tekstiä.** Leipäteksti alkoi
+"Kuvituskuva. Kuva: Nyab ...". Krediitin yritysnimi on valokuvaaja, ei
+rakentaja, ja se oli ingressin EDESSÄ eli juuri siinä ikkunassa josta
+osapuolet luetaan. `figcaption` poistetaan nyt kaikilta
+tiedotelähteiltä.
+
+Ajettu: 50 kuvausta haettu uudelleen (Nyab 56 → 199 merkkiä),
+2 urakoitsijaa täydennetty (Nyab, KSBR).
+
+**Auki:** rakennuttaja jää yhä tyhjäksi (Fingrid). Se vaatii genetiivin
+perusmuodon päättelyn, jota ei voi tehdä yksikäsitteisesti - sama este
+kuin `allativeToNominative`-funktiossa, joka palauttaa nullin
+epävarmassa tapauksessa.
+
+---
+
 ### D-065 – Urakoitsija otsikosta, artikkelin teksti ja pelkkä vuosi
 Kolme puutetta samalta riviltä ("Nyab rakentaa sähköaseman Forssaan").
 

@@ -758,11 +758,17 @@ export async function importCandidate(
        * toimitus, jolloin kenttä jäi tyhjäksi. Otsikon rakenne kertoo sen
        * silti: "Hartela toteuttaa A-Kruunulle vähähiilisen kerrostalon".
        *
-       * Poimija vaatii tilaajan allatiivissa, koska "X rakentaa" yksin ei
-       * erota urakoitsijaa rakennuttajasta - omaperusteisessa tuotannossa
-       * tekijä rakentaa itselleen.
+       * Poimija vaatii erikseen mainitun tilaajan, koska "X rakentaa"
+       * yksin ei erota urakoitsijaa rakennuttajasta - omaperusteisessa
+       * tuotannossa tekijä rakentaa itselleen. Tilaaja kelpaa otsikosta
+       * tai ingressistä, joten kuvaus annetaan mukaan.
        */
-      builder: candidate.builder ?? builderFromHeadline(cleanedTitle),
+      builder:
+        candidate.builder ??
+        builderFromHeadline(
+          cleanedTitle,
+          body.description ?? body.metadata?.description ?? null
+        ),
       building_type: candidate.buildingType,
       winners: candidate.winners,
       region: candidate.region,
