@@ -7,8 +7,22 @@ type Props = {
   sources: DiscoverySourceRow[]
 }
 
-type SourceStatus = "failing" | "disabled" | "ok"
+type SourceStatus = "failing" | "stale" | "disabled" | "ok"
 type SortKey = "status" | "name" | "run_count" | "error_count" | "last_success_at"
+
+/*
+ * VIRHEELLA ON TUOREUS.
+ *
+ * Aiemmin mikä tahansa kirjattu virhe teki lähteestä rikkinäisen niin
+ * kauan kuin uutta onnistumista ei tullut. Kertaluontoinen katko jäi
+ * siis näkyviin viikoiksi ja hukutti aidot viat alleen - mitattu
+ * 14.8.2026: 13 punaista, joista yksi oli aito.
+ *
+ * Yli viikon vanha virhe näytetään omana tilanaan eikä lasketa
+ * "ongelmiin". Sitä ei piiloteta: se jää listaan ja "Vain ongelmat"
+ * -suodattimeen, koska korjaamaton vanha virhe on silti tieto.
+ */
+const STALE_ERROR_MS = 7 * 24 * 60 * 60 * 1000
 
 function sourceStatus(s: DiscoverySourceRow): SourceStatus {
   if (!s.enabled) return "disabled"
@@ -16,16 +30,23 @@ function sourceStatus(s: DiscoverySourceRow): SourceStatus {
     s.last_error_at &&
     (!s.last_success_at || new Date(s.last_error_at) > new Date(s.last_success_at))
   ) {
-    return "failing"
+    const age = Date.now() - new Date(s.last_error_at).getTime()
+    return age > STALE_ERROR_MS ? "stale" : "failing"
   }
   return "ok"
 }
 
-// Toimimattomat (rikki, sitten pois) ensin.
-const STATUS_RANK: Record<SourceStatus, number> = { failing: 0, disabled: 1, ok: 2 }
+// Toimimattomat (rikki, vanha virhe, sitten pois) ensin.
+const STATUS_RANK: Record<SourceStatus, number> = {
+  failing: 0,
+  stale: 1,
+  disabled: 2,
+  ok: 3,
+}
 
 const STATUS_LABEL: Record<SourceStatus, string> = {
   failing: "🔴 rikki",
+  stale: "🟡 vanha virhe",
   disabled: "⚪ pois",
   ok: "🟢 ok",
 }
@@ -46,9 +67,11 @@ export default function DiscoverySourcesTable({ sources }: Props) {
   const [onlyProblems, setOnlyProblems] = useState(false)
 
   const enabledCount = sources.filter((s) => s.enabled).length
-  // "Ongelma" = oikeasti rikki (virheitä). Tarkoituksella pois kytketty lähde
-  // (esim. WFS korvattu SUKKAlla) EI ole ongelma, vaikka status !== "ok".
+  // "Ongelma" = oikeasti rikki (tuore virhe). Tarkoituksella pois kytketty
+  // lähde (esim. WFS korvattu SUKKAlla) EI ole ongelma, vaikka status !== "ok",
+  // eikä yli viikon vanha korjaamaton virhe (ks. sourceStatus).
   const failingCount = sources.filter((s) => sourceStatus(s) === "failing").length
+  const staleCount = sources.filter((s) => sourceStatus(s) === "stale").length
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -60,8 +83,13 @@ export default function DiscoverySourcesTable({ sources }: Props) {
   }
 
   const visible = useMemo(() => {
+    // Vanhaa virhettä ei piiloteta suodattimessa - se on korjaamaton, vaikkei
+    // enää kiireellinen.
     const filtered = onlyProblems
-      ? sources.filter((s) => sourceStatus(s) === "failing")
+      ? sources.filter((s) => {
+          const status = sourceStatus(s)
+          return status === "failing" || status === "stale"
+        })
       : sources
 
     const sorted = [...filtered].sort((a, b) => {
@@ -118,6 +146,9 @@ export default function DiscoverySourcesTable({ sources }: Props) {
           {failingCount > 0 && (
             <span className="font-semibold text-red-700">ongelmia {failingCount}</span>
           )}
+          {staleCount > 0 && (
+            <span className="font-semibold text-amber-700">vanhoja virheitä {staleCount}</span>
+          )}
         </div>
       </div>
 
@@ -163,8 +194,10 @@ export default function DiscoverySourcesTable({ sources }: Props) {
               <div className="md:col-span-2">
                 <div className="font-semibold text-gray-900">{source.name}</div>
                 <div className="text-sm text-gray-500">{source.id}</div>
-                {status === "failing" && source.last_error_message && (
-                  <div className="mt-1 text-xs text-red-700">
+                {(status === "failing" || status === "stale") && source.last_error_message && (
+                  <div
+                    className={`mt-1 text-xs ${status === "failing" ? "text-red-700" : "text-amber-700"}`}
+                  >
                     {source.last_error_message}
                   </div>
                 )}

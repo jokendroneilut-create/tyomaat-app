@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-067 – "Ongelmia 13" oli enimmäkseen oman valvonnan jälkiä
+TIC näytti 13 rikkinäistä lähdettä. Mittaus: 2 062 ajoa, mediaanikesto
+4,1 s, p90 19,2 s, ja viimeisestä 1 000 ajosta 971 onnistui. Kaikilla
+13:lla oli `success_count > 0`. Aidosti rikki oli **yksi**.
+
+**1. Vahtikoira leimasi virheajan väärään hetkeen.** Jumiin jäänyt ajo
+merkittiin virheeksi SIIVOUSHETKEEN, joka voi olla viikkoja ajon
+jälkeen. Koska tila vertaa `last_error_at > last_success_at`, lähde jäi
+punaiseksi vaikka olisi onnistunut sen jälkeen. Rovaniemen Kaavatorin
+virhe oli oikeasti 20.7. mutta leimattuna 13.8. - **24 vuorokauden**
+ero, ja neljä tuoreinta ajoa oli onnistunut.
+
+Aikaleima otetaan nyt ajon omasta alusta. Päättymisajaksi merkitään
+alku + tunti eli hetki jolloin ajo tiedettiin kuolleeksi; nykyhetki
+tuotti kestoja kuten 2 131 658 s, jotka pilasivat kestotilastot (p99 oli
+10 037 s). Vanhat rivit korjattiin ajolokista: 20 ajoa ja 22
+aikaleimaa, joista **4 lähdettä lakkasi näkymästä rikkinäisenä**.
+
+**2. Katkaisuviesti syytti lähdettä omasta työstämme.** "Lähde ei
+vastannut 90 sekunnissa" on väärä: raja kattaa koko ajon - haun,
+täydennyksen ja kaikkien kandidaattien tuonnin. Mitattu: Rakennuslehden
+syöte ja kaikkien kandidaattien täydennys vievät 1,2 s, mutta ajo
+katkesi 114 sekuntiin. Hitaus oli tuonnissa.
+
+**3. Virheellä ei ollut tuoreutta.** Kertaluontoinen katko jäi
+näkyviin, kunnes lähde sattui onnistumaan. Yli viikon vanha korjaamaton
+virhe näytetään nyt omana tilanaan eikä lasketa "ongelmiin". Sitä ei
+piiloteta: se jää listaan ja suodattimeen.
+
+**STT oli se yksi aito - ja syy oli aikakatkaisu itse.** Lähteen
+ONNISTUNEET ajot kestivät 209-216 s. Kun 90 sekunnin katkaisu lisättiin
+(D-060), lähde ei voinut enää onnistua kertaakaan: kahdeksan peräkkäistä
+virhettä. Katkaisu oli siis puolet siitä mitä lähde tarvitsi.
+
+Ratkaisu on sama kuin ajokohtaisessa aikabudjetissa (D-062): tuonti
+lopetetaan siististi ennen katkaisua ja ajo kirjataan onnistuneeksi
+sillä mitä ehdittiin. Budjetti lasketaan ajon alusta, koska haku on osa
+katkaistavaa aikaa - haun jälkeen aloitettu budjetti ylittäisi rajan
+juuri niillä lähteillä joita sen on tarkoitus suojata.
+
+**Matkalla löytyi kaatava vika.** `findRecentlySeenSourceUrls` pilkkoi
+osoitelistan sadan paloihin. STT:n osoitteet ovat pitkiä: 100 kpl =
+17 585 merkkiä, mikä ylittää PostgRESTin 16 kt otsikkorajan
+(UND_ERR_HEADERS_OVERFLOW). Funktio heittää, joten se pysäytti koko
+lähteen ajon. Pala mitoitetaan nyt pituuden mukaan.
+
+**Auki - kandidaatit tuodaan uudelleen joka ajossa.** Nähty-tarkistus
+lukee `project_sources`-taulua, jossa on 763 riviä ja joka vaatii
+`project_id`:n. Hylätty kandidaatti ei siis jätä sinne jälkeä, vaikka
+jokainen tuontiyritys kirjautuu `project_import_events`-tauluun
+(34 392 riviä). Mitattu: STT:n 874 kandidaatista vain **8** tunnistettiin
+nähdyiksi. Tarkistus kysyy siis taulua joka ei rakenteeltaan voi
+vastata kysymykseen. Korjaus muuttaisi kaikkien 300 lähteen käytöstä ja
+kytkeytyy kuvaustäydennyksen kiertoon (täydennys ajetaan vain
+näkemättömille), joten se on oma päätöksensä.
+
+---
+
 ### D-066 – Urakoitsija myös ingressistä, ja artikkelin loppu on katkaistava ilman maksumuuriakin
 Sääntö ei poiminut urakoitsijaa siltä riviltä josta se sai alkunsa
 ("Nyab rakentaa sähköaseman Forssaan"). Rajaus oli tiedossa ja

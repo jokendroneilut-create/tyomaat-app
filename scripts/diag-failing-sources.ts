@@ -46,9 +46,19 @@ async function main() {
       (!s.last_success_at || new Date(s.last_error_at) > new Date(s.last_success_at))
   )
 
+  /*
+   * Sama raja kuin TIC:n taulukossa: yli viikon vanha korjaamaton virhe
+   * ei ole enää "ongelma" vaan vanha virhe.
+   */
+  const STALE_DAYS = 7
+  const fresh = failing.filter((s: any) => (days(s.last_error_at) ?? 0) <= STALE_DAYS)
+  const stale = failing.filter((s: any) => (days(s.last_error_at) ?? 0) > STALE_DAYS)
+
   console.log(`lähteitä yhteensä: ${sources.length}`)
   console.log(`käytössä:          ${enabled.length}`)
-  console.log(`TIC näyttää rikki: ${failing.length}\n`)
+  console.log(`viimeisin tapahtuma virhe: ${failing.length}`)
+  console.log(`  joista tuoreita (ongelmia):     ${fresh.length}`)
+  console.log(`  joista yli ${STALE_DAYS} vrk vanhoja:     ${stale.length}\n`)
 
   const sorted = [...failing].sort(
     (a: any, b: any) => (days(a.last_error_at) ?? 0) - (days(b.last_error_at) ?? 0)

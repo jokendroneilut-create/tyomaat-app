@@ -11,6 +11,33 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### "Ongelmia 13" oli enimmakseen oman valvonnan jalkia
+
+TIC naytti 13 rikkinaista lahdetta. Mitattu: 2 062 ajoa, mediaanikesto
+4,1 s, ja viimeisesta 1 000 ajosta 971 onnistui. Aidosti rikki oli yksi.
+
+Vahtikoira leimasi jumiajon virheeksi siivoushetkeen, joka voi olla
+viikkoja ajon jalkeen - Rovaniemen Kaavatorin virhe oli oikeasti 20.7.
+mutta leimattuna 13.8. Aikaleima otetaan nyt ajon omasta alusta, ja
+kesto rajataan tuntiin (aiemmin kirjautui 2 131 658 s). Vanhat rivit
+korjattiin ajolokista: 4 lahdetta lakkasi nakymasta rikkinaisena.
+
+Yli viikon vanha korjaamaton virhe naytetaan omana tilanaan eika
+lasketa "ongelmiin". Katkaisuviesti ei enaa syyta lahdetta: 90 s raja
+kattaa koko ajon, ei pelkkaa hakua.
+
+STT oli se yksi aito, ja syy oli katkaisu itse: sen onnistuneet ajot
+kestivat 209-216 s, eli 90 s raja teki onnistumisen mahdottomaksi.
+Tuonti lopetetaan nyt siististi ennen katkaisua ja ajo kirjataan
+onnistuneeksi silla mita ehdittiin.
+
+Samalla korjattiin kaatava vika: nahty-tarkistus pilkkoi osoitelistan
+sadan paloihin, ja STT:n pitkilla osoitteilla pala oli 17 585 merkkia -
+yli PostgRESTin 16 kt otsikkorajan. Pala mitoitetaan nyt pituuden
+mukaan.
+
+---
+
 ### Urakoitsija myos ingressista, artikkelin loppu ja kuvateksti
 
 Edellinen saanto ei poiminut urakoitsijaa silta rivilta josta se sai

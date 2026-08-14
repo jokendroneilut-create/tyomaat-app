@@ -48,12 +48,21 @@ function describeError(error: any): string {
  * 90 sekuntia on nelinkertainen mitattuun keskiarvoon nähden - riittää
  * hitaalle alasivuja hakevalle kerääjälle (Seinäjoki, Kerava) mutta
  * jättää 400 s muille vaikka yksi lähde katkaistaisiin.
+ *
+ * RAJA EI KOSKE PELKKAA HAKUA. Sen sisällä on koko lähteen ajo: haku,
+ * alasivujen täydennys JA kaikkien kandidaattien tuonti
+ * duplikaattivertailuineen. Siksi viesti ei saa syyttää lähdettä -
+ * mitattu 14.8.2026: Rakennuslehden syöte ja kaikkien kandidaattien
+ * täydennys vievät 1,2 s, mutta koko ajo katkesi 114 sekuntiin. Hitaus
+ * oli omassa tuonnissa, ei palvelimessa.
  */
 const SOURCE_TIMEOUT_MS = 90 * 1000
 
 export class SourceTimeoutError extends Error {
   constructor(sourceName: string, ms: number) {
-    super(`Lähde ei vastannut ${Math.round(ms / 1000)} sekunnissa: ${sourceName}`)
+    super(
+      `Ajo ylitti ${Math.round(ms / 1000)} sekuntia (haku + tuonti): ${sourceName}`
+    )
     this.name = "SourceTimeoutError"
   }
 }
@@ -107,25 +116,48 @@ export async function reapStuckRuns(): Promise<number> {
   const message = "Ajo jäi kesken (ei päättynyt tunnissa)"
 
   for (const run of stuck) {
+    /*
+     * AIKALEIMAT AJON MUKAAN, EI SIIVOUSHETKEN.
+     *
+     * Siivous voi tapahtua viikkoja ajon jälkeen. Jos virhe leimattaisiin
+     * nykyhetkeen, lähde näyttäisi hajonneen juuri nyt vaikka se on
+     * onnistunut sen jälkeen monta kertaa. Mitattu 14.8.2026: kuusi
+     * lähdettä näkyi rikkinäisinä 11.-14.8. jumiajan takia, ja kolmella
+     * niistä TUOREIN ajo oli onnistunut.
+     *
+     * Päättymisajaksi merkitään hetki jolloin ajo tiedettiin kuolleeksi
+     * (alku + tunti). Nykyhetki tuottaisi kestoja kuten 24 vuorokautta,
+     * jotka pilaavat kestotilastot - mitattu p99 10 037 s.
+     */
+    const startedAt = new Date(run.created_at)
+    const deadAt = new Date(startedAt.getTime() + STUCK_RUN_AGE_MS).toISOString()
+
     await supabaseAdmin
       .from("discovery_runs")
       .update({
         status: "error",
         error_message: message,
-        finished_at: new Date().toISOString(),
+        finished_at: deadAt,
       })
       .eq("id", run.id)
 
     const { data: source } = await supabaseAdmin
       .from("discovery_sources")
-      .select("error_count")
+      .select("error_count, last_error_at")
       .eq("id", run.source_id)
       .maybeSingle()
+
+    /*
+     * Vanhempaa jumia siivotessa ei saa siirtää virheaikaa taaksepäin,
+     * jos lähteellä on jo tuoreempi virhe kirjattuna.
+     */
+    const known = source?.last_error_at ? new Date(source.last_error_at) : null
+    const lastErrorAt = known && known > new Date(deadAt) ? source!.last_error_at : deadAt
 
     await supabaseAdmin
       .from("discovery_sources")
       .update({
-        last_error_at: new Date().toISOString(),
+        last_error_at: lastErrorAt,
         last_error_message: message,
         error_count: Number(source?.error_count ?? 0) + 1,
         updated_at: new Date().toISOString(),

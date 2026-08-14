@@ -102,6 +102,26 @@ const CANDIDATE_CONCURRENCY = 6
  */
 const ENRICH_PER_RUN = 40
 
+/*
+ * TUONNIN AIKABUDJETTI.
+ *
+ * Lähdeajolla on 90 sekunnin aikakatkaisu (sourceWorker). Kun se
+ * ylittyy, koko ajo kirjautuu virheeksi eikä lähde saa yhtään
+ * onnistumista - vaikka se olisi ehtinyt tuoda satoja kandidaatteja.
+ *
+ * Mitattu 14.8.2026: stt_haku palautti 863 kandidaattia, ja sen
+ * ONNISTUNEET ajot kestivät 209-216 s. Aikakatkaisu tehtiin sen jälkeen,
+ * joten lähde ei voinut enää onnistua kertaakaan: kahdeksan perakkaista
+ * virhetta.
+ *
+ * Sama ratkaisu kuin putken ajobudjetissa: tuonti lopetetaan siististi
+ * ennen katkaisua ja ajo kirjataan onnistuneeksi sillä mitä ehdittiin.
+ * Loput tulevat seuraavalla ajolla, koska järjestys on lyhin kuvaus
+ * ensin ja NÄKEMÄTTÖMÄN kuvauspituus on 0 - uudet kandidaatit ovat siis
+ * aina jonon kärjessä.
+ */
+const IMPORT_BUDGET_MS = 70 * 1000
+
 async function processWithConcurrency<T>(
   items: T[],
   limit: number,
@@ -129,6 +149,15 @@ export async function collectLegacySource(source: any) {
     )
   }
 
+  /*
+   * Budjetti lasketaan AJON ALUSTA, ei haun jälkeen: aikakatkaisu koskee
+   * koko ajoa. Haku on osa sitä ja voi yksinään viedä kymmeniä sekunteja
+   * (stt_haku 13-31 s mitattuna), joten haun jälkeen aloitettu budjetti
+   * ylittäisi katkaisun juuri niillä lähteillä joita se on tarkoitettu
+   * suojaamaan.
+   */
+  const importDeadline = Date.now() + IMPORT_BUDGET_MS
+
   const candidates = (await legacy.fetch()) ?? []
 
   /*
@@ -150,6 +179,7 @@ export async function collectLegacySource(source: any) {
   let saved = 0
   let skipped = 0
   let enriched = 0
+  let deferred = 0
 
   /*
    * Osa lähteistä tarjoaa listauksessa vain otsikon ja tiivistelmän, ja
@@ -186,6 +216,15 @@ export async function collectLegacySource(source: any) {
       : candidates
 
   await processWithConcurrency(ordered, CANDIDATE_CONCURRENCY, async (candidate: any) => {
+    /*
+     * Budjetti tarkistetaan ennen työtä, ei kesken sen: keskeytetty
+     * tuonti jättäisi rivin puolitiehen.
+     */
+    if (Date.now() > importDeadline) {
+      deferred++
+      return
+    }
+
     if (!candidate?.source_url) {
       skipped++
       return
@@ -243,9 +282,22 @@ export async function collectLegacySource(source: any) {
     }
   })
 
+  /*
+   * Kesken jäänyt osuus kirjataan lokiin. Ilman merkintää osittainen ajo
+   * näyttäisi samalta kuin täysi, ja hiljainen katkaisu on juuri se vika
+   * josta ajokohtainen aikabudjetti aikanaan syntyi.
+   */
+  if (deferred > 0) {
+    console.warn(
+      `legacyFetchCollector: aikabudjetti tayttyi (${legacy.name}), ` +
+        `${deferred} kandidaattia siirtyi seuraavaan ajoon`
+    )
+  }
+
   return {
     documentsFound: candidates.length,
     documentsSaved: saved,
     skipped,
+    deferred,
   }
 }

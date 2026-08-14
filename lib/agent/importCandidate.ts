@@ -94,9 +94,14 @@ export async function isSourceUrlSeenRecently(
  * satoja kandidaatteja (stt_haku 253), ja yksitellen kysyttynä pelkkä
  * nähty-tarkistus oli satoja peräkkäisiä tietokantakierroksia.
  *
- * .in() pilkotaan sadan palasiin, koska pitkä IN-lista kasvattaa URL:n
- * yli PostgRESTin rajan.
+ * PALA MITOITETAAN PITUUDEN EIKA MAARAN MUKAAN. Sadan osoitteen pala
+ * ylitti PostgRESTin otsikkorajan (16 kt), kun osoitteet ovat pitkiä:
+ * mitattu 14.8.2026 stt_haku, 100 osoitetta = 17 585 merkkiä, jolloin
+ * kysely kaatui UND_ERR_HEADERS_OVERFLOW-virheeseen. Se ei ollut
+ * ohitettava virhe vaan pysäytti koko lähteen ajon, koska funktio
+ * heittää.
  */
+const URL_CHUNK_CHARS = 8000
 export async function findRecentlySeenSourceUrls(
   urls: (string | null | undefined)[]
 ): Promise<Set<string>> {
@@ -108,9 +113,22 @@ export async function findRecentlySeenSourceUrls(
   const supabase = getSupabase()
   const cutoff = Date.now() - 24 * 60 * 60 * 1000
 
-  for (let i = 0; i < unique.length; i += 100) {
-    const chunk = unique.slice(i, i + 100)
+  const chunks: string[][] = []
+  let current: string[] = []
+  let currentChars = 0
 
+  for (const url of unique) {
+    if (current.length > 0 && currentChars + url.length > URL_CHUNK_CHARS) {
+      chunks.push(current)
+      current = []
+      currentChars = 0
+    }
+    current.push(url)
+    currentChars += url.length
+  }
+  if (current.length > 0) chunks.push(current)
+
+  for (const chunk of chunks) {
     const { data, error } = await supabase
       .from("project_sources")
       .select("source_url,last_seen_at")
