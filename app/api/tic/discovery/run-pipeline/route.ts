@@ -40,6 +40,13 @@ export async function POST(request: Request) {
     .from("discovery_pipeline_runs")
     .insert({
       duration_ms: result.durationMs,
+      /*
+       * Mihin vaiheeseen aikabudjetti loppui, null jos ajo ehti loppuun.
+       * Ilman tätä lyhyt ajo näyttää samalta kuin tyhjä yö: 14 lähteen
+       * sijaan viisi, eikä mikään kerro johtuiko se budjetista vai siitä
+       * ettei lähteitä ollut ajettavana.
+       */
+      stopped_at: result.stoppedAt ?? null,
       pending_facts: result.pendingFacts ?? null,
       sources_run: result.sourcesRun,
       article_runs: result.articleRuns,

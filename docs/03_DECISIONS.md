@@ -38,9 +38,10 @@ lokirivi ehtii kirjoittua. Tarkistus on jokaisen vaiheen silmukassa, ei
 vain lähdevaiheessa - faktapoiminta voi yhtä lailla ylittää katon kun
 jono kasvaa.
 
-`stoppedAt` palautuu ajon vastauksessa mutta EI tallennu
-`discovery_pipeline_runs`-tauluun: sarakkeen lisääminen vaatii käsin
-ajetun DDL:n, eikä sitä tehdä ohjelmallisesti.
+`stoppedAt` tallentuu sarakkeeseen `discovery_pipeline_runs.stopped_at`
+(lisätty käsin SQL-editorissa 14.8.2026). Ilman sitä lyhyt ajo näyttää
+tilannekuvassa samalta kuin tyhjä yö: viisi lähdettä neljäntoista
+sijaan, eikä mikään kerro loppuiko aika vai lähteet.
 
 ---
 

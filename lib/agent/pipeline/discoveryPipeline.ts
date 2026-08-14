@@ -290,8 +290,9 @@ articleResults.push(result)
     durationMs,
     /*
      * Mihin vaiheeseen aikabudjetti loppui, tai null jos ajo ehti loppuun.
-     * Näkyy ajon vastauksessa ja lokissa; `discovery_pipeline_runs` ei
-     * tallenna tätä, koska sarakkeen lisääminen vaatii käsin ajetun DDL:n.
+     * Tallentuu `discovery_pipeline_runs.stopped_at`-sarakkeeseen, jotta
+     * lyhyt ajo erottuu tyhjästä yöstä: ilman tätä viiden lähteen ajo
+     * näyttää samalta riippumatta siitä loppuiko aika vai lähteet.
      */
     stoppedAt,
     pendingFacts: pendingFacts ?? null,
