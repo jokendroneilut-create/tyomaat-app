@@ -5,6 +5,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-064 – Vaihepäättely oli kuollutta koodia kaikille tiedotelähteille
+"Nyab rakentaa sähköaseman Forssaan" jäi vaiheeseen Suunnittelussa,
+vaikka kuvaus sanoo **"Rakentaminen alkaa elokuussa"** ja avainsana
+"rakentaminen alkaa" on ollut sanastossa alusta asti.
+
+Syy oli yhdessä ehdossa: `importCandidate` kutsui `inferPhaseFromText`
+vain kun lähde EI antanut vaihetta. Noin **20 lähdettä** asettaa sen
+kiinteästi muodossa `completed ? "Valmistunut" : "Suunnittelussa"`, joten
+ehto ei täyttynyt koskaan - päättely ei ajanut yhdellekään
+tiedotelähteelle.
+
+**AVAINSANA YKSIN EI RIITÄ, JA SE MITATTIIN.** Kun päättely kytkettiin
+päälle, se olisi siirtänyt 68 riviä. Tarkistin kohteet:
+
+| kohde | tulos |
+|---|---|
+| Rakennuslupa (18) | kuudesta tarkistetusta **yksi** oikein - muut menneitä lupia, vasta haettavia, kustannuserittelyn rivejä ("suunnittelut (rakennuslupa)") tai lomaketekstiä |
+| Kilpailutus (2) | osui aikataululistaan "urakkalaskenta ja urakoitsijavalinnat 2-4/2027" |
+| Rakenteilla (42) | paras, mutta mukana "rakentaminen alkaa suunnitelmien mukaan **2028**" |
+
+Siksi teksti saa siirtää vaihetta vain rakentamisen alkamiseen, ja vain
+kun `constructionHasStarted` vahvistaa ajankohdan menneeksi. Päätevaiheet
+(Valmistunut, Peruttu) jäävät kokonaan pois: "valmistui" tarkoittaa
+tiedotteissa lähes aina kohteen alkuperäistä rakennusvuotta, ja
+valmistuneeksi merkitseminen piilottaa hankkeen asiakkaalta.
+
+**VARTIJA POIMI ENSIN VÄÄRÄN VUODEN.** Ensimmäinen versio luki
+90 merkin ikkunan verbin jälkeen, ja lauseesta "Rakentaminen alkaa
+elokuussa ja valmista on vuonna 2028" se poimi 2028:n eli
+VALMISTUMISvuoden - jolloin juuri se rivi jonka piti korjaantua jäi
+korjaamatta. Ikkuna katkaistaan nyt lauseenosaan (`ja`, `sekä`, `jonka`,
+piste), koska sivulause aloittaa uuden asian.
+
+Vika näkyi vain siksi että tarkistin nimenomaan sen rivin josta ilmoitus
+tuli, eikä pelkkää kokonaislukua: rajaus näytti ensin toimivan (86 riviä
+siirtyi), mutta oikea rivi ei ollut joukossa.
+
+Ajettu: 13 riviä. Ero 86:een tulee siitä että katkaisu pudotti pois ne
+joissa osuma perustui väärään vuoteen.
+
+---
+
 ### D-063 – Kerays ja kasittely omiin cron-kutsuihinsa
 Ajokohtainen budjetti (D-062) teki pullonkaulasta nakyvan heti
 ensimmaisessa ajossa: **14.8.2026 klo 21 ajo paattyi merkintaan

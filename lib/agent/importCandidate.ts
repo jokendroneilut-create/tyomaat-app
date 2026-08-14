@@ -11,6 +11,7 @@ import {
   stripCompletionWords,
 } from "@/lib/projects/detectCompletionFromText"
 import { PHASE_LABELS, phaseAdvances } from "@/lib/projects/phases"
+import { constructionHasStarted } from "@/lib/projects/constructionStarted"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { shouldUnexpire } from "@/lib/projects/tenderExpiry"
 import {
@@ -653,17 +654,65 @@ export async function importCandidate(
     return { status: "skipped_completed", reason }
   }
 
-  const inferredPhaseKey = !body.phase
-    ? inferPhaseFromText(
-        body.name,
-        body.metadata?.description ?? body.metadata?.operation,
-        body.metadata
-      )
-    : null
+  /*
+   * TEKSTIPÄÄTTELY AJETAAN AINA, EI VAIN KUN LÄHDE VAIKENEE.
+   *
+   * Ehto oli aiemmin `!body.phase`, ja käytännössä se teki päättelystä
+   * kuollutta koodia: noin 20 lähdettä asettaa vaiheen kiinteästi
+   * muodossa `completed ? "Valmistunut" : "Suunnittelussa"`, joten
+   * `body.phase` on aina totuusarvoltaan tosi.
+   *
+   * Mitattu tapaus (Rakennuslehti 14.8.2026): "Nyab rakentaa sähköaseman
+   * Forssaan", kuvaus "Rakentaminen alkaa elokuussa ja valmista on
+   * vuonna 2028." Avainsana "rakentaminen alkaa" on sanastossa ja
+   * osoittaa vaiheeseen `construction`, mutta rivi sai silti lähteen
+   * oletuksen "Suunnittelussa".
+   */
+  const inferredPhaseKey = inferPhaseFromText(
+    body.name,
+    body.metadata?.description ?? body.metadata?.operation,
+    body.metadata
+  )
 
-  const insertPhase =
-    body.phase ||
-    (inferredPhaseKey ? PHASE_LABELS[inferredPhaseKey] : PHASE_LABELS.planning)
+  const inferredPhase = inferredPhaseKey ? PHASE_LABELS[inferredPhaseKey] : null
+
+  /*
+   * VAIN RAKENTAMISEN ALKAMINEN, JA VAIN JOS SE ON JO TAPAHTUNUT.
+   *
+   * Mitattu 14.8.2026 koko hankekannasta, mitä avainsanapäättely tekisi:
+   *
+   *   Rakennuslupa (18 riviä): kuudesta tarkistetusta yksi oikein. Muut
+   *   olivat menneitä lupia, vasta haettavia, kustannuserittelyn rivejä
+   *   ("suunnittelut (rakennuslupa)") tai lomaketekstiä.
+   *
+   *   Kilpailutus (2 riviä): osui aikataululistaan "urakkalaskenta ja
+   *   urakoitsijavalinnat 2-4/2027" - suunnitelma vuosien päähän.
+   *
+   *   Rakenteilla (42 riviä): paras, mutta mukana "rakentaminen alkaa
+   *   suunnitelmien mukaan 2028".
+   *
+   * Siksi teksti saa siirtää vaihetta vain rakentamisen alkamiseen, ja
+   * `constructionHasStarted` vaatii että mainittu ajankohta on mennyt.
+   * Muut vaiheet jäävät lähteen ja päätösaineiston vastuulle, joissa ne
+   * perustuvat asiakirjaan eivätkä yhteen sanaan leipätekstissä.
+   *
+   * Suunta on yksisuuntainen kuten täsmäytyksessä: uusi tieto voi kertoa
+   * hankkeen edenneen, muttei palanneen.
+   */
+  const textSaysConstructionStarted = constructionHasStarted(
+    [body.name, body.metadata?.description, body.metadata?.operation]
+      .filter(Boolean)
+      .join(" ")
+  )
+
+  const construction = PHASE_LABELS.construction
+
+  const textMayAdvance =
+    textSaysConstructionStarted && phaseAdvances(body.phase, construction)
+
+  const insertPhase = textMayAdvance
+    ? construction
+    : body.phase || inferredPhase || PHASE_LABELS.planning
 
   /*
    * Ei täsmäytystä olemassa olevaan julkiseen hankkeeseen — aiemmin

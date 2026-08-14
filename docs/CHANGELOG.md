@@ -11,6 +11,26 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Vaihepaattely oli kuollutta koodia tiedotelahteille
+
+"Nyab rakentaa sahkoaseman Forssaan" jai vaiheeseen Suunnittelussa
+vaikka kuvaus sanoo "Rakentaminen alkaa elokuussa". Syy: tekstipaattely
+ajettiin vain jos lahde ei antanut vaihetta, ja noin 20 lahdetta asettaa
+sen kiinteasti - ehto ei tayttynyt koskaan.
+
+Avainsana yksin ei riita, ja se mitattiin: Rakennuslupa-osumista yksi
+kuudesta oli oikein, Kilpailutus osui aikataululistaan ja Rakenteilla
+sisalsi "rakentaminen alkaa suunnitelmien mukaan 2028". Teksti saa nyt
+siirtaa vaihetta vain rakentamisen alkamiseen ja vain kun ajankohta on
+mennyt.
+
+Vartija poimi ensin vaaran vuoden: "alkaa elokuussa ja valmista on
+vuonna 2028" antoi 2028. Ikkuna katkaistaan nyt lauseenosaan.
+
+Ajettu 13 rivia.
+
+---
+
 ### Kerays ja kasittely omiin cron-kutsuihinsa
 
 Ajokohtainen budjetti paljasti pullonkaulan heti: 14.8. klo 21 ajo
