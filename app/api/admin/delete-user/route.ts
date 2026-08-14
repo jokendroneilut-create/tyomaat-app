@@ -61,6 +61,44 @@ export async function POST(req: Request) {
       )
     }
 
+    /*
+     * ELINKAARI KIRJATAAN ENNEN POISTOA.
+     *
+     * deleteUser on kova poisto: sen jälkeen tunnuksesta ei ole jäljellä
+     * mitään, ei sähköpostia eikä luontipäivää. Silloin katoaa myös tieto
+     * siitä mihin kohorttiin tili kuului ja konvertoituiko se. Tiedot on
+     * siis luettava ja kirjattava kun ne vielä ovat olemassa.
+     *
+     * Kirjaus ei saa estää poistoa: jos loki epäonnistuu, poisto tehdään
+     * silti ja virhe jää lokiin. Poisto on käyttäjän pyyntö, loki on
+     * meidän kirjanpitoamme.
+     */
+    try {
+      const { data: target } = await supabase
+        .from("profiles")
+        .select("email, full_name, created_at")
+        .eq("id", userId)
+        .maybeSingle()
+
+      const { error: logError } = await supabase.from("account_lifecycle").upsert(
+        {
+          user_id: userId,
+          email: target?.email ?? null,
+          full_name: target?.full_name ?? null,
+          event: "deleted",
+          occurred_at: new Date().toISOString(),
+          metadata: { source: "admin_delete_user", deleted_by: caller.email ?? null },
+        },
+        { onConflict: "user_id,event" }
+      )
+
+      if (logError) {
+        console.error("ACCOUNT LIFECYCLE LOG FAILED:", logError.message)
+      }
+    } catch (logErr: any) {
+      console.error("ACCOUNT LIFECYCLE LOG FAILED:", logErr?.message ?? logErr)
+    }
+
     const { error } = await supabase.auth.admin.deleteUser(userId)
 
     if (error) {
