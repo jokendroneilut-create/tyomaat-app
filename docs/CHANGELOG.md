@@ -11,6 +11,30 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Tunnuksesta jaa pysyva merkinta, ja kayttajatilanteen seuranta
+
+Tunnuksen poisto oli kova poisto eika siita jaanyt mitaan jaljelle.
+Uusi taulu account_lifecycle saa merkinnan jokaisesta tunnuksesta: ei
+vierasavainta auth.users-tauluun, poisto estetty triggerilla, vain
+lisayksia. Kaikki 73 tilia kirjattu. Yllapito on tasmaytys
+(scripts/sync-account-lifecycle.ts), ei triggeri Supabasen omaan
+skeemaan.
+
+Kaksi raporttia: scripts/report-accounts.ts (montako tilia luotu,
+milloin, mille yrityksille) ja scripts/snapshot-users.ts (kuka niista
+kayttaa tuotetta). Tilannekuva kirjataan docs/10_USERS.md:hen.
+
+Mittauksessa loytyi kaksi vikaa omassa laskennassa. profiles.created_at
+ei ole tilin luontipaiva vaan profiilirivin luontipaiva - 40 rivia oli
+luotu samana paivana taulun kayttoonoton taydennysajossa, ja 51 tilia
+73:sta oli eri paivalla kuin auth.users. Lisaksi yksi admin-tili tuotti
+93 % kaikista tapahtumista, mika teki jokaisesta keskiarvosta
+merkityksettoman.
+
+Tilaus- ja trial-tilaa ei kerata: omistaja laskuttaa asiakkaat itse.
+
+---
+
 ### Kasitelty kandidaatti muistetaan, myos hylatty
 
 Nahty-tarkistus kysyi project_sources-taulua, joka vaatii project_id:n

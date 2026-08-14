@@ -85,21 +85,40 @@ GDPR-poistopyynnön takia, myös yritystieto katoaa siltä riviltä. Jos
 yritystason luvut halutaan säilyttää poistojen yli, `account_lifecycle`
 tarvitsee oman `company_domain`-sarakkeen.
 
-**Tunnuksen säilyminen on nyt varmistettu.** `account_lifecycle`-taulu
+**Tunnuksen säilyminen on varmistettu.** `account_lifecycle`-taulu
 otettiin käyttöön 15.8.2026 ja siihen kirjattiin kaikki 73 tiliä
-`created`-tapahtumina oikeilla `auth.users`-luontipäivillä. Taulussa ei
-ole vierasavainta `auth.users`iin, joten historia säilyy vaikka tunnus
-poistetaan — ja `/api/admin/delete-user` kirjaa `deleted`-tapahtuman
-ennen poistoa. Trial- ja tilaustapahtumia (`trial_started`,
-`converted`, `cancelled`) taulu tukee, mutta niitä ei vielä kirjoiteta
-mistään.
+`created`-tapahtumina oikeilla `auth.users`-luontipäivillä. Se toimii
+kuin päiväkirja: kirjoitetaan kerran, ei poisteta.
 
-**Vaikutus uusien myyjien aloittaessa.** Ilman tilauskenttää ei voi
-mitata konversiota trialista maksavaksi eikä sanoa kenen kauppa oli
-kenenkin. Käytännössä joko kevyt kenttä `profiles`-tauluun
-(`plan`, `trial_ends_at`, `owner`) tai ulkoinen CRM. Kumpaa tahansa —
-päätös kannattaa tehdä ennen kuin tilimäärä kasvaa, koska takautuvasti
-tietoa ei saa mistään.
+| suoja | miten |
+|---|---|
+| tilin poisto ei kosketa merkintää | ei vierasavainta `auth.users`iin |
+| merkintää ei voi poistaa | trigger `account_lifecycle_block_delete` |
+| ei auki anon-avaimelle | RLS päällä ilman policyja |
+| poistettu tili jää kirjoihin | `/api/admin/delete-user` kirjaa `created` + `deleted` ennen poistoa |
+
+Nimen ja sähköpostin **saa** nollata poistopyynnön yhteydessä — merkintä
+ja päivämäärä jäävät, joten luvut säilyvät ilman henkilötietoa.
+
+SQL: [`2026-08-15_account_lifecycle.sql`](sql/2026-08-15_account_lifecycle.sql)
+ja [`2026-08-15_account_lifecycle_no_delete.sql`](sql/2026-08-15_account_lifecycle_no_delete.sql)
+(molemmat ajettu 15.8.2026).
+
+Ylläpito on täsmäytys, ei tapahtumakaappaus:
+`npx tsx scripts/sync-account-lifecycle.ts --apply` vertaa lokia
+`auth.users`iin ja täydentää molempiin suuntiin. Aja se silloin tällöin
+— erityisesti jos tilejä on poistettu Supabasen hallintapaneelista,
+joka ohittaa sovelluksen poistoreitin.
+
+**Näin on päätetty (15.8.2026): tilaustietoa ei kerätä.** Omistaja
+laskuttaa asiakkaat itse ja tietää maksavien määrän ilman järjestelmää.
+`account_lifecycle` tukee tapahtumia `trial_started`, `converted` ja
+`cancelled`, mutta niitä ei kirjoiteta mistään. Tätä ei tarvitse
+ehdottaa uudelleen.
+
+Käytännön seuraus: tämä tiedosto vastaa kysymykseen *montako tunnusta
+on luotu ja kuka niistä käyttää tuotetta*. Maksavien määrä tulee
+laskutuksesta, ja vertailu tehdään käsin.
 
 ---
 

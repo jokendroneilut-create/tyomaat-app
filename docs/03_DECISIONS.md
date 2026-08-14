@@ -5,6 +5,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-069 – Tunnuksesta jää päiväkirjamerkintä, tilaustietoa ei kerätä
+Tunnuksen poisto on kova poisto (`auth.admin.deleteUser`), eikä siitä
+jäänyt mitään jäljelle. Vuoden päästä ei siis voisi sanoa montako
+tunnusta on kaikkiaan luotu - tieto katoaisi jokaisen poiston mukana.
+
+**Ratkaisu on erillinen loki, ei kenttä olemassa olevassa taulussa.**
+`account_lifecycle` saa merkinnän jokaisesta tunnuksesta. Kolme
+ominaisuutta tekevät siitä pysyvän:
+
+- **Ei vierasavainta `auth.users`iin.** Vierasavain `ON DELETE CASCADE`
+  pyyhkisi historian samalla kun tunnus poistetaan, eli tekisi
+  täsmälleen sen mitä taululla estetään.
+- **Poisto estetty triggerillä.** Pelkkä RLS ei riitä, koska service
+  role ohittaa sen. Muokkaus on sallittu: sähköposti ja nimi on voitava
+  nollata poistopyynnön yhteydessä, jolloin merkintä ja päivämäärä
+  jäävät ja luvut säilyvät ilman henkilötietoa.
+- **Vain lisäyksiä.** Tila luetaan tapahtumista, kuten
+  `analytics_events`-taulussa.
+
+Ylläpito on täsmäytys (`scripts/sync-account-lifecycle.ts`), ei
+triggeri `auth.users`-tauluun. Tilejä syntyy useaa reittiä, ja
+unohdettu reitti jäisi hiljaa kirjaamatta; täsmäytys kattaa kaikki ja
+myös menneet. Triggeriä Supabasen omaan skeemaan ei tehdä, koska
+rikkinäinen triggeri siellä estäisi kirjautumisen.
+
+**`profiles.created_at` EI OLE TILIN LUONTIPÄIVÄ.** Se on profiilirivin
+luontipäivä. Mitattu 15.8.2026: 40 profiiliriviä oli luotu kaikki
+samana päivänä 3.5.2026 - se on taulun käyttöönoton täydennysajo - ja
+51 tiliä 73:sta oli eri päivällä kuin `auth.users`, suurin ero **78
+vuorokautta**. Ensimmäinen tilannekuva laskettiin profilesin mukaan ja
+raportoi "40 tilin erän toukokuussa". Sellaista erää ei ollut:
+todellisuudessa helmikuussa 28 ja maaliskuussa 11. Rekisteröitymispäivä
+luetaan siis `auth.users`ista.
+
+**Yritys tunnistetaan sähköpostin domainista**, koska erillistä
+yrityskenttää ei ole. 52 tiliä 73:sta on yritysdomainissa (23 eri
+yritystä), 21 ilmaissähköpostissa eikä niitä voi yhdistää yritykseen
+millään. Ilman ilmaissähköpostilistaa "gmail.com" olisi näyttänyt
+suurimmalta asiakkaalta 15 tilillä.
+
+**Tilaus- ja trial-tilaa EI kerätä.** Kannassa ei ole
+`subscriptions`-, `plans`- eikä `trials`-tauluja, eikä niitä lisätä:
+omistaja laskuttaa asiakkaat itse ja tietää maksavien määrän ilman
+järjestelmää (päätös 15.8.2026). `account_lifecycle` tukee tarvittaessa
+tapahtumia `trial_started`, `converted` ja `cancelled`, mutta niitä ei
+kirjoiteta mistään. **Älä ehdota tilaustenhallintaa uudelleen ilman
+että sitä pyydetään.**
+
+---
+
 ### D-068 – "Onko tämä käsitelty" on eri kysymys kuin "syntyikö tästä hanke"
 Nähty-tarkistus kysyi `project_sources`-taulua, joka vaatii
 `project_id`:n. Se vastaa kysymykseen *syntyikö tästä hanke* - ei
