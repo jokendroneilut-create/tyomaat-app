@@ -5,6 +5,60 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-065 - Urakoitsija otsikosta, artikkelin teksti ja pelkka vuosi
+Kolme puutetta samalta rivilta ("Nyab rakentaa sahkoaseman Forssaan").
+
+**1. Urakoitsija jai tyhjaksi.** Yritysten omilla sivuilla se tulee
+julkaisijasta, mutta uutislahteilla julkaisija on toimitus. Otsikon
+rakenne kertoo tekijan silti.
+
+Pelkka "X rakentaa" ei kuitenkaan riita: omaperusteisessa tuotannossa
+tekija rakentaa itselleen ja on rakennuttaja. Mitatut esimerkit:
+"Espoon Asunnot rakentaa 82 vuokra-asuntoa", "PeeAssa rakentaa
+S-marketin", "Mainiokodit rakentaa asumispalveluyksikon". Siksi
+vaaditaan tilaaja allatiivissa ("Hartela toteuttaa A-Kruunulle...").
+
+Tarkkuus mitattiin olemassa olevaa dataa vasten: saanto osuu 57 riviin,
+joista **42:lla urakoitsija oli jo kirjattu ja se on sama nimi**.
+
+Rajaus maksaa kattavuutta: se EI kata sita riviä josta ilmoitus tuli,
+koska uutisotsikko ei nimea tilaajaa lainkaan. Vaara rooli olisi
+pahempi kuin tyhja kentta, koska urakoitsijaa kaytetaan
+kilpailija-analyysiin.
+
+**2. Kuvaus oli 56 merkkia.** RSS antaa vain ingressin. Artikkelin alku
+sisaltaa kaiken olennaisen - urakoitsija, tilaaja, kohde, sijainti ja
+aikataulu - joten sivu haetaan nyt erikseen.
+
+Maksumuuri on katkaistava: Rakennuslehti nayttaa vain alun ja sen
+jalkeen listaa MUIDEN artikkelien otsikoita. Ilman katkaisua ne
+paatyisivat kuvaukseen, mika on sama saaste joka tuotti vaaria
+kohdetyyppeja ja kustannuksia. Mitattu: 56 -> 223 merkkia, roskaton.
+
+**3. Valmistumisvuotta ei poimittu.** Kysymys oli aiheellinen: teksti
+sanoo "valmista on vuonna 2028", eika mikaan kuvio poiminut sita, koska
+kaikki vaativat kuukauden. Mitattu 109 rivia samassa tilassa.
+
+Pelkka vuosi kartoitetaan vuoden VIIMEISEEN paivaan, samasta syysta
+kuin vuodenajat kartoitetaan myohaisimpaan kuukauteen: hanketta ei
+merkita valmiiksi ennen aikojaan.
+
+Samalla loytyi piileva vika vartijassa: "valmis"-vartalo osuu myos
+sanaan **valmistelu**, joka tarkoittaa painvastaista. "Hankkeen
+valmistelun yhtion kanssa vuoden 2024 aikana" olisi antanut
+valmistumisajaksi 2024.
+
+Ajettu: 15 urakoitsijaa, 277 valmistumisaikaa (joista 96 siirtyi
+tavoitteeksi ja 16 poistettiin mahdottomana).
+
+**Kaksi ohjausmerkkia matkalla.** Regexien muokkaus Python-heredocilla
+muunsi `\b`:n kahdesti kirjaimelliseksi backspace-merkiksi (0x08),
+jolloin kuvio vaati tekstilta ohjausmerkkeja eika osunut koskaan.
+Molemmat nayttivat oikealta editorissa ja lapaisivat tyyppitarkistuksen.
+Vika loytyi vasta `cat -A`:lla. Ala muokkaa regexeja heredocilla.
+
+---
+
 ### D-064 – Vaihepäättely oli kuollutta koodia kaikille tiedotelähteille
 "Nyab rakentaa sähköaseman Forssaan" jäi vaiheeseen Suunnittelussa,
 vaikka kuvaus sanoo **"Rakentaminen alkaa elokuussa"** ja avainsana

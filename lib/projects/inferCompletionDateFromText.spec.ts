@@ -269,3 +269,45 @@ describe("vuosiraja", () => {
     ).toBeNull()
   })
 })
+
+describe("pelkka vuosi ja valmistelu", () => {
+  /*
+   * MITATTU TAPAUS. "Nyab rakentaa sahkoaseman Forssaan": teksti on
+   * "Rakentaminen alkaa elokuussa ja valmista on vuonna 2028."
+   * 109 rivia kertoi valmistumisen vain vuositasolla eika mikaan
+   * kuvio poiminut niita.
+   */
+  it("poimii pelkan vuoden", () => {
+    expect(
+      inferCompletionDateFromText("Rakentaminen alkaa elokuussa ja valmista on vuonna 2028.")
+    ).toBe("2028-12-31")
+    expect(inferCompletionDateFromText("Valmistuminen arviolta 2028.")).toBe("2028-12-31")
+  })
+
+  /*
+   * VUODEN VIIMEINEN PAIVA, samasta syysta kuin vuodenajat kartoitetaan
+   * myohaisimpaan kuukauteen: hanketta ei merkita valmiiksi ennen
+   * aikojaan.
+   */
+  it("kayttaa vuoden viimeista paivaa", () => {
+    expect(inferCompletionDateFromText("Kohde valmistuu 2027.")).toBe("2027-12-31")
+  })
+
+  /*
+   * VALMISTELU EI OLE VALMISTUMINEN. "valmis"-vartalo osuu myos sanaan
+   * valmistelu, joka tarkoittaa painvastaista.
+   */
+  it("ei poimi valmistelua", () => {
+    expect(
+      inferCompletionDateFromText("Hanke eteni valmistelun yhtiön kanssa vuoden 2024 aikana.")
+    ).toBeNull()
+    expect(inferCompletionDateFromText("Asia on valmisteilla vuonna 2026.")).toBeNull()
+  })
+
+  /* Tarkempi kuvio voittaa yha: kuukausi ennen pelkkaa vuotta. */
+  it("suosii kuukautta pelkan vuoden sijaan", () => {
+    expect(
+      inferCompletionDateFromText("Urakka valmistuu syyskuussa 2025 ja takuuaika paattyy 2027.")
+    ).toBe("2025-09-30")
+  })
+})

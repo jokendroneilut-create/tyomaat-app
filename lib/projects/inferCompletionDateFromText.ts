@@ -84,6 +84,16 @@ const PLAN_COMPLETES = new RegExp(
 const COMPLETION_WORD = /valmis|käyttöön/
 
 /*
+ * VALMISTELU EI OLE VALMISTUMINEN.
+ *
+ * "valmis"-vartalo osuu myös sanoihin valmistelu, valmisteilla ja
+ * valmistava, jotka tarkoittavat päinvastaista: työ on vasta alussa.
+ * Mitattu 14.8.2026: "hankkeen valmistelun yhtiön kanssa vuoden 2024
+ * aikana" olisi antanut valmistumisajaksi 2024.
+ */
+const PREPARATION = /valmistelu|valmistele|valmisteil|valmistava|valmistav/i
+
+/*
  * VÄISTÖTILAN KÄYTTÖÖNOTTO EI OLE HANKKEEN VALMISTUMINEN. Väistötila
  * otetaan käyttöön kun varsinainen työ ALKAA, joten sen päivä on
  * päinvastainen signaali. Pelkkä sanan esiintyminen tekstissä ei riitä
@@ -111,6 +121,7 @@ function findGuardedDate(
     /* Este luetaan vain lauseen alusta, ei koko tekstistä. */
     const clause = precedingWindow.slice(precedingWindow.lastIndexOf(".") + 1)
     if (TEMPORARY_PREMISES.test(clause)) continue
+    if (PREPARATION.test(clause) && !/valmistu/i.test(clause)) continue
 
     const subjectWindow = text.slice(Math.max(0, match.index - 120), match.index)
     if (PLAN_COMPLETES.test(subjectWindow)) continue
@@ -199,6 +210,26 @@ export function inferCompletionDateFromText(
     }
   )
   if (numericMatch) return numericMatch
+
+  /*
+   * PELKKÄ VUOSI ILMAN KUUKAUTTA.
+   *
+   * Mitattu 14.8.2026: 109 riviä sanoo valmistumisen vain vuositasolla
+   * ("valmista on vuonna 2028", "valmistuminen arviolta 2028") eikä
+   * mikään kuvio poiminut niitä. Mukana oli myös se rivi josta ilmoitus
+   * tuli.
+   *
+   * Päivä on vuoden VIIMEINEN, samasta syystä kuin vuodenajat
+   * kartoitetaan myöhäisimpään kuukauteen: virhe kallistuu siihen että
+   * hanke näyttää valmistuvan myöhemmin kuin aikaisemmin, jolloin sitä
+   * ei merkitä valmiiksi ennen aikojaan.
+   */
+  const yearMatch = findGuardedDate(
+    normalized,
+    /()(20\d{2})/g,
+    () => 12
+  )
+  if (yearMatch) return yearMatch
 
   /*
    * SOPIMUSKAUSI VIIMEISENÄ. Kunnan hankintapäätös ei sano "valmistuu

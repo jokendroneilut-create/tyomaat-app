@@ -1,3 +1,4 @@
+import { extractReleaseBody } from "./companyRelease"
 import { detectCityFromText } from "./detectCityFromText"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 
@@ -178,4 +179,66 @@ export async function fetchRakennuslehtiSource() {
   }
 
   return results
+}
+
+/*
+ * ARTIKKELIN LEIPÄTEKSTI RSS-INGRESSIN TILALLE.
+ *
+ * RSS antaa vain ingressin: mitattu 14.8.2026 "Nyab rakentaa sähköaseman
+ * Forssaan" -rivillä kuvaus oli 56 merkkiä ("Rakentaminen alkaa
+ * elokuussa ja valmista on vuonna 2028."). Artikkelin alusta löytyy
+ * kaikki olennainen:
+ *
+ *   "Infrarakentaja Nyab on sopinut kantaverkkoyhtiö Fingridin kanssa
+ *    Pikkumuolaan 400 kilovoltin sähköaseman rakentamisesta Forssassa.
+ *    Projekti käynnistyy elokuussa 2026 ja valmistuu vuoden 2028 lopussa."
+ *
+ * eli urakoitsija, tilaaja, kohde, sijainti ja aikataulu.
+ *
+ * MAKSUMUURI ON KATKAISTAVA. Rakennuslehti näyttää vain alun, ja sen
+ * jälkeen sivulla on kirjautumiskehotus ja lista MUIDEN artikkelien
+ * otsikoita ("Luetuimmat artikkelit: Fira rakentaa ison datakeskuksen
+ * hollantilaisyhtiölle..."). Ilman katkaisua ne päätyisivät hankkeen
+ * kuvaukseen - sama saaste joka tuotti vääriä kohdetyyppejä ja
+ * kustannuksia muissa lähteissä.
+ */
+const PAYWALL_MARKERS = [
+  "Tämä artikkeli on tilaajille",
+  "Kirjaudu sisään",
+  "Luetuimmat artikkelit",
+  "Hyödynnä 1kk",
+  "Tilaa Rakennuslehti",
+]
+
+export function trimAtPaywall(text: string): string {
+  let cut = text.length
+  for (const marker of PAYWALL_MARKERS) {
+    const at = text.indexOf(marker)
+    if (at >= 0 && at < cut) cut = at
+  }
+  return text.slice(0, cut).trim()
+}
+
+export async function enrichRakennuslehtiCandidate(candidate: any): Promise<any> {
+  if (!candidate?.source_url) return candidate
+
+  try {
+    const res = await fetch(candidate.source_url, {
+      cache: "no-store",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)" },
+    })
+    if (!res.ok) return candidate
+
+    const body = trimAtPaywall(extractReleaseBody(await res.text()) ?? "")
+
+    /*
+     * Lyhyempi kuin RSS:n ingressi tarkoittaa että poiminta epäonnistui;
+     * silloin pidetään se mitä oli.
+     */
+    if (body.length <= String(candidate.description ?? "").length) return candidate
+
+    return { ...candidate, description: body }
+  } catch {
+    return candidate
+  }
 }

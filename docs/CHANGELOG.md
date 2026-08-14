@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Urakoitsija otsikosta, artikkelin teksti ja pelkka vuosi
+
+Kolme puutetta samalta rivilta. Urakoitsija poimitaan nyt uutisotsikosta
+kun tilaaja on allatiivissa - pelkka "X rakentaa" ei riita, koska
+omaperusteisessa tuotannossa tekija on rakennuttaja. Saanto osuu 57
+riviin joista 42:lla nimi oli jo kirjattu samana.
+
+Rakennuslehden kuvaus haetaan artikkelisivulta RSS-ingressin sijaan
+(56 -> 223 merkkia), maksumuuriin katkaisten jottei muiden artikkelien
+otsikoita paady kuvaukseen.
+
+Pelkka vuosi ilman kuukautta poimitaan nyt valmistumisajaksi (109
+rivia oli tassa tilassa). Samalla korjattiin piileva vika: "valmis"
+-vartalo osui myos sanaan "valmistelu", joka tarkoittaa painvastaista.
+
+Ajettu 15 urakoitsijaa ja 277 valmistumisaikaa.
+
+---
+
 ### Vaihepaattely oli kuollutta koodia tiedotelahteille
 
 "Nyab rakentaa sahkoaseman Forssaan" jai vaiheeseen Suunnittelussa

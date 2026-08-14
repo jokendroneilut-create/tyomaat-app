@@ -12,6 +12,7 @@ import {
 } from "@/lib/projects/detectCompletionFromText"
 import { PHASE_LABELS, phaseAdvances } from "@/lib/projects/phases"
 import { constructionHasStarted } from "@/lib/projects/constructionStarted"
+import { builderFromHeadline } from "@/lib/agent/builderFromHeadline"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { shouldUnexpire } from "@/lib/projects/tenderExpiry"
 import {
@@ -749,7 +750,19 @@ export async function importCandidate(
       operation: cleanedTitle,
       description: body.description ?? body.metadata?.description ?? null,
       developer: candidate.developer,
-      builder: candidate.builder,
+      /*
+       * URAKOITSIJA UUTISOTSIKOSTA, JOS LÄHDE EI SITÄ TIEDÄ.
+       *
+       * Yritysten omilla sivuilla urakoitsija tulee julkaisijasta, mutta
+       * uutislähteillä (Rakennuslehti, kaupunkien uutiset) julkaisija on
+       * toimitus, jolloin kenttä jäi tyhjäksi. Otsikon rakenne kertoo sen
+       * silti: "Hartela toteuttaa A-Kruunulle vähähiilisen kerrostalon".
+       *
+       * Poimija vaatii tilaajan allatiivissa, koska "X rakentaa" yksin ei
+       * erota urakoitsijaa rakennuttajasta - omaperusteisessa tuotannossa
+       * tekijä rakentaa itselleen.
+       */
+      builder: candidate.builder ?? builderFromHeadline(cleanedTitle),
       building_type: candidate.buildingType,
       winners: candidate.winners,
       region: candidate.region,
