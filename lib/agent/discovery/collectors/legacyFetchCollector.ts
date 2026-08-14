@@ -168,9 +168,9 @@ export async function collectLegacySource(source: any) {
   const projects = candidates.length > 0 ? await loadProjectsForMatching() : []
 
   /*
-   * Sama 24 tunnin ikkuna kuin vanhassa ajossa: jo nähtyä osoitetta ei
-   * tuoda uudelleen. Ilman tätä jokainen ajo kirjaisi saman tiedotteen
-   * uudelleen project_import_events-tauluun. Haetaan koko erälle kerralla.
+   * Jo käsiteltyä osoitetta ei tuoda uudelleen. Ikkuna on viikko ja se
+   * luetaan tuontitapahtumista, eli myös hylätty kandidaatti muistetaan
+   * (ks. findRecentlySeenSourceUrls). Haetaan koko erälle kerralla.
    */
   const seenUrls = await findRecentlySeenSourceUrls(
     candidates.map((candidate: any) => candidate?.source_url)

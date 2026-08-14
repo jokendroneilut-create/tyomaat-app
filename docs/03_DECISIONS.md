@@ -5,6 +5,46 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-068 – "Onko tämä käsitelty" on eri kysymys kuin "syntyikö tästä hanke"
+Nähty-tarkistus kysyi `project_sources`-taulua, joka vaatii
+`project_id`:n. Se vastaa kysymykseen *syntyikö tästä hanke* - ei
+kysymykseen *onko tämä jo käsitelty*. Hylätty kandidaatti ei jättänyt
+sinne jälkeä, joten se tuotiin ja hylättiin uudelleen joka ajossa.
+
+Toinen vika oli ikkunassa: 24 h, kun näiden lähteiden `refresh_minutes`
+on 1440 eli myös 24 h. **Ikkuna joka ei ole pidempi kuin lähteen ajoväli
+ei voi rakenteellisesti ohittaa mitään** - edellinen ajo on aina juuri
+liian vanha.
+
+Mitattu stt_haku: 861 kandidaatista 859:llä oli jo tuontitapahtuma (411
+skipped, 282 queued_for_review, 166 verified) ja vain **2** oli aidosti
+uusia. Silti tuontiin meni 866. Noin 0,84 s per kandidaatti tarkoittaa
+~12 minuuttia työtä 90 sekunnin budjetissa.
+
+Tarkistus lukee nyt `project_import_events`-taulua, johon jokainen
+yritys kirjautuu myös hylättynä, ja ikkuna on viikko. Mitatut
+vaihtoehdot tuontiin menevistä: nykyinen 866, tapahtumat + 24 h 670,
+tapahtumat + 7 vrk **45**, tapahtumat + 30 vrk 2. Kuukausi hylättiin:
+niin pitkällä ikkunalla sivun aito päivitys jäisi huomaamatta.
+
+Todennettu: stt_haku 874 -> 50 tuontiin, rakennuslehti 16 -> 2. Ajon
+arvio 42 s, kun raja on 90 s.
+
+**Hinta on kuvaustäydennys.** `enrich()` ajetaan vain näkemättömille
+kandidaateille, joten jo tuodun rivin kuvausta ei enää täydennetä tätä
+kautta. Aiemmin se toimi vahingossa: kaikki näyttivät näkemättömiltä,
+joten 40 täydennyspaikkaa saattoi osua mihin tahansa riviin. Nyt pooli
+on vain aidosti uudet. Vaihtoehto olisi irrottaa täydennys
+nähty-ehdosta kokonaan; se jätettiin tekemättä, koska kuvausten
+takautuva täydennys hoidetaan jo omilla skripteillään
+(`backfill-stt-bodies`, `backfill-rakennuslehti-bodies`) eikä
+sivutuotteena turhasta tuonnista.
+
+`isSourceUrlSeenRecently` (/api/agent/seen-source) jätettiin ennalleen:
+se on eri rajapinta eikä osa keräysputkea.
+
+---
+
 ### D-067 – "Ongelmia 13" oli enimmäkseen oman valvonnan jälkiä
 TIC näytti 13 rikkinäistä lähdettä. Mittaus: 2 062 ajoa, mediaanikesto
 4,1 s, p90 19,2 s, ja viimeisestä 1 000 ajosta 971 onnistui. Kaikilla
@@ -51,7 +91,7 @@ osoitelistan sadan paloihin. STT:n osoitteet ovat pitkiä: 100 kpl =
 (UND_ERR_HEADERS_OVERFLOW). Funktio heittää, joten se pysäytti koko
 lähteen ajon. Pala mitoitetaan nyt pituuden mukaan.
 
-**Auki - kandidaatit tuodaan uudelleen joka ajossa.** Nähty-tarkistus
+**Ratkaistu D-068:ssa - kandidaatit tuodaan uudelleen joka ajossa.** Nähty-tarkistus
 lukee `project_sources`-taulua, jossa on 763 riviä ja joka vaatii
 `project_id`:n. Hylätty kandidaatti ei siis jätä sinne jälkeä, vaikka
 jokainen tuontiyritys kirjautuu `project_import_events`-tauluun

@@ -11,6 +11,27 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Kasitelty kandidaatti muistetaan, myos hylatty
+
+Nahty-tarkistus kysyi project_sources-taulua, joka vaatii project_id:n
+eli vastaa kysymykseen "syntyiko tasta hanke". Hylatty kandidaatti ei
+jattanyt sinne jalkea, joten se tuotiin ja hylattiin uudelleen joka
+ajossa. Ikkuna oli lisaksi 24 h, kun lahteiden ajovali on myos 24 h -
+ikkuna joka ei ole pidempi kuin ajovali ei ohita mitaan.
+
+Mitattu stt_haku: 861 kandidaatista 859:lla oli jo tuontitapahtuma ja
+vain 2 oli aidosti uusia, mutta tuontiin meni 866 - noin 12 minuuttia
+tyota 90 sekunnin budjetissa.
+
+Tarkistus lukee nyt project_import_events-taulua ja ikkuna on viikko.
+Todennettu: stt_haku 874 -> 50 tuontiin, rakennuslehti 16 -> 2.
+
+Hinta: kuvaustaydennys ajetaan vain nakemattomille kandidaateille, eli
+jo tuodun rivin kuvausta ei enaa taydenneta tata kautta. Takautuva
+taydennys hoidetaan omilla skripteillaan.
+
+---
+
 ### "Ongelmia 13" oli enimmakseen oman valvonnan jalkia
 
 TIC naytti 13 rikkinaista lahdetta. Mitattu: 2 062 ajoa, mediaanikesto

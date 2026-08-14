@@ -90,10 +90,37 @@ export async function isSourceUrlSeenRecently(
 }
 
 /*
- * Sama tarkistus koko erälle yhdellä kyselyllä. Yksi lähde voi tuottaa
- * satoja kandidaatteja (stt_haku 253), ja yksitellen kysyttynä pelkkä
- * nähty-tarkistus oli satoja peräkkäisiä tietokantakierroksia.
+ * ONKO TAMA OSOITE JO KASITELTY. Koko erälle yhdellä kyselyllä: yksi
+ * lähde voi tuottaa satoja kandidaatteja (stt_haku 861), ja yksitellen
+ * kysyttynä tämä oli satoja peräkkäisiä tietokantakierroksia.
  *
+ * KYSYTAAN TUONTITAPAHTUMIA, EI HANKKEEN LAHTEITA. Aiemmin tämä luki
+ * `project_sources`-taulua, jossa on 763 riviä ja joka vaatii
+ * `project_id`:n - rivi syntyy vain kun kandidaatista tuli hanke.
+ * Hylätty kandidaatti ei jättänyt sinne jälkeä, joten se tuotiin ja
+ * hylättiin uudelleen joka ajossa. Taulu ei siis rakenteeltaan voinut
+ * vastata kysymykseen "onko tämä käsitelty" - se vastaa kysymykseen
+ * "syntyikö tästä hanke". Jokainen yritys sen sijaan kirjautuu
+ * `project_import_events`-tauluun myös hylättynä.
+ *
+ * Mitattu 14.8.2026 stt_haku: 861 kandidaatista 859:llä oli jo
+ * tuontitapahtuma (411 skipped, 282 queued_for_review, 166 verified) ja
+ * vain 2 oli aidosti uusia. Vanhalla tarkistuksella tuontiin meni 866.
+ *
+ * IKKUNAN ON OLTAVA PIDEMPI KUIN LAHTEEN AJOVALI. Vanha ikkuna oli 24 h
+ * ja näiden lähteiden `refresh_minutes` on 1440 eli myös 24 h, joten
+ * edellinen ajo oli aina juuri liian vanha eikä ikkuna ohittanut
+ * mitään. Viikko ohittaa STT:llä 861:stä 816 (tuontiin jää 45); 24 h
+ * olisi jättänyt 670 ja 30 vrk vain 2 - mutta kuukausi on jo niin pitkä
+ * että sivun aito päivitys jäisi huomaamatta.
+ *
+ * HUOM: /api/agent/seen-source (isSourceUrlSeenRecently) käyttää yhä
+ * vanhaa 24 tunnin project_sources-tarkistusta. Se on eri rajapinta
+ * eikä osa keräysputkea.
+ */
+const IMPORT_SEEN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+
+/*
  * PALA MITOITETAAN PITUUDEN EIKA MAARAN MUKAAN. Sadan osoitteen pala
  * ylitti PostgRESTin otsikkorajan (16 kt), kun osoitteet ovat pitkiä:
  * mitattu 14.8.2026 stt_haku, 100 osoitetta = 17 585 merkkiä, jolloin
@@ -111,7 +138,7 @@ export async function findRecentlySeenSourceUrls(
   if (unique.length === 0) return seen
 
   const supabase = getSupabase()
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000
+  const cutoff = new Date(Date.now() - IMPORT_SEEN_WINDOW_MS).toISOString()
 
   const chunks: string[][] = []
   let current: string[] = []
@@ -129,18 +156,21 @@ export async function findRecentlySeenSourceUrls(
   if (current.length > 0) chunks.push(current)
 
   for (const chunk of chunks) {
+    /*
+     * Rajaus tehdään kannassa (gte), koska tapahtumia on kymmeniä
+     * tuhansia ja samasta osoitteesta voi olla useita rivejä. Riittää
+     * että osoitteelle löytyy yksikin tapahtuma ikkunan sisältä.
+     */
     const { data, error } = await supabase
-      .from("project_sources")
-      .select("source_url,last_seen_at")
+      .from("project_import_events")
+      .select("source_url")
       .in("source_url", chunk)
+      .gte("detected_at", cutoff)
 
     if (error) throw error
 
     for (const row of data ?? []) {
-      if (!row.last_seen_at) continue
-      if (new Date(row.last_seen_at).getTime() >= cutoff) {
-        seen.add(row.source_url)
-      }
+      if (row.source_url) seen.add(row.source_url)
     }
   }
 
