@@ -84,7 +84,37 @@ async function main() {
     return rows
   }
 
-  const profiles = await page("profiles")
+  /*
+   * REKISTEROITYMISPAIVA LUETAAN auth.users-TAULUSTA, EI PROFILESISTA.
+   *
+   * profiles.created_at ei ole tilin luontipaiva vaan profiilirivin
+   * luontipaiva. Mitattu 15.8.2026: 40 profiilirivia oli luotu KAIKKI
+   * samana paivana 3.5.2026 - se on profiles-taulun kayttoonoton
+   * taydennysajo. 51 tilia 73:sta oli eri paivalla kuin auth.users, ja
+   * suurin ero oli 78 vuorokautta.
+   *
+   * Ensimmainen tilannekuva laskettiin profilesin mukaan ja raportoi
+   * "40 tilin eran toukokuussa". Sellaista ei ollut: todellisuudessa
+   * helmikuussa 28 ja maaliskuussa 11.
+   */
+  const authUsers: any[] = []
+  for (let p = 1; ; p++) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page: p, perPage: 200 })
+    if (error) throw error
+    authUsers.push(...data.users)
+    if (data.users.length < 200) break
+  }
+
+  const profileRows = await page("profiles")
+  const profileById = new Map(profileRows.map((p: any) => [p.id, p]))
+
+  const profiles = authUsers.map((u) => ({
+    id: u.id,
+    email: u.email ?? (profileById.get(u.id) as any)?.email ?? "",
+    full_name: (profileById.get(u.id) as any)?.full_name ?? null,
+    created_at: u.created_at,
+  }))
+
   const events = await page("analytics_events", "user_id,event_type,created_at")
   const favorites = await page("user_project_favorites", "user_id")
   const statuses = await page("user_project_status", "user_id")

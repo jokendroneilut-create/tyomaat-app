@@ -59,9 +59,18 @@ saatavilla.
 **Mutta järjestelmä ei tiedä kuka on trialilla, kenen trial päättyi tai
 kuka maksaa.** Listaa "trialit jotka eivät jääneet maksaviksi
 asiakkaiksi" ei voi tuottaa datasta. Lähin korvike on tili + käyttö:
-*luotu toukokuussa, ei jälkeäkään 14.7. jälkeen*. Se on eri asia kuin
+*luotu helmikuussa, ei jälkeäkään 14.7. jälkeen*. Se on eri asia kuin
 konvertoitumaton trial, koska syy voi yhtä hyvin olla ettei tiliä
 koskaan otettu käyttöön.
+
+**Tunnuksen säilyminen on nyt varmistettu.** `account_lifecycle`-taulu
+otettiin käyttöön 15.8.2026 ja siihen kirjattiin kaikki 73 tiliä
+`created`-tapahtumina oikeilla `auth.users`-luontipäivillä. Taulussa ei
+ole vierasavainta `auth.users`iin, joten historia säilyy vaikka tunnus
+poistetaan — ja `/api/admin/delete-user` kirjaa `deleted`-tapahtuman
+ennen poistoa. Trial- ja tilaustapahtumia (`trial_started`,
+`converted`, `cancelled`) taulu tukee, mutta niitä ei vielä kirjoiteta
+mistään.
 
 **Vaikutus uusien myyjien aloittaessa.** Ilman tilauskenttää ei voi
 mitata konversiota trialista maksavaksi eikä sanoa kenen kauppa oli
@@ -87,8 +96,9 @@ vielä ole — tämä on lähtötaso.
 | Aktiivinen 7 vrk sisällä | **19** |
 | Aktiivinen 30 vrk sisällä | **30** |
 
-**Tilit kuukausittain:** 04/2026: 2 · 05/2026: 39 · 07/2026: 17 ·
-08/2026: 12 (kesäkuussa ei yhtään)
+**Tilit kuukausittain** (`auth.users.created_at`): 02/2026: 27 ·
+03/2026: 11 · 04/2026: 3 · 06/2026: 1 · 07/2026: 16 · 08/2026: 12
+(touko- ja kesäkuussa käytännössä ei yhtään)
 
 **Aktiiviset käyttäjät viikoittain** (mittaus alkaa 14.7.):
 
@@ -104,10 +114,15 @@ vielä ole — tämä on lähtötaso.
 
 | rekisteröity | tilejä | nähty jaksolla | osuus |
 |---|---|---|---|
-| 04/2026 | 2 | 2 | 100 % |
-| 05/2026 | 39 | 7 | **18 %** |
-| 07/2026 | 17 | 12 | **71 %** |
+| 02/2026 | 27 | 6 | **22 %** |
+| 03/2026 | 11 | 2 | **18 %** |
+| 04/2026 | 3 | 1 | 33 % |
+| 06/2026 | 1 | 0 | 0 % |
+| 07/2026 | 16 | 12 | **75 %** |
 | 08/2026 | 12 | 9 | **75 %** |
+
+Tiivistettynä: **helmi–huhtikuun 41 tilistä 9 on aktiivisia (22 %),
+heinä–elokuun 28 tilistä 21 (75 %).**
 
 **Sitoutuminen** (montako asiakastiliä on tehnyt tämän):
 
@@ -131,10 +146,13 @@ muutokset voi yhdistää tekoihin eikä arvailuun.
 
 | pvm | toimenpide | laajuus |
 |---|---|---|
+| helmi 2026 | ensimmäinen hankinta-aalto | 27 tiliä |
 | 4.3.2026 | ensimmäinen tallennettu haku käyttöön | 1 käyttäjä |
+| maalis 2026 | hankinta jatkuu | 11 tiliä |
 | 23.4.2026 | toinen tallennettu haku | 1 käyttäjä |
-| touko 2026 | 40 tilin erä | 40 tiliä |
+| touko–kesä 2026 | **tauko hankinnassa** | 1 tili |
 | 28.6.2026 | 2 tallennettua hakua (päivittäinen) | 2 käyttäjää |
+| heinä 2026 | hankinta uudelleen käyntiin | 16 tiliä |
 | 17.7.2026 | broadcast-testi | 1 (testi) |
 | **26.7.2026** | **broadcast: "Uusi klusteroituva karttanäkymä julkaistu"** | **61 vastaanottajaa** |
 | 27.7.2026 | mahdollisuusherätteet käyntiin | 61 kpl / 5 käyttäjää |
@@ -146,15 +164,19 @@ muutokset voi yhdistää tekoihin eikä arvailuun.
 
 ## Havainnot 15.8.2026
 
-**Heinä- ja elokuun tilit aktivoituvat nelinkertaisesti toukokuun
-tileihin verrattuna** (71–75 % vs 18 %). Ero on liian iso ollakseen
-sattumaa. Kolme mahdollista selitystä, eikä data erottele niitä:
-toukokuun erä oli laadultaan toisenlainen (esim. joukkorekisteröinti),
-tuote oli toukokuussa selvästi heikompi, tai toukokuun käyttäjät
-käyttivät tuotetta ennen 14.7. eikä siitä ole jälkeä. **Tämä on
-ensimmäinen asia joka kannattaa selvittää ennen kuin uusia myyjiä
-ohjeistetaan** — jos toukokuun erä oli eri kanavasta, sitä ei kannata
-toistaa.
+**Hankinnassa on ollut kolmen kuukauden tauko.** Helmi–huhtikuussa
+syntyi 41 tiliä, touko–kesäkuussa yksi, ja heinä–elokuussa 28. Tauko
+näkyy suoraan siinä ettei kohorttia ole mistä mitata.
+
+**Heinä- ja elokuun tilit aktivoituvat kolminkertaisesti alkuvuoden
+tileihin verrattuna** (75 % vs 22 %). Ero on liian iso ollakseen
+sattumaa, mutta data ei erottele syytä. Kolme mahdollista: alkuvuoden
+tilit ovat 5–6 kuukautta vanhoja ja ehtineet hiipua normaalisti, tuote
+oli silloin heikompi, tai he käyttivät tuotetta ennen 14.7. eikä siitä
+ole jälkeä. **Ikäero yksin riittäisi selittämään paljon** — tuoretta
+kohorttia verrataan puolen vuoden takaiseen, mikä ei ole reilu
+vertailu. Vasta kun heinäkuun kohortti on puoli vuotta vanha, luvut
+ovat vertailukelpoisia.
 
 **Aktiivisten määrä lähes kaksinkertaistui viimeisellä viikolla** (11 →
 19). Se osuu samaan aikaan kuin herätteiden laajeneminen ja uudet
@@ -165,10 +187,11 @@ aktivoinnin selvin vaje: heräte on ainoa mekanismi joka tuo käyttäjän
 takaisin ilman että hän itse muistaa tulla. Ero 8 ja 31 välillä on
 suoraan tekemättä jäänyttä työtä, ei tuotevirhe.
 
-**40 tiliä ei ole näkynyt kuukauteen.** Näistä 32 on toukokuun erästä.
-Ennen kuin niihin käytetään myyntiaikaa, kannattaa varmistaa ovatko ne
-ylipäätään oikeita liidejä. Huomaa myös ettei kannassa ole tietoa siitä,
-oliko kyse trialista joka ei konvertoitunut — ks. [Mitä EI ole
+**40 tiliä ei ole näkynyt kuukauteen.** Näistä 32 on helmi–huhtikuulta.
+Ne ovat vanhin ja kylmin joukko — ennen kuin niihin käytetään
+myyntiaikaa, kannattaa varmistaa ovatko ne ylipäätään oikeita liidejä.
+Huomaa myös ettei kannassa ole tietoa siitä, oliko kyse trialista joka
+ei konvertoitunut — ks. [Mitä EI ole
 tallessa](#mitä-ei-ole-tallessa-tilaus--ja-trial-tila).
 
 **Tallennettuja hakuja on 6 ja yksi niistä ei ole koskaan lähtenyt.**
@@ -187,4 +210,5 @@ sarjan hyppy luetaan käyttäjien käytökseksi.
 |---|---|
 | 14.7.2026 | `analytics_events` otettu käyttöön — kaikki aktiivisuusluvut alkavat tästä |
 | 15.8.2026 | `scripts/snapshot-users.ts` luotu |
-| 15.8.2026 | admin- ja testitili suljettu pois (`johannessippola@hotmail.com`, `jokendroneilut@gmail.com`). Ennen tätä luvut olivat: 71 asiakastiliä, 31 aktiivista, toukokuun kohortti 8/40 |
+| 15.8.2026 | admin- ja testitili suljettu pois (`johannessippola@hotmail.com`, `jokendroneilut@gmail.com`). Ennen tätä luvut olivat: 71 asiakastiliä, 31 aktiivista |
+| 15.8.2026 | **rekisteröitymispäivä luetaan `auth.users`ista, ei `profiles`ista.** `profiles.created_at` on profiilirivin luontipäivä: 40 riviä oli luotu kaikki samana päivänä 3.5.2026 (taulun käyttöönoton täydennysajo), ja 51 tiliä 73:sta oli eri päivällä kuin `auth.users` (suurin ero 78 vrk). Ennen korjausta kohortit raportoitiin muodossa "05/2026: 39 tiliä" — sellaista erää ei ollut |
