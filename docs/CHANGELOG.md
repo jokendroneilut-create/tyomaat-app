@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Ajokohtainen aikabudjetti
+
+Lahdekohtainen 90 s katkaisu ei riittanyt: 14.8. klo 15 ajossa nelja
+hidasta yritystiedotelahdetta osui perakkain (Asura 55 s, SRV 92 s
+katkaistu, Jatke 112 s katkaistu) ja Tekova alkoi vasta +375 s.
+Alusta tappoi funktion 500 s katossa kesken Tekovan.
+
+Tapettu ajo katoaa tilannekuvasta kokonaan, koska lokirivi kirjoitetaan
+vasta lopussa. Budjetti (380 s) pysayttaa uusien toiden aloittamisen,
+jolloin ajo paattyy siististi ja kertoo mihin se ehti. Tarkistus on
+jokaisen vaiheen silmukassa, ei vain lahdevaiheessa.
+
+---
+
 ### STT-lahde ei jumittunut vaan oli liian hidas
 
 Rajapinta vastaa moitteetta; lahde oli vain liian hidas mahtuakseen ajon

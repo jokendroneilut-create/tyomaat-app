@@ -29,6 +29,8 @@ type PipelineOptions = {
   maxFactJobs?: number
   maxIdentityCatchUpJobs?: number
   stages?: PipelineStage[]
+  /* Ajon aikabudjetti millisekunteina; oletus RUN_BUDGET_MS. */
+  budgetMs?: number
 }
 
 /*
@@ -42,8 +44,47 @@ type PipelineOptions = {
  * `stages`-parametri mahdollistaa tämän ilman että käsiajo (admin-paneeli)
  * menettää nykyisen "aja kaikki" -käytöksensä.
  */
+/*
+ * AJOKOHTAINEN AIKABUDJETTI.
+ *
+ * Lähdekohtainen aikakatkaisu (90 s) estää yksittäisen jumittajan, mutta
+ * ei sitä että USEA hidas lähde osuu samaan ajoon. Mitattu 14.8.2026 klo
+ * 15 ajo: Asura 55 s, SRV 92 s (katkaistu), Jatke 112 s (katkaistu) ja
+ * Tekova alkoi vasta +375 sekunnissa - alusta tappoi funktion 500
+ * sekunnin katossa kesken Tekovan.
+ *
+ * Tapettu ajo on pahempi kuin lyhyt ajo: lokirivi kirjoitetaan vasta
+ * lopussa, joten ajo katoaa tilannekuvasta kokonaan eikä kukaan näe että
+ * se edes yritettiin. Sama vikaluokka kuin jumittuneessa lähteessä.
+ *
+ * Budjetti pysäyttää UUSIEN töiden aloittamisen ennen kattoa, jolloin ajo
+ * päättyy siististi ja kertoo mihin se ehti. Kesken jääneet lähteet ovat
+ * seuraavan ajon kärjessä, koska niiden `last_run_at` ei päivittynyt.
+ *
+ * 380 s jättää 120 sekuntia kattoon: yksi käynnissä oleva lähde saa
+ * aikakatkaisunsa (90 s) loppuun ja lokirivi ehtii kirjoittua.
+ */
+const RUN_BUDGET_MS = 380 * 1000
+
 export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   const startedAt = Date.now()
+
+  const budgetMs = options.budgetMs ?? RUN_BUDGET_MS
+  const outOfTime = () => Date.now() - startedAt > budgetMs
+
+  /* Mihin vaiheeseen budjetti loppui - null jos ajo ehti loppuun. */
+  let stoppedAt: string | null = null
+
+  const stopIfOutOfTime = (stage: string): boolean => {
+    if (!outOfTime()) return false
+    if (!stoppedAt) {
+      stoppedAt = stage
+      console.log(
+        `discoveryPipeline: aikabudjetti (${Math.round(budgetMs / 1000)} s) tayttyi vaiheessa "${stage}"`
+      )
+    }
+    return true
+  }
 
   const stages = new Set(options.stages ?? ALL_STAGES)
 
@@ -90,6 +131,7 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
     if (sourcesError) throw sourcesError
 
     for (const source of sources ?? []) {
+      if (stopIfOutOfTime("sources")) break
       const result = await runSourceWorker(source.id)
       sourceResults.push(result)
     }
@@ -99,6 +141,7 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   // 2. Kerää HTML-artikkeleista PDF-linkit
   //
   for (let i = 0; stages.has("articles") && i < maxArticleJobs; i++) {
+    if (stopIfOutOfTime("articles")) break
     const { data: document, error } = await supabaseAdmin
       .from("source_documents")
       .select("id")
@@ -127,6 +170,7 @@ articleResults.push(result)
   // 3. PDF Worker
   //
   for (let i = 0; stages.has("pdfs") && i < maxPdfJobs; i++) {
+    if (stopIfOutOfTime("pdfs")) break
     const result = await runPdfWorker()
     pdfResults.push(result)
 
@@ -137,6 +181,7 @@ articleResults.push(result)
   // 4. Text Worker
   //
   for (let i = 0; stages.has("texts") && i < maxTextJobs; i++) {
+    if (stopIfOutOfTime("texts")) break
     const result = await runTextExtractionWorker()
     textResults.push(result)
 
@@ -161,6 +206,7 @@ articleResults.push(result)
    * kasva ohi. Vanhin ensin.
    */
   for (let i = 0; stages.has("facts") && i < maxIdentityCatchUpJobs; i++) {
+    if (stopIfOutOfTime("identity-catchup")) break
     const { data: pending } = await supabaseAdmin
       .from("source_documents")
       .select("id")
@@ -203,6 +249,7 @@ articleResults.push(result)
   // 5b. Fact Worker + Identity Worker
   //
   for (let i = 0; stages.has("facts") && i < maxFactJobs; i++) {
+    if (stopIfOutOfTime("facts")) break
     const result = await runFactWorker()
     factResults.push(result)
 
@@ -241,6 +288,12 @@ articleResults.push(result)
   return {
     ok: true,
     durationMs,
+    /*
+     * Mihin vaiheeseen aikabudjetti loppui, tai null jos ajo ehti loppuun.
+     * Näkyy ajon vastauksessa ja lokissa; `discovery_pipeline_runs` ei
+     * tallenna tätä, koska sarakkeen lisääminen vaatii käsin ajetun DDL:n.
+     */
+    stoppedAt,
     pendingFacts: pendingFacts ?? null,
     pendingIdentity: pendingIdentity ?? null,
 

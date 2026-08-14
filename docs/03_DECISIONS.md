@@ -5,6 +5,45 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-062 – Ajokohtainen aikabudjetti: tapettu ajo katoaa tilannekuvasta
+Lähdekohtainen 90 sekunnin katkaisu (D-060) esti yksittäisen jumittajan,
+mutta ei sitä että USEA hidas lähde osuu samaan ajoon. Mitattu
+14.8.2026 klo 15:
+
+| lähde | kesto |
+|---|---|
+| Hilma, Lieto, Naantali, Iisalmi | 2,9–18,7 s |
+| Asura tiedotteet | 54,7 s |
+| SRV tiedotteet | **91,9 s → katkaistu** |
+| Jatke tiedotteet | **111,8 s → katkaistu** |
+| Tekova tiedotteet | alkoi **+375 s**, jäi kesken |
+
+Alusta tappoi funktion 500 sekunnin katossa kesken Tekovan. Aikakatkaisu
+siis toimi - SRV ja Jatke kirjautuivat virheiksi eivätkä jääneet
+`started`-tilaan - mutta ajo ehti silti loppua kesken.
+
+**TAPETTU AJO ON PAHEMPI KUIN LYHYT AJO.** Lokirivi kirjoitetaan vasta
+lopussa, joten ajo katoaa tilannekuvasta kokonaan: TIC:in ajolistalla ei
+näy mitään, ja ilman `discovery_runs`-taulun kaivamista näyttää siltä
+ettei ajoa yritettykään. Sama vikaluokka kuin jumittuneessa lähteessä.
+
+Budjetti pysäyttää UUSIEN töiden aloittamisen 380 sekunnissa, jolloin ajo
+päättyy siististi ja kertoo mihin se ehti (`stoppedAt`). Kesken jääneet
+lähteet ovat seuraavan ajon kärjessä, koska niiden `last_run_at` ei
+päivittynyt.
+
+**380 s eikä lähempänä kattoa:** jäljelle jäävä 120 sekuntia riittää
+siihen että käynnissä oleva lähde saa aikakatkaisunsa (90 s) loppuun ja
+lokirivi ehtii kirjoittua. Tarkistus on jokaisen vaiheen silmukassa, ei
+vain lähdevaiheessa - faktapoiminta voi yhtä lailla ylittää katon kun
+jono kasvaa.
+
+`stoppedAt` palautuu ajon vastauksessa mutta EI tallennu
+`discovery_pipeline_runs`-tauluun: sarakkeen lisääminen vaatii käsin
+ajetun DDL:n, eikä sitä tehdä ohjelmallisesti.
+
+---
+
 ### D-061 – STT ei jumittunut vaan oli liian hidas
 D-060 esti jumittunutta lähdettä pysäyttämästä putkea, mutta jätti auki
 miksi STT jumittui. Se ei jumittunut lainkaan: rajapinta vastaa
