@@ -154,6 +154,23 @@ koko (50 p) ja tuoreus (25 p) hallitsevat yhä. Roolillisilla vaihtui
 8/20 (vaihesanaston korjauksesta). Seuraava vipuvarsi on siis
 **moduulipainojen tasapaino**, ei enää roolin puuttuminen.
 
+**"Muu"-osuus on nyt mittari, ei enää pelkkä vika.** Vaihtoehto
+säilyy valikossa tarkoituksella — pakollisessa modaalissa on oltava
+ulospääsy, tai käyttäjä valitsee väärän roolin päästäkseen eteenpäin,
+ja väärä rooli on huonompi kuin tyhjä. Mutta sen osuus kertoo suoraan
+kattaako valikko kentän:
+
+- **osuus pysyy ~50 %:ssa** → neljä uutta roolia eivät osuneet,
+  valikossa on yhä aukko → katso taas verkkotunnukset kuten 15.8.
+- **osuus laskee** → valikko kattaa, ja jäljelle jäävä "Muu" on aitoa
+  jäännösjoukkoa jolle kolmiportainen varasuunnitelma riittää.
+
+Mittaus vaatii **uusia tai asetuksiaan päivittäneitä tilejä**, joten se
+kannattaa lukea aikaisintaan noin kuukauden päästä (n. 15.9.2026) — ei
+aiemmin, koska nykyiset 13 tiliä eivät siirry itsestään (kohta 5) ja
+lukisivat mittarin väärin liian aikaisin. Sama roolijakauma-ajo kuin
+15.8., ks. D-071.
+
 **2. ~~Vaihesanasto vääristää pisteytystä~~ — väite tarkistettu ja se ei
 pidä paikkaansa (15.8.2026).** Kirjoitusasuja on 11, mutta
 `normalizeLegacyPhase` kanonisoi niistä 10. Ainoa tunnistumaton on
