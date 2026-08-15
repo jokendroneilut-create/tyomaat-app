@@ -450,6 +450,29 @@ ajo. Kerran kuvauksettomana tuotu rivi jää siis pysyvästi vajaaksi,
 vaikka koukku osaisi täydentää sen. Siksi jäämä purettiin erillisellä
 skriptillä: `scripts/backfill-company-enrichment.ts`.
 
+**Tulos 15.8.2026** (128 hanketta + 60 jonoriviä):
+
+| kenttä | osuus rikastetuista |
+|---|---|
+| asiakkaalle näkyvä kuvaus ≥ 400 mrk | **128 (100 %)**, mediaani 3 570 mrk |
+| kohdetyyppi | 114 (89 %) |
+| rakennuttaja | 94 (73 %) |
+| urakoitsija | 75 (59 %) |
+| euromäärä | 9 (7 %) |
+
+Kaikki nämä kentät olivat näillä riveillä aiemmin tyhjiä. Kohdetyyppi
+89 %:lla on merkittävin: se on alueen jälkeen asiakkaan tärkein
+suodatin.
+
+⚠️ **Kolme peräkkäistä virhettä ennen kuin luku oli oikein**, ja
+skripti raportoi kaikki kolme kertaa onnistuneena ("196 riviä, 0
+virhettä"): (1) mittaus ilman `--enrich`-lippua, (2) `??` ei korvaa
+tyhjää merkkijonoa, joten kuvaus ei päätynyt `additional_info`-kenttään
+(7/124), (3) korjaus säilytti liian lyhyen tiivistelmän, koska
+"ensimmäinen ei-tyhjä" voitti (15/124). Vasta "pisin voittaa" tuotti
+100 %. **Skriptin loki kertoo mitä se yritti tehdä, ei mitä kantaan
+päätyi** — jälkitarkistus kannasta on pakollinen osa backfillia.
+
 **B. Väärä rajaus (SRV, korjattu — D-074).** Lähde haki hyvin mutta
 suodatti pois sijoittajauutiset, joissa pörssiyhtiö julkaisee
 merkittävät urakkavoitot. 81 → 165 ehdokasta, euromäärä 16:ssa.
@@ -607,7 +630,8 @@ muistin varassa.
 - Kohdetyyppi puuttuu 2 260 hankkeelta (42 %).
 - Lähdelinkki puuttuu 734 hankkeelta (13 %), joista suurin osa on vanhaa
   legacy-erää.
-- Kuvaus alle 200 merkkiä 1 803 hankkeella (33 %).
+- Kuvaus alle 200 merkkiä **1 571** hankkeella (29 %). Oli 1 803;
+  yrityslähteiden jälkirikastus (15.8.2026) pudotti lukua 232:lla.
 
 ### Lähdekattavuus
 
