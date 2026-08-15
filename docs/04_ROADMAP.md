@@ -49,6 +49,8 @@ Datan kattavuus, joka rajaa mitä pisteytys voi käyttää:
 | kenttä puuttuu | osuus |
 |---|---|
 | kustannusarvio | 96 % |
+| **`business_value` (aito arvo)** | **96 %** — 61 % `"unknown"`, 35 % puuttuu |
+| **`size_class` (aito arvo)** | **100 %** — ei yhtään aitoa arvoa |
 | valmistumisaika | 92 % |
 | urakoitsija | 86 % |
 | rakennuttaja | 59 % |
@@ -183,9 +185,21 @@ Epäyhtenäisyys on siis **näyttö- ja siisteysasia, ei pisteytysvirhe**,
 ja pudotettu tästä listasta prioriteettina. Ainoa aito korjaus:
 "Suunnittelukilpailu" → `planning` tai oma vaihe.
 
-**3. Palautetta on 2 kappaletta.** Vaihe 4 (palauteoppiminen) ei voi
-olla riippuvuus millekään muulle — pisteytyksen on toimittava
-deterministisesti, ja oppiminen on myöhempi lisä.
+**3. Peukkuja on 1 — mutta palautedataa ~330 tapahtumaa (tarkennettu
+15.8.2026).** Kahdesta `project_feedback`-rivistä toinen on testitili,
+eli ulkoisia peukkuja on **yksi, yhdeltä tililtä**. Peukku on kuollut
+mittari.
+
+Käyttäytymissignaalia sen sijaan on: `project_open` 191 (25 tiliä),
+suosikit 84 (10 tiliä), hankkeen tilamuutos 59 (7 tiliä) — ja
+tilamuutoksissa **won 6, lost 8, offer_sent 12, contacted 27**. Won/lost
+ei ole relevanssin korvike vaan relevanssi itse.
+
+Oppiminen on siis kehitettävissä nyt, mutta **lähde on vaihdettava
+peukusta käyttäytymiseen**. Este: emme kirjaa näyttökertoja, joten
+tämän dokumentin oma mittari *"avatut / näytetyt"* ei ole laskettavissa
+eikä avausten järjestysvinoumaa voi korjata. Toimintalogiikka ja
+varaukset: [`08_P1_OPPORTUNITY_ENGINE.md`](08_P1_OPPORTUNITY_ENGINE.md) §9b.
 
 **3½. VARASTO JA ASIAKASKUNTA OVAT ELINKAAREN ERI PÄISSÄ — P1:n uusi
 suurin este (mitattu 15.8.2026).** Aktiivisten hankkeiden vaihejakauma:
@@ -211,6 +225,84 @@ väärässä päässä elinkaarta. **Pisteytystä ei voi säätää tämän ymp�
 — kyse on varaston koostumuksesta, ei painoista. Siksi Työjonon
 "Stara ja liikelaitokset" (voittajat) ja muut myöhäisen vaiheen
 lähteet nousevat P1:n kannalta tärkeämmiksi kuin uudet kaavalähteet.
+
+**3¾. HANKKEEN ARVO PUUTTUU KÄYTÄNNÖSSÄ AINA — ja se on pisteytyksen
+suurin moduuli (mitattu 15.8.2026).**
+
+| kenttä | kattavuus 5 481 aktiivisesta |
+|---|---|
+| `estimated_cost` | 200 (**4 %**) |
+| `floor_area` | 140 (3 %) |
+| `apartments` | 180 (3 %) |
+| jokin näistä | 406 (**7 %**) |
+| `metadata.business_value` aito arvo | 236 (**4 %**) |
+
+`business_value` on 61 %:lla `"unknown"` ja 35 %:lta puuttuu kokonaan;
+aitoja arvoja on high 213, medium 21, low 2. **Moduuli `businessValue`
+on pisteytyksen suurin (50 p) ja se vaikenee 96 %:lla hankkeista.**
+Käytännössä valtaosan hankkeista pistemäärä on tuoreus + lähde + vaihe.
+
+Ja kun se puhuu, se on ylivoimainen: 50 p voittaa roolin huippuvaiheen
+(40 p). Mitattu vaikutus 24 tilin top 20:iin yhteisellä 1 000 hankkeen
+joukolla (ilman aluerajausta, jotta mittaus koskee roolia):
+
+- **52 %** kaikista top 20 -paikoista on `business_value = high`
+- 24 tilin top 20 -listat koostuvat yhteensä vain **56 eri
+  hankkeesta** (jos listat olisivat erilaiset: 480)
+- mutta **0 hanketta on kaikkien 24 listalla** — eli syötteet eivät ole
+  identtisiä, ja rooli erottelee aidosti (Rakennusliike 20 % high vs.
+  Kiinteistönomistaja 75 %)
+
+Rehellinen tulkinta: **ei "kaikille sama lista", vaan kaikille lista
+samasta 56 hankkeen altaasta.** Personointi toimii, mutta se valitsee
+liian pienestä joukosta, koska arvokenttä ratkaisee kärjen ja se on
+tiedossa vain 4 %:lla.
+
+Kustannusarvio myös keskittyy: 175/200 tulee lähteestä jolla ei ole
+`source_name`ia (vanha legacy-erä) ja 32 % "Rakentaminen aloitettu"
+-vaiheen hankkeista — kaavoituksessa (52 % varastosta) arvo on
+**0 hankkeella 2 853:sta**. Tämä on sama vinouma kuin kohdassa 3½,
+eri kenttänä.
+
+*Mahdollisia suuntia (ei päätetty):* arvon johtaminen kerrosalasta tai
+asuntomäärästä, kohdetyyppikohtainen mediaanihinta karkeana arviona,
+`business_value`-luokittelun laajentaminen kuvaustekstistä, tai
+`"unknown"`-arvon käsittely eri tavalla kuin puuttuvan.
+
+#### "Liian pieni hanke" ei ole tällä hetkellä toimeenpantavissa
+
+Kysymys nousi 15.8.2026: jos käyttäjä valitsee peukun syyksi *"Liian
+pieni hanke"*, millä me ylipäätään mittaamme kokoa? Vastaus on että
+emme mitenkään — kolme erillistä katkosta samassa ketjussa:
+
+1. `reason_category` **tallennetaan mutta pisteytys ei lue sitä**
+   (`08_P1` §9b).
+2. Vaikka lukisi, kokoulottuvuutta ei ole: `estimated_cost` 4 %,
+   `floor_area` 3 %, `apartments` 3 %.
+3. **`metadata.size_class` on `"unknown"` 64 %:lla ja puuttuu
+   36 %:lta — aito arvo on 0 hankkeella.** Kenttä on silti
+   `AFFINITY_ATTRIBUTES`-listalla ja peukkulomake lähettää sen, eli
+   oppimissilmukassa on attribuutti jota ei ole olemassa.
+
+**Diskreetit kokosignaalit jotka OVAT olemassa** (sama ajo):
+
+| signaali | kattavuus | huomio |
+|---|---|---|
+| kohdetyyppi (`building_type`\|`property_type`) | **59 %** | korreloi kokoon: Sairaala / Energiantuotanto / Infrahanke ≫ Päiväkoti / Rivitalo |
+| euromäärä **kuvaustekstissä** (regex-arvio) | **14 %** (765 kpl) | vrt. rakenteinen kenttä 200 kpl — **3,8× enemmän** |
+| kerrosala kuvaustekstissä | 7 % (374 kpl) | vrt. `floor_area` 140 kpl — 2,7× enemmän |
+| asuntomäärä kuvaustekstissä | 1 % | vähäinen |
+
+Kaksi johtopäätöstä. **Kohdetyyppi on paras käytettävissä oleva
+diskreetti kokoluokka** (59 %) ja se on jo yhtenäistetty (D-059) —
+kokoluokka voidaan johtaa siitä ilman yhtään uutta lähdettä.
+Ja **teksti sisältää moninkertaisesti enemmän euroja kuin rakenteinen
+kenttä**, eli poiminta on alihyödynnetty, ei data puuttuva.
+
+*Tarkistettava erikseen:* Hilma-hankkeita on 294 (`cpv_code`,
+`procurement_type_code` täytettyinä), mutta `estimated_cost` on
+täytetty **yhdessä** niistä. Jos Hilman ilmoituksissa on arvokenttä,
+se on suoraan poimimatta jäänyttä rakenteista dataa.
 
 **4. Moduulipainojen tasapaino (uusi, D-071:n mittauksesta).** Rooli on
 40 pistettä ja hankkeen koko 50, joten **iso epärelevantti hanke voittaa

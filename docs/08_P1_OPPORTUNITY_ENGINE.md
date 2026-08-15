@@ -132,6 +132,76 @@ matchataan sananrajalla, pitkät alimerkkijonona (suomen taivutus eduksi).
 Peukku-ylös-osuus /today-syötteessä ↑; avatut/näytetyt ↑. Analytiikka
 (`analytics/track`) on jo olemassa.
 
+⚠️ **"Avatut / näytetyt" ei ole laskettavissa** (todettu 15.8.2026):
+`analytics_events` kirjaa `project_open`-tapahtumat (191 kpl, 25 tiliä,
+kaikissa `project_id`), mutta **näyttökertoja ei kirjata lainkaan**.
+Osoittaja on, nimittäjää ei. Mittari on ollut tässä dokumentissa alusta
+asti, mutta sitä ei ole koskaan voitu lukea.
+
+## 9b. Palauteoppiminen: nykyinen toimintalogiikka
+
+Kirjattu 15.8.2026, koska mekanismi ei ollut dokumentoituna missään.
+Kyse ei ole koneoppimisesta vaan **laskurista**:
+
+1. **Peukku tallentaa hankkeen ominaisuudet mukaansa.**
+   `TodayFeedbackButtons` kirjoittaa `project_feedback`-riville
+   `rating`in lisäksi hankkeen attribuutit (`region`, `business_value`,
+   `construction_type`, `building_type`, `size_class`, `source_name`).
+   Tämä on tarkoituksellista: palaute säilyy tulkittavana vaikka hanke
+   myöhemmin muuttuisi tai vaihe etenisi.
+2. **Affiniteetti per attribuutti.** `getUserFeedbackContext` summaa
+   käyttäjän rivit (ylös +1, alas −1) attribuuttiarvoittain →
+   `affinity["region"]["Pirkanmaa"] = +2`.
+3. **Pisteytys lukee summan.** `feedbackAffinity` käy uuden hankkeen
+   kuusi attribuuttia, kertoo netto­summan viidellä, rajaa ±30.
+   Perustelu: *"Muistuttaa hankkeita joista pidit"*.
+
+Lisäksi peukku alas **piilottaa hankkeen kokonaan**
+(`downvotedProjectIds`) — paljon jyrkempi mekanismi kuin pisteiden
+vähennys, ja riskialtis näin ohuella datalla.
+
+**Syykategoriat kerätään mutta ovat käyttämättä.** `reason_category`
+(*"Liian pieni hanke"*, *"Väärä alue"*, *"Ei kiinnosta"*) ja
+`reason_text` tallentuvat, mutta pisteytys ei lue niitä. Oppiminen on
+myös tiukasti per käyttäjä — kukaan ei hyödy toisen palautteesta.
+
+⚠️ **`size_class` on kuollut attribuutti silmukassa.** Se on
+`AFFINITY_ATTRIBUTES`-listalla ja peukkulomake lähettää sen, mutta
+mitattuna 15.8.2026 kenttä on `"unknown"` 64 %:lla ja puuttuu
+36 %:lta — **aito arvo on 0 hankkeella 5 481:stä**. Siksi syy *"Liian
+pieni hanke"* ei ole toimeenpantavissa, vaikka pisteytys lukisikin
+syykategoriat. Käytettävissä olevat kokosignaalit ja mitatut
+kattavuudet: [`04_ROADMAP.md`](04_ROADMAP.md) kohta 3¾.
+
+### Mitattu signaalitilanne 15.8.2026
+
+| signaali | kpl | tilejä |
+|---|---|---|
+| 👍👎 peukut | **1** (2 riviä, joista 1 testitili) | 1 |
+| `project_open` | 191 | 25 |
+| suosikit (`user_project_favorites`) | 84 | 10 |
+| tilamuutos (`user_project_status`) | 59 | 7 |
+
+Tilamuutosten sisältö: contacted 27, offer_sent 12, lost 8, new 6,
+**won 6**.
+
+**Johtopäätös: peukku on kuollut mittari, mutta palautedataa on ~330
+tapahtumaa 25 tilillä.** Ja won/lost ei ole relevanssin *korvike* vaan
+relevanssi itse — käyttäjä kertoi että hanke muuttui rahaksi. Oppimisen
+lähde voidaan vaihtaa koskematta `feedbackAffinity`-moduuliin, koska
+`getUserFeedbackContext` tuottaa jo oikean muotoisen
+`affinity[attribuutti][arvo]`-kartan.
+
+**Kaksi varausta ennen kuin avauksista opitaan:**
+- **Järjestysvinouma.** Käyttäjä avaa mitä näytämme ylimpänä, joten
+  avauksista oppiminen vahvistaa nykyistä järjestystä riippumatta siitä
+  onko se oikea — itseään ruokkiva silmukka, ei oppimista.
+- **Vinoumaa ei voi korjata ilman näyttökertoja** (ks. §9). Siksi
+  näyttökertojen kirjaaminen (mitkä hankkeet, missä järjestyksessä,
+  millä pisteellä) on edellytys sekä mittarille että oppimiselle.
+  Suosikit ja won/lost kelpaavat sellaisenaan, koska järjestysvinouma
+  vaikuttaa niihin vähemmän.
+
 ## 10. Periaatteet & riskit
 
 - **Deterministinen ensin, fail-open** (D-006): V1–V3 sääntöpohjaista; LLM vasta
