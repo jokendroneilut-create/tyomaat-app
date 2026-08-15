@@ -646,6 +646,30 @@ muistin varassa.
   vaatisi YVA-sivun uudelleenhaun. Kaikilla 94:llä on `source_url`
   tallessa, joten se on tehtävissä — mutta YVA-lähteellä ei ole
   rikastuskoukkua, joten se ei tule ilmaiseksi D-075:n työntekijän mukana.
+
+  **Kolmen kohdan suunnitelma osapuolten täydentämiseen (15.8.2026),
+  tässä järjestyksessä:**
+
+  1. **Muokkausreitti hyväksytylle hankkeelle** (D-076) — tehty
+     ensin, koska ilman sitä kaksi muuta tuottavat tietoa jota ei voi
+     tallentaa eikä korjata.
+  2. **YVA-poimija.** Sivun rakenne tarkistettu: hankevastaava on
+     nimettynä kenttänä ("Hankkeesta vastaava: Valoa Networks Oy") osiossa
+     "Hankkeen yhteystiedot", ja samalla saisi yhteysviranomaisen,
+     diaarinumeron ja YVA-aikataulun. **Deterministinen, ei LLM:ää** —
+     sama ankkurointi kuin `createCompanyEnricher`issa. Arvio: yksi
+     poimija ~80 riviä + 94 sivun kertahaku. Kattaa 43 % puutteesta.
+  3. **Haku + LLM käsin lisätyille (46 kpl).** Näillä ei ole
+     lähdetekstiä lainkaan — kuvaus tyhjä, ei lähdettä — joten
+     poimittavaa ei ole ja tieto on haettava ulkopuolelta. Yksi
+     verkkohaku antaa esim. Atrian tehtaalle rakennuttajan, 82,4 M€:n ja
+     aikataulun. Kustannus on suuruusluokkaa **1–3 $ kertaluontoisesti**
+     221 hankkeelle, eli raha ei ole este.
+
+     *Este on oikeellisuus.* Väärä yritysnimi on asiakkaalle pahempi kuin
+     tyhjä kenttä (D-057, D-072, D-073). Siksi tällaisen on kirjoitettava
+     lähde-URL ja luottamustaso mukaan ja mentävä TIC:iin tarkistettavaksi
+     — ei suoraan asiakkaalle. LLM ehdottaa, ihminen hyväksyy.
 - Lähdelinkki puuttuu **650** hankkeelta (12 %). Oli 742; 124 palautettiin
   15.8.2026 `source_document_id`:n kautta
   (`scripts/backfill-from-stored-documents.ts`). **Loput eivät ole

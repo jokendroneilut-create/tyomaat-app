@@ -5,6 +5,8 @@ import { extractCostFromText } from "./extractCostFromText"
  *
  * Arvo voi tulla kolmella eri tarkkuudella, eivätkä ne saa näyttää samalta:
  *
+ *   manual    Ihmisen käsin syöttämä arvo. Vahvin, koska se on nimenomaan
+ *             korjaus koneen erehdykseen (D-076).
  *   contract  Hilman ilmoituksen sopimusarvo. Eksakti, toteutunut hinta.
  *   text      Kuvaustekstistä ankkuroituna poimittu kustannusarvio. Hankkeen
  *             oma arvio, usein pyöristetty ja hankkeen alkuvaiheesta.
@@ -21,7 +23,7 @@ import { extractCostFromText } from "./extractCostFromText"
  * ei poimintapäätös, joten se pidetään erillään kunnes siitä on päätetty.
  */
 
-export type CostSource = "contract" | "text"
+export type CostSource = "manual" | "contract" | "text"
 
 export type ResolvedCost = {
   estimated_cost: number
@@ -33,6 +35,7 @@ export type ResolvedCost = {
  * arviolla, vaikka arvio tulisi myöhemmästä lähdesignaalista.
  */
 const PRECEDENCE: Record<CostSource, number> = {
+  manual: 3,
   contract: 2,
   text: 1,
 }
@@ -44,7 +47,7 @@ function toPositiveNumber(value: unknown): number | null {
 }
 
 function isCostSource(value: unknown): value is CostSource {
-  return value === "contract" || value === "text"
+  return value === "manual" || value === "contract" || value === "text"
 }
 
 /*

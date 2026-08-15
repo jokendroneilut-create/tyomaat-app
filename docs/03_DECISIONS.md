@@ -5,6 +5,75 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-076 – Hyväksyttyä hanketta ei voinut muokata lainkaan
+
+**Löydös.** Johannes kertoi lisänneensä käsin tiedot hankkeelle
+"Valmisruokalaitos Nurmoon" (Atrian tehdas, 82,4 M€) ja ihmetteli miksi
+ne olivat kadonneet. Kanta kertoi että ne eivät kadonneet:
+
+| | |
+|---|---|
+| luotu | 18.2.2026 |
+| vaihehistoria | 0 riviä |
+| tuontitapahtumat | 0 |
+| metadata | vain `building_type` |
+
+Data ei ole duplikaatissa eikä jonorivillä (haettu Atria/Nurmo/
+valmisruoka).
+
+⚠️ **Yksi todiste jouduttiin perumaan.** Päättelin ensin että riviä ei
+ole koskaan päivitetty, koska `updated_at` oli tyhjä. Se ei todistanut
+mitään: **`projects`-taulussa ei ole `updated_at`-saraketta lainkaan** —
+se selvisi vasta kun tämä muokkausreitti kaatui siihen. Tyhjä kenttä ja
+olematon kenttä näyttivät kyselyssä samalta. Muokkausaika kirjataan
+siksi metadataan (`edited_at`).
+
+Jäljelle jäävä näyttö (ei vaihehistoriaa, ei tuontitapahtumia, metadata
+lähes tyhjä, ei muokkausreittiä olemassa) tukee yhä sitä ettei tietoja
+ole tallennettu hankkeelle sovelluksen kautta — mutta **sitä ei voi
+todistaa**, koska muokkausjälkeä ei ole kerätty mihinkään. Se on itse
+asiassa tämän päätöksen kolmannen säännön koko peruste.
+
+**Syy: sovelluksessa ei ollut reittiä hyväksytyn hankkeen
+muokkaamiseen.** `app/api/tic/projects/update` muokkaa
+`potential_projects`-taulua eli ehdokkaita. `projects`-tauluun
+kirjoittivat vain approve, auto-complete, expire, duplikaattien
+piilotus ja agentin verify — yhtään kenttäeditoria ei ollut. Käsin
+syötetyt tiedot eivät siis voineet tallentua hankkeelle minkään
+sovelluspolun kautta.
+
+**Tämä oli myös este kaikelle rikastukselle.** 221 hanketta on
+suunnittelu- tai rakentamisvaiheessa ilman rakennuttajaa ja
+urakoitsijaa, eikä kukaan voinut korjata niitä käsin. Sama este koskisi
+LLM-avusteista täydennystä: ehdotettua tietoa ei olisi voinut
+hyväksyä mihinkään.
+
+**Päätös: lisätään muokkausreitti, ja se noudattaa kolmea sääntöä.**
+
+1. **Metadata yhdistetään, ei korvata.** Juuri metadatan
+   ylikirjoittaminen on se mekanismi jolla tietoa katoaa huomaamatta.
+2. **Käsin syötetty arvo on vahvin.** `cost_source` sai kolmannen
+   tason `manual`, joka voittaa sekä `contract`in että `text`in — ihmisen
+   korjaus ei saa kumoutua seuraavalla poiminnalla. Ks. D-072.
+3. **Muokkaus jättää jäljen.** `metadata.edited_at` ja
+   `metadata.edited_fields` kirjataan, ja vaiheen muutos menee
+   vaihehistoriaan lähteellä `dashboard_admin`. Ilman jälkeä sama
+   kysymys ("miksi tämä katosi") ei olisi vastattavissa ensi
+   kerrallakaan — kuten se ei ollut nytkään.
+
+**Todennettu tuotantodataa vasten** (Atrian tehdas, 15.8.2026):
+reitti kirjoitti rakennuttajaksi "Atria Oyj" ja kustannukseksi
+82 400 000 €, `building_type` säilyi metadatassa, toinen sama kutsu
+palautti "ei muutoksia", ja simuloitu myöhempi poiminta (sopimusarvo
+12 M€ + tekstistä 45 M€) EI kumonnut käsin syötettyä arvoa.
+
+**Vaiheen käsimuutos saa peruuttaa taaksepäin.** Tuonnissa vaihe ei saa
+peruuttaa (`phaseAdvances`), koska vanhentunut ilmoitus ei saa siirtää
+hanketta väärään suuntaan. Ihmisen korjaus on eri asia: se on
+nimenomaan sitä varten että kone luki väärin.
+
+---
+
 ### D-075 – Osoite dokumentiksi haussa, runko myöhemmin
 
 **Ongelma.** Legacy-reitin rikastus voi tapahtua vain niin kauan kuin

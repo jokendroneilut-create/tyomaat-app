@@ -71,6 +71,22 @@ describe("resolveProjectCost", () => {
     ).toEqual({ estimated_cost: 45_000_000, cost_source: "text" })
   })
 
+  /*
+   * Ihmisen korjaus ei saa kumoutua seuraavalla poiminnalla — muuten
+   * muokkausreitti (D-076) olisi hyödytön, koska agentti ylikirjoittaisi
+   * korjauksen heti.
+   */
+  it("käsin syötetty voittaa sekä sopimusarvon että tekstin", () => {
+    expect(
+      resolveProjectCost({
+        existingCost: 82_400_000,
+        existingSource: "manual",
+        contractValue: 12_000_000,
+        text: "Hankkeen kustannusarvio on 45 miljoonaa euroa.",
+      })
+    ).toEqual({ estimated_cost: 82_400_000, cost_source: "manual" })
+  })
+
   it("sivuuttaa kelvottomat arvot", () => {
     expect(resolveProjectCost({ contractValue: 0 })).toBeNull()
     expect(resolveProjectCost({ contractValue: "" })).toBeNull()
