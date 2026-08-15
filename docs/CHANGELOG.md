@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 15.8.)
 
+### Yrityslahteiden rikastus tallennettuihin riveihin
+
+Yrityslahteiden rikastuskoukku createCompanyEnricher hakee tiedotesivun
+leipatekstin ja paattelee siita kuvauksen, osapuolet, vaiheen ja
+kohdetyypin. Se toimii - mitattuna kuvaus 100 % kahdeksalla testatulla
+lahteella. Mutta tuonnissa koukkua kutsutaan vain viela nakemattomille
+osoitteille, ja budjetti on 40 kandidaattia per ajo, joten kerran
+kuvauksettomana tuotu rivi ei koskaan taydenny itsestaan.
+
+Uusi scripts/backfill-company-enrichment.ts purkaa kertyneen jaaman:
+ajaa koukun jo tallennettujen rivien yli, taydentaa kuvauksen,
+urakoitsijan, kohdetyypin ja euromaaran. Ei ylikirjoita olemassa
+olevaa tietoa muuten kuin kuvauksen osalta eika peruuta vaihetta
+taaksepain.
+
+Huom aiempaan kirjaukseen: vaite "13 lahdetta palauttaa kuvauksen
+0 %:lla" oli mitattu ilman --enrich-lippua, eli ennen koukkua. Lahteet
+eivat ole rikki. Ks. roadmap 3¾.
+
 ### Hankkeen euromaarainen arvo: kolme katkennutta kytkentaa
 
 Arvo oli 4 %:lla aktiivisista hankkeista. Kyse ei ollut puuttuvasta

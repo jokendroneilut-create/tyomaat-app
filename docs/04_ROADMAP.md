@@ -432,22 +432,39 @@ katselmoinnin välissä, ei haussa.**
 
 Kaksi erillistä vikatyyppiä erottui:
 
-**A. Kuvaukseton ehdokas (13 lähdettä 26:sta).** asuntosaatio, asura,
-aura, bonava, fira, ncc, varte, hausia, rakennusteho, marvea,
-marttilan, ysaatio ja brand_toimitilat palauttavat kuvauksen **0 %:lla**
-ehdokkaista. Pelkän otsikon perusteella korttia ei voi arvioida, joten
-ne hylätään katselmoinnissa lähes poikkeuksetta (D-027) — eikä
-euromäärää voi poimia tekstistä jota ei ole. Nämä ovat luultavasti
-juuri niitä vanhoja lähteitä joita on syytä epäillä.
+**A. ~~Kuvaukseton ehdokas (13 lähdettä)~~ — mittausvirhe, korjattu
+15.8.2026.** Ensimmäinen lukema "13 lähdettä palauttaa kuvauksen 0 %:lla"
+oli **mitattu väärin**: audit ajettiin ilman `--enrich`-lippua, ja
+skriptin oma kommentti varoittaa juuri tästä — ilman lippua taulukko
+mittaa tuotoksen ENNEN rikastuskoukkua.
+
+Koukun kanssa ajettuna (`--enrich --sample=4`) samat kahdeksan lähdettä
+antavat **kuvauksen 100 %:lla**, urakoitsijan useimmilla ja kohdetyypin
+50–100 %:lla. `createCompanyEnricher` siis toimii. Lähteet eivät ole
+rikki eikä niissä ole korjattavaa.
+
+**A2. Oikea vika: jo tallennettu rivi ei koskaan täydenny.**
+Tuonnissa koukkua kutsutaan vain **vielä näkemättömille** osoitteille
+(`legacyFetchCollector`: `seenUrls`), ja budjetti on 40 kandidaattia per
+ajo. Kerran kuvauksettomana tuotu rivi jää siis pysyvästi vajaaksi,
+vaikka koukku osaisi täydentää sen. Siksi jäämä purettiin erillisellä
+skriptillä: `scripts/backfill-company-enrichment.ts`.
 
 **B. Väärä rajaus (SRV, korjattu — D-074).** Lähde haki hyvin mutta
 suodatti pois sijoittajauutiset, joissa pörssiyhtiö julkaisee
 merkittävät urakkavoitot. 81 → 165 ehdokasta, euromäärä 16:ssa.
 
-*Seuraava askel (ei päätetty):* korjaa A-luokan lähteet hakemaan
-tiedotteen leipäteksti, kuten SRV:llä jo tehtiin (D-027:n korjaus).
-13 lähdettä × kuvaukseton ehdokas on suoraan sekä hylkäysprosentti että
-puuttuva euromäärä.
+*Seuraava askel (ei päätetty):* harkitse pitäisikö tuonnin ajaa koukku
+myös jo nähdyille riveille joiden kuvaus on lyhyt — nyt se on erillisen
+skriptin varassa, eli sama jäämä alkaa kertyä uudelleen. Vaihtoehto on
+ajastaa backfill-skripti, jolloin tuontiin ei kosketa.
+
+**Metodihuomio, joka maksoi kaksi väärää päätelmää tässä samassa
+osiossa.** Ensin väitin vaihesanaston vääristävän pisteytystä
+(kohta 2) ja sitten 13 lähteen olevan rikki (A) — molemmat kumoutuivat
+kun luku mitattiin oikein. Kummassakin tapauksessa alkuperäinen luku
+oli olemassa ja näytti vakuuttavalta; vain sen tuottanut ehto oli
+väärä. Mitattu luku ei ole sen luotettavampi kuin sen mittaustapa.
 
 *Rajoitteet rehellisyyden vuoksi:* otos on 199 hanketta, tyyppiä kohti
 3–39, joten mediaanit ovat suuntaa-antavia — kelpaavat kokoluokkaan,
