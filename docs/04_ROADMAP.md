@@ -380,11 +380,53 @@ kohdalle — sama raja jonka Johannes ehdotti itsenäisesti:
   luotettavuus ≥ 75 %. Ei koskaan euromäärää, koska sitä ei tiedetä.
 - **Ei kumpaakaan** → ei kokoluokkaa lainkaan. Tyhjä ei valehtele.
 
-Avoin kysymys ennen toteutusta: näytetäänkö johdettu luokka
-asiakkaalle ollenkaan, kun se kattaa vain ~5 % ja on väärässä joka
-neljännellä. Vaihtoehto on käyttää sitä **vain sisäisesti**
-pisteytyksessä ja suodatuksessa, jolloin virhe ei näy väitteenä
-asiakkaalle.
+**PÄÄTETTY 15.8.2026: johdettua kokoluokkaa ei tehdä lainkaan.**
+Käytetään vain tiedossa olevaa arvoa. Kohdetyypistä päättely olisi
+kattanut ~5 % ja ollut väärässä joka neljännellä — arvaus jota asiakas
+lukisi faktana. Sama periaate kuin D-057:ssä ja D-072:ssa: tyhjä kenttä
+ei valehtele. `cost_source: "derived"` jää käyttämättä.
+
+Kokoluokka voidaan siis johtaa **vain tunnetusta arvosta** (yllä oleva
+neliportainen taulukko), ja se kattaa sen minkä poiminta kattaa.
+
+#### Yrityslähteet: oikea oletus, mutta lähteet eivät tuota
+
+Hypoteesi 15.8.2026: yritykset ilmoittavat itse voittamiensa urakoiden
+arvon, joten yrityslähteet olisivat euromäärien paras suoni. Oletus on
+oikea — mutta **lähteet eivät tuota juuri mitään.**
+
+Rekisteröityjä yrityslähteitä on 28 (SRV, YIT, Skanska, NCC, Peab,
+Lujatalo, Fira, Hartela, Bonava…). Ne ovat tuottaneet yhteensä **97
+aktiivista hanketta 5 481:stä eli 1,8 %:**
+
+| lähde | hankkeita | joilla arvo |
+|---|---|---|
+| rakennuslehti | 24 | **6 (25 %)** |
+| srv | 11 | 0 |
+| pohjola_rakennus | 11 | 0 |
+| skanska | 7 | 1 |
+| hartela | 6 | 0 |
+| lujatalo | 5 | 0 |
+| peab / fira / jatke / ncc / bonava | 1–2 kukin | 0 |
+| **yit, grk, asura, asuntosäätiö, espoonasunnot, mangrove** | **0** | – |
+
+Kaksi johtopäätöstä. **Rakennuslehti on koko kannan paras arvolähde:**
+25 % sen hankkeista on euromäärä, kun koko kannan keskiarvo on 6 %.
+Ammattilehti raportoi urakkasummat rutiininomaisesti. **Ja isot
+urakoitsijalähteet ovat käytännössä kuolleita** — YIT, GRK ja viisi
+muuta eivät ole tuottaneet yhtäkään hanketta, ja SRV:n 11 hankkeesta
+yhdelläkään ei ole arvoa.
+
+Ongelma ei siis ole poiminta vaan keruu: tekstistä on jo poimittu
+kaikki mihin ankkurit yltävät (`poimittavissa vielä 0` mitattuna).
+Euromäärien kattavuus kasvaa vain saamalla lisää **niitä tekstejä,
+joissa summa mainitaan** — ammattilehtityyppisiä lähteitä ja
+toimivia urakoitsijatiedotteita.
+
+*Seuraava askel (ei päätetty):* selvitä miksi yrityslähteet eivät
+tuota — onko kyse rikkinäisistä hakijoista, kuvauksettomista
+ehdokkaista (D-027) vai siitä että tiedotteet eivät läpäise
+relevanssiporttia. Ks. myös Työjonon "Todenna STT ja Rakennuslehti".
 
 *Rajoitteet rehellisyyden vuoksi:* otos on 199 hanketta, tyyppiä kohti
 3–39, joten mediaanit ovat suuntaa-antavia — kelpaavat kokoluokkaan,

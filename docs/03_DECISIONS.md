@@ -5,6 +5,37 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-073 – Hankkeen kokoa ei arvata, vain mitataan
+
+Kokoluokka ("Suuri hanke") olisi voitu johtaa kohdetyypistä, koska
+tyyppien mediaanit eroavat 18-kertaisesti (datakeskus 100 M€ →
+rivitalo 5,5 M€). Mitattuna päättely ei kuitenkaan kanna:
+
+- neljä luokkaa osui oikeaan **40 %:lla** (perusarvaus 31 %)
+- kolme luokkaa 10 M€:n rajalla **50 %** — perusarvaus 49 %, eli
+  hyödytön
+- vain kahtiajako 10 M€:n kohdalta erottui: 68 % vs. 51 %
+
+Tyyppien sisäinen hajonta on liian suuri: Kerrostalo 57 % ja
+Hoivakoti 50 % ovat kolikonheittoja, ja juuri ne ovat yleisiä.
+Luotettavat tyypit (≥ 75 %) kattavat **292 hanketta eli 5 %** — tuskin
+enempää kuin ne 315, joilla arvo jo on.
+
+**Päätös: kokoluokka lasketaan vain tiedossa olevasta arvosta.**
+5 %:n lisäkattavuus hinnalla, että joka neljäs merkintä on väärä, ei
+ole vaihtokauppa jonka asiakas häviäisi hiljaa — hän lukisi arvauksen
+faktana ja tekisi myyntipäätöksiä sen varassa. Sama periaate kuin
+D-057:ssä (tyhjä on parempi kuin väärä) ja D-072:ssa (alkuperä
+näkyviin). `cost_source: "derived"` jää varatuksi mutta käyttämättä.
+
+**Seuraus:** euromääräinen suodatus (kartta, /today) rajautuu siihen
+mitä poiminta tuottaa. Kattavuus kasvaa vain keräämällä lisää tekstejä
+joissa summa mainitaan — ei päättelemällä. Mitattu suunta: ammattilehti
+(Rakennuslehti 25 % vs. koko kannan 6 %) ja urakoitsijatiedotteet, ks.
+roadmap 3¾.
+
+---
+
 ### D-072 – Hankkeen arvo kolmella tarkkuudella, alkuperä tallennettuna
 
 Euromääräinen arvo oli 4 %:lla aktiivisista hankkeista (200/5 481),
