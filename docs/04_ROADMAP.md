@@ -628,6 +628,24 @@ muistin varassa.
   **"Suunnittelukilpailu" (3 hanketta), joka ei kanonisoidu lainkaan**.
   Loput on siisteyttä: yksi vaihe, yksi nimi näytöllä.
 - Kohdetyyppi puuttuu 2 260 hankkeelta (42 %).
+- **Osapuolet puuttuvat kokonaan 221 hankkeelta** joissa työ on käynnissä
+  tai suunnitteilla (mitattu 15.8.2026). Asiakkaalle näkyvistä 2 136
+  suunnittelu- tai rakentamisvaiheen hankkeesta 10 %:lta puuttuu **sekä
+  rakennuttaja että pääurakoitsija** — eikä 219:llä ole edes
+  `related_companies`-merkintää. Näistä **30 on rakentamisvaiheessa**, mikä
+  on pahin tapaus: käynnissä oleva työmaa jolle ei ole ketään
+  soitettavaa. Vertailuksi 1 510 hankkeella on toinen osapuoli ja 405:llä
+  molemmat.
+
+  Lähteittäin: **yva 94** (43 %), tuntematon lähde 45, discovery_agent 26,
+  Espoon kuulutukset 14, rakennuslehti 11.
+
+  *Tarkistettu YVA:n osalta:* poiminta ei ole rikki — 240 YVA-hankkeesta
+  146:lla (61 %) rakennuttaja on. Puuttuvilla 94:llä hankevastaavan nimi
+  **ei ole tallennetussa kuvaustekstissä** (osuma 1/94), joten korjaus
+  vaatisi YVA-sivun uudelleenhaun. Kaikilla 94:llä on `source_url`
+  tallessa, joten se on tehtävissä — mutta YVA-lähteellä ei ole
+  rikastuskoukkua, joten se ei tule ilmaiseksi D-075:n työntekijän mukana.
 - Lähdelinkki puuttuu **650** hankkeelta (12 %). Oli 742; 124 palautettiin
   15.8.2026 `source_document_id`:n kautta
   (`scripts/backfill-from-stored-documents.ts`). **Loput eivät ole
