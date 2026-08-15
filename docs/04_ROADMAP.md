@@ -299,6 +299,38 @@ kokoluokka voidaan johtaa siitä ilman yhtään uutta lähdettä.
 Ja **teksti sisältää moninkertaisesti enemmän euroja kuin rakenteinen
 kenttä**, eli poiminta on alihyödynnetty, ei data puuttuva.
 
+**Kohdetyyppi ennustaa kokoa — todennettu, ei oletettu.** Niistä 200
+hankkeesta joilla on kustannusarvio, **199:llä on myös kohdetyyppi**.
+Mediaanikustannus tyypeittäin:
+
+| kohdetyyppi | n | mediaani € |
+|---|---|---|
+| Datakeskus | 11 | 100 000 000 |
+| Energiantuotanto | 12 | 100 000 000 |
+| Kulttuurirakennus | 6 | 61 400 000 |
+| Sairaala | 5 | 50 000 000 |
+| Liikuntapaikka | 7 | 31 500 000 |
+| Toimitila | 39 | 28 000 000 |
+| Infrahanke | 30 | 24 000 000 |
+| Koulu | 22 | 18 000 000 |
+| Päiväkoti | 5 | 14 000 000 |
+| Kerrostalo | 26 | 13 000 000 |
+| Hoivakoti | 6 | 10 000 000 |
+| Silta | 6 | 8 500 000 |
+| Rivitalo | 4 | 5 500 000 |
+
+Ero on **18-kertainen** päästä päähän ja järjestys on intuitiivinen.
+Tämä riittää **kolmiportaiseen kokoluokkaan** (suuri / keskikokoinen /
+pieni), ja nostaisi kokoulottuvuuden kattavuuden 4 %:sta 59 %:iin
+ilman yhtään uutta lähdettä tai poimintaa.
+
+*Rajoitteet rehellisyyden vuoksi:* otos on 199 hanketta, tyyppiä kohti
+3–39, joten mediaanit ovat suuntaa-antavia — kelpaavat kokoluokkaan,
+eivät euroarvioon. Otos on myös vino (175/200 samasta legacy-erästä ja
+32 % "Rakentaminen aloitettu" -vaiheesta), joten mediaanit voivat olla
+koko kantaa korkeampia. Ja 41 %:lla ei ole kohdetyyppiä lainkaan, eli
+heille koko jää yhä tuntemattomaksi.
+
 *Tarkistettava erikseen:* Hilma-hankkeita on 294 (`cpv_code`,
 `procurement_type_code` täytettyinä), mutta `estimated_cost` on
 täytetty **yhdessä** niistä. Jos Hilman ilmoituksissa on arvokenttä,
