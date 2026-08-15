@@ -5,6 +5,43 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-070 – Keskeytetty hankinta ei ole myönnetty sopimus
+Hilma julkaisee hankinnan keskeyttämisen **samalla ilmoitustyypillä**
+kuin sopimuksen myöntämisen (`ContractAwardNotices`), joten peruttu
+kilpailutus sai vaiheen "Sopimus myönnetty". Asiakkaalle kerrottiin että
+urakka on annettu jollekin, vaikka ketään ei valittu. Mitattu
+15.8.2026: 11 riviä, joista **kolme oli asiakkaille näkyvissä**.
+
+**Kaksi rakenteista signaalia kokeiltiin ja molemmat hylättiin.**
+
+`isCancelled` on Hilman oma kenttä ja se on **false** myös
+ilmoituksella jonka otsikko on "Keskeytysilmoitus, TAPO Köyliöntien…" —
+varmistettu raakadatasta. Kenttä ei kerro tästä mitään.
+
+`notice_type` ei erottele: tyyppi 29 on 83 riviä joista 5 keskeytyksiä,
+tyyppi E4 on 174 riviä joista 5. Ne ovat sopimusilmoituksen
+alatyyppejä, eivät keskeytyksen tunnuksia.
+
+**Voittajan puuttuminen yksin on liian löysä.** 290 sopimusilmoituksesta
+45:ltä puuttuu voittaja, mutta vain 10 niistä on keskeytyksiä — 35
+väärää osumaa.
+
+Toimiva tunnistus on **otsikko ja voittajan puuttuminen yhdessä**: osuu
+kaikkiin 11 keskeytysriviin eikä yhteenkään väärään. Voittajaehto on
+turva sille tapaukselle että ilmoitus keskeyttää yhden osan ja myöntää
+toisen — silloin voittaja on merkitty eikä hanketta saa palauttaa
+kilpailutukseen.
+
+**Hanketta ei hylätä eikä piiloteta.** Keskeytetty kilpailutus
+kilpailutetaan yleensä uudelleen, joten liidi on yhä aito — jopa
+arvokas, koska se palaa. Väärin oli vain vaihe, joten hanke palautetaan
+kilpailutukseen. Sama päättely kuin D-057:ssä: tyhjä tai varovainen on
+parempi kuin väärä väite.
+
+Ajettu: 10 riviä korjattu (3 näkyvissä, 7 jonossa).
+
+---
+
 ### D-069 – Tunnuksesta jää päiväkirjamerkintä, tilaustietoa ei kerätä
 Tunnuksen poisto on kova poisto (`auth.admin.deleteUser`), eikä siitä
 jäänyt mitään jäljelle. Vuoden päästä ei siis voisi sanoa montako

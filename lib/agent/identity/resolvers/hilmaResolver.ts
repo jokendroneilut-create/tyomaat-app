@@ -1,4 +1,5 @@
 import { hilmaNoticeUrl } from "@/lib/agent/hilmaNoticeUrl"
+import { isCancellationNotice } from "@/lib/agent/hilmaCancellation"
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
@@ -249,9 +250,28 @@ export async function resolveHilmaProject({
     winners.length > 0 ||
     metadata.is_contract_award === true
 
-  const phaseHint = isContractAward
-    ? PHASE_LABELS.contract_awarded
-    : PHASE_LABELS.tender
+  /*
+   * KESKEYTETTY HANKINTA EI OLE MYONNETTY SOPIMUS.
+   *
+   * Hilma julkaisee keskeytyksen samalla ilmoitustyypilla kuin
+   * sopimuksen myontamisen, joten ilman tata tarkistusta peruttu
+   * kilpailutus sai vaiheen "Sopimus myonnetty". Mitattu 15.8.2026:
+   * kolme tallaista rivia oli asiakkaille nakyvissa.
+   *
+   * Hanketta EI hylata. Keskeytetty kilpailutus tarkoittaa yleensa
+   * etta se kilpailutetaan uudelleen, joten liidi on yha aito - vain
+   * vaihe on vaara. Hanke palautetaan kilpailutusvaiheeseen.
+   */
+  const isCancelled = isCancellationNotice({
+    title: operation,
+    winners,
+    winnerOrganisations: metadata.winner_organisations,
+  })
+
+  const phaseHint =
+    isContractAward && !isCancelled
+      ? PHASE_LABELS.contract_awarded
+      : PHASE_LABELS.tender
 
   const classification = classifyProject({
     operation,
@@ -374,6 +394,12 @@ export async function resolveHilmaProject({
 
       is_cancelled:
         metadata.is_cancelled ?? false,
+
+      /*
+       * Oma paattely, erillaan Hilman is_cancelled-kentasta joka on
+       * false myos aidoilla keskeytysilmoituksilla.
+       */
+      is_cancelled_procurement: isCancelled,
 
       is_contract_award: isContractAward,
       phase_hint: phaseHint,

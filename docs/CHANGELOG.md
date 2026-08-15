@@ -11,6 +11,26 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Keskeytetty hankinta ei ole enaa "Sopimus myonnetty"
+
+Hilma julkaisee hankinnan keskeyttamisen samalla ilmoitustyypilla kuin
+sopimuksen myontamisen, joten peruttu kilpailutus sai vaiheen "Sopimus
+myonnetty" - asiakkaalle kerrottiin etta urakka on annettu jollekin
+vaikka ketaan ei valittu. Kolme tallaista rivia oli nakyvissa.
+
+Hilman oma isCancelled-kentta on false myos aidoilla
+keskeytysilmoituksilla, eika notice_type erottele niita (tyyppi 29: 83
+rivia joista 5 keskeytyksia). Voittajan puuttuminen yksin on liian
+loysa: 45 sopimusilmoitusta ilman voittajaa, joista vain 10
+keskeytyksia. Tunnistus tehdaan otsikon ja voittajan puuttumisen
+yhdistelmalla - osuu kaikkiin 11 eika yhteenkaan vaaraan.
+
+Hanketta ei hylata: keskeytetty kilpailutus kilpailutetaan yleensa
+uudelleen, joten liidi on yha aito. Vaihe palautetaan kilpailutukseen.
+Korjattu 10 rivia.
+
+---
+
 ### Tunnuksesta jaa pysyva merkinta, ja kayttajatilanteen seuranta
 
 Tunnuksen poisto oli kova poisto eika siita jaanyt mitaan jaljelle.
