@@ -5,6 +5,53 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-077 – YVA:n hankevastaava luetaan nimetystä kentästä, ei proosasta
+
+`fetchYvaSource` poimii rakennuttajan hakurajapinnan leipätekstistä
+proosakuvioilla (`extractYvaDeveloper`: "X Oy suunnittelee…"). Se osuu
+146:een hankkeeseen 240:stä. Puuttuvilla 94:llä nimi **ei ole
+leipätekstissä lainkaan** — haku sanalla "hankevastaava" osui 1/94.
+
+Nimi on hankesivulla nimettynä kenttänä, jota hakurajapinta ei palauta:
+
+```html
+<div class="yva_content__item">
+  <span class="yva_content__title">Hankkeesta vastaava:</span>
+  Valoa Networks Oy, Dominic Marshall
+</div>
+```
+
+Rakenne on sama kaikilla tarkistetuilla sivuilla ja sisältää seitsemän
+kenttää: Tila, Alueet, Aihealue, Hankkeesta vastaava, Konsultti,
+Yhteysviranomainen, Diaarinumero. **Nimetty kenttä on aina luotettavampi
+kuin proosasta arvattu** — sama oppi kuin D-074:ssä. Yhteysviranomainen,
+konsultti ja diaarinumero tulevat samasta jäsennyksestä ilman lisätyötä.
+
+**Ensimmäinen sääntö oli väärä, ja kuivaharjoittelu paljasti sen.**
+"Ota kaikki ensimmäiseen pilkkuun asti" tuotti 15 mitatusta kentästä
+**viisi henkilön nimeä** — kenttä alkaa usein yhteyshenkilöllä ja
+organisaatio on vasta seuraavana ("Annemarie Kallström, Myrsky Energia
+Oy"). Lisäksi se katkaisi ELY-keskuksen nimen ("Uudenmaan elinkeino-"),
+koska organisaation nimessä on pilkkuja.
+
+Korjattu sääntö käy osat läpi ja valitsee ensimmäisen, joka ei ole
+henkilö eikä yhteystieto. Julkiset toimijat tunnistetaan
+organisaatiosanasta (virasto, keskus, hallitus, säätiö, rahasto…),
+koska "Metsähallitus" ja "Väylävirasto" eivät kanna yhtiömuotoa eikä
+`looksLikeCompany` siksi tunnistaisi niitä. Tavuviivaan päättyvä osa
+liitetään seuraavaan, jotta pilkullinen nimi säilyy ehjänä.
+
+**Ilman kuivaharjoittelua viiden hankkeen rakennuttajaksi olisi
+kirjoittunut henkilön nimi.** Se on tämän istunnon toistuva opetus:
+skriptin oma raportti kertoo mitä se yritti tehdä, ei mitä kantaan
+päätyy.
+
+Koukku on rekisteröity `lib/agent/sources.ts`:n yva-lähteelle, joten
+uudet hankkeet saavat kentän D-075:n runkotyöntekijän kautta ilman
+lisätyötä.
+
+---
+
 ### D-076 – Hyväksyttyä hanketta ei voinut muokata lainkaan
 
 **Löydös.** Johannes kertoi lisänneensä käsin tiedot hankkeelle

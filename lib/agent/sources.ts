@@ -52,6 +52,7 @@ import { fetchRakennuslehtiSource, enrichRakennuslehtiCandidate } from "./fetchR
 import { fetchSttHakuSource, enrichSttCandidate } from "./fetchSttHakuSource"
 import { fetchYmparistolupaSource } from "./fetchYmparistolupaSource"
 import { fetchYvaSource } from "./fetchYvaSource"
+import { createYvaEnricher } from "./yvaProjectPage"
 import { fetchSuunnittelukilpailuSource } from "./fetchSuunnittelukilpailuSource"
 import { createCompanyEnricher } from "./companyRelease"
 
@@ -105,6 +106,12 @@ export const sources = [
   { name: "rakennuslehti", fetch: fetchRakennuslehtiSource, enrich: enrichRakennuslehtiCandidate },
   { name: "stt_haku", fetch: fetchSttHakuSource, enrich: enrichSttCandidate },
   { name: "ymparistolupa", fetch: fetchYmparistolupaSource },
-  { name: "yva", fetch: fetchYvaSource },
+  /*
+   * Rikastuskoukku lukee hankesivun nimetyt kentät (hankevastaava,
+   * yhteysviranomainen, diaarinumero), joita hakurajapinta ei palauta.
+   * Mitattu 15.8.2026: 94 hanketta 240:stä oli ilman rakennuttajaa, koska
+   * nimi ei ole leipätekstissä lainkaan. Ks. lib/agent/yvaProjectPage.ts.
+   */
+  { name: "yva", fetch: fetchYvaSource, enrich: createYvaEnricher() },
   { name: "suunnittelukilpailu", fetch: fetchSuunnittelukilpailuSource },
 ]
