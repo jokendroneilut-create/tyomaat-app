@@ -27,6 +27,45 @@ describe("extractCostFromText", () => {
     ).toBe(45_000_000)
   })
 
+  /*
+   * Pörssiyhtiön vakiomuoto voitetulle urakalle (mitattu SRV:n tiedotteista
+   * 15.8.2026). Arvo ilmoitetaan SOPIMUKSEN arvona, ja perässä on lähes aina
+   * maininta tilauskantaan kirjaamisesta — se ei tee luvusta koontilukua.
+   */
+  it("poimii pörssitiedotteen sopimusarvon tilauskantamaininnasta huolimatta", () => {
+    expect(
+      extractCostFromText(
+        "SRV toteuttaa monitoimiareenan Kouvolaan. Sopimuksen arvo SRV:lle on noin 18 miljoonaa euroa ja se kirjataan yhtiön tilauskantaan kesäkuulle 2026."
+      )
+    ).toBe(18_000_000)
+
+    expect(
+      extractCostFromText(
+        "Sopimuksen arvo SRV:lle on noin 21,5 miljoonaa euroa ja hanke kirjataan yhtiön tilauskantaan sen siirtyessä toteutusvaiheeseen."
+      )
+    ).toBe(21_500_000)
+  })
+
+  it("torjuu yhä koontiluvut ja puitesopimukset", () => {
+    // Tilauskanta luvun kohteena = koontiluku.
+    expect(
+      extractCostFromText("Konsernin tilauskanta oli 1200 miljoonaa euroa.")
+    ).toBeNull()
+
+    expect(
+      extractCostFromText("Sopimusten arvo yhteensä 300 miljoonaa euroa.")
+    ).toBeNull()
+
+    // Puite-/palvelusopimus ei ole hanke, vaikka sillä on arvo.
+    expect(
+      extractCostFromText("Puitesopimuksen arvo on 10 miljoonaa euroa.")
+    ).toBeNull()
+
+    expect(
+      extractCostFromText("Vuosisopimuksen arvo on 2 miljoonaa euroa.")
+    ).toBeNull()
+  })
+
   it("lukee desimaalit", () => {
     expect(
       extractCostFromText("Urakan arvo on 12,5 miljoonaa euroa.")

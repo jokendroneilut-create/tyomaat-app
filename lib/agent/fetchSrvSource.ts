@@ -6,9 +6,25 @@ import { extractStreetAddress } from "./extractStreetAddress"
  * SRV:n oma "ajankohtaista"-sivu on Gatsby-sovellus, jonka HTML ei
  * sisällä artikkelisisältöä (ladataan asiakaspuolella). Sivun
  * build-aikainen data-JSON kuitenkin sisältää KAIKKI Cision-tiedotteet
- * (myös pörssitiedotteet ym.) valmiiksi jäsenneltynä — suodatetaan
- * niistä suomenkieliset ja Type002 "Lehdistötiedote" -kategoriaan
- * kuuluvat, jolloin sijoittaja-/hallintotiedotteet jäävät pois.
+ * valmiiksi jäsenneltynä.
+ *
+ * SIJOITTAJAUUTISIA EI SAA SULKEA POIS. Aiemmin tässä vaadittiin
+ * kategoria Type002 ("Lehdistötiedote") sillä perusteella että
+ * sijoittajatiedotteet ovat hallinnollisia. Se päättely oli väärä:
+ * pörssiyhtiölle merkittävä voitettu urakka ON olennainen tieto
+ * sijoittajille, joten juuri suurimmat urakkavoitot julkaistaan
+ * Type004:nä ("Sijoittajauutinen").
+ *
+ * Mitattu 15.8.2026: kahden vuoden ikkunassa 241 suomenkielistä
+ * tiedotetta, joista 165 on hankemaisia — mutta Type002-ehto päästi
+ * läpi vain 81. Pois jäi mm. "SRV toteuttaa historiallisen
+ * Hämeenlinnan Lyseon peruskorjauksen" (sopimuksen arvo 21,5 M€) ja
+ * "SRV toteuttaa monitoimiareenan Kouvolaan" (18 M€) — molemmat
+ * Type004.
+ *
+ * Rajaus tehdään nyt sisällöllä (PROJECT_KEYWORDS / EXCLUDE_KEYWORDS)
+ * eikä julkaisukanavalla, sekä sulkemalla pois johdon
+ * liiketoimi-ilmoitukset joissa ei koskaan ole hanketta.
  */
 const PAGE_DATA_URL =
   "https://www.srv.fi/page-data/srv-yrityksena/ajankohtaista/page-data.json"
@@ -81,9 +97,13 @@ export async function fetchSrvSource() {
     if (!d) continue
     if (d.LanguageCode !== "fi") continue
 
+    /*
+     * Type003 = "Johdon liiketoimet" (MAR-ilmoitus osakekaupoista). Ainoa
+     * kategoria jossa ei voi olla hanketta; kaikki muut päästetään läpi ja
+     * sisältö ratkaisee.
+     */
     const categories: { Code?: string; Name?: string }[] = d.Categories ?? []
-    const isPressRelease = categories.some((c) => c.Code === "Type002")
-    if (!isPressRelease) continue
+    if (categories.some((c) => c.Code === "Type003")) continue
 
     const title = (d.Title ?? "").trim()
     const url = (d.CanonicalUrl ?? "").trim() || d.CisionWireUrl

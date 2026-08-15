@@ -80,6 +80,18 @@ function anchorsFor(amount: string, bareAmount: string): RegExp[] {
       `urak\\w*\\s+(?:arvo|hinta)\\w*\\s+(?:\\S+\\s+){0,2}?(?:on\\s+|oli\\s+)?${HEDGE}${amount}`,
       "i"
     ),
+    /*
+     * "Sopimuksen arvo SRV:lle on noin 21,5 miljoonaa euroa"
+     *
+     * Mitattu 15.8.2026 SRV:n Hämeenlinnan Lyseo -tiedotteesta. Tämä on
+     * pörssiyhtiön vakiomuoto voitetulle urakalle — arvo ilmoitetaan
+     * SOPIMUKSEN eikä urakan arvona, koska tieto on sijoittajille olennainen.
+     * Ilman tätä ankkuria juuri suurimmat voitetut urakat jäivät poimimatta.
+     */
+    new RegExp(
+      `sopimu\\w*\\s+(?:arvo|hinta)\\w*\\s+(?:\\S+\\s+){0,2}?(?:on\\s+|oli\\s+)?${HEDGE}${amount}`,
+      "i"
+    ),
     // "Hankkeen kokonaisarvon arvioidaan olevan noin 44 miljoonaa euroa"
     new RegExp(
       `hankkeen\\s+kokonaisarvo\\w*\\s+(?:\\S+\\s+){0,3}?${HEDGE}${amount}`,
@@ -119,8 +131,31 @@ const ANCHOR_SETS: { anchors: RegExp[]; multiplier: number; min: number }[] = [
  * Koko tekstiä koskevat esteet: nämä kertovat että luku on koontiluku eikä
  * yksittäisen hankkeen kustannus.
  */
+/*
+ * "tilauskanta" oli tässä aluksi paljaana, koska koontiluku esiintyy usein
+ * sen lähellä ("on voittanut useita hankkeita yhteensä 20 miljoonan euron
+ * arvosta"). Mitattu 15.8.2026: se torjui myös aidot yksittäiset sopimukset,
+ * koska urakoitsijatiedotteen VAKIOFRAASI on "Sopimuksen arvo on noin 18
+ * miljoonaa euroa ja se kirjataan yhtiön tilauskantaan" — tilauskanta
+ * mainitaan nimenomaan siksi että kyse on yhdestä uudesta sopimuksesta.
+ *
+ * Este rajattiin muotoon jossa tilauskanta ITSE on luvun kohde
+ * ("tilauskanta oli 1,2 miljardia"). Alkuperäiset mitatut väärät osumat
+ * torjuu yhä `useita hankkeita` ja `yhteensä <luku>`.
+ */
 const AGGREGATE =
-  /valtakunnallisesti|yhteens[aä]\s+(?:noin\s+)?\d|useita\s+hankkeita|tilauskan|liikevaihto|vuosittain|vuodessa|per\s+vuosi|\/vuosi/i
+  /valtakunnallisesti|yhteens[aä]\s+(?:noin\s+)?\d|useita\s+hankkeita|tilauskanta\w*\s+(?:on|oli|kasvoi|nousi|kehittyi)|liikevaihto|vuosittain|vuodessa|per\s+vuosi|\/vuosi/i
+
+/*
+ * Puite- ja palvelusopimus ei ole hanke. Tämä on erillinen este
+ * "sopimuksen arvo" -ankkurille: mitattu tapaus on "Toistaiseksi voimassa
+ * olevan sopimuksen arvo on 10 miljoonaa euroa" (Tiera Oy:n palveluhankinta),
+ * joka on sopimuksen arvo muttei rakennushankkeen kustannus. Muut ankkurit
+ * (kustannusarvio, urakan arvo) eivät tarvitse tätä, koska ne sanovat jo
+ * itse mistä on kyse.
+ */
+const FRAMEWORK_CONTRACT =
+  /toistaiseksi\s+voimassa|puitesopimu|puitej[aä]rjestely|vuosisopimu|optiokau/i
 
 export function extractCostFromText(
   text: string | null | undefined
@@ -141,6 +176,12 @@ export function extractCostFromText(
       const at = match.index ?? 0
       const window = lead.slice(Math.max(0, at - 80), at + match[0].length + 40)
       if (AGGREGATE.test(window)) continue
+
+      /*
+       * Puite-este koskee vain "sopimuksen arvo" -ankkuria; tunnistetaan
+       * osumasta itsestään, jotta ankkurilista pysyy yhtenä taulukkona.
+       */
+      if (/^sopimu/i.test(match[0]) && FRAMEWORK_CONTRACT.test(window)) continue
 
       /*
        * Ryhmittelijät pois ennen lukemista ("1 250 000" / "1.250.000"), mutta

@@ -5,6 +5,59 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-074 – Sijoittajauutinen on urakkatiedote, ei hallintotiedote
+
+Kysymys "miksi tätä uutista ei ole poimittu" (SRV:n Hämeenlinnan Lyseo,
+sopimuksen arvo 21,5 M€) paljasti **kaksi toisistaan riippumatonta
+vikaa**, jotka molemmat piti korjata ennen kuin yksikin tällainen
+tiedote menee läpi.
+
+**1. Kategoriasuodatin sulki pois juuri arvokkaimmat tiedotteet.**
+`fetchSrvSource` vaati kategorian Type002 ("Lehdistötiedote")
+perustellen että sijoittajatiedotteet ovat hallinnollisia. Päättely oli
+väärä: **pörssiyhtiölle merkittävä voitettu urakka ON olennainen tieto
+sijoittajille**, joten suurimmat urakkavoitot julkaistaan Type004:nä
+("Sijoittajauutinen"). Suodatin siis torjui sitä paremmin mitä
+suuremmasta urakasta oli kyse.
+
+Mitattu 15.8.2026: 24 kk:n ikkunassa 241 suomenkielistä tiedotetta,
+joista 165 hankemaisia — Type002-ehto päästi läpi 81. Rajaus tehdään
+nyt sisällöllä (avainsanat) eikä julkaisukanavalla; pois suljetaan vain
+Type003 (johdon liiketoimet), jossa ei voi olla hanketta.
+
+**2. "Sopimuksen arvo" ei ollut ankkuri.** Poimijassa oli "urakan
+arvo" muttei "sopimuksen arvo" — ja juuri jälkimmäinen on pörssiyhtiön
+vakiomuoto, koska tieto kirjataan sopimuksena tilauskantaan.
+
+**2b. Ja este torjui senkin.** `AGGREGATE` sisälsi paljaan sanan
+`tilauskan`, joka lisättiin torjumaan yrityksen tilauskantaa
+koontilukuna. Mutta urakoitsijatiedotteen vakiofraasi on *"Sopimuksen
+arvo on noin 18 miljoonaa euroa **ja se kirjataan yhtiön
+tilauskantaan**"* — tilauskanta mainitaan nimenomaan siksi että kyse on
+yhdestä uudesta sopimuksesta. Este rajattiin muotoon jossa tilauskanta
+itse on luvun kohde (`tilauskanta oli 1,2 miljardia`).
+
+Este oli myös epävakaa: se laukesi Kouvolan tiedotteessa muttei
+Hämeenlinnan, koska ero oli yksi sana ikkunan reunalla. Sellainen vika
+näyttää satunnaiselta eikä sitä huomaa ilman mittausta.
+
+**Uusi ankkuri vaati oman esteensä.** Testit paljastivat regression
+heti: "Toistaiseksi voimassa olevan sopimuksen arvo on 10 miljoonaa
+euroa" (Tiera Oy:n palveluhankinta) on sopimuksen arvo muttei
+rakennushankkeen kustannus. Lisätty `FRAMEWORK_CONTRACT`-este
+(puitesopimus, vuosisopimus, toistaiseksi voimassa) joka koskee vain
+sopimusankkuria — muut ankkurit sanovat jo itse mistä on kyse.
+
+**Tulos:** SRV-lähde 81 → **165 ehdokasta**, ja euromäärä poimitaan
+16:sta (10 %) — mukaan lukien molemmat kysytyt tiedotteet (21,5 M€ ja
+18,0 M€). Vertailuksi: koko kannan keskiarvo on 6 %.
+
+**Yleistettävä oppi:** lähdettä ei pidä rajata *julkaisukanavan* vaan
+*sisällön* perusteella. Kanava kertoo kenelle tiedote on suunnattu,
+ei sitä onko siinä hanke.
+
+---
+
 ### D-073 – Hankkeen kokoa ei arvata, vain mitataan
 
 Kokoluokka ("Suuri hanke") olisi voitu johtaa kohdetyypistä, koska
