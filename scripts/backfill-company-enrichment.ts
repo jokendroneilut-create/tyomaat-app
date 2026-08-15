@@ -48,6 +48,18 @@ const SHORT_DESCRIPTION = 400
 const firstFilled = (...values: any[]) =>
   values.find((v) => v !== null && v !== undefined && String(v).trim() !== "") ?? null
 
+/*
+ * KUVAUS ON POIKKEUS: pisin voittaa, ei ensimmäinen.
+ *
+ * Muissa kentissä olemassa oleva arvo säilytetään, mutta kuvauksessa
+ * tallennettu arvo on tyypillisesti listauksen 150-250 merkin tiivistelmä ja
+ * uusi on tiedotteen koko teksti — sama sisältö täydellisenä. `firstFilled`
+ * yksin piti lyhyen version, jolloin rikastus näytti onnistuvan mutta
+ * asiakkaalle näkyvä kenttä ei muuttunut (mitattu: 124 hankkeesta vain 15).
+ */
+const longerText = (existing: any, next: string) =>
+  next.length > String(existing ?? "").length ? next : existing
+
 for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
   .replace(/\r/g, "")
   .split("\n")) {
@@ -226,7 +238,7 @@ async function main() {
       const { error } = await supabase
         .from("projects")
         .update({
-          additional_info: firstFilled(r.additional_info, description),
+          additional_info: longerText(r.additional_info, description),
           city: firstFilled(r.city, enriched.city),
           location: firstFilled(r.location, enriched.location),
           developer: firstFilled(r.developer, enriched.developer),
