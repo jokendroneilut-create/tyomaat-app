@@ -26,8 +26,26 @@ import { readFileSync } from "node:fs"
 
 const APPLY = process.argv.includes("--apply")
 
-/* Lyhyempi kuin tämä on otsikonmittainen pätkä, ei kuvaus. */
-const MIN_DESCRIPTION = 200
+/*
+ * KAKSI ERI RAJAA, JOTKA ON PIDETTÄVÄ ERILLÄÄN.
+ *
+ * `SHORT_THRESHOLD` = mikä hanke lasketaan puutteelliseksi (sama 200 kuin
+ * roadmapin mittarissa). `MIN_DESCRIPTION` = kuinka pitkä korvaavan tekstin
+ * on vähintään oltava.
+ *
+ * Ne olivat aluksi sama vakio, jolloin alarajan laskeminen olisi pudottanut
+ * 120-199 merkin hankkeet pois korjattavien joukosta — eli juuri ne joita
+ * laskeminen oli tarkoitettu auttamaan.
+ *
+ * 120 eikä 200: mitattu 15.8.2026, lähteiden omien kuvauskenttien
+ * mediaanipituus on 135 merkkiä. Kaavakuvaukset ovat lyhyitä lähteessä
+ * itsessään. 200 on meidän laatumittarimme, ei käyttökelpoisuuden raja —
+ * 135 merkin kuvaus lähteen omasta kentästä on asiakkaalle parempi kuin
+ * 47 merkin otsikonpätkä. Korvaus vaatii joka tapauksessa, että uusi teksti
+ * on nykyistä pidempi.
+ */
+const SHORT_THRESHOLD = 200
+const MIN_DESCRIPTION = 120
 
 for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
   .replace(/\r/g, "")
@@ -154,7 +172,7 @@ async function main() {
 
   for (const r of projects as any[]) {
     const current = String(r.additional_info ?? r.metadata?.description ?? "")
-    if (current.length >= MIN_DESCRIPTION) continue
+    if (current.length >= SHORT_THRESHOLD) continue
 
     const url = urlOf(r.metadata)
     const document =

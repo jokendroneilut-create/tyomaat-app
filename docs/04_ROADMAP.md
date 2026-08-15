@@ -628,8 +628,19 @@ muistin varassa.
   **"Suunnittelukilpailu" (3 hanketta), joka ei kanonisoidu lainkaan**.
   Loput on siisteyttä: yksi vaihe, yksi nimi näytöllä.
 - Kohdetyyppi puuttuu 2 260 hankkeelta (42 %).
-- Lähdelinkki puuttuu 734 hankkeelta (13 %), joista suurin osa on vanhaa
-  legacy-erää.
+- Lähdelinkki puuttuu **650** hankkeelta (12 %). Oli 742; 124 palautettiin
+  15.8.2026 `source_document_id`:n kautta
+  (`scripts/backfill-from-stored-documents.ts`). **Loput eivät ole
+  palautettavissa:** niillä ei ole dokumenttitunnusta, ilmoitusnumeroa
+  eikä lupanumeroa. Ne ovat helmi–maaliskuun 2026 erä (286 + 200 kpl),
+  joka tuotiin ennen lähdehistorian kirjaamista. Hyväksytty tappioksi —
+  metsästäminen ei tuota mitään.
+- **Kuvauksen lyhyys on osin lähteen ominaisuus, ei meidän vikamme.**
+  Mitattu 15.8.2026: 1 571 lyhytkuvauksisesta 965:llä on lähteen
+  `description`-kenttä tallessa, mutta **sen mediaanipituus on 135
+  merkkiä** — kaavakuvaukset ovat lähteessä itsessään lyhyitä. Vain
+  125:llä kenttä ylitti 200 merkkiä. Mittari mittaa siis osittain
+  lähdeaineistoa, ei puutetta poiminnassa.
 - Kuvaus alle 200 merkkiä **1 571** hankkeella (29 %). Oli 1 803;
   yrityslähteiden jälkirikastus (15.8.2026) pudotti lukua 232:lla.
 
