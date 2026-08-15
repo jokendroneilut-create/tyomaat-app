@@ -154,14 +154,46 @@ koko (50 p) ja tuoreus (25 p) hallitsevat yhä. Roolillisilla vaihtui
 8/20 (vaihesanaston korjauksesta). Seuraava vipuvarsi on siis
 **moduulipainojen tasapaino**, ei enää roolin puuttuminen.
 
-**2. Vaihesanasto on epäyhtenäinen.** "Suunnittelussa" 1 271 vs
-"Suunnittelu" 212, "Rakentaminen aloitettu" 395 vs "Rakenteilla" 264.
-Pisteytys nojaa vaiheeseen, joten kahdella nimellä oleva sama vaihe
-vääristää painotusta suoraan. Halpa korjata (ks. Työjono).
+**2. ~~Vaihesanasto vääristää pisteytystä~~ — väite tarkistettu ja se ei
+pidä paikkaansa (15.8.2026).** Kirjoitusasuja on 11, mutta
+`normalizeLegacyPhase` kanonisoi niistä 10. Ainoa tunnistumaton on
+"Suunnittelukilpailu" (3 hanketta), eli **0 % aktiivisista hankkeista
+jää pisteytykseltä näkymättä**. "Suunnittelussa" ja "Suunnittelu"
+päätyvät molemmat avaimeen `planning`, "Rakentaminen aloitettu" ja
+"Rakenteilla" avaimeen `construction`.
+
+Epäyhtenäisyys on siis **näyttö- ja siisteysasia, ei pisteytysvirhe**,
+ja pudotettu tästä listasta prioriteettina. Ainoa aito korjaus:
+"Suunnittelukilpailu" → `planning` tai oma vaihe.
 
 **3. Palautetta on 2 kappaletta.** Vaihe 4 (palauteoppiminen) ei voi
 olla riippuvuus millekään muulle — pisteytyksen on toimittava
 deterministisesti, ja oppiminen on myöhempi lisä.
+
+**3½. VARASTO JA ASIAKASKUNTA OVAT ELINKAAREN ERI PÄISSÄ — P1:n uusi
+suurin este (mitattu 15.8.2026).** Aktiivisten hankkeiden vaihejakauma:
+
+| vaihe | kpl | osuus |
+|---|---|---|
+| Kaavoitus | 2 853 | **52 %** |
+| Suunnittelu (yhteensä) | 1 501 | 27 % |
+| Rakenteilla (yhteensä) | 663 | 12 % |
+| Sopimus myönnetty | 185 | 3 % |
+| Kilpailutus | 170 | 3 % |
+| Rakennuslupa | 100 | 2 % |
+
+Yli puolet varastosta on kaavoituksessa. Kaavoitukselle antaa painoa
+vain kolme roolia (Arkkitehti 1.0, Kiinteistönomistaja 0.8, Infra 0.4)
+— ja **arkkitehtejä on asiakaskunnassa nolla**. Asiakkaat ovat
+Infrassa, materiaalitoimituksessa, urakoinnissa ja vuokrauksessa, eli
+elinkaaren loppupäässä, jossa on 20 % varastosta.
+
+Tämä selittää mitatun 24 %:n: roolillisella käyttäjällä vaihepisteet
+ovat nollassa kolmella neljäsosalla syötettä, koska hankkeet ovat
+väärässä päässä elinkaarta. **Pisteytystä ei voi säätää tämän ympäri**
+— kyse on varaston koostumuksesta, ei painoista. Siksi Työjonon
+"Stara ja liikelaitokset" (voittajat) ja muut myöhäisen vaiheen
+lähteet nousevat P1:n kannalta tärkeämmiksi kuin uudet kaavalähteet.
 
 **4. Moduulipainojen tasapaino (uusi, D-071:n mittauksesta).** Rooli on
 40 pistettä ja hankkeen koko 50, joten **iso epärelevantti hanke voittaa
@@ -240,12 +272,14 @@ muistin varassa.
 
 ### Datan laatu
 
-- **Vaihesanasto on epäyhtenäinen.** "Suunnittelussa" 1 271 vs
-  "Suunnittelu" 212, "Rakentaminen aloitettu" 395 vs "Rakenteilla" 264 —
-  samoja vaiheita kahdella nimellä. Sama vika kuin kohdetyypeissä ennen
-  yhtenäistystä (198 arvoa → 20, ks. D-059). **Vaihe on asiakkaan
-  tärkein suodatin ja P1:n keskeisin ulottuvuus**, joten tämä kannattaa
-  korjata ennen pisteytystä.
+- **Vaihesanasto on epäyhtenäinen** — mutta ei niin haitallinen kuin
+  tässä aiemmin väitettiin. Tarkistettu 15.8.2026: 11 kirjoitusasua,
+  joista `normalizeLegacyPhase` kanonisoi 10. "Suunnittelussa" 1 285 ja
+  "Suunnittelu" 216 päätyvät molemmat avaimeen `planning`,
+  "Rakentaminen aloitettu" 397 ja "Rakenteilla" 266 avaimeen
+  `construction`. Pisteytys ei siis vääristy. Aito korjattava on
+  **"Suunnittelukilpailu" (3 hanketta), joka ei kanonisoidu lainkaan**.
+  Loput on siisteyttä: yksi vaihe, yksi nimi näytöllä.
 - Kohdetyyppi puuttuu 2 260 hankkeelta (42 %).
 - Lähdelinkki puuttuu 734 hankkeelta (13 %), joista suurin osa on vanhaa
   legacy-erää.
