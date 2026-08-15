@@ -5,6 +5,52 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-075 – Osoite dokumentiksi haussa, runko myöhemmin
+
+**Ongelma.** Legacy-reitin rikastus voi tapahtua vain niin kauan kuin
+tiedote on vielä lähteen listaussivulla: `seenUrls` ohittaa jo nähdyt
+(7 vrk) ja `ENRICH_PER_RUN` rajaa 40:een per ajo. Kun tiedote vierähtää
+listalta, se jää pysyvästi siihen mitä otsikosta saatiin. Mitattu
+15.8.2026: 128 hanketta oli kuvauksetta, ja vain käsin ajettu backfill
+korjasi ne.
+
+**Harkittu vaihtoehto oli siirtää kaikki 49 legacy-lähdettä
+dokumenttimalliin.** Arvio: 49 lähdettä ≈ 15 parseria (kuntapäätökset
+16 → 4, yritystiedotteet 28 → 1 jaettu + n. 5 poikkeusta, muut 5–6),
+n. 5 267 riviä pääosin uudelleenkäytettävää logiikkaa. Kaksi asiaa
+puhui sitä vastaan juuri nyt: **kaikki 49 lähdettä toimivat**
+(jokaisella onnistunut ajo 10 vrk:n sisällä, ei virheitä), joten koko
+riski olisi regressio ja koko hyöty rakenteellinen — ja kohdetiedosto
+`apiCollector.ts` on **38 587 riviä ja 248 `source.parser ===`
+-haaraa**, joten siirto sellaisenaan vaihtaisi "monta pientä tiedostoa"
+-ongelman pahempaan.
+
+**Päätös: tallennetaan haussa vain OSOITE dokumenttiriviksi
+(`status: "listed"`), runko haetaan erillisessä työntekijässä.**
+
+Perustelut:
+- Se irrottaa rikastuksen listaussivun ikkunasta, mikä on koko ongelma.
+- Runkoa **ei** haeta ajon sisällä — sivuhaku on juuri se kustannus
+  jota `ENRICH_PER_RUN` rajoittaa.
+- Se on **aito osajoukko täydestä siirrosta**, ei kiertotie: samat rivit
+  joita siirretyt parserit myöhemmin lukisivat. Mikään ei mene hukkaan.
+- Kun runko on kerran tallessa, poimintaa voi parantaa **takautuvasti**
+  ilman uutta verkkohakua. Tämä olisi säästänyt kolme backfill-kierrosta
+  15.8.2026.
+
+**Yksi suoja oli pakollinen.** `factWorker` poimii dokumentit ehdolla
+`facts_extracted_at is null` **ilman statussuodatinta**, joten
+rungottomat rivit olisivat menneet suoraan faktojen poimintaan.
+Lisätty `.neq("status", "listed")`. Todennettu kannalla: ilman suojaa
+jonoon olisi tullut juuri ne 10 uutta riviä, suojan kanssa 0.
+
+**Valmistumisehto, jottei tämä jää roikkumaan.** Kun vaihe 2
+(runkotyöntekijä) toimii, `ENRICH_PER_RUN` ja `seenUrls`-ohitus
+poistetaan haun puolelta ja `scripts/backfill-company-enrichment.ts`
+**poistetaan**. Skriptin olemassaolo on merkki siitä että työ on kesken.
+
+---
+
 ### D-074 – Sijoittajauutinen on urakkatiedote, ei hallintotiedote
 
 Kysymys "miksi tätä uutista ei ole poimittu" (SRV:n Hämeenlinnan Lyseo,

@@ -1,3 +1,4 @@
+import crypto from "crypto"
 import { createClient } from "@supabase/supabase-js"
 import { sources as legacySources } from "@/lib/agent/sources"
 import {
@@ -95,6 +96,86 @@ function findLegacySource(key: string | null | undefined) {
 const CANDIDATE_CONCURRENCY = 6
 
 /*
+ * DOKUMENTTIRIVIN TALLENNUS: "listed" = osoite tiedossa, runkoa ei ole haettu.
+ *
+ * Miksi. Rikastus (enrich) voi tapahtua vain niin kauan kuin tiedote on vielä
+ * lähteen listaussivulla: `seenUrls` ohittaa jo nähdyt ja `ENRICH_PER_RUN`
+ * rajaa 40:een. Kun tiedote vierähtää listalta pois, se jää pysyvästi siihen
+ * mitä otsikosta saatiin — mitattu 15.8.2026: 128 hanketta oli kuvauksetta ja
+ * vain käsin ajettu backfill korjasi ne.
+ *
+ * Osoitteen tallentaminen dokumentiksi irrottaa rikastuksen tuosta ikkunasta:
+ * rivi säilyy käsiteltävänä listaussivusta riippumatta. Tämä on myös aito
+ * osajoukko täydestä siirrosta dokumenttimalliin — samat rivit, jotka
+ * siirretyt parserit myöhemmin lukisivat.
+ *
+ * RUNKOA EI HAETA TÄSSÄ. Sivuhaku ajon sisällä on juuri se kustannus jota
+ * ENRICH_PER_RUN rajoittaa; runko haetaan erillisessä työntekijässä (vaihe 2).
+ *
+ * Tämä vaihe ei muuta yhtään olemassa olevaa polkua: rivit ovat statuksella
+ * "listed", jonka `factWorker` ohittaa, eikä tuontihaara alla tiedä niistä.
+ */
+const DOCUMENT_CHUNK = 200
+
+async function recordCandidateDocuments(
+  source: any,
+  legacyName: string,
+  candidates: any[]
+): Promise<number> {
+  const rows = candidates
+    .filter((candidate: any) => candidate?.source_url)
+    .map((candidate: any) => ({
+      source_id: source.id,
+      source_name: source.name,
+      title: String(candidate.name ?? "").slice(0, 500) || null,
+      document_url: String(candidate.source_url),
+      document_type: "listing",
+      content_hash: crypto
+        .createHash("sha256")
+        .update(`${candidate.source_url}|${candidate.name ?? ""}`)
+        .digest("hex"),
+      status: "listed",
+      raw_payload: { legacy_source: legacyName, awaiting_body: true },
+      updated_at: new Date().toISOString(),
+    }))
+
+  if (!rows.length) return 0
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  )
+
+  let saved = 0
+
+  for (let i = 0; i < rows.length; i += DOCUMENT_CHUNK) {
+    const chunk = rows.slice(i, i + DOCUMENT_CHUNK)
+
+    /*
+     * `ignoreDuplicates` on olennainen: sama osoite voi olla jo tallennettu
+     * oikeana dokumenttina runkoineen, eikä sitä saa ylikirjoittaa
+     * rungottomalla "listed"-rivillä.
+     */
+    const { error } = await supabase
+      .from("source_documents")
+      .upsert(chunk, { onConflict: "document_url", ignoreDuplicates: true })
+
+    if (error) {
+      console.error(
+        `legacyFetchCollector: dokumenttirivin tallennus epäonnistui (${source.name}):`,
+        error.message
+      )
+      return saved
+    }
+
+    saved += chunk.length
+  }
+
+  return saved
+}
+
+/*
  * Sivuhakuja per ajo. Yksi tiedotesivu on ~50 kB ja vastaa nopeasti, mutta
  * lähde voi palauttaa satoja kandidaatteja - mitattuna stt_haku 253 - ja
  * ajobudjetti on 500 s koko putkelle. 40 riittää tuoreisiin: uusia
@@ -165,6 +246,21 @@ export async function collectLegacySource(source: any) {
    * satoja kandidaatteja (stt_haku palautti mittauksessa 253), ja ilman
    * tätä jokainen niistä lukisi koko projects-taulun uudelleen.
    */
+  /*
+   * Osoitteet talteen ENNEN tuontia ja sen budjetteja: myös aikakatkaisuun
+   * kaatuvan ajon kandidaatit jäävät näin myöhemmin rikastettaviksi.
+   * Best-effort — tallennuksen epäonnistuminen ei saa kaataa lähdeajoa.
+   */
+  let documentsListed = 0
+  try {
+    documentsListed = await recordCandidateDocuments(source, legacy.name, candidates)
+  } catch (error: any) {
+    console.error(
+      `legacyFetchCollector: dokumenttirivien tallennus kaatui (${source.name}):`,
+      error?.message ?? error
+    )
+  }
+
   const projects = candidates.length > 0 ? await loadProjectsForMatching() : []
 
   /*
@@ -297,6 +393,7 @@ export async function collectLegacySource(source: any) {
   return {
     documentsFound: candidates.length,
     documentsSaved: saved,
+    documentsListed,
     skipped,
     deferred,
   }

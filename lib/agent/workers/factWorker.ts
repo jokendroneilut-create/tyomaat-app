@@ -24,6 +24,14 @@ export async function runFactWorker(documentId?: string) {
     const { data: documents, error: documentError } = await supabaseAdmin
       .from("source_documents")
       .select("*")
+      /*
+       * "listed" = legacyFetchCollector on tallentanut vain osoitteen, runkoa
+       * ei ole vielä haettu. Ilman tätä rajausta faktojen poiminta yrittäisi
+       * lukea tyhjää tekstiä ja kuluttaisi vuoroja turhaan. Runko haetaan
+       * erillisessä työntekijässä, joka nollaa statuksen kun teksti on
+       * tallessa — vasta silloin rivi kuuluu tähän jonoon.
+       */
+      .neq("status", "listed")
       .is("facts_extracted_at", null)
       .order("created_at", { ascending: false })
       .limit(100)
