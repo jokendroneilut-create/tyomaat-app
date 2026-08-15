@@ -199,9 +199,13 @@ lähteet nousevat P1:n kannalta tärkeämmiksi kuin uudet kaavalähteet.
 40 pistettä ja hankkeen koko 50, joten **iso epärelevantti hanke voittaa
 pienen relevantin**. Tämä selittää miksi "Muu"-tilien järjestys ei
 juuri muuttunut vaikka vaihepisteytys korjattiin: koko ja tuoreus (75 p
-yhdessä) hallitsevat kärkeä. Ennen painojen säätämistä kannattaa
-korjata vaihesanasto (kohta 2), koska se vääristää mittaria jolla
-säätöä arvioidaan.
+yhdessä) hallitsevat kärkeä.
+
+*Korjattu viittaus:* tässä luki aiemmin että vaihesanasto on
+korjattava ennen painojen säätöä. Se este osoittautui olemattomaksi
+(kohta 2), joten painojen säätöä ei jarruta mikään — paitsi että
+kohdan 3½ varastovinouma kannattaa ratkaista ensin, koska painojen
+säätäminen ei tuo syötteeseen hankkeita joita siellä ei ole.
 
 **5. Nykyiset "Muu"-tilit eivät siirry uusiin rooleihin itsestään.**
 13 tiliä on yhä roolissa "Muu"; uudet vaihtoehdot näkyvät heille vasta
@@ -220,6 +224,43 @@ jäljellä oleva tapa lisätä personointia.
 **Rajaus:** vain alue ja vaihe ovat lähes täydellisiä kenttiä,
 kohdetyyppi kohtuullinen. Kokoon tai osapuoliin nojaava painotus jäisi
 59–96 %:lla hankkeista laskematta (ks. *Mitattu tilanne*).
+
+### Ehdotetut seuraavat askeleet — EI PÄÄTETTY (15.8.2026)
+
+Nämä kolme nousivat D-071:n mittauksista. **Johannes ei ole päättänyt
+näistä mitään**, eikä yhtäkään saa aloittaa tämän kirjauksen nojalla —
+tämä on muistilista, ei suunnitelma. Järjestys on ehdotettu
+tärkeysjärjestys perusteluineen, jotta päätöksen voi tehdä myöhemmin
+ilman että aineisto pitää kaivaa uudestaan.
+
+**E1. Myöhäisen vaiheen lähteet (Stara ja liikelaitokset, voittajat,
+sopimusilmoitukset).** Peruste: kohta 3½ — 52 % varastosta on
+kaavoituksessa, asiakkaat elinkaaren loppupäässä. Pisteytys ei voi
+näyttää hankkeita joita syötteessä ei ole.
+
+*Huomaa jännite olemassa olevaan linjaan:* "Tietoisesti taakse"
+-osiossa lisälähteet on merkitty laskevaksi tuotoksi. Mittaus ei kumoa
+sitä yleisesti — uusi **kaava**lähde on yhä laskevaa tuottoa — mutta
+myöhäisen vaiheen lähde ruokkii suoraan sitä päätä jossa asiakkaat
+ovat. Jos E1 valitaan, D-011:n kriteeri ("aikaisempi vaihe kuin
+nykylähteet") on kirjattava uudelleen, koska tämä on tarkoituksella
+päinvastainen. Se on päätös, ei sivuhuomio.
+
+**E2. Yksi lisäkysymys pakolliseen aktivointimodaaliin ("erikoisalasi").**
+Peruste: kohta 6 — herättää kuolleen `tradeKeywordFit`-moduulin (25 p,
+käytössä 0/26 tilillä) ja tuottaa toimialadatan, jonka puute esti
+roolin päättelyn. Halvin toteutus, mutta lisää kitkaa jo pakolliseen
+onboardingiin — se on hinta joka on punnittava.
+
+**E3. Moduulipainojen tasapaino (rooli 40 vs. koko 50).** Peruste:
+kohta 4. Halvin koodimuutos, mutta pienin vaikutus ennen E1:tä:
+painojen säätäminen ei tuo syötteeseen hankkeita joita siellä ei ole.
+
+**Mitä ratkaisisi valinnan:** E1:n kohdalla se, kuinka monta
+loppupään hanketta puuttuvista lähteistä oikeasti tulisi (mitattavissa
+otoksella ennen rakentamista). E2:n kohdalla se, paljonko onboardingin
+keskeytys kasvaa — nykyistä läpäisyprosenttia ei ole mitattu. E3:n
+kohdalla peukkupalaute, jota on 2 kpl, eli ei mitään.
 
 ## P2 — Elinkaari-laukaistut hälytykset: "oikea aika"
 
