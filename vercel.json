@@ -17,6 +17,10 @@
       "schedule": "10 */6 * * *"
     },
     {
+      "path": "/api/tic/discovery/run-release-body-worker",
+      "schedule": "40 */6 * * *"
+    },
+    {
       "path": "/api/admin/scan-duplicates?mode=incremental",
       "schedule": "0 4 * * *"
     },

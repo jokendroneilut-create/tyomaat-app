@@ -49,6 +49,26 @@ jonoon olisi tullut juuri ne 10 uutta riviä, suojan kanssa 0.
 poistetaan haun puolelta ja `scripts/backfill-company-enrichment.ts`
 **poistetaan**. Skriptin olemassaolo on merkki siitä että työ on kesken.
 
+**Vaihe 2 tehty 15.8.2026:** `lib/agent/workers/releaseBodyWorker.ts`
+hakee rungon `listed`-dokumenteille, tallentaa sen `raw_text`iin ja vie
+rikastuksen jonoriville ja hankkeelle. Ajastettu 6 h välein
+(`40 */6 * * *`), 30 min lähdeajon jälkeen. Todennettu 10 dokumentilla:
+10/10 haettu, runko mediaani 3 598 merkkiä, 24 jonoriviä ja 2 hanketta
+päivittyi, `factWorker`in jono pysyi nollassa.
+
+Kolme yksityiskohtaa, jotka ratkaisivat oikein toimimisen:
+- **Dokumenttia ei syötetä faktaputkeen.** Legacy-reitti on jo tuonut
+  kandidaatin `importCandidate`illa, joten `factWorker`in läpi ajaminen
+  loisi saman hankkeen toiseen kertaan. Rivi merkitään käsitellyksi
+  (`facts_extracted_at`), mikä pitää sen pois jonosta.
+- **Jono järjestetään `updated_at`in mukaan**, ei luontiajan. Virheeseen
+  kaatunut rivi jää `listed`-tilaan uutta yritystä varten, ja
+  luontijärjestys nostaisi saman rikkinäisen osoitteen kärkeen joka
+  ajolla — nyt se siirtyy hännille itsestään.
+- **Kuvauksessa pisin voittaa**, muissa kentissä olemassa oleva
+  säilyy. Sama sääntö kuin backfill-skriptissä, ja siihen meni kolme
+  yritystä (ks. roadmap 3¾).
+
 ---
 
 ### D-074 – Sijoittajauutinen on urakkatiedote, ei hallintotiedote
