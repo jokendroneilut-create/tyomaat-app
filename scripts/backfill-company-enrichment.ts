@@ -36,6 +36,18 @@ const LIMIT = Number(
 /* Lyhyempi kuvaus kuin tämä = listauksen tiivistelmä, ei tiedotteen teksti. */
 const SHORT_DESCRIPTION = 400
 
+/*
+ * TYHJÄ MERKKIJONO ON YHTÄ TYHJÄ KUIN NULL.
+ *
+ * Ensimmäinen versio käytti `??`, joka korvaa vain null/undefined. Kannassa
+ * kuvaus ja osapuolet ovat kuitenkin usein `""`, jolloin `r.additional_info ??
+ * description` palautti tyhjän merkkijonon ja rikastus meni hukkaan juuri
+ * siinä kentässä jonka asiakas näkee. Mitattu 15.8.2026: 124 rikastetusta
+ * hankkeesta vain 7:llä kuvaus päätyi perille.
+ */
+const firstFilled = (...values: any[]) =>
+  values.find((v) => v !== null && v !== undefined && String(v).trim() !== "") ?? null
+
 for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
   .replace(/\r/g, "")
   .split("\n")) {
@@ -159,12 +171,12 @@ async function main() {
           metadata: {
             ...r.metadata,
             description,
-            city: r.metadata?.city ?? enriched.city ?? null,
-            location: r.metadata?.location ?? enriched.location ?? null,
-            developer: r.metadata?.developer ?? enriched.developer ?? null,
-            builder: r.metadata?.builder ?? enriched.builder ?? null,
-            building_type: r.metadata?.building_type ?? enriched.building_type ?? null,
-            phase_hint: enriched.phase ?? r.metadata?.phase_hint ?? null,
+            city: firstFilled(r.metadata?.city, enriched.city),
+            location: firstFilled(r.metadata?.location, enriched.location),
+            developer: firstFilled(r.metadata?.developer, enriched.developer),
+            builder: firstFilled(r.metadata?.builder, enriched.builder),
+            building_type: firstFilled(r.metadata?.building_type, enriched.building_type),
+            phase_hint: firstFilled(enriched.phase, r.metadata?.phase_hint),
             ...(cost
               ? { estimated_cost: cost.estimated_cost, cost_source: cost.cost_source }
               : {}),
@@ -214,12 +226,12 @@ async function main() {
       const { error } = await supabase
         .from("projects")
         .update({
-          additional_info: r.additional_info ?? description,
-          city: r.city ?? enriched.city ?? null,
-          location: r.location ?? enriched.location ?? null,
-          developer: r.developer ?? enriched.developer ?? null,
-          builder: r.builder ?? enriched.builder ?? null,
-          property_type: r.property_type ?? enriched.building_type ?? null,
+          additional_info: firstFilled(r.additional_info, description),
+          city: firstFilled(r.city, enriched.city),
+          location: firstFilled(r.location, enriched.location),
+          developer: firstFilled(r.developer, enriched.developer),
+          builder: firstFilled(r.builder, enriched.builder),
+          property_type: firstFilled(r.property_type, enriched.building_type),
           phase: nextPhase,
           ...(costChanged ? { estimated_cost: cost!.estimated_cost } : {}),
           metadata: {
