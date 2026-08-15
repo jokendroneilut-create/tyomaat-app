@@ -1,9 +1,21 @@
 import { CANONICAL_PHASES } from "@/lib/projects/phases"
 
+/*
+ * Roolivalikko. "Muu" on VIIMEINEN vaihtoehto eikä oletus: mitattuna
+ * 15.8.2026 puolet tileistä (13/26) oli siinä, ja syy oli listan aukko eikä
+ * käyttäjän haluttomuus — verkkotunnukset paljastivat henkilöstövuokrausta,
+ * erikoisurakointia, konevuokrausta ja mittauspalvelua. Nämä neljä lisättiin.
+ * Roolien nimien on vastattava `lib/opportunity/roleStageMatrix.ts`:n avaimia,
+ * muuten rooli valuu takaisin painottomaksi. Ks. D-071.
+ */
 export const companyProfiles = [
+  "Aliurakointi",
   "Arkkitehti",
+  "Henkilöstövuokraus",
   "Infra",
   "Kiinteistönomistaja",
+  "Konevuokraus",
+  "Konsultti",
   "Rakennesuunnittelu",
   "Rakennusliike",
   "Rakennustuotteet",

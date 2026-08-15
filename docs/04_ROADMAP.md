@@ -124,16 +124,35 @@ vähemmällä selaamisella.
 
 ### Mistä jatkaa
 
-Kolme mitattua puutetta, tärkeysjärjestyksessä:
+Mitatut puutteet, tärkeysjärjestyksessä. Kohta 1 on tehty 15.8.2026;
+kohdat 4–5 tulivat sen mittauksesta.
 
-**1. Puolet käyttäjistä on roolissa "Muu", jolla ei ole painoja
-lainkaan.** 26:sta rooli on valittu kaikilla, mutta jakauma on: Muu 13,
-Infra 6, Rakennustuotteet 4, Kiinteistönomistaja 1, Talotekniikka 1,
-Rakennusliike 1. Matriisissa `Muu: {}` eli tyhjä — **puolet
-käyttäjistä ei siis saa roolipisteytystä ollenkaan**, vaikka koko
-kerros on rakennettu. Tämä on P1:n suurin yksittäinen vipuvarsi: joko
-kattavammat roolivaihtoehdot, roolin päättely toimialasta, tai
-oletuspainot "Muu"-roolille.
+**1. ~~Puolet käyttäjistä on roolissa "Muu"~~ — korjattu 15.8.2026
+(D-071).** Jakauma oli Muu 13, Infra 6, Rakennustuotteet 4,
+Kiinteistönomistaja 1, Talotekniikka 1, Rakennusliike 1, ja matriisissa
+`Muu: {}` eli tyhjä.
+
+Syy ei ollut käyttäjien haluttomuus vaan **listan aukko**:
+"Muu"-tilien verkkotunnukset olivat henkilöstövuokrausta (4),
+erikoisurakointia (2), konevuokrausta ja mittauspalvelua — yhtäkään ei
+ollut valikossa. Kun valikko on pakollinen eikä siinä ole omaa
+toimialaa, "Muu" on ainoa ulospääsy.
+
+Roolin päättely toimialasta suljettiin pois, koska avainsanoja oli
+asettanut 0/26 tiliä — mutta huomaa mistä se johtuu: **avainsanoja ei
+kysytä pakollisessa aktivointimodaalissa lainkaan**, kun taas rooli ja
+myyntihetki kysytään (26/26 on siis pakotettu, ei vapaaehtoinen luku).
+Puuttuva data on kysymättä jäänyt kysymys, ei käyttäjien vastahakoisuus.
+
+Toteutus: neljä uutta roolia + kolmiportainen `resolveStageFit`
+(rooli → omat myyntihetket → mitattu oletus). Samalla korjattiin
+myyntihetkimoduuli, joka tunnisti vain 5 vaihetta 9:stä.
+
+**Mitattu tulos:** "Muu"-tileillä vaihepisteet nousivat nollasta
+keskimäärin 43 %:lle hankkeista, mutta **top 20 vaihtui vain 3/20** —
+koko (50 p) ja tuoreus (25 p) hallitsevat yhä. Roolillisilla vaihtui
+8/20 (vaihesanaston korjauksesta). Seuraava vipuvarsi on siis
+**moduulipainojen tasapaino**, ei enää roolin puuttuminen.
 
 **2. Vaihesanasto on epäyhtenäinen.** "Suunnittelussa" 1 271 vs
 "Suunnittelu" 212, "Rakentaminen aloitettu" 395 vs "Rakenteilla" 264.
@@ -143,6 +162,28 @@ vääristää painotusta suoraan. Halpa korjata (ks. Työjono).
 **3. Palautetta on 2 kappaletta.** Vaihe 4 (palauteoppiminen) ei voi
 olla riippuvuus millekään muulle — pisteytyksen on toimittava
 deterministisesti, ja oppiminen on myöhempi lisä.
+
+**4. Moduulipainojen tasapaino (uusi, D-071:n mittauksesta).** Rooli on
+40 pistettä ja hankkeen koko 50, joten **iso epärelevantti hanke voittaa
+pienen relevantin**. Tämä selittää miksi "Muu"-tilien järjestys ei
+juuri muuttunut vaikka vaihepisteytys korjattiin: koko ja tuoreus (75 p
+yhdessä) hallitsevat kärkeä. Ennen painojen säätämistä kannattaa
+korjata vaihesanasto (kohta 2), koska se vääristää mittaria jolla
+säätöä arvioidaan.
+
+**5. Nykyiset "Muu"-tilit eivät siirry uusiin rooleihin itsestään.**
+13 tiliä on yhä roolissa "Muu"; uudet vaihtoehdot näkyvät heille vasta
+jos he palaavat asetuksiin. Vaihtoehdot: kohdennettu viesti, asetusten
+esiinnosto /today:ssa, tai kertaluontoinen kartoitus verkkotunnuksen
+perusteella (ei automaattinen — se olisi arvaus käyttäjän puolesta).
+
+**6. Aktivointimodaali kysyy kaksi asiaa kolmesta.** Rooli ja
+myyntihetki ovat pakollisia, avainsanat eivät ole siinä lainkaan —
+siksi `tradeKeywordFit` (25 p) on käytännössä kuollut moduuli 0/26
+tilillä. Yksi lisäkysymys pakolliseen modaaliin ("mitä myyt / mikä on
+erikoisalasi") herättäisi valmiin moduulin ja antaisi samalla sen
+toimialadatan, jonka puuttuminen esti roolin päättelyn. Halvin
+jäljellä oleva tapa lisätä personointia.
 
 **Rajaus:** vain alue ja vaihe ovat lähes täydellisiä kenttiä,
 kohdetyyppi kohtuullinen. Kokoon tai osapuoliin nojaava painotus jäisi

@@ -1,11 +1,16 @@
 import type { TodaySettings } from "./getTodaySettings"
-import { projectSource, projectPhaseText } from "./todayFilters"
+import { projectSource } from "./todayFilters"
 import type { FeedbackContext } from "./getUserFeedbackContext"
-import { PHASE_LABELS, type PhaseKey } from "@/lib/projects/phases"
+import {
+  normalizeLegacyPhase,
+  PHASE_LABELS,
+  type PhaseKey,
+} from "@/lib/projects/phases"
 import { projectPhaseKey } from "@/lib/opportunity/projectPhaseKey"
 import {
-  roleStageWeight,
+  resolveStageFit,
   ROLE_DATIVE_LABEL,
+  type StageFit,
 } from "@/lib/opportunity/roleStageMatrix"
 
 const FEEDBACK_ATTRIBUTE_WEIGHT = 5
@@ -13,12 +18,23 @@ const FEEDBACK_SCORE_CAP = 30
 const ROLE_STAGE_MAX_POINTS = 40
 const TRADE_KEYWORD_POINTS_PER_HIT = 12
 const TRADE_KEYWORD_MAX_POINTS = 25
+/*
+ * 20 eikä 30: vanha substring-versio antoi 20 pistettä per osunut sääntö ja
+ * katkaisi 30:een vasta jos kaksi sääntöä osui samaan hankkeeseen. Kanonisella
+ * vaiheella osumia on täsmälleen yksi, joten 20 on sama arvo kuin ennenkin —
+ * 30 olisi nostanut moduulin painoa 50 % korjauksen sivutuotteena.
+ */
+const SALES_MOMENT_POINTS = 20
 
 /*
  * Viitemaksimi 0–100 match-%:n normalisointiin (P1 V2): erinomainen osuma =
  * rooli-huippu (40) + suuri hanke (50) + uusi tänään (25) + hyvä lähde (15) +
- * myyntihetki (30). Lähde-/palautemoduulit voivat nostaa hieman yli, siksi
- * clampataan 0–100.
+ * myyntihetki (20) = 150. Avainsana- ja palautemoduulit voivat nostaa yli,
+ * siksi clampataan 0–100.
+ *
+ * Luku pidetään 160:ssä vaikka erittelyn summa on 150: jakaja on
+ * normalisointivakio, ja sen säätäminen siirtäisi JOKAISEN käyttäjän
+ * match-prosenttia aina kun yksittäisen moduulin pisteitä hienosäädetään.
  */
 const MATCH_REFERENCE_MAX = 160
 
@@ -35,6 +51,7 @@ type ScoreResult = { points: number; reason?: string }
 type OpportunityContext = {
   project: any
   phaseKey: PhaseKey | null
+  stageFit: StageFit
   settings: TodaySettings
   feedback?: FeedbackContext
 }
@@ -52,13 +69,27 @@ function daysSince(dateValue: string | null | undefined) {
 /*
  * ⭐ Rooli → elinkaaren vaihe. P1:n ydinmoduuli: yritysprofiili ohjaa
  * pisteytystä (aiemmin inertti). Ks. `lib/opportunity/roleStageMatrix.ts`.
+ *
+ * Paino ratkaistaan kolmiportaisesti (rooli → omat myyntihetket → mitattu
+ * oletus), joten myös roolittomat ja "Muu"-käyttäjät saavat vaihepisteytyksen.
+ * Selitysteksti kertoo rehellisesti kummasta on kyse: ilmoitettu rooli vai
+ * pääteltu signaali.
  */
 function roleStageFit(ctx: OpportunityContext): ScoreResult {
-  const weight = roleStageWeight(ctx.settings.companyProfile, ctx.phaseKey)
+  const { weight, source } = ctx.stageFit
   if (weight <= 0) return { points: 0 }
 
   const points = Math.round(weight * ROLE_STAGE_MAX_POINTS)
   const phaseLabel = ctx.phaseKey ? PHASE_LABELS[ctx.phaseKey] : ""
+
+  if (source === "moments") {
+    return { points, reason: `${phaseLabel} — valitsemasi myyntihetki` }
+  }
+
+  if (source === "default") {
+    return { points, reason: `${phaseLabel} — tyypillinen myyntihetki` }
+  }
+
   const dative =
     ROLE_DATIVE_LABEL[ctx.settings.companyProfile ?? ""] ?? "sinulle"
 
@@ -98,28 +129,28 @@ function sourceQuality(ctx: OpportunityContext): ScoreResult {
 
 /*
  * Käyttäjän manuaalisesti valitsema myyntihetki (override roolin oletukselle).
- * Säilytetään; V2 johtaa oletukset roolista automaattisesti.
+ *
+ * Vertaa hankkeen KANONISEEN vaiheeseen, ei vapaaseen tekstiin. Aiempi versio
+ * tunnisti viisi vaihetta yhdeksästä substring-säännöillä, joten "Sopimus
+ * myönnetty", "Valmistumassa", "Valmistunut" ja "Ideointi" eivät tuottaneet
+ * pisteitä koskaan — vaikka ne ovat valittavissa ja käytössä. Sama vaihelogiikka
+ * on nyt yhdessä paikassa (`projectPhaseKey`) kuten muuallakin P1:ssä.
+ *
+ * Ei pisteitä jos vaihepaino jo johdettiin näistä samoista myyntihetkistä:
+ * se olisi sama signaali laskettuna kahdesti.
  */
 function salesMomentFit(ctx: OpportunityContext): ScoreResult {
+  if (ctx.stageFit.source === "moments") return { points: 0 }
+
   const moments = ctx.settings.bestSalesMoments ?? []
-  if (!moments.length) return { points: 0 }
+  if (!moments.length || !ctx.phaseKey) return { points: 0 }
 
-  const text = projectPhaseText(ctx.project)
-  let score = 0
+  const matches = moments.some(
+    (moment) => normalizeLegacyPhase(moment) === ctx.phaseKey
+  )
 
-  for (const moment of moments) {
-    const normalized = moment.toLowerCase()
-
-    if (normalized === "kilpailutus" && text.includes("hilma")) score += 20
-    if (normalized === "rakennuslupa" && text.includes("lupa")) score += 20
-    if (normalized === "rakenteilla" && text.includes("rakenteilla")) score += 20
-    if (normalized === "kaavoitus" && text.includes("kaavoitus")) score += 20
-    if (normalized === "suunnittelu" && text.includes("suunnittel")) score += 20
-  }
-
-  const points = Math.min(score, 30)
-  return points > 0
-    ? { points, reason: "Sopii valitsemaasi myyntihetkeen" }
+  return matches
+    ? { points: SALES_MOMENT_POINTS, reason: "Sopii valitsemaasi myyntihetkeen" }
     : { points: 0 }
 }
 
@@ -260,9 +291,16 @@ export function scoreOpportunity(
   settings: TodaySettings,
   feedback?: FeedbackContext
 ): OpportunityScore {
+  const phaseKey = projectPhaseKey(project)
+
   const ctx: OpportunityContext = {
     project,
-    phaseKey: projectPhaseKey(project),
+    phaseKey,
+    stageFit: resolveStageFit(
+      settings.companyProfile,
+      phaseKey,
+      settings.bestSalesMoments ?? []
+    ),
     settings,
     feedback,
   }

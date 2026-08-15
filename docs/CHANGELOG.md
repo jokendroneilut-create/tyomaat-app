@@ -9,6 +9,36 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-08 (tyo 15.8.)
+
+### Puolet kayttajista sai vihdoin vaihepisteytyksen
+
+Rooli "Muu" oli pisteytysmatriisissa tyhja, joten 13 tilia 26:sta ei
+saanut lainkaan sita moduulia joka on P1:n suurin yksittainen (40 p
+160:sta). Syy ei ollut kayttajissa: "Muu"-tilien verkkotunnukset olivat
+henkilostovuokrausta (4 tilia), erikoisurakointia, konevuokrausta ja
+mittauspalvelua - yhtaan naista ei ollut yhdeksan vaihtoehdon listalla.
+
+Roolin paattely toimialasta suljettiin pois, koska avainsanoja oli
+asettanut 0 tilia 26:sta - ja se johtuu siita ettei niita kysyta
+pakollisessa aktivointimodaalissa lainkaan, toisin kuin roolia ja
+myyntihetkea (26/26 on siis pakotettu luku, ei vapaaehtoinen).
+Painon ratkaisu on nyt kolmiportainen: rooli -> kayttajan omat
+myyntihetket -> mitattu oletus. Nelja puuttunutta roolia lisattiin ja
+niiden painot johdettiin samojen tilien omista valinnoista.
+
+Pikkulappu jolla oli iso vaikutus: myyntihetkimoduuli vertasi vapaaseen
+tekstiin viidella substring-saannolla, joten "Sopimus myonnetty",
+"Valmistumassa", "Valmistunut" ja "Ideointi" eivat tuottaneet pisteita
+koskaan. Nyt vertailu on kanoniseen vaiheeseen.
+
+Mitattuna todellisilla asetuksilla: "Muu"-tileilla vaihepisteet
+nousivat nollasta keskimaarin 43 %:lle hankkeista, mutta top 20 vaihtui
+vain 3/20 - koko ja tuoreus hallitsevat yha karkea. Roolillisilla
+vaihtui 8/20, ja se tuli kokonaan vaihesanaston korjauksesta. Ks. D-071.
+
+---
+
 ## 2026-08 (tyo 12.8.)
 
 ### Lahdepaikkoja 14 -> 20 per ajo

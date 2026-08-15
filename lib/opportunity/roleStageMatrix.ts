@@ -1,4 +1,5 @@
 import {
+  normalizeLegacyPhase,
   PHASE_KEYS_IN_ORDER,
   PHASE_LABELS,
   type PhaseKey,
@@ -32,8 +33,77 @@ export const ROLE_STAGE_MATRIX: Record<string, StageWeights> = {
     construction: 1.0,
     nearing_completion: 0.5,
   },
+
+  /*
+   * Nämä neljä lisättiin 15.8.2026, koska puolet käyttäjistä (13/26) oli
+   * roolissa "Muu" eikä siis saanut roolipisteytystä lainkaan. Syy ei ollut
+   * laiskuus vaan se ETTEI LISTALLA OLLUT HEIDÄN TOIMIALAANSA: mitattuna
+   * "Muu"-tilien verkkotunnukset olivat henkilöstövuokraus (4 tiliä),
+   * erikoisurakointi (maalaus, teräsrakenteet), konevuokraus ja
+   * mittauspalvelu. Painot on johdettu NÄIDEN SAMOJEN TILIEN itse
+   * valitsemista myyntihetkistä, ei arvattu.
+   */
+  Henkilöstövuokraus: {
+    tender: 0.5,
+    contract_awarded: 0.8,
+    construction: 1.0,
+    nearing_completion: 0.5,
+  },
+  Aliurakointi: {
+    permit: 0.4,
+    contract_awarded: 1.0,
+    construction: 0.9,
+    nearing_completion: 0.4,
+  },
+  Konevuokraus: {
+    permit: 0.5,
+    contract_awarded: 0.8,
+    construction: 1.0,
+    nearing_completion: 0.3,
+  },
+  /*
+   * Konsultti on heterogeenisin uusi rooli: painot noudattavat blueprintin
+   * logiikkaa (konsultti myy varhain, suunnitteluvaiheessa), mutta ainoa
+   * mitattu konsulttitili — mittauspalvelu — valitsi itse myöhemmät vaiheet.
+   * Tämä on ensimmäinen rivi jota kannattaa tarkistaa kun konsultteja
+   * rekisteröityy lisää.
+   */
+  Konsultti: {
+    planning: 1.0,
+    permit: 0.8,
+    tender: 0.6,
+    contract_awarded: 0.5,
+    construction: 0.6,
+  },
+
   Muu: {},
 }
+
+/*
+ * "Muu"-roolin oletuspainot, kun käyttäjä ei ole valinnut myyntihetkiäkään.
+ *
+ * Ei arvattu: mitattu 15.8.2026 niiden 13 "Muu"-tilin omista valinnoista,
+ * jotka olivat myyntihetkensä valinneet. Rakenteilla oli valittuna 13/13,
+ * Sopimus myönnetty 9/13, Valmistumassa 7/13, Kilpailutus 7/13. Roolittoman
+ * käyttäjän paras arvaus on siis käynnissä oleva työmaa.
+ *
+ * Huippu on tarkoituksella 0.9 eikä 1.0: P2-hälytykset laukeavat vain
+ * painolla 1.0, ja pääteltyä signaalia ei saa nostaa ilmoitettua roolia
+ * vastaavaksi — se lähettäisi sähköpostia ihmisille jotka eivät ole
+ * kertoneet meille mitä tekevät. Ks. D-071.
+ */
+export const UNKNOWN_ROLE_DEFAULT_WEIGHTS: StageWeights = {
+  tender: 0.4,
+  contract_awarded: 0.6,
+  construction: 0.9,
+  nearing_completion: 0.4,
+}
+
+/*
+ * Käyttäjän itse valitseman myyntihetken paino, kun roolia ei ole. Sama
+ * 0.9-katto ja sama peruste kuin yllä.
+ */
+const SELECTED_MOMENT_WEIGHT = 0.9
 
 /*
  * Roolin datiivimuoto selitystekstiä varten ("… sopii materiaalitoimittajalle").
@@ -47,6 +117,10 @@ export const ROLE_DATIVE_LABEL: Record<string, string> = {
   Sähköurakoitsija: "sähköurakoitsijalle",
   Talotekniikka: "talotekniikkaurakoitsijalle",
   Rakennustuotteet: "materiaalitoimittajalle",
+  Henkilöstövuokraus: "henkilöstövuokraajalle",
+  Aliurakointi: "aliurakoitsijalle",
+  Konevuokraus: "konevuokraamolle",
+  Konsultti: "konsultille",
   Muu: "sinulle",
 }
 
@@ -60,6 +134,59 @@ export function roleStageWeight(
 ): number {
   if (!companyProfile || !phaseKey) return 0
   return ROLE_STAGE_MATRIX[companyProfile]?.[phaseKey] ?? 0
+}
+
+/*
+ * Mistä paino tuli — ratkaisee selitystekstin ja estää saman signaalin
+ * laskemisen kahdesti (ks. `salesMomentFit` todayRankingissa).
+ */
+export type StageFitSource = "role" | "moments" | "default"
+
+export type StageFit = { weight: number; source: StageFitSource }
+
+/*
+ * ⭐ Painon ratkaisu kolmella tasolla — tämä on se kohta jossa "Muu"-rooli
+ * lakkaa olemasta pisteytyksen umpikuja.
+ *
+ * 1. ROOLI, jos sillä on painoja. Käyttäjä on kertonut suoraan mitä tekee.
+ * 2. KÄYTTÄJÄN OMAT MYYNTIHETKET, jos rooli on "Muu"/tuntematon/puuttuu.
+ *    Mitattu 15.8.2026: kaikki 26 asetuksensa säätänyttä tiliä oli valinnut
+ *    myyntihetkensä, myös 13/13 "Muu"-tiliä. Signaali oli siis olemassa
+ *    koko ajan — sitä ei vain käytetty roolin puuttuessa.
+ * 3. MITATTU OLETUS, jos sekään ei ole tiedossa (ks.
+ *    `UNKNOWN_ROLE_DEFAULT_WEIGHTS`).
+ *
+ * Fail-soft: tuntematon vaihe -> 0, ei rankaisua eikä poikkeusta.
+ */
+export function resolveStageFit(
+  companyProfile: string | null | undefined,
+  phaseKey: PhaseKey | null,
+  selectedSalesMoments: string[] = []
+): StageFit {
+  if (!phaseKey) return { weight: 0, source: "role" }
+
+  const roleWeights = companyProfile
+    ? ROLE_STAGE_MATRIX[companyProfile]
+    : undefined
+
+  if (roleWeights && Object.keys(roleWeights).length > 0) {
+    return { weight: roleWeights[phaseKey] ?? 0, source: "role" }
+  }
+
+  if (selectedSalesMoments.length > 0) {
+    const selected = selectedSalesMoments.some(
+      (moment) => normalizeLegacyPhase(moment) === phaseKey
+    )
+    return {
+      weight: selected ? SELECTED_MOMENT_WEIGHT : 0,
+      source: "moments",
+    }
+  }
+
+  return {
+    weight: UNKNOWN_ROLE_DEFAULT_WEIGHTS[phaseKey] ?? 0,
+    source: "default",
+  }
 }
 
 /*

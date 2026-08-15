@@ -5,6 +5,87 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-071 – "Muu" ei ollut käyttäjän valinta vaan listan aukko
+
+Puolet asetuksensa säätäneistä tileistä (13/26) oli roolissa "Muu", jonka
+painot olivat `Muu: {}` — tyhjä. Rooli on 40 pistettä pisteytyksen 160:n
+viitemaksimista eli sen suurin yksittäinen moduuli, joten **puolen
+käyttäjäkunnan syöte järjestyi vain hankkeen koon ja tuoreuden mukaan**.
+Se on täsmälleen se kaikille sama lista, jonka P1:n piti poistaa.
+
+**Syy selvisi katsomalla keitä he ovat.** "Muu"-tilien verkkotunnukset
+15.8.2026: henkilöstövuokrausta 4 tiliä, erikoisurakointia 2 (maalaus,
+teräsrakenteet), konevuokrausta 1, mittauspalvelua 1. Yhdeksän
+vaihtoehdon listalla ei ollut yhtäkään näistä. Kyse ei ollut siitä
+etteivät käyttäjät viitsineet valita, vaan siitä ettei heille ollut
+mitään valittavaa. Roadmap tarjosi kolme vaihtoehtoa (lisää rooleja /
+päättely toimialasta / oletuspainot); data valitsi niistä kaksi ja
+sulki yhden pois.
+
+**Roolin päättely toimialasta suljettiin pois: siihen ei ole dataa.**
+Avainsanoja oli asettanut **0 tiliä 26:sta**. Profiilissa ei ole
+yritys- eikä toimialakenttää. Ainoa käytettävissä oleva vihje olisi
+sähköpostin verkkotunnus, ja sen tulkinta on arvausta.
+
+**HUOM tulkinnasta: nämä kaksi lukua eivät ole vertailukelpoisia.**
+`RoleActivationModal` pakottaa roolin ja vähintään yhden myyntihetken
+(`canSave = Boolean(role) && selectedMoments.length > 0`), kun taas
+avainsanoja ei kysytä siinä lainkaan. "0/26 avainsanaa" ei siis kerro
+haluttomuudesta vaan siitä **ettemme kysy** — ja "26/26 myyntihetkeä"
+on pakotettu valinta, ei vapaaehtoinen signaali. Molemmat ovat
+korjattavissa kysymällä, eivät päättelemällä.
+
+**Myyntihetki on silti paras käytettävissä oleva signaali** — se on
+tietoinen klikkaus nimettyihin vaiheisiin, ja "Muu"-tileistä
+enemmistö valitsi 1–5 vaihetta yhdeksästä eli erotteli aidosti.
+Rakenteilla oli valittuna kaikilla kolmellatoista. Rajoite on
+tunnettava: pakotettu valinta tuottaa myös kohinaa, ja muutama tili
+valitsi kaikki 8–9 vaihetta, jolloin paino on vakio eikä erottele
+mitään.
+
+Pakotus selittää myös itse ongelman: kun valikko on pakollinen eikä
+siinä ole omaa toimialaa, "Muu" on ainoa ulospääsy. 50 %:n osuus ei
+siis mittaa välinpitämättömyyttä vaan valikon kattavuutta.
+
+Ratkaisu on siksi kolmiportainen (`resolveStageFit`): **rooli →
+käyttäjän omat myyntihetket → mitattu oletus**. Neljä puuttunutta
+roolia lisättiin (Henkilöstövuokraus, Aliurakointi, Konevuokraus,
+Konsultti), ja niiden painot johdettiin näiden samojen tilien omista
+valinnoista — ei arvattu.
+
+**Pääteltu paino jää tarkoituksella alle 1.0:n (0.9 / oletus 0.6–0.9).**
+P2-hälytys laukeaa vain painolla 1.0, joten päättely ei saa nostaa
+signaalia ilmoitetun roolin tasolle: se lähettäisi sähköpostia
+ihmisille jotka eivät ole kertoneet meille mitä tekevät. Hälytysten
+`roleStageWeight` jätettiin muuttumatta puhtaaksi roolikyselyksi.
+
+**Sivulöydös, joka osoittautui isommaksi.** Myyntihetkimoduuli vertasi
+vapaaseen tekstiin viidellä substring-säännöllä, joten yhdeksästä
+vaiheesta neljä — "Sopimus myönnetty", "Valmistumassa", "Valmistunut",
+"Ideointi" — ei tuottanut pisteitä koskaan, vaikka ne ovat
+valittavissa ja käytössä. Nyt vertailu tehdään kanoniseen vaiheeseen
+kuten muuallakin P1:ssä. Pistemäärä pidettiin 20:ssä (ei nostettu
+30:een), koska vanha 30 oli katto joka täyttyi vain kahden säännön
+osuessa samaan hankkeeseen — muuten korjaus olisi nostanut moduulin
+painoa 50 % sivutuotteena.
+
+**Mitattu vaikutus todellisilla asetuksilla** (top 20, 24 asiakastiliä):
+"Muu"-tileillä vaihepisteet nousivat nollasta keskimäärin 43 %:lle
+hankkeista, mutta **top 20 vaihtui vain 3/20** — koko (50 p) ja tuoreus
+(25 p) hallitsevat yhä, ja moni "Muu"-tili on valinnut niin monta
+vaihetta että bonus on lähes vakio. Roolillisilla tileillä vaihtui
+8/20, ja se muutos tulee kokonaan vaihesanaston korjauksesta. Eli:
+selitys ja pisteytys korjaantuivat kaikille, mutta järjestys muuttui
+eniten niillä joilla rooli oli jo kunnossa.
+
+**Auki:** (a) moduulipainojen tasapaino — rooli 40 vs. koko 50 tarkoittaa
+että iso epärelevantti hanke voittaa pienen relevantin; (b) nykyiset 13
+"Muu"-tiliä eivät siirry uusiin rooleihin itsestään, vaan vasta jos
+palaavat asetuksiin; (c) vaihesanaston epäyhtenäisyys (Työjono)
+vääristää juuri tätä ulottuvuutta.
+
+---
+
 ### D-070 – Keskeytetty hankinta ei ole myönnetty sopimus
 Hilma julkaisee hankinnan keskeyttämisen **samalla ilmoitustyypillä**
 kuin sopimuksen myöntämisen (`ContractAwardNotices`), joten peruttu
