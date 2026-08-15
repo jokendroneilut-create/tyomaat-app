@@ -34,6 +34,51 @@ describe("extractCostFromText", () => {
   })
 
   /*
+   * ALLE MILJOONAN HANKKEET. Poimija tunnisti 15.8.2026 asti vain miljoonia,
+   * joten enemmistö jäi rakenteellisesti näkymättä — Hilman sopimusarvojen
+   * mediaani on 278 600 €.
+   */
+  it("poimii täydet eurot ryhmittelijästä riippumatta", () => {
+    expect(
+      extractCostFromText("Hankkeen kustannusarvio on 850 000 euroa.")
+    ).toBe(850_000)
+
+    expect(
+      extractCostFromText("Urakan arvo on 1 250 000 euroa.")
+    ).toBe(1_250_000)
+
+    expect(
+      extractCostFromText("Hankkeen kokonaiskustannus on 1.250.000 euroa.")
+    ).toBe(1_250_000)
+
+    expect(
+      extractCostFromText("Kyse on 950 000 euron urakasta.")
+    ).toBe(950_000)
+  })
+
+  it("ei poimi liian pientä summaa hankkeen kustannukseksi", () => {
+    // Alaraja 10 000 €: rakennushanke ei maksa satasia, joten pienempi luku
+    // on jotain muuta (maksu, sakko, neliöhinta).
+    expect(extractCostFromText("Hankkeen kustannusarvio on 500 euroa.")).toBeNull()
+  })
+
+  it("miljoonamuoto voittaa, ei lueta '45' täysinä euroina", () => {
+    expect(
+      extractCostFromText("Hankkeen kustannusarvio on 45 miljoonaa euroa.")
+    ).toBe(45_000_000)
+  })
+
+  it("täysien eurojen poiminta noudattaa samoja esteitä", () => {
+    expect(
+      extractCostFromText("Rakennusliikkeen liikevaihto oli 850 000 euroa.")
+    ).toBeNull()
+
+    expect(
+      extractCostFromText("Urakan arvo on yhteensä 850 000 euroa vuodessa.")
+    ).toBeNull()
+  })
+
+  /*
    * EUROMÄÄRÄ YKSIN EI RIITÄ. Nämä kaksi ovat mitattuja tapauksia samasta
    * aineistosta: kumpikaan ei ole hankkeen kustannus, ja ilman
    * kontekstivaatimusta molemmat olisi kirjoitettu hankkeelle.

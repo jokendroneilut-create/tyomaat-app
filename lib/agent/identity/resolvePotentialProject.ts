@@ -5,6 +5,7 @@ import {
   type IdentifierType,
 } from "@/lib/projects/identity"
 import { syncApprovedProject } from "@/lib/projects/syncApprovedProject"
+import { resolveProjectCost } from "@/lib/projects/resolveProjectCost"
 import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
 import {
   inferCompletionDateFromText,
@@ -129,6 +130,40 @@ export async function resolvePotentialProject(
     isNonConstructionZoning(input.title) ||
     isNonConstructionZoning(md.operation) ||
     hasNonConstructionZoningDisclaimer(md.description)
+
+  /*
+   * Hankkeen euromääräinen arvo. Keskitetty tänne samasta syystä kuin
+   * valmistumisaika yllä: se koskee kaikkia lähteitä, eikä jokaisen
+   * resolverin pidä muistaa poimia sitä erikseen.
+   *
+   * Aiemmin `extractCostFromText` oli olemassa mutta sitä kutsuttiin VAIN
+   * käsin ajettavasta backfill-skriptistä, joten uudet hankkeet eivät saaneet
+   * kustannusta lainkaan — kenttä täyttyi vain silloin kun joku muisti ajaa
+   * skriptin. Hilman `contract_value` puolestaan poimittiin jo faktana mutta
+   * jäi metadataan: mitattu 15.8.2026, 105 hanketta joilla oli sopimusarvo,
+   * ja niistä 104:llä `estimated_cost` oli tyhjä.
+   */
+  const costText = [md.description, md.operation, input.title]
+    .filter(Boolean)
+    .join(" ")
+
+  function costMetadata(
+    existingMetadata?: Record<string, any> | null
+  ): Record<string, unknown> {
+    const resolved = resolveProjectCost({
+      contractValue: md.contract_value,
+      text: costText,
+      existingCost: existingMetadata?.estimated_cost,
+      existingSource: existingMetadata?.cost_source,
+    })
+
+    if (!resolved) return {}
+
+    return {
+      estimated_cost: resolved.estimated_cost,
+      cost_source: resolved.cost_source,
+    }
+  }
 
   let completionMetadata: Record<string, unknown> = {}
   if (staleCompleted) {
@@ -260,6 +295,7 @@ export async function resolvePotentialProject(
           ...(existing.metadata ?? {}),
           ...(input.metadata ?? {}),
           ...completionMetadata,
+          ...costMetadata(existing.metadata),
           source_history: sourceHistory,
           lastSourceName: input.sourceName ?? null,
           matched_existing_project_id:
@@ -329,6 +365,7 @@ export async function resolvePotentialProject(
           : {}),
         ...(input.metadata ?? {}),
         ...completionMetadata,
+        ...costMetadata(null),
         ...relevanceGate.metadata,
         source_history: buildSourceHistory(null, input),
         firstSourceName: input.sourceName ?? null,

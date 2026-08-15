@@ -11,6 +11,32 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 15.8.)
 
+### Hankkeen euromaarainen arvo: kolme katkennutta kytkentaa
+
+Arvo oli 4 %:lla aktiivisista hankkeista. Kyse ei ollut puuttuvasta
+datasta vaan siita ettei sita viety perille.
+
+Hilman sopimusarvo poimittiin jo faktana metadata.contract_value:hyn,
+mutta syncApprovedProject paivitti vain metadatan eika koskaan
+estimated_cost-saraketta: 105 hankkeella oli sopimusarvo, ja niista
+104:lla sarake oli tyhja. Tekstipoimija extractCostFromText oli
+olemassa mutta sita kutsuttiin vain kasin ajettavasta skriptista, eli
+uudet hankkeet eivat saaneet kustannusta lainkaan. Ja poimija tunnisti
+vain miljoonia, joten alle miljoonan hankkeet olivat rakenteellisesti
+nakymattomia - Hilman sopimusarvojen mediaani on 278 600 €.
+
+Ratkaisu keskitettiin resolveProjectCost-funktioon, joka merkitsee myos
+arvon alkuperan (metadata.cost_source: contract | text). Eksakti
+sopimusarvo ja arvio eivat saa nayttaa samalta, ja sopimusarvo saa
+korvata arvion muttei toisinpain. Poiminta ajetaan nyt
+resolvePotentialProjectissa kaikille lahteille, kuten valmistumisajan
+paattely.
+
+Kattavuus 200 -> 315 / 5 607, joista 104 on eksaktia sopimusarvoa.
+Jonossa 197 rivia odottaa hyvaksyntaa. Olemassa olevista 200 arvosta
+tasmalleen yksi muuttui (425 000 -> 395 000, arvio korvautui
+sopimusarvolla). Ks. D-072.
+
 ### Puolet kayttajista sai vihdoin vaihepisteytyksen
 
 Rooli "Muu" oli pisteytysmatriisissa tyhja, joten 13 tilia 26:sta ei

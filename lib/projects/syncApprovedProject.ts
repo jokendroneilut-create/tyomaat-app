@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { phaseAdvances as phaseAdvancesFrom } from "./phases"
 import { recordPhaseChange } from "./recordPhaseChange"
 import { shouldUnexpire } from "./tenderExpiry"
+import { resolveProjectCost } from "./resolveProjectCost"
 import {
   awardWinnersFromMetadata,
   mergeCompanyNames,
@@ -26,7 +27,7 @@ export async function syncApprovedProject(input: {
 }) {
   const { data: project, error } = await input.supabase
     .from("projects")
-    .select("id, phase, status, metadata")
+    .select("id, phase, status, metadata, estimated_cost")
     .eq("id", input.projectId)
     .maybeSingle()
 
@@ -57,10 +58,41 @@ export async function syncApprovedProject(input: {
     awardWinnersFromMetadata(baseMetadata)
   )
 
+  /*
+   * Euromääräinen arvo myös jo hyväksytylle hankkeelle.
+   *
+   * Tämä reitti päivitti aiemmin vain metadatan, joten Hilman jälki-ilmoituksen
+   * mukanaan tuoma `contract_value` jäi metadataan eikä koskaan päätynyt
+   * `estimated_cost`-sarakkeeseen, jota asiakas näkee. Mitattu 15.8.2026: 105
+   * hanketta joilla oli sopimusarvo, ja niistä 104:llä sarake oli tyhjä —
+   * tämä puuttuva kytkentä oli syy.
+   *
+   * Sopimusarvo on toteutunut hinta, joten se saa korvata aiemman arvion;
+   * käänteinen suunta on estetty `resolveProjectCost`issa.
+   */
+  const resolvedCost = resolveProjectCost({
+    contractValue: baseMetadata.contract_value,
+    text: [baseMetadata.description, baseMetadata.operation]
+      .filter(Boolean)
+      .join(" "),
+    existingCost: project.estimated_cost,
+    existingSource: (project.metadata as any)?.cost_source,
+  })
+
+  const costChanged =
+    resolvedCost !== null &&
+    Number(resolvedCost.estimated_cost) !== Number(project.estimated_cost ?? 0)
+
   const mergedMetadata = {
     ...baseMetadata,
     ...(relatedCompanies.length > 0
       ? { related_companies: relatedCompanies }
+      : {}),
+    ...(resolvedCost
+      ? {
+          estimated_cost: resolvedCost.estimated_cost,
+          cost_source: resolvedCost.cost_source,
+        }
       : {}),
   }
 
@@ -77,6 +109,7 @@ export async function syncApprovedProject(input: {
     .update({
       phase: mergedPhase,
       last_verified_at: nowIso,
+      ...(costChanged ? { estimated_cost: resolvedCost!.estimated_cost } : {}),
       ...(unexpire ? { status: "active" } : {}),
       metadata: unexpire
         ? {

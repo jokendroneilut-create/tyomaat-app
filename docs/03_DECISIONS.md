@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-072 – Hankkeen arvo kolmella tarkkuudella, alkuperä tallennettuna
+
+Euromääräinen arvo oli 4 %:lla aktiivisista hankkeista (200/5 481),
+vaikka se on asiakkaan kannalta keskeinen suodatin ja pisteytyksen
+suurin moduuli nojaa siihen (`businessValue`, 50 p). Kartoituksessa
+selvisi ettei kyse ollut puuttuvasta datasta vaan **kolmesta
+katkenneesta kytkennästä**.
+
+**1. Hilman sopimusarvo poimittiin jo — se ei vain päätynyt perille.**
+`extractHilmaFacts` lukee `noticeResultTotalAmount`-kentän ja
+tallentaa sen `metadata.contract_value`iin. Mitattu 15.8.2026: 105
+aktiivisella hankkeella oli sopimusarvo, ja niistä **104:llä
+`estimated_cost` oli tyhjä**. Syy: `syncApprovedProject` päivitti
+metadatan muttei koskaan sarakekenttää. Tämä on paras mahdollinen
+arvotieto — toteutunut hinta, ei arvio — ja se makasi käyttämättä.
+
+**2. Tekstipoimija oli olemassa mutta sitä ei kutsuttu tuonnissa.**
+`extractCostFromText` (D-062) oli kytketty **vain käsin ajettavaan
+backfill-skriptiin**. Uusi hanke ei siis saanut kustannusta lainkaan,
+ellei joku muistanut ajaa skriptin. Nyt ratkaisu on keskitetty
+`resolvePotentialProject`iin samaan kohtaan kuin valmistumisajan
+päättely, joten se koskee kaikkia lähteitä automaattisesti.
+
+**3. Poimija tunnisti vain miljoonia.** Kuvio oli
+`miljoonaa|milj|M€|Meur`, joten **alle miljoonan hankkeet olivat
+rakenteellisesti näkymättömiä** — ja ne ovat enemmistö: Hilman
+sopimusarvojen mediaani on 278 600 €. Lisätty täysien eurojen kuvio
+(`850 000 euroa`, `1.250.000 €`) samoilla ankkureilla ja esteillä,
+alaraja 10 000 €.
+
+**Alkuperä tallennetaan (`metadata.cost_source`), koska eksakti
+sopimusarvo ja arvio eivät saa näyttää samalta.** Järjestys
+`contract > text`, ja `resolveProjectCost` estää huonomman alkuperän
+kirjoittamisen paremman päälle: sopimusarvo saa korvata tekstiarvion,
+ei toisinpäin. Merkitsemätön vanha arvo tulkitaan arvioksi — muuten
+aito sopimusarvo ei koskaan kirjoittuisi sen päälle.
+
+**Mitattu tulos.** Kattavuus 200 → 315 / 5 607 (4 % → 6 %), joista
+**104 on eksaktia sopimusarvoa**. Jonoon kirjoitettiin 197 riviä
+(135 sopimusarvoa, 62 tekstistä), jotka valuvat hankkeisiin
+hyväksynnän myötä. Olemassa olevista 200 arvosta **täsmälleen yksi
+muuttui**: 425 000 → 395 000, kun arvio korvautui sopimusarvolla.
+
+**Tärkein vaikutus ei ole tuo 2 %-yksikköä vaan se, että kytkennät
+ovat nyt olemassa** — aiemmin kenttä täyttyi vain käsin ajetusta
+skriptistä, nyt jokainen uusi Hilma-sopimus ja jokainen
+kustannusarvion mainitseva teksti poimitaan automaattisesti.
+
+**Kolmas taso ("oma arvio") jätettiin tarkoituksella tekemättä.**
+Kohdetyypistä johdettu mediaani nostaisi kattavuuden 59 %:iin, ja
+korrelaatio on todennettu (roadmap 3¾: 100 M€ datakeskus → 5,5 M€
+rivitalo). Mutta arvatun luvun näyttäminen asiakkaalle on
+tuotepäätös, ei poimintapäätös: `cost_source: "derived"` on varattu
+sitä varten, eikä `resolveProjectCost` tuota sitä ennen kuin
+näyttötavasta on päätetty.
+
+---
+
 ### D-071 – "Muu" ei ollut käyttäjän valinta vaan listan aukko
 
 Puolet asetuksensa säätäneistä tileistä (13/26) oli roolissa "Muu", jonka

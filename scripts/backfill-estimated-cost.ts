@@ -37,7 +37,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
-  const { extractCostFromText } = await import("../lib/projects/extractCostFromText")
+  const { resolveProjectCost } = await import("../lib/projects/resolveProjectCost")
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,50 +58,103 @@ async function main() {
 
   console.log(`${APPLY ? "KIRJOITETAAN" : "KUIVAHARJOITTELU (--apply kirjoittaa)"}\n`)
 
+  const euro = (n: number) =>
+    n >= 1_000_000
+      ? `${(n / 1_000_000).toFixed(1)} M€`.padStart(10)
+      : `${Math.round(n).toLocaleString("fi")} €`.padStart(10)
+
+  const tally = (hits: { resolved: { cost_source: string } }[]) => {
+    const t = new Map<string, number>()
+    for (const h of hits) t.set(h.resolved.cost_source, (t.get(h.resolved.cost_source) ?? 0) + 1)
+    return [...t].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(", ")
+  }
+
   /* Jono: arvo metadataan, josta hyväksyntä siirtää sen sarakkeeseen. */
   const queue = await page("potential_projects", "id, title, metadata")
   const queueHits = queue
     .map((r: any) => ({
       r,
-      cost: extractCostFromText(String(r.metadata?.description ?? "")),
+      resolved: resolveProjectCost({
+        contractValue: r.metadata?.contract_value,
+        text: [r.metadata?.description, r.metadata?.operation, r.title]
+          .filter(Boolean)
+          .join(" "),
+        existingCost: r.metadata?.estimated_cost,
+        existingSource: r.metadata?.cost_source,
+      }),
     }))
-    .filter((x) => x.cost !== null && x.r.metadata?.estimated_cost !== x.cost)
+    .filter(
+      (x): x is { r: any; resolved: NonNullable<typeof x.resolved> } =>
+        x.resolved !== null &&
+        (Number(x.r.metadata?.estimated_cost ?? 0) !== x.resolved.estimated_cost ||
+          x.r.metadata?.cost_source !== x.resolved.cost_source)
+    )
 
-  console.log(`potential_projects: ${queue.length} rivia, poimittiin ${queueHits.length}`)
-  for (const { r, cost } of queueHits.slice(0, 10)) {
+  console.log(
+    `potential_projects: ${queue.length} rivia, kirjoitettavaa ${queueHits.length} (${tally(queueHits)})`
+  )
+  for (const { r, resolved } of queueHits.slice(0, 8)) {
     console.log(
-      `  ${String((cost! / 1_000_000).toFixed(1)).padStart(7)} M€  ${String(r.title).slice(0, 56)}`
+      `  ${euro(resolved.estimated_cost)}  [${resolved.cost_source}]  ${String(r.title).slice(0, 46)}`
     )
   }
 
-  /* Hyväksytyt: arvo suoraan sarakkeeseen, mutta ei ylikirjoiteta. */
+  /* Hyväksytyt: arvo suoraan sarakkeeseen. */
   const live = await page("projects", "id, name, estimated_cost, additional_info, metadata")
   const liveHits = live
     .map((r: any) => ({
       r,
-      cost: extractCostFromText(
-        String(r.additional_info ?? r.metadata?.description ?? "")
-      ),
+      resolved: resolveProjectCost({
+        contractValue: r.metadata?.contract_value,
+        text: [r.additional_info, r.metadata?.description, r.metadata?.operation]
+          .filter(Boolean)
+          .join(" "),
+        existingCost: r.estimated_cost,
+        existingSource: r.metadata?.cost_source,
+      }),
     }))
-    .filter((x) => x.cost !== null && !x.r.estimated_cost)
+    .filter(
+      (x): x is { r: any; resolved: NonNullable<typeof x.resolved> } =>
+        x.resolved !== null &&
+        (Number(x.r.estimated_cost ?? 0) !== x.resolved.estimated_cost ||
+          x.r.metadata?.cost_source !== x.resolved.cost_source)
+    )
 
-  console.log(`\nprojects: ${live.length} rivia, poimittiin ${liveHits.length}`)
-  for (const { r, cost } of liveHits.slice(0, 10)) {
+  const newValues = liveHits.filter((x) => !Number(x.r.estimated_cost ?? 0))
+
+  console.log(
+    `\nprojects: ${live.length} rivia, kirjoitettavaa ${liveHits.length} (${tally(liveHits)})`
+  )
+  console.log(
+    `  ...joista uusi arvo tyhjaan kenttaan: ${newValues.length}` +
+      `, olemassa olevan tarkennus: ${liveHits.length - newValues.length}`
+  )
+  for (const { r, resolved } of liveHits.slice(0, 8)) {
     console.log(
-      `  ${String((cost! / 1_000_000).toFixed(1)).padStart(7)} M€  ${String(r.name).slice(0, 56)}`
+      `  ${euro(resolved.estimated_cost)}  [${resolved.cost_source}]  ${String(r.name).slice(0, 46)}`
     )
   }
+
+  const before = live.filter((r: any) => Number(r.estimated_cost) > 0).length
+  const after = before + newValues.length
   console.log(
-    `  (ohitettu ${live.filter((r: any) => r.estimated_cost).length} rivia joilla arvo on jo)`
+    `\n  kattavuus: ${before} -> ${after} / ${live.length}` +
+      ` (${Math.round((before / live.length) * 100)} % -> ${Math.round((after / live.length) * 100)} %)`
   )
 
   if (!APPLY) return
 
   let done = 0
-  for (const { r, cost } of queueHits) {
+  for (const { r, resolved } of queueHits) {
     const { error } = await supabase
       .from("potential_projects")
-      .update({ metadata: { ...r.metadata, estimated_cost: cost } })
+      .update({
+        metadata: {
+          ...r.metadata,
+          estimated_cost: resolved.estimated_cost,
+          cost_source: resolved.cost_source,
+        },
+      })
       .eq("id", r.id)
     if (error) console.log(`  VIRHE ${r.id}: ${error.message}`)
     else done++
@@ -109,10 +162,17 @@ async function main() {
   console.log(`\njonoon kirjoitettu: ${done}`)
 
   let done2 = 0
-  for (const { r, cost } of liveHits) {
+  for (const { r, resolved } of liveHits) {
     const { error } = await supabase
       .from("projects")
-      .update({ estimated_cost: cost, metadata: { ...r.metadata, estimated_cost: cost } })
+      .update({
+        estimated_cost: resolved.estimated_cost,
+        metadata: {
+          ...r.metadata,
+          estimated_cost: resolved.estimated_cost,
+          cost_source: resolved.cost_source,
+        },
+      })
       .eq("id", r.id)
     if (error) console.log(`  VIRHE ${r.id}: ${error.message}`)
     else done2++
