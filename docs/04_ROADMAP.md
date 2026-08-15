@@ -657,6 +657,22 @@ muistin varassa.
 
 ### Operointi
 
+- **TARKISTA 16.–17.8.2026: purkautuuko `listed`-jono.** Runkotyöntekijä
+  (D-075, vaihe 2) ajastettiin 15.8. Kaksi asiaa katsottava ensimmäisen
+  täyden discovery-kierroksen jälkeen:
+  1. **Jonon kasvu vs. purku.** 49 legacy-lähdettä × sadat kandidaatit
+     voi tuottaa ison erän kerralla, ja työntekijä purkaa 25 per ajo eli
+     100/vrk. Jos `select count(*) from source_documents where status =
+     'listed'` kasvaa nopeammin kuin purkautuu, `DEFAULT_LIMIT` on
+     nostettava.
+  2. **Kuntapäätöslähteet päätyvät `no_enricher`-tilaan**, koska niillä
+     ei ole rikastuskoukkua. Se on odotettua eikä virhe — mutta jos ne
+     eivät saa tuota tilaa, ne täyttävät jonoa turhaan.
+- **Vasta sitten vaihe 3** (D-075:n valmistumisehto): poista haun
+  puolelta `ENRICH_PER_RUN` ja `seenUrls`-ohitus sekä
+  `scripts/backfill-company-enrichment.ts`. Ei ennen kuin jonon
+  purkautuminen on nähty tuotannossa.
+
 - **Mittaa ajokesto** noston 14 → 20 jälkeen (Ajot-sivu). Oma raja 500 s,
   alustan kova katto 800 s.
 - **Todenna STT ja Rakennuslehti** kun ne osuvat vuoroon — korjaukset on
