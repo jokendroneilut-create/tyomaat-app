@@ -2,6 +2,7 @@ import Link from "next/link"
 import { getPendingReviewCount } from "./services/getPendingReviewCount"
 import { getPendingDuplicateCount } from "./services/getDuplicateCandidates"
 import { getRecentRunErrorCount } from "./services/getRecentRunErrorCount"
+import { getIncompleteProjectCount } from "./services/getIncompleteProjectCount"
 
 export const dynamic = "force-dynamic"
 
@@ -16,16 +17,30 @@ export default async function TicLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [pendingReviewCount, pendingDuplicateCount, recentErrorCount] =
-    await Promise.all([
-      getPendingReviewCount(),
-      getPendingDuplicateCount(),
-      getRecentRunErrorCount(),
-    ])
+  const [
+    pendingReviewCount,
+    pendingDuplicateCount,
+    recentErrorCount,
+    incompleteProjectCount,
+  ] = await Promise.all([
+    getPendingReviewCount(),
+    getPendingDuplicateCount(),
+    getRecentRunErrorCount(),
+    getIncompleteProjectCount(),
+  ])
 
   const nav: NavItem[] = [
     { href: "/tic", label: `🏠 Etusivu (${pendingReviewCount})` },
     { href: "/tic/operations", label: "🧭 Tapahtumat" },
+    /*
+     * Luku on korjattavissa oleva puute, ei tilasto: näiden hankkeiden
+     * osapuolet puuttuvat kokonaan, joten asiakkaalle ei ole ketään
+     * soitettavaa. Ks. getIncompleteProjectCount.
+     */
+    {
+      href: "/tic/hanke?puutteelliset=1",
+      label: `🏗️ Hankkeet (${incompleteProjectCount})`,
+    },
     { href: "/tic/discovery", label: "🔍 Keräimet" },
     { href: "/tic/discovery/documents", label: "📄 Dokumentit" },
     { href: "/tic/discovery/merges", label: "🔗 Yhdistymiset" },
