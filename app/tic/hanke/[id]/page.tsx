@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
 import EditProject from "./EditProject"
+import AiSuggestion from "./AiSuggestion"
 
 export const dynamic = "force-dynamic"
 
@@ -123,6 +124,20 @@ export default async function TicProjectPage({ params }: Props) {
           </div>
         </dl>
       </section>
+
+      {metadata.ai_suggestion ? (
+        <AiSuggestion
+          projectId={id}
+          suggestion={metadata.ai_suggestion}
+          current={{
+            developer: text((project as any).developer),
+            builder: text((project as any).builder),
+            estimatedCost: (project as any).estimated_cost
+              ? String((project as any).estimated_cost)
+              : "",
+          }}
+        />
+      ) : null}
 
       <EditProject
         projectId={id}

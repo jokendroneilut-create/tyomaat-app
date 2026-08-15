@@ -5,6 +5,57 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-078 – Haku + LLM ehdottaa osapuolet, ihminen hyväksyy
+
+**Miksi tämä on poikkeus sääntöön "deterministinen ensin" (D-006).** Käsin
+lisätyillä hankkeilla ei ole lähdetekstiä lainkaan: mitattu 15.8.2026,
+46 hanketta joilla kuvaus on tyhjä, lähdettä ei ole ja metadatassa on
+yksi kenttä. Poimittavaa ei siis ole — ainoa tie on hakea tieto
+ulkopuolelta. Juuri tähän D-006 varaa LLM:n: "epävarmoihin ja korkean
+arvon tapauksiin".
+
+**Haku + malli, ei pelkkä malli.** Malli yksin arvaisi. Verkkohaku
+(`web_search`) tuottaa lähteet, ja **lähde-URL vaaditaan jokaiselta
+ehdotukselta** — ilman sitä tulos hylätään koodissa, ei kehotteessa.
+
+**Kaksi vaihetta, koska yksi ei toiminut.** Ensin yritettiin yhtä kutsua
+jossa haku ja rakenteinen ulostulo (`output_config.format`) yhdistetään.
+Se palautti johdonmukaisesti tyhjän: hakuvastaus sisältää sitaatti- ja
+koodisuorituslohkoja, eikä lopputeksti ole silloin JSONia. Nyt vaihe 1
+hakee vapaamuotoisesti ja vaihe 2 jäsentää skeemaan **ilman työkaluja** —
+jälkimmäinen näkee vain vaiheen 1 löydökset, joten se ei voi keksiä
+mitään mitä lähteissä ei ollut.
+
+**EI KIRJOITA ASIAKKAALLE NÄKYVIÄ KENTTIÄ.** Tulos menee
+`metadata.ai_suggestion`iin ja odottaa ihmisen hyväksyntää TIC:ssä.
+Hyväksyntä kulkee D-076:n muokkausreitin kautta, joten hyväksytty arvo
+saa merkinnän `cost_source: "manual"` ja jättää muokkausjäljen —
+hyväksytty ehdotus on ihmisen päätös, ei koneen. Hyväksyntä täyttää vain
+tyhjät kentät eikä koskaan yliaja tarkistettua tietoa.
+
+**Todennettu tunnetulla tapauksella.** "Valmisruokalaitos Nurmoon"
+(Atrian tehdas, jonka oikean vastauksen Johannes tiesi): rakennuttaja
+**Atria Oyj**, pääurakoitsija **YIT Oyj**, kustannus **82 400 000 €**,
+varmuus high, 8 lähdettä. Kaikki oikein.
+
+**Ja se osaa olla vastaamatta.** "Uimahallin laajennus, Kotka" ei
+tuottanut ehdotusta lainkaan — liian yleinen nimi, ei tunnistettavaa
+hanketta. Tyhjä on oikea vastaus, ja se on koodissa pakotettu: ilman
+lähdettä tai ilman yhtäkään kenttää palautetaan null.
+
+**Yksi vika jäi kiinni kuivaharjoittelussa.** Malli palautti
+urakoitsijaksi *"Keski-Suomen Betonirakenne Oy (KSBR) – infraurakka
+(maanrakennus-, perustus- ja kaapelointityöt)"*. Nimikenttään kuuluu
+nimi, ei selitys, joten arvo katkaistaan sulkuun tai ajatusviivaan ja
+yli 80 merkin arvo hylätään. Sotkuinen arvo hankekortilla on melkein
+yhtä paha kuin väärä.
+
+*Rajaus:* varmuustaso (`high`/`medium`/`low`) on mallin oma arvio eikä
+mitattu. Sitä ei pidä lukea todennäköisyytenä — se on lajittelun apu,
+ja lähteet ovat se mitä tarkistetaan.
+
+---
+
 ### D-077 – YVA:n hankevastaava luetaan nimetystä kentästä, ei proosasta
 
 `fetchYvaSource` poimii rakennuttajan hakurajapinnan leipätekstistä
