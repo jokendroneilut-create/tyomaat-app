@@ -13,17 +13,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ### Lahdepaikkoja 14 -> 20 per ajo
 
-Kierrosaika oli mitattuna 5,6 vrk: 299 lahdetta, 14 paikkaa per ajo, 4
-ajoa vuorokaudessa. Vuorokauden refresh_minutes ei siis toteutunut
-lahellakaan, ja korjatun lahteen paluu terveeksi kesti paivia.
+Vuorokauden refresh_minutes ei toteutunut lahellakaan: 299 lahdetta ja
+13 perustason paikkaa per ajo (yksi paikka menee aina Hilmalle) = 52
+lahdetta vuorokaudessa, eli taysi kierros 6 vrk. Korjatun lahteen paluu
+terveeksi kesti siis paivia.
 
 Nosto perustuu kahteen mittaukseen. Aika: lahteet veivat 14.8. klo 21
 yhteensa 317 s 380 sekunnin budjetista, 15.8. klo 12 samat 14 paikkaa
 veivat ~138 s - ero tulee nahty-tarkistuksen korjauksesta. Jonot:
 kasittelypuoli on tyhja, 0 dokumenttia odottaa faktojen poimintaa.
 
-Valivaiheet nostettiin samassa suhteessa. Odotus: kierros 5,6 -> 3,9
-vrk. Kesto on mitattava Ajot-sivulta parin ajon jalkeen.
+Valivaiheet nostettiin samassa suhteessa. Kierros 6 -> 4 vrk ja
+vanhentumisraja 9 -> 6 vrk. Kesto on mitattava Ajot-sivulta parin ajon
+jalkeen; oma rajamme on 500 s ja alustan kova katto 800 s.
 
 ---
 

@@ -18,10 +18,19 @@
  * uusi kesto Ajot-sivulta - kesto ei skaalaudu täysin lineaarisesti (osa
  * vaiheista on kiinteän kokoisia) eikä 500s-kattoa saa ylittää.
  *
- * NOSTO 14 -> 20 (15.8.2026). Kierrosaika oli mitattuna 5,6 vrk: 299
- * lähdettä, 14 paikkaa per ajo, 4 ajoa vuorokaudessa = 56 lähdettä/vrk.
- * Vuorokauden `refresh_minutes` ei siis toteutunut lähelläkään, ja
- * korjatun lähteen paluu terveeksi kesti päiviä.
+ * NOSTO 14 -> 20 (15.8.2026). Vuorokauden `refresh_minutes` ei
+ * toteutunut lähelläkään, ja korjatun lähteen paluu terveeksi kesti
+ * päiviä.
+ *
+ * Kierros lasketaan samalla kaavalla kuin Operations-sivulla: taatut
+ * lähteet (priority > 10) varaavat kiinteän paikan joka ajossa eivätkä
+ * kierrä muiden mukana, joten perustason kierto lasketaan jäljelle
+ * jäävillä paikoilla. Taattuja on yksi (Hilma).
+ *
+ *   14 paikkaa -> 13 perustason paikkaa/ajo = 52/vrk -> kierros 6 vrk
+ *   20 paikkaa -> 19 perustason paikkaa/ajo = 76/vrk -> kierros 4 vrk
+ *
+ * Vanhentumisraja (kierros × 1,5) lyhenee samalla 9 -> 6 vrk.
  *
  * Kaksi mittausta perustelevat noston:
  *
@@ -39,9 +48,10 @@
  * jätetään ennalleen, koska faktoilla on oma cron-kutsunsa
  * (DISCOVERY_PROCESS_CONFIG) eikä sen jono ole kasvamassa.
  *
- * Odotus: kierros 5,6 -> 3,9 vrk. MITTAA kesto Ajot-sivulta parin ajon
- * jälkeen; tämän päivän 138 s koostui kevyistä kaavalähteistä, ja
- * raskaampi erä (Espoon Asunnot 72 s, stt_haku ~42 s) vie enemmän.
+ * MITTAA kesto Ajot-sivulta parin ajon jälkeen; tämän päivän 138 s
+ * koostui kevyistä kaavalähteistä, ja raskaampi erä (Espoon Asunnot
+ * 72 s, stt_haku ~42 s) vie enemmän. Oma rajamme on 500 s ja alustan
+ * kova katto 800 s, eli marginaalia on 300 s.
  */
 export const DISCOVERY_CRON_CONFIG = {
   maxSourceCount: 20,
