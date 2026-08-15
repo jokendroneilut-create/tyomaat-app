@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 12.8.)
 
+### Lahdepaikkoja 14 -> 20 per ajo
+
+Kierrosaika oli mitattuna 5,6 vrk: 299 lahdetta, 14 paikkaa per ajo, 4
+ajoa vuorokaudessa. Vuorokauden refresh_minutes ei siis toteutunut
+lahellakaan, ja korjatun lahteen paluu terveeksi kesti paivia.
+
+Nosto perustuu kahteen mittaukseen. Aika: lahteet veivat 14.8. klo 21
+yhteensa 317 s 380 sekunnin budjetista, 15.8. klo 12 samat 14 paikkaa
+veivat ~138 s - ero tulee nahty-tarkistuksen korjauksesta. Jonot:
+kasittelypuoli on tyhja, 0 dokumenttia odottaa faktojen poimintaa.
+
+Valivaiheet nostettiin samassa suhteessa. Odotus: kierros 5,6 -> 3,9
+vrk. Kesto on mitattava Ajot-sivulta parin ajon jalkeen.
+
+---
+
 ### Keskeytetty hankinta ei ole enaa "Sopimus myonnetty"
 
 Hilma julkaisee hankinnan keskeyttamisen samalla ilmoitustyypilla kuin

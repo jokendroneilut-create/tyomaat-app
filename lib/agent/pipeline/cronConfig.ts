@@ -17,12 +17,37 @@
  * enemmän dokumentteja = enemmän faktoja). Jos näitä nostetaan lisää, MITTAA
  * uusi kesto Ajot-sivulta - kesto ei skaalaudu täysin lineaarisesti (osa
  * vaiheista on kiinteän kokoisia) eikä 500s-kattoa saa ylittää.
+ *
+ * NOSTO 14 -> 20 (15.8.2026). Kierrosaika oli mitattuna 5,6 vrk: 299
+ * lähdettä, 14 paikkaa per ajo, 4 ajoa vuorokaudessa = 56 lähdettä/vrk.
+ * Vuorokauden `refresh_minutes` ei siis toteutunut lähelläkään, ja
+ * korjatun lähteen paluu terveeksi kesti päiviä.
+ *
+ * Kaksi mittausta perustelevat noston:
+ *
+ *   AIKA. 14.8. klo 21 lähteet veivät 317 s 380 sekunnin budjetista.
+ *   15.8. klo 12 samat 14 paikkaa veivät ~138 s. Ero tulee
+ *   nähty-tarkistuksen korjauksesta (D-068), joka poisti satojen jo
+ *   käsiteltyjen kandidaattien uudelleentuonnin joka ajossa.
+ *
+ *   JONOT. Käsittelypuoli on tyhjä: 0 dokumenttia odottaa faktojen
+ *   poimintaa ja kaikki 137 agent_jobs-työtä on onnistunut. Lisää
+ *   dokumentteja siis mahtuu ilman että jono alkaa kasvaa.
+ *
+ * Välivaiheet nostetaan samassa suhteessa samasta syystä kuin
+ * 2026-07: enemmän lähteitä = enemmän dokumentteja. `maxFactJobs`
+ * jätetään ennalleen, koska faktoilla on oma cron-kutsunsa
+ * (DISCOVERY_PROCESS_CONFIG) eikä sen jono ole kasvamassa.
+ *
+ * Odotus: kierros 5,6 -> 3,9 vrk. MITTAA kesto Ajot-sivulta parin ajon
+ * jälkeen; tämän päivän 138 s koostui kevyistä kaavalähteistä, ja
+ * raskaampi erä (Espoon Asunnot 72 s, stt_haku ~42 s) vie enemmän.
  */
 export const DISCOVERY_CRON_CONFIG = {
-  maxSourceCount: 14,
-  maxArticleJobs: 14,
-  maxPdfJobs: 14,
-  maxTextJobs: 14,
+  maxSourceCount: 20,
+  maxArticleJobs: 20,
+  maxPdfJobs: 20,
+  maxTextJobs: 20,
   maxFactJobs: 45,
 }
 
