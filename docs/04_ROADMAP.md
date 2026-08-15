@@ -320,9 +320,71 @@ Mediaanikustannus tyypeittäin:
 | Rivitalo | 4 | 5 500 000 |
 
 Ero on **18-kertainen** päästä päähän ja järjestys on intuitiivinen.
-Tämä riittää **kolmiportaiseen kokoluokkaan** (suuri / keskikokoinen /
-pieni), ja nostaisi kokoulottuvuuden kattavuuden 4 %:sta 59 %:iin
-ilman yhtään uutta lähdettä tai poimintaa.
+
+⚠️ **Korjaus 15.8.2026 (myöhempi mittaus): tämä taulukko lupasi liikaa,
+ja arvioni 59 %:n kattavuudesta oli väärä.** Mediaani kertoo tyyppien
+välisen eron, mutta ei tyypin sisäistä hajontaa — ja se on iso. Kun
+315 tunnetun arvon joukolla testattiin, kuinka usein kohdetyypin
+mediaanista johdettu luokka osuu oikeaan:
+
+| jako | osuvuus | vertailukohta (arvaa aina yleisin) | hyöty |
+|---|---|---|---|
+| 2 luokkaa, raja 10 M€ | **68 %** | 51 % | **+17 pp** |
+| 2 luokkaa, raja 5 M€ | 70 % | 62 % | +8 pp |
+| 3 luokkaa (<2 / 2–20 / >20 M€) | 52 % | 36 % | +16 pp |
+| 3 luokkaa (<1 / 1–10 / >10 M€) | 50 % | 49 % | **+1 pp, hyödytön** |
+| 4 luokkaa | 40 % | 31 % | +9 pp |
+
+**Vain karkea kahtiajako 10 M€:n kohdalta kantaa** — ja sekin on
+väärässä joka kolmannella. Kolme luokkaa 10 M€:n rajalla ei ole
+perusarvausta parempi lainkaan.
+
+Tyyppikohtainen luotettavuus 10 M€:n rajalla (osuus havainnoista
+enemmistön puolella): Rivitalo 100 %, Datakeskus 92 %, Teollisuus
+83 %, Silta 75 % — mutta **Kerrostalo 57 %, Hoivakoti 50 %**, eli
+kolikonheitto. Suuret tyypit ovat juuri niitä epävarmoja.
+
+**Ja luotettavien tyyppien kattavuus on pieni.** 75 %:n rajalla
+mukaan pääsevät Rivitalo, Datakeskus, Teollisuus ja Silta = **292
+hanketta eli 5 % kannasta** — tuskin enempää kuin ne 315, joilla arvo
+jo on. (Laskelma näyttää 47 %, mutta siitä 2 272 on hankkeita **ilman
+kohdetyyppiä**; tyypittömälle ei voi päätellä tyypistä mitään, joten
+ne eivät kelpaa mukaan.) 70 %:n rajalla mukaan tulevat
+Energiantuotanto, Toimitila ja Sairaala → n. 20 % kannasta, mutta joka
+kolmas merkintä on väärä.
+
+**Johtopäätös: johdettu kokoluokka ei ratkaise kattavuutta.** Se on
+lisä tunnetun arvon päälle, ei sen korvike. Kattavuus tulee
+poiminnasta (ks. D-072), ei päättelystä.
+
+#### Kokoluokan määritelmä (ehdotus, ei päätetty)
+
+Rajat mitatusta jakaumasta (315 tunnettua arvoa: p25 = 774 k€,
+mediaani = 9 M€, p75 = 29 M€), joten 10 M€ osuu luontevasti mediaanin
+kohdalle — sama raja jonka Johannes ehdotti itsenäisesti:
+
+| luokka | raja | osuus tunnetuista |
+|---|---|---|
+| Pieni | < 1 M€ | 27 % |
+| Keskikokoinen | 1–10 M€ | 24 % |
+| Suuri | 10–50 M€ | 31 % |
+| Erittäin suuri | ≥ 50 M€ | 18 % |
+
+**Tarkkuus seuraa todistetta — tämä on ehdotuksen ydin:**
+
+- **Arvo tiedossa** (315 hanketta) → neljä luokkaa, eksakti, ja
+  euromäärä näkyviin: *"Suuri — 12,5 M€"*. Sopimusarvo voidaan
+  merkitä erikseen toteutuneeksi.
+- **Arvo johdettu kohdetyypistä** → **vain kahtiajako** *"Suuri
+  hanke (yli 10 M€)"* / ei merkintää, ja vain tyypeille joiden
+  luotettavuus ≥ 75 %. Ei koskaan euromäärää, koska sitä ei tiedetä.
+- **Ei kumpaakaan** → ei kokoluokkaa lainkaan. Tyhjä ei valehtele.
+
+Avoin kysymys ennen toteutusta: näytetäänkö johdettu luokka
+asiakkaalle ollenkaan, kun se kattaa vain ~5 % ja on väärässä joka
+neljännellä. Vaihtoehto on käyttää sitä **vain sisäisesti**
+pisteytyksessä ja suodatuksessa, jolloin virhe ei näy väitteenä
+asiakkaalle.
 
 *Rajoitteet rehellisyyden vuoksi:* otos on 199 hanketta, tyyppiä kohti
 3–39, joten mediaanit ovat suuntaa-antavia — kelpaavat kokoluokkaan,
