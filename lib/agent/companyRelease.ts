@@ -2,7 +2,7 @@ import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 import { extractStreetAddress } from "./extractStreetAddress"
 import { parseEstimatedCompletionDate } from "./parseFinnishCompletionDate"
-import { resolveParties } from "./fetchSttHakuSource"
+import { resolveParties, extractClientFromText } from "./fetchSttHakuSource"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { inferBuildingType, LEAD_LENGTH } from "./buildingType"
 
@@ -81,6 +81,25 @@ export function inferCompanyPhase(title: string, body: string | null): string {
 }
 
 /*
+ * Suunnittelutoimiston vaihepäättely.
+ *
+ * ERO URAKOITSIJAAN: `CONTRACT_PATTERNS` jätetään tarkoituksella pois.
+ * Suunnittelijan tiedotteessa "sopimus solmittu" tarkoittaa
+ * SUUNNITTELUsopimusta, ei urakan myöntämistä — sen lukeminen urakaksi
+ * siirtäisi hankkeen vuosia edelle todellisuudesta. Rakentaminen luetaan
+ * vain silloin kun teksti sanoo sen suoraan.
+ */
+export function inferDesignerPhase(title: string, body: string | null): string {
+  const head = (title ?? "").toLowerCase()
+  if (COMPLETED_KEYWORDS.some((k) => head.includes(k))) return PHASE_LABELS.completed
+
+  const text = `${title ?? ""} ${body ?? ""}`
+  if (CONSTRUCTION_PATTERNS.some((re) => re.test(text))) return PHASE_LABELS.construction
+
+  return PHASE_LABELS.planning
+}
+
+/*
  * Tiedotesivun leipäteksti. Sivun runko on täynnä navigaatiota, joten
  * otetaan ensin artikkelielementti ja vasta viimeisenä koko body.
  * Murupolku on luotettava katkaisukohta silloin kun artikkelielementtiä ei
@@ -95,6 +114,20 @@ const CRUMB_MARKERS = ["You are here:", "Olet tässä:", "Etusivu /"]
 const LEADING_JUNK =
   /^(skip to content|mene sisältöön|siirry sisältöön|hyppää sisältöön|report this content|kuuntele juttu)\s*/i
 
+/* Tarkin valitsin ensin, koko sivun runko vasta viimeisenä varakeinona. */
+const BODY_SELECTORS = [
+  "article",
+  "main",
+  ".article",
+  ".article__body",
+  ".article__content",
+  ".news-article",
+  ".content__main",
+]
+
+/* Alle tämän jäävä teksti on navigaatiota tai tyhjä kääre, ei tiedote. */
+const MIN_BODY_LENGTH = 120
+
 
 export function extractReleaseBody(html: string): string | null {
   const $ = cheerio.load(html)
@@ -106,13 +139,45 @@ export function extractReleaseBody(html: string): string | null {
    */
   $("script, style, noscript, nav, header, footer, iframe, form, figcaption").remove()
 
-  const article = $(
-    "article, main, .article, .article__body, .article__content, .news-article, .content__main"
-  )
-    .first()
-    .text()
+  /*
+   * PISIN SIIVOTTU OSUMA, EI ENSIMMÄINEN.
+   *
+   * `.first()` kaatui tyhjään kääreeseen: Sitowisen tiedotesivulla on 15
+   * <article>-elementtiä, joista ensimmäinen on 5 merkkiä ja toinen koko
+   * 5780 merkin tiedote (mitattu 16.8.2026). Ensimmäinen jäi alle 120
+   * merkin kynnyksen, joten koko sivu palautti null ja jokainen ehdokas
+   * tuli ilman kuvausta — juuri se vika joka D-027:n mukaan johtaa 80-100 %
+   * hylkäysasteeseen katselmoinnissa.
+   *
+   * Pituus mitataan SIIVOUKSEN JÄLKEEN. Raakapituudella mitattuna valinta
+   * osui elementtiin, joka siivouksessa katkesi "Lue myös" -kohdasta:
+   * Rakennuslehti heikkeni 905 merkistä 267:ään. Siivottu pituus on se
+   * mikä lopulta jää käyttöön, joten valinta on tehtävä siitä.
+   *
+   * Vertailu tehdään KAIKKIEN valitsimien kesken, ei valitsin kerrallaan.
+   * Vanha `.first()` valitsi unionista dokumenttijärjestyksessä ensimmäisen,
+   * ei ensimmäisen valitsimen osumaa — Rakennuslehdellä voittaja oli `main`,
+   * ei `article`. Valitsinkohtainen järjestys olisi siis ollut uusi sääntö,
+   * ei entisen säilyttämistä, ja se pudotti Rakennuslehden 905 merkistä
+   * 267:ään (mitattu 16.8.2026).
+   */
+  let best = ""
 
-  let text = (article || $("body").text()).replace(/\s+/g, " ").trim()
+  $(BODY_SELECTORS.join(", ")).each((_, el) => {
+    const candidate = cleanReleaseText($(el).text())
+    if (candidate.length > best.length) best = candidate
+  })
+
+  if (best.length >= MIN_BODY_LENGTH) return best.slice(0, 4000)
+
+  const fallback = cleanReleaseText($("body").text())
+
+  return fallback.length >= MIN_BODY_LENGTH ? fallback.slice(0, 4000) : null
+}
+
+/* Murupolun, naapuriartikkelien ja sivukaluston poisto yhdestä ehdokkaasta. */
+function cleanReleaseText(raw: string): string {
+  let text = raw.replace(/\s+/g, " ").trim()
 
   for (const marker of CRUMB_MARKERS) {
     const at = text.indexOf(marker)
@@ -129,12 +194,10 @@ export function extractReleaseBody(html: string): string | null {
    * otsikoita - leikataan pois, jottei väärä kaupunki tai päivämäärä
    * poimiudu naapuriartikkelista.
    */
-  text = text
+  return text
     .split(/sinua saattaisi kiinnostaa|lue myös|muita uutisia|muut tiedotteet|aiheeseen liittyvät/i)[0]
     .trim()
     .replace(LEADING_JUNK, "")
-
-  return text.length >= 120 ? text.slice(0, 4000) : null
 }
 
 async function fetchHtml(url: string): Promise<string | null> {
@@ -161,8 +224,14 @@ export type CompanyEnricherOptions = {
    * Oletus on urakoitsija, koska valtaosa lähteistä on rakennusliikkeitä.
    * Väärä rooli kirjoittaisi esimerkiksi Y-Säätiön urakoitsijaksi, vaikka
    * se on rakennuttaja.
+   *
+   * "designer" on suunnittelutoimisto (Sitowise, WSP, Sweco). Se EI ole
+   * kumpikaan osapuoli, joita palvelu seuraa: julkaisijaa ei siis kirjata
+   * kumpaankaan kenttään lainkaan, vaan ainoastaan tekstistä löytyvä
+   * tilaaja rakennuttajaksi. Ilman omaa rooliaan oletuslogiikka kirjaisi
+   * Sitowisen rakennuttajaksi aina kun tilaajaa ei saada jäsennettyä.
    */
-  role?: "builder" | "developer"
+  role?: "builder" | "developer" | "designer"
 }
 
 export { inferBuildingType, LEAD_LENGTH }
@@ -202,6 +271,43 @@ export function createCompanyEnricher({
     const parties = resolveParties(publisher, candidate.name, lead)
     const client = parties.builder ? parties.developer : null
     const ownDevelopment = OWN_DEVELOPMENT.test(lead)
+
+    /*
+     * SUUNNITTELIJA EI OLE OSAPUOLI. Julkaisijaa ei kirjata kumpaankaan
+     * kenttään; rakennuttajaksi kelpaa vain tekstistä nimetty tilaaja.
+     * `resolveParties` palauttaisi tässä julkaisijan rakennuttajaksi aina
+     * kun tilaajaa ei löydy, mikä olisi juuri se väärä tieto jota ihminen
+     * ei osaisi epäillä ("Sitowise rakennuttaa Vantaan ratikan").
+     */
+    if (role === "designer") {
+      const clientFromText = extractClientFromText(candidate.name, lead)
+
+      return {
+        ...candidate,
+        description: body,
+        city: candidate.city ?? detectCityFromText(body),
+        location: candidate.location ?? extractStreetAddress(body),
+        developer:
+          clientFromText && clientFromText.toLowerCase() !== publisher.toLowerCase()
+            ? clientFromText
+            : candidate.developer ?? null,
+        builder: candidate.builder ?? null,
+        /*
+         * Lähteen jo toteama valmistuminen EI saa kumoutua rikastuksessa.
+         * `inferDesignerPhase` tuntee vain sanat "valmistui/valmistunut",
+         * joten "Kruunusillat-allianssi TOTEUTTI liikennehankkeen" olisi
+         * palautunut suunnitteluvaiheeseen — valmis hanke näkyisi
+         * asiakkaalle avoimena mahdollisuutena (mitattu 16.8.2026).
+         */
+        phase: candidate.completed
+          ? candidate.phase
+          : inferDesignerPhase(candidate.name, body),
+        property_type:
+          candidate.property_type ?? inferBuildingType(candidate.name, body),
+        estimated_completion:
+          candidate.estimated_completion ?? parseEstimatedCompletionDate(body),
+      }
+    }
 
     const developer =
       role === "developer"

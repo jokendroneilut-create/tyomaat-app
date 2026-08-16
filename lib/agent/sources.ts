@@ -54,6 +54,7 @@ import { fetchYmparistolupaSource } from "./fetchYmparistolupaSource"
 import { fetchYvaSource } from "./fetchYvaSource"
 import { createYvaEnricher } from "./yvaProjectPage"
 import { fetchSuunnittelukilpailuSource } from "./fetchSuunnittelukilpailuSource"
+import { fetchSitowiseSource } from "./fetchSitowiseSource"
 import { createCompanyEnricher } from "./companyRelease"
 
 export const sources = [
@@ -114,4 +115,12 @@ export const sources = [
    */
   { name: "yva", fetch: fetchYvaSource, enrich: createYvaEnricher() },
   { name: "suunnittelukilpailu", fetch: fetchSuunnittelukilpailuSource },
+  /*
+   * Ensimmäinen suunnittelutoimistolähde. Suunnittelija valitaan hankkeen
+   * alussa, joten tieto tulee ennen urakkakilpailua — ja se yltää
+   * yksityisiin suurhankkeisiin, joita lupa- ja hankintalähteet eivät näe.
+   * Rooli "designer": julkaisijaa ei kirjata rakennuttajaksi eikä
+   * urakoitsijaksi, ks. companyRelease.ts.
+   */
+  { name: "sitowise", fetch: fetchSitowiseSource, enrich: createCompanyEnricher({ publisher: "Sitowise", role: "designer" }) },
 ]
