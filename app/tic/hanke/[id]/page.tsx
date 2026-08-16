@@ -11,7 +11,10 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-type Props = { params: Promise<{ id: string }> }
+type Props = {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ puutteelliset?: string; q?: string }>
+}
 
 const text = (value: unknown) =>
   value === null || value === undefined ? "" : String(value)
@@ -28,8 +31,22 @@ function formatDate(value: string | null | undefined) {
  * lukee `potential_projects`-taulua. Hyväksytylle hankkeelle ei ollut sivua
  * lainkaan, joten sen tietoja ei voinut katsoa eikä korjata TIC:stä.
  */
-export default async function TicProjectPage({ params }: Props) {
+export default async function TicProjectPage({ params, searchParams }: Props) {
   const { id } = await params
+  const view = await searchParams
+
+  /*
+   * Paluu palaa SIIHEN näkymään josta tultiin. Aiemmin linkki vei aina
+   * suodattamattomaan listaan, joten jonoa purkaessa palasi eteen kaikki
+   * hankkeet — mikä näytti siltä ettei jono tyhjentynyt lainkaan.
+   */
+  const backHref = view.puutteelliset
+    ? "/tic/hanke?puutteelliset=1"
+    : view.q
+      ? `/tic/hanke?q=${encodeURIComponent(view.q)}`
+      : "/tic/hanke"
+
+  const backLabel = view.puutteelliset ? "Osapuolettomat" : "Hankehaku"
 
   const { data: project } = await supabaseAdmin
     .from("projects")
@@ -49,8 +66,8 @@ export default async function TicProjectPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
-      <Link href="/tic/hanke" className="text-sm text-gray-600 hover:text-gray-900">
-        ← Hankehaku
+      <Link href={backHref} className="text-sm text-gray-600 hover:text-gray-900">
+        ← {backLabel}
       </Link>
 
       <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">

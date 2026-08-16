@@ -8,7 +8,31 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-type Props = { searchParams: Promise<{ q?: string; puutteelliset?: string }> }
+type Props = {
+  searchParams: Promise<{ q?: string; puutteelliset?: string; sivu?: string }>
+}
+
+/*
+ * Rakentamisvaihe kärkeen: käynnissä oleva työmaa ilman osapuolia on
+ * kiireellisin korjattava — asiakkaalle se on liidi jolle ei ole ketään
+ * soitettavaa. Järjestys on EKSPLISIITTINEN eikä nojaa siihen että
+ * "Rakenteilla" sattuu olemaan aakkosissa ennen "Suunnittelussa".
+ */
+const PHASE_RANK: Record<string, number> = {
+  Rakenteilla: 0,
+  "Rakentaminen aloitettu": 0,
+  Suunnittelussa: 1,
+  Suunnittelu: 1,
+}
+
+const PAGE_SIZE = 50
+
+/*
+ * Järjestys ja sivutus tehdään muistissa, koska PostgREST ei osaa
+ * mielivaltaista vaihejärjestystä. Katto on tästä syystä pakko olla:
+ * ilman sitä suodattamaton näkymä hakisi koko kannan.
+ */
+const FETCH_CAP = 1000
 
 /*
  * Hankehaku korjausta varten (D-076).
@@ -20,14 +44,22 @@ type Props = { searchParams: Promise<{ q?: string; puutteelliset?: string }> }
  * käsin yksitellen.
  */
 export default async function TicProjectSearchPage({ searchParams }: Props) {
-  const { q, puutteelliset } = await searchParams
+  const { q, puutteelliset, sivu } = await searchParams
   const onlyIncomplete = puutteelliset === "1"
+  const page = Math.max(1, Number(sivu) || 1)
+
+  /* Näkymän tila kulkee mukana hankelinkeissä, jotta paluu palaa TÄHÄN. */
+  const viewParams = onlyIncomplete
+    ? "?puutteelliset=1"
+    : q?.trim()
+      ? `?q=${encodeURIComponent(q.trim())}`
+      : ""
 
   let query = supabaseAdmin
     .from("projects")
     .select("id, name, city, region, phase, developer, builder, estimated_cost")
     .eq("status", "active")
-    .limit(60)
+    .limit(FETCH_CAP)
 
   if (q?.trim()) {
     query = query.ilike("name", `%${q.trim()}%`)
@@ -45,7 +77,32 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
       ])
   }
 
-  const { data: projects, error } = await query.order("name")
+  const { data: allMatching, error } = await query.order("name")
+
+  const sorted = [...(allMatching ?? [])].sort((a: any, b: any) => {
+    const rank =
+      (PHASE_RANK[String(a.phase)] ?? 9) - (PHASE_RANK[String(b.phase)] ?? 9)
+    if (rank !== 0) return rank
+    return String(a.name).localeCompare(String(b.name), "fi")
+  })
+
+  const total = sorted.length
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const current = Math.min(page, pageCount)
+  const projects = sorted.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
+
+  const pageHref = (target: number) => {
+    const params = new URLSearchParams()
+    if (onlyIncomplete) params.set("puutteelliset", "1")
+    if (q?.trim()) params.set("q", q.trim())
+    if (target > 1) params.set("sivu", String(target))
+    const query = params.toString()
+    return query ? `/tic/hanke?${query}` : "/tic/hanke"
+  }
+
+  const constructionCount = sorted.filter(
+    (r: any) => PHASE_RANK[String(r.phase)] === 0
+  ).length
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
@@ -86,14 +143,39 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
 
       {error && <p className="mt-6 text-sm text-red-600">{error.message}</p>}
 
-      <p className="mt-6 text-sm text-gray-500">
-        {projects?.length ?? 0} hanketta {q?.trim() ? `haulla "${q.trim()}"` : ""}
+      {/*
+        MITÄ LISTA NYT NÄYTTÄÄ — sanottava ääneen. Ilman tätä suodattamaton
+        perusnäkymä on erehdyttävän näköinen jono: navigaatiossa lukee
+        "Hankkeet (N)", ja jos suodatin on pois päältä, listalla on hankkeita
+        joilla osapuolet ovat kunnossa. Se näyttää siltä ettei jono tyhjentynyt.
+      */}
+      <p className="mt-6 text-sm">
+        {onlyIncomplete ? (
+          <span className="font-medium text-gray-900">
+            Osapuolettomat hankkeet — suunnittelu tai rakentaminen käynnissä,
+            ei rakennuttajaa eikä pääurakoitsijaa
+          </span>
+        ) : (
+          <span className="font-medium text-gray-900">
+            Kaikki aktiiviset hankkeet{q?.trim() ? ` haulla "${q.trim()}"` : ""}
+          </span>
+        )}
+        <span className="ml-2 text-gray-500">
+          {total} hanketta
+          {constructionCount
+            ? ` · ${constructionCount} rakentamisvaiheessa (ensin listalla)`
+            : ""}
+          {total >= FETCH_CAP ? " · katkaistu 1000:een" : ""}
+        </span>
       </p>
 
       <ul className="mt-3 divide-y divide-gray-200 rounded-2xl border border-gray-200 bg-white">
         {(projects ?? []).map((p: any) => (
           <li key={p.id} className="px-5 py-3">
-            <Link href={`/tic/hanke/${p.id}`} className="block hover:bg-gray-50">
+            <Link
+              href={`/tic/hanke/${p.id}${viewParams}`}
+              className="block hover:bg-gray-50"
+            >
               <span className="font-medium text-gray-900">{p.name}</span>
 
               <span className="ml-2 text-sm text-gray-500">
@@ -114,6 +196,40 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
           </li>
         ))}
       </ul>
+
+      {pageCount > 1 ? (
+        <nav className="mt-4 flex items-center gap-3 text-sm">
+          {current > 1 ? (
+            <Link
+              href={pageHref(current - 1)}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 hover:bg-gray-50"
+            >
+              ← Edellinen
+            </Link>
+          ) : (
+            <span className="rounded-lg border border-gray-200 px-3 py-1.5 text-gray-400">
+              ← Edellinen
+            </span>
+          )}
+
+          <span className="text-gray-600">
+            Sivu {current} / {pageCount}
+          </span>
+
+          {current < pageCount ? (
+            <Link
+              href={pageHref(current + 1)}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 hover:bg-gray-50"
+            >
+              Seuraava →
+            </Link>
+          ) : (
+            <span className="rounded-lg border border-gray-200 px-3 py-1.5 text-gray-400">
+              Seuraava →
+            </span>
+          )}
+        </nav>
+      ) : null}
     </main>
   )
 }
