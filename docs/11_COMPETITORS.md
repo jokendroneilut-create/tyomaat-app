@@ -273,8 +273,36 @@ Metrocilla. Uusi ominaisuus ei ole erottautumista; se on kiinniottoa.
 hintaa, kumpikaan ei anna kokeilla ilman myyjää, molemmat myyvät
 vuosisopimuksen etukäteen laskutettuna. Se ei ole sattumaa vaan seuraus
 myyntiorganisaation kustannuksesta — ja siksi se on ainoa rakenteellisesti auki
-oleva rako. Julkinen hinta, itsepalvelukokeilu ja kuukausisopimus ovat asioita,
-joita kumpikaan ei voi kopioida purkamatta omaa myyntimalliaan.
+oleva rako.
+
+### Päätetty asemointi (16.8.2026)
+
+Työmaat.fi ei matki kilpailijoiden myyntimallia vaan asettuu sitä vastaan
+kolmella konkreettisella tavalla:
+
+| | RPT & Metroc | Työmaat.fi |
+|---|---|---|
+| hinta | ei julkaista, neuvotellaan | **julkinen** |
+| ostaminen | demo myyjän kanssa pakollinen | **ilman myyjää** |
+| sopimus | vuosikausi etukäteen, 60 pv irtisanomisaika, uusiutuu automaattisesti | **irtisanottavissa 30 päivän aikana koska tahansa** |
+
+**Miksi tämä on puolustettava eikä vain mukava.** Nämä eivät ole ominaisuuksia
+joita kilpailija voi lisätä — ne ovat asioita joita hän ei voi lisätä ilman
+oman rakenteensa purkamista. RPT:llä on nimetyt account managerit ja
+tutkimustiimi, Metrocilla neljä asiakashankkijaa ja 23 hengen palkkakulu.
+Molempien kate edellyttää, että asiakas maksaa myyntikäynnin ja sitoutuu
+vuodeksi etukäteen. Kuukausi kerrallaan irtisanottava itsepalvelutuote
+romuttaisi heidän ennustettavan liikevaihtonsa ja tekisi myyntiorganisaatiosta
+tappiollisen.
+
+Yhden hengen kulurakenne tekee siitä meille mahdollista. **Se on ainoa etu,
+joka seuraa suoraan pienuudesta eikä katoa sitä mukaa kun kilpailija huomaa
+sen.**
+
+Kääntöpuoli on syytä sanoa ääneen: 30 päivän irtisanottavuus siirtää
+todistustaakan tuotteelle joka kuukausi. Se toimii vain jos tuote tuottaa
+näkyvää arvoa jatkuvasti — mikä on sama vaatimus kuin P1:n relevanssipisteytys
+asettaa. Asemointi ja tuotesuunta ovat siis samassa veneessä.
 
 **Toinen rako: kapeus.** Metroc myy viittä tuotetta neljälle segmentille, RPT
 kymmentä. Molemmat vastaavat kysymykseen "mitä kaikkea markkinassa tapahtuu".
