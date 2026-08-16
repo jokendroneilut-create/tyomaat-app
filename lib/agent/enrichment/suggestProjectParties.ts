@@ -31,7 +31,14 @@ const SYSTEM_PROMPT =
   "on parempi kuin väärä. Älä päättele yrityksen nimeä hankkeen nimestä. " +
   "rakennuttaja = tilaaja joka teettää hankkeen (esim. kaupunki, kiinteistöyhtiö). " +
   "paaurakoitsija = rakentava yritys. Nämä ovat eri asia — älä laita samaa " +
-  "yritystä molempiin ellei lähde nimenomaan kerro sitä. " +
+  "yritystä molempiin ellei lähde nimenomaan kerro sitä. Jos sama yritys on " +
+  "aidosti molemmissa rooleissa (omaperusteinen tuotanto, perustajaurakointi, " +
+  "rakentaminen omaan käyttöön), merkitse omaperusteinen=true ja kerro " +
+  "perustelussa mikä lause lähteessä sen vahvistaa. " +
+  "ÄLÄ PÄÄTTELE URAKOITSIJAA TOIMIALATAVASTA. Mitattu 16.8.2026: lähde kertoi " +
+  "vain 'vapaarahoitteinen asuntohanke' eikä nimennyt urakoitsijaa, ja " +
+  "urakoitsijaksi ehdotettiin silti rakennuttajaa perustajaurakoinnin " +
+  "yleisyyden perusteella. Jos lähde ei nimeä urakoitsijaa, jätä se nulliksi. " +
   "kustannus ilmoitetaan euroina kokonaislukuna (82,4 miljoonaa = 82400000). " +
   "Varmuus: 'high' vain jos useampi lähde tai virallinen lähde vahvistaa, " +
   "'low' jos tieto on epäsuora tai yksittäinen maininta."
@@ -48,6 +55,7 @@ const SUGGESTION_SCHEMA = {
     "rakennuttaja",
     "paaurakoitsija",
     "kustannus_eur",
+    "omaperusteinen",
     "varmuus",
     "lahteet",
     "perustelu",
@@ -57,6 +65,13 @@ const SUGGESTION_SCHEMA = {
     rakennuttaja: { anyOf: [{ type: "string" }, { type: "null" }] },
     paaurakoitsija: { anyOf: [{ type: "string" }, { type: "null" }] },
     kustannus_eur: { anyOf: [{ type: "integer" }, { type: "null" }] },
+    /*
+     * Sama yritys molemmissa rooleissa on aito ilmiö (omaperusteinen
+     * tuotanto) MUTTA myös se virhemuoto jossa urakoitsija päätellään
+     * rakennuttajasta. Erillinen kenttä pakottaa mallin ottamaan kantaa,
+     * jolloin tarkistajan ei tarvitse päätellä sitä perustelutekstistä.
+     */
+    omaperusteinen: { type: "boolean" },
     varmuus: { type: "string", enum: ["high", "medium", "low"] },
     lahteet: { type: "array", items: { type: "string" } },
     perustelu: { type: "string" },
@@ -67,6 +82,7 @@ export type PartySuggestion = {
   developer: string | null
   builder: string | null
   estimatedCost: number | null
+  ownDevelopment: boolean
   confidence: "high" | "medium" | "low"
   sources: string[]
   reason: string
@@ -230,10 +246,21 @@ export async function suggestProjectParties(input: {
     if (!sources.length) return null
     if (!developer && !builder && cost === null) return null
 
+    /*
+     * Sama yritys molemmissa rooleissa hyväksytään VAIN jos malli merkitsi
+     * hankkeen omaperusteiseksi. Muuten urakoitsija on pääteltävissä
+     * rakennuttajasta, ja se on juuri se virhe joka mitattiin 16.8.2026.
+     */
+    const sameCompany =
+      developer && builder && developer.toLowerCase() === builder.toLowerCase()
+
+    const ownDevelopment = parsed.omaperusteinen === true
+
     return {
       developer,
-      builder,
+      builder: sameCompany && !ownDevelopment ? null : builder,
       estimatedCost: cost,
+      ownDevelopment,
       confidence:
         parsed.varmuus === "high" || parsed.varmuus === "low"
           ? parsed.varmuus

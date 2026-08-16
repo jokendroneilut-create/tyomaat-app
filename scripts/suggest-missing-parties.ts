@@ -139,6 +139,7 @@ async function main() {
               sources: suggestion.sources,
               reason: suggestion.reason,
               model: suggestion.model,
+              own_development: suggestion.ownDevelopment,
               created_at: new Date().toISOString(),
             },
           },

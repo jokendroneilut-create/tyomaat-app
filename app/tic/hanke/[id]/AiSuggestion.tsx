@@ -24,6 +24,8 @@ type Suggestion = {
   reason: string
   model: string
   created_at: string
+  own_development?: boolean
+  verified?: string
 }
 
 const CONFIDENCE_STYLE: Record<string, string> = {
@@ -125,6 +127,19 @@ export default function AiSuggestion({
           </dd>
         </div>
       </dl>
+
+      {suggestion.own_development ? (
+        <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-gray-700">
+          <strong>Omaperusteinen hanke:</strong> sama yritys on tarkoituksella
+          sekä rakennuttaja että urakoitsija.
+        </p>
+      ) : null}
+
+      {suggestion.verified ? (
+        <p className="mt-3 rounded-lg border border-green-300 bg-white px-3 py-2 text-sm text-gray-800">
+          <strong>Tarkistettu lähteestä:</strong> {suggestion.verified}
+        </p>
+      ) : null}
 
       {suggestion.reason ? (
         <p className="mt-4 text-sm text-gray-700">{suggestion.reason}</p>

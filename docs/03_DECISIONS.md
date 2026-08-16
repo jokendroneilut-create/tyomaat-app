@@ -54,6 +54,31 @@ yhtä paha kuin väärä.
 mitattu. Sitä ei pidä lukea todennäköisyytenä — se on lajittelun apu,
 ja lähteet ovat se mitä tarkistetaan.
 
+**Jälkitarkistus 16.8.2026: 4/36 ehdotuksessa sama yritys oli
+molemmissa rooleissa. Kolme oli oikein, yksi ei.** Kaikki neljä
+tarkistettiin alkuperäisistä lähteistä:
+
+| hanke | tulos |
+|---|---|
+| Asura | **oikein** — lähde: "rakentamisesta vastasi yrityksen oma kokenut henkilöstö" |
+| Hartela | **oikein** — omaperusteinen, myyty valmistuttua Balderille; nimi yhtenäistettiin molempiin rooleihin |
+| HC Hoivakodit | **oikein** — lähde: kehittäjä ja toteuttaja; Humana on vuokralainen, ei tilaaja **vaikka hankkeen otsikko niin väittää** |
+| Peab | **väärin** — lähde kertoo vain "vapaarahoitteinen asuntohanke" eikä nimeä urakoitsijaa |
+
+Peabin tapaus on opettavainen: ehdotus ei ollut hallusinaatio vaan
+**toimialapäättely**. Perustajaurakointi on Suomessa niin yleistä, että
+rakennuttajasta voi useimmiten päätellä urakoitsijan — ja juuri siksi
+malli teki sen, vaikka kehote kielsi arvaamisen. Päättely oli
+todennäköisesti oikea, mutta se ei ollut lähteessä, eikä
+tarkistamatonta väitettä voi erottaa tarkistetusta kortilla.
+
+**Kaksi korjausta, jotta tämä ei toistu.** Skeemaan lisättiin
+`omaperusteinen`-kenttä, joka pakottaa mallin ottamaan kantaa sen
+sijaan että tarkistaja päättelisi sen perustelutekstistä. Ja koodissa
+sama yritys molemmissa rooleissa hyväksytään **vain** jos malli
+merkitsi hankkeen omaperusteiseksi — muuten urakoitsija tyhjennetään.
+Tarkistus on koodissa, ei kehotteessa, koska kehote ei riittänyt.
+
 ---
 
 ### D-077 – YVA:n hankevastaava luetaan nimetystä kentästä, ei proosasta
