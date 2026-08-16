@@ -49,14 +49,50 @@ export default function AiSuggestion({
   const [done, setDone] = useState(false)
 
   /*
-   * Vain kentät jotka ehdotus täyttää JA jotka ovat hankkeella tyhjät.
-   * Hyväksyntä ei saa yliajaa jo tarkistettua tietoa.
+   * MIKSI TÄSSÄ NÄYTETÄÄN MYÖS RISTIRIIDAT, EI VAIN TYHJIÄ KENTTIÄ.
+   *
+   * Ensimmäinen versio hyväksyi vain tyhjiin kenttiin, "jottei yliaja
+   * tarkistettua tietoa". Vaikutus oli päinvastainen: kun kenttä oli jo
+   * täynnä, nappi lukittui — ja ainoa tapa hyväksyä ehdotus oli tyhjentää
+   * kenttä ensin käsin. Mitattu 16.8.2026: yhdellä hankkeella urakoitsija
+   * "Marvea Uusimaa Oy" tyhjeni juuri sitä ennen kuin ehdotus hyväksyttiin.
+   * Varovaisuudeksi tarkoitettu sääntö siis houkutteli tuhoamaan tiedon.
+   *
+   * Nyt eroavat arvot näytetään muodossa "nykyinen → ehdotettu" ja käyttäjä
+   * valitsee. Sama arvo ei tuota valintaa lainkaan.
    */
+  type Change = { key: string; label: string; from: string; to: string | number }
+
+  const changes: Change[] = []
+
+  const consider = (
+    key: string,
+    label: string,
+    currentValue: string,
+    suggested: string | number | null
+  ) => {
+    if (suggested === null || suggested === "") return
+    if (String(currentValue).trim() === String(suggested).trim()) return
+    changes.push({ key, label, from: currentValue, to: suggested })
+  }
+
+  consider("developer", "Rakennuttaja", current.developer, suggestion.developer)
+  consider("builder", "Pääurakoitsija", current.builder, suggestion.builder)
+  consider(
+    "estimated_cost",
+    "Kustannus",
+    current.estimatedCost,
+    suggestion.estimated_cost
+  )
+
+  const [selected, setSelected] = useState<string[]>(() =>
+    /* Tyhjään kenttään lisäys on oletuksena valittu; korvaus ei ole. */
+    changes.filter((c) => !c.from).map((c) => c.key)
+  )
+
   const fields: Record<string, string | number> = {}
-  if (suggestion.developer && !current.developer) fields.developer = suggestion.developer
-  if (suggestion.builder && !current.builder) fields.builder = suggestion.builder
-  if (suggestion.estimated_cost && !current.estimatedCost) {
-    fields.estimated_cost = suggestion.estimated_cost
+  for (const change of changes) {
+    if (selected.includes(change.key)) fields[change.key] = change.to
   }
 
   const acceptable = Object.keys(fields)
@@ -165,6 +201,53 @@ export default function AiSuggestion({
         </ul>
       </div>
 
+      {changes.length ? (
+        <div className="mt-5 space-y-2">
+          <span className="text-sm font-medium text-gray-700">
+            Valitse mitkä kirjoitetaan
+          </span>
+
+          {changes.map((change) => (
+            <label
+              key={change.key}
+              className="flex items-start gap-2 rounded-lg bg-white px-3 py-2 text-sm"
+            >
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={selected.includes(change.key)}
+                onChange={(e) =>
+                  setSelected((current) =>
+                    e.target.checked
+                      ? [...current, change.key]
+                      : current.filter((k) => k !== change.key)
+                  )
+                }
+              />
+              <span>
+                <span className="font-medium">{change.label}:</span>{" "}
+                {change.from ? (
+                  <>
+                    <span className="text-red-700 line-through">{change.from}</span>{" "}
+                    <span aria-hidden>→</span>{" "}
+                    <span className="font-medium">{change.to}</span>
+                    <span className="ml-2 text-xs text-amber-700">
+                      korvaa nykyisen arvon
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-medium">{change.to}</span>
+                )}
+              </span>
+            </label>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-5 text-sm text-gray-600">
+          Ehdotus vastaa hankkeen nykyisiä tietoja — ei muutettavaa.
+        </p>
+      )}
+
       <div className="mt-5 flex items-center gap-3">
         <button
           type="button"
@@ -176,7 +259,7 @@ export default function AiSuggestion({
             ? "Hyväksytään…"
             : acceptable.length
               ? `Hyväksy (${acceptable.length} kenttää)`
-              : "Ei tyhjiä kenttiä täytettäväksi"}
+              : "Ei valintoja"}
         </button>
 
         {done && <span className="text-sm text-green-700">Hyväksytty</span>}

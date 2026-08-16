@@ -55,6 +55,31 @@ export default function EditProject({ projectId, initial }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<string[] | null>(null)
 
+  /*
+   * LOMAKKEEN TILA ON SYNKATTAVA PROPSIIN — muuten se kumoaa muut muutokset.
+   *
+   * `useState(initial)` alustaa vain kerran eikä päivity kun propsi muuttuu.
+   * Kun ehdotus hyväksytään, kortti kirjoittaa arvon ja kutsuu
+   * `router.refresh()`: palvelin renderöi uuden arvon, mutta lomakkeen oma
+   * tila jää vanhaan tyhjään. Silloin `changedKeys` näkee eron ja tulkitsee
+   * sen KÄYTTÄJÄN tyhjennykseksi — "Tallenna" kirjoittaa tyhjän juuri
+   * hyväksytyn arvon päälle.
+   *
+   * Mitattu 16.8.2026: hanke "Asunto Oy Hyvinkään Altus" menetti näin
+   * urakoitsijansa kahdesti peräkkäin, ja tallennus näytti onnistuneen.
+   *
+   * Synkataan kun palvelimen data OIKEASTI muuttuu, ei joka renderillä —
+   * muuten kesken oleva kirjoitus katoaisi näppäimen alta.
+   */
+  const initialKey = JSON.stringify(initial)
+  const [syncedKey, setSyncedKey] = useState(initialKey)
+
+  if (syncedKey !== initialKey) {
+    setSyncedKey(initialKey)
+    setValues(initial)
+    setSaved(null)
+  }
+
   const set = (key: keyof Props["initial"]) => (value: string) =>
     setValues((current) => ({ ...current, [key]: value }))
 
