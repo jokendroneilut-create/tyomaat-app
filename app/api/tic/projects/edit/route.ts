@@ -92,6 +92,36 @@ export async function POST(request: Request) {
   const updates: Record<string, unknown> = {}
   const changed: string[] = []
 
+  /*
+   * NÄKYVYYS: piilota hanke asiakkailta tai palauta se näkyviin.
+   *
+   * Aiemmin tämä onnistui vain dashboardin kytkimestä, joka kirjoittaa
+   * `is_public`in suoraan ilman perustelua ja ilman jälkeä. Piilotus on
+   * kuitenkin päätös — "tämä ei ole hanke" — ja päätös ilman perustelua on
+   * seuraavalle katsojalle arvoitus, aivan kuten D-076:n muokkausjälki.
+   *
+   * Perustelu on siksi PAKOLLINEN piilotettaessa. Näkyviin palauttaminen ei
+   * vaadi sitä: virheen korjaamisen pitää olla helpompaa kuin sen tekemisen.
+   */
+  let hiddenReason: string | null = null
+
+  if ("is_public" in (body?.fields ?? {})) {
+    const next = body.fields.is_public === true
+
+    if (!next && !cleanString(body?.reason)) {
+      return NextResponse.json(
+        { ok: false, error: "Piilottaminen vaatii perustelun (reason)" },
+        { status: 400 }
+      )
+    }
+
+    if (next !== (project as any).is_public) {
+      updates.is_public = next
+      changed.push("is_public")
+      hiddenReason = next ? null : cleanString(body.reason)
+    }
+  }
+
   for (const field of TEXT_FIELDS) {
     if (!(field in (body?.fields ?? {}))) continue
 
@@ -171,6 +201,11 @@ export async function POST(request: Request) {
           : {}),
         ...("property_type" in updates
           ? { building_type: updates.property_type }
+          : {}),
+        ...("is_public" in updates
+          ? updates.is_public
+            ? { hidden_at: null, hidden_reason: null, unhidden_at: nowIso }
+            : { hidden_at: nowIso, hidden_reason: hiddenReason }
           : {}),
         edited_at: nowIso,
         edited_fields: changed,

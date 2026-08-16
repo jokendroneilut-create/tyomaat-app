@@ -5,6 +5,52 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-079 – Piilotus ei piilottanut Tänään-syötteestä
+
+Kysymys "onko dashboard ainoa tapa poistaa tämä ja onko se järkevä"
+paljasti että **piilotus ei toiminut siellä missä sillä on eniten
+väliä.**
+
+`is_public = false` suodatettiin karttasivulla (`/projects`) ja
+digesteissä, mutta **`getTodayProjects` ei suodattanut sitä lainkaan**.
+Tänään-syöte on pääasiallinen asiakasnäkymä, joten piilotettu hanke
+katosi kartalta ja jäi silti näkyviin sinne.
+
+**Mitattu 16.8.2026: 43 hanketta oli merkitty piilotetuksi, ja niistä
+40 osui yhä Tänään-kyselyyn.** Joku oli siis tehnyt työn ja luullut sen
+tehdyksi.
+
+Suodatin lisätty molempiin `getTodayProjects`in kyselyihin — listaan ja
+"kaikki hankkeet alueellasi" -lukuun. `is_public` on `null`-vapaa
+(5 566 true, 43 false, 0 null), joten `.eq("is_public", true)` on
+turvallinen eikä pudota mitään vahingossa.
+
+**Piilotus siirtyi myös oikeaan paikkaan.** Ainoa yleinen tapa oli
+dashboardin kytkin, joka kirjoittaa `is_public`in suoraan ilman
+perustelua ja ilman jälkeä. Piilotus on kuitenkin päätös — "tämä ei ole
+hanke" — ja perustelematon päätös on seuraavalle katsojalle arvoitus,
+aivan kuten D-076:n muokkausjälki.
+
+TIC:n hankesivulla on nyt näkyvyysosio, ja se kulkee saman
+muokkausreitin kautta:
+
+- **Perustelu on pakollinen piilotettaessa** (400 ilman sitä),
+  valmiilla vaihtoehdoilla ("Ei hanke — pelkkä uutinen tai
+  markkinointi", "Duplikaatti", "Väärä tieto", …).
+- **Palauttaminen ei vaadi perustelua** — virheen korjaamisen pitää
+  olla helpompaa kuin sen tekemisen.
+- Syy ja ajankohta jäävät metadataan (`hidden_reason`, `hidden_at`), ja
+  piilotetun hankkeen sivu näyttää ne.
+
+**Juurisyy on eri asia eikä ratkaistu tässä.** Kysytty hanke
+("Laatukoteja yhteistyöllä Helsingin ykkösalueille", lähde `varte`) on
+yrityksen markkinointiuutinen ilman yksilöitävää kohdetta. Se pääsi
+katselmoinnista läpi, ja piilotus on oire eikä korjaus — sama
+D-027:n perhe. Jos näitä alkaa kertyä, oikea paikka on
+relevanssiportti, ei piilotusnappi.
+
+---
+
 ### D-078 – Haku + LLM ehdottaa osapuolet, ihminen hyväksyy
 
 **Miksi tämä on poikkeus sääntöön "deterministinen ensin" (D-006).** Käsin

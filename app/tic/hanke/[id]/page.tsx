@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
 import EditProject from "./EditProject"
 import AiSuggestion from "./AiSuggestion"
+import Visibility from "./Visibility"
 
 export const dynamic = "force-dynamic"
 
@@ -155,6 +156,12 @@ export default async function TicProjectPage({ params, searchParams }: Props) {
           }}
         />
       ) : null}
+
+      <Visibility
+        projectId={id}
+        isPublic={(project as any).is_public !== false}
+        hiddenReason={metadata.hidden_reason ?? null}
+      />
 
       <EditProject
         projectId={id}

@@ -21,6 +21,13 @@ export async function getTodayProjects(regions?: string[]) {
       metadata
     `)
     .eq("status", "active")
+    /*
+     * PIILOTUS ON KUNNIOITETTAVA MYÖS TÄÄLLÄ. Tämä suodatin puuttui, joten
+     * `is_public = false` piilotti hankkeen kartalta ja digesteistä muttei
+     * Tänään-syötteestä — eli pääasiallisesta asiakasnäkymästä. Mitattu
+     * 16.8.2026: 43 piilotetusta hankkeesta 40 näkyi yhä Tänään-syötteessä.
+     */
+    .eq("is_public", true)
     // Valmistuneet työmaat eivät ole mahdollisuuksia — pois syötteestä (sama
     // rajaus kuin karttasivulla + getRegionProjectCountissa).
     .neq("phase", "Valmistunut")
@@ -67,6 +74,8 @@ export async function getRegionProjectCount(regions?: string[]): Promise<number>
     .from("projects")
     .select("*", { count: "exact", head: true })
     .eq("status", "active")
+    /* Sama piilotussuodatin kuin yllä, jottei luku lupaa piilotettuja. */
+    .eq("is_public", true)
     // Valmistunut työmaa ei ole enää mahdollisuus — suodatetaan pois, jotta
     // luku vastaa karttasivua (joka jättää valmistuneet/vanhentuneet pois).
     .neq("phase", "Valmistunut")
