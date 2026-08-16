@@ -5,6 +5,7 @@ import { parseEstimatedCompletionDate } from "./parseFinnishCompletionDate"
 import { resolveParties, extractClientFromText } from "./fetchSttHakuSource"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { inferBuildingType, LEAD_LENGTH } from "./buildingType"
+import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
 
 /*
  * Yrityksen lehdistötiedotteen lukeminen: kuvaus, vaihe, osapuolet ja
@@ -282,8 +283,29 @@ export function createCompanyEnricher({
     if (role === "designer") {
       const clientFromText = extractClientFromText(candidate.name, lead)
 
+      /*
+       * SUUNNITTELIJA ON SILTI HANKKEEN YRITYS. Vaikka se ei ole
+       * rakennuttaja eikä pääurakoitsija, se on tiedossa oleva osapuoli ja
+       * ainoa mitä tästä lähteestä varmasti tiedetään. Ilman tätä tieto
+       * katoaisi kokonaan. `related_companies` on oikea koti, koska tuonti
+       * yhdistää sen olemassa olevaan hankkeeseen eikä ylikirjoita —
+       * suunnittelijan tiedote voi hyvinkin olla ENSIMMÄINEN havainto
+       * hankkeesta, jota myöhemmät lähteet täydentävät.
+       */
+      const related = mergeCompanyNames(
+        Array.isArray(candidate.metadata?.related_companies)
+          ? candidate.metadata.related_companies
+          : [],
+        [publisher]
+      )
+
       return {
         ...candidate,
+        metadata: {
+          ...(candidate.metadata ?? {}),
+          related_companies: related,
+          designer: publisher,
+        },
         description: body,
         city: candidate.city ?? detectCityFromText(body),
         location: candidate.location ?? extractStreetAddress(body),
