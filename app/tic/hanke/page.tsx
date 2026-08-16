@@ -57,7 +57,9 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
 
   let query = supabaseAdmin
     .from("projects")
-    .select("id, name, city, region, phase, developer, builder, estimated_cost")
+    .select(
+      "id, name, city, region, phase, developer, builder, estimated_cost, is_public"
+    )
     .eq("status", "active")
     .limit(FETCH_CAP)
 
@@ -67,6 +69,17 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
 
   if (onlyIncomplete) {
     query = query
+      /*
+       * PIILOTETTU HANKE EI OLE JONOTYÖTÄ. Jono on lista siitä, mitä
+       * asiakkaalle näkyvistä hankkeista puuttuu — kun hanke on päätetty
+       * piilottaa (esim. "liian pieni"), sen osapuolten täydentäminen ei
+       * hyödytä ketään. Ilman tätä suodatinta piilotus ei näyttänyt
+       * tehneen mitään: hanke katosi asiakkailta mutta jäi jonoon.
+       *
+       * Nimihaussa piilotetut näkyvät yhä, merkittynä — muuten piilotettua
+       * hanketta ei löytäisi TIC:stä lainkaan palauttaakseen sen.
+       */
+      .eq("is_public", true)
       .or("developer.is.null,developer.eq.")
       .or("builder.is.null,builder.eq.")
       .in("phase", [
@@ -152,8 +165,8 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
       <p className="mt-6 text-sm">
         {onlyIncomplete ? (
           <span className="font-medium text-gray-900">
-            Osapuolettomat hankkeet — suunnittelu tai rakentaminen käynnissä,
-            ei rakennuttajaa eikä pääurakoitsijaa
+            Osapuolettomat hankkeet — asiakkaalle näkyvät, suunnittelu tai
+            rakentaminen käynnissä, ei rakennuttajaa eikä pääurakoitsijaa
           </span>
         ) : (
           <span className="font-medium text-gray-900">
@@ -177,6 +190,12 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
               className="block hover:bg-gray-50"
             >
               <span className="font-medium text-gray-900">{p.name}</span>
+
+              {p.is_public === false ? (
+                <span className="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+                  piilotettu
+                </span>
+              ) : null}
 
               <span className="ml-2 text-sm text-gray-500">
                 {[p.city, p.phase].filter(Boolean).join(" · ")}
