@@ -16,6 +16,28 @@ väite ja mitattu tosiasia eivät saa näyttää samalta.
 
 ---
 
+## Tiivistelmä (18.8.2026)
+
+Jos luet vain tämän:
+
+| | |
+|---|---|
+| **RPT / Hubexo** | Ihmiset soittavat rakennuttajille. 600 €/kk yhdestä maakunnasta. Julkaisi 17.8.2026 **Byggfakta Risen**: tekoälyvalmentaja, joka kertoo mitä tehdä tänään. Käyttöönotto maksullinen, 3–4 vk. |
+| **Metroc** | Sama malli kuin meillä: automaatio julkisista lähteistä. 1,4 M€ / 23 hlöä / 400+ asiakasta → **~300–400 €/kk**. Omistaa suomalaisen julkisen sektorin datan (Public Investments). |
+| **Meidän tie** | Julkinen hinta, ostaminen ilman myyjää, **irtisanottavissa 30 päivässä**. Ainoa etu joka seuraa pienuudesta eikä katoa kun kilpailija huomaa sen. |
+
+Kolme asiaa jotka on syytä muistaa ilman että niitä tarvitsee etsiä uudelleen:
+
+1. **Kattavuus- ja ominaisuuskilpailu on hävitty molempia vastaan.** Ei siksi
+   ettei työtä tehdä, vaan siksi että toisella on puhelinsoittoja ja lähes
+   100 vuoden arkisto ja toisella 23 henkeä ja viiden vuoden etumatka.
+2. **P1 ja investointipäätöslähde eivät ole erottautumista vaan
+   kilpailukelpoisuuden minimi.** Molemmat kilpailijat tekevät ne jo.
+3. **Erottautuminen on hinnassa, ostettavuudessa ja Suomi-kohtaisuudessa** —
+   kolme asiaa, joita kumpikaan ei voi kopioida purkamatta omaa rakennettaan.
+
+---
+
 Suoria kilpailijoita on kaksi, ja ne edustavat kahta eri mallia:
 **RPT Smart** kerää datan ihmisillä ja myy kalliisti, **Metroc** kerää sen
 automaatiolla ja myy keskihintaan. Jälkimmäinen on meidän mallimme — ja siksi
