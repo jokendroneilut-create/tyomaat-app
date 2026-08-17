@@ -405,6 +405,55 @@ julkaisukynnyksestä kuin kattavuudesta.
 
 ---
 
+## Asetelma on kolmio, ei pari (18.8.2026)
+
+Taulukkoa lukiessa on houkuttelevaa nähdä kaksi kilpailijaa ja me. Risen
+jälkeen oikeampi luenta on kolmio, jossa **jokainen puristaa jotakuta toista** —
+ja se muuttaa sitä, mitä taulukon rivit tarkoittavat.
+
+**Rise ei ottanut Metrocilta ominaisuuksia vaan tarinan.** Metrocin asemointi
+oli "moderni tekoälytuote vastaan vanha dinosaurus". Yhdessä lanseerauksessa
+dinosaurus on tekoälytuote, jolla on lisäksi 700 000 hankkeen historia ja
+puhelimitse varmennettu data. Hyökkäyslause *"niitä erottaa se, mihin tekoäly
+on koulutettu"* on kirjoitettu suoraan Metrocia vastaan. Metrocin rehellinen
+vastaus siihen on "julkisiin asiakirjoihin" — teknisesti kelpo, kaupallisesti
+heikompi.
+
+**Metroc ei silti ole puristuksessa hengissä pysymisestä.** Liiketappio on
+−0,2 M€ eli −8,4 %, kun se kaksi vuotta aiemmin oli −52 %. Yhtiö on
+käytännössä kannattavuuden rajalla eikä tarvitse uutta kierrosta selviytyäkseen.
+Puristus kohdistuu kasvutarinaan, ei taseeseen. **Älä siis suunnittele sen
+varaan, että Metroc kaatuu.**
+
+**Ja tästä seuraa se osa joka koskee meitä.** Metrocilla on yksi asia, jota
+Rise ei voi kopioida rikkomatta omaa arkkitehtuuriaan: suomalainen julkisen
+sektorin asiakirjakerros. Neljän maan yhtenäiseen alustaan eivät mahdu kuntien
+budjetit, pöytäkirjat, investointiohjelmat eivätkä hyvinvointialueet — se on
+hinta, jonka Hubexo maksaa pohjoismaisesta yhdenmukaisuudesta.
+
+Jos Metroc pelaa tämän oikein, he eivät jää välikäteen vaan **vetäytyvät
+asemaan "se suomalainen"**. Se on täsmälleen sama kulma, jonka tunnistimme
+omaksemme. Riski ei siis ole että Metroc murskaantuu, vaan että Rise pakottaa
+heidät juuri siihen kulmaan johon me olimme menossa — ja he pääsevät sinne
+23 hengellä ja 400 asiakkaalla.
+
+**Seuraus prioriteettiin:** investointipäätöslähde ei ole rauhassa odottava
+aukko vaan kilpajuoksu samasta kulmasta. Sen arvo ei laske, mutta sen
+kiireellisyys nousee.
+
+**Hinta ei ole vielä ase.** Halpuus puree vasta kun halpa tuote on riittävän
+hyvä sille segmentille. Tänään Metrocin asiakas, joka katsoo Työmaat.fi:tä, ei
+näe halvempaa vaihtoehtoa vaan puuttuvia kenttiä (urakoitsija 86 %,
+rakennuttaja 59 %, kustannus 96 %, yhteyshenkilöitä ei lainkaan). Hinnoittelu
+muuttuu aseeksi vasta datan kattavuuden kautta — ei päinvastoin.
+
+**Kuka on altteimmillaan juuri nyt: me.** Meillä on vähiten kaikkea paitsi
+vapautta. Ero on se, että vapaus on ainoa noista jota ei voi ostaa rahalla —
+ja myös ainoa jota asiakas ei näe. Se on syy suunnitella pitkälle, ei syy
+tuudittautua.
+
+---
+
 ## Johtopäätökset asemointiin
 
 **Kattavuuskilpailu on hävitty molempia vastaan.** RPT:tä vastaan siksi että
