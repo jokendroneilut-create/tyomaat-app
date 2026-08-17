@@ -72,12 +72,10 @@ export async function GET(req: Request) {
         last_sign_in_at: u.last_sign_in_at ?? null,
         confirmed: Boolean(u.email_confirmed_at),
         /*
-         * Lukitustila luetaan `app_metadata`sta, EI `banned_until`ista:
-         * hallintarajapinta ei palauta `banned_until`-kenttää lainkaan
-         * (todennettu 18.8.2026), joten siihen nojaava tarkistus olisi
-         * aina epätosi ja lukittu tunnus näyttäisi vapaalta. Lukitusreitti
-         * kirjoittaa molemmat — `ban_duration` estää kirjautumisen,
-         * `app_metadata` kertoo tilan.
+         * Lukitustila luetaan `app_metadata`sta, koska sinne mahtuu myös
+         * PERUSTELU — `banned_until` kertoisi vain päivämäärän. Lukitusreitti
+         * kirjoittaa molemmat: `ban_duration` estää kirjautumisen,
+         * `app_metadata` kertoo tilan ja syyn näytettäväksi.
          */
         locked: Boolean((u as any).app_metadata?.locked),
         lockedReason: (u as any).app_metadata?.locked_reason ?? null,

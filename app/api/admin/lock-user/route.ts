@@ -113,18 +113,19 @@ export async function POST(req: Request) {
     }
 
     /*
-     * TILA KIRJATAAN MYÖS `app_metadata`an, JA SE ON PAKKO.
+     * TILA KIRJATAAN MYÖS `app_metadata`an.
      *
-     * `ban_duration` estää kirjautumisen, mutta Supaben hallintarajapinta
-     * EI palauta `banned_until`-kenttää lainkaan — ei `listUsers`issa eikä
-     * `getUserById`ssä (todennettu 18.8.2026: kentät ovat app_metadata,
-     * aud, confirmed_at, created_at, email, email_confirmed_at, id,
-     * identities, is_anonymous, phone, role, updated_at, user_metadata).
+     * `ban_duration` estää kirjautumisen, mutta se ei kanna PERUSTELUA
+     * eikä lukitusaikaa — ja juuri perustelu on se mitä seuraava katsoja
+     * tarvitsee ("miksi tämä on lukossa?"). `app_metadata` palautuu
+     * `listUsers`issa ja on vain palvelimelta kirjoitettavissa, joten se
+     * on turvallinen paikka näytettävälle tilalle.
      *
-     * Ilman tätä käyttöliittymä ei siis voisi mitenkään tietää onko tunnus
-     * lukossa: lukittu tili näyttäisi vapaalta ja nappi lukessa "Lukitse".
-     * `app_metadata` on vain palvelimelta kirjoitettavissa, joten käyttäjä
-     * ei voi muuttaa sitä itse.
+     * HUOM. Älä päättele kentän puuttumisesta ettei sitä ole:
+     * supabase-js jättää null-kentät kokonaan pois oliosta, joten yhden
+     * käyttäjän otos näyttää harhaanjohtavasti siltä että kenttää ei ole
+     * olemassa. Todettu 18.8.2026 sekä `last_sign_in_at`in (löytyy 54/76
+     * käyttäjältä) että `banned_until`in kohdalla.
      */
     const { error } = await supabase.auth.admin.updateUserById(userId, {
       ban_duration: lock ? LOCK_DURATION : UNLOCK_DURATION,
