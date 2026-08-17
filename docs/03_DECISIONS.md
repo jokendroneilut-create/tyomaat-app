@@ -5,6 +5,126 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-082 – Jono kasvoi koska halpa työ kulutti kallista budjettia
+
+Kaksi eri jonoa kasvoi samasta syystä: **budjetti oli mitoitettu
+verkkohaulle, mutta se rajoitti myös työtä joka ei hae mitään.**
+
+**Dokumenttijono.** `releaseBodyWorker`in `DEFAULT_LIMIT = 25` on
+olemassa rajoittamaan sivuhakuja. Kuntapäätöksillä ei ole rikastajaa —
+niiden koko sisältö tuli jo hausta — joten ne vain merkitään
+käsitellyiksi. Silti ne kuluttivat saman budjetin.
+
+Mitattu 17.8.2026: jonossa 418 riviä, joista **414 ei tarvinnut
+verkkohakua lainkaan** ja vain 4 tarvitsi. Kertymä ~200/vrk, purkuteho
+100/vrk (25 × 4 ajoa) → jono kasvoi noin sata riviä vuorokaudessa,
+vaikka 99 % siitä oli ilmaista työtä. Nyt ne kuitataan
+joukkopäivityksenä budjetin ulkopuolella: **418 → 0, kesto 9,7 s.**
+
+**Kandidaattijono.** `legacyFetchCollector`issa ohitustarkistus "onko
+tämä osoite jo nähty" oli tuontisilmukan sisällä, sen ensimmäisenä
+ehtona. Kaikki kandidaatit kulkivat siis rinnakkaisuusjonon läpi ja
+kuluttivat aikabudjetin tarkistuksen, vaikkei niille tehty mitään.
+
+`stt_haku` palauttaa 12 kuukauden ikkunasta ~874 kandidaattia, joista
+mitattuna vain **52 oli uusia**. 70 sekunnin tuontibudjetti loppui
+kesken, 448 siirtyi seuraavaan ajoon — ja seuraava ajo aloitti taas
+samasta 874:stä. **Rästi ei voinut purkautua**, ja lähde kaatui 90
+sekunnin aikakatkaisuun 9 kertaa viikossa; viimeisin onnistuminen 5.8.
+
+Karsinta siirretty silmukan eteen. Semantiikka ei muutu — ohitushaara ei
+tehnyt muuta kuin kasvatti laskuria.
+
+| | kesto | siirtyi seuraavaan |
+|---|---|---|
+| ennen | 77 s | 448 |
+| rästiä purkaessa | 85 s | 22 |
+| vakaa tila | 26 s | 0 |
+
+**Kiinteä yleiskustannus mitattiin samalla**, koska se määrää mihin
+lähde ylipäätään mahtuu: haku 13–31 s (vaihtelee ajokerroittain),
+`loadProjectsForMatching` 9 s, dokumenttirivit 2 s — eli ~38 s ennen
+kuin yhtään kandidaattia on käsitelty. Jokainen **uusi** kandidaatti
+maksaa noin 1,4 s. Jos raja tulee vastaan uudelleen, oikea korjaus on
+lyhentää 12 kuukauden ikkunaa, ei nostaa budjettia.
+
+**Yleistys:** kun ajo rajoitetaan, rajan pitää koskea sitä resurssia
+jota se suojaa. Molemmissa tapauksissa raja oli oikea mutta kohdistui
+väärään joukkoon, ja seuraus oli sama — jono, joka näytti kasvavan
+"liian monesta hankkeesta" mutta koostui työstä jota ei tarvinnut tehdä.
+
+---
+
+### D-081 – Suunnittelutoimisto on lähde, mutta vain uutisensa
+
+Yksityiset suurhankkeet eivät osu Hilmaan, päätöksiin eivätkä kaavoihin
+(ks. muistiinpano yksityisten rakennuttajien katvealueesta).
+Suunnittelija valitaan hankkeen alussa, joten sen tiedote tulee ennen
+urakkakilpailua — ja yltää sinne minne lupalähteet eivät.
+
+**Referenssisivut hylättiin mitattuna.** Otos WSP:n kymmenestä
+projektisivusta 16.8.2026: **7 valmista, 2 käynnissä, 1 tuntematon.**
+Referenssisivu on markkinointia jälkikäteen. Lisäksi WSP:n listaus pyörii
+Coveo-hakupalvelun päällä ilman palvelimen renderöimää HTML:ää, eikä
+nykyinen keräin saisi siitä mitään. Sweco: 34+ sivua ilman rakenteisia
+asiakas- tai vaihekenttiä. Granlund: valikoitu case-kokoelma.
+
+**Uutis- ja sijoittajatiedotteet kelpaavat.** Pörssiyhtiö tiedottaa
+voitetut toimeksiannot nimeltä ja ajallaan. Ensimmäinen lähde on
+`sitowise`; RSS-syöte hylättiin, koska se on vuoden vanha (tuorein
+13.8.2025) vaikka sivusto julkaisee yhä.
+
+**Uusi rooli `designer`.** Suunnittelija ei ole rakennuttaja eikä
+pääurakoitsija, joten julkaisijaa ei kirjata kumpaankaan kenttään.
+Ilman omaa rooliaan oletuslogiikka olisi kirjannut Sitowisen
+rakennuttajaksi aina kun tilaajaa ei saada tekstistä jäsennettyä.
+
+**Suunnittelija tallennetaan silti** — se on hankkeen tiedossa oleva
+yritys ja usein ainoa mitä tästä lähteestä varmasti tiedetään.
+`metadata.related_companies` on oikea koti, koska tuonti yhdistää sen
+olemassa olevaan hankkeeseen eikä ylikirjoita: suunnittelijan tiedote voi
+olla ENSIMMÄINEN havainto hankkeesta, jota myöhemmät lähteet
+täydentävät.
+
+**Vaihepäättely eroaa urakoitsijasta.** `CONTRACT_PATTERNS` jätetään
+pois: suunnittelijan "sopimus solmittu" tarkoittaa suunnittelusopimusta,
+ja urakaksi luettuna hanke siirtyisi vuosia todellisuutta edelle.
+
+Ajettu 17.8.2026: 13 ehdokasta jonoon, **kuvaus 13/13, suunnittelija
+13/13, kaupunki 10/13**. Rakennuttaja jää 0/13, koska tilaajakuviot on
+viritetty urakoitsijan tiedotteille ("rakentaa X:lle") — tiedossa oleva
+puute, ei arvaus.
+
+**Sivutuote, joka koski kaikkia yrityslähteitä.** Ensimmäinen ajo antoi
+kuvauksen 0/14. `extractReleaseBody` valitsi `.first()` koko
+valitsinunionista, ja Sitowisen sivulla ensimmäinen `<article>` on tyhjä
+kääre (5 merkkiä, kun toisessa on 5 780). Alle 120 merkin tulos palautti
+`null`. Nyt valitaan **pisin siivottu** osuma. Mitattu 11 lähteen
+sivulla: 9 sama, 2 parempi, 0 huonompi.
+
+---
+
+### D-080 – Piilotettu hanke ei ole jonotyötä
+
+Piilotettu hanke jäi TIC:n osapuolettomien jonoon, koska kysely rajasi
+vain `status = active`. Piilotus näytti siis siltä ettei se tehnyt
+mitään: hanke katosi asiakkailta mutta jäi työlistalle.
+
+Jono rajaa nyt `is_public = true`. Osapuolten täydentäminen hankkeelle,
+jota kukaan ei näe, ei hyödytä ketään (jono 124 → 122).
+
+**Nimihaussa piilotetut näkyvät yhä, merkittynä "piilotettu"** — muuten
+piilotettua hanketta ei löytäisi TIC:stä lainkaan palauttaakseen sen
+näkyviin. Sama periaate kuin D-079:ssä: virheen korjaamisen pitää olla
+helpompaa kuin sen tekemisen.
+
+**Piilotus, ei poisto.** Duplikaattitäsmäytys lataa kaikki
+`projects`-rivit ilman `is_public`-suodatinta, joten piilotettu rivi
+toimii muistimerkkinä: sama sivu ei synny uutena hankkeena. Poistettu
+rivi ei estä mitään, ja lähde loisi sen uudelleen seuraavassa haussa.
+
+---
+
 ### D-079 – Piilotus ei piilottanut Tänään-syötteestä
 
 Kysymys "onko dashboard ainoa tapa poistaa tämä ja onko se järkevä"
