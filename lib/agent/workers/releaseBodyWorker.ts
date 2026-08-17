@@ -157,8 +157,71 @@ async function applyToStoredRows(
   return { queue, projects }
 }
 
+/*
+ * Kirjanpitorivit pois ennen hakubudjettia.
+ *
+ * `DEFAULT_LIMIT` on olemassa rajoittamaan VERKKOHAKUJA. Rivit joilla ei ole
+ * rikastajaa (kuntapäätökset, joiden koko sisältö tuli jo hausta) eivät hae
+ * mitään — ne vain merkitään käsitellyiksi. Silti ne kuluttivat samaa 25
+ * rivin budjettia, ja koska niitä kertyy moninkertaisesti purkunopeuteen
+ * nähden, jono kasvoi loputtomasti.
+ *
+ * Mitattu 17.8.2026: jonossa 418 riviä, joista 414 oli tällaisia ja vain 4
+ * tarvitsi verkkohaun. Kertymä oli ~200/vrk ja purkuteho 100/vrk (25 × 4
+ * ajoa), joten jono kasvoi noin sata riviä vuorokaudessa — vaikka 99 % siitä
+ * oli työtä joka ei maksa mitään.
+ *
+ * Nämä kuitataan joukkopäivityksenä budjetin ULKOPUOLELLA, jotta hakubudjetti
+ * kohdistuu niihin riveihin joita varten se on.
+ */
+const SWEEP_LIMIT = 1000
+
+/* Supabasen .in() on pilkottava, ettei kyselystä tule liian pitkää. */
+const SWEEP_CHUNK = 100
+
+async function sweepRowsWithoutEnricher(): Promise<number> {
+  const { data } = await supabaseAdmin
+    .from("source_documents")
+    .select("id, raw_payload")
+    .eq("status", "listed")
+    .order("updated_at", { ascending: true })
+    .limit(SWEEP_LIMIT)
+
+  const ids = (data ?? [])
+    .filter(
+      (row: any) =>
+        typeof findLegacySource(row.raw_payload?.legacy_source)?.enrich !== "function"
+    )
+    .map((row: any) => row.id)
+
+  if (!ids.length) return 0
+
+  const now = new Date().toISOString()
+  let swept = 0
+
+  for (let index = 0; index < ids.length; index += SWEEP_CHUNK) {
+    const chunk = ids.slice(index, index + SWEEP_CHUNK)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .update({
+        status: "no_enricher",
+        facts_extracted_at: now,
+        processed_at: now,
+        updated_at: now,
+      })
+      .in("id", chunk)
+
+    if (!error) swept += chunk.length
+  }
+
+  return swept
+}
+
 export async function runReleaseBodyWorker(limit = DEFAULT_LIMIT) {
   const startedAt = Date.now()
+
+  const sweptWithoutEnricher = await sweepRowsWithoutEnricher()
 
   const { data: documents, error } = await supabaseAdmin
     .from("source_documents")
@@ -177,7 +240,12 @@ export async function runReleaseBodyWorker(limit = DEFAULT_LIMIT) {
   if (error) throw error
 
   if (!documents?.length) {
-    return { ok: true, message: "Ei runkoa odottavia dokumentteja", processed: 0 }
+    return {
+      ok: true,
+      message: "Ei runkoa odottavia dokumentteja",
+      processed: 0,
+      sweptWithoutEnricher,
+    }
   }
 
   let fetched = 0
@@ -280,6 +348,7 @@ export async function runReleaseBodyWorker(limit = DEFAULT_LIMIT) {
   return {
     ok: true,
     processed: documents.length,
+    sweptWithoutEnricher,
     fetched,
     skipped,
     failed,
