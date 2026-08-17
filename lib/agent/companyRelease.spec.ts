@@ -4,9 +4,10 @@ import {
   extractReleaseBody,
   inferBuildingType,
   createCompanyEnricher,
+  stripPublisherName,
 } from "./companyRelease"
 import { allativeToNominative } from "./companyName"
-import { extractClientFromText } from "./fetchSttHakuSource"
+import { extractClientFromText, extractExplicitClient } from "./fetchSttHakuSource"
 
 /*
  * Kaikki testitapaukset ovat oikeasta tiedotteesta "Peab peruskorjaa Vanhan
@@ -333,5 +334,79 @@ describe("inferBuildingType – ulkoalueet", () => {
         "Hankkeeseen sisältyy leikkipiha ja pallokenttä."
       )
     ).toBe("Päiväkoti")
+  })
+})
+
+/*
+ * Varten hoivakotitiedote 18.8.2026 paljasti kolme vikaa kerralla:
+ * naapuriartikkelit jäivät kuvaukseen, kaupungiksi tuli yritysnimen
+ * "Tampere" vaikka kohde on Nokialla, ja tilaaja jäi poimimatta koska se
+ * mainitaan vasta ingressin ulkopuolella.
+ */
+const VARTE_BODY =
+  "Hoivakoti rakentuu Nokialle ja tulee tarjoamaan 60 asukaspaikkaa " +
+  "ikäihmisille. Hanke valmistuu toukokuussa 2027. Nokian Pinsiöntielle " +
+  "rakennettavan hoivakodin työt ovat tontilla jo täydessä vauhdissa. " +
+  "60-asukaspaikkainen hoivakoti tulee olemaan kooltaan 2647 brm2. " +
+  "Kohde rakennetaan A-energialuokkaan ja lämmitysmuotona on maalämpö. " +
+  "Hankkeen tilaajana toimii Asuntorakennuttajat Group Oy. " +
+  "Sinua voisi kiinnostaa myös: Projektit Varte Tampere Oy rakentaa " +
+  "hoivakodin Varte 17.08.2026 Työpaikat Vastaava työnjohtaja " +
+  "Varte 11.08.2026 TILAA POSTIA KODIN ETSIJÄLLE"
+
+describe("sivun hännän leikkaus", () => {
+  it("leikkaa 'Sinua voisi kiinnostaa' -palkin naapuriartikkeleineen", () => {
+    const body = extractReleaseBody(
+      `<html><body><article>${VARTE_BODY}</article></body></html>`
+    )
+
+    expect(body).toContain("Nokian Pinsiöntielle")
+    expect(body).not.toContain("Vastaava työnjohtaja")
+    expect(body).not.toContain("TILAA POSTIA")
+  })
+
+  /*
+   * Sama ilmaus keskellä artikkelia on osa sisältöä. Ilman sijaintirajaa
+   * tästä jäisi jäljelle vain ensimmäinen lause.
+   */
+  it("ei leikkaa roskamerkkiä tekstin alkupuolelta", () => {
+    const early =
+      "Lue myös liitteenä oleva havainnekuva. " +
+      "Hanke toteutetaan Nokialle ja se valmistuu keväällä 2027. ".repeat(8)
+
+    const body = extractReleaseBody(
+      `<html><body><article>${early}</article></body></html>`
+    )
+
+    expect(body).toContain("valmistuu keväällä 2027")
+    expect(body!.length).toBeGreaterThan(200)
+  })
+})
+
+describe("extractExplicitClient", () => {
+  it("löytää tilaajan myös ingressin ulkopuolelta", () => {
+    expect(extractExplicitClient(VARTE_BODY)).toBe("Asuntorakennuttajat Group Oy")
+  })
+
+  /*
+   * Ero `extractClientFromText`iin: tämä ei päättele, joten se on
+   * turvallinen koko rungossa eikä vain ingressissä.
+   */
+  it("ei arvaa yritystä ilman tilaaja-sanaa", () => {
+    expect(
+      extractExplicitClient("Varte Tampere Oy rakentaa hoivakodin Nokialle.")
+    ).toBeNull()
+  })
+})
+
+describe("stripPublisherName", () => {
+  it("poistaa julkaisijan ja sen perässä olevan paikkakunnan", () => {
+    const stripped = stripPublisherName(
+      "Varte Tampere Oy rakentaa hoivakodin Nokialle.",
+      "Varte"
+    )
+
+    expect(stripped).not.toContain("Tampere")
+    expect(stripped).toContain("Nokialle")
   })
 })

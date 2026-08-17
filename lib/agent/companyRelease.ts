@@ -2,7 +2,11 @@ import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 import { extractStreetAddress } from "./extractStreetAddress"
 import { parseEstimatedCompletionDate } from "./parseFinnishCompletionDate"
-import { resolveParties, extractClientFromText } from "./fetchSttHakuSource"
+import {
+  resolveParties,
+  extractClientFromText,
+  extractExplicitClient,
+} from "./fetchSttHakuSource"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { inferBuildingType, LEAD_LENGTH } from "./buildingType"
 import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
@@ -101,6 +105,29 @@ export function inferDesignerPhase(title: string, body: string | null): string {
 }
 
 /*
+ * JULKAISIJAN NIMI POIS ENNEN KAUPUNKITUNNISTUSTA.
+ *
+ * Konsernien tytäryhtiöt on nimetty paikkakunnan mukaan — "Varte Tampere
+ * Oy", "Varte Uusimaa Oy" — joten yritysnimi sisältää kaupungin, joka ei
+ * ole hankkeen sijainti. Mitattu 18.8.2026: hoivakotitiedote sai
+ * kaupungiksi Tampereen, vaikka teksti sanoo "Hoivakoti rakentuu
+ * Nokialle" ja "Nokian Pinsiöntielle". Sama teksti ilman yritysnimeä
+ * antaa oikein Nokian.
+ *
+ * Poisto koskee VAIN kaupunkitunnistusta: kuvaukseen ja osapuolten
+ * poimintaan nimi kuuluu.
+ */
+export function stripPublisherName(text: string, publisher: string): string {
+  const escaped = publisher.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+  /* Julkaisija ja sitä seuraava paikannimi + yhtiömuoto samalta erältä. */
+  return text.replace(
+    new RegExp(`\\b${escaped}(?:\\s+[A-ZÅÄÖ][\\wåäöÅÄÖ-]+)?\\s*(?:Oy|Oyj|Ab|Ky)?\\b`, "g"),
+    " "
+  )
+}
+
+/*
  * Tiedotesivun leipäteksti. Sivun runko on täynnä navigaatiota, joten
  * otetaan ensin artikkelielementti ja vasta viimeisenä koko body.
  * Murupolku on luotettava katkaisukohta silloin kun artikkelielementtiä ei
@@ -128,6 +155,43 @@ const BODY_SELECTORS = [
 
 /* Alle tämän jäävä teksti on navigaatiota tai tyhjä kääre, ei tiedote. */
 const MIN_BODY_LENGTH = 120
+
+/*
+ * Sivun hännän aloittavat otsikot. Ks. perustelu cleanReleaseTextissä.
+ *
+ * "KATSO MYÖS" ON TARKOITUKSELLA POIS, vaikka se oli mitatuista yleisin
+ * (294 esiintymää). YVA-sivuilla se ei aloita häntää vaan on keskellä
+ * sivua linkkilaatikkona, ja sen jälkeen jatkuu aito hankekuvaus.
+ * Todennettu 18.8.2026 Fingridin voimajohtohankkeella: leikkaus olisi
+ * poistanut 1 514 merkkiä, joihin sisältyi johdon pituus, reitti, kunnat
+ * ja hankevastaavan yhteystiedot. Sijaintiraja ei suojaa siltä, koska
+ * kohta on vasta 70 %:n kohdalla.
+ */
+const TAIL_MARKERS =
+  /sinua (?:saattaisi|voisi) kiinnostaa|saattaisit pitää|lue myös|muita uutisia|muut tiedotteet|muut artikkelit|muut julkaisut|muut hankkeet|lisää uutisia|liittyvät uutiset|uusimmat artikkelit|tilaa uutiskirje|tilaa postia|jaa artikkeli|seuraa meitä|muualla verkossa/i
+
+/*
+ * Roskamerkki hyväksytään katkaisukohdaksi vasta tästä eteenpäin. Kaikki
+ * mitatut esiintymät olivat 64-93 % kohdalla, joten raja on selvästi
+ * niiden alapuolella eikä estä yhtäkään.
+ */
+const TAIL_MIN_POSITION = 0.4
+
+/*
+ * PELKKÄ hännän leikkaus, ilman muuta siivousta.
+ *
+ * Tarpeen takautuvaan korjaukseen: `cleanReleaseText` normalisoi myös
+ * välilyönnit, joten sillä verrattuna 2 865 tallennettua kuvausta näytti
+ * muuttuvan vaikka saastuneita oli 323 — loput olisi kirjoitettu
+ * uudelleen pelkän välilyöntieron takia.
+ */
+export function cutReleaseTail(text: string): string {
+  const cut = text.search(TAIL_MARKERS)
+
+  return cut > 0 && cut > text.length * TAIL_MIN_POSITION
+    ? text.slice(0, cut).trim()
+    : text
+}
 
 
 export function extractReleaseBody(html: string): string | null {
@@ -177,7 +241,7 @@ export function extractReleaseBody(html: string): string | null {
 }
 
 /* Murupolun, naapuriartikkelien ja sivukaluston poisto yhdestä ehdokkaasta. */
-function cleanReleaseText(raw: string): string {
+export function cleanReleaseText(raw: string): string {
   let text = raw.replace(/\s+/g, " ").trim()
 
   for (const marker of CRUMB_MARKERS) {
@@ -191,14 +255,34 @@ function cleanReleaseText(raw: string): string {
   }
 
   /*
-   * "Sinua saattaisi kiinnostaa" -palkki listaa MUIDEN artikkeleiden
-   * otsikoita - leikataan pois, jottei väärä kaupunki tai päivämäärä
-   * poimiudu naapuriartikkelista.
+   * Sivun häntä pois: naapuriartikkelien listat, uutiskirjetilaukset ja
+   * jakopalkit. Ilman tätä väärä kaupunki tai yritys poimiutuu VIEREISESTÄ
+   * artikkelista.
+   *
+   * KUVIOT ON MITATTU, EI ARVATTU. Aiempi lista tunsi vain sanamuodon
+   * "Sinua saattaisi kiinnostaa", mutta Varten sivulla lukee "Sinua VOISI
+   * kiinnostaa myös" — yhden sanan ero, joka jätti kaksi naapuriartikkelia
+   * ja uutiskirjemainoksen kuvaukseen. Mitattu 18.8.2026: 12 513
+   * tallennetusta kuvauksesta 323 sisälsi tällaista roskaa.
+   *
+   * Esiintymät ja keskimääräinen sijainti tekstissä:
+   *   katso myös 294 (81 %) · seuraa meitä 89 (72 %) ·
+   *   tilaa uutiskirje 84 (64 %) · sinua voisi kiinnostaa 28 (84 %) ·
+   *   tilaa postia 15 (86 %) · jaa artikkeli 9 (87 %)
    */
-  return text
-    .split(/sinua saattaisi kiinnostaa|lue myös|muita uutisia|muut tiedotteet|aiheeseen liittyvät/i)[0]
-    .trim()
-    .replace(LEADING_JUNK, "")
+  const cut = text.search(TAIL_MARKERS)
+
+  /*
+   * LEIKATAAN VAIN TEKSTIN LOPPUPUOLELTA. Jokainen mitattu roskamerkki
+   * osui 64-93 % kohdalle, eli ne ovat sivun häntää. Ilmaus keskellä
+   * artikkelia ("katso myös liite") on sen sijaan osa sisältöä, ja sen
+   * kohdalta leikkaaminen hukkaisi tiedotteen loppuosan. Raja suojaa
+   * siltä ilman että se estää yhtäkään mitattua tapausta.
+   */
+  const trimmed =
+    cut > 0 && cut > text.length * TAIL_MIN_POSITION ? text.slice(0, cut) : text
+
+  return trimmed.trim().replace(LEADING_JUNK, "")
 }
 
 async function fetchHtml(url: string): Promise<string | null> {
@@ -307,7 +391,7 @@ export function createCompanyEnricher({
           designer: publisher,
         },
         description: body,
-        city: candidate.city ?? detectCityFromText(body),
+        city: candidate.city ?? detectCityFromText(stripPublisherName(body, publisher)),
         location: candidate.location ?? extractStreetAddress(body),
         developer:
           clientFromText && clientFromText.toLowerCase() !== publisher.toLowerCase()
@@ -331,10 +415,21 @@ export function createCompanyEnricher({
       }
     }
 
+    /*
+     * Tilaaja etsitään koko rungosta, jos ingressi ei sitä antanut — mutta
+     * vain yksiselitteisistä ilmauksista ("tilaajana toimii X"). Ingressin
+     * rajaus on olemassa siksi, ettei naapuriartikkelin yritys poimiudu
+     * tilaajaksi; tässä se riski ei toteudu, koska kuvio vaatii sanan
+     * "tilaajana" tai "rakennuttajana" nimen edelle.
+     */
+    const explicitClient = extractExplicitClient(body)
+
     const developer =
       role === "developer"
         ? publisher
-        : client ?? (ownDevelopment ? publisher : candidate.developer ?? null)
+        : client ??
+          explicitClient ??
+          (ownDevelopment ? publisher : candidate.developer ?? null)
 
     /*
      * Rakennuttajan tiedotteesta urakoitsijaa ei yleensä saa luotettavasti,
@@ -350,7 +445,7 @@ export function createCompanyEnricher({
        * 150-250 merkkiä, artikkeli 1000-2000.
        */
       description: body,
-      city: candidate.city ?? detectCityFromText(body),
+      city: candidate.city ?? detectCityFromText(stripPublisherName(body, publisher)),
       location: candidate.location ?? extractStreetAddress(body),
       developer,
       builder,

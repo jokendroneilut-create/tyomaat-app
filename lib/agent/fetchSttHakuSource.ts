@@ -118,6 +118,38 @@ const CLIENT_PATTERNS = [
   ),
 ]
 
+/*
+ * Vain YKSISELITTEISET tilaajailmaukset — "tilaajana toimii X",
+ * "rakennuttajana on X".
+ *
+ * MIKSI OMA FUNKTIO. `extractClientFromText` sisältää myös päätteleviä
+ * kuvioita ("toteuttaa X:lle", "ja X ovat sopineet"), jotka voivat osua
+ * mihin tahansa yritysnimeen tekstissä. Siksi osapuolet luetaan vain
+ * ingressistä (LEAD_LENGTH = 700). Se rajaus kuitenkin hukkasi tilaajan
+ * silloin kun se mainitaan vasta myöhemmin: mitattu 18.8.2026, Varten
+ * hoivakotitiedotteessa "Hankkeen tilaajana toimii Asuntorakennuttajat
+ * Group Oy" on merkillä 832, eli 132 merkkiä ingressin ulkopuolella.
+ *
+ * Nämä kaksi kuviota nimeävät tilaajan suoraan, joten ne ovat turvallisia
+ * koko tekstissä — toisin kuin päättelevät kuviot.
+ */
+const EXPLICIT_CLIENT_PATTERNS = CLIENT_PATTERNS.slice(0, 2)
+
+export function extractExplicitClient(text: string | null): string | null {
+  const joined = String(text ?? "")
+  if (!joined) return null
+
+  for (const pattern of EXPLICIT_CLIENT_PATTERNS) {
+    const match = joined.match(pattern)
+    if (!match?.[1]) continue
+
+    const name = cleanCompanyName(match[1])
+    if (name.length >= 4) return name
+  }
+
+  return null
+}
+
 export function extractClientFromText(
   title: string | null,
   description: string | null
