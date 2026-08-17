@@ -1,4 +1,20 @@
-export type AnalyticsEventType = "login" | "pageview" | "project_open"
+/*
+ * `source_link_click` = käyttäjä avasi hankkeen alkuperäisen ilmoituksen.
+ *
+ * Kirjataan kahdesta syystä, joista tuotesyy on tärkeämpi. ENSINNÄKIN
+ * kukaan ei tiedä käytetäänkö linkkiä: se lisättiin koska sitä pidettiin
+ * asiakkaalle arvokkaana, mutta oletusta ei ole mitattu. TOISEKSI linkki
+ * paljastaa lähteen osoitteen, ja koko lähdelistan kerääminen vaatisi
+ * tuhansia klikkauksia — mikä erottuu normaalikäytöstä kertaluokkina.
+ *
+ * Sama mittari vastaa siis molempiin: pidetäänkö linkki, ja kerääkö joku
+ * niitä järjestelmällisesti.
+ */
+export type AnalyticsEventType =
+  | "login"
+  | "pageview"
+  | "project_open"
+  | "source_link_click"
 
 export function getDeviceType(): "mobile" | "desktop" {
   if (typeof window === "undefined") return "desktop"

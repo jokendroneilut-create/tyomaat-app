@@ -5,7 +5,13 @@ import { createClient } from "@supabase/supabase-js"
 
 export const runtime = "nodejs"
 
-const ALLOWED_EVENT_TYPES = new Set(["login", "pageview", "project_open"])
+const ALLOWED_EVENT_TYPES = new Set([
+  "login",
+  "pageview",
+  "project_open",
+  /* Alkuperäisen ilmoituksen avaus, ks. lib/analytics/trackEvent.ts. */
+  "source_link_click",
+])
 
 export async function POST(request: Request) {
   try {

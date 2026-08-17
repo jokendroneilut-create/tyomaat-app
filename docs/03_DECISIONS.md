@@ -5,6 +5,55 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-083 – RLS-pyyhkäisy ohitti analytiikkataulun, eikä oire näkynyt kenellekään
+
+Kokeilujaksoa kalastelleista yhteydenotoista syntyi kysymys, havaitaanko
+poikkeava selaus. Sitä selvitettäessä `analytics_events`-taulusta löytyi
+**544 tapahtumaa ilman `user_id`:tä** (15.7.–5.8.2026), joista 205 oli
+hanke-avauksia — kolmasosa kaikista.
+
+**Ensin esitin tämän nykyisenä vikana. Se oli väärin.** Uudessa datassa
+aukkoa ei ole: 6.8.–17.8. kertyi 7 672 tapahtumaa ja **nolla**
+tunnistamatonta. Ilmiö oli päättynyt 12 vuorokautta ennen kuin sitä
+katsottiin.
+
+**Syyn jäljitys sulki pois kolme selitystä.** Kirjausreitti on luotu
+14.7. eikä sitä ole muokattu kertaakaan, ja siinä on alusta asti suoja
+joka ei kirjoita riviä ilman kirjautunutta käyttäjää
+(`app/api/analytics/track/route.ts`) — rivit eivät voi olla siitä.
+Yhtään tiliä ei ole poistettu, joten viite ei ole nollautunut
+poistossa (kaikki 34 analytiikan käyttäjää ovat yhä `profiles`-taulussa).
+Koodissa ei ole toista kirjoittajaa.
+
+**Selitys löytyi RLS-korjauksen kattavuudesta.** 30.7. suljettiin 16
+anon-avaimelle avointa taulua (`docs/sql/2026-07-30_enable_rls_exposed_tables.sql`),
+mutta **`analytics_events` ei ollut niiden joukossa**. Taulu jäi siis
+auki, ja nollarivit jatkuvat täsmälleen siihen asti kunnes RLS ilmeisesti
+ulotettiin siihen erikseen. Nyt anon-avaimen kirjoitus on estetty
+(todennettu: `new row violates row-level security policy`), luku on
+sallittu mutta palauttaa nolla riviä.
+
+En pysty nimeämään kirjoittajaa ilman heinäkuun palvelinlokeja, enkä
+esitä arvausta faktana.
+
+**Varsinainen opetus ei ole RLS vaan havaitseminen.** Taulussa oli
+kuukauden ajan rivejä, joiden syntyminen on koodin perusteella
+mahdotonta, eikä kukaan huomannut — koska mikään ei katsonut. Oire oli
+olemassa koko ajan ja luettavissa yhdellä kyselyllä.
+
+Siksi analytiikkaan lisätään mittariksi **"tapahtumia ilman
+käyttäjätunnistetta"**. Sen kuuluu olla aina nolla; nollasta poikkeava
+luku tarkoittaa tuntematonta kirjoittajaa. Tämä olisi paljastanut asian
+heinäkuussa.
+
+**Termi kirjattuna, koska sitä käytetään mittareissa:** *tapahtuma* =
+yksi rivi `analytics_events`-taulussa. Tyypit ovat `pageview`, `login` ja
+`project_open`. Jaksolla 6.8.–17.8. jakauma oli 5 993 / 1 487 / 192.
+Hanke-avauksia kertyy siis noin 16 vuorokaudessa — poikkeaman
+kynnysarvot on asetettava vasta kun jakaumaa on katsottu, ei etukäteen.
+
+---
+
 ### D-082 – Jono kasvoi koska halpa työ kulutti kallista budjettia
 
 Kaksi eri jonoa kasvoi samasta syystä: **budjetti oli mitoitettu

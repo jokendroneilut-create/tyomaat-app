@@ -1389,6 +1389,13 @@ setTeamModeEnabled(true)
     rel="noopener noreferrer"
     className="projects-btn"
     style={{ textDecoration: "none" }}
+    onClick={() =>
+      trackEvent({
+        event_type: 'source_link_click',
+        project_id: selected.id,
+        path: '/projects',
+      })
+    }
   >
     Avaa alkuperäinen ilmoitus
   </a>
