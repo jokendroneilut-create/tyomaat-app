@@ -299,17 +299,37 @@ export async function collectLegacySource(source: any) {
    */
   const enrichBudget = typeof legacy.enrich === "function" ? ENRICH_PER_RUN : 0
 
+  /*
+   * JO NÄHDYT KARSITAAN ENNEN SILMUKKAA, EI SEN SISÄLLÄ.
+   *
+   * Ohitus oli aiemmin silmukan ensimmäinen ehto, joten jokainen kandidaatti
+   * kulki rinnakkaisuusjonon läpi ja kulutti aikabudjetin tarkistuksen
+   * vaikkei sille tehtäisi mitään. Se ei näy pienillä lähteillä mutta kaataa
+   * suuret: stt_haku palauttaa 12 kuukauden ikkunasta ~874 kandidaattia,
+   * joista mitattuna 17.8.2026 vain 52 oli uusia. Ajo kesti 77 s paikallisesti
+   * ja työntekijän raja on 90 s, joten lähde kaatui aikakatkaisuun
+   * yhdeksän kertaa viikossa — 94 % työstä oli jo tuotujen läpikäyntiä.
+   *
+   * Karsinta ei muuta semantiikkaa: ohitushaara ei tehnyt muuta kuin kasvatti
+   * laskuria.
+   */
+  const unseen = candidates.filter(
+    (candidate: any) => candidate?.source_url && !seenUrls.has(candidate.source_url)
+  )
+
+  skipped = candidates.length - unseen.length
+
   const storedDescriptionLength =
     enrichBudget > 0 ? await loadStoredDescriptionLengths(legacy.name) : new Map()
 
   const ordered =
     enrichBudget > 0
-      ? [...candidates].sort(
+      ? [...unseen].sort(
           (a: any, b: any) =>
             (storedDescriptionLength.get(a?.source_url) ?? 0) -
             (storedDescriptionLength.get(b?.source_url) ?? 0)
         )
-      : candidates
+      : unseen
 
   await processWithConcurrency(ordered, CANDIDATE_CONCURRENCY, async (candidate: any) => {
     /*
@@ -318,16 +338,6 @@ export async function collectLegacySource(source: any) {
      */
     if (Date.now() > importDeadline) {
       deferred++
-      return
-    }
-
-    if (!candidate?.source_url) {
-      skipped++
-      return
-    }
-
-    if (seenUrls.has(candidate.source_url)) {
-      skipped++
       return
     }
 
