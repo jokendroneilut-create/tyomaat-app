@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
+import { loginErrorMessage } from '../../lib/auth/loginErrorMessage'
 
 export default function LoginPage() {
   const [nextPath, setNextPath] = useState('/today')
@@ -40,7 +41,7 @@ export default function LoginPage() {
     setLoading(false)
 
     if (error) {
-      setError(error.message)
+      setError(loginErrorMessage(error.message))
       return
     }
 
