@@ -25,7 +25,7 @@ vaarallisempi vertailukohta.
 
 ## RPT Smart (Hubexo Finland Oy)
 
-Markkinan vanha ja suuri toimija. Havainnot 16.8.2026 myyntisivulta, FAQ:sta ja
+Markkinan vanha ja suuri toimija. Havainnot 18.8.2026 myyntisivulta, FAQ:sta ja
 tukisivustolta, ellei toisin mainita.
 
 ### Yritys
@@ -159,12 +159,133 @@ kerrallaan, ei "Kerrostalo Finnooseen").
 relevanteista hankkeista heillä jo on ("saat relevantit projektit ja
 päivitykset suoraan sähköpostiisi"). Se ei ole meidän erottautumisemme.
 
+### Byggfakta Rise — julkaistu 17.8.2026
+
+**Yllä oleva Smart-analyysi vanheni julkaisupäivänään.** Hubexo julkaisi samana
+päivänä seuraavan sukupolven alustan, joka korvaa Smartin suunnan. Heidän oma
+muotoilunsa FAQ:ssa:
+
+> "Byggfakta Smart on luotettava työkalu rakennushankkeiden seurantaan ja
+> suunnitteluun. **Byggfakta Rise on seuraavan sukupolven ratkaisu.** Samat
+> yksityiskohtaiset tiedot lisättynä tekoälyllä."
+
+Ja tuotelupaus tiivistettynä yhteen lauseeseen sivulla:
+
+> "Se ei ole arkisto hankkeista. Se on kumppani, joka osaa tehdä johtopäätöksiä."
+
+Eli **haku-ja-suodatus-paradigma, jonka tunnistimme heidän heikkoudekseen, on
+juuri se jonka he itse hylkäsivät.**
+
+#### Mitä Rise tekee
+
+Tekoäly on kolmessa paikassa (heidän oma jaottelunsa):
+
+1. **AI Myyntivalmentaja** — analysoi hanketiedot, päätöksentekijöiden
+   käyttäytymisen ja markkinasignaalit ja ehdottaa seuraavan parhaan
+   toimenpiteen jokaiselle myyntiputken hankkeelle samanaikaisesti. Sivulla
+   esimerkkinä numeroitu toimintalista: *1 Kontaktoi konsulttia — Tänään ·
+   2 Seuraa rakennuttajaa · 3 Lisää myyntiputkeen.*
+2. **Tekoälychat** — luonnollisen kielen kysymykset ilman suodattimia
+   ("Kuka on tilannut vastaavia hankkeita viimeisten 12 kuukauden aikana?").
+3. **Taustalla toimiva priorisointijärjestelmä, joka päättää mitä syötteessäsi
+   näytetään ensin.**
+
+Muu toiminnallisuus: koko toimijaketju nimillä, rooleilla ja suorilla
+yhteystiedoilla; myyntiputki vaiheineen (prospekti → mahdollisuus → aktiivinen →
+voitetut) jaettuna tiimille; tarjouspyynnöt ja omat tarjoukset määräaikoineen;
+hankesivu jolla kuvaus, vaihe, budjetti, **piirustukset**, materiaalit,
+toimijat, kartta, sisäiset kommentit ja @-maininnat; markkinaindeksi
+aloituksille ja suunnittelulle viiden vuoden historialla. Mobiilipari on
+erillinen tuote (Hubexo Reach).
+
+Maantiede: **Suomi, Ruotsi, Norja ja Tanska samalla alustalla.**
+
+#### Lehdistötiedotteen luvut (17.8.2026)
+
+| | |
+|---|---|
+| aktiivisia ja **varmennettuja** hankkeita | yli 90 000 (Pohjoismaat) |
+| hankkeita historiadata mukaan lukien | lähes **700 000** |
+| aktiivisia rakennusalan yrityksiä | yli 65 000 (Pohjoismaat) |
+| datan ikä | lähes 100 vuotta |
+| toimitusjohtaja | Dario Aganovic: *"Byggfakta Rise on enemmän kuin tietokanta. Se on liiketoimintakumppani."* |
+
+Kaksi asiaa näistä luvuista.
+
+**Smartin "yli 50 000" ja Risen "yli 90 000" eivät voi molemmat olla oikein
+samasta asiasta.** Todennäköisin selitys on, että Smart-sivun luku on vanha tai
+rajattu eri tavalla. Kumpikin on joka tapauksessa **pohjoismainen**, joten
+Suomen osuus on karkeasti luokkaa 15 000–20 000 aktiivista hanketta. Se on
+oikea vertailukohta meidän 5 439:lle — ei 90 000 eikä Metrocin 100 000.
+
+**Metrocin "yli 100 000 hanketta" Suomessa yksin ja Byggfaktan 90 000 koko
+Pohjolassa mittaavat eri asiaa.** Byggfakta laskee vain puhelimitse
+varmennettuja; Metroc laskee kaiken mitä automaatio poimii. Kun kilpailija
+seuraavan kerran heiluttaa hankemäärää, oikea kysymys ei ole "montako" vaan
+"mikä kelpaa hankkeeksi".
+
+**Ja se 700 000 historiahanketta plus 65 000 yritystä on se, mitä
+Myyntivalmentaja oikeasti syö.** Päättäjän käyttäytymishistoria ei synny
+tietokannasta vaan sen iästä.
+
+#### Miten he perustelevat etunsa — ja ketä vastaan
+
+Sivulla on neljä erillistä lohkoa, jotka selittävät mitä "vahvistettu"
+tarkoittaa: tutkijamme soittavat, he jatkavat soittamista, joka kerta samat
+ihmiset, ja tietojen antajat käyttävät alustaa itsekin. Kärki on suora:
+
+> "Kaikki rakennusalan alustat puhuvat tänä vuonna tekoälystä. Niitä erottaa
+> toisistaan se, mitä tekoäly tekee käyttäessäsi sitä, ja **mihin se on
+> koulutettu**."
+
+Tämä on tähdätty Metrocia vastaan — ja meitä vastaan. Väite on: tekoäly on
+hyödyke, puhelimitse vahvistettu data ei ole. Siihen ei voi vastata sanomalla
+"meilläkin on tekoäly".
+
+Toinen ja pahempi puoli väitteestä on **päätöksentekijöiden historiallinen
+käyttäytyminen**: kuka on tilannut vastaavia hankkeita, kuka vie hanketta
+oikeasti eteenpäin, milloin heihin on viimeksi oltu yhteydessä. Se nojaa
+vuodesta 1936 kertyneeseen arkistoon. Meillä on noin vuosi dataa. **Tätä
+ulottuvuutta ei kurota kiinni työllä, vain ajalla.**
+
+#### Mikä Risessä on aidosti heikkoa
+
+- **Suomen tekoäly on koulutettu tanskalaisella datalla.** Heidän oma
+  muotoilunsa: "Meidän tekoälymme on koulutettu **tanskalaisilla**
+  rakennushankkeilla, jotka ihminen on käsitellyt puhelimitse." Alusta on
+  pohjoismainen keskustuote, Suomi saa käännöksen. Käännösjälki näkyy sivulla
+  asti (saksalaiset lainausmerkit `„vahvistettu"`, "Kontakoi konsulttia").
+- **Ei suomalaisia julkisen sektorin lähteitä.** Yhtenäinen pohjoismainen
+  alusta ei sisällä kuntien talonrakennusohjelmia, hyvinvointialueiden
+  investointiohjelmia eikä päätöspöytäkirjoja. Heidän vahvuutensa on puhelin,
+  ei suomalainen asiakirjakoneisto. Sen omistaa tällä hetkellä Metroc.
+- **Käyttöönotto on maksullinen lisäpalvelu ja kestää 3–4 viikkoa**, Customer
+  Success -henkilön kanssa. Tukitasoja on kolme: "Käyttöönotto", "Aktiivinen
+  tuki", "Strateginen kumppanuus". Lisenssit ja roolit neuvotellaan
+  organisaatiokohtaisesti.
+- **Ristiriita omassa viestissä:** tuotesivu sanoo "Se ei ole CRM-järjestelmä",
+  mutta esittelysivu myy myyntiputkea vaiheineen, muistiinpanoja ja
+  @-mainintoja. Se on CRM, jota ei haluta kutsua CRM:ksi — luultavasti koska
+  CRM-korvaajan myyminen tappaisi Salesforce-integraatiokeskustelun.
+- **Brändipääomaa poltetaan.** He ostavat Google-mainontaa **omalla
+  brändihaullaan "rpt smart"** (tarkka haku, kampanja "SF | Brand") ja ohjaavat
+  sen Risen laskeutumissivulle. Vanhan tuotteen hakuliikenne käännetään uudelle
+  sivulle maksetulla mainonnalla.
+
+**Korjaus omaan päättelyyn.** Oletin ensin, että jokainen Smart-asiakas on
+erikseen käännytettävä ja että migraatio hidastaa heitä. Tiedote sanoo toisin:
+alusta otetaan käyttöön 17.8.2026 alkaen **kaikissa Pohjoismaissa kaikille
+nykyisille asiakkaille**. Kyse ei ole hitaasta lisämyynnistä vaan
+kertarysäyksellä tehtävästä alustavaihdosta. Se on heille nopeampi kuin
+oletin — ja tarkoittaa, että 20 000 käyttäjää näkee Myyntivalmentajan
+lähiviikkoina, ei ensi vuonna.
+
 ---
 
 ## Metroc Oy
 
 Läheisin kilpailija — **sama malli kuin meillä**: julkiset lähteet, automaattinen
-keruu, tekoälyrikastus, suosittelumalli. Havainnot 16.8.2026 sivustolta ja
+keruu, tekoälyrikastus, suosittelumalli. Havainnot 18.8.2026 sivustolta ja
 julkisista taloustiedoista.
 
 ### Yritys ja luvut
@@ -238,18 +359,22 @@ pullonkaula.
 
 ## Vertailu
 
-| | RPT Smart | Metroc | Työmaat.fi |
+| | RPT / Byggfakta Rise | Metroc | Työmaat.fi |
 |---|---|---|---|
 | keruumalli | tutkimustiimit soittavat | automaatio + AI julkisista lähteistä | automaatio + AI julkisista lähteistä |
-| hankemäärä (väite) | "yli 50 000" (Pohjoismaat?) | "yli 100 000" | 5 439 asiakkaille näkyvää |
+| hankemäärä (väite) | 90 000 varmennettua + 700 000 historiaa (Pohjoismaat) → Suomi ~15–20 k | "yli 100 000" (Suomi, ei varmennusvaatimusta) | 5 439 asiakkaille näkyvää |
 | yksityiset hankkeet | kyllä, ydinaluetta | osin (teollisuus, tontit) | ei |
-| julkiset investointipäätökset | tutkimustiimillä | oma tuote, AI Chat | **aukko** |
-| yhteyshenkilöt | kyllä | kyllä, päättäjätasolla | ei |
-| luonnollisen kielen haku | ei | kyllä | ei |
-| suosittelu | "hankesuositukset", kevyt | oppiva malli | pisteytys rakennettu, palaute puuttuu |
-| CRM-integraatiot | API | HubSpot, Salesforce, Pipedrive | oma CRM |
-| hinta | **600 €/kk / maakunta** (mitattu) | **~300–400 €/kk** (johdettu) | — |
-| itsepalvelu / julkinen hinta | ei / ei | ei / ei | — |
+| julkiset investointipäätökset | tutkimustiimillä, ei omana tuotteena | oma tuote, AI Chat | **aukko** |
+| yhteyshenkilöt | kyllä, + päättäjien käyttäytymishistoria | kyllä, päättäjätasolla | ei |
+| luonnollisen kielen haku | **kyllä (Rise)** | kyllä | ei |
+| syötteen priorisointi | **kyllä (Rise)** | oppiva malli | pisteytys rakennettu, palaute puuttuu |
+| seuraava toimenpide ("mitä teen tänään") | **kyllä — AI Myyntivalmentaja (Rise)** | ei | P1:n tavoite, kesken |
+| myyntiputki tuotteessa | kyllä (Rise) | kyllä (Buildings) | oma CRM |
+| CRM-integraatiot | määritellään käyttöönotossa | HubSpot, Salesforce, Pipedrive | oma CRM |
+| maantiede | FI, SE, NO, DK samalla alustalla | FI, SE | FI |
+| hinta | **600 €/kk / maakunta** (Smart, mitattu); Rise + maksullinen käyttöönotto | **~300–400 €/kk** (johdettu) | — |
+| käyttöönotto | 3–4 vk, maksullinen lisäpalvelu | demo + myyjä | — |
+| itsepalvelu / julkinen hinta | ei / ei | ei / ei | **kyllä / kyllä** (päätetty) |
 | koko | konserni, 2 500 hlöä | 23 hlöä, 1,4 M€ | 1 hlö |
 
 **Hankemääriä ei voi verrata suoraan.** 100 000 ja 50 000 ovat eri asioita eri
@@ -275,7 +400,7 @@ vuosisopimuksen etukäteen laskutettuna. Se ei ole sattumaa vaan seuraus
 myyntiorganisaation kustannuksesta — ja siksi se on ainoa rakenteellisesti auki
 oleva rako.
 
-### Päätetty asemointi (16.8.2026)
+### Päätetty asemointi (18.8.2026)
 
 Työmaat.fi ei matki kilpailijoiden myyntimallia vaan asettuu sitä vastaan
 kolmella konkreettisella tavalla:
@@ -299,15 +424,40 @@ Yhden hengen kulurakenne tekee siitä meille mahdollista. **Se on ainoa etu,
 joka seuraa suoraan pienuudesta eikä katoa sitä mukaa kun kilpailija huomaa
 sen.**
 
+**Rise vahvisti tämän päätöksen samana päivänä kun se tehtiin.** Risen
+käyttöönotto on maksullinen lisäpalvelu, kestää 3–4 viikkoa, vaatii Customer
+Success -henkilön ja lisenssit neuvotellaan organisaatiokohtaisesti; tukitasoja
+on kolme. Kilpailija ei siis ole siirtymässä matalan kynnyksen suuntaan vaan
+päinvastoin — heidän kustannuksensa asiakasta kohti juuri nousi. Rako ei
+kaventunut, se leveni.
+
 Kääntöpuoli on syytä sanoa ääneen: 30 päivän irtisanottavuus siirtää
 todistustaakan tuotteelle joka kuukausi. Se toimii vain jos tuote tuottaa
 näkyvää arvoa jatkuvasti — mikä on sama vaatimus kuin P1:n relevanssipisteytys
 asettaa. Asemointi ja tuotesuunta ovat siis samassa veneessä.
 
-**Toinen rako: kapeus.** Metroc myy viittä tuotetta neljälle segmentille, RPT
-kymmentä. Molemmat vastaavat kysymykseen "mitä kaikkea markkinassa tapahtuu".
-Kysymys "mitä minun pitäisi tehdä tänään" on yhä kenenkään omistamatta — mutta
-sen voittaminen vaatii, että vastaus on **oikea**, ei että se on olemassa.
+**~~Toinen rako: kapeus.~~ Vanhentui samana päivänä, 18.8.2026.** Tässä luki
+että kysymys *"mitä minun pitäisi tehdä tänään"* on yhä kenenkään omistamatta.
+**Se ei pidä paikkaansa.** Byggfakta Risen AI Myyntivalmentaja vastaa
+täsmälleen siihen, ja taustapriorisointi järjestää syötteen — sama asia kuin
+`/today`. Väite jätetään yliviivattuna näkyviin, koska on hyödyllisempää muistaa
+että se vanheni kahdessa päivässä kuin että se joskus esitettiin.
+
+Seuraus: **P1 ei ole erottautumista vaan kilpailukelpoisuuden minimi**, aivan
+kuten investointipäätöslähde. Ja se on nyt mitattavissa kilpailijaa vastaan:
+heidän valmentajansa voi sanoa "kontaktoi konsulttia tänään", koska he tietävät
+kuka konsultti on. Meillä urakoitsija puuttuu 86 %:lta ja rakennuttaja 59 %:lta.
+**Suositus ei voi olla parempi kuin kenttä jonka päälle se rakentuu** —
+toimenpidesuositus ilman osapuolitietoa on korkeintaan "katso tätä hanketta",
+ja se on eri tuote.
+
+Kapeus itsessään on yhä rako, mutta eri kohdassa kuin luulin: ei
+kysymyksenasettelussa vaan **Suomi-kohtaisuudessa**. Rise on yksi
+pohjoismainen alusta neljälle maalle, ja sen tekoäly on heidän omien sanojensa
+mukaan koulutettu tanskalaisella datalla. Kuntien talonrakennusohjelmat,
+hyvinvointialueiden investointiohjelmat ja päätöspöytäkirjat eivät mahdu
+yhtenäiseen pohjoismaiseen tuotteeseen. Ne ovat suomalaisen tuotteen etu, ja
+juuri nyt Metroc on ainoa joka käyttää sitä.
 
 **Hinnoittelun ankkuri.** Automatisoidun tuotteen markkinahinta Suomessa on
 ~300 €/kk (Metrocin toteutunut ARPU) ja ihmiskeruun ~600 €/kk yhdestä
@@ -328,6 +478,34 @@ kapeampi tai ostettavampi — ei jos se yrittää olla sama tuote halvemmalla.
 
 ---
 
+## Kilpailijaseurannan havainnot
+
+Päivätty loki siitä, mitä kilpailijoiden julkisessa käyttäytymisessä tapahtuu.
+Erillään tuoteanalyysistä, koska nämä ovat nopeasti muuttuvia signaaleja.
+
+**18.8.2026 — RPT poisti lähes kaikki referenssit sivuiltaan.** Smart-sivulle
+jäi yksi asiakaslainaus (Kuljetusrinki). Ajoitus on sama kuin Risen julkaisu,
+mikä antaa kaksi lukutapaa: joko vanhan tuotteen referenssit siivotaan pois
+uuden tieltä (todennäköisin), tai referenssiasiakkaissa on tapahtunut jotain
+mitä ei haluta näkyvän. **Älä ylitulkitse** — lanseerauksen yhteydessä
+sivustosiivous on tavallista. Referenssit oli ehditty tutkia ennen poistoa, eli
+aineisto on tallessa vaikka lähde katosi. Sama opetus kuin
+`rakennushankkeet.rpt.fi` -listan kanssa: **kilpailijan julkinen sivu on
+katoava lähde, ja se kannattaa ottaa talteen silloin kun se on auki.**
+
+**18.8.2026 — kilpailijoiden yleisö otettu seurantaan.** RPT:n ja Metrocin
+Instagram-tykkääjät on käyty läpi ja seurattu. Perustelu: kilpailijan sisältöä
+seuraava rakennusalan yritys on määritelmällisesti markkinassa oleva ostaja —
+se on halvin olemassa oleva liidilähde yhden hengen yritykselle, ja se ei vaadi
+mainosbudjettia. Tämä on myös ainoa kanava, jossa pienuus on etu: kumpikaan
+kilpailija ei voi tehdä samaa henkilökohtaisesti.
+
+Jotta työ kumuloituu eikä jää kertaluontoiseksi, kannattaa kirjata mitä
+listasta seuraa: montako seurattua kääntyi kontaktiksi ja mitkä yritystyypit
+painottuvat. Muuten seurattujen määrä on aktiivisuusmittari, ei tulosmittari.
+
+---
+
 ## Lähteet
 
 **RPT Smart.** Myyntisivu ja FAQ: <https://www.rpt.fi/rpt-byggfakta-smart> ·
@@ -335,7 +513,9 @@ tukisivusto: <https://www.rpt.fi/smart-tuki> (alasivut *omat valinnat*,
 *suodattimet*, *sarakkeet*, *kilpailutus*, *yrityshaku*) ·
 nimenmuutos ja omistus: <https://hubexo.com/news/byggfakta-group-becomes-hubexo/>,
 <https://www.stirlingsquare.com/news/byggfakta-group> ·
-**hinta 600 €/kk: oma käyttökokemus (16.8.2026).**
+**hinta 600 €/kk: oma käyttökokemus (18.8.2026)** ·
+Byggfakta Rise: <https://www.rpt.fi/rise>, <https://www.rpt.fi/rise-tutustu> ·
+lehdistötiedote 17.8.2026: <https://www.mynewsdesk.com/fi/hubexo/pressreleases/hubexo-lanseeraa-uuden-tekoaelyalustan-byggfakta-risen-joka-auttaa-rakennusalan-yrityksiae-saavuttamaan-parempia-tuloksia-huomattavasti-pienemmaellae-vaivalla-3461035>
 
 **Metroc.** Etusivu ja tuotesivut: <https://metroc.ai/palvelumme/projects/>,
 `/palvelumme/public-investments/`, `/palvelumme/real-estates/`,
