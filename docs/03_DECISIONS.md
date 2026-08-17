@@ -5,6 +5,71 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-085 – Yksi tiedote paljasti viisi vikaa, ja kuivaharjoitus esti neljä virhettä
+
+Yksi Varten hoivakotitiedote (18.8.2026) tuotti kannalle rivin, jossa oli
+väärä kaupunki, puuttuva rakennuttaja, väärä vaihe, puuttuva osoite ja
+kuvaus täynnä naapuriartikkeleita. Jokaisella oli oma syynsä.
+
+**1. Sivun hännän leikkaus tunsi vain yhden sanamuodon.** Kuvio odotti
+"Sinua saattaisi kiinnostaa", mutta Varten sivulla lukee "Sinua VOISI
+kiinnostaa myös" — yhden sanan ero, joka jätti kaksi naapuriartikkelia ja
+uutiskirjemainoksen kuvaukseen. Merkit on nyt **mitattu 12 513
+kuvauksesta**, ei arvattu, ja leikkaus tehdään vain tekstin loppupuolelta
+(yli 40 %), koska kaikki mitatut roskamerkit osuivat 64–93 % kohdalle.
+
+**"Katso myös" jätettiin pois vaikka se oli yleisin (294 esiintymää).**
+YVA-sivuilla se ei aloita häntää vaan on keskellä sivua linkkilaatikkona,
+ja sen jälkeen jatkuu aito hankekuvaus. Fingridin voimajohtohankkeesta
+olisi kadonnut 1 514 merkkiä: johdon pituus, reitti, kunnat ja
+hankevastaavan yhteystiedot.
+
+**2. Tilaaja jäi ingressirajauksen taakse.** Osapuolet luetaan vain
+ensimmäisestä 700 merkistä, jottei naapuriartikkelin yritys poimiudu
+tilaajaksi — mutta "Hankkeen tilaajana toimii Asuntorakennuttajat Group
+Oy" on merkillä 832. Uusi `extractExplicitClient` lukee koko rungon mutta
+**vain yksiselitteisistä ilmauksista** ("tilaajana toimii X"), joten
+rajauksen alkuperäinen syy ei palaa.
+
+**3. Kaupunki tuli yritysnimestä.** "Varte Tampere Oy" teki Nokialle
+rakentuvasta hoivakodista tamperelaisen. Julkaisijan nimi leikataan nyt
+pois ennen kaupunkitunnistusta — mutta vain siitä, ei kuvauksesta.
+
+**4. Vaihe ei tunnistanut käynnissä olevaa työmaata.** "Työt ovat
+tontilla jo täydessä vauhdissa" ei osunut yhteenkään kuvioon.
+
+**5. Osoite jäi tyhjäksi vaikka katu oli tiedossa.** Talonumeron vaatimus
+on tarkoituksellinen — numeroton osoite ei ole täsmäytyksen todiste — ja
+se jätettiin koskematta. Kadunnimi poimitaan nyt omaan vihjekenttäänsä,
+**ei `location`iin**: tieto katsojalle, ei avain.
+
+**Lisäksi: kenttien alkuperä.** Esikatselu näytti arvot muttei sitä mistä
+ne tulivat, joten katselmoija hyväksyi sokkona. Jokainen rikastuksen
+täyttämä kenttä saa nyt merkinnän — *lähde*, *teksti* tai *julkaisija*.
+Merkintä kertoo mistä arvo tuli, **ei sitä onko se oikein**: väärä
+Tampere olisi ollut yhtä lailla "teksti".
+
+**KUIVAHARJOITUS ON TÄMÄN KIRJAUKSEN VARSINAINEN OPETUS.** Neljä erillistä
+takautuvaa ajoa oli valmiina ajettavaksi, ja kuivaharjoitus paljasti
+jokaisessa virheen ennen kirjoittamista:
+
+| aiottu ajo | mitä kuivaharjoitus näytti | lopputulos |
+|---|---|---|
+| kuvausten siivous | 2 865 riviä muuttuisi, mutta muutos oli välilyöntien normalisointia | rajattiin 128:aan |
+| kaupunkien korjaus | Oulu → Jyväskylä, Kuopio → Jyväskylä: yhdeksän oikeaa kaupunkia olisi rikkoutunut | **hylättiin kokonaan** |
+| vaiheen korjaus | kolme jo valmistunutta hanketta olisi siirtynyt rakenteille | 68 → 51 |
+| vaiheen korjaus | kuntapäätöksen teksti kuvaa ympäristöä, ei hanketta | 51 → 44 |
+
+Ilman kuivaharjoituksia kaksi näistä olisi mennyt asiakkaille asti. Sääntö
+on siis kirjattava vahvempana kuin tapana: **takautuvaa ajoa ei kirjoiteta
+ilman, että sen tuotos on ensin luettu riveittäin** — ei vain laskettu.
+
+Ajettu lopulta: 128 kuvausta siivottu (104 978 merkkiä roskaa), 4
+rakennuttajaa täydentyi, 44 hanketta siirtyi rakentamiseen (38 jonossa, 6
+hyväksyttyä, jokainen kuudesta tarkistettu yksitellen).
+
+---
+
 ### D-084 – Tunnus lukitaan käsin, kone vain ilmoittaa
 
 Kokeilujaksoa kalastelleet yhteydenotot (yleisösähköposti, ei nimettyä
