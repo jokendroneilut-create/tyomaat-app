@@ -5,6 +5,69 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-084 – Tunnus lukitaan käsin, kone vain ilmoittaa
+
+Kokeilujaksoa kalastelleet yhteydenotot (yleisösähköposti, ei nimettyä
+päämiestä, hiljaisuus kun pyydettiin työsähköpostia) nostivat kysymyksen:
+mitä tunnukselle voi tehdä jos käyttö osoittautuu väärinkäytöksi?
+
+**Vastaus oli: ei mitään.** Ainoa olemassa oleva toimenpide oli KOVA
+POISTO. Väärinkäytön havaitessa ainoa vipu olisi ollut tuhota tili
+lopullisesti — jolloin katoavat sekä todisteet että mahdollisuus perua
+virhe. Sama periaate kuin D-080:ssa: peruttava toimenpide ennen
+peruuttamatonta.
+
+**Lukitus** (`/api/admin/lock-user`) estää kirjautumisen mutta säilyttää
+tilin, historian ja analytiikkatapahtumat. Kaksi estettä vahingolle:
+perustelu on pakollinen, ja erillinen vahvistus jossa sähköposti ja syy
+ovat luettavissa. Vapautus ei vaadi kumpaakaan. Oman tai toisen
+ylläpitäjän tunnuksen lukitseminen on estetty palvelinpuolella.
+
+**AUTOMAATTISTA LUKITUSTA EI TEHTY, JA SE ON PÄÄTÖS.** Perustaso mitattiin
+ilman ylläpitäjän omaa käyttöä: 28 asiakasta on avannut hankkeita,
+mediaani 6 eri hanketta, innokkain 43. Kolme syytä:
+
+1. **Perustaso on liian lähellä.** Mikä tahansa kynnys lähellä todellista
+   käyttöä lukitsee ennen pitkää maksavan asiakkaan kesken työpäivän.
+   Virheen hinnat ovat epäsymmetriset: väärä lukitus maksaa
+   asiakassuhteen, myöhästynyt havainto muutaman tunnin dataa.
+2. **28 aktiivista asiakasta mahtuu ihmisen katseeseen.** Automaatio
+   ansaitsee paikkansa vasta kun tapahtumia on enemmän kuin ehtii katsoa.
+3. **Automaattinen raja opettaa kaappaajalle missä raja on.** Hän jää sen
+   alle. Hiljainen ilmoitus ei opeta mitään ulospäin.
+
+Tilalle **ilmoitus** (`/api/admin/usage-alert`, cron 06:00): kynnys 200
+eri hanketta / 24 h eli noin viisinkertainen innokkaimpaan asiakkaaseen.
+Koko hankekannan läpikäynti vaatisi yli 5 000 avausta, joten aito
+kaappaus ylittää kynnyksen moninkertaisesti eikä sen tarkka arvo ratkaise.
+Päätös jää ihmiselle.
+
+**Kaksi vikaa jäi kiinni todentamisessa ennen tuotantoa.**
+`account_lifecycle`-taulussa on uniikkirajoite `(user_id, event)`, joten
+toinen lukitus olisi kaatunut duplikaattivirheeseen — ja koska kirjaus on
+try/catchin sisällä, lukitus olisi silti onnistunut mutta jäänyt
+kirjaamatta. Nyt upsert; rajoite jää, eli taulu säilyttää VIIMEISIMMÄN
+lukituksen syineen eikä koko historiaa. Toiseksi lukitustila kirjataan
+myös `app_metadata`an, koska `banned_until` ei kanna perustelua.
+
+**Sivutuote: kirjautumisvirheet suomennettiin.** Lukittu käyttäjä näki
+Supaben oman viestin "user is banned". Se on ainoa kohta jossa lukittu
+käyttäjä kohtaa palvelun, joten hän saa nyt ohjeen ottaa yhteyttä.
+Tuntematon virhe palautetaan yhä sellaisenaan: geneerinen suomennos
+piilottaisi syyn silloinkin kun se olisi hyödyllinen.
+
+**Todennettu oikeassa ajossa 18.8.2026:** lukitus → kirjautuminen estyy →
+vapautus → tila palautuu, ja päiväkirjaan jäi molemmista merkintä
+tekijöineen.
+
+**Metodinen opetus:** väitin kahdesti että Supaben rajapinta ei palauta
+jotain kenttää (`last_sign_in_at`, `banned_until`). Molemmat väitteet
+syntyivät YHDEN käyttäjän otoksesta, ja supabase-js jättää null-kentät
+kokonaan pois oliosta. Puuttuva avain ei siis todista puuttuvaa kenttää —
+kenttien olemassaolo on mitattava koko joukosta.
+
+---
+
 ### D-083 – RLS-pyyhkäisy ohitti analytiikkataulun, eikä oire näkynyt kenellekään
 
 Kokeilujaksoa kalastelleista yhteydenotoista syntyi kysymys, havaitaanko
