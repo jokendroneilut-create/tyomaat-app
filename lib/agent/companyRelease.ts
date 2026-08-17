@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
-import { extractStreetAddress } from "./extractStreetAddress"
+import { extractStreetAddress, extractStreetName } from "./extractStreetAddress"
 import { parseEstimatedCompletionDate } from "./parseFinnishCompletionDate"
 import {
   resolveParties,
@@ -55,6 +55,19 @@ const CONSTRUCTION_PATTERNS = [
   /rakentaminen\s+on\s+(?:alkanut|käynnissä)/i,
   /harjannostajaisia/i,
   /peruskivi/i,
+  /*
+   * Tiedotteissa toistuvat muodot, jotka kertovat töiden olevan käynnissä
+   * mutta jotka eivät osuneet yllä oleviin. Mitattu 18.8.2026: 68
+   * suunnitteluvaiheeseen jäänyttä ehdokasta 3 506:sta kertoi tekstissä
+   * töiden olevan käynnissä — mm. Varten hoivakoti, jonka teksti sanoo
+   * "työt ovat tontilla jo täydessä vauhdissa".
+   *
+   * "rakentaminen on edennyt" jätettiin pois: se kertoo etenemisestä
+   * muttei siitä mihin on edetty.
+   */
+  /työt\s+(?:ovat\s+)?(?:tontilla\s+)?(?:jo\s+)?(?:täydessä\s+vauhdissa|käynnissä|alkaneet|alkoivat)/i,
+  /rakennustyöt\s+(?:on\s+)?aloitettu/i,
+  /työmaa\s+on\s+käynnissä/i,
 ]
 
 /*
@@ -437,6 +450,12 @@ export function createCompanyEnricher({
      */
     const builder = role === "developer" ? candidate.builder ?? null : publisher
 
+    const city = candidate.city ?? detectCityFromText(stripPublisherName(body, publisher))
+    const location = candidate.location ?? extractStreetAddress(body)
+    const propertyType = candidate.property_type ?? inferBuildingType(candidate.name, body)
+    const completion =
+      candidate.estimated_completion ?? parseEstimatedCompletionDate(body)
+
     return {
       ...candidate,
       /*
@@ -445,14 +464,57 @@ export function createCompanyEnricher({
        * 150-250 merkkiä, artikkeli 1000-2000.
        */
       description: body,
-      city: candidate.city ?? detectCityFromText(stripPublisherName(body, publisher)),
-      location: candidate.location ?? extractStreetAddress(body),
+      city,
+      location,
       developer,
       builder,
       phase: inferCompanyPhase(candidate.name, body),
-      property_type: candidate.property_type ?? inferBuildingType(candidate.name, body),
-      estimated_completion:
-        candidate.estimated_completion ?? parseEstimatedCompletionDate(body),
+      property_type: propertyType,
+      estimated_completion: completion,
+      metadata: {
+        ...(candidate.metadata ?? {}),
+        /*
+         * Katuvihje omaan kenttäänsä, EI locationiin: numeroton osoite ei
+         * kelpaa täsmäytyksen avaimeksi, mutta se on katsojalle arvokas.
+         */
+        ...(location ? {} : { street_hint: extractStreetName(body) }),
+        /*
+         * ALKUPERÄ KENTTÄKOHTAISESTI.
+         *
+         * Ilman tätä katselmoija hyväksyy sokkona: esikatselu näyttää
+         * arvot muttei sitä, tuliko kenttä lähteestä sellaisenaan, poimittiinko
+         * se tekstistä säännöllä vai onko se pääteltyi. Kysymys nousi
+         * 18.8.2026 muodossa "en näe onko 2647 brm2 poimittu tekstistä
+         * vaan joudun hyväksymään sen sokkona".
+         *
+         * "lähde" = tuli listaukselta valmiina, "teksti" = poimittu
+         * tiedotteen leipätekstistä, "julkaisija" = pääteltiin siitä kuka
+         * tiedotteen julkaisi.
+         */
+        field_sources: {
+          ...(candidate.metadata?.field_sources ?? {}),
+          city: candidate.city ? "lähde" : city ? "teksti" : null,
+          location: candidate.location ? "lähde" : location ? "teksti" : null,
+          developer:
+            role === "developer"
+              ? "julkaisija"
+              : client || explicitClient
+                ? "teksti"
+                : ownDevelopment
+                  ? "teksti"
+                  : candidate.developer
+                    ? "lähde"
+                    : null,
+          builder: role === "developer" ? (candidate.builder ? "lähde" : null) : "julkaisija",
+          property_type: candidate.property_type ? "lähde" : propertyType ? "teksti" : null,
+          phase: "teksti",
+          estimated_completion: candidate.estimated_completion
+            ? "lähde"
+            : completion
+              ? "teksti"
+              : null,
+        },
+      },
     }
   }
 }

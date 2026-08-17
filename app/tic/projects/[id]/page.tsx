@@ -134,6 +134,8 @@ export default async function CandidateDetailPage({ params }: Props) {
             buildingType: metadata.building_type ?? "",
             phaseHint: metadata.phase_hint ?? metadata.decision_status ?? "",
           }}
+          sources={metadata.field_sources ?? {}}
+          streetHint={metadata.street_hint ?? null}
         />
 
         {typeof metadata.site_area_m2 === "number" && (

@@ -20,9 +20,53 @@ type Props = {
     buildingType: string
     phaseHint: string
   }
+  /*
+   * Kentän alkuperä: mistä arvo on peräisin. Ilman tätä katselmoija
+   * hyväksyy sokkona — esikatselu näyttää arvot muttei sitä, tuliko kenttä
+   * lähteestä valmiina, poimittiinko se tiedotteen tekstistä vai
+   * pääteltiinkö se julkaisijasta.
+   *
+   * Vanhoilla riveillä tietoa ei ole, jolloin merkintä jätetään pois —
+   * tyhjä on rehellisempi kuin arvattu alkuperä.
+   */
+  sources?: Record<string, string | null | undefined>
+  /* Kadunnimi ilman talonumeroa: näytetään vihjeenä, ei osoitteena. */
+  streetHint?: string | null
 }
 
-export default function EditableCandidate({ candidateId, initial }: Props) {
+/* Pieni merkintä kentän otsikon perässä. */
+function Source({ value }: { value?: string | null }) {
+  if (!value) return null
+
+  const style =
+    value === "teksti"
+      ? "bg-blue-50 text-blue-700"
+      : value === "julkaisija"
+        ? "bg-amber-50 text-amber-700"
+        : "bg-gray-100 text-gray-600"
+
+  return (
+    <span
+      className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-medium ${style}`}
+      title={
+        value === "teksti"
+          ? "Poimittu tiedotteen leipätekstistä säännöllä"
+          : value === "julkaisija"
+            ? "Päätelty siitä kuka tiedotteen julkaisi"
+            : "Tuli lähteestä valmiina"
+      }
+    >
+      {value}
+    </span>
+  )
+}
+
+export default function EditableCandidate({
+  candidateId,
+  initial,
+  sources = {},
+  streetHint,
+}: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -94,16 +138,53 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
       <div>
         <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-sm text-gray-800 md:grid-cols-2">
           <p><strong>Maakunta:</strong> {region || "-"}</p>
-          <p><strong>Kaupunki:</strong> {city || "-"}</p>
-          <p><strong>Sijainti / osoite:</strong> {address || "-"}</p>
-          <p><strong>🏗️ Rakennuttaja:</strong> {developer || "-"}</p>
-          <p><strong>👷 Pääurakoitsija:</strong> {builder || "-"}</p>
+          <p><strong>Kaupunki:</strong> {city || "-"}<Source value={sources.city} /></p>
+          <p>
+            <strong>Sijainti / osoite:</strong> {address || "-"}
+            <Source value={sources.location} />
+            {/*
+              * Kadunnimi ilman talonumeroa näytetään erikseen vihjeenä. Se ei
+              * kelpaa osoitteeksi täsmäytykseen, mutta katselmoijalle se on
+              * tarkempi kuin pelkkä kaupunki — ja usein ainoa mitä tekstissä
+              * on ("Nokian Pinsiöntielle").
+              */}
+            {!address && streetHint ? (
+              <span className="ml-2 text-gray-500">
+                katu tekstissä: <strong>{streetHint}</strong> (ei talonumeroa)
+              </span>
+            ) : null}
+          </p>
+          <p>
+            <strong>🏗️ Rakennuttaja:</strong> {developer || "-"}
+            <Source value={sources.developer} />
+          </p>
+          <p>
+            <strong>👷 Pääurakoitsija:</strong> {builder || "-"}
+            <Source value={sources.builder} />
+          </p>
           <p className="md:col-span-2">
             <strong>🏢 Liittyvät yritykset:</strong> {relatedCompanies || "-"}
           </p>
-          <p><strong>🏢 Kohdetyyppi:</strong> {buildingType || "-"}</p>
-          <p><strong>Vaihe:</strong> {phaseHint || "-"}</p>
+          <p>
+            <strong>🏢 Kohdetyyppi:</strong> {buildingType || "-"}
+            <Source value={sources.property_type} />
+          </p>
+          <p><strong>Vaihe:</strong> {phaseHint || "-"}<Source value={sources.phase} /></p>
         </div>
+
+        {Object.values(sources).some(Boolean) ? (
+          <p className="mt-3 text-xs text-gray-500">
+            Merkintä kertoo mistä arvo tuli:{" "}
+            <span className="rounded-full bg-gray-100 px-2 py-0.5">lähde</span> = tuli
+            lähteestä valmiina,{" "}
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">teksti</span>{" "}
+            = poimittu tiedotteen leipätekstistä säännöllä,{" "}
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">
+              julkaisija
+            </span>{" "}
+            = päätelty siitä kuka tiedotteen julkaisi.
+          </p>
+        ) : null}
 
         <button
           type="button"
@@ -161,7 +242,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
         </label>
 
         <label className="text-sm">
-          <span className="mb-1 block font-semibold text-gray-700">Kaupunki</span>
+          <span className="mb-1 block font-semibold text-gray-700">Kaupunki<Source value={sources.city} /></span>
           <input
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             value={city}
@@ -170,7 +251,7 @@ export default function EditableCandidate({ candidateId, initial }: Props) {
         </label>
 
         <label className="text-sm">
-          <span className="mb-1 block font-semibold text-gray-700">Sijainti / osoite</span>
+          <span className="mb-1 block font-semibold text-gray-700">Sijainti / osoite<Source value={sources.location} /></span>
           <input
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             value={address}
