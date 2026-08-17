@@ -9,6 +9,8 @@ type AdminUser = {
   created_at: string
   last_sign_in_at: string | null
   confirmed: boolean
+  locked?: boolean
+  lockedReason?: string | null
 }
 
 type SortColumn = 'email' | 'created_at' | 'last_sign_in_at' | 'confirmed'
@@ -29,6 +31,7 @@ export default function UsersPage() {
   const [inviteResult, setInviteResult] = useState<string | null>(null)
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [lockingId, setLockingId] = useState<string | null>(null)
 
   const [sortColumn, setSortColumn] = useState<SortColumn>('created_at')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
@@ -154,6 +157,83 @@ export default function UsersPage() {
     setInviting(false)
   }
 
+  /*
+   * LUKITUS JA VAPAUTUS.
+   *
+   * Lukitus estää kirjautumisen mutta säilyttää tilin, historian ja
+   * analytiikan — toisin kuin poisto, joka on peruuttamaton. Siksi tämä on
+   * se toimenpide johon tartutaan ensin, jos käyttö näyttää väärinkäytöltä.
+   *
+   * KAKSI ESTETTÄ VAHINGOLLE. Perustelu on pakollinen, eli lukitus vaatii
+   * ajatuksen; ja erillinen vahvistus, jossa sähköposti on luettavissa,
+   * eli se vaatii katseen oikeaan riviin. Vapautus ei vaadi kumpaakaan.
+   */
+  const handleLock = async (user: AdminUser) => {
+    const locked = Boolean(user.locked)
+
+    let reason = ''
+
+    if (!locked) {
+      const input = window.prompt(
+        `Lukitse tunnus ${user.email}?\n\n` +
+          'Kirjautuminen estyy heti. Tili, historia ja analytiikka säilyvät, ' +
+          'ja lukituksen voi purkaa milloin tahansa.\n\n' +
+          'Kirjoita perustelu (pakollinen):'
+      )
+
+      if (input === null) return
+
+      reason = input.trim()
+
+      if (!reason) {
+        setError('Lukitseminen vaatii perustelun')
+        return
+      }
+
+      const confirmed = window.confirm(
+        `Varmista vielä:\n\nLUKITAAN ${user.email}\nSyy: ${reason}\n\nJatketaanko?`
+      )
+
+      if (!confirmed) return
+    }
+
+    setLockingId(user.id)
+    setError(null)
+
+    const token = await getToken()
+
+    if (!token) {
+      setError('Et ole kirjautunut sisään')
+      setLockingId(null)
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin/lock-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId: user.id, lock: !locked, reason }),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        setError(json.error || 'Toiminto epäonnistui')
+      } else {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === user.id ? { ...u, locked: !locked } : u))
+        )
+      }
+    } catch {
+      setError('Toiminto epäonnistui')
+    }
+
+    setLockingId(null)
+  }
+
   const handleDelete = async (user: AdminUser) => {
     const ok = window.confirm(
       `Haluatko varmasti poistaa käyttäjän ${user.email}? Tätä ei voi perua.`
@@ -275,13 +355,43 @@ export default function UsersPage() {
                 <td style={{ padding: '8px 4px' }}>{formatDate(u.created_at)}</td>
                 <td style={{ padding: '8px 4px' }}>{formatDate(u.last_sign_in_at)}</td>
                 <td style={{ padding: '8px 4px' }}>
-                  {u.confirmed ? (
+                  {u.locked ? (
+                    <span style={{ color: '#b91c1c', fontWeight: 700 }} title={u.lockedReason ?? undefined}>
+                      🔒 Lukittu
+                      {u.lockedReason ? (
+                        <span style={{ display: 'block', fontWeight: 400, fontSize: 12, color: '#6b7280' }}>
+                          {u.lockedReason}
+                        </span>
+                      ) : null}
+                    </span>
+                  ) : u.confirmed ? (
                     <span style={{ color: '#15803d', fontWeight: 600 }}>Aktivoitu</span>
                   ) : (
                     <span style={{ color: '#b45309', fontWeight: 600 }}>Odottaa kutsun hyväksyntää</span>
                   )}
                 </td>
-                <td style={{ padding: '8px 4px', textAlign: 'right' }}>
+                <td style={{ padding: '8px 4px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <button
+                    onClick={() => handleLock(u)}
+                    disabled={lockingId === u.id}
+                    style={{
+                      padding: '6px 12px',
+                      marginRight: 8,
+                      background: u.locked ? '#dcfce7' : '#fef3c7',
+                      color: u.locked ? '#15803d' : '#92400e',
+                      borderRadius: 6,
+                      border: 'none',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {lockingId === u.id
+                      ? 'Odota...'
+                      : u.locked
+                        ? 'Vapauta'
+                        : 'Lukitse'}
+                  </button>
+
                   <button
                     onClick={() => handleDelete(u)}
                     disabled={deletingId === u.id}

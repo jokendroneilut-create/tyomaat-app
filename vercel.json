@@ -25,6 +25,10 @@
       "schedule": "0 4 * * *"
     },
     {
+      "path": "/api/admin/usage-alert",
+      "schedule": "0 6 * * *"
+    },
+    {
       "path": "/api/admin/auto-complete-projects",
       "schedule": "0 5 * * *"
     },
