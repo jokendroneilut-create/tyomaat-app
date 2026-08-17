@@ -17,6 +17,29 @@ type AnalyticsData = {
   totalUsers: number
   totalEvents: number
 
+  adminEventsExcluded: number
+  unattributedEvents: number
+  unattributedEventsAllTime: number
+  usageAnomalies: {
+    userId: string
+    email: string
+    distinctProjects: number
+    totalOpens: number
+    peakOpensPerHour: number
+    sourceLinkClicks: number
+  }[]
+  usageBaseline: {
+    usersWithOpens: number
+    medianDistinctProjects: number
+    maxDistinctProjects: number
+  }
+  sourceLinkUsage: {
+    clicks: number
+    clickers: number
+    projectOpens: number
+    clickRate: number
+  }
+
   feedbackTotals: { up: number; down: number }
   mostDownvotedProjects: ProjectRow[]
   downvotesByRegion: { region: string; count: number }[]
@@ -138,10 +161,81 @@ export default function AnalyticsPage() {
 
       {data && (
         <>
-          <div style={{ marginTop: 16, display: 'flex', gap: 24, fontSize: 14, color: '#374151' }}>
+          <div style={{ marginTop: 16, display: 'flex', gap: 24, fontSize: 14, color: '#374151', flexWrap: 'wrap' }}>
             <div><strong>{data.totalUsers}</strong> käyttäjää</div>
-            <div><strong>{data.totalEvents}</strong> tallennettua tapahtumaa</div>
+            <div><strong>{data.totalEvents}</strong> asiakastapahtumaa</div>
+            <div style={{ color: '#6b7280' }}>
+              <strong>{data.adminEventsExcluded}</strong> admin-tapahtumaa suodatettu pois
+            </div>
           </div>
+
+          {/*
+            Tämän luvun kuuluu olla nolla: kirjausreitti ei kirjoita riviä
+            ilman kirjautunutta käyttäjää. Nollasta poikkeava tarkoittaa
+            tuntematonta kirjoittajaa (D-083).
+          */}
+          {data.unattributedEvents > 0 ? (
+            <p style={{ marginTop: 12, padding: 10, borderRadius: 6, background: '#fef2f2', color: '#b91c1c', fontSize: 14 }}>
+              ⚠️ <strong>{data.unattributedEvents}</strong> tapahtumaa ilman
+              käyttäjätunnistetta viimeisen 30 vrk aikana. Kirjausreitti ei voi
+              tuottaa tällaisia, joten taulussa on tuntematon kirjoittaja.
+            </p>
+          ) : (
+            <p style={{ marginTop: 12, fontSize: 13, color: '#6b7280' }}>
+              ✓ Ei tapahtumia ilman käyttäjätunnistetta (30 vrk).
+              {data.unattributedEventsAllTime > 0
+                ? ` Historiassa ${data.unattributedEventsAllTime} kpl, 15.7.–5.8.2026 — ks. D-083.`
+                : ''}
+            </p>
+          )}
+
+          <Section title="🔎 Poikkeava käyttö">
+            <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 10 }}>
+              Perustaso: <strong>{data.usageBaseline.usersWithOpens}</strong> asiakasta
+              on avannut hankkeita, mediaani{' '}
+              <strong>{data.usageBaseline.medianDistinctProjects}</strong> eri hanketta,
+              suurin <strong>{data.usageBaseline.maxDistinctProjects}</strong>.
+              Koko hankekannan läpikäynti vaatisi tuhansia avauksia, joten
+              poikkeama erottuu kertaluokkina — ei muutamana kymmenenä.
+            </p>
+
+            <Table
+              rows={data.usageAnomalies}
+              emptyText="Ei vielä avausdataa asiakkailta."
+              columns={[
+                { label: 'Käyttäjä', render: (r) => r.email },
+                { label: 'Eri hankkeita', render: (r) => r.distinctProjects },
+                { label: 'Avauksia', render: (r) => r.totalOpens },
+                { label: 'Huipputahti /h', render: (r) => r.peakOpensPerHour },
+                { label: 'Lähdelinkkejä', render: (r) => r.sourceLinkClicks },
+              ]}
+            />
+          </Section>
+
+          <Section title="🔗 Lähdelinkin käyttö">
+            <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 10 }}>
+              "Avaa alkuperäinen ilmoitus" -linkin käyttö. Kertoo sekä sen
+              onko linkki asiakkaalle hyödyllinen, että sen kerääkö joku
+              lähdeosoitteita järjestelmällisesti.
+            </p>
+
+            <div style={{ display: 'flex', gap: 24, fontSize: 14, flexWrap: 'wrap' }}>
+              <div><strong>{data.sourceLinkUsage.clicks}</strong> avausta</div>
+              <div><strong>{data.sourceLinkUsage.clickers}</strong> käyttäjää</div>
+              <div>
+                <strong>{data.sourceLinkUsage.clickRate} %</strong> avatuista
+                hankkeista ({data.sourceLinkUsage.projectOpens} avausta)
+              </div>
+            </div>
+
+            {data.sourceLinkUsage.clicks === 0 ? (
+              <p style={{ marginTop: 10, fontSize: 13, color: '#6b7280' }}>
+                Kirjaus otettiin käyttöön 17.8.2026 — tätä ennen klikkauksia ei
+                tallennettu lainkaan, joten nolla ei vielä tarkoita ettei linkkiä
+                käytetä.
+              </p>
+            ) : null}
+          </Section>
 
           <Section title="📱 Laitejakauma">
             {data.devicePercentages.length === 0 ? (

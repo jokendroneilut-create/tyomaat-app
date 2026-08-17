@@ -34,6 +34,55 @@ function topN<T>(map: Map<T, number>, n: number) {
     .slice(0, n)
 }
 
+/*
+ * Tapahtumat sivutettuna. Aiempi `.limit(20000)` oli sekä katkaisu että
+ * hiljainen: kannassa oli 25 263 riviä, joten "tallennettuja tapahtumia"
+ * -luku olisi ennen pitkää alkanut valehdella eikä mikään olisi kertonut
+ * siitä.
+ */
+async function fetchAllEvents() {
+  const rows: any[] = []
+
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabaseAdmin
+      .from("analytics_events")
+      .select("user_id, event_type, path, project_id, duration_seconds, device_type, created_at")
+      .range(from, from + 999)
+
+    if (error) throw error
+
+    rows.push(...(data ?? []))
+    if (!data || data.length < 1000) break
+  }
+
+  return rows
+}
+
+/*
+ * ADMIN EROTETAAN OMAKSI LUVUKSEEN.
+ *
+ * Mitattu 17.8.2026: kaikista 25 263 tapahtumasta 22 254 eli 88 % oli
+ * admin-tunnuksesta — sivunkatseluista 90 %. Analytiikka näytti siis
+ * pääosin ylläpitäjän omaa käyttöä asiakkaiden käyttönä, ja jokainen
+ * "eniten"-lista oli käytännössä hänen.
+ *
+ * Sama vääristymä olisi tehnyt poikkeamien havaitsemisesta mahdotonta:
+ * ylläpitäjä selaa hankkeita työkseen, joten hän olisi aina näyttänyt
+ * eniten poikkeavalta.
+ */
+function resolveAdminIds(users: any[]): Set<string> {
+  const admins = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean)
+
+  return new Set(
+    users
+      .filter((u) => admins.includes(String(u.email ?? "").toLowerCase()))
+      .map((u) => u.id)
+  )
+}
+
 export async function GET(request: Request) {
   const auth = await verifyAdminRequest(request)
   if (!auth.ok) {
@@ -44,10 +93,7 @@ export async function GET(request: Request) {
     const [users, eventsRes, savedSearchesRes, favoritesRes, teamMembersRes, feedbackRes] =
       await Promise.all([
         fetchAllUsers(),
-        supabaseAdmin
-          .from("analytics_events")
-          .select("user_id, event_type, path, project_id, duration_seconds, device_type")
-          .limit(20000),
+        fetchAllEvents().then((data) => ({ data, error: null as any })),
         supabaseAdmin.from("saved_searches").select("user_id"),
         supabaseAdmin.from("user_project_favorites").select("project_id"),
         supabaseAdmin.from("team_members").select("user_id, team_id"),
@@ -67,7 +113,39 @@ export async function GET(request: Request) {
     if (feedbackRes.error) throw feedbackRes.error
 
     const userEmail = new Map(users.map((u) => [u.id, u.email ?? u.id]))
-    const events = eventsRes.data ?? []
+    const adminIds = resolveAdminIds(users)
+
+    const allEvents = eventsRes.data ?? []
+
+    /*
+     * TAPAHTUMA ILMAN KÄYTTÄJÄTUNNISTETTA ON MAHDOTON (D-083).
+     *
+     * Kirjausreitti ei kirjoita riviä ilman kirjautunutta käyttäjää, joten
+     * tämän luvun kuuluu olla nolla. Nollasta poikkeava tarkoittaa
+     * tuntematonta kirjoittajaa. Heinäkuussa niitä kertyi 544 kuukauden
+     * ajan eikä kukaan huomannut, koska mikään ei katsonut — tämä mittari
+     * on se joka olisi katsonut.
+     */
+    /*
+     * IKKUNA ON 30 VRK, EI KOKO HISTORIA. Heinäkuun 544 riviä ovat pysyvä
+     * osa aineistoa, joten koko historiasta laskettuna varoitus olisi aina
+     * päällä — ja pysyvä varoitus lakkaa olemasta varoitus. Vanha luku
+     * näytetään erikseen taustatietona.
+     */
+    const unattributedCutoff = new Date(Date.now() - 30 * 86400_000).toISOString()
+
+    const unattributedEvents = allEvents.filter(
+      (e) => !e.user_id && String(e.created_at) >= unattributedCutoff
+    ).length
+
+    const unattributedEventsAllTime = allEvents.filter((e) => !e.user_id).length
+
+    const adminEventsExcluded = allEvents.filter(
+      (e) => e.user_id && adminIds.has(e.user_id)
+    ).length
+
+    /* Kaikki alla olevat mittarit koskevat ASIAKKAITA, eivät ylläpitoa. */
+    const events = allEvents.filter((e) => e.user_id && !adminIds.has(e.user_id))
 
     // Eniten kirjautuneet käyttäjät
     const loginCounts = new Map<string, number>()
@@ -107,6 +185,107 @@ export async function GET(request: Request) {
           (projectOpenCounts.get(e.project_id) ?? 0) + 1
         )
       }
+    }
+
+    /*
+     * POIKKEAVA KÄYTTÖ (kohta 3).
+     *
+     * Kolme lukua per käyttäjä: montako ERI hanketta on avattu, suurin
+     * avausmäärä yhden tunnin sisällä, ja montako lähdelinkkiä on avattu.
+     *
+     * Perustaso mitattu 17.8.2026 ilman adminia: 28 asiakasta joilla
+     * avauksia, mediaani 6 eri hanketta, suurin 43. Koko lähdelistan
+     * kerääminen vaatisi yli 5 000 avausta — kaksi kertaluokkaa yli
+     * innokkaimman aidon käyttäjän. Poikkeama ei siis ole hienovarainen,
+     * ja siksi tämä on lista eikä hälytys: kynnysarvo asetetaan vasta kun
+     * jakaumaa on katsottu.
+     */
+    const distinctProjectsByUser = new Map<string, Set<string>>()
+    const opensPerUserHour = new Map<string, number>()
+    const sourceClicksByUser = new Map<string, number>()
+    const totalOpensByUser = new Map<string, number>()
+
+    for (const e of events) {
+      const userId = e.user_id as string
+
+      if (e.event_type === "project_open" && e.project_id) {
+        if (!distinctProjectsByUser.has(userId)) {
+          distinctProjectsByUser.set(userId, new Set())
+        }
+        distinctProjectsByUser.get(userId)!.add(e.project_id)
+
+        totalOpensByUser.set(userId, (totalOpensByUser.get(userId) ?? 0) + 1)
+
+        /* Tunnin tarkkuus riittää: kaappaus näkyy tuhansina, ei kymmeninä. */
+        const hourKey = `${userId}|${String(e.created_at).slice(0, 13)}`
+        opensPerUserHour.set(hourKey, (opensPerUserHour.get(hourKey) ?? 0) + 1)
+      }
+
+      if (e.event_type === "source_link_click") {
+        sourceClicksByUser.set(userId, (sourceClicksByUser.get(userId) ?? 0) + 1)
+      }
+    }
+
+    const peakOpensByUser = new Map<string, number>()
+    for (const [key, count] of opensPerUserHour) {
+      const userId = key.split("|")[0]
+      if (count > (peakOpensByUser.get(userId) ?? 0)) {
+        peakOpensByUser.set(userId, count)
+      }
+    }
+
+    const anomalyUserIds = Array.from(
+      new Set([
+        ...distinctProjectsByUser.keys(),
+        ...sourceClicksByUser.keys(),
+      ])
+    )
+
+    const usageAnomalies = anomalyUserIds
+      .map((userId) => ({
+        userId,
+        email: userEmail.get(userId) ?? userId,
+        distinctProjects: distinctProjectsByUser.get(userId)?.size ?? 0,
+        totalOpens: totalOpensByUser.get(userId) ?? 0,
+        peakOpensPerHour: peakOpensByUser.get(userId) ?? 0,
+        sourceLinkClicks: sourceClicksByUser.get(userId) ?? 0,
+      }))
+      .sort((a, b) => b.distinctProjects - a.distinctProjects)
+      .slice(0, 15)
+
+    const distinctSizes = Array.from(distinctProjectsByUser.values())
+      .map((set) => set.size)
+      .sort((a, b) => a - b)
+
+    const usageBaseline = {
+      usersWithOpens: distinctSizes.length,
+      medianDistinctProjects: distinctSizes.length
+        ? distinctSizes[Math.floor(distinctSizes.length / 2)]
+        : 0,
+      maxDistinctProjects: distinctSizes.length
+        ? distinctSizes[distinctSizes.length - 1]
+        : 0,
+    }
+
+    /*
+     * LÄHDELINKIN KÄYTTÖ (kohta 4).
+     *
+     * Linkki lisättiin koska sitä pidettiin asiakkaalle arvokkaana, mutta
+     * oletusta ei ole koskaan mitattu. `clickRate` vastaa siihen suoraan:
+     * kuinka moni avattu hanke johtaa alkuperäisen ilmoituksen avaamiseen.
+     */
+    const sourceLinkClicks = Array.from(sourceClicksByUser.values()).reduce(
+      (a, b) => a + b,
+      0
+    )
+
+    const totalOpens = Array.from(totalOpensByUser.values()).reduce((a, b) => a + b, 0)
+
+    const sourceLinkUsage = {
+      clicks: sourceLinkClicks,
+      clickers: sourceClicksByUser.size,
+      projectOpens: totalOpens,
+      clickRate: totalOpens > 0 ? Math.round((sourceLinkClicks / totalOpens) * 1000) / 10 : 0,
     }
 
     // Hakuvahdit asettaneet käyttäjät
@@ -224,6 +403,14 @@ export async function GET(request: Request) {
       devicePercentages,
       totalUsers: users.length,
       totalEvents: events.length,
+
+      /* Erottelu näkyviin: muuten luvut näyttäisivät vain pienentyneen. */
+      adminEventsExcluded,
+      unattributedEvents,
+      unattributedEventsAllTime,
+      usageAnomalies,
+      usageBaseline,
+      sourceLinkUsage,
 
       feedbackTotals: { up: totalUp, down: totalDown },
       mostDownvotedProjects: mapProjects(topN(downvotesByProject, 5), "downvoteCount"),
