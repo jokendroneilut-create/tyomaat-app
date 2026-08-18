@@ -32,8 +32,19 @@ const supabaseAdmin = createClient(
  * (`facts_extracted_at`), mikä pitää sen pois myös factWorkerin jonosta.
  */
 
-/* Sivuhakuja per ajo. Yksi tiedotesivu on ~50 kB ja vastaa nopeasti. */
-const DEFAULT_LIMIT = 25
+/*
+ * Sivuhakuja per ajo.
+ *
+ * Mitattu 18.8.2026: 1,22 s per dokumentti (25 kpl = 30,6 s), ja reitin
+ * `maxDuration` on 300 s — vanha 25:n erä käytti siitä kymmenesosan.
+ * 50 vie noin minuutin ja jättää yhä nelinkertaisen marginaalin
+ * verkon vaihtelulle.
+ *
+ * Erää EI nostettu lähelle kattoa (~196 mahtuisi): pitkä ajo menettää
+ * kaiken tekemänsä jos se katkeaa, kun taas lyhyt ajo toistuu tunnin
+ * päästä. Läpimeno haetaan siksi TIHEYDESTÄ, ks. vercel.json.
+ */
+const DEFAULT_LIMIT = 50
 
 /* Lyhyempi kuin tämä ei ole tiedotteen runko vaan listauksen tiivistelmä. */
 const MIN_BODY_LENGTH = 400
