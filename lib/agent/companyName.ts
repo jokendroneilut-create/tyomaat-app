@@ -114,7 +114,26 @@ export function allativeToNominative(raw: string): string | null {
    * -> kaupunki) eivät osu - niiden perusmuotoa ei voi päätellä.
    */
   const vowelStem = word.match(/^(.*[aeiouyåäö])lle$/i)
-  if (vowelStem) return vowelStem[1]
+  if (vowelStem) {
+    /*
+     * ASTEVAIHTELU JÄÄ TÄHÄN, EI ARVAUKSEEN.
+     *
+     * Vokaalisäännön piti sulkea astevaihtelu pois, mutta se katsoo vain
+     * viimeistä kirjainta — ja vaihtelu tapahtuu sitä EDELTÄVÄSSÄ
+     * konsonantissa. "HOK-Elannolle" päättyy vokaaliin, joten sääntö osui
+     * ja tuotti "HOK-Elanno", vaikka perusmuoto on "HOK-Elanto" (nt -> nn).
+     * Mitattu 18.8.2026: virheellinen nimi oli kannassa asiakkaalle
+     * näkyvänä rakennuttajana.
+     *
+     * Heikon asteen kaksoiskonsonantista ei voi päätellä kumpi vahva aste
+     * oli: "Elanno-" voi tulla sanasta Elanto, mutta "Auroranlinna" on jo
+     * perusmuoto. Kumpikin on mahdollinen, joten kenttä jätetään tyhjäksi
+     * — sama ratkaisu kuin "kaupungille" kohdalla.
+     */
+    if (/(nn|mm|ll|rr)[aeiouyåäö]$/i.test(vowelStem[1])) return null
+
+    return vowelStem[1]
+  }
 
   return null
 }

@@ -410,3 +410,20 @@ describe("stripPublisherName", () => {
     expect(stripped).toContain("Nokialle")
   })
 })
+
+describe("allativeToNominative — astevaihtelu", () => {
+  /*
+   * "HOK-Elannolle" tuotti aiemmin "HOK-Elanno", joka päätyi kantaan
+   * asiakkaalle näkyväksi rakennuttajaksi. Oikea muoto on HOK-Elanto,
+   * mutta sitä ei voi päätellä päätteestä — joten kenttä jää tyhjäksi.
+   */
+  it("ei arvaa perusmuotoa heikon asteen kaksoiskonsonantista", () => {
+    expect(allativeToNominative("HOK-Elannolle")).toBeNull()
+  })
+
+  it("ei riko vokaaliin päättyviä nimiä joissa ei ole vaihtelua", () => {
+    expect(allativeToNominative("Kojamolle")).toBe("Kojamo")
+    expect(allativeToNominative("Peabille")).toBe("Peab")
+    expect(allativeToNominative("Senaatti-kiinteistöille")).toBe("Senaatti-kiinteistöt")
+  })
+})
