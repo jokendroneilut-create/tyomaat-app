@@ -55,6 +55,10 @@ import { fetchYvaSource } from "./fetchYvaSource"
 import { createYvaEnricher } from "./yvaProjectPage"
 import { fetchSuunnittelukilpailuSource } from "./fetchSuunnittelukilpailuSource"
 import { fetchSitowiseSource } from "./fetchSitowiseSource"
+import {
+  fetchSkanskaProjectsSource,
+  enrichSkanskaProject,
+} from "./fetchSkanskaProjectsSource"
 import { createCompanyEnricher } from "./companyRelease"
 
 export const sources = [
@@ -123,4 +127,10 @@ export const sources = [
    * urakoitsijaksi, ks. companyRelease.ts.
    */
   { name: "sitowise", fetch: fetchSitowiseSource, enrich: createCompanyEnricher({ publisher: "Sitowise", role: "designer" }) },
+  /*
+   * Skanskan PROJEKTISIVUT, eri lahde kuin sen uutiset. Uutinen kertoo
+   * hetkesta, projektisivu hankkeen tilan ja osapuolet nimettyina
+   * kenttina - ja pysyy ajan tasalla koko hankkeen ajan.
+   */
+  { name: "skanska_projektit", fetch: fetchSkanskaProjectsSource, enrich: enrichSkanskaProject },
 ]
