@@ -5,6 +5,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-087 – Terveysmittari näyttää milloin lähde kaatui, ei onko se rikki
+
+TIC:n discovery-sivu näytti **11 ongelmaa**. Selvitys osoitti, että vain
+yksi oli aito vika.
+
+**Kahdeksan yhdestätoista oli vanhentunutta kohinaa.** Virheet olivat
+97–115 h vanhoja eli samasta ikkunasta 4–5 vrk takaa. Testasin viisi
+niistä suoraan: `srv` 3,0 s / 165 ehdokasta, `jatke` 1,7 s / 22,
+`lujatalo` 9,7 s / 25, `rakennuslehti` 0,5 s / 17, `stt_haku` 15,5 s /
+877. **Kaikki toimivat.**
+
+**Syy on kierron ja vanhenemisikkunan suhde.** Mitattu 18.8.2026: 300
+lähdettä, noin 47 eri lähdettä ajossa vuorokaudessa → **koko kierto 6,3
+vrk** (mediaani viime ajosta 2,1 vrk, vanhin 6,8). "Rikki"-merkintä
+vanhenee vasta 7 vrk:ssa. Ikkuna on siis pidempi kuin kierto, joten
+kertaluontoisesti kaatunut lähde ehtii näyttää punaiselta lähes koko
+kierron ajan **ilman että sitä testataan kertaakaan uudelleen**.
+
+Mittari ei valehtele — se vain mittaa eri asiaa kuin miltä näyttää.
+
+**Automaattista uusintayritystä EI tehdä.** Se vaihtaisi punaisen
+vihreäksi kertomatta miksi lähde kaatui, eli piilottaisi oireen
+selvittämättä syytä. Kun lähde menee punaiselle, syy selvitetään.
+Jos näkymä jatkossa häiritsee, oikea korjaus on erottaa "kaatui kerran"
+ja "ei ole toiminut sitten viime yrityksen" toisistaan — ei piilottaa
+virhettä.
+
+**Ainoa aito vika oli Marttilan kaavoitus**, ja siinä oli kaksi
+kerrostumaa. Palvelin lähettää vain palvelinvarmenteen ilman
+välivarmennetta, mihin oli jo tehty korjaus: puuttuva varmenne haetaan
+AIA-kentän osoitteesta. Korjaus haki kuitenkin **tasan yhden tason**,
+koska silloin ketjusta puuttui täsmälleen yksi (Let's Encrypt R13 → ISRG
+Root X1). Let's Encrypt on sittemmin vaihtanut välivarmenteeseen **YR2**,
+eikä yksi hyppy enää päädy Noden luottamaan juureen.
+
+Pahempi kerrostuma oli toinen: virhe vaihtui muotoon
+`UNABLE_TO_GET_ISSUER_CERT` — **täsmälleen niin kuin vanha kommentti oli
+ennustanut** — mutta juuri sitä koodia ei ollut vajaan ketjun
+koodilistalla. Varmennekorjaus ei siis enää käynnistynyt lainkaan; lähde
+kaatui ennen kuin ehti yrittää korjata ketjua.
+
+Ketjua seurataan nyt kunnes vastaan tulee itse allekirjoitettu juuri tai
+AIA loppuu (syvyys rajattu neljään), ja koodi on lisätty listalle. Ketjua
+ei ohiteta: haettu välivarmenne kelpaa vain jos se ketjuttuu järjestelmän
+juurivarmenteeseen. Todennettu: 2,6 s, 2 dokumenttia, tila 🟢.
+
+**Opetus koodikommenteista:** vanha kommentti kertoi tarkalleen mitä
+tapahtuisi jos ketju syvenisi, ja juuri niin kävi. Kommentti oli oikeassa
+mutta koodi ei seurannut sitä loppuun asti — ennuste kirjattiin, mutta
+sen varalta ei varauduttu.
+
+---
+
+### D-086 – Runkojonon läpimeno haetaan tiheydestä, ei eräkoosta
+
+Runkojono oli 984 riviä ja kasvoi. Toisin kuin D-082:ssa, nyt **979/984
+tarvitsi oikean verkkohaun** (`stt_haku` 599, `yva` 315), joten
+kirjanpitorivien pyyhkäisy ei auttanut lainkaan — raja itse oli
+pullonkaula.
+
+Mitattu 18.8.2026: **1,22 s per dokumentti**, eli 25 rivin erä vei 30 s
+reitin 300 sekunnin budjetista. Kymmenesosa käytössä, ja purkuteho 100
+kpl/vrk kertymää vastaan.
+
+Erä 25 → 50 (mitattu 55,8 s) ja cron 4×/vrk → tunneittain. Yhdessä
+**1 200 kpl/vrk**, joten jono purkautuu alle vuorokaudessa.
+
+**Erää ei nostettu lähelle kattoa**, vaikka ~196 mahtuisi: pitkä ajo
+menettää kaiken tekemänsä jos se katkeaa, kun taas lyhyt ajo toistuu
+tunnin päästä. Sama periaate kuin lähdeajoissa — läpimeno haetaan
+toistotiheydestä, ei yhden erän koosta.
+
+Todennettu oikealla ajolla: 50 kpl / 55,8 s, jono 954 → 904, ja samalla
+47 jonoriviä ja 21 hanketta sai täydennystä.
+
+---
+
 ### D-085 – Yksi tiedote paljasti viisi vikaa, ja kuivaharjoitus esti neljä virhettä
 
 Yksi Varten hoivakotitiedote (18.8.2026) tuotti kannalle rivin, jossa oli
