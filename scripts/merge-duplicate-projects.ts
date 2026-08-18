@@ -1,49 +1,68 @@
+/*
+ * Yhdistää kaksi samaa hanketta tarkoittavaa riviä.
+ *
+ * TIC:n duplikaattinäkymä osaa vain merkitä parin ja piilottaa toisen; itse
+ * yhdistämiselle ei ole työkalua, joten tieto jäi säilyvältä hankkeelta pois.
+ *
+ * Poistettavaa riviä EI poisteta vaan piilotetaan (is_public = false), sama
+ * kuin duplikaattinäkymän "Piilota tämä". Näin päätös on peruttavissa ja
+ * historia jää talteen.
+ *
+ * Säilyvän arvot voittavat aina — poistettavalta täydennetään vain tyhjät.
+ *
+ *   npx tsx scripts/merge-duplicate-projects.ts --keep=<uuid> --remove=<uuid>
+ *   npx tsx scripts/merge-duplicate-projects.ts --keep=<uuid> --remove=<uuid> --apply
+ */
 import { readFileSync } from "node:fs"
 
-for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8").replace(/\r/g, "").split("\n")) {
-  const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/); if (!m) continue
-  let v = m[2].trim(); if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1)
+const APPLY = process.argv.includes("--apply")
+const arg = (name: string) =>
+  process.argv.find((a) => a.startsWith(`--${name}=`))?.split("=")[1] ?? null
+
+const KEEP = arg("keep")
+const REMOVE = arg("remove")
+
+for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
+  .replace(/\r/g, "")
+  .split("\n")) {
+  const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/)
+  if (!m) continue
+  let v = m[2].trim()
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+    v = v.slice(1, -1)
+  }
   if (!(m[1] in process.env)) process.env[m[1]] = v
 }
 
 /*
- * KAHDEN HANKKEEN YHDISTÄMINEN NIIN, ETTÄ TIETO SIIRTYY.
- *
- * Olemassa oleva duplikaattikäsittely (`/api/tic/duplicates/hide-project`)
- * vain piilottaa hävinneen rivin — se EI siirrä mitään. Jos rivit tietävät
- * eri asioita, piilotus siis hävittää sen mitä vain hävinnyt tiesi.
- *
- * Mitattu tapaus 18.8.2026: Espoon Prismakeskus oli kannassa kahtena.
- * Toisella oli oikea kaupunki (Espoo), tyyppi (Kauppa) ja rakennuttajan
- * oikea kirjoitusasu; toisella pääurakoitsija (Skanska Oy). Pelkkä
- * piilotus olisi hävittänyt Skanskan.
- *
- * SÄÄNTÖ: säilyvälle riville täytetään VAIN TYHJÄT kentät. Olemassa olevaa
- * ei ylikirjoiteta, koska säilyväksi valitaan se rivi jonka tiedot ovat
- * oikein — muuten valinta olisi tehty väärin päin.
- *
- * Käyttö:
- *   npx tsx scripts/merge-duplicate-projects.ts <säilyvä> <hävinnyt> [--apply]
+ * Sarakkeet joita täydennetään poistettavalta jos säilyvällä on tyhjä.
+ * Nimeä, kaupunkia, maakuntaa tai vaihetta ei kosketa: ne ovat säilyvän
+ * identiteetti, ja vaiheen siirtäminen ohittaisi phaseAdvances-säännön.
  */
-
-const [keepId, dropId] = process.argv.slice(2).filter((a) => !a.startsWith("--"))
-const APPLY = process.argv.includes("--apply")
-
-/* Kentät jotka voidaan periä hävinneeltä, jos säilyvältä puuttuu. */
-const INHERITABLE = [
+const FILLABLE_COLUMNS = [
+  "location",
   "developer",
   "builder",
-  "location",
   "property_type",
+  "apartments",
+  "floor_area",
   "estimated_cost",
+  "construction_start",
   "estimated_completion",
-  "region",
-  "city",
-] as const
+  "latitude",
+  "longitude",
+  "additional_info",
+  "structural_design",
+  "hvac_design",
+  "electrical_design",
+  "architectural_design",
+  "geotechnical_design",
+  "earthworks_contractor",
+]
 
 async function main() {
-  if (!keepId || !dropId) {
-    console.error("Anna kaksi tunnistetta: <säilyvä> <hävinnyt>")
+  if (!KEEP || !REMOVE || KEEP === REMOVE) {
+    console.log("Anna --keep=<uuid> ja --remove=<uuid> (eri hankkeet)")
     process.exit(1)
   }
 
@@ -56,136 +75,207 @@ async function main() {
     { auth: { persistSession: false } }
   )
 
-  const { data, error } = await supabase.from("projects").select("*").in("id", [keepId, dropId])
+  const { data: rows, error } = await supabase
+    .from("projects")
+    .select("*")
+    .in("id", [KEEP, REMOVE])
+
   if (error) throw error
 
-  const keep: any = (data ?? []).find((r: any) => r.id === keepId)
-  const drop: any = (data ?? []).find((r: any) => r.id === dropId)
+  const keep = rows?.find((r) => r.id === KEEP)
+  const remove = rows?.find((r) => r.id === REMOVE)
 
-  if (!keep || !drop) {
-    console.error("Hanketta ei löydy")
+  if (!keep || !remove) {
+    console.log("Hanketta ei löydy:", !keep ? KEEP : REMOVE)
     process.exit(1)
   }
 
-  /*
- * Kirjoitusasultaan lähes sama nimi on sama yritys.
- *
- * Kuivaharjoitus 18.8.2026: hävinneellä rivillä rakennuttaja oli
- * "HOK-Elanno" (allatiivin "HOK-Elannolle" väärä perusmuoto) ja
- * säilyvällä oikein "HOK-Elanto". Ilman tätä tarkistusta väärä
- * kirjoitusasu olisi lisätty liittyväksi yritykseksi omana rivinään.
- */
-function normalizeName(value: string): string {
-  return value.toLowerCase().replace(/[^a-zåäö0-9]/g, "")
-}
+  console.log(`SÄILYY:    "${keep.name}" (${keep.city ?? "-"}, ${keep.phase ?? "-"})`)
+  console.log(`POISTUU:   "${remove.name}" (${remove.city ?? "-"}, ${remove.phase ?? "-"})\n`)
 
-function editDistance(a: string, b: string): number {
-  const d: number[][] = Array.from({ length: a.length + 1 }, (_, i) =>
-    Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
-  )
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      d[i][j] = Math.min(
-        d[i - 1][j] + 1,
-        d[i][j - 1] + 1,
-        d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
-      )
+  // 1. Tyhjät sarakkeet
+  const columnFills: Record<string, any> = {}
+  for (const column of FILLABLE_COLUMNS) {
+    const current = (keep as any)[column]
+    const incoming = (remove as any)[column]
+    const isEmpty = current == null || String(current).trim() === ""
+    if (isEmpty && incoming != null && String(incoming).trim() !== "") {
+      columnFills[column] = incoming
     }
   }
-  return d[a.length][b.length]
-}
 
-function isNearDuplicateName(name: string, existing: (string | null)[]): boolean {
-  const a = normalizeName(name)
-  if (!a) return true
-  return existing.some((other) => {
-    if (!other) return false
-    const b = normalizeName(other)
-    return b.length > 0 && editDistance(a, b) <= 2
-  })
-}
-
-const empty = (v: any) => v === null || v === undefined || String(v).trim() === ""
-
-  const updates: Record<string, unknown> = {}
-  for (const field of INHERITABLE) {
-    if (empty(keep[field]) && !empty(drop[field])) updates[field] = drop[field]
+  console.log(`täydennettäviä sarakkeita: ${Object.keys(columnFills).length}`)
+  for (const [k, v] of Object.entries(columnFills)) {
+    console.log(`  ${k.padEnd(24)} <- ${String(v).slice(0, 70)}`)
   }
 
-  /*
-   * Hävinneen osapuolet talteen liittyvinä yrityksinä myös silloin kun ne
-   * eivät mahtuneet omiin kenttiinsä — muuten tieto katoaisi hiljaa.
-   */
-  const related = mergeCompanyNames(
-    Array.isArray(keep.metadata?.related_companies) ? keep.metadata.related_companies : [],
-    Array.isArray(drop.metadata?.related_companies) ? drop.metadata.related_companies : [],
-    [drop.developer, drop.builder].filter(Boolean)
-  ).filter(
-    (name) =>
-      !isNearDuplicateName(name, [
-        keep.developer,
-        keep.builder,
-        updates.developer as string,
-        updates.builder as string,
-      ])
+  // 2. Metadata: säilyvän arvot voittavat
+  const keepMeta = keep.metadata ?? {}
+  const removeMeta = remove.metadata ?? {}
+
+  const metaFills: Record<string, any> = {}
+  for (const [k, v] of Object.entries(removeMeta)) {
+    if (k === "source_history" || k === "related_companies" || k === "also_known_as") continue
+    const current = (keepMeta as any)[k]
+    if (current == null || current === "" ) metaFills[k] = v
+  }
+
+  const sourceHistory = [
+    ...(Array.isArray(keepMeta.source_history) ? keepMeta.source_history : []),
+    ...(Array.isArray(removeMeta.source_history) ? removeMeta.source_history : []),
+  ]
+
+  const relatedCompanies = mergeCompanyNames(
+    keepMeta.related_companies,
+    removeMeta.related_companies
   )
 
-  /* Pisin kuvaus voittaa, kuten runkotyöntekijässäkin. */
-  const description =
-    String(drop.additional_info ?? "").length > String(keep.additional_info ?? "").length
-      ? drop.additional_info
-      : keep.additional_info
+  /*
+   * Poistettavan nimi talteen: matcher lukee also_known_as -kenttää, joten
+   * saman uutisen toinen otsikkomuoto osuu jatkossa säilyvään hankkeeseen
+   * eikä synnytä duplikaattia uudelleen.
+   */
+  const alsoKnownAs = [
+    ...new Set(
+      [
+        ...(Array.isArray(keepMeta.also_known_as) ? keepMeta.also_known_as : []),
+        remove.name,
+      ]
+        .map((n: unknown) => String(n ?? "").trim())
+        .filter(Boolean)
+        .filter((n) => n !== keep.name)
+    ),
+  ]
 
-  console.log(APPLY ? "=== YHDISTETÄÄN ===" : "=== KUIVAHARJOITUS ===")
-  console.log(`säilyy:   ${keep.name}`)
-  console.log(`          ${keep.city} · ${keep.property_type} · ${keep.developer ?? "-"} / ${keep.builder ?? "-"}`)
-  console.log(`häviää:   ${drop.name}`)
-  console.log(`          ${drop.city} · ${drop.property_type} · ${drop.developer ?? "-"} / ${drop.builder ?? "-"}`)
-  console.log(`\nperitään säilyvälle:`)
-  if (Object.keys(updates).length === 0) console.log("   (ei mitään — säilyvällä on jo kaikki)")
-  for (const [k, v] of Object.entries(updates)) console.log(`   ${k.padEnd(22)} ${v}`)
-  console.log(`liittyvät yritykset:   ${related.length ? related.join(", ") : "-"}`)
-  console.log(`kuvaus:                ${String(description ?? "").length} merkkiä (oli ${String(keep.additional_info ?? "").length})`)
+  console.log(`\nmetadata-avaimia täydennetään: ${Object.keys(metaFills).length}`)
+  console.log(`lähdehistoria: ${(keepMeta.source_history ?? []).length} + ${(removeMeta.source_history ?? []).length} = ${sourceHistory.length}`)
+  console.log(`liittyvät yritykset: ${relatedCompanies.length}`)
+  console.log(`also_known_as: ${JSON.stringify(alsoKnownAs)}`)
 
-  if (!APPLY) return
+  // 3. Käyttäjädata
+  const { data: favs } = await supabase
+    .from("user_project_favorites")
+    .select("*")
+    .eq("project_id", REMOVE)
+
+  const { data: assignments } = await supabase
+    .from("project_assignments")
+    .select("*")
+    .eq("project_id", REMOVE)
+
+  const { data: keepAssignments } = await supabase
+    .from("project_assignments")
+    .select("*")
+    .eq("project_id", KEEP)
+
+  console.log(`\nsuosikkeja siirrettävänä:  ${favs?.length ?? 0}`)
+  console.log(`vastuutuksia poistettavalla: ${assignments?.length ?? 0}`)
+  console.log(`vastuutuksia säilyvällä:     ${keepAssignments?.length ?? 0}`)
+
+  /*
+   * Vastuutusta ei siirretä jos säilyvällä on jo omistaja — hankkeella on
+   * yksi vastuullinen, eikä skripti valitse ihmisten välillä. Poistettavan
+   * vastuutus poistetaan, ja tieto jää metadataan.
+   */
+  const droppedAssignments = (keepAssignments?.length ?? 0) > 0 ? assignments ?? [] : []
+  const movedAssignments = (keepAssignments?.length ?? 0) > 0 ? [] : assignments ?? []
+
+  if (droppedAssignments.length > 0) {
+    console.log(`  -> säilyvällä on jo omistaja, poistettavan ${droppedAssignments.length} vastuutus(ta) poistetaan`)
+  }
+  if (movedAssignments.length > 0) {
+    console.log(`  -> siirretään ${movedAssignments.length} vastuutus(ta) säilyvälle`)
+  }
+
+  if (!APPLY) {
+    console.log("\nkuivaharjoitus — aja --apply kirjoittaaksesi")
+    return
+  }
 
   const nowIso = new Date().toISOString()
 
   const { error: keepError } = await supabase
     .from("projects")
     .update({
-      ...updates,
-      additional_info: description,
+      ...columnFills,
+      last_verified_at: nowIso,
       metadata: {
-        ...(keep.metadata ?? {}),
-        ...(related.length ? { related_companies: related } : {}),
-        merged_from: [
-          ...(Array.isArray(keep.metadata?.merged_from) ? keep.metadata.merged_from : []),
-          { project_id: dropId, name: drop.name, merged_at: nowIso, inherited: Object.keys(updates) },
+        ...metaFills,
+        ...keepMeta,
+        source_history: sourceHistory,
+        ...(relatedCompanies.length > 0 ? { related_companies: relatedCompanies } : {}),
+        ...(alsoKnownAs.length > 0 ? { also_known_as: alsoKnownAs } : {}),
+        merged_from_project_ids: [
+          ...(Array.isArray(keepMeta.merged_from_project_ids)
+            ? keepMeta.merged_from_project_ids
+            : []),
+          REMOVE,
         ],
       },
     })
-    .eq("id", keepId)
+    .eq("id", KEEP)
 
   if (keepError) throw keepError
 
-  /* Hävinnyt piilotetaan mutta säilytetään: se estää saman tuonnin uudelleen. */
-  const { error: dropError } = await supabase
+  for (const fav of favs ?? []) {
+    await supabase
+      .from("user_project_favorites")
+      .upsert({ ...fav, id: undefined, project_id: KEEP }, { onConflict: "user_id,project_id", ignoreDuplicates: true })
+  }
+  if ((favs?.length ?? 0) > 0) {
+    await supabase.from("user_project_favorites").delete().eq("project_id", REMOVE)
+  }
+
+  for (const assignment of movedAssignments) {
+    await supabase
+      .from("project_assignments")
+      .update({ project_id: KEEP })
+      .eq("id", assignment.id)
+  }
+
+  for (const assignment of droppedAssignments) {
+    await supabase.from("project_assignments").delete().eq("id", assignment.id)
+  }
+
+  const { error: removeError } = await supabase
     .from("projects")
     .update({
       is_public: false,
       metadata: {
-        ...(drop.metadata ?? {}),
-        merged_into_project_id: keepId,
-        hidden_at: nowIso,
-        hidden_reason: `Yhdistetty hankkeeseen ${keepId}`,
+        ...removeMeta,
+        merged_into_project_id: KEEP,
+        merged_at: nowIso,
+        dropped_assignments: droppedAssignments.map((a) => ({
+          owner_id: a.owner_id,
+          team_id: a.team_id,
+          assigned_at: a.assigned_at,
+        })),
       },
     })
-    .eq("id", dropId)
+    .eq("id", REMOVE)
 
-  if (dropError) throw dropError
+  if (removeError) throw removeError
 
-  console.log("\nvalmis.")
+  // Kirjataan pari käsitellyksi, jottei skanneri nosta sitä uudelleen.
+  const [idA, idB] = [KEEP, REMOVE].sort()
+  await supabase.from("project_duplicate_candidates").upsert(
+    {
+      project_id_a: idA,
+      project_id_b: idB,
+      confidence: 100,
+      reasons: ["manual_merge"],
+      status: "confirmed_duplicate",
+      reviewed_at: nowIso,
+    },
+    { onConflict: "project_id_a,project_id_b" }
+  )
+
+  console.log("\nvalmis:")
+  console.log(`  säilyi   ${KEEP}`)
+  console.log(`  piilotettu ${REMOVE} (is_public = false, ei poistettu)`)
 }
 
-main().catch((e) => { console.error(e); process.exit(1) })
+main().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})
