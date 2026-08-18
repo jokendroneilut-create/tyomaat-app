@@ -5,6 +5,55 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-090 – Uusi lähde on jaettujen poimijoiden testi
+
+GRK:n projektisivuja lisättäessä joukkoon lipsahti **virolainen
+ratahanke suomalaisena**. Syy ei ollut uudessa lähteessä vaan
+`detectCityFromText`issä, jota kaikki lähteet käyttävät:
+
+```
+"vuoden 2028 loppuun mennessä"  →  kunta "Loppi"
+```
+
+Kanta **"lopp"** + päätelistan **"uun"** osuu sanaan "loppuun".
+Sananrajat täyttyvät, joten mikään olemassa oleva suoja ei estänyt sitä.
+
+**VIKA OLI OLLUT KANNASSA KOKO AJAN.** Mitattu 19.8.2026: kahdeksasta
+`city = "Loppi"` -hankkeesta **kolme oli väärässä kunnassa** — mm.
+"Tekova rakentaa JYSKin uudet liiketilat Järvenpäähän" ja "Ämttön silta
+Porissa maantiellä 13004". Ne olivat olleet asiakkaille näkyvissä väärän
+maakunnan alla, eikä mikään ollut kertonut siitä.
+
+Korjaus oli yhden rivin lisäys `STEM_MATCH_EXCLUDED`-listalle, jossa oli
+jo täsmälleen sama ratkaisu kunnalle "Kaavi" (kanta "kaav" vs. sanat
+"kaava", "kaavoitus"). Ennen muutosta varmistettiin, ettei se riko aitoja
+osumia: **astevaihtelun takia muodot "Lopen" ja "Lopella" eivät osu
+kantaan muutenkaan**, joten poisto ei menetä mitään. Ajossa "Ämttön silta
+Porissa" korjautui Poriksi.
+
+**YLEINEN HAVAINTO.** Jaettu poimija on testattu vain sillä aineistolla
+jota sille on syötetty. Uusi lähde tuo uudenlaista tekstiä — tässä
+tapauksessa ulkomaita käsittelevää proosaa — ja paljastaa siksi vanhoja
+vikoja, jotka eivät ole koskaan aiemmin osuneet. Sama toistui tässä
+työssä kolmesti:
+
+| lähde joka paljasti | vika jaetussa koodissa |
+|---|---|
+| Sitowise | `extractReleaseBody` valitsi tyhjän `<article>`-kääreen |
+| Varte | hännän leikkaus tunsi vain yhden sanamuodon; kaupunki tuli yritysnimestä |
+| GRK | `detectCityFromText` luki kunnan sanasta "loppuun" |
+
+Uutta lähdettä lisättäessä kannattaa siis katsoa **ensimmäisen ajon
+tulosta riveittäin** eikä vain lukumääriä: poikkeava rivi kertoo
+useammin jaetusta poimijasta kuin uudesta lähteestä.
+
+**JÄI KÄSIN KORJATTAVAKSI.** Kaksi riviä on yhä väärässä kunnassa, koska
+oikeaa kaupunkia ei voi johtaa tekstistä automaattisesti: JYSK/Järvenpää
+(illatiivi "Järvenpäähän" ei tunnistu) ja Ilmasotakoulu/Tikkakoski (nimeä
+ei mainita). Niitä ei arvattu.
+
+---
+
 ### D-089 – Yrityksen projektisivut ovat oma lähdeluokkansa, ja kattavuus on mitattava sivukohtaisesti
 
 Espoon Prismakeskuksen tapaus (D-088) nosti kysymyksen: Skanskan omalla
@@ -26,6 +75,7 @@ esiintymisestä, että Lujatalo on paras vaihtoehto. Se oli väärin:
 |---|---|---|---|---|---|
 | **NCC** | 21 | 20 | 71 % | **95 %** | **95 %** |
 | Skanska | 53 | ~50 % | **94 %** | – | – |
+| GRK | 239 | **16** | 0 % | – | – |
 | Lujatalo | 115 | **7** | **12 %** | – | – |
 
 Lujatalon sanat olivat listaussivulla, eivät jokaisella hankesivulla —
@@ -56,6 +106,28 @@ lapsielementit ilman välilyöntiä, joten sivun teksti on muodossa
 "StatusKäynnissäProjektin tiedot" ja "Asiakas:Skanska Kodit". Kentät on
 siksi luettava DOM-rakenteesta (`<h3>` + `<p>`, `<li><strong>`), ei
 tekstiä pilkkomalla. Sama vika iski kaikkiin kolmeen lähteeseen.
+
+**GRK ON NELJÄS, MUTTA ERI LUOKKAA.** Kartoituksen suurin yksittäinen
+löytö oli GRK:n 239 suomenkielistä projektisivua — enemmän kuin muilla
+yhteensä. Sivuilla EI kuitenkaan ole nimettyjä kenttiä, joten poiminta on
+tekstipohjaista ja rakennuttaja jää tyhjäksi. Se otettiin silti käyttöön,
+koska GRK on iso infratoimija ja infrassa kattavuutemme on ohuempi kuin
+talonrakentamisessa: 16 käynnissä olevaa hanketta (Hailuodon kiinteä
+yhteys, Jätkäsaaren kannaksen silta, Turun raitiotie).
+
+GRK:lle ei tehty rikastuskoukkua lainkaan. Sivut ovat 700–1600 merkkiä ja
+koko 239 sivun haku vie rinnakkain 7,9 s, joten haku tekee kaiken
+kerralla — näin poiminta ei jää `ENRICH_PER_RUN`-katon taakse eikä odota
+runkotyöntekijää. Sama ratkaisu sopii muillekin pienisivuisille lähteille.
+
+**MUUT ISOT RAKENNUSLIIKKEET KARTOITETTIIN, EIKÄ VASTAAVAA LÖYTYNYT.**
+Fira (116 sivua), Destia (72), Consti (2), SRV ja YIT: kaikilla on
+referenssisivut, mutta niissä ei ole nimettyjä kenttiä. Nopea sanahaku
+antoi kaksi houkuttelevaa mutta väärää tulosta — Fira "rakennuttaja 8/8"
+oli navigaatiotekstiä ("hyödyt rakennuttajalle") ja SRV "rakennuttaja
+3/3" murupolkua ("Rakennuttajalle › Referenssit"). Molemmat karsiutuivat
+sivukohtaisessa tarkistuksessa, eli sama virhe kuin Lujatalon kohdalla oli
+toistumassa.
 
 **PROSESSIHUOMIO.** Regexien kirjoittaminen shell-skriptin läpi söi
 kenoviivat kolme kertaa tässä työssä: `\s` muuttui kirjaimeksi "s" ja
