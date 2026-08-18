@@ -63,6 +63,10 @@ import {
   fetchLujataloProjectsSource,
   enrichLujataloProject,
 } from "./fetchLujataloProjectsSource"
+import {
+  fetchNccProjectsSource,
+  enrichNccProject,
+} from "./fetchNccProjectsSource"
 import { createCompanyEnricher } from "./companyRelease"
 
 export const sources = [
@@ -142,4 +146,9 @@ export const sources = [
    * valmistuneita eivatka ne ole mahdollisuuksia vaan historiaa.
    */
   { name: "lujatalo_projektit", fetch: fetchLujataloProjectsSource, enrich: enrichLujataloProject },
+  /*
+   * NCC:n projektisivut - mitattuna rikkain yrityslahde. Ainoa joka tuottaa
+   * katuosoitteen postinumeroineen ja suunnittelijat urakkalajeittain.
+   */
+  { name: "ncc_projektit", fetch: fetchNccProjectsSource, enrich: enrichNccProject },
 ]
