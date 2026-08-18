@@ -1,0 +1,181 @@
+import * as cheerio from "cheerio"
+import { detectCityFromText } from "./detectCityFromText"
+import { extractStreetAddress } from "./extractStreetAddress"
+import { inferBuildingType } from "./buildingType"
+import { PHASE_LABELS } from "@/lib/projects/phases"
+
+/*
+ * LUJATALON REFERENSSIT — projektisivut, ei uutisia.
+ *
+ * Sama malli kuin Skanskan projektisivuilla, mutta rikkaampi: Lujatalo on
+ * ainoa mitattu lähde, joka erottaa TILAAJAN ja RAKENNUTTAJAN toisistaan
+ * ja kertoo lisäksi urakan euromääräisen osuuden. Mitattu 19.8.2026: 115
+ * referenssiä yhdellä sivulla, ei sivutusta.
+ *
+ * KENTÄT LUETAAN DOM-RAKENTEESTA, EI TEKSTISTÄ. Sivun "Projektin tiedot"
+ * -osio on <h3>otsikko</h3><p>arvo</p> -pareja. Pelkkä tekstipoiminta ei
+ * toimi, koska cheerio yhdistää elementit ilman erottimia — silloin
+ * "Rakennuttaja" ja arvo sulautuvat yhdeksi merkkijonoksi
+ * ("RakennuttajaPäijät-Hämeen hyvinvointialue").
+ */
+
+const LISTING_URL = "https://www.lujatalo.fi/referenssit/"
+
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+/*
+ * Kortti kertoo tilan sanoin tai pelkkänä vuosilukuna. Sivusto erottaa ne
+ * itse, joten vaihetta ei tarvitse arvata: "Rakentaminen käynnissä" on
+ * käynnissä, pelkkä vuosiluku on valmistunut referenssi.
+ */
+const ONGOING = /rakentaminen käynnissä|käynnissä/i
+
+export function parseLujataloCard(cardText: string): {
+  city: string | null
+  ongoing: boolean
+} {
+  const [head] = cardText.split(/\s+–\s+/)
+  const rest = cardText.slice(head?.length ?? 0)
+
+  return {
+    city: head?.trim() ? detectCityFromText(head.trim()) : null,
+    ongoing: ONGOING.test(rest.slice(0, 60)),
+  }
+}
+
+export async function fetchLujataloProjectsSource() {
+  const response = await fetch(LISTING_URL, { headers: { "User-Agent": UA } })
+  if (!response.ok) return []
+
+  const $ = cheerio.load(await response.text())
+
+  const seen = new Set<string>()
+  const results: any[] = []
+
+  $('a[href*="/referenssit/"]').each((_, el) => {
+    const href = $(el).attr("href") ?? ""
+
+    /* Listaussivu itse ja sertifikaattisivu eivät ole hankkeita. */
+    if (/\/referenssit\/?$/.test(href) || href.includes("sertifikaatit")) return
+
+    const url = href.startsWith("http") ? href : `https://www.lujatalo.fi${href}`
+    if (seen.has(url)) return
+    seen.add(url)
+
+    /*
+     * Linkki itse on "Lue lisää" -painike, joten otsikko haetaan kortin
+     * juuresta ylöspäin kulkemalla.
+     */
+    let node = $(el)
+    let title = ""
+    let cardText = ""
+
+    for (let up = 0; up < 6 && !title; up++) {
+      node = node.parent()
+      const heading = node.find("h1,h2,h3,h4").first()
+      if (heading.length) {
+        title = heading.text().replace(/\s+/g, " ").trim()
+        cardText = node.text().replace(/\s+/g, " ").trim()
+      }
+    }
+
+    if (!title) return
+
+    const card = parseLujataloCard(cardText)
+
+    /*
+     * VALMISTUNEET REFERENSSIT JÄTETÄÄN POIS.
+     *
+     * Mitattu 19.8.2026: 115 referenssistä 108 on valmistuneita. Ne eivät
+     * ole mahdollisuuksia vaan historiaa, ja katselmointijonoon tuotuina ne
+     * hukuttaisivat alleen ne seitsemän jotka ovat käynnissä.
+     *
+     * Sama mittaus osoitti myös, että rakenteiset kentät ovat harvassa:
+     * 25 sivun otoksesta tilaaja tai rakennuttaja löytyi vain kolmelta.
+     * Lähteen arvo on siis käynnissä olevissa kohteissa, ei kenttien
+     * kattavuudessa.
+     */
+    if (!card.ongoing) return
+
+    results.push({
+      name: title,
+      city: card.city,
+      region: null,
+      location: null,
+      phase: card.ongoing ? PHASE_LABELS.construction : PHASE_LABELS.completed,
+      source_url: url,
+      confidence: 0.7,
+      completed: !card.ongoing,
+      source_name: "lujatalo_projektit",
+    })
+  })
+
+  return results
+}
+
+/* "71 M€" -> 71000000. Muut muodot jätetään, jottei arvata väärin. */
+export function parseMillionEuros(value: string): number | null {
+  const match = value.replace(",", ".").match(/([\d.]+)\s*M€/i)
+  if (!match) return null
+
+  const millions = Number(match[1])
+  return Number.isFinite(millions) && millions > 0 ? Math.round(millions * 1_000_000) : null
+}
+
+export async function enrichLujataloProject(candidate: any): Promise<any> {
+  if (!candidate?.source_url) return candidate
+
+  const response = await fetch(candidate.source_url, { headers: { "User-Agent": UA } })
+  if (!response.ok) return candidate
+
+  const $ = cheerio.load(await response.text())
+  $("script, style, noscript, nav, header, footer").remove()
+
+  /* Kenttäparit: <h3>otsikko</h3> jota seuraa <p>arvo</p>. */
+  const fields = new Map<string, string>()
+
+  $("h3").each((_, el) => {
+    const label = $(el).text().replace(/\s+/g, " ").trim()
+    const value = $(el).next("p").text().replace(/\s+/g, " ").trim()
+    if (label && value) fields.set(label.toLowerCase(), value)
+  })
+
+  const developer = fields.get("rakennuttaja") ?? fields.get("tilaaja") ?? null
+  const contractForm = fields.get("urakkamuoto") ?? fields.get("hankemuoto") ?? null
+  const scope = fields.get("laajuus") ?? null
+  const costText = fields.get("rakentamisen osuus m€") ?? null
+
+  const body = $("body").text().replace(/\s+/g, " ").trim()
+  const detailsAt = body.search(/Projektin tiedot/i)
+  const description = (detailsAt > 0 ? body.slice(0, detailsAt) : body)
+    .split(/Sinua saattaisi kiinnostaa/i)[0]
+    .trim()
+
+  const cost = costText ? parseMillionEuros(costText) : null
+
+  return {
+    ...candidate,
+    description: description.slice(0, 4000),
+    city: candidate.city ?? detectCityFromText(description),
+    location: candidate.location ?? extractStreetAddress(description),
+    developer: candidate.developer ?? developer,
+    /* Julkaisija on pääurakoitsija omilla referenssisivuillaan. */
+    builder: candidate.builder ?? "Lujatalo",
+    property_type: candidate.property_type ?? inferBuildingType(candidate.name, description),
+    ...(cost ? { estimated_cost: cost } : {}),
+    metadata: {
+      ...(candidate.metadata ?? {}),
+      ...(cost ? { cost_source: "text" } : {}),
+      ...(contractForm ? { urakkamuoto: contractForm } : {}),
+      ...(scope ? { laajuus: scope } : {}),
+      field_sources: {
+        developer: developer ? "teksti" : null,
+        builder: "julkaisija",
+        phase: "lähde",
+        city: candidate.city ? "lähde" : "teksti",
+        estimated_cost: cost ? "teksti" : null,
+      },
+    },
+  }
+}

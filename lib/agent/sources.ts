@@ -59,6 +59,10 @@ import {
   fetchSkanskaProjectsSource,
   enrichSkanskaProject,
 } from "./fetchSkanskaProjectsSource"
+import {
+  fetchLujataloProjectsSource,
+  enrichLujataloProject,
+} from "./fetchLujataloProjectsSource"
 import { createCompanyEnricher } from "./companyRelease"
 
 export const sources = [
@@ -133,4 +137,9 @@ export const sources = [
    * kenttina - ja pysyy ajan tasalla koko hankkeen ajan.
    */
   { name: "skanska_projektit", fetch: fetchSkanskaProjectsSource, enrich: enrichSkanskaProject },
+  /*
+   * Lujatalon referenssit, rajattuna KAYNNISSA oleviin: 115:sta 108 on
+   * valmistuneita eivatka ne ole mahdollisuuksia vaan historiaa.
+   */
+  { name: "lujatalo_projektit", fetch: fetchLujataloProjectsSource, enrich: enrichLujataloProject },
 ]
