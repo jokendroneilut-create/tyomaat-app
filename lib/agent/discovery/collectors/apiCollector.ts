@@ -30697,15 +30697,31 @@ function marttilaDecodeBody(buffer: Buffer, encoding: string): string {
  * ketjuttuu järjestelmän juurivarmenteeseen, mikä tarkistetaan
  * varsinaisessa pyynnössä normaalisti.
  *
- * Haetaan vain yksi taso, koska Marttilan ketjusta puuttuu täsmälleen yksi
- * välivarmenne (Let's Encrypt R13 -> ISRG Root X1). Jos ketjusta puuttuisi
- * useampi taso, pyyntö kaatuisi edelleen - silloin virhekoodi vaihtuu
- * muotoon UNABLE_TO_GET_ISSUER_CERT ja kertoo sen.
+ * KETJUA SEURATAAN NIIN PITKÄLLE KUIN AIA VIE, ei yhtä tasoa.
+ *
+ * Aiempi versio haki tasan yhden välivarmenteen, koska Marttilan ketjusta
+ * puuttui silloin täsmälleen yksi (Let's Encrypt R13 -> ISRG Root X1).
+ * Let's Encrypt on sittemmin vaihtanut välivarmenteeseen YR2, eikä yksi
+ * hyppy enää pääty Noden luottamaan juureen — todettu 18.8.2026, ja virhe
+ * vaihtui täsmälleen siihen muotoon jonka vanha kommentti ennusti
+ * (UNABLE_TO_GET_ISSUER_CERT).
+ *
+ * Nyt jokaisen haetun varmenteen AIA-kenttä luetaan uudelleen, kunnes
+ * vastaan tulee itse allekirjoitettu juuri tai AIA loppuu. Syvyys on
+ * rajattu, ettei rikkinäinen tai silmukkainen ketju jää pyörimään.
  */
-let marttilaIssuerPem: string | null = null
+const MARTTILA_MAX_CHAIN_DEPTH = 4
 
-async function fetchMarttilaIssuerCertificate(): Promise<string | null> {
-  if (marttilaIssuerPem) return marttilaIssuerPem
+let marttilaIssuerPems: string[] | null = null
+
+/* Yhden varmenteen AIA-osoite ("CA Issuers"), jos se on ilmoitettu. */
+function issuerUrlFromCertificate(cert: import("node:crypto").X509Certificate): string | null {
+  const match = cert.infoAccess?.match(/CA Issuers - URI:(\S+)/)
+  return match?.[1] ?? null
+}
+
+async function fetchMarttilaIssuerCertificate(): Promise<string[] | null> {
+  if (marttilaIssuerPems) return marttilaIssuerPems
 
   const host = new URL(MARTTILA_LISTING_URL).hostname
 
@@ -30728,20 +30744,39 @@ async function fetchMarttilaIssuerCertificate(): Promise<string | null> {
 
   if (!issuerUrl) return null
 
-  const response = await fetch(issuerUrl, { cache: "no-store" })
-  if (!response.ok) return null
+  const pems: string[] = []
+  let nextUrl: string | null = issuerUrl
 
-  // AIA palauttaa varmenteen DER-muodossa, joka on käännettävä PEM:ksi
-  marttilaIssuerPem = new crypto.X509Certificate(
-    Buffer.from(await response.arrayBuffer())
-  ).toString()
+  while (nextUrl && pems.length < MARTTILA_MAX_CHAIN_DEPTH) {
+    const response: Response = await fetch(nextUrl, { cache: "no-store" })
+    if (!response.ok) break
 
-  return marttilaIssuerPem
+    // AIA palauttaa varmenteen DER-muodossa, joka on käännettävä PEM:ksi
+    const certificate = new crypto.X509Certificate(
+      Buffer.from(await response.arrayBuffer())
+    )
+
+    pems.push(certificate.toString())
+
+    /*
+     * Itse allekirjoitettu varmenne on juuri: ketju on kasassa eikä
+     * seuraavaa tasoa ole olemassa.
+     */
+    if (certificate.subject === certificate.issuer) break
+
+    nextUrl = issuerUrlFromCertificate(certificate)
+  }
+
+  if (pems.length === 0) return null
+
+  marttilaIssuerPems = pems
+
+  return marttilaIssuerPems
 }
 
 function marttilaHttpsGet(
   url: string,
-  extraCa: string | null
+  extraCa: string[] | null
 ): Promise<{ status: number; body: string }> {
   return new Promise((resolve, reject) => {
     const request = https.get(
@@ -30750,7 +30785,7 @@ function marttilaHttpsGet(
         headers: MARTTILA_FETCH_HEADERS,
         timeout: 15000,
         // ca korvaa oletusvarmenteet, joten juuret on lueteltava mukaan
-        ...(extraCa ? { ca: [...tls.rootCertificates, extraCa] } : {}),
+        ...(extraCa ? { ca: [...tls.rootCertificates, ...extraCa] } : {}),
       },
       (res) => {
         const chunks: Buffer[] = []
@@ -30779,14 +30814,22 @@ function marttilaHttpsGet(
   })
 }
 
+/*
+ * Vajaan ketjun virhekoodit. UNABLE_TO_GET_ISSUER_CERT puuttui listalta,
+ * joten kun Let's Encryptin ketju syveni ja virhe vaihtui juuri siihen,
+ * varmennekorjaus ei enää käynnistynyt lainkaan - lähde vain kaatui
+ * (todettu 18.8.2026).
+ */
 const MARTTILA_MISSING_CHAIN_CODES = [
   "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+  "UNABLE_TO_GET_ISSUER_CERT",
   "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+  "SELF_SIGNED_CERT_IN_CHAIN",
 ]
 
 async function fetchMarttilaListing(attempts = 3): Promise<string> {
   let lastError: unknown = null
-  let extraCa: string | null = null
+  let extraCa: string[] | null = null
 
   for (let i = 0; i < attempts; i++) {
     try {
