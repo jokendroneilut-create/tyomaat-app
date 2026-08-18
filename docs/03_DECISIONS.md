@@ -5,6 +5,117 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-089 – Yrityksen projektisivut ovat oma lähdeluokkansa, ja kattavuus on mitattava sivukohtaisesti
+
+Espoon Prismakeskuksen tapaus (D-088) nosti kysymyksen: Skanskan omalla
+projektisivulla lukee suoraan "Asiakas: HOK-Elanto" ja "Status: Käynnissä",
+joten miksi luemme sen STT-tiedotteesta?
+
+**PROJEKTISIVU ON ERI ASIA KUIN UUTINEN.** Uutinen kertoo hetkestä: mitä
+juuri nyt julkistettiin. Projektisivu kertoo hankkeen tilan ja osapuolet
+nimettyinä kenttinä, ja se pysyy ajan tasalla koko hankkeen ajan. Sama
+yritys voi siis olla kaksi eri lähdettä, ja niin nyt on: `skanska`
+(uutiset) ja `skanska_projektit`.
+
+**KATTAVUUS MITATAAN HANKESIVUILTA, EI LISTAUSSIVUN SANOISTA.** Tämä oli
+kierroksen kallein oppi. Kartoitin lähteitä hakemalla listaussivulta
+sanoja "Tilaaja", "Rakennuttaja", "Laajuus" ja päättelin niiden
+esiintymisestä, että Lujatalo on paras vaihtoehto. Se oli väärin:
+
+| lähde | hankesivuja | käynnissä | rakennuttaja | osoite | suunnittelijat |
+|---|---|---|---|---|---|
+| **NCC** | 21 | 20 | 71 % | **95 %** | **95 %** |
+| Skanska | 53 | ~50 % | **94 %** | – | – |
+| Lujatalo | 115 | **7** | **12 %** | – | – |
+
+Lujatalon sanat olivat listaussivulla, eivät jokaisella hankesivulla —
+25 sivun otoksesta tilaaja tai rakennuttaja löytyi vain kolmelta. Ja sen
+115 referenssistä 108 on valmistuneita, eli historiaa eikä
+mahdollisuuksia; lähde rajattiin siksi käynnissä oleviin.
+
+**NCC TUOTTAA KAKSI KENTTÄÄ, JOITA MIKÄÄN MUU LÄHDE EI OLE TUOTTANUT.**
+
+1. **Katuosoite postinumeroineen** ("Rauhankatu 17, 00170 Helsinki").
+   Se on duplikaattitäsmäytyksen vahvin avain — juuri sen puuttuminen
+   hajotti Espoon Prisman kahdeksi riviksi.
+2. **Suunnittelijat urakkalajeittain**: arkkitehti-, rakenne-, LVIA-,
+   sähkö- ja pohjarakennesuunnittelu. Kannassa on ollut sarakkeet näille
+   koko ajan (`projectCompanies.ts`), eikä yksikään lähde ollut täyttänyt
+   niitä. Jonoon tuli 11/15 vähintään yhdellä.
+
+**MONIVAIHEISET SIVUT.** Osa sivuista kokoaa saman hankkeen useita
+vaiheita samaan listaan (NCC:n OYS 2030 kattaa 2019–2030 kolmena
+jaksona), eikä lohkojen JÄRJESTYS kerro tuoreutta — tällä sivulla ylin on
+vanhin. Kaksi ensimmäistä korjausyritystäni nojasi järjestykseen ja meni
+siksi pieleen. Vaihe päätellään nyt koko sivun rakennusajoista: jos mikä
+tahansa niistä ulottuu tulevaisuuteen, hanke on kesken. Käynnissä oleva
+työmaa ei saa näkyä valmistuneena.
+
+**TOISTUVA ANSA: cheerio ei erota elementtejä.** `$(el).text()` liittää
+lapsielementit ilman välilyöntiä, joten sivun teksti on muodossa
+"StatusKäynnissäProjektin tiedot" ja "Asiakas:Skanska Kodit". Kentät on
+siksi luettava DOM-rakenteesta (`<h3>` + `<p>`, `<li><strong>`), ei
+tekstiä pilkkomalla. Sama vika iski kaikkiin kolmeen lähteeseen.
+
+**PROSESSIHUOMIO.** Regexien kirjoittaminen shell-skriptin läpi söi
+kenoviivat kolme kertaa tässä työssä: `\s` muuttui kirjaimeksi "s" ja
+`\d` kirjaimeksi "d". Yhdessä tapauksessa se söi arvon alkukirjaimen
+("Skanska Kodit" → "kanska Kodit") ja pääsi tuotantoon asti, koska testi
+sattui käyttämään syötettä jossa väärä kuvio ei osunut. Regexit
+kirjoitetaan jatkossa suoraan tiedostoon.
+
+---
+
+### D-088 – Duplikaatti ei hävitä tietoa, se piilottaa sen toiselle riville
+
+"Lisäsin Skanskan käsin pääurakoitsijaksi, ja se on kadonnut."
+
+Tieto ei ollut kadonnut. Espoon Prismakeskus oli kannassa **kahtena**,
+molemmat STT:stä, kahdesta eri tiedotteesta:
+
+```
+ee6f0d96  Espoo    · Kauppa     · HOK-Elanto · urakoitsija –
+f9c20a9f  Helsinki · Kerrostalo · HOK-Elanno · urakoitsija Skanska Oy
+```
+
+**VÄÄRÄ KAUPUNKI SYNNYTTI DUPLIKAATIN.** Skanska-rivillä kaupunki oli
+Helsinki (tiedotteen päiväys; HOK-Elannon kotipaikka) ja tyyppi
+Kerrostalo. Ajettu täsmäytys näiden välillä antaa **"EI OSU"** kynnyksellä
+70. Kun kaupunki ja tyyppi eroavat, pisteet jäävät alle rajan — ja
+duplikaatti jää eloon jakaen tiedon kahtia.
+
+Tästä seuraa yleisempi asia: **duplikaatin oireena on puuttuva kenttä,
+ei kaksi riviä.** Käyttäjä ei näe kahta riviä; hän näkee yhden rivin
+jolta puuttuu se mitä hän itse lisäsi.
+
+**YHDISTÄMINEN SIIRTÄÄ TIEDON.** Olemassa oleva duplikaattikäsittely
+(`/api/tic/duplicates/hide-project`) vain piilottaa hävinneen rivin
+siirtämättä mitään — jolloin piilotus hävittäisi sen mitä vain hävinnyt
+tiesi. Repossa oli jo tähän työkalu
+(`scripts/merge-duplicate-projects.ts`), jonka **kirjoitin vahingossa
+uusiksi huomaamatta sen olemassaoloa**. Alkuperäinen oli kattavampi:
+se yhdistää lähdehistorian ja `also_known_as`-kentän, käy läpi kaikki
+metadata-avaimet ja siirtää suosikit sekä vastuutukset. Se palautettiin.
+
+Yhdistyksessä säilyvälle täytetään vain TYHJÄT kentät: säilyväksi
+valitaan se rivi jonka tiedot ovat oikein. Prismalle siirtyi
+pääurakoitsija ja kustannusarvio **60 M€**, joka oli vain hävinneellä
+rivillä.
+
+**ASTEVAIHTELU EI OLE PÄÄTELTÄVISSÄ.** Hävinneellä rivillä rakennuttaja
+oli "HOK-Elanno" — allatiivin "HOK-Elannolle" väärä perusmuoto.
+Vokaalisäännön piti sulkea astevaihtelu pois, mutta se katsoo vain
+viimeistä kirjainta, ja vaihtelu tapahtuu sitä EDELTÄVÄSSÄ konsonantissa
+(nt → nn). Heikon asteen kaksoiskonsonantista ei voi päätellä kumpi vahva
+aste oli: "Elanno-" voi tulla sanasta Elanto, mutta "Auroranlinna" on jo
+perusmuoto. Kenttä jää siksi tyhjäksi — sama ratkaisu kuin "kaupungille".
+
+Mitattu 1 256 nimestä: heikon asteen näköisiä viisi, joista neljä on
+oikeita nimiä jotka eivät tule tästä muunnoksesta. Rajaus ei siis riko
+mitään olemassa olevaa.
+
+---
+
 ### D-087 – Terveysmittari näyttää milloin lähde kaatui, ei onko se rikki
 
 TIC:n discovery-sivu näytti **11 ongelmaa**. Selvitys osoitti, että vain
