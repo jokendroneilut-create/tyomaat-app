@@ -67,7 +67,13 @@ const MANDATORY_SUFFIX_PATTERN = `(${SUFFIX_ALTERNATION})`
 // "Kaavi" kannalla ("kaav") törmäisi jatkuvasti tämän sovelluksen omaan
 // sanastoon ("kaava", "kaavan", "kaavoitus") — jätetään kantahaku pois
 // tälle kunnalle, tarkka nimi + pääte riittää kattamaan oikeat osumat.
-const STEM_MATCH_EXCLUDED = new Set(["Kaavi"])
+// "Loppi" kannalla ("lopp") tuotti osuman sanaan "loppuun" ("vuoden 2028
+// loppuun mennessä"), ja mitattuna 19.8.2026 kolme kannan kahdeksasta
+// Loppi-hankkeesta oli tällä tavoin väärässä kunnassa - mm. "JYSKin uudet
+// liiketilat Järvenpäähän" ja "Ämttön silta Porissa". Poisto ei menetä
+// mitään, koska astevaihtelun takia aidot muodot "Lopen" ja "Lopella"
+// eivät osu kantaankaan; ne jäävät tunnistumatta joka tapauksessa.
+const STEM_MATCH_EXCLUDED = new Set(["Kaavi", "Loppi"])
 
 const sortedMunicipalities = Object.values(MUNICIPALITIES).sort(
   (a, b) => b.name.length - a.name.length

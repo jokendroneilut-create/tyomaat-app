@@ -67,6 +67,7 @@ import {
   fetchNccProjectsSource,
   enrichNccProject,
 } from "./fetchNccProjectsSource"
+import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
 import { createCompanyEnricher } from "./companyRelease"
 
 export const sources = [
@@ -151,4 +152,11 @@ export const sources = [
    * katuosoitteen postinumeroineen ja suunnittelijat urakkalajeittain.
    */
   { name: "ncc_projektit", fetch: fetchNccProjectsSource, enrich: enrichNccProject },
+  /*
+   * GRK:n projektisivut - infrahankkeita, joissa kattavuutemme on ohuempi
+   * kuin talonrakentamisessa. Ei rikastuskoukkua: sivut ovat pienia ja
+   * haku tekee kaiken kerralla, joten poiminta ei ole ENRICH_PER_RUN-katon
+   * takana.
+   */
+  { name: "grk_projektit", fetch: fetchGrkProjectsSource },
 ]
