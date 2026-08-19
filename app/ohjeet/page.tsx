@@ -76,8 +76,9 @@ export default function OhjeetPage() {
         <p className="mt-3">
           Työmaat.fi kokoaa Suomen rakennushankkeet yhteen paikkaan ja nostaa
           niistä esiin ne, jotka ovat yrityksellesi myynnin kannalta
-          ajankohtaisia. Tarkoitus on, että näet hankkeen silloin kun siihen voi
-          vielä vaikuttaa — ei silloin kun urakoitsija on jo valittu.
+          ajankohtaisia. Tarkoitus on, että näet hankkeen oikea-aikaisesti
+          silloin kun on paras ajankohta olla yhteydessä. Lisäksi voit selailla
+          hankkeita karttanäkymässä ja suodattaa niitä haluamallasi tavalla.
         </p>
 
         <p className="mt-3">
@@ -173,12 +174,6 @@ export default function OhjeetPage() {
           tietoa. Voit valita päivittäisen tai viikoittaisen tahdin.
         </p>
 
-        <p className="mt-3">
-          Hakuvahti kannattaa rajata kapeaksi. Koko maakunnan kattava vahti
-          tuottaa paljon sähköpostia; &quot;uudet koulu- ja päiväkotihankkeet
-          Pirkanmaalla&quot; on hyödyllinen.
-        </p>
-
         <H id="omat">6. Omat: suosikit ja merkinnät</H>
 
         <p className="mt-3">
@@ -216,12 +211,13 @@ export default function OhjeetPage() {
         <ul className="mt-2 space-y-2">
           <li>
             <strong>Luot tiimin</strong> ja lisäät jäsenet
-            sähköpostiosoitteella. Kutsuttu saa linkin, jolla hän asettaa itse
-            salasanansa.
+            sähköpostiosoitteella.
           </li>
           <li>
             <strong>Jaat hankkeet</strong> valitsemalla kullekin omistajan.
-            Omistajan voi vaihtaa milloin tahansa.
+            Jakaa voi käsin yksi kerrallaan tai isompina kertaerinä, jolloin
+            järjestelmä jakaa hankkeet satunnaisesti mutta tasaisesti tiimin
+            kesken. Omistajan voi vaihtaa milloin tahansa.
           </li>
           <li>
             <strong>Asetat jakosuodattimet</strong> tiimin asetuksista: mitkä
@@ -264,9 +260,10 @@ export default function OhjeetPage() {
 
         <p className="mt-3">
           Palvelu lähettää kahdenlaista postia: <strong>hakuvahtien</strong>{" "}
-          ilmoituksia ja <strong>koostetta</strong> alueesi uusista hankkeista.
-          Molempien tahdin ja sen, tuleeko niitä lainkaan, säädät kohdasta{" "}
-          <strong>Asetukset → Ilmoitukset</strong>.
+          ilmoituksia ja tiedon siitä jos joku hanke etenee sinulle otolliseen
+          ajankohtaan. Jälkimmäinen ilmoitus perustuu Tänään-näkymässä antamiisi
+          asetuksiin. Molempien tahdin ja sen, tuleeko niitä lainkaan, säädät
+          kohdasta <strong>Asetukset → Ilmoitukset</strong>.
         </p>
 
         <p className="mt-3">
@@ -287,7 +284,7 @@ export default function OhjeetPage() {
         <p className="mt-3">
           Kun uutta tietoa tulee, se{" "}
           <strong>täydennetään olemassa olevaan hankkeeseen</strong> — ei luoda
-          uutta riviä. Käytännössä avaamasi hanke voi näyttää parin viikon
+          uutta hanketta. Käytännössä avaamasi hanke voi näyttää parin viikon
           päästä erilaiselta: rakennuttaja on tarkentunut, pääurakoitsija on
           selvinnyt, kustannusarvio tai aikataulu on ilmestynyt, vaihe on
           edennyt suunnittelusta rakentamiseen.
@@ -321,10 +318,8 @@ export default function OhjeetPage() {
         </p>
 
         <p className="mt-3">
-          <strong>Jos huomaat virheellisen tiedon</strong>, kerro siitä. Se
-          korjataan, ja usein korjaus koskee samalla kymmeniä muita hankkeita,
-          koska sama poimintasääntö vaikuttaa kaikkiin. Yhden käyttäjän havainto
-          parantaa siis koko palvelua.
+          <strong>Jos huomaat virheellisen tiedon</strong>, kerro siitä. Virheen
+          korjaaminen parantaa kaikkien käyttäjien palvelua.
         </p>
 
         <H id="ukk">12. Usein kysyttyä</H>
@@ -389,8 +384,8 @@ export default function OhjeetPage() {
 
         <p className="mt-3">
           Näistä on hyötyä myös muille käyttäjille: yksittäisen hankkeen korjaus
-          jää usein yhteen hankkeeseen, mutta poimintasäännön korjaus parantaa
-          kaikki samalla tavalla kerätyt hankkeet kerralla.
+          saattaa johtaa parannukseen, joka vaikuttaa positiivisesti lukuisiin
+          hankkeisiin.
         </p>
 
         <p className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
