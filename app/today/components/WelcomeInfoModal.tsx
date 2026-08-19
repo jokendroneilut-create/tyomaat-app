@@ -50,12 +50,11 @@ export default function WelcomeInfoModal({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 text-sm leading-relaxed text-gray-700">
           <p>
-            <strong>Tänään</strong>-näkymä on <strong>beta-vaiheessa</strong> ja
-            aktiivisessa kehityksessä — se ei ole vielä täysin valmis, ja
-            kehitämme sitä jatkuvasti käyttäjäpalautteen perusteella. Tavoite on
-            koota sinulle tärkeimmät ja ajankohtaisimmat hankkeet valitsemiesi
-            asetusten mukaan. <strong>Mukauta asetukset itsellesi sopiviksi</strong>,
-            niin näkymä palvelee parhaiten.
+            <strong>Tänään</strong>-näkymä kokoaa sinulle tärkeimmät ja
+            ajankohtaisimmat hankkeet valitsemiesi asetusten mukaan. Kehitämme
+            sitä jatkuvasti käyttäjäpalautteen perusteella.
+            <strong> Mukauta asetukset itsellesi sopiviksi</strong>, niin näkymä
+            palvelee parhaiten.
           </p>
 
           <p className="mt-3">

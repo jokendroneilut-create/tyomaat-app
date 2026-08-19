@@ -162,22 +162,7 @@ export default function Navbar() {
   const NavLinks = () => (
   <>
     <NavSection>
-      <NavItem href="/today">
-        Tänään{" "}
-        <span
-          style={{
-            marginLeft: 6,
-            padding: "2px 6px",
-            borderRadius: 999,
-            background: "#dbeafe",
-            color: "#1d4ed8",
-            fontSize: 10,
-            fontWeight: 700,
-          }}
-        >
-          BETA
-        </span>
-      </NavItem>
+      <NavItem href="/today">Tänään</NavItem>
 
       <NavItem href="/projects">Hankkeet / Kartta</NavItem>
       <NavItem href="/watchlists">Hakuvahdit</NavItem>

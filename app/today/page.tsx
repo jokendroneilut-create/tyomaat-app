@@ -31,15 +31,7 @@ const summary = await getTodaySummary(user?.id)
 
       {user?.id && <WelcomeInfoModal suppressed={needsRoleActivation} />}
 
-      <div className="flex items-center gap-3">
-  <h1 className="text-3xl font-bold text-gray-900">
-    Tänään
-  </h1>
-
-  <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
-    BETA
-  </span>
-</div>
+      <h1 className="text-3xl font-bold text-gray-900">Tänään</h1>
 
       <p className="mt-2 text-gray-600">
         Päivän tärkeimmät rakennushankkeet ja tapahtumat.
@@ -50,12 +42,12 @@ const summary = await getTodaySummary(user?.id)
 
     <div>
       <p className="font-semibold text-gray-900">
-        Tänään-näkymä on beta-vaiheessa
+        Tänään kokoaa yrityksellesi tärkeimmät rakennushankkeet
       </p>
 
       <p className="mt-1 text-sm text-gray-700">
-        Tänään kokoaa yrityksellesi tärkeimmät rakennushankkeet yhteen näkymään.
-        Kehitämme ominaisuutta jatkuvasti käyttäjäpalautteen perusteella.
+        Kehitämme näkymää käyttäjäpalautteen perusteella — kerro mikä toimii
+        ja mikä ei.
       </p>
     </div>
 
