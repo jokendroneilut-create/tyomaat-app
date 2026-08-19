@@ -37,20 +37,24 @@ const summary = await getTodaySummary(user?.id)
         Tänään-näkymä kokoaa yrityksellesi tärkeimmät rakennushankkeet
       </p>
 
-      <div className="mt-5 flex justify-end">
+      {/*
+        * Molemmat napit samassa rivissä: mobiilissa allekkain vasempaan
+        * reunaan, työpöydällä vierekkäin niin että palaute jää oikealle.
+        * Erillisinä lohkoina ne asettuivat mobiilissa eri reunoihin, mikä
+        * näytti siltä ettei niillä ole tekemistä keskenään.
+        */}
+      <div className="mt-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <TodaySettingsModal />
+
         <FeedbackButton
           context="Tänään-näkymän palaute"
-          className="rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+          className="shrink-0 rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
         />
       </div>
 
-<div className="mt-4">
-  <TodaySettingsModal />
-</div>
-
-<p className="mt-3 text-sm text-gray-500">
-  Mukauta näkymää valitsemalla alueet, hankkeen vaiheet ja tietolähteet.
-</p>
+      <p className="mt-3 text-sm text-gray-500">
+        Mukauta näkymää valitsemalla alueet, hankkeen vaiheet ja tietolähteet.
+      </p>
 
 {summary.team?.inTeam && user?.id && (
   <TeamModeToggle userId={user.id} initialSettings={summary.settings} />
