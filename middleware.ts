@@ -37,8 +37,14 @@ export async function middleware(request: NextRequest) {
   const isProjects = pathname.startsWith("/projects")
   const isToday = pathname.startsWith("/today")
   const isTic = pathname.startsWith("/tic")
+  const isOhjeet = pathname.startsWith("/ohjeet")
 
-  const isProtected = isDashboard || isProjects || isToday || isTic
+  /*
+   * Ohjeet vaatii kirjautumisen: sivu kertoo mitä lähteitä ja logiikkaa
+   * palvelu käyttää. Pelkkä matcher-lista ei suojaa mitään — polku on
+   * lisättävä myös tähän ehtoon, muuten middleware ajaa mutta päästää läpi.
+   */
+  const isProtected = isDashboard || isProjects || isToday || isTic || isOhjeet
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
@@ -71,6 +77,7 @@ export const config = {
     "/projects/:path*",
     "/today",
     "/today/:path*",
+    "/ohjeet",
     "/tic",
     "/tic/:path*",
   ],

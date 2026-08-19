@@ -271,6 +271,7 @@ export default function Navbar() {
           <NavSection>
             <NavItem href="/settings">Salasana</NavItem>
             <NavItem href="/settings/ilmoitukset">Ilmoitukset</NavItem>
+            <NavItem href="/ohjeet">Ohjeet</NavItem>
           </NavSection>
         </div>
       )}
