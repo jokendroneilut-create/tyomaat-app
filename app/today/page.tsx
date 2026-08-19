@@ -34,30 +34,15 @@ const summary = await getTodaySummary(user?.id)
       <h1 className="text-3xl font-bold text-gray-900">Tänään</h1>
 
       <p className="mt-2 text-gray-600">
-        Päivän tärkeimmät rakennushankkeet ja tapahtumat.
+        Tänään-näkymä kokoaa yrityksellesi tärkeimmät rakennushankkeet
       </p>
 
-      <div className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4">
-  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-    <div>
-      <p className="font-semibold text-gray-900">
-        Tänään kokoaa yrityksellesi tärkeimmät rakennushankkeet
-      </p>
-
-      <p className="mt-1 text-sm text-gray-700">
-        Kehitämme näkymää käyttäjäpalautteen perusteella — kerro mikä toimii
-        ja mikä ei.
-      </p>
-    </div>
-
-    <FeedbackButton
-      context="Tänään-näkymän palaute"
-      className="rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
-    />
-
-  </div>
-</div>
+      <div className="mt-5 flex justify-end">
+        <FeedbackButton
+          context="Tänään-näkymän palaute"
+          className="rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+        />
+      </div>
 
 <div className="mt-4">
   <TodaySettingsModal />
