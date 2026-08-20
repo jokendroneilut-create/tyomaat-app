@@ -68,6 +68,8 @@ import {
   enrichNccProject,
 } from "./fetchNccProjectsSource"
 import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
+import { fetchHartelaAreasSource } from "./fetchHartelaAreasSource"
+import { fetchHcHoivakoditSource } from "./fetchHcHoivakoditSource"
 import { createCompanyEnricher } from "./companyRelease"
 
 export const sources = [
@@ -159,4 +161,16 @@ export const sources = [
    * takana.
    */
   { name: "grk_projektit", fetch: fetchGrkProjectsSource },
+  /*
+   * Hartelan TULEVAT asuinalueet - eri sivu kuin referenssit, jotka ovat
+   * valmistuneita. Naiden arvo on katuosoite: 8/15 sivulta loytyy osoite
+   * talonumeroineen, mika on duplikaattitasmayksen vahvin avain.
+   */
+  { name: "hartela_asuinalueet", fetch: fetchHartelaAreasSource },
+  /*
+   * HC Hoivakodit. Volyymi on pieni - koko sivustolla yksi artikkeli -
+   * mutta lahde on halpa ja tuo osoitteen. Tuotto on syyta tarkistaa
+   * ennen kuin siihen nojataan.
+   */
+  { name: "hc_hoivakodit", fetch: fetchHcHoivakoditSource },
 ]
