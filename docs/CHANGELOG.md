@@ -11,6 +11,38 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 21.8.)
 
+### Geneeriset hankenimet taydennetty sijainnilla
+
+Kasin luoduissa hankkeissa oli nimia kuten "Datakeskus", "Kerrostalo" ja
+"Toimitila". Asiakas nakee listassaan seitseman rivia nimelta "Datakeskus",
+eivatka ne erotu toisistaan tasmaytyksessakaan.
+
+Taydennetty 34 nimea sijainnista (scripts/backfill-generic-project-names.ts).
+Vanha nimi jai also_known_as-kenttaan, joten duplikaattitasmaytys loytaa
+hankkeen edelleen silla.
+
+Rajattu kasin tehtyihin: lahteesta tulleet lyhyet nimet ovat kaavan
+virallisia nimia ("Puijonsarvi", "Kytola") ja siksi oikein. 202 yhden sanan
+nimesta 168 oli kaavalahteista.
+
+Kuivaharjoitus paljasti vian ensimmaisessa saannossa: pelkka kaupunki olisi
+antanut kolmelle Helsingin "Kerrostalo"-riville saman nimen "Kerrostalo,
+Helsinki" eli tasan saman ongelman kuin ennen. Ne ovat Verkkosaaressa,
+Oulunkylassa ja Nihdissa, joten tarkenteeksi otetaan aluenimi kun sellainen
+on ja kaupunki vasta varalla. Katuosoitetta ei kayteta.
+
+### Duplikaattitarkistus jonolle
+
+Jono kaytiin lapi kolmella signaalilla (scripts/scan-queue-pairs.ts).
+Herttoniemen kaltaisia nakymattomia pareja ei ollut yhtaan. Loytyi kaksi
+aitoa duplikaattia: Vt 3 Moreenin eritasoliittyma (GRK + Vaylavirasto,
+molemmat jonossa) ja Micropolis 3 (kaksi Hilma-riviä, joissa kaupunki "ii"
+ja "Ii"). Molemmat yhdistetty.
+
+Kaksi ehdokasta jotka nayttivat nimen perusteella duplikaateilta EIVAT
+olleet: Kajaanissa on kaksi eri datakeskusta (SRV/CSC ja XTX Markets) ja
+Rauhanniemessa kaksi eri kerrostaloa (TOAS/NCC ja YIT).
+
 ### Otsikoiden yhteiset sanat nostavat hankkeen ehdotuksiin
 
 titleSimilarity on Jaccard: yhteiset sanat jaettuna kaikkien sanojen
