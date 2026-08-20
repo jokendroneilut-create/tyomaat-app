@@ -42,10 +42,33 @@ työssä kolmesti:
 | Sitowise | `extractReleaseBody` valitsi tyhjän `<article>`-kääreen |
 | Varte | hännän leikkaus tunsi vain yhden sanamuodon; kaupunki tuli yritysnimestä |
 | GRK | `detectCityFromText` luki kunnan sanasta "loppuun" |
+| Hartela | katuosoitteen normalisointi täsmäytykseen — **ei tehty**, ks. alla |
 
 Uutta lähdettä lisättäessä kannattaa siis katsoa **ensimmäisen ajon
 tulosta riveittäin** eikä vain lukumääriä: poikkeava rivi kertoo
 useammin jaetusta poimijasta kuin uudesta lähteestä.
+
+**NELJÄS TAPAUS PÄÄTTYI TOISIN: MUUTOSTA EI TEHTY.** Hartelan uudet
+hankkeet eivät täsmänneet olemassa oleviin riveihin, koska osoitteet
+eroavat merkkijonoina — `Ukonkellontie 6` vs. `Ukonkellontie 6, 02450
+Kirkkonummi`. Ilmeinen korjaus olisi verrata vain katua ja numeroa.
+
+Mittaus koko kannasta kumosi sen. Samalla kadulla ja numerolla on
+hankkeita jotka EIVÄT ole sama hanke:
+
+```
+Maunonkatu 2, Oulu   "Asunto Oy Kuusiluodonrannan Runo" ja "Kuusiluodonrannan Saaga"
+Koroistentie 10      Teboilin purku · Junatien metrosilta · Patterimäen asemakaava
+```
+
+Eri taloyhtiöitä samassa korttelissa, ja kolme täysin eri hanketta
+samalla osoitteella — jälkimmäinen ilmeisesti hallinnollinen osoite,
+ei hankkeen sijainti. Normalisointi olisi yhdistänyt ne.
+
+**Kahden duplikaatin käsittely jonossa on halvempaa kuin väärin
+yhdistetyt hankkeet**, joten täsmäytys jätettiin ennalleen. Tämä on
+myös vastaus siihen miksi D-088:n duplikaattiongelmaa ei kannata
+ratkaista löysentämällä täsmäytystä.
 
 **JÄI KÄSIN KORJATTAVAKSI.** Kaksi riviä on yhä väärässä kunnassa, koska
 oikeaa kaupunkia ei voi johtaa tekstistä automaattisesti: JYSK/Järvenpää
@@ -76,6 +99,8 @@ esiintymisestä, että Lujatalo on paras vaihtoehto. Se oli väärin:
 | **NCC** | 21 | 20 | 71 % | **95 %** | **95 %** |
 | Skanska | 53 | ~50 % | **94 %** | – | – |
 | GRK | 239 | **16** | 0 % | – | – |
+| Hartela (tulevat) | 15 | 15 | – | **53 %** | – |
+| HC Hoivakodit | 1 | 1 | 100 % | 100 % | – |
 | Lujatalo | 115 | **7** | **12 %** | – | – |
 
 Lujatalon sanat olivat listaussivulla, eivät jokaisella hankesivulla —
@@ -119,6 +144,25 @@ GRK:lle ei tehty rikastuskoukkua lainkaan. Sivut ovat 700–1600 merkkiä ja
 koko 239 sivun haku vie rinnakkain 7,9 s, joten haku tekee kaiken
 kerralla — näin poiminta ei jää `ENRICH_PER_RUN`-katon taakse eikä odota
 runkotyöntekijää. Sama ratkaisu sopii muillekin pienisivuisille lähteille.
+
+**KARTOITUS TARKISTI HARTELALTA VÄÄRÄN SIVUN.** Totesin ettei Hartelalla
+ole käyttökelpoista sivua, koska katsoin vain `/referenssit` — se on
+valmistuneita kohteita. Sivu `/tulevat-asuinalueet` on päinvastoin
+tulevia, ja siellä **katuosoite löytyy 8 sivulta 15:stä** eli parempi
+osuus kuin yhdelläkään muulla yrityslähteellä. Se löytyi vasta kun
+käyttäjä huomasi joutuneensa lisäämään osoitteen käsin.
+
+Opetus on sama kuin kattavuusmittauksessa mutta askelta aiemmin:
+**yhden sivun tarkistaminen ei riitä päätelmään koko sivustosta.**
+Referenssit ja tulevat kohteet ovat eri sivustoilla eri paikoissa, eikä
+yhden puuttuminen kerro toisesta mitään.
+
+**HC HOIVAKODIT** lisättiin samasta syystä: käsin lisätty
+"Hommaksenkaari 5" oli heidän omassa tiedotteessaan valmiina.
+Listaussivu on JS-vetoinen (53 kB HTML, 116 merkkiä tekstiä), joten
+käytetään WordPressin REST-rajapintaa. Koko sivustolla on yksi
+artikkeli — lähde on halpa ja tuo osoitteen, mutta sen tuottoon ei pidä
+nojata ennen kuin sitä on mitattu uudelleen.
 
 **MUUT ISOT RAKENNUSLIIKKEET KARTOITETTIIN, EIKÄ VASTAAVAA LÖYTYNYT.**
 Fira (116 sivua), Destia (72), Consti (2), SRV ja YIT: kaikilla on
