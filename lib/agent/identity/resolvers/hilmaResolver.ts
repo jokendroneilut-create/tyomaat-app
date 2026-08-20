@@ -11,6 +11,7 @@ import {
   isSinglePropertyCompany,
 } from "@/lib/geo/municipalityFromName"
 import { extractWorksite } from "@/lib/agent/identity/extractWorksiteAddress"
+import { fetchHilmaRealizedLocation } from "@/lib/agent/hilmaRealizedLocation"
 
 function findFact(
   facts: any[],
@@ -296,6 +297,37 @@ export async function resolveHilmaProject({
       : null)
 
   let resolvedAddress = projectAddress
+  let addressFromNotice = false
+
+  /*
+   * Ilmoituksen oma suorituspaikkakenttä (eForms BT-5101) luetaan ENNEN
+   * kuvaustekstin jäsennystä: rakenteinen osoite on aina tarkempi kuin
+   * tekstistä poimittu. Kenttä on täytetty noin joka kolmannessa
+   * ilmoituksessa, joten tekstijäsennintä tarvitaan yhä lopuille.
+   *
+   * Haku tehdään vain kun jotain puuttuu, jotta täydellisille ilmoituksille
+   * ei tule turhaa verkkokutsua.
+   */
+  if (!municipality || !resolvedAddress) {
+    const notice = await fetchHilmaRealizedLocation(
+      metadata.procedure_id,
+      metadata.notice_id
+    )
+
+    if (!resolvedAddress && notice.address) {
+      resolvedAddress = notice.address
+      addressFromNotice = true
+    }
+
+    /*
+     * Kaupunki voi olla kylä tai postitoimipaikka ("Sirkka", "Jurva"), jota
+     * kuntaluettelo ei tunne. Silloin osoite otetaan silti talteen mutta
+     * kunta jätetään tyhjäksi — arvattu kunta olisi virhe hakutuloksissa.
+     */
+    if (!municipality && notice.city) {
+      municipality = getMunicipalityByPlaceName(notice.city)?.name ?? null
+    }
+  }
 
   /*
    * Työmaan osoite/kaupunki on Hilmassa usein vain vapaassa kuvaustekstissä
@@ -359,6 +391,12 @@ export async function resolveHilmaProject({
 
       buyer_address: buyerAddress,
       project_address: resolvedAddress,
+
+      /* Katselmoija näkee esikatselussa mistä osoite on peräisin. */
+      field_sources: {
+        ...((metadata as any)?.field_sources ?? {}),
+        location: addressFromNotice ? "ilmoituksen suorituspaikka" : null,
+      },
 
       deadline,
       expiration_date: expirationDate,

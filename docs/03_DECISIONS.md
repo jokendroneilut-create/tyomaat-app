@@ -5,6 +5,70 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-092 – Työmaan osoite luetaan ilmoituksen omasta kentästä, ei PDF:stä
+
+Osoitteita jouduttiin kaivamaan käsin Hilman tarjouspyynnöistä. Selvitettiin
+voiko sen PDF:n lukea automaattisesti — **ei voi, eikä kannata**:
+
+| Reitti | Tulos |
+|---|---|
+| "Ilmoituksen PDF" | osoittaa `/print`-tulosteeseen samasta ilmoituksesta |
+| `attachments` / `links` rajapinnassa | molemmat tyhjiä |
+| "Osallistu hankintaan" → tarjouspalvelu.fi | ohjaa Cloudian kirjautumissivulle, 0 pdf-linkkiä |
+
+Varsinaiset tarjouspyyntöasiakirjat ovat toimittajaportaalissa
+rekisteröitymisen takana. Hilman oma ohjeteksti sanoo tämän suoraan.
+
+**Osoite löytyi silti — väärästä kentästä.** eForms-ilmoituksessa on
+rakenteinen suorituspaikka `realizedLocation` (BT-5101), jota emme lukeneet.
+Käyttämämme hakurajapinta (`avp/eformnotices`) **ei palauta sitä lainkaan**;
+kenttä on vain ilmoitussivun omassa rajapinnassa
+`web/api/public/procedure/{N}/enotice/{M}`. Siksi resolver tekee nyt toisen
+haun — mutta vain kun osoite tai kunta puuttuu.
+
+Mitattu 21.8.2026: 306 vajaasta ehdokkaasta **93 sai osoitteen ja 24 kunnan**,
+ja niistä syntyneistä hankkeista 59 sai osoitteen ja 14 kunnan. Noin kaksi
+kolmasosaa tilaajista jättää kentän täyttämättä (koodi `anyw-cou` =
+"missä tahansa maassa") — juuri niin kävi Isonkyrön latukonehallissa, joka
+selvityksen aloitti.
+
+**Kuivaharjoitus paljasti kaksi vikaa, joita testit eivät olisi löytäneet:**
+kaksi päällystysurakkaa olisi saanut osoitteekseen tilaajan postilokeron
+"PL 125", ja yhden ilmoituksen postinumeroksi oli kirjoitettu kuusinumeroinen
+"123390". Molemmat suodatetaan nyt (`isPostBoxOnly`, viiden numeron tarkistus).
+
+Kunta täytetään vain jos kuntaluettelo tunnistaa sen: kenttä sisältää usein
+kylän tai ruotsinkielisen nimen ("Ylämylly", "Jakobstad"), jolloin osoite
+otetaan mutta kunta jätetään tyhjäksi. 15 tapausta jäi näin ilman kuntaa —
+tyhjä on parempi kuin arvattu.
+
+Ks. `lib/agent/hilmaRealizedLocation.ts`,
+`scripts/backfill-hilma-realized-location.ts`.
+
+### D-091 – Tunnisteen pitää olla pysyvä, ei ilmoituskohtainen
+
+Sama hankinta julkaistaan Hilmassa useana ilmoituksena (korjaus, jälki-,
+keskeytysilmoitus) ja **jokainen saa oman ilmoitusnumeronsa**. Tunnisteena
+käytettiin `hilma_notice_number`ia, joka siis eroaa joka kerta — niinpä
+korjausilmoitus loi uuden ehdokkaan, vaikka hanke oli jo kannassa. Resolver-
+reitti ei tee sumeaa täsmäystä hyväksyttyihin hankkeisiin, joten mitään ei
+sitonut niitä yhteen, ja duplikaatti ehti käyttäjän näkyville.
+
+Korjaus: `hilma_procedure_id` (hankinnan tunnus) pysyy samana kaikissa saman
+hankinnan ilmoituksissa. Se kirjataan nyt tunnisteeksi, ja jonossa olevat
+duplikaatit sivuutettiin takautuvasti (`ignored`, ei poistoa — ks. D-088).
+
+**Kaavapäätöksissä ei ole samaa ongelmaa.** Tarkistettu 20.8.2026: 2 966
+kaavatunnistetta, 2 966 eri arvoa, **0** tunnistetta jolla olisi useampi
+ehdokas; 3 162 kaavaehdokkaasta vain 58 ilman tunnistetta eikä yhtään
+samannimistä duplikaattiryhmää. Syy on rakenteellinen — kaavatunnus
+(`AK-2145`) pysyy samana kaavan edetessä vaiheesta toiseen.
+
+Yleistys: **tunnisteeksi kelpaa vain se, mikä ei muutu kohteen elinkaaren
+aikana.** Ilmoitus-, versio- ja päätösnumerot eivät kelpaa.
+
+Ks. `lib/projects/identity.ts`, `scripts/backfill-hilma-procedure-id.ts`.
+
 ### D-090 – Uusi lähde on jaettujen poimijoiden testi
 
 GRK:n projektisivuja lisättäessä joukkoon lipsahti **virolainen
