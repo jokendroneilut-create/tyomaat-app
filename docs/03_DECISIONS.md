@@ -5,6 +5,46 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-096 – Lupapisteen päätös-PDF on haettava heti, koska kuulutus poistuu verkosta
+
+Vantaan kuulutus LP-092-2026-02341 on rajapinnassa *"Rakentamista
+valmistelevat työt"*. Päätös-PDF kertoo mistä on kyse:
+
+> Tulevien **datakeskusrakennusten** ja lämmöntalteenottorakennuksen
+> rakentamista valmistelevat pohjatyöt… Kaivuu- ja täyttöalueiden laajuus on
+> 42 465 m². Louhinta-alueiden laajuus on 22 621 m².
+
+Ilman PDF:ää iso datakeskushanke näyttää rutiinikaivuulta. Rajapinta antaa
+mitatusti 15–119 merkkiä, PDF keskimäärin 6 500.
+
+**AIKAIKKUNA ON KIINNI.** Kuulutuksessa lukee "Julkaisu poistuu verkosta
+25.9.2026", ja sen mukana menee PDF. Mitattu 21.8.2026 otoksesta 25
+tallennettua kuulutusta: PDF irtosi enää **15:ltä**. Teksti on siis otettava
+talteen keräysvaiheessa — myöhemmin sitä ei saa mistään. Siksi haku tehdään
+collectorissa eikä erillisessä työntekijässä.
+
+Osoite `api/raw/download-bulletin-doc?bulletinId=…` löytyi sovelluksen omasta
+`bulletins.js`:stä; arvatut polut palauttivat 404/401.
+
+**KUVAUKSEN POIMINTA ANKKUROIDAAN OTSIKKOON.** Ensimmäinen versio otti
+pisimmän lainausmerkeissä olevan jakson. Mitattu 15 päätöksellä: se osui
+yhteen, ja sekin oli väärä kohta — poikkeamispäätöksen perustelu
+("Autosuojan nykyinen sijainti ei muutu"), ei hankkeen kuvaus. Otsikkoon
+sidottuna poiminta on harvinaisempi mutta oikea. Otsikon loppuosa vaihtelee
+kunnittain ("hakemuksella" / "hakemuksessa"), mikä sekin löytyi vasta
+kuivaharjoituksesta: yksi kuvaus alkoi sanoilla `hakemuksessa: "`.
+
+Koko PDF-teksti tallennetaan aina, vaikka kuvausta ei poimittaisi — se on
+pysyvä kopio siitä mikä muuten katoaisi.
+
+**LÄHDELINKKI.** Lupapiste-riveillä ei ollut lähdelinkkiä lainkaan, joten
+"avaa lähde" ei tehnyt mitään. Linkki lisättiin, mutta se toimii vain
+kuulutusaikana. Se on hyväksyttävää: katselmointi osuu juuri siihen
+ikkunaan, ja sen jälkeen tieto on tallessa omassa kannassa.
+
+Ks. `lib/agent/lupapisteBulletinPdf.ts`,
+`scripts/backfill-lupapiste-pdf.ts`.
+
 ### D-095 – Otsikkovertailu on Jaccard, ja pitkä lomakeotsikko laimentaa sen
 
 Kysymys oli aiheellinen: eikö yhteisten sanojen pitäisi nostaa pisteitä?

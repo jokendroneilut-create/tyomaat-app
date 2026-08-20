@@ -8,6 +8,10 @@ import type { DiscoverySource } from "../registry/sources"
 import { detectCityFromText } from "../../detectCityFromText"
 import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
 import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
+import {
+  fetchLupapisteBulletinPdfText,
+  extractApplicationDescription,
+} from "../../lupapisteBulletinPdf"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,6 +35,9 @@ function getTitleFromHilmaNotice(notice: any) {
 const LUPAPISTE_BULLETINS_PAGE = "https://julkipano.lupapiste.fi/app/fi/bulletins"
 const LUPAPISTE_CATEGORIES = ["r", "p"]
 const LUPAPISTE_MAX_PAGES_PER_CATEGORY = 5
+
+/* PDF-hakuja per ajo. Loput jaavat seuraavaan ajoon, koska jo haetut ohitetaan. */
+const LUPAPISTE_PDF_BUDGET = 40
 
 async function fetchLupapisteCsrfToken() {
   const response = await fetch(LUPAPISTE_BULLETINS_PAGE, { cache: "no-store" })
@@ -96,6 +103,26 @@ async function collectLupapisteSource(source: DiscoverySource) {
 
   let found = 0
   let saved = 0
+  let pdfHaettu = 0
+
+  /*
+   * PAATOS-PDF ON HAETTAVA HETI. Kuulutus poistetaan verkosta muutoksenhaku-
+   * ajan paatyttya, ja sen mukana PDF. Mitattu 21.8.2026: 25 tallennetusta
+   * kuulutuksesta PDF irtosi enaa 15:lta. Rajapinta antaa vain lyhyen
+   * toimenpidetekstin (15-119 merkkia), PDF keskimaarin 6 500 merkkia -
+   * ja juuri sielta selvisi etta "Rakentamista valmistelevat tyot" Vantaan
+   * Mittalinjalla tarkoittaa TULEVIA DATAKESKUSRAKENNUKSIA.
+   */
+  const jo = new Set<string>()
+  {
+    const { data } = await supabaseAdmin
+      .from("source_documents")
+      .select("document_url")
+      .eq("source_id", source.id)
+      .not("raw_payload->>bulletin_pdf_text", "is", null)
+      .limit(5000)
+    for (const row of data ?? []) jo.add(String((row as any).document_url))
+  }
 
   for (const category of LUPAPISTE_CATEGORIES) {
     for (let page = 1; page <= LUPAPISTE_MAX_PAGES_PER_CATEGORY; page++) {
@@ -118,6 +145,20 @@ async function collectLupapisteSource(source: DiscoverySource) {
         found += 1
 
         const documentUrl = `https://julkipano.lupapiste.fi/app/fi/bulletins#!/bulletin/${notice.id}`
+
+        /*
+         * Budjetti, koska yksi PDF on satoja kilotavuja ja ajossa on muutakin.
+         * Jo haetut ohitetaan, joten seuraava ajo jatkaa siita mihin jai.
+         */
+        let pdfText: string | null = null
+        let pdfKuvaus: string | null = null
+
+        if (!jo.has(documentUrl) && pdfHaettu < LUPAPISTE_PDF_BUDGET) {
+          pdfHaettu += 1
+          pdfText = await fetchLupapisteBulletinPdfText(String(notice.id), { token, cookie })
+          pdfKuvaus = extractApplicationDescription(pdfText)
+        }
+
         const rawText = JSON.stringify(notice)
         const contentHash = hashContent(rawText)
 
@@ -141,6 +182,13 @@ async function collectLupapisteSource(source: DiscoverySource) {
                 category,
                 priority: source.priority,
                 original: notice,
+                ...(pdfText
+                  ? {
+                      bulletin_pdf_text: pdfText,
+                      ...(pdfKuvaus ? { bulletin_description: pdfKuvaus } : {}),
+                      bulletin_pdf_fetched_at: new Date().toISOString(),
+                    }
+                  : {}),
               },
               processed_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),

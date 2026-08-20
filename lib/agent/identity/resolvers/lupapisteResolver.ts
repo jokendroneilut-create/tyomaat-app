@@ -37,10 +37,22 @@ export async function resolveLupapisteProject({
    * kerro mitä hankkeessa oikeasti tehdään — varsinainen sisältö on vain
    * päätöstekstissä. Näytetään koko päätösteksti Lisätietoja-kentässä.
    */
+  /*
+   * PÄÄTÖS-PDF:N KUVAUS MUKAAN. Rajapinnan toimenpideteksti on lyhyt
+   * nimike, mutta päätösasiakirjassa on hakijan oma kuvaus hankkeesta.
+   * Mitattu 21.8.2026: Vantaan LP-092-2026-02341 on rajapinnassa
+   * "Rakentamista valmistelevat työt", mutta PDF kertoo että kyse on
+   * TULEVIEN DATAKESKUSRAKENNUSTEN ja lämmöntalteenottorakennuksen
+   * pohjatöistä — 1 838 merkkiä tietoa jota ei muuten olisi lainkaan.
+   * Ilman tätä iso hanke näyttää rutiinikaivuulta.
+   */
+  const bulletinDescription = document.raw_payload?.bulletin_description ?? null
+
   const description = [
     propertyId ? `Kiinteistötunnus: ${propertyId}` : null,
     address ? `Osoite: ${address}` : null,
     operation ? `Toimenpide: ${operation}` : null,
+    bulletinDescription ? `Hankkeen kuvaus hakemuksella:\n${bulletinDescription}` : null,
     decisionText ? `Päätös:\n${decisionText}` : null,
   ]
     .filter(Boolean)
@@ -99,6 +111,15 @@ export async function resolveLupapisteProject({
       source_name: document.source_name,
       source_document_id: document.id,
       resolver: "lupapisteResolver",
+
+      /*
+       * Lähdelinkki puuttui Lupapiste-riveiltä kokonaan, joten "avaa lähde"
+       * ei tehnyt mitään. Linkki toimii vain kuulutusaikana — kuulutus
+       * poistetaan verkosta muutoksenhakuajan päätyttyä — mutta katselmointi
+       * osuu käytännössä juuri siihen ikkunaan. Sen jälkeen tieto on tallessa
+       * PDF:stä poimitussa kuvauksessa, ei linkin takana.
+       */
+      source_url: document.document_url ?? null,
 
       operation,
       description,
