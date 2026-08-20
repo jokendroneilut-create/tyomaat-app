@@ -9,6 +9,48 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-08 (tyo 21.8.)
+
+### Tyomaan osoite Hilman suorituspaikkakentasta
+
+Hilma-hankkeiden osoite poimittiin tahan asti vain vapaasta kuvaustekstista,
+joten se jai usein tyhjaksi ja piti kaivaa kasin tarjouspyynnosta.
+
+Selvitettiin ensin voiko tarjouspyynnon PDF:n lukea automaattisesti: ei voi.
+Ilmoituksen "Liitteet ja linkit" sisaltaa vain ilmoituksen oman tulosteen,
+attachments-kentta on tyhja, ja varsinaiset asiakirjat ovat tarjouspalvelu.fi:n
+kirjautumisen takana.
+
+Osoite loytyi silti: eForms-ilmoituksessa on rakenteinen suorituspaikka
+(BT-5101), jota ei luettu. Kentta ei tule kayttamastamme hakurajapinnasta vaan
+vaatii erillisen haun ilmoitussivun rajapinnasta, joka tehdaan nyt silloin kun
+osoite tai kunta puuttuu.
+
+Takautuva korjaus: 306 vajaasta ehdokkaasta 93 sai osoitteen ja 24 kunnan,
+niista syntyneista hankkeista 59 sai osoitteen ja 14 kunnan. Uusintaajo ei
+loyda enaa muutettavaa. Osoitteen alkupera nakyy TIC-esikatselussa.
+
+Kuivaharjoitus esti kaksi virhetta: kahden paallystysurakan osoitteeksi olisi
+tullut tilaajan postilokero "PL 125", ja yhden ilmoituksen postinumeroksi
+kuusinumeroinen "123390". Molemmat suodatetaan.
+
+Kunta taytetaan vain jos kuntaluettelo tunnistaa sen; 15 tapauksessa kentassa
+oli kyla tai ruotsinkielinen nimi ("Ylamylly", "Jakobstad"), jolloin osoite
+otettiin mutta kunta jatettiin tyhjaksi. (`1a08a95`, D-092, KL-004)
+
+### Saman Hilma-hankinnan ilmoitukset sidottu hankintatunnuksella
+
+Sama hankinta julkaistaan useana ilmoituksena ja jokainen sai oman
+ilmoitusnumeronsa, joten korjausilmoitus loi uuden ehdokkaan vaikka hanke oli
+jo kannassa. Tunnisteeksi otettiin hankintatunnus, joka pysyy samana, ja
+jonossa olleet duplikaatit sivuutettiin takautuvasti.
+
+Kaavapaatokset tarkistettiin samalla: niissa ei ole tata ongelmaa, koska
+kaavatunnus pysyy samana kaavan edetessa. 2 966 tunnistetta, 0 tapausta jossa
+sama tunniste osuisi useaan ehdokkaaseen. (`15aa0f9`, D-091)
+
+---
+
 ## 2026-08 (tyo 15.8.)
 
 ### Yrityslahteiden rikastus tallennettuihin riveihin

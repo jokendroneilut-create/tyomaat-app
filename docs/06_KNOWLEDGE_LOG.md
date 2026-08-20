@@ -99,3 +99,44 @@ Espoon Asunnot (Espoo), Sivakka (Oulu), Niiralan Kulma (Kuopio), VTS-Kodit
 olemassa oleviksi ja yhden kunnan toimijoiksi. Muut lisätään tapauskohtaisesti
 kun kunta on varma — esim. JVA (Jyväskylä), Lahden Talot, Pikipruukki (Vaasa)
 ovat todennäköisiä mutta vahvistamatta.
+
+---
+
+### KL-004 – Hilman ilmoituksessa on rakenteinen suorituspaikka, mutta harva täyttää sen
+
+Observation:
+eForms-ilmoituksessa on oma kenttä työn suorituspaikalle (BT-5101,
+`realizedLocation`). Mitattu 21.8.2026 kaikista ehdokkaista, joilta osoite tai
+kunta puuttui (306 kpl): **noin kolmasosassa kenttä oli täytetty**, lopuissa oli
+koodi `anyw-cou` ("missä tahansa maassa") tai kenttä oli tyhjä. Täytetty kenttä
+on tarkka — se on tilaajan itsensä ilmoittama työmaan osoite, ei hankintayksikön
+käyntiosoite.
+
+Kaksi ansaa mitattiin: osa tilaajista laittaa kenttään oman **postilokeronsa**
+("PL 125"), ja postinumeroissa on lyöntivirheitä (kuusinumeroinen "123390").
+
+Varsinaiset tarjouspyyntöasiakirjat, joissa osoite lähes aina on, ovat
+toimittajaportaalissa (tarjouspalvelu.fi / Cloudia) **rekisteröitymisen takana**.
+Ilmoituksen "Liitteet ja linkit" sisältää vain ilmoituksen oman PDF-tulosteen.
+
+Why it matters:
+Tämä on tarkin saatavilla oleva työmaan osoite ilman kirjautumista, ja se on
+riippumaton vapaan tekstin jäsennyksestä. Ilman osoitetta hanke ei paikannu
+kartalle eikä osu osoitepohjaisiin hakuihin. Täydentää KL-003:a: kun kenttä on
+täytetty, se voittaa tilaajan nimestä pääteltävän kunnan.
+
+Possible system use:
+`lib/agent/hilmaRealizedLocation.ts`; kutsutaan `hilmaResolver.ts`:stä vain kun
+osoite tai kunta puuttuu. Kenttä ei tule käyttämästämme hakurajapinnasta
+(`avp/eformnotices`) vaan vaatii erillisen haun ilmoitussivun rajapinnasta.
+
+Kentän `cityName` on usein kylä tai ruotsinkielinen nimi ("Ylämylly",
+"Jakobstad", "Sirkka"), jota kuntaluettelo ei tunne — silloin osoite otetaan
+mutta kunta jätetään tyhjäksi.
+
+Confidence:
+High — mitattu 306 ilmoituksesta, ei arvio.
+
+Status:
+Koodissa ja ajettu takautuvasti (D-092). Avoin: ruotsinkielisten ja kylien
+nimien kuntahaku puuttuu (15 tapausta jäi ilman kuntaa).
