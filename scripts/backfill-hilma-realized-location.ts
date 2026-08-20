@@ -98,7 +98,7 @@ async function main() {
   for (let i = 0; i < projectIds.length; i += 100) {
     const { data, error } = await supabase
       .from("projects")
-      .select("id, name, location, city, metadata")
+      .select("id, name, location, city, region, metadata")
       .in("id", projectIds.slice(i, i + 100))
     if (error) throw error
     for (const p of data ?? []) projects.set(String(p.id), p)
@@ -123,10 +123,16 @@ async function main() {
   let candidateAddress = 0, candidateCity = 0, projectAddress = 0, projectCity = 0
   let unknownCity = 0, nothing = 0
   const rows: string[] = []
+  /* Tunnistamattomat nimet listataan, jotta kuntaluetteloa voi laajentaa
+   * mitatusta datasta eikä arvaamalla. */
+  const unknownNames = new Map<string, number>()
 
   for (const { candidate, notice } of results) {
     const municipality = notice.city ? getMunicipalityByPlaceName(notice.city)?.name ?? null : null
-    if (notice.city && !municipality) unknownCity++
+    if (notice.city && !municipality) {
+      unknownCity++
+      unknownNames.set(notice.city, (unknownNames.get(notice.city) ?? 0) + 1)
+    }
 
     const newAddress = !candidate.address && notice.address ? notice.address : null
     const newCity = !candidate.municipality && municipality ? municipality : null
@@ -177,7 +183,19 @@ async function main() {
         .from("projects")
         .update({
           ...(newProjectAddress ? { location: newProjectAddress } : {}),
-          ...(newProjectCity ? { city: newProjectCity } : {}),
+          /*
+           * Maakunta on asetettava samalla. Ilman sitä hanke saa kaupungin
+           * mutta jää pois alueittain suodatetuista näkymistä — juuri niin
+           * kävi ensimmäisessä ajossa 21.8.2026 (6 hanketta).
+           */
+          ...(newProjectCity
+            ? {
+                city: newProjectCity,
+                ...(project.region
+                  ? {}
+                  : { region: getMunicipalityByPlaceName(newProjectCity)?.region ?? null }),
+              }
+            : {}),
           metadata: {
             ...(project.metadata ?? {}),
             location_backfilled_from: "hilma_realized_location",
@@ -195,6 +213,14 @@ async function main() {
   console.log(`hankkeelle kunta:              ${projectCity}`)
   console.log(`kaupunki ei tunnistu kunnaksi: ${unknownCity}`)
   console.log(`ei muutosta:                   ${nothing}`)
+
+  if (unknownNames.size) {
+    console.log(`\ntunnistamattomat paikannimet (${unknownNames.size}):`)
+    for (const [name, n] of [...unknownNames].sort((a, b) => b[1] - a[1])) {
+      console.log(`  ${String(n).padStart(3)}x  ${name}`)
+    }
+  }
+
   console.log(`\nrivit (${rows.length}):`)
   for (const r of rows) console.log(r)
 }

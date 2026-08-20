@@ -17,18 +17,102 @@ import {
 const ALL_MUNICIPALITIES: Municipality[] = Object.values(MUNICIPALITIES)
 
 /*
- * Postitoimipaikkoja jotka eivät ole omia kuntiaan. Hilman hankintayksikön
- * osoitteessa "kaupunki" on postitoimipaikka, ei kunta: "14200 Turenki" on
- * Janakkalan kirkonkylä, jolloin suora kuntarekisterihaku palauttaa tyhjän
- * ja koko hankkeen sijainti jää tunnistamatta. Laajennettavissa.
+ * Postitoimipaikkoja ja kyliä jotka eivät ole omia kuntiaan. Hilman
+ * hankintayksikön osoitteessa "kaupunki" on postitoimipaikka, ei kunta:
+ * "14200 Turenki" on Janakkalan kirkonkylä, jolloin suora kuntarekisterihaku
+ * palauttaa tyhjän ja koko hankkeen sijainti jää tunnistamatta.
+ *
+ * Alla olevat on MITATTU aineistosta 21.8.2026
+ * (`scripts/measure-unknown-place-names.ts`), ei arvattu. Lisää vain nimiä
+ * jotka esiintyvät oikeasti ja joiden kunta on yksikäsitteinen — esim.
+ * "Kuivasjärvi" on sekä Oulussa että Parkanossa, joten se jätettiin pois.
  */
 const POSTAL_PLACE_MUNICIPALITIES: Record<string, string> = {
   turenki: "Janakkala",
   ivalo: "Inari",
   onttola: "Kontiolahti",
   immola: "Imatra",
-  nauvo: "Parainen", // kuntaliitos 2009
-  kuusankoski: "Kouvola", // kuntaliitos 2009
+  hikiä: "Hausjärvi",
+  sirkka: "Kittilä", // Levin kylä
+  rukatunturi: "Kuusamo",
+  tervakoski: "Janakkala",
+  nummela: "Vihti",
+  vesivehmaa: "Asikkala",
+  vekaranjärvi: "Kouvola", // varuskunta, ent. Valkeala
+  ylämylly: "Liperi",
+  kelloselkä: "Salla",
+  impiö: "Ranua",
+  nukari: "Nurmijärvi",
+}
+
+/*
+ * LAKANNEET KUNNAT. Kuntaliitoksessa nimi jää elämään postitoimipaikkana ja
+ * puheessa vuosikymmeniksi, joten sitä esiintyy aineistossa yhä.
+ */
+const MERGED_MUNICIPALITIES: Record<string, string> = {
+  nauvo: "Parainen", // 2009
+  kuusankoski: "Kouvola", // 2009
+  eno: "Joensuu", // 2009
+  noormarkku: "Pori", // 2010
+  haukipudas: "Oulu", // 2013
+  mänttä: "Mänttä-Vilppula", // 2009
+  jurva: "Kurikka", // 2009
+}
+
+/*
+ * RUOTSINKIELISET KUNTANIMET. Kaksikielisen kunnan ilmoitus voi käyttää
+ * kumpaa nimeä tahansa: mitattu 21.8.2026 suorituspaikkakentästä
+ * "JAKOBSTAD", jolloin kunta jäi tyhjäksi vaikka osoite saatiin.
+ *
+ * Kattaa virallisesti kaksikieliset kunnat. Nimet ovat yksikäsitteisiä
+ * eivätkä osu mihinkään suomenkieliseen kunnannimeen.
+ *
+ * HUOM: "Pedersöre" ja "Mariehamn" osoittavat rekisterin virallisiin
+ * nimiin "Pedersören kunta" ja "Maarianhamina - Mariehamn", joita ei
+ * kirjoiteta aineistoon sellaisenaan.
+ */
+const SWEDISH_MUNICIPALITY_NAMES: Record<string, string> = {
+  esbo: "Espoo",
+  hangö: "Hanko",
+  helsingfors: "Helsinki",
+  ingå: "Inkoo",
+  jakobstad: "Pietarsaari",
+  karleby: "Kokkola",
+  kaskö: "Kaskinen",
+  kimitoön: "Kemiönsaari",
+  kristinestad: "Kristiinankaupunki",
+  kronoby: "Kruunupyy",
+  kyrkslätt: "Kirkkonummi",
+  lappträsk: "Lapinjärvi",
+  larsmo: "Luoto",
+  lovisa: "Loviisa",
+  malax: "Maalahti",
+  mariehamn: "Maarianhamina - Mariehamn",
+  mörskom: "Myrskylä",
+  nykarleby: "Uusikaarlepyy",
+  närpes: "Närpiö",
+  pargas: "Parainen",
+  pedersöre: "Pedersören kunta",
+  raseborg: "Raasepori",
+  sibbo: "Sipoo",
+  sjundeå: "Siuntio",
+  vanda: "Vantaa",
+  vasa: "Vaasa",
+  vörå: "Vöyri",
+  åbo: "Turku",
+  borgå: "Porvoo",
+  borgnäs: "Pornainen",
+  grankulla: "Kauniainen",
+  korsholm: "Mustasaari",
+  pyttis: "Pyhtää",
+}
+
+/*
+ * Rekisterin virallinen nimi poikkeaa arkinimestä myös suomeksi:
+ * Tilastokeskuksella Maarianhamina on "Maarianhamina - Mariehamn".
+ */
+const REGISTRY_NAME_ALIASES: Record<string, string> = {
+  maarianhamina: "Maarianhamina - Mariehamn",
 }
 
 /*
@@ -46,8 +130,17 @@ const GENITIVE_EXCEPTIONS: Record<string, string> = {
 }
 
 /*
- * Kuntarekisterihaku joka tuntee myös postitoimipaikat.
+ * Kuntarekisterihaku joka tuntee myös postitoimipaikat, lakanneet kunnat ja
+ * ruotsinkieliset nimet. Kaikki aliakset ratkaistaan rekisteriä vasten, joten
+ * kirjoitusvirhe tai tuntematon nimi palauttaa tyhjän eikä arvausta.
  */
+export const PLACE_ALIASES: Record<string, string> = {
+  ...POSTAL_PLACE_MUNICIPALITIES,
+  ...MERGED_MUNICIPALITIES,
+  ...SWEDISH_MUNICIPALITY_NAMES,
+  ...REGISTRY_NAME_ALIASES,
+}
+
 export function getMunicipalityByPlaceName(
   name: string | null | undefined
 ): Municipality | null {
@@ -56,7 +149,7 @@ export function getMunicipalityByPlaceName(
 
   if (!name) return null
 
-  const alias = POSTAL_PLACE_MUNICIPALITIES[name.trim().toLowerCase()]
+  const alias = PLACE_ALIASES[name.trim().toLowerCase()]
   return alias ? getMunicipalityByName(alias) : null
 }
 

@@ -6,7 +6,80 @@ import {
   municipalityFromBuyerName,
   isCityCorroboratedByText,
   isSinglePropertyCompany,
+  PLACE_ALIASES,
 } from "./municipalityFromName"
+import { getMunicipalityByName } from "./municipalities"
+
+describe("PLACE_ALIASES", () => {
+  /*
+   * Alias ratkaistaan kuntarekisteriä vasten, joten kirjoitusvirhe kohteessa
+   * palauttaisi hiljaa tyhjän eikä mikään kaatuisi. Siksi jokainen kohde
+   * tarkistetaan erikseen.
+   */
+  it("jokainen alias osoittaa olemassa olevaan kuntaan", () => {
+    const rikki = Object.entries(PLACE_ALIASES).filter(
+      ([, target]) => !getMunicipalityByName(target)
+    )
+    expect(rikki).toEqual([])
+  })
+
+  /*
+   * Suora rekisterihaku tehdään ensin, joten kuntanimeä vastaava alias olisi
+   * kuollutta koodia — ja merkki siitä että jotain on ymmärretty väärin.
+   */
+  it("yksikään alias ei ole jo kuntarekisterissä", () => {
+    const turhat = Object.keys(PLACE_ALIASES).filter((key) => getMunicipalityByName(key))
+    expect(turhat).toEqual([])
+  })
+
+  it("avaimet ovat pieniä kirjaimia", () => {
+    expect(Object.keys(PLACE_ALIASES).filter((k) => k !== k.toLowerCase())).toEqual([])
+  })
+})
+
+describe("getMunicipalityByPlaceName – laajennetut nimet", () => {
+  /* Mitattu 21.8.2026: 26 riviä jäi ilman kuntaa, koska rekisterissä on
+   * virallinen nimi "Pedersören kunta". */
+  it("tunnistaa rekisterin viralliset erikoisnimet", () => {
+    expect(getMunicipalityByPlaceName("Pedersöre")?.name).toBe("Pedersören kunta")
+    expect(getMunicipalityByPlaceName("Maarianhamina")?.name).toBe("Maarianhamina - Mariehamn")
+    expect(getMunicipalityByPlaceName("Mariehamn")?.name).toBe("Maarianhamina - Mariehamn")
+  })
+
+  /* Hilman suorituspaikkakentässä esiintyi "JAKOBSTAD" isoin kirjaimin. */
+  it("tunnistaa ruotsinkieliset kuntanimet kirjainkoosta riippumatta", () => {
+    expect(getMunicipalityByPlaceName("JAKOBSTAD")?.name).toBe("Pietarsaari")
+    expect(getMunicipalityByPlaceName("Vasa")?.name).toBe("Vaasa")
+    expect(getMunicipalityByPlaceName("Åbo")?.name).toBe("Turku")
+    expect(getMunicipalityByPlaceName("Karleby")?.name).toBe("Kokkola")
+  })
+
+  it("tunnistaa lakanneet kunnat", () => {
+    expect(getMunicipalityByPlaceName("Haukipudas")?.name).toBe("Oulu")
+    expect(getMunicipalityByPlaceName("Noormarkku")?.name).toBe("Pori")
+    expect(getMunicipalityByPlaceName("Eno")?.name).toBe("Joensuu")
+    expect(getMunicipalityByPlaceName("Mänttä")?.name).toBe("Mänttä-Vilppula")
+  })
+
+  it("tunnistaa mitatut kylät ja postitoimipaikat", () => {
+    expect(getMunicipalityByPlaceName("Ylämylly")?.name).toBe("Liperi")
+    expect(getMunicipalityByPlaceName("Sirkka")?.name).toBe("Kittilä")
+    expect(getMunicipalityByPlaceName("Nummela")?.name).toBe("Vihti")
+    expect(getMunicipalityByPlaceName("Vekaranjärvi")?.name).toBe("Kouvola")
+  })
+
+  /*
+   * Tuntematon, monitulkintainen tai ulkomainen nimi jää tyhjäksi.
+   * "Kuivasjärvi" on sekä Oulussa että Parkanossa, "Venice" ei ole Suomessa,
+   * ja "Kirkonummi" on kirjoitusvirhe jota ei pidä legitimoida aliaksena.
+   */
+  it("palauttaa tyhjän kun nimi on tuntematon tai monitulkintainen", () => {
+    expect(getMunicipalityByPlaceName("Kuivasjärvi")).toBeNull()
+    expect(getMunicipalityByPlaceName("Venice")).toBeNull()
+    expect(getMunicipalityByPlaceName("Kirkonummi")).toBeNull()
+    expect(getMunicipalityByPlaceName("Kemijoki")).toBeNull()
+  })
+})
 
 describe("municipalityFromGenitive", () => {
   it("tunnistaa säännöllisen genetiivin", () => {

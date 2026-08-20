@@ -5,6 +5,45 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-093 – Kuntaluettelon aliakset mitataan aineistosta, ei arvata
+
+Kuntahaku tunsi vain perusmuotoiset kuntanimet ja kuuden rivin käsilistan
+postitoimipaikkoja. Laajennus tehtiin **mittaamalla mitkä nimet oikeasti
+jäävät tunnistumatta** (`scripts/measure-unknown-place-names.ts`), ei
+kirjoittamalla listaa muistista.
+
+Mittaus paljasti yllättävän ykkösen: **"Pedersöre" esiintyi 26 rivillä**, eikä
+se ole kylä tai vanha kunta vaan olemassa oleva kunta, jonka virallinen nimi
+rekisterissä on *"Pedersören kunta"*. Samasta syystä ei löytynyt
+*"Maarianhamina - Mariehamn"*. Nämä olivat rekisterin nimeämistapa, eivät
+puuttuvaa tietoa.
+
+Aliakset jaettiin neljään ryhmään alkuperän mukaan, koska niiden luotettavuus
+on eri: postitoimipaikat/kylät, lakanneet kunnat, ruotsinkieliset nimet ja
+rekisterin viralliset nimet. Yhteen läjään heitettynä tieto siitä, mihin
+kutakin voi luottaa, katoaisi.
+
+**Mitä EI lisätty.** Kirjoitusvirheitä ("Kirkonummi", "Pertumaa", "Kokkolam")
+ei legitimoida aliaksena — ne korjataan lähteessä tai käsin. Monitulkintaisia
+ei myöskään: "Kuivasjärvi" on sekä Oulussa että Parkanossa, "Kemijoki" on joki
+ja "Kouvola-Kotka" tieosuus. Ulkomainen "Venice" jää oikein tunnistumatta.
+
+Tulos: tuntemattomia nimiä 20 → 9, eli 36 riviä sai kunnan.
+
+**Testi tarkistaa jokaisen aliaksen kohteen.** Alias ratkaistaan rekisteriä
+vasten, joten kohteen kirjoitusvirhe palauttaisi hiljaa tyhjän eikä mikään
+kaatuisi. Sen takia testi käy kaikki 55 aliasta läpi ja varmistaa myös, ettei
+yksikään avain ole jo rekisterissä (kuollutta koodia).
+
+**Oma virhe, joka löytyi samalla:** edellinen suorituspaikkatäydennys asetti
+hankkeelle kaupungin mutta **ei maakuntaa**, jolloin kuusi asiakkaille näkyvää
+hanketta putosi alueittain suodatetuista näkymistä. Kaupunki ilman maakuntaa
+on huonompi kuin ei kaupunkia lainkaan, koska vika ei näy mistään.
+Korjattu sekä skriptissä että takautuvasti
+(`scripts/backfill-project-region.ts`).
+
+Ks. `lib/geo/municipalityFromName.ts` (`PLACE_ALIASES`).
+
 ### D-092 – Työmaan osoite luetaan ilmoituksen omasta kentästä, ei PDF:stä
 
 Osoitteita jouduttiin kaivamaan käsin Hilman tarjouspyynnöistä. Selvitettiin

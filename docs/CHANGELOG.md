@@ -11,6 +11,29 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 21.8.)
 
+### Kuntaluettelon laajennus mitatuilla nimilla
+
+Kuntahaku tunsi vain perusmuotoiset kuntanimet ja kuuden rivin listan
+postitoimipaikkoja. Laajennus tehtiin mittaamalla aineistosta mitka nimet
+oikeasti jaavat tunnistumatta (scripts/measure-unknown-place-names.ts).
+
+Suurin yksittainen loyto: "Pedersore" esiintyi 26 rivilla. Se ei ole kyla
+vaan olemassa oleva kunta, jonka virallinen nimi rekisterissa on
+"Pedersoren kunta". Samasta syysta ei loytynyt "Maarianhamina - Mariehamn".
+
+Lisatty nelja ryhmaa aliaksia alkuperan mukaan: postitoimipaikat ja kylat,
+lakanneet kunnat, ruotsinkieliset kuntanimet ja rekisterin viralliset nimet.
+Kirjoitusvirheita ja monitulkintaisia nimia ei lisatty.
+
+Tuntemattomia nimia 20 -> 9. Testi tarkistaa etta jokainen 55 aliaksesta
+osoittaa oikeasti olemassa olevaan kuntaan.
+
+Samalla korjattu edellisen ajon virhe: suorituspaikkataydennys asetti
+hankkeelle kaupungin mutta ei maakuntaa, jolloin kuusi asiakkaille nakyvaa
+hanketta putosi alueittain suodatetuista nakymista. Korjattu skriptissa ja
+takautuvasti (scripts/backfill-project-region.ts). Hankkeita ilman maakuntaa
+on nyt 0. (D-093)
+
 ### Tyomaan osoite Hilman suorituspaikkakentasta
 
 Hilma-hankkeiden osoite poimittiin tahan asti vain vapaasta kuvaustekstista,

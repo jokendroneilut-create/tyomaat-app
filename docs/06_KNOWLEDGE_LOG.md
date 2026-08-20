@@ -138,5 +138,7 @@ Confidence:
 High — mitattu 306 ilmoituksesta, ei arvio.
 
 Status:
-Koodissa ja ajettu takautuvasti (D-092). Avoin: ruotsinkielisten ja kylien
-nimien kuntahaku puuttuu (15 tapausta jäi ilman kuntaa).
+Koodissa ja ajettu takautuvasti (D-092). Kuntahaku laajennettu 21.8.2026
+ruotsinkielisillä nimillä, lakanneilla kunnilla ja mitatuilla kylillä (D-093),
+jolloin loputkin tunnistuivat — paitsi ulkomainen "Venice", joka jää oikein
+tunnistumatta.
