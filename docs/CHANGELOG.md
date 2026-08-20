@@ -25,8 +25,16 @@ Lisatty nelja ryhmaa aliaksia alkuperan mukaan: postitoimipaikat ja kylat,
 lakanneet kunnat, ruotsinkieliset kuntanimet ja rekisterin viralliset nimet.
 Kirjoitusvirheita ja monitulkintaisia nimia ei lisatty.
 
-Tuntemattomia nimia 20 -> 9. Testi tarkistaa etta jokainen 55 aliaksesta
-osoittaa oikeasti olemassa olevaan kuntaan.
+Tuntemattomia nimia 20 -> 6. Testi tarkistaa etta jokainen alias osoittaa
+oikeasti olemassa olevaan kuntaan.
+
+Kolme kirjoitusvirhetta korjattiin rivilta, ei aliaksena: Kokkolam ->
+Kokkola, Kirkonummi -> Kirkkonummi, Pertumaa -> Pertunmaa
+(scripts/fix-city-typos.ts). Kaikki kolme olivat asiakkaille nakyvia.
+
+Kolmas korjaus paljasti ettei "Pertunmaa" ole kuntarekisterissa. Rekisteri
+verrattiin Tilastokeskuksen luokituspalveluun: 308/308 tasmaa. Pertunmaa
+liitettiin Mantyharjuun 1.1.2025 ja on luokituksen ainoa muutos 2024 -> 2025.
 
 Samalla korjattu edellisen ajon virhe: suorituspaikkataydennys asetti
 hankkeelle kaupungin mutta ei maakuntaa, jolloin kuusi asiakkaille nakyvaa

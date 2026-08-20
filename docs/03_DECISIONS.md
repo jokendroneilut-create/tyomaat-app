@@ -24,11 +24,22 @@ rekisterin viralliset nimet. Yhteen läjään heitettynä tieto siitä, mihin
 kutakin voi luottaa, katoaisi.
 
 **Mitä EI lisätty.** Kirjoitusvirheitä ("Kirkonummi", "Pertumaa", "Kokkolam")
-ei legitimoida aliaksena — ne korjataan lähteessä tai käsin. Monitulkintaisia
-ei myöskään: "Kuivasjärvi" on sekä Oulussa että Parkanossa, "Kemijoki" on joki
-ja "Kouvola-Kotka" tieosuus. Ulkomainen "Venice" jää oikein tunnistumatta.
+ei legitimoida aliaksena — ne korjataan riviltä (`scripts/fix-city-typos.ts`),
+ei hausta. Monitulkintaisia ei myöskään: "Kuivasjärvi" on sekä Oulussa että
+Parkanossa, "Kemijoki" on joki ja "Kouvola-Kotka" tieosuus. Ulkomainen
+"Venice" jää oikein tunnistumatta.
 
-Tulos: tuntemattomia nimiä 20 → 9, eli 36 riviä sai kunnan.
+Tulos: tuntemattomia nimiä 20 → 6, eli 39 riviä sai kunnan.
+
+**Kuntarekisteri tarkistettiin lähdettä vasten.** Kirjoitusvirheen korjaus
+kaatui siihen, ettei "Pertunmaa" ollut rekisterissä. Rekisteri verrattiin
+Tilastokeskuksen luokituspalveluun (`kunta_1_20250101`): **308/308 täsmää**,
+ei puuttuvia, ylimääräisiä eikä nimieroja. Pertunmaa oli 2024-luokituksessa
+ja poistui 2025 — se on luokituksen ainoa muutos vuosien välillä, ja kunta
+liitettiin Mäntyharjuun 1.1.2025. Lisättiin lakanneisiin kuntiin.
+
+Hankkeen kaupungiksi jätettiin silti "Pertunmaa": korjattiin kirjoitusvirhe,
+ei siirretty hanketta toiseen kuntaan. Maakunta ratkeaa aliaksen kautta.
 
 **Testi tarkistaa jokaisen aliaksen kohteen.** Alias ratkaistaan rekisteriä
 vasten, joten kohteen kirjoitusvirhe palauttaisi hiljaa tyhjän eikä mikään

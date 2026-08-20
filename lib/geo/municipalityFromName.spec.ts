@@ -61,6 +61,15 @@ describe("getMunicipalityByPlaceName – laajennetut nimet", () => {
     expect(getMunicipalityByPlaceName("Mänttä")?.name).toBe("Mänttä-Vilppula")
   })
 
+  /*
+   * Pertunmaa liitettiin Mäntyharjuun 1.1.2025 ja on Tilastokeskuksen
+   * luokituksen ainoa muutos 2024 -> 2025. Nimi elää silti aineistossa.
+   */
+  it("tunnistaa tuoreimman kuntaliitoksen", () => {
+    expect(getMunicipalityByPlaceName("Pertunmaa")?.name).toBe("Mäntyharju")
+    expect(getMunicipalityByPlaceName("Pertunmaa")?.region).toBe("Etelä-Savo")
+  })
+
   it("tunnistaa mitatut kylät ja postitoimipaikat", () => {
     expect(getMunicipalityByPlaceName("Ylämylly")?.name).toBe("Liperi")
     expect(getMunicipalityByPlaceName("Sirkka")?.name).toBe("Kittilä")
