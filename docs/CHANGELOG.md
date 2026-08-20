@@ -11,6 +11,35 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 21.8.)
 
+### Otsikoiden yhteiset sanat nostavat hankkeen ehdotuksiin
+
+titleSimilarity on Jaccard: yhteiset sanat jaettuna kaikkien sanojen
+maaralla. Kunnan paatosotsikko on lomaketaytetta (osoite, kiinteistotunnus,
+kaupunginosat), joten lyhyt tasmallinen otsikko hukkuu siihen. "Herttoniemen
+kirkon purku-urakka" ja pitka purkamislupaotsikko jakavat kaksi sanaa, mutta
+Jaccard antaa 0,18 - alle 0,3:n rajan, eli nolla pistetta. Kattavuus
+lyhyempaa otsikkoa vasten on 0,67.
+
+Kattavuutta kokeiltiin tasmaytyksessa ja se kaadettiin mittauksessa:
+duplikaattijono nousi 37 parista 106:een ja 69 uudesta valtaosa oli vaaria
+(Helsingin katusuunnitelmapaatokset jakavat lomakekielta). Muutos peruttiin
+ja lahtotaso todennettiin.
+
+Kattavuus vietiin sen sijaan ehdotuslistaan, kahdella mitatulla rajauksella:
+vahintaan kaksi yhteista sanaa, eika kuntanimi kelpaa yhteiseksi sanaksi.
+Ilman jalkimmaista syntyi kolme uutta ehdotusta, kaikki vaaria ja kaikki
+pelkan kuntanimen varassa. Nykyjonosta muutos tuottaa 0 uutta ehdotusta -
+se on turvaverkko tapaukseen jossa osoite puuttuu. (D-095)
+
+### Kaksi vaaraa rakennuttajaa korjattu
+
+Lahde helsinki_paatokset asettaa rakennuttajaksi aina "Helsingin kaupunki";
+kaikilla 519 hankkeella sama arvo. Useimmiten se on oikein, mutta
+purkamislupapaatoksissa hakija on joku muu. Korjattu Herttoniemen kirkko
+(Helsingin seurakuntayhtyma) ja As Oy Oulunkylantori 2. Alkuperainen arvo
+talletettiin metadataan. Kaupungin omat yhtiot (Heka, Kiinteisto Oy
+Helsingin Toimitilat) jatettiin ennalleen.
+
 ### Sama katuosoite nostaa hankkeen ehdotuksiin
 
 Herttoniemen kirkon purku oli kannassa kahdesti, Helsingin paatoksista ja

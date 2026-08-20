@@ -49,6 +49,19 @@ const REASON_LABELS: Record<string, string> = {
   different_name_subjects: "eri kohde nimessä",
 }
 
+/*
+ * Otsikkokattavuuden peruste kertoo MITKÄ sanat ovat yhteisiä, jotta
+ * katselmoija näkee heti onko osuma mielekäs ("herttoniemen kirkon") vai
+ * pelkkää lomakekieltä ("katusuunnitelma hyväksyminen").
+ */
+function reasonLabel(reason: string): string {
+  if (reason.startsWith("similar_title_words:")) {
+    const words = reason.slice("similar_title_words:".length)
+    return `yhteiset sanat: ${words}`
+  }
+  return REASON_LABELS[reason] ?? reason
+}
+
 export default function MergeIntoProject({ candidateId }: { candidateId: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -165,7 +178,7 @@ export default function MergeIntoProject({ candidateId }: { candidateId: string 
 
         {s.reasons.length > 0 && (
           <p className="mt-2 text-xs text-gray-500">
-            {s.reasons.map((r) => REASON_LABELS[r] ?? r).join(", ")}
+            {s.reasons.map((r) => reasonLabel(r)).join(", ")}
           </p>
         )}
 

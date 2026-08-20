@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-095 – Otsikkovertailu on Jaccard, ja pitkä lomakeotsikko laimentaa sen
+
+Kysymys oli aiheellinen: eikö yhteisten sanojen pitäisi nostaa pisteitä?
+Pitäisi, mutta `titleSimilarity` on **Jaccard** — yhteiset sanat jaettuna
+KAIKKIEN sanojen määrällä:
+
+```
+"Herttoniemen kirkon purku-urakka"                              3 sanaa
+"Purkamislupahakemus, Herttoniemen kirkon purkaminen,
+ Herttoniemi, Länsi-Herttoniemi, 091-043-0102-0005,
+ Hiihtomäentie 23, Helsingin seurakuntayhtymä, ..."            10 sanaa
+
+yhteisiä 2  ->  Jaccard 2/11 = 0,18   (alle 0,3:n rajan = NOLLA pistettä)
+                kattavuus 2/3 = 0,67
+```
+
+Kunnan päätösotsikko on lomaketäytettä, jossa toistuvat osoite,
+kiinteistötunnus ja kaupunginosat. Se rankaisee lyhyttä, täsmällistä otsikkoa.
+
+**Kokeiltiin `max(jaccard, coverage)` täsmäytyksessä — kaadettiin mittauksessa.**
+Duplikaattijono nousi 37 parista 106:een, ja 69 uudesta valtaosa oli vääriä:
+Helsingin katusuunnitelmapäätökset jakavat sanat "katusuunnitelmat" ja
+kaupunginosan nimen, jolloin kattavuus 0,67 syntyy pelkästä lomakekielestä.
+
+```
+ 75  NCC toteuttaa Vantaan uuden oikeustalon Tikkurilaan | Sähköasema Vantaalle
+ 73  Ounasvaarantie, Pallaksentie, katusuunnitelmat, Mellunkylä
+     Laakavuorenkuja, katusuunnitelma, Mellunkylä
+```
+
+Muutos peruttiin ja lähtötaso todennettiin (37 → 37, 0 uutta).
+
+**Kattavuus vietiin sen sijaan ehdotuslistaan** samalla periaatteella kuin
+katuavain (D-094). Kaksi rajausta mitattiin:
+
+1. **Vähintään kaksi yhteistä sanaa.** Yksi riittäisi erottamaan kaksi eri
+   taloyhtiötä samassa korttelissa toisistaan väärin perustein
+   ("Kuusiluodonrannan Runo" / "Kuusiluodonrannan Saaga" jakavat yhden).
+2. **Kuntanimi ei ole yhteinen sana.** Ensimmäinen mittaus tuotti kolme uutta
+   ehdotusta, kaikki vääriä ja kaikki pelkän kuntanimen varassa ("Lahden
+   sote-keskuksen korjaus" ja "Kokonaispurku-urakka, Lahden Nastolan kohteet"
+   jakoivat sanat "lahden" ja "lahti"). Maantiede lasketaan jo `same_city`nä,
+   ja ehdotukset haetaan muutenkin vain samasta kaupungista.
+
+Erottelu rajauksien jälkeen:
+
+| pari | kattavuus | yhteiset sanat |
+|---|---|---|
+| Herttoniemen kirkko (sama) | **0,67** | herttoniemen, kirkon |
+| Niuvanniemen sairaala (sama) | **0,67** | niuvanniemen, sairaalan |
+| Kuusiluodonranta Runo/Saaga (eri) | 0,50 | kuusiluodonrannan |
+| Mellunkylän katusuunnitelmat (eri) | 0,33 | mellunkylä |
+| Lahti- ja Vantaa-parit (eri) | 0,00 | – |
+
+Nykyisestä jonosta tämä tuottaa **0 uutta ehdotusta**, eli se ei lisää
+katselmoitavaa — se on turvaverkko sille tapaukselle jossa osoite puuttuu ja
+katuavain ei siksi auta.
+
 ### D-094 – Katuavain kuuluu ehdotuslistaan, ei täsmäytykseen
 
 Herttoniemen kirkon purku oli kannassa kahdesti — Helsingin päätöksistä ja

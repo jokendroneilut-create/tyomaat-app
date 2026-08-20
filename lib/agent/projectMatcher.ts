@@ -160,6 +160,61 @@ function titleWords(value: string | null | undefined) {
 }
 
 /*
+ * OTSIKON KATTAVUUS — VAIN IHMISELLE NÄYTETTÄVÄÄN EHDOTUSLISTAAN.
+ *
+ * titleSimilarity on Jaccard: yhteiset sanat jaettuna KAIKKIEN sanojen
+ * määrällä. Kuntien päätösotsikot ovat lomaketäytettä (osoite, kiinteistö-
+ * tunnus, kaupunginosat toistuvat), joten pitkä otsikko painaa tuloksen alas
+ * vaikka lyhyempi sisältyisi siihen lähes kokonaan:
+ *
+ *   "Herttoniemen kirkon purku-urakka"                    (3 sanaa)
+ *   "Purkamislupahakemus, Herttoniemen kirkon purkaminen,
+ *    Herttoniemi, Länsi-Herttoniemi, 091-043-0102-0005,
+ *    Hiihtomäentie 23, Helsingin seurakuntayhtymä, ..."  (10 sanaa)
+ *
+ * Yhteisiä sanoja kaksi -> Jaccard 2/11 = 0,18 (alle 0,3:n rajan, nolla
+ * pistettä), mutta kattavuus lyhyempää vasten 2/3 = 0,67.
+ *
+ * TÄTÄ EI SAA KYTKEÄ calculateMatchiin. Kokeiltu ja mitattu 21.8.2026:
+ * `Math.max(jaccard, coverage)` nosti duplikaattijonon 37 parista 106:een,
+ * ja 69 uudesta parista valtaosa oli vääriä — Helsingin katusuunnitelma-
+ * päätökset jakavat sanat "katusuunnitelmat" ja kaupunginosan nimen, jolloin
+ * kattavuus 0,67 syntyy pelkästä lomakekielestä ("Ounasvaarantie,
+ * Pallaksentie, katusuunnitelmat, Mellunkylä" vs "Laakavuorenkuja,
+ * katusuunnitelma, Mellunkylä"). Muutos peruttiin.
+ *
+ * Ehdotuslistassa sama tieto on käyttökelpoinen, koska ihminen katsoo sen
+ * ja väärä ehdotus maksaa yhden silmäyksen.
+ */
+export function titleCoverage(
+  first: string | null | undefined,
+  second: string | null | undefined
+): { coverage: number; sharedWords: string[] } {
+  const a = new Set(titleWords(first))
+  const b = new Set(titleWords(second))
+
+  if (!a.size || !b.size) return { coverage: 0, sharedWords: [] }
+
+  /*
+   * KUNTANIMI EI OLE TODISTE TÄSSÄ. Se on jo laskettu same_cityna, ja
+   * ehdotukset haetaan muutenkin vain samasta kaupungista — joten yhteinen
+   * kuntanimi ei kerro yhtään mitään siitä onko kyse samasta hankkeesta.
+   *
+   * Mitattu 21.8.2026 ilman tätä rajausta: kolme uutta ehdotusta, kaikki
+   * vääriä ja kaikki pelkän kuntanimen varassa ("Lahden sote-keskuksen
+   * korjaus" ja "Kokonaispurku-urakka, Lahden Nastolan kohteet" jakoivat
+   * sanat "lahden" ja "lahti"). Kuntahaku tunnistaa myös genetiivin.
+   */
+  const shared = [...a]
+    .filter((word) => b.has(word))
+    .filter((word) => !getMunicipalityByAnyForm(word))
+
+  const smaller = Math.min(a.size, b.size)
+
+  return { coverage: shared.length / smaller, sharedWords: shared }
+}
+
+/*
  * Sanan vartalo karkeasti: loppu pois, vähintään neljä merkkiä jäljelle.
  * Tarkoitus on tunnistaa TAIVUTUSMUOTO samasta sanasta, ei tehdä oikeaa
  * morfologiaa - "purkaminen" ja "purkamisen" jakavat vartalon "purkami",

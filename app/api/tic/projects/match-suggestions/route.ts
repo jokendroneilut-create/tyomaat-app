@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
-import { findProjectMatchDetailed, calculateMatch } from "@/lib/agent/projectMatcher"
+import {
+  findProjectMatchDetailed,
+  calculateMatch,
+  titleCoverage,
+} from "@/lib/agent/projectMatcher"
 import { streetKey } from "@/lib/projects/streetKey"
 
 const supabaseAdmin = createClient(
@@ -30,6 +34,9 @@ const MAX_SUGGESTIONS = 5
 
 /* Saman katuosoitteen osumat erikseen, jotteivät ne syrjäytä pisteytettyjä. */
 const MAX_STREET_SUGGESTIONS = 3
+
+/* Sama raja otsikkokattavuudelle. */
+const MAX_TITLE_SUGGESTIONS = 3
 
 export async function POST(request: Request) {
   const auth = await verifyAdminRequest(request)
@@ -145,6 +152,35 @@ export async function POST(request: Request) {
             }))
         : []
 
+    /*
+     * OTSIKKO, JOKA SISÄLTYY TOISEEN LÄHES KOKONAAN.
+     *
+     * Sama syy kuin katuavaimella: täsmäytys ei näe tätä, mutta ihminen
+     * tunnistaa sen heti. Kynnys 0,6 ja vähintään kaksi yhteistä sanaa
+     * mitattiin jonosta — löysempi tuo mukaan päätösotsikoiden lomakekieltä.
+     */
+    const TITLE_COVERAGE_THRESHOLD = 0.6
+    const streetIds = new Set(streetMatches.map((row) => row.project.id))
+
+    const titleMatches =
+      candidateCityKey && normalized.name
+        ? projects
+            .filter((project) => {
+              if (scoredIds.has(project.id) || streetIds.has(project.id)) return false
+              if (String(project.city ?? "").trim().toLowerCase() !== candidateCityKey) {
+                return false
+              }
+              const { coverage, sharedWords } = titleCoverage(normalized.name, project.name)
+              return sharedWords.length >= 2 && coverage >= TITLE_COVERAGE_THRESHOLD
+            })
+            .slice(0, MAX_TITLE_SUGGESTIONS)
+            .map((project) => ({
+              project,
+              match: calculateMatch(project, normalized as any),
+              shared: titleCoverage(normalized.name, project.name).sharedWords,
+            }))
+        : []
+
     const best = findProjectMatchDetailed(projects, normalized as any)
 
     /*
@@ -166,6 +202,7 @@ export async function POST(request: Request) {
     const suggestedIds = new Set([
       ...scored.map((row) => row.project.id),
       ...streetMatches.map((row) => row.project.id),
+      ...titleMatches.map((row) => row.project.id),
     ])
     const query = String(body.query ?? "").trim().toLowerCase()
 
@@ -289,6 +326,21 @@ export async function POST(request: Request) {
           builder: project.builder,
           confidence: match?.confidence ?? null,
           reasons: ["same_street_address", ...(match?.reasons ?? [])],
+        })),
+        ...titleMatches.map(({ project, match, shared }) => ({
+          projectId: project.id,
+          name: project.name,
+          city: project.city,
+          region: project.region,
+          phase: project.phase,
+          status: project.status,
+          developer: project.developer,
+          builder: project.builder,
+          confidence: match?.confidence ?? null,
+          reasons: [
+            `similar_title_words:${shared.slice(0, 3).join(" ")}`,
+            ...(match?.reasons ?? []),
+          ],
         })),
       ],
     })

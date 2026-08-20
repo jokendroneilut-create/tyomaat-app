@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { findProjectMatchDetailed } from "./projectMatcher"
+import { findProjectMatchDetailed, titleCoverage } from "./projectMatcher"
 
 const BLANK = {
   city: null,
@@ -293,5 +293,57 @@ describe("different_name_subjects", () => {
     )
     expect(match?.reasons ?? []).not.toContain("different_name_subjects")
     expect(match!.confidence).toBeGreaterThanOrEqual(70)
+  })
+})
+
+describe("titleCoverage", () => {
+  /*
+   * Ehdotuslistan apufunktio, EI osa calculateMatchia. Kuntien
+   * päätösotsikot ovat lomaketäytettä, jossa lyhyempi otsikko hukkuu
+   * Jaccardissa — kattavuus lyhyempää vasten näkee sen.
+   */
+  it("nostaa lyhyen otsikon esiin pitkästä lomakeotsikosta", () => {
+    const r = titleCoverage(
+      "Herttoniemen kirkon purku-urakka",
+      "Purkamislupahakemus, Herttoniemen kirkon purkaminen, Herttoniemi, Länsi-Herttoniemi, 091-043-0102-0005, Hiihtomäentie 23, Helsingin seurakuntayhtymä, Hiihtomäentie 23"
+    )
+    expect(r.sharedWords).toEqual(["herttoniemen", "kirkon"])
+    expect(r.coverage).toBeCloseTo(2 / 3, 2)
+  })
+
+  /*
+   * Kuntanimi ei ole todiste: ehdotukset haetaan jo valmiiksi samasta
+   * kaupungista. Mitattu ilman tätä rajausta: kolme uutta ehdotusta,
+   * kaikki vääriä ja kaikki pelkän kuntanimen varassa.
+   */
+  it("ei laske kuntanimeä yhteiseksi sanaksi", () => {
+    const r = titleCoverage(
+      "Lahden sote-keskuksen korjaus, Lahti",
+      "Kokonaispurku-urakka, Lahden Nastolan kohteet"
+    )
+    expect(r.sharedWords).toEqual([])
+    expect(r.coverage).toBe(0)
+  })
+
+  it("ei laske genetiivimuotoista kuntanimeä", () => {
+    const r = titleCoverage(
+      "Maanteiden parantaminen, Muurame",
+      "Vt 9 Korpilahti-Keljonkangas (Jyväskylä ja Muurame)"
+    )
+    expect(r.sharedWords).not.toContain("muurame")
+  })
+
+  /*
+   * Kaksi eri taloyhtiötä samassa korttelissa jakaa vain yhden sanan.
+   * Ehdotus vaatii kaksi, joten tämä ei nouse listalle.
+   */
+  it("antaa vain yhden yhteisen sanan eri taloyhtiöille", () => {
+    const r = titleCoverage("Asunto Oy Kuusiluodonrannan Runo", "Kuusiluodonrannan Saaga")
+    expect(r.sharedWords).toEqual(["kuusiluodonrannan"])
+  })
+
+  it("kestää tyhjän otsikon", () => {
+    expect(titleCoverage(null, "Jotain")).toEqual({ coverage: 0, sharedWords: [] })
+    expect(titleCoverage("Jotain", "")).toEqual({ coverage: 0, sharedWords: [] })
   })
 })
