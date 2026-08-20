@@ -16,14 +16,14 @@ väite ja mitattu tosiasia eivät saa näyttää samalta.
 
 ---
 
-## Tiivistelmä (18.8.2026)
+## Tiivistelmä (päivitetty 20.8.2026)
 
 Jos luet vain tämän:
 
 | | |
 |---|---|
-| **RPT / Hubexo** | Ihmiset soittavat rakennuttajille. 600 €/kk yhdestä maakunnasta. Julkaisi 17.8.2026 **Byggfakta Risen**: tekoälyvalmentaja, joka kertoo mitä tehdä tänään. Käyttöönotto maksullinen, 3–4 vk. |
-| **Metroc** | Sama malli kuin meillä: automaatio julkisista lähteistä. 1,4 M€ / 23 hlöä / 400+ asiakasta → **~300–400 €/kk**. Omistaa suomalaisen julkisen sektorin datan (Public Investments). |
+| **RPT / Hubexo** | Ihmiset soittavat rakennuttajille. Julkaisi 17.8.2026 **Byggfakta Risen**: tekoälyvalmentaja Rune, joka kertoo kenelle soittaa tänään ja kirjoittaa sähköpostin valmiiksi. **Aluehinnoittelu poistui — käyttöönotto kattaa koko Suomen.** Vanha Smart oli 600 €/kk yhdestä maakunnasta. Käyttöönotto maksullinen, 3–4 vk. |
+| **Metroc** | Sama malli kuin meillä: automaatio julkisista lähteistä. 1,4 M€ / 23 hlöä / 400+ asiakasta → **~300–400 €/kk**. Omistaa suomalaisen julkisen sektorin **asiakirjadatan** (Public Investments). |
 | **Meidän tie** | Julkinen hinta, ostaminen ilman myyjää, **irtisanottavissa 30 päivässä**. Ainoa etu joka seuraa pienuudesta eikä katoa kun kilpailija huomaa sen. |
 
 Kolme asiaa jotka on syytä muistaa ilman että niitä tarvitsee etsiä uudelleen:
@@ -32,9 +32,13 @@ Kolme asiaa jotka on syytä muistaa ilman että niitä tarvitsee etsiä uudellee
    ettei työtä tehdä, vaan siksi että toisella on puhelinsoittoja ja lähes
    100 vuoden arkisto ja toisella 23 henkeä ja viiden vuoden etumatka.
 2. **P1 ja investointipäätöslähde eivät ole erottautumista vaan
-   kilpailukelpoisuuden minimi.** Molemmat kilpailijat tekevät ne jo.
-3. **Erottautuminen on hinnassa, ostettavuudessa ja Suomi-kohtaisuudessa** —
-   kolme asiaa, joita kumpikaan ei voi kopioida purkamatta omaa rakennettaan.
+   kilpailukelpoisuuden minimi.** Molemmat kilpailijat tekevät ne jo — Risen
+   webinaari (20.8.) osoitti matchaus-pisteytyksen, perustelut ja palautepeukut
+   toimivina ruudulla.
+3. **Erottautuminen on hinnassa ja ostettavuudessa.** Suomi-kohtaisuus oli
+   kolmas, mutta se kapeni 20.8.: Risessä on kuntien hankkeet
+   yhteyshenkilöineen. Jäljelle jää **asiakirjataso** (budjetit,
+   investointiohjelmat, pöytäkirjat) — ja siinä kilpailija on Metroc, ei RPT.
 
 ---
 
@@ -83,6 +87,34 @@ Tämä on analyysin tärkein yksittäinen luku, ja siitä seuraa kolme asiaa:
    ettei palvelu ole "vain suurille yrityksille".
 3. **Se on meidän hintakattomme referenssi.** Emme voi olla kalliimpia
    kattavuudella, joka on mitatusti heikompi (ks. alla).
+
+#### Päivitys 20.8.2026 — aluehinnoittelu poistui Risen myötä
+
+**Rise ei enää hinnoittele alueittain. Kun palvelun ottaa käyttöön, mukana on
+koko Suomi.** Lähde: webinaari 20.8.2026 ja oma käyttökokemus.
+
+Tämä kumoaa yllä olevan kohdan 1 (*"paketointiakselit ovat alue ja
+hanketyyppi"*) siltä osin kuin se koskee Riseä. Smartin 600 €/kk yhdestä
+maakunnasta pysyy mitattuna faktana, mutta se on nyt **vanhan tuotteen
+hinnoittelumalli**, ei tulevan.
+
+Kolme seurausta, ja yksi niistä sattuu meihin:
+
+1. **Menetimme paketointiedun ennen kuin ehdimme käyttää sitä.** Aiempi
+   luonnollinen vastaväite oli *"koko Suomi, kaikki hanketyypit, yksi hinta"* —
+   meille lähes ilmaista, heille kallista. Nyt se on heidän oma tarjoamansa.
+   Erottautumisen on tultava hinnan tasosta, läpinäkyvyydestä ja
+   ostettavuudesta, **ei enää laajuudesta.**
+2. **Rise on todennäköisesti kalliimpi kuin Smart, ei halvempi.** Alueittain
+   rajattu 600 €/kk oli tapa myydä pienempi paketti halvemmalla. Kun rajaus
+   poistuu, alin hintapiste nousee — eikä sitä kompensoi maksullinen 3–4 viikon
+   käyttöönotto. Tämä kasvattaa hintaeroa meihin, mikä on meille hyvä.
+3. **Se kertoo mitä he tavoittelevat.** Aluehinnoittelusta luopuu vain
+   toimija, joka haluaa asiakkaan käyttävän tuotetta koko liiketoimintansa
+   ohjaamiseen eikä yhden maakunnan myyntilistana. Rise myydään
+   järjestelmäksi, ei hakupalveluksi — ja järjestelmästä ei irtisanouduta
+   kuukaudessa. Se on heidän vastauksensa meidän 30 päivän lupaukseemme,
+   vaikkeivät he tiedä meidän olevan olemassa.
 
 ### Miten data kerätään — tämä on koko juttu
 
@@ -301,6 +333,179 @@ nykyisille asiakkaille**. Kyse ei ole hitaasta lisämyynnistä vaan
 kertarysäyksellä tehtävästä alustavaihdosta. Se on heille nopeampi kuin
 oletin — ja tarkoittaa, että 20 000 käyttäjää näkee Myyntivalmentajan
 lähiviikkoina, ei ensi vuonna.
+
+#### Webinaari 20.8.2026 — mitä tuotteessa oikeasti on
+
+Osallistuin Hubexon webinaariin ("Rakennusalan hankkeiden voittaminen muuttuu
+pysyvästi", esittäjinä Lasse Paavola / Key Account Manager ja Ella Tuominen /
+Customer Success Manager) ja otin 28 näyttökuvaa. Alla se, mikä näkyi ruudulla
+— ei markkinointitekstiä vaan toimiva tuote. Tämä on tarkin kilpailijatieto
+mitä meillä on koskaan ollut.
+
+**Huom. ympäristö:** demo ajettiin osoitteessa `stage.nextgen.hubexo.dev`, siis
+staging-ympäristössä. Tuotteen nimi käyttöliittymässä on **Byggfakta**, ei RPT.
+
+##### Tekoälyn nimi on Rune
+
+Markkinointisivun "Myyntivalmentaja" on tuotteessa **Rune —
+"Tekoälypohjainen myyntivalmentaja"**. Se on sivupaneeli, joka aukeaa hankesivun
+päälle, ei erillinen näkymä.
+
+##### Hankesivun rakenne
+
+Välilehdet: *Yleiskatsaus · Hankinnat · Kuvat · Materiaalit · Henkilöt ja
+yritykset · Suunnittelu · Kommentit.* Esimerkkihanke "Kerrostalo As Oy
+Tampereen Hatanpään Arborea", budjetti EUR 15 milj., aloitus lokakuuta 2026,
+päättyminen joulukuuta 2027, kausi 14 kk, rakennuksia 1, kerroksia 8.
+
+**Elinkaari näytetään kahtena rinnakkaisena raiteena**, ei yhtenä vaiheena:
+*Suunnittelu ja kaavoitus* (Early Planning → Schematic Design → Rezoning →
+Documentation in progress) ja *Pääurakoitsija* (Pre-Tender → Applications to
+Tender/REOI → Tenders Called/Tenders Invited → Main Contract Awarded).
+Kummallakin oma aikajana. Tämä on parempi malli kuin meidän yksi
+`lifecycle`-kenttä: sama hanke voi olla suunnittelussa pitkällä ja
+urakkakilpailussa alussa.
+
+**Materiaalit-välilehti** listaa rakenneratkaisut: Façade (Brick Façade
+Ceramic), HVAC (District Energy), Roof (Felt Roofing), Structural (Concrete
+Element, Concrete Frame). Tämä on se mistä tavarantoimittaja maksaa, eikä
+meillä ole siitä mitään.
+
+##### Tutkija näkyy tuotteessa nimellä
+
+Jokaisella hankkeella on paneeli *Viimeisin päivitys / Historia*, jossa on
+**nimetty tutkija yhteystietoineen** — "Tiina Kinnunen, Tutkija, 0457-20 05 19,
+tiina.kinnunen@hubexo.com" — ja rivi **"Seuraavaa päivitystä odotetaan:
+elokuuta 2026"**.
+
+Tämä on fiksuinta koko tuotteessa. Se tekee moatista tarkistettavan: asiakas
+näkee kuka tiedon on hankkinut, milloin, ja koska se päivittyy seuraavan
+kerran. Emme voi kopioida tätä, mutta periaatteen voi ottaa: **lähteen ja
+tuoreuden näyttäminen on itsessään tuoteominaisuus**, ja se meillä on
+(lähde-URL, havaintopäivä) ilman että sitä nostetaan esiin.
+
+##### Matchaus = per-asiakas relevanssipisteytys perusteluineen
+
+Jokaisella hankkeella on lohko *Suositukset ja näkemykset → Analyysi*, joka
+alkaa rivillä **"Matchaus: Keskitaso"** tai **"Matchaus: Matala"**. Kaksi
+todellista esimerkkiä ruudulta:
+
+> **Matchaus: Keskitaso** – hankintatiedot ja päätoteuttaja vielä avoimia.
+> Hanke on ennakkomarkkinointivaiheessa, rakentaminen alkaa lokakuussa 2026.
+> Päätoteuttajaa ei ole nimetty, ja tarjouskilpailu on todennäköisesti käynnissä
+> tai alkamassa.
+
+> **Matchaus: Matala** – rakentaminen alkaa alle 60 päivän kuluttua.
+> Pääurakoitsija sekä pääosa keskeisistä rooleista on jo täytetty.
+
+Rakenne on aina sama: *Matchaus → Miksi tässä on mahdollisuus → Suositeltu
+seuraava askel* (numeroitu 1-2-3, nimetty henkilö, sähköposti, puhelin ja
+perustelu miksi juuri hän). Lopussa peukut: *"Oliko tämä vastaus hyödyllinen?"*
+
+**Tämä on P1 tuotannossa.** Ei "pisteytys rakennettu, palaute puuttuu" vaan
+pisteytys + ihmisluettava perustelu + palautesilmukka, kaikki näkyvissä
+samassa lohkossa.
+
+##### Rune tekee myös työn, ei vain suositusta
+
+Sivupaneelin ehdotuschipit ovat toimenpiteitä, eivät kysymyksiä: *"Laadi
+yhteydenottosähköposti Ville Salmiselle" · "Valmistele Pirkanmaan
+hanke-vertailu" · "Milloin ottaa yhteyttä arkkitehtiin" · "Miten perustella
+hinta Lapti Oylle?" · "Kuka muu kannattaa kontaktoida?" · "Lyhennä
+sähköpostia".*
+
+Ruudulla Rune kirjoitti **valmiin myyntisähköpostin** (lähettäjä, vastaanottaja,
+aihe, personoitu leipäteksti hankkeen tiedoilla, lopussa ehdotus "puolen tunnin
+etäpalaveri viikolla 37 tai 38?") ja **esitysrungon dioittain** ("Dia 7 –
+Yhteistyön aloittaminen", "Dia 8 – Yhteystiedot"). PowerPoint-tiedoston
+tekemisestä se kieltäytyi rehellisesti: *"PowerPoint-esityspohjien luominen ei
+kuulu kykyihini – pystyn tuottamaan ainoastaan tekstiä."*
+
+Vaikuttavin yksittäinen vastaus oli roolikohtainen kysymys kiintokalusteista.
+Rune nimesi ensisijaisen kontaktin (rakennuttaja, koska tekee
+materiaalivalinnat tässä vaiheessa) **ja toissijaisen** (arkkitehti, koska
+"määrittelee tilasuunnitelmat ja voi kirjata toimittajan
+suunnitteluasiakirjoihin"), sekä järjestyksen: ensin rakennuttaja, sitten
+arkkitehti *"ennen kuin tuotemäärittelyt lukittuvat"*. Se on toimialaosaamista,
+ei geneeristä LLM-tekstiä.
+
+##### Kun hanke on myöhässä, se ehdottaa seuraavaa ikkunaa
+
+Matala-matchauksen hankkeessa (Toijalan päiväkoti, Akaa) Rune ei sanonut "ohita
+tämä" vaan käänsi sen suhdetyöksi: ota yhteyttä **tilaajan edustajaan Jarmo
+Airaksiseen, Akaan kaupunki** (sähköposti ja puhelin näkyvissä), selvitä onko
+kaupungilla muita hankkeita suunnitteilla, ja *"seuraava ikkuna avautuu, kun
+kaupunki käynnistää uuden investointihankkeen suunnittelun"*.
+
+Tämä ajattelutapa puuttuu meiltä kokonaan: **hävitty hanke on sisäänpääsy
+seuraavaan.**
+
+##### Chat näyttää priorisoinnin perusteet sarakkeena
+
+Kysymys *"Kerro minulle alkavat linjasaneeraukset Helsingissä aika välillä
+lokakuu 2026 – tammikuu 2027"* palautti taulukon sarakkeilla *Otsikko · Kunta ·
+**Priorisointi** · Arvo · Yhteyshenkilö*. Priorisointi-sarake on numeroitu lista
+syitä: **1 Ei puitesopimus · 2 Roolit vapaita · 3 Oikea suunnitteluvaihe ·
+4 Hakusanaosuma (otsikossa)**. Vastausaika näkyi: 4,4 s.
+
+Chatin yläpalkissa kolme painiketta: *Aloita alusta · **Muuta miten Rune näyttää
+hankkeet** · **Muuta miten Rune priorisoi***. Käyttäjä säätää siis
+priorisointilogiikkaa itse. Alalaidassa vastuuvapauslauseke: *"Muista, että
+keskustelet nyt tekoälyn kanssa. Tarkista aina tärkeät tiedot."*
+
+##### Muu toiminnallisuus
+
+| | |
+|---|---|
+| navigaatio | Hankkeet (Etsi hankkeita, Omat hankkeet) · Tarjouspyynnöt · Yritykset (Etsi yritys, Yrityslistat) · Analytiikka · Ilmoitukset |
+| kanban | kansiot sarakkeilla *Prospektit · Tulevat · Työn alla · Voitetut · Poistetut*, kortit tageineen ja budjetteineen, jaettu tiimille |
+| ilmoitukset | hienojakoiset: hankkeen osoite/kustannus/aloitus/päättymispäivä muuttui, kutsuttu tarjoamaan, tarjous jätetty, tarjouskilpailu ratkaistu, mainittu kommentissa, projekti siirretty kansiossa tilasta toiseen |
+| suodattimet | **31 toimialaa** hierarkkisesti (Education → Child Care, College, Creche, Lower Secondary School, Institute…), rakennustyyppi (New), budjetti **ja aikaikkuna jopa vuoteen 2046** |
+| tallennetut haut | nimettyjä, esim. "Alkavat kouluhankkeet pirkanmaa – Aktiivinen suodatin" |
+| yrityshaku | **280 762 yritystä** (koko Pohjola; tuloksissa myös Ruotsi ja Tanska) |
+
+**Yritysprofiili on oma analytiikkanäkymänsä.** Tampereen kaupunki: linkitettyjä
+yrityksiä 187, jaettuja hankkeita 452, kokonaiskustannus **EUR 974 milj.**,
+vaihejakauma 182 aktiivista / 270 valmistunutta, suurimmat rooliryhmät
+(Rakennuttaja/Tilaaja 565, Urakoitsija/Aliurakoitsija 243, Erikoissuunnittelija
+182, Arkkitehti/Pääsuunnittelija 169, Pääurakoitsija 31) ja eniten linkitetyt
+kumppanit (Ramboll 100, Tuomi Logistiikka 58, AFRY 33, A-Insinöörit 32) —
+lisäksi nimetyt yhteyshenkilöt `@tampere.fi`-osoitteineen.
+
+Se on **verkostograafi**: yritys ↔ hanke ↔ rooli ↔ henkilö, aggregoituna.
+Siitä näkee kuka tekee kenen kanssa ja kuinka usein.
+
+**Analytiikka** on markkinaindeksi maittain (Sweden · Norway · Denmark ·
+**Finland**), 12 kk liukuva, historia heinäkuusta 2021. Suomen luvut ruudulla
+(elo 2025–heinä 2026 vs. elo 2024–heinä 2025): aloitusindeksi muu kuin
+asuinrakentaminen **+84 %**, maa- ja vesirakentaminen **+118 %**,
+asuinrakentaminen **−21 %**, yhteensä **+69 %**; suunnitteluindeksi muu kuin
+asuinrakentaminen +19 %, maa- ja vesirakentaminen −5 %.
+
+##### Mitä heilläkin puuttuu
+
+Ruudulta näkyi toistuvasti **"Tilaaja: Ei määritetty"**, **"Osoitetta ei
+asetettu"** ja **"Roolia ei määritetty"** — myös hankkeilla, jotka oli valittu
+demoon esimerkeiksi. Puhelimitse varmennettu data ei siis tarkoita täydellistä
+dataa. Se kannattaa muistaa kun oma 86 %:n urakoitsijapuute tuntuu
+lohduttomalta: **ero on iso mutta ei ääretön.**
+
+##### Korjaus aiempaan päättelyyni tässä samassa dokumentissa
+
+Kirjoitin yllä, ettei Risessä ole suomalaisia julkisen sektorin lähteitä ja että
+kuntien hankkeet ovat siksi meidän rakomme. **Näyttökuvat kumoavat sen.**
+Ruudulla oli Toijalan päiväkoti (Akaa, 5,4 M€), Päiväkoti ja pienten koulu
+Parkanoon (6,2 M€), Kaukajärven koulu ja päiväkoti (57 M€), Kauraslammen koulun
+uudisrakennus Ylöjärvellä (25 M€), Tredu-kampuskehityshanke ja Tampereen
+kaupungin 452 hanketta — kuntien viranhaltijoiden sähköposteineen.
+
+Tarkempi muotoilu: **heillä on samat hankkeet, eri reittiä.** He saavat ne
+soittamalla kunnan viranhaltijalle, Metroc lukee budjetit ja pöytäkirjat, me
+emme kumpaakaan. Se mitä Risessä *ei* näkynyt on asiakirjatason kysely ("mitä
+tämän kaupungin investointiohjelmassa lukee") — se on yhä Metrocin Public
+Investments, ei Risen.
+
+Aukko on siis olemassa, mutta kapeampi ja kilpaillumpi kuin kirjasin.
 
 ---
 
@@ -587,6 +792,12 @@ nimenmuutos ja omistus: <https://hubexo.com/news/byggfakta-group-becomes-hubexo/
 **hinta 600 €/kk: oma käyttökokemus (18.8.2026)** ·
 Byggfakta Rise: <https://www.rpt.fi/rise>, <https://www.rpt.fi/rise-tutustu> ·
 lehdistötiedote 17.8.2026: <https://www.mynewsdesk.com/fi/hubexo/pressreleases/hubexo-lanseeraa-uuden-tekoaelyalustan-byggfakta-risen-joka-auttaa-rakennusalan-yrityksiae-saavuttamaan-parempia-tuloksia-huomattavasti-pienemmaellae-vaivalla-3461035>
+
+**Rise-webinaari 20.8.2026.** 28 näyttökuvaa arkistoitu kansioon
+[`competitors/rise-webinaari-2026-08-20/`](competitors/rise-webinaari-2026-08-20/)
+— tuote demottiin ympäristössä `stage.nextgen.hubexo.dev`. Kuvat ovat tallessa
+repossa, koska kilpailijan aineisto katoaa (ks. *Kilpailijaseurannan
+havainnot*). **Aluehinnoittelun poistuminen: webinaari + oma käyttökokemus.**
 
 **Metroc.** Etusivu ja tuotesivut: <https://metroc.ai/palvelumme/projects/>,
 `/palvelumme/public-investments/`, `/palvelumme/real-estates/`,
