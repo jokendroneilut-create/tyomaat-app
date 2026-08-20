@@ -11,6 +11,27 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 21.8.)
 
+### Sama katuosoite nostaa hankkeen ehdotuksiin
+
+Herttoniemen kirkon purku oli kannassa kahdesti, Helsingin paatoksista ja
+Hilmasta, eika pari yhdistynyt eika edes noussut ehdotukseksi. Syy: osoitteita
+verrataan merkkijonona, ja "Osoite Hiihtomaentie 23, 00800 Helsinki" ei ole
+sama merkkijono kuin "Hiihtomaentie 23, Helsinki". Tulos oli null, ei edes
+matalaa pistemaaraa. Duplikaattiskannaus ei olisi loytanyt paria koskaan:
+parhaassakin tapauksessa 60, kun portti on 70.
+
+Automaattista yhdistamista ei loysatty - samalla osoitteella on aidosti eri
+hankkeita (D-090). Sen sijaan katuavain lisattiin ehdotuslistaan, joka on
+ihmiselle katsottavaksi. Sama kaupunki vaaditaan.
+
+Selauslista jarjestetaan nyt osuvuuden mukaan. Aiemmin se otti 25 ensimmaista
+saman kaupungin hanketta kannan omassa jarjestyksessa; Helsingissa on 1 044
+hanketta ja etsitty oli sijalla 93, joten lista ei voinut nayttaa sita.
+Uudella jarjestyksella se on sijalla 1.
+
+Mitattu koko jonosta: 164 ehdokkaasta 49:lla on katuavain, 5:lla osuma ja
+niista 1 on uutta tietoa - tasmalleen tama tapaus. Ei kohinaa. (D-094)
+
 ### Kuntaluettelon laajennus mitatuilla nimilla
 
 Kuntahaku tunsi vain perusmuotoiset kuntanimet ja kuuden rivin listan

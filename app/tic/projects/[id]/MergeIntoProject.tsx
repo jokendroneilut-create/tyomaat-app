@@ -41,6 +41,12 @@ const REASON_LABELS: Record<string, string> = {
   name_in_description: "nimi mainittu kuvauksessa",
   same_developer: "sama rakennuttaja",
   same_building_type: "sama rakennustyyppi",
+  /*
+   * Sama katu ja talonumero, vaikka osoite on kirjoitettu eri tavoin.
+   * Tämä ei ole täsmäytyksen pistemäärä vaan havainto ihmiselle.
+   */
+  same_street_address: "sama katuosoite",
+  different_name_subjects: "eri kohde nimessä",
 }
 
 export default function MergeIntoProject({ candidateId }: { candidateId: string }) {

@@ -5,6 +5,52 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-094 – Katuavain kuuluu ehdotuslistaan, ei täsmäytykseen
+
+Herttoniemen kirkon purku oli kannassa kahdesti — Helsingin päätöksistä ja
+Hilmasta — eikä pari yhdistynyt eikä edes noussut ehdotukseksi. Syy mitattiin:
+`calculateMatch` vertaa osoitteita **merkkijonona sellaisenaan**.
+
+```
+ehdokas  "Osoite Hiihtomäentie 23, 00800 Helsinki"
+hanke    "Hiihtomäentie 23, Helsinki"
+```
+
+Sama rakennus, eri kirjoitusasu → `same_location` ei täyty, ja kun osoite
+putoaa, muutakaan todistetta ei jää: otsikkojen samankaltaisuus alle 0,3
+(hankkeen otsikko on 160 merkkiä lomaketäytettä) ja rakennuttaja eri
+(hankkeella virheellinen "Helsingin kaupunki", ehdokkaalla oikea "Helsingin
+seurakuntayhtymä"). Tulos oli **null** — ei edes matalaa pistemäärää.
+
+**Skannaus ei olisi löytänyt sitä koskaan.** Simuloitu ehdokas hyväksyttynä
+hankkeeksi: molemmat suunnat null, ja parhaassakin tapauksessa (identtinen
+osoite) 60 — alle skannauksen 70:n portin, joka lisäksi vaatii nimi- tai
+tunnistetodisteen.
+
+**Ratkaisu ei ole löysentää täsmäytystä.** D-090 mittasi että samalla kadulla
+ja numerolla on aidosti eri hankkeita ("Maunonkatu 2, Oulu" = kaksi eri
+taloyhtiötä, "Koroistentie 10" = kolme eri hanketta). Katuavain jää siis pois
+`calculateMatch`ista ja 70:n rajasta.
+
+Sen sijaan katuavain lisättiin **ehdotuslistaan**, joka on ihmiselle
+katsottavaksi ja jossa väärä ehdotus maksaa yhden silmäyksen. Ero on
+olennainen: sama tieto on liian karkea automaattiin mutta juuri oikea
+ihmiselle. Sama kaupunki vaaditaan, koska kadunnimet toistuvat kunnasta
+toiseen ("Koulukatu 15").
+
+**Selauslista oli järjestämätön.** Varalistana näytettiin "25 ensimmäistä
+saman kaupungin hanketta" siinä järjestyksessä kuin rivit tulivat kannasta.
+Helsingissä on 1 044 hanketta ja etsitty oli sijalla 93 — lista ei siis voinut
+näyttää sitä. Nyt järjestys on karkea osuvuus (sama katuosoite, yhteiset
+erottelevat sanat), jolloin oikea hanke nousi sijalle **1/1044**.
+
+Mitattu koko jonosta (164 ehdokasta): 49:llä on katuavain, 5:llä osuma
+hankkeeseen, ja niistä **1 on uutta tietoa** — täsmälleen tämä tapaus. Loput
+neljä näkyivät jo pisteytettyinä. Muutos ei siis tuo kohinaa.
+
+Ks. `lib/projects/streetKey.ts`,
+`app/api/tic/projects/match-suggestions/route.ts`.
+
 ### D-093 – Kuntaluettelon aliakset mitataan aineistosta, ei arvata
 
 Kuntahaku tunsi vain perusmuotoiset kuntanimet ja kuuden rivin käsilistan

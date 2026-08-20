@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { findProjectMatchDetailed, calculateMatch } from "@/lib/agent/projectMatcher"
+import { streetKey } from "@/lib/projects/streetKey"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,6 +27,9 @@ export const maxDuration = 60
  */
 const SUGGESTION_THRESHOLD = 30
 const MAX_SUGGESTIONS = 5
+
+/* Saman katuosoitteen osumat erikseen, jotteivät ne syrjäytä pisteytettyjä. */
+const MAX_STREET_SUGGESTIONS = 3
 
 export async function POST(request: Request) {
   const auth = await verifyAdminRequest(request)
@@ -102,6 +106,45 @@ export async function POST(request: Request) {
       .sort((a, b) => (b.match!.confidence ?? 0) - (a.match!.confidence ?? 0))
       .slice(0, MAX_SUGGESTIONS)
 
+    /*
+     * SAMA KATUOSOITE ON EHDOTUS, VAIKKA TÄSMÄYTYS EI ANNA PISTEITÄ.
+     *
+     * calculateMatch vertaa osoitteita merkkijonona, joten sama rakennus eri
+     * kirjoitusasussa ei tuota mitään. Mitattu tapaus 21.8.2026:
+     *
+     *   ehdokas "Osoite Hiihtomäentie 23, 00800 Helsinki"  (Hilma)
+     *   hanke   "Hiihtomäentie 23, Helsinki"               (Helsingin päätökset)
+     *
+     * Sama Herttoniemen kirkon purku kahdesta lähteestä. calculateMatch
+     * palautti null, joten ehdotusta ei syntynyt — eikä pari olisi löytynyt
+     * duplikaattiskannauksestakaan, joka vaatii vähintään 70.
+     *
+     * Katuavain EI mene calculateMatchiin eikä siten automaattiseen
+     * yhdistämiseen: samalla osoitteella on aidosti eri hankkeita (D-090).
+     * Tässä listassa väärä ehdotus maksaa yhden silmäyksen, joten kattavuus
+     * on oikea valinta. Sama kaupunki vaaditaan, koska kadunnimet toistuvat
+     * kunnasta toiseen ("Koulukatu 15").
+     */
+    const candidateStreetKey = streetKey(normalized.location)
+    const candidateCityKey = String(normalized.city ?? "").trim().toLowerCase()
+    const scoredIds = new Set(scored.map((row) => row.project.id))
+
+    const streetMatches =
+      candidateStreetKey && candidateCityKey
+        ? projects
+            .filter(
+              (project) =>
+                !scoredIds.has(project.id) &&
+                String(project.city ?? "").trim().toLowerCase() === candidateCityKey &&
+                streetKey(project.location) === candidateStreetKey
+            )
+            .slice(0, MAX_STREET_SUGGESTIONS)
+            .map((project) => ({
+              project,
+              match: calculateMatch(project, normalized as any),
+            }))
+        : []
+
     const best = findProjectMatchDetailed(projects, normalized as any)
 
     /*
@@ -120,8 +163,48 @@ export async function POST(request: Request) {
      *
      * Nämä eivät ole osumia vaan selattavaa: ihminen päättää.
      */
-    const suggestedIds = new Set(scored.map((row) => row.project.id))
+    const suggestedIds = new Set([
+      ...scored.map((row) => row.project.id),
+      ...streetMatches.map((row) => row.project.id),
+    ])
     const query = String(body.query ?? "").trim().toLowerCase()
+
+    /*
+     * SELAUSLISTA ON JÄRJESTETTÄVÄ, EI VAIN RAJATTAVA.
+     *
+     * Lista otti aiemmin 25 ensimmäistä siinä järjestyksessä kuin rivit
+     * tulivat kannasta (id-järjestys). Mitattu 21.8.2026: Helsingissä on
+     * 1 044 hanketta ja etsitty hanke oli sijalla 93 — se ei siis voinut
+     * näkyä lainkaan. Isossa kaupungissa järjestämätön lista on sama kuin
+     * tyhjä lista.
+     *
+     * Järjestys on karkea tarkoituksella: tämä on selattavaa, ei osumia.
+     */
+    const candidateWords = new Set(
+      String(normalized.name ?? "")
+        .toLowerCase()
+        .split(/[^a-zåäö0-9]+/)
+        .filter((word) => word.length >= 5)
+    )
+
+    const browseRank = (project: any): number => {
+      let rank = 0
+
+      if (candidateStreetKey && streetKey(project.location) === candidateStreetKey) {
+        rank += 100
+      }
+
+      const projectWords = String(project.name ?? "")
+        .toLowerCase()
+        .split(/[^a-zåäö0-9]+/)
+        .filter((word) => word.length >= 5)
+
+      for (const word of new Set(projectWords)) {
+        if (candidateWords.has(word)) rank += 10
+      }
+
+      return rank
+    }
 
     const browse = projects
       .filter((project) => {
@@ -140,6 +223,9 @@ export async function POST(request: Request) {
           String(project.city ?? "").toLowerCase() === String(city).toLowerCase()
         )
       })
+      .map((project) => ({ project, rank: browseRank(project) }))
+      .sort((a, b) => b.rank - a.rank)
+      .map((row) => row.project)
       .slice(0, 25)
       .map((project) => ({
         projectId: project.id,
@@ -173,18 +259,38 @@ export async function POST(request: Request) {
         : normalized.city
           ? `Muut hankkeet kaupungissa ${normalized.city}`
           : null,
-      suggestions: scored.map(({ project, match }) => ({
-        projectId: project.id,
-        name: project.name,
-        city: project.city,
-        region: project.region,
-        phase: project.phase,
-        status: project.status,
-        developer: project.developer,
-        builder: project.builder,
-        confidence: match!.confidence,
-        reasons: match!.reasons,
-      })),
+      /*
+       * Katuosoiteosumat tulevat pisteytettyjen perään omalla perusteellaan.
+       * Niillä ei välttämättä ole pistemäärää lainkaan (calculateMatch voi
+       * palauttaa null), mikä on tarkoitus: ne eivät ole täsmäytyksen osumia
+       * vaan ihmiselle näytettävä havainto samasta osoitteesta.
+       */
+      suggestions: [
+        ...scored.map(({ project, match }) => ({
+          projectId: project.id,
+          name: project.name,
+          city: project.city,
+          region: project.region,
+          phase: project.phase,
+          status: project.status,
+          developer: project.developer,
+          builder: project.builder,
+          confidence: match!.confidence,
+          reasons: match!.reasons,
+        })),
+        ...streetMatches.map(({ project, match }) => ({
+          projectId: project.id,
+          name: project.name,
+          city: project.city,
+          region: project.region,
+          phase: project.phase,
+          status: project.status,
+          developer: project.developer,
+          builder: project.builder,
+          confidence: match?.confidence ?? null,
+          reasons: ["same_street_address", ...(match?.reasons ?? [])],
+        })),
+      ],
     })
   } catch (err: any) {
     console.error(err)
