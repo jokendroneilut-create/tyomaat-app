@@ -3,6 +3,16 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 export type IdentifierType =
   | "property_id"
   | "hilma_notice_number"
+  /*
+   * Hankinnan tunnus, EI ilmoitusnumero. Sama hankinta julkaistaan Hilmassa
+   * useana ilmoituksena (korjaukset, lisätiedot), ja jokainen saa oman
+   * ilmoitusnumeronsa — joten `hilma_notice_number` ei sido niitä yhteen.
+   * `procedure_id` on sama kaikilla saman hankinnan ilmoituksilla.
+   *
+   * Mitattu 20.8.2026: 33 hankinnasta oli syntynyt 37 ylimääräistä
+   * ehdokasta, mm. "Isonkyrön Latukonehalli" neljästi (procedure 35676).
+   */
+  | "hilma_procedure_id"
   | "lupapiste_permit_number"
   | "espoo_permit_number"
   | "vantaa_kaava_tunnus"

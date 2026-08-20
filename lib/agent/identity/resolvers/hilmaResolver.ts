@@ -334,6 +334,15 @@ export async function resolveHilmaProject({
       { type: "hilma_notice_number", value: noticeNumber },
       { type: "hilma_notice_number", value: parentNoticeId },
       { type: "hilma_notice_number", value: linkedNotices },
+      /*
+       * HANKINNAN TUNNUS SITOO SAMAN HANKINNAN ILMOITUKSET YHTEEN.
+       *
+       * Ilmoitusnumero on eri joka kerta, joten korjausilmoitus loi
+       * uuden ehdokkaan vaikka hanke oli jo kannassa. Resolver-reitti ei
+       * tee sumeaa täsmäystä hyväksyttyihin hankkeisiin, joten tunniste
+       * on ainoa mikä ne yhdistää.
+       */
+      { type: "hilma_procedure_id", value: metadata.procedure_id },
     ],
 
     metadata: {
