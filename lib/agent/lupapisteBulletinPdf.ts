@@ -130,12 +130,19 @@ export function extractApplicationDescription(pdfText: string | null): string | 
 
   const after = pdfText.slice(match.index + match[0].length)
 
-  /* Kuvaus on lainausmerkeissä siteerattuna hakemuksesta. */
+  /*
+   * VAIN LAINAUSMERKEISSÄ. Kuvaus on siteerattu hakemuksesta, ja lainaus-
+   * merkit ovat ainoa luotettava loppumerkki.
+   *
+   * Kappalehaara kokeiltiin ja poistettiin. Mitattu 21.8.2026 takautuvassa
+   * ajossa: kuudesta poiminnasta kolme tuli kappalehaarasta ja KAIKKI KOLME
+   * jatkuivat kuvauksen ohi päätösmääräyksiin ja sivunumeroon asti
+   * ("...Kuusamon kaupunkiPäätösRAKENTAMISLUPA §21422.7.2026Sivu 1").
+   * Syy on että näissä päätöksissä ei ole tyhjiä rivejä, joten kappaleen
+   * loppua ei voi tunnistaa. Lainaushaaran kolme olivat puhtaita.
+   */
   const quoted = after.match(/^\s*"([^"]{40,4000})"/)
   if (quoted) return quoted[1].replace(/\s*\n\s*/g, " ").trim()
 
-  /* Ilman lainausmerkkejä: seuraava kappale tyhjään riviin asti. */
-  const paragraph = after.split(/\n\s*\n/)[0]?.replace(/\s*\n\s*/g, " ").trim() ?? ""
-
-  return paragraph.length >= 40 ? paragraph.slice(0, 4000) : null
+  return null
 }

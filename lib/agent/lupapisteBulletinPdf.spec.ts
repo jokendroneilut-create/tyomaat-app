@@ -27,11 +27,16 @@ describe("extractApplicationDescription", () => {
     )
   })
 
-  it("poimii kappaleen kun lainausmerkkeja ei ole", () => {
-    const pdf = "Rakennushankkeen kuvaus:\nUudisrakennus jossa on kolme kerrosta ja autohalli.\n\nSeuraava osio"
-    expect(extractApplicationDescription(pdf)).toBe(
-      "Uudisrakennus jossa on kolme kerrosta ja autohalli."
-    )
+  /*
+   * Kappalehaara kokeiltiin ja poistettiin: mitattu kuudesta poiminnasta
+   * kolme tuli siita ja KAIKKI KOLME jatkuivat kuvauksen ohi paatos-
+   * maarayksiin ja sivunumeroon asti, koska naissa paatoksissa ei ole
+   * tyhjia riveja joista kappaleen lopun tunnistaisi.
+   */
+  it("ei poimi ilman lainausmerkkeja", () => {
+    const pdf =
+      "Rakennushankkeen kuvaus:\nUudisrakennus jossa on kolme kerrosta ja autohalli.\nHankkeen vaativuusTavanomainen"
+    expect(extractApplicationDescription(pdf)).toBeNull()
   })
 
   /*
