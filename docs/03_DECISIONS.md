@@ -5,6 +5,52 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-097 – Paikallislehti ei ole löytölähde siellä missä kaupungin oma lähde on
+
+Arvioitiin Helsingin Uutiset ja Länsiväylä lähteiksi. **Ei otettu käyttöön.**
+
+Molemmilla on RSS (`/feed/rss`), 30 juttua per syöte. Mitattu 21.8.2026:
+
+| lehti | juttuja | rakentamiseen viittaavia | oikeasti hankkeesta |
+|---|---|---|---|
+| Helsingin Uutiset | 30 (3,3 vrk) | 6 | **0** |
+| Länsiväylä | 30 (9,1 vrk) | 6 | **3** |
+
+Länsiväylän kolmekin purkautuvat luettaessa: valmistunut Jorvin sairaala,
+Espoon kaava jonka saamme jo kaupungilta, ja kolumni. Loput ovat jääkiekkoa,
+ravintoloita ja kolareita.
+
+**RATKAISEVA TESTI: OLIKO ESIMERKKIJUTTU JO KANNASSA?** Oli. Juttu
+"Kuuluisa teollisuuskortteli myllätään Helsingissä" kertoo asemakaavasta,
+joka on kannassa nimellä *"Pitäjänmäki, Kutomotie 6 lähialueineen"* —
+hyväksytty, vaihe Kaavoitus, lähde SUKKA. Pitäjänmäessä on 7 hanketta,
+kaikki kaupungin omista lähteistä.
+
+Tästä yleistys: pääkaupunkiseudun paikallislehti raportoi kaupungin
+päätöksistä ja kaavoista, eli **samasta aineistosta jonka keräämme jo
+alkulähteeltä** (helsinki_paatokset 519 hanketta, SUKKA 194, lisäksi Espoon
+ja Vantaan kaavat). Lehti on jälkijunassa oleva kopio.
+
+**MIKÄ SIINÄ SILTI OLI HYVÄÄ.** Juttu kertoi suunnittelijan (Sitowise),
+kerrosluvun ja asukasmäärän, joita kaavarivillä ei ole. Se tekee siitä
+rikastuslähteen, ei löytölähteen — eikä rikastus kannata osumatiheydellä
+0–3 / 30.
+
+Vertailukohta: `stt_haku` 900 ehdokasta / 355 hyväksyttyä (39 %) ja
+`rakennuslehti` 42 / 26 (62 %). Ne tuottavat, koska kattavat koko maan ja
+kirjoittavat nimenomaan rakentamisesta. Paikallislehti tekee päinvastoin:
+kapea alue, laaja aihepiiri.
+
+**HUOM NIMISEKAANNUS.** Kannassa oleva lähde `helsinki_uutiset` EI ole
+Helsingin Uutiset -lehti vaan hel.fi:n kaupungin uutiset. Paikallislehtiä
+ei ole yhtään.
+
+**JOS TÄHÄN JOSKUS PALATAAN**, kulma on toinen: molemmat lehdet kuuluvat
+samaan konserniin, joten sama `/feed/rss` -muoto toimii todennäköisesti
+kymmenillä lehdillä. Arvo olisi **kunnissa joiden omaa kaava- tai
+päätöslähdettä meillä ei ole** — ei pääkaupunkiseudulla. Avoin: mitkä kunnat
+ovat ilman lähdettä ja onko niissä konsernin lehteä. Tätä ei ole mitattu.
+
 ### D-096 – Lupapisteen päätös-PDF on haettava heti, koska kuulutus poistuu verkosta
 
 Vantaan kuulutus LP-092-2026-02341 on rajapinnassa *"Rakentamista
