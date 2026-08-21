@@ -142,3 +142,48 @@ Koodissa ja ajettu takautuvasti (D-092). Kuntahaku laajennettu 21.8.2026
 ruotsinkielisillä nimillä, lakanneilla kunnilla ja mitatuilla kylillä (D-093),
 jolloin loputkin tunnistuivat — paitsi ulkomainen "Venice", joka jää oikein
 tunnistumatta.
+
+---
+
+### KL-005 – Lupapisteen rakennuslupa kertoo hankkeen, mutta vain PDF:ssä ja vain hetken
+
+Observation:
+Lupapisteen kuulutusrajapinta antaa hankkeesta vain lyhyen toimenpidenimikkeen
+(mitattu 21.8.2026: 15–119 merkkiä, esim. "Rakentamista valmistelevat työt").
+Varsinainen sisältö on päätösasiakirjan PDF:ssä, keskimäärin 6 500 merkkiä.
+Siellä on hakijan oma kuvaus hankkeesta, kaavan käyttötarkoitus, pinta-alat,
+massamäärät ja hankkeen vaativuusluokka.
+
+Mitattu tapaus: Vantaan LP-092-2026-02341 (Mittalinja 1) on rajapinnassa
+rutiinikaivuu, mutta PDF kertoo että kyse on **tulevien datakeskusrakennusten**
+ja lämmöntalteenottorakennuksen pohjatöistä — kaivualue 42 465 m², louhinta
+22 621 m², kaava T-6 teollisuus- ja varastorakennusten korttelialue.
+
+**Kuulutus poistuu verkosta muutoksenhakuajan päätyttyä**, tyypillisesti noin
+kuukauden kuluttua päätöksestä ("Julkaisu poistuu verkosta 25.9.2026"). PDF
+katoaa samalla. Mitattu: 491 tallennetusta kuulutuksesta PDF irtosi enää
+275:ltä, eli 216 oli jo mennyt.
+
+Why it matters:
+Rakennuslupa on aikaisin luotettava signaali isosta hankkeesta — aikaisempi
+kuin kilpailutus. Mutta lupa myönnetään valmistelevalle työvaiheelle, jonka
+nimike ei kerro mitään lopullisesta kohteesta. Pelkän rajapintatekstin varassa
+datakeskus, logistiikkakeskus ja omakotitalon pohjatyöt näyttävät samalta.
+
+Possible system use:
+`lib/agent/lupapisteBulletinPdf.ts`; haku tehdään collectorissa keräysvaiheessa
+eikä jälkikäteen, koska aikaikkuna sulkeutuu. Koko teksti tallennetaan
+`raw_payload.bulletin_pdf_text`-kenttään pysyväksi kopioksi.
+
+Kuvauksen poiminta on rajattu lainausmerkeissä olevaan hakijan tekstiin
+(otsikko "Hankkeen kuvaus hakemuksella/hakemuksessa"). Se osuu harvoin (3/275),
+koska kunnat käyttävät eri lomakepohjia — mutta osuessaan se on oikea.
+Tallennetusta tekstistä voi poimia lisää myöhemmin ilman että data ehtii kadota.
+
+Confidence:
+High — mitattu 491 kuulutuksesta.
+
+Status:
+Koodissa ja ajettu takautuvasti (D-096). Avoin: muiden kuntien lomakepohjista
+ei ole vielä poimintaa, ja PDF sisältää myös pinta-alat ja kaavatiedot joita ei
+vielä lueta omiksi kentikseen.

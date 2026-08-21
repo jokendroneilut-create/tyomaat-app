@@ -11,6 +11,33 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 21.8.)
 
+### Lupapisteen paatos-PDF luetaan keraysvaiheessa
+
+Vantaan kuulutus LP-092-2026-02341 nakyi rajapinnassa nimella
+"Rakentamista valmistelevat tyot". Paatos-PDF kertoo etta kyse on tulevien
+datakeskusrakennusten ja lammontalteenottorakennuksen pohjatoista,
+kaivualue 42 465 m2 ja louhinta-alue 22 621 m2. Ilman PDF:aa iso
+datakeskushanke nayttaa rutiinikaivuulta.
+
+Rajapinta antaa mitatusti 15-119 merkkia, PDF keskimaarin 6 500.
+
+Kuulutus poistetaan verkosta muutoksenhakuajan paatyttya ja PDF sen
+mukana, joten haku on tehtava silloin kun teksti on saatavilla. Se tehdaan
+nyt collectorissa, budjetilla 40 per ajo, ja jo haetut ohitetaan.
+Takautuva pelastusajo: 491 kuulutuksesta PDF irtosi enaa 275:lta, 216 oli
+jo mennyt.
+
+Kuvauksen poiminta rajattiin lainausmerkkeihin kahden kuivaharjoituksen
+jalkeen. Pituusheuristiikka osui 15 paatoksesta yhteen ja sekin vaaraan
+kohtaan; kappalehaara tuotti kolme poimintaa jotka kaikki jatkuivat
+paatosmaarayksiin ja sivunumeroon asti. Nyt poimintoja on 3/275 - harvoin
+mutta oikein. Koko PDF-teksti tallennetaan aina, joten siita voi poimia
+lisaa myohemmin ilman etta data ehtii kadota.
+
+Lupapiste-riveilla ei ollut lahdelinkkia lainkaan; se lisattiin. Linkki
+toimii vain kuulutusaikana, mutta katselmointi osuu siihen ikkunaan.
+(D-096, KL-005)
+
 ### Geneeriset hankenimet taydennetty sijainnilla
 
 Kasin luoduissa hankkeissa oli nimia kuten "Datakeskus", "Kerrostalo" ja
