@@ -11,6 +11,27 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 21.8.)
 
+### Hartelan asuinalueiden kuvaus ja rakennustyyppi korjattu
+
+Kuvaukseksi luettiin koko sivun teksti, jonka alkuosa markkinoi kaupunkia
+eika hanketta. Kaksi vikaa, mitattu kaikilta 15 ehdokkaalta:
+
+Kuvaus alkoi selainkehotuksella 15/15. Poisto oli koodissa mutta trim()
+ajettiin vasta sen jalkeen, joten "^Ole hyva" ei osunut koskaan - rivin
+alussa oli valilyonti.
+
+Rakennustyyppi oli vaara 6/15. Kaupungin palveluluettelosta luettuna
+asuinkerrostalohanke sai tyypikseen Paivakoti (4 kpl), Koulu ja
+Liikuntapaikka - sivustolla jonka nimi on "tulevat asuinalueet".
+
+Kuvaus rajataan nyt siihen virkkeeseen josta hankeasia alkaa, ja tyyppi
+suodatetaan asuintyyppeihin. Takautuva korjaus ajettu kaikille 15
+ehdokkaalle: 6 vaaraa tyyppia pois, 5 tyhjaa sai oikean.
+
+Osoitepoimijaan ei koskettu: Hervannan vaara osoite johtuu puuttuvasta
+paatteesta "piha", mutta sen lisaaminen toisi 10 vaaraa osoitetta yhta
+oikeaa vastaan. (D-099)
+
 ### Lupapisteen paatos-PDF luetaan keraysvaiheessa
 
 Vantaan kuulutus LP-092-2026-02341 nakyi rajapinnassa nimella
