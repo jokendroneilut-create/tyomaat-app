@@ -11,7 +11,8 @@ import {
   isSinglePropertyCompany,
 } from "@/lib/geo/municipalityFromName"
 import { extractWorksite } from "@/lib/agent/identity/extractWorksiteAddress"
-import { fetchHilmaRealizedLocation } from "@/lib/agent/hilmaRealizedLocation"
+import { parseRealizedLocation } from "@/lib/agent/hilmaRealizedLocation"
+import { fetchHilmaEForm, parseHilmaContacts } from "@/lib/agent/hilmaContacts"
 
 function findFact(
   facts: any[],
@@ -308,11 +309,22 @@ export async function resolveHilmaProject({
    * Haku tehdään vain kun jotain puuttuu, jotta täydellisille ilmoituksille
    * ei tule turhaa verkkokutsua.
    */
+  /*
+   * ILMOITUS HAETAAN AINA, EI VAIN OSOITTEEN TAKIA.
+   *
+   * Sama vastaus sisaltaa yhteyshenkilot, ja ne ovat yksi kolmesta
+   * syysta joiden takia testiasiakkaat eivat jaaneet maksaviksi
+   * (00_PRODUCT_BLUEPRINT.md 1.1). Aiemmin haku tehtiin vain kun osoite
+   * tai kunta puuttui, jolloin tunnetun osoitteen ilmoituksista ei saatu
+   * yhteystietoja lainkaan.
+   *
+   * Yksi haku riittaa molempiin.
+   */
+  const eForm = await fetchHilmaEForm(metadata.procedure_id, metadata.notice_id)
+  const hilmaContacts = parseHilmaContacts(eForm)
+
   if (!municipality || !resolvedAddress) {
-    const notice = await fetchHilmaRealizedLocation(
-      metadata.procedure_id,
-      metadata.notice_id
-    )
+    const notice = parseRealizedLocation(eForm)
 
     if (!resolvedAddress && notice.address) {
       resolvedAddress = notice.address
@@ -391,6 +403,12 @@ export async function resolveHilmaProject({
 
       buyer_address: buyerAddress,
       project_address: resolvedAddress,
+
+      /*
+       * Tilaajan ja voittajan yhteyshenkilot ilmoituksesta. Kentta on
+       * `contact_persons`, koska kayttoliittyma renderoi sen jo.
+       */
+      contact_persons: hilmaContacts,
 
       /* Katselmoija näkee esikatselussa mistä osoite on peräisin. */
       field_sources: {

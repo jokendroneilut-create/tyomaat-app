@@ -31,7 +31,7 @@ siksi ne ovat tässä dokumentissa eivätkä muistiinpanoissa.
 |---|---|---|
 | hankkeita | hankkeita kannassa | 5 752, kasvu ~150–250 / viikko |
 | ajoitus | varhaisin vaihe jossa hanke näkyy | kaava ja rakennuslupa ovat käytössä; ks. D-096 (Lupapisteen PDF paljasti datakeskuksen jota rajapinta ei kertonut) |
-| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **2 941 / 5 705 (51,6 %)** — ks. tavoite alla |
+| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **3 099 / 5 705 (54,3 %)** — ks. tavoite alla |
 
 **TAVOITE: jokaisella asiakkaalle näkyvällä hankkeella on vähintään yksi
 yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
@@ -40,11 +40,11 @@ yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
 
 ```
 asiakkaille näkyviä hankkeita          5 705
-  ainakin yksi yhteystieto             2 941   51,6 %
-  tavoitettava (sposti tai puhelin)    2 798   49,0 %
-  nimetty henkilö                        939   16,5 %
+  ainakin yksi yhteystieto             3 099   54,3 %
+  tavoitettava (sposti tai puhelin)    2 956   51,8 %
+  nimetty henkilö                      1 022   17,9 %
 
-  EI YHTÄÄN YHTEYSTIETOA               2 764   48,4 %
+  EI YHTÄÄN YHTEYSTIETOA               2 606   45,7 %
 ```
 
 *Kehitys 22.8.2026:*
@@ -53,9 +53,10 @@ asiakkaille näkyviä hankkeita          5 705
 |---|---|---|
 | lähtötilanne | 1 986 (34,8 %) | – |
 | sähköpostiankkuri tiedotteista | 2 756 (48,3 %) | 682 |
-| peitetyt osoitteet + puhelinankkuri | **2 941 (51,6 %)** | **939** |
+| peitetyt osoitteet + puhelinankkuri | 2 941 (51,6 %) | 939 |
+| Hilman ilmoitusten osapuolet | **3 099 (54,3 %)** | **1 022** |
 
-Nimettyjen henkilöiden määrä nousi 682 → 939 eli **+38 %** — se on
+Nimettyjen henkilöiden määrä nousi 682 → 1 022 eli **+50 %** — se on
 myyjälle arvokkain luku, koska nimetty henkilö on ainoa jolle voi soittaa.
 
 Puutteesta valtaosa on lähteitä joissa yhteystietoa ei ole tekstissä
