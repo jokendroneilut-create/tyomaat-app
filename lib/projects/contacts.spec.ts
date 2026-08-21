@@ -181,3 +181,86 @@ describe("yhteystietoja ei koskaan poisteta", () => {
     expect(c.title).toBe("johtaja")
   })
 })
+
+describe("peitetyt sahkopostit", () => {
+  /*
+   * Mitattu 22.8.2026: 78 hanketta ja 197 osoitetta jaivat huomaamatta,
+   * koska ne on kirjoitettu keruun estamiseksi muodossa [at] tai (at).
+   */
+  it("tunnistaa hakasulkeisen muodon", () => {
+    const c = extractContacts("yksikön päällikkö Merja Rukko, puh. 09 310 20576, merja.rukko[at]hel.fi")
+    expect(c[0].email).toBe("merja.rukko@hel.fi")
+    expect(c[0].name).toBe("Merja Rukko")
+  })
+
+  it("tunnistaa kaarisulkeisen muodon", () => {
+    expect(extractContacts("tapani.vuorentausta(at)kouvola.fi")[0].email).toBe("tapani.vuorentausta@kouvola.fi")
+  })
+
+  it("sallii valilyonnit sulkeiden ymparilla", () => {
+    expect(extractContacts("tapani.pukinkorva [at] ii.fi")[0].email).toBe("tapani.pukinkorva@ii.fi")
+  })
+
+  it("muuntaa myos peitetyn pisteen", () => {
+    expect(extractContacts("matti [at] firma [dot] fi")[0].email).toBe("matti@firma.fi")
+  })
+
+  /* Pelkkaa " at " -sanaa ei kosketa: se on englannissa tavallinen. */
+  it("ei muuta proosaa jossa lukee at", () => {
+    expect(extractContacts("The meeting is at the office in Helsinki")).toEqual([])
+  })
+})
+
+describe("puhelinankkuri", () => {
+  /*
+   * Kunnan paatoksissa on nimi ja numero mutta ei osoitetta lainkaan.
+   * Mitattu: 271 hanketta, joista 181:lla myos nimi.
+   */
+  it("poimii kontaktin nimesta ja puhelimesta ilman sahkopostia", () => {
+    const c = extractContacts("Valmistelija: suunnittelupäällikkö Tapani Vuorentausta, puh. 020 615 7096")
+    expect(c).toHaveLength(1)
+    expect(c[0].name).toBe("Tapani Vuorentausta")
+    expect(c[0].phone).toBe("020 615 7096")
+    expect(c[0].email).toBe("")
+    expect(c[0].kind).toBe("person")
+  })
+
+  /* Pelkka irrallinen numero ei ole yhteystieto. */
+  it("ei poimi numeroa ilman nimea", () => {
+    expect(extractContacts("Kokonaiskustannus 020 615 7096 euroa")).toEqual([])
+  })
+
+  it("ei toista henkiloa joka on jo poimittu sahkopostilla", () => {
+    const c = extractContacts("Jani Peltomäki, puh. 044 085 0412, jani.peltomaki@srv.fi")
+    expect(c).toHaveLength(1)
+  })
+
+  it("poimii seka sahkopostillisen etta pelkan puhelimellisen", () => {
+    const t =
+      "Jani Peltomäki, puh. 044 085 0412, jani.peltomaki@srv.fi Lisätietoja antaa suunnittelupäällikkö Satu Suomi, puh. 020 615 8046"
+    const c = extractContacts(t)
+    expect(c).toHaveLength(2)
+    expect(c.some((x) => x.name === "Satu Suomi" && x.email === "")).toBe(true)
+  })
+})
+
+describe("nimentunnistuksen rajaus", () => {
+  /* Mitattu puhelinankkuria lisattaessa: nama tulivat "nimina". */
+  it("ei pida yhtiomuotoa nimena", () => {
+    expect(extractContacts("Linjasaneeraus Rakennus Oy puh. 0207415560")).toEqual([])
+  })
+
+  it("ei pida kadunnimea sukunimena", () => {
+    expect(extractContacts("Kerrostalo Heka Tihtaalinkatu puh. 0503721640")).toEqual([])
+  })
+
+  it("ei pida tehtavanimiketta etunimena", () => {
+    expect(extractContacts("Työnjohtaja Esa puh. 0505677677")).toEqual([])
+    expect(extractContacts("Yhteyshenkilö Jani puh. 0407526606")).toEqual([])
+  })
+
+  it("tunnistaa oikean nimen nimikkeen jalkeen", () => {
+    const c = extractContacts("Työnjohtaja Esa Virtanen puh. 040 567 7677")
+    expect(c[0].name).toBe("Esa Virtanen")
+  })
+})

@@ -27,6 +27,7 @@ export type Contact = {
   name: string | null
   title: string | null
   organization: string | null
+  /* Tyhja kun kontakti on poimittu puhelinnumeron perusteella. */
   email: string
   phone: string | null
   /* Henkilö vai organisaation yleinen laatikko (kirjaamo@, info@). */
@@ -65,7 +66,16 @@ const NAME_RE =
  * "Lisätiedot Jani" ja "Puh Mervi" tuottaisivat roskaa.
  */
 const NOT_A_NAME =
-  /^(Lisätiedot|Lisätietoja|Yhteyshenkilöt|Yhteystiedot|Puh|Tel|Sähköposti|Media|Jakelu|Liite|Kuva|Tiedotteen)$/i
+  /^(Lisätiedot|Lisätietoja|Yhteyshenkilöt?|Yhteystiedot|Puh|Tel|Sähköposti|Media|Jakelu|Liite|Kuva|Tiedotteen|Työnjohtaja|Valmistelija|Esittelijä|Rakennuttaja|Urakoitsija|Isännöitsijä|Rakennus|Asunto|Kerrostalo|Rivitalo|Kiinteistö|Toimitusjohtaja|Projektipäällikkö|Aluejohtaja|Myyntipäällikkö|Kaavoitus|Suunnittelu|Kaupunki|Kunta|Arkkitehdit|Rakennuttajapäällikkö|Hankejohtaja)$/i
+
+/*
+ * Yhtiömuoto tai kadunnimi nimen osana = kyse ei ole henkilöstä.
+ * Mitattu 22.8.2026 puhelinankkuria lisättäessä: poiminta tuotti nimiä
+ * "Rakennus Oy" ja "Heka Tihtaalinkatu". Kumpikaan ei ole kenenkään nimi.
+ */
+const ORG_FORM = /^(Oy|Oyj|Ab|Ltd|As|Ky|Kb)$/i
+const STREET_WORD =
+  /(katu|tie|kuja|polku|väylä|kaari|ranta|aukio|puisto|raitti|rinne|silta)$/i
 
 /* Organisaatiomuodot joista tunnistaa yrityksen nimen tekstistä. */
 const ORG_RE =
@@ -83,12 +93,39 @@ function clean(value: string): string {
  * lähin nimi kuuluu tälle osoitteelle. Aiemmat kuuluvat edellisille
  * yhteyshenkilöille tai leipätekstin sitaateille.
  */
+const WORD = /^[A-ZÅÄÖ][a-zåäö]+(?:-[A-ZÅÄÖ][a-zåäö]+)?$/
+
+/*
+ * SANAPAREINA, EI SÄÄNNÖLLISELLÄ LAUSEKKEELLA.
+ *
+ * Globaali lauseke ei löydä limittäisiä pareja: kun "Työnjohtaja Esa" on
+ * käsitelty, haku jatkuu sen jälkeen eikä "Esa Virtanen" osu koskaan.
+ * Tekstissä nimeä edeltää lähes aina tehtävänimike, joten juuri se pari
+ * on se joka tarvitaan.
+ */
+const SEGMENT_SPLIT = new RegExp('[,;:()\n]')
+
 function findName(before: string): string | null {
   let last: string | null = null
 
-  for (const m of before.matchAll(NAME_RE)) {
-    if (NOT_A_NAME.test(m[1]) || NOT_A_NAME.test(m[2])) continue
-    last = `${m[1]} ${m[2]}`
+  /*
+   * PARI EI SAA YLITTAA PILKKUA. Ilman tata "Toni Matikka, Porvoon
+   * kaupunki" tuotti nimen "Matikka Porvoon" - viimeinen kelvollinen
+   * pari ylitti erottimen. Nimi ja sita seuraava organisaatio ovat
+   * tekstissa lahes aina eri lohkoissa.
+   */
+  for (const lohko of before.split(SEGMENT_SPLIT)) {
+    const sanat = lohko.split(/[^A-Za-zÅÄÖåäö-]+/).filter(Boolean)
+
+    for (let i = 0; i + 1 < sanat.length; i++) {
+      const a = sanat[i]
+      const b = sanat[i + 1]
+      if (!WORD.test(a) || !WORD.test(b)) continue
+      if (NOT_A_NAME.test(a) || NOT_A_NAME.test(b)) continue
+      if (ORG_FORM.test(a) || ORG_FORM.test(b)) continue
+      if (STREET_WORD.test(b)) continue
+      last = `${a} ${b}`
+    }
   }
 
   return last
@@ -209,8 +246,69 @@ function organizationFor(email: string, before: string): string | null {
   return clean(before.match(ORG_RE)?.[1] ?? "") || null
 }
 
+/*
+ * PEITETYT SÄHKÖPOSTIT.
+ *
+ * Tiedotteissa ja päätöksissä osoite kirjoitetaan usein muodossa
+ * "merja.rukko[at]hel.fi" tai "vuorentausta(at)kouvola.fi", jotta sitä ei
+ * voisi kerätä koneellisesti. Mitattu 22.8.2026: 78 hanketta ja 197
+ * osoitetta, jotka jäivät kokonaan huomaamatta — mittaus väitti ettei
+ * yhdessäkään puuttuvassa hankkeessa ole sähköpostia.
+ *
+ * Vain sulkeelliset muodot muunnetaan. Pelkkää " at " -sanaa ei kosketa:
+ * se esiintyy englanninkielisessä proosassa jatkuvasti.
+ */
+const OBFUSCATED_AT = /\s*[[({]\s*(?:at|ät)\s*[\])}]\s*/gi
+const OBFUSCATED_DOT = /\s*[[({]\s*(?:dot|piste)\s*[\])}]\s*/gi
+
+export function deobfuscateEmails(text: string): string {
+  return text.replace(OBFUSCATED_AT, "@").replace(OBFUSCATED_DOT, ".")
+}
+
+/*
+ * PUHELINANKKURI. Osalla lähteistä on nimi ja numero mutta ei osoitetta
+ * lainkaan — tyypillisesti kunnan päätöksissä ("Valmistelija:
+ * suunnittelupäällikkö Tapani Vuorentausta, puh. 020 615 7096").
+ *
+ * Mitattu 22.8.2026: 271 hankkeella on kelvollinen puhelinnumero ilman
+ * sähköpostia, ja niistä 181:llä löytyy myös nimi.
+ *
+ * NIMI VAADITAAN. Pelkkä irrallinen numero ei ole yhteystieto, ja
+ * numeroita on teksteissä muutenkin (pykälät, pinta-alat). Ilman
+ * nimivaatimusta poiminta tuottaisi roskaa.
+ */
+function contactsFromPhones(source: string, kaytetyt: Set<string>): Contact[] {
+  const tulos: Contact[] = []
+  const nahdyt = new Set<string>()
+
+  for (const m of source.matchAll(new RegExp(PHONE_RE, "g"))) {
+    const numero = clean(m[0])
+    if (!isPhone(numero)) continue
+
+    const avain = numero.replace(/\D/g, "")
+    if (kaytetyt.has(avain) || nahdyt.has(avain)) continue
+
+    const alku = Math.max(0, (m.index ?? 0) - WINDOW_BEFORE)
+    const before = source.slice(alku, m.index)
+    const name = findName(before)
+    if (!name) continue
+
+    nahdyt.add(avain)
+    tulos.push({
+      name,
+      title: findTitle(before.slice(before.lastIndexOf(name) + name.length), null),
+      organization: clean(before.match(ORG_RE)?.[1] ?? "") || null,
+      email: "",
+      phone: numero,
+      kind: "person",
+    })
+  }
+
+  return tulos
+}
+
 export function extractContacts(text: string | null | undefined): Contact[] {
-  const source = String(text ?? "")
+  const source = deobfuscateEmails(String(text ?? ""))
   if (!source) return []
 
   const contacts: Contact[] = []
@@ -276,6 +374,16 @@ export function extractContacts(text: string | null | undefined): Contact[] {
 
     contacts.push({ name, title, organization, email, phone, kind })
   }
+
+  /*
+   * Puhelinankkuroidut vasta lopuksi: sahkopostillinen kontakti on
+   * luotettavampi, ja jo kaytetyt numerot on ohitettava jottei sama
+   * henkilo tule kahdesti.
+   */
+  const kaytetytNumerot = new Set(
+    contacts.map((c) => String(c.phone ?? "").replace(/\D/g, "")).filter(Boolean)
+  )
+  contacts.push(...contactsFromPhones(source, kaytetytNumerot))
 
   /* Henkilöt ensin: myyjälle nimetty kontakti on arvokkaampi. */
   return contacts.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "person" ? -1 : 1))

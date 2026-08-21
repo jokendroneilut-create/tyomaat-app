@@ -31,7 +31,7 @@ siksi ne ovat tässä dokumentissa eivätkä muistiinpanoissa.
 |---|---|---|
 | hankkeita | hankkeita kannassa | 5 752, kasvu ~150–250 / viikko |
 | ajoitus | varhaisin vaihe jossa hanke näkyy | kaava ja rakennuslupa ovat käytössä; ks. D-096 (Lupapisteen PDF paljasti datakeskuksen jota rajapinta ei kertonut) |
-| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **2 756 / 5 705 (48,3 %)** — ks. tavoite alla |
+| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **2 941 / 5 705 (51,6 %)** — ks. tavoite alla |
 
 **TAVOITE: jokaisella asiakkaalle näkyvällä hankkeella on vähintään yksi
 yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
@@ -40,15 +40,26 @@ yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
 
 ```
 asiakkaille näkyviä hankkeita          5 705
-  ainakin yksi yhteystieto             2 756   48,3 %
-  tavoitettava (sposti tai puhelin)    2 610   45,7 %
-  nimetty henkilö                        682   12,0 %
+  ainakin yksi yhteystieto             2 941   51,6 %
+  tavoitettava (sposti tai puhelin)    2 798   49,0 %
+  nimetty henkilö                        939   16,5 %
 
-  EI YHTÄÄN YHTEYSTIETOA               2 949   51,7 %
+  EI YHTÄÄN YHTEYSTIETOA               2 764   48,4 %
 ```
 
-Puutteesta 19 % on käsin luotuja hankkeita ja loput jakautuvat lähteille,
-joissa yhteystietoa ei ole rakenteisesti saatavilla:
+*Kehitys 22.8.2026:*
+
+| vaihe | yhteystieto | nimetty henkilö |
+|---|---|---|
+| lähtötilanne | 1 986 (34,8 %) | – |
+| sähköpostiankkuri tiedotteista | 2 756 (48,3 %) | 682 |
+| peitetyt osoitteet + puhelinankkuri | **2 941 (51,6 %)** | **939** |
+
+Nimettyjen henkilöiden määrä nousi 682 → 939 eli **+38 %** — se on
+myyjälle arvokkain luku, koska nimetty henkilö on ainoa jolle voi soittaa.
+
+Puutteesta valtaosa on lähteitä joissa yhteystietoa ei ole tekstissä
+lainkaan (jakauma mitattu ennen viimeisintä ajoa):
 
 ```
   563  19 %  käsin luodut
