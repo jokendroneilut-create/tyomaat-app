@@ -31,7 +31,40 @@ siksi ne ovat tässä dokumentissa eivätkä muistiinpanoissa.
 |---|---|---|
 | hankkeita | hankkeita kannassa | 5 752, kasvu ~150–250 / viikko |
 | ajoitus | varhaisin vaihe jossa hanke näkyy | kaava ja rakennuslupa ovat käytössä; ks. D-096 (Lupapisteen PDF paljasti datakeskuksen jota rajapinta ei kertonut) |
-| yhteystiedot | hankkeita joilla yhteyshenkilö | **2 678 / 5 752 (47 %)**, joista nimetty henkilö 593 |
+| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **2 756 / 5 705 (48,3 %)** — ks. tavoite alla |
+
+**TAVOITE: jokaisella asiakkaalle näkyvällä hankkeella on vähintään yksi
+yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
+
+*Puute mitattuna 22.8.2026 (`scripts/measure-contact-coverage.ts`):*
+
+```
+asiakkaille näkyviä hankkeita          5 705
+  ainakin yksi yhteystieto             2 756   48,3 %
+  tavoitettava (sposti tai puhelin)    2 610   45,7 %
+  nimetty henkilö                        682   12,0 %
+
+  EI YHTÄÄN YHTEYSTIETOA               2 949   51,7 %
+```
+
+Puutteesta 19 % on käsin luotuja hankkeita ja loput jakautuvat lähteille,
+joissa yhteystietoa ei ole rakenteisesti saatavilla:
+
+```
+  563  19 %  käsin luodut
+  515  17 %  helsinki_paatokset
+  351  12 %  Hilma
+  158   5 %  Väylävirasto
+  110   4 %  Lupapiste kuulutukset
+```
+
+Kahdesta luvusta näkee mihin työ kannattaa kohdistaa:
+
+- **222 hanketta** on ilman kuvausta ja lisätietoja — niistä ei voi poimia
+  mitään, vaan tieto on haettava lähteestä uudelleen tai lisättävä käsin.
+- **1 863 hankkeella osapuoli on tiedossa** (rakennuttaja tai urakoitsija)
+  mutta henkilö ei. Näille yrityskohtainen yhteystieto olisi parempi kuin
+  ei mitään.
 
 2. Core Vision
 
