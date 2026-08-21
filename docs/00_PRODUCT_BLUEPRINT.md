@@ -5,6 +5,34 @@ Työmaat.fi helps construction industry companies identify business opportunitie
 
 The goal is not to build only a construction project registry. The goal is to build a system that detects, enriches, follows and prioritizes construction-related opportunities throughout their lifecycle.
 
+1.1 Kriittinen tavoite: kolme syytä joiden takia testiasiakkaat eivät jääneet
+
+**Tämä on tuotteen tärkein mittatikku.** Testikäyttäjiltä saadun palautteen
+mukaan tilaus jäi tekemättä kolmesta syystä, tässä järjestyksessä:
+
+1. **Liian vähän hankkeita** — kattavuus ei riittänyt siihen että palvelua
+   olisi kannattanut seurata päivittäin.
+2. **Liian myöhään** — hanke näkyi vasta kun se oli jo kilpailutuksessa tai
+   rakenteilla, jolloin myyjä oli myöhässä.
+3. **Liian vähän yhteystietoja** — hanke ilman yhteyshenkilöä on
+   puolivalmis: käyttäjä tietää että kohde on olemassa, muttei kenelle
+   soittaa.
+
+Jokainen uusi lähde, poimija ja ominaisuus on syytä arvioida sitä vasten,
+kumpaa näistä kolmesta se parantaa. Jos se ei paranna mitään niistä, se
+tuskin ratkaisee sitä miksi asiakas ei maksa.
+
+Nämä eivät ole mielipiteitä vaan syy siihen ettei liikevaihtoa synny, ja
+siksi ne ovat tässä dokumentissa eivätkä muistiinpanoissa.
+
+*Nykytila mitattuna 22.8.2026:*
+
+| syy | mittari | tilanne |
+|---|---|---|
+| hankkeita | hankkeita kannassa | 5 752, kasvu ~150–250 / viikko |
+| ajoitus | varhaisin vaihe jossa hanke näkyy | kaava ja rakennuslupa ovat käytössä; ks. D-096 (Lupapisteen PDF paljasti datakeskuksen jota rajapinta ei kertonut) |
+| yhteystiedot | hankkeita joilla yhteyshenkilö | **2 678 / 5 752 (47 %)**, joista nimetty henkilö 593 |
+
 2. Core Vision
 
 Työmaat.fi is a construction market intelligence platform.

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
 import { resolveWinnerName } from "@/lib/projects/winnerName"
+import { extractContacts, mergeContacts } from "@/lib/projects/contacts"
 import {
   awardWinnersFromMetadata,
   mergeCompanyNames,
@@ -2387,11 +2388,33 @@ export async function POST(request: Request) {
         awardWinnersFromMetadata(metadata)
       )
 
+      /*
+       * YHTEYSHENKILÖT YHDISTETÄÄN, EI KORVATA.
+       *
+       * Yhdistäminen täyttää vain tyhjiä kenttiä, joten uuden lähteen
+       * tuomat yhteyshenkilöt eivät päätyneet mihinkään: `additional_info`
+       * ei ole edes päivityslistalla, ja vanha kuvaus jäi voimaan.
+       * Käyttäjä joutui lisäämään Kouvolan yhtenäiskoulun kolme
+       * yhteyshenkilöä käsin, vaikka ne olivat uuden tiedotteen tekstissä.
+       *
+       * Yhteystiedot ovat yksi kolmesta syystä joiden takia testiasiakkaat
+       * eivät jääneet maksaviksi (ks. 00_PRODUCT_BLUEPRINT.md), joten
+       * niiden hukkuminen rikastuksessa on kallis vika.
+       *
+       * Union sähköpostin perusteella: sama henkilö ei tule kahdesti,
+       * mutta uusi henkilö tulee aina mukaan.
+       */
+      const mergedContacts = mergeContacts(
+        (existingProject.metadata?.contact_persons as any[]) ?? [],
+        extractContacts(metadata.description ?? null)
+      )
+
       const mergedMetadata = {
         ...metadata,
         ...(existingProject.metadata ?? {}),
         also_known_as: Array.from(alsoKnownAs),
         related_companies: relatedCompanies,
+        contact_persons: mergedContacts,
         source_count: Number(existingProject.metadata?.source_count ?? 1) + 1,
         last_seen_at: new Date().toISOString(),
         last_source_name:
@@ -2545,6 +2568,21 @@ export async function POST(request: Request) {
   source_name: sourceName,
   source_url: sourceUrl,
   documents_url: documentsUrl,
+
+  /*
+   * Yhteyshenkilöt omaksi rakenteekseen jo luonnissa. Tieto on ollut
+   * kuvaustekstissä koko ajan (mitattu 840 hanketta), mutta proosana
+   * keskellä tiedotetta se ei ole myyjälle käyttökelpoinen.
+   *
+   * Kenttä on `contact_persons`, koska käyttöliittymä renderöi sen jo
+   * kolmessa paikassa (Tänään-modaali, hankelista, TIC-esikatselu) ja
+   * 1 986 kaavalähteistä tullutta hanketta käyttää sitä. Rinnakkainen
+   * kenttä olisi jäänyt näkymättömäksi.
+   */
+  contact_persons: mergeContacts(
+    (metadata.contact_persons as any[]) ?? [],
+    extractContacts(metadata.description ?? null)
+  ),
 
   potential_project_id: potentialProject.id,
   source_document_id: metadata.source_document_id ?? null,

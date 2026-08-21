@@ -5,6 +5,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-101 – Yhteyshenkilöt poimitaan tekstistä, koska tieto oli jo kannassa
+
+Käyttäjä yhdisti uuden tiedotteen olemassa olevaan hankkeeseen, ja
+huomasi ettei **lisätiedot muuttunut eikä kolmea yhteyshenkilöä tullut
+mukana** — ne piti lisätä käsin. Yhteystiedot ovat yksi kolmesta syystä
+joiden takia testiasiakkaat eivät jääneet maksaviksi (ks.
+`00_PRODUCT_BLUEPRINT.md` 1.1), joten niiden hukkuminen on kallis vika.
+
+**KOLME ERILLISTÄ VIKAA:**
+
+1. **`additional_info` ei ole yhdistämisen päivityslistalla lainkaan.**
+   Yhdistäminen päivittää kaupungin, osoitteen, osapuolet ja vaiheen,
+   mutta lisätietokenttä jää aina ennalleen. Uuden lähteen teksti ei siis
+   koskaan päädy minnekään.
+2. **Yhteyshenkilöitä ei poimittu tiedotteista ollenkaan.** Kenttä
+   `metadata.contact_persons` on ollut olemassa ja käyttöliittymä
+   renderöi sen kolmessa paikassa, mutta vain kaavaresolverit
+   kirjoittivat siihen.
+3. **Tieto oli silti kannassa koko ajan.** Mitattu 22.8.2026: **840
+   hankkeen** kuvaustekstissä on sähköpostiosoite ja 593:lla nimetty
+   henkilö — proosana keskellä pitkää tiedotetta.
+
+**ANKKURI ON SÄHKÖPOSTI, EI OTSIKKO.** Muoto vaihtelee lähteittäin
+täysin: SRV kirjoittaa `nimi, tehtävä, yritys, puh, sposti`, YVA panee
+organisaation ensin, Pohjola jättää pilkut pois, STT käyttää
+paikanpitäjää `etunimi.sukunimi@`. Ainoa yhteinen ja koneellisesti varma
+elementti on sähköpostiosoite, joten poiminta tehdään sen ympäriltä.
+
+**NELJÄ VIKAA JOTKA MITTAUS PALJASTI JA JOITA TESTIT EIVÄT OLISI:**
+
+| vika | oire | korjaus |
+|---|---|---|
+| puhelin ikkunan alusta | Heidi Tetteh sai Jani Peltomäen numeron | lähin numero, ei ensimmäinen |
+| nimi tekstistä | kolme Taalerin henkilöä sai nimekseen "Taaleri Kiinteistöt" | nimi sähköpostista, teksti varalle |
+| `\bp\b` nimikkeessä | "viestintä äällikkö" — ä ei ole JS:n regexissä sanamerkki | vain `p.` pisteen kanssa |
+| diaarinumero puhelimena | "Kai Vaisto (026-1401)" | 9–12 numeroa vaaditaan |
+
+**VIIDES VIKA OLI TUHOISA JA VAIN KUIVAHARJOITUS ESTI SEN.** Yhdistäminen
+avaimensi pelkkään sähköpostiin, mutta kaavalähteiden yhteyshenkilöillä
+osoite on usein tyhjä (`{name: "Valtteri Tupala", email: null, phone:
+"044 740 1408"}`). Takautuva ajo olisi **pudottanut** niitä: kuivaharjoitus
+näytti rivejä `2 -> 1` ja `1 -> 0`. Avain on nyt sähköposti tai, sen
+puuttuessa, nimi ja puhelin.
+
+**TULOS.** Yhteyshenkilöllisiä hankkeita **1 986 → 2 678 (47 %)**, uusia
+kontakteja 1 601, eikä yhtään vanhaa menetetty. Ääkköset säilyvät, koska
+nimi luetaan tekstistä kun se vastaa sähköpostin nimeä ilman tarkkeita.
+
+Ks. `lib/projects/contacts.ts`, `scripts/backfill-contact-persons.ts`.
+
 ### D-100 – Hyväksynnän täsmäytys rajataan maakuntaan, ja reitille asetetaan aikaraja
 
 Hyväksyntä luki **koko hankekannan** joka kerta sumeaa täsmäytystä varten.
