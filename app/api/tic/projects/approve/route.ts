@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
 import { resolveWinnerName } from "@/lib/projects/winnerName"
 import { extractContacts, mergeContacts } from "@/lib/projects/contacts"
+import { chooseAdditionalInfo } from "@/lib/projects/additionalInfo"
 import {
   awardWinnersFromMetadata,
   mergeCompanyNames,
@@ -2404,8 +2405,23 @@ export async function POST(request: Request) {
        * Union sähköpostin perusteella: sama henkilö ei tule kahdesti,
        * mutta uusi henkilö tulee aina mukaan.
        */
+      /*
+       * VANHAN TEKSTIN YHTEYSTIEDOT TALTEEN ENNEN KORVAAMISTA.
+       *
+       * Lisätietokenttä korvataan uudemmalla tekstillä (ks.
+       * chooseAdditionalInfo), joten siinä olevat yhteyshenkilöt
+       * katoaisivat. Osa niistä on käyttäjän KÄSIN lisäämiä — juuri niin
+       * kävi Kouvolan yhtenäiskoulussa — eikä niitä ole missään muualla.
+       *
+       * Yhteystiedot ovat yksi kolmesta syystä joiden takia testiasiakkaat
+       * eivät jääneet maksaviksi, joten niitä ei hävitetä missään
+       * tilanteessa, vaikka ne olisivat vanhemmasta lähteestä.
+       */
       const mergedContacts = mergeContacts(
-        (existingProject.metadata?.contact_persons as any[]) ?? [],
+        mergeContacts(
+          (existingProject.metadata?.contact_persons as any[]) ?? [],
+          extractContacts(existingProject.additional_info ?? null)
+        ),
         extractContacts(metadata.description ?? null)
       )
 
@@ -2440,6 +2456,21 @@ export async function POST(request: Request) {
           lat: existingProject.lat ?? coords.lat,
           lng: existingProject.lng ?? coords.lon,
           phase: mergedPhase,
+
+          /*
+           * Lisätiedot uudemmasta lähteestä. Kenttä ei ollut aiemmin
+           * päivityslistalla lainkaan, joten hankkeen kuvaus jäi
+           * ensimmäisen lähteen varaan — Kouvolan yhtenäiskoulussa siinä
+           * luki "rakentaminen käynnistyy keväällä 2026" vaikka hanke oli
+           * jo rakenteilla.
+           *
+           * Vanhan tekstin yhteyshenkilöt on poimittu talteen yllä.
+           */
+          additional_info: chooseAdditionalInfo(
+            existingProject.additional_info,
+            metadata.description ?? null
+          ),
+
           last_verified_at: new Date().toISOString(),
           metadata: mergedMetadata,
         })

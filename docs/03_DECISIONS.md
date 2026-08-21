@@ -49,11 +49,32 @@ osoite on usein tyhjä (`{name: "Valtteri Tupala", email: null, phone:
 näytti rivejä `2 -> 1` ja `1 -> 0`. Avain on nyt sähköposti tai, sen
 puuttuessa, nimi ja puhelin.
 
-**TULOS.** Yhteyshenkilöllisiä hankkeita **1 986 → 2 678 (47 %)**, uusia
-kontakteja 1 601, eikä yhtään vanhaa menetetty. Ääkköset säilyvät, koska
-nimi luetaan tekstistä kun se vastaa sähköpostin nimeä ilman tarkkeita.
+**TULOS.** Yhteyshenkilöllisiä hankkeita **1 986 → 2 773 (48 %)**, joista
+nimetty henkilö 690. Uusia kontakteja 1 812, eikä yhtään vanhaa menetetty.
+Ääkköset säilyvät, koska nimi luetaan tekstistä kun se vastaa sähköpostin
+nimeä ilman tarkkeita.
 
-Ks. `lib/projects/contacts.ts`, `scripts/backfill-contact-persons.ts`.
+**TEKSTI KORVATAAN, YHTEYSTIEDOT VAIN KARTTUVAT.** Nämä kaksi kenttää
+käyttäytyvät tarkoituksella eri tavoin:
+
+| kenttä | sääntö | miksi |
+|---|---|---|
+| `additional_info` | uusin lähde voittaa | kaksi tiedotetta toistaa 60–80 % sisällöstä; perään liitettynä kenttään jäisi sekä vanha lupaus että uusi tosiasia |
+| `contact_persons` | **vain lisätään, ei koskaan poisteta** | yhteystiedot ovat yksi kolmesta konversioesteestä, ja vanhastakin lähteestä tullut kontakti on arvokas |
+
+Sääntöjen yhdistelmä on vaarallinen ilman suojaa: tekstin korvaaminen
+hävittäisi siinä olevat yhteyshenkilöt. Siksi yhdistämishaara poimii
+**vanhan tekstin kontaktit talteen ennen korvaamista**, ja
+`mergeContacts`in vain-lisäävyys on varmistettu omilla testeillä
+("sailyttaa jokaisen vanhan kontaktin", "ei koskaan lyhene").
+
+Tämä ei ollut teoreettinen riski: mitattu 22.8.2026, **112 hankkeella oli
+yhteystietoja pelkästään `additional_info`-kentässä** (211 kontaktia),
+osa käyttäjän käsin lisäämiä. Ne siirrettiin rakenteiseen kenttään ennen
+kuin korvaussääntö otettiin käyttöön.
+
+Ks. `lib/projects/contacts.ts`, `lib/projects/additionalInfo.ts`,
+`scripts/backfill-contact-persons.ts`.
 
 ### D-100 – Hyväksynnän täsmäytys rajataan maakuntaan, ja reitille asetetaan aikaraja
 

@@ -9,6 +9,36 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-08 (tyo 22.8.)
+
+### Yhteyshenkilot omaan rakenteiseen kenttaan
+
+Kayttaja yhdisti uuden tiedotteen olemassa olevaan hankkeeseen eivatka
+kolme yhteyshenkiloa tulleet mukana - ne piti lisata kasin. Yhteystiedot
+ovat yksi kolmesta syysta joiden takia testiasiakkaat eivat jaaneet
+maksaviksi; ne kirjattiin nyt kriittiseksi tavoitteeksi
+00_PRODUCT_BLUEPRINT.md:hen, jossa niita ei ollut aiemmin lainkaan.
+
+Yhteyshenkilot poimitaan tiedotteiden tekstista kenttaan
+metadata.contact_persons, jota kayttoliittyma jo renderoi kolmessa
+paikassa. Poiminta ankkuroidaan sahkopostiin, koska muoto vaihtelee
+lahteittain taysin ja osoite on ainoa yhteinen elementti.
+
+Kaksi kenttaa kayttaytyy tarkoituksella eri tavoin: additional_info
+korvataan uusimmalla lahteella (vanhentunut teksti oli jaanyt voimaan
+ikuisiksi ajoiksi), mutta contact_persons on VAIN-LISAAVA eika siita
+poisteta koskaan mitaan. Yhdistaminen poimii vanhan tekstin kontaktit
+talteen ennen korvaamista, ja vain-lisaavyys on varmistettu testeilla.
+
+Takautuva ajo: yhteyshenkilollisia hankkeita 1 986 -> 2 773 (48 %),
+joista nimetty henkilo 690. Uusia kontakteja 1 812, yhtaan vanhaa ei
+menetetty. Naista 112 hanketta oli sellaisia joilla yhteystiedot olivat
+pelkastaan lisatietokentassa - osa kasin lisattyja.
+
+Viisi vikaa loytyi mittaamalla, joista yksi olisi ollut tuhoisa:
+yhdistaminen avaimensi pelkkaan sahkopostiin, mutta kaavalahteiden
+kontakteilla se on usein tyhja - ajo olisi pudottanut niita. (D-101)
+
 ## 2026-08 (tyo 21.8.)
 
 ### Hyvaksynta rajattu maakuntaan ja reitille asetettu aikaraja

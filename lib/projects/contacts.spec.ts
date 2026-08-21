@@ -138,3 +138,46 @@ describe("puhelinnumeron tarkistus", () => {
     expect(extractContacts("Topi Laine +358 400 792 492 topi.laine@example.fi")[0].phone).toBe("+358 400 792 492")
   })
 })
+
+describe("yhteystietoja ei koskaan poisteta", () => {
+  /*
+   * TAKUU: yhteystietokentta on vain-lisaava. Lisatietoteksti korvataan
+   * uudemmalla (ks. chooseAdditionalInfo), joten vanhasta lahteesta
+   * tulleet yhteyshenkilot saisivat kadota vain tassa - eivat saa.
+   * Yhteystiedot ovat yksi kolmesta syysta joiden takia testiasiakkaat
+   * eivat jaaneet maksaviksi.
+   */
+  it("sailyttaa jokaisen vanhan kontaktin vaikka uusia tulee", () => {
+    const vanhat: any = [
+      { name: "Vanha Yksi", email: "vanha1@x.fi", phone: "040 111 1111", title: null },
+      { name: "Vanha Kaksi", email: null, phone: "040 222 2222", title: "kaavoittaja" },
+      { name: null, email: "kirjaamo@kunta.fi", phone: null, title: null },
+    ]
+    const uudet: any = [
+      { name: "Uusi", email: "uusi@y.fi", phone: "040 333 3333", title: null, organization: null, kind: "person" },
+    ]
+    const tulos = mergeContacts(vanhat, uudet)
+    expect(tulos).toHaveLength(4)
+    for (const v of vanhat) {
+      expect(tulos.some((t) => (v.email ? t.email === v.email : t.name === v.name))).toBe(true)
+    }
+  })
+
+  it("ei koskaan lyhene", () => {
+    const vanhat: any = [
+      { name: "A", email: "a@x.fi", phone: null, title: null },
+      { name: "B", email: "b@x.fi", phone: null, title: null },
+    ]
+    expect(mergeContacts(vanhat, []).length).toBeGreaterThanOrEqual(vanhat.length)
+    expect(mergeContacts(vanhat, null).length).toBeGreaterThanOrEqual(vanhat.length)
+  })
+
+  it("taydentaa vanhan puuttuvat kentat mutta ei korvaa olemassa olevia", () => {
+    const vanhat: any = [{ name: "Matti Meikäläinen", email: "m@x.fi", phone: null, title: null }]
+    const uudet: any = [{ name: "Matti M", email: "m@x.fi", phone: "040 123 4567", title: "johtaja", organization: "x", kind: "person" }]
+    const [c] = mergeContacts(vanhat, uudet)
+    expect(c.name).toBe("Matti Meikäläinen")
+    expect(c.phone).toBe("040 123 4567")
+    expect(c.title).toBe("johtaja")
+  })
+})

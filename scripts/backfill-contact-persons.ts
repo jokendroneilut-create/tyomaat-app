@@ -43,7 +43,7 @@ async function main() {
   for (let f = 0; ; f += 1000) {
     const { data, error } = await supabase
       .from("projects")
-      .select("id,name,is_public,metadata")
+      .select("id,name,is_public,additional_info,metadata")
       .range(f, f + 999)
     if (error) throw error
     rivit.push(...(data ?? [])); if (!data || data.length < 1000) break
@@ -62,7 +62,17 @@ async function main() {
     const vanhat = Array.isArray(meta.contact_persons) ? meta.contact_persons : []
     if (vanhat.length) ennenKontaktilla++
 
-    const poimitut = extractContacts(String(meta.description ?? ""))
+    /*
+     * MOLEMMAT TEKSTIT. Kuvaus tulee lahteesta, mutta lisatietokentassa
+     * voi olla KASIN lisattyja yhteyshenkiloita joita ei ole missaan
+     * muualla - kayttaja lisasi Kouvolan yhtenaiskoulun kolme kontaktia
+     * juuri sinne. Lisatietoteksti korvataan jatkossa uudemmalla
+     * (chooseAdditionalInfo), joten ne on saatava talteen nyt.
+     */
+    const poimitut = mergeContacts(
+      extractContacts(String(meta.description ?? "")),
+      extractContacts(String(p.additional_info ?? ""))
+    )
     const uudet = mergeContacts(vanhat, poimitut)
 
     if (uudet.length) jalkeenKontaktilla++
