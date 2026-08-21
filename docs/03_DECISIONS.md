@@ -40,13 +40,34 @@ asiakirjojen sisältöä. Otsikkotasolla hanke on usein tunnistettavissa
 euromäärät jäävät saamatta. Tämä on syytä tietää ennen kuin lähdettä
 rakennetaan.
 
-**SYÖTTEEN SISÄLTÖÄ EI OLE VOITU TARKISTAA.** Sitä ei voi katsoa
-rikkomatta samaa robots-sääntöä, joka on voimassa jokaisessa mitatussa
-Tweb-asennuksessa, eikä syötteestä ole julkista dokumentaatiota. Osoite ja
-sisältö on siksi kysyttävä kirjaamolta tai avattava selaimella ihmisenä.
+**SYÖTE MITATTU 21.8.2026 — SE EI KELPAA LÄHTEEKSI.**
+`asianhallintavhp.hyvinkaa.fi/ktwebscr/pk_rssfeed.htm?toimielin=`
+(haettu kerran, kaupungin oman kirjallisen suosituksen nojalla):
 
-Avoin: syötteen osoite, kattaako se viranhaltijapäätökset (rakennusurakat
-ovat usein juuri niitä) ja montako julkaisua se sisältää.
+```
+kanava:     Pöytäkirjat
+kohteita:   50        aikajänne: 9.2.2026 - 18.8.2026 (n. 6 kk)
+kohde:      <title>   Tekninen lautakunta: 10/2026 18.8.2026 18:00
+            <link>    .../pk_asil_tweb.htm?bid=13721
+            <category>Tekninen lautakunta
+            <pubDate> Tue, 18 Aug 2026 18:00:00 GMT
+```
+
+**Syötteessä on KOKOUKSIA, ei päätöksiä.** Kohteessa ei ole asialistaa,
+otsikkoa eikä aihetta — vain toimielin, kokousnumero ja kellonaika. Sen
+selvittäminen, sisältääkö "Tekninen lautakunta 10/2026" rakennushankkeen,
+vaatii linkin avaamisen, eli täsmälleen sen sivustohaun josta kaupunki
+kieltäytyi.
+
+Volyymikin on pieni: 50 kokousta kuudelta kuukaudelta, joista teknistä
+lautakuntaa 8 ja ympäristölautakuntaa 4.
+
+Lopputulos: **syötteestä ei saa yhtään hanketietoa.** Sitä ei kannata
+rakentaa. Ainoa jäljelle jäävä toivo on erillinen
+viranhaltijapäätössyöte, jossa kohde olisi yksi päätös ja otsikko kertoisi
+aiheen — rakennusurakat ovat usein juuri viranhaltijapäätöksiä. Sen
+olemassaoloa ei voi tarkistaa polkuja arvaamalla, koska se olisi
+sivustohakua; se on kysyttävä kirjaamolta.
 
 ### D-097 – Paikallislehti ei ole löytölähde siellä missä kaupungin oma lähde on
 
