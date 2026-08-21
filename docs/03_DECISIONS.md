@@ -5,6 +5,62 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-104 – Kunnan yleinen yhteystieto vain täsmällisellä verkkotunnuksella
+
+Puutteesta (2 483 hanketta) jokaisesta tiedettiin joko osapuoli tai
+kunta — ei yhdestäkään puuttunut molempia. Jakauma oli äärimmäisen
+keskittynyt: **Helsingin kaupunki yksin 578 hanketta** eli 23 %.
+
+Houkutus oli käyttää uudelleen jo kannassa olevaa yhteystietoa. Se
+osoittautui vaaralliseksi, ja **kolme peräkkäistä yritystä kaatui omaan
+kuivaharjoitukseensa:**
+
+```
+1. "sama osapuoli -> sama yhteystieto"
+   Tampereen kaupunki -> kirjaamo.pirkanmaa@ely-keskus.fi
+   Vaylavirasto       -> kirjaamo@lvv.fi
+   -> hankkeelle tallennettu yhteystieto EI ole osapuolen yhteystieto,
+      vaan sen viranomaisen tai konsultin joka sattui olemaan tekstissa
+
+2. "kunta varalle kun osapuolelle ei loydy"
+   Atria  -> kaavoitus@seinajoki.fi
+   Google -> kirjaamo@hamina.fi
+   -> yksityisen hankkeen yhteystiedoksi tuli kunnan luukku
+
+3. "verkkotunnus sisaltaa nimen sanan"   794 vaaraa paria
+   Tampereen kaupunki -> kaavoitus@uusi[kaupunki].fi
+   SRV ja CSC         -> kirjaamo@ely-[keskus].fi
+   -> yleissana osui vaaraan tunnukseen
+```
+
+**Sääntö joka jäi voimaan.** Mekanismi rajattiin kuntiin, ja
+verkkotunnuksen on vastattava kuntaa **täsmälleen** — ei sisältymistä,
+ei etuliitteitä. Yrityksiä tämä ei kata tarkoituksella: yrityksen
+verkkotunnusta ei voi päätellä nimestä (Tampereen Tilapalvelut Oy →
+tilapa.fi).
+
+**Osoitetta ei myöskään johdeta kaavasta.** `kirjaamo@<kunnan domain>`
+näyttää turvalliselta, mutta Helsingin kirjaamo on
+`helsinki.kirjaamo@hel.fi` — `kirjaamo@hel.fi` ei ole olemassa. Yksi
+arvattu osoite olisi mennyt 578 hankkeelle. Osoitteet haetaan siksi
+kunnan omalta sivulta (`scripts/mine-municipality-contacts.ts`), ja
+todiste on kaksinkertainen: osoite esiintyy kunnan omalla sivulla JA
+sen verkkotunnus vastaa kuntaa. Tulos on versioitu lähdeviitteineen
+(`lib/projects/municipalityContacts.ts`, 93 kuntaa).
+
+**Tulos:** kattavuus 3 222 → 4 649 eli **56,5 % → 81,5 %**, puute
+2 483 → 1 056.
+
+**Rajoitus on tiedostettu.** Nämä ovat kirjaamoja, eivät nimettyjä
+henkilöitä — nimettyjen määrä ei noussut lainkaan (1 145, 20,1 %).
+Sama vastalause kuin [D-102]:ssa pätee: viranomaislaatikko ei ole
+myyntikontakti. Ne merkitään aina `kind: "organization"`, jolloin
+käyttöliittymä näyttää henkilöt ensin ja mittarit erottavat ne.
+Tavoite "vähintään yksi yhteystieto" täyttyy, tavoite "kenelle
+soittaa" ei — se on eri työ.
+
+---
+
 ### D-103 – Väyläviraston yhteystiedon esti hakukatto, ei poiminta
 
 157 asiakkaille näkyvää Väylävirasto-hanketta oli ilman yhteyshenkilöä.

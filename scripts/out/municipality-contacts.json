@@ -1,0 +1,467 @@
+{
+  "Helsinki": {
+    "email": "helsinki.kirjaamo@hel.fi",
+    "source": "https://www.hel.fi/kirjaamo",
+    "projects": 579
+  },
+  "Espoo": {
+    "email": "kirjaamo@espoo.fi",
+    "source": "https://www.espoo.fi/kirjaamo",
+    "projects": 36
+  },
+  "Kirkkonummi": {
+    "email": "kirjaamo@kirkkonummi.fi",
+    "source": "https://www.kirkkonummi.fi",
+    "projects": 36
+  },
+  "Kouvola": {
+    "email": "kirjaamo@kouvola.fi",
+    "source": "https://www.kouvola.fi/fi/hallinto-ja-talous/kirjaamo",
+    "projects": 34
+  },
+  "Jämsä": {
+    "email": "kirjaamo@jamsa.fi",
+    "source": "https://www.jamsa.fi",
+    "projects": 25
+  },
+  "Tuusula": {
+    "email": "kirjaamo@tuusula.fi",
+    "source": "https://www.tuusula.fi",
+    "projects": 24
+  },
+  "Vantaa": {
+    "email": "kirjaamo@vantaa.fi",
+    "source": "https://www.vantaa.fi/fi/yhteystiedot",
+    "projects": 22
+  },
+  "Äänekoski": {
+    "email": "kirjaamo@aanekoski.fi",
+    "source": "https://www.aanekoski.fi",
+    "projects": 21
+  },
+  "Kotka": {
+    "email": "kirjaamo@kotka.fi",
+    "source": "https://www.kotka.fi",
+    "projects": 20
+  },
+  "Rovaniemi": {
+    "email": "kirjaamo@rovaniemi.fi",
+    "source": "https://www.rovaniemi.fi",
+    "projects": 19
+  },
+  "Sipoo": {
+    "email": "kirjaamo@sipoo.fi",
+    "source": "https://www.sipoo.fi/fi/yhteystiedot",
+    "projects": 18
+  },
+  "Kuopio": {
+    "email": "kirjaamo@kuopio.fi",
+    "source": "https://www.kuopio.fi",
+    "projects": 16
+  },
+  "Hanko": {
+    "email": "kirjaamo@hanko.fi",
+    "source": "https://www.hanko.fi",
+    "projects": 14
+  },
+  "Sysmä": {
+    "email": "kirjaamo@sysma.fi",
+    "source": "https://www.sysma.fi",
+    "projects": 12
+  },
+  "Säkylä": {
+    "email": "kirjaamo@sakyla.fi",
+    "source": "https://www.sakyla.fi",
+    "projects": 12
+  },
+  "Pudasjärvi": {
+    "email": "asiakaspalvelu@pudasjarvi.fi",
+    "source": "https://www.pudasjarvi.fi",
+    "projects": 11
+  },
+  "Eura": {
+    "email": "kirjaamo@eura.fi",
+    "source": "https://www.eura.fi",
+    "projects": 11
+  },
+  "Karkkila": {
+    "email": "kirjaamo@karkkila.fi",
+    "source": "https://www.karkkila.fi",
+    "projects": 10
+  },
+  "Vehmaa": {
+    "email": "kirjaamo@vehmaa.fi",
+    "source": "https://www.vehmaa.fi",
+    "projects": 9
+  },
+  "Pirkkala": {
+    "email": "kirjaamo@pirkkala.fi",
+    "source": "https://www.pirkkala.fi",
+    "projects": 8
+  },
+  "Haapavesi": {
+    "email": "neuvonta@haapavesi.fi",
+    "source": "https://www.haapavesi.fi",
+    "projects": 7
+  },
+  "Savonlinna": {
+    "email": "kirjaamo@savonlinna.fi",
+    "source": "https://www.savonlinna.fi",
+    "projects": 7
+  },
+  "Naantali": {
+    "email": "kirjaamo@naantali.fi",
+    "source": "https://www.naantali.fi",
+    "projects": 6
+  },
+  "Tammela": {
+    "email": "kirjaamo@tammela.fi",
+    "source": "https://www.tammela.fi/yhteystiedot",
+    "projects": 6
+  },
+  "Kolari": {
+    "email": "kirjaamo@kolari.fi",
+    "source": "https://www.kolari.fi",
+    "projects": 6
+  },
+  "Rauma": {
+    "email": "kirjaamo@rauma.fi",
+    "source": "https://www.rauma.fi",
+    "projects": 6
+  },
+  "Järvenpää": {
+    "email": "kirjaamo@jarvenpaa.fi",
+    "source": "https://www.jarvenpaa.fi/yhteystiedot",
+    "projects": 6
+  },
+  "Muhos": {
+    "email": "kirjaamo@muhos.fi",
+    "source": "https://www.muhos.fi",
+    "projects": 6
+  },
+  "Tohmajärvi": {
+    "email": "kirjaamo@tohmajarvi.fi",
+    "source": "https://www.tohmajarvi.fi",
+    "projects": 5
+  },
+  "Suonenjoki": {
+    "email": "kirjaamo@suonenjoki.fi",
+    "source": "https://www.suonenjoki.fi/fi/yhteystiedot",
+    "projects": 5
+  },
+  "Vaala": {
+    "email": "kirjaamo@vaala.fi",
+    "source": "https://www.vaala.fi",
+    "projects": 5
+  },
+  "Ylivieska": {
+    "email": "kirjaamo@ylivieska.fi",
+    "source": "https://www.ylivieska.fi/kirjaamo",
+    "projects": 4
+  },
+  "Joutsa": {
+    "email": "kirjaamo@joutsa.fi",
+    "source": "https://www.joutsa.fi/fi/yhteystiedot",
+    "projects": 4
+  },
+  "Kuhmo": {
+    "email": "kirjaamo@kuhmo.fi",
+    "source": "https://www.kuhmo.fi",
+    "projects": 4
+  },
+  "Saarijärvi": {
+    "email": "kirjaamo@saarijarvi.fi",
+    "source": "https://www.saarijarvi.fi",
+    "projects": 3
+  },
+  "Mikkeli": {
+    "email": "kirjaamo@mikkeli.fi",
+    "source": "https://www.mikkeli.fi",
+    "projects": 3
+  },
+  "Hyvinkää": {
+    "email": "kirjaamo@hyvinkaa.fi",
+    "source": "https://www.hyvinkaa.fi",
+    "projects": 3
+  },
+  "Loimaa": {
+    "email": "kirjaamo@loimaa.fi",
+    "source": "https://www.loimaa.fi",
+    "projects": 3
+  },
+  "Ylöjärvi": {
+    "email": "kirjaamo@ylojarvi.fi",
+    "source": "https://www.ylojarvi.fi",
+    "projects": 3
+  },
+  "Kurikka": {
+    "email": "kirjaamo@kurikka.fi",
+    "source": "https://www.kurikka.fi/fi/yhteystiedot",
+    "projects": 3
+  },
+  "Joensuu": {
+    "email": "kirjaamo@joensuu.fi",
+    "source": "https://www.joensuu.fi/yhteystiedot",
+    "projects": 3
+  },
+  "Sotkamo": {
+    "email": "kirjaamo@sotkamo.fi",
+    "source": "https://www.sotkamo.fi",
+    "projects": 3
+  },
+  "Pori": {
+    "email": "kirjaamo@pori.fi",
+    "source": "https://www.pori.fi",
+    "projects": 3
+  },
+  "Kärkölä": {
+    "email": "kirjaamo@karkola.fi",
+    "source": "https://www.karkola.fi",
+    "projects": 3
+  },
+  "Asikkala": {
+    "email": "kirjaamo@asikkala.fi",
+    "source": "https://www.asikkala.fi",
+    "projects": 3
+  },
+  "Ulvila": {
+    "email": "kirjaamo@ulvila.fi",
+    "source": "https://www.ulvila.fi",
+    "projects": 3
+  },
+  "Forssa": {
+    "email": "kirjaamo@forssa.fi",
+    "source": "https://www.forssa.fi",
+    "projects": 3
+  },
+  "Nakkila": {
+    "email": "kirjaamo@nakkila.fi",
+    "source": "https://www.nakkila.fi",
+    "projects": 3
+  },
+  "Sodankylä": {
+    "email": "kirjaamo@sodankyla.fi",
+    "source": "https://www.sodankyla.fi",
+    "projects": 3
+  },
+  "Lemi": {
+    "email": "rakennusvalvonta@lemi.fi",
+    "source": "https://www.lemi.fi/fi/yhteystiedot",
+    "projects": 3
+  },
+  "Lappeenranta": {
+    "email": "kirjaamo@lappeenranta.fi",
+    "source": "https://www.lappeenranta.fi/yhteystiedot",
+    "projects": 2
+  },
+  "Hattula": {
+    "email": "kirjaamo@hattula.fi",
+    "source": "https://www.hattula.fi",
+    "projects": 2
+  },
+  "Salo": {
+    "email": "kirjaamo@salo.fi",
+    "source": "https://www.salo.fi",
+    "projects": 2
+  },
+  "Orimattila": {
+    "email": "kirjaamo@orimattila.fi",
+    "source": "https://www.orimattila.fi",
+    "projects": 2
+  },
+  "Kokkola": {
+    "email": "asiakaspalvelu@kokkola.fi",
+    "source": "https://www.kokkola.fi/fi/yhteystiedot",
+    "projects": 2
+  },
+  "Tornio": {
+    "email": "kirjaamo@tornio.fi",
+    "source": "https://www.tornio.fi",
+    "projects": 2
+  },
+  "Taipalsaari": {
+    "email": "kirjaamo@taipalsaari.fi",
+    "source": "https://www.taipalsaari.fi",
+    "projects": 2
+  },
+  "Kajaani": {
+    "email": "neuvonta@kajaani.fi",
+    "source": "https://www.kajaani.fi",
+    "projects": 2
+  },
+  "Hollola": {
+    "email": "kirjaamo@hollola.fi",
+    "source": "https://www.hollola.fi",
+    "projects": 2
+  },
+  "Salla": {
+    "email": "kirjaamo@salla.fi",
+    "source": "https://www.salla.fi",
+    "projects": 2
+  },
+  "Muurame": {
+    "email": "kirjaamo@muurame.fi",
+    "source": "https://www.muurame.fi",
+    "projects": 2
+  },
+  "Vaasa": {
+    "email": "kirjaamo@vaasa.fi",
+    "source": "https://www.vaasa.fi/fi/hallinto-ja-talous/kirjaamo",
+    "projects": 1
+  },
+  "Kitee": {
+    "email": "tekninen.kirjaamo@kitee.fi",
+    "source": "https://www.kitee.fi",
+    "projects": 1
+  },
+  "Raisio": {
+    "email": "kirjaamo@raisio.fi",
+    "source": "https://www.raisio.fi",
+    "projects": 1
+  },
+  "Kaarina": {
+    "email": "kirjaamo@kaarina.fi",
+    "source": "https://www.kaarina.fi",
+    "projects": 1
+  },
+  "Lahti": {
+    "email": "kirjaamo@lahti.fi",
+    "source": "https://www.lahti.fi/fi/hallinto-ja-talous/kirjaamo",
+    "projects": 1
+  },
+  "Kempele": {
+    "email": "kirjaamo@kempele.fi",
+    "source": "https://www.kempele.fi",
+    "projects": 1
+  },
+  "Pello": {
+    "email": "kirjaamo@pello.fi",
+    "source": "https://www.pello.fi",
+    "projects": 1
+  },
+  "Enontekiö": {
+    "email": "kirjaamo@enontekio.fi",
+    "source": "https://www.enontekio.fi",
+    "projects": 1
+  },
+  "Merikarvia": {
+    "email": "kirjaamo@merikarvia.fi",
+    "source": "https://www.merikarvia.fi",
+    "projects": 1
+  },
+  "Janakkala": {
+    "email": "kirjaamo@janakkala.fi",
+    "source": "https://www.janakkala.fi",
+    "projects": 1
+  },
+  "Kalajoki": {
+    "email": "kirjaamo@kalajoki.fi",
+    "source": "https://www.kalajoki.fi",
+    "projects": 1
+  },
+  "Orivesi": {
+    "email": "kirjaamo@orivesi.fi",
+    "source": "https://www.orivesi.fi",
+    "projects": 1
+  },
+  "Kyyjärvi": {
+    "email": "kirjaamo@kyyjarvi.fi",
+    "source": "https://www.kyyjarvi.fi",
+    "projects": 1
+  },
+  "Lieto": {
+    "email": "kirjaamo@lieto.fi",
+    "source": "https://www.lieto.fi/fi/yhteystiedot",
+    "projects": 1
+  },
+  "Pieksämäki": {
+    "email": "kirjaamo@pieksamaki.fi",
+    "source": "https://www.pieksamaki.fi",
+    "projects": 1
+  },
+  "Perho": {
+    "email": "info@perho.fi",
+    "source": "https://www.perho.fi",
+    "projects": 1
+  },
+  "Muonio": {
+    "email": "kirjaamo@muonio.fi",
+    "source": "https://www.muonio.fi",
+    "projects": 1
+  },
+  "Kontiolahti": {
+    "email": "kirjaamo@kontiolahti.fi",
+    "source": "https://www.kontiolahti.fi",
+    "projects": 1
+  },
+  "Kemijärvi": {
+    "email": "kirjaamo@kemijarvi.fi",
+    "source": "https://www.kemijarvi.fi/fi/hallinto-ja-talous/kirjaamo",
+    "projects": 1
+  },
+  "Ilmajoki": {
+    "email": "kirjaamo@ilmajoki.fi",
+    "source": "https://www.ilmajoki.fi/fi/yhteystiedot",
+    "projects": 1
+  },
+  "Ruokolahti": {
+    "email": "kirjaamo@ruokolahti.fi",
+    "source": "https://www.ruokolahti.fi",
+    "projects": 1
+  },
+  "Ylitornio": {
+    "email": "kirjaamo@ylitornio.fi",
+    "source": "https://www.ylitornio.fi",
+    "projects": 1
+  },
+  "Varkaus": {
+    "email": "kirjaamo@varkaus.fi",
+    "source": "https://www.varkaus.fi",
+    "projects": 1
+  },
+  "Kangasala": {
+    "email": "kirjaamo@kangasala.fi",
+    "source": "https://www.kangasala.fi",
+    "projects": 1
+  },
+  "Iisalmi": {
+    "email": "kirjaamo@iisalmi.fi",
+    "source": "https://www.iisalmi.fi",
+    "projects": 1
+  },
+  "Kiuruvesi": {
+    "email": "kirjaamo@kiuruvesi.fi",
+    "source": "https://www.kiuruvesi.fi",
+    "projects": 1
+  },
+  "Heinola": {
+    "email": "kirjaamo@heinola.fi",
+    "source": "https://www.heinola.fi",
+    "projects": 1
+  },
+  "Karstula": {
+    "email": "kirjaamo@karstula.fi",
+    "source": "https://www.karstula.fi",
+    "projects": 1
+  },
+  "Padasjoki": {
+    "email": "kirjaamo@padasjoki.fi",
+    "source": "https://www.padasjoki.fi/yhteystiedot",
+    "projects": 1
+  },
+  "Tervola": {
+    "email": "info@tervola.fi",
+    "source": "https://www.tervola.fi",
+    "projects": 1
+  },
+  "Kauhajoki": {
+    "email": "kirjaamo@kauhajoki.fi",
+    "source": "https://www.kauhajoki.fi",
+    "projects": 1
+  },
+  "Petäjävesi": {
+    "email": "kirjaamo@petajavesi.fi",
+    "source": "https://www.petajavesi.fi/fi/yhteystiedot",
+    "projects": 1
+  }
+}

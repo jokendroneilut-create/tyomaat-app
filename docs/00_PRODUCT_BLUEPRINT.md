@@ -31,7 +31,7 @@ siksi ne ovat tässä dokumentissa eivätkä muistiinpanoissa.
 |---|---|---|
 | hankkeita | hankkeita kannassa | 5 752, kasvu ~150–250 / viikko |
 | ajoitus | varhaisin vaihe jossa hanke näkyy | kaava ja rakennuslupa ovat käytössä; ks. D-096 (Lupapisteen PDF paljasti datakeskuksen jota rajapinta ei kertonut) |
-| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **3 222 / 5 705 (56,5 %)** — ks. tavoite alla |
+| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **4 649 / 5 705 (81,5 %)** — ks. tavoite alla |
 
 **TAVOITE: jokaisella asiakkaalle näkyvällä hankkeella on vähintään yksi
 yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
@@ -40,11 +40,11 @@ yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
 
 ```
 asiakkaille näkyviä hankkeita          5 705
-  ainakin yksi yhteystieto             3 222   56,5 %
-  tavoitettava (sposti tai puhelin)    3 066   53,7 %
+  ainakin yksi yhteystieto             4 649   81,5 %
+  tavoitettava (sposti tai puhelin)    4 493   78,8 %
   nimetty henkilö                      1 145   20,1 %
 
-  EI YHTÄÄN YHTEYSTIETOA               2 483   43,5 %
+  EI YHTÄÄN YHTEYSTIETOA               1 056   18,5 %
 ```
 
 *Kehitys 22.8.2026:*
@@ -55,7 +55,8 @@ asiakkaille näkyviä hankkeita          5 705
 | sähköpostiankkuri tiedotteista | 2 756 (48,3 %) | 682 |
 | peitetyt osoitteet + puhelinankkuri | 2 941 (51,6 %) | 939 |
 | Hilman ilmoitusten osapuolet | 3 099 (54,3 %) | 1 022 |
-| Väyläviraston projektipäälliköt (D-103) | **3 222 (56,5 %)** | **1 145** |
+| Väyläviraston projektipäälliköt (D-103) | 3 222 (56,5 %) | 1 145 |
+| kuntien yleiset yhteystiedot (D-104) | **4 649 (81,5 %)** | 1 145 |
 
 Nimettyjen henkilöiden määrä nousi 682 → 1 145 eli **+68 %** — se on
 myyjälle arvokkain luku, koska nimetty henkilö on ainoa jolle voi soittaa.
@@ -74,13 +75,17 @@ Puutteesta valtaosa on lähteitä joissa yhteystietoa ei ole tekstissä
 lainkaan (jakauma mitattu ennen viimeisintä ajoa):
 
 ```
-  528  21 %  käsin luodut
-  512  21 %  helsinki_paatokset
-  189   8 %  Hilma
-  119   5 %  Tampereen vireillä olevat kaavat
-  110   4 %  Lupapiste kuulutukset
-   35   1 %  Väylävirasto  (oli 158 ennen D-103:a)
+  459  43 %  käsin luodut
+  123  12 %  Hilma
+   48   5 %  yva
+   35   3 %  Väylävirasto
+   33   3 %  Senaatti-kiinteistöt
 ```
+
+Kunnalliset lähteet (helsinki_paatokset 512, Tampere 119, Lupapiste
+110) katosivat listalta kokonaan D-104:n myötä. Jäljellä oleva puute on
+luonteeltaan toinen: käsin luodut hankkeet ja yksityiset toimijat,
+joille kuntarekisteri ei päde.
 
 Kahdesta luvusta näkee mihin työ kannattaa kohdistaa:
 
