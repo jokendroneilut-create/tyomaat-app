@@ -2,6 +2,7 @@ import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { inferMunicipalityFromText } from "@/lib/geo/inferMunicipalityFromText"
+import { normalizeVaylaContact } from "@/lib/agent/vaylaContacts"
 
 function findFact(facts: any[], type: string) {
   return facts.find((fact) => fact.fact_type === type)
@@ -47,16 +48,13 @@ export async function resolveVaylaProject({
     title: operation,
   })
 
-  const contactPersons = contact?.name
-    ? [
-        {
-          name: contact.name,
-          title: contact.title ?? contact.organization,
-          phone: contact.phone,
-          email: contact.email,
-        },
-      ]
-    : []
+  /*
+   * Poimittu lohko EI KELPAA SELLAISENAAN. Sivulla lukee lähes aina
+   * malliosoite "etunimi.sukunimi@vayla.fi", ja nimikentässä on välillä
+   * ohje eikä henkilöä ("Kts. osahankkeiden yhteystiedot"). Siivous on
+   * `vaylaContacts`-moduulissa, koska takautuva ajo tarvitsee samaa.
+   */
+  const contactPersons = normalizeVaylaContact(contact)
 
   const fullDescription = [
     description,

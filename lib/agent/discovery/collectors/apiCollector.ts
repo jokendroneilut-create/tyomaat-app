@@ -1379,7 +1379,25 @@ async function collectKreateSource(source: DiscoverySource) {
 }
 
 const VAYLA_PAGES_PER_RUN = 2
-const VAYLA_MAX_DETAIL_FETCHES_PER_RUN = 5
+
+/*
+ * Yksi listaussivu on 15 hanketta, joten kahden sivun kierroksella tulee
+ * enintään 30 kohdetta — katto nostettiin viidestä siihen, jotta JOKAINEN
+ * kierroksella nähty hanke saa yhteystietonsa.
+ *
+ * Mitattu 22.8.2026: viiden katolla vain 36/188 dokumenttia oli koskaan
+ * saanut detaljihaun, ja 157 asiakkaille näkyvää hanketta oli siksi ilman
+ * yhteyshenkilöä — vaikka poiminta oli ollut olemassa alusta asti.
+ * Detaljit tallennetaan, joten vakaassa tilassa hakuja tulee vain uusista.
+ */
+const VAYLA_MAX_DETAIL_FETCHES_PER_RUN = 30
+
+/*
+ * Yhteystiedoton sivu tarkistetaan uudelleen kuukauden päästä: hanke voi
+ * saada projektipäällikön vasta myöhemmin. Ilman tätä ikkunaa
+ * yhteystiedottomat sivut haettaisiin joka yö uudelleen ikuisesti.
+ */
+const VAYLA_DETAIL_RECHECK_DAYS = 30
 const VAYLA_LISTING_BASE =
   "https://vayla.fi/suunnittelu-rakentaminen/-/project/c/35402106-35402107"
 
@@ -1524,13 +1542,27 @@ async function collectVaylaSource(source: DiscoverySource) {
     .select("document_url, raw_payload")
     .eq("source_id", source.id)
 
+  const recheckBefore = Date.now() - VAYLA_DETAIL_RECHECK_DAYS * 86400000
+
   const knownDetails = new Map<string, { contact: any; progress: string | null }>()
   for (const row of existingRows ?? []) {
-    if (row.raw_payload?.contact || row.raw_payload?.progress) {
+    const payload = row.raw_payload ?? {}
+    if (payload.contact || payload.progress) {
       knownDetails.set(row.document_url, {
-        contact: row.raw_payload.contact ?? null,
-        progress: row.raw_payload.progress ?? null,
+        contact: payload.contact ?? null,
+        progress: payload.progress ?? null,
       })
+      continue
+    }
+
+    /*
+     * Tyhjäkin haku on tulos: ilman sen muistamista sivu, jolla ei ole
+     * yhteystietoa, haettaisiin uudelleen joka ajossa ja söisi katon
+     * niiltä joilla tieto on.
+     */
+    const checkedAt = Date.parse(String(payload.contact_checked_at ?? ""))
+    if (Number.isFinite(checkedAt) && checkedAt > recheckBefore) {
+      knownDetails.set(row.document_url, { contact: null, progress: null })
     }
   }
 
@@ -1546,16 +1578,17 @@ async function collectVaylaSource(source: DiscoverySource) {
     let progress = known?.progress ?? null
     let detailsAttempted = Boolean(known)
 
+    let checkedNow = false
+
     if (!detailsAttempted && detailFetches < VAYLA_MAX_DETAIL_FETCHES_PER_RUN) {
       const details = await fetchVaylaProjectDetails(item.link)
       contact = details.contact
       progress = details.progress
       detailFetches += 1
+      checkedNow = true
       detailsAttempted = Boolean(details.contact || details.progress)
 
-      if (detailsAttempted) {
-        inRunDetails.set(item.link, { contact, progress })
-      }
+      inRunDetails.set(item.link, { contact, progress })
     }
 
     const rawText = JSON.stringify(item)
@@ -1582,6 +1615,7 @@ async function collectVaylaSource(source: DiscoverySource) {
             region: item.region,
             phase: item.phase,
             ...(detailsAttempted ? { contact, progress } : {}),
+            ...(checkedNow ? { contact_checked_at: new Date().toISOString() } : {}),
             original: item,
           },
           processed_at: new Date().toISOString(),

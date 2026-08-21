@@ -5,6 +5,72 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-103 – Väyläviraston yhteystiedon esti hakukatto, ei poiminta
+
+157 asiakkaille näkyvää Väylävirasto-hanketta oli ilman yhteyshenkilöä.
+Oletus oli, että sivuilta pitäisi poimia jotain uutta. Mittaus osoitti
+päinvastaista: **poiminta oli ollut olemassa alusta asti.**
+`fetchVaylaProjectDetails()` lukee hankesivun `.contact-information`
+-lohkon (organisaatio, nimike, nimi, puhelin, Cloudflare-suojattu
+sähköposti) ja `vaylaResolver` kirjoittaa sen `contact_persons`-kenttään.
+
+Pullonkaula oli yksi vakio:
+
+```
+VAYLA_MAX_DETAIL_FETCHES_PER_RUN = 5     ← katalogissa ~390 hanketta
+36 / 188 dokumenttia oli koskaan saanut detaljihaun   (19 %)
+ja jokainen niistä 36:sta tuotti nimen
+```
+
+Katto nostettiin 30:een (= 2 listaussivua × 15 hanketta, eli jokainen
+kierroksella nähty hanke). Lisäksi tyhjä haku muistetaan
+(`contact_checked_at`) ja uusitaan vasta 30 pv päästä — ilman sitä
+yhteystiedottomat sivut söisivät katon joka ajossa uudelleen.
+
+**Takautuva ajo:** 125/159 (79 %) sai yhteyshenkilön — nimi, nimike ja
+suora puhelin, tyypillisesti hankkeen projektipäällikkö. Kattavuus
+3 099 → 3 222 (54,3 % → 56,5 %), nimettyjä henkilöitä 1 022 → 1 145.
+
+**Kaksi ansaa, jotka kuivaharjoitus paljasti.** Poimittu lohko ei kelpaa
+sellaisenaan, joten siivous on omassa moduulissaan
+(`lib/agent/vaylaContacts.ts`):
+
+1. **Sähköposti on lähes aina malli.** Sivulla lukee
+   `etunimi.sukunimi@vayla.fi`. Cloudflare-purku onnistuu, mutta osoite
+   on muotoilu — ei kenenkään osoite. Se laajennetaan nimen perusteella
+   (`Kari Partiainen` → `kari.partiainen@vayla.fi`), koska malli on
+   organisaation oma ilmoitus osoitteidensa muodosta. **Tunnistamaton
+   malli hylätään:** sivulla oli kirjoitusvirhe `etunimi.sukuni@vayla.fi`,
+   ja ensimmäinen versio olisi tallentanut sen sellaisenaan.
+
+2. **Nimikentässä ei aina ole henkilöä:** `Kts. osahankkeiden
+   yhteystiedot`, `Yhteydenotot Palauteväylän kautta (palautevayla.fi)`.
+
+**Sivulöydös — sama vika oli tuotannossa laajemmin.** 376 yhteyshenkilöä
+21 lähteessä oli tallennettu malliosoitteella, eli asiakkaille näytettiin
+osoitetta `etunimi.sukunimi@rovaniemi.fi` oikeana. Ne tyhjennettiin
+(nimi, nimike ja puhelin säilyivät aina — [D-101]).
+
+**Miksi laajennus tehdään VAIN Väylälle.** Kuivaharjoitus kaikkiin
+lähteisiin tuotti 325 osoitetta, joista luettuna liian moni oli väärä:
+
+```
+Venna Oy               -> venna.oy@suomisenmaito.fi        yritys
+Honkamaan Tuulivoima   -> honkamaan.tuulivoima@fortum.com  yritys
+Finland Oy             -> finland.oy@wsp.com               katkelma "WSP Finland Oy"
+Valmistelija Sahlakari -> valmistelija.sahlakari@tuusula.fi  nimike + sukunimi
+Airi Määtt             -> airi.maatt@lvv.fi                katkennut sukunimi
+Fornamn Efternamn      -> fornamn.efternamn@korsnas.fi     malli myös nimenä
+```
+
+Väylän nimi tulee sivun rakenteisesta `.full-name`-kentästä; muualla se
+on poimittu vapaasta tekstistä. Katkennutta sukunimeä ei voi koneellisesti
+havaita, ja väärä osoite on käyttäjälle pahempi kuin puuttuva — hän luulee
+lähettäneensä viestin. **Avoin:** ~300 osoitetta olisi palautettavissa,
+jos nimenpoimintaa kovennetaan; se on oma mitattava työnsä.
+
+---
+
 ### D-102 – Lupapisteen päätös-PDF:stä ei poimita yhteystietoja
 
 Lupapisteen 110 näkyvästä hankkeesta yksikään ei ollut saanut

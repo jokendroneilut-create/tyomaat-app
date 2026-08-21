@@ -31,7 +31,7 @@ siksi ne ovat tässä dokumentissa eivätkä muistiinpanoissa.
 |---|---|---|
 | hankkeita | hankkeita kannassa | 5 752, kasvu ~150–250 / viikko |
 | ajoitus | varhaisin vaihe jossa hanke näkyy | kaava ja rakennuslupa ovat käytössä; ks. D-096 (Lupapisteen PDF paljasti datakeskuksen jota rajapinta ei kertonut) |
-| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **3 099 / 5 705 (54,3 %)** — ks. tavoite alla |
+| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **3 222 / 5 705 (56,5 %)** — ks. tavoite alla |
 
 **TAVOITE: jokaisella asiakkaalle näkyvällä hankkeella on vähintään yksi
 yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
@@ -40,11 +40,11 @@ yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
 
 ```
 asiakkaille näkyviä hankkeita          5 705
-  ainakin yksi yhteystieto             3 099   54,3 %
-  tavoitettava (sposti tai puhelin)    2 956   51,8 %
-  nimetty henkilö                      1 022   17,9 %
+  ainakin yksi yhteystieto             3 222   56,5 %
+  tavoitettava (sposti tai puhelin)    3 066   53,7 %
+  nimetty henkilö                      1 145   20,1 %
 
-  EI YHTÄÄN YHTEYSTIETOA               2 606   45,7 %
+  EI YHTÄÄN YHTEYSTIETOA               2 483   43,5 %
 ```
 
 *Kehitys 22.8.2026:*
@@ -54,27 +54,39 @@ asiakkaille näkyviä hankkeita          5 705
 | lähtötilanne | 1 986 (34,8 %) | – |
 | sähköpostiankkuri tiedotteista | 2 756 (48,3 %) | 682 |
 | peitetyt osoitteet + puhelinankkuri | 2 941 (51,6 %) | 939 |
-| Hilman ilmoitusten osapuolet | **3 099 (54,3 %)** | **1 022** |
+| Hilman ilmoitusten osapuolet | 3 099 (54,3 %) | 1 022 |
+| Väyläviraston projektipäälliköt (D-103) | **3 222 (56,5 %)** | **1 145** |
 
-Nimettyjen henkilöiden määrä nousi 682 → 1 022 eli **+50 %** — se on
+Nimettyjen henkilöiden määrä nousi 682 → 1 145 eli **+68 %** — se on
 myyjälle arvokkain luku, koska nimetty henkilö on ainoa jolle voi soittaa.
+
+**Huomaa:** yhteystiedon lisääminen jälkikäteen EI tiedota asiakkaalle.
+Hakuvahdin muutosseuranta lukee `project_changes`-taulua, jonka kirjoittaa
+tietokantaliipaisin `log_project_changes()` — ja se seuraa vain
+**sarakkeita**, kun taas `contact_persons` on `metadata`-kentän sisällä.
+Mitattu 22.8.2026: 36 tunnin aikana 151 muutosriviä (location, name, city,
+phase, developer, region, property_type, builder, additional_info) ja
+**nolla riviä metadatasta** — vaikka samaan aikaan päivitettiin yli 1 400
+hankkeen metadata. Takautuvat yhteystiedot eivät siis ole tavoittaneet
+ketään; korjaus vaatii liipaisimen muutoksen.
 
 Puutteesta valtaosa on lähteitä joissa yhteystietoa ei ole tekstissä
 lainkaan (jakauma mitattu ennen viimeisintä ajoa):
 
 ```
-  563  19 %  käsin luodut
-  515  17 %  helsinki_paatokset
-  351  12 %  Hilma
-  158   5 %  Väylävirasto
+  528  21 %  käsin luodut
+  512  21 %  helsinki_paatokset
+  189   8 %  Hilma
+  119   5 %  Tampereen vireillä olevat kaavat
   110   4 %  Lupapiste kuulutukset
+   35   1 %  Väylävirasto  (oli 158 ennen D-103:a)
 ```
 
 Kahdesta luvusta näkee mihin työ kannattaa kohdistaa:
 
 - **222 hanketta** on ilman kuvausta ja lisätietoja — niistä ei voi poimia
   mitään, vaan tieto on haettava lähteestä uudelleen tai lisättävä käsin.
-- **1 863 hankkeella osapuoli on tiedossa** (rakennuttaja tai urakoitsija)
+- **1 430 hankkeella osapuoli on tiedossa** (rakennuttaja tai urakoitsija)
   mutta henkilö ei. Näille yrityskohtainen yhteystieto olisi parempi kuin
   ei mitään.
 
