@@ -19,26 +19,50 @@ const supabaseAdmin = createClient(
 const NOT_IGNORED =
   "metadata->>recommended_action.neq.ignore,metadata->>recommended_action.is.null"
 
+/*
+ * YHTEENVETO EI SAA KAATAA KATSELMOINTIJONOA.
+ *
+ * Nämä luvut ovat sivun yläreunan koriste; varsinainen työ on jonossa sen
+ * alla. Aiemmin jokainen laskuri teki `throw error`, ja koska /tic hakee
+ * kaiken yhdellä Promise.all:lla, YKSI epäonnistunut laskuri palautti koko
+ * sivulle 500:n — myös jonolle.
+ *
+ * Mitattu 21.8.2026: hyväksyntä lukee kaikki 5 737 hanketta läpi (9,9 s) ja
+ * ajaa täsmäytyksen niitä vasten (3,3 s), ja hyväksynnän jälkeen /tic
+ * ladataan uudelleen. Kuormapiikki osuu siis juuri silloin kun laskurit
+ * ajetaan, joten ohimenevä virhe on odotettavissa eikä poikkeus.
+ *
+ * Virheen sattuessa palautetaan null, jonka käyttöliittymä näyttää
+ * viivana. Puuttuva luku on haitaton, kaatunut sivu ei.
+ */
 async function countNewCandidates(
   build: (q: any) => any
-): Promise<number> {
-  const base = supabaseAdmin
-    .from("potential_projects")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "new")
+): Promise<number | null> {
+  try {
+    const base = supabaseAdmin
+      .from("potential_projects")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "new")
 
-  const { count, error } = await build(base)
-  if (error) throw error
-  return count ?? 0
+    const { count, error } = await build(base)
+    if (error) {
+      console.error("TIC-yhteenvedon laskuri epäonnistui:", error.message)
+      return null
+    }
+    return count ?? 0
+  } catch (err: any) {
+    console.error("TIC-yhteenvedon laskuri kaatui:", err?.message ?? err)
+    return null
+  }
 }
 
 export type TicDailySummaryData = {
-  needsReview: number
-  highPriority: number
-  tenders: number
-  zoning: number
-  ignored: number
-  failedSources: number
+  needsReview: number | null
+  highPriority: number | null
+  tenders: number | null
+  zoning: number | null
+  ignored: number | null
+  failedSources: number | null
 }
 
 export async function getTicDailySummary(): Promise<TicDailySummaryData> {
@@ -71,28 +95,46 @@ export async function getTicDailySummary(): Promise<TicDailySummaryData> {
       // resolvePotentialProject), joten näytetään tuoreena lukuna eikä kaikkien
       // aikojen kertymänä, joka ei koskaan tyhjentynyt.
       (async () => {
-        const since = new Date(
-          Date.now() - 24 * 60 * 60 * 1000
-        ).toISOString()
-        const { count, error } = await supabaseAdmin
-          .from("potential_projects")
-          .select("*", { count: "exact", head: true })
-          .eq("metadata->>recommended_action", "ignore")
-          .gte("created_at", since)
-        if (error) throw error
-        return count ?? 0
+        try {
+          const since = new Date(
+            Date.now() - 24 * 60 * 60 * 1000
+          ).toISOString()
+          const { count, error } = await supabaseAdmin
+            .from("potential_projects")
+            .select("*", { count: "exact", head: true })
+            .eq("metadata->>recommended_action", "ignore")
+            .gte("created_at", since)
+          if (error) {
+            console.error("TIC-yhteenveto, ohitetut:", error.message)
+            return null
+          }
+          return count ?? 0
+        } catch (err: any) {
+          console.error("TIC-yhteenveto, ohitetut:", err?.message ?? err)
+          return null
+        }
       })(),
 
-      getDiscoverySources(),
+      /* Lahdelista on omassa suojassaan samasta syysta. */
+      (async () => {
+        try {
+          return await getDiscoverySources()
+        } catch (err: any) {
+          console.error("TIC-yhteenveto, lahteet:", err?.message ?? err)
+          return null
+        }
+      })(),
     ])
 
-  const failedSources = (sources ?? []).filter(
-    (s: any) =>
-      s.enabled &&
-      s.last_error_at &&
-      (!s.last_success_at ||
-        new Date(s.last_error_at) > new Date(s.last_success_at))
-  ).length
+  const failedSources = sources
+    ? sources.filter(
+        (s: any) =>
+          s.enabled &&
+          s.last_error_at &&
+          (!s.last_success_at ||
+            new Date(s.last_error_at) > new Date(s.last_success_at))
+      ).length
+    : null
 
   return { needsReview, highPriority, tenders, zoning, ignored, failedSources }
 }
