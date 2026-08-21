@@ -59,6 +59,19 @@ käyttöliittymä näyttää henkilöt ensin ja mittarit erottavat ne.
 Tavoite "vähintään yksi yhteystieto" täyttyy, tavoite "kenelle
 soittaa" ei — se on eri työ.
 
+**Takautuvan ajon muutosrivit poistetaan.** Ajo tuotti 1 427 riviä
+`project_changes`-tauluun (uusi liipaisin, ks. blueprint 1.1), jolloin
+seuraava hakuvahti olisi lähettänyt asiakkaalle 1 427 riviä "Päivitys:
+Yhteystiedot". Rivit poistettiin ennen ajoa: kirjaamo-osoitteen
+ilmestyminen vanhaan hankkeeseen ei ole asiakkaalle uutinen, ja oikea
+hetki tiedottaa on silloin kun hankkeelle tulee **nimetty henkilö**.
+Yhteystiedot itse jäivät paikoilleen — vain ilmoitus jäi pois.
+
+Käytäntö jatkossa: takautuvan ajon jälkeen poista sen synnyttämät
+`contact_persons`-rivit, mutta **vain ne joissa ei ole nimettyä
+henkilöä** — nimetty henkilö on juuri se mistä asiakkaan kuuluu saada
+tieto.
+
 ---
 
 ### D-103 – Väyläviraston yhteystiedon esti hakukatto, ei poiminta
