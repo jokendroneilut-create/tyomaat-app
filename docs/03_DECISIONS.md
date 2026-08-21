@@ -5,6 +5,93 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-100 – Hyväksynnän täsmäytys rajataan maakuntaan, ja reitille asetetaan aikaraja
+
+Hyväksyntä luki **koko hankekannan** joka kerta sumeaa täsmäytystä varten.
+Käyttäjä havaitsi ~5 s viiveen ja kysyi paheneeko se. Pahenee, ja
+lineaarisesti.
+
+**MITATTU 21.8.2026 (5 752 hanketta):**
+
+```
+haku       ~1 200 ms / 1000 riviä      6,4 s koko kannalle
+laskenta    0,771 ms / hanke           4,4 s koko kannalle
+                                      ~2,0 s per 1000 hanketta
+```
+
+Payloadista **88 % on metadataa** (2 440 kB vs 291 kB per 1000 riviä),
+vaikka täsmäytys tarvitsee siitä vain kuusi avainta. Tämä on yhä
+korjaamatta — ks. alla.
+
+Kasvuvauhti: heinäkuu 3 488 hanketta, elokuu 1 585 (21 vrk). Käyttäjän
+oma arvio 150–250 hanketta viikossa. Jonon 99 ehdokkaasta vain 31:llä on
+tunniste joka ohittaisi skannauksen, eli **~70 % hyväksynnöistä ajaa
+täyden läpikäynnin**.
+
+**RATKAISU 1: AIKARAJA.** Hyväksyntä oli ainoa raskas reitti ilman omaa
+`maxDuration`-asetusta — muut asettavat 60 s (5 reittiä), 300 s ja 500 s.
+Se ajoi siis alustan oletuksella jota kukaan ei ollut valinnut. Asetettu
+60 s. Tämä ei nopeuta mitään, mutta muuttaa tulevan **kaatumisen**
+siedettäväksi hitaudeksi. Käyttäjän priorisointi oli tässä ratkaiseva:
+*"pieni hidastelu ei ole vaarallista kunhan järjestelmä kestää."*
+
+**RATKAISU 2: MAAKUNTARAJAUS.** Sama täsmäytys ajettiin kaikille 99
+jonon ehdokkaalle kolmella joukolla
+(`scripts/measure-match-narrowing.ts`):
+
+| joukko | koko | osumat | menetetty |
+|---|---|---|---|
+| koko kanta | 5 752 | 69 | – |
+| **sama maakunta** | **1 229 (21 %)** | **64** | **6** |
+| sama kaupunki | 910 (16 %) | 63 | 10 |
+
+Kaupunkirajaus säästäisi hieman enemmän mutta menettäisi lähes
+kaksinkertaisesti, joten maakunta on oikea taso.
+
+**MENETYKSET OVAT ROSKAA, EIVÄT TIETOA.** Kaikki kuusi ovat tiehankkeita,
+kaikki **alle 70 pisteen** (eivät siis olisi vaikuttaneet yhteenkään
+automaattiseen yhdistämiseen) ja sisällöltään vääriä:
+
+```
+"Valtatien 4 pitkän aikavälin tavoitetila"  -> "Vt 2 Pori-Helsinki"       48 p
+"Valtatien 5 parantaminen Kontiomäen kylä"  -> "Maantie 848 jk+pp-väylä"  46 p
+```
+
+Tiehankkeet ylittävät maakuntarajoja, mikä selittää ristiinosumat — mutta
+ne eivät ole samoja hankkeita. Ilman maakuntaa (7/99) luetaan koko kanta
+kuten ennen.
+
+Mitattu haun nopeutus: Uusimaa 4×, Pirkanmaa 19×, Kainuu 18×.
+
+**MILLOIN RAJA TULEE VASTAAN.** Uusimaa on suurin maakunta, 2 006
+hanketta eli **35 % koko kannasta** — ja sen osuus pysyy suunnilleen
+vakiona kannan kasvaessa. Maakuntarajaus on siis vakiokerroin, ei
+kasvuluokan muutos. 10 sekunnin katolla (~8,5 s skannausbudjetti):
+
+| tila | maakunnan raja | koko kanta silloin | aikaa nykytahdilla |
+|---|---|---|---|
+| ennen tätä muutosta | ~4 250 | ~12 000 | ~7 kk |
+| maakuntarajaus + metadata pois | ~11 000 | ~31 000 | ~2 v |
+| + `maxDuration = 60` | ~30 000 | ~85 000 | vuosikymmeniä |
+
+**AVOIMET, JOS TÄHÄN PALATAAN:**
+
+1. **Metadatan pudotus haussa** — 88 % payloadista, ei käyttäytymisriskiä.
+   Täsmäytys tarvitsee vain: `description`, `permit_number`,
+   `property_id`, `developer`, `building_type`, `also_known_as` /
+   `source_title`.
+2. **Esilaskettu osuma tuonnissa.** `metadata.matched_existing_project_id`
+   ohittaa skannauksen kokonaan ja hyväksyntä lukee sen jo — mutta
+   **0/99 ehdokkaalla se on asetettuna**, koska resolver-reitti ei tee
+   sumeaa täsmäytystä (D-088). Tuonti ajetaan cronissa, jossa 13 s ei
+   haittaa. Vaatii tuoreussäännön: myöhemmin hyväksytty hanke ei näy
+   aiemmin lasketussa osumassa.
+3. Täsmäytys tietokantaan (Postgres-funktio, trigram-indeksi) — ainoa
+   ratkaisu joka muuttaa kasvuluokan.
+
+Ks. `scripts/measure-approve-scaling.ts`,
+`scripts/measure-match-narrowing.ts`.
+
 ### D-099 – Markkinointisivulta luettu kuvaus kertoo kaupungista, ei hankkeesta
 
 Hartelan asuinaluesivuilta luettiin kuvaukseksi koko sivun teksti. Siitä

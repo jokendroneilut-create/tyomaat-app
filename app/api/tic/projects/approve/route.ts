@@ -29,6 +29,25 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+/*
+ * AIKARAJA ON ASETETTAVA, KOSKA TYÖ KASVAA HANKEMÄÄRÄN MUKANA.
+ *
+ * Tämä on TIC:n raskain vuorovaikutteinen reitti — se lukee hankkeita,
+ * ajaa sumean täsmäytyksen, geokoodaa ja kirjoittaa tunnisteet — mutta se
+ * oli ainoa raskas reitti ilman omaa aikarajaa, eli se ajoi alustan
+ * oletuksella jota kukaan ei ollut valinnut. Muut asettavat: viisi
+ * reittiä 60 s, yksi 300 s, kaksi 500 s.
+ *
+ * Mitattu 21.8.2026: hyväksynnän kustannus kasvaa ~2 s jokaista tuhatta
+ * hanketta kohti, ja hankkeita tulee 150-250 viikossa. Ilman asetettua
+ * rajaa hyväksyntä ei aikanaan hidastuisi vaan EPÄONNISTUISI.
+ *
+ * 60 s on tarkoituksella reilu: hidas hyväksyntä on siedettävä,
+ * katkennut ei ole.
+ */
+export const runtime = "nodejs"
+export const maxDuration = 60
+
 export async function POST(request: Request) {
   try {
     const auth = await verifyAdminRequest(request)
@@ -2257,15 +2276,41 @@ export async function POST(request: Request) {
        * hankekannasta (1000/4099 mitattuna), jolloin jo olemassa oleva hanke
        * jäi löytymättä ja hyväksyntä loi duplikaatin.
        */
+      /*
+       * MAAKUNTARAJAUS. Sumea täsmäytys luki koko hankekannan joka
+       * hyväksynnällä. Mitattu 21.8.2026 (5 752 hanketta): haku 1 200 ms
+       * per 1000 riviä ja laskenta 0,771 ms per hanke, eli noin 2 s per
+       * tuhat hanketta — ja kustannus kasvaa lineaarisesti.
+       *
+       * Rajaus samaan maakuntaan pudottaa skannattavan joukon mitatusti
+       * 5 752:sta keskimäärin 1 229:ään (21 %). Sitä EI tehdä sokkona:
+       * sama täsmäytys ajettiin kaikille 99 jonon ehdokkaalle molemmilla
+       * joukoilla, ja tulos oli 69 osumaa vs 64.
+       *
+       * Ne kuusi "menetettyä" ovat kaikki tiehankkeita, kaikki alle 70
+       * pisteen (eivät siis olisi vaikuttaneet automaattiseen
+       * yhdistämiseen) ja sisällöltään vääriä: "Valtatien 4 pitkän
+       * aikavälin tavoitetila" osui hankkeeseen "Vt 2 Pori-Helsinki"
+       * 48 pisteellä. Rajaus poistaa siis roskaa, ei tietoa.
+       *
+       * Kaupunkirajaus olisi säästänyt hieman enemmän (910) mutta
+       * menettänyt 10 osumaa, joten maakunta on oikea taso.
+       *
+       * Ilman maakuntaa (mitattu 7/99) luetaan koko kanta kuten ennen.
+       */
       const existingProjects: any[] = []
       const PAGE = 1000
 
       for (let from = 0; ; from += PAGE) {
-        const { data, error: existingProjectsError } = await supabaseAdmin
+        let query = supabaseAdmin
           .from("projects")
           .select(
             "id,name,city,region,location,phase,completed_at,status,developer,property_type,metadata"
           )
+
+        if (region) query = query.eq("region", region)
+
+        const { data, error: existingProjectsError } = await query
           .order("id", { ascending: true })
           .range(from, from + PAGE - 1)
 

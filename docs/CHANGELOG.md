@@ -11,6 +11,29 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 21.8.)
 
+### Hyvaksynta rajattu maakuntaan ja reitille asetettu aikaraja
+
+Hyvaksynta luki koko hankekannan joka kerta sumeaa tasmaytysta varten.
+Mitattu 5 752 hankkeella: haku 1 200 ms per 1000 rivia, laskenta 0,771 ms
+per hanke, eli ~2 s per tuhat hanketta - ja lineaarisesti kasvava.
+
+Tasmaytys rajattu samaan maakuntaan: skannattava joukko 5 752 -> 1 229
+(21 %). Haku nopeutui Uusimaalla 4x, muissa maakunnissa 18-19x.
+
+Rajausta ei tehty sokkona: sama tasmaytys ajettiin kaikille 99 jonon
+ehdokkaalle molemmilla joukoilla. Osumat 69 -> 64, ja ne kuusi
+"menetettya" ovat kaikki tiehankkeita, kaikki alle 70 pisteen eli
+automaattisen yhdistamisen ulkopuolella, ja sisallolta vaaria
+("Valtatien 4 tavoitetila" osui hankkeeseen "Vt 2 Pori-Helsinki").
+Kaupunkirajaus olisi menettanyt 10, joten maakunta on oikea taso.
+
+Hyvaksyntareitti oli ainoa raskas reitti ilman maxDuration-asetusta;
+asetettu 60 s. Se ei nopeuta mitaan mutta muuttaa tulevan kaatumisen
+siedettavaksi hitaudeksi.
+
+Ilman maakuntaa olevat ehdokkaat (7/99) lukevat koko kannan kuten
+ennenkin. (D-100)
+
 ### Hartelan asuinalueiden kuvaus ja rakennustyyppi korjattu
 
 Kuvaukseksi luettiin koko sivun teksti, jonka alkuosa markkinoi kaupunkia
