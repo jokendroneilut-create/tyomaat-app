@@ -63,6 +63,12 @@ function humanizeField(field: string): string {
     estimated_cost: "Arvioitu kustannus",
     construction_start: "Rakentamisen aloitus",
     additional_info: "Lisätietoja",
+    /*
+     * Kirjoittaa erillinen liipaisin (docs/sql/2026-08-22_contact_persons_change_log.sql),
+     * koska contact_persons on metadatan sisällä eikä oma sarakkeensa —
+     * log_project_changes() ei siksi nähnyt sitä lainkaan.
+     */
+    contact_persons: "Yhteystiedot",
   };
 
   return map[field] ?? field;
