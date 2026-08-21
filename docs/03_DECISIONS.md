@@ -63,9 +63,42 @@ Volyymikin on pieni: 50 kokousta kuudelta kuukaudelta, joista teknistä
 lautakuntaa 8 ja ympäristölautakuntaa 4.
 
 Lopputulos: **syötteestä ei saa yhtään hanketietoa.** Sitä ei kannata
-rakentaa. Ainoa jäljelle jäävä toivo on erillinen
-viranhaltijapäätössyöte, jossa kohde olisi yksi päätös ja otsikko kertoisi
-aiheen — rakennusurakat ovat usein juuri viranhaltijapäätöksiä. Sen
+rakentaa.
+
+**MUTTA ASIAKIRJAT OVAT ARVOKKAITA — VIKA ON PÄÄSYSSÄ, EI SISÄLLÖSSÄ.**
+Yksi käsin avattu pöytäkirja (Tekninen lautakunta 10/2026, 18.8.2026,
+§ 80) sisälsi:
+
+```
+Sopimus Kravunarkunkadun liittymäjärjestelyjen ja ajoväylien
+rakentamisesta, kunnossapidosta ja kustannusvastuista
+
+  sijainti     Kravunarkunkatu, väli Hakakalliontie-Hangonväylän
+               ylikulkusilta, Hakakallion kaupunginosa
+  yksityinen
+  osapuoli     Kiinteistö Oy Hyvinkään Burger
+  arvo         579 236,84 EUR, kaupungin osuus 267 439,23 EUR
+  urakkamuoto  yksikköhintaurakka
+  tila         kaupunki kilpailuttaa urakat
+```
+
+Tarkistettu kannasta: **"Kravunarkunkatu" ei tuottanut yhtään osumaa** —
+ei hanketta eikä ehdokasta. Hakakallion *kaava* on meillä
+("Hakakallion kaupan alue", kaavalähteestä), mutta urakka ei. Hyvinkään
+46 hankkeesta 34 tulee kaavalähteestä eikä päätöksistä yhtään.
+
+Arvo on siis **aikaetu ja budjetti**, ei ainutlaatuisuus: koska kaupunki
+kilpailuttaa urakan, se päätyy aikanaan Hilmaan. Pöytäkirjasta se
+tiedettäisiin kuukausia aiemmin, euromäärän ja yksityisen osapuolen
+kanssa.
+
+Käsin tehtynä työmäärä on pieni yhdelle kunnalle: teknisen lautakunnan
+ja ympäristölautakunnan kokouksia oli 12 kuudessa kuukaudessa eli noin
+kaksi kuukaudessa. Kymmenelle Tweb-kunnalle se on jo ~20 asiakirjaa
+kuukaudessa, eikä se skaalaudu koko maahan.
+
+Ainoa automaattinen reitti olisi erillinen viranhaltijapäätössyöte,
+jossa kohde olisi yksi päätös ja otsikko kertoisi aiheen. Sen
 olemassaoloa ei voi tarkistaa polkuja arvaamalla, koska se olisi
 sivustohakua; se on kysyttävä kirjaamolta.
 
