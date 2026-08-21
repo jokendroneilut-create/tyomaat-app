@@ -5,6 +5,49 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-098 – Tweb-kunnista saa RSS-syötteen, ei sivustohakua
+
+Hyvinkäältä pyydettiin lupaa hakea päätösjärjestelmästä koneellisesti.
+Vastaus 21.8.2026 (kirjaamo) kolmeen esitettyyn vaihtoehtoon:
+
+| pyyntö | vastaus |
+|---|---|
+| rajapinta esityslistoihin | ei — asianhallinnan rajapinta on suljetussa verkossa eikä sitä avata julkiverkkoon |
+| poikkeus robots.txt:hen | ei — "emme muuta asetuksia yksittäisiä toimijoita varten" |
+| kirjallinen lupa sivustohakuun | ei — **"tässä vaiheessa"** |
+
+**Mutta vastaus päättyy suositukseen:** *"Suosittelemme hyödyntämään
+Julkaisu-palvelun RSS-syötettä uusien asiakirjojen seurantaan."* Kaupunki
+siis ohjaa itse koneluettavaan kanavaan. Tulkinta: syötteen lukeminen on
+sallittua, syötteen linkkien seuraaminen asiakirjoihin ei — se olisi juuri
+sitä sivustohakua josta kieltäydyttiin.
+
+**KIELTO ON TUOTETOIMITTAJAN VAKIO, EI KUNNAN LINJAUS.** Mitattu 21.8.2026:
+
+```
+asianhallintavhp.hyvinkaa.fi/robots.txt   User-Agent: *  Disallow: /
+nokia.tweb.fi/robots.txt                  User-Agent: *  Disallow: /
+```
+
+Sama asetus kahdessa toisistaan riippumattomassa asennuksessa. Hyvinkää ei
+myöskään perustellut kieltoa sisällöllisesti vaan sillä ettei sitä muuteta
+yksittäiselle toimijalle. Yhden kunnan vastaus on siis malli koko
+Tweb-perheelle — ja niin on myös RSS, joka on tuotteen vakio-ominaisuus.
+
+**SEURAUS ARVOON.** Syötteestä saa otsikot, päivämäärät ja linkit, ei
+asiakirjojen sisältöä. Otsikkotasolla hanke on usein tunnistettavissa
+("Hankesuunnitelma, X-koulun perusparannus"), mutta kuvaus, osoite ja
+euromäärät jäävät saamatta. Tämä on syytä tietää ennen kuin lähdettä
+rakennetaan.
+
+**SYÖTTEEN SISÄLTÖÄ EI OLE VOITU TARKISTAA.** Sitä ei voi katsoa
+rikkomatta samaa robots-sääntöä, joka on voimassa jokaisessa mitatussa
+Tweb-asennuksessa, eikä syötteestä ole julkista dokumentaatiota. Osoite ja
+sisältö on siksi kysyttävä kirjaamolta tai avattava selaimella ihmisenä.
+
+Avoin: syötteen osoite, kattaako se viranhaltijapäätökset (rakennusurakat
+ovat usein juuri niitä) ja montako julkaisua se sisältää.
+
 ### D-097 – Paikallislehti ei ole löytölähde siellä missä kaupungin oma lähde on
 
 Arvioitiin Helsingin Uutiset ja Länsiväylä lähteiksi. **Ei otettu käyttöön.**
