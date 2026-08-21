@@ -5,6 +5,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-102 – Lupapisteen päätös-PDF:stä ei poimita yhteystietoja
+
+Lupapisteen 110 näkyvästä hankkeesta yksikään ei ollut saanut
+yhteystietoa, ja 75:llä oli päätös-PDF:n teksti valmiina kannassa
+(D-096). Poiminta olisi ollut ilmainen: ei uutta hakua, vain olemassa
+olevan tekstin lukeminen.
+
+**Mitattu 22.8.2026 — ja se kaatoi ajatuksen:**
+
+```
+poimittavia kontakteja           97
+  VIRANOMAISLAATIKKO             73   75 %
+  muu                            24   25 %
+```
+
+Ja se neljäsosakin on viranomaisia:
+
+```
+rakennusvalvonta@hel.fi          rakennusvalvonta@savonlinna.fi
+kirjaamo@raahe.fi                ita-suomi.hao@oikeus.fi
+jarmo.leppanen@pelastustoimi.fi  johanna.laitanen@kurikka.fi
+etunimi.sukunimi@tampere.fi      ← paikanpitäjä, ei osoite
+```
+
+**Syy on rakenteellinen.** Päätösasiakirja on viranomaisen dokumentti:
+siinä ovat lupaviranomaisen, kirjaamon, pelastuslaitoksen ja
+muutoksenhakuelimen yhteystiedot. Hakija — se jolle myyjä haluaisi
+soittaa — on **peitetty mustalla palkilla** henkilötietona (todettu jo
+D-096:ssa poimittaessa hankekuvausta).
+
+**Miksi tätä ei tehdä.** Kenttä täyttyisi lupatoimiston osoitteilla, ja
+kattavuusmittari näyttäisi paremmalta kuin todellisuus on. Se on
+huonompi lopputulos kuin tyhjä kenttä: käyttäjä luulee saavansa
+kontaktin ja saa rakennusvalvonnan vaihteen. Tyhjä kenttä kertoo
+rehellisesti että tietoa ei ole.
+
+Sama koskee muitakin lupa- ja päätöslähteitä: jos yhteystieto on
+viranomaisen eikä hankkeen osapuolen, sitä ei pidä poimia
+myyntikontaktiksi. Vrt. D-101, jossa Hilman eSender ja markkinaoikeus
+suodatettiin pois samasta syystä — erona vain se, että Hilmassa jäi
+suodatuksen jälkeen tilaaja ja voittaja jäljelle, tässä ei jää mitään.
+
 ### D-101 – Yhteyshenkilöt poimitaan tekstistä, koska tieto oli jo kannassa
 
 Käyttäjä yhdisti uuden tiedotteen olemassa olevaan hankkeeseen, ja
