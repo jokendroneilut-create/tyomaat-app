@@ -5,6 +5,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-099 – Markkinointisivulta luettu kuvaus kertoo kaupungista, ei hankkeesta
+
+Hartelan asuinaluesivuilta luettiin kuvaukseksi koko sivun teksti. Siitä
+seurasi kaksi vikaa, jotka mitattiin 21.8.2026 kaikilta 15 ehdokkaalta:
+
+**1. Kuvaus alkoi selainkehotuksella — 15/15.** Poisto oli koodissa, mutta
+`trim()` ajettiin vasta sen jälkeen, joten `^Ole hyvä` ei osunut koskaan:
+rivin alussa oli välilyönti. Yhden merkin verran väärä järjestys, eikä
+mikään testi kattanut sitä.
+
+**2. Rakennustyyppi oli väärä — 6/15.** Sivun alkuosa markkinoi KAUPUNKIA:
+*"Nokia tarjoaa kattavan palveluverkoston. Päiväkodit, koulut, lukio…"*
+Siitä luettuna asuinkerrostalohanke sai tyypikseen **Päiväkoti** (4 kpl),
+**Koulu** ja **Liikuntapaikka** — sivustolla, jonka nimi on
+*tulevat asuinalueet*.
+
+Korjaus on kaksiosainen: kuvaus rajataan siihen virkkeeseen josta
+hankeasia alkaa, ja tyyppi suodatetaan asuintyyppeihin. Pelkkä verbi ei
+kelpaa rajauksen aloitukseksi — *"arki rakentuu palveluiden ympärille"* on
+tunnelmointia — vaan virkkeessä on oltava myös asumiseen viittaava sana.
+
+Tulos: 6 väärää tyyppiä pois, 5 tyhjää sai oikean, kaikki 15 kuvausta
+alkavat hankeasialla.
+
+**MITÄ EI TEHTY.** Yksi osoite oli väärä: Hervannan Novelli sai
+"Insinöörinkatu 3", vaikka teksti sanoo *"osoitteeseen Aasianpiha 1"* —
+jaettu `extractStreetAddress` ei tunne päätettä **piha**. Ilmeinen korjaus
+olisi lisätä se. Mittaus koko kannasta kumosi sen:
+
+```
+"Afrikanpiha 4"  10 ehdokkaassa   <- yrityksen toimisto-osoite tiedotteissa
+"Aasianpiha 1"    1 ehdokkaassa   <- ainoa aito parannus
+```
+
+Kymmenen väärää osoitetta yhtä oikeaa vastaan, joten jaettu poimija
+jätettiin ennalleen. Tämä on **neljäs kerta**, kun saman päivän
+kuivaharjoitus kaataa ilmeisen korjauksen (vrt. D-090, D-093, D-095).
+
+Ks. `lib/agent/fetchHartelaAreasSource.ts`,
+`scripts/backfill-hartela-description.ts`.
+
 ### D-098 – Tweb-kunnista saa RSS-syötteen, ei sivustohakua
 
 Hyvinkäältä pyydettiin lupaa hakea päätösjärjestelmästä koneellisesti.
