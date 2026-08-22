@@ -209,6 +209,21 @@ Käytäntö jatkossa: takautuvan ajon jälkeen poista sen synnyttämät
 henkilöä** — nimetty henkilö on juuri se mistä asiakkaan kuuluu saada
 tieto.
 
+**Sama koskee kuvauksia.** Väyläviraston kuvausajo (D-107) tuotti 173
+`additional_info`-riviä. Vanhan hankkeen kuvauksen rikastuminen ei ole
+asiakkaalle uutinen sen enempää kuin kirjaamo-osoitteen ilmestyminen,
+joten ne poistettiin samalla perusteella.
+
+**MUTTA POISTO EI SAA NOJATA AIKAIKKUNAAN.** Mitattu 22.8.2026: niistä
+173 rivistä **viisi ei ollut takautuvasta ajosta** vaan normaalista
+yöajosta — neljä SRV:n ja yksi Hilman aitoa kuvauspäivitystä. Pelkkään
+kellonaikaan perustuva poisto olisi hävittänyt ne, eikä asiakas olisi
+saanut tietoa oikeasta muutoksesta.
+
+Poistettavat on siksi rajattava **ajon omiin hankkeisiin** (tässä:
+lähde = Väylävirasto), ja rajaus on tarkistettava ennen kirjoitusta.
+Ensimmäinen versio pysähtyi omaan vartijaansa juuri tähän.
+
 ---
 
 ### D-103 – Väyläviraston yhteystiedon esti hakukatto, ei poiminta

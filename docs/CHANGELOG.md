@@ -30,6 +30,12 @@ uusinta.
 Takautuva ajo 372/376 rivia (99 %), keskimaarin 206 -> 2 697 merkkia.
 Yksikaan teksti ei lyhentynyt. (D-107)
 
+Ajon 173 muutosrivia poistettiin samalla perusteella kuin yhteystietojen
+ajossa: vanhan hankkeen kuvauksen rikastuminen ei ole uutinen. Poisto
+rajattiin ajon omiin hankkeisiin - niista 173:sta viisi oli aitoja
+yoajon paivityksia (SRV, Hilma), ja pelkkaan aikaikkunaan nojaava poisto
+olisi havittanyt ne. (D-104)
+
 ### Otsikoiden vartalointia ei otettu kayttoon
 
 Espoonlahden duplikaattipari jai 50 pisteeseen kynnyksen ollessa 70,
