@@ -50,7 +50,7 @@ import type { Contact } from "@/lib/projects/contacts"
  * yksittäinen puute) jäisi kokonaan tunnistamatta.
  */
 const ROLE_LOCAL =
-  /(^|\.)(kirjaamo|registratur|registrator|info|asiakaspalvelu|palaute|neuvonta|kaavoitus|planlaggning|rakennusvalvonta|byggnadstillsyn|tekninen|tilapalvelu|tilapalvelut|yhdyskunta|kaupunkiymparisto|kaupunkiympäristö|kaupunkisuunnittelu|elinvoima|maankaytto|maankäyttö)(\.|$)/i
+  /(^|\.)(kirjaamo|registratur|registrator|info|asiakaspalvelu|palaute|neuvonta|kaavoitus|planlaggning|rakennusvalvonta|byggnadstillsyn|tekninen|tilapalvelu|tilapalvelut|yhdyskunta|kaupunkiymparisto|kaupunkiympäristö|kaupunkisuunnittelu|elinvoima|maankaytto|maankäyttö|kaupunki|kunta|stad|kommun)(\.|$)/i
 
 const EMAIL_SHAPE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 

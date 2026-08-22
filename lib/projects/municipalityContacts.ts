@@ -6,13 +6,18 @@
  * esiintyy kunnan omalla sivulla JA sen verkkotunnus vastaa kuntaa.
  *
  * Miksi kaavaa ei voi käyttää: "kirjaamo@<kunnan domain>" näyttää
- * turvalliselta, mutta Helsingin kirjaamo on helsinki.kirjaamo@hel.fi.
- * Yksi arvattu osoite olisi mennyt 579 hankkeelle.
+ * turvalliselta, mutta muodot vaihtelevat kunnittain:
+ *
+ *   helsinki.kirjaamo@hel.fi        turun.kaupunki@turku.fi
+ *   kunta@nurmijarvi.fi             siikalatvan.kunta@siikalatva.fi
+ *
+ * Pelkkä kirjaamo@hel.fi ei ole olemassa, ja yksi arvattu osoite olisi
+ * mennyt 578 hankkeelle.
  *
  * Nämä ovat organisaatiotason laatikoita, eivät nimettyjä henkilöitä
  * (vrt. D-102). Ne merkitään aina kind: "organization".
  *
- * Haettu 22.8.2026, 93 kuntaa, kattaa 1116 hanketta.
+ * Haettu 22.8.2026, 107 kuntaa.
  * Päivitys: npx tsx scripts/mine-municipality-contacts.ts
  */
 
@@ -29,6 +34,7 @@ export const MUNICIPALITY_CONTACTS: Record<string, { email: string; source: stri
   "Rovaniemi": { email: "kirjaamo@rovaniemi.fi", source: "https://www.rovaniemi.fi" },
   "Sipoo": { email: "kirjaamo@sipoo.fi", source: "https://www.sipoo.fi/fi/yhteystiedot" },
   "Kuopio": { email: "kirjaamo@kuopio.fi", source: "https://www.kuopio.fi" },
+  "Nurmijärvi": { email: "kunta@nurmijarvi.fi", source: "https://www.nurmijarvi.fi" },
   "Hanko": { email: "kirjaamo@hanko.fi", source: "https://www.hanko.fi" },
   "Sysmä": { email: "kirjaamo@sysma.fi", source: "https://www.sysma.fi" },
   "Säkylä": { email: "kirjaamo@sakyla.fi", source: "https://www.sakyla.fi" },
@@ -36,18 +42,23 @@ export const MUNICIPALITY_CONTACTS: Record<string, { email: string; source: stri
   "Eura": { email: "kirjaamo@eura.fi", source: "https://www.eura.fi" },
   "Karkkila": { email: "kirjaamo@karkkila.fi", source: "https://www.karkkila.fi" },
   "Vehmaa": { email: "kirjaamo@vehmaa.fi", source: "https://www.vehmaa.fi" },
+  "Oulainen": { email: "kaupunki@oulainen.fi", source: "https://www.oulainen.fi" },
   "Pirkkala": { email: "kirjaamo@pirkkala.fi", source: "https://www.pirkkala.fi" },
   "Haapavesi": { email: "neuvonta@haapavesi.fi", source: "https://www.haapavesi.fi" },
   "Savonlinna": { email: "kirjaamo@savonlinna.fi", source: "https://www.savonlinna.fi" },
+  "Kärsämäki": { email: "karsamaen.kunta@karsamaki.fi", source: "https://www.karsamaki.fi" },
   "Naantali": { email: "kirjaamo@naantali.fi", source: "https://www.naantali.fi" },
   "Tammela": { email: "kirjaamo@tammela.fi", source: "https://www.tammela.fi/yhteystiedot" },
   "Kolari": { email: "kirjaamo@kolari.fi", source: "https://www.kolari.fi" },
   "Rauma": { email: "kirjaamo@rauma.fi", source: "https://www.rauma.fi" },
   "Järvenpää": { email: "kirjaamo@jarvenpaa.fi", source: "https://www.jarvenpaa.fi/yhteystiedot" },
   "Muhos": { email: "kirjaamo@muhos.fi", source: "https://www.muhos.fi" },
+  "Pielavesi": { email: "kunta@pielavesi.fi", source: "https://www.pielavesi.fi" },
   "Tohmajärvi": { email: "kirjaamo@tohmajarvi.fi", source: "https://www.tohmajarvi.fi" },
   "Suonenjoki": { email: "kirjaamo@suonenjoki.fi", source: "https://www.suonenjoki.fi/fi/yhteystiedot" },
   "Vaala": { email: "kirjaamo@vaala.fi", source: "https://www.vaala.fi" },
+  "Turku": { email: "turun.kaupunki@turku.fi", source: "https://www.turku.fi" },
+  "Taivalkoski": { email: "taivalkoski.kunta@taivalkoski.fi", source: "https://www.taivalkoski.fi" },
   "Ylivieska": { email: "kirjaamo@ylivieska.fi", source: "https://www.ylivieska.fi/kirjaamo" },
   "Joutsa": { email: "kirjaamo@joutsa.fi", source: "https://www.joutsa.fi/fi/yhteystiedot" },
   "Kuhmo": { email: "kirjaamo@kuhmo.fi", source: "https://www.kuhmo.fi" },
@@ -67,6 +78,7 @@ export const MUNICIPALITY_CONTACTS: Record<string, { email: string; source: stri
   "Nakkila": { email: "kirjaamo@nakkila.fi", source: "https://www.nakkila.fi" },
   "Sodankylä": { email: "kirjaamo@sodankyla.fi", source: "https://www.sodankyla.fi" },
   "Lemi": { email: "rakennusvalvonta@lemi.fi", source: "https://www.lemi.fi/fi/yhteystiedot" },
+  "Siikalatva": { email: "siikalatvan.kunta@siikalatva.fi", source: "https://www.siikalatva.fi" },
   "Lappeenranta": { email: "kirjaamo@lappeenranta.fi", source: "https://www.lappeenranta.fi/yhteystiedot" },
   "Hattula": { email: "kirjaamo@hattula.fi", source: "https://www.hattula.fi" },
   "Salo": { email: "kirjaamo@salo.fi", source: "https://www.salo.fi" },
@@ -78,6 +90,8 @@ export const MUNICIPALITY_CONTACTS: Record<string, { email: string; source: stri
   "Hollola": { email: "kirjaamo@hollola.fi", source: "https://www.hollola.fi" },
   "Salla": { email: "kirjaamo@salla.fi", source: "https://www.salla.fi" },
   "Muurame": { email: "kirjaamo@muurame.fi", source: "https://www.muurame.fi" },
+  "Leppävirta": { email: "kunta@leppavirta.fi", source: "https://www.leppavirta.fi" },
+  "Mynämäki": { email: "kunta@mynamaki.fi", source: "https://www.mynamaki.fi" },
   "Vaasa": { email: "kirjaamo@vaasa.fi", source: "https://www.vaasa.fi/fi/hallinto-ja-talous/kirjaamo" },
   "Kitee": { email: "tekninen.kirjaamo@kitee.fi", source: "https://www.kitee.fi" },
   "Raisio": { email: "kirjaamo@raisio.fi", source: "https://www.raisio.fi" },
@@ -110,6 +124,11 @@ export const MUNICIPALITY_CONTACTS: Record<string, { email: string; source: stri
   "Tervola": { email: "info@tervola.fi", source: "https://www.tervola.fi" },
   "Kauhajoki": { email: "kirjaamo@kauhajoki.fi", source: "https://www.kauhajoki.fi" },
   "Petäjävesi": { email: "kirjaamo@petajavesi.fi", source: "https://www.petajavesi.fi/fi/yhteystiedot" },
+  "Luumäki": { email: "kunta@luumaki.fi", source: "https://www.luumaki.fi" },
+  "Merijärvi": { email: "merijarven.kunta@merijarvi.fi", source: "https://www.merijarvi.fi" },
+  "Paltamo": { email: "paltamon.kunta@paltamo.fi", source: "https://www.paltamo.fi" },
+  "Liminka": { email: "kunta@liminka.fi", source: "https://www.liminka.fi" },
+  "Pöytyä": { email: "kunta@poytya.fi", source: "https://www.poytya.fi" },
 }
 
 export function municipalityContact(name: string | null | undefined): string | null {

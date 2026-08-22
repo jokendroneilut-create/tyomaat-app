@@ -463,5 +463,75 @@
     "email": "kirjaamo@petajavesi.fi",
     "source": "https://www.petajavesi.fi/fi/yhteystiedot",
     "projects": 1
+  },
+  "Nurmijärvi": {
+    "email": "kunta@nurmijarvi.fi",
+    "source": "https://www.nurmijarvi.fi",
+    "projects": 15
+  },
+  "Oulainen": {
+    "email": "kaupunki@oulainen.fi",
+    "source": "https://www.oulainen.fi",
+    "projects": 9
+  },
+  "Kärsämäki": {
+    "email": "karsamaen.kunta@karsamaki.fi",
+    "source": "https://www.karsamaki.fi",
+    "projects": 7
+  },
+  "Pielavesi": {
+    "email": "kunta@pielavesi.fi",
+    "source": "https://www.pielavesi.fi",
+    "projects": 6
+  },
+  "Turku": {
+    "email": "turun.kaupunki@turku.fi",
+    "source": "https://www.turku.fi",
+    "projects": 5
+  },
+  "Taivalkoski": {
+    "email": "taivalkoski.kunta@taivalkoski.fi",
+    "source": "https://www.taivalkoski.fi",
+    "projects": 5
+  },
+  "Siikalatva": {
+    "email": "siikalatvan.kunta@siikalatva.fi",
+    "source": "https://www.siikalatva.fi",
+    "projects": 3
+  },
+  "Leppävirta": {
+    "email": "kunta@leppavirta.fi",
+    "source": "https://www.leppavirta.fi",
+    "projects": 2
+  },
+  "Mynämäki": {
+    "email": "kunta@mynamaki.fi",
+    "source": "https://www.mynamaki.fi",
+    "projects": 2
+  },
+  "Luumäki": {
+    "email": "kunta@luumaki.fi",
+    "source": "https://www.luumaki.fi",
+    "projects": 1
+  },
+  "Merijärvi": {
+    "email": "merijarven.kunta@merijarvi.fi",
+    "source": "https://www.merijarvi.fi",
+    "projects": 1
+  },
+  "Paltamo": {
+    "email": "paltamon.kunta@paltamo.fi",
+    "source": "https://www.paltamo.fi",
+    "projects": 1
+  },
+  "Liminka": {
+    "email": "kunta@liminka.fi",
+    "source": "https://www.liminka.fi",
+    "projects": 1
+  },
+  "Pöytyä": {
+    "email": "kunta@poytya.fi",
+    "source": "https://www.poytya.fi",
+    "projects": 1
   }
 }
