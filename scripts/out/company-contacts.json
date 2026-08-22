@@ -1,0 +1,72 @@
+{
+  "Fira": {
+    "email": "info@fira.fi",
+    "source": "https://www.fira.fi/yhteystiedot",
+    "projects": 12
+  },
+  "Bonava": {
+    "email": "myynti@bonava.fi",
+    "source": "https://www.bonava.fi",
+    "projects": 8
+  },
+  "Asuntosäätiö": {
+    "email": "asiakaspalvelu@asuntosaatio.fi",
+    "source": "https://www.asuntosaatio.fi",
+    "projects": 5
+  },
+  "Brand toimitilat": {
+    "email": "myynti@brandtoimitilat.fi",
+    "source": "https://www.brandtoimitilat.fi",
+    "projects": 4
+  },
+  "Lapti": {
+    "email": "asiakaspalvelu@lapti.fi",
+    "source": "https://www.lapti.fi",
+    "projects": 3
+  },
+  "Asura": {
+    "email": "info@asura.fi",
+    "source": "https://www.asura.fi",
+    "projects": 3
+  },
+  "Y-Säätiö": {
+    "email": "asiakaspalvelu@ysaatio.fi",
+    "source": "https://www.ysaatio.fi",
+    "projects": 2
+  },
+  "Aura Rakennus": {
+    "email": "toimisto@aurarakennus.fi",
+    "source": "https://www.aurarakennus.fi",
+    "projects": 2
+  },
+  "Peab": {
+    "email": "info@peab.fi",
+    "source": "https://www.peab.fi",
+    "projects": 2
+  },
+  "Mangrove Oy": {
+    "email": "asiakaspalvelu@mangrove.fi",
+    "source": "https://www.mangrove.fi",
+    "projects": 1
+  },
+  "Bonava Oy": {
+    "email": "myynti@bonava.fi",
+    "source": "https://www.bonava.fi",
+    "projects": 1
+  },
+  "Marvea": {
+    "email": "toimisto@marvea.fi",
+    "source": "https://www.marvea.fi",
+    "projects": 1
+  },
+  "Peab Oy": {
+    "email": "info@peab.fi",
+    "source": "https://www.peab.fi",
+    "projects": 1
+  },
+  "Brand toimitilat Oy": {
+    "email": "myynti@brandtoimitilat.fi",
+    "source": "https://www.brandtoimitilat.fi",
+    "projects": 1
+  }
+}
