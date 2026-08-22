@@ -31,7 +31,7 @@ siksi ne ovat tässä dokumentissa eivätkä muistiinpanoissa.
 |---|---|---|
 | hankkeita | hankkeita kannassa | 5 752, kasvu ~150–250 / viikko |
 | ajoitus | varhaisin vaihe jossa hanke näkyy | kaava ja rakennuslupa ovat käytössä; ks. D-096 (Lupapisteen PDF paljasti datakeskuksen jota rajapinta ei kertonut) |
-| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **4 709 / 5 705 (82,5 %)** — ks. tavoite alla |
+| yhteystiedot | näkyviä hankkeita joilla yhteystieto | **4 739 / 5 705 (83,1 %)** — ks. tavoite alla |
 
 **TAVOITE: jokaisella asiakkaalle näkyvällä hankkeella on vähintään yksi
 yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
@@ -40,11 +40,11 @@ yhteystieto.** Hanke ilman yhteystietoa ei ole myyntivihje vaan uutinen.
 
 ```
 asiakkaille näkyviä hankkeita          5 705
-  ainakin yksi yhteystieto             4 709   82,5 %
-  tavoitettava (sposti tai puhelin)    4 553   79,8 %
-  nimetty henkilö                      1 145   20,1 %
+  ainakin yksi yhteystieto             4 739   83,1 %
+  tavoitettava (sposti tai puhelin)    4 590   80,5 %
+  nimetty henkilö                      1 184   20,8 %
 
-  EI YHTÄÄN YHTEYSTIETOA                 996   17,5 %
+  EI YHTÄÄN YHTEYSTIETOA                 966   16,9 %
 ```
 
 *Kehitys 22.8.2026:*
@@ -56,7 +56,8 @@ asiakkaille näkyviä hankkeita          5 705
 | peitetyt osoitteet + puhelinankkuri | 2 941 (51,6 %) | 939 |
 | Hilman ilmoitusten osapuolet | 3 099 (54,3 %) | 1 022 |
 | Väyläviraston projektipäälliköt (D-103) | 3 222 (56,5 %) | 1 145 |
-| kuntien yleiset yhteystiedot (D-104) | **4 709 (82,5 %)** | 1 145 |
+| kuntien yleiset yhteystiedot (D-104) | 4 709 (82,5 %) | 1 145 |
+| Senaatin rakennuttajapäälliköt | **4 739 (83,1 %)** | **1 184** |
 
 Nimettyjen henkilöiden määrä nousi 682 → 1 145 eli **+68 %** — se on
 myyjälle arvokkain luku, koska nimetty henkilö on ainoa jolle voi soittaa.

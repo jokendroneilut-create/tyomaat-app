@@ -29,8 +29,16 @@ export async function resolveSenaattiProject({
   const location = metadata.location ?? null
   const buildingType = metadata.building_type ?? null
   const description = metadata.description ?? null
-  const contact: { name: string | null; title: string | null; email: string | null } | null =
-    metadata.contact ?? null
+  /*
+   * Uusi muoto on taulukko (nimi, nimike, SUORA puhelin, laajennettu
+   * osoite) - vanha yhden objektin muoto sailytetaan, koska kannassa on
+   * viela dokumentteja jotka on kerätty sillä.
+   */
+  const contacts: any[] = Array.isArray(metadata.contacts)
+    ? metadata.contacts
+    : metadata.contact
+      ? [metadata.contact]
+      : []
 
   const municipality = getMunicipalityByName(location)
   const phaseHint = mapSenaattiPhase(senaattiPhase)
@@ -40,16 +48,7 @@ export async function resolveSenaattiProject({
     title: operation,
   })
 
-  const contactPersons = contact?.name
-    ? [
-        {
-          name: contact.name,
-          title: contact.title ?? "Senaatti-kiinteistöt",
-          phone: null,
-          email: contact.email,
-        },
-      ]
-    : []
+  const contactPersons = contacts.filter((c) => c?.name)
 
   const result = await resolvePotentialProject({
     title: operation,

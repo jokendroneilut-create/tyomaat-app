@@ -4,6 +4,8 @@ import tls from "tls"
 import zlib from "zlib"
 import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
+import type { Contact } from "@/lib/projects/contacts"
+import { parseSenaattiContacts } from "@/lib/agent/senaattiContacts"
 import type { DiscoverySource } from "../registry/sources"
 import { detectCityFromText } from "../../detectCityFromText"
 import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
@@ -1664,7 +1666,13 @@ async function collectVaylaSource(source: DiscoverySource) {
   }
 }
 
-const SENAATTI_MAX_DETAIL_FETCHES_PER_RUN = 10
+/*
+ * Sama katto naannytti aiemmin Vaylaviraston (D-103) ja Kreaten: 43
+ * hankkeen luettelosta ehti kaydä vain osa, ja 33 hanketta oli ilman
+ * yhteystietoa vaikka poiminta oli olemassa. Haetut sailytetaan, joten
+ * vakaassa tilassa hakuja tulee vain uusista.
+ */
+const SENAATTI_MAX_DETAIL_FETCHES_PER_RUN = 50
 
 /*
  * Senaatti.fi on myös WordPress, mutta REST-rajapinnan content.rendered
@@ -1712,31 +1720,26 @@ function extractSenaattiHeroText(contentHtml: string): string | null {
  * ("hankkeen_yhteystiedot"-kenttä), joten se vaatii erillisen
  * sivukohtaisen haun.
  */
-async function fetchSenaattiContact(projectUrl: string): Promise<{
-  name: string | null
-  title: string | null
-  email: string | null
-} | null> {
+/*
+ * Hankesivun `hankkeen_yhteystiedot` on HTML-escapattua tekstia, jossa on
+ * rakennuttajapaallikon nimi, nimike, SUORA puhelin ja malliosoite.
+ * Jasennys on lib/agent/senaattiContacts.ts:ssa, koska myos takautuva ajo
+ * tarvitsee sita.
+ *
+ * Vanha versio poimi vain nimen, nimikkeen ja osoitteen: puhelinta ei
+ * luettu lainkaan ja osoite jai malliksi. Mitattu 22.8.2026 - kymmenesta
+ * yhteystiedon saaneesta hankkeesta yhdeksalta puuttui puhelin ja
+ * kuudelta osoite.
+ */
+async function fetchSenaattiContacts(projectUrl: string): Promise<Contact[]> {
   try {
     const html = await (await fetch(projectUrl, { cache: "no-store" })).text()
     const match = html.match(/"hankkeen_yhteystiedot"\s*:\s*"([^"]*)"/)
-    if (!match) return null
+    if (!match) return []
 
-    const lines = match[1]
-      .split(/\\r\\n/)
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .filter((line) => line !== "Lisätietoja" && line !== "Senaatti-kiinteistöt")
-
-    const email = lines.find((line) => line.includes("@")) ?? null
-    const name = lines.find((line) => line !== email) ?? null
-    const title = lines.find((line) => line !== email && line !== name) ?? null
-
-    if (!name && !email) return null
-
-    return { name, title, email }
+    return parseSenaattiContacts(match[1])
   } catch {
-    return null
+    return []
   }
 }
 
@@ -1765,8 +1768,8 @@ async function collectSenaattiSource(source: DiscoverySource) {
 
   const knownContacts = new Map<string, any>()
   for (const row of existingRows ?? []) {
-    if (row.raw_payload?.contact) {
-      knownContacts.set(row.document_url, row.raw_payload.contact)
+    if (row.raw_payload?.contacts?.length) {
+      knownContacts.set(row.document_url, row.raw_payload.contacts)
     }
   }
 
@@ -1786,7 +1789,7 @@ async function collectSenaattiSource(source: DiscoverySource) {
     const detailsAttempted = Boolean(known)
 
     if (!detailsAttempted && detailFetches < SENAATTI_MAX_DETAIL_FETCHES_PER_RUN) {
-      contact = await fetchSenaattiContact(post.link)
+      contact = await fetchSenaattiContacts(post.link)
       detailFetches += 1
     }
 
@@ -1824,7 +1827,7 @@ async function collectSenaattiSource(source: DiscoverySource) {
             phase,
             location,
             building_type: buildingType,
-            ...(contact ? { contact } : {}),
+            ...(contact?.length ? { contacts: contact } : {}),
             original: post,
           },
           processed_at: new Date().toISOString(),
