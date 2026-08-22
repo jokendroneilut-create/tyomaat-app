@@ -68,6 +68,7 @@ async function main() {
 
   const { createClient } = await import("@supabase/supabase-js")
   const { mergeCompanyNames } = await import("../lib/projects/projectCompanies")
+  const { mergeContacts } = await import("../lib/projects/contacts")
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -116,9 +117,29 @@ async function main() {
   const metaFills: Record<string, any> = {}
   for (const [k, v] of Object.entries(removeMeta)) {
     if (k === "source_history" || k === "related_companies" || k === "also_known_as") continue
+    /* Yhteyshenkilöt yhdistetään, ei täydennetä — ks. alla. */
+    if (k === "contact_persons") continue
     const current = (keepMeta as any)[k]
     if (current == null || current === "" ) metaFills[k] = v
   }
+
+  /*
+   * YHTEYSHENKILÖT YHDISTETÄÄN, EI TÄYDENNETÄ TYHJÄÄN.
+   *
+   * Muut metadata-avaimet täydennetään vain jos säilyvällä on tyhjä, mutta
+   * contact_persons on vain-lisäävä (D-101). Täydennyssääntö olisi
+   * hävittänyt poistettavan kontaktit aina kun säilyvällä oli edes yksi:
+   * mitattu 22.8.2026 Espoonlahden parissa, jossa säilyvällä oli 2 ja
+   * poistettavalla 3 — ja poistettava piilotetaan, joten ne olisivat
+   * kadonneet näkyvistä kokonaan.
+   *
+   * Yhteystiedot ovat yksi kolmesta syystä joiden takia testiasiakkaat
+   * eivät jääneet maksaviksi; niitä ei hävitetä yhdistämisessä.
+   */
+  const mergedContacts = mergeContacts(
+    Array.isArray(keepMeta.contact_persons) ? keepMeta.contact_persons : [],
+    Array.isArray(removeMeta.contact_persons) ? removeMeta.contact_persons : []
+  )
 
   const sourceHistory = [
     ...(Array.isArray(keepMeta.source_history) ? keepMeta.source_history : []),
@@ -148,6 +169,10 @@ async function main() {
   ]
 
   console.log(`\nmetadata-avaimia täydennetään: ${Object.keys(metaFills).length}`)
+  console.log(
+    `yhteyshenkilöt: säilyvällä ${(keepMeta.contact_persons ?? []).length} + ` +
+      `poistettavalla ${(removeMeta.contact_persons ?? []).length} -> ${mergedContacts.length}`
+  )
   console.log(`lähdehistoria: ${(keepMeta.source_history ?? []).length} + ${(removeMeta.source_history ?? []).length} = ${sourceHistory.length}`)
   console.log(`liittyvät yritykset: ${relatedCompanies.length}`)
   console.log(`also_known_as: ${JSON.stringify(alsoKnownAs)}`)
@@ -202,6 +227,8 @@ async function main() {
       metadata: {
         ...metaFills,
         ...keepMeta,
+        /* Yhdistetty lista voittaa säilyvän oman — se sisältää molemmat. */
+        ...(mergedContacts.length > 0 ? { contact_persons: mergedContacts } : {}),
         source_history: sourceHistory,
         ...(relatedCompanies.length > 0 ? { related_companies: relatedCompanies } : {}),
         ...(alsoKnownAs.length > 0 ? { also_known_as: alsoKnownAs } : {}),
