@@ -6,6 +6,7 @@ import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
 import type { Contact } from "@/lib/projects/contacts"
 import { parseSenaattiContacts } from "@/lib/agent/senaattiContacts"
+import { parseVaylaDescription } from "@/lib/agent/vaylaProjectDescription"
 import {
   fetchTenderCalendar,
   isConstructionTender,
@@ -1516,9 +1517,10 @@ function decodeCloudflareEmail(encoded: string): string | null {
   }
 }
 
-async function fetchVaylaProjectDetails(projectUrl: string): Promise<{
+async function fetchVaylaProjectDetails(projectUrl: string, title?: string | null): Promise<{
   contact: { organization: string | null; title: string | null; name: string | null; phone: string | null; email: string | null } | null
   progress: string | null
+  description: string | null
 }> {
   try {
     const html = await (await fetch(projectUrl, { cache: "no-store" })).text()
@@ -1542,9 +1544,19 @@ async function fetchVaylaProjectDetails(projectUrl: string): Promise<{
     const progress =
       $("[class*=project__progress]").first().text().replace(/\s+/g, " ").trim() || null
 
-    return { contact, progress }
+    /*
+     * LEIPATEKSTI, EI VAIN LISTAUKSEN TEASER.
+     *
+     * Kuvaukseksi tallennettiin listaussivun yhden virkkeen teaser, vaikka
+     * hankesivulla on sama auki kirjoitettuna - rahoitus, kilometrit ja
+     * kohdeluettelo tienumeroineen. Mitattu 22.8.2026: 197 hanketta 376:sta,
+     * keskimaarin 210 -> 1 982 merkkia.
+     */
+    const description = parseVaylaDescription(html, title)
+
+    return { contact, progress, description }
   } catch {
-    return { contact: null, progress: null }
+    return { contact: null, progress: null, description: null }
   }
 }
 
@@ -1580,13 +1592,14 @@ async function collectVaylaSource(source: DiscoverySource) {
 
   const recheckBefore = Date.now() - VAYLA_DETAIL_RECHECK_DAYS * 86400000
 
-  const knownDetails = new Map<string, { contact: any; progress: string | null }>()
+  const knownDetails = new Map<string, { contact: any; progress: string | null; description?: string | null }>()
   for (const row of existingRows ?? []) {
     const payload = row.raw_payload ?? {}
     if (payload.contact || payload.progress) {
       knownDetails.set(row.document_url, {
         contact: payload.contact ?? null,
         progress: payload.progress ?? null,
+        description: payload.page_description ?? null,
       })
       continue
     }
@@ -1602,7 +1615,7 @@ async function collectVaylaSource(source: DiscoverySource) {
     }
   }
 
-  const inRunDetails = new Map<string, { contact: any; progress: string | null }>()
+  const inRunDetails = new Map<string, { contact: any; progress: string | null; description?: string | null }>()
   let saved = 0
   let detailFetches = 0
 
@@ -1612,19 +1625,21 @@ async function collectVaylaSource(source: DiscoverySource) {
     const known = knownDetails.get(item.link) ?? inRunDetails.get(item.link)
     let contact = known?.contact ?? null
     let progress = known?.progress ?? null
+    let description: string | null = known?.description ?? null
     let detailsAttempted = Boolean(known)
 
     let checkedNow = false
 
     if (!detailsAttempted && detailFetches < VAYLA_MAX_DETAIL_FETCHES_PER_RUN) {
-      const details = await fetchVaylaProjectDetails(item.link)
+      const details = await fetchVaylaProjectDetails(item.link, item.title)
       contact = details.contact
       progress = details.progress
+      description = details.description
       detailFetches += 1
       checkedNow = true
       detailsAttempted = Boolean(details.contact || details.progress)
 
-      inRunDetails.set(item.link, { contact, progress })
+      inRunDetails.set(item.link, { contact, progress, description })
     }
 
     const rawText = JSON.stringify(item)
@@ -1646,7 +1661,9 @@ async function collectVaylaSource(source: DiscoverySource) {
             parser: source.parser,
             priority: source.priority,
             title: item.title,
-            description: item.description,
+            /* Sivun leipateksti voittaa listauksen teaserin. */
+            description: description || item.description,
+            ...(description ? { page_description: description } : {}),
             hanke_type: item.hankeType,
             region: item.region,
             phase: item.phase,

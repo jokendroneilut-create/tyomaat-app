@@ -11,6 +11,47 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Vaylan kuvaukset hankesivulta, ei listauksen teaserista
+
+Kuvaus oli listaussivun yksi virke ("Lapin elinvoimakeskuksen
+paallystyskohteet kesalla 2026", 56 merkkia). Hankesivulla sama on auki
+kirjoitettuna: rahoitus, kilometrit ja kohdeluettelo tienumeroineen,
+kunnittain ja pituuksineen.
+
+Sivupohjia on kaksi. Ensimmainen versio luki vain .project__intro-lohkoa
+ja jatti 66 hanketta ilman kuvausta - niilla sisalto on
+.content-article-lohkossa, jossa on lisaksi hankkeen perustiedot,
+aikataulu ja tilaaja.
+
+Lahdetta ei kuormiteta: neljalla rinnakkaisella haulla vayla.fi vastasi
+66 kertaa 429, joten rinnakkaisuus on kaksi ja 429:lle on porrastettu
+uusinta.
+
+Takautuva ajo 372/376 rivia (99 %), keskimaarin 206 -> 2 697 merkkia.
+Yksikaan teksti ei lyhentynyt. (D-107)
+
+### Otsikoiden vartalointia ei otettu kayttoon
+
+Espoonlahden duplikaattipari jai 50 pisteeseen kynnyksen ollessa 70,
+koska otsikkovertailu on sanatarkka: "asuntoa", "asunnoille" ja
+"asunnot" ovat kolme eri sanaa.
+
+Kaksi varianttia mitattiin koko nakyvalla aineistolla. Kumpikaan ei
+kelvannut: crudeStem tormayttaa "satama" ja "satava" (molemmat -> "sata"),
+ja etuliitevariantti tuottaa VAARAN automaattisen yhdistamisen
+(Vinkkilan asemakaava == Rautilan asemakaava), mika piilottaisi hankkeen
+asiakkailta.
+
+Kolmas kirjattu yritys laajentaa otsikkovertailua ja kolmas joka kaatuu
+samaan ilmioon. Otsikko ei ole se signaali josta tasmaytysta kannattaa
+parantaa. (D-106)
+
+### Yhteyshenkilot sailyvat hankkeita yhdistettaessa
+
+Yhdistamistyokalu taydensi metadatan vain tyhjiin avaimiin, joten
+poistettavan yhteyshenkilot havisivat aina kun sailyvalla oli edes yksi.
+Mitattu Espoonlahden parissa: 2 + 3 -> 4, vanhalla saannolla 2.
+
 ### Senaatin kilpailutuskalenteri - ensimmainen lahde ENNEN julkaisua
 
 Kaikki 307 aiempaa lahdetta kertovat jostain mika on jo tapahtunut:

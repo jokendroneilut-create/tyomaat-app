@@ -5,6 +5,94 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-107 – Väyläviraston kuvaus luetaan hankesivulta, ei listauksen teaserista
+
+Kuvaukseksi oli tallennettu listaussivun teaser, tyypillisesti yksi virke:
+
+```
+"Lapin elinvoimakeskuksen päällystyskohteet kesällä 2026."      56 merkkiä
+```
+
+Hankesivulla sama on auki kirjoitettuna, ja siinä on juuri se tieto jota
+urakoitsija tarvitsee — rahoitus, kilometrit ja **kohdeluettelo
+tienumeroineen, kunnittain ja pituuksineen**:
+
+```
+Vuonna 2026 Lapin elinvoimakeskukselle myönnettiin 23,8 miljoonaa euroa
+teiden päällystämiseen... uusitaan päällystettä 145 km...
+  Mt 926 Itäkoski–Suvannonvaara, Keminmaa-Tervola, n. 5 km
+  Mt 934 Tapionkylä–Meltaus, Rovaniemi, n. 29 km              2 455 merkkiä
+```
+
+Sivu haettiin jo yhteystietoa varten (D-103), joten tämä ei ole uusi
+pyyntö vaan lisää kenttiä samasta vastauksesta.
+
+**KAKSI SIVUPOHJAA.** Ensimmäinen versio luki vain `.project__intro`-lohkoa
+ja jätti 66 hanketta ilman kuvausta — niillä sisältö on
+`.content-article`-lohkossa, jossa on lisäksi hankkeen perustiedot,
+aikataulu ja tilaaja. Pisin tulos voittaa.
+
+**Lähdettä ei kuormiteta.** Neljällä rinnakkaisella haulla vayla.fi vastasi
+66 kertaa `429 Too Many Requests`. Rinnakkaisuus on kaksi, tauko 400 ms ja
+429:lle porrastettu uusinta.
+
+**Tulos:** 372 / 376 riviä (99 %), keskimäärin **206 → 2 697 merkkiä**.
+Yksikään teksti ei lyhentynyt — ajo keskeytyisi jos näin kävisi, koska
+pidempi vanha teksti voi olla käsin täydennetty.
+
+---
+
+### D-106 – Otsikoiden vartalointia EI oteta käyttöön (kolmas mitattu yritys)
+
+Espoonlahden pari ("111 asuntoa Espoon Asunnoille…" ja "Espoon Asunnot
+rakennuttaa 111 vuokra-asuntoa…") jäi 50 pisteeseen kynnyksen ollessa 70,
+koska otsikkovertailu on **sanatarkka**: "asuntoa", "asunnoille" ja
+"asunnot" ovat kolme eri sanaa, ja ainoa yhteinen sana "espoon"
+suodatetaan kuntanimenä.
+
+Mitattu koko näkyvällä aineistolla (5 722 hanketta, kaupungin sisäiset
+parit, paras osuma per hanke):
+
+```
+                     uudet >=70    uudet >=40   paras osuma vaihtui
+crudeStem            2             19           79
+etuliite (>=5 merkkiä) 4           42          141
+```
+
+**Kumpikaan ei kelpaa.**
+
+`crudeStem` katkaisee pituuteen `max(4, n−3)`, jolloin kyse ei ole
+taivutusmuodosta vaan yhteisestä alusta:
+
+```
+satama -> sata     satava -> sata          osuma
+rantakatu -> rantak   rantakylä -> rantak  osuma
+```
+
+Etuliitevariantti korjaa nuo mutta tuottaa **väärän automaattisen
+yhdistämisen**, mikä on pahin mahdollinen virhe — se piilottaisi
+hankkeen asiakkailta:
+
+```
+65 -> 75   Vinkkilän asemakaavan muutos, korttelit 37b
+        == Rautilan asemakaavan muutos, kortteli 100
+```
+
+Molempien 40-tason lisäykset ovat lomakekieltä: eri korttelit samassa
+kaupunginosassa, eri koulujen perusparannukset, eri metroasemien
+liukuportaat.
+
+Tämä on **kolmas** kirjattu yritys laajentaa otsikkovertailua, ja kolmas
+joka kaatuu samaan ilmiöön (vrt. tämän tiedoston aiemmat kaksi).
+Johtopäätös: otsikko ei ole se signaali josta täsmäytystä kannattaa
+parantaa. Espoonlahden pari olisi ratkennut osoitteesta, ja
+rakennuttaja/urakoitsija-kenttien ristiin vertailusta — sama yritys oli
+toisella `developer`- ja toisella `builder`-kentässä.
+
+Mittausteline on tallessa: `scripts/measure-stemming-effect.ts`.
+
+---
+
 ### D-105 – Ensimmäinen lähde joka kertoo hankkeesta ENNEN julkaisua
 
 Kaikki 307 aiempaa lähdettä kertovat jostain mikä on jo tapahtunut:
