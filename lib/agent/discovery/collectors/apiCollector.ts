@@ -1220,7 +1220,13 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
   }
 }
 
-const KREATE_PROJECTS_PER_RUN = 30
+/*
+ * WordPressin REST-rajapinnan yläraja on 100 riviä sivulta. Kreaten
+ * luettelossa oli 251 hanketta 22.8.2026, joten kolme sivua riittää
+ * reilusti — katto on turvaraja karkaavaa silmukkaa vastaan.
+ */
+const KREATE_PER_PAGE = 100
+const KREATE_MAX_PAGES = 5
 
 type KreateContact = {
   title: string | null
@@ -1308,16 +1314,39 @@ async function collectKreateSource(source: DiscoverySource) {
     fetchKreateTaxonomy("project_category"),
   ])
 
-  const response = await fetch(
-    `https://kreate.fi/wp-json/wp/v2/project?per_page=${KREATE_PROJECTS_PER_RUN}&lang=fi&orderby=modified&order=desc`,
-    { cache: "no-store" }
-  )
+  /*
+   * KOKO LUETTELO, EI VAIN UUSIMPIA.
+   *
+   * Aiempi haku oli `per_page=30&orderby=modified&order=desc`, jolloin
+   * jokainen ajo näki saman 30 tuoreimman hankkeen eikä loppuun päässyt
+   * koskaan. Mitattu 22.8.2026: Kreaten luettelossa on 251 hanketta ja
+   * meillä oli niistä 31.
+   *
+   * Hinta on pieni ja saalis poikkeuksellinen: 229 hanketta 251:stä
+   * (91 %) kertoo työmaan vastuuhenkilön nimen, tehtävän ja SUORAN
+   * matkapuhelinnumeron. Se on paras yhteystietolaatu koko aineistossa
+   * — vrt. kuntien kirjaamot (D-104), joissa nimettyjä on nolla.
+   *
+   * WordPressin yläraja on 100 riviä sivulta, joten koko luettelo on
+   * kolme pyyntöä.
+   */
+  const posts: any[] = []
+  for (let page = 1; page <= KREATE_MAX_PAGES; page++) {
+    const response = await fetch(
+      `https://kreate.fi/wp-json/wp/v2/project?per_page=${KREATE_PER_PAGE}&page=${page}&lang=fi&orderby=modified&order=desc`,
+      { cache: "no-store" }
+    )
 
-  if (!response.ok) {
-    throw new Error(`Kreaten hankerajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+    if (!response.ok) {
+      /* Sivu yli lopun vastaa 400 — se on luettelon loppu, ei virhe. */
+      if (page > 1 && response.status === 400) break
+      throw new Error(`Kreaten hankerajapinnan haku epäonnistui: ${response.status} ${response.statusText}`)
+    }
+
+    const sivu = await response.json()
+    posts.push(...(sivu ?? []))
+    if (!Array.isArray(sivu) || sivu.length < KREATE_PER_PAGE) break
   }
-
-  const posts = await response.json()
 
   let saved = 0
 
