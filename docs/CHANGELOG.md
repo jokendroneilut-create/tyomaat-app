@@ -11,6 +11,109 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Senaatin kilpailutuskalenteri - ensimmainen lahde ENNEN julkaisua
+
+Kaikki 307 aiempaa lahdetta kertovat jostain mika on jo tapahtunut:
+kaava vireilla, lupa myonnetty, kilpailutus julkaistu. Senaatin
+kilpailutuskalenteri kertoo kilpailutuksesta jota ei ole viela
+julkaistu - sarake on "Ennakoitu julkaisuajankohta" ja ulottuu
+mitatusti 1-8 nelannesta eteenpain (2026/Q2 - 2028/Q2).
+
+60 rivia, joista 15 rakentamista, ja kaikilla 15:lla yhteystieto
+(13 nimettya henkiloa). Osuu konversioesteeseen "liian myohaan", johon
+mikaan aiempi lahdetyo ei ole osunut.
+
+Rivit ovat ENNUSTEITA: vaihe on aina Suunnitteilla, ajankohta
+sailytetaan nelanneksena eika muunneta keksityksi paivamaaraksi
+("2027-01-01" nayttaisi tarkemmalta kuin tieto on), ja kuvaus sanoo
+suoraan etta kyse on ennakkotiedosta. Tunniste on otsikko eika
+ajankohta, jottei sama hanke monistu rivin siirtyessa. (D-105)
+
+### Kolme lahdetta joissa poiminta oli valmiina mutta katto naannytti sen
+
+Sama vika loytyi kolmesti perakkain: yhteystietojen poiminta oli ollut
+olemassa alusta asti, mutta ajokohtainen hakukatto esti sita paasemasta
+luettelon lapi.
+
+- **Vaylavirasto**: VAYLA_MAX_DETAIL_FETCHES_PER_RUN = 5, ja vain
+  36/188 dokumenttia oli koskaan saanut detaljihaun. Katto 30:een,
+  tyhja haku muistetaan contact_checked_at-leimalla. Takautuva ajo
+  125/159 (79 %) sai projektipaallikon nimineen ja suorine numeroineen.
+  (D-103)
+- **Kreate**: per_page=30&orderby=modified, joten jokainen ajo nki saman
+  30 tuoreimman hankkeen. Luettelossa on 251 hanketta ja meilla oli 31 -
+  ja 229:lla niista on tyomaan vastuuhenkilo suorine matkapuhelimineen
+  (91 %). Sivutus koko luetteloon.
+- **Senaatti**: SENAATTI_MAX_DETAIL_FETCHES_PER_RUN = 10 eika 44
+  hankkeen luettelo ehtinyt lapi. Lisaksi jasennin poimi vain nimen ja
+  nimikkeen - puhelinta ei luettu lainkaan ja osoite jai malliksi.
+  Backfill 41 hanketta.
+
+### Malliosoitteet pois tuotannosta
+
+Lahteet kirjoittavat yhteystiedon usein muotoon
+"etunimi.sukunimi@vayla.fi". Cloudflare-purku onnistui, mutta osoite on
+malli eika kenenkaan osoite - ja niita oli kannassa 376 kappaletta 21
+lahteessa asiakkaille naytettavana.
+
+Ne tyhjennettiin; nimi, nimike ja puhelin sailyivat aina. Malli
+laajennetaan nimen perusteella vain RAKENTEISESTA lahteesta, koska
+kuivaharjoitus kaikkiin lahteisiin tuotti roskaa: "Venna Oy" ->
+venna.oy@..., "Airi Maatt" -> airi.maatt@... (katkennut sukunimi, jota
+ei voi koneellisesti havaita). (D-103)
+
+### Kuntien yleiset yhteystiedot
+
+Kolme uudelleenkayton varianttia kaatui kuivaharjoitukseen ennen kuin
+saanto oli oikea: hankkeelle tallennettu yhteystieto ei ole osapuolen
+yhteystieto (Tampereen kaupunki -> kirjaamo@ely-keskus.fi), kunta ei
+kelpaa varalle yksityiselle (Atria -> kaavoitus@seinajoki.fi), eika
+osittainen verkkotunnusosuma kelpaa lainkaan - yleissana "kaupunki" osui
+tunnukseen uusikaupunki.fi ja tuotti 794 vaaraa paria.
+
+Voimaan jai: roolilaatikko JA TASMALLINEN kunnan verkkotunnus.
+Osoitteita ei myoskaan johdeta kaavasta - Helsingin kirjaamo on
+helsinki.kirjaamo@hel.fi, ja arvattu kirjaamo@hel.fi olisi mennyt 578
+hankkeelle. Ne haetaan kunnan omalta sivulta ja versioidaan
+lahdeviitteineen (107 kuntaa). (D-104)
+
+Nama ovat kirjaamoja, eivat nimettyja henkiloita - nimettyjen maara ei
+noussut lainkaan. Tavoite "vahintaan yksi yhteystieto" tayttyy, tavoite
+"kenelle soittaa" ei.
+
+### Yhteystiedon lisays nakyy nyt hakuvahdissa
+
+Hakuvahti lukee project_changes-taulua, jonka kirjoittaa liipaisin
+log_project_changes(). Se seuraa vain SARAKKEITA, ja contact_persons on
+metadata-kentan sisalla. Mitattu: 36 h aikana 151 muutosrivia ja nolla
+metadatasta, vaikka yli 1 400 hankkeen metadata paivittyi - yksikaan
+takautuvasti lisatty yhteyshenkilo ei ollut tavoittanut asiakasta.
+
+Korjaus on ERILLINEN liipaisin, ei muutos olemassa olevaan funktioon,
+jonka runkoa ei ole repossa. Tiedottaa vain kun kontaktien maara kasvaa.
+SQL ajettava kasin: docs/sql/2026-08-22_contact_persons_change_log.sql
+
+Kaytanto: takautuvan ajon jalkeen poista sen synnyttamat rivit, mutta
+VAIN ne joissa ei ole nimettya henkiloa. Kirjaamo-osoite vanhassa
+hankkeessa ei ole uutinen; nimetty henkilo on. (D-104)
+
+### Yhteystietojen kattavuus paivan aikana
+
+```
+lahtotilanne                       1 986   34,8 %   nimettyja      -
+sahkopostiankkuri tiedotteista     2 756   48,3 %   nimettyja    682
+peitetyt osoitteet + puhelin       2 941   51,6 %   nimettyja    939
+Hilman ilmoitusten osapuolet       3 099   54,3 %   nimettyja  1 022
+Vaylaviraston projektipaallikot    3 222   56,5 %   nimettyja  1 145
+kuntien yleiset yhteystiedot       4 709   82,5 %   nimettyja  1 145
+Senaatin rakennuttajapaallikot     4 739   83,1 %   nimettyja  1 184
+```
+
+Jaljella 966 hanketta (16,9 %). Kasin luoduista mitattiin ettei
+niissa ole yhtaan sahkopostia tekstissa, joten LLM:aa ei kaytetty
+osoitteiden tuottamiseen - ilman lahdetta se tuottaisi ne muististaan
+eika tarkistustieta olisi.
+
 ### Yhteyshenkilot omaan rakenteiseen kenttaan
 
 Kayttaja yhdisti uuden tiedotteen olemassa olevaan hankkeeseen eivatka
