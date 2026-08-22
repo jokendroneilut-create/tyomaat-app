@@ -56,3 +56,6 @@ ab-*.json
 # app/.claude/launch.json toistaa juuren konfiguraation mutta kovakoodatulla
 # absoluuttisella polulla (--prefix C:\Users\...), joten se on koneriippuva.
 app/.claude/launch.json
+
+# Mittausajojen valitulokset (kymmenia megatavuja, ei kuulu historiaan)
+scripts/out/pairs-*.json
