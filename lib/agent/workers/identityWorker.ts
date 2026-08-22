@@ -8,6 +8,7 @@ import { resolveHelsinkiKaavaProject } from "@/lib/agent/identity/resolvers/hels
 import { resolveTampereKaavaProject } from "@/lib/agent/identity/resolvers/tampereKaavaResolver"
 import { resolveTurkuKaavaProject } from "@/lib/agent/identity/resolvers/turkuKaavaResolver"
 import { resolveKreateProject } from "@/lib/agent/identity/resolvers/kreateResolver"
+import { resolveSenaattiTenderProject } from "@/lib/agent/identity/resolvers/senaattiTenderResolver"
 import { resolveVaylaProject } from "@/lib/agent/identity/resolvers/vaylaResolver"
 import { resolveSenaattiProject } from "@/lib/agent/identity/resolvers/senaattiResolver"
 import { resolvePuolustuskiinteistotProject } from "@/lib/agent/identity/resolvers/puolustuskiinteistotResolver"
@@ -363,6 +364,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "väylävirasto hankkeet") {
     const result = await resolveVaylaProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "senaatti-kiinteistöt kilpailutuskalenteri") {
+    const result = await resolveSenaattiTenderProject({
       document,
       facts: facts ?? [],
     })

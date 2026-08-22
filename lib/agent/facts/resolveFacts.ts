@@ -7,6 +7,7 @@ import { extractTampereKaavaFacts } from "@/lib/agent/facts/extractTampereKaavaF
 import { extractTurkuKaavaFacts } from "@/lib/agent/facts/extractTurkuKaavaFacts"
 import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
 import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
+import { extractSenaattiTenderFacts } from "@/lib/agent/facts/extractSenaattiTenderFacts"
 import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
 import { extractPuolustuskiinteistotFacts } from "@/lib/agent/facts/extractPuolustuskiinteistotFacts"
 import { extractEspooKaavaFacts } from "@/lib/agent/facts/extractEspooKaavaFacts"
@@ -969,6 +970,22 @@ export function resolveFacts(document: any) {
         phase,
         category,
         contacts,
+      }),
+    }
+  }
+
+  if (document.source_name === "Senaatti-kiinteistöt kilpailutuskalenteri") {
+    return {
+      decisions: [],
+      facts: extractSenaattiTenderFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        title: document.raw_payload?.title ?? document.title ?? null,
+        category: document.raw_payload?.category ?? null,
+        expectedPublication: document.raw_payload?.expected_publication ?? null,
+        scope: document.raw_payload?.scope ?? null,
+        contacts: document.raw_payload?.contacts ?? [],
+        moreInfo: document.raw_payload?.more_info ?? null,
       }),
     }
   }

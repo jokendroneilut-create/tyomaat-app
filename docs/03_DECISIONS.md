@@ -5,6 +5,55 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-105 – Ensimmäinen lähde joka kertoo hankkeesta ENNEN julkaisua
+
+Kaikki 307 aiempaa lähdettä kertovat jostain mikä on jo tapahtunut:
+kaava on vireillä, lupa myönnetty, kilpailutus julkaistu. Senaatin
+**kilpailutuskalenteri** on ensimmäinen joka kertoo kilpailutuksesta
+jota ei ole vielä julkaistu.
+
+Sarake on "Ennakoitu julkaisuajankohta", ja mitattu 22.8.2026:
+
+```
+2026/Q2  4     2027/Q1  8
+2026/Q3 26     2027/Q2  4
+2026/Q4 12     2027/Q3  3     2027/Q4 1     2028/Q2 2
+
+60 riviä, joista 15 rakentamista
+15/15 yhteystieto, 13 nimettyä henkilöä
+```
+
+Hilma kertoo kilpailutuksesta kun se julkaistaan; tämä 1–8 neljännestä
+aiemmin. Se osuu suoraan konversioesteeseen **"liian myöhään"**
+(`docs/00_PRODUCT_BLUEPRINT.md` 1.1), johon mikään aiempi lähdetyö ei
+ole osunut.
+
+**Volyymi on pieni ja se on tarkoitus.** 15 hanketta kerrallaan. Arvo on
+ajoituksessa, ei määrässä — vertaa saman päivän kuntaurakkaan, joka
+kattoi 1 487 hanketta mutta ei tuonut yhtään nimettyä henkilöä (D-104).
+
+**ENNUSTE, EI PÄÄTÖS.** Rivi voi siirtyä tai peruuntua, joten:
+
+- vaihe on aina "Suunnitteilla"; kilpailutusta ei väitetä alkaneeksi
+- ajankohta säilytetään neljänneksenä (`"2027/Q1"`) eikä muunneta
+  `fact_date`-päivämääräksi — keksitty `2027-01-01` näyttäisi
+  käyttäjälle tarkemmalta kuin tieto on
+- kuvaus sanoo suoraan että kyseessä on ennakkotieto
+
+**Tunniste on otsikko, ei ajankohta.** Kalenterissa ei ole rivikohtaista
+osoitetta. Otsikko pysyy samana kun rivi siirtyy neljänneksestä toiseen,
+joten sama hanke ei monistu ajankohdan päivittyessä.
+
+**Yhteystieto johdetaan nimestä** Senaatin omalla mallilla
+(`etunimi.sukunimi@senaatti.fi`), sama sääntö kuin [D-103]:ssa.
+Ristiintarkistettu: kalenterista johdetut osoitteet täsmäsivät niihin
+jotka löytyivät erikseen Senaatin uutissivuilta (`ari.kiiskinen@senaatti.fi`).
+
+Lähde rekisteröidään [D-001]:n mukaisesti:
+`docs/sql/2026-08-22_senaatti_tender_calendar_source.sql`.
+
+---
+
 ### D-104 – Kunnan yleinen yhteystieto vain täsmällisellä verkkotunnuksella
 
 Puutteesta (2 483 hanketta) jokaisesta tiedettiin joko osapuoli tai

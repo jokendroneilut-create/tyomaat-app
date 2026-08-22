@@ -6,6 +6,11 @@ import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
 import type { Contact } from "@/lib/projects/contacts"
 import { parseSenaattiContacts } from "@/lib/agent/senaattiContacts"
+import {
+  fetchTenderCalendar,
+  isConstructionTender,
+  SENAATTI_TENDER_CALENDAR_URL,
+} from "@/lib/agent/senaattiTenderCalendar"
 import type { DiscoverySource } from "../registry/sources"
 import { detectCityFromText } from "../../detectCityFromText"
 import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
@@ -1740,6 +1745,82 @@ async function fetchSenaattiContacts(projectUrl: string): Promise<Contact[]> {
     return parseSenaattiContacts(match[1])
   } catch {
     return []
+  }
+}
+
+/*
+ * SENAATIN KILPAILUTUSKALENTERI.
+ *
+ * Ainoa lahde joka kertoo hankkeesta ENNEN kuin kilpailutus julkaistaan
+ * (ks. lib/agent/senaattiTenderCalendar.ts). Rivit ovat ennusteita, ja
+ * ne paivittyvat: sama rivi voi siirtya nelanneksesta toiseen tai
+ * kadota kokonaan kun kilpailutus julkaistaan.
+ *
+ * Vain rakentaminen kerataan - kalenterissa on myos tietohallintoa ja
+ * sisaisia palveluita.
+ */
+async function collectSenaattiTenderSource(source: DiscoverySource) {
+  const rivit = await fetchTenderCalendar()
+
+  if (!rivit.length) {
+    throw new Error("Senaatin kilpailutuskalenterista ei saatu yhtaan rivia")
+  }
+
+  const rakentaminen = rivit.filter(isConstructionTender)
+  let saved = 0
+
+  for (const rivi of rakentaminen) {
+    /*
+     * Kalenterissa ei ole rivikohtaista osoitetta, joten tunniste
+     * muodostetaan otsikosta. Otsikko on Senaatin oma ja pysyy samana
+     * rivin siirtyessa neljanneksesta toiseen, joten sama hanke ei
+     * monistu kun ajankohta paivittyy.
+     */
+    const slug = rivi.title
+      .toLowerCase()
+      .replace(/[^a-z0-9äöå]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80)
+
+    const documentUrl = `${SENAATTI_TENDER_CALENDAR_URL}#${slug}`
+    const rawText = JSON.stringify(rivi)
+
+    const { error } = await supabaseAdmin
+      .from("source_documents")
+      .upsert(
+        {
+          source_id: source.id,
+          source_name: source.name,
+          title: rivi.title,
+          document_url: documentUrl,
+          document_type: "api",
+          content_hash: hashContent(rawText),
+          status: "downloaded",
+          raw_text: rawText,
+          raw_payload: {
+            parser: source.parser,
+            priority: source.priority,
+            title: rivi.title,
+            category: rivi.category,
+            expected_publication: rivi.expectedPublication,
+            scope: rivi.scope,
+            contacts: rivi.contacts,
+            more_info: rivi.moreInfo,
+            original: rivi,
+          },
+          processed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "document_url" }
+      )
+
+    if (error) throw error
+    saved += 1
+  }
+
+  return {
+    documentsFound: rivit.length,
+    documentsSaved: saved,
   }
 }
 
@@ -38640,6 +38721,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "lupapisteParser") {
     return collectLupapisteSource(source)
+  }
+
+  if (source.parser === "senaattiTenderParser") {
+    return collectSenaattiTenderSource(source)
   }
 
   if (source.parser === "kreateParser") {

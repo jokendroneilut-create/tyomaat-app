@@ -23,6 +23,12 @@ export type IdentifierType =
   | "kreate_project_id"
   | "vayla_project_id"
   | "senaatti_project_id"
+  /*
+   * Kilpailutuskalenterin rivi. Tunniste muodostetaan otsikosta, koska
+   * kalenterissa ei ole rivikohtaista osoitetta — otsikko pysyy samana
+   * kun rivin ennakoitu ajankohta siirtyy neljänneksestä toiseen.
+   */
+  | "senaatti_tender_id"
   | "kuopio_kaava_tunnus"
   | "lahti_kaava_tunnus"
   | "pori_kaava_tunnus"
@@ -275,6 +281,7 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "kreate_project_id",
   "vayla_project_id",
   "senaatti_project_id",
+  "senaatti_tender_id",
   "kuopio_kaava_tunnus",
   "lahti_kaava_tunnus",
   "pori_kaava_tunnus",
