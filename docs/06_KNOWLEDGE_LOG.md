@@ -187,3 +187,32 @@ Status:
 Koodissa ja ajettu takautuvasti (D-096). Avoin: muiden kuntien lomakepohjista
 ei ole vielä poimintaa, ja PDF sisältää myös pinta-alat ja kaavatiedot joita ei
 vielä lueta omiksi kentikseen.
+
+## 2026-08-23 – Rakennuslehden ehdokkailta puuttuu kaupunki
+
+Rudolf Steiner -koulun hanke ei osunut jo hyväksyttyyn Jatken
+tiedotteeseen. Syy EI ollut veto vaan todisteiden puute: otsikot eivät
+jaa yhtään sanaa tokenisoinnin jälkeen ("koulun" vs "steiner-koulussa",
+ks. D-106), eikä muuta todistetta ollut.
+
+Juurisyy on ylempänä. Mitattu:
+
+```
+rakennuslehti-ehdokkaita: 50
+  ilman kaupunkia:        50   kaikki
+  kaupunki pääteltävissä tekstistä: 23
+```
+
+Täsmäytys hakee ehdokkaita kaupungin sisältä, joten ilman kaupunkia ei
+ole mitään mihin verrata. Lähde käyttää `legacyCompanyResolver`ia, joka
+ei päättele kuntaa tekstistä.
+
+**EI KORJATTU, KOSKA PÄÄTTELY EI OLE VIELÄ LUOTETTAVA.** Otoksesta:
+
+```
+"Varte rakentaa hoivakotia Nokialle"  ->  Tampere    väärin
+```
+
+Väärä kaupunki on pahempi kuin puuttuva: se siirtää hankkeen väärän
+asiakkaan hakuvahtiin. Ennen käyttöönottoa on luettava kaikkien 23
+päättelyn tulos riveittäin.

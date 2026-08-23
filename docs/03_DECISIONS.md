@@ -5,6 +5,50 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-108 – Sähköposti siivotaan poiminnassa, koska se tarttuu ympäristöönsä
+
+Tiedotteesta poimittu osoite ottaa mukaansa edeltävän numeron ja
+seuraavan sanan, koska rivinvaihdot ja elementtien rajat katoavat
+tekstiksi muunnettaessa:
+
+```
+8368reima.liikamaa@jatke.fiKuvatLataaLataaJatke
+kirjaamo@vaala.fiOsallistumis
+arttu.makipaa@kuopio.fi
+044 718 5435
+```
+
+Asiakas lähettää viestin osoitteeseen jota ei ole olemassa — eikä saa
+virheilmoitusta joka kertoisi syyn. Mitattu 23.8.2026: **70 hanketta 12
+lähteessä.**
+
+**KAKSI OMAA VERSIOTA KAATUI KUIVAHARJOITUKSEEN:**
+
+1. *"Verkkotunnus on aina pienaakkosia."* Ei ole —
+   `Eveliina.Etelakoski@Raisio.fi` on aito, ja sääntö olisi tyhjentänyt
+   sen kokonaan. Toimivan osoitteen hävittäminen on pahempi kuin se vika
+   jota korjattiin.
+
+2. *"Normalisoidaan samalla pienaakkosiksi."* Se olisi tuottanut **594
+   päivitystä joista vain 91 oli aitoja korjauksia**. Kirjainkoko ei ole
+   virhe, ja turha kirjoitus on tässä myös turha muutosrivi asiakkaalle.
+
+**Sääntö joka jäi voimaan.** Roskan tuntomerkki on ISO KIRJAIN KESKELLÄ
+verkkotunnusta silloin kun sitä ennen on jo kelvollinen pääte:
+`jatke.fi` + `KuvatLataa…`. Alussa oleva iso kirjain ei kelpaa merkiksi.
+Päätelistaa ei käytetä, joten `@vsb.energy` ja `@diplomatie.gouv.fr`
+säilyvät.
+
+Paikallisosan etunumerot (STT:n kuva- ja liitetunnisteita) poistetaan kun
+jäljelle jää vähintään kolme kirjainta — `3m@example.fi` säilyy.
+
+**Tulos:** 76 osoitetta korjattu, 19 tyhjennetty (esim.
+`rautavuori@fcg.fi@mikkeli.fi`, kaksi @-merkkiä), 64 organisaatiokenttää
+siivottu — sama roska oli vuotanut sinne, koska organisaatio päätellään
+verkkotunnuksesta.
+
+---
+
 ### D-107 – Väyläviraston kuvaus luetaan hankesivulta, ei listauksen teaserista
 
 Kuvaukseksi oli tallennettu listaussivun teaser, tyypillisesti yksi virke:
