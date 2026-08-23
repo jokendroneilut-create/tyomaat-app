@@ -10,6 +10,26 @@ function formatArea(value: number) {
 
 const PAGE_SIZE = 50
 
+type ReviewContact = {
+  name?: string | null
+  title?: string | null
+  phone?: string | null
+  email?: string | null
+}
+
+/* Nimetyt ensin: myyjälle nimetty kontakti on arvokkaampi kuin kirjaamo. */
+function contactsOf(metadata: any): ReviewContact[] {
+  const lista: ReviewContact[] = Array.isArray(metadata?.contact_persons)
+    ? metadata.contact_persons
+    : []
+
+  return [...lista].sort((a, b) => {
+    const an = String(a?.name ?? "").trim() ? 0 : 1
+    const bn = String(b?.name ?? "").trim() ? 0 : 1
+    return an - bn
+  })
+}
+
 export default function PotentialProjectsReviewList({
   projects,
   totalCount,
@@ -217,6 +237,40 @@ export default function PotentialProjectsReviewList({
                         <strong>Kiinteistö:</strong>{" "}
                         {project.property_id ?? "-"}
                       </div>
+                    </div>
+                  )}
+
+                  {/*
+                    * YHTEYSHENKILÖT NÄKYVIIN JO HYVÄKSYNNÄSSÄ.
+                    *
+                    * Ne näkyivät vain hankkeen omalla sivulla, joten
+                    * hyväksyjä ei nähnyt listasta onko ehdokkaalla ketään
+                    * kenelle soittaa. Yhteystiedot ovat yksi kolmesta
+                    * syystä joiden takia testiasiakkaat eivät jääneet
+                    * (docs/00_PRODUCT_BLUEPRINT.md 1.1), joten se on
+                    * hyväksyntäpäätöksen kannalta olennainen tieto.
+                    *
+                    * Nimetty henkilö erotellaan laatikosta: kirjaamo ei
+                    * ole sama asia kuin rakennuttajapäällikkö.
+                    */}
+                  {contactsOf(metadata).length > 0 ? (
+                    <div className="mt-2 text-sm text-gray-700">
+                      <strong>Yhteyshenkilöt:</strong>{" "}
+                      {contactsOf(metadata)
+                        .slice(0, 3)
+                        .map((c) =>
+                          [c.name, c.title, c.phone, c.email]
+                            .filter(Boolean)
+                            .join(" · ")
+                        )
+                        .join("   |   ")}
+                      {contactsOf(metadata).length > 3
+                        ? `   (+${contactsOf(metadata).length - 3})`
+                        : ""}
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-sm text-amber-700">
+                      Ei yhteystietoa
                     </div>
                   )}
                 </div>

@@ -146,3 +146,125 @@ export function extractApplicationDescription(pdfText: string | null): string | 
 
   return null
 }
+
+/*
+ * LOMAKEKENTÄT KUULUTUS-PDF:STÄ.
+ *
+ * `extractApplicationDescription` lukee kenttää "Hankkeen kuvaus", ja se
+ * on oikea kenttä silloin kun se on olemassa — mutta mitattu 23.8.2026:
+ * sitä on **3 dokumentissa 264:stä (1 %)**. Hyödyllinen teksti on
+ * lähes aina muualla:
+ *
+ *   Toimenpide          244   92 %
+ *   Kaavatilanne        210   80 %
+ *   Pinta-ala           201   76 %
+ *   Lisäselvitykset     114   43 %
+ *   Kerrosala            86   33 %
+ *
+ * PDF-teksti on sarakkeetonta: otsikko ja arvo ovat kiinni toisissaan
+ * ("LisäselvityksetToimistorakennus, LVI-muutos…"), joten arvo luetaan
+ * otsikon jälkeen seuraavaan tunnettuun otsikkoon asti.
+ */
+
+/* Kaikki tunnetut otsikot, jotta arvo osataan katkaista oikeaan kohtaan. */
+const BULLETIN_LABELS = [
+  "Lupatunnus",
+  "Kiinteistötunnus",
+  "Kiinteistön osoite",
+  "Pinta-ala",
+  "Kaavatilanne",
+  "Hankkeeseen ryhtyvä",
+  "Toimenpide",
+  "Lisäselvitykset",
+  "Kerrosala",
+  "Rakennuspaikka",
+  "Hankkeen vaativuus",
+  "Suunnittelun vaativuus",
+  "Pääsuunnittelija",
+  "Rakennustoimenpiteen yhteydessä",
+  "Hakija",
+  "Naapurien kuuleminen",
+  "Lausunnot",
+  "Päätös",
+  "Muutoksenhaku",
+  /*
+   * Naita ei ollut ensimmaisessa listassa, ja arvo vuoti niiden yli:
+   * "Toimistorakennus... Luvan rakennukset7529104289167Nuudisrakennus".
+   */
+  "Luvan rakennukset",
+  "Luvan rakennelmat",
+  "Rakennuksen tiedot",
+  "Rakennelman tiedot",
+  "Suunnittelijat",
+  "Vastaava työnjohtaja",
+  "Katselmukset",
+  "Liitteet",
+  "Maksut",
+  "RAKENNUKSET",
+  "Tarkemmat tiedot",
+]
+
+/*
+ * Lomakekentän arvo on lyhyt. Pidempi tarkoittaa etta katkaisu ei osunut
+ * ja teksti jatkuu seuraaviin osioihin - silloin on parempi jattaa
+ * poimimatta kuin nayttaa asiakkaalle sekavaa jaannosta.
+ */
+const MAX_FIELD_LENGTH = 400
+
+function labelValue(pdfText: string, label: string): string | null {
+  const i = pdfText.indexOf(label)
+  if (i < 0) return null
+
+  const after = pdfText.slice(i + label.length)
+
+  /* Katkaisu seuraavaan otsikkoon; ilman sitä arvo jatkuisi loppuun asti. */
+  let end = after.length
+  for (const other of BULLETIN_LABELS) {
+    if (other === label) continue
+    const j = after.indexOf(other)
+    if (j >= 0 && j < end) end = j
+  }
+
+  const value = after.slice(0, end).replace(/\s+/g, " ").trim()
+
+  /*
+   * Tyhjä arvo on yleinen: "Hankkeeseen ryhtyvä" on kuulutuksissa
+   * poistettu (D-102), jolloin otsikkoa seuraa suoraan seuraava otsikko.
+   */
+  return value.length >= 3 && value.length <= MAX_FIELD_LENGTH ? value : null
+}
+
+export type BulletinFields = {
+  toimenpide: string | null
+  lisaselvitykset: string | null
+  kaavatilanne: string | null
+  pintaAla: string | null
+  kerrosala: string | null
+}
+
+export function extractBulletinFields(pdfText: string | null): BulletinFields {
+  const t = cleanBulletinPdfText(pdfText ?? "")
+  if (!t) {
+    return { toimenpide: null, lisaselvitykset: null, kaavatilanne: null, pintaAla: null, kerrosala: null }
+  }
+
+  return {
+    toimenpide: labelValue(t, "Toimenpide"),
+    lisaselvitykset: labelValue(t, "Lisäselvitykset"),
+    kaavatilanne: labelValue(t, "Kaavatilanne"),
+    pintaAla: labelValue(t, "Pinta-ala"),
+    kerrosala: labelValue(t, "Kerrosala"),
+  }
+}
+
+/*
+ * Kuvaus parhaasta saatavilla olevasta lähteestä, järjestyksessä:
+ * hakijan oma kuvaus > lisäselvitykset > toimenpide.
+ */
+export function bestBulletinDescription(pdfText: string | null): string | null {
+  const oma = extractApplicationDescription(pdfText)
+  if (oma) return oma
+
+  const f = extractBulletinFields(pdfText)
+  return f.lisaselvitykset ?? f.toimenpide ?? null
+}

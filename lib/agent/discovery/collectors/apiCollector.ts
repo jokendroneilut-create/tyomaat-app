@@ -18,6 +18,7 @@ import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
 import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
 import {
   fetchLupapisteBulletinPdfText,
+  bestBulletinDescription,
   extractApplicationDescription,
 } from "../../lupapisteBulletinPdf"
 
@@ -164,7 +165,12 @@ async function collectLupapisteSource(source: DiscoverySource) {
         if (!jo.has(documentUrl) && pdfHaettu < LUPAPISTE_PDF_BUDGET) {
           pdfHaettu += 1
           pdfText = await fetchLupapisteBulletinPdfText(String(notice.id), { token, cookie })
-          pdfKuvaus = extractApplicationDescription(pdfText)
+          /*
+           * Paras saatavilla oleva kuvaus, ei vain "Hankkeen kuvaus"
+           * -kenttaa: mitattu 23.8.2026, sita on 3 dokumentissa 264:sta
+           * (1 %), kun Toimenpide loytyy 92 %:sta.
+           */
+          pdfKuvaus = bestBulletinDescription(pdfText)
         }
 
         const rawText = JSON.stringify(notice)

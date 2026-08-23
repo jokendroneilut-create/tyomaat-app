@@ -11,6 +11,38 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Lupapisteen kuulutus-PDF:sta luetaan nyt oikeat kentat
+
+Kuulutuksen PDF haettiin 264 dokumentille, mutta kuvaus saatiin vain
+KOLMEEN. Poimija etsi kenttaa "Hankkeen kuvaus", jota on 1 %:ssa.
+Hyodyllinen teksti on lahes aina muualla:
+
+```
+Hankkeen kuvaus       3    1 %   <- ainoa jota luettiin
+Toimenpide          244   92 %
+Kaavatilanne        210   80 %
+Pinta-ala           201   76 %
+Lisaselvitykset     114   43 %
+```
+
+PDF-teksti on sarakkeetonta, joten otsikko ja arvo ovat kiinni
+toisissaan ("LisaselvityksetToimistorakennus, LVI-muutos..."). Arvo
+luetaan otsikon jalkeen seuraavaan tunnettuun otsikkoon asti.
+
+Ensimmainen versio vuoti yli osioiden ("Luvan rakennukset7529104289167
+Nuudisrakennus"), koska kaikkia otsikoita ei ollut listalla. Lisatty
+puuttuvat ja 400 merkin katto - pidempi tarkoittaa etta katkaisu ei
+osunut, ja silloin on parempi jattaa poimimatta.
+
+Kuvaus saadaan nyt 244:lle 264:sta. Takautuva ajo: 236 lahdedokumenttia,
+joista 214 sai kuvauksen ensimmaista kertaa.
+
+### Yhteyshenkilot nakyviin hyvaksyntalistaan
+
+Yhteyshenkilot nakyivat vain hankkeen omalla sivulla, joten hyvaksyja ei
+nahnyt listasta onko ehdokkaalla ketaan kenelle soittaa. Nyt listassa
+lukee joko yhteyshenkilot (nimetyt ensin) tai "Ei yhteystietoa".
+
 ### Vaihesuodattimen kuollut vaihtoehto pois, kartan selite korjattu
 
 Vaihesuodatin tarjosi vaihtoehtoa "Valmistunut", joka palautti aina nolla
