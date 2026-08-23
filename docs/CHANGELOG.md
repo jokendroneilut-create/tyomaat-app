@@ -11,6 +11,31 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Ymparistoonsa tarttuneet sahkopostit korjattu
+
+Poimittu osoite otti mukaansa edeltavan numeron ja seuraavan sanan, koska
+rivinvaihdot ja elementtien rajat katoavat tekstiksi muunnettaessa:
+
+```
+8368reima.liikamaa@jatke.fiKuvatLataaLataaJatke
+kirjaamo@vaala.fiOsallistumis
+arttu.makipaa@kuopio.fi
+044 718 5435
+```
+
+Asiakas lahettaa viestin osoitteeseen jota ei ole olemassa. 70 hanketta
+12 lahteessa; 76 osoitetta korjattu, 19 tyhjennetty, 64
+organisaatiokenttaa siivottu (sama roska oli vuotanut sinne).
+
+Kaksi omaa virhetta jai kuivaharjoitukseen. Ensimmainen versio vaati
+verkkotunnukselta pienaakkosia, jolloin aito "Eveliina.Etelakoski@Raisio.fi"
+olisi tyhjentynyt kokonaan. Toinen olisi pienaakkostanut 594 riviä joista
+vain 91 oli aitoja korjauksia - kirjainkoko ei ole virhe.
+
+Roskan tuntomerkki on iso kirjain KESKELLA verkkotunnusta kun sita ennen
+on jo kelvollinen paate. Paatelistaa ei kayteta, joten @vsb.energy ja
+@diplomatie.gouv.fr sailyvat.
+
 ### Kayttajalistaan tunnuksen ika ja kokeilun tila
 
 Suurin osa 94 tunnuksesta on testikayttajia, eika tilaus- tai

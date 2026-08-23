@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { extractContacts, hasPersonContact, mergeContacts } from "./contacts"
+import { extractContacts, hasPersonContact, mergeContacts , sanitizeEmail} from "./contacts"
 
 describe("extractContacts", () => {
   /* SRV:n tiedotteen vakiomuoto: nimi, tehtava, yritys, puh, sposti. */
@@ -262,5 +262,51 @@ describe("nimentunnistuksen rajaus", () => {
   it("tunnistaa oikean nimen nimikkeen jalkeen", () => {
     const c = extractContacts("Työnjohtaja Esa Virtanen puh. 040 567 7677")
     expect(c[0].name).toBe("Esa Virtanen")
+  })
+})
+
+describe("sanitizeEmail", () => {
+  it("katkaisee verkkotunnukseen tarttuneen sanan", () => {
+    expect(sanitizeEmail("reima.liikamaa@jatke.fiKuvatLataaLataaJatke")).toBe("reima.liikamaa@jatke.fi")
+    /* Isolla alkava verkkotunnus on aito eika saa katketa. */
+    expect(sanitizeEmail("Eveliina.Etelakoski@Raisio.fi")).toBe("Eveliina.Etelakoski@Raisio.fi")
+    expect(sanitizeEmail("kirjaamo@vaala.fiOsallistumis")).toBe("kirjaamo@vaala.fi")
+    expect(sanitizeEmail("niko.mikkonen@lohja.fiTiitus")).toBe("niko.mikkonen@lohja.fi")
+  })
+
+  it("katkaisee peraan tarttuneen puhelinnumeron", () => {
+    expect(sanitizeEmail("arttu.makipaa@kuopio.fi\n044 718 5435")).toBe("arttu.makipaa@kuopio.fi")
+  })
+
+  it("poistaa alusta numerot kun jaljelle jaa nimi", () => {
+    expect(sanitizeEmail("8368reima.liikamaa@jatke.fi")).toBe("reima.liikamaa@jatke.fi")
+    expect(sanitizeEmail("0021pirjo.raiha@espoonasunnot.fi")).toBe("pirjo.raiha@espoonasunnot.fi")
+  })
+
+  it("poistaa etunumerot myos ilman pistetta", () => {
+    /* STT:n kuvatunniste tarttuu osoitteeseen kiinni. */
+    expect(sanitizeEmail("0811mursu@energiequelle.fi")).toBe("mursu@energiequelle.fi")
+  })
+
+  it("ei kajoa numeroalkuiseen kun jaljelle jaa liian vahan", () => {
+    /* "3m" ei ole "m" — siita ei voi paatella mitaan. */
+    expect(sanitizeEmail("3m@example.fi")).toBe("3m@example.fi")
+  })
+
+  it("sailyttaa harvinaiset paatteet", () => {
+    /* Ei paatelistaa, joten nama eivat katkea. */
+    expect(sanitizeEmail("teemu.ruuska@vsb.energy")).toBe("teemu.ruuska@vsb.energy")
+    expect(sanitizeEmail("sonja.vuorsalo@elements.green")).toBe("sonja.vuorsalo@elements.green")
+    expect(sanitizeEmail("scg.helsinki-amba@diplomatie.gouv.fr")).toBe("scg.helsinki-amba@diplomatie.gouv.fr")
+  })
+
+  it("ei muuta kirjainkokoa", () => {
+    /* Pienaakkostus olisi tuottanut 594 turhaa paivitysta. */
+    expect(sanitizeEmail("Jani.Laasanen@kaarina.fi")).toBe("Jani.Laasanen@kaarina.fi")
+  })
+
+  it("palauttaa nullin kun osoitetta ei ole", () => {
+    expect(sanitizeEmail(null)).toBeNull()
+    expect(sanitizeEmail("ei osoitetta")).toBeNull()
   })
 })

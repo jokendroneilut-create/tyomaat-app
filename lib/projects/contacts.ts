@@ -37,6 +37,79 @@ export type Contact = {
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
 
 /*
+ * SÄHKÖPOSTI TARTTUU YMPÄRISTÖÖNSÄ.
+ *
+ * Poimittu osoite ottaa mukaansa edeltävän numeron ja seuraavan sanan,
+ * koska rivinvaihdot ja elementtien rajat katoavat tekstiksi
+ * muunnettaessa. Mitattu 23.8.2026: 12 lähdettä.
+ *
+ *   8368reima.liikamaa@jatke.fiKuvatLataaLataaJatke
+ *   kirjaamo@vaala.fiOsallistumis
+ *   arttu.makipaa@kuopio.fi\n044 718 5435
+ *
+ * Asiakas lähettää viestin osoitteeseen jota ei ole olemassa.
+ */
+
+/*
+ * Runko EI saa vaatia pelkkiä pienaakkosia: tiedotteissa esiintyy
+ * "Eveliina.Etelakoski@Raisio.fi", ja ensimmäinen versio hylkäsi sen
+ * kokonaan — toimiva osoite olisi tyhjentynyt.
+ */
+const EMAIL_SHAPE_RE = /^([A-Za-z0-9._%+-]+)@([A-Za-z0-9.-]*[A-Za-z0-9])$/
+
+const TLD_ENDING = /\.[A-Za-z]{2,}$/
+
+/*
+ * Roskan tuntomerkki on ISO KIRJAIN KESKELLÄ verkkotunnusta, kun sitä
+ * ennen on jo kelvollinen pääte: "jatke.fi" + "KuvatLataa…". Alussa
+ * oleva iso kirjain ei kelpaa merkiksi, koska "Raisio.fi" on aito.
+ */
+function trimGluedDomain(domain: string): string {
+  for (let i = 1; i < domain.length - 1; i++) {
+    const iso = domain[i] >= "A" && domain[i] <= "Z"
+    const seuraavaPieni = domain[i + 1] >= "a" && domain[i + 1] <= "z"
+    if (!iso || !seuraavaPieni) continue
+
+    const alku = domain.slice(0, i)
+    if (TLD_ENDING.test(alku)) return alku
+  }
+  return domain
+}
+
+export function sanitizeEmail(value: string | null | undefined): string | null {
+  /* Välilyönti tai rivinvaihto päättää osoitteen: perässä on usein puhelin. */
+  const raw = String(value ?? "").trim().split(/\s/)[0]
+  if (!raw) return null
+
+  const osat = raw.match(EMAIL_SHAPE_RE)
+  if (!osat) return null
+
+  let local = osat[1]
+  const domain = trimGluedDomain(osat[2])
+  if (!TLD_ENDING.test(domain)) return null
+
+  /*
+   * Paikallisosan alusta poistetaan numerot. Ne ovat tiedotteen kuva- tai
+   * liitetunnisteita jotka ovat tarttuneet osoitteeseen kiinni — mitattu
+   * 23.8.2026, joukossa 8368, 0021, 5691, 4286, 1829, 033 ja 0811.
+   *
+   * SUOJA LYHYILLE: jäljelle on jäätävä vähintään kolme kirjainta, joten
+   * "3m@example.fi" säilyy ennallaan. Siitä ei voi päätellä mitään.
+   */
+  const ilmanNumeroita = local.replace(/^\d+/, "")
+  if (ilmanNumeroita !== local && ilmanNumeroita.length >= 3 && /^[A-Za-z]/.test(ilmanNumeroita)) {
+    local = ilmanNumeroita
+  }
+
+  /*
+   * Kirjainkokoa EI muuteta. Se ei ole virhe vaan tyyliseikka, ja
+   * pienaakkostus olisi tuottanut 594 turhaa päivitystä joista vain 91
+   * oli aitoja korjauksia.
+   */
+  return `${local}@${domain}`
+}
+
+/*
  * Suomalainen puhelinnumero. Sallitaan +358 ja 0-alku, väliviivat ja
  * välilyönnit — tiedotteissa esiintyy kaikkia muotoja.
  */
@@ -315,7 +388,10 @@ export function extractContacts(text: string | null | undefined): Contact[] {
   const seen = new Set<string>()
 
   for (const match of source.matchAll(EMAIL_RE)) {
-    const email = match[0]
+    /* Roskat pois ennen kaikkea muuta: avain ja domain luetaan tästä. */
+    const email = sanitizeEmail(match[0])
+    if (!email) continue
+
     const key = email.toLowerCase()
     if (seen.has(key)) continue
     seen.add(key)
