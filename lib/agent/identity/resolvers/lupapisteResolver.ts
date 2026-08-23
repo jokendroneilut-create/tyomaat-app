@@ -56,6 +56,13 @@ export async function resolveLupapisteProject({
    * mitaan, joten kontakti merkitaan role: "authority" - kayttajan on
    * nahtava ero ennen kuin han soittaa.
    */
+  /*
+   * Kuulutuksen lomakekentat: kaavan kayttotarkoitus ("T-6; teollisuus-
+   * ja varastorakennusten korttelialue"), pinta-ala, kerrosala,
+   * rakennusoikeus. Nama ovat lahteessa mutta eivat nakyneet missaan.
+   */
+  const bulletinFields: any = document.raw_payload?.bulletin_fields ?? null
+
   const officials: any[] = Array.isArray(document.raw_payload?.bulletin_officials)
     ? document.raw_payload.bulletin_officials
     : []
@@ -146,6 +153,12 @@ export async function resolveLupapisteProject({
       operation,
       description,
       ...(authorityContacts.length ? { contact_persons: authorityContacts } : {}),
+      ...(bulletinFields?.kaavanKayttotarkoitus ? { plan_use_purpose: bulletinFields.kaavanKayttotarkoitus } : {}),
+      ...(bulletinFields?.kaavatilanne ? { plan_status: bulletinFields.kaavatilanne } : {}),
+      ...(bulletinFields?.pintaAla ? { site_area_text: bulletinFields.pintaAla } : {}),
+      ...(bulletinFields?.kerrosala ? { floor_area_text: bulletinFields.kerrosala } : {}),
+      ...(bulletinFields?.rakennusoikeus ? { building_right_text: bulletinFields.rakennusoikeus } : {}),
+      ...(bulletinFields?.tilavuus ? { volume_text: bulletinFields.tilavuus } : {}),
       municipality_code: municipalityCode,
       region: municipality?.region ?? null,
 

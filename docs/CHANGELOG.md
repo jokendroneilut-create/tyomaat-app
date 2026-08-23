@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Kuulutuksen lomakekentat nakyviin hankkeen sivulle
+
+Kuulutus-PDF:ssa oli kenttia jotka joko poimittiin muttei naytetty tai
+jotka jaivat kokonaan poimimatta: kaavan kayttotarkoitus (34 %,
+"T-6; teollisuus- ja varastorakennusten korttelialue"), tontin pinta-ala
+(67 %), kaavatilanne (66 %), tilavuus (29 %), kerrosala (25 %) ja
+rakennusoikeus (8 %).
+
+Oma katto hylkasi puolet parhaasta kentasta: Lisaselvitykset on vapaata
+tekstia jonka mediaanipituus on 440 merkkia, ja yhteinen 400 merkin katto
+hylkasi 66 kenttaa 119:sta. Katto on nyt kenttakohtainen.
+
+Kolme korjausta naytteista luettuna: numerokentasta otetaan vain luku ja
+yksikko ("102 m 2 Rakennusoikeus" -> "102 m 2"), numerokentan on
+alettava numerolla, ja otsikon katkaisu tehdaan kirjainkokoriippumatta
+("Eikaavaa TOIMENPIDE Va" -> "Eikaavaa").
+
+151 jonon ehdokasta ja 74 nakyvaa hanketta sai kentat. (D-115)
+
 ### Kaavaselostuksista poimitaan yhteystiedot, rajattuna
 
 Kaavalahteiden liitteissa oli 245 kaavaselostusta 184 hankkeelle 56

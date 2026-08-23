@@ -174,11 +174,17 @@ const BULLETIN_LABELS = [
   "Kiinteistön osoite",
   "Pinta-ala",
   "Kaavatilanne",
+  "Kaavan käyttötarkoitus",
+  "Rakennusoikeus",
+  "Kokonaisala",
+  "Tilavuus",
   "Hankkeeseen ryhtyvä",
   "Toimenpide",
   "Lisäselvitykset",
   "Kerrosala",
   "Rakennuspaikka",
+  "Poikkeamispäätös",
+  "Rakentamismääräykset",
   "Hankkeen vaativuus",
   "Suunnittelun vaativuus",
   "Pääsuunnittelija",
@@ -222,23 +228,71 @@ const BOILERPLATE =
   /^(rakentamislupahakemuksen|lupahakemuksen|hakemuksen)\s+k[aä]sittelyst[aä]|^maksu|^p[aä][aä]t[oö]ksest[aä]\s+peritt[aä]v[aä]/i
 
 /*
- * Lomakekentän arvo on lyhyt. Pidempi tarkoittaa etta katkaisu ei osunut
- * ja teksti jatkuu seuraaviin osioihin - silloin on parempi jattaa
- * poimimatta kuin nayttaa asiakkaalle sekavaa jaannosta.
+ * Kentän enimmäispituus RIIPPUU KENTÄSTÄ.
+ *
+ * Yksi yhteinen 400 merkin katto oli virhe: `Lisäselvitykset` on
+ * vapaata tekstiä jonka mediaanipituus on 440 merkkiä, joten katto
+ * hylkäsi 66 kenttää 119:stä (55 %). Juuri se teksti kertoo mitä
+ * työmaalla tehdään:
+ *
+ *   "Tontilta puretaan vanha ammattioppilaitos kesän ja alkusyksyn
+ *    2026 aikana (erillinen purkulupa LP-092-2024-06575), purkamisen
+ *    jälkeen tontilla aloitettaisiin puiden kaataminen…"
+ *
+ * Lyhyillä rakenteisilla kentillä katto on edelleen tiukka, koska
+ * niissä pitkä arvo tarkoittaa katkaisuvirhettä.
  */
 const MAX_FIELD_LENGTH = 400
+const MAX_FREE_TEXT_LENGTH = 2500
+const FREE_TEXT_LABELS = new Set(["Toimenpide", "Lisäselvitykset"])
+
+/*
+ * Numerokentän arvo alkaa numerolla tai tehokkuusluvulla ("e=0,5").
+ * Ilman tätä arvo vuoti seuraavaan osioon: "300 Poikkeamispä…" ja
+ * "Sallittu uudisrakentaminen…" päätyivät rakennusoikeudeksi.
+ */
+const NUMERIC_LABELS = new Set([
+  "Pinta-ala",
+  "Kerrosala",
+  "Rakennusoikeus",
+  "Kokonaisala",
+  "Tilavuus",
+])
+const NUMERIC_VALUE = /^(\d|e\s*=)/i
+
+/*
+ * Numerokentasta otetaan VAIN luku ja yksikko. Katkaisu seuraavaan
+ * otsikkoon ei riita, koska PDF:ssa yksikko on pilkottu ("102 m 2") ja
+ * seuraava otsikko voi olla kiinni siina: "102 m 2 Rakennusoikeus…".
+ */
+const NUMERIC_HEAD = /^((?:\d[\d\s.,]*|e\s*=\s*[\d.,]+)\s*(?:k-?m\s*2|kem\s*2|m\s*2|m\s*3|m²|m³|ha|kpl)?)/i
+
+function numericHead(value: string): string | null {
+  const m = value.match(NUMERIC_HEAD)
+  if (!m) return null
+  const head = m[1].replace(/\s+/g, " ").trim()
+  return head.length >= 1 ? head : null
+}
 
 function labelValue(pdfText: string, label: string): string | null {
+  const maxLength = FREE_TEXT_LABELS.has(label) ? MAX_FREE_TEXT_LENGTH : MAX_FIELD_LENGTH
   const i = pdfText.indexOf(label)
   if (i < 0) return null
 
   const after = pdfText.slice(i + label.length)
 
-  /* Katkaisu seuraavaan otsikkoon; ilman sitä arvo jatkuisi loppuun asti. */
+  /*
+   * Katkaisu seuraavaan otsikkoon; ilman sitä arvo jatkuisi loppuun asti.
+   *
+   * VERTAILU ON KIRJAINKOKORIIPPUMATON. PDF:ssä otsikko voi olla
+   * versaalina ("Eikaavaa TOIMENPIDE Vä…"), jolloin tarkka vertailu ei
+   * osunut ja arvo vuoti seuraavaan osioon.
+   */
+  const afterLower = after.toLowerCase()
   let end = after.length
   for (const other of BULLETIN_LABELS) {
     if (other === label) continue
-    const j = after.indexOf(other)
+    const j = afterLower.indexOf(other.toLowerCase())
     if (j >= 0 && j < end) end = j
   }
 
@@ -248,8 +302,12 @@ function labelValue(pdfText: string, label: string): string | null {
    * Tyhjä arvo on yleinen: "Hankkeeseen ryhtyvä" on kuulutuksissa
    * poistettu (D-102), jolloin otsikkoa seuraa suoraan seuraava otsikko.
    */
-  if (value.length < 3 || value.length > MAX_FIELD_LENGTH) return null
+  if (value.length < 3 || value.length > maxLength) return null
   if (BOILERPLATE.test(value)) return null
+  if (NUMERIC_LABELS.has(label)) {
+    if (!NUMERIC_VALUE.test(value)) return null
+    return numericHead(value)
+  }
 
   return value
 }
@@ -258,22 +316,34 @@ export type BulletinFields = {
   toimenpide: string | null
   lisaselvitykset: string | null
   kaavatilanne: string | null
+  /* "T-6; teollisuus- ja varastorakennusten korttelialue" */
+  kaavanKayttotarkoitus: string | null
   pintaAla: string | null
   kerrosala: string | null
+  rakennusoikeus: string | null
+  kokonaisala: string | null
+  tilavuus: string | null
 }
 
 export function extractBulletinFields(pdfText: string | null): BulletinFields {
   const t = cleanBulletinPdfText(pdfText ?? "")
-  if (!t) {
-    return { toimenpide: null, lisaselvitykset: null, kaavatilanne: null, pintaAla: null, kerrosala: null }
+  const tyhja: BulletinFields = {
+    toimenpide: null, lisaselvitykset: null, kaavatilanne: null,
+    kaavanKayttotarkoitus: null, pintaAla: null, kerrosala: null,
+    rakennusoikeus: null, kokonaisala: null, tilavuus: null,
   }
+  if (!t) return tyhja
 
   return {
     toimenpide: labelValue(t, "Toimenpide"),
     lisaselvitykset: labelValue(t, "Lisäselvitykset"),
     kaavatilanne: labelValue(t, "Kaavatilanne"),
+    kaavanKayttotarkoitus: labelValue(t, "Kaavan käyttötarkoitus"),
     pintaAla: labelValue(t, "Pinta-ala"),
     kerrosala: labelValue(t, "Kerrosala"),
+    rakennusoikeus: labelValue(t, "Rakennusoikeus"),
+    kokonaisala: labelValue(t, "Kokonaisala"),
+    tilavuus: labelValue(t, "Tilavuus"),
   }
 }
 

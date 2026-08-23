@@ -5,6 +5,51 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-115 – Kuulutuksen lomakekentät näkyviin: käyttötarkoitus, ala, rakennusoikeus
+
+Kysymys oli suora: onko lähteestä poimittu tietoa jota asiakas näkisi
+mutta joka ei näy sivulla — esimerkiksi rakennusoikeus. **Oli.**
+
+Mitattu 309 kuulutus-PDF:stä:
+
+```
+Toimenpide              83 %   poimittiin, näkyi
+Pinta-ala               67 %   poimittiin, EI näkynyt
+Kaavatilanne            66 %   poimittiin, EI näkynyt
+Kaavan käyttötarkoitus  34 %   EI poimittu lainkaan
+Lisäselvitykset         35 %   poimittiin osittain
+Tilavuus                29 %   EI poimittu
+Kerrosala               25 %   poimittiin, EI näkynyt
+Rakennusoikeus           8 %   EI poimittu
+```
+
+Arvot ovat juuri sitä mitä myyjä katsoo ensimmäisenä:
+`T-6; teollisuus- ja varastorakennusten korttelialue`,
+`rakennusoikeus 4 750 m²`, `tontti 29,6122 ha`.
+
+**Oma katto hylkäsi puolet parhaasta kentästä.** `Lisäselvitykset` on
+vapaata tekstiä jonka mediaanipituus on 440 merkkiä, ja yhteinen 400
+merkin katto hylkäsi 66 kenttää 119:stä. Katto on nyt kenttäkohtainen:
+2 500 merkkiä vapaalle tekstille, 400 lyhyille rakenteisille.
+
+**Kolme korjausta, jokainen näytteistä luettuna:**
+
+```
+"102 m 2 Rakennusoikeus…"   numerokentästä otetaan vain luku ja yksikkö
+"300 Poikkeamispäätöksen…"  numerokentän on alettava numerolla
+"Eikaavaa TOIMENPIDE Vä…"   katkaisu oli kirjainkokoherkkä, otsikko
+                            versaalina ei osunut
+```
+
+Viimeinen on sama vika kuin viranomaispoiminnassa samana päivänä
+(D-113): puuttuva `i`-lippu. Kannattaa muistaa — PDF-teksti ei noudata
+kirjainkokoa.
+
+**Tulos:** 151 jonon ehdokasta ja 74 näkyvää hanketta sai kentät, ja ne
+näkyvät hankkeen sivulla omana lohkonaan.
+
+---
+
 ### D-114 – Kaavaselostuksista poimitaan vain yhteystiedot, ei tekstiä
 
 Kaavalähteiden liitteissä oli 245 kaavaselostusta 184 hankkeelle 56

@@ -20,6 +20,7 @@ import {
   fetchLupapisteBulletinPdfText,
   bestBulletinDescription,
   extractBulletinOfficials,
+  extractBulletinFields,
   extractApplicationDescription,
 } from "../../lupapisteBulletinPdf"
 
@@ -164,6 +165,8 @@ async function collectLupapisteSource(source: DiscoverySource) {
         let pdfKuvaus: string | null = null
         /* Paatoksen tehnyt viranhaltija - viranomainen, ei osapuoli. */
         let pdfViranomaiset: ReturnType<typeof extractBulletinOfficials> = []
+        /* Lomakekentat: kaavan kayttotarkoitus, pinta-ala, kerrosala jne. */
+        let pdfKentat: ReturnType<typeof extractBulletinFields> | null = null
 
         if (!jo.has(documentUrl) && pdfHaettu < LUPAPISTE_PDF_BUDGET) {
           pdfHaettu += 1
@@ -175,6 +178,7 @@ async function collectLupapisteSource(source: DiscoverySource) {
            */
           pdfKuvaus = bestBulletinDescription(pdfText)
           pdfViranomaiset = extractBulletinOfficials(pdfText)
+          pdfKentat = extractBulletinFields(pdfText)
         }
 
         const rawText = JSON.stringify(notice)
@@ -205,6 +209,7 @@ async function collectLupapisteSource(source: DiscoverySource) {
                       bulletin_pdf_text: pdfText,
                       ...(pdfKuvaus ? { bulletin_description: pdfKuvaus } : {}),
                       ...(pdfViranomaiset.length ? { bulletin_officials: pdfViranomaiset } : {}),
+                      ...(pdfKentat ? { bulletin_fields: pdfKentat } : {}),
                       bulletin_pdf_fetched_at: new Date().toISOString(),
                     }
                   : {}),

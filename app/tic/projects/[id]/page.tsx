@@ -150,6 +150,37 @@ export default async function CandidateDetailPage({ params }: Props) {
           </p>
         )}
 
+        {/*
+          * KUULUTUKSEN LOMAKEKENTAT.
+          *
+          * Nama olivat lahteessa mutta eivat nakyneet missaan: kaavan
+          * kayttotarkoitus ("T-6; teollisuus- ja varastorakennusten
+          * korttelialue"), pinta-ala, kerrosala ja rakennusoikeus.
+          * Juuri naista naki hankkeen mittaluokan.
+          */}
+        {(() => {
+          const kentat: [string, unknown][] = [
+            ["🏷️ Kaavan käyttötarkoitus", metadata.plan_use_purpose],
+            ["🗺️ Kaavatilanne", metadata.plan_status],
+            ["📐 Tontin pinta-ala", metadata.site_area_text],
+            ["🏗️ Kerrosala", metadata.floor_area_text],
+            ["📊 Rakennusoikeus", metadata.building_right_text],
+            ["📦 Tilavuus", metadata.volume_text],
+          ]
+          const naytettavat = kentat.filter(([, v]) => typeof v === "string" && v.trim())
+          if (!naytettavat.length) return null
+
+          return (
+            <div className="mt-3 grid gap-1 text-sm text-gray-800 md:grid-cols-2">
+              {naytettavat.map(([otsikko, arvo]) => (
+                <p key={otsikko}>
+                  <strong>{otsikko}:</strong> {String(arvo)}
+                </p>
+              ))}
+            </div>
+          )
+        })()}
+
         {(() => {
           const exp = resolveExpiry(
             metadata,
