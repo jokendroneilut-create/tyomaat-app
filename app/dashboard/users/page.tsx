@@ -48,7 +48,11 @@ export default function UsersPage() {
       setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortColumn(column)
-      setSortDirection('asc')
+      /*
+       * Ika ja kirjautuminen ovat kiinnostavia suurimmasta paasta:
+       * paattyneet kokeilut ja tuoreimmat kirjautumiset ensin.
+       */
+      setSortDirection(column === 'age_days' || column === 'last_sign_in_at' ? 'desc' : 'asc')
     }
   }
 
@@ -70,8 +74,12 @@ export default function UsersPage() {
       if (sortColumn === 'email') {
         cmp = (a.email ?? '').localeCompare(b.email ?? '', 'fi')
       } else if (sortColumn === 'age_days') {
-        /* Ika on kaanteinen luontiaikaan nahden: vanhin tunnus = suurin ika. */
-        cmp = (daysSince(b.created_at) ?? -1) - (daysSince(a.created_at) ?? -1)
+        /*
+         * Luonnollinen suunta, jotta nuoli vastaa nakemaa: alas = suurin
+         * ika ensin eli paattyneet karkeen. Ensimmainen versio kaansi
+         * vertailun tassa, jolloin nuoli alas naytti nuorimmat.
+         */
+        cmp = (daysSince(a.created_at) ?? -1) - (daysSince(b.created_at) ?? -1)
       } else if (sortColumn === 'confirmed') {
         cmp = Number(a.confirmed) - Number(b.confirmed)
       } else {
@@ -296,7 +304,12 @@ export default function UsersPage() {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 900 }}>
+    /*
+     * Taulukossa on kuusi saraketta, joista kolme on paivamaaria.
+     * 900 pikselissa sahkopostisarake leikkautui ja paivamaarat
+     * katkesivat kolmelle riville.
+     */
+    <div style={{ padding: 24, maxWidth: 1280 }}>
       <h1>Käyttäjät</h1>
 
       <div style={{ marginTop: 16, padding: 16, border: '1px solid #e5e7eb', borderRadius: 8 }}>
@@ -382,7 +395,7 @@ export default function UsersPage() {
         </div>
 
         <div style={{ marginTop: 12, overflowX: 'auto' }}>
-          <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>
               <SortHeader column="email" label="Sähköposti" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
@@ -398,7 +411,7 @@ export default function UsersPage() {
             {sortedUsers.map((u) => (
               <tr key={u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                 <td style={{ padding: '8px 4px' }}>{u.email}</td>
-                <td style={{ padding: '8px 4px' }}>{formatDate(u.created_at)}</td>
+                <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>{formatDate(u.created_at)}</td>
                 <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
                   {(() => {
                     const days = daysSince(u.created_at)
@@ -413,7 +426,7 @@ export default function UsersPage() {
                     )
                   })()}
                 </td>
-                <td style={{ padding: '8px 4px' }}>{formatDate(u.last_sign_in_at)}</td>
+                <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>{formatDate(u.last_sign_in_at)}</td>
                 <td style={{ padding: '8px 4px' }}>
                   {u.locked ? (
                     <span style={{ color: '#b91c1c', fontWeight: 700 }} title={u.lockedReason ?? undefined}>
@@ -503,7 +516,7 @@ function SortHeader({
   const arrow = active ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''
 
   return (
-    <th style={{ padding: '8px 4px' }}>
+    <th style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
       <button
         onClick={() => onSort(column)}
         style={{
