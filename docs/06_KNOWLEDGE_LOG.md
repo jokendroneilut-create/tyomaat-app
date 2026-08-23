@@ -338,3 +338,51 @@ Hyvinkää  <- "Lujan tulosinfo 13.2.2026"                 ei hanke lainkaan
 Helsinki-rajattu versio olisi tarkempi (Malminkartano, Kannelmäki,
 Pohjois-Haaga, Itäkeskus ovat yksiselitteisiä), mutta täyttäisi noin
 kymmenen riviä — sama työ ilman parempaa tulosta.
+
+
+## 2026-08-23 – Poimimattomat kentät muissa lähteissä
+
+Lupapisteen jälkeen tarkistettiin systemaattisesti, onko muissa
+lähteissä vastaavaa: mittarina lähdedokumenttiin talletetun raakatekstin
+määrä verrattuna siihen mitä hankkeelle päätyy.
+
+**Suurin osa suurista eroista on näennäisiä.** Raakateksti on usein koko
+HTML-sivu tai WP-rajapinnan JSON, josta valtaosa on runkoa:
+
+```
+Espoon kuulutukset      86 777 merkkiä raakaa  ->  140  (koko HTML-sivu)
+Lempäälä                38 936                 ->  499  (JSON + section-HTML)
+Senaatti-kiinteistöt    19 510                 ->  470  (WP-postin JSON)
+```
+
+Näissä poiminta on jo olemassa; ero on muotoa, ei puuttuvaa tietoa.
+
+### Aito löydös: kaavaselostukset
+
+Kaavalähteiden `attachments`-kentässä on **1 935 PDF-liitettä**, joista
+**245 on kaavaselostuksia** — 184 hanketta 56 kunnassa. Yhtäkään ei
+haeta.
+
+Kolme haettua näytettä osoittaa mitä niissä on:
+
+```
+"Päivi Muhonen puh. +358 44 4598 434 paivi.muhonen@saarijarvi.fi"
+"Kaavan laatija: Sitowise Oy, Timo Huhtinen DI, YKS 245"
+```
+
+Eli **nimetty henkilö puhelimineen ja sähköposteineen** sekä kaavaa
+laativa konsultti — juuri se tieto jota koko päivä on etsitty.
+
+**MUTTA KOKO ON ONGELMA.** Näytteet olivat 229 000, 284 000 ja 884 000
+merkkiä. Koko tekstin tallentaminen 245 selostukselle olisi satoja
+megatavuja, eikä sitä kannata tehdä (vrt. sama päivä: 195 MB
+mittaustuloksia meni vahingossa git-historiaan).
+
+**Ehdotus jos tähän palataan:** haetaan vain `selostus`-nimiset PDF:t,
+poimitaan niistä VAIN yhteystietolohko ja kaavan laatija, ja
+tallennetaan poiminta — ei koko tekstiä. Sama kuin Lupapisteessä, mutta
+tiukemmin rajattuna kokoluokan takia.
+
+Muut 1 690 PDF-liitettä ovat kaavakarttoja, osallistumis- ja
+arviointisuunnitelmia ja kuulutuksia; niissä ei ole yhteystietoja
+samalla tavalla.
