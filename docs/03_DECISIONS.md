@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-111 – "Valmistumassa" on määritelty muttei koskaan käytössä
+
+Kartan selite lupasi väriä nimellä "Valmistunut", vaikka valmistuneet on
+suodatettu pois kaikista aktiivisista näkymistä. Selvitettäessä paljastui
+että myös seuraava vaihe on käytännössä kuollut.
+
+**Määritelmä.** `CANONICAL_PHASES`, järjestysnumero 8 — Rakenteilla (7)
+ja Valmistunut (9) välissä:
+
+```
+7  Rakenteilla
+8  Valmistumassa     <- tämä
+9  Valmistunut
+```
+
+**Milloin hanke menee siihen: ei koskaan automaattisesti.** Mitattu
+23.8.2026:
+
+```
+koodipolkuja jotka asettavat phase = "Valmistumassa"    0
+siirtymiä project_phase_history-taulussa                 0
+hankkeita tässä vaiheessa                                1   (käsin asetettu)
+```
+
+Vaihe on olemassa `projectPhaseKey.ts`:n hahmoissa
+(`/valmistumassa/`, `/käyttöönot/`) ja `roleStageMatrix`in painoissa
+(0,3–0,5 roolista riippuen), mutta ne vain **lukevat** vaihetta
+osumapisteytystä varten — mikään ei kirjoita sitä. Ainoa tapa päätyä
+siihen on asettaa se käsin TIC:ssä.
+
+**Automaattinen sääntö olisi mahdollinen** mutta kattaisi vähän. Mitattu:
+
+```
+näkyviä rakennusvaiheessa                676
+  valmistumisarvio tiedossa              282   42 %
+    arvio <= 3 kk päässä                  19
+```
+
+Eli sääntö "rakennusvaiheessa ja valmistumiseen alle 3 kk → Valmistumassa"
+koskisi tänään 19 hanketta. Se ei ole tehty, koska hyöty on epäselvä:
+myyjälle merkitys on sama kuin Rakenteilla, ja `roleStageMatrix` antaa
+sille jopa **matalamman** painon (0,3–0,5 vs. Rakenteilla). Vaiheen
+tarkentaminen siis laskisi hankkeen osumapisteitä.
+
+**Päätös:** vaihe jätetään olemaan käsin asetettavaksi. Kartan selite
+sanoo nyt "Valmistumassa" eikä lupaa väriä joka ei koskaan esiinny.
+
+### Kuollut vaihtoehto vaihesuodattimesta pois
+
+Vaihesuodattimen vaihtoehdot rakennettiin kaikista kanonisista vaiheista,
+joten "Valmistunut" oli valittavissa — ja palautti aina nolla tulosta,
+koska valmistuneet on jo suodatettu pois aineistosta
+(`activeProjectsData`). Valittavissa oleva vaihtoehto joka ei koskaan
+tuota tulosta kertoo käyttäjälle "näitä ei ole" eikä "näitä ei näytetä".
+Poistettu valikosta.
+
+---
+
 ### D-110 – Valmistuminen tunnistetaan vain vaihekentästä, ei tekstistä
 
 Jatkokysymys D-109:ään: pitäisikö valmistuneet tunnistaa myös sanoista

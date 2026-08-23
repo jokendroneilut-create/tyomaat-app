@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Vaihesuodattimen kuollut vaihtoehto pois, kartan selite korjattu
+
+Vaihesuodatin tarjosi vaihtoehtoa "Valmistunut", joka palautti aina nolla
+tulosta - valmistuneet on suodatettu pois jo aineistosta. Poistettu.
+
+Kartan selitteessa luki "Valmistunut" varille jota kaytannossa kayttaa
+vain Valmistumassa-vaihe. Selite sanoo nyt Valmistumassa.
+
+Samalla selvisi etta "Valmistumassa" on maaritelty muttei koskaan
+kaytossa: nolla koodipolkua asettaa sen, nolla siirtymaa
+vaihehistoriassa, yksi hanke kasin asetettuna. Automaattinen saanto
+(valmistumiseen alle 3 kk) koskisi 19 hanketta, mutta roleStageMatrix
+antaa vaiheelle MATALAMMAN painon kuin Rakenteilla - tarkentaminen siis
+laskisi osumapisteita. Jatetaan kasin asetettavaksi. (D-111)
+
 ### Hakuvahti ei enaa kerro valmistuneista hankkeista
 
 Tanaan-nakyma ja hankelista suodattivat valmistuneet pois, mutta
