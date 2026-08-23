@@ -188,31 +188,66 @@ Koodissa ja ajettu takautuvasti (D-096). Avoin: muiden kuntien lomakepohjista
 ei ole vielä poimintaa, ja PDF sisältää myös pinta-alat ja kaavatiedot joita ei
 vielä lueta omiksi kentikseen.
 
-## 2026-08-23 – Rakennuslehden ehdokkailta puuttuu kaupunki
+## 2026-08-23 – Rudolf Steiner -koulun pari, ja oma mittausvirhe
 
-Rudolf Steiner -koulun hanke ei osunut jo hyväksyttyyn Jatken
-tiedotteeseen. Syy EI ollut veto vaan todisteiden puute: otsikot eivät
-jaa yhtään sanaa tokenisoinnin jälkeen ("koulun" vs "steiner-koulussa",
-ks. D-106), eikä muuta todistetta ollut.
-
-Juurisyy on ylempänä. Mitattu:
+Rakennuslehden hanke ei osunut jo hyväksyttyyn Jatken tiedotteeseen.
+Syy EI ollut veto: kaikki neljä vetoa testattiin eikä yksikään laukea.
+Pari hylätään todisteiden puutteesta.
 
 ```
-rakennuslehti-ehdokkaita: 50
-  ilman kaupunkia:        50   kaikki
-  kaupunki pääteltävissä tekstistä: 23
+A: helsingin | rudolf | steiner | koulun     | laajennusurakka | jatke
+B: helsingin | steiner-koulussa | käynnistyy | korjausurakka
 ```
 
-Täsmäytys hakee ehdokkaita kaupungin sisältä, joten ilman kaupunkia ei
-ole mitään mihin verrata. Lähde käyttää `legacyCompanyResolver`ia, joka
-ei päättele kuntaa tekstistä.
+Ainoa yhteinen sana on kuntanimi. "koulun" ja "steiner-koulussa" ovat
+sama sana eri taivutuksessa — sama ilmiö kuin [D-106]:ssa, jonka
+korjausyritykset mitattiin ja hylättiin. **Pelkkä sama kunta ei riitä
+yhdistämiseen eikä pidäkään riittää**, joten täsmäytys toimii tässä
+oikein. Pari on yhdistettävissä vain käsin.
 
-**EI KORJATTU, KOSKA PÄÄTTELY EI OLE VIELÄ LUOTETTAVA.** Otoksesta:
+### Oma mittausvirhe, joka kannattaa muistaa
+
+Ensimmäinen selitykseni oli väärä. Väitin että kaikilta 50
+Rakennuslehti-ehdokkaalta puuttuu kaupunki. Luin kenttää `city`, jota
+**`potential_projects`-taulussa ei ole** — sarake on `municipality`.
+PostgREST palautti tyhjän eikä virhettä, koska en tarkistanut `error`ia,
+ja `undefined` näytti puuttuvalta arvolta.
+
+Oikeat luvut:
 
 ```
-"Varte rakentaa hoivakotia Nokialle"  ->  Tampere    väärin
+rakennuslehti-ehdokkaita:      50
+  ilman kuntaa:                11     (ei 50)
+  niistä korjattavissa:         3
+Steiner-ehdokkaan kunta:  "Helsinki"  (oli jo täytetty)
 ```
 
-Väärä kaupunki on pahempi kuin puuttuva: se siirtää hankkeen väärän
-asiakkaan hakuvahtiin. Ennen käyttöönottoa on luettava kaikkien 23
-päättelyn tulos riveittäin.
+Kahdeksan yhdestätoista on **oikein tyhjiä**: kaksi Liettuassa ja yksi
+Virossa, viisi markkinauutisia ilman työmaata ("Datakeskusbuumi näkyy
+tukkukaupassa", "Skanska-pomo varoittaa").
+
+Korjattu käsin luettuina: Parainen, Rovaniemi, Lappeenranta.
+
+**Opetus:** kun kysely palauttaa nollan rivin, syy voi olla puuttuva
+sarake eikä puuttuva data. Tarkista `error` aina — kaksi kertaa saman
+päivän aikana (`projects.property_id`, `potential_projects.city`)
+kysely epäonnistui hiljaisesti ja johti vääriin johtopäätöksiin.
+
+### Automaattinen kunnan päättely ei kelpaa sellaisenaan
+
+23 ehdokasta joilla kunta olisi pääteltävissä tekstistä, luettu
+riveittäin: 21 oikein, kaksi kelvotonta.
+
+```
+"Varte rakentaa hoivakotia Nokialle"  -> Tampere
+   kuvaus: "Varte Tampere on aloittanut... Nokialla"
+   yrityksen nimessä oleva paikannimi voitti
+
+"Härmälänojan silta"                  -> Pirkkala
+   kuvaus: "Tampereen ja Pirkkalan kuntarajalle"
+   kohde on rajalla, kumpikaan ei ole väärin eikä oikein
+```
+
+Jokainen tapaus jossa päättely onnistui **pelkästä otsikosta** oli
+oikein (15/15); molemmat virheet tulivat kuvauksesta. Jos tämä joskus
+automatisoidaan, otsikko on luotettavampi ankkuri kuin koko teksti.
