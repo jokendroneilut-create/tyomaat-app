@@ -15,6 +15,7 @@ import {
   isNonConstructionZoning,
   hasNonConstructionZoningDisclaimer,
 } from "@/lib/agent/knowledge/negativeProjects"
+import { PHASE_LABELS } from "@/lib/projects/phases"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -165,8 +166,29 @@ export async function resolvePotentialProject(
     }
   }
 
+  /*
+   * LAHDE ITSE SANOO ETTA KOHDE ON VALMIS.
+   *
+   * Aiempi saanto vaati valmistumisPAIVAN tekstista, eika se laukea
+   * referenssiportfolioissa: niissa vaihe on rakenteinen kenttä eika
+   * kuvauksessa lue paivamaaraa. Mitattu 23.8.2026 - jonossa oli 19
+   * valmistunutta hanketta (Iso Omena, Olkiluodon kapselointilaitos,
+   * Sokos Hotel Turun Seurahuone) joista jokaisella recommended_action
+   * oli tyhja, eli suodatus ei ollut kaynyt kertaakaan.
+   *
+   * Valmis rakennus ei ole liidi. Ihmisen ei kuulu tehda siita
+   * hylkayspaatosta yksi kerrallaan.
+   */
+  const sourceSaysCompleted =
+    String(md.phase_hint ?? "").trim().toLowerCase() === PHASE_LABELS.completed.toLowerCase()
+
   let completionMetadata: Record<string, unknown> = {}
-  if (staleCompleted) {
+  if (sourceSaysCompleted) {
+    completionMetadata = {
+      recommended_action: "ignore",
+      auto_ignored_reason: "lahde_ilmoittaa_valmistuneeksi",
+    }
+  } else if (staleCompleted) {
     completionMetadata = {
       recommended_action: "ignore",
       auto_ignored_reason: `valmistunut_menneisyydessa:${inferredCompletion}`,

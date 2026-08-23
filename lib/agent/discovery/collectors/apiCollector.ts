@@ -1372,6 +1372,21 @@ async function collectKreateSource(source: DiscoverySource) {
 
     const phase = kreatePhaseFromStatusNames(statusList)
 
+    /*
+     * VALMISTUNEITA REFERENSSEJÄ EI KERÄTÄ.
+     *
+     * Kreaten kohdeluettelo on ennen kaikkea referenssiportfolio:
+     * mitattu 23.8.2026 siinä on 301 valmistunutta ja 54 käynnissä
+     * olevaa. Valmistunut kohde ei ole myyjälle liidi — se on jo
+     * rakennettu — ja jokainen niistä olisi vaatinut ihmisen
+     * hylkäyspäätöksen katselmointijonossa.
+     *
+     * Tämä on suora seuraus koko luettelon avaamisesta (D-105:n
+     * yhteydessä tehty sivutuskorjaus). Ilman rajausta yksi yöajo olisi
+     * tuonut jonoon ~220 valmista rakennusta.
+     */
+    if (phase === "Valmistunut") continue
+
     const rawText = JSON.stringify(post)
     const contentHash = hashContent(rawText)
 

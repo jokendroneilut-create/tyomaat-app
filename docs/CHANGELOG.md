@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Valmistuneet hankkeet eivat enaa tule katselmointijonoon
+
+Jonossa oli 19 hanketta 94:sta (20 %) vaiheessa "Valmistunut" - Iso Omena,
+Olkiluodon kapselointilaitos, Sokos Hotel Turun Seurahuone. Ne tulevat
+urakoitsijoiden referenssiportfolioista, jotka ovat markkinointisivuja jo
+rakennetuista kohteista.
+
+D-008:n suodatus ei estanyt niita, koska se vaatii valmistumispaivan
+TEKSTISTA ja portfoliossa vaihe on rakenteinen kentta. Uusi saanto: jos
+lahde itse ilmoittaa vaiheeksi "Valmistunut", ehdokas ohitetaan.
+
+Tama oli lahella kymmenkertaistua: Kreaten koko kohdeluettelon avaaminen
+toi 251 hanketta joista 301 on valmistuneita ja vain 54 kaynnissa (sama
+hanke voi olla useassa taksonomiassa). Yksi yoajo olisi tuonut jonoon
+~220 valmista rakennusta. Kreaten kollektori ohittaa ne nyt jo
+keraysvaiheessa. (D-109)
+
 ### Ymparistoonsa tarttuneet sahkopostit korjattu
 
 Poimittu osoite otti mukaansa edeltavan numeron ja seuraavan sanan, koska

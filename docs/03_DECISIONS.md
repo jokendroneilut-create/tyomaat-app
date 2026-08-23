@@ -5,6 +5,44 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-109 – Valmistunut hanke ei mene katselmointijonoon
+
+Jonossa oli 19 hanketta 94:stä (20 %) vaiheessa "Valmistunut": Kauppakeskus
+Iso Omena, Olkiluodon kapselointilaitos, Sokos Hotel Turun Seurahuone.
+Ne tulevat urakoitsijoiden **referenssiportfolioista** (Skanskan ja NCC:n
+"projektimme", Kreaten kohdeluettelo), jotka ovat markkinointisivuja jo
+rakennetuista kohteista.
+
+Valmis rakennus ei ole liidi. Ihmisen ei kuulu tehdä siitä
+hylkäyspäätöstä yksi kerrallaan.
+
+**MIKSI [D-008] EI ESTÄNYT TÄTÄ.** Sen sääntö vaatii valmistumis*päivän*
+tekstistä (`inferCompletionDateFromText`). Portfoliokohteissa vaihe on
+rakenteinen kenttä eikä kuvauksessa lue päivämäärää, joten sääntö ei
+lauennut kertaakaan — kaikilla 19:llä `recommended_action` oli tyhjä.
+
+Uusi sääntö on suorempi: **jos lähde itse ilmoittaa vaiheeksi
+"Valmistunut", ehdokas ohitetaan** (`auto_ignored_reason:
+lahde_ilmoittaa_valmistuneeksi`). Se on lähteen oma jäsennelty tieto, ei
+tekstistä päättelyä.
+
+**Tämä oli lähellä kymmenkertaistua.** Kreaten koko kohdeluettelon
+avaaminen (D-105:n yhteydessä) toi näkyviin 251 hanketta, joista mitattuna
+
+```
+Valmistuneet / Completed   301
+Käynnissä / Ongoing         54
+```
+
+Ilman tätä rajausta yksi yöajo olisi tuonut jonoon noin 220 valmista
+rakennusta. Kreaten kollektori ohittaa ne nyt jo keräysvaiheessa, jottei
+niitä tallenneta turhaan lainkaan.
+
+**Ei poisteta, vaan ohitetaan.** Status → `ignored`, sama kuin jonosta
+poistossa: ei näy asiakkaille, historia säilyy, päätös on peruttavissa.
+
+---
+
 ### D-108 – Sähköposti siivotaan poiminnassa, koska se tarttuu ympäristöönsä
 
 Tiedotteesta poimittu osoite ottaa mukaansa edeltävän numeron ja
