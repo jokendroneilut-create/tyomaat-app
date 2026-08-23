@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { daysLeft, daysSince, trialState, type TrialState } from '@/lib/users/trial'
 
 type AdminUser = {
   id: string
@@ -13,12 +14,18 @@ type AdminUser = {
   lockedReason?: string | null
 }
 
-type SortColumn = 'email' | 'created_at' | 'last_sign_in_at' | 'confirmed'
+type SortColumn = 'email' | 'created_at' | 'age_days' | 'last_sign_in_at' | 'confirmed'
 type SortDirection = 'asc' | 'desc'
 
 function formatDate(value: string | null) {
   if (!value) return '-'
   return new Date(value).toLocaleString('fi-FI')
+}
+
+const TRIAL_STYLE: Record<TrialState, { color: string; weight: number }> = {
+  ohi: { color: '#b91c1c', weight: 700 },
+  pian: { color: '#b45309', weight: 600 },
+  kesken: { color: '#374151', weight: 400 },
 }
 
 export default function UsersPage() {
@@ -45,12 +52,26 @@ export default function UsersPage() {
     }
   }
 
+  const trialSummary = useMemo(() => {
+    let ohi = 0
+    let pian = 0
+    for (const u of users) {
+      const tila = trialState(daysSince(u.created_at))
+      if (tila === 'ohi') ohi += 1
+      else if (tila === 'pian') pian += 1
+    }
+    return { ohi, pian }
+  }, [users])
+
   const sortedUsers = useMemo(() => {
     const sorted = [...users].sort((a, b) => {
       let cmp = 0
 
       if (sortColumn === 'email') {
         cmp = (a.email ?? '').localeCompare(b.email ?? '', 'fi')
+      } else if (sortColumn === 'age_days') {
+        /* Ika on kaanteinen luontiaikaan nahden: vanhin tunnus = suurin ika. */
+        cmp = (daysSince(b.created_at) ?? -1) - (daysSince(a.created_at) ?? -1)
       } else if (sortColumn === 'confirmed') {
         cmp = Number(a.confirmed) - Number(b.confirmed)
       } else {
@@ -320,7 +341,31 @@ export default function UsersPage() {
 
       <div style={{ marginTop: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h2 style={{ fontSize: 18 }}>Kaikki käyttäjät ({users.length})</h2>
+          <h2 style={{ fontSize: 18 }}>
+            Kaikki käyttäjät ({users.length})
+            {/*
+              * Luvut otsikkoon, jotta paattyneet nakyvat ilman selaamista.
+              * Tama on sivun varsinainen tarkoitus: muistaa mitka
+              * testitunnukset ovat umpeutuneet.
+              */}
+            {trialSummary.ohi > 0 || trialSummary.pian > 0 ? (
+              <span style={{ marginLeft: 12, fontSize: 14, fontWeight: 400 }}>
+                {trialSummary.ohi > 0 ? (
+                  <span style={{ color: '#b91c1c', fontWeight: 700 }}>
+                    {trialSummary.ohi} kokeilu ohi
+                  </span>
+                ) : null}
+                {trialSummary.ohi > 0 && trialSummary.pian > 0 ? (
+                  <span style={{ color: '#9ca3af' }}> · </span>
+                ) : null}
+                {trialSummary.pian > 0 ? (
+                  <span style={{ color: '#b45309', fontWeight: 600 }}>
+                    {trialSummary.pian} päättyy viikon sisällä
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+          </h2>
           <button
             onClick={() => fetchUsers()}
             disabled={loading}
@@ -342,6 +387,7 @@ export default function UsersPage() {
             <tr style={{ textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>
               <SortHeader column="email" label="Sähköposti" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="created_at" label="Luotu" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              <SortHeader column="age_days" label="Ikä (pv)" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="last_sign_in_at" label="Viimeksi kirjautunut" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="confirmed" label="Tila" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <th style={{ padding: '8px 4px' }} />
@@ -353,6 +399,20 @@ export default function UsersPage() {
               <tr key={u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                 <td style={{ padding: '8px 4px' }}>{u.email}</td>
                 <td style={{ padding: '8px 4px' }}>{formatDate(u.created_at)}</td>
+                <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
+                  {(() => {
+                    const days = daysSince(u.created_at)
+                    const tila = trialState(days)
+                    const tyyli = TRIAL_STYLE[tila]
+                    return (
+                      <span style={{ color: tyyli.color, fontWeight: tyyli.weight }}>
+                        {days == null ? '-' : days}
+                        {tila === 'ohi' ? ' · kokeilu ohi' : null}
+                        {tila === 'pian' ? ` · ${daysLeft(days)} pv jäljellä` : null}
+                      </span>
+                    )
+                  })()}
+                </td>
                 <td style={{ padding: '8px 4px' }}>{formatDate(u.last_sign_in_at)}</td>
                 <td style={{ padding: '8px 4px' }}>
                   {u.locked ? (

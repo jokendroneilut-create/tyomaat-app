@@ -11,6 +11,26 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Kayttajalistaan tunnuksen ika ja kokeilun tila
+
+Suurin osa 94 tunnuksesta on testikayttajia, eika tilaus- tai
+kokeilutilaa kerata mihinkaan (tietoinen valinta, laskutus hoidetaan
+kasin). Ainoa asia josta kokeilun paattymisen voi paatella on tunnuksen
+ika, ja se piti laskea paassa luontipaivamaarasta.
+
+Listaan lisattiin "Ika (pv)" -sarake, joka on jarjestettavissa ja
+varikoodattu: >= 30 pv punainen "kokeilu ohi", >= 23 pv oranssi
+"n pv jaljella". Otsikkoriville tuli lisaksi yhteenveto, jotta luvut
+nakyvat ilman selaamista.
+
+Logiikka on omassa moduulissaan (lib/users/trial.ts) testeineen, koska
+paivalaskenta on juuri se kohta jossa virhe menisi huomaamatta:
+29 pv 23 h ei ole viela 30, tuntematon aikaleima ei ole "ohi", eika
+jaljella oleva aika mene negatiiviseksi.
+
+Ika lasketaan auth.users.created_at-kentasta - profiles.created_at ei
+ole tilin luontipaiva.
+
 ### Vaylan kuvaukset hankesivulta, ei listauksen teaserista
 
 Kuvaus oli listaussivun yksi virke ("Lapin elinvoimakeskuksen
