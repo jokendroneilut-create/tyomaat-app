@@ -386,3 +386,48 @@ tiukemmin rajattuna kokoluokan takia.
 Muut 1 690 PDF-liitettä ovat kaavakarttoja, osallistumis- ja
 arviointisuunnitelmia ja kuulutuksia; niissä ei ole yhteystietoja
 samalla tavalla.
+
+
+## 2026-08-23 – Liitteet käytiin läpi kaikista lähteistä
+
+Kaavaselostusten poiminnan (D-114) jälkeen tarkistettiin, onko muissa
+lähteissä vastaavaa. Haku ei rajoittunut avainnimiin vaan etsi **minkä
+tahansa .pdf-osoitteen mistä tahansa kentästä**, myös raakatekstistä.
+
+```
+lähteitä joissa PDF-osoitteita:  73
+PDF-osoitteita yhteensä:      2 092
+```
+
+**Käytännössä kaikki ovat kaavalähteitä.** Ei-kaavalähteitä on viisi,
+yhteensä 32 PDF:ää, ja ne ovat kohinaa:
+
+```
+26  Espoon kuulutukset      päätösluettelo (vain kirjaamo@espoo.fi),
+                            ja "Siirretyt ajoneuvot" -kuulutus
+ 2  Senaatti                asukastilaisuuden kutsu, 2017 asiakirja
+ 2  STT                     EK:n mediainfo
+ 1  Hilma                   ruotsinkielinen tarjouspyyntö
+ 1  Lupapiste               kaupunkitilaohje
+```
+
+### Kaavaliitteiden jakauma ja mitä kustakin saa
+
+```
+1 106  muu            kuulutuksia, luontoselvityksiä, seurantalomakkeita
+  375  OAS            osallistumis- ja arviointisuunnitelmat
+  245  kaavaselostus  POIMITAAN (D-114) — 76 nimettyä henkilöä
+  204  kaavakartta
+    5  kaavamääräykset
+```
+
+**OAS ja "muu" tarkistettiin otoksella, eivätkä ne kannata.** Neljästä
+OAS-näytteestä kahdessa ei ollut kontaktia ja kahdessa oli roskaa
+("Jyväskylä Jyväskylä" = ELY:n osoite). "Muu"-lokerosta saatiin vain
+kunnan kirjaamo (`kirjaamo@multia.fi`,
+`kirjaamo.keski-suomi@ely-keskus.fi`) — sama tieto joka on jo D-104:n
+kuntarekisterissä.
+
+Selostus on siis ainoa liitetyyppi jossa on nimetty henkilö suorine
+yhteystietoineen, ja se on nyt poimittu. **Liitteiden osalta ei jää
+tunnettua aukkoa.**
