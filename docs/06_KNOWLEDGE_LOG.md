@@ -296,3 +296,45 @@ maiden nimiin. Käyttökonteksti ratkaisee, ei funktio.
 Kaupunginosien ja taajamien nimet (Lievestuore, Malminkartano, Jorvas,
 Kannelmäki, Pohjois-Haaga, Kimola) vaatisivat oman taulukkonsa;
 `PLACE_ALIASES` kattaa 57 nimeä eikä näitä ole siinä. Se on eri työ.
+
+
+## 2026-08-23 – Kaupunginosataulukkoa ei rakenneta
+
+Kysymys oli: kannattaako kaupunginosien ja taajamien nimistä tehdä
+taulukko, jotta "Malminkartanon asematunneli" osaisi Helsinkiin?
+
+Taulukko louhittiin OMASTA DATASTA eikä muistista: riveiltä joilla kunta
+on tiedossa poimittiin otsikon nimisanat, ja nimi kelpasi vain jos se
+esiintyi yhdessä ainoassa kunnassa. Mitattu kolmella kynnyksellä:
+
+```
+kynnys   taulukon koko   täyttäisi
+  2         4 838 nimeä    73 / 450 tyhjää
+  3         1 097          34 / 450
+  5           386          18 / 450
+```
+
+**Virheitä on jokaisella tasolla, myös tiukimmalla:**
+
+```
+Porvoo    <- "Kokemäenjoen ylittävät Koiviston sillat"   sillat ovat Porissa
+Oulu      <- "Iijoen ratasilta"                          Iijoki on Iissä
+Helsinki  <- "Jorvin sairaalan palvelut"                 Jorvi on Espoossa
+Hyvinkää  <- "Lujan tulosinfo 13.2.2026"                 ei hanke lainkaan
+```
+
+**EI RAKENNETA.** Kaksi syytä:
+
+1. Hyöty on pieni. Ne 450 tyhjää ovat valtaosin rivejä joilla *ei
+   kuulukaan* olla yhtä kuntaa — maakunnallisia päällystysurakoita
+   ("Päällystystyöt 2026 – Satakunta") ja tiedotteita ilman työmaata.
+   Oikeasti korjattavia on kymmenkunta.
+
+2. Ylläpito on jatkuvaa ja hiljaista. Taulukko vanhenee ja vinoutuu sen
+   mukaan mitä lähteitä kertyy, eikä tuhannen nimen listaa lue kukaan
+   läpi. Virheet eivät näy missään ennen kuin asiakas ihmettelee miksi
+   espoolainen sairaala on Helsingissä.
+
+Helsinki-rajattu versio olisi tarkempi (Malminkartano, Kannelmäki,
+Pohjois-Haaga, Itäkeskus ovat yksiselitteisiä), mutta täyttäisi noin
+kymmenen riviä — sama työ ilman parempaa tulosta.
