@@ -14,7 +14,13 @@ import {
 import { trackEvent } from '@/lib/analytics/trackEvent'
 import FeedbackButton from '../components/FeedbackButton'
 
-const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
+/*
+ * Vaihesuodattimen vaihtoehdot. VALMISTUNEET JATETAAN POIS, koska ne on
+ * jo suodatettu pois itse aineistosta (ks. activeProjectsData alla).
+ * Valittavissa oleva vaihtoehto joka palauttaa aina nolla tulosta ei
+ * kerro kayttajalle "naita ei nayteta" vaan "naita ei ole".
+ */
+const PHASE_OPTIONS = CANONICAL_PHASES.filter((p) => p.key !== 'completed').map((p) => p.label)
 
 type Project = {
   id: string
@@ -925,8 +931,13 @@ setTeamModeEnabled(true)
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/*
+              * Sama vari on seka "Valmistumassa"- etta "Valmistunut"-
+              * vaiheelle, mutta valmistuneet on suodatettu pois, joten
+              * kartalla se tarkoittaa aina viimeistelyvaihetta.
+              */}
             <span className="marker-dot marker--done" />
-            <span style={{ fontSize: 14 }}>Valmistunut</span>
+            <span style={{ fontSize: 14 }}>Valmistumassa</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
