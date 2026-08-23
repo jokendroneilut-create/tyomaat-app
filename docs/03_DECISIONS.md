@@ -5,6 +5,71 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-112 – Vaihejärjestelmän kokonaiskuva: määrittely, asettaminen, siirtymä
+
+Kartoitettu 23.8.2026, koska "Valmistumassa"-selvitys (D-111) paljasti
+ettei vaiheiden toimintaa ollut kuvattu missään kokonaisuutena.
+
+**Määrittely.** `lib/projects/phases.ts`, `CANONICAL_PHASES`. Vaiheella on
+järjestysnumero, ja järjestys on koko mekanismin perusta:
+
+```
+1 Ideointi   2 Kaavoitus   3 Suunnittelu   4 Rakennuslupa   5 Kilpailutus
+6 Sopimus myönnetty   7 Rakenteilla   8 Valmistumassa   9 Valmistunut
+  Peruttu = terminaalinen, EI järjestysnumeroa
+```
+
+**Siirtymäsääntö on yksi ja sama kaikille reiteille:** `phaseAdvances()`.
+Vaihe saa edetä muttei peruuttaa. Järjestyksetön vaihe (Peruttu) ei
+koskaan ohita nykyistä, koska emme voi tietää onko se edistys.
+
+**Neljä reittiä joilla vaihe asetetaan** — mitattu
+`project_phase_history`-taulusta (5 410 riviä):
+
+```
+5 116  tic_approve          ihminen hyväksyy ehdokkaan
+  138  agent_import         lähteen oma tilakenttä tai tekstipäättely
+  111  auto_sync            arvioitu valmistumispäivä on mennyt
+   38  manual_correction    käsin tehty palautus
+    7  dashboard_admin
+    1  manual_tic_fix
+```
+
+Eli **95 % vaiheista tulee ihmisen hyväksynnästä**, ei automatiikasta.
+
+Lähdekohtainen käännös tapahtuu kollektoreissa ja resolvereissa
+(`kuopioPhaseLabel`, `helsinkiSukkaPhaseLabel`, `hyvinkaaPhaseLabel`,
+`kreatePhaseFromStatusNames`, `mapVaylaPhase`, `mapSenaattiPhase`), ja
+tekstipäättely `inferCompanyPhase`illa.
+
+**Toteutuneet siirtymät** (hankkeita joilla useampi kuin yksi merkintä):
+
+```
+47  planning -> completed        45  planning -> construction
+36  zoning -> planning           22  zoning -> completed
+12  planning -> contract_awarded 10  construction -> completed
+```
+
+**Taaksepäin meneviä siirtymiä on 23, ja ne ovat kaikki historiaa.**
+Kaikki lähteestä `agent_import`, uusin 12.8.2026:
+
+```
+16  construction -> planning      4  permit -> planning
+ 1  completed -> planning         1  contract_awarded -> planning
+```
+
+Syy näkyy korjaushistoriassa: sääntö kytkettiin agentin tuontiin
+5.8. (`2e98ce8`) ja loput reitit 14.8. (`0a9b74f`). Viimeinen
+taaksepäin-siirtymä on niiden väliltä. **Yhtään ei ole tapahtunut sen
+jälkeen** — sääntö pitää nyt kaikilla poluilla.
+
+Sivulöydös: historiassa on myös 26 merkintää joissa vaihe ei muutu
+(`planning -> planning`). Ne eivät ole siirtymiä vaan uudelleenkirjauksia,
+eivätkä ne haittaa mitään — mutta selittävät miksi rivimäärä on suurempi
+kuin todellisten siirtymien määrä.
+
+---
+
 ### D-111 – "Valmistumassa" on määritelty muttei koskaan käytössä
 
 Kartan selite lupasi väriä nimellä "Valmistunut", vaikka valmistuneet on
