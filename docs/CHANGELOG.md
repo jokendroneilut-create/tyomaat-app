@@ -37,6 +37,18 @@ osunut, ja silloin on parempi jattaa poimimatta.
 Kuvaus saadaan nyt 244:lle 264:sta. Takautuva ajo: 236 lahdedokumenttia,
 joista 214 sai kuvauksen ensimmaista kertaa.
 
+Kuivaharjoitus paljasti viela kaksi roskan lahdetta: maksurivit
+("Rakentamislupahakemuksen kasittelysta veloitetaan 988 euroa") ja
+RAKENNELMAT-taulukon. Molemmat hylataan nyt, ja 8 jo kirjoitettua
+roskakuvausta poistettiin.
+
+TIETO EI SIIRRY ITSESTAAN. Faktapoimija valitsee dokumentit ehdolla
+`.is("facts_extracted_at", null)` eli kasittelee jokaisen tasan kerran,
+joten lahdedokumenttiin kirjoitettu kuvaus ei paivity jo luotuihin
+hankkeisiin. Siirto tehtiin erikseen: 58 jonon ehdokasta ja 24 nakyvaa
+hanketta. Kuvausta ei korvattu vaan taydennettiin - vanhassa tekstissa
+on kiinteistotunnus ja osoite, uudessa hakijan oma kuvaus tyosta.
+
 ### Yhteyshenkilot nakyviin hyvaksyntalistaan
 
 Yhteyshenkilot nakyivat vain hankkeen omalla sivulla, joten hyvaksyja ei

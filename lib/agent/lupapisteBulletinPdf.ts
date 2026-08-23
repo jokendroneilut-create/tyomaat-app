@@ -201,8 +201,18 @@ const BULLETIN_LABELS = [
   "Liitteet",
   "Maksut",
   "RAKENNUKSET",
+  "RAKENNELMAT",
   "Tarkemmat tiedot",
+  "Ennakkokatselmus",
 ]
+
+/*
+ * Hallinnollista vakiotekstia, ei hankkeen kuvausta. Naita paatyi
+ * Lisaselvitykset-kenttaan: "Rakentamislupahakemuksen kasittelysta
+ * veloitetaan 988 euroa" ei kerro tyosta mitaan.
+ */
+const BOILERPLATE =
+  /^(rakentamislupahakemuksen|lupahakemuksen|hakemuksen)\s+k[aä]sittelyst[aä]|^maksu|^p[aä][aä]t[oö]ksest[aä]\s+peritt[aä]v[aä]/i
 
 /*
  * Lomakekentän arvo on lyhyt. Pidempi tarkoittaa etta katkaisu ei osunut
@@ -231,7 +241,10 @@ function labelValue(pdfText: string, label: string): string | null {
    * Tyhjä arvo on yleinen: "Hankkeeseen ryhtyvä" on kuulutuksissa
    * poistettu (D-102), jolloin otsikkoa seuraa suoraan seuraava otsikko.
    */
-  return value.length >= 3 && value.length <= MAX_FIELD_LENGTH ? value : null
+  if (value.length < 3 || value.length > MAX_FIELD_LENGTH) return null
+  if (BOILERPLATE.test(value)) return null
+
+  return value
 }
 
 export type BulletinFields = {

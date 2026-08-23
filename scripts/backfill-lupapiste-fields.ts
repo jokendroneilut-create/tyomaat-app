@@ -57,7 +57,7 @@ async function main() {
   console.log(`  kuvaus nyt tallessa:  ${pdfIla.filter((d: any) => d.raw_payload?.bulletin_description).length}\n`)
 
   /* 1. Lahdedokumentteihin kuvaus ja kentat. */
-  let uusiaKuvauksia = 0
+  let uusiaKuvauksia = 0, poistettuja = 0
   const paivitykset: { id: string; payload: any }[] = []
 
   for (const d of pdfIla) {
@@ -65,16 +65,23 @@ async function main() {
     const kuvaus = bestBulletinDescription(teksti)
     const kentat = extractBulletinFields(teksti)
 
-    if (!kuvaus && !kentat.kaavatilanne && !kentat.pintaAla) continue
-    if (d.raw_payload.bulletin_description === kuvaus) continue
+    const vanha = d.raw_payload.bulletin_description ?? null
+    if (!kuvaus && !kentat.kaavatilanne && !kentat.pintaAla && !vanha) continue
+    if (vanha === kuvaus) continue
 
-    if (kuvaus && !d.raw_payload.bulletin_description) uusiaKuvauksia++
+    if (kuvaus && !vanha) uusiaKuvauksia++
+    if (!kuvaus && vanha) poistettuja++
 
+    /*
+     * VANHENTUNUT ARVO ON POISTETTAVA. Poimija hylkaa nyt maksurivit ja
+     * taulukkovuodot, mutta aiemmin kirjoitettu roska jaisi paikoilleen
+     * jos avain vain jatetaan pois - siksi se asetetaan nulliksi.
+     */
     paivitykset.push({
       id: d.id,
       payload: {
         ...d.raw_payload,
-        ...(kuvaus ? { bulletin_description: kuvaus } : {}),
+        bulletin_description: kuvaus ?? null,
         ...(kentat.kaavatilanne ? { bulletin_kaavatilanne: kentat.kaavatilanne } : {}),
         ...(kentat.pintaAla ? { bulletin_pinta_ala: kentat.pintaAla } : {}),
         ...(kentat.kerrosala ? { bulletin_kerrosala: kentat.kerrosala } : {}),
@@ -84,6 +91,7 @@ async function main() {
 
   console.log(`paivitettavia lahdedokumentteja: ${paivitykset.length}`)
   console.log(`  niista uusia kuvauksia:        ${uusiaKuvauksia}`)
+  console.log(`  roskakuvauksia poistettu:      ${poistettuja}`)
 
   /* 2. Nayte luettavaksi. */
   console.log("\nnaytteita:")
