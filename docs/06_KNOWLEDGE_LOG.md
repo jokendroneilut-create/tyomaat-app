@@ -251,3 +251,48 @@ riveittäin: 21 oikein, kaksi kelvotonta.
 Jokainen tapaus jossa päättely onnistui **pelkästä otsikosta** oli
 oikein (15/15); molemmat virheet tulivat kuvauksesta. Jos tämä joskus
 automatisoidaan, otsikko on luotettavampi ankkuri kuin koko teksti.
+
+
+## 2026-08-23 – Puuttuva kunta ei ole systeeminen ongelma
+
+Tarkistettu kaikki lähteet molemmista tauluista:
+
+```
+HYVÄKSYTYT (asiakkaille näkyvät)     54 / 5 749    1 %
+JONO                                398 / 7 897    5 %
+```
+
+**Valtaosa on oikein tyhjiä.** Jonon suurin kasa on `stt_haku` (239), ja
+ne ovat tiedotteita joilla ei ole työmaata lainkaan: "Keskuskauppakamari:
+velkakonversiomahdollisuus", "ETL:n terveiset budjettiriiheen",
+"Ilmaisku vaurioitti Pelastakaa Lasten toimipistettä Ukrainassa".
+
+Hyväksytyistä 54:stä useimmat ovat maakunnallisia infraurakoita joilla ei
+ole yhtä kuntaa — "Päällystystyöt 2026 – Satakunta", "Siltatyöt
+Varsinais-Suomessa", "Rantaradan kehittäminen Karjaa–Kauklahti",
+"Merenkurkun kiinteän yhteyden esiselvitys". **44:llä 54:stä maakunta on
+tiedossa**, ja se on näille oikea tarkkuus.
+
+### Genetiivipäättelyä EI kytketä tekstihakuun
+
+`inferMunicipalityFromText` ei käytä yhtään kuntahakufunktiota, vaikka
+`municipalityFromGenitive` osaa "Liedon" → Lieto. Kytkentä näytti
+ilmeiseltä parannukselta. Mitattu otsikoista, tulos **6/10 väärin**:
+
+```
+Rantasalmi  <- "Rantaradan kehittäminen"       rantarata on Helsinki–Turku
+Muurame     <- "peruskivi muurattiin"          verbi
+Puolanka    <- "Puolan panttijärjestelmän"     maa
+Paltamo     <- "Paltan laskelma"               työnantajajärjestö
+Sulkava     <- "Sulkavuoren keskuspuhdistamo"  Tampereella
+Pyhäntä     <- "Pyhänselän 400 kV"             Muhoksella
+```
+
+Syy: funktio tekee viiden merkin etuliitehaun yksikäsitteisyysehdolla.
+Se on turvallinen kun syöte on jo tiedossa kuntanimeksi (kuntakenttä,
+hankintayksikön nimi), mutta vapaassa tekstissä se osuu verbeihin ja
+maiden nimiin. Käyttökonteksti ratkaisee, ei funktio.
+
+Kaupunginosien ja taajamien nimet (Lievestuore, Malminkartano, Jorvas,
+Kannelmäki, Pohjois-Haaga, Kimola) vaatisivat oman taulukkonsa;
+`PLACE_ALIASES` kattaa 57 nimeä eikä näitä ole siinä. Se on eri työ.
