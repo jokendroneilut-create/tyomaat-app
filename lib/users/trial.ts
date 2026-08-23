@@ -8,6 +8,11 @@
  *
  * Ikä lasketaan `auth.users.created_at`-kentästä. `profiles.created_at`
  * EI kelpaa: se ei ole tilin luontipäivä.
+ *
+ * LASKENTA ALKAA TUNNUKSEN LUONNISTA, ei ensimmäisestä kirjautumisesta.
+ * Vahvistettu 23.8.2026. Seuraus on tiedostettu: tunnus jonka saaja ei
+ * ole koskaan kirjautunut näkyy silti päättyneenä 30 päivän jälkeen —
+ * kokeilu on annettu, käyttämättä jättäminen ei pidennä sitä.
  */
 
 export const TRIAL_DAYS = 30
