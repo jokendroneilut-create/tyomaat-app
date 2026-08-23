@@ -15,6 +15,8 @@ type ReviewContact = {
   title?: string | null
   phone?: string | null
   email?: string | null
+  /* "authority" = viranomainen, ei hankkeen osapuoli. */
+  role?: string | null
 }
 
 /* Nimetyt ensin: myyjälle nimetty kontakti on arvokkaampi kuin kirjaamo. */
@@ -259,7 +261,17 @@ export default function PotentialProjectsReviewList({
                       {contactsOf(metadata)
                         .slice(0, 3)
                         .map((c) =>
-                          [c.name, c.title, c.phone, c.email]
+                          [
+                            c.name,
+                            c.title,
+                            c.phone,
+                            c.email,
+                            /*
+                              * Viranomainen merkitaan nakyviin: han tuntee
+                              * hankkeen muttei osta mitaan.
+                              */
+                            c.role === "authority" ? "(viranomainen)" : null,
+                          ]
                             .filter(Boolean)
                             .join(" · ")
                         )

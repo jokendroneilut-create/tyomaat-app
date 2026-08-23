@@ -48,6 +48,28 @@ export async function resolveLupapisteProject({
    */
   const bulletinDescription = document.raw_payload?.bulletin_description ?? null
 
+  /*
+   * VIRANOMAISET, EI OSAPUOLIA.
+   *
+   * Kuulutuksessa hakija on peitetty (D-102), mutta paatoksen tehnyt
+   * rakennustarkastaja on nimetty. Han tuntee hankkeen muttei osta
+   * mitaan, joten kontakti merkitaan role: "authority" - kayttajan on
+   * nahtava ero ennen kuin han soittaa.
+   */
+  const officials: any[] = Array.isArray(document.raw_payload?.bulletin_officials)
+    ? document.raw_payload.bulletin_officials
+    : []
+
+  const authorityContacts = officials.map((o: any) => ({
+    name: o.name ?? null,
+    title: o.title ?? null,
+    organization: o.organization ?? null,
+    email: "",
+    phone: null,
+    kind: "person" as const,
+    role: "authority" as const,
+  }))
+
   const description = [
     propertyId ? `Kiinteistötunnus: ${propertyId}` : null,
     address ? `Osoite: ${address}` : null,
@@ -123,6 +145,7 @@ export async function resolveLupapisteProject({
 
       operation,
       description,
+      ...(authorityContacts.length ? { contact_persons: authorityContacts } : {}),
       municipality_code: municipalityCode,
       region: municipality?.region ?? null,
 

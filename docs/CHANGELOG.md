@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Lupapisteen viranomaiset yhteystiedoiksi, merkittyna
+
+Kuulutuksessa hakija on peitetty (D-102), mutta paatoksen tehnyt
+viranhaltija on nimetty: Paattaja 83 %, Valmistelija 20 %. Nama
+poimitaan nyt, mutta merkitaan role: "authority" ja kayttoliittyma
+nayttaa merkinnan - rakennustarkastaja tuntee hankkeen muttei osta
+mitaan, ja kayttajan on nahtava ero ennen kuin han soittaa.
+
+Nimen jasennys vaati kolme korjausta, jokainen loytyi lukemalla tuotos
+riveittain: genetiivi jai nimeen ("Kyllonen Tampereen"), hahmosta puuttui
+i-lippu ("Neuvonen Rakennusvalvonta", "Laiteenmaki KURIKAN") ja raja osui
+keskelle sanaa ("Tavaststjerna Aa"). Vaarin kirjoitettu ihmisen nimi on
+pahempi kuin puuttuva, joten epavarma jaa poimimatta.
+
+109 jonon ehdokasta ja 44 nakyvaa hanketta sai nimetyn viranhaltijan.
+Nimettyja henkiloita 1 184 -> 1 262. (D-113)
+
 ### Lupapisteen kuulutus-PDF:sta luetaan nyt oikeat kentat
 
 Kuulutuksen PDF haettiin 264 dokumentille, mutta kuvaus saatiin vain

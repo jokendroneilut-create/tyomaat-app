@@ -32,6 +32,21 @@ export type Contact = {
   phone: string | null
   /* Henkilö vai organisaation yleinen laatikko (kirjaamo@, info@). */
   kind: "person" | "organization"
+  /*
+   * VIRANOMAINEN EROTETAAN HANKKEEN OSAPUOLESTA.
+   *
+   * Lupapisteen kuulutuksissa on nimetty rakennustarkastaja tai
+   * lupainsinööri, joka teki päätöksen. Hän tuntee hankkeen muttei osta
+   * mitään — myyjälle se on eri asia kuin rakennuttaja, ja käyttäjän on
+   * nähtävä ero ennen kuin hän soittaa.
+   *
+   * Tyhjä tarkoittaa hankkeen omaa yhteyshenkilöä, kuten ennenkin.
+   *
+   * "buyer" ja "winner" ovat Hilman osapuolirooleja (ks.
+   * `lib/agent/hilmaContacts.ts`) — ne ovat hankkeen osapuolia, eivät
+   * viranomaisia.
+   */
+  role?: "authority" | "buyer" | "winner" | null
 }
 
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g

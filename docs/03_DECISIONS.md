@@ -5,6 +5,43 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-113 – Lupapisteen viranomaiset poimitaan, mutta merkitään viranomaisiksi
+
+[D-102] hylkäsi Lupapisteen yhteystietolähteenä. Se pitää yhä paikkansa
+**hakijasta** — se on kuulutuksesta poistettu. Mutta päätöksen tehnyt
+viranhaltija on nimetty, eikä sitä mitattu silloin:
+
+```
+Päättäjä      258 / 309   83 %
+Valmistelija   61 / 309   20 %
+```
+
+Nämä **eivät ole myyntikontakteja**: rakennustarkastaja tuntee hankkeen
+muttei osta mitään. Siksi ne merkitään `role: "authority"`, ja
+käyttöliittymä näyttää merkinnän — käyttäjän on nähtävä ero ennen kuin
+hän soittaa. Sähköpostia tai puhelinta ei ole, mutta näillä hankkeilla
+on jo kunnan kirjaamo (D-104), ja pari "kirjaamo@kunta.fi + pyydä
+rakennustarkastaja Hietalaa" on käyttökelpoisempi kuin pelkkä kirjaamo.
+
+**Nimen jäsennys vaati kolme korjausta**, ja jokainen löytyi lukemalla
+tuotos riveittäin:
+
+```
+1. genetiivi jäi nimeen        "Kyllönen Tampereen"      -> org-raja siirrettiin
+2. hahmossa ei ollut i-lippua  "Neuvonen Rakennusvalvonta"
+                               "Laiteenmäki KURIKAN"     -> /i + versaalisuoja
+3. raja osui keskelle sanaa    "Tavaststjerna Ää"        -> vähimmäispituus 3
+```
+
+Väärin kirjoitettu ihmisen nimi on käyttäjälle pahempi kuin puuttuva,
+joten epävarma jää poimimatta: hylkäävät ehdot pudottivat saannon
+242:sta 203:een, ja jäljelle jäi 15/16 puhdasta näytettä.
+
+**Tulos:** 109 jonon ehdokasta ja 44 näkyvää hanketta sai nimetyn
+viranhaltijan.
+
+---
+
 ### D-112 – Vaihejärjestelmän kokonaiskuva: määrittely, asettaminen, siirtymä
 
 Kartoitettu 23.8.2026, koska "Valmistumassa"-selvitys (D-111) paljasti

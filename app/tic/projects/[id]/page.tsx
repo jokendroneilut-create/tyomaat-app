@@ -30,7 +30,13 @@ export default async function CandidateDetailPage({ params }: Props) {
 
   const { candidate, signals, sourceHistory } = detail
   const metadata = candidate.metadata ?? {}
-  const contactPersons: { name: string; title: string | null; phone: string | null; email: string | null }[] =
+  const contactPersons: {
+    name: string
+    title: string | null
+    phone: string | null
+    email: string | null
+    role?: string | null
+  }[] =
     Array.isArray(metadata.contact_persons) ? metadata.contact_persons : []
 
   const consultants: { name: string; role: string | null }[] = Array.isArray(
@@ -171,6 +177,12 @@ export default async function CandidateDetailPage({ params }: Props) {
                 {contact.title ? `, ${contact.title}` : ""}
                 {contact.phone ? ` — ${contact.phone}` : ""}
                 {contact.email ? ` — ${contact.email}` : ""}
+                {/* Viranomainen tuntee hankkeen muttei osta mitaan. */}
+                {contact.role === "authority" ? (
+                  <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
+                    viranomainen
+                  </span>
+                ) : null}
               </p>
             ))}
           </div>

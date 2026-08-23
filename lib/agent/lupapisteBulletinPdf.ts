@@ -1,3 +1,4 @@
+import { isPersonName } from "@/lib/agent/vaylaContacts"
 /*
  * LUPAPISTEEN KUULUTUKSEN PÄÄTÖS-PDF.
  *
@@ -286,4 +287,116 @@ export function bestBulletinDescription(pdfText: string | null): string | null {
 
   const f = extractBulletinFields(pdfText)
   return f.lisaselvitykset ?? f.toimenpide ?? null
+}
+
+/*
+ * VIRANOMAISET KUULUTUS-PDF:STÄ.
+ *
+ * D-102 totesi ettei kuulutuksista saa yhteystietoja, ja se pitää
+ * paikkansa HAKIJASTA — se on peitetty. Mutta päätöksen tekijä on
+ * nimetty, ja mitattu 23.8.2026:
+ *
+ *   Päättäjä      258 / 309   83 %
+ *   Valmistelija   61 / 309   20 %
+ *
+ *   "Rakennustarkastaja Tero Hietala Kuusamon kaupunki"
+ *   "LVI-insinööri Miranda Kyllönen Tampereen kaupunki"
+ *
+ * Nämä eivät ole myyntikontakteja vaan viranomaisia: he tuntevat
+ * hankkeen muttei osta mitään. Siksi ne merkitään `role: "authority"`,
+ * jotta käyttäjä näkee eron ennen kuin soittaa.
+ *
+ * Sähköpostia tai puhelinta ei ole. Pelkkä nimi ei muuten riitä
+ * yhteystiedoksi, mutta näillä hankkeilla on jo kunnan kirjaamo (D-104),
+ * ja pari "kirjaamo@kunta.fi + pyydä rakennustarkastaja Hietalaa" on
+ * käyttökelpoisempi kuin pelkkä kirjaamo.
+ */
+
+/* Organisaation alku: tästä eteenpäin arvo ei ole enää henkilön nimi. */
+/*
+ * GENETIIVI ON OTETTAVA MUKAAN. Ensimmäinen versio katkaisi sanasta
+ * "kaupunki", jolloin "Tampereen" jäi nimeen ja tulokseksi tuli
+ * "Kyllönen Tampereen" — nimi ja organisaatio sekaisin. Organisaatio on
+ * lähes aina muotoa "<paikka>n kaupunki", joten edeltävä n-loppuinen
+ * sana kuuluu siihen.
+ */
+const OFFICIAL_ORG =
+  /\b((?:[A-ZÅÄÖ][A-ZÅÄÖa-zåäö-]+n\s+)?[A-ZÅÄÖa-zåäö-]*(?:kaupunki|kunta|kaupungin|kunnan|rakennusvalvonta|lupayksikk|viranhaltija|lautakunta|jaosto|viranomainen)[A-ZÅÄÖa-zåäö-]*\b[\s\S]*)$/i
+
+function parseOfficial(raw: string): { name: string; title: string | null; organization: string | null } | null {
+  const arvo = String(raw ?? "").replace(/\s+/g, " ").trim()
+  if (!arvo) return null
+
+  const orgMatch = arvo.match(OFFICIAL_ORG)
+  const organization = orgMatch ? orgMatch[1].trim() : null
+  const ennenOrgia = orgMatch ? arvo.slice(0, arvo.length - orgMatch[1].length).trim() : arvo
+
+  const sanat = ennenOrgia.split(/\s+/).filter(Boolean)
+  if (sanat.length < 2) return null
+
+  /*
+   * Sotkuinen PDF tuottaa sanoja joissa valilyonnit ovat kadonneet
+   * ("RakennustarkastajaRakentamislupa"). Niista ei saa nimea.
+   */
+  if (sanat.some((w) => w.length > 24)) return null
+
+  /*
+   * NIMESSÄ EI SAA OLLA ORGANISAATIOSANAA. Ilman tätä poiminta tuotti
+   * nimiä "Neuvonen Rakennusvalvonta" ja "Laiteenmäki KURIKAN" —
+   * organisaatio vuoti nimeen kun katkaisu ei osunut. Väärin kirjoitettu
+   * ihmisen nimi on käyttäjälle pahempi kuin puuttuva.
+   */
+  const kaksiViimeista = sanat.slice(-2)
+  if (
+    kaksiViimeista.some(
+      (w) =>
+        /(valvonta|yksikk|virasto|kaupunki|kunta|lautakunta|viranhaltija|palvelut)$/i.test(w) ||
+        (w.length > 2 && w === w.toUpperCase()) ||
+        /*
+         * Katkennut sana ei ole nimi: "Tavaststjerna Ää" syntyi kun
+         * organisaation raja osui keskelle sanaa "Äänekosken".
+         */
+        w.length < 3
+    )
+  ) {
+    return null
+  }
+
+  const name = sanat.slice(-2).join(" ")
+  if (!isPersonName(name)) return null
+
+  const title = sanat.slice(0, -2).join(" ").replace(/[,;:]$/, "").trim() || null
+
+  return { name, title, organization: organization || null }
+}
+
+export type BulletinOfficial = {
+  name: string
+  title: string | null
+  organization: string | null
+  source: "Päättäjä" | "Valmistelija"
+}
+
+export function extractBulletinOfficials(pdfText: string | null): BulletinOfficial[] {
+  const t = cleanBulletinPdfText(pdfText ?? "")
+  if (!t) return []
+
+  const tulos: BulletinOfficial[] = []
+  const nahdyt = new Set<string>()
+
+  for (const label of ["Valmistelija", "Päättäjä"] as const) {
+    const arvo = labelValue(t, label)
+    if (!arvo) continue
+
+    const h = parseOfficial(arvo)
+    if (!h) continue
+
+    const avain = h.name.toLowerCase()
+    if (nahdyt.has(avain)) continue
+    nahdyt.add(avain)
+
+    tulos.push({ ...h, source: label })
+  }
+
+  return tulos
 }

@@ -19,6 +19,7 @@ import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
 import {
   fetchLupapisteBulletinPdfText,
   bestBulletinDescription,
+  extractBulletinOfficials,
   extractApplicationDescription,
 } from "../../lupapisteBulletinPdf"
 
@@ -161,6 +162,8 @@ async function collectLupapisteSource(source: DiscoverySource) {
          */
         let pdfText: string | null = null
         let pdfKuvaus: string | null = null
+        /* Paatoksen tehnyt viranhaltija - viranomainen, ei osapuoli. */
+        let pdfViranomaiset: ReturnType<typeof extractBulletinOfficials> = []
 
         if (!jo.has(documentUrl) && pdfHaettu < LUPAPISTE_PDF_BUDGET) {
           pdfHaettu += 1
@@ -171,6 +174,7 @@ async function collectLupapisteSource(source: DiscoverySource) {
            * (1 %), kun Toimenpide loytyy 92 %:sta.
            */
           pdfKuvaus = bestBulletinDescription(pdfText)
+          pdfViranomaiset = extractBulletinOfficials(pdfText)
         }
 
         const rawText = JSON.stringify(notice)
@@ -200,6 +204,7 @@ async function collectLupapisteSource(source: DiscoverySource) {
                   ? {
                       bulletin_pdf_text: pdfText,
                       ...(pdfKuvaus ? { bulletin_description: pdfKuvaus } : {}),
+                      ...(pdfViranomaiset.length ? { bulletin_officials: pdfViranomaiset } : {}),
                       bulletin_pdf_fetched_at: new Date().toISOString(),
                     }
                   : {}),
