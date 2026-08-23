@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Hakuvahti ei enaa kerro valmistuneista hankkeista
+
+Tanaan-nakyma ja hankelista suodattivat valmistuneet pois, mutta
+hakuvahti ei - asiakas saattoi saada sahkopostiinsa hankkeen jota han ei
+loyda sovelluksesta. Nyt hakuvahti suodattaa seka valmistuneet etta
+vanhentuneet kilpailutukset.
+
+Suodatus on null-turvallinen: pelkka neq() pudottaisi myos rivit joilla
+kentta on tyhja, koska SQL:ssa null != 'x' on null.
+
+Samalla tutkittiin pitaisiko valmistuminen tunnistaa myos sanoista
+"valmistui" ja "otettiin kayttoon". EI PIDA: 163 nakyvaa hanketta osuu
+tallaiseen sanaan, ja 16 luetusta naytteesta yksi oli aito. Loput
+viittaavat rakennuksen ikaan ("Rakennus on valmistunut 1978") tai
+osasuunnitelmaan ("yleissuunnitelma valmistui 2019"). (D-110)
+
 ### Valmistuneet hankkeet eivat enaa tule katselmointijonoon
 
 Jonossa oli 19 hanketta 94:sta (20 %) vaiheessa "Valmistunut" - Iso Omena,

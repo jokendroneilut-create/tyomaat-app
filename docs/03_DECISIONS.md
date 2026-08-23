@@ -5,6 +5,52 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-110 – Valmistuminen tunnistetaan vain vaihekentästä, ei tekstistä
+
+Jatkokysymys D-109:ään: pitäisikö valmistuneet tunnistaa myös sanoista
+"valmistui", "otettiin käyttöön", "luovutettiin"?
+
+**Ei pidä.** Mitattu 23.8.2026 — 163 asiakkaille näkyvää hanketta osuu
+tällaiseen sanaan, ja otoksesta 16 luettuna **yksi** oli aito. Loput
+viittaavat olemassa olevan rakennuksen ikään tai osasuunnitelmaan:
+
+```
+"Hakaniemen metroasema otettiin käyttöön vuonna 1982"   hanke on peruskorjaus
+"Rakennus on valmistunut 1978"                          hanke on kilpailutus
+"yleissuunnitelma valmistui vuonna 2019"                suunnitelma, ei hanke
+"Leikkipuistorakennus Kimmo on valmistunut 1952"
+"Vanha koulurakennus on valmistunut 1957–1963"
+```
+
+Sana kertoo lähes aina KOHTEEN historiasta, ei hankkeen tilasta —
+päinvastoin kuin miltä näyttää. Rakenteinen vaihekenttä on ainoa
+luotettava merkki, ja se riittää (D-109).
+
+### Mitä valmistuneelle hankkeelle tapahtuu
+
+Kysymys oli aiheellinen: valmistuneella hankkeella ei tee enää mitään.
+Tarkistettu missä se suodattuu:
+
+```
+Tänään-näkymä        suodattaa pois     ✓  (.neq phase Valmistunut)
+Hankelista + kartta  suodattaa pois     ✓  (normalizeLegacyPhase !== completed)
+Hakuvahti            EI SUODATTANUT     ✗
+```
+
+Asiakas siis saattoi saada sähköpostiinsa hankkeen, jota hän ei löydä
+sovelluksesta. **Korjattu:** hakuvahti suodattaa nyt sekä valmistuneet
+että vanhentuneet kilpailutukset (`status = "expired"`).
+
+Suodatus on kirjoitettu null-turvallisesti
+(`or(phase.is.null,phase.neq.…)`), koska pelkkä `neq()` pudottaisi myös
+rivit joilla kenttä on tyhjä — SQL:ssä `null != 'x'` on null. Sama
+varoitus on hankelistan koodissa.
+
+Hankkeita ei poisteta eikä piiloteta: rivi jää kantaan ja on löydettävissä
+suoralla linkillä. Vain aktiivisista näkymistä se putoaa.
+
+---
+
 ### D-109 – Valmistunut hanke ei mene katselmointijonoon
 
 Jonossa oli 19 hanketta 94:stä (20 %) vaiheessa "Valmistunut": Kauppakeskus

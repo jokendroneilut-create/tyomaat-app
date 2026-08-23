@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { PHASE_LABELS } from "@/lib/projects/phases";
 
 const ROUTE_VERSION = "trace-v3-2026-03-06";
 
@@ -347,10 +348,28 @@ export async function GET(req: Request) {
         ? new Date(w.last_sent_at)
         : new Date(Date.now() - (w.frequency === "daily" ? 24 : 7) * 24 * 60 * 60 * 1000);
 
+      /*
+       * VALMISTUNUT HANKE EI KUULU HAKUVAHTIIN.
+       *
+       * Tanaan-nakyma ja hankelista suodattavat valmistuneet pois, mutta
+       * hakuvahti ei suodattanut - asiakas sai sahkopostiinsa hankkeen,
+       * jota han ei loyda sovelluksesta. Sama koskee vanhentuneita
+       * kilpailutuksia (status "expired").
+       *
+       * Mitattu 23.8.2026: 135 nakyvaa hanketta on vaiheessa
+       * "Valmistunut".
+       */
       let q = supabase
         .from("projects")
         .select("id,name,city,region,phase,created_at")
         .eq("is_public", true)
+        /*
+         * Null-turvallinen muoto: pelkka neq() pudottaisi myos rivit
+         * joilla kentta on null, koska SQL:ssa null != 'x' on null.
+         * Legacy-hankkeilla status voi olla tyhja.
+         */
+        .or(`phase.is.null,phase.neq.${PHASE_LABELS.completed}`)
+        .or("status.is.null,status.neq.expired")
         .gt("created_at", since.toISOString())
         .order("created_at", { ascending: false });
 
