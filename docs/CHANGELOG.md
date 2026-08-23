@@ -11,6 +11,27 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Kaavaselostuksista poimitaan yhteystiedot, rajattuna
+
+Kaavalahteiden liitteissa oli 245 kaavaselostusta 184 hankkeelle 56
+kunnassa, eika yhtakaan ollut haettu. Niissa on nimetty henkilo
+puhelimineen ja sahkoposteineen - juuri se mita muualta ei saa.
+
+Koko pakotti rajaamaan: selostukset ovat 229 000 - 884 000 merkkia.
+Haetaan vain 6 ensimmaista sivua (perustiedot ovat kansilehdella),
+tallennetaan vain poiminta eika tekstia, ja tiedostolla on 25 MB katto.
+Luettavaa tekstia jaa 12 175 merkkia keskimaarin.
+
+Nelja siivousta, jokainen otoksesta luettuna: malliosoite laajennetaan
+nimesta, yleislaatikon yhteydessa poimittu nimi hylataan ("Risto Rytin"
+on kadunnimi), alaviitteen numero katkaistaan puhelimesta, ja
+asiakirjan omat sanat hylataan nimena ("Kaavaselostus Kaavaselostus",
+"Selostus Copyright").
+
+96 poimintaa, joista 76 nimettya henkiloa ja 16 kaavan laatijaa.
+90 jonon ehdokasta ja 86 nakyvaa hanketta paivittyi.
+Nimettyja henkiloita 1 262 -> 1 314. (D-114)
+
 ### Lupapisteen viranomaiset yhteystiedoiksi, merkittyna
 
 Kuulutuksessa hakija on peitetty (D-102), mutta paatoksen tehnyt

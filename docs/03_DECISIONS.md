@@ -5,6 +5,44 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-114 – Kaavaselostuksista poimitaan vain yhteystiedot, ei tekstiä
+
+Kaavalähteiden liitteissä oli 245 kaavaselostusta 184 hankkeelle 56
+kunnassa, eikä yhtäkään ollut haettu. Niissä on se mitä muualta ei saa:
+**nimetty henkilö puhelimineen ja sähköposteineen**.
+
+**KOKO PAKOTTI RAJAAMAAN.** Selostukset ovat 229 000 – 884 000 merkkiä;
+koko tekstin tallentaminen olisi satoja megatavuja. Kolme rajausta:
+
+```
+1. vain 6 ensimmäistä sivua   perustiedot ovat kansilehdellä
+2. vain poiminta tallennetaan  koko teksti ei mene kantaan
+3. 25 MB katto tiedostolle     kaavakartat ovat kymmeniä megatavuja
+```
+
+Tuloksena luettava määrä tekstiä: **12 175 merkkiä** keskimäärin.
+
+**Neljä siivousta, jokainen otoksesta luettuna:**
+
+```
+etunimi.sukunimi@pihtiputaa.fi  -> laajennetaan nimestä (D-103)
+"Risto Rytin" + kaupunki@…      -> kadunnimi; yleislaatikon nimi hylätään
+"040 753 1524 1"                -> alaviitteen numero tarttui, katkaistaan
+"Kaavaselostus Kaavaselostus"   -> asiakirjan sana nimenä, hylätään
+"Selostus Copyright 01016612-0" -> Y-tunnus puhelimena, hylätään
+```
+
+**Tulos:** 96 poimintaa, joista **76 nimettyä henkilöä** ja 16 kaavan
+laatijaa. 90 jonon ehdokasta ja 86 näkyvää hanketta päivittyi.
+
+Kaavan laatija (konsulttitoimisto) tallennetaan `plan_author`-kenttään —
+se on oma osapuolensa ja usein ensimmäinen joka tietää hankkeesta.
+
+Muut 1 690 PDF-liitettä ovat kaavakarttoja ja osallistumissuunnitelmia;
+niissä ei ole yhteystietoja samalla tavalla eikä niitä haeta.
+
+---
+
 ### D-113 – Lupapisteen viranomaiset poimitaan, mutta merkitään viranomaisiksi
 
 [D-102] hylkäsi Lupapisteen yhteystietolähteenä. Se pitää yhä paikkansa
