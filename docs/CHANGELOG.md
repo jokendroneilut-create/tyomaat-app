@@ -42,6 +42,10 @@ Kuivaharjoitus paljasti viela kaksi roskan lahdetta: maksurivit
 RAKENNELMAT-taulukon. Molemmat hylataan nyt, ja 8 jo kirjoitettua
 roskakuvausta poistettiin.
 
+Puuttuvat PDF:t haettiin kasin: 264 -> 309. Loppuja ei saatu, koska
+kuulutus poistuu verkosta muutoksenhakuajan paatyttya - 241
+dokumentille PDF ei ole enaa saatavilla. Kuvauksia 217 -> 244.
+
 TIETO EI SIIRRY ITSESTAAN. Faktapoimija valitsee dokumentit ehdolla
 `.is("facts_extracted_at", null)` eli kasittelee jokaisen tasan kerran,
 joten lahdedokumenttiin kirjoitettu kuvaus ei paivity jo luotuihin

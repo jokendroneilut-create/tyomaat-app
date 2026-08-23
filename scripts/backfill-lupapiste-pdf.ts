@@ -24,11 +24,20 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 
 const APPLY = process.argv.includes("--apply")
 const LIMIT = Number(process.argv.find((a) => a.startsWith("--limit="))?.slice(8) ?? 0)
+/*
+ * Otsikko jolla kuvaus erottuu hankkeen muusta tekstista. Sama merkkijono
+ * toimii myos tunnisteena: sen perusteella tiedetaan onko kuvaus jo lisatty.
+ */
 const LABEL = "Hankkeen kuvaus hakemuksella:"
 
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
-  const { fetchLupapisteCsrf, fetchLupapisteBulletinPdfText, extractApplicationDescription } =
+  /*
+   * bestBulletinDescription eika extractApplicationDescription: jalkimmainen
+   * lukee vain kenttaa "Hankkeen kuvaus", jota on 1 %:ssa kuulutuksista.
+   * Mitattu 23.8.2026 - ks. changelog.
+   */
+  const { fetchLupapisteCsrf, fetchLupapisteBulletinPdfText, bestBulletinDescription } =
     await import("../lib/agent/lupapisteBulletinPdf")
 
   const supabase = createClient(
@@ -74,7 +83,7 @@ async function main() {
     if (!text) { eiSaatu++; continue }
 
     saatiin++
-    const kuvaus = extractApplicationDescription(text)
+    const kuvaus = bestBulletinDescription(text)
     if (kuvaus) kuvauksia++
 
     /* Ehdokas jolle tama dokumentti synnytti rivin. */

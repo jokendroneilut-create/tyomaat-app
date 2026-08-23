@@ -204,6 +204,12 @@ const BULLETIN_LABELS = [
   "RAKENNELMAT",
   "Tarkemmat tiedot",
   "Ennakkokatselmus",
+  /* Poikkeamispaatoksissa omat osionsa. */
+  "Poikkeamiset",
+  "Poikkeaminen",
+  "Perustelut",
+  "Sovelletut oikeusohjeet",
+  "Voimassaolo",
 ]
 
 /*
