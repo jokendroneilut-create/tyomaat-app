@@ -10,6 +10,7 @@ import {
   normalizeLegacyPhase,
   type PhaseKey,
 } from "@/lib/projects/phases"
+import { resolveWindow } from "@/lib/alerts/window"
 import { matchesRegions } from "../../today/services/todayFilters"
 import { defaultTodaySettings } from "../../today/services/getTodaySettings"
 
@@ -30,12 +31,19 @@ export const maxDuration = 60
  * (unique user_id+project_id+phase_key) estää saman hälytyksen kahdesti.
  *
  * ?dry=1  — laske ja raportoi, älä lähetä äläkä kirjaa (esikatselu).
- * ?hours=N — ikkuna taaksepäin (oletus 30h, kattaa vrk-ajon + marginaali).
+ * ?hours=N — ohittaa vesirajan ja pakottaa kiinteän ikkunan (korjausajo).
+ *
+ * IKKUNA ON VESIRAJA, ei kiinteä 30 h. Ks. lib/alerts/window.ts — kiinteä
+ * ikkuna tuotti 24.8.2026 pysyvän 18 tunnin katveen kun yksi ajo jäi
+ * väliin, ja 71 hankeilmoitusta 8 asiakkaalle piti lähettää käsin.
  */
 
 // PostgREST hylkää liian pitkän URL:n (satojen id:iden .in() -lista ->
 // 400 Bad Request), joten haetaan id-listat paloissa.
 const ID_CHUNK = 100
+
+/* Vesirajan avain alert_watermarks-taulussa. */
+const WATERMARK_KEY = "opportunity_alerts"
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = []
@@ -135,7 +143,9 @@ export async function GET(req: Request) {
     const secret = url.searchParams.get("secret")
     const authHeader = req.headers.get("authorization")
     const dry = url.searchParams.get("dry") === "1"
-    const hours = Math.max(1, Number(url.searchParams.get("hours")) || 30)
+    const overrideHours = url.searchParams.has("hours")
+      ? Number(url.searchParams.get("hours"))
+      : null
 
     const isManual = !!secret && secret === process.env.CRON_SECRET
     const isCron =
@@ -151,7 +161,46 @@ export async function GET(req: Request) {
     const appBaseUrl = process.env.APP_BASE_URL || "http://localhost:3000"
     const fromEmail = process.env.MAIL_FROM || "onboarding@resend.dev"
 
-    const since = new Date(Date.now() - hours * 60 * 60 * 1000)
+    /*
+     * VESIRAJA. Taulun puuttuminen ei saa kaataa hälytystä — silloin
+     * palataan kiinteään ikkunaan, eli vanhaan käytökseen. Hiljainen
+     * paluu on tässä oikein: hälytys on parempi myöhässä kuin ei
+     * lainkaan, ja puuttuva taulu näkyy vastauksen windowSource-kentässä.
+     */
+    const ajoAlkoi = new Date()
+    const { data: wmRow } = await supabase
+      .from("alert_watermarks")
+      .select("last_processed_at")
+      .eq("key", WATERMARK_KEY)
+      .maybeSingle()
+
+    const ikkuna = resolveWindow({
+      now: ajoAlkoi.getTime(),
+      overrideHours,
+      watermark: (wmRow as any)?.last_processed_at ?? null,
+    })
+    const since = ikkuna.since
+
+    /*
+     * Vesiraja siirtyy ajon ALKUHETKEEN, ei loppuun: ajon aikana syntyneet
+     * vaihemuutokset jäävät seuraavalle kierrokselle. Päällekkäisyys on
+     * vaaratonta, koska opportunity_alerts on uniikki
+     * (user_id, project_id, phase_key).
+     *
+     * Siirtyy myös kun mitään ei lähetetty — vesiraja tarkoittaa
+     * "käsitelty tähän asti", ei "lähetetty tähän asti". Muuten ikkuna
+     * kasvaisi loputtomiin hiljaisina päivinä.
+     */
+    const siirraVesiraja = async () => {
+      if (dry || overrideHours != null) return
+      const { error } = await supabase
+        .from("alert_watermarks")
+        .upsert(
+          { key: WATERMARK_KEY, last_processed_at: ajoAlkoi.toISOString(), updated_at: new Date().toISOString() },
+          { onConflict: "key" }
+        )
+      if (error) console.error("VESIRAJAN SIIRTO EPAONNISTUI:", error.message)
+    }
 
     // 1. Vaihemuutokset ikkunassa; pidä uusin vaihe per hanke.
     const { data: history, error: hErr } = await supabase
@@ -169,7 +218,15 @@ export async function GET(req: Request) {
 
     const projectIds = [...latestPhaseByProject.keys()]
     if (!projectIds.length) {
-      return NextResponse.json({ ok: true, windowHours: hours, changedProjects: 0, sent: 0 })
+      await siirraVesiraja()
+      return NextResponse.json({
+        ok: true,
+        windowHours: ikkuna.hours,
+        windowSource: ikkuna.source,
+        since: since.toISOString(),
+        changedProjects: 0,
+        sent: 0,
+      })
     }
 
     // 2. Hankkeiden tiedot (id-lista paloissa, ks. ID_CHUNK).
@@ -302,10 +359,14 @@ export async function GET(req: Request) {
       sent++
     }
 
+    await siirraVesiraja()
+
     return NextResponse.json({
       ok: true,
       dry,
-      windowHours: hours,
+      windowHours: ikkuna.hours,
+      windowSource: ikkuna.source,
+      since: since.toISOString(),
       changedProjects: projectIds.length,
       usersMatched: perUser.size,
       sent,

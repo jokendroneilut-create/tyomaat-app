@@ -11,6 +11,16 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Halytyksen ikkuna on vesiraja (D-118)
+
+Tyotilaisuushalytys katsoi kiinteasti 30 tuntia taaksepain, mika tuotti
+pysyvan katveen aina kun yksi ajo jai valiin. 24.8. katveeseen jai 71
+hankeilmoitusta kahdeksalle maksavalle asiakkaalle.
+
+Ikkuna alkaa nyt siita mihin edellinen ajo paasi (`alert_watermarks`),
+kuten hakuvahdissa. Katto 7 vrk, `?hours=N` ohittaa yha, ja taulun
+puuttuessa palataan vanhaan kaytokseen.
+
 ### Vantaa kieltaytyi koneellisesta luvusta (D-098)
 
 Lupapyynto paatosten koneluettavasta hausta kirjattiin Vantaan kirjaamoon

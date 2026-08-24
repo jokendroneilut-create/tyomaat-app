@@ -5,6 +5,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-118 – Hälytyksen ikkuna on vesiraja, ei kiinteä 30 tuntia
+
+Työtilaisuushälytys katsoi kiinteästi 30 tuntia taaksepäin nykyhetkestä.
+Se toimii niin kauan kuin joka ajo onnistuu — ja tuottaa **pysyvän
+katveen** heti kun yksi jää väliin:
+
+```
+eilinen ajo  23.8. 08:00 UTC  kattoi  22.8. 02:00 -> 23.8. 08:00
+24.8. 08:00                   EI AJETTU (Supabase alhaalla 15 h)
+huominen     25.8. 08:00      kattaa  24.8. 02:00 -> 25.8. 08:00
+                                      ^ 18 tuntia putosi väliin
+```
+
+Katveeseen jäi 54 vaihemuutosta ja **71 hankeilmoitusta kahdeksalle
+maksavalle asiakkaalle** — mukana `planning -> contract_awarded`
+-siirtymiä, eli juuri ne hetket joista asiakas maksaa. Ne lähetettiin
+käsin (`?hours=32`), mutta vika olisi toistunut jokaisesta tulevasta
+katkosta.
+
+**Ikkuna alkaa nyt siitä mihin edellinen ajo pääsi.** Sama periaate kuin
+hakuvahdin `last_sent_at`-leimassa, joka selvisi samasta katkosta ilman
+menetyksiä — hakuvahti kuroi aukon umpeen itsestään, työtilaisuushälytys
+ei. Vesiraja on omassa taulussaan `alert_watermarks`
+(`docs/sql/2026-08-24_…`), RLS päällä ilman policya: vain service_role
+pääsee siihen.
+
+**Neljä rajausta, kukin omasta syystään:**
+
+1. **`?hours=N` ohittaa vesirajan.** Käsin ajettava korjaus on
+   säilytettävä — sillä katve paikattiin 24.8., eikä vesiraja auta
+   takautuvasti.
+2. **Katto 7 vuorokautta.** Kuukauden katko ei saa tuottaa kuukauden
+   ikäisiä "juuri nyt alkoi" -ilmoituksia. Vanha liidi on huonompi kuin
+   ei liidiä, koska se syö uskottavuuden.
+3. **Vesiraja siirtyy ajon alkuhetkeen, ei loppuun.** Ajon aikana
+   syntyneet muutokset jäävät seuraavalle kierrokselle. Päällekkäisyys on
+   vaaratonta, koska `opportunity_alerts` on uniikki
+   (user_id, project_id, phase_key) — sama syy jonka takia leveämmän
+   korjausikkunan saattoi ajaa turvallisesti.
+4. **Siirtyy myös kun mitään ei lähetetty.** Vesiraja tarkoittaa
+   "käsitelty tähän asti", ei "lähetetty tähän asti" — muuten ikkuna
+   kasvaisi loputtomiin hiljaisina päivinä.
+
+**Taulun puuttuminen ei kaada mitään.** Reitti palaa kiinteään 30 tunnin
+ikkunaan eli vanhaan käytökseen, ja `windowSource`-kenttä kertoo kumpaa
+käytettiin. Todennettu oikeaa kantaa vasten ennen taulun luomista:
+`fallback` 30 h ilman taulua, `override` 48 h `?hours=48`:lla.
+
+---
+
 ### D-117 – Security Advisorin neljästä varoituksesta yksikään ei ole vuoto
 
 Advisor näytti 24.8.2026 neljä varoitusta. Runkojen lukemisen jälkeen
