@@ -310,3 +310,64 @@ describe("sanitizeEmail", () => {
     expect(sanitizeEmail("ei osoitetta")).toBeNull()
   })
 })
+
+describe("extractContacts – malliosoite ei ole osoite", () => {
+  /*
+   * Mitattu 25.8.2026 ajamalla poimija 12 547 kuvaustekstin yli: 670
+   * nimi–osoite-ristiriidasta 659 syntyi siita, etta sivun OHJE
+   * ("sahkoposti: etunimi.sukunimi@rovaniemi.fi") liitettiin viereiseen
+   * oikeaan nimeen. Asiakas naki uskottavan osoitteen ja lahetti viestin
+   * tyhjaan.
+   */
+  it("ei anna malliosoitetta oikealle nimelle", () => {
+    const teksti =
+      "Lisatietoja antaa kaavoituspaallikko Markku Pyhajarvi, puh. 016 322 8927, sahkoposti: etunimi.sukunimi@rovaniemi.fi"
+    const c = extractContacts(teksti)
+    expect(c.some((x) => String(x.email).includes("etunimi"))).toBe(false)
+  })
+
+  it("sailyttaa nimen ja numeron vaikka osoite pudotetaan", () => {
+    const teksti =
+      "Lisatietoja antaa kaavoituspaallikko Markku Pyhajarvi, puh. 016 322 8927, sahkoposti: etunimi.sukunimi@rovaniemi.fi"
+    const c = extractContacts(teksti)
+    const markku = c.find((x) => String(x.name ?? "").includes("Markku"))
+    expect(markku).toBeTruthy()
+    expect(markku!.email).toBe("")
+    expect(String(markku!.phone ?? "")).toContain("322 8927")
+  })
+
+  /*
+   * Nimea EI saa laajentaa osoitteeksi. Vapaassa tekstissa lahin nimi on
+   * usein nimike tai toinen henkilo, joten laajennus tuottaisi keksityn
+   * osoitteen. Laajennus kuuluu vain rakenteisiin lahteisiin (D-103).
+   */
+  it("ei laajenna nimesta osoitetta", () => {
+    const c = extractContacts("Markku Pyhajarvi sahkoposti: etunimi.sukunimi@rovaniemi.fi")
+    expect(c.some((x) => x.email === "markku.pyhajarvi@rovaniemi.fi")).toBe(false)
+    expect(c.every((x) => x.email === "" || !x.email)).toBe(true)
+  })
+
+  it("ei lue nimea malliosoitteesta", () => {
+    const c = extractContacts("Sahkopostit ovat muotoa etunimi.sukunimi@kuopio.fi")
+    expect(c.some((x) => /Etunimi|Sukunimi/i.test(String(x.name ?? "")))).toBe(false)
+  })
+
+  it("lyhennetty muoto etu.sukunimi kelpaa myos malliksi", () => {
+    const c = extractContacts("Kaavoittaja Liisa Virtanen, sahkoposti: etu.sukunimi@rovaniemi.fi")
+    expect(c.some((x) => String(x.email).includes("etu.sukunimi"))).toBe(false)
+  })
+
+  /* Oikea osoite ei saa pudota mukana. */
+  it("ei koske oikeaan osoitteeseen", () => {
+    const c = extractContacts("Kaavoituspaallikko Markku Pyhajarvi, markku.pyhajarvi@rovaniemi.fi")
+    expect(c.some((x) => x.email === "markku.pyhajarvi@rovaniemi.fi")).toBe(true)
+  })
+
+  it("ei tuota kaksoiskappaleita kun sama malli toistuu", () => {
+    const teksti =
+      "Markku Pyhajarvi sahkoposti: etunimi.sukunimi@rovaniemi.fi ja lisatietoja etunimi.sukunimi@rovaniemi.fi"
+    const c = extractContacts(teksti)
+    const markut = c.filter((x) => String(x.name ?? "").includes("Markku"))
+    expect(markut.length).toBe(1)
+  })
+})

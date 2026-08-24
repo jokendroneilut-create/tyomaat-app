@@ -5,6 +5,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-123 – Poimija ei saa palauttaa malliosoitetta, eikä nimestä saa keksiä osoitetta
+
+Kannassa oli 29 väärää nimi–osoite-paria (D-122), ja oletin vian olevan
+poimijassa. **Oletus oli osittain väärä.** Nimen ja osoitteen pariutus
+oli jo korjattu 22.8.2026 (D-101): sähköposti voittaa tekstistä luetun
+nimen. Testi oikealla lähdetekstillä antoi puhtaan tuloksen:
+
+```
+Kai Väistö      kai.vaisto@rovaniemi.fi     palvelualuepäällikkö
+Antti Lassila   antti.lassila@rovaniemi.fi  toimialajohtaja
+```
+
+Kannassa oli siis vanhalla logiikalla poimittua dataa, ei elävää vikaa.
+
+**MUTTA MITTAUS PALJASTI TOISEN VIAN.** Nykyinen poimija ajettiin
+12 547 kuvaustekstin yli, ja se tuotti **670 ristiriitaa (13 %)** — 659
+niistä samaa lajia:
+
+```
+Kirsi Nieminen     etunimi.sukunimi@lvv.fi         yva          555
+Markku Pyhäjärvi   etunimi.sukunimi@rovaniemi.fi   Rovaniemi     24
+Mervi Roiha-Muilu  etunimi.sukunimi@kela.fi        stt_haku      45
+```
+
+Sivulla lukee **ohje** siitä miten osoite muodostetaan, ja poimija
+tarttui siihen ja liitti sen viereiseen oikeaan nimeen. Asiakas näki
+uskottavan osoitteen ja lähetti viestin tyhjään. Sama vika oli
+siivottu kannasta (D-122), mutta lähde tuotti sitä yhä.
+
+**KORJAUS: osoite pudotetaan, nimeä ei laajenneta.** Malliosoitteesta ei
+tehdä osoitetta nimen perusteella, koska vapaassa tekstissä lähin nimi on
+usein nimike tai toinen henkilö — laajennus tuottaisi keksityn osoitteen.
+Laajennus kuuluu vain rakenteisiin lähteisiin, joissa nimi on omana
+kenttänään (D-103). Nimi ja puhelin säilyvät, joten yhteystieto ei katoa.
+
+```
+ennen   670 ristiriitaa (13 %)   659 malliosoitetta   6 666 kontaktia
+jälkeen  11 ristiriitaa ( 0 %)     0 malliosoitetta   6 667 kontaktia
+```
+
+Kontaktien määrä ei laskenut — vain valheellinen osoite lähti.
+
+**Hahmo on tiukka tarkoituksella:** `etunimi.sukunimi` ja lyhennetty
+`etu.sukunimi` kattavat kaikki 659 mitattua tapausta. Löysempi ehto
+("alkaa sanalla etunimi") osuisi joskus oikeaan osoitteeseen ja
+pudottaisi sen.
+
+**Jäljelle jäävät 11** ovat muita syitä (roskanimi + yleislaatikko),
+eivätkä ne johda asiakasta väärään henkilöön.
+
+---
+
 ### D-122 – Tyhjä yhteystieto on parempi kuin väärä, ja se on poikkeus vain-lisäävään sääntöön
 
 Havainto lähti omistajan huomiosta: *"sama projektinjohtaja vetää yleensä

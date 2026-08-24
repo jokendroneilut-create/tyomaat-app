@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Poimija ei enaa liita malliosoitetta oikeaan nimeen (D-123)
+
+Sivulla oleva OHJE ("sahkoposti: etunimi.sukunimi@rovaniemi.fi")
+liitettiin viereiseen oikeaan nimeen, ja asiakas lahetti viestin
+tyhjaan. Mitattu ajamalla poimija 12 547 kuvaustekstin yli: 670
+ristiriidasta 659 oli tata.
+
+Osoite pudotetaan, nimea ei laajenneta - vapaassa tekstissa lahin nimi on
+usein nimike tai toinen henkilo. Nimi ja puhelin sailyvat.
+
+Ristiriitoja 670 -> 11, ja kontaktien maara pysyi samana (6 666 ->
+6 667). Nimi-osoite-pariutus oli jo korjattu 22.8.; kannassa oli vain
+vanhaa dataa.
+
 ### Vaarat ja puuttuvat yhteystiedot korjattu (D-122)
 
 5 156 tarkistettavasta sahkopostista 148 ei tasmannut nimeen. Korjattu

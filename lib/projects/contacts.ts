@@ -143,6 +143,18 @@ const ROLE_MAILBOX =
   /^(kirjaamo|info|asiakaspalvelu|palaute|posti|myynti|tiedotus|viestinta|viestintä|kaavoitus|elinvoima|tekninen|hallinto|neuvonta|etunimi\.sukunimi|firstname\.lastname)\b/i
 
 /*
+ * MALLIOSOITE: sivulla oleva OHJE siitä miten osoite muodostetaan, ei
+ * kenenkään osoite. "Sähköposti: etunimi.sukunimi@rovaniemi.fi".
+ *
+ * Muodot ovat mitattuja eivätkä arvattuja (25.8.2026): "etunimi.sukunimi"
+ * ja lyhennetty "etu.sukunimi" kattavat kaikki 659 löydettyä tapausta.
+ * Hahmo on tarkoituksella tiukka — löysempi ("alkaa sanalla etunimi")
+ * osuisi joskus oikeaan osoitteeseen ja pudottaisi sen.
+ */
+const PLACEHOLDER_LOCAL =
+  /^(etunimi|etu|firstname|fornamn)\.(sukunimi|sukunimet|lastname|efternamn)$/i
+
+/*
  * Nimi: kaksi tai kolme isolla alkavaa sanaa. Suomalaisissa sukunimissä
  * on väliviivoja ja ääkkösiä, ja etunimi voi olla lyhennetty ("Jan-Erik").
  */
@@ -404,16 +416,41 @@ export function extractContacts(text: string | null | undefined): Contact[] {
 
   for (const match of source.matchAll(EMAIL_RE)) {
     /* Roskat pois ennen kaikkea muuta: avain ja domain luetaan tästä. */
-    const email = sanitizeEmail(match[0])
-    if (!email) continue
+    const raw = sanitizeEmail(match[0])
+    if (!raw) continue
 
-    const key = email.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
+    const rawLocal = raw.split("@")[0]
+
+    /*
+     * MALLIOSOITE EI OLE OSOITE.
+     *
+     * Sivulla lukee "sähköposti: etunimi.sukunimi@rovaniemi.fi" ohjeena
+     * siitä miten osoite muodostetaan. Poimija tarttui siihen ja liitti
+     * sen viereiseen oikeaan nimeen, jolloin asiakas näki uskottavan
+     * osoitteen ja lähetti viestin tyhjään.
+     *
+     * Mitattu 25.8.2026 ajamalla poimija 12 547 kuvaustekstin yli:
+     * 670 nimi–osoite-ristiriidasta 659 oli tätä. Loput 11 ovat muita
+     * syitä.
+     *
+     * Nimeä EI laajenneta täällä vaan osoite pudotetaan. Laajennus on
+     * turvallista vain rakenteisissa lähteissä, joissa nimi on omana
+     * kenttänään (D-103); vapaassa tekstissä lähin nimi on usein
+     * nimike tai toinen henkilö, ja laajennus tuottaisi keksityn
+     * osoitteen. Nimi ja puhelin säilyvät, joten yhteystieto ei katoa.
+     */
+    const onMalliosoite = PLACEHOLDER_LOCAL.test(rawLocal)
+    const email = onMalliosoite ? "" : raw
+
+    if (!onMalliosoite) {
+      const key = raw.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+    }
 
     const start = Math.max(0, (match.index ?? 0) - WINDOW_BEFORE)
     const before = source.slice(start, match.index)
-    const after = source.slice((match.index ?? 0) + email.length, (match.index ?? 0) + email.length + WINDOW_AFTER)
+    const after = source.slice((match.index ?? 0) + raw.length, (match.index ?? 0) + raw.length + WINDOW_AFTER)
 
     /*
      * LÄHIN puhelin, ei ensimmäinen. Ikkunassa on usein edellisen
@@ -434,7 +471,11 @@ export function extractContacts(text: string | null | undefined): Contact[] {
      * ("nsalonen@norsk-e-fuel.com").
      */
     const nameFromText = findName(before)
-    const nameFromAddress = nameFromEmail(email)
+    /*
+     * Malliosoitteesta luettu nimi olisi kirjaimellisesti "Etunimi
+     * Sukunimi", joten se luetaan vain oikeasta osoitteesta.
+     */
+    const nameFromAddress = onMalliosoite ? null : nameFromEmail(raw)
 
     /*
      * ÄÄKKÖSET OTETAAN TEKSTISTÄ. Sähköposti on ASCII, joten siitä
@@ -448,7 +489,11 @@ export function extractContacts(text: string | null | undefined): Contact[] {
         ? nameFromText
         : nameFromAddress ?? nameFromText
 
-    const organization = organizationFor(email, before)
+    /*
+     * Verkkotunnus on käyttökelpoinen vaikka paikallisosa olisi malli:
+     * "etunimi.sukunimi@rovaniemi.fi" kertoo silti organisaation.
+     */
+    const organization = organizationFor(raw, before)
 
     /*
      * Nimi tekstistä on luotettavampi kuin sähköpostista pääteltu, joten
@@ -459,9 +504,24 @@ export function extractContacts(text: string | null | undefined): Contact[] {
       ? findTitle(before.slice(before.lastIndexOf(ankkuri) + ankkuri.length), organization)
       : null
 
-    const local = email.split("@")[0]
     const kind: Contact["kind"] =
-      ROLE_MAILBOX.test(local) || !name ? "organization" : "person"
+      ROLE_MAILBOX.test(rawLocal) || !name ? "organization" : "person"
+
+    if (onMalliosoite) {
+      /*
+       * Ilman osoitetta jäljelle jää nimi ja numero. Jos kumpaakaan ei
+       * ole, malliosoitteesta ei jää yhteystietoa lainkaan.
+       */
+      if (!name && !phone) continue
+
+      /*
+       * Kaksoiskappaleiden esto ei voi nojata osoitteeseen, koska sitä ei
+       * ole: sama malli esiintyy sivulla usein monta kertaa.
+       */
+      const malliAvain = `malli:${String(name ?? "").toLowerCase()}|${String(phone ?? "").replace(/\D/g, "")}`
+      if (seen.has(malliAvain)) continue
+      seen.add(malliAvain)
+    }
 
     contacts.push({ name, title, organization, email, phone, kind })
   }
