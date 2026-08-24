@@ -64,9 +64,40 @@ sähköpostista, joten `Anna-Maria Niilo-Rämä` ja
 `anna-maria.niilo-rama@hameenkyro.fi` eivät täsmänneet. Vertaa
 molemmat puolet samalla normalisoinnilla.
 
-**Täydennys (36 kpl) siirrettiin viimeiseksi** ja tehdään vain kun
-luovuttajan nimi ja osoite täsmäävät — muuten se levittäisi juuri sitä
-virhettä jota tässä korjattiin.
+**Korjaus tehtiin neljässä vaiheessa, tässä järjestyksessä.** Järjestys
+on koko päätöksen ydin: täydennys ennen korjausta olisi levittänyt
+virhettä, koska se lukee samaa dataa.
+
+```
+1. väärät parit      29  ->  20 korvattu, 9 tyhjennetty
+2. malliosoitteet    42  ->  31 laajennettu, 11 tyhjennetty
+3. roskanimet        67  ->  siirretty oikeaan kenttään
+4. täydennys        224  ->  lisätty tarkistetusta lähteestä
+
+ristiriidat 148 -> 10 (0 %), ja ne 10 ovat yleislaatikoita
+```
+
+**Kolmas vaihe oli siirto, ei poisto.** Nimikentässä oli organisaatio
+(24), nimike (19), puhelinnumero (16) tai tunnistamaton roska (8), kun
+sähköposti oli oikein. `Contact`-tyypissä on omat kentät nimikkeelle ja
+organisaatiolle, joten tieto siirtyi sinne.
+
+**Neljäs vaihe oli 224 eikä 36.** Ensimmäinen mittaukseni laski vain
+täysin tyhjät yhteystiedot; ajo täydentää myös osittaiset (puhelin on,
+sähköposti puuttuu). Sama operaatio, mutta luku olisi pitänyt sanoa
+oikein jo suunnitelmassa.
+
+**Portti todistettiin toimivaksi:** täydennys lisäsi 224 osoitetta eikä
+tuottanut yhtään uutta ristiriitaa — tarkistettavien määrä kasvoi
+5 069 → 5 293 ja virheelliset pysyivät kymmenessä. Jäljelle jäi 15
+täydennettävää, joiden luovuttaja ei läpäissyt tarkistusta; ne jäävät
+tyhjiksi tarkoituksella.
+
+**AVOIN: Rovaniemen poimija romahduttaa kontaktit.** `title`-kentässä on
+useamman henkilön tiedot yhdessä tietueessa (`"Kaavasuunnittelija Elias
+Ritola, sähköposti: , Kaavoituspäällikkö Markku Pyhäjärvi…"`). Kenttien
+siirto ei korjaa sitä — se vaatii ankkurointilogiikan korjaamisen, kuten
+Raaseporinkin tapaus.
 
 ---
 

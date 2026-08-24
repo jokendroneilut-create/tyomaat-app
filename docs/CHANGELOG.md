@@ -22,9 +22,18 @@ Tyhjennys on tietoinen poikkeus saantoon "yhteystiedoista ei koskaan
 poisteta mitaan": vaara osoite nayttaa oikealta ja ohjaa asiakkaan
 vaaralle henkilolle, kun taas tyhja kentta on rehellinen.
 
+Sen jalkeen 67 roskanimea siirrettiin oikeisiin kenttiin
+(organisaatio, nimike, puhelin) ja 224 puuttuvaa sahkopostia
+taydennettiin saman henkilon tarkistetusta tietueesta samasta lahteesta.
+Ristiriitoja 148 -> 10, eivatka ne kymmenen ole vikoja.
+
+Jarjestys oli olennainen: taydennys ennen korjausta olisi levittanyt
+virhetta, koska se lukee samaa dataa.
+
 Vika on poimijassa: kun sivulla on useita henkiloita, lahin osoite
 liitetaan vaaraan nimeen. Raaseporissa sama konsultin osoite paatyi
-seitsemalle eri kaavoittajalle. Takautuva korjaus ei estä uusia.
+seitsemalle eri kaavoittajalle, ja Rovaniemella koko tietue on
+romahtanut yhdeksi. Takautuva korjaus ei esta uusia.
 
 ### Kreaten kuvaukset, osoitteet ja valmistumisajat (D-121)
 
