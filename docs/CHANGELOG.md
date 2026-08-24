@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Vaarat ja puuttuvat yhteystiedot korjattu (D-122)
+
+5 156 tarkistettavasta sahkopostista 148 ei tasmannut nimeen. Korjattu
+kahdessa osassa: 29 vaaraa paria (20 korvattiin oikealla osoitteella,
+9 tyhjennettiin) ja 42 malliosoitetta (31 laajennettiin nimesta, 11
+tyhjennettiin). Ristiriitoja jaljella 77, joista 64 on roskanimea.
+
+Tyhjennys on tietoinen poikkeus saantoon "yhteystiedoista ei koskaan
+poisteta mitaan": vaara osoite nayttaa oikealta ja ohjaa asiakkaan
+vaaralle henkilolle, kun taas tyhja kentta on rehellinen.
+
+Vika on poimijassa: kun sivulla on useita henkiloita, lahin osoite
+liitetaan vaaraan nimeen. Raaseporissa sama konsultin osoite paatyi
+seitsemalle eri kaavoittajalle. Takautuva korjaus ei estä uusia.
+
 ### Kreaten kuvaukset, osoitteet ja valmistumisajat (D-121)
 
 Kreaten hankesivun sisalto oli kannassa mutta resolveri ei lukenut sita:

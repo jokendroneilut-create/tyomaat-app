@@ -5,6 +5,71 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-122 – Tyhjä yhteystieto on parempi kuin väärä, ja se on poikkeus vain-lisäävään sääntöön
+
+Havainto lähti omistajan huomiosta: *"sama projektinjohtaja vetää yleensä
+useampaa hanketta"* — eli nimettä jäänyt yhteystieto voisi täydentyä
+saman henkilön toisesta hankkeesta. Mittaus 13 838 hankkeesta osoitti
+täydennettävää olevan 36 kappaletta 567:stä, mutta yksi näyte pysäytti
+sen:
+
+```
+Johanna Backas  ->  niclas.skog@raasepori.fi
+```
+
+Täydennys olisi kopioinut väärän henkilön osoitteen. Se johti oikeampaan
+kysymykseen: **kuinka moni olemassa oleva osoite on jo väärässä
+nimessä?** Nimen ja `etunimi.sukunimi@`-osoitteen voi verrata toisiinsa.
+
+```
+5 156 tarkistettavaa osoitetta
+   148 ei täsmää (3 %)
+        64  roskanimi     "322 8927", "Kaavasuunnittelija", "Sitowise Oy"
+        42  malliosoite   etunimi.sukunimi@ laajentamatta
+        29  VÄÄRÄ PARI    oikea nimi, toisen henkilön osoite
+        13  yleislaatikko / yritysnimi — ei vika
+```
+
+**VÄÄRÄ TIETO ON PAHEMPI KUIN PUUTTUVA.** Puuttuva osoite on tyhjä
+kohta; väärä näyttää oikealta ja johtaa asiakkaan lähettämään tarjouksen
+väärälle henkilölle — ja virhe näyttää tulevan meiltä. Omistajan päätös
+25.8.2026: *"tyhjä on parempi kuin väärä osoite."*
+
+Tämä on **tietoinen poikkeus sääntöön** *"yhteystietokentästä ei koskaan
+poisteta mitään, ainoastaan lisätään"* (D-101). Rajaus on tiukka: vain
+sähköposti, vain kun nimi on selvästi henkilön nimi ja osoite kuuluu
+jollekin muulle. Nimi, nimike ja puhelin säilyvät aina.
+
+**Korjaus tehtiin kahdessa osassa:**
+
+1. **29 väärää paria.** 20:lle tiedettiin oikea osoite, koska sama
+   henkilö esiintyi oikein toisessa saman lähteen hankkeessa —
+   ne korvattiin, eli tieto tarkentui eikä kadonnut. 9:lle ei tiedetty,
+   ja niiltä osoite tyhjennettiin.
+2. **42 malliosoitetta.** Laajennettiin nimestä (31) tai tyhjennettiin
+   (11). Laajennus vain rakenteisista lähteistä (Väylävirasto, Senaatti)
+   — kaavalähteissä nimi on vapaassa tekstissä titteleineen
+   ("kaavasuunnittelija Sara Ka…", "Tekninen lautakunta"), eikä siitä voi
+   johtaa osoitetta. Sama rajaus kuin D-103:ssa.
+
+**Vika on poimijassa, ei datassa.** Raaseporissa sivulla on useita
+henkilöitä, ja poimija liittää lähimmän osoitteen — sama konsultin
+osoite (`sten.ohman@netsten.fi`) päätyi seitsemälle eri kaavoittajalle.
+Takautuva korjaus ei estä uusien syntymistä; se vaatisi
+ankkurointilogiikan korjaamisen.
+
+**Oma mittausvirhe kirjattuna:** ensimmäinen luku oli 151, josta kolme
+oli tarkistimeni vika — poistin väliviivat nimestä mutten
+sähköpostista, joten `Anna-Maria Niilo-Rämä` ja
+`anna-maria.niilo-rama@hameenkyro.fi` eivät täsmänneet. Vertaa
+molemmat puolet samalla normalisoinnilla.
+
+**Täydennys (36 kpl) siirrettiin viimeiseksi** ja tehdään vain kun
+luovuttajan nimi ja osoite täsmäävät — muuten se levittäisi juuri sitä
+virhettä jota tässä korjattiin.
+
+---
+
 ### D-121 – Kreaten hankesivun rakenteinen kenttä voittaa proosasta päättelyn
 
 Hankkeella "Uusi Mähkönsilta…" näkyi kuvauksena pelkkä otsikko (70
