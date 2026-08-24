@@ -5,6 +5,45 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-117 – Security Advisorin neljästä varoituksesta yksikään ei ole vuoto
+
+Advisor näytti 24.8.2026 neljä varoitusta. Runkojen lukemisen jälkeen
+**yksikään ei ollut tietovuoto** — kirjattu tähän, jottei niitä tutkita
+uudelleen joka kerta kun advisor avataan.
+
+**`is_team_leader(uuid)` ja `is_team_member(uuid)` ovat tarkoituksellisia.**
+Advisor varoittaa koska ne ovat SECURITY DEFINER ja kirjautuneet voivat
+kutsua niitä. Molempia tarvitaan: DEFINER välttää RLS-rekursion, ja
+`authenticated` tarvitsee EXECUTE:n koska RLS-policyt kutsuvat niitä.
+Ratkaisevaa on runko:
+
+    select exists (select 1 from team_members
+                   where team_id = team_id_to_check
+                     and user_id = auth.uid());
+
+Kutsuja päätellään `auth.uid()`:lla eikä oteta parametrina, joten
+käyttäjä saa tietää vain oman jäsenyytensä — vieraasta tiimistä tulee
+`false` riippumatta siitä onko tiimiä olemassa. Advisor ei voi tätä
+tietää. `anon` on peruttu jo 30.7. eikä näille tehdä enää mitään.
+
+**`account_lifecycle_no_delete` jäi käsittelemättä aikajärjestyksen
+takia**, ei unohduksesta: funktio luotiin 15.8., kovennus ajettiin 30.7.
+Riski oli olematon — `security_definer = false` ja koko runko on yksi
+`raise exception`, joka ei viittaa yhteenkään tauluun, joten
+asettamatonta `search_path`ia ei voi hyödyntää. Korjattiin silti
+johdonmukaisuuden vuoksi samoilla kahdella lauseella kuin muut
+trigger-funktiot (`docs/sql/2026-08-24_…`).
+
+**Todennettu, ei oletettu:** poisto kaatui kovennuksen jälkeen yhä
+triggerin virheeseen, mikä osoittaa että trigger-mekanismi ei vaadi
+kutsujalta EXECUTE-oikeutta. Huomaa ettei `delete … where false` kelpaa
+testiksi — rivikohtainen triggeri ei laukea ilman oikeaa riviä, joten
+tyhjä poisto antaisi väärän varmuuden.
+
+**Leaked Password Protection** on Auth-asetusten kytkin, ei SQL.
+
+---
+
 ### D-116 – Vahti hälyttää katkosta, eikä se saa muistaa mitään Supabasessa
 
 24.8.2026 Supabase-instanssi oli alhaalla **noin 15 tuntia** (23.8. klo
@@ -1044,6 +1083,40 @@ Ainoa automaattinen reitti olisi erillinen viranhaltijapäätössyöte,
 jossa kohde olisi yksi päätös ja otsikko kertoisi aiheen. Sen
 olemassaoloa ei voi tarkistaa polkuja arvaamalla, koska se olisi
 sivustohakua; se on kysyttävä kirjaamolta.
+
+
+**VANTAA VAHVISTI SAMAN 24.8.2026 — TOINEN RIIPPUMATON KUNTA, SAMA VASTAUS.**
+Lupapyyntö päätösten koneluettavasta hausta kirjattiin Vantaan kirjaamoon
+11.8.2026 (diaarinumero **VD/5640/07.01.07/2026**), ja tiedonhallintapäällikkö
+vastasi kieltävästi. Vastaus nimeää Twebin itse ja antaa kaksi perustelua:
+
+> *"Vantaan kaupungin asianhallintajärjestelmässä Robots.txt on määritelty
+> niin, etteivät ohjelmalliset haut pääse suoraan kiinni.
+> Järjestelmätoimittajamme mukaan robottien hakukutsut julkaisulle ja sitä
+> myöten Twebille voivat hidastaa järjestelmän toimintaa. Jos antaisimme
+> luvan yhdelle toimijalle, meidän tulisi yhdenvertaisuuden nimissä sallia
+> myös muiden toimijoiden haut."*
+
+Yhdenvertaisuusperustelu on **sanatarkasti sama kuin Hyvinkäällä**: kieltoa
+ei muuteta yksittäiselle toimijalle. Vantaa lisää siihen toimittajan
+kuormitusarvion. Kaupunki ei myöskään aio muuttaa nykyistä järjestelmää.
+
+Yksi ero Hyvinkäähän: **Vantaa ei tarjonnut RSS-vaihtoehtoa.** Hyvinkään
+vastaus päättyi suositukseen syötteestä, Vantaan ei — joten Vantaalla ei ole
+edes sitä rajattua kanavaa, joka Hyvinkäälläkin osoittautui arvottomaksi.
+
+**SEURAUS LÄHDESTRATEGIAAN.** Kaksi toisistaan riippumatonta kuntaa, sama
+tuote, sama vastaus, sama perustelu. Kolmatta ei kannata kysyä samalla
+kysymyksellä — Tweb-perhe on suljettu koneelliselta luvulta, ja
+lupakirjeiden lähettäminen kunta kerrallaan on tältä osin loppuun kaluttu.
+Jos päätöksiin halutaan reitti, se on haettava muualta kuin luvasta:
+erillinen viranhaltijapäätössyöte (ks. yllä) tai kokonaan toinen lähde.
+
+**EI SAA HAKEA.** Vantaan päätösjärjestelmään ei kohdisteta pyyntöjä. Sama
+kirjallinen sitoumus kuin Hyvinkäälle. Tarkistettu 24.8.2026: ainoa
+rekisteröity Vantaa-lähde on `gis.vantaa.fi/geoserver/wfs` (avoin
+karttapalvelu, eri järjestelmä), eikä `discovery_sources`-taulussa ole
+yhtään tweb-, asianhallinta- tai ktwebscr-osoitetta.
 
 ### D-097 – Paikallislehti ei ole löytölähde siellä missä kaupungin oma lähde on
 

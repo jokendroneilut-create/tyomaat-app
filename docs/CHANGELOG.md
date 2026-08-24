@@ -11,6 +11,38 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Vantaa kieltaytyi koneellisesta luvusta (D-098)
+
+Lupapyynto paatosten koneluettavasta hausta kirjattiin Vantaan kirjaamoon
+11.8.2026 (VD/5640/07.01.07/2026). Kieltava vastaus 24.8.2026:
+robots.txt estaa ohjelmalliset haut, toimittaja arvioi robottikutsujen
+hidastavan jarjestelmaa, eika lupaa voi antaa yhdelle ilman etta se
+annetaan kaikille.
+
+Sama yhdenvertaisuusperustelu kuin Hyvinkaalla, sama tuote (Tweb) —
+mutta ilman Hyvinkaan tarjoamaa RSS-vaihtoehtoa. Kaksi riippumatonta
+kuntaa samalla vastauksella: Tweb-perhe on suljettu, eika kolmatta
+kannata kysya samalla kysymyksella.
+
+Vantaan paatosjarjestelmaan ei kohdisteta pyyntoja. Tarkistettu: ainoa
+Vantaa-lahde on gis.vantaa.fi/geoserver/wfs (avoin karttapalvelu), eika
+lahteissa ole yhtaan tweb-osoitetta.
+
+### Security Advisorin varoitukset kayty lapi (D-117)
+
+Nelja varoitusta, ei yhtaan vuotoa. Tiimifunktiot `is_team_leader` ja
+`is_team_member` ovat tarkoituksellisesti SECURITY DEFINER ja
+kirjautuneiden kutsuttavissa — runko paattelee kutsujan `auth.uid()`:lla,
+joten kayttaja saa tietaa vain oman jasenyytensa.
+
+`account_lifecycle_no_delete` kovennettiin (`search_path`, EXECUTE
+peruttu). Se jai heinakuun kovennuksesta pois koska funktio luotiin
+vasta 15.8. Riski oli olematon: runko on yksi `raise exception` eika
+viittaa yhteenkaan tauluun.
+
+Todennettu jalkikateen: poisto kaatuu yha triggerin virheeseen, eli
+trigger-mekanismi ei vaadi kutsujalta EXECUTE-oikeutta.
+
 ### Vahti hälyttää katkosta (D-116)
 
 Supabase-instanssi oli alhaalla 23.–24.8. noin 15 tuntia eikä kukaan
