@@ -73,7 +73,7 @@ async function main() {
 
     const paivitykset: any[] = []
     const naytteet: string[] = []
-    let kuvauksia = 0, paivia = 0, osoitteita = 0
+    let kuvauksia = 0, paivia = 0, osoitteita = 0, johtajia = 0
 
     for (const p of rivit) {
       const k = perUrl.get(String(p.metadata.source_url))
@@ -89,6 +89,27 @@ async function main() {
         paivia++
       }
       if (k.projectManager && !meta.project_manager) metaLisays.project_manager = k.projectManager
+
+      /*
+       * Projektinjohtaja yhteyshenkiloksi jos han ei ole jo listalla.
+       * VAIN LISAYS: yhteystietokentasta ei koskaan poisteta mitaan.
+       * Mitattu: 30 tapauksessa 32:sta han on jo mukana henkilostoosion
+       * kautta sahkoposteineen, joten tama koskee kaytannossa yhta
+       * hanketta.
+       */
+      if (k.projectManager) {
+        const nykyiset: any[] = Array.isArray(meta.contact_persons) ? meta.contact_persons : []
+        const onJo = nykyiset.some(
+          (c: any) => String(c?.name ?? "").toLowerCase() === String(k.projectManager).toLowerCase()
+        )
+        if (!onJo) {
+          metaLisays.contact_persons = [
+            ...nykyiset,
+            { name: k.projectManager, title: "Projektinjohtaja", phone: null, email: null },
+          ]
+          johtajia++
+        }
+      }
 
       if (taulu === "projects") {
         /*
@@ -130,7 +151,7 @@ async function main() {
     console.log(`=== ${taulu} ===`)
     console.log(`  osuvia rivja:   ${rivit.length}`)
     console.log(`  MENNYT valmistumispaiva: ${menneet.length}  (auto-complete siirtaa nama valmistuneiksi)`)
-    console.log(`  paivitettavia:  ${paivitykset.length}   (kuvaus ${kuvauksia}, valmistumisaika ${paivia}, osoite ${osoitteita})`)
+    console.log(`  paivitettavia:  ${paivitykset.length}   (kuvaus ${kuvauksia}, valmistumisaika ${paivia}, osoite ${osoitteita}, projektinjohtaja ${johtajia})`)
     for (const n of naytteet) console.log(n)
     console.log()
 

@@ -26,6 +26,12 @@ Ansa jonka mittaus paljasti: sivun alalaidan "muut hankkeet" -karuselli
 sisaltaa TOISTEN hankkeiden valmistumisaikoja. Ensimmainen toteutus
 poimi juuri sen.
 
+Projektinjohtaja lisataan yhteyshenkiloksi jos han ei ole jo listalla.
+Mitattuna se koski yhta hanketta 75:sta: yhteystiedot tulivat jo
+henkilostoosiosta (nimi, tehtava, puhelin, sahkoposti) ja kattavuus oli
+97 %. Nimi ilman osoitetta rikkoo vakiintunutta saantoa, mutta omistaja
+paatti etta se on silti hyva tieto.
+
 ### Takautuvien ajojen hidastus hylattiin mittauksen jalkeen (D-120)
 
 Ehdotin skripteille kirjoitusten tahdistusta, koska takautuva ajo osui

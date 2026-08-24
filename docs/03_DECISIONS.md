@@ -55,6 +55,38 @@ voittaa arvauksen ilman erillistä koodia.
 
 Takautuva ajo: 41 jonon ehdokasta ja 34 näkyvää hanketta.
 
+**PROJEKTINJOHTAJA LISÄTTIIN YHTEYSHENKILÖKSI — tietoisena poikkeuksena.**
+Väitin ensin ettei projektinjohtaja ole yhteyshenkilönä. Mittaus 75
+Kreate-rivistä osoitti sen vääräksi:
+
+```
+ilman yhtään yhteyshenkilöä        2 / 75    (kattavuus 97 %)
+Projektinjohtaja-kenttä olemassa  32
+  jo mukana yhteyshenkilöissä     30
+  ei mukana -> lisättävää          2         (sama hanke kahdessa taulussa)
+```
+
+Yhteystiedot tulivat jo hankesivun **henkilöstöosiosta** (`.job` / `.name`
+/ `.tel` / `.email`), josta saadaan nimi, tehtävä, puhelin ja sähköposti.
+Projektinjohtaja on lähes aina myös siinä taulukossa.
+
+Lisäys koski siis yhtä hanketta ja tuotti yhden nimen ilman sähköpostia
+tai puhelinta — mikä rikkoo säännön *"nimi ilman osoitetta tai numeroa ei
+ole yhteystieto"*. Suosittelin jättämään väliin. **Omistaja päätti
+toisin:** *"on se hyvä tieto"* — myyjä tietää kenestä kysyä, vaikkei
+häneen voi ottaa suoraan yhteyttä. Toteutus on vain-lisäävä: jos henkilö
+on jo listalla yhteystietoineen, häntä ei lisätä uudelleen nimenä.
+
+**Sivuhavainto, ei toteutettu:** kyseisen projektinjohtajan sähköposti on
+tiedossa TOISESTA Kreate-hankkeesta (`mika.seppala@kreate.fi`, Kimolan
+kanava), ja Kreaten osoitteet noudattavat muotoa
+`etunimi.sukunimi@kreate.fi`. Saman nimen ja saman työnantajan osoitteen
+kopiointi lähteen sisällä olisi lukemista eikä generointia — mutta
+yleistetty yhteystietojen kierrätys on jo hylätty kolmesti mittauksen
+perusteella (D-104), joten tätä ei tehty kysymättä.
+
+
+
 ---
 
 ### D-120 – Takautuvien ajojen hidastusta EI tehdä: ne kirjoittavat 4,3 riviä/s

@@ -49,6 +49,35 @@ export async function resolveKreateProject({
     }))
 
   /*
+   * PROJEKTINJOHTAJA KENTTALOHKOSTA.
+   *
+   * Poikkeus saantoon "nimi ilman sahkopostia tai puhelinta ei ole
+   * yhteystieto". Mitattu 25.8.2026: 75 Kreate-rivista 32:lla on
+   * Projektinjohtaja-kentta, ja 30 heista on jo henkilostoosiossa
+   * sahkoposteineen — lisays koskee siis kaytannossa yhta hanketta.
+   *
+   * Omistajan paatos: nimi on silti hyva tieto, vaikka siihen ei voi
+   * ottaa suoraan yhteytta. Myyja tietaa kenesta kysya.
+   *
+   * VAIN LISAYS, ei korvaus: jos henkilo on jo listalla (yleensa on,
+   * yhteystietoineen), hanta ei lisata uudelleen nimena.
+   */
+  const projektinjohtaja: string | null = metadata.project_manager ?? null
+  if (
+    projektinjohtaja &&
+    !contactPersons.some(
+      (c) => String(c.name ?? "").toLowerCase() === projektinjohtaja.toLowerCase()
+    )
+  ) {
+    contactPersons.push({
+      name: projektinjohtaja,
+      title: "Projektinjohtaja",
+      phone: null,
+      email: null,
+    })
+  }
+
+  /*
    * Kentat tulevat hankesivun rakenteisesta lohkosta (ks.
    * lib/agent/kreateProject.ts). Rakenteinen arvo on parempi kuin
    * proosasta paattely: mitattuna 41/41 vastaan 20/41.
