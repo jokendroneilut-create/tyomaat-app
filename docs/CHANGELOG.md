@@ -11,6 +11,17 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Takautuvien ajojen hidastus hylattiin mittauksen jalkeen (D-120)
+
+Ehdotin skripteille kirjoitusten tahdistusta, koska takautuva ajo osui
+ajallisesti lahelle 24.8. katkoa. Mitattu: silmukat kirjoittavat 4,3
+rivia sekunnissa, ja hitaus tulee verkon viiveesta eika kannasta. Se ei
+nalkiinnyta mitaan Postgresia, joten hidastus korjaisi ongelman jota ei
+ole. Ei tehda.
+
+Samalla kumoutuu aiempi arvaus katkon syysta: korrelaatio oli ainoa
+todiste. Syy jaa tuntemattomaksi.
+
 ### Poistetun tunnuksen jaljet ja tililokin ajastus (D-119)
 
 Kolmelta taululta puuttui kayttajaviite, joten poistetun tunnuksen rivit

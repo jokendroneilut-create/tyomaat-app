@@ -5,6 +5,57 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-120 – Takautuvien ajojen hidastusta EI tehdä: ne kirjoittavat 4,3 riviä/s
+
+24.8.2026 Supabase-instanssi kaatui, ja lokista näkyi että oma takautuva
+ajo kirjoitti `projects`-tauluun klo 01:12, kymmenen minuuttia ennen kuin
+Postgres alkoi toistaa `autovacuum worker took too long to start`
+-viestiä. Ajallinen läheisyys oli ilmeinen, ja ehdotin skripteille
+kirjoitusten tahdistusta.
+
+**Mittaus kumosi ehdotuksen.** Kirjoitusnopeus mitattiin samalla
+yhteyskäytöksellä kuin skripteillä on:
+
+```
+luku             122 ms
+kirjoitus        112 ms
+rivi silmukassa  234 ms   ->   4,3 riviä/s
+```
+
+Silmukat ovat jo valmiiksi hitaita, ja hitaus tulee verkon
+edestakaisesta viiveestä — ei kannasta. **4,3 kirjoitusta sekunnissa ei
+nälkiinnytä mitään Postgresia**, ei NANO-instanssiakaan, joka käsittelee
+satoja. Lokin oma checkpoint tukee tätä: klo 01:19 se kirjoitti 2 232
+puskuria eli noin 17 MB, mikä on vaatimatonta eikä tulva.
+
+Viive lisäisi hidastusta johonkin joka on jo kymmeniä kertoja hitaampi
+kuin mikä instanssia rasittaisi. Se koskisi 60 skriptiä ja lisäisi
+ylläpidettävää koodia korjatakseen ongelman jota mittaus ei löydä.
+
+**MITTAA SAMALLA YHTEYSKÄYTÖKSELLÄ KUIN OIKEA ASIAKAS.** Ensimmäinen
+mittaus antoi 1,7 riviä/s, koska `urllib` avaa uuden TLS-yhteyden joka
+pyyntöön. Skriptien Supabase-asiakas pitää yhteyden auki. Ero oli
+2,5-kertainen, ja väärä luku olisi tehnyt ongelmasta isomman kuin se on.
+
+**SEURAUS SYYPÄÄTELMÄÄN.** Sanoin ensin että todennäköisin selitys
+katkolle on kasautuva kirjoituskuorma. Mekanismi ei kestä tarkastelua:
+korrelaatio oli ainoa todiste, ja kun kuorma mitattiin, se ei riitä
+syyksi. **Katkon syy jää tuntemattomaksi**, ja takautuvat ajot ovat
+käytännössä puhdistettu epäilyksistä. Autovacuumin nälkiintyminen on
+lokissa aitona havaintona, mutta sen aiheuttaja on alustan puolella
+näkymättömissä.
+
+Oikea suoja on jo rakennettu eikä se ole hidastus: vahti (D-116) muutti
+15 tunnin sokeuden minuuteiksi. Jos vika toistuu, saamme sen alkuhetken
+tarkasti — juuri se tieto tästä katkosta puuttui.
+
+Jos skripteihin joskus kosketaan, oikea suunta on päinvastainen:
+**eräkirjoitus** vähentäisi edestakaisia pyyntöjä ja lyhentäisi 5 000
+rivin ajon 48 minuutista muutamaan. Se on nopeutus eikä suoja, mutta
+lyhyt ajo altistuu lyhyemmän aikaa mille tahansa häiriölle.
+
+---
+
 ### D-119 – Poistettu tunnus siivoutuu, paitsi siitä lokista joka on tarkoitus jäädä
 
 Tunnuksen poisto (`auth.admin.deleteUser`) ei siivoa mitään itse: reitti
