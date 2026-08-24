@@ -1,3 +1,5 @@
+import { parseKreateDescription, parseKreateFields } from "@/lib/agent/kreateProject"
+
 export type ExtractedFact = {
   fact_type: string
   fact_key?: string | null
@@ -34,6 +36,16 @@ export function extractKreateFacts({
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
 
+  /*
+   * Hankesivun HTML on tallessa post.content.rendered-kentassa, mutta sita
+   * ei luettu lainkaan: kuvaukseksi jai otsikko ja valmistumisaika puuttui.
+   * Mitattu 25.8.2026: Valmistuminen loytyy 41/41, Osoite 34/41 ja
+   * kuvaustekstin mediaani on 2 115 merkkia. Ks. lib/agent/kreateProject.ts.
+   */
+  const html = post?.content?.rendered ?? ""
+  const kentat = parseKreateFields(html)
+  const kuvaus = parseKreateDescription(html, title)
+
   const commonMetadata = {
     source_document_id: documentId,
     source_name: sourceName,
@@ -43,6 +55,12 @@ export function extractKreateFacts({
 
     category: clean(category),
     contacts,
+
+    description: kuvaus,
+    project_address: kentat.address,
+    estimated_completion: kentat.estimatedCompletion,
+    completion_text: kentat.completionText,
+    project_manager: kentat.projectManager,
   }
 
   if (title) {

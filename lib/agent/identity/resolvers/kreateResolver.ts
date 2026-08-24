@@ -48,10 +48,23 @@ export async function resolveKreateProject({
       email: c.email,
     }))
 
+  /*
+   * Kentat tulevat hankesivun rakenteisesta lohkosta (ks.
+   * lib/agent/kreateProject.ts). Rakenteinen arvo on parempi kuin
+   * proosasta paattely: mitattuna 41/41 vastaan 20/41.
+   *
+   * estimated_completion menee metadataan, ja resolvePotentialProject
+   * levittaa input.metadatan OMAN paattelynsa jalkeen - eli lahteen oma
+   * kentta voittaa arvauksen ilman erillista koodia.
+   */
+  const kuvaus: string | null = metadata.description ?? null
+  const osoite: string | null = metadata.project_address ?? null
+  const valmistuminen: string | null = metadata.estimated_completion ?? null
+
   const result = await resolvePotentialProject({
     title: operation,
     municipality: inferredMunicipality?.name ?? null,
-    address: null,
+    address: osoite,
     propertyId: null,
     permitNumber: null,
     sourceName: document.source_name,
@@ -66,6 +79,11 @@ export async function resolveKreateProject({
 
       operation,
       builder: "Kreate",
+
+      ...(kuvaus ? { description: kuvaus } : {}),
+      ...(osoite ? { project_address: osoite } : {}),
+      ...(valmistuminen ? { estimated_completion: valmistuminen } : {}),
+      ...(metadata.completion_text ? { completion_text: metadata.completion_text } : {}),
       kreate_post_id: metadata.decision_index ?? null,
       region: inferredMunicipality?.region ?? null,
       building_type: category,

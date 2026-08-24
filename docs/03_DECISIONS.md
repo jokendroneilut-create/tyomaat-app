@@ -5,6 +5,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-121 – Kreaten hankesivun rakenteinen kenttä voittaa proosasta päättelyn
+
+Hankkeella "Uusi Mähkönsilta…" näkyi kuvauksena pelkkä otsikko (70
+merkkiä), sijainti oli tyhjä ja arvioitu valmistuminen puuttui — vaikka
+lähdesivulla lukee kaikki kolme. Sisältö oli ollut kannassa koko ajan
+(`raw_payload.original.content.rendered`); resolveri ei vain lukenut
+sitä.
+
+Mitattu 25.8.2026, 41 dokumenttia:
+
+```
+Valmistuminen     41/41   rakenteisena kenttänä (12/2026)
+Osoite            34/41   "Maalismaantie 1, Ii", "Jokikatu 57, Porvoo"
+Projektinjohtaja  18/41   nimetty henkilö
+kuvausteksti      41/41   mediaani 2 115 merkkiä
+```
+
+**Rakenteinen kenttä on parempi kuin tekstistä päättely.** Sama tieto
+saataisiin osittain proosasta (`parseFinnishCompletionDate` löysi
+valmistumisajan), mutta se osui vain **20 dokumenttiin 41:stä**.
+Lähteen oma `<h4>Valmistuminen</h4><p>12/2026</p>` osuu kaikkiin eikä
+vaadi arvausta. Vanha jäsennin jää käyttöön muille lähteille.
+
+**KAKSI ANSAA, molemmat havaittu mittaamalla eikä lukemalla:**
+
+1. **Muiden hankkeiden karuselli.** Sivun alalaidassa on "muut
+   hankkeet" -lohko, jossa on TOISTEN hankkeiden nimiä ja
+   valmistumisaikoja. Ensimmäinen toteutukseni haki kenttälohkon
+   `lastIndexOf(" Tila ")`-hakuna ja poimi juuri sen — sama
+   "Kiilinkadun alikulkusilta 10/2026" toistui eri hankkeilla.
+   Poiminta on nyt rakenteinen (`<h4>`/`<p>`-pari) ja teksti katkaistaan
+   ennen `block-project-employees`-osiota. Testi vartioi tätä
+   nimenomaisesti.
+2. **Murupolku** ("Etusivu") vuotaa keskelle kuvaustekstiä, koska se on
+   hero-osion ja leipätekstin välissä.
+
+**Sivuvaikutus hyväksyttiin tietoisesti.** 10 hanketta 34:stä sai
+menneen valmistumispäivän (Kimolan kanava 2019, Sappi Kirkniemi 2022),
+joten yöllinen auto-complete siirtää ne "Valmistunut"-vaiheeseen.
+Omistajan linjaus: *"hanke on varmasti valmistunut jos Kreate omilla
+sivuillaan kertoo niin ja luotamme siihen."*
+
+**Keskitettyä logiikkaa ei tarvinnut muuttaa.**
+`resolvePotentialProject` päättelee valmistumisajan
+`metadata.description`-kentästä kaikille lähteille, mutta levittää
+`input.metadata`n oman päättelynsä JÄLKEEN — joten lähteen oma kenttä
+voittaa arvauksen ilman erillistä koodia.
+
+Takautuva ajo: 41 jonon ehdokasta ja 34 näkyvää hanketta.
+
+---
+
 ### D-120 – Takautuvien ajojen hidastusta EI tehdä: ne kirjoittavat 4,3 riviä/s
 
 24.8.2026 Supabase-instanssi kaatui, ja lokista näkyi että oma takautuva

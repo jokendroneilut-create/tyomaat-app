@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Kreaten kuvaukset, osoitteet ja valmistumisajat (D-121)
+
+Kreaten hankesivun sisalto oli kannassa mutta resolveri ei lukenut sita:
+kuvaukseksi jai otsikko (70 mk), sijainti tyhja, valmistumisaika
+puuttui. Sivulla on rakenteinen kenttalohko, josta Valmistuminen loytyy
+41/41 ja Osoite 34/41 - proosasta paattely osui vain 20/41.
+
+Takautuva ajo: 41 ehdokasta ja 34 nakyvaa hanketta. Kuvaus 70 -> n. 2 000
+merkkia. 10 hanketta sai menneen valmistumispaivan ja siirtyy
+auto-completessa valmistuneiksi; hyvaksytty tietoisesti.
+
+Ansa jonka mittaus paljasti: sivun alalaidan "muut hankkeet" -karuselli
+sisaltaa TOISTEN hankkeiden valmistumisaikoja. Ensimmainen toteutus
+poimi juuri sen.
+
 ### Takautuvien ajojen hidastus hylattiin mittauksen jalkeen (D-120)
 
 Ehdotin skripteille kirjoitusten tahdistusta, koska takautuva ajo osui
