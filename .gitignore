@@ -59,3 +59,5 @@ app/.claude/launch.json
 
 # Mittausajojen valitulokset (kymmenia megatavuja, ei kuulu historiaan)
 scripts/out/pairs-*.json
+# Katselmointilistat sisaltavat henkilotietoa - repo on julkinen.
+scripts/out/contact-mismatches.json

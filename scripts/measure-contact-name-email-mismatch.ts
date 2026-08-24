@@ -64,7 +64,8 @@ async function main() {
 
       const local = poista(email.split("@")[0])
       /* Vain etunimi.sukunimi-muoto on tarkistettavissa. */
-      const osat = local.split(".")
+      /* Valiviivat pois molemmilta puolilta: "Niilo-Rama" vs "niilo-rama". */
+      const osat = local.split(".").map((o) => o.replace(/[^a-z]/g, ""))
       if (osat.length !== 2 || osat[0].length < 3 || osat[1].length < 3) continue
 
       tarkistettavia++
