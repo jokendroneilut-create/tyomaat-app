@@ -12,17 +12,36 @@ kirjaa elinkaaren ja kutsuu Supabasea, ja kaikki muu nojaa kannan
 cascade-sääntöihin. Mitattu 24.8.2026:
 
 ```
-profiles, saved_searches, analytics_events,
-team_members, project_feedback      orpoja 0   cascade toimii
-
-user_today_preferences              orpoja 7   ei viiteavainta
-user_project_status                 orpoja 6   ei viiteavainta
-opportunity_alerts                  orpoja 3   ei viiteavainta
+                          orpokäyttäjiä   orporivejä
+user_today_preferences          7               7
+user_project_status             6              58
+opportunity_alerts              3             186
 ```
 
 Kolmelta taululta **puuttui käyttäjäviite kokonaan** — ainoa viiteavain
 oli `opportunity_alerts.project_id -> projects`. Cascade ei siis ollut
-rikki, sääntö puuttui. Koodin kommentti lupasi silti *"sen jälkeen
+rikki, sääntö puuttui. Yhteensä poistettiin 251 riviä, jotka kaikki
+kuuluivat tunnuksille joita ei ole enää olemassa.
+
+**Käyttäjiä ja rivejä ei saa sekoittaa.** Mittasin ensin eri
+käyttäjätunnuksia ja raportoin luvut 7 / 6 / 3 ikään kuin ne olisivat
+rivimääriä. Oikea rivimäärä oli lähes kymmenkertainen kahdessa
+taulussa, koska yhdellä käyttäjällä on monta hankemerkintää ja monta
+hälytystä. Poisto oli silti oikea, mutta luku olisi ohjannut väärin jos
+sen perusteella olisi arvioitu työn kokoa.
+
+**KANNASSA ON KOLME TIETOISTA MALLIA, EI YHTÄ.** Tämä selvisi vasta kun
+viiteavaimet listattiin kaikista tauluista:
+
+| sääntö | taulut | miksi |
+|---|---|---|
+| `CASCADE` | `saved_searches`, `team_members`, `project_feedback` + kolme korjattua | Henkilökohtainen työdata. Tunnuksen mukana pois. |
+| `SET NULL` | `analytics_events` | Tapahtuma säilyy tilastossa, henkilöyhteys katkeaa. 871 riviä 28 796:sta on nollattuja. |
+| ei viiteavainta | `account_lifecycle` | Historia on koko taulun tarkoitus (D-069). |
+
+Väitin ensin että `analytics_events` toimii cascadella. Se ei toimi — ja
+`SET NULL` on siinä parempi valinta kuin cascade olisi, koska
+käyttömäärien historia ei saa kadota tunnuksen mukana. Koodin kommentti lupasi silti *"sen jälkeen
 tunnuksesta ei ole jäljellä mitään"*, mikä piti paikkansa vain
 `auth.users`ista.
 

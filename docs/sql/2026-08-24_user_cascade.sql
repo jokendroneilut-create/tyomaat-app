@@ -5,12 +5,18 @@
 -- elinkaaren ja kutsuu auth.admin.deleteUser. Kaikki muu nojaa
 -- tietokannan cascade-saantoihin. Mitattu 24.8.2026:
 --
---   profiles, saved_searches, analytics_events,
---   team_members, project_feedback      orpoja 0   cascade toimii
+--                            orpokayttajia   orporiveja
+--   user_today_preferences          7                7
+--   user_project_status             6               58
+--   opportunity_alerts              3              186
 --
---   user_today_preferences              orpoja 7   ei viiteavainta
---   user_project_status                 orpoja 6   ei viiteavainta
---   opportunity_alerts                  orpoja 3   ei viiteavainta
+--   HUOM: kayttajia ja riveja ei saa sekoittaa. Yhdella kayttajalla on
+--   monta hankemerkintaa ja monta halytysta, joten rivimaara on lahes
+--   kymmenkertainen. Yhteensa 251 rivia.
+--
+--   Kunnossa jo ennestaan: saved_searches, team_members,
+--   project_feedback (CASCADE) ja analytics_events (SET NULL — tapahtuma
+--   sailyy tilastossa, henkiloyhteys katkeaa).
 --
 -- Naista kolmesta PUUTTUI kayttajaviite kokonaan (tarkistettu
 -- information_schemasta: ainoa viiteavain oli

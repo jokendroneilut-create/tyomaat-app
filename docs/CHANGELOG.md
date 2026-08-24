@@ -14,8 +14,14 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 ### Poistetun tunnuksen jaljet ja tililokin ajastus (D-119)
 
 Kolmelta taululta puuttui kayttajaviite, joten poistetun tunnuksen rivit
-jaivat kantaan: user_today_preferences 7, user_project_status 6,
-opportunity_alerts 3. Korjaus-SQL docs/sql/2026-08-24_user_cascade.sql.
+jaivat kantaan: 16 kuollutta tunnusta ja niilla 251 rivia
+(user_today_preferences 7, user_project_status 58, opportunity_alerts
+186). Korjaus-SQL docs/sql/2026-08-24_user_cascade.sql, ajettu.
+
+Kannassa on kolme tietoista mallia: CASCADE henkilokohtaiselle
+tyodatalle, SET NULL analytics_eventsille (tapahtuma sailyy tilastossa,
+henkiloyhteys katkeaa) ja ei viiteavainta lainkaan
+account_lifecyclelle.
 account_lifecycle on tasta tarkoituksellinen poikkeus (D-069) — sille ei
 saa lisata cascadea.
 
