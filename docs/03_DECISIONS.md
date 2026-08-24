@@ -33,9 +33,19 @@ instanssi. Jokainen epäonnistuminen varmistetaan uusinnalla 3 s kuluttua.
 24.8. vika oli pysyvä — kuusi peräkkäistä tarkistusta antoi 522:n joka
 kerta — joten aito katko läpäisee varmistuksen.
 
-**Tunnettu sokea piste:** vahti ei havaitse omaa kuolemaansa. Jos Vercel
-on alhaalla, cron ei aja eikä hälytystä tule. Sen kattaa vain sovelluksen
-ulkopuolinen valvonta, joka on erillinen ja suositeltava lisä.
+**Sokea piste katettu toisella kerroksella.** Vahti ei voi havaita omaa
+kuolemaansa: jos Vercel on alhaalla tai cron ei laukea, hälytystä ei
+tule lainkaan. Sen kattaa `.github/workflows/uptime.yml`, joka ajetaan
+GitHubin koneilla — Vercelistä ja Supabasesta riippumatta — vartin
+välein. Se tarkistaa ensin että sovellus vastaa (ei vaadi salaisuuksia)
+ja sitten koko ketjun `CRON_SECRET`-avaimella, mikä varmistaa myös että
+sisäinen vahti itse on elossa ja avain yhä voimassa. Työn
+epäonnistuminen lähettää GitHubin oman ilmoituksen.
+
+Kerrokset ovat tarkoituksella eri tiheydellä: sisäinen viiden minuutin
+välein (Supabasen kaatuminen on todennäköisin vika), ulkoinen vartin
+välein (koko alustan kaatuminen on harvinaisempi). Repo on julkinen,
+joten Actions-minuutit ovat ilmaisia.
 
 ---
 

@@ -1,0 +1,81 @@
+# ULKOINEN VAHTI — kattaa sen mitä sisäinen vahti ei voi kattaa.
+#
+# /api/admin/health-check ajetaan Vercelin cronilla ja se havaitsee
+# Supabasen kaatumisen. Se ei kuitenkaan havaitse OMAA kuolemaansa: jos
+# Vercel on alhaalla tai cron ei jostain syystä laukea, hälytystä ei tule
+# lainkaan. Juuri se tapaus jäi 24.8.2026 huomaamatta 15 tunniksi.
+#
+# Tämä työ ajetaan GitHubin koneilla, jotka ovat Vercelistä ja
+# Supabasesta riippumattomia. Kun työ epäonnistuu, GitHub lähettää
+# omistajalle sähköpostin (Settings -> Notifications -> Actions).
+#
+# Repo on julkinen, joten Actions-minuutit ovat ilmaisia eikä 15
+# minuutin väli maksa mitään. Väli on tarkoituksella harvempi kuin
+# sisäisen vahdin viisi minuuttia: tämä on varmistus harvinaiselle
+# tapaukselle, ei ensisijainen havainto.
+
+name: Uptime
+
+on:
+  schedule:
+    # Vartin välein, tasaminuuttien ohi: GitHubin ajastin ruuhkautuu
+    # tasatunnein ja siirtää töitä myöhemmäksi.
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+
+# Hidas ajo ei saa kasautua päällekkäin seuraavan kanssa.
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # 1. Vastaako sovellus ylipäätään? Tämä on se kysymys johon
+      #    sisäinen vahti ei voi vastata. Ei vaadi salaisuuksia.
+      #    24.8. tämä olisi palauttanut 200 vaikka kanta oli kuollut,
+      #    joten se ei korvaa sisäistä vahtia vaan täydentää sitä.
+      - name: Sovellus vastaa
+        run: |
+          koodi=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --max-time 25 --retry 2 --retry-delay 15 --retry-all-errors \
+            https://app.tyomaat.fi/login)
+          echo "login-sivu: HTTP $koodi"
+          if [ "$koodi" != "200" ]; then
+            echo "::error::Sovellus ei vastaa (HTTP $koodi). Tarkista Vercel."
+            exit 1
+          fi
+
+      # 2. Koko ketju: sovellus -> cron-reitti -> Supabase. Tämä
+      #    varmistaa myös sen, että sisäinen vahti itse on elossa ja
+      #    että CRON_SECRET on yhä voimassa. Ohitetaan siististi jos
+      #    salaisuutta ei ole asetettu, jotta työ toimii heti.
+      - name: Kirjautuminen ja kanta vastaavat
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::notice::CRON_SECRET puuttuu — vain sovelluksen saatavuus tarkistettiin."
+            echo "Lisaa se: Settings -> Secrets and variables -> Actions -> New repository secret"
+            exit 0
+          fi
+
+          vastaus=$(curl -sS --max-time 60 --retry 1 --retry-delay 10 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://app.tyomaat.fi/api/admin/health-check)
+
+          echo "$vastaus"
+
+          if echo "$vastaus" | grep -q '"unauthorized"'; then
+            echo "::error::CRON_SECRET ei kelpaa — vahti ei ole ajossa."
+            exit 1
+          fi
+
+          if ! echo "$vastaus" | grep -q '"ok":true'; then
+            echo "::error::Kirjautuminen tai kanta ei vastaa. Supabase -> Project Settings -> General -> Restart project"
+            exit 1
+          fi
+
+          echo "kaikki kunnossa"
