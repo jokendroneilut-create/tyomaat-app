@@ -11,6 +11,36 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Vahti hälyttää katkosta (D-116)
+
+Supabase-instanssi oli alhaalla 23.–24.8. noin 15 tuntia eikä kukaan
+tiennyt siitä ennen kuin ylläpitäjä yritti itse kirjautua. Lokista näkyy
+klo 05:22 tehty aito kirjautumisyritys, joka sai 522:n.
+
+Uusi `/api/admin/health-check` tarkistaa viiden minuutin välein
+kirjautumisen ja kannan, varmistaa epäonnistumisen uusinnalla ja lähettää
+sähköpostin. Tila ei ole Supabasessa vaan Resendin idempotenssiavaimessa,
+koska kanta on alhaalla juuri silloin kun vahtia tarvitaan.
+
+**Katkon kulku lokista.** Klo 01:12 (Suomen aikaa) takautuva ajo kirjoitti
+`projects`-tauluun. Klo 01:23–01:36 Postgres toisti kahdeksan kertaa
+`autovacuum worker took too long to start; canceled`, mikä on merkki
+resurssien loppumisesta. Klo 01:45 viimeinen onnistunut pyyntö, klo 02:40
+ensimmäinen 522. Uudelleenkäynnistys korjasi tilanteen 6 sekunnissa eikä
+data kärsinyt: 5 848 hanketta ja 5 799 näkyvää, samat kuin ennen katkoa.
+
+Kolme muuta selitystä testattiin ja hylättiin: levy (246 MB, 3 % NANO:n
+levystä), indeksit (kaikki tila on TOASTissa, `projects` 288 kB indeksiä)
+ja jumiin jäänyt keräysajo (klo 18:05–18:13 ajo oli kauttaaltaan
+`success`).
+
+**Mittausvirhe, joka kannattaa muistaa.** Päättelin ensin viimeisen
+kirjoitushetken `project_changes`-taulusta ja totesin ajojen päättyneen
+tuntia ennen kaatumista. Se oli väärin: pelkkä `metadata`-päivitys ei
+laukaise muutosliipaisinta, joten kysely ei voinut nähdä sitä mitä
+etsin. Sama virhelaji kuin `.neq()`-ansa, jossa NULL-rivit putosivat
+pois — kysely vastasi kysymykseen jota en esittänyt.
+
 ### Kuulutuksen lomakekentat nakyviin hankkeen sivulle
 
 Kuulutus-PDF:ssa oli kenttia jotka joko poimittiin muttei naytetty tai

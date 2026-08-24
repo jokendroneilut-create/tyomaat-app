@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/admin/health-check",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/digests",
       "schedule": "0 7 * * *"
     },

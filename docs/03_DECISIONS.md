@@ -5,6 +5,40 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-116 – Vahti hälyttää katkosta, eikä se saa muistaa mitään Supabasessa
+
+24.8.2026 Supabase-instanssi oli alhaalla **noin 15 tuntia** (23.8. klo
+22:45–23:40 UTC välillä kuollut, palautui 24.8. klo 12:50). Kirjautuminen
+oli mahdotonta koko ajan: `/auth/v1/health` vastasi 522:lla. Lokista
+näkyy, että klo 05:22 joku yritti oikeasti kirjautua ja sai 522:n.
+
+**Kukaan ei tiennyt.** Vika selvisi vasta kun ylläpitäjä yritti itse.
+Tämä on itse katkoa vakavampi ongelma, koska se toistuu jokaisessa
+tulevassa katkossa riippumatta syystä.
+
+Vahti on `/api/admin/health-check`, ajossa viiden minuutin välein.
+
+**Se ei saa tallentaa tilaansa Supabaseen.** Tavallinen ratkaisu
+"hälytä vain kun tila muuttuu" vaatii muistin siitä, hälytettiinkö jo.
+Se muisti olisi kannassa — samassa joka on alhaalla juuri silloin kun
+vahtia tarvitaan. Toisto estetään siksi **Resendin
+idempotenssiavaimella** (`resend@6.9.2`), joka lasketaan tunnin
+tarkkuudella ja elää lähettäjän päässä. Viiden minuutin tarkistusväli
+antaa nopean havainnon, tunnin avain pitää 15 tunnin katkon 15 viestissä
+180:n sijaan — ja toimii samalla muistutuksena että vika jatkuu.
+
+**Yksi epäonnistuminen ei riitä.** Supabasella on avoin häiriö
+ajoittaisista 401-virheistä, eikä hetkellinen piikki ole kaatunut
+instanssi. Jokainen epäonnistuminen varmistetaan uusinnalla 3 s kuluttua.
+24.8. vika oli pysyvä — kuusi peräkkäistä tarkistusta antoi 522:n joka
+kerta — joten aito katko läpäisee varmistuksen.
+
+**Tunnettu sokea piste:** vahti ei havaitse omaa kuolemaansa. Jos Vercel
+on alhaalla, cron ei aja eikä hälytystä tule. Sen kattaa vain sovelluksen
+ulkopuolinen valvonta, joka on erillinen ja suositeltava lisä.
+
+---
+
 ### D-115 – Kuulutuksen lomakekentät näkyviin: käyttötarkoitus, ala, rakennusoikeus
 
 Kysymys oli suora: onko lähteestä poimittu tietoa jota asiakas näkisi
