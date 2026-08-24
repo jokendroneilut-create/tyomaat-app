@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Poistetun tunnuksen jaljet ja tililokin ajastus (D-119)
+
+Kolmelta taululta puuttui kayttajaviite, joten poistetun tunnuksen rivit
+jaivat kantaan: user_today_preferences 7, user_project_status 6,
+opportunity_alerts 3. Korjaus-SQL docs/sql/2026-08-24_user_cascade.sql.
+account_lifecycle on tasta tarkoituksellinen poikkeus (D-069) — sille ei
+saa lisata cascadea.
+
+Tililokin tasmaytys oli vain kasin ajettava skripti ja unohtunut 17.8.
+jalkeen: 24 tunnusta oli lokin ulkopuolella. Tasmaytetty, ja ajastettu
+vuorokausittain (/api/admin/sync-account-lifecycle, 03:00 UTC). Skripti
+ja reitti kayttavat nyt samaa moduulia.
+
 ### Halytyksen ikkuna on vesiraja (D-118)
 
 Tyotilaisuushalytys katsoi kiinteasti 30 tuntia taaksepain, mika tuotti

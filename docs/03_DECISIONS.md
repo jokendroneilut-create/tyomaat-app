@@ -5,6 +5,53 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-119 – Poistettu tunnus siivoutuu, paitsi siitä lokista joka on tarkoitus jäädä
+
+Tunnuksen poisto (`auth.admin.deleteUser`) ei siivoa mitään itse: reitti
+kirjaa elinkaaren ja kutsuu Supabasea, ja kaikki muu nojaa kannan
+cascade-sääntöihin. Mitattu 24.8.2026:
+
+```
+profiles, saved_searches, analytics_events,
+team_members, project_feedback      orpoja 0   cascade toimii
+
+user_today_preferences              orpoja 7   ei viiteavainta
+user_project_status                 orpoja 6   ei viiteavainta
+opportunity_alerts                  orpoja 3   ei viiteavainta
+```
+
+Kolmelta taululta **puuttui käyttäjäviite kokonaan** — ainoa viiteavain
+oli `opportunity_alerts.project_id -> projects`. Cascade ei siis ollut
+rikki, sääntö puuttui. Koodin kommentti lupasi silti *"sen jälkeen
+tunnuksesta ei ole jäljellä mitään"*, mikä piti paikkansa vain
+`auth.users`ista.
+
+Vaikutus oli lievä mutta jatkuva: työtilaisuushälytys kävi joka ajolla
+läpi seitsemän kuollutta käyttäjää ja laski ne `usersMatched`-lukuun —
+siksi 24.8. esikatselu näytti 9 vaikka vastaanottajia oli 8. Isompi
+kysymys on tietosuoja: poistetun käyttäjän hakuasetukset jäivät kantaan.
+
+**`account_lifecycle` on tästä tarkoituksellinen poikkeus (D-069).** Se
+on ainoa taulu johon poistetun tunnuksen tiedot jäävät, eikä sille saa
+lisätä cascadea — vierasavain pyyhkisi historian täsmälleen silloin kun
+sitä tarvitaan. Tämä ei ole teoriaa: 24.8. poistetun käyttäjän
+henkilöllisyys selvisi nimenomaan siitä taulusta, kun `auth.users` ja
+`profiles` olivat jo tyhjiä. Olin kirjoittamassa cascade-ohjeeseen
+loppulausetta "lisää sama sääntö jokaiselle uudelle user_id-taululle";
+se olisi ennen pitkää tuhonnut juuri tämän historian.
+
+**Täsmäytys ajastettiin, koska juuri sen puuttuminen aiheutti aukon.**
+`account_lifecycle` päivittyi vain käsin ajettavalla skriptillä, ja se
+oli ajettu viimeksi 17.8. — **24 tunnusta oli lokin ulkopuolella**,
+mukana maksavia asiakkaita. Samana päivänä oli poistettu kuusi tunnusta,
+joten riski ei ollut teoreettinen. Nyt `/api/admin/sync-account-lifecycle`
+ajetaan vuorokausittain klo 03:00 UTC. Käsiajo säilyy, ja molemmat
+käyttävät samaa moduulia `lib/users/accountLifecycleSync.ts` — kaksi
+toteutusta erkaantuisi, ja poikkeama näkyisi vasta kun historiaa
+tarvitaan eli liian myöhään.
+
+---
+
 ### D-118 – Hälytyksen ikkuna on vesiraja, ei kiinteä 30 tuntia
 
 Työtilaisuushälytys katsoi kiinteästi 30 tuntia taaksepäin nykyhetkestä.

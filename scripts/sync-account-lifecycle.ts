@@ -1,5 +1,10 @@
 /*
- * Pitää account_lifecycle-lokin ajan tasalla.
+ * Pitää account_lifecycle-lokin ajan tasalla (käsiajo).
+ *
+ * LOGIIKKA ON MODUULISSA lib/users/accountLifecycleSync.ts, jota myös
+ * ajastettu reitti /api/admin/sync-account-lifecycle käyttää. Kaksi
+ * toteutusta erkaantuisi ajan myötä, ja poikkeama näkyisi vasta silloin
+ * kun historiaa tarvitaan — eli liian myöhään.
  *
  * MIKSI TAYDENNYS EIKA TRIGGERI. Tilejä syntyy useaa reittiä: kutsu
  * sovelluksesta, Supabasen hallintapaneeli, mahdollinen tuleva
@@ -14,13 +19,14 @@
  *   1. auth.usersissa mutta ei lokissa  -> kirjataan "created"
  *   2. lokissa mutta ei enää auth.usersissa -> kirjataan "deleted"
  *
- * Kohdan 2 aikaleima on HAVAINTOHETKI, ei poistohetki - sitä ei ole
- * kirjattu mihinkään. Se merkitään metadataan, jottei arviota luulla
- * mittaukseksi (sama virhe kuin vahtikoiran aikaleimoissa, D-067).
- *
+ * Aja ensin ilman lippua:
  *   npx tsx scripts/sync-account-lifecycle.ts
  *   npx tsx scripts/sync-account-lifecycle.ts --apply
+ *
+ * HUOM: ajastettu reitti hoitaa tämän nyt vuorokausittain. Käsiajo on
+ * jäljellä tarkistusta ja poikkeustilanteita varten.
  */
+
 import { readFileSync } from "node:fs"
 
 const APPLY = process.argv.includes("--apply")
@@ -39,6 +45,8 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
+  const { runLifecycleSync } = await import("../lib/users/accountLifecycleSync")
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -53,85 +61,20 @@ async function main() {
     process.exit(1)
   }
 
-  /* Kaikki auth-tilit sivutettuna. */
-  const authUsers: any[] = []
-  for (let page = 1; ; page++) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 })
-    if (error) throw error
-    authUsers.push(...data.users)
-    if (data.users.length < 200) break
-  }
-
-  const { data: profiles } = await supabase.from("profiles").select("id,email,full_name")
-  const profileById = new Map((profiles ?? []).map((p: any) => [p.id, p]))
-
-  const existing: any[] = []
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("account_lifecycle")
-      .select("user_id,event")
-      .range(from, from + 999)
-    if (error) throw error
-    existing.push(...(data ?? []))
-    if (!data || data.length < 1000) break
-  }
-
-  const has = new Set(existing.map((r) => `${r.user_id}:${r.event}`))
-  const knownUsers = new Set(existing.map((r) => r.user_id))
-  const liveIds = new Set(authUsers.map((u) => u.id))
+  const t = await runLifecycleSync(supabase, { apply: APPLY })
 
   console.log(`${APPLY ? "KIRJOITETAAN" : "KUIVAHARJOITTELU (--apply kirjoittaa)"}`)
-  console.log(`auth-tileja ${authUsers.length}, lokissa ${knownUsers.size} tilia\n`)
+  console.log(`auth-tileja ${t.authCount}, lokissa ${t.knownUsers} tilia\n`)
+  console.log(`kirjataan "created": ${t.created.length}`)
+  console.log(`kirjataan "deleted" (havaittu kadonneeksi): ${t.deleted.length}`)
+  for (const r of t.deleted) console.log(`  ${r.user_id}`)
 
-  /* 1. Puuttuvat "created". */
-  const missingCreated = authUsers
-    .filter((u) => !has.has(`${u.id}:created`))
-    .map((u) => {
-      const p: any = profileById.get(u.id)
-      return {
-        user_id: u.id,
-        email: u.email ?? p?.email ?? null,
-        full_name: p?.full_name ?? null,
-        event: "created",
-        occurred_at: u.created_at,
-        metadata: { source: "sync-account-lifecycle" },
-      }
-    })
-
-  console.log(`kirjataan "created": ${missingCreated.length}`)
-
-  /* 2. Kadonneet tilit. */
-  const vanished = [...knownUsers].filter((id) => !liveIds.has(id) && !has.has(`${id}:deleted`))
-  console.log(`kirjataan "deleted" (havaittu kadonneeksi): ${vanished.length}`)
-  for (const id of vanished) console.log(`  ${id}`)
-
-  if (!APPLY) return
-
-  for (let i = 0; i < missingCreated.length; i += 500) {
-    const { error } = await supabase
-      .from("account_lifecycle")
-      .upsert(missingCreated.slice(i, i + 500), { onConflict: "user_id,event" })
-    if (error) console.log(`  VIRHE created: ${error.message}`)
+  if (t.errors.length) {
+    for (const e of t.errors) console.log(`  VIRHE ${e}`)
+    process.exit(1)
   }
 
-  if (vanished.length > 0) {
-    const { error } = await supabase.from("account_lifecycle").upsert(
-      vanished.map((id) => ({
-        user_id: id,
-        event: "deleted",
-        occurred_at: new Date().toISOString(),
-        metadata: {
-          source: "sync-account-lifecycle",
-          /* Poistohetkea ei ole kirjattu mihinkaan - tama on havaintohetki. */
-          occurred_at_is_detection_time: true,
-        },
-      })),
-      { onConflict: "user_id,event" }
-    )
-    if (error) console.log(`  VIRHE deleted: ${error.message}`)
-  }
-
-  console.log("\nvalmis")
+  console.log(APPLY ? "\nvalmis" : "")
 }
 
 main().catch((e) => {
