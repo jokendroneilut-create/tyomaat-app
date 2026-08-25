@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest"
-import { parseLujataloCard, parseMillionEuros } from "./fetchLujataloProjectsSource"
+import {
+  parseLujataloCard,
+  parseLujataloSchedule,
+  parseMillionEuros,
+} from "./fetchLujataloProjectsSource"
 
 /*
  * Kortin teksti sellaisena kuin cheerio sen tuottaa: kaupunki, viiva,
@@ -35,5 +39,34 @@ describe("parseMillionEuros", () => {
   it("palauttaa nullin muusta muodosta", () => {
     expect(parseMillionEuros("noin 70 miljoonaa")).toBeNull()
     expect(parseMillionEuros("8799 brm2")).toBeNull()
+  })
+})
+
+describe("parseLujataloSchedule", () => {
+  /*
+   * Listasivu merkitsi "Varkauden Sote-keskuksen" kaynnissa olevaksi,
+   * vaikka kohdesivulla lukee "Rakentamisen aikataulu 2019 - 2021".
+   * Valmis kohde tuli jonoon rakenteilla olevana.
+   */
+  it("lukee vuosivalin", () => {
+    expect(parseLujataloSchedule("2019 - 2021")).toEqual({ start: 2019, end: 2021 })
+    expect(parseLujataloSchedule("2024-2026")).toEqual({ start: 2024, end: 2026 })
+  })
+
+  it("osaa ajatusviivan", () => {
+    expect(parseLujataloSchedule("2024–2026")).toEqual({ start: 2024, end: 2026 })
+    expect(parseLujataloSchedule("2024—2026")).toEqual({ start: 2024, end: 2026 })
+  })
+
+  /* Avoimesta lopusta ei voi paatella valmistumista. */
+  it("hylkaa avoimen lopun ja kelvottoman", () => {
+    for (const paha of ["2025-", "2025", "kevat 2026", "", null, undefined]) {
+      expect(parseLujataloSchedule(paha as any)).toBeNull()
+    }
+  })
+
+  /* Kaanteinen vali on kirjoitusvirhe, ei tieto. */
+  it("hylkaa kaanteisen valin", () => {
+    expect(parseLujataloSchedule("2026 - 2019")).toBeNull()
   })
 })

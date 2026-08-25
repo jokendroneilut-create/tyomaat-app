@@ -11,6 +11,17 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Lujatalon referenssisivun aikataulu luetaan (D-126)
+
+Ehdokas oli jonossa rakenteilla olevana, vaikka lahdesivulla lukee
+"Rakentamisen aikataulu 2019 - 2021". Listauksen kaynnissa-merkinta oli
+vanhentunut. Keraaja lukee nyt kohdesivun aikataulun ja merkitsee
+kohteen valmistuneeksi jos loppuvuosi on mennyt.
+
+Mitattu: 6 elavaa Lujatalo-referenssia, joista 1 oli paattynyt.
+Korjattu takautuvasti. GRK:n (18) sivuilla ei ole aikataulua lainkaan,
+NCC (15) mitattu jo 19.8., Kreate korjattu 25.8.
+
 ### Kuulutuksen kuvaukseen sekä Toimenpide että Lisaselvitykset (D-125)
 
 Kuvaus valitsi toisen kentan ja hukkasi toisen, joten olennaisin osa -

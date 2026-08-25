@@ -114,6 +114,33 @@ export async function fetchLujataloProjectsSource() {
   return results
 }
 
+/*
+ * RAKENTAMISEN AIKATAULU REFERENSSISIVULTA.
+ *
+ * Listasivu merkitsee kohteen kaynnissa olevaksi, mutta merkinta voi olla
+ * vanhentunut: "Varkauden Sote-keskus" tuli jonoon rakenteilla olevana
+ * vaikka kohdesivulla lukee "Rakentamisen aikataulu 2019 - 2021".
+ *
+ * Kohdesivun oma aikataulu on luotettavampi kuin listauksen merkinta,
+ * koska se on hankkeen tieto eika listauksen tila.
+ *
+ * Hyvaksytaan vain nelinumeroiset vuodet: "2019 - 2021", "2024-2026" ja
+ * ajatusviivalla "2024–2026". Avoin loppu ("2025-") jatetaan, koska
+ * siita ei voi paatella valmistumista.
+ */
+export function parseLujataloSchedule(
+  value: string | null | undefined
+): { start: number; end: number } | null {
+  const m = String(value ?? "").match(/\b(19|20)(\d{2})\s*[-–—]\s*(19|20)(\d{2})\b/)
+  if (!m) return null
+
+  const start = Number(`${m[1]}${m[2]}`)
+  const end = Number(`${m[3]}${m[4]}`)
+  if (end < start) return null
+
+  return { start, end }
+}
+
 /* "71 M€" -> 71000000. Muut muodot jätetään, jottei arvata väärin. */
 export function parseMillionEuros(value: string): number | null {
   const match = value.replace(",", ".").match(/([\d.]+)\s*M€/i)
@@ -145,6 +172,8 @@ export async function enrichLujataloProject(candidate: any): Promise<any> {
   const contractForm = fields.get("urakkamuoto") ?? fields.get("hankemuoto") ?? null
   const scope = fields.get("laajuus") ?? null
   const costText = fields.get("rakentamisen osuus m€") ?? null
+  const aikatauluTeksti = fields.get("rakentamisen aikataulu") ?? null
+  const aikataulu = parseLujataloSchedule(aikatauluTeksti)
 
   const body = $("body").text().replace(/\s+/g, " ").trim()
   const detailsAt = body.search(/Projektin tiedot/i)
@@ -153,6 +182,21 @@ export async function enrichLujataloProject(candidate: any): Promise<any> {
     .trim()
 
   const cost = costText ? parseMillionEuros(costText) : null
+
+  /*
+   * KOHDESIVUN AIKATAULU VOITTAA LISTAUKSEN MERKINNÄN.
+   *
+   * Listaus merkitsi "Varkauden Sote-keskuksen" käynnissä olevaksi, mutta
+   * kohdesivulla lukee "Rakentamisen aikataulu 2019 - 2021". Merkintä oli
+   * siis vanhentunut, ja valmis kohde tuli jonoon rakenteilla olevana.
+   *
+   * Aikataulu on hankkeen oma tieto, listauksen merkintä vain listauksen
+   * tila — siksi aikataulu ratkaisee. Päättyneestä vuodesta tehdään
+   * valmistumispäivä (vuoden viimeinen päivä, kuten muissakin
+   * arvioissa), jolloin hanke tunnistetaan valmistuneeksi.
+   */
+  const paattynyt =
+    aikataulu != null && aikataulu.end < new Date().getUTCFullYear()
 
   return {
     ...candidate,
@@ -164,15 +208,19 @@ export async function enrichLujataloProject(candidate: any): Promise<any> {
     builder: candidate.builder ?? "Lujatalo",
     property_type: candidate.property_type ?? inferBuildingType(candidate.name, description),
     ...(cost ? { estimated_cost: cost } : {}),
+    ...(aikataulu ? { estimated_completion: `${aikataulu.end}-12-31` } : {}),
+    ...(paattynyt ? { phase: PHASE_LABELS.completed, completed: true } : {}),
     metadata: {
       ...(candidate.metadata ?? {}),
       ...(cost ? { cost_source: "text" } : {}),
       ...(contractForm ? { urakkamuoto: contractForm } : {}),
       ...(scope ? { laajuus: scope } : {}),
+      ...(aikatauluTeksti ? { rakentamisen_aikataulu: aikatauluTeksti } : {}),
       field_sources: {
         developer: developer ? "teksti" : null,
         builder: "julkaisija",
-        phase: "lähde",
+        /* Aikataulu on tarkempi kuin listauksen merkintä. */
+        phase: paattynyt ? "aikataulu" : "lähde",
         city: candidate.city ? "lähde" : "teksti",
         estimated_cost: cost ? "teksti" : null,
       },

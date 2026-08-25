@@ -5,6 +5,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-126 – Kohdesivun aikataulu voittaa listauksen "käynnissä"-merkinnän
+
+Ehdokas "Varkauden Sote-keskus" oli jonossa vaiheessa *Rakenteilla*,
+vaikka lähdesivulla lukee **"Rakentamisen aikataulu 2019 - 2021"**.
+Lujatalon referenssilistaus merkitsi kohteen käynnissä olevaksi, ja
+kerääjä luotti siihen.
+
+**Merkintä ja aikataulu ovat eri asioita.** Listauksen merkintä on
+listauksen tila ja voi vanhentua; aikataulu on hankkeen oma tieto.
+Kerääjä lukee nyt kohdesivun kentän `Rakentamisen aikataulu`
+(`<h3>`/`<p>`-pari, sama rakenne josta laajuus ja hinta jo luettiin) ja
+merkitsee kohteen valmistuneeksi jos loppuvuosi on mennyt.
+
+Avoin loppu ("2025-") jätetään lukematta: siitä ei voi päätellä
+valmistumista. Käänteinen väli on kirjoitusvirhe eikä tieto.
+
+**LAAJUUS MITATTIIN, EI ARVATTU.** Haettiin kaikkien ei-hylättyjen
+Lujatalo-referenssien kohdesivut:
+
+```
+tarkistettu                6
+aikataulu löytyi           1
+päättynyt jo aiemmin       1   <- juuri se joka löydettiin
+```
+
+Yksi tapaus, ei kertymää. Korjattu takautuvasti.
+
+**MUUT REFERENSSIPORTFOLIOT käytiin läpi samalla kysymyksellä.**
+
+| lähde | eläviä | tila |
+|---|---|---|
+| Kreate | 78 | korjattu 25.8. (`Valmistuminen`-kenttä, D-121) |
+| GRK | 18 | **sivulla ei ole aikataulua lainkaan** |
+| NCC | 15 | mitattu 19.8., valmistuneita 0 |
+| Lujatalo | 6 | korjattu tässä |
+
+GRK:n kohdesivuilta ei löydy sanoja "aikataulu", "valmistuu" eikä
+"toteutus", joten aukkoa ei voi sulkea lähteestä. Se on kirjattu tähän,
+jottei sitä tutkita uudelleen tuloksetta — jos GRK:n kohde on valmis, se
+huomataan vain käsin.
+
+**Yleistys.** Yrityksen referenssiportfolio on ensisijaisesti historiaa,
+ei tarjontaa. Kun sellaisesta kerätään, on kysyttävä erikseen mistä
+valmistuminen luetaan — listauksen merkintä ei riitä. Sama havainto
+johti Kreatella siihen että valmistuneita ei kerätä lainkaan (D-105).
+
+---
+
 ### D-125 – Kuulutuksen kuvaus on Toimenpide JA Lisäselvitykset, ei kumpi tahansa
 
 Hanke d0901758 näytti 497 merkin kuvauksen, josta puuttui olennaisin osa:
