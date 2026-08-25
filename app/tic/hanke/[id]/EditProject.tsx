@@ -17,6 +17,13 @@ const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
  * päätyneet hankkeelle.
  */
 
+export type EditableContact = {
+  name: string
+  title: string
+  email: string
+  phone: string
+}
+
 type Props = {
   projectId: string
   initial: {
@@ -30,8 +37,13 @@ type Props = {
     phase: string
     estimatedCost: string
     estimatedCompletion: string
+    apartments: string
+    floorArea: string
+    constructionStart: string
+    expireAt: string
     additionalInfo: string
   }
+  initialContacts: EditableContact[]
 }
 
 const FIELD_LABELS: Record<keyof Props["initial"], string> = {
@@ -45,10 +57,16 @@ const FIELD_LABELS: Record<keyof Props["initial"], string> = {
   phase: "Vaihe",
   estimatedCost: "Arvioitu kustannus (€)",
   estimatedCompletion: "Arvioitu valmistuminen",
+  apartments: "Asuntoja",
+  floorArea: "Kerrosala (m²)",
+  constructionStart: "Rakentamisen aloitus",
+  expireAt: "Vanhenee",
   additionalInfo: "Kuvaus",
 }
 
-export default function EditProject({ projectId, initial }: Props) {
+const TYHJA_KONTAKTI: EditableContact = { name: "", title: "", email: "", phone: "" }
+
+export default function EditProject({ projectId, initial, initialContacts }: Props) {
   const router = useRouter()
   const [values, setValues] = useState(initial)
   const [saving, setSaving] = useState(false)
@@ -71,21 +89,44 @@ export default function EditProject({ projectId, initial }: Props) {
    * Synkataan kun palvelimen data OIKEASTI muuttuu, ei joka renderillä —
    * muuten kesken oleva kirjoitus katoaisi näppäimen alta.
    */
-  const initialKey = JSON.stringify(initial)
+  /*
+   * Yhteystiedot ovat lista objekteja eivätkä mahdu `values`-tauluun, joten
+   * ne pidetään erillisessä tilassa. Ne tallentuvat samalla painikkeella,
+   * koska kaksi tallennusta samalla sivulla johtaisi ennen pitkää siihen
+   * että toinen unohtuu.
+   */
+  const [contacts, setContacts] = useState<EditableContact[]>(initialContacts)
+
+  /*
+   * Yhteystiedot kuuluvat samaan synkronointiin: jos ne jäisivät pois
+   * avaimesta, palvelimen palauttama korjattu lista ei koskaan päivittyisi
+   * lomakkeelle — se on juuri se hiljainen katoaminen jota tämä lohko
+   * estää.
+   */
+  const initialKey = JSON.stringify({ initial, initialContacts })
   const [syncedKey, setSyncedKey] = useState(initialKey)
 
   if (syncedKey !== initialKey) {
     setSyncedKey(initialKey)
     setValues(initial)
+    setContacts(initialContacts)
     setSaved(null)
   }
 
   const set = (key: keyof Props["initial"]) => (value: string) =>
     setValues((current) => ({ ...current, [key]: value }))
+  const contactsChanged =
+    JSON.stringify(contacts.filter((c) => c.name || c.email || c.phone)) !==
+    JSON.stringify(initialContacts)
+
+  const setContact = (i: number, key: keyof EditableContact) => (value: string) =>
+    setContacts((current) => current.map((c, j) => (j === i ? { ...c, [key]: value } : c)))
 
   const changedKeys = (Object.keys(values) as (keyof Props["initial"])[]).filter(
     (key) => values[key] !== initial[key]
   )
+
+  const muutoksia = changedKeys.length + (contactsChanged ? 1 : 0)
 
   async function save() {
     setSaving(true)
@@ -98,26 +139,35 @@ export default function EditProject({ projectId, initial }: Props) {
        * merkkijonon tyhjennykseksi, joten koko lomakkeen lähettäminen
        * pyyhkisi kentät joita ei ole ladattu lomakkeelle.
        */
-      const fields: Record<string, string | number | null> = {}
+      const fields: Record<string, unknown> = {}
+
+      const NUMEROT: Record<string, string> = {
+        estimatedCost: "estimated_cost",
+        apartments: "apartments",
+        floorArea: "floor_area",
+      }
+
+      const NIMET: Record<string, string> = {
+        propertyType: "property_type",
+        additionalInfo: "additional_info",
+        estimatedCompletion: "estimated_completion",
+        constructionStart: "construction_start",
+        expireAt: "expire_at",
+      }
 
       for (const key of changedKeys) {
         const value = values[key]
 
-        if (key === "estimatedCost") {
-          fields.estimated_cost = value.trim() === "" ? null : Number(value)
+        if (key in NUMEROT) {
+          fields[NUMEROT[key]] = value.trim() === "" ? null : Number(value)
           continue
         }
 
-        const apiKey =
-          key === "propertyType"
-            ? "property_type"
-            : key === "additionalInfo"
-              ? "additional_info"
-              : key === "estimatedCompletion"
-                ? "estimated_completion"
-                : key
+        fields[NIMET[key] ?? key] = value
+      }
 
-        fields[apiKey] = value
+      if (contactsChanged) {
+        fields.contact_persons = contacts.filter((c) => c.name || c.email || c.phone)
       }
 
       const response = await fetch("/api/tic/projects/edit", {
@@ -206,6 +256,54 @@ export default function EditProject({ projectId, initial }: Props) {
 
         {textField("estimatedCost")}
         {textField("estimatedCompletion")}
+        {textField("apartments")}
+        {textField("floorArea")}
+
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">Rakentamisen aloitus</span>
+          <input
+            type="date"
+            value={values.constructionStart}
+            onChange={(e) => set("constructionStart")(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          />
+        </label>
+
+        {/*
+          * VANHENEMINEN. Hyväksynnässä on ruksi "aseta vanhenemaan", mutta
+          * jos se unohtuu, päivää ei voinut asettaa jälkikäteen millään.
+          * Painike laskee saman säännön mukaan kuin hyväksyntä.
+          */}
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">Vanhenee</span>
+          <input
+            type="date"
+            value={values.expireAt}
+            onChange={(e) => set("expireAt")(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          />
+          <span className="mt-1 flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const d = new Date()
+                d.setFullYear(d.getFullYear() + 1)
+                set("expireAt")(d.toISOString().slice(0, 10))
+              }}
+              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700"
+            >
+              Vuoden kuluttua
+            </button>
+            <button
+              type="button"
+              onClick={() => set("expireAt")("")}
+              disabled={!values.expireAt}
+              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 disabled:opacity-40"
+            >
+              Ei vanhene
+            </button>
+          </span>
+        </label>
       </div>
 
       <label className="mt-4 block">
@@ -218,24 +316,80 @@ export default function EditProject({ projectId, initial }: Props) {
         />
       </label>
 
+      {/*
+        * YHTEYSTIEDOT. Näitä ei voinut korjata missään: väärin poimittu
+        * osoite jäi paikalleen, ja puuttuvan sai lisätä vain lähdettä
+        * korjaamalla. Rivin tyhjentäminen poistaa sen tallennuksessa.
+        */}
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold text-gray-900">Yhteyshenkilöt</h3>
+        <p className="mt-1 text-xs text-gray-600">
+          Tyhjennä rivin kaikki kentät poistaaksesi yhteyshenkilön.
+        </p>
+
+        <div className="mt-3 space-y-3">
+          {contacts.map((c, i) => (
+            <div key={i} className="grid gap-2 sm:grid-cols-4">
+              <input
+                type="text"
+                value={c.name}
+                onChange={(e) => setContact(i, "name")(e.target.value)}
+                placeholder="Nimi"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <input
+                type="text"
+                value={c.title}
+                onChange={(e) => setContact(i, "title")(e.target.value)}
+                placeholder="Nimike"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <input
+                type="email"
+                value={c.email}
+                onChange={(e) => setContact(i, "email")(e.target.value)}
+                placeholder="Sähköposti"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <input
+                type="text"
+                value={c.phone}
+                onChange={(e) => setContact(i, "phone")(e.target.value)}
+                placeholder="Puhelin"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setContacts((current) => [...current, { ...TYHJA_KONTAKTI }])}
+          className="mt-3 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700"
+        >
+          + Lisää yhteyshenkilö
+        </button>
+      </div>
+
       <div className="mt-5 flex items-center gap-3">
         <button
           type="button"
           onClick={save}
-          disabled={saving || changedKeys.length === 0}
+          disabled={saving || muutoksia === 0}
           className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
         >
-          {saving ? "Tallennetaan…" : `Tallenna (${changedKeys.length})`}
+          {saving ? "Tallennetaan…" : `Tallenna (${muutoksia})`}
         </button>
 
         <button
           type="button"
           onClick={() => {
             setValues(initial)
+            setContacts(initialContacts)
             setError(null)
             setSaved(null)
           }}
-          disabled={saving || changedKeys.length === 0}
+          disabled={saving || muutoksia === 0}
           className="rounded-lg border border-gray-300 px-4 py-2 text-sm disabled:opacity-40"
         >
           Peruuta

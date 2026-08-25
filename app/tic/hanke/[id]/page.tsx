@@ -178,8 +178,22 @@ export default async function TicProjectPage({ params, searchParams }: Props) {
             ? String((project as any).estimated_cost)
             : "",
           estimatedCompletion: text((project as any).estimated_completion),
+          apartments: (project as any).apartments ? String((project as any).apartments) : "",
+          floorArea: (project as any).floor_area ? String((project as any).floor_area) : "",
+          /* <input type="date"> vaatii YYYY-MM-DD, ei ISO-aikaleimaa. */
+          constructionStart: text((project as any).construction_start).slice(0, 10),
+          expireAt: text(metadata.expire_at).slice(0, 10),
           additionalInfo: text((project as any).additional_info),
         }}
+        initialContacts={(Array.isArray(metadata.contact_persons)
+          ? metadata.contact_persons
+          : []
+        ).map((c: any) => ({
+          name: text(c?.name),
+          title: text(c?.title),
+          email: text(c?.email),
+          phone: text(c?.phone),
+        }))}
       />
     </main>
   )

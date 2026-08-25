@@ -3,6 +3,13 @@ import { createClient } from "@supabase/supabase-js"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { normalizeLegacyPhase } from "@/lib/projects/phases"
+import { computeManualExpiry } from "@/lib/projects/tenderExpiry"
+import {
+  cleanContacts,
+  cleanString,
+  toIsoDate,
+  toPositiveNumber,
+} from "@/lib/projects/editFields"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,17 +54,15 @@ const TEXT_FIELDS = [
   "estimated_completion",
 ] as const
 
-function cleanString(value: unknown): string | null {
-  if (typeof value !== "string") return null
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? trimmed : null
-}
-
-function toPositiveNumber(value: unknown): number | null {
-  if (value === null || value === undefined || value === "") return null
-  const n = Number(value)
-  return Number.isFinite(n) && n > 0 ? n : null
-}
+/*
+ * PERIAATE: kaikki mitä asiakas näkee, pitää voida korjata.
+ *
+ * Kentät alla lisättiin 25.8.2026, koska ne näkyvät asiakkaan
+ * hankekortilla mutta niitä ei voinut muokata millään sovelluspolulla —
+ * sama vika kuin D-076:ssa, vain eri kentissä.
+ */
+const NUMBER_FIELDS = ["apartments", "floor_area"] as const
+const DATE_FIELDS = ["construction_start"] as const
 
 export async function POST(request: Request) {
   const auth = await verifyAdminRequest(request)
@@ -173,6 +178,88 @@ export async function POST(request: Request) {
     }
   }
 
+  /* Luvut: asuntojen määrä ja kerrosala. */
+  for (const field of NUMBER_FIELDS) {
+    if (!(field in (body?.fields ?? {}))) continue
+    const next = toPositiveNumber(body.fields[field])
+    if (Number(next ?? 0) !== Number((project as any)[field] ?? 0)) {
+      updates[field] = next
+      changed.push(field)
+    }
+  }
+
+  /* Päivämäärät: rakentamisen aloitus. */
+  for (const field of DATE_FIELDS) {
+    if (!(field in (body?.fields ?? {}))) continue
+    const raw = body.fields[field]
+    const next = raw === null || raw === "" ? null : toIsoDate(raw)
+
+    if (raw !== null && raw !== "" && next === null) {
+      return NextResponse.json(
+        { ok: false, error: `Kelvoton päivämäärä (odotettiin YYYY-MM-DD): ${String(raw)}` },
+        { status: 400 }
+      )
+    }
+
+    const nykyinen = String((project as any)[field] ?? "").slice(0, 10) || null
+    if (next !== nykyinen) {
+      updates[field] = next
+      changed.push(field)
+    }
+  }
+
+  /*
+   * Metadataan menevät kentät. Nämä eivät ole sarakkeita, joten ne
+   * kerätään erikseen ja liitetään metadatan yhdistämiseen alempana.
+   */
+  const metaUpdates: Record<string, any> = {}
+  const nykyinenMeta = ((project as any).metadata ?? {}) as Record<string, any>
+
+  /*
+   * VANHENEMISPÄIVÄ. Hyväksynnässä on ruksi "aseta vanhenemaan", mutta
+   * jos se unohtuu, päivää ei voinut asettaa jälkikäteen millään.
+   *
+   * "auto" laskee saman säännön mukaan kuin hyväksyntä
+   * (`computeManualExpiry`), jottei synny kahta erilaista laskentaa.
+   */
+  if ("expire_at" in (body?.fields ?? {})) {
+    const raw = body.fields.expire_at
+    let next: string | null
+
+    if (raw === null || raw === "") next = null
+    else if (raw === "auto") next = computeManualExpiry(nykyinenMeta, (project as any).created_at ?? null)
+    else {
+      const paiva = toIsoDate(raw)
+      if (!paiva) {
+        return NextResponse.json(
+          { ok: false, error: `Kelvoton vanhenemispäivä: ${String(raw)}` },
+          { status: 400 }
+        )
+      }
+      next = new Date(`${paiva}T00:00:00Z`).toISOString()
+    }
+
+    if ((next ?? null) !== (nykyinenMeta.expire_at ?? null)) {
+      metaUpdates.expire_at = next
+      changed.push("expire_at")
+    }
+  }
+
+  /* Yhteystiedot: ainoa paikka jossa väärin poimitun voi korjata käsin. */
+  if ("contact_persons" in (body?.fields ?? {})) {
+    const next = cleanContacts(body.fields.contact_persons)
+    if (next === null) {
+      return NextResponse.json(
+        { ok: false, error: "contact_persons pitää olla lista" },
+        { status: 400 }
+      )
+    }
+    if (JSON.stringify(next) !== JSON.stringify(nykyinenMeta.contact_persons ?? [])) {
+      metaUpdates.contact_persons = next
+      changed.push("contact_persons")
+    }
+  }
+
   if (!changed.length) {
     return NextResponse.json({ ok: true, changed: [], message: "Ei muutoksia" })
   }
@@ -196,6 +283,8 @@ export async function POST(request: Request) {
       metadata: {
         ...((project as any).metadata ?? {}),
         ...(costSource ? { cost_source: costSource } : {}),
+        /* Metadataan menevat kasin muokatut kentat (expire_at, yhteystiedot). */
+        ...metaUpdates,
         ...("additional_info" in updates
           ? { description: updates.additional_info }
           : {}),

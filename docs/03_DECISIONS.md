@@ -5,6 +5,59 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-124 – Kaikki mitä asiakas näkee, pitää voida korjata käsin
+
+Tarve tuli konkreettisesta tilanteesta: hyväksynnässä unohtui ruksata
+"aseta vanhenemaan", eikä päivää voinut asettaa jälkikäteen millään
+sovelluspolulla. Sama koski yhteystietoja — väärin poimitun osoitteen sai
+pois vain kannasta käsin.
+
+**Rajaus on mitattu, ei arvattu.** Vertasin asiakkaan hankekortin
+näyttämiä kenttiä muokattavissa oleviin:
+
+```
+näkyy ja muokattavissa   nimi, maakunta, kaupunki, sijainti, kohdetyyppi,
+                         kustannus, valmistuminen, kuvaus, vaihe,
+                         rakennuttaja, pääurakoitsija
+
+näkyi mutta EI muokattavissa
+  asuntoja               apartments            -> lisätty
+  kerrosala              floor_area            -> lisätty
+  rakentamisen aloitus   construction_start    -> lisätty
+  yhteyshenkilöt         metadata.contact_persons -> lisätty
+  vanhenemispäivä        metadata.expire_at    -> lisätty
+  liittyvät yritykset    metadata.related_companies -> EI vielä
+```
+
+Se on sama vika kuin D-076:ssa, vain eri kentissä: tietoa näytetään
+asiakkaalle, mutta virheen korjaamiseen ei ole polkua.
+
+**Vanheneminen laskee saman säännön mukaan kuin hyväksyntä.** Arvo
+`"auto"` kutsuu `computeManualExpiry`ä, eli tarjousajasta vuosi
+eteenpäin tai vuosi hyväksynnästä. Kahta erilaista laskentaa ei synny.
+Lomakkeessa on lisäksi suora päivämääräkenttä ja "Ei vanhene".
+
+**Tyhjä yhteystietolista on sallittu** — se on ainoa tapa poistaa väärin
+poimittu yhteystieto käsin, ja D-122:n jälkeen tiedämme että sellaisia
+syntyy. Tämä on tietoinen poikkeus vain-lisäävään sääntöön, sama
+perustelu kuin siellä.
+
+**Päivämäärä validoidaan tiukasti.** `construction_start` on
+`date`-sarake: kelvoton arvo kaataisi koko tallennuksen, jolloin muutkin
+samalla kertaa muokatut kentät jäisivät tallentumatta. `new
+Date("2027-02-30")` vierii maaliskuun toiseksi eikä kerro virheestä,
+joten olematon päivä tarkistetaan erikseen.
+
+**Puhtaat apufunktiot omassa moduulissaan** (`lib/projects/editFields.ts`),
+koska reitin tuonti käynnistää Supabase-asiakkaan ja testi kaatuisi
+ympäristömuuttujiin ennen kuin pääsee itse asiaan.
+
+**EI TODENNETTU SELAIMESSA.** Paikallisella palvelimella ei ollut
+kirjautunutta istuntoa, enkä syötä tunnuksia. Varmennettu käännöksellä ja
+12 yksikkötestillä; lomakkeen toiminta on tarkistettava käsin.
+
+---
+
 ### D-123 – Poimija ei saa palauttaa malliosoitetta, eikä nimestä saa keksiä osoitetta
 
 Kannassa oli 29 väärää nimi–osoite-paria (D-122), ja oletin vian olevan

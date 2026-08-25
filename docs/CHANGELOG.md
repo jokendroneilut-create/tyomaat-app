@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Hankkeen kaikki nakyvat kentat muokattavissa (D-124)
+
+Hyvaksynnassa unohtunutta "aseta vanhenemaan" -ruksia ei voinut korjata
+jalkikateen, eika yhteystietoja voinut muokata missaan.
+
+Muokkaukseen lisattiin: asuntojen maara, kerrosala, rakentamisen aloitus,
+vanhenemispaiva ja yhteyshenkilot (nimi, nimike, sahkoposti, puhelin).
+Vanheneminen laskee saman saannon mukaan kuin hyvaksynta. Tyhja
+yhteystietolista on sallittu - se on ainoa tapa poistaa vaarin poimittu
+osoite kasin.
+
+Puuttuu viela: metadata.related_companies.
+
 ### Poimija ei enaa liita malliosoitetta oikeaan nimeen (D-123)
 
 Sivulla oleva OHJE ("sahkoposti: etunimi.sukunimi@rovaniemi.fi")
