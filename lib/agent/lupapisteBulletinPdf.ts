@@ -288,12 +288,50 @@ function labelValue(pdfText: string, label: string): string | null {
    * versaalina ("Eikaavaa TOIMENPIDE Vä…"), jolloin tarkka vertailu ei
    * osunut ja arvo vuoti seuraavaan osioon.
    */
-  const afterLower = after.toLowerCase()
   let end = after.length
   for (const other of BULLETIN_LABELS) {
-    if (other === label) continue
-    const j = afterLower.indexOf(other.toLowerCase())
-    if (j >= 0 && j < end) end = j
+    /*
+     * VAIN OTSIKON OMA KIRJOITUSASU TAI KOKONAAN VERSAALI.
+     *
+     * Ensimmäinen versio vertaili tarkasti ja vuoti versaaliotsikoissa
+     * ("Eikaavaa TOIMENPIDE Vä…"). Korjasin sen 25.8.2026 tekemällä
+     * vertailusta kirjainkokoriippumattoman — ja rikoin sillä pahemman:
+     * otsikkosana esiintyy myös tavallisessa tekstissä, jolloin arvo
+     * katkesi kesken lauseen.
+     *
+     *   "…asuinpientalo 100 k-m² (rakennusoikeudellinen kerrosala 96…"
+     *                                              ^ katkesi tähän
+     *
+     * Mitattu 26.8.2026: 36 kuvausta 309:stä olisi lyhentynyt, pahimmin
+     * 344 merkistä 57:ään. Otsikko on PDF:ssä joko oikein kirjoitettu tai
+     * kokonaan versaali, joten näiden kahden salliminen kattaa molemmat
+     * tapaukset päästämättä läpi leipätekstin sanoja.
+     */
+    for (const muoto of [other, other.toUpperCase()]) {
+      /*
+       * Oma otsikko ohitetaan vain samassa kirjoitusasussa. Versaalitoisto
+       * on aito seuraava osio: juuri siihen arvo vuoti ennen
+       * ("Eikaavaa TOIMENPIDE Väliaikainen rakennus").
+       */
+      if (other === label && muoto === label) continue
+
+      const j = after.indexOf(muoto)
+      if (j < 0 || j >= end) continue
+
+      /*
+       * KAKSOISPISTE EROTTAA LEIPÄTEKSTIN OTSIKOSTA. Lomakkeessa otsikko
+       * on kiinni arvossaan ilman välimerkkiä ("PoikkeamisetMuutostyön"),
+       * joten kaksoispisteen kanssa kyseessä on virke.
+       *
+       * Mitattu 26.8.2026: Toimenpide-kentän arvo alkoi sanoilla
+       * "Poikkeamispäätös: Luvanvaraisuudesta vapautetun…", ja koska
+       * "Poikkeamispäätös" on myös otsikko, katkaisu osui kohtaan 0 ja
+       * tyhjensi koko arvon.
+       */
+      if (after[j + muoto.length] === ":") continue
+
+      end = j
+    }
   }
 
   const value = after.slice(0, end).replace(/\s+/g, " ").trim()
@@ -356,7 +394,35 @@ export function bestBulletinDescription(pdfText: string | null): string | null {
   if (oma) return oma
 
   const f = extractBulletinFields(pdfText)
-  return f.lisaselvitykset ?? f.toimenpide ?? null
+
+  /*
+   * MOLEMMAT, EI KUMPI TAHANSA.
+   *
+   * Aiempi versio valitsi `lisaselvitykset ?? toimenpide`, ja se hukkasi
+   * tietoa kahteen suuntaan:
+   *
+   *   - Kun Lisäselvitykset oli olemassa, Toimenpide katosi. Hanke
+   *     d0901758 näytti 497 merkin kuvauksen, josta puuttui juuri se
+   *     osuus joka kertoo mitä tontilla tapahtuu.
+   *   - Kun Lisäselvitykset oli lyhyt lomakekenttä ("Lupatunnus:
+   *     26-0039-RL"), se voitti kuvaavan Toimenpiteen ("Vapaa-ajan
+   *     asunnon rakentaminen ja vanhojen rakennusten purkaminen").
+   *
+   * Toimenpide kertoo MITÄ tehdään ja Lisäselvitykset MITEN — myyjälle
+   * molemmat ovat tarpeen, joten ne ketjutetaan. Järjestys on tämä,
+   * koska toimenpide on tiivistys ja luetaan ensin.
+   */
+  const osat = [f.toimenpide, f.lisaselvitykset]
+    .map((s) => String(s ?? "").trim())
+    .filter(Boolean)
+
+  if (!osat.length) return null
+
+  /* Sama teksti molemmissa kentissä on yleistä; sitä ei toisteta. */
+  if (osat.length === 2 && osat[1].startsWith(osat[0])) return osat[1]
+  if (osat.length === 2 && osat[0].startsWith(osat[1])) return osat[0]
+
+  return osat.join("\n\n")
 }
 
 /*

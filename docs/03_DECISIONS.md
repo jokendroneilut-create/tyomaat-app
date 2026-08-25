@@ -5,6 +5,69 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-125 – Kuulutuksen kuvaus on Toimenpide JA Lisäselvitykset, ei kumpi tahansa
+
+Hanke d0901758 näytti 497 merkin kuvauksen, josta puuttui olennaisin osa:
+`Lisäselvitykset`, joka kertoo mitä tontilla oikeasti tapahtuu
+(*"Tontilta puretaan vanha ammattioppilaitos… puiden kaataminen,
+maanrakennustyöt…"*). Poimija osasi kentän — vika oli siinä mitä
+kuvaukseksi valittiin.
+
+**Kolme erillistä vikaa, jotka löytyivät vasta rivi riviltä lukemalla.**
+
+**1. Valinta hukkasi tietoa molempiin suuntiin.**
+`bestBulletinDescription` palautti `lisaselvitykset ?? toimenpide`. Kun
+Lisäselvitykset oli olemassa, Toimenpide katosi; kun se oli lyhyt
+lomakekenttä (*"Lupatunnus: 26-0039-RL"*), se voitti kuvaavan
+Toimenpiteen. Nyt ne ketjutetaan: Toimenpide kertoo **mitä** tehdään ja
+Lisäselvitykset **miten**, ja myyjä tarvitsee molemmat.
+
+**2. Oma eilinen korjaukseni rikkoi katkaisun.** Tein 25.8. otsikkoon
+katkaisusta kirjainkokoriippumattoman, jotta versaaliotsikko ei vuoda.
+Se katkaisi arvon myös leipätekstin sanaan:
+
+```
+"…asuinpientalo 100 k-m² (rakennusoikeudellinen kerrosala 96…"
+                                       ^ katkesi tähän
+```
+
+Mitattu 26.8.2026: **36 kuvausta 309:stä olisi lyhentynyt**, pahimmin
+344 merkistä 57:ään. Nyt katkaisu vaatii otsikon oman kirjoitusasun tai
+kokonaan versaalin — molemmat tapaukset toimivat.
+
+Kaksi tarkennusta samaan: kaksoispisteellinen sana on virke eikä otsikko
+(*"Poikkeamispäätös: Luvanvaraisuudesta…"* tyhjensi koko arvon), ja oma
+otsikko ohitetaan vain samassa kirjoitusasussa — versaalitoisto on aito
+seuraava osio.
+
+**3. Takautuva ajo ohitti juuri sen rivin jota se olisi eniten
+tarvinnut.** Ohitusehto vertasi kuvauksen **40 ensimmäistä merkkiä**, ja
+koska kuvaus alkaa lähes aina samalla Toimenpide-lauseella, pidentynyt
+teksti tulkittiin "jo mukana". Sen takia sama hanke jäi 497 merkkiin
+vaikka lähteessä oli 2 218. Nyt ohitetaan vain jos koko teksti on jo
+mukana, ja vanha lyhyempi versio korvataan omalta kohdaltaan.
+
+**Tulos.**
+
+```
+lähdedokumentteja päivitetty   122
+jonon ehdokkaita                36    622 -> 1 459 merkkiä
+näkyviä hankkeita               25    736 -> 1 594 merkkiä
+esimerkkihanke                        497 -> 2 537 merkkiä
+```
+
+**SISÄLTÖÄ EI KORVATA TYHJÄLLÄ.** Poimija hylkää joskus arvon jonka se
+ennen hyväksyi (yksi dokumentti 309:stä), ja tyhjennys menettäisi ainoan
+kuvauksen. Vanha teksti on parempi kuin ei mitään; jos se on väärin, sen
+näkee ja korjaa käsin (D-124).
+
+**Opetus.** Kuivaharjoituksen lukeminen riveittäin esti tässä kolme
+virhettä: ilman sitä olisin korvannut 218 merkin kuvauksen 48 merkin
+katkelmalla ja pitänyt sitä parannuksena, koska yhteenvetoluvut
+näyttivät hyviltä.
+
+---
+
 ### D-124 – Kaikki mitä asiakas näkee, pitää voida korjata käsin
 
 Tarve tuli konkreettisesta tilanteesta: hyväksynnässä unohtui ruksata

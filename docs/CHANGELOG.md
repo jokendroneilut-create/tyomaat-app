@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Kuulutuksen kuvaukseen sekä Toimenpide että Lisaselvitykset (D-125)
+
+Kuvaus valitsi toisen kentan ja hukkasi toisen, joten olennaisin osa -
+mita tontilla oikeasti tapahtuu - jai pois. Nyt molemmat ketjutetaan.
+
+Samalla korjattiin kaksi virhetta katkaisussa: eilinen
+kirjainkokoriippumaton vertailu katkaisi arvon leipatekstin sanaan
+(36 kuvausta 309:sta olisi lyhentynyt), ja takautuva ajo ohitti rivin
+jos sen 40 ensimmaista merkkia tasmasivat.
+
+Paivitetty: 122 lahdedokumenttia, 36 jonon ehdokasta (622 -> 1 459 mk)
+ja 25 nakyvaa hanketta (736 -> 1 594 mk).
+
 ### Hankkeen kaikki nakyvat kentat muokattavissa (D-124)
 
 Hyvaksynnassa unohtunutta "aseta vanhenemaan" -ruksia ei voinut korjata

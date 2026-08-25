@@ -80,10 +80,31 @@ async function main() {
 
       const nykyinen = String(p.metadata?.description ?? "").trim()
 
-      /* Jo mukana - ei tehda mitaan. */
-      if (nykyinen.includes(uusi.slice(0, Math.min(40, uusi.length)))) { ohitettu++; continue }
+      /*
+       * ALKUOSAN VERTAILU EI RIITA.
+       *
+       * Ensimmainen versio ohitti rivin jos nykyinen teksti sisalsi
+       * kuvauksen 40 ensimmaista merkkia. Kuvaus alkaa lahes aina samalla
+       * Toimenpide-lauseella, joten pidentynyt kuvaus tulkittiin "jo
+       * mukana": hanke d0901758 jai 497 merkkiin vaikka lahteessa oli
+       * 2 218, ja juuri puuttuva osa (Lisaselvitykset) oli se olennainen.
+       */
+      if (nykyinen.includes(uusi)) { ohitettu++; continue }
 
-      const yhdistetty = nykyinen ? `${nykyinen}\n\n${uusi}` : uusi
+      /*
+       * Resolveri kokoaa kuvauksen osista ja merkitsee kuulutusosuuden
+       * omalla otsikollaan. Vanha lyhyempi versio korvataan siita kohdasta
+       * eteenpain, jottei sama teksti tule kahdesti.
+       */
+      const MERKKI = "Hankkeen kuvaus hakemuksella:"
+      const merkkiKohta = nykyinen.indexOf(MERKKI)
+
+      const yhdistetty =
+        merkkiKohta >= 0
+          ? `${nykyinen.slice(0, merkkiKohta + MERKKI.length)}\n${uusi}`
+          : nykyinen
+            ? `${nykyinen}\n\n${uusi}`
+            : uusi
 
       muuttuu++
       merkitEnnen += nykyinen.length

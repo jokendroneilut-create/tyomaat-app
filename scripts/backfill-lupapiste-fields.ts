@@ -66,6 +66,15 @@ async function main() {
     const kentat = extractBulletinFields(teksti)
 
     const vanha = d.raw_payload.bulletin_description ?? null
+
+    /*
+     * SISALTOA EI KORVATA TYHJALLA. Poimija hylkaa joskus arvon jonka se
+     * ennen hyvaksyi (26.8.2026: yksi dokumentti 309:sta), ja silloin
+     * tyhjennys menettaisi ainoan kuvauksen. Vanha teksti on parempi kuin
+     * ei mitaan; jos se on vaarin, sen nakee ja korjaa kasin.
+     */
+    if (!kuvaus && vanha) continue
+
     if (!kuvaus && !kentat.kaavatilanne && !kentat.pintaAla && !vanha) continue
     if (vanha === kuvaus) continue
 
