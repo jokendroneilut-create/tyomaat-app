@@ -78,9 +78,17 @@ Opetus on toistuva: **kysy missä näkymässä ongelma nähdään**, älä pää
 sitä kentän nimestä. Kaksi eri sivua muokkaa kahta eri taulua, ja
 kenttien nimet ovat samat.
 
-**EI TODENNETTU SELAIMESSA.** Paikallisella palvelimella ei ollut
-kirjautunutta istuntoa, enkä syötä tunnuksia. Varmennettu käännöksellä ja
-12 yksikkötestillä; lomakkeen toiminta on tarkistettava käsin.
+**TODENNUS.** En voinut ajaa tätä selaimessa: paikallisella palvelimella
+ei ollut kirjautunutta istuntoa, enkä syötä tunnuksia. Varmennettu
+käännöksellä ja 12 yksikkötestillä, ja **omistaja todensi toiminnan
+käsin 25.8.2026** — sekä muokkauslomakkeet että `/projects`-sivun
+korjauslinkki.
+
+Kirjaan tämän ääneen, koska kaksi ensimmäistä yritystä meni ohi maalin:
+ensin väärä sivu (`/tic/hanke` kun ongelma oli `/tic/projects`), sitten
+oikea editori johon ei päässyt mistään. Automaattinen todennus ei olisi
+kumpaakaan löytänyt, koska molemmat käänsivät ja testit menivät läpi —
+vika oli siinä mitä käyttäjä pystyi tekemään, ei siinä toimiiko koodi.
 
 ---
 

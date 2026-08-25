@@ -29,6 +29,8 @@ Asiakkaan /projects-sivun modaaliin lisattiin yllapitajalle nakyva
 "Muokkaa"-linkki: virhe huomataan siella, mutta korjaukseen ei johtanut
 mistaan polkua.
 
+Todennettu kasin 25.8.2026: muokkauslomakkeet ja korjauslinkki toimivat.
+
 Puuttuu viela: metadata.related_companies.
 
 ### Poimija ei enaa liita malliosoitetta oikeaan nimeen (D-123)
