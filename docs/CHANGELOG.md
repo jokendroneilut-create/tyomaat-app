@@ -22,6 +22,13 @@ Vanheneminen laskee saman saannon mukaan kuin hyvaksynta. Tyhja
 yhteystietolista on sallittu - se on ainoa tapa poistaa vaarin poimittu
 osoite kasin.
 
+Yhteystiedot myos jonon ehdokkaalla (/tic/projects/[id]), jotta vaarin
+poimittua ei tarvitse korjata kahdesti. Taulukko on jaettu komponentti.
+
+Asiakkaan /projects-sivun modaaliin lisattiin yllapitajalle nakyva
+"Muokkaa"-linkki: virhe huomataan siella, mutta korjaukseen ei johtanut
+mistaan polkua.
+
 Puuttuu viela: metadata.related_companies.
 
 ### Poimija ei enaa liita malliosoitetta oikeaan nimeen (D-123)

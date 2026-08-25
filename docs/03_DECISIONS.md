@@ -52,6 +52,32 @@ joten olematon päivä tarkistetaan erikseen.
 koska reitin tuonti käynnistää Supabase-asiakkaan ja testi kaatuisi
 ympäristömuuttujiin ennen kuin pääsee itse asiaan.
 
+
+**JATKO 25.8.2026: väärä näkymä ensin, sitten oikea reitti.**
+
+Laajensin ensin `/tic/hanke/[id]`:n eli hyväksytyn hankkeen editorin,
+mutta omistaja oli sivulla `/tic/projects/[id]` — jonon ehdokkaan
+katselmoinnissa, joka kirjoittaa `potential_projects`iin. Editori oli
+oikea, mutta **sinne ei päässyt mistään.**
+
+Kaksi puutetta korjattiin:
+
+1. **Yhteystiedot myös jonossa.** Ehdokkaan editorissa niitä ei voinut
+   muokata lainkaan, joten väärin poimittu osoite siirtyi hyväksynnässä
+   hankkeelle ja virhe piti korjata kahdesti. Taulukko on nyt jaettu
+   komponentti (`app/tic/components/ContactsEditor.tsx`), koska kaksi
+   erillistä toteutusta erkaantuisi ja korjaus jäisi toiseen.
+2. **Korjauslinkki asiakkaan näkymästä.** Virhe huomataan
+   `/projects`-sivulla — siellä asiakas sen näkee — mutta sivulla ei
+   ollut minkäänlaista polkua muokkaukseen, ei edes ylläpitäjälle.
+   Modaalissa on nyt "Muokkaa", joka näkyy vain ylläpitäjälle ja avaa
+   hankkeen editorin. Ilman sitä korjaaminen vaati id:n kaivamisen
+   osoiteriviltä.
+
+Opetus on toistuva: **kysy missä näkymässä ongelma nähdään**, älä päättele
+sitä kentän nimestä. Kaksi eri sivua muokkaa kahta eri taulua, ja
+kenttien nimet ovat samat.
+
 **EI TODENNETTU SELAIMESSA.** Paikallisella palvelimella ei ollut
 kirjautunutta istuntoa, enkä syötä tunnuksia. Varmennettu käännöksellä ja
 12 yksikkötestillä; lomakkeen toiminta on tarkistettava käsin.

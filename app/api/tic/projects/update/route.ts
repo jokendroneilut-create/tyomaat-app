@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { cleanContacts } from "@/lib/projects/editFields"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 
 const supabaseAdmin = createClient(
@@ -89,6 +90,25 @@ export async function POST(request: Request) {
   const existingMetadata = potentialProject.metadata ?? {}
 
   /*
+   * YHTEYSHENKILÖT. Näitä ei voinut korjata jonossa lainkaan: väärin
+   * poimittu osoite jäi paikalleen ja siirtyi hyväksynnässä hankkeelle,
+   * jolloin virhe piti korjata kahdesti — kerran täällä ja kerran
+   * hyväksynnän jälkeen (D-124).
+   *
+   * Kenttä käsitellään vain jos se on pyynnössä: vanhat kutsut eivät
+   * lähetä sitä, eikä puuttuva kenttä saa tyhjentää olemassa olevia.
+   */
+  const contactsGiven = "contactPersons" in (body ?? {})
+  const cleanedContacts = contactsGiven ? cleanContacts(body.contactPersons) : null
+
+  if (contactsGiven && cleanedContacts === null) {
+    return NextResponse.json(
+      { ok: false, error: "contactPersons pitää olla lista" },
+      { status: 400 }
+    )
+  }
+
+  /*
    * Säilytä lähteen alkuperäinen otsikko ensimmäisellä käsin muokkauskerralla.
    * Duplikaattivertailu (projectMatcher) nojaa monilla lähteillä (uutiset,
    * tiedotteet, kilpailut) pelkkään otsikkoon, koska niillä ei ole permit-/
@@ -117,6 +137,7 @@ export async function POST(request: Request) {
         builder,
         related_companies: relatedCompanies,
         phase_hint: phaseHint,
+        ...(cleanedContacts ? { contact_persons: cleanedContacts } : {}),
         ...(sourceTitle ? { source_title: sourceTitle } : {}),
         manually_edited_at: new Date().toISOString(),
       },

@@ -179,6 +179,37 @@ export default function Projects() {
   const pageSize = isMobile ? 15 : 30
   const mapHeight = isMobile ? 360 : 520
 
+  /*
+   * Ylläpitäjän tunnistus, jotta korjauslinkki näkyy vain hänelle.
+   * Sama tapa kuin Navbarissa: istunnon token ja /api/admin/is-admin.
+   */
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    let peruttu = false
+
+    const tarkista = async () => {
+      try {
+        const { data } = await supabase.auth.getSession()
+        const token = data.session?.access_token
+        if (!token) return
+
+        const res = await fetch('/api/admin/is-admin', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const json = await res.json()
+        if (!peruttu) setIsAdmin(json?.isAdmin === true)
+      } catch {
+        /* Ylläpitolinkin puuttuminen ei saa rikkoa asiakkaan näkymää. */
+      }
+    }
+
+    tarkista()
+    return () => {
+      peruttu = true
+    }
+  }, [])
+
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [loadDebug, setLoadDebug] = useState('Aloitetaan lataus...')
@@ -1250,6 +1281,28 @@ setTeamModeEnabled(true)
   className="projects-btn"
   style={{ background: '#e5e7eb' }}
 />
+
+                {/*
+                  * YLLÄPITÄJÄN OIKOPOLKU KORJAUKSEEN.
+                  *
+                  * Virhe huomataan täällä — tässä näkymässä asiakas sen
+                  * näkee — mutta korjaus tehdään hankkeen omalla sivulla,
+                  * eikä sinne johtanut mistään linkkiä. Ilman tätä väärän
+                  * tiedon korjaaminen vaati id:n kaivamisen osoiteriviltä.
+                  *
+                  * Näkyy vain ylläpitäjälle; asiakkaalle painiketta ei ole.
+                  */}
+                {isAdmin && (
+                  <a
+                    href={`/tic/hanke/${selected.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="projects-btn"
+                    style={{ background: '#111827', color: '#fff' }}
+                  >
+                    Muokkaa
+                  </a>
+                )}
 
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                   

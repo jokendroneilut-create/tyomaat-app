@@ -1,6 +1,10 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import ContactsEditor, {
+  contactsPayload,
+  type EditableContact,
+} from "@/app/tic/components/ContactsEditor"
 import { useState } from "react"
 import { CANONICAL_PHASES } from "@/lib/projects/phases"
 import { REGIONS } from "@/lib/geo/municipalities"
@@ -17,12 +21,6 @@ const PHASE_OPTIONS = CANONICAL_PHASES.map((p) => p.label)
  * päätyneet hankkeelle.
  */
 
-export type EditableContact = {
-  name: string
-  title: string
-  email: string
-  phone: string
-}
 
 type Props = {
   projectId: string
@@ -64,7 +62,6 @@ const FIELD_LABELS: Record<keyof Props["initial"], string> = {
   additionalInfo: "Kuvaus",
 }
 
-const TYHJA_KONTAKTI: EditableContact = { name: "", title: "", email: "", phone: "" }
 
 export default function EditProject({ projectId, initial, initialContacts }: Props) {
   const router = useRouter()
@@ -116,11 +113,8 @@ export default function EditProject({ projectId, initial, initialContacts }: Pro
   const set = (key: keyof Props["initial"]) => (value: string) =>
     setValues((current) => ({ ...current, [key]: value }))
   const contactsChanged =
-    JSON.stringify(contacts.filter((c) => c.name || c.email || c.phone)) !==
-    JSON.stringify(initialContacts)
+    JSON.stringify(contactsPayload(contacts)) !== JSON.stringify(initialContacts)
 
-  const setContact = (i: number, key: keyof EditableContact) => (value: string) =>
-    setContacts((current) => current.map((c, j) => (j === i ? { ...c, [key]: value } : c)))
 
   const changedKeys = (Object.keys(values) as (keyof Props["initial"])[]).filter(
     (key) => values[key] !== initial[key]
@@ -167,7 +161,7 @@ export default function EditProject({ projectId, initial, initialContacts }: Pro
       }
 
       if (contactsChanged) {
-        fields.contact_persons = contacts.filter((c) => c.name || c.email || c.phone)
+        fields.contact_persons = contactsPayload(contacts)
       }
 
       const response = await fetch("/api/tic/projects/edit", {
@@ -316,59 +310,8 @@ export default function EditProject({ projectId, initial, initialContacts }: Pro
         />
       </label>
 
-      {/*
-        * YHTEYSTIEDOT. Näitä ei voinut korjata missään: väärin poimittu
-        * osoite jäi paikalleen, ja puuttuvan sai lisätä vain lähdettä
-        * korjaamalla. Rivin tyhjentäminen poistaa sen tallennuksessa.
-        */}
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-gray-900">Yhteyshenkilöt</h3>
-        <p className="mt-1 text-xs text-gray-600">
-          Tyhjennä rivin kaikki kentät poistaaksesi yhteyshenkilön.
-        </p>
-
-        <div className="mt-3 space-y-3">
-          {contacts.map((c, i) => (
-            <div key={i} className="grid gap-2 sm:grid-cols-4">
-              <input
-                type="text"
-                value={c.name}
-                onChange={(e) => setContact(i, "name")(e.target.value)}
-                placeholder="Nimi"
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-              <input
-                type="text"
-                value={c.title}
-                onChange={(e) => setContact(i, "title")(e.target.value)}
-                placeholder="Nimike"
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-              <input
-                type="email"
-                value={c.email}
-                onChange={(e) => setContact(i, "email")(e.target.value)}
-                placeholder="Sähköposti"
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-              <input
-                type="text"
-                value={c.phone}
-                onChange={(e) => setContact(i, "phone")(e.target.value)}
-                placeholder="Puhelin"
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-            </div>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setContacts((current) => [...current, { ...TYHJA_KONTAKTI }])}
-          className="mt-3 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700"
-        >
-          + Lisää yhteyshenkilö
-        </button>
+        <ContactsEditor contacts={contacts} onChange={setContacts} disabled={saving} />
       </div>
 
       <div className="mt-5 flex items-center gap-3">

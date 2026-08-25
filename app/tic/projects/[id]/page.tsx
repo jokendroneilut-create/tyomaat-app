@@ -140,6 +140,15 @@ export default async function CandidateDetailPage({ params }: Props) {
             buildingType: metadata.building_type ?? "",
             phaseHint: metadata.phase_hint ?? metadata.decision_status ?? "",
           }}
+          initialContacts={(Array.isArray(metadata.contact_persons)
+            ? metadata.contact_persons
+            : []
+          ).map((c: any) => ({
+            name: String(c?.name ?? ""),
+            title: String(c?.title ?? ""),
+            email: String(c?.email ?? ""),
+            phone: String(c?.phone ?? ""),
+          }))}
           sources={metadata.field_sources ?? {}}
           streetHint={metadata.street_hint ?? null}
         />

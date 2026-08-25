@@ -2,6 +2,10 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import ContactsEditor, {
+  contactsPayload,
+  type EditableContact,
+} from "@/app/tic/components/ContactsEditor"
 import { CANONICAL_PHASES } from "@/lib/projects/phases"
 import { REGIONS } from "@/lib/geo/municipalities"
 
@@ -20,6 +24,12 @@ type Props = {
     buildingType: string
     phaseHint: string
   }
+  /*
+   * Yhteyshenkilot: naita ei voinut korjata jonossa lainkaan, joten vaarin
+   * poimittu osoite siirtyi hyvaksynnassa hankkeelle ja virhe piti korjata
+   * kahdesti (D-124).
+   */
+  initialContacts: EditableContact[]
   /*
    * Kentän alkuperä: mistä arvo on peräisin. Ilman tätä katselmoija
    * hyväksyy sokkona — esikatselu näyttää arvot muttei sitä, tuliko kenttä
@@ -64,6 +74,7 @@ function Source({ value }: { value?: string | null }) {
 export default function EditableCandidate({
   candidateId,
   initial,
+  initialContacts,
   sources = {},
   streetHint,
 }: Props) {
@@ -81,6 +92,7 @@ export default function EditableCandidate({
   const [relatedCompanies, setRelatedCompanies] = useState(initial.relatedCompanies)
   const [buildingType, setBuildingType] = useState(initial.buildingType)
   const [phaseHint, setPhaseHint] = useState(initial.phaseHint)
+  const [contacts, setContacts] = useState<EditableContact[]>(initialContacts)
 
   function cancelEdit() {
     setTitle(initial.title)
@@ -92,6 +104,7 @@ export default function EditableCandidate({
     setRelatedCompanies(initial.relatedCompanies)
     setBuildingType(initial.buildingType)
     setPhaseHint(initial.phaseHint)
+    setContacts(initialContacts)
     setError(null)
     setEditing(false)
   }
@@ -115,6 +128,7 @@ export default function EditableCandidate({
           relatedCompanies,
           buildingType,
           phaseHint,
+          contactPersons: contactsPayload(contacts),
         }),
       })
 
@@ -309,6 +323,10 @@ export default function EditableCandidate({
             onChange={(e) => setBuildingType(e.target.value)}
           />
         </label>
+      </div>
+
+      <div className="mt-5 border-t border-gray-200 pt-4">
+        <ContactsEditor contacts={contacts} onChange={setContacts} disabled={saving} />
       </div>
 
       <div className="mt-4 flex gap-2">
