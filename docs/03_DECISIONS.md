@@ -5,6 +5,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-127 – Haulla ei ollut aikabudjettia, vain tuonnilla
+
+`Tampereen päätökset` oli neljässä ajossa onnistunut kerran eikä
+tuottanut mitään 18 vuorokauteen. Virhe oli aina sama: *"Ajo ylitti 90
+sekuntia (haku + tuonti)"*.
+
+**Mitattu 26.8.2026 ajamalla haku erikseen:**
+
+```
+tampere_paatokset     HAKU 84,4 s   18 kandidaattia
+rovaniemi_paatokset   HAKU 29,7 s   26 kandidaattia
+```
+
+Pelkkä haku söi **94 % 90 sekunnin rajasta**, ja tuonnille jäi kuusi
+sekuntia. Vika ei siis ollut tuonnissa — toisin kuin STT:llä (D-067),
+jossa sama oire johtui päinvastaisesta syystä.
+
+**Suoja oli olemassa mutta väärässä paikassa.** `legacyFetchCollector`
+katkaisee tuonnin siististi 70 sekunnissa (`IMPORT_BUDGET_MS`), mutta
+haulla ei ollut mitään rajaa. Hidas haku ehti siis kuluttaa koko
+lähdekohtaisen katkaisun ennen kuin siisti mekanismi pääsi alkuun.
+
+CaseM-haku on silmukka — hakusanat × 5 sivua + enintään 60
+yksityiskohtahakua — joten se voidaan katkaista kesken: jokainen kierros
+lisää valmiin kandidaatin listaan. Budjetti on **55 s**, mikä jättää
+tuonnille noin 35 s.
+
+**HAKUSANOJA KIERRÄTETÄÄN.** Ilman sitä katkaisu osuisi joka ajolla
+samaan kohtaan ja listan loppupää jäisi ajamatta — sama näännytys jonka
+lähdekohtainen katto aiheutti Väylävirastolle (D-103). Aloituskohta
+siirtyy vuorokausittain.
+
+**Tulos mitattuna:**
+
+```
+ennen    84,4 s   18 kandidaattia   kaatui katkaisuun joka kerta
+jälkeen  56,5 s   27 kandidaattia   mahtuu budjettiin
+```
+
+Kandidaatteja tuli enemmän kuin ennen, koska kierrätys aloitti eri
+hakusanasta. Rovaniemi ei muuttunut (23,2 s).
+
+**Sivuhavainto: mitoituksen oletus on vanhentunut.** `SOURCE_TIMEOUT_MS`
+perusteltiin sillä että "yksi ajo käsittelee 14 lähdettä", mutta
+`maxSourceCount` on nyt 20. Per lähde jää siis 25 s eikä 35 s. Se
+liittyy erikseen käsiteltävään havaintoon, että 9 % keräysajoista jää
+vajaaksi.
+
+---
+
 ### D-126 – Kohdesivun aikataulu voittaa listauksen "käynnissä"-merkinnän
 
 Ehdokas "Varkauden Sote-keskus" oli jonossa vaiheessa *Rakenteilla*,

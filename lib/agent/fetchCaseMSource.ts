@@ -27,6 +27,30 @@ const MAX_DETAIL_FETCHES_PER_RUN = 60
 const RECENCY_MONTHS = 18
 
 /*
+ * HAUN AIKABUDJETTI.
+ *
+ * Lähdekohtainen katkaisu on 90 s ja se kattaa haun JA tuonnin
+ * (`sourceWorker.SOURCE_TIMEOUT_MS`). Tuonnilla on jo oma siisti budjetti
+ * (`legacyFetchCollector.IMPORT_BUDGET_MS`, 70 s), mutta haulla ei ollut
+ * mitään — joten hidas haku söi koko rajan ennen kuin tuonti ehti alkaa.
+ *
+ * Mitattu 26.8.2026: `tampere_paatokset` haku kesti **84,4 s** ja palautti
+ * 18 kandidaattia. Tuonnille jäi 6 sekuntia, ja lähde kaatui
+ * aikakatkaisuun joka kerta: neljä ajoa, yksi onnistuminen, ei mitään
+ * 18 vuorokauteen. Sama kuvio kuin STT:llä (D-067) — katkaisu oli
+ * pienempi kuin mitä lähde tarvitsi.
+ *
+ * Haku on silmukka: hakusanat × 5 sivua + enintään 60 yksityiskohtahakua.
+ * Se voidaan katkaista siististi kesken, koska jokainen kierros lisää
+ * valmiin kandidaatin listaan.
+ *
+ * 55 s jättää tuonnille noin 35 s 90 sekunnin rajasta. Vertailukohta:
+ * `rovaniemi_paatokset` haki 26 kandidaattia 29,7 sekunnissa, eli
+ * tavallinen kunta mahtuu budjettiin vaivatta.
+ */
+const FETCH_BUDGET_MS = 55 * 1000
+
+/*
  * Hakusanat ovat Dynastyn CONSTRUCTION_SIGNALS-listan ydin. Ne on jo mitattu
  * toimiviksi kuuden kunnan aineistolla, joten niitä ei arvata uudelleen.
  * Lista on lyhyempi kuin Dynastyssa, koska tässä jokainen sana on oma
@@ -264,8 +288,26 @@ export function createCaseMFetcher(config: CaseMConfig) {
     const seen = new Set<string>()
     let detailFetches = 0
 
-    for (const term of SEARCH_TERMS) {
+    const deadline = Date.now() + FETCH_BUDGET_MS
+    let keskeytyi: string | null = null
+
+    /*
+     * HAKUSANOJA KIERRÄTETÄÄN, JOTTEI BUDJETTI NÄÄNNYTÄ LOPPUPÄÄTÄ.
+     *
+     * Ilman kierrätystä katkaisu osuisi joka ajolla samaan kohtaan, ja
+     * listan viimeiset hakusanat eivät tulisi koskaan ajetuiksi — sama
+     * näännytys jonka lähdekohtainen katto aiheutti Väylävirastolle
+     * (D-103) ja Kreatelle. Aloituskohta siirtyy vuorokausittain, joten
+     * jokainen sana tulee vuorollaan ensimmäiseksi.
+     */
+    const siirto = Math.floor(Date.now() / 86_400_000) % SEARCH_TERMS.length
+    const termit = [...SEARCH_TERMS.slice(siirto), ...SEARCH_TERMS.slice(0, siirto)]
+
+    for (const term of termit) {
+      if (Date.now() > deadline) { keskeytyi = term; break }
+
       for (let page = 1; page <= MAX_PAGES_PER_TERM; page++) {
+        if (Date.now() > deadline) { keskeytyi = term; break }
         const url = `${base}/fi-FI/haku?n=${config.siteId}&d=1&s=${encodeURIComponent(
           term
         )}&o=Rank&page=${page}`
@@ -291,6 +333,14 @@ export function createCaseMFetcher(config: CaseMConfig) {
 
           if (!isConstructionSubject(hit.title)) continue
           if (detailFetches >= MAX_DETAIL_FETCHES_PER_RUN) continue
+
+          /*
+           * Yksityiskohtahaku on kalleinta työtä (60 kpl × ~1 s), joten
+           * budjetti tarkistetaan juuri ennen sitä. Osuma jää tälle
+           * kierrokselle poimimatta, mutta seuraava ajo aloittaa eri
+           * hakusanasta ja tavoittaa sen.
+           */
+          if (Date.now() > deadline) { keskeytyi = term; break }
 
           detailFetches++
           const itemHtml = await getHtml(`${base}${hit.path}`)
@@ -347,6 +397,19 @@ export function createCaseMFetcher(config: CaseMConfig) {
 
         if (hits.length < RESULTS_PER_PAGE) break
       }
+    }
+
+    /*
+     * Kesken jäänyt haku kirjataan lokiin. Ilman merkintää osittainen ajo
+     * näyttäisi samalta kuin täysi, ja hiljainen katkaisu on juuri se vika
+     * jota tässä korjataan.
+     */
+    if (keskeytyi) {
+      console.warn(
+        `fetchCaseM: aikabudjetti (${Math.round(FETCH_BUDGET_MS / 1000)} s) tayttyi ` +
+          `(${config.sourceName}) hakusanassa "${keskeytyi}", ` +
+          `${results.length} kandidaattia, ${detailFetches} yksityiskohtahakua`
+      )
     }
 
     return results
