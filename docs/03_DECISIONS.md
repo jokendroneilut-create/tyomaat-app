@@ -5,6 +5,55 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-128 – Tiedotelähteen kaupunkipäättelyä EI muuteta: virhe on 2,3 % eikä sitä voi erottaa
+
+Kaksi yhdistymistä paljasti väärän kaupungin: *Luolavuoren koulu*
+(Turku) ja *Marjoniemen yhtenäiskoulu* (Kouvola) oli molemmat merkitty
+Helsinkiin, molemmat SRV:n tiedotteista. Havainto oli oikea, mutta
+päättelin siitä liikaa: väitin että **SRV merkitsee 56 % ehdokkaistaan
+Helsinkiin** ja että se on systemaattinen virhe.
+
+**Osuus ei ole virheaste.** SRV rakentaa aidosti paljon Helsinkiin.
+Näytteet luettuna rungosta luetut Helsingit olivat pääosin oikein:
+Kruunuvuorenranta, Pasilan virastokeskus, Myllypuro, Itämerentori — ja
+Torihotelli sai oikein Oulun.
+
+**Oikea mittari on erimielisyys yhdistymisessä**, koska hanke on
+tunnistettu samaksi muilla perusteilla ja sen kaupunki tulee eri
+lähteestä:
+
+```
+lahde        vertailtu   eri mielta
+stt_haku          73        4   (5 %)
+srv               10        2   (20 %, pieni otos)
+kaikki muut      176        0   (0 %)
+yhteensa         259        6   (2,3 %)
+```
+
+Erimielisyys on siis olemassa ja keskittyy tiedotelähteisiin, mutta se
+on 2,3 % eikä 56 %.
+
+**KAKSI KORJAUSHYPOTEESIA TESTATTIIN JA MOLEMMAT KAATUIVAT.**
+
+1. *"Tunnistin ei osaa taivutusmuotoja, siksi se putoaa runkoon."*
+   Väärä: `detectCityFromText("Tekovalle uusi sopimus – Raaseporiin
+   rakennetaan")` palauttaa oikein Raaseporin.
+2. *"Väärä kaupunki on tiedotteen lopussa yhtiön vakiotekstissä, joten
+   lue vain alkuosa."* Väärä: osuman mediaanisijainti on **10 %**
+   rungon pituudesta ja 411 osumaa 621:stä on ensimmäisessä
+   neljänneksessä. Oikeat ja väärät ovat samassa kohdassa.
+
+**EI MUUTETA.** Ilman mitattua erotinta muutos olisi arvaus, ja tässä
+kohdassa arvaukset on hylätty ennenkin (D-104: kolme yhteystietojen
+kierrätysmallia, D-118-alue: vartalointi kahdesti).
+
+**Lieventävä seikka on jo olemassa:** yhdistyessään ehdokas ei muuta
+hankkeen kaupunkia, joten nuo kuusi eivät vahingoita mitään. Riski
+koskee vain ehdokkaita jotka eivät yhdisty — ja niiden kaupungin voi nyt
+korjata käsin katselmoinnissa (D-124).
+
+---
+
 ### D-127 – Haulla ei ollut aikabudjettia, vain tuonnilla
 
 `Tampereen päätökset` oli neljässä ajossa onnistunut kerran eikä
