@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Ajojen ja lahteiden aikabudjetit korjattu (D-127, D-129)
+
+Tampereen paatokset kaatui aikakatkaisuun joka ajolla: pelkka haku kesti
+84,4 s kun raja on 90 s. Haku sai oman 55 s budjetin ja hakusanojen
+kierratyksen. Mitattu jalkeen: 56,5 s ja 27 kandidaattia (oli 84,4 s ja
+18).
+
+9 % keraysajoista sy0i koko budjetin lahdevaiheeseen, jolloin rikastus
+jai kokonaan valiin. Lahdevaiheelle annettiin oma katto (70 % ajosta),
+joten rikastukselle jaa aina noin 114 s.
+
+Tiedotelahteen kaupunkipaattelya EI muutettu (D-128): erimielisyys on
+6/259 eli 2,3 %, ja kaksi korjaushypoteesia kaatui mittauksessa.
+
 ### Lujatalon referenssisivun aikataulu luetaan (D-126)
 
 Ehdokas oli jonossa rakenteilla olevana, vaikka lahdesivulla lukee

@@ -66,6 +66,34 @@ type PipelineOptions = {
  */
 const RUN_BUDGET_MS = 380 * 1000
 
+/*
+ * LÄHDEVAIHEELLE OMA KATTO, JOTTA RIKASTUS EHTII AJAA.
+ *
+ * Vaiheet ajetaan järjestyksessä (sources -> articles -> pdfs -> texts ->
+ * facts) ja jokainen tarkistaa saman koko ajon budjetin. Jos lähdevaihe
+ * kuluttaa sen loppuun, KAIKKI rikastusvaiheet jäävät väliin — eivät
+ * osittain vaan kokonaan.
+ *
+ * Mitattu 26.8.2026, 109 keräysajoa:
+ *
+ *   täysiä (20/20 lähdettä)   99
+ *   vajaita                   10   (9 %)
+ *     kesto                   380–437 s   (mediaani 182 s)
+ *     stopped_at              "sources"   kaikissa
+ *     rikastus                0 / 0 / 0 / 0
+ *
+ * Faktajono ei kasvanut pysyvästi (huippu 1 009 → 15), joten velkaa ei
+ * kerry — mutta joka kymmenes kierros tekee vain keräyksen.
+ *
+ * 70 % jättää rikastukselle noin 114 s. Tavallinen ajo ei muutu: 20
+ * lähdettä vie mediaanina 182 s, mikä mahtuu 266 sekuntiin vaivatta.
+ * Katkaisu osuu vain niihin ajoihin jotka ennen veivät koko budjetin.
+ *
+ * Kesken jääneet lähteet ovat seuraavan ajon kärjessä, koska niiden
+ * `last_run_at` ei päivittynyt — sama mekanismi kuin ennenkin.
+ */
+const SOURCES_BUDGET_SHARE = 0.7
+
 export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   const startedAt = Date.now()
 
@@ -130,8 +158,30 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
 
     if (sourcesError) throw sourcesError
 
+    /*
+     * Lähdevaihe pysähtyy omaan kattoonsa, ei koko ajon budjettiin —
+     * muuten rikastus jää kokonaan väliin (ks. SOURCES_BUDGET_SHARE).
+     */
+    const sourcesDeadline = startedAt + budgetMs * SOURCES_BUDGET_SHARE
+
     for (const source of sources ?? []) {
       if (stopIfOutOfTime("sources")) break
+
+      if (Date.now() > sourcesDeadline) {
+        /*
+         * Eri tunniste kuin "sources", koska nämä ovat eri tapaus: budjetti
+         * ei loppunut vaan lähdevaihe pysäytettiin jotta rikastus ehtii.
+         * Ilman eroa mittaus ei erottaisi korjattua tilannetta vanhasta.
+         */
+        if (!stoppedAt) stoppedAt = "sources_cap"
+        console.log(
+          `discoveryPipeline: lahdevaiheen katto ` +
+            `(${Math.round((budgetMs * SOURCES_BUDGET_SHARE) / 1000)} s) tayttyi, ` +
+            `${sourceResults.length} lahdetta ajettu, rikastus jatkuu`
+        )
+        break
+      }
+
       const result = await runSourceWorker(source.id)
       sourceResults.push(result)
     }

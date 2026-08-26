@@ -5,6 +5,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-129 – Lähdevaihe ei saa syödä koko ajobudjettia
+
+Putki ajaa vaiheet järjestyksessä (`sources → articles → pdfs → texts →
+facts`) ja jokainen tarkistaa saman koko ajon budjetin (380 s). Jos
+lähdevaihe kuluttaa sen loppuun, **kaikki rikastusvaiheet jäävät väliin
+— eivät osittain vaan kokonaan.**
+
+**Mitattu 26.8.2026, 109 keräysajoa:**
+
+```
+täysiä (20/20 lähdettä)   99
+vajaita                   10   (9 %)
+  kesto                   380–437 s   (mediaani 182 s)
+  stopped_at              "sources"   kaikissa kymmenessä
+  rikastus                0 / 0 / 0 / 0
+```
+
+Joka kymmenes kierros teki siis pelkän keräyksen.
+
+**Velkaa ei kerry, mutta hitautta kertyy.** Faktajono nousi 18.8.
+huippuun 1 009 ja valui tyhjäksi 21.8. mennessä; nyt se on 15. Työ ei
+siis katoa, se siirtyy.
+
+**Korjaus: lähdevaiheelle oma katto, 70 % ajon budjetista.** Rikastukselle
+jää noin 114 s. Tavallinen ajo ei muutu — 20 lähdettä vie mediaanina
+182 s, mikä mahtuu 266 sekuntiin vaivatta. Katkaisu osuu vain niihin
+ajoihin jotka ennen veivät koko budjetin.
+
+Kesken jääneet lähteet ovat seuraavan ajon kärjessä, koska niiden
+`last_run_at` ei päivittynyt — sama mekanismi kuin ennenkin.
+
+**Katkaisu merkitään eri tunnisteella** (`sources_cap` eikä `sources`),
+koska kyse on eri tapauksesta: budjetti ei loppunut vaan vaihe
+pysäytettiin tarkoituksella. Ilman eroa seuraava mittaus ei erottaisi
+korjattua tilannetta vanhasta.
+
+**Liittyy D-127:ään.** Sama juurisyy näkyi lähdetasolla: Tampereen haku
+vei 84 s 90 sekunnin rajasta. Kun yksittäinen lähde venyy, se syö sekä
+oman onnistumisensa että kierroksen budjetin. Molemmat korjattiin
+samalla periaatteella — siisti katkaisu ennen kattoa sen sijaan että
+työ menetetään.
+
+**Sivuhavainto:** `SOURCE_TIMEOUT_MS` (90 s) perusteltiin oletuksella
+"yksi ajo käsittelee 14 lähdettä", mutta `maxSourceCount` on nyt 20. Per
+lähde jää 25 s eikä 35 s. Rajaa ei muutettu, koska mittaus ei osoita
+sitä ongelmaksi — mutta oletus on kirjattu tähän, jottei se jää
+näkymättömäksi.
+
+---
+
 ### D-128 – Tiedotelähteen kaupunkipäättelyä EI muuteta: virhe on 2,3 % eikä sitä voi erottaa
 
 Kaksi yhdistymistä paljasti väärän kaupungin: *Luolavuoren koulu*
