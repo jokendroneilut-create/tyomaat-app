@@ -32710,6 +32710,42 @@ async function collectKristiinankaupunkiKaavaSource(source: DiscoverySource) {
 
 const TAIVASSALO_LISTING_URL = "https://www.taivassalo.fi/asuminen/rakentaminen/kaavoitus-ja-paikkatieto"
 
+/*
+ * TAIVASSALON KOHDESIVUN KUVAUS.
+ *
+ * Listaus antaa vain yhden lauseen: "Hakkenpaan asemakaava; vireilletulo
+ * hyvaksytty kunnanhallituksessa 24.8.2026." Se on 55 merkkia eika kerro
+ * hankkeesta mitaan.
+ *
+ * Jokaisella kaavalla on kuitenkin OMA SIVU, ja siella lukee otsikon
+ * "Kuvaus kaavasta:" alla koko suunnittelualueen kuvaus: mita alue
+ * kattaa, mitka kiinteistot siihen kuuluvat, pinta-ala ja kaavatyon
+ * tavoite. Mitattu 26.8.2026 Hakkenpaan sivulta: 900 merkkia.
+ *
+ * Kohdesivuja on nelja, joten haku maksaa nelja pyyntoa ajossa.
+ */
+const TAIVASSALO_DESCRIPTION_LABEL = "Kuvaus kaavasta:"
+
+/* Sivun lopun navigaatio ei kuulu kuvaukseen. */
+const TAIVASSALO_DESCRIPTION_END = /Takaisin\s+Kaavoitus/i
+
+function parseTaivassaloDetail(html: string): string | null {
+  const $ = cheerio.load(html)
+  $("script, style, noscript, nav, header, footer").remove()
+
+  const body = $("body").text().replace(/\s+/g, " ").trim()
+  const i = body.indexOf(TAIVASSALO_DESCRIPTION_LABEL)
+  if (i < 0) return null
+
+  let teksti = body.slice(i + TAIVASSALO_DESCRIPTION_LABEL.length)
+  const loppu = teksti.search(TAIVASSALO_DESCRIPTION_END)
+  if (loppu > 0) teksti = teksti.slice(0, loppu)
+
+  teksti = teksti.trim()
+  /* Alle taman jaava ei ole kuvaus vaan jaannos. */
+  return teksti.length >= 80 ? teksti : null
+}
+
 function taivassaloPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   const matchesUnguarded = (pattern: RegExp, extraGuard?: (window: string) => boolean) => {
@@ -32761,6 +32797,23 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
     })
     .filter((item) => item.title.length > 0)
 
+  /*
+   * Kohdesivujen linkit listaukselta. Osoite on suhteellinen, ja teksti
+   * on sama kuin listan otsikko — siksi tasmays tehdaan otsikolla.
+   */
+  const detailLinks = new Map<string, string>()
+  $("a").each((_, el) => {
+    const href = $(el).attr("href") ?? ""
+    if (!href.includes("/kaavoitus-ja-paikkatieto/")) return
+    const teksti = $(el).text().replace(/\s+/g, " ").trim().toLowerCase()
+    if (teksti) {
+      detailLinks.set(
+        teksti,
+        href.startsWith("http") ? href : `https://www.taivassalo.fi${href}`
+      )
+    }
+  })
+
   let saved = 0
   const slugCounts = new Map<string, number>()
 
@@ -32768,13 +32821,45 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
     const phase = taivassaloPhaseFromText(`${item.title} ${item.text}`)
     const completed = phase === "Voimaantulo"
 
+    /*
+     * KOHDESIVUN KUVAUS KORVAA LISTAN LAUSEEN.
+     *
+     * Listalta saatava teksti on yksi lause vireilletulosta; kohdesivulla
+     * on koko suunnittelualueen kuvaus kiinteistoineen ja tavoitteineen.
+     * Haku ei saa kaataa keraysta, joten virhe vain ohitetaan ja listan
+     * teksti jaa kayttoon.
+     */
+    let detailDescription: string | null = null
+    const detailUrl = detailLinks.get(item.title.toLowerCase())
+
+    if (detailUrl) {
+      try {
+        const detailResponse = await fetch(detailUrl, { cache: "no-store" })
+        if (detailResponse.ok) {
+          detailDescription = parseTaivassaloDetail(await detailResponse.text())
+        }
+      } catch {
+        /* Kohdesivu on lisatieto, ei ehto. */
+      }
+    }
+
+    /*
+     * Molemmat talteen: listan lause kertoo vaiheen paivamaaran, jota
+     * kohdesivun kuvauksessa ei ole.
+     */
+    const description = detailDescription
+      ? item.text
+        ? `${item.text}\n\n${detailDescription}`
+        : detailDescription
+      : item.text
+
     const baseSlug = kemiSlug(item.title)
     const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
     slugCounts.set(baseSlug, occurrence)
     const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
     const documentUrl = `${TAIVASSALO_LISTING_URL}#${slug}`
 
-    const rawText = JSON.stringify({ title: item.title, phase, description: item.text })
+    const rawText = JSON.stringify({ title: item.title, phase, description })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -32793,7 +32878,7 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
           title: item.title,
           slug,
           phase,
-          description: item.text,
+          description,
           contacts: [],
           completed,
         },

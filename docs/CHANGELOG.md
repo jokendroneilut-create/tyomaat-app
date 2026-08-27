@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Taivassalon kaavakuvaukset kohdesivulta (D-130)
+
+Keraaja luki vain listauksen yhden lauseen (55 merkkia). Jokaisella
+kaavalla on oma sivu, jolla lukee "Kuvaus kaavasta:" ja koko
+suunnittelualueen kuvaus kiinteistoineen, pinta-aloineen ja
+tavoitteineen (344-833 merkkia).
+
+Listan lause ja kohdesivun kuvaus ketjutetaan: edellinen kertoo vaiheen
+paivamaaran, jalkimmainen sisallon.
+
+Takautuva ajo: 4 ehdokasta ja 2 nakyvaa hanketta. Esimerkki 55 -> 867
+merkkia.
+
 ### Ajojen ja lahteiden aikabudjetit korjattu (D-127, D-129)
 
 Tampereen paatokset kaatui aikakatkaisuun joka ajolla: pelkka haku kesti

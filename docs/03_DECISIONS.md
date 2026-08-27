@@ -5,6 +5,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-130 – Taivassalon kaavalla on oma sivu, ja listaus antoi vain päivämäärän
+
+Hanke "Hakkenpään asemakaava" näytti 55 merkin kuvauksen:
+*"vireilletulo hyväksytty kunnanhallituksessa 24.8.2026."* Se kertoo
+milloin, ei mitä.
+
+Kerääjä luki vain listauksen `<li>`-rivin. Jokaisella kaavalla on
+kuitenkin **oma sivu**, ja siellä otsikon `Kuvaus kaavasta:` alla on koko
+suunnittelualueen kuvaus: mitä alue kattaa, kiinteistötunnukset,
+pinta-ala ja kaavatyön tavoite.
+
+**Mitattu 26.8.2026, kaikki neljä kaavaa:**
+
+```
+Hakkenpään asemakaava           789 merkkiä
+Haakanniemen ranta-asemakaava   833
+Marttilan asemakaavan muutos    608
+Ahainen-Tuomoinen               344
+```
+
+Kohdesivuja on neljä, joten haku maksaa neljä pyyntöä ajossa.
+
+**MOLEMMAT TALTEEN, EI KUMPI TAHANSA.** Listan lause kertoo vaiheen
+päivämäärän, jota kohdesivulla ei ole; kohdesivu kertoo sisällön, jota
+listalla ei ole. Ne ketjutetaan — sama virhe kuin Lupapisteen
+kuvauksessa (D-125) olisi ollut valita toinen.
+
+**Takautuva ajo:** 4 jonon ehdokasta ja 2 näkyvää hanketta. Esimerkki
+55 → 867 merkkiä, ja mukana ovat nyt kiinteistötunnukset ja 8,6
+hehtaarin pinta-ala.
+
+*"Aasamaan ranta-asemakaava"* jätettiin ennalleen, koska sitä ei ole
+enää listauksella eikä kohdesivua ole. Tyhjä on parempi kuin arvattu.
+
+**Yleistys.** Kuntien kaavalistaukset ovat usein hakemistoja, eivät
+sisältöä. Kun listalta saatava teksti on yksi lause, kannattaa tarkistaa
+onko kohteella oma sivu — sama kuvio kuin Lujatalon aikataulussa
+(D-126) ja Kreaten kentissä (D-121).
+
+---
+
 ### D-129 – Lähdevaihe ei saa syödä koko ajobudjettia
 
 Putki ajaa vaiheet järjestyksessä (`sources → articles → pdfs → texts →
