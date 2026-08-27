@@ -11,6 +11,32 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Granlundin tasmaytys olemassa oleviin (D-132)
+
+Rikastuksen edellytys on tunnistaa sama hanke kahdesta lahteesta eri
+nimella. Kumpikaan automaattinen tapa ei kantanut:
+
+Tuotannon vertailija ei ylittanyt kynnysta 70 kertaakaan 204:sta, ja
+harmaa vyohyke 50-69 sisalsi seka oikean kaupungintalon auditorion etta
+vaaran parin "Anatomian rakennus -> Porthania". Kynnysta ei siis voi
+laskea.
+
+Tiukka nimivertailu antoi kaksi paria, joista kuivaharjoitus paljasti
+toisen vaaraksi: Granlundilla on kaksi Finlandia-hanketta (2012-2015 ja
+2017-2024), ja jonossa ollut Skanskan sivulta tullut rivi sai 1.00
+osuman VAARAAN. Rikastus olisi kirjoittanut kaynnissa olevalle
+hankkeelle valmistumisvuodeksi 2015.
+
+Otsikko tunnistaa rakennuksen, ei hanketta. Uusi saanto: jos samasta
+rakennuksesta on lahteessa useampi hanke, yhtaan ei tasmayteta
+automaattisesti. Vertailu ilman valilyonteja, jottei yhdyssanaero erota
+samaa taloa.
+
+Lopputulos 1 varma pari (Prisma Hyllykallio, osuma onnistui
+kirjoitusvirheesta huolimatta) ja 9 katselmoitavaa. Rikastus vain
+taydentaa tyhjia kenttia eika ylikirjoita mitaan.
+
+
 ### Granlund lisatty lahteeksi (D-131)
 
 Granlund on suunnittelutoimisto, joten se on hankkeessa vuosia ennen
@@ -22,7 +48,7 @@ valmistunut, 42 vanhaa ilman valmistumisvuotta ja 4 konsultointia.
 Jonoon jaa 6 aitoa kaynnissa olevaa hanketta.
 
 Arvo on rikastuksessa: Prisma Hyllykallio oli jo jonossa Lujatalolta ja
-Granlund taydensi sen. Tasmaytys olemassa oleviin on avoin tyo.
+Granlund taydensi sen. Tasmaytys olemassa oleviin: ks. D-132 alla.
 
 ### Taivassalon kaavakuvaukset kohdesivulta (D-130)
 
