@@ -44,6 +44,16 @@ sisältöä. Kun listalta saatava teksti on yksi lause, kannattaa tarkistaa
 onko kohteella oma sivu — sama kuvio kuin Lujatalon aikataulussa
 (D-126) ja Kreaten kentissä (D-121).
 
+**AVOIN: sama kysymys on esitettävä muillekin kaavalähteille.** Sama
+kuvio on nyt löytynyt kolmesti kolmesta eri lähdetyypistä, joten se
+tuskin rajoittuu Taivassaloon. Kaavalähteitä on yli 200, joten työ
+kannattaa aloittaa mittaamalla eikä lukemalla: **etsi lähteet joiden
+ehdokkaiden mediaanikuvaus on alle ~150 merkkiä ja joiden
+`source_url` osoittaa listaussivulle** (ankkuri `#`-merkin jälkeen on
+vahva vihje, kuten Taivassalolla). Ne ovat todennäköisiä samoja
+tapauksia. Yksittäisen lähteen korjaus on pieni — tässä se oli yksi
+jäsennin ja yksi linkin seuraaminen.
+
 ---
 
 ### D-129 – Lähdevaihe ei saa syödä koko ajobudjettia
