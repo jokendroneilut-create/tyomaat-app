@@ -4,6 +4,62 @@ Merkittäviä suunnittelupäätöksiä ja niiden perustelut, jottei niitä käyd
 uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
+### D-132 – Otsikko tunnistaa rakennuksen, ei hanketta
+
+Granlund on suunnittelija ja mukana vuosia ennen urakoitsijaa (D-131),
+joten sama hanke on meillä usein jo toisesta lähteestä toisella nimellä.
+Löytölähteenä Granlund antaa vain kuusi kesken olevaa hanketta — loput
+198 olisivat arvokkaita vain rikastuksena, ja se vaatii täsmäytyksen.
+
+**MASSATÄSMÄYTYS EI OLE TURVALLISTA.** Mitattu 26.8.2026 tuotannon
+omalla vertailijalla (`calculateMatch`), vain saman kaupungin sisällä,
+5910 hanketta + 8047 ehdokasta vastaan:
+
+```
+>= 70   0 / 204     kynnys ei ylity kertaakaan
+50-69   9           sisältää sekä oikeita että vääriä
+```
+
+Kynnystä ei voi laskea, koska harmaa vyöhyke on aidosti sekainen: 65
+pistettä sai sekä oikea "Helsingin kaupungintalon auditorion
+peruskorjaus" että väärä "Anatomian rakennus → Porthania peruskorjaus".
+
+**MUTTA OTSIKKOKAAN EI RIITÄ YKSIN.** Tiukka nimivertailu antoi kaksi
+paria, ja kuivaharjoitus paljasti toisen niistä vääräksi:
+
+| Granlundilla | Aika |
+|---|---|
+| Finlandia-talo | 2012–2015 |
+| Finlandiatalo perusparannus, AV-… | 2017–2024 |
+
+Jonossa ollut "Finlandia Talo" tuli Skanskan projektisivulta ja on siis
+jälkimmäinen. Nimiosuma oli **1.00 väärään** — rikastus olisi
+kirjoittanut käynnissä olevalle hankkeelle valmistumisvuodeksi 2015.
+
+Nimi tunnistaa siis rakennuksen, ja samassa rakennuksessa on
+vuosikymmenten varrella monta hanketta. Siksi sääntö on:
+
+> **Jos samasta rakennuksesta on lähteessä useampi hanke, yhtäkään ei
+> täsmäytetä automaattisesti.**
+
+Vertailu tehdään ilman välilyöntejä, koska yhdyssanaero ei saa erottaa
+samaa taloa ("Finlandia-talo" vs. "Finlandiatalo perusparannus"). Sääntö
+hylkää eikä hyväksy, joten liian herkkä tunnistus johtaa vain
+katselmointiin — ei väärään tietoon.
+
+**LOPPUTULOS: 1 varma pari 204:stä.** Prisma Hyllykallio, jonka
+täsmäytys onnistui kirjoitusvirheestä huolimatta ("saneeeraus"). Loput 9
+menivät katselmointilistaan `scripts/out/granlund-review.json`.
+
+Yksi pari on vähän, ja se on oikea tulos: emme keksi loppuja 203:a.
+Rikastus myös vain **täydentää tyhjiä kenttiä** eikä ylikirjoita mitään,
+koska väärä täsmäytys ei saa tuhota oikeaa tietoa.
+
+`lib/agent/granlundMatch.ts` · `scripts/match-granlund-projects.ts`
+(kuivaharjoitus oletuksena, kirjoittaa vasta `--apply`)
+
+---
+
 
 ### D-131 – Granlund on rikastuslähde, ja siksi kerätään vain kuusi hanketta
 

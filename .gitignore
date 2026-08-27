@@ -61,3 +61,4 @@ app/.claude/launch.json
 scripts/out/pairs-*.json
 # Katselmointilistat sisaltavat henkilotietoa - repo on julkinen.
 scripts/out/contact-mismatches.json
+scripts/out/granlund-review.json
