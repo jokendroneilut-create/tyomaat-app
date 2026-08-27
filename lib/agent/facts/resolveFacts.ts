@@ -6,6 +6,7 @@ import { extractHelsinkiKaavaFacts } from "@/lib/agent/facts/extractHelsinkiKaav
 import { extractTampereKaavaFacts } from "@/lib/agent/facts/extractTampereKaavaFacts"
 import { extractTurkuKaavaFacts } from "@/lib/agent/facts/extractTurkuKaavaFacts"
 import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
+import { extractGranlundFacts } from "@/lib/agent/facts/extractGranlundFacts"
 import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
 import { extractSenaattiTenderFacts } from "@/lib/agent/facts/extractSenaattiTenderFacts"
 import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
@@ -949,6 +950,22 @@ export function resolveFacts(document: any) {
         documentsUrl: document.document_url,
         description,
         identifyingInfo,
+      }),
+    }
+  }
+
+  if (document.source_name === "Granlund projektit") {
+    const post = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
+
+    return {
+      decisions: [],
+      facts: extractGranlundFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        post,
+        title: document.raw_payload?.title ?? null,
+        description: document.raw_payload?.description ?? null,
+        fields: document.raw_payload?.fields ?? {},
       }),
     }
   }

@@ -8,6 +8,7 @@ import { resolveHelsinkiKaavaProject } from "@/lib/agent/identity/resolvers/hels
 import { resolveTampereKaavaProject } from "@/lib/agent/identity/resolvers/tampereKaavaResolver"
 import { resolveTurkuKaavaProject } from "@/lib/agent/identity/resolvers/turkuKaavaResolver"
 import { resolveKreateProject } from "@/lib/agent/identity/resolvers/kreateResolver"
+import { resolveGranlundProject } from "@/lib/agent/identity/resolvers/granlundResolver"
 import { resolveSenaattiTenderProject } from "@/lib/agent/identity/resolvers/senaattiTenderResolver"
 import { resolveVaylaProject } from "@/lib/agent/identity/resolvers/vaylaResolver"
 import { resolveSenaattiProject } from "@/lib/agent/identity/resolvers/senaattiResolver"
@@ -357,6 +358,13 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kreate hankkeet") {
     const result = await resolveKreateProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (sourceName === "granlund projektit") {
+    const result = await resolveGranlundProject({
       document,
       facts: facts ?? [],
     })

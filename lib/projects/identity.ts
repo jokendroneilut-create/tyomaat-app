@@ -21,6 +21,12 @@ export type IdentifierType =
   | "tampere_kaava_tunnus"
   | "turku_kaava_tunnus"
   | "kreate_project_id"
+  /*
+   * Granlund on suunnittelutoimisto, joten sama hanke voi tulla myös
+   * urakoitsijan sivuilta eri nimellä. Oma tunnus pitää nämä erillään
+   * kunnes täsmäytys yhdistää ne.
+   */
+  | "granlund_post_id"
   | "vayla_project_id"
   | "senaatti_project_id"
   /*

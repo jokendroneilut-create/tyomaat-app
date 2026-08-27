@@ -1332,6 +1332,154 @@ function parseKreateContacts(contentHtml: string): KreateContact[] {
   return contacts
 }
 
+/*
+ * GRANLUNDIN PROJEKTIT.
+ *
+ * Granlund on suunnittelutoimisto, ei urakoitsija - se on hankkeessa
+ * mukana vuosia ennen tyomaata. Lahde loytyi kun Lujatalon
+ * referenssisivulta ei saatu Prisma Hyllykalliosta juuri mitaan, ja
+ * Granlundin sivulla oli tilaaja, aikataulu, pinta-ala ja muut toimijat.
+ *
+ * WordPressin REST-rajapinta antaa kaiken kerralla. Mitattu 26.8.2026,
+ * 211 hanketta:
+ *
+ *   Paikkakunta 100 % | Tyyppi 100 % | kuvaus 100 % (mediaani 651 mk)
+ *   Tilaaja      99 % | Aloitus 98 % | Valmistuminen 80 %
+ *
+ * Tilaaja 99 %:lla on paras kattavuus mita lahteista on mitattu - se on
+ * juuri se kentta joka useimmiten puuttuu.
+ *
+ * VALMISTUNEITA EI KERATA. Sama mittaus: vain 10 hanketta 169:sta joilla
+ * on valmistumisvuosi on kesken (>= kuluva vuosi). Loput ovat historiaa,
+ * eika valmis kohde ole myyjalle liidi - se on jo rakennettu. Ilman
+ * rajausta yksi ajo toisi jonoon ~200 valmista rakennusta, sama vika
+ * jota Kreatella jo korjattiin (D-105).
+ *
+ * Ilman valmistumisvuotta oleva otetaan mukaan: 42 hanketta 211:sta, ja
+ * niista ei voi paatella etta ne olisivat valmiita.
+ */
+const GRANLUND_API = "https://www.granlund.fi/wp-json/wp/v2/projects"
+const GRANLUND_PER_PAGE = 100
+const GRANLUND_MAX_PAGES = 3
+const GRANLUND_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+
+async function collectGranlundSource(source: DiscoverySource) {
+  const { parseGranlundFields, parseGranlundDescription } = await import(
+    "@/lib/agent/granlundProject"
+  )
+
+  const posts: any[] = []
+  for (let page = 1; page <= GRANLUND_MAX_PAGES; page++) {
+    const response = await fetch(
+      `${GRANLUND_API}?per_page=${GRANLUND_PER_PAGE}&page=${page}&lang=fi`,
+      { headers: { "User-Agent": GRANLUND_UA }, cache: "no-store" }
+    )
+    if (!response.ok) {
+      if (page === 1) {
+        throw new Error(
+          `Granlundin projektirajapinnan haku epaonnistui: ${response.status} ${response.statusText}`
+        )
+      }
+      break
+    }
+
+    const sivu = await response.json()
+    if (!Array.isArray(sivu) || sivu.length === 0) break
+    posts.push(...sivu)
+    if (sivu.length < GRANLUND_PER_PAGE) break
+  }
+
+  const nyt = new Date().getUTCFullYear()
+  let saved = 0
+  let skippedCompleted = 0
+  let skippedOld = 0
+  let skippedAdvisory = 0
+
+  for (const post of posts) {
+    const html = post?.content?.rendered ?? ""
+    const fields = parseGranlundFields(html)
+    const description = parseGranlundDescription(html)
+    const title = decodeHtmlEntities(post?.title?.rendered ?? "")
+
+    /*
+     * KOLME RAJAUSTA, JOKAINEN MITATTU 26.8.2026 (204 hanketta).
+     *
+     * 1. Valmistunut ei ole liidi - se on jo rakennettu.  152 kpl
+     * 2. Ilman valmistumisvuotta ratkaisee aloitusvuosi.   42 kpl
+     *    Naista 42:sta aloitusvuodet olivat 1996-2024 ja moni oli
+     *    ohjelmistoprojekti ("Granlund Manager -yllapitojarjestelma"),
+     *    ei rakennushanke. Vanha aloitus ilman valmistumista tarkoittaa
+     *    kaytannossa paattynytta tyota.
+     * 3. Konsultointi ei ole rakennushanke.                  4 kpl
+     *    Selvitykset ja energiastrategiat ovat neuvontatyota; myyjalle
+     *    ei ole tyomaata jolle soittaa.
+     *
+     * Jaljelle jaa 6 hanketta, ja ne ovat aitoja: Hippos, Hangonsilta,
+     * Kansallismuseo, Tays, Tainionkosken kirkko ja Prisma Hyllykallio.
+     *
+     * Loysempi aloitusraja (nyt-2) toi vain yhden lisaa, ja sekin oli
+     * kiinteistojohtamista - joten raja on nyt-1.
+     */
+    if (fields.completionYear != null && fields.completionYear < nyt) {
+      skippedCompleted++
+      continue
+    }
+
+    if (fields.completionYear == null && (fields.startYear == null || fields.startYear < nyt - 1)) {
+      skippedOld++
+      continue
+    }
+
+    if (/konsultointi|kiinteistojohtaminen|kiinteistöjohtaminen/i.test(String(fields.projectType ?? ""))) {
+      skippedAdvisory++
+      continue
+    }
+
+    const rawText = JSON.stringify(post)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: title || `Granlund-hanke ${post.id}`,
+        document_url: post.link,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          granlund_post_id: post.id,
+          title,
+          description,
+          fields,
+          modified: post.modified,
+          original: post,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+    saved += 1
+  }
+
+  console.log(
+    `collectGranlundSource: ${posts.length} hanketta, ${saved} tallennettu, ` +
+      `ohitettu: ${skippedCompleted} valmistunutta, ${skippedOld} vanhaa, ` +
+      `${skippedAdvisory} konsultointia`
+  )
+
+  return {
+    documentsFound: posts.length,
+    documentsSaved: saved,
+  }
+}
+
 async function collectKreateSource(source: DiscoverySource) {
   const [statusNames, categoryNames] = await Promise.all([
     fetchKreateTaxonomy("project_status"),
@@ -38862,6 +39010,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "kreateParser") {
     return collectKreateSource(source)
+  }
+
+  if (source.parser === "granlundParser") {
+    return collectGranlundSource(source)
   }
 
   if (source.parser === "vaylaParser") {

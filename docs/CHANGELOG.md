@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Granlund lisatty lahteeksi (D-131)
+
+Granlund on suunnittelutoimisto, joten se on hankkeessa vuosia ennen
+urakoitsijaa. Kenttien kattavuus on paras mitattu: Tilaaja 99 %,
+Paikkakunta 100 %, kuvaus 100 % (mediaani 651 merkkia).
+
+Loytolahteena se on silti lahes tyhja: 204 hankkeesta 152 on
+valmistunut, 42 vanhaa ilman valmistumisvuotta ja 4 konsultointia.
+Jonoon jaa 6 aitoa kaynnissa olevaa hanketta.
+
+Arvo on rikastuksessa: Prisma Hyllykallio oli jo jonossa Lujatalolta ja
+Granlund taydensi sen. Tasmaytys olemassa oleviin on avoin tyo.
+
 ### Taivassalon kaavakuvaukset kohdesivulta (D-130)
 
 Keraaja luki vain listauksen yhden lauseen (55 merkkia). Jokaisella

@@ -5,6 +5,62 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-131 – Granlund on rikastuslähde, ja siksi kerätään vain kuusi hanketta
+
+Lähde löytyi ongelmasta: Prisma Hyllykalliosta ei saatu Lujatalon
+referenssisivulta juuri mitään — otsikko, laajuus ja urakkamuoto.
+Granlundin sivulla oli tilaaja, aikataulu, pinta-ala, muut toimijat ja
+nimetty yhteyshenkilö.
+
+**Granlund on suunnittelija, ei urakoitsija.** Se on hankkeessa mukana
+vuosia ennen työmaata: Prismassa suunnittelu alkoi 2024 ja rakentaminen
+2026. Siksi se ei mene `builder`-kenttään vaan liittyviin yrityksiin
+roolinsa kanssa, ja vaiheeksi tulee suunnittelu.
+
+**KENTTIEN KATTAVUUS ON PARAS MITATTU** (26.8.2026, 211 hanketta):
+
+```
+Paikkakunta 100 %  ·  Tyyppi 100 %  ·  kuvaus 100 % (mediaani 651 mk)
+Tilaaja      99 %  ·  Aloitus 98 %  ·  Valmistuminen 80 %
+Pinta-ala    73 %  ·  Granlundin roolit 93 %
+```
+
+Tilaaja 99 %:lla on poikkeuksellinen — se on juuri se kenttä joka
+useimmiten puuttuu, ja se on hankkeen maksaja.
+
+**LÖYTÖLÄHTEENÄ SE ON SILTI LÄHES TYHJÄ.** Kolme rajausta, jokainen
+mitattu 204 hankkeesta:
+
+```
+valmistunut                        152   ei liidi, on jo rakennettu
+ilman valmistumisvuotta, vanha      42   aloitusvuodet 1996-2024
+konsultointi                         4   selvitys ei ole työmaa
+JÄÄ JONOON                           6
+```
+
+Jäljelle jäävät kuusi ovat aitoja: Hippos, Hangonsillan monitoimiareena,
+Kansallismuseo, Tays Keskussairaala, Tainionkosken kirkko ja Prisma
+Hyllykallio.
+
+Löysempi aloitusraja (`nyt-2`) toi vain yhden lisää, ja sekin oli
+kiinteistöjohtamista — joten raja on `nyt-1`.
+
+**Ilman rajausta jonoon olisi tullut 52 ehdokasta**, joista 46 ei ollut
+liidejä. Ensimmäinen ajo teki juuri niin, ja ne poistettiin ennen kuin
+fact-työläinen ehti käsitellä yhtäkään — sama vika jota Kreatella jo
+korjattiin (D-105).
+
+**ARVO ON RIKASTUKSESSA, EI LÖYTÄMISESSÄ.** Prisma Hyllykallio oli jo
+jonossa Lujatalolta; Granlund täydensi sen. Kerääjä kattaa vain
+löytämisen — täsmäytys olemassa oleviin hankkeisiin nimen ja kaupungin
+perusteella on erillinen työ, ja siinä on tämän lähteen todellinen anti.
+
+**AVOIN:** täsmäytys 211 hankkeen koko aineistoon. Se hyödyntäisi myös
+ne 152 valmistunutta, koska hanke on voinut olla meillä jo
+suunnitteluvaiheessa.
+
+---
+
 ### D-130 – Taivassalon kaavalla on oma sivu, ja listaus antoi vain päivämäärän
 
 Hanke "Hakkenpään asemakaava" näytti 55 merkin kuvauksen:
