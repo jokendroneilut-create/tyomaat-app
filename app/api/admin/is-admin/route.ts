@@ -1,50 +1,37 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+
+import { getRequestRole } from "@/lib/auth/getRequestRole"
+import { isAdmin } from "@/lib/auth/roles"
 
 export const runtime = "nodejs"
 
-function parseAdminEmails(value: string | undefined) {
-  return (value || "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean)
-}
-
+/*
+ * Kertoo kutsujalle oman roolinsa.
+ *
+ * `isAdmin` sailytetaan, koska sita luetaan useassa nakymassa
+ * (mm. /projects "Muokkaa"-linkki). `role` on uusi ja tarpeen
+ * myyjatasolle, joka ei ole admin muttei tavallinen kayttajakaan.
+ */
 export async function GET(req: Request) {
   try {
-    const authHeader = req.headers.get("authorization")
+    const tulos = await getRequestRole(req)
 
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ isAdmin: false }, { status: 401 })
+    if (!tulos.ok) {
+      return NextResponse.json(
+        { isAdmin: false, role: "user" },
+        { status: tulos.status }
+      )
     }
-
-    const token = authHeader.replace("Bearer ", "").trim()
-
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token)
-
-    if (error || !user) {
-      return NextResponse.json({ isAdmin: false }, { status: 401 })
-    }
-
-    const admins = parseAdminEmails(process.env.ADMIN_EMAILS)
-    const userEmail = (user.email || "").toLowerCase()
 
     return NextResponse.json({
-      isAdmin: admins.includes(userEmail),
+      isAdmin: isAdmin(tulos.role),
+      role: tulos.role,
     })
   } catch (err: any) {
     console.error("IS ADMIN ERROR:", err)
 
     return NextResponse.json(
-      { isAdmin: false, error: err?.message || "unknown error" },
+      { isAdmin: false, role: "user", error: err?.message || "unknown error" },
       { status: 500 }
     )
   }
