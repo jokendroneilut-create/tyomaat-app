@@ -750,19 +750,47 @@ muistin varassa.
   `/crm`-sivulle, viive tallennukseen ettei joka näppäily kirjoita
   kantaan, ja testitilin nollauksen laajennus.
 
-- **Maakuntavalikko monivalinnaksi (`/projects`).** Nyt yksi maakunta
-  kerrallaan. Arvioitu 28.8.2026: **pieni työ**, koska `phase` on jo
-  monivalinta ja malli on kopioitavissa sellaisenaan
-  (`projects-multiselect`-komponentti ja `applyPhaseFilter`).
+- ~~**Maakuntavalikko monivalinnaksi (`/projects`).**~~ Tehty 28.8.2026
+  (`c2f323e`). Sääntö "merkkijono tai lista" oli kopioituna kolmessa
+  paikassa ja on nyt jaettu `lib/watchlists/filterValues.ts`:aan.
 
-  Kosketuspinnat: `app/projects/page.tsx` (tila `string` → `string[]`,
-  valikon merkintä, suodatus, kaupunkilistan johtaminen, URL-parametri,
-  hakuvahdin nimi ja suodattimet) sekä `app/api/digests/route.ts` kolme
-  kohtaa ja `app/watchlists/page.tsx` yksi.
+- **Myyjänäkymä: oma tunnustaso ja rajattu käyttäjälista.** Myyjä näkisi
+  vain hänen hankkimansa asiakkaat ja heidän kirjautumisensa, jotta hän
+  voi muistutella niitä jotka eivät ole ottaneet tuotetta käyttöön.
 
-  **Vanhat hakuvahdit tallentavat `region`-kentän merkkijonona**, joten
-  lukijoiden on kestettävä molemmat muodot — kuten `applyPhaseFilter` jo
-  tekee vaiheelle.
+  Selvitetty 28.8.2026, ja **työ on suurempi kuin miltä se kuulostaa**:
+
+  **Rooleja ei ole olemassa.** Admin-oikeus tulee ympäristömuuttujasta
+  `ADMIN_EMAILS`, jota vasten verrataan sähköpostia kymmenessä eri
+  reitissä (`is-admin`, `list-users`, `invite-user`, `lock-user`,
+  `delete-user`, `analytics`, `send-broadcast`, `usage-alert`,
+  `health-check`, `record-phase-change`). Kolmas taso ei mahdu tähän:
+  ympäristömuuttuja ei voi kertoa *kenen* asiakkaita kukin myyjä sai.
+
+  Siksi ensimmäinen osa on oikea roolimekanismi kannassa. Se on
+  turvallisuusmuutos eikä käyttöliittymämuutos, ja sen on syytä olla
+  hallittu: RLS ratkaisee mitä myyjä näkee, ei käyttöliittymä.
+
+  Osat:
+  1. **Rooli kantaan** — käsin ajettava DDL + RLS. Nykyinen
+     `ADMIN_EMAILS` on syytä säilyttää rinnalla varmistuksena, ettei
+     admin lukitse itseään ulos.
+  2. **Asiakkaan liittäminen myyjään** — admin-näkymään kenttä jolla
+     käyttäjälle merkitään hankkinut myyjä.
+  3. **Rajattu Käyttäjät-näkymä** — sama sivu kuin adminilla mutta vain
+     omat asiakkaat, ja **ilman** kutsu-, lukitus- ja poistotoimintoja.
+  4. **Valikko roolin mukaan.**
+
+  Data on jo olemassa: `list-users` palauttaa `created_at` ja
+  `last_sign_in_at`, eli "kuka ei ole kirjautunut" saadaan suoraan.
+
+  **HUOM — trial-tilaa ei kerätä.** Myyjän varsinainen tarve on
+  muistutella trial-asiakkaita, mutta järjestelmä ei tiedä kuka on
+  trialilla: tilaustietoa ei tallenneta lainkaan. Ilman sitä myyjä näkee
+  vain "ei ole kirjautunut", ei "trial päättyy pian". Tämä on päätettävä
+  ennen toteutusta: joko myyjänäkymä rajoittuu kirjautumistietoon, tai
+  tilaustieto aletaan kirjata.
+
 
 
 ## Tietoisesti taakse / ei nyt
