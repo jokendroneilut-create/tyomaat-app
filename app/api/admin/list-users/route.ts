@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 
 import { getRequestRole } from "@/lib/auth/getRequestRole"
 import { canSeeOwnCustomers, isAdmin } from "@/lib/auth/roles"
+import { visibleUsers } from "@/lib/users/visibleUsers"
 
 export const runtime = "nodejs"
 
@@ -106,10 +107,8 @@ export async function GET(req: Request) {
       })
       .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
 
-    /* Myyjalle vain omat asiakkaat. */
-    const users = isAdmin(kutsuja.role)
-      ? kaikki
-      : kaikki.filter((u) => u.ownerId === kutsuja.userId)
+    /* Myyjalle vain omat asiakkaat. Rajaus on testattu erikseen. */
+    const users = visibleUsers(kutsuja.role, kutsuja.userId, kaikki)
 
     /* Admin tarvitsee myyjalistan liittamista varten. */
     const sellers = isAdmin(kutsuja.role)
