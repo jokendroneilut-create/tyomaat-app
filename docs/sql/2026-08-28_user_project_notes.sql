@@ -117,3 +117,23 @@ create policy user_project_notes_delete_own
 --    where schemaname = 'public' and tablename = 'user_project_notes'
 --    order by policyname;
 --   -- neljä riviä: delete, insert, select, update
+
+
+-- HUOM 28.8.2026: ensimmaisen ajon jalkeen kannassa oli KAHDEKSAN
+-- policya nelja sijaan. Talle taululle oli ajettu myos toinen,
+-- repositorion ulkopuolinen versio nimilla notes_select_own,
+-- notes_insert_own, notes_update_own ja notes_delete_own.
+--
+-- Ehdot tarkistettiin eika vuotoa ollut: kaikissa kahdeksassa oli
+-- (auth.uid() = user_id). Ainoa ero oli notes_update_own, jolta puuttui
+-- with_check - Postgres kayttaa silloin USING-lauseketta myos uusien
+-- rivien tarkistukseen, joten vaikutus on sama.
+--
+-- Kaksoiskappaleet pudotettiin, jotta kanta vastaa tata tiedostoa.
+-- Sallivat policyt yhdistyvat TAI-ehdolla, joten paallekkaiset saannot
+-- ovat aina tarkistamisen arvoisia: loysin voittaa tiukemman.
+--
+--   drop policy if exists notes_select_own on public.user_project_notes;
+--   drop policy if exists notes_insert_own on public.user_project_notes;
+--   drop policy if exists notes_update_own on public.user_project_notes;
+--   drop policy if exists notes_delete_own on public.user_project_notes;
