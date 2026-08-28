@@ -22,6 +22,11 @@ function useIsMobile(breakpoint = 768) {
 export default function Navbar() {
   const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  /*
+   * Myyja ei ole admin, mutta nakee oman asiakaslistansa. Siksi rooli
+   * erikseen: admin-valikkoa ei saa avata hanelle.
+   */
+  const [role, setRole] = useState<"admin" | "seller" | "user">("user");
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -47,6 +52,7 @@ export default function Navbar() {
     const checkAdmin = async (token?: string) => {
       if (!token) {
         setIsAdmin(false);
+        setRole("user");
         return;
       }
 
@@ -57,8 +63,10 @@ export default function Navbar() {
 
         const json = await res.json();
         setIsAdmin(json.isAdmin === true);
+        setRole(json.role === "admin" || json.role === "seller" ? json.role : "user");
       } catch {
         setIsAdmin(false);
+        setRole("user");
       }
     };
 
@@ -169,6 +177,10 @@ export default function Navbar() {
       <NavItem href="/crm">Omat</NavItem>
       <NavItem href="/tasks">Tehtävät</NavItem>
       <NavItem href="/team">Tiiminäkymä</NavItem>
+      {/* Myyjalle oma asiakaslista ilman admin-valikkoa. */}
+      {role === "seller" && (
+        <NavItem href="/dashboard/users">Omat asiakkaat</NavItem>
+      )}
     </NavSection>
 
     {isAdmin && (

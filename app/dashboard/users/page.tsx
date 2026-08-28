@@ -12,7 +12,14 @@ type AdminUser = {
   confirmed: boolean
   locked?: boolean
   lockedReason?: string | null
+
+  /* Jarjestelmarooli ja hankkinut myyja. Vain adminille merkityksellisia. */
+  role?: 'admin' | 'seller' | 'user'
+  ownerId?: string | null
+  ownerEmail?: string | null
 }
+
+type Seller = { id: string; email: string | null }
 
 type SortColumn = 'email' | 'created_at' | 'age_days' | 'last_sign_in_at' | 'confirmed'
 type SortDirection = 'asc' | 'desc'
@@ -32,6 +39,17 @@ export default function UsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  /*
+   * Kutsujan oma rooli. Myyja nakee vain hankkimansa asiakkaat eika saa
+   * kutsua, lukita tai poistaa ketaan. Rajaus tehdaan palvelimella
+   * (/api/admin/list-users); tama ohjaa vain sita mita napit nayttavat.
+   */
+  const [viewerRole, setViewerRole] = useState<'admin' | 'seller' | 'user'>('user')
+  const [sellers, setSellers] = useState<Seller[]>([])
+  const [savingId, setSavingId] = useState<string | null>(null)
+
+  const isAdminView = viewerRole === 'admin'
 
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviting, setInviting] = useState(false)
@@ -133,6 +151,8 @@ export default function UsersPage() {
         if (!silent) setError(json.error || 'Käyttäjien haku epäonnistui')
       } else {
         setUsers(json.users)
+        if (json.role) setViewerRole(json.role)
+        setSellers(json.sellers ?? [])
       }
     } catch {
       if (!silent) setError('Käyttäjien haku epäonnistui')
@@ -144,6 +164,48 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers()
   }, [])
+
+  /*
+   * Yhteinen kutsu admin-reiteille. Palvelin tarkistaa roolin joka
+   * kerta, joten tama on vain kayttoliittyman puoli.
+   */
+  const laheta = async (polku: string, body: any) => {
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    if (!token) return { error: 'Et ole kirjautunut sisään' }
+
+    const res = await fetch(polku, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    })
+
+    return res.json().catch(() => ({ error: 'Vastauksen luku epäonnistui' }))
+  }
+
+  const handleRole = async (user: AdminUser, role: 'seller' | 'admin' | null) => {
+    setSavingId(user.id)
+    setError(null)
+
+    const json = await laheta('/api/admin/set-user-role', { userId: user.id, role })
+
+    if (json?.error) setError(json.error)
+    else await fetchUsers(true)
+
+    setSavingId(null)
+  }
+
+  const handleAssign = async (user: AdminUser, sellerId: string | null) => {
+    setSavingId(user.id)
+    setError(null)
+
+    const json = await laheta('/api/admin/assign-customer', { userId: user.id, sellerId })
+
+    if (json?.error) setError(json.error)
+    else await fetchUsers(true)
+
+    setSavingId(null)
+  }
 
   const handleInvite = async () => {
     const email = inviteEmail.trim().toLowerCase()
@@ -310,8 +372,16 @@ export default function UsersPage() {
      * katkesivat kolmelle riville.
      */
     <div style={{ padding: 24, maxWidth: 1280 }}>
-      <h1>Käyttäjät</h1>
+      <h1>{isAdminView ? 'Käyttäjät' : 'Omat asiakkaat'}</h1>
 
+      {!isAdminView && (
+        <p style={{ marginTop: 8, color: '#6b7280', fontSize: 14 }}>
+          Näet hankkimasi asiakkaat ja sen, ovatko he ottaneet tuotteen
+          käyttöön. Kokeilun tila lasketaan tunnuksen iästä.
+        </p>
+      )}
+
+      {isAdminView && (
       <div style={{ marginTop: 16, padding: 16, border: '1px solid #e5e7eb', borderRadius: 8 }}>
         <label style={{ fontWeight: 700 }}>Lisää uusi käyttäjä</label>
 
@@ -347,6 +417,7 @@ export default function UsersPage() {
 
         {inviteResult && <div style={{ marginTop: 8 }}>{inviteResult}</div>}
       </div>
+      )}
 
       {error && (
         <div style={{ marginTop: 16, color: '#b91c1c' }}>{error}</div>
@@ -355,7 +426,7 @@ export default function UsersPage() {
       <div style={{ marginTop: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={{ fontSize: 18 }}>
-            Kaikki käyttäjät ({users.length})
+            {isAdminView ? 'Kaikki käyttäjät' : 'Asiakkaani'} ({users.length})
             {/*
               * Luvut otsikkoon, jotta paattyneet nakyvat ilman selaamista.
               * Tama on sivun varsinainen tarkoitus: muistaa mitka
@@ -403,7 +474,8 @@ export default function UsersPage() {
               <SortHeader column="age_days" label="Ikä (pv)" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="last_sign_in_at" label="Viimeksi kirjautunut" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="confirmed" label="Tila" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-              <th style={{ padding: '8px 4px' }} />
+              {isAdminView && <th style={{ padding: '8px 4px' }}>Myyjä</th>}
+              {isAdminView && <th style={{ padding: '8px 4px' }} />}
             </tr>
           </thead>
 
@@ -443,6 +515,73 @@ export default function UsersPage() {
                     <span style={{ color: '#b45309', fontWeight: 600 }}>Odottaa kutsun hyväksyntää</span>
                   )}
                 </td>
+
+                {isAdminView && (
+                  <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
+                    {/*
+                      * Myyja itse ei ole kenenkaan asiakas, joten
+                      * hanelle nayetaan roolin poisto liitoksen sijaan.
+                      */}
+                    {u.role === 'seller' ? (
+                      <button
+                        onClick={() => handleRole(u, null)}
+                        disabled={savingId === u.id}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: 6,
+                          border: '1px solid #d1d5db',
+                          background: '#dbeafe',
+                          color: '#1d4ed8',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                        title="Poista myyjärooli"
+                      >
+                        Myyjä ✕
+                      </button>
+                    ) : u.role === 'admin' ? (
+                      <span style={{ color: '#6b7280' }}>admin</span>
+                    ) : (
+                      <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                        <select
+                          value={u.ownerId ?? ''}
+                          disabled={savingId === u.id}
+                          onChange={(e) => handleAssign(u, e.target.value || null)}
+                          style={{
+                            padding: '4px 6px',
+                            borderRadius: 6,
+                            border: '1px solid #d1d5db',
+                            background: '#fff',
+                          }}
+                        >
+                          <option value="">— ei myyjää —</option>
+                          {sellers.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.email}
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          onClick={() => handleRole(u, 'seller')}
+                          disabled={savingId === u.id}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: 6,
+                            border: '1px solid #d1d5db',
+                            background: '#fff',
+                            cursor: 'pointer',
+                          }}
+                          title="Tee tästä käyttäjästä myyjä"
+                        >
+                          + myyjäksi
+                        </button>
+                      </span>
+                    )}
+                  </td>
+                )}
+
+                {isAdminView && (
                 <td style={{ padding: '8px 4px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                   <button
                     onClick={() => handleLock(u)}
@@ -481,13 +620,19 @@ export default function UsersPage() {
                     {deletingId === u.id ? 'Poistetaan...' : 'Poista'}
                   </button>
                 </td>
+                )}
               </tr>
             ))}
 
             {!loading && users.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}>
-                  Ei käyttäjiä
+                <td
+                  colSpan={isAdminView ? 7 : 5}
+                  style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}
+                >
+                  {isAdminView
+                    ? 'Ei käyttäjiä'
+                    : 'Sinulle ei ole vielä liitetty asiakkaita.'}
                 </td>
               </tr>
             )}

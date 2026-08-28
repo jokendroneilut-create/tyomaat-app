@@ -697,6 +697,42 @@ muistin varassa.
 - **RPT-lista:** Tampereen 9 kadonnutta ehdokasta, Turku ei aja,
   lupakirjeet kirjaamoissa.
 
+- **HOAS ja muut opiskelija-asuntosäätiöt lähteiksi** (kirjattu 28.8.2026).
+
+  Herätteenä hyväksytty hanke Rakennuslehdestä: HOAS rakentaa Helsinkiin
+  402 uutta opiskelija-asuntoa, lähes 60 M€ investointi
+  (`hoas.fi/2026/08/25/...`). Tieto tuli meille kiertotietä lehden
+  kautta, vaikka rakennuttaja itse tiedotti sen.
+
+  **Miksi tämä ryhmä on poikkeuksellisen hyvä:** säätiöt ovat
+  rakennuttajia, eivät urakoitsijoita — ne tiedottavat hankkeesta kun
+  investointipäätös on tehty, eli ennen urakkakilpailua. Ne ovat myös
+  yleishyödyllisiä ja ARA-rahoitteisia, joten tiedottaminen on
+  avointa ja säännöllistä. Yksi säätiö kattaa yhden kaupunkiseudun,
+  joten kymmenkunta lähdettä kattaisi kaikki yliopistokaupungit.
+
+  Tunnetut toimijat: HOAS (Helsingin seutu, `hoas.fi`), TOAS (Tampere),
+  **TYS (Turun ylioppilaskyläsäätiö, `tys.fi`)**, KOAS (Jyväskylä),
+  PSOAS (Oulu), POAS (Kuopio), LOAS (Lappeenranta), VOAS (Vaasa), DAS
+  (Rovaniemi), Elli (Joensuu).
+
+  **Mukaan myös ylioppilaskuntien omat säätiöt ja kiinteistöyhtiöt**,
+  jotka ovat eri asia kuin asuntosäätiöt: ylioppilaskunnat omistavat
+  merkittävää kiinteistövarallisuutta ja rakennuttavat myös muuta kuin
+  asuntoja (HYY Yhtymä, TYY, TREY, OYY). Nämä eivät osu
+  asuntosäätiöhakuun, joten ne on lueteltava erikseen.
+
+  **Täydellinen lista on otettava SOA ry:n (Suomen opiskelija-asunnot)
+  jäsenluettelosta** eikä muistista — sama periaate kuin RPT-listalla:
+  puuttuvasta toimijasta päätellään puuttuva lähde.
+
+  Työ alkaa `scripts/probe-design-firms.ts`-koettimella, joka lukee
+  robots.txt:n ja etsii koneluettavan tiedotelistauksen. Sama seula
+  kuin suunnittelutoimistoilla (`docs/12_DESIGN_FIRM_SOURCES.md`), ja
+  sama mittari ratkaisee: montako **kesken olevaa** hanketta lähde
+  tuottaisi.
+
+
 ### Poimintalogiikka
 
 - **Rakennuttaja ingressistä** (D-066 auki). Vaatii genetiivin

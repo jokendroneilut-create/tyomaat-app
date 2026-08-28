@@ -1,12 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 
-function parseAdminEmails(value: string | undefined) {
-  return (value || "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean)
-}
+import { parseAdminEmails, resolveRole } from "@/lib/auth/roles"
+
+/* Ainoa dashboard-polku jolle myyja paasee. */
+const SELLER_PATH = "/dashboard/users"
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next()
@@ -57,7 +55,33 @@ export async function middleware(request: NextRequest) {
     const admins = parseAdminEmails(process.env.ADMIN_EMAILS)
     const userEmail = (user?.email || "").toLowerCase()
 
-    if (!admins.includes(userEmail)) {
+    /*
+     * Rooli kysytään vain jos ympäristömuuttuja ei jo riitä. Näin
+     * adminin polulle ei tule ylimääräistä kyselyä, ja tänne asti
+     * päätyvät vain ne jotka olisi muutenkin ohjattu pois.
+     */
+    let dbRole: string | null = null
+
+    if (user && !admins.includes(userEmail)) {
+      const { data: rooli } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle()
+
+      dbRole = rooli?.role ?? null
+    }
+
+    const role = resolveRole({ email: userEmail, dbRole, adminEmails: admins })
+
+    /*
+     * Myyjä pääsee VAIN omaan asiakaslistaansa. Muu dashboard ja koko
+     * TIC ovat adminin. Polku vertaillaan tarkasti, jottei
+     * /dashboard/users-alkuinen alipolku avaudu vahingossa.
+     */
+    const sallittu = role === "admin" || (role === "seller" && pathname === SELLER_PATH)
+
+    if (!sallittu) {
       // Ei-admin ohjataan asiakaskotiin. Aiemmin /projects (vanha koti);
       // nyt /today on asiakasnäkymän etusivu.
       const url = request.nextUrl.clone()
