@@ -21,7 +21,7 @@ type AdminUser = {
 
 type Seller = { id: string; email: string | null }
 
-type SortColumn = 'email' | 'created_at' | 'age_days' | 'last_sign_in_at' | 'confirmed'
+type SortColumn = 'email' | 'created_at' | 'age_days' | 'last_sign_in_at' | 'confirmed' | 'seller'
 type SortDirection = 'asc' | 'desc'
 
 function formatDate(value: string | null) {
@@ -133,6 +133,17 @@ export default function UsersPage() {
         cmp = (daysSince(a.created_at) ?? -1) - (daysSince(b.created_at) ?? -1)
       } else if (sortColumn === 'confirmed') {
         cmp = Number(a.confirmed) - Number(b.confirmed)
+      } else if (sortColumn === 'seller') {
+        /*
+         * Aakkosjarjestys myyjan sahkopostin mukaan. Liittamaton on
+         * tyhja merkkijono, joten se ryhmittyy alkuun nousevassa ja
+         * loppuun laskevassa - kumpikin paa on kayttokelpoinen: alusta
+         * loytaa liittamattomat, lopusta ne on siirretty pois tielta.
+         *
+         * Myyjan oma rivi ei ole kenenkaan asiakas, joten sekin menee
+         * tyhjien joukkoon.
+         */
+        cmp = (a.ownerEmail ?? '').localeCompare(b.ownerEmail ?? '', 'fi')
       } else {
         const aVal = a[sortColumn] ?? ''
         const bVal = b[sortColumn] ?? ''
@@ -565,7 +576,15 @@ export default function UsersPage() {
               <SortHeader column="age_days" label="Ikä (pv)" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="last_sign_in_at" label="Viimeksi kirjautunut" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="confirmed" label="Tila" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-              {isAdminView && <th style={{ padding: '8px 4px' }}>Myyjä</th>}
+              {isAdminView && (
+                <SortHeader
+                  column="seller"
+                  label="Myyjä"
+                  sortColumn={sortColumn}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                />
+              )}
               {isAdminView && <th style={{ padding: '8px 4px' }} />}
             </tr>
           </thead>
