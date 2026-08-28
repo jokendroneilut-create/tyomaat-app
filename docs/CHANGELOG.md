@@ -32,6 +32,12 @@ Rajaus on kolmessa kerroksessa: middleware paastaa myyjan vain yhteen
 polkuun, reitti suodattaa rivit palvelimella, ja RLS sitoo liitoksen
 myyjaan. Kayttoliittyman napit ovat vasta neljas kerros.
 
+Sivun ylalaidassa luvut myyjittain: kuinka moni asiakas on kunkin
+myyjan ja kuinka moni ilman myyjaa eli itse hankittu. Myyja- ja
+admin-tunnukset jatetaan laskuista pois, koska ne eivat ole asiakkaita.
+Myyja-sarakkeen otsikosta lista jarjestyy myyjan mukaan kuten muutkin
+sarakkeet; liittamattomat ryhmittyvat nousevassa alkuun.
+
 ### Omat muistiinpanot hankkeelle (D-133)
 
 `/crm`-sivun jokaisessa hankekortissa on nyt vapaa tekstilaatikko.
