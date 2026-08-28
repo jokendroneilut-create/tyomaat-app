@@ -52,6 +52,30 @@ create index if not exists user_project_notes_user_id_idx
   on public.user_project_notes (user_id);
 
 
+-- Uniikki pari VANHALLE taululle, jos sellainen oli jo olemassa.
+--
+-- Taulu oli luotu joskus aiemmin suoraan SQL-editorissa, jolloin
+-- "create table if not exists" ei tehnyt mitaan eika uniikkia paria
+-- syntynyt. Ilman sita upsert kaatuu virheeseen
+-- "there is no unique or exclusion constraint matching the ON CONFLICT
+-- specification", eli tallennus ei toimi lainkaan.
+--
+-- Postgres ei tue "add constraint if not exists", joten tehdaan
+-- ehdollisesti.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conrelid = 'public.user_project_notes'::regclass
+       and conname = 'user_project_notes_user_project_uniq'
+  ) then
+    alter table public.user_project_notes
+      add constraint user_project_notes_user_project_uniq unique (user_id, project_id);
+  end if;
+end
+$$;
+
+
 -- updated_at pidetaan ajan tasalla kannassa, jottei se ole
 -- kayttoliittyman muistin varassa.
 create or replace function public.set_user_project_notes_updated_at()
@@ -137,3 +161,24 @@ create policy user_project_notes_delete_own
 --   drop policy if exists notes_insert_own on public.user_project_notes;
 --   drop policy if exists notes_update_own on public.user_project_notes;
 --   drop policy if exists notes_delete_own on public.user_project_notes;
+--
+--
+-- JA TARKEAMPI LOYTO SAMASTA SYYSTA.
+--
+-- Koska taulu oli jo olemassa, "create table if not exists" ei tehnyt
+-- mitaan - eika uniikkia paria (user_id, project_id) siis syntynyt.
+-- Testikirjoitus paljasti taman:
+--
+--   there is no unique or exclusion constraint matching the
+--   ON CONFLICT specification
+--
+-- Ominaisuus olisi ollut kokonaan rikki: jokainen tallennus olisi
+-- nayttanyt "Tallennus epaonnistui". Ylla oleva do-lohko korjaa taman
+-- myos vanhaan tauluun.
+--
+-- OPETUS: "create table if not exists" on hiljainen. Se ei kerro etta
+-- taulu oli jo olemassa, joten kaikki muutkin taulun sisaiset
+-- maarittelyt (vierasavaimet, kaskadit, oletusarvot) jaavat vanhan
+-- version varaan. Policyt ja triggerit sen sijaan luotiin, koska ne
+-- ovat omia lauseitaan - siksi ristiriita nakyi juuri policyjen
+-- kaksoiskappaleina.
