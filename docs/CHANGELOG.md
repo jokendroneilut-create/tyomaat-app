@@ -11,6 +11,27 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Myyjarooli ja rajattu asiakasnakyma (D-134)
+
+Myyja nakee nyt Kayttajat-nakymassa vain hankkimansa asiakkaat:
+sahkopostin, luontipaivan, kokeilun tilan ja viimeisimman
+kirjautumisen. Ei kutsu-, lukitus- eika poistotoimintoja. Tarkoitus on
+etta myyja osaa muistuttaa niita joiden kokeilu on paattymassa.
+
+Admin liittaa asiakkaan myyjalle kasin: Kayttajat-nakymassa on
+Myyja-sarake, jossa "+ myyjaksi" tekee kayttajasta myyjan ja
+pudotusvalikko liittaa asiakkaan hanelle.
+
+Rooleja ei ollut olemassa lainkaan - admin-oikeus tuli
+ymparistomuuttujasta kymmenessa reitissa. Ensimmainen tyo oli siis
+roolimekanismi kantaan, ei nakyma. Rooli ja liitos ovat omissa
+tauluissaan joihin kayttajalla ei ole kirjoitusoikeutta, jotta
+itsekorotus on rakenteellisesti mahdoton.
+
+Rajaus on kolmessa kerroksessa: middleware paastaa myyjan vain yhteen
+polkuun, reitti suodattaa rivit palvelimella, ja RLS sitoo liitoksen
+myyjaan. Kayttoliittyman napit ovat vasta neljas kerros.
+
 ### Omat muistiinpanot hankkeelle (D-133)
 
 `/crm`-sivun jokaisessa hankekortissa on nyt vapaa tekstilaatikko.

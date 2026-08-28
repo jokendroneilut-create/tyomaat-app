@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
 import { getRequestRole } from "@/lib/auth/getRequestRole"
-import { canSeeOwnCustomers, isAdmin } from "@/lib/auth/roles"
+import { canSeeOwnCustomers, isAdmin, parseAdminEmails, resolveRole } from "@/lib/auth/roles"
 import { visibleUsers } from "@/lib/users/visibleUsers"
 
 export const runtime = "nodejs"
@@ -60,6 +60,8 @@ export async function GET(req: Request) {
      * Liitokset ja roolit haetaan erikseen, jotta puuttuva taulu ei
      * kaada listaa ennen kuin DDL on ajettu.
      */
+    const adminEmails = parseAdminEmails(process.env.ADMIN_EMAILS)
+
     const omistajat = new Map<string, string>()
     const roolit = new Map<string, string>()
 
@@ -100,7 +102,17 @@ export async function GET(req: Request) {
           locked: Boolean((u as any).app_metadata?.locked),
           lockedReason: (u as any).app_metadata?.locked_reason ?? null,
 
-          role: roolit.get(u.id) ?? "user",
+          /*
+           * Sama ratkaisu kuin paasytarkistuksessa: ADMIN_EMAILS-listalla
+           * oleva on admin vaikka kantarivia ei olisi. Ilman tata han
+           * nakyisi listassa tavallisena kayttajana, jolle voisi
+           * vahingossa valita myyjan.
+           */
+          role: resolveRole({
+            email: u.email,
+            dbRole: roolit.get(u.id) ?? null,
+            adminEmails,
+          }),
           ownerId,
           ownerEmail: ownerId ? (sahkopostit.get(ownerId) ?? null) : null,
         }

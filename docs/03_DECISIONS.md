@@ -5,6 +5,73 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-134 – Myyjärooli: rajaus kolmessa kerroksessa, ei yhdessä
+
+Myyjän pitää nähdä hankkimansa asiakkaat ja se, ovatko he ottaneet
+tuotteen käyttöön — jotta hän osaa muistuttaa niitä joiden kokeilu on
+päättymässä. Muiden asiakkaita hän ei saa nähdä.
+
+**ROOLEJA EI OLLUT OLEMASSA.** Admin-oikeus tuli ympäristömuuttujasta
+`ADMIN_EMAILS`, jota vasten verrattiin sähköpostia kymmenessä eri
+reitissä. Kolmas taso ei mahdu siihen: ympäristömuuttuja ei voi kertoa
+*kenen* asiakkaita kukin myyjä sai, eikä sitä voi muuttaa ilman uutta
+julkaisua. Ensimmäinen työ oli siis roolimekanismi, ei näkymä.
+
+**ROOLI OMAAN TAULUUN, EI `profiles`-SARAKKEEKSI.**
+
+`profiles`-taulussa on rivi jokaiselle 101 tunnukselle, joten sarake
+olisi ollut helppo. Se olisi ollut myös vaarallinen: jos `profiles`
+sallii käyttäjän päivittää omaa riviään (vaikka vain nimeä), sama
+käytäntö antaisi hänen asettaa itselleen roolin `admin`.
+`user_roles`-taulussa ei ole yhtään käyttäjän kirjoituspolitiikkaa,
+joten korotus on rakenteellisesti mahdoton — ei kiinni siitä muistaako
+joku tarkistaa.
+
+Samasta syystä liitos `customer_owners` on oma taulunsa.
+
+**RAJAUS ON KOLMESSA KERROKSESSA.**
+
+Käyttöliittymän piilotus ei ole suoja. Siksi:
+
+1. **Middleware** päästää myyjän vain polkuun `/dashboard/users`. Polku
+   vertaillaan tarkasti (`===`), jottei alipolku avaudu vahingossa.
+2. **`/api/admin/list-users`** suodattaa rivit palvelimella kutsujan
+   roolin mukaan.
+3. **RLS** sitoo `customer_owners`-rivin `seller_id`-arvoon.
+
+Napit piilotetaan vasta neljäntenä.
+
+Suodatus on omassa funktiossaan `lib/users/visibleUsers.ts` eikä rivinä
+reitin sisällä, koska se on tietoturvaraja: jos se vuotaa, myyjä näkee
+toisen myyjän asiakkaat. Testit kohdistuvat hiljaisiin vuotoihin —
+liittämätön asiakas ei näy myyjälle, ja tyhjä katsojatunnus ei osu
+riveihin joilla `ownerId` on null.
+
+**`ADMIN_EMAILS` JÄÄ VOIMAAN JA VOITTAA AINA.** Jos kannan sisältö
+menee rikki tai admin poistaa vahingossa oman rivinsä, pääsy säilyy.
+Lukitsematta jääminen on tärkeämpää kuin yksi totuuden lähde. Sama
+koskee tilannetta jossa roolin haku epäonnistuu: rooli jää tyhjäksi,
+eikä kukaan saa oikeuksia joita ei ansaitse.
+
+**KORJAUS AIEMPAAN ARVIOON.** Kirjasin työjonoon että myyjä näkisi vain
+"ei ole kirjautunut" eikä kokeilun tilaa, koska tilaustietoa ei kerätä.
+Se oli väärin: `lib/users/trial.ts` johtaa kokeilun tilan tunnuksen
+iästä (30 päivää luonnista, varoitus viikkoa ennen), ja admin-näkymä
+näytti sen jo. Myyjä saa siis juuri sen tiedon jota muistutteluun
+tarvitaan, eikä tilaustietoa tarvitse alkaa kerätä.
+
+Todennettu 29.8.2026 oikeaa kantaa vasten, rivit siivottu perässä:
+kielletty rooli torjutaan kannassa, yksi rooli per tunnus, myyjä ei voi
+olla oma asiakkaansa, yksi omistaja per asiakas, ja RLS estää
+kirjautumattoman luvun sekä korotus- ja liitosyritykset.
+
+`docs/sql/2026-08-28_user_roles.sql` ·
+`docs/sql/2026-08-28_customer_owners.sql` · `lib/auth/roles.ts` ·
+`lib/users/visibleUsers.ts` · `middleware.ts`
+
+---
+
+
 ### D-133 – Käyttäjän oma teksti ei saa kadota sivutuotteena
 
 `/crm`-sivulle lisättiin vapaa muistiinpanolaatikko per hanke. Kaksi

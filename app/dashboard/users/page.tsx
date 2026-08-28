@@ -371,7 +371,7 @@ export default function UsersPage() {
      * 900 pikselissa sahkopostisarake leikkautui ja paivamaarat
      * katkesivat kolmelle riville.
      */
-    <div style={{ padding: 24, maxWidth: 1280 }}>
+    <div style={{ padding: 24, maxWidth: isAdminView ? 1600 : 1280 }}>
       <h1>{isAdminView ? 'Käyttäjät' : 'Omat asiakkaat'}</h1>
 
       {!isAdminView && (
@@ -466,7 +466,19 @@ export default function UsersPage() {
         </div>
 
         <div style={{ marginTop: 12, overflowX: 'auto' }}>
-          <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse' }}>
+          {/*
+            * Myyja-sarake tuo lisaa leveytta, joten adminin taulukko
+            * tarvitsee enemman tilaa kuin myyjan. Ilman tata Lukitse- ja
+            * Poista-napit jaavat vaakavieritykseen piiloon - sama vika
+            * joka korjattiin kerran jo nostamalla 900:aan.
+            */}
+          <table
+            style={{
+              width: '100%',
+              minWidth: isAdminView ? 1340 : 900,
+              borderCollapse: 'collapse',
+            }}
+          >
           <thead>
             <tr style={{ textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>
               <SortHeader column="email" label="Sähköposti" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
@@ -552,6 +564,8 @@ export default function UsersPage() {
                             borderRadius: 6,
                             border: '1px solid #d1d5db',
                             background: '#fff',
+                            /* Pitka sahkoposti ei saa levittaa saraketta. */
+                            maxWidth: 190,
                           }}
                         >
                           <option value="">— ei myyjää —</option>
