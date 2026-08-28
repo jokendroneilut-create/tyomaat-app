@@ -11,6 +11,38 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Omat muistiinpanot hankkeelle (D-133)
+
+`/crm`-sivun jokaisessa hankekortissa on nyt vapaa tekstilaatikko.
+Tallennus tapahtuu 900 ms kirjoittamisen tauottua ja lisaksi kentasta
+poistuttaessa, jottei jokainen nappainpainallus kirjoita kantaan mutta
+viimeinen ajatus ei myoskaan jaa lahettamatta.
+
+Oma taulu `user_project_notes` eika sarake suosikkeihin: omista poisto
+on oikea DELETE, joten sarakkeena teksti olisi kadonnut mukana. Nyt
+hanke voi poistua omista ja palata, ja muistiinpano on tallella.
+
+Toteutuksessa loytyi kesken jaanyt tyo: taulu oli luotu joskus aiemmin
+suoraan SQL-editorissa, joten `create table if not exists` ei tehnyt
+mitaan eika uniikkia paria syntynyt. Tallennus olisi ollut kokonaan
+rikki. Sailyva saanto: kasin ajettu DDL todennetaan kirjoituksella.
+
+### Omat hankkeet oikeassa jarjestyksessa
+
+`/crm` jarjesti listan hankkeen luontipaivan mukaan, ei sen milloin
+kayttaja lisasi sen omiin. Jarjestys oli vaara 11 kayttajalla 13:sta,
+yhdella tasmalleen vaarinpain. Nyt viimeksi lisatty on ylimpana.
+
+### Maakuntavalikko monivalinnaksi
+
+`/projects`-sivun maakuntavalikko salli vain yhden maakunnan, vaikka
+urakoitsija toimii tyypillisesti muutamalla naapurimaakunnalla. Nyt
+monivalinta kuten vaihe, ja muutos ulottuu myos hakuvahteihin.
+
+Vanhat hakuvahdit tallentavat kentan merkkijonona, joten lukijoiden on
+kestettava molemmat muodot. Saanto oli kolmessa paikassa kopioituna ja
+on nyt jaettu `lib/watchlists/filterValues.ts`:aan testeineen.
+
 ### Granlundin tasmaytys olemassa oleviin (D-132)
 
 Rikastuksen edellytys on tunnistaa sama hanke kahdesta lahteesta eri

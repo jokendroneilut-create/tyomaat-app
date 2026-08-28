@@ -4,6 +4,62 @@ Merkittäviä suunnittelupäätöksiä ja niiden perustelut, jottei niitä käyd
 uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
+
+### D-133 – Käyttäjän oma teksti ei saa kadota sivutuotteena
+
+`/crm`-sivulle lisättiin vapaa muistiinpanolaatikko per hanke. Kaksi
+päätöstä, joista jälkimmäinen löytyi vasta testaamalla.
+
+**MUISTIINPANO OMAAN TAULUUN, EI SARAKKEEKSI SUOSIKKEIHIN.**
+
+Ilmeisin toteutus olisi ollut sarake `user_project_favorites`-tauluun.
+Se olisi ollut väärin: omista poisto on oikea `DELETE`
+(`confirmRemoveFavorite`), joten muistiinpano olisi kadonnut mukana
+ilman varoitusta. Käyttäjän itse kirjoittama teksti on arvokkaampaa kuin
+mikään keräämämme kenttä.
+
+Nyt hanke voidaan poistaa omista ja lisätä takaisin, ja teksti on yhä
+tallella. Sama linja kuin TIC-jonossa, jossa poisto on tilamerkintä eikä
+`DELETE`.
+
+**`create table if not exists` ON HILJAINEN.**
+
+Taulu `user_project_notes` oli luotu joskus aiemmin suoraan
+SQL-editorissa ja työ oli jäänyt siihen: sitä ei mainita missään
+dokumentissa, yksikään koodirivi ei ollut viitannut siihen, eikä sen
+policy-nimiä löydy repositorion historiasta.
+
+Siksi DDL:n ajo ei luonut taulua — eikä siis myöskään uniikkia paria
+`(user_id, project_id)`. Policyt ja liipaisin sen sijaan syntyivät,
+koska ne ovat omia lauseitaan. Ristiriita näkyi **kahdeksana policyna
+neljän sijaan**, mutta se oli oire eikä vika.
+
+Varsinainen vika löytyi vasta kirjoitustestillä:
+
+```
+there is no unique or exclusion constraint matching the
+ON CONFLICT specification
+```
+
+Ominaisuus olisi ollut kokonaan rikki. Jokainen tallennus olisi
+näyttänyt käyttäjälle "Tallennus epäonnistui", ja minä olisin
+raportoinut sen valmiiksi — koska sivu on kirjautumisen takana enkä
+nähnyt sitä itse.
+
+**Sääntö tästä eteenpäin: käsin ajettu DDL todennetaan kirjoituksella,
+ei silmäilemällä.** Taulun olemassaolo ei todista että sen rakenne on
+se mitä tiedosto sanoo. Kaikki taulun *sisäiset* määrittelyt —
+vierasavaimet, kaskadit, uniikit parit, oletusarvot — jäävät vanhan
+version varaan, ja `if not exists` vaikenee siitä.
+
+Todennettu 28.8.2026 oikeaa kantaa vasten, rivit siivottu perässä:
+tallennus luo ja päivittää ilman kaksoisriviä, `updated_at` päivittyy,
+RLS estää kirjautumattoman luvun ja kirjoituksen.
+
+`app/crm/ProjectNotes.tsx` · `docs/sql/2026-08-28_user_project_notes.sql`
+
+---
+
 ### D-132 – Otsikko tunnistaa rakennuksen, ei hanketta
 
 Granlund on suunnittelija ja mukana vuosia ennen urakoitsijaa (D-131),
