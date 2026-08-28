@@ -736,19 +736,10 @@ muistin varassa.
 
 ### Asiakaskäyttöliittymä
 
-- **Omat muistiinpanot hankkeelle (`/crm`).** Vapaa tekstilaatikko per
-  hanke, käyttäjäkohtainen. Arvioitu 28.8.2026: **pieni työ, noin
-  puoli päivää**, mutta yksi ratkaisu on tehtävä ensin — säilyvätkö
-  muistiinpanot jos hanke poistetaan omista.
-
-  `user_project_favorites` poistetaan oikeasti (`delete`), joten
-  muistiinpano sarakkeena siinä katoaisi mukana. Oma taulu
-  `user_project_notes` säilyttäisi tekstin. Sama linja kuin
-  TIC-jonossa, jossa poisto on tilamerkintä eikä `DELETE`.
-
-  Osat: käsin ajettava DDL + RLS (`docs/sql/`), lataus ja tallennus
-  `/crm`-sivulle, viive tallennukseen ettei joka näppäily kirjoita
-  kantaan, ja testitilin nollauksen laajennus.
+- ~~**Omat muistiinpanot hankkeelle (`/crm`).**~~ Tehty 28.8.2026.
+  Oma taulu `user_project_notes`, jotta teksti säilyy vaikka hanke
+  poistetaan omista — omista poisto on oikea DELETE.
+  DDL: `docs/sql/2026-08-28_user_project_notes.sql`.
 
 - ~~**Maakuntavalikko monivalinnaksi (`/projects`).**~~ Tehty 28.8.2026
   (`c2f323e`). Sääntö "merkkijono tai lista" oli kopioituna kolmessa

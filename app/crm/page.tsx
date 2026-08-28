@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import ConfirmModal from '../components/ConfirmModal'
 import TodayProjectModal from '../today/components/TodayProjectModal'
+import ProjectNotes from './ProjectNotes'
 
 type Project = {
   id: string
@@ -57,6 +58,8 @@ export default function CRMPage() {
   const [confirmOpen, setConfirmOpen] = useState(false)
 const [confirmProjectId, setConfirmProjectId] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [notes, setNotes] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const run = async () => {
@@ -64,6 +67,8 @@ const [confirmProjectId, setConfirmProjectId] = useState<string | null>(null)
 
       const { data: userRes } = await supabase.auth.getUser()
       const userId = userRes?.user?.id
+
+      setUserId(userId ?? null)
 
       if (!userId) {
         setProjects([])
@@ -85,6 +90,26 @@ const [confirmProjectId, setConfirmProjectId] = useState<string | null>(null)
           .order('created_at', { ascending: false }),
         supabase.from('user_project_status').select('project_id,status').eq('user_id', userId),
       ])
+
+      /*
+       * Muistiinpanot haetaan erikseen eika Promise.all:issa, koska
+       * taulu voi puuttua kunnes DDL on ajettu. Virhe ei saa kaataa
+       * koko sivua - silloin CRM olisi kaytannossa rikki.
+       */
+      const { data: noteRows, error: noteError } = await supabase
+        .from('user_project_notes')
+        .select('project_id,note')
+        .eq('user_id', userId)
+
+      if (noteError) {
+        console.error('Muistiinpanojen lataus epaonnistui:', noteError)
+      } else {
+        const n: Record<string, string> = {}
+        ;(noteRows ?? []).forEach((r: any) => {
+          n[r.project_id] = r.note ?? ''
+        })
+        setNotes(n)
+      }
 
       const favIds = (favs ?? []).map((r: any) => r.project_id)
       setFavorites(new Set(favIds))
@@ -315,6 +340,14 @@ const confirmRemoveFavorite = async () => {
                   <option value="lost">Hävitty</option>
                 </select>
               </div>
+
+              {userId && (
+                <ProjectNotes
+                  projectId={p.id}
+                  userId={userId}
+                  initialNote={notes[p.id] ?? ''}
+                />
+              )}
             </div>
           ))}
         </div>
