@@ -734,6 +734,37 @@ muistin varassa.
   hallintapaneelista poistettu tili voi kadottaa luontipäivänsä, jos
   täsmäytystä ei ole ajettu välissä.
 
+### Asiakaskäyttöliittymä
+
+- **Omat muistiinpanot hankkeelle (`/crm`).** Vapaa tekstilaatikko per
+  hanke, käyttäjäkohtainen. Arvioitu 28.8.2026: **pieni työ, noin
+  puoli päivää**, mutta yksi ratkaisu on tehtävä ensin — säilyvätkö
+  muistiinpanot jos hanke poistetaan omista.
+
+  `user_project_favorites` poistetaan oikeasti (`delete`), joten
+  muistiinpano sarakkeena siinä katoaisi mukana. Oma taulu
+  `user_project_notes` säilyttäisi tekstin. Sama linja kuin
+  TIC-jonossa, jossa poisto on tilamerkintä eikä `DELETE`.
+
+  Osat: käsin ajettava DDL + RLS (`docs/sql/`), lataus ja tallennus
+  `/crm`-sivulle, viive tallennukseen ettei joka näppäily kirjoita
+  kantaan, ja testitilin nollauksen laajennus.
+
+- **Maakuntavalikko monivalinnaksi (`/projects`).** Nyt yksi maakunta
+  kerrallaan. Arvioitu 28.8.2026: **pieni työ**, koska `phase` on jo
+  monivalinta ja malli on kopioitavissa sellaisenaan
+  (`projects-multiselect`-komponentti ja `applyPhaseFilter`).
+
+  Kosketuspinnat: `app/projects/page.tsx` (tila `string` → `string[]`,
+  valikon merkintä, suodatus, kaupunkilistan johtaminen, URL-parametri,
+  hakuvahdin nimi ja suodattimet) sekä `app/api/digests/route.ts` kolme
+  kohtaa ja `app/watchlists/page.tsx` yksi.
+
+  **Vanhat hakuvahdit tallentavat `region`-kentän merkkijonona**, joten
+  lukijoiden on kestettävä molemmat muodot — kuten `applyPhaseFilter` jo
+  tekee vaiheelle.
+
+
 ## Tietoisesti taakse / ei nyt
 
 - **Lisää discovery-lähteitä** ilman asiakaskerroksen kehitystä — laskeva tuotto,

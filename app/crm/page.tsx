@@ -74,7 +74,15 @@ const [confirmProjectId, setConfirmProjectId] = useState<string | null>(null)
       }
 
       const [{ data: favs }, { data: stats }] = await Promise.all([
-        supabase.from('user_project_favorites').select('project_id').eq('user_id', userId),
+        /*
+         * created_at on lisayshetki omiin, ei hankkeen luontipaiva.
+         * Jarjestys otetaan tasta, jotta viimeksi lisatty on ylimpana.
+         */
+        supabase
+          .from('user_project_favorites')
+          .select('project_id,created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false }),
         supabase.from('user_project_status').select('project_id,status').eq('user_id', userId),
       ])
 
@@ -97,13 +105,21 @@ const [confirmProjectId, setConfirmProjectId] = useState<string | null>(null)
         .from('projects')
         .select('id,name,city,region,phase,created_at')
         .in('id', favIds)
-        .order('created_at', { ascending: false })
 
       if (error) {
         console.error(error)
         setProjects([])
       } else {
-        setProjects((projs as Project[]) ?? [])
+        /*
+         * Kanta palauttaa rivit omassa jarjestyksessaan, joten lista
+         * jarjestetaan lisayshetken mukaan. Aiemmin tassa luki
+         * .order('created_at') joka on HANKKEEN luontipaiva - mitattuna
+         * 28.8.2026 jarjestys oli vaara 11 kayttajalla 13:sta.
+         */
+        const sija = new Map(favIds.map((id: string, i: number) => [id, i]))
+        const lista = ((projs as Project[]) ?? []).slice()
+        lista.sort((a, b) => (sija.get(a.id) ?? 0) - (sija.get(b.id) ?? 0))
+        setProjects(lista)
       }
 
       setLoading(false)
