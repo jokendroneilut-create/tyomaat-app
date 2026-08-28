@@ -85,6 +85,39 @@ export default function UsersPage() {
     return { ohi, pian }
   }, [users])
 
+  /*
+   * Asiakkaat myyjittain.
+   *
+   * Myyja- ja admin-tunnukset EIVAT ole asiakkaita, joten ne jatetaan
+   * laskuista pois - muuten summa ei tasmaisi asiakasmaaraan. Ilman
+   * myyjaa olevat ovat itse hankittuja.
+   */
+  const sellerSummary = useMemo(() => {
+    const asiakkaat = users.filter((u) => (u.role ?? 'user') === 'user')
+
+    const maarat = new Map<string, number>()
+    let omat = 0
+
+    for (const u of asiakkaat) {
+      if (!u.ownerId) omat += 1
+      else maarat.set(u.ownerId, (maarat.get(u.ownerId) ?? 0) + 1)
+    }
+
+    const myyjittain = sellers
+      .map((s) => ({ id: s.id, email: s.email, maara: maarat.get(s.id) ?? 0 }))
+      .sort((a, b) => b.maara - a.maara)
+
+    /*
+     * Liitos voi osoittaa tunnukseen jota ei ole myyjalistalla (rooli
+     * poistettu kesken kaiken). Ei jateta niita nakymattomiin.
+     */
+    const tuntematon = [...maarat.entries()]
+      .filter(([id]) => !sellers.some((s) => s.id === id))
+      .reduce((a, [, n]) => a + n, 0)
+
+    return { myyjittain, omat, tuntematon, yhteensa: asiakkaat.length }
+  }, [users, sellers])
+
   const sortedUsers = useMemo(() => {
     const sorted = [...users].sort((a, b) => {
       let cmp = 0
@@ -382,6 +415,52 @@ export default function UsersPage() {
       )}
 
       {isAdminView && (
+        <div
+          style={{
+            marginTop: 16,
+            padding: 16,
+            border: '1px solid #e5e7eb',
+            borderRadius: 8,
+            background: '#f9fafb',
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: 10 }}>
+            Asiakkaat myyjittäin{' '}
+            <span style={{ fontWeight: 400, color: '#6b7280', fontSize: 14 }}>
+              ({sellerSummary.yhteensa} asiakasta · myyjä- ja admin-tunnukset
+              eivät ole mukana)
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            <SummaryCard
+              label="Omat (ei myyjää)"
+              value={sellerSummary.omat}
+              highlight
+            />
+
+            {sellerSummary.myyjittain.map((s) => (
+              <SummaryCard key={s.id} label={s.email ?? '(tuntematon)'} value={s.maara} />
+            ))}
+
+            {sellerSummary.tuntematon > 0 && (
+              <SummaryCard
+                label="Poistetulla myyjällä"
+                value={sellerSummary.tuntematon}
+              />
+            )}
+          </div>
+
+          {sellerSummary.myyjittain.length === 0 && (
+            <p style={{ marginTop: 10, fontSize: 13, color: '#6b7280' }}>
+              Yhtään myyjää ei ole vielä merkitty. Tee käyttäjästä myyjä
+              taulukon Myyjä-sarakkeesta.
+            </p>
+          )}
+        </div>
+      )}
+
+      {isAdminView && (
       <div style={{ marginTop: 16, padding: 16, border: '1px solid #e5e7eb', borderRadius: 8 }}>
         <label style={{ fontWeight: 700 }}>Lisää uusi käyttäjä</label>
 
@@ -653,6 +732,52 @@ export default function UsersPage() {
           </tbody>
         </table>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* Yksi luku yhdelle myyjalle. Omat korostetaan, koska se on vertailukohta. */
+function SummaryCard({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string
+  value: number
+  highlight?: boolean
+}) {
+  return (
+    <div
+      style={{
+        minWidth: 150,
+        padding: '8px 12px',
+        borderRadius: 8,
+        background: '#fff',
+        border: `1px solid ${highlight ? '#bfdbfe' : '#e5e7eb'}`,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 12,
+          color: '#6b7280',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: 220,
+        }}
+        title={label}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: 22,
+          fontWeight: 800,
+          color: highlight ? '#1d4ed8' : '#111827',
+        }}
+      >
+        {value}
       </div>
     </div>
   )
