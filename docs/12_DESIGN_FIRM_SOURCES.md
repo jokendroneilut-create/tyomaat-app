@@ -1,5 +1,10 @@
 # Suunnittelu-, insinööri- ja arkkitehtitoimistot lähteinä
 
+> **TILA: HARKINNASSA, ei toteuteta 28.8.2026.** Kartoitus on tehty ja
+> tulokset alla, mutta yhtäkään lähdettä ei lisätä toistaiseksi. Tämä on
+> tietoinen päätös eikä unohdus: älä ala toteuttaa näitä ilman että asia
+> otetaan uudelleen esiin.
+
 Kartoitettu 28.8.2026. Lähtökohta on D-131: **suunnittelija on hankkeessa
 vuosia ennen urakoitsijaa** ja tietää tilaajan. Granlundilla tilaaja
 löytyi 99 %:sta hankkeista — juuri se kenttä joka meiltä useimmiten
