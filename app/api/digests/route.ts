@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { PHASE_LABELS } from "@/lib/projects/phases";
+import { describeFilter, filterValues } from "@/lib/watchlists/filterValues";
 
 const ROUTE_VERSION = "trace-v3-2026-03-06";
 
@@ -79,14 +80,13 @@ function summarizeFilters(filters: any): string {
   if (!filters || typeof filters !== "object") return "Ei suodattimia";
 
   const parts: string[] = [];
+
   if (filters.q) parts.push(`Haku: ${filters.q}`);
-  if (filters.region) parts.push(`Maakunta: ${filters.region}`);
+  const maakunta = describeFilter("Maakunta", filters.region);
+  if (maakunta) parts.push(maakunta);
   if (filters.city) parts.push(`Kaupunki: ${filters.city}`);
-  if (Array.isArray(filters.phase)) {
-    if (filters.phase.length > 0) parts.push(`Vaihe: ${filters.phase.join(", ")}`);
-  } else if (filters.phase) {
-    parts.push(`Vaihe: ${filters.phase}`);
-  }
+  const vaihe = describeFilter("Vaihe", filters.phase);
+  if (vaihe) parts.push(vaihe);
   if (filters.property_type) parts.push(`Kohdetyyppi: ${filters.property_type}`);
 
   return parts.length ? parts.join(" • ") : "Ei suodattimia";
@@ -102,25 +102,21 @@ function isDue(freq: "daily" | "weekly", lastSentAt: string | null) {
 }
 
 /*
- * Vaihe voi olla yksittäinen merkkijono (ennen monivalintaa tallennetut
- * hakuvahdit) tai lista. Vanhat rivit jäävät kantaan sellaisenaan, joten
- * molemmat muodot on osattava lukea.
+ * Yksi arvo haetaan tasavertailulla ja monta `in`-ehdolla. Tyhjä rajaus
+ * ei kavenna hakua lainkaan.
  */
-function applyPhaseFilter(q: any, phase: unknown) {
-  if (Array.isArray(phase)) {
-    const values = phase.filter((value) => typeof value === "string" && value)
-    return values.length > 0 ? q.in("phase", values) : q
-  }
-
-  return phase ? q.eq("phase", phase) : q
+function applyListFilter(q: any, column: string, value: unknown) {
+  const values = filterValues(value)
+  if (values.length === 0) return q
+  return values.length === 1 ? q.eq(column, values[0]) : q.in(column, values)
 }
 
 function applyProjectFilters(q: any, filters: any) {
   if (!filters || typeof filters !== "object") return q;
 
-  if (filters.region) q = q.eq("region", filters.region);
+  q = applyListFilter(q, "region", filters.region);
   if (filters.city) q = q.eq("city", filters.city);
-  q = applyPhaseFilter(q, filters.phase);
+  q = applyListFilter(q, "phase", filters.phase);
   if (filters.property_type) q = q.eq("property_type", filters.property_type);
 
   if (filters.q && typeof filters.q === "string" && filters.q.trim()) {
@@ -136,15 +132,9 @@ function applyProjectFilters(q: any, filters: any) {
 function applyProjectChangeFilters(q: any, filters: any) {
   if (!filters || typeof filters !== "object") return q;
 
-  if (filters.region) q = q.eq("after->>region", filters.region);
+  q = applyListFilter(q, "after->>region", filters.region);
   if (filters.city) q = q.eq("after->>city", filters.city);
-
-  if (Array.isArray(filters.phase)) {
-    const values = filters.phase.filter((value: unknown) => typeof value === "string" && value)
-    if (values.length > 0) q = q.in("after->>phase", values)
-  } else if (filters.phase) {
-    q = q.eq("after->>phase", filters.phase)
-  }
+  q = applyListFilter(q, "after->>phase", filters.phase);
 
   if (filters.property_type) q = q.eq("after->>property_type", filters.property_type);
 

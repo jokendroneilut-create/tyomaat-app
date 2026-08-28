@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Dispatch, RefObject, SetStateAction } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import MapClient from './MapClient'
 import type { MapBounds } from './Map'
@@ -119,6 +120,37 @@ function useIsMobile(breakpoint = 768) {
   return isMobile
 }
 
+/*
+ * Sulkee avoimen monivalintapaneelin kun klikataan sen ulkopuolelle tai
+ * painetaan Escapea. Jaettu, koska sekä vaihe- että maakuntavalikko
+ * tarvitsevat täsmälleen saman käytöksen.
+ */
+function useCloseOnOutside(
+  open: boolean,
+  ref: RefObject<HTMLDivElement | null>,
+  setOpen: Dispatch<SetStateAction<boolean>>
+) {
+  useEffect(() => {
+    if (!open) return
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!ref.current?.contains(event.target as Node)) setOpen(false)
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open, ref, setOpen])
+}
+
 function toNumberOrNull(v: unknown): number | null {
   if (v == null) return null
   if (typeof v === 'number') return Number.isFinite(v) ? v : null
@@ -218,7 +250,14 @@ export default function Projects() {
   const [showTeamHighlights, setShowTeamHighlights] = useState(true)
 
   const [q, setQ] = useState('')
-  const [region, setRegion] = useState<string>('')
+  /*
+   * Maakuntasuodatin on monivalinta samasta syystä kuin vaihe alla:
+   * urakoitsija toimii tyypillisesti muutamalla naapurimaakunnalla, ei
+   * yhdellä eikä koko maassa. Tyhjä lista = ei rajausta.
+   */
+  const [region, setRegion] = useState<string[]>([])
+  const [regionOpen, setRegionOpen] = useState(false)
+  const regionRef = useRef<HTMLDivElement | null>(null)
   const [city, setCity] = useState<string>('')
   /*
    * Vaihesuodatin on monivalinta: käyttäjä haluaa nähdä esimerkiksi
@@ -286,8 +325,19 @@ export default function Projects() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    /*
+     * Osoiterivillä maakunnat ovat pilkulla eroteltuina. Yksi maakunta
+     * toimii yhä sellaisenaan, joten vanhat linkit eivät hajoa.
+     */
     const regionParam = params.get('region')
-    if (regionParam) setRegion(regionParam)
+    if (regionParam) {
+      setRegion(
+        regionParam
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean)
+      )
+    }
   }, [])
 
   useEffect(() => {
@@ -377,7 +427,7 @@ export default function Projects() {
     setWatchFrequency('weekly')
 
     const parts = [
-      region || null,
+      region.length > 0 ? region.join(', ') : null,
       city || null,
       phase.length > 0 ? phase.join(', ') : null,
       propertyType || null,
@@ -416,7 +466,12 @@ export default function Projects() {
 
       const filters = {
         q: q.trim() || null,
-        region: region || null,
+        /*
+         * Hakuvahdille lista, kuten vaiheelle. /api/digests osaa lukea
+         * sekä yksittäisen merkkijonon (vanhat tallennetut haut) että
+         * listan.
+         */
+        region: region.length > 0 ? region : null,
         city: city || null,
         /*
          * Hakuvahdille lista. /api/digests osaa lukea sekä yksittäisen
@@ -626,7 +681,8 @@ setTeamModeEnabled(true)
   const regions = useMemo(() => uniqSorted(projects.map((p) => p.region)), [projects])
 
   const cities = useMemo(() => {
-    const base = region ? projects.filter((p) => (p.region || '') === region) : projects
+    const base =
+      region.length > 0 ? projects.filter((p) => region.includes(p.region || '')) : projects
     return uniqSorted(base.map((p) => p.city))
   }, [projects, region])
 
@@ -638,7 +694,7 @@ setTeamModeEnabled(true)
     const needle = q.trim().toLowerCase()
 
     return projects.filter((p) => {
-      if (region && (p.region || '') !== region) return false
+      if (region.length > 0 && !region.includes(p.region || '')) return false
       if (city && p.city !== city) return false
       if (phase.length > 0 && !phase.includes(displayPhaseLabel(p.phase))) return false
 
@@ -702,7 +758,7 @@ setTeamModeEnabled(true)
 
   const clearFilters = () => {
     setQ('')
-    setRegion('')
+    setRegion([])
     setCity('')
     setPhase([])
     setPropertyType('')
@@ -712,25 +768,8 @@ setTeamModeEnabled(true)
    * Paneeli sulkeutuu kun klikataan sen ulkopuolelle. Ilman tätä avattu
    * valikko jäisi auki ja peittäisi kartan.
    */
-  useEffect(() => {
-    if (!phaseOpen) return
-
-    const onPointerDown = (event: MouseEvent) => {
-      if (!phaseRef.current?.contains(event.target as Node)) setPhaseOpen(false)
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setPhaseOpen(false)
-    }
-
-    document.addEventListener('mousedown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [phaseOpen])
+  useCloseOnOutside(phaseOpen, phaseRef, setPhaseOpen)
+  useCloseOnOutside(regionOpen, regionRef, setRegionOpen)
 
   useEffect(() => {
     if (!city) return
@@ -799,16 +838,54 @@ setTeamModeEnabled(true)
             />
           </div>
 
-          <div>
+          <div className="projects-multiselect" ref={regionRef}>
             <label className="projects-label">Maakunta</label>
-            <select className="projects-select" value={region} onChange={(e) => setRegion(e.target.value)}>
-              <option value="">Kaikki</option>
-              {regions.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
+
+            <button
+              type="button"
+              className="projects-multiselect-toggle"
+              onClick={() => setRegionOpen((open) => !open)}
+              aria-expanded={regionOpen}
+            >
+              <span>
+                {region.length === 0
+                  ? 'Kaikki'
+                  : region.length === 1
+                    ? region[0]
+                    : `${region.length} valittu`}
+              </span>
+              <span aria-hidden>▾</span>
+            </button>
+
+            {regionOpen && (
+              <div className="projects-multiselect-panel">
+                <div className="projects-multiselect-actions">
+                  <button type="button" onClick={() => setRegion([...regions])}>
+                    Valitse kaikki
+                  </button>
+                  <button type="button" onClick={() => setRegion([])}>
+                    Tyhjennä
+                  </button>
+                </div>
+
+                {regions.map((r) => (
+                  <label key={r} className="projects-multiselect-option">
+                    <input
+                      type="checkbox"
+                      checked={region.includes(r)}
+                      onChange={(e) =>
+                        setRegion((current) =>
+                          e.target.checked
+                            ? [...current, r]
+                            : current.filter((value) => value !== r)
+                        )
+                      }
+                    />
+                    {r}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

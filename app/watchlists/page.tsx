@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import { describeFilter } from '@/lib/watchlists/filterValues'
 
 type SavedSearch = {
   id: string
@@ -47,15 +48,13 @@ function summarizeFilters(filters: any): string {
   if (!filters || typeof filters !== 'object') return '—'
 
   const parts: string[] = []
+
   if (filters.q) parts.push(`Haku: ${filters.q}`)
-  if (filters.region) parts.push(`Maakunta: ${filters.region}`)
+  const maakunta = describeFilter('Maakunta', filters.region)
+  if (maakunta) parts.push(maakunta)
   if (filters.city) parts.push(`Kaupunki: ${filters.city}`)
-  // Vaihe voi olla lista (monivalinta) tai merkkijono (vanhat hakuvahdit).
-  if (Array.isArray(filters.phase)) {
-    if (filters.phase.length > 0) parts.push(`Vaihe: ${filters.phase.join(', ')}`)
-  } else if (filters.phase) {
-    parts.push(`Vaihe: ${filters.phase}`)
-  }
+  const vaihe = describeFilter('Vaihe', filters.phase)
+  if (vaihe) parts.push(vaihe)
   if (filters.property_type) parts.push(`Kohdetyyppi: ${filters.property_type}`)
 
   return parts.length ? parts.join(' • ') : 'Ei suodattimia'
