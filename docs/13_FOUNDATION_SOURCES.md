@@ -134,3 +134,43 @@ täsmäytysavain mitä meillä on.
 Ennen toteutusta on ratkaistava sama asia kuin suunnittelutoimistoilla:
 **täsmäytys olemassa oleviin** (D-132). Katuosoite tekee siitä täällä
 helpompaa kuin Granlundilla, jolla oli vain kaupunki.
+
+---
+
+## Ylioppilaskunnat ja niiden kiinteistöyhtiöt: EI kelpaa lähteeksi
+
+Kartoitettu erikseen 29.8.2026, koska ne eivät ole SOA ry:n jäseniä ja
+omistavat kiinteistöjä suoraan tai yhtiönsä kautta. 13 toimijaa.
+
+**Tulos on kielteinen, ja syy on rakenteellinen.** Ylioppilaskunnan
+verkkoviestintä on edunvalvontaa ja opiskelijaelämää, ei
+rakennuttamista — vaikka kiinteistöomistus olisi merkittävä.
+
+| Toimija | Tiedotteita | Hankeosumia |
+|---|---|---|
+| YTHS | 1038 | 0 / 20 |
+| Åbo Akademis Studentkår | 607 | 0 / 20 |
+| TREY | 1482 | 5 / 20, kaikki uutiskirjeitä ja apurahoja |
+| LTKY | 514 | 4 / 20, tilannekatsauksia |
+| LYY | 271 | 10 / 20, kaikki lausuntoja ja jäsenkirjeitä |
+
+Osumat luettuna rivi riviltä **yksikään ei ollut hanketiedote.**
+
+**HYY Yhtymän oma sivusto on lakannut olemasta.** Se oli näistä
+ylivoimaisesti suurin kiinteistönomistaja (mm. Kaivopiha, Uusi
+ylioppilastalo). `hyy-yhtyma.fi` ohjaa nykyään `hyy.fi`:hin, jolla on
+vain 139 sivua eikä tiedotetyyppiä lainkaan. Tätä ei siis voi lukea
+koneellisesti millään tavalla.
+
+Ilman WP-rajapintaa jäivät myös AYY, TYY, ISYY, VYY, OYY ja
+Teknologföreningen.
+
+**RSS ei pelasta ketään.** Tarkistettu erikseen molemmista ryhmistä,
+koska rajapinnan puuttuminen ei sulje syötettä pois: TOASin `/feed` on
+tyhjä, LOASin viimeisin merkintä on vuodelta **2019** ja TYY:n
+**2022**. Vanhentunut syöte on huonompi kuin ei syötettä lainkaan,
+koska se näyttää toimivalta.
+
+**Johtopäätös: ylioppilaskuntia ei oteta lähteiksi.** Ainoa poikkeus on
+jo mukana asuntopuolella: AYY Asunnot ja Soihtu (JYY) julkaisevat
+hanketiedotteita, koska ne hoitavat nimenomaan asuntokantaa.

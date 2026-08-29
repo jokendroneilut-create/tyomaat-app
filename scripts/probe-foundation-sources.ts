@@ -21,8 +21,10 @@ import { mkdirSync, writeFileSync } from "node:fs"
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) tyomaat.fi-lahdekartoitus"
 const AIKAKATKO = 12_000
 
+type Kohde = { nimi: string; domain: string; seutu: string }
+
 /* SOA ry:n jasenluettelosta 29.8.2026. */
-const SAATIOT: { nimi: string; domain: string; seutu: string }[] = [
+const SAATIOT: Kohde[] = [
   { nimi: "HOAS", domain: "www.hoas.fi", seutu: "Helsinki" },
   { nimi: "TOAS", domain: "www.toas.fi", seutu: "Tampere" },
   { nimi: "TYS", domain: "www.tys.fi", seutu: "Turku" },
@@ -50,6 +52,30 @@ const SAATIOT: { nimi: string; domain: string; seutu: string }[] = [
   { nimi: "SAO", domain: "www.sao.fi", seutu: "?" },
   { nimi: "JYY", domain: "jyy.fi", seutu: "Jyväskylä" },
   { nimi: "AYY Domo", domain: "domo.ayy.fi", seutu: "Espoo" },
+]
+
+/*
+ * YLIOPPILASKUNNAT JA NIIDEN KIINTEISTOYHTIOT.
+ *
+ * Eri ryhma kuin asuntosaatiot: ylioppilaskunta omistaa kiinteistoja
+ * suoraan tai yhtionsa kautta, eika ole SOA ry:n jasen. HYY Yhtyma on
+ * naista suurin - se omistaa mm. Kaivopihan ja Uuden ylioppilastalon
+ * Helsingin ytimessa.
+ */
+const YLIOPPILASKUNNAT: Kohde[] = [
+  { nimi: "HYY Yhtyma", domain: "hyyyhtyma.fi", seutu: "Helsinki" },
+  { nimi: "HYY", domain: "hyy.fi", seutu: "Helsinki" },
+  { nimi: "AYY", domain: "www.ayy.fi", seutu: "Espoo" },
+  { nimi: "TYY", domain: "www.tyy.fi", seutu: "Turku" },
+  { nimi: "TREY", domain: "trey.fi", seutu: "Tampere" },
+  { nimi: "OYY", domain: "www.oyy.fi", seutu: "Oulu" },
+  { nimi: "ISYY", domain: "www.isyy.fi", seutu: "Kuopio/Joensuu" },
+  { nimi: "LTKY", domain: "www.ltky.fi", seutu: "Lappeenranta" },
+  { nimi: "LYY", domain: "www.lyy.fi", seutu: "Rovaniemi" },
+  { nimi: "VYY", domain: "www.vyy.fi", seutu: "Vaasa" },
+  { nimi: "Abo Akademis Studentkar", domain: "studentkaren.fi", seutu: "Turku" },
+  { nimi: "Teknologforeningen", domain: "www.teknologforeningen.fi", seutu: "Espoo" },
+  { nimi: "Ylioppilaiden terveydenhoitosaatio", domain: "www.yths.fi", seutu: "koko maa" },
 ]
 
 function robotsKieltaa(robots: string, polku: string): boolean {
@@ -158,11 +184,20 @@ async function tutki(s: (typeof SAATIOT)[number]) {
 }
 
 async function main() {
+  /*
+   * Ryhma valitaan argumentilla, jotta sama seula palvelee molempia:
+   * --ryhma=yo tutkii ylioppilaskunnat, muuten asuntosaatiot.
+   */
+  const yo = process.argv.includes("--ryhma=yo")
+  const KOHTEET = yo ? YLIOPPILASKUNNAT : SAATIOT
+  console.log(`KOHDERYHMA: ${yo ? "ylioppilaskunnat ja kiinteistoyhtiot" : "opiskelija-asuntosaatiot"} (${KOHTEET.length})
+`)
+
   const tulokset: any[] = []
   const RINNAKKAIN = 4
 
-  for (let i = 0; i < SAATIOT.length; i += RINNAKKAIN) {
-    const era = SAATIOT.slice(i, i + RINNAKKAIN)
+  for (let i = 0; i < KOHTEET.length; i += RINNAKKAIN) {
+    const era = KOHTEET.slice(i, i + RINNAKKAIN)
     const t = await Promise.all(era.map(tutki))
     tulokset.push(...t)
     for (const r of t) {

@@ -697,7 +697,13 @@ muistin varassa.
 - **RPT-lista:** Tampereen 9 kadonnutta ehdokasta, Turku ei aja,
   lupakirjeet kirjaamoissa.
 
-- **HOAS ja muut opiskelija-asuntosäätiöt lähteiksi** (kirjattu 28.8.2026).
+- ~~**HOAS ja muut opiskelija-asuntosäätiöt lähteiksi**~~ — kartoitettu
+  29.8.2026, ks. `docs/13_FOUNDATION_SOURCES.md`. 16/27 tarjoaa
+  koneluettavan tiedotevirran, tuotto ~3–6 hanketiedotetta vuodessa
+  toimijaa kohti. Ylioppilaskunnat kartoitettu erikseen ja hylätty.
+  Toteutus odottaa täsmäytyksen ratkaisua (D-132).
+
+  Alkuperäinen kirjaus 28.8.2026:
 
   Herätteenä hyväksytty hanke Rakennuslehdestä: HOAS rakentaa Helsinkiin
   402 uutta opiskelija-asuntoa, lähes 60 M€ investointi
@@ -771,6 +777,31 @@ muistin varassa.
   täsmäytystä ei ole ajettu välissä.
 
 ### Asiakaskäyttöliittymä
+
+- **Miksi käyttäjä valitsee lähteet?** (avoin kysymys, kirjattu 29.8.2026)
+
+  Onboardingin vaihe `StepSources` kysyy "Mistä lähteistä Tänään saa
+  etsiä hankkeita?", ja valinta on aito suodatin: `matchesSources`
+  rajaa Tänään-näkymää `getTodaySummary`ssä.
+
+  **Epäilys on aiheellinen: lähde on meidän putkistoamme, ei asiakkaan
+  käsite.** Urakoitsija välittää alueesta, vaiheesta ja kohdetyypistä —
+  ei siitä tuliko liidi Hilmasta, kaavapäätöksestä vai rakennuttajan
+  tiedotteesta. Valinta myös vanhenee itsestään: jokainen uusi lähde on
+  sellainen jota vanha käyttäjä ei ole valinnut.
+
+  Tyhjä valinta ei onneksi tyhjennä näkymää — `matchesSources`
+  palauttaa `true` jos lista on tyhjä tai kaikki on valittu. Riski on
+  siis osittaisessa valinnassa, joka kaventaa syötettä hiljaisesti.
+
+  Ratkaisuvaihtoehdot kun palataan: (a) poistetaan valinta kokonaan,
+  (b) jätetään mutta oletukseksi kaikki eikä kysytä onboardingissa,
+  (c) korvataan käsitteellä joka on asiakkaalle merkityksellinen
+  (esim. "vain vahvistetut hankkeet" vs. "myös aikaiset signaalit").
+
+  Ennen päätöstä kannattaa mitata: kuinka moni käyttäjä on tosiasiassa
+  rajannut lähteitä, ja kuinka paljon se kaventaa heidän syötettään.
+
 
 - ~~**Omat muistiinpanot hankkeelle (`/crm`).**~~ Tehty 28.8.2026.
   Oma taulu `user_project_notes`, jotta teksti säilyy vaikka hanke
