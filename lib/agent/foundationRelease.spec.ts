@@ -8,6 +8,8 @@ import {
   parseFloorArea,
   parsePhase,
   parseProjectName,
+  parseSites,
+  streetStem,
 } from "./foundationRelease"
 
 /*
@@ -68,11 +70,38 @@ describe("parseFoundationRelease — hylkaykset", () => {
     expect(r.isProject).toBe(false)
   })
 
+  /*
+   * HOAS julkaisee haastattelusarjaa "Etunimi Sukunimi - sitaatti".
+   * Leipatekstissa mainitaan kiinteistoja ohimennen. Mitattu 29.8.2026:
+   * 4 osumaa 11:sta oli naita.
+   */
+  it("hylkaa haastattelun", () => {
+    const r = parseFoundationRelease(
+      "Timo Jaatinen – Katsomalla eteenpäin on aina pärjätty",
+      "Välimerenkatu 5 valmistui 2005 ja siinä on 214 asuntoa."
+    )
+    expect(r.isProject).toBe(false)
+    expect(r.reason).toContain("haastattelu")
+  })
+
+  it("hylkaa haastattelun myos tavuviivalla", () => {
+    expect(parseFoundationRelease("Tuula Saari - Kaiken takana on nainen", "Fredrikinkatu 48 peruskorjaus valmistui").isProject).toBe(false)
+  })
+
+  /* Kaksiosainen hankeotsikko ei saa mennä haastatteluksi. */
+  it("ei luule hankeotsikkoa haastatteluksi", () => {
+    const r = parseFoundationRelease(
+      "Siltakujan perusparannus valmistuu – hae kotia nyt!",
+      "Siltakuja 2 perusparannus valmistuu kesäkuussa 2025."
+    )
+    expect(r.isProject).toBe(true)
+  })
+
   /* Ilman osoitetta hanketta ei voi tasmayttaa - mieluummin tyhja. */
-  it("hylkaa hanketiedotteen ilman osoitetta", () => {
+  it("hylkaa hanketiedotteen ilman kohdetta", () => {
     const r = parseFoundationRelease("Uusi opiskelijatalo valmistui", "Talo valmistui kesällä.")
     expect(r.isProject).toBe(false)
-    expect(r.reason).toContain("osoitetta")
+    expect(r.reason).toContain("kohdetta")
   })
 })
 
@@ -159,6 +188,18 @@ describe("kenttien poiminta", () => {
     expect(parseCompletion("ei aikataulua")).toBeNull()
   })
 
+  /*
+   * Tiedote ei kerro hankkeesta joka valmistui vuosia ennen sen
+   * kirjoittamista. Ilman tata haastattelun historiaosuus tuotti
+   * valmistumisvuodeksi 2005.
+   */
+  it("hylkaa valmistumisen joka on kaukana ennen julkaisua", () => {
+    expect(parseCompletion("valmistui vuonna 2005", "2024-02-27")).toBeNull()
+    expect(parseCompletion("valmistuu vuonna 2027", "2024-02-27")).toBe("2027-12-31")
+    /* Hieman ennen julkaisua valmistunut on uskottava. */
+    expect(parseCompletion("valmistui 31.7.2026", "2026-08-24")).toBe("2026-07-31")
+  })
+
   /* Mahdoton paiva on virhe datassa, ei paivamaara. */
   it("torjuu mahdottoman paivan", () => {
     expect(parseCompletion("valmistui 31.2.2026")).toBeNull()
@@ -170,5 +211,61 @@ describe("kenttien poiminta", () => {
     expect(parsePhase("kohteelle haettiin rakennuslupa")).toBe("permit")
     expect(parsePhase("solmittiin aiesopimus")).toBe("planning")
     expect(parsePhase("ei mitään")).toBeNull()
+  })
+})
+
+describe("usea kohde samassa tiedotteessa", () => {
+  /*
+   * HOASin tarkein tiedote (402 asuntoa, 60 M€) koskee KAHTA kohdetta,
+   * ja kadunnimet ovat taivutettuja ilman numeroa. Numeroa vaatinut
+   * poimija hylkasi sen kokonaan.
+   */
+  const KAKSI_KOHDETTA =
+    "Hoas on käynnistänyt kaksi uutta opiskelija-asuntojen rakennushanketta. " +
+    "Uudet talot nousevat Ruskeasuolle Mannerheimintielle ja Itäkeskukseen " +
+    "Gotlanninkadulle. Hankkeet tuovat 402 uutta asuntoa. Mannerheimintien " +
+    "ja Gotlanninkadun kohteet valmistuvat alkuvuodesta 2028."
+
+  it("poimii tiedotteen mutta ei nimea sita arvalla", () => {
+    const r = parseFoundationRelease(
+      "Hoas rakentaa Helsinkiin 402 uutta opiskelija-asuntoa",
+      KAKSI_KOHDETTA
+    )
+    expect(r.isProject).toBe(true)
+    expect(r.projectName).toBeNull()
+    expect(r.apartments).toBe(402)
+    expect(r.reason).toContain("katselmoitava")
+  })
+
+  /* Sama katu eri sijamuodoissa on yksi kohde, ei kaksi. */
+  it("yhdistaa sijamuodot yhdeksi kohteeksi", () => {
+    const sites = parseSites("", KAKSI_KOHDETTA)
+    expect(sites).toHaveLength(2)
+    expect(sites[0]).toBe("Mannerheimintielle")
+    expect(sites[1]).toBe("Gotlanninkadulle")
+  })
+
+  /*
+   * Ilman osoitenumeroa tiedotteen on ansaittava paikkansa kovalla
+   * luvulla. Ilman tata mukaan paasivat "Sentinvenyttajan
+   * asunnonhakuvinkit" ja "Hoas lanseeraa Tiedostavat tyomaat".
+   */
+  it("hylkaa numerottoman kohteen jos asuntomaaraa ei kerrota", () => {
+    const r = parseFoundationRelease(
+      "Hoas lanseeraa Tiedostavat työmaat",
+      "Mannerheimintiellä rakentaminen on edennyt hyvin. Urakoitsijat sitoutuvat."
+    )
+    expect(r.isProject).toBe(false)
+    expect(r.reason).toContain("asuntomäärää")
+  })
+
+  it("numerollinen osoite voittaa katumaininnan", () => {
+    const sites = parseSites("Otakaari 15", "Otakaarelle valmistuu talo")
+    expect(sites).toEqual(["Otakaari 15"])
+  })
+
+  it("streetStem karsii sijapaatteen", () => {
+    expect(streetStem("Mannerheimintielle")).toBe(streetStem("Mannerheimintien"))
+    expect(streetStem("Gotlanninkadulle")).toBe(streetStem("Gotlanninkadun"))
   })
 })

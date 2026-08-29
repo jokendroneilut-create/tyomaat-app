@@ -1539,7 +1539,7 @@ async function collectFoundationSource(source: DiscoverySource) {
   const skipped = new Map<string, number>()
 
   for (const post of posts) {
-    const parsed = parseFoundationRelease(post?.title?.rendered, post?.content?.rendered)
+    const parsed = parseFoundationRelease(post?.title?.rendered, post?.content?.rendered, post?.date)
 
     if (!parsed.isProject) {
       skipped.set(parsed.reason, (skipped.get(parsed.reason) ?? 0) + 1)

@@ -23,6 +23,11 @@ export type FoundationRelease = {
   /* Miksi hyväksyttiin tai hylättiin — näkyy ajolokissa. */
   reason: string
   projectName: string | null
+  /*
+   * Kaikki tiedotteessa mainitut kohteet. Yksi tiedote voi koskea
+   * montaa hanketta, jolloin nimea ei valita arvalla vaan katsotaan.
+   */
+  sites: string[]
   apartments: number | null
   floorArea: number | null
   builder: string | null
@@ -49,7 +54,7 @@ export function htmlToText(html: string | null | undefined): string {
  * rakennetaan tai on rakennettu.
  */
 const TEKO =
-  /(harjannostajai|rakenteilla|uudiskohde|uudisrakenn|peruskorjau|perusparannu|purkuty|rakennusty[öo]t|rakentaminen (?:on )?(?:alkanut|edennyt|kaynniss|käynniss)|toteuttaa hankkeen|rakennuttaa|valmistui|valmistuu|tontinvaraus|aiesopimu|rakennuslupa|urakoitsij|urakan)/i
+  /(harjannostajai|rakenteilla|uudiskohde|uudisrakenn|peruskorjau|perusparannu|purkuty|rakennusty[öo]t|rakentaminen (?:on )?(?:alkanut|edennyt|kaynniss|käynniss)|toteuttaa hankkeen|rakennuttaa|valmistu(?:u|i|vat|vad|neet|nut|massa)|tontinvaraus|aiesopimu|rakennuslupa|urakoitsij|urakan)/i
 
 /*
  * HYLKÄYSLISTA. Nämä sisältävät sanan "asunto" tai "kiinteistö" mutta
@@ -63,6 +68,17 @@ const EI_HANKE =
  * -kiinteistön" kertoo omistajanvaihdoksesta, ei rakentamisesta. Ostaja
  * voi kyllä remontoida, mutta sitä ei tiedetä - eikä sitä keksitä.
  */
+/*
+ * HAASTATTELU EI OLE HANKETIEDOTE.
+ *
+ * HOAS julkaisee sarjaa jossa otsikko on "Etunimi Sukunimi - sitaatti".
+ * Leipatekstissa mainitaan kiinteistoja ohimennen, joten poimija
+ * hyvaksyi ne hankkeiksi ja luki yhdesta valmistumisvuodeksi 2005.
+ * Mitattu 29.8.2026: 4 osumaa 11:sta oli haastatteluja.
+ */
+const HAASTATTELU =
+  /^\s*[A-ZÄÖÅ][a-zäöå-]+\s+[A-ZÄÖÅ][a-zäöå-]+\s*[-–—]\s*\S/
+
 const KIINTEISTOKAUPPA = /\bon myynyt\b|\bmyi\b.{0,30}kiinteist/i
 
 /* Suomalaiset kadunnimien päätteet, joilla osoite tunnistuu tekstistä. */
@@ -72,6 +88,67 @@ const KATU_PAATE =
 const OSOITE_RE = new RegExp(
   `\\b([A-ZÄÖÅ][a-zäöåA-ZÄÖÅ-]*${KATU_PAATE}\\s?\\d+(?:\\s?[-–]\\s?\\d+)?[a-zA-Z]?)`,
 )
+
+/*
+ * KATU ILMAN NUMEROA, TAIVUTETTUNA.
+ *
+ * HOASin tarkein tiedote (402 asuntoa, 60 M€) sanoo: "Uudet talot
+ * nousevat Ruskeasuolle Mannerheimintielle ja Itäkeskukseen
+ * Gotlanninkadulle". Kadunnimissä ei ole numeroa eikä perusmuotoa,
+ * joten numeroa vaatinut poimija hylkäsi koko tiedotteen.
+ *
+ * Näitä ei käytetä hankkeen nimenä - ne kertovat vain että kohteita on
+ * ja montako. Nimeäminen jää tiedotteen otsikolle ja katselmoijalle.
+ */
+/*
+ * HUOM: kirjoitettu regex-literaalina eikä new RegExp + template.
+ * Template-literaalissa sananrajan kenoviiva-b tarkoittaa
+ * ASKELPALAUTINMERKKIÄ eikä sananrajaa, joten kuvio ei osunut
+ * mihinkään. Vika löytyi vasta kun poimijaa testattiin suoraan sitä
+ * tiedotetta vasten jonka piti osua — siihen asti luvut näyttivät
+ * uskottavilta.
+ */
+const KATU_MAININTA_RE =
+  /\b([A-ZÄÖÅ][a-zäöå-]{2,}(?:kaare|kaari|kadu|katu|tiel|tie|kuja|polu|polku|väylä|rinte|rinne|puisto|aukio|kylä|ranna|ranta|mäe|mäki|tori)[a-zäöå]{0,4})\b/g
+
+export function parseSites(title: string, text: string): string[] {
+  const kaikki = `${title} ${text}`
+  const ulos = new Set<string>()
+
+  /* Numerolliset osoitteet ensin - ne ovat tarkkoja. */
+  const numerolliset = new RegExp(OSOITE_RE.source, "g")
+  for (const m of kaikki.matchAll(numerolliset)) {
+    if (m[1]) ulos.add(m[1].replace(/\s+/g, " ").trim())
+  }
+  if (ulos.size > 0) return [...ulos]
+
+  /*
+   * Sama katu esiintyy monessa sijamuodossa: "Mannerheimintielle" ja
+   * "Mannerheimintien". Ne ovat sama kohde, joten kaksoiskappaleet
+   * yhdistetään vartalon perusteella ja ensimmäinen muoto jää näkyviin.
+   */
+  const vartalot = new Map<string, string>()
+  for (const m of kaikki.matchAll(KATU_MAININTA_RE)) {
+    if (!m[1]) continue
+    const muoto = m[1].trim()
+    const vartalo = streetStem(muoto)
+    if (!vartalot.has(vartalo)) vartalot.set(vartalo, muoto)
+  }
+  return [...vartalot.values()]
+}
+
+/* Sijapäätteet pisimmästä lyhimpään, jottei "lle" jää puolittain. */
+const SIJAPAATTEET = ["lle", "lla", "llä", "ssa", "ssä", "sta", "stä", "lta", "ltä", "ksi", "n"]
+
+export function streetStem(value: string): string {
+  const s = String(value ?? "").toLowerCase()
+  for (const paate of SIJAPAATTEET) {
+    if (s.length > paate.length + 3 && s.endsWith(paate)) {
+      return s.slice(0, -paate.length)
+    }
+  }
+  return s
+}
 
 /*
  * Hankkeen nimi on käytännössä osoite: "Otakaari 15". Etsitään ensin
@@ -157,8 +234,23 @@ function kuunViimeinen(vuosi: number, kk: number): string {
  *   "valmistuu elokuussa 2026"     kuukausi -> kuun viimeinen
  *   "valmistuu 2027"               vuosi    -> vuoden viimeinen
  */
-export function parseCompletion(text: string): string | null {
+/*
+ * Julkaisupaiva rajaa menneisyyden: tiedote ei kerro hankkeesta joka
+ * valmistui vuosia ennen sen kirjoittamista. Ilman tata haastattelun
+ * historiaosuus tuotti valmistumisvuodeksi 2005.
+ */
+const VALMISTUMISEN_TAKARAJA_VUOSIA = 2
+
+export function parseCompletion(text: string, publishedAt?: string | null): string | null {
   const s = String(text ?? "")
+
+  const liianVanha = (iso: string) => {
+    if (!publishedAt) return false
+    const julkaistu = new Date(publishedAt).getTime()
+    if (!Number.isFinite(julkaistu)) return false
+    const raja = julkaistu - VALMISTUMISEN_TAKARAJA_VUOSIA * 365.25 * 86400000
+    return new Date(iso).getTime() < raja
+  }
 
   const tarkka = /valmistu[a-z]*\s+(\d{1,2})\.(\d{1,2})\.(\d{4})/i.exec(s)
   if (tarkka) {
@@ -166,7 +258,8 @@ export function parseCompletion(text: string): string | null {
     const d = new Date(Date.UTC(Number(v), Number(k) - 1, Number(p)))
     /* Torjutaan mahdoton päivä kuten 31.2. */
     if (d.getUTCMonth() === Number(k) - 1 && d.getUTCDate() === Number(p)) {
-      return d.toISOString().slice(0, 10)
+      const iso = d.toISOString().slice(0, 10)
+      return liianVanha(iso) ? null : iso
     }
     return null
   }
@@ -175,11 +268,17 @@ export function parseCompletion(text: string): string | null {
   if (kk) {
     const nimi = kk[1].toLowerCase()
     const numero = KUUKAUDET[nimi]
-    if (numero) return kuunViimeinen(Number(kk[2]), numero)
+    if (numero) {
+      const iso = kuunViimeinen(Number(kk[2]), numero)
+      return liianVanha(iso) ? null : iso
+    }
   }
 
   const vuosi = /valmistu[a-z]*\s+(?:vuonna\s+)?(20\d{2})/i.exec(s)
-  if (vuosi) return `${vuosi[1]}-12-31`
+  if (vuosi) {
+    const iso = `${vuosi[1]}-12-31`
+    return liianVanha(iso) ? null : iso
+  }
 
   return null
 }
@@ -203,7 +302,8 @@ export function parsePhase(text: string): PhaseKey | null {
 
 export function parseFoundationRelease(
   titleHtml: string | null | undefined,
-  contentHtml: string | null | undefined
+  contentHtml: string | null | undefined,
+  publishedAt?: string | null
 ): FoundationRelease {
   const title = htmlToText(titleHtml)
   const text = htmlToText(contentHtml)
@@ -213,6 +313,7 @@ export function parseFoundationRelease(
     isProject: false,
     reason: "",
     projectName: null,
+    sites: [],
     apartments: null,
     floorArea: null,
     builder: null,
@@ -225,26 +326,48 @@ export function parseFoundationRelease(
   /* Hylkäys ratkaistaan OTSIKOSTA: leipäteksti voi mainita ohimennen. */
   if (EI_HANKE.test(title)) return { ...tyhja, reason: "asukasviestintä, ei hanke" }
   if (KIINTEISTOKAUPPA.test(title)) return { ...tyhja, reason: "kiinteistökauppa, ei rakennushanke" }
+  if (HAASTATTELU.test(title)) return { ...tyhja, reason: "haastattelu, ei hanke" }
 
   if (!TEKO.test(kaikki)) return { ...tyhja, reason: "ei rakentamisen tekoa" }
 
   const projectName = parseProjectName(title, text)
+  const sites = parseSites(title, text)
 
   /*
-   * Ilman osoitetta hanketta ei voi täsmäyttää eikä nimetä, joten
-   * tiedote jää poimimatta. Tämä on tietoinen menetys: yleisluontoinen
-   * tiedote ei kelpaa hankkeeksi.
+   * Ilman yhtäkään kohdetta tiedote jää poimimatta. Tämä on tietoinen
+   * menetys: yleisluontoinen tiedote ei kelpaa hankkeeksi.
    */
-  if (!projectName) return { ...tyhja, reason: "ei tunnistettavaa osoitetta" }
+  if (!projectName && sites.length === 0) {
+    return { ...tyhja, reason: "ei tunnistettavaa kohdetta" }
+  }
+
+  const apartments = parseApartments(kaikki)
+
+  /*
+   * NUMEROTON POLKU VAATII KOVAN LUVUN.
+   *
+   * Ilman osoitenumeroa hanketta ei voi nimetä, joten sen on
+   * ansaittava paikkansa muuten: tiedotteen on kerrottava montako
+   * asuntoa rakennetaan. Ilman tätä ehtoa mukaan pääsivät mm.
+   * "Sentinvenyttäjän asunnonhakuvinkit" ja "Hoas lanseeraa
+   * Tiedostavat työmaat" (mitattu 29.8.2026), jotka mainitsevat kadun
+   * ohimennen mutta eivät ole hankkeita.
+   */
+  const useaKohde = !projectName && sites.length > 0
+
+  if (useaKohde && apartments == null) {
+    return { ...tyhja, reason: "kohde ilman osoitetta ja asuntomäärää" }
+  }
 
   return {
     isProject: true,
-    reason: "hanke",
+    reason: useaKohde ? "kohteita ilman osoitenumeroa, katselmoitava" : "hanke",
     projectName,
-    apartments: parseApartments(kaikki),
+    sites,
+    apartments,
     floorArea: parseFloorArea(kaikki),
     builder: parseBuilder(kaikki),
-    estimatedCompletion: parseCompletion(kaikki),
+    estimatedCompletion: parseCompletion(kaikki, publishedAt),
     phaseHint: parsePhase(kaikki),
   }
 }

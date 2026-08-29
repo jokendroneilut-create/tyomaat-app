@@ -61,7 +61,7 @@ async function main() {
     let hyvaksytyt = 0
 
     for (const p of posts) {
-      const r = parseFoundationRelease(p?.title?.rendered, p?.content?.rendered)
+      const r = parseFoundationRelease(p?.title?.rendered, p?.content?.rendered, p?.date)
       if (!r.isProject || !r.projectName) continue
       hyvaksytyt++
       const nykyinen = hankkeet.get(r.projectName) ?? { n: 0, urakoitsija: null, vaihe: null }

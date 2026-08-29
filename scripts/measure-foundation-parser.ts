@@ -5,22 +5,23 @@
  * jotta hylkäykset ja hyväksynnät voi lukea rivi riviltä.
  */
 
-const API = "https://ayyasunnot.fi/wp-json/wp/v2/posts"
+/* Paatepiste argumenttina, jotta sama kuivaharjoitus kay kaikille. */
+const API = process.argv[2] ?? "https://ayyasunnot.fi/wp-json/wp/v2/posts"
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 
 async function main() {
   const { parseFoundationRelease, htmlToText } = await import("../lib/agent/foundationRelease")
 
   const posts: any[] = []
-  for (let sivu = 1; sivu <= 3; sivu++) {
-    const r = await fetch(`${API}?per_page=100&page=${sivu}&orderby=date&order=desc`, {
+  for (let sivu = 1; sivu <= 10; sivu++) {
+    const r = await fetch(`${API}?per_page=20&page=${sivu}&orderby=date&order=desc`, {
       headers: { "User-Agent": UA },
     })
     if (!r.ok) break
     const era = await r.json()
     if (!Array.isArray(era) || !era.length) break
     posts.push(...era)
-    if (era.length < 100) break
+    if (era.length < 20) break
   }
 
   console.log(`tiedotteita: ${posts.length}\n`)
@@ -29,7 +30,7 @@ async function main() {
   const syyt = new Map<string, number>()
 
   for (const p of posts) {
-    const r = parseFoundationRelease(p?.title?.rendered, p?.content?.rendered)
+    const r = parseFoundationRelease(p?.title?.rendered, p?.content?.rendered, p?.date)
     if (r.isProject) {
       hyvaksytyt.push({ ...r, pvm: String(p.date).slice(0, 10), otsikko: htmlToText(p?.title?.rendered), url: p.link })
     } else {
