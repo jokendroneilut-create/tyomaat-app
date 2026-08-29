@@ -192,9 +192,17 @@ Kuivaharjoituksen voi ajaa milloin vain, se ei kirjoita mitaan:
   voimaan tulleen dokumentin valmiiksi käsitellyksi jo kirjoitushetkellä,
   joten jo hyväksytty hanke ei koskaan saa tietoa. Mitattu 29.8.2026: 370
   dokumenttia kertoo voimaantulosta, 130 niistä on meillä hankkeena ja
-  127 näkyy yhä vaiheessa "Kaavoitus". Voimaantulo ei ole syy piilottaa —
-  se on hetki jolloin rakentaminen tulee mahdolliseksi — vaan syy siirtää
-  vaihetta eteenpäin.
+  127 näkyy yhä vaiheessa "Kaavoitus".
+
+  **Päivä on nyt poimittu** (D-147, 30.8.2026): 102/127 sai
+  voimaantulopäivän, ja ne jakautuvat kahtia — **37 on tullut voimaan
+  2025 tai myöhemmin** ja **45 ennen vuotta 2023**. Kumottuja on 1.
+  Tieto on hankkeen metadatassa (`kaava_tila`, `kaava_voimaantulo`).
+
+  Mitä siitä seuraa on yhä auki, ja se on kaksi eri asiaa:
+  tuore lainvoimainen kaava kuuluu **vaiheeseen eteenpäin** (rakentaminen
+  on mahdollista, se on paras hetki myydä), vanha kuuluu **pois
+  näkyvistä**. Kumottu ei toteudu lainkaan.
 - **Kynnys 60 vrk on mitoitettu varmuudella, ei mittauksella.** Kanta on
   kuusi viikkoa vanha, joten todellista katoamisnopeutta ei voi vielä
   laskea. Kynnys kannattaa mitata uudelleen kun `last_seen_at` on

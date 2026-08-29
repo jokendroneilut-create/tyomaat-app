@@ -13,6 +13,7 @@ import {
   SENAATTI_TENDER_CALENDAR_URL,
 } from "@/lib/agent/senaattiTenderCalendar"
 import type { DiscoverySource } from "../registry/sources"
+import { parseKaavaPaatos } from "@/lib/agent/kaavaVoimaantulo"
 import { pietarsaariKaavaDescription } from "@/lib/agent/pietarsaariKaavaDescription"
 import {
   pietarsaariKaavaSlugs,
@@ -2861,6 +2862,13 @@ type SeinajokiDetails = {
   completed: boolean
   phase: string | null
   description: string | null
+  /*
+   * Paattyiko kaavoitus voimaantuloon vai kumoamiseen, ja milloin.
+   * Paiva ratkaisee onko hanke tuore liidi vai vuosien takainen kaava:
+   * ilman sita 2012 ja 2026 nayttavat samalta.
+   */
+  tila: "voimassa" | "kumottu" | "kesken"
+  voimaantulo: string | null
 }
 
 /*
@@ -2904,7 +2912,13 @@ function collectDescription(paragraphs: string[]): string | null {
 }
 
 async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
-  const empty: SeinajokiDetails = { completed: false, phase: null, description: null }
+  const empty: SeinajokiDetails = {
+    completed: false,
+    phase: null,
+    description: null,
+    tila: "kesken",
+    voimaantulo: null,
+  }
 
   try {
     const response = await fetch(url, { cache: "no-store" })
@@ -2972,7 +2986,19 @@ async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
     const datedStages = stages.filter((stage) => /^\d/.test(stage))
     const lastStage = datedStages[datedStages.length - 1] ?? null
     const phase = lastStage ? lastStage.replace(/^[\d.\s–-]+/, "").trim() : null
-    const completed = /voimaantulopäivä|lainvoimaisuuspäivä|lainvoimaisuuskuulutus|lopetettu|kumonnut/i.test(lastStage ?? "")
+
+    /*
+     * PAIVA OLI RIVILLA JA SE HEITETTIIN POIS. Vaiheen nimi luettiin
+     * rivin alusta paivamaaran yli ("29.1.2020 Voimaantulopäivä"), joten
+     * tiesimme etta kaava on tullut voimaan mutta emme milloin - ja juuri
+     * se erottaa tuoreen liidin vuosien takaisesta kaavasta.
+     *
+     * Samalla erottuu kumottu kaava: hallinto-oikeuden kumoama tai
+     * lautakunnan lopettama kaava paattaa kaavoituksen niin kuin
+     * voimaantulokin, mutta se EI toteudu.
+     */
+    const paatos = parseKaavaPaatos(stages)
+    const completed = paatos.tila !== "kesken"
 
     /*
      * Osalla sivuista ei ole lainkaan varsinaista kuvaustekstiä artikkelin
@@ -2983,7 +3009,13 @@ async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
       description = `Käsittelyvaiheet:\n${stages.map((s) => `• ${s}`).join("\n")}`
     }
 
-    return { completed, phase: phase || null, description }
+    return {
+      completed,
+      phase: phase || null,
+      description,
+      tila: paatos.tila,
+      voimaantulo: paatos.paiva,
+    }
   } catch {
     return empty
   }
@@ -3030,11 +3062,19 @@ async function collectSeinajokiSource(source: DiscoverySource) {
 
   const knownDetails = new Map<string, SeinajokiDetails>()
   for (const row of existingRows ?? []) {
-    if (row.raw_payload?.phase) {
+    /*
+     * Valimuisti vaatii kaava_tila-kentan, ei pelkkaa vaihetta: ilman
+     * sita vanhat rivit jaisivat ikuisesti ilman voimaantulopaivaa,
+     * koska detaljisivua ei haettaisi uudelleen. Nyt jokainen rivi
+     * haetaan kerran ja taydentyy itsestaan.
+     */
+    if (row.raw_payload?.phase && row.raw_payload?.kaava_tila) {
       knownDetails.set(row.document_url, {
         completed: row.raw_payload.completed ?? false,
         phase: row.raw_payload.phase,
         description: row.raw_payload.description ?? null,
+        tila: row.raw_payload.kaava_tila,
+        voimaantulo: row.raw_payload.voimaantulo ?? null,
       })
     }
   }
@@ -3073,6 +3113,8 @@ async function collectSeinajokiSource(source: DiscoverySource) {
             phase: details?.phase ?? null,
             description: details?.description ?? null,
             completed: details?.completed ?? false,
+            kaava_tila: details?.tila ?? null,
+            voimaantulo: details?.voimaantulo ?? null,
           },
           processed_at: new Date().toISOString(),
           last_seen_at: new Date().toISOString(),

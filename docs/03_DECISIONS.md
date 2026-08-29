@@ -5,6 +5,67 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-147 – Voimaantulopaiva poimitaan, ja kuivaharjoitus paljasti kaksi virhetta
+
+127 hanketta nakyi asiakkaalle vaiheessa "Kaavoitus" vaikka lahde kertoi
+kaavan tulleen voimaan — ja 59:lla paivaa ei ollut poimittu lainkaan.
+Paiva ratkaisee mita hanke on:
+
+```
+voimaan 2026   kaava lainvoimainen, rakentaminen voi alkaa -> paras hetki
+voimaan 2012   kohde rakennettu tai ei toteudu koskaan     -> roskaa listalla
+```
+
+**TIETO OLI JO SIVULLA.** Seinajoen kasittelyvaihelista on muotoa
+"29.1.2020 Voimaantulopäivä", ja keraaja luki vaiheen nimen HEITTAEN
+PAIVAN POIS rivin alusta (`replace(/^[\d.\s–-]+/, "")`).
+
+**KUMOTTU EI OLE VOIMAAN TULLUT.** Hallinto-oikeuden kumoama tai
+lautakunnan lopettama kaava paattaa kaavoituksen kuten voimaantulokin,
+mutta se EI toteudu. Ne luettiin samaksi lipuksi.
+
+**KAKSI VIRHETTA, JOTKA VAIN RIVEITTAIN LUKEMINEN PALJASTI.** Molemmat
+nayttivat taulukossa taysin uskottavilta:
+
+  1. **Sama paiva monelle kaavalle.** Osa kunnista listaa kaikki kaavansa
+     yhdelle sivulle (`.../asemakaavat/#kartanorinne-asemakaava`), joten
+     koko sivun lukeminen antoi Pornaisten viidelle eri kaavalle saman
+     paivan 28.5.2018 ja Kustavin kolmelle saman paivan 6.6.2022 — se oli
+     sivun VIIMEINEN voimaantulo. Korjaus: `anchorBlockText` rajaa tekstin
+     siihen otsikkoon jonka ankkuri osoittaa. Kun ankkuria ei loydy,
+     paatosta ei tehda lainkaan.
+  2. **Paiva avainsanan vaaralla puolella.** Pornainen kirjoittaa
+     "29.1.2007 Kunnanvaltuusto hyvaksynyt, tullut voimaan: 26.11.2007".
+     Ensimmainen versio otti paivan aina avainsanaa ENNEN, joten kaava sai
+     hyvaksymispaivan voimaantulopaivakseen — kymmenen kuukautta vaarin.
+     Korjaus: haku ankkuroidaan avainsanaan, ensin sen jalkeen ja sitten
+     sita ennen.
+
+Toinen niista loytyi vasta kun yksi rivi tarkistettiin elavasta
+lahteesta. Taulukon uskottavuus ei ole todiste.
+
+**TULOS.** Osa kunnista ei kayta otsikkoelementteja vaan lihavoitua
+kappaletta, joten lohkon rajaus tunnistaa senkin.
+
+```
+127 hanketta joilla lahde kertoo kaavoituksen paattyneen
+  paiva poimittu   102
+    voimassa 101 · kumottu 1 · kesken 9
+    ei lohkoa 8 · HTTP-virhe 8
+  tuoreet 2025-    37
+  vanhat  <2023    45
+```
+
+**TAMA AJO EI SIIRRA VAIHETTA EIKA VANHENNA MITAAN.** Se vain taydentaa
+tiedon. Mita siita seuraa — tuoreiden vaiheen siirto eteenpain ja
+vanhojen poistaminen nakyvista — on erillinen paatos, ja se tehdaan
+naiden lukujen paalta.
+
+`lib/agent/kaavaVoimaantulo.ts` · `lib/agent/htmlAnchorBlock.ts` ·
+`scripts/backfill-kaava-voimaantulo.ts`
+
+---
+
 ### D-146 – Jokaisella hankkeella on oltava poistumispolku
 
 Kaavoitushankkeilla ei ollut yhtaan tapaa poistua asiakkaan nakyvista.

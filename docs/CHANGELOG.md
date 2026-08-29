@@ -9,6 +9,30 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-08 (tyo 30.8.)
+
+### Kaavan voimaantulopaiva poimitaan (D-147)
+
+127 hanketta nakyi asiakkaalle vaiheessa "Kaavoitus" vaikka lahde kertoi
+kaavan tulleen voimaan, ja 59:lla paivaa ei ollut poimittu lainkaan.
+Paiva erottaa parhaan liidin roskasta: 2026 tarkoittaa etta rakentaminen
+voi alkaa, 2012 etta kohde on rakennettu tai ei toteudu.
+
+Tieto oli jo sivulla - Seinajoen "29.1.2020 Voimaantulopäivä" luettiin
+niin etta paiva heitettiin pois rivin alusta.
+
+Kuivaharjoitus paljasti kaksi virhetta jotka nayttivat taulukossa
+uskottavilta. Yhteiselta sivulta luettuna viisi Pornaisten kaavaa sai
+saman paivan (koko sivun viimeisen voimaantulon), ja "tullut voimaan:
+26.11.2007" luettiin edeltavasta hyvaksymispaivasta 29.1.2007 - kymmenen
+kuukautta vaarin. Jalkimmainen loytyi vasta yhta rivia lahteesta vasten
+tarkistamalla.
+
+Tulos: 102/127 sai paivan. Niista 37 on tullut voimaan 2025 tai
+myohemmin ja 45 ennen vuotta 2023; kumottuja 1. Ajo ei siirra vaihetta
+eika vanhenna mitaan - se on erillinen paatos naiden lukujen paalta.
+
+
 ## 2026-08 (tyo 29.8.)
 
 ### Poistumispolku listalta kadonneille kaavoille (D-146)
