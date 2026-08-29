@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { chooseDuplicateSurvivor, completeness } from "./duplicateSurvivor"
+import { chooseDuplicateSurvivor, completeness, moreAdvancedPhase } from "./duplicateSurvivor"
 
 const tyhja = { id: "a", created_at: "2026-01-01T00:00:00Z" }
 
@@ -72,5 +72,38 @@ describe("chooseDuplicateSurvivor", () => {
 
     expect(chooseDuplicateSurvivor(tuntematon, tiedetty).keepId).toBe("tiedetty")
     expect(chooseDuplicateSurvivor(tiedetty, tuntematon).keepId).toBe("tiedetty")
+  })
+})
+
+describe("moreAdvancedPhase", () => {
+  /* Yksinkertaistettu jarjestys testia varten. */
+  const jarjestys = (p: string | null | undefined) =>
+    p === "Suunnittelussa" ? 3 : p === "Rakenteilla" ? 7 : p === "Valmistunut" ? 9 : null
+
+  /*
+   * Taulumaen vesitorni: sailynyt sanoi "Suunnittelussa", piilotettu
+   * Kreaten oma sivu "Rakenteilla". Vaihe olisi jaanyt vanhentuneeksi.
+   */
+  it("nostaa vaiheen kun piilotettu tietaa enemman", () => {
+    expect(moreAdvancedPhase("Suunnittelussa", "Rakenteilla", jarjestys)).toBe("Rakenteilla")
+  })
+
+  /* Taaksepain ei siirreta. */
+  it("ei laske vaihetta", () => {
+    expect(moreAdvancedPhase("Rakenteilla", "Suunnittelussa", jarjestys)).toBeNull()
+  })
+
+  it("ei muuta samaa vaihetta", () => {
+    expect(moreAdvancedPhase("Rakenteilla", "Rakenteilla", jarjestys)).toBeNull()
+  })
+
+  it("tuntematon vaihe ei nosta mitaan", () => {
+    expect(moreAdvancedPhase("Suunnittelussa", "Roskaa", jarjestys)).toBeNull()
+    expect(moreAdvancedPhase("Suunnittelussa", null, jarjestys)).toBeNull()
+  })
+
+  /* Tuntematon sailyvan vaihe: piilotetun tieto on parempi kuin ei mitaan. */
+  it("tayttaa puuttuvan vaiheen", () => {
+    expect(moreAdvancedPhase(null, "Rakenteilla", jarjestys)).toBe("Rakenteilla")
   })
 })

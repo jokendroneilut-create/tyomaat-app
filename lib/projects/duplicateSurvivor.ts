@@ -104,3 +104,29 @@ export function chooseDuplicateSurvivor(
     reason: `yhtä täydelliset (${pisteetA}), vanhempi jää`,
   }
 }
+
+/*
+ * PIILOTUS EI SAA HÄVITTÄÄ VAIHETIETOA.
+ *
+ * Taulumäen vesitorni 29.8.2026: säilynyt hanke sanoi "Suunnittelussa",
+ * mutta piilotettu — Kreaten oma projektisivu — sanoi "Rakenteilla".
+ * Piilotus jätti asiakkaalle vanhentuneen vaiheen, vaikka rakentamisen
+ * alkaminen oli tiedossa.
+ *
+ * Vaihe kulkee vain ETEENPÄIN: jos jompikumpi tietää hankkeen edenneen
+ * pidemmälle, se on totta. Taaksepäin ei siirretä, koska myöhempi
+ * havainto ei kumoa aiempaa edistymistä.
+ */
+export function moreAdvancedPhase(
+  keepPhase: string | null | undefined,
+  hidePhase: string | null | undefined,
+  phaseOrder: (p: string | null | undefined) => number | null
+): string | null {
+  const jaava = phaseOrder(keepPhase)
+  const piiloon = phaseOrder(hidePhase)
+
+  if (piiloon == null) return null
+  if (jaava != null && jaava >= piiloon) return null
+
+  return hidePhase ?? null
+}

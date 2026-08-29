@@ -11,6 +11,29 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Kaksoiskappaleet yhdistyvat oikeasti (D-138, D-139)
+
+Klaukkalan vesitorni nakyi asiakkaalle kahtena hankkeena, vaikka pari
+oli jo vahvistettu kaksoiskappaleeksi. Vahvistus kirjasi vain
+paatoksen; piilotus oli erillinen nappi joka jai valilla painamatta.
+47 vahvistetusta parista neljalla molemmat olivat yha julkisia.
+
+Nyt vahvistus piilottaa toisen samassa ja kertoo kumpi jai ja miksi.
+Enemman taytettyja kenttia voittaa, tasapelissa vanhempi jaa. Jos
+piilotettava on jonkun omissa, piilotus jaa tekematta ja asia jaa
+ihmiselle.
+
+Samalla loytyi etta piilotus havitti vaihetietoa: kuudella hankkeella
+sailynyt naytti vanhempaa vaihetta kuin piilotettu tiesi, ja kolme
+niista sanoi "Sopimus myonnetty" vaikka rakentaminen oli alkanut.
+Korjattu takautuvasti.
+
+Taulumaen vesitorni oli kannassa kolmena eika yhtaan paria ollut edes
+ehdotettu: tiedoteotsikot ovat lauseita eivatka nimia, joten
+otsikkovertailu ei osu. Korjattiin kasin; pisteytys jai ennalleen,
+koska kynnyksen laskeminen toisi mukanaan vaaria pareja.
+
+
 ### Opiskelija-asuntosaatiot lahteiksi (D-136)
 
 HOAS, Lahden Talot ja PSOAS kayttoon: 25 dokumenttia, 17 eri hanketta.

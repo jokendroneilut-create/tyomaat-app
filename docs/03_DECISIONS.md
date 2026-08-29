@@ -5,6 +5,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-138 – Vahvistus ilman toimenpidettä on puolikas päätös
+
+Klaukkalan vesitorni näkyi asiakkaalle kahtena hankkeena. Pari oli
+kuitenkin tunnistettu ja **vahvistettu kaksoiskappaleeksi**
+luottamuksella 83 — tunnistus toimi täsmälleen niin kuin pitikin.
+
+Vika oli kirjanpidossa: vahvistus kirjoitti vain `status`-kentän.
+Piilotus oli erillinen nappi, joka piti muistaa painaa. Erillinen askel
+jäi väistämättä välillä väliin — mitattuna **47 vahvistetusta parista
+neljällä molemmat olivat yhä julkisia.**
+
+Nyt vahvistus piilottaa toisen samassa ja kertoo kumpi jäi ja miksi.
+
+**KUMPI JÄÄ.** Valinta on omassa testatussa moduulissaan, koska väärä
+valinta hävittää tietoa: enemmän täytettyjä kenttiä voittaa, ja
+tasapelissä **vanhempi jää** — siihen on ehtinyt kertyä suosikkeja ja
+D-133:n jälkeen myös asiakkaan omia muistiinpanoja.
+
+**ASIAKKAAN OMAT MENEVÄT EDELLE.** Jos piilotettava hanke on jonkun
+omissa, se katoaisi hänen listaltaan ilman selitystä. Silloin piilotus
+jää tekemättä ja näkymä kertoo että asia vaatii ihmistä.
+
+**PIILOTUS EI SAA HÄVITTÄÄ VAIHETIETOA.** Tämä löytyi vasta kun
+Taulumäki korjattiin: säilynyt hanke sanoi "Suunnittelussa", mutta
+piilotettu — Kreaten *oma* projektisivu — sanoi "Rakenteilla". Piilotus
+olisi jättänyt asiakkaalle vanhentuneen vaiheen.
+
+Takautuvasti tarkistettuna näitä oli **kuusi**, ja kolme niistä sanoi
+"Sopimus myönnetty" vaikka rakentaminen oli jo alkanut. Vaihe kulkee
+nyt merkinnässä vain eteenpäin: jos jompikumpi tietää hankkeen edenneen
+pidemmälle, se on totta.
+
+---
+
+### D-139 – Tiedoteotsikko ei kelpaa hankkeen tunnisteeksi
+
+Taulumäen vesitorni oli kannassa **kolmena** hankkeena, eikä yhtäkään
+paria ollut ehdotettu kaksoiskappaleeksi. Syy näkyy pisteistä: kaikki
+kolme paria saavat **50**, kun kynnys on 70.
+
+```
+50  Taulumäen vesitorni  <->  Rakennamme Jyväskylään uuden Taulumäen…
+50  Taulumäen vesitorni  <->  Jyväskylän uuden maamerkin – Taulumäen…
+50  Rakennamme Jyväskylään…  <->  Jyväskylän uuden maamerkin…
+    perusteet: same_city, same_region, name_in_description
+```
+
+`similar_title` ei osu kertaakaan, koska **otsikot ovat tiedotelauseita
+eivätkä hankkeen nimiä**. Sama hanke saa jokaiselta lähteeltä oman
+otsikkonsa, ja ne ovat kieliopillisesti kaukana toisistaan vaikka
+tarkoittavat samaa.
+
+Vertailukohta: Klaukkalan pari sai 83, koska siellä toinen otsikko oli
+sattumalta toisen alijono ("Skanska rakentaa käpyä muistuttavan
+vesitornin…" vs. "Käpyä muistuttavan vesitornin…"). Se oli onnenkauppa,
+ei sääntö.
+
+Tämä on sama havainto kuin D-132: otsikko tunnistaa korkeintaan
+rakennuksen, ei hanketta. Erona se, että siellä ongelma oli liian
+löysä täsmäytys ja täällä liian tiukka.
+
+**Taulumäki korjattiin käsin** kirjaamalla parit `manual_merge`-syyllä,
+jolloin sama korjauspolku hoiti loput ja jälki jäi
+`project_duplicate_candidates`-tauluun.
+
+**Avoin:** pisteytystä ei muutettu. Kynnyksen laskeminen 50:een toisi
+mukanaan kaikki samassa kaupungissa olevat saman alan hankkeet, ja
+D-132 osoitti mihin se johtaa. Oikea korjaus olisi tunnistaa otsikoista
+erisnimi + kohdetyyppi ("Taulumäen vesitorni") ja verrata niitä, mutta
+se on oma työnsä eikä sitä tehty tässä.
+
+`lib/projects/duplicateSurvivor.ts` ·
+`app/api/tic/duplicates/review/route.ts` ·
+`scripts/fix-confirmed-duplicates.ts`
+
+---
+
 ### D-137 – Katselmoijan on nähtävä kaikki mitä on poimittu
 
 Wärtsilän laajennuksen kohdalla kysyttiin miksi kuvauksessa lukeva

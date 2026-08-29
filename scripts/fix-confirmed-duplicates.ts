@@ -24,7 +24,8 @@ const APPLY = process.argv.includes("--apply")
 
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
-  const { chooseDuplicateSurvivor, completeness } = await import("../lib/projects/duplicateSurvivor")
+  const { chooseDuplicateSurvivor, completeness, moreAdvancedPhase } = await import("../lib/projects/duplicateSurvivor")
+  const { phaseOrder } = await import("../lib/projects/phases")
 
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,7 +46,7 @@ async function main() {
     const { data } = await admin
       .from("projects")
       .select(
-        "id,name,city,created_at,is_public,developer,builder,location,lat,lng,apartments,floor_area,estimated_cost,construction_start,property_type,metadata"
+        "id,name,city,phase,created_at,is_public,developer,builder,location,lat,lng,apartments,floor_area,estimated_cost,construction_start,property_type,metadata"
       )
       .in("id", idt.slice(i, i + 100))
     hankkeet.push(...(data ?? []))
@@ -57,6 +58,39 @@ async function main() {
     const b = kartta.get(p.project_id_b)
     return a && b && a.is_public !== false && b.is_public !== false
   })
+
+  /*
+   * VAIHEEN NOSTO MYOS JO PIILOTETUILLE.
+   *
+   * Piilotus ei aiemmin siirtanyt vaihetta, joten sailyneelle on voinut
+   * jaada vanhentunut vaihe vaikka piilotettu tiesi paremmin.
+   */
+  let nostoja = 0
+  for (const p of (parit ?? []) as any[]) {
+    const a = kartta.get(p.project_id_a)
+    const b = kartta.get(p.project_id_b)
+    if (!a || !b) continue
+
+    const jaava = a.is_public !== false ? a : b
+    const piiloon = a.is_public !== false ? b : a
+    if (jaava.id === piiloon.id) continue
+
+    const uusiVaihe = moreAdvancedPhase(jaava.phase, piiloon.phase, phaseOrder)
+    if (!uusiVaihe) continue
+
+    nostoja++
+    console.log(`  VAIHE  ${String(jaava.name).slice(0, 46)}`)
+    console.log(`         "${jaava.phase}" -> "${uusiVaihe}" (piilotetulta)`)
+
+    if (APPLY) {
+      const { error } = await admin.from("projects").update({ phase: uusiVaihe }).eq("id", jaava.id)
+      console.log(error ? `         VIRHE: ${error.message}` : "         nostettu")
+      jaava.phase = uusiVaihe
+    }
+  }
+  if (nostoja) console.log(`
+vaiheen nostoja: ${nostoja}
+`)
 
   console.log(`${APPLY ? "AJO" : "KUIVAHARJOITUS"}`)
   console.log(`vahvistettuja pareja: ${parit?.length ?? 0}`)

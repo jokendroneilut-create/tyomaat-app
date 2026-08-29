@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
-import { chooseDuplicateSurvivor } from "@/lib/projects/duplicateSurvivor"
+import { chooseDuplicateSurvivor, moreAdvancedPhase } from "@/lib/projects/duplicateSurvivor"
+import { phaseOrder } from "@/lib/projects/phases"
 
 export const runtime = "nodejs"
 
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
   const { data: hankkeet, error: hankeVirhe } = await supabaseAdmin
     .from("projects")
     .select(
-      "id,name,created_at,developer,builder,location,lat,lng,apartments,floor_area,estimated_cost,construction_start,property_type,metadata,is_public"
+      "id,name,phase,created_at,developer,builder,location,lat,lng,apartments,floor_area,estimated_cost,construction_start,property_type,metadata,is_public"
     )
     .in("id", [pari.project_id_a, pari.project_id_b])
 
@@ -108,6 +109,16 @@ export async function POST(req: Request) {
     })
   }
 
+  /*
+   * Vaihetieto siirretaan ennen piilotusta: piilotettu voi tietaa
+   * hankkeen edenneen pidemmalle, ja muuten se tieto katoaisi.
+   */
+  const nostettuVaihe = moreAdvancedPhase(jaava?.phase, piilotettava?.phase, phaseOrder)
+
+  if (nostettuVaihe) {
+    await supabaseAdmin.from("projects").update({ phase: nostettuVaihe }).eq("id", valinta.keepId)
+  }
+
   const { error: piilotusVirhe } = await supabaseAdmin
     .from("projects")
     .update({ is_public: false })
@@ -123,5 +134,6 @@ export async function POST(req: Request) {
     hideName: piilotettava?.name ?? null,
     keepName: jaava?.name ?? null,
     reason: valinta.reason,
+    phaseLifted: nostettuVaihe,
   })
 }
