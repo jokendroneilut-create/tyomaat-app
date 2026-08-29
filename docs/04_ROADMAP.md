@@ -653,7 +653,11 @@ muistin varassa.
   1. **Muokkausreitti hyväksytylle hankkeelle** (D-076) — tehty
      ensin, koska ilman sitä kaksi muuta tuottavat tietoa jota ei voi
      tallentaa eikä korjata.
-  2. **YVA-poimija.** Sivun rakenne tarkistettu: hankevastaava on
+  2. ~~**YVA-poimija.**~~ Tarkistettu 29.8.2026 (D-144): poimija on jo
+     olemassa (`createYvaEnricher`) ja kattaa 259/273 hanketta. Puute on
+     enää **14, ei 94** — ja niistä 11:llä rakennuttajaa ei ole
+     YVA-sivulla lainkaan, ei kenttänä eikä leipätekstissä. Kolme
+     löytynyttä päivitettiin. Alkuperäinen kirjaus: hankevastaava on
      nimettynä kenttänä ("Hankkeesta vastaava: Valoa Networks Oy") osiossa
      "Hankkeen yhteystiedot", ja samalla saisi yhteysviranomaisen,
      diaarinumeron ja YVA-aikataulun. **Deterministinen, ei LLM:ää** —

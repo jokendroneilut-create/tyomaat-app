@@ -5,6 +5,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-144 – YVA-poimija oli jo tehty, ja loppu ei ole poimittavissa
+
+Työjonossa oli kohta "YVA-poimija: hankevastaava on nimettynä kenttänä,
+kattaa 43 % puutteesta (94 hanketta)". Ennen toteutusta kaksi asiaa
+tarkistettiin, ja molemmat kumosivat suunnitelman.
+
+**PUUTE ON 14, EI 94.** Mitattu 29.8.2026: YVA-hankkeita on 273, ja
+niistä **259:llä on rakennuttaja**. Luku 94 on 15.8. mitattu, ja
+yrityslähteiden jälkirikastus on kaventanut sitä sen jälkeen.
+Ehdokasjonossa ei ole yhtään YVA-riviä, joten kertyvää puutettakaan ei
+ole.
+
+**POIMIJA ON JO OLEMASSA.** `createYvaEnricher` lukee sivun
+rakenteiset kentät ja on kytketty lähteeseen. Se ei siis ollut
+tekemättä — 95 %:n kattavuus on sen ansiota.
+
+**JÄLJELLE JÄÄVÄ 11 EI OLE POIMITTAVISSA TÄSTÄ LÄHTEESTÄ.** Rikastaja
+ajettiin niitä 14:ää vasten ja löysi kolme (Koppö Energia, Pohjan Voima,
+Lasor Vind), jotka päivitettiin. Loput yksitoista tarkistettiin sivu
+kerrallaan:
+
+```
+Vaalan datakeskus
+  kentät sivulla   Alueet · Aihealue · Yhteysviranomainen · Diaarinumero
+  "Hankkeesta vastaava"   ei lainkaan
+  yritysnimiä koko sivulla   0
+```
+
+Rakennuttajaa ei siis ole sivulla rakenteisena kenttänä eikä
+leipätekstissä. Poimijaa ei voi parantaa niin että se löytäisi tiedon
+jota ei ole.
+
+**Nämä 11 ovat isoja hankkeita** — datakeskuksia, tuulivoimaa, Fingridin
+voimajohto, Pirkanmaan keskuspuhdistamo — joten puute on tuntuva. Tieto
+löytyisi todennäköisesti valvontaviranomaisen diaarista
+(`LVV-U/81913/2026` on tallessa), mutta se on uusi lähde eikä tämän
+poimijan korjaus.
+
+`scripts/backfill-yva-developer.ts` · `lib/agent/yvaProjectPage.ts`
+
+---
+
 ### D-143 – Kuvauksen lyhyys ei ollutkaan vain lähteen ominaisuus
 
 Pietarsaaren kaavassa "Asemakaava Varvetissa" kuvaus oli 94 merkkiä ja
