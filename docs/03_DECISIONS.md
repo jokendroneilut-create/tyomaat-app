@@ -5,6 +5,115 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-137 – Katselmoijan on nähtävä kaikki mitä on poimittu
+
+Wärtsilän laajennuksen kohdalla kysyttiin miksi kuvauksessa lukeva
+"11 000 bruttoneliömetriä" ei näy esikatselussa. Vastaus oli
+epämiellyttävä: sitä ei ollut poimittu lainkaan, ja **näkymä näytti
+oikein tyhjän**. Hankkeen mittaluokka jäi arvailun varaan.
+
+**KURATOITU KENTTÄLISTA VANHENEE ITSESTÄÄN.** Esikatselu näytti
+kiinteän joukon kenttiä. Jokainen uusi lähde tuo metatietoja joita
+kukaan ei muista lisätä listaan, ja silloin tieto on kannassa mutta
+katselmoija ei näe sitä. Päätös tehdään vajailla tiedoilla eikä kukaan
+huomaa.
+
+Siksi esikatselussa on nyt kaksi tasoa: kuratoitu lista tärkeimmille
+kentille (laajuus, asuntomäärä, aikataulu, kustannus, urakkamuoto,
+lupanumero, kiinteistötunnus) ja sen perässä avattava **"Muut poimitut
+kentät"**, joka näyttää kaiken muun. Putkiston omat kentät on rajattu
+pois: ne kertovat mistä tieto tuli, eivät hankkeesta.
+
+**CHEERION `.text()` LIITTÄÄ ILMAN EROTINTA.** Kaksi näkyvää vikaa
+osoittautui samaksi juureksi:
+
+```
+otsikko leipätekstissä   "...ExtensionLujatalo toteuttaa..."
+linkkilista lopussa      "...kanssa:https://...https://..."
+```
+
+`$("body").text()` liittää peräkkäisten elementtien tekstit suoraan
+toisiinsa. Teksti kootaan nyt lohkoelementeittäin ja pelkät osoitteet
+pudotetaan — linkkilista ei ole hankkeen kuvausta. Listan otsikko
+karsitaan perästä, koska se ei kerro mitään ilman listaa.
+
+**KUIVAHARJOITUS ESTI TIETOJEN MENETYKSEN.** Korjaus oli tarkoitus ajaa
+kaikkiin seitsemään Lujatalo-ehdokkaaseen uudelleenhakuna. Kuivana
+ajettuna paljastui, että Prisma Hyllykallion kuvaus on täydennetty
+käsin ("Lähteet: Lujatalo (urakoitsija) ja Granlund (suunnittelija)") —
+uudelleenhaku olisi ylikirjoittanut sen raakatekstillä.
+
+Sääntö tästä: **takautuva korjaus rajataan riveihin joissa vika
+oikeasti on**, ei kaikkiin joita se koskisi. Kuvaus päivitettiin vain
+jos siinä oli liimautuneita osoitteita. Seitsemästä muuttui yksi.
+
+`lib/agent/fetchLujataloProjectsSource.ts` · `app/tic/projects/[id]/page.tsx`
+
+---
+
+### D-136 – Tiedote ei ole hankesivu, ja yksi kerääjä riittää monelle säätiölle
+
+Opiskelija-asuntosäätiöt (`docs/13_FOUNDATION_SOURCES.md`) julkaisevat
+tiedotteita, eivät hankesivuja kuten Granlund (D-131). Ero on iso:
+AYY:n 47 tiedotteesta 42 on asukasviestintää — muutto-ohjeita,
+nettiyhteyksiä, kesäasuntoja.
+
+**TUNNISTUS VAATII TEON, EI AIHETTA.** Sana "asunto" esiintyy lähes
+joka tiedotteessa, joten aihe ei kelpaa tunnistimeksi. Vaaditaan teko:
+harjannostajaiset, rakennustyöt alkoivat, urakoitsija toteuttaa
+hankkeen, valmistui. Lisäksi erillinen hylkäyslista, koska
+"Kesäasuntojen haku on avattu" sisältää sanan asunto muttei ole hanke.
+
+**YKSI KERÄÄJÄ, MONTA LÄHDETTÄ.** Aloitin AYY:stä, mutta sama poimija
+löysi hankkeet jokaisesta lähteestä — ne käyttävät samaa WordPressin
+rajapintaa. Siksi moduuli on `foundationRelease` eikä `ayyRelease`, ja
+faktat ja tunnistus haarautuvat **parserista eivät lähteen nimestä**.
+Uusi säätiö on rivi `discovery_sources`-taulussa, ei uusi kerääjä.
+
+**OSOITE ON TUNNISTE.** Sama hanke tuottaa monta tiedotetta: AYY:n
+Otakaari 15 esiintyy viidesti (ensihaku → taidekilpailu →
+harjannostajaiset → valmistuminen). Ne sidotaan yhteen osoitteella.
+Ilman sitä yhdestä hankkeesta syntyisi viisi ehdokasta.
+
+**MITTASIN ENSIN VÄÄRÄÄ ASIAA.** Arvioin AYY:lle 6,9 hanketiedotetta
+vuodessa. Tiukka poimija luki koko 16 kuukauden arkiston ja löysi
+**yhden hankkeen**. Luin kaikki 47 otsikkoa läpi: vääriä hylkäyksiä ei
+ollut, arkistossa ei vain ole muita. Oikea mittari on eri hankkeet, ei
+tiedotteet — ja se on koko joukolle noin **10 vuodessa**, ei 40–60.
+
+**NELJÄ VIKAA LÖYTYI LUKEMALLA KUIVAHARJOITUS RIVI RIVILTÄ:**
+
+1. Numeronpoiminta luki "elokuussa 2026 153 asuntoa" luvuksi 2026153.
+2. Urakoitsijaksi tuli "oli Varte Lahti Oy", koska `/i`-lippu mitätöi
+   ison alkukirjaimen vaatimuksen.
+3. HOASin haastattelusarja ("Etunimi Sukunimi – sitaatti") pääsi läpi:
+   4 osumaa 11:stä, ja yhdestä luettiin valmistumisvuodeksi 2005.
+4. PSOASin 2021 julkaistu historiikkisarja tuotti neljä "hanketta"
+   jotka ovat viisi vuotta valmiita. Siksi kerääjässä on kolmen vuoden
+   ikäraja — **iässä eikä vaiheessa**, koska tuore valmistuminen on
+   arvokas päivitys mutta vanha ei ole mitään.
+
+**LÄHTEEN TÄRKEIN TIEDOTE HYLÄTTIIN ALUKSI KOKONAAN.** HOASin 402
+asunnon ja 60 M€:n investointi kaatui siihen että kadunnimet ovat
+taivutettuja ja ilman numeroa: "nousevat Ruskeasuolle
+Mannerheimintielle ja Itäkeskukseen Gotlanninkadulle". Tiedote koskee
+kahta kohdetta, joten nimeä ei valita arvalla — se poimitaan
+katselmoitavaksi ja kohteet tallennetaan metatietoihin. Numeroton polku
+vaatii lisäksi kovan luvun (asuntomäärän), koska ilman sitä mukaan
+pääsivät "Sentinvenyttäjän asunnonhakuvinkit".
+
+Yksi vika oli työkalussa eikä logiikassa: sananraja kirjoittui
+tiedostoon **askelpalautinmerkkinä**, joten kuvio ei osunut mihinkään.
+Se löytyi vasta kun poimijaa testattiin suoraan sitä tiedotetta vasten
+jonka piti osua — siihen asti luvut näyttivät uskottavilta.
+
+Käytössä 29.8.2026: HOAS, Lahden Talot ja PSOAS. Yhteensä 25
+dokumenttia ja 17 eri hanketta.
+
+`lib/agent/foundationRelease.ts` · `docs/13_FOUNDATION_SOURCES.md`
+
+---
+
 ### D-135 – Poistettu kysymys johon vastaus heitettiin pois
 
 Onboardingin vaihe kysyi "Mistä lähteistä Tänään saa etsiä hankkeita?"

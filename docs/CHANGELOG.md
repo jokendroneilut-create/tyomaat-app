@@ -11,6 +11,34 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Opiskelija-asuntosaatiot lahteiksi (D-136)
+
+HOAS, Lahden Talot ja PSOAS kayttoon: 25 dokumenttia, 17 eri hanketta.
+Nama ovat rakennuttajia, joten ne tiedottavat ennen urakkakilpailua ja
+rakennuttaja tiedetaan maaritelman nojalla. Osasta saa myos
+urakoitsijan: Pajala Yhtiot Oy, Varte Lahti Oy.
+
+Yksi keraaja palvelee kaikkia: uusi saatio on rivi discovery_sources-
+taulussa, ei uutta koodia. Tunnistus vaatii TEON eika aihetta, koska
+sana "asunto" esiintyy lahes joka tiedotteessa. Osoite toimii
+tunnisteena, koska sama hanke tuottaa monta tiedotetta.
+
+Kerroin aiemmin etta ryhma tuottaisi 40-60 hanketta vuodessa. Se oli
+vaarin: mittasin tiedotteita en hankkeita. Oikea luku on noin 10.
+
+### Katselmoija nakee nyt kaikki poimitut kentat (D-137)
+
+Ehdokkaan esikatselu naytti kiinteaa joukkoa kenttia, joten uuden
+lahteen tuoma tieto jai kantaan nakymattomiin. Nyt mukana ovat laajuus,
+asuntomaara, aikataulu, kustannus, urakkamuoto, lupanumero ja
+kiinteistotunnus - seka avattava lista kaikesta muusta.
+
+Samalla korjattiin Lujatalon kuvaus: cheerion .text() liitti
+elementtien tekstit ilman erotinta, joten otsikko liimautui
+leipatekstiin ja linkkilista jai kuvauksen loppuun. Laajuus poimitaan
+nyt myos leipatekstista kun rakenteista kenttaa ei ole.
+
+
 ### Lahdevalinta poistettu asiakkaalta (D-135)
 
 Onboarding kysyi mista lahteista Tanaan saa etsia hankkeita. Vastaus ei
