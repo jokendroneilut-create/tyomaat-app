@@ -7,6 +7,7 @@ import {
   titleCoverage,
 } from "@/lib/agent/projectMatcher"
 import { streetKey } from "@/lib/projects/streetKey"
+import { housingCompanyKey } from "@/lib/projects/housingCompanyKey"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,6 +38,9 @@ const MAX_STREET_SUGGESTIONS = 3
 
 /* Sama raja otsikkokattavuudelle. */
 const MAX_TITLE_SUGGESTIONS = 3
+
+/* Taloyhtion nimi on tarkka, joten kolme riittaa. */
+const MAX_COMPANY_SUGGESTIONS = 3
 
 export async function POST(request: Request) {
   const auth = await verifyAdminRequest(request)
@@ -107,10 +111,39 @@ export async function POST(request: Request) {
       description: metadata.description ?? null,
     }
 
+    /*
+     * TALOYHTION NIMI EROTTAA OIKEAN VAARISTA.
+     *
+     * "Asunto Oy Oulun Valoisa" on rekisteroity ja yksikasitteinen
+     * tavalla jota tiedoteotsikko ei ole. Laptin Hiukkavaarassa oikea
+     * hanke oli jo listalla, mutta samalla 38 pisteella kuin nelja
+     * vaaraa - katselmoija ei voinut tietaa kumpi on oikea.
+     *
+     * Avain EI mene calculateMatchiin (D-090:n linja): mitattuna 106
+     * parista 14 jaa alle kynnyksen, mika ei perustele pisteytyksen
+     * muuttamista koko kannassa. Tassa se nostaa oikean karkeen ja
+     * kertoo miksi.
+     */
+    const candidateCompanyKey = housingCompanyKey(
+      normalized.name,
+      (normalized as any).description ?? null
+    )
+
+    const projectCompanyKey = (project: any) =>
+      housingCompanyKey(project.name, project.metadata?.description ?? null)
+
+    const sameCompany = (project: any) =>
+      Boolean(candidateCompanyKey) && projectCompanyKey(project) === candidateCompanyKey
+
     const scored = projects
       .map((project) => ({ project, match: calculateMatch(project, normalized as any) }))
       .filter((row) => row.match && row.match.confidence >= SUGGESTION_THRESHOLD)
-      .sort((a, b) => (b.match!.confidence ?? 0) - (a.match!.confidence ?? 0))
+      .sort((a, b) => {
+        /* Sama taloyhtio karkeen, muuten pistemaaran mukaan. */
+        const ero = Number(sameCompany(b.project)) - Number(sameCompany(a.project))
+        if (ero !== 0) return ero
+        return (b.match!.confidence ?? 0) - (a.match!.confidence ?? 0)
+      })
       .slice(0, MAX_SUGGESTIONS)
 
     /*
@@ -178,6 +211,43 @@ export async function POST(request: Request) {
               project,
               match: calculateMatch(project, normalized as any),
               shared: titleCoverage(normalized.name, project.name).sharedWords,
+            }))
+        : []
+
+    /*
+     * TALOYHTION NIMI.
+     *
+     * "Asunto Oy Oulun Valoisa" on rekisteroity ja yksikasitteinen
+     * tavalla jota tiedoteotsikko ei ole: sama hanke tunnistuu siita
+     * vaikka otsikot olisivat eri lauseita. Laptin Hiukkavaara jai 38
+     * pisteeseen vaikka molemmissa teksteissa lukee sama yhtio.
+     *
+     * Avain EI mene calculateMatchiin, samasta syysta kuin katuavain
+     * (D-090): mitattuna 106 parista 14 jaa nyt alle kynnyksen, mika ei
+     * perustele pisteytyksen muuttamista koko kannassa. Ehdotuslistassa
+     * vaara pari maksaa yhden silmayksen.
+     *
+     * Poiminta on rajattu otsikkoon ja kuvauksen ensimmaiseen
+     * virkkeeseen: koko kuvauksesta poimittuna vaaria pareja oli 472,
+     * koska tiedotteet luettelevat lopussa yrityksen MUITA kohteita.
+     */
+    const titleIds = new Set(titleMatches.map((row) => row.project.id))
+
+    const companyMatches =
+      candidateCompanyKey && candidateCityKey
+        ? projects
+            .filter((project) => {
+              if (scoredIds.has(project.id)) return false
+              if (streetIds.has(project.id) || titleIds.has(project.id)) return false
+              if (String(project.city ?? "").trim().toLowerCase() !== candidateCityKey) {
+                return false
+              }
+              return sameCompany(project)
+            })
+            .slice(0, MAX_COMPANY_SUGGESTIONS)
+            .map((project) => ({
+              project,
+              match: calculateMatch(project, normalized as any),
             }))
         : []
 
@@ -313,7 +383,9 @@ export async function POST(request: Request) {
           developer: project.developer,
           builder: project.builder,
           confidence: match!.confidence,
-          reasons: match!.reasons,
+          reasons: sameCompany(project)
+            ? [`same_housing_company:${candidateCompanyKey}`, ...match!.reasons]
+            : match!.reasons,
         })),
         ...streetMatches.map(({ project, match }) => ({
           projectId: project.id,
@@ -326,6 +398,21 @@ export async function POST(request: Request) {
           builder: project.builder,
           confidence: match?.confidence ?? null,
           reasons: ["same_street_address", ...(match?.reasons ?? [])],
+        })),
+        ...companyMatches.map(({ project, match }) => ({
+          projectId: project.id,
+          name: project.name,
+          city: project.city,
+          region: project.region,
+          phase: project.phase,
+          status: project.status,
+          developer: project.developer,
+          builder: project.builder,
+          confidence: match?.confidence ?? null,
+          reasons: [
+            `same_housing_company:${candidateCompanyKey}`,
+            ...(match?.reasons ?? []),
+          ],
         })),
         ...titleMatches.map(({ project, match, shared }) => ({
           projectId: project.id,

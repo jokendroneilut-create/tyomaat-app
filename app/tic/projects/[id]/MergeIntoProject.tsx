@@ -59,6 +59,16 @@ function reasonLabel(reason: string): string {
     const words = reason.slice("similar_title_words:".length)
     return `yhteiset sanat: ${words}`
   }
+
+  /*
+   * Taloyhtiön nimi näytetään sellaisenaan, koska se on ehdotuksen koko
+   * peruste — pelkkä "sama taloyhtiö" ei kertoisi mikä yhtiö.
+   */
+  if (reason.startsWith("same_housing_company:")) {
+    const yhtio = reason.slice("same_housing_company:".length)
+    return `sama taloyhtiö: ${yhtio}`
+  }
+
   return REASON_LABELS[reason] ?? reason
 }
 

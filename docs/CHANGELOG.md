@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Taloyhtion nimi erottaa oikean ehdotuksen (D-141)
+
+Ehdotuslistassa saattoi olla viisi hanketta samalla 38 pisteella, eika
+katselmoija voinut tietaa kumpi on oikea. Nyt sama taloyhtio nostaa
+oikean karkeen ja kertoo perusteen: "sama taloyhtio: oulun valois".
+
+Poiminta on rajattu otsikkoon ja kuvauksen kahteen ensimmaiseen
+virkkeeseen. Koko kuvauksesta poimittuna vaaria pareja oli 472, koska
+tiedotteet luettelevat lopussa yrityksen muita kohteita.
+
+Avain ei mene automaattiseen yhdistamiseen, samalla perusteella kuin
+katuavain: 14 loytoa ei perustele pisteytyksen muuttamista koko
+kannassa.
+
+
 ### Kaksoiskappaleet yhdistyvat oikeasti (D-138)
 
 Klaukkalan vesitorni nakyi asiakkaalle kahtena, vaikka pari oli

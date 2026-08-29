@@ -51,12 +51,32 @@ Hukkuvien joukossa on juuri se pari josta kysymys alkoi (38) sekä mm.
 uutta kotia" (58) ja kaksi identtistä "Malminkartanon kirjaston korvaava
 uudisrakennus" (65).
 
-**EHDOTUS: EHDOTUSLISTAAN, EI AUTOMAATTIIN.** Sama linja kuin
-katuavaimella (D-090): tieto on liian pieni ja liian tuore automaattiin,
-mutta ehdotuslistassa väärä pari maksaa yhden silmäyksen. 14 löytöä ei
-myöskään perustele pisteytyksen muuttamista koko kannassa.
+**TOTEUTETTU EHDOTUSLISTAAN, EI AUTOMAATTIIN.** Sama linja kuin
+katuavaimella (D-090): tieto on liian pieni automaattiin, mutta
+ehdotuslistassa väärä pari maksaa yhden silmäyksen. 14 löytöä ei
+perustele pisteytyksen muuttamista koko kannassa.
 
-`scripts/measure-housing-company-key.ts`
+**AVAIMEN ARVO EI OLLUTKAAN LISÄTÄ EHDOTUKSIA VAAN EROTTAA OIKEA.**
+Ensimmäinen toteutus lisäsi vain hankkeita joita listalla ei jo ollut —
+ja juuri se pari, jonka takia koko avain tehtiin, oli listalla
+ennestään. Se oli siellä samalla 38 pisteellä kuin neljä väärää, joten
+katselmoija ei voinut tietää kumpi on oikea.
+
+Nyt avain sekä nostaa oikean kärkeen että kertoo perusteen
+("sama taloyhtiö: oulun valois"). Lisäksi se tuo listalle ne joita
+pisteytys ei löytänyt lainkaan.
+
+**IKKUNA ON KAKSI VIRKETTÄ, EI YKSI.** Ensimmäinen toteutus rajasi
+yhteen virkkeeseen ja oli siten tiukempi kuin mitattu: STT:n tiedote
+johtaa yleisellä lauseella ja nimeää taloyhtiön vasta toisessa
+virkkeessä. Yhden virkkeen rajaus hukkasi juuri sen parin jonka takia
+avain tehtiin.
+
+**Jäännösriski on tiedossa:** jos tiedote mainitsee toisen kohteen jo
+toisessa virkkeessä, se poimitaan. Mittaus osoitti sen harvinaiseksi
+(2 väärää paria 261:stä), ja ehdotuslistassa se maksaa yhden silmäyksen.
+
+`lib/projects/housingCompanyKey.ts` · `scripts/measure-housing-company-key.ts`
 
 ---
 
