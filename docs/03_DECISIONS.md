@@ -5,6 +5,61 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-141 – Taloyhtiön nimi kelpaa avaimeksi vain otsikosta ja ensimmäisestä virkkeestä
+
+Laptin Hiukkavaara jäi 38 pisteeseen, vaikka molemmissa kuvauksissa
+lukee sama taloyhtiö "Asunto Oy Oulun Valoisa". Tieto oli olemassa muttei
+käytössä.
+
+**TIETOA KÄYTETÄÄN JO, MUTTA VAIN TOISEEN SUUNTAAN.** D-045 käyttää
+taloyhtiön nimeä EROTTAMISEEN: eri nimet painavat varmuuden kynnyksen
+alle ("Asunto Oy Helsingin Pyy" vs "…Evia"). Yhdistämiseen sitä ei
+käytetä kertaakaan.
+
+**KOKO KUVAUS ON KELVOTON LÄHDE.** Ensimmäinen mittaus poimi kaikki
+maininnat, ja avain "kempeleen loiste" yhdisti Oulun, Turun, Porin,
+Joensuun, Helsingin, Tampereen ja Jyväskylän hankkeet. Syy on
+tiedotteissa: ne luettelevat lopussa yrityksen MUITA kohteita.
+**Kuvauksessa mainittu taloyhtiö ei ole välttämättä hankkeen oma.**
+
+Pelkkä ensimmäinen maininta ei riittänyt: "Palvelukeskus Oulun
+Kynsilehtoon" sai yhä avaimekseen "kempeleen loiste", koska tiedote
+johtaa toisella kohteella.
+
+**RAJAUS OTSIKKOON JA ENSIMMÄISEEN VIRKKEESEEN RATKAISI:**
+
+```
+                      kaikki      1. maininta   otsikko + 1. virke
+jaettuja avaimia         172           116              80
+pareja                  1396           752             261
+eri kaupungissa          472           193               2
+```
+
+Väärät parit putosivat 472 → 2, ja nekin kaksi näyttävät kaupunkivirheiltä
+eivätkä vääriltä linkeiltä ("Kiinteistö Oy Kissantassu" Tampere ↔
+"38 asuntoa Pohjois-Hervantaan" merkitty Helsinkiin, vaikka Hervanta on
+Tampereella).
+
+**MITÄ AVAIN TOISI:**
+
+- Kattavuus 294 riviä 14 169:stä eli **2 %** — pieni joukko.
+- 106 hanke↔ehdokas-paria jakaa avaimen.
+- **14 niistä jää nyt alle 70:n kynnyksen**, eli hukkuu.
+
+Hukkuvien joukossa on juuri se pari josta kysymys alkoi (38) sekä mm.
+"Pohjola Rakennus rakentaa kaksi kerrostaloa" ↔ "Oulun Hiukkavaaraan 55
+uutta kotia" (58) ja kaksi identtistä "Malminkartanon kirjaston korvaava
+uudisrakennus" (65).
+
+**EHDOTUS: EHDOTUSLISTAAN, EI AUTOMAATTIIN.** Sama linja kuin
+katuavaimella (D-090): tieto on liian pieni ja liian tuore automaattiin,
+mutta ehdotuslistassa väärä pari maksaa yhden silmäyksen. 14 löytöä ei
+myöskään perustele pisteytyksen muuttamista koko kannassa.
+
+`scripts/measure-housing-company-key.ts`
+
+---
+
 ### D-140 – Tyhjää ehdokasta ei voi edes ehdottaa yhdistettäväksi
 
 Kysymys oli miksi Laptin Hiukkavaaran hankkeet eivät nousseet edes
