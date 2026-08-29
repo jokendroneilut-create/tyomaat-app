@@ -63,3 +63,4 @@ scripts/out/pairs-*.json
 scripts/out/contact-mismatches.json
 scripts/out/granlund-review.json
 scripts/out/design-firms*.json
+scripts/out/foundation-*.json
