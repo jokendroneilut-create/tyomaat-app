@@ -3,9 +3,6 @@ import {
   parseLujataloCard,
   parseLujataloSchedule,
   parseMillionEuros,
-  parseScopeFromText,
-  blockText,
-  trimDanglingLabel,
 } from "./fetchLujataloProjectsSource"
 
 /*
@@ -71,82 +68,5 @@ describe("parseLujataloSchedule", () => {
   /* Kaanteinen vali on kirjoitusvirhe, ei tieto. */
   it("hylkaa kaanteisen valin", () => {
     expect(parseLujataloSchedule("2026 - 2019")).toBeNull()
-  })
-})
-
-describe("parseScopeFromText", () => {
-  /*
-   * Wartsila STH HUB Extension 29.8.2026: kohdesivulla ei ollut
-   * rakenteista Laajuus-kenttaa, joten luku jai kokonaan poimimatta
-   * vaikka se luki leipatekstissa.
-   */
-  it("lukee bruttoneliot leipatekstista", () => {
-    expect(
-      parseScopeFromText("Hankkeen laajuus on noin 11 000 bruttoneliömetriä.")
-    ).toBe("11 000 bruttoneliömetriä")
-  })
-
-  it("lukee kerrosneliot ja tavalliset neliot", () => {
-    expect(parseScopeFromText("kohteessa on 4 465 neliömetriä")).toBe("4 465 neliömetriä")
-    expect(parseScopeFromText("laajuus 12 000 k-m2")).toBe("12 000 k-m2")
-  })
-
-  /* Sama ansa kuin asuntosaatiopoimijassa: luku ei saa hypata yli. */
-  it("ei hyppaa kahden luvun yli", () => {
-    expect(parseScopeFromText("vuonna 2028 valmistuu 11 000 bruttoneliömetriä")).toBe(
-      "11 000 bruttoneliömetriä"
-    )
-  })
-
-  it("palauttaa nullin kun lukua ei ole", () => {
-    expect(parseScopeFromText("ei laajuutta mainittu")).toBeNull()
-    expect(parseScopeFromText("")).toBeNull()
-  })
-})
-
-describe("blockText", () => {
-  /*
-   * Cheerion .text() liittaa elementit ilman erotinta. Siita syntyi
-   * kaksi vikaa: otsikko liimautui leipatekstiin ja linkkilista jai
-   * kuvauksen loppuun.
-   */
-  const cheerioLoad = (html: string) => require("cheerio").load(html)
-
-  it("erottaa lohkot valilyonnilla", () => {
-    const $ = cheerioLoad("<h1>Wärtsilä STH HUB Extension</h1><p>Lujatalo toteuttaa laajennuksen.</p>")
-    expect(blockText($)).toBe("Wärtsilä STH HUB Extension Lujatalo toteuttaa laajennuksen.")
-  })
-
-  it("pudottaa pelkat osoitteet", () => {
-    const $ = cheerioLoad(
-      "<p>Hanke etenee.</p><p>https://www.lujatalo.fi/ajankohtaista/2026/02/06/juttu</p><p>https://www.lujatalo.fi/toinen</p>"
-    )
-    expect(blockText($)).toBe("Hanke etenee.")
-  })
-
-  it("sailyttaa tekstin jossa on linkki mukana", () => {
-    const $ = cheerioLoad("<p>Lisätietoja: https://esimerkki.fi sivulla.</p>")
-    expect(blockText($)).toContain("Lisätietoja")
-  })
-})
-
-describe("trimDanglingLabel", () => {
-  /*
-   * Linkkilistan poiston jalkeen sen otsikko jai roikkumaan kuvauksen
-   * loppuun ilman itse listaa.
-   */
-  it("karsii kaksoispisteeseen paattyvan katkelman", () => {
-    expect(
-      trimDanglingLabel("Koulutuskeskus valmistui 2025. Lisää yhteistyöhankkeista Wärtsilän kanssa:")
-    ).toBe("Koulutuskeskus valmistui 2025.")
-  })
-
-  it("ei koske tavalliseen loppuun", () => {
-    expect(trimDanglingLabel("Hanke valmistuu 2028.")).toBe("Hanke valmistuu 2028.")
-  })
-
-  /* Kesken jaanyt lause ei ole otsikko, joten sita ei karsita. */
-  it("kestaa tyhjan", () => {
-    expect(trimDanglingLabel("")).toBe("")
   })
 })

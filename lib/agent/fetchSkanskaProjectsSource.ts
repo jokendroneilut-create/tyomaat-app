@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio"
+import { blockText, cutAtFirstMarker, parseScopeFromText, trimTrailingHeadings } from "./htmlBlockText"
 import { detectCityFromText } from "./detectCityFromText"
 import { extractStreetAddress } from "./extractStreetAddress"
 import { inferBuildingType } from "./buildingType"
@@ -124,7 +125,8 @@ export async function enrichSkanskaProject(candidate: any): Promise<any> {
   const response = await fetch(candidate.source_url, { headers: { "User-Agent": UA } })
   if (!response.ok) return candidate
 
-  const $ = cheerio.load(await response.text())
+  const rawHtml = await response.text()
+  const $ = cheerio.load(rawHtml)
   $("script, style, noscript, nav, header, footer").remove()
 
   const text = $("main").text().replace(/\s+/g, " ").trim() || $("body").text().replace(/\s+/g, " ").trim()
@@ -140,12 +142,70 @@ export async function enrichSkanskaProject(candidate: any): Promise<any> {
   const projectType = extractSkanskaField(text, "Hanketyyppi")
 
   /*
+   * Laajuus: rakenteinen "Koko"-kentta ensin, leipateksti varalla.
+   * Firdon 19 000 brm2 luki vain kuvauksessa, joten se jai poimimatta.
+   */
+  /*
+   * "Koko"-kentta on erottimettomassa tekstissa, joten se nappaa
+   * helposti viereiset kentat mukaan: Hotel Grand Hansalla arvoksi tuli
+   * "Aloitus:Valmistuminen:Kehitysvaihe:2/2021-5/2021". Siksi arvon on
+   * NAYTETTAVA pinta-alalta, ei pelkastaan sisallettava numero.
+   */
+  /*
+   * LAAJUUS ON UPOTETUSSA JSONISSA, EI TEKSTISSA.
+   *
+   * Firdon sivu nayttaa "19 000 brm²" vasta selaimessa: palvelimen
+   * palauttamassa HTML:ssa luku on JSON-lohkossa muodossa
+   * "Size":"19 000 brm²". Siksi sita ei loytynyt tekstista lainkaan, ja
+   * hankkeen mittaluokka jai poimimatta.
+   *
+   * Rakenteinen kentta on luotettavampi kuin leipatekstista arvaaminen,
+   * joten se luetaan ensin.
+   */
+  /*
+   * Lainausmerkit ovat JSON-lohkossa kenoviivalla suojattuja
+   * (\"Size\":\"19 000 brm²\"), joten molemmat muodot on sallittava.
+   */
+  const sizeFromJson =
+    /\\?"Size\\?"\s*:\s*\\?"([^"\\]{1,60})\\?"/.exec(rawHtml)?.[1]?.trim() || null
+
+  const sizeField = extractSkanskaField(text, "Koko")
+  const kentanScope =
+    sizeField && /\d/.test(sizeField) && /(brm|m2|m²|neliö|kerrosala)/i.test(sizeField)
+      ? sizeField
+      : null
+
+  const scope = sizeFromJson && /\d/.test(sizeFromJson) ? sizeFromJson : kentanScope
+
+  /*
    * Kuvaus alkaa "Projektin tiedot" -otsikon jälkeen; sitä ennen on
    * navigaatiota ja murupolku.
    */
-  const detailsAt = text.search(/Projektin tiedot/i)
-  const description =
-    detailsAt >= 0 ? text.slice(detailsAt + "Projektin tiedot".length).trim() : text
+  /*
+   * KUVAUS KOOTAAN LOHKOITTAIN, KENTAT EI.
+   *
+   * Ylla oleva `text` on tarkoituksella erottimeton, koska
+   * kenttapoiminta nojaa siihen ("StatusKaynnissa"). Kuvaukselle se on
+   * kuitenkin vaara: Firdossa syntyi "Asiakas:MonikayttajataloPalvelu:"
+   * ja loppuun liimautui maavalitsin.
+   */
+  const lohkot = blockText($)
+  const detailsAt = lohkot.search(/Projektin tiedot/i)
+  const raakaKuvaus =
+    detailsAt >= 0 ? lohkot.slice(detailsAt + "Projektin tiedot".length).trim() : lohkot
+
+  /*
+   * Sivun hantaan jaa upotuksia joita nav/footer-poisto ei tavoita:
+   * karttaupotus ja maavalitsin. Katkaistaan ensimmaisesta.
+   */
+  const description = trimTrailingHeadings(
+    cutAtFirstMarker(
+      raakaKuvaus,
+      /(Kuvia\s+Sijainti|Sijainti\s+Aktivoi kartta|Aktivoi kartta|Valitse maa|Siirry Group sivustolle|Loading\.\.\.)/i
+    )
+  )
+
+  const scopeFromText = parseScopeFromText(description)
 
   const phase = status
     ? STATUS_TO_PHASE[status.toLowerCase().split(/\s/)[0]] ?? candidate.phase
@@ -171,8 +231,11 @@ export async function enrichSkanskaProject(candidate: any): Promise<any> {
         builder: "julkaisija",
         phase: status ? "teksti" : null,
         city: "teksti",
+        laajuus: scope ? "lähde" : scopeFromText ? "teksti" : null,
       },
       ...(projectType ? { skanska_hanketyyppi: projectType } : {}),
+      /* Rakenteinen kentta ensin, leipateksti varalla. */
+      ...(scope || scopeFromText ? { laajuus: scope ?? scopeFromText } : {}),
     },
   }
 }
