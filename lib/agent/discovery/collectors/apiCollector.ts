@@ -13,6 +13,7 @@ import {
   SENAATTI_TENDER_CALENDAR_URL,
 } from "@/lib/agent/senaattiTenderCalendar"
 import type { DiscoverySource } from "../registry/sources"
+import { pietarsaariKaavaDescription } from "@/lib/agent/pietarsaariKaavaDescription"
 import { detectCityFromText } from "../../detectCityFromText"
 import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
 import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
@@ -9146,7 +9147,17 @@ async function collectPietarsaariKaavaSource(source: DiscoverySource) {
     const signalText = [...headings, ...paragraphs].join(" ")
     const phase = pietarsaariPhaseFromText(signalText)
     const completed = phase === "Voimaantulo"
-    const description = paragraphs.find((p) => p.length > 40 && !/^\.?suunnittelun tarkoitus$/i.test(p)) ?? null
+    /*
+     * Kuvaus kootaan otsikoittain: pelkka ensimmainen kappale jatti
+     * "Suunnittelun tarkoitus" -osion kokonaan pois, ja juuri se kertoo
+     * mita alueelle on tulossa.
+     */
+    const description = pietarsaariKaavaDescription(
+      block.nodes.map((node: any) => ({
+        tag: String(node.name ?? ""),
+        text: $(node).text().replace(/\s+/g, " ").trim(),
+      }))
+    )
 
     const kaavaMatch = signalText.match(PIETARSAARI_KAAVA_NUMBER_PATTERN)
     const kaavaTunnus = kaavaMatch ? kaavaMatch[1] : null
