@@ -15,7 +15,18 @@ export async function getPotentialProjectsForReview(page = 1) {
     .select("*")
     .eq("status", "new")
     .or("metadata->>recommended_action.neq.ignore,metadata->>recommended_action.is.null")
-    .order("created_at", { ascending: false })
+    /*
+     * VANHIN ENSIN.
+     *
+     * Jono käsitellään järjestyksessä, joten pisimpään odottaneen on
+     * oltava ylimpänä. Uusin ensin tarkoitti että vanhat ehdokkaat
+     * valuivat listan häntään sitä mukaa kun uusia tuli — eli juuri ne
+     * jäivät käsittelemättä.
+     *
+     * Sama järjestys pitää sivutuksen mielekkäänä: sivu 1 on aina se
+     * jota seuraavaksi käsitellään.
+     */
+    .order("created_at", { ascending: true })
     .range(offset, offset + PAGE_SIZE - 1)
 
   if (error) throw error
