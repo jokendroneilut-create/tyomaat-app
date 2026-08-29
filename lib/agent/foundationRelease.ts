@@ -61,7 +61,7 @@ const TEKO =
  * eivät ole hankkeita. Mitattu todellisista otsikoista 29.8.2026.
  */
 const EI_HANKE =
-  /(kesäasunto|kesäasuntojen|asuntojen haku|haku on avattu|vapautuvia asuntoja|jälleenvuokra|edelleenluovut|sisäänmuutto|muutto-ohje|järjestyssään|palovaroitin|internet-yhteyd|asuntotilanteesta|vuokrasopimu|asukasvalinta|hakuaika)/i
+  /(kesäasunto|kesäasuntojen|asuntojen haku|haku on avattu|vapautuvia asuntoja|vapautumassa|jälleenvuokra|edelleenluovut|sisäänmuutto|muutto-ohje|järjestyssään|palovaroitin|internet-yhteyd|asuntotilanne|vuokrasopimu|asukasvalinta|hakuaika|asuntonäyttö)/i
 
 /*
  * Kiinteistökauppa EI ole rakennushanke. "AYY on myynyt Tuhkimontie 2
@@ -78,6 +78,15 @@ const EI_HANKE =
  */
 const HAASTATTELU =
   /^\s*[A-ZÄÖÅ][a-zäöå-]+\s+[A-ZÄÖÅ][a-zäöå-]+\s*[-–—]\s*\S/
+
+/*
+ * JUHLAVUOSI EI OLE OSOITE.
+ *
+ * POASin tiedote "Peltokatu 100 vuotta!" luki luvun katunumeroksi ja
+ * teki siita hankkeen. Luku joka on kadunnimen perassa mutta jota
+ * seuraa "vuotta", ei ole osoite.
+ */
+const JUHLAVUOSI = /\d+\s*vuotta\b/i
 
 const KIINTEISTOKAUPPA = /\bon myynyt\b|\bmyi\b.{0,30}kiinteist/i
 
@@ -328,6 +337,7 @@ export function parseFoundationRelease(
   if (EI_HANKE.test(title)) return { ...tyhja, reason: "asukasviestintä, ei hanke" }
   if (KIINTEISTOKAUPPA.test(title)) return { ...tyhja, reason: "kiinteistökauppa, ei rakennushanke" }
   if (HAASTATTELU.test(title)) return { ...tyhja, reason: "haastattelu, ei hanke" }
+  if (JUHLAVUOSI.test(title)) return { ...tyhja, reason: "juhlavuosi, ei hanke" }
 
   if (!TEKO.test(kaikki)) return { ...tyhja, reason: "ei rakentamisen tekoa" }
 

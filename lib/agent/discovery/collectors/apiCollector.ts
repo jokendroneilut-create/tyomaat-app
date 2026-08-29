@@ -1519,10 +1519,27 @@ async function collectFoundationSource(source: DiscoverySource) {
 
   const posts: any[] = []
   for (let page = 1; page <= FOUNDATION_MAX_PAGES; page++) {
-    const response = await fetch(
-      `${source.url}?per_page=${FOUNDATION_PER_PAGE}&page=${page}&orderby=date&order=desc`,
-      { headers: { "User-Agent": FOUNDATION_UA }, cache: "no-store" }
-    )
+    /*
+     * VERKKOVIRHE KESKEN AJON EI SAA HUKATA JO KERATTYA.
+     *
+     * Sevas kaatui "fetch failed" -virheeseen 29.8.2026 ja koko lahde
+     * keskeytyi, vaikka aiemmat sivut olivat jo tallessa. Ensimmainen
+     * sivu on eri asia: jos se ei vastaa, lahde on rikki ja se pitaa
+     * nakya ajon virheena.
+     */
+    let response: Response
+    try {
+      response = await fetch(
+        `${source.url}?per_page=${FOUNDATION_PER_PAGE}&page=${page}&orderby=date&order=desc`,
+        { headers: { "User-Agent": FOUNDATION_UA }, cache: "no-store" }
+      )
+    } catch (e: any) {
+      if (page === 1) {
+        throw new Error(`${source.name}: tiedoterajapintaan ei saatu yhteytta: ${e?.message ?? e}`)
+      }
+      console.warn(`collectFoundationSource(${source.name}): sivu ${page} epaonnistui, jatketaan kerätyilla`)
+      break
+    }
 
     if (!response.ok) {
       if (page === 1) {

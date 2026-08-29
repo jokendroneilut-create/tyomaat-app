@@ -271,3 +271,35 @@ describe("usea kohde samassa tiedotteessa", () => {
     expect(streetStem("Gotlanninkadulle")).toBe(streetStem("Gotlanninkadun"))
   })
 })
+
+describe("uudet hylkaykset", () => {
+  /* KOASin "Asuntotilanne elokuussa 2024" luki 121 asuntoa hankkeeksi. */
+  it("hylkaa vuokraustilanteen", () => {
+    const r = parseFoundationRelease(
+      "Asuntotilanne elokuussa 2024",
+      "Koas Kauppakatu 13b:ssa on 121 asuntoa vapaana, uusia valmistuu pian."
+    )
+    expect(r.isProject).toBe(false)
+  })
+
+  it("hylkaa vapautuvat asunnot ja asuntonaytot", () => {
+    expect(parseFoundationRelease("Kaksioita ja soluhuoneita vapautumassa", "Palstatie 4 rakennettiin 2019.").isProject).toBe(false)
+    expect(parseFoundationRelease("Asuntonäyttö Taitoniekantie 18.4.", "Kohde valmistuu pian.").isProject).toBe(false)
+  })
+
+  /* POASin "Peltokatu 100 vuotta!" luki juhlavuoden katunumeroksi. */
+  it("hylkaa juhlavuoden", () => {
+    const r = parseFoundationRelease("Peltokatu 100 vuotta!", "Talo valmistui 1925 ja peruskorjattiin.")
+    expect(r.isProject).toBe(false)
+    expect(r.reason).toContain("juhlavuosi")
+  })
+
+  /* Oikea osoitteellinen hanke ei saa pudota naiden mukana. */
+  it("paastaa aidon hankkeen lapi", () => {
+    const r = parseFoundationRelease(
+      "Koas ja Peab käynnistävät 80 opiskelija-asunnon rakentamisen",
+      "Kauppakatu 13b:hen valmistuu 80 asuntoa. Rakennustyöt ovat alkaneet."
+    )
+    expect(r.isProject).toBe(true)
+  })
+})

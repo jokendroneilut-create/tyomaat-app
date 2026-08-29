@@ -11,6 +11,24 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Yhdeksan asuntosaatiolahdetta kaytossa (D-136)
+
+POAS, KOAS, Sevas, TYS, Savonlinna ja AYY lisatty HOASin, Lahden
+Talojen ja PSOASin rinnalle. Yhteensa 29 eri hanketta jonossa.
+
+Pois jatettiin Kuopas, VOAS ja Joensuun Elli (0 hanketta) seka Soihtu
+ja Kajaanin Pietari (1 hanke sadoista tiedotteista) - jokainen lahde
+maksaa hakuaikaa ajobudjetista.
+
+Kolme uutta hylkayssaantoa luettiin tuloksesta rivi rivilta:
+vuokraustilanne ("Asuntotilanne elokuussa 2024" -> 121 asuntoa),
+asuntonaytot ja juhlavuosi ("Peltokatu 100 vuotta!" luki juhlavuoden
+katunumeroksi). Seitseman vanhentunutta dokumenttia siivottiin jonosta.
+
+Verkkovirhe kesken ajon ei enaa hukkaa jo kerattya: Sevas kaatui ja koko
+lahde keskeytyi, vaikka aiemmat sivut olivat tallessa.
+
+
 ### Valmistumassa pois asiakkaan vaihesuodattimesta (D-111)
 
 Julkisista 5 909 hankkeesta yksi on tassa vaiheessa, joten valinta
