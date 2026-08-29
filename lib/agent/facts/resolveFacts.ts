@@ -7,6 +7,7 @@ import { extractTampereKaavaFacts } from "@/lib/agent/facts/extractTampereKaavaF
 import { extractTurkuKaavaFacts } from "@/lib/agent/facts/extractTurkuKaavaFacts"
 import { extractKreateFacts } from "@/lib/agent/facts/extractKreateFacts"
 import { extractGranlundFacts } from "@/lib/agent/facts/extractGranlundFacts"
+import { extractFoundationFacts } from "@/lib/agent/facts/extractFoundationFacts"
 import { extractVaylaFacts } from "@/lib/agent/facts/extractVaylaFacts"
 import { extractSenaattiTenderFacts } from "@/lib/agent/facts/extractSenaattiTenderFacts"
 import { extractSenaattiFacts } from "@/lib/agent/facts/extractSenaattiFacts"
@@ -950,6 +951,27 @@ export function resolveFacts(document: any) {
         documentsUrl: document.document_url,
         description,
         identifyingInfo,
+      }),
+    }
+  }
+
+  /*
+   * Asuntosaatiot tunnistetaan PARSERISTA eika lahteen nimesta: sama
+   * keraaja palvelee montaa saatiota, ja uusi lahde on rivi taulussa
+   * eika uusi haara taalla.
+   */
+  if (document.raw_payload?.parser === "foundationReleaseParser") {
+    const post = document.raw_payload?.original ?? safeJsonParse(document.raw_text)
+
+    return {
+      decisions: [],
+      facts: extractFoundationFacts({
+        documentId: document.id,
+        sourceName: document.source_name,
+        post,
+        title: document.raw_payload?.title ?? null,
+        fields: document.raw_payload?.fields ?? {},
+        developer: document.raw_payload?.developer ?? null,
       }),
     }
   }

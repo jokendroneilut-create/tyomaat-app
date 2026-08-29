@@ -1480,6 +1480,133 @@ async function collectGranlundSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * OPISKELIJA-ASUNTOSAATIOT: YKSI KERAAJA, MONTA LAHDETTA.
+ *
+ * Nama julkaisevat TIEDOTTEITA, eivat hankesivuja, ja kaikki kayttavat
+ * samaa WordPressin rajapintaa. Poimija (foundationRelease) osoittautui
+ * mitattaessa yhteiseksi: sama logiikka loysi hankkeet HOASista,
+ * PSOASista, POASista, KOASista, Sevaksesta, Lahden Taloista, TYSista,
+ * Savonlinnasta, Kajaanista ja Soihdusta.
+ *
+ * Siksi uusi saatio on RIVI discovery_sources-taulussa, ei uusi kerraaja.
+ * Paatepiste luetaan source.url-kentasta.
+ *
+ * SIVUKOKO ON 20 EIKA 100. TYS palauttaa isolla sivukoolla vajaan
+ * JSONin (mitattu 29.8.2026), joten raja on asetettu heikoimman
+ * lahteen mukaan.
+ */
+const FOUNDATION_PER_PAGE = 20
+const FOUNDATION_MAX_PAGES = 10
+const FOUNDATION_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+
+async function collectFoundationSource(source: DiscoverySource) {
+  const { parseFoundationRelease } = await import("@/lib/agent/foundationRelease")
+
+  const posts: any[] = []
+  for (let page = 1; page <= FOUNDATION_MAX_PAGES; page++) {
+    const response = await fetch(
+      `${source.url}?per_page=${FOUNDATION_PER_PAGE}&page=${page}&orderby=date&order=desc`,
+      { headers: { "User-Agent": FOUNDATION_UA }, cache: "no-store" }
+    )
+
+    if (!response.ok) {
+      if (page === 1) {
+        throw new Error(
+          `${source.name}: tiedoterajapinnan haku epaonnistui: ${response.status} ${response.statusText}`
+        )
+      }
+      break
+    }
+
+    let sivu: any
+    try {
+      sivu = await response.json()
+    } catch {
+      /*
+       * Vajaa JSON on tunnettu vika ainakin TYSilla. Se ei ole syy
+       * kaataa ajoa - otetaan se mita ehdittiin lukea.
+       */
+      break
+    }
+
+    if (!Array.isArray(sivu) || sivu.length === 0) break
+    posts.push(...sivu)
+    if (sivu.length < FOUNDATION_PER_PAGE) break
+  }
+
+  let saved = 0
+  const skipped = new Map<string, number>()
+
+  for (const post of posts) {
+    const parsed = parseFoundationRelease(post?.title?.rendered, post?.content?.rendered)
+
+    if (!parsed.isProject) {
+      skipped.set(parsed.reason, (skipped.get(parsed.reason) ?? 0) + 1)
+      continue
+    }
+
+    const title = decodeHtmlEntities(post?.title?.rendered ?? "")
+    const rawText = JSON.stringify(post)
+    const contentHash = hashContent(rawText)
+
+    const { error } = await supabaseAdmin.from("source_documents").upsert(
+      {
+        source_id: source.id,
+        source_name: source.name,
+        title: title || `${source.name} ${post.id}`,
+        document_url: post.link,
+        document_type: "api",
+        content_hash: contentHash,
+        status: "downloaded",
+        raw_text: rawText,
+        raw_payload: {
+          parser: source.parser,
+          priority: source.priority,
+          foundation_post_id: post.id,
+          title,
+          /*
+           * Sama hanke tuottaa monta tiedotetta (ensihaku,
+           * harjannostajaiset, valmistuminen). project_name on osoite,
+           * joten se sitoo ne yhteen tunnistuksessa.
+           */
+          project_name: parsed.projectName,
+          /*
+           * Rakennuttaja on saatio itse. Lahteen nimessa on
+           * " tiedotteet" -paate, joka karsitaan pois.
+           */
+          developer: source.name.replace(/\s*tiedotteet$/i, "").trim(),
+          fields: parsed,
+          published_at: post.date,
+          modified: post.modified,
+          original: post,
+        },
+        processed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "document_url" }
+    )
+
+    if (error) throw error
+    saved += 1
+  }
+
+  const syyt = [...skipped.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([syy, n]) => `${n} ${syy}`)
+    .join(", ")
+
+  console.log(
+    `collectFoundationSource(${source.name}): ${posts.length} tiedotetta, ` +
+      `${saved} hanketta tallennettu. Ohitettu: ${syyt || "-"}`
+  )
+
+  return {
+    documentsFound: posts.length,
+    documentsSaved: saved,
+  }
+}
+
 async function collectKreateSource(source: DiscoverySource) {
   const [statusNames, categoryNames] = await Promise.all([
     fetchKreateTaxonomy("project_status"),
@@ -39014,6 +39141,10 @@ export async function collectApiSource(source: DiscoverySource) {
 
   if (source.parser === "granlundParser") {
     return collectGranlundSource(source)
+  }
+
+  if (source.parser === "foundationReleaseParser") {
+    return collectFoundationSource(source)
   }
 
   if (source.parser === "vaylaParser") {

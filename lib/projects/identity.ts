@@ -27,6 +27,13 @@ export type IdentifierType =
    * kunnes täsmäytys yhdistää ne.
    */
   | "granlund_post_id"
+  /*
+   * Asuntosaation tiedotteista sama hanke tulee monta kertaa
+   * (ensihaku, harjannostajaiset, valmistuminen). Osoite sitoo ne
+   * yhteen; ilman tunnistetta yhdesta hankkeesta syntyisi monta
+   * ehdokasta.
+   */
+  | "foundation_project_name"
   | "vayla_project_id"
   | "senaatti_project_id"
   /*

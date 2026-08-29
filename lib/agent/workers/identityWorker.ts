@@ -9,6 +9,7 @@ import { resolveTampereKaavaProject } from "@/lib/agent/identity/resolvers/tampe
 import { resolveTurkuKaavaProject } from "@/lib/agent/identity/resolvers/turkuKaavaResolver"
 import { resolveKreateProject } from "@/lib/agent/identity/resolvers/kreateResolver"
 import { resolveGranlundProject } from "@/lib/agent/identity/resolvers/granlundResolver"
+import { resolveFoundationProject } from "@/lib/agent/identity/resolvers/foundationResolver"
 import { resolveSenaattiTenderProject } from "@/lib/agent/identity/resolvers/senaattiTenderResolver"
 import { resolveVaylaProject } from "@/lib/agent/identity/resolvers/vaylaResolver"
 import { resolveSenaattiProject } from "@/lib/agent/identity/resolvers/senaattiResolver"
@@ -358,6 +359,14 @@ if (sourceName === "hilma") {
     results.push(result)
   } else if (sourceName === "kreate hankkeet") {
     const result = await resolveKreateProject({
+      document,
+      facts: facts ?? [],
+    })
+
+    results.push(result)
+  } else if (document.raw_payload?.parser === "foundationReleaseParser") {
+    /* Parserista eika lahteen nimesta: sama keraaja palvelee montaa saatiota. */
+    const result = await resolveFoundationProject({
       document,
       facts: facts ?? [],
     })
