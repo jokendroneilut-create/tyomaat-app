@@ -4,7 +4,6 @@ import { getUserFeedbackContext } from "./getUserFeedbackContext"
 import { getUserFavoritesContext } from "./getUserFavoritesContext"
 import {
   matchesBestSalesMoments,
-  matchesSources,
   matchesRegions,
 } from "./todayFilters"
 import { rankTodayProjects } from "./todayRanking"
@@ -54,9 +53,6 @@ export async function getTodaySummary(userId?: string | null) {
   const filteredProjects = allProjects
   .filter((project: any) =>
     matchesRegions(project, settings.regions)
-  )
-  .filter((project: any) =>
-    matchesSources(project, settings.sources)
   )
   .filter((project: any) =>
     matchesBestSalesMoments(project, settings.bestSalesMoments)

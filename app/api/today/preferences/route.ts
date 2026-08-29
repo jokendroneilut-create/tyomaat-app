@@ -51,7 +51,6 @@ function normalizeSettings(settings: any) {
     constructionTypes: settings?.constructionTypes ?? [],
     buildingTypes: settings?.buildingTypes ?? [],
     bestSalesMoments: settings?.bestSalesMoments ?? [],
-    sources: settings?.sources ?? [],
     keywords: Array.isArray(settings?.keywords)
       ? settings.keywords
           .map((k: unknown) => String(k ?? "").trim())

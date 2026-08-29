@@ -778,7 +778,9 @@ muistin varassa.
 
 ### Asiakaskäyttöliittymä
 
-- **Miksi käyttäjä valitsee lähteet?** (avoin kysymys, kirjattu 29.8.2026)
+- ~~**Miksi käyttäjä valitsee lähteet?**~~ Ratkaistu 29.8.2026 (D-135):
+  valinta poistettiin, koska vastaus ei tallentunut mihinkään eikä lähde
+  ole asiakkaan käsite. Alkuperäinen kirjaus:
 
   Onboardingin vaihe `StepSources` kysyy "Mistä lähteistä Tänään saa
   etsiä hankkeita?", ja valinta on aito suodatin: `matchesSources`

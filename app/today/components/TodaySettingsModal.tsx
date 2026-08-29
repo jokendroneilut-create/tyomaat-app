@@ -8,13 +8,11 @@ import StepFinished from "./settings/StepFinished"
 import StepMaxProjects from "./settings/StepMaxProjects"
 import StepRegion from "./settings/StepRegion"
 import StepSalesMoment from "./settings/StepSalesMoment"
-import StepSources from "./settings/StepSources"
 import StepKeywords from "./settings/StepKeywords"
 import StepWelcome from "./settings/StepWelcome"
 
 import {
   regions,
-  todaySources,
 } from "./settings/todaySettingsConfig"
 import { salesMomentsForRole } from "@/lib/opportunity/roleStageMatrix"
 
@@ -40,9 +38,6 @@ export default function TodaySettingsModal() {
    */
   const [salesMomentsAuto, setSalesMomentsAuto] = useState(true)
 
-  const [selectedSources, setSelectedSources] = useState<string[]>([
-    ...todaySources,
-  ])
 
   const [keywords, setKeywords] = useState<string[]>([])
 
@@ -59,7 +54,12 @@ export default function TodaySettingsModal() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const totalSteps = 7
+  /*
+   * Lahdevalinta poistettiin 29.8.2026: se kysyi kayttajalta jotain
+   * jota ei tallennettu mihinkaan (saraketta sources ei ollut), eika
+   * lahde ole asiakkaan kasite vaan meidan putkistoamme.
+   */
+  const totalSteps = 6
 
   useEffect(() => {
     let cancelled = false
@@ -132,14 +132,6 @@ export default function TodaySettingsModal() {
         setSelectedSalesMoments(savedMoments)
         // Tallennettu ei-tyhjä valinta on käyttäjän oma → ei ylikirjoiteta.
         setSalesMomentsAuto(savedMoments.length === 0)
-
-        setSelectedSources(
-          // Tyhjä lista = "kaikki" (matchesSources päästää tyhjällä kaiken
-          // läpi), joten näytetään kaikki valittuna eikä "kaikki pois päältä".
-          Array.isArray(settings.sources) && settings.sources.length > 0
-            ? settings.sources
-            : [...todaySources]
-        )
 
         setKeywords(
           Array.isArray(settings.keywords) ? settings.keywords : []
@@ -268,7 +260,6 @@ export default function TodaySettingsModal() {
             buildingTypes: [],
 
             bestSalesMoments: selectedSalesMoments,
-            sources: selectedSources,
             keywords,
             opportunityAlerts,
             teamModeInToday,
@@ -321,13 +312,6 @@ export default function TodaySettingsModal() {
         value:
           selectedSalesMoments.length > 0
             ? selectedSalesMoments.join(", ")
-            : "Ei valittu",
-      },
-      {
-        label: "Lähteet",
-        value:
-          selectedSources.length > 0
-            ? selectedSources.join(", ")
             : "Ei valittu",
       },
       {
@@ -392,21 +376,13 @@ export default function TodaySettingsModal() {
 
       case 4:
         return (
-          <StepSources
-            selectedSources={selectedSources}
-            onChange={setSelectedSources}
-          />
-        )
-
-      case 5:
-        return (
           <StepMaxProjects
             selectedValue={maxProjects}
             onChange={setMaxProjects}
           />
         )
 
-      case 6:
+      case 5:
         return (
           <StepKeywords
             keywords={keywords}
@@ -416,7 +392,7 @@ export default function TodaySettingsModal() {
           />
         )
 
-      case 7:
+      case 6:
         return <StepFinished />
 
       default:

@@ -2,18 +2,7 @@ function normalize(value: unknown) {
   return String(value ?? "").trim().toLowerCase()
 }
 
-const ALL_SOURCE_OPTIONS = [
-  "rakennusluvat",
-  "hilma",
-  "kaavoitus",
-  "kuntapäätökset",
-  "yritysuutiset",
-  "ympäristö & yva",
-  "suunnittelukilpailut",
-]
-
 // Yhdistää projektin source_name -> näkyviin lähdekategorioihin.
-// Kategorian avain vastaa normalisoitua wizard-valintaa (todaySources).
 // Järjestys ei vaikuta lopputulokseen; jokainen matcher arvioidaan erikseen.
 const SOURCE_CATEGORY_MATCHERS: {
   key: string
@@ -100,42 +89,6 @@ export function projectSource(project: any) {
       project.metadata?.lastSourceName ??
       project.metadata?.resolver ??
       ""
-  )
-}
-
-export function matchesSources(
-  project: any,
-  selectedSources: string[]
-) {
-  if (!selectedSources?.length) {
-    return true
-  }
-
-  const normalizedSources = selectedSources.map(normalize)
-
-  if (
-    normalizedSources.includes("kaikki lähteet") ||
-    containsAllOptions(selectedSources, ALL_SOURCE_OPTIONS)
-  ) {
-    return true
-  }
-
-  const source = projectSource(project)
-  const hasPermitNumber = Boolean(project.metadata?.permit_number)
-
-  const matchedCategories = SOURCE_CATEGORY_MATCHERS.filter((matcher) =>
-    matcher.matches(source, hasPermitNumber)
-  ).map((matcher) => matcher.key)
-
-  // FAIL-OPEN: jos lähde ei osu mihinkään tunnettuun kategoriaan, sitä ei
-  // voi valita eikä sulkea pois -> näytetään aina. Estää tulevien lähteiden
-  // äänettömän katoamisen suodatuksessa.
-  if (matchedCategories.length === 0) {
-    return true
-  }
-
-  return matchedCategories.some((category) =>
-    normalizedSources.includes(category)
   )
 }
 

@@ -12,7 +12,6 @@ export type TodaySettings = {
   constructionTypes: string[]
   buildingTypes: string[]
   bestSalesMoments: string[]
-  sources: string[]
   keywords: string[]
   maxProjects: number
   showRejected: boolean
@@ -35,7 +34,6 @@ export const defaultTodaySettings: TodaySettings = {
   constructionTypes: [],
   buildingTypes: [],
   bestSalesMoments: [],
-  sources: [],
   keywords: [],
   maxProjects: 20,
   showRejected: false,

@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Lahdevalinta poistettu asiakkaalta (D-135)
+
+Onboarding kysyi mista lahteista Tanaan saa etsia hankkeita. Vastaus ei
+tallentunut mihinkaan: taulussa ei ole saraketta sources, joten
+suodatin sai aina tyhjan listan eika suodattanut kertaakaan. 37
+kayttajasta nollalla oli rajaus.
+
+Valinta poistettiin kokonaan sen sijaan etta se olisi korjattu: lahde
+on meidan putkistoamme eika asiakkaan kasite, ja valinta olisi
+vanhentunut itsestaan jokaisen uuden lahteen myota. Kaikki lahteet ovat
+nyt kaikilla paalla aina. Asetusvelho lyheni seitsemasta vaiheesta
+kuuteen.
+
+
 ### Myyjarooli ja rajattu asiakasnakyma (D-134)
 
 Myyja nakee nyt Kayttajat-nakymassa vain hankkimansa asiakkaat:

@@ -28,16 +28,6 @@ export const salesMoments = CANONICAL_PHASES.filter((p) => !p.terminal).map(
   (p) => p.label
 )
 
-export const todaySources = [
-  "Hilma",
-  "Kaavoitus",
-  "Kuntapäätökset",
-  "Rakennusluvat",
-  "Yritysuutiset",
-  "Ympäristö & YVA",
-  "Suunnittelukilpailut",
-] as const
-
 export const regions = [
   "Etelä-Karjala",
   "Etelä-Pohjanmaa",

@@ -5,7 +5,6 @@ import {
   companyProfiles,
   salesMoments,
   regions as ALL_REGIONS,
-  todaySources,
 } from "./settings/todaySettingsConfig"
 
 type Props = {
@@ -65,13 +64,6 @@ export default function RoleActivationModal({ userId, initialSettings }: Props) 
           ? ["Koko Suomi"]
           : selectedRegions
 
-      // Lähteet: oletuksena KAIKKI päälle (säilytä olemassa olevat jos on).
-      const sources =
-        Array.isArray(initialSettings?.sources) &&
-        initialSettings.sources.length > 0
-          ? initialSettings.sources
-          : [...todaySources]
-
       const response = await fetch("/api/today/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -82,7 +74,6 @@ export default function RoleActivationModal({ userId, initialSettings }: Props) 
             companyProfile: role,
             bestSalesMoments: selectedMoments,
             regions,
-            sources,
           },
         }),
       })

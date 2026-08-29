@@ -5,6 +5,45 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-135 – Poistettu kysymys johon vastaus heitettiin pois
+
+Onboardingin vaihe kysyi "Mistä lähteistä Tänään saa etsiä hankkeita?"
+ja tarjosi seitsemän vaihtoehtoa. Vastaus **ei tallentunut mihinkään.**
+
+Mitattu 29.8.2026 ennen poistoa: `user_today_preferences`-taulussa EI
+OLE saraketta `sources`. Reitti luki `settings?.sources ?? []`, joka oli
+aina tyhjä, ja `matchesSources` palautti tyhjällä listalla `true`.
+Suodatin ei siis suodattanut kertaakaan. 37 käyttäjästä nollalla oli
+rajaus — ei siksi että kukaan olisi valinnut kaikki, vaan siksi ettei
+valintaa voitu tallentaa.
+
+Vika oli piilossa juuri siksi että se **epäonnistui turvallisesti**:
+tyhjä valinta päästää kaiken läpi, joten mikään ei näyttänyt rikki
+olevan. Käyttäjä vain vastasi kysymykseen jolla ei ollut vaikutusta.
+
+**Lähde ei ole asiakkaan käsite.** Urakoitsija välittää alueesta,
+vaiheesta ja kohdetyypistä — ei siitä tuliko liidi Hilmasta,
+kaavapäätöksestä vai rakennuttajan tiedotteesta. Valinta olisi myös
+vanhentunut itsestään: jokainen uusi lähde on sellainen jota vanha
+käyttäjä ei ole valinnut, joten kasvava lähdekattavuus olisi kaventanut
+vanhojen käyttäjien näkymää.
+
+Siksi valinta poistettiin kokonaan sen sijaan että se olisi korjattu.
+Kaikki lähteet ovat kaikilla päällä aina.
+
+Poistettu: `StepSources`-komponentti, `todaySources`-lista,
+`matchesSources`-suodatin testeineen, `ALL_SOURCE_OPTIONS` sekä
+`sources`-kenttä asetustyypistä ja tallennusreitistä. Asetusvelho lyheni
+seitsemästä vaiheesta kuuteen.
+
+`projectSource` jäi: sitä käyttää `todayRanking` pisteytykseen, mikä on
+eri asia kuin käyttäjän tekemä rajaus.
+
+Muutos ei muuta yhdenkään käyttäjän näkymää, koska suodatin ei ollut
+koskaan aktiivinen.
+
+---
+
 ### D-134 – Myyjärooli: rajaus kolmessa kerroksessa, ei yhdessä
 
 Myyjän pitää nähdä hankkimansa asiakkaat ja se, ovatko he ottaneet
