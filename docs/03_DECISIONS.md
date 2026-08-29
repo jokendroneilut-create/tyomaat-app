@@ -1746,6 +1746,24 @@ tarkentaminen siis laskisi hankkeen osumapisteitä.
 **Päätös:** vaihe jätetään olemaan käsin asetettavaksi. Kartan selite
 sanoo nyt "Valmistumassa" eikä lupaa väriä joka ei koskaan esiinny.
 
+**JATKO 29.8.2026: POISTETTU MYÖS ASIAKKAAN VAIHESUODATTIMESTA.**
+Uusintamittaus: julkisista 5 909 hankkeesta **yksi** on tässä
+vaiheessa. Sama peruste kuin "Valmistuneella" alla — valittavissa oleva
+vaihtoehto joka ei tuota tulosta kertoo "näitä ei ole" eikä "näitä ei
+näytetä".
+
+Vaihe säilyy TIC:ssä ja dashboardissa valittavana, ja tällaiset
+hankkeet näkyvät listassa normaalisti; niihin ei vain voi rajata.
+Vanhat hakuvahdit (4 kpl 14:stä sisälsi tämän vaiheen) toimivat
+ennallaan, koska ne lukevat tallennettua listaa eivätkä valikkoa.
+
+**Sivuhuomio joka kannattaa tietää käsin asettaessa:** vaiheen
+tarkentaminen Rakenteilla → Valmistumassa **laskee** hankkeen
+osumapisteitä (`roleStageMatrix`: Rakennustuotteet 1,0 → 0,5,
+yleispaino 0,7 → 0,4). Melkein valmiiseen kohteeseen ei enää myydä,
+joten logiikka on oikea — mutta seuraus on että käsin tarkennettu vaihe
+piilottaa hankkeen niiltä joille se olisi muuten osunut.
+
 ### Kuollut vaihtoehto vaihesuodattimesta pois
 
 Vaihesuodattimen vaihtoehdot rakennettiin kaikista kanonisista vaiheista,

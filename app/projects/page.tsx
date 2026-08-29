@@ -21,7 +21,28 @@ import FeedbackButton from '../components/FeedbackButton'
  * Valittavissa oleva vaihtoehto joka palauttaa aina nolla tulosta ei
  * kerro kayttajalle "naita ei nayteta" vaan "naita ei ole".
  */
-const PHASE_OPTIONS = CANONICAL_PHASES.filter((p) => p.key !== 'completed').map((p) => p.label)
+/*
+ * VALITTAVISSA OLEVA VAIHTOEHTO JOKA EI TUOTA TULOSTA KERTOO
+ * "NÄITÄ EI OLE" EIKÄ "NÄITÄ EI NÄYTETÄ".
+ *
+ * "Valmistunut" poistettiin tällä perusteella jo aiemmin: valmistuneet
+ * on suodatettu pois aineistosta, joten valinta palautti aina nollan.
+ *
+ * "Valmistumassa" poistetaan nyt samasta syystä. D-111 mittasi ettei
+ * mikään koodipolku aseta sitä — se on olemassa vain käsin
+ * asetettavana. Mitattu 29.8.2026: julkisista 5 909 hankkeesta
+ * YKSI on tässä vaiheessa.
+ *
+ * Vaihe säilyy TIC:ssä ja dashboardissa valittavana, ja tällaiset
+ * hankkeet näkyvät listassa normaalisti — niihin ei vain voi rajata.
+ * Vanhat hakuvahdit (4 kpl 14:stä) toimivat ennallaan, koska ne
+ * lukevat tallennettua listaa eivätkä tätä valikkoa.
+ */
+const HIDDEN_PHASE_KEYS = new Set(['completed', 'nearing_completion'])
+
+const PHASE_OPTIONS = CANONICAL_PHASES.filter((p) => !HIDDEN_PHASE_KEYS.has(p.key)).map(
+  (p) => p.label
+)
 
 type Project = {
   id: string

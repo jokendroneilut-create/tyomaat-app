@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Valmistumassa pois asiakkaan vaihesuodattimesta (D-111)
+
+Julkisista 5 909 hankkeesta yksi on tassa vaiheessa, joten valinta
+palautti kaytannossa aina tyhjan. Sama peruste kuin "Valmistuneella"
+aiemmin: vaihtoehto joka ei tuota tulosta kertoo "naita ei ole" eika
+"naita ei nayteta".
+
+Vaihe sailyy TIC:ssa ja dashboardissa valittavana, ja tallaiset
+hankkeet nakyvat listassa normaalisti. Vanhat hakuvahdit toimivat
+ennallaan.
+
+
 ### Valmistumisaika poimitaan myos ilman vuosilukua (D-142)
 
 "valmistuvat marraskuussa" jai ennen kokonaan poimimatta, koska poimija
