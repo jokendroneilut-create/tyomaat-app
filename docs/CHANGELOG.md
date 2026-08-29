@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Pietarsaaren kaavakuvaukset kokonaisina (D-143)
+
+Kuvaukseksi otettiin vain ensimmainen kappale, joten "Suunnittelun
+tarkoitus" jai pois - eli juuri se mita alueelle on tulossa. Kuvaus
+kootaan nyt otsikoittain, ja takautuvasti 17 ehdokasta 19:sta sai
+pidemman kuvauksen.
+
+Tama tarkentaa 15.8. tehtya mittausta: kuvauksen lyhyys on lahteen
+ominaisuus listaustasolla, mutta kohdesivulla teksti on usein olemassa
+ja jaa vain poimimatta.
+
+
 ### Yhdeksan asuntosaatiolahdetta kaytossa (D-136)
 
 POAS, KOAS, Sevas, TYS, Savonlinna ja AYY lisatty HOASin, Lahden

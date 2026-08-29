@@ -683,6 +683,13 @@ muistin varassa.
   merkkiä** — kaavakuvaukset ovat lähteessä itsessään lyhyitä. Vain
   125:llä kenttä ylitti 200 merkkiä. Mittari mittaa siis osittain
   lähdeaineistoa, ei puutetta poiminnassa.
+
+  **TARKENNUS 29.8.2026 (D-143):** tämä pitää paikkansa LISTAUSTASON
+  kentistä, mutta ei kohdesivuista. Taivassalo (D-130) ja Pietarsaari
+  (D-143) osoittivat että teksti on usein sivulla olemassa ja jää vain
+  poimimatta — Pietarsaaressa 17 ehdokasta 19:stä sai 2–4-kertaisen
+  kuvauksen. Lyhyt kuvaus kannattaa siis tarkistaa lähteestä ennen kuin
+  se kirjataan lähteen viaksi.
 - Kuvaus alle 200 merkkiä **1 571** hankkeella (29 %). Oli 1 803;
   yrityslähteiden jälkirikastus (15.8.2026) pudotti lukua 232:lla.
 
@@ -814,7 +821,8 @@ muistin varassa.
   (`c2f323e`). Sääntö "merkkijono tai lista" oli kopioituna kolmessa
   paikassa ja on nyt jaettu `lib/watchlists/filterValues.ts`:aan.
 
-- **Myyjänäkymä: oma tunnustaso ja rajattu käyttäjälista.** Myyjä näkisi
+- ~~**Myyjänäkymä: oma tunnustaso ja rajattu käyttäjälista.**~~ Tehty
+  29.8.2026 (D-134). Alkuperäinen kirjaus: Myyjä näkisi
   vain hänen hankkimansa asiakkaat ja heidän kirjautumisensa, jotta hän
   voi muistutella niitä jotka eivät ole ottaneet tuotetta käyttöön.
 

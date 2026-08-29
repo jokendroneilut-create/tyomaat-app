@@ -5,6 +5,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-143 – Kuvauksen lyhyys ei ollutkaan vain lähteen ominaisuus
+
+Pietarsaaren kaavassa "Asemakaava Varvetissa" kuvaus oli 94 merkkiä ja
+kertoi vain etäisyyden torilta. Sivulla luki myös se mitä alueelle on
+tulossa — mutta poimija ei ottanut sitä.
+
+**KUVAUS OTETTIIN ENSIMMÄISESTÄ KAPPALEESTA.** Kohdesivulla jokainen
+kaava on jaettu h4-otsikoihin, joiden alla on yksi kappale:
+
+```
+Suunnittelualue          "sijaitsee noin 3 km torilta"          <- tämä otettiin
+Suunnittelun tarkoitus   "mahdollistaa Varvetin kehittäminen
+                          pientaloalueeksi"                     <- tämä jäi pois
+```
+
+Jälkimmäinen on juuri se jota myyjä hankkeesta haluaa tietää.
+
+**OTSIKOT SALLITAAN NIMELTÄ, EI POISSULJETA.** Sivulla on 18
+"Suunnittelualue"- ja 15 "Suunnittelun tarkoitus" -osiota; loput ovat
+asiakirjoja, henkilönimiä tai nähtävilläolotietoja, jotka luetaan
+erikseen vaihesignaaliksi. Sallimislista on täällä turvallisempi kuin
+poissulkeminen, koska sivu on rakenteeltaan johdonmukainen.
+
+Varalla on yhä vanha käytös: jos otsikot muuttuvat, kuvaus otetaan
+ensimmäisestä riittävän pitkästä kappaleesta. Muuten sivun uudistus
+tyhjentäisi kuvaukset huomaamatta.
+
+**TAKAUTUVASTI 17 EHDOKASTA 19:STÄ** sai pidemmän kuvauksen, useimmat
+2–4-kertaisen (650 → 1057, 158 → 585, 199 → 641).
+
+**TÄMÄ TARKENTAA AIEMPAA MITTAUSTA.** 15.8.2026 todettiin että
+kuvauksen lyhyys on "osin lähteen ominaisuus, ei meidän vikamme":
+965 lyhytkuvauksisesta lähteen oma kenttä oli mediaaniltaan 135
+merkkiä. Se pitää yhä paikkansa listaustason kentistä — mutta
+Taivassalo (D-130) ja nyt Pietarsaari osoittavat, että **kohdesivulla
+teksti on usein olemassa ja jää vain poimimatta.** Lyhyt kuvaus on siis
+syytä tarkistaa lähteestä ennen kuin se kirjataan lähteen viaksi.
+
+**KAKSI ANSAA MATKAN VARRELLA.** Osassa kaavoista otsikko on kappaleen
+sisällä (".Suunnittelun tarkoitus On todettu tarve"), joten se
+karsitaan alusta — mutta vain kun sitä seuraa uusi virke isolla
+alkukirjaimella. Ensimmäinen versio söi sanan myös aidosta lauseesta
+"Suunnittelualue sijaitsee noin 3 km torilta", koska **`/i`-lippu
+mitätöi ison alkukirjaimen vaatimuksen**. Sama ansa osui samana päivänä
+urakoitsijan nimen poimintaan.
+
+`lib/agent/pietarsaariKaavaDescription.ts`
+
+---
+
 ### D-142 – Kuukausi ilman vuotta oli sokea piste
 
 "Hiukkavaaran uudet rivitalokodit valmistuvat marraskuussa" — tieto on
