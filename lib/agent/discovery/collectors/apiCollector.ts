@@ -220,6 +220,7 @@ async function collectLupapisteSource(source: DiscoverySource) {
                   : {}),
               },
               processed_at: new Date().toISOString(),
+              last_seen_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },
             { onConflict: "document_url" }
@@ -364,6 +365,7 @@ async function collectHilmaSource(source: DiscoverySource) {
         original: notice,
       },
       processed_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
   }
@@ -610,6 +612,7 @@ async function collectVantaaKaavaSource(source: DiscoverySource) {
             original: feature,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -837,6 +840,7 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
             original: feature,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -1002,6 +1006,7 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
             original: feature,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -1233,6 +1238,7 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
             original: feature,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -1464,6 +1470,7 @@ async function collectGranlundSource(source: DiscoverySource) {
           original: post,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "document_url" }
@@ -1627,6 +1634,7 @@ async function collectFoundationSource(source: DiscoverySource) {
           original: post,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "document_url" }
@@ -1750,6 +1758,7 @@ async function collectKreateSource(source: DiscoverySource) {
             original: post,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -2023,6 +2032,7 @@ async function collectVaylaSource(source: DiscoverySource) {
             original: item,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -2177,6 +2187,7 @@ async function collectSenaattiTenderSource(source: DiscoverySource) {
             original: rivi,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -2280,6 +2291,7 @@ async function collectSenaattiSource(source: DiscoverySource) {
             original: post,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -2420,6 +2432,7 @@ async function collectKuopioSource(source: DiscoverySource) {
             original: feature,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -2695,6 +2708,7 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
             original: feature,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -2815,6 +2829,7 @@ async function collectHyvinkaaSource(source: DiscoverySource) {
             original: feature,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -3060,6 +3075,7 @@ async function collectSeinajokiSource(source: DiscoverySource) {
             completed: details?.completed ?? false,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(details?.completed
             ? {
@@ -3310,6 +3326,7 @@ async function collectRovaniemiSource(source: DiscoverySource) {
             description: item.description,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(details?.stale
             ? {
@@ -3621,6 +3638,7 @@ async function collectMikkeliSource(source: DiscoverySource) {
             is_non_plan_page: isNonPlanPage,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(isNonPlanPage
             ? {
@@ -3721,6 +3739,7 @@ async function collectKotkaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -3899,6 +3918,7 @@ async function collectSaloSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -3998,6 +4018,7 @@ async function collectPorvooSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -4118,6 +4139,7 @@ async function collectKokkolaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -4227,6 +4249,7 @@ async function collectKirkkonummiSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -4400,6 +4423,7 @@ async function collectKeravaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -4509,6 +4533,7 @@ async function collectTuusulaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -4597,6 +4622,7 @@ async function collectNurmijarviSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -4707,6 +4733,7 @@ async function collectSipooSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -4815,6 +4842,7 @@ async function collectJarvenpaaSource(source: DiscoverySource) {
             raw_text: rawText,
             raw_payload: known,
             processed_at: new Date().toISOString(),
+            last_seen_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             ...(known.completed || known.too_old
               ? {
@@ -4917,6 +4945,7 @@ async function collectJarvenpaaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -5087,6 +5116,7 @@ async function collectPuolustuskiinteistotSource(source: DiscoverySource) {
             raw_text: rawText,
             raw_payload: known,
             processed_at: new Date().toISOString(),
+            last_seen_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             ...(known.completed || known.too_old
               ? {
@@ -5158,6 +5188,7 @@ async function collectPuolustuskiinteistotSource(source: DiscoverySource) {
             too_old: tooOld,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           // Valmistunut TAI yli 24 kk vanha -> ei nosteta tuoreena liidinä.
           ...(completed || tooOld
@@ -5361,6 +5392,7 @@ async function collectEspooKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -5505,6 +5537,7 @@ async function collectLohjaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -5646,6 +5679,7 @@ async function collectRaumaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -5784,6 +5818,7 @@ async function collectKaarinaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -5931,6 +5966,7 @@ async function collectNokiaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -6278,6 +6314,7 @@ async function collectImatraKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -6466,6 +6503,7 @@ async function collectRaaheKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -6604,6 +6642,7 @@ async function collectSastamalaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -6664,6 +6703,7 @@ async function collectVihtiKaavaSource(source: DiscoverySource) {
             completed: false,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -6849,6 +6889,7 @@ async function collectRiihimakiKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -7024,6 +7065,7 @@ async function collectRaaseporiKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -7173,6 +7215,7 @@ async function collectRaisioKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -7323,6 +7366,7 @@ async function collectLempaalaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -7452,6 +7496,7 @@ async function collectKajaaniKaavaSource(source: DiscoverySource) {
             completed: item.completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(item.completed
             ? {
@@ -7577,6 +7622,7 @@ async function collectHollolaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -7701,6 +7747,7 @@ async function collectPirkkalaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -7856,6 +7903,7 @@ async function collectSiilinjarviKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -8051,6 +8099,7 @@ async function collectMantsalaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -8178,6 +8227,7 @@ async function collectTornioKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -8332,6 +8382,7 @@ async function collectLietoKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -8497,6 +8548,7 @@ async function collectNaantaliKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -8631,6 +8683,7 @@ async function collectIisalmiKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -8764,6 +8817,7 @@ async function collectMustasaariKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -8890,6 +8944,7 @@ async function collectKempeleKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -9053,6 +9108,7 @@ async function collectValkeakoskiKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -9232,6 +9288,7 @@ async function collectPietarsaariKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -9366,6 +9423,7 @@ async function collectKurikkaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -9513,6 +9571,7 @@ async function collectVarkausKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -9665,6 +9724,7 @@ async function collectKemiKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -9775,6 +9835,7 @@ async function collectHaminaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -9927,6 +9988,7 @@ async function collectJamsaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -10089,6 +10151,7 @@ async function collectLaukaaKaavaSource(source: DiscoverySource) {
               completed,
             },
             processed_at: new Date().toISOString(),
+            last_seen_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             ...(completed
               ? {
@@ -10239,6 +10302,7 @@ async function collectHeinolaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -10395,6 +10459,7 @@ async function collectAanekoskiKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -10547,6 +10612,7 @@ async function collectPieksamakiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -10711,6 +10777,7 @@ async function collectAkaaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -10855,6 +10922,7 @@ async function collectForssaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -10976,6 +11044,7 @@ async function collectJanakkalaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -11091,6 +11160,7 @@ async function collectOrimattilaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -11234,6 +11304,7 @@ async function collectYlivieskaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -11376,6 +11447,7 @@ async function collectLoimaaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -11542,6 +11614,7 @@ async function collectKontiolahtiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -11687,6 +11760,7 @@ async function collectKauhavaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -11801,6 +11875,7 @@ async function collectLapuaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -11969,6 +12044,7 @@ async function collectKauhajokiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -12107,6 +12183,7 @@ async function collectIlmajokiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -12255,6 +12332,7 @@ async function collectUusikaupunkiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -12370,6 +12448,7 @@ async function collectPaimioKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -12479,6 +12558,7 @@ async function collectUlvilaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -12662,6 +12742,7 @@ async function collectKankaanpaaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -12723,6 +12804,7 @@ async function collectKankaanpaaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -12831,6 +12913,7 @@ async function collectLiperiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -12974,6 +13057,7 @@ async function collectLieksaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -13118,6 +13202,7 @@ async function collectKiteeKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -13269,6 +13354,7 @@ async function collectKalajokiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -13456,6 +13542,7 @@ async function collectNivalaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -13620,6 +13707,7 @@ async function collectLimingaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -13782,6 +13870,7 @@ async function collectMuurameKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -13983,6 +14072,7 @@ async function collectSaarijarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -14182,6 +14272,7 @@ async function collectKeuruuKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -14320,6 +14411,7 @@ async function collectLoviisaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -14459,6 +14551,7 @@ async function collectKuusamoKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -14620,6 +14713,7 @@ async function collectKauniainenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -14789,6 +14883,7 @@ async function collectParainenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -14953,6 +15048,7 @@ async function collectSomeroKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -15094,6 +15190,7 @@ async function collectHuittinenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -15227,6 +15324,7 @@ async function collectKokemakiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -15389,6 +15487,7 @@ async function collectUrjalaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -15529,6 +15628,7 @@ async function collectPunkalaidunKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -15676,6 +15776,7 @@ async function collectLoppiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -15833,6 +15934,7 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -16000,6 +16102,7 @@ async function collectSavitaipaleKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -16177,6 +16280,7 @@ async function collectJuvaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -16354,6 +16458,7 @@ async function collectLapinlahtiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -16523,6 +16628,7 @@ async function collectKannusKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -16687,6 +16793,7 @@ async function collectToholampiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -16840,6 +16947,7 @@ async function collectKuhmoKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -16985,6 +17093,7 @@ async function collectSuomussalmiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -17147,6 +17256,7 @@ async function collectKittilaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -17317,6 +17427,7 @@ async function collectKemijarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -17465,6 +17576,7 @@ async function collectRautjarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -17689,6 +17801,7 @@ async function collectAlajarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -17848,6 +17961,7 @@ async function collectAlavusKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -18039,6 +18153,7 @@ async function collectIsokyroKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -18196,6 +18311,7 @@ async function collectKuortaneKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -18357,6 +18473,7 @@ async function collectLaihiaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -18549,6 +18666,7 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -18742,6 +18860,7 @@ async function collectEnonkoskiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -18903,6 +19022,7 @@ async function collectHeinavesiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -19058,6 +19178,7 @@ async function collectHirvensalmiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -19192,6 +19313,7 @@ async function collectPuumalaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -19346,6 +19468,7 @@ async function collectSulkavaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -19520,6 +19643,7 @@ async function collectHyrynsalmiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -19747,6 +19871,7 @@ async function collectPaltamoKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -19901,6 +20026,7 @@ async function collectPuolankaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -20065,6 +20191,7 @@ async function collectHausjarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -20220,6 +20347,7 @@ async function collectJokioinenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -20374,6 +20502,7 @@ async function collectVeteliKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -20546,6 +20675,7 @@ async function collectMultiaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -20705,6 +20835,7 @@ async function collectPetajavesiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -20878,6 +21009,7 @@ async function collectPihtipudasKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -21036,6 +21168,7 @@ async function collectToivakkaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -21195,6 +21328,7 @@ async function collectUurainenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -21387,6 +21521,7 @@ async function collectViitasaariKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -21557,6 +21692,7 @@ async function collectIittiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -21732,6 +21868,7 @@ async function collectMiehikkalaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -21875,6 +22012,7 @@ async function collectPyhtaaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -22031,6 +22169,7 @@ async function collectVirolahtiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -22163,6 +22302,7 @@ async function collectEnontekioKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -22361,6 +22501,7 @@ async function collectInariKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -22487,6 +22628,7 @@ async function collectKeminmaaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -22639,6 +22781,7 @@ async function collectMuonioKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -22812,6 +22955,7 @@ async function collectPelkosenniemiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -23012,6 +23156,7 @@ async function collectRanuaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -23186,6 +23331,7 @@ async function collectSimoKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -23343,6 +23489,7 @@ async function collectSodankylaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -23513,6 +23660,7 @@ async function collectPelloKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -23673,6 +23821,7 @@ async function collectYlitornioKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -23758,6 +23907,7 @@ async function collectYlitornioKaavaSource(source: DiscoverySource) {
               completed,
             },
             processed_at: new Date().toISOString(),
+            last_seen_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             ...(completed
               ? {
@@ -23952,6 +24102,7 @@ async function collectHameenkyroKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -24119,6 +24270,7 @@ async function collectIkaalinenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -24277,6 +24429,7 @@ async function collectManttaVilppulaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -24463,6 +24616,7 @@ async function collectOrivesiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -24612,6 +24766,7 @@ async function collectPalkaneKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -24759,6 +24914,7 @@ async function collectVesilahtiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -24918,6 +25074,7 @@ async function collectKaskinenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -25065,6 +25222,7 @@ async function collectRuovesiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -25252,6 +25410,7 @@ async function collectVirratKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -25357,6 +25516,7 @@ async function collectKangasalaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -25527,6 +25687,7 @@ async function collectYlojarviKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -25680,6 +25841,7 @@ async function collectSavonlinnaKaavaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -25936,6 +26098,7 @@ async function collectLahtiSource(source: DiscoverySource) {
               : {}),
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(isCompleted
             ? {
@@ -26215,6 +26378,7 @@ async function collectPoriSource(source: DiscoverySource) {
               : {}),
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }
@@ -26528,6 +26692,7 @@ async function collectOuluSource(source: DiscoverySource) {
               : {}),
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(isCompleted
             ? {
@@ -26771,6 +26936,7 @@ async function collectJyvaskylaSource(source: DiscoverySource) {
               : {}),
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(isCompleted
             ? {
@@ -26923,6 +27089,7 @@ async function collectHameenlinnaSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -27111,6 +27278,7 @@ async function collectJoensuuSource(source: DiscoverySource) {
             completed,
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(completed
             ? {
@@ -27331,6 +27499,7 @@ async function collectVaasaSource(source: DiscoverySource) {
               : {}),
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(isCompleted
             ? {
@@ -27560,6 +27729,7 @@ async function collectKouvolaSource(source: DiscoverySource) {
               : {}),
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(isCompleted
             ? {
@@ -27803,6 +27973,7 @@ async function collectLappeenrantaSource(source: DiscoverySource) {
               : {}),
           },
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           ...(isCompleted
             ? {
@@ -27953,6 +28124,7 @@ async function collectPornainenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -28110,6 +28282,7 @@ async function collectHankoKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -28247,6 +28420,7 @@ async function collectInkooKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -28363,6 +28537,7 @@ async function collectKarkkilaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -28474,6 +28649,7 @@ async function collectSiuntioKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -28584,6 +28760,7 @@ async function collectEuraKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -28702,6 +28879,7 @@ async function collectSiikainenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -28844,6 +29022,7 @@ async function collectJoutsaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -28998,6 +29177,7 @@ async function collectPielavesiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -29152,6 +29332,7 @@ async function collectKiuruvesiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -29264,6 +29445,7 @@ async function collectAuraKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -29364,6 +29546,7 @@ async function collectVehmaaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -29464,6 +29647,7 @@ async function collectLaitilaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -29572,6 +29756,7 @@ async function collectKustaviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -29678,6 +29863,7 @@ async function collectSieviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -29804,6 +29990,7 @@ async function collectVaalaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -29938,6 +30125,7 @@ async function collectSiikajokiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -30075,6 +30263,7 @@ async function collectSiikalatvaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -30207,6 +30396,7 @@ async function collectIiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -30361,6 +30551,7 @@ async function collectAlavieskaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -30462,6 +30653,7 @@ async function collectHailuotoKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -30563,6 +30755,7 @@ async function collectOulainenKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -30696,6 +30889,7 @@ async function collectTaivalkoskiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -30813,6 +31007,7 @@ async function collectPoytyaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -30906,6 +31101,7 @@ async function collectMaskuKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -31022,6 +31218,7 @@ async function collectRuskoKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -31141,6 +31338,7 @@ async function collectMynamakiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -31232,6 +31430,7 @@ async function collectKemionsaariKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -31549,6 +31748,7 @@ async function collectMarttilaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -31652,6 +31852,7 @@ async function collectPyharantaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -31770,6 +31971,7 @@ async function collectLestijarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -31896,6 +32098,7 @@ async function collectPerhoKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -32027,6 +32230,7 @@ async function collectVoyriKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -32143,6 +32347,7 @@ async function collectUusikaarlepyyKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -32345,6 +32550,7 @@ async function collectPedersoreKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -32474,6 +32680,7 @@ async function collectMaalahtiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -32638,6 +32845,7 @@ async function collectLuotoKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -32795,6 +33003,7 @@ async function collectKruunupyyKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -32921,6 +33130,7 @@ async function collectKorsnasKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -33041,6 +33251,7 @@ async function collectKristiinankaupunkiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -33238,6 +33449,7 @@ async function collectTaivassaloKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -33367,6 +33579,7 @@ async function collectIlomantsiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -33517,6 +33730,7 @@ async function collectTohmajarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -33665,6 +33879,7 @@ async function collectTammelaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -33824,6 +34039,7 @@ async function collectLemiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -33950,6 +34166,7 @@ async function collectKangasniemiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -34097,6 +34314,7 @@ async function collectKihnioKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -34225,6 +34443,7 @@ async function collectRistijarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -34346,6 +34565,7 @@ async function collectKolariKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -34468,6 +34688,7 @@ async function collectSallaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -34591,6 +34812,7 @@ async function collectTervolaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -34697,6 +34919,7 @@ async function collectSavukoskiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -34815,6 +35038,7 @@ async function collectUtsjokiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -34907,6 +35131,7 @@ async function collectIsojokiKaavaSource(source: DiscoverySource) {
         completed,
       },
       processed_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       ...(completed
         ? {
@@ -35014,6 +35239,7 @@ async function collectVimpeliKaavaSource(source: DiscoverySource) {
         completed,
       },
       processed_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       ...(completed
         ? {
@@ -35117,6 +35343,7 @@ async function collectJamijarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -35202,6 +35429,7 @@ async function collectNakkilaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -35289,6 +35517,7 @@ async function collectSakylaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -35407,6 +35636,7 @@ async function collectKeiteleKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -35513,6 +35743,7 @@ async function collectSonkajarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -35592,6 +35823,7 @@ async function collectSuonenjokiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -35679,6 +35911,7 @@ async function collectTuusniemiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -35752,6 +35985,7 @@ async function collectVieremaKaavaSource(source: DiscoverySource) {
         completed,
       },
       processed_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       ...(completed
         ? {
@@ -35862,6 +36096,7 @@ async function collectTaipalsaariKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -36032,6 +36267,7 @@ async function collectNurmesKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -36127,6 +36363,7 @@ async function collectKinnulaKaavaSource(source: DiscoverySource) {
         completed,
       },
       processed_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       ...(completed
         ? {
@@ -36237,6 +36474,7 @@ async function collectAsikkalaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -36368,6 +36606,7 @@ async function collectKoskiTlKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -36487,6 +36726,7 @@ async function collectSysmaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -36613,6 +36853,7 @@ async function collectPadasjokiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -36748,6 +36989,7 @@ async function collectKarkolaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -36852,6 +37094,7 @@ async function collectHartolaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -36947,6 +37190,7 @@ async function collectTyrnavaKaavaSource(source: DiscoverySource) {
         completed,
       },
       processed_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       ...(completed
         ? {
@@ -37072,6 +37316,7 @@ async function collectReisjarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -37195,6 +37440,7 @@ async function collectPudasjarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -37312,6 +37558,7 @@ async function collectPyhantaKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -37428,6 +37675,7 @@ async function collectPyhajarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -37551,6 +37799,7 @@ async function collectPyhajokiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -37658,6 +37907,7 @@ async function collectMuhosKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -37753,6 +38003,7 @@ async function collectLumijokiKaavaSource(source: DiscoverySource) {
         completed,
       },
       processed_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       ...(completed
         ? {
@@ -37866,6 +38117,7 @@ async function collectKarsamakiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -37997,6 +38249,7 @@ async function collectHaapavesiKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -38131,6 +38384,7 @@ async function collectHaapajarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -38238,6 +38492,7 @@ async function collectMerijarviKaavaSource(source: DiscoverySource) {
           completed,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...(completed
           ? {
@@ -39305,6 +39560,7 @@ export async function collectApiSource(source: DiscoverySource) {
           parser: source.parser,
         },
         processed_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
       {

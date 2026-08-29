@@ -136,6 +136,12 @@ async function recordCandidateDocuments(
         .digest("hex"),
       status: "listed",
       raw_payload: { legacy_source: legacyName, awaiting_body: true },
+      /*
+       * Vain lisayksessa: upsert kayttaa ignoreDuplicates-lippua, joten
+       * olemassa olevan rivin last_seen_at ei paivity. Nama rivit on
+       * siksi rajattu poistumissaannon ulkopuolelle.
+       */
+      last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }))
 

@@ -41,6 +41,10 @@
       "schedule": "30 5 * * *"
     },
     {
+      "path": "/api/admin/expire-unlisted-projects",
+      "schedule": "45 5 * * *"
+    },
+    {
       "path": "/api/admin/sync-account-lifecycle",
       "schedule": "0 3 * * *"
     }

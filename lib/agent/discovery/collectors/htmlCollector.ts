@@ -91,6 +91,7 @@ export async function collectHtmlSource(source: Source) {
           },
           published_at: document.publishedAt ?? null,
           processed_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "document_url" }

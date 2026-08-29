@@ -704,6 +704,15 @@ muistin varassa.
   (ks. muistiinpano yksityisten rakennuttajien katvealueesta).
 - **Stara ja liikelaitokset** — voittajia jää poimimatta, Stara on aito
   kilpailija.
+- **Poistumispolku puuttuu rakentamisvaiheelta** — noin 2400 hanketta
+  suunnittelu-, lupa- ja rakentamisvaiheissa jää listalle kunnes joku
+  kertoo valmistumisesta. Kaavoitus sai polun 29.8.2026 (D-146,
+  `docs/14_POISTUMISPOLUT.md`), nämä eivät.
+
+- **Voimaan tullut kaava jää vaiheeseen "Kaavoitus"** — 127 hanketta,
+  joiden lähde kertoo kaavan tulleen voimaan. Ei syy piilottaa vaan syy
+  siirtää vaihetta eteenpäin.
+
 - **Samannimiset lohkot muissa kaavalähteissä** — Pietarsaaressa kaksi
   eri kaavaa samalla otsikolla kirjoittui samaan tunnisteeseen, ja
   toinen katosi kokonaan ilman että mikään laskuri kertoi siitä

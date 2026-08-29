@@ -75,6 +75,7 @@ for (const pdfLink of pdfLinks) {
       },
       updated_at: new Date().toISOString(),
       processed_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
     })
     .eq("id", documentId)
     .select()

@@ -5,6 +5,62 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-146 – Jokaisella hankkeella on oltava poistumispolku
+
+Kaavoitushankkeilla ei ollut yhtaan tapaa poistua asiakkaan nakyvista.
+Mitattu 29.8.2026:
+
+```
+Kaavoitus-vaiheen hankkeita       2901   (48 % koko kannasta)
+  naytetaan asiakkaalle           2890
+  vanhentuneita                      0
+  manuaalinen vanhenemispaiva        0
+  arvioitu valmistuminen            12
+```
+
+Portteja on nelja — `phase = Valmistunut`, `status = expired`,
+`is_public = false`, rivin poisto — eika yksikaan niista laukea kaavalle.
+Lista olisi kasvanut yksisuuntaisesti.
+
+**LAHDE KERTOO MILLOIN KAAVA ON OHI.** Rivi katoaa kaupungin "vireilla
+olevat" -listalta kun kaavoitus paattyy: hyvaksyminen, lainvoima,
+raukeaminen tai sulautuminen toiseen kaavaan. Poistamisen hetkea ei ole
+saadelty — nahtavilläolot ja kuulutukset ovat, sivunhoito ei — joten
+kunnat tekevat sen eri aikaan. Valtaosa ei poista lainkaan vaan vaihtaa
+otsikon: 370 dokumenttia vireilla-sivuilta kertoo jo voimaantulosta ja
+208 niista on yha listalla.
+
+**UPDATED_AT EI KELVANNUT MITTARIKSI, JA SE JOHTI HARHAAN.** Faktojen ja
+identiteetin poimijat kirjoittavat samaan riviin ilman etta dokumenttia
+on nahty, ja osa keraajista lukee listasta vain osan kerrallaan (Oulu 2
+sivua/vrk, kierros ~10 vrk). Mittasin katoamiset `updated_at`:lla ja sain
+Oulusta 39 kadonnutta kaavaa. Vertailu elavaan sivuun naytti **yhden**.
+
+Siksi uusi kentta `source_documents.last_seen_at`, jonka kirjoittaa VAIN
+keraaja. Vanhoille riveille se jaa tyhjaksi: takautuva arvaus olisi juuri
+se saastunut `updated_at`, ja tyhja kentta ei koskaan vanhenna mitaan.
+
+**KYNNYS 60 VRK.** Pisin tiedetty keraajan kierros on 10 vrk, joten kynnys
+on siita kuusinkertainen. Lyhyempaa ei voi perustella: kanta on kuusi
+viikkoa vanha eika todellista katoamisnopeutta voi viela laskea.
+
+**VANHENEMINEN EI OLE POISTO.** Hanke saa tilan `expired`, rivi ja
+historia sailyvat, ja jos dokumentti nakyy lahteella uudelleen sama cron
+palauttaa sen. Santo kieltaytyy neljassa tilanteessa: tyhja
+`last_seen_at`, sairas lahde (hiljainen vika vanhentaisi koko lahteen
+kerralla), pelkka listausrivi, tai toinen lahde on nahnyt hankkeen.
+
+Kaikki poistumispolut ja tiedossa olevat aukot on nyt lueteltu yhteen
+paikkaan: `docs/14_POISTUMISPOLUT.md`. Suurin jaljella oleva aukko on
+etta suunnittelu-, lupa- ja rakentamisvaiheen ~2400 hankkeella ei ole
+omaa polkua.
+
+`lib/projects/unlistedExpiry.ts` ·
+`app/api/admin/expire-unlisted-projects/route.ts` ·
+`docs/sql/2026-08-29_last_seen_at.sql`
+
+---
+
 ### D-145 – Kaksi eri kaavaa samalla nimella katosi yhdeksi
 
 Kysymys oli yksinkertainen: onko Pietarsaaren "vireilla olevat
