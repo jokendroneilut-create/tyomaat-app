@@ -150,6 +150,68 @@ export function parseMillionEuros(value: string): number | null {
   return Number.isFinite(millions) && millions > 0 ? Math.round(millions * 1_000_000) : null
 }
 
+/*
+ * LOHKOTEKSTI, EI $("body").text().
+ *
+ * Cheerion .text() liittaa peräkkäisten elementtien tekstit ILMAN
+ * erotinta. Siitä syntyi kaksi vikaa samasta juuresta (havaittu
+ * 29.8.2026, Wärtsilä STH HUB Extension):
+ *
+ *   otsikko liimautui leipätekstiin  "...ExtensionLujatalo toteuttaa..."
+ *   linkkilista kuvauksen loppuun    "...kanssa:https://...https://..."
+ *
+ * Siksi teksti kootaan lohkoelementeittäin ja pelkät osoitteet
+ * pudotetaan: linkkilista ei ole hankkeen kuvausta.
+ */
+export function blockText($: any): string {
+  const palat: string[] = []
+
+  $("h1, h2, h3, h4, p, li, td, th, blockquote").each((_: any, el: any) => {
+    const teksti = $(el).text().replace(/\s+/g, " ").trim()
+    if (!teksti) return
+    /* Pelkkä osoite tai osoitejono ei ole kuvausta. */
+    if (/^(?:https?:\/\/\S+\s*)+$/i.test(teksti)) return
+    palat.push(teksti)
+  })
+
+  return palat.join(" ").replace(/\s+/g, " ").trim()
+}
+
+/*
+ * "Hankkeen laajuus on noin 11 000 bruttoneliömetriä".
+ *
+ * Lujatalon kohdesivulla on yleensä rakenteinen Laajuus-kenttä, mutta
+ * ei aina - Wärtsilän laajennuksessa luku oli vain leipätekstissä,
+ * jolloin se jäi kokonaan poimimatta.
+ *
+ * Tuhaterotin sallitaan vain kolmen numeron ryhmissä, jottei luku hyppää
+ * kahden luvun yli (sama ansa kuin asuntosäätiöpoimijassa).
+ */
+export function parseScopeFromText(text: string): string | null {
+  const m =
+    /(?<!\d)(\d{1,3}(?:\s\d{3})*)\s*(bruttoneliömetri[aä]?|brm2|brm²|kerrosneliömetri[aä]?|k-m2|neliömetri[naä]?)/i.exec(
+      String(text ?? "")
+    )
+  if (!m) return null
+
+  const luku = Number(m[1].replace(/\s/g, ""))
+  if (!Number.isFinite(luku) || luku <= 0) return null
+
+  return `${m[1].trim()} ${m[2]}`
+}
+
+/*
+ * Linkkilistan poiston jalkeen sen otsikko jaa roikkumaan:
+ * "...vuonna 2025. Lisaa yhteistyohankkeista Wartsilan kanssa:".
+ * Kaksoispisteeseen paattyva viimeinen katkelma ei kerro mitaan ilman
+ * listaa, joten se karsitaan.
+ */
+export function trimDanglingLabel(text: string): string {
+  return String(text ?? "")
+    .replace(/(?:^|(?<=[.!?]))\s*[^.!?]{0,90}:\s*$/, "")
+    .trim()
+}
+
 export async function enrichLujataloProject(candidate: any): Promise<any> {
   if (!candidate?.source_url) return candidate
 
@@ -175,12 +237,15 @@ export async function enrichLujataloProject(candidate: any): Promise<any> {
   const aikatauluTeksti = fields.get("rakentamisen aikataulu") ?? null
   const aikataulu = parseLujataloSchedule(aikatauluTeksti)
 
-  const body = $("body").text().replace(/\s+/g, " ").trim()
+  const body = blockText($)
   const detailsAt = body.search(/Projektin tiedot/i)
-  const description = (detailsAt > 0 ? body.slice(0, detailsAt) : body)
-    .split(/Sinua saattaisi kiinnostaa/i)[0]
-    .trim()
+  const description = trimDanglingLabel(
+    (detailsAt > 0 ? body.slice(0, detailsAt) : body)
+      .split(/Sinua saattaisi kiinnostaa/i)[0]
+      .trim()
+  )
 
+  const scopeFromText = parseScopeFromText(description)
   const cost = costText ? parseMillionEuros(costText) : null
 
   /*
@@ -214,7 +279,8 @@ export async function enrichLujataloProject(candidate: any): Promise<any> {
       ...(candidate.metadata ?? {}),
       ...(cost ? { cost_source: "text" } : {}),
       ...(contractForm ? { urakkamuoto: contractForm } : {}),
-      ...(scope ? { laajuus: scope } : {}),
+      /* Rakenteinen kenttä ensin, leipäteksti varalla. */
+      ...(scope || scopeFromText ? { laajuus: scope ?? scopeFromText } : {}),
       ...(aikatauluTeksti ? { rakentamisen_aikataulu: aikatauluTeksti } : {}),
       field_sources: {
         developer: developer ? "teksti" : null,
@@ -223,6 +289,7 @@ export async function enrichLujataloProject(candidate: any): Promise<any> {
         phase: paattynyt ? "aikataulu" : "lähde",
         city: candidate.city ? "lähde" : "teksti",
         estimated_cost: cost ? "teksti" : null,
+        laajuus: scope ? "lähde" : scopeFromText ? "teksti" : null,
       },
     },
   }

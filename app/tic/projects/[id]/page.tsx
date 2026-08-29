@@ -175,8 +175,28 @@ export default async function CandidateDetailPage({ params }: Props) {
             ["🏗️ Kerrosala", metadata.floor_area_text],
             ["📊 Rakennusoikeus", metadata.building_right_text],
             ["📦 Tilavuus", metadata.volume_text],
+
+            /*
+             * Nama olivat metatiedoissa mutta eivat nakyneet missaan.
+             * Wartsilan laajennuksessa laajuus "11 000 bruttoneliometria"
+             * oli poimittu, mutta katselmoija ei nahnyt sita - eli
+             * hankkeen mittaluokka jai arvailun varaan.
+             */
+            ["📏 Laajuus", metadata.laajuus],
+            ["🏠 Asuntoja", metadata.apartments],
+            ["📅 Arvioitu valmistuminen", metadata.estimated_completion],
+            ["🚧 Rakentamisen aloitus", metadata.construction_start],
+            ["🗓️ Rakentamisen aikataulu", metadata.rakentamisen_aikataulu],
+            ["💶 Arvioitu kustannus", metadata.estimated_cost],
+            ["📝 Urakkamuoto", metadata.urakkamuoto],
+            ["🔢 Lupanumero", metadata.permit_number],
+            ["🗝️ Kiinteistötunnus", metadata.property_id],
           ]
-          const naytettavat = kentat.filter(([, v]) => typeof v === "string" && v.trim())
+          const naytettavat = kentat.filter(
+            ([, v]) =>
+              (typeof v === "string" && v.trim()) ||
+              (typeof v === "number" && Number.isFinite(v))
+          )
           if (!naytettavat.length) return null
 
           return (
@@ -187,6 +207,63 @@ export default async function CandidateDetailPage({ params }: Props) {
                 </p>
               ))}
             </div>
+          )
+        })()}
+
+        {/*
+          * MUUT POIMITUT KENTAT.
+          *
+          * Ylla oleva lista on kuratoitu, joten uusi lahde voi tuoda
+          * kentan jota kukaan ei muista lisata siihen - ja silloin tieto
+          * on kannassa mutta katselmoija ei nae sita. Tama lohko nayttaa
+          * loput, jotta paatos tehdaan kaikella mita on poimittu.
+          *
+          * Putkiston omat kentat on rajattu pois: ne kertovat mista tieto
+          * tuli, eivat hankkeesta.
+          */}
+        {(() => {
+          const putkisto = new Set([
+            "source", "source_name", "source_url", "source_document_id",
+            "source_history", "firstSourceName", "resolver", "operation",
+            "field_sources", "llm_relevance", "enriched_at", "region",
+            "city", "description", "related_companies", "contact_persons",
+            "phase_hint", "building_type", "developer", "builder",
+            "street_hint", "matched_existing_project_id", "documents_url",
+            "construction_type", "size_class", "business_value",
+            "recommended_action", "classification_confidence",
+            "classification_reasons", "expire_at", "expire_reason",
+            "winners", "decision_status", "cost_source", "location",
+            "plan_use_purpose", "plan_status", "site_area_text",
+            "site_area_m2", "floor_area_text", "building_right_text",
+            "volume_text", "laajuus", "apartments", "estimated_completion",
+            "construction_start", "rakentamisen_aikataulu",
+            "estimated_cost", "urakkamuoto", "permit_number", "property_id",
+          ])
+
+          const muut = Object.entries(metadata as Record<string, unknown>)
+            .filter(([avain]) => !putkisto.has(avain))
+            .filter(
+              ([, arvo]) =>
+                (typeof arvo === "string" && arvo.trim()) ||
+                (typeof arvo === "number" && Number.isFinite(arvo)) ||
+                typeof arvo === "boolean"
+            )
+
+          if (!muut.length) return null
+
+          return (
+            <details className="mt-3 text-sm text-gray-700">
+              <summary className="cursor-pointer font-semibold">
+                Muut poimitut kentät ({muut.length})
+              </summary>
+              <div className="mt-2 grid gap-1 md:grid-cols-2">
+                {muut.map(([avain, arvo]) => (
+                  <p key={avain}>
+                    <span className="text-gray-500">{avain}:</span> {String(arvo)}
+                  </p>
+                ))}
+              </div>
+            </details>
           )
         })()}
 
