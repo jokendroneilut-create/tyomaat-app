@@ -1498,6 +1498,20 @@ async function collectGranlundSource(source: DiscoverySource) {
  */
 const FOUNDATION_PER_PAGE = 20
 const FOUNDATION_MAX_PAGES = 10
+
+/*
+ * TIEDOTTEEN IKARAJA.
+ *
+ * Nama arkistot ulottuvat vuosien taakse, ja vanha tiedote kertoo
+ * talosta joka on jo rakennettu - se ei ole liidi. PSOASin arkistossa
+ * on 27.8.2021 julkaistu historiikkisarja vanhoista taloista, ja se
+ * tuotti nelja "hanketta" jotka ovat viisi vuotta valmiita.
+ *
+ * Raja on iassa eika vaiheessa: aivan tuore valmistuminen on
+ * arvokas paivitys olemassa olevaan hankkeeseen, viiden vuoden
+ * takainen ei.
+ */
+const FOUNDATION_MAX_AGE_YEARS = 3
 const FOUNDATION_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 
 async function collectFoundationSource(source: DiscoverySource) {
@@ -1544,6 +1558,15 @@ async function collectFoundationSource(source: DiscoverySource) {
     if (!parsed.isProject) {
       skipped.set(parsed.reason, (skipped.get(parsed.reason) ?? 0) + 1)
       continue
+    }
+
+    const julkaistu = new Date(String(post?.date ?? "")).getTime()
+    if (Number.isFinite(julkaistu)) {
+      const raja = Date.now() - FOUNDATION_MAX_AGE_YEARS * 365.25 * 24 * 60 * 60 * 1000
+      if (julkaistu < raja) {
+        skipped.set("yli 3 vuotta vanha", (skipped.get("yli 3 vuotta vanha") ?? 0) + 1)
+        continue
+      }
     }
 
     const title = decodeHtmlEntities(post?.title?.rendered ?? "")
