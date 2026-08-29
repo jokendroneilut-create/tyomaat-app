@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 30.8.)
 
+### Lainvoimainen kaava siirtyy suunnitteluvaiheeseen (D-148)
+
+Voimaan tullut kaava jai vaiheeseen "Kaavoitus" samaan kasaan juuri
+vireille tulleiden kanssa, joten alkavia tyomaita etsiva ei loytanyt
+sita. 39 hanketta, joiden kaava on tullut voimaan enintaan 24 kk sitten,
+siirtyi vaiheeseen "Suunnittelu".
+
+Siirto vain eteenpain: jo pidemmalla oleva hanke jaa rauhaan. Kumottu
+kaava ei siirry, eika sellainen jolta puuttuu voimaantulopaiva.
+Jokaisesta siirrosta jaa vaihehistoriaan rivi perusteluineen.
+
+Kaksi rivia tarkistettiin elavasta lahteesta ennen ajoa ja molemmat
+tasmasivat. Cron klo 5:15 pitaa tiedon ajan tasalla.
+
+
 ### Kaavan voimaantulopaiva poimitaan (D-147)
 
 127 hanketta nakyi asiakkaalle vaiheessa "Kaavoitus" vaikka lahde kertoi

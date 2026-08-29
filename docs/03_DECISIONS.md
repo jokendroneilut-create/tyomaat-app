@@ -5,6 +5,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-148 – Lainvoimainen kaava siirtyy suunnitteluvaiheeseen
+
+Kun kaava on tullut voimaan, kaavoitus on ohi ja rakentaminen on
+mahdollista: seuraavaksi tulevat suunnittelu, tontinluovutus ja
+rakennuslupa. Se on myyjalle paras hetki — ja juuri se hetki oli
+meilta nakymattomissa, koska hanke jai vaiheeseen "Kaavoitus" samaan
+kasaan juuri vireille tulleiden kanssa.
+
+Voimaantulopaiva poimittiin D-147:ssa. Nyt siita seuraa jotain.
+
+**KYNNYS 24 KUUKAUTTA.** Tuore lainvoima tarkoittaa etta hanke on
+kaynnistymassa; vuosikymmenen takainen kaava on joko rakennettu tai ei
+toteudu koskaan. Kahden vuoden raja on HARKITTU, ei mitattu: kanta on
+liian nuori kertomaan kuinka nopeasti lainvoimainen kaava johtaa
+rakentamiseen. Se on mitattavissa myohemmin.
+
+**SIIRTO VAIN ETEENPAIN.** Saanto koskee vain vaihetta "Kaavoitus". Jos
+hanke on jo pidemmalla (rakennuslupa, kilpailutus, rakenteilla), sita ei
+saa vetaa taaksepain — toinen lahde tietaa silloin enemman kuin
+kaavasivu.
+
+**KUMOTTU EI SIIRRY.** Hallinto-oikeuden kumoama tai lautakunnan
+lopettama kaava ei toteudu. Ilman voimaantulopaivaa ei siirreta
+myoskaan: mieluummin tyhja kuin vaara.
+
+**AJETTU 30.8.2026:** 39 hanketta siirtyi vaiheeseen "Suunnittelu".
+Vanhin siirretty tuli voimaan 7.11.2024, tuorein 18.8.2026. Kaksi rivia
+tarkistettiin elavasta lahteesta ennen ajoa (Terwa Tower "Kaava
+lainvoimainen 27.1.2026", Myllysaarentie 19.1.2026) ja molemmat
+tasmasivat.
+
+Jokaisesta siirrosta jaa vaihehistoriaan rivi perusteluineen
+("Kaava tuli voimaan 2026-01-27"), joten muutos on jaljitettavissa.
+
+Cron `advance-effective-zoning` klo 5:15 pitaa tiedon ajan tasalla.
+Se lukee voimaantulon suoraan dokumenteista, koska voimaan tullut
+dokumentti merkitaan valmiiksi kasitellyksi jo kirjoitushetkella eika
+tieto etene putken kautta.
+
+**AVOIN:** ne 45 hanketta joiden kaava tuli voimaan ennen vuotta 2023
+ovat yha listalla vaiheessa "Kaavoitus". Niiden poistaminen nakyvista on
+eri paatos eika sita pida tehda samalla saannolla.
+
+`lib/projects/effectiveZoning.ts` ·
+`app/api/admin/advance-effective-zoning/route.ts`
+
+---
+
 ### D-147 – Voimaantulopaiva poimitaan, ja kuivaharjoitus paljasti kaksi virhetta
 
 127 hanketta nakyi asiakkaalle vaiheessa "Kaavoitus" vaikka lahde kertoi

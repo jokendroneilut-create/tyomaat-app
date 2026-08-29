@@ -48,7 +48,7 @@ Sääntö: [lib/projects/tenderExpiry.ts](../lib/projects/tenderExpiry.ts)
 mennyt. Kenttä poimitaan vapaasta tekstistä ("valmistuu lokakuussa
 2026").
 
-### Kaavoitus (2901 hanketta)
+### Kaavoitus (2862 hanketta)
 
 **Poistuu kun kaava katoaa kaupungin listalta.**
 `expire-unlisted-projects` (cron 5:45) antaa tilan `expired` kun
@@ -199,10 +199,15 @@ Kuivaharjoituksen voi ajaa milloin vain, se ei kirjoita mitaan:
   2025 tai myöhemmin** ja **45 ennen vuotta 2023**. Kumottuja on 1.
   Tieto on hankkeen metadatassa (`kaava_tila`, `kaava_voimaantulo`).
 
-  Mitä siitä seuraa on yhä auki, ja se on kaksi eri asiaa:
-  tuore lainvoimainen kaava kuuluu **vaiheeseen eteenpäin** (rakentaminen
-  on mahdollista, se on paras hetki myydä), vanha kuuluu **pois
-  näkyvistä**. Kumottu ei toteudu lainkaan.
+  **Tuoreet on siirretty eteenpäin** (D-148, 30.8.2026): 39 hanketta,
+  joiden kaava on tullut voimaan enintään 24 kk sitten, siirtyi
+  vaiheeseen "Suunnittelu". Cron `advance-effective-zoning` (5:15)
+  pitää tiedon ajan tasalla.
+
+  **Yhä auki:** ne 45 hanketta joiden kaava tuli voimaan ennen vuotta
+  2023. Ne ovat listalla vaiheessa "Kaavoitus" vaikka kohde on joko
+  rakennettu tai ei toteudu. Poistaminen näkyvistä on eri päätös kuin
+  tuoreen nostaminen eteenpäin, eikä sitä pidä tehdä samalla säännöllä.
 - **Kynnys 60 vrk on mitoitettu varmuudella, ei mittauksella.** Kanta on
   kuusi viikkoa vanha, joten todellista katoamisnopeutta ei voi vielä
   laskea. Kynnys kannattaa mitata uudelleen kun `last_seen_at` on
