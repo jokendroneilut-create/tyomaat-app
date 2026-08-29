@@ -9,6 +9,60 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-08 (tyo 29.8.)
+
+### Poistumispolku listalta kadonneille kaavoille (D-146)
+
+Kaavoitushankkeilla ei ollut yhtaan tapaa poistua asiakkaan nakyvista:
+2901 hanketta, joista 2890 nakyi, vanhentuneita 0. Lista olisi kasvanut
+yksisuuntaisesti.
+
+Uusi kentta `source_documents.last_seen_at` kirjoitetaan VAIN keraajasta.
+`updated_at` ei kelvannut mittariksi kahdesta syysta - faktojen ja
+identiteetin poimijat kirjoittavat samaan riviin, ja osa keraajista lukee
+listasta vain osan kerrallaan. Se ehti johtaa harhaan: Oulusta nayttti
+kadonneen 39 kaavaa, elava vertailu naytti yhden.
+
+Vahvistettu ajamalla 29.8.: Pietarsaaren 22 dokumentista 18 sai
+merkinnan, ja ne nelja ilman ovat tasmalleen ne jotka eivat ole enaa
+sivulla. Erottelu syntyi ensimmaisella ajolla.
+
+Cron `expire-unlisted-projects` (5:45) antaa tilan `expired` kun
+dokumenttia ei ole nahty 60 vrk. Vanheneminen ei ole poisto: rivi ja
+historia sailyvat, ja dokumentin palatessa sama cron palauttaa hankkeen.
+Saanto kieltaytyy neljassa tilanteessa (tyhja kentta, sairas lahde,
+listausrivi, toinen lahde nahnyt).
+
+Ensimmainen aito vanheneminen on mahdollinen 28.10.2026. Kaikki
+poistumispolut ja aukot: `docs/14_POISTUMISPOLUT.md`.
+
+
+### Kaksi samannimista Pietarsaaren kaavaa erotettu (D-145)
+
+Sivun 18 kaavasta meilla oli 17. Kaksi eri kaavaa on otsikoitu
+"Asemakaavan muutos Keskustassa" (kirkon kortteli 15 ja Maria Malmin
+kortteli), ja jalkimmainen ylikirjoitti ensimmaisen joka ajolla.
+Laskurit eivat kertoneet siita: documentsFound ja documentsSaved olivat
+molemmat 18.
+
+Erottimia tarvittiin kaksi. Tunniste erotetaan kuvauksen tiivisteella -
+ei jarjestysnumerolla, joka vaihtaisi hankkeiden identiteetit keskenaan
+sivun jarjestyessa uudelleen. Nimi erotetaan kaupungin oman asiakirjan
+nimesta (`OAS-kirkko-ja-sen-ymparisto-kaava-041.pdf`), koska ehdokkaiden
+yhdistaminen putoaa viimeisena keinona osoitteen vertailuun ja "osoite"
+on tassa lahteessa kaavan nimi.
+
+Sama riski koskee yli 20 muuta kaavalahdetta - tyojonossa.
+
+
+### YVA-poimija oli jo tehty (D-144)
+
+Tyojonon kohta "kattaa 43 % puutteesta (94 hanketta)" kumoutui
+tarkistuksessa: poimija on olemassa ja kattaa 259/273 hanketta, puute on
+14. Kolme loytyi ja paivitettiin; lopuilla 11:lla rakennuttajaa ei ole
+YVA-sivulla lainkaan, ei kenttana eika leipatekstissa.
+
+
 ## 2026-08 (tyo 22.8.)
 
 ### Pietarsaaren kaavakuvaukset kokonaisina (D-143)

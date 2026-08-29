@@ -121,6 +121,51 @@ takaisin aktiiviseksi (`revived_at`).
 
 ---
 
+## Vahvistettu ajamalla 29.8.2026
+
+Ensimmainen ajo `last_seen_at`-kentan kanssa, Pietarsaari:
+
+```
+kerätty                18 kaavaa
+lähteen dokumentteja   22
+last_seen_at asetettu  18
+```
+
+Ne nelja ilman merkintaa ovat tasmalleen ne jotka eivat ole enaa sivulla
+(Itala, Luutavuori, vanha Varvet, vanhentunut Keskusta-rivi). Erottelu
+syntyi ensimmaisella ajolla ilman etta mitaan paateltiin
+`updated_at`-kentasta.
+
+Vanhenemiscronin kuivaharjoitus samana paivana:
+
+```json
+{ "kynnysVrk": 60, "vanhojaDokumentteja": 0, "vanhennettavia": 0, "palautettavia": 0 }
+```
+
+Nolla on oikea tulos: kentta on juuri syntynyt eika yksikaan merkinta voi
+olla 60 vuorokautta vanha.
+
+Kuivaharjoituksen voi ajaa milloin vain, se ei kirjoita mitaan:
+
+```
+/api/admin/expire-unlisted-projects?dry=1&secret=...
+```
+
+---
+
+## Kalenteriin
+
+- **28.10.2026** — ensimmainen paiva jolloin aito vanheneminen on
+  mahdollinen (60 vrk ensimmaisista merkinnoista). Aja kuivaharjoitus
+  ENNEN kuin cron ajaa itsestaan, ja lue tulos riveittain: ensimmainen
+  ajo on se joka paljastaa jos saanto vanhentaa jotain vaarin.
+- **Marraskuu 2026** — mittaa kynnys uudelleen. 60 vrk on mitoitettu
+  varmuudella (pisin tiedetty keraajan kierros 10 vrk x 6), ei
+  havaitulla katoamisnopeudella. Kun `last_seen_at` on kerannyt pari
+  kuukautta dataa, oikean kynnyksen voi laskea.
+
+---
+
 ## Avoimet aukot
 
 - **Rakentamisvaiheen hankkeille ei ole poistumispolkua.** Noin 2400
