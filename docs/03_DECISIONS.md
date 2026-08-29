@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-145 – Kaksi eri kaavaa samalla nimella katosi yhdeksi
+
+Kysymys oli yksinkertainen: onko Pietarsaaren "vireilla olevat
+asemakaavahankkeet" -sivun kaikki kaavat kerätty. Sivulla on 18 kaavaa,
+meilla oli 17.
+
+**SAMA OTSIKKO KAHDESTI.** Sivulla on kaksi eri kaavaa otsikolla
+"Asemakaavan muutos Keskustassa":
+
+```
+lohko  7   kirkon kortteli 15, Pietarsaaren kirkko v. 1731
+           luonnos nahtavilla 15.4.-18.5.2026
+lohko 15   Maria Malmin kortteli, ent. virastotalo ja linja-autoasema
+```
+
+Molemmista muodostui sama tunniste (`asemakaavan-muutos-keskustassa`),
+ja koska dokumentit tallennetaan osoitteen perusteella, jalkimmainen
+ylikirjoitti ensimmaisen joka ajolla. Kirkon kortteli ei siis ollut
+koskaan jarjestelmassa — eika mikaan laskuri kertonut siita, koska
+`documentsFound` ja `documentsSaved` olivat molemmat 18.
+
+**KAKSI EROTINTA TARVITTIIN, EI YHTA.** Tunnisteen erottaminen ei
+riittanyt: ehdokkaiden yhdistaminen putoaa viimeisena keinona
+OSOITTEEN ja kunnan vertailuun, ja tassa lahteessa "osoite" on kaavan
+nimi. Erotellut tunnisteet saivat siis yha saman ehdokkaan. Mitattu
+ajamalla: kirkon dokumentti sulautui Maria Malmin ehdokkaaseen ja
+ylikirjoitti sen kuvauksen.
+
+  1. **Tunniste** erotetaan kuvauksesta lasketulla tiivisteella.
+     EI jarjestysnumeroa ("-2"): se vaihtaisi kahden hankkeen
+     identiteetit keskenaan heti kun kaupunki jarjestaa sivun
+     uudelleen, ja hankkeet vaihtaisivat sisaltonsa hiljaa.
+  2. **Nimi** erotetaan kaupungin OMAN asiakirjan nimesta:
+     `OAS-kirkko-ja-sen-ymparisto-kaava-041.pdf` -> "kirkko ja sen
+     ymparisto", `Maria-Malm-PDB.pdf` -> "Maria Malm". Nimea ei siis
+     keksita vaan luetaan lahteesta.
+
+Erotin lisataan VAIN kun sama otsikko esiintyy sivulla useammin kuin
+kerran — muuten kaikkien 18 kaavan tunniste vaihtuisi kerralla ja ne
+palaisivat jonoon kaksoiskappaleina.
+
+**KORJAUS TAKAUTUVASTI.** Tallessa ollut hanke oli Maria Malm. Se
+nimettiin "Asemakaavan muutos Keskustassa (Maria Malm)" ja siirrettiin
+uuteen tunnisteeseen, jotta se pysyi samana hankkeena. Kirkon kortteli
+tuli jonoon uutena ehdokkaana. Sivun 18 kaavasta meilla on nyt 18.
+
+**AVOIN, SAMA RISKI MUUALLA.** Yli 20 muuta kaavalahdetta muodostaa
+dokumentin osoitteen samalla tavalla otsikosta. Jos jollakin niista on
+kaksi samannimista lohkoa, sama katoaminen tapahtuu — eika siita
+nakyisi jalkea. Tarkistus vaatii sivujen uudelleenhaun, joten se on
+tyojonossa. Halvin yleinen suoja olisi, etta keraaja huomauttaa kun
+kaksi lohkoa tuottaa saman osoitteen samalla ajolla.
+
+`lib/agent/pietarsaariKaavaSlug.ts` ·
+`scripts/fix-pietarsaari-keskusta.ts`
+
+---
+
 ### D-144 – YVA-poimija oli jo tehty, ja loppu ei ole poimittavissa
 
 Työjonossa oli kohta "YVA-poimija: hankevastaava on nimettynä kenttänä,

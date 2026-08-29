@@ -14,6 +14,10 @@ import {
 } from "@/lib/agent/senaattiTenderCalendar"
 import type { DiscoverySource } from "../registry/sources"
 import { pietarsaariKaavaDescription } from "@/lib/agent/pietarsaariKaavaDescription"
+import {
+  pietarsaariKaavaSlugs,
+  pietarsaariKaavaTitles,
+} from "@/lib/agent/pietarsaariKaavaSlug"
 import { detectCityFromText } from "../../detectCityFromText"
 import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
 import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
@@ -9087,15 +9091,6 @@ function pietarsaariPhaseFromText(text: string): string {
   return "Vireilletulo"
 }
 
-function pietarsaariSlug(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-}
-
 async function collectPietarsaariKaavaSource(source: DiscoverySource) {
   const response = await fetch(PIETARSAARI_LISTING_URL, { cache: "no-store" })
   if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
@@ -9125,7 +9120,45 @@ async function collectPietarsaariKaavaSource(source: DiscoverySource) {
   let found = 0
   let saved = 0
 
-  for (const block of blocks) {
+  /*
+   * Kuvaukset luetaan ENNEN silmukkaa, koska tunniste tarvitsee ne:
+   * sivulla on kaksi eri kaavaa samalla otsikolla, ja ne erotetaan
+   * toisistaan kuvauksesta lasketulla tiivisteella.
+   */
+  const kuvaukset = blocks.map((block) =>
+    pietarsaariKaavaDescription(
+      block.nodes.map((node: any) => ({
+        tag: String(node.name ?? ""),
+        text: $(node).text().replace(/\s+/g, " ").trim(),
+      }))
+    )
+  )
+  /*
+   * Kaupungin omien asiakirjojen nimet: niista otetaan tarkenne kun sama
+   * otsikko esiintyy sivulla kahdesti.
+   */
+  const asiakirjat = blocks.map((block) => {
+    const hrefit: string[] = []
+    for (const node of block.nodes) {
+      $(node)
+        .find("a")
+        .each((_: any, a: any) => {
+          const href = String($(a).attr("href") ?? "")
+          if (/\.pdf(\?|#|$)/i.test(href)) hrefit.push(href)
+        })
+    }
+    return hrefit
+  })
+
+  const lohkot = blocks.map((block, i) => ({
+    title: block.title,
+    description: kuvaukset[i],
+    documents: asiakirjat[i],
+  }))
+  const slugit = pietarsaariKaavaSlugs(lohkot)
+  const nimet = pietarsaariKaavaTitles(lohkot)
+
+  for (const [index, block] of blocks.entries()) {
     if (!block.title) continue
 
     found += 1
@@ -9152,12 +9185,7 @@ async function collectPietarsaariKaavaSource(source: DiscoverySource) {
      * "Suunnittelun tarkoitus" -osion kokonaan pois, ja juuri se kertoo
      * mita alueelle on tulossa.
      */
-    const description = pietarsaariKaavaDescription(
-      block.nodes.map((node: any) => ({
-        tag: String(node.name ?? ""),
-        text: $(node).text().replace(/\s+/g, " ").trim(),
-      }))
-    )
+    const description = kuvaukset[index]
 
     const kaavaMatch = signalText.match(PIETARSAARI_KAAVA_NUMBER_PATTERN)
     const kaavaTunnus = kaavaMatch ? kaavaMatch[1] : null
@@ -9173,10 +9201,11 @@ async function collectPietarsaariKaavaSource(source: DiscoverySource) {
     }
     const contacts = plannerName ? [{ name: plannerName, title: "Suunnittelija", phone: null, email: null }] : []
 
-    const slug = pietarsaariSlug(block.title)
+    const slug = slugit[index]
+    const nimi = nimet[index]
     const documentUrl = `${PIETARSAARI_LISTING_URL}#${slug}`
 
-    const rawText = JSON.stringify({ title: block.title, phase, description, kaavaTunnus, contacts })
+    const rawText = JSON.stringify({ title: nimi, phase, description, kaavaTunnus, contacts })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin
@@ -9185,7 +9214,7 @@ async function collectPietarsaariKaavaSource(source: DiscoverySource) {
         {
           source_id: source.id,
           source_name: source.name,
-          title: block.title,
+          title: nimi,
           document_url: documentUrl,
           document_type: "api",
           content_hash: contentHash,
@@ -9194,7 +9223,7 @@ async function collectPietarsaariKaavaSource(source: DiscoverySource) {
           raw_payload: {
             parser: source.parser,
             priority: source.priority,
-            title: block.title,
+            title: nimi,
             slug,
             kaava_tunnus: kaavaTunnus,
             phase,
