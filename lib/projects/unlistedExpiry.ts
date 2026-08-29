@@ -22,6 +22,38 @@
  * dokumentti nakyy lahteella uudelleen, hanke palautetaan.
  */
 
+/*
+ * KYTKIN: ENSIMMAINEN AITO VANHENEMINEN ON TEHTAVA TIETOISESTI.
+ *
+ * Cron ajaa joka aamu klo 5:45, joten ilman tata se ehtisi vanhentaa
+ * ensimmaisen erän ennen kuin kukaan on lukenut yhtaan riviä. Juuri
+ * ensimmainen ajo on se joka paljastaa jos saanto vanhentaa jotain
+ * vaarin — ja se on luettava riveittain, kuten jokainen takautuva ajo.
+ *
+ * Kytkin pois: cron laskee paatokset ja raportoi ne, mutta EI kirjoita
+ * mitaan. Se toimii siis tarkkailijana.
+ *
+ * Kytkin paalle: vaihda arvoksi true ja pushaa. Tallainen kytkin kuuluu
+ * koodiin eika ympäristomuuttujaan tai osoiteparametriin, koska silloin
+ * paatos nakyy git-historiassa eika se voi tapahtua vahingossa.
+ *
+ * Ennen kytkemista: aja kuivaharjoitus ja lue tulos riveittain.
+ *   npx tsx scripts/dry-run-unlisted-expiry.ts
+ */
+export const UNLISTED_EXPIRY_ENABLED = false
+
+/*
+ * Kirjoitetaanko tallä ajolla. Kytkin voittaa aina: kuivaharjoituksen voi
+ * pyytaa, mutta kirjoittamista ei voi pyytaa kytkimen ohi.
+ */
+export function writesAllowed(
+  enabled: boolean,
+  dryRunRequested: boolean
+): boolean {
+  if (!enabled) return false
+  return !dryRunRequested
+}
+
 export const UNLISTED_THRESHOLD_DAYS = 60
 
 /* Lahde on elossa vain jos se on ajettu aivan askettain JA tuottanut jotain. */

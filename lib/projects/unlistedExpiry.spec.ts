@@ -4,6 +4,7 @@ import {
   UNLISTED_REASON,
   UNLISTED_THRESHOLD_DAYS,
   evaluateUnlisted,
+  writesAllowed,
 } from "./unlistedExpiry"
 
 const NYT = new Date("2026-08-29T12:00:00Z")
@@ -102,5 +103,21 @@ describe("evaluateUnlisted", () => {
         lastSeenAt: vrkSitten(200),
       })
     ).toBe("keep")
+  })
+})
+
+describe("writesAllowed", () => {
+  /*
+   * Kytkin voittaa aina. Ilman tata cron ehtisi vanhentaa ensimmaisen
+   * eran ennen kuin kukaan on lukenut yhtaan rivia.
+   */
+  it("ei kirjoita kun kytkin on pois", () => {
+    expect(writesAllowed(false, false)).toBe(false)
+    expect(writesAllowed(false, true)).toBe(false)
+  })
+
+  it("kirjoittaa vain kun kytkin on paalla eika kuivaharjoitusta pyydetty", () => {
+    expect(writesAllowed(true, false)).toBe(true)
+    expect(writesAllowed(true, true)).toBe(false)
   })
 })

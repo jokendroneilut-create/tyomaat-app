@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import {
+  UNLISTED_EXPIRY_ENABLED,
   UNLISTED_REASON,
   UNLISTED_THRESHOLD_DAYS,
   evaluateUnlisted,
+  writesAllowed,
 } from "@/lib/projects/unlistedExpiry"
 
 export const runtime = "nodejs"
@@ -37,7 +39,15 @@ export async function GET(req: Request) {
     const url = new URL(req.url)
     const querySecret = url.searchParams.get("secret")
     const authHeader = req.headers.get("authorization")
-    const dryRun = url.searchParams.get("dry") === "1"
+    const dryRunRequested = url.searchParams.get("dry") === "1"
+
+    /*
+     * Kytkin voittaa: kun se on pois, ajo laskee paatokset ja raportoi
+     * ne mutta ei kirjoita mitaan. Ensimmainen aito vanheneminen on
+     * tehtava tietoisesti, ei aamun cron-ajon sivutuotteena.
+     */
+    const kirjoitetaan = writesAllowed(UNLISTED_EXPIRY_ENABLED, dryRunRequested)
+    const dryRun = !kirjoitetaan
 
     const isManualRun = !!querySecret && querySecret === process.env.CRON_SECRET
     const isCronRun = !!authHeader && authHeader === `Bearer ${process.env.CRON_SECRET}`
@@ -163,11 +173,24 @@ export async function GET(req: Request) {
       return NextResponse.json({
         ok: true,
         dryRun: true,
+        kytkin: UNLISTED_EXPIRY_ENABLED ? "paalla" : "pois",
+        ...(UNLISTED_EXPIRY_ENABLED
+          ? {}
+          : {
+              huom:
+                "Kytkin on pois: mitaan ei kirjoiteta. Lue paatokset riveittain, " +
+                "aseta sitten UNLISTED_EXPIRY_ENABLED = true (lib/projects/unlistedExpiry.ts).",
+            }),
         kynnysVrk: UNLISTED_THRESHOLD_DAYS,
         vanhojaDokumentteja: vanhat.length,
         vanhennettavia: paatokset.filter((p) => p.paatos === "expire").length,
         palautettavia: paatokset.filter((p) => p.paatos === "revive").length,
-        otos: paatokset.slice(0, 20).map((p) => ({
+        /*
+         * Otos on rajattu, mutta rajaus on nakyvissa: `vanhennettavia`
+         * ja `palautettavia` kertovat todellisen maaran, joten katkaisu
+         * ei voi nayttaa "kaikki kaydty lapi".
+         */
+        otos: paatokset.slice(0, 200).map((p) => ({
           id: p.hanke.id,
           nimi: p.hanke.name,
           vaihe: p.hanke.phase,
@@ -227,6 +250,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       ok: true,
+      kytkin: "paalla",
       kynnysVrk: UNLISTED_THRESHOLD_DAYS,
       vanhojaDokumentteja: vanhat.length,
       vanhennettu: tulokset.filter((t) => t.paatos === "expire" && t.ok).length,

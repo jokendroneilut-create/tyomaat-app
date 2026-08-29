@@ -119,6 +119,17 @@ sääntö kieltäytyy neljässä tilanteessa:
 dokumentti näkyy lähteellä uudelleen, sama cron palauttaa hankkeen
 takaisin aktiiviseksi (`revived_at`).
 
+Lisäksi **kytkin**: `UNLISTED_EXPIRY_ENABLED` on `false`, joten cron
+laskee päätökset ja raportoi ne mutta ei kirjoita mitään. Ilman sitä
+aamun ajo klo 5:45 ehtisi vanhentaa ensimmäisen erän ennen kuin kukaan on
+lukenut yhtään riviä — ja juuri ensimmäinen ajo on se joka paljastaa jos
+sääntö vanhentaa jotain väärin.
+
+Kytkin on koodissa eikä ympäristömuuttujassa tai osoiteparametrissa,
+jotta päätös näkyy git-historiassa eikä voi tapahtua vahingossa. Se estää
+kaikki kirjoitukset, myös palautukset — merkitystä sillä ei ole ennen
+kuin jotain on vanhentunut.
+
 ---
 
 ## Vahvistettu ajamalla 29.8.2026
@@ -156,9 +167,15 @@ Kuivaharjoituksen voi ajaa milloin vain, se ei kirjoita mitaan:
 ## Kalenteriin
 
 - **28.10.2026** — ensimmainen paiva jolloin aito vanheneminen on
-  mahdollinen (60 vrk ensimmaisista merkinnoista). Aja kuivaharjoitus
-  ENNEN kuin cron ajaa itsestaan, ja lue tulos riveittain: ensimmainen
-  ajo on se joka paljastaa jos saanto vanhentaa jotain vaarin.
+  mahdollinen (60 vrk ensimmaisista merkinnoista). Cron ei kirjoita
+  mitaan ennen kuin kytkin kaannetaan, joten kiirettä ei ole:
+
+  ```
+  npx tsx scripts/dry-run-unlisted-expiry.ts
+  ```
+
+  Lue tulos riveittain. Vasta sen jalkeen `UNLISTED_EXPIRY_ENABLED = true`
+  (lib/projects/unlistedExpiry.ts) ja push.
 - **Marraskuu 2026** — mittaa kynnys uudelleen. 60 vrk on mitoitettu
   varmuudella (pisin tiedetty keraajan kierros 10 vrk x 6), ei
   havaitulla katoamisnopeudella. Kun `last_seen_at` on kerannyt pari
