@@ -43,6 +43,9 @@ export default function DuplicateCandidatesReviewList({
     label: string
   } | null>(null)
 
+  /* Kertoo mita vahvistus teki: kumpi piilotettiin ja miksi. */
+  const [notice, setNotice] = useState<string | null>(null)
+
   async function review(id: string, status: "confirmed_duplicate" | "not_duplicate") {
     setPending(null)
     setLoadingId(id)
@@ -57,6 +60,20 @@ export default function DuplicateCandidatesReviewList({
 
       const result = await response.json()
       if (!response.ok) throw new Error(result.error ?? "Tallennus epäonnistui")
+
+      /*
+       * Vahvistus piilottaa toisen automaattisesti, joten kerrotaan
+       * kumpi jai. Ilman tata piilotus tapahtuisi nakymattomissa.
+       */
+      if (result.hidden) {
+        setNotice(
+          `Piilotettu: ${result.hideName ?? "toinen"} — jäi: ${result.keepName ?? "toinen"} (${result.reason ?? ""})`
+        )
+      } else if (result.warning) {
+        setNotice(result.warning)
+      } else {
+        setNotice(null)
+      }
 
       router.refresh()
     } catch (err: any) {
@@ -101,6 +118,10 @@ export default function DuplicateCandidatesReviewList({
     <div className="space-y-4">
       {error && (
         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
+      )}
+
+      {notice && (
+        <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">{notice}</div>
       )}
 
       {candidates.map((c) => {
