@@ -11,6 +11,37 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Kaksoiskappaleet yhdistyvat oikeasti (D-138)
+
+Klaukkalan vesitorni nakyi asiakkaalle kahtena, vaikka pari oli
+vahvistettu kaksoiskappaleeksi. Vahvistus kirjasi vain paatoksen;
+piilotus oli erillinen nappi joka jai valilla painamatta. Nyt se
+tapahtuu samassa, ja nakyma kertoo kumpi jai ja miksi.
+
+Piilotus siirtaa myos vaihetiedon: kuusi hanketta naytti vanhentunutta
+vaihetta, kolme niista "Sopimus myonnetty" vaikka rakentaminen oli jo
+alkanut. Asiakkaan omissa oleva hanke jaa aina ihmiselle.
+
+Taulumaen vesitorni oli kannassa kolmena ja Klaukkalan kahtena; molemmat
+yhdistetty.
+
+### TIC-jono vanhin ensin
+
+Jono naytti uusimman ylimpana, joten pisimpaan odottaneet valuivat
+hantaan sita mukaa kun uusia tuli. Nyt sivu 1 on aina se jota
+seuraavaksi kasitellaan.
+
+### Lapti-lahde rikastuu (D-140)
+
+Lapti oli ainoa yrityslahde ilman rikastajaa, joten sen omilta sivuilta
+tullut ehdokas oli tyhja: ei kuvausta, ei osapuolia. Lapti itse puuttui
+hankkeesta vaikka tieto oli Laptin sivuilta.
+
+Tyhjaa ehdokasta ei voi myoskaan ehdottaa yhdistettavaksi: vertailija
+palauttaa null kun yksikaan neljasta vahimmaisehdosta ei tayty. Viisi
+ehdokasta korjattiin takautuvasti.
+
+
 ### Kaksoiskappaleet yhdistyvat oikeasti (D-138, D-139)
 
 Klaukkalan vesitorni nakyi asiakkaalle kahtena hankkeena, vaikka pari

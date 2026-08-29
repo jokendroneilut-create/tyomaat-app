@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-140 – Tyhjää ehdokasta ei voi edes ehdottaa yhdistettäväksi
+
+Kysymys oli miksi Laptin Hiukkavaaran hankkeet eivät nousseet edes
+ehdotukseen. Vastaus paljasti ketjun, jossa yksi puuttuva rivi esti
+kaiken muun.
+
+**LAPTI OLI AINOA YRITYSLÄHDE ILMAN RIKASTAJAA.** Jokaisella muulla
+yrityslähteellä on `createCompanyEnricher({ publisher })`, joka hakee
+tiedotteen kohdesivun ja kirjaa julkaisijan osapuoleksi. Laptilla ei
+ollut — ja sen hakufunktion nimi kertoo miksi: `fetchTestSource`,
+prototyyppi joka jäi tuotantoon.
+
+Seuraus näkyi asiakkaalle: Laptin omilta sivuilta tullut ehdokas ei
+sisältänyt kuvausta, rakennuttajaa eikä liittyviä yrityksiä. **Lapti
+itse puuttui hankkeesta, vaikka tieto oli Laptin sivuilta.**
+
+**SEURAUS OLI ISOMPI KUIN PUUTTUVA NIMI.** `calculateMatch` palauttaa
+`null` ellei täyty yksi neljästä vähimmäisehdosta: vahva tunniste, sama
+sijainti, tekstinäyttö tai rakennuttaja+kaupunki yhdessä. Tyhjällä
+ehdokkaalla ei täyttynyt yksikään, joten **vertailu ei tuottanut edes
+nollaa vaan ei mitään** — ehdokasta ei voitu ehdottaa yhdistettäväksi
+mihinkään.
+
+Rikastuksen jälkeen kuvaukset ovat 1 300–3 500 merkkiä ja Lapti
+kirjautuu pääurakoitsijaksi. Viisi kannassa ollutta ehdokasta korjattiin
+takautuvasti.
+
+**TÄSMÄYTYS EI SILTI YLLÄ EHDOTUKSEEN, JA SE ON ERI VIKA.** Rikastettuna
+oikea pari saa 38 pistettä — **saman kuin kaksi täysin eri Hiukkavaaran
+hanketta**. Kaikki kolme näyttävät samalta: sama kaupunki, samankaltainen
+kuvaus. Vertailija ei siis erehdy vaan on aidosti kyvytön erottamaan
+niitä tällä todistusaineistolla.
+
+Lisäksi oikeaa paria rankaisee `different_name_numbers`, joka laukeaa
+otsikoiden toisiinsa liittymättömistä luvuista: ehdokkaassa lukee
+"esittelyasunto avautuu 2.9." ja hankkeessa "60 prosenttia asunnoista
+varattu".
+
+**RATKAISU ON OLEMASSA MUTTA KÄYTTÄMÄTTÄ.** Molemmissa kuvauksissa
+esiintyy sama taloyhtiö:
+
+```
+lapti.fi   "Asunto Oy Oulun Valoisan"   "Asunto Oy Oulun Valoisa"
+stt        "Asunto Oy Oulun Valoisaan"
+```
+
+Taloyhtiön nimi on asuntohankkeen todellinen tunniste — se on
+yksikäsitteinen tavalla jota otsikko ei ole, ja se erottaisi tämän parin
+myös niistä kahdesta väärästä (Pohjola Rakennus ja TA-Yhtymä rakentavat
+omia taloyhtiöitään samaan kaupunginosaan).
+
+Avoin: `Asunto Oy X` -nimen poiminta kuvauksesta tunnisteeksi. Se on
+pisteytysmuutos ja koskee koko kantaa, joten se mitataan ensin.
+
+`lib/agent/sources.ts` · `lib/agent/companyRelease.ts`
+
+---
+
 ### D-138 – Vahvistus ilman toimenpidettä on puolikas päätös
 
 Klaukkalan vesitorni näkyi asiakkaalle kahtena hankkeena. Pari oli

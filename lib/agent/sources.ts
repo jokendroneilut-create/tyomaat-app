@@ -73,7 +73,26 @@ import { fetchHcHoivakoditSource } from "./fetchHcHoivakoditSource"
 import { createCompanyEnricher } from "./companyRelease"
 
 export const sources = [
-  { name: "lapti", fetch: fetchTestSource },
+  /*
+   * LAPTI OLI AINOA YRITYSLAHDE ILMAN RIKASTAJAA.
+   *
+   * Havaittu 29.8.2026: Laptin omilta sivuilta tullut ehdokas ei
+   * sisaltanyt kuvausta, rakennuttajaa eika liittyvia yrityksia - eli
+   * Lapti itse puuttui hankkeesta, vaikka tieto oli Laptin sivuilta.
+   *
+   * Seuraus oli isompi kuin puuttuva nimi: ilman kuvausta ja
+   * rakennuttajaa calculateMatch palauttaa null, koska yksikaan sen
+   * neljasta vahimmaisehdosta ei tayty. Tyhjaa ehdokasta ei siis voi
+   * edes ehdottaa yhdistettavaksi mihinkaan.
+   *
+   * Funktion nimi fetchTestSource kertoo mista on kyse: prototyyppi joka
+   * jai tuotantoon.
+   */
+  {
+    name: "lapti",
+    fetch: fetchTestSource,
+    enrich: createCompanyEnricher({ publisher: "Rakennusliike Lapti" }),
+  },
   { name: "yit", fetch: fetchYitSource, enrich: createCompanyEnricher({ publisher: "YIT" }) },
   { name: "asuntosaatio", fetch: fetchAsuntosaatioSource, enrich: createCompanyEnricher({ publisher: "Asuntosäätiö", role: "developer" }) },
   { name: "asura", fetch: fetchAsuraSource, enrich: createCompanyEnricher({ publisher: "Asura" }) },
