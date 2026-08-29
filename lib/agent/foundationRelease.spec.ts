@@ -208,6 +208,8 @@ describe("kenttien poiminta", () => {
   it("paattelee vaiheen teosta", () => {
     expect(parsePhase("rakennus valmistui heinäkuussa")).toBe("completed")
     expect(parsePhase("vietettiin harjannostajaisia")).toBe("construction")
+    /* Monikko: HOASin 402 asunnon tiedote jai ilman vaihetta. */
+    expect(parsePhase("kohteet valmistuvat alkuvuodesta 2028")).toBe("construction")
     expect(parsePhase("kohteelle haettiin rakennuslupa")).toBe("permit")
     expect(parsePhase("solmittiin aiesopimus")).toBe("planning")
     expect(parsePhase("ei mitään")).toBeNull()

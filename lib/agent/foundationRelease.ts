@@ -293,7 +293,8 @@ export function parsePhase(text: string): PhaseKey | null {
 
   if (/valmistui\b|on valmistunut|otettiin k[aä]ytt[oö][oö]n/i.test(s)) return "completed"
   if (/harjannostajai|rakenteilla|rakennusty[öo]t (?:ovat )?(?:alkaneet|k[aä]ynniss)|rakentaminen (?:on )?(?:alkanut|edennyt|k[aä]ynniss)/i.test(s)) return "construction"
-  if (/valmistuu|muutto ajoittuu|ensihaku/i.test(s)) return "construction"
+  /* Monikko mukaan: "kohteet valmistuvat alkuvuodesta 2028". */
+  if (/valmistu(?:u|vat|massa)|muutto ajoittuu|ensihaku/i.test(s)) return "construction"
   if (/rakennuslupa|lupahakemus/i.test(s)) return "permit"
   if (/aiesopimu|tontinvaraus|suunnitell(?:aan|un)/i.test(s)) return "planning"
 
