@@ -704,6 +704,21 @@ muistin varassa.
   (ks. muistiinpano yksityisten rakennuttajien katvealueesta).
 - **Stara ja liikelaitokset** — voittajia jää poimimatta, Stara on aito
   kilpailija.
+- **Pornaisten arkisto-osio kerätään liideiksi** — kunnan sivulla on
+  kaksi osiota, "Vireillä oleva asemakaavan muutos / asemakaava" ja
+  "Hyväksytyt / voimaan tulleet asemakaavat", ja kerääjä lukee molemmat
+  (`collectPornainenKaavaSource`). Siitä syntyi 21 hanketta, joiden kaava
+  on tullut voimaan 2004–2022 — ne eivät ole koskaan olleet liidejä.
+  Tarkista sama muista lähteistä joissa voimaan tulleita on paljon
+  (Porvoo 65 %, Seinäjoki 59 %, Tuusula 51 %).
+
+- **Seinäjoen "Asemanseutu II-vaihe (01120)" puuttuu meiltä** — kaava on
+  kaupungin ajankohtaisten asemakaavojen listalla mutta meillä ei ole
+  siitä dokumenttia lainkaan. Löytyi 30.8.2026 tutkittaessa vanhaa
+  kortteli 47:n kaavaa: vanha rivi on vanhentunut, mutta juuri se
+  korvaava kaava on se elävä liidi. Tarkista `collectSeinajokiSource`-
+  listauksen kattavuus.
+
 - **Poistumispolku puuttuu rakentamisvaiheelta** — noin 2400 hanketta
   suunnittelu-, lupa- ja rakentamisvaiheissa jää listalle kunnes joku
   kertoo valmistumisesta. Kaavoitus sai polun 29.8.2026 (D-146,
