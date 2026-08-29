@@ -1,7 +1,10 @@
 import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 import { extractStreetAddress, extractStreetName } from "./extractStreetAddress"
-import { parseEstimatedCompletionDate } from "./parseFinnishCompletionDate"
+import {
+  parseEstimatedCompletionDate,
+  parseReleaseDate,
+} from "./parseFinnishCompletionDate"
 import {
   resolveParties,
   extractClientFromText,
@@ -423,8 +426,14 @@ export function createCompanyEnricher({
           : inferDesignerPhase(candidate.name, body),
         property_type:
           candidate.property_type ?? inferBuildingType(candidate.name, body),
+        /*
+         * Julkaisupaiva luetaan tiedotteesta, jotta ilman vuotta
+         * kirjoitettu kuukausi ("valmistuvat marraskuussa") voidaan
+         * ajoittaa. Ilman sita vuotta ei arvata.
+         */
         estimated_completion:
-          candidate.estimated_completion ?? parseEstimatedCompletionDate(body),
+          candidate.estimated_completion ??
+          parseEstimatedCompletionDate(body, parseReleaseDate(body)),
       }
     }
 
@@ -454,7 +463,8 @@ export function createCompanyEnricher({
     const location = candidate.location ?? extractStreetAddress(body)
     const propertyType = candidate.property_type ?? inferBuildingType(candidate.name, body)
     const completion =
-      candidate.estimated_completion ?? parseEstimatedCompletionDate(body)
+      candidate.estimated_completion ??
+      parseEstimatedCompletionDate(body, parseReleaseDate(body))
 
     return {
       ...candidate,

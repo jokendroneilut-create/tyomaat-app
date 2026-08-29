@@ -5,6 +5,42 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-142 – Kuukausi ilman vuotta oli sokea piste
+
+"Hiukkavaaran uudet rivitalokodit valmistuvat marraskuussa" — tieto on
+otsikossa, mutta valmistumisaikaa ei ollut poimittu.
+
+**POIMIJA VAATI VUOSILUVUN.** `parseEstimatedCompletionDate` tunnisti
+muodot "valmistuu marraskuussa 2026", "valmistuu syksyllä 2026" ja
+"valmistuu vuonna 2026", mutta ei pelkkää kuukautta. Se on kuitenkin
+tavallinen tapa kirjoittaa tiedotteen otsikko: vuosi on itsestään selvä
+kirjoittajalle.
+
+**VUOSI PÄÄTELLÄÄN JULKAISUPÄIVÄSTÄ, EI KULUVASTA PÄIVÄSTÄ.** Vanha
+tiedote ei kerro tästä vuodesta. Mennyt kuukausi tarkoittaa seuraavaa
+vuotta: joulukuussa julkaistu "valmistuu maaliskuussa" on ensi maaliskuu.
+Ilman julkaisupäivää vuotta ei arvata lainkaan.
+
+**JULKAISUPÄIVÄ LUETAAN TIEDOTTEESTA ITSESTÄÄN**, koska rikastajalle ei
+välitetä sitä mistään. Sananraja ei kelvannut: Laptin tekstissä lukee
+"uutinen20.8.2026" ilman välilyöntiä, jolloin koko päiväys jäi
+lukematta. Tilalle numerotarkistus.
+
+Takautuvasti 21 ehdokasta sai valmistumisajan, mm. tämä (2026-11-30).
+
+**KETJU OLI MUUTEN VALMIS.** `auto-complete-projects` ajetaan joka yö
+klo 5 ja siirtää hankkeen valmistuneeksi kun `estimated_completion` on
+mennyt. Puuttuva pala oli siis vain päivämäärän poiminta — ei
+mekanismi.
+
+**VAIHETTA EI PÄÄTELLÄ TÄSTÄ.** Tiedote kertoo milloin kohde valmistuu,
+ei sitä että se olisi jo valmistumassa. Vaiheen nosto tapahtuu vasta kun
+päivä on mennyt, eikä sitä arvata etukäteen.
+
+`lib/agent/parseFinnishCompletionDate.ts` · `lib/agent/companyRelease.ts`
+
+---
+
 ### D-141 – Taloyhtiön nimi kelpaa avaimeksi vain otsikosta ja ensimmäisestä virkkeestä
 
 Laptin Hiukkavaara jäi 38 pisteeseen, vaikka molemmissa kuvauksissa

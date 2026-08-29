@@ -11,6 +11,17 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 22.8.)
 
+### Valmistumisaika poimitaan myos ilman vuosilukua (D-142)
+
+"valmistuvat marraskuussa" jai ennen kokonaan poimimatta, koska poimija
+vaati vuosiluvun kuukauden peraan. Vuosi paatellaan nyt tiedotteen
+julkaisupaivasta, ja mennyt kuukausi tarkoittaa seuraavaa vuotta.
+
+Takautuvasti 21 ehdokasta sai valmistumisajan. Ketju oli muuten valmis:
+auto-complete-projects siirtaa hankkeen valmistuneeksi joka yo kun paiva
+on mennyt.
+
+
 ### Taloyhtion nimi erottaa oikean ehdotuksen (D-141)
 
 Ehdotuslistassa saattoi olla viisi hanketta samalla 38 pisteella, eika
