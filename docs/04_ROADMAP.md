@@ -804,7 +804,10 @@ muistin varassa.
 
 ### Operointi
 
-- **TARKISTA 16.–17.8.2026: purkautuuko `listed`-jono.** Runkotyöntekijä
+- ~~**TARKISTA 16.–17.8.2026: purkautuuko `listed`-jono.**~~ Mitattu
+  30.8.2026: `listed` = **0**, jono on purettu. `no_enricher` = 563, mikä
+  on kohdan 2 odottama tila eikä virhe. Alkuperäinen kirjaus:
+  Runkotyöntekijä
   (D-075, vaihe 2) ajastettiin 15.8. Kaksi asiaa katsottava ensimmäisen
   täyden discovery-kierroksen jälkeen:
   1. **Jonon kasvu vs. purku.** 49 legacy-lähdettä × sadat kandidaatit
@@ -824,9 +827,8 @@ muistin varassa.
   alustan kova katto 800 s.
 - **Todenna STT ja Rakennuslehti** kun ne osuvat vuoroon — korjaukset on
   tehty mutta niitä ei ole vielä ajettu kertaakaan.
-- **`sync-account-lifecycle` ei ole cronissa.** Supabasen
-  hallintapaneelista poistettu tili voi kadottaa luontipäivänsä, jos
-  täsmäytystä ei ole ajettu välissä.
+- ~~**`sync-account-lifecycle` ei ole cronissa.**~~ Tarkistettu
+  30.8.2026: se on `vercel.json`:ssa aikataululla `0 3 * * *`.
 
 ### Asiakaskäyttöliittymä
 
