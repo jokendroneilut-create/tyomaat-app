@@ -32,12 +32,6 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 const APPLY = process.argv.includes("--apply")
 const VIIVE_MS = 400
 
-/*
- * Lähteet joihin ei kohdisteta pyyntöjä: Hyvinkään Tweb kieltää
- * robots.txt:ssä kaiken paitsi syötteen, ja Vantaan päätösjärjestelmään
- * ei tehdä pyyntöjä lainkaan.
- */
-const KIELLETYT = /hyvinkaa|tweb|vantaa\.fi/i
 
 function odota(ms: number) {
   return new Promise((r) => setTimeout(r, ms))
@@ -48,6 +42,8 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { parseKaavaPaatosTekstista } = await import("../lib/agent/kaavaVoimaantulo")
   const { anchorBlockText } = await import("../lib/agent/htmlAnchorBlock")
+  /* Kaupungit jotka ovat kieltaneet koneellisen haun kirjallisesti. */
+  const { kiellettyOsoite } = await import("../lib/agent/kielletytLahteet")
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -88,8 +84,8 @@ async function main() {
     .map((d) => ({ d, h: urlMap.get(String(d.document_url)) }))
     .filter((x) => x.h && x.h.phase !== "Valmistunut" && x.h.status !== "expired" && x.h.is_public !== false)
 
-  const ohitetut = kohteet.filter((x) => KIELLETYT.test(String(x.d.document_url)))
-  const haettavat = kohteet.filter((x) => !KIELLETYT.test(String(x.d.document_url)))
+  const ohitetut = kohteet.filter((x) => kiellettyOsoite(String(x.d.document_url)))
+  const haettavat = kohteet.filter((x) => !kiellettyOsoite(String(x.d.document_url)))
 
   console.log(`${APPLY ? "AJO" : "KUIVAHARJOITUS"}: ${kohteet.length} hanketta, haetaan ${haettavat.length}`)
   if (ohitetut.length) console.log(`  ohitettu ${ohitetut.length} (lähde kieltää haun)`)

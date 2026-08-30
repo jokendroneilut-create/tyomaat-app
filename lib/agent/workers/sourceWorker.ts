@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
+
+import { kiellettyOsoite, kiellonSelitys } from "@/lib/agent/kielletytLahteet"
 import { collectApiSource } from "@/lib/agent/discovery/collectors/apiCollector"
 import { collectHtmlSource } from "@/lib/agent/discovery/collectors/htmlCollector"
 import { collectLegacySource } from "@/lib/agent/discovery/collectors/legacyFetchCollector"
@@ -179,6 +181,23 @@ export async function runSourceWorker(sourceId: string) {
     return {
       ok: false,
       error: "Source not found",
+    }
+  }
+
+  /*
+   * PORTTI: KOLME KAUPUNKIA ON KIELTANYT KONEELLISEN HAUN KIRJALLISESTI.
+   *
+   * Lupaus oli tahan asti vain dokumentissa. Jos kielletty osoite
+   * paatyisi discovery_sources-tauluun vahingossa, mikaan ei estaisi
+   * ajoa. Nyt ajo kieltaytyy ennen ensimmaista pyyntoa.
+   */
+  const kielto = kiellettyOsoite(String(source.url ?? ""))
+  if (kielto) {
+    return {
+      ok: false,
+      sourceId: source.id,
+      source: source.name,
+      error: kiellonSelitys(kielto),
     }
   }
 

@@ -5,6 +5,77 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-149 – Lappeenranta kieltaytyi, ja kielto koodattiin portiksi
+
+**LAPPEENRANTA EI ANNA LUPAA.** Lupapyynto rakennushankkeita koskevien
+paatosten koneluettavasta hausta lahetettiin kirjaamoon 8.8.2026.
+Konsernihallinto vastasi 30.8.2026:
+
+> *"Olemme kayneet asiaa sisaisesti lapi ja paatyneet siihen, etta
+> kayttolupaa ei myonneta, koska julkaisujarjestelmamme kanssa on ollut
+> paljon ongelmia."*
+
+Perustelu on eri kuin Hyvinkaalla ja Vantaalla. Ne vetosivat
+yhdenvertaisuuteen ("emme muuta asetuksia yksittaisille toimijoille");
+Lappeenranta vetoaa oman julkaisujarjestelmansa vakauteen. Vastaus ei siis
+ole kannanotto meihin vaan jarjestelmaan.
+
+**KOLMAS KIELTO, JA ERI TUOTE.** D-098:n paatelma oli "Tweb-perhe on
+suljettu koneelliselta luvulta". Lappeenrannalla on M-Files, ei Tweb — ja
+vastaus on sama. Kielto ei siis ole tuoteominaisuus vaan kuntien linja:
+
+```
+Hyvinkaa      Tweb      21.8.2026   ei lupaa (yhdenvertaisuus)
+Vantaa        Tweb      24.8.2026   ei lupaa (yhdenvertaisuus + kuormitus)
+Lappeenranta  M-Files   30.8.2026   ei lupaa (jarjestelman ongelmat)
+```
+
+Neljatta lupakirjetta ei kannata lahettaa samalla kysymyksella. Jos
+paatoksiin halutaan reitti, se haetaan muualta kuin luvasta.
+
+**HYVINKAAN JATKOKYSYMYS SAI VASTAUKSEN 30.8.2026.** D-098:ssa todettiin
+etta poytakirjasyotteessa on KOKOUKSIA eika paatoksia, ja kaupungilta
+kysyttiin onko syotetta jonka kohteena on yksittainen asia otsikkoineen.
+Vastaus:
+
+> *"Viranhaltijapaatosten otsikot loytyvat Viranhaltijapaatokset-sivun
+> RSS-syotteesta. Kokouspykalista jarjestelmatoimittajan vastaus oli, etta
+> RSS-syotteita ei ole saatavilla talla hetkella kokoussivulta, jossa
+> nakyvat pykalat."*
+
+Tama on ensimmainen myonteinen tieto koko lupakierroksesta: **otsikollinen
+syote on olemassa** viranhaltijapaatoksille. Kokouspykalille ei ole
+syotetta eika sellaista ole tulossa.
+
+Sita ei ole viela mitattu. Syotteen osoite pitaa saada kysymalla, EI
+sivustoa selaamalla — kirjallinen lupaus koskee yha kaikkea muuta paitsi
+syotetta.
+
+**KIELTO ON NYT KOODISSA, EI VAIN DOKUMENTISSA.** Lupaus "emme hae"
+eli tahan asti dokumentissa ja yhden skriptin sisaisena regexina.
+`lib/agent/kielletytLahteet.ts` kokoaa kolme kieltoa yhteen ja
+`runSourceWorker` kieltaytyy ennen ensimmaista pyyntoa, jos kielletty
+osoite paatyisi lahdetauluun vahingossa.
+
+Kaksi tarkennusta, jotka on helppo ymmartaa vaarin:
+
+  1. **Kielto koskee paatosjarjestelmaa, ei kaupunkia.** Lappeenrannan
+     kaavoitussivu (`www.lappeenranta.fi`) on eri jarjestelma ja se on
+     kaytossa. Tarkistettu 30.8.2026: `lappeenranta-kaavat-vireilla` on
+     ainoa Lappeenranta-lahde, eika yhdessakaan dokumentissa ole
+     mfiles-osoitetta.
+  2. **Hyvinkaan syote on poikkeus**, koska kaupunki suositteli sita itse
+     kirjallisesti kahdesti — mutta vain syote, ei sen linkkien takana
+     olevat asiakirjat. Se on erikseen pyydettava `salliRssSyote`-lipulla.
+
+Sahkopostien nimet ja yhteystiedot jatettiin kirjaamatta: repo on
+julkinen, eika virkahenkilon yhteystietoja tarvita paatoksen
+ymmartamiseen.
+
+`lib/agent/kielletytLahteet.ts` · `lib/agent/workers/sourceWorker.ts`
+
+---
+
 ### D-148 – Lainvoimainen kaava siirtyy suunnitteluvaiheeseen
 
 Kun kaava on tullut voimaan, kaavoitus on ohi ja rakentaminen on

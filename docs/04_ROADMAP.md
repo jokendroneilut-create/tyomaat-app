@@ -702,6 +702,15 @@ muistin varassa.
 - **Fingridin liityntähankkeet** — yksityisten suurhankkeiden katvealue.
   Microsoftin Kirkkonummen datakeskus osui meihin vain YVA:n kautta
   (ks. muistiinpano yksityisten rakennuttajien katvealueesta).
+- **Hyvinkään viranhaltijapäätösten RSS-syöte** — kaupunki vahvisti
+  30.8.2026 että viranhaltijapäätösten otsikot ovat omassa
+  RSS-syötteessään (kokouspykälille syötettä ei ole). Se on ainoa
+  myönteinen tieto koko lupakierroksesta, ja ensimmäinen otsikollinen
+  kanava Tweb-kunnasta. Syötteen osoite on saatava **kysymällä, ei
+  sivustoa selaamalla** — kirjallinen lupaus koskee yhä kaikkea muuta
+  paitsi syötettä (D-098, D-149). Sen jälkeen mittaa kelpaako otsikkotaso
+  hankkeen tunnistamiseen.
+
 - **Stara ja liikelaitokset** — voittajia jää poimimatta, Stara on aito
   kilpailija.
 - **Pornaisten arkisto-osio kerätään liideiksi** — kunnan sivulla on
