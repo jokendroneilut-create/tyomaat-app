@@ -11,6 +11,29 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-08 (tyo 30.8.)
 
+### Kaavan elinkaari sai molemmat paat (D-150, D-152)
+
+Kaavoitushankkeilla ei ollut yhtaan poistumistapaa. Nyt niita on kaksi,
+ja molemmat nojaavat lahteen omaan tietoon.
+
+Pornaisten sivun arkisto-osiosta oli syntynyt 21 hanketta joiden kaava
+tuli voimaan 2004-2024. Keraaja tunnistaa arkistorivin nyt OSIOSTA eika
+tekstista: sivun 25 arkistorivista kolme ei kerro voimaantulosta
+tekstissaan lainkaan, ja juuri ne olisivat livahtaneet ehdokkaiksi.
+
+Vanha lainvoimainen kaava poistuu nakyvista 24 kuukauden jalkeen, kumottu
+iasta riippumatta. Ajettu 41 hanketta. Perustelu tarkistettiin lahteista:
+Oulun Tuiran monitoimitalo valmistui kesalla 2025 ja Kestilan Kokkonevan
+tuulipuisto kevaalla 2022 - molemmat nakyivat vaiheessa "Kaavoitus".
+
+Tarkistettiin myos kolme muuta lahdetta joissa voimaan tulleita on paljon
+(D-151). Porvoo ja Tuusula ovat puhtaita; Seinajoen ja Oulun vuoto ei
+johdu sivurakenteesta vaan siita etta suoja nojaa budjetoituun
+detaljisivun hakuun ja saapuu myohassa.
+
+Voimaan tulleita mutta yha nakyvia hankkeita: 0. Nakyvia hankkeita 5732.
+
+
 ### Lainvoimainen kaava siirtyy suunnitteluvaiheeseen (D-148)
 
 Voimaan tullut kaava jai vaiheeseen "Kaavoitus" samaan kasaan juuri

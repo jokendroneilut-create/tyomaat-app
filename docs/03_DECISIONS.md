@@ -5,6 +5,43 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-153 – Seinajoen "puuttuva kaava" ei puuttunut; kattavuus on taydellinen
+
+Eilen kirjattiin tyojonoon, etta Seinajoen "Asemanseutu II-vaihe (01120)"
+puuttuu meilta ja etta `collectSeinajokiSource`-listauksen kattavuus on
+tarkistettava. **Vaara paatelma.** Kattavuus mitattiin 30.8.2026:
+
+```
+kaupungin listalla   104 kaavaa
+meilla dokumenttina  105
+puuttuu meilta         0
+meilla mutta ei enaa sivulla   1   (Nurmo, kortteli 1004 - kaava lopetettu)
+```
+
+Kerääjä lukee siis kaiken minka kaupunki listaa.
+
+**SIVUA EI OLE OLEMASSA.** Osoite `.../keskusta-asemanseutu-ii-vaihe-01120/`
+vastaa **404** (myos ilman kauttaviivaa), kaupungin oma haku `?s=01120`
+antaa nolla osumaa, eika sivustolla ole yhtaan linkkia siihen. Hakukoneen
+tulos on vanhentunut: sen mukaan sivu on paivitetty viimeksi 9.8.2023.
+
+**MITEN VIRHE SYNTYI.** Paatelma tehtiin HAKUKONEEN tuloslistasta, ei
+lahteesta. Kaksi tulosta samasta hausta — vanha kortteli 47 ja II-vaihe —
+nayttivat yhdessa silta kuin jalkimmainen olisi elava jatko jonka olemme
+missanneet. Kumpaakaan ei avattu.
+
+Sama vaatimus kuin poimintojen kohdalla patee siis myos paatelmiin
+lahteen kattavuudesta: **avaa osoite, ala paattele listauksesta.**
+
+**MITA SIITA JAA.** Asemanseudun rakentaminen on aito ja kaynnissa —
+ensimmainen vaihe avattiin joulukuussa 2024 ja alue rakentuu neljassa
+vaiheessa noin 18 hehtaarille. Mutta kaupunki ei julkaise siita kaavaa
+"ajankohtaiset asemakaavat" -listalla, joten se ei ole meidan
+kattavuusaukkomme vaan lahteen rajaus. Jos alue halutaan nakyviin, se on
+haettava muualta kuin kaavalistalta.
+
+---
+
 ### D-152 – Vanha lainvoimainen kaava poistuu nakyvista
 
 Vaiheen siirto (D-148) hoiti tuoreet, tama hoitaa loput. Sama kynnys, 24

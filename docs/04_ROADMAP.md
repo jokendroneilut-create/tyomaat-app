@@ -723,12 +723,11 @@ muistin varassa.
   on budjetoitu, joten ehdokas syntyy ennen kuin tila tiedetään. Ne
   korjautuvat vanhentamissäännöllä, ei lähdekohtaisella muutoksella.
 
-- **Seinäjoen "Asemanseutu II-vaihe (01120)" puuttuu meiltä** — kaava on
-  kaupungin ajankohtaisten asemakaavojen listalla mutta meillä ei ole
-  siitä dokumenttia lainkaan. Löytyi 30.8.2026 tutkittaessa vanhaa
-  kortteli 47:n kaavaa: vanha rivi on vanhentunut, mutta juuri se
-  korvaava kaava on se elävä liidi. Tarkista `collectSeinajokiSource`-
-  listauksen kattavuus.
+- ~~**Seinäjoen "Asemanseutu II-vaihe (01120)" puuttuu meiltä**~~
+  **Väärä havainto, korjattu 30.8.2026 (D-153).** Sivu vastaa 404 eikä
+  kaupungin oma haku löydä sitä — hakukoneen tulos oli vanhentunut.
+  Kattavuus mitattiin samalla: kaupungin listalla 104 kaavaa, meillä 105
+  dokumenttia, puuttuu 0. Kerääjässä ei ole vikaa.
 
 - ~~**Vanha lainvoimainen kaava pois näkyvistä**~~ Tehty 30.8.2026
   (D-152): 41 hanketta vanhennettu, cron `expire-stale-zoning` 5:20.
