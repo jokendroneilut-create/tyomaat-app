@@ -5,6 +5,53 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-151 – Porvoo ja Tuusula eivat vuoda; Seinajoki ja Oulu vuotavat, ja syy on eri
+
+Pornaisten korjauksen (D-150) jalkeen tarkistettiin kolme lahdetta joissa
+voimaan tulleita dokumentteja on paljon. Odotus oli, etta niissa on sama
+kahden osion rakenne. **Ei ole.**
+
+```
+lahde                                voimassa  hanke  nakyy
+Seinajoen ajankohtaiset asemakaavat        62     44     43
+Oulun vireilla olevat kaavat               47     17     17
+Porvoon asemakaavat                        44      0      0
+Tuusulan vireilla olevat kaavat            38      0      0
+```
+
+**PORVOO JA TUUSULA OVAT PUHTAITA.** Molemmilla on suoja ja se toimii:
+Tuusulan kartta-aineistossa on rakenteinen kentta `date_legal`
+(38/74 riville asetettu) ja keraaja lukee sen suoraan; Porvoo tunnistaa
+tilan sivun omasta tekstista. Kumpikaan ei ole tuottanut yhtaan hanketta
+voimaan tulleesta kaavasta. Sivurakenne ei siis ole ongelma — kummassakaan
+ei ole erillista arkisto-osiota, vaan luettelo sisaltaa kaikki kaavat ja
+tila luetaan riviltä.
+
+**SEINAJOEN JA OULUN VUOTO EI OLE RAKENTEESSA VAAN JARJESTYKSESSA.**
+Molemmilla on sama suoja, mutta se nojaa DETALJISIVUN hakuun, ja haku on
+budjetoitu: Seinajoki 8 sivua ajossa, Oulu 2 listasivua vuorokaudessa ja
+25 detaljia ajossa. Kun listarivi tallennetaan ennen kuin sen tilaa
+tiedetaan, `completed` on false ja ehdokas syntyy. Tila selviaa vasta
+paivia myohemmin — jolloin hanke on jo voitu hyvaksya.
+
+Suoja ei siis puutu; se saapuu myohassa.
+
+**KORJAUS EI OLE UUSI SUOJA VAAN JALKIKATEINEN.** Ehdokkaan luonnin
+viivastaminen siihen asti kunnes tila tiedetaan hidastaisi myos aitoja
+liideja viikolla. Parempi on antaa tiedon korjata itsensa, kun se
+saapuu:
+
+  - tuore lainvoima -> vaihe eteenpain (D-148, tehty, cron 5:15)
+  - vanha lainvoima -> pois nakyvista (tekematta)
+
+Jalkimmainen on se tyojonon kohta joka kattaa naiden kahden lahteen
+43 + 17 rivia. Pornaisten kaltaista lahdekohtaista korjausta ei tarvita.
+
+Mitattu 30.8.2026. Voimaan tulleita dokumentteja 370, niista hankkeena
+130, ja asiakkaalle nakyvia 106 (oli 127 ennen Pornaisten siivousta).
+
+---
+
 ### D-150 – Arkisto-osio tunnistetaan osiosta, ei tekstista
 
 Pornaisten kaavasivulla on kaksi osiota: "Vireilla oleva asemakaavan

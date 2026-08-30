@@ -715,9 +715,13 @@ muistin varassa.
   kilpailija.
 - ~~**Pornaisten arkisto-osio kerätään liideiksi**~~ Tehty 30.8.2026
   (D-150): arkistorivi tunnistetaan nyt osiosta eikä tekstistä, ja 21
-  hanketta vanhennettiin. **Auki yhä:** sama tarkistus muissa lähteissä
-  joissa voimaan tulleita on paljon — Porvoo 65 %, Seinäjoki 59 %,
-  Tuusula 51 %. Niiden sivurakennetta ei ole vielä katsottu.
+  hanketta vanhennettiin. Muut kolme lähdettä tarkistettu
+  samana päivänä (D-151): **Porvoo ja Tuusula eivät vuoda** — niiden
+  suoja toimii eikä yhtään voimaan tullutta kaavaa ole päätynyt
+  hankkeeksi. Seinäjoki (43 näkyvää) ja Oulu (17) vuotavat, mutta syy ei
+  ole sivurakenne vaan järjestys: suoja nojaa detaljisivun hakuun, joka
+  on budjetoitu, joten ehdokas syntyy ennen kuin tila tiedetään. Ne
+  korjautuvat vanhentamissäännöllä, ei lähdekohtaisella muutoksella.
 
 - **Seinäjoen "Asemanseutu II-vaihe (01120)" puuttuu meiltä** — kaava on
   kaupungin ajankohtaisten asemakaavojen listalla mutta meillä ei ole
