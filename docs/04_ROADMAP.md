@@ -713,13 +713,11 @@ muistin varassa.
 
 - **Stara ja liikelaitokset** — voittajia jää poimimatta, Stara on aito
   kilpailija.
-- **Pornaisten arkisto-osio kerätään liideiksi** — kunnan sivulla on
-  kaksi osiota, "Vireillä oleva asemakaavan muutos / asemakaava" ja
-  "Hyväksytyt / voimaan tulleet asemakaavat", ja kerääjä lukee molemmat
-  (`collectPornainenKaavaSource`). Siitä syntyi 21 hanketta, joiden kaava
-  on tullut voimaan 2004–2022 — ne eivät ole koskaan olleet liidejä.
-  Tarkista sama muista lähteistä joissa voimaan tulleita on paljon
-  (Porvoo 65 %, Seinäjoki 59 %, Tuusula 51 %).
+- ~~**Pornaisten arkisto-osio kerätään liideiksi**~~ Tehty 30.8.2026
+  (D-150): arkistorivi tunnistetaan nyt osiosta eikä tekstistä, ja 21
+  hanketta vanhennettiin. **Auki yhä:** sama tarkistus muissa lähteissä
+  joissa voimaan tulleita on paljon — Porvoo 65 %, Seinäjoki 59 %,
+  Tuusula 51 %. Niiden sivurakennetta ei ole vielä katsottu.
 
 - **Seinäjoen "Asemanseutu II-vaihe (01120)" puuttuu meiltä** — kaava on
   kaupungin ajankohtaisten asemakaavojen listalla mutta meillä ei ole

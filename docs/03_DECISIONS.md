@@ -5,6 +5,53 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-150 – Arkisto-osio tunnistetaan osiosta, ei tekstista
+
+Pornaisten kaavasivulla on kaksi osiota: "Vireilla oleva asemakaavan
+muutos / asemakaava" ja "Hyvaksytyt / voimaan tulleet asemakaavat".
+Keraaja luki molemmat samalla tavalla, joten arkistosta syntyi 21
+hanketta joiden kaava on tullut voimaan 2004-2024. Ne eivat ole koskaan
+olleet liideja — Kotojarven kartanon kuvaus on kokonaisuudessaan
+"Kaavakartta, -merkinnat ja -maaraykset. Hyvaksytty: kunnanvaltuusto
+8.11.2004. Tullut voimaan: 14.12.2004".
+
+**OSIO ON TOTUUS, EI TEKSTI.** Keraajassa oli jo suoja: `completed`
+asetetaan kun vaiheteksti kertoo voimaantulosta, eika valmiista tehda
+ehdokasta. Se ei riittanyt. Mitattu 30.8.2026: sivun 25 arkistorivista
+KOLME ei kerro voimaantulosta tekstissaan lainkaan — niiden vaiheeksi
+paateltiin "Hyvaksyminen" tai "Vireilletulo", ja juuri ne olisivat
+livahtaneet ehdokkaiksi. Nyt arkistorivi tunnistetaan siita OSIOSTA
+jossa se on, ja teksti on vain lisatieto.
+
+**OSIOTA EI LOPETETTU KERAAMASTA.** Se on ainoa paikka josta nakee
+milloin vireilla ollut kaava on paattynyt. Rivi kerataan, mutta siita ei
+tehda ehdokasta.
+
+**SIIVOUS.** 21 hanketta sai tilan `expired`, syy
+`lahteen_arkisto_osio`. Kaksi jai: Pekkolantie (voimaan 11/2025) ja
+Monitoimihalli-paloasema (4/2025) ovat arkistossa mutta tuoreita, ja ne
+siirtyivat eilen suunnitteluvaiheeseen (D-148). Kynnys on sama 24
+kuukautta kuin siella — vasta arkistoon siirtynyt kaava tarkoittaa etta
+kaavoitus juuri paattyi ja rakentaminen voi alkaa, eli se on liidi eika
+roska.
+
+```
+ennen   26 hanketta, joista 23 arkistosta
+jalkeen 21 expired · 3 vireilla olevaa · 2 tuoretta suunnittelussa
+```
+
+Ilman voimaantulopaivaa ei vanhenneta: silloin ei tiedeta kumpi tapaus
+on kyseessa.
+
+**AVOIN.** Sama tarkistus on tekematta muissa lahteissa joissa voimaan
+tulleita on paljon: Porvoo 65 %, Seinajoki 59 %, Tuusula 51 %. Vanhoja
+lainvoimaisia kaavoja nakyy yha 41 (oli 62).
+
+`lib/agent/discovery/collectors/apiCollector.ts` ·
+`scripts/expire-archive-zoning.ts`
+
+---
+
 ### D-149 – Lappeenranta kieltaytyi, ja kielto koodattiin portiksi
 
 **LAPPEENRANTA EI ANNA LUPAA.** Lupapyynto rakennushankkeita koskevien

@@ -28081,18 +28081,38 @@ function pornainenExtractBlocks($: cheerio.CheerioAPI, sectionId: string): Porna
   return blocks
 }
 
+/*
+ * ARKISTO-OSIO EI OLE LIIDEJÄ.
+ *
+ * Kunnan sivulla on kaksi osiota: "Vireillä oleva asemakaavan muutos /
+ * asemakaava" ja "Hyväksytyt / voimaan tulleet asemakaavat".
+ * Jälkimmäinen on arkisto — kaavat ovat lainvoimaisia, osa 2000-luvun
+ * alusta. Ne luettiin samalla tavalla kuin vireillä olevat, ja niistä
+ * syntyi 21 hanketta joiden kaava tuli voimaan 2004-2022.
+ *
+ * Osio kerätään yhä, koska siitä näkee milloin vireillä ollut kaava on
+ * päättynyt — mutta arkistorivistä EI tehdä ehdokasta. Tunnistus tehdään
+ * OSION perusteella eikä tekstistä: tekstistä pääteltynä kolme riviä
+ * 28:sta jäisi tunnistamatta ("Hyväksyminen", "Vireilletulo"), koska
+ * niiden kuvauksessa ei lue voimaantulosta.
+ */
+const PORNAINEN_ARKISTO_OSIOT = new Set([
+  "hyvaksytyt-voimaan-tulleet-asemakaavat",
+  "hyvaksytyt-voimaan-tulleet-osayleiskaavat",
+])
+
 async function pornainenFetchBlocks(
   url: string,
   sectionIds: string[],
   energyOnly: boolean
-): Promise<{ title: string; phase: string; description: string | null }[]> {
+): Promise<{ title: string; phase: string; description: string | null; arkisto: boolean }[]> {
   const response = await fetch(url, { cache: "no-store" })
   if (!response.ok) return []
 
   const $ = cheerio.load(await response.text())
   const energyPattern = /tuulivoima|aurinkovoima|tuulipuisto|aurinkopuisto/i
 
-  const results: { title: string; phase: string; description: string | null }[] = []
+  const results: { title: string; phase: string; description: string | null; arkisto: boolean }[] = []
 
   for (const sectionId of sectionIds) {
     for (const block of pornainenExtractBlocks($, sectionId)) {
@@ -28104,6 +28124,7 @@ async function pornainenFetchBlocks(
         title: block.title,
         phase: pornainenPhaseFromText(fullText),
         description: bodyText || null,
+        arkisto: PORNAINEN_ARKISTO_OSIOT.has(sectionId),
       })
     }
   }
@@ -28135,7 +28156,8 @@ async function collectPornainenKaavaSource(source: DiscoverySource) {
   const slugCounts = new Map<string, number>()
 
   for (const item of items) {
-    const completed = item.phase === "Voimaantulo"
+    /* Arkistorivi on aina paattynyt, sanoi teksti mita tahansa. */
+    const completed = item.arkisto || item.phase === "Voimaantulo"
     const baseSlug = kemiSlug(item.title)
     const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
     slugCounts.set(baseSlug, occurrence)
@@ -28164,6 +28186,7 @@ async function collectPornainenKaavaSource(source: DiscoverySource) {
           description: item.description,
           contacts: [],
           completed,
+          arkisto: item.arkisto,
         },
         processed_at: new Date().toISOString(),
         last_seen_at: new Date().toISOString(),
