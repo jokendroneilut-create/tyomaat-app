@@ -204,10 +204,11 @@ Kuivaharjoituksen voi ajaa milloin vain, se ei kirjoita mitaan:
   vaiheeseen "Suunnittelu". Cron `advance-effective-zoning` (5:15)
   pitää tiedon ajan tasalla.
 
-  **Yhä auki:** ne 45 hanketta joiden kaava tuli voimaan ennen vuotta
-  2023. Ne ovat listalla vaiheessa "Kaavoitus" vaikka kohde on joko
-  rakennettu tai ei toteudu. Poistaminen näkyvistä on eri päätös kuin
-  tuoreen nostaminen eteenpäin, eikä sitä pidä tehdä samalla säännöllä.
+  **Vanhat on poistettu näkyvistä** (D-152, 30.8.2026): 41 hanketta,
+  joiden kaava sai lainvoiman yli 24 kk sitten, sai tilan `expired`.
+  Mukana yksi kumottu kaava, joka poistuu iästä riippumatta. Cron
+  `expire-stale-zoning` (5:20) pitää tiedon ajan tasalla. Voimaan
+  tulleita mutta yhä näkyviä on nyt **0**.
 - **Kynnys 60 vrk on mitoitettu varmuudella, ei mittauksella.** Kanta on
   kuusi viikkoa vanha, joten todellista katoamisnopeutta ei voi vielä
   laskea. Kynnys kannattaa mitata uudelleen kun `last_seen_at` on

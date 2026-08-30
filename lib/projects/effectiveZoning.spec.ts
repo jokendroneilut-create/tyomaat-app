@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { TUORE_KUUKAUDET, evaluateEffectiveZoning } from "./effectiveZoning"
+import {
+  TUORE_KUUKAUDET,
+  evaluateEffectiveZoning,
+  evaluateStaleZoning,
+} from "./effectiveZoning"
 
 const NYT = new Date("2026-08-30T12:00:00Z")
 const kkSitten = (n: number) => {
@@ -56,5 +60,36 @@ describe("evaluateEffectiveZoning", () => {
   /* Tulevaisuuden paiva on poimintavirhe, ei lainvoima. */
   it("ei siirra tulevaisuuden paivalla", () => {
     expect(evaluateEffectiveZoning({ ...perus, voimaantulo: "2027-01-01" })).toBe("keep")
+  })
+})
+
+describe("evaluateStaleZoning", () => {
+  /* Tuiran monitoimitalo valmistui 2025, kaava voimaan 2022. */
+  it("vanhentaa vanhan lainvoimaisen kaavan", () => {
+    expect(evaluateStaleZoning({ ...perus, voimaantulo: "2022-12-14" })).toBe("expire")
+  })
+
+  /* Tuore lainvoima on paras liidi, ei roska - se siirtyy vaiheessa eteenpain. */
+  it("ei vanhenna tuoretta", () => {
+    expect(evaluateStaleZoning({ ...perus, voimaantulo: kkSitten(3) })).toBe("keep")
+    expect(evaluateStaleZoning({ ...perus, voimaantulo: kkSitten(TUORE_KUUKAUDET) })).toBe("keep")
+  })
+
+  /* Kumottua kaavaa ei ole olemassa, joten ika ei muuta asiaa. */
+  it("vanhentaa kumotun iasta riippumatta", () => {
+    expect(evaluateStaleZoning({ ...perus, tila: "kumottu", voimaantulo: kkSitten(1) })).toBe("expire")
+    expect(evaluateStaleZoning({ ...perus, tila: "kumottu", voimaantulo: null })).toBe("expire")
+  })
+
+  it("ei vanhenna ilman paivaa eika kesken olevaa", () => {
+    expect(evaluateStaleZoning({ ...perus, voimaantulo: null })).toBe("keep")
+    expect(evaluateStaleZoning({ ...perus, tila: "kesken", voimaantulo: "2012-01-01" })).toBe("keep")
+  })
+
+  /* Pidemmalla oleva hanke on toisen lahteen tietoa, ei kaavasivun. */
+  it("ei koske hankkeeseen joka on jo pidemmalla", () => {
+    for (const vaihe of ["Suunnittelu", "Rakennuslupa", "Rakenteilla"]) {
+      expect(evaluateStaleZoning({ ...perus, phase: vaihe, voimaantulo: "2012-01-01" })).toBe("keep")
+    }
   })
 })

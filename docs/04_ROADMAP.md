@@ -730,6 +730,9 @@ muistin varassa.
   korvaava kaava on se elävä liidi. Tarkista `collectSeinajokiSource`-
   listauksen kattavuus.
 
+- ~~**Vanha lainvoimainen kaava pois näkyvistä**~~ Tehty 30.8.2026
+  (D-152): 41 hanketta vanhennettu, cron `expire-stale-zoning` 5:20.
+
 - **Poistumispolku puuttuu rakentamisvaiheelta** — noin 2400 hanketta
   suunnittelu-, lupa- ja rakentamisvaiheissa jää listalle kunnes joku
   kertoo valmistumisesta. Kaavoitus sai polun 29.8.2026 (D-146,

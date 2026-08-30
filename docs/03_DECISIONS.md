@@ -5,6 +5,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-152 – Vanha lainvoimainen kaava poistuu nakyvista
+
+Vaiheen siirto (D-148) hoiti tuoreet, tama hoitaa loput. Sama kynnys, 24
+kuukautta, toiseen suuntaan: yli kaksi vuotta sitten lainvoiman saanut
+kaava tarkoittaa etta kohde on rakennettu tai ei toteudu.
+
+**PERUSTELU ON TARKISTETTU, EI PAATELTY.** Kaksi listan hanketta
+tutkittiin lahteista 30.8.2026: Oulun Tuiran monitoimitalo valmistui
+kesalla 2025 ja koulu aloitti syksylla, Kestilan Kokkonevan tuulipuisto
+(9 x Nordex, 43,2 MW) valmistui kevaalla 2022. Molemmat nakyivat
+asiakkaalle vaiheessa "Kaavoitus".
+
+**KUMOTTU POISTUU IASTA RIIPPUMATTA.** Hallinto-oikeuden kumoamaa kaavaa
+ei ole olemassa, joten se ei ole liidi minaan ikaisena. Naita oli yksi
+(Seinajoen Roves). Jos kaupunki aloittaa kaavan alusta, lahteelle syntyy
+uusi vireilla oleva rivi.
+
+**AJETTU 30.8.2026: 41 hanketta.** Vanhin voimaan 16.3.2011, tuorein
+26.7.2024. Lahteittain Seinajoki 28, Oulu 12, Siikalatva 1 — samat kaksi
+lahdetta joiden vuoto mitattiin D-151:ssa, eli lahdekohtaista korjausta
+ei todella tarvittu.
+
+```
+ennen                    5773 nakyvaa hanketta
+jalkeen                  5732
+expired yhteensa           62   lainvoimainen yli 24 kk  40
+                                lahteen arkisto-osio     21
+                                kumottu                   1
+voimaan tullut mutta yha nakyvissa: 0
+```
+
+**VANHENEMINEN EI OLE POISTO.** Rivi ja historia sailyvat, syy on
+luettavissa (`expired_reason`, `expired_detail`), ja hanke nakyy yha
+omissa niille jotka ovat sen tallentaneet: `/crm` hakee suosikit
+tunnuksella eika suodata tilaa. Tarkistettu: yksikaan vanhennetuista ei
+ollut kenenkaan omissa, joten kukaan ei menettanyt mitaan.
+
+Cron `expire-stale-zoning` klo 5:20. Toinen ajo samana paivana palautti
+nollan, eli saanto on vakaa eika kayta samoja rivejä uudelleen.
+
+**AVOIN, JA SE ON ERI ASIA.** Seinajoen "Keskusta, kortteli 47, aseman
+alue" vanheni oikein — kaava on kaytetty loppuun — mutta paikka on
+elava: asemanseutua rakennetaan neljassa vaiheessa ja sen jatko on oma
+kaavansa "Asemanseutu II-vaihe (01120)", jota meilla ei ole. Vanhennus ei
+siis poistanut liidia, mutta se paljastaa etta korvaava kaava puuttuu.
+Se on tyojonossa erikseen.
+
+`lib/projects/effectiveZoning.ts` ·
+`app/api/admin/expire-stale-zoning/route.ts`
+
+---
+
 ### D-151 – Porvoo ja Tuusula eivat vuoda; Seinajoki ja Oulu vuotavat, ja syy on eri
 
 Pornaisten korjauksen (D-150) jalkeen tarkistettiin kolme lahdetta joissa
