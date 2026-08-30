@@ -741,13 +741,12 @@ muistin varassa.
   joiden lähde kertoo kaavan tulleen voimaan. Ei syy piilottaa vaan syy
   siirtää vaihetta eteenpäin.
 
-- **Samannimiset lohkot muissa kaavalähteissä** — Pietarsaaressa kaksi
-  eri kaavaa samalla otsikolla kirjoittui samaan tunnisteeseen, ja
-  toinen katosi kokonaan ilman että mikään laskuri kertoi siitä
-  (D-145). Yli 20 muuta kaavalähdettä muodostaa dokumentin osoitteen
-  samalla tavalla otsikosta. Tarkistus vaatii sivujen uudelleenhaun.
-  Halvin yleinen suoja: kerääjä huomauttaa kun kaksi lohkoa tuottaa
-  saman osoitteen samalla ajolla.
+- ~~**Samannimiset lohkot muissa kaavalähteissä**~~ Tarkistettu
+  30.8.2026 (D-154): 143 listaussivua, kahdeksalla otsikko toistuu,
+  **menetyksiä 0** — ainoa aito oli Pietarsaari ja se on korjattu.
+  Tarkistus on skriptinä (`scripts/check-duplicate-blocks.ts`) ja sen
+  voi ajaa uudelleen. Kolme sivua vastasi virheellä eikä niitä käyty
+  läpi.
 
 - **Ruotsinkieliset päätökset** — jäävät poimimatta.
 - **RPT-lista:** Tampereen 9 kadonnutta ehdokasta, Turku ei aja,

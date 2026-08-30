@@ -5,6 +5,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-154 – Samannimisten lohkojen tarkistus: ei yhtaan menetysta, ja mittari ylihalytti kahdesti
+
+Pietarsaaren kaksi samannimista kaavaa (D-145) herattivat kysymyksen:
+yli 20 kaavalahdetta muodostaa dokumentin osoitteen otsikosta, joten
+sama katoaminen voi olla kaynnissa muuallakin nakymatta. Tarkistus
+tehtiin 30.8.2026.
+
+```
+ankkuriosoitteita kayttavia listaussivuja   143 haettu (3 virhetta)
+sivuja joilla otsikko toistuu                 8
+niista menettaa kaavan                        0
+```
+
+**AINOA AITO ON JO KORJATTU.** Pietarsaaren "asemakaavan-muutos-
+keskustassa": 2 lohkoa, 3 dokumenttia — eli erottelu toimii.
+
+**MITTARI YLIHALYTTI KAHDESTI, JA KUMPIKIN VERSIO NAYTTI USKOTTAVALTA.**
+
+  1. *Ensimmainen versio* laski toistuvat otsikot ja ilmoitti viisi
+     lahdetta menettavaksi. Kasin luettuna jokainen oli sama kaava
+     kahdella otsikkotasolla (h3 ja h4), otsikko ja tyhja linkkirivi, tai
+     otsikko toistettuna asiakirjaryhmille.
+  2. *Toinen versio* vertasi lohkojen sisaltoja ja putosi neljaan.
+     Nekin osoittautuivat kasin samoiksi: lyhyt paivamaarahuomautus
+     ("OAS oli nahtavilla 28.1.-18.2.2026") ja asiakirjalista
+     ("Kuulutus, Kaavakartta, Kaavaselostus") eroavat sanoina mutta
+     kertovat samasta kaavasta.
+
+Vasta kolmas versio erottaa oikein, ja se vaatii KAKSI ehtoa: molemmissa
+lohkoissa on oltava oikeaa kuvaustekstia (>= 120 merkkia) JA sanastojen
+on erottava (yhteisia sanoja alle 60 %). Ehdot on johdettu niista
+sivuista jotka ylihalyttivat, ja juuri ne sivut ovat nyt testien
+kiintopisteina — Keuruu, Sakyla, Tohmajarvi vaarina ja Pietarsaari
+aitona.
+
+**MIKSI TAMA KANNATTI KIRJATA.** Kaksi kertaa perakkain mittari antoi
+listan joka nayttti tyolistalta: viisi kuntaa, sitten nelja. Molemmilla
+kerroilla korjaus olisi ollut turha ja olisi muuttanut toimivia
+keraajia. Kolmen sivun avaaminen kasin maksoi kymmenen minuuttia ja
+sailytti ne ennallaan.
+
+**MITA JAI TARKISTAMATTA.** Kolme listaussivua vastasi virheella (Loppi
+HTTP 500 ja kaksi muuta), joten niita ei kaytu lapi. Tarkistuksen voi
+ajaa uudelleen: `npx tsx scripts/check-duplicate-blocks.ts`. Se ei
+kirjoita mitaan.
+
+`lib/agent/htmlAnchorBlock.ts` · `scripts/check-duplicate-blocks.ts`
+
+---
+
 ### D-153 – Seinajoen "puuttuva kaava" ei puuttunut; kattavuus on taydellinen
 
 Eilen kirjattiin tyojonoon, etta Seinajoen "Asemanseutu II-vaihe (01120)"

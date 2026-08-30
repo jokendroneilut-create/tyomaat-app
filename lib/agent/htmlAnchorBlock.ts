@@ -101,3 +101,109 @@ export function anchorBlockText($: any, anchor: string): string | null {
   const teksti = palat.join(" ").replace(/\s+/g, " ").trim()
   return teksti || null
 }
+
+/*
+ * Sivun lohko-otsikot samalla saannolla kuin ankkurin haku: otsikot
+ * h1-h6 ja kokonaan lihavoidut kappaleet. Tata kaytetaan sen
+ * tarkistamiseen, tuottaako sivu kaksi samannimista lohkoa — silloin
+ * niista muodostuu sama tunniste ja toinen katoaa (D-145).
+ */
+export function blockHeadings($: any): string[] {
+  return $([...OTSIKOT, "p"].join(","))
+    .toArray()
+    .filter((el: any) => otsikkoTaso($, el) !== null)
+    .map((el: any) => $(el).text().replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+}
+
+/*
+ * Kaikkien samannimisten lohkojen SISALLOT.
+ *
+ * Toistuva otsikko ei viela tarkoita kahta kaavaa: kuntien sivuilla sama
+ * nimi esiintyy usein kahdella tasolla (h3 ja h4), otsikkona ja
+ * linkkilistassa, tai kerran per asiakirjaryhma. Vasta se, etta lohkojen
+ * SISALLOT eroavat, kertoo kahdesta eri kaavasta.
+ *
+ * Palauttaa yhden merkkijonon per esiintyma, tyhjat mukaan lukien.
+ */
+export function blockTextsForSlug($: any, slug: string): string[] {
+  const ulos: string[] = []
+
+  for (const el of $([...OTSIKOT, "p"].join(",")).toArray()) {
+    const taso = otsikkoTaso($, el)
+    if (taso === null) continue
+    if (anchorSlug($(el).text()) !== slug) continue
+
+    const palat: string[] = []
+    let solmu: any = $(el).next()
+    while (solmu && solmu.length) {
+      const seuraava = otsikkoTaso($, solmu.get(0))
+      if (seuraava !== null && seuraava <= taso) break
+      palat.push(solmu.text())
+      solmu = solmu.next()
+    }
+    ulos.push(palat.join(" ").replace(/\s+/g, " ").trim())
+  }
+
+  return ulos
+}
+
+/*
+ * Ovatko samannimiset lohkot SAMA kaava?
+ *
+ * Toistuva otsikko on kuntien sivuilla useimmiten sama kaava. Mitattu
+ * 30.8.2026: 143 listaussivusta kahdeksalla otsikko toistui, ja jokainen
+ * niista osoittautui kasin luettuna samaksi kaavaksi — paitsi
+ * Pietarsaaren Keskusta, joka oli aito (D-145).
+ *
+ * Kolme tavallista tapaa jolla sama kaava esiintyy kahdesti:
+ *
+ *   h3 ja sen alla h4 samalla nimella   ylempi lohko sisaltaa alemman
+ *   otsikko ja linkkilistan rivi        toinen on tyhja
+ *   otsikko per asiakirjaryhma          "Kuulutus... Kaavakartta..."
+ *
+ * Erottelu tehdaan kahdella ehdolla, jotka molempien on toteuduttava
+ * jotta kyse olisi KAHDESTA kaavasta:
+ *
+ *   1. molemmissa on oikeaa kuvaustekstia (>= KUVAUS_MIN merkkia) —
+ *      asiakirjalista ja paivamaarahuomautus jaavat alle
+ *   2. sanastot eroavat — sama kaava kirjoittaa samat sanat, vaikka
+ *      lohkojen pituus vaihtelisi
+ */
+const KUVAUS_MIN = 120
+const SANASTO_RAJA = 0.6
+
+function sanat(teksti: string): Set<string> {
+  return new Set(
+    teksti
+      .toLowerCase()
+      .split(/[^a-zäöå0-9]+/)
+      .filter((w) => w.length > 3)
+  )
+}
+
+function sanastoOsuus(a: string, b: string): number {
+  const sa = sanat(a)
+  const sb = sanat(b)
+  if (!sa.size || !sb.size) return 1
+  let yhteisia = 0
+  for (const w of sa) if (sb.has(w)) yhteisia++
+  return yhteisia / Math.min(sa.size, sb.size)
+}
+
+export function blocksLookIdentical(tekstit: string[]): boolean {
+  const siistit = tekstit.map((t) => String(t ?? "").replace(/\s+/g, " ").trim())
+  const kuvaukset = siistit.filter((t) => t.length >= KUVAUS_MIN)
+  if (kuvaukset.length < 2) return true
+
+  for (let i = 0; i < kuvaukset.length; i++) {
+    for (let j = i + 1; j < kuvaukset.length; j++) {
+      const a = kuvaukset[i]
+      const b = kuvaukset[j]
+      if (a.includes(b) || b.includes(a)) continue
+      if (sanastoOsuus(a, b) < SANASTO_RAJA) return false
+    }
+  }
+
+  return true
+}
