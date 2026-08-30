@@ -6,6 +6,7 @@ import { genericizeDecisionTitle } from "./decisionTitle"
 import { decodeHtmlEntities } from "./htmlEntities"
 import { CONSTRUCTION_SIGNALS } from "./fetchDynastySource"
 import { toIsoDate } from "./fetchHelsinkiPaatoksetSource"
+import { REQUEST_TIMEOUT_MS, fetchWithTimeout } from "@/lib/agent/fetchWithTimeout"
 
 /*
  * CaseM-päätösjärjestelmä (cloudnc.fi), käytössä mm. Tampereella.
@@ -132,9 +133,20 @@ export function decodeEntities(text: string): string {
   return decodeHtmlEntities(text)
 }
 
+/*
+ * PYYNNOLLA ON OLTAVA KATTO, EI VAIN SILMUKALLA.
+ *
+ * Aikabudjetti tarkistetaan hakusanojen valissa, joten se ei voi
+ * keskeyttaa yksittaista jumiin jaanytta pyyntoa. Mitattu 30.8.2026:
+ * tampere_paatokset -ajo kesti 120,4 s ja siita HAKU oli 120,4 s, tuonti
+ * 0,0 s — lahde kaatui 90 sekunnin katkaisuun tuomatta mitaan.
+ * Rovaniemen palvelin ei vastannut 60 sekunnissa lainkaan.
+ *
+ * Katkaisu kirjataan lokiin: hidas palvelin ei saa jaada nakymatta.
+ */
 async function getHtml(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       cache: "no-store",
       headers: {
         accept: "text/html,*/*",
@@ -143,7 +155,12 @@ async function getHtml(url: string): Promise<string | null> {
     })
     if (!res.ok) return null
     return await res.text()
-  } catch {
+  } catch (error: any) {
+    if (String(error?.message ?? "").toLowerCase().includes("abort")) {
+      console.warn(
+        `fetchCaseM: pyynto katkaistiin ${REQUEST_TIMEOUT_MS / 1000} sekunnin jalkeen: ${url}`
+      )
+    }
     return null
   }
 }
@@ -289,6 +306,19 @@ export function createCaseMFetcher(config: CaseMConfig) {
     let detailFetches = 0
 
     const deadline = Date.now() + FETCH_BUDGET_MS
+
+    /*
+     * BUDJETTI ON TARKISTETTAVA PYYNNON KESTO EDELLA.
+     *
+     * Pelkka `Date.now() > deadline` sallii uuden pyynnon alkaa 54,9
+     * sekunnin kohdalla, ja pyyntokohtainen katto on 25 s — jolloin haku
+     * venyy 80 sekuntiin ja lahdekohtainen 90 sekunnin katkaisu osuu
+     * tuontiin. Mitattu 30.8.2026: Tampere 75,5 s ja Rovaniemi 84,9 s
+     * juuri nain.
+     *
+     * Uutta pyyntoa ei siis aloiteta, jos sen katto ei mahdu budjettiin.
+     */
+    const ehtii = () => Date.now() + REQUEST_TIMEOUT_MS <= deadline
     let keskeytyi: string | null = null
 
     /*
@@ -304,10 +334,10 @@ export function createCaseMFetcher(config: CaseMConfig) {
     const termit = [...SEARCH_TERMS.slice(siirto), ...SEARCH_TERMS.slice(0, siirto)]
 
     for (const term of termit) {
-      if (Date.now() > deadline) { keskeytyi = term; break }
+      if (!ehtii()) { keskeytyi = term; break }
 
       for (let page = 1; page <= MAX_PAGES_PER_TERM; page++) {
-        if (Date.now() > deadline) { keskeytyi = term; break }
+        if (!ehtii()) { keskeytyi = term; break }
         const url = `${base}/fi-FI/haku?n=${config.siteId}&d=1&s=${encodeURIComponent(
           term
         )}&o=Rank&page=${page}`
@@ -340,7 +370,7 @@ export function createCaseMFetcher(config: CaseMConfig) {
            * kierrokselle poimimatta, mutta seuraava ajo aloittaa eri
            * hakusanasta ja tavoittaa sen.
            */
-          if (Date.now() > deadline) { keskeytyi = term; break }
+          if (!ehtii()) { keskeytyi = term; break }
 
           detailFetches++
           const itemHtml = await getHtml(`${base}${hit.path}`)

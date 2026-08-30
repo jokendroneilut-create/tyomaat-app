@@ -5,6 +5,69 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-155 – Hidas pyyntö kaatoi lähteen, ei tuonti
+
+Tampereen ja Rovaniemen päätöslähteet kaatuivat 90 sekunnin katkaisuun
+toistuvasti. Oletus oli, että tuonti (duplikaattivertailu, kirjoitukset)
+on hidas, ja kolmesta korjausvaihtoehdosta kaksi olisi kohdistunut
+siihen. **Mittaus osoitti toisin.**
+
+Ajo mitattiin vaiheittain 30.8.2026:
+
+```
+tampere_paatokset   yhteensa 120,4 s
+  haku                       120,4 s
+  listausrivien kirjoitus      0,0 s
+  tasmaytyslista               0,0 s
+  jo nahdyt                    0,0 s
+  tuonti                       0,0 s
+```
+
+Koko aika oli HAUSSA. Tuonti ei ehtinyt alkaa lainkaan.
+
+**SYY: PYYNNÖLLÄ EI OLLUT KATTOA.** Haun aikabudjetti (55 s) tarkistetaan
+hakusanojen välissä, joten se ei voi keskeyttää yksittäistä jumiin
+jäänyttä pyyntöä — ja `getHtml` kutsui `fetch`iä ilman aikakatkaisua.
+Yksi vastaamaton pyyntö vei koko ajon.
+
+Palvelinten mitatut vasteajat (CaseM, kaupunkien päätösjärjestelmä):
+
+```
+tampere.cloudnc.fi      9,4 s · 10,5 s · 24,1 s
+jyvaskyla.cloudnc.fi   11,6 s
+rovaniemi.cloudnc.fi   ei vastannut 60 sekunnissa lainkaan
+```
+
+**KAKSI KORJAUSTA, MOLEMMAT MITASTA JOHDETTUJA.**
+
+  1. **Pyyntökohtainen katto 25 s** (`fetchWithTimeout`). Hitain
+     ONNISTUNUT vastaus oli 24,1 s, joten normaali hitaus mahtuu mutta
+     jumi katkeaa. Katkaisu kirjataan lokiin, jottei hidas palvelin jää
+     näkymättä.
+  2. **Budjetti tarkistetaan pyynnön kesto edellä.** Pelkkä
+     `Date.now() > deadline` sallii uuden pyynnön alkaa 54,9 sekunnin
+     kohdalla, jolloin haku venyy 80 sekuntiin ja katkaisu osuu
+     tuontiin. Uutta pyyntöä ei aloiteta, jos sen katto ei mahdu
+     budjettiin.
+
+```
+ennen           92 s / 104 s / 162 s   virhe joka kerta
+katon jalkeen   75,5 s / 84,9 s        ok, mutta niukasti
+molemmat        49,3 s / 49,5 s        ok
+```
+
+**MITA TASTA OPPI.** Kolme korjausvaihtoehtoa oli valmiina ennen
+mittausta (osittainen ajo onnistumiseksi, katon nosto, tuonnin
+nopeutus). Yksikaan ei olisi osunut syyhyn, ja kaksi niista olisi
+piilottanut sen: hidas palvelin olisi jäänyt hitaaksi ja lähde olisi
+"toiminut" tuomatta mitään.
+
+Sivutuote: tuonnin nopeutta ei tarvinnut arvailla. Se on 0,0 s.
+
+`lib/agent/fetchWithTimeout.ts` · `lib/agent/fetchCaseMSource.ts`
+
+---
+
 ### D-154 – Samannimisten lohkojen tarkistus: ei yhtaan menetysta, ja mittari ylihalytti kahdesti
 
 Pietarsaaren kaksi samannimista kaavaa (D-145) herattivat kysymyksen:
