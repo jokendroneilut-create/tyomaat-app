@@ -9,6 +9,47 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-09 (tyo 1.9.)
+
+### Maakunta nakyy katselmoinnissa (D-156)
+
+Espoon kuulutusten ehdokas naytti TIC:ssa maakunnan tyhjana. Vika ei
+ollut poiminnassa eika lahteessa: hyvaksynta on aina paatellyt puuttuvan
+maakunnan kunnasta, mutta esikatselu luki pelkkaa metadata.region-kenttaa
+- ja Espoon kuulutukset ei kirjoita sita.
+
+  Espoon kuulutuksista hyvaksyttyja hankkeita   18
+    joilla maakunta "Uusimaa"                   18
+  katselmoinnissa nakyva maakunta               tyhja
+
+Kentta siis tayttyi oikein sekunti hyvaksynnan jalkeen, mutta naytti
+puuttuvalta juuri siina nakymassa jonka perusteella hyvaksyminen
+tehdaan. Tyhja kentta katselmoinnissa saa epailemaan poimintaa joka
+toimii.
+
+resolveRegion paattelee maakunnan kunnasta, ja sita kutsuu seka
+esikatselu etta hyvaksynta - ne eivat voi enaa eriytya. Uusista
+ehdokkaista ilman maakuntaa oli 6, nyt 1: Hilma-rivi jolla kuntaa ei ole
+lainkaan. Tuntemattomasta kunnasta ei arvata.
+
+Huomionarvoista jatkon kannalta: hyvaksynnan duplikaattitasmaytys on
+rajattu maakuntaan (5 752 -> 1 229 skannattavaa), joten ehdokas jolla
+maakuntaa EI voi paatella lukee edelleen koko kannan. Niita on nyt yksi.
+
+
+### Ajokestojen mittaus ja CaseM-pyynnon aikakatkaisu (D-155)
+
+Tampereen ja Rovaniemen paatoslahteet kaatuivat 90 sekunnin katkaisuun
+toistuvasti. Mittaus osoitti etta koko aika oli HAUSSA (120,4 s / 120,4 s)
+ja tuonti 0,0 s: yhdella HTTP-pyynnolla ei ollut aikakatkaisua lainkaan.
+Pyyntokohtainen katto 25 s ja budjetin tarkistus pyynnon kesto edella
+veivat ajon 162 sekunnista alle viidenkymmenen. Todennettu tuotannossa
+31.8.: Tampere 47,6 s, Rovaniemi 63,6 s, molemmat ok.
+
+Samalla mitattiin mihin legacy-ajon aika menee: tasmaytyslista 10,4 s
+joka ajossa ja kasvaa hankemaaran mukana. Kirjattu tyojonoon.
+
+
 ## 2026-08 (tyo 30.8.)
 
 ### Kaavan elinkaari sai molemmat paat (D-150, D-152)
