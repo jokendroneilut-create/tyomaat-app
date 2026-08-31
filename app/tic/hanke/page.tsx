@@ -58,7 +58,7 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
   let query = supabaseAdmin
     .from("projects")
     .select(
-      "id, name, city, region, phase, developer, builder, estimated_cost, is_public"
+      "id, name, city, region, phase, developer, builder, estimated_cost, is_public, ai_suggestion:metadata->ai_suggestion"
     )
     .eq("status", "active")
     .limit(FETCH_CAP)
@@ -92,12 +92,24 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
 
   const { data: allMatching, error } = await query.order("name")
 
+  /*
+   * ODOTTAVA EHDOTUS NOSTETAAN KARKEEN.
+   *
+   * Mallin ehdotus (D-078) kirjoitetaan `metadata.ai_suggestion`iin ja se
+   * odottaa ihmisen hyvaksyntaa hankkeen omalla sivulla. Ilman tata
+   * nostoa ehdotus hautautui listaan: neljä ehdotusta 277 puutteellisen
+   * joukossa, aakkosjarjestyksessa, eika niita loytanyt mistaan.
+   */
   const sorted = [...(allMatching ?? [])].sort((a: any, b: any) => {
+    const ehdotus = (a.ai_suggestion ? 0 : 1) - (b.ai_suggestion ? 0 : 1)
+    if (ehdotus !== 0) return ehdotus
     const rank =
       (PHASE_RANK[String(a.phase)] ?? 9) - (PHASE_RANK[String(b.phase)] ?? 9)
     if (rank !== 0) return rank
     return String(a.name).localeCompare(String(b.name), "fi")
   })
+
+  const ehdotuksia = sorted.filter((p: any) => p.ai_suggestion).length
 
   const total = sorted.length
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -176,11 +188,19 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
         <span className="ml-2 text-gray-500">
           {total} hanketta
           {constructionCount
-            ? ` · ${constructionCount} rakentamisvaiheessa (ensin listalla)`
+            ? ` · ${constructionCount} rakentamisvaiheessa`
             : ""}
           {total >= FETCH_CAP ? " · katkaistu 1000:een" : ""}
         </span>
       </p>
+
+      {ehdotuksia > 0 && (
+        <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">
+          {ehdotuksia} hankkeella on mallin ehdotus osapuolista odottamassa —
+          ne ovat listan kärjessä. Avaa hanke, tarkista lähteet ja hyväksy tai
+          hylkää.
+        </p>
+      )}
 
       <ul className="mt-3 divide-y divide-gray-200 rounded-2xl border border-gray-200 bg-white">
         {(projects ?? []).map((p: any) => (
@@ -194,6 +214,12 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
               {p.is_public === false ? (
                 <span className="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
                   piilotettu
+                </span>
+              ) : null}
+
+              {p.ai_suggestion ? (
+                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  ehdotus odottaa
                 </span>
               ) : null}
 
