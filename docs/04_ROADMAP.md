@@ -802,8 +802,14 @@ muistin varassa.
   `allativeToNominative`-funktiossa.
 - **Kuvaustäydennys irti nähty-ehdosta** (D-068, vaihtoehto D). Tarpeen
   vain jos lyhyitä kuvauksia alkaa kertyä.
-- **LLM-duplikaattiskannaus harmaalle vyöhykkeelle**: 3 168 paria
-  ≈ 0,9 $/ajo. Lykätty; aloita 259 parin katselmoinnista.
+- **LLM-duplikaattiskannaus harmaalle vyöhykkeelle** — mitattu 1.9.2026
+  (D-158) ja tehtävä muutti muotoaan. Yläkaista (≥95 pistettä,
+  kuvaustodiste) ratkesi **säännöllä**: 10 paria, kaikki aitoja, ei
+  mallikutsua. Täysi skannaus toi 32 paria katselmoitavaksi.
+
+  **LLM on perusteltu vasta kaistalle 70–78** (37 paria), jossa sääntö ei
+  erota oikeaa väärästä. Tee se vasta kun nuo 32 on katselmoitu —
+  katselmoinnin tulos kertoo onko uusi sääntö oikeassa.
 
 ### Operointi
 

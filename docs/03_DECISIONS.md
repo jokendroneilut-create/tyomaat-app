@@ -5,6 +5,71 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-158 – Harmaa vyohyke mitattiin: LLM:aa ei tarvittu ylakaistaan
+
+Tyojonossa oli kohta "LLM-duplikaattiskannaus harmaalle vyohykkeelle:
+3 168 paria ~0,9 $/ajo". Mittaus vaihtoi tehtavan muodon: ylakaista
+ratkesi saannolla, ei mallilla.
+
+**MITTAUS 1.9.2026** koko julkisella joukolla (5 954 hanketta,
+732 092 vertailtua paria):
+
+```
+harmaa vyohyke yhteensa            157 669 paria
+  70+ mutta ei tunnistetta/nimea        76
+  60-69                                633
+  50-59                              1 091
+  40-49                            154 049   <- kohina
+  alle 40                            1 820
+```
+
+Iso massa on 40-49 pisteen kohinaa: sama kaupunki, sama maakunta, sama
+rakennuttaja, eri hanke. Sita ei kannata antaa mallille luettavaksi.
+
+**KIINNOSTAVA KAISTA ON KAPEA.** Skanneri jatti `name_in_description`
+-todisteen tarkoituksella pois, koska sen vaikutusta pareittaisessa
+lapikaynnissa ei ollut mitattu (kirjattu koodiin). Se kaista on 47 paria
+ja jakautuu jyrkasti:
+
+```
+>= 95   10 paria, kaikki aitoja
+70-78   37 paria, enimmakseen eri hankkeita
+```
+
+Ne kymmenen ovat samaa tuuli- tai aurinkovoimahanketta kahdesta
+lahteesta — YVA-hanke ja saman puiston osayleiskaava:
+"Halmemaen alueen tuulivoimapuisto" || "Halmemaen tuulivoimahanke,
+Karsamaki". Asiakkaalle ne nakyvat kahtena rivina samasta puistosta.
+
+Alempi kaista on aidosti sekainen: "Ruskeasuon alueen kadut" ja
+"Koirasaarentie, Kookarinkuja" ovat molemmat Helsingin katusuunnitelmia
+mutta eri hankkeita.
+
+**SAANTO, EI MALLI.** Kuvaustodiste hyvaksytaan nyt 95 pisteesta
+ylospain ja vain samassa kaupungissa. Otos on pieni (10) mutta
+yksimielinen ja kaista kapea, joten saanto on halvempi ja
+jaljitettavampi kuin mallikutsu — eika se maksa mitaan per ajo.
+
+**TAYSI SKANNAUS AJETTIIN** (329 s): 32 uutta paria katselmoitavaksi,
+joista **10 loytyi uudella saannolla** ja 22 olisi loytynyt ennenkin —
+niita ei vain oltu skannattu, koska viikkoajo vertaa vain muuttuneita
+hankkeita. Taysi skannaus kannattaa siis ajaa kasin silloin talloin.
+
+Loytyneissa on selvia pareja myos tiedotelahteista: "Jatke rakentaa
+Lietoon..." || "Lietoon alueellisesti merkittavan logistiikkakohteen..."
+ja "Tekova rakentaa 17.2 M€ AI-datakeskuksen..." || "17.2 M€
+AI-datakeskuksen laajennus".
+
+**LLM JAA ODOTTAMAAN.** Se on perusteltu vasta 70-78 kaistalle (37
+paria), jossa saanto ei erota oikeaa vaarasta. Se on pieni ja halpa
+tehda myohemmin — mutta vasta kun nama 32 on katselmoitu, koska
+katselmoinnin tulos kertoo onko uusi saanto oikeassa.
+
+`lib/agent/duplicates/qualityBar.ts` ·
+`scripts/measure-duplicate-grey-zone.ts`
+
+---
+
 ### D-157 – Maakunta oli paatelty, ei tarkistettu: viisi kuntaa vaarassa maakunnassa
 
 Hilman ehdokas "Merrankujan katu- ja vesihuoltosaneeraus" ei loytanyt

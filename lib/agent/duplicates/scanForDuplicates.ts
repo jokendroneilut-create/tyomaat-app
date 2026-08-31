@@ -8,6 +8,7 @@ import {
   buildComparisonBuckets,
   comparisonPartners,
 } from "@/lib/agent/duplicates/comparisonBuckets"
+import { passesDuplicateQualityBar } from "@/lib/agent/duplicates/qualityBar"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,44 +35,6 @@ async function fetchAllProjects(): Promise<MatchableProject[]> {
   }
 
   return rows
-}
-
-/*
- * calculateMatch on viritetty yhden discovery-ehdokkaan täsmäytykseen
- * koko hankejoukkoa vasten, jossa sattumanvarainen "sama sijainti/
- * kaupunki/rakennuttaja" -osuma on harvinainen. Tässä pareittaisessa
- * koko-datan läpikäynnissä sama koodi tuotti paljon vääriä osumia,
- * koska moni hanke on tallennettu vain kaupungin/kaupunginosan
- * tarkkuudella location-kenttään (esim. "Oulu" tai "Nihti") — moni eri
- * hanke jakaa saman arvon ilman että ne ovat sama hanke. Vaaditaan siis
- * lisäksi joko vahva tunniste tai nimi-todiste, ja nimi-todisteen
- * tapauksessa vielä sama kaupunki (ei pelkkä sama maakunta), jotta
- * yleisnimiset hankkeet ("Kerrostalo", "Datakeskus") eri kaupungeissa
- * eivät osu toisiinsa.
- */
-function passesDuplicateQualityBar(match: ProjectMatchResult): boolean {
-  if (match.confidence < 70) return false
-
-  const hasStrongIdentifier =
-    match.reasons.includes("same_permit_number") ||
-    match.reasons.includes("same_property_id")
-
-  if (hasStrongIdentifier) return true
-
-  /*
-   * name_in_description on tarkoituksella POIS tästä listasta. Se on
-   * täsmäytyksessä pätevä tekstitodiste, mutta skanneri vertaa hankkeita
-   * toisiinsa — ei ehdokasta hankkeeseen — eikä sen vaikutusta pareittaisessa
-   * läpikäynnissä ole mitattu. Lisääminen laajentaisi skannerin porttia
-   * mittaamatta, mikä on juuri se virhe joka on aiemmin tuottanut vääriä
-   * pareja. Jos tämä otetaan mukaan, mittaa ensin ajamalla täysi skannaus.
-   */
-  const hasTitleEvidence =
-    match.reasons.includes("exact_title") ||
-    match.reasons.includes("exact_distinctive_title") ||
-    match.reasons.includes("similar_title")
-
-  return hasTitleEvidence && match.reasons.includes("same_city")
 }
 
 export type ScanResult = {
