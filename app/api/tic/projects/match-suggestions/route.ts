@@ -8,6 +8,7 @@ import {
 } from "@/lib/agent/projectMatcher"
 import { streetKey } from "@/lib/projects/streetKey"
 import { housingCompanyKey } from "@/lib/projects/housingCompanyKey"
+import { resolveRegion } from "@/lib/projects/resolveRegion"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -102,7 +103,12 @@ export async function POST(request: Request) {
       name: metadata.operation ?? candidate.title ?? null,
       sourceTitle: (metadata.source_title as string | null) ?? null,
       city: candidate.municipality ?? metadata.city ?? null,
-      region: metadata.region ?? null,
+      /*
+       * Maakunta paatellaan kunnasta jos lahde ei sita kerro (D-156).
+       * Tama ei ole vain naytto: tasmaytys rajataan maakuntaan, joten
+       * tyhja maakunta lukee koko kannan.
+       */
+      region: resolveRegion({ metadataRegion: metadata.region, city: candidate.municipality ?? metadata.city }),
       location: candidate.address ?? metadata.project_address ?? null,
       permitNumber: candidate.permit_number ?? null,
       propertyId: candidate.property_id ?? null,

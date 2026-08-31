@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { resolveRegion } from "@/lib/projects/resolveRegion"
 
 function formatArea(value: number) {
   return `${Math.round(value).toLocaleString("fi-FI")} m²`
@@ -130,8 +131,17 @@ export default function PotentialProjectsReviewList({
 
   const totalPages = typeof totalCount === "number" ? Math.max(1, Math.ceil(totalCount / PAGE_SIZE)) : null
 
+  /*
+   * Maakunta paatellaan kunnasta samalla saannolla kuin hyvaksynnassa
+   * (D-156). Pelkka metadata.region naytti "puuttuu" niille lahteille
+   * jotka eivat sita kirjoita, vaikka hyvaksynta taytti sen oikein.
+   */
   const missingRegionCount = projects.filter(
-    (project) => !(project.metadata ?? {}).region
+    (project) =>
+      !resolveRegion({
+        metadataRegion: (project.metadata ?? {}).region,
+        city: project.municipality,
+      })
   ).length
 
   return (
@@ -194,7 +204,7 @@ export default function PotentialProjectsReviewList({
                       * korjataan tarkistuksessa käsin, koska hyväksyjä näkee
                       * alkuperäisen ilmoituksen eikä joudu arvaamaan.
                       */}
-                    {!metadata.region && (
+                    {!resolveRegion({ metadataRegion: metadata.region, city: project.municipality }) && (
                       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                         Maakunta puuttuu
                       </span>

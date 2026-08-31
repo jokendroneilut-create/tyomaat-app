@@ -37,6 +37,25 @@ uusia ehdokkaita 13
 Se yksi jaljelle jaava on oikein tyhja: kuntaa ei ole, joten maakuntaa ei
 voi paatella. Tuntemattomasta kunnasta ei arvata.
 
+**KORJAUS PITI TEHDA NELJAAN PAIKKAAN, EI YHTEEN.** Ensimmainen korjaus
+osui vain ehdokkaan omalle sivulle, ja lista naytti yha "Maakunta
+puuttuu" — sama tarkistus oli kirjoitettu erikseen neljalle:
+
+```
+app/tic/services/getCandidate.ts                 ehdokassivun esikatselu
+app/tic/components/PotentialProjectsReviewList   lista ja sen varoitus
+app/api/tic/projects/approve/route.ts            hyvaksynta
+app/api/tic/projects/match-suggestions/route.ts  duplikaattiehdotukset
+```
+
+Kolme neljasta luki pelkkaa `metadata.region`-kenttaa. Se ettei
+korjauksen naytto muuttunut oli oikea havainto eika kayttajan erehdys:
+korjasin yhden paikan neljasta.
+
+Viimeinen niista ei ole naytto vaan hinta: tasmaytys rajataan
+maakuntaan (5 752 -> 1 229 skannattavaa riviä), joten tyhja maakunta
+lukee koko kannan.
+
 `lib/projects/resolveRegion.ts`
 
 ---
