@@ -11,6 +11,46 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Maakunta korjattu kolmesta eri syysta (D-157)
+
+Hilman ehdokas ei loytanyt maakuntaa vaikka osoite oli tiedossa. Yhden
+rivin jaljitys paljasti kaksi toisistaan riippumatonta vikaa.
+
+Genetiivi ei ratkennut: "Iitin kunta" palautti tyhjan, koska Iitti ->
+Iitin heikentaa kaksoiskonsonantin ja pudottaa loppu-i:n. Nyt palautus
+tehdaan molempiin suuntiin ja hyvaksytaan vain jos tasan yksi kunta osuu.
+Genetiivimuodoista toimii 20/20 (oli 18/20).
+
+Maakunta oli PAATELTY kuntanumeroista, mika koodaa vuotta 2021 edeltavan
+jaon. Tilastokeskuksen vastaavuustaulua vasten 303/308 tasmasi. Viisi
+kuntaa siirtyi 1.1.2021 eika siirto nakynyt meilla lainkaan:
+
+  Iitti Kymenlaakso -> Paijat-Hame        Joroinen  Etela-Savo -> Pohjois-Savo
+  Kuhmoinen Keski-Suomi -> Pirkanmaa      Laihia    Etela-Pohjanmaa -> Pohjanmaa
+  Heinavesi Etela-Savo -> Pohjois-Karjala
+
+Korjaus rajattiin lukemalla rivit: 52 ristiriidasta 28 oli vaylahankkeita
+jotka ulottuvat usean maakunnan alueelle, ja niissa kunta on reittipiste
+eika sijainti. Korjattiin 28 hanketta.
+
+Tarkistus on nyt skriptina ja se ajetaan kun kuntajako muuttuu:
+scripts/check-municipality-regions.ts (nyt 308/308).
+
+
+### Osapuoliehdotukset kaynnistettiin (D-078)
+
+Kymmenelle hankkeelle ilman rakennuttajaa ja urakoitsijaa haettiin
+ehdotus verkosta, rakenteilla olevat ensin. Neljalle loytyi ehdotus
+lahteineen, kuudelle ei - ne ovat pienia yksityisia kohteita joita ei ole
+julkisissa lahteissa, ja malli palautti tyhjan sen sijaan etta olisi
+keksinyt.
+
+Ehdotukset odottavat hyvaksyntaa TIC:ssa eivatka nay asiakkaalle.
+Osumatarkkuus 4/10. Sama ajo kuivaharjoituksena loysi 2 ja kirjoittavana
+4, joten verkkohaku ei ole deterministista - sama hanke voi loytya
+toisella ajolla ja jaada toisella loytymatta.
+
+
 ### Maakunta nakyy katselmoinnissa (D-156)
 
 Espoon kuulutusten ehdokas naytti TIC:ssa maakunnan tyhjana. Vika ei
