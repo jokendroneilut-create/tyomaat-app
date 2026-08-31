@@ -5,6 +5,42 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-156 – Esikatselu naytti tyhjaa maakuntaa, vaikka hyvaksynta taytti sen
+
+Espoon kuulutusten ehdokas nayttti TIC:ssa maakunnan tyhjana. Vika ei
+ollut poiminnassa eika lahteessa: **hyvaksynta on aina paatellyt
+puuttuvan maakunnan kunnasta**, mutta esikatselu luki pelkkaa
+`metadata.region`-kenttaa.
+
+```
+Espoon kuulutuksista hyvaksyttyja hankkeita   18
+  joilla maakunta "Uusimaa"                   18
+katselmoinnissa nakyva maakunta               tyhja
+```
+
+Kentta siis tayttyi oikein heti hyvaksynnan jalkeen, mutta se naytti
+puuttuvalta juuri siina nakymassa jonka perusteella hyvaksyminen
+tehdaan. Tyhja kentta katselmoinnissa on sama asia kuin puuttuva tieto:
+se saa epailemaan poimintaa joka toimii.
+
+**KORJAUS ON YKSI FUNKTIO KUMMALLEKIN.** `resolveRegion` paattelee
+maakunnan kunnasta jos lahde ei sita kerro, ja sita kutsuu seka
+esikatselu (`getCandidate`) etta hyvaksynta. Niin ne eivat voi eriytya
+toisistaan — juuri se eriytyminen oli koko vika.
+
+```
+uusia ehdokkaita 13
+  ilman maakuntaa ennen   6
+  ilman maakuntaa jalkeen 1   (Hilma-rivi jolla kunta on null)
+```
+
+Se yksi jaljelle jaava on oikein tyhja: kuntaa ei ole, joten maakuntaa ei
+voi paatella. Tuntemattomasta kunnasta ei arvata.
+
+`lib/projects/resolveRegion.ts`
+
+---
+
 ### D-155 – Hidas pyyntö kaatoi lähteen, ei tuonti
 
 Tampereen ja Rovaniemen päätöslähteet kaatuivat 90 sekunnin katkaisuun

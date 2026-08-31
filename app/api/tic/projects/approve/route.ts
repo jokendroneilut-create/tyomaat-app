@@ -25,6 +25,7 @@ import {
 } from "@/lib/projects/identity"
 import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
+import { resolveRegion } from "@/lib/projects/resolveRegion"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -2148,8 +2149,7 @@ export async function POST(request: Request) {
       : potentialProject.municipality ?? null
 
     const region =
-      metadata.region ??
-      getMunicipalityByName(city)?.region ??
+      resolveRegion({ metadataRegion: metadata.region, city }) ??
       inferredMunicipality?.region ??
       null
 

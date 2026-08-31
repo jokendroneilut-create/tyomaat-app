@@ -826,6 +826,25 @@ muistin varassa.
   `scripts/backfill-company-enrichment.ts`. Ei ennen kuin jonon
   purkautuminen on nähty tuotannossa.
 
+- **Täsmäytyslista maksaa 10,4 s joka legacy-ajossa.** Mitattu 31.8.2026
+  Hartelan ajosta: haku 6,8 s, **täsmäytyslista 10,4 s**, kuvauspituudet
+  3,1 s, ja loput per-kandidaatti-työtä (täydennys 138,7 s ja tuonti
+  213,9 s kumulatiivisesti, 6 rinnakkain). `loadProjectsForMatching`
+  lukee hankelistan joka ajolla, ja se **kasvaa hankemäärän mukana** —
+  tänään 5 732 näkyvää hanketta.
+
+  Se on 12 % 90 sekunnin budjetista ja ainoa osa joka kasvaa itsestään.
+  Neljä lähdettä on jo katon rajassa: Hartela 81–92 s, Rovaniemi 88,9 s,
+  Tampere 83,7 s, Skanska 73,3 s. Kaikkien ajojen mediaani on 5,6 s ja
+  90. persentiili 34,7 s, joten ongelma koskee vain näitä muutamaa —
+  toistaiseksi.
+
+  **Mitattu vaihtoehto joka EI auta:** "lataa lista vain jos uusia
+  kandidaatteja on" — vain 6 % onnistuneista ajoista tallentaa nolla
+  kandidaattia. Oikea korjaus on rajata itse kyselyä (esim. sama kunta
+  tai tuoreet hankkeet), ja se vaatii oman mittauksensa siitä mitä
+  täsmäytys oikeasti tarvitsee.
+
 - **Mittaa ajokesto** noston 14 → 20 jälkeen (Ajot-sivu). Oma raja 500 s,
   alustan kova katto 800 s.
 - **Todenna STT ja Rakennuslehti** kun ne osuvat vuoroon — korjaukset on

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { resolveRegion } from "@/lib/projects/resolveRegion"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -135,6 +136,13 @@ export async function getCandidate(id: string): Promise<CandidateDetail | null> 
       id: potentialProject.id,
       title: potentialProject.title,
       city: potentialProject.municipality,
+      /*
+       * Maakunta paatellaan kunnasta samalla saannolla kuin
+       * hyvaksynnassa. Aiemmin esikatselu luki pelkkaa
+       * metadata.region-kenttaa ja naytti tyhjaa niille lahteille jotka
+       * eivat sita kirjoita (Espoon kuulutukset, Hilma).
+       */
+      region: resolveRegion({ metadataRegion: metadata.region, city: potentialProject.municipality }),
       location: potentialProject.address,
       reason: metadata.operation ?? null,
       score: potentialProject.confidence ?? 0,

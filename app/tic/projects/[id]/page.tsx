@@ -129,7 +129,7 @@ export default async function CandidateDetailPage({ params }: Props) {
           candidateId={candidate.id}
           initial={{
             title: metadata.operation ?? candidate.title ?? "",
-            region: metadata.region ?? "",
+            region: candidate.region ?? "",
             city: candidate.city ?? "",
             address: candidate.location ?? "",
             developer: metadata.developer ?? "",
