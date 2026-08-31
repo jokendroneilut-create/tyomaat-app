@@ -141,6 +141,7 @@ export default function PotentialProjectsReviewList({
       !resolveRegion({
         metadataRegion: (project.metadata ?? {}).region,
         city: project.municipality,
+        buyerName: (project.metadata ?? {}).developer,
       })
   ).length
 
@@ -204,7 +205,7 @@ export default function PotentialProjectsReviewList({
                       * korjataan tarkistuksessa käsin, koska hyväksyjä näkee
                       * alkuperäisen ilmoituksen eikä joudu arvaamaan.
                       */}
-                    {!resolveRegion({ metadataRegion: metadata.region, city: project.municipality }) && (
+                    {!resolveRegion({ metadataRegion: metadata.region, city: project.municipality, buyerName: metadata.developer }) && (
                       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                         Maakunta puuttuu
                       </span>

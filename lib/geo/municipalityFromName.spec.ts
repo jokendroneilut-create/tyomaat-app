@@ -241,3 +241,57 @@ describe("isSinglePropertyCompany", () => {
     expect(isSinglePropertyCompany("")).toBe(false)
   })
 })
+
+/*
+ * Nama loytyivat 1.9.2026 Hilman ehdokkaasta jonka kunta jai tyhjaksi:
+ * ostaja oli "Iitin kunta" ja genetiivi ei ratkennut, koska Iitti ->
+ * Iitin heikentaa kaksoiskonsonantin JA pudottaa loppu-i:n.
+ */
+describe("genetiivi astevaihtelulla", () => {
+  it("ratkaisee kaksoiskonsonantin ja katoavan i:n", () => {
+    expect(municipalityFromGenitive("Iitin")?.name).toBe("Iitti")
+    expect(municipalityFromBuyerName("Iitin kunta")?.name).toBe("Iitti")
+  })
+
+  /* Kolmen merkin nimi jai aiemmin pituusrajan alle. */
+  it("ratkaisee lyhyen nimen", () => {
+    expect(municipalityFromGenitive("Iin")?.name).toBe("Ii")
+    expect(municipalityFromBuyerName("Iin kunta")?.name).toBe("Ii")
+  })
+
+  /* Aiemmin toimineet eivat saa rikkoutua. */
+  it("sailyttaa aiemmin toimineet muodot", () => {
+    for (const [gen, odotus] of [
+      ["Espoon", "Espoo"], ["Lahden", "Lahti"], ["Kotkan", "Kotka"],
+      ["Nurmeksen", "Nurmes"], ["Turun", "Turku"], ["Oulun", "Oulu"],
+      ["Kuopion", "Kuopio"], ["Keuruun", "Keuruu"], ["Nokian", "Nokia"],
+    ] as [string, string][]) {
+      expect(municipalityFromGenitive(gen)?.name).toBe(odotus)
+    }
+  })
+
+  /* Epavarmasta ei arvata: kaksi osumaa tarkoittaa tyhjaa. */
+  it("ei arvaa kun muoto ei osu yhteen kuntaan", () => {
+    expect(municipalityFromGenitive("Jokin")).toBeNull()
+  })
+})
+
+/*
+ * Maakunta oli PAATELTY kuntanumeroista, mika koodaa vuotta 2021
+ * edeltavan jaon. Viisi kuntaa siirtyi 1.1.2021, ja niiden hankkeet
+ * naikyivat vaarassa maakunnassa asiakkaan suodattimessa.
+ */
+describe("maakunta 2021 siirtymien jalkeen", () => {
+  it("tuntee siirtyneet kunnat", () => {
+    const odotus: [string, string][] = [
+      ["Iitti", "Päijät-Häme"],
+      ["Joroinen", "Pohjois-Savo"],
+      ["Kuhmoinen", "Pirkanmaa"],
+      ["Laihia", "Pohjanmaa"],
+      ["Heinävesi", "Pohjois-Karjala"],
+    ]
+    for (const [kunta, maakunta] of odotus) {
+      expect(getMunicipalityByPlaceName(kunta)?.region).toBe(maakunta)
+    }
+  })
+})

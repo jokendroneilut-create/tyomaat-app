@@ -5,6 +5,66 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-157 – Maakunta oli paatelty, ei tarkistettu: viisi kuntaa vaarassa maakunnassa
+
+Hilman ehdokas "Merrankujan katu- ja vesihuoltosaneeraus" ei loytanyt
+maakuntaa vaikka osoite oli tiedossa. Yhden rivin jaljitys paljasti kaksi
+toisistaan riippumatonta vikaa.
+
+**1. GENETIIVI EI RATKENNUT.** Ostaja on "Iitin kunta", ja
+`municipalityFromBuyerName` palautti tyhjan. Syy: Iitti -> Iitin
+heikentaa kaksoiskonsonantin JA pudottaa loppu-i:n, joten pelkka n:n
+poisto antoi "iiti" jota ei ole. Sama koski lyhyita nimia — "Iin kunta"
+jai nelja merkkia vaatineen pituusrajan alle.
+
+Palautus tehdaan nyt molempiin suuntiin (vartalon loppuun ja loppu-i:n
+edelle) ja hyvaksytaan vain jos TASAN YKSI kunta osuu. Mitattu 20
+genetiivimuodolla: ennen 18/20, nyt 20/20.
+
+**2. MAAKUNTA OLI PAATELTY KUNTANUMEROISTA.** `municipalities.ts`
+kertoi itse: *"Maakunta on paatelty kuntanumeroista tunnetun maakuntajaon
+perusteella — tarkista poikkeustapaukset tarvittaessa erikseen."*
+Paattely koodaa vuotta 2021 edeltavan jaon, ja viisi kuntaa siirtyi
+1.1.2021:
+
+```
+Iitti      Kymenlaakso      -> Paijat-Hame
+Joroinen   Etela-Savo       -> Pohjois-Savo
+Kuhmoinen  Keski-Suomi      -> Pirkanmaa
+Laihia     Etela-Pohjanmaa  -> Pohjanmaa
+Heinavesi  Etela-Savo       -> Pohjois-Karjala
+```
+
+Tarkistettu Tilastokeskuksen vastaavuustaulusta
+(`kunta_1_20260101#maakunta_1_20260101`): 303 kuntaa 308:sta tasmasi jo,
+viisi ei. Vika ei nay koodissa vaan asiakkaan suodattimessa — hanke on
+vaaran maakunnan alla eika loydy sielta mista sita haetaan.
+
+**KORJAUS RAJATTIIN LUKEMALLA RIVIT.** Ensimmainen versio olisi
+korjannut 52 hanketta joilla kunta ja maakunta ovat ristiriidassa.
+Riveittain luettuna 28 niista oli **vaylahankkeita jotka ulottuvat usean
+maakunnan alueelle**: "Valtatien 3 parantaminen Tampere-Vaasa" on kunta
+Tampere ja maakunta Pohjanmaa, ja molemmat ovat oikein — kunta on
+reittipiste, ei sijainti. Niissa lahteen oma maakunta on parempi tieto
+kuin meidan paattelymme.
+
+Korjattiin siis 28: viiden siirtyneen kunnan hankkeet (joilla lahteen
+arvo oli peraisin samasta vanhentuneesta taulusta) ja ne joilla lahde ei
+ollut kertonut maakuntaa lainkaan.
+
+**MAAKUNTA PAATELLAAN NYT MYOS TILAAJASTA.** `resolveRegion` kokeilee
+kolmatta reittia: kunnan nimi tilaajana ("Iitin kunta"). Yksityinen
+tilaaja ei osu kaavaan, joten se palauttaa tyhjan.
+
+Tarkistus on skriptina ja se ajetaan kun kuntajako muuttuu:
+`npx tsx scripts/check-municipality-regions.ts` — 1.9.2026 se palauttaa
+308/308 tasmaa.
+
+`lib/geo/municipalities.ts` · `lib/geo/municipalityFromName.ts` ·
+`lib/projects/resolveRegion.ts` · `scripts/check-municipality-regions.ts`
+
+---
+
 ### D-156 – Esikatselu naytti tyhjaa maakuntaa, vaikka hyvaksynta taytti sen
 
 Espoon kuulutusten ehdokas nayttti TIC:ssa maakunnan tyhjana. Vika ei

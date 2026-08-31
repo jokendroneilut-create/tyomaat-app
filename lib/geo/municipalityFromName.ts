@@ -169,13 +169,49 @@ export function municipalityFromGenitive(
   if (!word) return null
 
   const w = word.trim().toLowerCase()
-  if (w.length < 4 || !w.endsWith("n")) return null
+  /*
+   * Kolme merkkia riittaa: "Iin" on Ii-kunnan genetiivi. Nelja jatti sen
+   * ulkopuolelle, ja Ii on aito kunta jossa on rakennushankkeita.
+   */
+  if (w.length < 3 || !w.endsWith("n")) return null
 
   const exception = GENITIVE_EXCEPTIONS[w]
   if (exception) return getMunicipalityByName(exception)
 
-  const direct = getMunicipalityByName(w.slice(0, -1))
+  const vartalo = w.slice(0, -1)
+
+  const direct = getMunicipalityByName(vartalo)
   if (direct) return direct
+
+  /*
+   * ASTEVAIHTELU JA KATOAVA I. "Iitin kunta" ei ratkennut lainkaan:
+   * genetiivissa kaksoiskonsonantti heikkenee ja loppu-i katoaa
+   * (Iitti -> Iitin), joten pelkka n:n poisto antaa "iiti" jota ei ole.
+   * Sama koskee lyhyita nimia (Ii -> Iin), jotka jaivat pituusrajan alle.
+   *
+   * Kokeillaan vartalon tunnetut palautukset ja hyvaksytaan vain jos
+   * TASAN YKSI kunta osuu — kaksi osumaa tarkoittaa etta arvaus on
+   * epavarma, ja vaara kunta on pahempi kuin tyhja.
+   */
+  const muunnokset = new Set<string>([vartalo, vartalo + "i"])
+
+  /*
+   * Heikko k/p/t vahvistetaan takaisin. Se voi olla vartalon lopussa
+   * (Kokemäen -> Kokemäki) tai loppu-i:n edella (Iitin -> Iitti).
+   */
+  for (const kaava of [/([aeiouyäö])([kpt])$/, /([aeiouyäö])([kpt])(i)$/]) {
+    const vahvistettu = vartalo.replace(kaava, (_m, v, k, i) => `${v}${k}${k}${i ?? ""}`)
+    if (vahvistettu === vartalo) continue
+    muunnokset.add(vahvistettu)
+    muunnokset.add(vahvistettu + "i")
+  }
+
+  const osumat = [...muunnokset]
+    .map((muoto) => getMunicipalityByName(muoto))
+    .filter((m): m is Municipality => Boolean(m))
+
+  const yksilolliset = new Map(osumat.map((m) => [m.code, m]))
+  if (yksilolliset.size === 1) return [...yksilolliset.values()][0]
 
   const matches = ALL_MUNICIPALITIES.filter(
     (m) =>

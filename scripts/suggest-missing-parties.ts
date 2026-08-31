@@ -85,6 +85,16 @@ async function main() {
     )
     /* Ei ehdoteta uudelleen samalle hankkeelle. */
     .filter((r: any) => !r.metadata?.ai_suggestion)
+    /*
+     * RAKENTEILLA OLEVAT ENSIN. Kaynnissa oleva tyomaa jolle ei ole
+     * ketaan soitettavaa on pahin tapaus: hanke on olemassa, aikataulu
+     * juoksee, eika myyja voi tehda sille mitaan. Mitattu 1.9.2026:
+     * 277 hanketta ilman osapuolta, joista 10 on rakenteilla.
+     */
+    .sort((a: any, b: any) => {
+      const paino = (r: any) => (normalizeLegacyPhase(r.phase) === "construction" ? 0 : 1)
+      return paino(a) - paino(b)
+    })
     .slice(0, LIMIT)
 
   console.log(

@@ -108,7 +108,11 @@ export async function POST(request: Request) {
        * Tama ei ole vain naytto: tasmaytys rajataan maakuntaan, joten
        * tyhja maakunta lukee koko kannan.
        */
-      region: resolveRegion({ metadataRegion: metadata.region, city: candidate.municipality ?? metadata.city }),
+      region: resolveRegion({
+        metadataRegion: metadata.region,
+        city: candidate.municipality ?? metadata.city,
+        buyerName: metadata.developer,
+      }),
       location: candidate.address ?? metadata.project_address ?? null,
       permitNumber: candidate.permit_number ?? null,
       propertyId: candidate.property_id ?? null,

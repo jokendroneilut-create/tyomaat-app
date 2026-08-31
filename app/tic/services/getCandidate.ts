@@ -142,7 +142,11 @@ export async function getCandidate(id: string): Promise<CandidateDetail | null> 
        * metadata.region-kenttaa ja naytti tyhjaa niille lahteille jotka
        * eivat sita kirjoita (Espoon kuulutukset, Hilma).
        */
-      region: resolveRegion({ metadataRegion: metadata.region, city: potentialProject.municipality }),
+      region: resolveRegion({
+        metadataRegion: metadata.region,
+        city: potentialProject.municipality,
+        buyerName: metadata.developer,
+      }),
       location: potentialProject.address,
       reason: metadata.operation ?? null,
       score: potentialProject.confidence ?? 0,

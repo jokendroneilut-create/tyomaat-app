@@ -1,8 +1,20 @@
 /*
  * Suomen kuntien numerot ja nimet: Tilastokeskuksen luokituspalvelusta
  * (kunta_1_20250101, data.stat.fi) haettu ja vahvistettu suoraan API:sta.
- * Maakunta on päätelty kuntanumeroista tunnetun maakuntajaon perusteella —
- * tarkista poikkeustapaukset tarvittaessa erikseen.
+ * MAAKUNTA ON TARKISTETTU TILASTOKESKUKSEN VASTAAVUUSTAULUSTA
+ * (kunta_1_20260101#maakunta_1_20260101) 1.9.2026. Aiemmin se oli
+ * PÄÄTELTY kuntanumeroista, ja päättely koodaa vuotta 2021 edeltävän
+ * jaon: viisi kuntaa siirtyi maakunnasta toiseen 1.1.2021 eikä siirto
+ * näkynyt meillä lainkaan.
+ *
+ *   Iitti      Kymenlaakso      -> Päijät-Häme
+ *   Joroinen   Etelä-Savo       -> Pohjois-Savo
+ *   Kuhmoinen  Keski-Suomi      -> Pirkanmaa
+ *   Laihia     Etelä-Pohjanmaa  -> Pohjanmaa
+ *   Heinävesi  Etelä-Savo       -> Pohjois-Karjala
+ *
+ * 303 kuntaa 308:sta täsmäsi jo ennestään. Tarkistuksen voi ajaa
+ * uudelleen: scripts/check-municipality-regions.ts
  */
 
 export type Municipality = {
@@ -43,7 +55,7 @@ export const MUNICIPALITIES: Record<string, Municipality> = {
   "081": { code: "081", name: "Hartola", region: "Päijät-Häme" },
   "082": { code: "082", name: "Hattula", region: "Kanta-Häme" },
   "086": { code: "086", name: "Hausjärvi", region: "Kanta-Häme" },
-  "090": { code: "090", name: "Heinävesi", region: "Etelä-Savo" },
+  "090": { code: "090", name: "Heinävesi", region: "Pohjois-Karjala" },
   "091": { code: "091", name: "Helsinki", region: "Uusimaa" },
   "092": { code: "092", name: "Vantaa", region: "Uusimaa" },
   "097": { code: "097", name: "Hirvensalmi", region: "Etelä-Savo" },
@@ -57,7 +69,7 @@ export const MUNICIPALITIES: Record<string, Municipality> = {
   "111": { code: "111", name: "Heinola", region: "Päijät-Häme" },
   "139": { code: "139", name: "Ii", region: "Pohjois-Pohjanmaa" },
   "140": { code: "140", name: "Iisalmi", region: "Pohjois-Savo" },
-  "142": { code: "142", name: "Iitti", region: "Kymenlaakso" },
+  "142": { code: "142", name: "Iitti", region: "Päijät-Häme" },
   "143": { code: "143", name: "Ikaalinen", region: "Pirkanmaa" },
   "145": { code: "145", name: "Ilmajoki", region: "Etelä-Pohjanmaa" },
   "146": { code: "146", name: "Ilomantsi", region: "Pohjois-Karjala" },
@@ -70,7 +82,7 @@ export const MUNICIPALITIES: Record<string, Municipality> = {
   "167": { code: "167", name: "Joensuu", region: "Pohjois-Karjala" },
   "169": { code: "169", name: "Jokioinen", region: "Kanta-Häme" },
   "170": { code: "170", name: "Jomala", region: "Ahvenanmaa" },
-  "171": { code: "171", name: "Joroinen", region: "Etelä-Savo" },
+  "171": { code: "171", name: "Joroinen", region: "Pohjois-Savo" },
   "172": { code: "172", name: "Joutsa", region: "Keski-Suomi" },
   "176": { code: "176", name: "Juuka", region: "Pohjois-Karjala" },
   "177": { code: "177", name: "Juupajoki", region: "Pirkanmaa" },
@@ -122,7 +134,7 @@ export const MUNICIPALITIES: Record<string, Municipality> = {
   "287": { code: "287", name: "Kristiinankaupunki", region: "Pohjanmaa" },
   "288": { code: "288", name: "Kruunupyy", region: "Pohjanmaa" },
   "290": { code: "290", name: "Kuhmo", region: "Kainuu" },
-  "291": { code: "291", name: "Kuhmoinen", region: "Keski-Suomi" },
+  "291": { code: "291", name: "Kuhmoinen", region: "Pirkanmaa" },
   "295": { code: "295", name: "Kumlinge", region: "Ahvenanmaa" },
   "297": { code: "297", name: "Kuopio", region: "Pohjois-Savo" },
   "300": { code: "300", name: "Kuortane", region: "Etelä-Pohjanmaa" },
@@ -137,7 +149,7 @@ export const MUNICIPALITIES: Record<string, Municipality> = {
   "320": { code: "320", name: "Kemijärvi", region: "Lappi" },
   "322": { code: "322", name: "Kemiönsaari", region: "Varsinais-Suomi" },
   "398": { code: "398", name: "Lahti", region: "Päijät-Häme" },
-  "399": { code: "399", name: "Laihia", region: "Etelä-Pohjanmaa" },
+  "399": { code: "399", name: "Laihia", region: "Pohjanmaa" },
   "400": { code: "400", name: "Laitila", region: "Varsinais-Suomi" },
   "402": { code: "402", name: "Lapinlahti", region: "Pohjois-Savo" },
   "403": { code: "403", name: "Lappajärvi", region: "Etelä-Pohjanmaa" },

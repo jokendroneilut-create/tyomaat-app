@@ -1,4 +1,5 @@
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import { municipalityFromBuyerName } from "@/lib/geo/municipalityFromName"
 
 /*
  * MAAKUNTA PÄÄTELLÄÄN KUNNASTA, JOS LÄHDE EI SITÄ KERRO.
@@ -21,12 +22,25 @@ import { getMunicipalityByName } from "@/lib/geo/municipalities"
 export function resolveRegion(input: {
   metadataRegion?: string | null
   city?: string | null
+  /*
+   * Tilaajan nimi ("Iitin kunta"). Osalla Hilman ilmoituksista kuntaa ei
+   * ole omana kenttänään, mutta tilaaja on kunta itse — ja kunta
+   * rakennuttaa käytännössä aina omalle alueelleen. Yksityinen tilaaja
+   * ("YIT Oyj") ei osu kaavaan, joten se palauttaa tyhjän.
+   */
+  buyerName?: string | null
 }): string | null {
   const merkitty = String(input.metadataRegion ?? "").trim()
   if (merkitty) return merkitty
 
   const kunta = String(input.city ?? "").trim()
-  if (!kunta) return null
+  if (kunta) {
+    const osuma = getMunicipalityByName(kunta)?.region
+    if (osuma) return osuma
+  }
 
-  return getMunicipalityByName(kunta)?.region ?? null
+  const tilaaja = String(input.buyerName ?? "").trim()
+  if (tilaaja) return municipalityFromBuyerName(tilaaja)?.region ?? null
+
+  return null
 }

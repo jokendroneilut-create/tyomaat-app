@@ -25,3 +25,24 @@ describe("resolveRegion", () => {
     expect(resolveRegion({ city: null, metadataRegion: null })).toBeNull()
   })
 })
+
+/*
+ * Hilman ilmoituksessa kuntaa ei aina ole omana kenttanaan, mutta
+ * tilaaja on kunta itse. Loytyi 1.9.2026: "Merrankujan katu- ja
+ * vesihuoltosaneeraus", kunta null, tilaaja "Iitin kunta".
+ */
+describe("resolveRegion tilaajan nimesta", () => {
+  it("paattelee maakunnan kunnan nimesta tilaajana", () => {
+    expect(resolveRegion({ buyerName: "Iitin kunta" })).toBe("Päijät-Häme")
+    expect(resolveRegion({ buyerName: "Espoon kaupunki" })).toBe("Uusimaa")
+  })
+
+  it("ei paattele yksityisesta tilaajasta", () => {
+    expect(resolveRegion({ buyerName: "YIT Oyj" })).toBeNull()
+    expect(resolveRegion({ buyerName: "Kiinteistö Oy Merrankuja" })).toBeNull()
+  })
+
+  it("kunta voittaa tilaajan", () => {
+    expect(resolveRegion({ city: "Espoo", buyerName: "Iitin kunta" })).toBe("Uusimaa")
+  })
+})
