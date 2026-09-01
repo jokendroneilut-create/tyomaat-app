@@ -11,6 +11,33 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Duplikaattien harmaa vyohyke mitattiin (D-158)
+
+Tyojonossa oli "LLM-duplikaattiskannaus harmaalle vyohykkeelle, 3 168
+paria ~0,9 $/ajo". Mittaus vaihtoi tehtavan muodon: ylakaista ratkesi
+saannolla, ei mallilla.
+
+Koko julkinen joukko lapikaytiin (5 954 hanketta, 732 092 paria).
+Harmaa vyohyke on 157 669 paria, mutta 154 049 niista on 40-49 pisteen
+kohinaa - sama kaupunki, maakunta ja rakennuttaja, eri hanke.
+
+Kiinnostava kaista on 47 paria ja jakautuu jyrkasti: 95+ pisteessa 10
+paria jotka olivat kaikki aitoja, 70-78 pisteessa 37 paria enimmakseen
+eri hankkeita. Ne kymmenen ovat samaa tuulipuistoa kahdesta lahteesta -
+YVA-hanke ja saman puiston osayleiskaava.
+
+Kuvaustodiste (name_in_description) hyvaksytaan nyt 95 pisteesta
+ylospain ja vain samassa kaupungissa. Portti eriytettiin omaksi
+moduulikseen testeineen.
+
+Taysi skannaus toi 32 paria katselmoitavaksi: 10 uudella saannolla ja 22
+jotka olisi loytynyt ennenkin mutta joita ei oltu skannattu, koska
+viikkoajo vertaa vain muuttuneita hankkeita.
+
+LLM on perusteltu vasta kaistalle 70-78, ja vasta kun nama 32 on
+katselmoitu - katselmoinnin tulos kertoo onko uusi saanto oikeassa.
+
+
 ### Maakunta korjattu kolmesta eri syysta (D-157)
 
 Hilman ehdokas ei loytanyt maakuntaa vaikka osoite oli tiedossa. Yhden
