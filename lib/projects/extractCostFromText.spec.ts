@@ -195,4 +195,55 @@ describe("extractCostFromText", () => {
       extractCostFromText(`${lead} Urakan arvo Skanskalle on noin 29 miljoonaa euroa.`)
     ).toBeNull()
   })
+
+  /*
+   * PAATOSASIAKIRJAN MUODOT. Jokainen naista on luettu kannasta
+   * 1.9.2026; lukumaarat kertovat kuinka monella nakyvalla hankkeella
+   * muoto esiintyy.
+   */
+  describe("paatosasiakirja", () => {
+    it("lukee summan myos syvalta tekstista", () => {
+      const teksti = `${"x".repeat(1400)} Hankkeelle on varattu investointiohjelmassa 2,0 M€ vuosille 2026-2028.`
+      expect(extractCostFromText(teksti)).toBe(2_000_000)
+    })
+
+    it("tunnistaa rakennuskustannukset (177 rivia)", () => {
+      expect(
+        extractCostFromText("Katusuunnitelman rakennuskustannukset ovat yhteensä noin 1 240 000 euroa.")
+      ).toBe(1_240_000)
+      expect(extractCostFromText("Rakentamisen kustannukset ovat noin 250 000 euroa.")).toBe(250_000)
+    })
+
+    it("tunnistaa enimmaishinnan (75 rivia)", () => {
+      expect(
+        extractCostFromText("Hankkeen enimmäishinta on arvonlisäverottomana 20 840 000 euroa.")
+      ).toBe(20_840_000)
+      expect(extractCostFromText("Arvonlisäveroton enimmäishinta on 5.400.000 euroa.")).toBe(5_400_000)
+    })
+
+    /*
+     * Sivukulut. Kumpikin nayttaa ankkurilta ja kumpikin kirjoittaisi
+     * vaaran luvun: yllapito on vuosikulu (156 rivia, aineiston yleisin
+     * muoto) ja kaynnistamiskustannus on kalusteraha (36 rivia).
+     */
+    it("ei lue yllapitoa eika kaynnistamiskustannusta", () => {
+      expect(extractCostFromText("Vuosittaiset ylläpitokustannukset ovat noin 13 500 euroa.")).toBeNull()
+      expect(
+        extractCostFromText("Hankkeen käynnistämiskustannuksiin varataan noin 450 000 euroa.")
+      ).toBeNull()
+      expect(extractCostFromText("Vuokra on 25 euroa/m²/kk eli noin 30 000 euroa vuodessa.")).toBeNull()
+    })
+
+    /* Tiedotteen koontiluvut eivat saa palata paatospassin kautta. */
+    it("pitaa tiedotteen esteet voimassa", () => {
+      expect(
+        extractCostFromText(
+          "Puolustusvoimien investoinnit valtakunnallisesti olivat viime vuonna 356 miljoonaa euroa."
+        )
+      ).toBeNull()
+      expect(
+        extractCostFromText("on voittanut useita hankkeita yhteensä noin 20 miljoonan euron arvosta")
+      ).toBeNull()
+    })
+  })
 })

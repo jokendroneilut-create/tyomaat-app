@@ -223,10 +223,15 @@ export function inferCompletionDateFromText(
    * kartoitetaan myöhäisimpään kuukauteen: virhe kallistuu siihen että
    * hanke näyttää valmistuvan myöhemmin kuin aikaisemmin, jolloin sitä
    * ei merkitä valmiiksi ennen aikojaan.
+   * VUOSILUKU EI SAA OLLA OSA PIDEMPAA NUMEROSARJAA. Ilman
+   * numerorajoja kuvio luki vuoden kiinteistotunnuksesta: mitattu
+   * 1.9.2026 "Paivittaistavaramyymalan laajennus, Maakotkantie 19" sai
+   * valmistumisvuodeksi 2081, koska tunnus 09208101120002 sisaltaa
+   * merkkijonon 2081 ja sita ennen luki "tulee myymalan kayttoon".
    */
   const yearMatch = findGuardedDate(
     normalized,
-    /()(20\d{2})/g,
+    /()(?<!\d)(20\d{2})(?!\d)/g,
     () => 12
   )
   if (yearMatch) return yearMatch

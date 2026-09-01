@@ -157,6 +157,86 @@ const AGGREGATE =
 const FRAMEWORK_CONTRACT =
   /toistaiseksi\s+voimassa|puitesopimu|puitej[aä]rjestely|vuosisopimu|optiokau/i
 
+/*
+ * PAATOSASIAKIRJA ON ERI TEKSTILAJI KUIN TIEDOTE.
+ *
+ * Ylla oleva 1 200 merkin ikkuna ja koontiluku-este on rakennettu
+ * TIEDOTETTA varten: tiedote kasittelee usein useaa hanketta, ja sen oma
+ * aihe kerrotaan alussa. Kunnan paatosasiakirja on painvastainen - se
+ * kasittelee yhta asiaa, ja summa on syvalla "Selostus"-osiossa.
+ *
+ * MITATTU 1.9.2026 koko nakyvalla joukolla (5 717 hanketta): 905 mainitsee
+ * summan kuvauksessaan mutta vain 77:lta se oli poimittu. **524 rivilla
+ * summa on vasta 1 200 merkin jalkeen**, eli poimija ei nahnyt sita
+ * lainkaan. Laukaisevana tapauksena oli Kivenlahden pukutilat, jonka
+ * teksti sanoo suoraan "Hankkeelle on varattu investointiohjelmassa
+ * 2,0 M€" - merkissa 1 250.
+ *
+ * Ankkurit alla on luettu aineistosta, ei keksitty:
+ *
+ *   rakennuskustannukset ovat ...      177 rivia  (katu- ja puistosuunnitelmat)
+ *   enimmaishinta on alv 0 ...          63 + 12   (Helsingin hankesuunnitelmat)
+ *   rakentamisen kustannukset ovat ...  36
+ *   hankkeelle on varattu ...           37
+ *
+ * KAKSI MUOTOA ON TARKOITUKSELLA ULKONA. "Yllapitokustannukset ovat noin
+ * 13 500 euroa" on vuosittainen yllapito, ei hankkeen hinta (156 rivia,
+ * yleisin yksittainen muoto koko aineistossa). "Kaynnistamiskustannuksiin
+ * varataan noin 450 000 euroa" on kalusteraha koulun tai paivakodin
+ * avaamiseen, kun rakennus itse maksaa kymmenia miljoonia (36 rivia).
+ * Kumpikin naytti ankkurilta ja kumpikin olisi kirjoittanut vaaran luvun.
+ */
+function documentAnchorsFor(amount: string): RegExp[] {
+  return [
+    /* "Katusuunnitelman rakennuskustannukset ovat yhteensa noin 880 000 euroa" */
+    new RegExp(
+      `rakennuskustannu\\w*\\s+(?:ovat|on)\\s+(?:yhteens[aä]\\s+)?${HEDGE}${amount}`,
+      "i"
+    ),
+    /* "Rakentamisen kustannukset ovat noin 250 000 euroa" */
+    new RegExp(
+      `rakentamisen\\s+kustannu\\w*\\s+(?:ovat|on)\\s+(?:yhteens[aä]\\s+)?${HEDGE}${amount}`,
+      "i"
+    ),
+    /* "Hankkeen enimmaishinta on arvonlisaverottomana 20 840 000 euroa" */
+    new RegExp(
+      `enimm[aä]ishinta\\w*(?:-arvio)?\\s+(?:on\\s+)?(?:arvonlis[aä]verottomana\\s+)?${HEDGE}${amount}`,
+      "i"
+    ),
+    /* "Arvonlisaveroton enimmaishinta on 5 400 000 euroa" */
+    new RegExp(
+      `arvonlis[aä]verot\\w*\\s+enimm[aä]ishinta\\w*\\s+(?:on\\s+)?${HEDGE}${amount}`,
+      "i"
+    ),
+    /* "Hankkeen kustannusarvio on 2,0 M€" myos tekstin loppupuolella */
+    new RegExp(`kustannusarvio\\w*\\s+(?:on\\s+|oli\\s+)?${HEDGE}${amount}`, "i"),
+    /* "Hankkeelle on varattu investointiohjelmassa 2,0 M€" */
+    new RegExp(`varattu\\s+(?:\\S+\\s+){0,3}?${HEDGE}${amount}`, "i"),
+  ]
+}
+
+const DOCUMENT_SETS: { anchors: RegExp[]; multiplier: number; min: number }[] = [
+  { anchors: documentAnchorsFor(AMOUNT_MILLIONS), multiplier: 1_000_000, min: 0 },
+  { anchors: documentAnchorsFor(AMOUNT_PLAIN), multiplier: 1, min: PLAIN_MIN_EUR },
+]
+
+/*
+ * Esteet paatosankkureille. Nama ovat eri asia kuin tiedotteen
+ * koontiluvut: tassa torjutaan sivukulu joka esiintyy samassa
+ * asiakirjassa hankkeen oman hinnan kanssa.
+ * TOIMIVALTAFRAASI ON PAHIN NAISTA. Helsingin jaostopaatoksissa on
+ * vakiolause paatosvallan rajasta. Se esiintyy kahdessa muodossa:
+ * "...jaosto tai sen maaraama viranomainen hyvaksyy tilahankkeita
+ * koskevat suunnitelmat, kun kustannusarvio on enintaan 5 miljoonaa"
+ * ja "...jaosto paattaa tilahankkeista, joiden kustannusarvio on
+ * enintaan 5 miljoonaa". Kumpikin on paatoksentekosaanto eika
+ * hankkeen hinta. Mitattu 1.9.2026: seitseman hanketta olisi saanut
+ * arvon 5 000 000, kun asiakirjassa lukee 1 300 000, 1 155 000,
+ * 1 411 815 ja 8 144 446.
+ */
+const SIDE_COST =
+  /yll[aä]pitokustannu|k[aä]ynnist[aä]miskustannu|k[aä]ynnist[aä]misraha|irtaimist|vuokrakustannu|euroa\s*\/\s*m|(?:p[aä][aä]tt[aä][aä]|p[aä][aä]tt[aä]nyt|p[aä][aä]tti|hyv[aä]ksyy)\s+tilahank|p[aä][aä]t[oö]svalta/i
+
 export function extractCostFromText(
   text: string | null | undefined
 ): number | null {
@@ -204,6 +284,38 @@ export function extractCostFromText(
        * suurimmatkin yksittäiset rakennushankkeet jäävät alle kolmen
        * miljardin, joten sitä suurempi luku on lähes varmasti väärin luettu.
        */
+      if (euros > 3_000_000_000) continue
+
+      return euros
+    }
+  }
+
+  /*
+   * PAATOSPASSI. Ajetaan vasta kun tiedoteankkurit eivat loytaneet
+   * mitaan, ja koko tekstista: paatosasiakirjassa summa on syvalla
+   * "Selostus"-osiossa (524 riviä mitattu 1.9.2026). Koontiluku-estetta
+   * EI kayteta, koska sen "yhteensa <luku>" torjuisi juuri sen muodon
+   * jossa katusuunnitelman oma hinta ilmoitetaan ("rakennuskustannukset
+   * ovat yhteensa noin 1 240 000 euroa"). Tilalla on sivukuluesto.
+   */
+  for (const { anchors, multiplier, min } of DOCUMENT_SETS) {
+    for (const anchor of anchors) {
+      const match = text.match(anchor)
+      if (!match) continue
+
+      const at = match.index ?? 0
+      const window = text.slice(Math.max(0, at - 220), at + match[0].length + 60)
+      if (SIDE_COST.test(window)) continue
+
+      const raw = String(match[1] ?? "")
+      const normalized =
+        multiplier === 1 ? raw.replace(/[  .]/g, "") : raw.replace(",", ".")
+
+      const value = Number(normalized)
+      if (!Number.isFinite(value) || value <= 0) continue
+
+      const euros = Math.round(value * multiplier)
+      if (euros < min) continue
       if (euros > 3_000_000_000) continue
 
       return euros

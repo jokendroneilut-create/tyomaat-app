@@ -11,6 +11,38 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kustannusarvio ja valmistumisaika paatosasiakirjoista (D-161)
+
+Kysymys yhdesta ehdokkaasta paljasti kaksi eri vikaa. Valmistumisaika
+poimittiin oikein mutta havisi kirjoitusjarjestykseen: kentta
+kirjoitettiin metadatan alkuun ja lahteen `estimated_completion: null`
+levitettiin paalle. Kustannusarviota ei nahty lainkaan, koska poimija
+katsoo vain tekstin 1 200 ensimmaista merkkia - oikein tiedotteelle,
+vaarin paatosasiakirjalle jossa summa on syvalla selostuksessa.
+
+Mitattu 5 717 nakyvalla hankkeella: 905 mainitsee summan, poimittu oli
+77, ja 524:lla summa on vasta 1 200 merkin jalkeen.
+
+Paatosasiakirjoille tehtiin oma passi nelja aineistosta luettua
+ankkuria (rakennuskustannukset, enimmaishinta, rakentamisen
+kustannukset, "hankkeelle on varattu"). Kolme muotoa estettiin
+tarkoituksella: yllapitokustannus on vuosikulu, kaynnistamiskustannus on
+kalusteraha, ja Helsingin toimivaltafraasi "jaosto paattaa
+tilahankkeista, joiden kustannusarvio on enintaan 5 miljoonaa euroa" on
+paatoksentekosaanto - se olisi antanut seitsemalle hankkeelle arvon
+5 000 000, kun asiakirjassa lukee 1,3 M€, 1,155 M€, 1,41 M€ ja 8,14 M€.
+
+Samalla korjattiin vuosiluvun poiminta: ilman numerorajoja kuvio luki
+vuoden 2081 kiinteistotunnuksesta 09208101120002.
+
+Takautuva ajo taytti 302 hanketta (206 kustannusarviota, 127 tulevaa
+valmistumispaivaa) ja jonon kaksi ehdokasta. Kustannusarvio on nyt 590
+nakyvalla hankkeella, valmistumisaika 613:lla.
+
+65 mennytta valmistumispaivaa jatettiin kirjoittamatta: mennyt paiva
+laukaisee yoajon joka merkitsee hankkeen valmistuneeksi, ja osa niista
+on kesken (Kupittaa-Turku-ratahanke, Valtatien 2 YVA).
+
 ### Oulu ei anna lupaa paatosjarjestelmaansa (D-160)
 
 Oulun kaupunki vastasi 1.9.2026 kieltavasti 8.8. jatettyyn

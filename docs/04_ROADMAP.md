@@ -716,6 +716,14 @@ muistin varassa.
   eikä lupanumeroa. Ne ovat helmi–maaliskuun 2026 erä (286 + 200 kpl),
   joka tuotiin ennen lähdehistorian kirjaamista. Hyväksytty tappioksi —
   metsästäminen ei tuota mitään.
+- **Kustannusarvio 590:llä ja valmistumisaika 613:lla** näkyvästä 5 717
+  hankkeesta (10–11 %, tilanne 1.9.2026 D-161:n korjausten jälkeen).
+  Loput eivät ole poimintavirhe vaan lähteen vaikeneminen: summaa
+  mainitsevia on 905, ja niistä on nyt poimittu se osa jossa summa on
+  hankkeen oma eikä ylläpitokulu, kalusteraha tai päätösvallan raja.
+  Seuraava askel olisi liitteet (hankesuunnitelma-PDF), ei uusi kuvio
+  samaan tekstiin.
+
 - **Kuvauksen lyhyys on osin lähteen ominaisuus, ei meidän vikamme.**
   Mitattu 15.8.2026: 1 571 lyhytkuvauksisesta 965:llä on lähteen
   `description`-kenttä tallessa, mutta **sen mediaanipituus on 135
@@ -785,6 +793,23 @@ muistin varassa.
   suunnittelu-, lupa- ja rakentamisvaiheissa jää listalle kunnes joku
   kertoo valmistumisesta. Kaavoitus sai polun 29.8.2026 (D-146,
   `docs/14_POISTUMISPOLUT.md`), nämä eivät.
+
+  **65 mennyttä valmistumispäivää odottaa päätöstä** (D-161, 1.9.2026).
+  Takautuva täydennysajo löysi ne tekstistä mutta EI kirjoittanut niitä:
+  mennyt `estimated_completion` laukaisee `auto-complete-projects`-ajon,
+  joka merkitsee hankkeen valmistuneeksi ja poistaa sen asiakkaan
+  listalta. Riveittäin luettuna osa olisi oikein, mutta osa on kesken —
+  "Kupittaa–Turku-ratahanke" (2025-10-31) ja "Valtatien 2 parantaminen,
+  YVA" (2025-04-30) ovat käynnissä, ja päivä koskee osavaihetta.
+  Lista saa näkyviin:
+
+  ```bash
+  npx tsx scripts/fix-cost-and-completion.ts
+  ```
+
+  Kirjoitus vaatii lipun `--menneet`. Tämä on sama kysymys kuin
+  poistumispolku itse: kumpi on pahempi, valmistunut hanke listalla vai
+  kesken oleva hanke piilotettuna.
 
 - ~~**Voimaan tullut kaava jää vaiheeseen "Kaavoitus"**~~ Hoidettu
   29.–30.8.2026 (D-152): `advance-effective-zoning` ajaa vuorokausittain

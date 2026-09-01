@@ -5,6 +5,84 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-161 - Kustannusarvio ja valmistumisaika: ikkuna, jarjestys ja vakiofraasi
+
+Kysymys tuli yhdesta ehdokkaasta (Kivenlahden lahiliikunta-alueen
+pukutilat, 1.9.2026): onko kustannusarvio ja valmistumisaika poimittu?
+Ei kumpaakaan - vaikka kuvauksessa lukee "Hankkeelle on varattu
+investointiohjelmassa 2,0 M€" ja "Rakennuksen on tarkoitus valmistua
+marras-joulukuussa 2028". Relevanssiportin oma perustelu jopa siteerasi
+molempia. Syyt osoittautuivat eri vioiksi.
+
+**VIKA 1: VALMISTUMISAIKA HAVISI KIRJOITUSJARJESTYKSEEN.** Poimija
+toimi koko ajan - se lukee tekstista oikein 2028-12-31. Kentta
+kirjoitettiin kuitenkin metadatan ALKUUN, ja `...input.metadata`
+levitettiin sen paalle. Koska lahteet asettavat rakenteisen
+`estimated_completion: null`, lahteen tyhja voitti poimitun paivan joka
+kerta. Korjaus: paiva kirjoitetaan levitysten JALKEEN ja vain jos kentta
+on aidosti tyhja.
+
+**VIKA 2: POIMIJA EI NAHNYT SUMMAA.** `extractCostFromText` katsoo
+tekstin 1 200 ensimmaista merkkia. Rajaus on oikein TIEDOTTEELLE, joka
+kasittelee usein useaa hanketta ja kertoo oman aiheensa alussa. Kunnan
+PAATOSASIAKIRJA on painvastainen: se kasittelee yhta asiaa, ja summa on
+syvalla "Selostus"-osiossa - Kivenlahdella merkissa 1 250.
+
+**MITATTU KOKO JOUKOLLA** (5 717 nakyvaa hanketta): 905 mainitsee summan
+kuvauksessaan, poimittu oli **77**. Naista 524:lla summa on vasta 1 200
+merkin jalkeen.
+
+Paatosasiakirjoille tehtiin oma passi, joka ajetaan koko tekstista vasta
+kun tiedoteankkurit eivat loytaneet mitaan. Ankkurit luettiin
+aineistosta:
+
+```
+rakennuskustannukset ovat ...      177 rivia
+enimmaishinta on alv 0 ...          75
+rakentamisen kustannukset ovat ...  36
+hankkeelle on varattu ...           37
+```
+
+**KOLME MUOTOA ON TARKOITUKSELLA ULKONA**, ja jokainen olisi
+kirjoittanut vaaran luvun:
+
+1. "Vuosittaiset yllapitokustannukset ovat noin 13 500 euroa" - vuosikulu,
+   ei hankkeen hinta. 156 rivia, aineiston yleisin yksittainen muoto.
+2. "Kaynnistamiskustannuksiin varataan noin 450 000 euroa" - kalusteraha
+   koulun avaamiseen, kun rakennus maksaa kymmenia miljoonia. 36 rivia.
+3. **Helsingin toimivaltafraasi.** "...jaosto paattaa tilahankkeista,
+   joiden kustannusarvio on enintaan 5 miljoonaa euroa" esiintyy joka
+   jaostopaatoksessa. Se on paatoksentekosaanto eika hankkeen hinta.
+   Ilman estoa **seitseman hanketta olisi saanut arvon 5 000 000**, kun
+   asiakirjassa lukee 1 300 000, 1 155 000, 1 411 815 ja 8 144 446.
+   Fraasi esiintyy kahdessa sanamuodossa ja molemmat piti estaa
+   erikseen.
+
+**VUOSILUKU LUETTIIN KIINTEISTOTUNNUKSESTA.** Kuivaharjoituksessa yksi
+rivi sai valmistumisvuodeksi 2081. Syy: pelkan vuoden kuvio `(20\d{2})`
+ilman numerorajoja osui tunnukseen 09208101120002, ja edella luki
+"tulee myymalan kayttoon" joka kelpasi vartijaksi. Kuvioon lisattiin
+numerorajat.
+
+**MENNEET PAIVAT JATETTIIN KIRJOITTAMATTA.** 65 rivilla poimittu paiva
+oli jo mennyt. Se ei ole pelkka kentta: `auto-complete-projects` siirtaa
+yollisessa ajossa hankkeen tilaan "completed", eli hanke katoaa
+asiakkaan listalta. Osalla se olisi oikein, mutta luettuna riveittain
+osa on kesken - "Kupittaa-Turku-ratahanke" (2025-10-31) ja "Valtatien 2
+parantaminen, YVA" (2025-04-30) ovat molemmat kaynnissa, ja paiva koskee
+osavaihetta. Ne odottavat lippua `--menneet` ja ihmisen paatosta.
+
+**TULOS.** Kirjoitettu 302 hankkeelle (206 kustannusarviota, 127
+tulevaa valmistumispaivaa) ja jonon kahdelle ehdokkaalle. Kustannusarvio
+on nyt 590 nakyvalla hankkeella ja valmistumisaika 613:lla.
+
+`lib/projects/extractCostFromText.ts` ·
+`lib/projects/inferCompletionDateFromText.ts` ·
+`lib/agent/identity/resolvePotentialProject.ts` ·
+`scripts/fix-cost-and-completion.ts`
+
+---
+
 ### D-160 - Oulu ei anna lupaa paatosjarjestelmaansa
 
 Oulun kaupunki vastasi 1.9.2026 lupapyyntoon, joka jatettiin 8.8.2026

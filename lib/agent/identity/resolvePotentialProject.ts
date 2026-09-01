@@ -149,6 +149,30 @@ export async function resolvePotentialProject(
     .filter(Boolean)
     .join(" ")
 
+  /*
+   * POIMITTU PAIVA EI SAA HAVITA LAHTEEN TYHJAAN.
+   *
+   * Kentta kirjoitettiin metadatan ALKUUN, jonka jalkeen
+   * `...input.metadata` levitettiin paalle - ja koska lahteet asettavat
+   * `estimated_completion: null` rakenteisena kenttana, tyhja voitti
+   * poimitun paivan joka kerta. Mitattu tapaus 1.9.2026: Kivenlahden
+   * pukutilat, jonka kuvauksessa lukee "Rakennuksen on tarkoitus
+   * valmistua marras-joulukuussa 2028" ja jonka poimija lukee oikein
+   * (2028-12-31) - mutta kannassa kentta oli null.
+   *
+   * Nyt paiva kirjoitetaan levitysten JALKEEN ja vain jos kentta on
+   * aidosti tyhja. Lahteen tai aiemman ajon oma arvo voittaa yha.
+   */
+  function completionField(
+    existingMetadata?: Record<string, any> | null
+  ): Record<string, unknown> {
+    if (!inferredCompletion) return {}
+    const nyt = String(
+      existingMetadata?.estimated_completion ?? md.estimated_completion ?? ""
+    ).trim()
+    return nyt ? {} : { estimated_completion: inferredCompletion }
+  }
+
   function costMetadata(
     existingMetadata?: Record<string, any> | null
   ): Record<string, unknown> {
@@ -312,11 +336,9 @@ export async function resolvePotentialProject(
         last_seen: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         metadata: {
-          ...(inferredCompletion
-            ? { estimated_completion: inferredCompletion }
-            : {}),
           ...(existing.metadata ?? {}),
           ...(input.metadata ?? {}),
+          ...completionField(existing.metadata),
           ...completionMetadata,
           ...costMetadata(existing.metadata),
           source_history: sourceHistory,
@@ -393,10 +415,8 @@ export async function resolvePotentialProject(
       evidence_count: 0,
       status: autoIgnored || relevanceGate.ignored ? "ignored" : "new",
       metadata: {
-        ...(inferredCompletion
-          ? { estimated_completion: inferredCompletion }
-          : {}),
         ...(input.metadata ?? {}),
+        ...completionField(null),
         ...completionMetadata,
         ...costMetadata(null),
         ...relevanceGate.metadata,
