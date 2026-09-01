@@ -37,7 +37,7 @@ async function main() {
   for (let f = 0; ; f += 1000) {
     const { data, error } = await admin
       .from("projects")
-      .select("id,name,city,region,is_public,status,metadata")
+      .select("id,name,city,region,is_public,status,developer,metadata")
       .range(f, f + 999)
     if (error) throw error
     rivit.push(...(data ?? []))
@@ -85,6 +85,33 @@ async function main() {
   }
   for (const [k, v] of [...per].sort((a, b) => b[1] - a[1])) console.log(`  ${k.padEnd(52)} ${v}`)
 
+  /*
+   * TYHJAT MAAKUNNAT. Eri asia kuin vaara maakunta: tassa mikaan ei
+   * ylikirjoitu, vaan tyhja kentta taytetaan samalla logiikalla jota
+   * hyvaksynta ja TIC kayttavat (resolveRegion) - mukaan lukien
+   * maakunnallinen tilaaja ja otsikon genetiivi.
+   */
+  const { resolveRegion } = await import("../lib/projects/resolveRegion")
+  const tyhjat = rivit
+    .filter((r) => r.status === "active" && r.is_public !== false)
+    .filter((r) => !String(r.region ?? "").trim())
+    .map((r) => ({
+      r,
+      oikea: resolveRegion({
+        metadataRegion: r.metadata?.region,
+        city: r.city,
+        buyerName: r.metadata?.developer ?? r.developer,
+        title: r.name,
+      }),
+    }))
+    .filter((x) => x.oikea)
+
+  console.log("")
+  console.log("TYHJIA MAAKUNTIA taytettavissa " + tyhjat.length + ":")
+  for (const { r, oikea } of tyhjat) {
+    console.log("  " + String(oikea).padEnd(18) + " " + String(r.name ?? "").slice(0, 52) + "  (tilaaja: " + String(r.metadata?.developer ?? r.developer ?? "-").slice(0, 24) + ")")
+  }
+
   if (!APPLY) {
     console.log("\nKuivaharjoitus: mitaan ei kirjoitettu.")
     return
@@ -97,6 +124,12 @@ async function main() {
     else ok++
   }
   console.log(`\nkorjattu ${ok} / ${korjattavat.length}`)
+
+  for (const { r, oikea } of tyhjat) {
+    const { error } = await admin.from("projects").update({ region: oikea }).eq("id", r.id)
+    if (error) console.log("  VIRHE " + r.name + ": " + error.message)
+  }
+  console.log("taytetty tyhjia " + tyhjat.length)
 }
 
 main().catch((e) => { console.error("VIRHE:", e?.message ?? e); process.exit(1) })

@@ -112,6 +112,7 @@ export async function POST(request: Request) {
         metadataRegion: metadata.region,
         city: candidate.municipality ?? metadata.city,
         buyerName: metadata.developer,
+        title: candidate.title,
       }),
       location: candidate.address ?? metadata.project_address ?? null,
       permitNumber: candidate.permit_number ?? null,

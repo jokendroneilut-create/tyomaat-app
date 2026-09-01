@@ -5,6 +5,51 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-163 - Maakunnallinen tilaaja ja otsikon genetiivi maakunnan lahteina
+
+Ilmoitus jonossa: "Kiteen alueen tyokone- ja kuljetuspalvelut,
+maanrakennustoihin liittyvat henkilotyot seka kiviainekset" (Hilma,
+2.9.2026). Maakunta puuttui.
+
+**SYY.** Hilman ilmoituksella ei ole kuntakenttaa lainkaan
+(`municipality` tyhja, `metadata.region` null). Maakunta on tahan asti
+paatelty kolmesta lahteesta: lahteen omasta kentasta, kunnasta, tai
+tilaajan nimesta jos se on kunta ("Iitin kunta"). Tassa tilaaja on
+**Pohjois-Karjalan hankintatoimi** - maakunnallinen organisaatio, ei
+kunta, joten `municipalityFromBuyerName` ei osu.
+
+**MITATTU ENNEN KORJAUSTA.** Nakyvista 5 836 hankkeesta maakunta puuttui
+**12:lta** ja jonosta yhdelta. Aukko on siis kapea eika systeeminen -
+mutta 10:lla noista 12:sta ei ole mitaan mista paatella ("Senaatti-
+kiinteistot", "Skanska sai uuden datakeskusurakan"), joten niiden tyhja
+on oikein. Korjattavissa oli kolme.
+
+**KAKSI UUTTA LAHDETTA, MOLEMMAT VIIMEISINA:**
+
+1. **Maakunnan nimi organisaation nimessa.** "Pohjois-Karjalan
+   hankintatoimi", "Varsinais-Suomen ELY-keskus", hyvinvointialueet.
+   Taivutus on TAULUKOITU eika paatelty: suomen maakuntanimien genetiivi
+   on osin saannoton (Uusimaa -> Uudenmaan, Lappi -> Lapin, Satakunta ->
+   Satakunnan), ja arvaava saanto osuisi vaarin juuri niissa. Lista on
+   19 rivia pitka eika kasva. Pisin nimi tarkistetaan ensin, jottei
+   "Pohjanmaa" osu ennen "Pohjois-Pohjanmaata".
+2. **Otsikon ensimmainen sana genetiivissa.** "Kiteen alueen ..." antaa
+   Kitee -> Pohjois-Karjala. Heikoin keino ja siksi viimeisena;
+   hyvaksytaan vain jos genetiivi ratkeaa yksikasitteisesti kunnaksi,
+   jolloin kadun- ja yritysnimet eivat osu.
+
+**KORJATTU KOLMESSA KOHDASSA** kuten D-156:ssa opittiin: sama funktio
+`resolveRegion` ajaa hyvaksynnan, TIC:n esikatselun, katselmointilistan
+ja yhdistamisehdotukset, joten kaikki nelja saivat korjauksen kerralla.
+Otsikko kulkee nyt funktiolle kaikista neljasta.
+
+Takautuvasti taytettiin kolme tyhjaa maakuntaa
+(`scripts/fix-project-regions.ts`); jonossa ei jaanyt yhtaan ilman.
+
+`lib/geo/regionFromName.ts` · `lib/projects/resolveRegion.ts`
+
+---
+
 ### D-162 - Kesken oleva hanke piilotettuna on pahempi kuin valmistunut listalla
 
 **PERIAATE (Johannes 2.9.2026).** Kysyin kumpi virhe on pahempi, ja

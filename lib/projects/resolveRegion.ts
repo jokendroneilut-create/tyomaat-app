@@ -1,5 +1,6 @@
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
-import { municipalityFromBuyerName } from "@/lib/geo/municipalityFromName"
+import { municipalityFromBuyerName, municipalityFromGenitive } from "@/lib/geo/municipalityFromName"
+import { regionFromOrganisationName } from "@/lib/geo/regionFromName"
 
 /*
  * MAAKUNTA PÄÄTELLÄÄN KUNNASTA, JOS LÄHDE EI SITÄ KERRO.
@@ -29,6 +30,12 @@ export function resolveRegion(input: {
    * ("YIT Oyj") ei osu kaavaan, joten se palauttaa tyhjän.
    */
   buyerName?: string | null
+  /*
+   * Otsikko viimeisena keinona. Hilman ilmoituksissa kohde on usein
+   * vain otsikossa ("Kiteen alueen tyokone- ja kuljetuspalvelut"), kun
+   * rakenteinen kuntakentta on tyhja.
+   */
+  title?: string | null
 }): string | null {
   const merkitty = String(input.metadataRegion ?? "").trim()
   if (merkitty) return merkitty
@@ -40,7 +47,29 @@ export function resolveRegion(input: {
   }
 
   const tilaaja = String(input.buyerName ?? "").trim()
-  if (tilaaja) return municipalityFromBuyerName(tilaaja)?.region ?? null
+  if (tilaaja) {
+    const kunnasta = municipalityFromBuyerName(tilaaja)?.region
+    if (kunnasta) return kunnasta
+
+    /*
+     * MAAKUNNALLINEN TILAAJA. "Pohjois-Karjalan hankintatoimi",
+     * "Varsinais-Suomen ELY-keskus" ja hyvinvointialueet eivat ole
+     * kuntia, joten kunnasta paattely ei osu - mutta nimi kertoo
+     * maakunnan suoraan. Se on juuri se tieto jota asiakas suodattaa.
+     */
+    const nimesta = regionFromOrganisationName(tilaaja)
+    if (nimesta) return nimesta
+  }
+
+  /*
+   * OTSIKON ENSIMMAINEN SANA GENETIIVISSA. Heikoin keino ja siksi
+   * viimeisena: "Kiteen alueen tyokone- ja kuljetuspalvelut" antaa
+   * Kitee -> Pohjois-Karjala. Hyvaksytaan vain jos genetiivi ratkeaa
+   * yksikasitteisesti kunnaksi (`municipalityFromGenitive`), jolloin
+   * kadun- ja yritysnimet eivat osu.
+   */
+  const ensimmainen = String(input.title ?? "").trim().split(/\s+/)[0]
+  if (ensimmainen) return municipalityFromGenitive(ensimmainen)?.region ?? null
 
   return null
 }

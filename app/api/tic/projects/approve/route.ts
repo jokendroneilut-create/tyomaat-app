@@ -2149,7 +2149,7 @@ export async function POST(request: Request) {
       : potentialProject.municipality ?? null
 
     const region =
-      resolveRegion({ metadataRegion: metadata.region, city, buyerName: metadata.developer }) ??
+      resolveRegion({ metadataRegion: metadata.region, city, buyerName: metadata.developer, title: potentialProject.title }) ??
       inferredMunicipality?.region ??
       null
 

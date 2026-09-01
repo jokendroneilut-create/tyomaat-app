@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Maakunta maakunnallisesta tilaajasta ja otsikosta (D-163)
+
+Hilman ilmoituksella ei ole kuntakenttaa, ja tilaaja voi olla
+maakunnallinen ("Pohjois-Karjalan hankintatoimi") - jolloin kunnasta
+paattely ei osu, vaikka nimi kertoo maakunnan suoraan. Lisaksi otsikon
+ensimmainen sana on usein kunta genetiivissa ("Kiteen alueen ...").
+
+Molemmat lisattiin `resolveRegion`iin viimeisina keinoina.
+Maakuntanimien taivutus on taulukoitu eika paatelty, koska osa on
+saannoton (Uusimaa -> Uudenmaan, Lappi -> Lapin, Satakunta ->
+Satakunnan).
+
+Mitattu: nakyvista 5 836 hankkeesta maakunta puuttui 12:lta ja jonosta
+yhdelta. Kolme oli korjattavissa, ja ne korjattiin; lopuilla 10:lla ei
+ole mitaan mista paatella, joten tyhja on niissa oikein.
+
 ### Piilotus vaatii nyt enemman kuin umpeutuneen arvion (D-162)
 
 Periaate: kesken oleva hanke piilotettuna on pahempi kuin valmistunut

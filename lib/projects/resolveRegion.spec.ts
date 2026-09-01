@@ -45,4 +45,32 @@ describe("resolveRegion tilaajan nimesta", () => {
   it("kunta voittaa tilaajan", () => {
     expect(resolveRegion({ city: "Espoo", buyerName: "Iitin kunta" })).toBe("Uusimaa")
   })
+
+  /*
+   * Maakunnallinen tilaaja ja otsikko. Mitattu rivi 2.9.2026: Hilman
+   * ilmoitus "Kiteen alueen tyokone- ja kuljetuspalvelut", tilaajana
+   * Pohjois-Karjalan hankintatoimi, ilman kuntakenttaa.
+   */
+  it("lukee maakunnan maakunnallisen tilaajan nimesta", () => {
+    expect(
+      resolveRegion({ metadataRegion: null, city: null, buyerName: "Pohjois-Karjalan hankintatoimi" })
+    ).toBe("Pohjois-Karjala")
+  })
+
+  it("lukee maakunnan otsikon genetiivista viimeisena keinona", () => {
+    expect(
+      resolveRegion({
+        metadataRegion: null,
+        city: null,
+        buyerName: null,
+        title: "Kiteen alueen työkone- ja kuljetuspalvelut",
+      })
+    ).toBe("Pohjois-Karjala")
+  })
+
+  it("ei arvaa maakuntaa yritystilaajasta eika tavallisesta otsikosta", () => {
+    expect(
+      resolveRegion({ metadataRegion: null, city: null, buyerName: "Senaatti-kiinteistöt", title: "Hankesuunnittelupalvelut" })
+    ).toBeNull()
+  })
 })

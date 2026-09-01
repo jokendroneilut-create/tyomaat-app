@@ -146,6 +146,7 @@ export async function getCandidate(id: string): Promise<CandidateDetail | null> 
         metadataRegion: metadata.region,
         city: potentialProject.municipality,
         buyerName: metadata.developer,
+        title: potentialProject.title,
       }),
       location: potentialProject.address,
       reason: metadata.operation ?? null,
