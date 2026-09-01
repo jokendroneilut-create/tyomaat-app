@@ -77,6 +77,21 @@ ei tyhjenna.
 Lopputulos: tyyppi on 64 %:lla (oli 57 %), ja suodattimen arvolista
 lyheni 63 arvosta 35:een, joista 20 kanonista kattaa 3 632 rivia.
 
+**AUKI: SANASTOSTA PUUTTUU "JULKINEN RAKENNUS".** Kaupungintalo,
+kasarmi, vankila ja poliisiaseman kaltaiset kohteet eivat osu mihinkaan
+20:sta kanonisesta tyypista. Korjausajon kaksi tiedossa olevaa
+huononnusta tulevat juuri siita: "Kaupungintalon saneeraus" siirtyi
+Toimitilasta Kulttuurirakennukseen ja "Poliisiammattikorkeakoulun
+asuntoloiden uudistaminen" Kerrostalosta Kouluun. Uusi tyyppi koskee
+saantoa, mallin promptia ja asiakkaan suodatinta yhta aikaa, joten se on
+oma paatoksensa.
+
+**AUKI: 2 092 rivia on yha tyypittomia**, ja se on tarkoituksellista -
+saanto ei loyda tyyppia otsikosta eivatka kaksi kutsua paase
+yksimielisyyteen. Niiden tayttaminen vaatii uuden todisteen
+(kuvausteksti, liite, lahteen oma luokitus), ei uutta arvausta.
+Ks. tyojono [`04_ROADMAP.md`](04_ROADMAP.md).
+
 `lib/agent/quality/resolveBuildingType.ts` · `lib/agent/buildingType.ts` ·
 `scripts/fix-building-type.ts`
 

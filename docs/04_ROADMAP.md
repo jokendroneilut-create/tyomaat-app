@@ -627,7 +627,36 @@ muistin varassa.
   `construction`. Pisteytys ei siis vääristy. Aito korjattava on
   **"Suunnittelukilpailu" (3 hanketta), joka ei kanonisoidu lainkaan**.
   Loput on siisteyttä: yksi vaihe, yksi nimi näytöllä.
-- Kohdetyyppi puuttuu 2 260 hankkeelta (42 %).
+- **Kohdetyyppi puuttuu 2 092 hankkeelta (36 %).** Tilanne 1.9.2026
+  luokittimen kytkennän ja takautuvan korjauksen jälkeen (D-159): tyyppi
+  on 3 650:llä eli 64 %:lla, kun ennen työtä se oli 57 %:lla.
+  Suodattimen arvolista lyheni 63 arvosta 35:een. Puuttuvat 2 092 ovat
+  rivejä joilla **sääntö ei löydä tyyppiä otsikosta eivätkä mallin kaksi
+  kutsua pääse yksimielisyyteen** — eli tyhjä on tässä tarkoituksellinen,
+  ei unohdus. Niiden täyttäminen vaatii uuden todisteen (kuvausteksti,
+  liite tai lähteen oma luokitus), ei uutta arvausta.
+
+  **Avoinna kolme asiaa:**
+
+  1. **Sanastosta puuttuu "Julkinen rakennus".** Kaupungintalo,
+     kasarmi, vankila ja poliisiaseman kaltaiset kohteet eivät osu
+     mihinkään 20:stä kanonisesta tyypistä, joten ne päätyvät joko
+     Toimitilaan tai Kulttuurirakennukseen. Kaksi tiedossa olevaa
+     huononnusta 1.9.2026 korjausajossa tulee juuri tästä:
+     "Kaupungintalon saneeraus" siirtyi Toimitilasta
+     Kulttuurirakennukseen ja "Poliisiammattikorkeakoulun asuntoloiden
+     uudistaminen" Kerrostalosta Kouluun. Uusi tyyppi on sanastomuutos,
+     joka koskee sekä sääntöä, mallin promptia että asiakkaan
+     suodatinta — tehdään harkiten, ei ohimennen.
+  2. **18 riviä on yhä sanaston ulkopuolella** (15 eri arvoa:
+     "Julkinen rakennus" 6, "Tori", "Kylpylä", "Vankila", "koulu",
+     "toimisto" …). Ne eivät osu asiakkaan suodattimeen. Sääntö ei
+     tunnista niitä otsikosta eikä malli anna vastausta, joten ne
+     odottavat joko kohtaa 1 tai käsin tehtyä päätöstä.
+  3. **Mittari kannattaa toistaa** kun uusia hankkeita on kertynyt:
+     `scripts/fix-building-type.ts --vaihe=b` vahvistaa tai korjaa
+     mallin kirjoittamat arvot, ja sen tulos kertoo pysyykö kahden
+     äänen portti tarkkana.
 - **Osapuolet puuttuvat kokonaan 221 hankkeelta** joissa työ on käynnissä
   tai suunnitteilla (mitattu 15.8.2026). Asiakkaalle näkyvistä 2 136
   suunnittelu- tai rakentamisvaiheen hankkeesta 10 %:lta puuttuu **sekä
