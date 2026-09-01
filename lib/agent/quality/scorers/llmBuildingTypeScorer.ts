@@ -157,7 +157,20 @@ export async function scoreBuildingType(input: {
             `Kuvaus: ${(input.description ?? "-").slice(0, DESCRIPTION_CHARS)}`,
         },
       ],
-    } as Anthropic.MessageCreateParamsNonStreaming)
+    } as Anthropic.MessageCreateParamsNonStreaming, {
+      /*
+       * AIKAKATKAISU, KOSKA TAMA AJETAAN NYT PUTKESSA.
+       *
+       * Luokitin oli aiemmin vain skriptissa, jossa hidas pyynto ei
+       * haitannut. Putkessa se syo tuonnin aikabudjettia (D-155: yksi
+       * hidas pyynto kaatoi koko lahteen, ei tuonti). Otsikon
+       * luokittelu kestaa sekunnin; 15 s on reilusti yli sen, ja
+       * ylitys tarkoittaa etta kentta jaa tyhjaksi - ei etta ajo
+       * kaatuu.
+       */
+      timeout: 15_000,
+      maxRetries: 1,
+    })
 
     const textBlock = res.content.find((b) => b.type === "text")
     if (!textBlock || textBlock.type !== "text") return null

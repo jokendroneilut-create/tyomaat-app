@@ -46,9 +46,10 @@ const CONCURRENCY = 6
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { inferBuildingType } = await import("../lib/agent/buildingType")
-  const { scoreBuildingType, isBuildingTypeScorerEnabled, BUILDING_TYPES } = await import(
+  const { isBuildingTypeScorerEnabled, BUILDING_TYPES } = await import(
     "../lib/agent/quality/scorers/llmBuildingTypeScorer"
   )
+  const { resolveBuildingType } = await import("../lib/agent/quality/resolveBuildingType")
 
   if (!isBuildingTypeScorerEnabled()) {
     console.log("ANTHROPIC_API_KEY puuttuu")
@@ -104,11 +105,17 @@ async function main() {
         let source = "saanto"
 
         if (!type) {
-          const verdict = await scoreBuildingType({
+          /*
+           * Sama portti kuin putkessa: kaksi kutsua joiden on oltava
+           * samaa mieltä. Yksi kutsu antaa noin 10 % vääriä (mitattu
+           * 1.9.2026), ja erimielisyys on niiden luotettavin merkki.
+           */
+          const tulos = await resolveBuildingType({
             title,
             description: String(r.additional_info ?? r.metadata?.description ?? ""),
+            ruleBuildingType: null,
           })
-          type = verdict?.type ?? null
+          type = (tulos.metadata.building_type as string | undefined) ?? null
           source = "llm"
         }
 
@@ -152,6 +159,56 @@ async function main() {
 
   console.log("\nnayte:")
   for (const s of samples) console.log(s)
+
+  /*
+   * JONO KORJATAAN SAMALLA AJOLLA.
+   *
+   * Ehdokas kantaa kohdetyypin metadata.building_type-kentassa, ja
+   * hyvaksynta kopioi sen hankkeen property_type-kenttaan. Jonossa
+   * odottava ehdokas ilman tyyppia syntyy hyvaksyttaessa ilman tyyppia,
+   * eli sama aukko uudestaan. Uudet ehdokkaat saavat tyypin putkessa
+   * (resolveBuildingType), mutta jo jonossa olevat eivat.
+   */
+  const { data: jono, error: jonoErr } = await supabase
+    .from("potential_projects")
+    .select("id,title,metadata")
+    .eq("status", "new")
+  if (jonoErr) throw jonoErr
+
+  const jonossa = (jono ?? []).filter(
+    (r: any) => !String(r.metadata?.building_type ?? "").trim()
+  )
+
+  console.log(`
+JONO: ${jono?.length ?? 0} ehdokasta, ilman kohdetyyppia ${jonossa.length}`)
+
+  for (const r of jonossa) {
+    const title = String((r as any).title ?? "")
+    const md: any = (r as any).metadata ?? {}
+    let type = inferBuildingType(title, null)
+    let source = "saanto"
+    if (!type) {
+      const tulos = await resolveBuildingType({
+        title,
+        description: String(md.description ?? md.operation ?? ""),
+        ruleBuildingType: null,
+      })
+      type = (tulos.metadata.building_type as string | undefined) ?? null
+      source = "llm"
+    }
+
+    console.log(`  ${source.padEnd(7)} ${String(type ?? "-").padEnd(18)} ${title.slice(0, 52)}`)
+
+    if (!APPLY || !type) continue
+
+    await supabase
+      .from("potential_projects")
+      .update({
+        metadata: { ...md, building_type: type, building_type_source: source },
+      })
+      .eq("id", (r as any).id)
+  }
+
 }
 
 main().catch((e) => {

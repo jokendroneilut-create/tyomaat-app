@@ -53,6 +53,17 @@ const BUILDING_TYPES: [RegExp, string][] = [
   [/koulu(?!t)|lukio|kampus|oppilaitos/i, "Koulu"],
   [/kirjasto/i, "Kirjasto"],
   [/hoivakoti|palvelutalo|asumisyksik|senioritalo/i, "Hoivakoti"],
+  /*
+   * KAUPPA PUUTTUI SAANNOSTA KOKONAAN, vaikka se on kanonisessa
+   * sanastossa. Seuraus: kaupan kohteet menivat mallille, ja malli
+   * arvasi niita vaarin. Mitattu 1.9.2026 otoksella: "Puuilo-myymala
+   * Jamsaan" oli kannassa "Toimitila" ja "Skanska toteuttaa Lahteen
+   * uuden K-Citymarketin" sai tyypin vasta mallilta.
+   *
+   * Kuviot ovat kaupan omia sanoja, eivat brandeja: brandilista
+   * vanhenee ja osuu vaariin ("Prisma" on myos kadunnimi).
+   */
+  [/myymal|myymäl|kauppakesku|liikekesku|liikerakennu|kauppahalli|tavaratalo|citymarket|supermarket/i, "Kauppa"],
   [/logistiikk|varastorakennu|terminaal/i, "Logistiikka"],
   [/hotelli/i, "Hotelli"],
   [/toimitila|toimistorakennu|toimistotalo/i, "Toimitila"],
@@ -78,7 +89,7 @@ const BUILDING_TYPES: [RegExp, string][] = [
    * liikuntapaikka. Siksi vain yhdyssanat joissa etuosa on liikuntaa.
    */
   [
-    /uimahalli|liikuntahalli|jäähalli|urheiluhalli|urheilukent|yleisurheilukent|pallokent|pelikent|tekonurmi|tekonurme|tekojääkent|liikuntapuisto|urheilupuisto|urheilukesku|liikuntapaik|kuntorata|skeittipaik|skeittipuisto|uimaranta/i,
+    /uimahalli|liikuntahalli|jäähalli|urheiluhalli|urheilukent|yleisurheilukent|pallokent|pelikent|tekonurmi|tekonurme|tekojääkent|liikuntapuisto|urheilupuisto|urheilukesku|liikuntapaik|kuntorata|kuntosali|hiihtoreitti|hiihtolatu|hiihtokesku|skeittipaik|skeittipuisto|uimaranta/i,
     "Liikuntapaikka",
   ],
   /*
@@ -88,7 +99,34 @@ const BUILDING_TYPES: [RegExp, string][] = [
    * "Kerrostalo" ja "Maasälvänpuisto, leikkipuisto Maasälpä" oli "Rivitalo".
    */
   [/leikkipuisto|leikkipiha|leikkipaik/i, "Leikkipuisto"],
-  [/\bsilta\b|siltaa|ratahank|raitiotie|katusaneeraus/i, "Infrahanke"],
+  /*
+   * KATU- JA PUISTOSUUNNITELMA ON INFRAA, EI RAKENNUS. Ne ovat
+   * Helsingin paatosaineiston yleisin yksittainen muoto eika niissa ole
+   * rakennusta lainkaan. Ilman omaa kuviota ne menivat mallille, joka
+   * luki tyypin ymparistosta: "Atlantinaukio, katusuunnitelma,
+   * Lansisatama" oli kannassa "Logistiikka" (satama vieressa) ja
+   * "Tehtaanpuisto, puistosuunnitelman hyvaksyminen" oli
+   * "Leikkipuisto".
+   *
+   * Tama on tarkoituksella taulun VIIMEINEN rivi: leikkipuiston ja
+   * liikuntapuiston omat kuviot ovat aiemmin, joten "Leikkipuisto
+   * Trumpetin puistosuunnitelma" pysyy leikkipuistona.
+   */
+  /*
+   * SILLALLA ON OMA TYYPPI SANASTOSSA, mutta ei ollut omaa saantoa:
+   * kuvio \bsilta\b vei sillat "Infrahanke"-tyyppiin ja tarkempi arvo
+   * hukkui.
+   *
+   * KUVIO ON KAPEA, KOSKA "silta" ON SUOMESSA ENNEN KAIKKEA PAIKANNIMI.
+   * Ensimmainen yritys oli jalkiosakuvio (silta\b) ja se ammuttiin alas
+   * lukemalla rivit: 30 osumasta noin 20 oli paikannimia -
+   * "Papinsillan asemakaava", "Multisilta, Multiojankatu",
+   * "Pasila, Opastinsilta 1 ja 2", "Venesillan asemakaava". Jaljelle
+   * jaavat sillan omat tyosanat ja erillinen sana "silta"
+   * ("Harmalanojan silta"), jotka eivat osu kadunnimiin.
+   */
+  [/\bsilta\b|ylikulkusilta|ylikulkusillan|risteyssilta|risteyssillan|ratasilta|ratasillan|\bsiltojen|sillan (?:korjaus|peruskorjaus|uusim|rakentam)/i, "Silta"],
+  [/\bsilta\b|siltaa|ratahank|raitiotie|katusaneeraus|katusuunnitel|puistosuunnitel/i, "Infrahanke"],
 ]
 
 /*
@@ -138,3 +176,20 @@ function inferFromWholeText(title: string, body: string | null): string | null {
   return null
 }
 
+/*
+ * KAIKKI OTSIKKOON OSUVAT TYYPIT, ei vain ensimmainen.
+ *
+ * `inferBuildingType` palauttaa taulun ensimmaisen osuman, mika on
+ * oikea valinta kun tyyppia asetetaan. Kun VANHAA arvoa korjataan, on
+ * eri kysymys: tukeeko otsikko myos sita. "NCC rakentaa Jakarlan koulun
+ * ja paivakodin Turkuun" tukee seka Koulua etta Paivakotia, joten
+ * vaihtaminen toiseksi on heiluntaa ilman hyotya - ja voi ylikirjoittaa
+ * lahteen oman tiedon.
+ */
+export function matchingBuildingTypes(title: string): string[] {
+  const osumat: string[] = []
+  for (const [pattern, label] of BUILDING_TYPES) {
+    if (pattern.test(title ?? "") && !osumat.includes(label)) osumat.push(label)
+  }
+  return osumat
+}

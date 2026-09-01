@@ -5,6 +5,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-159 - Kohdetyypitin putkeen, ja kaksi aanta yhden sijaan
+
+Kohdetyyppi on asiakkaan ensisijainen suodatin. Luokitin oli olemassa ja
+mitattu, mutta vain skriptissa - sama vika kuin kustannuspoimijassa
+aikanaan: kentta tayttyi vain kun joku muisti ajaa skriptin.
+
+**MITTAUS ENNEN TYOTA 1.9.2026.** Nakyvista 5 742 hankkeesta 2 446:lta
+kohdetyyppi puuttui ja 108:lla se oli kanonisen sanaston ulkopuolella
+(43 eri arvoa: "koulu", "Julkinen rakennus", "Metallimalmien ...
+louhinta"). Sanaston ulkopuolinen arvo ei osu asiakkaan suodattimeen
+lainkaan, joten hanke on kaytannossa tyypiton. Vauhti oli pahempi kuin
+kertyma: viimeisen 14 vrk hankkeista 61 %:lta tyyppi puuttui.
+
+**YKSI KUTSU EI RIITA - LUETTU RIVEITTAIN.** Ensimmainen ajo taytti 400
+riviä (57 saannolla, 343 mallilta). Naytteen 25 rivia luettuna kolme oli
+selvasti vaarin: "Itakeskuksen perhekeskus" -> Koulu, "Koy Espoon
+Nihtiparkki" -> Kerrostalo, "Ahtelan leirikeskus" -> Leikkipuisto. Sama
+tarkistus 60 rivin otoksella koko riskijoukosta antoi ~10 % selvasti
+vaaria.
+
+Aiempi "tarkkuus 98 %" ei ollut vaarin mitattu vaan vaarasta joukosta:
+se mitattiin riveilla joiden tyypin SAANTO tiesi otsikosta, eli
+helpoilla. Mallille menevat juuri ne joita saanto ei osannut.
+
+**VARMUUSLUKU EI EROTTELE, ERIMIELISYYS EROTTELEE.** Otoksen molemmat
+selvat virheet olivat 0,95:n kaistalla. Kun sama otsikko pisteytettiin
+uudelleen, vastaus vaihtui 9 rivilla 60:sta - ja kaikki loydetyt virheet
+olivat siina joukossa:
+
+```
+0.95  kanta=Toimitila    malli=Kauppa       Puuilo-myymala Jamsaan
+0.95  kanta=Toimitila    malli=Logistiikka  Jatke rakentaa ... logistiikkarakennuksen
+0.85  kanta=Logistiikka  malli=Infrahanke   Atlantinaukio, katusuunnitelma, Lansisatama
+```
+
+Portti on siksi **kaksi rinnakkaista kutsua joiden on oltava samaa
+mielta**, lisaksi varmuus >= 0,8. Erimielisyys jattaa kentan tyhjaksi.
+
+**SAANNOSTA PUUTTUI KOLME ASIAA**, ja ne loytyivat rivilistaa lukemalla:
+Kauppa puuttui kokonaan vaikka on sanastossa (17 kaupan kohdetta oli
+"Toimitila"), katu- ja puistosuunnitelma ei ollut infraa (100+ Helsingin
+suunnitelmaa oli Leikkipuistoja ja Kerrostaloja, yksi Hotelli), ja
+Sillalla ei ollut omaa saantoa.
+
+**SILTAKUVIO AMMUTTIIN ALAS OMALLA MITTAUKSELLA.** Ensimmainen versio
+luki sillan yhdyssanan jalkiosana. Se tuotti 30 osumaa, joista noin 20
+oli paikannimia: "Papinsillan asemakaava", "Pasila, Opastinsilta 1 ja
+2", "Multisilta, Multiojankatu". Kavennettuna sillan omiin tyosanoihin
+(ylikulkusilta, risteyssilta, ratasilta, siltojen, erillinen sana
+"silta") jaljelle jai 7 rivia, kaikki aitoja siltatoita.
+
+**TAKAUTUVA KORJAUS KAHDESSA VAIHEESSA** (`scripts/fix-building-type.ts`):
+
+```
+A  saanto korjaa            202 rivia kirjoitettu
+B  kaksi aanta tarkistaa    2 083 tarkistettu: 1 582 vahvistui,
+                            56 vaihtui, 445 jatettiin rauhaan
+```
+
+Kasin muokattuun ei kosketa: `metadata.edited_fields` kertoo mitka
+kentat ihminen on itse asettanut.
+
+**TYHJENTAMINEN KOKEILTIIN JA HYLATTIIN.** Vaiheen B piti tyhjentaa
+kentta silloin kun kutsut eivat paase yksimielisyyteen. Kuivaharjoitus
+60 rivilla kumosi sen: tyhjennettavista noin nelja oli oikein
+("Tuotantolaitos Jyvaskylaan" = Teollisuus) ja nelja vaarin - tasapeli.
+Korvaaminen sen sijaan osui 5-6 kertaa 7:sta. Vaihe B siis korvaa mutta
+ei tyhjenna.
+
+Lopputulos: tyyppi on 64 %:lla (oli 57 %), ja suodattimen arvolista
+lyheni 63 arvosta 35:een, joista 20 kanonista kattaa 3 632 rivia.
+
+`lib/agent/quality/resolveBuildingType.ts` · `lib/agent/buildingType.ts` ·
+`scripts/fix-building-type.ts`
+
+---
+
 ### D-158 – Harmaa vyohyke mitattiin: LLM:aa ei tarvittu ylakaistaan
 
 Tyojonossa oli kohta "LLM-duplikaattiskannaus harmaalle vyohykkeelle:

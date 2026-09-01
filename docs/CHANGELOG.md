@@ -11,6 +11,38 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kohdetyypitin putkeen, ja kaksi aanta yhden sijaan (D-159)
+
+Kohdetyyppi on asiakkaan ensisijainen suodatin, ja luokitin oli
+olemassa mutta vain skriptissa. Nyt se ajetaan siella missa ehdokkaat
+syntyvat (`resolvePotentialProject`), ja hyvaksynta kopioi arvon
+hankkeelle kuten ennenkin.
+
+Mitattu ennen tyota: nakyvista 5 742 hankkeesta 2 446:lta tyyppi
+puuttui, 108:lla se oli sanaston ulkopuolella (43 eri arvoa), ja
+viimeisen 14 vrk hankkeista 61 %:lta se puuttui.
+
+Ensimmaisen ajon tulos luettiin riveittain, ja se paljasti ettei yksi
+mallikutsu riita: 25 rivin naytteessa kolme oli selvasti vaarin. Mallin
+oma varmuusluku ei erottele - molemmat otoksen selvat virheet olivat
+0,95:n kaistalla. Erimielisyys erottelee: uudelleen pisteytettyna
+vastaus vaihtui 9 rivilla 60:sta, ja kaikki loydetyt virheet olivat
+siina joukossa. Portti on nyt kaksi rinnakkaista kutsua joiden on oltava
+samaa mielta.
+
+Saantoon lisattiin kolme puuttuvaa asiaa: Kauppa (puuttui kokonaan
+vaikka on sanastossa), katu- ja puistosuunnitelma infrana, ja Silta
+omana tyyppinaan. Siltakuvion ensimmainen versio ammuttiin alas omalla
+mittauksella - 30 osumasta 20 oli paikannimia.
+
+Takautuva korjaus: saanto korjasi 202 rivia, ja kahden aanen tarkistus
+kavi lapi 2 083 mallin kirjoittamaa arvoa (1 582 vahvistui, 56 vaihtui,
+445 jatettiin rauhaan). Kasin muokattuun ei kosketa. Tyhjentaminen
+kokeiltiin ja hylattiin: se poisti yhta monta oikeaa arvoa kuin vaaraa.
+
+Tyyppi on nyt 64 %:lla (oli 57 %), ja suodattimen arvolista lyheni 63
+arvosta 35:een.
+
 ### Duplikaattien harmaa vyohyke mitattiin (D-158)
 
 Tyojonossa oli "LLM-duplikaattiskannaus harmaalle vyohykkeelle, 3 168

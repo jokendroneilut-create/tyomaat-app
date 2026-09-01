@@ -7,6 +7,7 @@ import {
 import { syncApprovedProject } from "@/lib/projects/syncApprovedProject"
 import { resolveProjectCost } from "@/lib/projects/resolveProjectCost"
 import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
+import { resolveBuildingType } from "@/lib/agent/quality/resolveBuildingType"
 import {
   inferCompletionDateFromText,
   isPastDate,
@@ -369,6 +370,16 @@ export async function resolvePotentialProject(
     ruleRecommendedAction,
   })
 
+  /*
+   * Kohdetyyppi mallilta vain kun sääntö ei osannut. Sama kaava kuin
+   * relevanssiportissa: uusi ehdokas, harmaa alue, fail-open.
+   */
+  const buildingType = await resolveBuildingType({
+    title,
+    description: md.description ?? md.operation ?? null,
+    ruleBuildingType: md.building_type,
+  })
+
   const { data: created, error } = await supabaseAdmin
     .from("potential_projects")
     .insert({
@@ -389,6 +400,7 @@ export async function resolvePotentialProject(
         ...completionMetadata,
         ...costMetadata(null),
         ...relevanceGate.metadata,
+        ...buildingType.metadata,
         source_history: buildSourceHistory(null, input),
         firstSourceName: input.sourceName ?? null,
         matched_existing_project_id: matchedExistingProjectId,
