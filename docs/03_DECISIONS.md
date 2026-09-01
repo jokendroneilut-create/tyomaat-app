@@ -73,8 +73,26 @@ parantaminen, YVA" (2025-04-30) ovat molemmat kaynnissa, ja paiva koskee
 osavaihetta. Ne odottavat lippua `--menneet` ja ihmisen paatosta.
 
 **TULOS.** Kirjoitettu 302 hankkeelle (206 kustannusarviota, 127
-tulevaa valmistumispaivaa) ja jonon kahdelle ehdokkaalle. Kustannusarvio
-on nyt 590 nakyvalla hankkeella ja valmistumisaika 613:lla.
+tulevaa valmistumispaivaa) ja jonon kahdelle ehdokkaalle.
+
+**JATKOMITTAUS LAHTEITTAIN paljasti kolme lisaa**, ja yksi niista oli
+oma esto:
+
+1. **Esto katsoi myos eteenpain.** Helsingin katusuunnitelmissa lukee
+   "rakennuskustannukset ovat yhteensa noin 1 240 000 euroa, 470
+   euroa/m²" - nelihinta on VERTAILULUKU joka seuraa oikeaa summaa,
+   mutta `euroa/m` -esto torjui koko rivin. Kaikki torjuttavat muodot
+   (yllapito, kaynnistamiskulu, toimivaltafraasi, vuokra) tulevat luvun
+   EDELLA, joten ikkuna paattyy nyt osumaan. Tama yksin toi 171 rivia.
+2. **Valilyonti puuttui aineistosta**: "ovat yhteensa noin1 720 000
+   euroa". Pehmennin salli vain "noin " valilyonnilla.
+3. **"Hankkeen kustannukset ovat noin 3,2 miljoonaa euroa"** on
+   Vaylaviraston vakiomuoto (95 rivia mainitsee summan, 53 oli ohi).
+   Ankkuri kattaa myos muodon "hankkeen kustannusvaraus on 12
+   miljoonaa euroa".
+
+Yhteensa kirjoitettu 473 hankkeelle. Kustannusarvio on nyt 761
+nakyvalla hankkeella (oli 384) ja valmistumisaika 613:lla (oli 486).
 
 `lib/projects/extractCostFromText.ts` ·
 `lib/projects/inferCompletionDateFromText.ts` ·

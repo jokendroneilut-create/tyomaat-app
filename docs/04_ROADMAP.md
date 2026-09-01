@@ -716,8 +716,9 @@ muistin varassa.
   eikä lupanumeroa. Ne ovat helmi–maaliskuun 2026 erä (286 + 200 kpl),
   joka tuotiin ennen lähdehistorian kirjaamista. Hyväksytty tappioksi —
   metsästäminen ei tuota mitään.
-- **Kustannusarvio 590:llä ja valmistumisaika 613:lla** näkyvästä 5 717
-  hankkeesta (10–11 %, tilanne 1.9.2026 D-161:n korjausten jälkeen).
+- **Kustannusarvio 761:llä ja valmistumisaika 613:lla** näkyvästä 5 717
+  hankkeesta (13 % ja 11 %, tilanne 2.9.2026 D-161:n korjausten jälkeen;
+  ennen työtä 384 ja 486).
   Loput eivät ole poimintavirhe vaan lähteen vaikeneminen: summaa
   mainitsevia on 905, ja niistä on nyt poimittu se osa jossa summa on
   hankkeen oma eikä ylläpitokulu, kalusteraha tai päätösvallan raja.

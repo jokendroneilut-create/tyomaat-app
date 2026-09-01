@@ -35,9 +35,16 @@ paatoksentekosaanto - se olisi antanut seitsemalle hankkeelle arvon
 Samalla korjattiin vuosiluvun poiminta: ilman numerorajoja kuvio luki
 vuoden 2081 kiinteistotunnuksesta 09208101120002.
 
-Takautuva ajo taytti 302 hanketta (206 kustannusarviota, 127 tulevaa
-valmistumispaivaa) ja jonon kaksi ehdokasta. Kustannusarvio on nyt 590
-nakyvalla hankkeella, valmistumisaika 613:lla.
+Jatkomittaus lahteittain paljasti kolme lisaa. Yksi oli oma esto:
+"euroa/m²" torjui Helsingin katusuunnitelmat, joissa nelihinta on
+vertailuluku oikean summan JALJESSA - esto katsoo nyt vain taaksepain,
+ja se yksin toi 171 rivia. Lisaksi pehmennin ei sallinut puuttuvaa
+valilyontia ("noin1 720 000") ja Vaylaviraston vakiomuoto "hankkeen
+kustannukset ovat noin 3,2 miljoonaa euroa" puuttui ankkureista.
+
+Takautuva ajo taytti 473 hanketta ja jonon kaksi ehdokasta.
+Kustannusarvio on nyt 761 nakyvalla hankkeella (oli 384),
+valmistumisaika 613:lla (oli 486).
 
 65 mennytta valmistumispaivaa jatettiin kirjoittamatta: mennyt paiva
 laukaisee yoajon joka merkitsee hankkeen valmistuneeksi, ja osa niista

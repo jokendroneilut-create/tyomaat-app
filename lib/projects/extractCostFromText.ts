@@ -51,7 +51,7 @@ const AMOUNT_PLAIN =
 const PLAIN_MIN_EUR = 10_000
 
 /* Pehmentimet jotka esiintyvät luvun edessä: "noin", "n.", "enintään". */
-const HEDGE = "(?:noin\\s+|n\\.\\s*|enint[aä][aä]n\\s+|arviolta\\s+|l[aä]hes\\s+|yli\\s+)?"
+const HEDGE = "(?:noin\\s*|n\\.\\s*|enint[aä][aä]n\\s+|arviolta\\s+|l[aä]hes\\s+|yli\\s+)?"
 
 /*
  * Nimetyt lauseet joissa summa ON hankkeen kustannus. Jokainen on mitattu
@@ -208,6 +208,11 @@ function documentAnchorsFor(amount: string): RegExp[] {
       `arvonlis[aä]verot\\w*\\s+enimm[aä]ishinta\\w*\\s+(?:on\\s+)?${HEDGE}${amount}`,
       "i"
     ),
+    /* "Hankkeen kustannukset ovat noin 3,2 miljoonaa euroa" (Vaylavirasto) */
+    new RegExp(
+      `hankkeen\\s+kustannu\\w*\\s+(?:ovat|on)\\s+(?:yhteens[aä]\\s+)?${HEDGE}${amount}`,
+      "i"
+    ),
     /* "Hankkeen kustannusarvio on 2,0 M€" myos tekstin loppupuolella */
     new RegExp(`kustannusarvio\\w*\\s+(?:on\\s+|oli\\s+)?${HEDGE}${amount}`, "i"),
     /* "Hankkeelle on varattu investointiohjelmassa 2,0 M€" */
@@ -303,8 +308,19 @@ export function extractCostFromText(
       const match = text.match(anchor)
       if (!match) continue
 
+      /*
+       * ESTE KATSOO VAIN TAAKSEPAIN.
+       *
+       * Ensimmainen versio katsoi myos osuman jalkeen, ja se torjui
+       * kelvollisia rivejä: Helsingin katusuunnitelmissa lukee
+       * "rakennuskustannukset ovat yhteensa noin 1 240 000 euroa,
+       * 470 euroa/m²" - nelihinta on vertailuluku, joka seuraa oikeaa
+       * summaa. Kaikki torjuttavat muodot (yllapito, kaynnistamiskulu,
+       * toimivaltafraasi, vuokra) tulevat luvun EDELLA, joten ikkuna
+       * paattyy osumaan.
+       */
       const at = match.index ?? 0
-      const window = text.slice(Math.max(0, at - 220), at + match[0].length + 60)
+      const window = text.slice(Math.max(0, at - 220), at + match[0].length)
       if (SIDE_COST.test(window)) continue
 
       const raw = String(match[1] ?? "")
