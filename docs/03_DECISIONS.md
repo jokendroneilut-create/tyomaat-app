@@ -5,6 +5,63 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-162 - Kesken oleva hanke piilotettuna on pahempi kuin valmistunut listalla
+
+**PERIAATE (Johannes 2.9.2026).** Kysyin kumpi virhe on pahempi, ja
+vastaus oli yksiselitteinen: kesken olevan hankkeen piilottaminen.
+Perustelu on epasymmetria - vaara piilotus vie asiakkaalta liidin jota
+han ei voi tietaa menettaneensa, kun taas turha rivi listalla nakyy ja
+on korjattavissa.
+
+Periaate ei koskenut vain sita 65 mennytta paivaa jotka D-161:ssa
+jatettiin kirjoittamatta. Sama saanto ajoi jo joka yo.
+
+**MITATTU: 114 HANKETTA OLI PIILOTETTU, NIISTA 108 VAARIN.**
+`auto-complete-projects` siirsi hankkeen tilaan "completed" heti kun
+tekstista poimittu arvio meni. Syyt jakautuivat kahtia:
+
+```
+85  paiva oli vanhempi kuin hetki jolloin hanke loydettiin
+22  paiva oli mennyt alle 90 vrk sitten
+ 6  kesti tarkastelun
+```
+
+**PAIVA ENNEN LOYTOHETKEA EI OLE TODISTE.** Me poimimme vain kaynnissa
+olevia hankkeita. Jos lahde ilmoitti hankkeen 2026 ja "valmistumispaiva"
+on 2003, kyse ei ole valmistuneesta hankkeesta vaan vaarin luetusta
+vuosiluvusta - vanhan kaavan viitteesta, edellisesta vaiheesta tai
+liitteen paivayksesta. Mitatut: "Hukkalansalon tuulivoimakaava"
+(2003-12-31, loydetty 15.7.2026) ja "Pursialan asemakaavan muutos"
+(2013-12-31). Naita 85 ei olisi pelastanut mikaan odotusaika.
+
+**ODOTUSAIKA 90 VRK.** Rakennushanke myohastyy useammin kuin valmistuu
+etuajassa, joten arvion umpeutuminen ei ole todiste. Mitattu: 22
+hanketta piilotettiin kahden vuorokauden kuluttua paivasta, mukaan
+lukien viisi siltaurakkaa ja "Sallan rajavartioaseman uudistus".
+
+**KOLMAS PORTTI ON LAHDE ITSE.** Jos `last_seen_at` kertoo etta lahde on
+nahnyt dokumentin valmistumispaivan JALKEEN, hanke on yha listalla
+lahteessa - se on juuri se "muu signaali" jota odotusajan kuuluu
+kuunnella. Portti on toistaiseksi enimmakseen lepotilassa, koska
+`last_seen_at` tayttyy vasta 29.8.2026 jalkeen nahdyille dokumenteille
+(D-146).
+
+**PALAUTUS AJETTU:** 108 hanketta takaisin aiempaan vaiheeseensa
+(`scripts/restore-auto-completed.ts`). Piiloon jai kuusi, ja ne kestavat
+lukemisen: paiva 3-6 kk sitten, kaikki loydetty ennen paivaa, ja
+otsikoissa lukee "Harjannostajaisia vietetaan".
+
+**D-161:N 65 MENNYTTA PAIVAA JATETAAN YHA KIRJOITTAMATTA.** Portti
+suojaisi nyt suurimman osan niista, mutta kolmas portti on lepotilassa
+eika toinen auta hankkeeseen jonka arvio meni vuosia sitten mutta joka
+on yha kesken ("Kupittaa-Turku-ratahanke").
+
+`lib/projects/autoCompleteGate.ts` ·
+`app/api/admin/auto-complete-projects/route.ts` ·
+`scripts/restore-auto-completed.ts`
+
+---
+
 ### D-161 - Kustannusarvio ja valmistumisaika: ikkuna, jarjestys ja vakiofraasi
 
 Kysymys tuli yhdesta ehdokkaasta (Kivenlahden lahiliikunta-alueen

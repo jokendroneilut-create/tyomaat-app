@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Piilotus vaatii nyt enemman kuin umpeutuneen arvion (D-162)
+
+Periaate: kesken oleva hanke piilotettuna on pahempi kuin valmistunut
+hanke listalla. Vaara piilotus vie asiakkaalta liidin jota han ei voi
+tietaa menettaneensa.
+
+`auto-complete-projects` siirsi hankkeen tilaan "completed" heti kun
+tekstista poimittu arvio meni. Mitattu: 114 piilotettua, joista 108
+vaarin - 85:lla valmistumispaiva oli vanhempi kuin hetki jolloin hanke
+loydettiin (vaarin luettu vuosiluku, ei valmistuminen) ja 22
+piilotettiin kahden vuorokauden kuluttua paivasta.
+
+Kolme porttia: paiva ei saa olla loytohetkea vanhempi, sen on oltava
+mennyt yli 90 vrk sitten, eika lahde saa olla nahnyt hanketta paivan
+jalkeen. 108 hanketta palautettiin aiempaan vaiheeseensa; piiloon jai
+kuusi jotka kestavat lukemisen.
+
 ### Kustannusarvio ja valmistumisaika paatosasiakirjoista (D-161)
 
 Kysymys yhdesta ehdokkaasta paljasti kaksi eri vikaa. Valmistumisaika

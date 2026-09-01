@@ -795,6 +795,13 @@ muistin varassa.
   kertoo valmistumisesta. Kaavoitus sai polun 29.8.2026 (D-146,
   `docs/14_POISTUMISPOLUT.md`), nämä eivät.
 
+  **Piilotuksen kynnys nostettu 2.9.2026 (D-162):** arvion umpeutuminen
+  ei yksin riitä, vaan päivän on oltava löytöhetkeä uudempi, mennyt yli
+  90 vrk sitten, eikä lähde saa olla nähnyt hanketta päivän jälkeen.
+  Vanha sääntö oli piilottanut 114 hanketta, joista 108 väärin; ne on
+  palautettu. Periaate: kesken oleva hanke piilotettuna on pahempi kuin
+  valmistunut hanke listalla.
+
   **65 mennyttä valmistumispäivää odottaa päätöstä** (D-161, 1.9.2026).
   Takautuva täydennysajo löysi ne tekstistä mutta EI kirjoittanut niitä:
   mennyt `estimated_completion` laukaisee `auto-complete-projects`-ajon,

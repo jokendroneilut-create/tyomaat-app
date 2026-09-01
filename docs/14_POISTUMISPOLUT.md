@@ -213,3 +213,22 @@ Kuivaharjoituksen voi ajaa milloin vain, se ei kirjoita mitaan:
   kuusi viikkoa vanha, joten todellista katoamisnopeutta ei voi vielä
   laskea. Kynnys kannattaa mitata uudelleen kun `last_seen_at` on
   kerännyt dataa muutaman kuukauden.
+
+## Piilotuksen todistuskynnys (D-162)
+
+**Kesken oleva hanke piilotettuna on pahempi kuin valmistunut hanke
+listalla.** Väärä piilotus vie asiakkaalta liidin jota hän ei voi tietää
+menettäneensä; turha rivi listalla näkyy ja on korjattavissa. Tämä
+epäsymmetria ratkaisee jokaisen poistumispolun kynnyksen.
+
+Käytännössä: **arvion umpeutuminen ei yksin riitä.** Tekstistä poimittu
+`estimated_completion` on arvio, ja rakennushanke myöhästyy useammin kuin
+valmistuu etuajassa. Kolme porttia (`lib/projects/autoCompleteGate.ts`):
+
+1. **Päivä ei saa olla vanhempi kuin hankkeen löytöhetki.** Me poimimme
+   vain käynnissä olevia hankkeita, joten löytöä edeltävä
+   "valmistumispäivä" on väärin luettu vuosiluku — ei valmistuminen.
+2. **Päivän on oltava mennyt yli 90 vrk sitten.**
+3. **Lähde ei saa olla nähnyt hanketta päivän jälkeen** (`last_seen_at`).
+
+Mitattu 2.9.2026 ennen porttia: 114 piilotettua, joista 108 väärin.
