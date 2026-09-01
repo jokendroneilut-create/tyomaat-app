@@ -24,6 +24,14 @@
  */
 import { readFileSync } from "node:fs"
 
+/*
+ * VAIN JONO. Hankepuolen lapikaynti maksaa kaksi mallikutsua per rivi,
+ * ja tyhjaksi jaaneet rivit ovat jo kertaalleen kysytty - niiden
+ * uudelleenkysyminen ei tuota uutta tietoa ilman uutta todistetta.
+ * Jonon korjaus sen sijaan on pieni ja kiireellinen: ehdokas joka
+ * hyvaksytaan ilman tyyppia synnyttaa hankkeen ilman tyyppia.
+ */
+const VAIN_JONO = process.argv.includes("--vain-jono")
 const APPLY = process.argv.includes("--apply")
 const LIMIT = Number(
   process.argv.find((a) => a.startsWith("--limit="))?.split("=")[1] ?? "100000"
@@ -85,7 +93,7 @@ async function main() {
       `  kasitellaan nyt:          ${Math.min(LIMIT, needsWork.length)}\n`
   )
 
-  const work = needsWork.slice(0, LIMIT)
+  const work = VAIN_JONO ? [] : needsWork.slice(0, LIMIT)
 
   let cursor = 0
   let fromRule = 0
@@ -175,9 +183,38 @@ async function main() {
     .eq("status", "new")
   if (jonoErr) throw jonoErr
 
-  const jonossa = (jono ?? []).filter(
-    (r: any) => !String(r.metadata?.building_type ?? "").trim()
+  /*
+   * KIRJOITUSASU EI OLE PUUTTUVA TIETO. Osa lahteista kirjoittaa tyypin
+   * pienella ("koulu", "rivitalo"), jolloin arvo on oikein mutta ei osu
+   * asiakkaan suodattimeen. Se normalisoidaan kanoniseen muotoon eika
+   * kysyta mallilta uudelleen - malli ei tieda tasta enempaa kuin lahde.
+   */
+  const kanoninenMuoto = new Map<string, string>(
+    [...canonical].map((t) => [t.toLowerCase(), t])
   )
+
+  let normalisoitu = 0
+  for (const r of jono ?? []) {
+    const nyt = String((r as any).metadata?.building_type ?? "").trim()
+    if (!nyt || canonical.has(nyt)) continue
+    const oikea = kanoninenMuoto.get(nyt.toLowerCase())
+    if (!oikea) continue
+    console.log(`  normalisointi ${nyt} -> ${oikea}`)
+    normalisoitu++
+    if (!APPLY) continue
+    await supabase
+      .from("potential_projects")
+      .update({ metadata: { ...((r as any).metadata ?? {}), building_type: oikea } })
+      .eq("id", (r as any).id)
+  }
+  if (normalisoitu) console.log(`  kirjoitusasu korjattu ${normalisoitu}`)
+
+  const jonossa = (jono ?? []).filter((r: any) => {
+    const nyt = String(r.metadata?.building_type ?? "").trim()
+    if (!nyt) return true
+    /* Sanaston ulkopuolinen arvo joka ei ole pelkka kirjoitusasu. */
+    return !canonical.has(nyt) && !kanoninenMuoto.has(nyt.toLowerCase())
+  })
 
   console.log(`
 JONO: ${jono?.length ?? 0} ehdokasta, ilman kohdetyyppia ${jonossa.length}`)
