@@ -44,6 +44,18 @@ vakion. Oulun perustelu on niista paras ennuste - tasapuolisuus ja
 kuormitusriski eivat muutu paremmalla pyynnolla. Tweb- ja
 LOOTA-kaupunkeja ei siis lasketa tulevan kattavuuden varaan.
 
+**VASTAUSTA EI LAHETETTY.** Harkittiin lyhytta viestia, joka olisi
+kysynyt yhden asian: onko RSS-syotteen lukeminen sallittua, jos haetaan
+pelkka syote kerran vuorokaudessa eika lainkaan sen linkkien takana
+olevia asiakirjoja. Johannes paatti 1.9.2026 olla vastaamatta - paatos
+on kirjattu, eika kirjaamoon lahetetty mitaan.
+
+Seuraus on selva ja tarkoituksellinen: **syotetta ei lueta.** Jos se
+joskus halutaan kayttoon, lupa on kysyttava ensin ja vasta myonteisen
+vastauksen jalkeen lisataan `sallittuSyote` Oulun riville. Sama kaava
+kuin Hyvinkaalla (D-098). Kirjattu tyojonoon
+[`04_ROADMAP.md`](04_ROADMAP.md).
+
 `lib/agent/kielletytLahteet.ts` · [`rpt/README.md`](rpt/README.md)
 
 ---

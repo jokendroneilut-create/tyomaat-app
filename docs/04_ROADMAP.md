@@ -740,6 +740,20 @@ muistin varassa.
   paitsi syötettä (D-098, D-149). Sen jälkeen mittaa kelpaako otsikkotaso
   hankkeen tunnistamiseen.
 
+- **Oulun RSS-syötteen tulkinta jäi kysymättä** — Oulu kieltäytyi
+  1.9.2026 (D-160) ja mainitsi ohimennen, että `asiakirjat.ouka.fi`:n
+  julkaisusivulla on RSS-syöte. Kirje ei anna sille lupaa eikä kiellä
+  sitä nimeltä, ja kirjeen lopetuslause kieltää hakemisen
+  järjestelmästä. **Tulkitsemme sen kielloksi**: syötettä ei lueta.
+  Kysymys jätettiin tietoisesti lähettämättä 1.9.2026 — vastaus
+  kirjattiin, mutta kirjaamoon ei vastattu.
+
+  Jos syöte joskus halutaan käyttöön, järjestys on: kysy lupa
+  kirjallisesti (asianumero OUKA/10674/07.01.04.02/2026), ja vasta
+  myönteisen vastauksen jälkeen lisää `sallittuSyote` Oulun riville
+  `kielletytLahteet.ts`:ssä. Sama kaava kuin Hyvinkäällä. Ilman tätä
+  askelta syötteen lukeminen rikkoisi kirjallisen lupauksemme.
+
 - **Stara ja liikelaitokset** — voittajia jää poimimatta, Stara on aito
   kilpailija.
 - ~~**Pornaisten arkisto-osio kerätään liideiksi**~~ Tehty 30.8.2026
