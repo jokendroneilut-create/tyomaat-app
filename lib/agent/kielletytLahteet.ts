@@ -1,7 +1,7 @@
 /*
  * OSOITTEET JOIHIN EI KOHDISTETA PYYNTÖJÄ.
  *
- * Kolme kaupunkia on kieltänyt päätösjärjestelmänsä koneellisen haun
+ * Neljä kaupunkia on kieltänyt päätösjärjestelmänsä koneellisen haun
  * kirjallisesti, ja jokaiselle on annettu kirjallinen lupaus siitä että
  * emme hae. Lupaus on tähän asti ollut vain dokumentissa ja yksittäisen
  * skriptin sisäisenä listana — nyt se on yhdessä paikassa ja koodi
@@ -10,6 +10,7 @@
  *   Hyvinkää   asianhallintavhp.hyvinkaa.fi   (Tweb)    D-098, 21.8.2026
  *   Vantaa     päätösjärjestelmä              (Tweb)    D-098, 24.8.2026
  *   Lappeenranta mfiles.lappeenranta.fi       (M-Files) D-149, 30.8.2026
+ *   Oulu       asiakirjat.ouka.fi             (LOOTA)   D-160,  1.9.2026
  *
  * Kaksi tarkennusta, jotka on helppo ymmärtää väärin:
  *
@@ -59,6 +60,23 @@ export const KIELLETYT_LAHTEET: KiellettyLahde[] = [
     kaupunki: "Lappeenranta",
     jarjestelma: "M-Files",
     paatos: "D-149 (30.8.2026)",
+  },
+  /*
+   * Oulun kielto koskee päätösten julkaisusivua ja sen takana olevaa
+   * asianhallintaa. Kaavoitussivu www.ouka.fi on eri järjestelmä ja
+   * käytössä normaalisti — sitä ei kielletty.
+   *
+   * RSS-syötettä EI merkitä sallituksi. Kaupunki kertoi sen olemassa
+   * olosta mutta ei antanut sille lupaa: kirje päättyy lauseeseen "Oulun
+   * kaupunki ei anna lupaa päätösten hakemiseen suoraan järjestelmästä",
+   * ja syöte on kirjeen mukaan osa samaa valmisjärjestelmää. Lupa
+   * kysytään erikseen ennen kuin syötettä luetaan.
+   */
+  {
+    tunniste: "asiakirjat.ouka.fi",
+    kaupunki: "Oulu",
+    jarjestelma: "LOOTA",
+    paatos: "D-160 (1.9.2026)",
   },
 ]
 

@@ -5,6 +5,49 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-160 - Oulu ei anna lupaa paatosjarjestelmaansa
+
+Oulun kaupunki vastasi 1.9.2026 lupapyyntoon, joka jatettiin 8.8.2026
+(asianumero OUKA/10674/07.01.04.02/2026). Vastaus on **ei**.
+
+Vastaajana asianhallintapaallikko Sanna-Leena Eskola, konsernihallinto.
+Kirjeen olennainen sisalto:
+
+- Esityslistoihin ja poytakirjoihin **ei ole avointa rajapintaa**.
+- Julkaisusivulla `asiakirjat.ouka.fi` on **RSS-syote**, jonka kautta
+  "joitain tietoja saa koneluettavassa muodossa". Sivu ja syote ovat
+  osa valmisjarjestelmaa, johon ei olla tekemassa muutoksia.
+- `robots.txt` on maaritelty niin etteivat ohjelmalliset haut paase
+  kiinni, ja **jos yhdelle annettaisiin lupa, se pitaisi tasapuolisuuden
+  vuoksi antaa muillekin**. Jarjestelmatoimittajan mukaan kutsujen maara
+  voi heikentaa asianhallintajarjestelman kaytettavyytta.
+- "Oulun kaupunki ei anna lupaa paatosten hakemiseen suoraan
+  jarjestelmasta."
+
+**RSS-SYOTETTA EI TULKITA LUVAKSI.** Kirje kertoo syotteen olemassa
+olosta mutta ei anna sille lupaa, ja lopetuslause kieltaa hakemisen
+jarjestelmasta. Tama eroaa Hyvinkaasta (D-098), joka nimenomaan
+suositteli syotettaan kahdesti. `asiakirjat.ouka.fi` lisattiin siksi
+`KIELLETYT_LAHTEET`-listaan ilman `sallittuSyote`-poikkeusta.
+
+**MUUTOS AJAVAAN KOODIIN: EI MITAAN.** Tarkistettu koko repo: emme ole
+koskaan hakenut `asiakirjat.ouka.fi`:sta. Ainoa Oulun lahde on
+kaavoitussivu `www.ouka.fi/suunnitelmat-ja-kaavahankkeet`, joka on eri
+jarjestelma eika kielto koske sita. Kielto on siis ennakoiva - se estaa
+sen etta joku myohemmin lisaa lahteen tietamattaan.
+
+**KOLMAS EI KOLMESTA KYSYTYSTA.** Hyvinkaa 21.8., Lappeenranta 30.8.,
+Oulu 1.9. RPT-dokumentin aiempi paatelma oli, etta robots.txt on
+toimittajan vakio eika kunnan kanta. Se pitaa teknisesti paikkansa,
+mutta johti vaaraan odotukseen: kun kunnalta kysytaan, kunta vahvistaa
+vakion. Oulun perustelu on niista paras ennuste - tasapuolisuus ja
+kuormitusriski eivat muutu paremmalla pyynnolla. Tweb- ja
+LOOTA-kaupunkeja ei siis lasketa tulevan kattavuuden varaan.
+
+`lib/agent/kielletytLahteet.ts` · [`rpt/README.md`](rpt/README.md)
+
+---
+
 ### D-159 - Kohdetyypitin putkeen, ja kaksi aanta yhden sijaan
 
 Kohdetyyppi on asiakkaan ensisijainen suodatin. Luokitin oli olemassa ja

@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Oulu ei anna lupaa paatosjarjestelmaansa (D-160)
+
+Oulun kaupunki vastasi 1.9.2026 kieltavasti 8.8. jatettyyn
+lupapyyntoon (OUKA/10674/07.01.04.02/2026). Perusteena tasapuolisuus -
+lupa yhdelle tarkoittaisi lupaa kaikille - ja jarjestelmatoimittajan
+arvio siita etta kutsut voivat heikentaa asianhallinnan kaytettavyytta.
+Avointa rajapintaa ei ole; RSS-syote on olemassa mutta sille ei annettu
+lupaa, joten sita ei tulkita luvaksi.
+
+`asiakirjat.ouka.fi` lisattiin kiellettyjen lahteiden listaan. Ajavaan
+koodiin ei tullut muutosta: emme ole koskaan hakeneet siita, ja Oulun
+kaavoitussivu www.ouka.fi on eri jarjestelma eika kielto koske sita.
+
+Kolmas kielteinen kolmesta kysytysta (Hyvinkaa, Lappeenranta, Oulu).
+RPT-dokumentin oletus "robots.txt on toimittajan vakio eika kunnan
+kanta" korjattiin: kun kunnalta kysytaan, kunta vahvistaa vakion.
+
 ### Kohdetyypitin putkeen, ja kaksi aanta yhden sijaan (D-159)
 
 Kohdetyyppi on asiakkaan ensisijainen suodatin, ja luokitin oli

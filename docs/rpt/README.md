@@ -598,6 +598,28 @@ Kaikille viidelle tarvitaan siis kunnan lupa tai vaihtoehtoinen lähde.
 Jyväskylä ei sitä kaipaa, koska CaseM kattaa sen. Vantaa on tärkein: 46
 puuttuvaa hanketta, eniten koko listalla.
 
+**LUPAA KYSYTTIIN, JA VASTAUS ON KOLMESTI EI (tilanne 1.9.2026).** Yllä
+oleva päätelmä "kielto on toimittajan vakio eikä kunnan kanta" pitää
+teknisesti paikkansa mutta johti väärään odotukseen: kun kunnalta
+kysytään, kunta ei kumoa vakiota vaan vahvistaa sen.
+
+| kunta | vastaus | peruste kirjeessä |
+|---|---|---|
+| Hyvinkää (21.8.) | ei | ohjaa RSS-syötteeseen, ei muita sivupyyntöjä |
+| Lappeenranta (30.8.) | ei | julkaisujärjestelmässä ollut paljon ongelmia |
+| Oulu (1.9., D-160) | ei | tasapuolisuus + kuormitusriski asianhallintaan |
+
+Oulun vastaus on niistä perustelluin ja siksi paras ennuste lopuille:
+lupa yhdelle tarkoittaisi luvan antamista kaikille pyytäjille, ja
+järjestelmätoimittajan mukaan kutsut voivat heikentää asianhallinnan
+käytettävyyttä. Kumpikaan peruste ei ole meistä kiinni eikä muutu
+paremmalla pyynnöllä.
+
+Kysyminen kannattaa silti — se maksaa yhden sähköpostin ja tuottaa
+kirjallisen tiedon siitä mitä saa hakea — mutta **Tweb- ja
+LOOTA-kaupunkeja ei kannata laskea tulevan kattavuuden varaan.**
+Vaihtoehtoinen lähde (kaavoitussivu, RSS, Hilma) on niissä oikea polku.
+
 ## Neljä viimeistä kaupunkia: kaksi auki, kaksi kiinni
 
 Lappeenranta, Kouvola, Seinäjoki ja Porvoo eivät löytyneet automaattisesti,
