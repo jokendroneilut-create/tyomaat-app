@@ -132,9 +132,33 @@ ei tyhjenna.
 Lopputulos: tyyppi on 64 %:lla (oli 57 %), ja suodattimen arvolista
 lyheni 63 arvosta 35:een, joista 20 kanonista kattaa 3 632 rivia.
 
+**JONO KORJATTIIN 1.9.2026 ILLALLA.** Aamun ajon aikaan jono oli tyhja;
+illalla siina oli 23 ehdokasta, jotka olivat syntyneet ennen kuin
+luokitin meni tuotantoon. Tulos: tyyppi 14:lla 23:sta, ja yhdeksan jai
+tyhjaksi perustellusti ("Kirvesmiestyot", "Kiinteistojen sahkotekniset
+tyot" - tyosuorite, ei kohde).
+
+Kaksi opetusta:
+
+1. **KIRJOITUSASU EI OLE PUUTTUVA TIETO.** Kolmella rivilla oli lahteen
+   antama arvo pienella ("koulu", "rivitalo", "kerrostalo"). Ne ovat
+   sisallollisesti oikein mutta eivat osu asiakkaan suodattimeen, joten
+   hanke on kaytannossa tyypiton - ja skripti ohitti ne, koska "tieto on
+   jo olemassa". Ne normalisoidaan nyt kanoniseen muotoon **eika kysyta
+   mallilta**: malli ei tieda tasta enempaa kuin lahde, joten kysyminen
+   olisi vain tilaisuus menna vaarin ilmaiseksi.
+
+2. **TYHJAA EI KYSYTA UUDELLEEN ILMAN UUTTA TODISTETTA.** Skriptiin
+   lisattiin `--vain-jono`, koska ilman sita ajo olisi kaynyt lapi myos
+   hankepuolen 2 092 tyhjaa rivia eli noin 4 000 mallikutsua. Ne on jo
+   kysytty kahdella aanella; sama kysymys tuottaa saman tyhjan.
+   Uudelleenkysyminen kannattaa vasta kun rivi on saanut uutta tekstia.
+
 **AUKI: SANASTOSTA PUUTTUU "JULKINEN RAKENNUS".** Kaupungintalo,
-kasarmi, vankila ja poliisiaseman kaltaiset kohteet eivat osu mihinkaan
-20:sta kanonisesta tyypista. Korjausajon kaksi tiedossa olevaa
+kasarmi, vankila, paloasema ja poliisiaseman kaltaiset kohteet eivat osu
+mihinkaan 20:sta kanonisesta tyypista. Jono vahvisti taman heti:
+"Valtimon pelastusaseman muutostyot" jai tyhjaksi, koska paloasemalle ei
+ole tyyppia. Korjausajon kaksi tiedossa olevaa
 huononnusta tulevat juuri siita: "Kaupungintalon saneeraus" siirtyi
 Toimitilasta Kulttuurirakennukseen ja "Poliisiammattikorkeakoulun
 asuntoloiden uudistaminen" Kerrostalosta Kouluun. Uusi tyyppi koskee

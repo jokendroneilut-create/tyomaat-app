@@ -653,7 +653,13 @@ muistin varassa.
      "toimisto" …). Ne eivät osu asiakkaan suodattimeen. Sääntö ei
      tunnista niitä otsikosta eikä malli anna vastausta, joten ne
      odottavat joko kohtaa 1 tai käsin tehtyä päätöstä.
-  3. **Mittari kannattaa toistaa** kun uusia hankkeita on kertynyt:
+  3. **Jono korjataan omalla lipullaan.** `--vain-jono` ajaa pelkan
+     katselmointijonon eika kosketa hankepuolen tyhjia rivejä. Ajettu
+     1.9.2026: 23 ehdokkaasta 14 sai tyypin. Aja tama kun jonoon on
+     kertynyt rivejä ennen kuin katselmoit ne — hyväksyntä kopioi
+     tyypin hankkeelle, joten tyypitön ehdokas synnyttää tyypittömän
+     hankkeen.
+  4. **Mittari kannattaa toistaa** kun uusia hankkeita on kertynyt:
      `scripts/fix-building-type.ts --vaihe=b` vahvistaa tai korjaa
      mallin kirjoittamat arvot, ja sen tulos kertoo pysyykö kahden
      äänen portti tarkkana.
