@@ -780,9 +780,12 @@ muistin varassa.
   kertoo valmistumisesta. Kaavoitus sai polun 29.8.2026 (D-146,
   `docs/14_POISTUMISPOLUT.md`), nämä eivät.
 
-- **Voimaan tullut kaava jää vaiheeseen "Kaavoitus"** — 127 hanketta,
-  joiden lähde kertoo kaavan tulleen voimaan. Ei syy piilottaa vaan syy
-  siirtää vaihetta eteenpäin.
+- ~~**Voimaan tullut kaava jää vaiheeseen "Kaavoitus"**~~ Hoidettu
+  29.–30.8.2026 (D-152): `advance-effective-zoning` ajaa vuorokausittain
+  klo 5:15 ja `expire-stale-zoning` klo 5:20. **Tarkistettu 1.9.2026
+  reitin omalla logiikalla: siirrettäviä 0** (73 voimaantulopäivällistä
+  dokumenttia, 2 863 kaavoitusvaiheen hanketta). Rivi jäi tähän auki
+  vaikka työ oli tehty.
 
 - ~~**Samannimiset lohkot muissa kaavalähteissä**~~ Tarkistettu
   30.8.2026 (D-154): 143 listaussivua, kahdeksalla otsikko toistuu,
