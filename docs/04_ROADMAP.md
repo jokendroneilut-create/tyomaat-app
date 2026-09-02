@@ -945,6 +945,24 @@ muistin varassa.
 
 ### Asiakaskäyttöliittymä
 
+- **Tänään-syötteen kaksi kattoa on nyt mitattu (D-164, D-165).**
+  Hakuraja nostettiin 1 000 → 3 000 riviin ja syötteeseen ladataan 300;
+  "Näytä lisää" paljastaa erän kerrallaan. Tilanne 2.9.2026:
+
+  | maakunta | kaikki | rakenteilla |
+  |---|---|---|
+  | Uusimaa | 2 008 | 305 |
+  | Pirkanmaa | 564 | 83 |
+  | Kainuu | 88 | 14 |
+  | Keski-Pohjanmaa | 74 | 9 |
+
+  **Kaksi asiaa jää seurattavaksi.** Uusimaa on ainoa maakunta yli
+  1 000:n, mutta muut kasvavat — kun toinen ylittää 3 000, sama katkaisu
+  palaa, ja silloin oikea korjaus on suodattaa vaihe jo SQL:ssä eikä
+  nostaa rajaa uudelleen. Toiseksi sivu on `force-dynamic` ja Uudenmaan
+  haku kestää mitattuna 3,1 s (kolme sivua); jos se häiritsee, seuraava
+  askel on välimuisti maakunnittain, ei rivien karsiminen.
+
 - ~~**Miksi käyttäjä valitsee lähteet?**~~ Ratkaistu 29.8.2026 (D-135):
   valinta poistettiin, koska vastaus ei tallentunut mihinkään eikä lähde
   ole asiakkaan käsite. Alkuperäinen kirjaus:
