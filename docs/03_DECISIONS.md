@@ -5,6 +5,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-164 - Tanaan-syote: nayta lisaa, ja kevyempi rivi kuin ennen
+
+**ONGELMA.** `/today` naytti vain muutamia kymmenia hankkeita ja oli
+nopeasti selattu loppuun. Syy oli se etta asetus `maxProjects` (oletus
+20) rajasi sen mita PALVELIN ylipaataan lahetti - listan lopussa ei
+ollut mihin jatkaa.
+
+**RATKAISU.** Asetus ohjaa nyt vain ensimmaista eraa. Palvelin lahettaa
+enemman (100), ja "Nayta lisaa" -nappi paljastaa seuraavan eran
+kerrallaan. Kun ladatut loppuvat, tilalle tulee linkki hankelistaukseen
+- nappi ei lupaa rivejä joita ei ole ladattu.
+
+**RIVI KEVENNETTIIN, JOTEN SATA ON HALVEMPI KUIN KAKSIKYMMENTA OLI.**
+Mitattu 2.9.2026: hankkeen rivi painaa 4,4 kt, koska se kantaa
+`additional_info`- ja `metadata.description`-tekstit. Sata rivia olisi
+ollut 444 kt eli viisinkertainen entiseen 89 kt:hen.
+
+Asiakas ei kuitenkaan tarvitse noita tekstejä: kortti nayttaa nimen,
+sijainnin, vaiheen ja osumaprosentin, ja modaali hakee hankkeen itse
+id:lla (`TodayProjectModal`). Pisteytys kayttaa tekstit palvelimella
+ENNEN katkaisua, joten avainsanaosumat sailyvat. Kun rivilta karsitaan
+kaikki muu kuin kortin ja peukkujen tarvitsema:
+
+```
+ennen:  20 riviä raskaana  89 kt
+nyt:   100 riviä kevyena   52 kt   (0,52 kt/rivi)
+```
+
+Eli viisinkertainen sisalto ja silti kevyempi sivu.
+
+**TODENNETTU ILMAN SELAINTA.** `/today` vaatii kirjautumisen, eika
+esikatseluselain ole kirjautunut. Nappi todennettiin renderoimalla
+komponentti testissa (`renderToStaticMarkup`), ja eralaskenta on omana
+puhtaana funktionaan (`app/today/services/naytaLisaa.ts`) - kolme lukua
+jotka on helppo sekoittaa: naytetyt, ladatut mutta piilossa, ja
+lataamatta jaaneet.
+
+`app/today/services/getTodaySummary.ts` ·
+`app/today/components/TodayRecommendedProjects.tsx`
+
+---
+
 ### D-163 - Maakunnallinen tilaaja ja otsikon genetiivi maakunnan lahteina
 
 Ilmoitus jonossa: "Kiteen alueen tyokone- ja kuljetuspalvelut,

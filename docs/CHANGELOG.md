@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Tanaan-syotteeseen "Nayta lisaa" (D-164)
+
+`/today` naytti vain muutamia kymmenia hankkeita, koska asetus
+`maxProjects` (oletus 20) rajasi sen mita palvelin lahetti. Asetus ohjaa
+nyt vain ensimmaista eraa; nappi paljastaa loput, ja ladattujen
+loputtua tilalle tulee linkki hankelistaukseen.
+
+Samalla syotteen rivi kevennettiin: se kantoi `additional_info`- ja
+`metadata.description`-tekstit (4,4 kt/rivi), joita asiakas ei tarvitse
+- modaali hakee hankkeen itse ja pisteytys kayttaa tekstit palvelimella.
+Sata rivia painaa nyt 52 kt, kun kaksikymmenta painoi ennen 89 kt.
+
 ### Maakunta maakunnallisesta tilaajasta ja otsikosta (D-163)
 
 Hilman ilmoituksella ei ole kuntakenttaa, ja tilaaja voi olla

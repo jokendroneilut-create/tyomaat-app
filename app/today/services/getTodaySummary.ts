@@ -28,6 +28,51 @@ function daysAgoIso(days: number) {
   return start.toISOString()
 }
 
+/* Kuinka monta riviä syotteeseen ladataan kerralla. Ks. selitys alempaa. */
+const LADATTAVAT = 100
+
+/*
+ * SYOTTEEN RIVI KEVENNETAAN ENNEN LAHETYSTA.
+ *
+ * Hankkeen rivi kantaa `additional_info`- ja `metadata.description`
+ * -tekstit, jotka ovat mitattuna 4,4 kt/rivi eli 444 kt sadalta
+ * rivilta. Asiakas ei tarvitse niita: kortti nayttaa nimen, sijainnin
+ * ja vaiheen, ja modaali hakee hankkeen itse id:lla
+ * (`TodayProjectModal`). Pisteytys kayttaa tekstit palvelimella ENNEN
+ * tata, joten avainsanaosumat sailyvat.
+ *
+ * Naiden karsiminen tekee sadasta rivista kevyemman kuin
+ * kahdestakymmenesta oli aiemmin.
+ */
+function kevytRivi(project: any) {
+  const md = project.metadata ?? {}
+  return {
+    id: project.id,
+    name: project.name,
+    city: project.city,
+    region: project.region,
+    location: project.location,
+    phase: project.phase,
+    property_type: project.property_type,
+    developer: project.developer,
+    builder: project.builder,
+    created_at: project.created_at,
+    /* Pisteytyksen tuotos, jota kortti nayttaa. */
+    today_match: project.today_match,
+    today_reasons: project.today_reasons,
+    team_owner_id: project.team_owner_id,
+    team_owner_name: project.team_owner_name,
+    /* Vain ne metadatan kentat joita kortti ja peukut kayttavat. */
+    metadata: {
+      business_value: md.business_value ?? null,
+      construction_type: md.construction_type ?? null,
+      building_type: md.building_type ?? null,
+      size_class: md.size_class ?? null,
+      source_name: md.source_name ?? null,
+    },
+  }
+}
+
 export async function getTodaySummary(userId?: string | null) {
   const sevenDaysAgo = daysAgoIso(7)
 
@@ -136,7 +181,24 @@ export async function getTodaySummary(userId?: string | null) {
 
     newPotentialProjects: [],
 
-    recommendedProjects: teamRankedProjects.slice(0, maxProjects),
+    /*
+     * SYOTTEESEEN LADATAAN ENEMMAN KUIN NAYTETAAN.
+     *
+     * Asetuksen `maxProjects` (oletus 20) rajasi aiemmin sen mita
+     * palvelin ylipaataan lahetti, joten listan lopussa ei ollut mihin
+     * jatkaa - sivu oli nopeasti selattu loppuun. Nyt asetus ohjaa vain
+     * ENSIMMAISTA erää, ja "Nayta lisaa" paljastaa loput.
+     *
+     * Yläraja on olemassa siksi etta rivi kantaa kuvauksen ja koko
+     * metadatan (modaali tarvitsee ne), joten koko pisteytetty joukko
+     * olisi megatavuja. Sata riviä on viisinkertainen oletusnäkymään ja
+     * pysyy kevyena; sen ylitse ohjataan hankelistaukseen.
+     */
+    recommendedProjects: teamRankedProjects
+      .slice(0, Math.max(maxProjects, LADATTAVAT))
+      .map(kevytRivi),
+    recommendedInitial: maxProjects,
+    recommendedTotal: teamRankedProjects.length,
 
     // Ohjaa opt-in-kytkimen näkymisen /today-sivulla.
     team: { inTeam: teamOwnership.inTeam },

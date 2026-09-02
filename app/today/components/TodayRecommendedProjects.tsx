@@ -4,6 +4,7 @@ import { useState } from "react"
 import TodayProjectModal from "./TodayProjectModal"
 import TodayFeedbackButtons from "./TodayFeedbackButtons"
 import TodayFavoriteActions from "./TodayFavoriteActions"
+import { eraNakyma } from "../services/naytaLisaa"
 
 export default function TodayRecommendedProjects({
   projects,
@@ -11,17 +12,39 @@ export default function TodayRecommendedProjects({
   feedback,
   favorites,
   teamMode = false,
+  initialCount,
+  totalCount,
 }: {
   projects: any[]
   userId?: string | null
   feedback?: Record<string, "up" | "down">
   favorites?: Record<string, boolean>
   teamMode?: boolean
+  /* Ensimmäinen erä = käyttäjän asetus (oletus 20). */
+  initialCount?: number
+  /* Kaikki pisteytetyt, myös ne joita ei ladattu. */
+  totalCount?: number
 }) {
   const [openId, setOpenId] = useState<string | null>(null)
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
 
-  const visibleProjects = projects.filter((p) => !hiddenIds.has(p.id))
+  /*
+   * NAYTA LISAA. Aiemmin palvelin lähetti vain asetuksen verran rivejä,
+   * joten listan lopussa ei ollut mihin jatkaa. Nyt rivejä on ladattu
+   * enemmän kuin näytetään, ja nappi paljastaa seuraavan erän.
+   */
+  const eraKoko = Math.max(1, initialCount ?? 20)
+  const [nakyvissa, setNakyvissa] = useState(eraKoko)
+
+  const {
+    nakyvat: visibleProjects,
+    jaljella,
+    lataamatta,
+  } = eraNakyma({
+    rivit: projects.filter((p) => !hiddenIds.has(p.id)),
+    nakyvissa,
+    kaikkiPisteytetyt: totalCount,
+  })
 
   return (
     <section className="mt-10 rounded-xl border bg-white p-6 shadow-sm">
@@ -154,6 +177,27 @@ export default function TodayRecommendedProjects({
             )
           })}
         </div>
+      )}
+
+      {jaljella > 0 && (
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setNakyvissa((n) => n + eraKoko)}
+            className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            Näytä lisää ({jaljella} jäljellä)
+          </button>
+        </div>
+      )}
+
+      {jaljella === 0 && lataamatta > 0 && (
+        <p className="mt-6 text-center text-sm text-gray-500">
+          Näytetty {visibleProjects.length} hanketta.{" "}
+          <a href="/projects" className="font-semibold text-blue-600 hover:underline">
+            Selaa kaikkia {(totalCount ?? 0).toLocaleString("fi")} hanketta
+          </a>
+        </p>
       )}
 
       {openId && (
