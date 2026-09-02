@@ -5,6 +5,68 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-165 - Tanaan-syotteen hakuraja katkaisi neljä viidesta Uudenmaan osumasta
+
+Kysymys: miksi `/today` nayttaa niin vahan, ja voiko pienessa
+maakunnassa nakya vain muutamia? Mittaus vastasi molempiin ja paljasti
+vian jota ei etsitty.
+
+**MITATTU 2.9.2026** koko nakyvalla joukolla (5 838 hanketta), vaiheet
+suodattimen omilla nimilla:
+
+```
+maakunta          kaikki  kaavoitus  suunnittelu  kilpailutus  rakenteilla
+Uusimaa             2008        665          863          139          305
+Pirkanmaa            564        362           76           30           83
+Varsinais-Suomi      453        257           68           37           81
+Pohjois-Pohjanmaa    450        219          156           34           58
+...
+Kainuu                88         34           29            9           14
+Keski-Pohjanmaa       74         38           24            6            9
+```
+
+Vastaus jalkimmaiseen kysymykseen on siis kylla: "Rakenteilla" tuottaa
+Uudellamaalla 305 hanketta mutta Kainuussa 14 ja Keski-Pohjanmaalla 9.
+Pienessa maakunnassa raja on aineisto, ei asetus.
+
+**MUTTA ISOSSA MAAKUNNASSA RAJA OLI HAUSSA.** `getTodayProjects` haki
+1 000 UUSINTA hanketta ja suodatti vasta sen jalkeen. Uudellamaalla on
+2 008 hanketta, joten ikkuna ulottui vain 26.7.2026 asti - ja siihen
+mahtui "Rakenteilla"-hankkeista **63, kun niita on 305**. Neljä
+viidesta katosi hakurajaan, ei suodattimeen, eika kayttaja olisi voinut
+saada niita nakyviin millaan asetuksella.
+
+**KORJAUS: KEVYT RIVI JA SIVUTUS.** Rivi kantoi `additional_info`- ja
+`metadata.description`-tekstit, jotka ovat kaytannossa sama teksti
+kahteen kertaan. Metadata luetaan nyt nimettyina kenttina
+(`metadata->>source_name` jne.) eika kokonaisena jsonb:na, ja tekstit
+haetaan vain kun kayttajalla on avainsanoja - ne ovat ainoa kohta joka
+niita lukee.
+
+```
+ennen:  1 000 riviä raskaana   11 kt/rivi   11,0 Mt
+nyt:    2 008 riviä kevyena    0,7 kt/rivi   1,4 Mt
+```
+
+Haku sivutetaan, koska PostgREST palauttaa enintaan 1 000 riviä
+kerralla; raja on 3 000 riviä, mika kattaa suurimman maakunnan.
+Mitattuna Uusimaa 3,1 s (kolme sivua) vastaan aiempi 2,8 s yhdella
+raskaalla kyselylla - eli sama luokka, mutta tulos on taydellinen.
+
+**SYOTTEESEEN LADATAAN NYT 300** (D-164:n 100 sijaan), koska kevyt rivi
+maksaa 0,52 kt: 300 riviä on 156 kt. Se kattaa suurimmankin yksittaisen
+valinnan.
+
+**MITTARI OLI ENSIN VAARASSA.** Ensimmainen ajo nayttti "rakentaminen
+aloitettu" -sarakkeessa nollan joka maakunnassa. Vika ei ollut
+sovelluksessa vaan mittarissa: suodattimen valinnan nimi on
+"rakenteilla", ja "rakentaminen aloitettu" putosi `default`-haaraan.
+Sama opetus kuin ennenkin - lue nimet lahteesta, ala oleta.
+
+`app/today/services/getTodayProjects.ts`
+
+---
+
 ### D-164 - Tanaan-syote: nayta lisaa, ja kevyempi rivi kuin ennen
 
 **ONGELMA.** `/today` naytti vain muutamia kymmenia hankkeita ja oli

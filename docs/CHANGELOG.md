@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Tanaan-syotteen hakuraja katkaisi ison maakunnan osumat (D-165)
+
+`getTodayProjects` haki 1 000 uusinta hanketta ja suodatti vasta sen
+jalkeen. Uudellamaalla on 2 008 hanketta, joten "Rakenteilla"-osumista
+nakyi 63 kun niita on 305 - neljä viidesta katosi hakurajaan, ei
+suodattimeen.
+
+Rivi kevennettiin (metadata nimettyina kenttina, tekstit vain kun
+kayttajalla on avainsanoja) ja haku sivutettiin 3 000 riviin asti:
+11 kt/rivi -> 0,7 kt/rivi, 11,0 Mt -> 1,4 Mt. Syotteeseen ladataan nyt
+300 riviä.
+
+Mitattu samalla mita nakymä nayttaa maakunnittain: "Rakenteilla" on
+Uudellamaalla 305, Pirkanmaalla 83, Kainuussa 14 ja
+Keski-Pohjanmaalla 9. Pienessa maakunnassa raja on aineisto, ei asetus.
+
 ### Tanaan-syotteeseen "Nayta lisaa" (D-164)
 
 `/today` naytti vain muutamia kymmenia hankkeita, koska asetus

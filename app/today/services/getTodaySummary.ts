@@ -28,8 +28,16 @@ function daysAgoIso(days: number) {
   return start.toISOString()
 }
 
-/* Kuinka monta riviä syotteeseen ladataan kerralla. Ks. selitys alempaa. */
-const LADATTAVAT = 100
+/*
+ * Kuinka monta riviä syotteeseen ladataan. Nostettu 100 -> 300 sen
+ * jalkeen kun rivi kevennettiin: mitattu 0,52 kt/rivi, joten 300 riviä
+ * on 156 kt - yha kevyempi kuin 20 raskasta riviä oli (89 kt oli
+ * vanhalla rivilla, mutta se kantoi koko kuvaustekstin).
+ *
+ * Kolmesataa kattaa suurimmankin yksittaisen valinnan: Uudenmaan
+ * "Rakenteilla" on 305 hanketta (mitattu 2.9.2026).
+ */
+const LADATTAVAT = 300
 
 /*
  * SYOTTEEN RIVI KEVENNETAAN ENNEN LAHETYSTA.
@@ -88,7 +96,13 @@ export async function getTodaySummary(userId?: string | null) {
     regionTotal,
     teamOwnership,
   ] = await Promise.all([
-    getTodayProjects(settings.regions),
+    /*
+     * Tekstit haetaan vain kun kayttajalla on avainsanoja: ne ovat rivin
+     * painavin osa eika niita tarvita muuhun kuin avainsanapisteytykseen.
+     */
+    getTodayProjects(settings.regions, {
+      tarvitseeTekstit: Array.isArray(settings.keywords) && settings.keywords.length > 0,
+    }),
     getUserFeedbackContext(userId),
     getUserFavoritesContext(userId),
     getRegionProjectCount(settings.regions),
