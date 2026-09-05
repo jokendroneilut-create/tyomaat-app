@@ -44,6 +44,12 @@ kuntakenttaa jaa ilman maakuntaa.
 **HANKKEISIIN EI TARVITTU TAKAUTUVAA AJOA:** kaikki kuusi ovat
 katselmointijonossa, ja hyvaksynta lukee maakunnan samasta funktiosta.
 
+**KAUPUNGINOSALUETTELOA EI TEHDA.** Johannes 5.9.2026: kaupungin voi
+lisata kasin, "ei ole iso vaiva". Tikkurilan kaltaisia tapauksia on
+harvakseltaan, ja luettelo olisi satoja nimia joista osa on
+monikayttoisia (Keskusta, Harju, Ranta). Kasin taydentaminen on siis
+hyvaksytty vastaus tahan luokkaan - ala ehdota luetteloa uudestaan.
+
 `lib/geo/regionFromName.ts` · `lib/projects/resolveRegion.ts`
 
 ---
