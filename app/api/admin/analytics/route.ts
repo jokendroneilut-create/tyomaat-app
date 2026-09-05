@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
+import { ISTUNTO_TAUKO_MIN } from "@/lib/analytics/kayttoyhteenveto"
 
 export const runtime = "nodejs"
 
@@ -158,13 +159,35 @@ export async function GET(request: Request) {
     // Laitejakauma
     const deviceCounts = new Map<string, number>()
 
+    /*
+     * Kirjautumisajat kerataan ensin ja tiivistetaan vasta silmukan
+     * jalkeen: `fetchAllEvents` ei jarjesta rivejä, joten tiivistys ei
+     * saa olla riippuvainen saapumisjarjestyksesta.
+     */
+    const kirjautumisajat = new Map<string, number[]>()
+
     for (const e of events) {
       if (e.device_type) {
         deviceCounts.set(e.device_type, (deviceCounts.get(e.device_type) ?? 0) + 1)
       }
 
+      /*
+       * KIRJAUTUMISTAPAHTUMA EI OLE KIRJAUTUMINEN. `login` kirjataan
+       * Supabasen SIGNED_IN-signaalista, joka laukeaa myos istunnon
+       * palautuksesta ja valilehden avauksesta. Mitattu 5.9.2026 yhdelta
+       * asiakkaalta: 34 tapahtumasta 17 tuli alle minuutin paassa
+       * edellisesta, ja nelja osui samaan sekuntiin.
+       *
+       * Tiivistetaan samalla saannolla kuin istunto (30 min), jotta tama
+       * lista ja kayttajakohtainen nakyma kertovat saman luvun.
+       */
       if (e.event_type === "login" && e.user_id) {
-        loginCounts.set(e.user_id, (loginCounts.get(e.user_id) ?? 0) + 1)
+        const hetki = new Date(String(e.created_at)).getTime()
+        if (Number.isFinite(hetki)) {
+          const lista = kirjautumisajat.get(e.user_id) ?? []
+          lista.push(hetki)
+          kirjautumisajat.set(e.user_id, lista)
+        }
       }
 
       if (e.event_type === "pageview") {
@@ -386,6 +409,18 @@ export async function GET(request: Request) {
       count,
       percentage: totalDeviceEvents > 0 ? Math.round((count / totalDeviceEvents) * 1000) / 10 : 0,
     }))
+
+    for (const [userId, ajat] of kirjautumisajat) {
+      let laskuri = 0
+      let edellinen: number | null = null
+      for (const hetki of [...ajat].sort((a, b) => a - b)) {
+        if (edellinen === null || hetki - edellinen > ISTUNTO_TAUKO_MIN * 60_000) {
+          laskuri++
+        }
+        edellinen = hetki
+      }
+      loginCounts.set(userId, laskuri)
+    }
 
     const mapUsers = (entries: [string, number][], key: string) =>
       entries.map(([userId, value]) => ({

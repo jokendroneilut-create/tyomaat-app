@@ -945,7 +945,10 @@ muistin varassa.
 
 ### Asiakaskäyttöliittymä
 
-- **Varmista myyjän istunnolla että "Käyttö"-nappi näkyy.** Koodista
+- ~~**Varmista myyjän istunnolla että "Käyttö"-nappi näkyy.**~~
+  Todennettu 5.9.2026: toimii myyjän näkymässä. Myyjällä on 48 asiakasta,
+  joista 14:llä on käyttödataa. Reitin näkyvyysraja on lisäksi testattu
+  (myyjä ei näe toisen myyjän asiakasta). Alkuperäinen kirjaus: Koodista
   tarkistettu 5.9.2026: sarake "Viimeksi kirjautunut" ei ole
   `isAdminView`-ehdon takana, ja `/api/admin/user-activity` sallii
   myyjän omat asiakkaat (`canSeeOwnCustomers` + `visibleUsers`). Sen

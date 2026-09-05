@@ -40,6 +40,29 @@ describe("paivittainenKaytto", () => {
     expect(rivit[0].istuntoja).toBe(2)
   })
 
+  /*
+   * Mitattu tapaus: nelja login-tapahtumaa samassa sekunnissa, koska
+   * SIGNED_IN laukeaa myos istunnon palautuksesta.
+   */
+  it("ei laske samaa kirjautumista moneen kertaan", () => {
+    const rivit = paivittainenKaytto([
+      tapahtuma("a", "2026-09-01T09:16:01Z", "login", null),
+      tapahtuma("a", "2026-09-01T09:16:01Z", "login", null),
+      tapahtuma("a", "2026-09-01T09:16:02Z", "login", null),
+      tapahtuma("a", "2026-09-01T09:16:43Z", "login", null),
+      tapahtuma("a", "2026-09-01T09:27:25Z", "login", null),
+    ])
+    expect(rivit[0].kirjautumisia).toBe(1)
+  })
+
+  it("laskee uuden kirjautumisen tauon jalkeen", () => {
+    const rivit = paivittainenKaytto([
+      tapahtuma("a", "2026-09-01T06:22:00Z", "login", null),
+      tapahtuma("a", "2026-09-01T09:13:00Z", "login", null),
+    ])
+    expect(rivit[0].kirjautumisia).toBe(2)
+  })
+
   it("kestaa tyhjan syotteen", () => {
     expect(paivittainenKaytto([])).toEqual([])
   })

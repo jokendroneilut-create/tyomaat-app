@@ -189,6 +189,23 @@ pyoristetaan tasalukuun omalla testatulla funktiollaan
 (`akselinYlaraja`): 47 -> 50, mutta 12 -> 15 eika 20, jottei puolet
 kuvasta jaa tyhjaksi.
 
+**KIRJAUTUMISTAPAHTUMA EI OLE KIRJAUTUMINEN.** Myyjan nakymassa yksi
+asiakas nayttti "17 kirjautumista" paivana jona istuntoja oli nelja.
+Luku oli vaara: `login` kirjataan Supabasen SIGNED_IN-signaalista, joka
+laukeaa myos istunnon palautuksesta ja valilehden avauksesta. Mitattu
+samalta asiakkaalta: **34 tapahtumasta 17 tuli alle minuutin paassa
+edellisesta**, ja nelja osui samaan sekuntiin (09:16:01-02).
+
+Kirjautumiset tiivistetaan nyt samalla saannolla kuin istunnot (30 min),
+seka kayttajakohtaisessa nakymassa etta analytiikkasivun "Eniten
+kirjautuneet" -listalla - muuten sama asiakas nayttaisi eri luvun eri
+sivulla. Korjatut luvut: 17 -> 4, 12 -> 2, ja listan karki 350 -> 18.
+
+Tiivistys tehdaan vasta kun kaikki tapahtumat on kerätty, koska
+`fetchAllEvents` ei jarjesta rivejä: ensimmainen versio tiivisti
+saapumisjarjestyksessa ja jatti luvut yha liian suuriksi (44 vastaan
+oikea 31).
+
 `lib/analytics/kayttoyhteenveto.ts` ·
 `app/api/admin/user-activity/route.ts` ·
 `app/dashboard/analytics/KayttoTrendi.tsx`

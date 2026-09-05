@@ -53,6 +53,7 @@ export function paivittainenKaytto(tapahtumat: Tapahtuma[]): PaivaRivi[] {
 
   const per = new Map<string, PaivaRivi>()
   let edellinen: number | null = null
+  let edellinenKirjautuminen: number | null = null
 
   for (const t of jarjestetyt) {
     const paiva = paivastaAvain(t.created_at)
@@ -70,7 +71,29 @@ export function paivittainenKaytto(tapahtumat: Tapahtuma[]): PaivaRivi[] {
     if (uusiIstunto) rivi.istuntoja++
     edellinen = hetki
 
-    if (t.event_type === "login") rivi.kirjautumisia++
+    /*
+     * KIRJAUTUMISET TIIVISTETAAN, KOSKA TAPAHTUMA EI TARKOITA
+     * KIRJAUTUMISTA.
+     *
+     * `login` kirjataan Supabasen SIGNED_IN-signaalista, joka laukeaa
+     * myos istunnon palautuksesta ja valilehden avauksesta. Mitattu
+     * 5.9.2026 yhdelta asiakkaalta: 34 tapahtumasta 17 tuli alle
+     * minuutin paassa edellisesta, ja nelja osui samaan sekuntiin
+     * (09:16:01-02). Raaka luku nayttti "17 kirjautumista" paivana jona
+     * istuntoja oli nelja.
+     *
+     * Kirjautuminen lasketaan siksi samalla saannolla kuin istunto:
+     * uusi vasta kun edellisesta on yli tauon verran aikaa.
+     */
+    if (t.event_type === "login") {
+      if (
+        edellinenKirjautuminen === null ||
+        hetki - edellinenKirjautuminen > ISTUNTO_TAUKO_MIN * 60_000
+      ) {
+        rivi.kirjautumisia++
+      }
+      edellinenKirjautuminen = hetki
+    }
     if (t.event_type === "pageview") {
       rivi.sivulatauksia++
       rivi.sekunteja += Math.max(0, Number(t.duration_seconds ?? 0))
