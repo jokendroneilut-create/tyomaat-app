@@ -5,6 +5,62 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-173 - Lapti ja Bonava: kaksi lisaa asuntokatalogia, tila omasta kentastaan
+
+Jatkoa D-172:lle. Molemmilla rakentajalla OLI jo lahde, mutta kumpikaan
+ei nae omaperusteista asuntotuotantoa:
+
+    lapti   -> lapti.fi/ajankohtaista        (uutiset, urakkavoitot)
+    bonava  -> bonava.fi/tietoa-meista/media (mediatiedotteet)
+
+Tama tarkistettiin ENNEN rakentamista, jottei tehda paallekkaista
+tyota. Kohdekatalogit ovat eri osoitteissa eivatka ne mene paallekkain
+naiden kanssa.
+
+**LAPTI (`lapti_kohteet`) — rikkain mitattu yrityslahde.** Taloyhtiot
+ovat omana sisaltotyyppinaan (`pdx_housingcompany-sitemap.xml`), ja joka
+sivulla on sama nimetty kenttataulukko: Taloyhtion nimi, Katuosoite,
+Rakentaja, Rakennustyyppi, Asuntojen maara, Arvioitu valmistusaika,
+Energialuokka. Ajo tuotti 9 ehdokasta, joilla **jokainen kentta oli
+taytetty** — kaupunki, katuosoite, vaihe, valmistumispaiva, asuntomaara
+ja rakennustyyppi.
+
+**Vaihe luetaan portaasta, ei tekstista.** Sivu piirtaa nelivaiheisen
+portaan (Suunnitteilla -> Ennakkomarkkinoinnissa -> Rakenteilla ->
+Muuttovalmis) ja korostaa nykyisen vaiheen `orange-bg`-luokalla. Kaikki
+nelja nimea ovat siis joka sivulla, joten tekstihaku antaisi aina saman
+vastauksen — sama ansa joka D-172:ssa teki ennakkomarkkinoinnissa
+olevasta Pionista rakenteilla olevan.
+
+**Kelpoisuus vaatii KAKSI ehtoa.** Mitattu: 18:sta "kesken" olevasta
+yhdeksalla ei ollut valmistumisaikaa lainkaan — ne olivat
+korttelisivuja ja autohallipaikkoja. Siksi vaaditaan seka vaihe
+portaasta etta tulevaisuuden valmistumisaika. Kumpikaan yksin ei riita:
+portaan voi jattaa paivittamatta.
+
+**BONAVA (`bonava_kohteet`) — tila koneluettavana.** Sivu asettaa
+`window.bonavaInfo.pageType` ja `.salesStatus`. 423 `/asunnot/`-
+osoitteesta 33 on kohdesyvyydella ja niista 13 on `ProjectPage`:
+5 Planned, 3 ForSale, 3 Presales, 2 ReadyToMoveIn. **Planned on
+aikaisin vaihe jonka yksikaan mitattu rakentajasivusto merkitsee.**
+
+**Taloyhtio tasmahaulla, ei poimintasaannolla.** `housingCompanyName`
+(D-171) ei kelpaa tahan kahdesta syysta: (1) se lukee vain otsikon ja
+kuvauksen kaksi ensimmaista virketta, ja Bonavan sivulla yhtio mainitaan
+merkilla 600 / 8 134; (2) sen genetiivikatkaisu pudottaisi lopun
+numeron, ja **Tuulikello 2 ja 3 ovat eri taloyhtioita**. Yhtio kelpaa
+siis vain jos teksti sisaltaa tasmalleen "<yhtiomuoto> <productName>".
+
+Samasta syysta kaksoiskappaleet karsitaan **tarkalla nimella eika
+avaimella** molemmissa keraajissa: avain pudottaa numeron, jolloin kaksi
+eri hanketta nayttaisi samalta ja toinen jaisi pois.
+
+**AVOIN: `apartments` ei kulje tuontipolussa.** Molemmat lahteet
+tietavat asuntojen maaran, ja `projects.apartments` on olemassa,
+nakyy digesteissa ja on kasin muokattavissa — mutta ehdokas->hanke
+-polku ei kirjoita sita koskaan. Maara talletetaan toistaiseksi
+`metadata.apartments`-kenttaan.
+
 ### D-172 - Rakentajan oma asuntokatalogi lahteena (Lujakoti)
 
 Ehdokas "Lujatalo rakentaa omaperusteisen kerrostalon Tampereelle"

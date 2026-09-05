@@ -64,6 +64,8 @@ import {
   enrichLujataloProject,
 } from "./fetchLujataloProjectsSource"
 import { fetchLujakotiSource } from "./fetchLujakotiSource"
+import { fetchLaptiKohteetSource } from "./fetchLaptiKohteetSource"
+import { fetchBonavaKohteetSource } from "./fetchBonavaKohteetSource"
 import {
   fetchNccProjectsSource,
   enrichNccProject,
@@ -176,6 +178,19 @@ export const sources = [
    * Kohdesivu antaa rekisteroidyn taloyhtion nimen ja katuosoitteen.
    */
   { name: "lujakoti", fetch: fetchLujakotiSource },
+  /*
+   * Laptin taloyhtiot. Lahde `lapti` lukee uutissivun eika nae
+   * omaperusteista asuntotuotantoa lainkaan (D-172). Kohdesivuilla on
+   * 21 nimettya kenttaa - rikkain mitattu yrityslahde.
+   */
+  { name: "lapti_kohteet", fetch: fetchLaptiKohteetSource },
+  /*
+   * Bonavan kohdesivut. Lahde `bonava` lukee mediatiedotteet eika nae
+   * omia asuntokohteita. Myyntitila on koneluettava
+   * (`window.bonavaInfo.salesStatus`), ja "Planned" on aikaisin vaihe
+   * jonka yksikaan mitattu rakentajasivusto merkitsee.
+   */
+  { name: "bonava_kohteet", fetch: fetchBonavaKohteetSource },
   /*
    * NCC:n projektisivut - mitattuna rikkain yrityslahde. Ainoa joka tuottaa
    * katuosoitteen postinumeroineen ja suunnittelijat urakkalajeittain.

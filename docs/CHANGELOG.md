@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Lapti ja Bonava: kohdekatalogit lahteiksi (D-173)
+
+Molemmilla oli jo lahde, mutta kumpikin lukee uutisia (`lapti` ->
+ajankohtaista, `bonava` -> mediatiedotteet) eika nae omaperusteista
+asuntotuotantoa. Tarkistettu ennen rakentamista.
+
+`lapti_kohteet` on rikkain mitattu yrityslahde: taloyhtiot ovat omana
+sisaltotyyppinaan ja joka sivulla on nimetty kenttataulukko. Ajo tuotti
+9 ehdokasta joilla jokainen kentta oli taytetty — katuosoite,
+valmistumispaiva, asuntomaara, rakennustyyppi ja vaihe. Vaihe luetaan
+sivun nelivaiheisesta portaasta (aktiivinen askel on korostettu), koska
+kaikki neljä nimea ovat joka sivulla ja tekstihaku antaisi aina saman
+vastauksen.
+
+`bonava_kohteet` lukee myyntitilan koneluettavasta kentasta
+(`window.bonavaInfo.salesStatus`): 11 kesken olevaa kohdetta, joista
+viisi on `Planned` eli vasta suunnitteilla. Se on aikaisin vaihe jonka
+yksikaan mitattu rakentajasivusto merkitsee.
+
 ### Lujakoti lahteeksi: rakentajan oma asuntokatalogi (D-172)
 
 Omaperusteisesta asuntokohteesta ei synny urakkauutista eika
