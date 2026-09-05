@@ -946,11 +946,15 @@ muistin varassa.
 ### Asiakaskäyttöliittymä
 
 - **Trialin aktivoituminen on mitattu, konversio ei (D-166, 5.9.2026).**
-  Käyttöseuranta on nyt näkyvissä käyttäjäkohtaisesti ja koko joukolle,
-  ja se paljasti ensimmäisen luvun johon kannattaa tarttua: **elokuussa
-  luoduista 59 tunnuksesta 34 ei ole kirjautunut kertaakaan.** Kutsu ei
-  ollut syy — kaikilla sähköposti on vahvistettu eikä yhdelläkään ole
-  avaamatonta kutsua.
+  Käyttöseuranta on nyt näkyvissä käyttäjäkohtaisesti ja koko joukolle.
+
+  **Kirjautumattomat ovat jo seurannassa** — käyttäjälistalla näkyy
+  viimeisin kirjautuminen ja trial-tila, ja Johannes sekä myyjä
+  aktivoivat niitä jotka eivät kirjaudu. Elokuun 59 tunnuksesta 34 on
+  tällaisia (kutsu ei ole syy: kaikilla sähköposti on vahvistettu eikä
+  yhdelläkään ole avaamatonta kutsua). **Uutta ei siis ole se KUKA ei
+  kirjaudu vaan se MITEN kirjautuneet käyttävät** — päivät, minuutit ja
+  sivut, jotka näkyvät nyt "Käyttö"-napista.
 
   30 vrk:n kehitys kertoo saman toisin päin: käyttäjiä +187 % ja
   istuntoja +111 %, mutta sivulatauksia −10 % ja istunnon keskikesto

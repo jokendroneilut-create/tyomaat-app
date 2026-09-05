@@ -53,7 +53,14 @@ keskikesto     27 min  -57 %
 ```
 
 Luku kertoo myyntityon tuloksen tarkemmin kuin tunnusmaara: **tunnuksia
-tulee lisaa, mutta kukin kayttaa vahemman.** Sama nakyy yksittaisella
+tulee lisaa, mutta kukin kayttaa vahemman.**
+
+**KIRJAUTUMATTOMAT OLIVAT JO SEURANNASSA.** Ehdotin ensimmaisena
+toimena "soita niille 34:lle jotka eivat ole kirjautuneet" - mutta
+kayttajalistalla nakyy viimeisin kirjautuminen ja trial-tila, ja niita
+aktivoidaan jo. Uutta ei siis ole KUKA ei kirjaudu vaan **miten
+kirjautuneet kayttavat**: paivat, minuutit ja sivut. Sen naki
+aiemmin vain top-5-listalta koko joukosta, ei asiakkaalta. Sama nakyy yksittaisella
 rivilla - esimerkkiasiakas kaytti 154 min 30.7., sitten 2 min, 1 min,
 1 min, eika mitaan 20.8. jalkeen.
 
