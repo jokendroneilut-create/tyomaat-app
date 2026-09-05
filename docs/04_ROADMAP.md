@@ -945,6 +945,30 @@ muistin varassa.
 
 ### Asiakaskäyttöliittymä
 
+- **Trialin aktivoituminen on mitattu, konversio ei (D-166, 5.9.2026).**
+  Käyttöseuranta on nyt näkyvissä käyttäjäkohtaisesti ja koko joukolle,
+  ja se paljasti ensimmäisen luvun johon kannattaa tarttua: **elokuussa
+  luoduista 59 tunnuksesta 34 ei ole kirjautunut kertaakaan.** Kutsu ei
+  ollut syy — kaikilla sähköposti on vahvistettu eikä yhdelläkään ole
+  avaamatonta kutsua.
+
+  30 vrk:n kehitys kertoo saman toisin päin: käyttäjiä +187 % ja
+  istuntoja +111 %, mutta sivulatauksia −10 % ja istunnon keskikesto
+  −57 %. **Tunnuksia tulee lisää, mutta kukin käyttää vähemmän.**
+
+  **Mitä ei vielä ole:** trial → maksava ei ole missään. Ei
+  `subscriptions`- eikä `trials`-taulua, ja `account_lifecycle` kirjaa
+  vain created/deleted/locked. Yhdellä myyjällä konversio on ainoa vipu
+  (soittomäärää ei voi kasvattaa ilman toista ihmistä), joten se on
+  seuraava mitattava. Kevyin muoto on kaksi kenttää tunnusta kohden:
+  `trial_started_at` ja `converted_at`. Vaatii SQL:n.
+
+  Kolme asiaa jotka datasta jo saa ilman uutta kirjausta:
+  aktivoituiko trial (ensimmäinen kirjautuminen 3 vrk:ssa), käyttääkö
+  asiakas viikoittain, ja hiipuuko käyttö ennen irtisanomista — se
+  viimeinen on Metrocin "churn ei saa olla ikinä yllätys" mitattuna
+  eikä soittamalla (ks. `competitors/metroc-virnala-haastattelu-2021-05-12/`).
+
 - **Tänään-syötteen kaksi kattoa on nyt mitattu (D-164, D-165).**
   Hakuraja nostettiin 1 000 → 3 000 riviin ja syötteeseen ladataan 300;
   "Näytä lisää" paljastaa erän kerrallaan. Tilanne 2.9.2026:
