@@ -59,6 +59,17 @@ Samalla korjattiin analytiikkasivun "TypeError: fetch failed": vanha
 reitti haki hankkeiden nimet yhdella .in()-kyselylla, ja lista oli
 kasvanut 764 tunnisteeseen. Pilkottu 90:n paloihin.
 
+Kirjautumisluku korjattiin: `login` kirjataan Supabasen
+SIGNED_IN-signaalista, joka laukeaa myos istunnon palautuksesta ja
+valilehden avauksesta. Yksi asiakas nayttti 17 kirjautumista paivana
+jona istuntoja oli nelja; mitattuna 34 tapahtumasta 17 tuli alle
+minuutin paassa edellisesta. Tiivistetaan nyt samalla 30 minuutin
+saannolla kuin istunnot, seka kayttajakohtaisessa nakymassa etta
+"Eniten kirjautuneet" -listalla. Korjatut luvut 17 -> 4 ja 350 -> 18.
+
+Myyjan nakyma todennettu: "Kaytto"-nappi toimii, ja reitin
+nakyvyysraja on testattu (myyja ei nae toisen myyjan asiakasta).
+
 ### Tanaan-syotteen hakuraja katkaisi ison maakunnan osumat (D-165)
 
 `getTodayProjects` haki 1 000 uusinta hanketta ja suodatti vasta sen
