@@ -954,6 +954,23 @@ muistin varassa.
 
 ### Operointi
 
+- **KÄSIN YHDISTÄMINEN PUUTTUU TIC:STÄ.** Yhdistämiskoneisto on valmis
+  (`/api/tic/duplicates/review`: valitsee säilyjän, nostaa vaiheen,
+  tarkistaa suosikit, piilottaa toisen), mutta pari voi syntyä vain
+  skannauksesta. Kun ihminen näkee listalla kaksi samaa hanketta, hänellä
+  ei ole nappia.
+
+  Mitattu tapaus 6.9.2026: "Vanhan paperitehtaan konehalliin rakennetaan
+  datakeskus Kajaanissa" ja "Datakeskus Kajaaniin" ovat molemmat CSC:n
+  Lumi-tekoälytehdas samassa paperikonehallissa. Skannaus ei löytänyt
+  paria, koska otsikoissa ei ole yhteistä sanaa. Pari lisättiin
+  katselmointilistalle käsin kannan kautta.
+
+  **Pienin korjaus:** hankelistan riville valinta ja "yhdistä valittu" →
+  `INSERT project_duplicate_candidates (reasons: ["manual"], confidence:
+  100)`, minkä jälkeen olemassa oleva katselmointinäkymä hoitaa loput.
+  Ei uutta yhdistämislogiikkaa.
+
 - ~~**TARKISTA 16.–17.8.2026: purkautuuko `listed`-jono.**~~ Mitattu
   30.8.2026: `listed` = **0**, jono on purettu. `no_enricher` = 563, mikä
   on kohdan 2 odottama tila eikä virhe. Alkuperäinen kirjaus:
