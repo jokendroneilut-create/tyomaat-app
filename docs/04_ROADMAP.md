@@ -619,6 +619,44 @@ muistin varassa.
 
 ### Datan laatu
 
+- **⭐ SEURAAVA: hankesuunnitelmien lukeminen liitteistä.** Tämä on
+  ensimmäinen parannettava, koska se on ainoa jäljellä oleva tie
+  kolmeen kenttään jotka ovat nyt matalalla — eikä syy ole enää
+  poiminnassa vaan siinä, ettei tieto ole kuvauksessa.
+
+  Tilanne 5.9.2026 näkyvillä 5 871 hankkeella, D-161:n ja D-169:n
+  korjausten **jälkeen**:
+
+  | kenttä | kattavuus |
+  |---|---|
+  | kustannusarvio | 781 (13 %) |
+  | valmistumisaika | 724 (12 %) |
+  | pinta-ala | 286 (5 %) |
+
+  Kuvauksesta poimittavissa oleva osuus on nyt poimittu: kaikki mitatut
+  ankkurit on käyty läpi ja torjuttavat muodot erotettu (ylläpitokulu,
+  toimivaltafraasi, maa-ala, rakennusoikeus). **Seuraava tieto on
+  liitteissä** — hankesuunnitelmassa lukee sekä enimmäishinta, laajuus
+  brm²:nä että aikataulu, usein samalla sivulla.
+
+  **Koneisto on jo olemassa, mutta vain skripteissä.** Sama kuvio kuin
+  kohdetyypittimessä (D-159): `lib/agent/kaavaselostusPdf.ts` osaa hakea
+  ja jäsentää PDF:n, ja `lupapisteBulletinPdf.ts` on kytketty putkeen
+  (`apiCollector`). Kaavaselostuksen lukijaa kutsuu vain
+  `scripts/backfill-kaavaselostus-contacts.ts`.
+
+  Sen dokumentoidut rajaukset kannattaa periä sellaisenaan, koska ne on
+  mitattu: **vain ensimmäiset sivut** (perustiedot ovat kansilehdellä),
+  **vain poiminta tallennetaan eikä tekstiä** (mitatut selostukset ovat
+  229 000–884 000 merkkiä) ja **tiedostokoolla katto** (kaavakartat ovat
+  kymmeniä megatavuja).
+
+  Aloitus: mittaa montako hanketta kantaa liitelinkin jonka nimessä on
+  "hankesuunnitelma", ja lue niistä kymmenkunta läpi — vasta se kertoo
+  onko luku samassa muodossa kuin kuvauksissa vai eri. Sama menettely
+  kuin kustannus- ja pinta-alapoimijassa: ankkurit aineistosta, ei
+  oletuksesta.
+
 - **Vaihesanasto on epäyhtenäinen** — mutta ei niin haitallinen kuin
   tässä aiemmin väitettiin. Tarkistettu 15.8.2026: 11 kirjoitusasua,
   joista `normalizeLegacyPhase` kanonisoi 10. "Suunnittelussa" 1 285 ja
