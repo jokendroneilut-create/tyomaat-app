@@ -5,6 +5,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-167 - STT haki vuoden historian kuudesti paivassa
+
+Ajolista nayttti 5 vrk:n ajalta 382 ajoa ja niista kaksi virhetta,
+molemmat samaa: "Ajo ylitti 90 sekuntia". Toinen oli STT.
+
+**EI OLLUT YKSITTAINEN PIIKKI.** 30 vrk:n historia STT:sta:
+
+```
+onnistui  3 / 13   kestot 74 s, 85 s, 86 s   (raja 90 s)
+kaatui    2        aikarajaan
+jumissa   8        "ei paattynyt tunnissa", 12.-13.8.
+```
+
+Onnistuneetkin olivat siis 4-16 sekunnin paassa rajasta. Ja jokainen
+ajo loysi noin **870 dokumenttia mutta tallensi 1-6** - eli teki vuoden
+tyon loytaakseen kourallisen uusia.
+
+**SYY OLI TUOREUSIKKUNA, EI HAKUSANOJEN MAARA.** Haku sivuttaa kutakin
+44 hakusanasta niin kauan kuin sivun vanhin tulos on tuoreusrajan
+sisalla, ja raja oli **12 kuukautta**. Koko vuoden historia haettiin
+uudestaan joka ajolla, kuudesti vuorokaudessa.
+
+**MITATTU ENNEN MUUTOSTA** kuudella hakusanalla:
+
+```
+12 kk   9 sivua, 900 tulosta, 25,7 s   -> 44 sanaa n. 31 s
+30 vrk  6 sivua, 600 tulosta,  0,8 s   -> 44 sanaa n.  1 s
+```
+
+Ero ei ole tuloksissa vaan sivutuksessa: lyhyella ikkunalla jokainen
+sana pysahtyy ensimmaiseen sivuun. Koko hakijan ajo mitattuna muutoksen
+jalkeen: **71 tulosta, 24 s** (oli ~870 ja 74-86 s). Loppuaika menee
+tiedotteiden runkojen hakuun, ja marginaali 90 sekuntiin on nyt reilu.
+
+**MIKSI 30 VRK RIITTAA.** Vanhat tiedotteet ovat jo tallessa - siksi
+tallennettuja oli vain 1-6 per ajo. Lahde ajetaan kuudesti
+vuorokaudessa, ja pisin mitattu katko oli kaksi vuorokautta. Jos
+historiaa tarvitaan uudestaan, ikkunan voi nostaa kasin yhta ajoa
+varten; se on kertaluontoinen toimenpide eika kuudesti paivassa
+toistuva.
+
+**HARTELA KAATUI SAMAAN RAJAAN 31.8.** Se on eri lahde ja todennakoisesti
+eri syy (aiemmin mitattu `statement timeout`), eika sita korjattu tassa.
+Jos se toistuu, sama kysymys kannattaa esittaa: mita ajo hakee joka
+kerta uudestaan?
+
+`lib/agent/fetchSttHakuSource.ts`
+
+---
+
 ### D-166 - Kayttoseuranta oli jo olemassa; puuttui vain nakyma
 
 Kysymys: voiko yksittaisen kayttajan kirjautumisia seurata tarkemmin -

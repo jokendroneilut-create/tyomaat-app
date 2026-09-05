@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### STT haki vuoden historian kuudesti paivassa (D-167)
+
+STT-lahde kaatui 90 sekunnin aikarajaan. 30 vrk:n historiassa se
+onnistui vain 3 kertaa 13:sta, ja onnistuneetkin kestivat 74-86 s.
+Jokainen ajo loysi noin 870 dokumenttia ja tallensi 1-6.
+
+Syy oli tuoreusikkuna: haku sivutti kutakin 44 hakusanasta 12 kuukauden
+taakse, eli koko vuoden historia haettiin uudestaan kuudesti
+vuorokaudessa. Ikkuna lyhennettiin 30 vuorokauteen. Mitattu ero
+kuudella hakusanalla: 25,7 s -> 0,8 s. Koko hakija muutoksen jalkeen:
+71 tulosta, 24 s.
+
 ### Kayttoseurannan nakymat: kayttajakohtainen ja koko joukon (D-166)
 
 `analytics_events` on ollut olemassa 14.7.2026 alkaen (36 019 riviä) ja

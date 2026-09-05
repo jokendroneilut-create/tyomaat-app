@@ -562,9 +562,39 @@ async function fetchTermReleases(
   return collected
 }
 
+/*
+ * TUOREUSIKKUNA RATKAISEE AJON KESTON, EI HAKUSANOJEN MAARA.
+ *
+ * Haku sivuttaa kutakin hakusanaa niin kauan kuin sivun vanhin tulos on
+ * tuoreusrajan sisalla. Kahdentoista kuukauden rajalla se tarkoittaa
+ * jopa kymmenta sivua per sana - eli koko vuoden historia haetaan
+ * uudestaan joka ajolla, kuudesti vuorokaudessa.
+ *
+ * MITATTU 5.9.2026 kuudella hakusanalla:
+ *
+ *   12 kk   9 sivua, 900 tulosta, 25,7 s   -> 44 sanaa n. 31 s
+ *   30 vrk  6 sivua, 600 tulosta,  0,8 s   -> 44 sanaa n.  1 s
+ *
+ * Ero ei ole tuloksissa vaan sivutuksessa: lyhyella ikkunalla jokainen
+ * sana pysahtyy ensimmaiseen sivuun.
+ *
+ * TAMA OLI AJON KAATANUT SYY. 30 vrk:n ajohistoriassa STT onnistui vain
+ * kolme kertaa kolmestatoista, ja nekin 74-86 sekunnissa 90 sekunnin
+ * rajaa vasten. Loput kaatuivat aikarajaan tai jaivat jumiin. Ajo loysi
+ * joka kerta noin 870 dokumenttia ja tallensi niista 1-6 - eli teki
+ * vuoden tyon loytaakseen kourallisen uusia.
+ *
+ * MIKSI 30 VRK RIITTAA. Vanhat tiedotteet ovat jo tallessa, ja lahde
+ * ajetaan kuudesti vuorokaudessa; pisin mitattu katko oli kaksi
+ * vuorokautta (12.-13.8.2026). Jos historiaa tarvitaan uudestaan, ikkunan
+ * voi nostaa kasin yhta ajoa varten - se on tietoinen kertaluontoinen
+ * toimenpide eika kuudesti paivassa toistuva.
+ */
+const TUOREUSIKKUNA_PAIVAA = 30
+
 export async function fetchSttHakuSource() {
   const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 12)
+  cutoffDate.setDate(cutoffDate.getDate() - TUOREUSIKKUNA_PAIVAA)
 
   const results: any[] = []
   const seen = new Set<string>()
