@@ -63,7 +63,15 @@ async function startRun(mode: "full" | "incremental", targetCount: number | null
     .from("agent_runs")
     .insert({
       agent_type: "duplicate_scan",
-      source_name: mode === "full" ? "Täysi skannaus" : "Viikkoskannaus",
+      /*
+       * NIMI KERTOO AJORYTMIN, JOTEN SEN ON PYSYTTAVA TOTUUDESSA.
+       * Etiketti oli "Viikkoskannaus" vielä sen jälkeen kun cron
+       * muutettiin päivittäiseksi (`0 4 * * *`). Mitattu 5.9.2026: ajo
+       * on ajettu joka päivä klo 04:00-04:02, mutta lokissa luki yhä
+       * viikko - ja se johti päättelemään väärin, että uusi hanke
+       * odottaisi duplikaattitarkistusta viikon.
+       */
+      source_name: mode === "full" ? "Täysi skannaus" : "Päivittäinen skannaus",
       status: "started",
       started_at: new Date().toISOString(),
       payload: { mode, targetCount },
