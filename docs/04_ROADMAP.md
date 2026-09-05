@@ -945,6 +945,16 @@ muistin varassa.
 
 ### Asiakaskäyttöliittymä
 
+- **Varmista myyjän istunnolla että "Käyttö"-nappi näkyy.** Koodista
+  tarkistettu 5.9.2026: sarake "Viimeksi kirjautunut" ei ole
+  `isAdminView`-ehdon takana, ja `/api/admin/user-activity` sallii
+  myyjän omat asiakkaat (`canSeeOwnCustomers` + `visibleUsers`). Sen
+  pitäisi siis näkyä — mutta sitä **ei ole kokeiltu kirjautuneena
+  myyjänä**, ja juuri näkyvyysrajat ovat se kohta jossa palvelin ja
+  käyttöliittymä voivat erota toisistaan. Testi on yksi kirjautuminen:
+  avaa asiakas ja katso että päivät ja minuutit tulevat näkyviin, ja
+  ettei toisen myyjän asiakas näy.
+
 - **Trialin aktivoituminen on mitattu, konversio ei (D-166, 5.9.2026).**
   Käyttöseuranta on nyt näkyvissä käyttäjäkohtaisesti ja koko joukolle.
 

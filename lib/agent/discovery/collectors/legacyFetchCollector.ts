@@ -6,6 +6,7 @@ import {
   findRecentlySeenSourceUrls,
   loadProjectsForMatching,
 } from "@/lib/agent/importCandidate"
+import { ehtiiViela } from "@/lib/agent/discovery/tuontiBudjetti"
 
 /*
  * Lähteen jo tallennettujen kuvausten pituudet osoitteittain.
@@ -337,15 +338,28 @@ export async function collectLegacySource(source: any) {
         )
       : unseen
 
+  /*
+   * Hannan varaaminen: ehdokasta ei aloiteta jos se ei ehdi valmiiksi
+   * ennen katkaisua. Perustelu ja mittaus `tuontiBudjetti.ts`:ssa.
+   */
+  let valmiita = 0
+  let kaytettyMs = 0
+
   await processWithConcurrency(ordered, CANDIDATE_CONCURRENCY, async (candidate: any) => {
-    /*
-     * Budjetti tarkistetaan ennen työtä, ei kesken sen: keskeytetty
-     * tuonti jättäisi rivin puolitiehen.
-     */
-    if (Date.now() > importDeadline) {
+    const ehtii = ehtiiViela({
+      nyt: Date.now(),
+      maaraaika: importDeadline,
+      valmiita,
+      kaytettyMs,
+      rinnakkaisuus: CANDIDATE_CONCURRENCY,
+    })
+
+    if (!ehtii) {
       deferred++
       return
     }
+
+    const alkoi = Date.now()
 
     let prepared = candidate
 
@@ -391,6 +405,10 @@ export async function collectLegacySource(source: any) {
         error?.message ?? error
       )
       skipped++
+    } finally {
+      /* Mitataan myos epaonnistunut: sekin kulutti aikaa. */
+      valmiita++
+      kaytettyMs += Date.now() - alkoi
     }
   })
 

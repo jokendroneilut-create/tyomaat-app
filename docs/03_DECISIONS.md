@@ -5,6 +5,60 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-168 - Hartelan kaatuminen oli hanta, ei haku
+
+STT:n korjauksen (D-167) jalkeen jaljella oli toinen 90 sekunnin
+ylitys: Hartela. Sama oire, eri syy - ja se selvisi vasta mittaamalla
+osat erikseen.
+
+**MITATTU 5.9.2026:**
+
+```
+haku          28 dokumenttia   8,0 s
+taydennys     ~1 s / kpl, kuusi rinnakkain -> 5 s
+yhteensa                       13 s
+ajot tuotannossa               69-93 s
+```
+
+Hartela ei siis hae liikaa (toisin kuin STT, joka haki vuoden
+historian). Kolmetoista sekuntia on haku ja taydennys; **loput 60-80 s
+on tuontivaihetta** - tunnistus, relevanssiportti ja kohdetyypitin, joista
+kaksi jalkimmaista ovat mallikutsuja.
+
+**VIKA ON HANNASSA.** Tuonnilla on 70 sekunnin budjetti ja ajolla 90
+sekunnin katkaisu. Budjetti tarkistetaan ennen ehdokkaan aloitusta,
+mutta kuusi ehdokasta voi kaynnistya juuri ennen maaraaikaa ja jokainen
+vie oman aikansa. Ajo ylittaa katkaisun vaikka budjetti piti - ja
+katkaisussa **koko ajo menetetaan**, mika nakyy lokissa muodossa
+"loyd 0, tall 0" vaikka tyo oli jo tehty.
+
+**KORJAUS: VARATAAN HANNALLE AIKA, MITATTUNA TASTA AJOSTA.** Ehdokasta
+ei aloiteta jos `nyt + keskikesto x rinnakkaisuus` ylittaa maaraajan.
+Arvio otetaan ajon omista ehdokkaista eika vakiosta, koska lahteet ovat
+erilaisia ja tuontikustannus muuttuu - kohdetyypitin lisasi juuri yhden
+mallikutsun jokaiseen uuteen ehdokkaaseen. Kolme ensimmaista aloitetaan
+aina, jotta arviolle saadaan pohja.
+
+Tama on tietoinen paluu aiempaan opetukseen: laskin kerran
+IMPORT_BUDGET_MS:n 70 -> 55 sekuntiin yhden otoksen perusteella ja
+jouduin perumaan sen, koska seuraava ajo oli hitaampi. Kiintea luku ei
+kestanyt, joten nyt luku lasketaan ajossa.
+
+**MITA EI KORJATTU.** Yksi ajo kaatui 29.8. virheeseen "canceling
+statement due to statement timeout". Epailin kokoelijan
+`metadata->>source_name` -kyselya, mutta mittaus kumosi sen: Hartelalla
+se maksaa 0,4 s (23 rivia). Se on indeksoimaton lausekehaku ja maksaa
+STT:lla 1,8 s (903 rivia), joten indeksi olisi silti perusteltu - mutta
+se on eri tyo eika todistetusti tama virhe.
+
+**Sivuhavainto:** kysely hakee koko `metadata`-jsonb:n vaikka tarvitsee
+kaksi kenttaa. Mitattuna STT:lla 4,1 Mt / 1,8 s vastaan 2,9 Mt / 1,0 s.
+Ei korjattu tassa, koska se ei ollut kaatumisen syy.
+
+`lib/agent/discovery/tuontiBudjetti.ts`
+
+---
+
 ### D-167 - STT haki vuoden historian kuudesti paivassa
 
 Ajolista nayttti 5 vrk:n ajalta 382 ajoa ja niista kaksi virhetta,

@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Hartelan kaatuminen oli hanta, ei haku (D-168)
+
+Toinen 90 sekunnin ylitys oli Hartela. Mitattuna haku on 8 s ja
+taydennys 5 s, mutta ajot kestivat 69-93 s - loput on tuontivaihetta.
+
+Vika oli hannassa: tuonnin budjetti on 70 s ja katkaisu 90 s, ja kuusi
+ehdokasta voi kaynnistya juuri ennen maaraaikaa. Ajo ylitti katkaisun
+vaikka budjetti piti, ja katkaisussa koko ajo menetetaan.
+
+Nyt ehdokasta ei aloiteta jos sen arvioitu kesto ei mahdu jaljella
+olevaan aikaan. Arvio lasketaan ajon omista ehdokkaista eika vakiosta,
+koska kiintea luku on jo kertaalleen osoittautunut kestamattomaksi.
+
 ### STT haki vuoden historian kuudesti paivassa (D-167)
 
 STT-lahde kaatui 90 sekunnin aikarajaan. 30 vrk:n historiassa se
