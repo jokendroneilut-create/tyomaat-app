@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { housingCompanyKey, normalizeHousingCompany } from "./housingCompanyKey"
+import { housingCompanyName, housingCompanyKey, normalizeHousingCompany } from "./housingCompanyKey"
 
 describe("normalizeHousingCompany", () => {
   /* Sijamuoto ei saa erottaa samaa yhtiota. */
@@ -96,5 +96,101 @@ describe("housingCompanyKey", () => {
     )
     expect(lapti).toBe(stt)
     expect(lapti).toBe("oulun valois")
+  })
+})
+/*
+ * Kaksi mitattua vikaa 6.9.2026. Kumpikaan ei saa palata: molemmat
+ * naytttivat toimivalta mutta tuottivat vaaria pareja.
+ */
+describe("korjatut viat", () => {
+  it("karsii sanan kiinteisto vaikka siina on skandimerkki", () => {
+    /*
+     * `\b` ei tunnista o-umlauttia sananmerkiksi, joten vanha kuvio
+     * jatti sanan paikalleen ja avaimeksi tuli "kiinteisto turun lyse".
+     * Kaupungin kiinteistoyhtio omistaa satoja rakennuksia, joten avain
+     * yhdisti Turun Lyseon ja Luolavuoren koulun.
+     */
+    expect(housingCompanyKey("Kiinteistö Oy Turun Lyseo", null)).toBe("turun lyse")
+    expect(housingCompanyKey("Kiinteistö Oy Turun Kaupunkitilat", null)).toBe("turun kaupunkitilat")
+  })
+
+  it("tunnistaa Koy-alkuisen nimen ilman erillista Oy:ta", () => {
+    expect(housingCompanyKey("Koy Tampereen Hymni", null)).toBe("tampereen hymn")
+  })
+
+  it("ei yksiloi pelkalla paikannimella", () => {
+    expect(housingCompanyKey("Asunto Oy Oulun", null)).toBeNull()
+  })
+})
+
+describe("housingCompanyName", () => {
+  it("palauttaa nimen sellaisenaan naytettavaksi", () => {
+    expect(housingCompanyName("Asunto Oy Oulun Valoisa valmistuu", null)).toBe(
+      "Asunto Oy Oulun Valoisa"
+    )
+    expect(
+      housingCompanyName("Lapti aloitti kohteen.", "Asunto Oy Oulun Valoisaan valmistuu 29 asuntoa.")
+    ).toBe("Asunto Oy Oulun Valoisaan")
+  })
+
+  /*
+   * Lahteissa nimen perassa ei ole pistetta, joten seuraavan virkkeen
+   * tai kentan ensimmainen sana on kuviolle nimen jatko. Mitattu
+   * 6.9.2026: 30 luetusta rivista kaikilla oli sama vika.
+   */
+  it("katkaisee nimen kun edellinen sana ei ole genetiivi", () => {
+    expect(housingCompanyName("Asunto Oy Espoon Luhtavehka SRV aloittaa", null)).toBe(
+      "Asunto Oy Espoon Luhtavehka"
+    )
+    expect(housingCompanyName("As Oy Helsingin Kruunuvouti Vastaava tyonjohtaja", null)).toBe(
+      "As Oy Helsingin Kruunuvouti"
+    )
+    expect(housingCompanyName("Asunto Oy Tampereen Okra Bonava kaynnisti", null)).toBe(
+      "Asunto Oy Tampereen Okra"
+    )
+  })
+
+  /* Genetiivimaareet kuuluvat nimeen: "Turun Kirstinpuiston Solina". */
+  it("sailyttaa moniosaisen nimen genetiivimaareet", () => {
+    expect(housingCompanyName("Asunto Oy Turun Kirstinpuiston Solina 13", null)).toBe(
+      "Asunto Oy Turun Kirstinpuiston Solina"
+    )
+    expect(housingCompanyName("Asunto Oy Espoon Hannusrannan Aurea Pohjola Rakennus", null)).toBe(
+      "Asunto Oy Espoon Hannusrannan Aurea"
+    )
+  })
+
+  /* Paasana ottaa peraansa nimen: "Villa Stenius", "Kauppakeskus Sello". */
+  it("jatkaa nimea paasanan jalkeen", () => {
+    expect(housingCompanyName("Kerrostalo Etela-Haagaan As Oy Helsingin Villa Stenius Kylatie 3A", null)).toBe(
+      "As Oy Helsingin Villa Stenius"
+    )
+  })
+
+  /*
+   * Tiedote voi kertoa kahdesta kohteesta. Otsikko ratkaisee kumpi
+   * yhtio on tama hanke (mitattu 6.9.2026: Nihdin Skyline ja Horizon).
+   */
+  it("valitsee otsikon mukaisen yhtion kun tiedotteessa on kaksi", () => {
+    const kuvaus =
+      "Hausia Oy kaynnistaa Nihdissa kaksi kohdetta: Asunto Oy Nihdin Skylinen rakentaminen alkaa huhtikuussa ja As Oy Nihdin Horizonin elokuussa 2026."
+    expect(housingCompanyName("Kerrostalo Nihdin Horizon", kuvaus)).toBe("As Oy Nihdin Horizonin")
+    expect(housingCompanyName("Kerrostalo Nihdin Skyline", kuvaus)).toBe("Asunto Oy Nihdin Skylinen")
+  })
+
+  /* Kumpikaan ei ole otsikossa: tyhja on parempi kuin vaara yhtio. */
+  it("jattaa tyhjaksi kun kahdesta ei voi valita", () => {
+    expect(
+      housingCompanyName(
+        "Kaksi kerrostaloa Nihtiin",
+        "Asunto Oy Nihdin Skylinen rakentaminen alkaa ja As Oy Nihdin Horizonin elokuussa."
+      )
+    ).toBeNull()
+  })
+
+  /* Sama kynnys kuin avaimella, jottei nayttoon jaa nimea jota ei tasmayteta. */
+  it("noudattaa samaa kynnysta kuin avain", () => {
+    expect(housingCompanyName("Asunto Oy Oulun", null)).toBeNull()
+    expect(housingCompanyName("Ei yhtiota tassa", null)).toBeNull()
   })
 })

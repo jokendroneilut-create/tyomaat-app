@@ -10,6 +10,8 @@ import {
   extractFloorAreaFromText,
   parseAlaTeksti,
 } from "@/lib/projects/extractFloorAreaFromText"
+import { housingCompanyName } from "@/lib/projects/housingCompanyKey"
+import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
 import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
 import { resolveBuildingType } from "@/lib/agent/quality/resolveBuildingType"
 import {
@@ -175,6 +177,43 @@ export async function resolvePotentialProject(
       existingMetadata?.estimated_completion ?? md.estimated_completion ?? ""
     ).trim()
     return nyt ? {} : { estimated_completion: inferredCompletion }
+  }
+
+  /*
+   * TALOYHTIÖ YRITYSLISTAAN.
+   *
+   * "Asunto Oy Oulun Valoisa" on rekisteröity ja yksilöivä tavalla jota
+   * tiedoteotsikko ei ole, ja se on asiakkaalle hakukelpoinen nimi.
+   * Poimintasääntö on ollut olemassa täsmäytystä varten
+   * (`housingCompanyKey`), mutta nimeä ei ole näytetty missään.
+   *
+   * Mitattu 6.9.2026: näkyvistä 5 899 hankkeesta **116:lla taloyhtiö
+   * lukee otsikossa tai kuvauksen alussa, ja vain 8:lla se on
+   * yrityksissä tai osapuolissa** — 108:lta se puuttuu kokonaan.
+   *
+   * Rajaus otsikkoon ja kahteen ensimmäiseen virkkeeseen on mitattu
+   * (29.8.2026): koko kuvauksesta poimittuna mukaan tulisi yrityksen
+   * MUITA kohteita, mikä tuotti 472 väärää täsmäytysparia.
+   */
+  function taloyhtioMetadata(
+    existingMetadata?: Record<string, any> | null
+  ): Record<string, unknown> {
+    const nimi = housingCompanyName(title, md.description ?? md.operation ?? null)
+    if (!nimi) return {}
+
+    /*
+     * Lista yhdistetään eikä korvata: lähde on voinut kertoa yrityksiä
+     * itse, eikä taloyhtiö saa pyyhkiä niitä. `mergeCompanyNames`
+     * hoitaa myös kirjoitusasun, jottei sama nimi päädy listalle
+     * kahdesti.
+     */
+    const lista = mergeCompanyNames(
+      (existingMetadata?.related_companies as string[]) ?? [],
+      (md.related_companies as string[]) ?? [],
+      [nimi]
+    )
+
+    return { housing_company: nimi, related_companies: lista }
   }
 
   /*
@@ -378,6 +417,7 @@ export async function resolvePotentialProject(
           ...completionMetadata,
           ...costMetadata(existing.metadata),
           ...alaMetadata(existing.metadata),
+          ...taloyhtioMetadata(existing.metadata),
           source_history: sourceHistory,
           lastSourceName: input.sourceName ?? null,
           matched_existing_project_id:
@@ -457,6 +497,7 @@ export async function resolvePotentialProject(
         ...completionMetadata,
         ...costMetadata(null),
         ...alaMetadata(null),
+        ...taloyhtioMetadata(null),
         ...relevanceGate.metadata,
         ...buildingType.metadata,
         source_history: buildSourceHistory(null, input),

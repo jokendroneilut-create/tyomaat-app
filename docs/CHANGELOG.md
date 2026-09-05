@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Taloyhtion nimi hankkeen yrityslistaan (D-171)
+
+"Asunto Oy Oulun Valoisa" on ollut kannassa vain riisuttuna
+tasmaytysavaimena. Nyt nimi lisataan hankkeen yrityslistaan sellaisenaan:
+se on rekisteroity yhtio, se yksiloi hankkeen paremmin kuin otsikko
+"Kerrostalo Hiukkavaaraan", ja asiakas voi hakea sita nimella. 128
+hanketta takautuvasti, uudet poiminnassa.
+
+Kuivaharjoituksen lukeminen paljasti kolme vikaa jotka avain oli
+normalisoinut nakymattomiin: kuvio nielaisi seuraavan virkkeen sanan
+("Luhtavehka **SRV**", "Fredrika **Arvioitu**"), paasana katkesi kesken
+("Villa" oli **Villa Stenius**), ja kahden kohteen tiedotteesta poimittiin
+vaara yhtio (hankkeelle "Nihdin Horizon" tuli **Skyline**). Sijamuotoa ei
+oikaista: astevaihtelun takia perusmuodon paattely tuottaisi vaaria nimia.
+
 ### Maakunta usean kunnan julkisyhteisosta (D-170)
 
 "Vantaan ja Keravan hyvinvointialue" ei osunut yhden kunnan hakuun, joten

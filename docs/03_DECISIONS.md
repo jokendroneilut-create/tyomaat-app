@@ -5,6 +5,79 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-171 - Taloyhtion nimi yrityslistaan: kolme katkaisusaantoa
+
+Taloyhtion nimi on ollut kannassa vain **tasmaytysavaimena**
+(`housingCompanyKey`, D-152): riisuttu vartalo "oulun valois" jota ei voi
+nayttaa kenellekaan. Nimi itse ei ole ollut missaan nakyvissa, vaikka
+"Asunto Oy Oulun Valoisa" on rekisteroity yhtio ja siksi hakukelpoinen
+tieto - asiakas voi hakea sita nimella, ja se yksiloi hankkeen tavalla
+jota otsikko "Kerrostalo Hiukkavaaraan" ei tee.
+
+Mitattu 6.9.2026: nakyvista 5 899 hankkeesta **137:lla** taloyhtio lukee
+otsikossa tai kuvauksen kahdessa ensimmaisessa virkkeessa, ja vain
+kahdeksalla se oli yrityksissa tai osapuolissa.
+
+**KUIVAHARJOITUKSEN LUKEMINEN PALJASTI KOLME VIKAA, JOISTA YKSIKAAN EI
+NAKYNYT AVAINKAYTOSSA.** Avain normalisoi pois juuri ne erot jotka
+naytolla ovat vaaria.
+
+**1. Kuvio nielaisi seuraavan virkkeen ensimmaisen sanan.** Lahteissa
+nimen perassa ei ole pistetta, joten kuviolle kaikki isolla alkava on
+nimen jatkoa:
+
+    Asunto Oy Espoon Luhtavehka SRV aloittaa 40 asunnon...
+    As Oy Tampereen Hatanpaan Fredrika Arvioitu valmistuminen 12/2026
+    As Oy Helsingin Kruunuvouti Vastaava tyonjohtaja Janne...
+
+Kolmen sanan ryhmasta **kaikki 30 luettua rivia** olivat tallaisia.
+
+**Ratkaisu on kielioppi, ei sanalista:** suomalaisen taloyhtion nimen
+maareet ovat genetiivissa ("Turun **Kirstinpuiston** Solina", "Espoon
+**Hannusrannan** Aurea"). Nimi jatkuu vain niin kauan kuin edellinen sana
+paattyy n:aan. Saanto katkaisi oikein kaikki 30 riviä.
+
+Harkittu ja **hylatty** vaihtoehto: "jatka jos seuraava sana ei ole
+pienella". Se olisi palauttanut seitseman virhetta ("Rakennusvuosi
+2027", "Lujatalo Oy", "Pohjola Rakennus") saadakseen kaksi oikein.
+
+**2. Paasana katkesi kesken.** Genetiivisaanto katkaisi liikaa siella
+missa nimen osa on paasana joka ottaa peraansa nimen: "As Oy Helsingin
+Villa" oli oikeasti **Villa Stenius**, "Kiinteisto Oy Kauppakeskus" oli
+**Kauppakeskus Sellolle**. Poikkeuslista on kahden sanan mittainen
+(villa, kauppakeskus) ja perustuu naihin kahteen mittaukseen.
+
+**3. Yksi tiedote, kaksi eri yhtiota.** Hankkeelle "Kerrostalo Nihdin
+Horizon" poimittiin **vaara yhtio**, koska tiedote kertoo kahdesta:
+
+    Hausia Oy kaynnistaa Nihdissa kaksi kohdetta: Asunto Oy Nihdin
+    Skylinen rakentaminen alkaa huhtikuussa ja As Oy Nihdin Horizonin
+    elokuussa 2026.
+
+Ensimmainen maininta on Skyline, joka on kannassa **oma hankkeensa**.
+Otsikko ratkaisee: se kuvaa juuri tata hanketta. Jos yksikaan mainituista
+ei loydy otsikosta, jatetaan tyhjaksi - **vaara yhtio on pahempi kuin
+puuttuva** (D-160). Saanto pudotti neljä epaselvaa rivia.
+
+**SIJAMUOTOA EI OIKAISTA.** Noin 20 nimea kirjoittuu listalle siina
+muodossa kuin lahde ne taivuttaa ("Asunto Oy Oulun Valoisaan",
+"Kiinteisto Oy Tapiolan Stadionille"). Perusmuodon paattely ei ole
+turvallista: astevaihtelu vaatisi sanakirjan, ja pelkka n:n poisto
+tuottaa vaaria nimia ("Lakan" -> Laka, oikea Lakka; "Suvilehdon" ->
+Suvilehdo, oikea Suvilehto; "Ahvenispolun" -> Ahvenispolu, oikea
+Ahvenispolku). Kolmestatoista genetiivista viisi olisi mennyt vaarin.
+Taivutettu mutta oikea nimi on luettava; vaaraan vartaloon typistetty ei.
+
+Nimi **lisataan** yrityslistaan (`mergeCompanyNames`), ei korvaa mitaan,
+eika kasin muokattuun (`edited_fields`) kosketa. Takautuvasti 128
+hanketta, jono tyhja. `scripts/fix-housing-company.ts`.
+
+**Duplikaattiskannaukseen tama ei vaikuta:** se lajittelee kaupungin,
+luvan ja kiinteistotunnuksen mukaan eika lue yrityslistaa. Avain on jo
+kaytossa TIC:n ehdotuslistassa (D-152).
+
+---
+
 ### D-170 - Usean kunnan julkisyhteiso: maakunta ratkeaa, kaupunki ei
 
 Ehdokas ilman kaupunkia ja maakuntaa: "Tikkurilan terveys- ja
