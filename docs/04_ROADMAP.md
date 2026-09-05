@@ -619,43 +619,61 @@ muistin varassa.
 
 ### Datan laatu
 
-- **⭐ SEURAAVA: hankesuunnitelmien lukeminen liitteistä.** Tämä on
-  ensimmäinen parannettava, koska se on ainoa jäljellä oleva tie
-  kolmeen kenttään jotka ovat nyt matalalla — eikä syy ole enää
-  poiminnassa vaan siinä, ettei tieto ole kuvauksessa.
+- **⭐ SEURAAVA: kanna jo poimitut liitetiedot eteenpäin.** Tutkittu
+  6.9.2026. Alkuperäinen kirjaus oli "hankesuunnitelmien lukeminen
+  liitteistä", ja **mittaus kumosi sen** — ks. alempaa. Oikea työ on
+  pienempi, halvempi ja jo puoliksi tehty.
 
-  Tilanne 5.9.2026 näkyvillä 5 871 hankkeella, D-161:n ja D-169:n
-  korjausten **jälkeen**:
+  **Lupapisteen lupapäätösten PDF:t haetaan ja jäsennetään jo putkessa**
+  (`apiCollector` → `lupapisteBulletinPdf`), ja tulos tallennetaan
+  `source_documents.raw_payload.bulletin_fields`iin. Siellä on:
 
-  | kenttä | kattavuus |
+  | kenttä | dokumenttia |
   |---|---|
-  | kustannusarvio | 781 (13 %) |
-  | valmistumisaika | 724 (12 %) |
-  | pinta-ala | 286 (5 %) |
+  | pintaAla | 223 |
+  | tilavuus | 111 |
+  | **kerrosala** | **89** |
+  | rakennusoikeus | 29 |
+  | **kokonaisala** | **20** |
 
-  Kuvauksesta poimittavissa oleva osuus on nyt poimittu: kaikki mitatut
-  ankkurit on käyty läpi ja torjuttavat muodot erotettu (ylläpitokulu,
-  toimivaltafraasi, maa-ala, rakennusoikeus). **Seuraava tieto on
-  liitteissä** — hankesuunnitelmassa lukee sekä enimmäishinta, laajuus
-  brm²:nä että aikataulu, usein samalla sivulla.
+  **Mutta yksikään niistä ei päädy ehdokkaalle eikä hankkeelle:**
+  mitattu, Lupapisteen 503 ehdokkaasta **0:lla on yhtään alakenttää**.
+  Tieto on siis haettu, jäsennetty ja tallennettu — ja sitten jätetty
+  kantamatta eteenpäin. Sama kuvio kuin kohdetyypittimessä ja
+  hyväksynnän `floor_area`-kentässä.
 
-  **Koneisto on jo olemassa, mutta vain skripteissä.** Sama kuvio kuin
-  kohdetyypittimessä (D-159): `lib/agent/kaavaselostusPdf.ts` osaa hakea
-  ja jäsentää PDF:n, ja `lupapisteBulletinPdf.ts` on kytketty putkeen
-  (`apiCollector`). Kaavaselostuksen lukijaa kutsuu vain
-  `scripts/backfill-kaavaselostus-contacts.ts`.
+  **Ajoihin ei tule lisäkuormaa**, koska PDF:t haetaan jo. Työ on
+  putkitusta: `bulletin_fields.kerrosala` → ehdokkaan metadata →
+  `projects.floor_area`.
 
-  Sen dokumentoidut rajaukset kannattaa periä sellaisenaan, koska ne on
-  mitattu: **vain ensimmäiset sivut** (perustiedot ovat kansilehdellä),
-  **vain poiminta tallennetaan eikä tekstiä** (mitatut selostukset ovat
-  229 000–884 000 merkkiä) ja **tiedostokoolla katto** (kaavakartat ovat
-  kymmeniä megatavuja).
+  **Käytä `kerrosala`a ja `kokonaisala`a, ÄLÄ `pintaAla`a.** Lupapäätöksessä
+  "Pinta-ala" on tyypillisesti tontin ala, ei rakennuksen — sama ansa
+  jonka takia paljas "pinta-ala" jätettiin pois tekstipoimijasta
+  (D-169). Arvot ovat merkkijonoja yksikköineen ja OCR-välein
+  ("96 m 2", "182 m²"), joten ne on jäsennettävä.
 
-  Aloitus: mittaa montako hanketta kantaa liitelinkin jonka nimessä on
-  "hankesuunnitelma", ja lue niistä kymmenkunta läpi — vasta se kertoo
-  onko luku samassa muodossa kuin kuvauksissa vai eri. Sama menettely
-  kuin kustannus- ja pinta-alapoimijassa: ankkurit aineistosta, ei
-  oletuksesta.
+  **MIKSI ALKUPERÄINEN KIRJAUS OLI VÄÄRÄ.** Mitattu 6.9.2026:
+
+  ```
+  source_documents 8 138, joista suoraan PDF        34   (kaikki admin.espoo.fi)
+  procurementDocumentsUrl                          492
+    tarjouspalvelu.fi (vaatii kirjautumisen)       379
+    hankintailmoitukset.fi (julkinen)               64
+    bem.buildercom / sokopro / haahtela (kirjaut.)  28
+  ehdokkaita joilla attachment_titles                0
+  ```
+
+  Eli **noudettavia hankesuunnitelmia ei juuri ole**: valtaosa
+  tarjousaineistosta on kirjautumisen takana, eikä liiteotsikoita ole
+  tallessa. Lisäksi siellä missä hinta oikeasti on, se on jo tekstissä
+  tai rakenteisena: Helsingin päätöksistä 440/851 antaa hinnan
+  kuvauksesta, ja Hilman 238 ehdokkaalla on `contract_value`, joka
+  päätyy kustannusarvioksi oikein (tarkistettu: 0 vuotoa).
+
+  Jäljelle jäävät aidot PDF-mahdollisuudet ovat **YVA-selostukset** ja
+  **kaavaselostukset** (`kaavaselostusPdf.ts` osaa jo hakea ne, mutta
+  poimii vain yhteystiedot) — molemmat julkisia. Ne ovat isompi työ ja
+  vasta Lupapisteen putkituksen jälkeen.
 
 - **Vaihesanasto on epäyhtenäinen** — mutta ei niin haitallinen kuin
   tässä aiemmin väitettiin. Tarkistettu 15.8.2026: 11 kirjoitusasua,
