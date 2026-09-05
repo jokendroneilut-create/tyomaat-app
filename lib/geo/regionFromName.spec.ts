@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { regionFromOrganisationName } from "./regionFromName"
+import { regionFromOrganisationName, regionFromPublicBodyName } from "./regionFromName"
 
 describe("regionFromOrganisationName", () => {
   /* Mitattu rivi: jonossa oleva Hilma-ilmoitus ilman kuntaa. */
@@ -30,5 +30,38 @@ describe("regionFromOrganisationName", () => {
     expect(regionFromOrganisationName("YIT Oyj")).toBeNull()
     expect(regionFromOrganisationName("")).toBeNull()
     expect(regionFromOrganisationName(null)).toBeNull()
+  })
+})
+
+describe("regionFromPublicBodyName", () => {
+  /*
+   * Mitattu rivi: Hilman ilmoitus ilman kuntaa, tilaajana kahden
+   * kunnan hyvinvointialue.
+   */
+  it("lukee maakunnan usean kunnan julkisyhteisosta", () => {
+    expect(regionFromPublicBodyName("Vantaan ja Keravan hyvinvointialue")).toBe("Uusimaa")
+    expect(regionFromPublicBodyName("Espoon seurakuntayhtymä")).toBe("Uusimaa")
+    expect(regionFromPublicBodyName("Jyväskylän yliopisto")).toBe("Keski-Suomi")
+  })
+
+  /*
+   * Yritys voi kantaa kunnan nimea olematta siella: "Savon Voima Verkko
+   * Oy" osuu Savonlinnaan mutta toimii Pohjois-Savossa. Oikeusmuoto on
+   * siksi pakko tarkistaa.
+   */
+  it("ei paattele yrityksesta eika yhdistyksesta", () => {
+    expect(regionFromPublicBodyName("Savon Voima Verkko Oy")).toBeNull()
+    expect(regionFromPublicBodyName("Helsingin Vihreät ry")).toBeNull()
+    expect(regionFromPublicBodyName("Tampereen Kulttuurikamari Oy")).toBeNull()
+  })
+
+  it("ei paattele kun kunnat ovat eri maakunnissa", () => {
+    expect(regionFromPublicBodyName("Turun ja Tampereen kaupungit")).toBeNull()
+  })
+
+  it("palauttaa null kun kuntaa ei ole nimessa", () => {
+    expect(regionFromPublicBodyName("Senaatti-kiinteistöt")).toBeNull()
+    expect(regionFromPublicBodyName("")).toBeNull()
+    expect(regionFromPublicBodyName(null)).toBeNull()
   })
 })

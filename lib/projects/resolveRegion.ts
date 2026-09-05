@@ -1,6 +1,9 @@
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { municipalityFromBuyerName, municipalityFromGenitive } from "@/lib/geo/municipalityFromName"
-import { regionFromOrganisationName } from "@/lib/geo/regionFromName"
+import {
+  regionFromOrganisationName,
+  regionFromPublicBodyName,
+} from "@/lib/geo/regionFromName"
 
 /*
  * MAAKUNTA PÄÄTELLÄÄN KUNNASTA, JOS LÄHDE EI SITÄ KERRO.
@@ -59,6 +62,16 @@ export function resolveRegion(input: {
      */
     const nimesta = regionFromOrganisationName(tilaaja)
     if (nimesta) return nimesta
+
+    /*
+     * USEAN KUNNAN JULKISYHTEISO. "Vantaan ja Keravan hyvinvointialue"
+     * ei osu yhden kunnan hakuun, mutta maakunta on yksikasitteinen kun
+     * kaikki nimen kunnat ovat samassa maakunnassa. Oikeusmuoto
+     * tarkistetaan, koska yritys voi kantaa kunnan nimea olematta
+     * siella.
+     */
+    const julkisesta = regionFromPublicBodyName(tilaaja)
+    if (julkisesta) return julkisesta
   }
 
   /*

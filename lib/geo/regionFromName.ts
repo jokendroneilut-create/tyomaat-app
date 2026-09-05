@@ -1,4 +1,5 @@
 import { MUNICIPALITIES } from "@/lib/geo/municipalities"
+import { municipalityFromGenitive } from "@/lib/geo/municipalityFromName"
 
 /*
  * MAAKUNTA ORGANISAATION NIMESTÄ.
@@ -66,4 +67,36 @@ export function regionFromOrganisationName(name: string | null | undefined): str
     }
   }
   return null
+}
+
+/*
+ * JULKISYHTEISO JOKA KATTAA USEAN KUNNAN.
+ *
+ * "Vantaan ja Keravan hyvinvointialue" kantaa kahta kuntaa, joten
+ * yhden kunnan haku ei osu lainkaan (`municipalityFromBuyerName`
+ * palauttaa null). Kaupunkia ei voi paatella - hanke voi olla
+ * kummassa tahansa - mutta MAAKUNTA on yksikasitteinen jos kaikki
+ * nimen kunnat ovat samassa maakunnassa.
+ *
+ * OIKEUSMUOTO ON PAKKO TARKISTAA. Yritys tai yhdistys voi kantaa
+ * kunnan nimea olematta siella: mitattu 5.9.2026, "Savon Voima Verkko
+ * Oy" osui Savonlinnaan (Etela-Savo), vaikka yhtio toimii
+ * Pohjois-Savossa. Julkisyhteison tunnusmerkilla rajattuna mitattu
+ * joukko oli 6 riviä ja kaikki kuusi oikein.
+ */
+const JULKISYHTEISO =
+  /hyvinvointialue|kaupunki|kunta\b|kunnan\b|kuntayhtym|seurakuntayhtym|seurakunta|liikelaitos|yliopisto|ammattikorkeakoulu/i
+
+export function regionFromPublicBodyName(name: string | null | undefined): string | null {
+  const teksti = String(name ?? "")
+  if (!teksti.trim() || !JULKISYHTEISO.test(teksti)) return null
+
+  const maakunnat = new Set<string>()
+  for (const sana of teksti.split(/[\s,/()]+/)) {
+    const kunta = municipalityFromGenitive(sana)
+    if (kunta) maakunnat.add(kunta.region)
+  }
+
+  /* Eri maakunnista koostuva nimi ei kerro yhta maakuntaa. */
+  return maakunnat.size === 1 ? [...maakunnat][0] : null
 }

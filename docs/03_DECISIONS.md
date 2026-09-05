@@ -5,6 +5,49 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-170 - Usean kunnan julkisyhteiso: maakunta ratkeaa, kaupunki ei
+
+Ehdokas ilman kaupunkia ja maakuntaa: "Tikkurilan terveys- ja
+sosiaalikeskuksen lisapohjatutkimuksen hankinta" (Hilma, 4.9.2026).
+Tilaajana **Vantaan ja Keravan hyvinvointialue**.
+
+**KAKSI SIGNAALIA JAI KAYTTAMATTA, JA VAIN TOINEN ON KAYTTOKELPOINEN:**
+
+1. Otsikon "Tikkurilan" - Tikkurila on Vantaan **kaupunginosa**, ei
+   kunta, joten `municipalityFromGenitive` ei tunnista sita. Kaupungin-
+   osaluettelo olisi oma tyonsa eika sita tehty.
+2. Tilaajan nimessa on **kaksi kuntaa**, ja yhden kunnan haku palauttaa
+   silloin null: `municipalityFromBuyerName("Vantaan ja Keravan
+   hyvinvointialue")` = null, kun taas "Vantaan kaupunki" = Vantaa.
+
+Toinen on korjattavissa: **kaupunkia ei voi paatella** (hanke voi olla
+kummassa tahansa) mutta **maakunta on yksikasitteinen**, koska Vantaa ja
+Kerava ovat molemmat Uudellamaalla.
+
+**OIKEUSMUOTO ON PAKKO TARKISTAA, JA MITTAUS NAYTTI MIKSI.** Ilman
+rajausta saanto ratkaisi 12 rivia 314:sta, mutta naytteissa oli selva
+vaara osuma: **"Savon Voima Verkko Oy" -> Savonlinna -> Etela-Savo**,
+vaikka yhtio toimii Pohjois-Savossa. Yritys tai yhdistys voi kantaa
+kunnan nimea olematta siella.
+
+Julkisyhteison tunnusmerkilla rajattuna (hyvinvointialue, kaupunki,
+kunta, kuntayhtyma, seurakunta, liikelaitos, yliopisto) joukko oli **6
+rivia ja kaikki kuusi oikein**. Kuudesta yksi on oikea kohdeluokka
+(hyvinvointialue) ja loput yliopistojen tiedotteita, joiden maakunta on
+oikein mutta jotka eivat ole rakennushankkeita lainkaan.
+
+**KUUSI RIVIA ON VAHAN, MUTTA LUOKKA TOISTUU.** Hyvinvointialueita on
+21, ne ovat isoja rakennuttajia, ja useampi niista on nimetty kahden
+kunnan mukaan. Ilman saantoa jokainen niiden ilmoitus ilman
+kuntakenttaa jaa ilman maakuntaa.
+
+**HANKKEISIIN EI TARVITTU TAKAUTUVAA AJOA:** kaikki kuusi ovat
+katselmointijonossa, ja hyvaksynta lukee maakunnan samasta funktiosta.
+
+`lib/geo/regionFromName.ts` · `lib/projects/resolveRegion.ts`
+
+---
+
 ### D-169 - Pinta-ala tekstista: yksikko on vahvempi todiste kuin lause
 
 Havainto tuli yhdesta ehdokkaasta: kuvauksessa luki "n. 1140 m2" mutta

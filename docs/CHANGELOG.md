@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Maakunta usean kunnan julkisyhteisosta (D-170)
+
+"Vantaan ja Keravan hyvinvointialue" ei osunut yhden kunnan hakuun, joten
+ilmoitus jai ilman maakuntaa. Kaupunkia ei voi paatella - hanke voi olla
+kummassa tahansa - mutta maakunta on yksikasitteinen kun kaikki nimen
+kunnat ovat samassa maakunnassa.
+
+Oikeusmuoto tarkistetaan, koska yritys voi kantaa kunnan nimea olematta
+siella: ilman rajausta "Savon Voima Verkko Oy" olisi osunut Savonlinnaan
+(Etela-Savo) vaikka yhtio toimii Pohjois-Savossa. Rajattuna joukko oli 6
+riviä ja kaikki oikein.
+
 ### Pinta-ala poimitaan nyt tekstista (D-169)
 
 `floor_area` on ollut kenttana muttei kirjoittajaa. Mitattu: nakyvista
