@@ -5,6 +5,62 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-169 - Pinta-ala tekstista: yksikko on vahvempi todiste kuin lause
+
+Havainto tuli yhdesta ehdokkaasta: kuvauksessa luki "n. 1140 m2" mutta
+kentta oli tyhja. Sama kuvio kuin kustannusarviossa (D-161) - kentta
+`floor_area` on ollut olemassa ja nakyy asiakkaalle, mutta mikaan ei ole
+kirjoittanut siihen tekstista mitaan.
+
+**MITATTU 5.9.2026:** nakyvista 5 871 hankkeesta **601 mainitsee
+pinta-alan kuvauksessaan ja vain 138:lla kentta oli taytetty**.
+
+**MUTTA VALTAOSA MAININNOISTA EI OLE RAKENNUKSEN ALA.** Ankkurit
+mitattiin yksitellen ja luettiin riveittain:
+
+```
+paljas brm2                110 rivia   kaikki rakennuksia
+laajuus ... m2              76         kaikki rakennuksia
+bruttoala / bruttoyta       26 + 22    kaikki rakennuksia
+kerrosala                   20         enimmakseen rakennuksia
+kokonaispinta-ala           13         sekaisin (myos kattoalue)
+pinta-ala (paljas)         124         VALTAOSIN MAA-ALAA
+rakennusoikeus              19         kaavan sallima, ei rakennettava
+kooltaan                    17         noin puolet maa-alaa
+```
+
+**YKSIKKO ON VAHVIN ANKKURI.** `brm²` tarkoittaa maaritelmallisesti
+rakennuksen bruttoalaa, joten sita ei tarvitse ankkuroida lauseeseen
+lainkaan - luku sen edessa on hankkeen ala. Se on myos suurin yksittainen
+ryhma.
+
+**PALJAS "PINTA-ALA" JATETTIIN POIS**, vaikka se on aineiston yleisin
+muoto (124 rivia): "Suunnittelualueen pinta-ala on 10 300 m²", "Puiston
+pinta-ala on 24 400 m²", "ranta-alueen pinta-ala on 58 000 m²". Sama
+paatos kuin yllapitokustannuksissa - muoto nayttaa ankkurilta mutta
+kertoo eri asiasta.
+
+Pois jaivat myos rakennusoikeus (kaavan sallima, ei rakennettava),
+pohjapinta-ala (kerroksen ala), kattoalueen pinta-ala, asuntojen
+keskipinta-ala ja "kooltaan" (17 rivista noin puolet maa-alaa, eika
+sanasta voi paatella kummasta on kyse).
+
+**KUUSI EPAILYTTAVINTA LUETTIIN LAHTEESTA** ennen kirjoitusta, ja
+kaikki tasmasivat sanatarkasti - mukaan lukien se joka nayttti
+oudoimmalta: "Kymp-talon varavoimakoneen tekninen hankesuunnitelma,
+48 531 m²". Asiakirjassa lukee "laajuus noin 48 531 brm²", eli lahde
+itse kuvaa hankkeen laajuuden rakennuksen alana. Poimija on siis
+uskollinen lahteelle, vaikka hanke itse on varavoimakone.
+
+**TULOS.** Kirjoitettu 148 hankkeelle ja yhdelle jonoriville; pinta-ala
+on nyt 286 nakyvalla hankkeella (oli 138). Kytketty myos putkeen
+(`resolvePotentialProject`) ja hyvaksyntaan - jalkimmainen puuttui
+kokonaan, eli ehdokkaan ala ei olisi siirtynyt hankkeelle.
+
+`lib/projects/extractFloorAreaFromText.ts` · `scripts/fix-floor-area.ts`
+
+---
+
 ### D-168 - Hartelan kaatuminen oli hanta, ei haku
 
 STT:n korjauksen (D-167) jalkeen jaljella oli toinen 90 sekunnin

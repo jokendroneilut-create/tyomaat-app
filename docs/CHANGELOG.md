@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Pinta-ala poimitaan nyt tekstista (D-169)
+
+`floor_area` on ollut kenttana muttei kirjoittajaa. Mitattu: nakyvista
+5 871 hankkeesta 601 mainitsee alan kuvauksessaan, 138:lla kentta oli
+taytetty.
+
+Valtaosa maininnoista ei kuitenkaan ole rakennuksen ala. Ankkurit
+mitattiin yksitellen: brm2 (110 rivia) on vahvin, koska yksikko itse
+tarkoittaa rakennuksen bruttoalaa. Paljas "pinta-ala" (124 rivia)
+jatettiin pois, koska se on valtaosin maa-alaa - suunnittelualue,
+puisto, ranta-alue. Samoin rakennusoikeus, pohjapinta-ala, kattoala,
+asuntojen keskipinta-ala ja "kooltaan".
+
+Kirjoitettu 148 hankkeelle; pinta-ala on nyt 286:lla (oli 138).
+Kytketty putkeen ja hyvaksyntaan - jalkimmainen puuttui kokonaan.
+
 ### Hartelan kaatuminen oli hanta, ei haku (D-168)
 
 Toinen 90 sekunnin ylitys oli Hartela. Mitattuna haku on 8 s ja

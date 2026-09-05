@@ -2449,6 +2449,7 @@ export async function POST(request: Request) {
             existingProject.earthworks_contractor ?? earthworksContractor,
           property_type:
             existingProject.property_type ?? metadata.building_type ?? null,
+          floor_area: existingProject.floor_area ?? metadata.floor_area ?? null,
           estimated_completion:
             existingProject.estimated_completion ?? estimatedCompletion,
           latitude: existingProject.latitude ?? coords.lat,
@@ -2564,6 +2565,12 @@ export async function POST(request: Request) {
         earthworks_contractor: earthworksContractor,
 
         property_type: metadata.building_type ?? null,
+        /*
+         * Pinta-ala kulkee metadatassa jonorivilta samoin kuin
+         * kustannusarvio. Ilman tata rivia poimittu ala katosi
+         * hyvaksynnassa: `floor_area` on hankkeen oma sarake.
+         */
+        floor_area: metadata.floor_area ?? null,
         estimated_completion: estimatedCompletion,
         /*
          * Kustannusarvio kulkee metadatassa jonoriviltä. Ilman tätä riviä

@@ -6,6 +6,7 @@ import {
 } from "@/lib/projects/identity"
 import { syncApprovedProject } from "@/lib/projects/syncApprovedProject"
 import { resolveProjectCost } from "@/lib/projects/resolveProjectCost"
+import { extractFloorAreaFromText } from "@/lib/projects/extractFloorAreaFromText"
 import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
 import { resolveBuildingType } from "@/lib/agent/quality/resolveBuildingType"
 import {
@@ -171,6 +172,24 @@ export async function resolvePotentialProject(
       existingMetadata?.estimated_completion ?? md.estimated_completion ?? ""
     ).trim()
     return nyt ? {} : { estimated_completion: inferredCompletion }
+  }
+
+  /*
+   * HANKKEEN PINTA-ALA. Sama kaava kuin kustannuksessa: kenttä oli
+   * olemassa muttei kirjoittajaa, ja tieto oli kuvauksessa. Mitattu
+   * 5.9.2026: näkyvistä 5 871 hankkeesta 601 mainitsi alan ja 138:lla
+   * kenttä oli täytetty. Poimintasäännöt ja niiden esteet ovat
+   * `extractFloorAreaFromText`issa - maa-alaa, rakennusoikeutta tai
+   * asunnon kokoa ei poimita.
+   */
+  function alaMetadata(
+    existingMetadata?: Record<string, any> | null
+  ): Record<string, unknown> {
+    const nyt = String(existingMetadata?.floor_area ?? md.floor_area ?? "").trim()
+    if (nyt) return {}
+
+    const ala = extractFloorAreaFromText(costText)
+    return ala ? { floor_area: ala } : {}
   }
 
   function costMetadata(
@@ -341,6 +360,7 @@ export async function resolvePotentialProject(
           ...completionField(existing.metadata),
           ...completionMetadata,
           ...costMetadata(existing.metadata),
+          ...alaMetadata(existing.metadata),
           source_history: sourceHistory,
           lastSourceName: input.sourceName ?? null,
           matched_existing_project_id:
@@ -419,6 +439,7 @@ export async function resolvePotentialProject(
         ...completionField(null),
         ...completionMetadata,
         ...costMetadata(null),
+        ...alaMetadata(null),
         ...relevanceGate.metadata,
         ...buildingType.metadata,
         source_history: buildSourceHistory(null, input),
