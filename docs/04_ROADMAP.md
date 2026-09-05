@@ -800,23 +800,66 @@ muistin varassa.
 ### Lähdekattavuus
 
 - **RAKENTAJIEN OMAT ASUNTOKATALOGIT — MITATTU KATVEALUE.** Lujakoti
-  lisättiin lähteeksi 6.9.2026 (D-172). Sama sivutyyppi on muillakin, ja
-  ne ovat isompia:
+  lisättiin lähteeksi 6.9.2026 (D-172). Kolme muuta tutkittiin samana
+  päivänä sivu sivulta; **YIT karsiutui, kolme muuta kannattaa**:
 
-  | rakentaja | kohdesivuja | osoite |
-  |---|---|---|
-  | Lapti | **67** | `lapti.fi/pdx_housingcompany-sitemap.xml` |
-  | T2H | **62** | `t2h.fi` juuritasolla `/asunto-oy-…` |
-  | Lujakoti | 18 (6 kesken) | tehty |
-  | YIT Koti | ? | `yitkoti.fi/asunnot` — linkit staattisessa HTML:ssä |
-  | Bonava | ? | `bonava.fi/asunnot` — sitemapissa `/asunnot/<kaupunki>/…` |
+  | rakentaja | uniikkeja | kesken | puuttuu meiltä | tiedon laatu |
+  |---|---|---|---|---|
+  | **Lapti** | 49 | 18 | **14** | 21 nimettyä kenttää joka sivulla |
+  | **T2H** | 54 | ? | **≤42** | schema.org JSON-LD + koordinaatit |
+  | **Bonava** | 13 | 11 | **6** | `salesStatus` koneluettavana |
+  | Lujakoti | 18 | 6 | tehty | `data-address` + tilamerkintä |
+  | ~~YIT Koti~~ | — | — | — | **ei kerättävissä, ks. alla** |
 
-  Laptilla on oma **`pdx_housingcompany`-sitemap**, eli taloyhtiöt ovat
-  sivustolla omana sisältötyyppinään. Se on paras lähtökohta seuraavaksi.
+  **Lapti — tehdään seuraavaksi.** `lapti.fi/pdx_housingcompany-sitemap.xml`,
+  robots sallii kaiken. Taloyhtiöt ovat omana sisältötyyppinään ja joka
+  sivulla on sama nimetty kenttätaulukko: Taloyhtiön nimi, Katuosoite,
+  Rakentaja, Rakennustyyppi, Asuntojen määrä, Arvioitu valmistusaika,
+  Rakennusvuosi, Energialuokka, Lämmitys, Tontin omistus. **Mikään
+  nykyinen lähde ei anna tätä.** 67 osoitetta on 49 taloyhtiötä (sama
+  yhtiö toistuu sitemapissa); 31 on valmistunut, 18 kesken, ja niistä
+  neljä on jo meillä. Viisi puuttuvaa on päivättyjä ja isoja:
+  Jätkän Kruunu 113 as. (12/2027), Nummenpakan Seppä 66 as. (12/2027),
+  Hatanpään Arborea 52 as. (12/2027), Espoon Lydia 39 as. (4/2028),
+  Kempeleen Loiste 28 as. (11/2027). Loput yhdeksän ovat
+  markkinointisivuja ilman päivämäärää (kortteli- ja autohallisivuja),
+  eli kerääjän on vaadittava päivätty valmistusaika.
 
-  Ei osumaa staattisesta HTML:stä: Hartela, Jatke, Skanska Kodit, SRV,
-  Pohjola Rakennus (`/kodit/` on olemassa, mutta listaus ei renderöidy
-  palvelimella).
+  **T2H — rikkain data, mutta tahti rajattu.** Kohteet ovat juuritasolla
+  (`t2h.fi/asunto-oy-espoon-aurum`) ja **etusivu listaa ne kaikki**, eli
+  löytäminen maksaa yhden pyynnön. Kohdesivulla on täysi
+  `schema.org/ApartmentComplex`: nimi, katuosoite, postinumero,
+  kaupunki, **koordinaatit**, asuntojen määrä ja kuvaus — plus
+  "Valmistuu: 10/2027". Koordinaatit tarkoittavat ettei Nominatimia
+  tarvita.
+
+  **`Crawl-delay: 15`** robots.txt:ssä: 62 sivua = 15,5 minuuttia, eikä
+  se mahdu 90 sekunnin ajobudjettiin. Kerääjän on siis haettava etusivu
+  + 4–5 kohdesivua per ajo ja kierrettävä. Vakaassa tilassa vain uudet
+  kohteet haetaan, joten hinta on kertaluontoinen.
+
+  Kannassa on nimellä vain 12/54. **Luku on yläraja puuttuville**: osa
+  voi olla kannassa tiedoteotsikolla ("Kerrostalo Vantaalle"), mitä
+  nimivertailu ei näe.
+
+  **Bonava — pieni mutta aikaisin.** 423 `/asunnot/`-osoitteesta 13 on
+  kohdesivuja, ja tila luetaan suoraan: `window.bonavaInfo.salesStatus`.
+  Jakauma: 5 `Planned`, 3 `ForSale`, 3 `Presales`, 2 `ReadyToMoveIn` —
+  eli **11 kesken, ja viisi niistä on vasta suunnitteilla**. Se on
+  aikaisin vaihe mitä mikään näistä sivustoista merkitsee. Taloyhtiön
+  nimi löytyy tekstistä 9:llä 13:sta. Kannassa 5/11.
+
+  **YIT EI OLE KERÄTTÄVISSÄ — aiempi kirjaukseni oli väärä.** Väitin
+  että linkit ovat staattisessa HTML:ssä; ne olivat etusivun valikko.
+  `yitkoti.fi` ohjautuu `yit.fi`:n etusivulle, asuntohaku (myös
+  `/asuntohaku/ennakkomarkkinoinnissa`) renderöityy selaimessa —
+  **nolla taloyhtiönimeä** 213 kt:n HTML:ssä — ja data tulee
+  `/GetProjects/`-rajapinnasta, **jonka robots.txt kieltää**. Ei siis
+  tehdä.
+
+  Ei osumaa staattisesta HTML:stä myöskään: Hartela, Jatke, Skanska
+  Kodit, SRV, Pohjola Rakennus (`/kodit/` on olemassa, mutta listaus ei
+  renderöidy palvelimella).
 
   **Miksi tämä luokka:** omaperusteisesta kohteesta ei synny
   urakkauutista eikä hankintailmoitusta, koska urakkaa ei kilpailuteta.
