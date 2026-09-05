@@ -26,6 +26,19 @@ normalisoinut nakymattomiin: kuvio nielaisi seuraavan virkkeen sanan
 vaara yhtio (hankkeelle "Nihdin Horizon" tuli **Skyline**). Sijamuotoa ei
 oikaista: astevaihtelun takia perusmuodon paattely tuottaisi vaaria nimia.
 
+### Taloyhtio duplikaattiskannauksen tunnisteena (D-171)
+
+Sama rekisteroity taloyhtio kahdella hankkeella on kaytannossa sama hanke
+kahdesta lahteesta. Mitattu: viisi paria jakaa taloyhtioavaimen, kaikki
+aitoja, eika yksikaan loytynyt nykysaannolla - nelja jai 58-65 pisteeseen
+ja yksi ei saanut pistetta lainkaan.
+
+Taloyhtio on nyt oma vertailuryhmansa ja vahva tunniste laatuportissa.
+Kytkenta on **vain skannaukseen**, ei matcheriin: duplikaattilista on
+ihmisen katselmoima, joten vaara pari maksaa silmayksen - automaattinen
+yhdistaminen hukkaisi hankkeen. Vetot (eri urakkalaji, eri energiakohde)
+patevat silti. Takautuva ajo toi 5 paria katselmointiin.
+
 ### Maakunta usean kunnan julkisyhteisosta (D-170)
 
 "Vantaan ja Keravan hyvinvointialue" ei osunut yhden kunnan hakuun, joten

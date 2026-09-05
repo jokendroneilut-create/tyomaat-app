@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import {
   calculateMatch,
+  haveHardVeto,
   type MatchableProject,
   type ProjectMatchResult,
 } from "@/lib/agent/projectMatcher"
@@ -9,6 +10,14 @@ import {
   comparisonPartners,
 } from "@/lib/agent/duplicates/comparisonBuckets"
 import { passesDuplicateQualityBar } from "@/lib/agent/duplicates/qualityBar"
+import { projectHousingKey } from "@/lib/projects/housingCompanyKey"
+
+/*
+ * Pelkän taloyhtiön varassa löytyneen parin varmuusluku. Sama kuin
+ * katselmointikynnys (70): pari kuuluu listalle, muttei näytä
+ * varmemmalta kuin pari jolla on lisäksi nimi- tai sijaintitodiste.
+ */
+const HOUSING_ONLY_CONFIDENCE = 70
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -150,6 +159,11 @@ async function runScan(
   const allProjects = await fetchAllProjects()
   const byId = new Map(allProjects.map((p) => [p.id, p]))
 
+  /* Kerran hankkeelta, ei kerran parilta: avain lasketaan tekstistä. */
+  const housingKeys = new Map<string, string | null>(
+    allProjects.map((p) => [p.id, projectHousingKey(p)])
+  )
+
   const targets = options.projectIds
     ? options.projectIds.map((id) => byId.get(id)).filter((p): p is MatchableProject => !!p)
     : allProjects
@@ -200,14 +214,57 @@ async function runScan(
         buildingType: a.property_type ?? a.metadata?.building_type ?? null,
       })
 
-      if (!match) continue
-      if (!passesDuplicateQualityBar(match)) continue
+      /*
+       * SAMA TALOYHTIÖ ON OMA REITTINSÄ (D-171).
+       *
+       * calculateMatch ei tunne taloyhtiötä eikä saa tuntea: avain on
+       * tarkoituksella pidetty pois automaattisesta yhdistämisestä
+       * (D-152). Tässä listassa pari menee ihmiselle katselmoitavaksi,
+       * joten tunniste kelpaa sellaisenaan.
+       *
+       * Mitattu 6.9.2026: viisi paria jakaa taloyhtiöavaimen, kaikki
+       * aitoja, eikä yksikään löytynyt nykysäännöllä. Kolme jäi 58-65
+       * pisteeseen ja yksi - "Asunto Oy Oulun Valoisa" kahdesta
+       * tiedotteesta - ei saanut pistettä lainkaan, koska tekstit ovat
+       * eri lauseita eikä rakennuttaja ole molemmissa.
+       *
+       * Vetot pätevät silti: eri urakkalaji tai eri energiakohde on
+       * eri hanke, vaikka yhtiö olisi sama.
+       */
+      const samaTaloyhtio =
+        !!housingKeys.get(a.id) && housingKeys.get(a.id) === housingKeys.get(b.id)
+
+      if (!match) {
+        if (!samaTaloyhtio) continue
+        if (haveHardVeto(b, { name: a.name, city: a.city, description: null })) continue
+
+        toInsert.push({
+          project_id_a: idA,
+          project_id_b: idB,
+          confidence: HOUSING_ONLY_CONFIDENCE,
+          reasons: ["same_housing_company"],
+        })
+        continue
+      }
+
+      const reasons = samaTaloyhtio
+        ? [...match.reasons, "same_housing_company" as const]
+        : match.reasons
+
+      if (!passesDuplicateQualityBar({ ...match, reasons })) continue
 
       toInsert.push({
         project_id_a: idA,
         project_id_b: idB,
-        confidence: match.confidence,
-        reasons: match.reasons,
+        /*
+         * Lista järjestetään varmuusluvun mukaan. Taloyhtiöpari jäi
+         * pisteytyksessä 58-65:een, koska tekstit ovat eri lauseita -
+         * se ei saa painua listan hännille vahvemman todisteen alle.
+         */
+        confidence: samaTaloyhtio
+          ? Math.max(match.confidence, HOUSING_ONLY_CONFIDENCE)
+          : match.confidence,
+        reasons,
       })
     }
   }

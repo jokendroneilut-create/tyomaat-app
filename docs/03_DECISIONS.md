@@ -72,9 +72,50 @@ Nimi **lisataan** yrityslistaan (`mergeCompanyNames`), ei korvaa mitaan,
 eika kasin muokattuun (`edited_fields`) kosketa. Takautuvasti 128
 hanketta, jono tyhja. `scripts/fix-housing-company.ts`.
 
-**Duplikaattiskannaukseen tama ei vaikuta:** se lajittelee kaupungin,
-luvan ja kiinteistotunnuksen mukaan eika lue yrityslistaa. Avain on jo
-kaytossa TIC:n ehdotuslistassa (D-152).
+#### Taloyhtio duplikaattiskannauksen tunnisteena
+
+Skannaus lajitteli vertailujoukon kaupungin, lupanumeron ja
+kiinteistotunnuksen mukaan, ja laatuportti vaati joko vahvan tunnisteen
+tai nimitodisteen + saman kaupungin. Taloyhtio ei ollut kummassakaan.
+
+**Mitattu 6.9.2026** (`scripts/measure-housing-duplicates.ts`): viisi
+paria jakaa taloyhtioavaimen, **kaikki aitoja**, eika yksikaan loytynyt
+nykysaannolla. Luetut parit:
+
+    58p  As. Oy Turun Prikantiini | Skanska kaynnistanyt Turun Telakkarannassa
+    58p  Asunto Oy Espoon Hannusrannan Aurea | Espoon Hannusrannan ennakkomarkkinointi
+    58p  As Oy Saarenhelmen rakentamisen Nihtiin | Kerrostalo Nihtiin As Oy Saarenhelmi
+    65p  Tampereen Kaukajarvelle 78 uutta kotia | Pohjola Rakennukselta 78 uutta kotia
+      -  Lapti aloittanut RS-kohteen Oulun Hiukkavaarassa | Hiukkavaaran rivitalokodit
+
+Viides ei saanut pistetta lainkaan: tekstit ovat eri lauseita eika
+rakennuttaja ole molemmissa, joten matcher palautti nullin. Se on juuri
+se pari jonka takia avain aikanaan tehtiin (D-152).
+
+**KYTKENTA VAIN SKANNAUKSEEN, EI MATCHERIIN.** D-152 paatti tietoisesti,
+ettei avain mene `calculateMatchiin` eika automaattiseen yhdistamiseen.
+Duplikaattitaulu on ihmisen katselmoima lista, joten siella vaara pari
+maksaa yhden silmayksen - yhdistaminen hukkaisi hankkeen.
+
+Kolme muutosta:
+
+1. **Oma vertailuryhma** (`byHousing`). Kaupunkiryhma ei riita: sama
+   yhtio voi olla kirjattu eri kaupungilla tai ilman kaupunkia.
+2. **Vahva tunniste laatuportissa**, ja **tarkistus ennen pisterajaa**.
+   Tama jarjestys oli oma virheeni ensimmaisessa toteutuksessa: raja
+   ensin olisi pudottanut nelja viidesta, koska ne jaivat 58-65:een.
+   Lupanumerolle ja kiinteistotunnukselle jarjestys ei muuta mitaan -
+   kumpikin lisaa 100 pistetta eivatka nimisakot koske niita.
+3. **Oma reitti kun matcher palauttaa nullin**, jotta viides pari
+   loytyy. **Vetot patevat silti** (eri urakkalaji, eri energiakohde):
+   ne siirrettiin omaan funktioonsa `haveHardVeto`, jotta skannaus voi
+   kunnioittaa niita ilman koodin kahdennusta.
+
+Varmuusluvuksi tulee vahintaan 70, koska lista jarjestetaan sen mukaan
+eika aito pari saa painua listan hannille pisteytyksen takia.
+
+Takautuvasti ajettu 133 taloyhtiohankkeelle: 5 paria katselmointiin
+(`scripts/scan-housing-duplicates.ts`).
 
 ---
 

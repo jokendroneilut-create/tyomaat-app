@@ -1,4 +1,5 @@
 import type { MatchableProject } from "@/lib/agent/projectMatcher"
+import { projectHousingKey } from "@/lib/projects/housingCompanyKey"
 import {
   normalizeAddress,
   normalizeIdentifierValue,
@@ -27,13 +28,20 @@ export type ComparisonBuckets = {
   byCity: Map<string, MatchableProject[]>
   byPermit: Map<string, MatchableProject[]>
   byProperty: Map<string, MatchableProject[]>
+  byHousing: Map<string, MatchableProject[]>
 }
 
+/*
+ * Taloyhtiö on oma ryhmänsä eikä kaupungin varassa: sama yhtiö voi olla
+ * kirjattu eri kaupungilla tai ilman kaupunkia, jolloin kaupunkiryhmä ei
+ * koskaan toisi paria vertailuun (D-171).
+ */
 function bucketKeys(project: MatchableProject) {
   return {
     city: normalizeAddress(project.city),
     permit: normalizeIdentifierValue(project.metadata?.permit_number),
     property: normalizeIdentifierValue(project.metadata?.property_id),
+    housing: projectHousingKey(project),
   }
 }
 
@@ -44,6 +52,7 @@ export function buildComparisonBuckets(
     byCity: new Map(),
     byPermit: new Map(),
     byProperty: new Map(),
+    byHousing: new Map(),
   }
 
   function add(
@@ -62,6 +71,7 @@ export function buildComparisonBuckets(
     add(buckets.byCity, keys.city, project)
     add(buckets.byPermit, keys.permit, project)
     add(buckets.byProperty, keys.property, project)
+    add(buckets.byHousing, keys.housing, project)
   }
 
   return buckets
@@ -78,6 +88,7 @@ export function comparisonPartners(
     [buckets.byCity, keys.city],
     [buckets.byPermit, keys.permit],
     [buckets.byProperty, keys.property],
+    [buckets.byHousing, keys.housing],
   ] as const) {
     if (!key) continue
     for (const other of map.get(key) ?? []) {

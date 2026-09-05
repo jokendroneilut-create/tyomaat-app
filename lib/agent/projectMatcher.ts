@@ -93,6 +93,13 @@ export type ProjectMatchReason =
   | "same_developer"
   | "same_building_type"
   /*
+   * Sama rekisteröity taloyhtiö. EI SYNNY TÄSSÄ vaan
+   * duplikaattiskannauksessa (D-171): avain pidetään pois
+   * automaattisesta yhdistämisestä (D-152), mutta katselmoitavassa
+   * duplikaattilistassa se on vahva tunniste.
+   */
+  | "same_housing_company"
+  /*
    * Negatiivinen syy: nimien numerot eroavat, joten varmuus on painettu
    * yhdistämiskynnyksen alle. Näkyy katselmoinnissa muiden syiden rinnalla,
    * jotta ihminen näkee MIKSI varma näyttävä pari jäi ehdotukseksi.
@@ -627,43 +634,51 @@ function getProjectTitles(
   ]
 }
 
+/*
+ * EHDOTTOMAT VETOT. Nämä eivät ole pisteitä vaan kieltoja: pari ei ole
+ * sama hanke, vaikka kaikki muu täsmäisi.
+ *
+ * 1. Eri urakkalaji = eri hanke, vaikka kohde olisi sama. Sama rakennus
+ *    kilpailutetaan usein rakennus-, sähkö- ja LVI-urakkana erikseen, ja
+ *    ne ovat eri hankkeita käyttäjän kannalta: LVI-alan myyjä etsii
+ *    omaansa, sähköurakoitsija omaansa. Mitattu tapaus: Kuhmon
+ *    terveysaseman uudisrakennus neljänä urakkana, joilla sama kaupunki,
+ *    lähes sama nimi ja sama rakennuttaja.
+ *
+ * 2. Eri paikannimi samassa kunnassa = eri energiahanke.
+ *    Energiahankkeiden otsikoista neljä sanaa viidestä on samoja, joten
+ *    pisteytys ei erota niitä. Mitattu 13.8.2026: 68
+ *    duplikaattiehdokkaasta 51 oli tätä kuviota, ja Tervolassa kuusi eri
+ *    tuulipuistoa ristiinpariutui 15 pariksi.
+ *
+ * Yhdistäminen hävittäisi kokonaisen urakan näkyvistä, kun taas estetty
+ * osuma jättää molemmat listalle ihmisen nähtäväksi.
+ *
+ * OMANA FUNKTIONAAN, koska duplikaattiskannaus nostaa taloyhtiöparin
+ * esiin ilman pisteytystä (D-171) ja sen on silti kunnioitettava näitä.
+ */
+export function haveHardVeto(
+  project: MatchableProject,
+  candidate: Pick<NormalizedProjectCandidate, "name" | "city" | "description">
+): boolean {
+  if (haveDifferentTrades(candidate.name, project.name)) return true
+
+  return haveDifferentEnergySites(
+    candidate.name,
+    project.name,
+    project.city,
+    candidate.description,
+    project.additional_info
+  )
+}
+
 export function calculateMatch(
   project: MatchableProject,
   candidate: NormalizedProjectCandidate
 ): ProjectMatchResult | null {
   const reasons: ProjectMatchReason[] = []
-  /*
-   * Eri urakkalaji = eri hanke, vaikka kohde olisi sama. Sama rakennus
-   * kilpailutetaan usein rakennus-, sähkö- ja LVI-urakkana erikseen, ja ne
-   * ovat eri hankkeita käyttäjän kannalta: LVI-alan myyjä etsii omaansa,
-   * sähköurakoitsija omaansa. Mitattu tapaus: Kuhmon terveysaseman
-   * uudisrakennus neljänä urakkana, joilla sama kaupunki, lähes sama nimi ja
-   * sama rakennuttaja - täsmäytykselle ne näyttivät duplikaateilta.
-   *
-   * Veto on ehdoton ja tarkistetaan ensin: yhdistäminen hävittäisi kokonaisen
-   * urakan näkyvistä, kun taas estetty osuma jättää molemmat listalle ihmisen
-   * nähtäväksi.
-   */
-  if (haveDifferentTrades(candidate.name, project.name)) {
-    return null
-  }
 
-  /*
-   * Eri paikannimi samassa kunnassa = eri energiahanke. Veto on ehdoton
-   * samasta syystä kuin urakkalajilla: energiahankkeiden otsikoista neljä
-   * sanaa viidestä on samoja, joten pisteytys ei erota niitä. Mitattu
-   * 13.8.2026: 68 duplikaattiehdokkaasta 51 oli tätä kuviota, ja
-   * Tervolassa kuusi eri tuulipuistoa ristiinpariutui 15 pariksi.
-   */
-  if (
-    haveDifferentEnergySites(
-      candidate.name,
-      project.name,
-      project.city,
-      candidate.description,
-      project.additional_info
-    )
-  ) {
+  if (haveHardVeto(project, candidate)) {
     return null
   }
 

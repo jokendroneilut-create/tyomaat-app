@@ -11,6 +11,18 @@ describe("passesDuplicateQualityBar", () => {
     expect(passesDuplicateQualityBar(pari(95, ["same_property_id"]))).toBe(true)
   })
 
+  /*
+   * Taloyhtio on rekisteroity nimi, ei kuvaileva otsikko: se kelpaa
+   * vahvaksi tunnisteeksi katselmoitavassa listassa (D-171). Mitatut
+   * parit jaivat 58-65 pisteeseen, joten ilman tata ne eivat loydy.
+   */
+  it("hyvaksyy saman taloyhtion vahvana tunnisteena", () => {
+    expect(passesDuplicateQualityBar(pari(70, ["same_housing_company"]))).toBe(true)
+    expect(
+      passesDuplicateQualityBar(pari(70, ["same_housing_company", "name_in_description"]))
+    ).toBe(true)
+  })
+
   it("vaatii nimitodisteelta saman kaupungin", () => {
     expect(passesDuplicateQualityBar(pari(80, ["similar_title", "same_city"]))).toBe(true)
     expect(passesDuplicateQualityBar(pari(80, ["similar_title", "same_region"]))).toBe(false)

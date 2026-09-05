@@ -204,6 +204,32 @@ export function housingCompanyKey(
 }
 
 /*
+ * TALLENNETTU NIMI ENSIN, POIMINTA VASTA SITTEN.
+ *
+ * `metadata.housing_company` on kirjoitettu poiminnan yhteydessä
+ * (D-171), ja se on parempi lähde kuin uudelleenpoiminta: hankkeen
+ * kuvaus on voitu sittemmin korvata toisen lähteen tekstillä, ja
+ * ihminen on voinut korjata nimen käsin.
+ */
+export function projectHousingKey(project: {
+  name?: string | null
+  additional_info?: string | null
+  metadata?: Record<string, unknown> | null
+}): string | null {
+  const tallennettu = project.metadata?.housing_company
+  if (typeof tallennettu === "string" && tallennettu.trim()) {
+    const avain = normalizeHousingCompany(tallennettu)
+    if (avain) return avain
+  }
+
+  const kuvaus =
+    project.additional_info ??
+    (typeof project.metadata?.description === "string" ? project.metadata.description : null)
+
+  return housingCompanyKey(project.name ?? null, kuvaus)
+}
+
+/*
  * TALOYHTIÖN NIMI SELLAISENAAN, ei avaimena.
  *
  * Avain on täsmäytystä varten riisuttu ja taivutuksesta puhdistettu

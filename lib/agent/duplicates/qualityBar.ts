@@ -14,13 +14,32 @@ import type { ProjectMatchResult } from "@/lib/agent/projectMatcher"
  * eivät osu toisiinsa.
  */
 export function passesDuplicateQualityBar(match: ProjectMatchResult): boolean {
-  if (match.confidence < 70) return false
-
+  /*
+   * TALOYHTIÖ ON VAHVA TUNNISTE (D-171). "Asunto Oy Oulun Valoisa" on
+   * rekisteröity nimi, ei kuvaileva otsikko: kaksi hanketta samalla
+   * yhtiöllä on käytännössä sama hanke kahdesta lähteestä.
+   *
+   * Rajaus on mitattu ennen avaimen käyttöönottoa (D-152): koko
+   * kuvauksesta poimittuna vääriä pareja oli 472, otsikkoon ja kahteen
+   * ensimmäiseen virkkeeseen rajattuna kaksi.
+   */
   const hasStrongIdentifier =
     match.reasons.includes("same_permit_number") ||
-    match.reasons.includes("same_property_id")
+    match.reasons.includes("same_property_id") ||
+    match.reasons.includes("same_housing_company")
 
+  /*
+   * TUNNISTE TARKISTETAAN ENNEN PISTERAJAA, ei sen jälkeen.
+   *
+   * Lupanumerolla ja kiinteistötunnuksella järjestyksellä ei ollut
+   * väliä: kumpikin lisää 100 pistettä, joten pari on aina yli rajan.
+   * Taloyhtiö tulee skannauksesta eikä pisteytyksestä, ja mitatut parit
+   * jäivät 58-65 pisteeseen - pisteraja ensin olisi pudottanut neljä
+   * viidestä (mitattu 6.9.2026).
+   */
   if (hasStrongIdentifier) return true
+
+  if (match.confidence < 70) return false
 
   /*
    * NAME_IN_DESCRIPTION KELPAA VASTA 95 PISTEESTÄ YLÖSPÄIN.

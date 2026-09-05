@@ -90,6 +90,21 @@ describe("comparisonPartners", () => {
     expect(comparisonPartners(projects[0], buckets)).toHaveLength(0)
   })
 
+  /*
+   * Taloyhtio yhdistaa myos ilman kaupunkia (D-171). Sama yhtio eri
+   * sijamuodossa on sama yhtio, koska avain riisuu taivutuksen.
+   */
+  it("ryhmittelee saman taloyhtion hankkeet ilman kaupunkia", () => {
+    const projects = [
+      project("a", { metadata: { housing_company: "Asunto Oy Oulun Valoisa" } }),
+      project("b", { metadata: { housing_company: "Asunto Oy Oulun Valoisaan" } }),
+      project("c", { metadata: { housing_company: "Asunto Oy Oulun Uljas" } }),
+    ]
+    const buckets = buildComparisonBuckets(projects)
+
+    expect(comparisonPartners(projects[0], buckets).map((p) => p.id)).toEqual(["b"])
+  })
+
   it("sietää kaupungin kirjoitusasun vaihtelun samoin kuin matcher", () => {
     const projects = [
       project("a", { city: " Kajaani " }),
