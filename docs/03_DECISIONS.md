@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-166 - Kayttoseuranta oli jo olemassa; puuttui vain nakyma
+
+Kysymys: voiko yksittaisen kayttajan kirjautumisia seurata tarkemmin -
+"kirjautui 1.9., 2.9. ja 3.9., oli 5 min, 6 min ja 9 min"?
+
+**EHDOTIN UUTTA TAULUA JA SYDAMENLYONTIA. SE OLI VAARIN.** Vastasin
+ensin, ettei kestoja saa ilman uutta kirjausta. Johannes huomautti etta
+analytiikkasivulla on jo "Pisimpaan aikaa viettaneet kayttajat" - ja
+niin onkin: `analytics_events` on ollut olemassa **14.7.2026 alkaen**,
+36 019 riviä, ja se sisaltaa `login`- ja `pageview`-tapahtumat seka
+sivulatauksen `duration_seconds`-keston.
+
+Tama on saman virheen toinen esiintyma kuin kohdetyypittimessa (D-159):
+**tarkistin mita EI ole, en mita on.** Kohdetyypitin oli olemassa mutta
+vain skriptissa; tassa kirjaus oli olemassa mutta ilman nakymaa.
+Kummassakin oikea ensimmainen liike olisi ollut lukea mita jarjestelma
+jo tekee.
+
+**MITAAN EI TARVINNUT KERATA. Rakennettiin vain kaksi nakymaa:**
+
+1. **Kayttajakohtainen historia** (`/api/admin/user-activity`,
+   kayttajalistan "Kaytto"-nappi). Nayttaa paivittain kirjautumiset,
+   istunnot, sivut ja ajan - tasan sen mita kysyttiin. Nakyvyysraja on
+   sama funktio kuin listalla (`visibleUsers`): admin nakee kaikki,
+   myyja vain hankkimansa asiakkaat.
+
+2. **Koko joukon kehitys** (`/api/admin/usage-trend`, analytiikkasivun
+   "Kayton kehitys"). Google Analyticsin muoto: nelja tunnuslukua,
+   kunkin vieressa muutos edelliseen yhta pitkaan jaksoon, ja
+   paivakohtainen pylvaikko jonka mittaria voi vaihtaa. Sivulla oli
+   ennestaan vain top-5-listoja, joista ei nae suuntaa.
+
+**ISTUNTO ON PAATELTAVA, EI KIRJATTU.** Taulussa ei ole
+istuntotunnusta, joten istunto rajataan yli 30 minuutin tauosta - sama
+saanto kuin GA:ssa, jotta luvut luetaan samalla tavalla. Kesto on
+sivulatausten kestojen summa, joten viimeinen sivu jaa aliarvioiduksi.
+Se on oikea suunta: mieluummin liian pieni kuin keksitty.
+
+**ENSIMMAINEN MITTAUS (30 vrk, 5.9.2026):**
+
+```
+kayttajia      43   +187 %
+istuntoja     342   +111 %
+sivulatauksia 13 205  -10 %
+keskikesto     27 min  -57 %
+```
+
+Luku kertoo myyntityon tuloksen tarkemmin kuin tunnusmaara: **tunnuksia
+tulee lisaa, mutta kukin kayttaa vahemman.** Sama nakyy yksittaisella
+rivilla - esimerkkiasiakas kaytti 154 min 30.7., sitten 2 min, 1 min,
+1 min, eika mitaan 20.8. jalkeen.
+
+`lib/analytics/kayttoyhteenveto.ts` ·
+`app/api/admin/user-activity/route.ts` ·
+`app/dashboard/analytics/KayttoTrendi.tsx`
+
+---
+
 ### D-165 - Tanaan-syotteen hakuraja katkaisi neljä viidesta Uudenmaan osumasta
 
 Kysymys: miksi `/today` nayttaa niin vahan, ja voiko pienessa

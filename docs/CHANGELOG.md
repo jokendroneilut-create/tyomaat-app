@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kayttoseurannan nakymat: kayttajakohtainen ja koko joukon (D-166)
+
+`analytics_events` on ollut olemassa 14.7.2026 alkaen (36 019 riviä) ja
+sisaltaa kirjautumiset, sivulataukset ja kestot. Puuttui vain nakyma.
+
+Kayttajalistalle tuli "Kaytto"-nappi, joka avaa asiakkaan paivittaisen
+kayton: kirjautumiset, istunnot, sivut ja aika, seka mita sivuja han
+kaytti. Myyja nakee vain omat asiakkaansa (sama `visibleUsers`-funktio
+kuin listalla).
+
+Analytiikkasivulle tuli "Kayton kehitys" Google Analyticsin muodossa:
+kayttajat, istunnot, sivulataukset ja istunnon keskikesto, kunkin
+vieressa muutos edelliseen yhta pitkaan jaksoon, ja paivakohtainen
+pylvaikko jonka mittaria voi vaihtaa. Istunto katkeaa yli 30 minuutin
+tauosta kuten GA:ssa.
+
+Ensimmainen mittaus (30 vrk): kayttajia 43 (+187 %), istuntoja 342
+(+111 %), sivulatauksia 13 205 (-10 %), keskikesto 27 min (-57 %).
+
 ### Tanaan-syotteen hakuraja katkaisi ison maakunnan osumat (D-165)
 
 `getTodayProjects` haki 1 000 uusinta hanketta ja suodatti vasta sen

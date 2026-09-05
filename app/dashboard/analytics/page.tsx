@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import KayttoTrendi from "./KayttoTrendi"
 
 type UserRow = { userId: string; email: string; [key: string]: any }
 type ProjectRow = { projectId: string; name: string; [key: string]: any }
@@ -155,6 +156,8 @@ export default function AnalyticsPage() {
       <p style={{ marginTop: 4, fontSize: 13, color: '#6b7280' }}>
         Perustuu kirjautumis-, sivunkatselu- ja hanke-avaustapahtumiin siitä lähtien kun seuranta otettiin käyttöön — vanhempaa historiaa ei ole.
       </p>
+
+      <KayttoTrendi />
 
       {loading && <p style={{ marginTop: 16 }}>Ladataan...</p>}
       {error && <p style={{ marginTop: 16, color: '#b91c1c' }}>{error}</p>}

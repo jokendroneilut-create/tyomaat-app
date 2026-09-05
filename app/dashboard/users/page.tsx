@@ -59,6 +59,15 @@ export default function UsersPage() {
   const [lockingId, setLockingId] = useState<string | null>(null)
 
   const [sortColumn, setSortColumn] = useState<SortColumn>('created_at')
+
+  /*
+   * Kayttohistoria avataan rivi kerrallaan. Data on `analytics_events`
+   * -taulussa 14.7.2026 alkaen; sita ei ladata etukateen kaikille, koska
+   * lista voi olla satoja rivejä ja jokainen haku on oma kyselynsa.
+   */
+  const [kayttoAuki, setKayttoAuki] = useState<string | null>(null)
+  const [kaytto, setKaytto] = useState<Record<string, any>>({})
+  const [kayttoLataa, setKayttoLataa] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const handleSort = (column: SortColumn) => {
@@ -225,6 +234,25 @@ export default function UsersPage() {
     })
 
     return res.json().catch(() => ({ error: 'Vastauksen luku epäonnistui' }))
+  }
+
+  const avaaKaytto = async (user: AdminUser) => {
+    if (kayttoAuki === user.id) {
+      setKayttoAuki(null)
+      return
+    }
+    setKayttoAuki(user.id)
+    if (kaytto[user.id]) return
+
+    setKayttoLataa(user.id)
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    const res = await fetch(`/api/admin/user-activity?userId=${user.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const json = await res.json().catch(() => ({ error: 'Vastauksen luku epäonnistui' }))
+    setKaytto((prev) => ({ ...prev, [user.id]: json }))
+    setKayttoLataa(null)
   }
 
   const handleRole = async (user: AdminUser, role: 'seller' | 'admin' | null) => {
@@ -590,7 +618,7 @@ export default function UsersPage() {
           </thead>
 
           <tbody>
-            {sortedUsers.map((u) => (
+            {sortedUsers.flatMap((u) => [
               <tr key={u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                 <td style={{ padding: '8px 4px' }}>{u.email}</td>
                 <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>{formatDate(u.created_at)}</td>
@@ -608,7 +636,26 @@ export default function UsersPage() {
                     )
                   })()}
                 </td>
-                <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>{formatDate(u.last_sign_in_at)}</td>
+                <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
+                  {formatDate(u.last_sign_in_at)}
+                  <button
+                    onClick={() => avaaKaytto(u)}
+                    title="Kirjautumispäivät ja käytetty aika"
+                    style={{
+                      marginLeft: 8,
+                      padding: '2px 8px',
+                      background: kayttoAuki === u.id ? '#dbeafe' : '#f3f4f6',
+                      color: '#374151',
+                      borderRadius: 6,
+                      border: 'none',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {kayttoAuki === u.id ? 'Sulje' : 'Käyttö'}
+                  </button>
+                </td>
                 <td style={{ padding: '8px 4px' }}>
                   {u.locked ? (
                     <span style={{ color: '#b91c1c', fontWeight: 700 }} title={u.lockedReason ?? undefined}>
@@ -733,8 +780,75 @@ export default function UsersPage() {
                   </button>
                 </td>
                 )}
-              </tr>
-            ))}
+              </tr>,
+
+              kayttoAuki === u.id ? (
+                <tr key={`${u.id}-kaytto`} style={{ background: '#f9fafb' }}>
+                  <td colSpan={12} style={{ padding: '12px 16px' }}>
+                    {kayttoLataa === u.id ? (
+                      <div style={{ color: '#6b7280' }}>Haetaan käyttöhistoriaa…</div>
+                    ) : kaytto[u.id]?.error ? (
+                      <div style={{ color: '#b91c1c' }}>{kaytto[u.id].error}</div>
+                    ) : (kaytto[u.id]?.paivat ?? []).length === 0 ? (
+                      <div style={{ color: '#6b7280' }}>
+                        Ei yhtään kirjautumista tai sivulatausta. Tunnus on luotu,
+                        mutta tuotetta ei ole avattu.
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                            Käyttöpäivät ({(kaytto[u.id]?.paivat ?? []).length} kpl)
+                          </div>
+                          <table style={{ fontSize: 13, borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr style={{ textAlign: 'left', color: '#6b7280' }}>
+                                <th style={{ padding: '2px 10px 2px 0' }}>Päivä</th>
+                                <th style={{ padding: '2px 10px 2px 0' }}>Kirjautumisia</th>
+                                <th style={{ padding: '2px 10px 2px 0' }}>Istuntoja</th>
+                                <th style={{ padding: '2px 10px 2px 0' }}>Sivuja</th>
+                                <th style={{ padding: '2px 0' }}>Aikaa</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(kaytto[u.id]?.paivat ?? []).slice(0, 30).map((p: any) => (
+                                <tr key={p.paiva}>
+                                  <td style={{ padding: '2px 10px 2px 0', whiteSpace: 'nowrap' }}>{p.paiva}</td>
+                                  <td style={{ padding: '2px 10px 2px 0' }}>{p.kirjautumisia}</td>
+                                  <td style={{ padding: '2px 10px 2px 0' }}>{p.istuntoja}</td>
+                                  <td style={{ padding: '2px 10px 2px 0' }}>{p.sivulatauksia}</td>
+                                  <td style={{ padding: '2px 0', whiteSpace: 'nowrap' }}>
+                                    {p.sekunteja < 60
+                                      ? `${p.sekunteja} s`
+                                      : `${Math.round(p.sekunteja / 60)} min`}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div>
+                          <div style={{ fontWeight: 600, marginBottom: 6 }}>Mitä käytti</div>
+                          <table style={{ fontSize: 13, borderCollapse: 'collapse' }}>
+                            <tbody>
+                              {(kaytto[u.id]?.sivut ?? []).map((sv: any) => (
+                                <tr key={sv.path}>
+                                  <td style={{ padding: '2px 16px 2px 0' }}>{sv.path}</td>
+                                  <td style={{ padding: '2px 0', whiteSpace: 'nowrap', color: '#6b7280' }}>
+                                    {Math.max(1, Math.round(sv.sekunteja / 60))} min · {sv.kertaa} kertaa
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ) : null,
+            ])}
 
             {!loading && users.length === 0 && (
               <tr>
