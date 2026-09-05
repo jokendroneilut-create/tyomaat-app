@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  akselinYlaraja,
   jaksonLuvut,
   muutosProsentti,
   paivasarja,
@@ -106,5 +107,24 @@ describe("muutosProsentti", () => {
   /* Nollasta kasvu ei ole prosentti, joten sita ei keksita. */
   it("palauttaa null kun vertailukohta on nolla", () => {
     expect(muutosProsentti(50, 0)).toBeNull()
+  })
+})
+
+describe("akselinYlaraja", () => {
+  it("pyoristaa ylospain tasalukuun", () => {
+    expect(akselinYlaraja(47)).toBe(50)
+    expect(akselinYlaraja(342)).toBe(400)
+    expect(akselinYlaraja(2717)).toBe(3000)
+  })
+
+  /* Pieni huippu ei saa hypata kaksinkertaiseksi. */
+  it("puolittaa askeleen kun huippu on juuri suuruusluokan ylapuolella", () => {
+    expect(akselinYlaraja(12)).toBe(15)
+    expect(akselinYlaraja(105)).toBe(150)
+  })
+
+  it("ei palauta nollaa", () => {
+    expect(akselinYlaraja(0)).toBeGreaterThan(0)
+    expect(akselinYlaraja(1)).toBe(1)
   })
 })

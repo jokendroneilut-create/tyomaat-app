@@ -30,6 +30,10 @@ tauosta kuten GA:ssa.
 Ensimmainen mittaus (30 vrk): kayttajia 43 (+187 %), istuntoja 342
 (+111 %), sivulatauksia 13 205 (-10 %), keskikesto 27 min (-57 %).
 
+Samalla korjattiin analytiikkasivun "TypeError: fetch failed": vanha
+reitti haki hankkeiden nimet yhdella .in()-kyselylla, ja lista oli
+kasvanut 764 tunnisteeseen. Pilkottu 90:n paloihin.
+
 ### Tanaan-syotteen hakuraja katkaisi ison maakunnan osumat (D-165)
 
 `getTodayProjects` haki 1 000 uusinta hanketta ja suodatti vasta sen

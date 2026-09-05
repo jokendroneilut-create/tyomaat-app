@@ -188,3 +188,18 @@ export function muutosProsentti(nyt: number, ennen: number): number | null {
   if (ennen === 0) return null
   return Math.round(((nyt - ennen) / ennen) * 100)
 }
+
+/*
+ * Y-AKSELIN YLARAJA.
+ *
+ * Ylin viiva on luettava vain jos se on tasaluku: 47:n kohdalla lukee
+ * 50, ei 47. Askel valitaan suuruusluokasta ja puolitetaan kun huippu on
+ * juuri askeleen ylapuolella - muuten 12 hyppaisi 20:een ja puolet
+ * kuvasta olisi tyhjaa.
+ */
+export function akselinYlaraja(huippu: number): number {
+  const arvo = Math.max(1, Math.ceil(huippu))
+  const suuruus = Math.pow(10, String(arvo).length - 1)
+  const askel = arvo / suuruus < 2 ? suuruus / 2 : suuruus
+  return Math.max(askel, Math.ceil(arvo / askel) * askel)
+}

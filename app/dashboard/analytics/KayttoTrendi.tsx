@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 
+import { akselinYlaraja } from "@/lib/analytics/kayttoyhteenveto"
+
 /*
  * KOKO JOUKON KÄYTTÖ JA SEN KEHITYS, Google Analyticsin tapaan.
  *
@@ -11,8 +13,7 @@ import { useEffect, useState } from "react"
  * pitkään jaksoon, ja päiväkohtainen pylväikkö alla.
  *
  * Pylväikkö on tehty div-elementeistä eikä kirjastosta: yksi mittari,
- * yksi sarja, ei vuorovaikutusta — kirjasto olisi enemmän koodia kuin
- * itse kuva.
+ * yksi sarja — kirjasto olisi enemmän koodia kuin itse kuva.
  */
 
 type Sarja = {
@@ -42,11 +43,24 @@ type Vastaus = {
 
 type Mittari = "kayttajia" | "istuntoja" | "sivulatauksia" | "sekunteja"
 
+const MITTARIN_NIMI: Record<Mittari, string> = {
+  kayttajia: "käyttäjää",
+  istuntoja: "istuntoa",
+  sivulatauksia: "sivulatausta",
+  sekunteja: "minuuttia",
+}
+
 function kesto(sekunteja: number) {
   if (sekunteja < 60) return `${Math.round(sekunteja)} s`
   const min = Math.round(sekunteja / 60)
   if (min < 60) return `${min} min`
   return `${Math.floor(min / 60)} h ${min % 60} min`
+}
+
+/* Päivä lyhyeen suomalaiseen muotoon: "2026-09-05" -> "5.9." */
+function lyhytPaiva(iso: string) {
+  const [, kk, pp] = iso.split("-")
+  return `${Number(pp)}.${Number(kk)}.`
 }
 
 function Muutos({ arvo }: { arvo: number | null }) {
@@ -99,11 +113,13 @@ export default function KayttoTrendi() {
   const [virhe, setVirhe] = useState<string | null>(null)
   const [paivia, setPaivia] = useState(30)
   const [mittari, setMittari] = useState<Mittari>("kayttajia")
+  const [osoitettu, setOsoitettu] = useState<number | null>(null)
 
   useEffect(() => {
     let peruttu = false
     setData(null)
     setVirhe(null)
+    setOsoitettu(null)
 
     fetch(`/api/admin/usage-trend?days=${paivia}`)
       .then((r) => r.json())
@@ -121,7 +137,22 @@ export default function KayttoTrendi() {
     }
   }, [paivia])
 
-  const huippu = Math.max(1, ...(data?.sarja ?? []).map((r) => Number(r[mittari] ?? 0)))
+  const sarja = data?.sarja ?? []
+
+  /*
+   * AIKA NÄYTETÄÄN MINUUTTEINA, MUUT KAPPALEINA. Sekunnit ovat oikea
+   * yksikkö laskentaan mutta väärä lukemiseen: kahdeksan tunnin päivä
+   * olisi 28 800 eikä kertoisi mitään.
+   */
+  const naytto = (arvo: number) => (mittari === "sekunteja" ? Math.round(arvo / 60) : arvo)
+  const huippu = Math.max(1, ...sarja.map((r) => naytto(Number(r[mittari] ?? 0))))
+
+  /*
+   * Ylin viiva on tasaluku eikä satunnainen huippuarvo (47 -> 50).
+   * Laskenta on omana testattuna funktionaan, koska pyöristys menee
+   * helposti pieleen juuri pienillä luvuilla.
+   */
+  const ylaraja = akselinYlaraja(huippu)
 
   return (
     <section
@@ -200,46 +231,119 @@ export default function KayttoTrendi() {
             />
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 2,
-              height: 140,
-              marginTop: 18,
-              paddingTop: 8,
-              borderBottom: "1px solid #e5e7eb",
-            }}
-          >
-            {data.sarja.map((r) => {
-              const arvo = Number(r[mittari] ?? 0)
-              return (
-                <div
-                  key={r.paiva}
-                  title={`${r.paiva}: ${mittari === "sekunteja" ? kesto(arvo) : arvo}`}
-                  style={{
-                    flex: 1,
-                    height: `${Math.max(2, (arvo / huippu) * 100)}%`,
-                    background: arvo === 0 ? "#f3f4f6" : "#2563eb",
-                    borderRadius: "2px 2px 0 0",
-                    minWidth: 2,
-                  }}
-                />
-              )
-            })}
+          {/* Osoitettu päivä: sama tieto kuin pylväässä, mutta luettavana. */}
+          <div style={{ marginTop: 16, height: 20, fontSize: 13 }}>
+            {osoitettu !== null && sarja[osoitettu] ? (
+              <span>
+                <strong>{sarja[osoitettu].paiva}</strong>{" "}
+                <span style={{ color: "#2563eb", fontWeight: 700 }}>
+                  {naytto(Number(sarja[osoitettu][mittari] ?? 0))}
+                </span>{" "}
+                <span style={{ color: "#6b7280" }}>{MITTARIN_NIMI[mittari]}</span>
+              </span>
+            ) : (
+              <span style={{ color: "#9ca3af" }}>
+                Vie osoitin pylvään päälle nähdäksesi päivän.
+              </span>
+            )}
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 12,
-              color: "#6b7280",
-              marginTop: 4,
-            }}
-          >
-            <span>{data.jakso.alku}</span>
-            <span>{data.jakso.loppu}</span>
+          <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+            {/* Y-AKSELI: kolme arvoa ja yksikkö. */}
+            <div
+              style={{
+                width: 52,
+                height: 150,
+                position: "relative",
+                fontSize: 11,
+                color: "#9ca3af",
+                textAlign: "right",
+              }}
+            >
+              {[1, 0.5, 0].map((osuus) => (
+                <div
+                  key={osuus}
+                  style={{
+                    position: "absolute",
+                    top: `${(1 - osuus) * 100}%`,
+                    right: 6,
+                    transform: "translateY(-50%)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {Math.round(ylaraja * osuus)}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ position: "relative", flex: 1, height: 150 }}>
+              {/* Vaakaviivat samoille kohdille kuin akselin arvot. */}
+              {[1, 0.5, 0].map((osuus) => (
+                <div
+                  key={osuus}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: `${(1 - osuus) * 100}%`,
+                    borderTop: osuus === 0 ? "1px solid #d1d5db" : "1px dashed #f0f0f0",
+                  }}
+                />
+              ))}
+
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: "100%" }}>
+                {sarja.map((r, i) => {
+                  const arvo = naytto(Number(r[mittari] ?? 0))
+                  const korostettu = osoitettu === i
+                  return (
+                    <div
+                      key={r.paiva}
+                      onMouseEnter={() => setOsoitettu(i)}
+                      onMouseLeave={() => setOsoitettu(null)}
+                      title={`${r.paiva}: ${arvo} ${MITTARIN_NIMI[mittari]}`}
+                      style={{
+                        flex: 1,
+                        minWidth: 2,
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "flex-end",
+                        cursor: "default",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "100%",
+                          height: `${Math.max(1, (arvo / ylaraja) * 100)}%`,
+                          background: arvo === 0 ? "#f3f4f6" : korostettu ? "#1d4ed8" : "#2563eb",
+                          borderRadius: "2px 2px 0 0",
+                        }}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div style={{ width: 34, fontSize: 11, color: "#6b7280", alignSelf: "flex-start" }}>
+              {mittari === "sekunteja" ? "min" : "kpl"}
+            </div>
+          </div>
+
+          {/* X-AKSELI: päivämäärät tasavälein, ei jokaista. */}
+          <div style={{ display: "flex", gap: 6 }}>
+            <div style={{ width: 52 }} />
+            <div style={{ display: "flex", flex: 1, fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+              {sarja.map((r, i) => {
+                const vali = Math.max(1, Math.round(sarja.length / 6))
+                const nakyy = i % vali === 0 || i === sarja.length - 1
+                return (
+                  <div key={r.paiva} style={{ flex: 1, minWidth: 2, textAlign: "left", whiteSpace: "nowrap" }}>
+                    {nakyy ? lyhytPaiva(r.paiva) : ""}
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ width: 34 }} />
           </div>
 
           <p style={{ fontSize: 12, color: "#6b7280", marginTop: 12 }}>

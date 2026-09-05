@@ -354,12 +354,28 @@ export async function GET(request: Request) {
 
     let projectNames = new Map<string, string>()
     if (neededProjectIds.length > 0) {
-      const { data: projectRows, error: projectError } = await supabaseAdmin
-        .from("projects")
-        .select("id, name")
-        .in("id", neededProjectIds)
+      /*
+       * .in() ON PILKOTTAVA. Tunnisteet menevat URL-kyselyjonoon, ja
+       * liian pitka lista kaatuu - mitattu 5.9.2026: 764 tunnistetta
+       * yhdella kyselylla palautti "Bad Request", ja Next.js naytti sen
+       * sivulla muodossa "TypeError: fetch failed". Sivu oli siis rikki
+       * ilman etta mikaan kertoi syyta.
+       *
+       * Raja kasvaa aineiston mukana: tama toimi niin kauan kuin
+       * avattuja hankkeita oli vahan. Sadan palat kestavat myos
+       * kasvun.
+       */
+      const PALA = 90
+      const projectRows: any[] = []
+      for (let i = 0; i < neededProjectIds.length; i += PALA) {
+        const { data, error: projectError } = await supabaseAdmin
+          .from("projects")
+          .select("id, name")
+          .in("id", neededProjectIds.slice(i, i + PALA))
 
-      if (projectError) throw projectError
+        if (projectError) throw projectError
+        projectRows.push(...(data ?? []))
+      }
 
       projectNames = new Map((projectRows ?? []).map((p) => [p.id, p.name]))
     }

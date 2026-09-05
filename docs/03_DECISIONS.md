@@ -57,6 +57,27 @@ tulee lisaa, mutta kukin kayttaa vahemman.** Sama nakyy yksittaisella
 rivilla - esimerkkiasiakas kaytti 154 min 30.7., sitten 2 min, 1 min,
 1 min, eika mitaan 20.8. jalkeen.
 
+**SIVU OLI SAMALLA RIKKI, JA SYY OLI KIRJATTU MUISTIIN JO AIEMMIN.**
+Analytiikkasivun alalaidassa luki "TypeError: fetch failed". Vika ei
+ollut uudessa osiossa vaan vanhassa `/api/admin/analytics`-reitissa: se
+haki hankkeiden nimet yhdella `.in("id", ...)`-kyselylla, ja lista oli
+kasvanut **764 tunnisteeseen**. Tunnisteet menevat URL-kyselyjonoon,
+joten liian pitka lista palauttaa "Bad Request" - jonka Next.js nayttaa
+muodossa "TypeError: fetch failed". Pilkottuna 90:n paloihin sama haku
+palauttaa 762 riviä normaalisti.
+
+Tama on sama ansa joka on kirjattu Supabase-muistiinpanoihin
+("`.in()` pilkottava ~100:n paloihin"). Se ei ilmennyt aiemmin, koska
+avattuja hankkeita oli vahemman - **raja kasvoi aineiston mukana**, ja
+sivu hajosi hiljaa ilman etta mikaan kertoi syyta.
+
+**AKSELIT JA OSOITINTIETO.** Pylvaikkoon lisattiin y-akselin arvot
+yksikkoineen (kpl / min), x-akselin paivamaarat tasavalein ja
+osoitettuun pylvaaseen paivan ja arvon nayttava rivi. Y-akselin ylaraja
+pyoristetaan tasalukuun omalla testatulla funktiollaan
+(`akselinYlaraja`): 47 -> 50, mutta 12 -> 15 eika 20, jottei puolet
+kuvasta jaa tyhjaksi.
+
 `lib/analytics/kayttoyhteenveto.ts` ·
 `app/api/admin/user-activity/route.ts` ·
 `app/dashboard/analytics/KayttoTrendi.tsx`
