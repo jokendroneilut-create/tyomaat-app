@@ -100,3 +100,30 @@ export function extractFloorAreaFromText(
 
   return null
 }
+
+/*
+ * LOMAKEKENTAN ARVO NUMEROKSI.
+ *
+ * Lupapisteen kuulutus-PDF:ssa ala on omana kenttanaan ("Kerrosala",
+ * "Kokonaisala"), ja arvo tallentuu merkkijonona sellaisena kuin se
+ * PDF:sta luettiin. Yksikko on erillaan vaihtelevasti, koska
+ * PDF-jasennys rikkoo valilyonnit: "96 m 2", "182 m²", "91m 2",
+ * "1471 m 2".
+ *
+ * Tama EI ole tekstipoiminta vaan kentan lukeminen: lause-ankkureita ei
+ * tarvita, koska lomake on jo kertonut mika luku on kyseessa.
+ */
+export function parseAlaTeksti(arvo: string | null | undefined): number | null {
+  const teksti = String(arvo ?? "").trim()
+  if (!teksti) return null
+
+  /* Luku ennen yksikkoa; ryhmittelija voi olla vali tai piste. */
+  const osuma = teksti.match(/(\d{1,3}(?:[\s .]\d{3})+|\d+)(?:[.,]\d+)?\s*m\s*[²2]/i)
+  if (!osuma) return null
+
+  const luku = Number(String(osuma[1]).replace(/[\s .]/g, ""))
+  if (!Number.isFinite(luku)) return null
+  if (luku < MIN_M2 || luku > MAX_M2) return null
+
+  return Math.round(luku)
+}

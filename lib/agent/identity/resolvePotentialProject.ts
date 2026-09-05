@@ -6,7 +6,10 @@ import {
 } from "@/lib/projects/identity"
 import { syncApprovedProject } from "@/lib/projects/syncApprovedProject"
 import { resolveProjectCost } from "@/lib/projects/resolveProjectCost"
-import { extractFloorAreaFromText } from "@/lib/projects/extractFloorAreaFromText"
+import {
+  extractFloorAreaFromText,
+  parseAlaTeksti,
+} from "@/lib/projects/extractFloorAreaFromText"
 import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
 import { resolveBuildingType } from "@/lib/agent/quality/resolveBuildingType"
 import {
@@ -187,6 +190,20 @@ export async function resolvePotentialProject(
   ): Record<string, unknown> {
     const nyt = String(existingMetadata?.floor_area ?? md.floor_area ?? "").trim()
     if (nyt) return {}
+
+    /*
+     * LOMAKEKENTTA VOITTAA TEKSTIN. Lupapisteen kuulutus-PDF:sta on jo
+     * luettu "Kerrosala" ja "Kokonaisala" omina kenttinaan
+     * (`lupapisteResolver` -> `floor_area_text`), ja nimetty kentta on
+     * vahvempi todiste kuin lauseesta paateltu luku. Mitattu 6.9.2026:
+     * tieto oli haettu, jasennetty ja tallennettu - muttei kannettu
+     * eteenpain, joten 20 nakyvalla hankkeella oli teksti muttei kentta.
+     *
+     * "Pinta-ala" (`site_area_text`) EI kelpaa: lupapaatoksessa se on
+     * tontin ala, ei rakennuksen. Sama ansa kuin tekstipoimijassa.
+     */
+    const kentasta = parseAlaTeksti(md.floor_area_text) ?? parseAlaTeksti(md.total_area_text)
+    if (kentasta) return { floor_area: kentasta }
 
     const ala = extractFloorAreaFromText(costText)
     return ala ? { floor_area: ala } : {}

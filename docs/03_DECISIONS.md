@@ -54,6 +54,67 @@ hyvaksytty vastaus tahan luokkaan - ala ehdota luetteloa uudestaan.
 
 ---
 
+### D-171 - Lupapisteen lomakekentat kannettiin eteenpain; PDF-hanke oli vaara
+
+Kirjasin 5.9.2026 tyojonon karkeen "hankesuunnitelmien lukeminen
+liitteista". **Mittaus 6.9. kumosi sen**, ja oikea tyo oli pienempi ja
+jo puoliksi tehty.
+
+**NOUDETTAVIA LIITTEITA EI JUURI OLE:**
+
+```
+source_documents 8 138, joista suoraan PDF        34   (kaikki admin.espoo.fi)
+procurementDocumentsUrl                          492
+  tarjouspalvelu.fi (vaatii kirjautumisen)       379
+  hankintailmoitukset.fi (julkinen)               64
+  buildercom / sokopro / haahtela (kirjautuminen) 28
+ehdokkaita joilla attachment_titles                0
+```
+
+Ja siella missa hinta on, se on jo saatavilla ilman PDF:aa: Helsingin
+paatoksista 440/851 antaa hinnan kuvaustekstista, ja Hilman 238
+ehdokkaalla on rakenteinen `contract_value`, joka paatyy
+kustannusarvioksi oikein (tarkistettu: 0 vuotoa, 4 vanhaa hanketta
+poikkeuksena).
+
+**OIKEA TYO OLI PUTKITUS.** Lupapisteen kuulutus-PDF:t haetaan ja
+jasennetaan jo putkessa (`apiCollector` -> `lupapisteBulletinPdf`), ja
+`extractBulletinFields` lukee niista Kerrosalan, Kokonaisalan,
+Pinta-alan, Rakennusoikeuden ja Tilavuuden. Ne tallennetaan
+`raw_payload.bulletin_fields`iin ja `lupapisteResolver` kantaa ne
+ehdokkaan metadataan (`floor_area_text` jne.) - **mutta mikaan ei
+muuttanut niita `floor_area`-kentaksi.**
+
+**ETSIN ENSIN VAARILLA NIMILLA.** Mittasin "0 alakenttaa 503
+ehdokkaalla" hakemalla nimia `kerrosala`, `pinta_ala`, `floor_area` -
+mutta resolveri tallentaa ne nimilla `floor_area_text`,
+`site_area_text`, `building_right_text`. Oikeilla nimilla luvut ovat 47,
+126 ja 19. Arvio hyodysta putosi samalla 109:sta **20 nakyvaan
+hankkeeseen**, koska suurin osa Lupapisteen riveista on pieniä
+yksityiskohteita jotka ohitetaan ennen ehdokkaan luontia.
+
+**LOMAKEKENTTA VOITTAA TEKSTIN.** Nimetty kentta on vahvempi todiste
+kuin lauseesta paatelty luku, joten `alaMetadata` lukee ensin
+`floor_area_text`in ja `total_area_text`in ja vasta sitten tekstin.
+`site_area_text` EI kelpaa: lupapaatoksessa "Pinta-ala" on tontin ala -
+sama ansa jonka takia paljas "pinta-ala" jatettiin pois D-169:ssa.
+
+Arvot ovat merkkijonoja joissa PDF-jasennys on rikkonut valilyonnit
+("96 m 2", "91m 2", "1471 m 2"), joten ne jasennetaan omalla testatulla
+funktiollaan (`parseAlaTeksti`).
+
+**AJOIHIN EI TULLUT LISAKUORMAA**, koska PDF:t haetaan jo. Kirjoitettu
+20 hankkeelle; pinta-ala on nyt 306 nakyvalla hankkeella.
+
+Jaljelle jaavat aidot PDF-mahdollisuudet ovat YVA-selostukset ja
+kaavaselostukset (`kaavaselostusPdf.ts` osaa hakea ne mutta poimii vain
+yhteystiedot). Ne ovat isompi tyo.
+
+`lib/projects/extractFloorAreaFromText.ts` ·
+`lib/agent/identity/resolvers/lupapisteResolver.ts`
+
+---
+
 ### D-169 - Pinta-ala tekstista: yksikko on vahvempi todiste kuin lause
 
 Havainto tuli yhdesta ehdokkaasta: kuvauksessa luki "n. 1140 m2" mutta

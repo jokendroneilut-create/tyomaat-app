@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { extractFloorAreaFromText } from "./extractFloorAreaFromText"
+import { extractFloorAreaFromText, parseAlaTeksti } from "./extractFloorAreaFromText"
 
 /*
  * Jokainen tapaus on luettu kannasta 5.9.2026, ei keksitty. Torjuttavat
@@ -91,5 +91,31 @@ describe("extractFloorAreaFromText", () => {
       expect(extractFloorAreaFromText("")).toBeNull()
       expect(extractFloorAreaFromText("Ei mitaan lukuja tassa tekstissa.")).toBeNull()
     })
+  })
+})
+/*
+ * Lupapisteen kuulutus-PDF:n lomakekentta. Arvot ovat kannasta
+ * 6.9.2026 - PDF-jasennys rikkoo valilyonnit vaihtelevasti.
+ */
+describe("parseAlaTeksti", () => {
+  it("lukee kentan arvon vaikka yksikko on hajalla", () => {
+    expect(parseAlaTeksti("96 m 2")).toBe(96)
+    expect(parseAlaTeksti("182 m²")).toBe(182)
+    expect(parseAlaTeksti("91m 2")).toBe(91)
+    expect(parseAlaTeksti("1471 m 2")).toBe(1471)
+    expect(parseAlaTeksti("1 747 m²")).toBe(1747)
+    expect(parseAlaTeksti("19834 m 2")).toBe(19834)
+  })
+
+  /* Sama alaraja kuin tekstipoimijassa: vaja ei ole hanke. */
+  it("ei lue jarjettoman pienta", () => {
+    expect(parseAlaTeksti("14 m 2")).toBeNull()
+  })
+
+  it("kestaa tyhjan ja lukuun kelpaamattoman", () => {
+    expect(parseAlaTeksti(null)).toBeNull()
+    expect(parseAlaTeksti("")).toBeNull()
+    expect(parseAlaTeksti("ei ilmoitettu")).toBeNull()
+    expect(parseAlaTeksti("500 m3")).toBeNull()
   })
 })

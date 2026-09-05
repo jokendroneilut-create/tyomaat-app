@@ -23,6 +23,24 @@ siella: ilman rajausta "Savon Voima Verkko Oy" olisi osunut Savonlinnaan
 (Etela-Savo) vaikka yhtio toimii Pohjois-Savossa. Rajattuna joukko oli 6
 riviä ja kaikki oikein.
 
+### Lupapisteen lomakekentat kannetaan eteenpain (D-171)
+
+Lupapisteen kuulutus-PDF:t haetaan ja jasennetaan jo putkessa, ja niista
+luetaan Kerrosala ja Kokonaisala omina kenttinaan. Ne tallennettiin
+ehdokkaan metadataan muttei muutettu `floor_area`-kentaksi.
+
+Nyt lomakekentta voittaa tekstipoiminnan: nimetty kentta on vahvempi
+todiste kuin lauseesta paatelty luku. "Pinta-ala" ei kelpaa, koska
+lupapaatoksessa se on tontin ala.
+
+Kirjoitettu 20 hankkeelle. Ajoihin ei tullut lisakuormaa, koska PDF:t
+haetaan jo.
+
+Samalla kumoutui tyojonon kirjaus "hankesuunnitelmien lukeminen
+liitteista": mitattuna noudettavia liitteita ei juuri ole (8 138
+dokumentista 34 on suoraan PDF, ja 379 tarjousaineiston linkkia on
+kirjautumisen takana).
+
 ### Pinta-ala poimitaan nyt tekstista (D-169)
 
 `floor_area` on ollut kenttana muttei kirjoittajaa. Mitattu: nakyvista

@@ -157,6 +157,13 @@ export async function resolveLupapisteProject({
       ...(bulletinFields?.kaavatilanne ? { plan_status: bulletinFields.kaavatilanne } : {}),
       ...(bulletinFields?.pintaAla ? { site_area_text: bulletinFields.pintaAla } : {}),
       ...(bulletinFields?.kerrosala ? { floor_area_text: bulletinFields.kerrosala } : {}),
+      /*
+       * Kokonaisala on toinen rakennuksen mitta samassa lomakkeessa, ja
+       * osalla riveista se on kun kerrosala puuttuu. Se kannetaan
+       * eteenpain samalla nimikkeella, jotta `alaMetadata` voi kayttaa
+       * sita varalla.
+       */
+      ...(bulletinFields?.kokonaisala ? { total_area_text: bulletinFields.kokonaisala } : {}),
       ...(bulletinFields?.rakennusoikeus ? { building_right_text: bulletinFields.rakennusoikeus } : {}),
       ...(bulletinFields?.tilavuus ? { volume_text: bulletinFields.tilavuus } : {}),
       municipality_code: municipalityCode,

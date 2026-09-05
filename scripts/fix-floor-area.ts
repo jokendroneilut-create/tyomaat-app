@@ -36,7 +36,19 @@ function teksti(nimi: string, ...osat: any[]) {
 
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
-  const { extractFloorAreaFromText } = await import("../lib/projects/extractFloorAreaFromText")
+  const { extractFloorAreaFromText, parseAlaTeksti } = await import(
+    "../lib/projects/extractFloorAreaFromText"
+  )
+
+  /*
+   * Lomakekentta voittaa tekstin: Lupapisteen kuulutus-PDF:sta luettu
+   * "Kerrosala"/"Kokonaisala" on nimetty kentta, ei lauseesta paatelty.
+   * "Pinta-ala" (`site_area_text`) ei kelpaa - se on tontin ala.
+   */
+  const alaRivilta = (md: any, nimi: string, ...tekstit: any[]) =>
+    parseAlaTeksti(md?.floor_area_text) ??
+    parseAlaTeksti(md?.total_area_text) ??
+    extractFloorAreaFromText(teksti(nimi, ...tekstit))
 
   const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false },
@@ -55,7 +67,7 @@ async function main() {
   for (const r of jono ?? []) {
     const md: any = (r as any).metadata ?? {}
     if (md.floor_area != null && String(md.floor_area).trim() !== "") continue
-    const ala = extractFloorAreaFromText(teksti(String((r as any).title ?? ""), md.description, md.operation))
+    const ala = alaRivilta(md, String((r as any).title ?? ""), md.description, md.operation)
     if (!ala) continue
     jonossa++
     console.log(`  jono  ${String(ala).padStart(7)} m²  ${String((r as any).title ?? "").slice(0, 56)}`)
@@ -90,7 +102,7 @@ async function main() {
     const md: any = r.metadata ?? {}
     if (r.floor_area != null && String(r.floor_area).trim() !== "") continue
     if (Array.isArray(md.edited_fields) && md.edited_fields.includes("floor_area")) continue
-    const ala = extractFloorAreaFromText(teksti(String(r.name ?? ""), r.additional_info, md.description))
+    const ala = alaRivilta(md, String(r.name ?? ""), r.additional_info, md.description)
     if (!ala) continue
     tyo.push({ r, ala })
   }
