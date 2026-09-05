@@ -23,7 +23,7 @@ Jos luet vain tämän:
 | | |
 |---|---|
 | **RPT / Hubexo** | Ihmiset soittavat rakennuttajille. Julkaisi 17.8.2026 **Byggfakta Risen**: tekoälyvalmentaja Rune, joka kertoo kenelle soittaa tänään ja kirjoittaa sähköpostin valmiiksi. **Aluehinnoittelu poistui — käyttöönotto kattaa koko Suomen.** Vanha Smart oli 600 €/kk yhdestä maakunnasta. Käyttöönotto maksullinen, 3–4 vk. |
-| **Metroc** | Sama malli kuin meillä: automaatio julkisista lähteistä. 1,4 M€ / 23 hlöä / 400+ asiakasta → **~300–400 €/kk**. Omistaa suomalaisen julkisen sektorin **asiakirjadatan** (Public Investments). |
+| **Metroc** | Sama malli kuin meillä: automaatio julkisista lähteistä. 1,4 M€ / 23 hlöä / 400+ asiakasta → **~250–350 €/kk** (vahvistettu kahdesta pisteestä, 2021 ja 2025). Omistaa suomalaisen julkisen sektorin **asiakirjadatan** (Public Investments) — keruu alkanut jo 2021. Kasvoi 0,5 M€:sta 1,4 M€:oon 4,5 vuodessa, yhä tappiolla. |
 | **Meidän tie** | Julkinen hinta, ostaminen ilman myyjää, **irtisanottavissa 30 päivässä**. Ainoa etu joka seuraa pienuudesta eikä katoa kun kilpailija huomaa sen. |
 
 Kolme asiaa jotka on syytä muistaa ilman että niitä tarvitsee etsiä uudelleen:
@@ -539,6 +539,15 @@ kaikki viisi tuotetta ja molemmat maat, ja "400+" on 2026 kun liikevaihto on
 2025 — todellinen keskihinta on pikemminkin hieman korkeampi, luokkaa
 300–400 €/kk.
 
+**Vahvistettu toisella pisteellä (2.9.2026).** Virnalan haastattelu 12.5.2021
+antaa saman laskun neljä vuotta aikaisemmilta luvuilta: 170 asiakasta ja "vähän
+reipas puoli miljoonaa" ARR ≈ **2 940 €/v ≈ 245 €/kk**. Kaksi eri vuotta, eri
+tuotemäärä ja eri maamäärä osuvat samaan haarukkaan, joten **luku ei ole enää
+yhden laskun varassa: Metrocin keskihinta on luokkaa 250–350 €/kk.** Samalla
+näkyy, että keskihinta nousi neljässä vuodessa vain ~19 % vaikka tuotteita tuli
+kolme lisää — **lisätuotteet eivät ole juuri nostaneet asiakaskohtaista
+laskutusta.** Ks. [`competitors/metroc-virnala-haastattelu-2021-05-12/`](competitors/metroc-virnala-haastattelu-2021-05-12/).
+
 Yhdessä RPT:n 600 €/kk (yksi maakunta) kanssa tämä antaa markkinan
 hintahaarukan: **automatisoitu tuote ~300 €/kk, ihmiskeruu ~600 €/kk ja ylös.**
 
@@ -581,6 +590,57 @@ Myönteinen puoli: he ovat 23 hengellä ja 1,4 M€:lla eivät mikään ylivoima
 tuoteperheen pirstaleisuus (viisi tuotetta, viisi ostopäätöstä) on aito
 heikkous. 16 %:n kasvu kertoo, että myynti — ei tuote — on tämän markkinan
 pullonkaula.
+
+### Miten tähän tultiin — perustajan oma kertomus (lisätty 2.9.2026)
+
+Yllä oleva on Metroc ulkoapäin ja tänään. Jussi Virnalan haastattelu
+**12.5.2021** on sama yhtiö sisältäpäin ja alusta: silloin 170 asiakasta,
+~0,5 M€ ARR, 12 henkeä, kaksi tuotetta. Koko analyysi ja aikaleimattu
+litteraatti:
+[`competitors/metroc-virnala-haastattelu-2021-05-12/`](competitors/metroc-virnala-haastattelu-2021-05-12/).
+
+Lähteen arvo on siinä, että **molemmat päät ovat tiedossa**: videolla Virnala
+kertoo mitä aikoo tehdä, ja meillä on tilinpäätös joka kertoo miten kävi.
+Kilpailijan strategiaa voi siis arvioida toteumaa vastaan.
+
+| 12.5.2021 sanottu | Toteuma 2025 |
+|---|---|
+| "rekrytoidaan Suomeen kymmenen henkeä lisää" | 23 henkeä — mutta neljässä vuodessa, ei vuodessa |
+| "tän vuoden ehdoton tavoite on Ruotsi" | FI + SE, 400+ asiakasta yhteensä |
+| "Nordics alkuun ja pyritään ne samaan haltuun" | ei toteutunut |
+| "tehdään uusia tuotteita" | toteutui: 2 → 5 tuotetta |
+| ~0,5 M€ ARR | 1,4 M€ — 2,8× neljässä ja puolessa vuodessa |
+
+Neljä havaintoa, jotka muuttavat yllä olevaa kuvaa:
+
+1. **Myyntipullonkaula ei ole enää arvio vaan havainto.** Metroc rakennettiin
+   ensimmäisestä kuukaudesta lähtien myyntikoneeksi kokeneen SaaS-myyjän
+   johdolla — 40–60 kylmäsoittoa ja 5–8 tapaamista päivässä. **Markkinointia ei
+   tehty kahteen vuoteen yhtään**, ja Virnala myöntää syyn: "jos mulla olisi
+   erilainen tausta… mutta mä olin tehnyt ihan perinteistä myyntiä". Kanava
+   valittiin perustajan taustasta, ei markkinasta. Kasvu vaati siksi 12 → 23
+   henkeä, ja kate ei parane.
+2. **Tuoteperheen pirstaleisuus on tarkoituksellinen, ei vahinko.** Riskejä
+   kysyttäessä Virnala nimeää useamman tuotteen suojaksi: "se ei ole yhden
+   tuotteen varassa… jos ei ole tyytyväinen, niin vaihtaa toiseen tuotteeseen".
+   Heikkous on siis kudottu heidän riskienhallintaansa eikä todennäköisesti
+   katoa. **Yksi tuote, yksi hinta, yksi ostopäätös erottaa meidät juuri tästä
+   kilpailijasta.**
+3. **Julkisten asiakirjojen keruu alkoi jo 2021.** Silloinen Metroc Lead:
+   "kerätään dataa avoimista lähteistä, kuntien ja kaupunkien dokumentteja."
+   Nykyinen Public Investments on sen jatke — **etumatka on viisi vuotta
+   kerrytettyä aineistoa, ei tuore lanseeraus.**
+4. **Ruotsiin lähdettiin kesken kotimarkkinan.** Virnala myöntää samassa
+   hengenvedossa että "meillä on Suomessa vielä paljon markkinaa", ja
+   haastattelija varoittaa suoraan lähetyksessä. Neljä vuotta myöhemmin Ruotsi
+   ei ole tuottanut toista Suomea.
+
+Poimittavaa on kolme asiaa, jotka eivät vaadi kokoa: **ei ilmaisia kokeiluja
+vaan määräaikainen aloitushinta + avoin roadmap**; **pienuuden sanominen ääneen**
+(tuotti Metrocille "pääsee ensimmäisten joukkoon" -reaktion, ja he ovat
+kasvaneet siitä ulos — me emme); ja **"churn ei saa olla ikinä yllätys"**,
+joka on yhdelle tekijälle toteutettavissa käyttöanalytiikalla ilman
+kvartaalisoittoja.
 
 ---
 
@@ -780,6 +840,21 @@ Jotta työ kumuloituu eikä jää kertaluontoiseksi, kannattaa kirjata mitä
 listasta seuraa: montako seurattua kääntyi kontaktiksi ja mitkä yritystyypit
 painottuvat. Muuten seurattujen määrä on aktiivisuusmittari, ei tulosmittari.
 
+**2.9.2026 — kilpailijan vanhat haastattelut ovat käyttämätön lähdeluokka.**
+Metrocin perustajan 57 minuutin haastattelu vuodelta 2021 sisälsi
+myyntimallin, hinnoittelun, kanavavalinnan ja viiden vuoden suunnitelmat
+suoraan perustajan suulla — aineistoa, jota ei saa mistään tuotesivulta.
+Video oli löydettävissä 439 katselukerralla ja **ilman tekstityksiä**, eli sitä
+ei löydä hakukoneella eikä sen sisältöä voi hakea. Se litteroitiin koneellisesti
+(Whisper medium, 58 min ääntä → 97 min ajoa) ja arkistoitiin repoon.
+
+Opetus on menetelmällinen: **kilpailijan johdon esiintymiset podcasteissa,
+webinaareissa ja sijoittajatilaisuuksissa ovat halvin olemassa oleva
+syvälähde**, ja niitä kannattaa etsiä aktiivisesti. Erityisen arvokkaita ovat
+**vanhat** esiintymiset, koska niissä kerrotut suunnitelmat voi tarkistaa
+toteumaa vastaan — arvaamisen sijaan nähdään, mikä strategia oikeasti tuotti
+mitäkin.
+
 ---
 
 ## Lähteet
@@ -808,3 +883,14 @@ taloustiedot: <https://www.asiakastieto.fi/yritykset/fi/metroc-oy/30192269/talou
 <https://www.proff.fi/yrityksen/metroc-oy/helsinki/tietokoneohjelmistot-ja-ohjelmistokehitys/3019226-9I009O> ·
 rahoituskierrokset: <https://www.rakennuslehti.fi/avainsanat/metroc/>,
 <https://metroc.ai/fi/materiaalit/metroc-kerasi-2-miljoonaa-euroa-uudella-rahoituskierroksella/>
+
+**Virnalan haastattelu 12.5.2021.** Founders Edge / *Next Level* -livelähetys,
+"Miten kasvattaa 500.000 € ARR 1½ vuodessa?", haastattelijana Ali Omar (Metrocin
+enkelisijoittaja ja hallituksen jäsen), 57:44 —
+<https://www.youtube.com/watch?v=TRGQRHGaWWU>. Videolla **ei ole tekstityksiä**,
+joten sisältö ei ole haettavissa ilman arkistoitua litteraattia. Analyysi ja
+aikaleimattu litteraatti:
+[`competitors/metroc-virnala-haastattelu-2021-05-12/`](competitors/metroc-virnala-haastattelu-2021-05-12/).
+⚠️ Litteraatti on **koneellinen** (Whisper medium): asiasisältö on luotettava,
+erisnimet ja sanamuodot eivät — tarkista sitaatti videolta ennen kuin käytät
+sitä ulospäin.

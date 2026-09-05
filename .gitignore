@@ -65,3 +65,10 @@ scripts/out/granlund-review.json
 scripts/out/design-firms*.json
 scripts/out/foundation-*.json
 scripts/out/housing-company-key.json
+
+# Kilpailija-aineiston sanatarkat litteraatit jaavat koneelle: repo on
+# julkinen, ja koko haastattelun litterointi on kolmannen osapuolen teoksen
+# jakamista. Analyysi (README.md) on omaa tekstia lyhyine sitaatteineen ja
+# kuuluu historiaan; litteraatti on sen lahdeaineisto ja tarkistettavissa
+# aikaleimoista alkuperaiselta videolta.
+docs/competitors/**/litteraatti.txt
