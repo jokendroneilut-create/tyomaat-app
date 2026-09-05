@@ -11,6 +11,27 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Lujakoti lahteeksi: rakentajan oma asuntokatalogi (D-172)
+
+Omaperusteisesta asuntokohteesta ei synny urakkauutista eika
+hankintailmoitusta, koska urakkaa ei kilpailuteta. Katvealue nakyi
+mitattuna: Boijenkadun korttelista 1, 2 ja 5 olivat kannassa, mutta
+Lujan oma kohde numero 6 ("Asunto Oy Tampereen Pioni", 45 asuntoa) ei
+ollut. Rakennuslehden juttu siita on maksumuurin takana.
+
+Uusi lahde lukee kohteet sitemapista ja poimii rekisteroidyn taloyhtion
+nimen, katuosoitteen, myyntitilan ja asuntomaaran. Valmiit kohteet
+jatetaan pois: 18 sivusta 12 on valmiita, joten lahde tuottaa kuusi
+kesken olevaa kohdetta.
+
+Elavaa sivua vasten loytyi kolme vikaa jotka fixtuuri olisi kadottanut:
+vaihe luettiin markkinointitekstista ("on rakenteilla 45 asuntoa" vs.
+tilamerkinta "Ennakkomarkkinoinnissa"), kuvaukseksi tuli navigaatio-
+valikko, ja markkinointiotsikko "Lujakoteja Koskelaan" olisi mennyt
+taloyhtion nimeksi.
+
+Sama sivutyyppi on muillakin ja isompana: Lapti 67 kohdesivua, T2H 62.
+
 ### Taloyhtion nimi hankkeen yrityslistaan (D-171)
 
 "Asunto Oy Oulun Valoisa" on ollut kannassa vain riisuttuna

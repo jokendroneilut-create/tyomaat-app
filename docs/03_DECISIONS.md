@@ -5,6 +5,61 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-172 - Rakentajan oma asuntokatalogi lahteena (Lujakoti)
+
+Ehdokas "Lujatalo rakentaa omaperusteisen kerrostalon Tampereelle"
+(Rakennuslehti, 5.9.2026) ei kertonut mita rakennetaan tai minne. Juttu
+on maksumuurin takana, ja ainoa nakyva vihje oli kuvateksti "Havainnekuva
+Tampereen Pionista" — ilman yhtiomuotoa, joten poimintasaanto ei olisi
+tunnistanut sita taloyhtioksi vaikka kuvatekstit luettaisiin.
+
+Rakennuttajan omalta sivulta (`lujakoti.fi`) selvisi kaikki: **Asunto Oy
+Tampereen Pioni, Boijenkatu 6, 45 asuntoa, ennakkomarkkinoinnissa.**
+
+**KATVEALUE ON RAKENTEELLINEN, EI SATTUMA.** Omaperusteisesta kohteesta
+ei synny urakkauutista eika hankintailmoitusta, koska urakkaa ei
+kilpailuteta — rakentaja rakentaa itselleen ja myy asunnot. Lujatalolla
+oli jo kaksi lahdetta (tiedotteet ja referenssit) eika kumpikaan nae
+naita: tiedote syntyy urakkavoitosta, referenssi valmistumisesta.
+
+Mitattu 6.9.2026: Boijenkadun korttelista **1, 2 ja 5 olivat kannassa,
+6 ei**. Naapurit tulivat urakkauutisina (TA-Yhtiot tilaajana), Pioni on
+Lujan omansa.
+
+**MITTAUS PIENENSI ODOTUSTA JA TARKENSI PERUSTELUN.** Sitemapissa on 18
+kohdesivua, mutta niista **12 on valmiita** — sama suhde kuin Lujatalon
+referensseilla (108/115). Lahde tuottaa siis kuusi kesken olevaa
+kohdetta, ei kahdeksaatoista. Arvo ei ole maarassa vaan siina mita
+rivit sisaltavat: rekisteroity taloyhtion nimi ja katuosoite.
+
+**KOLME VIKAA LOYTYI VASTA ELAVAA SIVUA VASTEN AJAMALLA:**
+
+1. **Vaihe luettiin markkinointitekstista.** "…johon on RAKENTEILLA
+   yhteensa 45 asuntoa" antoi vaiheeksi Rakenteilla, vaikka kohteen oma
+   tilamerkinta on "Ennakkomarkkinoinnissa" eika rakentaminen ole
+   alkanut. Kentat luetaan nyt `div.realty-meta`-sirpaleista ja osoite
+   id:sta `#lujakoti-address`.
+2. **Kuvaukseksi tuli navigaatiovalikko.** `blockText` poimii myos
+   `li`-alkiot, ja sivun ylin lista on valikko ("Luja Lujatalo
+   Lujabetoni Fescon Etusivu…"). Kuvaus otetaan nyt `p`-elementeista.
+3. **Otsikko ei aina ole taloyhtio.** "Lujakoteja Koskelaan" on
+   markkinointiotsikko; oikea nimi lukee kuvauksessa ("Asunto Oy
+   Helsingin Koskelan Akseli on suunnitteilla…"). Nimi poimitaan samalla
+   saannolla kuin muualla (D-171) eika oteta otsikosta sellaisenaan.
+
+Valmiit kohteet jatetaan pois samalla perusteella kuin referensseissa:
+"Muuttovalmis" tarkoittaa valmista rakennusta josta myydaan viela
+asuntoja — rakentaminen on ohi, joten se ei ole hankeloyto.
+
+robots.txt sallii kaiken ja ilmoittaa sitemapin itse. Listaussivua ei
+ole (`/kohteet/` = 404) eika status-taksonomia renderoidy palvelimella,
+joten kohteet luetaan sitemapista.
+
+Sama sivutyyppi on muillakin rakentajilla ja isompana: **Lapti 67,
+T2H 62** (ks. roadmapin lahdekattavuus).
+
+---
+
 ### D-171 - Taloyhtion nimi yrityslistaan: kolme katkaisusaantoa
 
 Taloyhtion nimi on ollut kannassa vain **tasmaytysavaimena**

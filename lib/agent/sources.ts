@@ -63,6 +63,7 @@ import {
   fetchLujataloProjectsSource,
   enrichLujataloProject,
 } from "./fetchLujataloProjectsSource"
+import { fetchLujakotiSource } from "./fetchLujakotiSource"
 import {
   fetchNccProjectsSource,
   enrichNccProject,
@@ -168,6 +169,13 @@ export const sources = [
    * valmistuneita eivatka ne ole mahdollisuuksia vaan historiaa.
    */
   { name: "lujatalo_projektit", fetch: fetchLujataloProjectsSource, enrich: enrichLujataloProject },
+  /*
+   * Lujan OMAPERUSTEINEN asuntotuotanto. Ei paalekkain kahden muun
+   * Luja-lahteen kanssa: omaperusteisesta kohteesta ei synny
+   * urakkauutista eika se paady referensseihin ennen valmistumista.
+   * Kohdesivu antaa rekisteroidyn taloyhtion nimen ja katuosoitteen.
+   */
+  { name: "lujakoti", fetch: fetchLujakotiSource },
   /*
    * NCC:n projektisivut - mitattuna rikkain yrityslahde. Ainoa joka tuottaa
    * katuosoitteen postinumeroineen ja suunnittelijat urakkalajeittain.

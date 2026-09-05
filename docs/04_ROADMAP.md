@@ -799,6 +799,49 @@ muistin varassa.
 
 ### Lähdekattavuus
 
+- **RAKENTAJIEN OMAT ASUNTOKATALOGIT — MITATTU KATVEALUE.** Lujakoti
+  lisättiin lähteeksi 6.9.2026 (D-172). Sama sivutyyppi on muillakin, ja
+  ne ovat isompia:
+
+  | rakentaja | kohdesivuja | osoite |
+  |---|---|---|
+  | Lapti | **67** | `lapti.fi/pdx_housingcompany-sitemap.xml` |
+  | T2H | **62** | `t2h.fi` juuritasolla `/asunto-oy-…` |
+  | Lujakoti | 18 (6 kesken) | tehty |
+  | YIT Koti | ? | `yitkoti.fi/asunnot` — linkit staattisessa HTML:ssä |
+  | Bonava | ? | `bonava.fi/asunnot` — sitemapissa `/asunnot/<kaupunki>/…` |
+
+  Laptilla on oma **`pdx_housingcompany`-sitemap**, eli taloyhtiöt ovat
+  sivustolla omana sisältötyyppinään. Se on paras lähtökohta seuraavaksi.
+
+  Ei osumaa staattisesta HTML:stä: Hartela, Jatke, Skanska Kodit, SRV,
+  Pohjola Rakennus (`/kodit/` on olemassa, mutta listaus ei renderöidy
+  palvelimella).
+
+  **Miksi tämä luokka:** omaperusteisesta kohteesta ei synny
+  urakkauutista eikä hankintailmoitusta, koska urakkaa ei kilpailuteta.
+  Katalogisivu on ainoa julkinen lähde, ja se antaa rekisteröidyn
+  taloyhtiön nimen ja katuosoitteen — juuri ne tiedot joita muut
+  lähteet joutuvat arvaamaan.
+
+- **Oikotie: ennakkomarkkinoinnissa olevat kohteet.** Kysytty 6.9.2026.
+
+  `asunnot.oikotie.fi/robots.txt` **ei estä** ilmoitussivuja (kiellot
+  koskevat `/api*`, `/pro`, `/card*`, `/tilastot` ja käyttäjätoimintoja)
+  ja sivusto julkaisee sitemapit. **Robots ei kuitenkaan ole se
+  kysymys** — Oikotie on kaupallinen ilmoitusalusta, ja aineiston
+  järjestelmällinen kopiointi koskee käyttöehtoja ja
+  tietokantaoikeutta (TekL 49 §), ei robotsia. Tämä on siis
+  lupakysymys, ei tekninen kysymys, ja se on ratkaistava ennen kuin
+  riviäkään koodia kirjoitetaan.
+
+  Kaksi reittiä: (a) kysytään Oikotieltä lupa tai rajapintaa
+  kirjallisesti — sama kaava kuin kuntien kanssa; (b) kerätään sama
+  tieto rakentajien omilta sivuilta, jolloin lupaa ei tarvita ja tieto
+  tulee alkulähteestä. **(b) on jo aloitettu** (yllä), joten (a):n arvo
+  on vain siinä mitä se lisäisi: kattavuus yhdellä haulla sen sijaan
+  että jokainen rakentaja lisätään erikseen.
+
 - **Fingridin liityntähankkeet** — yksityisten suurhankkeiden katvealue.
   Microsoftin Kirkkonummen datakeskus osui meihin vain YVA:n kautta
   (ks. muistiinpano yksityisten rakennuttajien katvealueesta).
