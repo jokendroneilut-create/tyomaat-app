@@ -5,6 +5,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-174 - T2H kiertavalla noutobudjetilla, ja asuntomaara sarakkeeseen
+
+**CRAWL-DELAY ON SUUNNITTELUN LAHTOKOHTA, EI ESTE.** T2H:n robots.txt
+asettaa `Crawl-delay: 15`. Kohdesivuja on 62, eli kertaajo olisi 15,5
+minuuttia kun lahteen aikakatto on 90 sekuntia. Sivusto on silti
+mitatuista rikkain: kohdesivulla on taysi `schema.org/ApartmentComplex`
+— nimi, katuosoite, postinumero, kaupunki, KOORDINAATIT ja asuntojen
+maara. Mikaan muu lahde ei anna koordinaatteja valmiina.
+
+Ratkaisu on **kiertava viipale**: joka ajolla haetaan sitemap ja nelja
+kohdesivua 15 sekunnin valein. Koko luettelo tulee kayodyksi noin
+kahdessa viikossa, ja sen jalkeen kierros pitaa tiedot tuoreina.
+
+Viipale valitaan **vuorokauden funktiona eika kantatilana**: yksikaan
+keraaja ei lue kantaa, eika sita rajaa kannata rikkoa yhden lahteen
+takia. Sama paiva antaa saman viipaleen, joten uudelleenajo ei hyppaa
+yli mitaan.
+
+**AIKAVAHTI LASKEE TULEVAN VIIVEEN.** Ensimmainen toteutus tarkisti vain
+kuluneen ajan, jolloin viimeinen kierros olisi voinut alkaa 74
+sekunnissa, odottaa 15 ja hakea viela sivun — eli ylittaa katon.
+Mitattu ajo: 71,9 s / 4 sivua, joten marginaali oli oikeasti ohut.
+
+Tila luetaan lyhyesta lipusta ("Tulossa", "Myynnissa"), jonka luokka on
+Tailwind-soppaa eika kelpaa valitsimeksi. Sen sijaan etsitaan elementti
+jonka KOKO teksti on tunnettu tilasana — silloin leipatekstin
+"rakentamisen vaiheet" ei osu, toisin kuin vapaassa tekstihaussa
+(D-172:n ansa).
+
+#### Asuntojen maara sarakkeeseen asti
+
+`projects.apartments` on ollut olemassa, nakyy asiakkaan koosteessa
+("Asuntojen maara") ja on kasin muokattavissa, mutta **ehdokas->hanke
+-polku ei kirjoittanut siihen koskaan mitaan**. Sama vika kuin
+aikanaan `floor_area`lla ja `estimated_cost`illa.
+
+Vika ei nakynyt ennen kuin joku lahde alkoi tuottaa luvun: kaikki kolme
+asuntokatalogia tietavat asuntomaaran. Korjaus on kaksi rivia
+hyvaksyntareitilla, molempiin haaroihin (uusi hanke ja paivitys), ja
+metadatan arvo siivotaan `kokonaisluku`-funktiolla: JSON-kentta voi olla
+numero tai merkkijono, ja "3-5" ei ole asuntomaara.
+
+**Takautuvaa korjattavaa ei ollut.** Mitattu: 5 901 nakyvasta
+hankkeesta 0:lla ja 8 388 jonorivista 0:lla oli asuntomaara
+metadatassa. Korjaus vaikuttaa siis vasta uusiin ehdokkaisiin.
+
+---
+
 ### D-173 - Lapti ja Bonava: kaksi lisaa asuntokatalogia, tila omasta kentastaan
 
 Jatkoa D-172:lle. Molemmilla rakentajalla OLI jo lahde, mutta kumpikaan
@@ -55,11 +103,7 @@ Samasta syysta kaksoiskappaleet karsitaan **tarkalla nimella eika
 avaimella** molemmissa keraajissa: avain pudottaa numeron, jolloin kaksi
 eri hanketta nayttaisi samalta ja toinen jaisi pois.
 
-**AVOIN: `apartments` ei kulje tuontipolussa.** Molemmat lahteet
-tietavat asuntojen maaran, ja `projects.apartments` on olemassa,
-nakyy digesteissa ja on kasin muokattavissa — mutta ehdokas->hanke
--polku ei kirjoita sita koskaan. Maara talletetaan toistaiseksi
-`metadata.apartments`-kenttaan.
+**`apartments` ei kulkenut tuontipolussa — korjattu D-174:ssa.**
 
 ### D-172 - Rakentajan oma asuntokatalogi lahteena (Lujakoti)
 

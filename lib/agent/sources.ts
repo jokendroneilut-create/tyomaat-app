@@ -66,6 +66,7 @@ import {
 import { fetchLujakotiSource } from "./fetchLujakotiSource"
 import { fetchLaptiKohteetSource } from "./fetchLaptiKohteetSource"
 import { fetchBonavaKohteetSource } from "./fetchBonavaKohteetSource"
+import { fetchT2hKohteetSource } from "./fetchT2hKohteetSource"
 import {
   fetchNccProjectsSource,
   enrichNccProject,
@@ -191,6 +192,13 @@ export const sources = [
    * jonka yksikaan mitattu rakentajasivusto merkitsee.
    */
   { name: "bonava_kohteet", fetch: fetchBonavaKohteetSource },
+  /*
+   * T2H:n kohdesivut. Rikkain data (schema.org, koordinaatit), mutta
+   * robots.txt asettaa Crawl-delay 15, joten joka ajolla haetaan vain
+   * nelja sivua ja luettelo kierretaan vuorokauden mukaan. Koko
+   * luettelo (62 sivua) tulee kayodyksi noin kahdessa viikossa.
+   */
+  { name: "t2h_kohteet", fetch: fetchT2hKohteetSource },
   /*
    * NCC:n projektisivut - mitattuna rikkain yrityslahde. Ainoa joka tuottaa
    * katuosoitteen postinumeroineen ja suunnittelijat urakkalajeittain.

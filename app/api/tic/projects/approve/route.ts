@@ -26,6 +26,7 @@ import {
 import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { resolveRegion } from "@/lib/projects/resolveRegion"
+import { kokonaisluku } from "@/lib/projects/kokonaisluku"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -2450,6 +2451,7 @@ export async function POST(request: Request) {
           property_type:
             existingProject.property_type ?? metadata.building_type ?? null,
           floor_area: existingProject.floor_area ?? metadata.floor_area ?? null,
+          apartments: existingProject.apartments ?? kokonaisluku(metadata.apartments),
           estimated_completion:
             existingProject.estimated_completion ?? estimatedCompletion,
           latitude: existingProject.latitude ?? coords.lat,
@@ -2571,6 +2573,15 @@ export async function POST(request: Request) {
          * hyvaksynnassa: `floor_area` on hankkeen oma sarake.
          */
         floor_area: metadata.floor_area ?? null,
+        /*
+         * Asuntojen maara kulkee metadatassa jonorivilta samoin kuin
+         * pinta-ala. Ilman tata rivia luku katosi hyvaksynnassa:
+         * `apartments` on hankkeen oma sarake, se nakyy asiakkaan
+         * koosteessa ("Asuntojen maara") ja on kasin muokattavissa,
+         * mutta mikaan ei kirjoittanut siihen mitaan (mitattu 6.9.2026,
+         * kun rakentajien omat asuntokatalogit alkoivat tuoda lukua).
+         */
+        apartments: kokonaisluku(metadata.apartments),
         estimated_completion: estimatedCompletion,
         /*
          * Kustannusarvio kulkee metadatassa jonoriviltä. Ilman tätä riviä

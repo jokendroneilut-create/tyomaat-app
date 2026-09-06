@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### T2H lahteeksi ja asuntomaara sarakkeeseen (D-174)
+
+T2H:n robots.txt asettaa Crawl-delay 15, joten 62 kohdesivua olisi
+kertaajolla 15,5 minuuttia kun aikakatto on 90 sekuntia. Keraaja hakee
+siksi nelja sivua per ajo ja kiertaa luetteloa vuorokauden mukaan;
+kierros kestaa noin kaksi viikkoa. Vastineeksi saadaan mitatuista rikkain
+data: schema.org-kentista tulevat katuosoite, postinumero, asuntojen
+maara ja koordinaatit valmiina.
+
+Samalla korjattiin vika joka nakyi vasta kun lahteet alkoivat tuottaa
+luvun: `projects.apartments` on olemassa ja nakyy koosteessa, mutta
+ehdokas->hanke -polku ei kirjoittanut siihen mitaan. Takautuvaa
+korjattavaa ei ollut (0 hanketta ja 0 jonorivia), eli korjaus vaikuttaa
+uusiin ehdokkaisiin.
+
 ### Lapti ja Bonava: kohdekatalogit lahteiksi (D-173)
 
 Molemmilla oli jo lahde, mutta kumpikin lukee uutisia (`lapti` ->

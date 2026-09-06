@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 import { PHASE_LABELS } from "@/lib/projects/phases"
+import { viimeinenPaiva } from "@/lib/projects/kuukausiPaiva"
 
 /*
  * BONAVAN KOHDESIVUT — OMAPERUSTEINEN ASUNTOTUOTANTO.
@@ -74,8 +75,7 @@ export function valmistumispaiva(arvo: string | null | undefined): string | null
   const kuukausi = KUUKAUDET.findIndex((k) => teksti.includes(k))
   if (kuukausi < 0) return `${vuosi[1]}-12-31`
 
-  const viimeinen = new Date(Date.UTC(Number(vuosi[1]), kuukausi + 1, 0)).getUTCDate()
-  return `${vuosi[1]}-${String(kuukausi + 1).padStart(2, "0")}-${viimeinen}`
+  return viimeinenPaiva(Number(vuosi[1]), kuukausi + 1)
 }
 
 /*

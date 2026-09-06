@@ -2,6 +2,7 @@ import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { housingCompanyName } from "@/lib/projects/housingCompanyKey"
+import { paivaKuukaudesta } from "@/lib/projects/kuukausiPaiva"
 
 /*
  * LAPTIN TALOYHTIÖT — OMAPERUSTEINEN ASUNTOTUOTANTO.
@@ -55,24 +56,10 @@ export function vaihePortaasta(tila: string | null | undefined): string | null {
 }
 
 /*
- * "12/2027" -> "2027-12-31", "2027" -> "2027-12-31".
- *
- * Kuukauden viimeinen päivä, kuten muissakin arvioissa: lähde antaa
- * kuukauden tarkkuuden eikä päivää saa keksiä.
+ * Jaettu sääntö kolmelle kerääjälle: ks. `lib/projects/kuukausiPaiva`.
  */
 export function valmistumispaiva(arvo: string | null | undefined): string | null {
-  const teksti = String(arvo ?? "")
-
-  const kk = teksti.match(/\b(\d{1,2})\s*\/\s*(20\d{2})\b/)
-  if (kk) {
-    const kuukausi = Number(kk[1])
-    if (kuukausi < 1 || kuukausi > 12) return null
-    const viimeinen = new Date(Date.UTC(Number(kk[2]), kuukausi, 0)).getUTCDate()
-    return `${kk[2]}-${String(kuukausi).padStart(2, "0")}-${viimeinen}`
-  }
-
-  const vuosi = teksti.match(/\b(20\d{2})\b/)
-  return vuosi ? `${vuosi[1]}-12-31` : null
+  return paivaKuukaudesta(arvo)
 }
 
 /*
