@@ -1,0 +1,312 @@
+/*
+ * FAKTAJONON PORTTI: mitka dokumentit ovat kasiteltavia ja mitka
+ * lopullisesti kasittelemattomia.
+ *
+ * OMASSA TIEDOSTOSSAAN, koska `factWorker` luo Supabase-clientin
+ * moduulitasolla eika olisi tuotavissa testiin - sama ratkaisu kuin
+ * `comparisonBuckets`illa.
+ */
+
+const JSON_ONLY_SOURCES = [
+  "Hilma",
+  "Lupapiste kuulutukset",
+  "Vantaan vireillä olevat kaavat",
+  "Helsingin vireillä olevat kaavat",
+  "Tampereen vireillä olevat kaavat",
+  "Turun vireillä olevat kaavat",
+  "Kreate hankkeet",
+  "Väylävirasto hankkeet",
+  "Senaatti-kiinteistöt hankkeet",
+  "Puolustuskiinteistöt uutiset",
+  "Espoon ajankohtaiset asemakaavat",
+  "Lohjan ajankohtaiset kaavat",
+  "Rauman vireillä olevat asemakaavat",
+  "Kaarinan vireillä olevat asemakaavat",
+  "Nokian vireillä olevat asemakaavat",
+  "Kajaanin vireillä olevat asemakaavat",
+  "Savonlinnan asemakaavakuulutukset",
+  "Kangasalan vireillä olevat asemakaavat",
+  "Ylöjärven vireillä olevat asemakaavat",
+  "Vihdin vireillä olevat asemakaavat",
+  "Riihimäen vireillä olevat asemakaavat",
+  "Raaseporin vireillä olevat asemakaavat",
+  "Raision vireillä olevat asemakaavat",
+  "Lempäälän vireillä olevat asemakaavat",
+  "Imatran vireillä olevat asemakaavat",
+  "Raahen vireillä olevat asemakaavat",
+  "Sastamalan vireillä ja nähtävillä olevat kaavat",
+  "Hollolan aktiiviset kaavat",
+  "Pirkkalan vireillä olevat asemakaavat",
+  "Siilinjärven vireillä olevat kaavat",
+  "Mäntsälän vireillä olevat asemakaavat",
+  "Tornion kaavatori",
+  "Liedon vireillä olevat asemakaavat",
+  "Naantalin vireillä olevat asemakaavat",
+  "Iisalmen vireillä olevat asemakaavat",
+  "Mustasaaren vireillä olevat asemakaavat",
+  "Kempeleen vireillä olevat asemakaavat",
+  "Valkeakosken vireillä olevat asemakaavat",
+  "Pietarsaaren vireillä olevat asemakaavat",
+  "Kurikan vireillä olevat asemakaavat",
+  "Varkauden vireillä olevat asemakaavat",
+  "Kemin vireillä olevat asemakaavat",
+  "Haminan vireillä olevat asemakaavat",
+  "Jämsän vireillä olevat asemakaavat",
+  "Laukaan vireillä olevat asemakaavat",
+  "Heinolan vireillä olevat asemakaavat",
+  "Äänekosken vireillä olevat asemakaavat",
+  "Pieksämäen vireillä olevat asemakaavat",
+  "Akaan vireillä olevat asemakaavat",
+  "Forssan vireillä olevat asemakaavat",
+  "Janakkalan vireillä olevat asemakaavat",
+  "Orimattilan vireillä olevat asemakaavat",
+  "Ylivieskan vireillä olevat asemakaavat",
+  "Loimaan vireillä olevat asemakaavat",
+  "Kontiolahden vireillä olevat asemakaavat",
+  "Kauhavan vireillä olevat asemakaavat",
+  "Lapuan vireillä olevat asemakaavat",
+  "Kauhajoen vireillä olevat asemakaavat",
+  "Ilmajoen vireillä olevat asemakaavat",
+  "Uudenkaupungin vireillä olevat asemakaavat",
+  "Paimion vireillä olevat asemakaavat",
+  "Ulvilan vireillä olevat asemakaavat",
+  "Kankaanpään vireillä olevat asemakaavat",
+  "Liperin vireillä olevat asemakaavat",
+  "Lieksan vireillä olevat asemakaavat",
+  "Kiteen vireillä olevat asemakaavat",
+  "Kalajoen vireillä olevat asemakaavat",
+  "Nivalan vireillä olevat asemakaavat",
+  "Limingan vireillä olevat asemakaavat",
+  "Muuramen vireillä olevat asemakaavat",
+  "Saarijärven vireillä olevat asemakaavat",
+  "Keuruun vireillä olevat asemakaavat",
+  "Loviisan vireillä olevat asemakaavat",
+  "Kuusamon vireillä olevat asemakaavat",
+  "Kauniaisten vireillä olevat asemakaavat",
+  "Paraisten vireillä olevat asemakaavat",
+  "Someron vireillä olevat asemakaavat",
+  "Huittisten vireillä olevat asemakaavat",
+  "Kokemäen vireillä olevat asemakaavat",
+  "Urjalan vireillä olevat asemakaavat",
+  "Punkalaitumen vireillä olevat asemakaavat",
+  "Lopen vireillä olevat asemakaavat",
+  "Hattulan vireillä olevat asemakaavat",
+  "Savitaipaleen vireillä olevat asemakaavat",
+  "Juvan vireillä olevat asemakaavat",
+  "Lapinlahden vireillä olevat asemakaavat",
+  "Kannuksen vireillä olevat asemakaavat",
+  "Toholammin vireillä olevat asemakaavat",
+  "Kuhmon vireillä olevat asemakaavat",
+  "Suomussalmen vireillä olevat asemakaavat",
+  "Kittilän vireillä olevat asemakaavat",
+  "Kemijärven vireillä olevat asemakaavat",
+  "Rautjärven vireillä olevat asemakaavat",
+  "Alajärven vireillä olevat asemakaavat",
+  "Alavuden vireillä olevat asemakaavat",
+  "Isonkyrön vireillä olevat asemakaavat",
+  "Kuortaneen vireillä olevat asemakaavat",
+  "Laihian vireillä olevat asemakaavat",
+  "Ähtärin vireillä olevat asemakaavat",
+  "Enonkosken vireillä olevat asemakaavat",
+  "Heinäveden vireillä olevat asemakaavat",
+  "Hirvensalmen vireillä olevat asemakaavat",
+  "Puumalan vireillä olevat asemakaavat",
+  "Sulkavan vireillä olevat asemakaavat",
+  "Hyrynsalmen vireillä olevat asemakaavat",
+  "Paltamon vireillä olevat asemakaavat",
+  "Puolangan vireillä olevat asemakaavat",
+  "Hausjärven vireillä olevat asemakaavat",
+  "Jokioisten vireillä olevat asemakaavat",
+  "Vetelin vireillä olevat asemakaavat",
+  "Multian vireillä olevat asemakaavat",
+  "Petäjäveden vireillä olevat asemakaavat",
+  "Pihtiputaan vireillä olevat asemakaavat",
+  "Toivakan vireillä olevat asemakaavat",
+  "Uuraisten vireillä olevat asemakaavat",
+  "Viitasaaren vireillä olevat asemakaavat",
+  "Iitin vireillä olevat asemakaavat",
+  "Miehikkälän vireillä olevat asemakaavat",
+  "Pyhtään vireillä olevat asemakaavat",
+  "Pornaisten vireillä olevat kaavat",
+  "Hangon ajankohtaiset kaavat",
+  "Inkoon ajankohtainen kaavoitus",
+  "Karkkilan vireillä olevat kaavahankkeet",
+  "Siuntion vireillä olevat asemakaavat",
+  "Euran kaavoitus ja maapolitiikka",
+  "Siikaisten kaavoitus",
+  "Joutsan kaavoitus",
+  "Pielaveden kaavoitus",
+  "Kiuruveden kaavoitus",
+  "Auran kaavoitus",
+  "Vehmaan kaavoitus",
+  "Laitilan kaavoitus",
+  "Kustavin kaavoitus",
+  "Sievin kaavoitus",
+  "Vaalan kaavoitus",
+  "Siikajoen kaavoitus",
+  "Siikalatvan kaavoitus",
+  "Iin kaavoitus",
+  "Alavieskan kaavoitus",
+  "Hailuodon kaavoitus",
+  "Oulaisten kaavoitus",
+  "Taivalkosken kaavoitus",
+  "Pöytyän kaavoitus",
+  "Maskun kaavoitus",
+  "Ruskon kaavoitus",
+  "Mynämäen kaavoitus",
+  "Kemiönsaaren kaavoitus",
+  "Marttilan kaavoitus",
+  "Pyhärannan kaavoitus",
+  "Taivassalon kaavoitus",
+  "Kristiinankaupungin kaavoitus",
+  "Korsnäsin kaavoitus",
+  "Kruunupyyn kaavoitus",
+  "Luodon kaavoitus",
+  "Maalahden kaavoitus",
+  "Pedersören kaavoitus",
+  "Uusikaarlepyyn kaavoitus",
+  "Vöyrin kaavoitus",
+  "Perhon kaavoitus",
+  "Lestijärven kaavoitus",
+  "Ilomantsin kaavoitus",
+  "Tohmajärven kaavoitus",
+  "Tammelan kaavoitus",
+  "Lemin kaavoitus",
+  "Kangasniemen kaavoitus",
+  "Kihniön tuulivoimahankkeet",
+  "Ristijärven kaavoitus",
+  "Kolarin kaavoitus",
+  "Sallan kaavoitus",
+  "Tervolan kaavoitus",
+  "Savukosken kaavoitus",
+  "Utsjoen kaavoitus",
+  "Isojoen kaavoitus",
+  "Vimpelin kaavoitus",
+  "Jämijärven kaavoitus",
+  "Nakkilan kaavoitus",
+  "Säkylän kaavoitus",
+  "Keiteleen kaavoitus",
+  "Sonkajärven kaavoitus",
+  "Suonenjoen kaavoitus",
+  "Tuusniemen kaavoitus",
+  "Vieremän kaavoitus",
+  "Taipalsaaren kaavoitus",
+  "Kinnulan kaavoitus",
+  "Nurmeksen kaavoitus",
+  "Merijärven kaavoitus",
+  "Haapajärven kaavoitus",
+  "Haapaveden kaavoitus",
+  "Kärsämäen kaavoitus",
+  "Lumijoen kaavoitus",
+  "Muhoksen kaavoitus",
+  "Pyhäjoen kaavoitus",
+  "Pyhäjärven kaavoitus",
+  "Pyhännän kaavoitus",
+  "Pudasjärven kaavoitus",
+  "Reisjärven kaavoitus",
+  "Tyrnävän kaavoitus",
+  "Asikkalan kaavoitus",
+  "Hartolan kaavoitus",
+  "Kärkölän kaavoitus",
+  "Padasjoen kaavoitus",
+  "Sysmän kaavoitus",
+  "Kosken Tl kaavoitus",
+  "Rajukivi Oy",
+  "Heinäveden vireillä olevat asemakaavat",
+  "Virolahden vireillä olevat asemakaavat",
+  "Enontekiön vireillä olevat asemakaavat",
+  "Inarin vireillä olevat asemakaavat",
+  "Keminmaan vireillä olevat asemakaavat",
+  "Muonion vireillä olevat asemakaavat",
+  "Pelkosenniemen vireillä olevat asemakaavat",
+  "Ranuan vireillä olevat asemakaavat",
+  "Simon vireillä olevat asemakaavat",
+  "Sodankylän vireillä olevat asemakaavat",
+  "Pellon vireillä olevat asemakaavat",
+  "Ylitornion vireillä olevat asemakaavat",
+  "Hämeenkyrön vireillä olevat asemakaavat",
+  "Ikaalisten vireillä olevat asemakaavat",
+  "Mänttä-Vilppulan vireillä olevat asemakaavat",
+  "Oriveden vireillä olevat asemakaavat",
+  "Pälkäneen vireillä olevat asemakaavat",
+  "Vesilahden vireillä olevat asemakaavat",
+  "Kaskisten vireillä olevat asemakaavat",
+  "Ruoveden vireillä olevat kaavat",
+  "Virtain vireillä olevat kaavat",
+  "Äänekosken vireillä olevat asemakaavat",
+  "Kuopion vireillä olevat kaavat",
+  "Helsingin vireillä olevat asemakaavat (SUKKA)",
+  "Hyvinkään vireillä olevat kaavat",
+  "Seinäjoen ajankohtaiset asemakaavat",
+  "Rovaniemen Kaavatori",
+  "Mikkelin vireillä olevat kaavat",
+  "Kotkan vireillä olevat asemakaavat",
+  "Salon ajankohtaiset asemakaavat",
+  "Porvoon asemakaavat",
+  "Kokkolan asemakaavatyöt",
+  "Kirkkonummen kaavoitus",
+  "Keravan kaavahankkeet",
+  "Tuusulan vireillä olevat kaavat",
+  "Nurmijärven ajankohtaiset asemakaavat",
+  "Sipoon vireillä olevat asemakaavat",
+  "Järvenpään vireillä olevat asemakaavat",
+  "Lahden kaavatyökohteet",
+  "Porin vireillä olevat kaavat",
+  "Oulun vireillä olevat kaavat",
+  "Jyväskylän vireillä olevat kaavat",
+  "Hämeenlinnan vireillä olevat kaavat",
+  "Joensuun laadinnassa olevat kaavat",
+  "Vaasan vireillä olevat asemakaavat",
+  "Kouvolan ajankohtaiset asemakaavat",
+  "Lappeenrannan vireillä olevat asemakaavat",
+]
+
+/*
+ * JSON-LÄHDE TUNNISTETAAN TYYPISTÄ, EI PELKÄSTÄ NIMILISTASTA.
+ *
+ * `JSON_ONLY_SOURCES` on käsin ylläpidetty lista, ja jokainen uusi
+ * API-lähde on jäänyt siitä pois — hiljaa, koska puuttuva nimi ei
+ * riko mitään vaan jättää dokumentin jonoon.
+ *
+ * Mitattu 7.9.2026: jono seisoi tasan 70:ssä viiden peräkkäisen
+ * ajon ajan. Kaikki 70 olivat `document_type = "api"`, kaikilla oli
+ * sisältö (`raw_payload.original` + `raw_text`) ja kaikki olisivat
+ * tuottaneet faktoja — mutta yksikään lähde ("Lahden Talot
+ * tiedotteet", "Hoas tiedotteet", "Senaatti-kiinteistöt
+ * kilpailutuskalenteri", …) ei ollut listalla. Ne eivät olleet
+ * käsiteltäviä eivätkä terminaalisia, joten ne jäivät jonoon
+ * ikuisesti.
+ *
+ * `document_type` on kerääjän kirjoittama sarake eikä unohdu.
+ */
+export const onJsonLahde = (d: any) =>
+  d.document_type === "api" || JSON_ONLY_SOURCES.includes(d.source_name)
+
+export const isProcessable = (d: any) =>
+  onJsonLahde(d) ? !!(d.raw_payload?.original || d.raw_text) : !!d.extracted_text
+
+/*
+ * Terminaalinen dokumentti = ei koskaan tule käsiteltäväksi, koska sen oma
+ * louhintavaihe on jo ajettu tuloksetta. Ilman tätä nämä jäivät ikuisesti
+ * jonoon (fact_worker vain ohitti ne .find():ssä eikä koskaan merkinnyt
+ * valmiiksi), mikä piti "Jono"-mittarin pysyvästi harhaanjohtavana ja kasasi
+ * kuollutta backlogia. Merkitään valmiiksi 0 faktalla, jolloin jono valuu
+ * tyhjäksi eikä sisällöttömiä dokumentteja kerry uudelleen.
+ */
+export const isTerminal = (d: any) => {
+  if (isProcessable(d)) return false
+  // Kuvapohjainen PDF: tekstinpoiminta on ajettu mutta tulos on tyhjä ("").
+  // (extracted_text === null tarkoittaa "ei vielä poimittu" -> ei terminaali.)
+  if (d.document_type === "pdf") return d.extracted_text === ""
+  // HTML-ilmoitussivu (ei JSON-lähde): artikkeli on haettu, mutta sivun
+  // rungosta ei synny koskaan extracted_textiä — mahdollinen hyötydata on
+  // linkatussa PDF:ssä, joka käsitellään omana dokumenttinaan.
+  if (d.document_type === "html" && !onJsonLahde(d)) {
+    return !!d.raw_payload?.articleFetchedAt
+  }
+  // JSON-lähde ilman hyötykuormaa: keräys tuotti tyhjän -> ei louhittavaa.
+  if (onJsonLahde(d)) {
+    return !d.raw_payload?.original && !d.raw_text
+  }
+  return false
+}

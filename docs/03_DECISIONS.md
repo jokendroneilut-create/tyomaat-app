@@ -5,6 +5,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-175 - Faktajonon portti lukee tyypin, ei nimilistaa
+
+Ajot-sivun "Jono" seisoi **tasan 70:ssa viiden perakkaisen ajon ajan**,
+vaikka samat ajot poimivat faktoja. Vakio luku on eri asia kuin hitaasti
+purkautuva jono: se tarkoittaa etta jaljella olevia ei kosketa lainkaan.
+
+Mitattu 7.9.2026 kaikista 70:sta:
+
+    status         downloaded   70 / 70
+    document_type  api          70 / 70
+    luontipaiva    22.8.-29.8.   ei yhtaan uudempaa
+    sisalto        raw_payload.original + raw_text   70 / 70
+    resolveFacts   tuottaisi faktoja                 70 / 70
+
+Ne eivat siis odottaneet vuoroaan vaan olivat jumissa, ja niissa oli
+kelvollinen sisalto — jopa valmiiksi jasennetyt kentat
+(`parser: foundationReleaseParser`).
+
+**SYY OLI KASIN YLLAPIDETTY NIMILISTA.** `factWorker` paatti
+kasittelytavan `JSON_ONLY_SOURCES`-listasta (~150 lahdenimea): listalla
+oleville luetaan `raw_payload`, muille `extracted_text`. Naiden 70:n
+lahteet ("Lahden Talot tiedotteet", "Hoas tiedotteet",
+"Senaatti-kiinteistot kilpailutuskalenteri", ...) eivat olleet listalla,
+joten niilta vaadittiin `extracted_text` jota API-lahteella ei ole
+koskaan.
+
+Samasta syysta ne eivat myoskaan olleet terminaalisia: `isTerminal`
+tunsi tyypit `pdf` ja `html`, muttei `api`. Ei kasiteltava, ei
+terminaali = ikuinen jono.
+
+**Puuttuva nimi ei riko mitaan nakyvasti** — se vain jattaa dokumentin
+jonoon. Siksi vika kasvoi hiljaa jokaisen uuden API-lahteen mukana.
+Korjaus: json-lahde tunnistetaan `document_type === "api"` -sarakkeesta
+(kerain kirjoittaa sen aina), ja nimilista jaa vain vanhojen
+poikkeusten varalle.
+
+Portti siirrettiin omaan moduuliinsa (`factQueueGate`), koska
+`factWorker` luo Supabase-clientin moduulitasolla eika olisi tuotavissa
+testiin — sama ratkaisu kuin `comparisonBuckets`illa. Todennettu
+ajamalla: jono 70 -> 65.
+
+**MITTARI OLI OIKEASSA, TULKINTA VAARIN.** Jono-sarake oli nakynyt
+sivulla koko ajan, mutta vakiona pysyva luku luettiin "jono purkautuu
+hitaasti" eika "jono ei liiku". Nouseva ja laskeva luku on dokumentoitu;
+**pysahtynyt** luku ansaitsee saman huomion.
+
+---
+
 ### D-174 - T2H kiertavalla noutobudjetilla, ja asuntomaara sarakkeeseen
 
 **CRAWL-DELAY ON SUUNNITTELUN LAHTOKOHTA, EI ESTE.** T2H:n robots.txt

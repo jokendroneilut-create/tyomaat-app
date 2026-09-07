@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Faktajono liikkuu taas: portti lukee tyypin (D-175)
+
+Ajot-sivun "Jono" seisoi tasan 70:ssa viiden ajon ajan. Kaikilla 70:lla
+oli sisalto ja kaikki olisivat tuottaneet faktoja, mutta niiden lahteet
+puuttuivat kasin yllapidetysta JSON_ONLY_SOURCES-listasta — joten niilta
+vaadittiin `extracted_text`, jota API-lahteella ei ole koskaan. Ne eivat
+myoskaan olleet terminaalisia, koska `isTerminal` tunsi vain tyypit
+`pdf` ja `html`. Ei kasiteltava, ei terminaali = ikuinen jono.
+
+Json-lahde tunnistetaan nyt `document_type`-sarakkeesta, jonka kerain
+kirjoittaa aina. Portti siirrettiin omaan moduuliinsa testattavaksi.
+Jono 70 -> 65 ajamalla.
+
 ### T2H lahteeksi ja asuntomaara sarakkeeseen (D-174)
 
 T2H:n robots.txt asettaa Crawl-delay 15, joten 62 kohdesivua olisi
