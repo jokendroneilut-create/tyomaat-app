@@ -848,6 +848,41 @@ muistin varassa.
   Info -tili**. Jos on, ne tulevat jo `stt_haku`n kautta ja työ on
   luokittelussa, ei uudessa lähteessä.
 
+  **Tarkistettu 8.9.2026** rajapinnasta
+  `sttinfo.fi/public-website-api/releases?search=<nimi>&size=100`, joka
+  palauttaa julkaisijan nimen ja id:n — niin erottuu oma tili siitä että
+  yritys vain mainitaan jonkun muun tiedotteessa.
+
+  | aktiivinen oma tili | id | omia | uusin |
+  |---|---|---|---|
+  | Hemsö | 40274770 | 72 | 30.6.2026 |
+  | Ilmarinen | 20853347 | 57 | 2.9.2026 |
+  | Nrep Oy | 69820425 | 20 | 11.3.2026 |
+  | Logicenters | 69820516 | 9 | 26.3.2026 |
+  | Logicor Oy | 69820617 | 6 | 19.12.2025 |
+  | Varma | 1794 | 4 | 4.9.2026 |
+
+  Nämä tulevat siis jo meille. **Tili on mutta hiljainen:** Kojamo
+  (58390132, uusin 2019), Equinix (69818673, 2023), Genesta (15680433,
+  2018).
+
+  **EI OMAA TILIÄ:** Prologis, Mileway, Blackstone, atNorth, Verne
+  Global, Hyperco, Catella, Sagax, Trevian, Cibus, Barings, Keva, SATO.
+
+  **Nimihaku yksin ei kelpaa todisteeksi.** Substring-osumat antoivat
+  "Satotukku Oy" (elintarviketukku), "Verneri Pohjola tmi" ja
+  "Työeläkevakuuttajat Tela" (jossa "keva" on sanan sisällä). Julkaisijat
+  on luettava, ei laskettava. Oletushaku palauttaa lisäksi vain 10
+  osumaa, joten kielteinen tulos vaatii `size`-parametrin.
+
+  **Business Wire (58763726) on STT Infossa**, ja juuri se selittää
+  tilittömien yritysten osumat: 6/7 Prologisin, 92/115 Hyperconin ja
+  89/114 Blackstonen osumasta tulee sen kautta. Ne ovat kuitenkin
+  englanninkielisiä globaaleja tiedotteita, eivätkä nykyiset
+  suomenkieliset hakusanat ("logistiikkakeskus", "datakeskus") osu
+  niihin. Hakusanan lisääminen englanniksi ei kannata: "Finland" olisi
+  valtava melulähde. Tilittömiä ei siis tavoiteta STT:n kautta.
+
 - **RAKENTAJIEN OMAT ASUNTOKATALOGIT — MITATTU KATVEALUE.** Lujakoti
   lisättiin lähteeksi 6.9.2026 (D-172). Kolme muuta tutkittiin samana
   päivänä sivu sivulta; **YIT karsiutui, kolme muuta kannattaa**:
