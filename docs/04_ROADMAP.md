@@ -619,6 +619,22 @@ muistin varassa.
 
 ### Datan laatu
 
+- **Kohdetyyppisääntö osuu yhdyssanan alkuun: "Koululammen puistoalueen
+  perusparannus" → Koulu.** Havaittu 7.9.2026 luettaessa sääntökorjauksen
+  17 riviä. Kyse on lammesta, ei koulusta.
+
+  **Helppo korjaus on väärä.** Sananrajan vaatiminen ("koulu" vain omana
+  sanana) hukkaisi aidot yhdyssanat, joita suomessa on enemmän kuin
+  vääriä: koulurakennus, koulukeskus, kouluhanke, koulukiinteistö. Sääntö
+  on siis oikeassa useammin kuin väärässä juuri siksi että se sallii
+  laajennuksen.
+
+  Oikea korjaus on paikannimien poikkeuslista (Koululampi, Kouluranta,
+  Koulunmäki) TAI tyypin ratkaiseminen otsikon pääsanasta
+  ("perusparannus … puistoalueen") eikä mistä tahansa osumasta. Kumpikaan
+  ei ole kiireellinen: yksi rivi mitatusta 17:stä, ja LLM-portti (D-171)
+  korjaa tämän luokan tapaukset kun se ajetaan.
+
 - **⭐ SEURAAVA: kanna jo poimitut liitetiedot eteenpäin.** Tutkittu
   6.9.2026. Alkuperäinen kirjaus oli "hankesuunnitelmien lukeminen
   liitteistä", ja **mittaus kumosi sen** — ks. alempaa. Oikea työ on
