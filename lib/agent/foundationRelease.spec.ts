@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  ikaPaivina,
   parseApartments,
   parseFoundationRelease,
   parseBuilder,
@@ -301,5 +302,48 @@ describe("uudet hylkaykset", () => {
       "Kauppakatu 13b:hen valmistuu 80 asuntoa. Rakennustyöt ovat alkaneet."
     )
     expect(r.isProject).toBe(true)
+  })
+})
+
+/*
+ * ARKISTORAJA. Kun lahde otetaan kayttoon, sen koko arkisto luetaan
+ * kerralla ja vuosien takaiset jutut nayttavat uusilta. Mitattu
+ * 7.9.2026 jonon kaikista 12 rivista: kaksi aitoa loytoa oli 14 ja 25
+ * vrk vanhoja, kaikki kymmenen kelvotonta yli 200 vrk.
+ */
+describe("parseFoundationRelease - arkistoraja", () => {
+  const NYT = new Date("2026-09-07T00:00:00Z")
+
+  const aito = (julkaistu: string) =>
+    parseFoundationRelease(
+      "Koas ja Peab kaynnistavat 80 opiskelija-asunnon rakentamisen",
+      "Kauppakatu 13b:hen valmistuu 80 asuntoa vuonna 2028. Rakennustyot ovat alkaneet.",
+      julkaistu,
+      NYT
+    )
+
+  it("paastaa tuoreen tiedotteen lapi", () => {
+    expect(aito("2026-08-25T00:00:00Z").isProject).toBe(true)
+    expect(aito("2026-05-01T00:00:00Z").isProject).toBe(true)
+  })
+
+  it("hylkaa arkistotiedotteen", () => {
+    const r = aito("2023-11-20T00:00:00Z")
+    expect(r.isProject).toBe(false)
+    expect(r.reason).toContain("arkistosta")
+  })
+
+  /* Ilman paivamaaraa ei voi paatella ikaa - silloin ei hylata. */
+  it("ei hylkaa kun paivamaaraa ei ole", () => {
+    expect(aito(null as any).isProject).toBe(true)
+    expect(parseFoundationRelease("Koas kaynnistaa", "Kauppakatu 13b:hen valmistuu 80 asuntoa 2028.").isProject).toBe(
+      true
+    )
+  })
+
+  it("laskee ian vuorokausina", () => {
+    expect(ikaPaivina("2026-09-01T00:00:00Z", NYT)).toBe(6)
+    expect(ikaPaivina(null, NYT)).toBeNull()
+    expect(ikaPaivina("roskaa", NYT)).toBeNull()
   })
 })

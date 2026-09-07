@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-176 - Arkistotiedote ei ole loyto: rakennuttajien tiedotelahteille ikaraja
+
+Jonoon ilmestyi ehdokas "Ylioppilaantie 4", jonka teksti kuuluu:
+*"Valkkylassa sijaitseva Seponpaja, Ylioppilaantie 4, on ollut
+perusparannuksessa. Asunnot ovat valmiina uusille asukkaille 1.1.2024."*
+Hanke oli siis valmistunut yli kaksi vuotta ennen kuin se tuli jonoon.
+
+**TAMA OLI SEURAUS OMASTA KORJAUKSESTANI.** D-175 vapautti 70
+dokumentin jumin, ja jumissa oli lahteiden KOKO ARKISTO: kun
+tiedotelahde otetaan kayttoon, sen kaikki vanhat jutut luetaan kerralla
+ja nayttavat meille uusilta. Aidosti uusi tiedote sen sijaan on tuore
+silloin kun se luetaan, koska dokumentit tunnistetaan osoitteesta eika
+samaa juttua lueta kahdesti.
+
+**RAJA LUETTIIN AINEISTOSTA, EI ARVATTU.** Luin jonon kaikki 12
+foundation-ehdokasta:
+
+    1022 vrk  Seponpaja           valmistunut 1.1.2024
+     985 vrk  Talvitie 23         muutto 5/2024
+     747 vrk  Yliopistokatu 22    ei hanke: juttu yhteisopuutarhasta
+     683 vrk  Hoas Huippu         valmistui 10/2025
+     564 vrk  Siltakuja 2         valmistui 6/2025
+     525 vrk  Liipolankatu 1      ei hanke: asukastarina 50 vuodesta
+     448 vrk  Hoyrykatu 1         muutto 10/2025
+     350 vrk  Kalevalantie 4      muutto 11/2025
+     344 vrk  Hopeakaivoksentie   muutto 1/2026
+     210 vrk  Laatikkotehtaankatu valmis, asukkaat muuttavat
+    ------------------------------------------------------
+      25 vrk  Lahden Liipola      AITO
+      14 vrk  Hoas 402 asuntoa    AITO
+
+Kaksi aitoa oli 14 ja 25 vuorokauden ikaisia, ja **kaikki kymmenen
+kelvotonta yli 200 vuorokauden**. Valiin jaa tyhja alue 25-210 vrk.
+Raja on **180 vrk** eli reilusti aitojen puolella.
+
+Koko aineistolla (49 dokumenttia) portti paastaa lapi 10 ja hylkaa 39.
+
+**VALMISTUMISTIEDOTETTA EI HYLATA.** Kokeilin ensin saantoa "muutto on
+jo tapahtunut -> ei hanke". Se rikkoi nelja olemassa olevaa testia, ja
+syysta: valmistumistiedote on tarkoituksella hanke (`phaseHint:
+completed`), koska se on se signaali joka SULKEE jo tunnetun hankkeen.
+Hylkays hukkaisi vaiheen paivityksen. Vanhat valmistumistiedotteet
+karsiutuvat arkistorajalla, tuoreet saavat menna lapi juuri siksi etta
+ne paivittavat tilan.
+
+**ASIAKKAILLE EI PAATYNYT MITAAN VAARAA.** Naista lahteista on
+nakyvissa tasan yksi hanke (TYS Kylankulma, rakennustyot alkoivat) ja se
+on aito. Tein myos laajan tekstihaun kaikista 5 954 nakyvasta
+hankkeesta, mutta **en raportoi siita lukua**: luettuna osumat olivat
+taustamainintoja ("tiesuunnitelma valmistui 2025", "edellinen laajennus
+valmistui 2012") tai tulevia ("muuttamaan vuoden 2027 alussa"), eivat
+valmistuneita hankkeita.
+
+Jono siivottiin samalla saannolla: 10 riviä -> `ignored`
+(`scripts/fix-arkistoehdokkaat.ts`), 2 aitoa jai.
+
+---
+
 ### D-175 - Faktajonon portti lukee tyypin, ei nimilistaa
 
 Ajot-sivun "Jono" seisoi **tasan 70:ssa viiden perakkaisen ajon ajan**,

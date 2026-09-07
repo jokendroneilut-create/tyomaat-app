@@ -310,10 +310,29 @@ export function parsePhase(text: string): PhaseKey | null {
   return null
 }
 
+/*
+ * Raja on tyhjässä välissä 25–210 vrk, ks. perustelu funktion sisällä.
+ * Puoli vuotta on reilusti aitojen löytöjen puolella.
+ */
+export const ARKISTORAJA_PAIVAA = 180
+
+export function ikaPaivina(
+  julkaistu: string | null | undefined,
+  nyt: Date = new Date()
+): number | null {
+  if (!julkaistu) return null
+
+  const aika = new Date(julkaistu).getTime()
+  if (!Number.isFinite(aika)) return null
+
+  return Math.round((nyt.getTime() - aika) / (24 * 60 * 60 * 1000))
+}
+
 export function parseFoundationRelease(
   titleHtml: string | null | undefined,
   contentHtml: string | null | undefined,
-  publishedAt?: string | null
+  publishedAt?: string | null,
+  nyt: Date = new Date()
 ): FoundationRelease {
   const title = htmlToText(titleHtml)
   const text = htmlToText(contentHtml)
@@ -332,6 +351,28 @@ export function parseFoundationRelease(
   }
 
   if (!title && !text) return { ...tyhja, reason: "tyhjä tiedote" }
+
+  /*
+   * ARKISTOTIEDOTE EI OLE LÖYTÖ.
+   *
+   * Kun lähde otetaan käyttöön, sen KOKO arkisto luetaan kerralla:
+   * vuosien takaiset jutut näyttävät uusilta, koska ne ovat meille
+   * uusia. Aidosti uusi tiedote sen sijaan on tuore silloin kun se
+   * luetaan, koska dokumentit tunnistetaan osoitteesta eikä samaa
+   * juttua lueta kahdesti.
+   *
+   * Mitattu 7.9.2026 jonon kaikista 12 rivistä: kaksi aitoa löytöä oli
+   * 14 ja 25 vuorokauden ikäisiä, ja KAIKKI kymmenen kelvotonta olivat
+   * yli 200 vuorokauden — joko valmistuneita kohteita tai ei hankkeita
+   * lainkaan ("Linnanmaan yhteisöllinen puutarha on pölyttäjän
+   * paratiisi", "asukkaita jotka ovat viihtyneet meillä 50 vuotta").
+   * Väliin jää tyhjä alue 25–210 vrk, ja raja asetetaan sen sisään
+   * reilusti aitojen puolelle.
+   */
+  const ika = ikaPaivina(publishedAt, nyt)
+  if (ika != null && ika > ARKISTORAJA_PAIVAA) {
+    return { ...tyhja, reason: `tiedote on arkistosta (${ika} vrk)` }
+  }
 
   /* Hylkäys ratkaistaan OTSIKOSTA: leipäteksti voi mainita ohimennen. */
   if (EI_HANKE.test(title)) return { ...tyhja, reason: "asukasviestintä, ei hanke" }
@@ -370,6 +411,20 @@ export function parseFoundationRelease(
     return { ...tyhja, reason: "kohde ilman osoitetta ja asuntomäärää" }
   }
 
+  /*
+   * VALMISTUMISTIEDOTETTA EI HYLÄTÄ, vaikka muutto olisi jo tapahtunut.
+   *
+   * Kokeilin sitä ensin, ja se rikkoi neljä olemassa olevaa testiä:
+   * valmistumistiedote on tarkoituksella hanke (`phaseHint: completed`),
+   * koska se on se signaali joka SULKEE jo tunnetun hankkeen. Hylkäys
+   * hukkaisi vaiheen päivityksen.
+   *
+   * Vanhat valmistumistiedotteet karsii arkistoraja funktion alussa;
+   * tuore valmistumistiedote saa mennä läpi juuri siksi että se
+   * päivittää hankkeen tilan.
+   */
+  const estimatedCompletion = parseCompletion(kaikki, publishedAt)
+
   return {
     isProject: true,
     reason: useaKohde ? "kohteita ilman osoitenumeroa, katselmoitava" : "hanke",
@@ -378,7 +433,7 @@ export function parseFoundationRelease(
     apartments,
     floorArea: parseFloorArea(kaikki),
     builder: parseBuilder(kaikki),
-    estimatedCompletion: parseCompletion(kaikki, publishedAt),
+    estimatedCompletion,
     phaseHint: parsePhase(kaikki),
   }
 }

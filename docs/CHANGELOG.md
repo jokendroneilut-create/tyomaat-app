@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Arkistotiedotteet pois jonosta (D-176)
+
+Jonoon tuli ehdokkaita hankkeista jotka valmistuivat vuosia sitten
+("Asunnot ovat valmiina uusille asukkaille 1.1.2024"). Syy oli D-175:n
+sivuvaikutus: jumin purku vapautti lahteiden koko arkiston, ja
+kayttoonotossa vuosien takaiset jutut nayttavat uusilta.
+
+Rakennuttajien tiedotelahteille tuli ikaraja 180 vrk. Raja luettiin
+aineistosta: jonon kaksi aitoa loytoa olivat 14 ja 25 vrk vanhoja,
+kaikki kymmenen kelvotonta yli 200 vrk. Valmistumistiedotetta EI
+hylata, koska se sulkee jo tunnetun hankkeen - vanhat karsiutuvat
+ikarajalla.
+
+Jono siivottiin samalla saannolla (10 riviä ignored, 2 aitoa jai).
+Asiakkaille ei ollut paatynyt naista lahteista mitaan vaaraa: nakyvissa
+on yksi hanke ja se on kesken.
+
 ### Faktajono liikkuu taas: portti lukee tyypin (D-175)
 
 Ajot-sivun "Jono" seisoi tasan 70:ssa viiden ajon ajan. Kaikilla 70:lla
