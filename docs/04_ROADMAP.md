@@ -815,6 +815,39 @@ muistin varassa.
 
 ### Lähdekattavuus
 
+- **~~Logicor (logistiikkakiinteistöt) omana lähteenä~~ — EI KANNATA,
+  tutkittu 8.9.2026.** Ulkomainen logistiikkakiinteistöjen omistaja, siis
+  juuri sitä yksityisten rakennuttajien luokkaa joka ei näy Hilmassa
+  eikä päätöksissä. Tutkittiin siksi, ei osunut.
+
+  **Kohdesivut eivät ole hankkeita.** `logicor.eu/fi/fi/kiinteistomme/…`
+  kuvaa VALMIITA rakennuksia vuokrattavaksi: Juvanmalmin sivulla on
+  osoite, lastaustaskut, lavapaikat ja sisäkorkeus — mutta **nolla
+  osumaa** sanoihin valmistuu, rakenteilla, kehitteillä tai tulossa.
+
+  **Uutisissa yksi hanke neljässä vuodessa.** Suomen uutislistalla on 9
+  juttua 2022–2025, ja niistä tasan yksi on hankeilmoitus: *"Logicor to
+  launch new development in Hakkila"* (28.8.2023, 6 000 m² uudisrakennus,
+  valmistui kesällä 2024). Loput ovat henkilönimityksiä, vuokrasopimuksia
+  ja asiakastapahtumia.
+
+  **RATKAISEVA SYY: julkaisut tulevat jo STT:n kautta.** Logicorilla on
+  STT Info -julkaisijatili (`publisherId=69820617`), ja `stt_haku` on jo
+  poiminut niiden tiedotteen jonoon (Kouvolan DSV-vuokrasopimus 31.7.2026,
+  hylätty oikein — vuokraus ei ole hanke). Oma kerääjä siis kahdentaisi
+  sen mitä meillä on.
+
+  Tekninen puoli olisi ollut kunnossa: robots sallii (`User-agent: *`
+  kieltää vain CMS-polut), uutissivu on palvelimen renderöimä. Cloudflare
+  torjuu tuntemattoman UA:n 403:lla mutta päästää läpi samalla
+  selain-UA:lla jota kaikki kerääjämme käyttävät. Kohdelistaus sen sijaan
+  renderöityy selaimessa.
+
+  **Yleistys muihin ulkomaisiin sijoittajiin** (Prologis, Mileway, NREP):
+  oikea kysymys ei ole "onko niillä omat sivut" vaan **onko niillä STT
+  Info -tili**. Jos on, ne tulevat jo `stt_haku`n kautta ja työ on
+  luokittelussa, ei uudessa lähteessä.
+
 - **RAKENTAJIEN OMAT ASUNTOKATALOGIT — MITATTU KATVEALUE.** Lujakoti
   lisättiin lähteeksi 6.9.2026 (D-172). Kolme muuta tutkittiin samana
   päivänä sivu sivulta; **YIT karsiutui, kolme muuta kannattaa**:
