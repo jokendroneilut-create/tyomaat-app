@@ -1099,6 +1099,30 @@ muistin varassa.
   alustan kova katto 800 s.
 - **Todenna STT ja Rakennuslehti** kun ne osuvat vuoroon — korjaukset on
   tehty mutta niitä ei ole vielä ajettu kertaakaan.
+
+  **STT näyttää yhä punaista, mutta virhe on korjauksia vanhempi**
+  (tarkistettu 7.9.2026). Aikajärjestys ratkaisee:
+
+  ```
+  28.8. 12:07  viimeisin onnistuminen
+   5.9. 06:06  virhe "Ajo ylitti 90 sekuntia (haku + tuonti)"
+   5.9. 21:34  korjaus: hakuikkuna 12 kk -> 30 vrk   (4a9eeb7)
+   5.9. 21:49  korjaus: tuonnin häntävaraus          (a187533)
+  ```
+
+  Mitään ei ole epäonnistunut korjausten jälkeen, ja haku mitattuna nyt
+  **30,6 s / 75 ehdokasta = 34 % 90 sekunnin katosta**.
+
+  **PUNAINEN EI TARKOITA "RIKKI NYT".** `DiscoverySourcesTable` merkitsee
+  lähteen rikkinäiseksi kun `last_error_at > last_success_at` ja virhe on
+  alle viikon vanha. Lippu putoaa siis vasta ONNISTUNEESTA ajosta — ei
+  siitä että vika on korjattu. Korjauksen jälkeen lähde näyttää
+  punaiselta niin kauan kuin se ei ole osunut vuoroon.
+
+  Tästä seuraa toimintaohje: kun lähde on korjattu, se on **ajettava
+  kerran** ("Aja nyt"), muuten punainen jää roikkumaan ja hukuttaa
+  aidot viat alleen — sama ongelma josta virheen tuoreusraja (D-14.8.)
+  aikanaan syntyi.
 - ~~**`sync-account-lifecycle` ei ole cronissa.**~~ Tarkistettu
   30.8.2026: se on `vercel.json`:ssa aikataululla `0 3 * * *`.
 
