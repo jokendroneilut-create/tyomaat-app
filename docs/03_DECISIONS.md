@@ -5,6 +5,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-177 - Epaonnistunut LLM-kutsu jattaa jaljen
+
+API-varat loppuivat 7.9.2026. Kysymykseen "aiheuttiko se ongelmia"
+vastaaminen paljasti mittausaukon: **en pystynyt paikantamaan katkoa
+datasta lainkaan.**
+
+`llm_relevance_log` kirjasi vain onnistuneet kutsut, joten lokista ei
+voinut erottaa kahta taysin eri tilannetta:
+
+    "malli ei vastannut"            -> ei riviä
+    "saanto paatti, mallia ei kutsuttu" -> ei riviä
+
+Paivittaiset maarat heittelevat muutenkin (portti ohitetaan kun saanto
+on jo paattanyt), joten pelkka volyymi ei kerro mitaan.
+
+**VAHINKOA EI OLLUT, JA SE ON RAKENTEELLINEN EIKA ONNEA.** Luin kaikki
+viisi kutsupaikkaa: jokainen nappaa virheen ja palauttaa nullin, ja
+relevanssiportti tulkitsee nullin `{ ignored: false }` -paatokseksi eli
+paastaa signaalin jonoon SUODATTAMATTA. Katko ei siis havita liideja
+vaan lopettaa suodatuksen — vika osuu painvastaiseen suuntaan kuin
+pelattiin. Yksikaan kutsupaikka ei myoskaan heita poikkeusta ulos, joten
+ajo ei voi kaatua kesken eran.
+
+Nyt epaonnistunut kutsu kirjataan tilalla `llm_error`, ja **rajapinnan
+oma virheviesti sailyy** — varojen loppuminen nakyy siis tekstina.
+Todennettu pakottamalla virhe kelvottomalla avaimella:
+
+    final_status:   llm_error
+    llm_relevant:   null
+    llm_reason:     401 {"type":"error",... "API key is invalid."}
+
+`llm_relevant` ja `llm_confidence` jaavat TYHJIKSI: mallilla ei ollut
+kantaa, eika tyhjaa saa lukea "ei relevantti" -paatokseksi.
+
+Kirjaus tehdaan pisteyttajan omassa catchissa eika portissa, koska vain
+siella tiedetaan mika meni pieleen. AI-suodatus-sivulle tuli nelja
+mittaria kolmen sijaan: "Malli ei vastannut" punaisena, ja sen alle
+viimeisimman virheen aika ja syy.
+
+---
+
 ### D-176 - Arkistotiedote ei ole loyto: rakennuttajien tiedotelahteille ikaraja
 
 Jonoon ilmestyi ehdokas "Ylioppilaantie 4", jonka teksti kuuluu:

@@ -41,10 +41,14 @@ export async function logRelevanceDecision(entry: {
   sourceName?: string | null
   ruleScore: number
   ruleStatus: string
-  model: string
-  llmRelevant: boolean
-  llmConfidence: number
-  llmReason: string
+  /*
+   * Nullit ovat virherivia varten: kun malli ei vastannut, silla ei ollut
+   * kantaa. Tyhjaa ei saa lukea "ei relevantti" -paatokseksi (D-177).
+   */
+  model: string | null
+  llmRelevant: boolean | null
+  llmConfidence: number | null
+  llmReason: string | null
   finalStatus: string
 }): Promise<void> {
   try {
@@ -55,10 +59,10 @@ export async function logRelevanceDecision(entry: {
       source_name: entry.sourceName ?? null,
       rule_score: entry.ruleScore,
       rule_status: entry.ruleStatus,
-      model: entry.model,
-      llm_relevant: entry.llmRelevant,
-      llm_confidence: entry.llmConfidence,
-      llm_reason: entry.llmReason,
+      model: entry.model ?? null,
+      llm_relevant: entry.llmRelevant ?? null,
+      llm_confidence: entry.llmConfidence ?? null,
+      llm_reason: entry.llmReason ?? null,
       final_status: entry.finalStatus,
     })
     if (error) {

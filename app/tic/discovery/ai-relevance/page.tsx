@@ -8,7 +8,8 @@ function formatDate(value: string | null) {
 }
 
 export default async function AiRelevancePage() {
-  const { decisions, total, surfaced, ignored } = await getRelevanceDecisions(200)
+  const { decisions, total, surfaced, ignored, errors, lastErrorAt, lastErrorReason } =
+    await getRelevanceDecisions(200)
 
   return (
     <main>
@@ -21,7 +22,7 @@ export default async function AiRelevancePage() {
           julkiseksi hankkeeksi — se on aina sinun päätöksesi.
         </p>
 
-        <div className="mt-4 grid grid-cols-3 gap-4">
+        <div className="mt-4 grid grid-cols-4 gap-4">
           <div className="rounded-xl border border-gray-200 p-4">
             <div className="text-sm text-gray-500">Päätöksiä</div>
             <div className="mt-1 text-xl font-semibold">{total}</div>
@@ -38,7 +39,41 @@ export default async function AiRelevancePage() {
               {ignored}
             </div>
           </div>
+
+          {/*
+            * Epaonnistunut kutsu on eri asia kuin "ei kutsuttu": fail-open
+            * paastaa signaalin jonoon suodattamatta, joten katko ei havita
+            * mitaan — mutta se lopettaa suodatuksen, eika sita nakynyt
+            * mistaan ennen tata (D-177).
+            */}
+          <div
+            className={`rounded-xl border p-4 ${
+              errors > 0 ? "border-red-300 bg-red-50" : "border-gray-200"
+            }`}
+          >
+            <div className="text-sm text-gray-500">Malli ei vastannut</div>
+            <div
+              className={`mt-1 text-xl font-semibold ${
+                errors > 0 ? "text-red-700" : "text-gray-400"
+              }`}
+            >
+              {errors}
+            </div>
+          </div>
         </div>
+
+        {errors > 0 && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm">
+            <div className="font-semibold text-red-800">
+              Viimeisin epäonnistunut kutsu {formatDate(lastErrorAt)}
+            </div>
+            <div className="mt-1 text-red-900">{lastErrorReason ?? "-"}</div>
+            <div className="mt-2 text-red-800">
+              Suodatus on tauolla, mutta mitään ei katoa: signaalit menevät
+              jonoon suodattamatta. Yleisin syy on API-varojen loppuminen.
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="mt-6">

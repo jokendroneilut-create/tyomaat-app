@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### LLM-katko nakyy nyt lokista ja AI-suodatus-sivulta (D-177)
+
+API-varat loppuivat 7.9.2026, eika katkoa pystynyt jalkikateen
+paikantamaan datasta: loki kirjasi vain onnistuneet kutsut. Nyt
+epaonnistunut kutsu kirjataan tilalla `llm_error` ja rajapinnan oma
+virheviesti sailyy, joten esim. varojen loppuminen nakyy tekstina.
+AI-suodatus-sivulla on uusi mittari "Malli ei vastannut" ja sen alla
+viimeisimman virheen aika ja syy.
+
+Vahinkoa katko ei aiheuttanut: kaikki viisi kutsupaikkaa ovat
+fail-open, ja relevanssiportti paastaa signaalin jonoon suodattamatta
+kun malli ei vastaa. Katko lopettaa suodatuksen, ei havita liideja.
+
+Samalla ajettiin kohdetyypin saantokorjaus: 17 riviä, mm. kuusi
+datakeskusta Energiantuotannosta Datakeskukseksi, sairaala ja silta
+omiin luokkiinsa.
+
 ### Arkistotiedotteet pois jonosta (D-176)
 
 Jonoon tuli ehdokkaita hankkeista jotka valmistuivat vuosia sitten

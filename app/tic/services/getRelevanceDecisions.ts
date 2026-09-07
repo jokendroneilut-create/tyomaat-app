@@ -23,6 +23,14 @@ export type RelevanceDecisionsResult = {
   total: number
   surfaced: number
   ignored: number
+  /*
+   * Epaonnistuneet kutsut. Ilman tata katko oli nakymaton: loki kirjasi
+   * vain onnistuneet, joten "malli ei vastannut" ja "mallia ei kutsuttu"
+   * eivat eronneet mitenkaan (D-177).
+   */
+  errors: number
+  lastErrorAt: string | null
+  lastErrorReason: string | null
 }
 
 /*
@@ -45,10 +53,15 @@ export async function getRelevanceDecisions(
 
   const decisions = (data ?? []) as RelevanceDecision[]
 
+  const virheet = decisions.filter((d) => d.final_status === "llm_error")
+
   return {
     decisions,
     total: decisions.length,
     surfaced: decisions.filter((d) => d.final_status === "needs_review").length,
     ignored: decisions.filter((d) => d.final_status === "ignored").length,
+    errors: virheet.length,
+    lastErrorAt: virheet[0]?.created_at ?? null,
+    lastErrorReason: virheet[0]?.llm_reason ?? null,
   }
 }
