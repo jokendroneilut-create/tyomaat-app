@@ -37,8 +37,15 @@ const LABELS = [
   "Granlundin palvelut projektissa",
 ] as const
 
-/* Kenttälohkon jälkeen alkaa sivun kalusteita, ei hankkeen tietoa. */
-const BLOCK_END = /(Katso kaikki palvelumme|Tutustu muihin|Kysy lisää)/
+/*
+ * SIVUN KALUSTE, EI HANKKEEN TIETOA.
+ *
+ * "Kysy lisää" aloittaa yhteyshenkilölaatikon: nimi, tehtävä, yksikkö,
+ * puhelinnumero ja sähköpostiosoite. "Lisätietoa" aloittaa linkkilaatikon
+ * ja "Kuvat:" kuvaajan krediitin.
+ */
+const BLOCK_END =
+  /(Katso kaikki palvelumme|Katso kaikki yhteystiedot|Tutustu muihin|Kysy lisää|Lisätietoa|Kuvat?:)/
 
 export type GranlundFields = {
   city: string | null
@@ -79,6 +86,12 @@ function readField(text: string, label: string): string | null {
     if (j >= 0 && j < end) end = j
   }
 
+  /*
+   * Kaluste katkaisee kentän. Ilman tätä "Muut hankkeen toimijat" jatkui
+   * seuraavaan otsikkoon asti ja Hippos-hankkeen toimijaksi kirjautui
+   * "PES-arkkitehdit Lisätietoa Lue lisää uudistuvasta Hippoksen alueesta
+   * Jyväskylän sivuilta" (mitattu 9.9.2026).
+   */
   const loppu = after.slice(0, end).search(BLOCK_END)
   if (loppu >= 0 && loppu < end) end = loppu
 
@@ -143,13 +156,21 @@ const MIN_DESCRIPTION = 120
  * kuvaus ja vasta sen jälkeen tiedot. Lohkon jälkeen tulee "Tutustu
  * muihin projekteihimme" -karuselli, jossa on TOISTEN hankkeiden nimiä —
  * sama ansa kuin Kreatella (D-121).
+ *
+ * KALUSTE ON MYÖS ENNEN KENTTIÄ. Yhteyshenkilölaatikko ("Kysy lisää")
+ * ja kuvaajan krediitti ("Kuvat:") ovat kuvauksen JA kenttälohkon
+ * välissä, joten pelkkä "Paikkakunta"-kohdasta leikkaaminen jätti ne
+ * kuvaukseen. Hippos-hankkeen kuvaus päättyi nimettyyn henkilöön,
+ * hänen tehtäväänsä, puhelinnumeroonsa ja sähköpostiosoitteeseensa.
+ * Mitattu 9.9.2026: kaikissa kuudessa tallennetussa Granlund-sivussa.
  */
 export function parseGranlundDescription(html: string | null | undefined): string | null {
   const t = htmlToText(html)
   if (!t) return null
 
   const i = t.indexOf("Paikkakunta")
-  const teksti = (i > MIN_DESCRIPTION ? t.slice(0, i) : t.split(BLOCK_END)[0]).trim()
+  const ennenKenttia = i > MIN_DESCRIPTION ? t.slice(0, i) : t
+  const teksti = ennenKenttia.split(BLOCK_END)[0].trim()
 
   return teksti.length >= MIN_DESCRIPTION ? teksti : null
 }

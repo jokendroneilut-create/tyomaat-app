@@ -5,6 +5,59 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-181 - Sivun kaluste ei kuulu kuvaukseen: kaksi hantaa mitattuna
+
+Kayttaja huomasi yhden Granlund-ehdokkaan kuvauksen keraavan roskaa loppuun.
+Mittaus paljasti kaksi eri vikaa, joista jalkimmainen oli paljon laajempi kuin
+raportoitu tapaus.
+
+**1. Granlundin yhteyshenkilolaatikko (6/6 dokumenttia).**
+`parseGranlundDescription` leikkasi kuvauksen vasta "Paikkakunta"-kohdasta,
+koska kenttalohkon oletettiin alkavan heti tekstin jalkeen. Sivulla niiden
+valissa on kuitenkin kuvaajan krediitti ("Kuvat:") ja yhteyshenkilolaatikko
+("Kysy lisaa"), jossa on nimi, tehtavanimike, yksikko, puhelinnumero ja
+sahkopostiosoite. Jokainen kuudesta tallennetusta Granlund-kuvauksesta
+paattyi siis nimettyyn henkiloon. Sama puuttuva katkaisu jatkoi "Muut
+hankkeen toimijat" -kentan linkkilaatikkoon asti, joten Hippos-hankkeen
+toimijaksi oli kirjattu "PES-arkkitehdit Lisatietoa Lue lisaa uudistuvasta
+Hippoksen alueesta Jyvaskylan sivuilta".
+
+Korjaus: `BLOCK_END` tuntee nyt myos "Lisatietoa", "Kuvat:" ja "Katso kaikki
+yhteystiedot", ja kuvaus katkaistaan siihen myos ENNEN kenttalohkoa.
+
+**2. STT Infon sivupohja (462 riviä).**
+`cleanReleaseText` katkaisi hannan jo ennestaan, mutta sen merkkilista ei
+tuntenut STT:n omia sanamuotoja. Kuvaukseen jai tiedotetilausmainos ja sen
+jalkeen "Lue lisaa julkaisijalta" -lista, jossa on KOKONAISIA toisten
+tiedotteiden otsikoita ja ingresseja. Fazerin suklaatehtaan kuvaukseen oli
+siten paatynyt Peltolammi-talo, Garminin toimitilat ja Metson
+teknologiakeskus omine kaupunkeineen - juuri sita naapuriartikkelisaastetta
+jota vastaan koko leikkaus alun perin tehtiin.
+
+**Naille kahdelle merkille ei aseteta sijaintirajaa.** Vanha 0,4:n raja on
+olemassa siksi, etta "katso myos" voi esiintya keskella artikkelia. "Tilaa
+tiedotteet sahkopostiisi" ja "Lue lisaa julkaisijalta" ovat sttinfo.fi:n
+sivupohjan tekstia eivatka voi esiintya tiedotteen sisalla. Mitattuna nelja
+osumaa oli vasta 30-32 % kohdalla eli sijaintiraja olisi jattanyt ne
+siivoamatta; lyhin jaljelle jaava teksti oli 809 merkkia, joten leikkaus ei
+tyhjenna yhtaan kuvausta. Turvaraja on siksi pituus (`MIN_BODY_LENGTH`), ei
+suhteellinen sijainti.
+
+**Mitattu 9.9.2026, siivottu takautuvasti:** 462 rivia (321 jonossa, 141 jo
+asiakkaille nakyvissa hankkeissa), 362 850 merkkia roskaa, keskimaarin 783
+merkkia rivilta. Granlundilta 7 kuvausta ja 2 toimijalistaa.
+
+**"Kuva:" EI kelvannut yleiseksi merkiksi.** Se osui 317 kuvaukseen, mutta
+luetuissa riveissa se oli useimmiten kuvateksti KESKELLA tiedotetta
+("Kuva: Liisa Takala" ja sen jalkeen jatkuu hankkeen teksti). Leikkaus olisi
+hukannut aitoa sisaltoa. Granlundin sivulla se on aina lopussa, joten se on
+vain siella katkaisumerkki.
+
+Skriptit: `backfill-description-tail.ts` (nyt tulostaa myos leikatun tekstin,
+ei pelkkia merkkimaaria) ja `fix-granlund-kuvaukset.ts`.
+
+---
+
 ### D-180 - Lahderivi, kasin yhdistaminen ja koordinaatti duplikaattisignaalina
 
 Kolme tyota jotka nousivat suoraan kayton havainnoista.

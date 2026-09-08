@@ -194,6 +194,39 @@ const TAIL_MARKERS =
 const TAIL_MIN_POSITION = 0.4
 
 /*
+ * STT INFON OMA KALUSTO — LEIKATAAN AINA, ILMAN SIJAINTIRAJAA.
+ *
+ * Nämä kaksi eivät ole monitulkintaisia kuten "katso myös": ne ovat
+ * sttinfo.fi:n sivupohjan tekstiä eivätkä voi esiintyä tiedotteen
+ * sisällä. Sijaintiraja on siis tarpeeton ja suorastaan haitallinen.
+ *
+ * "Lue lisää julkaisijalta" ALOITTAA TOISTEN TIEDOTTEIDEN LISTAN, jossa
+ * on kokonaisia otsikoita ja ingressejä muista hankkeista. Fazerin
+ * suklaatehtaan kuvaukseen oli siten päätynyt Peltolammi-talo, Garminin
+ * toimitilat ja Metson teknologiakeskus omine kaupunkeineen — juuri sitä
+ * naapuriartikkelisaastetta jota vastaan koko leikkaus on tehty.
+ *
+ * Mitattu 9.9.2026: 462 tallennettua kuvausta sisälsi hännän, niistä 141
+ * jo asiakkaille näkyvissä hankkeissa. Roskaa keskimäärin 783 merkkiä.
+ * Neljä osumaa oli vasta 30-32 % kohdalla eli sijaintiraja olisi
+ * jättänyt ne siivoamatta; lyhinkin jäljelle jäävä teksti oli 809
+ * merkkiä, joten leikkaus ei tyhjennä yhtäkään kuvausta.
+ */
+const VARMAT_TAIL_MARKERS = /tilaa tiedotteet sähköpostiisi|lue lisää julkaisijalta/i
+
+/*
+ * Hännän alkukohta tai -1. Varma merkki voittaa aina, monitulkintainen
+ * kelpaa vasta tekstin loppupuolelta.
+ */
+function hannanKohta(text: string): number {
+  const varma = text.search(VARMAT_TAIL_MARKERS)
+  if (varma >= MIN_BODY_LENGTH) return varma
+
+  const cut = text.search(TAIL_MARKERS)
+  return cut > 0 && cut > text.length * TAIL_MIN_POSITION ? cut : -1
+}
+
+/*
  * PELKKÄ hännän leikkaus, ilman muuta siivousta.
  *
  * Tarpeen takautuvaan korjaukseen: `cleanReleaseText` normalisoi myös
@@ -202,11 +235,9 @@ const TAIL_MIN_POSITION = 0.4
  * uudelleen pelkän välilyöntieron takia.
  */
 export function cutReleaseTail(text: string): string {
-  const cut = text.search(TAIL_MARKERS)
+  const cut = hannanKohta(text)
 
-  return cut > 0 && cut > text.length * TAIL_MIN_POSITION
-    ? text.slice(0, cut).trim()
-    : text
+  return cut > 0 ? text.slice(0, cut).trim() : text
 }
 
 
@@ -286,17 +317,17 @@ export function cleanReleaseText(raw: string): string {
    *   tilaa uutiskirje 84 (64 %) · sinua voisi kiinnostaa 28 (84 %) ·
    *   tilaa postia 15 (86 %) · jaa artikkeli 9 (87 %)
    */
-  const cut = text.search(TAIL_MARKERS)
-
   /*
-   * LEIKATAAN VAIN TEKSTIN LOPPUPUOLELTA. Jokainen mitattu roskamerkki
-   * osui 64-93 % kohdalle, eli ne ovat sivun häntää. Ilmaus keskellä
-   * artikkelia ("katso myös liite") on sen sijaan osa sisältöä, ja sen
-   * kohdalta leikkaaminen hukkaisi tiedotteen loppuosan. Raja suojaa
-   * siltä ilman että se estää yhtäkään mitattua tapausta.
+   * LEIKATAAN VAIN TEKSTIN LOPPUPUOLELTA. Jokainen mitattu monitulkintainen
+   * roskamerkki osui 64-93 % kohdalle, eli ne ovat sivun häntää. Ilmaus
+   * keskellä artikkelia ("katso myös liite") on sen sijaan osa sisältöä, ja
+   * sen kohdalta leikkaaminen hukkaisi tiedotteen loppuosan. Raja suojaa
+   * siltä ilman että se estää yhtäkään mitattua tapausta. STT Infon omalle
+   * kalustolle rajaa ei tarvita, ks. VARMAT_TAIL_MARKERS.
    */
-  const trimmed =
-    cut > 0 && cut > text.length * TAIL_MIN_POSITION ? text.slice(0, cut) : text
+  const cut = hannanKohta(text)
+
+  const trimmed = cut > 0 ? text.slice(0, cut) : text
 
   return trimmed.trim().replace(LEADING_JUNK, "")
 }

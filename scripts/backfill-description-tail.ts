@@ -22,6 +22,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
  */
 
 const APPLY = process.argv.includes("--apply")
+const NAYTTEITA = Number(process.argv.find((a) => a.startsWith("--naytteet="))?.split("=")[1] ?? 8)
 
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
@@ -70,10 +71,19 @@ async function main() {
       charsRemoved += current.length - next.length
       if (client) developersAdded++
 
-      if (samples.length < 6) {
+      /*
+       * NÄYTE ON LUETTAVA, EI VAIN LASKETTAVA. Pelkät merkkimäärät eivät
+       * kerro leikkautuiko roska vai hankkeen loppu, ja jokainen tämän
+       * istunnon kuivaharjoitus on paljastanut virheen vasta tekstistä.
+       */
+      if (samples.length < NAYTTEITA) {
+        const poistuu = current.slice(next.length)
+        const tiivis = (t: string) => t.replace(/\s+/g, " ")
         samples.push(
           `${table} ${String(row.id).slice(0, 8)}… ${current.length} → ${next.length} merkkiä` +
-            (client ? `  rakennuttaja: ${client}` : "")
+            (client ? `  rakennuttaja: ${client}` : "") +
+            `\n      jää:      …${tiivis(next.slice(-90))}` +
+            `\n      poistuu:  ${tiivis(poistuu.slice(0, 150))}…`
         )
       }
 

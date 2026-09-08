@@ -5,6 +5,7 @@ import {
   inferBuildingType,
   createCompanyEnricher,
   stripPublisherName,
+  cutReleaseTail,
 } from "./companyRelease"
 import { allativeToNominative } from "./companyName"
 import { extractClientFromText, extractExplicitClient } from "./fetchSttHakuSource"
@@ -425,5 +426,47 @@ describe("allativeToNominative — astevaihtelu", () => {
     expect(allativeToNominative("Kojamolle")).toBe("Kojamo")
     expect(allativeToNominative("Peabille")).toBe("Peab")
     expect(allativeToNominative("Senaatti-kiinteistöille")).toBe("Senaatti-kiinteistöt")
+  })
+})
+
+/*
+ * STT INFON KALUSTO LEIKATAAN ILMAN SIJAINTIRAJAA (D-181). Merkit ovat
+ * sivupohjan tekstiä eivätkä voi esiintyä tiedotteen sisällä, ja
+ * "Lue lisää julkaisijalta" aloittaa TOISTEN hankkeiden tiedotelistan.
+ */
+describe("cutReleaseTail - STT Infon kaluste", () => {
+  const runko = "A".repeat(400)
+
+  it("leikkaa tiedotetilauksen", () => {
+    const teksti = `${runko}Tilaa tiedotteet sähköpostiisiHaluatko tietää asioista ensimmäisten joukossa?`
+
+    expect(cutReleaseTail(teksti)).toBe(runko)
+  })
+
+  it("leikkaa julkaisijan muut tiedotteet", () => {
+    const teksti = `${runko}Lue lisää julkaisijalta Skanska OySkanska rakentaa Peltolammi-talon Tampereelle`
+
+    expect(cutReleaseTail(teksti)).toBe(runko)
+  })
+
+  /*
+   * Neljä mitattua osumaa oli vasta 30-32 % kohdalla, eli 0,4:n
+   * sijaintiraja olisi jättänyt ne siivoamatta.
+   */
+  it("leikkaa vaikka merkki on alle sijaintirajan", () => {
+    const teksti = `${runko}Tilaa tiedotteet sähköpostiisi${"B".repeat(2000)}`
+
+    expect(cutReleaseTail(teksti)).toBe(runko)
+  })
+
+  /* Liian aikainen osuma jättäisi tynkäkuvauksen, joten sitä ei leikata. */
+  it("ei tyhjennä lyhyttä tekstiä", () => {
+    const teksti = `Lyhyt alku.Tilaa tiedotteet sähköpostiisi${"B".repeat(500)}`
+
+    expect(cutReleaseTail(teksti)).toBe(teksti)
+  })
+
+  it("jättää tavallisen tekstin rauhaan", () => {
+    expect(cutReleaseTail(`${runko}Hanke valmistuu 2027.`)).toBe(`${runko}Hanke valmistuu 2027.`)
   })
 })

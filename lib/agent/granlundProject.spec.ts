@@ -86,3 +86,47 @@ describe("parseGranlundDescription", () => {
     expect(parseGranlundDescription(null)).toBeNull()
   })
 })
+
+/*
+ * SIVUN KALUSTE EI KUULU KUVAUKSEEN (D-181). Hippos-hankkeen sivulla
+ * yhteyshenkilölaatikko on kuvauksen ja kenttälohkon VÄLISSÄ, joten
+ * "Paikkakunta"-kohdasta leikkaaminen ei riittänyt.
+ */
+describe("parseGranlundDescription - kaluste", () => {
+  const runko =
+    "Hippos on liikunnan ja hyvinvoinnin keskus Jyväskylässä. Hankkeessa on pitkän " +
+    "jännevälin rakenteita, kuten 60 metrin teräsristikoita sekä värähtelymitoitettavia " +
+    "välipohjarakenteita. Kustannusarvio on 210 miljoonaa euroa."
+
+  it("katkaisee yhteyshenkilölaatikkoon ennen kenttälohkoa", () => {
+    const html = `<p>${runko} Kuvat: PES-arkkitehdit Kysy lisää Matti Meikäläinen Osastonjohtaja 040 000 0000 etunimi.sukunimi@granlund.fi Paikkakunta Jyväskylä Tilaaja Hippos-hanke</p>`
+    const kuvaus = parseGranlundDescription(html)
+
+    expect(kuvaus).toBe(runko)
+  })
+
+  it("katkaisee kalusteeseen myös ilman kenttälohkoa", () => {
+    const kuvaus = parseGranlundDescription(`<p>${runko} Katso kaikki yhteystiedot</p>`)
+
+    expect(kuvaus).toBe(runko)
+  })
+
+  it("säilyttää kuvauksen kun kalustetta ei ole", () => {
+    expect(parseGranlundDescription(`<p>${runko} Paikkakunta Oulu</p>`)).toBe(runko)
+  })
+})
+
+/*
+ * "Muut hankkeen toimijat" jatkui linkkilaatikkoon asti, koska
+ * "Lisätietoa" ei ollut tunnettu otsikko.
+ */
+describe("parseGranlundFields - toimijat", () => {
+  it("katkaisee toimijat linkkilaatikkoon", () => {
+    const html =
+      "<p>Paikkakunta Jyväskylä Muut hankkeen toimijat PES-arkkitehdit Lisätietoa " +
+      "Lue lisää uudistuvasta Hippoksen alueesta Jyväskylän sivuilta " +
+      "Granlundin palvelut projektissa Rakennesuunnittelu</p>"
+
+    expect(parseGranlundFields(html).otherCompanies).toEqual(["PES-arkkitehdit"])
+  })
+})

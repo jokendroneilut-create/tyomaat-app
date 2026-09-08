@@ -11,6 +11,24 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kuvausten hannat siivottu: yhteystiedot ja toisten hankkeiden tiedotteet (D-181)
+
+Yhden ehdokkaan kuvaus kerasi roskaa loppuun. Mittaus loysi kaksi vikaa.
+
+Granlundin sivuilta kuvauksen perassa tuli yhteyshenkilolaatikko: nimi,
+tehtava, puhelinnumero ja sahkopostiosoite. Kaikissa kuudessa
+tallennetussa Granlund-sivussa. Samasta syysta hankkeen toimijaksi oli
+kirjattu linkkilaatikon teksti.
+
+STT Infon tiedotesivuilta tuli tiedotetilausmainos ja sen perassa lista
+julkaisijan MUISTA tiedotteista kokonaisine ingresseineen. Fazerin
+suklaatehtaan kuvauksessa oli siten Peltolammi-talo, Garminin toimitilat
+ja Metson teknologiakeskus omine kaupunkeineen.
+
+Siivottu takautuvasti 462 rivia, joista 141 oli jo asiakkaille nakyvissa
+hankkeissa. Roskaa poistui 362 850 merkkia. Jasennys korjattiin myos
+uusia hankkeita varten.
+
 ### Kolme keraajaa kayttoon, kasin yhdistaminen ja sijaintisignaali (D-180)
 
 Lapti, Bonava ja T2H olivat koodissa valmiina mutta eivat ajaneet
