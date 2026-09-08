@@ -392,6 +392,13 @@ export default function Projects() {
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null)
   const [limitToMapView, setLimitToMapView] = useState(true)
 
+  /*
+   * Sijainnittomat pois oletuksena kun rajaus on paalla: niita on
+   * mitattuna 9 / 5 954 (0,15 %), ja ne osuvat listaan riippumatta
+   * siita missa kartta on.
+   */
+  const [showNoCoords, setShowNoCoords] = useState(false)
+
   const [zoomTarget, setZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
 
   const [watchOpen, setWatchOpen] = useState(false)
@@ -766,14 +773,27 @@ setTeamModeEnabled(true)
     })
   }, [filteredWithCoords, limitToMapView, mapBounds])
 
+  /*
+   * RAJAUS TARKOITTAA RAJAUSTA.
+   *
+   * Sijainniton hanke liitettiin ennen listaan aina, myös kun rajaus oli
+   * päällä. Se rikkoi lupauksen näkyvällä tavalla: Mikkeliin keskitetty
+   * kartta listasi Uudenmaan ja Varsinais-Suomen hankkeita, eikä niitä
+   * voinut mitenkään rajata pois — koordinaatiton hanke ei voi olla
+   * kartan rajojen sisällä.
+   *
+   * Ne eivät silti katoa: oma valinta tuo ne takaisin yhdellä
+   * klikkauksella. Piilotus ilman valintaa olisi hukannut ne kokonaan,
+   * ja alkuperäinen ratkaisu oli tehty juuri sen estämiseksi.
+   */
   const listProjects = useMemo(() => {
     if (!limitToMapView) return filteredProjects
-    return [...inBoundsWithCoords, ...filteredNoCoords]
-  }, [limitToMapView, filteredProjects, inBoundsWithCoords, filteredNoCoords])
+    return showNoCoords ? [...inBoundsWithCoords, ...filteredNoCoords] : inBoundsWithCoords
+  }, [limitToMapView, showNoCoords, filteredProjects, inBoundsWithCoords, filteredNoCoords])
 
   useEffect(() => {
     setVisibleCount(pageSize)
-  }, [q, region, city, phase, propertyType, limitToMapView, mapBounds, pageSize])
+  }, [q, region, city, phase, propertyType, limitToMapView, showNoCoords, mapBounds, pageSize])
 
   const visibleProjects = useMemo(() => listProjects.slice(0, visibleCount), [listProjects, visibleCount])
 
@@ -1009,10 +1029,29 @@ setTeamModeEnabled(true)
 
         <div className="projects-counter">
           Kartassa <strong>{mapCount}</strong> / suodatetuista {filteredProjects.length}
-          {noCoordsCount > 0 ? (
+          {/*
+            * Sijainniton hanke ei voi olla kartan rajojen sisällä, joten
+            * rajauksen ollessa päällä se on oma valintansa eikä pelkkä
+            * luku. Ilman rajausta kaikki ovat listassa muutenkin.
+            */}
+          {noCoordsCount > 0 && limitToMapView ? (
             <>
               {' '}
-              • <strong>{noCoordsCount}</strong> ilman koordinaatteja (näkyvät listassa)
+              •{' '}
+              <label className="projects-checkbox" style={{ display: 'inline-flex' }}>
+                <input
+                  type="checkbox"
+                  checked={showNoCoords}
+                  onChange={(e) => setShowNoCoords(e.target.checked)}
+                />
+                näytä myös sijainnittomat ({noCoordsCount})
+              </label>
+            </>
+          ) : null}
+          {noCoordsCount > 0 && !limitToMapView ? (
+            <>
+              {' '}
+              • <strong>{noCoordsCount}</strong> ilman sijaintia
             </>
           ) : null}
         </div>

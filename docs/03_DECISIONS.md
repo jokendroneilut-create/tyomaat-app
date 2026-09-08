@@ -5,6 +5,57 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-178 - Karttarajaus rajaa, ja sijaintia ei keksita
+
+Kayttaja kiersi tyomaita `/projects`-sivulla ja huomasi ettei "rajaa
+listaa kartan mukaan" toimi: Mikkeliin keskitetty kartta listasi
+Uudenmaan, Pohjois-Karjalan ja Varsinais-Suomen hankkeita.
+
+Syy oli yhdella rivilla — koordinaatittomat liitettiin listaan
+**rajauksesta riippumatta**:
+
+    if (!limitToMapView) return filteredProjects
+    return [...inBoundsWithCoords, ...filteredNoCoords]
+
+Koordinaatiton hanke ei voi olla kartan rajojen sisalla, joten sita ei
+voinut mitenkaan rajata pois. Maakuntatietoa ei katsottu lainkaan.
+
+**JUURISYY OLI DATA, EI KAYTTOLIITTYMA.** Mitattu 8.9.2026: nakyvista
+5 954 hankkeesta 47:lta puuttuivat koordinaatit (0,8 %), ja niista
+**12/12 geokoodautui testissa onnistuneesti**. Geokoodaus ajetaan
+hyvaksynnassa kerran, ja jos Nominatim ei vastaa, mikaan ei yrita
+uudestaan. Takautuva ajo: **47 -> 9**.
+
+**LOYTYI MYOS VIKA JOTA EI ETSITTY.** Geokoodari rakensi kyselyn
+`[location, city, region, "Finland"]`. Kun kolme ensimmaista puuttuu,
+jaljelle jai pelkka **"Finland"**, ja Nominatim vastaa siihen maan
+solmupisteella 63.247, 25.921. Kolme sijainnitonta hanketta ("Skanska
+sai uuden mittavan datakeskusurakan", "Suunnittelun tukipalvelut",
+OX2:n investointipaatos) olisi saanut taydennysajossa pisteen
+Haapajarven kohdalta — kartalla tasmallisen nakoisena. Vaaditaan nyt
+vahintaan yksi oikea sijaintitieto.
+
+**TARKKUUS KERTOO MIKA KYSELY OSUI, ei mita kenttia oli olemassa.**
+Ensimmainen versio paatteli leiman kentista, jolloin "Hopeasalmentien
+silta, Helsinki" merkittiin osoitetarkaksi vaikka osoite ei ratkennut
+ja piste tuli kaupunkihausta — Lauttasaaren sijaan keskustasta. Nyt
+`geocodeProjectLocation` palauttaa `tarkkuus`-kentan, ja se talletetaan
+`metadata.geocode_source`iin. Taydennetyista 18 oli osoitetarkkoja, 14
+kaupunkitarkkoja ja 6 maakuntatarkkoja.
+
+**KAYTTOLIITTYMA VASTA VIIMEISENA.** Rajauksen ollessa paalla lista on
+nyt tasan se mita kartalla nakyy. Jaljelle jaavat 9 sijainnitonta eivat
+katoa: laskuritekstin tilalla on valinta "nayta myos sijainnittomat
+(N)", oletuksena pois. Piilotus ilman valintaa olisi hukannut ne, ja
+alkuperainen ratkaisu oli tehty juuri sen estamiseksi.
+
+Jarjestys oli olennainen: jos kayttoliittyma olisi korjattu ensin, 38
+sijoitettavissa olevaa hanketta olisi jaanyt turhaan piiloon; jos
+taydennys olisi ajettu ennen "Finland"-suojaa, kolme olisi saanut
+vaaran pisteen.
+
+---
+
 ### D-177 - Epaonnistunut LLM-kutsu jattaa jaljen
 
 API-varat loppuivat 7.9.2026. Kysymykseen "aiheuttiko se ongelmia"

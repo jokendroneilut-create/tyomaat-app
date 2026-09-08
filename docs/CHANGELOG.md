@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Karttarajaus rajaa nyt oikeasti (D-178)
+
+"Rajaa listaa kartan mukaan" ei rajannut sijainnittomia hankkeita, joten
+Mikkeliin keskitetty kartta listasi Uudenmaan hankkeita. Korjattu
+kolmessa osassa, jarjestyksella oli merkitysta:
+
+1. Geokoodari ei enaa hae pelkalla "Finland"-kyselylla. Kolme
+   sijainnitonta hanketta olisi saanut maan keskipisteen tasmallisen
+   nakoisena pisteena.
+2. Takautuva geokoodaus: 47 hanketta ilman koordinaatteja -> 9.
+   Geokoodaus ajetaan hyvaksynnassa kerran, eika mikaan yrita
+   uudestaan jos Nominatim ei vastaa. Tarkkuus (osoite / kaupunki /
+   maakunta) talletetaan nyt metadataan.
+3. Rajauksen ollessa paalla lista = tasan kartalla nakyvat. Jaljelle
+   jaavat 9 sijainnitonta saa nakyviin valinnalla "nayta myos
+   sijainnittomat".
+
 ### LLM-katko nakyy nyt lokista ja AI-suodatus-sivulta (D-177)
 
 API-varat loppuivat 7.9.2026, eika katkoa pystynyt jalkikateen
