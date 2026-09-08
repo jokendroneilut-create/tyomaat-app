@@ -178,12 +178,30 @@ Suunnittelutoimistot **eivät ole löytölähteitä vaan rikastuslähteitä**.
 Jokainen antaa vain kourallisen kesken olevia hankkeita, koska ne
 julkaisevat referenssejä vasta kun työ on valmis tai pitkällä.
 
-Arvo on kahdessa asiassa:
+Arvo on kolmessa asiassa:
 
 1. **Tilaaja.** Se on hankkeen maksaja ja meiltä useimmiten puuttuva
    kenttä. JKMM, SARC Sigge ja Ideastructura antavat sen lähes aina.
 2. **Varhainen tieto.** Suunnittelija on mukana ennen urakoitsijaa, joten
    hanke näkyy näissä ennen Hilmaa ja lupapäätöksiä.
+3. **Nimetty yhteyshenkilö** *(lisätty 9.9.2026, D-182)*. Tätä ei
+   huomattu alkuperäisessä kartoituksessa. Granlundin jokaisella
+   projektisivulla on hankkeen oma yhteyshenkilö: nimi, tehtävänimike,
+   yksikkö ja **suora puhelinnumero**. Kuudesta tallennetusta sivusta
+   saatiin 7 henkilöä. Se on myyjälle arvokkaampi kuin kuvaus — ja se
+   on saatavilla jo suunnitteluvaiheessa, vuosia ennen työmaata.
+
+   Sähköposti on yleensä malliosoite "etunimi.sukunimi@granlund.fi"
+   (5/6 sivusta), jota ei tallenneta eikä johdeta nimestä (D-123).
+   Puhelinnumero on aito joka kerta.
+
+   **Tämä on tarkistettava muista viidestä ennen kuin kategoria
+   avataan uudelleen.** Granlundilla yhteystiedot ovat omissa
+   HTML-elementeissään (`.contact-card__name` jne.), joten poiminta on
+   deterministinen. Jos JKMM:llä, SARC Siggellä tai Ideastructuralla on
+   sama rakenne, kategorian arvo nousee selvästi siitä mitä yllä oleva
+   taulukko kertoo: taulukossa mitattiin vain tilaaja, sijainti, aika
+   ja laajuus.
 
 Rikastuksen este on täsmäytys, ja se on mitattu vaikeaksi (D-132):
 Granlundin 204 hankkeesta vain yksi täsmäytyi turvallisesti. Sama
