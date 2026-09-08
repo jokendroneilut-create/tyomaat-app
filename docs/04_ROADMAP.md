@@ -1124,6 +1124,41 @@ muistin varassa.
 
 ### Operointi
 
+- **⭐ KOORDINAATTI DUPLIKAATTISIGNAALIKSI — mitattu 8.9.2026.**
+  `calculateMatch` ei katso koordinaatteja lainkaan, vaikka ne ovat
+  hankkeen tarkin sijaintitieto.
+
+  Käyttäjän löytämä pari `/projects`-listalta:
+
+      Kerrostalo Pohjoinen Liipolankatu 14          60.9645711, 25.66597
+      Hartela toteuttaa asuinkerrostalon Lahden
+      Taloille Lahteen, Pohjoinen Liipolankatu 14   60.9645712, 25.66597
+
+  **Yksitoista senttimetriä toisistaan** eli sama rakennus, sama
+  kaupunki (Lahti), sama rakennusliike (Hartela). `calculateMatch`
+  palauttaa silti **nullin** — ei yhtään pistettä:
+
+  - otsikot eivät ole samankaltaisia (toinen on tiedotteen otsikko)
+  - `location` eroaa: "Pohjoinen Liipolankatu 14, Lahti" vs
+    "Liipolankatu 14"
+  - `developer` eroaa: "Lahden talot" vs "Kiinteistö Oy"
+
+  Pari ei siis pääse edes vertailuun, koska mikään neljästä
+  vähimmäisehdosta ei täyty.
+
+  **Nyt on oikea hetki:** D-179 tarkensi 192 hanketta talotasolle ja
+  merkitsi karkeat erikseen, joten koordinaatti on vasta nyt tarpeeksi
+  luotettava signaaliksi. Ennen sitä sääntö olisi yhdistänyt kaikki 536
+  Helsingin keskustan hanketta toisiinsa.
+
+  **Ehdotus:** oma vertailuryhmä koordinaatille (kuten taloyhtiölle
+  D-171:ssä) ja syy `sama_sijainti` kun kaksi hanketta on alle ~50 m
+  päässä toisistaan JA kumpikaan piste ei ole karkea
+  (`onKarkeaSijainti`). Karkea piste ei kelpaa: kaupungin keskustassa
+  etäisyys on nolla eikä se todista mitään.
+
+  Pari lisättiin katselmointilistaan käsin.
+
 - **KÄSIN YHDISTÄMINEN PUUTTUU TIC:STÄ.** Yhdistämiskoneisto on valmis
   (`/api/tic/duplicates/review`: valitsee säilyjän, nostaa vaiheen,
   tarkistaa suosikit, piilottaa toisen), mutta pari voi syntyä vain
