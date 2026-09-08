@@ -45,6 +45,11 @@ export type MatchableProject = {
   property_type?: string | null
   estimated_completion?: string | null
   additional_info?: string | null
+  /* Duplikaattiskannauksen sijaintivertailua varten (D-180). */
+  latitude?: number | string | null
+  longitude?: number | string | null
+  lat?: number | string | null
+  lng?: number | string | null
 
   metadata?: {
     permit_number?: string | null
@@ -99,6 +104,12 @@ export type ProjectMatchReason =
    * duplikaattilistassa se on vahva tunniste.
    */
   | "same_housing_company"
+  /*
+   * Sama piste kartalla. EI SYNNY calculateMatchissa vaan
+   * duplikaattiskannauksessa (D-180), samoin kuin taloyhtio: piste on
+   * luotettava vasta kun se ei ole kaupungin keskustan varajarjestelma.
+   */
+  | "same_coordinates"
   /*
    * Negatiivinen syy: nimien numerot eroavat, joten varmuus on painettu
    * yhdistämiskynnyksen alle. Näkyy katselmoinnissa muiden syiden rinnalla,

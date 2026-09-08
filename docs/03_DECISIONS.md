@@ -5,6 +5,65 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-180 - Lahderivi, kasin yhdistaminen ja koordinaatti duplikaattisignaalina
+
+Kolme tyota jotka nousivat suoraan kayton havainnoista.
+
+#### 1. Kolme keraajaa ei ajanut lainkaan
+
+Mitattu 8.9.2026: `lujakoti` oli tuottanut kuusi ehdokasta (mm. "Asunto
+Oy Tampereen Pioni"), mutta `lapti_kohteet`, `bonava_kohteet` ja
+`t2h_kohteet` **nolla**. Ne olivat koodissa valmiina ja testattuina.
+
+Syy: lahde tarvitsee rivin `discovery_sources`-tauluun (D-001).
+Rekisteroin lujakotin mutta en kolmea muuta - eli kolme valmista
+keraajaa nukkui, ja noin 20 hanketta jai loytymatta. Repossa oli
+valmis malli (`scripts/register-*-source.ts`), jonka kommentissa lukee
+tasmalleen tama.
+
+`discovery_sources.parser` tasmaa `lib/agent/sources.ts`:n
+name-kenttaan; `legacyFetchCollector` etsii keraajan sen perusteella.
+
+#### 2. Kasin yhdistaminen
+
+Kayttaja loysi kaksi duplikaattiparia kahdessa paivassa, ja molemmat
+jouduttiin lisaamaan kantaan kasin. Yhdistamiskoneisto oli valmis,
+mutta pari saattoi syntya vain skannauksesta.
+
+Nappi on hankekortissa siella missa yllapitajan muutkin toiminnot:
+ensimmainen klikkaus merkitsee hankkeen, toinen kirjaa parin
+katselmointiin. Se EI yhdista mitaan - paatos tehdaan samassa
+nakymassa kuin skannauksen loytamille pareille.
+
+#### 3. Koordinaatti duplikaattisignaalina
+
+`calculateMatch` ei katsonut koordinaatteja lainkaan. Kayttajan loytama
+pari oli **11 senttimetrin paassa** toisistaan, sama kaupunki ja sama
+rakennusliike, ja tasmaytys palautti nullin: otsikot, osoitteen
+kirjoitusasu ja rakennuttaja erosivat.
+
+**KOLME EHTOA, JOKAINEN MITATTU KUIVAHARJOITUKSESSA.** Pelkka 50
+metrin raja tuotti 233 paria, ja rivit lukemalla valtaosa oli vaaria:
+
+1. **Piste ei saa olla karkea.** Keskustassa etaisyys on nolla eika
+    todista mitaan (511 hanketta samalla pisteella Helsingissa).
+2. **Molemmilla on oltava katuosoite.** Karkeusmerkinnan kolmen
+    kynnys ei nappaa kahden hankkeen kaupunkikasoja: "Aurinkopuisto
+    Lappeenrantaan" ja "Monitoimiareena Lappeenrantaan" olivat nollan
+    metrin paassa. Osoitevaatimus pudotti 233 -> 52.
+3. **Kaksi eri taloyhtiota on kaksi eri hanketta**, vaikka ne olisivat
+    samassa korttelissa: "Asunto Oy Helsingin Bertas" ja "...Heikas"
+    olivat 31 metrin paassa. Veto pudotti 52 -> 49.
+
+Jaljelle jaavat 49 paria menevat katselmointiin, jossa vaara pari
+maksaa yhden silmayksen.
+
+**KOORDINAATIT PUUTTUIVAT HAUSTA.** `fetchAllProjects` ei valinnut
+niita lainkaan, joten `projectPiste` olisi palauttanut aina nullin eika
+saanto olisi lauennut koskaan - vika joka ei nay mistaan virheesta.
+
+---
+
 ### D-179 - Osoitehaku Photonilla, ja karkea piste sanotaan aaneen
 
 Jatkoa D-178:lle. Karttarajaus toimi, mutta kayttaja huomasi seuraavan:

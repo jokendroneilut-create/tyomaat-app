@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kolme keraajaa kayttoon, kasin yhdistaminen ja sijaintisignaali (D-180)
+
+Lapti, Bonava ja T2H olivat koodissa valmiina mutta eivat ajaneet
+kertaakaan: lahde tarvitsee rivin discovery_sources-tauluun. Nyt
+rekisteroity.
+
+Hankekorttiin tuli yllapitajalle "Merkitse duplikaatiksi": ensimmainen
+klikkaus merkitsee hankkeen, toinen kirjaa parin katselmointiin.
+
+Duplikaattiskannaus katsoo nyt myos koordinaatteja. Kayttajan loytama
+pari oli 11 cm paassa toisistaan eika skannaus nahnyt mitaan. Sama
+piste kelpaa todisteeksi vain jos kumpikaan piste ei ole karkea,
+molemmilla on katuosoite eivatka taloyhtiot eroa - ilman naita ehtoja
+mukaan tuli 233 paria joista valtaosa oli vaaria.
+
 ### Kartan pisteet: osoitehaku Photonilla ja karkea piste merkitaan (D-179)
 
 Karttasivulla oli 536 hanketta tasmalleen Helsingin keskustan pisteella

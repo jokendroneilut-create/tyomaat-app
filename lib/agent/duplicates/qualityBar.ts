@@ -26,7 +26,8 @@ export function passesDuplicateQualityBar(match: ProjectMatchResult): boolean {
   const hasStrongIdentifier =
     match.reasons.includes("same_permit_number") ||
     match.reasons.includes("same_property_id") ||
-    match.reasons.includes("same_housing_company")
+    match.reasons.includes("same_housing_company") ||
+    match.reasons.includes("same_coordinates")
 
   /*
    * TUNNISTE TARKISTETAAN ENNEN PISTERAJAA, ei sen jälkeen.

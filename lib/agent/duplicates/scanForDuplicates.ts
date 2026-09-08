@@ -11,6 +11,9 @@ import {
 } from "@/lib/agent/duplicates/comparisonBuckets"
 import { passesDuplicateQualityBar } from "@/lib/agent/duplicates/qualityBar"
 import { projectHousingKey } from "@/lib/projects/housingCompanyKey"
+import { projectPiste } from "@/lib/agent/duplicates/comparisonBuckets"
+import { etaisyysMetreina } from "@/lib/geo/etaisyys"
+import { karkeatPisteet, onKarkeaSijainti, onKatuosoite } from "@/lib/projects/sijaintitarkkuus"
 
 /*
  * Pelkän taloyhtiön varassa löytyneen parin varmuusluku. Sama kuin
@@ -18,6 +21,15 @@ import { projectHousingKey } from "@/lib/projects/housingCompanyKey"
  * varmemmalta kuin pari jolla on lisäksi nimi- tai sijaintitodiste.
  */
 const HOUSING_ONLY_CONFIDENCE = 70
+
+/*
+ * SAMA PISTE = SAMA RAKENNUS, mutta vain jos piste on oikeasti mitattu.
+ *
+ * 50 metria kattaa saman rakennuksen ja saman tontin mutta ei
+ * naapurikorttelia. Mitattu tapaus oli 11 senttimetria: sama kohde
+ * kahdesta lahteesta, eri otsikko ja eri kirjoitusasu osoitteesta.
+ */
+const SAMA_SIJAINTI_METRIA = 50
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,8 +43,13 @@ async function fetchAllProjects(): Promise<MatchableProject[]> {
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await supabaseAdmin
       .from("projects")
+      /*
+       * Koordinaatit ovat mukana sijaintivertailua varten (D-180).
+       * Ilman niita `projectPiste` palauttaa aina nullin eika saanto
+       * laukea koskaan - vika joka ei nay mistaan virheesta.
+       */
       .select(
-        "id,name,city,region,location,phase,completed_at,status,developer,property_type,metadata"
+        "id,name,city,region,location,phase,completed_at,status,developer,property_type,metadata,latitude,longitude,lat,lng"
       )
       .eq("is_public", true)
       .range(from, from + PAGE_SIZE - 1)
@@ -164,6 +181,16 @@ async function runScan(
     allProjects.map((p) => [p.id, projectHousingKey(p)])
   )
 
+  /*
+   * KARKEA PISTE EI KELPAA TODISTEEKSI.
+   *
+   * Kaupungin keskustassa etaisyys on nolla eika se kerro mitaan: 511
+   * hanketta istuu tasmalleen samalla pisteella Helsingissa (D-179).
+   * Ilman tata rajausta saanto ehdottaisi niita kaikkia toistensa
+   * duplikaateiksi.
+   */
+  const karkeat = karkeatPisteet(allProjects)
+
   const targets = options.projectIds
     ? options.projectIds.map((id) => byId.get(id)).filter((p): p is MatchableProject => !!p)
     : allProjects
@@ -234,22 +261,56 @@ async function runScan(
       const samaTaloyhtio =
         !!housingKeys.get(a.id) && housingKeys.get(a.id) === housingKeys.get(b.id)
 
+      const pisteA = projectPiste(a)
+      const pisteB = projectPiste(b)
+      /*
+       * Kolme ehtoa, kaikki mitattuja (D-180):
+       *
+       * 1. Kumpikaan piste ei ole karkea - keskustassa etaisyys on
+       *    nolla eika se todista mitaan.
+       * 2. MOLEMMILLA on katuosoite. Ilman tata mukaan tuli 233 paria
+       *    joista valtaosa oli kahden hankkeen kaupunkikasoja
+       *    ("Aurinkopuisto Lappeenrantaan" + "Monitoimiareena
+       *    Lappeenrantaan", 0 m). Osoitevaatimus pudotti ne 52:een.
+       * 3. Kaksi ERI rekisteroitya taloyhtiota on kaksi eri hanketta,
+       *    vaikka ne olisivat samassa korttelissa - "Asunto Oy
+       *    Helsingin Bertas" ja "...Heikas" olivat 31 m paassa.
+       */
+      const yhtioA = housingKeys.get(a.id)
+      const yhtioB = housingKeys.get(b.id)
+      const eriTaloyhtio = !!yhtioA && !!yhtioB && yhtioA !== yhtioB
+
+      const samaSijainti =
+        !!pisteA &&
+        !!pisteB &&
+        !eriTaloyhtio &&
+        onKatuosoite(a.location) &&
+        onKatuosoite(b.location) &&
+        !onKarkeaSijainti(a, karkeat) &&
+        !onKarkeaSijainti(b, karkeat) &&
+        etaisyysMetreina(pisteA, pisteB) <= SAMA_SIJAINTI_METRIA
+
       if (!match) {
-        if (!samaTaloyhtio) continue
+        if (!samaTaloyhtio && !samaSijainti) continue
         if (haveHardVeto(b, { name: a.name, city: a.city, description: null })) continue
 
         toInsert.push({
           project_id_a: idA,
           project_id_b: idB,
           confidence: HOUSING_ONLY_CONFIDENCE,
-          reasons: ["same_housing_company"],
+          reasons: [
+            ...(samaTaloyhtio ? ["same_housing_company" as const] : []),
+            ...(samaSijainti ? ["same_coordinates" as const] : []),
+          ],
         })
         continue
       }
 
-      const reasons = samaTaloyhtio
-        ? [...match.reasons, "same_housing_company" as const]
-        : match.reasons
+      const reasons = [
+        ...match.reasons,
+        ...(samaTaloyhtio ? ["same_housing_company" as const] : []),
+        ...(samaSijainti ? ["same_coordinates" as const] : []),
+      ]
 
       if (!passesDuplicateQualityBar({ ...match, reasons })) continue
 
@@ -261,9 +322,10 @@ async function runScan(
          * pisteytyksessä 58-65:een, koska tekstit ovat eri lauseita -
          * se ei saa painua listan hännille vahvemman todisteen alle.
          */
-        confidence: samaTaloyhtio
-          ? Math.max(match.confidence, HOUSING_ONLY_CONFIDENCE)
-          : match.confidence,
+        confidence:
+          samaTaloyhtio || samaSijainti
+            ? Math.max(match.confidence, HOUSING_ONLY_CONFIDENCE)
+            : match.confidence,
         reasons,
       })
     }

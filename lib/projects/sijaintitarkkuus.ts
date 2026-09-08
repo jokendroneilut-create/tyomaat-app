@@ -91,3 +91,24 @@ export function sijainninTarkkuusTeksti(hanke: Sijaintipiste): string {
     ? "Sijainti maakunnan tarkkuudella"
     : "Sijainti kaupungin tarkkuudella"
 }
+
+/*
+ * ONKO SIJAINTI KATUOSOITE?
+ *
+ * Duplikaattien sijaintivertailu tarvitsee tiukemman ehdon kuin
+ * naytolla kaytettava karkeusmerkinta. Syy on mitattu 8.9.2026:
+ * pelkalla 50 metrin rajalla ja kolmen kasakynnyksella sivuun jai 233
+ * paria, joista valtaosa oli kaupungin varajarjestelman kahden
+ * hankkeen kasoja - "Aurinkopuisto Lappeenrantaan" ja "Monitoimiareena
+ * Lappeenrantaan" olivat nollan metrin paassa toisistaan.
+ *
+ * Ero aitoon pariin on lahdeaineistossa: aidolla on katuosoite. Kun
+ * molemmilta vaadittiin osoite, 233 putosi 52:een ja luetut rivit
+ * olivat enimmakseen aitoja.
+ */
+const KATUOSOITE =
+  /[A-ZÄÖÅ][\wÄÖÅäöå-]*(katu|tie|kuja|polku|ranta|kaari|väylä|vayla|mäki|maki|aukio|rinne|raitti|silta)\s+\d+/i
+
+export function onKatuosoite(sijainti: string | null | undefined): boolean {
+  return KATUOSOITE.test(String(sijainti ?? ""))
+}

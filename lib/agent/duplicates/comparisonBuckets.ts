@@ -1,4 +1,5 @@
 import type { MatchableProject } from "@/lib/agent/projectMatcher"
+import { naapurisolut, solu, type Piste } from "@/lib/geo/etaisyys"
 import { projectHousingKey } from "@/lib/projects/housingCompanyKey"
 import {
   normalizeAddress,
@@ -29,6 +30,18 @@ export type ComparisonBuckets = {
   byPermit: Map<string, MatchableProject[]>
   byProperty: Map<string, MatchableProject[]>
   byHousing: Map<string, MatchableProject[]>
+  /*
+   * Sijaintisolu (~100 m). Kumppanit haetaan naapurisoluista, koska
+   * kaksi metrien paassa olevaa pistetta voi osua solurajan eri
+   * puolille (D-180).
+   */
+  byCoords: Map<string, MatchableProject[]>
+}
+
+export function projectPiste(project: MatchableProject): Piste | null {
+  const lat = Number(project.latitude ?? project.lat)
+  const lon = Number(project.longitude ?? project.lng)
+  return Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon } : null
 }
 
 /*
@@ -53,6 +66,7 @@ export function buildComparisonBuckets(
     byPermit: new Map(),
     byProperty: new Map(),
     byHousing: new Map(),
+    byCoords: new Map(),
   }
 
   function add(
@@ -72,6 +86,9 @@ export function buildComparisonBuckets(
     add(buckets.byPermit, keys.permit, project)
     add(buckets.byProperty, keys.property, project)
     add(buckets.byHousing, keys.housing, project)
+
+    const piste = projectPiste(project)
+    if (piste) add(buckets.byCoords, solu(piste), project)
   }
 
   return buckets
@@ -93,6 +110,16 @@ export function comparisonPartners(
     if (!key) continue
     for (const other of map.get(key) ?? []) {
       if (other.id !== project.id) partners.set(other.id, other)
+    }
+  }
+
+  /* Sijainti: oma solu ja sen kahdeksan naapuria. */
+  const piste = projectPiste(project)
+  if (piste) {
+    for (const s of naapurisolut(piste)) {
+      for (const other of buckets.byCoords.get(s) ?? []) {
+        if (other.id !== project.id) partners.set(other.id, other)
+      }
     }
   }
 

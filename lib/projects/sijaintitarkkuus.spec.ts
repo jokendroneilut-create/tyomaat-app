@@ -4,6 +4,7 @@ import {
   karkeatPisteet,
   onKarkeaSijainti,
   pisteAvain,
+  onKatuosoite,
   sijainninTarkkuusTeksti,
 } from "./sijaintitarkkuus"
 
@@ -80,5 +81,30 @@ describe("sijainninTarkkuusTeksti", () => {
       "maakunnan"
     )
     expect(sijainninTarkkuusTeksti(piste(60, 24))).toContain("kaupungin")
+  })
+})
+
+/*
+ * Duplikaattien sijaintivertailu vaatii katuosoitteen: ilman sita
+ * mukaan tuli 233 paria joista valtaosa oli kaupungin
+ * varajarjestelman kasoja (D-180).
+ */
+describe("onKatuosoite", () => {
+  it("tunnistaa katuosoitteen", () => {
+    expect(onKatuosoite("Pohjoinen Liipolankatu 14, Lahti")).toBe(true)
+    expect(onKatuosoite("Liipolankatu 14")).toBe(true)
+    expect(onKatuosoite("Kiilakivenkuja 2, 90250 Oulu")).toBe(true)
+  })
+
+  it("hylkaa alueen ja kaavan nimen", () => {
+    expect(onKatuosoite("Lappeenranta, Huuhaansuo")).toBe(false)
+    expect(onKatuosoite("Aijansuon urheilukeskuksen alue")).toBe(false)
+    expect(onKatuosoite("Kalasatama")).toBe(false)
+    expect(onKatuosoite(null)).toBe(false)
+  })
+
+  /* Katu ilman numeroa ei riita: piste voi olla missa tahansa kadulla. */
+  it("vaatii talonumeron", () => {
+    expect(onKatuosoite("Hopeasalmentie, Helsinki")).toBe(false)
   })
 })

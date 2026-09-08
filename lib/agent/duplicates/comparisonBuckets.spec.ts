@@ -20,6 +20,8 @@ function project(
     status: "active",
     developer: fields.developer ?? null,
     property_type: null,
+    latitude: fields.latitude ?? null,
+    longitude: fields.longitude ?? null,
     metadata: fields.metadata ?? {},
   } as MatchableProject
 }
@@ -113,5 +115,40 @@ describe("comparisonPartners", () => {
     const buckets = buildComparisonBuckets(projects)
 
     expect(comparisonPartners(projects[0], buckets).map((p) => p.id)).toEqual(["b"])
+  })
+})
+
+/*
+ * SIJAINTI OMANA RYHMANAAN (D-180). Kayttajan loytama pari oli 11 cm
+ * paassa toisistaan mutta ei paatynyt vertailuun lainkaan: kaupunki oli
+ * sama, mutta ilman osumaa muissa ryhmissa paria ei muodostu.
+ */
+describe("comparisonPartners - sijainti", () => {
+  it("tuo lahekkaiset hankkeet vertailuun", () => {
+    const projects = [
+      project("a", { latitude: 60.9645711, longitude: 25.66597 } as any),
+      project("b", { latitude: 60.9645712, longitude: 25.66597 } as any),
+    ]
+    const buckets = buildComparisonBuckets(projects)
+    expect(comparisonPartners(projects[0], buckets).map((p) => p.id)).toEqual(["b"])
+  })
+
+  /* Solurajan yli: naapurisolut on kaytava lapi. */
+  it("tuo vertailuun myos solurajan toiselta puolelta", () => {
+    const projects = [
+      project("a", { latitude: 60.96049, longitude: 25.0 } as any),
+      project("b", { latitude: 60.96051, longitude: 25.0 } as any),
+    ]
+    const buckets = buildComparisonBuckets(projects)
+    expect(comparisonPartners(projects[0], buckets).map((p) => p.id)).toEqual(["b"])
+  })
+
+  it("ei tuo kaukaisia", () => {
+    const projects = [
+      project("a", { latitude: 60.1699, longitude: 24.9384 } as any),
+      project("b", { latitude: 61.4978, longitude: 23.761 } as any),
+    ]
+    const buckets = buildComparisonBuckets(projects)
+    expect(comparisonPartners(projects[0], buckets)).toHaveLength(0)
   })
 })

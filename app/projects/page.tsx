@@ -239,6 +239,20 @@ export default function Projects() {
    */
   const [isAdmin, setIsAdmin] = useState(false)
 
+  /*
+   * KASIN YHDISTAMINEN, KAHDESSA KLIKKAUKSESSA.
+   *
+   * Duplikaatit huomataan juuri tassa listassa, mutta pari saattoi
+   * syntya vain skannauksesta - ja mitattuna se ei loyda naita
+   * (Kajaanin datakeskukset, Liipolankatu 14). Ensimmainen klikkaus
+   * merkitsee hankkeen, toinen kirjaa parin katselmointiin.
+   *
+   * Ei yhdista mitaan: paatos tehdaan samassa nakymassa kuin
+   * skannauksen loytamille pareille.
+   */
+  const [dupPari, setDupPari] = useState<{ id: string; name: string } | null>(null)
+  const [dupViesti, setDupViesti] = useState<string | null>(null)
+
   useEffect(() => {
     let peruttu = false
 
@@ -1164,6 +1178,55 @@ setTeamModeEnabled(true)
 </div>
       </div>
 
+      {/*
+        * Merkitty hanke ja tulos nakyviin listan ylapuolelle: modaali
+        * sulkeutuu valinnan jalkeen, joten ilman tata ei nakyisi mita
+        * on kesken. Vain yllapitajalle.
+        */}
+      {isAdmin && (dupPari || dupViesti) && (
+        <div
+          style={{
+            margin: '12px 0',
+            padding: '10px 14px',
+            borderRadius: 10,
+            border: '1px solid #fcd34d',
+            background: '#fffbeb',
+            color: '#92400e',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          {dupPari ? (
+            <>
+              <span>
+                Duplikaattivertailu kesken: <strong>{dupPari.name}</strong>. Avaa toinen hanke
+                ja paina &quot;Yhdistä valittuun&quot;.
+              </span>
+              <button className="projects-btn" type="button" onClick={() => setDupPari(null)}>
+                Peru
+              </button>
+            </>
+          ) : (
+            <>
+              <span>{dupViesti}</span>
+              <a
+                className="projects-btn"
+                href="/tic/discovery/duplicates"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Avaa katselmointi
+              </a>
+              <button className="projects-btn" type="button" onClick={() => setDupViesti(null)}>
+                Sulje
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="projects-list">
         {listProjects.length === 0 && <p>Ei projekteja valituilla filttereillä.</p>}
 
@@ -1494,6 +1557,65 @@ setTeamModeEnabled(true)
                   >
                     Muokkaa
                   </a>
+                )}
+
+                {isAdmin && (
+                  <button
+                    type="button"
+                    className="projects-btn"
+                    style={
+                      dupPari && dupPari.id !== selected.id
+                        ? { background: '#b45309', color: '#fff' }
+                        : undefined
+                    }
+                    onClick={async () => {
+                      if (!dupPari) {
+                        setDupPari({ id: selected.id, name: selected.name })
+                        setDupViesti(null)
+                        return
+                      }
+
+                      if (dupPari.id === selected.id) {
+                        setDupPari(null)
+                        return
+                      }
+
+                      const { data } = await supabase.auth.getSession()
+                      const token = data.session?.access_token
+                      const res = await fetch('/api/tic/duplicates/manual', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                        },
+                        body: JSON.stringify({
+                          projectIdA: dupPari.id,
+                          projectIdB: selected.id,
+                        }),
+                      })
+                      const json = await res.json().catch(() => null)
+
+                      setDupViesti(
+                        res.ok
+                          ? json?.alreadyExists
+                            ? 'Pari oli jo katselmoitavana.'
+                            : 'Pari lisätty katselmointiin.'
+                          : `Ei onnistunut: ${json?.error ?? res.status}`
+                      )
+                      setDupPari(null)
+                    }}
+                    title={
+                      dupPari && dupPari.id !== selected.id
+                        ? `Merkitse duplikaatiksi hankkeen "${dupPari.name}" kanssa`
+                        : 'Merkitse tämä ja avaa sitten toinen hanke'
+                    }
+                  >
+                    {dupPari
+                      ? dupPari.id === selected.id
+                        ? 'Peru valinta'
+                        : 'Yhdistä valittuun'
+                      : 'Merkitse duplikaatiksi'}
+                  </button>
                 )}
 
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
