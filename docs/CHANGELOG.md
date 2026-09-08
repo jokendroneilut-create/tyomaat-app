@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Granlundin yhteyshenkilot omaan kenttaansa (D-182)
+
+Nimetty suunnittelija puhelinnumeroineen luetaan nyt sivun rakenteesta
+yhteystietokenttaan, jonka katselmointinakyma ja hankekortti nayttavat.
+Granlund on hankkeessa mukana suunnitteluvaiheessa, eli vuosia ennen
+tyomaata.
+
+Malliosoitetta "etunimi.sukunimi@granlund.fi" ei tallenneta eika
+osoitetta johdeta nimesta. Yhdella sivulla kuudesta oli aito osoite.
+
+Kuivaharjoitus paljasti, etta kannassa olleet Granlund-yhteystiedot oli
+poimittu kuvaustekstista ja nimet olivat rikki ("Arkkitehti Granlund").
+Puhelinnumerot olivat oikein, joten sama henkilo tunnistettiin numerosta
+ja nimi korjattiin paikalleen sen sijaan etta rinnalle olisi lisatty
+toinen rivi. Yksikaan yhteystietorivi ei poistunut.
+
 ### Kuvausten hannat siivottu: yhteystiedot ja toisten hankkeiden tiedotteet (D-181)
 
 Yhden ehdokkaan kuvaus kerasi roskaa loppuun. Mittaus loysi kaksi vikaa.

@@ -5,6 +5,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-182 - Yhteyshenkilo luetaan rakenteesta, ei kuvaustekstista
+
+D-181 leikkasi Granlundin yhteyshenkilolaatikon pois kuvauksesta. Tieto
+itsessaan on kuitenkin arvokasta: nimetty suunnittelija puhelinnumeroineen on
+juuri sita mita myyja tarvitsee, ja Granlund kertoo sen jokaisella
+projektisivullaan jo suunnitteluvaiheessa - vuosia ennen tyomaata. Se
+siirrettiin siksi omaan `contact_persons`-kenttaansa, jonka seka
+katselmointinakyma etta hankekortti osaavat nayttaa.
+
+**Rakenteesta, ei tekstista.** Sivun HTML on taysin merkattua
+(`.contact-card__name`, `__title`, `.contact-highlight__location`, `__phone`,
+`__email`), joten cheerio riittaa eika mitaan tarvitse arvata. Merkkausta on
+kahta lajia: uudempi `.contact-card` ja vanhempi `.project-contact`, jossa ei
+ole erillista yksikkoriviä. Molemmat esiintyvat aineistossa.
+
+**Malliosoitetta ei tallenneta (D-123).** Kuudesta sivusta viidella lukee
+"etunimi.sukunimi@granlund.fi", joka on ohje eika osoite. Nimesta ei
+myoskaan johdeta osoitetta: a ja o, kaksoisnimet ja yhdysviivat tekisivat
+siita arvauksen. Yhdella sivulla oli aito osoite, ja se tallennettiin.
+Sahkoposti on HTML-entiteeteilla hamatty, mutta cheerion `.text()` purkaa ne.
+
+**SAMA HENKILO TUNNISTETAAN NUMEROSTA, EI NIMESTA.** Tama loytyi vasta
+kuivaharjoituksen riveilta. Kannassa oli jo Granlundin yhteyshenkiloita,
+mutta ne oli poimittu kuvauksen litteasta tekstista ja nimet olivat rikki:
+yksikon nimi henkilona, sukunimi+nimike nimena, pelkka nimike nimena.
+Puhelinnumerot olivat oikein. Nimella verrattuna sama ihminen olisi lisatty
+toiseen kertaan ja rikkinainen rivi olisi jaanyt sen viereen nakyviin.
+Numerolla tunnistettuna rivin nimi ja nimike korjattiin paikalleen. Yksikaan
+rivi ei kadonnut, eika tyhja sahkoposti saa korvata olemassa olevaa.
+
+**Tarkistettu ettei vika ole yleinen.** Kaikista 8 350 yhteyshenkilosta 363
+nimessa on nimike ja 421:ssa yhtiotunnus, mutta luettuna ne ovat
+enimmakseen kunnossa: "Joakim Kettunen, arkkitehti" on oikea nimi nimike
+perassaan, ja "Pelkosenniemen kunta" on aito kirjaamokontakti. Rikkinaiset
+olivat siis Granlundin tekstipoiminnan omia, ei jarjestelmanlaajuisia.
+
+Tulos: 6 sivua, 7 yhteyshenkiloa, 8 hankerivia. Skripti
+`backfill-granlund-yhteyshenkilot.ts`.
+
+---
+
 ### D-181 - Sivun kaluste ei kuulu kuvaukseen: kaksi hantaa mitattuna
 
 Kayttaja huomasi yhden Granlund-ehdokkaan kuvauksen keraavan roskaa loppuun.

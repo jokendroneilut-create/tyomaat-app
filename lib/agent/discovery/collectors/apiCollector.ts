@@ -1376,7 +1376,7 @@ const GRANLUND_MAX_PAGES = 3
 const GRANLUND_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 
 async function collectGranlundSource(source: DiscoverySource) {
-  const { parseGranlundFields, parseGranlundDescription } = await import(
+  const { parseGranlundFields, parseGranlundDescription, parseGranlundContacts } = await import(
     "@/lib/agent/granlundProject"
   )
 
@@ -1411,6 +1411,8 @@ async function collectGranlundSource(source: DiscoverySource) {
     const html = post?.content?.rendered ?? ""
     const fields = parseGranlundFields(html)
     const description = parseGranlundDescription(html)
+    /* Nimetty suunnittelija puhelinnumeroineen on sivun arvokkain anti. */
+    const contacts = parseGranlundContacts(html)
     const title = decodeHtmlEntities(post?.title?.rendered ?? "")
 
     /*
@@ -1467,6 +1469,7 @@ async function collectGranlundSource(source: DiscoverySource) {
           title,
           description,
           fields,
+          contacts,
           modified: post.modified,
           original: post,
         },

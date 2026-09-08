@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { parseGranlundDescription, parseGranlundFields } from "./granlundProject"
+import {
+  parseGranlundContacts,
+  parseGranlundDescription,
+  parseGranlundFields,
+} from "./granlundProject"
 
 /* Kentat ovat liimattuna yhteen ilman erottimia, kuten oikealla sivulla. */
 const LOHKO =
@@ -128,5 +132,67 @@ describe("parseGranlundFields - toimijat", () => {
       "Granlundin palvelut projektissa Rakennesuunnittelu</p>"
 
     expect(parseGranlundFields(html).otherCompanies).toEqual(["PES-arkkitehdit"])
+  })
+})
+
+/*
+ * YHTEYSHENKILÖT LUETAAN RAKENTEESTA (D-182). Merkkaus on kahta lajia
+ * ja sähköposti on HTML-entiteeteillä hämätty.
+ */
+describe("parseGranlundContacts", () => {
+  const kortti = `
+    <div class="contact-card">
+      <div class="contact-card__main">
+        <h4 class="contact-card__name">Matti Meikäläinen</h4>
+        <div class="contact-card__title">Osastonjohtaja, rakennesuunnittelu</div>
+        <div class="contact-highlight__location">Granlund Oulu</div>
+        <div class="contact-card__footer">
+          <div class="contact-card__phone"><a href="tel:040 000 0000">040 000 0000</a></div>
+          <div class="contact-card__email">etu&#110;imi.sukunimi&#64;granlund.fi</div>
+        </div>
+      </div>
+    </div>`
+
+  it("lukee nimen, nimikkeen, yksikön ja puhelimen", () => {
+    const [c] = parseGranlundContacts(kortti)
+
+    expect(c.name).toBe("Matti Meikäläinen")
+    expect(c.title).toBe("Osastonjohtaja, rakennesuunnittelu, Granlund Oulu")
+    expect(c.organization).toBe("Granlund Oulu")
+    expect(c.phone).toBe("040 000 0000")
+  })
+
+  /* Malliosoite on ohje eikä osoite (D-123); tyhjä on parempi kuin väärä. */
+  it("ei tallenna malliosoitetta", () => {
+    expect(parseGranlundContacts(kortti)[0].email).toBe("")
+  })
+
+  it("tallentaa aidon osoitteen entiteeteistä purettuna", () => {
+    const html = `
+      <div class="project-contact">
+        <div class="project-contact__main">
+          <h5 class="project-contact__name">Kaisa Esimerkki</h5>
+          <div class="project-contact__title">Arkkitehti</div>
+          <div class="project-contact__meta">
+            <div class="project-contact__phone"><a href="tel:040 111 1111">040 111 1111</a></div>
+            <div class="project-contact__email"><a href="#">&#107;aisa.&#101;simerkki&#64;granlund.fi</a></div>
+          </div>
+        </div>
+      </div>`
+
+    const [c] = parseGranlundContacts(html)
+    expect(c.email).toBe("kaisa.esimerkki@granlund.fi")
+    expect(c.title).toBe("Arkkitehti")
+    expect(c.organization).toBe("Granlund")
+  })
+
+  it("lukee useamman henkilön samalta sivulta", () => {
+    expect(parseGranlundContacts(kortti + kortti.replace("Matti Meikäläinen", "Liisa Virtanen")))
+      .toHaveLength(2)
+  })
+
+  it("ei palauta mitään ilman yhteyslaatikkoa", () => {
+    expect(parseGranlundContacts("<p>Hanke valmistuu 2027.</p>")).toEqual([])
+    expect(parseGranlundContacts(null)).toEqual([])
   })
 })

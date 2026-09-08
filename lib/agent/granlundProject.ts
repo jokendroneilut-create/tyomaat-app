@@ -24,6 +24,8 @@
  * asti — sama ratkaisu kuin Lupapisteen kuulutuksissa (D-115).
  */
 
+import * as cheerio from "cheerio"
+
 /* Kaikki tunnetut otsikot, jotta arvo osataan katkaista oikeaan kohtaan. */
 const LABELS = [
   "Paikkakunta",
@@ -173,4 +175,83 @@ export function parseGranlundDescription(html: string | null | undefined): strin
   const teksti = ennenKenttia.split(BLOCK_END)[0].trim()
 
   return teksti.length >= MIN_DESCRIPTION ? teksti : null
+}
+
+/*
+ * YHTEYSHENKILÖT PROJEKTISIVULTA.
+ *
+ * Nimetty suunnittelija puhelinnumeroineen on juuri sitä mitä myyjä
+ * tarvitsee, ja Granlund kertoo sen jokaisella projektisivullaan. Tähän
+ * asti tieto meni kuvauksen sekaan tekstimössönä (D-181); nyt se
+ * luetaan rakenteesta omaan kenttäänsä.
+ *
+ * KAKSI ERI MERKKAUSTA. Uudempi on `.contact-card` (nimi, nimike, yksikkö,
+ * puhelin, sähköposti omina elementteinään) ja vanhempi `.project-contact`,
+ * jossa ei ole erillistä yksikköriviä vaan yksikkö on nimikkeen perässä.
+ * Molemmat esiintyvät tallennetussa aineistossa, joten molemmat luetaan.
+ *
+ * SÄHKÖPOSTI ON HTML-ENTITEETEILLÄ HÄMÄTTY ("&#101;&#116;&#117;…").
+ * cheerion `.text()` purkaa ne, joten omaa purkajaa ei tarvita.
+ *
+ * MALLIOSOITETTA EI TALLENNETA (D-123). Useimmilla sivuilla lukee
+ * "etunimi.sukunimi@granlund.fi", joka on ohje eikä osoite. Nimestä ei
+ * myöskään johdeta osoitetta: ä ja ö, kaksoisnimet ja yhdysviivat
+ * tekisivät siitä arvauksen, ja tyhjä on parempi kuin väärä osoite.
+ */
+export type GranlundContact = {
+  name: string
+  title: string | null
+  organization: string | null
+  email: string
+  phone: string
+  kind: "person"
+}
+
+const MALLIOSOITE = /^etunimi\.sukunimi@/i
+
+function teksti(kortti: any, valitsin: string): string {
+  return kortti.find(valitsin).first().text().replace(/\s+/g, " ").trim()
+}
+
+export function parseGranlundContacts(html: string | null | undefined): GranlundContact[] {
+  const raaka = String(html ?? "")
+  if (!raaka) return []
+
+  const $ = cheerio.load(raaka)
+  const contacts: GranlundContact[] = []
+
+  for (const etuliite of ["contact-card", "project-contact"]) {
+    $(`.${etuliite}`).each((_i: number, el: any) => {
+      const kortti = $(el)
+
+      const name = teksti(kortti, `.${etuliite}__name`)
+      if (!name) return
+
+      const nimike = teksti(kortti, `.${etuliite}__title`)
+      /* Yksikkörivi on vain uudemmassa merkkauksessa. */
+      const yksikko = teksti(kortti, ".contact-highlight__location")
+
+      const email = teksti(kortti, `.${etuliite}__email`)
+      const phone = teksti(kortti, `.${etuliite}__phone`)
+
+      contacts.push({
+        name,
+        /* Yksikkö nimikkeen perään, koska näyttö lukee vain nimikkeen. */
+        title: [nimike, yksikko].filter(Boolean).join(", ") || null,
+        organization: yksikko || "Granlund",
+        email: email && !MALLIOSOITE.test(email) ? email : "",
+        phone,
+        kind: "person",
+      })
+    })
+  }
+
+  /* Sama henkilö voi olla sivulla kahdesti eri lohkoissa. */
+  const nahdyt = new Set<string>()
+  return contacts.filter((c) => {
+    const avain = `${c.name}|${c.phone}`
+    if (nahdyt.has(avain)) return false
+    nahdyt.add(avain)
+    return true
+  })
 }

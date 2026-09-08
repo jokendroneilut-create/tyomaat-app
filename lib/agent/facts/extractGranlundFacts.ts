@@ -31,6 +31,7 @@ export function extractGranlundFacts({
   title,
   description,
   fields,
+  contacts,
 }: {
   documentId: string
   sourceName: string
@@ -38,6 +39,7 @@ export function extractGranlundFacts({
   title: string | null
   description: string | null
   fields: any
+  contacts?: any
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
 
@@ -58,6 +60,12 @@ export function extractGranlundFacts({
     estimated_completion: clean(fields?.estimatedCompletion),
     other_companies: Array.isArray(fields?.otherCompanies) ? fields.otherCompanies : [],
     granlund_services: Array.isArray(fields?.granlundServices) ? fields.granlundServices : [],
+
+    /*
+     * Nimetty yhteyshenkilo on lahteen toiseksi arvokkain anti tilaajan
+     * jalkeen: myyja saa suunnittelijan puhelinnumeron jo ennen tyomaata.
+     */
+    contact_persons: Array.isArray(contacts) ? contacts : [],
   }
 
   if (title) {

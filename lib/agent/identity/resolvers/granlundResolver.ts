@@ -92,6 +92,15 @@ export async function resolveGranlundProject({
       related_companies: relatedCompanies,
 
       /*
+       * Yhteyshenkilot sivun rakenteesta (D-182). Malliosoite
+       * "etunimi.sukunimi@granlund.fi" on jo pudotettu poimijassa: se on
+       * ohje eika osoite (D-123).
+       */
+      contact_persons: Array.isArray(metadata.contact_persons)
+        ? metadata.contact_persons
+        : [],
+
+      /*
        * Suunnitteluvaihe, ei rakentaminen. Granlund on mukana ennen
        * tyomaata, ja vaarin merkitty vaihe siirtaisi hankkeen elinkaarella
        * eteenpain kuin se on.

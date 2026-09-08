@@ -988,6 +988,7 @@ export function resolveFacts(document: any) {
         title: document.raw_payload?.title ?? null,
         description: document.raw_payload?.description ?? null,
         fields: document.raw_payload?.fields ?? {},
+        contacts: document.raw_payload?.contacts ?? [],
       }),
     }
   }
