@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kartan pisteet: osoitehaku Photonilla ja karkea piste merkitaan (D-179)
+
+Karttasivulla oli 536 hanketta tasmalleen Helsingin keskustan pisteella
+ja 67 % kaikista jaetulla pisteella: geokoodari putosi kaupunkihakuun
+kun osoite ei ratkennut.
+
+Osoitehaku tehdaan nyt Photonilla, joka loytaa suomalaiset katuosoitteet
+Nominatimia paremmin. Tulos hyvaksytaan vain jos tyyppi on talo tai katu
+JA kadun nimi vastaa kysyttya — kuivaharjoituksessa Photon ehdotti
+"Luhtaniityntie 6" -> Sibeliuksentie ja "Pohjantie 2" -> Kiitokaari.
+Takautuva ajo tarkensi 192 hanketta talotasolle.
+
+Loput karkeat merkitaan nakyviin: kartalla katkoviivareuna, popupissa ja
+listassa teksti "Sijainti kaupungin tarkkuudella". Piste tulkitaan
+karkeaksi jos vahintaan kolme hanketta jakaa sen.
+
 ### Karttarajaus rajaa nyt oikeasti (D-178)
 
 "Rajaa listaa kartan mukaan" ei rajannut sijainnittomia hankkeita, joten

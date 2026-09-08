@@ -161,6 +161,24 @@ button:hover {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35) !important;
 }
 
+/*
+ * KARKEA SIJAINTI: piste on kaupungin keskusta, ei hankkeen osoite.
+ *
+ * Mitattu 8.9.2026: 536 hanketta istuu tasmalleen Helsingin keskustan
+ * pisteella, koska osoitehaku ei ratkennut ja geokoodari putosi
+ * kaupunkiin. Tayspohjainen merkki vaittaa tarkkuutta jota ei ole.
+ *
+ * Vaihe pysyy varina (sen takia karttaa katsotaan), mutta reuna on
+ * katkoviiva ja tayton peittaa vaalea kalvo. Ero nakyy vilkaisulla
+ * mutta ei kilpaile vaihevarin kanssa.
+ */
+.marker-dot.marker--karkea {
+  border-style: dashed !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+  opacity: 0.72 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) !important;
+}
+
 .marker--planning {
   background: #2563eb !important;
 }

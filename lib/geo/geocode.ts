@@ -1,3 +1,5 @@
+import { photonHaku } from "./photon"
+
 export type GeocodeResult = {
   lat: number | null
   lon: number | null
@@ -64,6 +66,26 @@ export async function geocodeProjectLocation(input: {
   region?: string | null
 }) {
   if (!onSijaintitietoa(input)) return { lat: null, lon: null, tarkkuus: null }
+
+  /*
+   * OSOITEHAKU PHOTONILLA ENSIN.
+   *
+   * Nominatim hukkaa suomalaiset katuosoitteet ja putoaa kaupunkiin,
+   * jolloin piste on keskusta (ks. `lib/geo/photon`). Photon osaa ne,
+   * ja sen tulos hyväksytään vain jos tyyppi on talo tai katu.
+   *
+   * Vain jos osoite on olemassa: kaupunki- ja maakuntahaut hoidetaan
+   * alla entiseen tapaan, koska niissä Nominatim on riittävä eikä
+   * kahta palvelua kannata pitää samasta työstä.
+   */
+  if (input.location?.trim()) {
+    const osoite = [input.location, input.city].map((v) => v?.trim()).filter(Boolean).join(", ")
+    const photon = await photonHaku(osoite)
+
+    if (photon?.tarkkuus === "osoite") {
+      return { lat: photon.lat, lon: photon.lon, tarkkuus: "osoite" }
+    }
+  }
 
   const q1 = [input.location, input.city, input.region, "Finland"]
     .map((value) => value?.trim())

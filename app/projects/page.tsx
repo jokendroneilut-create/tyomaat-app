@@ -12,6 +12,7 @@ import {
   collectProjectCompanies,
   mergeCompanyNames,
 } from '@/lib/projects/projectCompanies'
+import { karkeatPisteet, onKarkeaSijainti, sijainninTarkkuusTeksti } from '@/lib/projects/sijaintitarkkuus'
 import { trackEvent } from '@/lib/analytics/trackEvent'
 import FeedbackButton from '../components/FeedbackButton'
 
@@ -759,6 +760,14 @@ setTeamModeEnabled(true)
     })
   }, [projects, q, region, city, phase, propertyType])
 
+  /*
+   * Karkeat pisteet lasketaan KOKO aineistosta eika suodatetusta:
+   * kasauma on ominaisuus pisteella, ei hakutuloksella. Suodatetusta
+   * laskettuna Helsingin 536 hankkeen kasa nayttaisi tarkalta heti kun
+   * suodatin jattaa siita kaksi jaljelle.
+   */
+  const karkeat = useMemo(() => karkeatPisteet(projects), [projects])
+
   const filteredWithCoords = useMemo(() => filteredProjects.filter((p) => hasCoords(p)), [filteredProjects])
   const filteredNoCoords = useMemo(() => filteredProjects.filter((p) => !hasCoords(p)), [filteredProjects])
 
@@ -1209,6 +1218,29 @@ setTeamModeEnabled(true)
                       >
                         Ei koordinaatteja
                       </span>
+                    ) : onKarkeaSijainti(p, karkeat) ? (
+                      /*
+                       * Kaupunkitason piste nayttaa kartalla yhta
+                       * tasmalliselta kuin osoitteesta ratkennut. Mitattu
+                       * 8.9.2026: 536 hanketta istuu Helsingin keskustan
+                       * pisteella. Ilman merkintaa myyja voi ajaa pisteelle
+                       * jossa ei ole tyomaata.
+                       */
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontSize: 12,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          border: '1px dashed #d1d5db',
+                          background: '#fffbeb',
+                          color: '#92400e',
+                          whiteSpace: 'nowrap',
+                        }}
+                        title="Osoite ei ratkennut, joten piste on kaupungin keskusta"
+                      >
+                        📍 {sijainninTarkkuusTeksti(p)}
+                      </span>
                     ) : null}
                   </div>
                   <div>{p.city}</div>
@@ -1283,6 +1315,29 @@ setTeamModeEnabled(true)
                         }}
                       >
                         Ei koordinaatteja
+                      </span>
+                    ) : onKarkeaSijainti(p, karkeat) ? (
+                      /*
+                       * Kaupunkitason piste nayttaa kartalla yhta
+                       * tasmalliselta kuin osoitteesta ratkennut. Mitattu
+                       * 8.9.2026: 536 hanketta istuu Helsingin keskustan
+                       * pisteella. Ilman merkintaa myyja voi ajaa pisteelle
+                       * jossa ei ole tyomaata.
+                       */
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontSize: 12,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          border: '1px dashed #d1d5db',
+                          background: '#fffbeb',
+                          color: '#92400e',
+                          whiteSpace: 'nowrap',
+                        }}
+                        title="Osoite ei ratkennut, joten piste on kaupungin keskusta"
+                      >
+                        📍 {sijainninTarkkuusTeksti(p)}
                       </span>
                     ) : null}
                   </div>

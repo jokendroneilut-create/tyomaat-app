@@ -9,6 +9,7 @@ import L from 'leaflet'
 import 'leaflet.markercluster'
 import type { ZoomTarget } from './MapClient'
 import { normalizeLegacyPhase, type PhaseKey } from '@/lib/projects/phases'
+import { karkeatPisteet, onKarkeaSijainti, sijainninTarkkuusTeksti } from '@/lib/projects/sijaintitarkkuus'
 
 type Project = {
   id: string
@@ -144,7 +145,7 @@ function FlyTo({ target }: { target?: ZoomTarget }) {
  * ennakkoon. "Avaa hankekortti" -nappiin kiinnitetään oikea click-kuuntelija,
  * jossa hanke on suljettuna sulkeumassa (sama CustomEvent kuin ennen).
  */
-function buildPopupEl(p: Project): HTMLElement {
+function buildPopupEl(p: Project, karkea: boolean): HTMLElement {
   const wrap = document.createElement('div')
   wrap.style.minWidth = '220px'
 
@@ -169,6 +170,17 @@ function buildPopupEl(p: Project): HTMLElement {
   row('Kaupunki', p.city || '-')
   row('Vaihe', p.phase || '-')
   row('Sijainti', p.location, true)
+  /*
+   * Kaupunkitason piste on kartalla samannakoinen kuin osoitteesta
+   * ratkennut. Popupissa se on pakko sanoa aaneen, koska juuri
+   * popupista katsotaan minne ajetaan.
+   */
+  if (karkea) {
+    const huom = document.createElement('div')
+    huom.style.cssText = 'margin-top:6px;font-size:12px;color:#92400e;background:#fffbeb;border:1px dashed #fcd34d;border-radius:6px;padding:4px 6px'
+    huom.textContent = `${sijainninTarkkuusTeksti(p)} - tarkkaa osoitetta ei tiedetty`
+    body.appendChild(huom)
+  }
   row('Kohdetyyppi', p.property_type, true)
   row('Rakennuttaja', p.developer, true)
   row('Rakennusliike', p.builder, true)
@@ -237,12 +249,21 @@ function ClusterLayer({
       showCoverageOnHover: false,
     })
 
+    /*
+     * Karkeat pisteet lasketaan kaikista kartalle tulevista hankkeista:
+     * kasauma on pisteen ominaisuus, ei yksittaisen hankkeen.
+     */
+    const karkeat = karkeatPisteet(points.map((x) => x.p))
+
     for (const { p, lat, lng } of points) {
       if (lat == null || lng == null) continue
       const ownerClassName = teamModeEnabled ? ownerClass(p.owner_id, currentUserId) : ''
-      const icon = makeIcon(`${phaseClass(p.phase)} ${ownerClassName}`)
+      const karkea = onKarkeaSijainti(p, karkeat)
+      const icon = makeIcon(
+        `${phaseClass(p.phase)} ${ownerClassName} ${karkea ? 'marker--karkea' : ''}`
+      )
       const marker = L.marker([lat, lng], { icon })
-      marker.bindPopup(() => buildPopupEl(p), { minWidth: 220 })
+      marker.bindPopup(() => buildPopupEl(p, karkea), { minWidth: 220 })
       cluster.addLayer(marker)
     }
 

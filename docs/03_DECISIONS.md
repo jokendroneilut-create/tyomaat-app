@@ -5,6 +5,78 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-179 - Osoitehaku Photonilla, ja karkea piste sanotaan aaneen
+
+Jatkoa D-178:lle. Karttarajaus toimi, mutta kayttaja huomasi seuraavan:
+"useita hankkeita loytyy Helsingin keskustasta vaikka ne eivat ole
+oikeasti siella."
+
+**LAAJUUS MITATTIIN ENSIN.** Nakyvista 5 954 hankkeesta **3 980 (67 %)**
+istui pisteella jonka jakaa vahintaan yksi toinen hanke. Suurin kasa oli
+**536 hanketta tasmalleen pisteella 60.16662, 24.94354** eli Helsingin
+keskustassa; seuraavat Oulu 89, Rovaniemi 77, Seinajoki 74. Syy on
+geokoodarin varajarjestelma: kun osoite ei ratkea, haetaan kaupungilla,
+ja kaupunki tarkoittaa keskustaa.
+
+**KORJATTAVUUS OLI 8 %, EI 62 %.** Kasoissa oli 2 251 hanketta joilla
+`location` oli taytetty, ja ensin naytti silta etta ne kaikki voisi
+tarkentaa. Rivit lukemalla se kaatui: vain **285 oli katuosoitteita**,
+72 kaavatunnuksia ja **1 894 alueiden ja kaavojen nimia**
+("Aijansuon urheilukeskuksen alue", "Lapin teollisuusalueen laajennus").
+Niista ei saa osoitetta millaan geokoodarilla — se ei ole
+geokoodausongelma vaan lahdeaineiston tarkkuus.
+
+#### 1. Karkea piste merkitaan
+
+Tarkkuutta ei ollut tallessa vanhoilla riveilla, joten se paatellaan
+kasaumasta: **piste on karkea jos vahintaan kolme hanketta jakaa sen**
+(`lib/projects/sijaintitarkkuus`).
+
+**KYNNYS ON KOLME, EI KAKSI.** Kahden hankkeen kasat ovat mitattuna
+sekalaisia: "Ilmarinkatu 17, Tampere" ja "Kiilakivenkuja 2, Oulu"
+esiintyvat kahdesti samana kiinteistona eli aidosti tarkkoina. Kolmesta
+ylospain poikkeusta ei loytynyt. Ero on 148 hanketta.
+
+Tallennettu `metadata.geocode_source` voittaa paattelyn: geokoodari
+tietaa minka kyselyn se sai osumaan, kasauma vain paattelee jaljista.
+
+Merkki kartalla saa katkoviivareunan ja popup kertoo asian sanoin.
+Listassa on merkinta "Sijainti kaupungin tarkkuudella".
+
+#### 2. Osoitehaku Photonilla
+
+Nominatim ei loyda suomalaisia katuosoitteita luotettavasti. Photon
+(sama OSM-aineisto, parempi haku) ratkaisi juuri ne jotka Nominatim
+hukkasi. Kaupunki- ja maakuntahaut jaivat Nominatimille.
+
+**PHOTON ARVAA, JA SE PITI SULKEA KAHDELLA PORTILLA.** Kuivaharjoitus
+paljasti molemmat:
+
+1. **Tyyppi.** "Kanalinsuu Rauma" (kaavan nimi) palautti
+   "Kanalinpuisto" tyypilla `other`. Hyvaksytaan vain `house` ja
+   `street`.
+2. **Kadun nimi.** Tyyppi ei riittanyt: 23 tarkentuneesta kaksi oli eri
+   katu — "Luhtaniityntie 6, Kerava" -> **Sibeliuksentie** ja
+   "Pohjantie 2, Vaasa" -> **Kiitokaari**. Tuloksen kadun on nyt
+   vastattava kysyttya.
+
+Vertailu on tarkoituksella tiukka: "Taimistonpolku" vs "Taimistopolku"
+hylataan vaikka kyse on todennakoisesti samasta kadusta. **Vaara katu on
+pahempi kuin kaupungin keskusta** — keskusta on rehellisesti karkea ja
+myos merkitaan sellaiseksi, mutta vaara katuosoite nayttaa tarkalta ja
+vie vaaraan paikkaan.
+
+Takautuva ajo 350 katuosoitteelliselle: **192 tarkentui talotasolle**,
+158 jai ennalleen. Helsingin kasa 536 -> 511, eri pisteita 2 300 ->
+2 472.
+
+**NOMINATIM ESTI KUTSUT KESKEN MITTAUKSEN**, mika on mita
+ilmeisimmin myos alkuperainen syy D-178:n 47 puuttuvalle
+koordinaatille: joukkohyvaksynta polttaa kiintion, geokoodaus
+epaonnistuu hiljaa eika mikaan yrita uudestaan.
+
+---
+
 ### D-178 - Karttarajaus rajaa, ja sijaintia ei keksita
 
 Kayttaja kiersi tyomaita `/projects`-sivulla ja huomasi ettei "rajaa
