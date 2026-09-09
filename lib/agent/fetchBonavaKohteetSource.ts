@@ -120,6 +120,54 @@ function bonavaKentta(html: string, nimi: string): string | null {
   return m?.[1]?.trim() || null
 }
 
+/*
+ * KOHTEEN OSOITE — YLÄPALKISTA, EI ESITTELYLAATIKOSTA.
+ *
+ * Ensimmäinen versio luki `.showings__information__details--address`,
+ * eli asuntoesittelyn osoitteen. Se on VÄÄRÄ KENTTÄ, ja mittaus
+ * 9.9.2026 kaikilta 13 kohdesivulta kertoo miksi:
+ *
+ *   - Tyhjä 5 sivulla 13:sta. Kaikki viisi olivat `Planned`-vaiheessa
+ *     eli juuri niitä aikaisimpia hankkeita joiden takia koko lähde
+ *     otettiin käyttöön: esittelyjä ei vielä ole, joten laatikkoa ei ole.
+ *   - VÄÄRÄ 2 sivulla. Esittely pidetään myyntitoimistossa, joka on eri
+ *     paikassa kuin työmaa: yhdellä kohteella esittely oli
+ *     "Itälahdenkatu 21 B" mutta kohde on "Melkonkatu 20", toisella
+ *     esittely "Iso-Heikkiläntie 22" ja kohde "Heikintasku 6". Väärä
+ *     osoite on pahempi kuin puuttuva: myyjä ajaa väärään paikkaan.
+ *
+ * Yläpalkin osoite oli oikein 13/13. Sama arvo on sivun JSON-lohkossa
+ * (`"StickyNav":…"SubHeading"`), josta se luetaan jos merkkaus muuttuu.
+ *
+ * KOORDINAATTEJA EI POIMITA, vaikka sivulla on `Latitude`/`Longitude`.
+ * Niitä on sivua kohti 33-100 kappaletta (lähipalvelut, naapurustot),
+ * eikä kohteen omaa saanut luotettavasti erotettua: kaksi eri
+ * poimintatapaa antoi eri pisteen jokaisella sivulla, ja kolmas onnistui
+ * vain 6:lla 13:sta. Osoite riittää: Photon-geokoodaus (D-179) löysi
+ * näistä osoitteista 11/13 talotasolla, ja onnistuneissa sivun oma piste
+ * ja geokoodaus olivat 9-73 metrin päässä toisistaan.
+ */
+export function bonavaOsoite(html: string, $?: cheerio.CheerioAPI): string | null {
+  const lataus = $ ?? cheerio.load(html)
+
+  const ylapalkki = lataus('.sticky-nav__text__item a[href="#mapandshowings"]')
+    .first()
+    .text()
+    .replace(/\s+/g, " ")
+    .trim()
+  if (ylapalkki) return ylapalkki
+
+  const json = html.match(/"StickyNav":\{[^]{0,200}?"SubHeading":"([^"]*)"/)?.[1]
+  return json ? puraJsonMerkit(json).replace(/\s+/g, " ").trim() || null : null
+}
+
+/* JSON-lohkoissa ääkköset ovat \uXXXX-muodossa. */
+function puraJsonMerkit(arvo: string): string {
+  return arvo.replace(/\\u([0-9a-fA-F]{4})/g, (_m, koodi) =>
+    String.fromCharCode(parseInt(koodi, 16))
+  )
+}
+
 export type BonavaKohde = {
   nimi: string
   osoite: string | null
@@ -146,8 +194,7 @@ export function parseBonavaPage(html: string): BonavaKohde | null {
     if (otsikko && arvo) kentat.set(otsikko.toLowerCase(), arvo)
   })
 
-  const osoite =
-    $(".showings__information__details--address").first().text().replace(/\s+/g, " ").trim() || null
+  const osoite = bonavaOsoite(html, $)
 
   const kuvaus = $("p")
     .map((_, el) => $(el).text().replace(/\s+/g, " ").trim())

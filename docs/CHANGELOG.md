@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Bonavan kohteille oikea osoite (D-183)
+
+Osoite luettiin asuntoesittelyn laatikosta, joka on eri asia kuin
+kohteen osoite. Kaikilta 13 kohdesivulta mitattuna se puuttui viidelta
+ja oli kahdella myyntitoimiston osoite eli eri paikassa kuin tyomaa.
+Puuttuvat viisi olivat kaikki suunnitteluvaiheen kohteita, eli juuri
+niita aikaisimpia joiden takia lahde otettiin kayttoon.
+
+Osoite luetaan nyt sivun ylapalkista, joka oli oikein 13/13.
+
+Korjattu takautuvasti 5 rivia, joista 2 oli jo hyvaksyttyja hankkeita.
+Toinen niista istui Tampereen keskustan varapisteella ja tarkentui
+oikealle kadulle.
+
 ### Granlundin yhteyshenkilot omaan kenttaansa (D-182)
 
 Nimetty suunnittelija puhelinnumeroineen luetaan nyt sivun rakenteesta

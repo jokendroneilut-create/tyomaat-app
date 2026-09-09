@@ -5,6 +5,57 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-183 - Kohteen osoite ei ole esittelyn osoite
+
+Kayttaja huomasi, etta Bonavan kohteen osoite oli lahteessa ("Kustinpolku 15,
+00240 Helsinki") mutta kannassa tyhjana. Kerooja luki osoitteen
+`.showings__information__details--address`-elementista eli
+**asuntoesittelyn** laatikosta. Se on eri asia kuin kohteen osoite.
+
+Mitattu 9.9.2026 kaikilta 13 kohdesivulta:
+
+| Poimintakohta | Oikein | Tyhja | Vaarin |
+|---|---|---|---|
+| Esittelylaatikko (vanha) | 6 | 5 | 2 |
+| Ylapalkki (uusi) | 13 | 0 | 0 |
+
+**Molemmat vikatyypit ovat pahoja, mutta eri tavalla.** Tyhjat viisi olivat
+kaikki `Planned`-vaiheessa - siis juuri ne aikaisimmat hankkeet joiden takia
+koko lahde otettiin kayttoon (D-180). Esittelyja ei viela ole, joten
+laatikkoa ei ole. Vaarat kaksi olivat pahempia: esittely pidetaan
+myyntitoimistossa, joka on eri paikassa kuin tyomaa. Yhdella kohteella
+esittely oli "Italahdenkatu 21 B" mutta kohde on "Melkonkatu 20", toisella
+esittely "Iso-Heikkilantie 22" ja kohde "Heikintasku 6". Myyja olisi ajanut
+vaaraan paikkaan. Kumpikaan naista kahdesta ei ollut ehtinyt kantaan.
+
+Ylapalkin osoite luetaan ensisijaisesti DOMista ja varalta sivun
+JSON-lohkosta (`"StickyNav"…"SubHeading"`), jossa aakkoset ovat
+`\uXXXX`-muodossa.
+
+**KOORDINAATTEJA EI POIMITA, vaikka sivulla on `Latitude`/`Longitude`.**
+Tama oli houkutus, koska tarkka piste ratkaisisi suoraan D-179:n ja D-180:n
+sijaintiongelman. Niita on kuitenkin sivua kohti 33-100 kappaletta
+(lahipalvelut, naapurustot, muut kohteet), eika kohteen omaa saanut
+luotettavasti erotettua: ensimmainen pari ja markkerin nimeen sidottu pari
+antoivat ERI pisteen jokaisella 13 sivulla, ja kolmas tapa (viimeinen pari
+ennen osoitteen mainintaa) onnistui vain 6:lla 13:sta. Kolme uskottavaa
+poimintaa, kolme eri vastausta - tasmalleen se tilanne jossa mittaus on
+pakko voittaa vaikutelma.
+
+**Osoite riittaa.** Photon-geokoodaus (D-179) ratkaisi naista osoitteista
+11/13 talotasolla, ja niilla kuudella joilla sivun oma piste saatiin luettua
+ero geokoodaukseen oli 9-73 metria (yksi poikkeus 543 m, jossa Photon on
+todennakoisesti se joka on vaarassa). Osoitteen tallentaminen tuottaa siis
+saman tuloksen olemassa olevaa polkua pitkin ilman arvausta.
+
+**Takautuva korjaus:** 5 rivia (3 jonossa, 2 jo hyvaksyttya hanketta).
+Tampereen kohde istui Tampereen keskustan varapisteella 61.4978,23.7616 ja
+tarkentui osoitteella Kuivaamonkadulle. Toinen jai ennalleen, koska Photon ei
+tunne vasta rakentuvaa katua - se on oikea lopputulos, ei epaonnistuminen.
+Skripti `fix-bonava-osoitteet.ts`, sen jalkeen `fix-karkeat-sijainnit.ts`.
+
+---
+
 ### D-182 - Yhteyshenkilo luetaan rakenteesta, ei kuvaustekstista
 
 D-181 leikkasi Granlundin yhteyshenkilolaatikon pois kuvauksesta. Tieto

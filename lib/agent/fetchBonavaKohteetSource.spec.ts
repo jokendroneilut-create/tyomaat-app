@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  bonavaOsoite,
   kaupunkiOsoitteesta,
   parseBonavaPage,
   taloyhtioNimesta,
@@ -89,7 +90,10 @@ const SIVU = `
   <div class="hero-box-fact__title">Valmistuminen:</div>
   <div class="hero-box-fact__value">Lokakuu 2026</div>
 </div>
-<p class="showings__information__details--address">Tuuliniitty 9, 02100 Espoo</p>
+<div class="sticky-nav__text__item">
+  <a class="button-primitive" href="#mapandshowings">Tuuliniitty 9, 02100 Espoo</a>
+</div>
+<p class="showings__information__details--address">Myyntitoimisto 1, 02100 Espoo</p>
 <p>Asunto Oy Espoon Tuulikello 3 tuo odotettuja uusia koteja aivan Tapiolan puistojen aareen.</p>
 `
 
@@ -106,5 +110,48 @@ describe("parseBonavaPage", () => {
   /* Aluesivu ei ole hanke: 33 osoitteesta vain 13 oli ProjectPage. */
   it("ohittaa muut kuin kohdesivut", () => {
     expect(parseBonavaPage("<script>window.bonavaInfo.pageType = 'AreaPage';</script>")).toBeNull()
+  })
+})
+
+/*
+ * OSOITE YLÄPALKISTA, EI ESITTELYLAATIKOSTA. Mitattu 9.9.2026 kaikilta
+ * 13 kohdesivulta: esittelyn osoite puuttui viideltä (kaikki
+ * `Planned`-vaiheessa) ja oli kahdella myyntitoimiston osoite eli eri
+ * paikassa kuin kohde.
+ */
+describe("bonavaOsoite", () => {
+  const ylapalkki = `
+    <div class="sticky-nav__text__item">
+      <a href="#mapandshowings">Kustinpolku 15, 00240 Helsinki</a>
+    </div>`
+
+  it("lukee yläpalkin osoitteen", () => {
+    expect(bonavaOsoite(ylapalkki)).toBe("Kustinpolku 15, 00240 Helsinki")
+  })
+
+  /* Väärä osoite on pahempi kuin puuttuva: myyjä ajaisi myyntitoimistoon. */
+  it("ei ota esittelyn osoitetta kohteen osoitteeksi", () => {
+    const html =
+      ylapalkki +
+      `<p class="showings__information__details--address">Itälahdenkatu 21 B, 00210 Helsinki</p>`
+
+    expect(bonavaOsoite(html)).toBe("Kustinpolku 15, 00240 Helsinki")
+  })
+
+  it("putoaa JSON-lohkoon jos merkkaus puuttuu", () => {
+    const html = `<div>"StickyNav":{"Title":null,"Content":{"Heading":"Turun Silmu","SubHeading":"Heikintasku 6, 20200 Turku"}}</div>`
+
+    expect(bonavaOsoite(html)).toBe("Heikintasku 6, 20200 Turku")
+  })
+
+  it("purkaa ääkköset JSON-lohkosta", () => {
+    const html =
+      '<div>"StickyNav":{"Content":{"SubHeading":"It\\u00E4lahdenkatu 21, 00210 Helsinki"}}</div>'
+
+    expect(bonavaOsoite(html)).toBe("Itälahdenkatu 21, 00210 Helsinki")
+  })
+
+  it("palauttaa nullin kun osoitetta ei ole", () => {
+    expect(bonavaOsoite("<p>Kohde valmistuu 2027.</p>")).toBeNull()
   })
 })
