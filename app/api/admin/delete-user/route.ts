@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { NOLLATTUJEN_KENTTA } from "@/lib/analytics/tunnistamattomat"
 
 export const runtime = "nodejs"
 
@@ -108,13 +109,41 @@ export async function POST(req: Request) {
         })
       }
 
+      /*
+       * MONTAKO ANALYTIIKKARIVIÄ POISTO NOLLAA?
+       *
+       * `analytics_events.user_id` on `ON DELETE SET NULL`: tapahtuma jää
+       * tilastoon, henkilöyhteys katkeaa. Se on oikea ratkaisu, mutta se
+       * tuottaa nollarivejä — ja nollarivi on analytiikan hälytysmittari
+       * tuntemattomasta kirjoittajasta (D-083).
+       *
+       * Määrä on laskettava NYT, koska poiston jälkeen sitä ei saa enää
+       * mistään: rivit ovat tallessa mutta yhteys käyttäjään on poikki.
+       * Ilman tätä lukua hälytys ei voi erottaa omaa siivousta
+       * ulkopuolisesta kirjoittajasta (D-184).
+       */
+      let nollattavia: number | null = null
+      try {
+        const { count } = await supabase
+          .from("analytics_events")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+        nollattavia = count ?? 0
+      } catch (countErr: any) {
+        console.error("ANALYTICS COUNT FAILED:", countErr?.message ?? countErr)
+      }
+
       rows.push({
         user_id: userId,
         email,
         full_name: target?.full_name ?? null,
         event: "deleted",
         occurred_at: new Date().toISOString(),
-        metadata: { source: "admin_delete_user", deleted_by: caller.email ?? null },
+        metadata: {
+          source: "admin_delete_user",
+          deleted_by: caller.email ?? null,
+          ...(nollattavia != null ? { [NOLLATTUJEN_KENTTA]: nollattavia } : {}),
+        },
       })
 
       const { error: logError } = await supabase

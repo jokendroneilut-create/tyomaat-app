@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Analytiikan nollarivihalytys vertaa nyt odotettuun (D-184)
+
+Varoitus "tapahtumia ilman kayttajatunnistetta" oli ollut pysyvasti
+paalla. Syy ei ollut tuntematon kirjoittaja vaan oma kokeilutunnusten
+siivous: tunnuksen poisto nollaa sen kayttajan vanhat tapahtumat, jotta
+henkiloyhteys katkeaa mutta tilasto sailyy.
+
+Poistoreitti laskee nyt nollattavien rivien maaran ennen poistoa ja
+kirjaa sen elinkaaripaivakirjaan. Halytys on erotus: toteutuneet miinus
+poistoista odotetut. Nolla on oma siivous, positiivinen on tuntematon
+kirjoittaja.
+
+Ilmaisinta ei siis poistettu, vaikka se oli vaarassa - pysyva varoitus
+lakkaa olemasta varoitus, mutta poistettu ilmaisin ei nae mitaan.
+
 ### Bonavan kohteille oikea osoite (D-183)
 
 Osoite luettiin asuntoesittelyn laatikosta, joka on eri asia kuin

@@ -5,6 +5,61 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-184 - Halytyksen premissi vanheni: nollarivi ei enaa tarkoita tuntematonta kirjoittajaa
+
+Kayttaja kysyi, onko analytiikan varoitus "308 tapahtumaa ilman
+kayttajatunnistetta" enaa relevantti - han muisti dokumenteista, etta sen
+piti kadota itsestaan. Se ei ollut katoamassa, ja syy on opettavainen.
+
+**D-083 oli oikeassa, ja sen paattely vanheni.** Se sulki pois kolme
+selitysta nollariveille, joista yksi oli *"yhtaan tilia ei ole poistettu"*.
+Premissi piti paikkansa 17.8.2026. Se lakkasi pitamasta 24.8.2026, kun
+kokeilutunnusten siivous alkoi.
+
+`analytics_events.user_id` on `ON DELETE SET NULL`
+(`docs/sql/2026-08-24_user_cascade.sql`: "tapahtuma sailyy tilastossa,
+henkiloyhteys katkeaa"). Tunnuksen poisto siis NOLLAA sen kayttajan vanhat
+rivit. Rivit eivat ole syntyneet ilman kayttajaa - ne on kirjoitettu
+kayttajan kanssa ja nollattu jalkikateen.
+
+**Todennettu datasta, ei paatelty:** 20 poistettua tunnusta 24.8.-8.9., ja
+ne 308 rivia olivat tavallista kayttoa (204 pageview, 59 login, 44
+project_open poluilla /projects, /today, /login) paivilta 11.8.-7.9.
+Viimeinen nollarivi 7.9. klo 06:31, viimeisin poisto 8.9. - yhtaan rivia ei
+ollut poistojen jalkeen. Kokonaismaara oli kasvanut 544:sta 1 511:een.
+
+**Mittaria ei poistettu vaan vaimennettiin odotetulla maaralla.** Pysyva
+varoitus lakkaa olemasta varoitus, mutta poistettu ilmaisin ei nae mitaan.
+Poistoreitti laskee nyt nollattavien rivien maaran ENNEN poistoa ja kirjaa
+sen `account_lifecycle.metadata`an. Maara on laskettava juuri silla
+hetkella: poiston jalkeen sita ei saa mistaan, koska yhteys on poikki.
+
+Halytys on nyt EROTUS eika lukumaara: toteutuneet miinus odotetut. Nolla =
+oma siivous, positiivinen = tuntematon kirjoittaja.
+
+**Aikaikkuna ei kelpaa talle vertailulle.** Vanha halytys katsoi 30 vrk:n
+ikkunaa, mutta poisto nollaa rivit joiden `created_at` on menneisyydessa -
+ikkuna ei osu poistohetkeen lainkaan. Erotus koko historiasta on sen sijaan
+tarkka. Ikkunan luku jaa nakyviin taustatietona.
+
+**Lahtotaso 1 511 on kirjattu vakiona, ei laskettu.** Taaksepain ei voi
+laskea: jo poistetuilta yhteys on katkennut lopullisesti, joten naiden
+rivien jakautumista heinakuun RLS-aukon (544) ja 24.8. alkaneiden poistojen
+kesken ei enaa saa selville. Vakio tarkoittaa "tama on jo nahty ja
+selitetty", ei arviota. Vain sen jalkeiset poistot kirjaavat oman maaransa,
+joten halytys seuraa kasvua eika kertynytta historiaa.
+
+**Yleinen opetus.** D-083:n opetus oli "lisaa mittari sille mita kukaan ei
+katso". Tama on sen jatko: **mittarin premissi voi vanheta ilman etta
+mittari huomaa sita**. Poistotoiminto ei tiennyt rikkovansa halytysta, ja
+halytys ei tiennyt etta sen oletus oli muuttunut. Kun uusi toiminto
+muuttaa jonkin taulun sisaltoa, on katsottava mitka mittarit lukevat sita.
+
+`lib/analytics/tunnistamattomat.ts` (laskenta + perustelut),
+`app/api/admin/delete-user/route.ts` (maaran kirjaus).
+
+---
+
 ### D-183 - Kohteen osoite ei ole esittelyn osoite
 
 Kayttaja huomasi, etta Bonavan kohteen osoite oli lahteessa ("Kustinpolku 15,

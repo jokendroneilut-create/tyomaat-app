@@ -2,6 +2,10 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { ISTUNTO_TAUKO_MIN } from "@/lib/analytics/kayttoyhteenveto"
+import {
+  odotetutNollarivit,
+  selittamattomatNollarivit,
+} from "@/lib/analytics/tunnistamattomat"
 
 export const runtime = "nodejs"
 
@@ -119,19 +123,19 @@ export async function GET(request: Request) {
     const allEvents = eventsRes.data ?? []
 
     /*
-     * TAPAHTUMA ILMAN KÄYTTÄJÄTUNNISTETTA ON MAHDOTON (D-083).
+     * TAPAHTUMA ILMAN KÄYTTÄJÄTUNNISTETTA (D-083, tarkennettu D-184).
      *
-     * Kirjausreitti ei kirjoita riviä ilman kirjautunutta käyttäjää, joten
-     * tämän luvun kuuluu olla nolla. Nollasta poikkeava tarkoittaa
-     * tuntematonta kirjoittajaa. Heinäkuussa niitä kertyi 544 kuukauden
-     * ajan eikä kukaan huomannut, koska mikään ei katsonut — tämä mittari
-     * on se joka olisi katsonut.
-     */
-    /*
-     * IKKUNA ON 30 VRK, EI KOKO HISTORIA. Heinäkuun 544 riviä ovat pysyvä
-     * osa aineistoa, joten koko historiasta laskettuna varoitus olisi aina
-     * päällä — ja pysyvä varoitus lakkaa olemasta varoitus. Vanha luku
-     * näytetään erikseen taustatietona.
+     * Kirjausreitti ei kirjoita riviä ilman kirjautunutta käyttäjää, mutta
+     * tunnuksen poisto NOLLAA sen käyttäjän vanhat rivit
+     * (`ON DELETE SET NULL`). Nollarivi ei siis enää yksin tarkoita
+     * tuntematonta kirjoittajaa, joten hälytys lasketaan erotuksena:
+     * toteutuneet miinus poistoista odotetut. Ks.
+     * `lib/analytics/tunnistamattomat.ts`.
+     *
+     * AIKAIKKUNAA EI KÄYTETÄ HÄLYTYKSEEN. Poisto nollaa rivit joiden
+     * `created_at` on menneisyydessä, joten 30 vrk:n ikkuna ei osu
+     * poistohetkeen. Erotus koko historiasta on sen sijaan tarkka. Ikkunan
+     * luku jää näkyviin taustatietona.
      */
     const unattributedCutoff = new Date(Date.now() - 30 * 86400_000).toISOString()
 
@@ -140,6 +144,24 @@ export async function GET(request: Request) {
     ).length
 
     const unattributedEventsAllTime = allEvents.filter((e) => !e.user_id).length
+
+    const lifecycleRes = await supabaseAdmin
+      .from("account_lifecycle")
+      .select("event, metadata")
+      .eq("event", "deleted")
+
+    /*
+     * Päiväkirjan luku fail-open: jos se ei vastaa, odotetuksi jää pelkkä
+     * lähtötaso ja hälytys menee herkemmäksi. Väärä hiljaisuus olisi
+     * pahempi kuin turha varoitus, koska mittarin koko tarkoitus on
+     * huomata se mitä kukaan ei katso.
+     */
+    const unattributedExpected = odotetutNollarivit(lifecycleRes.data ?? [])
+
+    const unattributedUnexplained = selittamattomatNollarivit(
+      unattributedEventsAllTime,
+      unattributedExpected
+    )
 
     const adminEventsExcluded = allEvents.filter(
       (e) => e.user_id && adminIds.has(e.user_id)
@@ -459,6 +481,8 @@ export async function GET(request: Request) {
       adminEventsExcluded,
       unattributedEvents,
       unattributedEventsAllTime,
+      unattributedExpected,
+      unattributedUnexplained,
       usageAnomalies,
       usageBaseline,
       sourceLinkUsage,

@@ -21,6 +21,9 @@ type AnalyticsData = {
   adminEventsExcluded: number
   unattributedEvents: number
   unattributedEventsAllTime: number
+  /* Lähtötaso + poistojen kirjaamat määrät, ks. lib/analytics/tunnistamattomat.ts */
+  unattributedExpected: number
+  unattributedUnexplained: number
   usageAnomalies: {
     userId: string
     email: string
@@ -173,21 +176,28 @@ export default function AnalyticsPage() {
           </div>
 
           {/*
-            Tämän luvun kuuluu olla nolla: kirjausreitti ei kirjoita riviä
-            ilman kirjautunutta käyttäjää. Nollasta poikkeava tarkoittaa
-            tuntematonta kirjoittajaa (D-083).
+            HÄLYTYS ON EROTUS, EI LUKUMÄÄRÄ (D-184).
+
+            Kirjausreitti ei kirjoita riviä ilman kirjautunutta käyttäjää,
+            mutta tunnuksen poisto nollaa sen käyttäjän vanhat rivit. Pelkkä
+            nollarivien määrä oli siksi pysyvä varoitus — ja pysyvä varoitus
+            lakkaa olemasta varoitus. Nyt verrataan poistoista odotettuun.
           */}
-          {data.unattributedEvents > 0 ? (
+          {data.unattributedUnexplained > 0 ? (
             <p style={{ marginTop: 12, padding: 10, borderRadius: 6, background: '#fef2f2', color: '#b91c1c', fontSize: 14 }}>
-              ⚠️ <strong>{data.unattributedEvents}</strong> tapahtumaa ilman
-              käyttäjätunnistetta viimeisen 30 vrk aikana. Kirjausreitti ei voi
-              tuottaa tällaisia, joten taulussa on tuntematon kirjoittaja.
+              ⚠️ <strong>{data.unattributedUnexplained}</strong> tapahtumaa ilman
+              käyttäjätunnistetta enemmän kuin tunnusten poistot selittävät
+              (yhteensä {data.unattributedEventsAllTime}, odotettu{' '}
+              {data.unattributedExpected}). Kirjausreitti ei voi tuottaa
+              tällaisia, joten taulussa on tuntematon kirjoittaja.
             </p>
           ) : (
             <p style={{ marginTop: 12, fontSize: 13, color: '#6b7280' }}>
-              ✓ Ei tapahtumia ilman käyttäjätunnistetta (30 vrk).
+              ✓ Ei selittämättömiä tapahtumia ilman käyttäjätunnistetta.
               {data.unattributedEventsAllTime > 0
-                ? ` Historiassa ${data.unattributedEventsAllTime} kpl, 15.7.–5.8.2026 — ks. D-083.`
+                ? ` Nollarivejä ${data.unattributedEventsAllTime} kpl (${data.unattributedEvents} viim. 30 vrk):` +
+                  ' heinäkuun RLS-aukko ja poistettujen tunnusten jäljet.' +
+                  ' Poisto katkaisee henkilöyhteyden mutta jättää tapahtuman tilastoon — ks. D-083 ja D-184.'
                 : ''}
             </p>
           )}
