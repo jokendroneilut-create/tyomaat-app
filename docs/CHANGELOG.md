@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### T2H loytaa uuden kohteen seuraavassa ajossa, ei kuukausien paasta (D-186)
+
+T2H sallii yhden sivupyynnon 15 sekunnin valein, joten ajossa ehtii
+kaksi kohdesivua. Kerajaa kiersi kaikki 63 sivua sokeasti, joten uusi
+kohde saattoi odottaa vuoroaan kuukausia, ja pyynnot kuluivat jo
+tunnettujen sivujen uudelleenlukuun.
+
+Nyt kerajaa lukee ensin sivuston sivukartan, joka kertoo yhdella
+pyynnolla jokaisen kohdesivun ja sen muokkausajan. Kaksi sivupaikkaa
+kaytetaan uusiin ja muuttuneisiin kohteisiin; muuttumattomia ei haeta.
+Uusi kohde loytyy ensimmaisessa ajossa sen jalkeen kun se ilmestyy
+sivukarttaan.
+
 ### Health-merkki nakee lahdeviat, ja nelja rikkinaista lahdetta korjattu (D-185)
 
 Sivupalkin Health-merkki ei voinut syttya lahteen kaatumisesta, koska se
@@ -19,7 +32,8 @@ yksittainen lahde kaatuu. Nyt merkki nayttaa rikkinaisten lahteiden
 maaran, saman luvun kuin Keraimet-sivun "ongelmia".
 
 T2H ei ollut onnistunut kertaakaan: sivuja haettiin liikaa 90 sekunnin
-rajaan nahden. Nyt kaksi sivua ajossa ja kierto ajokerran mukaan.
+rajaan nahden. Nyt kaksi sivua ajossa. (Sivujen valinta tarkentui
+D-186:ssa: uudet ja muuttuneet ensin, ei sokeaa kiertoa.)
 
 Helsingin paatokset hakee nyt 3 kk:n ikkunan 18 kk:n sijaan, jolloin
 tuotavia on 40 eika 287.

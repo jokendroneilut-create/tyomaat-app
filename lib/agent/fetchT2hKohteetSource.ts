@@ -2,6 +2,16 @@ import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { paivaKuukaudesta } from "@/lib/projects/kuukausiPaiva"
+import {
+  kirjaaHaettu,
+  lataaMuisti,
+  peruMerkinnatJalkeen,
+  peruutusRaja,
+  rekisteroiHakemattomat,
+  valitseHaettavat,
+  type SitemapSivu,
+  type Valinta,
+} from "./t2hMuisti"
 
 /*
  * T2H:N KOHDESIVUT — RIKKAIN DATA, RAJATTU TAHTI.
@@ -239,16 +249,72 @@ function ajoIndeksi(lahde?: { run_count?: number | null } | null): number {
   return Number.isFinite(laskuri) ? laskuri : Math.floor(Date.now() / CRON_VALI_MS)
 }
 
-export async function fetchT2hKohteetSource(lahde?: { run_count?: number | null } | null) {
+/*
+ * Kohdesivut sitemapista lastmodeineen (D-186). Sama rajaus kuin
+ * `kohdeOsoitteet`: juuritason `asunto-oy-`/`kiinteisto-oy-`-sivut.
+ */
+export function kohdeSivutLastmodeineen(xml: string): SitemapSivu[] {
+  const sivut = new Map<string, SitemapSivu>()
+
+  for (const m of xml.matchAll(/<url>([\s\S]*?)<\/url>/g)) {
+    const url = (m[1].match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "").trim()
+    if (!/^https:\/\/www\.t2h\.fi\/(asunto|kiinteisto)-oy-[a-z0-9-]+\/?$/.test(url)) continue
+    const lastmod = m[1].match(/<lastmod>([^<]+)<\/lastmod>/)?.[1]?.trim() ?? null
+    if (!sivut.has(url)) sivut.set(url, { url, lastmod })
+  }
+
+  return [...sivut.values()]
+}
+
+type LahdeRivi = {
+  run_count?: number | null
+  last_error_at?: string | null
+  last_success_at?: string | null
+}
+
+/*
+ * TÄMÄN AJON SIVUT: MUISTISTA, VARALLA KIERTO (D-186).
+ *
+ * Muisti kertoo mitkä sivut on haettu ja millä lastmodilla, joten ajo
+ * hakee vain uudet ja muuttuneet (`t2hMuisti.valitseHaettavat`). Jos
+ * muistia ei saada luettua, palataan ajolaskurin kiertoon: lähde tekee
+ * silloin samaa kuin ennen, eikä jää tyhjän päälle.
+ */
+async function tamanAjonSivut(sivut: SitemapSivu[], lahde?: LahdeRivi | null): Promise<Valinta[]> {
+  try {
+    const raja = peruutusRaja(lahde)
+    if (raja) await peruMerkinnatJalkeen(raja)
+
+    let muisti = await lataaMuisti()
+
+    if (muisti && muisti.size === 0) {
+      /* Ensimmäinen ajo: nykyiset sivut aloitusvarannoksi, ei "uusiksi". */
+      if (await rekisteroiHakemattomat(sivut.map((s) => s.url))) muisti = await lataaMuisti()
+    }
+
+    if (muisti && muisti.size > 0) return valitseHaettavat(sivut, muisti, SIVUJA_PER_AJO)
+  } catch {
+    /* fail-open: kierto alla */
+  }
+
+  const lastmodit = new Map(sivut.map((s) => [s.url, s.lastmod]))
+  return ajonViipale(
+    sivut.map((s) => s.url),
+    ajoIndeksi(lahde)
+  ).map((url) => ({ url, lastmod: lastmodit.get(url) ?? null, syy: "hakematon" as const }))
+}
+
+export async function fetchT2hKohteetSource(lahde?: LahdeRivi | null) {
   const aloitettu = Date.now()
 
   const vastaus = await fetch(SITEMAP_URL, { headers: { "User-Agent": UA } })
   if (!vastaus.ok) return []
 
-  const urls = kohdeOsoitteet(await vastaus.text())
+  const sivut = kohdeSivutLastmodeineen(await vastaus.text())
+  const valinta = await tamanAjonSivut(sivut, lahde)
   const results: any[] = []
 
-  for (const url of ajonViipale(urls, ajoIndeksi(lahde))) {
+  for (const { url, lastmod, syy } of valinta) {
     /*
      * Budjettiin lasketaan TULEVA viive, ei vain kulunut aika. Ilman
      * sitä viimeinen kierros voisi alkaa 74 sekunnissa, odottaa 15 ja
@@ -259,6 +325,10 @@ export async function fetchT2hKohteetSource(lahde?: { run_count?: number | null 
     /* Crawl-delay myös ensimmäiseen: sitemap haettiin juuri. */
     await new Promise((r) => setTimeout(r, VIIVE_MS))
 
+    /*
+     * Epäonnistunutta hakua EI kirjata muistiin: sivu jää valittavaksi ja
+     * yritetään seuraavalla ajolla uudelleen.
+     */
     let html: string
     try {
       const sivu = await fetch(url, { headers: { "User-Agent": UA } })
@@ -269,7 +339,16 @@ export async function fetchT2hKohteetSource(lahde?: { run_count?: number | null 
     }
 
     const kohde = parseT2hPage(html)
-    if (!kohde || !onAjankohtainen(kohde)) continue
+    const hyvaksytty = !!kohde && onAjankohtainen(kohde)
+
+    /*
+     * Myös hylätty kirjataan (valmistunut kohde, ei kohdesivu): muuten se
+     * näyttäisi joka ajolla uudelta ja veisi paikan.
+     */
+    await kirjaaHaettu(url, lastmod, !hyvaksytty).catch(() => {})
+    console.log(`fetchT2hKohteetSource: ${syy} ${hyvaksytty ? "hyvaksytty" : "hylatty"} ${url}`)
+
+    if (!kohde || !hyvaksytty) continue
 
     results.push({
       name: kohde.nimi,

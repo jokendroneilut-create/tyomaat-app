@@ -5,6 +5,77 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-186 - T2H hakee vain uudet ja muuttuneet sivut, ei sokeaa kiertoa
+
+Kayttaja kysyi, miksi uusi T2H-kohde voisi loytya vasta kuukausien paasta, ja
+totesi etta lahteen ajaminen joka kerta kuulostaa hullulta. **Molemmat
+huomiot olivat oikeita, ja vika oli kerajan rakenteessa, ei ajotiheydessa.**
+
+**Rajat ovat todelliset.** T2H:n robots.txt sallii yhden sivupyynnon 15 s
+valein, ja lahteen ajon katto on 90 s (haku + tuonti), joten ajossa ehtii
+kaksi kohdesivua. Lahde tulee vuoroon 4-6 vrk:n valein. Sokea kierto 63
+sivun yli = 32 ajoa = noin viisi kuukautta. Taattu paikka joka ajossa olisi
+lyhentanyt sen noin 8 vrk:hon, mutta kayttanyt pyynnot jo tunnettujen,
+muuttumattomien sivujen uudelleenlukuun nelja kertaa paivassa.
+
+**Sitemap kertoo kaiken yhdella pyynnolla:** jokaisen kohdesivun osoitteen ja
+`lastmod`in. Uusi kohde on sitemapissa uusi osoite, joten sen loytamiseen ei
+tarvita yhtaan kohdesivun hakua. Nyt ajo:
+
+  1. lukee sitemapin (1 pyynto)
+  2. kayttaa kaksi sivupaikkaa jarjestyksessa
+       uusi -> hakematon -> muuttunut -> muuttunut-hylatty
+     ja kunkin ryhman sisalla uusin lastmod ensin
+  3. ei hae muuttumatonta sivua lainkaan
+
+**Uusi kohde haetaan ensimmaisessa ajossa sen jalkeen kun se ilmestyy
+sitemapiin** eli 4-6 vrk:ssa, ei kuukausissa.
+
+**Korjaus omaan aiempaan paatelmaan (D-185):** hylkasin `lastmod`in, koska
+39/63 sivua oli muokattu 30 vrk:n sisalla. Arvioin sita pelkkana
+jarjestyksena ("uusimmat ensin") ilman tietoa siita, mita on jo haettu.
+Oikea kysymys on "onko sivu uusi tai muuttunut MEIDAN edellisen hakumme
+jalkeen", ja siihen sitemap vastaa.
+
+**Muisti on `alert_watermarks`-taulussa** avaimilla `t2h:<url>` ja
+`t2h-hylatty:<url>`, arvona sivun lastmod hakuhetkella (hakematon =
+1970-sentinelli). Uutta taulua ei tarvittu. `source_documents` ei kelpaa:
+faktajono poimii sielta jokaisen rivin jolla `facts_extracted_at` on null
+(`discoveryPipeline.ts`), ja hylatyt sivut jaisivat jonoon roikkumaan - sama
+vika kuin aiempi "jono pysyy 70:ssa".
+
+**Kolme sudenkuoppaa suljettu:**
+
+  - *Hylatyt kirjataan myos.* Muuten valmistunut kohde nayttaisi joka ajolla
+    uudelta ja veisi paikan.
+  - *Kaatuneen ajon merkinnat perutaan.* Sivu kirjataan hakuhetkella, mutta
+    ehdokas tuodaan vasta sen jalkeen. Jos ajo kaatuu valissa, muisti
+    vaittaisi uuden kohteen kasitellyksi vaikka sita ei tuotu. Siksi ajon
+    alussa, jos edellinen ajo kaatui (`last_error_at > last_success_at`),
+    viimeisimman onnistumisen jalkeiset merkinnat poistetaan ja sivut
+    haetaan heti uudelleen.
+  - *Epaonnistunutta hakua ei kirjata*, joten se yritetaan uudelleen.
+
+**Fail-open:** jos muistia ei saada luettua, ajo palaa ajolaskurin
+kiertoon (D-185) eika jaa tyhjan paalle.
+
+**Aloitusvaranto kestaa yha kuukausia, ja se on oikein.** Jokainen 62
+nykyisesta sivusta on haettava kerran, mika vie ~31 ajoa. Uusi kohde ohittaa
+varannon, joten loytyminen ei hidastu siita. Tunnettujen kohteiden
+vaihemuutokset ("muuttunut") ovat varannon jalkeen, ja koska T2H paivittaa
+lastmodia usein (39/63 30 vrk:ssa), niiden jono voi olla kapasiteettia
+pidempi - ne ovat parhaan yrityksen tietoa, uudet eivat.
+
+**Todennettu:** kuivakoe elavaa sitemapia vastaan (62 kohdesivua) -
+ensimmainen ajo hakee kaksi viimeksi muutettua; sitemapiin lisatty osoite
+nousee karkeen vaikka sen lastmod on vanha; kun kaikki on haettu eika mikaan
+muuttunut, haettavia on 0. **Ei viela tuotannossa:** ensimmainen oikea ajo
+rekisteroi 62 riviä `alert_watermarks`iin.
+
+`lib/agent/t2hMuisti.ts` (valinta ja muisti), `fetchT2hKohteetSource.ts`.
+
+---
+
 ### D-185 - Health-merkki oli sokea lahdevioille, ja nelja lahdetta kaatui eri syista
 
 Kayttaja kysyi, miksi Keraimet-sivulla nakyi seitseman rikkinaista lahdetta
@@ -116,9 +187,11 @@ pahin tapaus, eika se kerro onko korjaus riittava. Ratkaiseva mittaus on
 seuraava ajastettu ajo kummallekin.
 
 **T2H EI saa taattua paikkaa** (Johanneksen paatos 11.9.2026: ei tarpeen).
-Seuraus on hyvaksytty: 2 sivua ajossa ja 4-6 vrk:n kierto tarkoittavat,
-etta 63 sivun kierros kestaa noin 32 ajoa eli useita kuukausia. Uusi kohde
-voi siis loytya vasta kun kierto osuu sen kohdalle.
+~~Seuraus on hyvaksytty: 63 sivun kierros kestaa noin 32 ajoa, joten uusi
+kohde voi loytya vasta kun kierto osuu sen kohdalle.~~ **Korjattu D-186:ssa:**
+sokea kierto korvattiin sitemapin vertailulla, joten uusi kohde haetaan
+ensimmaisessa ajossa sen ilmestymisen jalkeen. Taattua paikkaa ei edelleenkaan
+tarvita. Ajolaskurin kierto on jaljella vain varamekanismina.
 
 **Seen-ikkuna jatetaan 7 vrk:ksi, avoimena.** Johannes ei ottanut kantaa,
 joten suositus on odottaa: kaksi suoraa syyta (Helsingin leveä ikkuna ja
