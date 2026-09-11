@@ -246,7 +246,15 @@ export async function collectLegacySource(source: any) {
    */
   const importDeadline = Date.now() + IMPORT_BUDGET_MS
 
-  const candidates = (await legacy.fetch()) ?? []
+  /*
+   * Lähteen rivi välitetään kerääjälle. Useimmat eivät käytä sitä, mutta
+   * kierrättävä kerääjä (T2H) tarvitsee ajolaskurin, jotta peräkkäiset
+   * ajot saavat eri sivut (D-185). Tyyppimuunnos, koska rekisterin
+   * funktioilla on eri parametrit ja ylimääräinen argumentti on
+   * nollaparametriselle funktiolle harmiton.
+   */
+  const fetchLahde = legacy.fetch as (lahde?: unknown) => Promise<any[] | null | undefined>
+  const candidates = (await fetchLahde(source)) ?? []
 
   /*
    * Täsmäytyslista haetaan kerran per lähdeajo. Yksi lähde voi tuottaa

@@ -48,42 +48,44 @@ describe("kohdeOsoitteet", () => {
 })
 
 /*
- * robots.txt asettaa Crawl-delay 15, joten 62 sivua kertaajolla olisi
- * 15,5 minuuttia. Lista kierretaan vuorokauden mukaan.
+ * robots.txt asettaa Crawl-delay 15, joten 63 sivua kertaajolla olisi
+ * 16 minuuttia. Lista kierretaan AJOKERRAN mukaan (D-185): paivaan sidottu
+ * kierto jatti viipaleet kayttamatta, koska lahde ei aja joka paiva.
  */
 describe("ajonViipale", () => {
-  const paiva = 24 * 60 * 60 * 1000
   const lista = ["a", "b", "c", "d", "e", "f"]
 
-  it("antaa saman viipaleen samana paivana", () => {
-    const aamu = 10 * paiva + 3_600_000
-    const ilta = 10 * paiva + 80_000_000 - 79_000_000
-    expect(ajonViipale(lista, aamu, 2)).toEqual(ajonViipale(lista, ilta, 2))
+  it("antaa saman viipaleen samalla ajokerralla", () => {
+    expect(ajonViipale(lista, 7, 2)).toEqual(ajonViipale(lista, 7, 2))
   })
 
-  /* Paiva 10 x 2 = 20, 20 % 6 = 2, eli viipale alkaa kolmannesta. */
-  it("siirtyy seuraavaan viipaleeseen seuraavana paivana", () => {
-    expect(ajonViipale(lista, 10 * paiva, 2)).toEqual(["c", "d"])
-    expect(ajonViipale(lista, 11 * paiva, 2)).toEqual(["e", "f"])
+  /* Ajo 1 x 2 = 2, eli viipale alkaa kolmannesta. */
+  it("siirtyy seuraavaan viipaleeseen seuraavalla ajolla", () => {
+    expect(ajonViipale(lista, 1, 2)).toEqual(["c", "d"])
+    expect(ajonViipale(lista, 2, 2)).toEqual(["e", "f"])
   })
 
-  /* Kolmessa paivassa kuuden listan kierros on tasan taynna. */
   it("kiertaa listan ympari", () => {
-    expect(ajonViipale(lista, 12 * paiva, 2)).toEqual(["a", "b"])
+    expect(ajonViipale(lista, 3, 2)).toEqual(["a", "b"])
   })
 
-  /* Viipale ei saa jattaa yhtaan sivua kayttamatta kierroksella. */
-  it("kayy koko listan lapi kierroksessa", () => {
+  /*
+   * Todellinen koko: 63 kohdesivua kahden viipaleina. Perakkaiset ajot
+   * kayvat kaiken lapi 32 ajossa ilman ett yhtaan jaa valiin.
+   */
+  it("kay 63 sivua lapi 32 perakkaisessa ajossa", () => {
+    const sivut = Array.from({ length: 63 }, (_, i) => `s${i}`)
     const kaydyt = new Set<string>()
-    for (let paivaa = 10; paivaa < 13; paivaa++) {
-      for (const x of ajonViipale(lista, paivaa * paiva, 2)) kaydyt.add(x)
+    for (let ajo = 100; ajo < 132; ajo++) {
+      for (const x of ajonViipale(sivut, ajo, 2)) kaydyt.add(x)
     }
-    expect([...kaydyt].sort()).toEqual(lista)
+    expect(kaydyt.size).toBe(63)
   })
 
-  it("sietaa tyhjan listan ja lyhyen listan", () => {
-    expect(ajonViipale([], 10 * paiva, 4)).toEqual([])
-    expect(ajonViipale(["a"], 10 * paiva, 4)).toEqual(["a"])
+  it("sietaa tyhjan ja lyhyen listan seka roskan", () => {
+    expect(ajonViipale([], 10, 2)).toEqual([])
+    expect(ajonViipale(["a"], 10, 2)).toEqual(["a"])
+    expect(ajonViipale(lista, -5, 2)).toEqual(["a", "b"])
   })
 })
 

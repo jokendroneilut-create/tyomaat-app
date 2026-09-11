@@ -5,6 +5,99 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-185 - Health-merkki oli sokea lahdevioille, ja nelja lahdetta kaatui eri syista
+
+Kayttaja kysyi, miksi Keraimet-sivulla nakyi seitseman rikkinaista lahdetta
+mutta sivupalkissa ei ollut huutomerkkia, ja miksi yoajo ei tuonut yhtaan uutta
+hanketta.
+
+**Yoajo oli normaali.** 11.9. klo 03.04: 20 lahdetta, kaikki onnistuivat.
+Vuoroon osui yhdeksan vuokrataloyhtion tiedotesivua ja pienten kuntien
+kaavasivuja. 00 UTC -lohko on antanut nollan ennenkin (31.8., 1.9., 3.9.,
+4.9.), ja paivatasolla uusia ehdokkaita tuli 11-84/vrk.
+
+**1. Health-merkki luki vaaraa taulua.** Se laski `agent_runs`-virheita, jotka
+syntyvat vain kun koko cron-kutsu kaatuu. Lahdekohtainen kaatuminen kirjataan
+`discovery_runs`iin ja putki merkitaan silti onnistuneeksi: viikossa 400/400
+putkiajoa onnistui vaikka lahteita kaatui seitseman kertaa. Merkin oma kommentti
+lupasi nayttaa juuri lahdeviat ("lahde palauttaa HTML:aa JSONin sijaan").
+Sivupalkin aiempi tarkastus (CHANGELOG) totesi Healthin terveeksi katsomalla
+samaa taulua, joten vika jai silloinkin huomaamatta.
+
+Nyt merkki on rikkinaisten lahteiden maara + putken kaatumiset 24 h.
+Rikki-saanto oli kolmessa kopiossa, jotka olivat ehtineet erota (paivan
+yhteenveto ei tuntenut viikon tuoreusrajaa), joten se on nyt yksi funktio
+`lib/agent/discovery/lahteenTila.ts`. Merkki nayttaa 7, sama kuin Keraimet-sivun
+"ongelmia 7".
+
+**2. T2H ei ollut onnistunut kertaakaan (oma vika, D-180).** robots.txt:n
+15 s viive x 4 sivua = 60 s, ja 90 s katto kattaa myos tuonnin, joten tuonnille
+jai alle 15 s. Nyt 2 sivua (30 s viivetta, tuonnille ~50 s). Lisaksi kierto oli
+sidottu paivamaaraan vaikka lahde ajetaan 4-6 vrk:n valein, joten viipaleet
+jaivat kayttamatta. Nyt kierto kulkee ajolaskurin (`run_count`) mukaan: 63 sivua
+32 perakkaisessa ajossa, yhtaan valiin jattamatta. `legacyFetchCollector`
+valittaa lahteen rivin kerajalle.
+
+Sitemapin `lastmod` tutkittiin vaihtoehtona ("uusimmat ensin"), mutta 39/63
+sivua oli muokattu 30 vrk:n sisalla, joten se ei rajaisi juuri mitaan.
+
+**3. Helsingin paatokset: haku oli nopea, tuonti hidas.** Oletin ensin STT:n
+kuviota (D-167, liian leveä ikkuna hidastaa hakua). **Mittaus kumosi sen:**
+koko 18 kk:n haku kesti 2,3 s. Hitaus oli tuonnissa: 287 kandidaatista vain 6
+oli "jo nahty", koska seen-ikkuna on viikko ja lahde tulee vuoroon 4-6 vrk:n
+valein - yksi myohastyminen tai kaatuminen vie koko eran ikkunan ulkopuolelle.
+Ikkuna 18 kk -> 3 kk: 287 -> 40 kandidaattia, haku 1,1 s. 13.8. jalkeen
+luotujen Helsinki-ehdokkaiden paatos oli luontihetkella enintaan 8 vrk vanha.
+
+**Vanhennusansa tarkistettiin ennen muutosta (D-184:n opetus).**
+`expire-unlisted-projects` vanhentaa hankkeen jonka dokumentin `last_seen_at`
+on vanha, ja ikkunasta pudonnut paatos lakkaa paivittamasta sita. Helsingin
+kaikki 309 dokumenttia ovat kuitenkin tyyppia `listing`, jotka pidetaan aina
+(`listingOnly -> keep`), ja kytkin on muutenkin pois. Ansaa ei ole.
+
+**4. Taysmaytyslista: kuvaus haettiin kahdesti ja valimuisti vanheni kesken
+ajon.** Porin haku kesti paikallisesti 8,5 s (29 pyyntoa), tuotannossa ajo
+74-87 s - ja kestot eivat skaalaudu kandidaattimaaran mukaan (Pori 18, Helsinki
+286, molemmat ~75 s). Samalla maaralla pienet kunnat vaihtelivat 3 s / 44 s.
+`loadProjectsForMatching` lataa koko hanketaulun: 6 178 hanketta, **24 Mt,
+15,7 s** paikallisesti.
+
+Kaksi koodikommentin premissia oli vanhentunut:
+
+  - "yksi haku on n. 6 MB" -> 24 Mt. `metadata.description` oli 10,2 Mt
+    (42 %), vaikka matcher lukee `additional_info ?? metadata.description` ja
+    vain 221 hankkeelta puuttui additional_info (niiden kuvaukset 0,01 Mt).
+    Nyt kuvaus haetaan erikseen vain niille: 24 -> 13,7 Mt.
+    **Todennettu: 6 178/6 178 rivia matcherille identtisia** lahtotasoon
+    verrattuna.
+  - "viisi minuuttia kattaa yhden putkiajon" -> ajo kestaa 200-390 s.
+    Valimuisti vanheni kesken ajon ja joku lahde latasi 24 Mt uudelleen, mika
+    sopii kaksihuippuisiin kestoihin. Nyt 15 min.
+
+**Porin korjaus on epasuora eika viela todennettu tuotannossa.** Porissa ei
+muutettu mitaan lahdekohtaista; hyoty tulee kevyemmasta ja kerran ajossa
+ladattavasta listasta. Tarkista Porin kesto seuraavasta ajosta.
+
+**5. Pyhtaa: palvelimelta puuttuu valivarmenne.** Pysyva (testattu nyt), ei
+satunnainen. Palvelin lahettaa vain oman varmenteensa; selain hakee puuttuvan
+itse, Node ei. Ketju on palvelin -> YE1 -> Root YE -> ISRG Root X2, ja Noden
+varastossa on vain X1 ja X2 - **pelkka YE1 ei riita** (openssl verify kaatui
+ilman Root YE:ta, negatiivinen kontrolli). Varmenteet ladattiin palvelimen oman
+varmenteen AIA-osoitteista ja moduuli generoitiin niista
+(`scripts/generoi-lisavarmenteet.ts`), ei kopioitu kasin. Mukana YE1-YE3,
+koska Let's Encrypt myontaa satunnaisesti niista ja varmenne uusitaan 90 vrk
+valein. Tarkistusta ei ohiteta: varmenteet ovat luotettujen juurten jatkona
+ketjunrakennusta varten. Testi todentaa ketjun offline ja kaatuu 60 vrk ennen
+vanhenemista (2.9.2028). Todennettu elavana: listaus HTTP 200, 4 kaavalinkkia.
+
+**Ei tehty:** seen-ikkuna (7 vrk) on edelleen lahes sama kuin kierto (4-6 vrk).
+Se on kohdan 3 ja 4 yhteinen juurimekanismi, mutta ikkunan pidentaminen
+viivastyttaisi saman osoitteen paivitysten tuontia kaikilta lahteilta, joten se
+on oma paatoksensa. T2H:n nostaminen taattuun paikkaan (priority > 10)
+nopeuttaisi kiertoa 32 ajosta noin 8 vrk:hon, mutta varaa paikan joka ajosta.
+
+---
+
 ### D-184 - Halytyksen premissi vanheni: nollarivi ei enaa tarkoita tuntematonta kirjoittajaa
 
 Kayttaja kysyi, onko analytiikan varoitus "308 tapahtumaa ilman

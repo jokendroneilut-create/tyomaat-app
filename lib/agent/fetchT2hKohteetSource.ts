@@ -35,13 +35,27 @@ const UA =
 /* robots.txt: Crawl-delay: 15. */
 const VIIVE_MS = 15_000
 
-/* Neljä sivua = 60 s viivettä, mikä mahtuu 90 sekunnin kattoon. */
-const SIVUJA_PER_AJO = 4
+/*
+ * KAKSI SIVUA AJOSSA, EI NELJÄÄ (D-185).
+ *
+ * 90 sekunnin katto koskee koko lähdeajoa: haun JA tuonnin
+ * duplikaattivertailuineen (`sourceWorker.SOURCE_TIMEOUT_MS`). Neljä
+ * sivua vei pelkkää viivettä 60 s, joten tuonnille jäi alle 15 s ja
+ * ensimmäinen ajo 9.9.2026 kaatui aikakatkaisuun tuottamatta mitään.
+ * Lähde ei ole onnistunut kertaakaan.
+ *
+ * Kahdella sivulla viivettä on 30 s ja tuonnille jää noin 50 s.
+ */
+const SIVUJA_PER_AJO = 2
 
-/* Varmistus jos verkko takkuaa: ei jäädä odottamaan kattoon asti. */
-const AIKABUDJETTI_MS = 75_000
+/*
+ * Hakuvaiheen budjetti: sitemap + 2 × (15 s viive + sivu). Ylittyessä
+ * lopetetaan siististi ja tuodaan se mitä ehdittiin hakea.
+ */
+const AIKABUDJETTI_MS = 40_000
 
-const VUOROKAUSI_MS = 24 * 60 * 60 * 1000
+/* Varakierron jakso, kun ajolaskuria ei ole: yksi cron-väli. */
+const CRON_VALI_MS = 6 * 60 * 60 * 1000
 
 /*
  * TILA LUETAAN LIPUSTA, EI LEIPÄTEKSTISTÄ.
@@ -190,13 +204,22 @@ export function kohdeOsoitteet(xml: string): string[] {
 }
 
 /*
- * Vuorokauden mukaan kiertävä viipale. Sama päivä antaa saman viipaleen,
- * joten uudelleenajo ei hyppää yli mitään.
+ * AJOKERRAN MUKAAN KIERTÄVÄ VIIPALE, EI PÄIVÄN.
+ *
+ * Ensimmäinen versio kiersi vuorokauden mukaan, mutta lähde ei tule
+ * vuoroon joka päivä: perustason lähde ajetaan noin neljän-viiden
+ * päivän välein (`cronConfig`). Päiväkohtaiset viipaleet jäivät siis
+ * enimmäkseen käyttämättä, ja 63 sivun läpikäynti olisi vienyt kuukausia
+ * pelkän satunnaisen osuman varassa (D-185).
+ *
+ * Ajolaskuri (`discovery_sources.run_count`) kasvaa jokaisen ajon
+ * jälkeen - myös kaatuneen - joten peräkkäiset ajot saavat peräkkäiset
+ * viipaleet eikä yhtään sivua hypätä yli.
  */
-export function ajonViipale<T>(kaikki: T[], nyt: number, koko = SIVUJA_PER_AJO): T[] {
+export function ajonViipale<T>(kaikki: T[], ajo: number, koko = SIVUJA_PER_AJO): T[] {
   if (!kaikki.length) return []
 
-  const alku = (Math.floor(nyt / VUOROKAUSI_MS) * koko) % kaikki.length
+  const alku = (Math.max(0, Math.floor(ajo)) * koko) % kaikki.length
   const viipale: T[] = []
 
   for (let i = 0; i < Math.min(koko, kaikki.length); i++) {
@@ -206,7 +229,17 @@ export function ajonViipale<T>(kaikki: T[], nyt: number, koko = SIVUJA_PER_AJO):
   return viipale
 }
 
-export async function fetchT2hKohteetSource() {
+/*
+ * Ajolaskuri lähteen riviltä. Käsiajossa tai testissä riviä ei välttämättä
+ * ole, jolloin kierto sidotaan cron-väliin: jokainen kuuden tunnin jakso
+ * antaa eri viipaleen.
+ */
+function ajoIndeksi(lahde?: { run_count?: number | null } | null): number {
+  const laskuri = Number(lahde?.run_count)
+  return Number.isFinite(laskuri) ? laskuri : Math.floor(Date.now() / CRON_VALI_MS)
+}
+
+export async function fetchT2hKohteetSource(lahde?: { run_count?: number | null } | null) {
   const aloitettu = Date.now()
 
   const vastaus = await fetch(SITEMAP_URL, { headers: { "User-Agent": UA } })
@@ -215,7 +248,7 @@ export async function fetchT2hKohteetSource() {
   const urls = kohdeOsoitteet(await vastaus.text())
   const results: any[] = []
 
-  for (const url of ajonViipale(urls, Date.now())) {
+  for (const url of ajonViipale(urls, ajoIndeksi(lahde))) {
     /*
      * Budjettiin lasketaan TULEVA viive, ei vain kulunut aika. Ilman
      * sitä viimeinen kierros voisi alkaa 74 sekunnissa, odottaa 15 ja

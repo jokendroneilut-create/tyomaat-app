@@ -196,16 +196,25 @@ export type ImportResult = {
  * osoitteeseen, joita tuonti ei muuta.
  */
 /*
- * Täsmäytyslista on sama kaikille saman ajon lähteille, ja yksi haku on
- * n. 6 MB. Ilman välimuistia kuuden legacy-lähteen ajo hakisi sen kuudesti
- * eli ~37 MB - Supabasen ilmaistason egress-kiintiö on 5 GB kuukaudessa.
+ * Täsmäytyslista on sama kaikille saman ajon lähteille. Ilman välimuistia
+ * jokainen legacy-lähde hakisi sen erikseen - Supabasen ilmaistason
+ * egress-kiintiö on 5 GB kuukaudessa.
  *
- * Elinikä on lyhyt tarkoituksella: ajon aikana tehdyt muutokset eivät näy
- * välimuistissa, mutta täsmäytys perustuu nimeen, kaupunkiin ja osoitteeseen,
- * joita tuonti ei muuta. Viisi minuuttia kattaa yhden putkiajon.
+ * Elinikä: ajon aikana tehdyt muutokset eivät näy välimuistissa, mutta
+ * täsmäytys perustuu nimeen, kaupunkiin ja osoitteeseen, joita tuonti ei
+ * muuta.
+ *
+ * 15 MIN, EI 5 (D-185). Aiempi perustelu oli "viisi minuuttia kattaa yhden
+ * putkiajon", mutta mitattuna 11.9.2026 ajo kestää 200-390 s eli usein yli
+ * viisi minuuttia. Välimuisti vanheni siis kesken ajon, ja lähde jonka
+ * kohdalle vanheneminen osui latasi koko listan uudelleen - 15,7 s
+ * paikallisesti ja 24 Mt siirtoa. Se sopii kaksihuippuisiin kestoihin:
+ * sama lähde samalla kandidaattimäärällä kesti vuorotellen 3 ja 44 s.
+ * Viisitoista minuuttia kattaa putkiajon JA sen perään klo :10 ajettavan
+ * käsittelyajon.
  */
 let matchingCache: { rows: any[]; loadedAt: number } | null = null
-const MATCHING_CACHE_MS = 5 * 60 * 1000
+const MATCHING_CACHE_MS = 15 * 60 * 1000
 
 export function clearProjectsForMatchingCache() {
   matchingCache = null
@@ -230,6 +239,15 @@ export async function loadProjectsForMatching(): Promise<any[]> {
    * ne poimitaan JSON-poluilla ja kootaan takaisin metadata-olioksi -
    * täsmäytys näkee siis saman kuin ennen, mutta siirto on murto-osa.
    * additional_info jää mukaan, koska matcher käyttää sitä kuvauksena.
+   *
+   * KUVAUS HAETTIIN KAHDESTI (D-185). Matcher lukee kuvauksen muodossa
+   * `additional_info ?? metadata.description`, mutta molemmat haettiin
+   * kaikille riveille. Mitattu 11.9.2026: lista oli 24 Mt, josta
+   * `metadata.description` 10,2 Mt (42 %) - ja vain 221 hankkeelta 6 178:sta
+   * puuttui additional_info, niiden kuvaukset yhteensä 0,01 Mt. Siksi
+   * `metadata.description` haetaan erikseen VAIN niille riveille joilla
+   * additional_info on null - täsmälleen `??`-operaattorin ehto, joten
+   * matcher näkee saman kuvauksen kuin ennen jokaisella rivillä.
    */
   const PAGE = 1000
   const rows: any[] = []
@@ -245,7 +263,6 @@ export async function loadProjectsForMatching(): Promise<any[]> {
           "meta_developer:metadata->>developer," +
           "meta_building_type:metadata->>building_type," +
           "meta_source_title:metadata->>source_title," +
-          "meta_description:metadata->>description," +
           "meta_also_known_as:metadata->also_known_as," +
           "meta_merged_into:metadata->>merged_into_project_id"
       )
@@ -269,7 +286,6 @@ export async function loadProjectsForMatching(): Promise<any[]> {
         meta_developer,
         meta_building_type,
         meta_source_title,
-        meta_description,
         meta_also_known_as,
         meta_merged_into,
         ...rest
@@ -283,13 +299,41 @@ export async function loadProjectsForMatching(): Promise<any[]> {
           developer: meta_developer,
           building_type: meta_building_type,
           source_title: meta_source_title,
-          description: meta_description,
           also_known_as: meta_also_known_as,
         },
       })
     }
 
     if (data.length < PAGE) break
+  }
+
+  /*
+   * Kuvaus niille joilta additional_info puuttuu (ks. yllä). Sama
+   * yhdistämissuodatin kuin päähaussa, jotta joukko on sama.
+   */
+  const ilmanKuvausta = new Map(
+    rows.filter((r) => r.additional_info == null).map((r) => [r.id, r])
+  )
+
+  if (ilmanKuvausta.size > 0) {
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id,meta_description:metadata->>description")
+        .is("additional_info", null)
+        .is("metadata->>merged_into_project_id", null)
+        .order("id", { ascending: true })
+        .range(from, from + PAGE - 1)
+
+      if (error) throw error
+
+      for (const r of (data ?? []) as any[]) {
+        const rivi = ilmanKuvausta.get(r.id)
+        if (rivi) rivi.metadata.description = r.meta_description
+      }
+
+      if (!data || data.length < PAGE) break
+    }
   }
 
   matchingCache = { rows, loadedAt: Date.now() }

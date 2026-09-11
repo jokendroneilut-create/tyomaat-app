@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { getDiscoverySources } from "../operations/services/getDiscoverySources"
+import { onRikki } from "@/lib/agent/discovery/lahteenTila"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -126,15 +127,12 @@ export async function getTicDailySummary(): Promise<TicDailySummaryData> {
       })(),
     ])
 
-  const failedSources = sources
-    ? sources.filter(
-        (s: any) =>
-          s.enabled &&
-          s.last_error_at &&
-          (!s.last_success_at ||
-            new Date(s.last_error_at) > new Date(s.last_success_at))
-      ).length
-    : null
+  /*
+   * Sama sääntö kuin Keräimet-sivulla ja Health-merkissä (D-185). Tämä
+   * kopio ei tuntenut virheen viikon tuoreutta, joten se laski vanhat
+   * kertaluontoiset katkot mukaan ja näytti eri luvun kuin "ongelmia N".
+   */
+  const failedSources = sources ? sources.filter((s: any) => onRikki(s)).length : null
 
   return { needsReview, highPriority, tenders, zoning, ignored, failedSources }
 }

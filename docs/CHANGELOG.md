@@ -11,6 +11,27 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Health-merkki nakee lahdeviat, ja nelja rikkinaista lahdetta korjattu (D-185)
+
+Sivupalkin Health-merkki ei voinut syttya lahteen kaatumisesta, koska se
+luki koko putken virheita - ja putki merkitaan onnistuneeksi vaikka
+yksittainen lahde kaatuu. Nyt merkki nayttaa rikkinaisten lahteiden
+maaran, saman luvun kuin Keraimet-sivun "ongelmia".
+
+T2H ei ollut onnistunut kertaakaan: sivuja haettiin liikaa 90 sekunnin
+rajaan nahden. Nyt kaksi sivua ajossa ja kierto ajokerran mukaan.
+
+Helsingin paatokset hakee nyt 3 kk:n ikkunan 18 kk:n sijaan, jolloin
+tuotavia on 40 eika 287.
+
+Kaikkien lahteiden yhteinen taysmaytyslista kevenee 24 megatavusta 13,7
+megatavuun, koska kuvausta ei enaa haeta kahteen kertaan, ja se
+ladataan kerran ajossa eika useasti.
+
+Pyhtaan palvelimelta puuttuu varmenneketjun keskimmainen osa, joten haku
+kaatui. Puuttuvat osat liitetaan nyt hakuun; varmenteen tarkistusta ei
+ohiteta.
+
 ### Analytiikan nollarivihalytys vertaa nyt odotettuun (D-184)
 
 Varoitus "tapahtumia ilman kayttajatunnistetta" oli ollut pysyvasti

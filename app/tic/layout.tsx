@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { getPendingReviewCount } from "./services/getPendingReviewCount"
 import { getPendingDuplicateCount } from "./services/getDuplicateCandidates"
-import { getRecentRunErrorCount } from "./services/getRecentRunErrorCount"
+import { getHealthAlertCount } from "./services/getHealthAlertCount"
 import { getIncompleteProjectCount } from "./services/getIncompleteProjectCount"
 
 export const dynamic = "force-dynamic"
@@ -10,6 +10,8 @@ type NavItem = {
   href: string
   label: string
   alertCount?: number
+  /* Merkin selitys hiiren alla: mistä luku koostuu. */
+  alertTitle?: string
 }
 
 export default async function TicLayout({
@@ -20,12 +22,12 @@ export default async function TicLayout({
   const [
     pendingReviewCount,
     pendingDuplicateCount,
-    recentErrorCount,
+    healthAlert,
     incompleteProjectCount,
   ] = await Promise.all([
     getPendingReviewCount(),
     getPendingDuplicateCount(),
-    getRecentRunErrorCount(),
+    getHealthAlertCount(),
     getIncompleteProjectCount(),
   ])
 
@@ -54,7 +56,10 @@ export default async function TicLayout({
     {
       href: "/tic/discovery/health",
       label: "🩺 Health",
-      alertCount: recentErrorCount,
+      alertCount: healthAlert.rikkiLahteita + healthAlert.putkenVirheita,
+      alertTitle:
+        `${healthAlert.rikkiLahteita} lähdettä rikki (viimeisin ajo kaatui, alle viikko sitten)` +
+        (healthAlert.putkenVirheita ? `, ${healthAlert.putkenVirheita} putken kaatumista 24 h` : ""),
     },
     { href: "/tic/discovery/runs", label: "⏱️ Ajot" },
   ]
@@ -77,7 +82,7 @@ export default async function TicLayout({
                 <span>{item.label}</span>
                 {item.alertCount ? (
                   <span
-                    title={`${item.alertCount} virheajoa viimeisen 24 h aikana`}
+                    title={item.alertTitle ?? `${item.alertCount} huomioitavaa`}
                     className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white"
                   >
                     !

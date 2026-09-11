@@ -2,38 +2,22 @@
 
 import { useMemo, useState } from "react"
 import type { DiscoverySourceRow } from "../services/getDiscoverySources"
+import { lahteenTila, type LahteenTila } from "@/lib/agent/discovery/lahteenTila"
 
 type Props = {
   sources: DiscoverySourceRow[]
 }
 
-type SourceStatus = "failing" | "stale" | "disabled" | "ok"
+type SourceStatus = LahteenTila
 type SortKey = "status" | "name" | "run_count" | "error_count" | "last_success_at"
 
 /*
- * VIRHEELLA ON TUOREUS.
- *
- * Aiemmin mikä tahansa kirjattu virhe teki lähteestä rikkinäisen niin
- * kauan kuin uutta onnistumista ei tullut. Kertaluontoinen katko jäi
- * siis näkyviin viikoiksi ja hukutti aidot viat alleen - mitattu
- * 14.8.2026: 13 punaista, joista yksi oli aito.
- *
- * Yli viikon vanha virhe näytetään omana tilanaan eikä lasketa
- * "ongelmiin". Sitä ei piiloteta: se jää listaan ja "Vain ongelmat"
- * -suodattimeen, koska korjaamaton vanha virhe on silti tieto.
+ * Sääntö (ml. virheen viikon tuoreus) on yhteinen sivupalkin
+ * Health-merkin ja päivän yhteenvedon kanssa, jotta "ongelmia N" on
+ * sama luku kaikkialla (D-185). Ks. `lib/agent/discovery/lahteenTila`.
  */
-const STALE_ERROR_MS = 7 * 24 * 60 * 60 * 1000
-
 function sourceStatus(s: DiscoverySourceRow): SourceStatus {
-  if (!s.enabled) return "disabled"
-  if (
-    s.last_error_at &&
-    (!s.last_success_at || new Date(s.last_error_at) > new Date(s.last_success_at))
-  ) {
-    const age = Date.now() - new Date(s.last_error_at).getTime()
-    return age > STALE_ERROR_MS ? "stale" : "failing"
-  }
-  return "ok"
+  return lahteenTila(s)
 }
 
 // Toimimattomat (rikki, vanha virhe, sitten pois) ensin.

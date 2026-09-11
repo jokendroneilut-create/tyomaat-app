@@ -27,7 +27,33 @@ import { stripHtml } from "./stripHtml"
 const SEARCH_URL =
   "https://paatokset-elastic-proxy.api.hel.ninja/paatokset_decisions/_search"
 
-const RECENCY_MONTHS = 18
+/*
+ * TUOREUSIKKUNA 3 KK, EI 18 (D-185).
+ *
+ * Koko ikkuna haetaan joka ajolla ja jokainen osuma kulkee tuonnin läpi.
+ * Mitattu 11.9.2026:
+ *
+ *   18 kk  528 osumaa, 287 kandidaattia   3 kk  68 osumaa
+ *
+ * Haku itse on nopea (2-5 s), mutta 287 kandidaatista vain 6 oli
+ * "jo nähty", koska seen-ikkuna on viikko ja lähde tulee vuoroon 4-6
+ * vrk:n välein: yksi myöhästyminen tai kaatuminen vie koko erän ikkunan
+ * ulkopuolelle ja kaikki tuodaan uudelleen. Ajo kesti tavallisestikin
+ * 72-77 s 90 sekunnin katosta, ja 10.9. se ylitti rajan.
+ *
+ * MIKSI 3 KK RIITTÄÄ. 13.8. jälkeen luotujen Helsinki-ehdokkaiden päätös
+ * oli luontihetkellä enintään 8 vrk vanha (mediaani 2). Lähde tulee
+ * vuoroon 4-6 vrk:n välein, joten 3 kk:n ikkunassa jokainen päätös
+ * näkyy noin 15 ajossa. Myöhempi päätös samasta hankkeesta on uusi
+ * osuma, joten vaiheen eteneminen näkyy edelleen.
+ *
+ * EI VANHENNUSANSAA. Ikkunasta pudonnut päätös lakkaa päivittämästä
+ * dokumenttinsa `last_seen_at`ia, mutta tämän lähteen dokumentit ovat
+ * tyyppiä `listing` (309/309), ja listausrivit pidetään aina
+ * (`evaluateUnlisted`: listingOnly -> keep). Tarkistettu ennen muutosta,
+ * koska juuri tällainen muutos rikkoisi toisen työn huomaamatta (D-184).
+ */
+const RECENCY_MONTHS = 3
 
 /*
  * Kategoriat ovat lähteen OMA luokittelu, joten suodatus ei nojaa

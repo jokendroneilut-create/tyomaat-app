@@ -21979,6 +21979,16 @@ function pyhtaaPhaseFromBoldParagraphs(boldParagraphTexts: string[]): string {
 }
 
 async function collectPyhtaaKaavaSource(source: DiscoverySource) {
+  /*
+   * PYHTÄÄN PALVELIMELTA PUUTTUU VÄLIVARMENNE (D-185). Se lähettää vain
+   * oman varmenteensa, joten Noden fetch kaatui virheeseen
+   * UNABLE_TO_VERIFY_LEAF_SIGNATURE (8.9.2026 alkaen). Haku tehdään siksi
+   * Let's Encryptin YE-välivarmenteiden kanssa; tarkistusta ei ohiteta.
+   */
+  const { fetchLisavarmenteilla } = await import("@/lib/agent/fetchLisavarmenteilla")
+  const fetch = (url: string, _init?: unknown) =>
+    fetchLisavarmenteilla(url, { headers: LOPPI_FETCH_HEADERS as Record<string, string> })
+
   const response = await fetch(PYHTAA_LISTING_URL, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
   if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
 
