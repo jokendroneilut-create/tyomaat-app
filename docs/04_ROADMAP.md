@@ -1242,6 +1242,20 @@ muistin varassa.
   kerran** ("Aja nyt"), muuten punainen jää roikkumaan ja hukuttaa
   aidot viat alleen — sama ongelma josta virheen tuoreusraja (D-14.8.)
   aikanaan syntyi.
+
+  **11.9.2026: STT ajettu korjausten jälkeen ja onnistui** (90 löydettyä,
+  6 tallennettua) — mutta kesto oli 90 s eli tasan katossa. Ks. seuraava
+  kohta.
+- **Seuraa Poria ja STT:tä seuraavissa ajastetuissa ajoissa** (D-185).
+  Käsiajossa 11.9. Pori kesti 81 s ja STT 90 s 90 sekunnin katosta.
+  Käsiajo alkaa kylmällä välimuistilla ja lataa täsmäytyslistan aina,
+  joten se on pahin tapaus; putkiajon kesto ratkaisee. Katso Ajot- ja
+  Keräimet-sivulta kun kumpikin on osunut vuoroon.
+- **Avoin päätös: seen-ikkuna 7 vrk vs. kierto 4-6 vrk** (D-185).
+  Johannes ei ottanut kantaa; ikkuna pidetään ennallaan. **Laukaisuehto:**
+  jos sama lähde kaatuu aikakatkaisuun kahdesti seuraavan kierroksen
+  aikana, mitataan kuinka suuri osa sen erästä oli pudonnut ikkunan
+  ulkopuolelle — silloin päätös tehdään datalla eikä arviolla.
 - ~~**`sync-account-lifecycle` ei ole cronissa.**~~ Tarkistettu
   30.8.2026: se on `vercel.json`:ssa aikataululla `0 3 * * *`.
 

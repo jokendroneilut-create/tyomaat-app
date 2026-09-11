@@ -32,6 +32,11 @@ Pyhtaan palvelimelta puuttuu varmenneketjun keskimmainen osa, joten haku
 kaatui. Puuttuvat osat liitetaan nyt hakuun; varmenteen tarkistusta ei
 ohiteta.
 
+Kasiajot korjausten jalkeen: kaikki seitseman onnistuivat ja rikkinaisia
+lahteita on nolla. Pori (81 s) ja STT (90 s) ovat yha lahella 90 sekunnin
+rajaa, joten niita seurataan seuraavissa ajastetuissa ajoissa. T2H ei saa
+taattua paikkaa joka ajossa.
+
 ### Analytiikan nollarivihalytys vertaa nyt odotettuun (D-184)
 
 Varoitus "tapahtumia ilman kayttajatunnistetta" oli ollut pysyvasti

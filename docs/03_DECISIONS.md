@@ -96,6 +96,37 @@ viivastyttaisi saman osoitteen paivitysten tuontia kaikilta lahteilta, joten se
 on oma paatoksensa. T2H:n nostaminen taattuun paikkaan (priority > 10)
 nopeuttaisi kiertoa 32 ajosta noin 8 vrk:hon, mutta varaa paikan joka ajosta.
 
+**Jatko 11.9.2026: kasiajot korjausten jalkeen.** Kaikki seitseman ajettiin
+kerran, kaikki onnistuivat, ja rikki-lahteita on 0.
+
+| Lahde | Ennen | Kasiajo | Loydetty / tallennettu |
+|---|---|---|---|
+| T2H | ei koskaan onnistunut | 43 s | 1 / 1 |
+| Pyhtaa | TLS-virhe | 7 s | 3 / 3 |
+| Helsingin paatokset | 72-77 s, 10.9. 104 s | **59 s** | 39 / 6 |
+| Porin paatokset | 74-87 s, 10.9. 99 s | **81 s** | 18 / 5 |
+| STT | 5.9. aikakatkaisu | **90 s** | 90 / 6 |
+| Kalajoki | 90 s jumi | 5 s | 8 / 8 |
+| Bonava tiedotteet | 90 s jumi | 31 s | 7 / 2 |
+
+**Pori ja STT ovat yha rajalla.** Kasiajo alkaa kylmalla valimuistilla,
+joten se maksaa aina taysmaytyslistan latauksen (13,7 Mt) - putkiajossa
+lista on yleensa jo ladattu edellisen lahteen kohdalla. Kasiajo on siis
+pahin tapaus, eika se kerro onko korjaus riittava. Ratkaiseva mittaus on
+seuraava ajastettu ajo kummallekin.
+
+**T2H EI saa taattua paikkaa** (Johanneksen paatos 11.9.2026: ei tarpeen).
+Seuraus on hyvaksytty: 2 sivua ajossa ja 4-6 vrk:n kierto tarkoittavat,
+etta 63 sivun kierros kestaa noin 32 ajoa eli useita kuukausia. Uusi kohde
+voi siis loytya vasta kun kierto osuu sen kohdalle.
+
+**Seen-ikkuna jatetaan 7 vrk:ksi, avoimena.** Johannes ei ottanut kantaa,
+joten suositus on odottaa: kaksi suoraa syyta (Helsingin leveä ikkuna ja
+taysmaytyslistan paino) on korjattu, ja ikkunan muutos koskisi jokaista
+lahdetta. **Laukaisuehto:** jos sama lahde kaatuu aikakatkaisuun kahdesti
+seuraavan kierroksen aikana (erityisesti Pori tai STT), mitataan onko syy
+seen-ikkunan ulkopuolelle pudonnut era - silloin paatos tehdaan datalla.
+
 ---
 
 ### D-184 - Halytyksen premissi vanheni: nollarivi ei enaa tarkoita tuntematonta kirjoittajaa
