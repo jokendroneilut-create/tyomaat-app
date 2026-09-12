@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Rakentaja luetaan tiedotteesta, ei jateta tyhjaksi (D-189)
+
+Tiedote nimeaa paaurakoitsijan ("rakentamisesta vastaa", "paaurakoitsijana
+toimii"), mutta kenttaa ei taytetty siita. Nyt taytetaan.
+
+Samalla korjattiin rivit, joissa rakentajaksi oli merkitty tilaaja:
+Senaatti/Tulli-hankkeessa rakentaja on NCC, ei Senaatti-kiinteistot.
+
+Takautuvasti taytetty rakentaja 101 riville ja korjattu rooli 4:lla.
+Kaikki 27 mitattua riviä luettiin lapi ennen kuvion lisaamista - yhtaan
+aliurakoitsijaa ei joukossa ollut.
+
 ### Katkenneet rakennuttajanimet korjattu, kunta ei ole enaa tilaaja (D-188)
 
 Rakennuttajan nimi paateltiin taivutetusta muodosta, ja paattely katkaisi

@@ -1266,16 +1266,15 @@ muistin varassa.
   aja sitä lukematta.
 - ~~**Nimi katkeaa taivutuksen riisunnassa.**~~ Mitattu ja korjattu
   12.9.2026 (D-188): 18 riviä → 0.
-- **Roolit menevät ristiin, ja rakentaja jää poimimatta** (D-188:n mittaus,
-  `scripts/measure-osapuolet.ts`). Jäljellä kaksi asiaa:
-  - **3 riviä**, joissa rakentajaksi on merkitty tilaaja. Esim.
-    Senaatti/Tulli: `builder` = "Senaatti-kiinteistöt", vaikka teksti sanoo
-    "Senaatti-kiinteistöt rakennuttaa" ja "Rakentamisesta vastaa NCC".
-  - **24 riviä**, joilla rakentaja puuttuu vaikka teksti nimeää sen
-    (Consti, SSA Rakennus, NCC Suomi, Hallirakentajat Lappi, Mestek).
-  Kuvio "rakentamisesta vastaa X" / "urakoitsijana toimii X" korjaisi
-  todennäköisesti molemmat, mutta osa 24:stä voi olla aliurakoitsijoita —
-  lue rivit ennen kuin lisäät kuvion.
+- ~~**Roolit menevät ristiin, ja rakentaja jää poimimatta.**~~ Rivit luettiin
+  (yksikään ei ollut aliurakoitsija) ja korjattiin 12.9.2026 (D-189):
+  rakentaja täytetty 101 riville, roolit korjattu 4:llä. Mittarit 0.
+- **Rakennuttajakenttään on kertynyt listoja** (D-189). Ohkolanlaakson
+  sillalla `developer` = "Destia Oy, WSP Finland Oy" eli urakoitsija ja
+  valvoja samassa kentässä, vaikka rakennuttaja on Uudenmaan ELY-keskus.
+  Tämä esti yhden rakentajan kirjoittamisen (sisältymisvertailu), ja se on
+  oikea käytös — vika on rakennuttajakentässä. Mittaa ensin kuinka monessa
+  rivissä kenttä sisältää useamman yrityksen.
 - ~~**`sync-account-lifecycle` ei ole cronissa.**~~ Tarkistettu
   30.8.2026: se on `vercel.json`:ssa aikataululla `0 3 * * *`.
 

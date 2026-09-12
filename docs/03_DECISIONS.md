@@ -5,6 +5,53 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-189 - Rakentaja luetaan tekstista, ja kuivaharjoitus pysaytti sen kolmesti
+
+D-188:n mittaus jatti auki kaksi asiaa: 24 rivilla teksti nimesi
+paaurakoitsijan mutta kentta oli tyhja, ja kolmella rakentajaksi oli merkitty
+tilaaja. Epailin etta osa 24:sta on aliurakoitsijoita, joten rivit luettiin
+ensin lapi.
+
+**Kaikki 27 riviä luettiin. Yksikaan ei ollut aliurakoitsija.** Sanamuodot
+olivat poikkeuksetta paaurakoitsijan: "rakentamisesta vastaa", "paaurakoitsijana
+toimii", "paaurakoitsija on", "urakoitsijana toimii", "KVR-urakoitsijana
+toimii". Valvoja ja suunnittelija esiintyvat samoissa lauseissa mutta eri
+sanamuodolla ("urakan valvonnasta vastaa WSP", "paasuunnittelijana toimii
+Sarc + Sigge").
+
+**KUIVAHARJOITUS PYSAYTTI TAMAN KOLME KERTAA, JA JOKA KERTA VIKA OLI OMANI:**
+
+  1. **641 rivia ja roskaa.** Rakentajaksi tuli tekstinpatkia kuten "ovat
+     tutustuneet rakennuspaikkaan". Kaksi syyta yhta aikaa: `i`-lippu mitatoi
+     `NAME`-kuvion ison alkukirjaimen vaatimuksen, ja loysa urakoitsija-kuvio
+     osui tarjouspyyntojen vakiofraasiin "urakoitsija toimii kohteen
+     paaurakoitsijana", jossa ei ole yritysnimea lainkaan. Korjaus: ei
+     `i`-lippua, ja "urakoitsijana" vaatii verbin "toimii".
+  2. **Virkkeen ylitys ja allatiivi.** "Rakennusliike Lapti.
+     Palveluntuottajana" - kaappaus jatkui seuraavaan virkkeeseen, koska
+     nimessa ei ollut yhtiomuotoa johon `cleanCompanyName` katkaisisi. Ja
+     "Paaurakoitsijana Elenialle hankkeessa toimii Omexom" antoi tilaajan.
+  3. **"NCC. Varha" ja "VRJ. Laajennuksen".** Kirjainlyhennesaanto oli
+     "edellinen merkki on iso kirjain", mika hyvaksyi myos "NCC." Oikea ehto
+     on YKSI iso kirjain sanan alussa.
+
+Lisaksi sama yritys olisi paatynyt molempiin rooleihin: vertailu oli tarkka
+merkkijonovertailu, joten "KSBR" ja "KSBR, Keski-Suomen Betonirakenne Oy"
+nayttivat eri yrityksilta. Nyt vertailu jattaa yhtiomuodon huomiotta ja
+hyvaksyy sisaltymisen.
+
+**Ajettu 12.9.2026:** rakentaja lisatty 101 riville, rooli korjattu 4:lla
+(2 + 2). Mittaus: katkennut nimi 0, roolit ristiin 0.
+
+**Yksi rivi jatettiin tarkoituksella koskematta.** Ohkolanlaakson sillalla
+`developer` on "Destia Oy, WSP Finland Oy" eli urakoitsija ja valvoja samassa
+kentassa. Sisaltymisvertailu esti kirjoituksen, koska rakentaja olisi tullut
+samaksi kuin rakennuttaja. Vika on rakennuttajakentassa, ja se on oma tyonsa.
+
+`fetchSttHakuSource.ts`, `scripts/fix-rakentaja-tekstista.ts`.
+
+---
+
 ### D-188 - Perusmuoto todennetaan lahdetekstista, ja kuntanimi ei ole tilaaja
 
 Rakennuttajaksi oli kirjattu "Tull" (D-187:n yhteydessa havaittu). Mittaus

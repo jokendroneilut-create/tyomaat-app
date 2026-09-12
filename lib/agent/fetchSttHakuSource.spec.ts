@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { extractClientFromText, resolveDeveloper, resolveParties } from "./fetchSttHakuSource"
+import {
+  extractBuilderFromText,
+  extractClientFromText,
+  resolveDeveloper,
+  resolveParties,
+} from "./fetchSttHakuSource"
 import { extractStreetAddress } from "./extractStreetAddress"
 
 describe("extractStreetAddress", () => {
@@ -201,5 +206,77 @@ describe("extractClientFromText - allatiivi", () => {
         "Peab ja Evijarven kunta ovat sopineet koulun rakentamisesta."
       )
     ).toBe("Evijarven kunta")
+  })
+})
+
+/*
+ * RAKENTAJA TEKSTISTA (D-189). Kuviot on luettu aineistosta: kaikki 27
+ * riviä kaytiin lapi ja jokainen oli pääurakoitsija.
+ */
+describe("extractBuilderFromText", () => {
+  it.each([
+    ["rakentamisesta vastaa Consti Korjausrakentaminen Oy. Pääsuunnittelijana toimii Sarc", "Consti Korjausrakentaminen Oy"],
+    ["Hankkeen pääurakoitsijana toimii Hallirakentajat Lappi Oy, ja suunnittelusta vastaa Ramboll", "Hallirakentajat Lappi Oy"],
+    ["Hankkeen pääurakoitsija on Mestek Oy. Avainsanat liikenne", "Mestek Oy"],
+    ["Urakoitsijana toimii Oteran Oy ja urakan valvonnasta vastaa WSP Finland Oy", "Oteran Oy"],
+    ["hankkeen KVR-urakoitsijana toimii Aura Rakennus Lansi-Suomi Oy", "Aura Rakennus Lansi-Suomi Oy"],
+    ["Pääurakoitsijana toimii Rakennusliike J. Malm Oy. Lisatiedot:", "Rakennusliike J. Malm Oy"],
+  ])("lukee rakentajan: %s", (teksti, odotettu) => {
+    expect(extractBuilderFromText(null, teksti)).toBe(odotettu)
+  })
+
+  it("ei lue aliurakoitsijaa", () => {
+    expect(extractBuilderFromText(null, "Aliurakoitsijana toimii Putkiasennus Oy.")).toBeNull()
+  })
+
+  it("ei lue valvojaa eika suunnittelijaa", () => {
+    expect(extractBuilderFromText(null, "Urakan valvonnasta vastaa WSP Finland Oy.")).toBeNull()
+    expect(extractBuilderFromText(null, "Pääsuunnittelijana toimii UKI Arkkitehdit.")).toBeNull()
+  })
+})
+
+describe("resolveParties - rakentaja tekstista", () => {
+  it("ei jata tilaajaa rakentajaksi kun teksti nimeaa urakoitsijan", () => {
+    const teksti =
+      "Senaatti-kiinteistot rakentaa uudisrakennuksen Tullille. Rakentamisesta vastaa NCC, jonka kanssa Senaatti-kiinteistot on allekirjoittanut sopimuksen."
+    const osapuolet = resolveParties("Senaatti-kiinteistot", "Senaatti ja NCC solmivat sopimuksen", teksti)
+
+    expect(osapuolet.builder).toBe("NCC")
+  })
+
+  it("tayttaa rakentajan kun julkaisija on rakennuttaja", () => {
+    const teksti = "Niipperintie 97:n rakentamisesta vastaava SSA Rakennus Oy on aiemmin toteuttanut kohteen."
+    const osapuolet = resolveParties("Espoon Asunnot", "85-asuntoinen kerrostalo", teksti)
+
+    expect(osapuolet.developer).toBe("Espoon Asunnot")
+    expect(osapuolet.builder).toBe("SSA Rakennus Oy")
+  })
+
+  it("ei kirjaa samaa yritysta molempiin rooleihin", () => {
+    const teksti = "Rakentamisesta vastaa Lujatalo Oy."
+    expect(resolveParties("Lujatalo Oy", "Lujatalo rakentaa", teksti).builder).toBeNull()
+  })
+})
+
+/* Kuivaharjoituksen paljastamat rajatapaukset (D-189). */
+describe("extractBuilderFromText - rajatapaukset", () => {
+  it("ei jatka kaappausta virkkeen yli", () => {
+    expect(
+      extractBuilderFromText(
+        null,
+        "Hoivakodin suunnittelusta ja rakentamisesta vastaa Rakennusliike Lapti. Palveluntuottajana toimii Attendo."
+      )
+    ).toBe("Rakennusliike Lapti")
+  })
+
+  it("ei lue tilaajaa urakoitsijaksi allatiivista", () => {
+    expect(
+      extractBuilderFromText(null, "Pääurakoitsijana Elenialle hankkeessa toimii Omexom.")
+    ).toBeNull()
+  })
+
+  it("ei kirjaa samaa yritysta molempiin rooleihin yhtiomuodon erosta huolimatta", () => {
+    const teksti = "Hankkeen rakentamisesta vastaa Rakennusliike Lapti."
+    expect(resolveParties("Rakennusliike Lapti Oy", "Lapti rakentaa hoivakodin", teksti).builder).toBeNull()
   })
 })

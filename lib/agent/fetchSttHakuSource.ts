@@ -230,13 +230,133 @@ export type SttParties = {
   builder: string | null
 }
 
+/*
+ * RAKENTAJA TEKSTISTÄ (D-189).
+ *
+ * Kuviot on LUETTU aineistosta, ei keksitty: kaikki 27 riviä, joilla
+ * teksti nimeää rakentajan mutta kenttä oli tyhjä tai väärä, käytiin läpi
+ * 12.9.2026. Jokainen oli pääurakoitsija - yhtään aliurakoitsijaa ei
+ * joukossa ollut.
+ *
+ *   rakentamisesta vastaa       Consti, NCC Suomi, SSA Rakennus, NCC
+ *   pääurakoitsijana toimii     Hallirakentajat Lappi, Valicon, Lapti
+ *   pääurakoitsija on           Mestek, Jatke Toimitilat, Resolum
+ *   urakoitsijana toimii        Oteran, Destia
+ *   KVR-urakoitsijana toimii    Aura Rakennus Länsi-Suomi
+ *
+ * ALIURAKOITSIJA SULJETAAN POIS: "aliurakoitsijana toimii" osuisi muuten
+ * samaan kuvioon. Valvoja ja suunnittelija esiintyvät samoissa lauseissa
+ * ("urakan valvonnasta vastaa WSP", "pääsuunnittelijana toimii Sarc +
+ * Sigge"), mutta eri sanamuodolla eivätkä osu.
+ *
+ * `cleanCompanyName` katkaisee nimen yhtiömuotoon, mikä ratkaisee sekä
+ * kirjainlyhenteen ("Rakennusliike J. Malm Oy") että virkkeen yli
+ * jatkuvan kaappauksen ("Mestek Oy. Avainsanat").
+ *
+ * KUVIOT OVAT TARKKOJA, JA SIIHEN ON SYY. Ensimmäinen versio käytti
+ * `i`-lippua ja löyhää urakoitsija-kuviota. Kuivaharjoitus antoi 641
+ * riviä ja rakentajaksi tekstinpätkiä kuten "ovat tutustuneet
+ * rakennuspaikkaan": `i`-lippu mitätöi `NAME`-kuvion ison alkukirjaimen
+ * vaatimuksen, ja tarjouspyyntöasiakirjojen vakiofraasi "urakoitsija
+ * toimii kohteen pääurakoitsijana" ei nimeä ketään.
+ *
+ * Siksi: ei `i`-lippua (iso alkukirjain vaaditaan), ja "urakoitsijana"
+ * vaatii aina verbin "toimii".
+ */
+const BUILDER_PATTERNS = [
+  new RegExp(`[Rr]akentamisesta\\s+vasta\\w*\\s+(${NAME})`),
+  new RegExp(`(?<![Aa]li)[Pp]ääurakoitsija(?:na)?\\s+(?:toimii\\s+|on\\s+)?(${NAME})`),
+  new RegExp(`(?<![Aa]li)[Uu]rakoitsijana\\s+toimii\\s+(${NAME})`),
+]
+
+export function extractBuilderFromText(
+  title: string | null,
+  description: string | null
+): string | null {
+  const joined = [title, description].filter(Boolean).join(" ")
+  if (!joined) return null
+
+  for (const pattern of BUILDER_PATTERNS) {
+    const match = joined.match(pattern)
+    if (!match?.[1]) continue
+
+    /*
+     * VIRKE KATKAISEE NIMEN. `cleanCompanyName` katkaisee yhtiömuotoon,
+     * mutta ilman sitä kaappaus jatkui seuraavaan virkkeeseen:
+     * "rakentamisesta vastaa Rakennusliike Lapti. Palveluntuottajana..."
+     * (mitattu 12.9.2026). Piste YHDEN ison kirjaimen jäljessä on
+     * kirjainlyhenne eikä virkkeen loppu - "Rakennusliike J. Malm Oy".
+     *
+     * Ehto on "yksi kirjain sanan alussa", ei "edellinen merkki on iso":
+     * jälkimmäinen päästi läpi "NCC. Varha" ja "VRJ. Laajennuksen".
+     */
+    const virkkeesta = match[1].split(/(?<!(?:^|\s)[A-ZÄÖÅ])\.\s+/)[0]
+
+    /*
+     * ALLATIIVI EI OLE URAKOITSIJA VAAN TILAAJA. Mitattu lause:
+     * "Pääurakoitsijana Elenialle hankkeessa toimii Omexom" - kuvio osui
+     * sanaan "Elenialle", joka on tilaaja. Kenttä jää mieluummin tyhjäksi.
+     */
+    if (/lle$/i.test(virkkeesta.trim())) continue
+
+    /*
+     * KOLME MERKKIÄ RIITTÄÄ RAKENTAJALLE. Tilaajapoiminnan neljän merkin
+     * raja pudotti "NCC":n, ja alan suurimmat urakoitsijat ovat juuri
+     * kolmikirjaimisia (NCC, YIT, SRV). Ankkuri on tässä vahva - nimi on
+     * luettu lauseesta "rakentamisesta vastaa X" - joten lyhyt nimi ei ole
+     * sama riski kuin löyhässä kuviossa.
+     */
+    const name = cleanCompanyName(virkkeesta)
+    if (name.length >= 3) return name
+  }
+
+  return null
+}
+
+/*
+ * Sama yritys ei voi olla molemmissa rooleissa. Vertailu jättää
+ * yhtiömuodon huomiotta: "Rakennusliike Lapti" ja "Rakennusliike Lapti Oy"
+ * ovat sama yritys, ja tarkka merkkijonovertailu olisi päästänyt ne
+ * molempiin kenttiin.
+ */
+function yritysAvain(nimi: string | null): string {
+  return String(nimi ?? "")
+    .toLowerCase()
+    .replace(/\b(oyj|oy|abp|ab|ky|ltd|group|konserni)\b/g, " ")
+    .replace(/[^a-zåäö0-9]+/g, "")
+}
+
+function eriYritys(a: string | null, b: string | null): boolean {
+  const x = yritysAvain(a)
+  const y = yritysAvain(b)
+  if (!x || !y) return true
+  /*
+   * Sisältyminen riittää: rakennuttajakenttään on kertynyt myös listoja
+   * ("KSBR, Keski-Suomen Betonirakenne Oy"), eikä sama yritys saa päätyä
+   * molempiin rooleihin niidenkään kautta.
+   */
+  return x !== y && !x.includes(y) && !y.includes(x)
+}
+
 export function resolveParties(
   publisher: string | null,
   title: string | null,
   description: string | null
 ): SttParties {
+  /*
+   * Tekstin nimeämä rakentaja voittaa päättelyn: julkaisija on rakentaja
+   * vain jos tekstissä ei sanota toisin. Mitattu 12.9.2026 kolme riviä,
+   * joissa rakentajaksi oli merkitty tilaaja (Senaatti-kiinteistöt,
+   * vaikka "Rakentamisesta vastaa NCC").
+   */
+  const builderFromText = extractBuilderFromText(title, description)
+
   if (!publisher) {
-    return { developer: extractCompaniesFromText(title, description), builder: null }
+    const developer = extractCompaniesFromText(title, description)
+    return {
+      developer,
+      builder: eriYritys(builderFromText, developer) ? builderFromText : null,
+    }
   }
 
   const isAuthority = AUTHORITY_PUBLISHERS.some((pattern) => pattern.test(publisher))
@@ -247,7 +367,11 @@ export function resolveParties(
    * väärä rakennuttaja, jonka ihminen joutuu huomaamaan ja korjaamaan.
    */
   if (isAuthority) {
-    return { developer: extractCompaniesFromText(title, description), builder: null }
+    const developer = extractCompaniesFromText(title, description)
+    return {
+      developer,
+      builder: eriYritys(builderFromText, developer) ? builderFromText : null,
+    }
   }
 
   /*
@@ -258,10 +382,18 @@ export function resolveParties(
    */
   const client = extractClientFromText(title, description)
   if (client && client.toLowerCase() !== publisher.toLowerCase()) {
-    return { developer: client, builder: publisher }
+    /*
+     * Tekstin nimeämä rakentaja voittaa julkaisijan: mitattu tapaus on
+     * Senaatti/Tulli, jossa julkaisija on rakennuttaja ja NCC rakentaja.
+     */
+    const builder = eriYritys(builderFromText, client) ? builderFromText : null
+    return { developer: client, builder: builder ?? publisher }
   }
 
-  return { developer: publisher, builder: null }
+  return {
+    developer: publisher,
+    builder: eriYritys(builderFromText, publisher) ? builderFromText : null,
+  }
 }
 
 /** Säilytetään vanha rajapinta; palauttaa vain rakennuttajan. */
