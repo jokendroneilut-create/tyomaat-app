@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { sources as legacySources } from "@/lib/agent/sources"
 import { resolveProjectCost } from "@/lib/projects/resolveProjectCost"
+import { extractFloorAreaFromText } from "@/lib/projects/extractFloorAreaFromText"
 import { phaseAdvances } from "@/lib/projects/phases"
 
 const supabaseAdmin = createClient(
@@ -92,6 +93,21 @@ async function applyToStoredRows(
       existingSource: (row as any).metadata?.cost_source,
     })
 
+    /*
+     * PINTA-ALA SAMASTA TEKSTISTÄ KUIN KUSTANNUS (D-187).
+     *
+     * Runko haetaan tässä jälkikäteen, ja kustannus laskettiin siitä
+     * uudelleen - ala ei. Ala on kuitenkin juuri siinä osassa tekstiä joka
+     * tulee vasta rungon mukana: Senaatin ja Tullin tiedotteessa
+     * "Uudisrakennuksen laajuus on noin 5 600 bruttoneliömetriä".
+     *
+     * Ei ylikirjoita olemassa olevaa: sama sääntö kuin tuonnissa
+     * (`resolvePotentialProject.alaMetadata`).
+     */
+    const ala = (row as any).metadata?.floor_area
+      ? null
+      : extractFloorAreaFromText(`${(row as any).title ?? ""} ${description}`)
+
     const { error } = await supabaseAdmin
       .from("potential_projects")
       .update({
@@ -107,6 +123,7 @@ async function applyToStoredRows(
             enriched.building_type
           ),
           phase_hint: firstFilled(enriched.phase, (row as any).metadata?.phase_hint),
+          ...(ala ? { floor_area: ala } : {}),
           ...(cost
             ? { estimated_cost: cost.estimated_cost, cost_source: cost.cost_source }
             : {}),
@@ -121,7 +138,7 @@ async function applyToStoredRows(
   const { data: projectRows } = await supabaseAdmin
     .from("projects")
     .select(
-      "id, name, phase, city, location, developer, builder, property_type, estimated_cost, additional_info, metadata"
+      "id, name, phase, city, location, developer, builder, property_type, estimated_cost, floor_area, additional_info, metadata"
     )
     .eq("metadata->>source_url", documentUrl)
 
@@ -134,6 +151,12 @@ async function applyToStoredRows(
       existingCost: r.estimated_cost,
       existingSource: r.metadata?.cost_source,
     })
+
+    /* Ala rungosta samoin kuin kustannus; ei ylikirjoita olemassa olevaa. */
+    const ala =
+      r.floor_area || r.metadata?.floor_area
+        ? null
+        : extractFloorAreaFromText(`${r.name ?? ""} ${description}`)
 
     /* Vaihe saa edetä muttei peruuttaa - sama sääntö kuin tuonnissa. */
     const nextPhase = phaseAdvances(r.phase, enriched.phase) ? enriched.phase : r.phase
@@ -151,12 +174,14 @@ async function applyToStoredRows(
         property_type: firstFilled(r.property_type, enriched.building_type),
         phase: nextPhase,
         ...(costChanged ? { estimated_cost: cost!.estimated_cost } : {}),
+        ...(ala ? { floor_area: ala } : {}),
         metadata: {
           ...(r.metadata ?? {}),
           description: longerText(r.metadata?.description, description),
           ...(cost
             ? { estimated_cost: cost.estimated_cost, cost_source: cost.cost_source }
             : {}),
+          ...(ala ? { floor_area: ala } : {}),
           enriched_at: new Date().toISOString(),
         },
       })

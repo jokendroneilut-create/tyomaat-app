@@ -119,3 +119,32 @@ describe("parseAlaTeksti", () => {
     expect(parseAlaTeksti("500 m3")).toBeNull()
   })
 })
+
+/*
+ * AUKI KIRJOITETTU BRUTTONELIOMETRI (D-187). Yksikko tarkoittaa
+ * maaritelmallisesti rakennuksen bruttoalaa, kuten brm² - se vain puuttui
+ * listasta. Mitattu 12.9.2026: sana esiintyi 97 jonorivilla eika
+ * yhdellakaan niista ollut alaa.
+ */
+describe("extractFloorAreaFromText - bruttoneliometri", () => {
+  it("lukee auki kirjoitetun yksikon", () => {
+    expect(
+      extractFloorAreaFromText("Uudisrakennuksen laajuus on noin 5 600 bruttoneliömetriä.")
+    ).toBe(5600)
+  })
+
+  it("ottaa koko hankkeen alan ennen osuutta", () => {
+    expect(
+      extractFloorAreaFromText(
+        "Uudisrakennuksen laajuus on noin 5 600 bruttoneliömetriä. STUKin tiloista tulee noin 650 bruttoneliömetrin suuruinen osuus."
+      )
+    ).toBe(5600)
+  })
+
+  /* Maa-alan esteet eivat saa rikkoutua. */
+  it("ei poimi maa-alaa", () => {
+    expect(
+      extractFloorAreaFromText("Suunnittelualueen pinta-ala on noin 10 300 neliömetriä.")
+    ).toBeNull()
+  })
+})

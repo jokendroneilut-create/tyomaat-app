@@ -208,9 +208,23 @@ function documentAnchorsFor(amount: string): RegExp[] {
       `arvonlis[aä]verot\\w*\\s+enimm[aä]ishinta\\w*\\s+(?:on\\s+)?${HEDGE}${amount}`,
       "i"
     ),
-    /* "Hankkeen kustannukset ovat noin 3,2 miljoonaa euroa" (Vaylavirasto) */
+    /*
+     * "Hankkeen kustannukset ovat noin 3,2 miljoonaa euroa" (Vaylavirasto)
+     *
+     * `hanke\w*` eika `hankkeen`: mitattu 12.9.2026 Senaatin ja Tullin
+     * tiedotteesta, jossa lukee "Hankekokonaisuuden kustannukset ovat
+     * yhteensa 41,5 milj. euroa". Se on saman hankkeen oma hinta, mutta
+     * sanamuoto ei osunut yhteenkaan ankkuriin. Lyhenne "milj." tunnettiin
+     * jo - vika oli lauseessa, ei summan kirjoitusasussa.
+     *
+     * MUODOT LUETELLAAN, EI VENYTETÄ. Ensin kokeiltu `hanke\w*` ei osu
+     * sanaan "hankkeen" lainkaan (kaksi k:ta) - se olisi rikkonut vanhan
+     * muodon, ja testi kaatui heti. Väljempi `hank\w*` taas ottaisi
+     * mukaan "hankinnan kustannukset", ja juuri hankinta-sanan summat on
+     * tässä tiedostossa mitattu vääriksi (ajoneuvojen huoltoleasing).
+     */
     new RegExp(
-      `hankkeen\\s+kustannu\\w*\\s+(?:ovat|on)\\s+(?:yhteens[aä]\\s+)?${HEDGE}${amount}`,
+      `(?:hankkeen|hankekokonaisuuden)\\s+kustannu\\w*\\s+(?:ovat|on)\\s+(?:yhteens[aä]\\s+)?${HEDGE}${amount}`,
       "i"
     ),
     /* "Hankkeen kustannusarvio on 2,0 M€" myos tekstin loppupuolella */

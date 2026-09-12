@@ -247,3 +247,41 @@ describe("extractCostFromText", () => {
     })
   })
 })
+
+/*
+ * HANKEKOKONAISUUS ON HANKE (D-187). Senaatin ja Tullin tiedotteessa
+ * 12.9.2026 lukee "Hankekokonaisuuden kustannukset ovat yhteensa 41,5
+ * milj. euroa" - saman hankkeen oma hinta, mutta sanamuoto ei osunut
+ * yhteenkaan ankkuriin. Lyhenne "milj." tunnettiin jo.
+ */
+describe("extractCostFromText - hankekokonaisuus", () => {
+  it("lukee hankekokonaisuuden kustannukset", () => {
+    expect(
+      extractCostFromText(
+        "Rakennushanke toteutetaan yhteishankintana. Hankekokonaisuuden kustannukset ovat yhteensä 41,5 milj. euroa."
+      )
+    ).toBe(41_500_000)
+  })
+
+  it("lukee saman muodon taysina euroina", () => {
+    expect(extractCostFromText("Hankekokonaisuuden kustannukset ovat 850 000 euroa.")).toBe(850_000)
+  })
+
+  it("ei osu hankintakustannuksiin", () => {
+    expect(extractCostFromText("Hankintakustannukset ovat 5 miljoonaa euroa.")).toBeNull()
+  })
+
+  /* Vanha muoto ei saa rikkoutua. */
+  it("lukee yha hankkeen kustannukset", () => {
+    expect(extractCostFromText("Hankkeen kustannukset ovat noin 3,2 miljoonaa euroa.")).toBe(
+      3_200_000
+    )
+  })
+})
+
+/* Raja: hankinta ei ole hanke, ks. tiedoston alun mitatut vaarat osumat. */
+describe("extractCostFromText - hankinnan raja", () => {
+  it("ei lue hankinnan kustannuksia", () => {
+    expect(extractCostFromText("Hankinnan kustannukset ovat 1,3 miljoonaa euroa.")).toBeNull()
+  })
+})

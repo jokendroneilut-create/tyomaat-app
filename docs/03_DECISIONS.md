@@ -5,6 +5,62 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-187 - Kaksi poimintasaantoa puuttui: auki kirjoitettu bruttoneliometri ja hankekokonaisuuden kustannus
+
+Kayttaja huomasi, ettei Senaatin ja Tullin tiedotteesta ollut poimittu
+kustannusta eika pinta-alaa, vaikka molemmat lukevat kuvauksessa.
+
+**Molemmat vahvistettiin ajamalla funktiot oikealla tekstilla, ei
+paattelemalla:**
+
+```
+"5 600 bruttoneliometria"     -> null      "5 600 brm²" -> 5600
+"41,5 milj. euroa" (tassa lauseessa) -> null
+"Kustannusarvio on 41,5 milj. euroa" -> 41 500 000
+```
+
+**Ala:** yksikko oli auki kirjoitettuna tuntematon. `brm²` on ollut vahvin
+ankkuri alusta asti, koska se tarkoittaa maaritelmallisesti rakennuksen
+bruttoalaa - sama patee sanaan "bruttoneliometria", se vain puuttui
+listasta. Mitattu 12.9.2026: sana esiintyi 97 jonorivilla eika
+YHDELLAKAAN niista ollut alaa.
+
+**Kustannus:** ensin luulin vikaa lyhenteeseen "milj.". **Se oli vaarin** -
+lyhenne tunnetaan. Vika oli lauseessa: ankkuri oli `hankkeen kustannukset`,
+ja tekstissa lukee "Hankekokonaisuuden kustannukset ovat yhteensa".
+
+**Ensimmainen korjaus oli vaara ja testi kaatoi sen heti.** Kirjoitin
+ankkuriksi `hanke\w*`, joka EI osu sanaan "hankkeen" (kaksi k:ta) - se olisi
+rikkonut vanhan muodon. Valjempi `hank\w*` taas ottaisi mukaan "hankinnan
+kustannukset", ja juuri hankinta-sanan summat on tassa tiedostossa mitattu
+vaariksi. Muodot luetellaan siksi: `(?:hankkeen|hankekokonaisuuden)`.
+
+**Runkotyontekija laski vain kustannuksen, ei alaa.** Tiedotteen runko
+haetaan jalkikateen, ja juuri siina osassa tekstia ala usein on. Nyt
+molemmat lasketaan samasta tekstista, eika kumpikaan ylikirjoita olemassa
+olevaa arvoa.
+
+**TAKAUTUVA AJO RAJATTIIN, KOSKA ENSIMMAINEN KUIVAHARJOITUS OLI LIIAN
+LAAJA.** Se olisi muuttanut 564 kustannusta ja 453 alaa, vaikka uudet
+saannot koskevat noin 120 rivia. Ero tuli siita, etta vanhat saannot
+ajettiin uudelleen tekstiin joka on kasvanut rungon haun myota - eri tyo ja
+omat riskinsa: luetuista naytteista yksi olisi antanut paivakodille alan
+664 m², joka on tekstissa TOISEN yksikon peruskorjauksen ala. Skriptin
+oletus on nyt kapea (`--kaikki` ajaa laajan).
+
+**Naytteen oli myos oltava oikea lause.** Ensimmainen versio etsi lukua
+sen kahdella ensimmaisella numerolla, joten naytteet osoittivat vaaraan
+kohtaan tekstia - eika riveja voi lukea niin. Korjattu etsimaan luku
+kaikissa kirjoitusasuissa.
+
+**Ajettu 12.9.2026:** 1 kustannus (juuri kysytty rivi, 41,5 M€) ja 152
+pinta-alaa. Kaikki luetut naytteet olivat hankkeen omaa bruttoalaa.
+
+`extractFloorAreaFromText.ts`, `extractCostFromText.ts`,
+`releaseBodyWorker.ts`, `scripts/fix-kustannus-ja-ala.ts`.
+
+---
+
 ### D-186 - T2H hakee vain uudet ja muuttuneet sivut, ei sokeaa kiertoa
 
 Kayttaja kysyi, miksi uusi T2H-kohde voisi loytya vasta kuukausien paasta, ja

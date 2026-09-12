@@ -49,6 +49,19 @@ const ANKKURIT: RegExp[] = [
   /* "1 700 brm²" — yksikkö kertoo jo että kyse on rakennuksesta. */
   new RegExp(String.raw`${LUKU}\s*(?:brm2|brm²|br-m2|brm\b)`, "i"),
 
+  /*
+   * "noin 5 600 bruttoneliömetriä" — sama todiste kuin brm², vain auki
+   * kirjoitettuna. Tämä puuttui: mitattu 12.9.2026, sana esiintyy 97
+   * jonorivillä eikä YHDELLÄKÄÄN niistä ollut alaa, ja 47 hankkeesta
+   * 26:lta se puuttui.
+   *
+   * Osittainen osuus ("Tullin käyttöön tulee noin 650 bruttoneliömetrin
+   * suuruinen osuus") menisi tästä läpi, mutta ankkureista voittaa
+   * ensimmäinen osuma ja koko hankkeen ala mainitaan tekstissä ensin.
+   * Sama riski on ollut brm²-muodossa alusta asti.
+   */
+  new RegExp(String.raw`${LUKU}\s*brutto-?neliö\w*`, "i"),
+
   /* "Koko hankkeen bruttoala on 4 604 m²", ruotsiksi "bruttoyta". */
   new RegExp(String.raw`bruttoala\w*\s+(?:on\s+)?${HEDGE}${LUKU}\s*${YKSIKKO}`, "i"),
   new RegExp(String.raw`omfattar\s+${HEDGE}${LUKU}\s*${YKSIKKO}\s*bruttoyta`, "i"),

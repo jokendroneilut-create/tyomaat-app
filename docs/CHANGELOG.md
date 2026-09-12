@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Hinta-arvio ja pinta-ala poimitaan kahdesta uudesta sanamuodosta (D-187)
+
+Kuvauksessa luki seka hankkeen kustannus etta laajuus, mutta kumpaakaan
+ei ollut poimittu. Pinta-alan yksikko tunnettiin vain lyhenteena
+(brm²), ei auki kirjoitettuna ("bruttoneliometria"), ja kustannuksen
+ankkuri tunsi muodon "hankkeen kustannukset" muttei
+"hankekokonaisuuden kustannukset".
+
+Tiedotteen runko haetaan jalkikateen, ja siina vaiheessa laskettiin
+vain kustannus. Nyt myos pinta-ala.
+
+Takautuvasti taydennetty 152 pinta-alaa ja yksi hinta-arvio.
+
 ### T2H loytaa uuden kohteen seuraavassa ajossa, ei kuukausien paasta (D-186)
 
 T2H sallii yhden sivupyynnon 15 sekunnin valein, joten ajossa ehtii

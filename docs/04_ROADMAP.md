@@ -1256,6 +1256,21 @@ muistin varassa.
   jos sama lähde kaatuu aikakatkaisuun kahdesti seuraavan kierroksen
   aikana, mitataan kuinka suuri osa sen erästä oli pudonnut ikkunan
   ulkopuolelle — silloin päätös tehdään datalla eikä arviolla.
+- **Laaja kustannus- ja pinta-alapoiminta tallennetusta tekstistä**
+  (D-187). Kapean korjauksen kuivaharjoitus paljasti, että vanhojen
+  sääntöjen ajaminen uudelleen kasvaneeseen tekstiin täydentäisi **564
+  kustannusta ja 453 pinta-alaa**. Sitä EI ajettu: luetuista näytteistä
+  yksi oli väärä (päiväkoti olisi saanut alaksi tekstissä mainitun toisen
+  yksikön peruskorjauksen 664 m²). Oma työnsä, jossa rivit on luettava
+  läpi — `scripts/fix-kustannus-ja-ala.ts --kaikki` tekee ajon, mutta älä
+  aja sitä lukematta.
+- **Rakennuttaja ja rakentaja menevät ristiin STT-tiedotteissa, ja nimi
+  katkeaa.** Havaittu 12.9.2026 Senaatti/Tulli-rivillä: `developer` oli
+  **"Tull"** (katkennut nimi) ja `builder` "Senaatti-kiinteistöt", vaikka
+  teksti sanoo "Senaatti-kiinteistöt rakennuttaa" ja "Rakentamisesta
+  vastaa NCC". Kaksi eri vikaa samassa rivissä: nimen katkaisu
+  (taivutuksen riisunta) ja roolien sekoittuminen. Mittaa ensin kuinka
+  moni rivi on samalla tavalla väärin.
 - ~~**`sync-account-lifecycle` ei ole cronissa.**~~ Tarkistettu
   30.8.2026: se on `vercel.json`:ssa aikataululla `0 3 * * *`.
 
