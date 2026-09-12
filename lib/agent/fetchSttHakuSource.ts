@@ -1,5 +1,5 @@
 import { detectCityFromText } from "./detectCityFromText"
-import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import { MUNICIPALITIES, getMunicipalityByName } from "@/lib/geo/municipalities"
 import { extractStreetAddress } from "./extractStreetAddress"
 import { NAME, cleanCompanyName, allativeToNominative } from "./companyName"
 
@@ -150,6 +150,37 @@ export function extractExplicitClient(text: string | null): string | null {
   return null
 }
 
+/*
+ * ONKO ALLATIIVIMUOTO KUNTA? (D-188)
+ *
+ * "Skanska rakentaa Tampereelle" kertoo MISSÄ rakennetaan, ei kenelle.
+ * Kuntanimi ei siis ole tilaaja tässä kuviossa.
+ *
+ * `detectCityFromText` ei riitä: se tunnisti mitatuista neljästä vain
+ * "Tampereelle". Astevaihtelu ("Pihtiputaalle" -> Pihtipudas) ja
+ * vartalonvaihto ("Ruovedelle" -> Ruovesi, "Rovaniemelle" -> Rovaniemi)
+ * jäävät siltä.
+ *
+ * Vertailu tehdään siksi etuliitteellä: kunnan nimestä jätetään KOLME
+ * viimeistä merkkiä pois. Kaksi ei riittänyt, koska astevaihtelu osuu
+ * juuri siihen kohtaan: "pihtipudas" vs "pihtiputaalle" eroavat
+ * kahdeksannessa merkissä (d/t).
+ *
+ * Pituusraja estää osumat pidempiin nimiin: "Kotkamillsille" ei ole
+ * Kotka eikä "Kemiralle" ole Kemi, koska sana on liian pitkä.
+ */
+function onKuntaAllatiivissa(raw: string): boolean {
+  const sana = raw.trim().toLowerCase()
+  if (!sana.endsWith("lle") || sana.includes(" ")) return false
+
+  for (const kunta of Object.values(MUNICIPALITIES)) {
+    const nimi = kunta.name.toLowerCase()
+    const etuliite = nimi.slice(0, Math.max(4, nimi.length - 3))
+    if (sana.startsWith(etuliite) && sana.length <= nimi.length + 4) return true
+  }
+  return false
+}
+
 export function extractClientFromText(
   title: string | null,
   description: string | null
@@ -168,10 +199,26 @@ export function extractClientFromText(
      * perusmuotoon. Jos käännöstä ei voi tehdä yksikäsitteisesti, kuvio
      * ohitetaan - väärä nimi olisi huonompi kuin tyhjä kenttä.
      */
-    const base = raw.endsWith("lle") ? allativeToNominative(raw) : raw
+    const base = raw.endsWith("lle") ? allativeToNominative(raw, joined) : raw
     if (!base) continue
 
     const name = cleanCompanyName(base)
+
+    /*
+     * KUNTA ON PAIKKA, EI TILAAJA (D-188).
+     *
+     * "Skanska rakentaa Tampereelle" kertoo MISSÄ rakennetaan, ei kenelle.
+     * Allatiivikuvio ei erota näitä, ja mitattuna 12.9.2026 kannassa oli
+     * kuusi riviä joissa rakennuttajaksi oli kirjattu kunta tästä
+     * kuviosta - kaikki lisäksi katkenneella nimellä ("Tamperee",
+     * "Pihtiputaa", "Rovanieme", "Ruovede").
+     *
+     * Rajaus koskee VAIN paljasta kuntanimeä allatiivista: "Evijärven
+     * kunta ovat sopineet" on aito tilaaja eikä osu tähän, koska nimessä
+     * on organisaatiosana.
+     */
+    if (raw.endsWith("lle") && (onKuntaAllatiivissa(raw) || getMunicipalityByName(name))) continue
+
     if (name.length >= 4) return name
   }
 

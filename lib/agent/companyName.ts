@@ -92,9 +92,50 @@ const ALLATIVE_ENDINGS: [RegExp, string][] = [
 const NOT_A_CLIENT =
   /^(asiakkaa|tilaaja|käyttäji|asukkai|osakkai|kaikil|muil|niil|kaupungi|kunnal|valtiol|yhtiöl|säätiöl|seurakunnal|yhdistyksel|hankkeel|urakoitsijal)/i
 
-export function allativeToNominative(raw: string): string | null {
+/*
+ * PERUSMUOTO TODENNETAAN LÄHDETEKSTISTÄ, EI PÄÄTELLÄ YKSIN (D-188).
+ *
+ * Säännöt alla arvaavat perusmuodon päätteestä, ja arvaus meni väärin aina
+ * kun vartalo poikkeaa nominatiivista. Mitattu 12.9.2026: kannassa oli 18
+ * riviä joissa rakennuttajaksi oli kirjattu katkennut nimi - "Tull"
+ * (Tullille), "Kattokeskukse" (Kattokeskukselle), "Tokmann" (Tokmannille).
+ *
+ * Oikea muoto on kuitenkin lähes aina samassa tekstissä: tiedote puhuu
+ * Tullista ja Kattokeskuksesta muutenkin. Siksi ensin kokeillaan
+ * ehdokkaita ja valitaan se joka TEKSTISSÄ esiintyy omana sanana. Jos
+ * yksikään ei esiinny, palataan vanhoihin sääntöihin - muuten
+ * "Fazerille" hajoaisi silloin kun teksti puhuu vain "Fazerin"
+ * hankkeesta.
+ */
+function ehdokasmuodot(base: string): string[] {
+  const lista = [base]
+
+  /* "Tampereelle" -> base "Tamperee": pitkä vartalovokaali lyhenee. */
+  if (/([aeiouyåäö])\1$/i.test(base)) lista.push(base.slice(0, -1))
+
+  /* "Fazerille" -> base "Fazeri": sidevokaali pois. */
+  if (/i$/i.test(base)) lista.push(base.slice(0, -1))
+
+  /* "Kattokeskukselle" -> base "Kattokeskukse": -kse- vartalo, nominatiivi -s. */
+  if (/kse$/i.test(base)) lista.push(base.replace(/kse$/i, "s"))
+
+  return [...new Set(lista.filter((e) => e.length >= 3))]
+}
+
+function esiintyyOmanaSanana(sana: string, teksti: string): boolean {
+  const turva = sana.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return new RegExp(`(^|[^\\wÄÖÅäöå])${turva}([^\\wÄÖÅäöå]|$)`, "i").test(teksti)
+}
+
+export function allativeToNominative(raw: string, konteksti?: string | null): string | null {
   const word = raw.trim()
   if (!word.endsWith("lle") || NOT_A_CLIENT.test(word)) return null
+
+  if (konteksti) {
+    const base = word.slice(0, -3)
+    const loytyi = ehdokasmuodot(base).find((e) => esiintyyOmanaSanana(e, konteksti))
+    if (loytyi) return loytyi
+  }
 
   for (const [ending, replacement] of ALLATIVE_ENDINGS) {
     if (ending.test(word)) return word.replace(ending, replacement)

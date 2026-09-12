@@ -1264,13 +1264,18 @@ muistin varassa.
   yksikön peruskorjauksen 664 m²). Oma työnsä, jossa rivit on luettava
   läpi — `scripts/fix-kustannus-ja-ala.ts --kaikki` tekee ajon, mutta älä
   aja sitä lukematta.
-- **Rakennuttaja ja rakentaja menevät ristiin STT-tiedotteissa, ja nimi
-  katkeaa.** Havaittu 12.9.2026 Senaatti/Tulli-rivillä: `developer` oli
-  **"Tull"** (katkennut nimi) ja `builder` "Senaatti-kiinteistöt", vaikka
-  teksti sanoo "Senaatti-kiinteistöt rakennuttaa" ja "Rakentamisesta
-  vastaa NCC". Kaksi eri vikaa samassa rivissä: nimen katkaisu
-  (taivutuksen riisunta) ja roolien sekoittuminen. Mittaa ensin kuinka
-  moni rivi on samalla tavalla väärin.
+- ~~**Nimi katkeaa taivutuksen riisunnassa.**~~ Mitattu ja korjattu
+  12.9.2026 (D-188): 18 riviä → 0.
+- **Roolit menevät ristiin, ja rakentaja jää poimimatta** (D-188:n mittaus,
+  `scripts/measure-osapuolet.ts`). Jäljellä kaksi asiaa:
+  - **3 riviä**, joissa rakentajaksi on merkitty tilaaja. Esim.
+    Senaatti/Tulli: `builder` = "Senaatti-kiinteistöt", vaikka teksti sanoo
+    "Senaatti-kiinteistöt rakennuttaa" ja "Rakentamisesta vastaa NCC".
+  - **24 riviä**, joilla rakentaja puuttuu vaikka teksti nimeää sen
+    (Consti, SSA Rakennus, NCC Suomi, Hallirakentajat Lappi, Mestek).
+  Kuvio "rakentamisesta vastaa X" / "urakoitsijana toimii X" korjaisi
+  todennäköisesti molemmat, mutta osa 24:stä voi olla aliurakoitsijoita —
+  lue rivit ennen kuin lisäät kuvion.
 - ~~**`sync-account-lifecycle` ei ole cronissa.**~~ Tarkistettu
   30.8.2026: se on `vercel.json`:ssa aikataululla `0 3 * * *`.
 

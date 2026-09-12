@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Katkenneet rakennuttajanimet korjattu, kunta ei ole enaa tilaaja (D-188)
+
+Rakennuttajan nimi paateltiin taivutetusta muodosta, ja paattely katkaisi
+nimen aina kun vartalo poikkeaa perusmuodosta: "Tullille" -> "Tull".
+Nyt perusmuoto todennetaan samasta tiedotteesta, jossa oikea muoto lahes
+aina esiintyy.
+
+Lisaksi kuntanimi ei ole enaa tilaaja: "rakentaa Tampereelle" kertoo
+missa rakennetaan, ei kenelle.
+
+Korjattu 18 riviä: 9 nimea oikeaksi ja 9 kenttaa tyhjaksi silloin kun
+oikeaa muotoa ei voi paatella. Vaara nimi on huonompi kuin tyhja kentta.
+
 ### Hinta-arvio ja pinta-ala poimitaan kahdesta uudesta sanamuodosta (D-187)
 
 Kuvauksessa luki seka hankkeen kustannus etta laajuus, mutta kumpaakaan

@@ -5,6 +5,63 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-188 - Perusmuoto todennetaan lahdetekstista, ja kuntanimi ei ole tilaaja
+
+Rakennuttajaksi oli kirjattu "Tull" (D-187:n yhteydessa havaittu). Mittaus
+pyydettiin ennen korjausta - ja se kannatti, koska **kaksi ensimmaista
+mittaustani olivat vaaria**:
+
+```
+150  "arvo on pidemman sanan alku"        -> developer="Muu" osui sanaan "muutos"
+117  + jatkon oltava sijapaate            -> "Vaylavirasto" <- "Vaylaviraston"
+                                             eli tavallista taivutusta
+ 18  + nimi ei esiinny omana sanana
+     KOKO AINEISTOSSA                     -> aito katkennut nimi
+```
+
+Ero on olennainen: rivikohtainen saanto ei erota katkennutta nimea oikeasta,
+koska oikeankin nimen nominatiivi puuttuu usein juuri siita tekstista. Koko
+aineiston sanasto erottaa ne - "Vaylavirasto" esiintyy monessa kuvauksessa
+omana sanana, "Tull" ei yhdessakaan.
+
+**Juurisyy:** `allativeToNominative` paattelee perusmuodon paatteesta.
+Paattely menee vaarin aina kun vartalo poikkeaa nominatiivista:
+"Tullille" -> "Tull", "Kattokeskukselle" -> "Kattokeskukse",
+"Tokmannille" -> "Tokmann".
+
+**Korjaus 1: perusmuoto todennetaan samasta tekstista.** Tiedote puhuu
+Tullista ja Kattokeskuksesta muutenkin, joten ehdokkaista valitaan se joka
+tekstissa esiintyy omana sanana. Jos yksikaan ei esiinny, palataan vanhoihin
+saantoihin - muuten "Fazerille" hajoaisi silloin kun teksti puhuu vain
+"Fazerin" hankkeesta.
+
+**Korjaus 2: kuntanimi on paikka, ei tilaaja.** "Skanska rakentaa
+Tampereelle" kertoo MISSA rakennetaan. Neljalla rivilla kunta oli kirjattu
+rakennuttajaksi, kaikki lisaksi katkenneella nimella.
+
+`detectCityFromText` ei riittanyt: se tunnisti neljasta vain "Tampereelle".
+Vertailu tehdaan etuliitteella, josta jatetaan KOLME viimeista merkkia pois
+- kaksi ei riittanyt, koska astevaihtelu osuu juuri siihen ("pihtipudas" vs
+"pihtiputaalle" eroavat kahdeksannessa merkissa). Pituusraja estaa osumat
+pidempiin nimiin ("Kotkamillsille" ei ole Kotka).
+
+**Ajettu 12.9.2026:** 9 nimea korjattu (Tulli, Tokmanni, Kattokeskus), 9
+kenttaa tyhjennetty (kunnat seka HOK-Elanto, jonka astevaihtelua ei voi
+paatella). Mittaus korjauksen jalkeen: **18 -> 0**.
+
+Kuivaharjoitus esti viela yhden virheen: "re:mount" olisi tyhjennetty, koska
+sanasto pilkkoo sen kaksoispisteesta. Korjaus rajattiin pelkkiin
+kirjaimiin.
+
+**Jaa auki** (sama mittaus): roolit ristiin 3 rivia (rakentajaksi merkitty
+tilaaja) ja rakentaja puuttuu 24 rivilta vaikka teksti nimeaa sen. Eri vika,
+ja ROADMAPissa.
+
+`companyName.ts`, `fetchSttHakuSource.ts`,
+`scripts/measure-osapuolet.ts` (mittaus), `scripts/fix-katkenneet-nimet.ts`.
+
+---
+
 ### D-187 - Kaksi poimintasaantoa puuttui: auki kirjoitettu bruttoneliometri ja hankekokonaisuuden kustannus
 
 Kayttaja huomasi, ettei Senaatin ja Tullin tiedotteesta ollut poimittu

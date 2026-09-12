@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { resolveDeveloper, resolveParties } from "./fetchSttHakuSource"
+import { extractClientFromText, resolveDeveloper, resolveParties } from "./fetchSttHakuSource"
 import { extractStreetAddress } from "./extractStreetAddress"
 
 describe("extractStreetAddress", () => {
@@ -161,5 +161,45 @@ describe("resolveDeveloper", () => {
 
   it("sietää tyhjät", () => {
     expect(resolveDeveloper(null, null, null)).toBeNull()
+  })
+})
+
+/*
+ * TILAAJA ALLATIIVISTA (D-188). Perusmuoto todennetaan samasta tekstista,
+ * ja kuntanimi on paikka eika tilaaja.
+ */
+describe("extractClientFromText - allatiivi", () => {
+  it("lukee perusmuodon tekstista eika katkaise nimea", () => {
+    const teksti =
+      "Senaatti-kiinteistot rakentaa Tullille uudisrakennuksen Vantaalle. Tullin uudet tilat valmistuvat 2028. Tulli on yksi valtion suurimmista."
+    expect(extractClientFromText("Senaatti ja NCC solmivat sopimuksen", teksti)).toBe("Tulli")
+  })
+
+  it("ei kirjaa kuntaa tilaajaksi", () => {
+    expect(
+      extractClientFromText(
+        "Kreate rakentaa Tampereelle matkaterminaalin",
+        "Kreate rakentaa Tampereelle matkaterminaalin ja sujuvammat kulkuyhteydet."
+      )
+    ).toBeNull()
+  })
+
+  it("ei kirjaa kuntaa tilaajaksi myoskaan astevaihtelun yli", () => {
+    expect(
+      extractClientFromText(
+        "Uusi S-market Pihtiputaalle",
+        "Osuuskauppa Keskimaa rakentaa Pihtiputaalle uuden S-marketin nykyisen myymalan viereen."
+      )
+    ).toBeNull()
+  })
+
+  /* Kunnan organisaatio ON tilaaja: nimessa on organisaatiosana. */
+  it("sailyttaa kunnan organisaationa", () => {
+    expect(
+      extractClientFromText(
+        "Peab ja Evijarven kunta sopivat",
+        "Peab ja Evijarven kunta ovat sopineet koulun rakentamisesta."
+      )
+    ).toBe("Evijarven kunta")
   })
 })
