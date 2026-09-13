@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### YVA-hankkeen yritys luetaan myos otsikosta (D-191)
+
+YVA-hankkeen otsikko on usein muotoa "Endomines Oy, Etelaisen
+kultalinjan kaivoshanke", mutta otsikkoa ei luettu - rakennuttaja
+haettiin vain leipatekstista. 579 rivista 136:lta puuttui yritys.
+
+Otsikko luetaan nyt varalta, ei leipatekstin tilalle. Taydennetty 17
+riviä, mukana datakeskus "Tuike Finland Oy palvelinkeskus, Hamina".
+
+Loput 119 jaettiin syyn mukaan: 28:lla viranomaisen sivulla ei ole
+viela sisaltoa, ja 62:lla tekstissa olevat yritykset ovat valtaosin
+konsultteja (FCG, WSP, AFRY, Ramboll) - niita ei kirjata
+rakennuttajaksi arvaamalla.
+
 ### Kaavasivun ingressi luetaan, ja hankkeen yritys poimitaan siita (D-190)
 
 Pyhajoen kaavasivuilta luettiin vain leipateksti, jolloin sivun

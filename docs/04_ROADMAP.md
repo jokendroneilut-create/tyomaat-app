@@ -1269,6 +1269,21 @@ muistin varassa.
 - ~~**Roolit menevät ristiin, ja rakentaja jää poimimatta.**~~ Rivit luettiin
   (yksikään ei ollut aliurakoitsija) ja korjattiin 12.9.2026 (D-189):
   rakentaja täytetty 101 riville, roolit korjattu 4:llä. Mittarit 0.
+- **Sivun alku jää lukematta kuudessa muussa keräimessä** (D-190:n mittaus,
+  `scripts/measure-puuttuva-alku.ts`). Mitattu 146 lähteestä: 52 osumaa,
+  joista luettuna valtaosa on navigaatiota (oikein ohitettu). Aitoja on
+  kuusi: **Kaarina, Porvoo, Naantali, Jämsä, Ylöjärvi ja
+  Puolustuskiinteistöt** — kaikilta putoaa kaavan tai uutisen oma
+  aloituskappale. Rajatapauksina Jyväskylä, Äänekoski ja Mikkeli
+  (kaavan vaihetiedot). Korjaus on lähdekohtainen, koska ingressi on eri
+  elementissä joka sivustolla.
+- **YVA: 119 hanketta ilman rakennuttajaa** (D-191). Jakauma mitattu:
+  28:lla viranomaisen sivulla ei ole vielä sisältöä (täydentyy itsestään),
+  62:lla tekstissä on yrityksiä mutta valtaosin konsultteja (FCG, WSP,
+  AFRY, Ramboll) ja 29:llä ei yhtiömuotoista nimeä lainkaan. **Älä poimi
+  tekstin ensimmäistä yritysnimeä** — se kirjoittaisi konsultin
+  rakennuttajaksi. Oikea tie on mitata mitkä lauseet nimeävät
+  hankevastaavan, kuten kustannus- ja rakentajapoiminnassa tehtiin.
 - **Rakennuttajakenttään on kertynyt listoja** (D-189). Ohkolanlaakson
   sillalla `developer` = "Destia Oy, WSP Finland Oy" eli urakoitsija ja
   valvoja samassa kentässä, vaikka rakennuttaja on Uudenmaan ELY-keskus.

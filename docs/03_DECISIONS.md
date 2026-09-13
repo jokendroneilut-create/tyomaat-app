@@ -5,6 +5,55 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-191 - YVA:n otsikko nimeaa hankevastaavan, muttei sita luettu
+
+D-190:n mittaus paljasti, etta sama "sivun alku jaa lukematta" -vika koskee
+useampaa lahdetta. YVA valittiin ensimmaiseksi, koska siella kyse on
+puuttuvista yrityksista.
+
+**Mitattu 13.9.2026: 579 YVA-rivista 136:lta puuttui rakennuttaja.**
+Rajapinnassa EI ole hankevastaavaa omana kenttanaan - tarkistettu hakemalla
+yksi tietue ja listaamalla kaikki kentat; `organization` on viranomainen
+(ELY / Lupa- ja valvontavirasto). Tieto on siis tekstissa tai otsikossa.
+
+**Jako kertoi mika on korjattavissa:**
+
+```
+A  16  yhtiomuoto otsikossa              -> korjattavissa heti
+B  28  kuvaus alle 400 merkkia           -> viranomaisen sivulla ei sisaltoa
+C  63  tekstissa yhtioita, ei poimittu   -> valtaosa KONSULTTEJA
+D  29  tekstia on, yhtiomuotoista nimea ei
+```
+
+**C:HEN EI KOSKETTU, JA SE ON OLENNAISTA.** Naytti houkuttelevalta poimia
+tekstin ensimmainen yritysnimi, mutta luettuna ne ovat useimmiten
+konsultteja tai verkkoyhtioita: FCG Rakennettu Ymparisto Oy, WSP Finland
+Oy, AFRY Finland Oy, Ramboll Finland Oy, Fingrid Oyj, Elenia Verkko Oyj.
+Hankkeen omistaja on niiden joukossa vain osassa (Honkamaan Tuulivoima Oy,
+NG Nordic Finland Oy, P2X Solutions Oy). Naiivi saanto olisi kirjoittanut
+konsultin rakennuttajaksi - sama virhe jota vastaan
+`extractCostFromText`in ja rakentajapoiminnan ankkurit on rakennettu.
+
+**B ei ole poimintavika.** Niiden sivuilla lukee "Sisaltoa sivuille tulossa
+lahiaikoina" tai "Sivua paivitetaan" - mukana juuri arvokkaimpia
+(Vaalan datakeskus, Klaukkalan Sudentullin datakeskus, Sarvenmaan
+datakeskus). Yritys taydentyy kun viranomainen julkaisee kuvauksen.
+
+**Korjaus: otsikko varalle, ei tilalle.** Otsikko on muotoa
+"<yritys>, <hankkeen nimi>" ("Endomines Oy, Etelaisen kultalinjan
+kaivoshanke"). Leipatekstin ankkuroitu poiminta pysyy ensisijaisena, joten
+muutos vain tayttaa tyhjia eika muuta yhtaan olemassa olevaa arvoa.
+`cleanCompanyName` katkaisee yhtiomuotoon, joten "Rudus Oy:n kiviaineksen"
+-> "Rudus Oy".
+
+Yhtiomuotoa vaaditaan edelleen: "Vaalan datakeskus, Vaala" ja "Uudenmaan
+ELY-keskus, tiehanke" eivat mene lapi.
+
+**Ajettu 13.9.2026:** 17 riviä (16 jonossa + 1 hyvaksytty). Mittaus
+136 -> 119. Mukana datakeskus "Tuike Finland Oy palvelinkeskus, Hamina".
+
+---
+
 ### D-190 - Sivun ingressi jai lukematta, ja juuri siina luki datakeskuksen omistaja
 
 Kayttaja nosti esiin Pyhajoen Hanhelan kaavan: datakeskushanke, joita on

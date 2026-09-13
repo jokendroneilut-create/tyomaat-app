@@ -147,6 +147,40 @@ export function extractYvaDeveloper(text: string | null | undefined): string | n
 }
 
 /*
+ * OTSIKKO NIMEÄÄ HANKEVASTAAVAN USEIN SUORAAN (D-191).
+ *
+ * YVA-hankkeen otsikko on muotoa "<yritys>, <hankkeen nimi>":
+ * "Endomines Oy, Eteläisen kultalinjan kaivoshanke", "Fingrid Oyj,
+ * Alajärvi-Hikiä 400+110 kilovoltin voimajohtohanke". Otsikkoa ei
+ * kuitenkaan luettu lainkaan - rakennuttaja haettiin vain leipätekstistä.
+ *
+ * Mitattu 13.9.2026: 579 YVA-rivistä 136:lta puuttui rakennuttaja, ja
+ * niistä 16:lla yhtiömuoto on otsikossa. Leipätekstistä ne eivät löydy,
+ * koska teksti käyttää lyhyttä nimeä ("Endomines suunnittelee") jota
+ * yhtiömuotovaatimus ei päästä läpi - ja se vaatimus on siellä syystä.
+ *
+ * `cleanCompanyName` katkaisee yhtiömuotoon, joten "Rudus Oy:n
+ * kiviaineksen" -> "Rudus Oy" ja "ATP Palloneva Oy:n Pallonevan
+ * pohjoisen..." -> "ATP Palloneva Oy".
+ *
+ * VARALLA, EI TILALLA: leipätekstin ankkuroitu poiminta ("hankkeesta
+ * vastaa X") on yhä ensisijainen, joten tämä vain täyttää tyhjiä eikä
+ * muuta yhtään olemassa olevaa arvoa.
+ */
+export function developerFromYvaTitle(title: string | null | undefined): string | null {
+  const otsikko = String(title ?? "").trim()
+  const pilkku = otsikko.indexOf(",")
+  if (pilkku <= 0) return null
+
+  const nimi = cleanCompanyName(otsikko.slice(0, pilkku)).replace(/\s+/g, " ").trim()
+  if (nimi.length < 4) return null
+  if (!looksLikeCompany(nimi)) return null
+  if (TRUNCATED_NAME.test(nimi)) return null
+
+  return nimi
+}
+
+/*
  * Hakuvastauksen `content` on koko sivun leipäteksti HTML-entiteetteineen ja
  * rivinvaihtoineen. Otsikko toistuu sen alussa, joten se pudotetaan.
  */
@@ -326,7 +360,7 @@ export async function fetchYvaSource() {
       city,
       region,
       location: null,
-      developer: extractYvaDeveloper(body ?? summary),
+      developer: extractYvaDeveloper(body ?? summary) ?? developerFromYvaTitle(title),
       permit_number: null,
       /*
        * subjectArea on hanketyyppi ("Tuulivoimalahankkeet"). projectType on

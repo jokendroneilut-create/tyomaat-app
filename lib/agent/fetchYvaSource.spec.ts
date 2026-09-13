@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import {
+  developerFromYvaTitle,
   extractYvaDeveloper,
   cleanYvaContent,
   readYvaStatus,
@@ -147,5 +148,31 @@ describe("extractYvaDeveloper - sulkulauseke", () => {
       "Infinergies Finland Oy"
     )
     expect(extractYvaDeveloper("Hankealueelle on tarkoitus laatia asemakaava.")).toBeNull()
+  })
+})
+
+/*
+ * Otsikko nimeaa hankevastaavan usein suoraan (D-191). Mitattu: 136
+ * rakennuttajattomasta rivista 16:lla yhtiomuoto on otsikossa.
+ */
+describe("developerFromYvaTitle", () => {
+  it.each([
+    ["Endomines Oy, Eteläisen kultalinjan kaivoshanke", "Endomines Oy"],
+    ["Fingrid Oyj, Alajärvi-Hikiä 400+110 kilovoltin voimajohtohanke YVA", "Fingrid Oyj"],
+    ["Rudus Oy:n kiviaineksen, betonin ja asfaltin kierrätysalueet Tampereella", "Rudus Oy"],
+    ["ATP Palloneva Oy:n Pallonevan pohjoisen aurinko- ja tuulivoimahanke, Kauhajoki", "ATP Palloneva Oy"],
+    ["Yara Suomi Oy, Siilinjärven kipsin läjitys", "Yara Suomi Oy"],
+  ])("lukee otsikosta: %s", (otsikko, odotettu) => {
+    expect(developerFromYvaTitle(otsikko)).toBe(odotettu)
+  })
+
+  /* Ilman yhtiomuotoa ei arvata: "Vaalan datakeskus" ei ole yritys. */
+  it.each([
+    "Vaalan datakeskus, Vaala",
+    "Klaukkalan Sudentullin datakeskus, Nurmijärvi",
+    "Uudenmaan ELY-keskus, tiehanke",
+    "Nivalan vihreän vedyn tuotantolaitos",
+  ])("ei arvaa nimea ilman yhtiomuotoa: %s", (otsikko) => {
+    expect(developerFromYvaTitle(otsikko)).toBeNull()
   })
 })
