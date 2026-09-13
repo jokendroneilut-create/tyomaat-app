@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### YVA-hankkeiden konsultit ja verkkoyhtiot liittyviksi yrityksiksi (D-192)
+
+YVA-tekstissa mainitut yritykset ovat valtaosin konsultteja (Sitowise,
+Ramboll, AFRY, Sweco) ja verkkoyhtioita (Fingrid). Ne eivat ole
+rakennuttajia, mutta ne ovat hankkeen aitoja osapuolia - joten ne
+kirjataan nyt liittyviksi yrityksiksi.
+
+Taydennetty 475 hankkeelle, yhteensa 944 yritysta.
+
+Poiminnan siivous mitattiin aineistosta: sivun avainsanat, tiedostonimet
+ja sivun lyhytosoite tarttuivat nimen eteen, ja "&" katkaisi nimen
+kesken ("Sweco Infra & Rail Oy").
+
 ### YVA-hankkeen yritys luetaan myos otsikosta (D-191)
 
 YVA-hankkeen otsikko on usein muotoa "Endomines Oy, Etelaisen

@@ -147,6 +147,94 @@ export function extractYvaDeveloper(text: string | null | undefined): string | n
 }
 
 /*
+ * HANKKEEN MUUT YRITYKSET (D-192).
+ *
+ * Rakennuttajaa ei saa arvata tekstin ensimmäisestä yritysnimestä: mitattu
+ * 13.9.2026, ne ovat valtaosin konsultteja (Sitowise 52, Ramboll 49,
+ * AFRY 35, Sweco 30) tai verkkoyhtiöitä (Fingrid 56). Ne ovat kuitenkin
+ * hankkeen AITOJA OSAPUOLIA, joten ne kuuluvat liittyviin yrityksiin -
+ * sinne ne eivät väitä olevansa hankkeen omistaja.
+ *
+ * SIIVOUS ON MITATTU, EI ARVATTU. Raakapoiminta tarttui kolmeen roskaan:
+ *
+ *   sivun avainsana nimen edessä   "Tuulivoimalahankkeet Tuulipuisto Pontema Oy"
+ *   asiakirjan tiedostonimi        "Natura-arvioinnista.pdf ... Semecon Oy"
+ *   katkennut nimi                 "Suomi Oy" (5 kertaa), "Rail Oy"
+ *
+ * Roska on aina nimen EDESSÄ, joten se karsitaan alusta. Siivouksen
+ * jälkeen 507 eri nimestä jäi 367, ja listan kärki on pelkkiä aitoja
+ * yrityksiä.
+ */
+/*
+ * "&" ON OSA NIMEÄ, EI KATKO. Jokaisen sanan piti alkaa isolla
+ * kirjaimella, joten "Sweco Infra & Rail Oy" katkesi ja poiminnaksi tuli
+ * "Rail Oy" (mitattu 13.9.2026).
+ */
+const YVA_YRITYS =
+  /([A-ZÄÖÅ][\wÄÖÅäöå&.-]*(?:\s+(?:&\s+)?[A-ZÄÖÅ][\wÄÖÅäöå&.-]*){0,3})\s+(Oy|Oyj|Ab|Abp|Ky|Ltd|plc|GmbH)\b/g
+
+const YVA_ETULIITEROSKA =
+  /^(yva|arviointiohjelma|arviointiselostus|selostus|ohjelma|tuulivoimalahankkeet|voimajohdot|energiantuotanto|energiproduktion|voimalaitokset|liikenne|kaivostoiminta|hankkeet|liitteet?|lausunnot|mielipiteet|natura|perusteltu|paatelma|päätelmä)$/i
+
+/* Enintään tämä määrä per hanke: pidempi lista on lähinnä kohinaa. */
+const YVA_YRITYKSIA_ENINTAAN = 10
+
+function siivoaYritysnimi(raw: string): string | null {
+  let sanat = raw.split(/\s+/)
+
+  while (sanat.length > 1) {
+    const eka = sanat[0]
+    const onRoska =
+      YVA_ETULIITEROSKA.test(eka) ||
+      /\.(pdf|docx?|xlsx?)$/i.test(eka) ||
+      /[_\d]/.test(eka) ||
+      (eka === eka.toUpperCase() && eka.length > 3)
+    if (!onRoska) break
+    sanat = sanat.slice(1)
+  }
+
+  const nimi = sanat.join(" ").trim()
+  if (nimi.length < 5) return null
+  if (TRUNCATED_NAME.test(nimi)) return null
+  return nimi
+}
+
+export function extractYvaCompanies(
+  text: string | null | undefined,
+  poisluettava?: string | null
+): string[] {
+  if (!text) return []
+
+  const poissa = String(poisluettava ?? "").toLowerCase().trim()
+  const nimet: string[] = []
+
+  /*
+   * OSOITTEET POIS ENSIN - sama ansa kuin `extractYvaDeveloper`issa.
+   * Sivun lyhytosoite on leipätekstin seassa ja tarttuu nimen eteen:
+   * "www.ymparisto.fi/Kangaslammin-tuuli-ja-aurinkovoimahanke-YVA Pohjan
+   * Voima Oy" (mitattu 13.9.2026).
+   */
+  const cleaned = String(text).replace(URL_PATTERN, " ").replace(PARENTHESIS, " ")
+
+  for (const m of cleaned.matchAll(YVA_YRITYS)) {
+    const nimi = siivoaYritysnimi(`${m[1]} ${m[2]}`)
+    if (!nimi || nimi.toLowerCase() === poissa) continue
+
+    /*
+     * MUUNNELMIA EI YHDISTETÄ. Aineistossa esiintyy "AA Sakatti Oy" ja
+     * "AA Sakatti Mining Oy", jotka ovat sama yritys - mutta "FCG
+     * Rakennettu Ympäristö Oy" ja "FCG Finnish Consulting Group Oy" ovat
+     * ERI yhtiöitä samassa konsernissa. Eroa ei voi päätellä nimestä
+     * ilman yritysrekisteriä, ja väärin yhdistetty pari on pahempi kuin
+     * kaksi riviä listassa.
+     */
+    if (!nimet.includes(nimi)) nimet.push(nimi)
+  }
+
+  return nimet.slice(0, YVA_YRITYKSIA_ENINTAAN)
+}
+
+/*
  * OTSIKKO NIMEÄÄ HANKEVASTAAVAN USEIN SUORAAN (D-191).
  *
  * YVA-hankkeen otsikko on muotoa "<yritys>, <hankkeen nimi>":
@@ -351,16 +439,32 @@ export async function fetchYvaSource() {
       summary ||
       `YVA-hanke${subjectLabel ? ` (${subjectLabel})` : ""}. Ympäristövaikutusten arviointi käynnissä.`
 
+    const yvaDeveloper =
+      extractYvaDeveloper(body ?? summary) ?? developerFromYvaTitle(title)
+
+    /*
+     * Muut hankkeen yritykset liittyviksi - ei rakennuttajaksi (D-192).
+     * Ne ovat konsultteja ja verkkoyhtiöitä, jotka ovat aitoja osapuolia
+     * mutta eivät hankkeen omistajia.
+     */
+    const yvaCompanies = extractYvaCompanies(
+      `${title} ${body ?? summary ?? ""}`,
+      yvaDeveloper
+    )
+
     results.push({
       name: title,
       description: yvaStatus
         ? `YVA-menettelyn tila: ${yvaStatus}.\n\n${baseDescription}`
         : baseDescription,
-      metadata: { yva_status: yvaStatus },
+      metadata: {
+        yva_status: yvaStatus,
+        ...(yvaCompanies.length ? { related_companies: yvaCompanies } : {}),
+      },
       city,
       region,
       location: null,
-      developer: extractYvaDeveloper(body ?? summary) ?? developerFromYvaTitle(title),
+      developer: yvaDeveloper,
       permit_number: null,
       /*
        * subjectArea on hanketyyppi ("Tuulivoimalahankkeet"). projectType on

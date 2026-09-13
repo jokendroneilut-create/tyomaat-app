@@ -1277,6 +1277,8 @@ muistin varassa.
   aloituskappale. Rajatapauksina Jyväskylä, Äänekoski ja Mikkeli
   (kaavan vaihetiedot). Korjaus on lähdekohtainen, koska ingressi on eri
   elementissä joka sivustolla.
+- ~~**YVA: tekstin yritykset jäävät kokonaan käyttämättä.**~~ Kirjataan
+  liittyviksi yrityksiksi 13.9.2026 (D-192): 475 hanketta, 944 yritystä.
 - **YVA: 119 hanketta ilman rakennuttajaa** (D-191). Jakauma mitattu:
   28:lla viranomaisen sivulla ei ole vielä sisältöä (täydentyy itsestään),
   62:lla tekstissä on yrityksiä mutta valtaosin konsultteja (FCG, WSP,

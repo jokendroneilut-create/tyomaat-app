@@ -5,6 +5,50 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-192 - Konsultti ei ole rakennuttaja, mutta se on hankkeen osapuoli
+
+D-191 jatti auki 62 YVA-hanketta, joiden tekstissa on yrityksia muttei
+rakennuttajaa. En poiminut niita rakennuttajaksi, koska luettuna ne ovat
+valtaosin konsultteja. **Johannes huomautti etta ne kuuluvat silti
+liittyviin yrityksiin** - ja se on oikein: konsultti ja verkkoyhtio ovat
+hankkeen aitoja osapuolia, ja `related_companies`-kentassa ne eivat vaita
+olevansa hankkeen omistaja.
+
+**Mitattu 13.9.2026, 507 eri nimea.** Yleisimmat kertovat mista on kyse:
+Fingrid Oyj 56, Sitowise Oy 52, Ramboll Finland Oy 49, AFRY Finland Oy 35,
+Sweco Finland Oy 30. Juuri nama olisi kirjattu rakennuttajiksi, jos
+"tekstin ensimmainen yritys" -saanto olisi otettu kayttoon.
+
+**SIIVOUS TEHTIIN MITTAAMALLA, JA KUIVAHARJOITUS PALJASTI NELJA VIKAA:**
+
+  1. *Sivun avainsana nimen edessa* - "Tuulivoimalahankkeet Tuulipuisto
+     Pontema Oy". Roska on aina nimen EDESSA, joten se karsitaan alusta.
+  2. *Asiakirjan tiedostonimi* - "Natura-arvioinnista.pdf ... Semecon Oy".
+  3. *Katkennut nimi* - "Suomi Oy" (5 kertaa).
+  4. Siivouksen jalkeen 507 nimesta jai 367, ja listan karki oli pelkkia
+     aitoja yrityksia.
+
+**Kaksi vikaa jai viela kuivaharjoituksen naytteisiin:**
+
+  - **"Rail Oy"** tuli nimesta "Sweco Infra & Rail Oy": kuvio vaati
+    jokaisen sanan alkavan isolla kirjaimella, joten "&" katkaisi ketjun
+    ja kaappaus alkoi keskelta.
+  - **"Kangaslammin-tuuli-ja-aurinkovoimahanke-YVA Pohjan Voima Oy"** on
+    sivun lyhytosoite. `extractYvaDeveloper` pudottaa osoitteet ennen
+    poimintaa, mutta uusi funktio ei - sama ansa joka on ollut tassa
+    tiedostossa dokumentoituna jo ennestaan ("YVA Dragon Mining Oy").
+
+**MUUNNELMIA EI YHDISTETA.** Kokeilin yhdistaa "AA Sakatti Oy" ja "AA
+Sakatti Mining Oy", mutta sama saanto yhdistaisi myos "FCG Rakennettu
+Ymparisto Oy":n ja "FCG Finnish Consulting Group Oy":n, jotka ovat ERI
+yhtioita samassa konsernissa. Eroa ei voi paatella nimesta ilman
+yritysrekisteria, joten molemmat sailytetaan.
+
+**Ajettu 13.9.2026:** 475 riviä, 944 yritysta. Vain tyhjiin - olemassa
+olevaa listaa ei korvattu.
+
+---
+
 ### D-191 - YVA:n otsikko nimeaa hankevastaavan, muttei sita luettu
 
 D-190:n mittaus paljasti, etta sama "sivun alku jaa lukematta" -vika koskee

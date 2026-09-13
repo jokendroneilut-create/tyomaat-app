@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   developerFromYvaTitle,
+  extractYvaCompanies,
   extractYvaDeveloper,
   cleanYvaContent,
   readYvaStatus,
@@ -174,5 +175,66 @@ describe("developerFromYvaTitle", () => {
     "Nivalan vihreän vedyn tuotantolaitos",
   ])("ei arvaa nimea ilman yhtiomuotoa: %s", (otsikko) => {
     expect(developerFromYvaTitle(otsikko)).toBeNull()
+  })
+})
+
+/*
+ * Hankkeen muut yritykset liittyviksi, ei rakennuttajaksi (D-192).
+ * Siivoussaannot on mitattu aineistosta.
+ */
+describe("extractYvaCompanies", () => {
+  it("poimii konsultit ja verkkoyhtiot", () => {
+    const teksti =
+      "Hankkeesta vastaa Myrsky Energia Oy. YVA-konsulttina toimii Sitowise Oy ja sahkonsiirrosta vastaa Fingrid Oyj."
+    expect(extractYvaCompanies(teksti, "Myrsky Energia Oy")).toEqual([
+      "Sitowise Oy",
+      "Fingrid Oyj",
+    ])
+  })
+
+  it("karsii sivun avainsanan nimen edesta", () => {
+    expect(extractYvaCompanies("Tuulivoimalahankkeet Tuulipuisto Pontema Oy")).toEqual([
+      "Tuulipuisto Pontema Oy",
+    ])
+  })
+
+  it("karsii tiedostonimen", () => {
+    expect(
+      extractYvaCompanies("Perusteltu-paatelma_2024-06-14.pdf Semecon Oy")
+    ).toEqual(["Semecon Oy"])
+  })
+
+  it("ei poimi katkennutta nimea", () => {
+    expect(extractYvaCompanies("Hanketta suunnittelee wpd Suomi Oy")).toEqual([])
+  })
+
+  /*
+   * Muunnelmia ei yhdisteta: nimesta ei voi paatella onko kyse samasta
+   * yrityksesta (AA Sakatti) vai konsernin eri yhtioista (FCG).
+   */
+  it("sailyttaa muunnelmat erillisina", () => {
+    const teksti = "AA Sakatti Oy hakee lupaa. AA Sakatti Mining Oy vastaa hankkeesta."
+    expect(extractYvaCompanies(teksti)).toEqual(["AA Sakatti Oy", "AA Sakatti Mining Oy"])
+  })
+
+  it("ei palauta rakennuttajaa liittyvissa", () => {
+    expect(extractYvaCompanies("Endomines Oy suunnittelee kaivosta.", "Endomines Oy")).toEqual([])
+  })
+})
+
+/* Kuivaharjoituksen paljastamat rajatapaukset (D-192). */
+describe("extractYvaCompanies - rajatapaukset", () => {
+  it("sailyttaa &-merkin osana nimea", () => {
+    expect(extractYvaCompanies("YVA-konsulttina toimii Sweco Infra & Rail Oy.")).toEqual([
+      "Sweco Infra & Rail Oy",
+    ])
+  })
+
+  it("ei kaappaa sivun osoitetta nimeen", () => {
+    expect(
+      extractYvaCompanies(
+        "Tämän sivun lyhytosoite on www.ymparisto.fi/Kangaslammin-tuuli-ja-aurinkovoimahanke-YVA Pohjan Voima Oy omistaa hankeyhtiön."
+      )
+    ).toEqual(["Pohjan Voima Oy"])
   })
 })
