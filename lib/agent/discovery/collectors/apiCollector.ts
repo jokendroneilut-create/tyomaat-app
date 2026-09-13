@@ -37820,14 +37820,34 @@ async function collectPyhajokiKaavaSource(source: DiscoverySource) {
   let saved = 0
   const slugCounts = new Map<string, number>()
 
+  /* Hankkeesta vastaava luetaan samalla kuviolla kuin YVA-aineistosta. */
+  const { extractYvaDeveloper } = await import("@/lib/agent/fetchYvaSource")
+
   for (const url of urls) {
     let title = ""
     let description = ""
+    let developer: string | null = null
     try {
       const detailResponse = await fetch(url, { cache: "no-store" })
       if (detailResponse.ok) {
         const $$ = cheerio.load(await detailResponse.text())
         title = $$("h1").first().text().replace(/\s+/g, " ").trim()
+
+        /*
+         * INGRESSI ON OMA KENTTÄNSÄ, JA JUURI SIINÄ LUKEE HANKKEEN OMISTAJA.
+         *
+         * Kerääjä luki vain leipätekstilohkon, jolloin sivun ENSIMMÄINEN
+         * virke jäi pois. Mitattu 13.9.2026 Hanhelan datakeskuskaavasta:
+         * leipäteksti 649 merkkiä alkaa sanoilla "Hankealueelle on tarkoitus
+         * laatia...", kun sivun ingressissä lukee "Verda Cloud Oy (”Verda”)
+         * suunnittelee datakeskushanketta Pyhäjoen kunnan pohjoisosaan".
+         * Hankkeesta vastaava yritys oli siis sivulla mutta ei meillä.
+         */
+        const ingressi = $$(".field--name-field-ingressi")
+          .first()
+          .text()
+          .replace(/\s+/g, " ")
+          .trim()
         const body = $$(".block-field-blocknodepagebody")
           .first()
           .text()
@@ -37837,7 +37857,8 @@ async function collectPyhajokiKaavaSource(source: DiscoverySource) {
           .toArray()
           .map((a) => $$(a).text().replace(/\s+/g, " ").trim())
           .filter(Boolean)
-        description = [body, ...attachmentTitles].join(" ")
+        description = [ingressi, body, ...attachmentTitles].filter(Boolean).join(" ")
+        developer = extractYvaDeveloper(description)
       }
     } catch {
       // Skip documents whose detail page fails to load.
@@ -37873,6 +37894,7 @@ async function collectPyhajokiKaavaSource(source: DiscoverySource) {
           slug,
           phase,
           description,
+          ...(developer ? { developer } : {}),
           contacts: [],
           completed,
         },
@@ -38278,6 +38300,12 @@ async function collectHaapavesiKaavaSource(source: DiscoverySource) {
       if (detailResponse.ok) {
         const $$ = cheerio.load(await detailResponse.text())
         title = $$("h1").first().text().replace(/\s+/g, " ").trim()
+        /* Ingressi on oma kenttänsä; ilman sitä sivun ensimmäinen virke jää pois (D-190). */
+        const ingressi = $$(".field--name-field-ingressi")
+          .first()
+          .text()
+          .replace(/\s+/g, " ")
+          .trim()
         const body = $$(".block-field-blocknodepagebody")
           .first()
           .text()
@@ -38287,7 +38315,7 @@ async function collectHaapavesiKaavaSource(source: DiscoverySource) {
           .toArray()
           .map((el) => $$(el).text().replace(/\s+/g, " ").trim())
           .filter(Boolean)
-        description = [body, ...attachmentTitles].join(" ")
+        description = [ingressi, body, ...attachmentTitles].filter(Boolean).join(" ")
       }
     } catch {
       // Skip documents whose detail page fails to load.

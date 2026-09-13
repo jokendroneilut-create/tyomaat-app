@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kaavasivun ingressi luetaan, ja hankkeen yritys poimitaan siita (D-190)
+
+Pyhajoen kaavasivuilta luettiin vain leipateksti, jolloin sivun
+ensimmainen virke jai pois - ja juuri siina lukee hankkeen omistaja.
+Hanhelan datakeskuskaavassa se oli "Verda Cloud Oy suunnittelee
+datakeskushanketta Pyhajoen kunnan pohjoisosaan".
+
+Nyt ingressi luetaan mukaan ja yritys poimitaan siita. Sama korjaus
+Haapaveden kaavasivuille.
+
+Katselmointikortti nayttaa kaavaehdokkaalle nyt myos rakennustyypin ja
+hankkeesta vastaavan yrityksen, kun ne ovat tiedossa. Aiemmin kortilla
+nakyi vain kaava-alue ja kaupunginosa, jotka ovat usein tyhjia - datakeskus
+naytti siksi luokittelemattomalta, vaikka luokitus oli kannassa oikein.
+
+Takautuvasti taydennetty 14 kuvausta ja 2 rakennuttajaa.
+
 ### Rakentaja luetaan tiedotteesta, ei jateta tyhjaksi (D-189)
 
 Tiedote nimeaa paaurakoitsijan ("rakentamisesta vastaa", "paaurakoitsijana

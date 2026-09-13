@@ -128,3 +128,24 @@ describe("cleanYvaContent", () => {
     expect(cleanYvaContent(null, "Otsikko")).toBeNull()
   })
 })
+
+/*
+ * Sulkulauseke nimen ja verbin valissa katkaisi poiminnan (D-190).
+ * Mitattu Pyhajoen datakeskuskaavasta.
+ */
+describe("extractYvaDeveloper - sulkulauseke", () => {
+  it("lukee nimen vaikka valissa on lyhennemerkinta", () => {
+    expect(
+      extractYvaDeveloper(
+        "Verda Cloud Oy (”Verda”) suunnittelee datakeskushanketta Pyhäjoen kunnan pohjoisosaan."
+      )
+    ).toBe("Verda Cloud Oy")
+  })
+
+  it("ei muuta aiempaa kayttaytymista", () => {
+    expect(extractYvaDeveloper("Infinergies Finland Oy suunnittelee tuulipuistoa.")).toBe(
+      "Infinergies Finland Oy"
+    )
+    expect(extractYvaDeveloper("Hankealueelle on tarkoitus laatia asemakaava.")).toBeNull()
+  })
+})

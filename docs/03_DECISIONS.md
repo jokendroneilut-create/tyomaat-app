@@ -5,6 +5,59 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-190 - Sivun ingressi jai lukematta, ja juuri siina luki datakeskuksen omistaja
+
+Kayttaja nosti esiin Pyhajoen Hanhelan kaavan: datakeskushanke, joita on
+vaikea loytaa (vrt. yksityisten suurhankkeiden katve). Han listasi kolme
+ongelmaa. **Mittaus korjasi niista kaksi:**
+
+  1. *"Loydetty kaksi kertaa."* Ei duplikaatti: toinen on osayleiskaava ja
+     toinen asemakaava, eli kaksi eri kaavaa samasta hankkeesta. Kayttaja
+     totesi taman itse kesken selvityksen.
+  2. *"Ei luokiteltu datakeskukseksi."* Luokittelu OLI oikein: molemmilla
+     riveilla `building_type = "Datakeskus"`. Vika oli naytossa -
+     katselmointikortti nayttaa kaavaehdokkaalle vain kaava-alueen ja
+     kaupunginosan, jotka ovat useimmiten tyhjia, eika rakennustyyppia
+     lainkaan. Hanke siis NAYTTI luokittelemattomalta.
+  3. *"Yritysta ei ole poimittu."* Tama oli aito, ja syy oli syvemmalla
+     kuin poimintasaannossa.
+
+**KERAAJA LUKI VAIN LEIPATEKSTILOHKON.** Mitattu 13.9.2026: sivun teksti on
+886 merkkia, meilla oli 782. Puuttuva osa oli sivun ENSIMMAINEN virke:
+
+```
+"Verda Cloud Oy (”Verda”) suunnittelee datakeskushanketta Pyhajoen
+ kunnan pohjoisosaan kantaverkon varteen."
+```
+
+Se on omassa kentassaan (`.field--name-field-ingressi`), jota kerajaa ei
+lukenut. Yritys oli siis sivulla mutta ei koskaan meilla - eika mikaan
+poimintasaanto olisi voinut loytaa sita. Sama vika oli Haapaveden
+keraajassa, joka lukee samaa lohkoa.
+
+**POIMINTA KAATUI VIELA SULKULAUSEKKEESEEN.** `extractYvaDeveloper` vaatii
+nimen ja verbin vierekkain, ja lyhennemerkinta katkaisi sen: "Verda Cloud Oy
+(”Verda”) suunnittelee" palautti tyhjan. Sulkulausekkeet pudotetaan nyt
+ennen poimintaa, mika hyodyttaa myos YVA-lahdetta.
+
+**Ajettu 13.9.2026:** 14 kuvausta sai ingressinsa ja 2 riviä rakennuttajan
+(Verda Cloud Oy). Kuvaukset luettiin riveittain - jokainen lisays oli aitoa
+hankekontekstia, esim. "Kaavamuutoksella Rajakiiri Oy haluaa paivittaa
+Maanahkiaisen merituulipuiston osayleiskaavan".
+
+**Kaavakortti nayttaa nyt myos rakennustyypin ja hankkeesta vastaavan**, kun
+ne ovat tiedossa. Tyhjia viivoja ei lisatty.
+
+**Opetus on sama kuin D-181:ssa mutta toisin pain:** siella sivun kalustetta
+pati liikaa mukaan, tassa sivun omaa sisaltoa jai pois. Kummassakin vika
+loytyi vasta vertaamalla tallennettua tekstia elavaan sivuun.
+
+`apiCollector.ts` (Pyhajoki + Haapavesi), `fetchYvaSource.ts`,
+`pyhajokiKaavaResolver.ts`, `PotentialProjectsReviewList.tsx`,
+`scripts/fix-pyhajoki-ingressi.ts`.
+
+---
+
 ### D-189 - Rakentaja luetaan tekstista, ja kuivaharjoitus pysaytti sen kolmesti
 
 D-188:n mittaus jatti auki kaksi asiaa: 24 rivilla teksti nimesi

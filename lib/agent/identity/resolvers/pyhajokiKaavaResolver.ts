@@ -65,6 +65,16 @@ export async function resolvePyhajokiKaavaProject({
       description,
       contact_persons: [],
 
+      /*
+       * HANKKEESTA VASTAAVA YRITYS (D-190). Kaavoitusaloitteen tekijä lukee
+       * sivun ingressissä ("Verda Cloud Oy suunnittelee datakeskushanketta"),
+       * ja se on kaavahankkeessa arvokkain tieto: kunta on kaavoittaja,
+       * mutta yritys on se joka rakentaa ja jolle myydään.
+       */
+      ...(document.raw_payload?.developer
+        ? { developer: document.raw_payload.developer }
+        : {}),
+
       phase_hint: phaseHint,
       completed,
 

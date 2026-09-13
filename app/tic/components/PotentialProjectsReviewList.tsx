@@ -226,6 +226,27 @@ export default function PotentialProjectsReviewList({
                           <strong>Kaupunginosa:</strong>{" "}
                           {metadata.district_name ?? "-"}
                         </div>
+
+                        {/*
+                          * RAKENNUSTYYPPI JA YRITYS NÄKYVIIN MYÖS KAAVALLA (D-190).
+                          *
+                          * Kaavakortti näytti vain kaava-alueen ja kaupunginosan,
+                          * jotka ovat useimmiten tyhjiä. Pyhäjoen Hanhelan kaava oli
+                          * luokiteltu datakeskukseksi ja sen takana on Verda Cloud Oy,
+                          * mutta kortilla ei näkynyt kumpaakaan - hanke näytti
+                          * tavalliselta kaavalta. Näytetään vain kun tieto on, jottei
+                          * kortti täyty viivoista.
+                          */}
+                        {metadata.building_type ? (
+                          <div>
+                            <strong>Rakennustyyppi:</strong> {metadata.building_type}
+                          </div>
+                        ) : null}
+                        {metadata.developer ? (
+                          <div>
+                            <strong>Hankkeesta vastaava:</strong> {metadata.developer}
+                          </div>
+                        ) : null}
                       </div>
 
                       <p className="mt-2 text-gray-600">

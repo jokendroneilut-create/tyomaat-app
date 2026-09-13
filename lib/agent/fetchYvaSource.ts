@@ -118,10 +118,18 @@ const URL_PATTERN = /\b(?:https?:\/\/|www\.)\S+/gi
  */
 const TRUNCATED_NAME = /^(?:Suomi|Finland|Sverige|Norge)\s+(?:Oy|Oyj|Ab|Ky)$/i
 
+/*
+ * SULKULAUSEKE NIMEN JA VERBIN VÄLISSÄ. Kuvio vaatii nimen ja verbin
+ * vierekkäin, ja lyhennemerkintä katkaisi sen: mitattu 13.9.2026 Pyhäjoen
+ * datakeskuskaavasta, jossa lukee `Verda Cloud Oy (”Verda”) suunnittelee`.
+ * Nimi oli tekstissä, mutta poiminta palautti tyhjän.
+ */
+const PARENTHESIS = /\s*[(（][^)）]*[)）]/g
+
 export function extractYvaDeveloper(text: string | null | undefined): string | null {
   if (!text) return null
 
-  const cleaned = text.replace(URL_PATTERN, " ")
+  const cleaned = text.replace(URL_PATTERN, " ").replace(PARENTHESIS, " ")
 
   for (const pattern of DEVELOPER_PATTERNS) {
     const match = cleaned.match(pattern)
