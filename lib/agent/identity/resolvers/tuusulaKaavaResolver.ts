@@ -3,6 +3,7 @@ import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialPr
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { gk25ToWgs84 } from "@/lib/geo/gk25"
+import { yhteystiedotVapaastaTekstista } from "@/lib/projects/vapaaYhteystieto"
 
 function findFact(facts: any[], type: string) {
   return facts.find((fact) => fact.fact_type === type)
@@ -66,7 +67,8 @@ export async function resolveTuusulaKaavaProject({
       documents_url: document.document_url,
 
       description,
-      contact_persons: contact ? [{ name: contact, title: null, phone: null, email: null }] : [],
+      // Vapaa teksti jäsennetään nimeksi, puhelimeksi ja sähköpostiksi (D-198).
+      contact_persons: yhteystiedotVapaastaTekstista(contact),
 
       lupapiste_coordinates: coordinates,
       lupapiste_coordinates_wgs84: wgs84,

@@ -5,6 +5,50 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-198 - Yhteystieto oli tallessa, mutta vaarassa kentassa tai viereisessa laatikossa
+
+Testikayttajien palaute on toistuvasti "liian vahan yhteystietoja", ja
+demoissa sama nakyy. Mitattu 19.9.2026 (`scripts/measure-yhteystiedot.ts`)
+aktiivisista julkisista hankkeista:
+
+```
+vahintaan yksi yhteystieto   80 %   (4 897 / 6 127)
+nimetty henkilo              51 %
+ei mitaan                    20 %   rakenteilla-vaiheessa 46 %
+kuvaukseen jaanyt poimimatta 18 hanketta
+```
+
+**Tekstista ei ole enaa poimittavaa** - puute on lahteissa, ei
+poiminnassa. Lisaksi arvokkaimpien hankkeiden henkilo on useimmiten
+kunnan kaavoittaja, ei ostaja: ostajapuolen henkilo (Hilman
+tilaaja/voittaja tai rakennuttajan/rakentajan oma) on vain ~12 %:lla.
+Tama selittaa palautetta paremmin kuin kokonaisluku.
+
+Kolme heikointa kaavalahdetta tutkittiin:
+
+  1. **Tuusula - tieto oli kannassa, jasennys rikki.** Resolveri kirjoitti
+     vapaan tekstin ("<nimi>\nKaavasuunnittelija\n040...\n<osoite>")
+     NIMI-kenttaan. Asiakas naki sotkun, eika puhelin tai osoite ollut
+     klikattava. Nyt `yhteystiedotVapaastaTekstista` jasentaa sen
+     `extractContacts`illa. Turva: tekstin osoite, joka puuttuu
+     tuloksesta, liitetaan henkilolle - sulkulauseke "(ent. X)" pudotti
+     sen ensimmaisessa kuivaharjoituksessa. Backfill ohittaa rivin, jos
+     yksikaan alkuperainen osoite tai numero katoaisi.
+  2. **Hameenlinna - nimi kaavan kohdalla, numero sivun lopussa.** Kaavan
+     kohdalla lukee vain "Yhteyshenkilo: <nimi>", mutta SAMALLA sivulla
+     on kaavoituksen henkilohakemisto. Kaikki 9 nimea loytyivat siita.
+     Ei lisapyyntoja.
+  3. **Tampere - nimettya henkiloa ei ole missaan kaytetyssa lahteessa.**
+     Rajapinnassa (WFS) on vain tunnus, verkkosivu ja diaarinumero;
+     hankesivulla vain palvelupiste. Nimi on todennakoisesti vain
+     kaava-asiakirjoissa (OAS-PDF). Ei arvattu.
+
+**Ajettu 19.9.2026:** Tuusula 50 rivia, Hameenlinna 90 rivia. Toinen
+kuivaharjoitus kummallekin: 0. Kattavuus: Hameenlinna 0 % -> 100 %,
+Tuusula 3 % -> 62 % henkilo; kaikki kaavalahteet 64,5 % -> 66,6 %.
+
+---
+
 ### D-197 - Rakennuttajaksi ei enaa tekstin kolmea ensimmaista yritysta
 
 ROADMAPissa oli kohta "rakennuttajakenttaan on kertynyt listoja"

@@ -35,9 +35,10 @@ export async function resolveHameenlinnaKaavaProject({
     ? [
         {
           name: contactName,
-          title: "Kaavoitus",
-          phone: null,
-          email: null,
+          // Hakemistosta nimen perusteella (D-198); ilman osumaa kuten ennen.
+          title: metadata.contact_title ?? "Kaavoitus",
+          phone: metadata.contact_phone ?? null,
+          email: metadata.contact_email ?? null,
         },
       ]
     : []

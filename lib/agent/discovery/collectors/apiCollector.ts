@@ -4,7 +4,7 @@ import tls from "tls"
 import zlib from "zlib"
 import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
-import type { Contact } from "@/lib/projects/contacts"
+import { extractContacts, type Contact } from "@/lib/projects/contacts"
 import { parseSenaattiContacts } from "@/lib/agent/senaattiContacts"
 import { parseVaylaDescription } from "@/lib/agent/vaylaProjectDescription"
 import {
@@ -27038,6 +27038,18 @@ function parseHameenlinnaTunnus(rawTitle: string): { title: string; tunnus: stri
   return { title: rawTitle.trim(), tunnus: null }
 }
 
+/* Nimen perusteella hakemistosta; ei osumaa -> ei kenttiä (nimi säilyy). */
+function hameenlinnaYhteystieto(nimi: string | null, hakemisto: Contact[]) {
+  if (!nimi) return {}
+  const osuma = hakemisto.find((c) => (c.name ?? "").trim().toLowerCase() === nimi.trim().toLowerCase())
+  if (!osuma) return {}
+  return {
+    contact_title: osuma.title ?? null,
+    contact_phone: osuma.phone ?? null,
+    contact_email: osuma.email || null,
+  }
+}
+
 async function collectHameenlinnaSource(source: DiscoverySource) {
   const response = await fetch(HAMEENLINNA_LISTING_URL, { cache: "no-store" })
 
@@ -27054,6 +27066,16 @@ async function collectHameenlinnaSource(source: DiscoverySource) {
   let found = 0
 
   const boxes = $(".b-single-accordion-box").toArray()
+
+  /*
+   * HENKILÖHAKEMISTO SAMALTA SIVULTA (D-198). Kaavan kohdalla lukee vain
+   * "Yhteyshenkilö: <nimi>", mutta sivun lopussa on kaavoituksen
+   * hakemisto puhelimineen ja sähköposteineen. Mitattu 19.9.2026: kaikki
+   * 9 yhteyshenkilöä löytyivät hakemistosta. Ei lisäpyyntöjä.
+   */
+  const $hakemisto = cheerio.load(html)
+  $hakemisto("script, style").remove()
+  const hakemisto = extractContacts($hakemisto("body").text())
 
   for (const box of boxes) {
     const $box = $(box)
@@ -27133,6 +27155,7 @@ async function collectHameenlinnaSource(source: DiscoverySource) {
             kaava_tunnus: tunnus,
             description,
             contact_name: contactName,
+            ...hameenlinnaYhteystieto(contactName, hakemisto),
             phase,
             completed,
           },

@@ -23,6 +23,7 @@ export function extractHameenlinnaKaavaFacts({
   phase,
   description,
   contactName,
+  contact = null,
 }: {
   documentId: string
   sourceName: string
@@ -31,6 +32,8 @@ export function extractHameenlinnaKaavaFacts({
   phase: string | null
   description: string | null
   contactName: string | null
+  /* Sivun hakemistosta nimen perusteella (D-198). */
+  contact?: { title: string | null; phone: string | null; email: string | null } | null
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
 
@@ -45,6 +48,9 @@ export function extractHameenlinnaKaavaFacts({
 
     description: clean(description),
     contact_name: clean(contactName),
+    contact_title: contact?.title ?? null,
+    contact_phone: contact?.phone ?? null,
+    contact_email: contact?.email ?? null,
   }
 
   if (kaavaTunnus) {

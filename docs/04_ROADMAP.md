@@ -1323,6 +1323,18 @@ muistin varassa.
 - ~~**`sync-account-lifecycle` ei ole cronissa.**~~ Tarkistettu
   30.8.2026: se on `vercel.json`:ssa aikataululla `0 3 * * *`.
 
+- **Yhteystiedot: ostajapuolen henkilö puuttuu** (D-198, mittaus
+  19.9.2026, `scripts/measure-yhteystiedot.ts`). 80 %:lla on jokin
+  yhteystieto, mutta ostajapuolen henkilö vain ~12 %:lla; arvokkaissa
+  hankkeissa henkilö on yleensä kaavoittaja. Rakenteilla-vaiheesta 46 %
+  ilman mitään. Seuraavat:
+  - Rakenteilla-vaiheen 336 hanketta ilman yhteystietoa, arvokkaimmat
+    ensin: rakennuttajan yhteystieto julkisesta lähteestä (ei arvata).
+  - Kunnan verkkotunnukset (hel.fi, ouka.fi …) tunnistukseen: kunta
+    rakennuttajana → kunnan henkilö on ostaja. Mittari aliarvioi nyt.
+  - Tampere (121 kaavaa): nimetty valmistelija vain OAS-PDF:ssä.
+  - "(ei lähdettä)" 612 hanketta, 71 % ilman yhteystietoa; rakennuslehti 84 %.
+
 ### Asiakaskäyttöliittymä
 
 - ~~**Varmista myyjän istunnolla että "Käyttö"-nappi näkyy.**~~

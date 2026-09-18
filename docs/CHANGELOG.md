@@ -11,6 +11,13 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kaavoittajan puhelin ja sähköposti Hämeenlinnaan ja Tuusulaan (D-198)
+
+Hämeenlinnan kaavoissa näkyi yhteyshenkilöstä vain nimi, ja Tuusulan
+kaavoissa yhteystiedot näkyivät nimen paikalla yhtenä tekstinä. Nyt
+kummassakin näkyvät nimi, puhelin ja sähköposti erikseen, ja ne ovat
+klikattavia. Korjaus koskee 140:tä riviä.
+
 ### Rakennuttajakentässä ei enää urakoitsijoiden listoja (D-197)
 
 Tiedotteista poimittu rakennuttaja saattoi olla lista tekstin

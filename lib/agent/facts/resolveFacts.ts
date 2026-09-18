@@ -826,6 +826,7 @@ export function resolveFacts(document: any) {
     const phase = document.raw_payload?.phase ?? null
     const description = document.raw_payload?.description ?? null
     const contactName = document.raw_payload?.contact_name ?? null
+    const rp = document.raw_payload ?? {}
 
     return {
       decisions: [],
@@ -837,6 +838,7 @@ export function resolveFacts(document: any) {
         phase,
         description,
         contactName,
+        contact: { title: rp.contact_title ?? null, phone: rp.contact_phone ?? null, email: rp.contact_email ?? null },
       }),
     }
   }
