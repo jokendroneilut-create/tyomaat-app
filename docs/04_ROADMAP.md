@@ -1278,14 +1278,12 @@ muistin varassa.
   antaa roolille etusijan ja myyntihetket tulevat bonuksena, kun taas
   hälytys käyttää nyt myyntihetkiä ensisijaisesti. Muutos järjestäisi
   kaikkien roolillisten käyttäjien näkymän uudelleen — mittaa ensin.
-- **Sivun alku jää lukematta kuudessa muussa keräimessä** (D-190:n mittaus,
-  `scripts/measure-puuttuva-alku.ts`). Mitattu 146 lähteestä: 52 osumaa,
-  joista luettuna valtaosa on navigaatiota (oikein ohitettu). Aitoja on
-  kuusi: **Kaarina, Porvoo, Naantali, Jämsä, Ylöjärvi ja
-  Puolustuskiinteistöt** — kaikilta putoaa kaavan tai uutisen oma
-  aloituskappale. Rajatapauksina Jyväskylä, Äänekoski ja Mikkeli
-  (kaavan vaihetiedot). Korjaus on lähdekohtainen, koska ingressi on eri
-  elementissä joka sivustolla.
+- ~~**Sivun alku jää lukematta kuudessa muussa keräimessä.**~~ Korjattu
+  19.9.2026 (D-194): Kaarina, Porvoo, Naantali, Jämsä, Ylöjärvi ja
+  Puolustuskiinteistöt, 168 riviä täydentyi.
+- **Rajatapaukset: Jyväskylä, Äänekoski ja Mikkeli** (D-190:n mittaus).
+  Näiltä putoaa kaavan vaihetietoja, ei hankkeen kuvausta. Mittaa ensin,
+  onko pudonnut osa hyödyllistä, ennen kuin korjaat.
 - ~~**YVA: tekstin yritykset jäävät kokonaan käyttämättä.**~~ Kirjataan
   liittyviksi yrityksiksi 13.9.2026 (D-192): 475 hanketta, 944 yritystä.
 - **YVA: 119 hanketta ilman rakennuttajaa** (D-191). Jakauma mitattu:

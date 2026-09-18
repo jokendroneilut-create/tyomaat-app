@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Hankkeen kuvaus alkaa nyt sivun alusta kuudessa lähteessä (D-194)
+
+Kaarinan, Porvoon, Naantalin, Jämsän ja Ylöjärven kaavoista sekä
+Puolustuskiinteistöjen uutisista tallentui vain osa sivusta. Pois jäi
+useimmiten juuri johdanto, joka kertoo mikä hanke on: "Kaavatyössä
+kehitetään katuyhteyttä Krossin ja Lakarin yritysalueille", "Ilmavoimien
+tukikohtaan Rissalaan nousee uusi materiaaliterminaali".
+
+Keräimet lukevat nyt johdannon, sijainnin ja tavoitteet järjestyksessä.
+Yhteystietolauseet ja linkkilistat jätetään pois. Jo löydetyt hankkeet
+päivitettiin: 168 riviä täydentyi, eikä yhdestäkään kuvauksesta poistunut
+tekstiä.
+
 ### Hälytykset noudattavat valitsemiasi myyntihetkiä (D-193)
 
 Sähköpostihälytys päätti otollisen vaiheen pelkästä yritysprofiilista, eikä

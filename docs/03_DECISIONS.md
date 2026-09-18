@@ -5,6 +5,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-194 - Kuusi keraajaa valitsi kuvaukseksi sivun keskikohdan, ja johdanto putosi
+
+D-190:n mittaus (`scripts/measure-puuttuva-alku.ts`) nimesi kuusi
+lahdetta, joiden tallennettu kuvaus alkaa vasta sivun keskelta. Oletus oli
+"ingressi eri elementissa" kuten Pyhajoella. **Luettuna syy oli kuusi eri
+valintaa**, jotka kaikki pudottivat johdannon:
+
+```
+Puolustuskiinteistot  uusissa jutuissa ingressi span.article__ingres,
+                      luettiin vain <p>:t
+Kaarina               luettiin vain "Suunnittelun tavoitteet"; ingressi
+                      (.field--name-field-description) ja Sijainti pois
+Naantali, Ylojarvi    valittiin PISIN kappale, muut hylattiin
+Jamsa                 tavoiteosion ensimmainen kappale; Sijainti pois
+Porvoo                ensimmainen kappale - jokainen kappale on oma
+                      .prose-lohkonsa, joten "kaikki kappaleet" = yksi
+```
+
+Porvoossa alku ei pudonnut, vaan jatko pudotti: johdannon toinen kappale
+(esim. "23 omakotitonttia", "vihrean vedyn tuotantolaitos") jai pois.
+
+**Korjaus: puhtaat funktiot `lib/agent/discovery/collectors/sivunKuvaus.ts`**,
+joita keraaja, testit ja backfill kayttavat. Osat koostetaan sivun
+jarjestyksessa samaan 1500 merkin budjettiin kuin `collectDescription`.
+Vanhemmissa Senaatin jutuissa ingressielementti on tyhja, joten ne pysyvat
+ennallaan.
+
+**Kuivaharjoitus loysi kaksi roskatyyppia, jotka korjattiin ennen ajoa:**
+Ylojarven kappaleet paattyvat lauseeseen "Asemakaavaa ohjaa
+projektiarkkitehti X, p. 040 ..., etunimi.sukunimi@...", ja Senaatin runko
+paattyy "Lue myos: ..." -linkkilistaan. Yhteystietolause pudotetaan
+lausetasolla, jolloin saman kappaleen hankekuvaus sailyy. Lievaa
+menettelytekstia ("kuulutettu vireille 2025 kaavoituskatsauksessa")
+jatettiin, koska se on hankkeen kontekstia.
+
+**Backfill vain laajentaa:** kuvaus korvataan vain jos vanha sisaltyy
+uuteen kokonaan, ja `additional_info` vain jos se oli sama kuin vanha
+kuvaus. Tallinrinne jai koskematta, koska sivulla "kt65" on muuttunut
+muotoon "kt 65". Myos `source_documents.raw_payload` paivitettiin, koska
+Puolustuskiinteistojen keraaja kayttaa tallessa olevaa kuvausta eika hae
+tunnettua sivua uudelleen.
+
+**Ajettu 19.9.2026:** 142 sivua, 168 rivia taydentyi (82 `additional_info`,
+88 lahdedokumenttia). Toinen kuivaharjoitus: 0 taydennettavaa. Kaarinan
+kaksi sivua palautti 403.
+
+---
+
 ### D-193 - Hälytys noudattaa käyttäjän valitsemia myyntihetkiä, ei roolin oletusta
 
 Johannes sai testitunnuksellaan sähköpostin "3 hanketta eteni sinulle

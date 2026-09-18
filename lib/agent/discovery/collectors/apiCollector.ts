@@ -16,6 +16,14 @@ import type { DiscoverySource } from "../registry/sources"
 import { parseKaavaPaatos } from "@/lib/agent/kaavaVoimaantulo"
 import { pietarsaariKaavaDescription } from "@/lib/agent/pietarsaariKaavaDescription"
 import {
+  jamsaKuvaus,
+  kaarinaKuvaus,
+  naantaliKuvaus,
+  porvooKuvaus,
+  puolustuskiinteistotKuvaus,
+  ylojarviKuvaus,
+} from "./sivunKuvaus"
+import {
   pietarsaariKaavaSlugs,
   pietarsaariKaavaTitles,
 } from "@/lib/agent/pietarsaariKaavaSlug"
@@ -4017,10 +4025,8 @@ async function collectPorvooSource(source: DiscoverySource) {
     const phase = $(".mt-half-gutter.max-w-prose").first().text().replace(/\s+/g, " ").trim() || null
     const completed = phase !== null && /tullut voimaan|lainvoimainen|saanut lainvoiman/i.test(phase)
 
-    const description =
-      $(".prose").first().find("p").first().text().replace(/\s+/g, " ").trim() ||
-      $("p").first().text().replace(/\s+/g, " ").trim() ||
-      null
+    // Johdanto valiotsikkoon asti, ei vain ensimmaista kappaletta (D-194).
+    const description = porvooKuvaus($) || $("p").first().text().replace(/\s+/g, " ").trim() || null
 
     const titleTunnusMatch = title.match(/^(?:AK|DP)\s*([\d/]+)/i)
     const kaavaTunnus = titleTunnusMatch ? titleTunnusMatch[1] : null
@@ -5188,12 +5194,8 @@ async function collectPuolustuskiinteistotSource(source: DiscoverySource) {
     const $ = cheerio.load(detailHtml)
     $("style, script").remove()
 
-    const description =
-      $("article p")
-        .toArray()
-        .map((el) => $(el).text().replace(/\s+/g, " ").trim())
-        .filter(Boolean)
-        .join(" ") || item.excerpt
+    // Uudemmissa jutuissa ingressi on omassa elementissaan (D-194).
+    const description = puolustuskiinteistotKuvaus($) || item.excerpt
 
     /*
      * Artikkelin runko mainitsee usein alkuperäisen rakennuksen
@@ -5795,8 +5797,8 @@ async function fetchKaarinaKaavaDetails(url: string) {
       return heading ? $(heading).parent().next() : null
     }
 
-    const goalsSection = findSection(/Suunnittelun tavoitteet/i)
-    const description = goalsSection ? goalsSection.text().replace(/\s+/g, " ").trim() || null : null
+    // Ingressi + sijainti + tavoitteet, ei pelkkia tavoitteita (D-194).
+    const description = kaarinaKuvaus($)
 
     const stagesSection = findSection(/Kaavan vaiheet/i)
     const stages: string[] = []
@@ -8504,8 +8506,8 @@ async function fetchNaantaliKaavaDetails(url: string) {
     .get()
     .filter(Boolean)
 
-  const candidates = paragraphs.filter((p) => p.length > 40 && !NAANTALI_PROCEDURAL_PATTERN.test(p))
-  const description = candidates.length ? candidates.reduce((a, b) => (b.length > a.length ? b : a)) : null
+  // Kaikki kappaleet jarjestyksessa, ei pisinta yksinaan (D-194).
+  const description = naantaliKuvaus($, NAANTALI_PROCEDURAL_PATTERN)
 
   const liftupTitles = $("article.liftup")
     .map((_, el) => $(el).find("h2").first().text().replace(/\s+/g, " ").trim())
@@ -9975,19 +9977,8 @@ async function collectJamsaKaavaSource(source: DiscoverySource) {
 
     const title = article.find("h1").first().text().replace(/\s+/g, " ").trim() || link.title
 
-    const goalsHeading = article
-      .find("h4")
-      .filter((_, el) => $(el).text().trim() === "Kaavan tavoitteet")
-      .first()
-    const description =
-      goalsHeading.length
-        ? goalsHeading
-            .nextUntil("h4")
-            .filter("p")
-            .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
-            .get()
-            .find((p) => p.length > 20) ?? null
-        : null
+    // Sijainti + tavoitteet kokonaan, ei tavoitteiden ensimmaista kappaletta (D-194).
+    const description = jamsaKuvaus($)
 
     const stagesHeading = article
       .find("h4")
@@ -25672,10 +25663,12 @@ async function fetchYlojarviKaavaDetails(url: string) {
       candidates.push(text)
     })
 
+    // Johdantokappaleet jarjestyksessa; pisin kappale vain jos rakenne puuttuu (D-194).
     const description =
-      candidates.length > 0
+      ylojarviKuvaus($) ??
+      (candidates.length > 0
         ? candidates.reduce((longest, current) => (current.length > longest.length ? current : longest))
-        : null
+        : null)
 
     const kaavaAineistoHeading = $("h3")
       .filter((_, el) => $(el).text().trim() === "Kaava-aineisto")
