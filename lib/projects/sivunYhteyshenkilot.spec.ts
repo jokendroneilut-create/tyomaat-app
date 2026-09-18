@@ -29,7 +29,7 @@ describe("sivunYhteyshenkilot", () => {
 
 describe("sahkopostiVastaaNimea", () => {
   it("vertaa ilman ääkkösiä", () => {
-    expect(sahkopostiVastaaNimea("Ilmari Hämäläinen", "ilmari.hamalainen@esimerkki.fi")).toBe(true)
+    expect(sahkopostiVastaaNimea("Keijo Mäkäräinen", "keijo.makarainen@esimerkki.fi")).toBe(true)
     expect(sahkopostiVastaaNimea("Taaleri Kiinteistöjen", "info@esimerkki.fi")).toBe(false)
   })
 })
