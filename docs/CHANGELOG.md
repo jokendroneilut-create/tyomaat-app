@@ -11,6 +11,14 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Väylän hankkeille projektipäällikkö (D-199)
+
+Väyläviraston ja elinvoimakeskusten hankesivuilla on nimetty
+projektipäällikkö puhelimineen ja sähköposteineen, mutta suurelta osalta
+hankkeista se jäi hakematta. Nyt sen on 171 hankkeella lisää. Väylän
+hankkeista 87 %:lla on yhteyshenkilö (ennen 74 %). Kattohankkeet, joiden
+sivulla ohjataan osahankkeisiin, saavat henkilön osahankkeen sivulta.
+
 ### Kaavoittajan puhelin ja sähköposti Hämeenlinnaan ja Tuusulaan (D-198)
 
 Hämeenlinnan kaavoissa näkyi yhteyshenkilöstä vain nimi, ja Tuusulan

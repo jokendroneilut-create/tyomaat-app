@@ -5,6 +5,46 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-199 - Vaylan projektipaallikko oli sivulla, mutta sivua ei koskaan haettu
+
+Rakenteilla-vaiheen hankkeista 336 oli ilman yhteystietoa. Jaettuna:
+
+```
+ilman lahdetta (helmi-maaliskuun 2026 alkuaineisto)   244
+Vaylavirasto hankkeet                                  32
+rakennuslehti                                          19
+muut                                                   41
+```
+
+**Lahteettomille ei voi tehda mitaan lahteesta**: niilla ei ole
+lahdedokumenttia, josta yhteystiedon voisi varmentaa, eika yrityksen
+verkkotunnusta voi paatella nimesta (orgContacts: 794 vaaraa paria).
+Kirjattu ROADMAPiin.
+
+**Vaylasta loytyi rakenteellinen vika.** Keraaja hakee yksityiskohtasivun
+(jossa yhteystietolaatikko on) enintaan 30 per ajo, ja lahde on ajettu
+vain 12 kertaa. Mitattu 19.9.2026: 249 lahdedokumentista **103:lle sivua
+ei ollut koskaan haettu**. Laatikko oli sivulla koko ajan.
+
+Kolme tapausta, jarjestyksessa:
+
+  1. **Oma laatikko** - 160 rivia. Haettiin uudelleen.
+  2. **Kattohanke** ("Kts. osahankkeiden yhteystiedot") - henkilo on
+     osahankkeen sivulla (Vt 9 Kanavuori-Hankasalmi -> Kanavuori-
+     Lievestuore). Keraaja seuraa nyt linkit (`vaylaSubprojectLinks`,
+     enintaan 5, ei navigaatiota), MUTTA vain kun sivu itse sanoo
+     "osahankkeiden yhteystiedot": "Siltatyot Kainuussa" linkittaa
+     toiseen hankkeeseen (paallystystyot), jonka henkilo olisi vaara.
+  3. **Leipateksti** - ohjelmasivu "Siltatyot Ita-Suomessa" nimeaa
+     yhteyshenkilot tekstissa, 11 rivia. "puh.nro." tulkittiin
+     titteliksi "nro." - `siivoaTitteli` poistaa sen.
+
+**Ajettu 19.9.2026:** 171 / 229 rivia (32 hanketta + 139 ehdokasta), 0
+uusintakuivaharjoituksessa. Vayla-lahteen henkilokattavuus 74 % -> 87 %.
+Jaljelle jaaneilla 58:lla ei ole yhteystietoa sivulla lainkaan.
+
+---
+
 ### D-198 - Yhteystieto oli tallessa, mutta vaarassa kentassa tai viereisessa laatikossa
 
 Testikayttajien palaute on toistuvasti "liian vahan yhteystietoja", ja

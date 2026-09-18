@@ -5,6 +5,7 @@ import zlib from "zlib"
 import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
 import { extractContacts, type Contact } from "@/lib/projects/contacts"
+import { vaylaSubprojectLinks } from "@/lib/agent/vaylaSubprojects"
 import { parseSenaattiContacts } from "@/lib/agent/senaattiContacts"
 import { parseVaylaDescription } from "@/lib/agent/vaylaProjectDescription"
 import {
@@ -1889,6 +1890,21 @@ function decodeCloudflareEmail(encoded: string): string | null {
   }
 }
 
+type VaylaContactBoxData = { organization: string | null; title: string | null; name: string | null; phone: string | null; email: string | null }
+
+function vaylaContactBox($: cheerio.CheerioAPI): VaylaContactBoxData | null {
+  const contactBox = $(".contact-information .contact").first()
+  if (!contactBox.length) return null
+  const emailEncoded = contactBox.find(".__cf_email__").first().attr("data-cfemail")
+  return {
+    organization: contactBox.find(".organization").first().text().trim() || null,
+    title: contactBox.find(".title").first().text().trim() || null,
+    name: contactBox.find(".full-name").first().text().trim() || null,
+    phone: contactBox.find(".phones li").first().text().trim() || null,
+    email: emailEncoded ? decodeCloudflareEmail(emailEncoded) : null,
+  }
+}
+
 async function fetchVaylaProjectDetails(projectUrl: string, title?: string | null): Promise<{
   contact: { organization: string | null; title: string | null; name: string | null; phone: string | null; email: string | null } | null
   progress: string | null
@@ -1898,18 +1914,29 @@ async function fetchVaylaProjectDetails(projectUrl: string, title?: string | nul
     const html = await (await fetch(projectUrl, { cache: "no-store" })).text()
     const $ = cheerio.load(html)
 
-    const contactBox = $(".contact-information .contact").first()
-    let contact = null
+    let contact = vaylaContactBox(cheerio.load(html))
 
-    if (contactBox.length) {
-      const emailEncoded = contactBox.find(".__cf_email__").first().attr("data-cfemail")
-
-      contact = {
-        organization: contactBox.find(".organization").first().text().trim() || null,
-        title: contactBox.find(".title").first().text().trim() || null,
-        name: contactBox.find(".full-name").first().text().trim() || null,
-        phone: contactBox.find(".phones li").first().text().trim() || null,
-        email: emailEncoded ? decodeCloudflareEmail(emailEncoded) : null,
+    /*
+     * KATTOHANKE: "Kts. osahankkeiden yhteystiedot" (D-199). Sivulla ei ole
+     * omaa yhteystietolaatikkoa, vaan projektipäälliköt ovat osahankkeiden
+     * sivuilla (Vt 9 Kanavuori-Hankasalmi -> Kanavuori-Lievestuore,
+     * Lievestuore-Hankasalmi). Otetaan ensimmäinen osahankkeen henkilö.
+     * Enintään VAYLA_MAX_SUBPAGES pyyntöä, vain vayla.fi:n omat sivut.
+     */
+    /*
+     * Vain kun sivu itse ohjaa osahankkeisiin. Muuten linkki voi olla
+     * "katso myös" toiseen hankkeeseen, jonka henkilö olisi väärä
+     * (Siltatyöt Kainuussa -> Päällystystyöt Pohjois-Pohjanmaalla).
+     */
+    if (!contact && /osahankkeiden\s+yhteystiedot/i.test($("body").text())) {
+      for (const alasivu of vaylaSubprojectLinks($, projectUrl)) {
+        try {
+          const subHtml = await (await fetch(alasivu, { cache: "no-store" })).text()
+          contact = vaylaContactBox(cheerio.load(subHtml))
+        } catch {
+          contact = null
+        }
+        if (contact?.name) break
       }
     }
 

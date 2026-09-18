@@ -1328,8 +1328,15 @@ muistin varassa.
   yhteystieto, mutta ostajapuolen henkilö vain ~12 %:lla; arvokkaissa
   hankkeissa henkilö on yleensä kaavoittaja. Rakenteilla-vaiheesta 46 %
   ilman mitään. Seuraavat:
-  - Rakenteilla-vaiheen 336 hanketta ilman yhteystietoa, arvokkaimmat
-    ensin: rakennuttajan yhteystieto julkisesta lähteestä (ei arvata).
+  - ~~Rakenteilla-vaiheen 336 hanketta ilman yhteystietoa.~~ Väylä
+    korjattu (D-199). **244 näistä on lähteettömiä** (helmi–maaliskuun
+    2026 alkuaineisto: Visulahden datakeskus, Kotkan akkutehdas, OYS C):
+    ei lähdedokumenttia, josta varmentaa. Vaatii päätöksen – esim. oman
+    lähteen haku hankekohtaisesti, ei arvausta.
+  - **Väylän keräimen tahti** (D-199): 103 sivua ei koskaan haettu
+    yksityiskohtaisesti – katto 30/ajo, lähde ajettu 12 kertaa. Selvitä
+    putoavatko kohteet listaukselta ennen kuin niihin ehditään, ennen kuin
+    kattoa nostetaan (90 s työaikaraja).
   - Kunnan verkkotunnukset (hel.fi, ouka.fi …) tunnistukseen: kunta
     rakennuttajana → kunnan henkilö on ostaja. Mittari aliarvioi nyt.
   - Tampere (121 kaavaa): nimetty valmistelija vain OAS-PDF:ssä.

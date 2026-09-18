@@ -19,7 +19,13 @@ import { extractContacts, type Contact } from "./contacts"
  */
 
 /* Kentän lyhenne ei ole titteli: "<nimi> / sp. ... / p. ..." -> titteli "sp.". */
-const EI_TITTELI = /^(?:sp|s-posti|sähköposti|email|puh|puhelin|p|gsm)\.?:?$/i
+const EI_TITTELI = /^(?:sp|s-posti|sähköposti|email|puh|puhelin|p|gsm|nro|puh\.?\s*nro)\.?:?$/i
+
+/* "<nimi>, puh.nro. 0295..." -> titteli "nro." (Väylä, D-199). */
+export function siivoaTitteli(title: string | null | undefined): string | null {
+  const t = String(title ?? "").trim()
+  return !t || EI_TITTELI.test(t) ? null : t
+}
 
 export type VapaaYhteystieto = Pick<Contact, "name" | "title" | "phone"> & {
   /* Pelkän nimen rivillä osoitetta ei ole. */
@@ -32,7 +38,7 @@ export function yhteystiedotVapaastaTekstista(raw: string | null | undefined): V
 
   const poimitut: VapaaYhteystieto[] = extractContacts(teksti).map((c) => ({
     ...c,
-    title: c.title && EI_TITTELI.test(c.title.trim()) ? null : c.title,
+    title: siivoaTitteli(c.title),
   }))
 
   /*

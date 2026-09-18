@@ -3,6 +3,8 @@ import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialPr
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { inferMunicipalityFromText } from "@/lib/geo/inferMunicipalityFromText"
 import { normalizeVaylaContact } from "@/lib/agent/vaylaContacts"
+import { extractContacts } from "@/lib/projects/contacts"
+import { siivoaTitteli } from "@/lib/projects/vapaaYhteystieto"
 
 function findFact(facts: any[], type: string) {
   return facts.find((fact) => fact.fact_type === type)
@@ -54,7 +56,17 @@ export async function resolveVaylaProject({
    * ohje eikä henkilöä ("Kts. osahankkeiden yhteystiedot"). Siivous on
    * `vaylaContacts`-moduulissa, koska takautuva ajo tarvitsee samaa.
    */
-  const contactPersons = normalizeVaylaContact(contact)
+  const laatikosta = normalizeVaylaContact(contact)
+  /*
+   * Ohjelmasivulla (Siltatyöt Itä-Suomessa) ei ole laatikkoa, mutta
+   * yhteyshenkilöt ovat leipätekstissä (D-199). Vain henkilöt.
+   */
+  const contactPersons =
+    laatikosta.length > 0
+      ? laatikosta
+      : extractContacts(description)
+          .filter((c) => c.kind === "person" && c.role !== "authority")
+          .map((c) => ({ ...c, title: siivoaTitteli(c.title) }))
 
   const fullDescription = [
     description,
