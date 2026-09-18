@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import PhaseTimeline from "@/app/projects/PhaseTimeline"
-import { displayPhaseLabel } from "@/lib/projects/phases"
+import { displayProjectPhase } from "@/lib/projects/phases"
 import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 import { trackEvent } from "@/lib/analytics/trackEvent"
 import TodayFeedbackButtons from "./TodayFeedbackButtons"
@@ -262,7 +262,7 @@ export default function TodayProjectModal({
                 <h2 className="projects-modalTitle">{project.name}</h2>
                 <div className="projects-modalSub">
                   {project.city} • {project.region || "-"} •{" "}
-                  {displayPhaseLabel(project.phase)}
+                  {displayProjectPhase(project.phase, project.metadata?.is_cancelled_procurement)}
                 </div>
                 <PhaseTimeline rawPhase={project.phase} history={phaseHistory} />
 

@@ -314,6 +314,14 @@ export async function GET(req: Request) {
       for (const [projectId, phaseKey] of latestPhaseByProject) {
         const project = projectById.get(projectId)
         if (!project) continue
+        /*
+         * Keskeytetty kilpailutus pysyy näkyvissä (D-070), mutta siitä ei
+         * hälytetä "kilpailutukseen edenneenä" - tarjota ei voi (D-196).
+         * Vain kilpailutusvaiheessa: lippu voi olla päällä myös hankkeella,
+         * jonka yksi osa keskeytettiin ja toinen myönnettiin (Malmin
+         * uimahalli A2/B2) - sen sopimushälytys on aito.
+         */
+        if (project.metadata?.is_cancelled_procurement === true && phaseKey === "tender") continue
         const vaihe = halytysvaihe(role, phaseKey, myyntihetket)
         if (!vaihe.osuu) continue
         if (!matchesRegions(project, settings.regions)) continue

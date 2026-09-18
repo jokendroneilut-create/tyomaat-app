@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabaseClient'
 import MapClient from './MapClient'
 import type { MapBounds } from './Map'
 import PhaseTimeline from './PhaseTimeline'
-import { CANONICAL_PHASES, displayPhaseLabel, normalizeLegacyPhase } from '@/lib/projects/phases'
+import { CANONICAL_PHASES, displayPhaseLabel, displayProjectPhase, normalizeLegacyPhase } from '@/lib/projects/phases'
 import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
 import {
   collectProjectCompanies,
@@ -63,6 +63,8 @@ type Project = {
    * avataan erikseen.
    */
   related_companies: string[] | null
+  /* Keskeytetty Hilma-kilpailutus, näytetään vaiheen yhteydessä (D-196). */
+  is_cancelled_procurement?: boolean | null
   property_type: string | null
   apartments: number | null
   floor_area: number | null
@@ -603,6 +605,7 @@ export default function Projects() {
           structural_design, hvac_design, electrical_design, architectural_design,
           geotechnical_design, earthworks_contractor, additional_info,
           related_companies:metadata->related_companies,
+          is_cancelled_procurement:metadata->is_cancelled_procurement,
            latitude, longitude,
           is_public,
           created_at
@@ -1308,7 +1311,7 @@ setTeamModeEnabled(true)
                   </div>
                   <div>{p.city}</div>
                   <div>{p.region || '-'}</div>
-                  <div>{displayPhaseLabel(p.phase)}</div>
+                  <div>{displayProjectPhase(p.phase, p.is_cancelled_procurement)}</div>
 
                   <div className="projects-actions" style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                     <button className="projects-btn" onClick={() => setSelected(p)}>
@@ -1406,7 +1409,7 @@ setTeamModeEnabled(true)
                   </div>
 
                   <div className="projects-cardMeta">
-                    {p.city} • {p.region || '-'} • {displayPhaseLabel(p.phase)}
+                    {p.city} • {p.region || '-'} • {displayProjectPhase(p.phase, p.is_cancelled_procurement)}
                   </div>
 
                   <div style={{ marginTop: 6 }}>
@@ -1486,7 +1489,7 @@ setTeamModeEnabled(true)
               <div>
                 <h2 className="projects-modalTitle">{selected.name}</h2>
                 <div className="projects-modalSub">
-                  {selected.city} • {selected.region || '-'} • {displayPhaseLabel(selected.phase)}
+                  {selected.city} • {selected.region || '-'} • {displayProjectPhase(selected.phase, selected.is_cancelled_procurement)}
                 </div>
                 <PhaseTimeline rawPhase={selected.phase} history={phaseHistory} />
               </div>

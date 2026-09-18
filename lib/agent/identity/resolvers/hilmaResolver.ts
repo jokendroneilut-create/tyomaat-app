@@ -1,5 +1,5 @@
 import { hilmaNoticeUrl } from "@/lib/agent/hilmaNoticeUrl"
-import { isCancellationNotice } from "@/lib/agent/hilmaCancellation"
+import { isCancellationNotice, stripCancellationPrefix } from "@/lib/agent/hilmaCancellation"
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
@@ -366,7 +366,8 @@ export async function resolveHilmaProject({
   const municipalityObj = getMunicipalityByPlaceName(municipality)
 
   const result = await resolvePotentialProject({
-    title: operation,
+    // Keskeytysilmoituksen otsikko ei ole hankkeen nimi (D-196).
+    title: isCancelled && operation ? stripCancellationPrefix(operation) : operation,
     municipality,
     address: resolvedAddress,
     propertyId: null,

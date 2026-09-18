@@ -5,6 +5,52 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-196 - Keskeytetty kilpailutus nakyy keskeytettyna, ei avoimena
+
+Halytysten katvealueen mittaus (`scripts/measure-vaiheen-eteneminen.ts`)
+loysi Hilma-hankkeita, jotka nakyivat asiakkaalle avoimina
+kilpailutuksina, vaikka hankinta oli keskeytetty - nimena esim.
+"Keskeytysilmoitus: Vt 4 Rovaniemi-Apukka, pohjatutkimukset".
+
+**D-070 PYSYY.** Ensimmainen ehdotus oli siirtaa ne pois aktiivisista,
+mutta se kumoaisi D-070:n: keskeytetty kilpailutus kilpailutetaan
+yleensa uudelleen, joten liidi on aito, eika kesken olevaa hanketta
+piiloteta. Kayttaja valitsi korjauksen D-070:n mukaisesti.
+
+**Vika oli nakyvyydessa, ei vaiheessa.** Lippu
+`metadata.is_cancelled_procurement` asetettiin oikein, mutta mikaan ei
+lukenut sita. Nyt:
+
+  1. Vaihe naytetaan "Kilpailutus (keskeytetty)" listassa, kortissa ja
+     Tanaan-nakyman modaalissa (`displayProjectPhase`). Vaihesuodatin
+     kayttaa yha pelkkaa vaihetta.
+  2. Keskeytysilmoituksen etuliite pois nimesta, kun ilmoitus on
+     ensimmainen jonka hankinnasta naemme (`stripCancellationPrefix`).
+  3. Halytys ei ilmoita keskeytettya kilpailutusta - tarjota ei voi.
+     Vain kilpailutusvaiheessa: Malmin uimahallin A2/B2-vesikattotoissa
+     lippu on paalla, koska myohemmat ilmoitukset olivat voittajattomia,
+     mutta Rakennusliike Evalahti Oy voitti sopimuksen 6.8. Sen
+     sopimushalytys on aito.
+
+**"Hankintapaatos ilman voittajaa" -tapaukset olivat keskeytyksia.**
+Mittaus nosti esiin kolme hanketta (Kirvesmiestyot, Malmin
+viherkattotyot, sahkotekniset tyot), joissa paatosilmoitus ei vienyt
+vaihetta eteenpain. Kaikilla kolmella lippu on paalla, joten ne ovat
+oikein kilpailutuksessa ja nakyvat nyt keskeytettyina.
+
+**Vuosaaren Urheilutalo jatettiin koskematta.** "KESKEYTYS: ...
+vedenkasittely (VKU)" on vaiheessa "Sopimus myonnetty" rakentajanaan
+Atolli Oy, ja vaihe on asetettu KASIN TIC-hyvaksynnassa kahdesti.
+Keskeytys koskee vain VKU-osaa, joten muut tyot ovat voineet menna
+Atollille. Ihmisen paatosta ei kumota - avoin kysymys kayttajalle.
+Samasta syysta vaihetta palauttavaa saantoa ei tehty: automaattisesti
+syntynytta tapausta ei loytynyt.
+
+**Ajettu 19.9.2026:** 4 nimea korjattu. Keskeytettyna nakyy nyt 7
+kilpailutusta.
+
+---
+
 ### D-195 - Kaava nimeaa rakennuttajan, mutta saantoa ajettiin vain YVA:lle
 
 D-194:n jalkeen tarkistettiin, loytyyko taydentyneista kuvauksista

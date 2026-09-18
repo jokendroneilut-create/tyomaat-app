@@ -11,6 +11,14 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Keskeytetty kilpailutus näkyy keskeytettynä (D-196)
+
+Hilmassa keskeytetyt kilpailutukset näkyivät avoimina, eli niihin olisi
+luullut voivansa vielä tarjota. Nyt vaiheena lukee "Kilpailutus
+(keskeytetty)". Hanke pysyy silti listalla, koska se kilpailutetaan
+yleensä uudelleen. Nimestä on poistettu "Keskeytysilmoitus:"-etuliite,
+eikä keskeytetystä kilpailutuksesta enää lähetetä hälytystä.
+
 ### Kaavahankkeet saavat rakennuttajan kaavan tekstistä (D-195)
 
 Kaavasivu kertoo usein suoraan, kuka hanketta vie: "Neoen Renewables

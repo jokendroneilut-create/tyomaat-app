@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { isCancellationNotice, titleSaysCancellation } from "./hilmaCancellation"
+import { isCancellationNotice, stripCancellationPrefix, titleSaysCancellation } from "./hilmaCancellation"
 
 describe("isCancellationNotice", () => {
   /*
@@ -68,5 +68,25 @@ describe("isCancellationNotice", () => {
   it("sietaa tyhjan", () => {
     expect(isCancellationNotice({ title: null })).toBe(false)
     expect(isCancellationNotice({ title: "" })).toBe(false)
+  })
+})
+
+describe("stripCancellationPrefix (D-196)", () => {
+  it("poistaa mitatut etuliitemuodot", () => {
+    expect(stripCancellationPrefix("Keskeytysilmoitus: Vt 4 Rovaniemi-Apukka, pohjatutkimukset")).toBe(
+      "Vt 4 Rovaniemi-Apukka, pohjatutkimukset"
+    )
+    expect(stripCancellationPrefix("Keskeytysilmoitus, TAPO Köyliöntien tasoristeys")).toBe("TAPO Köyliöntien tasoristeys")
+    expect(stripCancellationPrefix("KESKEYTYS: Vuosaaren Urheilutalo")).toBe("Vuosaaren Urheilutalo")
+    expect(stripCancellationPrefix("Keskeytys-ilmoitus-Koulun peruskorjaus")).toBe("Koulun peruskorjaus")
+    expect(stripCancellationPrefix("JÄLKI-ILMOITUS HANKINNAN KESKEYTTÄMINEN_Kadun saneeraus")).toBe("Kadun saneeraus")
+  })
+
+  it("ei koske nimeen jossa keskeytys ei ole alussa", () => {
+    expect(stripCancellationPrefix("Koulun peruskorjaus, keskeytys 2019")).toBe("Koulun peruskorjaus, keskeytys 2019")
+  })
+
+  it("ei tyhjennä nimeä", () => {
+    expect(stripCancellationPrefix("Keskeytysilmoitus")).toBe("Keskeytysilmoitus")
   })
 })

@@ -70,3 +70,23 @@ export function isCancellationNotice(input: {
   if (!titleSaysCancellation(input.title)) return false
   return hasNoWinner(input.winners, input.winnerOrganisations)
 }
+
+/*
+ * KESKEYTYSETULIITE POIS HANKKEEN NIMESTÄ (D-196).
+ *
+ * Kun keskeytysilmoitus on ensimmäinen ilmoitus jonka hankinnasta
+ * näemme, sen otsikosta tuli hankkeen nimi: "Keskeytysilmoitus: Vt 4
+ * Rovaniemi-Apukka, pohjatutkimukset". D-070:n mukaan hanke pysyy
+ * näkyvissä kilpailutuksena, joten nimen kuuluu olla hankkeen nimi -
+ * keskeytys näytetään vaiheen yhteydessä (`displayProjectPhase`).
+ *
+ * Vain alusta, ja vain jos jäljelle jää nimi. Mitatut muodot ks.
+ * CANCELLATION_TITLE yllä.
+ */
+const CANCELLATION_PREFIX =
+  /^\s*(?:jälki-ilmoitus\s+hankinnan\s+keskeyttäminen|keskeytys-?ilmoitus|keskeytys)\s*[:,_–-]?\s*/i
+
+export function stripCancellationPrefix(title: string): string {
+  const siistitty = title.replace(CANCELLATION_PREFIX, "").trim()
+  return siistitty.length >= 5 ? siistitty : title.trim()
+}

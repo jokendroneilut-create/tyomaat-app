@@ -78,6 +78,23 @@ export function displayPhaseLabel(raw: string | null | undefined): string {
   return key ? PHASE_LABELS[key] : raw?.trim() || "-"
 }
 
+/*
+ * KESKEYTETTY KILPAILUTUS NÄKYY (D-196). D-070:n mukaan hanke pysyy
+ * kilpailutusvaiheessa, koska se yleensä kilpailutetaan uudelleen - mutta
+ * asiakkaalle se näytti avoimelta kilpailutukselta, johon voi vielä
+ * tarjota. Lippu (`metadata.is_cancelled_procurement`) oli olemassa,
+ * muttei sitä luettu missään.
+ */
+export function displayProjectPhase(
+  raw: string | null | undefined,
+  cancelledProcurement?: unknown
+): string {
+  const label = displayPhaseLabel(raw)
+  return cancelledProcurement === true && normalizeLegacyPhase(raw) === "tender"
+    ? `${label} (keskeytetty)`
+    : label
+}
+
 export function phaseOrder(raw: string | null | undefined): number | null {
   const key = normalizeLegacyPhase(raw)
   if (!key) return null

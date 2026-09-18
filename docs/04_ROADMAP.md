@@ -1281,6 +1281,20 @@ muistin varassa.
 - ~~**Sivun alku jää lukematta kuudessa muussa keräimessä.**~~ Korjattu
   19.9.2026 (D-194): Kaarina, Porvoo, Naantali, Jämsä, Ylöjärvi ja
   Puolustuskiinteistöt, 168 riviä täydentyi.
+- **Avoin: Vuosaaren Urheilutalo, VKU** (D-196). "KESKEYTYS: …
+  vedenkäsittely (VKU)" on vaiheessa "Sopimus myönnetty" (Atolli Oy),
+  ja se on asetettu käsin. Tarkista, onko Atolli voittanut muun osan
+  vai onko vaihe väärin.
+- **Hälytysten katvealue: eteneminen lähteestä toiseen** (mittaus
+  19.9.2026, `scripts/measure-vaiheen-eteneminen.ts`). Saman hankinnan
+  jatkoilmoitus etenee oikein, mutta eteneminen kaava → lupa → Hilma
+  jää mittarin ulkopuolelle, koska tunnisteet eroavat. Vaatii nimi- ja
+  osoitevertailun.
+- **Tarkista valmistumisajastuksen hälytykset** (mittaus 19.9.2026).
+  Viikolla 31.8. `estimated-completion-cron` ja `restore-auto-completed`
+  kirjasivat ~220 vaihemuutosta, osa taaksepäin (valmistunut →
+  kaavoitus). Hälytys lukee uusimman vaiheen, joten ne ovat voineet
+  lähettää hälytyksiä hankkeista jotka eivät edenneet.
 - **Kaavojen liittyvät yritykset** (D-195). Kaavakuvauksista löytyy
   626 yritysnimeä (konsultit kuten Sitowise ja FCG, tilojen käyttäjät,
   hankeyhtiöiden emot), mutta noin joka kymmenes on väärin:
