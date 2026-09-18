@@ -137,6 +137,52 @@ export function roleStageWeight(
 }
 
 /*
+ * ONKO VAIHE KÄYTTÄJÄN ITSE VALITSEMA MYYNTIHETKI? (D-193)
+ *
+ * Yksi paikka tälle vertailulle. Sama vertailu oli kirjoitettu erikseen
+ * Tänään-näkymään (`salesMomentFit`) ja `resolveStageFit`iin, ja
+ * sähköpostihälytys ei tehnyt sitä lainkaan - joten sama asetus toimi
+ * yhdessä paikassa ja jäi huomiotta toisessa.
+ */
+export function onValittuMyyntihetki(
+  phaseKey: PhaseKey | null,
+  selectedSalesMoments: string[] = []
+): boolean {
+  if (!phaseKey) return false
+  return selectedSalesMoments.some((moment) => normalizeLegacyPhase(moment) === phaseKey)
+}
+
+export type HalytysLahde = "moments" | "role"
+
+/*
+ * LÄHETETÄÄNKÖ TÄSTÄ VAIHEMUUTOKSESTA HÄLYTYS? (D-193)
+ *
+ * KÄYTTÄJÄN VALINTA VOITTAA ROOLIN. Hälytys päätti aiemmin otollisen
+ * vaiheen pelkästä yritysprofiilista (`roleStageWeight === 1`), eikä
+ * lukenut käyttäjän valitsemia myyntihetkiä lainkaan. Mitattu tapaus
+ * 18.9.2026: Infra-profiili, myyntihetkeksi valittu "Rakenteilla" - ja
+ * sähköposti "Kilpailutus — sopii infrarakentajalle", koska Kilpailutus on
+ * Infran huippuvaihe. Käyttäjän omissa asetuksissa lukee toisin, joten
+ * viesti oli ristiriidassa sen kanssa mitä hän näkee.
+ *
+ * Roolin huippuvaihe on käytössä vain, kun myyntihetkiä ei ole valittu.
+ *
+ * "MUU"-PROFIILI SAI NOLLA HÄLYTYSTÄ. Sillä ei ole huippuvaihetta, joten
+ * vanha sääntö ei lähettänyt mitään, vaikka käyttäjä oli valinnut
+ * myyntihetkensä ja pitänyt hälytykset päällä.
+ */
+export function halytysvaihe(
+  companyProfile: string | null | undefined,
+  phaseKey: PhaseKey | null,
+  selectedSalesMoments: string[] = []
+): { osuu: boolean; lahde: HalytysLahde } {
+  if (selectedSalesMoments.length > 0) {
+    return { osuu: onValittuMyyntihetki(phaseKey, selectedSalesMoments), lahde: "moments" }
+  }
+  return { osuu: roleStageWeight(companyProfile, phaseKey) >= 1, lahde: "role" }
+}
+
+/*
  * Mistä paino tuli — ratkaisee selitystekstin ja estää saman signaalin
  * laskemisen kahdesti (ks. `salesMomentFit` todayRankingissa).
  */

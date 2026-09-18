@@ -5,6 +5,67 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-193 - Hälytys noudattaa käyttäjän valitsemia myyntihetkiä, ei roolin oletusta
+
+Johannes sai testitunnuksellaan sähköpostin "3 hanketta eteni sinulle
+otolliseen vaiheeseen", jossa kaikki kolme olivat Kilpailutus-vaiheessa
+("Kilpailutus — sopii infrarakentajalle"). Hänen asetuksissaan lukee
+"Parhaat myyntihetket: Rakenteilla". Viesti oli siis ristiriidassa sen kanssa,
+mitä hän näkee omissa asetuksissaan.
+
+**Asetus oli kannassa oikein** (`bestSalesMoments: ["Rakenteilla"]`). Vika oli
+hälytysreitissä: se päätti otollisen vaiheen pelkästä yritysprofiilista
+(`roleStageWeight(role, phaseKey) < 1`), eikä lukenut valintaa lainkaan.
+Infran huippuvaihe on Kilpailutus.
+
+**Sama asetus toimi toisessa paikassa.** Tänään-näkymä käyttää myyntihetkiä
+(bonuksena roolin päälle), sähköposti ei. Vertailu oli kirjoitettu erikseen
+kahteen paikkaan - sama kuvio kuin Health-merkin kolmessa kopiossa (D-185).
+Nyt se on yhdessä funktiossa (`onValittuMyyntihetki`), jota molemmat
+kayttavat.
+
+**Uusi saanto (`halytysvaihe`):** kun käyttäjä on valinnut myyntihetkiä,
+ne ratkaisevat. Roolin huippuvaihe on käytössä vain, jos valintoja ei ole.
+
+**MITATTU ENNEN MUUTOSTA, koska se koskee muitakin kuin testitunnusta:**
+
+```
+hälytyksiä 7 vrk     vanha sääntö 280   uusi 928
+käyttäjiä joilla määrä muuttuu: 34
+testitunnus          15 -> 3 (vain Rakenteilla)
+```
+
+- **"Muu"-profiili sai nolla hälytystä.** Sillä ei ole huippuvaihetta, joten
+  vanha sääntö ei lähettänyt mitään, vaikka käyttäjä oli valinnut
+  myyntihetkensä ja pitänyt hälytykset päällä. Esim. yksi tili 0 -> 67.
+- Osalla määrä laskee: Aliurakointi-tili, joka valitsi vain "Valmistumassa",
+  29 -> 0.
+
+**Sähköposteja ei tule enempää** - kooste lähtee kerran päivässä. Kasvu näkyy
+koosteen pituutena, joten kooste rajattiin **kymmeneen** hankkeeseen,
+suurimmat ensin, ja loput mainitaan määränä ("+ N muuta hanketta — näet ne
+Tänään-näkymässä").
+
+**Löydettiin samalla hiljainen vika:** koosteessa oli jo raja 30 näytössä,
+mutta KAIKKI osumat kirjattiin `opportunity_alerts`iin lähetetyiksi - kanta
+väitti lähetetyksi hankkeen, jota käyttäjä ei koskaan nähnyt. Nyt kirjataan
+vain näytetyt.
+
+**Mitä EI muutettu:** Tänään-näkymän järjestys. `resolveStageFit` antaa
+edelleen roolille etusijan ja myyntihetket tulevat bonuksena. Sen muuttaminen
+järjestäisi kaikkien roolillisten käyttäjien näkymän uudelleen, eikä sitä ole
+mitattu. Vertailu on kuitenkin nyt yhteinen, joten säännöt eivät voi enää
+eriytyä huomaamatta.
+
+**Todennettu tuotantodatalla:** testitunnukselle 3 osumaa, kaikki
+Rakenteilla, ei yhtään Kilpailutusta.
+
+`lib/opportunity/roleStageMatrix.ts` (`halytysvaihe`, `onValittuMyyntihetki`),
+`lib/alerts/kooste.ts` (yläraja ja järjestys - oma moduuli, koska Next.js ei
+salli route-tiedostosta muita exportteja), `app/api/opportunity-alerts/route.ts`.
+
+---
+
 ### D-192 - Konsultti ei ole rakennuttaja, mutta se on hankkeen osapuoli
 
 D-191 jatti auki 62 YVA-hanketta, joiden tekstissa on yrityksia muttei

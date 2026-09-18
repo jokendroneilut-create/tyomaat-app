@@ -1269,6 +1269,15 @@ muistin varassa.
 - ~~**Roolit menevät ristiin, ja rakentaja jää poimimatta.**~~ Rivit luettiin
   (yksikään ei ollut aliurakoitsija) ja korjattiin 12.9.2026 (D-189):
   rakentaja täytetty 101 riville, roolit korjattu 4:llä. Mittarit 0.
+- **Seuraa hälytysmäärää ensimmäisen viikon ajan** (D-193). Mitattu ennen
+  muutosta: 280 -> 928 kohdetta viikossa, 34 käyttäjällä määrä muuttuu.
+  Sähköposteja ei tule enempää (kooste kerran päivässä, enintään 10
+  hanketta), mutta katso poistuuko joku hälytyksistä tai valittaako liian
+  pitkästä listasta.
+- **Avoin: Tänään-näkymän järjestyksen sääntö** (D-193). `resolveStageFit`
+  antaa roolille etusijan ja myyntihetket tulevat bonuksena, kun taas
+  hälytys käyttää nyt myyntihetkiä ensisijaisesti. Muutos järjestäisi
+  kaikkien roolillisten käyttäjien näkymän uudelleen — mittaa ensin.
 - **Sivun alku jää lukematta kuudessa muussa keräimessä** (D-190:n mittaus,
   `scripts/measure-puuttuva-alku.ts`). Mitattu 146 lähteestä: 52 osumaa,
   joista luettuna valtaosa on navigaatiota (oikein ohitettu). Aitoja on

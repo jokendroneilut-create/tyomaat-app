@@ -8,6 +8,7 @@ import {
 } from "@/lib/projects/phases"
 import { projectPhaseKey } from "@/lib/opportunity/projectPhaseKey"
 import {
+  onValittuMyyntihetki,
   resolveStageFit,
   ROLE_DATIVE_LABEL,
   type StageFit,
@@ -145,9 +146,8 @@ function salesMomentFit(ctx: OpportunityContext): ScoreResult {
   const moments = ctx.settings.bestSalesMoments ?? []
   if (!moments.length || !ctx.phaseKey) return { points: 0 }
 
-  const matches = moments.some(
-    (moment) => normalizeLegacyPhase(moment) === ctx.phaseKey
-  )
+  /* Sama vertailu kuin sähköpostihälytyksessä, ettei kaksi kopiota eriydy (D-193). */
+  const matches = onValittuMyyntihetki(ctx.phaseKey, moments)
 
   return matches
     ? { points: SALES_MOMENT_POINTS, reason: "Sopii valitsemaasi myyntihetkeen" }

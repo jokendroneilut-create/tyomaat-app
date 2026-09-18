@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { projectPhaseKey } from "./projectPhaseKey"
 import {
+  halytysvaihe,
+  onValittuMyyntihetki,
   resolveStageFit,
   roleStageWeight,
   salesMomentsForRole,
@@ -159,5 +161,42 @@ describe("salesMomentsForRole", () => {
   it("ei roolia / Muu -> tyhjä", () => {
     expect(salesMomentsForRole(null)).toEqual([])
     expect(salesMomentsForRole("Muu")).toEqual([])
+  })
+})
+
+/*
+ * KAYTTAJAN VALINTA VOITTAA ROOLIN HALYTYKSESSA (D-193). Mitattu tapaus:
+ * Infra-profiili, myyntihetkeksi valittu "Rakenteilla" - ja silti
+ * sahkoposti "Kilpailutus — sopii infrarakentajalle".
+ */
+describe("halytysvaihe", () => {
+  it("ei halyta roolin huippuvaiheesta jos kayttaja on valinnut toisin", () => {
+    expect(halytysvaihe("Infra", "tender", ["Rakenteilla"])).toEqual({
+      osuu: false,
+      lahde: "moments",
+    })
+  })
+
+  it("halyttaa kayttajan valitsemasta vaiheesta vaikka se ei ole roolin huippu", () => {
+    expect(halytysvaihe("Infra", "construction", ["Rakenteilla"]).osuu).toBe(true)
+  })
+
+  /* Roolin huippuvaihe on kaytossa vain kun myyntihetkia ei ole valittu. */
+  it("kayttaa roolin huippuvaihetta ilman valintoja", () => {
+    expect(halytysvaihe("Infra", "tender", [])).toEqual({ osuu: true, lahde: "role" })
+  })
+
+  /* "Muu"-profiililla ei ole huippuvaihetta, joten se ei saanut koskaan halytysta. */
+  it("halyttaa Muu-profiilille sen valitsemista vaiheista", () => {
+    expect(halytysvaihe("Muu", "construction", ["Rakenteilla"]).osuu).toBe(true)
+    expect(halytysvaihe("Muu", "construction", []).osuu).toBe(false)
+  })
+})
+
+describe("onValittuMyyntihetki", () => {
+  it("vertaa kanoniseen vaiheeseen", () => {
+    expect(onValittuMyyntihetki("construction", ["Rakenteilla"])).toBe(true)
+    expect(onValittuMyyntihetki("tender", ["Rakenteilla"])).toBe(false)
+    expect(onValittuMyyntihetki(null, ["Rakenteilla"])).toBe(false)
   })
 })

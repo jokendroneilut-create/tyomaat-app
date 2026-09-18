@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Hälytykset noudattavat valitsemiasi myyntihetkiä (D-193)
+
+Sähköpostihälytys päätti otollisen vaiheen pelkästä yritysprofiilista, eikä
+lukenut käyttäjän omaa valintaa. Infra-profiilin käyttäjä, joka oli
+valinnut myyntihetkekseen "Rakenteilla", sai silti hälytyksiä
+Kilpailutus-vaiheesta.
+
+Nyt valitut myyntihetket ratkaisevat. Roolin oletusta käytetään vain, jos
+valintoja ei ole tehty. Samalla "Muu"-profiilin käyttäjät alkavat saada
+hälytyksiä - aiemmin he eivät saaneet yhtään.
+
+Kooste näyttää enintään kymmenen hanketta, suurimmat ensin, ja kertoo
+loppujen määrän.
+
 ### YVA-hankkeiden konsultit ja verkkoyhtiot liittyviksi yrityksiksi (D-192)
 
 YVA-tekstissa mainitut yritykset ovat valtaosin konsultteja (Sitowise,

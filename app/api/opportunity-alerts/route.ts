@@ -2,9 +2,10 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { Resend } from "resend"
 import {
-  roleStageWeight,
+  halytysvaihe,
   ROLE_DATIVE_LABEL,
 } from "@/lib/opportunity/roleStageMatrix"
+import { hankkeenArvo, valitseKoosteeseen } from "@/lib/alerts/kooste"
 import {
   PHASE_LABELS,
   normalizeLegacyPhase,
@@ -22,8 +23,11 @@ export const maxDuration = 60
 /*
  * P2 — Elinkaari-laukaistut hälytykset ("oikea aika").
  *
- * Kun hanke etenee vaiheeseen joka on käyttäjän roolin HUIPPUVAIHE
- * (roleStageWeight === 1.0), lähetetään sähköpostihälytys. Opt-out:
+ * Kun hanke etenee vaiheeseen jonka KÄYTTÄJÄ ON ITSE VALINNUT
+ * myyntihetkekseen, lähetetään sähköpostihälytys. Jos myyntihetkiä ei ole
+ * valittu, käytetään roolin huippuvaihetta (roleStageWeight === 1.0).
+ * Ennen D-193:a käytettiin AINA roolin huippuvaihetta, ja käyttäjän valinta
+ * jäi huomiotta. Ks. `halytysvaihe` (lib/opportunity/roleStageMatrix). Opt-out:
  * oletuksena päällä käyttäjille joilla on rooli valittuna
  * (settings.opportunityAlerts !== false). Kerran/vrk (Vercel-cron).
  *
@@ -67,6 +71,8 @@ type Match = {
   city: string | null
   region: string | null
   reason: string
+  /* Järjestys koosteessa: suurempi ensin (ks. lib/alerts/kooste.ts). */
+  rank: number
 }
 
 function resolvePhaseKey(raw: unknown): PhaseKey | null {
@@ -78,9 +84,20 @@ function resolvePhaseKey(raw: unknown): PhaseKey | null {
     : null
 }
 
-function buildEmail(matches: Match[], appBaseUrl: string) {
+/*
+ * `matches` on jo rajattu näytettäviin (ks. lib/alerts/kooste).
+ * `yhteensa` ja `muita` kertovat koko määrän, ettei käyttäjä luule
+ * kymmentä kaikiksi.
+ */
+function buildEmail(matches: Match[], appBaseUrl: string, yhteensa: number, muita: number) {
+  const muitaHtml = muita
+    ? `<div style="margin-top:14px;font-size:13px;color:#374151;">
+         + ${muita} muuta hanketta — näet ne Tänään-näkymässä.
+       </div>`
+    : ""
+  const muitaText = muita ? `\n+ ${muita} muuta hanketta — näet ne Tänään-näkymässä.\n` : ""
+
   const rows = matches
-    .slice(0, 30)
     .map((m) => {
       const meta = [m.city, m.region ?? "-", PHASE_LABELS[m.phaseKey]]
         .filter(Boolean)
@@ -108,11 +125,12 @@ function buildEmail(matches: Match[], appBaseUrl: string) {
         <div style="padding:18px 20px;border-bottom:1px solid #e5e7eb;">
           <div style="font-size:18px;font-weight:800;color:#111827;">Tyomaat.fi</div>
           <div style="margin-top:6px;color:#374151;font-weight:700;">
-            ${matches.length} hanketta eteni sinulle otolliseen vaiheeseen
+            ${yhteensa} hanketta eteni sinulle otolliseen vaiheeseen
           </div>
         </div>
         <div style="padding:6px 20px 0 20px;">
           <table style="width:100%;border-collapse:collapse;">${rows}</table>
+          ${muitaHtml}
           <div style="margin:18px 0;">
             <a href="${appBaseUrl}/today" style="display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:12px 14px;border-radius:10px;font-weight:800;">Avaa Tänään-näkymä</a>
           </div>
@@ -124,14 +142,14 @@ function buildEmail(matches: Match[], appBaseUrl: string) {
     </div>`
 
   const text =
-    `Hei!\n\n${matches.length} hanketta eteni sinulle otolliseen vaiheeseen:\n\n` +
+    `Hei!\n\n${yhteensa} hanketta eteni sinulle otolliseen vaiheeseen:\n\n` +
     matches
-      .slice(0, 30)
       .map(
         (m) =>
           `• ${m.name} – ${m.city ?? ""} – ${m.region ?? "-"} (${PHASE_LABELS[m.phaseKey]})\n  ${m.reason}\n  ${appBaseUrl}/projects?open=${encodeURIComponent(m.projectId)}`
       )
       .join("\n") +
+    muitaText +
     `\n\nAvaa Tänään: ${appBaseUrl}/today\n`
 
   return { html, text }
@@ -284,14 +302,34 @@ export async function GET(req: Request) {
       if (!role) continue
       if (settings.opportunityAlerts === false) continue
 
+      /*
+       * Käyttäjän itse valitsemat myyntihetket ratkaisevat; roolin
+       * huippuvaihe vain jos niitä ei ole valittu (D-193). Ks.
+       * `halytysvaihe`.
+       */
+      const myyntihetket: string[] = Array.isArray(settings.bestSalesMoments)
+        ? settings.bestSalesMoments
+        : []
+
       for (const [projectId, phaseKey] of latestPhaseByProject) {
         const project = projectById.get(projectId)
         if (!project) continue
-        if (roleStageWeight(role, phaseKey) < 1) continue
+        const vaihe = halytysvaihe(role, phaseKey, myyntihetket)
+        if (!vaihe.osuu) continue
         if (!matchesRegions(project, settings.regions)) continue
         if (alreadySent.has(`${userId}:${projectId}:${phaseKey}`)) continue
 
+        /*
+         * Selitys kertoo MIKSI hanke on listalla. Aiempi "sopii
+         * infrarakentajalle" oli väärä syy silloin, kun käyttäjä oli
+         * itse valinnut toisen vaiheen.
+         */
         const dative = ROLE_DATIVE_LABEL[role] ?? "sinulle"
+        const reason =
+          vaihe.lahde === "moments"
+            ? `${PHASE_LABELS[phaseKey]} — valitsemasi myyntihetki`
+            : `${PHASE_LABELS[phaseKey]} — sopii ${dative}`
+
         const list = perUser.get(userId) ?? []
         list.push({
           projectId,
@@ -299,7 +337,8 @@ export async function GET(req: Request) {
           name: String(project.name ?? "(nimetön)"),
           city: project.city ?? null,
           region: project.region ?? null,
-          reason: `${PHASE_LABELS[phaseKey]} — sopii ${dative}`,
+          reason,
+          rank: hankkeenArvo(project),
         })
         perUser.set(userId, list)
       }
@@ -330,10 +369,13 @@ export async function GET(req: Request) {
 
       if (!email || !resend) continue
 
+      /* Tärkeimmät kymmenen; loput mainitaan määränä (ks. lib/alerts/kooste). */
+      const { naytettavat, muita } = valitseKoosteeseen(matches)
+
       const { subject } = {
         subject: `${matches.length} hanketta eteni sinulle otolliseen vaiheeseen`,
       }
-      const { html, text } = buildEmail(matches, appBaseUrl)
+      const { html, text } = buildEmail(naytettavat, appBaseUrl, matches.length, muita)
 
       const sendRes = await resend.emails.send({
         from: fromEmail,
@@ -347,8 +389,13 @@ export async function GET(req: Request) {
         continue
       }
 
+      /*
+       * VAIN NÄYTETYT KIRJATAAN LÄHETETYIKSI. Aiemmin kirjattiin kaikki
+       * osumat, vaikka viestissä näkyi enintään 30 - kanta väitti
+       * lähetetyksi hankkeen jota käyttäjä ei koskaan nähnyt (D-193).
+       */
       const { error: insErr } = await supabase.from("opportunity_alerts").insert(
-        matches.map((m) => ({
+        naytettavat.map((m) => ({
           user_id: userId,
           project_id: m.projectId,
           phase_key: m.phaseKey,
