@@ -11,6 +11,17 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kaavahankkeet saavat rakennuttajan kaavan tekstistä (D-195)
+
+Kaavasivu kertoo usein suoraan, kuka hanketta vie: "Neoen Renewables
+Finland Oy suunnittelee tuulivoimapuistoa…", "YH-Kodit Oy hakee
+kaavamuutosta…". Tätä ei luettu kaavoista lainkaan.
+
+Nyt luetaan, ja 105 kaavahanketta sai rakennuttajan. Joukossa on
+kymmeniä tuuli- ja aurinkovoimapuistoja sekä Planmecan pääkonttorin
+laajennus. Uudet kaavat saavat rakennuttajan automaattisesti.
+Puolustuskiinteistöjen uutisista poimitaan lisäksi pääurakoitsija.
+
 ### Hankkeen kuvaus alkaa nyt sivun alusta kuudessa lähteessä (D-194)
 
 Kaarinan, Porvoon, Naantalin, Jämsän ja Ylöjärven kaavoista sekä

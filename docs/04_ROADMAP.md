@@ -1281,6 +1281,15 @@ muistin varassa.
 - ~~**Sivun alku jää lukematta kuudessa muussa keräimessä.**~~ Korjattu
   19.9.2026 (D-194): Kaarina, Porvoo, Naantali, Jämsä, Ylöjärvi ja
   Puolustuskiinteistöt, 168 riviä täydentyi.
+- **Kaavojen liittyvät yritykset** (D-195). Kaavakuvauksista löytyy
+  626 yritysnimeä (konsultit kuten Sitowise ja FCG, tilojen käyttäjät,
+  hankeyhtiöiden emot), mutta noin joka kymmenes on väärin:
+  etuliitesana nimen edessä ("Lisätietoja", "Kuulutus", "Hakijana",
+  "Kaavamuutoksella"), liimautunut sana ("OyYhteystiedot"), katkennut
+  nimi ("Europe Oy", kun isokirjaiminen "SSAB" pudotetaan roskana) ja
+  henkilön nimi yrityksen edessä. Mittaa ja lue:
+  `scripts/measure-kaavan-yritykset.ts`. Henkilönimet ovat vaikein
+  tapaus – älä ota käyttöön ennen kuin ne on ratkaistu.
 - **Rajatapaukset: Jyväskylä, Äänekoski ja Mikkeli** (D-190:n mittaus).
   Näiltä putoaa kaavan vaihetietoja, ei hankkeen kuvausta. Mittaa ensin,
   onko pudonnut osa hyödyllistä, ennen kuin korjaat.

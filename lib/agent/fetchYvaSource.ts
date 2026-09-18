@@ -95,10 +95,17 @@ const MAX_PAGES = 12
  * tai "Hanke suunnittelee" poimisi nimeksi yleissanan. Otoksen jokaisessa
  * hankkeessa mainittiin Oy, Oyj, Ab tai Ky, joten rajaus ei maksa mitään.
  */
+/*
+ * EI i-LIPPUA (D-195). Lippu mitatoi NAME-kuvion ison alkukirjaimen
+ * vaatimuksen, jolloin nimi jatkui pienilla sanoilla: mitattu 19.9.2026
+ * "Hankkeesta vastaa Lapin ELY-keskus ja konsulttina on Finnmap Infra Oy"
+ * -> rakennuttajaksi koko lause. Sama ansa kuin rakentajapoiminnassa
+ * (fetchSttHakuSource). Iso/pieni alkukirjain sallitaan vain ankkurille.
+ */
 const DEVELOPER_PATTERNS = [
   // "Hankkeesta vastaavana toimiva Eolus Energy Oy suunnittelee..."
-  new RegExp(`\\bhankkeesta\\s+vastaa(?:vana\\s+toimiva)?\\s+(${NAME})`, "i"),
-  new RegExp(`\\bhankevastaava(?:na)?\\s+(?:toimii\\s+|on\\s+)?(${NAME})`, "i"),
+  new RegExp(`\\b[Hh]ankkeesta\\s+vastaa(?:vana\\s+toimiva)?\\s+(${NAME})`),
+  new RegExp(`\\b[Hh]ankevastaava(?:na)?\\s+(?:toimii\\s+|on\\s+)?(${NAME})`),
   // "Infinergies Finland Oy suunnittelee enintään 68 tuulivoimalan..."
   new RegExp(`(${NAME})\\s+(?:suunnittelee|selvittää|hakee|toteuttaa)`),
 ]
@@ -184,11 +191,19 @@ function siivoaYritysnimi(raw: string): string | null {
 
   while (sanat.length > 1) {
     const eka = sanat[0]
+    /*
+     * Virkkeen loppu ja allatiivi nimen edessa (D-195, mitattu 19.9.2026
+     * kaavakuvauksista): "Kerkkolaan. Neoen Renewables Finland Oy" ja
+     * "toimitti Puolustuskiinteistöille Adapteo Finland Oy". Pisteellinen
+     * sana on roskaa vain jos se on pidempi kuin lyhenne ("As.", "J.").
+     */
     const onRoska =
       YVA_ETULIITEROSKA.test(eka) ||
       /\.(pdf|docx?|xlsx?)$/i.test(eka) ||
       /[_\d]/.test(eka) ||
-      (eka === eka.toUpperCase() && eka.length > 3)
+      (eka === eka.toUpperCase() && eka.length > 3) ||
+      (/\.$/.test(eka) && eka.length > 4) ||
+      /lle$/i.test(eka)
     if (!onRoska) break
     sanat = sanat.slice(1)
   }
@@ -196,6 +211,8 @@ function siivoaYritysnimi(raw: string): string | null {
   const nimi = sanat.join(" ").trim()
   if (nimi.length < 5) return null
   if (TRUNCATED_NAME.test(nimi)) return null
+  /* Paljas etumuoto: "As. Oy Piikkiön Kirkonkulma" katkesi muotoon "As. Oy". */
+  if (/^(?:As\.?|Asunto|Kiinteistö|Kiint\.?|Bostads|Fastighets)\s*(?:Oy|Ab)$/i.test(nimi)) return null
   return nimi
 }
 

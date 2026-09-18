@@ -5,6 +5,62 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-195 - Kaava nimeaa rakennuttajan, mutta saantoa ajettiin vain YVA:lle
+
+D-194:n jalkeen tarkistettiin, loytyyko taydentyneista kuvauksista
+yrityksia. Kuuden lahteen sijaan mitattiin kaikki kaavalahteet
+(`scripts/measure-kaavan-yritykset.ts`), koska poimintasaanto
+`extractYvaDeveloper` ("X suunnittelee / hakee", "hankkeesta vastaa X")
+oli olemassa - mutta kaavalahteille sita ei ajettu lainkaan.
+
+**Mitattu 19.9.2026: kaavariveista ~6 100:lta puuttui rakennuttaja.**
+Saanto loysi 103, ja luettuna kaikki olivat oikein yhta lukuun
+ottamatta. Joukossa oli kymmenia tuulivoimapuistoja (Neoen, ABO Energy,
+Myrsky Energia, Prokon, Fortum), Planmecan paakonttorin laajennus ja
+YH-Kodit. Hankeyhtio kirjautuu sellaisenaan ("OX2 Finland Oy:n
+hankeyhtio Pajukoski Wind Oy" -> Pajukoski Wind Oy), koska se on
+hankkeen juridinen omistaja.
+
+**Kaksi vikaa korjattiin ennen ajoa:**
+
+  1. *i-lippu.* "Hankkeesta vastaa Lapin ELY-keskus ja konsulttina on
+     Finnmap Infra Oy" -> rakennuttajaksi koko lause. Lippu mitatoi
+     NAME-kuvion ison alkukirjaimen vaatimuksen - sama ansa kuin
+     rakentajapoiminnassa (fetchSttHakuSource). Nyt vain ankkurin
+     alkukirjain saa vaihdella. Tallessa olevista rakennuttajista ei
+     loytynyt taman vian jalkia.
+  2. *Etumuoto.* "As. Oy Piikkiön Kirkonkulma" -> "As. Oy", koska
+     `cleanCompanyName` katkaisee ensimmaiseen yhtiomuotoon. Taloyhtion ja
+     kiinteistoyhtion muoto on nimen alussa, joten se ohitetaan.
+
+**RAJATTU KAAVOIHIN, keskitetysti** (`lib/projects/kaavanRakennuttaja.ts`,
+kutsu `resolvePotentialProject`issa). Uutisissa "X toteuttaa" on usein
+urakoitsija, joten sama saanto kaikille lahteille kirjoittaisi rakentajan
+rakennuttajaksi. Kaavalahde tunnistetaan nimesta: 242/322 lahdetta osui,
+eika yksikaan ollut muu kuin kaava. Vain tyhjaan kenttaan.
+
+**Puolustuskiinteistojen paaurakoitsija** ("Paaurakoitsijana toimii
+Rakennustoimisto Eero Reijonen Oy") poimitaan nyt resolverissa. Olemassa
+olevilla riveilla kentta oli jo taytetty aiemmassa kertaluonteisessa
+backfillissa, joten tama koskee uusia juttuja. Kentta kirjoitetaan vain
+jos nimi loytyi - `builder: null` olisi levittynyt kasin syotetyn arvon
+paalle.
+
+**LIITTYVAT YRITYKSET JATETTIIN POIS.** YVA:n `extractYvaCompanies`
+kaavateksteihin ajettuna tuotti 626 nimea, ja arviolta joka kymmenes oli
+vaarin: etuliitesanoja ("Lisätietoja", "Kuulutus", "Hakijana",
+"Kaavamuutoksella"), liimautuneita ("OyYhteystiedot ..."), katkenneita
+("Europe Oy" - isokirjaiminen "SSAB" pudotettiin roskana) ja
+henkiloiden nimia yrityksen edessa. Kaksi etuliitetyyppia (virkkeen loppu,
+allatiivi) korjattiin, koska ne koskivat myos YVA:a. Loput on kirjattu
+ROADMAPiin.
+
+**Ajettu 19.9.2026:** 105 riviä sai rakennuttajan (103 + kaksi Kihniön
+tuulivoimahanketta, jotka lahteen nimi toi mukaan). Toinen
+kuivaharjoitus: 0.
+
+---
+
 ### D-194 - Kuusi keraajaa valitsi kuvaukseksi sivun keskikohdan, ja johdanto putosi
 
 D-190:n mittaus (`scripts/measure-puuttuva-alku.ts`) nimesi kuusi

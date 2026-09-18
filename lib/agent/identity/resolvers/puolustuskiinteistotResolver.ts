@@ -1,6 +1,7 @@
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
+import { extractBuilderFromText } from "@/lib/agent/fetchSttHakuSource"
 import { getMunicipalityByName, MUNICIPALITIES } from "@/lib/geo/municipalities"
 
 function findFact(facts: any[], type: string) {
@@ -57,6 +58,7 @@ export async function resolvePuolustuskiinteistotProject({
 
   const metadata = facts[0]?.metadata ?? {}
   const description = metadata.description ?? null
+  const paaurakoitsija = extractBuilderFromText(operation, description)
 
   const detectedMunicipality = detectMunicipalityFromText(`${operation ?? ""} ${description ?? ""}`)
   const municipality = getMunicipalityByName(detectedMunicipality)
@@ -93,6 +95,13 @@ export async function resolvePuolustuskiinteistotProject({
        * metadata.developer-kentästä, ei metadata.builder-kentästä.
        */
       developer: "Puolustuskiinteistöt",
+      /*
+       * Uutinen nimeaa usein paaurakoitsijan: "Paaurakoitsijana toimii
+       * Rakennustoimisto Eero Reijonen Oy" (D-195). Ankkuroitu poiminta,
+       * sama kuin STT-tiedotteissa. Kentta vain jos loytyi: null
+       * levittyisi olemassa olevan (esim. kasin syotetyn) arvon paalle.
+       */
+      ...(paaurakoitsija ? { builder: paaurakoitsija } : {}),
       region: municipality?.region ?? null,
 
       decision_status: decisionStatus,

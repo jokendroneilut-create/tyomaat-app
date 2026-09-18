@@ -238,3 +238,41 @@ describe("extractYvaCompanies - rajatapaukset", () => {
     ).toEqual(["Pohjan Voima Oy"])
   })
 })
+
+/*
+ * KAAVAKUVAUKSISTA MITATUT (D-195, 19.9.2026).
+ */
+describe("extractYvaDeveloper - kaavatekstit", () => {
+  it("ei paasta pienia sanoja nimeen (ei i-lippua)", () => {
+    expect(
+      extractYvaDeveloper(
+        "Hankkeesta vastaa Lapin ELY-keskus ja konsulttina on Finnmap Infra Oy. Napapiirin asemakaavassa ei ole varauduttu."
+      )
+    ).toBeNull()
+  })
+
+  it("lukee etumuotoisen taloyhtion koko nimen", () => {
+    expect(
+      extractYvaDeveloper("As. Oy Piikkiön Kirkonkulma hakee omistamalleen tontille kaavamuutosta.")
+    ).toBe("As. Oy Piikkiön Kirkonkulma")
+  })
+
+  it("lukee kaavan hakijan", () => {
+    expect(extractYvaDeveloper("YH-Kodit Oy hakee kaavamuutosta omistamilleen kiinteistöille.")).toBe("YH-Kodit Oy")
+  })
+})
+
+describe("extractYvaCompanies - kaavatekstien etuliiteroska", () => {
+  it("pudottaa virkkeen lopun ja allatiivin nimen edesta", () => {
+    expect(
+      extractYvaCompanies("aluetta Jämsän Kerkkolaan. Neoen Renewables Finland Oy perustaa hankeyhtiön.")
+    ).toEqual(["Neoen Renewables Finland Oy"])
+    expect(
+      extractYvaCompanies("Rakennukset toimitti Puolustuskiinteistöille Adapteo Finland Oy.")
+    ).toEqual(["Adapteo Finland Oy"])
+  })
+
+  it("ei palauta paljasta etumuotoa", () => {
+    expect(extractYvaCompanies("As. Oy Piikkiön Kirkonkulma hakee kaavamuutosta.")).toEqual([])
+  })
+})

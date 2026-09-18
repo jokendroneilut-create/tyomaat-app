@@ -40,7 +40,21 @@ const COMPANY_FORM_PATTERN = COMPANY_FORMS.join("|")
  * Nimen perässä oleva välimerkki ei kuulu nimeen. Piste sallitaan sanan
  * sisällä ("As. Oy"), joten se siivotaan vasta lopusta.
  */
+/*
+ * ETUMUOTO: taloyhtion ja kiinteistoyhtion yhtiomuoto on nimen ALUSSA
+ * ("As. Oy Piikkiön Kirkonkulma"). Katkaisu ensimmaiseen yhtiomuotoon
+ * jatti nimeksi pelkan "As. Oy" (mitattu 19.9.2026 Kaarinan kaavasta).
+ * Etumuodon jalkeinen osa siivotaan normaalisti.
+ */
+const ETUMUOTO = /^((?:As\.?|Asunto|Asunto-osakeyhtiö|Kiinteistö|Kiint\.?|Bostads|Fastighets)\s*-?\s*(?:Oy|Ab)\.?\s+)(?=\S)/i
+
 export function cleanCompanyName(raw: string): string {
+  const etu = raw.match(ETUMUOTO)
+  if (etu) {
+    const loput = cleanCompanyName(raw.slice(etu[1].length))
+    return loput ? `${etu[1].replace(/\s+/g, " ")}${loput}`.trim() : etu[1].trim()
+  }
+
   /*
    * Nimi katkaistaan yhtiömuotoon. Ilman tätä kaappaus jatkuu seuraavaan
    * virkkeeseen, koska piste kuuluu nimimerkkeihin ("As. Oy") ja seuraava

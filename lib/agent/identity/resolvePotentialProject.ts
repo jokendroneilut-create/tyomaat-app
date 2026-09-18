@@ -11,6 +11,7 @@ import {
   parseAlaTeksti,
 } from "@/lib/projects/extractFloorAreaFromText"
 import { housingCompanyName } from "@/lib/projects/housingCompanyKey"
+import { kaavanRakennuttaja } from "@/lib/projects/kaavanRakennuttaja"
 import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
 import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
 import { resolveBuildingType } from "@/lib/agent/quality/resolveBuildingType"
@@ -217,6 +218,21 @@ export async function resolvePotentialProject(
   }
 
   /*
+   * KAAVAN RAKENNUTTAJA KUVAUKSESTA (D-195). Vain tyhjaan kenttaan ja
+   * vain kaavalahteille - perustelu `kaavanRakennuttaja`ssa.
+   */
+  function rakennuttajaMetadata(
+    existingMetadata?: Record<string, any> | null
+  ): Record<string, unknown> {
+    const developer = kaavanRakennuttaja({
+      sourceName: input.sourceName ?? md.source_name,
+      description: md.description,
+      nykyinen: existingMetadata?.developer ?? md.developer,
+    })
+    return developer ? { developer } : {}
+  }
+
+  /*
    * HANKKEEN PINTA-ALA. Sama kaava kuin kustannuksessa: kenttä oli
    * olemassa muttei kirjoittajaa, ja tieto oli kuvauksessa. Mitattu
    * 5.9.2026: näkyvistä 5 871 hankkeesta 601 mainitsi alan ja 138:lla
@@ -418,6 +434,7 @@ export async function resolvePotentialProject(
           ...costMetadata(existing.metadata),
           ...alaMetadata(existing.metadata),
           ...taloyhtioMetadata(existing.metadata),
+          ...rakennuttajaMetadata(existing.metadata),
           source_history: sourceHistory,
           lastSourceName: input.sourceName ?? null,
           matched_existing_project_id:
@@ -498,6 +515,7 @@ export async function resolvePotentialProject(
         ...costMetadata(null),
         ...alaMetadata(null),
         ...taloyhtioMetadata(null),
+        ...rakennuttajaMetadata(null),
         ...relevanceGate.metadata,
         ...buildingType.metadata,
         source_history: buildSourceHistory(null, input),
