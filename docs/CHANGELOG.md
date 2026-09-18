@@ -11,6 +11,14 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Suurille hankkeille lähde ja yhteyshenkilö (D-200)
+
+Alkuvuoden hankkeilta puuttui lähdetieto, ja siksi myös yhteyshenkilö.
+Tällaisia ovat esimerkiksi Lahden ja Mikkelin datakeskukset, Kotkan
+akkutehdas ja Vantaan lämmön kausivarasto. Nyt 77 hankkeella on lähde,
+ja 68:lla on nimetty yhteyshenkilö rakennuttajalta tai urakoitsijalta:
+projektijohtaja, työmaapäällikkö tai toimitusjohtaja.
+
 ### Väylän hankkeille projektipäällikkö (D-199)
 
 Väyläviraston ja elinvoimakeskusten hankesivuilla on nimetty

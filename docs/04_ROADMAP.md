@@ -1331,8 +1331,11 @@ muistin varassa.
   - ~~Rakenteilla-vaiheen 336 hanketta ilman yhteystietoa.~~ Väylä
     korjattu (D-199). **244 näistä on lähteettömiä** (helmi–maaliskuun
     2026 alkuaineisto: Visulahden datakeskus, Kotkan akkutehdas, OYS C):
-    ei lähdedokumenttia, josta varmentaa. Vaatii päätöksen – esim. oman
-    lähteen haku hankekohtaisesti, ei arvausta.
+    ei lähdedokumenttia, josta varmentaa. **Aloitettu 19.9.2026 (D-200):**
+    77 sai lähteen, 68 henkilön. Jäljellä ~194: verkkohaku hanke
+    kerrallaan, syöte .
+  - **Kaksoishankkeet lähteettömien joukossa** (D-200): esim. "Kerrostalo
+    Hatanpäähän" näkyy asiakkaalle kahdesti. Yhdistämisestä päättää käyttäjä.
   - **Väylän keräimen tahti** (D-199): 103 sivua ei koskaan haettu
     yksityiskohtaisesti – katto 30/ajo, lähde ajettu 12 kertaa. Selvitä
     putoavatko kohteet listaukselta ennen kuin niihin ehditään, ennen kuin

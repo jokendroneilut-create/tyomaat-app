@@ -5,6 +5,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-200 - Lahteettomille hankkeille lahde: ensin tallessa oleva, sitten haku
+
+Julkisista aktiivisista hankkeista 621 on lahteettomia (helmi-maaliskuun
+2026 alkuaineisto, ennen kuin source_name tallennettiin), ja niista 244
+rakenteilla-vaiheessa ilman yhteystietoa - mukana alan suurimmat
+(Visulahden datakeskus, Kotkan akkutehdas, OYS C).
+
+**Halvin ensin, mitattu `scripts/measure-lahteettomat.ts`:**
+
+  1. **Osoite oli tallessa** `last_source_url`-kentassa (STT-tiedote tai
+     rakennusliikkeen hankesivu) - 73 hanketta, 55 sai henkilon.
+  2. **Sama hanke toisen lahteen kautta** - nimivertailu antoi 31 paria,
+     joista luettuna puolet vaaria ("Asunto Oy Espoon Luhtavehka" <->
+     "... Vuoritonttu"). Parit lueteltiin kasin: 12 hanketta sai lahteen,
+     7 myos henkilon. Hankkeita EI yhdistetty - osa on asiakkaalle
+     nakyvia kaksoiskappaleita, joiden yhdistamisesta paattaa kayttaja.
+  3. **Verkkohaku hanke kerrallaan** - pilotti 10 arvokkaimmalla: lahde
+     10/10, nimetty henkilo 6/10 (NYAB:n toimitusjohtaja, Easpringin
+     johtaja, SRV:n projektijohtaja ja tyomaapaallikko, Vantaan Energian
+     johtajat). STT:n hakurajapinta ei kelpaa tahan: koko tekstin haku
+     tuottaa lahinna kohinaa, eivatka suuret yksityiset hankkeet ole
+     STT:ssa.
+
+**YHTEYSTIETO VAIN HAETULTA SIVULTA, EI HAKUTULOKSESTA**
+(`lib/projects/sivunYhteyshenkilot.ts`). Mitatut saannot 73 sivulla:
+
+  - Elementtien valiin rivinvaihto: ilman sita "Pietarinen" +
+    "Toimitusjohtaja" + "Terho Pietarinen" liimautuivat yhdeksi nimeksi.
+  - Nimen muoto ei riita ("Perustiedot Helsingin", "Taaleri
+    Kiinteistojen" lapaisivat sen). Vahva todiste: sahkopostin
+    alkuosassa on henkilon etu- tai sukunimi. Pelkan puhelinnumeron rivi
+    jaa pois.
+  - Lahteeksi kirjataan ensimmainen osoite joka VASTASI - NCC:n
+    tiedoteosoite palautti 404.
+
+**Tulos 19.9.2026:** 77 lahteetonta hanketta sai lahteen ja 68 nimetyn
+henkilon. Jaljella ~194 rakenteilla-vaiheen lahteetonta, joille ei ole
+viela haettu. Syote hakuun: `scripts/data/lahteettomat-lahteet.json`.
+
+---
+
 ### D-199 - Vaylan projektipaallikko oli sivulla, mutta sivua ei koskaan haettu
 
 Rakenteilla-vaiheen hankkeista 336 oli ilman yhteystietoa. Jaettuna:
