@@ -1316,12 +1316,10 @@ muistin varassa.
   tekstin ensimmäistä yritysnimeä** — se kirjoittaisi konsultin
   rakennuttajaksi. Oikea tie on mitata mitkä lauseet nimeävät
   hankevastaavan, kuten kustannus- ja rakentajapoiminnassa tehtiin.
-- **Rakennuttajakenttään on kertynyt listoja** (D-189). Ohkolanlaakson
-  sillalla `developer` = "Destia Oy, WSP Finland Oy" eli urakoitsija ja
-  valvoja samassa kentässä, vaikka rakennuttaja on Uudenmaan ELY-keskus.
-  Tämä esti yhden rakentajan kirjoittamisen (sisältymisvertailu), ja se on
-  oikea käytös — vika on rakennuttajakentässä. Mittaa ensin kuinka monessa
-  rivissä kenttä sisältää useamman yrityksen.
+- ~~**Rakennuttajakenttään on kertynyt listoja.**~~ Korjattu 19.9.2026
+  (D-197): lähde oli STT:n "kolme ensimmäistä yritystä", 22 riviä.
+  Jäljellä olevat 140 listaa ovat pääosin oikein (organisaatio + yksikkö,
+  yhteishankkeet).
 - ~~**`sync-account-lifecycle` ei ole cronissa.**~~ Tarkistettu
   30.8.2026: se on `vercel.json`:ssa aikataululla `0 3 * * *`.
 

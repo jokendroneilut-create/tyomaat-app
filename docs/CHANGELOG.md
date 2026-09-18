@@ -11,6 +11,15 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Rakennuttajakentässä ei enää urakoitsijoiden listoja (D-197)
+
+Tiedotteista poimittu rakennuttaja saattoi olla lista tekstin
+ensimmäisistä yrityksistä, esimerkiksi "Destia Oy, Ramboll CM Oy", eli
+urakoitsija ja konsultti. Nyt rakennuttajaksi kirjataan vain yritys,
+jonka teksti nimeää hankkeen vastaavaksi tai tilaajaksi. Jos sellaista
+ei ole, kenttä jää tyhjäksi. 22 riviä korjattiin, ja urakoitsijat
+siirtyivät rakentajakenttään.
+
 ### Keskeytetty kilpailutus näkyy keskeytettynä (D-196)
 
 Hilmassa keskeytetyt kilpailutukset näkyivät avoimina, eli niihin olisi

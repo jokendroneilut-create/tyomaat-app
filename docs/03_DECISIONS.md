@@ -5,6 +5,61 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-197 - Rakennuttajaksi ei enaa tekstin kolmea ensimmaista yritysta
+
+ROADMAPissa oli kohta "rakennuttajakenttaan on kertynyt listoja"
+(Ohkolanlaakso, D-189). Mitattiin kaikki hankkeet
+(`scripts/measure-rakennuttajalistat.ts`): **6 337:sta 159:ssa
+rakennuttajakentassa on erotin, ja luettuna valtaosa on oikein** -
+organisaatio ja yksikko ("Helsingin kaupunki, kaupunkiympariston
+toimiala"), nimessa oleva "ja" ("Vantaan ja Keravan hyvinvointialue")
+tai aito yhteishanke (Yrjo ja Hanna Kodit, Microsoft/Fortum). Vaaria oli
+noin 15.
+
+**Mekaaninen "eka nimi rakennuttajaksi" olisi ollut vaarin.**
+Ohkolanlaakson "Destia Oy, WSP Finland Oy" -listassa kumpikaan ei ole
+rakennuttaja - se on ELY-keskus.
+
+**LAHDE: STT:n `extractCompaniesFromText`** otti koko tiedotteen kolme
+ensimmaista yhtionimea, kun julkaisija puuttui tai oli viranomainen.
+Listaan paatyi urakoitsijoita, konsultteja ja tiedotteen lopun
+yhteystiedot - yhdessa rivissa myos henkilon nimi. Juuri tata D-191
+varoitti tekemasta.
+
+**Uusi jarjestys, mitattu 45 rivilla** joiden arvo oli vanhan saannon
+tuotos:
+
+  1. Otsikon yritykset - kuulutus nimeaa toteuttajat otsikossa (Bull
+     Team Oy:n ja WeKas Oy:n laajennus). Useampi sallittu.
+  2. Ankkuroitu lause ("hankkeesta vastaa X", "X suunnittelee",
+     "tilaajana X"). Pelkka ensimmainen virke oli liian tiukka: YVA-
+     paatelmassa hankevastaava on keskella tekstia (Kemijoki Oy,
+     Elements Suomi Oy, ABO Energy Suomi Oy olisivat kadonneet).
+  3. Tekstin ainoa yritys - yksiselitteinen (LogoHub Oy, Tuulialfa Oy).
+
+Konsultti ei kelpaa missaan vaiheessa (Koutuanjarven tuulivoima:
+Sitowise, vaikka hanke on Metsahallituksen). Konsulttitunnistus katsoo
+koko nimen, koska nimikuvio nappaa lauseen alun roolisanan
+("Rakennuttajakonsultti Ramboll CM Oy"). Myoskaan tekstin nimeama
+rakentaja ei kelpaa: ilman tata ainoaksi jaanyt urakoitsija paatyi
+rakennuttajaksi ja rakentajakentta tyhjaksi. Rakentajakuvioon lisattiin
+"Urakan toteuttaa X" (Taivalkunnantie: "Urakan toteuttaa Destia Oy.
+Tilaajina toimivat Elinvoimakeskus ja Nokian kaupunki.").
+
+**Kasin luetut sekalistat (4)**, joissa rakentaja oli rakennuttajan
+seassa, korjattiin yksitellen: Oulun elamysareena (Oulun kaupunki;
+SRV ja Trevian liittyviin), Linnakaupungin monitoimitalo (Turun
+kaupunki), OYS C-rakennus (Pohde; NCC on jo rakentaja), Kajaanin
+datakeskus (CSC; SRV rakentajaksi). KSBR tiedottaa omista urakoistaan,
+joten sen kolmen tiedotteen rakennuttaja tyhjennettiin ja KSBR siirtyi
+rakentajaksi.
+
+**Ajettu 19.9.2026:** 22 rivia (12 hanketta + 10 ehdokasta). Toinen
+kuivaharjoitus: 0. Epavarmat jatettiin (YIT ja eQ
+Yhteiskuntakiinteistot, Vayla + erillissopimukset).
+
+---
+
 ### D-196 - Keskeytetty kilpailutus nakyy keskeytettyna, ei avoimena
 
 Halytysten katvealueen mittaus (`scripts/measure-vaiheen-eteneminen.ts`)

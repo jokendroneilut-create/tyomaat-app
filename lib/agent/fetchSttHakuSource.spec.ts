@@ -280,3 +280,36 @@ describe("extractBuilderFromText - rajatapaukset", () => {
     expect(resolveParties("Rakennusliike Lapti Oy", "Lapti rakentaa hoivakodin", teksti).builder).toBeNull()
   })
 })
+
+/*
+ * REKISTERITTÖMÄN / VIRANOMAISJULKAISIJAN RAKENNUTTAJA (D-197). Ennen:
+ * tekstin kolme ensimmäistä yhtiönimeä pilkuilla.
+ */
+describe("resolveParties - rakennuttaja tekstistä (D-197)", () => {
+  it("ei kirjaa urakoitsija- ja konsulttilistaa rakennuttajaksi", () => {
+    const teksti =
+      "Taivalkunnantielle rakennetaan uusi jalankulun ja pyöräilyn väylä. Urakan toteuttaa Destia Oy. Tilaajina toimivat Elinvoimakeskus ja Nokian kaupunki. Rakennuttajakonsultti Ramboll CM Oy."
+    const osapuolet = resolveParties(null, "Taivalkunnantien väylän rakennustyöt alkavat", teksti)
+    expect(osapuolet.developer).toBeNull()
+    expect(osapuolet.builder).toBe("Destia Oy")
+  })
+
+  it("lukee hankevastaavan YVA-päätelmän keskeltä", () => {
+    const teksti =
+      "Yhteysviranomaisena toimiva Lupa- ja valvontavirasto on antanut perustellun päätelmän. Hankkeesta vastaa Kemijoki Oy. Arviointiselostuksen laati Sweco Finland Oy."
+    expect(resolveParties(null, "Pumppuvoimalaitos", teksti).developer).toBe("Kemijoki Oy")
+  })
+
+  it("sallii otsikon useamman toteuttajan", () => {
+    expect(
+      resolveParties(null, "Bull Team Oy:n ja WeKas Oy:n laajennuksen YVA-menettely käynnistyy", "Teksti.").developer
+    ).toBe("Bull Team Oy, WeKas Oy")
+  })
+
+  it("kelpuuttaa tekstin ainoan yrityksen mutta ei konsulttia", () => {
+    expect(resolveParties(null, "Logistiikkakeskuksen rakennustyöt alkavat", "LogoHub Oy:n keskus nousee Turkuun.").developer).toBe(
+      "LogoHub Oy"
+    )
+    expect(resolveParties(null, "Tuulivoimahankkeen YVA-ohjelma nähtäville", "Ohjelman on laatinut Sitowise Oy.").developer).toBeNull()
+  })
+})

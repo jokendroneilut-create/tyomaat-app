@@ -2,6 +2,7 @@ import { detectCityFromText } from "./detectCityFromText"
 import { MUNICIPALITIES, getMunicipalityByName } from "@/lib/geo/municipalities"
 import { extractStreetAddress } from "./extractStreetAddress"
 import { NAME, cleanCompanyName, allativeToNominative } from "./companyName"
+import { extractYvaDeveloper } from "./fetchYvaSource"
 
 /*
  * STT Info -hakulähde. Toisin kuin nimetyt yrityslähteet (jotka lukevat yhden
@@ -50,19 +51,60 @@ const AUTHORITY_PUBLISHERS = [
 const COMPANY_NAME =
   /\b([A-ZÅÄÖ][\wåäöÅÄÖ&.\-]*(?:\s+[A-ZÅÄÖ][\wåäöÅÄÖ&.\-]*)*\s+(?:Oy|Oyj|Ab|Ky|Ltd))\b/g
 
-function extractCompaniesFromText(...texts: (string | null | undefined)[]): string | null {
-  const joined = texts.filter(Boolean).join(" ")
-  if (!joined) return null
-
+function companyNames(text: string | null | undefined): string[] {
   const found = new Map<string, string>()
-
-  for (const match of joined.matchAll(COMPANY_NAME)) {
+  for (const match of String(text ?? "").matchAll(COMPANY_NAME)) {
     const name = match[1].replace(/:n$/i, "").trim()
     if (name.length >= 4) found.set(name.toLowerCase(), name)
   }
+  return Array.from(found.values())
+}
 
-  const names = Array.from(found.values()).slice(0, 3)
-  return names.length > 0 ? names.join(", ") : null
+/*
+ * KONSULTTI EI OLE RAKENNUTTAJA (D-191, D-197). Mikä tahansa kohta nimessä,
+ * koska nimikuvio nappaa lauseen alun roolisanan ("Rakennuttajakonsultti
+ * Ramboll CM Oy"). YVA- ja kaavatekstien
+ * yleisimmät yhtiöt ovat suunnittelu- ja ympäristökonsultteja.
+ */
+const KONSULTTI =
+  /(?:^|\s)(?:Sitowise|Ramboll|AFRY|Sweco|WSP|FCG|Pöyry|A-Insinöörit|Granlund|Ains|Envineer|Plandea|Projoplan|Karttaako|Suomen Luontotieto|Etha Wind)\b|konsultti\b/i
+
+/*
+ * EI ENÄÄ "KOLME ENSIMMÄISTÄ YRITYSTÄ" (D-197).
+ *
+ * Aiempi sääntö otti koko tiedotteen kolme ensimmäistä yhtiönimeä ja
+ * yhdisti ne pilkuilla. Rakennuttajakenttään kertyi urakoitsijoita,
+ * konsultteja ja tiedotteen lopun yhteystietoja: "Destia Oy, Ramboll CM
+ * Oy", "STM Infra Oy, Savon Kuljetus Oy, <henkilö> STM Infra Oy",
+ * "Destia Oy, WSP Finland Oy" (Ohkolanlaakso, rakennuttaja ELY).
+ *
+ * Järjestys, jokainen askel mitattu 45 rivillä 19.9.2026:
+ *   1. OTSIKON yritykset - kuulutus nimeää toteuttajat otsikossa ("Bull
+ *      Team Oy:n ja WeKas Oy:n laajennuksen YVA-menettely"), useampi sallittu.
+ *   2. Ankkuroitu lause tekstistä: "hankkeesta vastaa X", "X suunnittelee",
+ *      "tilaajana X". YVA-päätelmissä hankevastaava on vasta keskellä
+ *      tekstiä (Kemijoki Oy, Elements Suomi Oy, ABO Energy Suomi Oy).
+ *   3. Tekstin AINOA yritys - yksiselitteinen (LogoHub Oy, Tuulialfa Oy).
+ * Muuten tyhjä. Konsultti ei kelpaa missään vaiheessa, eikä tekstin
+ * nimeämä rakentaja ("Urakoitsijana toimii Destia Oy") - muuten ainoaksi
+ * jäänyt urakoitsija päätyisi rakennuttajaksi ja rakentajakenttä tyhjäksi.
+ */
+function extractCompaniesFromText(
+  title: string | null | undefined,
+  description: string | null | undefined
+): string | null {
+  const rakentaja = extractBuilderFromText(title ?? null, description ?? null)
+  const kelpaa = (n: string) => !KONSULTTI.test(n) && eriYritys(n, rakentaja)
+
+  const otsikosta = companyNames(title).filter(kelpaa)
+  if (otsikosta.length > 0) return otsikosta.slice(0, 3).join(", ")
+
+  const ankkuroitu =
+    extractYvaDeveloper(description) ?? extractClientFromText(null, description ?? null)
+  if (ankkuroitu) return kelpaa(ankkuroitu) ? ankkuroitu : null
+
+  const kaikki = companyNames(`${title ?? ""} ${description ?? ""}`).filter(kelpaa)
+  return kaikki.length === 1 ? kaikki[0] : null
 }
 
 /*
@@ -267,6 +309,8 @@ const BUILDER_PATTERNS = [
   new RegExp(`[Rr]akentamisesta\\s+vasta\\w*\\s+(${NAME})`),
   new RegExp(`(?<![Aa]li)[Pp]ääurakoitsija(?:na)?\\s+(?:toimii\\s+|on\\s+)?(${NAME})`),
   new RegExp(`(?<![Aa]li)[Uu]rakoitsijana\\s+toimii\\s+(${NAME})`),
+  // "Urakan toteuttaa Destia Oy. Tilaajina toimivat ..." (D-197, Taivalkunnantie)
+  new RegExp(`[Uu]rakan\\s+toteuttaa\\s+(${NAME})`),
 ]
 
 export function extractBuilderFromText(
