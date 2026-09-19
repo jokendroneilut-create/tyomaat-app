@@ -130,9 +130,17 @@ Tulos 147 / 194 sai osoitteen. Ennen ajoa:
 vaiheen hankkeista ilman yhteystietoa 43,5 % -> 25,7 %, henkilo 44,7 % ->
 62,5 %. Kaikki aktiiviset: ilman yhteystietoa 18,5 % -> 15,8 %.
 
-**Kesken:** 23 hanketta jai hakematta, koska istunnon verkkohakukiintio
-(200) taytti - lista `scripts/data/lahteettomat-uusinta.json`. 24 haettiin
-ilman sopivaa osumaa.
+**Uusinta seuraavassa istunnossa:** 23 hanketta jai ensin hakematta
+verkkohakukiintion (200) vuoksi (`scripts/data/lahteettomat-uusinta.json`).
+Uusinnassa 18/23 sai osoitteen; kaksi paattelyyn perustuvaa jatettiin pois
+(Murkionkatu: nimi ja kuvaus eri hankkeista; K-Citymarket Espoo: kohde
+paatelty). 16 sai lahteen, 8 henkilon. Kuivaharjoitus loysi viela
+osoitteen, jonka verkkotunnus alkoi pisteella ("...@.luja.fi") - torjuttu.
+Samalla korjattiin kannasta vanha "...@hyvinkaa.fi." (piste lopussa).
+
+**Lopputulos:** 243 lahteetonta sai lahteen, 176 nimetyn henkilon.
+Ilman lahdetta jaivat yleisnimiset ("Kerrostalo Ouluun") - nimi ei
+yksiloi kohdetta, eika arvattu.
 
 **Sivutuote: agentit loysivat vanhentuneita vaiheita.** Noin 15
 "rakenteilla" olevaa on lahteen mukaan valmistunut (esim. Firan Tokmanni-

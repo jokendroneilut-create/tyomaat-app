@@ -1332,9 +1332,9 @@ muistin varassa.
     korjattu (D-199). **244 näistä on lähteettömiä** (helmi–maaliskuun
     2026 alkuaineisto: Visulahden datakeskus, Kotkan akkutehdas, OYS C):
     ei lähdedokumenttia, josta varmentaa. **Aloitettu 19.9.2026 (D-200):**
-    227 sai lähteen, 168 henkilön (syöte `scripts/data/lahteettomat-lahteet.json`).
-    **Jäljellä 23 hakematta** (verkkohakukiintiö täyttyi):
-    `scripts/data/lahteettomat-uusinta.json`.
+    243 sai lähteen, 176 henkilön (syöte `scripts/data/lahteettomat-lahteet.json`).
+    Kaikki haettu. Ilman sopivaa lähdettä jäivät yleisnimiset ("Kerrostalo
+    Ouluun", "Kevyen liikenteen väylä Ouluun") – nimi ei yksilöi kohdetta.
   - ~~**Vanhentuneet vaiheet.**~~ 10 merkitty valmiiksi (D-201): 6 lähteen
     toteamana, 4 käyttäjän päätöksellä (Firan vanhat kohteet 2022–24).
   - **Kaksoishankkeet: 7 paria TIC:n duplikaattijonossa** (D-202) –

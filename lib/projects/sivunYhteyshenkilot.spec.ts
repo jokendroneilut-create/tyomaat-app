@@ -42,3 +42,10 @@ describe("sivunYhteyshenkilot - organisaation laatikot ja rikkinäiset osoitteet
     expect(sivunYhteyshenkilot($)).toEqual([])
   })
 })
+
+describe("sivunYhteyshenkilot - verkkotunnus", () => {
+  it("hylkää pisteellä alkavan verkkotunnuksen", () => {
+    const $ = cheerio.load(`<p>Matti Meikäläinen, 040 765 4321, matti.meikalainen@.esimerkki.fi</p>`)
+    expect(sivunYhteyshenkilot($)).toEqual([])
+  })
+})

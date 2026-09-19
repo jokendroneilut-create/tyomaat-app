@@ -38,7 +38,8 @@ export function sahkopostiVastaaNimea(nimi: unknown, email: unknown): boolean {
 const EI_HENKILO = /^(asuntomyynti|myynti|asiakaspalvelu|kotikatu|rakennus|info|toimisto|vaihde|viestintä|media|kirjaamo)\b/i
 
 /* Osoitteeseen liimautunut sana: "...@esimerkki.fi.Tervetuloa". */
-const EHJA_OSOITE = /^[^@\s]+@[a-z0-9.-]+\.[a-z]{2,}$/
+/* Verkkotunnus alkaa kirjaimella tai numerolla: "...@.luja.fi" on rikki. */
+const EHJA_OSOITE = /^[^@\s.][^@\s]*@[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.[a-z]{2,}$/
 
 /* Yhtiömuoto tai suluissa oleva huomautus ei ole titteli. */
 function siistiTitteli(title: string | null | undefined): string | null {
