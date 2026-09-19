@@ -1335,9 +1335,9 @@ muistin varassa.
     227 sai lähteen, 168 henkilön (syöte `scripts/data/lahteettomat-lahteet.json`).
     **Jäljellä 23 hakematta** (verkkohakukiintiö täyttyi):
     `scripts/data/lahteettomat-uusinta.json`.
-  - **Vanhentuneet vaiheet** (D-200): ~15 rakenteilla-hanketta on lähteen
-    mukaan valmistunut (Firan Tokmanni/Transval 2022–23, Harjun stadion).
-    Päätös vaiheen korjauksesta käyttäjällä.
+  - ~~**Vanhentuneet vaiheet.**~~ 6 merkitty valmiiksi lähteen toteamana
+    (D-201). **Päätettävänä:** Firan Tokmanni, Transval, NREP Espoo ja DHL
+    Sipoo – vain vanha suunniteltu aikataulu (2022–24), ei toteumaa.
   - **Kaksoishankkeet lähteettömien joukossa** (D-200): esim. "Kerrostalo
     Hatanpäähän" näkyy asiakkaalle kahdesti. Yhdistämisestä päättää käyttäjä.
   - **Väylän keräimen tahti** (D-199): 103 sivua ei koskaan haettu

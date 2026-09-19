@@ -225,6 +225,11 @@ export async function GET(req: Request) {
       .from("project_phase_history")
       .select("project_id, phase, created_at")
       .gte("created_at", since.toISOString())
+      /*
+       * Käsin tehty korjaus ei ole uusi tapahtuma: vuonna 2025 valmistunut
+       * hanke, joka korjataan nyt valmistuneeksi, ei "edennyt" tänään (D-201).
+       */
+      .neq("source", "manual_correction")
       .order("created_at", { ascending: true })
     if (hErr) throw hErr
 

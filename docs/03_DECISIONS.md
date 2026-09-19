@@ -5,6 +5,39 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-201 - Valmistunut vain kun lahde toteaa sen, ei kun vanha aikataulu umpeutui
+
+D-200:n haku loysi noin 15 "rakenteilla" olevaa hanketta, jotka hakuagentin
+mukaan olivat valmistuneet. Agentin huomautukseen ei luotettu: jokaisen
+lahdesivu haettiin ja valmistumista koskevat virkkeet luettiin.
+
+**Kolme ryhmaa:**
+
+  1. **Lahde toteaa valmistumisen menneessa muodossa - 6 hanketta,
+     merkitty valmiiksi.** Koiviston ja Pikkuhaaran sillat ("urakka
+     valmistui ... vuoden 2025 lopulla"), Finnoonniityn linja-autovarikko
+     ("luovutettiin tilaajalle"), Iisalmen liikekiinteisto, Ruissalontien
+     kerrostalo, Oulunkylan vuokrakerrostalo, Ahvenisjarven koulu.
+     Todiste kirjattu vaihehistorian syyksi.
+  2. **Vain suunniteltu aikataulu vanhassa tiedotteessa - 4 hanketta,
+     EI merkitty.** Firan Tokmanni (kevat 2024), Transval (2022), NREP
+     Espoo (5/2023), DHL Sipoo (2/2024). Lahes varmasti valmiita, mutta
+     tiedote kertoo suunnitelman, ei toteumaa. Valmistumisajastus ei
+     myoskaan merkitsisi niita: portti 1 hylkaa loytohetkea vanhemman
+     paivan vaarin luettuna vuosilukuna (autoCompleteGate). Paatos
+     kayttajalla.
+  3. **Ei todistetta** - Mantylanhuippu, Harjun stadion, Harjulan koulu,
+     Upinniemi ("viimeisimpana valmistui kasarmi 21" - kokonaisuus voi
+     jatkua). Ennallaan.
+
+**Kasin tehty korjaus ei laukaise halytysta.** Vaihehistoriaan lahteella
+`manual_correction`, jonka halytys nyt ohittaa: vuonna 2025 valmistunut
+silta ei "edennyt" tanaan. Yksi kayttaja on valinnut myyntihetkeksi
+myos Valmistunut, ja han olisi saanut naista vanhoista hankkeista
+halytyksen.
+
+---
+
 ### D-200 - Lahteettomille hankkeille lahde: ensin tallessa oleva, sitten haku
 
 Julkisista aktiivisista hankkeista 621 on lahteettomia (helmi-maaliskuun
