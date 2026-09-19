@@ -1,12 +1,1078 @@
 [
-  { "id": "b253426b-8c78-42d9-b0d4-3f940552e0db", "urls": ["https://nyabgroup.com/en/newsroom/nyab-signs-contract-for-data-center-project-in-mikkeli-finland/", "https://mikseimikkeli.fi/ajankohtaista-tietoa-compute-nordicin-datakeskushankkeesta/"] },
-  { "id": "706cdf01-939f-498f-bfb3-abc5331ce717", "urls": ["https://easpring.fi/fi/artikkelit/kotkan-akkumateriaalitehtaan-ymparistolupa-sai-lainvoiman/", "https://www.kotka.fi/2025/03/historiallinen-hetki-kotkassa-easpringin-katodimateriaalitehtaan-rakentaminen-alkaa/"] },
-  { "id": "12986da3-149b-447d-a37b-25b599868d88", "urls": ["https://news.cision.com/fi/srv-yhtiot-oyj/r/dayonen-datakeskuksen-rakennustyot-kaynnistyvat-lahdessa---srv-vahvistaa-asemaansa-datakeskusrakenta,c4331403", "https://www.srv.fi/srv-yrityksena/tyomaat/2984-lahden-datakeskus/"] },
-  { "id": "996f5c70-fec0-4d4b-8803-a3d559eb0c9f", "urls": ["https://news.cision.com/fi/miltton/r/google-laajentaa-haminan-datakeskustaan-ja-kaynnistaa-uuden-hukkalammon-talteenottoprojektin,c3984422"] },
-  { "id": "884c1f59-5ef4-406c-8ca9-f895a32b3c1e", "urls": ["https://forcitgroup.com/news/planning-of-a-new-tnt-production-plant-in-noormarkku-pori-progresses/"] },
-  { "id": "a495c984-54d3-494c-a232-9b32f56d10a0", "urls": ["https://www.ncc.fi/media/pressrelease-container/3b6e94a73b9e55f6/ncc-rakentaa-uuden-c-rakennuksen-oulun-yliopistolliseen-sairaalaan-hanke-etenee-toteutusvaiheeseen/", "https://pohde.fi/ajankohtaista/uutiset/oysin-uudistaminen-etenee-c-rakennuksen-toteutusvaiheen-sopimus-allekirjoitettiin/"] },
-  { "id": "5dba2aa9-8e75-4a6c-b13f-51bc9535b01a", "urls": ["https://www.yitgroup.com/fi/news-repository/sijoittajauutiset/yit-aloittaa-louhintatyot-maailman-suurimmassa-lammon-kausivarastossa--arvo-yitlle-noin-100-miljoonaa-euroa", "https://www.epressi.com/tiedotteet/energia/maailman-suurimman-lammon-kausivarasto-varannon-louhintatyot-kaynnistyvat-vantaalla.html"] },
-  { "id": "5440837b-2896-4c1f-a5c6-430dfda5e462", "urls": ["https://www.atria.com/uutishuone/2026/tulevaisuuden-ruokatehdas-rakentuu-nurmoon/", "https://www.yitgroup.com/fi/news-repository/lehdistotiedotteet/yit-on-sopinut-atria-oyjn-kanssa-tulevaisuuden-valmisruokatehtaan-rakentamisesta-seinajoelle"] },
-  { "id": "54f89fdc-e552-4202-9be7-f681b72b88c9", "urls": ["https://news.cision.com/fi/yit-oyj/r/yit-kaynnistaa-tikkurilan-osaamiskampuksen-oppilaitosrakennuksen-rakennustyot---arvo-yit-lle-77-milj,c4335860", "https://vtkoy.fi/ajankohtaista/tikkurilan-osaamiskampuksen-oppilaitoskorttelin-urakoitsijaksi-yit-rakennus"] },
-  { "id": "34e5789b-5f6d-4643-a25d-10dfd8be67dc", "urls": ["https://www.sttinfo.fi/tiedote/71725137/skanska-rakentaa-hok-elannolle-prismakeskuksen-espooseen?publisherId=69819623&lang=fi", "https://www.sttinfo.fi/tiedote/72307763/espoon-keskuksen-prismakeskuksen-peruskivi-on-nyt-muurattu-sisaan-katkettiin-aikakapseli?lang=fi"] }
+ {
+  "id": "b253426b-8c78-42d9-b0d4-3f940552e0db",
+  "urls": [
+   "https://nyabgroup.com/en/newsroom/nyab-signs-contract-for-data-center-project-in-mikkeli-finland/",
+   "https://mikseimikkeli.fi/ajankohtaista-tietoa-compute-nordicin-datakeskushankkeesta/"
+  ]
+ },
+ {
+  "id": "706cdf01-939f-498f-bfb3-abc5331ce717",
+  "urls": [
+   "https://easpring.fi/fi/artikkelit/kotkan-akkumateriaalitehtaan-ymparistolupa-sai-lainvoiman/",
+   "https://www.kotka.fi/2025/03/historiallinen-hetki-kotkassa-easpringin-katodimateriaalitehtaan-rakentaminen-alkaa/"
+  ]
+ },
+ {
+  "id": "12986da3-149b-447d-a37b-25b599868d88",
+  "urls": [
+   "https://news.cision.com/fi/srv-yhtiot-oyj/r/dayonen-datakeskuksen-rakennustyot-kaynnistyvat-lahdessa---srv-vahvistaa-asemaansa-datakeskusrakenta,c4331403",
+   "https://www.srv.fi/srv-yrityksena/tyomaat/2984-lahden-datakeskus/"
+  ]
+ },
+ {
+  "id": "996f5c70-fec0-4d4b-8803-a3d559eb0c9f",
+  "urls": [
+   "https://news.cision.com/fi/miltton/r/google-laajentaa-haminan-datakeskustaan-ja-kaynnistaa-uuden-hukkalammon-talteenottoprojektin,c3984422"
+  ]
+ },
+ {
+  "id": "884c1f59-5ef4-406c-8ca9-f895a32b3c1e",
+  "urls": [
+   "https://forcitgroup.com/news/planning-of-a-new-tnt-production-plant-in-noormarkku-pori-progresses/"
+  ]
+ },
+ {
+  "id": "a495c984-54d3-494c-a232-9b32f56d10a0",
+  "urls": [
+   "https://www.ncc.fi/media/pressrelease-container/3b6e94a73b9e55f6/ncc-rakentaa-uuden-c-rakennuksen-oulun-yliopistolliseen-sairaalaan-hanke-etenee-toteutusvaiheeseen/",
+   "https://pohde.fi/ajankohtaista/uutiset/oysin-uudistaminen-etenee-c-rakennuksen-toteutusvaiheen-sopimus-allekirjoitettiin/"
+  ]
+ },
+ {
+  "id": "5dba2aa9-8e75-4a6c-b13f-51bc9535b01a",
+  "urls": [
+   "https://www.yitgroup.com/fi/news-repository/sijoittajauutiset/yit-aloittaa-louhintatyot-maailman-suurimmassa-lammon-kausivarastossa--arvo-yitlle-noin-100-miljoonaa-euroa",
+   "https://www.epressi.com/tiedotteet/energia/maailman-suurimman-lammon-kausivarasto-varannon-louhintatyot-kaynnistyvat-vantaalla.html"
+  ]
+ },
+ {
+  "id": "5440837b-2896-4c1f-a5c6-430dfda5e462",
+  "urls": [
+   "https://www.atria.com/uutishuone/2026/tulevaisuuden-ruokatehdas-rakentuu-nurmoon/",
+   "https://www.yitgroup.com/fi/news-repository/lehdistotiedotteet/yit-on-sopinut-atria-oyjn-kanssa-tulevaisuuden-valmisruokatehtaan-rakentamisesta-seinajoelle"
+  ]
+ },
+ {
+  "id": "54f89fdc-e552-4202-9be7-f681b72b88c9",
+  "urls": [
+   "https://news.cision.com/fi/yit-oyj/r/yit-kaynnistaa-tikkurilan-osaamiskampuksen-oppilaitosrakennuksen-rakennustyot---arvo-yit-lle-77-milj,c4335860",
+   "https://vtkoy.fi/ajankohtaista/tikkurilan-osaamiskampuksen-oppilaitoskorttelin-urakoitsijaksi-yit-rakennus"
+  ]
+ },
+ {
+  "id": "34e5789b-5f6d-4643-a25d-10dfd8be67dc",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71725137/skanska-rakentaa-hok-elannolle-prismakeskuksen-espooseen?publisherId=69819623&lang=fi",
+   "https://www.sttinfo.fi/tiedote/72307763/espoon-keskuksen-prismakeskuksen-peruskivi-on-nyt-muurattu-sisaan-katkettiin-aikakapseli?lang=fi"
+  ]
+ },
+ {
+  "id": "44e9ac95-9ebe-4e73-9cd2-0e4a5a6a16c8",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71617017/skanska-toteuttaa-valtatie-12n-parannuksen-valilla-jokue-tillola?publisherId=69819623&lang=fi",
+   "https://www.skanska.fi/tietoa-skanskasta/media/uutiset/303094/Skanska-toteuttaa-Valtatie-12-n-parannuksen-valilla-JokueTillola",
+   "https://vayla.fi/vt-12-mankala-tillola"
+  ]
+ },
+ {
+  "id": "978e017f-b128-46df-86ed-5633fd800a18",
+  "urls": [
+   "https://www.yitgroup.com/fi/news-repository/lehdistotiedotteet/yit-rakentaa-36-uutta-a-energialuokan-yit-kotia-tampereen-ranta-tampellan-alueelle",
+   "https://news.cision.com/yit-oyj/r/yit-launched-construction-of-36-new-yit-homes-in-energy-class-a-in-ranta-tampella--tampere,c4319431",
+   "https://www.yit.fi/en/homes/apartments-for-sale/tampere/ranta-tampella/tampereen-nasinsade"
+  ]
+ },
+ {
+  "id": "ecb0ec9c-eb6e-4132-9f8b-941645db611a",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/72267734/riihimaen-keskustan-s-marketin-rakentaminen-kaynnistyy?publisherId=68574224&lang=fi",
+   "https://www.riihimaki.fi/tiedotteet/riihimaen-keskustaan-rakennetaan-uusi-s-market/",
+   "https://www.epressi.com/tiedotteet/kaupungit-ja-kunnat/riihimaen-keskustaan-rakennetaan-uusi-s-market.html"
+  ]
+ },
+ {
+  "id": "1de72dd2-3ec2-4242-9483-a02d03407ad9",
+  "urls": [
+   "https://news.cision.com/fi/nrc-group-finland/r/nrc-group-rakentaa-uutta-ox2-n-tuulipuistoa-kauhavalle,c4281749",
+   "https://www.epressi.com/tiedotteet/rakentaminen/ox2n-tuulipuisto-nousee-kauhavalle-nrc-groupin-uusiutuvan-energian-infratyot-hankkeella-etenevat-suunnitellusti.html"
+  ]
+ },
+ {
+  "id": "c7cf15fb-3507-48a1-8b17-99d18f0b187c",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/70121813/firan-modernisointi-jatkaa-toimistosaneerauksia-kruununhaassa?publisherId=69819368&lang=fi",
+   "https://fira.fi/tiedote/firan-modernisointi-jatkaa-toimistosaneerauksia-kruununhaassa/"
+  ]
+ },
+ {
+  "id": "7bbf5ae7-87f9-4a10-bb8d-e68e5b616736",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71012201/alpiq-investoi-suomen-suurimpaan-sahkovarastohankkeeseen-pohjois-pohjanmaalla?publisherId=69820731&lang=fi",
+   "https://pohjanvoima.fi/en/alpiq-investoi-sahkovarastohankkeeseen/"
+  ]
+ },
+ {
+  "id": "123bff2a-436c-40f8-81c6-f1165fc4faba",
+  "urls": [
+   "https://www.pohjolarakennus.fi/artikkeli/pohjola-rakennus-toteuttaa-fluiconnecto-oyn-uuden-paatoimipaikan-palokkaan/"
+  ]
+ },
+ {
+  "id": "ee2cd1af-3dff-48f3-a1ae-2cdd0f6c3760",
+  "urls": [
+   "https://www.hyvinkaa.fi/asuinymparisto-ja-rakentaminen/liikenne/kaynnissa-olevat-katusaneeraukset/kalevankatu-vt-25/",
+   "https://vayla.fi/vt-25-hanko-mantsala"
+  ]
+ },
+ {
+  "id": "63042b2e-1a66-4c86-b157-2005f078d796",
+  "urls": [
+   "https://www.bonava.fi/tietoa-meista/media/2026/1/bonava-rakentaa-kolmen-kerrostalon-asuinkorttelin-helsingin-lauttasaareen"
+  ]
+ },
+ {
+  "id": "57d06fc1-576a-4ef9-a911-8d40fd9b53a9",
+  "urls": [
+   "https://ssa.fi/asuntorakentaminen/ssa-rakentaa-espoon-asunnoille-85-asunnon-kerrostalokohteen/"
+  ]
+ },
+ {
+  "id": "b233b428-1a84-479f-827c-d5ee85b3736c",
+  "urls": [
+   "https://www.jmoy.fi/asunnot/espoo/leppavaara/asunto-oy-espoon-mantylanhuippu/"
+  ]
+ },
+ {
+  "id": "b3de5071-8a8a-4e93-b956-03ab9b47a963",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/70635119/kreatelle-yli-9-miljoonan-urakka-kokemaenjoen-koiviston-ja-pikkuhaaran-siltojen-uusiminen-kaynnistyy?publisherId=69818424&lang=fi",
+   "https://kreate.fi/kohteet/uusimme-kokemaenjoen-ylittavat-koiviston-ja-pikkuhaaran-sillat-valtatiella-11/",
+   "https://vayla.fi/vt-11-koiviston-ja-pikkuhaaran-sillat"
+  ]
+ },
+ {
+  "id": "aa679037-2bde-43bb-b633-712efe560e8d",
+  "urls": [
+   "https://www.srv.fi/srv-yrityksena/ajankohtaista/lehdistotiedote/naantalin-prisman-peruskivi-muurattu-turun-osuuskaupan-ensimmainen-ymparistosertifioitu-kohde-avataan-syksylla-2026/",
+   "https://news.cision.com/fi/srv-yhtiot-oyj/r/naantalin-prisman-peruskivi-muurattu---turun-osuuskaupan-ensimmainen-ymparistosertifioitu-kohde-avat,c4268368",
+   "https://www.naantali.fi/fi/uutiset/naantalin-prisman-peruskivi-muurattu-kauppa-valmistuu-syksylla-2026"
+  ]
+ },
+ {
+  "id": "03ba0620-941d-4e3c-8f89-7bc5f2aa6a6f",
+  "urls": [
+   "https://firakotona.fi/en/kohteet/kera/espoon-novelli/"
+  ]
+ },
+ {
+  "id": "ab9c6f72-79c7-421f-a059-5ab9f7de9367",
+  "urls": [
+   "https://www.puroila.com/fi/myytavat-asunnot/as-oy-kiviniemen-kippari/"
+  ]
+ },
+ {
+  "id": "6b7acd4d-ce9a-4376-be43-885f5333f9d0",
+  "urls": [
+   "https://www.t2h.fi/asunto-oy-kangasalan-lakka"
+  ]
+ },
+ {
+  "id": "3676a233-9f22-4d08-ae07-26bc3dd3cc54",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71712957/rannikkoprikaatin-kaikki-kasarmit-peruskorjattu-48-miljoonan-euron-investointi-varusmiesten-palvelusolosuhteisiin?publisherId=69820941&lang=fi",
+   "https://www.senaatti.fi/ajankohtaista/uutiset/rannikkoprikaatin-kaikki-kasarmit-peruskorjattu-48-miljoonan-euron-investointi-varusmiesten-palvelusolosuhteisiin/"
+  ]
+ },
+ {
+  "id": "8304ecb3-4c93-4c4f-84e0-a8cf725fa684",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/72068001/ata-gears-laajentaa-toimitilojaan-tampereen-linnainmaalla?publisherId=55623418&lang=fi",
+   "https://www.kielotoimitilat.fi/en/ata-gears-expands-production-facilities-in-linnainmaa-tampere"
+  ]
+ },
+ {
+  "id": "439de994-6d4c-4c34-b885-25c1d4cda35b",
+  "urls": [
+   "https://kfs.fi/kfs-finland-toteuttaa-vaativan-patohankkeen-pamilon-vesivoimalaitoksella-sopimuksen-arvo-noin-11-miljoonaa-euroa/",
+   "https://news.cision.com/fi/vattenfall-oy/r/vattenfall-kaynnistaa-mittavan-patoinvestoinnin-pamilon-vesivoimalaitoksella---vaativa-korjaushanke-,c4362142",
+   "https://www.sttinfo.fi/announcement/72129850?publisherId=69818424&lang=fi"
+  ]
+ },
+ {
+  "id": "6cb0106a-37e9-4d02-a0e7-fd24647452c7",
+  "urls": [
+   "https://www.nrcgroup.fi/uutiset/rakennamme-rauman-uuden-henkilojunaseisakkeen-henkiloliikenne-raumalle-mahdollista-kevaalla-2027",
+   "https://www.epressi.com/tiedotteet/rakentaminen/nrc-group-rakentaa-rauman-uuden-henkilojunaseisakkeen-maanrakennus-ja-pohjanvahvistustyot-kaynnissa.html",
+   "https://vayla.fi/-/rauman-uuden-seisakkeen-rakentaminen-alkaa-huhtikuussa"
+  ]
+ },
+ {
+  "id": "0e9a0f0c-b3ac-429c-876a-b95b885f2960",
+  "urls": [
+   "https://solarigo.fi/ajankohtaista/turvesuolle-alettiin-rakentaa-teollista-aurinkovoimalaa-kuortaneella/",
+   "https://solarigo.fi/teolliset-aurinkopuistot-referenssit/honkisaarenneva/"
+  ]
+ },
+ {
+  "id": "1f6a68a4-b613-4fca-b1e6-492315dd4569",
+  "urls": [
+   "https://sivakka.fi/kotia-etsivalle/tulevia-kohteita/"
+  ]
+ },
+ {
+  "id": "090f8d2e-3ca8-4b15-89e5-3691e8bb7e5c",
+  "urls": [
+   "https://www.caverion.fi/media/tiedotteet/2026/caverion-rakentaa-fingridille-uuden-400-kv-sahkoaseman-pohjanmaalle-abackaan-seka-toteuttaa-laajennukset-kajaanin-vuolijoen-ja-muhoksen-pyhaselan-sahkoasemiin.-sopimusten-yhteisarvo-18-miljoonaa-euroa",
+   "https://news.cision.com/fi/caverion/r/caverion-rakentaa-fingridille-uuden-400-kv-sahkoaseman-pohjanmaalle-abackaan-seka-toteuttaa-laajennu,c4333053"
+  ]
+ },
+ {
+  "id": "6780a25a-3236-4732-b61b-ceb56549a0f8",
+  "urls": [
+   "https://www.varte.fi/varte/ajankohtaista/varte-toteuttaa-op-toimitilakiinteist%C3%B6-kylle-laboratoriokiinteist%C3%B6n-vantaalle",
+   "https://www.epressi.com/tiedotteet/rakentaminen/varte-toteuttaa-op-toimitilakiinteisto-kylle-laboratoriokiinteiston-vantaalle.html"
+  ]
+ },
+ {
+  "id": "08ca8340-93a5-4cff-81dd-ddf5d7c6dac3",
+  "urls": [
+   "https://www.fira.fi/uutiset/fira-rakentaa-harjulan-koulun-ja-paivakodin-jarvenpaahan/",
+   "https://www.epressi.com/tiedotteet/rakentaminen/fira-rakentaa-harjulan-koulun-ja-paivakodin-jarvenpaahan.html"
+  ]
+ },
+ {
+  "id": "ed398d19-ecec-4f4b-810b-41a806395888",
+  "urls": [
+   "https://www.oulunkylankulma.fi/"
+  ]
+ },
+ {
+  "id": "42988144-ff87-4e74-970e-150785847b8f",
+  "urls": [
+   "https://yrjojahanna.fi/uusi-palvelutalo-nousee-espoon-mankkaalle/"
+  ]
+ },
+ {
+  "id": "ce89a67b-6db1-47bd-9050-2bdc321d1b99",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71932024/kembaanan-rakentaminen-aiheuttaa-muutoksia-jalankulkuun-ja-pyorailyyn-limingantiella-oulussa?lang=fi",
+   "https://www.ouka.fi/suunnitelmat-ja-hankkeet/kembaana-2-vaihe-katu-ja-ymparistosuunnitelmat-seka-liikenteenohjaus"
+  ]
+ },
+ {
+  "id": "14023c1f-4619-46c4-bcda-048a254653c4",
+  "urls": [
+   "https://www.pohjolarakennus.fi/kodit/helsinki/herttoniemi/asunto-oy-helsingin-valurinpuisto/"
+  ]
+ },
+ {
+  "id": "e2d61d34-c436-4add-99b3-47f58b7b38d4",
+  "urls": [
+   "https://lahdentalot.fi/yritys/tiedotteet/lahden-talojen-svinhufvudinkadun-korttelin-kolmaskin-talo-alkaa-rakentumaan/"
+  ]
+ },
+ {
+  "id": "b6b3c514-6e59-4d9b-8447-546f7bd199f4",
+  "urls": [
+   "https://www.yitgroup.com/fi/news-repository/lehdistotiedotteet/yit-rakentaa-28-uutta-valjaa-ja-valoisaa-yit-kotia-piispanristille-kaarinaan"
+  ]
+ },
+ {
+  "id": "8e1df065-f2b9-402c-980d-be6232286ea9",
+  "urls": [
+   "https://lapti.fi/ajankohtaista/viiden-uuden-vuokramallin-paivakodin-rakentaminen-alkaa-turussa/",
+   "https://www.turku.fi/ajankohtaista/paivakotien-uudistushanke-etenee-turussa-ensimmaisia-vuokramallin-paivakoteja-aletaan",
+   "https://www.sttinfo.fi/tiedote/71596816/urban-partners-ja-rakennusliike-lapti-voittaneet-kilpailutuksen-viiden-paivakodin-toteutuksesta-turkuun?publisherId=55623418&lang=fi"
+  ]
+ },
+ {
+  "id": "88d76278-4fcf-4922-b7ed-3834831ceba3",
+  "urls": [
+   "https://ssa.fi/palvelukodit/uuden-hoivakodin-rakentaminen-turkuun-on-alkanut/",
+   "https://hoivatilat.fi/hoivatilat-toteuttaa-ikaihmisten-hoivakodit-attendolle-turkuun-kuopioon-ja-seinajoelle/",
+   "https://www.sttinfo.fi/tiedote/71639524/attendo-ja-hoivatilat-toteuttavat-ikaihmisten-hoivakodit-turkuun-kuopioon-ja-seinajoelle?lang=fi"
+  ]
+ },
+ {
+  "id": "8710bb17-3b22-42e0-9df1-ae84b965817f",
+  "urls": [
+   "https://tekova.fi/tekova-urakoi-uuden-puuilon-jamsaan/"
+  ]
+ },
+ {
+  "id": "755e980f-77d4-4009-950d-c2a30e9896bf",
+  "urls": [
+   "https://kreate.fi/kreaten-loppuvuosi-jatkuu-vahvana-noin-40-miljoonan-euron-urakka-helsinki-riihimaki-hankkeelta-tilauskantaan/",
+   "https://vayla.fi/purola-nuppulinna-lisaraiteet",
+   "https://tuusula.fi/2026/01/22/lisaraiteiden-rakentamistyot-alkavat-purolan-ja-nuppulinnan-valilla/"
+  ]
+ },
+ {
+  "id": "f2e59278-c400-4ba8-8e25-a341c0a398ef",
+  "urls": [
+   "https://news.cision.com/yit-oyj/r/new-stylish-homes-in-tampere---yit-started-construction-of-the-asunto-oy-tampere-sointu-apartment-bu,c4247832",
+   "https://www.yitgroup.com/en/news-repository/press-release/new-stylish-homes-in-tampere---yit-started-construction-of-the-asunto-oy-tampere-sointu-apartment-building",
+   "https://www.yit.fi/en/homes/apartments-for-sale/tampere/rauhaniemi/tampereen-sointu"
+  ]
+ },
+ {
+  "id": "1a47ca03-c440-4560-b0fc-886c2b8d1632",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71295532/kreate-rakentaa-lahes-11-miljoonan-urakassa-ritaportin-alueen-kadut-ja-vesihuollon-oulussa?publisherId=69818424&lang=fi",
+   "https://kreate.fi/kreate-rakentaa-lahes-11-miljoonan-urakassa-ritaportin-alueen-kadut-ja-vesihuollon-oulussa/",
+   "https://kreate.fi/en/projects/by-constructing-streets-and-water-supply-systems-in-the-ritaportti-area-we-are-creating-the-conditions-for-a-new-business-hub-in-oulu/"
+  ]
+ },
+ {
+  "id": "9dff0878-f13e-49e7-9d39-e6d55873c7d5",
+  "urls": [
+   "https://www.inderes.fi/releases/toivo-group-oyj-on-solminut-kaupat-kahdesta-yhteensa-noin-20-miljoonan-euron-arvoisesta-yhteiskuntakiinteistosta-nrepin-hallinnoiman-rahaston-kanssa"
+  ]
+ },
+ {
+  "id": "22f48386-705a-42e9-980f-21b90ecb1a1e",
+  "urls": [
+   "https://www.ouka.fi/uutiset/isokadun-peruskorjaus-jatkuu-valilla-heinatorinkatu-peltokatu"
+  ]
+ },
+ {
+  "id": "820eed1c-3444-48e3-9519-845768047201",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71310989/hausjarvelle-rakennetaan-uusi-monitoimihalli-tekova-valittu-urakoitsijaksi?lang=fi",
+   "https://tekova.fi/tekova-valittu-hausjarven-kunnan-uuden-monitoimihallin-urakoitsijaksi/"
+  ]
+ },
+ {
+  "id": "7c809eeb-79b1-4ddd-b4bc-968f60bd61e2",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71728165/mangrove-oyn-urakoima-uusi-kerrostalohanke-kaynnistyi-pirkkalan-turrin-alueella-pirkkalan-linnanpihaan-rakentuu-63-vuokra-asuntoa?publisherId=69819151&lang=fi"
+  ]
+ },
+ {
+  "id": "d8c12979-5e8b-4faf-bb32-73ba3ccf6008",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71634457/rakennusliike-lapti-toteuttaa-hoivatiloille-ikaihmisten-hoivakodit-seinajoelle-ja-kuopioon?publisherId=55623418&lang=fi",
+   "https://lapti.fi/ajankohtaista/lapti-toteuttaa-hoivatiloille-ikaihmisten-hoivakodit-seinajoelle-ja-kuopioon/",
+   "https://www.sttinfo.fi/tiedote/71639524/attendo-ja-hoivatilat-toteuttavat-ikaihmisten-hoivakodit-turkuun-kuopioon-ja-seinajoelle?publisherId=4368&lang=fi"
+  ]
+ },
+ {
+  "id": "f888f96a-c254-4fc7-b734-30b203be2624",
+  "urls": [
+   "https://fira.fi/uutiset/fira-rakentaa-tokmannin-logistiikkakeskuksen-uuden-laajennusosan-mantsalaan/",
+   "https://www.epressi.com/tiedotteet/rakentaminen/fira-oy-rakentaa-tokmannin-logistiikkakeskuksen-uuden-laajennusosan-mantsalaan.html"
+  ]
+ },
+ {
+  "id": "e74bf2d3-5477-4f8b-bdb1-a6c57b1b6d4e",
+  "urls": [
+   "https://www.fira.fi/uutiset/fira-rakentaa-transvalille-energiatehokkaan-varastorakennuksen/",
+   "https://www.transval.fi/2021/02/10/merkittava-investointi-logistiikkayhtio-transvalille-37-miljoonan-euron-varasto/"
+  ]
+ },
+ {
+  "id": "7a4822e5-5174-494d-befa-3c7dad1f6800",
+  "urls": [
+   "https://mfn.se/all/a/jm/jm-forvarvar-byggratter-for-bostadsutveckling-i-vanda"
+  ]
+ },
+ {
+  "id": "40e84590-94c5-4085-a363-dd431e5e5057",
+  "urls": [
+   "https://www.jmoy.fi/asunnot/espoo/leppavaara/asunto-oy-espoon-puustellinpuisto/"
+  ]
+ },
+ {
+  "id": "80136b59-0ee5-462a-bee3-a3727cb09093",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/70938423/jatke-rakentaa-38-asuntoa-pohjois-hervantaan?publisherId=69820730&lang=fi"
+  ]
+ },
+ {
+  "id": "3bc0ecf3-0e29-40d4-be39-1923e4a03802",
+  "urls": [
+   "https://pallasrakennuslappi.fi/kohde/rovaniemen-valionranta/"
+  ]
+ },
+ {
+  "id": "8b3b073f-230b-49d1-967b-6de31434a500",
+  "urls": [
+   "https://enersense.com/releases/enersense-wins-its-first-large-scale-battery-energy-storage-project-in-finland/",
+   "https://www.inderes.fi/releases/enersense-voitti-ensimmaisen-suuren-kokoluokan-akkuvarastohankkeensa-suomessa",
+   "https://www.ox2.com/projects/kannisto"
+  ]
+ },
+ {
+  "id": "8e15e1cd-249f-49c8-8c34-7f874281c5b2",
+  "urls": [
+   "https://www.lujatalo.fi/ajankohtaista/2026/03/12/lujatalo-rakentaa-elolle-100-asunnon-kerrostalohankkeen-helsingin-koskelaan/"
+  ]
+ },
+ {
+  "id": "26ce9198-10cf-4ee6-9a81-e0862906a0f3",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/70361222/jatke-rakentaa-porvooseen-k-citymarketiin-hotellin-ja-asuntoja?publisherId=69820730&lang=fi",
+   "https://jatke.fi/jatke-rakentaa-porvooseen-k-citymarketiin-hotellin-ja-asuntoja/",
+   "https://www.kesko.fi/media/uutiset-ja-tiedotteet/uutiset/2024/uuden-k-citymarketin-rakentaminen-porvoon-lansirannalle-alkaa/"
+  ]
+ },
+ {
+  "id": "526bbcf9-719e-41f0-a1c2-d4ebb478dfd3",
+  "urls": [
+   "https://www.asura.fi/ajankohtaista/finnoonniitynlinja-autovarikkoluovutettutilaajlle"
+  ]
+ },
+ {
+  "id": "8658246a-399f-49eb-9c03-3d08a85e729c",
+  "urls": [
+   "https://rakennusteho.fi/kohde/mantytorni/",
+   "https://rakennusteho.fi/2025/05/helsingin-ensimmainen-hirsikerrostalo-nyt-ennakkomarkkinoinnissa/"
+  ]
+ },
+ {
+  "id": "3b0dc25e-6714-4f70-8e46-3df19804784a",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/72095409/skanska-jatkaa-metson-lokomotion-teknologiakeskuksen-rakentamista?publisherId=69819623&lang=fi",
+   "https://lokomotion.fi/"
+  ]
+ },
+ {
+  "id": "dc2fef15-590e-49a9-b7f0-0e845da67aa6",
+  "urls": [
+   "https://www.epressi.com/tiedotteet/rakentaminen/nrc-group-uusii-kouvola-luumaki-rataa.html",
+   "https://vayla.fi/kouvola-luumaki-ratahanke"
+  ]
+ },
+ {
+  "id": "00ae0c27-1099-415f-a330-9a04fc52eb51",
+  "urls": [
+   "https://ssa.fi/asuntorakentaminen/keravan-rakennustyot-kaynnistyneet/",
+   "https://ovaro.fi/kiinteistokehitys/asuntohanke-laurintie/",
+   "https://www.inderes.fi/releases/ovaro-kaynnisti-asuinkerrostalohankkeen-keravan-keskustassa-toteutuksesta-vastaa-konserniyhtio-ovaro-development"
+  ]
+ },
+ {
+  "id": "57278d69-1173-4332-9c03-4de2f78a6b68",
+  "urls": [
+   "https://www.jyvaskyla.fi/kaupunkikeskusta/tayden-kympin-keskusta/keskustan-kehittaminen-ja-rakennushankkeet/ydinkeskustan-rakennushankkeet"
+  ]
+ },
+ {
+  "id": "465c21cb-fc68-4283-aa1f-8dab9ece840c",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/70583243/rave-rakennus-oy-aloittaa-suuren-asuntourakan-oulun-tuirassa?publisherId=69819389&lang=fi",
+   "https://ta.fi/en/cost-pool/kangastie-13-tuira-oulu-asumisoikeus/"
+  ]
+ },
+ {
+  "id": "b7866bf8-2268-451d-a73f-48133d8e3d42",
+  "urls": [
+   "https://www.nrcgroup.fi/uutiset/nrc-group-uusii-kuopion-maaherrankadun-alikulkusillan---viallinen-silta-puretaan",
+   "https://www.epressi.com/tiedotteet/logistiikka-ja-liikenne/kuopion-maaherrankadun-sillan-uudelleenrakennus-kaynnistyy-kesakuussa.html"
+  ]
+ },
+ {
+  "id": "91aab630-3dab-408d-a7f2-ad54670e9b94",
+  "urls": [
+   "https://vrp.fi/tulossa-anni-tati/",
+   "https://www.jarvenpaa.fi/asuminen-ja-ymparisto/hankkeet/vanhankylanniemi-ja-anni-tadin-kyla/anni-tadin-kylan-kilpailuohjelma"
+  ]
+ },
+ {
+  "id": "a823d893-e2b5-4734-a482-b9ef0190bcfc",
+  "urls": [
+   "https://www.porvoo.fi/uutiset/vesihuoltoverkostoa-parannetaan-hamarinrannassa-tarkea-saneeraus-kaynnistyy/",
+   "https://porvoonvesi.fi/uutiset/vesihuoltoverkostotyo-hamarinrannassa-etenee/"
+  ]
+ },
+ {
+  "id": "730c5402-782b-4356-a536-546f6bb44bde",
+  "urls": [
+   "https://lapti.fi/ajankohtaista/viiden-uuden-vuokramallin-paivakodin-rakentaminen-alkaa-turussa/",
+   "https://www.sttinfo.fi/tiedote/71596816/urban-partners-ja-rakennusliike-lapti-voittaneet-kilpailutuksen-viiden-paivakodin-toteutuksesta-turkuun?publisherId=55623418&lang=fi",
+   "https://www.turku.fi/ajankohtaista/paivakotien-uudistushanke-etenee-turussa-ensimmaisia-vuokramallin-paivakoteja-aletaan"
+  ]
+ },
+ {
+  "id": "a102708d-4876-468c-aebc-4c9fbbd910fc",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71830541/ox2n-ensimmaiset-energiavarastoinvestoinnit-suomessa-kanniston-ja-korkeamaan-tuulipuistojen-yhteyteen?publisherId=69817516&lang=fi",
+   "https://www.ox2.com/fi/suomi/ajankohtaista/tiedotteet-ja-uutiset/ox2n-ensimmaiset-energiavarastoinvestoinnit-suomessa-kanniston-ja-korkeamaan-tuulipuistojen-yhteyteen/"
+  ]
+ },
+ {
+  "id": "2959e35f-980c-4ad7-b207-a17ed3d464cb",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71889031/hartela-toteuttaa-apianlahden-palvelukorttelin-valkeakoskelle?publisherId=1812&lang=fi"
+  ]
+ },
+ {
+  "id": "74e8d32b-91df-415d-a3fe-d46f409279dc",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71500984/tekova-toteuttaa-iisalmeen-kolmen-kayttajan-liikekiinteiston-ruotsalaisen-kiinteistosijoitusyhtio-prisma-propertiesin-kanssa?publisherId=69820639&lang=fi",
+   "https://tekova.fi/iisalmen-liikerakennus-valmistui-tekovan-ja-prisma-propertiesin-ensimmainen-yhteishanke-paatokseen/"
+  ]
+ },
+ {
+  "id": "f1dd9a74-9d76-4fb8-b4be-b69fe200fb96",
+  "urls": [
+   "https://lapti.fi/ajankohtaista/joensuuhun-rakentuu-kahteen-uuteen-asumisyksikkoon-yhteensa-120-asuntoa-ikaantyneille/",
+   "https://www.sttinfo.fi/tiedote/71946032/joensuuhun-rakentuu-kahteen-uuteen-asumisyksikkoon-yhteensa-120-asuntoa-ikaantyneille?publisherId=55623418&lang=fi"
+  ]
+ },
+ {
+  "id": "ce8f4c66-89b4-408e-8e31-9e2677158b8f",
+  "urls": [
+   "https://aurarakennus.fi/uusi-kerrostalo-rakentuu-ruissalontielle",
+   "https://www.epressi.com/tiedotteet/rakentaminen/uusia-vuokrakoteja-turun-kasvavaan-kirstinpuistoon-modernia-asumista-historiallisella-alueella.html",
+   "https://avainasunnot.fi/kohteet/turun-ruissalontie-12b/"
+  ]
+ },
+ {
+  "id": "95415f83-a5de-46e7-bce6-c8ee11e4533e",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71735634/rakennustoimisto-ktervo-oy-ja-kpy-novapolis-oy-sopimukseen-toimitilakiinteiston-rakentamisesta-kuopion-keskustaan?lang=fi",
+   "https://www.novapolis.fi/ajankohtaista/rakennustoimisto-k-tervo-oy-ja-kpy-novapolis-oy-sopimukseen-toimitilakiinteiston-rakentamisesta-kuopion-keskustaan/",
+   "https://www.sttinfo.fi/tiedote/71626866/novapolikselta-merkittava-kasvuavaus-kuopion-keskustaan-mehilainen-ankkurivuokralaiseksi?publisherId=69818994&lang=fi"
+  ]
+ },
+ {
+  "id": "9361ea85-2934-4986-a505-9f18824552b2",
+  "urls": [
+   "https://peab.fi/peab/ajankohtaista/peab-rakentaa-kaksi-kerrostaloa-espoon-asunnot-oylle/",
+   "https://www.sttinfo.fi/tiedote/71116880/espoon-asunnot-rakentaa-82-energiatehokasta-vuokra-asuntoa-karakallioon?publisherId=69820862&lang=fi"
+  ]
+ },
+ {
+  "id": "5f5eb38a-b7ff-4619-992c-b4dbae05ec98",
+  "urls": [
+   "https://www.kouvola.fi/ajankohtaiset/kaunisnurmen-uuden-paivakodin-urakoitsijat-on-valittu/",
+   "https://www.kouvola.fi/ajankohtaiset/kaunisnurmen-paivakodin-rakentaminen-alkaa/",
+   "https://www.kouvola.fi/ajankohtaiset/kaunisnurmen-uusi-paivakoti-etenee-kohti-valmistumista/"
+  ]
+ },
+ {
+  "id": "db87707f-ae68-4162-a52b-7a3ad7c12dab",
+  "urls": [
+   "https://www.ouka.fi/uutiset/kiskopolun-ylikulkusillan-korjaustyot-kaynnistyvat-silta-suljettu-lokakuulle-2027",
+   "https://kreate.fi/kohteet/kiskopolun-ylikulkusillan-peruskorjaus-varmistaa-sujuvat-yhteydet-oulun-ratapihan-yli/"
+  ]
+ },
+ {
+  "id": "d93f6db8-e3a7-49ff-a766-c4375cb57a18",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71567043/jyvaskylan-mattilanpeltoon-nousee-60-paikkainen-ikaihmisten-hoivakoti?publisherId=55623418&lang=fi",
+   "https://www.sttinfo.fi/tiedote/71567512/jyvaskylan-mattilanpeltoon-rakentuu-uusi-attendo-koti-ikaihmisille?publisherId=4368&lang=fi"
+  ]
+ },
+ {
+  "id": "c835d8da-c1d4-4e68-8027-8de932193ed8",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71277626/hartela-rakentaa-talle-kaksi-asumisoikeuskerrostaloa-jarvenpaahan-ja-lahteen?lang=fi"
+  ]
+ },
+ {
+  "id": "f8af93cc-ecba-4859-b4ab-7780d2926a7e",
+  "urls": [
+   "https://www.caverion.fi/media/tiedotteet/2026/caverion-rakentaa-fingridille-uuden-400-kv-sahkoaseman-pohjanmaalle-abackaan-seka-toteuttaa-laajennukset-kajaanin-vuolijoen-ja-muhoksen-pyhaselan-sahkoasemiin.-sopimusten-yhteisarvo-18-miljoonaa-euroa",
+   "https://news.cision.com/fi/caverion/r/caverion-rakentaa-fingridille-uuden-400-kv-sahkoaseman-pohjanmaalle-abackaan-seka-toteuttaa-laajennu,c4333053"
+  ]
+ },
+ {
+  "id": "2f874e35-5bf3-49e6-b572-6c4c01deefa0",
+  "urls": [
+   "https://www.caverion.fi/media/tiedotteet/2026/caverion-rakentaa-fingridille-uuden-400-kv-sahkoaseman-pohjanmaalle-abackaan-seka-toteuttaa-laajennukset-kajaanin-vuolijoen-ja-muhoksen-pyhaselan-sahkoasemiin.-sopimusten-yhteisarvo-18-miljoonaa-euroa",
+   "https://news.cision.com/fi/caverion/r/caverion-rakentaa-fingridille-uuden-400-kv-sahkoaseman-pohjanmaalle-abackaan-seka-toteuttaa-laajennu,c4333053"
+  ]
+ },
+ {
+  "id": "554ac240-2622-4a61-8125-7d56fa09c7e4",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/69941859/fira-rakentaa-nrepin-omistaman-logistiikkakeskuksen-laajennusosan-espooseen?publisherId=69819368",
+   "https://fira.fi/uutiset/fira-rakentaa-nrepin-omistaman-logistiikkakeskuksen-laajennusosan-espooseen/"
+  ]
+ },
+ {
+  "id": "1fdbb4c6-4187-49c3-a72b-35f22bcc614b",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/70992139/asuntomessut-pickala-rock-resortissa-2027?publisherId=69818441&lang=fi",
+   "https://www.rockresort.fi/asuntomessut-pickala-rock-resortissa-kesalla-2027/",
+   "https://www.asuntomessut.fi/pickala-rock-resort-2027/"
+  ]
+ },
+ {
+  "id": "fb70817d-9f7d-4dff-8cc7-2d83081fbfa4",
+  "urls": [
+   "https://www.srv.fi/srv-yrityksena/ajankohtaista/lehdistotiedote/srv-kaynnistaa-omistusasuntokohteen-rakentamisen-espoon-niittykumpuun/",
+   "https://news.cision.com/fi/srv-yhtiot-oyj/r/srv-kaynnistaa-omistusasuntokohteen-rakentamisen-espoon-niittykumpuun,c4277087",
+   "https://www.srv.fi/asunnon-ostajalle/espoo/niittykumpu/luhtavehka/"
+  ]
+ },
+ {
+  "id": "2f2219ca-42f6-4938-b40a-c2fc17ce068e",
+  "urls": [
+   "https://www.epressi.com/tiedotteet/rakentaminen/vrp-urakoi-helsingin-oulunkylaan-m2-kotien-vuokra-asuntoja.html",
+   "https://ysaatio.fi/rakennushanke/helsingin-oulunkylaan-rakentuu-uusia-m2-kotien-vuokra-asuntoja/"
+  ]
+ },
+ {
+  "id": "2bf1e9d8-0349-44c4-9804-04fea8b75b01",
+  "urls": [
+   "https://www.arkta.fi/asunnot/fredrika/",
+   "https://www.arkta.fi/arkta-kaynnisti-tampereen-hatanpaan-fredrikan-uusien-puutalokotien-ennakkomarkkinoinnin/"
+  ]
+ },
+ {
+  "id": "15d91df1-3eec-4868-a744-56b8b5fd352d",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71596816/urban-partners-ja-rakennusliike-lapti-voittaneet-kilpailutuksen-viiden-paivakodin-toteutuksesta-turkuun?publisherId=55623418&lang=fi",
+   "https://lapti.fi/ajankohtaista/viiden-uuden-vuokramallin-paivakodin-rakentaminen-alkaa-turussa/",
+   "https://www.turku.fi/ajankohtaista/paivakotien-uudistushanke-etenee-turussa-ensimmaisia-vuokramallin-paivakoteja-aletaan"
+  ]
+ },
+ {
+  "id": "5112fe68-ccb3-4210-89cc-de6e65d69d21",
+  "urls": [
+   "https://www.hel.fi/fi/uutiset/nihdissa-ja-verkkosaaressa-rakennetaan-vilkkaasti-myos-vuonna-2026"
+  ]
+ },
+ {
+  "id": "46a8ff3d-2bf9-44f4-9d20-6fe5a948ef08",
+  "urls": [
+   "https://www.varte.fi/kodin-etsijalle/isokaari/taloyhtio-ja-sijainti"
+  ]
+ },
+ {
+  "id": "57827063-c0dd-43c3-ac0e-a0a871593b0a",
+  "urls": [
+   "https://www.caverion.com/newsroom/releases/2026/caverion-to-deliver-a-30-megawatt-heat-pump-plant-in-kajaani-finland--waste-heat-from-data-centers-will-be-utilized-in-the-areas-district-heating-network/",
+   "https://news.cision.com/caverion/r/caverion-to-deliver-a-30-megawatt-heat-pump-plant-in-kajaani--finland---waste-heat-from-data-centers,c4347839"
+  ]
+ },
+ {
+  "id": "b02ea8e1-a1f1-4ee9-a310-f83ed06778da",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/70256307/ahvenisjarven-koulun-rakennustyot-kaynnistyvat-tampereella?publisherId=69819623&lang=fi",
+   "https://www.skanska.com/fi/fi/meista/ajankohtaista/uutiset-ja-tiedotteet/2024/ahvenisjarven-koulun-rakennustyot-kaynnistyvat-tampereella",
+   "https://tampereentilapalvelut.fi/hankkeet/ahvenisjarven-koulu-uudisrakennus/"
+  ]
+ },
+ {
+  "id": "71795f70-e7bb-4a7d-adfe-8273727389ae",
+  "urls": [
+   "https://tampereentilapalvelut.fi/hankkeet/tullikamari-remontoidaan-kulttuurin-ehdoilla/",
+   "https://www.tampere.fi/ajankohtaista/2024/11/25/tullikamarin-perusparannus-alkaa-helmikuussa"
+  ]
+ },
+ {
+  "id": "96c9db68-f226-46ec-bbe8-70b1f1aaf261",
+  "urls": [
+   "https://jykia.fi/jykia-rakennuttaa-senopille-uuden-tuotantolaitoksen-jyvaskylaan/",
+   "https://jykia.fi/senopin-tuotantolaitoksen-rakennustyot-etenevat-kohde-valmistuu-syksylla/"
+  ]
+ },
+ {
+  "id": "957cdf0e-d757-44c6-807d-d41d2932d628",
+  "urls": [
+   "https://www.yitgroup.com/fi/news-repository/lehdistotiedotteet/yit-rakentaa-34-uutta-a-energialuokan-kotia-raisioon",
+   "https://www.yit.fi/en/homes/apartments-for-sale/raisio/raision-taimi"
+  ]
+ },
+ {
+  "id": "cd557eea-22cd-4c86-bdcb-5b46ad871199",
+  "urls": [
+   "https://www.grk.fi/grk-kaynnistaa-sahkoasemaprojektin-rovaniemella/"
+  ]
+ },
+ {
+  "id": "2e8be101-4fd7-46ec-bf72-4039bcbb1d7b",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71291358/lapti-toteuttaa-ta-yhtymalle-asuinkerrostalon-jyvaskylan-vaajakoskelle?lang=fi",
+   "https://lapti.fi/referenssi/asuinkerrostalo-ta-yhtymalle/"
+  ]
+ },
+ {
+  "id": "377a3e80-d07d-4221-9a36-a9e92a793b1e",
+  "urls": [
+   "https://www.luja.fi/2025/11/17/lujatalo-rakentaa-pysakointitalon-hatanpaan-uuden-asuinalueen-ytimeen/",
+   "https://www.epressi.com/tiedotteet/rakentaminen/lujatalo-rakentaa-pysakointitalon-hatanpaan-uuden-asuinalueen-ytimeen.html",
+   "https://www.lujatalo.fi/ajankohtaista/2025/11/17/lujatalo-rakentaa-pysakointitalon-hatanpaan-uuden-asuinalueen-ytimeen/"
+  ]
+ },
+ {
+  "id": "6fbf90f2-ef53-42d6-bea6-f6e0701cd42a",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71314964/skanska-rakentaa-fazerille-suklaatehtaan-lahteen?publisherId=69819623&lang=fi",
+   "https://www.fazergroup.com/fi/tietoa-fazerista/liiketoimintamme/fazer-makeiset/lahden-uusi-suklaatehdas/",
+   "https://www.lahti.fi/uutiset/fazerin-suklaatehtaan-peruskivi-muurattiin-pippon-yritysalueella/"
+  ]
+ },
+ {
+  "id": "973b0a75-5ffd-4685-a1a5-7da2d5ffe24f",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/fira-rakentaa-dhllle-logistiikkakeskuksen-sipooseen?publisherId=69819368&releaseId=69943059",
+   "https://fira.fi/en/news/fira-to-build-a-dhl-logistics-centre-in-sipoo/"
+  ]
+ },
+ {
+  "id": "0de05acc-f45f-4747-bf4d-809c05aafe70",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/70088768/destia-voitti-espoon-kaupunkiradan-alueurakka-3n?publisherId=64656842&lang=fi",
+   "https://vayla.fi/espoonkaupunkirata/koivuhovi-espoon-keskus-au3",
+   "https://www.kauniainen.fi/asuminen-ja-ymparisto/kuntatekniikka/kaupunkirata/"
+  ]
+ },
+ {
+  "id": "542e3c12-0b06-4c10-a313-06641bd75122",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71674505/rakennusliike-lapti-aloittanut-uuden-rs-kohteen-rakentamisen-helsingin-oulunkylaan-yhtion-neljas-gryndialoitus-2025?publisherId=55623418&lang=fi",
+   "https://lapti.fi/asuntoyhtio/asunto-oy-helsingin-kruununvouti/"
+  ]
+ },
+ {
+  "id": "a57a6eb7-c18d-406a-8665-0a5945db494a",
+  "urls": [
+   "https://www.asuntosaatio.fi/tiedotteet/asuntosaatiolta-uusia-asumisoikeusasuntoja-helsingin-herttoniemeen/"
+  ]
+ },
+ {
+  "id": "602b3c4f-fa3d-4572-8df0-29c4b4f65212",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71780451/mangrove-oy-ja-naantalin-vuokratalot-oy-ovat-allekirjoittaneet-urakkasopimuksen-toisesta-naantaliin-rakennettavasta-vuokrakerrostalosta?publisherId=69819151&lang=fi"
+  ]
+ },
+ {
+  "id": "9dff6c1e-5e88-4eec-949b-02c6168368c0",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71596816/urban-partners-ja-rakennusliike-lapti-voittaneet-kilpailutuksen-viiden-paivakodin-toteutuksesta-turkuun?publisherId=55623418&lang=fi",
+   "https://www.turku.fi/ajankohtaista/paivakotien-uudistushanke-etenee-turussa-ensimmaisia-vuokramallin-paivakoteja-aletaan",
+   "https://lapti.fi/ajankohtaista/viiden-uuden-vuokramallin-paivakodin-rakentaminen-alkaa-turussa/"
+  ]
+ },
+ {
+  "id": "7cc498e4-2162-44d7-affc-d25b7d1e7846",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71674505/rakennusliike-lapti-aloittanut-uuden-rs-kohteen-rakentamisen-helsingin-oulunkylaan-yhtion-neljas-gryndialoitus-2025?publisherId=55623418&lang=fi",
+   "https://lapti.fi/asuntoyhtio/asunto-oy-helsingin-kruununvouti/"
+  ]
+ },
+ {
+  "id": "79d4de2f-ca08-4490-8d2e-402727f06e6a",
+  "urls": [
+   "https://www.varte.fi/varte/ajankohtaista/varte-oy-rakentaa-uuden-hoivakodin-porvooseen",
+   "https://www.epressi.com/tiedotteet/rakentaminen/varte-oy-rakentaa-uuden-hoivakodin-porvooseen.html"
+  ]
+ },
+ {
+  "id": "92e9a29a-6be5-46b0-951b-475d22310c96",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71673771/jatke-rakentaa-jalleen-tvt-asunnoille-turun-pernoon-uusi-7-kerroksinen-asuinkerrostalo?lang=fi",
+   "https://jatke.fi/jatke-rakentaa-jalleen-tvt-asunnoille/",
+   "https://www.tvt.fi/en/tvtlle-apartment-building-under-construction-in-pernoo/"
+  ]
+ },
+ {
+  "id": "663eceb4-08cd-4d41-8d48-720b0f54b24c",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/70173134/grk-rakentaa-fortumille-tuotantolaitoksen-espooseen?publisherId=69819211&lang=fi",
+   "https://www.grk.fi/grk-rakentaa-fortumille-tuotantolaitoksen-espooseen/",
+   "https://www.grk.fi/projektit/fortumin-tuotantolaitoksen-rakentaminen/"
+  ]
+ },
+ {
+  "id": "fdd18d87-e127-49fd-9784-1acfa31f515a",
+  "urls": [
+   "https://www.yitgroup.com/fi/news-repository/lehdistotiedotteet/yit-urakoi-a-kruunulle-13-miljoonan-euron-asuinkerrostalon-jyvaskylan-keskustaan"
+  ]
+ },
+ {
+  "id": "42a7f731-fde8-4952-82b4-9842cab5525c",
+  "urls": [
+   "https://www.nrcgroup.fi/projektit/kunnossapitoalueet-9-ja-11"
+  ]
+ },
+ {
+  "id": "7b190d5d-29ea-49b5-9dcd-9b9c02112667",
+  "urls": [
+   "https://www.ncc.fi/media/pressrelease-container/96c7ba5fbf61a2cd/ncc-rakentaa-a-kruunulle-kerrostalon-tampereen-hiedanrantaan/",
+   "https://hiedanranta.fi/ajankohtaista/ncc-ja-a-kruunu-ncc-rakentaa-a-kruunulle-kerrostalon-tampereen-hiedanrantaan/",
+   "https://www.a-kruunu.fi/hakijalle/uudiskohteet/tampereen-kuivaamonkatu-3"
+  ]
+ },
+ {
+  "id": "ae8856c5-7330-4545-9c9e-65716b1e0c0d",
+  "urls": [
+   "https://hok-elanto.fi/artikkeli/uusi-s-market-varisto-avataan-4-6-varistoon-kauan-kaivattu-24-7-ruokakauppa-ja-robokuljetukset"
+  ]
+ },
+ {
+  "id": "dbd0cedd-5b1e-486f-ad37-bb918be31988",
+  "urls": [
+   "https://www.skanska.com/fi/fi/meista/ajankohtaista/uutiset-ja-tiedotteet/2025/skanska-rakentaa-iin-kunnalle-uuden-koulun-valtariin",
+   "https://www.ii.fi/ajankohtaista/valtarin-kouluinvestointi-iin-historian-suurin-skanska-talonrakennus-oy-valittiin"
+  ]
+ },
+ {
+  "id": "6562f0bf-b7d3-4617-8b23-c259de162dca",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71571531/lahteen-rakennetaan-suomen-kolmas-puu-lidl-rakennusmateriaalilla-on-iso-ilmastovaikutus?publisherId=69820360&lang=fi",
+   "https://www.sttinfo.fi/tiedote/72053879/lidlin-kolmas-puumyymala-ja-210-myymala-avataan-karistossa-215?lang=fi"
+  ]
+ },
+ {
+  "id": "5b498eae-9b66-406d-9d69-14b075b75e22",
+  "urls": [
+   "https://www.hel.fi/fi/uutiset/nihdissa-ja-verkkosaaressa-rakennetaan-vilkkaasti-myos-vuonna-2026"
+  ]
+ },
+ {
+  "id": "2e733cdd-ba6b-45a2-86a4-d879c7620efb",
+  "urls": [
+   "https://laaksonyhteissairaala.fi/paarakennus/paarakennus-kohoaa-omiin-korkeuksiinsa-miten-rakennuksen-eri-osat-etenevat/",
+   "https://www.sttinfo.fi/tiedote/70112920/muistutuskutsu-medialle-tervetuloa-tutustumiskaynnille-laakson-sairaalan-uuden-paarakennuksen-tyomaalle-73?publisherId=69819754&lang=fi",
+   "https://laaksonyhteissairaala.fi/rakentaminen/rakentamisen-aikataulu/"
+  ]
+ },
+ {
+  "id": "926215e8-26ef-4197-b5ce-e705dfb11181",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71658190/hartela-toteuttaa-asuinkerrostalon-eden-asunnoille-espoon-niittykumpuun?publisherId=1812&lang=fi",
+   "https://www.sttinfo.fi/tiedote/71657349/eden-asunnot-sijoittaa-asuntokohteeseen-espoon-niittykummussa?lang=fi"
+  ]
+ },
+ {
+  "id": "f2ba4bb6-04ef-4a47-8396-9fb454b31efa",
+  "urls": [
+   "https://plushoiva.fi/uusi-kehitysvammaisten-asumispalveluyksikko-turkuun-artukaisiin/"
+  ]
+ },
+ {
+  "id": "25b8f8a0-17c0-4f1d-ae2b-0fefc008fe5c",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71596816/urban-partners-ja-rakennusliike-lapti-voittaneet-kilpailutuksen-viiden-paivakodin-toteutuksesta-turkuun?publisherId=55623418&lang=fi",
+   "https://lapti.fi/ajankohtaista/viiden-uuden-vuokramallin-paivakodin-rakentaminen-alkaa-turussa/",
+   "https://www.turku.fi/ajankohtaista/paivakotien-uudistushanke-etenee-turussa-ensimmaisia-vuokramallin-paivakoteja-aletaan"
+  ]
+ },
+ {
+  "id": "5c346b14-d459-4953-b136-d81c0d4b1080",
+  "urls": [
+   "https://www.epressi.com/tiedotteet/rakentaminen/lohjalla-kaynnistyi-asuinkerrostalo-uudella-kuorikivi-elementilla-rungon-rakennustyot-kayntiin-nopeasti.html",
+   "https://lujabetoni.fi/2026/05/20/lohjalla-kaynnistyi-asuinkerrostalo-uudella-kuorikivi-elementilla-rungon-rakennustyot-kayntiin-nopeasti/"
+  ]
+ },
+ {
+  "id": "2c10846c-d007-49c9-84d4-e56d84f725df",
+  "urls": [
+   "https://www.sttinfo.fi/announcement/71527621?lang=fi&publisherId=69819211",
+   "https://www.epressi.com/tiedotteet/logistiikka-ja-liikenne/palojoensuun-ja-kuttasen-valisen-tieosuuden-parantaminen-enontekiolla-alkaa-marraskuussa.html",
+   "https://vayla.fi/vt-21-palojoensuu-jatuni"
+  ]
+ },
+ {
+  "id": "6e080e5d-bb06-49ab-9842-4773e57ae767",
+  "urls": [
+   "https://peab.fi/peab/ajankohtaista/peruskorjaamme-harjun-stadionin-jyvaskylassa/",
+   "https://www.jyvaskyla.fi/uutinen/2024-11-14_harjun-stadionin-peruskorjaus-kaynnistyy"
+  ]
+ },
+ {
+  "id": "e6d22aff-9d6d-4c61-8933-3afb13c3e5de",
+  "urls": [
+   "https://www.t2h.fi/asunto-oy-sarvvikin-savel",
+   "https://www.t2h.fi/asunto-oy-sarvvikin-sointu"
+  ]
+ },
+ {
+  "id": "7895ed20-fbc3-4f84-82b2-be78944e1781",
+  "urls": [
+   "https://www.inderes.fi/en/releases/toivo-group-plc-has-started-construction-of-eur-46-million-regional-construction-project-in-niittykumpu-espoo"
+  ]
+ },
+ {
+  "id": "ad24c8df-01b9-4214-be09-b3ce72410238",
+  "urls": [
+   "https://www.biltema.fi/uutta-ja-hyodyllista/uutiset/biltema-kokkola-15-vuotta--tontti-uutta-tavarataloa-varten-hankittu/",
+   "https://www.epressi.com/tiedotteet/rakentaminen/biltema-kokkola-15-vuotta-tontti-uutta-tavarataloa-varten-hankittu.html"
+  ]
+ },
+ {
+  "id": "963d2c35-6655-40fd-8ea2-86b150d9218a",
+  "urls": [
+   "https://finland.neoen.com/fi/uutiset/2026/neoen-rakentaa-suomen-ensimmaisen-neljan-tunnin-akkuvaraston-raumalle/",
+   "https://www.epressi.com/tiedotteet/energia/neoen-rakentaa-suomen-ensimmaisen-neljan-tunnin-akkuvaraston-raumalle.html"
+  ]
+ },
+ {
+  "id": "e1dd892f-dfa3-4629-ab8d-3e5c05d2fc59",
+  "urls": [
+   "https://yrjojahanna.fi/kiertotalouskorttelin-rakennustyot-ovat-kaynnistyneet-jatkasaaressa/",
+   "https://news.cision.com/fi/yit-oyj/r/yit-on-allekirjoittanut-sopimuksen-yrjo-ja-hanna--saation-kanssa-jatkasaaren-kiertotalouskorttelin-r,c3776021",
+   "https://www.yit.fi/kiertotalouskortteli"
+  ]
+ },
+ {
+  "id": "d1590a84-34cb-455c-a54f-bb3ad1a5f408",
+  "urls": [
+   "https://www.asuntosaatio.fi/tiedotteet/vuosaaren-vihreista-vihrein-kerrostalohanke-kayntiin/",
+   "https://www.sttinfo.fi/tiedote/71643956/helsingin-vuosaareen-nousee-ainutlaatuinen-kerrostalokohde-vehreaa-asumista-heti-alusta-alkaen?lang=fi",
+   "https://www.arkta.fi/vuosaaren-vihreista-vihrein-kerrostalohanke-kayntiin/"
+  ]
+ },
+ {
+  "id": "3c4c0186-ae55-47f5-b828-2b5f5884843d",
+  "urls": [
+   "https://peab.fi/peab/media/tiedotteet/2025/joulukuu/peab-rakentaa-kerrostalon-avain-asunnoille-helsingin-mellunmakeen/",
+   "https://www.epressi.com/tiedotteet/rakentaminen/avain-asunnot-jatkaa-kasvuaan-paakaupunkiseudulla-mellunmakeen-50-uutta-kotia.html"
+  ]
+ },
+ {
+  "id": "c1dbf2de-407f-47ec-9afd-e728118e7932",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71269617/asuntosaatiolta-uusia-asumisoikeustaloja-espoon-sateriin?lang=fi",
+   "https://www.asuntosaatio.fi/tiedotteet/asuntosaatiolta-uusia-asumisoikeustaloja-espoon-sateriin/"
+  ]
+ },
+ {
+  "id": "e39e6c06-b95c-4d52-b71a-45ddc1a35ef0",
+  "urls": [
+   "https://www.varte.fi/varte/ajankohtaista/varte-toteuttaa-veho-turun-automyym%C3%A4l%C3%A4n-ja-korjaamon-uudistushankkeen-raisiossa",
+   "https://www.epressi.com/tiedotteet/rakentaminen/varte-toteuttaa-veho-turun-automyymalan-ja-korjaamon-uudistushankkeen-raisiossa.html"
+  ]
+ },
+ {
+  "id": "571f9c23-b40d-4245-b032-24ccd18f0989",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71643956/helsingin-vuosaareen-nousee-ainutlaatuinen-kerrostalokohde-vehreaa-asumista-heti-alusta-alkaen?lang=fi",
+   "https://www.asuntosaatio.fi/tiedotteet/vuosaaren-vihreista-vihrein-kerrostalohanke-kayntiin/",
+   "https://www.arkta.fi/vuosaaren-vihreista-vihrein-kerrostalohanke-kayntiin/"
+  ]
+ },
+ {
+  "id": "21a6c635-3dfa-473a-b44c-85d6ed001f7e",
+  "urls": [
+   "https://lsjh.fi/lsjh-investoi-topinojan-lajitteluasemaan/",
+   "https://www.epressi.com/tiedotteet/ymparisto-ja-luonto/topinojan-lajitteluaseman-toimintojen-uudelleenjarjestely-saattaa-ajoittain-ruuhkauttaa-asioinnin-asemalla.html",
+   "https://lsjh.fi/topinojankaaren-rakennustyot-vaikuttavat-topinojan-lajitteluasemalla-ja-jatekeskuksessa-asiointiin/"
+  ]
+ },
+ {
+  "id": "ffbc7c22-151a-4d3a-a3cb-64a9d52483df",
+  "urls": [
+   "https://www.sttinfo.fi/announcement/71085485?publisherId=69819211&lang=fi",
+   "https://vayla.fi/-/vt-3-moreenin-eritasoliittyma-hankkeen-urakoitsija-on-valittu-rakennustyot-alkavat-toukokuussa",
+   "https://vayla.fi/vt-3-moreenin-eritasoliittyma"
+  ]
+ },
+ {
+  "id": "e60391f8-d8fd-4231-a010-7ff3bde57b38",
+  "urls": [
+   "https://www.t2h.fi/asunto-oy-kirkkonummen-valtikka-kruunu"
+  ]
+ },
+ {
+  "id": "0e0b0711-0a6a-4286-b7ae-1cf0e6787c4f",
+  "urls": [
+   "https://www.epressi.com/tiedotteet/teknologia/historiallinen-investointi-lappeenrantaan-nebius-toimijaksi-polarnoden-kehittamaan-310-megawatin-datakeskushankkeeseen-2.html",
+   "https://www.lappeenranta.fi/fi/kaupunki-ja-paatoksenteko/keskeisia-rakennushankkeita/pajarilan-datakeskus",
+   "https://www.epressi.com/tiedotteet/kaupungit-ja-kunnat/poikkeuksellinen-datakeskusinvestointi-lappeenrantaan-nebius-toimijaksi-pajarilaan-rakennettavaan-tekoalyprojektiin.html"
+  ]
+ },
+ {
+  "id": "900abfaa-6019-4331-8a11-8b707f7cc2bb",
+  "urls": [
+   "https://www.kouvola.fi/ajankohtaiset/datakeskushanke-kuusankoskelle-etenee-rakennuslupa-kasittelyssa-2-12/"
+  ]
+ },
+ {
+  "id": "dd424264-6c20-44ca-b77c-826a9eac60c4",
+  "urls": [
+   "https://jmalm.fi/wivi-lonnin-suunnittelema-koulurakennus-uudistuu-harjun-koulun-perusparannus-alkanut/",
+   "https://tampereentilapalvelut.fi/hankkeet/harjun-koulun-perusparannus-on-kaynnissa/"
+  ]
+ },
+ {
+  "id": "015a6bc7-477c-4ff3-b260-edeea475726a",
+  "urls": [
+   "https://www.sttinfo.fi/tiedote/71763890/teraselementti-rakentaa-karkkaisen-uuden-yli-15-000-m2n-tavaratalon-pirkkalaan?publisherId=22720537&lang=fi",
+   "https://teraselementti.fi/hankkeet/tavaratalo-karkkainen-pirkkala/",
+   "https://teraselementti.fi/artikkelit/teraselementti-rakentaa-pirkkalaan-karkkaisen-uuden-tavaratalon/"
+  ]
+ },
+ {
+  "id": "7151c0e6-2a66-46c7-aa29-c9c172eed819",
+  "urls": [
+   "https://hlv.fi/lampovarastohanke/",
+   "https://hlv.fi/ajankohtaista/maailman-suurin-lampovarasto-hyvinkaalle/"
+  ]
+ },
+ {
+  "id": "ab36ba80-1877-4eb8-abe3-f33827da9268",
+  "urls": [
+   "https://fira.fi/uutiset/fira-rakentaa-kalasataman-alykortteliin/"
+  ]
+ },
+ {
+  "id": "583c2648-e2a7-4667-9a56-7f08a960009d",
+  "urls": [
+   "https://ksbr.fi/ksbr-on-rajamaenkylan-tuulipuiston-uusi-paaurakoitsija/",
+   "https://www.sttinfo.fi/tiedote/69967882/suomen-suurimpiin-lukeutuva-rajamaenkylan-tuulivoimahanke-etenee-rakentamisen-valmisteluun-osayleiskaava-ja-rakennusluvat-saivat-lainvoiman?publisherId=69817516"
+  ]
+ },
+ {
+  "id": "797ae668-f58d-4f9c-a9d1-98d8b940ee11",
+  "urls": [
+   "https://www.t2h.fi/asunto-oy-espoon-vasalli"
+  ]
+ },
+ {
+  "id": "6236146d-71b9-4fae-878c-17a7fb314952",
+  "urls": [
+   "https://www.t2h.fi/asunto-oy-kaarinan-sinetti"
+  ]
+ },
+ {
+  "id": "1e027f93-b5b2-4f47-b631-132f8767509a",
+  "urls": [
+   "https://tekova.fi/tekova-solmi-kauppa-ja-vuokrasopimukset-omakehitteisesta-hankkeesta-adapteolle-tuotanto-ja-varastotilat-riihimaelle/",
+   "https://www.riihimaki.fi/tiedotteet/adapteo-rakennuttaa-13-hehtaarin-tehdasalueen-riihimaelle/"
+  ]
+ },
+ {
+  "id": "4bbc1a8f-9781-4435-a8ea-e1f494de33a0",
+  "urls": [
+   "https://www.srv.fi/srv-yrityksena/ajankohtaista/sijoittajauutinen/srv-rakentaa-ysaatiolle-49-asuntoa-espoon-vermonniittyyn-5295875/",
+   "https://news.cision.com/fi/srv-yhtiot-oyj/r/srv-rakentaa-y-saatiolle-49-asuntoa-espoon-vermonniittyyn,c4299580",
+   "https://ysaatio.fi/rakennushanke/y-saatio-rakennuttaa-espoon-vermonniittyyn-uusia-m2-kotien-vuokra-asuntoja/"
+  ]
+ },
+ {
+  "id": "8ab7971f-1d83-423a-bfa6-a3a755165406",
+  "urls": [
+   "https://jatke.fi/ajankohtaista/keravan-energia-investoi-tulevaan-uudella-modernilla-toimitalolla-jatke-toimii-hankkeessa-paaurakoitsijana/",
+   "https://www.sttinfo.fi/tiedote/71865169/keravan-energia-investoi-tulevaan-uudella-modernilla-toimitalolla-jatke-toimii-hankkeessa-paaurakoitsijana?publisherId=69820730&lang=fi",
+   "https://www.keravanenergia.fi/artikkelit/tervahaudankadun-tyomaalla-tapahtuu/"
+  ]
+ },
+ {
+  "id": "de66151c-0287-40ba-ba6e-c7484bd0cd9e",
+  "urls": [
+   "https://www.astora.fi/l/astora-rakennus-ja-hoivatilat-oyj-aloittavat-ensimmaisen-yhteisen-hankkeen-uusi-ikaihmisten-hoivakoti-rakentuu-pirkkalan-pereensaareen/",
+   "https://hoivatilat.fi/hoivatilat-toteuttaa-ikaihmisten-hoivakodin-ikifitille-pirkkalaan/"
+  ]
+ },
+ {
+  "id": "bdbce264-8f09-472b-9de1-e38369e04014",
+  "urls": [
+   "https://lapti.fi/ajankohtaista/lapti-toteuttaa-hoivatiloille-ikaihmisten-hoivakodit-seinajoelle-ja-kuopioon/",
+   "https://www.sttinfo.fi/tiedote/71634457/rakennusliike-lapti-toteuttaa-hoivatiloille-ikaihmisten-hoivakodit-seinajoelle-ja-kuopioon?lang=fi"
+  ]
+ },
+ {
+  "id": "83a6c735-53e5-4007-b531-b00b5985ce75",
+  "urls": [
+   "https://suurhanketoimisto.fi/ajankohtaiset/ox2-n-tuulivoimahankkeet-halsualla-etenevat-myotatuulessa/"
+  ]
+ }
 ]

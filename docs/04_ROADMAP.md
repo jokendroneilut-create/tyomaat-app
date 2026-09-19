@@ -1332,8 +1332,12 @@ muistin varassa.
     korjattu (D-199). **244 näistä on lähteettömiä** (helmi–maaliskuun
     2026 alkuaineisto: Visulahden datakeskus, Kotkan akkutehdas, OYS C):
     ei lähdedokumenttia, josta varmentaa. **Aloitettu 19.9.2026 (D-200):**
-    77 sai lähteen, 68 henkilön. Jäljellä ~194: verkkohaku hanke
-    kerrallaan, syöte .
+    227 sai lähteen, 168 henkilön (syöte `scripts/data/lahteettomat-lahteet.json`).
+    **Jäljellä 23 hakematta** (verkkohakukiintiö täyttyi):
+    `scripts/data/lahteettomat-uusinta.json`.
+  - **Vanhentuneet vaiheet** (D-200): ~15 rakenteilla-hanketta on lähteen
+    mukaan valmistunut (Firan Tokmanni/Transval 2022–23, Harjun stadion).
+    Päätös vaiheen korjauksesta käyttäjällä.
   - **Kaksoishankkeet lähteettömien joukossa** (D-200): esim. "Kerrostalo
     Hatanpäähän" näkyy asiakkaalle kahdesti. Yhdistämisestä päättää käyttäjä.
   - **Väylän keräimen tahti** (D-199): 103 sivua ei koskaan haettu

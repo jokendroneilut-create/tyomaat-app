@@ -30,6 +30,23 @@ export function sahkopostiVastaaNimea(nimi: unknown, email: unknown): boolean {
     .some((osa) => osa.length >= 3 && alku.includes(osa))
 }
 
+/*
+ * Organisaation laatikko henkilön näköisenä: "Asuntomyynti Tampere" +
+ * asuntomyynti.tampere@... läpäisee nimen ja osoitteen vertailun.
+ * Mitattu 150 sivulla 19.9.2026.
+ */
+const EI_HENKILO = /^(asuntomyynti|myynti|asiakaspalvelu|kotikatu|rakennus|info|toimisto|vaihde|viestintä|media|kirjaamo)\b/i
+
+/* Osoitteeseen liimautunut sana: "...@esimerkki.fi.Tervetuloa". */
+const EHJA_OSOITE = /^[^@\s]+@[a-z0-9.-]+\.[a-z]{2,}$/
+
+/* Yhtiömuoto tai suluissa oleva huomautus ei ole titteli. */
+function siistiTitteli(title: string | null | undefined): string | null {
+  const t = String(title ?? "").trim()
+  if (!t || t.length > 60 || /^(oyj|oy|ab|ky)$/i.test(t) || /^\(.*\)$/.test(t)) return null
+  return siivoaTitteli(t)
+}
+
 export function sivunYhteyshenkilot($: CheerioAPI): Contact[] {
   $("script, style, nav, header, footer").remove()
   $("body *").each((_, el) => {
@@ -38,12 +55,13 @@ export function sivunYhteyshenkilot($: CheerioAPI): Contact[] {
   const nahty = new Set<string>()
   return extractContacts($("body").text())
     .filter((c) => c.kind === "person" && c.role !== "authority")
-    .filter((c) => isPersonName(c.name) && sahkopostiVastaaNimea(c.name, c.email))
+    .filter((c) => isPersonName(c.name) && !EI_HENKILO.test(String(c.name)) && sahkopostiVastaaNimea(c.name, c.email))
+    .filter((c) => EHJA_OSOITE.test(String(c.email)))
     .filter((c) => {
       const k = String(c.email).toLowerCase()
       if (nahty.has(k)) return false
       nahty.add(k)
       return true
     })
-    .map((c) => ({ ...c, title: String(c.title ?? "").length > 60 ? null : siivoaTitteli(c.title) }))
+    .map((c) => ({ ...c, title: siistiTitteli(c.title) }))
 }

@@ -1,0 +1,186 @@
+[
+ {
+  "id": "a10b2457-561c-4d14-9238-beb6a0e1daa1",
+  "nimi": "Kevyen liikenteen väylä Ouluun",
+  "kunta": "Oulu",
+  "rakennuttaja": "Oulun kaupunki",
+  "rakentaja": null,
+  "kuvaus": ""
+ },
+ {
+  "id": "da9ca54c-7231-4df1-88b9-54966bbfe05a",
+  "nimi": "Toimistorakennus Rovaniemelle",
+  "kunta": "Rovaniemi",
+  "rakennuttaja": "Napapiirin Residuum",
+  "rakentaja": null,
+  "kuvaus": ""
+ },
+ {
+  "id": "4153e577-9613-4917-83c9-c4ab62643ac1",
+  "nimi": "Kerrostalo Finnooseen",
+  "kunta": "Espoo",
+  "rakennuttaja": "M2 kodit",
+  "rakentaja": "Hausia",
+  "kuvaus": ""
+ },
+ {
+  "id": "bb086494-c6ca-445b-9a55-69d84c974a87",
+  "nimi": "MMK10 -hanke",
+  "kunta": "Espoo",
+  "rakennuttaja": "Projeco Oy",
+  "rakentaja": "Rakennusliike V. Mättölä Oy",
+  "kuvaus": "Tiilat tulevat palvelemaan KY-säätiötä. Palokonsultti: Fitec Oy AV- ja akustiikkasuunnittelu: A-Insinöörit Tietomallikoordinointi sekä sisustussuunnittelu: Avarrus Architects"
+ },
+ {
+  "id": "b1006295-ceed-495d-a287-2a44b6a54696",
+  "nimi": "Kerrotalo Murkionkatu Turku",
+  "kunta": "Turku",
+  "rakennuttaja": "TVT Asunnot Oy",
+  "rakentaja": "Jatke",
+  "kuvaus": "Jatke Länsi-Suomi Oy rakentaa Turun Pernon alueelle uuden asuinkerrostalon TVT Asunnoille. Rakennushankkeeseen kuuluu 7-kerroksinen talo ja sen asukkaita palveleva piha- ja pysäköintialue. TVT Asuntoj"
+ },
+ {
+  "id": "c3b6dc06-00c4-4f8b-8079-99fe32c50246",
+  "nimi": "Kerrostalo Etelä-Haagaan As Oy Helsingin Villa Stenius Kylätie 3A",
+  "kunta": "Helsinki",
+  "rakennuttaja": "Niilo Ikonen & Pauli Siponen",
+  "rakentaja": "SSA Rakennus Oy",
+  "kuvaus": "Pysäköintihalli, josta voi ostaa autopaikan itselleen. Pysäköintihalli rakentuu myöhemmin osana Qiva Haaga kokonaisuutta Rakentamisen aloitus 1/2026. Valmistuminen viimeistään 12/2026."
+ },
+ {
+  "id": "8f17e2a8-0749-4cbd-86cc-2dd4f5e39213",
+  "nimi": "RTK-Palvelu Oy toimitila",
+  "kunta": "Hämeenlinna",
+  "rakennuttaja": "Brand toimitilat",
+  "rakentaja": null,
+  "kuvaus": "Kohteen ensimmäiseksi käyttäjäksi tulee RTK-Palvelu Oy, ja tilojen luovutus on suunniteltu syksylle 2026. RTK-Palvelun Hämeenlinnan toimipisteeseen toimisto-, huolto- ja ylläpitotilat sekä erikseen su"
+ },
+ {
+  "id": "ef0acff3-2a4d-4b67-b353-f6f63bd83195",
+  "nimi": "Asunto Oy Espoon Piaffe",
+  "kunta": "Espoo",
+  "rakennuttaja": "ICECAPITAL Housing Fund VII Ky",
+  "rakentaja": "SRV",
+  "kuvaus": "Yhtiö muodostuu yksiportaisesta 8-kerroksisesta asuinkerrostalosta, jossa on yhteensä 49 asuntoa. "
+ },
+ {
+  "id": "eb53d93f-2163-4d30-9087-e70733fb0fa8",
+  "nimi": "Kullervonkatu 11-15",
+  "kunta": "Lohja",
+  "rakennuttaja": "Kas Kodit Oy",
+  "rakentaja": "Rakennus K.Karhu Oy",
+  "kuvaus": "Valmistuminen kesällä 2027 MARKO LEHTISAARI, Rakennus K.Karhu Oy 040 355 7395"
+ },
+ {
+  "id": "2e23c447-a64f-47d7-96ab-5047cff09d53",
+  "nimi": "Valmiusasema Vantaalle",
+  "kunta": "Vantaa",
+  "rakennuttaja": "Rakennusliike Asura",
+  "rakentaja": null,
+  "kuvaus": "VANTAAN Korsoon on tulossa uusi pelastuslaitoksen valmiusasema, joka yhdistää pelastustoiminnan ja ensihoidon tarpeet. Valmiusaseman suunnittelussa on huomioitu myös sopimuspalokunnan toimintaedellyty"
+ },
+ {
+  "id": "d186498a-f686-45e7-ab2d-b484fc52d5e3",
+  "nimi": "Kerrostalo Ouluun",
+  "kunta": "Oulu",
+  "rakennuttaja": "Skanska",
+  "rakentaja": null,
+  "kuvaus": ""
+ },
+ {
+  "id": "c532cb03-c75d-4a5b-898b-dd207a536e22",
+  "nimi": "Vesilinja Klaukkalan ja Kirkonkylän välille",
+  "kunta": "Nurmijärvi",
+  "rakennuttaja": "Nurmijärven Vesi",
+  "rakentaja": "Erkkiheikkilä Oy",
+  "kuvaus": ""
+ },
+ {
+  "id": "218ad3e3-37ea-4f2b-8553-729a86fa8257",
+  "nimi": "Rivitalokoteja Oulunkylään",
+  "kunta": "Helsinki",
+  "rakennuttaja": "Toivo Group Oyj",
+  "rakentaja": "Toivo Homes",
+  "kuvaus": ""
+ },
+ {
+  "id": "21c08d20-f53c-4e1e-8ea5-2530e09ad953",
+  "nimi": "Logistiikkakeskus Kirkkonummelle",
+  "kunta": "Kirkkonummi",
+  "rakennuttaja": "Helsingin telakka",
+  "rakentaja": null,
+  "kuvaus": "Helsingin telakka investoi uuteen logistiikkakeskukseen Kirkkonummen Sundsbergissa. Kirkkonummen rakennus- ja ympäristölautakunta hyväksyi hankkeen rakennusluvan 24.3. pitämässään kokouksessa, ja rake"
+ },
+ {
+  "id": "60e87ea0-e454-47a0-8737-5d67aa425c79",
+  "nimi": "K-Citymarket, Espoo",
+  "kunta": "Espoo",
+  "rakennuttaja": "Kesko",
+  "rakentaja": null,
+  "kuvaus": ""
+ },
+ {
+  "id": "7a34e77b-b8e4-4bc0-bc32-b3b80e728a1c",
+  "nimi": "Pohjolan Liikenteen Linja-autovarikko",
+  "kunta": "Kuopio",
+  "rakennuttaja": "Koneurakointi M.Niiranen Oy",
+  "rakentaja": null,
+  "kuvaus": "Työnjohtaja Miika Leskinen Koneurakointi M.Niiranen Oy"
+ },
+ {
+  "id": "03680398-6332-4bc9-8d80-1b7d3ad2a1d4",
+  "nimi": "Asumisoikeusasuntoja Espoon Espoonlahteen",
+  "kunta": "Espoo",
+  "rakennuttaja": "Asuntosäätiö",
+  "rakentaja": "SRV",
+  "kuvaus": ""
+ },
+ {
+  "id": "951b999f-b9d2-493e-bb5f-977f9333a5ef",
+  "nimi": "Palvelukoti Saloon",
+  "kunta": "Salo",
+  "rakennuttaja": "Plus Hoivakodit Oy",
+  "rakentaja": "Varte",
+  "kuvaus": "Varte Turku Oy aloittaa toimintansa Varsinais-Suomessa helmikuussa käynnistyvällä palvelukotihankkeella. Saloon rakentuva palvelukoti on uuden alueyhtiön ensimmäisiä hankkeita ja tärkeä avaus Varten l"
+ },
+ {
+  "id": "7955614e-2099-4022-93cf-109d98d3d1c8",
+  "nimi": "Rivitaloja Hirvensaloon Turkuun",
+  "kunta": "Turku",
+  "rakennuttaja": "TVT Asunnot Oy",
+  "rakentaja": "Mangrove Oy",
+  "kuvaus": "Mangrove Oy aloittaa kesäkuussa mittavan uudisrakennushankkeen Turun Hirvensaloon Kaistarniemen luonnonläheiselle asuinalueelle. TVT Asunnot Oy:lle rakennetaan yhdeksän kaksikerroksista rivitaloa, joi"
+ },
+ {
+  "id": "c312f88d-5815-465e-afb3-9e9ac15b85b2",
+  "nimi": "Ikääntyneiden hoivakoti",
+  "kunta": "Raisio",
+  "rakennuttaja": "Plus Hoivakodit",
+  "rakentaja": "Lujatalo",
+  "kuvaus": "Kyseessä on KVR-urakka Lujatalon tontille ja hanke toteutetaan hankekehityshankkeena. Rakentamislupasuunnittelu on aloitettu ja rakentamisen arvioidaan käynnistyvän alkusyksystä 2026. Tavoitteena on, "
+ },
+ {
+  "id": "e314d4b6-a604-4221-b9b7-b70bb6f7167a",
+  "nimi": "As Oy Munkkiluodontie 43",
+  "kunta": "Espoo",
+  "rakennuttaja": "JM Suomi",
+  "rakentaja": null,
+  "kuvaus": "Valmistuminen alustavasti joulukuu 2027. Kaksi kerrostaloa, yhtiöön rakentuu 34 uutta kotia, pääasiassa tilavia 3–5 huoneen asuntoja."
+ },
+ {
+  "id": "6c15d77c-fab2-4ed8-8602-73ddc9ae2b37",
+  "nimi": "Tays Keskussairaalan henkilöstön uusi pysäköintitalo",
+  "kunta": "Tampere",
+  "rakennuttaja": "Pirkanmaan hyvinvointialue (Pirha)",
+  "rakentaja": "Työyhteenliittymä ManU, Jatke Pirkanmaa Oy",
+  "kuvaus": "Jatke toteuttaa KVR-urakkana Pirkanmaan hyvinvointialueelle (Pirha) uuden pysäköintirakennuksen Tampereen yliopistollisen sairaalan (Tays) alueelle. Pysäköintihalli nousee Hoitajantielle, Tays Keskuss"
+ },
+ {
+  "id": "57f8f5c6-b910-4e1a-8558-110dbf517bda",
+  "nimi": "Hemsö rakennuttaa hoivakodin Turkuun – urakoitsijana NCC",
+  "kunta": "Turku",
+  "rakennuttaja": "Hemsö",
+  "rakentaja": "NCC",
+  "kuvaus": "Turun Luolavuoreen rakennetaan 170-paikkainen ikääntyneiden asumispalveluyksikkö. Tontilla olevan vanhan rakennuksen purkutyöt alkavat kevään aikana, ja uuden rakentaminen käynnistyy syksyllä 2026. Ko"
+ }
+]

@@ -33,3 +33,12 @@ describe("sahkopostiVastaaNimea", () => {
     expect(sahkopostiVastaaNimea("Taaleri Kiinteistöjen", "info@esimerkki.fi")).toBe(false)
   })
 })
+
+describe("sivunYhteyshenkilot - organisaation laatikot ja rikkinäiset osoitteet", () => {
+  it("hylkää asuntomyynnin laatikon ja liimautuneen osoitteen", () => {
+    const $ = cheerio.load(
+      `<p>Asuntomyynti Tampere, puh. 040 123 4567, asuntomyynti.tampere@esimerkki.fi</p><p>Matti Meikäläinen, 040 765 4321, matti.meikalainen@esimerkki.fi.Tervetuloa</p>`
+    )
+    expect(sivunYhteyshenkilot($)).toEqual([])
+  })
+})

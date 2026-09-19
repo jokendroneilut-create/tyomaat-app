@@ -15,9 +15,10 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 Alkuvuoden hankkeilta puuttui lähdetieto, ja siksi myös yhteyshenkilö.
 Tällaisia ovat esimerkiksi Lahden ja Mikkelin datakeskukset, Kotkan
-akkutehdas ja Vantaan lämmön kausivarasto. Nyt 77 hankkeella on lähde,
-ja 68:lla on nimetty yhteyshenkilö rakennuttajalta tai urakoitsijalta:
-projektijohtaja, työmaapäällikkö tai toimitusjohtaja.
+akkutehdas ja Vantaan lämmön kausivarasto. Nyt 227 hankkeella on lähde,
+ja 168:lla on nimetty yhteyshenkilö rakennuttajalta tai urakoitsijalta:
+projektijohtaja, työmaapäällikkö tai toimitusjohtaja. Rakenteilla olevista
+hankkeista ilman yhteystietoa on nyt 26 % (ennen 44 %).
 
 ### Väylän hankkeille projektipäällikkö (D-199)
 

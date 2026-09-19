@@ -38,10 +38,19 @@ async function main() {
   let lahde = 0
   let henkilo = 0
   for (const { id, urls } of syote) {
-    const { data } = await db.from("projects").select("id, name, metadata").eq("id", id)
+    const { data } = await db.from("projects").select("id, name, city, developer, builder, metadata").eq("id", id)
     const p: any = data?.[0]
     if (!p) { console.log(`EI LÖYDY ${id}`); continue }
     if (p.metadata?.source_name) { console.log(`OHITETAAN (lähde jo) ${p.name}`); continue }
+
+    /*
+     * SIVUN ON KOSKETTAVA TÄTÄ HANKETTA. Haku voi tuoda saman yhtiön
+     * toisen kohteen tiedotteen. Sivun tekstissä on mainittava hankkeen
+     * kunta (vartalo, jotta taivutus menee läpi) tai osapuolen nimi.
+     */
+    const vartalo = (s: unknown) => String(s ?? "").trim().toLowerCase().slice(0, 5)
+    const tunnisteet = [vartalo(p.city), ...[p.developer, p.builder].map((x) => String(x ?? "").trim().toLowerCase().split(/\s+/)[0])]
+      .filter((t) => t && t.length >= 3)
 
     const uudet: any[] = []
     const toimivat: string[] = []
@@ -49,8 +58,15 @@ async function main() {
       try {
         const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)" } })
         if (res.ok) {
+          const html = await res.text()
+          const teksti = cheerio.load(html)("body").text().toLowerCase()
+          if (tunnisteet.length && !tunnisteet.some((t) => teksti.includes(t))) {
+            console.log(`   EI KOSKE HANKETTA (${tunnisteet.join("/")} puuttuu): ${url}`)
+            await nuku(VIIVE_MS)
+            continue
+          }
           toimivat.push(url)
-          for (const c of sivunYhteyshenkilot(cheerio.load(await res.text()))) {
+          for (const c of sivunYhteyshenkilot(cheerio.load(html))) {
             if (!uudet.some((u) => String(u.email).toLowerCase() === String(c.email).toLowerCase())) uudet.push(c)
           }
         } else console.log(`   HTTP ${res.status} ${url}`)

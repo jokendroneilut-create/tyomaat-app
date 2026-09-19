@@ -40,9 +40,38 @@ rakenteilla-vaiheessa ilman yhteystietoa - mukana alan suurimmat
   - Lahteeksi kirjataan ensimmainen osoite joka VASTASI - NCC:n
     tiedoteosoite palautti 404.
 
-**Tulos 19.9.2026:** 77 lahteetonta hanketta sai lahteen ja 68 nimetyn
-henkilon. Jaljella ~194 rakenteilla-vaiheen lahteetonta, joille ei ole
-viela haettu. Syote hakuun: `scripts/data/lahteettomat-lahteet.json`.
+**Ensimmainen vaihe 19.9.2026:** 77 lahteetonta hanketta sai lahteen ja 68
+nimetyn henkilon.
+
+**Laaja haku samana paivana, 194 hanketta.** Kymmenen rinnakkaista agenttia
+haki kukin ~20 hanketta ja palautti VAIN osoitteet (ei yhteystietoja).
+Tulos 147 / 194 sai osoitteen. Ennen ajoa:
+
+  - Agenttien itse epavarmoiksi merkitsemat pois (Kaerlatie: nimi
+    viittaa eri hankkeeseen kuin kuvaus; Sivakka Hiironen: uutinen
+    tulipalosta; Hepokorpi: sivu toisesta laitoksesta).
+  - Uusi tarkistus: sivun tekstissa on mainittava hankkeen kunta tai
+    osapuolen nimi - hylkasi 4 sivua (mm. JM:n Mantylanhuippu-sivu ilman
+    kuntaa, JM:n ruotsinkielinen porssitiedote).
+  - Kuivaharjoitus loysi kolme roskatyyppia: organisaation laatikko
+    henkilon nakoisena ("Asuntomyynti <kaupunki>" + asuntomyynti.x@...),
+    osoitteeseen liimautunut sana ("...@x.fi.Tervetuloa") ja titteliksi
+    yhtiomuoto tai sulkuhuomautus. Kaikki kolme torjutaan nyt
+    `sivunYhteyshenkilot`issa.
+
+**Tulos:** 150 hanketta sai lahteen, 100 nimetyn henkilon. Rakenteilla-
+vaiheen hankkeista ilman yhteystietoa 43,5 % -> 25,7 %, henkilo 44,7 % ->
+62,5 %. Kaikki aktiiviset: ilman yhteystietoa 18,5 % -> 15,8 %.
+
+**Kesken:** 23 hanketta jai hakematta, koska istunnon verkkohakukiintio
+(200) taytti - lista `scripts/data/lahteettomat-uusinta.json`. 24 haettiin
+ilman sopivaa osumaa.
+
+**Sivutuote: agentit loysivat vanhentuneita vaiheita.** Noin 15
+"rakenteilla" olevaa on lahteen mukaan valmistunut (esim. Firan Tokmanni-
+ja Transval-kohteet 2022-23, Harjun stadion 7/2026), ja muutama
+kaksoiskappale (Oulunkylan kerrostalo = As Oy Helsingin Kruunuvouti).
+Vaiheisiin ei koskettu; paatos kayttajalla.
 
 ---
 
