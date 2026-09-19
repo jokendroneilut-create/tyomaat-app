@@ -21,11 +21,12 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 const APPLY = process.argv.includes("--apply")
 
 /* [lähteettömän nimen alku, vastineen otsikon alku] - luettu 19.9.2026. */
+/*
+ * Poistettu 19.9.2026 (D-202): Hatanpää Boijenkatu 2, Hiukkavaara ja
+ * Tampereen Hatanpää - eri hankkeita, ks. scripts/peru-vaarat-parit.ts.
+ */
 const PARIT: [string, string][] = [
-  ["Kerrostalo Hatanpäähän Boijenkatu 2", "Kerrostalo Hatanpäähän"],
-  ["Kerrostalo Hiukkavaaraan", "Kerrostalo Oulun Hiukkavaaraan"],
   ["Kulomäentien sillan peruskorjaus", "Kulomäentien risteyssillan peruskorjaus alkaa Tuusulassa"],
-  ["Kerrostalo Tampereen Hatanpäähän", "Lujatalo käynnistää omaperusteisen kerrostalon rakentamisen Tampereen Hatanpäähän"],
   ["Asunto Oy Tampereen Kalevan Kaiku", "Asunto Oy Tampereen Kalevan Kaiun rakentamisen"],
   ["Turun tuomiokirkon peruskorjaus", "Turun tuomiokirkon mittavan peruskorjauksen"],
   ["Helsingin Kruunuvuorenrantaan rakenteille 77 Bonava-kotia", "Helsingin Kruunuvuorenrantaan rakenteille 77 Bonava-kotia"],

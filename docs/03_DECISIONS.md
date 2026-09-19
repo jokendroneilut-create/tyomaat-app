@@ -5,6 +5,39 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-202 - Kaksoishankkeet jonoon, ei yhdistetty - ja kolme vaaraa paria peruttiin
+
+D-200:n haussa loytyi hankkeita, jotka nakyvat asiakkaalle kahdesti
+(lahteeton alkuaineiston rivi + sama hanke toisen lahteen kautta).
+Skannaus ei loydy niita, koska otsikot ovat eri lauseita.
+
+**Olemassa oleva ketju kaytetaan, ei rinnakkaista.** Parit kirjattiin
+`project_duplicate_candidates`-jonoon (`scripts/lisaa-kaksoisparit.ts`)
+samalla merkinnalla kuin TIC:n "Merkitse duplikaatiksi" (`manual`,
+varmuus 100). Kayttaja vahvistaa TIC:ssa; vahvistus valitsee saily­jan,
+nostaa vaiheen, tarkistaa suosikit ja piilottaa toisen. **7 paria
+jonoon:** Oulun Hiukkavaaran kaksi kerrostaloa, Kurkela-Kuusisto (kolme
+rivia), LogoHub, Kansallisarkisto, Oulunkyla = As Oy Helsingin
+Kruunuvouti, Vuosaaren Asuntosaation kohde.
+
+**JONO KERTOI ETTA KOLME "PARIA" OLI JO HYLATTY.** Kayttaja oli
+katselmoinut "Kerrostalo Hatanpaahan", Hiukkavaaran ja Rauhanniemen
+parit `not_duplicate` - ja oikein: rakennuttajat eroavat (TA-Yhtiot vs.
+Pajala; Sivakka vs. TA-Yhtyma/Lapti; YIT vs. NCC/Toas).
+
+**Taman seuraus: D-200 oli kopioinut vaaran hankkeen henkilot.**
+`fix-lahteettomat-parit.ts` antoi naille lahteettomille vastineen
+yhteyshenkilot ja lahteen. Peruttu (`scripts/peru-vaarat-parit.ts`):
+3 henkiloa ja 3 lahdeosoitetta pois, vain vastineelta kopioidut. Myos
+Tampereen Hatanpaan Lujatalo-lahde peruttiin, koska Lujatalolla on
+alueella kaksi kohdetta. Parit poistettu alkuperaisesta listasta.
+
+**Opetus:** ennen kuin tieto kopioidaan "samasta" hankkeesta, katso
+onko pari jo katselmoitu. Ihmisen `not_duplicate` on vahvempi todiste
+kuin nimen samankaltaisuus.
+
+---
+
 ### D-201 - Valmistunut vain kun lahde toteaa sen, ei kun vanha aikataulu umpeutui
 
 D-200:n haku loysi noin 15 "rakenteilla" olevaa hanketta, jotka hakuagentin

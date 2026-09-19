@@ -1337,8 +1337,9 @@ muistin varassa.
     `scripts/data/lahteettomat-uusinta.json`.
   - ~~**Vanhentuneet vaiheet.**~~ 10 merkitty valmiiksi (D-201): 6 lähteen
     toteamana, 4 käyttäjän päätöksellä (Firan vanhat kohteet 2022–24).
-  - **Kaksoishankkeet lähteettömien joukossa** (D-200): esim. "Kerrostalo
-    Hatanpäähän" näkyy asiakkaalle kahdesti. Yhdistämisestä päättää käyttäjä.
+  - **Kaksoishankkeet: 7 paria TIC:n duplikaattijonossa** (D-202) –
+    vahvista TIC:ssä. (Aiempi esimerkki "Kerrostalo Hatanpäähän" oli väärä:
+    pari oli jo katselmoitu eri hankkeiksi.)
   - **Väylän keräimen tahti** (D-199): 103 sivua ei koskaan haettu
     yksityiskohtaisesti – katto 30/ajo, lähde ajettu 12 kertaa. Selvitä
     putoavatko kohteet listaukselta ennen kuin niihin ehditään, ennen kuin
