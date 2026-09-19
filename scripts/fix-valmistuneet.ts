@@ -30,6 +30,14 @@ const VALMISTUNEET: { id: string; todiste: string; lahde: string }[] = [
   { id: "ce8f4c66", todiste: "Nyt valmistuneet kodit (18.6.2026)", lahde: "epressi.com" },
   { id: "2f2219ca", todiste: "kohde luovutettiin tilaajalle elokuussa 2026", lahde: "epressi.com" },
   { id: "b02ea8e1", todiste: "Ahvenisjärven uusi koulu valmistui", lahde: "tampereentilapalvelut.fi" },
+  /*
+   * Käyttäjän päätös 19.9.2026: tiedote kertoo vain suunnitellun
+   * aikataulun, joka umpeutui 2022-2024. Ei toteumaa lähteessä.
+   */
+  { id: "f888f96a", todiste: "käyttäjän päätös: tiedotteen mukaan valmistuu keväällä 2024", lahde: "fira.fi" },
+  { id: "e74bf2d3", todiste: "käyttäjän päätös: tiedotteen mukaan arvioitu valmistuminen 2022", lahde: "fira.fi" },
+  { id: "554ac240", todiste: "käyttäjän päätös: tiedotteen mukaan valmistuu 5/2023", lahde: "fira.fi" },
+  { id: "973b0a75", todiste: "käyttäjän päätös: tiedotteen mukaan luovutetaan 9/2023 ja 2/2024", lahde: "fira.fi" },
 ]
 
 async function main() {

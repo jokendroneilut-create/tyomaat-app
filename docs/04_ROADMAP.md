@@ -1335,9 +1335,8 @@ muistin varassa.
     227 sai lähteen, 168 henkilön (syöte `scripts/data/lahteettomat-lahteet.json`).
     **Jäljellä 23 hakematta** (verkkohakukiintiö täyttyi):
     `scripts/data/lahteettomat-uusinta.json`.
-  - ~~**Vanhentuneet vaiheet.**~~ 6 merkitty valmiiksi lähteen toteamana
-    (D-201). **Päätettävänä:** Firan Tokmanni, Transval, NREP Espoo ja DHL
-    Sipoo – vain vanha suunniteltu aikataulu (2022–24), ei toteumaa.
+  - ~~**Vanhentuneet vaiheet.**~~ 10 merkitty valmiiksi (D-201): 6 lähteen
+    toteamana, 4 käyttäjän päätöksellä (Firan vanhat kohteet 2022–24).
   - **Kaksoishankkeet lähteettömien joukossa** (D-200): esim. "Kerrostalo
     Hatanpäähän" näkyy asiakkaalle kahdesti. Yhdistämisestä päättää käyttäjä.
   - **Väylän keräimen tahti** (D-199): 103 sivua ei koskaan haettu

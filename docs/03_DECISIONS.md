@@ -24,8 +24,9 @@ lahdesivu haettiin ja valmistumista koskevat virkkeet luettiin.
      Espoo (5/2023), DHL Sipoo (2/2024). Lahes varmasti valmiita, mutta
      tiedote kertoo suunnitelman, ei toteumaa. Valmistumisajastus ei
      myoskaan merkitsisi niita: portti 1 hylkaa loytohetkea vanhemman
-     paivan vaarin luettuna vuosilukuna (autoCompleteGate). Paatos
-     kayttajalla.
+     paivan vaarin luettuna vuosilukuna (autoCompleteGate). **Kayttaja
+     paatti 19.9.2026 merkita ne valmiiksi** - paatos kirjattu
+     vaihehistorian syyksi.
   3. **Ei todistetta** - Mantylanhuippu, Harjun stadion, Harjulan koulu,
      Upinniemi ("viimeisimpana valmistui kasarmi 21" - kokonaisuus voi
      jatkua). Ennallaan.
