@@ -1124,6 +1124,14 @@ muistin varassa.
 
 ### Operointi
 
+- **Analytiikka ja käyttäjäsivu näyttävät eri luvun** (havaittu 20.9.2026).
+  `/dashboard/analytics` näyttää 20.9. kolme käyttäjää, mutta
+  `/dashboard/users` kertoo, että sinä päivänä on kirjautunut vain admin
+  (muut 18.9.). Selvitä mitä kumpikin laskee: tapahtumat
+  (`analytics_events`) vs. kirjautuminen (`last_sign_in_at`), riittääkö
+  vanha istunto tapahtumiin ilman uutta kirjautumista, ja suodattuuko
+  admin kaikilla tunnuksillaan (hotmail, gmail, koneunion). Jos kyse on
+  eri mittarista, otsikointi on korjattava — muuten luku näyttää virheeltä.
 - **⭐ KOORDINAATTI DUPLIKAATTISIGNAALIKSI — mitattu 8.9.2026.**
   `calculateMatch` ei katso koordinaatteja lainkaan, vaikka ne ovat
   hankkeen tarkin sijaintitieto.
