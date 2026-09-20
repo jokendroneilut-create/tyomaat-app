@@ -5,6 +5,149 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-207 - Yhteyshenkilo poimitaan ehdokasvaiheessa, ei vasta hyvaksynnassa
+
+TIC nayttaa ehdokkaalle "Ei yhteystietoa" vaikka nimi, titteli, puhelin ja
+sahkoposti lukevat kuvauksessa. Todettu 20.9.2026 ehdokkaalla
+`a618ef2e` ("Kotkansaarelle valmistuu yhteisollisen asumisen koteja
+ikaantyneille kesalla 2028", `stt_haku`): `metadata.contact_persons` oli
+tyhja taulukko, mutta kuvauksen lopussa luki "Yhteyshenkilot Mervi Takala
+tulosaluejohtaja Kymenlaakson hyvinvointialue Puh: ... <sahkoposti>", ja
+`extractContacts` poimii siita henkilon oikein kaikkine kenttineen.
+
+**Syy oli ajoitus, ei poimija.** `extractContacts` ajettiin vasta
+hyvaksyntareitilla (`app/api/tic/projects/approve/route.ts`).
+Ehdokasvaiheessa sita ei ajanut kukaan muu kuin `vaylaResolver`.
+
+#### Mitattu ensin
+
+`scripts/measure-ehdokkaiden-yhteyshenkilot.ts` (ei kirjoituksia).
+
+| | |
+|---|---|
+| ehdokkaita yhteensa | 8 875 |
+| `contact_persons` tyhja | 6 010 |
+| **...ja kuvauksesta olisi loytynyt HENKILO** | **1 929** |
+| vain organisaatiolaatikko (kirjaamo@, info@) | 176 |
+
+**Jonon pituus ei kerro tasta mitaan.** Mittaushetkella jonossa
+(`status = new`) oli 9 ehdokasta ja niista osumia 3 - jono purkautuu
+nopeasti. Vika nakyy vasta VIRRASSA: 1 929 osumasta **802 oli
+hylatty ja 264 ohitettu**, eli niiden yhteystieto ei paatynyt kenttaan
+koskaan, ja katselmoija teki paatoksen nakematta sita. Osumia on 68 eri
+lahteesta (`stt_haku` 647, `srv` 240, `yva` 230, Espoon kuulutukset 82).
+
+**Hyvaksyntareitti itse toimii.** 862 hyvaksytysta osumasta **816 sai
+yhteyshenkilon hyvaksynnassa**. Vahinko on siis katselmointivaiheen
+sokeus, ei lopullinen tiedon katoaminen - paitsi hylatyille ja
+ohitetuille, joille se on lopullinen.
+
+#### Paatos: poiminta `resolvePotentialProject`iin
+
+Sama paikka kuin kustannus (D-161), pinta-ala (D-169) ja taloyhtio
+(D-171) - ja samasta syysta.
+
+Vaihtoehto oli nayttaa TIC:ssa "kuvauksesta loytyi" -ehdotus. Se hylattiin:
+se olisi korjannut vain katselmointiruudun, ja tieto olisi jaanyt
+kirjoittamatta kenttaan. Jokainen muu lukija (halytykset, hankelista,
+hyvaksyntareitti, mittarit) laskisi ehdokkaan yha yhteystiedottomaksi.
+Resolverikohtainen korjaus taas unohtuisi seuraavalta lahteelta, kuten se
+on unohtunut 68 lahteelta tahan asti.
+
+Hyvaksyntareitin oma poiminta **jaa varalle**: `mergeContacts` on
+vain-lisaava, joten kahdesti ajaminen ei ole haitallista, ja se kattaa
+ennen tata paatosta luodut ehdokkaat.
+
+#### Kaksi ansaa, molemmat merkitaan - kumpaakaan ei pudoteta
+
+`lib/projects/contactRole.ts`. Tyhja kentta on katselmoijalle pahempi
+kuin merkitty kentta: han nakee "Ei yhteystietoa" eika tieda etta tieto
+oli olemassa (sama peruste kuin D-162:n piilotuskynnyksessa; vrt.
+D-122, jossa VAARA yhteystieto on eri asia kuin merkitty).
+
+**(a) Viranomainen** = paatoksen ratkaissut, ei hanketta tekeva:
+rakennustarkastaja, lupainsinoori, lupa-arkkitehti. Lisaksi kunnan
+paatoksen lopun **muutoksenhakuohje**, josta poimija lukee
+markkinaoikeuden osoitteen ja "nimeksi" kadunnimen (3 osumaa 1 929:sta,
+tunnistettava `@oikeus.fi`-verkkotunnuksesta).
+
+*"Valmistelija" EI ole tassa joukossa*, vaikka sana nayttaa
+viranomaiselta. Kunnan investointipaatoksessa (Porin Stadion, Rovaniemen
+uimahalli) kaupunki on itse rakennuttaja, ja paatoksen valmistellut
+liikuntajohtaja on hankkeen paras yhteyshenkilo. Lupapaatos ja
+investointipaatos ovat eri asioita.
+
+**(b) Viestintahenkilo** tunnistetaan TITTELISTA, ei tiedotteen osiosta.
+Osiosaanto olisi ollut vaarin: SRV:n Suutarilan tiedotteessa samassa
+"Lisatiedot"-lohkossa ovat elinkaarihankkeiden johtaja,
+projektipaallikko, viestinnan asiantuntija JA Helsingin kaupungin
+projektinjohtaja - kolme neljasta on myyjalle oikea kontakti, ja
+osiosaanto olisi pudottanut kaikki nelja. Tittelisaanto osuu 166:een
+osumaan 1 929:sta, ja **44:ssa viestintahenkilo on ainoa loytynyt
+henkilo** (Helsingin kasvatus- ja koulutuslautakunnan ennakkotiedotteet)
+- juuri niissa pudottaminen olisi tuottanut tyhjan kentan.
+
+Molemmat nakyvat TIC:ssa merkintana "(viranomainen)" / "(viestinta)", ja
+ne jarjestetaan nimettyjen jalkeen: ehdokaslista nayttaa vain kolme
+ensimmaista, joten jarjestys ratkaisee kenet katselmoija nakee.
+
+#### Kolmas ansa loytyi vasta kun yhdistaminen ajettiin kuivana
+
+Poiminta ajetaan nyt myos ehdokkaille joilla JO ON yhteystiedot, joten
+kuivaharjoitus ajettiin kaikkien 2 866 sellaisen yli ennen kirjoitusta.
+Se paljasti ansan jota ei osattu etsia.
+
+`mergeContacts` taydentaa tyhjat kentat uudesta lahteesta. Vapaasta
+tekstista poimittuun se on vaarallista juuri NIMEN kohdalla, koska
+osoite on tallessa ilman nimea siksi etta se on ORGANISAATION laatikko:
+
+| osoite | olisi saanut nimekseen |
+|---|---|
+| `kuulutukset@liminka.fi` | "Tupos Mielipiteen" |
+| `kirjaamo@ysao.fi` (role buyer) | "Tapaaminen Sankariniemen" |
+| `jatevesi@lapuanjatevesi.fi` (role buyer) | "Jari-Jussi Syrja", henkiloksi |
+
+Kaksi ensimmaista ovat roskaa. Kolmas on todennakoisesti aito nimi
+vaarassa paikassa, ja se on niista pahin: se vaittaisi henkilon
+osoitteeksi yhtion yleista postilaatikkoa, ja asiakas lahettaisi viestin
+vaaralle ihmiselle. Sama peruste kuin `extractContacts`in
+malliosoitesaannossa (D-103): nimea ei laajenneta vapaasta tekstista.
+
+Korjaus on `mergeTekstipoiminta` (`lib/projects/contacts.ts`): nimi,
+`kind` ja lahteen rooli sailyvat sellaisinaan, puhelin/titteli/
+organisaatio saavat yha taydentya. Kaytossa seka ehdokasvaiheessa etta
+hyvaksyntareitilla. Ajon jalkeen 2 866 rivista **0 kutistui, 0 roolia
+muuttui ja 0 nimea vaihtui**; 185 sai uuden henkilon.
+
+Samasta ajosta loytyi toinen, pienempi asia: `mergeContacts` yhdistaa
+myos listassa JO OLEVAT kaksoisrivit, jolloin 7 ehdokkaalla suora numero
+olisi vaihtunut vaihteeseen (Saarijarven Mirja Tarvainen 044 → 020).
+Vaara numero on pahempi kuin puuttuva (D-122), ja vanhojen
+kaksoisrivien siivous on eri tehtava, joten kenttaan kirjoitetaan **vain
+kun poiminta lisaa jonkun**.
+
+#### Kaksi virhetta jotka vain testi paljasti
+
+Ensimmainen versio tunsi vain hahmon `viestint`, jolloin **"viestinnan
+asiantuntija" jai merkitsematta** - suomen astevaihtelu (nt -> nn), ja
+juuri se muoto on SRV:n tiedotteissa. Toiseksi virkanimike on suomessa
+usein ENNEN nimea ("rakennustarkastaja Matti Virtanen"), jolloin se ei
+paady `extractContacts`in titteliin lainkaan; viranomaissaanto lukee
+siksi myos nimea edeltavan 60 merkin ikkunan. Viestintasaanto EI lue
+ikkunaa - se osuisi juuri niihin sanoihin joiden perassa oikea kontakti
+on ("Lisatietoja ja haastattelupyynnot: <projektipaallikko>").
+
+#### Takautuva ajo
+
+`scripts/backfill-ehdokkaiden-yhteyshenkilot.ts`, kuivaharjoitus ensin.
+Jonossa oli 5 ehdokasta ja muutos koski **yhta riviä** - juuri
+raportoitua `a618ef2e`:ta, joka sai yhteyshenkilon Mervi Takala,
+tulosaluejohtaja, puhelin ja sahkoposti, ilman roolimerkintaa (oikein:
+han on hankkeen oma yhteyshenkilo). Hylattyja ja ohitettuja ei
+takautuvasti korjata: ne eivat palaa katselmointiin.
+
+---
+
 ### D-206 - Lahdeajon 90 sekunnin katto ylittyi marginaalin puutteesta, ei yhdesta hitaasta vaiheesta
 
 TIC:n Health-merkki paloi, koska **Rovaniemen paatokset** oli rikki: ajo

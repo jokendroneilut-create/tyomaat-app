@@ -2,7 +2,11 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
 import { resolveWinnerName } from "@/lib/projects/winnerName"
-import { extractContacts, mergeContacts } from "@/lib/projects/contacts"
+import {
+  extractContacts,
+  mergeTekstipoiminta,
+} from "@/lib/projects/contacts"
+import { merkitseRoolit } from "@/lib/projects/contactRole"
 import { chooseAdditionalInfo } from "@/lib/projects/additionalInfo"
 import {
   awardWinnersFromMetadata,
@@ -2418,12 +2422,24 @@ export async function POST(request: Request) {
        * eivät jääneet maksaviksi, joten niitä ei hävitetä missään
        * tilanteessa, vaikka ne olisivat vanhemmasta lähteestä.
        */
-      const mergedContacts = mergeContacts(
-        mergeContacts(
+      /*
+       * Roolit myös täällä (D-207): ehdokasvaiheessa merkityt säilyvät
+       * `mergeTekstipoiminta`n kautta, mutta ennen D-207:tä luodut ehdokkaat
+       * poimitaan vasta tässä — niidenkin viestintähenkilö ja
+       * viranomainen on erotuttava hankkeen vastuuhenkilöstä.
+       */
+      const mergedContacts = mergeTekstipoiminta(
+        mergeTekstipoiminta(
           (existingProject.metadata?.contact_persons as any[]) ?? [],
-          extractContacts(existingProject.additional_info ?? null)
+          merkitseRoolit(
+            extractContacts(existingProject.additional_info ?? null),
+            existingProject.additional_info ?? null
+          )
         ),
-        extractContacts(metadata.description ?? null)
+        merkitseRoolit(
+          extractContacts(metadata.description ?? null),
+          metadata.description ?? null
+        )
       )
 
       const mergedMetadata = {
@@ -2628,9 +2644,12 @@ export async function POST(request: Request) {
    * 1 986 kaavalähteistä tullutta hanketta käyttää sitä. Rinnakkainen
    * kenttä olisi jäänyt näkymättömäksi.
    */
-  contact_persons: mergeContacts(
+  contact_persons: mergeTekstipoiminta(
     (metadata.contact_persons as any[]) ?? [],
-    extractContacts(metadata.description ?? null)
+    merkitseRoolit(
+      extractContacts(metadata.description ?? null),
+      metadata.description ?? null
+    )
   ),
 
   potential_project_id: potentialProject.id,

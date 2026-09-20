@@ -10,6 +10,11 @@ import {
   extractFloorAreaFromText,
   parseAlaTeksti,
 } from "@/lib/projects/extractFloorAreaFromText"
+import {
+  extractContacts,
+  mergeTekstipoiminta,
+} from "@/lib/projects/contacts"
+import { merkitseRoolit } from "@/lib/projects/contactRole"
 import { housingCompanyName } from "@/lib/projects/housingCompanyKey"
 import { kaavanRakennuttaja } from "@/lib/projects/kaavanRakennuttaja"
 import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
@@ -264,6 +269,80 @@ export async function resolvePotentialProject(
     return ala ? { floor_area: ala } : {}
   }
 
+  /*
+   * YHTEYSHENKILÖT KUVAUKSESTA (D-207).
+   *
+   * Sama kaava kuin kustannuksessa, pinta-alassa ja taloyhtiössä:
+   * poiminta oli olemassa mutta ajettiin vasta HYVÄKSYNTÄREITILLÄ
+   * (`app/api/tic/projects/approve/route.ts`), joten ehdokasvaiheessa
+   * kenttä oli tyhjä ja TIC näytti "Ei yhteystietoa" vaikka nimi,
+   * titteli, puhelin ja sähköposti lukivat kuvauksessa.
+   *
+   * Mitattu 20.9.2026: 8 875 ehdokkaasta 6 010:llä `contact_persons` oli
+   * tyhjä, ja niistä **1 929:llä kuvauksesta olisi löytynyt henkilö**.
+   * Jonossa niitä oli mittaushetkellä vain 1 (jono purkautuu nopeasti),
+   * joten vika ei näy jonon pituudesta vaan virrasta: 802 näistä
+   * hylättiin ja 264 ohitettiin — niiden yhteystieto ei päätynyt
+   * mihinkään kenttään koskaan.
+   *
+   * MIKSI TÄSSÄ EIKÄ TIC:N NÄKYMÄSSÄ. Näkymään tehty "kuvauksesta
+   * löytyi" -ehdotus olisi korjannut vain katselmointiruudun: tieto
+   * jäisi yhä kirjoittamatta, ja jokainen muu lukija (hälytykset,
+   * hankelista, hyväksyntäreitti) laskisi ehdokkaan yhä
+   * yhteystiedottomaksi. Lähde ei myöskään ole yhden lähteen ongelma —
+   * osumia on 68 eri lähteestä — joten resolverikohtainen korjaus
+   * unohtuisi seuraavalta, kuten se unohtui tähän asti kaikilta paitsi
+   * `vaylaResolver`ilta.
+   *
+   * HYVÄKSYNTÄREITIN OMA POIMINTA JÄÄ VARALLE. Se toimii mitatusti
+   * (816 hyväksyttyä 862:sta sai yhteyshenkilön hyväksynnässä), ja
+   * `mergeContacts` on vain-lisäävä, joten kahdesti ajaminen ei ole
+   * haitallista.
+   *
+   * ROOLIT MERKITÄÄN, EI PUDOTETA — perustelu `contactRole.ts`:ssä.
+   */
+  function yhteyshenkilotMetadata(
+    existingMetadata?: Record<string, any> | null
+  ): Record<string, unknown> {
+    const teksti = [md.description, md.operation].filter(Boolean).join("\n")
+    if (!teksti) return {}
+
+    const poimitut = merkitseRoolit(extractContacts(teksti), teksti)
+    if (!poimitut.length) return {}
+
+    /*
+     * VAIN LISÄÄ. Lähde on voinut antaa yhteyshenkilöt rakenteisena
+     * (Väylä, Lupapisteen viranomaiset, Hilman osapuolet), eikä
+     * tekstipoiminta saa pyyhkiä niitä. `mergeContacts` säilyttää
+     * olemassa olevan kentät ja roolin täsmäävällä avaimella.
+     */
+    const nykyiset = [
+      ...((existingMetadata?.contact_persons as any[]) ?? []),
+      ...((md.contact_persons as any[]) ?? []),
+    ]
+
+    const yhdistetty = mergeTekstipoiminta(nykyiset, poimitut)
+
+    /*
+     * VAIN KUN POIMINTA LISÄÄ JONKUN.
+     *
+     * `mergeContacts` yhdistää myös listassa JO OLEVAT kaksoisrivit,
+     * koska avain on sähköposti. Mitattu 20.9.2026: 2 866 ehdokkaasta
+     * joilla oli yhteystiedot, 7:llä lista kutistui pelkästä
+     * yhdistämisestä — sama henkilö oli tallessa kahdesti, kahdella eri
+     * numerolla, ja jäljelle jäi jälkimmäinen. Saarijärven Mirja
+     * Tarvainen olisi vaihtanut suoran numeron kaupungin vaihteeseen.
+     *
+     * Väärä numero on käyttäjälle pahempi kuin puuttuva (D-122), eikä
+     * yhteyshenkilöiden poiminta ole oikea paikka siivota vanhoja
+     * kaksoisrivejä. Jos poiminta ei tuo uutta ihmistä, kenttään ei
+     * kosketa lainkaan.
+     */
+    if (yhdistetty.length <= nykyiset.length) return {}
+
+    return { contact_persons: yhdistetty }
+  }
+
   function costMetadata(
     existingMetadata?: Record<string, any> | null
   ): Record<string, unknown> {
@@ -435,6 +514,7 @@ export async function resolvePotentialProject(
           ...alaMetadata(existing.metadata),
           ...taloyhtioMetadata(existing.metadata),
           ...rakennuttajaMetadata(existing.metadata),
+          ...yhteyshenkilotMetadata(existing.metadata),
           source_history: sourceHistory,
           lastSourceName: input.sourceName ?? null,
           matched_existing_project_id:
@@ -516,6 +596,7 @@ export async function resolvePotentialProject(
         ...alaMetadata(null),
         ...taloyhtioMetadata(null),
         ...rakennuttajaMetadata(null),
+        ...yhteyshenkilotMetadata(null),
         ...relevanceGate.metadata,
         ...buildingType.metadata,
         source_history: buildSourceHistory(null, input),

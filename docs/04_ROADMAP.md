@@ -1124,13 +1124,38 @@ muistin varassa.
 
 ### Operointi
 
-- **Yhteyshenkilö poimitaan vasta hyväksyttäessä** (havaittu 20.9.2026).
-  Jonossa olevan ehdokkaan `contact_persons` on tyhjä, vaikka kuvauksessa
-  on "Yhteyshenkilöt …" ja `extractContacts` poimii sen oikein –
-  poiminta ajetaan vasta `approve`-reitillä. Katselmoija ei siis näe
-  yhteyshenkilöä päätöstä tehdessään. Todettu ehdokkaalla a618ef2e
-  (stt_haku, Kotkansaari). Mittaa montako ehdokasta tämä koskee ja siirrä
-  poiminta ehdokasvaiheeseen; varo viranomais- ja viestintäyhteystietoja.
+- ~~**Yhteyshenkilö poimitaan vasta hyväksyttäessä**~~ — tehty 20.9.2026
+  (D-207). Poiminta on nyt `resolvePotentialProject`issa, eli kaikilla
+  lähteillä, ja roolit merkitään (`lib/projects/contactRole.ts`).
+
+  **Mitattu ensin** (`scripts/measure-ehdokkaiden-yhteyshenkilot.ts`):
+  8 875 ehdokkaasta 6 010:llä `contact_persons` oli tyhjä ja niistä
+  **1 929:llä kuvauksesta olisi löytynyt henkilö** — 68 eri lähteestä.
+  Jonossa niitä oli mittaushetkellä 3, joten jonon pituus ei paljastanut
+  mitään: 802 osumaa oli **hylätty** ja 264 ohitettu, eli katselmoija oli
+  tehnyt päätöksen näkemättä yhteyshenkilöä.
+
+  Kaksi ansaa käsiteltiin **merkitsemällä, ei pudottamalla**: luvan
+  ratkaissut viranomainen (+ muutoksenhakuohjeen markkinaoikeus,
+  `@oikeus.fi`) ja tiedotteen viestintähenkilö, joka tunnistetaan
+  tittelistä eikä osiosta — 166 osumaa, ja 44:ssä hän on *ainoa* löytynyt
+  henkilö. Kunnan investointipäätöksen "valmistelija" **ei** ole
+  viranomainen: siinä kaupunki on itse rakennuttaja.
+
+  Takautuva ajo kosketti yhtä jonossa ollutta riviä (a618ef2e).
+
+- **34 hyväksyttyä hanketta jäi yhä ilman yhteyshenkilöä** (havaittu
+  20.9.2026 D-207:n mittauksessa). Hyväksyntäreitti poimi 862 osumasta
+  816, mutta 34:llä kenttä on hyväksynnänkin jälkeen tyhjä vaikka teksti
+  sisältää henkilön — ja 12 ehdokkaan `approved_project_id` ei osoita
+  olemassa olevaan hankkeeseen (yhdistetty tai poistettu?). Pieni joukko,
+  mutta syy on tuntematon: selvitä ennen kuin luotat siihen että
+  hyväksyntä täydentää aina. Mittari on jo olemassa.
+
+- **176 ehdokasta löytää vain kirjaamo- tai info-laatikon** (mitattu
+  20.9.2026). Ne eivät ole myyntikontakteja, mutta eivät myöskään tyhjä
+  kenttä. Nyt ne kirjoittuvat `kind: "organization"`-riveinä. Katso
+  parin viikon päästä näyttääkö TIC niitä turhan usein "yhteystietona".
 - ~~**Health-merkki ei kerro syytä**~~ — tehty 20.9.2026 (D-205, D-206).
   Merkissä on nyt luku `!`:n sijaan, ja Health-sivun ensimmäinen lohko
   "Rikkinäiset lähteet" näyttää lähteen nimen, virheviestin kokonaisena,
