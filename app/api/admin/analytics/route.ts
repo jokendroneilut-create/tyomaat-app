@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { ISTUNTO_TAUKO_MIN } from "@/lib/analytics/kayttoyhteenveto"
+import { omanKaytonEmails, omanKaytonIds } from "@/lib/analytics/omaKaytto"
 import {
   odotetutNollarivit,
   selittamattomatNollarivit,
@@ -75,17 +76,19 @@ async function fetchAllEvents() {
  * ylläpitäjä selaa hankkeita työkseen, joten hän olisi aina näyttänyt
  * eniten poikkeavalta.
  */
-function resolveAdminIds(users: any[]): Set<string> {
-  const admins = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean)
-
-  return new Set(
-    users
-      .filter((u) => admins.includes(String(u.email ?? "").toLowerCase()))
-      .map((u) => u.id)
-  )
+function resolveAdminIds(
+  users: { id: string; email?: string | null }[],
+  roolit: { user_id: string; role?: string | null }[] | null
+): Set<string> {
+  /*
+   * Lista on laajempi kuin ADMIN_EMAILS (D-204): yllapitajan testi- ja
+   * tyotunnukset eivat ole admineja, mutta eivat myoskaan asiakkaita.
+   */
+  return omanKaytonIds({
+    users,
+    roolit,
+    emails: omanKaytonEmails(process.env),
+  })
 }
 
 export async function GET(request: Request) {
@@ -95,7 +98,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [users, eventsRes, savedSearchesRes, favoritesRes, teamMembersRes, feedbackRes] =
+    const [users, eventsRes, savedSearchesRes, favoritesRes, teamMembersRes, feedbackRes, rolesRes] =
       await Promise.all([
         fetchAllUsers(),
         fetchAllEvents().then((data) => ({ data, error: null as any })),
@@ -109,6 +112,7 @@ export async function GET(request: Request) {
           )
           .order("created_at", { ascending: false })
           .limit(5000),
+        supabaseAdmin.from("user_roles").select("user_id, role"),
       ])
 
     if (eventsRes.error) throw eventsRes.error
@@ -118,7 +122,7 @@ export async function GET(request: Request) {
     if (feedbackRes.error) throw feedbackRes.error
 
     const userEmail = new Map(users.map((u) => [u.id, u.email ?? u.id]))
-    const adminIds = resolveAdminIds(users)
+    const adminIds = resolveAdminIds(users, rolesRes.data ?? null)
 
     const allEvents = eventsRes.data ?? []
 

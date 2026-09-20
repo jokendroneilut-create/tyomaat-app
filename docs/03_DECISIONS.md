@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-204 - Aktiivinen kayttaja ei ole kirjautunut kayttaja
+
+Havainto 20.9.2026: analytiikan "Kayton kehitys" naytti paivalle **kolme
+kayttajaa**, mutta kayttajalistan `Viimeksi kirjautunut` -sarakkeessa sina
+paivana oli vain yllapitaja. Nakymat nayttivat olevan ristiriidassa.
+
+**Mitattu ennen kuin mitaan muutettiin** (`scripts/diag-analytics-vs-signin.mjs`,
+vain SELECT). Paivan 38 tapahtumaa neljalta tunnukselta:
+
+| tunnus | tapahtumia | last_sign_in_at | laskettiin |
+|---|---|---|---|
+| yllapitaja | 31 (28 pageview, 3 login) | 20.9. | ei, suodatettu |
+| asiakas A | 3 (project_open + 2 pageview) | 3.9. | kylla |
+| asiakas B | 3 (project_open + 2 pageview) | 18.9. | kylla |
+| asiakas C | 1 pageview | 9.9. | kylla |
+
+**Molemmat luvut olivat oikein.** Ne mittaavat eri asiaa:
+
+1. **Vanha istunto riittaa tapahtumiin.** Kolme asiakasta kaytti tuotetta
+   ilman uutta kirjautumista - eivat tuottaneet edes `login`-tapahtumaa
+   (`login` kirjataan vain Supabasen `SIGNED_IN`-signaalista, ja paluu
+   evasteella on `TOKEN_REFRESHED`). Supabasen `last_sign_in_at` ei paivity
+   tokenin uusimisesta, joten se jai 3.9./18.9./9.9. Koko 30 vrk jaksolla
+   aktiivisia kayttajapaivia oli 139, `login`-tapahtumia 115 ja
+   `last_sign_in_at`-osumia vain 36 - kolmas luku on pienin myos siksi, etta
+   sarake nayttaa vain VIIMEISIMMAN kirjautumisen. Se ei ole paivakohtainen
+   lista eika kelpaa aktiivisten kayttajien tarkistukseen.
+2. Sama ihminen ei ollut kahdella tunnuksella: kolme eri yritysta, kolme eri
+   verkkotunnusta.
+
+**Sivutuotteena loytyi todellinen virhe: admin-suodatus oli vajaa.**
+`ADMIN_EMAILS` sisalsi yhden osoitteen ja `user_roles`-taulussa oli nolla
+admin-rivia, joten yllapitajan kaksi muuta tunnusta (testitunnus ja
+tyosahkoposti) laskettiin **asiakkaiksi**. Kuivaharjoituksen tuotos 30 vrk
+jaksolta: 27 paivasta **15 naytti 1-2 kayttajaa liikaa**, jakson eri
+kayttajia **39 -> 37** ja sivulatauksia **3 522 -> 3 081 (-14 %)**. Paivan
+20.9. luku kolme ei muutu - ne ovat aitoja asiakkaita.
+
+**Paatos.**
+
+- Otsikko `Kayttajat` -> **`Aktiiviset kayttajat`**, ja alaviite kertoo etta
+  aktiivinen != kirjautunut ja miksi kayttajalistan sarake nayttaa eri paivan.
+  Luku oli oikea; vaarin oli sen nimi.
+- Oma kaytto rajataan uudella `ANALYTICS_EXCLUDE_EMAILS`-muuttujalla
+  (`lib/analytics/omaKaytto.ts`), jota kaikki kolme rajaavaa reittia kayttavat
+  (`usage-trend`, `analytics`, `usage-alert`). Lisaksi `user_roles`-taulun
+  admin-rivit otetaan mukaan, ettei lista jaa yhden ymparistomuuttujan varaan.
+- **Eri muuttuja kuin `ADMIN_EMAILS` tarkoituksella.** Osoitteen lisaaminen
+  `ADMIN_EMAILS`-listalle antaisi sille admin-oikeudet, ja testitunnus on
+  olemassa nimenomaan ASIAKKAAN nakyman katsomista varten. Lukujen rajaus ja
+  oikeuksien myontaminen ovat eri asia.
+- Tyhja muuttuja sailyttaa vanhan kayttaytymisen, joten tuotannon luvut
+  muuttuvat vasta kun arvo asetetaan Verceliin.
+
+Toistuva opetus: kun kaksi mittaria ovat eri mielta, kysy ensin mittaavatko ne
+samaa asiaa. Tassa eivat mitanneet - ja vasta sen selvittaminen paljasti
+oikean vian, joka oli eri kohdassa kuin epailty.
+
 ### D-203 - Kolme lahteesta tarkistettua korjausta, kasin lisatty nimi jaa
 
 Hakuagentit (D-200) nostivat kolme hanketta, joissa kannan tieto nayttaa
