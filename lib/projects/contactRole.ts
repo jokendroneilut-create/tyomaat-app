@@ -33,16 +33,29 @@ import type { Contact } from "./contacts"
  * investointipäätös ovat eri asioita, ja ero on juuri tässä.
  */
 const VIRANOMAISNIMIKE =
-  /(rakennustarkastaj|lupainsin[oö]{2}r|lupa-?arkkitehti|lupavalmistelij|tarkastusinsin[oö]{2}r|rakennusvalvonna|rakennusvalvontap[aä]{2}llik)/i
+  /(rakennustarkastaj|lupainsin[oö]{2}r|lupa-?arkkitehti|lupavalmistelij|tarkastusinsin[oö]{2}r|rakennusvalvonna|rakennusvalvontap[aä]{2}llik|yhteysviranomai|lupa- ja valvontavirasto|ELY-keskus)/i
 
 /*
- * Oikeusaste esiintyy vain muutoksenhakuohjeessa, ei hankkeen
+ * VERKKOTUNNUS RIITTÄÄ KAHDELLE VIRANOMAISJOUKOLLE.
+ *
+ * `oikeus.fi` esiintyy vain muutoksenhakuohjeessa, ei hankkeen
  * osapuolena. Kunnan päätöksen lopussa on markkinaoikeuden tai
  * hallinto-oikeuden osoite, ja poimija lukee siitä "nimen" (kadunnimen)
- * ja osoitteen @oikeus.fi. Mitattu 20.9.2026: 3 ehdokasta 1 929:stä —
- * harvinainen mutta yksiselitteinen.
+ * ja osoitteen. Mitattu 20.9.2026: 3 ehdokasta 1 929:stä — harvinainen
+ * mutta yksiselitteinen.
+ *
+ * `lvv.fi` (Lupa- ja valvontavirasto) ja `ely-keskus.fi` ovat YVA:n
+ * YHTEYSVIRANOMAINEN: se arvioi hankkeen ympäristövaikutukset eikä osta
+ * siitä mitään. Mitattu 21.9.2026: 251 kontaktia, joista 238 YVA-
+ * lähteestä — ely-keskus.fi 144 ja lvv.fi 107. Muita virastopäätteitä
+ * ei aineistossa esiinny, joten niitä ei myöskään arvata tähän.
+ *
+ * YVA-sivulla on oma "Yhteysviranomainen:"-kenttä, mutta kerättyyn
+ * kuvaustekstiin otsikko säilyy vain 3 kertaa 251:stä — nimeä edeltää
+ * sen sijaan viraston nimi. Siksi sääntö nojaa verkkotunnukseen, joka on
+ * mitatusti aina paikalla, ja viraston nimi on vain lisätuki alla.
  */
-const OIKEUSASTEEN_DOMAIN = /(^|\.)oikeus\.fi$/i
+const VIRANOMAISEN_DOMAIN = /(^|\.)(oikeus\.fi|lvv\.fi|ely-keskus\.fi)$/i
 
 /*
  * NIMIKE ON SUOMESSA USEIN ENNEN NIMEÄ.
@@ -95,7 +108,7 @@ export function paatteleRooli(
   const titteli = String(contact.title ?? "")
   const domain = String(contact.email ?? "").split("@")[1] ?? ""
 
-  if (OIKEUSASTEEN_DOMAIN.test(domain)) return "authority"
+  if (VIRANOMAISEN_DOMAIN.test(domain)) return "authority"
   if (VIRANOMAISNIMIKE.test(titteli)) return "authority"
 
   const nimi = String(contact.name ?? "").trim()

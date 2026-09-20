@@ -5,6 +5,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-208 - Takautuva ajo korjasi ehdokkaan, muttei jo hyvaksyttya hanketta
+
+D-207:n mittauksessa jai auki 34 hyvaksyttya hanketta, joilla kentta oli
+tyhja vaikka ehdokkaan tekstissa on henkilo. Epailys oli poimijassa tai
+hyvaksyntareitissa. **Kumpikaan ei ollut syy.**
+
+#### Syy: kopio ei paivity
+
+Takautuvat ajot korjaavat `potential_projects`-taulua, koska ehdokas on
+se joka on rikki. Jo hyvaksytty ehdokas on kuitenkin kopioitu
+`projects`-tauluun, eika kopio paivity - asiakas nakee yha sen tekstin
+joka oli olemassa hyvaksyntahetkella.
+
+Suurin yksittainen aiheuttaja on `scripts/backfill-yva-details.ts`,
+commit **8.8.2026**: se taydensi YVA-ehdokkaiden 78 merkin tiivistelmat
+koko hankekuvauksiksi, mutta kirjoitti vain `potential_projects`-tauluun.
+5.-7.8. hyvaksytyt 28 hanketta jaivat tiivistelman varaan. Yhteyshenkilo
+ei siis kadonnut hyvaksynnassa - sita ei ollut tekstissa viela silloin.
+
+#### Ilmio oli 34:aa laajempi
+
+Mitattu 21.9.2026 kaikista hyvaksytyista:
+
+| | |
+|---|---|
+| hyvaksyttyja hankkeita | 5 698 |
+| ehdokkaan kuvaus pidempi kuin hankkeen | 192 |
+| **...ja hankkeen kuvaus sisaltyy siihen kokonaan** | **80** |
+| naista hanke saisi yhteyshenkilon | 47 |
+| asiakkaalta piilossa ollutta tekstia | **272 861 merkkia** |
+
+Lahteet: yva 38, Pietarsaaren kaavat 15, kouvola_paatokset 6, stt_haku 6.
+
+#### Korjaus
+
+`scripts/backfill-hyvaksytyn-kuvaus-ehdokkaalta.ts`, kaksi vaihetta.
+
+**Vaihe 1** korvaa kuvauksen VAIN jos vanha sisaltyy uuteen kokonaan
+(sama turvaraja kuin `fix-sivun-kuvaus-alusta.ts`:ssa): uusi on aina
+vanha + lisaa. `additional_info` korvataan vain jos se on tyhja tai sama
+kuin vanha kuvaus - 15 tapauksessa se oli kasin muokattu, eika siihen
+kosketa (D-101). 80 rivia.
+
+**Vaihe 2** poimii yhteyshenkilon myos silloin kun kuvausta EI korvata:
+teksti voi olla kasin kirjoitettu tai toisesta lahteesta, mutta ehdokas
+on sama hanke. Vain hankkeisiin joilla ei ole yhtaan yhteyshenkiloa.
+5 rivia - juuri ne jotka turvaraja perustellusti esti vaiheessa 1.
+
+Molempien jalkeen 34:sta on jaljella **0**.
+
+#### Kolmas ansa: YVA:n yhteysviranomainen
+
+Kuivaharjoitus paljasti ettei D-207:n viranomaissaanto tunne
+YVA-lahdetta. Ilmoituksessa on kolme osapuolta perakkain - hankkeesta
+vastaava, konsultti ja **yhteysviranomainen** - ja viimeinen on
+Lupa- ja valvontavirasto tai ELY-keskus, joka arvioi hankkeen muttei
+osta siita mitaan. Ilman saantoa 30+ virkamiesta olisi mennyt hankkeen
+osapuoliksi merkitsematta.
+
+Mitattu 21.9.2026: **251 kontaktia**, joista 238 YVA-lahteesta -
+`ely-keskus.fi` 144 ja `lvv.fi` 107. Muita virastopaatteita ei
+aineistossa esiinny, joten niita ei arvata saantoon.
+
+YVA-sivulla on oma "Yhteysviranomainen:"-kentta, mutta keratyssa
+kuvaustekstissa otsikko sailyy vain **3 kertaa 251:sta** - nimea edeltaa
+sen sijaan viraston nimi. Siksi saanto nojaa VERKKOTUNNUKSEEN, joka on
+mitatusti aina paikalla; viraston nimi on lisatuki nimi-ikkunassa.
+
+#### Jaljelle jai kaksi pienta, molemmat yksittaistapauksia
+
+Evastebanneri hankkeen kuvauksena: **1 hanke 6 344:sta** (Vanhan Vaasan
+sairaala, lahde peab). Teams-kutsun roska nimena ("Microsoft Teams",
+"Vx Dial"): **2 kontaktia** koko aineistossa. Kumpikaan ei ole saannon
+arvoinen - ne korjataan kasin jos haittaavat.
+
+---
+
 ### D-207 - Yhteyshenkilo poimitaan ehdokasvaiheessa, ei vasta hyvaksynnassa
 
 TIC nayttaa ehdokkaalle "Ei yhteystietoa" vaikka nimi, titteli, puhelin ja
