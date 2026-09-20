@@ -5,6 +5,32 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-203 - Kolme lahteesta tarkistettua korjausta, kasin lisatty nimi jaa
+
+Hakuagentit (D-200) nostivat kolme hanketta, joissa kannan tieto nayttaa
+vaaralta. Jokaisen lahdesivu luettiin 20.9.2026 ennen korjausta - agentin
+huomautus ei riita todisteeksi.
+
+  1. **Villa Stenius, Etela-Haaga.** Rakennuttajana kahden henkilon
+     nimet. Kayttaja sailyttaa ne ("olen saattanut kaivaa ne jostain"),
+     joten kenttaan EI kosketa; SSA Rakennus Oy lisattiin liittyviin
+     yrityksiin. Todiste: SSA:n hankesivu ja Helsingin paatos (Qiva
+     Haaga). Koko kanta tarkistettiin henkilonnimien varalta: tama on
+     ainoa tapaus, muut 139 osumaa olivat yritysnimia ilman Oy-paatetta
+     ("JM Suomi", "Urban Partners").
+  2. **Valmiusasema.** Asuran sivu: "Tilaaja: Vantaan ja Keravan
+     hyvinvointialue", "Asura toimii paaurakoitsijana". Kannassa Asura
+     oli RAKENNUTTAJANA. Korjattu rakennuttaja ja rakentaja; Korson
+     rivin kunta Helsinki -> Vantaa (osoite Urpiaisentie 36, 01450
+     Vantaa). Rivit ovat sama hanke -> duplikaattijonoon.
+  3. **Kerrostalo Finnooseen.** Agentti vaitti valmistuneeksi, mutta
+     Y-Saation sivu sanoo "arvioidaan valmistuvan kesalla 2026". EI
+     merkitty valmiiksi: kirjattiin `estimated_completion` 31.8.2026,
+     jolloin valmistumisajastus paattaa omalla saannollaan (D-201).
+     Lisaksi rakentaja "Hausia" -> "Hausia Oy" ja Y-Saatio liittyviin.
+
+---
+
 ### D-202 - Kaksoishankkeet jonoon, ei yhdistetty - ja kolme vaaraa paria peruttiin
 
 D-200:n haussa loytyi hankkeita, jotka nakyvat asiakkaalle kahdesti
