@@ -93,7 +93,26 @@ export async function scoreRelevance(input: {
             `Lähde: ${input.sourceName ?? "-"}`,
         },
       ],
-    } as Anthropic.MessageCreateParamsNonStreaming)
+    } as Anthropic.MessageCreateParamsNonStreaming, {
+      /*
+       * AIKAKATKAISU, SAMASTA SYYSTA KUIN KOHDETYYPPILUOKITTIMESSA.
+       *
+       * Naapuri `llmBuildingTypeScorer` sai katkaisun D-155:ssa, mutta
+       * tama portti jai ilman - vaikka `resolvePotentialProject` kutsuu
+       * juuri tata ENSIN ja kohdetyyppia vasta sen jalkeen, eli hidas
+       * pyynto tassa estaa senkin. SDK:n oletus on 10 minuuttia ja kaksi
+       * uudelleenyritysta, ja lahdeajon kova katkaisu on 90 sekuntia:
+       * yksi jumiin jaanyt portti kaataa siis koko lahteen, ja ajo
+       * kirjautuu aikakatkaisuksi ilman vihjetta syysta.
+       *
+       * Mitattu 20.9.2026 Rovaniemen 10 ehdokkaalla: portti vastasi
+       * 2,1-4,2 sekunnissa (kohdetyyppi 2,1-3,1 s). 15 s on sama katto
+       * kuin naapurilla ja nelinkertainen mitattuun - ylitys tarkoittaa
+       * fail-open eli ehdokas menee jonoon, ei etta ajo kaatuu.
+       */
+      timeout: 15_000,
+      maxRetries: 1,
+    })
 
     const textBlock = res.content.find((b) => b.type === "text")
     if (!textBlock || textBlock.type !== "text") {
