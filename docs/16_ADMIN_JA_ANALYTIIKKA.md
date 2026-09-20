@@ -105,6 +105,14 @@ koska luvut ovat piste ajassa):
   30 vrk jaksolla 27 päivästä **15 näytti 1–2 käyttäjää liikaa**, jakson eri
   käyttäjiä **39 → 37** ja sivulatauksia **3 522 → 3 081 (−14 %)**. Luvut
   korjautuvat tuotannossa vasta kun `ANALYTICS_EXCLUDE_EMAILS` on asetettu.
+- **Sarakkeen nimi on tulkintaohje (D-204, mitattu 20.9.2026):** käyttäjäsivun
+  `Viimeksi kirjautunut` -saraketta luettiin "kuka kävi viimeksi". 48
+  asiakastunnuksesta **16 oli käynyt myöhemmin kuin oli kirjautunut** (suurin
+  ero 115 vrk), ja sarakkeen mukaan järjestetyssä 12 kärjessä vain yksi rivi
+  osui oikealle sijalle — viisi nimeä puuttui kokonaan, mukaan lukien kaksi
+  tuoreinta kävijää. Lisättiin **`Viimeksi käynyt`** -sarake (näkymä
+  `user_last_activity`); vanha sarake jäi paikalleen, koska kirjautumispäivä
+  on eri tieto eikä väärä.
 - **Käyttö ilman kirjautumista on tavallista, ei poikkeus (D-204):** 30 vrk
   jaksolla aktiivisia käyttäjäpäiviä 139, `login`-tapahtumia 115,
   `last_sign_in_at`-osumia samalle päivälle vain 36. Päivänä 20.9. kolme
@@ -121,6 +129,9 @@ tuottama luku on avattava lähteestä ennen kuin sen perusteella toimitaan
 
 ## Päivityshistoria
 
+- **2026-09-20** — Lisätty käyttäjäsivulle `Viimeksi käynyt` -sarake (näkymä
+  `user_last_activity`, docs/sql/2026-09-20_user_last_activity.sql): 48
+  asiakkaasta 16 oli käynyt myöhemmin kuin oli kirjautunut.
 - **2026-09-20** — Lisätty D-204: aktiivinen käyttäjä ≠ kirjautunut käyttäjä
   (kortin otsikko `Käyttäjät` → `Aktiiviset käyttäjät`), ja oman käytön
   suodatuksen vuoto asiakaslukuihin (39 → 37 käyttäjää, 3 522 → 3 081
