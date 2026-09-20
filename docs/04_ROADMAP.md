@@ -1124,6 +1124,12 @@ muistin varassa.
 
 ### Operointi
 
+- **Health-merkki ei kerro syytä** (havaittu 20.9.2026). Sivupalkin punainen
+  "!" kertoo vain että jotain on rikki; syy on pelkässä title-attribuutissa
+  (hover). Mitattu 20.9.: 1 rikki lähde – "Rovaniemen päätökset", ajo
+  ylitti 90 s (viimeisin onnistuminen 9.9.). Kaksi työtä: näytä syy
+  Health-sivulla (lähde, virhe, aika) ja korjaa Rovaniemen ajo mittaamalla
+  mihin aika menee – ei aikarajan nostoa ilman mittausta.
 - **Analytiikka ja käyttäjäsivu näyttävät eri luvun** (havaittu 20.9.2026).
   `/dashboard/analytics` näyttää 20.9. kolme käyttäjää, mutta
   `/dashboard/users` kertoo, että sinä päivänä on kirjautunut vain admin
