@@ -71,9 +71,13 @@ ohittanut juuri ne asiakkaat jotka olivat aktiivisimpia. (Luku on
 alaraja: tapahtumat skannattiin uusimmasta paasta 60 000 rivin katolla,
 joten osa vanhoista viimeisista kaynneista jai nakematta.)
 
-Lisattiin **`Viimeksi kaynyt`** -sarake sen viereen; vanha sarake jai
-paikalleen haalennettuna, koska kirjautumispaiva on eri tieto eika
-vaara. Lahde on nakyma `user_last_activity`
+Lisattiin **`Viimeksi kaynyt`** -sarake ja **kirjautumissarake poistettiin**.
+Se oli hetken naiden vieressa, mutta kaytossa kavi ilmi ettei se vastaa
+yhteenkaan kysymykseen jota talla sivulla kysytaan: se jaa jalkeen
+istunnon verran eika kerro mitaan mita kayntipaiva ei kerro paremmin.
+Tarkka kirjautumishistoria sailyi `Kaytto`-painikkeen takana, jonne se
+kuuluukin - painike siirrettiin kayntisarakkeeseen. Lahde on nakyma
+`user_last_activity`
 (`docs/sql/2026-09-20_user_last_activity.sql`): `analytics_events` on
 43 243 rivia ja kasvaa ~16 000 rivia/kk, joten viimeisimman tapahtuman
 etsiminen sivulatauksella tarkoittaisi taulun selaamista sivu kerrallaan.

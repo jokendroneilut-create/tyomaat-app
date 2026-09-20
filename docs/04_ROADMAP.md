@@ -1124,14 +1124,26 @@ muistin varassa.
 
 ### Operointi
 
-- **Analytiikka ja käyttäjäsivu näyttävät eri luvun** (havaittu 20.9.2026).
-  `/dashboard/analytics` näyttää 20.9. kolme käyttäjää, mutta
-  `/dashboard/users` kertoo, että sinä päivänä on kirjautunut vain admin
-  (muut 18.9.). Selvitä mitä kumpikin laskee: tapahtumat
-  (`analytics_events`) vs. kirjautuminen (`last_sign_in_at`), riittääkö
-  vanha istunto tapahtumiin ilman uutta kirjautumista, ja suodattuuko
-  admin kaikilla tunnuksillaan (hotmail, gmail, koneunion). Jos kyse on
-  eri mittarista, otsikointi on korjattava — muuten luku näyttää virheeltä.
+- ~~**Analytiikka ja käyttäjäsivu näyttävät eri luvun**~~ — selvitetty
+  20.9.2026 (D-204). Molemmat luvut olivat oikein: analytiikka laskee
+  tapahtumia, käyttäjäsivu kirjautumisia, ja vanha istunto riittää
+  tapahtumiin ilman uutta kirjautumista. Kortin otsikko → *Aktiiviset
+  käyttäjät*, käyttäjäsivulle *Viimeksi käynyt* -sarake ja
+  kirjautumissarake pois. Sivutuotteena löytyi oikea vika: admin-suodatus
+  kattoi vain yhden tunnuksen kolmesta (39 → 37 käyttäjää, −14 %
+  sivulatauksia).
+- **Kutsun lähetys ei toimi — tunnukset luodaan Supabasen kautta**
+  (kirjattu 20.9.2026). Käyttäjä testasi kutsureittiä viimeksi ja siinä oli
+  yhä ongelmia, joten tunnukset on tehty käsin Supabasen dashboardista.
+  Mitattu: 112 tunnuksesta vain **4**:llä on `invited_at`, eli
+  `inviteUserByEmail`-reittiä on käytetty neljästi. Ne neljä kirjautuivat
+  kaikki, joten reitti on toiminut ainakin joskus. Seuraus: 53 tunnusta ei
+  ole koskaan kirjautunut, eikä kukaan heistä ole saanut kutsua tuotteen
+  kautta — käyttöönottoaste myyjään liitetyillä 17/54 (31 %) vs.
+  liittämättömillä 39/55 (71 %). Selvitettävä mikä kutsussa hajoaa
+  (`app/api/admin/invite-user/route.ts`, Supabasen SMTP-asetukset;
+  `scripts/diag-invite.mjs` on olemassa). **Ei kiireellinen** — nykyinen
+  käsityö toimii, mutta se estää tunnuksen antamisen ilman ylläpitäjää.
 - **⭐ KOORDINAATTI DUPLIKAATTISIGNAALIKSI — mitattu 8.9.2026.**
   `calculateMatch` ei katso koordinaatteja lainkaan, vaikka ne ovat
   hankkeen tarkin sijaintitieto.

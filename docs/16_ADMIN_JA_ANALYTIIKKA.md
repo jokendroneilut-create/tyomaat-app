@@ -111,8 +111,13 @@ koska luvut ovat piste ajassa):
   ero 115 vrk), ja sarakkeen mukaan järjestetyssä 12 kärjessä vain yksi rivi
   osui oikealle sijalle — viisi nimeä puuttui kokonaan, mukaan lukien kaksi
   tuoreinta kävijää. Lisättiin **`Viimeksi käynyt`** -sarake (näkymä
-  `user_last_activity`); vanha sarake jäi paikalleen, koska kirjautumispäivä
-  on eri tieto eikä väärä.
+  `user_last_activity`) ja kirjautumissarake poistettiin: se ei vastaa
+  yhteenkään kysymykseen jota tällä sivulla kysytään. Tarkka
+  kirjautumishistoria on `Käyttö`-painikkeen takana. **Sarake näkyy myös
+  myyjälle** — sitä ei ole rajattu adminille, ja `user-activity`-reitti
+  sallii myyjälle hänen omat asiakkaansa (`visibleUsers`). Mitattu
+  20.9.2026: myyjällä 54 asiakasta, joista 17:llä käynti tiedossa ja
+  **8 käynyt viimeisen 7 vrk aikana**.
 - **Käyttö ilman kirjautumista on tavallista, ei poikkeus (D-204):** 30 vrk
   jaksolla aktiivisia käyttäjäpäiviä 139, `login`-tapahtumia 115,
   `last_sign_in_at`-osumia samalle päivälle vain 36. Päivänä 20.9. kolme
