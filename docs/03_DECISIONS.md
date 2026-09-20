@@ -59,9 +59,34 @@ kayttajia **39 -> 37** ja sivulatauksia **3 522 -> 3 081 (-14 %)**. Paivan
 - Tyhja muuttuja sailyttaa vanhan kayttaytymisen, joten tuotannon luvut
   muuttuvat vasta kun arvo asetetaan Verceliin.
 
+**Jatko samana paivana: kayttajasivulle oma sarake.** Kayttaja kertoi
+tulkinneensa `Viimeksi kirjautunut` -saraketta niin, etta sen mukaan
+jarjestamalla nakee ketka ovat viimeksi KAYNEET palvelussa. Mitattu:
+48 asiakastunnuksesta **16 (33 %)** oli kaynyt myohemmin kuin oli
+kirjautunut, yhdeksalla ero yli 7 vrk, neljalla yli 30 vrk, suurin ero
+**115 vrk**. Sarakkeen mukaan jarjestetyssa 12 karjessa vain yksi rivi
+osui oikealle sijalle ja **viisi nimea puuttui kokonaan** - mukaan lukien
+kaksi tuoreinta kavijaa. Soittolista olisi siis systemaattisesti
+ohittanut juuri ne asiakkaat jotka olivat aktiivisimpia. (Luku on
+alaraja: tapahtumat skannattiin uusimmasta paasta 60 000 rivin katolla,
+joten osa vanhoista viimeisista kaynneista jai nakematta.)
+
+Lisattiin **`Viimeksi kaynyt`** -sarake sen viereen; vanha sarake jai
+paikalleen haalennettuna, koska kirjautumispaiva on eri tieto eika
+vaara. Lahde on nakyma `user_last_activity`
+(`docs/sql/2026-09-20_user_last_activity.sql`): `analytics_events` on
+43 243 rivia ja kasvaa ~16 000 rivia/kk, joten viimeisimman tapahtuman
+etsiminen sivulatauksella tarkoittaisi taulun selaamista sivu kerrallaan.
+Aggregaatti kannassa palauttaa noin sata rivia. Puuttuva nakyma ei kaada
+listaa - sarake on tyhja kunnes DDL on ajettu, sama kaytanto kuin
+liitostauluilla.
+
 Toistuva opetus: kun kaksi mittaria ovat eri mielta, kysy ensin mittaavatko ne
 samaa asiaa. Tassa eivat mitanneet - ja vasta sen selvittaminen paljasti
-oikean vian, joka oli eri kohdassa kuin epailty.
+oikean vian, joka oli eri kohdassa kuin epailty. Toinen opetus tuli
+perassa: myos KAYTTAJA tulkitsee mittaria, ja sarakkeen nimi on se
+tulkintaohje - "Viimeksi kirjautunut" luettiin "viimeksi kaynyt" kolmen
+kuukauden ajan.
 
 ### D-203 - Kolme lahteesta tarkistettua korjausta, kasin lisatty nimi jaa
 

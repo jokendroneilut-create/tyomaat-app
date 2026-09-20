@@ -9,6 +9,13 @@ type AdminUser = {
   email: string | null
   created_at: string
   last_sign_in_at: string | null
+
+  /*
+   * Viimeisin TAPAHTUMA, ei kirjautuminen (D-204). Tyhja jos nakymaa
+   * user_last_activity ei ole viela luotu tai tunnus ei ole kayttanyt
+   * tuotetta sen jalkeen kun tapahtumia alettiin kirjata 14.7.2026.
+   */
+  last_seen_at?: string | null
   confirmed: boolean
   locked?: boolean
   lockedReason?: string | null
@@ -21,7 +28,14 @@ type AdminUser = {
 
 type Seller = { id: string; email: string | null }
 
-type SortColumn = 'email' | 'created_at' | 'age_days' | 'last_sign_in_at' | 'confirmed' | 'seller'
+type SortColumn =
+  | 'email'
+  | 'created_at'
+  | 'age_days'
+  | 'last_seen_at'
+  | 'last_sign_in_at'
+  | 'confirmed'
+  | 'seller'
 type SortDirection = 'asc' | 'desc'
 
 function formatDate(value: string | null) {
@@ -79,7 +93,11 @@ export default function UsersPage() {
        * Ika ja kirjautuminen ovat kiinnostavia suurimmasta paasta:
        * paattyneet kokeilut ja tuoreimmat kirjautumiset ensin.
        */
-      setSortDirection(column === 'age_days' || column === 'last_sign_in_at' ? 'desc' : 'asc')
+      setSortDirection(
+        column === 'age_days' || column === 'last_sign_in_at' || column === 'last_seen_at'
+          ? 'desc'
+          : 'asc'
+      )
     }
   }
 
@@ -593,7 +611,7 @@ export default function UsersPage() {
           <table
             style={{
               width: '100%',
-              minWidth: isAdminView ? 1340 : 900,
+              minWidth: isAdminView ? 1500 : 1060,
               borderCollapse: 'collapse',
             }}
           >
@@ -602,6 +620,14 @@ export default function UsersPage() {
               <SortHeader column="email" label="Sähköposti" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="created_at" label="Luotu" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="age_days" label="Ikä (pv)" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              {/*
+                * KAKSI SARAKETTA, KOSKA NE OVAT ERI ASIA (D-204).
+                * "Viimeksi kaynyt" vastaa kysymykseen kuka on ollut
+                * palvelussa; "Viimeksi kirjautunut" kertoo milloin tunnus
+                * viimeksi todisti itsensa. Jalkimmainen jaa jalkeen, koska
+                * istunto sailyy evasteessa yli viikon.
+                */}
+              <SortHeader column="last_seen_at" label="Viimeksi käynyt" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="last_sign_in_at" label="Viimeksi kirjautunut" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="confirmed" label="Tila" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               {isAdminView && (
@@ -637,6 +663,9 @@ export default function UsersPage() {
                   })()}
                 </td>
                 <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
+                  {formatDate(u.last_seen_at ?? null)}
+                </td>
+                <td style={{ padding: '8px 4px', whiteSpace: 'nowrap', color: '#6b7280' }}>
                   {formatDate(u.last_sign_in_at)}
                   <button
                     onClick={() => avaaKaytto(u)}
@@ -853,7 +882,7 @@ export default function UsersPage() {
             {!loading && users.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdminView ? 7 : 5}
+                  colSpan={isAdminView ? 8 : 6}
                   style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}
                 >
                   {isAdminView

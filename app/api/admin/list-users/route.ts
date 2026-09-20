@@ -79,6 +79,29 @@ export async function GET(req: Request) {
     if (rooliVirhe) console.error("Roolien haku epaonnistui:", rooliVirhe.message)
     else (roolirivit ?? []).forEach((r: any) => roolit.set(r.user_id, r.role))
 
+    /*
+     * VIIMEISIN KAYNTI, ERI ASIA KUIN VIIMEISIN KIRJAUTUMINEN (D-204).
+     *
+     * `last_sign_in_at` liikkuu vain oikeasta kirjautumisesta, ja istunto
+     * sailyy evasteessa yli viikon. Mitattu 20.9.2026: 48 asiakkaasta 16
+     * oli kaynyt myohemmin kuin oli kirjautunut, suurin ero 115 vrk.
+     * Sarakkeen mukaan jarjestetty "kuka kavi viimeksi" oli siis vaarassa
+     * jarjestyksessa.
+     *
+     * Nakyma `user_last_activity` (docs/sql/2026-09-20_user_last_activity.sql)
+     * tekee aggregaatin kannassa: 43 000 rivin taulua ei voi selata
+     * sivulatauksen yhteydessa. Puuttuva nakyma ei kaada listaa - sarake
+     * jaa tyhjaksi kunnes DDL on ajettu, sama kaytanto kuin liitoksilla.
+     */
+    const kaynnit = new Map<string, string>()
+
+    const { data: kayntirivit, error: kayntiVirhe } = await supabase
+      .from("user_last_activity")
+      .select("user_id,last_seen_at")
+
+    if (kayntiVirhe) console.error("Viimeisimman kaynnin haku epaonnistui:", kayntiVirhe.message)
+    else (kayntirivit ?? []).forEach((r: any) => kaynnit.set(r.user_id, r.last_seen_at))
+
     const sahkopostit = new Map<string, string | null>(
       allUsers.map((u) => [u.id, u.email ?? null])
     )
@@ -92,6 +115,7 @@ export async function GET(req: Request) {
           email: u.email ?? null,
           created_at: u.created_at,
           last_sign_in_at: u.last_sign_in_at ?? null,
+          last_seen_at: kaynnit.get(u.id) ?? null,
           confirmed: Boolean(u.email_confirmed_at),
           /*
            * Lukitustila luetaan `app_metadata`sta, koska sinne mahtuu myös
