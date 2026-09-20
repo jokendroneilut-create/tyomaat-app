@@ -45,8 +45,13 @@ export type Contact = {
    * "buyer" ja "winner" ovat Hilman osapuolirooleja (ks.
    * `lib/agent/hilmaContacts.ts`) — ne ovat hankkeen osapuolia, eivät
    * viranomaisia.
+   *
+   * "media" on tiedotteen viestintähenkilö: hän vastaa
+   * haastattelupyyntöihin muttei tunne hankkeen hankintoja. Ero
+   * vastuuhenkilöön näkyy tittelissä, ei tekstin osiosta — perustelu
+   * `contactRole.ts`:ssä.
    */
-  role?: "authority" | "buyer" | "winner" | null
+  role?: "authority" | "buyer" | "winner" | "media" | null
 }
 
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
@@ -572,6 +577,53 @@ function contactKey(c: Contact): string | null {
   if (!nimi && !puh) return null
 
   return `n:${nimi}|${puh}`
+}
+
+/*
+ * TEKSTIPOIMINTA EI SAA NIMETÄ UUDELLEEN JO TUNNETTUA OSOITETTA (D-207).
+ *
+ * `mergeContacts` täydentää tyhjät kentät uudesta lähteestä, mikä on
+ * oikein kun molemmat ovat rakenteisia. Vapaasta tekstistä poimittuun
+ * se on vaarallista juuri NIMEN kohdalla: osoite on tallessa ilman
+ * nimeä siksi että se on ORGANISAATION laatikko, eikä lähin isolla
+ * alkava sanapari ole sen omistaja.
+ *
+ * Mitattu 20.9.2026 ajamalla yhdistäminen 2 866 ehdokkaan yli:
+ *
+ *   kuulutukset@liminka.fi  ->  nimi "Tupos Mielipiteen"
+ *   kirjaamo@ysao.fi        ->  nimi "Tapaaminen Sankariniemen"
+ *   jatevesi@lapuanjatevesi.fi (role buyer) -> henkilöksi
+ *
+ * Kaksi ensimmäistä ovat roskaa, ja kolmas on todennäköisesti aito nimi
+ * väärässä paikassa: se väittäisi henkilön osoitteeksi yhtiön yleistä
+ * postilaatikkoa. Asiakas lähettää viestin väärälle ihmiselle.
+ *
+ * Sama peruste kuin `extractContacts`in malliosoitesäännössä: nimeä ei
+ * laajenneta vapaasta tekstistä (D-103). Puhelin, titteli ja
+ * organisaatio saavat yhä täydentyä — ne eivät väitä kenestä osoite on.
+ */
+export function mergeTekstipoiminta(
+  existing: Contact[] | null | undefined,
+  poimitut: Contact[] | null | undefined
+): Contact[] {
+  const vanhat = new Map<string, Contact>()
+  for (const c of existing ?? []) {
+    const key = contactKey(c)
+    if (key) vanhat.set(key, c)
+  }
+
+  return mergeContacts(existing, poimitut).map((c) => {
+    const key = contactKey(c)
+    const vanha = key ? vanhat.get(key) : undefined
+    if (!vanha) return c
+
+    return {
+      ...c,
+      name: vanha.name,
+      kind: vanha.kind,
+      role: vanha.role ?? c.role,
+    }
+  })
 }
 
 export function mergeContacts(

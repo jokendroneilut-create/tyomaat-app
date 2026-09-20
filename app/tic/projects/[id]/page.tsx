@@ -300,6 +300,12 @@ export default async function CandidateDetailPage({ params }: Props) {
                     viranomainen
                   </span>
                 ) : null}
+                {/* Viestintahenkilo vastaa haastatteluihin, ei hankinnoista (D-207). */}
+                {contact.role === "media" ? (
+                  <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
+                    viestintä
+                  </span>
+                ) : null}
               </p>
             ))}
           </div>

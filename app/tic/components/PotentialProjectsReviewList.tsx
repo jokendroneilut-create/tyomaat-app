@@ -20,17 +20,27 @@ type ReviewContact = {
   role?: string | null
 }
 
-/* Nimetyt ensin: myyjälle nimetty kontakti on arvokkaampi kuin kirjaamo. */
+/*
+ * Nimetyt ensin: myyjälle nimetty kontakti on arvokkaampi kuin kirjaamo.
+ *
+ * Viestintä- ja viranomaiskontakti nimettyjen jälkeen (D-207). Lista
+ * näyttää vain kolme ensimmäistä, ja tiedotteessa viestintähenkilö on
+ * usein juuri hankkeen vastuuhenkilön vieressä — ilman järjestystä hän
+ * veisi paikan katselmoijan ruudulla.
+ */
+function contactRank(c: ReviewContact): number {
+  if (!String(c?.name ?? "").trim()) return 3
+  if (c?.role === "authority") return 2
+  if (c?.role === "media") return 1
+  return 0
+}
+
 function contactsOf(metadata: any): ReviewContact[] {
   const lista: ReviewContact[] = Array.isArray(metadata?.contact_persons)
     ? metadata.contact_persons
     : []
 
-  return [...lista].sort((a, b) => {
-    const an = String(a?.name ?? "").trim() ? 0 : 1
-    const bn = String(b?.name ?? "").trim() ? 0 : 1
-    return an - bn
-  })
+  return [...lista].sort((a, b) => contactRank(a) - contactRank(b))
 }
 
 export default function PotentialProjectsReviewList({
@@ -302,8 +312,17 @@ export default function PotentialProjectsReviewList({
                             /*
                               * Viranomainen merkitaan nakyviin: han tuntee
                               * hankkeen muttei osta mitaan.
+                              *
+                              * Viestintahenkilo samasta syysta (D-207):
+                              * tiedotteen "Lisatietoja"-osiossa han on
+                              * vastuuhenkilon vieressa, mutta han vastaa
+                              * haastattelupyyntoihin eika hankinnoista.
                               */
-                            c.role === "authority" ? "(viranomainen)" : null,
+                            c.role === "authority"
+                              ? "(viranomainen)"
+                              : c.role === "media"
+                                ? "(viestintä)"
+                                : null,
                           ]
                             .filter(Boolean)
                             .join(" · ")

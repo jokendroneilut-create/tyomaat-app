@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { extractContacts, hasPersonContact, mergeContacts , sanitizeEmail} from "./contacts"
+import { extractContacts, hasPersonContact, mergeContacts, mergeTekstipoiminta, sanitizeEmail } from "./contacts"
 
 describe("extractContacts", () => {
   /* SRV:n tiedotteen vakiomuoto: nimi, tehtava, yritys, puh, sposti. */
@@ -369,5 +369,72 @@ describe("extractContacts – malliosoite ei ole osoite", () => {
     const c = extractContacts(teksti)
     const markut = c.filter((x) => String(x.name ?? "").includes("Markku"))
     expect(markut.length).toBe(1)
+  })
+})
+
+describe("mergeTekstipoiminta – teksti ei nimea uudelleen", () => {
+  const laatikko = {
+    name: null,
+    title: null,
+    organization: "liminka",
+    email: "kuulutukset@liminka.fi",
+    phone: null,
+    kind: "organization" as const,
+  }
+
+  it("ei liita keksittya nimea organisaation laatikkoon", () => {
+    /*
+     * Mitattu 20.9.2026: kuulutukset@liminka.fi sai nimekseen "Tupos
+     * Mielipiteen" ja kirjaamo@ysao.fi nimekseen "Tapaaminen
+     * Sankariniemen" - lahin isolla alkava sanapari, ei osoitteen
+     * omistaja.
+     */
+    const tulos = mergeTekstipoiminta(
+      [laatikko],
+      [{ ...laatikko, name: "Tupos Mielipiteen", kind: "person" as const }]
+    )
+    expect(tulos).toHaveLength(1)
+    expect(tulos[0].name).toBeNull()
+    expect(tulos[0].kind).toBe("organization")
+  })
+
+  it("sailyttaa lahteen roolin", () => {
+    const ostaja = { ...laatikko, email: "jatevesi@lapuanjatevesi.fi", role: "buyer" as const }
+    const tulos = mergeTekstipoiminta(
+      [ostaja],
+      [{ ...ostaja, name: "Jari-Jussi Syrja", kind: "person" as const, role: null }]
+    )
+    expect(tulos[0].role).toBe("buyer")
+    expect(tulos[0].name).toBeNull()
+  })
+
+  it("taydentaa yha tyhjan puhelimen ja tittelin", () => {
+    const vanha = {
+      name: "Seppo Lamppu",
+      title: null,
+      organization: null,
+      email: "seppo@kaavoitus.fi",
+      phone: null,
+      kind: "person" as const,
+    }
+    const tulos = mergeTekstipoiminta(
+      [vanha],
+      [{ ...vanha, title: "kaavakonsultti", phone: "040 867 4451" }]
+    )
+    expect(tulos[0].phone).toBe("040 867 4451")
+    expect(tulos[0].title).toBe("kaavakonsultti")
+    expect(tulos[0].name).toBe("Seppo Lamppu")
+  })
+
+  it("tuo uuden henkilon mukaan", () => {
+    const uusi = {
+      name: "Jaana Valjus",
+      title: null,
+      organization: "liminka",
+      email: "jaana.valjus@liminka.fi",
+      phone: "044 497 370",
+      kind: "person" as const,
+    }
+    expect(mergeTekstipoiminta([laatikko], [uusi])).toHaveLength(2)
   })
 })
