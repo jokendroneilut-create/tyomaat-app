@@ -1,5 +1,9 @@
 import Link from "next/link"
 import { getDiscoveryHealth } from "../../services/getDiscoveryHealth"
+import {
+  getHealthAlertCount,
+  kuvaaHealthHalytys,
+} from "../../services/getHealthAlertCount"
 
 export const dynamic = "force-dynamic"
 
@@ -13,8 +17,25 @@ function formatMs(value: number | null) {
   return `${value} ms`
 }
 
+/* "2 vrk sitten" - ikä on se mitä virheestä ensin halutaan tietää. */
+function ika(value: string | null) {
+  if (!value) return "ei koskaan"
+  const vrk = Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000)
+  if (vrk <= 0) return "tänään"
+  return vrk === 1 ? "1 vrk sitten" : `${vrk} vrk sitten`
+}
+
 export default async function DiscoveryHealthPage() {
-  const health = await getDiscoveryHealth()
+  /*
+   * Hälytys haetaan samalta palvelulta kuin sivupalkin merkki, ei
+   * uudelleen laskettuna: merkki vie tälle sivulle, joten eri luku
+   * täällä olisi juuri se ristiriita jota `lahteenTila`-säännön
+   * keskittäminen esti (D-185).
+   */
+  const [health, alert] = await Promise.all([
+    getDiscoveryHealth(),
+    getHealthAlertCount(),
+  ])
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-8">
@@ -29,6 +50,94 @@ export default async function DiscoveryHealthPage() {
       <p className="mt-2 text-gray-600">
         Seuraa Discoveryn lähteitä, dokumentteja, jonoja ja viimeisimpiä ajoja.
       </p>
+
+      {/*
+        * RIKKINÄISET LÄHTEET ENSIMMÄISENÄ.
+        *
+        * Sivupalkin merkki tuo tänne, joten sivun on vastattava siihen
+        * kysymykseen jonka merkki herättää: mikä on rikki. Aiemmin sivu
+        * alkoi lähde- ja dokumenttiluvuilla eikä maininnut rikkinäistä
+        * lähdettä missään - syy oli vain merkin title-attribuutissa.
+        *
+        * Otsikkolause tulee samasta funktiosta kuin merkin teksti, joten
+        * ne eivät voi kertoa samaa asiaa eri sanoin.
+        */}
+      <section
+        className={`mt-8 rounded-2xl border p-5 shadow-sm ${
+          alert.yhteensa > 0
+            ? "border-red-200 bg-red-50"
+            : "border-green-200 bg-green-50"
+        }`}
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Rikkinäiset lähteet
+          </h2>
+          <span
+            className={`text-sm font-semibold ${
+              alert.yhteensa > 0 ? "text-red-700" : "text-green-700"
+            }`}
+          >
+            {kuvaaHealthHalytys(alert)}
+          </span>
+        </div>
+
+        {alert.rikkinaiset.length === 0 ? (
+          <p className="mt-3 text-sm text-gray-700">
+            Yhdenkään käytössä olevan lähteen viimeisin ajo ei ole kaatunut
+            viimeisen viikon aikana.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-4">
+            {alert.rikkinaiset.map((lahde) => (
+              <div
+                key={lahde.id}
+                className="rounded-xl border border-red-200 bg-white p-4"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div className="font-semibold text-gray-900">{lahde.name}</div>
+                  <div className="text-sm text-gray-500">
+                    virhe {ika(lahde.lastErrorAt)} · viimeisin onnistuminen{" "}
+                    {ika(lahde.lastSuccessAt)}
+                  </div>
+                </div>
+
+                {/*
+                  * Virheviesti kokonaisena. Se on koko syy - esimerkiksi
+                  * "Ajo ylitti 90 sekuntia (haku + tuonti)" kertoo heti
+                  * ettei vika ole lähteen palvelimessa vaan ajon katossa.
+                  */}
+                <div className="mt-2 text-sm text-red-700">
+                  {lahde.lastErrorMessage ?? "(ei virheviestiä)"}
+                </div>
+
+                <div className="mt-2 grid gap-1 text-xs text-gray-500 sm:grid-cols-2">
+                  <div>Virheen aika: {formatDate(lahde.lastErrorAt)}</div>
+                  <div>
+                    Viimeisin onnistuminen: {formatDate(lahde.lastSuccessAt)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {alert.putkenVirheita > 0 && (
+          <p className="mt-4 text-sm text-red-700">
+            Lisäksi koko putki kaatui {alert.putkenVirheita} kertaa viimeisen
+            24 tunnin aikana (agent_runs). Ne eivät näy lähteiden tilassa.
+          </p>
+        )}
+
+        <p className="mt-4 text-xs text-gray-500">
+          Sama sääntö kuin Keräimet-sivun &quot;ongelmia N&quot; -luvussa:
+          lähde on käytössä ja sen viimeisin tapahtuma on virhe, joka on alle
+          viikon vanha. Lippu putoaa vasta onnistuneesta ajosta.{" "}
+          <Link href="/tic/discovery" className="underline">
+            Keräimet
+          </Link>
+        </p>
+      </section>
 
       <section className="mt-8 grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border bg-white p-5 shadow-sm">

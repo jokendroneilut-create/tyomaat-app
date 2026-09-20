@@ -1,7 +1,10 @@
 import Link from "next/link"
 import { getPendingReviewCount } from "./services/getPendingReviewCount"
 import { getPendingDuplicateCount } from "./services/getDuplicateCandidates"
-import { getHealthAlertCount } from "./services/getHealthAlertCount"
+import {
+  getHealthAlertCount,
+  kuvaaHealthHalytys,
+} from "./services/getHealthAlertCount"
 import { getIncompleteProjectCount } from "./services/getIncompleteProjectCount"
 
 export const dynamic = "force-dynamic"
@@ -56,10 +59,13 @@ export default async function TicLayout({
     {
       href: "/tic/discovery/health",
       label: "🩺 Health",
-      alertCount: healthAlert.rikkiLahteita + healthAlert.putkenVirheita,
-      alertTitle:
-        `${healthAlert.rikkiLahteita} lähdettä rikki (viimeisin ajo kaatui, alle viikko sitten)` +
-        (healthAlert.putkenVirheita ? `, ${healthAlert.putkenVirheita} putken kaatumista 24 h` : ""),
+      alertCount: healthAlert.yhteensa,
+      /*
+       * Sama lause kuin Health-sivun otsikossa - ks. kuvaaHealthHalytys.
+       * Hiiren alla oleva teksti on nyt tarkennus, ei ainoa tieto:
+       * merkissä näkyy luku ja sivulla lähteet nimeltä.
+       */
+      alertTitle: kuvaaHealthHalytys(healthAlert),
     },
     { href: "/tic/discovery/runs", label: "⏱️ Ajot" },
   ]
@@ -80,12 +86,21 @@ export default async function TicLayout({
                 className="flex shrink-0 items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 sm:shrink"
               >
                 <span>{item.label}</span>
+                {/*
+                  * MERKISSÄ ON LUKU, EI HUUTOMERKKI (20.9.2026).
+                  *
+                  * "!" kertoi että jokin on vialla mutta ei kuinka moni
+                  * asia, ja syy oli pelkässä title-attribuutissa - eli
+                  * luettavissa vain hiirtä paikallaan pitämällä, ei
+                  * lainkaan kosketusnäytöllä. Luku kertoo laajuuden heti
+                  * ja Health-sivu erittelee sen nimeltä.
+                  */}
                 {item.alertCount ? (
                   <span
                     title={item.alertTitle ?? `${item.alertCount} huomioitavaa`}
                     className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white"
                   >
-                    !
+                    {item.alertCount}
                   </span>
                 ) : null}
               </Link>

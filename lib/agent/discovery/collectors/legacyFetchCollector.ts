@@ -254,13 +254,39 @@ export async function collectLegacySource(source: any) {
    * nollaparametriselle funktiolle harmiton.
    */
   const fetchLahde = legacy.fetch as (lahde?: unknown) => Promise<any[] | null | undefined>
-  const candidates = (await fetchLahde(source)) ?? []
 
   /*
-   * Täsmäytyslista haetaan kerran per lähdeajo. Yksi lähde voi tuottaa
-   * satoja kandidaatteja (stt_haku palautti mittauksessa 253), ja ilman
-   * tätä jokainen niistä lukisi koko projects-taulun uudelleen.
+   * TASMAYTYSLISTA LADATAAN HAUN RINNALLA, EI SEN JALKEEN.
+   *
+   * Lista haetaan kerran per lahdeajo. Yksi lahde voi tuottaa satoja
+   * kandidaatteja (stt_haku palautti mittauksessa 253), ja ilman tata
+   * jokainen niista lukisi koko projects-taulun uudelleen.
+   *
+   * Lista ei riipu haun tuloksesta mitenkaan - se on koko projects-taulu -
+   * mutta se odotti haun valmistumista ja oli sen jalkeen KRIITTISELLA
+   * POLULLA ilman mitaan budjettia. Haulla on oma budjetti (55 s) ja
+   * tuonnilla omansa (70 s ajon alusta), mutta tama vali ei kuulunut
+   * kummallekaan: se vain siirsi tuonnin maaraaikaa lahemmas 90 sekunnin
+   * kovaa katkaisua.
+   *
+   * Mitattu 20.9.2026 (Rovaniemen paatokset, kylma valimuisti, 6 318
+   * hanketta): lista maksoi 5,5 / 10,5 / 10,5 / 12,6 sekuntia neljassa
+   * ajossa. Rinnakkain ajettuna se oli valmis ennen hakua joka kerralla,
+   * eli 0,0 s - haku itse kestaa 11-31 s. Sama lahde kaatui 90 sekunnin
+   * katkaisuun kolmesti 12 ajossa ja ONNISTUNEET ajot kestivat 79-89 s,
+   * eli vika ei ollut yksi hidas vaihe vaan se ettei marginaalia ollut.
+   *
+   * Nolla kandidaattia palauttava lahde maksaa nyt yhden ylimaaraisen
+   * luvun. Se on halpa: kysely on jaetun 15 minuutin valimuistin takana,
+   * joten saman putkiajon seuraavat lahteet saavat sen valmiina - mika
+   * on tasmalleen se mita valimuistilta halutaankin.
    */
+  const luvassaProjects = loadProjectsForMatching()
+  /* Kelluva lupaus ei saa kaataa prosessia, jos hakuhaara heittaa ensin. */
+  luvassaProjects.catch(() => {})
+
+  const candidates = (await fetchLahde(source)) ?? []
+
   /*
    * Osoitteet talteen ENNEN tuontia ja sen budjetteja: myös aikakatkaisuun
    * kaatuvan ajon kandidaatit jäävät näin myöhemmin rikastettaviksi.
@@ -276,7 +302,7 @@ export async function collectLegacySource(source: any) {
     )
   }
 
-  const projects = candidates.length > 0 ? await loadProjectsForMatching() : []
+  const projects = candidates.length > 0 ? await luvassaProjects : []
 
   /*
    * Jo käsiteltyä osoitetta ei tuoda uudelleen. Ikkuna on viikko ja se

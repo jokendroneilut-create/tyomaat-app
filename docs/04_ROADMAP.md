@@ -1131,12 +1131,28 @@ muistin varassa.
   yhteyshenkilöä päätöstä tehdessään. Todettu ehdokkaalla a618ef2e
   (stt_haku, Kotkansaari). Mittaa montako ehdokasta tämä koskee ja siirrä
   poiminta ehdokasvaiheeseen; varo viranomais- ja viestintäyhteystietoja.
-- **Health-merkki ei kerro syytä** (havaittu 20.9.2026). Sivupalkin punainen
-  "!" kertoo vain että jotain on rikki; syy on pelkässä title-attribuutissa
-  (hover). Mitattu 20.9.: 1 rikki lähde – "Rovaniemen päätökset", ajo
-  ylitti 90 s (viimeisin onnistuminen 9.9.). Kaksi työtä: näytä syy
-  Health-sivulla (lähde, virhe, aika) ja korjaa Rovaniemen ajo mittaamalla
-  mihin aika menee – ei aikarajan nostoa ilman mittausta.
+- ~~**Health-merkki ei kerro syytä**~~ — tehty 20.9.2026 (D-205, D-206).
+  Merkissä on nyt luku `!`:n sijaan, ja Health-sivun ensimmäinen lohko
+  "Rikkinäiset lähteet" näyttää lähteen nimen, virheviestin kokonaisena,
+  virheen ajan ja viimeisimmän onnistumisen. Merkin teksti ja sivun otsikko
+  tulevat samasta funktiosta (`kuvaaHealthHalytys`), joten ne eivät voi
+  erota; rikki-sääntö on edelleen sama `onRikki` kuin Keräimet-sivulla
+  (ristiintarkistettu: molemmat 1).
+
+  **Rovaniemen syy oli muualla kuin epäiltiin.** Mitattu
+  `scripts/diag-casem-ajon-aika.ts`:llä: haku on 11,4–30,5 s ja kaikki 71
+  pyyntöä vastaavat alle 1,1 s:ssa, eli lähdepalvelin ei ollut hidas.
+  Aika meni budjetittomaan välivaiheeseen — täsmäytyslistan (6 318 hanketta)
+  lataukseen 5,5–12,6 s haun *jälkeen* — ja vika koski koko CaseM-perhettä:
+  Tampere 5 katkaisua 12 ajossa, Rovaniemi 3/12, Pori 1/8, ja onnistuneetkin
+  ajot kestivät 79–89 s 90 sekunnin katosta. Korjaus: lista ladataan haun
+  rinnalla, ja `scoreRelevance` sai saman 15 s aikakatkaisun kuin
+  naapurinsa `scoreBuildingType` (sillä ei ollut mitään; SDK:n oletus on
+  10 min). Aikarajaa ei nostettu.
+
+  Jää seurattavaksi: menivätkö Tampere ja Pori samalla kuntoon. Tarkista
+  `discovery_runs`-kestot parin viikon päästä — jos ne ovat yhä 80 s:n
+  tuntumassa, seuraava askel on detail-hakujen katto per ajo.
 - ~~**Analytiikka ja käyttäjäsivu näyttävät eri luvun**~~ — selvitetty
   20.9.2026 (D-204). Molemmat luvut olivat oikein: analytiikka laskee
   tapahtumia, käyttäjäsivu kirjautumisia, ja vanha istunto riittää

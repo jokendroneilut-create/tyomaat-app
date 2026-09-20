@@ -5,6 +5,107 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-206 - Lahdeajon 90 sekunnin katto ylittyi marginaalin puutteesta, ei yhdesta hitaasta vaiheesta
+
+TIC:n Health-merkki paloi, koska **Rovaniemen paatokset** oli rikki: ajo
+18.9.2026 kaatui viestiin "Ajo ylitti 90 sekuntia (haku + tuonti)".
+Ilmeinen tulkinta olisi ollut hidas lahdepalvelin ja korjaus joko katon
+nosto tai sivumaaran rajaus. **Mitattiin ensin** (20.9.2026,
+`scripts/diag-casem-ajon-aika.ts`, ei kirjoituksia).
+
+**Haku ei ollut syy.** Ajo tekee 71 HTTP-pyyntoa: 16 hakusivua ja 55
+yksityiskohtahakua (katto 60). Jokainen vastasi alle 1,1 sekunnissa, ja
+koko haku kesti kahdeksassa mittauksessa **11,4-30,5 s**. Detail-hakujen
+katto (60) ei myoskaan tayttynyt, joten sen laskeminen olisi leikannut
+saaliin korjaamatta mitaan.
+
+Sivutuote: haun tehollinen katko on **30 s, ei 55 s**, kuten koodin
+kommentti antaa ymmartaa. `ehtii()` vaatii etta pyynnon oma 25 s katto
+mahtuu budjettiin (`now + 25 <= start + 55`), joten uusia pyyntoja ei
+aloiteta 30 sekunnin jalkeen; 55 s on vain se raja johon viimeinen jo
+aloitettu pyynto voi venya. Hitaana paivana haku todella tayttaa taman
+30 sekuntia (mitattu: 20 kandidaattia ja 40 yksityiskohtahakua 27:n ja
+55:n sijaan) ja loput siirtyvat seuraavaan ajoon hakusanakierron myota.
+Se on suunniteltua kayttaytymista eika se riko 90 sekunnin kattoa.
+
+**Aika meni kolmeen paikkaan:**
+
+| vaihe | mitattu | budjetti |
+|---|---|---|
+| haku | 11,4-30,5 s | 55 s (oma) |
+| tasmaytyslista (6 318 hanketta) | 5,5-12,6 s | **ei mitaan** |
+| tuonti: 21 uutta ehdokasta x 5,1 s mallikutsuja, rinnakkaisuus 6 | ~20 s | 70 s ajon alusta |
+
+Keskimmainen rivi on vika. `loadProjectsForMatching` ei riipu haun
+tuloksesta mitenkaan, mutta se odotti haun valmistumista ja oli sen
+jalkeen kriittisella polulla **ilman mitaan budjettia**: se vain siirsi
+tuonnin maaraaikaa lahemmas kovaa katkaisua.
+
+**Vika ei ollut Rovaniemessa vaan koko CaseM-perheessa.** Ajohistoria
+riveittain: Rovaniemi 3 katkaisua 12 ajossa, Tampere 5/12, Pori 1/8,
+Jyvaskyla 0/7 - ja ONNISTUNEET ajot kestivat 79-89 s. Marginaalia ei
+ollut, joten normaali palvelinvaihtelu riitti kaatamaan ajon. Yksi
+kaatunut lahde ei siis ollut poikkeus vaan kolikonheiton tulos.
+
+**Toinen loyto samalla mittauksella: `scoreRelevance`-portilla ei ollut
+aikakatkaisua.** Naapuri `llmBuildingTypeScorer` sai sellaisen D-155:ssa
+tasmalleen tasta syysta ("yksi hidas pyynto kaatoi koko lahteen"), mutta
+`resolvePotentialProject` kutsuu juuri relevanssiporttia ENSIN. SDK:n
+oletus on 10 minuuttia ja kaksi uudelleenyritysta: yksi jumiin jaanyt
+portti ohittaa kaikki budjetit ja kaataa lahteen aikakatkaisuun ilman
+vihjetta syysta. Mitattu portin kesto kymmenella ehdokkaalla: 2,1-4,2 s.
+
+**Korjaus, kaksi rivia kumpikin:**
+
+1. Tasmaytyslista ladataan haun RINNALLA (`legacyFetchCollector`).
+   Mitattuna se oli valmis ennen hakua joka kerralla, eli 0,0 s
+   kriittisella polulla. Nolla kandidaattia palauttava lahde maksaa yhden
+   ylimaaraisen luvun; se on 15 minuutin valimuistin takana, joten saman
+   putkiajon seuraavat lahteet saavat sen valmiina.
+2. `scoreRelevance` sai saman 15 s katon ja `maxRetries: 1` kuin
+   naapurinsa. Ylitys on fail-open: ehdokas menee jonoon, ajo ei kaadu.
+
+**Aikarajaa EI nostettu.** Katon jalkeen pahin mahdollinen ajo on haku
+55 s (kova katto) + esityo ~1 s + yksi aalto ehdokkaita ~9 s = noin 65 s,
+eli budjetit vihdoin mahtuvat 90 sekuntiin paallekkain. Katon nosto olisi
+siirtanyt saman ongelman eteenpain ja syonyt putken 500 s ajobudjettia,
+joka on se raja jonka takia lahdekohtainen katko alun perin tehtiin.
+
+Opetus: kun mittari nayttaa yhta rikkinaista lahdetta, katso koko perheen
+ajohistoria riveittain ennen kuin korjaat sita yhta. Tassa "yksi rikki
+lahde" oli itse asiassa neljan lahteen yhteinen marginaaliongelma, ja
+kolme niista naytti terveelta vain koska niiden kolikko oli osunut
+oikein.
+
+### D-205 - Halytysmerkki kertoo laajuuden, sivu kertoo syyn
+
+Sivupalkin Health-merkki oli punainen pallo jossa luki `!`. Syy - mika
+lahde on rikki ja miksi - oli pelkassa `title`-attribuutissa, eli
+luettavissa vain hiirta paikallaan pitamalla eika lainkaan
+kosketusnaytolla. Merkki vei Health-sivulle, mutta **sivu ei nayttanyt
+rikkinaisia lahteita lainkaan**: se alkoi lahde- ja dokumenttiluvuilla.
+Merkki siis herattaa kysymyksen johon kohde ei vastannut.
+
+**Kolme muutosta:**
+
+1. **Merkissa on luku, ei huutomerkki.** `!` kertoo etta jokin on vialla
+   muttei kuinka moni asia.
+2. **Health-sivulle lohko "Rikkinaiset lahteet" ensimmaiseksi**: lahteen
+   nimi, viimeisin virheviesti kokonaisena, virheen aika ja viimeisin
+   onnistuminen, tuorein virhe ensin. Virheviesti on koko syy -
+   "Ajo ylitti 90 sekuntia (haku + tuonti)" kertoo heti ettei vika ole
+   lahteen palvelimessa vaan ajon katossa (vrt. [D-206]).
+3. **Sama lause molemmissa.** Merkin teksti ja sivun otsikko tulevat
+   funktiosta `kuvaaHealthHalytys`, joten kahta sanamuotoa ei voi syntya.
+   Sama syy kuin `lahteenTila`-saannon keskittamisessa (D-185), jossa
+   kolme kopiota olivat ehtineet erota. Lukitattu testilla
+   (`healthHalytysTeksti.spec.ts`), joka tarkistaa myos taivutuksen:
+   "1 lahde rikki", ei "1 lahdetta rikki".
+
+Rikki-saanto on edelleen sama `onRikki`, joten Kerainten "ongelmia N",
+merkin luku ja sivun lohko ovat samasta lahteesta. Ristiintarkistettu
+20.9.2026: molemmat 1.
+
 ### D-204 - Aktiivinen kayttaja ei ole kirjautunut kayttaja
 
 Havainto 20.9.2026: analytiikan "Kayton kehitys" naytti paivalle **kolme
