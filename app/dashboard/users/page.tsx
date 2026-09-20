@@ -33,7 +33,6 @@ type SortColumn =
   | 'created_at'
   | 'age_days'
   | 'last_seen_at'
-  | 'last_sign_in_at'
   | 'confirmed'
   | 'seller'
 type SortDirection = 'asc' | 'desc'
@@ -93,11 +92,7 @@ export default function UsersPage() {
        * Ika ja kirjautuminen ovat kiinnostavia suurimmasta paasta:
        * paattyneet kokeilut ja tuoreimmat kirjautumiset ensin.
        */
-      setSortDirection(
-        column === 'age_days' || column === 'last_sign_in_at' || column === 'last_seen_at'
-          ? 'desc'
-          : 'asc'
-      )
+      setSortDirection(column === 'age_days' || column === 'last_seen_at' ? 'desc' : 'asc')
     }
   }
 
@@ -611,7 +606,7 @@ export default function UsersPage() {
           <table
             style={{
               width: '100%',
-              minWidth: isAdminView ? 1500 : 1060,
+              minWidth: isAdminView ? 1340 : 900,
               borderCollapse: 'collapse',
             }}
           >
@@ -621,14 +616,16 @@ export default function UsersPage() {
               <SortHeader column="created_at" label="Luotu" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="age_days" label="Ikä (pv)" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               {/*
-                * KAKSI SARAKETTA, KOSKA NE OVAT ERI ASIA (D-204).
-                * "Viimeksi kaynyt" vastaa kysymykseen kuka on ollut
-                * palvelussa; "Viimeksi kirjautunut" kertoo milloin tunnus
-                * viimeksi todisti itsensa. Jalkimmainen jaa jalkeen, koska
-                * istunto sailyy evasteessa yli viikon.
+                * VAIN KAYNTI, EI KIRJAUTUMISTA (D-204).
+                *
+                * Sarakkeita oli hetken kaksi. Kirjautumispaiva ei kuitenkaan
+                * vastaa yhteenkaan kysymykseen jota talla sivulla kysytaan:
+                * se jaa jalkeen istunnon verran (mitattu ero jopa 115 vrk)
+                * eika kerro kayttajasta mitaan mita kayntipaiva ei kerro
+                * paremmin. Tarkka kirjautumishistoria on yha "Kaytto"-
+                * painikkeen takana, jonne se kuuluukin.
                 */}
               <SortHeader column="last_seen_at" label="Viimeksi käynyt" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-              <SortHeader column="last_sign_in_at" label="Viimeksi kirjautunut" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="confirmed" label="Tila" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               {isAdminView && (
                 <SortHeader
@@ -664,12 +661,9 @@ export default function UsersPage() {
                 </td>
                 <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
                   {formatDate(u.last_seen_at ?? null)}
-                </td>
-                <td style={{ padding: '8px 4px', whiteSpace: 'nowrap', color: '#6b7280' }}>
-                  {formatDate(u.last_sign_in_at)}
                   <button
                     onClick={() => avaaKaytto(u)}
-                    title="Kirjautumispäivät ja käytetty aika"
+                    title="Käyntipäivät, kirjautumiset ja käytetty aika"
                     style={{
                       marginLeft: 8,
                       padding: '2px 8px',
@@ -882,7 +876,7 @@ export default function UsersPage() {
             {!loading && users.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdminView ? 8 : 6}
+                  colSpan={isAdminView ? 7 : 5}
                   style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}
                 >
                   {isAdminView
