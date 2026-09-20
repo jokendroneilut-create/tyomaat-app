@@ -1124,6 +1124,13 @@ muistin varassa.
 
 ### Operointi
 
+- **Yhteyshenkilö poimitaan vasta hyväksyttäessä** (havaittu 20.9.2026).
+  Jonossa olevan ehdokkaan `contact_persons` on tyhjä, vaikka kuvauksessa
+  on "Yhteyshenkilöt …" ja `extractContacts` poimii sen oikein –
+  poiminta ajetaan vasta `approve`-reitillä. Katselmoija ei siis näe
+  yhteyshenkilöä päätöstä tehdessään. Todettu ehdokkaalla a618ef2e
+  (stt_haku, Kotkansaari). Mittaa montako ehdokasta tämä koskee ja siirrä
+  poiminta ehdokasvaiheeseen; varo viranomais- ja viestintäyhteystietoja.
 - **Health-merkki ei kerro syytä** (havaittu 20.9.2026). Sivupalkin punainen
   "!" kertoo vain että jotain on rikki; syy on pelkässä title-attribuutissa
   (hover). Mitattu 20.9.: 1 rikki lähde – "Rovaniemen päätökset", ajo
