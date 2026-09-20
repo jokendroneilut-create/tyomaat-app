@@ -44,7 +44,7 @@ type Vastaus = {
 type Mittari = "kayttajia" | "istuntoja" | "sivulatauksia" | "sekunteja"
 
 const MITTARIN_NIMI: Record<Mittari, string> = {
-  kayttajia: "käyttäjää",
+  kayttajia: "aktiivista käyttäjää",
   istuntoja: "istuntoa",
   sivulatauksia: "sivulatausta",
   sekunteja: "minuuttia",
@@ -202,7 +202,7 @@ export default function KayttoTrendi() {
         <>
           <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
             <Kortti
-              otsikko="Käyttäjät"
+              otsikko="Aktiiviset käyttäjät"
               arvo={String(data.nyt.kayttajia)}
               muutos={data.muutos.kayttajia}
               valittu={mittari === "kayttajia"}
@@ -346,10 +346,27 @@ export default function KayttoTrendi() {
             <div style={{ width: 34 }} />
           </div>
 
+          {/*
+            * AKTIIVINEN KAYTTAJA EI OLE SAMA KUIN KIRJAUTUNUT (D-204).
+            *
+            * Mitattu 20.9.2026: kolme asiakasta kaytti tuotetta, yksikaan
+            * ei kirjautunut sina paivana - istunto sailyy evasteessa yli
+            * viikon. Kayttajalistan "Viimeksi kirjautunut" nayttaa siksi
+            * eri paivan, ja lisaksi vain VIIMEISIMMAN kirjautumisen: se ei
+            * ole paivakohtainen lista eika kelpaa taman luvun tarkistukseen.
+            */}
           <p style={{ fontSize: 12, color: "#6b7280", marginTop: 12 }}>
+            <strong>Aktiivinen käyttäjä</strong> = tunnus, joka tuotti tapahtumia
+            sinä päivänä. Se ei tarkoita kirjautumista: istunto säilyy evästeessä
+            yli viikon, jolloin käyttäjälistan <em>Viimeksi kirjautunut</em> näyttää
+            aiemman päivän. Sarake näyttää vain viimeisimmän kirjautumisen, joten
+            sitä ei voi lukea päiväkohtaisena listana.
+          </p>
+          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>
             Istunto katkeaa yli 30 minuutin tauosta, kuten Google Analyticsissä.
             Aika lasketaan sivulatausten kestojen summana, joten viimeinen sivu jää
-            aina hieman aliarvioiduksi. Adminien oma käyttö on suodatettu pois.
+            aina hieman aliarvioiduksi. Ylläpitäjän oma käyttö (kaikki hänen
+            tunnuksensa) on suodatettu pois.
           </p>
         </>
       )}

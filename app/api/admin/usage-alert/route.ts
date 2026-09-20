@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { Resend } from "resend"
 
+import { omanKaytonEmails, omanKaytonIds } from "@/lib/analytics/omaKaytto"
+
 export const runtime = "nodejs"
 
 /*
@@ -59,20 +61,17 @@ export async function GET(request: Request) {
 
     /*
      * Ylläpitäjä rajataan pois: hän selaa hankkeita työkseen ja näyttäisi
-     * aina eniten poikkeavalta. Sama rajaus kuin analytiikkanäkymässä.
+     * aina eniten poikkeavalta. Sama rajaus kuin analytiikkanäkymässä —
+     * myös ylläpitäjän muut tunnukset (D-204).
      */
-    const adminEmails = (process.env.ADMIN_EMAILS || "")
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean)
-
     const { data: profiles } = await supabase.from("profiles").select("id, email")
+    const { data: roolit } = await supabase.from("user_roles").select("user_id, role")
 
-    const adminIds = new Set(
-      (profiles ?? [])
-        .filter((p: any) => adminEmails.includes(String(p.email ?? "").toLowerCase()))
-        .map((p: any) => p.id)
-    )
+    const adminIds = omanKaytonIds({
+      users: profiles ?? [],
+      roolit,
+      emails: omanKaytonEmails(process.env),
+    })
 
     const emailById = new Map((profiles ?? []).map((p: any) => [p.id, p.email]))
 

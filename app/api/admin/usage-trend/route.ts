@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-import { parseAdminEmails } from "@/lib/auth/roles"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
+import { omanKaytonEmails, omanKaytonIds } from "@/lib/analytics/omaKaytto"
 import {
   jaksonLuvut,
   muutosProsentti,
@@ -64,21 +64,19 @@ export async function GET(req: Request) {
     }
 
     /*
-     * Adminien oma kaytto pois: TIC-tyo on suurin yksittainen kayttaja
-     * eika kerro asiakkaista mitaan. Sama rajaus kuin nykyisella
-     * analytiikkasivulla.
+     * Oma kaytto pois: TIC-tyo on suurin yksittainen kayttaja eika kerro
+     * asiakkaista mitaan. Sama rajaus kuin nykyisella analytiikkasivulla.
+     * Lista kattaa myos yllapitajan muut tunnukset (D-204) - aiemmin
+     * pelkka ADMIN_EMAILS paasti ne asiakasluvuiksi.
      */
-    const adminEmails = parseAdminEmails(process.env.ADMIN_EMAILS)
+    const omatEmails = omanKaytonEmails(process.env)
     const { data: roolit } = await supabase.from("user_roles").select("user_id,role")
-    const adminIds = new Set(
-      (roolit ?? []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id)
-    )
-    if (adminEmails.length) {
-      const { data: users } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
-      for (const u of users?.users ?? []) {
-        if (u.email && adminEmails.includes(u.email.toLowerCase())) adminIds.add(u.id)
-      }
-    }
+    const { data: users } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    const adminIds = omanKaytonIds({
+      users: users?.users ?? [],
+      roolit,
+      emails: omatEmails,
+    })
 
     const asiakkaat = tapahtumat.filter((t) => t.user_id && !adminIds.has(t.user_id))
 

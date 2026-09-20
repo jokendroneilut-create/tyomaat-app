@@ -59,7 +59,18 @@ Google Analytics -tyylinen yhteenveto. Keskeiset periaatteet
   ("Avaa alkuperäinen ilmoitus", kirjaus 17.8.2026 alkaen), **poikkeavan käytön
   tunnistus** (järjestelmällisen haravoinnin havaitseminen perustasoon
   verraten), hankepalaute (👍/👎 alueittain, kokoluokittain, lähteittäin) ja
-  admin-tapahtumien suodatus pois luvuista.
+  oman käytön suodatus pois luvuista.
+- **Aktiivinen käyttäjä ≠ kirjautunut käyttäjä (D-204):** päivän "Aktiiviset
+  käyttäjät" on tunnusten määrä, jotka tuottivat tapahtumia. Istunto säilyy
+  evästeessä yli viikon, joten käyttö ei vaadi uutta kirjautumista eikä
+  `auth.users.last_sign_in_at` päivity. Käyttäjälistan *Viimeksi kirjautunut*
+  näyttää lisäksi vain viimeisimmän kirjautumisen — se ei ole päiväkohtainen
+  lista eikä kelpaa tämän luvun tarkistukseen.
+- **Oma käyttö on oma listansa:** rajaus tulee `ADMIN_EMAILS`-listan lisäksi
+  `ANALYTICS_EXCLUDE_EMAILS`-muuttujasta ja `user_roles`-taulun admin-riveistä
+  (`lib/analytics/omaKaytto.ts`). Erillinen muuttuja siksi, että
+  `ADMIN_EMAILS` antaisi myös oikeudet — testitunnus on olemassa asiakkaan
+  näkymän katsomista varten.
 
 ---
 
@@ -88,6 +99,16 @@ koska luvut ovat piste ajassa):
   se jää pysyvästi päälle.
 - **Kestoansa:** yksi tapaus kirjasi 2 131 658 s käyttöaikaa; kesto rajataan nyt
   tuntiin per tapahtuma.
+- **Oma käyttö vuoti asiakaslukuihin (D-204, mitattu 20.9.2026):** suodatus
+  nojasi yhteen `ADMIN_EMAILS`-osoitteeseen, ja `user_roles`-taulussa oli nolla
+  admin-riviä, joten ylläpitäjän kaksi muuta tunnusta laskettiin asiakkaiksi.
+  30 vrk jaksolla 27 päivästä **15 näytti 1–2 käyttäjää liikaa**, jakson eri
+  käyttäjiä **39 → 37** ja sivulatauksia **3 522 → 3 081 (−14 %)**. Luvut
+  korjautuvat tuotannossa vasta kun `ANALYTICS_EXCLUDE_EMAILS` on asetettu.
+- **Käyttö ilman kirjautumista on tavallista, ei poikkeus (D-204):** 30 vrk
+  jaksolla aktiivisia käyttäjäpäiviä 139, `login`-tapahtumia 115,
+  `last_sign_in_at`-osumia samalle päivälle vain 36. Päivänä 20.9. kolme
+  asiakasta käytti tuotetta ilman yhtäkään `login`-tapahtumaa.
 - **Poikkeavan käytön perustaso:** hankkeita avanneiden asiakkaiden mediaani ja
   maksimi lasketaan, jotta järjestelmällinen haravointi erottuu kertaluokkana
   eikä muutamana kymmenenä avauksena.
@@ -100,6 +121,11 @@ tuottama luku on avattava lähteestä ennen kuin sen perusteella toimitaan
 
 ## Päivityshistoria
 
+- **2026-09-20** — Lisätty D-204: aktiivinen käyttäjä ≠ kirjautunut käyttäjä
+  (kortin otsikko `Käyttäjät` → `Aktiiviset käyttäjät`), ja oman käytön
+  suodatuksen vuoto asiakaslukuihin (39 → 37 käyttäjää, 3 522 → 3 081
+  sivulatausta 30 vrk jaksolla). Mittausskripti
+  `scripts/diag-analytics-vs-signin.mjs`.
 - **2026-09-13** — Dokumentti luotu. Kirjattu admin-puolen laajuus (~24 reittiä,
   dashboard, roolit/näkyvyysrajat), analytiikkatyökalun kaksi näkymää ja
   periaatteet, sekä siitä saadut tulokset (D-166 ensimittaus, kirjautumisluvun
