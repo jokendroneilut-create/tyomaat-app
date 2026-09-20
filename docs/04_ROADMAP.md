@@ -1144,13 +1144,37 @@ muistin varassa.
 
   Takautuva ajo kosketti yhtä jonossa ollutta riviä (a618ef2e).
 
-- **34 hyväksyttyä hanketta jäi yhä ilman yhteyshenkilöä** (havaittu
-  20.9.2026 D-207:n mittauksessa). Hyväksyntäreitti poimi 862 osumasta
-  816, mutta 34:llä kenttä on hyväksynnänkin jälkeen tyhjä vaikka teksti
-  sisältää henkilön — ja 12 ehdokkaan `approved_project_id` ei osoita
-  olemassa olevaan hankkeeseen (yhdistetty tai poistettu?). Pieni joukko,
-  mutta syy on tuntematon: selvitä ennen kuin luotat siihen että
-  hyväksyntä täydentää aina. Mittari on jo olemassa.
+- ~~**34 hyväksyttyä hanketta jäi yhä ilman yhteyshenkilöä**~~ —
+  selvitetty ja korjattu 21.9.2026 (D-208). Syy ei ollut poimijassa
+  eikä hyväksyntäreitissä: **takautuva ajo korjaa ehdokkaan muttei jo
+  hyväksyttyä kopiota**. `scripts/backfill-yva-details.ts` (8.8.2026)
+  täydensi YVA-ehdokkaiden 78 merkin tiivistelmät koko
+  hankekuvauksiksi mutta kirjoitti vain `potential_projects`-tauluun,
+  joten päiviä aiemmin hyväksytyt jäivät tiivistelmän varaan.
+
+  Ilmiö oli laajempi kuin 34: **80 hanketta 5 698:sta** ja
+  **272 861 merkkiä** asiakkaalta piilossa ollutta tekstiä.
+  `scripts/backfill-hyvaksytyn-kuvaus-ehdokkaalta.ts` korjasi kaikki;
+  34:stä on jäljellä 0.
+
+  Kuivaharjoitus paljasti kolmannen roolin-ansan: YVA:n
+  **yhteysviranomainen** (`lvv.fi` 107, `ely-keskus.fi` 144 kontaktia)
+  olisi mennyt hankkeen osapuoleksi merkitsemättä. Sääntö nojaa
+  verkkotunnukseen, koska sivun "Yhteysviranomainen:"-otsikko säilyy
+  kerättyyn tekstiin vain 3 kertaa 251:stä.
+
+- **Takautuva ajo kirjoittaa vain ehdokkaaseen — kuvio, ei yksittäistapaus**
+  (havaittu 21.9.2026). `scripts/`-hakemistossa on kymmeniä
+  `backfill-*`-skriptejä jotka päivittävät `potential_projects`-taulua.
+  Jos ehdokas on jo hyväksytty, korjaus ei koskaan näy asiakkaalle.
+  D-208 korjasi kuvaus-kentän takautuvasti, mutta sama koskee mitä
+  tahansa kenttää (rakennuttaja, kustannus, pinta-ala). Harkitse
+  yhteistä apuria joka kantaa muutoksen myös `projects`-riville, tai
+  vähintään muistilista backfill-skriptin kirjoittajalle.
+
+- **12 ehdokkaan `approved_project_id` ei osoita olemassa olevaan
+  hankkeeseen** (havaittu 20.9.2026). Yhdistetty toiseen hankkeeseen vai
+  poistettu? Ei korjattu D-208:ssa, koska syy on eri. Pieni joukko.
 
 - **176 ehdokasta löytää vain kirjaamo- tai info-laatikon** (mitattu
   20.9.2026). Ne eivät ole myyntikontakteja, mutta eivät myöskään tyhjä

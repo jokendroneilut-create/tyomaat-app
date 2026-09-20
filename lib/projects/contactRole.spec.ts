@@ -99,3 +99,29 @@ describe("merkitseRoolit", () => {
     expect(c[0].role).toBeUndefined()
   })
 })
+
+describe("paatteleRooli – YVA:n yhteysviranomainen (D-208)", () => {
+  it("merkitsee Lupa- ja valvontaviraston viranomaiseksi", () => {
+    const c = rooleiksi(
+      "Konsultti: Marja Savolainen, p. 020 7656149, marja.savolainen@ecobio.fi " +
+        "Lupa- ja valvontavirasto, Annukka Koivukari, p. 0295 255669, annukka.koivukari@lvv.fi"
+    )
+    const konsultti = c.find((x) => x.name === "Marja Savolainen")
+    const virasto = c.find((x) => x.name === "Annukka Koivukari")
+    expect(virasto?.role).toBe("authority")
+    /* Konsultti on hankkeen osapuoli, ei viranomainen. */
+    expect(konsultti?.role).toBeUndefined()
+  })
+
+  it("merkitsee ELY-keskuksen viranomaiseksi", () => {
+    const c = rooleiksi("Jouko Saastamoinen, 0295 023 889, jouko.saastamoinen@ely-keskus.fi")
+    expect(c[0].role).toBe("authority")
+  })
+
+  it("ei merkitse hankkeesta vastaavaa", () => {
+    const c = rooleiksi(
+      "Hankkeesta vastaava: Tomi Makipelto, 050 370 409, tomi.makipelto@pohjanvoima.fi"
+    )
+    expect(c[0].role).toBeUndefined()
+  })
+})
