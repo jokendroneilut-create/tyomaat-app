@@ -30,13 +30,18 @@ describe("omanKaytonIds", () => {
     expect([...ids].sort()).toEqual(["1", "2"])
   })
 
-  it("ottaa mukaan user_roles-taulun adminit", () => {
+  it("ottaa mukaan user_roles-taulun adminit ja myyjät (D-209)", () => {
     const ids = omanKaytonIds({
       users,
       roolit: [{ user_id: "3", role: "admin" }, { user_id: "4", role: "seller" }],
       emails: [],
     })
-    expect([...ids]).toEqual(["3"])
+    expect([...ids].sort()).toEqual(["3", "4"])
+  })
+
+  it("tavallinen käyttäjärooli ei rajaudu pois", () => {
+    const ids = omanKaytonIds({ users, roolit: [{ user_id: "3", role: "user" }], emails: [] })
+    expect(ids.size).toBe(0)
   })
 
   it("asiakas ei rajaudu pois", () => {

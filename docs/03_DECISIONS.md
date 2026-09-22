@@ -5,6 +5,29 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-209 - Myyja rajataan analytiikan asiakasluvuista roolin perusteella
+
+Kayttajasivu jattaa myyja- ja admin-tunnukset pois asiakasluvuista, mutta
+analytiikka (`omanKaytonIds`) rajasi vain `admin`-roolin. Mitattu
+21.9.2026: `user_roles`-taulussa on yksi rivi, ja se on myyja - admin-riveja
+ei ole yhtaan, joten roolipohjainen rajaus ei sulkenut pois ketaan. Myyja
+tuotti 30 vrk:ssa noin 820-850 tapahtumaa, jotka laskettiin asiakkaan
+kaytoksi.
+
+**Rooli, ei sahkopostilista.** `seller` lisattiin rajattaviin rooleihin.
+Uusi myyja rajautuu pois heti kun han saa roolin - koodia tai Vercelin
+ymparistomuuttujaa ei tarvitse muuttaa. `ANALYTICS_EXCLUDE_EMAILS` jaa
+yllapitajan omille tunnuksille, joita on muutama eivatka ne muutu.
+
+**Vaikutus (30 vrk, oma kaytto rajattuna):** 5 622 -> 4 772 tapahtumaa,
+39 -> 38 kayttajaa. Koskee kaikkia kolmea kayttajaa: analytiikkasivu,
+kayttotrendi ja kayttohalytys.
+
+**Muistettava:** rajaus osuu vain myyjiin, joilla on `seller`-rivi
+`user_roles`-taulussa.
+
+---
+
 ### D-208 - Takautuva ajo korjasi ehdokkaan, muttei jo hyvaksyttya hanketta
 
 D-207:n mittauksessa jai auki 34 hyvaksyttya hanketta, joilla kentta oli

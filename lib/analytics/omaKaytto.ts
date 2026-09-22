@@ -36,7 +36,15 @@ export function omanKaytonEmails(env: Record<string, string | undefined>): strin
  * `user_roles`-taulun admin-rivit otetaan mukaan, jottei lista jää
  * vanhentuneen ympäristömuuttujan varaan — juuri siitä 20.9. mitattu
  * virhe johtui.
+ *
+ * MYYJÄ EI OLE ASIAKAS (D-209). Käyttäjäsivu jättää myyjät pois
+ * asiakasluvuista, mutta analytiikka laski ne mukaan: mitattu 21.9.2026
+ * 30 vrk jaksolla yksi myyjä, 822 tapahtumaa (5 %). Rooli ratkaisee eikä
+ * sähköpostilista, joten uusi myyjä rajautuu pois heti kun hän saa
+ * `seller`-roolin - koodia tai ympäristömuuttujaa ei tarvitse muuttaa.
  */
+const SISAISET_ROOLIT = new Set(["admin", "seller"])
+
 export function omanKaytonIds(input: {
   users: { id: string; email?: string | null }[]
   roolit?: { user_id: string; role?: string | null }[] | null
@@ -44,7 +52,7 @@ export function omanKaytonIds(input: {
 }): Set<string> {
   const ids = new Set<string>(
     (input.roolit ?? [])
-      .filter((r) => r.role === "admin")
+      .filter((r) => SISAISET_ROOLIT.has(String(r.role ?? "")))
       .map((r) => r.user_id)
   )
 

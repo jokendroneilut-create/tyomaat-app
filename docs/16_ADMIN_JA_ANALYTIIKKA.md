@@ -67,10 +67,14 @@ Google Analytics -tyylinen yhteenveto. Keskeiset periaatteet
   näyttää lisäksi vain viimeisimmän kirjautumisen — se ei ole päiväkohtainen
   lista eikä kelpaa tämän luvun tarkistukseen.
 - **Oma käyttö on oma listansa:** rajaus tulee `ADMIN_EMAILS`-listan lisäksi
-  `ANALYTICS_EXCLUDE_EMAILS`-muuttujasta ja `user_roles`-taulun admin-riveistä
-  (`lib/analytics/omaKaytto.ts`). Erillinen muuttuja siksi, että
-  `ADMIN_EMAILS` antaisi myös oikeudet — testitunnus on olemassa asiakkaan
-  näkymän katsomista varten.
+  `ANALYTICS_EXCLUDE_EMAILS`-muuttujasta ja `user_roles`-taulun admin- ja
+  **myyjä**riveistä (`lib/analytics/omaKaytto.ts`). Erillinen muuttuja siksi,
+  että `ADMIN_EMAILS` antaisi myös oikeudet — testitunnus on olemassa
+  asiakkaan näkymän katsomista varten.
+- **Myyjä ei ole asiakas (D-209):** myyjärooli rajataan luvuista roolin
+  perusteella, joten uusi myyjä jää pois heti kun hän saa `seller`-roolin.
+  Mitattu 21.9.2026, 30 vrk: 5 622 → 4 772 tapahtumaa, 39 → 38 käyttäjää.
+  Roolirivi on siis muistettava lisätä jokaiselle myyjälle.
 
 ---
 
