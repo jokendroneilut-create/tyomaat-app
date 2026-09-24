@@ -25,6 +25,9 @@ hankeuutisesta kaikki olivat jo aineistossa, ja STT julkaisi saman
 tiedotteen samana päivänä – yrityksen oma sivu ei siis tuo aikaetua
 eikä kattavuutta.
 
+Ensimmäinen kierros toi jonoon 19 uutta ehdokasta (13:lla yhteyshenkilö)
+ja täydensi 106 olemassa olevaa hanketta uudella lähdetiedolla.
+
 ### Uutislähteet pääsevät jonoon asti (D-210)
 
 Yksi lähdeajo ehti tuoda vain kuusi ehdokasta, vaikka listauksessa oli

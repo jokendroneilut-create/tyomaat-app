@@ -94,15 +94,50 @@ kayttaa samaa `importCandidate`-polkua; ainoa ero on ettei silla ole 90
 sekunnin kattoa. Sen jalkeen nahty-ikkuna (7 vrk) on pidempi kuin
 perustason kierto (4,4 vrk), joten kerran tuotu osoite ei palaa jonoon.
 
+#### Tulos (24.9.2026)
+
+Ensimmainen taysi kierros: **210 ehdokasta 27,7 minuutissa** (7,9 s
+ehdokasta kohti).
+
+    99  matched            olemassa olevaan hankkeeseen
+    49  duplicate_source   sama osoite jo tuotu
+    34  queued_for_review  uusi ehdokas jonoon
+    28  skipped_completed  valmistunut
+
+Jonoon jai portin jalkeen **19 ehdokasta**, joista 13:lla yhteyshenkilo,
+17:lla kaupunki ja 5:lla rakentaja. Portti ohitti 19. Lisaksi **106
+olemassa olevaa hanketta** sai uuden lahderivin (`project_sources`).
+
+Seuraava ajo kesti **19,2 s**: 243 kandidaattia, kaikki jo nahtyja, nolla
+lykattya. Nahty-ikkuna (7 vrk) on pidempi kuin perustason kierto, joten
+lahde on talta osin vakaassa tilassa.
+
+#### Fail-open jattaa jaljen vain lokiin
+
+Ajossa mallikutsu aikakatkaistui osalla ehdokkaista (kotiyhteys, kuusi
+rinnakkaista kutsua). Portit ovat fail-open, mika on oikea saanto - mutta
+silloin ehdokas menee jonoon ILMAN porttia eika siita jaa merkkia
+mihinkaan muualle kuin lokiin. Kuusi ehdokasta jai ilman
+relevanssiporttia ja 24 ilman kohdetyyppia.
+
+`scripts/fix-porttien-aukot.ts` ajaa puuttuvan portin uudelleen mille
+tahansa lahteelle. Se siirsi nelja roskaehdokasta jonosta pois
+("Soimulle maakunnallinen yrittajapalkinto", "Speweld Service osaksi
+Nimlaksen verkostoa") ja taydensi kohdetyypit.
+
 **Avoin:** yhden ehdokkaan tuonti maksaa 11,8 sekuntia, josta
 mallikutsut ovat 2,4 s. Loput on tietokantatyota, jota ei ole profiloitu.
 Se on koko putken lapimenon katto.
+
+**Avoin:** portin puuttumista ei nay mistaan mittarista. Nyt se loytyi
+vain koska ajoin taysimittaisen kierroksen kasin ja luin lokin.
 
 `lib/agent/fetchSttJulkaisijatSource.ts` · `lib/agent/fetchSttHakuSource.ts` ·
 `lib/agent/sttKandidaatti.spec.ts` · `lib/agent/sources.ts` ·
 `lib/agent/discovery/collectors/legacyFetchCollector.ts` ·
 `scripts/measure-stt-julkaisijasyote.ts` · `scripts/measure-yritysuutiset.ts` ·
-`scripts/lisaa-stt-julkaisijalahde.ts` · `scripts/fix-stt-julkaisijat-alkuaja.ts`
+`scripts/lisaa-stt-julkaisijalahde.ts` · `scripts/fix-stt-julkaisijat-alkuaja.ts` ·
+`scripts/fix-porttien-aukot.ts`
 
 ---
 
