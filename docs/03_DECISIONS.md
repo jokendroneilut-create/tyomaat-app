@@ -5,6 +5,90 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-210 - Lahdeajo toi kuusi ehdokasta sadasta, ja taatut paikat olivat vaarilla lahteilla
+
+Rakennuslehdesta hyvaksyttiin 23.9. hanke "Kreate sai tasoristeysten
+poistourakan Lapista". Sama uutinen oli Kreaten omalla sivulla jo 17.9.
+ja Kreaten STT-tiedotteena meidan kannassamme **20.9. klo 12:02** - kolme
+vuorokautta ennen lehtea. Se ei koskaan paatynyt jonoon.
+
+#### Vika 1: varaus oli kuusinkertainen
+
+`ehtiiViela` (tuontiBudjetti.ts) esti ehdokkaan aloituksen jos
+`keskiarvo x rinnakkaisuus` ei mahtunut jaljella olevaan aikaan.
+Paattely on vaara: rinnakkaiset ehdokkaat kuluttavat samaa seinakelloa,
+eivat perakkaista. Vapautuvaan paikkaan aloitettu ehdokas paattyy
+hetkessa `nyt + keskiarvo`.
+
+Kertoimella 6 ja 70 sekunnin budjetilla varaus ylittaa koko budjetin heti
+kun ehdokas maksaa yli ~12 s, jolloin ajo tuo tasan `CANDIDATE_CONCURRENCY`
+ehdokasta - ensimmaiset kuusi ehtivat kayntiin ennen kuin pohja on
+mitattu. Mitattu 25.8.-24.9.: 207 ajosta 25 pysahtyi tasan kuuteen, ja
+STT-tiedotteilla nain kavi kolmessa ajossa neljasta.
+
+Varaus on nyt yhden ehdokkaan keskikesto x 1,5. Sama luku, jonka
+alkuperainen mittauskin antoi: Hartelan hanta oli "parikymmenta
+sekuntia", eli yksi ehdokas eika kuusi.
+
+#### Vika 2: taatut paikat olivat vaarilla lahteilla
+
+`priority > 10` varaa lahteelle kiinteen paikan joka ajossa eli 4 kertaa
+vuorokaudessa. Yhdeksan opiskelija-asuntosaatiota (D-136) sai sellaisen
+kun ne lisattiin 29.8., eika sita poistettu.
+
+Mitattu 24.9.2026, 30 vrk:
+
+    lahde                        ajoja   ehdokkaita
+    Hilma                          124          417
+    9 opiskelija-asuntosaatiota    942           32
+    STT-tiedotteet                   5           17
+
+D-136 itse arvioi koko saatiojoukon tuotoksi **noin 10 eri hanketta
+vuodessa**. Ne veivat 41 % kaikista lahdeajoista. Samaan aikaan STT -
+919 ehdokasta, 93 %:lla yhteyshenkilo - sai vuoron 4-9 vuorokauden
+valein. Saatiot siirrettiin perustasolle ja STT taatuksi.
+
+Perustason kierto: 311 lahdetta / (20-10 paikkaa x 4 ajoa) = 7,8 vrk ->
+319 / (20-2 x 4) = 4,4 vrk. `cronConfig.ts` on koko ajan luvannut 4 vrk;
+lupaus oli vanhentunut huomaamatta.
+
+#### Mitta, jolla taman nakee ilman lokeja
+
+`discovery_runs.documents_found` on listauksen kandidaattien maara ja
+`documents_saved` se osa joka ehdittiin tuoda. STT:n rivit kertoivat
+vian suoraan:
+
+    28.8.  873 loydettya ->   1 tuotu
+    23.8.  863            ->   4
+    19.8.  867            ->   6
+    20.9.   94            ->   5
+
+Korjausten jalkeen neljassa ajossa 110 -> 7 / 8 / 6 / 8, ja jonoon tuli
+23 uutta ehdokasta joista kahdeksan LLM-portti ohitti heti.
+
+**Vuodon koko ennen korjausta (24.9.2026):** 2 657 legacy-dokumentista
+190 ei ollut koskaan tuotu. Niista 90 oli STT:n (64 syyskuulta), 42
+SRV:n ja 13 Rakennuslehden.
+
+**Kolmas muutos samalla:** relevanssiportti ja kohdetyypitin ajetaan
+rinnakkain (`Promise.all`). Kohdetyyppi ei riipu portin tuloksesta, joten
+perakkaisyys ei saastanyt yhtaan mallikutsua. Mitattu neljalla
+tiedotteella: 5,2-6,4 s -> 2,8-3,5 s.
+
+**Opetus:** taattu paikka on kustannus muille lahteille, ja se pitaa
+perustella tuotolla. Lisaa ei-nakyvaa hitautta ei huomaa mistaan, koska
+ajo nayttaa onnistuneelta - `documents_found` ja `documents_saved` ovat
+ainoa kohta jossa ero nakyy.
+
+`lib/agent/discovery/tuontiBudjetti.ts` ·
+`lib/agent/discovery/collectors/legacyFetchCollector.ts` ·
+`lib/agent/identity/resolvePotentialProject.ts` ·
+`lib/agent/pipeline/cronConfig.ts` · `scripts/fix-lahteiden-prioriteetit.ts` ·
+`scripts/measure-tuonnin-vuoto.ts` · `scripts/measure-tuomatta-jaaneet.ts` ·
+`scripts/measure-taatut-lahteet.ts` · `scripts/aja-lahde.ts`
+
+---
+
 ### D-209 - Myyja rajataan analytiikan asiakasluvuista roolin perusteella
 
 Kayttajasivu jattaa myyja- ja admin-tunnukset pois asiakasluvuista, mutta

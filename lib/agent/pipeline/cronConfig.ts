@@ -25,10 +25,18 @@
  * Kierros lasketaan samalla kaavalla kuin Operations-sivulla: taatut
  * lähteet (priority > 10) varaavat kiinteän paikan joka ajossa eivätkä
  * kierrä muiden mukana, joten perustason kierto lasketaan jäljelle
- * jäävillä paikoilla. Taattuja on yksi (Hilma).
+ * jäävillä paikoilla. Taattuja on kaksi: Hilma ja STT-tiedotteet.
  *
  *   14 paikkaa -> 13 perustason paikkaa/ajo = 52/vrk -> kierros 6 vrk
- *   20 paikkaa -> 19 perustason paikkaa/ajo = 76/vrk -> kierros 4 vrk
+ *   20 paikkaa -> 18 perustason paikkaa/ajo = 72/vrk -> kierros 4,4 vrk
+ *
+ * TAATTU PAIKKA ON KALLIS, JA SEN MÄÄRÄ PITÄÄ TARKISTAA (D-210).
+ * Yhdeksän opiskelija-asuntosäätiötä sai taatun paikan kun ne lisättiin
+ * 29.8.2026, eikä tätä laskelmaa päivitetty. Mitattu 24.9.2026: ne
+ * veivät 942 ajoa 30 vuorokaudessa ja tuottivat 32 ehdokasta, kun
+ * perustason kierto oli venynyt 7,8 vuorokauteen - eli kaksinkertaiseksi
+ * siihen mitä tämä kommentti lupasi. Jos lisäät taatun lähteen, laske
+ * kierros tästä uudelleen.
  *
  * Vanhentumisraja (kierros × 1,5) lyhenee samalla 9 -> 6 vrk.
  *

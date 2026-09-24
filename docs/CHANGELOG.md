@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Uutislähteet pääsevät jonoon asti (D-210)
+
+Yksi lähdeajo ehti tuoda vain kuusi ehdokasta, vaikka listauksessa oli
+yli sata: tuontibudjetin varaus oli kuusinkertainen ja pysäytti ajon heti
+ensimmäisen erän jälkeen. Samaan aikaan yhdeksän opiskelija-asuntosäätiötä
+varasi taatun paikan joka ajossa (942 ajoa kuukaudessa, 32 ehdokasta),
+kun STT-tiedotteet – toiseksi paras lähteemme – sai vuoron neljän
+vuorokauden välein. Nyt taatut paikat ovat Hilmalla ja STT:llä,
+perustason kierto lyheni 7,8 vuorokaudesta 4,4:ään, ja 190 koskaan
+tuomatta jäänyttä tiedotetta pääsee jonoon.
+
+Heräte: Rakennuslehdestä hyväksytty Kreaten tasoristeysurakka Kemissä oli
+ollut Kreaten omana tiedotteena kannassamme kolme päivää aiemmin.
+
 ### Suurille hankkeille lähde ja yhteyshenkilö (D-200)
 
 Alkuvuoden hankkeilta puuttui lähdetieto, ja siksi myös yhteyshenkilö.

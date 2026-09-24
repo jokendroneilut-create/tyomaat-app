@@ -558,23 +558,33 @@ export async function resolvePotentialProject(
    * Harmaan alueen LLM-portti: ajetaan vain uusille ehdokkaille ja vain kun
    * sääntö ei sanonut mitään. Portti voi suodattaa jonon ulkopuolelle, ei
    * koskaan hyväksyä julkiseksi. Fail-open: virheessä ehdokas menee jonoon.
+   *
+   * KAKSI PORTTIA RINNAKKAIN (D-210). Kohdetyyppi ei riipu portin
+   * tuloksesta: se ajetaan ja tallennetaan myös silloin kun portti
+   * ohittaa ehdokkaan, joten peräkkäisyys ei säästä yhtään kutsua vaan
+   * pelkästään hidasti. Mitattu 24.9.2026 neljällä STT-tiedotteella:
+   * peräkkäin 5,2-6,4 s, rinnakkain 2,8-3,5 s.
+   *
+   * Kesto on tuontibudjetin suurin yksittäinen erä, ja budjetti ratkaisee
+   * montako ehdokasta yksi lähdeajo ehtii tuoda (ks. tuontiBudjetti.ts).
    */
-  const relevanceGate = await gateCandidateRelevance({
-    title,
-    description: md.description ?? md.operation ?? null,
-    sourceName: input.sourceName ?? null,
-    ruleRecommendedAction,
-  })
-
-  /*
-   * Kohdetyyppi mallilta vain kun sääntö ei osannut. Sama kaava kuin
-   * relevanssiportissa: uusi ehdokas, harmaa alue, fail-open.
-   */
-  const buildingType = await resolveBuildingType({
-    title,
-    description: md.description ?? md.operation ?? null,
-    ruleBuildingType: md.building_type,
-  })
+  const [relevanceGate, buildingType] = await Promise.all([
+    gateCandidateRelevance({
+      title,
+      description: md.description ?? md.operation ?? null,
+      sourceName: input.sourceName ?? null,
+      ruleRecommendedAction,
+    }),
+    /*
+     * Kohdetyyppi mallilta vain kun sääntö ei osannut. Sama kaava kuin
+     * relevanssiportissa: uusi ehdokas, harmaa alue, fail-open.
+     */
+    resolveBuildingType({
+      title,
+      description: md.description ?? md.operation ?? null,
+      ruleBuildingType: md.building_type,
+    }),
+  ])
 
   const { data: created, error } = await supabaseAdmin
     .from("potential_projects")

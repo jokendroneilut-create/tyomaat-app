@@ -385,7 +385,6 @@ export async function collectLegacySource(source: any) {
       maaraaika: importDeadline,
       valmiita,
       kaytettyMs,
-      rinnakkaisuus: CANDIDATE_CONCURRENCY,
     })
 
     if (!ehtii) {
@@ -452,9 +451,16 @@ export async function collectLegacySource(source: any) {
    * josta ajokohtainen aikabudjetti aikanaan syntyi.
    */
   if (deferred > 0) {
+    /*
+     * Keskikesto mukaan lokiin: se on ainoa luku jolla varauksen
+     * mitoitusta voi tuotannossa arvioida (ks. tuontiBudjetti.ts).
+     */
+    const keskikesto = valmiita > 0 ? Math.round(kaytettyMs / valmiita) : 0
+
     console.warn(
       `legacyFetchCollector: aikabudjetti tayttyi (${legacy.name}), ` +
-        `${deferred} kandidaattia siirtyi seuraavaan ajoon`
+        `${deferred} kandidaattia siirtyi seuraavaan ajoon ` +
+        `(${valmiita} tuotu, keskikesto ${keskikesto} ms)`
     )
   }
 

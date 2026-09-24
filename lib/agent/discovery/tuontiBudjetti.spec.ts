@@ -5,7 +5,6 @@ import { ehtiiViela, POHJA_OTOS } from "./tuontiBudjetti"
 const perus = {
   nyt: 1_000_000,
   maaraaika: 1_000_000 + 30_000,
-  rinnakkaisuus: 6,
 }
 
 describe("ehtiiViela", () => {
@@ -26,32 +25,51 @@ describe("ehtiiViela", () => {
     ).toBe(false)
   })
 
-  /* 3 ehdokasta x 1 s = keskiarvo 1 s, varaus 6 s. 30 s riittaa. */
+  /* 3 ehdokasta x 1 s = keskiarvo 1 s, varaus 1,5 s. 30 s riittaa. */
   it("aloittaa kun varaus mahtuu jaljella olevaan aikaan", () => {
     expect(ehtiiViela({ ...perus, valmiita: 3, kaytettyMs: 3_000 })).toBe(true)
   })
 
-  /* Keskiarvo 6 s, varaus 36 s > 30 s jaljella. */
+  /* Keskiarvo 25 s, varaus 37,5 s > 30 s jaljella. */
   it("ei aloita kun varaus ei mahdu", () => {
-    expect(ehtiiViela({ ...perus, valmiita: 3, kaytettyMs: 18_000 })).toBe(false)
+    expect(ehtiiViela({ ...perus, valmiita: 3, kaytettyMs: 75_000 })).toBe(false)
   })
 
   /*
    * Juuri tama tapaus kaatoi Hartelan: maaraaikaa on viela jaljella,
-   * joten vanha saanto olisi aloittanut - mutta hanta ylittaa
-   * katkaisun.
+   * joten pelkka "onko maaraaika ohi" olisi aloittanut - mutta hanta
+   * ylittaa katkaisun.
    */
   it("torjuu ehdokkaan jolle jaa aikaa mutta ei tarpeeksi", () => {
     const nyt = 1_000_000
     const maaraaika = nyt + 5_000
-    expect(ehtiiViela({ nyt, maaraaika, valmiita: 5, kaytettyMs: 20_000, rinnakkaisuus: 6 })).toBe(
-      false
-    )
+    expect(ehtiiViela({ nyt, maaraaika, valmiita: 5, kaytettyMs: 20_000 })).toBe(false)
   })
 
-  it("kestaa rinnakkaisuuden 0", () => {
+  /*
+   * D-210. Vanha varaus oli keskiarvo x rinnakkaisuus (6), jolloin 12
+   * sekunnin ehdokas varasi 72 s eli enemman kuin koko 70 sekunnin
+   * budjetti - ajo pysahtyi tasan rinnakkaisuuden verran ehdokkaita.
+   * Yhden ehdokkaan varauksella sama tilanne jatkuu normaalisti.
+   */
+  it("jatkaa kun yksi ehdokas mahtuu vaikka kuusi ei mahtuisi", () => {
+    const nyt = 1_000_000
+    /* 55 s jaljella tuontibudjettia, ehdokkaan keskiarvo 12 s. */
+    const maaraaika = nyt + 55_000
+    expect(ehtiiViela({ nyt, maaraaika, valmiita: 6, kaytettyMs: 72_000 })).toBe(true)
+  })
+
+  /*
+   * Raja kulkee turvakertoimen mukaan: 12 s x 1,5 = 18 s varaus mahtuu
+   * 20 sekuntiin muttei 17:aan.
+   */
+  it("noudattaa turvakerrointa rajalla", () => {
+    const nyt = 1_000_000
     expect(
-      ehtiiViela({ ...perus, valmiita: 3, kaytettyMs: 3_000, rinnakkaisuus: 0 })
+      ehtiiViela({ nyt, maaraaika: nyt + 20_000, valmiita: 6, kaytettyMs: 72_000 })
     ).toBe(true)
+    expect(
+      ehtiiViela({ nyt, maaraaika: nyt + 17_000, valmiita: 6, kaytettyMs: 72_000 })
+    ).toBe(false)
   })
 })
