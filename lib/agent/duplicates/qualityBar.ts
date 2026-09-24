@@ -23,10 +23,43 @@ export function passesDuplicateQualityBar(match: ProjectMatchResult): boolean {
    * kuvauksesta poimittuna vääriä pareja oli 472, otsikkoon ja kahteen
    * ensimmäiseen virkkeeseen rajattuna kaksi.
    */
+  /*
+   * ENERGIAKOHDE ON YHTÄ VAHVA TUNNISTE KUIN TALOYHTIÖ (D-213).
+   *
+   * `same_energy_site` tunnistaa saman tuuli- tai aurinkopuiston
+   * paikannimestä kunnan sisällä ("Koivulannevan tuulipuiston
+   * yleiskaava" || "Koivulannevan tuulivoimahanke, Haapavesi").
+   * Täsmäyttäjä pitää sitä jo vahvana SIJAINTINA, mutta tämä portti ei
+   * tuntenut sitä: se vaatii otsikkotodisteen tai kuvaustodisteen 95
+   * pisteestä, eikä YVA-hankkeen ja osayleiskaavan otsikot muistuta
+   * toisiaan.
+   *
+   * Alla oleva perustelu kertoo saman asian toisin päin: ne kymmenen
+   * paria jotka läpäisivät 95 pisteen kaistan olivat NIMENOMAAN samaa
+   * tuuli- tai aurinkovoimahanketta kahdesta lähteestä. Tunniste oli siis
+   * jo todettu luotettavaksi - se ei vain kelvannut todisteeksi.
+   *
+   * Mitattu 24.9.2026 (6 316 aktiivista hanketta, 458 energiahanketta):
+   * `same_energy_site` osuu 48 pariin.
+   *
+   *   jo jonossa                16   (13 confirmed_duplicate, 3 not_duplicate)
+   *   läpäisee portin jo nyt    20
+   *   uusia tällä muutoksella   32
+   *
+   * Jonon oma historia on paras mittari tunnisteen luotettavuudesta:
+   * katselmoiduista 13/16 osoittautui duplikaatiksi. Luin uudet 32 läpi -
+   * kaksi on selvästi eri hanketta ("Harjunkorpi" ja "Kontiovaara" samalta
+   * yhtiöltä, kaksi eri ranta-asemakaavaa samalla järvellä). Loput ovat
+   * saman puiston YVA ja osayleiskaava.
+   *
+   * Pari menee KATSELMOITAVAKSI eikä yhdisty itsestään, joten kaksi väärää
+   * 32:sta on oikea vaihtokauppa 30:tä löytynyttä vastaan.
+   */
   const hasStrongIdentifier =
     match.reasons.includes("same_permit_number") ||
     match.reasons.includes("same_property_id") ||
     match.reasons.includes("same_housing_company") ||
+    match.reasons.includes("same_energy_site") ||
     match.reasons.includes("same_coordinates")
 
   /*

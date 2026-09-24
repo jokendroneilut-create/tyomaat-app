@@ -16,6 +16,20 @@ describe("passesDuplicateQualityBar", () => {
    * vahvaksi tunnisteeksi katselmoitavassa listassa (D-171). Mitatut
    * parit jaivat 58-65 pisteeseen, joten ilman tata ne eivat loydy.
    */
+  /*
+   * Energiakohde on paikannimi joka yksiloi puiston kunnan sisalla
+   * (D-213). YVA-hankkeen ja osayleiskaavan otsikot eivat muistuta
+   * toisiaan, joten ilman tata pari ei loydy - mitattuna 32 paria.
+   */
+  it("hyvaksyy saman energiakohteen vahvana tunnisteena", () => {
+    expect(passesDuplicateQualityBar(pari(65, ["same_energy_site", "same_city"]))).toBe(true)
+    expect(
+      passesDuplicateQualityBar(
+        pari(73, ["same_city", "same_region", "same_building_type", "same_energy_site"])
+      )
+    ).toBe(true)
+  })
+
   it("hyvaksyy saman taloyhtion vahvana tunnisteena", () => {
     expect(passesDuplicateQualityBar(pari(70, ["same_housing_company"]))).toBe(true)
     expect(

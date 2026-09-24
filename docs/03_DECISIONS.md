@@ -5,6 +5,91 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-213 - Duplikaattivihje laskettiin ja heitettiin pois, mutta portti oli oikeassa
+
+Kolmas ehdotus oli "Rakennuslehti laukaisimeksi": artikkelin osuessa
+yritykseen ja kaupunkiin haettaisiin ensin vastine olemassa olevista
+lahteista. Premissi tarkistettiin ensin.
+
+**Rakennuslehti todella kertoo samoja hankkeita.** 57 hankkeesta
+tuotannon oma tasmayttaja antaa 2:lle >= 70 (yhdistaisi) ja 24:lle 40-69
+(mahdollinen duplikaatti). Luettuna valtaosa 40-69 -kaistasta on aitoja
+pareja: Koskelan varikko <-> Kreate, Oulun normaalikoulu <-> STT,
+Hartelan Kirkkonummen rivitalot <-> Hartela.
+
+**Vihje lasketaan jo nyt ja heitetaan pois.** Hyvaksyntareitti kirjaa
+40-69 -osuman kenttaan `metadata.possible_duplicate_of`. Sita ei lue
+mikaan - ei kayttoliittyma eika ajastettu tyo. Mitattu 24.9.2026: kentta
+on asetettu **1 499 hankkeelle**, kun duplikaattijonossa oli 204 paria.
+
+#### Miksi kaistaa EI ohjattu jonoon
+
+Ilmeinen korjaus olisi tyontaa 40-69 jonoon. Se olisi kumonnut
+mitatun paatoksen. Yollisen skannauksen laatuportti hylkaa
+`name_in_description` -parit alle 95 pisteen, ja perustelu on 732 092
+vertaillun parin mittaus: kaista 70-78 oli "enimmakseen eri hankkeita".
+
+Mittasin uutislahteet erikseen (398 hanketta): 16 paria >= 70, 22
+kaistalla 60-69, 114 kaistalla 40-49. Luin >= 70 -kaistan lapi - noin 13
+kuudestatoista on aitoja - mutta **15/16 kaatuu porttiin**, koska portti
+vaatii otsikkotodisteen eivatka "Rovaniemen uuden paapoliisiaseman
+suunnittelu etenee" ja "Rovaniemelle rakennetaan uusi paapoliisiasema"
+muistuta toisiaan otsikkoina.
+
+Portin kumoaminen vaatisi oman mittauksensa samassa mittakaavassa kuin
+se jonka se sai. Se jaa auki; 16 paria ei ole peruste kumota 732 092
+parin mittausta.
+
+#### Mika korjattiin: energiakohde on vahva tunniste
+
+Portin OMA perustelu kertoi missa aukko on: ne kymmenen paria jotka
+lapaisivat 95 pisteen kaistan olivat "samaa tuuli- tai
+aurinkovoimahanketta kahdesta lahteesta". Tasmayttaja tunnistaa sen
+omalla tunnisteellaan (`same_energy_site`, paikannimi kunnan sisalla) ja
+pitaa sita vahvana SIJAINTINA - mutta portti ei tuntenut sita lainkaan.
+
+Tuulivoimahanke kulkee aina kahta polkua: kunnan osayleiskaava ja ELY:n
+YVA. Otsikot eivat muistuta toisiaan ("Koivulannevan tuulipuiston
+yleiskaava" / "Koivulannevan tuulivoimahanke, Haapavesi"), joten
+otsikkotodistetta ei synny koskaan.
+
+Mitattu 24.9.2026, 6 316 aktiivista hanketta ja 458 energiahanketta:
+
+    same_energy_site -pareja     48
+      jo jonossa                 16   (13 confirmed_duplicate, 3 not_duplicate)
+      lapaisee portin jo nyt     20
+      uusia talla muutoksella    32
+
+Jonon oma historia on paras mittari: katselmoiduista **13/16 oli
+duplikaatteja**. Luin uudet 32 lapi - kaksi on selvasti eri hanketta
+("Harjunkorpi" ja "Kontiovaara" samalta yhtiolta; kaksi eri
+ranta-asemakaavaa samalla jarvella). Loput ovat saman puiston YVA ja
+osayleiskaava.
+
+Pari menee KATSELMOITAVAKSI eika yhdisty itsestaan, joten kaksi vaaraa
+32:sta on oikea vaihtokauppa. Sama perustelu kuin taloyhtioavaimella
+(D-171), ja sama luonne: rekisteroity tai yksiloiva nimi, ei kuvaileva
+otsikko.
+
+**Parit vietiin jonoon kasin** (`scripts/fix-energiakohdeparit-jonoon.ts`)
+eika taydella skannauksella: taysi ajo loytaisi myos kaikki muut parit
+joita inkrementaalinen skannaus ei ole koskaan verrannut, enka ole
+lukenut niita. Jono 204 -> 236, pending 3 -> 35.
+
+**Avoin:** ajastettu skannaus on inkrementaalinen, joten vanhat parit
+eivat loydy itsestaan vaikka portti muuttuisi. Taysi skannaus on ajettava
+erikseen ja sen tuotos luettava lapi.
+
+**Avoin:** `possible_duplicate_of` on yha kentta jota ei lue mikaan.
+1 499 hanketta kantaa vihjetta jota kukaan ei nae.
+
+`lib/agent/duplicates/qualityBar.ts` · `lib/agent/duplicates/qualityBar.spec.ts` ·
+`scripts/measure-energiakohdeparit.ts` · `scripts/fix-energiakohdeparit-jonoon.ts` ·
+`scripts/measure-rakennuslehti-laukaisin.ts` ·
+`scripts/measure-hukatut-duplikaattivihjeet.ts`
+
+---
+
 ### D-212 - Tasmaytys oli tuontiputken suurin kustannus, ja se oli muistamattomuutta
 
 D-211 jatti auki kysymyksen: yhden ehdokkaan tuonti maksaa 11,8 sekuntia,

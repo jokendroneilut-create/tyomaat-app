@@ -11,6 +11,17 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Saman tuulipuiston YVA ja kaava löytyvät nyt toisilleen (D-213)
+
+Tuulivoimahanke kulkee kahta polkua — kunnan osayleiskaava ja ELY:n
+YVA — ja otsikot eivät muistuta toisiaan ("Koivulannevan tuulipuiston
+yleiskaava" / "Koivulannevan tuulivoimahanke, Haapavesi"). Duplikaattien
+laatuportti vaati otsikkotodisteen, joten pari ei löytynyt koskaan,
+vaikka täsmäyttäjä tunnistaa saman puiston paikannimestä. Paikannimi
+kelpaa nyt vahvaksi tunnisteeksi samoin kuin taloyhtiön nimi: **32 uutta
+paria katselmoitavaksi**, ja jo katselmoiduista vastaavista 13/16 oli
+duplikaatteja.
+
 ### Hankkeiden täsmäytys nelinkertaisesti nopeammaksi (D-212)
 
 Uuden ehdokkaan vertaaminen kaikkiin hankkeisiin vei 4,3–6,8 sekuntia —
