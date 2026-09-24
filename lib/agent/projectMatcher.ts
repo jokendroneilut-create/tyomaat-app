@@ -451,12 +451,49 @@ function textTrigramsCached(text: string | null | undefined): Set<string> {
  */
 const DESCRIPTION_COMPARE_LIMIT = 1500
 
+/*
+ * HANKKEEN PUOLEN TRIGRAMMIT MUISTIIN HANKEKOHTAISESTI (D-212).
+ *
+ * Yllä oleva yhden alkion muisti korjasi EHDOKKAAN puolen: sama teksti
+ * tokenisoitiin uudelleen jokaiselle hankkeelle. Hankkeiden puoli jäi
+ * korjaamatta, koska yhden kutsun sisällä se todella vaihtuu joka
+ * hankkeella. Mutta tuontiajossa kutsuja on satoja peräkkäin SAMAA
+ * hankelistaa vastaan (`loadProjectsForMatching` jaetaan koko erälle),
+ * joten sama 6 400 kuvauksen tokenisointi tehtiin uudelleen joka
+ * ehdokkaalle.
+ *
+ * Mitattu 24.9.2026, 6 410 hanketta: yksi täsmäytys 5,3-6,0 s ilman
+ * ehdokkaan kuvausta. Se on enemmän kuin tuonnin molemmat mallikutsut
+ * yhteensä (2,4 s) ja oli koko tuontiputken suurin yksittäinen erä.
+ *
+ * Avain on hankeolio ja tarkistus on TEKSTI, ei pelkkä olio: jos kuvaus
+ * muuttuu, trigrammit lasketaan uudelleen. WeakMap ei estä hankelistan
+ * roskienkeruuta ajon jälkeen.
+ */
+const hankkeenTrigrammit = new WeakMap<object, { teksti: string; grams: Set<string> }>()
+
+function projectTrigrams(
+  project: object | undefined,
+  text: string | null | undefined
+): Set<string> {
+  const leikattu = text?.slice(0, DESCRIPTION_COMPARE_LIMIT) ?? ""
+  if (!project) return textTrigrams(leikattu)
+
+  const muistissa = hankkeenTrigrammit.get(project)
+  if (muistissa && muistissa.teksti === leikattu) return muistissa.grams
+
+  const grams = textTrigrams(leikattu)
+  hankkeenTrigrammit.set(project, { teksti: leikattu, grams })
+  return grams
+}
+
 function descriptionSimilarity(
   first: string | null | undefined,
-  second: string | null | undefined
+  second: string | null | undefined,
+  project?: object
 ) {
   const a = textTrigramsCached(first?.slice(0, DESCRIPTION_COMPARE_LIMIT))
-  const b = textTrigrams(second?.slice(0, DESCRIPTION_COMPARE_LIMIT))
+  const b = projectTrigrams(project, second)
 
   // Liian lyhyet kuvaukset eivät anna luotettavaa signaalia.
   if (a.size < 10 || b.size < 10) return 0
@@ -530,6 +567,35 @@ function sameStem(first: string, second: string): boolean {
   return shared / longest >= STEM_RATIO
 }
 
+/*
+ * TEKSTIN SANAJOUKKO MUISTIIN (D-212).
+ *
+ * `nameWithinText` ajetaan molempiin suuntiin joka hankkeelle: ehdokkaan
+ * kuvausta vastaan (sama teksti koko silmukan ajan) ja hankkeen kuvausta
+ * vastaan (sama teksti joka ehdokkaalla). Kummassakin sanajoukko
+ * rakennettiin uudelleen joka kutsulla.
+ *
+ * CPU-profiili 24.9.2026: `nameWithinText` 8,0 s / 26,8 s eli 30 %
+ * täsmäytyksen ajasta. Avaimia on datan verran, joten muisti pysyy
+ * pienenä; katto on silti olemassa kuten `normalizeAddress`issa.
+ */
+const SANAJOUKKO_KATTO = 20_000
+const sanajoukot = new Map<string, Set<string>>()
+
+function tekstinSanat(text: string | null | undefined): Set<string> {
+  const avain = norm(text) ?? ""
+
+  const muistissa = sanajoukot.get(avain)
+  if (muistissa) return muistissa
+
+  const joukko = new Set(avain.split(" ").filter((word) => word.length >= 4))
+
+  if (sanajoukot.size >= SANAJOUKKO_KATTO) sanajoukot.clear()
+  sanajoukot.set(avain, joukko)
+
+  return joukko
+}
+
 function nameWithinText(
   name: string | null | undefined,
   text: string | null | undefined
@@ -540,15 +606,20 @@ function nameWithinText(
     .map((word) => word.trim())
     .filter((word) => word.length >= 4)
 
-  const textWords = new Set(
-    (norm(text) ?? "").split(" ").filter((word) => word.length >= 4)
-  )
+  const textWords = tekstinSanat(text)
   if (textWords.size < 5) return false
 
-  const foundInText = (word: string) =>
-    [...textWords].some(
-      (textWord) => textWord === word || sameStem(word, textWord)
-    )
+  /*
+   * Joukkoa iteroidaan suoraan: `[...textWords].some(...)` rakensi uuden
+   * taulukon jokaiselle vertailtavalle sanalle.
+   */
+  const foundInText = (word: string) => {
+    if (textWords.has(word)) return true
+    for (const textWord of textWords) {
+      if (sameStem(word, textWord)) return true
+    }
+    return false
+  }
 
   /*
    * Nimi jossa on vain YKSI erottuva sana. Geneeristen sanojen karsinta on
@@ -912,7 +983,8 @@ export function calculateMatch(
 
   const descriptionSim = descriptionSimilarity(
     candidate.description,
-    getProjectDescription(project)
+    getProjectDescription(project),
+    project
   )
 
   if (descriptionSim >= 0.5) {

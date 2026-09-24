@@ -550,8 +550,30 @@ export function normalizeIdentifierValue(
   return normalized.replace(/\s+/g, "")
 }
 
+/*
+ * NORMALISOINNIN MUISTI (D-212).
+ *
+ * Funktio on puhdas merkkijonomuunnos, mutta `projectMatcher` kutsuu sitä
+ * 20 kohdassa JOKAISELLE hankkeelle jokaista ehdokasta kohden. CPU-profiili
+ * 24.9.2026 (yksi täsmäytys 6 410 hanketta vastaan): normalizeAddress
+ * 14,0 s / 46,3 s eli 30 % koko täsmäytyksen ajasta, ja siitä 4,2 s kuluu
+ * yksin Unicode-luokkien regexiin `[^\p{L}\p{N}\s-]`.
+ *
+ * Eri arvoja on datan verran (hankkeen nimi, kaupunki, maakunta, osoite,
+ * rakennuttaja - noin 30 000 merkkijonoa), joten muisti pysyy pienenä.
+ * Katto on silti olemassa: pitkäikäisessä prosessissa arvoja kertyy myös
+ * ehdokkailta, eikä muistin kuulu kasvaa rajatta.
+ */
+const KATTO = 50_000
+const muisti = new Map<string, string | null>()
+
 export function normalizeAddress(value: string | null | undefined): string | null {
-  const normalized = String(value ?? "")
+  const raaka = String(value ?? "")
+
+  const muistissa = muisti.get(raaka)
+  if (muistissa !== undefined) return muistissa
+
+  const normalized = raaka
     .toLowerCase()
     .trim()
     .replace(/[–—−]/g, "-")
@@ -559,7 +581,12 @@ export function normalizeAddress(value: string | null | undefined): string | nul
     .replace(/\s+/g, " ")
     .trim()
 
-  return normalized.length > 0 ? normalized : null
+  const tulos = normalized.length > 0 ? normalized : null
+
+  if (muisti.size >= KATTO) muisti.clear()
+  muisti.set(raaka, tulos)
+
+  return tulos
 }
 
 function getSupabaseAdmin(): SupabaseClient {

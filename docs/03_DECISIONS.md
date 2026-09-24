@@ -5,6 +5,59 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-212 - Tasmaytys oli tuontiputken suurin kustannus, ja se oli muistamattomuutta
+
+D-211 jatti auki kysymyksen: yhden ehdokkaan tuonti maksaa 11,8 sekuntia,
+josta mallikutsut ovat 2,4 s. Loput oli profiloimatta.
+
+**Suurin erä oli `findProjectMatchDetailed`: 4,3-6,8 s per ehdokas**
+(6 410 hanketta). Se on puhdasta CPU-tyota, joten luku on sama
+tuotannossa. Enemman kuin molemmat mallikutsut yhteensa.
+
+CPU-profiili (`node --cpu-prof`) nimesi syyt:
+
+    normalizeAddress   14,0 s / 46,3 s   30 %
+    nameWithinText      8,2 s            18 %
+    descriptionSimilarity 4,2 s           9 %
+
+Kaikki kolme laskivat samaa asiaa uudelleen. Tasmaytys vertaa YHTA
+ehdokasta kaikkiin hankkeisiin, ja tuontiajossa kutsuja on satoja
+perakkain SAMAA hankelistaa vastaan - mutta hankkeen puoli tokenisoitiin
+joka kerta alusta.
+
+Kolme muistia, ei yhtaan muutosta logiikkaan:
+
+1. `normalizeAddress` on puhdas merkkijonomuunnos jota kutsutaan 20
+   kohdassa joka hankkeelle. Muisti avaimella = syote.
+2. `nameWithinText` rakensi tekstin sanajoukon joka kutsulla - ja
+   `[...textWords].some(...)` rakensi siita uuden taulukon JOKAISELLE
+   vertailtavalle sanalle. Joukko muistiin, iterointi suoraan joukosta.
+3. Kuvausten trigrammit hankekohtaiseen WeakMappiin. Ehdokkaan puoli oli
+   jo muistissa (aiempi korjaus), hankkeen puoli ei.
+
+**Tulos:** 4,3-6,8 s -> **1,1-1,5 s** lampimalla muistilla, sama
+lopputulos (samat luottamusluvut samoille ehdokkaille). Ensimmainen
+tasmaytys maksaa yha 5,7 s, koska muisti taytetaan silloin.
+
+**Miksi muisti eika algoritmin muutos.** Tasmayttajan saannot ovat
+mitattuja ja hienosaadettyja (D-019, kymmenen vuotoa korjattu lukemalla
+vaaria osumia). Muisti ei muuta yhtaan saantoa - se vain lakkaa
+laskemasta samaa kahdesti. Kaikki 1 411 testia menivat lapi
+muuttumattomina.
+
+**Katto jokaisessa muistissa.** Arvoja on datan verran (~30 000
+merkkijonoa), mutta pitkaikaisessa prosessissa ehdokkaiden omat tekstit
+kertyisivat rajatta. Kaikki kolme tyhjennetaan katon tayttyessa.
+
+**Avoin:** end-to-end -kustannusta ei ole mitattu uudelleen, koska
+jonossa ei ole enaa tuomattomia ehdokkaita. Seuraava tuotannon ajo
+kertoo sen `keskikesto`-lokirivilla (D-210).
+
+`lib/agent/projectMatcher.ts` · `lib/projects/identity.ts` ·
+`scripts/measure-tasmayttajan-hinta.ts`
+
+---
+
 ### D-211 - Yrityksen oma uutissivu ei tuonut mitaan, STT:n julkaisijasyote toi
 
 D-210:n herate oli Kreaten tasoristeysurakka, joka oli Kreaten omalla

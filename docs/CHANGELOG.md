@@ -11,6 +11,16 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Hankkeiden täsmäytys nelinkertaisesti nopeammaksi (D-212)
+
+Uuden ehdokkaan vertaaminen kaikkiin hankkeisiin vei 4,3–6,8 sekuntia —
+enemmän kuin tuonnin molemmat tekoälykutsut yhteensä. CPU-profiili
+osoitti, että sama työ tehtiin uudelleen joka ehdokkaalle: osoitteiden
+normalisointi, kuvausten sanajoukot ja trigrammit laskettiin alusta,
+vaikka hankelista on koko erän ajan sama. Kolme muistia, ei yhtään
+muutosta täsmäytyksen sääntöihin: **4,3–6,8 s → 1,1–1,5 s**, samat
+lopputulokset.
+
 ### Rakennusliikkeiden tiedotteet suoraan julkaisijasyötteestä (D-211)
 
 STT-haku etsii 44 hakusanalla, ja hakusana on arvaus siitä mitä
