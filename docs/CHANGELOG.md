@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Rakennusliikkeiden tiedotteet suoraan julkaisijasyötteestä (D-211)
+
+STT-haku etsii 44 hakusanalla, ja hakusana on arvaus siitä mitä
+tiedotteessa lukee. Kreaten 32 tiedotteesta vuoden ajalta hakusanat
+löysivät 22 – ulkopuolelle jäi mm. "Mt 180 Kurkela–Kuusisto -hanke
+toteutusvaiheeseen". Uusi lähde lukee 17 rakennusliikkeen ja
+rakennuttajan oman STT-syötteen, jolloin arvausta ei tarvita: 44
+tiedotetta vuoden ajalta, joita ei ollut aineistossa mistään lähteestä.
+
+Kokeilin ensin yrityksen omaa uutissivua (kreate.fi). Sen 18
+hankeuutisesta kaikki olivat jo aineistossa, ja STT julkaisi saman
+tiedotteen samana päivänä – yrityksen oma sivu ei siis tuo aikaetua
+eikä kattavuutta.
+
 ### Uutislähteet pääsevät jonoon asti (D-210)
 
 Yksi lähdeajo ehti tuoda vain kuusi ehdokasta, vaikka listauksessa oli

@@ -50,6 +50,7 @@ import { fetchBrandToimitilatSource } from "./fetchBrandToimitilatSource"
 import { fetchHelsinkiUutisetSource } from "./fetchHelsinkiUutisetSource"
 import { fetchRakennuslehtiSource, enrichRakennuslehtiCandidate } from "./fetchRakennuslehtiSource"
 import { fetchSttHakuSource, enrichSttCandidate } from "./fetchSttHakuSource"
+import { fetchSttJulkaisijatSource } from "./fetchSttJulkaisijatSource"
 import { fetchYmparistolupaSource } from "./fetchYmparistolupaSource"
 import { fetchYvaSource } from "./fetchYvaSource"
 import { createYvaEnricher } from "./yvaProjectPage"
@@ -144,6 +145,16 @@ export const sources = [
   { name: "helsinki_uutiset", fetch: fetchHelsinkiUutisetSource },
   { name: "rakennuslehti", fetch: fetchRakennuslehtiSource, enrich: enrichRakennuslehtiCandidate },
   { name: "stt_haku", fetch: fetchSttHakuSource, enrich: enrichSttCandidate },
+  /*
+   * Sama rajapinta kuin stt_haku, eri kysymys: hakusanahaku etsii
+   * tuntemattomia rakennuttajia, tämä varmistaa ettei nimetyn
+   * rakennusliikkeen tiedote jää hakusanan ohi (D-211). Rikastus on sama.
+   */
+  {
+    name: "stt_julkaisijat",
+    fetch: fetchSttJulkaisijatSource,
+    enrich: enrichSttCandidate,
+  },
   { name: "ymparistolupa", fetch: fetchYmparistolupaSource },
   /*
    * Rikastuskoukku lukee hankesivun nimetyt kentät (hankevastaava,

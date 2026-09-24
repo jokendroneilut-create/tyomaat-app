@@ -5,6 +5,107 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-211 - Yrityksen oma uutissivu ei tuonut mitaan, STT:n julkaisijasyote toi
+
+D-210:n herate oli Kreaten tasoristeysurakka, joka oli Kreaten omalla
+sivulla 17.9. mutta tuli meille Rakennuslehdesta 23.9. Ilmeinen johtopaatos
+olisi ollut lukea kreate.fi:n uutisvirta. **Mittaus kaatoi sen.**
+
+#### Yrityksen oma sivu: nolla lisaa
+
+`kreate.fi/wp-json/wp/v2/posts`, 12 kk: 75 postausta, joista 51
+suomenkielisia ja **18 hankeuutisia**. Jokainen 18:sta oli jo
+aineistossamme - 12 STT-tiedotteena, loput Kreaten hankeportfoliosta,
+Vaylalta, Vantaan kaavoista tai Sitowiseltä.
+
+Kuusi nayttti aluksi puuttuvan. **Avasin jokaisen lahteesta** enka
+luottanut mittariin: neljä oli kannassa toisella otsikolla (Tampereen
+maanalainen, Mt 180 Kurkela-Kuusisto kahdesti, Vantaan ratikan itaosa),
+yksi oli palkintouutinen eika hanke. Mittari olisi antanut uskottavan
+mutta vaaran tyolistan.
+
+Aikaetuakaan ei ollut: STT julkaisi saman tiedotteen **samana paivana**
+(17.9.2026). Kolmen vuorokauden viive oli meidan kierrossamme, ei
+lahteessa - se korjattiin D-210:ssa.
+
+#### Oikea aukko oli hakusanoissa
+
+`stt_haku` hakee 44 hakusanalla KAIKKIEN tiedottajien tiedotteita.
+Hakusana on arvaus siita mita tiedotteessa lukee. Mittatikuksi kelpaa
+STT:n oma julkaisijasyote (`?publisherId=`), joka palauttaa yhden
+yrityksen KAIKKI tiedotteet:
+
+    Kreate, 12 kk        32 tiedotetta
+    hakusanat loytavat   22
+    ulkopuolella         10
+
+Ulkopuolelle jaivat mm. "Mt 180 Kurkela-Kuusisto -hanke
+toteutusvaiheeseen" ja "Kreate kaynnistaa maanalaisen suurhankkeen
+rakentamisen Tampereella".
+
+Seitsemantoista rakennusalan julkaisijaa, 12 kk: **44 tiedotetta** joita
+ei ole kannassa mistaan lahteesta ja jotka lapaisevat saman
+rakentamissuodattimen kuin hakusanahaku.
+
+    julkaisija              tiedotteita  kannassa  uusia
+    Senaatti-kiinteistot             80        55      9
+    Kreate Group                     32        17      6
+    Skanska                          23        12      5
+    Hartela                          25        13      4
+    Jatke / Lapti / Asuntosaatio  20-23     14-18      3
+
+Uusi lahde `stt_julkaisijat` lukee nama syotteet. Muunnos tiedotteesta
+ehdokkaaksi on jaettu hakusanahaun kanssa (`sttKandidaatti`), koska juuri
+suodattimet ovat se osa jota ei saa kahdentaa.
+
+**Konsultit jatettiin pois** (Ramboll, A-Insinoorit): ne tiedottavat
+hankkeista joissa ovat mukana, mutta rakennuttajaksi ne eivat kelpaa
+(D-197).
+
+**Myos ne julkaisijat joilla aukkoa ei ole** ovat listalla (Consti,
+Soimu, K. Tervo, Tekova, Puolustuskiinteistot). Hakusanat sattuvat
+kattamaan ne tanaan; yksi pyynto per julkaisija (0,3 s) on halpa vakuutus
+siita ettei yhden yrityksen tiedotetyyli pudota sita pois nakyvista.
+
+#### Mita tuonnista opittiin
+
+Uuden lahteen ensiajo kesti **87-90 s** 90 sekunnin katkaisua vasten.
+Syy mitattiin:
+
+    yksi tuonti perakkain           11,8 s  (rikastus 0,4 s)
+    kuusi rinnakkain, yhden kesto   68 s
+    lapimeno kummassakin        ~1 / 11 s
+
+**Rinnakkaisuus ei nosta lapimenoa** - se vain pidentaa yksittaisen
+ehdokkaan kestoa saman verran. Ajon kesto on siis noin
+`esityo + 12 s x rinnakkaisuus`, ja 90 sekunnin katto sallii noin kuusi
+ehdokasta per ajo riippumatta budjetista. Sama nakyy tuotannon
+historiassa: 20.9. ajo 81 s / 6 tuontia.
+
+Tuontibudjetti laskettiin siksi **70 -> 60 sekuntiin**: se ei rajaa ajon
+pituutta vaan sita milloin viimeinen ehdokas aloitetaan, ja hannan
+marginaali kasvaa 20 -> 30 sekuntiin. Hitain yksittainen ehdokas vei
+mittauksessa 42 s.
+
+Ensimmainen taysi kierros (243 tiedotetta) ajettiin
+`scripts/fix-stt-julkaisijat-alkuaja.ts`:lla eika cron-ajoilla, koska
+viidella ehdokkaalla per ajo se olisi kestanyt lahes kaksi viikkoa. Ajo
+kayttaa samaa `importCandidate`-polkua; ainoa ero on ettei silla ole 90
+sekunnin kattoa. Sen jalkeen nahty-ikkuna (7 vrk) on pidempi kuin
+perustason kierto (4,4 vrk), joten kerran tuotu osoite ei palaa jonoon.
+
+**Avoin:** yhden ehdokkaan tuonti maksaa 11,8 sekuntia, josta
+mallikutsut ovat 2,4 s. Loput on tietokantatyota, jota ei ole profiloitu.
+Se on koko putken lapimenon katto.
+
+`lib/agent/fetchSttJulkaisijatSource.ts` · `lib/agent/fetchSttHakuSource.ts` ·
+`lib/agent/sttKandidaatti.spec.ts` · `lib/agent/sources.ts` ·
+`lib/agent/discovery/collectors/legacyFetchCollector.ts` ·
+`scripts/measure-stt-julkaisijasyote.ts` · `scripts/measure-yritysuutiset.ts` ·
+`scripts/lisaa-stt-julkaisijalahde.ts` · `scripts/fix-stt-julkaisijat-alkuaja.ts`
+
+---
+
 ### D-210 - Lahdeajo toi kuusi ehdokasta sadasta, ja taatut paikat olivat vaarilla lahteilla
 
 Rakennuslehdesta hyvaksyttiin 23.9. hanke "Kreate sai tasoristeysten

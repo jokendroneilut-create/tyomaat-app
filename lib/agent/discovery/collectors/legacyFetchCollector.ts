@@ -207,8 +207,21 @@ const ENRICH_PER_RUN = 40
  * Loput tulevat seuraavalla ajolla, koska järjestys on lyhin kuvaus
  * ensin ja NÄKEMÄTTÖMÄN kuvauspituus on 0 - uudet kandidaatit ovat siis
  * aina jonon kärjessä.
+ *
+ * 70 -> 60 SEKUNTIA (D-211). Budjetti ei rajaa ajon pituutta vaan sitä
+ * milloin viimeinen ehdokas ALOITETAAN; ajo päättyy vasta kun sekin on
+ * valmis. Varaus mitoitetaan keskiarvosta, joten poikkeuksellisen hidas
+ * ehdokas venyttää hännän yli varauksen.
+ *
+ * Mitattu 24.9.2026 julkaisijasyötteen ensiajossa: 70 sekunnin
+ * budjetilla ajo kesti 87,2 s, eli 90 sekunnin katkaisusta jäi 2,8 s.
+ * Hitain yksittäinen ehdokas vei noin 42 s, kun keskiarvo oli 17 s.
+ * Kymmenen sekuntia lyhyempi budjetti maksaa korkeintaan yhden
+ * ehdokkaan per ajo ja siirtää hännän marginaalin 20 -> 30 sekuntiin.
+ * Juuri tähän katkaisuun lähde kaatui aikanaan kahdeksan kertaa
+ * peräkkäin.
  */
-const IMPORT_BUDGET_MS = 70 * 1000
+const IMPORT_BUDGET_MS = 60 * 1000
 
 async function processWithConcurrency<T>(
   items: T[],

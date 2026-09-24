@@ -815,6 +815,66 @@ async function fetchTermReleases(
  */
 const TUOREUSIKKUNA_PAIVAA = 30
 
+/*
+ * YKSI TIEDOTE -> YKSI KANDIDAATTI.
+ *
+ * Sama muunnos kelpaa kummallekin STT-lähteelle: hakusanahaulle
+ * (`fetchSttHakuSource`) ja julkaisijasyötteelle
+ * (`fetchSttJulkaisijatSource`). Ne eroavat vain siinä MITKÄ tiedotteet
+ * haetaan — se mitä tiedotteesta luetaan on sama, ja suodattimet
+ * (`EXCLUDE_KEYWORDS`, `CONSTRUCTION_SIGNALS`) ovat juuri se osa jota ei
+ * saa kahdentaa kahteen paikkaan.
+ *
+ * Palauttaa `null` kun tiedote ei ole hanke tai on tuoreusrajan takana.
+ */
+export function sttKandidaatti(
+  release: any,
+  opts: { cutoffDate: Date | null; sourceName: string }
+): any | null {
+  const releaseDate = release?.date ? new Date(release.date) : null
+  if (opts.cutoffDate && releaseDate && releaseDate < opts.cutoffDate) return null
+
+  const fi = release?.versions?.fi
+  const title = (fi?.title || "").trim()
+  const relativeUrl = fi?.url || ""
+  if (!title || !relativeUrl) return null
+
+  const description =
+    (fi?.metadescription || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() || null
+
+  const haystack = `${title} ${description ?? ""}`.toLowerCase()
+  if (EXCLUDE_KEYWORDS.some((k) => haystack.includes(k))) return null
+  if (!CONSTRUCTION_SIGNALS.some((k) => haystack.includes(k))) return null
+
+  const absoluteHref = relativeUrl.startsWith("http")
+    ? relativeUrl
+    : `https://www.sttinfo.fi${relativeUrl}`
+
+  const city = detectCityFromText(haystack)
+  const region = city ? getMunicipalityByName(city)?.region ?? null : null
+  const completed = COMPLETED_KEYWORDS.some((k) => haystack.includes(k))
+
+  const parties = resolveParties(release?.publisher?.name ?? null, title, description)
+
+  return {
+    name: title,
+    description,
+    city,
+    region,
+    location: null,
+    developer: parties.developer,
+    builder: parties.builder,
+    phase: completed ? "Valmistunut" : "Suunnittelussa",
+    source_url: absoluteHref,
+    confidence: 0.5,
+    completed,
+    source_name: opts.sourceName,
+  }
+}
+
 export async function fetchSttHakuSource() {
   const cutoffDate = new Date()
   cutoffDate.setDate(cutoffDate.getDate() - TUOREUSIKKUNA_PAIVAA)
@@ -844,54 +904,14 @@ export async function fetchSttHakuSource() {
       const id = String(release?.id ?? "")
       if (!id || seen.has(id)) continue
 
-      const releaseDate = release?.date ? new Date(release.date) : null
-      if (releaseDate && releaseDate < cutoffDate) continue
-
-      const fi = release?.versions?.fi
-      const title = (fi?.title || "").trim()
-      const relativeUrl = fi?.url || ""
-      if (!title || !relativeUrl) continue
-
-      const description =
-        (fi?.metadescription || "")
-          .replace(/<[^>]+>/g, " ")
-          .replace(/\s+/g, " ")
-          .trim() || null
-
-      const haystack = `${title} ${description ?? ""}`.toLowerCase()
-      if (EXCLUDE_KEYWORDS.some((k) => haystack.includes(k))) continue
-      if (!CONSTRUCTION_SIGNALS.some((k) => haystack.includes(k))) continue
+      const candidate = sttKandidaatti(release, {
+        cutoffDate,
+        sourceName: "stt_haku",
+      })
+      if (!candidate) continue
 
       seen.add(id)
-
-      const absoluteHref = relativeUrl.startsWith("http")
-        ? relativeUrl
-        : `https://www.sttinfo.fi${relativeUrl}`
-
-      const city = detectCityFromText(haystack)
-      const region = city ? getMunicipalityByName(city)?.region ?? null : null
-      const completed = COMPLETED_KEYWORDS.some((k) => haystack.includes(k))
-
-      const parties = resolveParties(
-        release?.publisher?.name ?? null,
-        title,
-        description
-      )
-
-      results.push({
-        name: title,
-        description,
-        city,
-        region,
-        location: null,
-        developer: parties.developer,
-        builder: parties.builder,
-        phase: completed ? "Valmistunut" : "Suunnittelussa",
-        source_url: absoluteHref,
-        confidence: 0.5,
-        completed,
-        source_name: "stt_haku",
-      })
+      results.push(candidate)
     }
   }
 
