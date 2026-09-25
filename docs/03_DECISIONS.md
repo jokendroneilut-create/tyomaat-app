@@ -5,6 +5,102 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-214 - Rakennuslehti kertoi urakan, mutta ei kaupunkia eika yritysta
+
+Ehdokas "Are sai viiden miljoonan talotekniikkaurakan kouluhankkeesta"
+(23.9.2026) tuli jonoon ilman maakuntaa, kaupunkia ja yhtaan yritysta -
+vaikka sen oma kuvaus sanoo "Halkokarin koulu- ja paivakotihankkeesta
+**Kokkolassa**" ja "Talotekniikkayritys **Are** on saanut".
+
+#### Kaksi vikaa
+
+**1. Kaupunki paateltiin vain RSS-ingressista.** `fetchRakennuslehtiSource`
+lukee kaupungin otsikosta ja syotteen kuvauksesta. Rikastus hakee sen
+jalkeen koko artikkelin ja korvaa kuvauksen - **muttei laske kaupunkia
+uudelleen**. Otsikko ei nimennyt kaupunkia, joten kentta jai tyhjaksi
+vaikka teksti kertoi sen.
+
+Kaupunki on myos duplikaattitunnistuksen ehto: tasmaytys vaatii saman
+kaupungin, joten ilman sita sama hanke toisesta lahteesta ei loydy. Tassa
+tapauksessa kannassa oli jo hyvaksytty "Lujatalo valittu Halkokarin
+koulu- ja paivakotihankkeen toteuttajaksi", Kokkola.
+
+**2. Yritysta ei poimittu lainkaan.** `builderFromHeadline` tunsi vain
+urakointiverbit ("X rakentaa", "X urakoi"). Otsikkomuoto "X sai urakan"
+ja "X:lle urakka" - Rakennuslehden vakiomuotoja - jai kokonaan ulos.
+
+Mitattu 25.9.2026 Rakennuslehden 81 otsikolla: nykyinen saanto poimi
+viisi, "sai/voitti" tuo kolme ja allatiivi seitseman lisaa, eli 5 -> 15
+(19 %). Luin kaikki kymmenen lapi, yksikaan ei ollut vaara.
+
+**Nama eivat tarvitse erikseen nimettya tilaajaa.** Muu saanto vaatii sen
+(D-...: "X rakentaa" ei kerro kummasta roolista on kyse), mutta urakan voi
+VASTAANOTTAA vain urakoitsijana.
+
+**Perusmuoto vahvistetaan tekstista.** Allatiivin purku on arvaus kun
+vartalo muuttuu: "Jatkeelle" -> saanto antaa "Jatkee", oikea nimi on
+"Jatke". Nimen on esiinnyttava omana sanana otsikossa tai leipatekstissa,
+muuten ei poimita.
+
+**Sivu-urakan saaja ei ole paaurakoitsija.** "Are sai talotekniikkaurakan"
+ja "Kreate sai tasoristeysten poistourakan" ovat sama muoto mutta eri
+rooli. Are menee `related_companies`-listaan - sama ratkaisu kuin
+suunnittelijalla (`companyRelease.ts`, role "designer").
+
+#### Aren oma sivu lahteeksi
+
+Sama tieto oli **are.fi:ssa 17.9.**, kuusi paivaa ennen Rakennuslehtea, ja
+selvasti tarkempana:
+
+    Rakennuslehti  urakoitsija, urakkasumma
+    are.fi         + kaupunki, rakennuttaja (Kokkolan kaupunki),
+                     paaurakoitsija (Lujatalo Oy), laajuus 9 700 m2,
+                     aikataulu syksy 2026 - kevat 2028
+
+**Talotekniikka on oma lahdeluokkansa.** Paaurakoitsijoiden sivut ovat jo
+lahteina, mutta talotekniikkaurakoitsija tiedottaa hankkeista joissa se on
+SIVU-urakoitsija - ja nimeaa silloin usein seka rakennuttajan etta
+paaurakoitsijan. Yksi tiedote antaa kolme yritysta yhden sijaan.
+
+Lahde on WordPressin `news`-tyyppi (`/wp-json/wp/v2/news`), 342 uutista.
+Moduuli on yleinen (`talotekniikkaUutiset.ts`), joten seuraava yritys on
+yksi rivi.
+
+**KAKSI VIKAA LOYTYI KUIVAHARJOITUKSESTA:**
+
+1. *Signaali luettiin koko tekstista.* Lapi menivat myos
+   strategiajulkistukset ja yritysostot - niissa sanotaan ohimennen etta
+   yritys "toteuttaa" jotain. Pelkka otsikko: 93 -> 31 kandidaattia,
+   joista luettuna 27 on aitoja hankkeita.
+2. *Kaupunki luettiin koko tekstista.* "ARE talotekniikkakumppaniksi
+   uuteen hotellihankkeeseen **Kokkolassa**" sai kaupungikseen
+   Pietarsaaren ja "Uusi hybridiareena nousee **Kokkolaan**" Kaustisen.
+   Otsikko ensin, sitten ingressi (LEAD_LENGTH) - sama raja kuin
+   osapuolten poiminnassa.
+
+Sama vika loytyi takautuvasta ajosta: "Kajaanilainen datakeskus rakentuu
+vahvasti paikallisin voimin" sai kaupungikseen Lahden. Korjattu samalla
+tavalla ennen ajoa.
+
+**Tulos.** Are: 31 kandidaattia, 15 jonoon (portti ohitti 15), 13:lla
+kaupunki, kaikilla Are liittyvana yrityksena, kuudella paaurakoitsija
+(Lujatalo, PEAB, Hartela Pohjois-Suomi, Aspro, Joensuun
+HS-Kiinteistosaneeraus). Rakennuslehden takautuva ajo: 16 rivia sai
+kaupungin tai yrityksen.
+
+**Ohjausmerkki tiedostossa - taas.** `` kirjoittui regexiin
+askelpalautinmerkkina (kuusi kappaletta), tasan kuten D-136:ssa.
+`lib/ohjausmerkit.spec.ts` nappasi sen. Se testi on ainoa syy miksei vika
+paassyt lapi: regex nayttaa oikealta lukiessa.
+
+`lib/agent/builderFromHeadline.ts` · `lib/agent/fetchRakennuslehtiSource.ts` ·
+`lib/agent/talotekniikkaUutiset.ts` · `lib/agent/sources.ts` ·
+`scripts/measure-talotekniikkalahde.ts` ·
+`scripts/lisaa-talotekniikkalahde.ts` ·
+`scripts/fix-rakennuslehti-kaupunki.ts`
+
+---
+
 ### D-213 - Duplikaattivihje laskettiin ja heitettiin pois, mutta portti oli oikeassa
 
 Kolmas ehdotus oli "Rakennuslehti laukaisimeksi": artikkelin osuessa

@@ -51,6 +51,7 @@ import { fetchHelsinkiUutisetSource } from "./fetchHelsinkiUutisetSource"
 import { fetchRakennuslehtiSource, enrichRakennuslehtiCandidate } from "./fetchRakennuslehtiSource"
 import { fetchSttHakuSource, enrichSttCandidate } from "./fetchSttHakuSource"
 import { fetchSttJulkaisijatSource } from "./fetchSttJulkaisijatSource"
+import { luoTalotekniikkaLahde } from "./talotekniikkaUutiset"
 import { fetchYmparistolupaSource } from "./fetchYmparistolupaSource"
 import { fetchYvaSource } from "./fetchYvaSource"
 import { createYvaEnricher } from "./yvaProjectPage"
@@ -154,6 +155,19 @@ export const sources = [
     name: "stt_julkaisijat",
     fetch: fetchSttJulkaisijatSource,
     enrich: enrichSttCandidate,
+  },
+  /*
+   * Talotekniikkaurakoitsija tiedottaa hankkeista joissa se on
+   * SIVU-urakoitsija, ja nimeaa silloin usein rakennuttajan ja
+   * paaurakoitsijan (D-214). Kuvaus tulee jo rajapinnasta, joten
+   * erillista rikastusta ei tarvita.
+   */
+  {
+    name: "are",
+    fetch: luoTalotekniikkaLahde({
+      nimi: "Are",
+      endpoint: "https://www.are.fi/wp-json/wp/v2/news",
+    }),
   },
   { name: "ymparistolupa", fetch: fetchYmparistolupaSource },
   /*

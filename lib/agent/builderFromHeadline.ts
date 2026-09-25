@@ -1,4 +1,4 @@
-import { NAME, cleanCompanyName } from "./companyName"
+import { NAME, cleanCompanyName, allativeToNominative } from "./companyName"
 import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
 import { LEAD_LENGTH } from "./buildingType"
 
@@ -98,12 +98,103 @@ function leadNamesClient(description: string): boolean {
   return false
 }
 
+/*
+ * URAKAN VASTAANOTTAMINEN KERTOO ROOLIN ITSESSÄÄN (D-214).
+ *
+ * "X rakentaa" ei kerro kummasta roolista on kyse, ja siksi alla vaaditaan
+ * erikseen nimetty tilaaja. Kaksi otsikkomuotoa ei tarvitse sitä todistetta
+ * lainkaan, koska urakan voi VASTAANOTTAA vain urakoitsijana:
+ *
+ *   "Are sai viiden miljoonan talotekniikkaurakan kouluhankkeesta"
+ *   "Kreate sai tasoristeysten poistourakan Lapista"
+ *   "Lujatalolle muutosurakka Helsingin Herttoniemestä"
+ *   "Jatkeelle toimitilaurakka Helsingin keskustasta"
+ *
+ * Kohde on rajattu urakkaan ja projektiin tarkoituksella. "X:lle uusi
+ * sairaala" on sama muoto mutta päinvastainen rooli - siinä X saa
+ * rakennuksen, ei urakkaa.
+ *
+ * Mitattu 25.9.2026 Rakennuslehden 81 otsikolla: nykyinen sääntö poimi
+ * viisi, "sai/voitti" tuo kolme ja allatiivi seitsemän lisää - eli
+ * 5 -> 15 (19 %). Luin kaikki kymmenen läpi, yksikään ei ollut väärä.
+ */
+const AWARD_VERB = /^(?:sai|saa|voitti)$/i
+
+/*
+ * Urakka tai projekti, ei mikä tahansa hanke tai kohde.
+ *
+ * ILMAN SANANRAJAA. Urakkalaji on suomessa yhdyssanan loppuosa -
+ * "talotekniikkaurakan", "poistourakan", "siltaurakka",
+ * "miljoonaurakat" - joten `\burak` osui vain kahteen otsikkoon
+ * kymmenestä (mitattu 25.9.2026).
+ */
+const AWARD_OBJECT = /urak|projekti/i
+
+/*
+ * Allatiivimuotoinen nimi otsikon alussa. Nimi voi olla monisanainen
+ * ("Pohjola Rakennukselle"), joten edeltävät isolla alkavat sanat
+ * otetaan mukaan.
+ */
+const AWARDED_TO = new RegExp(
+  `^((?:[A-ZÅÄÖ][\\wåäöÅÄÖ&.\\-]*\\s+)*[A-ZÅÄÖ][\\wåäöÅÄÖ&.\\-]*lle)\\b`
+)
+
+function builderFromAward(
+  text: string,
+  description?: string | null
+): string | null {
+  const kelpaa = (nimi: string | null): string | null => {
+    if (!nimi || nimi.length < 3) return null
+    if (getMunicipalityByAnyForm(nimi)) return null
+    if (NOT_A_COMPANY.test(nimi.split(/\s+/)[0])) return null
+    return nimi
+  }
+
+  /* "X sai/voitti ... urakan" */
+  const verbi = text.match(HEADLINE)
+  if (verbi && AWARD_VERB.test(verbi[2])) {
+    const rest = text.slice(verbi[0].length)
+    if (AWARD_OBJECT.test(rest)) return kelpaa(cleanCompanyName(verbi[1]))
+  }
+
+  /*
+   * "X:lle ... urakka"
+   *
+   * PERUSMUOTO ON VAHVISTETTAVA TEKSTISTÄ. Allatiivin purku on arvaus
+   * silloin kun vartalo muuttuu: "Jatkeelle" -> sääntö antaa "Jatkee",
+   * oikea nimi on "Jatke". Väärä yritysnimi näkyy asiakkaalle
+   * urakoitsijana, joten arvaus ei kelpaa - nimen on esiinnyttävä
+   * omana sanana otsikossa tai leipätekstissä.
+   *
+   * Käytännössä tämä siirtää poiminnan rikastuksen jälkeen: RSS antaa
+   * vain otsikon, artikkelin teksti nimeää yrityksen perusmuodossa.
+   */
+  const allatiivi = text.match(AWARDED_TO)
+  if (allatiivi && AWARD_OBJECT.test(text.slice(allatiivi[0].length))) {
+    const konteksti = `${text} ${description ?? ""}`
+    const osat = allatiivi[1].split(/\s+/)
+    const viimeinen = allativeToNominative(osat[osat.length - 1], konteksti)
+
+    if (viimeinen) {
+      const nimi = kelpaa(cleanCompanyName([...osat.slice(0, -1), viimeinen].join(" ")))
+      if (nimi && new RegExp(`(^|\\W)${nimi.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\W|$)`, "i").test(konteksti)) {
+        return nimi
+      }
+    }
+  }
+
+  return null
+}
+
 export function builderFromHeadline(
   title: string | null | undefined,
   description?: string | null
 ): string | null {
   const text = String(title ?? "").trim()
   if (!text) return null
+
+  const palkinto = builderFromAward(text, description)
+  if (palkinto) return palkinto
 
   const match = text.match(HEADLINE)
   if (!match) return null

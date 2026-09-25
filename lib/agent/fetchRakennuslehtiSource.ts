@@ -1,6 +1,9 @@
 import { extractReleaseBody } from "./companyRelease"
 import { detectCityFromText } from "./detectCityFromText"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import { builderFromHeadline } from "./builderFromHeadline"
+import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
+import { LEAD_LENGTH } from "./buildingType"
 
 /*
  * Rakennuslehti (rakennuslehti.fi/feed) — alan uutislehden RSS. Kattaa juuri
@@ -167,6 +170,11 @@ export async function fetchRakennuslehtiSource() {
     results.push({
       name: title,
       description,
+      /*
+       * Urakoitsija jo syotevaiheessa silloin kun otsikko ja ingressi
+       * riittavat; rikastus taydentaa loput leipatekstista.
+       */
+      builder: builderFromHeadline(title, description),
       city, // valtakunnallinen syöte -> ei oletuskaupunkia; null jos ei tunnisteta
       region,
       location: null,
@@ -247,8 +255,91 @@ export async function enrichRakennuslehtiCandidate(candidate: any): Promise<any>
      */
     if (body.length <= String(candidate.description ?? "").length) return candidate
 
-    return { ...candidate, description: body }
+    return { ...candidate, ...poiminnatTekstista(candidate, body), description: body }
   } catch {
     return candidate
   }
+}
+
+/*
+ * KAUPUNKI JA URAKOITSIJA LUETAAN VASTA LEIPÄTEKSTISTÄ (D-214).
+ *
+ * `fetchRakennuslehtiSource` päättelee kaupungin RSS-syötteen otsikosta ja
+ * ingressistä. Ne ovat usein liian lyhyitä: mitattu esimerkki 23.9.2026,
+ * "Are sai viiden miljoonan talotekniikkaurakan kouluhankkeesta" - otsikko
+ * ei nimeä kaupunkia lainkaan, artikkelin ensimmäinen virke nimeää sekä
+ * kaupungin että urakoitsijan ("Talotekniikkayritys Are on saanut
+ * talotekniikkaurakan Halkokarin koulu- ja päiväkotihankkeesta
+ * Kokkolassa"). Hanke jäi jonoon ilman maakuntaa, kaupunkia ja yritystä.
+ *
+ * Kaupunki on myös duplikaattitunnistuksen ehto: täsmäytys vaatii saman
+ * kaupungin, joten ilman sitä sama hanke toisesta lähteestä ei löydy.
+ *
+ * VAIN TÄYDENNETÄÄN. Jos syöte ehti jo päätellä kentän, se säilyy -
+ * ingressi on lähempänä otsikkoa ja siten harvemmin naapurihankkeesta.
+ */
+/*
+ * SIVU-URAKAN SAAJA EI OLE PAAURAKOITSIJA.
+ *
+ * "Are sai viiden miljoonan talotekniikkaurakan" ja "Kreate sai
+ * tasoristeysten poistourakan" ovat sama otsikkomuoto mutta eri rooli:
+ * Kreate on hankkeen paaurakoitsija, Are yksi urakoitsija muiden joukossa.
+ * Mitattu esimerkki: Aren omassa tiedotteessa lukee "Hankkeen
+ * paaurakoitsijana toimii Lujatalo Oy".
+ *
+ * Vaara rooli on pahempi kuin puuttuva tieto, koska urakoitsijakenttaa
+ * kaytetaan kilpailija-analyysiin. Sivu-urakan saaja menee siksi
+ * `related_companies`-listaan - sama ratkaisu kuin suunnittelijalla
+ * (`companyRelease.ts`, role "designer").
+ *
+ * Oma kuvio eika `detectTrades`: se vaatii lajin olevan urakkasanan alku
+ * ("sahkourakka"), eika tunne talotekniikkaa lainkaan. Urakkalajien
+ * taksonomia ohjaa duplikaattien vetoja, joten sita ei muuteta tata varten.
+ */
+const SIVUURAKKA =
+  /taloteknii|\blvi\b|\blvia\b|\blvis\b|putkiurak|ilmanvaihtourak|sahkourak|sähköurak|automaatiourak|maalausurak|kattourak|viherurak/i
+
+export function poiminnatTekstista(
+  candidate: any,
+  body: string
+): Record<string, any> {
+  const lisat: Record<string, any> = {}
+
+  if (!candidate?.city) {
+    /*
+     * OTSIKKO ENSIN, SITTEN INGRESSI - EI KOKO ARTIKKELIA.
+     *
+     * Jutun loppuosa siteeraa johtajia ja kertoo yrityksen muista
+     * kohteista. Mitattu 25.9.2026 kuivaharjoituksessa: "Kajaanilainen
+     * datakeskus rakentuu vahvasti paikallisin voimin" sai kaupungikseen
+     * Lahden. Sama raja kuin osapuolten poiminnassa (LEAD_LENGTH).
+     */
+    const city =
+      detectCityFromText(String(candidate?.name ?? "").toLowerCase()) ??
+      detectCityFromText(body.slice(0, LEAD_LENGTH).toLowerCase())
+    if (city) {
+      lisat.city = city
+      if (!candidate?.region) lisat.region = getMunicipalityByName(city)?.region ?? null
+    }
+  }
+
+  const yritys = candidate?.builder
+    ? null
+    : builderFromHeadline(candidate?.name ?? null, body)
+
+  if (yritys && !SIVUURAKKA.test(String(candidate?.name ?? ""))) {
+    lisat.builder = yritys
+  } else if (yritys) {
+    const ennen: string[] = Array.isArray(candidate?.metadata?.related_companies)
+      ? candidate.metadata.related_companies
+      : []
+    const jalkeen = mergeCompanyNames(ennen, [yritys])
+
+    /* Ei ehdoteta muutosta jos yritys on jo listalla. */
+    if (jalkeen.length !== ennen.length) {
+      lisat.metadata = { ...(candidate?.metadata ?? {}), related_companies: jalkeen }
+    }
+  }
+
+  return lisat
 }

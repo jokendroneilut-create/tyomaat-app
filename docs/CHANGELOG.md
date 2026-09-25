@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Rakennuslehden jutuista kaupunki ja urakoitsija, Are lähteeksi (D-214)
+
+"Are sai viiden miljoonan talotekniikkaurakan kouluhankkeesta" tuli jonoon
+ilman maakuntaa, kaupunkia ja yhtään yritystä — vaikka sen oma teksti
+kertoo molemmat. Kaupunki pääteltiin vain RSS-ingressistä eikä laskettu
+uudelleen artikkelin tekstistä, ja otsikkomuodot "X sai urakan" ja
+"X:lle urakka" olivat urakoitsijan poiminnan ulkopuolella. Molemmat
+korjattu, ja 16 vanhaa Rakennuslehti-riviä sai kaupungin tai yrityksen
+takautuvasti.
+
+Lisäksi **Aren oma uutissivu on nyt lähde**. Sama tieto oli siellä kuusi
+päivää ennen lehteä ja tarkempana: kaupunki, rakennuttaja, pääurakoitsija,
+laajuus ja aikataulu. Talotekniikkaurakoitsija tiedottaa hankkeista joissa
+se on sivu-urakoitsija ja nimeää silloin usein sekä rakennuttajan että
+pääurakoitsijan — yksi tiedote antaa kolme yritystä yhden sijaan.
+
 ### Saman tuulipuiston YVA ja kaava löytyvät nyt toisilleen (D-213)
 
 Tuulivoimahanke kulkee kahta polkua — kunnan osayleiskaava ja ELY:n
