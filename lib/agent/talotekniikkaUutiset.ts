@@ -34,8 +34,13 @@ import { LEAD_LENGTH } from "./buildingType"
 export type TalotekniikkaYritys = {
   /* Yrityksen nimi sellaisena kuin se näytetään hankkeen yrityksissä. */
   nimi: string
-  /* WordPressin REST-päätepiste ilman sivutusparametreja. */
+  /*
+   * WordPressin REST-päätepiste ilman sivutusparametreja, tai RSS-syötteen
+   * osoite sellaisenaan.
+   */
   endpoint: string
+  /* Oletus on WordPress; kaikki eivät ole sitä (Sarlin on HubSpotissa). */
+  tyyppi?: "wp" | "rss"
 }
 
 /*
@@ -69,6 +74,17 @@ const HANKESIGNAALI = [
   "talotekniikkaurak",
   "saneeraa",
   "peruskorjaa",
+  /*
+   * Sarlinin otsikkotyyli on eri kuin Aren: "Sarlin mukana RAKENTAMASSA
+   * biokaasuratkaisua Nurmekseen" ja "Mäntsälän biovoiman
+   * LAAJENNUSHANKE". Ilman näitä kahta lähde tuotti nolla kandidaattia
+   * kymmenestä uutisesta, joista kaksi on hankkeita.
+   *
+   * Pelkkä "mukana" ei kelpaa: sillä osuisi myös "Olemme mukana vuoden
+   * 2025 Ilmasto-ohjelmassa".
+   */
+  "rakentamassa",
+  "laajennushank",
 ]
 
 /*
@@ -141,40 +157,106 @@ function tekstiksi(html: string | null | undefined): string {
     .trim()
 }
 
+/* Yhteinen muoto kummallekin syötetyypille. */
+type RaakaUutinen = { otsikko: string; osoite: string; teksti: string }
+
+async function haeTeksti(osoite: string): Promise<string | null> {
+  const ohjain = new AbortController()
+  const kello = setTimeout(() => ohjain.abort(), AIKAKATKAISU_MS)
+  try {
+    const vastaus = await fetch(osoite, {
+      signal: ohjain.signal,
+      cache: "no-store",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)" },
+    })
+    if (!vastaus.ok) return null
+    return await vastaus.text()
+  } catch {
+    return null
+  } finally {
+    clearTimeout(kello)
+  }
+}
+
+async function haeWordPress(endpoint: string): Promise<RaakaUutinen[]> {
+  const out: RaakaUutinen[] = []
+
+  for (let sivu = 1; sivu <= SIVUJA; sivu++) {
+    const teksti = await haeTeksti(
+      `${endpoint}?per_page=${SIVUKOKO}&page=${sivu}&_fields=id,date,link,title,content`
+    )
+    if (!teksti) break
+
+    let uutiset: any[] = []
+    try {
+      uutiset = JSON.parse(teksti)
+    } catch {
+      break
+    }
+    if (!Array.isArray(uutiset) || uutiset.length === 0) break
+
+    for (const u of uutiset) {
+      const otsikko = tekstiksi(u?.title?.rendered)
+      const osoite = u?.link
+      if (otsikko && osoite) {
+        out.push({ otsikko, osoite, teksti: tekstiksi(u?.content?.rendered) })
+      }
+    }
+
+    if (uutiset.length < SIVUKOKO) break
+  }
+
+  return out
+}
+
+/*
+ * RSS-SYÖTE. Kaikki eivät ole WordPressiä: Sarlin on HubSpotissa, jonka
+ * syöte antaa koko tekstin `content:encoded`-kentässä. Sama muunnos ja
+ * samat suodattimet kuin WordPress-puolella - eroa on vain haussa.
+ */
+function osa(item: string, tagi: string): string | null {
+  const osuma = item.match(
+    new RegExp(`<${tagi}[^>]*>([\\s\\S]*?)<\\/${tagi}>`, "i")
+  )
+  if (!osuma) return null
+  return tekstiksi(osuma[1].replace(/<!\[CDATA\[/g, "").replace(/\]\]>/g, ""))
+}
+
+async function haeRss(endpoint: string): Promise<RaakaUutinen[]> {
+  const xml = await haeTeksti(endpoint)
+  if (!xml) return []
+
+  const out: RaakaUutinen[] = []
+
+  for (const item of xml.match(/<item[\s\S]*?<\/item>/gi) ?? []) {
+    const otsikko = osa(item, "title")
+    const osoite = osa(item, "link")
+    if (!otsikko || !osoite) continue
+
+    const teksti =
+      osa(item, "content:encoded") ?? osa(item, "description") ?? ""
+
+    out.push({ otsikko, osoite, teksti })
+  }
+
+  return out
+}
+
 export function luoTalotekniikkaLahde(yritys: TalotekniikkaYritys) {
   return async function fetchTalotekniikkaUutiset() {
     const tulokset: any[] = []
 
-    for (let sivu = 1; sivu <= SIVUJA; sivu++) {
-      const ohjain = new AbortController()
-      const kello = setTimeout(() => ohjain.abort(), AIKAKATKAISU_MS)
+    const uutiset =
+      yritys.tyyppi === "rss"
+        ? await haeRss(yritys.endpoint)
+        : await haeWordPress(yritys.endpoint)
 
-      let uutiset: any[] = []
-      try {
-        const vastaus = await fetch(
-          `${yritys.endpoint}?per_page=${SIVUKOKO}&page=${sivu}&_fields=id,date,link,title,content`,
-          {
-            signal: ohjain.signal,
-            cache: "no-store",
-            headers: { "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)" },
-          }
-        )
-        if (!vastaus.ok) break
-        uutiset = await vastaus.json()
-      } catch {
-        break
-      } finally {
-        clearTimeout(kello)
-      }
-
-      if (!Array.isArray(uutiset) || uutiset.length === 0) break
-
+    {
       for (const uutinen of uutiset) {
-        const otsikko = tekstiksi(uutinen?.title?.rendered)
-        const osoite = uutinen?.link
-        if (!otsikko || !osoite) continue
+        const otsikko = uutinen.otsikko
+        const osoite = uutinen.osoite
 
-        const teksti = tekstiksi(uutinen?.content?.rendered)
+        const teksti = uutinen.teksti
         const haystack = `${otsikko} ${teksti}`.toLowerCase()
 
         /*
@@ -241,8 +323,6 @@ export function luoTalotekniikkaLahde(yritys: TalotekniikkaYritys) {
           metadata: { related_companies: mergeCompanyNames([], [yritys.nimi]) },
         })
       }
-
-      if (uutiset.length < SIVUKOKO) break
     }
 
     return tulokset

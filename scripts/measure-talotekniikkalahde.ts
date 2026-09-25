@@ -8,8 +8,10 @@ export {}
  *
  *   npx tsx scripts/measure-talotekniikkalahde.ts
  */
-const YRITYKSET = [
+const YRITYKSET: any[] = [
   { nimi: "Are", endpoint: "https://www.are.fi/wp-json/wp/v2/news" },
+  { nimi: "Sarlin", endpoint: "https://www.sarlin.com/ajankohtaista/tag/uutinen/rss.xml", tyyppi: "rss" },
+  { nimi: "Amplit", endpoint: "https://www.amplit.fi/wp-json/wp/v2/posts" },
 ]
 
 async function main() {

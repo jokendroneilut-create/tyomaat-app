@@ -27,6 +27,11 @@ laajuus ja aikataulu. Talotekniikkaurakoitsija tiedottaa hankkeista joissa
 se on sivu-urakoitsija ja nimeää silloin usein sekä rakennuttajan että
 pääurakoitsijan — yksi tiedote antaa kolme yritystä yhden sijaan.
 
+Samalla lisättiin **Sarlinin ja Amplitin** uutissivut sekä **Bravida,
+Assemblin ja Aito Talotekniikka** STT:n julkaisijasyötteeseen. Yhteensä
+21 uutta hanketta katselmoitavaksi. Caverionilla, Quattroservicesilla,
+LeaseGreenillä ja Constilla ei ole koneluettavaa syötettä.
+
 ### Saman tuulipuiston YVA ja kaava löytyvät nyt toisilleen (D-213)
 
 Tuulivoimahanke kulkee kahta polkua — kunnan osayleiskaava ja ELY:n

@@ -169,6 +169,32 @@ export const sources = [
       endpoint: "https://www.are.fi/wp-json/wp/v2/news",
     }),
   },
+  /*
+   * Sarlin on HubSpotissa eika WordPressissa, ja uutiset ovat oman
+   * tagin takana: `/ajankohtaista/rss.xml` on asiantuntijablogi eika
+   * sisalla hankkeita lainkaan (mitattu 25.9.2026: 10 juttua, 0
+   * hanketta), tag-syote antaa molemmat hankeuutiset.
+   */
+  {
+    name: "sarlin",
+    fetch: luoTalotekniikkaLahde({
+      nimi: "Sarlin",
+      endpoint: "https://www.sarlin.com/ajankohtaista/tag/uutinen/rss.xml",
+      tyyppi: "rss",
+    }),
+  },
+  /*
+   * Amplitin uutisvirta on pysahtynyt 5/2025, mutta 11 hanketta on
+   * takautuvasti arvokasta: ne taydentavat olemassa olevia hankkeita
+   * (Laakson yhteissairaala, Tapiolan Feenix, Etu-Toolon lukio).
+   */
+  {
+    name: "amplit",
+    fetch: luoTalotekniikkaLahde({
+      nimi: "Amplit",
+      endpoint: "https://www.amplit.fi/wp-json/wp/v2/posts",
+    }),
+  },
   { name: "ymparistolupa", fetch: fetchYmparistolupaSource },
   /*
    * Rikastuskoukku lukee hankesivun nimetyt kentät (hankevastaava,

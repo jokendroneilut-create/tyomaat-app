@@ -68,6 +68,17 @@ export const JULKAISIJAT: { nimi: string; id: string }[] = [
   { nimi: "Puolustuskiinteistöt", id: "69820941" },
   { nimi: "Helsingin kaupungin asunnot Oy (Heka)", id: "69818936" },
   { nimi: "Asuntosäätiö", id: "10333333" },
+  /*
+   * Talotekniikkaurakoitsijat (D-214). Ne tiedottavat hankkeista joissa
+   * ovat sivu-urakoitsijana ja nimeavat usein paaurakoitsijan.
+   * Mitattu 25.9.2026: Bravidalla 20 tiedotetta 12 kk, joista 11
+   * puuttui kannasta. Assemblinilla ja Aito Talotekniikalla ei ole
+   * tuoretta aukkoa, mutta pyynto on halpa ja tyyli voi muuttua.
+   * Sarlin ei ole listalla: silla on oma uutissyote (sources.ts).
+   */
+  { nimi: "Bravida Finland Oy", id: "68994337" },
+  { nimi: "Assemblin Oy", id: "54794371" },
+  { nimi: "Aito Talotekniikka Oy", id: "69820534" },
 ]
 
 /*

@@ -31,6 +31,30 @@ const RIVIT: Record<string, any> = {
     collector: "legacyFetchCollector",
     parser: "are",
   },
+  sarlin: {
+    id: "legacy-sarlin",
+    name: "Sarlin ajankohtaista",
+    type: "html",
+    category: "company_release",
+    url: "https://www.sarlin.com/ajankohtaista/tag/uutinen",
+    priority: 10,
+    enabled: true,
+    refresh_minutes: 1440,
+    collector: "legacyFetchCollector",
+    parser: "sarlin",
+  },
+  amplit: {
+    id: "legacy-amplit",
+    name: "Amplit ajankohtaista",
+    type: "html",
+    category: "company_release",
+    url: "https://www.amplit.fi/ajankohtaista/",
+    priority: 10,
+    enabled: true,
+    refresh_minutes: 1440,
+    collector: "legacyFetchCollector",
+    parser: "amplit",
+  },
 }
 
 async function main() {

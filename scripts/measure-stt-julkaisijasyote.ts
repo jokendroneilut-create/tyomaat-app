@@ -20,6 +20,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
  */
 
 /* publisherId luettu olemassa olevien STT-dokumenttien osoitteista. */
+/* Sama lista kuin lib/agent/fetchSttJulkaisijatSource.ts. */
 const JULKAISIJAT: [string, string][] = [
   ["Kreate Group Oyj", "69818424"],
   ["GRK Infra Oyj", "69819211"],
@@ -34,10 +35,13 @@ const JULKAISIJAT: [string, string][] = [
   ["Tekova Oyj", "69820639"],
   ["Mangrove Oy", "69819151"],
   ["Nimlas", "69817476"],
-  ["Senaatti-kiinteistot", "69820807"],
-  ["Puolustuskiinteistot", "69820941"],
-  ["Helsingin kaupungin asunnot (Heka)", "69818936"],
-  ["Asuntosaatio", "10333333"],
+  ["Senaatti-kiinteistöt", "69820807"],
+  ["Puolustuskiinteistöt", "69820941"],
+  ["Helsingin kaupungin asunnot Oy (Heka)", "69818936"],
+  ["Asuntosäätiö", "10333333"],
+  ["Bravida Finland Oy", "68994337"],
+  ["Assemblin Oy", "54794371"],
+  ["Aito Talotekniikka Oy", "69820534"],
 ]
 
 const KUUKAUDET = 12

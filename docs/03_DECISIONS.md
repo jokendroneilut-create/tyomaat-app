@@ -93,8 +93,45 @@ askelpalautinmerkkina (kuusi kappaletta), tasan kuten D-136:ssa.
 `lib/ohjausmerkit.spec.ts` nappasi sen. Se testi on ainoa syy miksei vika
 paassyt lapi: regex nayttaa oikealta lukiessa.
 
+#### Muut talotekniikkayritykset
+
+Kartoitin samalla mita muita alan yrityksia voi lukea koneellisesti.
+Kolme reittia, eri hinnalla:
+
+    yritys            reitti                     hankkeita
+    Are               WordPress /wp/v2/news      31 (15 jonoon)
+    Amplit            WordPress /wp/v2/posts     11 (3 jonoon)
+    Sarlin            RSS (HubSpot)               2 (2 jonoon)
+    Bravida           STT-julkaisijasyote         6 (1 jonoon)
+    Assemblin         STT-julkaisijasyote         0
+    Aito Talotekniikka STT-julkaisijasyote        0
+    Caverion, Quattroservices, LeaseGreen, Consti   ei konelukuista syotetta
+
+**HALVIN REITTI ENSIN.** Jos yritys tiedottaa STT Infossa, se on yksi rivi
+`fetchSttJulkaisijatSource`in listalle eika uutta koodia lainkaan (D-211).
+Oma syote rakennetaan vain kun STT:ssa ei ole mitaan - Sarlinilla on 0
+STT-tiedotetta 12 kuukaudessa mutta oma uutissivu, joten se sai oman
+lahteen.
+
+**OIKEA SYOTE ON ETSITTAVA.** Sarlinin `/ajankohtaista/rss.xml` on
+asiantuntijablogi: 10 juttua, nolla hanketta. Kayttajan osoittaman
+tag-sivun syote `/ajankohtaista/tag/uutinen/rss.xml` antaa molemmat
+hankeuutiset. Ensimmainen arvaus olisi tuottanut toimivan lahteen joka ei
+loyda mitaan.
+
+**OTSIKKOTYYLI ON YRITYSKOHTAINEN.** Aren sanasto ("toteuttaa",
+"kumppaniksi") ei osunut Sarliniin lainkaan: "mukana RAKENTAMASSA
+biokaasuratkaisua" ja "biovoiman LAAJENNUSHANKE". Kaksi sanaa lisaa,
+mitattuna niin etta ne eivat paasta lapi kohinaa ("mukana" yksin olisi
+poiminut myos "Olemme mukana Ilmasto-ohjelmassa").
+
+**Amplitin syote on pysahtynyt 5/2025.** Se lisattiin silti: 11 hanketta
+on takautuvasti arvokasta, koska ne taydentavat olemassa olevia hankkeita
+(Laakson yhteissairaala, Tapiolan Feenix, Etu-Toolon lukio).
+
 `lib/agent/builderFromHeadline.ts` · `lib/agent/fetchRakennuslehtiSource.ts` ·
 `lib/agent/talotekniikkaUutiset.ts` · `lib/agent/sources.ts` ·
+`lib/agent/fetchSttJulkaisijatSource.ts` ·
 `scripts/measure-talotekniikkalahde.ts` ·
 `scripts/lisaa-talotekniikkalahde.ts` ·
 `scripts/fix-rakennuslehti-kaupunki.ts`
