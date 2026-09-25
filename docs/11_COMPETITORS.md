@@ -16,17 +16,17 @@ väite ja mitattu tosiasia eivät saa näyttää samalta.
 
 ---
 
-## Tiivistelmä (päivitetty 20.8.2026)
+## Tiivistelmä (päivitetty 25.9.2026)
 
 Jos luet vain tämän:
 
 | | |
 |---|---|
-| **RPT / Hubexo** | Ihmiset soittavat rakennuttajille. Julkaisi 17.8.2026 **Byggfakta Risen**: tekoälyvalmentaja Rune, joka kertoo kenelle soittaa tänään ja kirjoittaa sähköpostin valmiiksi. **Aluehinnoittelu poistui — käyttöönotto kattaa koko Suomen.** Vanha Smart oli 600 €/kk yhdestä maakunnasta. Käyttöönotto maksullinen, 3–4 vk. |
+| **RPT / Hubexo** | Ihmiset soittavat rakennuttajille. **Byggfakta Rise** (17.8.2026): tekoälyvalmentaja Rune, joka kertoo kenelle soittaa tänään ja kirjoittaa sähköpostin valmiiksi; aluehinnoittelu poistui, käyttöönotto maksullinen 3–4 vk. Vanha Smart oli 600 €/kk yhdestä maakunnasta. **Hubexo Reach** (webinaari 6.10.2026): mobiilituote **alle 20 hengen yrityksille** — eli meidän segmenttimme. Hinta ja ostotapa yhä tuntemattomia. |
 | **Metroc** | Sama malli kuin meillä: automaatio julkisista lähteistä. 1,4 M€ / 23 hlöä / 400+ asiakasta → **~250–350 €/kk** (vahvistettu kahdesta pisteestä, 2021 ja 2025). Omistaa suomalaisen julkisen sektorin **asiakirjadatan** (Public Investments) — keruu alkanut jo 2021. Kasvoi 0,5 M€:sta 1,4 M€:oon 4,5 vuodessa, yhä tappiolla. |
 | **Meidän tie** | Julkinen hinta, ostaminen ilman myyjää, **irtisanottavissa 30 päivässä**. Ainoa etu joka seuraa pienuudesta eikä katoa kun kilpailija huomaa sen. |
 
-Kolme asiaa jotka on syytä muistaa ilman että niitä tarvitsee etsiä uudelleen:
+Neljä asiaa jotka on syytä muistaa ilman että niitä tarvitsee etsiä uudelleen:
 
 1. **Kattavuus- ja ominaisuuskilpailu on hävitty molempia vastaan.** Ei siksi
    ettei työtä tehdä, vaan siksi että toisella on puhelinsoittoja ja lähes
@@ -39,6 +39,11 @@ Kolme asiaa jotka on syytä muistaa ilman että niitä tarvitsee etsiä uudellee
    kolmas, mutta se kapeni 20.8.: Risessä on kuntien hankkeet
    yhteyshenkilöineen. Jäljelle jää **asiakirjataso** (budjetit,
    investointiohjelmat, pöytäkirjat) — ja siinä kilpailija on Metroc, ei RPT.
+4. **Erottautuja vanhenee ennen kuin se on tuotteessa — kolme kertaa
+   peräkkäin.** "Mitä tekisin tänään" kuoli 18.8., "koko Suomi yhdellä
+   hinnalla" 20.8., ja 25.9. Hubexo kohdisti Reachin alle 20 hengen
+   yrityksiin. **R1 (julkinen hinta, itsepalvelu, 30 pv) on kilpajuoksu, ei
+   järjestyskysymys.**
 
 ---
 
@@ -507,6 +512,134 @@ Investments, ei Risen.
 
 Aukko on siis olemassa, mutta kapeampi ja kilpaillumpi kuin kirjasin.
 
+### Hubexo Reach — pk-segmentin valtaus (webinaarikutsu 25.9.2026)
+
+Lähde: Hubexon markkinointisähköposti, joka kutsuu webinaariin **ti 6.10.2026
+klo 8.00–8.30**. Puhujat Lasse Paavola ja Ella Tuominen — sama pari kuin Risen
+webinaarissa 20.8. Johannes on ilmoittautunut.
+
+#### Tämä on meidän lanemme, heidän sanoillaan
+
+Kutsun perustelukappale on syytä lukea sanatarkasti, koska se on käytännössä
+sama analyysi jonka kirjasimme tähän dokumenttiin elokuussa — mutta heidän
+kirjoittamanaan:
+
+> "Suuri osa rakennusalan yrityksistä työllistää **alle 20 henkilöä**, mutta
+> useimmat projektityökalut on suunniteltu yrityksille, joilla on kokonainen
+> tiimi hoitamassa hallinnollisia tehtäviä."
+
+Ja segmentointi tehdään eksplisiittisesti omaa tuoteperhettä vastaan:
+
+> "Byggfakta Rise saattaa olla sinulle jo tuttu, mutta Hubexo Reach on jotain
+> ihan muuta. **Rise on suunniteltu suuremmille myyntiorganisaatioille**, kun
+> taas Reach kulkee mukana siellä, missä sinäkin – työmaalla."
+
+Me kirjasimme 18.8.: *"600 €/kk edellyttää että asiakkaalla on nimetty
+myyntiorganisaatio… Sen alapuolelle jää rakenteellisesti — ei sattumalta — koko
+pk-kenttä."* Hubexo on nyt lukenut saman markkinan ja rakentanut sille tuotteen.
+
+#### Repositiointi viidessä viikossa
+
+Elokuussa `/rise`-sivulla Reach oli **Risen lisävaruste**: *"Byggfakta Rise
+taskussasi… Hubexo Reach vie sen mukaan kentälle."* Nyt se on *"jotain ihan
+muuta"* ja eri ostajalle. Sama tuote, eri strateginen rooli, viisi viikkoa.
+
+Se kertoo kahdesta asiasta: he liikkuvat nopeasti, ja **pk-segmentti on heille
+tarpeeksi iso ollakseen oma tuotteensa** eikä vain lisäosa.
+
+#### Mitä kutsusta näkyy tuotteesta
+
+Puhelinmockupista ja lupauslistasta:
+
+| | |
+|---|---|
+| muoto | natiivi mobiilisovellus, alanavigaatio *Etusivu · Haku · Tallennetut · Profiili* — neljä välilehteä, kuluttajasovelluksen rakenne, ei yrityskonsolia |
+| päänäkymä | kartta pinneineen, päällä hakupalkki |
+| haku | luonnollinen kieli: *"Mitä projekteja haluat nähdä? Esim. koulut, joiden rakentaminen alkaa ensi vuonna"* — sama Rune-tyyppinen haku kuin Risessä |
+| määrä ruudulla | **"10 000+ kohdetta"** |
+| luvatut hyödyt | relevantit hankkeet missä ikinä oletkin · automaattiset ilmoitukset uusista mahdollisuuksista · potentiaalisten projektien seuranta ja hallinta · *"pidä tilauskantasi täynnä vähemmällä manuaalisella työllä"* |
+| otsikkolupaus | *"Löydä ja voita töitä – suoraan puhelimestasi. Anna tekoälyn etsiä, kun sinä keskityt töihisi."* |
+
+**Huomio lukuun 10 000+.** Se ei ole vertailukelpoinen Risen 90 000:een
+(pohjoismainen, varmennettu) eikä Metrocin 100 000:een (Suomi, ei
+varmennusvaatimusta) — se on mockupin ruudulla näkyvä luku, mahdollisesti
+rajattu näkymä. Jos se kuitenkin tarkoittaa Suomen aktiivisia hankkeita, se
+osuu aiemman arvioni (15 000–20 000) alarajan alle ja kannattaa tarkistaa
+webinaarissa.
+
+Huomattavaa on myös se, mitä **ei** luvata: ei myyntivalmentajaa, ei
+sähköpostin kirjoittamista, ei tiimin myyntiputkea, ei analytiikkaa. Reach on
+karsittu: *löydä, seuraa, saa ilmoitus.* Se on sama toiminnallisuusjoukko kuin
+meidän asiakaskerroksemme — `/today`, hakuvahdit, seuranta — eikä enempää.
+
+#### Ratkaiseva kysymys, johon kutsu ei vastaa
+
+**Voiko Reachin ostaa ilman myyjää ja mitä se maksaa?**
+
+Mobiilisovellus ei muuta sitä, että data tulee puhelinsoitoista ja että
+myyntiorganisaatio maksaa palkkaa. Kaksi mahdollista maailmaa:
+
+1. **Reach myydään kuten kaikki muukin** — demo, neuvoteltu lisenssi,
+   vuosisopimus etukäteen. Silloin kyse on paketoinnista, ei
+   liiketoimintamallista, ja **meidän rakomme pysyy auki**: alle 20 hengen
+   yritys ei osta 600 €/kk:n hintaluokan tuotetta käyttöliittymän takia.
+2. **Reach on itsepalvelu julkisella hinnalla** (sovelluskaupan tilaus tai
+   vastaava). Silloin **ainoa rakenteellinen etumme katoaa** ja jäljelle jää
+   hintataso ja 30 päivän irtisanottavuus.
+
+Vaihtoehto 2 on heille vaikea, koska se kannibalisoi Smartin ja Risen: miksi
+maksaa 600 €/kk maakunnasta, jos sovellus maksaa murto-osan? Se on klassinen
+innovaattorin dilemma, ja **sen ratkaisu on se mitä webinaarista pitää
+kuunnella.** Kaikki muu on toissijaista.
+
+#### Mitä kysyä 6.10. webinaarissa
+
+Tärkeysjärjestyksessä:
+
+1. **Hinta ja hinnoittelumalli.** Onko julkinen? Käyttäjä- vai yrityskohtainen?
+   Kuukausi vai vuosi?
+2. **Voiko sen ostaa itse** ilman demoa ja myyjää? Onko ilmainen kokeilu?
+3. **Sopimuskausi ja irtisanomisaika.** Sama 60 pv + automaattinen uusiutuminen
+   kuin Metrocilla ja Risellä, vai kevyempi?
+4. **Vaatiiko Reach Smart- tai Rise-tilauksen pohjalle** vai onko se itsenäinen
+   tuote? Tämä ratkaisee, onko kyseessä uusasiakashankinta vai lisämyynti
+   nykyisille.
+5. **Kattaako koko Suomen** vai palaako aluerajaus takaisin halvempana
+   pakettina?
+6. **Mitä dataa siinä on** verrattuna Riseen: samat hankkeet vai karsittu
+   joukko? Ovatko **yhteyshenkilöt** mukana — se on heidän kallein kenttänsä ja
+   pk-tuotteessa luonteva karsinnan kohde.
+7. **Mikä on "10 000+ kohdetta"** — Suomi, Pohjola, vai näkymän rajaus?
+8. **Julkaisuaikataulu ja markkinat:** onko Suomi ensimmäinen vai viimeinen?
+
+#### Johtopäätös
+
+Kolme asiaa, joista kaksi on epämiellyttäviä.
+
+**1. Tämä on kolmas erottautuja, joka vanhenee ennen kuin ehdimme käyttää sen.**
+Ensin *"mitä minun pitäisi tehdä tänään"* (kuoli 18.8., Rise), sitten *"koko
+Suomi yhdellä hinnalla"* (kuoli 20.8., aluehinnoittelu poistui), nyt
+*"pk-segmentti on rakenteellisesti auki"* (uhattuna 25.9., Reach). Kaava on
+selvä ja opetus yksiselitteinen: **asemointietu joka ei ole tuotteessa ei ole
+etu.** R1 (julkinen hinta, itsepalvelu, 30 pv) ei ole enää järjestyskysymys
+vaan kilpajuoksu.
+
+**2. Kilpailija validoi segmentin puolestamme.** Hubexo käyttää nyt
+markkinointibudjettia siihen, että alle 20 hengen rakennusalan yritys oppii
+tarvitsevansa hanketiedon puhelimessaan. Me emme olisi pystyneet siihen.
+Meillä on lisäksi jo lista tuota segmenttiä: 16 172 rakennusalan prospektia
+sähköposteineen yrittajat.fi:n hakemistosta. Kun he herättävät kysynnän,
+kysyntä ei ole heidän omaisuuttaan.
+
+**3. Heidän kustannusrakenteensa ei muuttunut.** Tutkijat soittavat yhä, ja
+myyntiorganisaatio maksaa yhä palkkaa. Sovellus on käyttöliittymä, ei
+liiketoimintamalli. Niin kauan kuin Reachin hinta on neuvoteltu ja sen taakse
+pääsee vain myyjän kautta, se on **paketointivastaus rakenteelliseen
+ongelmaan** — ja rakenteellinen ongelma ei katoa paketoimalla.
+
+Tämä johtopäätös on ehdollinen ja se ratkeaa 6.10. Jos hinta on julkinen ja
+ostaminen itsepalvelua, tämä kohta on kirjoitettava uusiksi.
+
 ---
 
 ## Metroc Oy
@@ -767,6 +900,24 @@ on kolme. Kilpailija ei siis ole siirtymässä matalan kynnyksen suuntaan vaan
 päinvastoin — heidän kustannuksensa asiakasta kohti juuri nousi. Rako ei
 kaventunut, se leveni.
 
+**Mutta 25.9.2026 rako kapeni toisesta suunnasta.** Hubexo Reach on
+mobiilituote, joka on kutsussa kohdistettu nimenomaan **alle 20 hengen
+yrityksiin** ja erotettu Risestä sanoilla *"Rise on suunniteltu suuremmille
+myyntiorganisaatioille"*. Se on sama segmentti, jonka tämä dokumentti kirjasi
+rakenteellisesti auki olevaksi.
+
+Päätöstä ei silti muuteta, ja syy on tarkka: **Reach muuttaa
+käyttöliittymän, ei myyntimallia** — ainakaan sen perusteella mitä kutsusta
+näkyy. Hinta, ostettavuus ja sopimusehdot ovat yhä tuntemattomia, ja juuri ne
+ratkaisevat onko kyseessä paketointi vai liiketoimintamallin muutos. Jos 6.10.
+webinaarissa paljastuu julkinen hinta ja itsepalveluosto, **tämä lohko on
+kirjoitettava uusiksi** (ks. *Hubexo Reach — pk-segmentin valtaus*).
+
+Se mitä tästä joka tapauksessa seuraa: **R1 ei ole enää järjestyskysymys vaan
+kilpajuoksu.** Kolmesta erottautujasta kaksi on jo vanhentunut ennen kuin
+ehdimme käyttää ne. Kolmas on se, jonka voimme yhä ehtiä — mutta vain
+julkaisemalla sen.
+
 Kääntöpuoli on syytä sanoa ääneen: 30 päivän irtisanottavuus siirtää
 todistustaakan tuotteelle joka kuukausi. Se toimii vain jos tuote tuottaa
 näkyvää arvoa jatkuvasti — mikä on sama vaatimus kuin P1:n relevanssipisteytys
@@ -818,6 +969,19 @@ kapeampi tai ostettavampi — ei jos se yrittää olla sama tuote halvemmalla.
 
 Päivätty loki siitä, mitä kilpailijoiden julkisessa käyttäytymisessä tapahtuu.
 Erillään tuoteanalyysistä, koska nämä ovat nopeasti muuttuvia signaaleja.
+
+**25.9.2026 — Hubexon julkaisutahti on noin kuukausi.** Rise-tiedote 17.8.,
+Rise-webinaari 20.8., Reach-webinaari 6.10. Sama esittäjäpari molemmissa
+webinaareissa (Lasse Paavola, Ella Tuominen). Tästä seuraa kaksi asiaa:
+**"vanha ja hidas dinosaurus" -oletus on kuollut**, ja kilpailijaseuranta
+kannattaa ajoittaa noin kuukauden välein eikä kvartaaleittain.
+
+**25.9.2026 — webinaarit ovat paras ilmainen kilpailijatiedon lähde.**
+Elokuun Rise-webinaarista saatiin 28 näyttökuvaa toimivasta tuotteesta — eli
+enemmän kuin koko markkinointisivustolta. Ne ovat ilmaisia, kestävät 30
+minuuttia ja niihin ilmoittaudutaan omalla nimellä. Kannattaa osallistua
+kaikkiin, myös Metrocin. Muista tallentaa aineisto heti: kilpailijan sivu
+katoaa, oma näyttökuva ei.
 
 **18.8.2026 — RPT poisti lähes kaikki referenssit sivuiltaan.** Smart-sivulle
 jäi yksi asiakaslainaus (Kuljetusrinki). Ajoitus on sama kuin Risen julkaisu,
@@ -873,6 +1037,13 @@ lehdistötiedote 17.8.2026: <https://www.mynewsdesk.com/fi/hubexo/pressreleases/
 — tuote demottiin ympäristössä `stage.nextgen.hubexo.dev`. Kuvat ovat tallessa
 repossa, koska kilpailijan aineisto katoaa (ks. *Kilpailijaseurannan
 havainnot*). **Aluehinnoittelun poistuminen: webinaari + oma käyttökokemus.**
+
+**Hubexo Reach.** Webinaarikutsu sähköpostitse 25.9.2026, neljä näyttökuvaa
+arkistoitu kansioon
+[`competitors/reach-webinaarikutsu-2026-09-25/`](competitors/reach-webinaarikutsu-2026-09-25/).
+Webinaari ti 6.10.2026 klo 8.00–8.30, puhujat Lasse Paavola ja Ella Tuominen.
+Johannes ilmoittautunut — **päivitä tämä dokumentti webinaarin jälkeen**,
+erityisesti hinta, ostotapa ja sopimusehdot.
 
 **Metroc.** Etusivu ja tuotesivut: <https://metroc.ai/palvelumme/projects/>,
 `/palvelumme/public-investments/`, `/palvelumme/real-estates/`,
