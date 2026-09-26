@@ -4,6 +4,7 @@ import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { normalizeLegacyPhase } from "@/lib/projects/phases"
 import { computeManualExpiry } from "@/lib/projects/tenderExpiry"
+import { sailytaVanhaOtsikko } from "@/lib/projects/otsikkoHistoria"
 import {
   cleanContacts,
   cleanString,
@@ -142,6 +143,23 @@ export async function POST(request: Request) {
       changed.push(field)
     }
   }
+
+  /*
+   * VANHA OTSIKKO TALTEEN NIMEÄ MUUTETTAESSA (D-216).
+   *
+   * Täsmäyttäjä lukee hankkeelta kolme otsikkoa (`getProjectTitles`), ja
+   * yhdistäminen täyttää `also_known_as`in — mutta käsin nimeäminen
+   * hävitti alkuperäisen otsikon kokonaan. Perustelu ja mittaus
+   * `lib/projects/otsikkoHistoria.ts`:ssä.
+   */
+  const nimiUpdates =
+    "name" in updates
+      ? sailytaVanhaOtsikko({
+          vanhaNimi: (project as any).name,
+          uusiNimi: updates.name as string | null,
+          metadata: (project as any).metadata,
+        })
+      : {}
 
   /* Kustannus: käsin syötetty voittaa aina, ja alkuperä merkitään. */
   let costSource: string | null = null
@@ -283,6 +301,7 @@ export async function POST(request: Request) {
       metadata: {
         ...((project as any).metadata ?? {}),
         ...(costSource ? { cost_source: costSource } : {}),
+        ...nimiUpdates,
         /* Metadataan menevat kasin muokatut kentat (expire_at, yhteystiedot). */
         ...metaUpdates,
         ...("additional_info" in updates

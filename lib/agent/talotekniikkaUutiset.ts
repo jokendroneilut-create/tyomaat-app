@@ -138,6 +138,19 @@ const VALMISTUNUT = [
   "saatiin päätökseen",
 ]
 
+/*
+ * TUOREUSIKKUNA (D-215).
+ *
+ * Ensimmainen kierros on tarkoituksella historiallinen - vanha tiedote
+ * taydentaa olemassa olevaa hanketta. Sen jalkeen vanha juttu on pelkkaa
+ * jonokuormaa: Sarlinin syotteessa on vuoden 2024 juttuja ja Amplitin
+ * syote on pysahtynyt 5/2025, eika niita hyvaksyta.
+ *
+ * Ikkuna lasketaan tiedotteen omasta paivamaarasta. Jos paivamaaraa ei
+ * ole, rivi paastetaan lapi: tuntematon ika ei ole peruste pudottaa.
+ */
+const TUOREUSIKKUNA_PAIVAA = 365
+
 /* Kaksi sivua á 100 kattaa Arella noin kaksi vuotta. */
 const SIVUJA = 2
 const SIVUKOKO = 100
@@ -187,7 +200,7 @@ function tekstiksi(html: string | null | undefined): string {
 }
 
 /* Yhteinen muoto kummallekin syötetyypille. */
-type RaakaUutinen = { otsikko: string; osoite: string; teksti: string }
+type RaakaUutinen = { otsikko: string; osoite: string; teksti: string; pvm: Date | null }
 
 async function haeTeksti(osoite: string): Promise<string | null> {
   const ohjain = new AbortController()
@@ -228,7 +241,12 @@ async function haeWordPress(endpoint: string): Promise<RaakaUutinen[]> {
       const otsikko = tekstiksi(u?.title?.rendered)
       const osoite = u?.link
       if (otsikko && osoite) {
-        out.push({ otsikko, osoite, teksti: tekstiksi(u?.content?.rendered) })
+        out.push({
+          otsikko,
+          osoite,
+          teksti: tekstiksi(u?.content?.rendered),
+          pvm: u?.date ? new Date(u.date) : null,
+        })
       }
     }
 
@@ -265,7 +283,10 @@ async function haeRss(endpoint: string): Promise<RaakaUutinen[]> {
     const teksti =
       osa(item, "content:encoded") ?? osa(item, "description") ?? ""
 
-    out.push({ otsikko, osoite, teksti })
+    const julkaistu = osa(item, "pubDate") ?? osa(item, "dc:date")
+    const pvm = julkaistu ? new Date(julkaistu) : null
+
+    out.push({ otsikko, osoite, teksti, pvm: pvm && !isNaN(pvm.getTime()) ? pvm : null })
   }
 
   return out
@@ -275,10 +296,15 @@ export function luoTalotekniikkaLahde(yritys: TalotekniikkaYritys) {
   return async function fetchTalotekniikkaUutiset() {
     const tulokset: any[] = []
 
-    const uutiset =
+    const raja = new Date()
+    raja.setDate(raja.getDate() - TUOREUSIKKUNA_PAIVAA)
+
+    const kaikki =
       yritys.tyyppi === "rss"
         ? await haeRss(yritys.endpoint)
         : await haeWordPress(yritys.endpoint)
+
+    const uutiset = kaikki.filter((u) => !u.pvm || u.pvm >= raja)
 
     {
       for (const uutinen of uutiset) {

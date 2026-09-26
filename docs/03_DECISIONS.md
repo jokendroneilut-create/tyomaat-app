@@ -5,6 +5,57 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-216 - Kasin nimeaminen havitti otsikon jonka tasmaytys tarvitsee
+
+Kayttaja kysyi: "jaako alkuperainen tuotu otsikko johonkin talteen siten
+etta duplikaattiskannaus voi kayttaa sita?" Vastaus oli **ei** - ja
+rakenne sita varten oli olemassa.
+
+`projectMatcher.getProjectTitles` lukee hankkeelta KOLME otsikkoa:
+
+    project.name
+    metadata.source_title
+    metadata.also_known_as[]
+
+`NormalizedProjectCandidate`in kommentti kertoo tarkoituksen suoraan:
+"lahteen alkuperainen otsikko ennen mahdollista kasin muokkausta,
+vertaillaan nimen ohella, jotta editoitu otsikko ei katkaise
+duplikaattiloydettavyytta".
+
+**Yhdistaminen tayttaa `also_known_as`in** (`approve/route.ts`: kun
+olemassa olevan hankkeen nimi eroaa tulevasta, vanha lisataan listaan).
+**Kasin nimeaminen ei tayttanyt kumpaakaan.** TIC:n muokkausreitti
+kirjoitti uuden nimen suoraan `name`-sarakkeeseen ja vanha katosi.
+
+Mitattu 26.9.2026, 6 460 hanketta:
+
+    also_known_as taytetty   268   (kaikki yhdistamisista)
+    source_title taytetty     49
+    nimi muokattu kasin        0
+
+Nolla on tassa olennainen: vikaa ei ollut viela tapahtunut. Se olisi
+alkanut vasta nyt, kun uutisotsikoita aletaan siivota hankkeen nimiksi
+(D-215) - eli juuri silloin kun otsikkoa eniten tarvitaan.
+
+**Kaksi kenttaa, eri tehtava.** Ensimmainen nimi on LAHTEEN otsikko ja
+menee `source_title`iin; myohemmat tyonimet menevat `also_known_as`iin.
+Nain alkuperainen sailyy erillaan eika huku listaan, ja tasmaytys saa
+kaikki muodot kayttoonsa.
+
+Logiikka on omassa moduulissaan (`lib/projects/otsikkoHistoria.ts`)
+testeineen eika reitin sisalla: reitilla ei ole testeja lainkaan.
+
+**Avoin:** `scanForDuplicates` vertaa parin vain yhteen suuntaan
+(`calculateMatch(b, {name: a.name, sourceTitle: a.metadata.source_title})`),
+joten a-roolissa olevan hankkeen `also_known_as` jaa lukematta. Hankkeen
+puolella (b) kaikki kolme otsikkoa luetaan. Epasymmetria on pieni mutta
+todellinen.
+
+`lib/projects/otsikkoHistoria.ts` · `lib/projects/otsikkoHistoria.spec.ts` ·
+`app/api/tic/projects/edit/route.ts`
+
+---
+
 ### D-215 - Entiteetit purettava ennen tagien poistoa, ja uutisotsikko on tasmaytysavain
 
 Sarlinin jonorivin "Mantsalan biovoiman laajennushanke" kuvaus oli 1 133
@@ -61,10 +112,16 @@ Kasin korjattu otsikko sailyy (`manual_correction`). Automaattinen
 normalisointi on oma tyonsa eika arvaus: se vaatii mittauksen siita mita
 otsikoita voi muuntaa turvallisesti.
 
-**Avoin:** yrityslahteilla ei ole ikarajaa. Sarlinin syotteessa on
-vuoden 2024 juttuja ja Amplitin syote on pysahtynyt 5/2025, joten jonoon
-tulee vanhoja hankkeita joita ei hyvaksyta. Tuoreusikkuna olisi helppo
-lisata, mutta ensimmainen taysi kierros on tarkoituksella historiallinen.
+**Tuoreusikkuna 12 kk (kayttajan paatos 26.9.2026).** Ensimmainen
+kierros on tarkoituksella historiallinen - vanha tiedote taydentaa
+olemassa olevaa hanketta - mutta sen jalkeen vanha juttu on pelkkaa
+jonokuormaa. Ikkuna lasketaan tiedotteen omasta paivamaarasta; ilman
+paivamaaraa rivi paastetaan lapi, koska tuntematon ika ei ole peruste
+pudottaa.
+
+Vaikutus mitattuna: Are 31 -> 9 kandidaattia, Sarlin 2 -> 0, Amplit
+11 -> 0. Sarlinin ja Amplitin syotteet eivat siis tuota mitaan ennen
+kuin ne julkaisevat uutta - historia on jo tuotu.
 
 `lib/agent/talotekniikkaUutiset.ts` · `lib/agent/sources.ts` ·
 `scripts/fix-sarlin-kuvaukset.ts`

@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Käsin annettu nimi ei enää hävitä alkuperäistä otsikkoa (D-216)
+
+Täsmäytys lukee hankkeelta kolme otsikkoa — nimen, lähteen alkuperäisen
+otsikon ja aiemmat nimet — jotta käsin siivottu otsikko ei katkaise
+duplikaattilöydettävyyttä. Yhdistäminen täytti listan, mutta käsin
+nimeäminen hävitti vanhan nimen kokonaan. Nyt ensimmäinen nimi tallentuu
+lähteen otsikoksi ja myöhemmät työniminä, joten kaikki muodot ovat
+duplikaattiskannauksen käytössä.
+
+Yrityslähteille lisättiin myös **12 kuukauden tuoreusikkuna**: vanha
+tiedote ei enää tule jonoon uutena hankkeena.
+
 ### Sarlinin kuvaukset olivat HTML-roskaa (D-215)
 
 RSS-syötteen kuvaus sisältää HTML:n escapattuna, ja siivous poisti tagit
