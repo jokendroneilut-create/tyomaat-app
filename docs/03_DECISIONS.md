@@ -5,6 +5,72 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-215 - Entiteetit purettava ennen tagien poistoa, ja uutisotsikko on tasmaytysavain
+
+Sarlinin jonorivin "Mantsalan biovoiman laajennushanke" kuvaus oli 1 133
+merkkia HubSpotin kuvakaareita ja seurantapikselin osoitetta:
+
+    div class="hs-featured-image-wrapper" a href="..." img src="..."
+    __ptq.gif?a=26915817 k=14 r=https%3A%2F%2F...
+
+**Syy on jarjestys.** RSS-syotteen `description` sisaltaa HTML:n
+ESCAPATTUNA (`&lt;div class=...&gt;`). `tekstiksi` poisti ensin tagit
+kuviolla `<[^>]+>` - mutta tekstissa ei ole yhtaan `<`-merkkia, joten
+mitaan ei poistunut. Vasta sen jalkeen entiteetit purettiin valilyonneiksi,
+jolloin jaljelle jai tagin SISUS tekstina.
+
+WordPress-haarassa vikaa ei nay, koska `content.rendered` on jo purettua
+HTML:aa. Korjaus kuuluu silti samaan funktioon: se palvelee molempia.
+
+**Purku ajetaan kahdesti**, koska syotteissa on myos kahdesti koodattua
+sisaltoa (`&amp;lt;`).
+
+#### Oikea kuvaus on artikkelissa, ei syotteessa
+
+Siivouksen jalkeen Sarlinin kuvaus on TYHJA - oikein, mutta hyodyton:
+HubSpotin RSS ei sisalla leipatekstia lainkaan. Artikkelisivulta
+`extractReleaseBody` antaa 2 837 merkkia, ja sen mukana rakennuttajan
+("Auris Energian enemmistoomistaman Mantsalan Biovoiman") ja hankkeen
+sisallon.
+
+Rikastus lisattiin VAIN RSS-lahteille. WordPress-haarassa se olisi turha
+sivuhaku, ja sivuhaku on juuri se kustannus jota tuontibudjetti rajoittaa
+(D-210).
+
+#### Uutisotsikko ei ole vain kosmeettinen ongelma
+
+Kayttaja huomautti etta "liian uutismainen otsikko on vahka outo
+kayttajalle". Mitattu 26.9.2026: julkisista aktiivisista hankkeista
+**208 / 6 240 (3,3 %)** on kokonaisia uutislauseita. Uutislahteilla osuus
+on aivan toinen:
+
+    stt_julkaisijat   45 %
+    stt_haku          29 %
+    rakennuslehti     29 %
+    are               29 %
+
+**Otsikko on myos tasmaytysavain.** `titleSimilarity`,
+`name_in_description` ja `different_name_subjects` luetaan otsikosta.
+Mitattu samana paivana: jonon 19 rivista kaistalla 40-69 **jokaisella**
+oli syyna `different_name_subjects` - uutisotsikon aihe on URAKKA
+("Halisten varavesilaitoksen talotekniikkaurakoista"), hankkeen aihe on
+RAKENNUS ("Skanska rakentaa Turun Halisten uuden varavesilaitoksen").
+Otsikko siis aktiivisesti estaa yhdistymisen oikeaan hankkeeseen.
+
+Kasin korjattu otsikko sailyy (`manual_correction`). Automaattinen
+normalisointi on oma tyonsa eika arvaus: se vaatii mittauksen siita mita
+otsikoita voi muuntaa turvallisesti.
+
+**Avoin:** yrityslahteilla ei ole ikarajaa. Sarlinin syotteessa on
+vuoden 2024 juttuja ja Amplitin syote on pysahtynyt 5/2025, joten jonoon
+tulee vanhoja hankkeita joita ei hyvaksyta. Tuoreusikkuna olisi helppo
+lisata, mutta ensimmainen taysi kierros on tarkoituksella historiallinen.
+
+`lib/agent/talotekniikkaUutiset.ts` · `lib/agent/sources.ts` ·
+`scripts/fix-sarlin-kuvaukset.ts`
+
+---
+
 ### D-214 - Rakennuslehti kertoi urakan, mutta ei kaupunkia eika yritysta
 
 Ehdokas "Are sai viiden miljoonan talotekniikkaurakan kouluhankkeesta"

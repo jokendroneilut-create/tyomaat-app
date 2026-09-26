@@ -11,6 +11,13 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Sarlinin kuvaukset olivat HTML-roskaa (D-215)
+
+RSS-syötteen kuvaus sisältää HTML:n escapattuna, ja siivous poisti tagit
+ennen kuin entiteetit oli purettu — jolloin tagin sisus jäi tekstiksi.
+Korjattu, ja kuvaus haetaan nyt artikkelisivulta: 1 133 merkkiä
+kuvakääreitä → 2 837 merkkiä oikeaa tekstiä.
+
 ### Rakennuslehden jutuista kaupunki ja urakoitsija, Are lähteeksi (D-214)
 
 "Are sai viiden miljoonan talotekniikkaurakan kouluhankkeesta" tuli jonoon

@@ -4,6 +4,7 @@ import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
 import { extractClientFromText, extractBuilderFromText } from "./fetchSttHakuSource"
 import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
 import { LEAD_LENGTH } from "./buildingType"
+import { extractReleaseBody } from "./companyRelease"
 
 /*
  * TALOTEKNIIKKAURAKOITSIJAN OMAT UUTISET.
@@ -144,15 +145,43 @@ const SIVUKOKO = 100
 /* Sama katto kuin muilla lähteillä: rivi ei saa jumittaa lähdeajoa. */
 const AIKAKATKAISU_MS = 15 * 1000
 
+/*
+ * MERKKIENTITEETIT PURETAAN ENNEN TAGIEN POISTOA (D-215).
+ *
+ * RSS-syotteen `content:encoded` sisaltaa HTML:n ESCAPATTUNA
+ * (`&lt;div class=...&gt;`). Jos tagit poistetaan ensin, kuviossa ei ole
+ * yhtaan `<`-merkkia eika mitaan poistu - ja kun entiteetit puretaan
+ * vasta sen jalkeen, jaljelle jaa tagin sisus tekstina.
+ *
+ * Mitattu 26.9.2026: Sarlinin "Mantsalan biovoiman laajennushanke"
+ * -rivin kuvaus oli 1 133 merkkia HubSpotin kuvakaareita ja
+ * seurantapikselin osoitetta - ei sanaakaan hankkeesta.
+ *
+ * WordPress-haarassa vikaa ei nay, koska `content.rendered` on jo
+ * purettua HTML:aa. Korjaus kuuluu silti tanne: sama funktio palvelee
+ * molempia.
+ *
+ * Kaksi kierrosta, koska syotteissa on myos kahdesti koodattua
+ * (`&amp;lt;`) sisaltoa.
+ */
+function puraEntiteetit(teksti: string): string {
+  return teksti
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&quot;|&#8221;|&#8220;|&#34;/g, '"')
+    .replace(/&#0?39;|&#8217;|&apos;/g, "'")
+    .replace(/&#8211;|&#8212;|&ndash;|&mdash;/g, "–")
+    .replace(/&amp;/gi, "&")
+}
+
 function tekstiksi(html: string | null | undefined): string {
-  return String(html ?? "")
+  return puraEntiteetit(puraEntiteetit(String(html ?? "")))
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;| | /g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;|&#8221;|&#8220;/g, '"')
-    .replace(/&#0?39;|&#8217;/g, "'")
-    .replace(/&#8211;|&#8212;/g, "–")
-    .replace(/&[a-z]+;/g, " ")
+    .replace(/&[a-z]+;|&#\d+;/gi, " ")
+    .replace(/[\u00a0\u202f\u200b]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
 }
@@ -326,5 +355,51 @@ export function luoTalotekniikkaLahde(yritys: TalotekniikkaYritys) {
     }
 
     return tulokset
+  }
+}
+
+/*
+ * RSS-SYÖTTEEN KUVAUS HAETAAN ARTIKKELISTA (D-215).
+ *
+ * WordPress antaa koko tekstin rajapinnassa, RSS ei aina anna mitään:
+ * Sarlinin `description` on pelkkä HubSpotin kuvakääre ja seurantapikseli.
+ * Siivouksen jälkeen kuvaus on siis tyhjä - oikein, mutta hyödytön.
+ *
+ * Artikkelisivulta sama juttu antaa 2 837 merkkiä, ja sen mukana
+ * rakennuttajan ("Auris Energian enemmistöomistaman Mäntsälän Biovoiman")
+ * ja hankkeen sisällön.
+ *
+ * Vain RSS-lähteille: WordPress-haarassa tämä olisi turha sivuhaku, ja
+ * sivuhaku on juuri se kustannus jota tuontibudjetti rajoittaa.
+ */
+export function luoTalotekniikkaRikastus(yritys: TalotekniikkaYritys) {
+  return async function enrichTalotekniikkaUutinen(candidate: any): Promise<any> {
+    if (!candidate?.source_url) return candidate
+
+    const html = await haeTeksti(candidate.source_url)
+    if (!html) return candidate
+
+    const body = tekstiksi(extractReleaseBody(html) ?? "")
+    if (body.length <= String(candidate.description ?? "").length) return candidate
+
+    const lead = body.slice(0, LEAD_LENGTH)
+    const city =
+      candidate.city ??
+      detectCityFromText(String(candidate.name ?? "").toLowerCase()) ??
+      detectCityFromText(lead.toLowerCase())
+
+    const tilaaja = candidate.developer ?? extractClientFromText(candidate.name, lead)
+    const kelpaa =
+      tilaaja &&
+      tilaaja.toLowerCase() !== yritys.nimi.toLowerCase() &&
+      !(!/\s/.test(tilaaja) && getMunicipalityByAnyForm(tilaaja))
+
+    return {
+      ...candidate,
+      description: body,
+      city,
+      region: city ? getMunicipalityByName(city)?.region ?? null : candidate.region,
+      developer: kelpaa ? tilaaja : candidate.developer,
+    }
   }
 }

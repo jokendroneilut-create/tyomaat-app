@@ -51,7 +51,7 @@ import { fetchHelsinkiUutisetSource } from "./fetchHelsinkiUutisetSource"
 import { fetchRakennuslehtiSource, enrichRakennuslehtiCandidate } from "./fetchRakennuslehtiSource"
 import { fetchSttHakuSource, enrichSttCandidate } from "./fetchSttHakuSource"
 import { fetchSttJulkaisijatSource } from "./fetchSttJulkaisijatSource"
-import { luoTalotekniikkaLahde } from "./talotekniikkaUutiset"
+import { luoTalotekniikkaLahde, luoTalotekniikkaRikastus } from "./talotekniikkaUutiset"
 import { fetchYmparistolupaSource } from "./fetchYmparistolupaSource"
 import { fetchYvaSource } from "./fetchYvaSource"
 import { createYvaEnricher } from "./yvaProjectPage"
@@ -182,6 +182,11 @@ export const sources = [
       endpoint: "https://www.sarlin.com/ajankohtaista/tag/uutinen/rss.xml",
       tyyppi: "rss",
     }),
+    /*
+     * RSS antaa vain kuvakaareen ja seurantapikselin, joten kuvaus
+     * haetaan artikkelisivulta (D-215).
+     */
+    enrich: luoTalotekniikkaRikastus({ nimi: "Sarlin", endpoint: "", tyyppi: "rss" }),
   },
   /*
    * Amplitin uutisvirta on pysahtynyt 5/2025, mutta 11 hanketta on
