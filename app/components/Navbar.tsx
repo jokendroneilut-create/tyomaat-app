@@ -21,6 +21,7 @@ function useIsMobile(breakpoint = 768) {
 
 export default function Navbar() {
   const [session, setSession] = useState<any>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   /*
    * Myyja ei ole admin, mutta nakee oman asiakaslistansa. Siksi rooli
@@ -74,6 +75,7 @@ export default function Navbar() {
       const { data } = await supabase.auth.getSession();
       const currentSession = data.session;
       setSession(currentSession);
+      setSessionLoaded(true);
       await checkAdmin(currentSession?.access_token);
     };
 
@@ -336,8 +338,13 @@ export default function Navbar() {
         }
       `}</style>
 
+      {/*
+       * Kirjautumaton kävijä (esim. kirjautumissivulla) palaa logosta
+       * markkinointisivulle; kirjautunut Tänään-näkymään. Ennen session
+       * latautumista oletetaan kirjautunut, ettei linkki välähdä ulos.
+       */}
       <a
-        href="/today"
+        href={sessionLoaded && !session ? "https://www.tyomaat.fi" : "/today"}
         onClick={() => setOpen(false)}
         style={{
           display: "flex",
