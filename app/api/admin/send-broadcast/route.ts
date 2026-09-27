@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { Resend } from "resend"
+import { isAccountLocked } from "@/lib/auth/isAccountLocked"
 
 export const runtime = "nodejs"
 
@@ -86,7 +87,10 @@ export async function POST(req: Request) {
       page++
     }
 
+    /* Lukituille ei lähetetä joukkoviestejä (ks. lib/auth/isAccountLocked). */
+    const skippedLocked = allUsers.filter((u) => isAccountLocked(u)).length
     const allRecipients = allUsers
+      .filter((u) => !isAccountLocked(u))
       .map((u) => u.email?.trim().toLowerCase())
       .filter((email): email is string => !!email)
 
@@ -114,15 +118,24 @@ export async function POST(req: Request) {
     const chunkSize = 49
     const chunks: string[][] = []
 
-    for (let i = 0; i < recipients.length; i += chunkSize) {
-      chunks.push(recipients.slice(i, i + chunkSize))
+    /*
+     * Näkyvä vastaanottaja on lähettävä admin itse. Aiemmin se oli
+     * MAIL_FROM (no-reply@), jota ei ole olemassa: osoite päätyi Resendin
+     * estolistalle ja koko erä näytti tilaa "suppressed", vaikka
+     * piilokopiot menivät perille. Admin poistetaan piilokopioista,
+     * ettei hän saa viestiä kahdesti samassa erässä.
+     */
+    const bccRecipients = recipients.filter((r) => r !== userEmail)
+    for (let i = 0; i < bccRecipients.length; i += chunkSize) {
+      chunks.push(bccRecipients.slice(i, i + chunkSize))
     }
+    if (chunks.length === 0) chunks.push([])
 
     for (const chunk of chunks) {
       const sendResult = await resend.emails.send({
         from: fromEmail,
-        to: fromEmail,
-        bcc: chunk,
+        to: userEmail,
+        ...(chunk.length ? { bcc: chunk } : {}),
         subject,
         text: message,
         html: `<div style="font-family:Arial,sans-serif;">${htmlMessage}</div>`,
@@ -153,6 +166,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       sent: recipients.length,
+      skippedLocked: testOnly ? 0 : skippedLocked,
       testOnly,
       logFailed: !!logError,
     })

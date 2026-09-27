@@ -14,6 +14,7 @@ import {
 import { resolveWindow } from "@/lib/alerts/window"
 import { matchesRegions } from "../../today/services/todayFilters"
 import { defaultTodaySettings } from "../../today/services/getTodaySettings"
+import { isAccountLocked } from "@/lib/auth/isAccountLocked"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -362,6 +363,7 @@ export async function GET(req: Request) {
     const resend = resendKey ? new Resend(resendKey) : null
 
     let sent = 0
+    let skippedLocked = 0
     const preview: any[] = []
 
     for (const [userId, matches] of perUser) {
@@ -369,6 +371,12 @@ export async function GET(req: Request) {
 
       const { data: userData } = await supabase.auth.admin.getUserById(userId)
       const email = userData?.user?.email ?? null
+
+      /* Lukitulle ei lähetetä hälytyksiä (ks. lib/auth/isAccountLocked). */
+      if (isAccountLocked(userData?.user)) {
+        skippedLocked++
+        continue
+      }
 
       if (dry) {
         preview.push({
@@ -430,6 +438,7 @@ export async function GET(req: Request) {
       changedProjects: projectIds.length,
       usersMatched: perUser.size,
       sent,
+      skippedLocked,
       ...(dry ? { preview } : {}),
     })
   } catch (err: any) {

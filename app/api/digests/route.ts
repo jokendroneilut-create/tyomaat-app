@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { PHASE_LABELS } from "@/lib/projects/phases";
 import { describeFilter, filterValues } from "@/lib/watchlists/filterValues";
+import { isAccountLocked } from "@/lib/auth/isAccountLocked";
 
 const ROUTE_VERSION = "trace-v3-2026-03-06";
 
@@ -506,6 +507,31 @@ export async function GET(req: Request) {
             projects_found: newProjects.length,
             updates_found: updatedOnly.length,
             note: `User email missing / admin error: ${uErr?.message || "no email"}`,
+          });
+        }
+        continue;
+      }
+
+      /*
+       * Lukitulle ei lähetetä koostetta. last_sent_at siirretään silti
+       * eteenpäin: kun lukitus puretaan (esim. "palataan tammikuussa"),
+       * ensimmäinen kooste alkaa siitä eikä kokoa kuukausien kertymää.
+       */
+      if (isAccountLocked(userData.user)) {
+        await supabase
+          .from("saved_searches")
+          .update({ last_sent_at: new Date().toISOString() })
+          .eq("id", w.id);
+
+        if (trace) {
+          traceRows.push({
+            watch_id: w.id,
+            name: w.name,
+            due,
+            since: since.toISOString(),
+            projects_found: newProjects.length,
+            updates_found: updatedOnly.length,
+            note: "Account locked -> not sent (last_sent_at advanced)",
           });
         }
         continue;
