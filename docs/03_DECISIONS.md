@@ -5,6 +5,43 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-218 - Helsingin WFS-kaavahakemisto pois: 90 hylkaysta, 4 hyvaksyntaa
+
+Lahde `helsinki-kaavat-vireilla` on kaavahakemiston GEOMETRIA-aineisto.
+Otsikot ovat muotoa "Kaava 13021 - OULUNKYLA" eika kuvausta ole:
+kuvauksen mediaani on **25 merkkia**, huonoin kaikista kaavalahteista.
+
+Mitattu 29.9.2026:
+
+    hyvaksytty     4
+    hylatty       90
+    kuvaus ohut   67 / 98
+
+Eli **96 % riveista hylataan katselmoinnissa**. Lahde ei siis ollut
+kuvausongelma vaan turha lahde: se kulutti katselmointityota eika
+tuottanut hankkeita.
+
+**SAMA AINEISTO TULEE JO SUKKASTA.** 82 lahteen 94 dokumentista vastaa
+kaavanumerolla (1xxxx) Helsingin SUKKA-lahteen rivia, jolla on
+kunnollinen otsikko ("Kluuvi, Porssitalo") ja 86-913 merkin kuvaus.
+SUKKAsta on hyvaksytty 198 hanketta.
+
+    13022  Kaava 13022 ...          -> Kluuvi, Porssitalo             397 merkkia
+    12997  Kaava 12997 - MELLUNKYLA -> Mellunmaen keskus              607 merkkia
+    13008  Vanha Helsingintie 5     -> Malmi, Vanha Helsingintie 5    913 merkkia
+
+**EI POISTETTU VAAN KYTKETTY POIS.** Rivi ja sen historia jaavat kantaan,
+joten paatoksen voi perua ja vanhat dokumentit sailyvat. Nelja
+hyvaksyttya hanketta jaavat ennalleen.
+
+Lahde oli jo kytketty pois kun tama kirjattiin (viimeinen ajo 28.9.2026);
+kirjaus tekee syyn nakyvaksi. Se on ainoa pois kytketty lahde koko
+rekisterissa.
+
+`scripts/fix-poista-helsingin-wfs.ts` · `scripts/measure-kaavakuvaukset.ts`
+
+---
+
 ### D-217 - Kuulutus kertoo menettelyn, selostus kertoo hankkeen
 
 Savonlinnan "Asemakaavan muutos, Teknologiapuisto" tuli jonoon 318
