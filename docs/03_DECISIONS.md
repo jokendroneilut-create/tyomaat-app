@@ -5,6 +5,86 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-217 - Kuulutus kertoo menettelyn, selostus kertoo hankkeen
+
+Savonlinnan "Asemakaavan muutos, Teknologiapuisto" tuli jonoon 318
+merkin kuvauksella, jossa ei ollut yhtaan hanketietoa:
+
+    "Osallistumis- ja arviointisuunnitelma seka kaavaluonnos ovat
+     nahtavilla 25.9.-2.11.2026 Savonlinnan kaupungin kotisivuilla ...
+     palvelupisteiden asiakaspaatteilla."
+
+Kaavaselostuksen luvussa "Kaavan tarkoitus" lukee se mita asiakas
+tarvitsee: tavoitteena tehostaa maankayttoa, kaupunki osti hehtaarin
+maaraalan Andritzilta 2023, teknologiakeskittymaa laajennetaan.
+
+#### Liitteet eivat ole kuulutuksessa
+
+Kuulutussivulla on 554 linkkia eika yhtaan liitetta - kaikki on
+navigaatiota. Kuulutus itse ohjaa kaavoitussivulle, ja siella liitteet
+ovat `<h3>`-otsikoittain ryhmiteltyina. **Otsikko on sanasta sanaan sama
+kuin kuulutuksen otsikko**, joten liitteet loytyvat ilman arvailua.
+
+Yksi sivuhaku per ajo rakentaa koko kartan: 10 selostusta 29.9.2026.
+
+#### Koko selostus ei kuulu kantaan, kaksi lukua kylla
+
+`kaavaselostusPdf.ts` rajasi aikanaan poimintaan eika tekstiin, koska
+selostukset ovat 229 000-884 000 merkkia. Sama rajaus patee tassa:
+talteen otetaan **kaksi lukua**, yhteensa enintaan 1 200 merkkia.
+
+    "Kaava-alue"       missa ja kuinka iso
+    "Kaavan tarkoitus" mita ja miksi
+
+Kumpikaan yksin ei riita. Selostuksen rakenne on vakiintunut
+(numeroidut otsikot), joten luvun raja on seuraava otsikko.
+
+**Kuulutuksen oma sisalto sailyy selostuksen perassa.** Osassa
+kuulutuksia on virke jota selostuksessa ei ole - "Asemakaavan muutos
+koskee kiinteistoja 740-2-8-4, 740-2-8-7..." - ja kiinteistotunnus on
+myos tasmaytyksen tunniste. Menettelyvirkkeet karsitaan, muu jaa.
+
+#### Kaksi vikaa loytyi vasta TOISTOAJOSSA
+
+Molemmat olisivat menneet lapi jos ajon olisi ajanut kerran:
+
+1. **Ohitus palautti kuvauksen kuulutustekstiksi.** PDF-hakujen katto
+   ohitti jo luetut, jolloin `selostusDescription` jai tyhjaksi ja
+   upsert ylikirjoitti aiemman selostuksen. Nyt tallennettu kuvaus
+   luetaan takaisin eika sita rakenneta uudelleen.
+2. **Hanta liitettiin joka ajolla uudelleen.** Olavinkadun kuvaus kasvoi
+   1 183 -> 1 307 merkkiin toisella ajolla. Sama korjaus: valmis kuvaus
+   kaytetaan sellaisenaan.
+
+Ajoin lahteen nelja kertaa perakkain ja vertasin merkkimaarat: 677 /
+1 189 / 709 / 1 183 / 991 pysyivat samoina.
+
+#### Tulos
+
+Kuudesta dokumentista **nelja sai kuvauksen selostuksesta** (677-1 189
+merkkia kuulutuksen 272-402 sijaan). Takautuva ajo korjasi 7 rivia
+(ehdokkaat ja hyvaksytyt hankkeet).
+
+Viides, "Asemakaavan laatiminen, Simpalantien asemakaava...", ei
+tasmannyt: kaavoitussivun otsikko on "Simpalantien asemakaava,
+Ykkoskaiteen teollisuusalue". Se jai kuulutuksen tekstiin - oikea
+lopputulos, koska vaaran kaavan selostus olisi pahempi kuin ohut kuvaus.
+
+**Avoin:** kuvausmoduuli on yleinen (`kaavanKuvaus.ts`), mutta
+liitekartta on Savonlinnan sivurakenteen mukainen. Muilla kaavalahteilla
+on sama vika - kuulutus kertoo menettelyn - ja sama korjaus vaatii
+kunkin sivurakenteen lukemisen.
+
+**Avoin:** ehdokkaan kuvausta ei voi korjata kasin TIC:ssa; muokkausreitti
+koskee vain hyvaksyttyja hankkeita. Kayttaja joutuu joko hyvaksymaan
+ensin tai pyytamaan korjausta skriptilla.
+
+`lib/agent/kaavanKuvaus.ts` · `lib/agent/savonlinnaSelostus.ts` ·
+`lib/agent/discovery/collectors/apiCollector.ts` ·
+`scripts/fix-savonlinna-kuvaukset.ts`
+
+---
+
 ### D-216 - Kasin nimeaminen havitti otsikon jonka tasmaytys tarvitsee
 
 Kayttaja kysyi: "jaako alkuperainen tuotu otsikko johonkin talteen siten

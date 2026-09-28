@@ -11,6 +11,15 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-09 (tyo 1.9.)
 
+### Kaavahankkeen kuvaus tulee nyt selostuksesta (D-217)
+
+Kaavakuulutus kertoo vain milloin paperit ovat nähtävillä — ei sanaakaan
+siitä mitä alueelle tulee. Savonlinnan kuulutuksiin liitetään nyt
+kaavaselostuksen kaksi olennaista lukua: missä alue on ja kuinka iso,
+sekä mitä ja miksi kaavoitetaan. Neljä viidestä sai oikean kuvauksen
+(677–1 189 merkkiä aiemman 272–402 sijaan), ja vanhat rivit korjattiin
+takautuvasti.
+
 ### Käsin annettu nimi ei enää hävitä alkuperäistä otsikkoa (D-216)
 
 Täsmäytys lukee hankkeelta kolme otsikkoa — nimen, lähteen alkuperäisen

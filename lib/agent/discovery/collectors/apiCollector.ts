@@ -8,6 +8,11 @@ import { extractContacts, type Contact } from "@/lib/projects/contacts"
 import { vaylaSubprojectLinks } from "@/lib/agent/vaylaSubprojects"
 import { parseSenaattiContacts } from "@/lib/agent/senaattiContacts"
 import { parseVaylaDescription } from "@/lib/agent/vaylaProjectDescription"
+import { haeKaavanKuvaus, kuulutuksenOmaSisalto } from "@/lib/agent/kaavanKuvaus"
+import {
+  savonlinnaSelostusLinkit,
+  savonlinnaSelostusOtsikolle,
+} from "@/lib/agent/savonlinnaSelostus"
 import {
   fetchTenderCalendar,
   isConstructionTender,
@@ -25806,6 +25811,26 @@ const SAVONLINNA_ANNOUNCEMENTS_URL =
   "https://www.savonlinna.fi/wp-json/wp/v2/announcements?search=asemakaava&per_page=100&_fields=id,slug,title,link,date,content"
 const SAVONLINNA_MAX_AGE_MONTHS = 15
 
+/*
+ * KUVAUS TULEE SELOSTUKSESTA, EI KUULUTUKSESTA (D-217).
+ *
+ * Kuulutus kertoo vain menettelyn - "nähtävillä 25.9.-2.11.2026
+ * palvelupisteiden asiakaspäätteillä" - eikä sanaakaan siitä mitä
+ * alueelle tulee. Liitteitä ei ole kuulutussivulla lainkaan (554
+ * linkkiä, kaikki navigaatiota); ne ovat kaavoitussivulla otsikoittain.
+ *
+ * Yksi sivuhaku per ajo riittää koko kartan rakentamiseen (10
+ * selostusta 29.9.2026).
+ */
+const SAVONLINNA_KAAVOITUS_URL = "https://www.savonlinna.fi/asukas/kaavoitus/"
+
+/*
+ * Selostus on 7 MB ja 42 sivua, joten hakuja rajataan per ajo samoin kuin
+ * Väylällä (D-103). Jo kertaalleen luetut ohitetaan, joten katto koskee
+ * vain uusia kaavoja - kierros valmistuu muutamassa ajossa.
+ */
+const SAVONLINNA_MAX_PDF_FETCHES_PER_RUN = 5
+
 const SAVONLINNA_PHASE_ORDER = [
   { pattern: /hyväksy|voimaan|lainvoima/i, label: "Hyväksyminen" },
   { pattern: /ehdotus/i, label: "Kaavaehdotus" },
@@ -25869,6 +25894,44 @@ async function collectSavonlinnaKaavaSource(source: DiscoverySource) {
     }
   }
 
+  /*
+   * Selostuslinkit kerran per ajo. Epäonnistuminen ei saa kaataa lähdettä:
+   * ilman karttaa kuvaus jää kuulutuksen tekstiksi kuten ennenkin.
+   */
+  let selostukset = new Map<string, string>()
+  try {
+    const sivu = await fetch(SAVONLINNA_KAAVOITUS_URL, { cache: "no-store" })
+    if (sivu.ok) selostukset = savonlinnaSelostusLinkit(await sivu.text())
+  } catch (error: any) {
+    console.error(
+      "collectSavonlinnaKaavaSource: kaavoitussivun haku epäonnistui:",
+      error?.message ?? error
+    )
+  }
+
+  /*
+   * Jo luetut selostukset ohitetaan, jotta katto kohdistuu uusiin. Tieto
+   * on dokumentin omassa payloadissa eikä vaadi omaa taulua.
+   */
+  const luetut = new Map<string, string>()
+  try {
+    const { data } = await supabaseAdmin
+      .from("source_documents")
+      .select("document_url, raw_payload")
+      .eq("source_id", source.id)
+
+    for (const rivi of data ?? []) {
+      const payload = (rivi as any).raw_payload
+      if (payload?.description_source === "selostus" && payload?.description) {
+        luetut.set(String((rivi as any).document_url), String(payload.description))
+      }
+    }
+  } catch {
+    /* Tyhjä kartta tarkoittaa "ei tietoa": haetaan uudelleen. */
+  }
+
+  let pdfHaut = 0
+
   let saved = 0
 
   for (const post of latestByTitle.values()) {
@@ -25885,7 +25948,51 @@ async function collectSavonlinnaKaavaSource(source: DiscoverySource) {
       if (/^(Lisätietoja|Mahdolliset|Savonlinnassa)/i.test(text)) return
       paragraphs.push(text)
     })
-    const description = collectDescription(paragraphs)
+    const kuulutusDescription = collectDescription(paragraphs)
+
+    /*
+     * Selostuksen kuvaus voittaa kuulutuksen: se kertoo mitä alueelle
+     * tulee, kuulutus vain milloin paperit ovat nähtävillä.
+     */
+    const selostusUrl = savonlinnaSelostusOtsikolle(selostukset, title)
+    let selostusDescription: string | null = null
+
+    /*
+     * JO LUETTU KUVAUS KAYTETAAN UUDELLEEN, EI HAETA JA EI HUKATA.
+     *
+     * Ilman tata ohitus palautti kuvauksen takaisin kuulutustekstiksi:
+     * PDF:aa ei haettu, joten `selostusDescription` jai tyhjaksi ja
+     * upsert ylikirjoitti aiemman selostuksen. Havaittu 29.9.2026
+     * heti ensimmaisessa toistoajossa.
+     */
+    const aiempi = luetut.get(post.link) ?? null
+
+    if (aiempi) {
+      selostusDescription = aiempi
+    } else if (selostusUrl && pdfHaut < SAVONLINNA_MAX_PDF_FETCHES_PER_RUN) {
+      pdfHaut += 1
+      selostusDescription = await haeKaavanKuvaus(selostusUrl)
+    }
+
+    /*
+     * Kuulutuksen oma sisalto sailyy selostuksen perassa: osassa on
+     * kiinteistotunnus tai rajaus jota selostuksessa ei ole, ja
+     * kiinteistotunnus on myos tasmaytyksen tunniste.
+     */
+    const kuulutuksenOma = kuulutuksenOmaSisalto(kuulutusDescription)
+
+    /*
+     * AIEMPI KUVAUS ON JO VALMIS, SITA EI RAKENNETA UUDELLEEN.
+     *
+     * Ensimmaisessa versiossa hanta liitettiin joka ajolla uudelleen:
+     * Olavinkadun kuvaus kasvoi 1 183 -> 1 307 -> ... merkkiin
+     * toistoajoissa. Tallennettu teksti sisaltaa jo hannan.
+     */
+    const description = aiempi
+      ? aiempi
+      : selostusDescription
+        ? [selostusDescription, kuulutuksenOma].filter(Boolean).join(" ")
+        : kuulutusDescription
 
     const phase = savonlinnaPhaseFromText(bodyText)
     const completed = /voimaan|lainvoima/i.test(phase ?? "")
@@ -25914,6 +26021,8 @@ async function collectSavonlinnaKaavaSource(source: DiscoverySource) {
             description,
             contacts,
             completed,
+            selostus_url: selostusUrl,
+            description_source: selostusDescription ? "selostus" : "kuulutus",
           },
           processed_at: new Date().toISOString(),
           last_seen_at: new Date().toISOString(),
