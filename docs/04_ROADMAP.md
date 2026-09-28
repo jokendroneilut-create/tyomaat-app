@@ -619,6 +619,55 @@ muistin varassa.
 
 ### Datan laatu
 
+- **KORKEIN PRIORITEETTI, ALOITETAAN PE 2.10.2026: kaavahankkeen
+  kuvaus selostuksesta, kunta kerrallaan.**
+
+  Kaavakuulutus kertoo vain menettelyn ("nähtävillä 25.9.–2.11.2026
+  palvelupisteiden asiakaspäätteillä"), ei sanaakaan siitä mitä alueelle
+  tulee. Savonlinna korjattiin 29.9.2026 (D-217): selostuksen luvut
+  "Kaava-alue" ja "Kaavan tarkoitus" kuvaukseksi, neljä viidestä sai
+  oikean tekstin.
+
+  **Koko:** 6 176 kaavarivistä **1 595 (26 %)** on kuvaus ohut tai
+  pelkkää menettelytekstiä (`scripts/measure-kaavakuvaukset.ts`,
+  mitattu 29.9.2026).
+
+  | n | huono | med. | lähde |
+  |---|---|---|---|
+  | 157 | 68 | 127 | Lahden kaavatyökohteet |
+  | 423 | 66 | 292 | Helsingin SUKKA |
+  | 175 | 61 | 344 | Seinäjoen ajankohtaiset asemakaavat |
+  | 52 | 46 | 108 | Pornaisten vireillä olevat kaavat |
+  | 36 | 36 | 85 | Pelkosenniemen vireillä olevat asemakaavat |
+
+  …ja 50+ kunnan häntä á 20–40 riviä.
+
+  **MIKSI TÄMÄ ON TÄRKEÄ:** näiden lähteiden hyväksymisaste on ~100 %
+  (Lahti 77/80, Seinäjoki 86/88, Pornainen 26/26), eli ohuet kuvaukset
+  ovat **asiakkaalle näkyvissä hankkeissa** — eivät jonossa.
+
+  **EI OLE YHTÄ YLEISTÄ KORJAUSTA.** Kolme yritystä, kaikki mitattu
+  29.9.2026:
+
+  1. Savonlinnan otsikkosääntö (h3 = kuulutuksen otsikko): **0 osumaa**
+     kuudesta muusta kunnasta. Nokia ryhmittelee kaupunginosittain,
+     muilla ei ole otsikoittain ryhmiteltyjä selostuslinkkejä lainkaan.
+  2. Geneerinen `documents_url` → selostus-pdf: **22 sivua 45:stä** ei
+     sisällä selostusta ollenkaan (karttasovelluksia, listasivuja).
+  3. Tiedostonimen sanaosuma: **6 osumaa 45:stä**, ja niistä yksi väärä
+     ("Kortekangas 3" → `Kaavaselostus_Kortekangas-2...`).
+
+  Jokainen kunta vaatii siis oman sivurakenteensa lukemisen. Yhteistä on
+  vain `lib/agent/kaavanKuvaus.ts` (PDF → kuvaus), joka on jo tehty.
+
+  **TYÖTAPA (ei neuvoteltavissa):** kuivaharjoitus luetaan rivi riviltä
+  ennen ajoa, ja lähde ajetaan **kahdesti** ennen kuin se on valmis.
+  Savonlinnassa kaksi vikaa ilmeni vasta toisella ajolla — kuvaus
+  palautui kuulutustekstiksi ja häntä liitettiin uudelleen (1 183 →
+  1 307 merkkiä). Yhden ajon jälkeen molemmat näyttivät onnistuneelta.
+
+  **Erä kerrallaan volyymijärjestyksessä**, 3–5 kuntaa per erä.
+
 - **Kohdetyyppisääntö osuu yhdyssanan alkuun: "Koululammen puistoalueen
   perusparannus" → Koulu.** Havaittu 7.9.2026 luettaessa sääntökorjauksen
   17 riviä. Kyse on lammesta, ei koulusta.
@@ -635,7 +684,8 @@ muistin varassa.
   ei ole kiireellinen: yksi rivi mitatusta 17:stä, ja LLM-portti (D-171)
   korjaa tämän luokan tapaukset kun se ajetaan.
 
-- **⭐ SEURAAVA: kanna jo poimitut liitetiedot eteenpäin.** Tutkittu
+- **Kanna jo poimitut liitetiedot eteenpäin.** (Oli seuraava työ ennen
+  kaavakuvauksia, 29.9.2026.) Tutkittu
   6.9.2026. Alkuperäinen kirjaus oli "hankesuunnitelmien lukeminen
   liitteistä", ja **mittaus kumosi sen** — ks. alempaa. Oikea työ on
   pienempi, halvempi ja jo puoliksi tehty.
