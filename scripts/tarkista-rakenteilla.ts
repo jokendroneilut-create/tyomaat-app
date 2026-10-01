@@ -22,8 +22,12 @@ for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8
  *   1. ARVIOITU VALMISTUMISPAIVA MENNYT - toimii, mutta kattaa vahan.
  *      1 140 rakenteilla-hankkeesta vain 39:lla paiva on mennyt ja 709:lta
  *      paiva puuttuu kokonaan. `evaluateAutoComplete` hoitaa naista 26,
- *      loput 13 se ohittaa (portti 3: lahde listaa hanketta yha, kuten
- *      Granlundin pysyva referenssisivu). Ne 13 tarvitsevat ihmissilmat.
+ *      loput 13 se ohittaa PORTISSA 1: paiva on vanhempi kuin loytohetki,
+ *      eli paiva ei ole todiste. Ne 13 tarvitsevat ihmissilmat - ja
+ *      tarkistus 1.10.2026 osoitti miksi: 12 kaydysta 9 oli todella
+ *      valmistunut, 2 oli aidosti kesken vaaralla paivalla ja 1 jai
+ *      ratkeamatta. Jos portti siirtaisi nama itse, se piilottaisi kaksi
+ *      kesken olevaa hanketta kahdentoista erassa.
  *
  *   2. OMA DOKUMENTTI KERTOO VALMISTUMISESTA - tuottaa oikeat osumat.
  *      Kynnys on kolme hanketta yksiloivaa yhteista sanaa: kahdella

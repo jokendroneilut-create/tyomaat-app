@@ -5,6 +5,69 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-221 - Yliaikainen hanke: 9/12 oli valmis, 2/12 vain vaarin paivattu
+
+Kvartaalitarkistuksen (D-220) signaali 1 jatti 12 hanketta, joilla
+arvioitu valmistumispaiva on mennyt mutta automatiikka ohittaa ne
+portissa 1 (paiva vanhempi kuin loytohetki). Lista kaytiin lapi kasin
+1.10.2026, jokainen lahteesta asti.
+
+| tulos | n | esimerkki |
+|---|---|---|
+| oli todella valmistunut | **9** | Vantaan oikeustalo, NCC 2.6.2026 |
+| aidosti kesken, paiva vaarin | **2** | Roihupellon varikko, arvio oli 2022-12-31 |
+| ei voi tietaa | **1** | SK-675 Valijoen silta |
+
+#### Portti 1 on oikeassa, ja juuri siksi tyo on kasityota
+
+Jos portti siirtaisi nama itse, se olisi piilottanut kaksi kesken
+olevaa hanketta kahdentoista erassa — 17 %. Molemmat olivat
+tunnistettavissa vain lahdetta lukemalla:
+
+- **Roihupellon raitiovaunuvarikon laajennus.** Arvio oli 2022-12-31,
+  mika on *Raide-Jokerin varikon* valmistumisvuosi — eri hanke samalla
+  tontilla. Oikea hanke on vasta alkanut: Kaupunkiliikenne 18.6.2026
+  *"Rakentaminen alkaa kesan aikana"*, valmistuminen noin vuosi
+  aloituksesta, paaurakoitsija VM Suomalainen. Korjattu 2027-08-31.
+  Aloituspaiva 2026-02-23 oli loytohetki + 1 vrk eika lahteen tieto
+  (tarjousaineisto julkaistiin 19.2.2026), joten se tyhjennettiin.
+- **Helsingin tekonurmikentat.** Arvio 2025-12-31 oli esirakentamisesta,
+  joka valmistui 2025. Varsinainen tyo on kesken: tiedote 24.4.2026
+  *"Puiston rakennustyot alkavat toukokuussa ja valmistuvat
+  suunnitelmien mukaan loka-marraskuussa."* Korjattu 2026-11-30.
+
+#### Signaali 2 ei loytanyt naista yhtakaan
+
+Yhdeksan valmistunutta ei osunut dokumenttisignaaliin lainkaan, ja syyt
+ovat rakenteellisia:
+
+1. **Valmistumisuutinen kaytta eri nimea.** Hanke on *"Rissalan
+   tukikohtaan uuden kasarmin"*, tiedote on *"Karjalan lennoston uusi
+   kasarmi valmistui"*. Yhteisia yksiloivia sanoja **nolla**, vaikka
+   kyse on samasta rakennuksesta. (Tiedote kertoo sen itse: *"on
+   valmistunut Rissalan tukikohtaan"*.)
+2. **Todiste ei ole kannassa.** Vantaan oikeustalon valmistumisen kertoo
+   NCC:n tiedote ja Jyvaskylan oikeustalon Keskisuomalainen — kumpikaan
+   lahde ei ole meilla.
+3. **Vanha artikkeli ei kerro valmistumisesta, vaan aikataulusta.**
+   Pohjolan ja Hartelan artikkelit sanovat *"valmistuu marraskuussa
+   2023"* — tuotu kantaan 2026. Valmistuminen on pateltava siita etta
+   paiva on mennyt, eika siita etta joku kertoi sen.
+
+**Johtopaatos: signaali 2 loytaa vain samannimiset tapaukset.** Loput
+loytyvat vain yliaikaislistasta, ja sen lapikaynti vaatii ihmisen joka
+hakee verkosta. Se on kvartaalitarkistuksen tyotapa, ei puute siina.
+
+#### Sivuhavainto: kaksi dokumenttia jai ilman runkoa
+
+Jyvaskylan purkupaatosten `raw_payload` oli `{"awaiting_body": true}` —
+paatosteksti jai hakematta, joten kannassa ei ollut aikataulua
+lainkaan. Paatokset luettiin kasin (21.5.2025 ja 13.5.2025, kummankin
+arvioitu valmistumisaika 11.7.2025). `awaiting_body`-tilaan jaaneiden
+dokumenttien maara on mittaamatta; kirjattu tyojonoon.
+
+---
+
 ### D-220 - Rakenteilla-hankkeiden valmistumistarkistus on kasityota, ei automaatiota
 
 Kysymys 1.10.2026 D-219:n jalkeen: pitaisiko koko kannan rakenteilla
@@ -27,10 +90,14 @@ aktiivista hanketta rakenteilla-vaiheissa (6 238 julkisesta).
 `evaluateAutoComplete` lukee arvioitua valmistumispaivaa, mutta
 **709 hankkeelta 1 140:sta se puuttuu kokonaan** — niita automatiikka ei
 voi koskaan siirtaa. Mennyt paiva on vain 39:lla, ja naista automatiikka
-ohittaa 13, koska portti 3 lukee lahteen listaavan hanketta yha
-(Granlundin pysyva referenssisivu on juuri tallainen). Ne 13 ovat
-tarkistuksen ainoa oikea tyolista tasta signaalista — vanhin on ollut
-yliaikainen **1 370 vrk**.
+ohittaa 13 **portissa 1**: paiva on vanhempi kuin hankkeen loytohetki,
+joten paiva ei ole todiste valmistumisesta. Ne 13 ovat tarkistuksen
+ainoa oikea tyolista tasta signaalista — vanhin on ollut yliaikainen
+**1 370 vrk**.
+
+*(Korjaus: tama kohta sanoi ensin portti 3, "lahde listaa hanketta yha".
+Vaarin — portti 3 palauttaa `wait`, ei `skip`. Kaikki 13 kaatuivat
+porttiin 1. Virhe huomattiin kun lista kaytiin lapi 1.10.2026.)*
 
 #### 2. Oma dokumentti on paras signaali, ja se on sama kuvio kuin D-219
 

@@ -694,9 +694,25 @@ muistin varassa.
   Vaasan sairaalan uudisrakennus. Signaali 2 palauttaa nyt yhden rivin,
   ja se on tunnettu väärä osuma (Vanhan Vaasan F- ja T-rakennukset).
 
-  **Seuraava kierros 1.1.2027.** Valmistumispäivä luetaan tiedotteen
-  tekstistä, ei tuontipäivästä — kuivaharjoitus paljasti että kahdella
-  kolmesta päivä oli väärin.
+  **Yliaikaislista käyty läpi 1.10.2026** (`scripts/fix-yliaikaiset-rakenteilla.ts`,
+  perustelut D-221): 12 hankkeesta 9 oli todella valmistunut, 2 oli
+  aidosti kesken väärällä päivällä ja 1 jäi ratkeamatta (SK-675
+  Välijoen silta — Väylän sivu on työlista, ei tilannekatsaus).
+  Signaali 1 palauttaa nyt yhden rivin.
+
+  **Seuraava kierros 1.1.2027.** Kaksi työtapasääntöä, molemmat
+  mitattuja: valmistumispäivä luetaan tiedotteen *tekstistä* eikä
+  tuontipäivästä, ja yliaikaislistan läpikäynti vaatii verkkohaun —
+  yhdeksän valmistunutta ei osunut dokumenttisignaaliin lainkaan, koska
+  valmistumisuutinen käyttää eri nimeä tai ei ole kannassa.
+
+- **Mittaamatta: montako dokumenttia on jäänyt `awaiting_body`-tilaan?**
+
+  Havaittu 1.10.2026 (D-221): Jyväskylän purkupäätösten `raw_payload`
+  oli `{"awaiting_body": true}`, eli päätösteksti jäi hakematta ja
+  kannassa ei ollut aikataulua lainkaan. Päätökset luettiin käsin.
+  Kyse voi olla yhdestä lähteestä tai sadoista dokumenteista — määrä on
+  mitattava ennen kuin tästä päätellään mitään.
 
 - **Kohdetyyppisääntö osuu yhdyssanan alkuun: "Koululammen puistoalueen
   perusparannus" → Koulu.** Havaittu 7.9.2026 luettaessa sääntökorjauksen

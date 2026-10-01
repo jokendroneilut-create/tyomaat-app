@@ -37,6 +37,21 @@ Vaasa 31.12.2025). Päivä luetaan tiedotteen tekstistä — kuivaharjoitus
 paljasti että kahdella kolmesta se olisi mennyt tuontipäivän mukaan
 väärin, koska `published_at` oli tyhjä.
 
+Sen jälkeen käytiin läpi myös yliaikaislista — ne 12 hanketta, joilla
+arvioitu valmistumispäivä on mennyt mutta automatiikka ei koske niihin.
+Yhdeksän oli todella valmistunut: muun muassa Vantaan ja Jyväskylän
+oikeustalot, Karjalan lennoston kasarmi Rissalassa ja kaksi Jyväskylän
+purku-urakkaa, jotka päättyivät heinäkuussa 2025. Kaksi oli sen sijaan
+aidosti kesken pelkän väärän päivän takia: Roihupellon
+raitiovaunuvarikon laajennuksen "valmistumispäivä" 2022 oli itse asiassa
+*Raide-Jokerin varikon* valmistumisvuosi, ja tekonurmikenttien 2025 oli
+esirakentamisesta. Yksi — Välijoen silta Kuopiossa — jäi ratkeamatta ja
+jätettiin näkyviin.
+
+Tämä on se syy, miksi työ on käsityötä: jos portti olisi siirtänyt nämä
+itse, se olisi piilottanut kaksi kesken olevaa hanketta kahdentoista
+erässä.
+
 Tarkistus itse **ei muuta mitään.** Vaiheen muutos piilottaa hankkeen
 asiakkaalta, ja automaattinen siirto on juuri se mekanismi joka tässä jo
 petti. Päätös tehdään TIC:ssä käsin.
