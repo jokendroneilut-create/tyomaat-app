@@ -736,16 +736,25 @@ export default function UsersPage() {
                 borderTop: '1px solid #e5e7eb',
               }}
             >
+              {/*
+                * TOTEUTUNUT SININEN, ARVIO MUSTA (Johannes 2.10.2026).
+                *
+                * MRR, ARR ja maksavien maara ovat kirjattuja lukuja;
+                * potentiaali on arvaus 149 eurolla niille joille hintaa
+                * ei ole sovittu. Sama vari tekisi niista
+                * samanarvoisia, ja arvio luettaisiin tulona.
+                */}
               <SummaryCard
                 label="Kuukausilaskutus (MRR)"
                 value={muotoileEuro(laskutus.mrr)}
                 highlight
               />
-              <SummaryCard label="Vuodessa (ARR)" value={muotoileEuro(laskutus.arr)} />
+              <SummaryCard label="Vuodessa (ARR)" value={muotoileEuro(laskutus.arr)} highlight />
               <SummaryCard
                 label="Maksavia asiakkaita"
                 value={laskutus.maksaviaAsiakkaita}
                 sub={`${laskutus.maksaviaTunnuksia} tunnusta · ${laskutus.asiakkaitaYhteensa} asiakasta yhteensä`}
+                highlight
               />
               {laskutus.testiasiakkaita > 0 && (
                 <>
