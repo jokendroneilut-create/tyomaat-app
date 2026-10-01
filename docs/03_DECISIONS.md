@@ -5,6 +5,75 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-220 - Rakenteilla-hankkeiden valmistumistarkistus on kasityota, ei automaatiota
+
+Kysymys 1.10.2026 D-219:n jalkeen: pitaisiko koko kannan rakenteilla
+olevat hankkeet tarkistaa saannollisesti, esim. kvartaaleittain, sen
+varalta etta joku on valmistunut eika kukaan ole kertonut meille?
+
+**Kyllä, mutta ei silla signaalilla jota automatiikka kayttaa.** Kolme
+mahdollista signaalia mitattiin (`scripts/measure-rakenteilla-vanhentuneet.ts`,
+`scripts/measure-valmistumisvihjeet.ts`). Populaatio: **1 140** julkista
+aktiivista hanketta rakenteilla-vaiheissa (6 238 julkisesta).
+
+| signaali | kattavuus | kelpaa |
+|---|---|---|
+| arvioitu valmistumispaiva mennyt | 39 / 1 140 | osittain |
+| oma dokumentti kertoo valmistumisesta | 4 parileytoa, 3 aitoa | kylla |
+| rakentaminen kestanyt liian kauan | 10 / 1 140 | **ei viela** |
+
+#### 1. Valmistumispaiva ei kanna tata tyota
+
+`evaluateAutoComplete` lukee arvioitua valmistumispaivaa, mutta
+**709 hankkeelta 1 140:sta se puuttuu kokonaan** — niita automatiikka ei
+voi koskaan siirtaa. Mennyt paiva on vain 39:lla, ja naista automatiikka
+ohittaa 13, koska portti 3 lukee lahteen listaavan hanketta yha
+(Granlundin pysyva referenssisivu on juuri tallainen). Ne 13 ovat
+tarkistuksen ainoa oikea tyolista tasta signaalista — vanhin on ollut
+yliaikainen **1 370 vrk**.
+
+#### 2. Oma dokumentti on paras signaali, ja se on sama kuvio kuin D-219
+
+Kannassa on **133 otsikkoa** joissa on valmistumissana. Kynnys mitattiin:
+
+- **2 yhteista yksiloivaa sanaa**: 45 paria, joista aitoja 3. Kohina
+  tulee yleissanoista ("toinen vaihe", "helsinkiin, espooseen").
+- **3 yhteista sanaa**: 4 paria, joista aitoja 3. Luettava lista.
+
+Loydot 1.10.2026: Kampin terveys- ja hyvinvointikeskus (valmistui
+etuajassa 20.9.2026, meilla Rakenteilla), Nokian F-35-huoltohalli
+(meilla "on harjakorkeudessa", tiedote kertoo valmistumisesta) ja Vanhan
+Vaasan sairaalan uudisrakennus, jonka tiedote sanoo suoraan:
+
+> "Hanke valmistui aikataulussa ja budjetissa loppuvuodesta 2025, ja
+> tilat otettiin kayttoon helmikuussa 2026."
+
+Rahasanat (miljoonan/euron/investointi) olivat ainoa vaara osuma ja ne
+lisattiin sulkulistaan.
+
+#### 3. Kesto ei kelpaa signaaliksi ennen vuotta 2028
+
+**753 hankkeelta 1 140:sta puuttuu aloituspaiva** ja vain 10:lla se on
+yli vuoden takana, koska keruu alkoi kevaalla 2026. "Rakenteilla liian
+kauan" on oikea ajatus mutta mittaamaton: kahden vuoden historia
+tarvitaan ennen kuin kynnys voidaan asettaa mittaamalla.
+
+#### Miksi ei cronia
+
+Signaali 2 tuottaa neljannesvuodessa muutaman rivin, joista yksi on
+vaara (Vanhan Vaasan F- ja T-rakennukset ovat eri, myohempi vaihe).
+Vaiheen muutos piilottaa hankkeen asiakkaalta, eli virhe on kallis
+suuntaan josta on sovittu: kesken oleva hanke piilotettuna on
+pahempi kuin valmistunut listalla. Automaattinen siirto on
+juuri se mekanismi joka tassa jo petti. Siksi
+`scripts/tarkista-rakenteilla.ts` **ei muuta mitaan** — se tulostaa
+listan linkkeineen, ja paatos tehdaan TIC:ssa kasin.
+
+**Ajetaan kvartaaleittain** (1.1. / 1.4. / 1.7. / 1.10.), kirjattu
+tyojonoon.
+
+---
+
 ### D-219 - Tieto oli kannassa kuusi viikkoa eika paassyt asiakkaalle
 
 Asiakaspalaute 1.10.2026 hankkeesta "Hangonsillan monitoimiareena"

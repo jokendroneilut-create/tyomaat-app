@@ -9,6 +9,32 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-10 (tyo 1.10.)
+
+### Rakenteilla olevien valmistumistarkistus kvartaaleittain (D-220)
+
+Hyvinkään areena oli rakenteilla 15 kuukautta ennen kuin kukaan huomasi.
+Sama voi tapahtua toiseen suuntaan: hanke seisoo listalla rakenteilla sen
+jälkeen kun se on avattu. Nyt on tarkistus, joka etsii nämä omasta
+aineistostamme — `scripts/tarkista-rakenteilla.ts`, ajetaan kvartaaleittain.
+
+Kolme signaalia mitattiin, kaksi kelpaa. Arvioitu valmistumispäivä ei
+kanna työtä yksin: 1 140 rakenteilla-hankkeesta **709:ltä se puuttuu
+kokonaan**, eikä automatiikka voi siirtää niitä koskaan. Paras signaali on
+oma dokumentti, joka kertoo valmistumisesta: kolmen yhteisen yksilöivän
+sanan kynnyksellä lista on neljä riviä ja niistä kolme aitoa. "Rakentaminen
+on kestänyt liian kauan" jää odottamaan vuotta 2028 — 753 hankkeelta
+puuttuu aloituspäivä, joten kynnystä ei voi vielä asettaa mittaamalla.
+
+Löydöt 1.10.2026: Kampin terveys- ja hyvinvointikeskus (valmistui
+etuajassa 20.9.), Nokian F-35-huoltohalli ja Vanhan Vaasan sairaalan
+uudisrakennus, jonka tiedote kertoo tilat otetuiksi käyttöön helmikuussa
+2026 — meillä se oli 305 vuorokautta yliaikainen rakenteilla-hanke.
+
+Skripti **ei muuta mitään.** Vaiheen muutos piilottaa hankkeen
+asiakkaalta, ja automaattinen siirto on juuri se mekanismi joka tässä jo
+petti. Päätös tehdään TIC:ssä käsin.
+
 ## 2026-09 (tyo 1.9.)
 
 ### Kaavahankkeen kuvaus tulee nyt selostuksesta (D-217)

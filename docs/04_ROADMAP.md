@@ -668,6 +668,30 @@ muistin varassa.
 
   **Erä kerrallaan volyymijärjestyksessä**, 3–5 kuntaa per erä.
 
+- **TOISTUVA, KVARTAALEITTAIN (1.1. / 1.4. / 1.7. / 1.10.): onko
+  rakenteilla oleva hanke jo valmistunut?**
+
+  `npx tsx scripts/tarkista-rakenteilla.ts` — ei muuta mitään, tulostaa
+  listan jonka lukee rivi riviltä ja korjaa TIC:ssä käsin. Perustelut ja
+  mitatut kynnykset: [`03_DECISIONS.md`](03_DECISIONS.md) D-220.
+
+  Lähtötilanne 1.10.2026: 1 140 julkista hanketta rakenteilla-vaiheissa.
+  Kaksi signaalia kolmesta kelpaa.
+
+  | signaali | rivejä | huomio |
+  |---|---|---|
+  | valmistumispäivä mennyt, automatiikka ohittaa | 13 | vanhin 1 370 vrk yliaikainen |
+  | oma dokumentti kertoo valmistumisesta | 4 | 3 aitoa |
+  | rakentaminen kestänyt liian kauan | — | **ei käytössä**, 753/1 140 ilman aloituspäivää |
+
+  Kolmas signaali otetaan käyttöön kun kantaan on kertynyt kaksi vuotta
+  aloituspäivähistoriaa (eli 2028). Silloin kynnys asetetaan mittaamalla,
+  ei arvaamalla.
+
+  **Auki 1.10.2026:** kolme vahvistettua löytöä odottaa vaiheen
+  korjausta — Kampin terveys- ja hyvinvointikeskus, Nokian
+  F-35-huoltohalli ja Vanhan Vaasan sairaalan uudisrakennus.
+
 - **Kohdetyyppisääntö osuu yhdyssanan alkuun: "Koululammen puistoalueen
   perusparannus" → Koulu.** Havaittu 7.9.2026 luettaessa sääntökorjauksen
   17 riviä. Kyse on lammesta, ei koulusta.
