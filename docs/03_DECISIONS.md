@@ -457,7 +457,7 @@ kaupunki, kaikilla Are liittyvana yrityksena, kuudella paaurakoitsija
 HS-Kiinteistosaneeraus). Rakennuslehden takautuva ajo: 16 rivia sai
 kaupungin tai yrityksen.
 
-**Ohjausmerkki tiedostossa - taas.** `` kirjoittui regexiin
+**Ohjausmerkki tiedostossa - taas.** `\b` kirjoittui regexiin
 askelpalautinmerkkina (kuusi kappaletta), tasan kuten D-136:ssa.
 `lib/ohjausmerkit.spec.ts` nappasi sen. Se testi on ainoa syy miksei vika
 paassyt lapi: regex nayttaa oikealta lukiessa.
