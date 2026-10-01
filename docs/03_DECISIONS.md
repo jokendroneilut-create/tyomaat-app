@@ -5,6 +5,75 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-224 - Yritys valitaan tunnukselle, ei paatella sahkopostista
+
+Johannes 2.10.2026: kayttajasivulle oma Yritys-sarake, tekstikentta joka
+ehdottaa olemassa olevia ja sallii uuden kirjoittamisen. *"Tama poistaisi
+ongelman ilmaissahkoposteista myos."* Lisaksi potentiaalinen MRR ja ARR,
+joka laskee mukaan myos trialit 149 EUR kuukausihinnalla.
+
+#### Paattely jaa oletukseksi, valinta voittaa sen
+
+D-223 paatteli asiakkaan sahkopostista: yritysdomain, tai vapaassa
+sahkopostissa koko osoite. Paattely toimii **102 tunnuksella 113:sta**,
+mutta loput 11 jaavat kukin omaksi "asiakkaakseen" vain siksi etta
+heilla on gmail tai hotmail. Jos kaksi heista on saman yrityksen vakea,
+**sita ei voi paatella mistaan** — se on kerrottava.
+
+`user_company` on siis tieto jota ei ole muualla, ei kopio. Paattely jaa
+voimaan niille joille yritysta ei ole valittu, eli 102 tunnusta toimii
+kuten ennenkin ilman yhtaan klikkausta.
+
+#### Nimi avaimena, ei id:ta
+
+Yrityksia on kymmenia, ei tuhansia. Erillinen yritystaulu id:lla toisi
+liitoksen ja yllapidon ilman etta yksikaan kysymys helpottuisi.
+`customer_billing.tunniste` ottaa nimen vastaan samoin kuin se ottaa
+domainin — sarake on "asiakkaan tunniste", ei "domain".
+
+Nimi normalisoidaan avaimeksi (`normalisoiYritys`: trim, pienet
+kirjaimet, valilyonnit yhteen), jotta "Koneunion Oy", "koneunion oy" ja
+" Koneunion  Oy " ovat sama asiakas. Nakyva nimi sailyy sellaisena kuin
+se kirjoitettiin.
+
+**Ehdotuslista on se mika estaa kirjoitusasujen rapautumisen**, ei
+rajoite. `<datalist>` tarjoaa jo kaytetyt nimet, mutta uuden voi
+kirjoittaa ilman eri "lisaa yritys" -vaihetta.
+
+#### Laskutusrivi seuraa yrityksen vaihtoa
+
+Yrityksen valinta vaihtaa asiakkaan tunnisteen, joten aiemmin kirjattu
+hinta jaisi vanhan tunnisteen alle ja katoaisi nakyvista. Hiljainen
+tiedon menetys on juuri se mita talla sivulla ei saa tapahtua, joten
+`set-user-company` kopioi rivin uudelle tunnisteelle — **mutta vain jos
+uudella ei ole omaa rivia.** Olemassa olevaa tietoa ei ylikirjoiteta.
+
+#### Potentiaali: oletus vaistyy tiedetyn hinnan tielta
+
+Trial-asiakas lasketaan potentiaaliin 149 EUR:lla, mutta **jos hinta on
+jo kirjattu, potentiaali kayttaa sita**. Hinnat ovat yrityskohtaisia
+(Johannes 2.10.2026: Sarlin 99, Etuputsarit 149), joten arvaus ei saa
+yliajaa tietoa. Siksi hintakentta on nakyvissa myos trialille, ei vain
+maksavalle.
+
+Potentiaali on **asiakaskohtainen**, kuten kaikki muukin hinnoittelu:
+Koneunionin 13 tunnusta ovat yksi 149 euron potentiaali, eivat
+kolmetoista. Kortti kertoo perusteen ("sis. N trial-asiakasta"), jottei
+lukua tarvitse uskoa sellaisenaan.
+
+#### "Testi" -> "Trial" vain nakyvassa tekstissa
+
+Kannan arvo on yha `testi`. Uudelleennimeaminen vaatisi check-rajoitteen
+migraation eika muuttaisi mitaan muuta kuin sanan.
+
+#### Sivusuunnan tiivistys
+
+Uusi sarake tarvitsi tilaa. Paivamaarista pudotettiin sekunnit: kaksi
+paivamaarasaraketta vei niilla noin 90 pikselia, eika tunnuksen
+luontihetkea lueta sekunnin tarkkuudella.
+
+---
+
 ### D-223 - Maksavat asiakkaat merkitaan ASIAKKAALLE, ei tunnukselle
 
 Johannes 1.10.2026: kayttajasivulle halutaan merkinta maksavista

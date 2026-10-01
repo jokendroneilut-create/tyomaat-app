@@ -11,6 +11,30 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 1.10.)
 
+## 2026-10 (tyo 2.10.)
+
+### Yritys-sarake ja potentiaalinen MRR/ARR (D-224)
+
+Käyttäjälistalla on nyt Yritys-sarake: tekstikenttä, joka ehdottaa jo
+käytettyjä nimiä ja sallii uuden kirjoittamisen. Tunnukset voi myös
+järjestää yrityksen mukaan.
+
+**Tämä ratkaisee ilmaissähköpostit.** Sähköpostista päättely toimii 102
+tunnuksella 113:sta, mutta loput 11 jäävät kukin omaksi asiakkaakseen
+vain siksi että heillä on gmail — eikä mistään voi päätellä, ovatko
+kaksi heistä saman yrityksen väkeä. Valinta voittaa päättelyn, ja
+päättely jää voimaan niille joille yritystä ei ole valittu.
+
+Yrityksen vaihtaminen siirtää aiemmin kirjatun hinnan mukana, mutta ei
+koskaan ylikirjoita olemassa olevaa riviä.
+
+Uutena myös **Potentiaalinen MRR ja ARR**, jotka laskevat trial-asiakkaat
+mukaan 149 €:lla — tai heille kirjatulla hinnalla, jos sellainen on.
+Hinnat ovat yrityskohtaisia, joten arvaus väistyy tiedon tieltä. Siksi
+hintakenttä näkyy myös trialille. Vetovalikon "Testi" on nyt "Trial".
+
+Vaatii SQL:n ajamisen: `docs/sql/2026-10-02_user_company.sql`.
+
 ### Maksavat asiakkaat, kuukausilaskutus ja ARR käyttäjäsivulle (D-223)
 
 Käyttäjälistalla on nyt Laskutus-sarake: asiakas merkitään maksavaksi,

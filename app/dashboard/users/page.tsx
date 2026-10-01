@@ -32,6 +32,9 @@ type AdminUser = {
    * tunnukset jakavat yhden hinnan — Sarlinin 12 tunnusta ovat yksi
    * maksava asiakas.
    */
+  /* Valittu yritys. Tyhja = asiakas paatellaan sahkopostista (D-224). */
+  company?: string | null
+
   billingKey?: string
   billingStatus?: 'maksava' | 'testi' | 'ei_maksava' | null
   billingMonthly?: number | null
@@ -40,9 +43,14 @@ type AdminUser = {
   billingUpdatedAt?: string | null
 }
 
+/*
+ * Kannan arvo on yha `testi`, nakyva sana on "Trial" (Johannes
+ * 2.10.2026). Arvoa ei nimetty uudelleen, koska se vaatisi
+ * check-rajoitteen migraation eika muuttaisi mitaan muuta.
+ */
 const BILLING_LABEL: Record<string, string> = {
   maksava: 'Maksava',
-  testi: 'Testi',
+  testi: 'Trial',
   ei_maksava: 'Ei maksava',
 }
 
@@ -54,12 +62,24 @@ type SortColumn =
   | 'age_days'
   | 'last_seen_at'
   | 'confirmed'
+  | 'company'
   | 'seller'
 type SortDirection = 'asc' | 'desc'
 
+/*
+ * Sekunnit pois: kaksi paivamaarasaraketta vei niilla noin 90 pikselia
+ * leveytta eika kukaan lue tunnuksen luontihetkea sekunnin tarkkuudella.
+ * Tila meni Yritys-sarakkeelle (D-224).
+ */
 function formatDate(value: string | null) {
   if (!value) return '-'
-  return new Date(value).toLocaleString('fi-FI')
+  return new Date(value).toLocaleString('fi-FI', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 const TRIAL_STYLE: Record<TrialState, { color: string; weight: number }> = {
@@ -84,6 +104,10 @@ export default function UsersPage() {
 
   /* Laskutusrivia tallennetaan asiakkaittain, ei tunnuksittain. */
   const [billingSaving, setBillingSaving] = useState<string | null>(null)
+
+  /* Yrityskentan ehdotukset ja tallennuksen tila (D-224). */
+  const [companies, setCompanies] = useState<string[]>([])
+  const [companySaving, setCompanySaving] = useState<string | null>(null)
 
   const isAdminView = viewerRole === 'admin'
 
@@ -173,7 +197,7 @@ export default function UsersPage() {
   const laskutus = useMemo(
     () =>
       laskeLaskutus(
-        users.map((u) => ({ email: u.email, role: u.role })),
+        users.map((u) => ({ email: u.email, role: u.role, yritys: u.company })),
         users
           .filter((u) => u.billingKey && u.billingStatus)
           .map((u) => ({
@@ -192,6 +216,17 @@ export default function UsersPage() {
 
       if (sortColumn === 'email') {
         cmp = (a.email ?? '').localeCompare(b.email ?? '', 'fi')
+      } else if (sortColumn === 'company') {
+        /*
+         * Yrityksetön tunnus viimeiseksi kumpaankin suuntaan: tyhja ei
+         * ole nimi, eika sen kuulu kilpailla aakkosjarjestyksessa.
+         */
+        const ay = (a.company ?? '').trim()
+        const by = (b.company ?? '').trim()
+        if (!ay && !by) cmp = (a.email ?? '').localeCompare(b.email ?? '', 'fi')
+        else if (!ay) cmp = 1
+        else if (!by) cmp = -1
+        else cmp = ay.localeCompare(by, 'fi') || (a.email ?? '').localeCompare(b.email ?? '', 'fi')
       } else if (sortColumn === 'age_days') {
         /*
          * Luonnollinen suunta, jotta nuoli vastaa nakemaa: alas = suurin
@@ -265,6 +300,7 @@ export default function UsersPage() {
         setUsers(json.users)
         if (json.role) setViewerRole(json.role)
         setSellers(json.sellers ?? [])
+        setCompanies(json.companies ?? [])
       }
     } catch {
       if (!silent) setError('Käyttäjien haku epäonnistui')
@@ -520,6 +556,51 @@ export default function UsersPage() {
     setBillingSaving(null)
   }
 
+  /*
+   * YRITYKSEN VALINTA (D-224).
+   *
+   * Vaihtaa asiakastunnisteen, joten koko lista haetaan uudelleen:
+   * sama yritys voi koskea montaa tunnusta, ja laskutusrivi voi siirtya
+   * mukana. Paikallinen arvaus menisi vaaraan heti kun yritykseen
+   * kuuluu useampi kuin yksi tunnus.
+   */
+  const handleCompany = async (user: AdminUser, yritys: string) => {
+    const siisti = yritys.trim().replace(/\s+/g, ' ')
+    if (siisti === (user.company ?? '').trim()) return
+
+    setCompanySaving(user.id)
+    setError(null)
+
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+
+    if (!token) {
+      setError('Et ole kirjautunut sisään')
+      setCompanySaving(null)
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin/set-user-company', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId: user.id, yritys: siisti }),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) setError(json.error || 'Yrityksen tallennus epäonnistui')
+      else await fetchUsers(true)
+    } catch {
+      setError('Yrityksen tallennus epäonnistui')
+    }
+
+    setCompanySaving(null)
+  }
+
   const handleDelete = async (user: AdminUser) => {
     const ok = window.confirm(
       `Haluatko varmasti poistaa käyttäjän ${user.email}? Tätä ei voi perua.`
@@ -642,8 +723,28 @@ export default function UsersPage() {
                 value={laskutus.maksaviaAsiakkaita}
                 sub={`${laskutus.maksaviaTunnuksia} tunnusta · ${laskutus.asiakkaitaYhteensa} asiakasta yhteensä`}
               />
-              {laskutus.testitunnuksia > 0 && (
-                <SummaryCard label="Testitunnuksia" value={laskutus.testitunnuksia} />
+              {laskutus.testiasiakkaita > 0 && (
+                <>
+                  {/*
+                    * POTENTIAALI ON ASIAKASKOHTAINEN (D-224). Trialille
+                    * kirjattu hinta voittaa 149 euron oletuksen, koska
+                    * hinnat ovat yrityskohtaisia (Sarlin 99).
+                    */}
+                  <SummaryCard
+                    label="Potentiaalinen MRR"
+                    value={muotoileEuro(laskutus.potentiaalinenMrr)}
+                    sub={`sis. ${laskutus.testiasiakkaita} trial-asiakasta`}
+                  />
+                  <SummaryCard
+                    label="Potentiaalinen ARR"
+                    value={muotoileEuro(laskutus.potentiaalinenArr)}
+                  />
+                  <SummaryCard
+                    label="Trial-asiakkaita"
+                    value={laskutus.testiasiakkaita}
+                    sub={`${laskutus.testitunnuksia} tunnusta`}
+                  />
+                </>
               )}
               {laskutus.ilmanHintaa > 0 && (
                 <SummaryCard
@@ -757,6 +858,16 @@ export default function UsersPage() {
           </button>
         </div>
 
+        {/*
+          * Ehdotuslista kerran koko taululle, ei rivia kohden: sama id
+          * sadassa elementissa on virheellista HTML:aa ja turhaa tyota.
+          */}
+        <datalist id="yritysehdotukset">
+          {companies.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+
         <div style={{ marginTop: 12, overflowX: 'auto' }}>
           {/*
             * Myyja-sarake tuo lisaa leveytta, joten adminin taulukko
@@ -788,6 +899,15 @@ export default function UsersPage() {
                 */}
               <SortHeader column="last_seen_at" label="Viimeksi käynyt" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <SortHeader column="confirmed" label="Tila" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+              {isAdminView && (
+                <SortHeader
+                  column="company"
+                  label="Yritys"
+                  sortColumn={sortColumn}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                />
+              )}
               {isAdminView && (
                 <SortHeader
                   column="seller"
@@ -859,6 +979,16 @@ export default function UsersPage() {
                     <span style={{ color: '#b45309', fontWeight: 600 }}>Odottaa kutsun hyväksyntää</span>
                   )}
                 </td>
+
+                {isAdminView && (
+                  <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
+                    <CompanyCell
+                      user={u}
+                      saving={companySaving === u.id}
+                      onSave={handleCompany}
+                    />
+                  </td>
+                )}
 
                 {isAdminView && (
                   <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
@@ -981,7 +1111,7 @@ export default function UsersPage() {
 
               kayttoAuki === u.id ? (
                 <tr key={`${u.id}-kaytto`} style={{ background: '#f9fafb' }}>
-                  <td colSpan={13} style={{ padding: '12px 16px' }}>
+                  <td colSpan={14} style={{ padding: '12px 16px' }}>
                     {kayttoLataa === u.id ? (
                       <div style={{ color: '#6b7280' }}>Haetaan käyttöhistoriaa…</div>
                     ) : kaytto[u.id]?.error ? (
@@ -1166,10 +1296,10 @@ function BillingCell({
   }
 
   const tallennaHinta = () => {
-    if (tila !== 'maksava') return
+    if (tila !== 'maksava' && tila !== 'testi') return
     if (!hinta.trim()) return
     if (String(user.billingMonthly ?? '') === hinta.trim()) return
-    onSave(user, 'maksava', hinta)
+    onSave(user, tila, hinta)
   }
 
   return (
@@ -1200,7 +1330,12 @@ function BillingCell({
         <option value="testi">{BILLING_LABEL.testi}</option>
       </select>
 
-      {tila === 'maksava' && (
+      {/*
+        * Hinta myos trialille (Johannes 2.10.2026): hinnat ovat
+        * yrityskohtaisia (Sarlin 99, Etuputsarit 149), ja kirjattu hinta
+        * voittaa potentiaalilaskennan 149 euron oletuksen.
+        */}
+      {(tila === 'maksava' || tila === 'testi') && (
         <>
           <input
             value={hinta}
@@ -1210,14 +1345,16 @@ function BillingCell({
             onKeyDown={(e) => {
               if (e.key === 'Enter') tallennaHinta()
             }}
-            placeholder="0"
+            placeholder={tila === 'testi' ? '149' : '0'}
             inputMode="decimal"
             style={{
               width: 64,
               padding: '4px 6px',
               borderRadius: 6,
-              border: `1px solid ${hinta.trim() ? '#d1d5db' : '#fcd34d'}`,
-              background: hinta.trim() ? '#fff' : '#fffbeb',
+              border: `1px solid ${
+                hinta.trim() || tila === 'testi' ? '#d1d5db' : '#fcd34d'
+              }`,
+              background: hinta.trim() || tila === 'testi' ? '#fff' : '#fffbeb',
               textAlign: 'right',
             }}
           />
@@ -1262,5 +1399,74 @@ function SortHeader({
         {arrow}
       </button>
     </th>
+  )
+}
+
+/*
+ * YRITYSSOLU (D-224).
+ *
+ * Tekstikentta ehdotuslistalla (`<datalist>`), ei valikko: olemassa
+ * olevan yrityksen saa valittua kirjoittamatta, mutta uuden voi
+ * kirjoittaa ilman eri "lisaa yritys" -vaihetta. Ehdotukset tulevat
+ * jo kaytetyista nimista, jottei sama yritys paady kantaan kolmella
+ * kirjoitusasulla.
+ *
+ * Tallennus tapahtuu kentasta poistuttaessa tai Enterilla. Jokaisella
+ * nappainpainalluksella tallentaminen kirjoittaisi kantaan
+ * puolivalmiita nimia ("Kon", "Koneu", ...).
+ */
+function CompanyCell({
+  user,
+  saving,
+  onSave,
+}: {
+  user: AdminUser
+  saving: boolean
+  onSave: (user: AdminUser, yritys: string) => void
+}) {
+  const [arvo, setArvo] = useState<string>(user.company ?? '')
+
+  useEffect(() => {
+    setArvo(user.company ?? '')
+  }, [user.company])
+
+  /* Myyja ja admin eivat ole asiakkaita. */
+  if (user.role === 'admin' || user.role === 'seller') {
+    return <span style={{ color: '#9ca3af' }}>—</span>
+  }
+
+  return (
+    <>
+      <input
+        value={arvo}
+        disabled={saving}
+        list="yritysehdotukset"
+        onChange={(e) => setArvo(e.target.value)}
+        onBlur={() => onSave(user, arvo)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+        }}
+        /*
+         * Tyhja kentta kertoo mista asiakas nyt paatellaan, jottei
+         * nayttaisi silta etta tieto puuttuu kokonaan.
+         */
+        placeholder={user.billingKey ?? ''}
+        title={
+          arvo.trim()
+            ? 'Yritys on valittu — se voittaa sähköpostista päättelyn'
+            : `Ei valittua yritystä. Asiakas päätellään: ${user.billingKey ?? '-'}`
+        }
+        style={{
+          width: 150,
+          padding: '4px 6px',
+          borderRadius: 6,
+          border: '1px solid #d1d5db',
+          background: '#fff',
+          color: arvo.trim() ? '#111827' : '#6b7280',
+          fontStyle: arvo.trim() ? 'normal' : 'italic',
+        }}
+      />
+
+    </>
   )
 }

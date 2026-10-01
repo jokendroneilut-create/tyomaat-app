@@ -62,10 +62,37 @@ export function onVapaaSahkoposti(email: string | null | undefined): boolean {
 }
 
 /*
- * Palauttaa laskutusrivin avaimen: yritysdomain tai koko osoite.
- * Tyhja merkkijono tarkoittaa ettei tunnistetta voi muodostaa.
+ * VALITTU YRITYS VOITTAA PAATTELYN (D-224).
+ *
+ * Paattely sahkopostista toimii 102 tunnuksella 113:sta, mutta 11 jaa
+ * yksin omaksi "asiakkaakseen" vain siksi etta heilla on gmail. Jos
+ * kaksi heista on saman yrityksen vakea, sita ei voi paatella mistaan —
+ * se on kerrottava. Siksi tunnukselle voi valita yrityksen, ja valinta
+ * ohittaa paattelyn aina.
+ *
+ * Nimi normalisoidaan avaimeksi, jotta "Koneunion Oy", "koneunion oy" ja
+ * " Koneunion  Oy " ovat sama asiakas. Nakyva nimi sailyy
+ * `user_company.yritys`issa sellaisena kuin se kirjoitettiin.
  */
-export function asiakkaanTunniste(email: string | null | undefined): string {
+export function normalisoiYritys(yritys: string | null | undefined): string {
+  return String(yritys ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+}
+
+/*
+ * Palauttaa laskutusrivin avaimen: valittu yritys, yritysdomain tai
+ * koko osoite. Tyhja merkkijono tarkoittaa ettei tunnistetta voi
+ * muodostaa.
+ */
+export function asiakkaanTunniste(
+  email: string | null | undefined,
+  yritys?: string | null
+): string {
+  const valittu = normalisoiYritys(yritys)
+  if (valittu) return valittu
+
   const puhdas = String(email ?? "").trim().toLowerCase()
   const domain = sahkopostinDomain(puhdas)
   if (!domain) return ""

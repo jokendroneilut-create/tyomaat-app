@@ -104,6 +104,22 @@ export async function GET(req: Request) {
     else (kayntirivit ?? []).forEach((r: any) => kaynnit.set(r.user_id, r.last_seen_at))
 
     /*
+     * VALITTU YRITYS (D-224).
+     *
+     * Paattely sahkopostista ei voi tietaa etta kaksi gmail-kayttajaa
+     * ovat samasta yrityksesta. Valinta voittaa paattelyn aina, ja
+     * puuttuva taulu ei kaada listaa.
+     */
+    const yritykset = new Map<string, string>()
+
+    const { data: yritysrivit, error: yritysVirhe } = await supabase
+      .from("user_company")
+      .select("user_id,yritys")
+
+    if (yritysVirhe) console.error("Yritysten haku epaonnistui:", yritysVirhe.message)
+    else (yritysrivit ?? []).forEach((r: any) => yritykset.set(r.user_id, r.yritys))
+
+    /*
      * LASKUTUSTIEDOT ASIAKKAITTAIN, EI TUNNUKSITTAIN (D-223).
      *
      * Avain on domain tai vapaan sahkopostin koko osoite, koska hinta on
@@ -127,7 +143,8 @@ export async function GET(req: Request) {
     const kaikki = allUsers
       .map((u) => {
         const ownerId = omistajat.get(u.id) ?? null
-        const lasku = laskutus.get(asiakkaanTunniste(u.email))
+        const yritys = yritykset.get(u.id) ?? null
+        const lasku = laskutus.get(asiakkaanTunniste(u.email, yritys))
 
         return {
           id: u.id,
@@ -159,8 +176,11 @@ export async function GET(req: Request) {
           ownerId,
           ownerEmail: ownerId ? (sahkopostit.get(ownerId) ?? null) : null,
 
+          /* Valittu yritys. Tyhja = tunniste paatellaan sahkopostista. */
+          company: yritys,
+
           /* Asiakastunniste nakyy, jotta sivulla naytetaan mita riviä muokataan. */
-          billingKey: asiakkaanTunniste(u.email),
+          billingKey: asiakkaanTunniste(u.email, yritys),
           billingStatus: lasku?.tila ?? null,
           billingMonthly:
             lasku?.kuukausihinta_eur === null || lasku?.kuukausihinta_eur === undefined
@@ -183,11 +203,20 @@ export async function GET(req: Request) {
           .map((u) => ({ id: u.id, email: u.email }))
       : []
 
+    /*
+     * Ehdotuslista yrityskenttaan: jo kaytetyt nimet, jotta sama yritys
+     * ei paady kantaan kolmella eri kirjoitusasulla.
+     */
+    const companies = [...new Set((yritysrivit ?? []).map((r: any) => String(r.yritys).trim()))]
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, "fi"))
+
     return NextResponse.json({
       ok: true,
       role: kutsuja.role,
       users,
       sellers,
+      companies,
     })
   } catch (err: any) {
     console.error("LIST USERS ERROR:", err)

@@ -28,7 +28,24 @@ export type LaskutusKayttaja = {
   email: string | null
   /* "admin" ja "seller" eivat ole asiakkaita. */
   role?: string | null
+  /* Valittu yritys voittaa sahkopostista paattelyn (D-224). */
+  yritys?: string | null
 }
+
+/*
+ * TRIAL-ASIAKKAAN OLETUSHINTA POTENTIAALISSA (D-224).
+ *
+ * Johannes 2.10.2026: potentiaaliluvut laskevat mukaan myos trialit
+ * 149 EUR kuukausihinnalla. Luku on ASIAKASKOHTAINEN kuten kaikki muukin
+ * hinnoittelu: Koneunionin 13 tunnusta ovat yksi asiakas, eivat
+ * kolmetoista.
+ *
+ * OLETUS VAISTYY TIEDETYN HINNAN TIELTA. Hinnat ovat yrityskohtaisia
+ * (Sarlin 99, Etuputsarit 149), joten jos trialille on jo kirjattu
+ * hinta, potentiaali kayttaa sita. Oletus on vain arvaus niille joille
+ * hintaa ei viela ole sovittu, eika arvaus saa yliajaa tietoa.
+ */
+export const TESTIASIAKKAAN_HINTA = 149
 
 export type LaskutusYhteenveto = {
   /* Kuukausilaskutus euroina. */
@@ -50,6 +67,15 @@ export type LaskutusYhteenveto = {
   ilmanHintaa: number
   /* Vanhin laskutusrivin paivitys: kertoo milloin hinnat on tarkistettu. */
   vanhinPaivitys: string | null
+
+  /* Testiksi merkityt asiakkaat (ei tunnukset). */
+  testiasiakkaita: number
+  /*
+   * MRR jos testiasiakkaat maksaisivat `TESTIASIAKKAAN_HINTA`.
+   * Sisaltaa nykyisen MRR:n.
+   */
+  potentiaalinenMrr: number
+  potentiaalinenArr: number
 }
 
 function hinta(arvo: number | string | null | undefined): number {
@@ -71,7 +97,7 @@ export function laskeLaskutus(
   const tunnuksia = new Map<string, number>()
   for (const u of kayttajat) {
     if (u.role === "admin" || u.role === "seller") continue
-    const tunniste = asiakkaanTunniste(u.email)
+    const tunniste = asiakkaanTunniste(u.email, u.yritys)
     if (!tunniste) continue
     tunnuksia.set(tunniste, (tunnuksia.get(tunniste) ?? 0) + 1)
   }
@@ -80,6 +106,8 @@ export function laskeLaskutus(
   let maksaviaAsiakkaita = 0
   let maksaviaTunnuksia = 0
   let testitunnuksia = 0
+  let testiasiakkaita = 0
+  let trialPotentiaali = 0
   let ilmanHintaa = 0
   let asiakkaitaYhteensa = 0
   let vanhinPaivitys: string | null = null
@@ -89,6 +117,8 @@ export function laskeLaskutus(
 
     if (rivi?.tila === "testi") {
       testitunnuksia += maara
+      testiasiakkaita++
+      trialPotentiaali += hinta(rivi.kuukausihinta_eur) || TESTIASIAKKAAN_HINTA
       continue
     }
 
@@ -110,9 +140,14 @@ export function laskeLaskutus(
   /* Sentit pyoristetaan vasta summan jalkeen. */
   mrr = Math.round(mrr * 100) / 100
 
+  const potentiaalinenMrr = Math.round((mrr + trialPotentiaali) * 100) / 100
+
   return {
     mrr,
     arr: Math.round(mrr * 12 * 100) / 100,
+    testiasiakkaita,
+    potentiaalinenMrr,
+    potentiaalinenArr: Math.round(potentiaalinenMrr * 12 * 100) / 100,
     maksaviaAsiakkaita,
     maksaviaTunnuksia,
     asiakkaitaYhteensa,

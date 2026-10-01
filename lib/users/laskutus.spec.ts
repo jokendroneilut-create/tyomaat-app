@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { asiakkaanTunniste, onVapaaSahkoposti } from "./asiakastunniste"
-import { laskeLaskutus, muotoileEuro } from "./laskutus"
+import { asiakkaanTunniste, normalisoiYritys, onVapaaSahkoposti } from "./asiakastunniste"
+import { TESTIASIAKKAAN_HINTA, laskeLaskutus, muotoileEuro } from "./laskutus"
 
 describe("asiakkaanTunniste", () => {
   /*
@@ -132,5 +132,106 @@ describe("laskeLaskutus", () => {
 describe("muotoileEuro", () => {
   it("muotoilee suomalaisittain ilman sentteja", () => {
     expect(muotoileEuro(1234).replace(/ /g, " ")).toContain("1 234")
+  })
+})
+
+describe("asiakkaanTunniste valitulla yrityksella", () => {
+  /*
+   * Juuri tata varten yritys valitaan: kaksi gmail-kayttajaa samasta
+   * yrityksesta ovat yksi asiakas, mita sahkopostista ei voi paatella.
+   */
+  it("yhdistaa vapaan sahkopostin kayttajat samaan yritykseen", () => {
+    expect(asiakkaanTunniste("eka@gmail.com", "Rakennus Oy")).toBe("rakennus oy")
+    expect(asiakkaanTunniste("toka@hotmail.com", "Rakennus Oy")).toBe("rakennus oy")
+  })
+
+  it("valinta voittaa myos yritysdomainin", () => {
+    expect(asiakkaanTunniste("a@asiakasyritys.fi", "Konserni Oy")).toBe("konserni oy")
+  })
+
+  it("palaa paattelyyn kun yritysta ei ole valittu", () => {
+    expect(asiakkaanTunniste("a@asiakasyritys.fi", null)).toBe("asiakasyritys.fi")
+    expect(asiakkaanTunniste("a@asiakasyritys.fi", "   ")).toBe("asiakasyritys.fi")
+  })
+
+  /* Kirjoitusasun vaihtelu ei saa synnyttaa kahta asiakasta. */
+  it("normalisoi kirjainkoon ja valilyonnit", () => {
+    expect(normalisoiYritys("  Koneunion   Oy ")).toBe("koneunion oy")
+    expect(asiakkaanTunniste("a@gmail.com", "KONEUNION OY")).toBe(
+      asiakkaanTunniste("b@gmail.com", "  koneunion  oy  ")
+    )
+  })
+})
+
+describe("potentiaalinen MRR ja ARR", () => {
+  /*
+   * Testiasiakas on ASIAKAS, ei tunnus: Koneunionin 13 tunnusta ovat
+   * yksi 149 euron potentiaali, eivat kolmetoista.
+   */
+  it("laskee testiasiakkaan kerran vaikka tunnuksia on 13", () => {
+    const kayttajat = Array.from({ length: 13 }, (_, i) => ({ email: `k${i}@testiyritys.fi` }))
+    const y = laskeLaskutus(kayttajat, [
+      { tunniste: "testiyritys.fi", tila: "testi", kuukausihinta_eur: null },
+    ])
+
+    expect(y.testiasiakkaita).toBe(1)
+    expect(y.testitunnuksia).toBe(13)
+    expect(y.potentiaalinenMrr).toBe(TESTIASIAKKAAN_HINTA)
+    expect(y.potentiaalinenArr).toBe(TESTIASIAKKAAN_HINTA * 12)
+  })
+
+  /* Potentiaali sisaltaa nykyisen MRR:n, ei ole siita erillinen. */
+  it("summaa nykyisen MRR:n ja testiasiakkaat", () => {
+    const y = laskeLaskutus(
+      [{ email: "a@maksava.fi" }, { email: "b@testi1.fi" }, { email: "c@testi2.fi" }],
+      [
+        { tunniste: "maksava.fi", tila: "maksava", kuukausihinta_eur: 300 },
+        { tunniste: "testi1.fi", tila: "testi", kuukausihinta_eur: null },
+        { tunniste: "testi2.fi", tila: "testi", kuukausihinta_eur: null },
+      ]
+    )
+
+    expect(y.mrr).toBe(300)
+    expect(y.testiasiakkaita).toBe(2)
+    expect(y.potentiaalinenMrr).toBe(300 + 2 * TESTIASIAKKAAN_HINTA)
+    expect(y.potentiaalinenArr).toBe((300 + 2 * TESTIASIAKKAAN_HINTA) * 12)
+  })
+
+  /* Hinnat ovat yrityskohtaisia, joten tiedetty hinta voittaa oletuksen. */
+  it("kayttaa trialille kirjattua hintaa oletuksen sijaan", () => {
+    const y = laskeLaskutus(
+      [{ email: "a@sarlin-esimerkki.fi" }, { email: "b@toinen-esimerkki.fi" }],
+      [
+        { tunniste: "sarlin-esimerkki.fi", tila: "testi", kuukausihinta_eur: 99 },
+        { tunniste: "toinen-esimerkki.fi", tila: "testi", kuukausihinta_eur: null },
+      ]
+    )
+
+    expect(y.potentiaalinenMrr).toBe(99 + TESTIASIAKKAAN_HINTA)
+    expect(y.mrr).toBe(0)
+  })
+
+  it("on sama kuin MRR kun testiasiakkaita ei ole", () => {
+    const y = laskeLaskutus(
+      [{ email: "a@maksava.fi" }],
+      [{ tunniste: "maksava.fi", tila: "maksava", kuukausihinta_eur: 199 }]
+    )
+    expect(y.potentiaalinenMrr).toBe(199)
+    expect(y.potentiaalinenArr).toBe(199 * 12)
+  })
+
+  /* Valittu yritys ohjaa myos summaa: kaksi gmailia = yksi asiakas. */
+  it("laskee valitun yrityksen yhtena asiakkaana", () => {
+    const y = laskeLaskutus(
+      [
+        { email: "eka@gmail.com", yritys: "Rakennus Oy" },
+        { email: "toka@hotmail.com", yritys: "Rakennus Oy" },
+      ],
+      [{ tunniste: "rakennus oy", tila: "maksava", kuukausihinta_eur: 250 }]
+    )
+
+    expect(y.maksaviaAsiakkaita).toBe(1)
+    expect(y.maksaviaTunnuksia).toBe(2)
+    expect(y.mrr).toBe(250)
   })
 })
