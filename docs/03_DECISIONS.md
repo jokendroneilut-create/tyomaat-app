@@ -52,8 +52,22 @@ eli jonoon tuli hieman kohinaa eika yhtaan liidia kadonnut. Nelja
 viidesta oli kohinaa (yrityskauppa, yrittajapalkinto, AI-hanke,
 enemmistoosuus), yksi aito hanke (Lapti, Kempele).
 
-**0,2 % ei ole syy nostaa kattoa.** Jos virheosuus kasvaa, mitataan
-ensin vastausajat — nyt niita ei lokiteta lainkaan.
+**0,2 % ei ole syy nostaa kattoa.**
+
+**Vastausaikoja EI ryhdyta lokittamaan** (Johannes 1.10.2026: *"jos
+virhe tulee niin sita aletaan tutkimaan"*). Ehdotin sita, ja se oli
+vaara ehdotus kolmesta syysta: tama selvitys ratkesi pelkista
+virheriveista ilman niita; hitaus oli kuormasta johtuvaa eika siten
+toistettavissa jalkikateen, joten historia ei korvaa mittausta
+ruuhkahetkella; ja hinta on uusi sarake kasin ajettavalla DDL:lla seka
+kirjoitus joka kutsulle, kerran kuukaudessa sattuvaa tapausta varten
+jonka seuraus on jonokohinaa eika kadonnut liidi.
+
+Loki sailyttaa jo otsikon, kuvauksen, lahteen ja ajan — ne riittavat
+erottamaan yksittaisen piikin leviavasta ongelmasta. Jos virheosuus
+nousee, vastausajat mitataan **silloin** erillisella ajolla. Sama
+saanto kuin D-220:n kestosignaalissa: kynnys asetetaan mittaamalla kun
+sita tarvitaan, ei keraamalla varmuuden vuoksi vuosi etukateen.
 
 #### Korjattu: nakyma valehteli, ei putki
 
