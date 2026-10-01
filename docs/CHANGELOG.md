@@ -9,9 +9,7 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
-## 2026-10 (tyo 1.10.)
-
-## 2026-10 (tyo 2.10.)
+## 2026-10 (tyo 1.-2.10.)
 
 ### Yritys-sarake ja potentiaalinen MRR/ARR (D-224)
 
