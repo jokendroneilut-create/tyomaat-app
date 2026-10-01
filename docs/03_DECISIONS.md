@@ -66,6 +66,18 @@ lukua tarvitse uskoa sellaisenaan.
 Kannan arvo on yha `testi`. Uudelleennimeaminen vaatisi check-rajoitteen
 migraation eika muuttaisi mitaan muuta kuin sanan.
 
+#### Korjaus 2.10.2026: "asiakkaita yhteensa" ei ollut yhteensa
+
+Kortti luki *"15 tunnusta · 21 asiakasta yhteensa"* vaikka asiakkaita on
+**84**. Luku jatti trialit pois, eika sita voinut paatella kortilta:
+sana "yhteensa" lupaa kokonaismaaran. Johannes kysyi mita matematiikka
+tarkoittaa — oikea kysymys, koska lukua ei voinut johtaa mistaan.
+
+Rajaus ei ollut edes tarpeen: trialeilla on oma korttinsa. Nyt
+`asiakkaitaYhteensa` on kokonaismaara. Tarkistettu tuotantodataa vasten:
+84 asiakasta = 19 valittua yritysta + 65 paateltya, joista 2 maksavaa
+(Sarlin 12 tunnusta + Etuputsarit 3 = 15) ja 63 trialia.
+
 #### Laskutus-sarake jarjestettavissa
 
 Lisatty 2.10.2026 pyynnosta. Jarjestys on **tila ensin, hinta sen

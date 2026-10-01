@@ -56,7 +56,14 @@ export type LaskutusYhteenveto = {
   maksaviaAsiakkaita: number
   /* Maksavien asiakkaiden tunnukset yhteensa. */
   maksaviaTunnuksia: number
-  /* Asiakkaita yhteensa, testit pois luettuna. */
+  /*
+   * Asiakkaita yhteensa, MYOS trialit.
+   *
+   * Luku jatti trialit pois 2.10.2026 asti, jolloin kortti luki
+   * "21 asiakasta yhteensa" vaikka asiakkaita oli 84. Sana "yhteensa"
+   * lupaa kokonaismaaran, eika rajausta voi paatella kortilta.
+   * Trialeilla on oma korttinsa, joten rajaus ei ollut edes tarpeen.
+   */
   asiakkaitaYhteensa: number
   /* Testiksi merkittyja tunnuksia. */
   testitunnuksia: number
@@ -115,14 +122,14 @@ export function laskeLaskutus(
   for (const [tunniste, maara] of tunnuksia) {
     const rivi = laskutus.get(tunniste)
 
+    asiakkaitaYhteensa++
+
     if (rivi?.tila === "testi") {
       testitunnuksia += maara
       testiasiakkaita++
       trialPotentiaali += hinta(rivi.kuukausihinta_eur) || TESTIASIAKKAAN_HINTA
       continue
     }
-
-    asiakkaitaYhteensa++
 
     if (rivi?.tila !== "maksava") continue
 

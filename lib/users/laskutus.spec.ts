@@ -62,8 +62,12 @@ describe("laskeLaskutus", () => {
     expect(y.asiakkaitaYhteensa).toBe(3)
   })
 
-  /* Koneunionin 13 tunnusta eivat ole asiakkaita eivatka maksajia. */
-  it("jattaa testiasiakkaan kokonaan pois", () => {
+  /*
+   * Trial on asiakas mutta ei maksaja. "Asiakkaita yhteensa" on
+   * kokonaismaara, koska kortin sana lupaa sen - trialeilla on oma
+   * lukunsa.
+   */
+  it("laskee trialin asiakkaaksi muttei maksajaksi", () => {
     const kayttajat = [
       ...Array.from({ length: 13 }, (_, i) => ({ email: `k${i}@koneunion.fi` })),
       { email: "maksaja@asiakas.fi" },
@@ -74,7 +78,9 @@ describe("laskeLaskutus", () => {
     ])
 
     expect(y.testitunnuksia).toBe(13)
-    expect(y.asiakkaitaYhteensa).toBe(1)
+    expect(y.testiasiakkaita).toBe(1)
+    expect(y.asiakkaitaYhteensa).toBe(2)
+    expect(y.maksaviaAsiakkaita).toBe(1)
     expect(y.mrr).toBe(250)
   })
 

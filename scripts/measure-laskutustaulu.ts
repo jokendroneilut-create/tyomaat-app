@@ -59,12 +59,43 @@ async function main() {
   const { data: roolirivit } = await db.from("user_roles").select("user_id,role")
   const roolit = new Map((roolirivit ?? []).map((r: any) => [r.user_id, r.role]))
 
+  const { data: yritysrivit } = await db.from("user_company").select("user_id,yritys")
+  const yritykset = new Map((yritysrivit ?? []).map((r: any) => [r.user_id, r.yritys]))
+
   const kayttajat = kaikki.map((u) => ({
     email: u.email ?? null,
+    yritys: yritykset.get(u.id) ?? null,
     role: adminEmails.has(String(u.email ?? "").toLowerCase())
       ? "admin"
       : (roolit.get(u.id) ?? "user"),
   }))
+
+  /* Mista asiakkaat muodostuvat: valittu yritys vai paattely. */
+  const ryhmat = new Map<string, { tunnuksia: number; valittu: boolean; tila: string | null }>()
+  for (const u of kayttajat) {
+    if (u.role === "admin" || u.role === "seller") continue
+    const t = asiakkaanTunniste(u.email, u.yritys)
+    if (!t) continue
+    const o = ryhmat.get(t) ?? {
+      tunnuksia: 0,
+      valittu: Boolean(String(u.yritys ?? "").trim()),
+      tila: (rivit ?? []).find((r: any) => String(r.tunniste).toLowerCase() === t)?.tila ?? null,
+    }
+    o.tunnuksia++
+    ryhmat.set(t, o)
+  }
+
+  console.log(`
+=== ASIAKKAAT: ${ryhmat.size} ===`)
+  console.log(`  valittu yritys  ${[...ryhmat.values()].filter((o) => o.valittu).length}`)
+  console.log(`  paatelty        ${[...ryhmat.values()].filter((o) => !o.valittu).length}`)
+  for (const [t, o] of [...ryhmat].sort((a, b) => b[1].tunnuksia - a[1].tunnuksia).slice(0, 25)) {
+    console.log(
+      `  ${String(o.tunnuksia).padStart(3)} tunnusta  ${(o.tila ?? "-").padEnd(11)} ${
+        o.valittu ? "[valittu]" : "[paatelty]"
+      } ${t.slice(0, 44)}`
+    )
+  }
 
   const osumat = kayttajat.filter((u) =>
     (rivit ?? []).some((r: any) => String(r.tunniste).toLowerCase() === asiakkaanTunniste(u.email))
