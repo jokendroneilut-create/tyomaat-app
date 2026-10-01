@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 
+import { relevanssiportinTila } from "@/lib/tic/relevanssiportinTila"
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -31,6 +33,16 @@ export type RelevanceDecisionsResult = {
   errors: number
   lastErrorAt: string | null
   lastErrorReason: string | null
+  /*
+   * Onko portti oikeasti tauolla. Pelkka virheiden lukumaara ei kerro
+   * sita: 1.10.2026 ikkunassa oli 5 virhetta, mutta kaikki samasta
+   * seitseman minuutin ruuhkasta viikkoa aiemmin, ja portti oli
+   * vastannut 131 kertaa niiden jalkeen (D-222).
+   */
+  paused: boolean
+  successesSinceError: number
+  /* Selitys virheen omasta viestista, ei arvaus. */
+  errorExplanation: string | null
 }
 
 /*
@@ -53,15 +65,18 @@ export async function getRelevanceDecisions(
 
   const decisions = (data ?? []) as RelevanceDecision[]
 
-  const virheet = decisions.filter((d) => d.final_status === "llm_error")
+  const tila = relevanssiportinTila(decisions)
 
   return {
     decisions,
     total: decisions.length,
     surfaced: decisions.filter((d) => d.final_status === "needs_review").length,
     ignored: decisions.filter((d) => d.final_status === "ignored").length,
-    errors: virheet.length,
-    lastErrorAt: virheet[0]?.created_at ?? null,
-    lastErrorReason: virheet[0]?.llm_reason ?? null,
+    errors: tila.virheita,
+    lastErrorAt: tila.viimeisinVirheAika,
+    lastErrorReason: tila.viimeisinVirheSyy,
+    paused: tila.tauolla,
+    successesSinceError: tila.onnistuneitaVirheenJalkeen,
+    errorExplanation: tila.selitys,
   }
 }

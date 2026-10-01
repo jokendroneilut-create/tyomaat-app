@@ -11,6 +11,24 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 1.10.)
 
+### AI-suodatuksen hälytys kertoo nyt mitä oikeasti tapahtui (D-222)
+
+TIC:n AI-suodatus-sivu näytti punaista ja väitti suodatuksen olevan
+tauolla sekä arvasi syyksi API-varojen loppumisen. Kumpikaan ei pitänyt
+paikkaansa: varoja oli 15,03 $, ja virheen oma viesti luki rivin
+ylempänä *"Request timed out."*
+
+Mitattuna lokissa on 2 392 päätöstä ja **5 virhettä (0,2 %)** — kaikki
+yhdestä seitsemän minuutin ruuhkasta 24.9., mittausjakson vilkkaimpana
+päivänä (140 kutsua, tavallinen päivä 2–38). Putkessa ei ollut mitään
+korjattavaa: aikakatkaisu on tarkoituksellinen, ja fail-open päästi ne
+viisi signaalia jonoon suodattamatta.
+
+Näkymä sen sijaan korjattiin. Tila päätellään nyt datasta — jos
+viimeisimmän virheen jälkeen on onnistuneita kutsuja, portti on
+toipunut eikä tauolla — ja syy luetaan virheen omasta viestistä eikä
+arvata. Punainen on varattu aidolle katkokselle.
+
 ### Rakenteilla olevien valmistumistarkistus kvartaaleittain (D-220)
 
 Hyvinkään areena oli rakenteilla 15 kuukautta ennen kuin kukaan huomasi.

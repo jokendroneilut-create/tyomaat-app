@@ -8,8 +8,18 @@ function formatDate(value: string | null) {
 }
 
 export default async function AiRelevancePage() {
-  const { decisions, total, surfaced, ignored, errors, lastErrorAt, lastErrorReason } =
-    await getRelevanceDecisions(200)
+  const {
+    decisions,
+    total,
+    surfaced,
+    ignored,
+    errors,
+    lastErrorAt,
+    lastErrorReason,
+    paused,
+    successesSinceError,
+    errorExplanation,
+  } = await getRelevanceDecisions(200)
 
   return (
     <main>
@@ -48,13 +58,13 @@ export default async function AiRelevancePage() {
             */}
           <div
             className={`rounded-xl border p-4 ${
-              errors > 0 ? "border-red-300 bg-red-50" : "border-gray-200"
+              paused ? "border-red-300 bg-red-50" : "border-gray-200"
             }`}
           >
             <div className="text-sm text-gray-500">Malli ei vastannut</div>
             <div
               className={`mt-1 text-xl font-semibold ${
-                errors > 0 ? "text-red-700" : "text-gray-400"
+                paused ? "text-red-700" : errors > 0 ? "text-amber-700" : "text-gray-400"
               }`}
             >
               {errors}
@@ -62,15 +72,46 @@ export default async function AiRelevancePage() {
           </div>
         </div>
 
+        {/*
+          * KATKOS JA MENNYT KATKOS OVAT ERI ASIA (D-222).
+          *
+          * Laatikko oli punainen aina kun ikkunassa oli yksikin virhe, ja
+          * vaitti kahta asiaa jotka 1.10.2026 olivat molemmat vaaria:
+          * "suodatus on tauolla" (ei ollut - viimeisin virhe oli viikkoa
+          * aiemmin ja portti oli vastannut 131 kertaa sen jalkeen) ja
+          * "yleisin syy on API-varojen loppuminen" (varoja oli 15,03 $;
+          * virheen oma viesti samassa laatikossa luki "Request timed
+          * out."). Arvaus oli perua 7.9.2026 varojen loppumisesta.
+          *
+          * Pysyva punainen laatikko lakkaa olemasta varoitus, joten tila
+          * paatellaan nyt datasta ja syy luetaan virheen omasta viestista.
+          */}
         {errors > 0 && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm">
-            <div className="font-semibold text-red-800">
-              Viimeisin epäonnistunut kutsu {formatDate(lastErrorAt)}
+          <div
+            className={`mt-4 rounded-xl border p-4 text-sm ${
+              paused ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"
+            }`}
+          >
+            <div className={`font-semibold ${paused ? "text-red-800" : "text-amber-900"}`}>
+              {paused
+                ? `Suodatus on tauolla — viimeisin epäonnistunut kutsu ${formatDate(lastErrorAt)}`
+                : `Suodatus toimii. Viimeisin epäonnistunut kutsu ${formatDate(lastErrorAt)}`}
             </div>
-            <div className="mt-1 text-red-900">{lastErrorReason ?? "-"}</div>
-            <div className="mt-2 text-red-800">
-              Suodatus on tauolla, mutta mitään ei katoa: signaalit menevät
-              jonoon suodattamatta. Yleisin syy on API-varojen loppuminen.
+
+            <div className={`mt-1 ${paused ? "text-red-900" : "text-amber-900"}`}>
+              {lastErrorReason ?? "-"}
+            </div>
+
+            {errorExplanation && (
+              <div className={`mt-2 ${paused ? "text-red-800" : "text-amber-800"}`}>
+                {errorExplanation}
+              </div>
+            )}
+
+            <div className={`mt-2 ${paused ? "text-red-800" : "text-amber-800"}`}>
+              {paused
+                ? "Mitään ei katoa: signaalit menevät jonoon suodattamatta, eli jonoon tulee enemmän kohinaa mutta yhtään liidiä ei häviä."
+                : `Sen jälkeen ${successesSinceError} onnistunutta kutsua. Epäonnistuneiden signaalit menivät jonoon suodattamatta — mitään ei kadonnut.`}
             </div>
           </div>
         )}

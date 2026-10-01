@@ -5,6 +5,72 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-222 - "Suodatus on tauolla" oli vaara, ja syyksi arvattu varojen loppuminen oli myos vaara
+
+Johannes 1.10.2026, kuvakaappaus TIC:n AI-suodatus-sivusta ja Claude
+Consolesta: *"katso mika ongelma ai suodatuksessa on, varat eivat ole
+loppu"*. Sivu nautti punaista laatikkoa:
+
+> Viimeisin epaonnistunut kutsu 24.9.2026 klo 19.17.11
+> Request timed out.
+> **Suodatus on tauolla**, mutta mitaan ei katoa: signaalit menevat
+> jonoon suodattamatta. **Yleisin syy on API-varojen loppuminen.**
+
+**Kumpikin vaite oli vaara, ja kolmas tieto oli samassa laatikossa.**
+Varoja oli 15,03 $ ja kuukauden kaytto 0,23 $. Virheen oma viesti luki
+rivia ylempana: `Request timed out.` Arvaus oli perua 7.9.2026 varojen
+loppumisesta (D-177) ja jai paikalleen vaikka loki kertoo syyn itse.
+
+#### Mitattu (`scripts/measure-relevanssiportin-virheet.ts`)
+
+`llm_relevance_log` 2 392 rivia: `needs_review` 1 914, `ignored` 473,
+**`llm_error` 5 — eli 0,2 %**. Kaikki viisi:
+
+| aika | lahde | viesti |
+|---|---|---|
+| 24.9.2026 19.10.38 | stt_julkaisijat | Request timed out. |
+| 24.9.2026 19.11.18 | stt_julkaisijat | Request timed out. |
+| 24.9.2026 19.11.53 | stt_julkaisijat | Request timed out. |
+| 24.9.2026 19.14.55 | stt_julkaisijat | Request timed out. |
+| 24.9.2026 19.17.11 | stt_julkaisijat | Request timed out. |
+
+**Yksi seitseman minuutin ruuhka, yksi lahde, viikko sitten.** 24.9. oli
+mittausjakson vilkkain paiva: 140 kutsua, kun tavallinen paiva on 2-38.
+Portti kutsuu mallia rinnakkain (`CANDIDATE_CONCURRENCY = 6`, ja
+`resolvePotentialProject` ajaa kaksi mallikutsua rinnan D-212:n jalkeen),
+joten ruuhkassa vastausaika venyy yli 15 sekunnin katon.
+
+Syote ei ollut syy: virheellisten syotteiden keskipituus oli **2 261
+merkkia**, onnistuneiden **3 800**. Pisin onnistunut oli 52 989 merkkia.
+
+#### Mitaan ei korjattu putkessa, ja se on tarkoitus
+
+Aikakatkaisu on D-155:n ja taman tiedoston oma paatos: ilman sita yksi
+jumittunut kutsu kaataa koko lahdeajon (kova katkaisu 90 s). Fail-open
+toimi kuten pitaa — ne viisi signaalia menivat jonoon suodattamatta,
+eli jonoon tuli hieman kohinaa eika yhtaan liidia kadonnut. Nelja
+viidesta oli kohinaa (yrityskauppa, yrittajapalkinto, AI-hanke,
+enemmistoosuus), yksi aito hanke (Lapti, Kempele).
+
+**0,2 % ei ole syy nostaa kattoa.** Jos virheosuus kasvaa, mitataan
+ensin vastausajat — nyt niita ei lokiteta lainkaan.
+
+#### Korjattu: nakyma valehteli, ei putki
+
+`lib/tic/relevanssiportinTila.ts` paattelee tilan datasta eika
+lukumaarasta: jos viimeisimman virheen JALKEEN on onnistuneita kutsuja,
+portti ei ole tauolla vaan toipunut (nyt 131 onnistunutta sivun 200
+rivin ikkunassa). Syy luetaan virheen omasta viestista
+(`selitaVirhe`) — aikakatkaisu, varat, pyyntoraja, avain,
+ylikuormitus — eika arvata. Punainen laatikko on varattu aidolle
+katkokselle, toipunut nakyy keltaisena.
+
+**Sama kuvio kuin D-184:ssa:** pysyva punainen laatikko lakkaa olemasta
+varoitus. Siella hälytyksen premissi vanheni, taalla selitysteksti jai
+kiinni yhteen menneeseen tapaukseen.
+
+---
+
 ### D-221 - Yliaikainen hanke: 9/12 oli valmis, 2/12 vain vaarin paivattu
 
 Kvartaalitarkistuksen (D-220) signaali 1 jatti 12 hanketta, joilla
