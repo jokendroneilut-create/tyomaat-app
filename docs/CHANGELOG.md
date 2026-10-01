@@ -31,7 +31,13 @@ etuajassa 20.9.), Nokian F-35-huoltohalli ja Vanhan Vaasan sairaalan
 uudisrakennus, jonka tiedote kertoo tilat otetuiksi käyttöön helmikuussa
 2026 — meillä se oli 305 vuorokautta yliaikainen rakenteilla-hanke.
 
-Skripti **ei muuta mitään.** Vaiheen muutos piilottaa hankkeen
+Ensimmäinen kierros ajettiin heti: kolme hanketta siirrettiin
+valmistuneeksi oikeilla päivillä (Kampi 15.9.2026, Nokia 14.10.2025,
+Vaasa 31.12.2025). Päivä luetaan tiedotteen tekstistä — kuivaharjoitus
+paljasti että kahdella kolmesta se olisi mennyt tuontipäivän mukaan
+väärin, koska `published_at` oli tyhjä.
+
+Tarkistus itse **ei muuta mitään.** Vaiheen muutos piilottaa hankkeen
 asiakkaalta, ja automaattinen siirto on juuri se mekanismi joka tässä jo
 petti. Päätös tehdään TIC:ssä käsin.
 

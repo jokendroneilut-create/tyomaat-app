@@ -58,6 +58,33 @@ yli vuoden takana, koska keruu alkoi kevaalla 2026. "Rakenteilla liian
 kauan" on oikea ajatus mutta mittaamaton: kahden vuoden historia
 tarvitaan ennen kuin kynnys voidaan asettaa mittaamalla.
 
+#### Korjattu 1.10.2026
+
+Kolme loytoa korjattiin `scripts/fix-valmistuneet-vaiheet.ts`:lla. Sen
+jalkeen tarkistus palauttaa signaalista 2 vain yhden rivin, ja se on se
+tunnettu vaara osuma (Vanhan Vaasan F- ja T-rakennukset, 2028).
+
+| hanke | vaihe ennen | valmistui |
+|---|---|---|
+| Kampin terveys- ja hyvinvointikeskus | Rakenteilla | 15.9.2026 |
+| F-35-huoltohalli, Nokian Linnavuori | Rakenteilla | 14.10.2025 |
+| Vanhan Vaasan sairaalan uudisrakennus | Rakenteilla | 31.12.2025 |
+
+**PAIVA ON TIEDOTTEEN TEKSTISSA, EI TUONTIPAIVASSA.** Kuivaharjoitus
+paljasti etta kahdella kolmesta oli vaara paiva: Nokian tiedote on
+14.10.2025 vaikka se tuotiin kantaan 17.8.2026, ja Kampin rakennus
+valmistui 15.9. vaikka tiedote on 20.9. Kummallakaan dokumentilla
+`published_at` ei ollut asetettu, joten paiva loytyi vain tekstista
+("Kampin sydameen on 15. syyskuuta valmistunut").
+
+**PORTTI 1 OLI OIKEASSA JA SILTI HANKE OLI VALMIS.** Vaasan
+vaihehistoria kertoo kuvion: cron siirsi hankkeen valmistuneeksi
+8.8.2026 (arvioitu paiva mennyt), ja `restore-auto-completed` palautti
+sen 1.9.2026 perustellen *"Valmistumispaiva (2025-11-30) on vanhempi
+kuin hankkeen loytohetki - ei todiste valmistumisesta"*. Portti oli
+oikeassa: paiva ei ollut todiste. Todiste oli tiedotteen tekstissa, ja
+juuri siksi signaali 2 on tassa tyossa tarkeampi kuin signaali 1.
+
 #### Miksi ei cronia
 
 Signaali 2 tuottaa neljannesvuodessa muutaman rivin, joista yksi on

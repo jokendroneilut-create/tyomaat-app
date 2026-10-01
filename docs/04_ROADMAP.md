@@ -688,9 +688,15 @@ muistin varassa.
   aloituspäivähistoriaa (eli 2028). Silloin kynnys asetetaan mittaamalla,
   ei arvaamalla.
 
-  **Auki 1.10.2026:** kolme vahvistettua löytöä odottaa vaiheen
-  korjausta — Kampin terveys- ja hyvinvointikeskus, Nokian
-  F-35-huoltohalli ja Vanhan Vaasan sairaalan uudisrakennus.
+  **Ensimmäinen kierros tehty 1.10.2026:** kolme hanketta siirrettiin
+  valmistuneeksi (`scripts/fix-valmistuneet-vaiheet.ts`) — Kampin
+  terveys- ja hyvinvointikeskus, Nokian F-35-huoltohalli ja Vanhan
+  Vaasan sairaalan uudisrakennus. Signaali 2 palauttaa nyt yhden rivin,
+  ja se on tunnettu väärä osuma (Vanhan Vaasan F- ja T-rakennukset).
+
+  **Seuraava kierros 1.1.2027.** Valmistumispäivä luetaan tiedotteen
+  tekstistä, ei tuontipäivästä — kuivaharjoitus paljasti että kahdella
+  kolmesta päivä oli väärin.
 
 - **Kohdetyyppisääntö osuu yhdyssanan alkuun: "Koululammen puistoalueen
   perusparannus" → Koulu.** Havaittu 7.9.2026 luettaessa sääntökorjauksen
