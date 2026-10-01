@@ -5,6 +5,66 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-219 - Tieto oli kannassa kuusi viikkoa eika paassyt asiakkaalle
+
+Asiakaspalaute 1.10.2026 hankkeesta "Hangonsillan monitoimiareena"
+(Hyvinkaa): *"on jo pitkastii rakenteilla"*. Hanke oli vaiheessa
+**Suunnittelu**.
+
+**Palaute oli oikea, ja todiste oli omassa aineistossamme.** SRV:n
+lehdistotiedote 9.9.2026, joka on kannassa:
+
+> "Monitoimiareenan rakennushanke kaynnistyi kehitysvaiheella lokakuussa
+> 2024 ja **rakennustyot alkoivat kesakuussa 2025**. ... Tanaan 9.9.2026
+> Hyvinkaa Areenan tyomaalla vietettiin **harjannostajaisia**."
+
+Kannassa on kolme SRV:n tiedotetta areenasta: rakentamisen kaynnistys ja
+peruskiven muuraus (19.8.2026) seka harjannostajaiset (15.9.2026).
+Rakennustyot olivat alkaneet **15 kuukautta** ennen palautetta.
+
+#### Miksi tieto ei liikkunut
+
+Sama areena on kannassa **kahtena hankkeena**:
+
+    868fe187  Hangonsillan monitoimiareena        Suunnittelu   Granlund
+    ae429748  Hyvinkaa Areena saavutti harja...   Rakenteilla   SRV
+
+Tasmaytys ei yhdista niita - `calculateMatch` palauttaa **null**, ei
+edes matalaa pistemaaraa. Syy on sama kuin D-215:ssa mitattu: SRV:n
+rivin otsikko on uutislause, ei hankkeen nimi. Duplikaattiparia ei siis
+syntynyt, eika vaihe siirtynyt.
+
+**Vaihe tuli lahteen tyypista eika todisteesta.** Granlund on
+suunnittelutoimisto, ja sen referenssisivu ei kerro vaihetta lainkaan
+(tarkistettu 1.10.2026). `phase_hint` oli "Suunnittelu" siksi etta lahde
+on suunnittelija - ei siksi etta hanke olisi suunnitteluvaiheessa.
+
+#### Korjattu
+
+Granlundin rivi: vaihe Rakenteilla, rakentaminen alkoi 1.6.2025,
+paaurakoitsija SRV, ja `metadata.phase_evidence` kertoo mihin se
+perustuu. Vaihehistoriaan `manual_correction`. Pari vietiin
+duplikaattijonoon (`reasons: ["manual"]`) - yhdistaminen on katselmoijan
+paatos, ei skriptin.
+
+#### Mittakaava
+
+Suunnittelutoimistojen lahteista on vain **7 julkista hanketta**, joten
+tama vaiheen lahde ei ole iso vika. Myoskaan vaiheen yleinen
+vanhentuminen ei ole: 4 551 julkisesta varhaisen vaiheen hankkeesta vain
+**159 on yli viisi kuukautta vanhoja**, ja niista 148 on lahteettomia
+vanhoja riveja.
+
+**Oikea oppi on toinen:** tieto oli meilla, oikein poimittuna, kuusi
+viikkoa - ja jai erilliselle riville jota mikaan ei yhdistanyt. Tama on
+sama juurisyy kuin tyojonon karkityossa (uutisotsikko hankkeen nimena)
+ja D-213:n avoimessa kohdassa (40-69 kaista jota ei lue mikaan). Yksi
+asiakas huomasi sen ennen meita.
+
+`scripts/fix-hyvinkaa-areena.ts`
+
+---
+
 ### D-218 - Helsingin WFS-kaavahakemisto pois: 90 hylkaysta, 4 hyvaksyntaa
 
 Lahde `helsinki-kaavat-vireilla` on kaavahakemiston GEOMETRIA-aineisto.
