@@ -64,6 +64,7 @@ type SortColumn =
   | 'confirmed'
   | 'company'
   | 'seller'
+  | 'billing'
 type SortDirection = 'asc' | 'desc'
 
 /*
@@ -236,6 +237,29 @@ export default function UsersPage() {
         cmp = (daysSince(a.created_at) ?? -1) - (daysSince(b.created_at) ?? -1)
       } else if (sortColumn === 'confirmed') {
         cmp = Number(a.confirmed) - Number(b.confirmed)
+      } else if (sortColumn === 'billing') {
+        /*
+         * Tila ensin, hinta sen sisalla. Hinta yksin ei kelpaisi
+         * jarjestykseksi: merkitsematon ja 0 euron rivi menisivat
+         * sekaisin, vaikka ne tarkoittavat eri asiaa.
+         *
+         * Nouseva: maksavat ensin (suurin hinta karjessa), sitten
+         * trialit, ei-maksavat ja lopuksi merkitsemattomat. Laskeva
+         * kaantaa sen, jolloin merkitsemattomat nousevat karkeen - ja se
+         * on juuri se lista jota merkitsemiseen tarvitaan.
+         */
+        const jarjestys: Record<string, number> = {
+          maksava: 0,
+          testi: 1,
+          ei_maksava: 2,
+        }
+        const sija = (u: AdminUser) =>
+          jarjestys[u.billingStatus ?? ''] ?? 3
+
+        cmp =
+          sija(a) - sija(b) ||
+          (b.billingMonthly ?? -1) - (a.billingMonthly ?? -1) ||
+          (a.email ?? '').localeCompare(b.email ?? '', 'fi')
       } else if (sortColumn === 'seller') {
         /*
          * Aakkosjarjestys myyjan sahkopostin mukaan. Liittamaton on
@@ -918,7 +942,13 @@ export default function UsersPage() {
                 />
               )}
               {isAdminView && (
-                <th style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>Laskutus</th>
+                <SortHeader
+                  column="billing"
+                  label="Laskutus"
+                  sortColumn={sortColumn}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                />
               )}
               {isAdminView && <th style={{ padding: '8px 4px' }} />}
             </tr>

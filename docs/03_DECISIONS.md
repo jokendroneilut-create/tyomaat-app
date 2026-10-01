@@ -66,6 +66,14 @@ lukua tarvitse uskoa sellaisenaan.
 Kannan arvo on yha `testi`. Uudelleennimeaminen vaatisi check-rajoitteen
 migraation eika muuttaisi mitaan muuta kuin sanan.
 
+#### Laskutus-sarake jarjestettavissa
+
+Lisatty 2.10.2026 pyynnosta. Jarjestys on **tila ensin, hinta sen
+sisalla**: pelkka hinta ei kelpaisi, koska merkitsematon ja 0 euron rivi
+menisivat sekaisin vaikka tarkoittavat eri asiaa. Nouseva antaa
+maksavat karkeen suurin hinta edella, laskeva nostaa merkitsemattomat
+karkeen — ja juuri sita listaa merkitsemiseen tarvitaan.
+
 #### Sivusuunnan tiivistys
 
 Uusi sarake tarvitsi tilaa. Paivamaarista pudotettiin sekunnit: kaksi
