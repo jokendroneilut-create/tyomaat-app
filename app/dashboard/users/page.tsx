@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { laskeLaskutus, muotoileEuro } from '@/lib/users/laskutus'
 import { daysLeft, daysSince, trialState, type TrialState } from '@/lib/users/trial'
 
 type AdminUser = {
@@ -24,6 +25,25 @@ type AdminUser = {
   role?: 'admin' | 'seller' | 'user'
   ownerId?: string | null
   ownerEmail?: string | null
+
+  /*
+   * LASKUTUS ON ASIAKKAAN, EI TUNNUKSEN (D-223). `billingKey` on
+   * yritysdomain tai vapaan sahkopostin koko osoite, ja saman avaimen
+   * tunnukset jakavat yhden hinnan — Sarlinin 12 tunnusta ovat yksi
+   * maksava asiakas.
+   */
+  billingKey?: string
+  billingStatus?: 'maksava' | 'testi' | 'ei_maksava' | null
+  billingMonthly?: number | null
+  billingSince?: string | null
+  billingNote?: string | null
+  billingUpdatedAt?: string | null
+}
+
+const BILLING_LABEL: Record<string, string> = {
+  maksava: 'Maksava',
+  testi: 'Testi',
+  ei_maksava: 'Ei maksava',
 }
 
 type Seller = { id: string; email: string | null }
@@ -61,6 +81,9 @@ export default function UsersPage() {
   const [viewerRole, setViewerRole] = useState<'admin' | 'seller' | 'user'>('user')
   const [sellers, setSellers] = useState<Seller[]>([])
   const [savingId, setSavingId] = useState<string | null>(null)
+
+  /* Laskutusrivia tallennetaan asiakkaittain, ei tunnuksittain. */
+  const [billingSaving, setBillingSaving] = useState<string | null>(null)
 
   const isAdminView = viewerRole === 'admin'
 
@@ -139,6 +162,29 @@ export default function UsersPage() {
 
     return { myyjittain, omat, tuntematon, yhteensa: asiakkaat.length }
   }, [users, sellers])
+
+  /*
+   * Kuukausilaskutus ja ARR (D-223).
+   *
+   * Summa lasketaan asiakkaista eika tunnuksista, muuten Sarlinin 12
+   * tunnusta laskisivat saman hinnan kaksitoista kertaa. Laskenta on
+   * `lib/users/laskutus.ts`:ssa, jotta se on testattavissa ilman sivua.
+   */
+  const laskutus = useMemo(
+    () =>
+      laskeLaskutus(
+        users.map((u) => ({ email: u.email, role: u.role })),
+        users
+          .filter((u) => u.billingKey && u.billingStatus)
+          .map((u) => ({
+            tunniste: u.billingKey as string,
+            tila: u.billingStatus ?? null,
+            kuukausihinta_eur: u.billingMonthly ?? null,
+            updated_at: u.billingUpdatedAt ?? null,
+          }))
+      ),
+    [users]
+  )
 
   const sortedUsers = useMemo(() => {
     const sorted = [...users].sort((a, b) => {
@@ -410,6 +456,70 @@ export default function UsersPage() {
     setLockingId(null)
   }
 
+  /*
+   * LASKUTUSRIVIN TALLENNUS (D-223).
+   *
+   * Kirjoitus kohdistuu asiakkaaseen, joten paikallinen tila on
+   * paivitettava KAIKILLE saman avaimen tunnuksille. Muuten Sarlinin
+   * 12 rivista yksi nayttaisi uutta hintaa ja yksitoista vanhaa, kunnes
+   * sivu ladataan uudelleen.
+   */
+  const handleBilling = async (
+    user: AdminUser,
+    tila: string,
+    kuukausihinta: string | null
+  ) => {
+    const tunniste = user.billingKey
+    if (!tunniste) return
+
+    setBillingSaving(tunniste)
+    setError(null)
+
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+
+    if (!token) {
+      setError('Et ole kirjautunut sisään')
+      setBillingSaving(null)
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin/set-customer-billing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ tunniste, tila, kuukausihinta }),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        setError(json.error || 'Laskutustiedon tallennus epäonnistui')
+      } else {
+        const nyt = new Date().toISOString()
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.billingKey === tunniste
+              ? {
+                  ...u,
+                  billingStatus: (json.poistettu ? null : json.tila) ?? null,
+                  billingMonthly: json.poistettu ? null : (json.kuukausihinta ?? null),
+                  billingUpdatedAt: json.poistettu ? null : nyt,
+                }
+              : u
+          )
+        )
+      }
+    } catch {
+      setError('Laskutustiedon tallennus epäonnistui')
+    }
+
+    setBillingSaving(null)
+  }
+
   const handleDelete = async (user: AdminUser) => {
     const ok = window.confirm(
       `Haluatko varmasti poistaa käyttäjän ${user.email}? Tätä ei voi perua.`
@@ -502,6 +612,57 @@ export default function UsersPage() {
               />
             )}
           </div>
+
+          {/*
+            * LASKUTUS SAMAAN LAATIKKOON (D-223).
+            *
+            * Luku on tasmalleen niin oikein kuin kasin syotetyt hinnat.
+            * Siksi vieressa on maksavien maara ja varoitus puuttuvista
+            * hinnoista: vajaa MRR ei saa nayttaa tasmalliselta.
+            */}
+          {isAdminView && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 10,
+                marginTop: 10,
+                paddingTop: 10,
+                borderTop: '1px solid #e5e7eb',
+              }}
+            >
+              <SummaryCard
+                label="Kuukausilaskutus (MRR)"
+                value={muotoileEuro(laskutus.mrr)}
+                highlight
+              />
+              <SummaryCard label="Vuodessa (ARR)" value={muotoileEuro(laskutus.arr)} />
+              <SummaryCard
+                label="Maksavia asiakkaita"
+                value={laskutus.maksaviaAsiakkaita}
+                sub={`${laskutus.maksaviaTunnuksia} tunnusta · ${laskutus.asiakkaitaYhteensa} asiakasta yhteensä`}
+              />
+              {laskutus.testitunnuksia > 0 && (
+                <SummaryCard label="Testitunnuksia" value={laskutus.testitunnuksia} />
+              )}
+              {laskutus.ilmanHintaa > 0 && (
+                <SummaryCard
+                  label="Maksava ilman hintaa"
+                  value={laskutus.ilmanHintaa}
+                  sub="MRR on näiltä osin vajaa"
+                  warn
+                />
+              )}
+            </div>
+          )}
+
+          {isAdminView && laskutus.maksaviaAsiakkaita === 0 && (
+            <p style={{ marginTop: 10, fontSize: 13, color: '#6b7280' }}>
+              Yhtään maksavaa asiakasta ei ole vielä merkitty. Merkitse
+              taulukon Laskutus-sarakkeesta — hinta on yrityskohtainen, eli
+              yksi merkintä kattaa kaikki saman yrityksen tunnukset.
+            </p>
+          )}
 
           {sellerSummary.myyjittain.length === 0 && (
             <p style={{ marginTop: 10, fontSize: 13, color: '#6b7280' }}>
@@ -606,7 +767,7 @@ export default function UsersPage() {
           <table
             style={{
               width: '100%',
-              minWidth: isAdminView ? 1340 : 900,
+              minWidth: isAdminView ? 1620 : 900,
               borderCollapse: 'collapse',
             }}
           >
@@ -635,6 +796,9 @@ export default function UsersPage() {
                   sortDirection={sortDirection}
                   onSort={handleSort}
                 />
+              )}
+              {isAdminView && (
+                <th style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>Laskutus</th>
               )}
               {isAdminView && <th style={{ padding: '8px 4px' }} />}
             </tr>
@@ -764,6 +928,16 @@ export default function UsersPage() {
                 )}
 
                 {isAdminView && (
+                  <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
+                    <BillingCell
+                      user={u}
+                      saving={billingSaving === u.billingKey}
+                      onSave={handleBilling}
+                    />
+                  </td>
+                )}
+
+                {isAdminView && (
                 <td style={{ padding: '8px 4px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                   <button
                     onClick={() => handleLock(u)}
@@ -807,7 +981,7 @@ export default function UsersPage() {
 
               kayttoAuki === u.id ? (
                 <tr key={`${u.id}-kaytto`} style={{ background: '#f9fafb' }}>
-                  <td colSpan={12} style={{ padding: '12px 16px' }}>
+                  <td colSpan={13} style={{ padding: '12px 16px' }}>
                     {kayttoLataa === u.id ? (
                       <div style={{ color: '#6b7280' }}>Haetaan käyttöhistoriaa…</div>
                     ) : kaytto[u.id]?.error ? (
@@ -898,10 +1072,15 @@ function SummaryCard({
   label,
   value,
   highlight = false,
+  sub,
+  warn = false,
 }: {
   label: string
-  value: number
+  /* Euromaara tulee valmiiksi muotoiltuna merkkijonona. */
+  value: number | string
   highlight?: boolean
+  sub?: string
+  warn?: boolean
 }) {
   return (
     <div
@@ -909,8 +1088,8 @@ function SummaryCard({
         minWidth: 150,
         padding: '8px 12px',
         borderRadius: 8,
-        background: '#fff',
-        border: `1px solid ${highlight ? '#bfdbfe' : '#e5e7eb'}`,
+        background: warn ? '#fffbeb' : '#fff',
+        border: `1px solid ${warn ? '#fcd34d' : highlight ? '#bfdbfe' : '#e5e7eb'}`,
       }}
     >
       <div
@@ -930,12 +1109,122 @@ function SummaryCard({
         style={{
           fontSize: 22,
           fontWeight: 800,
-          color: highlight ? '#1d4ed8' : '#111827',
+          color: warn ? '#b45309' : highlight ? '#1d4ed8' : '#111827',
         }}
       >
         {value}
       </div>
+      {sub && (
+        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{sub}</div>
+      )}
     </div>
+  )
+}
+
+/*
+ * LASKUTUSSOLU (D-223).
+ *
+ * Merkinta kohdistuu ASIAKKAASEEN: sama rivi nakyy kaikilla saman
+ * yrityksen tunnuksilla, ja muutos kirjoittaa ne kaikki. Siksi solu
+ * kertoo tunnisteen vihjetekstissa — muuten nayttaisi silta etta
+ * hinta koskisi vain tata yhta tunnusta.
+ *
+ * Maksavaksi merkitseminen EI tallennu ennen kuin hinta on annettu.
+ * Kanta ja reitti torjuvat hinnattoman maksavan, ja hiljainen torjunta
+ * olisi pahempi kuin odottava kentta: MRR vaittaisi olevansa tasmallinen
+ * vaikka yksi asiakas puuttuisi siita.
+ */
+function BillingCell({
+  user,
+  saving,
+  onSave,
+}: {
+  user: AdminUser
+  saving: boolean
+  onSave: (user: AdminUser, tila: string, kuukausihinta: string | null) => void
+}) {
+  const [tila, setTila] = useState<string>(user.billingStatus ?? '')
+  const [hinta, setHinta] = useState<string>(
+    user.billingMonthly === null || user.billingMonthly === undefined
+      ? ''
+      : String(user.billingMonthly)
+  )
+
+  /* Palvelimen vastaus on totuus, myos kun toinen rivi muutti saman asiakkaan. */
+  useEffect(() => {
+    setTila(user.billingStatus ?? '')
+    setHinta(
+      user.billingMonthly === null || user.billingMonthly === undefined
+        ? ''
+        : String(user.billingMonthly)
+    )
+  }, [user.billingStatus, user.billingMonthly])
+
+  /* Myyja ja admin eivat ole asiakkaita. */
+  if (user.role === 'admin' || user.role === 'seller') {
+    return <span style={{ color: '#9ca3af' }}>—</span>
+  }
+
+  const tallennaHinta = () => {
+    if (tila !== 'maksava') return
+    if (!hinta.trim()) return
+    if (String(user.billingMonthly ?? '') === hinta.trim()) return
+    onSave(user, 'maksava', hinta)
+  }
+
+  return (
+    <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+      <select
+        value={tila}
+        disabled={saving}
+        title={`Laskutus on yrityskohtainen · ${user.billingKey ?? ''}`}
+        onChange={(e) => {
+          const arvo = e.target.value
+          setTila(arvo)
+          if (arvo !== 'maksava') onSave(user, arvo, null)
+          else if (hinta.trim()) onSave(user, arvo, hinta)
+        }}
+        style={{
+          padding: '4px 6px',
+          borderRadius: 6,
+          border: '1px solid #d1d5db',
+          background:
+            tila === 'maksava' ? '#ecfdf5' : tila === 'testi' ? '#f3f4f6' : '#fff',
+          color: tila === 'testi' ? '#6b7280' : '#111827',
+          fontWeight: tila === 'maksava' ? 700 : 400,
+        }}
+      >
+        <option value="">— ei merkintää —</option>
+        <option value="maksava">{BILLING_LABEL.maksava}</option>
+        <option value="ei_maksava">{BILLING_LABEL.ei_maksava}</option>
+        <option value="testi">{BILLING_LABEL.testi}</option>
+      </select>
+
+      {tila === 'maksava' && (
+        <>
+          <input
+            value={hinta}
+            disabled={saving}
+            onChange={(e) => setHinta(e.target.value)}
+            onBlur={tallennaHinta}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') tallennaHinta()
+            }}
+            placeholder="0"
+            inputMode="decimal"
+            style={{
+              width: 64,
+              padding: '4px 6px',
+              borderRadius: 6,
+              border: `1px solid ${hinta.trim() ? '#d1d5db' : '#fcd34d'}`,
+              background: hinta.trim() ? '#fff' : '#fffbeb',
+              textAlign: 'right',
+            }}
+          />
+          <span style={{ fontSize: 12, color: '#6b7280' }}>€/kk</span>
+        </>
+      )}
+    </span>
   )
 }
 

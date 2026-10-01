@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 
 import { getRequestRole } from "@/lib/auth/getRequestRole"
 import { canSeeOwnCustomers, isAdmin, parseAdminEmails, resolveRole } from "@/lib/auth/roles"
+import { asiakkaanTunniste } from "@/lib/users/asiakastunniste"
 import { visibleUsers } from "@/lib/users/visibleUsers"
 
 export const runtime = "nodejs"
@@ -102,6 +103,23 @@ export async function GET(req: Request) {
     if (kayntiVirhe) console.error("Viimeisimman kaynnin haku epaonnistui:", kayntiVirhe.message)
     else (kayntirivit ?? []).forEach((r: any) => kaynnit.set(r.user_id, r.last_seen_at))
 
+    /*
+     * LASKUTUSTIEDOT ASIAKKAITTAIN, EI TUNNUKSITTAIN (D-223).
+     *
+     * Avain on domain tai vapaan sahkopostin koko osoite, koska hinta on
+     * yrityskohtainen: Sarlinin 12 tunnusta ovat yksi maksava asiakas.
+     * Puuttuva taulu ei kaada listaa - sarake jaa tyhjaksi kunnes DDL on
+     * ajettu, sama kaytanto kuin liitoksilla ja kaynneilla.
+     */
+    const laskutus = new Map<string, any>()
+
+    const { data: laskutusrivit, error: laskutusVirhe } = await supabase
+      .from("customer_billing")
+      .select("tunniste,tila,kuukausihinta_eur,alkaen,huomio,updated_at")
+
+    if (laskutusVirhe) console.error("Laskutustietojen haku epaonnistui:", laskutusVirhe.message)
+    else (laskutusrivit ?? []).forEach((r: any) => laskutus.set(String(r.tunniste).toLowerCase(), r))
+
     const sahkopostit = new Map<string, string | null>(
       allUsers.map((u) => [u.id, u.email ?? null])
     )
@@ -109,6 +127,7 @@ export async function GET(req: Request) {
     const kaikki = allUsers
       .map((u) => {
         const ownerId = omistajat.get(u.id) ?? null
+        const lasku = laskutus.get(asiakkaanTunniste(u.email))
 
         return {
           id: u.id,
@@ -139,6 +158,17 @@ export async function GET(req: Request) {
           }),
           ownerId,
           ownerEmail: ownerId ? (sahkopostit.get(ownerId) ?? null) : null,
+
+          /* Asiakastunniste nakyy, jotta sivulla naytetaan mita riviä muokataan. */
+          billingKey: asiakkaanTunniste(u.email),
+          billingStatus: lasku?.tila ?? null,
+          billingMonthly:
+            lasku?.kuukausihinta_eur === null || lasku?.kuukausihinta_eur === undefined
+              ? null
+              : Number(lasku.kuukausihinta_eur),
+          billingSince: lasku?.alkaen ?? null,
+          billingNote: lasku?.huomio ?? null,
+          billingUpdatedAt: lasku?.updated_at ?? null,
         }
       })
       .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))

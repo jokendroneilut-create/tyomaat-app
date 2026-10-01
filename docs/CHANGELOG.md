@@ -11,6 +11,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 1.10.)
 
+### Maksavat asiakkaat, kuukausilaskutus ja ARR käyttäjäsivulle (D-223)
+
+Käyttäjälistalla on nyt Laskutus-sarake: asiakas merkitään maksavaksi,
+ei-maksavaksi tai testiksi, ja maksavalle annetaan kuukausihinta.
+Yhteenvetolaatikko näyttää kuukausilaskutuksen ja ARR:n.
+
+**Merkintä kohdistuu asiakkaaseen, ei tunnukseen.** Mitattuna 113
+asiakastunnusta on 75 asiakasta — Sarlinilla on 12 tunnusta ja
+Koneunionilla 13. Per-tunnus-hinta olisi laskenut Sarlinin MRR:ään
+kaksitoista kertaa. Tunniste on yritysdomain, paitsi vapaassa
+sähköpostissa koko osoite: gmail- ja hotmail-osoitteita on jo 11, eikä
+kahta eri asiakasta saa niputtaa yhdeksi "gmail.com-asiakkaaksi".
+
+Koska hinnat syötetään käsin, kortit kertovat myös oman vajavaisuutensa:
+maksavien lukumäärä näkyy summan vieressä, ja jos joltakulta puuttuu
+hinta, siitä tulee erillinen varoituskortti.
+
+Vaatii SQL:n ajamisen: `docs/sql/2026-10-01_customer_billing.sql`.
+
 ### AI-suodatuksen hälytys kertoo nyt mitä oikeasti tapahtui (D-222)
 
 TIC:n AI-suodatus-sivu näytti punaista ja väitti suodatuksen olevan

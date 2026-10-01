@@ -5,6 +5,79 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-223 - Maksavat asiakkaat merkitaan ASIAKKAALLE, ei tunnukselle
+
+Johannes 1.10.2026: kayttajasivulle halutaan merkinta maksavista
+asiakkaista, testitunnuksista ja kuukausilaskutus + ARR. *"Hinta on
+yrityskohtainen eli domainia voi kayttaa yrityksen tunnisteena mikali ei
+joskus tule yritysta joka kayttaisi vaikka gmail osoitteita. Kaikki
+maksavat asiakkaat maksavat kuukausihintaa."*
+
+#### Avain on asiakas, koska tunnuksia on enemman kuin asiakkaita
+
+Mitattu 1.10.2026 (`scripts/measure-asiakasdomainit.ts`): **113
+asiakastunnusta jakautuu 75 asiakkaaseen.** Viidella yrityksella on
+useita tunnuksia:
+
+| tunnuksia | asiakas |
+|---|---|
+| 13 | koneunion.fi |
+| 12 | sarlin.com |
+| 4 | nostokonepalvelu.fi |
+| 3 | etuputsarit.fi |
+| 2 | awaregroup.fi |
+
+Jos hinta olisi tunnuksella, **Sarlin laskettaisiin MRR:aan kaksitoista
+kertaa**. Siksi `customer_billing`in avain on asiakas, ja yksi rivi
+kattaa kaikki saman asiakkaan tunnukset.
+
+#### Domain ei kelpaa aina, ja se on jo totta
+
+Johanneksen varaus ei ole hypoteettinen: **11 asiakastunnusta 113:sta on
+vapaassa sahkopostissa** (gmail 9, hotmail 2). Jos domain olisi avain,
+kaksi eri yhden hengen asiakasta olisi sama "gmail.com"-asiakas ja
+toisen hinta katoaisi toisen alle.
+
+Siksi tunniste on **yritysdomain tai vapaan sahkopostin koko osoite**
+(`lib/users/asiakastunniste.ts`). Tuntematon domain tulkitaan
+yritykseksi, mika on oikea suunta: vaara yritystulkinta nakyy sivulla ja
+on korjattavissa, vaara yhdistaminen sulauttaisi kaksi asiakasta hiljaa
+yhdeksi.
+
+#### Mita EI tehty
+
+Ei laskuja, ei tilaushistoriaa, ei tilauskantaa, ei CRM:aa. Yksi rivi
+per asiakas: tila, kuukausihinta, alkupaiva, huomio. Laskutusjaksoa ei
+ole, koska kaikki maksavat kuukausihintaa — jos vuosilaskutusta joskus
+tulee, se on oma kenttansa eika kerroin.
+
+Testikayttajat eivat vaadi koodisaantoa: `koneunion.fi` on yksi rivi
+tilassa `testi`, ja se kattaa kaikki 13 tunnusta. Taulun luova SQL
+lisaa rivin valmiiksi.
+
+#### Luku kertoo myos oman vajavaisuutensa
+
+Hinnat syotetaan kasin, joten MRR on tasmalleen niin oikein kuin
+syotteet. Siksi korttien vieressa on **maksavien lukumaara** ja
+erillinen varoituskortti **"Maksava ilman hintaa"**. Ilman sita vajaa
+summa nayttaisi tasmalliselta — sama ansa kuin D-184:ssa, jossa
+mittarin premissi vanheni ilman etta mittari huomasi. Kanta ja
+kirjoitusreitti torjuvat hinnattoman maksavan, ja kayttoliittyma odottaa
+hintaa sen sijaan etta tallentaisi puolivalmiin rivin.
+
+#### Osat
+
+| tiedosto | tehtava |
+|---|---|
+| `docs/sql/2026-10-01_customer_billing.sql` | taulu, RLS, koneunion-rivi — **ajettava kasin** |
+| `lib/users/asiakastunniste.ts` | domain vai sahkoposti |
+| `lib/users/laskutus.ts` | MRR, ARR, maarat, vajaus |
+| `app/api/admin/list-users` | liitos listaan (puuttuva taulu ei kaada) |
+| `app/api/admin/set-customer-billing` | kirjoitus, vain admin |
+| `app/dashboard/users/page.tsx` | Laskutus-sarake ja kortit |
+
+---
+
 ### D-222 - "Suodatus on tauolla" oli vaara, ja syyksi arvattu varojen loppuminen oli myos vaara
 
 Johannes 1.10.2026, kuvakaappaus TIC:n AI-suodatus-sivusta ja Claude
