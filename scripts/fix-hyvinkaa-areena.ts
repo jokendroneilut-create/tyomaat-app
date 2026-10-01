@@ -33,8 +33,20 @@ const APPLY = process.argv.includes("--apply")
 const GRANLUND = "868fe187-e9bb-4093-b24b-f6027667687d"
 const SRV = "ae429748-c25d-473d-877e-b82cb9a17bef"
 
-/* SRV:n tiedote 9.9.2026: rakennustyot alkoivat kesakuussa 2025. */
+/*
+ * SRV:n omat tiedotteet, kaikki kannassa:
+ *
+ *   19.8.2026  "kokonaiskustannusarvio on 45,6 miljoonaa euroa"
+ *   19.8.2026  "rakennustyot alkoivat kesakuussa 2025"
+ *   19.8.2026  "Rakennustoiden on maara valmistua kevaalla 2027"
+ *    9.9.2026  harjannostajaiset
+ *
+ * Granlundin sivulta tullut valmistumisarvio oli 31.12.2027 - puoli
+ * vuotta myohassa paaurakoitsijan omasta aikataulusta.
+ */
 const RAKENTAMINEN_ALKOI = "2025-06-01"
+const VALMISTUMINEN = "2027-05-31"
+const KUSTANNUS = 45_600_000
 const UUSI_VAIHE = "Rakenteilla"
 
 async function main() {
@@ -72,6 +84,20 @@ async function main() {
     console.log(` paaurakoitsija: - -> SRV`)
   }
 
+  /*
+   * Valmistuminen KORVATAAN: Granlundin 31.12.2027 on suunnittelijan
+   * arvio, SRV:n kevat 2027 paaurakoitsijan oma aikataulu.
+   */
+  if (gran.estimated_completion !== VALMISTUMINEN) {
+    muutokset.estimated_completion = VALMISTUMINEN
+    console.log(` valmistuminen: ${gran.estimated_completion ?? "-"} -> ${VALMISTUMINEN}`)
+  }
+
+  if (!gran.estimated_cost) {
+    muutokset.estimated_cost = KUSTANNUS
+    console.log(` kustannusarvio: - -> ${KUSTANNUS}`)
+  }
+
   /* Duplikaattipari jonoon, ei yhdisteta. */
   const [idA, idB] = [GRANLUND, SRV].sort()
   const { data: olemassa } = await db
@@ -99,6 +125,9 @@ async function main() {
           ...(gran.metadata ?? {}),
           phase_evidence:
             "SRV lehdistotiedote 9.9.2026: rakennustyot alkoivat kesakuussa 2025, harjannostajaiset 9.9.2026",
+          ...(muutokset.estimated_cost
+            ? { cost_source: "manual", estimated_cost: KUSTANNUS }
+            : {}),
         },
       })
       .eq("id", GRANLUND)
