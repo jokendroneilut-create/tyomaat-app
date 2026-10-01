@@ -4,13 +4,13 @@
 --
 -- AVAIN ON ASIAKAS, EI TUNNUS. Hinta on yrityskohtainen (Johannes
 -- 1.10.2026), ja mitattu 1.10.2026 (`scripts/measure-asiakasdomainit.ts`):
--- 113 asiakastunnusta jakautuu 75 asiakkaaseen, ja viidella yrityksella
+-- 113 asiakastunnusta jakautuu 84 asiakkaaseen, ja viidella yrityksella
 -- on useita tunnuksia -- Sarlin 12, Koneunion 13, Nostokonepalvelu 4,
 -- Etuputsarit 3, Awaregroup 2. Jos hinta olisi tunnuksella, Sarlin
 -- laskettaisiin MRR:aan kaksitoista kertaa.
 --
 -- TUNNISTE ON DOMAIN TAI SAHKOPOSTI. Domain kelpaa yrityksen
--- tunnisteeksi 73 tapauksessa 75:sta. Vapaat sahkopostit eivat kelpaa:
+-- tunnisteeksi 73 tapauksessa 84:sta. Vapaat sahkopostit eivat kelpaa:
 -- 11 tunnusta on gmailissa tai hotmailissa, ja kaksi eri asiakasta
 -- gmailissa olisi domainilla sama "yritys". Siksi vapaan sahkopostin
 -- kayttaja tunnistetaan koko osoitteella. Jako tehdaan koodissa

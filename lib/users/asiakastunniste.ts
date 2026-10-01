@@ -4,9 +4,10 @@
  * Hinta on yrityskohtainen, joten laskutusrivi tarvitsee avaimen joka
  * on asiakas eika tunnus. Mitattu 1.10.2026
  * (`scripts/measure-asiakasdomainit.ts`): 113 asiakastunnusta jakautuu
- * 75 asiakkaaseen, ja viidella yrityksella on useita tunnuksia. Suurin
- * on Koneunion 13 ja Sarlin 12 — per-tunnus-hinta laskisi Sarlinin
- * MRR:aan kaksitoista kertaa.
+ * 84 asiakkaaseen (73 yritysta + 11 vapaan sahkopostin kayttajaa), ja
+ * viidella yrityksella on useita tunnuksia. Suurimmat ovat Koneunion 13
+ * ja Sarlin 12 — per-tunnus-hinta laskisi Sarlinin MRR:aan kaksitoista
+ * kertaa.
  *
  * DOMAIN KELPAA TUNNISTEEKSI, PAITSI VAPAA SAHKOPOSTI. Johannes
  * 1.10.2026: *"domainia voi kayttaa yrityksen tunnisteena mikali ei

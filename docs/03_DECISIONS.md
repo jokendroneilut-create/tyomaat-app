@@ -16,7 +16,7 @@ maksavat asiakkaat maksavat kuukausihintaa."*
 #### Avain on asiakas, koska tunnuksia on enemman kuin asiakkaita
 
 Mitattu 1.10.2026 (`scripts/measure-asiakasdomainit.ts`): **113
-asiakastunnusta jakautuu 75 asiakkaaseen.** Viidella yrityksella on
+asiakastunnusta jakautuu 84 asiakkaaseen.** Viidella yrityksella on
 useita tunnuksia:
 
 | tunnuksia | asiakas |

@@ -18,7 +18,7 @@ ei-maksavaksi tai testiksi, ja maksavalle annetaan kuukausihinta.
 Yhteenvetolaatikko näyttää kuukausilaskutuksen ja ARR:n.
 
 **Merkintä kohdistuu asiakkaaseen, ei tunnukseen.** Mitattuna 113
-asiakastunnusta on 75 asiakasta — Sarlinilla on 12 tunnusta ja
+asiakastunnusta on 84 asiakasta — Sarlinilla on 12 tunnusta ja
 Koneunionilla 13. Per-tunnus-hinta olisi laskenut Sarlinin MRR:ään
 kaksitoista kertaa. Tunniste on yritysdomain, paitsi vapaassa
 sähköpostissa koko osoite: gmail- ja hotmail-osoitteita on jo 11, eikä
