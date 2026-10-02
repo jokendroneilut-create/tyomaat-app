@@ -78,6 +78,30 @@ Rajaus ei ollut edes tarpeen: trialeilla on oma korttinsa. Nyt
 84 asiakasta = 19 valittua yritysta + 65 paateltya, joista 2 maksavaa
 (Sarlin 12 tunnusta + Etuputsarit 3 = 15) ja 63 trialia.
 
+#### Korjaus 2.10.2026 (toinen): "asiakas" tarkoitti kahta eri asiaa
+
+Johannes kysyi uudelleen mista kortin luku tulee. Syy ei ollut luku vaan
+**sanasto**, ja sekaannus oli minun tuomani:
+
+    laatikon otsikko   "104 asiakasta"   = TUNNUKSIA
+    kortti             "76 asiakasta"    = YRITYKSIA
+
+Samalla sivulla, kahden senttimetrin paassa toisistaan. Lisaksi
+maksavien kortin alarivi yhdisti kaksi eri nimittajaa yhteen lauseeseen:
+*"15 tunnusta · 76 asiakasta yhteensa"* — joista ensimmainen koski niita
+kahta maksavaa ja toinen koko kantaa. Vasemmalta oikealle luettuna
+molemmat nayttivat kuuluvan maksaviin.
+
+**Korjaus: yksi luku per kortti, ja sanat tarkoittavat yhta asiaa.**
+Otsikko sanoo nyt "asiakastunnusta", maksavien kortti kertoo vain
+maksavista ("15 tunnusta"), ja kokonaismaara on omalla kortillaan
+("Asiakkaita yhteensa 76 · 104 tunnusta"). Koko sivulla **asiakas =
+yritys, tunnus = kayttaja**.
+
+Tama oli saman kortin toinen korjaus samana paivana. Ensimmainen korjasi
+vaaran luvun, tama sen etta oikeakin luku oli lukukelvoton ilman
+selitysta.
+
 #### Laskutus-sarake jarjestettavissa
 
 Lisatty 2.10.2026 pyynnosta. Jarjestys on **tila ensin, hinta sen

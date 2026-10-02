@@ -31,6 +31,12 @@ mukaan 149 €:lla — tai heille kirjatulla hinnalla, jos sellainen on.
 Hinnat ovat yrityskohtaisia, joten arvaus väistyy tiedon tieltä. Siksi
 hintakenttä näkyy myös trialille. Vetovalikon "Testi" on nyt "Trial".
 
+Yhteenvetolaatikon sanasto yhtenäistettiin samalla: **asiakas tarkoittaa
+yritystä ja tunnus käyttäjää** koko sivulla. Aiemmin laatikon otsikko
+laski tunnuksia sanalla "asiakasta" ja kortti yrityksiä samalla sanalla,
+eikä lukuja voinut suhteuttaa toisiinsa. Jokaisella kortilla on nyt yksi
+luku ja sen oma tarkenne.
+
 Vaatii SQL:n ajamisen: `docs/sql/2026-10-02_user_company.sql`.
 
 ### Maksavat asiakkaat, kuukausilaskutus ja ARR käyttäjäsivulle (D-223)

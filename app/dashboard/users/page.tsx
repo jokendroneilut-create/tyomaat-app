@@ -694,8 +694,8 @@ export default function UsersPage() {
           <div style={{ fontWeight: 700, marginBottom: 10 }}>
             Asiakkaat myyjittäin{' '}
             <span style={{ fontWeight: 400, color: '#6b7280', fontSize: 14 }}>
-              ({sellerSummary.yhteensa} asiakasta · myyjä- ja admin-tunnukset
-              eivät ole mukana)
+              ({sellerSummary.yhteensa} asiakastunnusta · myyjä- ja
+              admin-tunnukset eivät ole mukana)
             </span>
           </div>
 
@@ -753,9 +753,28 @@ export default function UsersPage() {
               <SummaryCard
                 label="Maksavia asiakkaita"
                 value={laskutus.maksaviaAsiakkaita}
-                sub={`${laskutus.maksaviaTunnuksia} tunnusta · ${laskutus.asiakkaitaYhteensa} asiakasta yhteensä`}
+                sub={`${laskutus.maksaviaTunnuksia} tunnusta`}
                 highlight
               />
+              {/*
+                * SANA "ASIAKAS" TARKOITTAA YRITYSTA, "TUNNUS" KAYTTAJAA.
+                *
+                * Johannes 2.10.2026 kysyi mista kortin luku tulee, ja syy
+                * oli sekaannus jonka olin itse tehnyt: laatikon otsikko
+                * laski tunnuksia sanalla "asiakasta" (104), kortti
+                * yrityksia samalla sanalla (76). Lisaksi maksavien kortin
+                * alarivi yhdisti kaksi eri nimittajaa — "15 tunnusta"
+                * koski kahta maksavaa, "76 asiakasta" koko kantaa.
+                *
+                * Nyt jokaisella kortilla on yksi luku ja sen oma
+                * tarkenne, ja otsikko sanoo tunnuksia tunnuksiksi.
+                */}
+              <SummaryCard
+                label="Asiakkaita yhteensä"
+                value={laskutus.asiakkaitaYhteensa}
+                sub={`${sellerSummary.yhteensa} tunnusta`}
+              />
+
               {laskutus.testiasiakkaita > 0 && (
                 <>
                   {/*
