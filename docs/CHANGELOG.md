@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 1.-2.10.)
 
+### Latausilmaisin näkyy nyt myös palvelinsivuilla (D-229)
+
+Tänään-näkymään siirryttäessä ei näkynyt mitään latausta, vaikka
+Hankkeisiin siirryttäessä näkyi. Syy ei ollut ilmaisimessa vaan
+sivutyypissä: `/projects` piirtyy selaimessa ja ehtii näyttää
+lataustilan, `/today` taas odottaa palvelinta ja näyttää siihen asti
+vanhaa sivua.
+
+Sovelluksessa on 18 palvelimella piirtyvää sivua eikä yhtäkään
+`loading.tsx`-tiedostoa, joten puute koski niitä kaikkia. Lisätty kolme
+tiedostoa — ne kattavat myös alireitit.
+
 ### Latausilmaisin: nosturi kääntää logon o-kirjainta (D-228)
 
 Sovelluksessa luki kahdessatoista kohdassa pelkkä "Ladataan…". Nyt

@@ -5,6 +5,42 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-229 - Palvelinkomponentit tarvitsevat oman latausilmaisimen
+
+Johannes 3.10.2026: *"kun siirryn /today -> /projects latausilmaisin
+tulee, mutta toiseen suuntaan siirryttaessa ei."*
+
+**Ero ei ollut ilmaisimessa vaan siina mita sivut ovat.**
+
+| sivu | tyyppi | mita tapahtuu |
+|---|---|---|
+| `/projects` | asiakaskomponentti | piirtyy heti, hakee datan vasta sitten -> `loading`-tila ehtii nakya |
+| `/today` | palvelinkomponentti (`force-dynamic`) | selain odottaa palvelimen vastausta ja nayttaa siihen asti VANHAA sivua |
+
+Palvelinkomponentissa ei ole mitaan `loading`-tilaa jota renderoida —
+sivu joko on valmis tai ei ole. Next.js:n oma ratkaisu on `loading.tsx`:
+se on Suspense-raja, jonka sisalto nakyy odotuksen ajan.
+
+#### Kolme tiedostoa, ei kahdeksaatoista
+
+Sovelluksessa on **18 palvelinkomponenttia ja oli nolla
+`loading.tsx`-tiedostoa**, eli puute koski jokaista palvelimella
+piirtyvaa sivua — Johannes vain huomasi sen Tanaan-nakymassa.
+
+`loading.tsx` kattaa segmentin JA sen alireitit, joten kolme riittaa:
+
+    app/today/loading.tsx         1 sivu
+    app/projects/[id]/loading.tsx 1 sivu
+    app/tic/loading.tsx          16 sivua
+
+Kaikki renderoivat saman `<Lataus keskita />`:n (D-228).
+
+**Mita ei voitu todentaa:** itse latausnakymaa ei paastu katsomaan ilman
+kirjautumista, joten varmistettu on vain etta reitit kaantyvat ja
+renderoityvat. Mekanismi on Next.js:n vakio.
+
+---
+
 ### D-228 - Latausilmaisin leikataan oikeasta logosta, ei piirreta uudelleen
 
 Johannes 3.10.2026: sovellukseen symboli joka kertoo sivun
