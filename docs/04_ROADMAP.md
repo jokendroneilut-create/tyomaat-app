@@ -706,6 +706,29 @@ muistin varassa.
   yhdeksän valmistunutta ei osunut dokumenttisignaaliin lainkaan, koska
   valmistumisuutinen käyttää eri nimeä tai ei ole kannassa.
 
+- **AUKI, RATKAISEVA TESTI TEKEMÄTTÄ: miksi 19 % dokumenteista ei tuota
+  ehdokasta?** (D-227, havaittu 2.10.2026)
+
+  Asuntosäätiön Mårtensbron kohteesta oli kannassa kaksi tiedotetta —
+  SRV 13.3.2025 ja STT 30.9.2026 — eikä kumpikaan tuottanut ehdokasta.
+  Hanketta ei ole kannassa lainkaan.
+
+  Mitattu: **1 836/9 541 dokumenttia (19,2 %)** ei tuota ehdokasta.
+  SRV:n 66:sta 38 on aitoja hankeilmoituksia, joista **ainakin viisi ei
+  löydy kannasta mitään kautta** (Hämeenlinnan Lyseo, Kouvolan
+  monitoimiareena, Kirkkonummen monitoimijatalo, Jykian tuotantolaitos,
+  Mårtensbron asumisoikeuskohde).
+
+  **Pois suljettu:** ikkunarajaus, faktojen poiminta, "jo nähty"
+  -muisti (ikkuna on viikko, joten uudelleenyrityksen pitäisi tapahtua).
+
+  **Seuraava askel:** `npx tsx scripts/aja-lahde.ts srv` ja katso mitä
+  juuri sille osoitteelle tapahtuu. Ajo kirjoittaa tuotantokantaan ja
+  voi tuoda jonoon kymmeniä ehdokkaita, joten se tehdään valvotusti.
+
+  **Älä oleta että 19,2 % on vuotoa** — iso osa on oikein pudotettua.
+  Vain rivien lukeminen erottaa hukan suodatuksesta.
+
 - **Mittaamatta: montako dokumenttia on jäänyt `awaiting_body`-tilaan?**
 
   Havaittu 1.10.2026 (D-221): Jyväskylän purkupäätösten `raw_payload`

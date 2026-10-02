@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 1.-2.10.)
 
+### Löytö: 19 % dokumenteista ei tuota ehdokasta (D-227)
+
+Asiakkaan LinkedIn-syötteestä nähty valmistunut kohde ei löytynyt
+kannasta — vaikka siitä oli kannassa **kaksi tiedotetta**, ja STT oli
+tuonut valmistumisuutisen samana päivänä kuin se julkaistiin
+LinkedInissä. Lähde ei siis ollut ongelma.
+
+Mitattuna 1 836 dokumenttia 9 541:stä ei tuota ehdokasta. SRV:n osalta
+luettiin kaikki 66 riviä: 38 on aitoja hankeilmoituksia, ja ainakin
+viisi hanketta puuttuu kannasta kokonaan.
+
+Syytä ei ole vielä selvitetty — ikkunarajaus, faktojen poiminta ja "jo
+nähty" -muisti suljettiin pois. Ratkaiseva testi on lähteen ajaminen
+valvotusti.
+
 ### Yritystiedotteiden ikkuna 24 kuukaudesta 12:een (D-226)
 
 Vanha tiedote on huono liidi, ja nyt se on mitattu: yli vuoden vanhoista

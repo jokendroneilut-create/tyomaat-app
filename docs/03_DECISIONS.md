@@ -5,6 +5,95 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-227 - 19 % dokumenteista ei tuota ehdokasta, syy auki
+
+Johannes 2.10.2026 naytti LinkedIn-julkaisun: Asuntosaation 50
+asumisoikeusasuntoa valmistuivat Espoon Martensbrohon. Pyysi merkitsemaan
+kohteen valmiiksi. **Hanketta ei ollut kannassa lainkaan** — ei
+hyvaksyttyna, ei jonossa, ei hylattyna.
+
+**Lahde ei ollut ongelma.** Meilla on siita kohteesta kaksi tiedotetta:
+
+    SRV   13.3.2025  "SRV toteuttaa 50 asumisoikeusasunnon kohteen
+                      Espoon Espoonlahteen"           tuotu 19.8.2026
+    STT   30.9.2026  "Asuntosaation 50 uutta asumisoikeusasuntoa
+                      valmistuivat ... Martensbron"   tuotu 30.9.2026
+
+STT toi valmistumisuutisen **samana paivana** kuin Asuntosaatio julkaisi
+sen LinkedInissa. Kumpikaan dokumentti ei tuottanut ehdokasta.
+
+#### Mittaus (`scripts/measure-faktojen-nollatulos.ts`)
+
+**1 836 dokumenttia 9 541:sta (19,2 %) ei tuottanut ehdokasta.**
+
+| osuus | lahde |
+|---|---|
+| 96 % | Helsingin vireilla olevat kaavat (90/94) |
+| 94 % | Espoon ajankohtaiset asemakaavat (175/187) |
+| 86 % | Espoon kuulutukset (113/131) |
+| 37 % | SRV tiedotteet (66/178) |
+| 25 % | Hilma (334/1326) |
+
+SRV:n 66 luettiin riveittain: 2 porssitiedotetta ja 15 valmistumis-
+uutista pudotetaan oikein, jolloin jaljelle jaa **38 aitoa
+hankeilmoitusta**. Niista ~30 loytyy kannasta toisen lahteen kautta, ja
+**ainakin viisi ei loydy mistaan**:
+
+- SRV toteuttaa historiallisen Hameenlinnan Lyseon peruskorjauksen
+- SRV toteuttaa monitoimiareenan Kouvolaan
+- Kirkkonummelle nousee massiivipuurunkoinen monitoimijatalo
+- SRV toteuttaa Jykialle uuden puolustusteollisuuden tuotantolaitoksen
+- SRV toteuttaa 50 asumisoikeusasunnon kohteen Espoon Espoonlahteen
+
+Luku "30 loytyy toisen lahteen kautta" on **ylaraja**: se perustuu
+nimien sanaosumaan, ja Martensbro sai siina vaaran osuman. Tarkistettu
+erikseen ettei hanketta ole.
+
+#### Mittarin ensimmainen versio oli vaara
+
+Se laski dokumentit joilla ei ole `project_facts`-rivia ja sai 33,6 %
+seka kokonaisia lahteita 100 %:n "vuotoon" (STT 1 043/1 043, SRV
+178/178). Luku oli merkityksetön: **yritystiedotteet kulkevat
+`legacyCompanyResolver`-polkua, joka luo ehdokkaan kirjoittamatta
+faktoja lainkaan.** Nollatulos oli normaali tila, ei vika. Virhe
+huomattiin ennen raportointia; perustelu on mittarin alussa.
+
+#### Mika suljettiin pois syyna
+
+- **Ei ikkunarajaus.** SRV:n tiedote on 13.3.2025, hyvin 24 kuukauden
+  rajan sisalla silloin kun se tuotiin (D-226 kiristi rajan 12:een vasta
+  2.10.2026).
+- **Ei faktojen poiminta.** Se ei ole taman polun vaihe.
+- **Ei "jo nahty" -muisti.** `findRecentlySeenSourceUrls` muistaa
+  osoitteen **viikon**, joten tuomatta jaanyt dokumentti pitaisi yrittaa
+  uudelleen seuraavalla kierroksella. Juuri siksi kuuden viikon
+  poissaolo ei sovi mihinkaan tunnettuun mekanismiin.
+
+#### Auki: ratkaiseva testi
+
+Aja SRV-lahde (`scripts/aja-lahde.ts`) ja katso mita juuri tuolle
+osoitteelle tapahtuu — ohitetaanko se, kaatuuko tuonti, vai luodaanko
+ehdokas joka ei tallennu. Ajoa ei tehty 2.10. koska se kirjoittaa
+tuotantokantaan ja voi tuoda jonoon kymmenia ehdokkaita.
+
+**Alaa oleta etta 19,2 % on vuotoa.** Iso osa on oikein pudotettua
+(valmistumisuutiset, menettelyilmoitukset, kaavojen ajantasaistamiset).
+Vasta rivien lukeminen erottaa hukan oikeasta suodatuksesta, kuten
+SRV:n kohdalla tehtiin.
+
+#### LinkedIn ei ole vastaus tahan
+
+Johannes kysyi samalla, saisiko LinkedInista reaaliaikaisempaa tietoa.
+Tama tapaus on vastaesimerkki: tieto oli meilla samana paivana.
+Lisaksi LinkedInilla ei ole julkista rajapintaa yrityssivujen
+julkaisuihin (API vaatii sivun hallinnan tai kumppanihyvaksynnan, RSS
+poistettiin), ja kaapiminen rikkoo kayttoehtoja. `02_DATA_MODEL.md`
+listaa "LinkedIn integration" kohdassa *Future capabilities* ilman
+paatosta. Kaytannossa LinkedIn on kaytossa kasityona osapuolten
+lisaamiseen, ja se toimii.
+
+---
+
 ### D-226 - Yritystiedotteiden ikkuna 24 kk -> 12 kk, yhteen paikkaan
 
 Johannes 2.10.2026 D-225:n jalkeen: *"kirista ikkuna 12 kuukauteen"*.
