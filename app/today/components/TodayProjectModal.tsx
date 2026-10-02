@@ -1,5 +1,6 @@
 "use client"
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import PhaseTimeline from "@/app/projects/PhaseTimeline"
@@ -239,9 +240,7 @@ export default function TodayProjectModal({
     >
       <div className="projects-modal">
         {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#6b7280" }}>
-            Ladataan...
-          </div>
+          <Lataus keskita />
         ) : error || !project ? (
           <div style={{ padding: 40, textAlign: "center" }}>
             <div style={{ color: "#b91c1c" }}>

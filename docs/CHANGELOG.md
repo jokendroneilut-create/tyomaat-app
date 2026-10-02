@@ -11,6 +11,27 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 1.-2.10.)
 
+### Latausilmaisin: nosturi kääntää logon o-kirjainta (D-228)
+
+Sovelluksessa luki kahdessatoista kohdassa pelkkä "Ladataan…". Nyt
+niissä on logo, jossa nosturi nostaa o-kirjaimen, kääntää koko
+ylärakenteen maston ympäri toiselle puolelle, laskee taakan — ja tekee
+saman käänteisesti takaisin. Kierros 8 s, vaiheet erillisinä.
+
+**Liike tehdään oikeasta logosta leikatuilla paloilla**, ei piirretystä
+nosturista: ristikkoa ja kirjasinta ei saa käsin vastaamaan. Rajat
+mitattiin pikseleistä. O pysyy koko ajan katsojaan päin luettavana,
+koska taakka kiertää saman verran vastaan.
+
+Kolme asiaa löytyi vasta katsomalla: 90° on ainoa kulma jossa litteä
+kuva katoaa kokonaan (mitattu leveys 0 px), koukun kiinnityspiste oli
+palan keskeltä sivussa jolloin kahden peilauksen ero näkyi 11 pikselin
+heittona käännetyssä asennossa, ja symmetriseksi levennetty pala toi
+mukanaan palan y-kirjainta.
+
+145 kt kolmessa kuvassa, pelkkiä CSS-muunnoksia, ei JavaScriptiä.
+`prefers-reduced-motion` pysäyttää liikkeen.
+
 ### Löytö: 19 % dokumenteista ei tuota ehdokasta (D-227)
 
 Asiakkaan LinkedIn-syötteestä nähty valmistunut kohde ei löytynyt

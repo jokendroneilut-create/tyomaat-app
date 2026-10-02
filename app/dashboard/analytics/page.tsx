@@ -1,5 +1,6 @@
 'use client'
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useState } from 'react'
 import KayttoTrendi from "./KayttoTrendi"
 
@@ -162,7 +163,7 @@ export default function AnalyticsPage() {
 
       <KayttoTrendi />
 
-      {loading && <p style={{ marginTop: 16 }}>Ladataan...</p>}
+      {loading && <Lataus leveys={140} />}
       {error && <p style={{ marginTop: 16, color: '#b91c1c' }}>{error}</p>}
 
       {data && (

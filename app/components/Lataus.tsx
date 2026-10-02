@@ -1,66 +1,99 @@
 /*
- * LATAUSILMAISIN: NOSTURI NOSTAA LOGON O-KIRJAINTA.
+ * LATAUSILMAISIN: TORNINOSTURI KAANTAA LOGON O-KIRJAINTA.
  *
- * Sovelluksessa luki kahdessatoista kohdassa pelkka "Ladataan...",
- * eika mikaan niista kertonut etta kyse on juuri tasta sovelluksesta.
+ * Sovelluksessa luki kahdessatoista kohdassa pelkka "Ladataan...", eika
+ * mikaan niista kertonut etta kyse on juuri tasta sovelluksesta.
  *
  * MIKSI OIKEA LOGO EIKA PIIRRETTY NOSTURI. Ensimmainen versio piirsi
- * nosturin SVG:lla, jotta yksittaisia osia voisi animoida. Johannes
- * 3.10.2026: *"nosturi ei nayta silta milta oikeasti"* ja *"myos fontti
- * on muuttunut"*. Molemmat pitivat paikkansa: logon ristikkorakennetta
- * ja kirjasinta ei saa kasin piirtamalla vastaamaan.
+ * nosturin SVG:lla jotta osia voisi animoida. Johannes 3.10.2026:
+ * *"nosturi ei nayta silta milta oikeasti"* ja *"myos fontti on
+ * muuttunut"*. Molemmat pitivat paikkansa — logon ristikkoa ja
+ * kirjasinta ei saa kasin piirtamalla vastaamaan. Liike tehdaan siksi
+ * OIKEASTA logosta leikatuilla paloilla:
  *
- * Siksi liike tehdaan OIKEASTA logosta leikatuilla paloilla:
+ *   logo-lataus-tausta.png   masto ja sana (ylarakenne ja o pyyhitty)
+ *   logo-lataus-puomi.png    vastapaino, puomi ja huippu (y 28-104)
+ *   logo-lataus-taakka.png   koukku ja o yhtena palana
  *
- *   logo-nosto-tausta.png   logo, josta vaijeri, koukku ja o on pyyhitty
- *   logo-nosto-taakka.png   koukku ja o yhtena palana (83x108)
+ * Palat leikattiin pikselirajoilta, jotka mitattiin logosta: o on
+ * x 231-313 ja y 163-249, koukkupala y 142-162, vaijeri x 263-270 ylos
+ * y 95:een, ja kaantyva ylarakenne x 31-292 / y 28-104.
  *
- * Palat on leikattu `logo_ilman_taustaa.png`:sta pikselirajoilta, jotka
- * mitattiin kuvasta: o on x 231-313 ja y 163-249, sen ylla koukkupala
- * y 142-162 ja vaijeri x 263-270 ylos y 95:een. Lepoasennossa taakka
- * osuu tasmalleen alkuperaiselle paikalleen, joten liikkumaton
- * latausilmaisin on pikselilleen sama kuin logo.
+ * KANGAS ON 100 PX LEVEAMPI KUIN LOGO. Taakka on 158 px kiertoakselista,
+ * joten 180 asteen kaannossa se paatyisi kohtaan x = -45 eli logon
+ * ulkopuolelle. Levennyksen jalkeen se asettuu kohtaan x 13-97 ja
+ * puomin karki kohtaan 35 — kaikki pysyy kuvassa.
  *
- * VAIJERI ON CSS-PALKKI, EI KUVA. Nosto on fysikaalisesti oikea vain jos
- * vaijeri lyhenee samalla kun taakka nousee. Kuvana se ei veny, joten se
- * on `div` jonka korkeus animoituu taakan kanssa samassa tahdissa.
+ * MIKSI TASAN 180 EIKA VAHEMMAN. 90 asteessa litte kuva on tasan
+ * kyljellaan ja sen leveys ruudulla on nolla: puomi, vaijeri ja taakka
+ * katoavat kaikki. Mitattu. Kaannoksen on siis mentava sen ohi.
  *
- * SIJAINNIT OVAT PROSENTTEJA, joten sama komponentti skaalautuu
- * 100 pikselista 400:aan ilman erillisia kokoja.
+ * VAIHEET OVAT ERILLISET (Johannes 3.10.2026): nosto, kaanto, lasku —
+ * tauko — ja samat vaiheet kaanteisesti takaisin. Jokainen vaihe
+ * paattyy ennen kuin seuraava alkaa, joten liike luetaan tyovaiheina
+ * eika yhtena sulavana pyorahdyksena.
  *
  * LIIKE ON VAPAAEHTOINEN: `prefers-reduced-motion` pysayttaa animaation,
  * jolloin jaljelle jaa logo paikallaan.
  */
 
-/* Mitat logon pikseleista (878x304). Prosentteina skaalautuvuuden takia. */
-const TAAKKA_VASEN = 26.31
+/* Mitat logon pikseleista (kangas 978x304). Prosentteina skaalautuvuuden takia. */
+const AKSELI = 21.83
+const TAAKKA_VASEN = 32.62
 const TAAKKA_YLA = 46.71
-const TAAKKA_LEVEYS = 9.45
-const VAIJERI_VASEN = 30.35
-const VAIJERI_YLA = 31.25
+const TAAKKA_LEVEYS = 9.71
 /*
- * Vaijerin pituus levossa (y 95 -> 142 = 47 px) ja nostettuna.
+ * TAAKKAPALA ON LEIKATTU SYMMETRISESTI VAIJERIN YMPARI (x 219-313,
+ * keskiviiva 266). Ilman sita koukku ja vaijeri eivat kohdanneet
+ * kaannetyssa aariasennossa:
  *
- * NOSTOKORKEUS ON RAJATTU VAIJERIN PITUUTEEN. Taakka voi nousta
- * korkeintaan 47 px ennen kuin koukku osuisi puomiin. Nosto on 35 px
- * eli 32 % taakan omasta korkeudesta (108 px), jolloin vaijeria jaa
- * nakyviin 12 px eika koukku koske puomiin.
+ * Puomin kierto peilaa taakan SIJAINNIN, ja taakan vastakierto peilaa
+ * sen KUVAN takaisin — juuri siksi o pysyy luettavana. Mutta jos
+ * kiinnityspiste ei ole palan keskella, se ei silloin peilaudu, kun
+ * vaijerin sijainti peilautuu. Mitattu heitto oli 1,3 % leveydesta eli
+ * 11 px 900 pikselin koossa, nakyen vain kaannetyssa asennossa.
  *
- * Ensimmainen versio nosti 11 %, mika oli liian vahan erottuakseen
- * (Johannes 3.10.2026).
+ * Symmetrisella palalla peilaus ei voi siirtaa mitaan.
  */
+
+/*
+ * Vaijerin VASEN REUNA, ei keskiviiva. Koukun kiinnityspiste logossa on
+ * x 266,5 eli 37,47 % kankaasta, ja vaijeri on 0,62 % levea — joten
+ * vasen reuna on 37,47 - 0,31.
+ *
+ * Ensimmainen versio asetti vasemman reunan suoraan 37,47:aan, jolloin
+ * keskiviiva meni 0,3 % oikealle. Virhe nakyi erityisesti kaannetyssa
+ * aariasennossa, koska se vaihtaa siina suuntaa: lepoasennossa vaijeri
+ * oli koukusta vasemmalla ja 180 asteessa oikealla (mitattu).
+ */
+const VAIJERI_VASEN = 37.164
+const VAIJERI_YLA = 31.25
 const VAIJERI_LEPO = 15.46
 const VAIJERI_YLHAALLA = 3.95
-const NOSTO = 32
+/* Nosto 35 px taakan 108 px korkeudesta; vaijerin pituus rajaa taman. */
+const NOSTO = 32.41
+
+/*
+ * Kierros 8 s. Vaiheiden rajat prosentteina:
+ *   0-5    lepo
+ *   5-20   nosto          0,4 - 1,6 s
+ *   20-45  kaanto 180     1,6 - 3,6 s
+ *   45-57  lasku          3,6 - 4,6 s
+ *   57-64  tauko
+ *   64-76  nosto
+ *   76-94  kaanto takaisin
+ *   94-100 lasku
+ */
+const KESTO = "8s"
 
 export default function Lataus({
   teksti = "Ladataan…",
-  leveys = 150,
+  leveys = 170,
   keskita = false,
 }: {
   /* Tyhja merkkijono jattaa pelkan logon ilman tekstia. */
   teksti?: string
-  /* Logon leveys pikseleina. */
+  /* Ilmaisimen leveys pikseleina (sisaltaa 100 px kaantovaran). */
   leveys?: number
   /* Koko sivun lataus: keskitetaan ja annetaan ilmaa ymparille. */
   keskita?: boolean
@@ -87,50 +120,103 @@ export default function Lataus({
           * eika naiden kokoisissa kuvissa hyodyta mitaan.
           */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-nosto-tausta.png" alt="Työmaat.fi" />
-        <div className="tm-lataus-vaijeri" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="tm-lataus-taakka" src="/logo-nosto-taakka.png" alt="" />
+        <img className="tm-lataus-pohja" src="/logo-lataus-tausta.png" alt="Työmaat.fi" />
+
+        <div className="tm-lataus-ylarakenne">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="tm-lataus-puomi" src="/logo-lataus-puomi.png" alt="" />
+          <div className="tm-lataus-vaijeri" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="tm-lataus-taakka" src="/logo-lataus-taakka.png" alt="" />
+        </div>
       </div>
 
-      {teksti ? (
-        <span style={{ color: "#6b7280", fontSize: 14 }}>{teksti}</span>
-      ) : null}
+      {teksti ? <span style={{ color: "#6b7280", fontSize: 14 }}>{teksti}</span> : null}
 
       <style>{`
-        .tm-lataus { position: relative; display: inline-block; }
-        .tm-lataus > img:first-of-type { display: block; width: 100%; height: auto; }
+        .tm-lataus {
+          position: relative;
+          display: inline-block;
+          perspective: 1400px;
+          perspective-origin: ${AKSELI}% 40%;
+        }
+        .tm-lataus-pohja { display: block; width: 100%; height: auto; }
 
+        /* Puomi, vaijeri ja taakka kaantyvat yhtena kappaleena. */
+        .tm-lataus-ylarakenne {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          transform-origin: ${AKSELI}% 50%;
+          /* Ilman tata lapset littyvat puomin tasoon eika vastakierto toimi. */
+          transform-style: preserve-3d;
+          animation: tm-kaanto ${KESTO} ease-in-out infinite;
+        }
+        .tm-lataus-puomi {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: auto;
+        }
+        .tm-lataus-vaijeri {
+          position: absolute;
+          left: ${VAIJERI_VASEN}%;
+          top: ${VAIJERI_YLA}%;
+          width: 0.62%;
+          height: ${VAIJERI_LEPO}%;
+          background: #1b4a8f;
+          animation: tm-vaijeri ${KESTO} ease-in-out infinite;
+        }
         .tm-lataus-taakka {
           position: absolute;
           left: ${TAAKKA_VASEN}%;
           top: ${TAAKKA_YLA}%;
           width: ${TAAKKA_LEVEYS}%;
           height: auto;
-          animation: tm-nosto 2.1s cubic-bezier(.45,.05,.55,.95) infinite;
+          animation: tm-nosto ${KESTO} ease-in-out infinite;
         }
 
-        .tm-lataus-vaijeri {
-          position: absolute;
-          left: ${VAIJERI_VASEN}%;
-          top: ${VAIJERI_YLA}%;
-          width: 0.8%;
-          height: ${VAIJERI_LEPO}%;
-          background: #1b4a8f;
-          animation: tm-vaijeri 2.1s cubic-bezier(.45,.05,.55,.95) infinite;
+        @keyframes tm-kaanto {
+          0%, 20%   { transform: rotateY(0deg); }
+          45%, 76%  { transform: rotateY(-180deg); }
+          94%, 100% { transform: rotateY(0deg); }
         }
-
+        /*
+          * TAAKKA JA VAIJERI KIERTAVAT SAMAN VERRAN VASTAAN.
+          *
+          * Johannes 3.10.2026: *"pida animaatiossa o-kirjain koko ajan
+          * katsojaan pain luettavana eli ikaan kuin se olisi pallo"*.
+          * Ilman vastakiertoa taakka kiertyy puomin mukana ja litistyy
+          * mitattomaksi siina kohdassa jossa puomi on kyljellaan.
+          * Vastakierron kanssa se pysyy 34x44 pikselin kokoisena ja
+          * pystyssa, mutta kulkee silti kaaren mukana.
+          */
         @keyframes tm-nosto {
-          0%, 100% { transform: translateY(0); }
-          50%      { transform: translateY(-${NOSTO}%); }
+          0%, 5%    { transform: translateY(0)          rotateY(0deg); }
+          20%       { transform: translateY(-${NOSTO}%) rotateY(0deg); }
+          45%       { transform: translateY(-${NOSTO}%) rotateY(180deg); }
+          57%, 64%  { transform: translateY(0)          rotateY(180deg); }
+          76%       { transform: translateY(-${NOSTO}%) rotateY(180deg); }
+          94%       { transform: translateY(-${NOSTO}%) rotateY(0deg); }
+          100%      { transform: translateY(0)          rotateY(0deg); }
         }
         @keyframes tm-vaijeri {
-          0%, 100% { height: ${VAIJERI_LEPO}%; }
-          50%      { height: ${VAIJERI_YLHAALLA}%; }
+          0%, 5%    { height: ${VAIJERI_LEPO}%;      transform: rotateY(0deg); }
+          20%       { height: ${VAIJERI_YLHAALLA}%;  transform: rotateY(0deg); }
+          45%       { height: ${VAIJERI_YLHAALLA}%;  transform: rotateY(180deg); }
+          57%, 64%  { height: ${VAIJERI_LEPO}%;      transform: rotateY(180deg); }
+          76%       { height: ${VAIJERI_YLHAALLA}%;  transform: rotateY(180deg); }
+          94%       { height: ${VAIJERI_YLHAALLA}%;  transform: rotateY(0deg); }
+          100%      { height: ${VAIJERI_LEPO}%;      transform: rotateY(0deg); }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .tm-lataus-taakka, .tm-lataus-vaijeri { animation: none; }
+          .tm-lataus-ylarakenne,
+          .tm-lataus-taakka,
+          .tm-lataus-vaijeri { animation: none; }
         }
       `}</style>
     </div>

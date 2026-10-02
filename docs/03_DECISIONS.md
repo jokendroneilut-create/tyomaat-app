@@ -5,6 +5,104 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-228 - Latausilmaisin leikataan oikeasta logosta, ei piirreta uudelleen
+
+Johannes 3.10.2026: sovellukseen symboli joka kertoo sivun
+latautumisesta, logo ja jokin liikkuva osa. Sovelluksessa luki
+kahdessatoista kohdassa pelkka "Ladataan...".
+
+#### Piirretty nosturi ei kelpaa
+
+Ensimmainen versio piirsi nosturin SVG:lla, jotta yksittaisia osia voisi
+animoida. Johannes: *"nosturi ei nayta silta milta oikeasti myoskaan"*
+ja *"myos fontti on muuttunut"*. Molemmat pitivat paikkansa — logon
+ristikkorakennetta ja kirjasinta ei saa kasin piirtamalla vastaamaan,
+eika likiarvo kelpaa tunnuksessa.
+
+**Liike tehdaan siis oikeasta logosta leikatuilla paloilla.** Rajat
+mitattiin pikseleista (`sharp`, musteen sarake- ja rivijakauma), ei
+silmamaaralla:
+
+    o                 x 231-313, y 163-249
+    koukkupala        y 142-162
+    vaijeri           x 263-270, ylos y 95:een
+    kaantyva ylarakenne  x 31-292, y 28-104
+    maston keskiviiva x 113,5  (kiertoakseli)
+
+#### Kolme korjauskierrosta, jokainen Johanneksen havainnosta
+
+**1. Liike liian pieni.** Ensimmainen nosto oli 11 % taakan korkeudesta.
+Nostettu 32 %:iin eli 35 pikseliin. Rajan asettaa vaijeri: levossa se on
+47 px, joten korkeammalla koukku osuisi puomiin. 12 px jaa valiin.
+
+**2. Tornin pitaa kaantya.** *"nosturi nostaa o-kirjainta ylos ja alas"*
+tarkentui muotoon *"tornin pitaisi myos kaantya"*. Koko ylarakenne
+kaantyy nyt maston ympari `rotateY`-muunnoksella.
+
+Taysi 180 astetta vei taakan kohtaan x = -45 eli logon ulkopuolelle,
+joten **kangasta levennettiin 100 px vasemmalle**. Nyt taakka asettuu
+kohtaan x 13-97 ja puomin karki kohtaan 35.
+
+**90 ASTETTA EI OLE VAIHTOEHTO.** Johannes ehdotti sita ensin ja huomasi
+itse ongelman: litte kuva on silloin tasan kyljellaan. Mitattu
+leveys ruudulla **0 px** — puomi, vaijeri ja taakka katoavat kaikki.
+Kaannoksen on mentava sen ohi, ja `ease-in-out` tekee ohituksesta
+nopeimman kohdan.
+
+**3. O:n pitaa pysya luettavana.** *"pida animaatiossa o-kirjain koko
+ajan katsojaan pain luettavana eli ikaan kuin se olisi pallo."* Taakka
+ja vaijeri kiertavat nyt saman verran vastaan (`transform-style:
+preserve-3d` + vastakierto). Mitattu: siina kohdassa jossa puomi on
+kyljellaan, o on yha 34x44 px eika litisty nollaan.
+
+#### Vaijerin ja koukun kohdistus: kahden peilauksen ansa
+
+Johannes: *"nostokoukku ja vaijerit eivat ole samassa linjassa,
+varsinkin aariasennossa vasemmalle kaantyneena."* Han oli oikeassa, ja
+**ensimmainen mittaukseni ei loytanyt vikaa koska kaytin samaa vaaraa
+oletusta vertailun molemmilla puolilla.**
+
+Syy: puomin kierto peilaa taakan SIJAINNIN, ja vastakierto peilaa sen
+KUVAN takaisin — juuri siksi o pysyy luettavana. Mutta koukun
+kiinnityspiste oli 42 % palan leveydesta, eli ei keskella. Silloin se ei
+peilaudu kun vaijerin sijainti peilautuu, ja syntyy heitto joka nakyy
+VAIN kaannetyssa asennossa. Mitattu 1,3 % leveydesta eli 11 px 900
+pikselin koossa.
+
+**Korjaus juureen:** taakkapala leikattiin uudelleen symmetrisesti
+vaijerin keskiviivan ympari (x 219-313, keskiviiva 266,5). Nyt peilaus
+ei voi siirtaa mitaan. Perspektiivi poistettiin samalla, jolloin kierto
+on puhdas ortografinen eika laidoilla synny vinoutumista.
+
+Tulos mitattuna: **0,00 px** molemmissa aariasennoissa, aiemman 11
+pikselin sijaan.
+
+Levennys toi viela yhden sivuvaikutuksen, jonka Johannes huomasi:
+symmetrinen pala ulottui y-kirjaimen reunaan (y on x 149-227).
+Palasta poistettiin 175 pikselia sarakkeista 219-230; o alkaa vasta
+231:sta, joten siihen ei koskettu eika keskiviiva liikkunut.
+
+#### Lopputulos
+
+Kierros 8 s, erilliset vaiheet (Johannes: *"tee selkeat vaiheet"*):
+lepo - nosto - kaanto 180 - lasku - tauko - samat kaanteisesti.
+Jokainen vaihe paattyy ennen kuin seuraava alkaa.
+
+| tiedosto | sisalto |
+|---|---|
+| `logo-lataus-tausta.png` | masto ja sana |
+| `logo-lataus-puomi.png` | vastapaino, puomi, huippu |
+| `logo-lataus-taakka.png` | koukku ja o, symmetrinen |
+
+Yhteensa 145 kt, ladataan kerran. Animaatio on pelkkia
+CSS-muunnoksia — ei JavaScriptia. `prefers-reduced-motion` pysayttaa
+sen, jolloin jaljelle jaa logo paikallaan.
+
+Kaytossa **kaikissa** latauksissa (12 kohtaa). Aiempi pelkka nosto
+poistettiin kokonaan: *"nyt tehdaan yksi hyva joka on ainoa."*
+
+---
+
 ### D-227 - 19 % dokumenteista ei tuota ehdokasta, syy auki
 
 Johannes 2.10.2026 naytti LinkedIn-julkaisun: Asuntosaation 50

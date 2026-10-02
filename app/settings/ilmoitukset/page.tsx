@@ -1,5 +1,6 @@
 'use client'
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -111,7 +112,7 @@ export default function NotificationSettingsPage() {
         </p>
 
         {loading ? (
-          <div style={{ color: '#6b7280', fontSize: 14 }}>Ladataan…</div>
+          <Lataus leveys={120} />
         ) : (
           <div style={{ display: 'grid', gap: 10 }}>
             <label

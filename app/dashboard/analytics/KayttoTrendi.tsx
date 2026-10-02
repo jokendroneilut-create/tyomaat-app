@@ -1,5 +1,6 @@
 "use client"
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useState } from "react"
 
 import { akselinYlaraja } from "@/lib/analytics/kayttoyhteenveto"
@@ -196,7 +197,7 @@ export default function KayttoTrendi() {
       </div>
 
       {virhe && <p style={{ color: "#b91c1c", marginTop: 12 }}>{virhe}</p>}
-      {!data && !virhe && <p style={{ marginTop: 12, color: "#6b7280" }}>Ladataan…</p>}
+      {!data && !virhe && <Lataus leveys={120} />}
 
       {data && (
         <>

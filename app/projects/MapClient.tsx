@@ -1,5 +1,6 @@
 'use client'
 
+import Lataus from "@/app/components/Lataus"
 import dynamic from 'next/dynamic'
 import type { MapBounds } from './Map'
 import type React from 'react'
@@ -16,7 +17,7 @@ export type MapClientProps = {
 
 const DynamicMap = dynamic(() => import('./Map'), {
   ssr: false,
-  loading: () => <p style={{ padding: 12 }}>Ladataan karttaa…</p>,
+  loading: () => <Lataus teksti="Ladataan karttaa…" leveys={140} />,
 }) as React.ComponentType<MapClientProps>
 
 export default function MapClient(props: MapClientProps) {

@@ -1,5 +1,6 @@
 "use client"
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 
@@ -461,9 +462,7 @@ export default function TodaySettingsModal() {
 
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
               {loading ? (
-                <div className="flex min-h-[320px] items-center justify-center text-sm text-gray-500">
-                  Ladataan asetuksia...
-                </div>
+                <Lataus teksti="Ladataan asetuksia…" keskita />
               ) : mode === "summary" ? (
                 renderSummary()
               ) : (
