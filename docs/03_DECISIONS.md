@@ -35,9 +35,12 @@ piirtyvaa sivua — Johannes vain huomasi sen Tanaan-nakymassa.
 
 Kaikki renderoivat saman `<Lataus keskita />`:n (D-228).
 
-**Mita ei voitu todentaa:** itse latausnakymaa ei paastu katsomaan ilman
-kirjautumista, joten varmistettu on vain etta reitit kaantyvat ja
-renderoityvat. Mekanismi on Next.js:n vakio.
+**Todennettu 3.10.2026:** Johannes tarkisti itse — toimii seka
+tietokoneella etta mobiilissa. Valmis.
+
+(Kehitysvaiheessa itse latausnakymaa ei paassyt katsomaan ilman
+kirjautumista, joten minun varmistukseni rajoittui siihen etta reitit
+kaantyvat ja renderoityvat.)
 
 ---
 
@@ -136,6 +139,19 @@ sen, jolloin jaljelle jaa logo paikallaan.
 
 Kaytossa **kaikissa** latauksissa (12 kohtaa). Aiempi pelkka nosto
 poistettiin kokonaan: *"nyt tehdaan yksi hyva joka on ainoa."*
+
+**VALMIS 3.10.2026.** Johannes: *"nyt toimii hyvin tietokoneella ja
+mobiililla."*
+
+#### Mita tasta jai kateen
+
+Jokainen kolmesta vikasta loytyi silla etta Johannes KATSOI sita —
+kaksi niista sen jalkeen kun oma mittaukseni oli vahvistanut asian
+olevan kunnossa. Kohdistusvirheen kohdalla mittari sanoi 0,002 px,
+koska olin kayttanyt samaa vaaraa oletusta (etta kuva peilautuu)
+vertailun MOLEMMILLA puolilla. Mittaus ei voi loytaa virhetta omassa
+premississaan. Visuaalisessa tyossa katsominen ei ole mittaamisen
+heikompi korvike vaan sen tarkistus.
 
 ---
 
