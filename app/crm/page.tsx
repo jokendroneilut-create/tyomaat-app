@@ -1,5 +1,6 @@
 'use client'
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import ConfirmModal from '../components/ConfirmModal'
@@ -239,7 +240,7 @@ const confirmRemoveFavorite = async () => {
     return projects.filter((p) => (statuses[p.id] ?? 'new') === statusFilter)
   }, [projects, statuses, statusFilter])
 
-  if (loading) return <p style={{ padding: 20 }}>Ladataan...</p>
+  if (loading) return <Lataus keskita />
 
   return (
     <div style={{ padding: 20 }}>

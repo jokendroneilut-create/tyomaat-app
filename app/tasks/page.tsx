@@ -1,5 +1,6 @@
 'use client'
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -94,7 +95,7 @@ export default function TasksPage() {
   const open = useMemo(() => tasks.filter((t) => !t.is_done), [tasks])
   const done = useMemo(() => tasks.filter((t) => t.is_done), [tasks])
 
-  if (loading) return <p style={{ padding: 20 }}>Ladataan...</p>
+  if (loading) return <Lataus keskita />
 
   return (
     <div style={{ padding: 20, maxWidth: 760 }}>

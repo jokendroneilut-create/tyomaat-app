@@ -1,5 +1,6 @@
 'use client'
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Dispatch, RefObject, SetStateAction } from 'react'
 import { supabase } from '@/lib/supabaseClient'
@@ -862,7 +863,7 @@ setTeamModeEnabled(true)
   if (loading) {
   return (
     <div style={{ padding: 20 }}>
-      <p>Ladataan...</p>
+      <Lataus keskita />
       {process.env.NODE_ENV === 'development' && (
   <pre style={{ color: '#6b7280', fontSize: 12 }}>{loadDebug}</pre>
 )}

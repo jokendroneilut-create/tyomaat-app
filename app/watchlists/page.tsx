@@ -1,5 +1,6 @@
 'use client'
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
@@ -169,7 +170,7 @@ export default function WatchlistsPage() {
     }
   }
 
-  if (loading) return <p style={{ padding: 20 }}>Ladataan…</p>
+  if (loading) return <Lataus keskita />
 
   return (
     <div style={{ padding: 20, maxWidth: 1100, margin: '0 auto' }}>

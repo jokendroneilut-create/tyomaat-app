@@ -1,5 +1,6 @@
 'use client'
 
+import Lataus from "@/app/components/Lataus"
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import ConfirmModal from '../components/ConfirmModal'
@@ -887,7 +888,7 @@ const ownerBadgeStyle = (ownerId: string | null): React.CSSProperties => {
     whiteSpace: 'nowrap',
   })
 
-  if (loading) return <div style={{ padding: 20 }}>Ladataan...</div>
+  if (loading) return <Lataus keskita />
 
   if (!team) {
   return (

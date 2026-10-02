@@ -1,5 +1,6 @@
 'use client'
 
+import Lataus from "@/app/components/Lataus"
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
@@ -403,7 +404,7 @@ export default function Dashboard() {
     setForm(emptyForm)
   }
 
-  if (loading) return <p style={{ padding: 20 }}>Ladataan...</p>
+  if (loading) return <Lataus keskita />
 
   return (
     <div className="dashPage">
