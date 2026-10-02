@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import { fetchRssFeed } from "./fetchRssFeed"
 import { detectCityFromText } from "./detectCityFromText"
 
@@ -33,7 +34,7 @@ const COMPLETED_KEYWORDS = ["valmistui", "valmistunut"]
 export async function fetchRakennustehoSource() {
   const results: any[] = []
   const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 24)
+  cutoffDate.setMonth(cutoffDate.getMonth() - YRITYSTIEDOTTEEN_IKKUNA_KK)
 
   const items = await fetchRssFeed(FEED_URL)
 

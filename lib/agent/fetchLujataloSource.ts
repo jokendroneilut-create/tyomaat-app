@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import * as cheerio from "cheerio"
 import { extractStreetAddress } from "./extractStreetAddress"
 import { detectCityFromText } from "./detectCityFromText"
@@ -60,7 +61,7 @@ async function fetchArticleBodyText(url: string): Promise<string | null> {
 export async function fetchLujataloSource() {
   const results: any[] = []
   const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 24)
+  cutoffDate.setMonth(cutoffDate.getMonth() - YRITYSTIEDOTTEEN_IKKUNA_KK)
 
   for (let page = 1; page <= 3; page++) {
     const url =

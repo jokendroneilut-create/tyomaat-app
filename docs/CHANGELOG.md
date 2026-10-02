@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 1.-2.10.)
 
+### Yritystiedotteiden ikkuna 24 kuukaudesta 12:een (D-226)
+
+Vanha tiedote on huono liidi, ja nyt se on mitattu: yli vuoden vanhoista
+yritystiedotteista hyväksyttiin **3 %**, alle vuoden vanhoista **12 %**.
+Yli 12 kk vanhoista 250 hylättiin 263:sta. Ikkuna on siksi 12 kuukautta.
+
+Hinta on tiedossa eikä nolla: kahdeksan hyväksyttyä hanketta olisi
+jäänyt tulematta. Vaihtokauppa on 255 turhaa jonoriviä vastaan kahdeksan
+aitoa löytöä.
+
+Luku oli kopioituna 16 kerääjään; nyt se on yhdessä tiedostossa
+(`lib/agent/tiedotteenIkkuna.ts`). Päätös- ja kaavalähteiden omia
+ikkunoita (3–18 kk) ei koskettu.
+
 ### Yritys-sarake ja potentiaalinen MRR/ARR (D-224)
 
 Käyttäjälistalla on nyt Yritys-sarake: tekstikenttä, joka ehdottaa jo

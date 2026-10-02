@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 import { extractStreetAddress } from "./extractStreetAddress"
@@ -77,7 +78,7 @@ export async function fetchMangroveSource() {
   const seenUrls = new Set<string>()
 
   const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 24)
+  cutoffDate.setMonth(cutoffDate.getMonth() - YRITYSTIEDOTTEEN_IKKUNA_KK)
 
   const res = await fetch(LISTING_URL)
   if (!res.ok) return results

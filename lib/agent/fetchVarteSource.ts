@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 
@@ -14,7 +15,7 @@ export async function fetchVarteSource() {
   const results: any[] = []
 
   const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 24)
+  cutoffDate.setMonth(cutoffDate.getMonth() - YRITYSTIEDOTTEEN_IKKUNA_KK)
 
   const res = await fetch(URL)
   if (!res.ok) return results

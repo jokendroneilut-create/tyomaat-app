@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import { detectCityFromText } from "./detectCityFromText"
 import { stripHtml } from "./stripHtml"
 
@@ -41,7 +42,7 @@ const COMPLETED_KEYWORDS = ["valmistui", "valmistunut"]
 export async function fetchKasSource() {
   const results: any[] = []
   const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 24)
+  cutoffDate.setMonth(cutoffDate.getMonth() - YRITYSTIEDOTTEEN_IKKUNA_KK)
 
   const res = await fetch(API_URL)
   if (!res.ok) return results

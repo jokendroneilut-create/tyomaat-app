@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import { detectCityFromText } from "./detectCityFromText"
 import { stripHtml } from "./stripHtml"
 import { extractStreetAddress } from "./extractStreetAddress"
@@ -84,7 +85,7 @@ export async function fetchSrvSource() {
   const seenUrls = new Set<string>()
 
   const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 24)
+  cutoffDate.setMonth(cutoffDate.getMonth() - YRITYSTIEDOTTEEN_IKKUNA_KK)
 
   const res = await fetch(PAGE_DATA_URL)
   if (!res.ok) return results

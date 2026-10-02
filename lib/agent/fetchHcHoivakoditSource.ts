@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import { detectCityFromText } from "./detectCityFromText"
 import { extractStreetAddress } from "./extractStreetAddress"
 import { extractClientFromText } from "./fetchSttHakuSource"
@@ -28,7 +29,7 @@ const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 /* Kaksi vuotta: vanhempi tiedote ei ole enää myyntimahdollisuus. */
-const MAX_AGE_MONTHS = 24
+const MAX_AGE_MONTHS = YRITYSTIEDOTTEEN_IKKUNA_KK
 
 export function stripHtml(value: string): string {
   return value

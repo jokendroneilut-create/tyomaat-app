@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import { detectCityFromText } from "./detectCityFromText"
 
 export async function fetchFiraSource() {
@@ -23,7 +24,7 @@ for (let page = 1; page <= 5; page++) {
 
 const postDate = post?.date ? new Date(post.date) : null
 const cutoffDate = new Date()
-cutoffDate.setMonth(cutoffDate.getMonth() - 24)
+cutoffDate.setMonth(cutoffDate.getMonth() - YRITYSTIEDOTTEEN_IKKUNA_KK)
 
 if (postDate && postDate < cutoffDate) {
   

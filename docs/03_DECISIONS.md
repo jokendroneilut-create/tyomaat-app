@@ -5,6 +5,52 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-226 - Yritystiedotteiden ikkuna 24 kk -> 12 kk, yhteen paikkaan
+
+Johannes 2.10.2026 D-225:n jalkeen: *"kirista ikkuna 12 kuukauteen"*.
+
+#### Kynnys mitattiin ennen muutosta
+
+`scripts/measure-tiedotteiden-ika.ts`: yrityslahteiden 678 ehdokkaasta
+luettiin tiedotteen paiva raakatekstista (`published_at` on tyhja
+kaikilla, D-225) ja verrattiin lopputulokseen.
+
+| tiedotteen ika | ehdokkaita | hyvaksyttyja | hyvaksymisaste |
+|---|---|---|---|
+| alle 12 kk | 267 | 32 | **12 %** |
+| yli 12 kk | 263 | 8 | **3 %** |
+
+Yli vuoden vanhoista **250 hylattiin 263:sta**. Hyvaksymisaste on
+nelinkertainen tuoreiden hyvaksi, joten 12 kuukautta on mitattu raja
+eika arvaus.
+
+**HINTA ON TIEDOSSA EIKA NOLLA.** Kahdeksan hyvaksyttya hanketta olisi
+jaanyt tulematta. Vaihtokauppa on 255 turhaa jonoriviä vastaan 8 aitoa
+loytoa — tietoinen valinta, ei sivuvaikutus. Jos jonon laatu ei parane
+odotetusti, raja on yhdessa paikassa ja palautettavissa.
+
+#### Luku oli kopioituna 16 keraimeen
+
+`getMonth() - 24` oli omana rivinaan jokaisessa yritystiedotelahteessa
+(SRV, NCC, Peab, Lujatalo, Fira, Varte, Hausia, Mangrove, Marvea,
+Marttilan, Rakennusteho, KAS, Brand Toimitilat, HC Hoivakodit,
+Y-Saatio) seka Puolustuskiinteistoilla `apiCollector`issa. Muutos olisi
+vaatinut kuudentoista tiedoston muokkaamisen, ja yhdenkin unohtaminen
+olisi jaanyt huomaamatta.
+
+Nyt kaikki lukevat `lib/agent/tiedotteenIkkuna.ts`:aa.
+
+**PAATOS- JA KAAVALAHTEITA EI KOSKETTU.** Niilla on omat ikkunansa omista
+syistaan: CaseM ja Dynasty 18 kk, YVA 18 kk, Turku 18 kk, Savonlinna
+15 kk, Helsingin paatokset 3 kk. Yhteinen vakio koskee vain tiedotteita.
+
+#### Muutos vaikuttaa vain tuleviin ajoihin
+
+Rajaus tehdaan keraimessa ennen tallennusta, joten jonossa olevat rivit
+eivat muutu. Mittaushetkella yli 12 kk vanhoja oli jonossa **nelja**.
+
+---
+
 ### D-225 - Tuontivuodon korjaus purki rastijonon, ja se nakyi vanhoina uutisina
 
 Johannes 2.10.2026: *"miksi tammikuun 29 paivalta tulee nyt uutisia

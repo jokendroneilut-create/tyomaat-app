@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import crypto from "crypto"
 import https from "https"
 import tls from "tls"
@@ -5106,7 +5107,7 @@ function puolustuskiinteistotIsProjectArticle(title: string, excerpt: string): b
  * luetaan ensisijaisesti article:published_time-metasta (ISO), varalla
  * <time datetime="pp.kk.vvvv">-kentästä (Senaatin suomalainen muoto).
  */
-const PUOLUSTUSKIINTEISTOT_MAX_AGE_MONTHS = 24
+const PUOLUSTUSKIINTEISTOT_MAX_AGE_MONTHS = YRITYSTIEDOTTEEN_IKKUNA_KK
 
 function parseFinnishDate(value: string | null | undefined): string | null {
   if (!value) return null

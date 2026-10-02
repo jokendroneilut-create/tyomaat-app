@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import * as cheerio from "cheerio"
 import { detectCityFromText } from "./detectCityFromText"
 import {
@@ -40,7 +41,7 @@ export async function fetchPeabSource() {
   const seenUrls = new Set<string>()
 
   const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 24)
+  cutoffDate.setMonth(cutoffDate.getMonth() - YRITYSTIEDOTTEEN_IKKUNA_KK)
 
   for (let page = 1; page <= 5; page++) {
     const url =

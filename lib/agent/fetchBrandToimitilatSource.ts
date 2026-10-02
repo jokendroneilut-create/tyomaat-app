@@ -1,3 +1,4 @@
+import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import * as cheerio from "cheerio"
 import { fetchRssFeed } from "./fetchRssFeed"
 import { detectCityFromText } from "./detectCityFromText"
@@ -63,7 +64,7 @@ async function fetchArticleBodyText(url: string): Promise<string | null> {
 export async function fetchBrandToimitilatSource() {
   const results: any[] = []
   const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - 24)
+  cutoffDate.setMonth(cutoffDate.getMonth() - YRITYSTIEDOTTEEN_IKKUNA_KK)
 
   const items = await fetchRssFeed(FEED_URL)
 
