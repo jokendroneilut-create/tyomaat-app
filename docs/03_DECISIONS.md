@@ -5,6 +5,55 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-225 - Tuontivuodon korjaus purki rastijonon, ja se nakyi vanhoina uutisina
+
+Johannes 2.10.2026: *"miksi tammikuun 29 paivalta tulee nyt uutisia
+TIC:iin?"* Ehdokas oli SRV:n tiedote 29.1.2026, luotu jonoon 29.9.2026.
+
+**Mikaan ei ollut rikki.** Kyse oli kertaluonteisesta jonon
+purkautumisesta, jonka aiheutti oma korjaukseni.
+
+#### Ketju
+
+SRV-kerain lukee Cisionin koko tiedotearkiston ja rajaa sen 24
+kuukauteen (`fetchSrvSource.ts`, `PublishDate`). Lokakuusta 2024
+eteenpain kaikki siis kelpaavat. Ne vanhat eivat olleet tulleet sisaan,
+koska tuontibudjetti katkaisi jokaisen ajon kesken — sama vuoto joka
+mitattiin D-210:ssa (20.9. tuotiin 5 ehdokasta 94:sta).
+
+Kun vuoto korjattiin 24.-25.9., kuristin aukesi:
+
+| paiva | ehdokkaita | joista SRV |
+|---|---|---|
+| 23.9. | 29 | — |
+| **24.9.** | **207** | 2 |
+| 25.9. | 99 | — |
+| **29.9.** | 79 | **17** |
+| 30.9.-2.10. | 81 / 41 / 18 | **0** |
+
+SRV:n oma vuoro lahdekierrossa osui 29.9., ja silloin sen rastit tulivat
+kerralla: 17 ehdokasta, tiedotteet valilta 27.8.2025-29.1.2026.
+Purkautuminen on ohi — kolmena seuraavana paivana SRV:sta ei tullut
+yhtaan.
+
+#### Sivuloyto: `published_at` on tyhja kaikilla dokumenteilla
+
+Mitattu 2.10.2026: **9 541 dokumenttia, published_at puuttuu 100 %:lta.**
+73 lahteella ei ole yhdellakaan dokumentilla julkaisupaivaa, suurimpina
+Hilma 1 326, STT 1 043 ja Lupapiste 913.
+
+Tama ei riko mitaan tanaan, koska ikarajaus tehdaan **keraimen sisalla
+ennen tallennusta** (`RECENCY_MONTHS` 3-24 kerainkohtaisesti, ei
+keskitettya saantoa). Mutta se tarkoittaa ettei tallennuksen JALKEEN
+mikaan tieda kuinka vanha tiedote on — eika TIC voi nayttaa sita
+katselmoijalle. Juuri siksi tama kysymys piti selvittaa kannasta kasin.
+
+**Auki, Johanneksen paatettavaksi:** (1) naytetaanko tiedotteen paiva
+TIC:ssa, (2) kiristetaanko yritystiedotteiden ikkuna 24 kuukaudesta
+esim. 12:een. Kumpaakaan ei tehty.
+
+---
+
 ### D-224 - Yritys valitaan tunnukselle, ei paatella sahkopostista
 
 Johannes 2.10.2026: kayttajasivulle oma Yritys-sarake, tekstikentta joka
