@@ -143,6 +143,37 @@ poistettiin kokonaan: *"nyt tehdaan yksi hyva joka on ainoa."*
 **VALMIS 3.10.2026.** Johannes: *"nyt toimii hyvin tietokoneella ja
 mobiililla."*
 
+#### Jaettava versio: GIF
+
+Johannes 3.10.2026: saisiko ilmaisimen gifina jaettavaksi WhatsAppissa
+ja somessa. `scripts/tee-lataus-animaatio.ts` renderoi sen —
+**laskennallisesti, ei kuvakaappauksista**, samoilla arvoilla kuin
+komponentti. Kuvakaappaussarja olisi epatasainen ja selaimen
+ruudunpaivityksen armoilla.
+
+Kierto on toistettavissa suoraan, koska komponentissa ei ole
+perspektiivia: `rotateY(a)` on ortografisesti vaakasuora skaalaus
+kertoimella cos(a) akselin ympari, ja peilaus kun cos(a) < 0.
+
+Tulos: `public/jaettava/tyomaat-lataus.gif`, 640x279, 8,4 s, 478 kt,
+toistuu loputtomiin. Saatavilla myos osoitteena
+`https://app.tyomaat.fi/jaettava/tyomaat-lataus.gif`.
+
+**Kolme sharp-ansaa, jotka kaikki tuottivat hiljaisen virheen:**
+
+1. `composite` ajetaan vasta `resize`n jalkeen, joten yhdessa putkessa
+   taustakuva oli jo pienennettya kangasta suurempi. Kokoaminen ja
+   skaalaus on tehtava erikseen.
+2. `pageHeight` kuuluu **raw-objektin sisaan**. Juureen annettuna
+   syntyy yksi pitka kuva (pages 1) eika animaatiota.
+3. `delay` on annettava **taulukkona**, yksi arvo per ruutu. Yhtena
+   lukuna se asettuu vain ensimmaiselle ruudulle ja loput saavat 0 ms —
+   mitattu kesto oli silloin 0,07 s.
+
+Lisaksi ruudun mitat luetaan renderoidusta ruudusta eika lasketa: kaava
+erehtyi pikselin, jolloin raw-puskurin rivit menivat limittain ja GIF
+oli pelkkaa juovaa. Jokainen naista nakyi vasta kun kuvan katsoi.
+
 #### Mita tasta jai kateen
 
 Jokainen kolmesta vikasta loytyi silla etta Johannes KATSOI sita —
