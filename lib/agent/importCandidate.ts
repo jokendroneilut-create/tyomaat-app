@@ -823,7 +823,22 @@ export async function importCandidate(
    * sellaisenaan - mitattu "Soukankuja 10&ndash;12" (Espoo),
    * "Kuopion yleiskaava &#x2F; ..." (kaavalähde).
    */
-  const cleanedTitle = stripCompanyPrefixFromHeadline(decodeHtmlEntities(body.name))
+  /*
+   * ALKUPERAINEN OTSIKKO TALTEEN ENNEN SIISTIMISTA (D-232).
+   *
+   * Siistiminen poistaa otsikon alusta yrityksen, ja urakoitsijapoiminta
+   * tarvitsee tasmalleen sen: `builderFromHeadline` ankkuroituu otsikon
+   * alkuun. Jarjestys oli vaarin — poiminta ajettiin siistityn otsikon
+   * yli, eli juuri sen jalkeen kun ainoa tunniste oli poistettu.
+   *
+   * Mitattu 3.10.2026 koko dokumenttikannasta (9 563): 48 otsikkoa antaa
+   * urakoitsijan alkuperaisesta muodosta mutta ei siistitysta. Niista 26
+   * sai urakoitsijan muuta kautta (yrityksen oma tiedote tietaa
+   * julkaisijansa), joten todellinen hyoty on uutislahteissa — 13 osumaa
+   * oli STT-tiedotteita, joissa julkaisija ei ole urakoitsija.
+   */
+  const alkuperainenOtsikko = decodeHtmlEntities(body.name)
+  const cleanedTitle = stripCompanyPrefixFromHeadline(alkuperainenOtsikko)
 
   const result = await resolvePotentialProject({
     title: cleanedTitle,
@@ -858,7 +873,7 @@ export async function importCandidate(
       builder:
         candidate.builder ??
         builderFromHeadline(
-          cleanedTitle,
+          alkuperainenOtsikko,
           body.description ?? body.metadata?.description ?? null
         ),
       building_type: candidate.buildingType,

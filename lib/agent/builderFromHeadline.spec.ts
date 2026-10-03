@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { builderFromHeadline } from "./builderFromHeadline"
+import { stripCompanyPrefixFromHeadline } from "./stripCompanyPrefix"
 
 describe("builderFromHeadline", () => {
   /*
@@ -150,5 +151,27 @@ describe("builderFromHeadline", () => {
   it("sietaa tyhjan", () => {
     expect(builderFromHeadline(null)).toBeNull()
     expect(builderFromHeadline("")).toBeNull()
+  })
+
+  /*
+   * JARJESTYS: POIMINTA ENNEN OTSIKON SIISTIMISTA (D-232).
+   *
+   * Tuonti siistii otsikosta yrityksen pois hankkeen nimea varten. Jos
+   * poiminta ajetaan siistityn otsikon yli, se etsii nimea joka on juuri
+   * poistettu — eli kuvio ei voi osua. Tama testi pitaa jarjestyksen
+   * paikallaan: sama otsikko, kaksi tulosta.
+   */
+  describe("otsikon siistiminen vie urakoitsijan", () => {
+    const OTSIKKO = "SRV rakentaa 111 asuntoa Espoon Asunnoille Espoon Martensbrohon"
+
+    it("alkuperaisesta otsikosta urakoitsija loytyy", () => {
+      expect(builderFromHeadline(OTSIKKO, "")).toBe("SRV")
+    })
+
+    it("siistitysta otsikosta ei loydy", () => {
+      const siistitty = stripCompanyPrefixFromHeadline(OTSIKKO)
+      expect(siistitty).not.toContain("SRV")
+      expect(builderFromHeadline(siistitty, "")).toBeNull()
+    })
   })
 })

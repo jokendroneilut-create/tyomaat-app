@@ -5,6 +5,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-232 - "Osapuoleton" tarkoittaa tyhjaa kenttaa, ei tuntematonta osapuolta
+
+Johannes 3.10.2026 osapuolettomien jonosta: *"hankkeessa lukee jo
+kuvauksessa: 'NCC kaynnistaa hoivakodin rakennustyot Turussa...' Eli se ei
+ole osapuoleton koska NCC tiedetaan."*
+
+Han on oikeassa. Jonon ehto on `developer` JA `builder` tyhjia — se
+kertoo mita KENTASSA on, ei mita tiedetaan.
+
+#### Mista jono koostuu (mitattu 3.10.2026, 177 hanketta)
+
+| ryhma | kpl | mita se vaatii |
+|---|---|---|
+| kaksoiskappale: sama hanke on kannassa osapuolineen | 3 | yhdistaminen, ei poiminta |
+| osapuolen nimi hankkeen omassa tekstissa | 49 (28 %) | poiminta; roolin paattely on tyo |
+| kaavarivi jonka hankevastaava on toisella rivilla | 16 (9 %) | kaava pidetaan erillaan, rakennuttaja taytettavissa |
+| aidosti tyhja: lahteessa ei ole osapuolta | 109 (62 %) | ei tehtavissa mitaan |
+
+`scripts/mittaa-osapuolettomat.ts` toistaa jaon (`--listaa` nayttaa rivit).
+
+#### Esimerkki avattuna: NCC:n hoivakoti Turussa
+
+Johanneksen kysymys *"eiko tuo ole meilla lahteenakin?"* — **on.** NCC:n
+tiedotteet ja NCC:n projektisivut ovat molemmat lahteina, molemmat
+paalla, eika kumpikaan ole virheessa (10/10 ja 7/7 onnistunutta ajoa).
+Juuri tama tiedote on kannassa 26.9.2026.
+
+Sama hoivakoti on kannassa **kolme kertaa**:
+
+| hanke | lahde | osapuolet |
+|---|---|---|
+| "Hemso rakennuttaa hoivakodin Turkuun – urakoitsijana NCC" | NCC:n tiedote | Hemso / NCC |
+| "Hemso vuokraa Varhalle uuden 170-paikkaisen hoivakodin Turussa" | STT | Hemso / NCC |
+| "18 miljoonan hoivakotihanke" | Rakennuslehti | — |
+
+Kolmas on se joka on jonossa. Se ei siis ole osapuoleton hanke vaan
+**kolmas kappale hankkeesta jonka osapuolet ovat jo kannassa.**
+Kaksoiskappaleiden tunnistin antaa parille vain 46 %, eli se ei paady
+edes katselmointijonoon: otsikoissa ei ole yhteista sanaa eika
+Rakennuslehden rivilla ole osoitetta, joka on parin ainoa vahva side
+(Virvoituksentie).
+
+#### Korjaus: urakoitsija poimitaan ennen otsikon siistimista
+
+`importCandidate` siistii otsikosta yrityksen pois hankkeen nimea varten
+("NCC toteuttaa 18 miljoonan hoivakotihankkeen" -> "18 miljoonan
+hoivakotihanke") ja ajoi urakoitsijapoiminnan **vasta sen jalkeen** —
+eli etsi nimea joka oli juuri poistettu. Poiminta kaytetaan nyt
+alkuperaiseen otsikkoon. Testi `builderFromHeadline.spec.ts` pitaa
+jarjestyksen paikallaan.
+
+**Mita se maksoi, mitattuna.** Koko dokumenttikannasta (9 563) 48
+otsikkoa antaa urakoitsijan alkuperaisesta mutta ei siistitysta
+muodosta. Niista 26:lla urakoitsija on jo kannassa, koska yrityksen oma
+tiedote tietaa julkaisijansa. Todellinen hyoty on uutislahteissa: 13
+osumaa oli STT-tiedotteita, joissa julkaisija ei ole urakoitsija.
+
+**Tama korjaus ei olisi auttanut Johanneksen esimerkkiin.** Mitattu:
+myos alkuperainen otsikko antaa nullin, koska poimija vaatii erikseen
+nimetyn tilaajan (D-214) eika "NCC toteuttaa 18 miljoonan
+hoivakotihankkeen" nimea sellaista. Kaksi eri vikaa samassa rivissa, ja
+vain toinen on nyt korjattu.
+
+#### Auki
+
+1. **49 hanketta joiden tekstissa nimi on.** Roolin paattely on tyo:
+   "NCC kaynnistaa" ei kerro onko NCC urakoitsija vai rakennuttaja, ja
+   juuri siksi poimija on tahallaan varovainen.
+2. **Roskaa osapuolikentissa.** Mittaus paljasti etta kannassa on
+   osapuolina arvoja kuten "Muu", "Kiinteisto", "Aurinko" ja
+   "Helsingin". Ne tuottavat vaaria osumia kaikkeen nimihakuun.
+3. **Kaavarivit.** 16 kpl: hankevastaava on tiedossa saman paikan
+   toisella rivilla. Kaavaa ei yhdisteta hankkeeseen (aiempi paatos),
+   mutta rakennuttaja on taytettavissa — vaatii oman kuivaharjoituksen.
+
+---
+
 ### D-231 - Linkki hankkeeseen toimii vaikka hanke ei ole kartan listalla
 
 Johannes 3.10.2026 kaksoiskappalesivulta: *"ympyroitya hanketta ei loydy
