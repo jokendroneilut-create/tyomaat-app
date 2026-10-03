@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 1.-2.10.)
 
+### Kaavan tiivistelmä ja valmistelija selostuksesta (D-230)
+
+Lieksan kaavoista puuttui tiivistelmä ja yhteyshenkilö — kumpaakaan ei
+ole kaavasivulla eikä kaavoituksen listaussivulla, vaan molemmat ovat
+selostus-PDF:ssä. Mitattuna kuvaus puuttui 4/5 dokumentista ja
+yhteyshenkilö 5/5.
+
+Savonlinnaa varten tehty jäsennin (D-217) poimi tiivistelmän
+sellaisenaan — sitä ei vain kutsuttu täältä. Yhteyshenkilö poimitaan nyt
+nimikkeen perästä ("maankäytön suunnittelija Reino Hirvonen");
+sähköpostia ja puhelinta ei arvata, koska niitä ei lähteessä ole.
+
+Yksi PDF-haku riittää molempiin: yhteyshenkilöt ovat sivulla 4 ja
+tiivistelmä sivulla 6. Takautuvasti täydennettiin kolme viidestä; kahdella
+ei ole selostusta sivullaan lainkaan.
+
 ### Latausilmaisin näkyy nyt myös palvelinsivuilla (D-229)
 
 Tänään-näkymään siirryttäessä ei näkynyt mitään latausta, vaikka

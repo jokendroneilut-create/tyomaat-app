@@ -5,6 +5,78 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-230 - Kaavan tiivistelma ja valmistelija ovat selostuksessa, ei sivulla
+
+Johannes 3.10.2026 Lieksan Brahean korttelin 2027 asemakaavamuutoksesta:
+*"tassa pitaisi olla mukana lahteesta loytyva tiivistelma"* ja
+*"myos yhteyshenkilo puuttuu ja se pitaisi olla."*
+
+#### Jasennin oli jo olemassa, sita ei vain kutsuttu
+
+`lib/agent/kaavanKuvaus.ts` tehtiin Savonlinnaa varten (D-217). Kun sen
+ajoi tahan selostukseen, se poimi **tasmalleen** sen tiivistelman jonka
+Johannes oli liittanyt — 1 045 merkkia, ilman yhtaan muutosta.
+
+Lieksan kerain luki vain sivun kappaleet (`main.wp-block-group`, yli 40
+merkkia). Tallaisilla kaavasivuilla ei ole yhtaan sellaista kappaletta:
+sivu on otsikko ja nelja PDF-linkkia. `contacts` oli lisaksi
+kovakoodattu tyhjaksi taulukoksi.
+
+#### Mitattu: puute koski lahes kaikkia
+
+`scripts/measure-lieksan-kaavat.ts`, 3.10.2026:
+
+    kuvaus puuttui        4/5 dokumentista
+    yhteyshenkilo puuttui 5/5
+
+Sivuilta ei loydy kumpaakaan: tarkistettu seka kaavasivu etta
+kaavoituksen listaussivu — ei sahkopostia, ei nimea, ei tiivistelmaa.
+Ainoa lahde on selostus-PDF.
+
+#### Yksi haku riittaa molempiin
+
+Mitattu samasta selostuksesta: **yhteyshenkilot ovat sivulla 4 ja
+tiivistelma sivulla 6**, eli `kaavanKuvaus.ts`:n oma `MAX_SIVUJA = 6`
+kattaa kummankin. `haeKaavanKuvaus` jaettiin siksi kahtia:
+`haeKaavaselostuksenTeksti` hakee tekstin kerran, ja poiminnat ajetaan
+siita.
+
+Katto on **nelja selostusta per ajo** ja vain niille joilta tieto
+puuttuu. Selostus on iso (mitattu 1,9 Mt) ja lahdeajon kova katkaisu on
+90 s. Kerran haettu arvo luetaan varastosta eika haeta uudelleen.
+
+#### Yhteyshenkilo poimitaan vain nimikkeen perasta
+
+`lib/agent/kaavanYhteyshenkilo.ts`. Selostuksessa lukee:
+
+> "Kaavanlaatija Lieksan kaupunki / kaupunkiymparistot palvelualue /
+>  maankayton suunnittelija **Reino Hirvonen** — Kaava-asiakirjat
+>  Kaavasuunnittelija **Maria Hyvarinen**"
+
+Pelkka "kaksi isoa alkukirjainta" osuisi organisaatioihin ja
+paikannimiin ("Lieksan kaupunki" seisoo heti nimikkeen perassa).
+Nimike on se mika tekee loydosta yhteyshenkilon, joten ilman sita ei
+poimita mitaan. **Sahkopostia ja puhelinta ei arvata** — niita ei ole
+selostuksessa, ja tyhja on parempi kuin vaara yhteystieto.
+
+#### Takautuva taydennys
+
+`scripts/fix-lieksan-kaavakuvaukset.ts`. Kolme viidesta taydentyi; kaksi
+ei, koska niiden sivulla ei ole selostusta lainkaan (Linnanranta,
+Tiuransuo). Olemassa olevaa kuvausta ei ylikirjoiteta.
+
+    kuvaus puuttuu        4/5 -> 1/5
+    yhteyshenkilo puuttuu 5/5 -> 2/5
+
+#### Auki
+
+Sama puute koskee todennakoisesti muitakin kaavalahteita — tama on sama
+tyo joka on tyojonossa korkeimpana (1 595 ohutta kuvausta 6 176:sta).
+Lieksa on nyt toinen kunta Savonlinnan jalkeen, ja kuvio toistui:
+**jasennin on yhteinen, sivurakenne on kuntakohtainen.**
+
+---
+
 ### D-229 - Palvelinkomponentit tarvitsevat oman latausilmaisimen
 
 Johannes 3.10.2026: *"kun siirryn /today -> /projects latausilmaisin

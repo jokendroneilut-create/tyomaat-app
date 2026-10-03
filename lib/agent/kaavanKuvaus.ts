@@ -141,7 +141,13 @@ const MAX_TAVUJA = 25 * 1024 * 1024
 const AIKAKATKAISU_MS = 30_000
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 
-export async function haeKaavanKuvaus(url: string): Promise<string | null> {
+/*
+ * Selostuksen teksti kerran, jotta samasta hausta saadaan seka kuvaus
+ * etta yhteyshenkilot (D-230). Molemmat mahtuvat `MAX_SIVUJA`:n sisaan:
+ * mitattu Lieksan Brahean selostuksesta, jossa yhteyshenkilot ovat
+ * sivulla 4 ja tiivistelma sivulla 6.
+ */
+export async function haeKaavaselostuksenTeksti(url: string): Promise<string | null> {
   const ohjain = new AbortController()
   const kello = setTimeout(() => ohjain.abort(), AIKAKATKAISU_MS)
 
@@ -162,12 +168,16 @@ export async function haeKaavanKuvaus(url: string): Promise<string | null> {
     const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default as any
     const jasennetty = await pdfParse(buf, { max: MAX_SIVUJA })
 
-    return kaavanKuvausTekstista(jasennetty?.text ?? "")
+    return String(jasennetty?.text ?? "") || null
   } catch {
     return null
   } finally {
     clearTimeout(kello)
   }
+}
+
+export async function haeKaavanKuvaus(url: string): Promise<string | null> {
+  return kaavanKuvausTekstista(await haeKaavaselostuksenTeksti(url))
 }
 
 /*

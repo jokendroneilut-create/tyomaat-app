@@ -1,3 +1,5 @@
+import { haeKaavaselostuksenTeksti, kaavanKuvausTekstista } from "@/lib/agent/kaavanKuvaus"
+import { kaavanYhteyshenkilot } from "@/lib/agent/kaavanYhteyshenkilo"
 import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import crypto from "crypto"
 import https from "https"
@@ -13038,6 +13040,38 @@ function lieksaPhaseFromText(text: string): string {
   return "Vireilletulo"
 }
 
+/*
+ * LIEKSAN KAAVAN TIIVISTELMA JA VALMISTELIJA SELOSTUKSESTA (D-230).
+ *
+ * Johannes 3.10.2026: Brahean korttelin 2027 kaavasta puuttui
+ * tiivistelma, joka on lahteen selostus-PDF:ssa, seka yhteyshenkilo.
+ *
+ * MITATTU: sivun HTML:ssa ei ole kumpaakaan. Kerain luki vain sivun
+ * kappaleet, eika tallaisilla sivuilla ole yli 40 merkin kappaletta
+ * lainkaan — 4 viidesta Lieksan dokumentista oli ilman kuvausta ja
+ * 5 viidesta ilman yhteyshenkiloa. Molemmat ovat selostuksessa, ja
+ * `kaavanKuvaus.ts` (D-217, Savonlinnaa varten) poimii tiivistelman
+ * sellaisenaan — jasennin oli siis jo olemassa, sita ei vain kutsuttu.
+ *
+ * KUUSI SIVUA RIITTAA MOLEMPIIN: mitattu etta yhteyshenkilot ovat
+ * sivulla 4 ja tiivistelma sivulla 6, eli yksi haku kattaa kummankin.
+ *
+ * KATTO AJOA KOHDEN. Selostus on iso (mitattu 1,9 Mt) ja lahdeajon kova
+ * katkaisu on 90 s. Haetaan korkeintaan nelja per ajo ja vain niille
+ * joilta tieto puuttuu; loput tulevat seuraavilla kierroksilla.
+ */
+const LIEKSA_SELOSTUKSIA_PER_AJO = 4
+
+function lieksaSelostusLinkki($: cheerio.CheerioAPI): string | null {
+  for (const el of $("a[href]").toArray()) {
+    const href = $(el).attr("href") ?? ""
+    if (!/\.pdf(\?|$)/i.test(href)) continue
+    const tiedostonimi = decodeURIComponent(href.split("/").pop() ?? "")
+    if (/selostus/i.test(`${tiedostonimi} ${$(el).text()}`)) return href
+  }
+  return null
+}
+
 async function collectLieksaKaavaSource(source: DiscoverySource) {
   const listingResponse = await fetch(LIEKSA_LISTING_URL, { cache: "no-store" })
   if (!listingResponse.ok) return { documentsFound: 0, documentsSaved: 0 }
@@ -13078,6 +13112,22 @@ async function collectLieksaKaavaSource(source: DiscoverySource) {
   let found = 0
   let saved = 0
 
+  /* Jo haetut arvot: samaa selostusta ei haeta kahdesti. */
+  const varastoidut = new Map<string, { description: string | null; contacts: unknown[] }>()
+  const { data: vanhatRivit } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+  for (const r of vanhatRivit ?? []) {
+    const hyoty = ((r as any).raw_payload ?? {}) as any
+    varastoidut.set(String((r as any).document_url), {
+      description: hyoty.description ?? null,
+      contacts: Array.isArray(hyoty.contacts) ? hyoty.contacts : [],
+    })
+  }
+
+  let selostuksiaHaettu = 0
+
   for (const link of planLinks) {
     found += 1
 
@@ -13094,14 +13144,48 @@ async function collectLieksaKaavaSource(source: DiscoverySource) {
       .toArray()
       .map((p) => $(p).text().replace(/­/g, "").replace(/\s+/g, " ").trim())
       .filter(Boolean)
-    const description = paragraphs.find((p) => p.length > 40 && p !== title) ?? null
+    const sivunKuvaus = paragraphs.find((p) => p.length > 40 && p !== title) ?? null
     const phase = lieksaPhaseFromText(main.text().replace(/­/g, ""))
     const completed = phase === "Voimaantulo"
+
+    /*
+     * Sivun oma kappale voittaa: se on kunnan kirjoittama tiivistelma
+     * juuri tasta kaavasta. Selostukseen mennaan vain kun sita ei ole.
+     */
+    const varasto = varastoidut.get(link.href)
+    let description = sivunKuvaus ?? varasto?.description ?? null
+    let contacts: unknown[] = varasto?.contacts ?? []
+
+    if ((!description || !contacts.length) && selostuksiaHaettu < LIEKSA_SELOSTUKSIA_PER_AJO) {
+      const selostusUrl = lieksaSelostusLinkki($)
+      if (selostusUrl) {
+        selostuksiaHaettu += 1
+        const selostusTeksti = await haeKaavaselostuksenTeksti(selostusUrl)
+        if (selostusTeksti) {
+          if (!description) description = kaavanKuvausTekstista(selostusTeksti)
+          if (!contacts.length) {
+            /*
+             * Sama rakenne kuin muualla kannassa. Sahkopostia ja
+             * puhelinta EI arvata: niita ei ole selostuksessa, ja tyhja
+             * on parempi kuin vaara yhteystieto.
+             */
+            contacts = kaavanYhteyshenkilot(selostusTeksti).map((y) => ({
+              kind: "person",
+              name: y.nimi,
+              email: null,
+              phone: null,
+              title: y.rooli,
+              organization: "Lieksan kaupunki",
+            }))
+          }
+        }
+      }
+    }
 
     const slugMatch = link.href.match(/\/([^/]+)\/?$/)
     const slug = slugMatch ? slugMatch[1] : null
 
-    const rawText = JSON.stringify({ title, phase, description, contacts: [] })
+    const rawText = JSON.stringify({ title, phase, description, contacts })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -13122,7 +13206,7 @@ async function collectLieksaKaavaSource(source: DiscoverySource) {
           kaava_tunnus: null,
           phase,
           description,
-          contacts: [],
+          contacts,
           completed,
         },
         processed_at: new Date().toISOString(),
