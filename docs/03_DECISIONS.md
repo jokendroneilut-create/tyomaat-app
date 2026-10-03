@@ -5,6 +5,69 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-231 - Linkki hankkeeseen toimii vaikka hanke ei ole kartan listalla
+
+Johannes 3.10.2026 kaksoiskappalesivulta: *"ympyroitya hanketta ei loydy
+kun yritan avata. paadyn vain karttasivulle."*
+
+#### Syy
+
+Linkki oli `/projects?open=<id>`, ja karttasivu etsii hankkeen jo
+ladatusta listasta. Lista taas suodattaa heti haun jalkeen pois
+valmistuneet ja vanhentuneet hankkeet (perusteltu paatos: valmiilla
+tyomaalla ei voi tehda mitaan). Ympyroity hanke oli
+`phase = "Valmistunut"`, joten sita ei ollut listalla eika `find`
+loytanyt mitaan.
+
+**Linkki ei tehnyt yhtaan mitaan eika kertonut siita.** Kayttajalle se
+nayttaa rikkinaiselta linkilta, koska se on rikkinainen linkki.
+
+#### Laajuus: tama ei ollut vain yksi linkki
+
+Sama osoitemuoto on neljassa paikassa, joista kolme on asiakkaille:
+
+| Paikka | Kenelle | Osuu kun |
+|---|---|---|
+| `app/api/digests/route.ts` (4 linkkia) | asiakas | hanke valmistuu viestin ja klikkauksen valilla |
+| `app/api/opportunity-alerts/route.ts` (2) | asiakas | sama |
+| TIC: kaksoiskappaleet, rikastus, yhdistamiset | yllapito | hanke on valmistunut tai piilotettu |
+
+Kaksoiskappalejonon parit ovat tasta pahin tapaus: kaksoiskappaleita
+loytyy usein juuri siksi etta sama hanke on kannassa seka kesken etta
+valmistuneena, joten *toinen puoli parista on lahtokohtaisesti se jota ei
+voi avata*. Mitattu avoimesta jonosta: 1 pari, 1 linkki kahdesta ei
+avaudu.
+
+#### Korjaus
+
+1. **Karttasivu hakee hankkeen erikseen** kun sita ei ole listalla
+   (`app/projects/page.tsx`). `is_public` pysyy ehdossa: piilotettua
+   hanketta ei avata linkillakaan. Jos hanketta ei saada, se sanotaan
+   — hiljainen paluu kartalle oli juuri se mika naytti rikkinaiselta.
+2. **TIC-sivut linkittavat `/tic/hanke/<id>`:hen**, joka nayttaa
+   hankkeen vaiheesta ja nakyvyydesta riippumatta ja sallii korjaamisen.
+   Katselmoija tarvitsee hallintanakyman, ei asiakasnakymaa.
+3. **Kyselyparametrit kulkevat kirjautumisen yli** (`middleware.ts`).
+   `next` sai aiemmin vain polun, joten sahkopostin linkki vei
+   kirjautumisen jalkeen tyhjalle kartalle: hanke jonka takia viesti
+   avattiin katosi matkalla. Tama koski *jokaista* uloskirjautuneena
+   avattua koostelinkkia.
+4. **Avoin uudelleenohjaus tukittu** (`app/login/page.tsx`). Ehto oli
+   `next.startsWith('/')`, jonka lapi menee myos `//toinen-sivusto.fi`
+   — selain tulkitsee sen toiseksi sivustoksi. Osui samaan ketjuun, joten
+   korjattiin samalla.
+
+#### Mika jai todistamatta
+
+Middlewaren osuus on todettu ajamalla:
+`/projects?open=<id>` → `/login?next=%2Fprojects%3Fopen%3D<id>`.
+Karttasivun hakua **ei ole klikattu lapi**, koska sivu vaatii
+kirjautumisen enka kirjaudu kayttajan tunnuksilla. Kysely on sama taulu
+ja samat ehdot kuin listahaussa yhdella lisaehdolla (`id`), tyyppitarkistus
+ja 1 483 testia menevat lapi. Johannes nakee sen yhdella klikkauksella.
+
+---
+
 ### D-230 - Kaavan tiivistelma ja valmistelija ovat selostuksessa, ei sivulla
 
 Johannes 3.10.2026 Lieksan Brahean korttelin 2027 asemakaavamuutoksesta:

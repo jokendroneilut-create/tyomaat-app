@@ -45,9 +45,19 @@ export async function middleware(request: NextRequest) {
   const isProtected = isDashboard || isProjects || isToday || isTic || isOhjeet
 
   if (isProtected && !user) {
+    /*
+     * KYSELYPARAMETRIT KULKEVAT KIRJAUTUMISEN YLI (D-231).
+     *
+     * Aiemmin `next` sai vain polun, joten sahkopostin linkki
+     * /projects?open=<id> vei kirjautumisen jalkeen tyhjalle kartalle:
+     * hanke jonka takia viesti avattiin katosi matkalla. Paivakooste ja
+     * mahdollisuushalytykset kayttavat tasmalleen tata linkkia.
+     */
+    const kohde = `${pathname}${request.nextUrl.search}`
     const url = request.nextUrl.clone()
     url.pathname = "/login"
-    url.searchParams.set("next", pathname)
+    url.search = ""
+    url.searchParams.set("next", kohde)
     return NextResponse.redirect(url)
   }
 

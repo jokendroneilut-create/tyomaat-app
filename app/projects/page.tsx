@@ -231,6 +231,26 @@ function getStatusStyle(status: string) {
   }
 }
 
+/*
+ * LISTAKYSELYN KENTAT YHDESSA PAIKASSA. Samaa listaa tarvitaan kahdessa
+ * kyselyssa: koko listan sivutuksessa ja yksittaisen hankkeen haussa
+ * ?open=-linkille. Kaksi kopiota ajautuisi erilleen, ja silloin linkista
+ * avattu hanke nayttaisi eri kentat kuin listasta avattu.
+ *
+ * metadata ei ole mukana tarkoituksella (ks. kommentti haun yhteydessa).
+ */
+const LISTAN_KENTAT = `
+  id, name, city, region, phase, status, location, developer, builder, property_type,
+  apartments, floor_area, estimated_cost, construction_start, estimated_completion,
+  structural_design, hvac_design, electrical_design, architectural_design,
+  geotechnical_design, earthworks_contractor, additional_info,
+  related_companies:metadata->related_companies,
+  is_cancelled_procurement:metadata->is_cancelled_procurement,
+  latitude, longitude,
+  is_public,
+  created_at
+`
+
 export default function Projects() {
   const isMobile = useIsMobile(768)
   const pageSize = isMobile ? 15 : 30
@@ -316,18 +336,55 @@ export default function Projects() {
     { phase: string; created_at: string }[]
   >([])
 
-  useEffect(() => {
-    if (projects.length === 0) return
+  /*
+   * ?open= AVAA MYOS HANKKEEN JOTA LISTALLA EI OLE (D-231).
+   *
+   * Johannes 3.10.2026 kaksoiskappalesivulta: *"ympyroitya hanketta ei
+   * loydy kun yritan avata. paadyn vain karttasivulle."*
+   *
+   * SYY: tama nakyma suodattaa valmistuneet ja vanhentuneet pois heti
+   * haun jalkeen, joten `projects` ei sisalla niita lainkaan — eika
+   * `find` loytanyt mitaan. Linkki ei naennaisesti tehnyt yhtaan mitaan.
+   *
+   * Sama osuu asiakkaisiin: paivakoosteen ja mahdollisuushalytysten
+   * sahkoposteissa on tasmalleen sama linkki, ja hanke ehtii valmistua
+   * viestin ja klikkauksen valissa.
+   *
+   * Hanke haetaan siis erikseen kun sita ei ole listalla. `is_public`
+   * pysyy ehdossa: piilotettua hanketta ei avata linkillakaan.
+   */
+  const avausHaettu = useRef<string | null>(null)
+  const [avausVirhe, setAvausVirhe] = useState<string | null>(null)
 
-    const params = new URLSearchParams(window.location.search)
-    const openId = params.get('open')
-    if (!openId) return
+  useEffect(() => {
+    if (loading) return
+
+    const openId = new URLSearchParams(window.location.search).get('open')
+    if (!openId || avausHaettu.current === openId) return
+    avausHaettu.current = openId
 
     const found = projects.find((p) => String(p.id) === openId)
     if (found) {
       setSelected(found)
+      return
     }
-  }, [projects])
+
+    supabase
+      .from('projects')
+      .select(LISTAN_KENTAT)
+      .eq('id', openId)
+      .eq('is_public', true)
+      .maybeSingle()
+      .then(({ data }) => {
+        /*
+         * Tyhja tulos tarkoittaa piilotettua tai poistettua hanketta.
+         * Silloin se sanotaan: hiljainen paluu kartalle oli juuri se
+         * mika naytti rikkinaiselta linkilta.
+         */
+        if (data) setSelected(data as unknown as Project)
+        else setAvausVirhe('Linkin hanketta ei voi näyttää: se on piilotettu tai poistettu.')
+      })
+  }, [loading, projects])
 
   /*
    * Valitun hankkeen metadata haetaan vasta tässä, koska listakysely jättää
@@ -599,19 +656,7 @@ export default function Projects() {
     for (let from = 0; ; from += PAGE_SIZE) {
       const { data: pageData, error: pageError } = await supabase
         .from('projects')
-        .select(
-          `
-          id, name, city, region, phase, status, location, developer, builder, property_type,
-          apartments, floor_area, estimated_cost, construction_start, estimated_completion,
-          structural_design, hvac_design, electrical_design, architectural_design,
-          geotechnical_design, earthworks_contractor, additional_info,
-          related_companies:metadata->related_companies,
-          is_cancelled_procurement:metadata->is_cancelled_procurement,
-           latitude, longitude,
-          is_public,
-          created_at
-        `
-        )
+        .select(LISTAN_KENTAT)
         .eq('is_public', true)
         .order('created_at', { ascending: false })
         .range(from, from + PAGE_SIZE - 1)
@@ -1477,6 +1522,34 @@ setTeamModeEnabled(true)
           </div>
         )}
       </div>
+
+      {avausVirhe && (
+        <div
+          style={{
+            position: 'fixed',
+            left: '50%',
+            top: 16,
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            maxWidth: 520,
+            borderRadius: 10,
+            border: '1px solid #fca5a5',
+            background: '#fef2f2',
+            color: '#991b1b',
+            padding: '10px 14px',
+            fontSize: 14,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          }}
+        >
+          {avausVirhe}{' '}
+          <button
+            onClick={() => setAvausVirhe(null)}
+            style={{ marginLeft: 8, border: 'none', background: 'transparent', color: '#991b1b', cursor: 'pointer', fontWeight: 600 }}
+          >
+            Sulje
+          </button>
+        </div>
+      )}
 
       {selected && (
         <div

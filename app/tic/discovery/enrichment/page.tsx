@@ -41,7 +41,7 @@ export default async function EnrichmentPage() {
               >
                 <div className="md:col-span-2">
                   <Link
-                    href={`/projects?open=${item.project_id}`}
+                    href={`/tic/hanke/${item.project_id}`}
                     target="_blank"
                     className="font-semibold text-blue-700 hover:underline"
                   >

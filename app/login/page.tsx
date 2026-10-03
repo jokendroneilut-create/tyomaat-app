@@ -23,7 +23,13 @@ export default function LoginPage() {
       const params = new URLSearchParams(window.location.search)
       const next = params.get('next')
 
-      if (next && next.startsWith('/')) {
+      /*
+       * Vain oman palvelun sisainen polku kelpaa. Pelkka "alkaa
+       * kauttaviivalla" paastaisi lapi muodon "//esimerkki.fi", jonka
+       * selain tulkitsee toiseksi sivustoksi — eli kirjautumisen jalkeen
+       * kayttaja paatyisi ulos palvelusta.
+       */
+      if (next && next.startsWith('/') && !next.startsWith('//')) {
         setNextPath(next)
       }
     } catch {}

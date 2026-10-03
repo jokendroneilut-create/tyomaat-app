@@ -150,7 +150,7 @@ export default function DuplicateCandidatesReviewList({
                 p ? (
                   <div key={p.id} className="rounded-xl border border-gray-200 p-3">
                     <Link
-                      href={`/projects?open=${p.id}`}
+                      href={`/tic/hanke/${p.id}`}
                       target="_blank"
                       className="font-semibold text-blue-700 hover:underline"
                     >

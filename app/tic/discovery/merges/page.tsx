@@ -48,7 +48,7 @@ export default async function MergesPage() {
                 <div className="text-sm">
                   <div className="text-gray-500">Yhdistyi hankkeeseen</div>
                   <Link
-                    href={`/projects?open=${merge.project_id}`}
+                    href={`/tic/hanke/${merge.project_id}`}
                     target="_blank"
                     className="font-semibold text-blue-700 hover:underline"
                   >
