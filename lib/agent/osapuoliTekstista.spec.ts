@@ -49,14 +49,46 @@ describe("osapuoletTekstista", () => {
     expect(osapuoletTekstista("Tarjous jätettävä sitä varten.", ["Varte"])).toEqual([])
   })
 
+  /*
+   * Mitattu 4.10.2026: "iso alkukirjain" -ehto hylkasi "wpd Suomi Oy":n
+   * ja tilalle jai pelkka "Suomi".
+   */
+  it("lukee pienella kirjoitetun yritysnimen", () => {
+    const loydot = osapuoletTekstista("wpd Suomi Oy suunnittelee tuulipuistoa Puolangalle.", [
+      "wpd Suomi Oy",
+      "Suomi",
+    ])
+    expect(loydot.map((l) => l.nimi)).toEqual(["wpd Suomi Oy"])
+  })
+
   it("lukee lyhenteen versaalina", () => {
     expect(osapuoletTekstista("Yhteistyössä ARE:n kanssa rakennetaan.", ["Are"])[0]?.nimi).toBe("Are")
   })
 
-  /* Kaavinnan loppuosassa on valikkoja ja naapuriartikkeleita. */
-  it("lukee vain alkuosan", () => {
-    const pitka = `${"Hanke etenee. ".repeat(60)}Sonkakoti Oy on valikossa.`
-    expect(osapuoletTekstista(pitka, ["Sonkakoti Oy"])).toEqual([])
+  /*
+   * Kaavinnan loppuosassa on valikkoja. Valikossa on substantiiveja,
+   * osapuolilauseessa on tekeminen — se erottaa ne, ei sijainti.
+   */
+  it("ei poimi valikosta", () => {
+    const valikko =
+      "Asuminen ja ympäristö Avaa/sulje alavalikko Sonkakoti Oy Asuntokohteet Vapaat asunnot Tontit."
+    expect(osapuoletTekstista(valikko, ["Sonkakoti Oy"])).toEqual([])
+  })
+
+  /*
+   * MITATTU 4.10.2026 (Härmälänojan silta): osapuolet luetellaan vasta
+   * 1 500 merkin kohdalla. Pituusrajaus olisi hukannut juuri sen lauseen
+   * jonka vuoksi poimija on olemassa.
+   */
+  it("loytaa osapuolet myos tekstin lopusta", () => {
+    const pitka =
+      `${"Silta avautuu liikenteelle syksyn aikana. ".repeat(40)}` +
+      "Allianssin muodostavat Tampereen kaupunki, Pirkkalan kunta ja YIT Infra."
+    const nimet = osapuoletTekstista(pitka, ["Tampereen kaupunki", "Pirkkalan kunta", "YIT Infra"]).map(
+      (l) => l.nimi
+    )
+    expect(nimet).toContain("YIT Infra")
+    expect(nimet).toContain("Pirkkalan kunta")
   })
 
   it("sietaa tyhjan", () => {

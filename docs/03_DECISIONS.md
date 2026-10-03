@@ -5,6 +5,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-235 - Nimi koneelta, rooli ihmiselta — kolme nappia hankesivulla
+
+Johannes 4.10.2026: *"jatketaan eteenpain etta saadaa tuo tyhjaksi."*
+
+Poiminta (D-233) kirjoittaa loydokset `metadata.osapuoliehdotus`iin, ja
+TIC:n hankesivulla ne nakyvat vihreana laatikkona: nimi, **se lause josta
+nimi loytyi**, ja kolme nappia — rakennuttajaksi, paaurakoitsijaksi, ei
+osapuoli. Hyvaksynta kirjoittaa kentan samaa muokkausreittia kuin kasin
+tehty korjaus, joten se jattaa muokkausjaljen (D-076).
+
+Ajettu 45 hankkeelle, 74 nimea. Asiakkaalle nakyviin kenttiin ei
+koskettu: ehdotus on metadatassa kunnes ihminen paattaa.
+
+#### Kaksi saantoa jotka Johanneksen esimerkki kumosi
+
+Han avasi Harmalanojan sillan: *"tassakin hankkeessa on kerrottu:
+Allianssin muodostavat Tampereen Raitiotie oy, Tampereen kaupunki,
+Pirkkalan kunta, Afry Finland, Sweco Finland, NRC Group Finland ja YIT
+Infra."* Poimija ei ollut loytanyt yhtaan niista.
+
+**1. Pituusrajaus oli vaara.** Luin tekstista vain 700 ensimmaista
+merkkia, jottei kunnan navigaatiovalikko paatyisi osapuoleksi. Allianssi
+luetellaan vasta 1 500 merkin kohdalla — eli rajaus hukkasi juuri sen
+lauseen jonka vuoksi koko poimija on olemassa. **Sijainti ei erota
+valikkoa osapuolilauseesta.** Erottava tekija on lause itse: osapuolesta
+kerrotaan aina jotain tekemista, valikossa on vain substantiiveja. Nyt
+teksti luetaan kokonaan ja lauseelta vaaditaan tekemista kuvaava sana
+seka enintaan 350 merkkia (kaavinnan valikko oli yli 600, allianssilause
+on 140).
+
+Mitattu vaikutus: valikko-osumat (Sonkakoti Oy), lahdeluettelon viitteet
+("Vaylaviraston julkaisuja 61/2022"), tien nimi ("valilla Kivisaari –
+Atria") ja alaviitteen Microsoft katosivat kaikki — ja Harmalanojan
+viisi osapuolta tulivat tilalle.
+
+**2. "Iso alkukirjain" oli vaara ehto.** Se hylkasi `wpd Suomi Oy`:n,
+jolloin tilalle jai pelkka "Suomi". Oikea ehto on **nimen oma
+kirjainkoko**: isolla kirjoitettu nimi vaatii ison, pienella kirjoitettu
+kelpaa sellaisenaan.
+
+#### Jonon tila
+
+| | |
+|---|---|
+| jonossa | 149 |
+| naista ehdotus odottaa roolia | **45** |
+| ilman osumaa | 104 |
+
+Jonosivu nostaa ehdotusrivit karkeen ja sanoo montako niita on.
+
+---
+
 ### D-234 - Jonossa on vain se tyo joka on mahdollista tehda
 
 Johannes 3.10.2026: *"rajaa jono niille joille se on mahdollista. muuten

@@ -47,6 +47,9 @@ const ROSKANIMET = new Set([
   "group",
   "yksityinen",
   "tuntematon",
+  /* Maan nimi paatyi kenttaan osana nimea ("wpd Suomi Oy"). */
+  "suomi",
+  "finland",
 ])
 
 export function kelpaakoNimi(nimi: string): boolean {
@@ -101,12 +104,19 @@ function kohdat(teksti: string, nimi: string): number[] {
       const paate = loppu.startsWith(":") ? "" : (loppu.match(/^[a-zåäö]*/i)?.[0] ?? "")
 
       /*
-       * YRITYSNIMI KIRJOITETAAN ISOLLA. Ilman tata "Varte" osui sanaan
-       * "varten" ja "Are" sanaan "areena" — molemmat mitattu
+       * ESIINTYMAN ON NOUDATETTAVA NIMEN KIRJAINKOKOA. Ilman tata "Varte"
+       * osui sanaan "varten" ja "Are" sanaan "areena" — molemmat mitattu
        * kuivaharjoituksessa 3.10.2026. Pelkka sananraja ei riita, koska
        * suomen sijapaatteet ovat samoja kirjaimia kuin sanojen jatkot.
+       *
+       * Ehto on nimen kirjainkoko, EI "iso alkukirjain": jalkimmainen
+       * hylkasi "wpd Suomi Oy":n, jolloin tilalle jai pelkka "Suomi"
+       * (mitattu 4.10.2026). Pienella kirjoitettu yritysnimi on itsessaan
+       * sen verran omaleimainen ettei se osu yleissanaan.
        */
-      const alkaaIsolla = esiintyma.slice(0, 1) === esiintyma.slice(0, 1).toUpperCase()
+      const nimiIsolla = nimi.slice(0, 1) === nimi.slice(0, 1).toUpperCase()
+      const esiintymaIsolla = esiintyma.slice(0, 1) === esiintyma.slice(0, 1).toUpperCase()
+      const alkaaIsolla = nimiIsolla ? esiintymaIsolla : true
 
       /*
        * Lyhenne vaatii oman kirjainkokonsa: "ARE" ja "NCC" kirjoitetaan
@@ -165,14 +175,38 @@ function rooliKohdasta(teksti: string, kohta: number, nimi: string): "developer"
  * yhdessa kohdassa rooli lukee.
  */
 /*
- * VAIN ALKUOSA LUETAAN.
+ * LAUSEEN ON KERROTTAVA TEKEMISESTA, EI VAIN SISALTAA NIMEA.
  *
- * Sama syy kuin `buildingType`in LEAD_LENGTH-rajauksessa: hankkeen teksti
- * on usein koko sivun kaavinta, jolloin loppuosassa on valikkoja ja
- * naapuriartikkeleita. Mitattu 3.10.2026: Sonkajarven tuulivoimakaavasta
- * poimiutui "Sonkakoti Oy" kunnan sivun navigaatiovalikosta.
+ * Ensimmainen versio luki vain tekstin 700 ensimmaista merkkia, koska
+ * kaavinnan loppuosassa on valikkoja ja naapuriartikkeleita (Sonkajarven
+ * tuulivoimakaavasta poimiutui "Sonkakoti Oy" kunnan navigaatiovalikosta).
+ *
+ * SE RAJAUS OLI VAARA. Johannes 4.10.2026 Harmalanojan sillasta:
+ * osapuolet luetellaan vasta 1 500 merkin kohdalla — *"Allianssin
+ * muodostavat Tampereen Raitiotie oy, Tampereen kaupunki, Pirkkalan
+ * kunta, Afry Finland, Sweco Finland, NRC Group Finland ja YIT Infra"* —
+ * eli juuri se lause jonka vuoksi koko poimija on olemassa jai rajauksen
+ * taakse. Sijainti ei erota valikkoa osapuolilauseesta.
+ *
+ * Erottava tekija on lause itse: osapuolesta kerrotaan aina jotain
+ * tekemista ("rakentaa", "suunnittelee", "allianssin muodostavat"),
+ * valikossa on vain substantiiveja. Teksti luetaan siksi kokonaan ja
+ * lause vaaditaan asialliseksi.
  */
-const LUETTAVA_PITUUS = 700
+/*
+ * VALIKKO EI OLE LAUSE.
+ *
+ * Kunnan sivun navigaatio paatyy kaavinnassa yhdeksi pitkaksi jaksoksi
+ * ilman valimerkkeja, ja koska valikossa lukee "Rakentaminen" ja
+ * "Kaavoitus", se lapaisee asialause-ehdon. Pituus erottaa sen:
+ * Sonkajarven valikko oli yli 600 merkkia, kun taas se lause jonka
+ * vuoksi poimija on olemassa — "Allianssin muodostavat Tampereen
+ * Raitiotie oy, ..." — on 140.
+ */
+const PISIN_LAUSE = 350
+
+const ASIALAUSE =
+  /rakent|rakenn|urak|suunnittel|toteut|saneera|peruskorja|laajen|korjau|purku|purkaa|allians|konsorti|tilaa|vastaa|kehitt|investoi|vuokraa|hake|myonn|myönn|valit|sopimu|kaavoit|kilpailut|aloitt|kaynnist|käynnist/i
 
 export function osapuoletTekstista(
   teksti: string | null | undefined,
@@ -181,7 +215,6 @@ export function osapuoletTekstista(
   const puhdas = String(teksti ?? "")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, LUETTAVA_PITUUS)
   if (!puhdas) return []
 
   const loydokset = new Map<string, OsapuoliLoydos>()
@@ -190,10 +223,14 @@ export function osapuoletTekstista(
     if (!kelpaakoNimi(nimi)) continue
 
     for (const kohta of kohdat(puhdas, nimi)) {
+      const lause = lauseKohdasta(puhdas, kohta)
+      if (lause.length > PISIN_LAUSE) continue
+      if (!ASIALAUSE.test(lause)) continue
+
       const rooli = rooliKohdasta(puhdas, kohta, nimi)
       const edellinen = loydokset.get(nimi.toLowerCase())
       if (edellinen && (edellinen.rooli || !rooli)) continue
-      loydokset.set(nimi.toLowerCase(), { nimi, rooli, lause: lauseKohdasta(puhdas, kohta) })
+      loydokset.set(nimi.toLowerCase(), { nimi, rooli, lause })
     }
   }
 

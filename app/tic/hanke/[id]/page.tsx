@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
 import EditProject from "./EditProject"
 import AiSuggestion from "./AiSuggestion"
+import OsapuoliEhdotus from "./OsapuoliEhdotus"
 import Visibility from "./Visibility"
 
 export const dynamic = "force-dynamic"
@@ -153,6 +154,17 @@ export default async function TicProjectPage({ params, searchParams }: Props) {
             estimatedCost: (project as any).estimated_cost
               ? String((project as any).estimated_cost)
               : "",
+          }}
+        />
+      ) : null}
+
+      {metadata.osapuoliehdotus ? (
+        <OsapuoliEhdotus
+          projectId={id}
+          ehdotus={metadata.osapuoliehdotus}
+          current={{
+            developer: text((project as any).developer),
+            builder: text((project as any).builder),
           }}
         />
       ) : null}

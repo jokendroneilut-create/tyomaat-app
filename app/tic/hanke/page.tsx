@@ -63,7 +63,7 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
   let query = supabaseAdmin
     .from("projects")
     .select(
-      "id, name, city, region, phase, developer, builder, estimated_cost, is_public, ai_suggestion:metadata->ai_suggestion, source_name:metadata->>source_name"
+      "id, name, city, region, phase, developer, builder, estimated_cost, is_public, ai_suggestion:metadata->ai_suggestion, osapuoliehdotus:metadata->osapuoliehdotus, source_name:metadata->>source_name"
     )
     .eq("status", "active")
     .limit(FETCH_CAP)
@@ -121,6 +121,14 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
   const sorted = [...jononRivit].sort((a: any, b: any) => {
     const ehdotus = (a.ai_suggestion ? 0 : 1) - (b.ai_suggestion ? 0 : 1)
     if (ehdotus !== 0) return ehdotus
+
+    /*
+     * Tekstista poimittu nimi odottaa roolia (D-235). Se on nopein rivi
+     * kasitella — nimi ja todistelause ovat valmiina, ihmiselta tarvitaan
+     * vain rooli — joten se nousee heti mallin ehdotusten jalkeen.
+     */
+    const poiminta = (a.osapuoliehdotus ? 0 : 1) - (b.osapuoliehdotus ? 0 : 1)
+    if (poiminta !== 0) return poiminta
     const rank =
       (PHASE_RANK[String(a.phase)] ?? 9) - (PHASE_RANK[String(b.phase)] ?? 9)
     if (rank !== 0) return rank
@@ -128,6 +136,7 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
   })
 
   const ehdotuksia = sorted.filter((p: any) => p.ai_suggestion).length
+  const poimintoja = sorted.filter((p: any) => p.osapuoliehdotus).length
 
   const total = sorted.length
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -221,6 +230,14 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
           Lisäksi {rajattuPois} hanketta on rajattu pois: lähde ei nimeä
           osapuolta lainkaan (rakennusvalvonnan lupapäätökset). Ne löytyvät
           yhä nimihaulla ja näkyvät asiakkaalle normaalisti.
+        </p>
+      )}
+
+      {poimintoja > 0 && (
+        <p className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900">
+          {poimintoja} hankkeella osapuolen nimi löytyi hankkeen omasta
+          tekstistä — rooli puuttuu. Avaa hanke, lue todistelause ja valitse
+          rakennuttaja tai pääurakoitsija.
         </p>
       )}
 

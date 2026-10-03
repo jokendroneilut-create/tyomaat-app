@@ -18,25 +18,37 @@ for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8
  * loytyi. Rivi on luettava yksitellen: mittari kertoo vain etta nimi
  * osui, ei etta se on oikea osapuoli.
  *
- * EI KIRJOITA MITAAN.
+ * Ilman --apply ei kirjoiteta mitaan. --apply kirjoittaa loydokset
+ * hankkeen `metadata.osapuoliehdotus`iin, josta ne nakyvat TIC:n
+ * hankesivulla kolmena nappina (rakennuttajaksi / paaurakoitsijaksi /
+ * ei osapuoli). Asiakkaalle nakyviin kenttiin ei kosketa.
+ *
+ * EI YLIKIRJOITA. Hanke jolla on jo ehdotus ohitetaan, jottei ihmisen
+ * kasittelema rivi palaa listalle seuraavalla ajolla.
  *
  *   npx tsx scripts/ehdota-osapuolet.ts
+ *   npx tsx scripts/ehdota-osapuolet.ts --apply
  */
 
 const VAIHEET = ["Suunnittelussa", "Suunnittelu", "Rakenteilla", "Rakentaminen aloitettu"]
 
 async function main() {
+  const apply = process.argv.includes("--apply")
   const { createClient } = await import("@supabase/supabase-js")
   const { osapuoletTekstista, kelpaakoNimi } = await import("../lib/agent/osapuoliTekstista")
+  /* Rajatut lahteet jatetaan pois samoin kuin jonosta (D-234). */
+  const { haeRajatutLahteet, kuuluuJonoon } = await import("../lib/tic/osapuolettomienRajaus")
   const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false },
   })
+
+  const rajatut = await haeRajatutLahteet(db as any)
 
   const kaikki: any[] = []
   for (let from = 0; ; from += 1000) {
     const { data, error } = await db
       .from("projects")
-      .select("id, name, city, phase, status, is_public, developer, builder, additional_info, source_name:metadata->>source_name")
+      .select("id, name, city, phase, status, is_public, developer, builder, additional_info, metadata")
       .range(from, from + 999)
     if (error) throw error
     kaikki.push(...(data ?? []))
@@ -45,7 +57,12 @@ async function main() {
 
   const onOsapuoli = (p: any) => Boolean(String(p.developer ?? "").trim() || String(p.builder ?? "").trim())
   const jono = kaikki.filter(
-    (p) => p.status === "active" && p.is_public === true && !onOsapuoli(p) && VAIHEET.includes(String(p.phase))
+    (p) =>
+      p.status === "active" &&
+      p.is_public === true &&
+      !onOsapuoli(p) &&
+      VAIHEET.includes(String(p.phase)) &&
+      kuuluuJonoon((p.metadata ?? {}).source_name, rajatut)
   )
 
   /*
@@ -78,13 +95,16 @@ async function main() {
   }
   const haettavat = [...nimet].filter(kelpaakoNimi).sort((a, b) => b.length - a.length)
 
-  console.log("=== KUIVAHARJOITUS: osapuoli hankkeen omasta tekstista ===")
+  console.log(apply ? "=== AJO (--apply) ===" : "=== KUIVAHARJOITUS: osapuoli hankkeen omasta tekstista ===")
   console.log(`osapuolettomia jonossa ${jono.length}, haettavia nimia ${haettavat.length}\n`)
 
   let rooliTiedossa = 0
   let rooliAuki = 0
   let eiOsumaa = 0
   const rivit: string[] = []
+
+  let kirjoitettu = 0
+  let jokoEhdotus = 0
 
   for (const p of jono) {
     const teksti = `${p.name ?? ""}. ${p.additional_info ?? ""}`
@@ -94,9 +114,10 @@ async function main() {
       continue
     }
 
+    const metadata = (p.metadata ?? {}) as Record<string, unknown>
     rivit.push("=".repeat(104))
     rivit.push(`${String(p.name).slice(0, 72)}`)
-    rivit.push(`  ${String(p.city ?? "-")} · ${p.phase} · lahde ${p.source_name ?? "-"}`)
+    rivit.push(`  ${String(p.city ?? "-")} · ${p.phase} · lahde ${metadata.source_name ?? "-"}`)
     for (const l of loydot) {
       const rooli = l.rooli === "builder" ? "URAKOITSIJA" : l.rooli === "developer" ? "RAKENNUTTAJA" : "ROOLI AUKI "
       if (l.rooli) rooliTiedossa++
@@ -104,6 +125,35 @@ async function main() {
       rivit.push(`  ${rooli}  ${l.nimi}`)
       rivit.push(`     todiste: ${l.lause.slice(0, 150)}`)
     }
+
+    if (!apply) {
+      rivit.push("")
+      continue
+    }
+
+    if (metadata.osapuoliehdotus) {
+      jokoEhdotus++
+      rivit.push("  (ehdotus on jo — ohitetaan)")
+      rivit.push("")
+      continue
+    }
+
+    const { error: virhe } = await db
+      .from("projects")
+      .update({
+        metadata: {
+          ...metadata,
+          osapuoliehdotus: {
+            nimet: loydot,
+            luotu: new Date().toISOString(),
+            lahde: "teksti",
+          },
+        },
+      })
+      .eq("id", p.id)
+
+    rivit.push(virhe ? `  VIRHE: ${virhe.message}` : "  KIRJOITETTU")
+    if (!virhe) kirjoitettu++
     rivit.push("")
   }
 
@@ -113,7 +163,13 @@ async function main() {
   console.log(`  rooli luettavissa tekstista: ${rooliTiedossa} nimea`)
   console.log(`  rooli jaa auki:              ${rooliAuki} nimea`)
   console.log(`hankkeita ilman osumaa:        ${eiOsumaa}`)
-  console.log("\nEi kirjoitettu mitaan.")
+
+  if (apply) {
+    console.log(`\nkirjoitettu ehdotus:           ${kirjoitettu}`)
+    console.log(`ohitettu (ehdotus oli jo):     ${jokoEhdotus}`)
+  } else {
+    console.log("\nEi kirjoitettu mitaan. Aja --apply kun rivit on luettu.")
+  }
 }
 
 main().catch((e) => {
