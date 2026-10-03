@@ -68,12 +68,36 @@ Tiuransuo). Olemassa olevaa kuvausta ei ylikirjoiteta.
     kuvaus puuttuu        4/5 -> 1/5
     yhteyshenkilo puuttuu 5/5 -> 2/5
 
+#### Mika Savonlinnassa ja Lieksassa on yhteista — ja mika ei
+
+Johannes 3.10.2026: *"miten savonlinna liittyy lieksaan? Kaksi eri
+kaupunkia joista toinen on etela-savossa ja toinen pohjois-karjalassa?"*
+
+Kysymys oli aiheellinen, ja ensimmainen muotoiluni oli huolimaton.
+Yhteys ei ole maantieteessa vaan **asiakirjan rakenteessa**:
+
+| | vaihtelee kunnittain | tyomaara |
+|---|---|---|
+| kaavaselostuksen sisalto ja luvut | ei juuri | kertaalleen tehty |
+| verkkosivun rakenne ja liitelinkit | joka kunnassa | kunta kerrallaan |
+
+Selostus on vakiintunut asiakirja, jonka numeroitu rakenne
+("TIIVISTELMA", "1.1 Kaava-alue", "1.2 Kaavan tarkoitus") toistuu
+kunnasta riippumatta. Verkkosivu taas on kunnan oman
+julkaisujarjestelman tuotos. Siksi `kaavanKuvaus.ts` siirtyi
+sellaisenaan mutta kerain piti korjata erikseen.
+
+**MIKA ON TODETTU JA MIKA ON PAATELTY.** Todettu: sama jasennin poimi
+oikean tekstin kahdesta kunnasta ilman muutosta. Paatelty: syy on
+maankaytto- ja rakennusasetuksen sisaltovaatimuksissa ja
+ymparistoministerion mallissa — **tata en ole tarkistanut asetuksesta.**
+Kolmas kunta kertoo onko kyse saannosta vai sattumasta, ja se selviaa
+tyojonon seuraavassa erassa ilman eri tyota.
+
 #### Auki
 
 Sama puute koskee todennakoisesti muitakin kaavalahteita — tama on sama
 tyo joka on tyojonossa korkeimpana (1 595 ohutta kuvausta 6 176:sta).
-Lieksa on nyt toinen kunta Savonlinnan jalkeen, ja kuvio toistui:
-**jasennin on yhteinen, sivurakenne on kuntakohtainen.**
 
 ---
 

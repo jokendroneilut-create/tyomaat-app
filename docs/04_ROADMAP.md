@@ -660,6 +660,22 @@ muistin varassa.
   Jokainen kunta vaatii siis oman sivurakenteensa lukemisen. Yhteistä on
   vain `lib/agent/kaavanKuvaus.ts` (PDF → kuvaus), joka on jo tehty.
 
+  **Tämä jako on nyt todettu kahdesti (D-230, Lieksa 3.10.2026):**
+
+  | | vaihtelee kunnittain | työmäärä |
+  |---|---|---|
+  | kaavaselostuksen rakenne | ei juuri | kertaalleen tehty |
+  | verkkosivu ja liitelinkit | joka kunnassa | kunta kerrallaan |
+
+  Savonlinnaa varten tehty jäsennin poimi Lieksan selostuksesta oikean
+  tekstin **ilman yhtään muutosta**. Erän työmäärä on siis sivurakenteen
+  lukemista, ei jäsentämistä — ja se kannattaa muistaa kun erän kokoa
+  arvioidaan. Kolmas kunta kertoo onko sääntö vai sattuma.
+
+  Samalla kannattaa poimia **yhteyshenkilö** (`kaavanYhteyshenkilo.ts`):
+  Lieksassa se puuttui 5/5 hankkeesta ja löytyi samasta selostuksesta
+  samalla haulla.
+
   **TYÖTAPA (ei neuvoteltavissa):** kuivaharjoitus luetaan rivi riviltä
   ennen ajoa, ja lähde ajetaan **kahdesti** ennen kuin se on valmis.
   Savonlinnassa kaksi vikaa ilmeni vasta toisella ajolla — kuvaus
