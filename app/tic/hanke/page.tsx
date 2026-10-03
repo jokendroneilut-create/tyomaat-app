@@ -1,6 +1,11 @@
 import Link from "next/link"
 import { createClient } from "@supabase/supabase-js"
 
+import {
+  haeRajatutLahteet,
+  kuuluuJonoon,
+} from "@/lib/tic/osapuolettomienRajaus"
+
 export const dynamic = "force-dynamic"
 
 const supabaseAdmin = createClient(
@@ -58,7 +63,7 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
   let query = supabaseAdmin
     .from("projects")
     .select(
-      "id, name, city, region, phase, developer, builder, estimated_cost, is_public, ai_suggestion:metadata->ai_suggestion"
+      "id, name, city, region, phase, developer, builder, estimated_cost, is_public, ai_suggestion:metadata->ai_suggestion, source_name:metadata->>source_name"
     )
     .eq("status", "active")
     .limit(FETCH_CAP)
@@ -100,7 +105,20 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
    * nostoa ehdotus hautautui listaan: neljä ehdotusta 277 puutteellisen
    * joukossa, aakkosjarjestyksessa, eika niita loytanyt mistaan.
    */
-  const sorted = [...(allMatching ?? [])].sort((a: any, b: any) => {
+  /*
+   * JONOSTA RAJATAAN POIS LAHTEET JOTKA EIVAT NIMEA OSAPUOLTA (D-234).
+   *
+   * Rajaus koskee vain jononakymaa: nimihaussa hanke loytyy normaalisti,
+   * eika asiakkaalle nakyvaan dataan kosketa. Ks. `osapuolettomienRajaus`.
+   */
+  const rajatutLahteet = onlyIncomplete ? await haeRajatutLahteet(supabaseAdmin) : []
+  const ennenRajausta = (allMatching ?? []).length
+  const jononRivit = onlyIncomplete
+    ? (allMatching ?? []).filter((r: any) => kuuluuJonoon(r.source_name, rajatutLahteet))
+    : (allMatching ?? [])
+  const rajattuPois = ennenRajausta - jononRivit.length
+
+  const sorted = [...jononRivit].sort((a: any, b: any) => {
     const ehdotus = (a.ai_suggestion ? 0 : 1) - (b.ai_suggestion ? 0 : 1)
     if (ehdotus !== 0) return ehdotus
     const rank =
@@ -193,6 +211,18 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
           {total >= FETCH_CAP ? " · katkaistu 1000:een" : ""}
         </span>
       </p>
+
+      {/*
+        RAJAUS SANOTAAN AANEEN. Hiljaa kadonnut rivi nayttaa silta etta
+        jono tyhjeni tyolla — ja juuri sita tama ei ole.
+      */}
+      {onlyIncomplete && rajattuPois > 0 && (
+        <p className="mt-2 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700">
+          Lisäksi {rajattuPois} hanketta on rajattu pois: lähde ei nimeä
+          osapuolta lainkaan (rakennusvalvonnan lupapäätökset). Ne löytyvät
+          yhä nimihaulla ja näkyvät asiakkaalle normaalisti.
+        </p>
+      )}
 
       {ehdotuksia > 0 && (
         <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900">

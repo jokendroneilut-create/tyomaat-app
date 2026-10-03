@@ -5,6 +5,75 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-234 - Jonossa on vain se tyo joka on mahdollista tehda
+
+Johannes 3.10.2026: *"rajaa jono niille joille se on mahdollista. muuten
+se vaan paisuu maailman tappiin asti."*
+
+#### Ensin virhe jonka tein
+
+Ehdotin edellisessa vastauksessa etta Espoon kuulutusten hakija
+poimittaisiin "ilmoituksen omista kentista". Paattelin sen sanasta
+rakennuslupailmoitus enka avannut yhtaan ilmoitusta. Avasin sitten:
+
+```
+2  49-439-7-53   MAKKYLA
+   Sotarovastintie 9
+   Maalampokaivon poraus 6 kpl + 2 varakaivoa
+   paatoksentekija: Lvi-insinoori Jaakko Pesonen
+   049-2026-713
+```
+
+Kiinteistotunnus, osoite, toimenpide, paatoksen tehnyt virkamies,
+lupatunnus. **Hakijaa ei ole.** Kerain poimii jo kaiken mita
+ilmoituksessa on. Lupapisteen aineistossa hakijaa ei ole myoskaan, eika
+kiinteistotunnuksella loydy naille yhdellekaan vastinetta jolla osapuoli
+olisi. Ehdottamaani tyota ei ollut olemassa.
+
+#### Mita mittaus kertoi
+
+Lahteen kyky nimeta osapuoli, koko kannasta:
+
+| lahde | hankkeita | joilla osapuoli |
+|---|---|---|
+| STT-tiedotteet | 349 | 99 % |
+| YVA | 270 | 95 % |
+| kasin lisatyt | 638 | 94 % |
+| Rakennuslehti | 64 | 69 % |
+| **Espoon kuulutukset** | **29** | **0 %** |
+| **Lupapiste kuulutukset** | **156** | **0 %** |
+
+Jono niputti kaksi eri asiaa: poiminta meni ohi (tyota) ja lahde ei
+kerro osapuolta koskaan (ei tyota). Urakoitsijaa ei usein ole lupaa
+haettaessa edes valittu, joten lupapaatos ei voi sita nimeta.
+
+#### Rajaus
+
+`lib/tic/osapuolettomienRajaus.ts` rajaa jonosta pois lahteet joiden
+kategoria on `building_permits` tai `municipality_notices`.
+
+**Kategoria, ei nimilista.** Nimilista vanhenee heti kun seuraava kunta
+tuo lupapaatoksensa — ja juuri se oli Johanneksen huoli: lupapaatoksia
+tulee joka viikko eika yksikaan niista poistu jonosta tyota tekemalla.
+
+**Rajaus ei piilota hanketta.** Hanke nakyy asiakkaalle ja loytyy TIC:n
+nimihaulla kuten ennenkin. Sivu myos sanoo rajauksen aaneen: *"Lisaksi
+28 hanketta on rajattu pois: lahde ei nimea osapuolta lainkaan."*
+Hiljaa kadonnut rivi nayttaisi silta etta jono tyhjeni tyolla.
+
+#### Navigaation luku tarkoitti eri asiaa kuin lista
+
+Samalla korjattiin vanha ristiriita: `getIncompleteProjectCount` ei
+rajannut piilotettuja pois vaikka lista rajasi. Luvut olivat 186 ja 177.
+Nyt molemmat sanovat saman:
+
+| | ennen | nyt |
+|---|---|---|
+| navigaation luku | 186 | **149** |
+| listan pituus | 177 | **149** |
+
+---
+
 ### D-233 - Osapuoli poimitaan tekstista, rooli jatetaan ihmiselle
 
 Johannes 3.10.2026: *"tee kuivaharjoitus noille 49:lle. Jono pitaisi

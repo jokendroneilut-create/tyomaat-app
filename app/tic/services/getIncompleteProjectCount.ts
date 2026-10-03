@@ -1,5 +1,10 @@
 import { createClient } from "@supabase/supabase-js"
 
+import {
+  haeRajatutLahteet,
+  kuuluuJonoon,
+} from "@/lib/tic/osapuolettomienRajaus"
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -27,13 +32,29 @@ const ACTIVE_PHASES = [
 ]
 
 export async function getIncompleteProjectCount(): Promise<number> {
-  const { count, error } = await supabaseAdmin
+  /*
+   * LUKU LASKETAAN SAMOILLA EHDOILLA KUIN LISTA (D-234).
+   *
+   * Kaksi eroa korjattiin kerralla: luku ei aiemmin rajannut
+   * piilotettuja pois vaikka lista rajasi, ja rajatut lähteet puuttuivat
+   * kokonaan. Navigaation luvun on tarkoitettava samaa kuin sivun
+   * otsikon, muuten jono näyttää siltä ettei se tyhjene.
+   *
+   * Rivit luetaan tässä sen sijaan että käytettäisiin `count: exact`ia,
+   * koska lähderajaus tehdään nimellä eikä sitä saa PostgREST-ehdoksi
+   * ilman että `source_name`-null katoaa samalla.
+   */
+  const rajatutLahteet = await haeRajatutLahteet(supabaseAdmin)
+
+  const { data, error } = await supabaseAdmin
     .from("projects")
-    .select("id", { count: "exact", head: true })
+    .select("id, source_name:metadata->>source_name")
     .eq("status", "active")
+    .eq("is_public", true)
     .in("phase", ACTIVE_PHASES)
     .or("developer.is.null,developer.eq.")
     .or("builder.is.null,builder.eq.")
+    .limit(2000)
 
   /*
    * Navigaation luku ei saa kaataa koko TIC:iä: virheessä palautetaan 0,
@@ -44,5 +65,7 @@ export async function getIncompleteProjectCount(): Promise<number> {
     return 0
   }
 
-  return count ?? 0
+  return (data ?? []).filter((r) =>
+    kuuluuJonoon((r as { source_name?: string | null }).source_name, rajatutLahteet)
+  ).length
 }
