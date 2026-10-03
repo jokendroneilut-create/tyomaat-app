@@ -5,6 +5,68 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-233 - Osapuoli poimitaan tekstista, rooli jatetaan ihmiselle
+
+Johannes 3.10.2026: *"tee kuivaharjoitus noille 49:lle. Jono pitaisi
+saada tyhjaksi kokonaan."*
+
+`lib/agent/osapuoliTekstista.ts` tunnistaa hankkeen omasta tekstista
+yrityksen joka on kannassa jo osapuolena, ja palauttaa sen lauseen josta
+loydos tehtiin. Uusia yrityksia ei poimita — vain tunnistetaan tunnettu
+nimi siita tekstista jossa se lukee.
+
+**ROOLI JATETAAN AUKI JOS TEKSTI EI SITA KERRO.** "NCC kaynnistaa" ei
+erota urakoitsijaa rakennuttajasta: omaperusteisessa tuotannossa tekija
+rakentaa itselleen (D-214). Kuivaharjoituksessa roolin saattoi lukea
+tekstista vain **1 nimessa 67:sta** — eli tama on kaytannossa
+nimenpoimija, ja roolin paattaa ihminen.
+
+#### Kuivaharjoituksen tulos (177 hanketta)
+
+| | kpl |
+|---|---|
+| hanketta joilta loytyi nimi | 49 |
+| nimea yhteensa | 67 |
+| rooli luettavissa tekstista | 1 |
+| hanketta ilman osumaa | 128 |
+
+Luin kaikki 49 rivia lapi. Nimi on aito osapuoli noin 34 rivilla (NCC,
+Fira, SRV, YIT, Hartela, Bonava, Lapti, Lujatalo, Stara, Metsahallitus,
+Fortum, Myrsky Energia, hyvinvointialueet, kunnat tilaajina). Loput ovat
+sivutuotetta: lahdeluettelon viite ("Vaylaviraston julkaisuja 61/2022"),
+tien nimi ("valilla Kivisaari – Atria") tai kilpailun osallistuja jonka
+voittoa ei kerrota. **Juuri siksi tulos on ehdotus eika kentta.**
+
+#### Kolme mittausta jotka muuttivat saantoa
+
+1. **Yritysnimi kirjoitetaan isolla.** Ilman kirjainkoon vaatimusta
+   "Varte" osui sanaan "varten" ja "Are" sanaan "areena". Pelkka
+   sananraja ei riita, koska suomen sijapaatteet ovat samoja kirjaimia
+   kuin sanojen jatkot.
+2. **Vain alkuosa luetaan** (700 merkkia, sama raja kuin `buildingType`).
+   Kokonaisesta sivukaavinnasta poimiutui kunnan navigaatiovalikosta
+   "Sonkakoti Oy" tuulivoimakaavan osapuoleksi.
+3. **Osapuolikentta voi olla lista.** Arvo on muotoa `"Are Oy
+   (0989493-6), ISS Palvelut Oy (0906333-1)"`. Ilman pilkun ja
+   y-tunnuksen purkua "Are" ei ollut haettavien nimien joukossa
+   lainkaan — eli juuri sen lahteen yritys jonka tiedotteesta hanke tuli.
+   Purku nosti osumat 47:sta 49:aan ja toi ARE:n kaikkiin kolmeen
+   ARE-lahteen hankkeeseen.
+
+#### Jono ei tyhjene poiminnalla
+
+128 hanketta 177:sta ei nimea osapuolta omassa tekstissaan. Ne eivat
+lahde jonosta tata kautta. Suurin yksittainen ryhma on **Espoon
+kuulutukset (26)** eli rakennuslupailmoitukset, joissa hakija on
+tyypillisesti ilmoituksen omissa kentissa — se on oma tyonsa ja
+todennakoisesti suurin yksittainen erä. Seuraavat ovat lahteettomat (25)
+ja YVA (14).
+
+`scripts/ehdota-osapuolet.ts` toistaa kuivaharjoituksen. Se ei kirjoita
+mitaan — kirjoittava polku ja kahden napin hyvaksynta ovat tekematta.
+
+---
+
 ### D-232 - "Osapuoleton" tarkoittaa tyhjaa kenttaa, ei tuntematonta osapuolta
 
 Johannes 3.10.2026 osapuolettomien jonosta: *"hankkeessa lukee jo
