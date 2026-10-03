@@ -17,6 +17,14 @@ import { mkdirSync } from "node:fs"
  * cos(a) < 0. Se on suoraan toistettavissa `sharp`illa.
  *
  *   npx tsx scripts/tee-lataus-animaatio.ts
+ *
+ * MP4 WHATSAPPIA VARTEN. WhatsApp kasittelee raahatun GIFin
+ * dokumenttina eika toista sita; MP4:n se toistaa aina. Enkoodaus
+ * erikseen, koska ffmpeg ei ole riippuvuus:
+ *
+ *   npm install --no-save ffmpeg-static
+ *   FF=$(node -e "console.log(require('ffmpeg-static'))")
+ *   "$FF" -y -stream_loop 2 -i public/jaettava/tyomaat-lataus.gif  *     -vf "scale=720:-2:flags=lanczos,fps=25"  *     -c:v libx264 -pix_fmt yuv420p -profile:v baseline -level 3.1  *     -crf 20 -movflags +faststart public/jaettava/tyomaat-lataus.mp4
  */
 
 /* Kankaan mitat ja logon osien sijainnit (samat kuin komponentissa). */

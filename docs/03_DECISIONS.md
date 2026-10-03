@@ -159,6 +159,18 @@ Tulos: `public/jaettava/tyomaat-lataus.gif`, 640x279, 8,4 s, 478 kt,
 toistuu loputtomiin. Saatavilla myos osoitteena
 `https://app.tyomaat.fi/jaettava/tyomaat-lataus.gif`.
 
+**WHATSAPP EI TOISTA GIFIA, MP4:N KYLLA.** Johannes 3.10.2026: GIF
+liikkuu koneella ja LinkedInissa kuvana jaettuna, mutta WhatsAppissa ei.
+Syy ei ole tiedostossa vaan siina etta WhatsApp kasittelee raahatun
+GIFin dokumenttina. Siksi rinnalle tehtiin
+`public/jaettava/tyomaat-lataus.mp4` (720x280, H.264 baseline,
+yuv420p, faststart, kolme kierrosta = 25 s, 212 kt) — WhatsApp toistaa
+sen aina.
+
+Enkoodaus: `ffmpeg-static` asennettiin **`--no-save`**, eli se on vain
+`node_modules`issa eika `package.json`issa. Komento on
+`scripts/tee-lataus-animaatio.ts`:n kommentissa.
+
 **Kolme sharp-ansaa, jotka kaikki tuottivat hiljaisen virheen:**
 
 1. `composite` ajetaan vasta `resize`n jalkeen, joten yhdessa putkessa
