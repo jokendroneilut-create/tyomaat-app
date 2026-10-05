@@ -105,15 +105,19 @@ async function main() {
     .limit(2000)
 
   const hakijat = new Map<string, string>()
+  const kuvaukset = new Map<string, string>()
   for (const d of tuoreet ?? []) {
     const teksti = (d.raw_payload ?? {}).bulletin_pdf_text
     if (!teksti) continue
     const hakija = extractBulletinApplicant(String(teksti))
     if (hakija) hakijat.set(String(d.document_url), hakija)
+    const kuvaus = (d.raw_payload ?? {}).bulletin_description
+    if (kuvaus) kuvaukset.set(String(d.document_url), String(kuvaus))
   }
   console.log(`hakija poimittavissa ${hakijat.size} dokumentista`)
+  console.log(`PDF-kuvaus saatavilla ${kuvaukset.size} dokumentista`)
 
-  const urlit = [...hakijat.keys()]
+  const urlit = [...new Set([...hakijat.keys(), ...kuvaukset.keys()])]
   let paivitetty = 0
 
   for (const taulu of ["projects", "potential_projects"] as const) {
@@ -126,29 +130,55 @@ async function main() {
 
       for (const r of data ?? []) {
         const md = ((r as any).metadata ?? {}) as any
+        const nimi = String((r as any).name ?? (r as any).title ?? "").slice(0, 46)
+
+        /*
+         * HAKIJA vain tyhjaan kenttaan. Tunnettu rakennuttaja on joko
+         * kasin annettu tai toisesta lahteesta, eika sita ylikirjoiteta.
+         */
         const hakija = hakijat.get(String(md.source_url))
-        if (!hakija) continue
-
-        const nykyinen =
+        const nykyinenOsapuoli =
           taulu === "projects" ? String((r as any).developer ?? "").trim() : String(md.developer ?? "").trim()
-        if (nykyinen) continue
+        const lisattavaHakija = hakija && !nykyinenOsapuoli ? hakija : null
 
-        const nimi = String((r as any).name ?? (r as any).title ?? "").slice(0, 52)
-        console.log(`  ${taulu.padEnd(18)} ${nimi.padEnd(54)} -> ${hakija}`)
+        /*
+         * KUVAUS LISATAAN, EI KORVATA. Nykyinen teksti on rajapinnan
+         * tiivistelma; PDF:ssa on hakijan oma kuvaus hankkeesta. Vanha
+         * jaa paikalleen, uusi tulee sen peraan omalla otsikollaan.
+         */
+        const pdfKuvaus = kuvaukset.get(String(md.source_url)) ?? null
+        const nykyinenKuvaus = String(md.description ?? "")
+        const lisattavaKuvaus =
+          pdfKuvaus && pdfKuvaus.length > 80 && !nykyinenKuvaus.includes(pdfKuvaus.slice(0, 60))
+            ? pdfKuvaus
+            : null
+
+        if (!lisattavaHakija && !lisattavaKuvaus) continue
+
+        const osat: string[] = []
+        if (lisattavaHakija) osat.push(`hakija: ${lisattavaHakija}`)
+        if (lisattavaKuvaus) osat.push(`kuvaus +${lisattavaKuvaus.length} merkkia`)
+        console.log(`  ${taulu.padEnd(18)} ${nimi.padEnd(48)} ${osat.join(", ")}`)
         if (!apply) continue
+
+        let kuvaus = nykyinenKuvaus
+        if (lisattavaKuvaus) {
+          kuvaus = kuvaus
+            ? `${kuvaus}\n\nHankkeen kuvaus hakemuksella:\n${lisattavaKuvaus}`
+            : `Hankkeen kuvaus hakemuksella:\n${lisattavaKuvaus}`
+        }
+        if (lisattavaHakija && !kuvaus.includes("Hakija:")) {
+          kuvaus = kuvaus ? `${kuvaus}\n\nHakija: ${lisattavaHakija}` : `Hakija: ${lisattavaHakija}`
+        }
 
         const paivitys: any = {
           metadata: {
             ...md,
-            developer: hakija,
-            description: md.description
-              ? String(md.description).includes("Hakija:")
-                ? md.description
-                : `${md.description}\n\nHakija: ${hakija}`
-              : `Hakija: ${hakija}`,
+            ...(lisattavaHakija ? { developer: lisattavaHakija } : {}),
+            description: kuvaus,
           },
         }
-        if (taulu === "projects") paivitys.developer = hakija
+        if (taulu === "projects" && lisattavaHakija) paivitys.developer = lisattavaHakija
 
         const { error } = await db.from(taulu).update(paivitys).eq("id", (r as any).id)
         if (error) console.log(`    VIRHE: ${error.message}`)

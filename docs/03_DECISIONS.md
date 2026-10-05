@@ -96,10 +96,22 @@ mittasi hinnan: yhdeksan lahdetta vei 942 ajoa 30 vuorokaudessa ja
 perustason kierto kaksinkertaistui. Kuulutukset eivat katoa kahdessa
 paivassa vaan viikoissa, joten budjetti riittaa.
 
+#### Takautuva ajo loppuun (6.10.2026)
+
+Loput 484 puuttuvaa yritettiin kerran: **77 saatiin, 407 oli jo poistettu
+verkosta.** Kattavuus 446 -> **572/980 (58 %)**, ja loput 408 ovat
+pysyvasti poissa — niita ei kannata yrittaa uudelleen.
+
+Haetuista 133 sisalsi hankkeen oman kuvauksen. Skripti taydentaa nyt
+myos sen: **kuvaus lisataan, ei korvata** — rajapinnan tiivistelma jaa
+paikalleen ja PDF:n teksti tulee sen peraan otsikolla "Hankkeen kuvaus
+hakemuksella". Taydennetty 14 riville, pisin lisays 1 499 merkkia.
+
 #### Auki
 
 Seuraavan vuoron kattavuus on mitattava: jos era on yha yli 90, luku on
-nostettava tai lahteelle on annettava tiheampi vuoro.
+nostettava tai lahteelle on annettava tiheampi vuoro. 408 vanhaa
+kuulutusta jaa ilman PDF-tekstia pysyvasti.
 
 ---
 
