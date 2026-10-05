@@ -70,8 +70,33 @@ const LUPAPISTE_BULLETINS_PAGE = "https://julkipano.lupapiste.fi/app/fi/bulletin
 const LUPAPISTE_CATEGORIES = ["r", "p"]
 const LUPAPISTE_MAX_PAGES_PER_CATEGORY = 5
 
-/* PDF-hakuja per ajo. Loput jaavat seuraavaan ajoon, koska jo haetut ohitetaan. */
-const LUPAPISTE_PDF_BUDGET = 40
+/*
+ * PDF-hakuja per ajo.
+ *
+ * NOSTO 40 -> 90 (6.10.2026). Kommentti lupasi etta loput jaavat
+ * seuraavaan ajoon — ja juuri se oletus oli vaara kahdesta syysta:
+ *
+ *   1. LAHDE SAA VUORON NOIN JOKA TOINEN PAIVA. Se on tavallinen lahde
+ *      326:sta ja kierrossa on 18 paikkaa per ajo (ks. cronConfig):
+ *      mitattu 47 ajoa 95 vuorokaudessa. Yhdella vuorolla tulee siis
+ *      kahden paivan era, 60-88 kuulutusta — eli 20-48 jai joka kerta
+ *      budjetin ulkopuolelle.
+ *   2. KUULUTUS POISTUU VERKOSTA muutoksenhakuajan jalkeen, joten
+ *      "seuraavalla ajolla" ei ole mitaan haettavaa. Mitattu 6.10.2026:
+ *      80 vanhimmasta puuttuvasta 31 (39 %) oli jo mennyt. Se teksti ei
+ *      palaa mistaan.
+ *
+ * Kattavuus oli siksi 446/980 (46 %) ensimmaisten kolmen kuukauden
+ * ajalta.
+ *
+ * HINTA ON SEKUNTEJA. Mitattu samana paivana: onnistunut haku 271 ms,
+ * epaonnistunut 43 ms. Nosto lisaa ajoon noin 14 s, kun ajo kestaa
+ * 75-230 s ja turvabudjetti on 500 s.
+ *
+ * 90 kattaa havaitun maksimieran (88). Jos vuorovali lyhenee, tama voi
+ * laskea takaisin — mittaa silloin era uudelleen.
+ */
+const LUPAPISTE_PDF_BUDGET = 90
 
 async function fetchLupapisteCsrfToken() {
   const response = await fetch(LUPAPISTE_BULLETINS_PAGE, { cache: "no-store" })

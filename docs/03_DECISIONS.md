@@ -66,11 +66,40 @@ ovat viranomaisen omia. Osapuolen NIMI on eri asia.
 Johanneksen hanke sai rakennuttajakseen **Asuntorakennuttajat
 hankeyhtio 4 Oy**.
 
+#### Jatko: PDF-budjetti 40 -> 90 (6.10.2026)
+
+Johannes kysyi vaikuttaako budjetin nosto mihinkaan. Vaikuttaa, ja syy
+on muualla kuin arvasin: **lahde saa vuoron noin joka toinen paiva.**
+Se on tavallinen lahde 326:sta ja kierrossa on 18 paikkaa per ajo —
+mitattu 47 ajoa 95 vuorokaudessa, vaikka `refresh_minutes` on 120.
+
+Yhdella vuorolla tulee siis kahden paivan era:
+
+| ajopaiva | uusia kuulutuksia | joilla PDF |
+|---|---|---|
+| 6.9. | 88 | 24 (27 %) |
+| 15.9. | 76 | 25 (33 %) |
+| 24.9. | 77 | 34 (44 %) |
+| 15.8. | 69 | 37 (54 %) |
+
+Keskimaarin 62 uutta vuorokaudessa, yhdella vuorolla 60-88 — budjetti
+40. **Joka vuorolla jai 20-48 lukematta**, eika ylijaama palaudu
+seuraavalla kerralla, koska kuulutus poistuu verkosta: 80 vanhimmasta
+puuttuvasta 31 (39 %) oli jo mennyt.
+
+Hinta on sekunteja: onnistunut haku 271 ms, epaonnistunut 43 ms, eli
+nosto lisaa ajoon noin 14 s kun ajo kestaa 75-230 s 500 sekunnin
+budjetista. 90 kattaa havaitun maksimieran (88).
+
+**Takuupaikkaa ei otettu.** Se antaisi vuoron joka ajossa, mutta D-210
+mittasi hinnan: yhdeksan lahdetta vei 942 ajoa 30 vuorokaudessa ja
+perustason kierto kaksinkertaistui. Kuulutukset eivat katoa kahdessa
+paivassa vaan viikoissa, joten budjetti riittaa.
+
 #### Auki
 
-PDF-kattavuus on yha 50 %. Kuulutus poistuu verkosta muutoksenhakuajan
-jalkeen, ja **31 kahdeksastakymmenesta oli jo mennyt** — se tieto ei
-palaa. Budjetin nosto tai useampi ajo vuorokaudessa on oma paatoksensa.
+Seuraavan vuoron kattavuus on mitattava: jos era on yha yli 90, luku on
+nostettava tai lahteelle on annettava tiheampi vuoro.
 
 ---
 
