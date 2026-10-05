@@ -81,6 +81,7 @@ export async function resolveLupapisteProject({
     propertyId ? `Kiinteistötunnus: ${propertyId}` : null,
     address ? `Osoite: ${address}` : null,
     operation ? `Toimenpide: ${operation}` : null,
+    bulletinFields?.hakija ? `Hakija: ${bulletinFields.hakija}` : null,
     bulletinDescription ? `Hankkeen kuvaus hakemuksella:\n${bulletinDescription}` : null,
     decisionText ? `Päätös:\n${decisionText}` : null,
   ]
@@ -152,6 +153,18 @@ export async function resolveLupapisteProject({
 
       operation,
       description,
+      /*
+       * HAKIJA ON RAKENNUTTAJA (D-237).
+       *
+       * Kuulutuksen paatosasiakirja nimeaa luvan hakijan, ja se on
+       * hankkeen rakennuttaja — juuri se osapuoli joka naista
+       * hankkeista on puuttunut. Poimija palauttaa vain organisaation:
+       * yksityishenkilon nimi on henkilotieto, ei liidi.
+       *
+       * Huom. ettei tama ole ristiriidassa D-102:n kanssa, joka koski
+       * yhteystietoja (sahkoposteja ja puhelimia) eika osapuolen nimea.
+       */
+      ...(bulletinFields?.hakija ? { developer: bulletinFields.hakija } : {}),
       ...(authorityContacts.length ? { contact_persons: authorityContacts } : {}),
       ...(bulletinFields?.kaavanKayttotarkoitus ? { plan_use_purpose: bulletinFields.kaavanKayttotarkoitus } : {}),
       ...(bulletinFields?.kaavatilanne ? { plan_status: bulletinFields.kaavatilanne } : {}),

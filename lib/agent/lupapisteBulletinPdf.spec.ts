@@ -5,7 +5,7 @@ import {
   cleanBulletinPdfText,
   extractApplicationDescription,
   extractBulletinFields,
-} from "./lupapisteBulletinPdf"
+  extractBulletinApplicant,} from "./lupapisteBulletinPdf"
 
 describe("cleanBulletinPdfText", () => {
   /* Henkilotiedot on peitetty paatosasiakirjassa mustilla palkeilla. */
@@ -134,5 +134,67 @@ describe("bestBulletinDescription", () => {
 
   it("palauttaa nullin kun kumpaakaan ei ole", () => {
     expect(bestBulletinDescription("Kaavatilanne Asemakaava")).toBeNull()
+  })
+})
+
+/*
+ * HAKIJA VAIN ORGANISAATIONA (D-237).
+ *
+ * Nimet testeissa ovat keksittyja. Oikeassa aineistossa hakija on usein
+ * yksityishenkilo omalla nimellaan, eika sellaista saa tallentaa
+ * saati committaa julkiseen repoon.
+ */
+describe("extractBulletinApplicant", () => {
+  /* Otsikko on PDF-tekstissa kiinni arvossa. */
+  const YRITYS =
+    "HAKIJAAsuntorakennuttajat hankeyhtiö 4 Oy , Esimerkkikatu 1, 00100 HELSINKI " +
+    "RAKENNUSPAIKKA753-416-0016-0024 Puistikkotie, 04130 Sipoo"
+
+  it("poimii yrityksen nimen ilman osoitetta", () => {
+    expect(extractBulletinApplicant(YRITYS)).toBe("Asuntorakennuttajat hankeyhtiö 4 Oy")
+  })
+
+  it("katkaisee seuraavaan otsikkoon kun pilkkua ei ole", () => {
+    expect(extractBulletinApplicant("HAKIJASodankylän kunta RAKENNUSPAIKKA758-405-0021-0116")).toBe(
+      "Sodankylän kunta"
+    )
+  })
+
+  it("lukee myos monikkomuodon HAKIJAT", () => {
+    expect(extractBulletinApplicant("HAKIJAT Caruna Oy PL 1, 00001 HELSINKI")).toBe("Caruna Oy")
+  })
+
+  /* Yksityishenkilo ei ole liidi vaan henkilotieto. */
+  it("ei palauta yksityishenkiloa", () => {
+    expect(extractBulletinApplicant("HAKIJA Meikäläinen Matti Juhani Esimerkkitie 5")).toBeNull()
+  })
+
+  it("ei palauta peitettya arvoa", () => {
+    expect(extractBulletinApplicant("HAKIJAXXXXXXXX RAKENNUSPAIKKA426-405-0337-0000")).toBeNull()
+  })
+
+  /* "MUUTOKSENHAKIJA" esiintyy jokaisen paatoksen valitusosoituksessa. */
+  it("ei osu sanaan muutoksenhakija", () => {
+    expect(
+      extractBulletinApplicant("Valitus on MUUTOKSENHAKIJAn allekirjoitettava Oy")
+    ).toBeNull()
+  })
+
+  it("sietaa tyhjan", () => {
+    expect(extractBulletinApplicant(null)).toBeNull()
+    expect(extractBulletinApplicant("")).toBeNull()
+  })
+})
+
+/*
+ * Mitattu 6.10.2026: 495 PDF-tekstista 225 kayttaa monikkoa
+ * "Lisaselvitykset" ja 35 yksikkoa "Lisaselvitys". Pelkka monikko
+ * hukkasi jalkimmaisten kuvauksen kokonaan — mm. Sipoon hoivakodin,
+ * jonka koko hankekuvaus on juuri sen otsikon alla.
+ */
+describe("Lisäselvitys yksikössä", () => {
+  it("poimitaan myos yksikkomuodosta", () => {
+    const pdf = "TOIMENPIDEPoikkeaminen asemakaavasta LisäselvitysHakemus pohjautuu tontinluovutuskilpailuun. PÄÄTÖS"
+    expect(extractBulletinFields(pdf).lisaselvitykset).toContain("tontinluovutuskilpailuun")
   })
 })

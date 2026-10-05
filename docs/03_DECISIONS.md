@@ -5,6 +5,75 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-237 - Hakija on rakennuttaja — mutta vain jos se on organisaatio
+
+Johannes 6.10.2026 Sipoon hoivakotihankkeesta: *"luettiinko tasta
+hankkeesta tuo koko asiakirja, siina mainitaan myos hakija joka on tarkea
+tieto."*
+
+Oli oikeassa kahdesti: **PDF:aa ei ollut luettu, eika hakijaa olisi
+poimittu vaikka olisi.**
+
+#### Mika oli pielessa
+
+1. **Paatos-PDF jai hakematta.** Kerain hakee enintaan 40 PDF:aa ajossa
+   (`LUPAPISTE_PDF_BUDGET`). Mitattu 6.10.2026: 980 kuulutuksesta vain
+   **446:lla (46 %) oli PDF-teksti**. Tama hanke oli niiden 534 joukossa
+   joilta se puuttui.
+2. **Hakijaa ei poimittu lainkaan.** `extractBulletinFields` tunsi
+   kaavan, pinta-alan ja kerrosalan, muttei hakijaa.
+
+#### Mittaus joka maarasi saannon
+
+Kannan 446 PDF-tekstista HAKIJA-otsikko on **40:ssa**, ja niista vain
+**13 on organisaatio**. Loput ovat yksityishenkiloita omalla nimellaan
+tai peitettyja (XXXXXXXX).
+
+**Siksi vain organisaatio kelpaa.** Yksityishenkilon nimi ei ole liidi
+vaan henkilotieto: urakoitsija ei soita omakotirakentajalle
+rakennuttajana, ja nimen tallentaminen olisi tarpeetonta
+henkilotietojen kasittelya. Ilman yhtiotunnusta (Oy, Oyj, kunta,
+kaupunki, seurakunta, saatio, osuuskunta…) palautetaan null.
+
+**Tama ei ole ristiriidassa D-102:n kanssa.** Se koski
+YHTEYSTIETOJA — sahkoposteja ja puhelimia — jotka paatosasiakirjassa
+ovat viranomaisen omia. Osapuolen NIMI on eri asia.
+
+#### Kaksi mittausvirhetta matkalla
+
+- `/HAKIJA/` osui **nollaan** 446:sta, koska PDF-tekstissa otsikko
+  on kiinni arvossa: `HAKIJAAsuntorakennuttajat hankeyhtio 4 Oy`.
+  Paattava sananraja poistettiin, alkuraja jai (muuten osuu sanaan
+  MUUTOKSENHAKIJA).
+- Osoite ei aina ole pilkun takana: `HAKIJAT Caruna Oy Pl 1`. Nimi
+  katkaistaan myos postilokeroon ja katuosoitteeseen, mutta vasta kun
+  katusanaa seuraa numero — muuten "Rakennustie Oy" leikkautuisi.
+
+#### Tehty
+
+- `extractBulletinApplicant` + `bulletin_fields.hakija`
+- `lupapisteResolver` kirjoittaa sen rakennuttajaksi ja kuvaukseen
+- **Lisaselvitys yksikossa.** 495 PDF-tekstista 225 kayttaa monikkoa
+  "Lisaselvitykset" ja **35 yksikkoa "Lisaselvitys"** — jalkimmaisten
+  hankekuvaus hukkui kokonaan, mukaan lukien juuri taman Sipoon
+  hoivakodin.
+- Takautuva taydennys: `scripts/taydenna-lupapisteen-hakija.ts`.
+  Ajettu: 80 puuttuvaa PDF:aa yritetty, **49 saatu, 31 oli jo poistettu
+  verkosta**; hakija poimittiin 15 dokumentista ja **18 riville**
+  (hankkeet ja ehdokkaat) kirjattiin rakennuttaja. Kaikki 18 olivat
+  organisaatioita — luin rivit lapi.
+
+Johanneksen hanke sai rakennuttajakseen **Asuntorakennuttajat
+hankeyhtio 4 Oy**.
+
+#### Auki
+
+PDF-kattavuus on yha 50 %. Kuulutus poistuu verkosta muutoksenhakuajan
+jalkeen, ja **31 kahdeksastakymmenesta oli jo mennyt** — se tieto ei
+palaa. Budjetin nosto tai useampi ajo vuorokaudessa on oma paatoksensa.
+
+---
+
 ### D-236 - Kastelli lahteeksi; YIT oli jo, mutta tuotti kaksoiskappaleen
 
 Johannes 6.10.2026 kahdesta hankkeesta.

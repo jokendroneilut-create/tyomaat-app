@@ -181,6 +181,8 @@ const BULLETIN_LABELS = [
   "Hankkeeseen ryhtyvä",
   "Toimenpide",
   "Lisäselvitykset",
+  /* Osa kunnista kirjoittaa otsikon yksikossa (D-237). */
+  "Lisäselvitys",
   "Kerrosala",
   "Rakennuspaikka",
   "Poikkeamispäätös",
@@ -350,7 +352,86 @@ function labelValue(pdfText: string, label: string): string | null {
   return value
 }
 
+/*
+ * HAKIJA KUULUTUKSEN PAATOS-PDF:STA (D-237).
+ *
+ * Johannes 6.10.2026 Sipoon hoivakotihankkeesta: *"luettiinko tasta
+ * hankkeesta tuo koko asiakirja, siina mainitaan myos hakija joka on
+ * tarkea tieto."* Oli oikeassa kahdesti: PDF:aa ei ollut luettu, eika
+ * hakijaa olisi poimittu vaikka olisi.
+ *
+ * TAMA EI OLE RISTIRIIDASSA D-102:N KANSSA. Se paatos koski
+ * YHTEYSTIETOJA (sahkoposteja ja puhelinnumeroita), jotka ovat
+ * paatosasiakirjassa viranomaisen omia. Hakijan NIMI on eri asia: se on
+ * hankkeen osapuoli, ja juuri se puuttuu naista hankkeista.
+ *
+ * VAIN ORGANISAATIO KELPAA. Mitattu 6.10.2026 kannan 446
+ * PDF-tekstista: HAKIJA-otsikko on 40:ssa, ja niista vain 13 on yritys.
+ * Loput ovat yksityishenkiloita omalla nimellaan tai peitettyja
+ * (XXXXXXXX). Yksityishenkilon nimi ei ole liidi vaan henkilotieto,
+ * joten ilman yhtiotunnusta palautetaan null.
+ *
+ * OTSIKKO ON KIINNI ARVOSSA. PDF-tekstissa lukee
+ * "HAKIJAAsuntorakennuttajat hankeyhtio 4 Oy", joten paattavaa
+ * sananrajaa ei voi vaatia — /\bHAKIJA\b/ osui nollaan 446:sta.
+ * Alkuraja sen sijaan tarvitaan, muuten osuu sanaan MUUTOKSENHAKIJA.
+ */
+
+/* Yhtiomuoto tai julkisyhteiso. Ilman tata nimea ei oteta. */
+const ORGANISAATIO =
+  /(^|[^A-Za-zÅÄÖåäö])(oy|oyj|ab|ky|ry|as\.?\s*oy|kiinteistö\s*oy|kunta|kunnan|kaupunki|kaupungin|seurakunta|säätiö|osuuskunta|osuuskauppa|kuntayhtymä|yhtymä|liikelaitos|hyvinvointialue|verkko|yliopisto|oppilaitos)([^A-Za-zÅÄÖåäö]|$)/i
+
+/* Seuraavat otsikot, joihin arvo katkaistaan. */
+const HAKIJAN_JALKEEN =
+  /(RAKENNUSPAIKKA|KIINTEISTÖ|TOIMENPIDE|LUPATUNNUS|PÄÄTÖS|KUULEMINEN|LAUSUNNOT|ASIA|HANKE|SUUNNITTELIJ|NAAPURI)/
+
+/*
+ * Postiosoite nimen perasta. Osa asiakirjoista ei eroita osoitetta
+ * pilkulla: "HAKIJAT Caruna Oy Pl 1" ja "Kiinteisto Oy Siikataival c/o
+ * Retta Isannointi/Kauppatie 19-21". Katkaisu tehdaan vasta kun
+ * katuosaa seuraa numero, jottei yrityksen nimesta ("Rakennustie Oy")
+ * leikkaudu osaa.
+ */
+const OSOITTEEN_ALKU =
+  /(^|[^A-Za-zÅÄÖåäö])(p[.]?l[.]?\s*\d|postilokero|c\/o|[A-Za-zÅÄÖåäö]+(tie|katu|kuja|polku|väylä|kaari|rinne|raitti|puisto|aukio|ranta|mäki|harju|katu)\s+\d)/i
+
+function poistaOsoite(nimi: string): string {
+  const osuma = nimi.match(OSOITTEEN_ALKU)
+  if (!osuma || osuma.index === undefined) return nimi
+  return nimi.slice(0, osuma.index).trim()
+}
+
+export function extractBulletinApplicant(pdfText: string | null): string | null {
+  const t = cleanBulletinPdfText(pdfText ?? "")
+  if (!t) return null
+
+  const osuma = t.match(/(^|[^A-ZÅÄÖa-zåäö])HAKIJAT?/)
+  if (!osuma || osuma.index === undefined) return null
+
+  let jatko = t.slice(osuma.index + osuma[0].length)
+
+  const seuraava = jatko.search(HAKIJAN_JALKEEN)
+  if (seuraava > 0) jatko = jatko.slice(0, seuraava)
+
+  /*
+   * Nimi on ennen ensimmaista pilkkua; loput on postiosoite. Rivinvaihto
+   * katkaisee myos, koska osa asiakirjoista erottaa osoitteen rivilla.
+   */
+  const ennenPilkkua = jatko.split(/[,\n]/)[0].replace(/\s+/g, " ").trim()
+  const nimi = poistaOsoite(ennenPilkkua)
+  if (nimi.length < 4 || nimi.length > 90) return null
+
+  /* Peitetty henkilotieto tulee tekstiin X-jonona. */
+  if (/^X{3,}$/i.test(nimi.replace(/\s+/g, ""))) return null
+
+  if (!ORGANISAATIO.test(nimi)) return null
+
+  return nimi
+}
+
 export type BulletinFields = {
+  /* Hakija vain organisaationa, ks. extractBulletinApplicant. */
+  hakija: string | null
   toimenpide: string | null
   lisaselvitykset: string | null
   kaavatilanne: string | null
@@ -366,6 +447,7 @@ export type BulletinFields = {
 export function extractBulletinFields(pdfText: string | null): BulletinFields {
   const t = cleanBulletinPdfText(pdfText ?? "")
   const tyhja: BulletinFields = {
+    hakija: null,
     toimenpide: null, lisaselvitykset: null, kaavatilanne: null,
     kaavanKayttotarkoitus: null, pintaAla: null, kerrosala: null,
     rakennusoikeus: null, kokonaisala: null, tilavuus: null,
@@ -373,8 +455,10 @@ export function extractBulletinFields(pdfText: string | null): BulletinFields {
   if (!t) return tyhja
 
   return {
+    hakija: extractBulletinApplicant(pdfText),
     toimenpide: labelValue(t, "Toimenpide"),
-    lisaselvitykset: labelValue(t, "Lisäselvitykset"),
+    lisaselvitykset:
+      labelValue(t, "Lisäselvitykset") ?? labelValue(t, "Lisäselvitys"),
     kaavatilanne: labelValue(t, "Kaavatilanne"),
     kaavanKayttotarkoitus: labelValue(t, "Kaavan käyttötarkoitus"),
     pintaAla: labelValue(t, "Pinta-ala"),
