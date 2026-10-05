@@ -35,6 +35,7 @@ import { fetchTekovaSource } from "./fetchTekovaSource"
 import { fetchJatkeSource } from "./fetchJatkeSource"
 import { fetchEspoonAsunnotSource } from "./fetchEspoonAsunnotSource"
 import { fetchMeijouSource } from "./fetchMeijouSource"
+import { fetchKastelliSource } from "./fetchKastelliSource"
 import { fetchMangroveSource } from "./fetchMangroveSource"
 import { fetchSrvSource } from "./fetchSrvSource"
 import { fetchYsaatioSource } from "./fetchYsaatioSource"
@@ -115,6 +116,12 @@ export const sources = [
   { name: "espoon_asunnot", fetch: fetchEspoonAsunnotSource, enrich: createCompanyEnricher({ publisher: "Espoon Asunnot", role: "developer" }) },
   { name: "meijou", fetch: fetchMeijouSource, enrich: createCompanyEnricher({ publisher: "Meijou" }) },
   { name: "mangrove", fetch: fetchMangroveSource, enrich: createCompanyEnricher({ publisher: "Mangrove" }) },
+  /*
+   * Kastelli rakentaa vuokrakohteet omaan lukuunsa yhdessa rahoittajan
+   * kanssa (Novus Family Homes), eli se on urakoitsija — sama oletusrooli
+   * kuin muilla rakennusliikkeilla.
+   */
+  { name: "kastelli", fetch: fetchKastelliSource, enrich: createCompanyEnricher({ publisher: "Kastelli-talot" }) },
   { name: "srv", fetch: fetchSrvSource, enrich: createCompanyEnricher({ publisher: "SRV" }) },
   { name: "helsinki_paatokset", fetch: fetchHelsinkiPaatoksetSource },
   { name: "espoo_paatokset", fetch: fetchEspooPaatoksetSource },

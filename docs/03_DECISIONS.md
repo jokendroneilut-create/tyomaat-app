@@ -5,6 +5,57 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-236 - Kastelli lahteeksi; YIT oli jo, mutta tuotti kaksoiskappaleen
+
+Johannes 6.10.2026 kahdesta hankkeesta.
+
+#### Kastelli: uusi lahde
+
+*"lisataan lahteeksi kastelli, tama olisi loydettavissa myos sielta."*
+Kaarinan perhevuokra-asunnot tulivat Rakennuslehdesta; yhtion oma tiedote
+oli kaksi paivaa vanhempi.
+
+`lib/agent/fetchKastelliSource.ts` lukee WP REST APIa
+(`www.kastelli.fi/wp-json/wp/v2/posts`) eika kaavi sivua — sama ratkaisu
+kuin Firassa. robots.txt kieltaa vain `/wp-admin/`.
+
+**Suodatus on taman lahteen koko tyo.** Kastelli myy talopaketteja
+kuluttajille, joten "ajankohtaista" on paaosin markkinointia. Mitattu:
+71 julkaisua, 12 viimeisen 12 kk sisalla, **2 rakennushanketta** (Kaarina
+52 asuntoa, Espoon Suurpelto 65 asuntoa). Siksi avainsana vaatii monen
+asunnon kohteen: yhden perheen talopaketti ei ole urakoitsijalle liidi.
+
+**Poissulku katsoo vain otsikkoa.** Ensimmainen versio tutki myos
+ingressia ja hylkasi silla aidon hankkeen: *"Kastelli-talot Oy rakentaa
+65 rivitalovuokra-asuntoa Espoon Suurpeltoon"* putosi sanasta
+**"pientalobrandi"**, joka oli ingressin markkinointifraasi.
+Markkinointitiedote kertoo luonteensa otsikossa, joten sielta se myos
+tunnistetaan. Kuivaharjoitus: 1 -> 2 osumaa, molemmat aitoja.
+
+#### YIT: lahde oli jo — vika on muualla
+
+*"Tarkista onko meilla jo tama lahteena?"* **On.** `YIT tiedotteet`
+(`yitgroup.com/fi/media`) on paalla, 10/10 onnistunutta ajoa, ja juuri se
+tiedote on kannassa 1.10.2026.
+
+Hanke on silti kannassa **kahdesti**:
+
+| hanke | lahde | vaihe |
+|---|---|---|
+| "…elinkaarimallilla Tuusulaan – arvo YIT:lle 70 miljoonaa euroa" | YIT:n oma tiedote | Suunnittelu |
+| "Lahelan koulun, paivakodin ja nuorisotilan toteuttaminen elinkaarimallilla" | Rakennuslehti | Sopimus myonnetty |
+
+Molemmilla urakoitsija YIT. Tasmays **65 %** — alle 70:n yhdistamiskynnyksen
+ja alle skannauksen kynnyksen, joten pari ei paatynyt jonoon itsestaan.
+Vietiin katselmoitavaksi (`project_duplicate_candidates`, pending); ei
+yhdistetty itse.
+
+**Opetus:** kun sama hanke loytyy kahdesta lahteesta, kysymys ei ole
+"puuttuuko lahde" vaan "yhdistyvatko ne". Lahteen lisaaminen kasvattaa
+molempia: osumia ja kaksoiskappaleita.
+
+---
+
 ### D-235 - Nimi koneelta, rooli ihmiselta — kolme nappia hankesivulla
 
 Johannes 4.10.2026: *"jatketaan eteenpain etta saadaa tuo tyhjaksi."*
