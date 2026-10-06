@@ -35,10 +35,19 @@ async function main() {
   }
   const kattavuus = laskeKattavuus(hankkeet)
 
+  /* --demo nayttaa milta mittari nayttaa kun tasot eroavat. */
+  if (process.argv.includes("--demo")) {
+    for (const k of kattavuus) {
+      k.hankekohtaisia = Math.round(k.yhteystiedolla * 0.7)
+      k.hankekohtainenOsuus = k.hankkeita ? k.hankekohtaisia / k.hankkeita : 0
+    }
+  }
+
   const { data: historia } = await db.from("yhteystieto_kattavuus").select("paiva, vaihe, hankkeita, yhteystiedolla").order("paiva")
 
-  const mittari = (k: { vaihe: "construction" | "planning"; osuus: number; yhteystiedolla: number; hankkeita: number }) => {
-    const neula = mittarinPiste(k.osuus, MITTARI.sade - 8)
+  const mittari = (k: { vaihe: "construction" | "planning"; osuus: number; hankekohtainenOsuus: number; yhteystiedolla: number; hankekohtaisia: number; hankkeita: number }) => {
+    const kaikkiNeula = mittarinPiste(k.osuus, MITTARI.sade - 8)
+    const hankeNeula = mittarinPiste(k.hankekohtainenOsuus, MITTARI.sade - 8)
     const vyohykkeet = VYOHYKKEET.map((v) =>
       '<path d="' + mittarinKaari(v.alku, v.loppu, MITTARI.sade) + '" stroke="' + v.vari + '" stroke-width="' + MITTARI.paksuus + '" fill="none" />'
     ).join("")
@@ -52,11 +61,15 @@ async function main() {
     return '<div class="ruutu">' +
       '<h3>' + VAIHEEN_NIMI[k.vaihe] + '</h3>' +
       '<svg viewBox="0 0 ' + MITTARI.leveys + ' ' + MITTARI.korkeus + '">' + vyohykkeet + merkit +
-      '<line x1="' + MITTARI.keskiX + '" y1="' + MITTARI.keskiY + '" x2="' + neula.x + '" y2="' + neula.y + '" stroke="#111827" stroke-width="3" stroke-linecap="round" />' +
+      '<line x1="' + MITTARI.keskiX + '" y1="' + MITTARI.keskiY + '" x2="' + kaikkiNeula.x + '" y2="' + kaikkiNeula.y + '" stroke="#9ca3af" stroke-width="3" stroke-linecap="round" />' +
+      '<line x1="' + MITTARI.keskiX + '" y1="' + MITTARI.keskiY + '" x2="' + hankeNeula.x + '" y2="' + hankeNeula.y + '" stroke="#111827" stroke-width="3" stroke-linecap="round" />' +
       '<circle cx="' + MITTARI.keskiX + '" cy="' + MITTARI.keskiY + '" r="6" fill="#111827" />' +
       "</svg>" +
-      '<p class="iso">' + Math.round(k.osuus * 100) + " %</p>" +
-      '<p class="pieni">' + k.yhteystiedolla + " / " + k.hankkeita + " hanketta</p>" +
+      '<p class="iso">' + Math.round(k.hankekohtainenOsuus * 100) + " %</p>" +
+      '<p class="pieni">' + k.hankekohtaisia + " hankekohtaista / " + k.hankkeita + "</p>" +
+      (Math.round(k.osuus * 100) !== Math.round(k.hankekohtainenOsuus * 100)
+        ? '<p class="pieni" style="color:#9ca3af">' + Math.round(k.osuus * 100) + " % kun yrityskohtaiset lasketaan mukaan</p>"
+        : "") +
       "</div>"
   }
 

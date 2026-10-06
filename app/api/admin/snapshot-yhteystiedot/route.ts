@@ -67,19 +67,33 @@ export async function GET(req: Request) {
     const paiva = helsinginPaiva()
     const kattavuus = laskeKattavuus(hankkeet)
 
+    const rivit = kattavuus.map((k) => ({
+      paiva,
+      vaihe: k.vaihe,
+      hankkeita: k.hankkeita,
+      yhteystiedolla: k.yhteystiedolla,
+      hankekohtaisia: k.hankekohtaisia,
+    }))
+
+    /*
+     * `hankekohtaisia` lisataan kantaan kasin ajettavalla SQL:lla
+     * (D-241). Jos koodi menee tuotantoon ennen ajoa, kirjoitus kaatuisi
+     * puuttuvaan sarakkeeseen ja koko paivan mittaus jaisi tekematta —
+     * eika sita paivaa saa takaisin. Siksi varareitti ilman saraketta.
+     */
     const { error: kirjoitusVirhe } = await supabaseAdmin
       .from("yhteystieto_kattavuus")
-      .upsert(
-        kattavuus.map((k) => ({
-          paiva,
-          vaihe: k.vaihe,
-          hankkeita: k.hankkeita,
-          yhteystiedolla: k.yhteystiedolla,
-        })),
-        { onConflict: "paiva,vaihe" }
-      )
+      .upsert(rivit, { onConflict: "paiva,vaihe" })
 
-    if (kirjoitusVirhe) throw kirjoitusVirhe
+    if (kirjoitusVirhe) {
+      const { error: varalla } = await supabaseAdmin
+        .from("yhteystieto_kattavuus")
+        .upsert(
+          rivit.map(({ hankekohtaisia, ...muu }) => muu),
+          { onConflict: "paiva,vaihe" }
+        )
+      if (varalla) throw varalla
+    }
 
     return NextResponse.json({
       ok: true,
@@ -89,7 +103,9 @@ export async function GET(req: Request) {
         vaihe: k.vaihe,
         hankkeita: k.hankkeita,
         yhteystiedolla: k.yhteystiedolla,
+        hankekohtaisia: k.hankekohtaisia,
         osuus: Math.round(k.osuus * 100),
+        hankekohtainenOsuus: Math.round(k.hankekohtainenOsuus * 100),
       })),
     })
   } catch (error: any) {

@@ -37,11 +37,11 @@ async function main() {
 
   console.log("paiva " + paiva + ", luettu " + hankkeet.length + " hanketta")
   for (const k of kattavuus) {
-    console.log("  " + VAIHEEN_NIMI[k.vaihe].padEnd(16) + String(k.yhteystiedolla).padStart(5) + " / " + String(k.hankkeita).padEnd(6) + Math.round(k.osuus * 100) + " %")
+    console.log("  " + VAIHEEN_NIMI[k.vaihe].padEnd(16) + "hankekohtaisia " + String(k.hankekohtaisia).padStart(5) + " / " + String(k.hankkeita).padEnd(6) + Math.round(k.hankekohtainenOsuus * 100) + " %   kaikki " + Math.round(k.osuus * 100) + " %")
   }
 
   const { error } = await db.from("yhteystieto_kattavuus").upsert(
-    kattavuus.map((k) => ({ paiva, vaihe: k.vaihe, hankkeita: k.hankkeita, yhteystiedolla: k.yhteystiedolla })),
+    kattavuus.map((k) => ({ paiva, vaihe: k.vaihe, hankkeita: k.hankkeita, yhteystiedolla: k.yhteystiedolla, hankekohtaisia: k.hankekohtaisia })),
     { onConflict: "paiva,vaihe" }
   )
   if (error) throw error

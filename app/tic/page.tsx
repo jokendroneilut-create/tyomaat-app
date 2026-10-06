@@ -63,6 +63,17 @@ export default async function TicPage({
             ))}
           </div>
 
+          <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-0.5 w-5 bg-gray-900" />
+              hankekohtainen yhteyshenkilö (tavoite)
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-0.5 w-5 bg-gray-400" />
+              kaikki, myös yrityskohtainen
+            </span>
+          </p>
+
           <p className="mt-2 text-xs text-gray-500">
             Lasketaan asiakkaalle näkyvistä aktiivisista hankkeista. Mukaan
             lasketaan vain nimetty henkilö, jolla on sähköposti tai puhelin —

@@ -27,6 +27,25 @@ export type Kontakti = {
   phone?: string | null
   role?: string | null
   kind?: string | null
+  /*
+   * TASO: KENEN YHTEYSHENKILO (D-241).
+   *
+   * Johannes 6.10.2026: *"yrityskohtainen tieto on parempi kun ei tietoa
+   * ollenkaan. voi se olla jos se kerrotaan kayttajalle selvasti. tavoite
+   * on kuitenkin loytaa hankekohtainen yhteyshenkilo."*
+   *
+   *   "project"  — tama hanke: nimi on luettu hankkeen omasta
+   *                asiakirjasta (Helsingin paatoksen projektipaallikko,
+   *                tiedotteen yhteyshenkilo)
+   *   "company"  — yrityksen yleinen: oikea yritys, muttei tama hanke
+   *
+   * PUUTTUVA ARVO ON "project". Kaikki tahan asti kerätyt kontaktit
+   * tulevat hankkeen omasta lahteesta, joten oletus on se mika ne ovat.
+   * Yrityskohtainen taso on merkittava erikseen silloin kun se otetaan
+   * kayttoon — muuten tasot sekoittuisivat hiljaa ja mittari nayttaisi
+   * paremmalta kuin tilanne on.
+   */
+  level?: "project" | "company" | null
 }
 
 export function kelpaaYhteyshenkiloksi(kontakti: Kontakti | null | undefined): boolean {
@@ -41,10 +60,22 @@ export function kelpaaYhteyshenkiloksi(kontakti: Kontakti | null | undefined): b
   return Boolean(sahkoposti || puhelin)
 }
 
+export function onHankekohtainen(kontakti: Kontakti | null | undefined): boolean {
+  return String(kontakti?.level ?? "project") === "project"
+}
+
 export function onYhteyshenkilo(metadata: unknown): boolean {
-  const kontaktit = (metadata as { contact_persons?: unknown } | null)?.contact_persons
-  if (!Array.isArray(kontaktit)) return false
-  return kontaktit.some((k) => kelpaaYhteyshenkiloksi(k as Kontakti))
+  return kontaktit(metadata).some(kelpaaYhteyshenkiloksi)
+}
+
+/* Vain taman hankkeen oma yhteyshenkilo — tavoite, johon pyritaan. */
+export function onHankekohtainenYhteyshenkilo(metadata: unknown): boolean {
+  return kontaktit(metadata).some((k) => kelpaaYhteyshenkiloksi(k) && onHankekohtainen(k))
+}
+
+function kontaktit(metadata: unknown): Kontakti[] {
+  const lista = (metadata as { contact_persons?: unknown } | null)?.contact_persons
+  return Array.isArray(lista) ? (lista as Kontakti[]) : []
 }
 
 /*
@@ -67,8 +98,12 @@ export const VAIHEEN_NIMI: Record<MitattavaVaihe, string> = {
 export type Kattavuus = {
   vaihe: MitattavaVaihe
   hankkeita: number
+  /* Mika tahansa kelvollinen yhteyshenkilo, myos yrityskohtainen. */
   yhteystiedolla: number
+  /* Vain taman hankkeen oma yhteyshenkilo. */
+  hankekohtaisia: number
   osuus: number
+  hankekohtainenOsuus: number
 }
 
 export type MitattavaHanke = {
@@ -91,12 +126,15 @@ export function laskeKattavuus(hankkeet: MitattavaHanke[]): Kattavuus[] {
         normalizeLegacyPhase(h.phase) === vaihe
     )
     const yhteystiedolla = joukko.filter((h) => onYhteyshenkilo(h.metadata)).length
+    const hankekohtaisia = joukko.filter((h) => onHankekohtainenYhteyshenkilo(h.metadata)).length
 
     return {
       vaihe,
       hankkeita: joukko.length,
       yhteystiedolla,
+      hankekohtaisia,
       osuus: joukko.length ? yhteystiedolla / joukko.length : 0,
+      hankekohtainenOsuus: joukko.length ? hankekohtaisia / joukko.length : 0,
     }
   })
 }

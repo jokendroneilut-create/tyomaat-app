@@ -5,6 +5,61 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-241 - Yhteystiedolla on taso, ja mittarissa kaksi neulaa
+
+Johannes 6.10.2026: *"yrityskohtainen tieto on parempi kun ei tietoa
+ollenkaan. voi se olla jos se kerrotaan kayttajalle selvasti. tavoite on
+kuitenkin loytaa hankekohtainen yhteyshenkilo. tee vaikka kaksi neulaa
+mittariin jos halutaa nakyma molempiin ja varikoodaa ne."*
+
+Tama ratkaisee sen riskin joka syntyi heti kun mittari tehtiin (D-239):
+**halvin tapa saada neula vihreaksi olisi liittaa jokaiseen hankkeeseen
+yrityksen vaihde.** Silloin mittari nousisi ja tuote huononisi, eika
+kuukauden paasta tiedettaisi kumpi tapahtui.
+
+#### Taso kontaktissa
+
+`Kontakti.level`:
+
+| arvo | mita se on |
+|---|---|
+| `"project"` | taman hankkeen oma: nimi luettu hankkeen omasta asiakirjasta |
+| `"company"` | yrityksen yleinen: oikea yritys, muttei tama hanke |
+
+**Puuttuva arvo on `project`.** Kaikki tahan asti keratyt kontaktit
+tulevat hankkeen omasta lahteesta, joten oletus on se mita ne ovat.
+Yrityskohtainen taso merkitaan erikseen vasta kun se otetaan kayttoon —
+muuten tasot sekoittuisivat hiljaa.
+
+#### Kaksi neulaa
+
+Tumma neula = hankekohtainen (tavoite), harmaa = kaikki mukaan lukien
+yrityskohtaiset. Iso luku on **hankekohtainen**, ja yrityskohtainen
+naytetaan harmaana rivina vain jos se eroaa. Selite on mittarien alla.
+
+Juuri nyt neulat ovat samassa kohdassa, koska yrityskohtaisia
+yhteystietoja ei ole yhtaan. Se on oikea tilanne eika vika.
+
+#### Vaikutus heti: Helsingin takautuva ajo
+
+| | ennen | jalkeen |
+|---|---|---|
+| Rakenteilla | 63 % | **64 %** |
+| Suunnittelussa | 48 % | **76 %** |
+
+494 hanketta sai projektipaallikon, nolla hakuvirhetta, nolla sivua
+ilman yhteyshenkiloa. Suunnitteluvaiheen hyppy on 28 prosenttiyksikkoa —
+yhdesta lahdekorjauksesta.
+
+#### Auki
+
+Asiakkaalle pitaa viela **kertoa taso hankekortilla**: "yrityksen
+yhteyshenkilo" ei saa nayttaa samalta kuin "taman tyomaan vastaava".
+Ilman sita luvan antaminen yrityskohtaiselle tiedolle vain siirtaa
+ongelman asiakkaan puhelimeen.
+
+---
+
 ### D-240 - Helsingin paatoksista loytyy projektipaallikko, 500 hankkeelle
 
 Johannes 6.10.2026: *"nyt meidan pitaa alkaa tutkimaan ja lisaamaan

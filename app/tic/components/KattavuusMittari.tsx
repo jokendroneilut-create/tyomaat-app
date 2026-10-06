@@ -30,9 +30,12 @@ const piste = mittarinPiste
 const kaari = mittarinKaari
 
 export default function KattavuusMittari({ kattavuus }: { kattavuus: Kattavuus }) {
-  const { osuus, hankkeita, yhteystiedolla, vaihe } = kattavuus
+  const { osuus, hankekohtainenOsuus, hankkeita, yhteystiedolla, hankekohtaisia, vaihe } =
+    kattavuus
   const prosentti = Math.round(osuus * 100)
-  const neula = piste(osuus, SADE - 8)
+  const hankeProsentti = Math.round(hankekohtainenOsuus * 100)
+  const kaikkiNeula = piste(osuus, SADE - 8)
+  const hankeNeula = piste(hankekohtainenOsuus, SADE - 8)
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
@@ -42,7 +45,7 @@ export default function KattavuusMittari({ kattavuus }: { kattavuus: Kattavuus }
         viewBox={`0 0 ${LEVEYS} ${KORKEUS}`}
         className="mt-2 w-full"
         role="img"
-        aria-label={`${VAIHEEN_NIMI[vaihe]}: ${prosentti} prosentilla hankkeista on yhteyshenkilo`}
+        aria-label={`${VAIHEEN_NIMI[vaihe]}: ${hankeProsentti} prosentilla hankkeista on hankekohtainen yhteyshenkilo, ${prosentti} prosentilla jokin yhteyshenkilo`}
       >
         {VYOHYKKEET.map((v) => (
           <path
@@ -82,11 +85,31 @@ export default function KattavuusMittari({ kattavuus }: { kattavuus: Kattavuus }
           )
         })}
 
+        {/*
+          * KAKSI NEULAA (D-241). Johannes 6.10.2026: *"tee vaikka kaksi
+          * neulaa mittariin jos halutaa nakyma molempiin ja varikoodaa
+          * ne."* Tumma neula on tavoite — taman hankkeen oma
+          * yhteyshenkilo. Harmaa on kaikki, mukaan lukien yrityskohtainen
+          * tieto joka on parempi kuin ei mitaan mutta ei paamaara.
+          *
+          * Harmaa piirretaan ensin, jotta tumma jaa paalle kun ne ovat
+          * samassa kohdassa — ja juuri nyt ne ovat, koska yrityskohtaisia
+          * yhteystietoja ei ole viela yhtaan.
+          */}
         <line
           x1={KESKI_X}
           y1={KESKI_Y}
-          x2={neula.x}
-          y2={neula.y}
+          x2={kaikkiNeula.x}
+          y2={kaikkiNeula.y}
+          stroke="#9ca3af"
+          strokeWidth={3}
+          strokeLinecap="round"
+        />
+        <line
+          x1={KESKI_X}
+          y1={KESKI_Y}
+          x2={hankeNeula.x}
+          y2={hankeNeula.y}
           stroke="#111827"
           strokeWidth={3}
           strokeLinecap="round"
@@ -95,11 +118,24 @@ export default function KattavuusMittari({ kattavuus }: { kattavuus: Kattavuus }
       </svg>
 
       <p className="mt-1 text-center text-2xl font-bold tabular-nums text-gray-900 sm:text-3xl">
-        {prosentti} %
+        {hankeProsentti} %
       </p>
       <p className="text-center text-xs text-gray-500 sm:text-sm">
-        {yhteystiedolla.toLocaleString("fi-FI")} / {hankkeita.toLocaleString("fi-FI")} hanketta
+        <span className="font-medium text-gray-900">
+          {hankekohtaisia.toLocaleString("fi-FI")}
+        </span>{" "}
+        hankekohtaista / {hankkeita.toLocaleString("fi-FI")}
       </p>
+
+      {/*
+        * Yrityskohtainen luku naytetaan vain jos se eroaa: muuten rivi
+        * toistaisi saman luvun kahdesti ja nayttaisi virheelta.
+        */}
+      {prosentti !== hankeProsentti && (
+        <p className="text-center text-xs text-gray-400">
+          {prosentti} % kun yrityskohtaiset lasketaan mukaan
+        </p>
+      )}
     </div>
   )
 }

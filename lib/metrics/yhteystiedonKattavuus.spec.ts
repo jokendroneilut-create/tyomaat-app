@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   kelpaaYhteyshenkiloksi,
   laskeKattavuus,
+  onHankekohtainenYhteyshenkilo,
   onYhteyshenkilo,
 } from "./yhteystiedonKattavuus"
 
@@ -98,5 +99,40 @@ describe("laskeKattavuus", () => {
   it("ei jaa nollalla kun hankkeita ei ole", () => {
     const tulos = laskeKattavuus([])
     expect(tulos.every((t) => t.osuus === 0 && t.hankkeita === 0)).toBe(true)
+  })
+})
+
+describe("taso: hankekohtainen vai yrityskohtainen", () => {
+  const hanke = { name: "Aino Virtanen", email: "aino@example.fi" }
+  const yritys = { name: "Pekka Vaihde", phone: "0101234567", level: "company" as const }
+
+  /*
+   * PUUTTUVA TASO ON HANKEKOHTAINEN. Kaikki tahan asti keratyt kontaktit
+   * on luettu hankkeen omasta asiakirjasta, joten oletus on se mika ne
+   * ovat — eika vanha aineisto muutu hiljaa yrityskohtaiseksi.
+   */
+  it("ilman tasoa kontakti on hankekohtainen", () => {
+    expect(onHankekohtainenYhteyshenkilo({ contact_persons: [hanke] })).toBe(true)
+  })
+
+  it("yrityskohtainen lasketaan mukaan kokonaislukuun muttei hankekohtaiseen", () => {
+    const metadata = { contact_persons: [yritys] }
+    expect(onYhteyshenkilo(metadata)).toBe(true)
+    expect(onHankekohtainenYhteyshenkilo(metadata)).toBe(false)
+  })
+
+  it("laskee molemmat osuudet erikseen", () => {
+    const tulos = laskeKattavuus([
+      { phase: "Rakenteilla", status: "active", is_public: true, metadata: { contact_persons: [hanke] } },
+      { phase: "Rakenteilla", status: "active", is_public: true, metadata: { contact_persons: [yritys] } },
+      { phase: "Rakenteilla", status: "active", is_public: true, metadata: {} },
+      { phase: "Rakenteilla", status: "active", is_public: true, metadata: {} },
+    ])
+    const r = tulos.find((t) => t.vaihe === "construction")!
+    expect(r.hankkeita).toBe(4)
+    expect(r.yhteystiedolla).toBe(2)
+    expect(r.hankekohtaisia).toBe(1)
+    expect(r.osuus).toBe(0.5)
+    expect(r.hankekohtainenOsuus).toBe(0.25)
   })
 })
