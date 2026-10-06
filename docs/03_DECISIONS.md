@@ -5,6 +5,70 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-242 - Yritysrekisteri: yksi rivi per yritys, ei kopio per hanke
+
+Johannes 6.10.2026: *"tehdaan tuo yritysrekisteri."*
+
+Puute mitattiin uudelleen Helsingin korjauksen jalkeen: **1 160 -> 660
+hanketta** ilman yhteyshenkiloa, 345 eri yritysta, ja puolet puutteesta
+kattaa 36 yritysta. Karki on nyt tasaisempi kuin ennen (oli 5 yritysta).
+
+#### Rekisteri on taulu, ei kentta hankkeella
+
+Sama yritys esiintyy sadoissa hankkeissa. Jos yhteystieto kopioitaisiin
+jokaiselle, yhden henkilon vaihtuminen vaatisi satojen rivien
+paivittamisen eika mikaan kertoisi mika niista on ajan tasalla.
+`yritys_yhteyshenkilot` pitaa tiedon yhdessa paikassa ja hanke viittaa
+siihen **normalisoidulla avaimella**, koska nakyva nimi ei ole vakio:
+"YIT", "YIT Suomi Oy", "Are Oy (0989493-6), ISS Palvelut Oy (...)".
+
+`yritysavain` typistaa yhtiomuodon ja y-tunnuksen muttei liiketoiminnan
+nimea: **"YIT Infra" ei typisty "YIT":ksi**, koska se on eri yksikko
+omine yhteyshenkiloineen. Vaara yhteyshenkilo on pahempi kuin puuttuva.
+
+#### Ensimmainen tayttö johdettiin aineistosta, ei arvattu
+
+Yrityksen OMASTA lahteesta tulleen hankkeen yhteyshenkilo *on* sen
+yrityksen ihminen — lahde kertoo yrityksen, ei paattely
+sahkopostidomainista. Kokeilin ensin domain-paattelya ja se ehdotti
+Rakennusliike Laptille pohjolarakennus.fi:n henkiloita; se hylattiin.
+
+**Kaksi suodatinta kuivaharjoituksesta:**
+
+1. *Viestinta ei ole ostaja.* Ensimmainen ajo nosti SRV:n ja NCC:n
+   karkeen viestintapaallikot, jotka vastaavat haastattelupyyntoihin
+   eivat hankinnoista. Rooli on merkitty vain osalle, joten nimike
+   tarkistetaan erikseen.
+2. *Rikkinainen nimike paljastaa rikkinaisen poiminnan.* Yksi rivi oli
+   `". YhteyshenkilotManu Lainioh..."` — nimike jossa on toisen henkilon
+   nimi kiinni.
+
+Tulos: **18 yritysta, 111 henkiloa.**
+
+#### Rehellinen arvio kattavuudesta
+
+Rekisteri kattaa **160 hanketta 2 354:sta (7 %)**. Se ei ole paljon, ja
+sanon sen suoraan: johdettu rekisteri on alku, ei ratkaisu. Osumat ovat
+kuitenkin oikeissa yrityksissa — Skanska 32, NCC 22, Bonava 15, GRK 13 —
+eli juuri siella missa puute on. Loput karkiyritykset (Vaylavirasto 45,
+YIT 24, Hartela 22) vaativat kaytannossa kasin keratyn tiedon.
+
+Mittarissa ero nakyy heti:
+
+| vaihe | hankekohtainen | kaikki |
+|---|---|---|
+| Rakenteilla | 64 % | **75 %** |
+| Suunnittelussa | 76 % | **80 %** |
+
+#### Asiakkaalle vain jos omaa ei ole
+
+Reitti `/api/yritysrekisteri` palauttaa **tyhjan**, jos hankkeella on oma
+yhteyshenkilo: yrityksen yleinen ei koskaan ilmesty oman rinnalle.
+Rekisteria ei myoskaan anneta selaimeen kokonaan, vaan vain avatun
+hankkeen yrityksen osalta.
+
+---
+
 ### D-241 - Yhteystiedolla on taso, ja mittarissa kaksi neulaa
 
 Johannes 6.10.2026: *"yrityskohtainen tieto on parempi kun ei tietoa

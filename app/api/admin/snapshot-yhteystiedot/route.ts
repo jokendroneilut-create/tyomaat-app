@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { haeYritysrekisteri } from "@/lib/metrics/yritysrekisteri"
 import { createClient } from "@supabase/supabase-js"
 
 import { laskeKattavuus } from "@/lib/metrics/yhteystiedonKattavuus"
@@ -57,7 +58,7 @@ export async function GET(req: Request) {
     for (let from = 0; ; from += 1000) {
       const { data, error } = await supabaseAdmin
         .from("projects")
-        .select("phase, status, is_public, metadata")
+        .select("phase, status, is_public, metadata, developer, builder")
         .range(from, from + 999)
       if (error) throw error
       hankkeet.push(...(data ?? []))
@@ -65,7 +66,8 @@ export async function GET(req: Request) {
     }
 
     const paiva = helsinginPaiva()
-    const kattavuus = laskeKattavuus(hankkeet)
+    const rekisteri = await haeYritysrekisteri()
+    const kattavuus = laskeKattavuus(hankkeet, rekisteri)
 
     const rivit = kattavuus.map((k) => ({
       paiva,

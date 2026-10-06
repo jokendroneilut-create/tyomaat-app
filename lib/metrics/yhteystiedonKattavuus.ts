@@ -1,4 +1,5 @@
 import { normalizeLegacyPhase } from "@/lib/projects/phases"
+import { hankkeenYritysavaimet } from "./yritysavain"
 
 /*
  * YHTEYSTIEDON KATTAVUUS (D-239).
@@ -111,13 +112,24 @@ export type MitattavaHanke = {
   status?: string | null
   is_public?: boolean | null
   metadata?: unknown
+  /* Yritysrekisterin liitosta varten (D-242). */
+  developer?: string | null
+  builder?: string | null
 }
 
 /*
  * Mukaan vain asiakkaalle nakyvat aktiiviset hankkeet: piilotetun
  * hankkeen yhteystieto ei hyodyta ketaan, eika sen puute ole puute.
  */
-export function laskeKattavuus(hankkeet: MitattavaHanke[]): Kattavuus[] {
+/*
+ * Yrityskohtainen taydennys (D-242): hanke jolla ei ole omaa
+ * yhteyshenkiloa mutta jonka yritys on rekisterissa. Rekisteri annetaan
+ * parametrina, jotta laskenta pysyy puhtaana funktiona ja testattavana.
+ */
+export function laskeKattavuus(
+  hankkeet: MitattavaHanke[],
+  yritysrekisteri?: { has: (avain: string) => boolean }
+): Kattavuus[] {
   return MITATTAVAT_VAIHEET.map((vaihe) => {
     const joukko = hankkeet.filter(
       (h) =>
@@ -125,8 +137,19 @@ export function laskeKattavuus(hankkeet: MitattavaHanke[]): Kattavuus[] {
         h.is_public === true &&
         normalizeLegacyPhase(h.phase) === vaihe
     )
-    const yhteystiedolla = joukko.filter((h) => onYhteyshenkilo(h.metadata)).length
     const hankekohtaisia = joukko.filter((h) => onHankekohtainenYhteyshenkilo(h.metadata)).length
+
+    /*
+     * Kokonaisluku kattaa myos rekisterista tulevan yrityskohtaisen
+     * yhteyshenkilon — se on juuri se ero jonka harmaa neula nayttaa.
+     */
+    const yhteystiedolla = joukko.filter(
+      (h) =>
+        onYhteyshenkilo(h.metadata) ||
+        (yritysrekisteri
+          ? hankkeenYritysavaimet(h).some((avain) => yritysrekisteri.has(avain))
+          : false)
+    ).length
 
     return {
       vaihe,

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { haeYritysrekisteri } from "@/lib/metrics/yritysrekisteri"
 
 import {
   MITATTAVAT_VAIHEET,
@@ -45,14 +46,19 @@ export async function getYhteystietoMittarit(): Promise<YhteystietoMittarit> {
     for (let from = 0; ; from += 1000) {
       const { data, error } = await supabaseAdmin
         .from("projects")
-        .select("phase, status, is_public, metadata")
+        .select("phase, status, is_public, metadata, developer, builder")
         .range(from, from + 999)
       if (error) throw error
       hankkeet.push(...(data ?? []))
       if (!data || data.length < 1000) break
     }
 
-    const kattavuus = laskeKattavuus(hankkeet)
+    /*
+     * Yritysrekisteri mukaan (D-242): harmaa neula nayttaa myos
+     * yrityskohtaisen yhteyshenkilon, tumma vain hankekohtaisen.
+     */
+    const rekisteri = await haeYritysrekisteri()
+    const kattavuus = laskeKattavuus(hankkeet, rekisteri)
 
     const { data: rivit } = await supabaseAdmin
       .from("yhteystieto_kattavuus")

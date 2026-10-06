@@ -427,6 +427,48 @@ export default function Projects() {
     }
   }, [selected?.id, selected?.metadata])
 
+  /*
+   * YRITYKSEN YHTEYSHENKILO, JOS HANKKEEN OMAA EI OLE (D-242).
+   *
+   * Rekisteri on suojattu service-rolelle, joten se luetaan reitin
+   * kautta — ja vain avatulle hankkeelle, ei koko listalle: asiakkaan ei
+   * tarvitse saada kaikkien yritysten yhteystietoja yhdellä kutsulla.
+   *
+   * Reitti palauttaa tyhjän jos hankkeella on oma yhteyshenkilö, joten
+   * yrityksen yleinen ei koskaan ilmesty oman rinnalle.
+   */
+  useEffect(() => {
+    const id = selected?.id
+    if (!id || selected?.metadata === undefined) return
+
+    const omat = selected.metadata?.contact_persons ?? []
+    if (omat.length > 0) return
+
+    let cancelled = false
+
+    fetch(`/api/yritysrekisteri?projectId=${encodeURIComponent(String(id))}`)
+      .then((r) => r.json())
+      .then((tulos) => {
+        if (cancelled || !tulos?.ok || !tulos.yhteyshenkilot?.length) return
+        setSelected((current) =>
+          current && current.id === id
+            ? {
+                ...current,
+                metadata: {
+                  ...(current.metadata ?? {}),
+                  contact_persons: tulos.yhteyshenkilot,
+                },
+              }
+            : current
+        )
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [selected?.id, selected?.metadata])
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     /*

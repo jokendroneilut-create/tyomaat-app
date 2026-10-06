@@ -49,7 +49,15 @@ function tiedostot(polku: string): string[] {
 }
 
 describe("lahdekoodissa ei ole ohjausmerkkeja", () => {
-  it("kaikki tiedostot ovat puhtaita", () => {
+  /*
+   * OMA AIKARAJA, KOSKA TAMA LUKEE KOKO REPON.
+   *
+   * Testi kaatui 6.10.2026 koko sarjan ajossa viiden sekunnin
+   * oletusrajaan, mutta yksin ajettuna se kesti 1,4 s — eli vika oli
+   * rinnakkaiskuormassa, ei lahdekoodissa. Aikakatkaisu nayttaa samalta
+   * kuin loytynyt ohjausmerkki, ja juuri sita se ei saa nayttaa.
+   */
+  it("kaikki tiedostot ovat puhtaita", { timeout: 60_000 }, () => {
     const lika: string[] = []
 
     for (const juuri of JUURET) {

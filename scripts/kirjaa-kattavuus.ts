@@ -22,18 +22,21 @@ for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { laskeKattavuus, VAIHEEN_NIMI } = await import("../lib/metrics/yhteystiedonKattavuus")
+  const { haeYritysrekisteri } = await import("../lib/metrics/yritysrekisteri")
   const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
 
   const hankkeet: any[] = []
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await db.from("projects").select("phase, status, is_public, metadata").range(from, from + 999)
+    const { data, error } = await db.from("projects").select("phase, status, is_public, metadata, developer, builder").range(from, from + 999)
     if (error) throw error
     hankkeet.push(...(data ?? []))
     if (!data || data.length < 1000) break
   }
 
   const paiva = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Helsinki", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())
-  const kattavuus = laskeKattavuus(hankkeet)
+  const rekisteri = await haeYritysrekisteri()
+  console.log("yritysrekisterissa " + rekisteri.size + " yritysta")
+  const kattavuus = laskeKattavuus(hankkeet, rekisteri)
 
   console.log("paiva " + paiva + ", luettu " + hankkeet.length + " hanketta")
   for (const k of kattavuus) {
