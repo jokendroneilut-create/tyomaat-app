@@ -771,6 +771,39 @@ toimiala- ja rooliprofiiliin, ja siinä meillä on 86–96 %:n kenttäpuutteet.
 "Mitä on lähellä ja alkamassa kun minun kohteeni loppuu" on kysymys, johon
 meillä **on jo data vastata.**
 
+##### Korjaus edelliseen: Johannes pitää Reachin ideaa pöhkönä
+
+Yllä oleva arvio on kirjoitettu Hubexon muotoilussa ja liian myötämielisesti.
+Johanneksen vastaväite on parempi lähde kuin tämän dokumentin päättely, koska
+se tulee toimialan tuntemuksesta:
+
+> "Reachin liiketoimintaidea on pöhkö. Ei kukaan urakoitsija toimi oikeasti
+> noin. Voitetut hankkeet tulevat mistä tulevat."
+
+**Miksi hän on oikeassa.** Urakoitsijan seuraava työ tulee tilaajalta jonka
+kanssa on tehty ennenkin, pääurakoitsijalta joka soittaa, puitesopimuksesta
+tai tarjouspyynnöstä johon on kutsuttu — ei kartan selaamisesta. Pieni yritys
+on useimmiten varattu kuukausia eteenpäin, ja sen pullonkaula on **kapasiteetti
+ja kassa, ei liidien löytäminen**. "Lähistöllä alkava työmaa" ratkaisee
+ongelman, jota harvalla on.
+
+**Mikä siitä silti kannattaa pitää.** Ei ominaisuus vaan kaksi muuttujaa:
+**sijainti ja ajoitus**. Ne ovat oikeita siksi, että ajomatka on aito kustannus
+tietyille aloille (maarakennus, purku, telineet, nostot) ja että hankkeen vaihe
+kertoo milloin tietty ammattiryhmä ylipäätään kilpailutetaan.
+
+Ero on tämä, ja se on koko ero selailun ja tuotteen välillä:
+
+| | |
+|---|---|
+| ~~"mitä on lähellä"~~ | selailua — ratkaisee ongelman jota ei ole |
+| **"milloin lähelläni oleva hanke tulee siihen vaiheeseen, jossa minut valitaan"** | ajoitusta — ratkaisee ongelman joka on |
+
+Jälkimmäinen nojaa kahteen kenttään jotka meillä ovat lähes täydelliset
+(koordinaatit puuttuvat 1 %:lta, vaihe lähes täysi) — toisin kuin
+toimiala- ja rooliprofiili, jossa puutteet ovat 86–96 %. Se on syy pitää tämä
+mielessä, mutta **Reachin toteutusta ei kopioida.**
+
 ---
 
 ## Metroc Oy
@@ -1070,6 +1103,48 @@ Kääntöpuoli on syytä sanoa ääneen: 30 päivän irtisanottavuus siirtää
 todistustaakan tuotteelle joka kuukausi. Se toimii vain jos tuote tuottaa
 näkyvää arvoa jatkuvasti — mikä on sama vaatimus kuin P1:n relevanssipisteytys
 asettaa. Asemointi ja tuotesuunta ovat siis samassa veneessä.
+
+#### Attribuutio-ongelma — miksi 30 päivää on sekä etu että riski
+
+Johannes, 6.10.2026:
+
+> "Voitetut hankkeet tulevat mistä tulevat."
+
+Tämä on toimialan vaikein ongelma ja se koskee meitä enemmän kuin kilpailijoita.
+**Asiakas ei pysty jäljittämään, mikä liidilähde tuotti kaupan.** Rakennusalan
+kauppa syntyy kuukausien päästä, monen kosketuksen summana, ja lopullinen
+yhteydenotto tulee usein jotain muuta kautta kuin mistä tieto alun perin tuli.
+Mikään tämän markkinan tuote ei voi näyttää "tämä työkalu tuotti sinulle X
+euroa".
+
+Siitä seuraa kaksi asiaa.
+
+**1. Se selittää kilpailijoiden sopimusrakenteen.** Vuosisopimus etukäteen
+laskutettuna, 60 päivän irtisanomisaika, automaattinen uusiutuminen. Kun arvoa
+ei voi osoittaa, sopimusrakenne tekee sen asiakkaan puolesta: tilausta ei
+punnita kuukausittain, koska sitä ei voi punnita. Tämä ei ole pelkkää
+ahneutta — se on vastaus aitoon mittausongelmaan.
+
+**2. Se on meidän mallimme suurin riski.** 30 päivän irtisanottavuus poistaa
+juuri sen suojan. Asiakas kysyy joka kuukausi *"mitä minä tästä sain"*, eikä
+vastaus voi olla voitettu kauppa, koska kauppaa ei ole vielä voitettu — eikä
+sitä voitaisi silloinkaan yhdistää meihin.
+
+**Vaatimus joka tästä seuraa:** arvon on oltava **havaittavissa ennen kuin se
+on todistettavissa.** Käytännössä se tarkoittaa, että tuotteen on näytettävä
+joka viikko ilman että mitään on vielä voitettu:
+
+- montako relevanttia hanketta tällä viikolla löytyi
+- mikä seuraamissasi hankkeissa muuttui
+- **mitä et olisi muuten tiennyt** — tämä on tärkein ja vaikein
+
+Viimeinen on se, joka erottaa työkalun tilauksen uusimisen kynnyksellä. Jos
+asiakas olisi saanut saman tiedon Hilmasta tai lehdestä, hän irtisanoo.
+
+Tämä ei muuta asemointipäätöstä: 30 päivää on yhä se, jota kilpailija ei voi
+kopioida. Mutta se tarkentaa, mitä päätös tuotteelta vaatii — ja se vaatimus on
+tiukempi kuin P1:n relevanssipisteytys yksinään. **Pisteytys kertoo mikä on
+relevanttia; attribuutio-ongelma vaatii lisäksi näyttämään, että se oli uutta.**
 
 **~~Toinen rako: kapeus.~~ Vanhentui samana päivänä, 18.8.2026.** Tässä luki
 että kysymys *"mitä minun pitäisi tehdä tänään"* on yhä kenenkään omistamatta.
