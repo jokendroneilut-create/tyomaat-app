@@ -967,6 +967,91 @@ julkaisukynnyksestä kuin kattavuudesta.
 
 ---
 
+
+## Markkinan koko (6.10.2026)
+
+Ensimmäinen kerta kun tämä voidaan laskea oikeilla luvuilla eikä arvioilla:
+Hubexo Finlandin tilinpäätös ja heidän omasta esityksestään saadut
+asiakas- ja hankemäärät antavat nimittäjät.
+
+### Nykyinen kakku
+
+| | |
+|---|---|
+| Hubexo Finland Oy, koko liikevaihto 2025 | 11,3 M€ |
+| — josta hanketietoa (**arvio**) | ~6–8 M€; loppu on Rakennusfakta, ProdLib, suoramarkkinointi, SIR, Forecon PRIX, koulutukset |
+| Metroc, koko liikevaihto 2025 | 1,4 M€ (sis. Ruotsin) → Suomi ~1,0–1,2 M€ |
+| **Suomen hanketietomarkkina yhteensä** | **~8–10 M€/v** |
+
+Koko toimiala on siis pienempi kuin yksi keskikokoinen rakennusliike. Se on
+hyvä tietää ennen kuin markkinaosuuksista puhutaan: **osuuden kasvattaminen ei
+ole täällä se iso liike.**
+
+### Ostajien määrä on paljastavampi kuin euromäärä
+
+| | |
+|---|---|
+| Hubexon suomalaisia asiakasyrityksiä | "yli 2000" — sisältää myös pelkät Rakennusfakta-listaukset ja suoramarkkinoinnin, ei vain Smart-tilaajia |
+| Metrocin asiakkaita Suomessa | ~300 (400+ sis. Ruotsin) |
+| **hanketietoa ostavia yrityksiä yhteensä** | **~1 500–2 300** |
+
+Vertailukohdaksi oma aineisto: **16 172 rakennusalan yritystä sähköposteineen**
+yrittajat.fi:n hakemistosta, ja koko toimiala F on kokoluokkaa 45 000 yritystä,
+valtaosin alle viiden hengen.
+
+**Noin 85–95 % potentiaalisesta yleisöstä ei osta hanketietoa keneltäkään.**
+
+### Miksi he eivät osta: hinta on väärässä kokoluokassa
+
+Kolmen hengen yritykselle 470–600 €/kk on 5 600–7 200 €/v — lähes prosentti
+liikevaihdosta liidityökaluun. Sitä ei harkita, se ohitetaan. 100 €/kk on
+1 200 €/v, vähemmän kuin yhden työkoneen huolto; se ostetaan harkitsematta.
+
+Kilpailija ei ole ylihinnoiteltu. **Heidän halvin mahdollinen hintansa on vain
+liian korkea sille osalle markkinaa, jota ei ole koskaan palveltu** — koska 63
+henkeä ja 40 %:n katevaatimus on jaettava 2 000 asiakkaalle.
+
+### Mitä matala hintapiste tarkoittaa numeroina
+
+| uusia asiakkaita 100 €/kk | liikevaihtoa | mitä se on |
+|---|---|---|
+| 300 | 360 k€/v | erittäin hyvä yhden hengen yritys |
+| 500 | 600 k€/v | |
+| 1 000 | 1,2 M€/v | **suurempi kuin Metroc Suomessa — 1 hengellä vs. 23** |
+| 3 000 | 3,6 M€/v | koko markkina kasvaisi ~35 % |
+
+Tässä on asian ydin: **kakun ei tarvitse olla iso.** Hubexo tarvitsee
+470 €/kk × 2 000 asiakasta kattaakseen 63 henkeä, Metroc ~300 €/kk × 400
+pysyäkseen hengissä 23 hengellä. Yhden hengen kulurakenne ei tarvitse
+kumpaakaan — ja siksi se voi toimia hintapisteessä, jossa kumpikaan kilpailija
+ei voi.
+
+Kyse ei ole markkinaosuuden valtaamisesta vaan **markkinan luomisesta
+hintapisteeseen, jossa sitä ei ole ollut.**
+
+### Vaihtaja vai uusi ostaja — tämä on mitattava, ei arvattava
+
+6.10.2026 havaittu: ensimmäiset uudet asiakkaat ovat **nykyisiä RPT Smartin
+asiakkaita**. Se on korvaamista, ei kakun kasvattamista. Molemmat voivat olla
+totta samaan aikaan, mutta ne käyttäytyvät eri tavoin:
+
+| | vaihtaja | ei ole koskaan ostanut |
+|---|---|---|
+| myyntisykli | lyhyt — uskoo kategoriaan, on budjetti, ärsyyntynyt Risen lisämyynnistä | pitkä — pitää ensin uskoa että tällaista tarvitsee |
+| mihin vertaa | Byggfaktaan, eli kattavuuteen | ei mihinkään |
+| kuinka monta on olemassa | enintään ~2 000 | ~15 000 |
+| missä olemme vahvoja | heikoimmillamme (42 % volyymista, 24 % päällekkäisyys kärkihankkeista) | hinta ja ostettavuus |
+
+**Hiljainen vaara:** jos ensimmäiset parikymmentä asiakasta ovat vaihtajia,
+roadmap alkaa seurata heidän pyyntöjään (*"Smartissa oli tämä"*) ja ajaudumme
+rakentamaan halvempaa Smartia — juuri sitä kilpailua, joka on tässä
+dokumentissa todettu hävityksi.
+
+**Toimenpide:** laskutustietoihin yksi kenttä — *vaihtaja / ei koskaan
+ostanut*. Muutamassa kuukaudessa tiedetään kumpi teesi pitää, eikä sitä tarvitse
+arvata. Ks. muistiinpano `customer-billing`.
+
+---
 ## Asetelma on kolmio, ei pari (18.8.2026)
 
 Taulukkoa lukiessa on houkuttelevaa nähdä kaksi kilpailijaa ja me. Risen

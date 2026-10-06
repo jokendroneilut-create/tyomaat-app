@@ -108,6 +108,106 @@ kuukausihinta ovat tiedossa, korvaa rivi oikeilla luvuilla.
 
 ---
 
+
+## Strategia, johon arvio nojaa (kirjattu 6.10.2026)
+
+Johanneksen oma muotoilu, koska se on arvion tärkein oletus:
+
+> "Uskon vahvasti että voin luoda oman markkinan tuonne matalaan
+> hintapisteeseen. Se on minun strategiani: yksinkertainen, mutta kattava ja
+> edullinen tuote. Pirkka-versio ehkä jonkun mielestä, mutta se käy minulle
+> myös jos se on kannattavaa."
+
+Tämä on tietoinen valinta eikä puute, ja se kannattaa pitää mielessä kun
+arviota luetaan. **Pirkka ei ole huono tuote — se on tarkoituksella karsittu,
+hyvin tehty ja halpa, ja se omistaa valtavan markkinaosuuden.** Arvon ajuri ei
+tässä strategiassa ole ominaisuuksien määrä vaan asiakasmäärä ja churn.
+
+Markkinaperustelu on laskettu dokumentissa
+[`11_COMPETITORS.md`](11_COMPETITORS.md) kohdassa *Markkinan koko*: Suomen
+hanketietomarkkina on ~8–10 M€/v ja ostajia ~1 500–2 300, kun potentiaalinen
+yleisö on kokoluokkaa 15 000 yritystä. **85–95 % ei osta mitään, koska halvin
+tarjolla oleva hinta on väärässä kokoluokassa.**
+
+---
+
+## Yritysosto — skenaario ja mitä se vaatisi
+
+Byggfakta Group / Hubexo on pääomasijoitettu yritysostokone: kymmeniä
+yrityskauppoja 25 maassa, ja Suomen tuoteperheessäkin on ostettuja paloja
+(Forecon PRIX, ProdLib). Kysymys on siksi aiheellinen eikä teoreettinen.
+
+### Tänään: epätodennäköistä
+
+Yrityskaupalla on kiinteät kulut (DD, juristit, integraatio), jotka tekevät
+alle miljoonan kaupoista kannattamattomia 2 500 hengen konsernille, ellei kyse
+ole strategiasta. Nykyinen toistuva liikevaihto ei näy Hubexo Finlandin
+P&L:ssä, jossa liikevoitto on 5,2 M€.
+
+Eikä myytävänä ole sitä mitä he ostavat: **he ostavat toistuvaa liikevaihtoa ja
+asiakassuhteita, eivät teknologiaa.** Keruuautomaatio on heille kiinnostava
+mutta Suomi-kohtainen, ja heidän alustansa on tarkoituksella pohjoismainen.
+
+### Mutta 40 %:n kate tekee ostamisesta heille halvemman aseen kuin hinnan
+
+Tämä on epäintuitiivinen ja analyysin tärkein kohta. Jos matalan hinnan
+strategia alkaa purra, heillä on kaksi vastausta:
+
+| vastaus | mitä se maksaa heille |
+|---|---|
+| laskea hintaa | hinnoittelee 2 000 asiakkaan kannan uusiksi ja syö 5,2 M€:n katteen — **pysyvä** |
+| ostaa kilpailija | kertakulu, joka ei koske omaan hinnoitteluun lainkaan |
+
+Jälkimmäinen on halvempi. **Eli mitä paremmin strategia toimii, sitä
+houkuttelevampi ostokohde siitä tulee — nimenomaan siksi että se uhkaa
+hinnoittelua eikä kattavuutta.** Matalan hinnan asemointi on rakenteeltaan
+ostokohde-asemointia, haluttiin sitä tai ei.
+
+Laukaisupiste ei ole kaksi vaihtanutta asiakasta. Jossain sadan kohdalla luku
+alkaa vaatia selitystä Suomen johdolta eteenpäin.
+
+### Mikä nostaa hintaa — samat asiat jotka tekevät yrityksestä hyvän ilman kauppaa
+
+Konfliktia ei siis ole: osto-optimointi ja itsenäinen menestys osoittavat samaan
+suuntaan.
+
+- **toistuva liikevaihto ja matala churn** — käytännössä ainoa arvoajuri
+- **vaihtaja-asiakkaat erityisesti**, koska jokainen on heiltä menetettyä
+  liikevaihtoa
+- **orgaaninen hakukonenäkyvyys**, jota heillä ei ole lainkaan (vanha ilmainen
+  hankelista on kuollut, HTTP 526)
+- **dokumentaatio ja datan alkuperä** — `docs/` on due diligencessä
+  poikkeuksellisen hyvässä kunnossa
+- **puhdas omistus**: ei kanssaperustajia, ei sijoittajia, ei optioita. Pieni
+  kauppa kaatuu useammin sotkuiseen omistukseen kuin hintaan
+
+Kerroin pienessä B2B-datatuotteessa on sama 2–4 × ARR kuin yllä; strateginen
+preemio voi nostaa, muttei korvaa liian pientä liikevaihtoa.
+
+### Mitä kaupassa menettäisi
+
+**Yhden henkilön riski tarkoittaa earn-outia.** Ostaja ei osta tuotetta vaan
+yrityksen, joka toimii koska Johannes on siinä. Siksi tällaisissa kaupoissa on
+lähes aina ansaintaehto ja 1–3 vuoden sitoutuminen. Se tarkoittaa, että
+kaupassa myydään myös se vapaus, joka on tässä dokumentissa ja muistissa
+kirjattu tietoiseksi kilpailueduksi (`solo-self-funded`). Se ei tee kaupasta
+huonoa, mutta **se on hinnoiteltava mukaan eikä huomattava jälkikäteen.**
+
+### Käytännön varotoimi
+
+Jos yhteydenotto joskus tulee ("keskustellaanpa yhteistyöstä"), se voi yhtä
+hyvin olla tiedustelua siitä kuinka suuri uhka Työmaat.fi on. Ei asiakaslistaa,
+hinnoittelua eikä käyttäjämääriä ilman allekirjoitettua salassapitosopimusta —
+eikä asiakaslistaa nimitasolla kilpailijalle missään vaiheessa. Tämä on
+normaalia varovaisuutta, ei epäluuloa.
+
+### Johtopäätös
+
+**Ei nyt, mutta kyllä jos strategia onnistuu.** Toimintaohje on kumpaankin
+suuntaan sama: rakenna toistuvaa liikevaihtoa ja pidä churn matalana. Se tekee
+samalla parhaan itsenäisen yrityksen ja parhaan ostokohteen.
+
+---
 ## Reunaehdot ja oletukset
 
 - Yksin ilman ulkopuolista rahoitusta; keveys on tietoinen kilpailuetu. Arvio ei
@@ -120,6 +220,15 @@ kuukausihinta ovat tiedossa, korvaa rivi oikeilla luvuilla.
 ---
 
 ## Päivityshistoria
+
+- **2026-10-06** — Lisätty *Strategia, johon arvio nojaa* ja *Yritysosto —
+  skenaario*. Taustalla Hubexo Finlandin tilinpäätös (11,3 M€, liikevoitto
+  40,2 %, 63 hlöä, yli 2000 suomalaista asiakasta) ja markkinan koon laskenta
+  [`11_COMPETITORS.md`](11_COMPETITORS.md):ssa. Olennaisin uusi havainto
+  arvion kannalta: **40 %:n kate tekee kilpailijalle yritysostosta halvemman
+  aseen kuin hinnan laskemisesta**, eli onnistuva matalan hinnan strategia
+  kasvattaa sekä itsenäistä arvoa että ostohoukutusta samaan suuntaan. Arviota
+  itseään ei muutettu — ARR on yhä ratkaiseva puuttuva luku.
 
 - **2026-09-13** — Dokumentti luotu. Kirjattu heinäkuun, elokuun lopun ja
   syyskuun mittarit ja arviot. 29.8.→13.9. työ oli datavallihaudan syventämistä
