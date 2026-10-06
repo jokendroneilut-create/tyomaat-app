@@ -1,4 +1,5 @@
 'use client'
+import YhteyshenkilonTaso from '../components/YhteyshenkilonTaso'
 
 import Lataus from "@/app/components/Lataus"
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -98,7 +99,14 @@ type Project = {
     buyer_address?: string | null
     project_address?: string | null
     contact_persons?:
-      | { name: string; title: string | null; phone: string | null; email: string | null }[]
+      | {
+          name: string
+          title: string | null
+          phone: string | null
+          email: string | null
+          /* "company" = yrityksen yleinen, puuttuva = taman hankkeen oma. */
+          level?: string | null
+        }[]
       | null
     [key: string]: unknown
   } | null
@@ -1882,6 +1890,7 @@ setTeamModeEnabled(true)
                   <p key={i}>
                     {contact.name}
                     {contact.title ? `, ${contact.title}` : ''}
+                    <YhteyshenkilonTaso level={contact.level} />
                     {contact.phone ? (
                       <>
                         {' — '}

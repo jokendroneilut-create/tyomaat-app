@@ -51,12 +51,21 @@ yhteystietoja ei ole yhtaan. Se on oikea tilanne eika vika.
 ilman yhteyshenkiloa. Suunnitteluvaiheen hyppy on 28 prosenttiyksikkoa —
 yhdesta lahdekorjauksesta.
 
-#### Auki
+#### Taso nakyy asiakkaalle
 
-Asiakkaalle pitaa viela **kertoa taso hankekortilla**: "yrityksen
-yhteyshenkilo" ei saa nayttaa samalta kuin "taman tyomaan vastaava".
-Ilman sita luvan antaminen yrityskohtaiselle tiedolle vain siirtaa
-ongelman asiakkaan puhelimeen.
+`app/components/YhteyshenkilonTaso.tsx` nayttaa yhteyshenkilon perassa
+merkinnan **"yrityksen yhteyshenkilo"** — molemmilla hankekorteilla
+(kartta ja Tanaan). Ilman tata luvan antaminen yrityskohtaiselle
+tiedolle olisi vain siirtanyt ongelman asiakkaan puhelimeen.
+
+**Merkinta vain poikkeukselle.** Hankekohtainen on se mita asiakas
+odottaa saavansa, eika odotettua tarvitse selittaa; merkinta joka
+rivilla hukuttaisi poikkeuksen. Hiiren alla lukee mita puuttuu: *"Taman
+tyomaan omaa yhteyshenkiloa ei ole tiedossa."*
+
+Nyt yhdellakaan kontaktilla ei ole tasoa `company`, joten asiakkaalle ei
+muutu mikaan. Se on tarkoitus: merkinta on oltava olemassa **ennen**
+ensimmaista yrityskohtaista yhteystietoa, ei sen jalkeen.
 
 ---
 

@@ -1,4 +1,5 @@
 "use client"
+import YhteyshenkilonTaso from "../../components/YhteyshenkilonTaso"
 
 import Lataus from "@/app/components/Lataus"
 import { useEffect, useState } from "react"
@@ -48,7 +49,14 @@ type Project = {
     contract_currency?: string | null
     received_tender_count?: number | null
     contact_persons?:
-      | { name: string; title: string | null; phone: string | null; email: string | null }[]
+      | {
+          name: string
+          title: string | null
+          phone: string | null
+          email: string | null
+          /* "company" = yrityksen yleinen, puuttuva = taman hankkeen oma. */
+          level?: string | null
+        }[]
       | null
     [key: string]: unknown
   } | null
@@ -608,6 +616,7 @@ export default function TodayProjectModal({
                   <p key={i}>
                     {contact.name}
                     {contact.title ? `, ${contact.title}` : ""}
+                    <YhteyshenkilonTaso level={contact.level} />
                     {contact.phone ? (
                       <>
                         {" — "}
