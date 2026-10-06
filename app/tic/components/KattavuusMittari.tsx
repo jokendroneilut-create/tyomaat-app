@@ -35,7 +35,7 @@ export default function KattavuusMittari({ kattavuus }: { kattavuus: Kattavuus }
   const neula = piste(osuus, SADE - 8)
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
       <h3 className="text-sm font-semibold text-gray-700">{VAIHEEN_NIMI[vaihe]}</h3>
 
       <svg
@@ -94,10 +94,10 @@ export default function KattavuusMittari({ kattavuus }: { kattavuus: Kattavuus }
         <circle cx={KESKI_X} cy={KESKI_Y} r={6} fill="#111827" />
       </svg>
 
-      <p className="mt-1 text-center text-3xl font-bold tabular-nums text-gray-900">
+      <p className="mt-1 text-center text-2xl font-bold tabular-nums text-gray-900 sm:text-3xl">
         {prosentti} %
       </p>
-      <p className="text-center text-sm text-gray-500">
+      <p className="text-center text-xs text-gray-500 sm:text-sm">
         {yhteystiedolla.toLocaleString("fi-FI")} / {hankkeita.toLocaleString("fi-FI")} hanketta
       </p>
     </div>

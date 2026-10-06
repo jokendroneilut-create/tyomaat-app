@@ -47,7 +47,7 @@ export default function KattavuusTrendi({
   const lyhytPaiva = (paiva: string) => paiva.slice(8, 10) + "." + paiva.slice(5, 7) + "."
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
       <h3 className="text-sm font-semibold text-gray-700">
         {VAIHEEN_NIMI[vaihe]} — kehitys
       </h3>
@@ -96,11 +96,11 @@ export default function KattavuusTrendi({
       </svg>
 
       {pisteet.length <= 1 ? (
-        <p className="mt-1 text-center text-sm text-gray-500">
+        <p className="mt-1 text-center text-xs text-gray-500 sm:text-sm">
           Mittaus alkoi {pisteet.length === 1 ? lyhytPaiva(ensimmainen.paiva) : "tänään"}
         </p>
       ) : (
-        <p className="mt-1 text-center text-sm text-gray-500">
+        <p className="mt-1 text-center text-xs text-gray-500 sm:text-sm">
           {muutos === 0
             ? "Ennallaan"
             : `${muutos! > 0 ? "+" : ""}${muutos} prosenttiyksikköä`}{" "}

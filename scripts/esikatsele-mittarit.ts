@@ -80,7 +80,8 @@ async function main() {
   const html = "<!doctype html><html lang=\"fi\"><head><meta charset=\"utf-8\"><title>Mittarien esikatselu</title>" +
     "<style>body{font-family:system-ui,sans-serif;background:#f9fafb;padding:24px;margin:0}" +
     "h1{font-size:20px}h2{font-size:16px;color:#374151}" +
-    ".rivi{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1104px}" +
+    ".rivi{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:1104px}" +
+    "@media(min-width:1024px){.rivi{grid-template-columns:repeat(4,1fr);gap:16px}}" +
     ".ruutu{border:1px solid #e5e7eb;border-radius:16px;background:#fff;padding:16px}" +
     ".ruutu h3{font-size:13px;color:#374151;margin:0 0 8px}" +
     "svg{width:100%}" +

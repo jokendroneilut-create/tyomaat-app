@@ -44,7 +44,13 @@ export default async function TicPage({
             Yhteyshenkilön kattavuus
           </h2>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/*
+            * KAKSI RINNAKKAIN MYOS PUHELIMESSA (Johannes 6.10.2026).
+            * Yhden sarakkeen ruudukossa yksi mittari tayttaa koko
+            * ruudun korkeuden, jolloin toista ei nae ilman vierittamista
+            * — ja mittarien koko pointti on vertailla niita keskenaan.
+            */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {mittarit.kattavuus.map((k) => (
               <KattavuusMittari key={k.vaihe} kattavuus={k} />
             ))}
