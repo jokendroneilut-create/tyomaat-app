@@ -18,6 +18,8 @@ type ReviewContact = {
   email?: string | null
   /* "authority" = viranomainen, ei hankkeen osapuoli. */
   role?: string | null
+  /* "company" = yrityksen yleinen, puuttuva = taman hankkeen oma. */
+  level?: string | null
 }
 
 /*
@@ -323,6 +325,17 @@ export default function PotentialProjectsReviewList({
                               : c.role === "media"
                                 ? "(viestintä)"
                                 : null,
+                            /*
+                              * TASO NAKYY MYOS KATSELMOIJALLE (D-241).
+                              * Merkinta tehtiin ensin vain asiakkaan
+                              * korteille, mutta ero ratkaisee myos tassa:
+                              * "onko tassa hankkeessa ketaan jolle soittaa"
+                              * on eri kysymys kuin "tiedammeko yrityksen
+                              * vaihteen". Johannes huomasi puutteen heti.
+                              */
+                            String(c.level ?? "project") === "company"
+                              ? "(yrityksen yleinen)"
+                              : null,
                           ]
                             .filter(Boolean)
                             .join(" · ")

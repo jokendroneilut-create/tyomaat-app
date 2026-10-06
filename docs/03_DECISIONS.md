@@ -67,6 +67,14 @@ Nyt yhdellakaan kontaktilla ei ole tasoa `company`, joten asiakkaalle ei
 muutu mikaan. Se on tarkoitus: merkinta on oltava olemassa **ennen**
 ensimmaista yrityskohtaista yhteystietoa, ei sen jalkeen.
 
+**MYOS KATSELMOIJALLE.** Johannes kysyi heti: *"vaikuttaako tuo
+viimeeksi tehty myos tic jonossa odottaviin hankkeisiin?"* Ei
+vaikuttanut — merkinta oli vain asiakkaan korteilla. Ero ratkaisee myos
+jonossa: "onko tassa hankkeessa ketaan jolle soittaa" on eri kysymys
+kuin "tiedammeko yrityksen vaihteen". Jonorivilla lukee nyt
+`(yrityksen yleinen)` samassa kohdassa kuin `(viranomainen)` ja
+`(viestinta)`.
+
 ---
 
 ### D-240 - Helsingin paatoksista loytyy projektipaallikko, 500 hankkeelle
