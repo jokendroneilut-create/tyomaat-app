@@ -130,13 +130,37 @@ yhteystietoa. Tieto on vain sivulla, joten sivu on haettava.
 Kirjaamon osoite jaa paikalleen ja henkilo lisataan sen rinnalle:
 yhteystietokentasta ei poisteta mitaan.
 
+#### Tuleeko tieto jatkossa automaattisesti? Kylla — todennettu ajamalla
+
+Johannes 6.10.2026: *"onko tuon helsingin osalta nyt niin etta jatkossa
+nuo tiedot ovat aina mukana kun hyvaksyn hanketta?"*
+
+Ketju on todennettu ajamalla kerain oikeasti (ei lukemalla koodia):
+
+```
+kerain palautti 33 paatosta, yhteyshenkilo 29:lla
+  Tarvepaatos Jakomaen uimarannan huoltorakennuksesta
+     Anna Salmela, Arkkitehti, anna.s.salmela@hel.fi, 09 310 86468
+```
+
+Tieto kulkee `metadata.contact_persons`-avaimella kerajalta ehdokkaalle
+(`importCandidate` yhdistaa `body.metadata`n sellaisenaan) ja ehdokkaalta
+hankkeelle (hyvaksynta yhdistaa `contact_persons`-listan). Eli
+hyvaksyessasi hanke on jo valmiiksi yhteyshenkilollinen.
+
+**BUDJETTI RIITTAA, MITATTU.** Sivuhaku on rajattu 30:een per ajo, ja
+kerain palauttaa tuoreusikkunastaan 33 paatosta — eli kaytannossa koko
+ikkuna haetaan joka ajossa. Uusia paatoksia tulee mitatusti 1-9 per ajo
+(elokuun 430 ja 77 olivat lahteen perustamisera), ja ne ovat
+jarjestyksessa ensimmaisina, joten ne mahtuvat budjettiin aina.
+
 #### Auki
 
 Yhteyshenkilon **taso** pitaa viela erottaa: hankekohtainen (taman
 tyomaan vastaava) vs. yrityskohtainen (yrityksen yleinen). Mittari on
 nyt olemassa, ja halvin tapa saada neula vihreaksi olisi liittaa
 jokaiseen hankkeeseen yrityksen vaihde. Silloin mittari nousisi ja tuote
-huononisi.
+huononisi. — *Ratkaistu D-241:ssa.*
 
 ---
 
