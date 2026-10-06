@@ -1,14 +1,18 @@
 /*
- * Luku voi olla null, jos sen kysely epaonnistui. Aiemmin yksikin
- * epaonnistunut laskuri kaatoi koko /tic-sivun 500:aan - myos
- * katselmointijonon. Nyt puuttuva luku nakyy viivana ja jono toimii.
+ * KAKSI RIVIA JOISSA ON TYOTA (D-239).
+ *
+ * Tassa oli ennen kuuden kortin lista "Mita sinun kannattaa tehda
+ * tanaan?". Mittarit ottivat sen paikan, ja Johannes 6.10.2026 valitsi
+ * naista kaksi jaamaan: *"tuo 90 signaalia vaatii paatoksesi ja 4
+ * lahdetta epaonnistui voi jaada."*
+ *
+ * Nelja muuta korttia olivat saman jonon alaerittelya (korkea
+ * prioriteetti, tarjoukset, kaavoitus) tai pelkka tilasto
+ * (automaattisesti suodatetut) — ne eivat kertoneet mita tehda, vaan
+ * toistivat eri sanoin saman jonon joka on sivulla alempana.
  */
 type Props = {
   needsReview: number | null
-  highPriority: number | null
-  tenders: number | null
-  zoning: number | null
-  ignored: number | null
   failedSources?: number | null
 }
 
@@ -17,69 +21,22 @@ function Luku({ value }: { value: number | null | undefined }) {
   return <strong>{value ?? "–"}</strong>
 }
 
-function Card({
-  children,
-  href,
-}: {
-  children: React.ReactNode
-  href?: string
-}) {
-  const style = {
-    display: "block",
-    border: "1px solid #ddd",
-    borderRadius: 10,
-    padding: 16,
-    color: "inherit",
-    textDecoration: "none",
-  } as const
-
-  if (href) {
-    return (
-      <a href={href} style={{ ...style, cursor: "pointer" }}>
-        {children}
-      </a>
-    )
-  }
-  return <div style={style}>{children}</div>
-}
-
-export default function TicDailySummary({
-  needsReview,
-  highPriority,
-  tenders,
-  zoning,
-  ignored,
-  failedSources,
-}: Props) {
+export default function TicDailySummary({ needsReview, failedSources }: Props) {
   return (
-    <section style={{ marginTop: 24, marginBottom: 32 }}>
-      <h2>Mitä sinun kannattaa tehdä tänään?</h2>
+    <section className="mb-8 grid gap-2 sm:grid-cols-2">
+      <a
+        href="#review"
+        className="rounded-xl border border-gray-200 px-4 py-3 text-gray-900 no-underline hover:bg-gray-50"
+      >
+        🟡 <Luku value={needsReview} /> signaalia vaatii päätöksesi
+      </a>
 
-      <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
-        <Card href="#review">
-          🔥 <Luku value={highPriority} /> korkean prioriteetin mahdollisuutta löytyi
-        </Card>
-
-        <Card href="#review">
-          🟡 <Luku value={needsReview} /> signaalia vaatii päätöksesi
-        </Card>
-
-        <Card href="#review">
-          📑 <Luku value={tenders} /> tarjousmahdollisuutta havaittu
-        </Card>
-
-        <Card href="#review">
-          🏗️ <Luku value={zoning} /> kaavoitukseen tai varhaiseen hankkeeseen liittyvää signaalia
-        </Card>
-
-        <Card>
-          ⚪ <Luku value={ignored} /> signaalia suodatettiin pois automaattisesti viimeisen 24 h aikana
-        </Card>
-
-        <Card href="/tic/operations">
-          ⚠️ <Luku value={failedSources} /> lähdettä epäonnistui viime ajossa
-        </Card>
-      </div>
+      <a
+        href="/tic/operations"
+        className="rounded-xl border border-gray-200 px-4 py-3 text-gray-900 no-underline hover:bg-gray-50"
+      >
+        ⚠️ <Luku value={failedSources} /> lähdettä epäonnistui viime ajossa
+      </a>
     </section>
   )
 }

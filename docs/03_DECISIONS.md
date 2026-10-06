@@ -5,6 +5,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-239 - Yhteystiedon kattavuus: tiukka mittari ja oma historia
+
+Johannes 6.10.2026: *"nyt aloitetaan keskittyminen yhteyshenkiloihin
+toden teolla. tehdaan sille ensin kunnon mittarit."*
+
+#### Mittarin lukema riippuu maaritelmasta — ja ero on 29 prosenttiyksikkoa
+
+| maaritelma | koko kanta |
+|---|---|
+| loysa: onko kontaktikenttaa lainkaan | **86 %** |
+| tiukka: nimetty henkilo + sahkoposti tai puhelin, ei viranomainen | **57 %** |
+
+Loysa luku on imarteleva ja hyodyton: siihen lasketaan
+`kaavoitus@vihti.fi` ja nimettomat organisaatiorivit. **Myyja ei voi
+soittaa postilaatikolle.** Mittari kayttaa tiukkaa maaritelmaa
+(`lib/metrics/yhteystiedonKattavuus.ts`).
+
+Lahtotaso 6.10.2026 kanonisella vaiheella:
+
+| vaihe | hankkeita | yhteyshenkilo |
+|---|---|---|
+| Rakenteilla | 725 | **63 %** |
+| Suunnittelussa | 1 701 | **48 %** |
+| Kaavoitus | 2 898 | 67 % |
+| Rakennuslupa | 158 | 2 % |
+
+**KAKSI KIRJOITUSASUA, YKSI VAIHE.** Kannassa on seka "Rakenteilla" etta
+"Rakentaminen aloitettu" (352 + 373), samoin "Suunnittelussa" ja
+"Suunnittelu". Ilman `normalizeLegacyPhase`-normalisointia mittari
+nayttaisi vain puolet joukosta — ja luku olisi uskottava.
+
+#### Trendia ei voi laskea takautuvasti
+
+Yhteystiedot elavat hankkeen metadatassa ilman versiota. Kokeilin
+johtaa historian tuontikuukaudesta, ja se paljasti miksi se ei kelpaa:
+
+```
+Suunnittelu:  huhti 9 %   touko 50 %   kesa 100 %   heina 75 %   elo 44 %
+hankkeita:         23          10           1          287       1109
+```
+
+Kesakuun "100 %" on yksi hanke. Kayra heiluisi volyymin mukaan, ei
+laadun. **Mittaus alkaa siis tasta paivasta**: taulu
+`yhteystieto_kattavuus` (yksi rivi per paiva ja vaihe) ja cron
+`/api/admin/snapshot-yhteystiedot` klo 3.30. Ensimmainen piste
+kirjattiin kasin 6.10.2026 jottei graafi ole tyhja.
+
+**Nimittaja tallennetaan, ei vain prosentti.** Prosentti yksin ei kerro
+onko 63 % kolmesta vai 725:sta hankkeesta, eika sita voi jalkikateen
+paatella.
+
+#### Mittari nayttaa nykytilan, graafi mitatut paivat
+
+Neula lukee elavaa kantaa — muuten korjaus ei nakyisi ennen seuraavaa
+yota. Graafi piirtaa vain mitattuja pisteita, ja yhdella pisteella
+piirretaan **piste eika viivaa**: viiva vaittaisi kehityssuunnan jota ei
+ole mitattu.
+
+#### Katsottu, ei vain mitattu
+
+Geometria on omassa moduulissaan (`lib/metrics/mittarinGeometria.ts`)
+jotta `scripts/esikatsele-mittarit.ts` voi piirtaa esikatselun
+**samoilla funktioilla** oikeilla luvuilla — /tic vaatii
+adminkirjautumisen eika sita voi katsoa kehityksessa. Esikatselu
+paljasti heti yhden vian: asteikon numerot olivat kaaren sisapuolella ja
+kortin leveydella lahes lukukelvottomia. Ne siirrettiin ulkopuolelle,
+kuten Johanneksen mallikuvan huoneilmamittarissa.
+
+#### Vanha lista supistui kahteen riviin
+
+"Mita sinun kannattaa tehda tanaan" oli kuusi korttia, joista nelja oli
+saman jonon alaerittelya tai pelkka tilasto. Johannes valitsi kaksi
+jaamaan: *"tuo 90 signaalia vaatii paatoksesi ja 4 lahdetta
+epaonnistui voi jaada."*
+
+---
+
 ### D-238 - Tervehdys nimella, ja nimi kysytaan kerran
 
 Johannes 6.10.2026: *"Haluan ainakin tanaan nakymaan ylalaitaan tekstin
