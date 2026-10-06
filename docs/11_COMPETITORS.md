@@ -16,13 +16,13 @@ väite ja mitattu tosiasia eivät saa näyttää samalta.
 
 ---
 
-## Tiivistelmä (päivitetty 25.9.2026)
+## Tiivistelmä (päivitetty 6.10.2026)
 
 Jos luet vain tämän:
 
 | | |
 |---|---|
-| **RPT / Hubexo** | Ihmiset soittavat rakennuttajille. **Byggfakta Rise** (17.8.2026): tekoälyvalmentaja Rune, joka kertoo kenelle soittaa tänään ja kirjoittaa sähköpostin valmiiksi; aluehinnoittelu poistui, käyttöönotto maksullinen 3–4 vk. Vanha Smart oli 600 €/kk yhdestä maakunnasta. **Hubexo Reach** (webinaari 6.10.2026): mobiilituote **alle 20 hengen yrityksille** — eli meidän segmenttimme. Hinta ja ostotapa yhä tuntemattomia. |
+| **RPT / Hubexo** | Ihmiset soittavat rakennuttajille. **11,3 M€ liikevaihtoa Suomessa, 40,2 % liikevoitto, 63 hlöä, yli 2000 suomalaista asiakasta, 13 000 aktiivista hanketta Suomessa.** **Rise** (17.8.): tekoälyvalmentaja Rune. **Reach** (6.10.): mobiilituote alle 20 hengen yrityksille — meidän segmenttimme, mutta **hintaa ei kerrottu, ohjattiin myyntiin.** |
 | **Metroc** | Sama malli kuin meillä: automaatio julkisista lähteistä. 1,4 M€ / 23 hlöä / 400+ asiakasta → **~250–350 €/kk** (vahvistettu kahdesta pisteestä, 2021 ja 2025). Omistaa suomalaisen julkisen sektorin **asiakirjadatan** (Public Investments) — keruu alkanut jo 2021. Kasvoi 0,5 M€:sta 1,4 M€:oon 4,5 vuodessa, yhä tappiolla. |
 | **Meidän tie** | Julkinen hinta, ostaminen ilman myyjää, **irtisanottavissa 30 päivässä**. Ainoa etu joka seuraa pienuudesta eikä katoa kun kilpailija huomaa sen. |
 
@@ -72,6 +72,53 @@ tukisivustolta, ellei toisin mainita.
 Omistuspohja on pääomasijoittajavetoinen. Se tarkoittaa katteen optimointia ja
 tuotteiden yhdenmukaistamista yli maiden — ei nopeaa paikallista reagointia
 Suomen erityispiirteisiin.
+
+### Talousluvut — Hubexo Finland Oy 2025 (lisätty 6.10.2026)
+
+Nämä luvut muuttavat tämän dokumentin kantavaa väitettä, joten ne ovat omassa
+lohkossaan.
+
+| | |
+|---|---|
+| liikevaihto 2025 | **11,3 M€** (+5,3 %) |
+| liiketulos | **5,2 M€** |
+| **liikevoittoprosentti** | **40,2 %** |
+| nettotulos | 4,3 M€ |
+| henkilöstö | 63 |
+| omavaraisuusaste | 78 % |
+| suomalaisia asiakasyrityksiä | **"yli 2000"** (webinaari 6.10.2026) |
+
+Lähde: julkiset tilinpäätöstiedot; asiakasmäärä heidän omasta esityksestään.
+
+**Keskihinta.** 11,3 M€ / 2 000 asiakasta ≈ **5 650 €/v ≈ 470 €/kk** per
+asiakas. Varaus on iso: luku sisältää *kaikki* Hubexo Finlandin tuotteet
+(Smart, Tender, SIR, Rakennusfakta, ProdLib, suoramarkkinointi, koulutukset),
+eikä "luottavat meihin" välttämättä tarkoita maksavaa Smart-tilausta. Luku on
+silti paras suomalainen ankkuri mitä on ollut: mitattu 600 €/kk yhdestä
+maakunnasta on **keskiarvon yläpuolella**, ei tyypillinen hinta.
+
+#### Korjaus dokumentin kantavaan väitteeseen
+
+Tässä dokumentissa on toistuvasti sanottu, että kilpailija **ei voi** laskea
+hintaa tai siirtyä itsepalveluun purkamatta omaa rakennettaan. **40,2 %:n
+liikevoitolla se ei pidä paikkaansa.** Hubexo Finland tekee 5,2 M€ liikevoittoa
+63 hengellä. Heillä on varaa hinnoitella meidät ulos milloin tahansa, jos he
+niin päättävät. Hintasota on heille voitettavissa ja meille ei.
+
+Oikeampi muotoilu on tämä: **he eivät halua, eivät "eivät voi".** Julkinen,
+matala pk-hinta repricing-hinnoittelisi koko 2 000 asiakkaan kannan ja söisi
+juuri sen 5,2 M€:n katteen, jonka varassa pääomasijoittajaomistus lepää.
+Pääomasijoittaja ei salli 40 %:n katteen romuttamista uuden segmentin takia.
+
+Se on heikompi suoja kuin "ei voi", mutta se on **vakaa niin kauan kuin
+omistusrakenne ja kate pysyvät** — ja se selittää havainnon, josta tämä kaikki
+lähti: miksi Reachilla ei ole julkista hintaa.
+
+**Kasvu +5,3 % kertoo loput.** Suomi on heille kypsä lypsylehmä, ei
+kasvutarina. 2 000 asiakasta on todennäköisesti lähellä sitä mitä nykyisellä
+hinnalla ja myyntitavalla on saatavissa. Uutta liikevaihtoa on haettava
+segmentistä, jolle ei ole myyty — **mutta ilman että nykyiseltä kannalta
+leikataan hintaa.** Juuri sen ristiriidan tuote Reach on.
 
 ### Hinta — mitattu, ei arvattu
 
@@ -640,6 +687,90 @@ ongelmaan** — ja rakenteellinen ongelma ei katoa paketoimalla.
 Tämä johtopäätös on ehdollinen ja se ratkeaa 6.10. Jos hinta on julkinen ja
 ostaminen itsepalvelua, tämä kohta on kirjoitettava uusiksi.
 
+#### Webinaari 6.10.2026 — tuote julkaistiin, hintaa ei kerrottu
+
+Johannes osallistui. Puhujat Lasse Paavola ja **Elina Kyytsönen** (kutsussa
+luki Ella Tuominen). Tuote julkaistiin samana päivänä, sovelluksen versio
+ruudulla **v1.6.0** — eli kyse ei ole ensimmäisestä kokeiluversiosta vaan
+iteroidusta tuotteesta, jota on rakennettu pidempään.
+
+##### Ratkaiseva kysymys sai vastauksen: maailma 1
+
+Yllä kysyttiin, onko Reach itsepalvelutuote julkisella hinnalla vai myydäänkö
+se kuten kaikki muukin. **Hintaa ei kerrottu webinaarissa lainkaan;
+kiinnostuneet ohjattiin ottamaan yhteyttä myyntiin.**
+
+Se on vaihtoehto 1: **paketointi, ei liiketoimintamallin muutos.** Reach on
+uusi käyttöliittymä ja uusi kohderyhmä vanhan myyntikoneen päällä. Alle 20
+hengen yritys, jolle tuote on markkinoitu, joutuu yhä soittamaan myyjälle ja
+neuvottelemaan hinnan jota ei näe etukäteen.
+
+**Meidän rakomme pysyy siis auki** — mutta ks. *Talousluvut*: se on auki koska
+he eivät halua sulkea sitä, ei koska he eivät pystyisi.
+
+##### Luvut heidän omasta esityksestään
+
+Avauskalvo ("Autamme yrityksiä kasvamaan") sisälsi neljä väitettä:
+
+| väite | merkitys meille |
+|---|---|
+| "Yli 100 vuotta rakennusalan tietoa Pohjoismaissa" | tuttu brändiväite |
+| **"13 000 aktiivista rakennushanketta Suomessa seurannassa juuri nyt"** | **ensimmäinen Suomi-kohtainen hankemäärä, jonka he ovat kertoneet** |
+| **"Yli 2000 suomalaista rakennusalan yritystä luottavat meihin"** | ensimmäinen Suomen asiakasmäärä |
+| "Alan suurin tutkimustiimi, joka seuraa markkinaasi päivittäin" | 63 hengen yhtiössä iso osa on tutkijoita |
+
+**13 000 on tämän dokumentin tärkein uusi luku.** Se ratkaisee kiistan, jota on
+puitu elokuusta asti:
+
+- Risen lehdistötiedotteen 90 000 oli pohjoismainen. Arvioin Suomen osuudeksi
+  15 000–20 000; **oikea luku on 13 000**, eli arvioin yläkanttiin.
+- Reachin mockupin "10 000+ kohdetta" oli siis suuruusluokaltaan oikea.
+- **Metrocin "yli 100 000 hanketta Suomessa" on eri yksikkö, ei eri
+  kattavuus** — kahdeksankertainen ero markkinajohtajan omaan Suomen lukuun
+  todistaa sen lopullisesti. Metroc laskee kaiken mitä automaatio poimii,
+  Byggfakta vain aktiiviset ja varmennetut.
+- **Meidän 5 439 asiakkaille näkyvää hanketta on 42 % heidän 13 000:staan.**
+  Se on paljon parempi asema kuin aiempi mittaus antoi ymmärtää.
+
+Nämä kaksi lukua eivät ole ristiriidassa, ja ero niiden välillä on koko
+tuotestrategian ydin: **volyymissa olemme 42 %:ssa, mutta nimetyistä suurista
+hankkeista puuttui 76 %** ([rpt/README.md](rpt/README.md)). Meiltä ei siis
+puutu *määrä* vaan *ne hankkeet joilla on nimi, arvo ja osapuolet*. Lisää
+lähteitä ei korjaa sitä; osapuoli- ja arvotiedon täydentäminen korjaa.
+
+##### Mitä sovellus tekee — ja se käyttötapaus jota emme olleet ajatelleet
+
+Sovelluksen etusivu (näyttökuva arkistoitu):
+
+- Tervehdys nimellä, kellonaika, ilmoituskello.
+- **"Uutisia sinulle"** — päivän kooste luonnollisella kielellä: *"11 uutta
+  projektia yhteensä 15,3 miljoonan euron arvosta…"*, linkki *"Näytä kaikki
+  päivitykset →"*. Tämä on sama asia kuin meidän `/today`, mutta tiivistettynä
+  yhdeksi lauseeksi eikä listaksi.
+- **"Uudet suositukset"** — korttina yksi hanke (*Kerrostalon linjasaneeraus
+  As Oy …*, Suomen Talotekniikka Oy, Helsinki, alkaen tammikuu 2027) ja kortin
+  päällä **nimetty yhteyshenkilö ja painike "Ole yhteydessä"**. Eli Risen
+  myyntivalmentajan ydin yhdelle napille puristettuna.
+- Alanavigaatio *Etusivu · Haku · Tallennetut · Profiili*, sivussa
+  palautevälilehti.
+
+**Käyttötapaus, jonka Johannes poimi webinaarista:** Reach näyttää *nykyisen
+työmaan lähellä olevia työmaita, joihin voisi siirtyä kun nykyinen on
+päättymässä.*
+
+Tämä on terävä oivallus ja se kannattaa merkitä muistiin sellaisenaan.
+Kyse ei ole myyntiliidistä vaan **kapasiteetin jatkuvuudesta**: aliurakoitsija
+tai työryhmä, jonka kohde valmistuu kahden kuukauden päästä, etsii seuraavaa
+kohdetta ajomatkan päästä. Se on eri kysymys kuin "mikä hanke sopii
+liiketoimintaprofiiliini", ja se tekee kahdesta kentästä ratkaisevia:
+**sijainti ja aikataulu** — juuri ne kaksi, jotka ovat meillä lähes täydelliset
+(kaupunki/koordinaatit puuttuu 1 %:lta, vaihe lähes täysi).
+
+Se on huomionarvoista, koska meidän oma relevanssiajattelumme on nojannut
+toimiala- ja rooliprofiiliin, ja siinä meillä on 86–96 %:n kenttäpuutteet.
+"Mitä on lähellä ja alkamassa kun minun kohteeni loppuu" on kysymys, johon
+meillä **on jo data vastata.**
+
 ---
 
 ## Metroc Oy
@@ -782,7 +913,7 @@ kvartaalisoittoja.
 | | RPT / Byggfakta Rise | Metroc | Työmaat.fi |
 |---|---|---|---|
 | keruumalli | tutkimustiimit soittavat | automaatio + AI julkisista lähteistä | automaatio + AI julkisista lähteistä |
-| hankemäärä (väite) | 90 000 varmennettua + 700 000 historiaa (Pohjoismaat) → Suomi ~15–20 k | "yli 100 000" (Suomi, ei varmennusvaatimusta) | 5 439 asiakkaille näkyvää |
+| hankemäärä (väite) | **13 000 aktiivista Suomessa** (heidän oma lukunsa 6.10.2026); 90 000 varmennettua Pohjoismaissa + 700 000 historiaa | "yli 100 000" (Suomi, ei varmennusvaatimusta — eri yksikkö) | 5 439 asiakkaille näkyvää = **42 % heidän Suomen luvustaan** |
 | yksityiset hankkeet | kyllä, ydinaluetta | osin (teollisuus, tontit) | ei |
 | julkiset investointipäätökset | tutkimustiimillä, ei omana tuotteena | oma tuote, AI Chat | **aukko** |
 | yhteyshenkilöt | kyllä, + päättäjien käyttäytymishistoria | kyllä, päättäjätasolla | ei |
@@ -913,6 +1044,23 @@ ratkaisevat onko kyseessä paketointi vai liiketoimintamallin muutos. Jos 6.10.
 webinaarissa paljastuu julkinen hinta ja itsepalveluosto, **tämä lohko on
 kirjoitettava uusiksi** (ks. *Hubexo Reach — pk-segmentin valtaus*).
 
+**Ratkesi 6.10.2026: päätös pitää, mutta perustelu vaihtuu.** Reach
+julkaistiin eikä hintaa kerrottu — kiinnostuneet ohjattiin myyntiin. Kyse on
+siis paketoinnista, ja matalan kynnyksen rako pysyy auki.
+
+Perustelua on kuitenkin korjattava. Yllä sanotaan, ettei kilpailija **voi**
+siirtyä itsepalveluun purkamatta rakennettaan. Hubexo Finlandin tilinpäätös
+(11,3 M€, **liikevoitto 40,2 %**, 63 hlöä) osoittaa että voisi — ja että
+hintasota olisi heille voitettavissa. Oikea muotoilu on **he eivät halua**:
+julkinen pk-hinta repricing-hinnoittelisi 2 000 asiakkaan kannan ja söisi sen
+5,2 M€:n katteen, jonka varassa pääomasijoittajaomistus lepää. Ks.
+*Talousluvut — Hubexo Finland Oy 2025*.
+
+Käytännön ero on tämä: suoja ei ole rakenteellinen vaan taloudellinen, ja se
+kestää niin kauan kuin kate ja omistusrakenne pysyvät. Se ei ole syy jarruttaa
+R1:tä — se on syy kiirehtiä sitä, koska suoja voi poistua päätöksellä eikä
+vaadi heiltä vuosien rakennustyötä.
+
 Se mitä tästä joka tapauksessa seuraa: **R1 ei ole enää järjestyskysymys vaan
 kilpajuoksu.** Kolmesta erottautujasta kaksi on jo vanhentunut ennen kuin
 ehdimme käyttää ne. Kolmas on se, jonka voimme yhä ehtiä — mutta vain
@@ -969,6 +1117,21 @@ kapeampi tai ostettavampi — ei jos se yrittää olla sama tuote halvemmalla.
 
 Päivätty loki siitä, mitä kilpailijoiden julkisessa käyttäytymisessä tapahtuu.
 Erillään tuoteanalyysistä, koska nämä ovat nopeasti muuttuvia signaaleja.
+
+**6.10.2026 — webinaari tuotti kaksi lukua, joita ei saa mistään muualta.**
+"13 000 aktiivista rakennushanketta Suomessa" ja "yli 2000 suomalaista
+asiakasyritystä" eivät ole millään sivustolla, tiedotteessa eivätkä
+tukimateriaalissa — ne sanottiin ääneen avauskalvolla. Tämä vahvistaa
+elokuisen havainnon: **puoli tuntia webinaaria tuottaa enemmän kuin koko
+markkinointisivusto.** Molempiin Hubexon webinaareihin osallistuttiin, ja
+molemmista tuli dokumentin tärkeimmät luvut.
+
+**6.10.2026 — kilpailijan tilinpäätös kannattaa lukea, ei vain sivusto.**
+Hubexo Finland Oy:n julkiset luvut (11,3 M€, 40,2 % liikevoitto) kumosivat
+väitteen, jota tämä dokumentti oli toistanut kuukauden ajan. Tilinpäätös on
+ilmainen, se on neutraali lähde eikä se kerro mitä kilpailija haluaisi kertoa.
+**Tee sama Metrocille joka tilikausi** — heidän lukunsa on jo tässä
+dokumentissa, mutta uusin tilinpäätös kannattaa tarkistaa kerran vuodessa.
 
 **25.9.2026 — Hubexon julkaisutahti on noin kuukausi.** Rise-tiedote 17.8.,
 Rise-webinaari 20.8., Reach-webinaari 6.10. Sama esittäjäpari molemmissa
@@ -1044,6 +1207,16 @@ arkistoitu kansioon
 Webinaari ti 6.10.2026 klo 8.00–8.30, puhujat Lasse Paavola ja Ella Tuominen.
 Johannes ilmoittautunut — **päivitä tämä dokumentti webinaarin jälkeen**,
 erityisesti hinta, ostotapa ja sopimusehdot.
+
+**Hubexo Reach — webinaari 6.10.2026.** Johannes osallistui; puhujat Lasse
+Paavola ja Elina Kyytsönen. Näyttökuvat (avauskalvo ja sovelluksen etusivu,
+HubexoReach v1.6.0) arkistoitu kansioon
+[`competitors/reach-webinaari-2026-10-06/`](competitors/reach-webinaari-2026-10-06/).
+**Hintaa ei kerrottu, kiinnostuneet ohjattiin myyntiin.**
+
+**Hubexo Finland Oy:n talousluvut 2025:**
+<https://www.asiakastieto.fi/yritykset/fi/hubexo-finland-oy/07273239/taloustiedot>,
+<https://www.proff.fi/yrityksen/rpt-byggfakta-oy/-/-/0727323-9>
 
 **Metroc.** Etusivu ja tuotesivut: <https://metroc.ai/palvelumme/projects/>,
 `/palvelumme/public-investments/`, `/palvelumme/real-estates/`,
