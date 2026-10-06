@@ -23,7 +23,20 @@ import Anthropic from "@anthropic-ai/sdk"
  * tyhja kentta — han soittaa sen.
  */
 
-export const CONTACT_MODEL = "claude-opus-5"
+/*
+ * MALLI ON VAIHDETTAVISSA (D-244).
+ *
+ * Opus + verkkohaku on kallein yhdistelma mita kaytossa on: mitattu
+ * Johanneksen saldosta 6.10.2026, noin 10 senttia per hanke. 590
+ * hankkeella se olisi ~60 dollaria. Siksi malli luetaan
+ * ymparistomuuttujasta, jotta halvemman mallin osumatarkkuus voidaan
+ * mitata samalla koodilla eika arvata.
+ *
+ * Hyvaksyntaportti on joka tapauksessa ihmisella, joten halvemman mallin
+ * riski on pienempi kuin se nayttaa: huonompi ehdotus hylataan, ei
+ * paady asiakkaalle.
+ */
+export const CONTACT_MODEL = process.env.CONTACT_MODEL || "claude-opus-5"
 
 const SYSTEM_PROMPT =
   "Selvitat suomalaisen rakennushankkeen YHTEYSHENKILON verkkohaun avulla. " +
@@ -144,7 +157,22 @@ Kuka on taman hankkeen yhteyshenkilo? Anna nimi, nimike, organisaatio ` +
         model: CONTACT_MODEL,
         max_tokens: 4096,
         system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-        tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 6 }],
+        /*
+         * HAKUJEN MAARA ON HINNAN AJURI, EI MALLI (D-244).
+         *
+         * Mitattu 6.10.2026: malli kayttaa aina koko budjetin (6,0 hakua
+         * per hanke molemmilla malleilla), ja verkkohaku laskutetaan
+         * hakukohtaisesti — tokenit ovat siihen nahden pieni era. Siksi
+         * maara on saadettavissa: haluamme mitata mita 3 hakua tekee
+         * osumatarkkuudelle ennen kuin 590 hanketta ajetaan.
+         */
+        tools: [
+          {
+            type: "web_search_20260209",
+            name: "web_search",
+            max_uses: Number(process.env.CONTACT_MAX_SEARCHES || 6),
+          },
+        ],
         messages,
       } as Anthropic.MessageCreateParamsNonStreaming)
 

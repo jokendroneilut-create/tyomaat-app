@@ -26,6 +26,12 @@ for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8
 async function main() {
   const apply = process.argv.includes("--apply")
   const limit = Number(process.argv.find((a) => a.startsWith("--limit="))?.split("=")[1] ?? 10)
+  /*
+   * VAIHE VALITTAVISSA. Rakenteilla olevassa hankkeessa urakka on
+   * lahempana kuin suunnitteluvaiheessa, joten yhteystieto on siella
+   * arvokkaampi juuri nyt — ja budjetti on rajallinen.
+   */
+  const vaiheArg = process.argv.find((a) => a.startsWith("--vaihe="))?.split("=")[1]
 
   const { createClient } = await import("@supabase/supabase-js")
   const { normalizeLegacyPhase } = await import("../lib/projects/phases")
@@ -51,9 +57,13 @@ async function main() {
 
   const kohde = kaikki.filter((p) =>
     p.status === "active" && p.is_public === true &&
-    ["construction", "planning"].includes(String(normalizeLegacyPhase(p.phase))) &&
+    (vaiheArg
+      ? normalizeLegacyPhase(p.phase) === vaiheArg
+      : ["construction", "planning"].includes(String(normalizeLegacyPhase(p.phase)))) &&
     !onHankekohtainenYhteyshenkilo(p.metadata) &&
-    !(p.metadata ?? {}).yhteyshenkiloehdotus
+    !(p.metadata ?? {}).yhteyshenkiloehdotus &&
+    !(p.metadata ?? {}).yhteyshenkiloehdotus_paatos &&
+    !(p.metadata ?? {}).yhteyshenkilohaku
   )
 
   console.log(apply ? "=== AJO (--apply) ===" : "=== KUIVAHARJOITUS ===")
@@ -84,6 +94,23 @@ async function main() {
       if (!ehdotus) {
         eiLoytynyt++
         console.log("  --   " + String(p.name).slice(0, 56))
+
+        /*
+         * OHITUS KIRJATAAN, JOTTEI SITA MAKSETA KAHDESTI.
+         *
+         * Haku maksaa saman verran loysi se tai ei (5,8 verkkohakua per
+         * hanke). Ilman merkintaa seuraava ajo yrittaisi samat uudestaan:
+         * sadasta yritetysta 59 oli tallaisia, eli yli puolet rahasta
+         * olisi mennyt toistoon. Merkinta kertoo myos milloin yritettiin,
+         * jotta hanke voidaan yrittaa myohemmin uudelleen kun siita on
+         * ehka kirjoitettu lisaa.
+         */
+        if (apply) {
+          const md = (p.metadata ?? {}) as any
+          await db.from("projects").update({
+            metadata: { ...md, yhteyshenkilohaku: { loytyi: false, yritetty: new Date().toISOString(), model: process.env.CONTACT_MODEL || "claude-opus-5" } },
+          }).eq("id", p.id)
+        }
         continue
       }
       loytyi++
