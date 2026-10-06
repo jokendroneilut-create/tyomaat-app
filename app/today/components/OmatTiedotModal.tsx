@@ -20,6 +20,13 @@ import { useState } from "react"
  *
  * YRITYSTÄ EI KYSYTÄ. Se on adminin asettama ja laskutuksen avain; tässä
  * se vain näytetään. Sama sääntö kuin `/settings/omat-tiedot`-sivulla.
+ *
+ * EI PERUSTELUA KÄYTTÄJÄLLE. Ensimmäinen versio selitti että "tervehdimme
+ * sinua nimelläsi". Johannes 6.10.2026: *"En tiedä tarvitseeko asiakkaalle
+ * kertoa miksi tai mihin sitä käytämme ... sitä tarvitaan myös esimerkiksi
+ * tiiminäkymään."* Hän on oikeassa kahdesti: nimi näkyy myös tiimilistassa
+ * (`app/team/page.tsx` rivi 135), joten yhden käytön nimeäminen olisi
+ * harhaanjohtavaa — ja omaa nimeä ei tarvitse perustella lainkaan.
  */
 
 type Props = {
@@ -69,10 +76,9 @@ export default function OmatTiedotModal({ etunimi, sukunimi, puhelin, yritys }: 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <h2 className="text-xl font-bold text-gray-900">Omat tiedot</h2>
+        <h2 className="text-xl font-bold text-gray-900">Tarkista omat tietosi</h2>
         <p className="mt-2 text-sm text-gray-600">
-          Tervehdimme sinua nimelläsi, joten kerro se kerran. Voit muuttaa
-          tietoja myöhemmin kohdassa Asetukset → Omat tiedot.
+          Voit muuttaa tietoja myöhemmin kohdassa Asetukset → Omat tiedot.
         </p>
 
         {virhe && (

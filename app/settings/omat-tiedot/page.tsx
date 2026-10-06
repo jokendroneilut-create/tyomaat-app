@@ -90,10 +90,6 @@ export default function OmatTiedotPage() {
       <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 20 }}>Omat tiedot</h1>
 
       <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 20 }}>
-        <p style={{ marginBottom: 16, color: "#6b7280", fontSize: 14 }}>
-          Nimeä käytetään tervehdyksessä Tänään-näkymässä.
-        </p>
-
         {virhe && (
           <p
             style={{

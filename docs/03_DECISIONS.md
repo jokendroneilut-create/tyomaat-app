@@ -68,6 +68,20 @@ muokata yrityksen nimea, mutta naytetaan se."*
 **Tehtavanimiketta ei kysyta**: *"liian henkilokohtaista tietoa."*
 Kenttaa jota ei kerata ei voi myoskaan vuotaa.
 
+#### Lomake ei perustele itseaan
+
+Ensimmainen versio otsikoi "Omat tiedot" ja selitti: *"Tervehdimme sinua
+nimellasi, joten kerro se kerran."* Johannes 6.10.2026: *"En tieda
+tarvitseeko asiakkaalle kertoa miksi tai mihin sita kaytamme. se on
+vahan outoa kertoa etta kaytamme sita tervehtimiseen. sita tarvitaan
+myos esimerkiksi tiiminakymaan."*
+
+Han on oikeassa kahdesti. Nimi nakyy myos tiimilistassa
+(`app/team/page.tsx` rivi 135: `full_name || email`), joten yhden kayton
+nimeaminen olisi harhaanjohtavaa — ja omaa nimea ei tarvitse perustella
+lainkaan. Otsikko on nyt **"Tarkista omat tietosi"** ja leipateksti
+kertoo vain mista tiedot loytaa myohemmin.
+
 #### Kaksi varmistusta
 
 1. **Kayttaja tunnistetaan istunnosta, ei pyynnon kentasta.** Osa
