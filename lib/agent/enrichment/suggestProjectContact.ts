@@ -76,6 +76,25 @@ function getClient(): Anthropic | null {
   return cachedClient
 }
 
+/*
+ * TOKENILASKURI (D-244).
+ *
+ * Johannes lisasi 6.10.2026 varoja 20 dollarilla ja pyysi ajamaan loput.
+ * Budjetti ei saa kulua pimeassa: ajo laskee kayttamansa tokenit ja
+ * tulostaa ne, jotta hinta on verrattavissa laskuun eika arvattava.
+ *
+ * Hakutyokalun kutsut eivat nay tokeneina lainkaan — ne laskutetaan
+ * erikseen hakua kohden — joten luku on alaraja, ei koko hinta.
+ */
+export const tokenit = { syote: 0, tuotos: 0, hakuja: 0, kutsuja: 0 }
+
+function laske(vastaus: { usage?: { input_tokens?: number; output_tokens?: number; server_tool_use?: { web_search_requests?: number } } }) {
+  tokenit.kutsuja += 1
+  tokenit.syote += vastaus.usage?.input_tokens ?? 0
+  tokenit.tuotos += vastaus.usage?.output_tokens ?? 0
+  tokenit.hakuja += vastaus.usage?.server_tool_use?.web_search_requests ?? 0
+}
+
 export function isContactSuggestionEnabled(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY)
 }
@@ -129,6 +148,7 @@ Kuka on taman hankkeen yhteyshenkilo? Anna nimi, nimike, organisaatio ` +
         messages,
       } as Anthropic.MessageCreateParamsNonStreaming)
 
+      laske(searchResponse as any)
       if (searchResponse.stop_reason !== "pause_turn") break
       messages.push({ role: "assistant", content: searchResponse.content })
     }
@@ -159,6 +179,8 @@ Kuka on taman hankkeen yhteyshenkilo? Anna nimi, nimike, organisaatio ` +
       output_config: { format: { type: "json_schema", schema: SCHEMA } },
       messages: [{ role: "user", content: findings }],
     } as Anthropic.MessageCreateParamsNonStreaming)
+
+    laske(parseResponse as any)
 
     const teksti = parseResponse.content
       .filter((block): block is Anthropic.TextBlock => block.type === "text")

@@ -30,7 +30,7 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { normalizeLegacyPhase } = await import("../lib/projects/phases")
   const { onHankekohtainenYhteyshenkilo } = await import("../lib/metrics/yhteystiedonKattavuus")
-  const { suggestProjectContact, isContactSuggestionEnabled } = await import("../lib/agent/enrichment/suggestProjectContact")
+  const { suggestProjectContact, isContactSuggestionEnabled, tokenit } = await import("../lib/agent/enrichment/suggestProjectContact")
 
   if (!isContactSuggestionEnabled()) {
     console.log("ANTHROPIC_API_KEY puuttuu - ei tehda mitaan.")
@@ -104,6 +104,14 @@ async function main() {
 
   console.log("")
   console.log("loytyi " + loytyi + " / " + era.length + ", ei loytynyt " + eiLoytynyt)
+  console.log("")
+  console.log("KAYTTO: " + tokenit.kutsuja + " kutsua, syote " + tokenit.syote.toLocaleString("fi-FI") +
+    ", tuotos " + tokenit.tuotos.toLocaleString("fi-FI") + ", verkkohakuja " + tokenit.hakuja)
+  if (era.length) {
+    console.log("  per hanke: syote " + Math.round(tokenit.syote / era.length) +
+      ", tuotos " + Math.round(tokenit.tuotos / era.length) +
+      ", hakuja " + (tokenit.hakuja / era.length).toFixed(1))
+  }
   if (apply) console.log("kirjoitettu " + kirjoitettu)
   else console.log("Ei kirjoitettu mitaan.")
 }

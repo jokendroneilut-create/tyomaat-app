@@ -54,6 +54,20 @@ voi olla oikein (hankkeella on useita vastuuhenkiloita), mutta se
 osoittaa miksi tulos on **ehdotus eika fakta**: ihminen tarkistaa
 lahteen ja paattaa.
 
+#### Budjetti ei saa kulua pimeassa
+
+Johannes lisasi varoja 20 dollarilla ja pyysi ajamaan loput. Ennen
+isompaa ajoa lisattiin tokenilaskuri: ajo tulostaa kayttamansa syote- ja
+tuotostokenit seka verkkohakujen maaran, per hanke ja yhteensa.
+
+Ilman sita hinta olisi arvio. **Hakutyokalun kutsut eivat nay tokeneina**
+— ne laskutetaan erikseen hakua kohden — joten luku on alaraja eika koko
+hinta, ja se sanotaan tulosteessa.
+
+Ensimmainen 40 hankkeen era ajettiin ennen laskuria: 21 osumaa, 18
+niista varmuudella high. Toinen era ajetaan mitattuna, ja vasta sen
+jalkeen tiedetaan montako hanketta budjetilla saa.
+
 #### Hyvaksynta jattaa jaljen
 
 Ehdotus elaa `metadata.yhteyshenkiloehdotus`issa eika nay asiakkaalle.
