@@ -73,6 +73,20 @@ paljasti heti yhden vian: asteikon numerot olivat kaaren sisapuolella ja
 kortin leveydella lahes lukukelvottomia. Ne siirrettiin ulkopuolelle,
 kuten Johanneksen mallikuvan huoneilmamittarissa.
 
+#### Kaksi rinnakkain myos puhelimessa
+
+Ensimmainen ruudukko oli yksi sarake kapealla (`sm:grid-cols-2`).
+Johannes 6.10.2026: *"skaalaa mobiililla siten etta kaksi nakyy
+rinnakkain."* Yksi mittari taytti puhelimessa koko ruudun korkeuden,
+jolloin toista ei nahnyt ilman vierittamista — **ja mittarien koko
+pointti on vertailla niita keskenaan.** Rakenteilla 63 % ja
+suunnittelussa 48 % kertovat yhdessa enemman kuin kumpikaan yksin.
+
+Ruudukko on nyt kaksi saraketta heti kapeimmasta leveydesta ja nelja
+tyopoydalla. Ruudun tayte ja lukeman koko pienenevat kapealla, jotta
+asteikko ja prosentti pysyvat luettavina; katsottu esikatselusta 375
+pikselin leveydella.
+
 #### Vanha lista supistui kahteen riviin
 
 "Mita sinun kannattaa tehda tanaan" oli kuusi korttia, joista nelja oli
