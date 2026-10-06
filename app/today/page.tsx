@@ -5,8 +5,11 @@ import TodaySettingsModal from "./components/TodaySettingsModal"
 import FeedbackButton from "../components/FeedbackButton"
 import RoleActivationModal from "./components/RoleActivationModal"
 import WelcomeInfoModal from "./components/WelcomeInfoModal"
+import OmatTiedotModal from "./components/OmatTiedotModal"
 import TeamModeToggle from "./components/TeamModeToggle"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { haeOmatTiedot } from "./services/haeOmatTiedot"
+import { tervehdi } from "@/lib/users/tervehdys"
 
 export const dynamic = "force-dynamic"
 
@@ -18,10 +21,36 @@ const {
 } = await supabase.auth.getUser()
 
 const summary = await getTodaySummary(user?.id)
-  const needsRoleActivation = Boolean(user?.id) && !summary.settings.companyProfile
+  const omatTiedot = await haeOmatTiedot(user?.id)
+
+  /*
+   * NIMI KYSYTAAN ENNEN ROOLIA (D-238). Molemmat ovat pakollisia
+   * ensikaynnilla, ja kaksi paallekkaista modaalia olisi sekava. Nimi on
+   * nopein (yksi klikkaus esitaytetylla arvolla), joten se tulee ensin ja
+   * rooli heti sen jalkeen.
+   */
+  const tarvitseeNimen = Boolean(user?.id) && !omatTiedot.etunimi
+  const needsRoleActivation =
+    Boolean(user?.id) && !summary.settings.companyProfile && !tarvitseeNimen
+
+  /*
+   * Tervehdys lasketaan palvelimella mutta AINA Helsingin ajassa: sivu on
+   * force-dynamic, joten se renderoidaan joka pyynnolla, ja Vercelin
+   * UTC-kello antaisi ilman vyohyketta vaaran vuorokaudenajan.
+   */
+  const otsikko = tervehdi(omatTiedot.etunimi)
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-8">
+      {tarvitseeNimen && user?.id && (
+        <OmatTiedotModal
+          etunimi={omatTiedot.etunimi || omatTiedot.ehdotettuEtunimi}
+          sukunimi={omatTiedot.sukunimi || omatTiedot.ehdotettuSukunimi}
+          puhelin={omatTiedot.puhelin}
+          yritys={omatTiedot.yritys}
+        />
+      )}
+
       {needsRoleActivation && user?.id && (
         <RoleActivationModal
           userId={user.id}
@@ -29,9 +58,11 @@ const summary = await getTodaySummary(user?.id)
         />
       )}
 
-      {user?.id && <WelcomeInfoModal suppressed={needsRoleActivation} />}
+      {user?.id && (
+        <WelcomeInfoModal suppressed={needsRoleActivation || tarvitseeNimen} />
+      )}
 
-      <h1 className="text-3xl font-bold text-gray-900">Tänään</h1>
+      <h1 className="text-3xl font-bold text-gray-900">{otsikko}</h1>
 
       <p className="mt-2 text-gray-600">
         Tänään-näkymä kokoaa yrityksellesi tärkeimmät rakennushankkeet

@@ -5,6 +5,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-238 - Tervehdys nimella, ja nimi kysytaan kerran
+
+Johannes 6.10.2026: *"Haluan ainakin tanaan nakymaan ylalaitaan tekstin
+'huomenta/paivaa/iltaa XXX' jossa XXX on asiakkaan etunimi."*
+
+#### Loydos joka muutti suunnitelman
+
+`profiles.full_name` oli taytetty **kaikille 112 tunnukselle** — mutta
+jokainen arvo on **johdettu sahkopostiosoitteesta**, ei kayttajan
+antama. 76:lla siita tuli "Etunimi Sukunimi", koska osoite on muotoa
+`etunimi.sukunimi@`. Lopuilla 36:lla tulos on kayttokelvoton:
+
+```
+sladidasdriftteam    sladidasdriftteam@gmail.com
+Jjuliahanninen       jjuliahanninen@gmail.com
+testi                testi@koneunion.fi
+```
+
+"Huomenta sladidasdriftteam" on pahempi kuin ei tervehdysta. Siksi
+tervehdys kayttaa VAIN kayttajan vahvistamaa `first_name`-kenttaa, ja
+vanha arvo tarjotaan pelkkana lomakkeen esitaytteena — ja sielläkin vain
+jos se nayttaa nimelta (`lib/users/nimiehdotus.ts`).
+
+#### Kellonaika
+
+| kello | tervehdys |
+|---|---|
+| 05-09 | Huomenta |
+| 10-16 | Paivaa |
+| 17-04 | Iltaa |
+
+Kolme vaihtoehtoa kattavat vuorokauden, ja testi kay kaikki 24 tuntia
+lapi. Yolla kello kolmelta lukee "Iltaa" — "Yota" ei ole tervehdys vaan
+hyvastely.
+
+**AIKA LUETAAN EUROPE/HELSINKI-VYOHYKKEELTA.** Vercel ajaa UTC:ssa,
+joten ilman vyohyketta kesaaikaan klo 7 Suomessa olisi 4 UTC — eli
+"Iltaa" aamukahvilla. Tama on se yksityiskohta joka menee rikki
+huomaamatta, koska kehityskoneella kello on oikein.
+
+#### Pakotus kerran
+
+`/today` nayttaa `OmatTiedotModal`in kunnes etunimi on tallessa, samalla
+kaavalla kuin roolin aktivointi. **Nimi kysytaan ennen roolia**: se on
+nopein (yksi klikkaus esitaytetylla arvolla), eika kahta paallekkaista
+modaalia nayteta.
+
+#### Mika on kenenkin
+
+| kentta | kuka asettaa |
+|---|---|
+| etunimi, sukunimi, puhelin | asiakas |
+| yritys | admin — asiakkaalle vain nakyva |
+| sahkoposti | kirjautumistunnus, ei muokattavissa |
+
+**Yritys on laskutuksen avain** (`customer_billing.tunniste`). Jos
+asiakas kirjoittaisi "Koneunion" kun kannassa on "Koneunion Oy",
+laskutusrivi irtoaisi tunnuksesta. Johannes: *"Ei anneta asiakkaan
+muokata yrityksen nimea, mutta naytetaan se."*
+
+**Tehtavanimiketta ei kysyta**: *"liian henkilokohtaista tietoa."*
+Kenttaa jota ei kerata ei voi myoskaan vuotaa.
+
+#### Kaksi varmistusta
+
+1. **Kayttaja tunnistetaan istunnosta, ei pyynnon kentasta.** Osa
+   vanhemmista reiteista ottaa `userId`:n rungosta ja luottaa siihen;
+   silloin kuka tahansa kirjautunut voisi lukea toisen nimen ja
+   puhelinnumeron. `/api/profiili` lukee id:n aina istunnosta.
+2. **Puuttuva sarake ei kaada nakymaa.** `phone` lisataan kasin ajettavalla
+   SQL:lla, ja jos koodi menisi tuotantoon ennen ajoa, `select(... phone
+   ...)` palauttaisi virheen — jolloin tervehdys katoaisi ja pakollinen
+   lomake aukeaisi kaikille. `lib/users/profiiliRivi.ts` yrittaa ensin
+   puhelimen kanssa ja putoaa ilman sita.
+
+---
+
 ### D-237 - Hakija on rakennuttaja — mutta vain jos se on organisaatio
 
 Johannes 6.10.2026 Sipoon hoivakotihankkeesta: *"luettiinko tasta
