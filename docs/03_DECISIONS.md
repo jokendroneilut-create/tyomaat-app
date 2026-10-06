@@ -60,6 +60,53 @@ Mittarissa ero nakyy heti:
 | Rakenteilla | 64 % | **75 %** |
 | Suunnittelussa | 76 % | **80 %** |
 
+#### Toinen kierros: organisaatiot ja toistuvuusvaatimus
+
+Johannes pyysi keraamaan Vaylaviraston, YIT:n ja Hartelan
+yhteyshenkilot, ja mainitsi Kreaten avoimena yrityksena. Mittaus
+ohjasi tyon muualle kuin arvasin:
+
+| | puute | mista | organisaation hankkeita joissa ON yhteyshenkilo |
+|---|---|---|---|
+| Vaylavirasto | 45 | **33 sen omasta lahteesta** | 267 |
+| YIT | 25 | 20 kasin lisattyja | 6 |
+| Hartela | 19 | 13 omista lahteista | 30 |
+| Kreate | 17 | 6 STT, 5 kasin, 1 omasta | 54 |
+
+**Kreate toimii jo** — Johannes oli oikeassa. Sen oma lahde tuottaa
+yhteyshenkilon, ja puute tulee muista lahteista jotka kertovat Kreaten
+hankkeista.
+
+**Vaylaviraston 33 ei ole lahdevika.** Avasin kolme sivua: 53 000-55 000
+merkkia navigaatiota eika **yhtaan sahkopostiosoitetta**. Nama sivut
+eivat julkaise yhteyshenkiloa, toisin kuin ne 240 jotka julkaisevat.
+Lahde tekee tyonsa oikein.
+
+**Yritysten yhteystietosivut eivat ratkaise tata.** Hartelan sivulla on
+roolipostilaatikoita (`asuntomyynti.turku@hartela.fi`) ja mallipohja
+`etunimi.sukunimi@hartela.fi` — ei yhtaan nimettya ihmista. Juuri
+sellainen tieto hylattiin mittarista hyodyttomana.
+
+Ratkaisu loytyi aineistosta: rekisteri laajennettiin kattamaan myos
+`infrastructure_project`- ja `state_property_project`-lahteet
+(Vaylavirasto, Senaatti-kiinteistot, Kreate), ja mukaan otetaan vain
+**vahintaan kahdella hankkeella esiintyvat** henkilot. Yhden hankkeen
+projektipaallikko on sen hankkeen ihminen; **28 hankkeella toistuva
+rakennuttaja on organisaation vakiokontakti**.
+
+Tulos: 12 organisaatiota, 108 henkiloa, kattaa **206 hanketta**.
+
+| vaihe | hankekohtainen | kaikki |
+|---|---|---|
+| Rakenteilla | 64 % | **76 %** |
+| Suunnittelussa | 76 % | **81 %** |
+
+Kuivaharjoituksen tuotos naytti ensin myos rivit joita `--apply` ei
+kirjoittanut, eli se ei vastannut ajoa — suodatus on nyt yhdessa
+paikassa. Ja koska ensimmainen ajo ehti kirjoittaa loysemmalla
+saannolla, `--apply` poistaa johdetut rivit ennen kirjoitusta; kasin
+lisatty tieto tunnistetaan `lahde`-kentasta eika sita poisteta.
+
 #### Asiakkaalle vain jos omaa ei ole
 
 Reitti `/api/yritysrekisteri` palauttaa **tyhjan**, jos hankkeella on oma

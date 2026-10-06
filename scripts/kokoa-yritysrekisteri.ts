@@ -36,12 +36,25 @@ async function main() {
     if (!data || data.length < 1000) break
   }
 
-  /* Yrityslahteet: lahteen nimesta yrityksen nimi. */
-  const { data: lahteet } = await db.from("discovery_sources").select("name, parser").eq("category", "company_project")
+  /*
+   * ORGANISAATION OMAT LAHTEET.
+   *
+   * Ei vain `company_project`: myos Vaylavirasto, Senaatti-kiinteistot
+   * ja Kreate pitavat omaa hankeluetteloa muussa kategoriassa, ja juuri
+   * niilla on eniten nimettyja ihmisia (Vaylavirasto 267). Lahteen nimi
+   * kertoo organisaation, ja `source_name` hankkeella on sama nimi tai
+   * parserin tunnus riippuen kerajasta — molemmat otetaan vastaan.
+   */
+  const { data: lahteet } = await db
+    .from("discovery_sources")
+    .select("name, parser, category")
+    .in("category", ["company_project", "infrastructure_project", "state_property_project"])
+
   const parseriYritys = new Map<string, string>()
   for (const l of lahteet ?? []) {
     const yritys = String(l.name).replace(/\s+(tiedotteet|projektit|uutiset|hankkeet|kohdesivut|taloyhtiot|referenssit).*$/i, "").trim()
     parseriYritys.set(String(l.parser), yritys)
+    parseriYritys.set(String(l.name), yritys)
   }
 
   /* Henkilot yrityksittain, laskettuna yrityksen OMASTA lahteesta. */
@@ -87,6 +100,22 @@ async function main() {
     }
   }
 
+  /*
+   * SAMA SUODATUS NAYTOLLE JA KIRJOITUKSELLE. Kuivaharjoitus naytti
+   * ensin myos rivit joita --apply ei kirjoita (yhden hankkeen
+   * henkilot), eli tuotos ei vastannut ajoa. Se on juuri se ero joka
+   * tekee kuivaharjoituksesta hyodyttoman.
+   */
+  const VAHIMMAISTOISTO = 2
+  for (const r of rekisteri.values()) {
+    for (const [avain, h] of r.hlot) {
+      if (h.kpl < VAHIMMAISTOISTO) r.hlot.delete(avain)
+    }
+  }
+  for (const [avain, r] of rekisteri) {
+    if (r.hlot.size === 0) rekisteri.delete(avain)
+  }
+
   /* Montako hanketta hyotyisi? */
   const ilmanOmaa = kaikki.filter((p) => {
     const lista = (p.metadata ?? {}).contact_persons
@@ -113,9 +142,24 @@ async function main() {
   console.log("")
 
   if (apply) {
+    /*
+     * JOHDETUT RIVIT KIRJOITETAAN UUSIKSI, KASIN LISATYT EIVAT.
+     *
+     * Ensimmainen ajo kirjoitti myos yhden hankkeen henkilot; kun saanto
+     * kiristyi, ne jaisivat kantaan ilman etta mikaan poistaisi niita.
+     * Poisto kohdistuu vain `lahde`-kentan perusteella johdettuihin, eli
+     * myohemmin kasin lisatty tieto sailyy.
+     */
+    const { error: poistoVirhe } = await db
+      .from("yritys_yhteyshenkilot")
+      .delete()
+      .like("lahde", "johdettu%")
+    if (poistoVirhe) console.log("poisto epaonnistui: " + poistoVirhe.message)
+
     const rivit: any[] = []
     for (const [avain, r] of rekisteri) {
       for (const h of r.hlot.values()) {
+
         rivit.push({
           avain,
           yritys: r.yritys,
