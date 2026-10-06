@@ -5,6 +5,67 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-244 - Yhteyshenkilo verkosta: malli ehdottaa, ihminen paattaa
+
+Johannes 6.10.2026: *"tee llm ja verkkohaku puuttuville tassa kohtaa ja
+katsotaan mita sielta saadaan."*
+
+Puutteesta puolet on kasin lisattyja hankkeita joilla ei ole
+lahdeasiakirjaa josta poimia (D-243). Niille ainoa tie on hakea tieto
+ulkopuolelta.
+
+#### Tama on eri tyokalu kuin D-078
+
+`suggestProjectParties` ehdottaa OSAPUOLIA eli yritysnimia.
+`suggestProjectContact` ehdottaa IHMISTA jolle voi soittaa. Useimmilla
+puutteellisilla hankkeilla yritys on jo tiedossa — henkilo puuttuu, ja
+se on eri kysymys.
+
+Rakenne on sama kaksivaiheinen kuin D-078:ssa: haku saa vastata vapaasti
+(hakutyokalu tuottaa sitaattilohkoja, eika rakenteinen ulostulo toimi sen
+kanssa), ja jasennys tehdaan erillisella kutsulla **ilman tyokaluja** —
+se nakee vain vaiheen 1 loydokset eika voi keksia mitaan mita lahteissa
+ei ollut.
+
+#### Nelja porttia ennen kuin ehdotus syntyy
+
+1. **Nimi on kaksi sanaa.** Yksi sana on organisaatio tai jaannos.
+2. **Sahkoposti tai puhelin on pakko olla.** Nimi ilman yhteystapaa ei
+   auta ketaan soittamaan.
+3. **Mallipohjainen osoite hylataan.** `etunimi.sukunimi@senaatti.fi`
+   nayttaa oikealta muttei ole kenenkaan osoite — mitattu Hartelan
+   yhteystietosivulta.
+4. **Vaite ilman lahde-URL:aa ei ole loydos vaan arvaus.**
+
+Lisaksi nimike siistitaan: ensimmainen ajo palautti
+*"hankekehityspaallikko (Solarigon yhteystietosivulla: Project
+Development Engineer)"*, joka olisi mennyt sellaisenaan hankekortille.
+
+#### Ensimmaisen otoksen tulos (9 hanketta)
+
+**5 osumaa, joista 4 varmuudella "high" ja lahde-URL:n kanssa.**
+Esimerkiksi Hattulan koululle kiinteistopaallikko kunnan omalta sivulta
+ja Kelan paatoimitalolle kiinteistopaallikko Kelan tiedotteesta.
+
+**HAKU EI OLE DETERMINISTINEN.** Sama hanke ("Tuulipuisto Kauhavalle")
+antoi ensimmaisella ajolla Heli Harjulan (high) ja toisella Olli
+Takalammin (low) — eri henkilo, eri lahde, molemmat OX2:lta. Kumpikin
+voi olla oikein (hankkeella on useita vastuuhenkiloita), mutta se
+osoittaa miksi tulos on **ehdotus eika fakta**: ihminen tarkistaa
+lahteen ja paattaa.
+
+#### Hyvaksynta jattaa jaljen
+
+Ehdotus elaa `metadata.yhteyshenkiloehdotus`issa eika nay asiakkaalle.
+Hankesivulla se nakyy violettina laatikkona: nimi, nimike, yhteystapa,
+perustelu ja **klikattavat lahteet** — tarkistaminen on koko pointti.
+Hyvaksynta lisaa yhteyshenkilon tasolla `project` ja tallentaa
+lahde-URL:n mukaan, joten tieto on tarkistettavissa viela jalkeenpainkin.
+Hylkays poistaa ehdotuksen, jolloin sama hanke ei palaa seuraavassa
+ajossa.
+
+---
+
 ### D-243 - STT:n tiedotteessa on yhteyshenkilo, mutta vain sivulla
 
 Johannes 6.10.2026: *"Olen tyytyvainen vasta kun jokaisessa hankkeessa

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
 import EditProject from "./EditProject"
 import AiSuggestion from "./AiSuggestion"
+import YhteyshenkiloEhdotus from "./YhteyshenkiloEhdotus"
 import OsapuoliEhdotus from "./OsapuoliEhdotus"
 import Visibility from "./Visibility"
 
@@ -143,6 +144,10 @@ export default async function TicProjectPage({ params, searchParams }: Props) {
           </div>
         </dl>
       </section>
+
+      {metadata.yhteyshenkiloehdotus ? (
+        <YhteyshenkiloEhdotus projectId={id} ehdotus={metadata.yhteyshenkiloehdotus} />
+      ) : null}
 
       {metadata.ai_suggestion ? (
         <AiSuggestion
