@@ -1,4 +1,6 @@
 import { extractStreetAddress } from "./extractStreetAddress"
+import * as cheerio from "cheerio"
+import { helsinginYhteyshenkilot } from "./helsinginLisatiedot"
 import { inferBuildingType } from "./buildingType"
 import { extractDecisionWinners } from "./decisionWinners"
 import { inferDecisionPhase } from "./decisionPhase"
@@ -154,6 +156,37 @@ export function toIsoDate(value: unknown): string | null {
   return null
 }
 
+/*
+ * YHTEYSHENKILO PAATOSSIVULTA (D-240).
+ *
+ * Hakurajapinnassa on 29 kenttaa eika yhtaan yhteystietoa, joten
+ * projektipaallikon nimi, puhelin ja sahkoposti ovat vain
+ * paatossivulla. Mitattu 6.10.2026: 25 sivun otoksesta **jokaisella**
+ * oli henkilo — ja samaan aikaan 519 hanketta 524:sta oli kannassa
+ * ilman yhteyshenkiloa. Tama oli koko kannan suurin yksittainen puute.
+ *
+ * BUDJETTI, KOSKA SIVUHAKU MAKSAA AIKAA. Yksi sivu vastaa noin
+ * puolessa sekunnissa, ja ajossa on muitakin lahteita. Loput jaavat
+ * seuraavaan ajoon — toisin kuin Lupapisteen kuulutukset,
+ * paatokset.hel.fi on pysyva arkisto eika sivu katoa (D-237).
+ */
+const YHTEYSHENKILO_BUDJETTI = 30
+
+async function haeYhteyshenkilot(url: string) {
+  try {
+    const vastaus = await fetch(url, {
+      cache: "no-store",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; tyomaat.fi/1.0)" },
+    })
+    if (!vastaus.ok) return []
+
+    const $ = cheerio.load(await vastaus.text())
+    return helsinginYhteyshenkilot($("body").text().split(/\s+/g).join(" "))
+  } catch {
+    return []
+  }
+}
+
 export async function fetchHelsinkiPaatoksetSource() {
   const cutoff = new Date()
   cutoff.setMonth(cutoff.getMonth() - RECENCY_MONTHS)
@@ -178,6 +211,7 @@ export async function fetchHelsinkiPaatoksetSource() {
 
   const results: any[] = []
   const seen = new Set<string>()
+  let yhteyshenkiloHaettu = 0
 
   for (let page = 0; page < MAX_PAGES; page++) {
     let hits: any[] = []
@@ -250,6 +284,16 @@ export async function fetchHelsinkiPaatoksetSource() {
 
       const winners = extractDecisionWinners(description)
 
+      const paatosUrl = relativeUrl.startsWith("http")
+        ? relativeUrl
+        : `https://paatokset.hel.fi${relativeUrl}`
+
+      const yhteyshenkilot =
+        yhteyshenkiloHaettu < YHTEYSHENKILO_BUDJETTI
+          ? await haeYhteyshenkilot(paatosUrl)
+          : []
+      if (yhteyshenkiloHaettu < YHTEYSHENKILO_BUDJETTI) yhteyshenkiloHaettu += 1
+
       results.push({
         /*
          * PÄÄTÖSPÄIVÄ TALTEEN. `meeting_date` on haettu ES-vastauksessa
@@ -262,7 +306,29 @@ export async function fetchHelsinkiPaatoksetSource() {
          * vuodelta 2021 tai vanhempi, eikä ikää voinut mitata muuten kuin
          * arvaamalla asiatunnuksen vuodesta tai leipätekstistä.
          */
-        metadata: { decision_date: toIsoDate(first(s.meeting_date)) },
+        metadata: {
+          decision_date: toIsoDate(first(s.meeting_date)),
+          /*
+           * AVAIN ON `contact_persons`, EI `contacts`. Ensimmainen versio
+           * kaytti jalkimmaista (kuten kaavakerain apiCollectorissa), ja
+           * se olisi mennyt kantaan mutta ei nakyviin: metadata
+           * yhdistetaan sellaisenaan, eika mikaan lue `contacts`-avainta
+           * legacy-polulla. Tarkistettu kannasta: stt_haku, rakennuslehti
+           * ja are kayttavat kaikki `contact_persons`.
+           */
+          ...(yhteyshenkilot.length
+            ? {
+                contact_persons: yhteyshenkilot.map((h) => ({
+                  kind: "person" as const,
+                  name: h.nimi,
+                  title: h.nimike,
+                  email: h.sahkoposti,
+                  phone: h.puhelin,
+                  organization: "Helsingin kaupunki",
+                })),
+              }
+            : {}),
+        },
         name: genericizeDecisionTitle(subject),
         description,
         city: "Helsinki",
@@ -293,9 +359,7 @@ export async function fetchHelsinkiPaatoksetSource() {
           title: subject,
         }),
         business_value: "high",
-        source_url: relativeUrl.startsWith("http")
-          ? relativeUrl
-          : `https://paatokset.hel.fi${relativeUrl}`,
+        source_url: paatosUrl,
         confidence: 0.6,
         completed: false,
         source_name: "helsinki_paatokset",

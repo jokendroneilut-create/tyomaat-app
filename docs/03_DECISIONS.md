@@ -5,6 +5,86 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-240 - Helsingin paatoksista loytyy projektipaallikko, 500 hankkeelle
+
+Johannes 6.10.2026: *"nyt meidan pitaa alkaa tutkimaan ja lisaamaan
+noita yhteystietoja. tama on erittain tarkeaa, koska se on suurin syy
+miksi nykyiset trialit eivat jaa maksaviksi asiakkaiksi."*
+
+#### Mittaus muutti kysymyksen
+
+Rakenteilla + suunnittelussa on 1 160 hanketta ilman yhteyshenkiloa.
+**91 %:lla niista yritys on jo tiedossa** — kysymys ei siis ole "kuka
+tata tekee" vaan "kuka on se ihminen tunnetussa yrityksessa". Se on eri
+ongelma ja ratkeaa kerran per yritys, ei kerran per hanke.
+
+Keskittyma on raju: **puolet puutteista kattaa viisi yritysta**, ja
+533 niista on Helsingin kaupunki. Lahteittain:
+
+| lahde | ilman yhteyshenkiloa |
+|---|---|
+| **helsinki_paatokset** | **500 / 505 (99 %)** |
+| kasin lisatyt | 326 / 561 (58 %) |
+| rakennuslehti | 55 / 60 (92 %) |
+| stt_haku | 43 / 319 (13 %) |
+| Vaylavirasto | 33 / 270 (12 %) |
+| yva | 25 / 244 (10 %) |
+
+Siksi aloitettiin Helsingista: suurin yksittainen era koko kannassa.
+
+#### 20 sivun otos ennen riviakaan koodia
+
+Ensimmainen avaamani sivu ei sisaltanyt "Lisatiedot"-osiota, ja olisin
+voinut paatella etta tieto puuttuu. Otos kertoi toisin: **jokaisella
+20:sta oli henkilon nimi, nimike, puhelin ja sahkoposti.** Rakenne on
+vakio:
+
+```
+Paattaja Nimi Rikhard Manninen Titteli Maankayttojohtaja
+Lisatietojen antaja Nimi Katariina Verkamo Titteli Projektinjohtaja
+Puhelinnumero 09 310 20706 Sahkoposti katariina.verkamo@hel.fi
+```
+
+**Vain "Lisatietojen antaja", ei "Paattaja".** Paattaja on
+maankaytto- tai toimialajohtaja joka hyvaksyy suunnitelman; lisatietojen
+antaja on projektipaallikko joka hanketta tekee. Jalkimmainen on se
+jolle urakoitsija soittaa.
+
+Hakurajapinnassa tata ei ole: indeksissa on 29 kenttaa eika yhtaan
+yhteystietoa. Tieto on vain sivulla, joten sivu on haettava.
+
+#### Kaksi virhetta jotka kuivaharjoitus ja kanta paljastivat
+
+1. **Ruotsi ei ole poikkeus.** Ensimmainen jasennin osui 22:een
+   25:sta, ja kaksi ohitusta oli ruotsinkielisia sivuja: sama rakenne,
+   otsikot "Mer information / Namn / Titel / Telefonnummer / E-post".
+   Helsinki on kaksikielinen, joten se on toinen tavallinen tapaus.
+   Korjauksen jalkeen 25/25.
+2. **Avain oli vaara.** Kerain kirjoitti `metadata.contacts`, kuten
+   kaavakerain tekee apiCollectorissa. Legacy-polulla metadata
+   yhdistetaan sellaisenaan eika mikaan lue sita avainta: tieto olisi
+   mennyt kantaan muttei nakyviin. Tarkistin kannasta mita stt_haku,
+   rakennuslehti ja are kayttavat — `contact_persons`.
+
+#### Tehty
+
+- `lib/agent/helsinginLisatiedot.ts` + testit (kaksi kielta)
+- kerain hakee sivun uusille paatoksille, budjetti 30 / ajo
+- `scripts/taydenna-helsingin-yhteyshenkilot.ts` takautuvasti
+
+Kirjaamon osoite jaa paikalleen ja henkilo lisataan sen rinnalle:
+yhteystietokentasta ei poisteta mitaan.
+
+#### Auki
+
+Yhteyshenkilon **taso** pitaa viela erottaa: hankekohtainen (taman
+tyomaan vastaava) vs. yrityskohtainen (yrityksen yleinen). Mittari on
+nyt olemassa, ja halvin tapa saada neula vihreaksi olisi liittaa
+jokaiseen hankkeeseen yrityksen vaihde. Silloin mittari nousisi ja tuote
+huononisi.
+
+---
+
 ### D-239 - Yhteystiedon kattavuus: tiukka mittari ja oma historia
 
 Johannes 6.10.2026: *"nyt aloitetaan keskittyminen yhteyshenkiloihin
