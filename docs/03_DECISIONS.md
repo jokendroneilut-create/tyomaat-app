@@ -5,6 +5,65 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-243 - STT:n tiedotteessa on yhteyshenkilo, mutta vain sivulla
+
+Johannes 6.10.2026: *"Olen tyytyvainen vasta kun jokaisessa hankkeessa
+on projektikohtainen yhteystieto."*
+
+Tavoite on oikea, ja se pakottaa kysymaan missa puute viela on. Mitattu
+Helsingin ja rekisterin jalkeen: **660 hanketta ilman hankekohtaista
+yhteyshenkiloa**, ja ne jakautuvat nain:
+
+| | kpl | mita tehtavissa |
+|---|---|---|
+| **kasin lisatyt** | **326** | ei lahdeasiakirjaa — vain ulkoinen haku |
+| rakennuslehti | 55 | maksumuuri (D-242) |
+| stt_haku | 47 | **tama paatos** |
+| Vaylavirasto | 33 | sivut eivat julkaise (mitattu) |
+| yva | 25 | hankevastaava auki |
+| loput | ~174 | pitka hanta |
+
+#### Vika ei ollut poimijassa vaan siina mita luettiin
+
+STT:n tallennettu teksti on vain ingressi: sanaa "Lisatietoja" ei ollut
+yhdessakaan 47:sta. Tiedotteen LOPUSSA on yhteystietolohko, ja se jai
+hakematta. Kymmenen sivun otoksesta 8:lla oli nimetty henkilo.
+
+**Uutta jasennintä ei tarvittu.** `extractContacts` osaa lukea lohkon;
+haku puuttui. Vain `<article>`-sisalto luetaan, ei koko sivua — muuten
+mukaan tulisi STT:n oma viestinta jokaiselta sivulta.
+
+#### Nimi sahkopostista on arvaus — sama ansa kuin D-238:ssa
+
+Kuivaharjoitus naytti nimia kuten **"Juha Keranen"** ja **"Heikki
+Poyhonen"**. Syy: poimija johtaa nimen sahkopostista kun sivun tekstissa
+ei ole nimea vieressa, ja osoitteessa a-umlaut on a. Vaarin kirjoitettu
+nimi menee asiakkaalle nakyviin.
+
+Korjaus: osoitteen paikallisosasta rakennetaan kuvio jossa `a` voi olla
+myos `ä` ja `o` myos `ö`, ja kaytetaan sita kirjoitusasua **joka sivulla
+oikeasti lukee**. Jos sivu ei nimea mainitse, nimi jaa johdetuksi, mutta
+yhdysnimen jalkiosa korjataan isolle ("Janne-pekka" -> "Janne-Pekka").
+
+#### Tulos
+
+32 hanketta sai hankekohtaisen yhteyshenkilon.
+
+| vaihe | hankekohtainen | kaikki |
+|---|---|---|
+| Rakenteilla | 64 % -> **65 %** | 76 % |
+| Suunnittelussa | 76 % -> **78 %** | 82 % |
+
+#### Mita 100 % vaatisi
+
+Puolet jaljella olevasta puutteesta on hankkeita **jotka on lisatty
+kasin** — niilla ei ole lahdeasiakirjaa josta poimia. Niille on kaksi
+tieta: D-078:n LLM + verkkohaku (olemassa, ei kaytossa — odottavia
+ehdotuksia 0), tai yhteystiedon kirjaaminen samalla kun hanke lisataan.
+Jalkimmainen on halvempi ja tarkempi.
+
+---
+
 ### D-242 - Yritysrekisteri: yksi rivi per yritys, ei kopio per hanke
 
 Johannes 6.10.2026: *"tehdaan tuo yritysrekisteri."*
