@@ -303,7 +303,7 @@ jatkona; se voi kääntää "ehkä joskus" -jutun tehdyksi jutuksi.
 > lähteitä · asiakkaita ja testikäyttäjiä yhteensä satoja · Sippola
 > Enterprises Oy, Y-tunnus 3627561-2, perustettu 2026 · www.tyomaat.fi
 >
-> **Lisätiedot:** Johannes Sippola, perustaja, 040 962 4170. Toimitukselle
+> **Lisätiedot:** Johannes Sippola, perustaja, 040 962 4170, info@tyomaat.fi. Toimitukselle
 > tarjotaan pyydettäessä tunnukset palveluun sekä kuvamateriaalia.
 
 ### Mitä tiedotteessa luvattiin
