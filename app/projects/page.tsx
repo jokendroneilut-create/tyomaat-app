@@ -987,7 +987,7 @@ setTeamModeEnabled(true)
         }
       `}</style>
 
-      <h1 className="projects-title">Työmaat</h1>
+      <h1 className="projects-title">Rakennushankkeet kartalla</h1>
 
       <div className="projects-filters-card">
         <div className="projects-filters-grid">
