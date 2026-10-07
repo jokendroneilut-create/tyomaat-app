@@ -5,6 +5,65 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-247 - Keravan uutiset lahteeksi: kaavasivu ei kerro kuka voitti
+
+Johannes 7.10.2026 antoi lahteeksi sivun jolla Kauppakaaren kavelykadun
+suunnittelukilpailu ratkeaa, ja pyysi lisaamaan sen jos sita ei jo ole.
+
+Keravan KAAVAhankkeet olivat jo lahteena (`keravaKaavaParser`, WP:n
+`project`-sisaltotyyppi). Uutiset eivat olleet — ja ero on olennainen:
+**kaavasivu kertoo mita kaavoitetaan, uutinen kertoo mita on paatetty.**
+Voittajan nimi on vain uutisessa.
+
+#### Kategoriat valittiin mittaamalla
+
+Nelja ehdokasta, 12 tuoreinta otsikkoa kustakin:
+
+| kategoria | hankkeita otoksessa | juttuja | paatos |
+|---|---|---|---|
+| kaupunkisuunnittelu (56) | ~5/12 | 62 | mukaan |
+| rakentaminen (52) | ~5/12 | 68 | mukaan |
+| kadut-ja-liikenne (54) | ~2/12 | 125 | ei |
+| puistot (169) | ~1/12 | 52 | ei |
+
+Kaksi hylattya olisivat tuoneet eniten volyymia ja vahiten hankkeita:
+kadut-ja-liikenne on lahes kokonaan tilapaisia liikennejarjestelyja.
+
+#### Hanketermiluettelo hylattiin mittauksen perusteella
+
+Ensimmainen versio vaati osuman 35 hanketermin listasta. Mitattuna
+kaikilla 127 jutulla se epaonnistui **molempiin suuntiin**: 85 lapi
+(~30 roskaa) ja 42 hylattya, joista **yhdeksan oli oikeita hankkeita** —
+mm. "Pihkaniityn omakotitontit myynnissa", "Rajaytystyot maauimalan
+tyomaalla jatkuvat" ja "Asfaltointi-, kivetys- ja vihertyot alkavat".
+
+Syy on yksinkertainen: **kunta ei kirjoita sanaa "rakennushanke"**. Se
+kirjoittaa "asfaltointityot alkavat". Termiluettelo on arvaus siita
+miten kunta sattuu sanomaan asian, ja se vanhenee jokaisen uuden kunnan
+kohdalla — toisin kuin kaavaselostuksen rakenne, joka siirtyy
+([[kaava-parser-vs-page]]).
+
+Suodatin kaannettiin ympari: **poistetaan vain se mika ei koskaan ole
+hanke** (aanestykset, kyselyt, tilaisuudet, lakimuutokset, verokannat).
+Lapi menee 101/127, ja hylatyista 26:sta ei yksikaan ole hanke.
+Menetetty hanke on kalliimpi virhe kuin turha rivi jonossa, ja jono ei
+ole pullonkaula ([[review-queue-not-bottleneck]]).
+
+Poissulku katsoo **vain otsikkoa** (D-241): kyselyn mainitseminen jutun
+lopussa ei tee jutusta kyselya.
+
+#### Yksikkotesti loysi vian jota kuivaharjoitus ei nayttanyt
+
+`&#8211;` jai purkamatta, koska entiteettien siivous kasitteli vain
+nimettyja (`&[a-z]+;`). Otsikko "Loitsutie 1 &#8211; asemakaavamuutos"
+olisi mennyt jonoon nakyvana roskana. Numeroentiteetit purkautuvat nyt
+oikeiksi merkeiksi.
+
+Lahde: `legacy-kerava-uutiset`, parseri `kerava_uutiset`, sama muoto
+kuin Helsingin kaupungin uutisilla — ainoa aiempi kunnan uutisvirta.
+Seuraava mittaus: kuinka moni 101:sta muuttuu oikeaksi hankkeeksi. Siita
+paatellaan kannattaako sama tehda muille kunnille.
+
 ### D-246 - Virheraja ja yksi uusintayritys: paivitys ei saa olla asiakkaan tyokalu
 
 Johannes 7.10.2026: `/today` nautti admin-tunnuksella ruudun *"Application

@@ -49,6 +49,7 @@ import { fetchMarveaSource } from "./fetchMarveaSource"
 import { fetchMarttilanSource } from "./fetchMarttilanSource"
 import { fetchBrandToimitilatSource } from "./fetchBrandToimitilatSource"
 import { fetchHelsinkiUutisetSource } from "./fetchHelsinkiUutisetSource"
+import { fetchKeravaUutisetSource } from "./fetchKeravaUutisetSource"
 import { fetchRakennuslehtiSource, enrichRakennuslehtiCandidate } from "./fetchRakennuslehtiSource"
 import { fetchSttHakuSource, enrichSttCandidate } from "./fetchSttHakuSource"
 import { fetchSttJulkaisijatSource } from "./fetchSttJulkaisijatSource"
@@ -151,6 +152,11 @@ export const sources = [
   { name: "marttilan", fetch: fetchMarttilanSource, enrich: createCompanyEnricher({ publisher: "Marttilan Rakennus" }) },
   { name: "brand_toimitilat", fetch: fetchBrandToimitilatSource, enrich: createCompanyEnricher({ publisher: "Brand Toimitilat" }) },
   { name: "helsinki_uutiset", fetch: fetchHelsinkiUutisetSource },
+  /*
+   * Keravan kaavahankkeet olivat jo lahteena, mutta kaavasivu ei kerro
+   * kuka kilpailun voitti — uutinen kertoo (D-247).
+   */
+  { name: "kerava_uutiset", fetch: fetchKeravaUutisetSource },
   { name: "rakennuslehti", fetch: fetchRakennuslehtiSource, enrich: enrichRakennuslehtiCandidate },
   { name: "stt_haku", fetch: fetchSttHakuSource, enrich: enrichSttCandidate },
   /*
