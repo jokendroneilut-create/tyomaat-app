@@ -72,6 +72,58 @@ everything"*).
 
 ---
 
+## R1 — Ostettavuus (kirjattu 7.10.2026)
+
+**Miksi tämä on oma lohkonsa:** tunnusta "R1" käytetään
+[`11_COMPETITORS.md`](11_COMPETITORS.md):ssä ja
+[`17_KUMPPANUUDET.md`](17_KUMPPANUUDET.md):ssä yhteensä kahdeksassa kohdassa,
+mutta sitä ei ollut määritelty missään. Tämä lohko on se määritelmä.
+
+R1 ei ole datatyötä eikä älykkyyttä vaan **se, pystyykö asiakas ostamaan.**
+Se on priorisoitu erikseen P-sarjasta, koska se on ainoa asia jota kilpailija
+ei voi kopioida purkamatta omaa myyntimalliaan — ja koska se ei vaadi yhtään
+uutta datakenttää.
+
+### Tila 7.10.2026
+
+| osa | tila |
+|---|---|
+| **julkinen hinta** | ✅ **149 €/kk sivustolla** — ei "pyydä tarjous" |
+| **ei pakollista myyntitapaamista** | ✅ yhteydenottolomake riittää |
+| **30 päivän irtisanominen** | ✅ sähköpostilla |
+| tunnuksen luonti | käsin, lomakkeen perusteella |
+| laskutus | käsin |
+
+**Asemointi on siis jo elossa, ei suunnitelma.** Tämä on syytä sanoa ääneen,
+koska kilpailija-analyysissä R1 esitettiin pitkään tekemättömänä — se oli
+väärä oletus (ks. korjaus `11_COMPETITORS.md`:ssä 7.10.2026).
+
+### Mikä jää avoimeksi
+
+Jäljellä oleva osa on **käsityön määrä per asiakas**, ei puuttuva ominaisuus.
+Tunnuksen luonti on kertaluontoista, lasku toistuu kuukausittain.
+
+Tämä **ei ole ehdotus automatisoinnista.** Tilaustenhallinnan automatisointi on
+jo kertaalleen harkittu ja hylätty (15.8.2026), ja laskutus pysyy tietoisesti
+Johanneksen käsissä — ks. muistiinpano `no-subscription-tracking` ja D-223.
+Lohko on tässä siksi, että **jakelukanava muuttaa laskennan**: jos
+Rakennuslehti-tyyppinen kanava tuo kerralla kymmeniä tai satoja asiakkaita
+([`17_KUMPPANUUDET.md`](17_KUMPPANUUDET.md)), sitova rajoite on Johanneksen
+aika eikä kate.
+
+Päätös siitä, missä kohtaa käsityö muuttuu ongelmaksi, on hänen — ei tämän
+dokumentin. Kirjattu tähän vain se, että **se on sama kysymys kuin
+kanavapäätös**, ei erillinen.
+
+### Suhde muuhun roadmapiin
+
+R1 on P-sarjan rinnalla, ei sen sisällä: P1–P4 tekevät tuotteesta paremman,
+R1 tekee siitä ostettavan. Alkuperäisessä ehdotuksessa (7.10.2026) oli myös
+R2–R6 — kapea kärki, osapuolitieto, P1 perusteluun suunnattuna, kaksiraiteinen
+elinkaari ja investointipäätöslähde — mutta niitä ei ole päätetty, eikä niihin
+viitata muissa dokumenteissa. Ne ovat ehdotuksia, R1 on tilannekuva.
+
+---
 ## P1 — Opportunity Engine: per-asiakas relevanssipisteytys ⭐
 
 **Tavoite.** Jokainen hanke saa asiakaskohtaisen relevanssipisteen +
