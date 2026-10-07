@@ -16,6 +16,175 @@ päättelymme eivät saa näyttää samalta.
 
 ---
 
+## Tietoyhteistyö rakennuttajien kanssa — suunniteltu 8.10.2026, EI ALOITETTU
+
+> **Tila: idea.** Kenellekään ei ole lähetetty mitään eikä kenenkään
+> kanssa ole puhuttu. Kaikki alla oleva on omaa päättelyä. Tämä on
+> huomisen työlista, ei kuvaus kanavasta.
+
+Johannes 8.10.2026: *"koitetaan lähestyä rakennuttajia tietoyhteistyöllä.
+uskon ja toivon että he suostuisivat ja antaisivat meille tietojaan.
+muotoillaan kaunis sähköposti ja yritetään sillä. oikea henkilö pitää
+selvittää."*
+
+### Mitä tämä on, ja mitä se ei ole
+
+Tämä EI ole jakelukanava kuten Rakennuslehti. Tässä ei haeta yleisöä
+vaan **lähdettä**: rakennuttaja kertoisi omat hankkeensa suoraan meille.
+
+Kaksi erillistä asiaa, joita ei pidä niputtaa kysyttäessä:
+
+| | mitä saadaan | kuinka arkaa |
+|---|---|---|
+| **A. Hankkeet, joita ei ole missään julkisessa lähteessä** | kokonaan uutta | arempaa — kilpailijat näkevät saman |
+| **B. Yhteyshenkilö jo tunnettuun hankkeeseen** | täydennystä | vähemmän arkaa, usein jo kyltissä |
+
+**Aloita B:stä.** Se on pieni pyyntö, siihen on helppo vastata kyllä, ja
+se rakentaa luottamuksen jolla A:sta voi myöhemmin puhua. Iso pyyntö
+ensin tappaa molemmat.
+
+### Mitä yksi rakennuttaja on arvoltaan — mitattu 8.10.2026
+
+Aktiiviset, asiakkaalle näkyvät hankkeet, rakennuttaja ryhmiteltynä:
+
+| | rakennuttajia | hankkeita | yhteystiedolla |
+|---|---|---|---|
+| **Julkiset tilaajat** (≥4 hanketta) | 61 | 1 600 | 78 % |
+| **Yksityiset rakennuttajat** (≥4 hanketta) | 66 | 490 | **66 %** |
+
+Suurimmat yksityiset ja niiden nykyinen kattavuus:
+
+| rakennuttaja | hankkeita | yhteystiedolla |
+|---|---|---|
+| Bonava | 18 | 22 % |
+| Espoon Asunnot Oy | 18 | 61 % |
+| Rakennusliike Lapti Oy | 16 | 69 % |
+| Skanska Oy | 12 | 58 % |
+| TVT Asunnot Oy | 12 | 33 % |
+| Hartela | 12 | 67 % |
+| Tampereen Tilapalvelut | 12 | 25 % |
+| T2H | 10 | 70 % |
+| Kreate Group Oyj | 10 | 80 % |
+
+**Tästä seuraa kaksi asiaa, jotka ohjaavat koko lähestymistapaa:**
+
+1. **Julkisia ei kannata lähestyä tällä.** Heidän kattavuutensa on jo
+   78 %, koska päätökset ja Hilma kantavat yhteystiedot. Helsingin
+   kaupungilla se on 96 %. Yhteistyö ei toisi juuri mitään.
+2. **Yksi yksityinen rakennuttaja on enintään ~18 hanketta.** Kanava ei
+   skaalaudu neuvottelemalla syvälle vaan **kysymällä monelta**. Siksi
+   pyynnön on oltava niin pieni, että siihen vastataan ilman kokousta.
+
+### Mitä heille tarjotaan vastineeksi
+
+Pyyntö ilman vastinetta on kerjäämistä. Uskottava vaihtokauppa:
+
+- **Näkyvyys aliurakoitsijoille ja toimittajille.** Palvelumme käyttäjät
+  ovat juuri niitä, jotka haluavat myydä heidän työmailleen. Hankkeen
+  näkyminen oikein ja ajoissa **vähentää heidän omaa hankintakitkaansa**
+  — ei pelkästään meidän.
+- **Tiedot näkyvät oikein.** Jos emme saa tietoa heiltä, poimimme sen
+  kyltistä, päätöksistä ja uutisista — ja silloin virheet ovat meidän
+  arvauksiamme heidän hankkeistaan. Tämä on rehellinen ja vahva
+  argumentti: *tiedot julkaistaan joka tapauksessa, haluatteko että ne
+  ovat oikein?*
+- **Ei maksa heille mitään.** Ei sopimusta, ei integraatiota, ei
+  työmäärää — pyydetään se, mikä heillä on jo olemassa.
+
+### Oikea henkilö — mistä se selviää
+
+Ei ole yhtä oikeaa titteliä, ja arvaaminen on juuri se, mikä kaataa
+tällaisen kierroksen. Prioriteettijärjestys:
+
+1. **Viestintä- tai markkinointijohtaja.** Heidän työnsä on saada
+   hankkeet näkyviin. Tämä on heille helppo kyllä.
+2. **Hankekehitys- tai kehitysjohtaja.** Tietää hankkeet ennen kuin ne
+   ovat julkisia — mutta siksi myös varovaisempi.
+3. **Asiakkuus- tai myyntijohtaja.** Ymmärtää vastineen.
+
+**Älä lähesty vastaavaa työnjohtajaa.** Hän on hankkeen yhteyshenkilö,
+ei se joka päättää tiedon luovuttamisesta — ja väärälle henkilölle
+mennyt pyyntö kuluu hukkaan hiljaisena.
+
+Mistä nimi selvitetään, halvimmasta kalleimpaan:
+- yrityksen oma verkkosivu (`/yhteystiedot`, `/media`, `/viestinta`)
+- tiedotteiden allekirjoitus — meillä on näitä jo `source_documents`issa
+- LinkedIn
+- vaihde, ja kysy suoraan
+
+### Sähköpostin luonnos — EI LÄHETETTY
+
+Tämä on huomisen muokattavaksi, ei valmis.
+
+> **Aihe:** Työmaat.fi — näkyvätkö hankkeenne oikein?
+>
+> Hei [nimi],
+>
+> Olen Johannes Sippola, ja pyöritän Työmaat.fi-palvelua: kokoamme
+> Suomen rakennushankkeet yhteen paikkaan, jotta aliurakoitsijat ja
+> toimittajat löytävät ne ajoissa.
+>
+> [Yritys]-hankkeita on palvelussamme tällä hetkellä [N]. Kokoamme
+> tiedot julkisista lähteistä — päätöksistä, kuulutuksista,
+> tiedotteista — ja se tarkoittaa, että osa tiedoista on meidän
+> tulkintaamme. Mieluummin ne olisivat teidän kertomianne.
+>
+> Kysyisin yhtä asiaa: **voisitteko kertoa, kuka on kunkin käynnissä
+> olevan hankkeenne yhteyshenkilö?** Sitä tietoa kysytään meiltä
+> eniten, emmekä löydä sitä luotettavasti mistään.
+>
+> Teille tästä ei ole työtä eikä kustannusta. Teidän hankkeenne
+> löytyvät helpommin niiltä, jotka haluavat tarjota niihin — ja
+> tiedot ovat oikein, kun ne tulevat teiltä.
+>
+> Vastaan mielelläni mihin tahansa kysymykseen siitä, mitä teemme ja
+> mitä emme.
+>
+> Ystävällisin terveisin,
+> Johannes Sippola
+> Työmaat.fi | [puhelin] | www.tyomaat.fi
+
+Luonnoksen linjavalinnat:
+- **Yksi pyyntö, ei kolmea.** Yhteyshenkilö, ei "tietojanne".
+- **Hankemäärä mukaan.** Osoittaa että heidät tunnetaan jo, ei kylmä
+  mainoskirje.
+- **"Tiedot julkaistaan joka tapauksessa" sanotaan pehmeästi** — se on
+  totta ja vahva, mutta uhkaavana se kaataa keskustelun.
+- **Ei alennusta eikä kauppaa.** Tämä ei ole myyntikirje; sekoittaminen
+  tekisi pyynnöstä epäuskottavan.
+
+### Ennen kuin mitään lähetetään
+
+- [ ] **Vastausprosentti mitataan pienellä erällä.** 10–15 viestiä
+      käsin, lasketaan vastaukset viikossa. Jos 1/15 vastaa,
+      automatisointia ei rakenneta; jos 6/15, rakennetaan.
+- [ ] **Jokainen lähetys vaatii Johanneksen erillisen hyväksynnän.**
+      Nykyinen broadcast-toiminto EI sovi tähän: se lukee
+      vastaanottajat `auth.users`ista ja lähettää yhden rungon
+      piilokopiona (`app/api/admin/send-broadcast/route.ts`). Tämä
+      vaatii henkilökohtaisen viestin per vastaanottaja.
+- [ ] **Tietosuoja.** Pyydämme toista ihmistä luovuttamaan kolmannen
+      henkilön tiedot. B2B-tiedustelu ei vaadi ennakkosuostumusta, mutta
+      kun saamme henkilön tiedot muualta kuin häneltä itseltään,
+      hänelle on kerrottava mistä ne on saatu. Yksi lause ensimmäisessä
+      viestissä hänelle riittää — ratkaistaan nyt, ei sadan viestin
+      jälkeen.
+- [ ] **Vastausten vienti kantaan on käsityötä.** Vastaus tulee vapaana
+      tekstinä. Älä rakenna automaatiota ennen kuin vastausprosentti on
+      tiedossa.
+
+### Avoimet kysymykset
+
+- Suostuuko kukaan? **Tätä ei tiedetä.** Johanneksen usko on toive, ei
+  havainto — ensimmäiset 15 vastausta kertovat.
+- Pyydetäänkö kertaluontoinen lista vai jatkuva päivitys? Kertaluontoinen
+  on helpompi myöntää; jatkuva on arvokkaampi. Aloita kertaluontoisesta.
+- Mitä vastataan kysymykseen "näkyykö tämä kilpailijoillemme"? Vastaus
+  on kyllä, palvelu on avoin maksaville asiakkaille. Se on sanottava
+  suoraan, kysyttäessä tai kysymättä.
+
+---
+
 ## Rakennuslehti — keskustelu avattu 7.10.2026
 
 ### Mitä tiedetään, mitä ei
