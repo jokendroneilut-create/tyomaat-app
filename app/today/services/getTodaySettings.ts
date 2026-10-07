@@ -1,3 +1,4 @@
+import { lueUudelleen } from "@/lib/supabase/lueUudelleen"
 import { createClient } from "@supabase/supabase-js"
 
 const supabaseAdmin = createClient(
@@ -49,11 +50,15 @@ export async function getTodaySettings(userId?: string | null) {
     return defaultTodaySettings
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("user_today_preferences")
-    .select("settings")
-    .eq("user_id", userId)
-    .maybeSingle()
+  const { data, error } = await lueUudelleen<{ settings: any } | null>(
+    () =>
+      supabaseAdmin
+        .from("user_today_preferences")
+        .select("settings")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    "getTodaySettings"
+  )
 
   if (error) {
     throw error

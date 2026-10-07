@@ -1,3 +1,4 @@
+import { lueUudelleen } from "@/lib/supabase/lueUudelleen"
 import { createClient } from "@supabase/supabase-js"
 
 const supabaseAdmin = createClient(
@@ -124,9 +125,13 @@ export async function getTodayProjects(
    */
   const rivit: any[] = []
   for (let alku = 0; alku < HAKURAJA; alku += SIVU) {
-    const { data, error } = await query
-      .order("created_at", { ascending: false })
-      .range(alku, Math.min(alku + SIVU, HAKURAJA) - 1)
+    const { data, error } = await lueUudelleen<any[]>(
+      () =>
+        query
+          .order("created_at", { ascending: false })
+          .range(alku, Math.min(alku + SIVU, HAKURAJA) - 1),
+      `getTodayProjects sivu ${alku}`
+    )
 
     if (error) {
       throw error
@@ -163,7 +168,14 @@ export async function getRegionProjectCount(regions?: string[]): Promise<number>
     query = query.in("region", effectiveRegions)
   }
 
-  const { count, error } = await query
+  /*
+   * Laskuri palauttaa `count`in eika `data`a, joten uusinta kaaritaan
+   * samaan muotoon kuin muut luvut.
+   */
+  const { data: count, error } = await lueUudelleen<number>(
+    () => query.then(({ count, error }) => ({ data: count ?? 0, error })),
+    "getRegionProjectCount"
+  )
   if (error) throw error
   return count ?? 0
 }

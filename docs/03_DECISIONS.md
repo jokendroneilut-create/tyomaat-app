@@ -5,6 +5,53 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-246 - Virheraja ja yksi uusintayritys: paivitys ei saa olla asiakkaan tyokalu
+
+Johannes 7.10.2026: `/today` nautti admin-tunnuksella ruudun *"Application
+error: a server-side exception has occurred"*. Sama tunnus toimi samaan
+aikaan mobiililla, ja **sivun paivitys korjasi sen myos koneella**.
+
+#### Mika oli rikki
+
+Ei tili eika data — kaksi eri asiaa:
+
+1. **Yksi kysely epaonnistui kerran.** `/today`-polussa oli kolme kohtaa
+   jotka heittivat Supabasen virheen sellaisenaan eteenpain:
+   `getTodayProjects.ts` (sivutus ja laskuri) ja `getTodaySettings.ts`.
+2. **Koko sovelluksessa ei ollut yhtaan `error.tsx`:aa.** Mika tahansa
+   poikkeus nayttyi siis Next.js:n englanninkielisena oletusruutuna,
+   josta puuttui ainoa tarvittava ohje: paivita sivu.
+
+#### Miksi juuri admin-tunnus
+
+Ei siksi etta se on admin, vaan koska se on raskain kysely: alueena
+"Koko Suomi" ja maxProjects 40, kun toimivalla tunnuksella oli "Uusimaa"
+ja 20. `/today` hakee tuhannen rivin sivuina 3 000:een asti, joten laajin
+tunnus tekee eniten kyselyita — ja osuu satunnaiseen hairioon ensin.
+Todennakoisyys, ei bugi tilissa.
+
+#### Korjaus kahdessa osassa
+
+- `app/error.tsx` ja `app/global-error.tsx`: suomenkielinen teksti,
+  "Yrita uudelleen" -nappi ja virhetunnus. Tunnus naytetaan koska se on
+  ainoa kahva Vercelin lokiin.
+- `lib/supabase/lueUudelleen.ts`: yksi uusinta lukukyselylle.
+  **Virhelajia ei tunnisteta** — ohimenevan ja pysyvan erottaminen
+  viestin perusteella vanhenee heti kun PostgREST muuttaa sanamuotoaan,
+  joten uusinta tehdaan jokaisesta virheesta. Pysyva maksaa yhden turhan
+  kyselyn ja kaatuu silti. Vain lukuun: kirjoituksen uusiminen voi
+  tuplata rivin.
+
+Onnistunut uusinta kirjataan lokiin varoituksena. Ilman sita korjaus
+olisi nakymaton, eika kukaan huomaisi jos niita alkaa tulla sata
+paivassa — silloin vika ei ole satunnaisuudessa.
+
+#### Mita tama ei korjaa
+
+Jos kanta on alhaalla, sivu kaatuu edelleen — mutta suomeksi ja
+ulospaasyn kanssa. Katkoja on ollut kaksi (24.8. ja 22.9.), joten tama
+tilanne toistuu.
+
 ### D-245 - Verkkohaun hinta luetaan laskutuksesta, ei laskurista
 
 Johannes 7.10.2026, 233 hankkeen eran jalkeen: *"saldo meni 0,1 dollaria
