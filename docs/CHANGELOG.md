@@ -9,6 +9,33 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-10 (tyo 7.-8.10.)
+
+### Brändin kirjoitusasu: Tyomaat.fi ilman ö:tä (`7a0f3c6`, `37018d6`)
+
+Brändissä ei ole ö-kirjainta, mutta repositorio oli kirjoittanut sen
+läpeensä muodossa "Työmaat.fi". Korjattu 24 tiedostossa, 57 kohdassa.
+
+Mukana olivat myös **käyttäjälle näkyvät tekstit**, ei vain
+dokumentaatio: ohjesivu, tervetulomodaali, selaimen välilehden otsikko,
+digestin ja palautteen sähköpostit, latausnäyttö sekä Health-hälytyksen
+otsikko. Sisäisesti myös TIC:n nimi navigaatiossa.
+
+Karttasivun otsikko `<h1>Työmaat</h1>` jätettiin ensin korjauksen
+ulkopuolelle, koska sana saattoi tarkoittaa yleisnimeä eikä brändiä.
+Johannes valitsi tilalle **"Rakennushankkeet kartalla"**, joka kertoo
+sivun sisällön eikä toista brändin nimeä.
+
+Muutos on puhtaasti nimellinen eikä koske logiikkaa.
+
+### Tiedote Rakennuslehdelle (ei koodimuutos)
+
+Rakennuslehden Kari Souto pyysi tiedotteen toimitukseen ennen kuin
+yhteistyö aloitetaan. Tiedote laadittiin 7.10.2026; teksti ja
+taustaperustelut ovat [`17_KUMPPANUUDET.md`](17_KUMPPANUUDET.md):ssä.
+
+---
+
 ## 2026-10 (tyo 1.-2.10.)
 
 ### Kaavan tiivistelmä ja valmistelija selostuksesta (D-230)

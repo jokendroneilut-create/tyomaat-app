@@ -202,10 +202,121 @@ ensimmäinen oikea testi.** Jos Rakennuslehden tilaajista tulee maksavia
 asiakkaita, uusi markkina on olemassa. Jos ei tule, se tiedetään halvalla ja
 aikaisin — ja se tieto on yhtä arvokas.
 
+
+---
+
+## Tiedote toimitukselle (laadittu 7.10.2026)
+
+Rakennuslehden **Kari Souto** pyysi tiedotteen toimitukseen **ennen kuin
+yhteistyö aloitetaan**. Tiedote on siis portti kumppanuuteen, ei sen
+markkinointia.
+
+### Linjavalinnat ja miksi
+
+**Kilpailijoita ei nimetä.** Hubexo on lähes varmasti Rakennuslehden
+mainostaja. Nimeltä mainittua mainostajaa vastaan asettuva tiedote on
+toimituksen helpompi jättää käsittelemättä kuin selvittää kaupallisen puolen
+kanssa. Teksti kuvaa alan käytäntöä ("hintoja ei ole tapana julkaista") ja
+jättää vertailun toimittajalle — ja toimittajan itse tekemänä vertailu on
+juttuna vahvempi kuin meidän väitteenämme.
+
+**Ei väitteitä kilpailijan keruumenetelmästä.** Ensimmäisessä versiossa luki,
+että muut keräävät tiedon soittamalla. Johannes poisti sen: emme tiedä sitä
+varmasti. Tiedotteessa esitetty varma väite kilpailijasta on juuri se, jonka
+toimittaja tarkistaa, ja virhe veisi koko tekstin uskottavuuden.
+
+**Ulkopuolisen rahoituksen puute jätettiin pois.** Se vahvisti "yhden hengen
+yritys" -kulmaa heikommin kuin asia itse. Rahoitusrakenne on taloustoimituksen
+kysymys, ei rakennusalan lehden.
+
+**Asiakaskommenttia ei ole.** Tämä on tiedotteen suurin heikkous läpimenon
+kannalta — toimittaja tarvitsee jonkun muun kuin myyjän kertomaan että tuote
+toimii. Jos asiakas myöhemmin suostuu, se kannattaa tarjota Karille erikseen
+jatkona; se voi kääntää "ehkä joskus" -jutun tehdyksi jutuksi.
+
+### Lähetetty teksti
+
+> **TIEDOTE** — Julkaisuvapaa heti · Espoo, 7.10.2026
+>
+> **Rakennushankkeiden seurantaan suomalainen palvelu, jonka hinta on
+> julkisesti nähtävillä**
+>
+> Tyomaat.fi PRO kokoaa Suomen rakennushankkeet sadoista lähteistä ja kertoo
+> niistä kiinnostuneille yrityksille, kun hanke etenee. Palvelun hinta, 149
+> euroa kuukaudessa, on nähtävissä verkkosivulla, ja tilaus on irtisanottavissa
+> 30 päivän kuluessa. Hanketietopalveluiden hintoja ei alalla ole tapana
+> julkaista.
+>
+> Rakennusalan hanketietoa on myyty Suomessa vuosikymmeniä, mutta hinnan
+> selvittäminen on edellyttänyt yhteydenottoa myyntiin ja useimmiten
+> esittelytapaamista. Hinta on riippunut markkina-alueesta ja sopimuksen
+> laajuudesta. Tyomaat.fi on päättänyt tehdä toisin.
+>
+> *"Jos hintaa ei kerrota, ostaja ei voi vertailla eikä päättää itse.
+> Pienyrittäjä ei halua varata palaveria selvittääkseen, onko jokin hänelle
+> liian kallista"*, sanoo palvelun perustaja Johannes Sippola.
+>
+> Sama ajatus näkyy sopimusehdoissa. Tilaus on irtisanottavissa 30 päivän
+> kuluessa milloin tahansa, kun alalla on tavanomaista sitoa asiakas vuodeksi
+> kerrallaan. *"Kuukauden irtisanomisaika tarkoittaa, että palvelun on
+> ansaittava paikkansa joka kuukausi. Se on epämukavaa minulle, mutta se on
+> oikein asiakkaan kannalta."*
+>
+> **Hankkeet kootaan sadoista lähteistä.** Palvelu seuraa kaavoitusta,
+> rakennuslupia, julkisia hankintailmoituksia, kuntien ja hyvinvointialueiden
+> päätöksiä, ympäristövaikutusten arviointeja, rakennusalan yritysten omia
+> tiedotteita ja lukuisia muita lähteitä. Aineisto haetaan koneellisesti ja
+> yhdistetään hankekohtaisiksi kokonaisuuksiksi, joita seurataan
+> suunnitteluvaiheesta valmistumiseen asti. Seurannassa on tällä hetkellä yli
+> 6 000 rakennushanketta.
+>
+> *"Julkinen aineisto on Suomessa poikkeuksellisen hyvää. Kunnat julkaisevat
+> päätöksensä, kaavat ovat avoimia ja hankinnat ilmoitetaan. Ongelma ei ole
+> tiedon puute vaan se, ettei kukaan ehdi lukea niitä läpi joka päivä."*
+>
+> **Mukana myös hankkeen osapuolet ja yhteystiedot.** Hankkeen tietojen ohella
+> palvelu kertoo, ketkä hankkeessa ovat mukana: rakennuttaja, urakoitsijat ja
+> suunnittelijat. Käyttäjä saa myös yhteystiedot hankkeen keskeisiin
+> henkilöihin.
+>
+> *"Pelkkä tieto siitä että hanke on olemassa ei riitä. Myyjän pitää tietää
+> kenelle soitetaan ja missä vaiheessa se kannattaa tehdä."*
+>
+> **Kohderyhmänä yritykset, jotka eivät ole ostaneet hanketietoa.** Palvelun
+> kohderyhmä on pienet ja keskisuuret rakennusalan yritykset — urakoitsijat,
+> aliurakoitsijat, suunnittelutoimistot, tavarantoimittajat ja palveluyritykset.
+>
+> *"Suurin osa rakennusalan yrityksistä työllistää alle kymmenen henkeä. Ne
+> eivät ole koskaan ostaneet hanketietoa, koska se on hinnoiteltu isommille.
+> Minä en yritä viedä asiakkaita keneltäkään — olen tehnyt tuotteen niille,
+> joille sitä ei ole myyty."*
+>
+> **Palvelua rakentaa yksi ihminen.** Tyomaat.fi:tä kehittää ja ylläpitää
+> Johannes Sippola, joka on rakentanut palvelun vuonna 2025.
+>
+> *"Keveys on tässä etu eikä puute. Kun ei ole isoa organisaatiota
+> katettavana, hinnan voi asettaa sinne missä pienyrityksen on helppo sanoa
+> kyllä."*
+>
+> **Faktat:** Tyomaat.fi PRO · 149 €/kk julkisesti nähtävillä · irtisanottavissa
+> 30 päivän kuluessa, ei määräaikaa · yli 6 000 hanketta seurannassa · satoja
+> lähteitä · asiakkaita ja testikäyttäjiä yhteensä satoja · Sippola
+> Enterprises Oy, Y-tunnus 3627561-2, perustettu 2026 · www.tyomaat.fi
+>
+> **Lisätiedot:** Johannes Sippola, perustaja, 040 962 4170. Toimitukselle
+> tarjotaan pyydettäessä tunnukset palveluun sekä kuvamateriaalia.
+
+### Mitä tiedotteessa luvattiin
+
+Tunnukset toimitukselle ja kuvamateriaali pyydettäessä. **Nämä on pystyttävä
+toimittamaan heti**, jos toimitus tarttuu — toimittaja joka pääsee itse
+etsimään oman alueensa hankkeita kirjoittaa jutun selvästi todennäköisemmin
+kuin se, joka lukee pelkän tiedotteen.
+
 ---
 
 ## Tila
 
 | kanava | tila | seuraava askel |
 |---|---|---|
-| Rakennuslehti | keskustelu avattu 7.10.2026, ei yksityiskohtia | päätä listahinta (R1), sitten sovi tapaaminen jossa käydään avoimet kysymykset |
+| Rakennuslehti | keskustelu avattu 7.10.2026; toimitus pyysi tiedotteen ennen yhteistyön aloittamista, tiedote laadittu 7.10. | lähetä tiedote Kari Soudolle, varmistu että tunnukset ja kuvat ovat heti annettavissa; sitten avoimet kysymykset |
