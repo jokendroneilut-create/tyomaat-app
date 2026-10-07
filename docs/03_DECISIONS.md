@@ -5,6 +5,44 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-245 - Verkkohaun hinta luetaan laskutuksesta, ei laskurista
+
+Johannes 7.10.2026, 233 hankkeen eran jalkeen: *"saldo meni 0,1 dollaria
+miinukselle."*
+
+Era kustansi **46 dollaria** eli 20 senttia per hanke ja 54 senttia per
+loytynyt yhteyshenkilo. Oma arvioni ennen laskutuksen lukemista oli
+10-17 senttia — **puolet todellisesta**.
+
+#### Kaksi virhetta joita ei toisteta
+
+1. **Tokenilaskuri ei ole hinta-arvio.** Laskuri nakee tokenit ja
+   hakujen maaran, mutta ei niiden hintaa. Arvio naytti tasmalliselta
+   koska siina oli mitattuja lukuja — mutta puuttuva kerroin teki siita
+   kaksi kertaa liian pienen. Hinta luetaan konsolin laskutuksesta.
+2. **Paattelin vaarin mista hinta koostuu.** Kirjasin ensin ettei
+   halvempaan malliin vaihtaminen sastaa, koska hinta tulee hausta.
+   Jakauma on painvastainen: 840 hakua on ~8 dollaria (18 %) ja
+   820 000 tokenia ~38 dollaria (82 %). Tuotosta syntyy 2 400 tokenia
+   per hanke, koska vaihe 1 vastaa vapaana tekstina ja perustelee
+   loydoksen.
+
+Molemmat virheet olivat samaa lajia: luku joka nayttaa mitatulta on
+mitattu vain osittain. Ks. [[name-the-denominator]] ja D-244.
+
+#### Mita tasta seuraa
+
+- Jaljella olevat 357 suunnitteluvaiheen hanketta kustantaisivat samalla
+  mallilla **noin 70 dollaria**, eivat 25-35 kuten arvioin.
+- Koska hinta on tuotostokeneissa, **halvemman mallin mittaaminen
+  samalla otoksella** on tata ennen jarkeva askel — ja se on nyt
+  kirjattu saantona 5 dokumenttiin `docs/05_AI.md`.
+- Hakubudjetin karsiminen sastaisi vain viidenneksen, joten se ei ole
+  ensisijainen saato.
+
+Luvut ja viisi saantoa: `docs/05_AI.md` -> "Verkkohaku: eri
+kustannusluokka kuin muu LLM-kaytto".
+
 ### D-244 - Yhteyshenkilo verkosta: malli ehdottaa, ihminen paattaa
 
 Johannes 6.10.2026: *"tee llm ja verkkohaku puuttuville tassa kohtaa ja
