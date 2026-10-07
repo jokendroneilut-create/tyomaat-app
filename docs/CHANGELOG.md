@@ -1,4 +1,4 @@
-# Työmaat.fi – Changelog
+# Tyomaat.fi – Changelog
 
 Merkittävät toiminnalliset muutokset teemoittain. Yksityiskohdat git-historiassa
 (commit-tunnukset suluissa). Ylin = uusin.

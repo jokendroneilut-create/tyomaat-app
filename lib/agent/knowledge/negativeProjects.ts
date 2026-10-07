@@ -8,7 +8,7 @@ export const negativeProjects: NegativeProjectKnowledge[] = [
   {
     keyword: "omakotitalo",
     severity: "high",
-    reason: "Yksittäiset omakotitalot eivät yleensä kuulu Työmaat.fi:n kohderyhmään",
+    reason: "Yksittäiset omakotitalot eivät yleensä kuulu Tyomaat.fi:n kohderyhmään",
   },
   {
     keyword: "autotalli",
@@ -60,7 +60,7 @@ export const negativeProjects: NegativeProjectKnowledge[] = [
 /*
  * Pienet yksityiskohteet joita ei oteta TICin katselmointijonoon lainkaan —
  * vapaa-ajan asunnot, omakotitalot, piharakennukset yms. ovat hankkeina liian
- * pieniä Työmaat.fi:n kohderyhmälle. Käytetään lupapisteResolverissa
+ * pieniä Tyomaat.fi:n kohderyhmälle. Käytetään lupapisteResolverissa
  * suodattamaan rakennusluvat ennen ehdokkaan luontia.
  */
 /*

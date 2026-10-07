@@ -1,4 +1,4 @@
-# Työmaat.fi – Roadmap
+# Tyomaat.fi – Roadmap
 
 Tuotteen suunta ja priorisointi. Vastaa kysymykseen *"mitä seuraavaksi ja miksi
 juuri se"*. Täydentää visiodokumentteja: [`00_PRODUCT_BLUEPRINT.md`](00_PRODUCT_BLUEPRINT.md)

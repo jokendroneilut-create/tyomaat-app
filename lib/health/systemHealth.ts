@@ -62,7 +62,7 @@ export function buildAlertEmail(results: CheckResult[], now: Date = new Date()) 
   const nimet = kaatuneet.map((r) => r.name).join(", ")
   const aika = now.toISOString().slice(11, 16)
 
-  const subject = `Työmaat.fi: ${nimet} ei vastaa (${aika} UTC)`
+  const subject = `Tyomaat.fi: ${nimet} ei vastaa (${aika} UTC)`
 
   const text = [
     `Järjestelmän vahti ei saanut yhteyttä. Tarkistus uusittiin ennen`,

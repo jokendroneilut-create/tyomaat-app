@@ -1,7 +1,7 @@
-Työmaat.fi – Data Model v1.0
+Tyomaat.fi – Data Model v1.0
 Purpose
 
-This document describes the core data model of Työmaat.fi.
+This document describes the core data model of Tyomaat.fi.
 
 The objective is to separate:
 

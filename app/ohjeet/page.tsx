@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic"
  */
 
 const SECTIONS = [
-  { id: "mika", title: "Mikä Työmaat.fi on" },
+  { id: "mika", title: "Mikä Tyomaat.fi on" },
   { id: "tanaan", title: "Tänään-näkymä" },
   { id: "mukauta", title: "Mukauta näkymää" },
   { id: "kartta", title: "Kartta ja haku" },
@@ -50,7 +50,7 @@ export default function OhjeetPage() {
       <h1 className="text-3xl font-bold text-gray-900">Ohjeet</h1>
 
       <p className="mt-2 text-gray-600">
-        Miten Työmaat.fi toimii ja mitä sen eri osilla tekee.
+        Miten Tyomaat.fi toimii ja mitä sen eri osilla tekee.
       </p>
 
       <nav className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
@@ -71,10 +71,10 @@ export default function OhjeetPage() {
       </nav>
 
       <div className="text-[15px] leading-relaxed text-gray-800">
-        <H id="mika">1. Mikä Työmaat.fi on</H>
+        <H id="mika">1. Mikä Tyomaat.fi on</H>
 
         <p className="mt-3">
-          Työmaat.fi kokoaa Suomen rakennushankkeet yhteen paikkaan ja nostaa
+          Tyomaat.fi kokoaa Suomen rakennushankkeet yhteen paikkaan ja nostaa
           niistä esiin ne, jotka ovat yrityksellesi myynnin kannalta
           ajankohtaisia. Tarkoitus on, että näet hankkeen oikea-aikaisesti
           silloin kun on paras ajankohta olla yhteydessä. Lisäksi voit selailla

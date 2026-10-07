@@ -1,7 +1,7 @@
 # Työmäärä ja rahallinen arvio
 
 Elävä dokumentti. Kirjaa toteutuneen kehitystyön laajuuden ja siitä johdetun
-arvion Työmaat.fi:n nykyarvosta perusteluineen. Päivitetään aika ajoin — uusi
+arvion Tyomaat.fi:n nykyarvosta perusteluineen. Päivitetään aika ajoin — uusi
 rivi mittaritaulukkoon ja arviotaulukkoon, vanhoja rivejä ei poisteta, jotta
 kehityskaari säilyy.
 
@@ -196,7 +196,7 @@ huonoa, mutta **se on hinnoiteltava mukaan eikä huomattava jälkikäteen.**
 ### Käytännön varotoimi
 
 Jos yhteydenotto joskus tulee ("keskustellaanpa yhteistyöstä"), se voi yhtä
-hyvin olla tiedustelua siitä kuinka suuri uhka Työmaat.fi on. Ei asiakaslistaa,
+hyvin olla tiedustelua siitä kuinka suuri uhka Tyomaat.fi on. Ei asiakaslistaa,
 hinnoittelua eikä käyttäjämääriä ilman allekirjoitettua salassapitosopimusta —
 eikä asiakaslistaa nimitasolla kilpailijalle missään vaiheessa. Tämä on
 normaalia varovaisuutta, ei epäluuloa.

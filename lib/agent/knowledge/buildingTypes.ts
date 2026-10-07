@@ -46,7 +46,7 @@ export const buildingTypes: BuildingTypeKnowledge[] = [
     keyword: "omakotitalo",
     category: "low_value",
     businessValue: 5,
-    reason: "Yksittäiset omakotitalot eivät yleensä kuulu Työmaat.fi:n ydinkohderyhmään",
+    reason: "Yksittäiset omakotitalot eivät yleensä kuulu Tyomaat.fi:n ydinkohderyhmään",
   },
   {
     keyword: "terassi",

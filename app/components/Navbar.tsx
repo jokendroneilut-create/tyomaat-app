@@ -223,7 +223,7 @@ export default function Navbar() {
             }
           >
             <NavSection>
-              <NavItem href="/tic">Työmaat Intelligence Center</NavItem>
+              <NavItem href="/tic">Tyomaat Intelligence Center</NavItem>
               <NavItem href="/dashboard">Dashboard</NavItem>
               <NavItem href="/dashboard/users">Käyttäjät</NavItem>
               <NavItem href="/dashboard/analytics">Analytiikka</NavItem>

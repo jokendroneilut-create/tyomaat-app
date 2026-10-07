@@ -120,7 +120,7 @@ export default function Lataus({
           * eika naiden kokoisissa kuvissa hyodyta mitaan.
           */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="tm-lataus-pohja" src="/logo-lataus-tausta.png" alt="Työmaat.fi" />
+        <img className="tm-lataus-pohja" src="/logo-lataus-tausta.png" alt="Tyomaat.fi" />
 
         <div className="tm-lataus-ylarakenne">
           {/* eslint-disable-next-line @next/next/no-img-element */}

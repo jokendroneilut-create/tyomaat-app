@@ -1,4 +1,4 @@
-# Työmaat.fi – Kilpailijat
+# Tyomaat.fi – Kilpailijat
 
 Kuka muu myy samaa asiaa samalle asiakkaalle, mitä hän myy ja millä hinnalla.
 Tarkoitus ei ole seurata kilpailijaa vaan tietää **mihin emme voi kilpailla ja
@@ -943,7 +943,7 @@ kvartaalisoittoja.
 
 ## Vertailu
 
-| | RPT / Byggfakta Rise | Metroc | Työmaat.fi |
+| | RPT / Byggfakta Rise | Metroc | Tyomaat.fi |
 |---|---|---|---|
 | keruumalli | tutkimustiimit soittavat | automaatio + AI julkisista lähteistä | automaatio + AI julkisista lähteistä |
 | hankemäärä (väite) | **13 000 aktiivista Suomessa** (heidän oma lukunsa 6.10.2026); 90 000 varmennettua Pohjoismaissa + 700 000 historiaa | "yli 100 000" (Suomi, ei varmennusvaatimusta — eri yksikkö) | 5 439 asiakkaille näkyvää = **42 % heidän Suomen luvustaan** |
@@ -1098,7 +1098,7 @@ aukko vaan kilpajuoksu samasta kulmasta. Sen arvo ei laske, mutta sen
 kiireellisyys nousee.
 
 **Hinta ei ole vielä ase.** Halpuus puree vasta kun halpa tuote on riittävän
-hyvä sille segmentille. Tänään Metrocin asiakas, joka katsoo Työmaat.fi:tä, ei
+hyvä sille segmentille. Tänään Metrocin asiakas, joka katsoo Tyomaat.fi:tä, ei
 näe halvempaa vaihtoehtoa vaan puuttuvia kenttiä (urakoitsija 86 %,
 rakennuttaja 59 %, kustannus 96 %, yhteyshenkilöitä ei lainkaan). Hinnoittelu
 muuttuu aseeksi vasta datan kattavuuden kautta — ei päinvastoin.
@@ -1129,10 +1129,10 @@ oleva rako.
 
 ### Päätetty asemointi (18.8.2026)
 
-Työmaat.fi ei matki kilpailijoiden myyntimallia vaan asettuu sitä vastaan
+Tyomaat.fi ei matki kilpailijoiden myyntimallia vaan asettuu sitä vastaan
 kolmella konkreettisella tavalla:
 
-| | RPT & Metroc | Työmaat.fi |
+| | RPT & Metroc | Tyomaat.fi |
 |---|---|---|
 | hinta | ei julkaista, neuvotellaan | **julkinen** |
 | ostaminen | demo myyjän kanssa pakollinen | **ilman myyjää** |

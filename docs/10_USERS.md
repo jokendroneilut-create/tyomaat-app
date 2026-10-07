@@ -1,4 +1,4 @@
-# Työmaat.fi – Käyttäjätilanne
+# Tyomaat.fi – Käyttäjätilanne
 
 Myynti- ja aktivointitoimenpiteiden vaikutus näkyy vain, jos samat luvut
 lasketaan samalla tavalla eri ajankohtina. Tämä tiedosto on se sarja.

@@ -1,7 +1,7 @@
-Työmaat.fi – System Architecture v1.0
+Tyomaat.fi – System Architecture v1.0
 Purpose
 
-This document describes the technical architecture of Työmaat.fi.
+This document describes the technical architecture of Tyomaat.fi.
 
 It focuses on responsibilities of each subsystem, data flow and architectural principles.
 
@@ -38,7 +38,7 @@ Candidate Quality Engine
 Lifecycle Engine
         │
         ▼
-Työmaat Intelligence Center
+Tyomaat Intelligence Center
         │
         ▼
 Promotion Engine
@@ -299,7 +299,7 @@ Lifecycle Engine updates project stage.
 
 It does not calculate business value.
 
-Työmaat Intelligence Center (TIC)
+Tyomaat Intelligence Center (TIC)
 
 Internal operational workspace.
 
@@ -370,7 +370,7 @@ Keep modules independent.
 Documentation evolves together with code.
 Long-term Vision
 
-Työmaat.fi evolves through three stages.
+Tyomaat.fi evolves through three stages.
 
 Stage 1
 

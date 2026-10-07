@@ -28,7 +28,7 @@ export default async function TicPage({
     <main className="mx-auto max-w-6xl px-6 py-8">
       <section className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Työmaat Intelligence Center
+          Tyomaat Intelligence Center
         </h1>
       </section>
 

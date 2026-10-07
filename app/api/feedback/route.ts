@@ -111,16 +111,16 @@ export async function POST(request: Request) {
 
       const subject = context
         ? `Palaute: ${context}`
-        : "Palaute (Työmaat)"
+        : "Palaute (Tyomaat)"
 
       const text =
-        `Uusi palaute Työmaat-sovelluksesta:\n\n` +
+        `Uusi palaute Tyomaat-sovelluksesta:\n\n` +
         (metaLines.length ? `${metaLines.join("\n")}\n\n` : "") +
         `Viesti:\n${message}\n`
 
       const html = `
         <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#111827;">
-          <div style="font-size:16px;font-weight:800;margin-bottom:10px;">Uusi palaute Työmaat-sovelluksesta</div>
+          <div style="font-size:16px;font-weight:800;margin-bottom:10px;">Uusi palaute Tyomaat-sovelluksesta</div>
           ${
             metaLines.length
               ? `<div style="font-size:13px;color:#6b7280;margin-bottom:12px;">${metaLines

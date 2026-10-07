@@ -44,7 +44,7 @@ export default function WelcomeInfoModal({
       <div className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="shrink-0 border-b px-6 py-5">
           <h2 className="text-2xl font-bold text-gray-900">
-            Tervetuloa Työmaat.fi:hin! 👋
+            Tervetuloa Tyomaat.fi:hin! 👋
           </h2>
         </div>
 

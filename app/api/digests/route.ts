@@ -559,7 +559,7 @@ const updatesTextLines = buildUpdatedProjectsTextLines(updatedOnly, appBaseUrl);
         (updatedOnly.length > 0
           ? `Lisäksi löytyi ${updatedOnly.length} päivitystä olemassa oleviin hankkeisiin:\n\n${updatesTextLines}\n\n`
           : ``) +
-        `Avaa Työmaat: ${appBaseUrl}/projects\n` +
+        `Avaa Tyomaat: ${appBaseUrl}/projects\n` +
         `Hallinnoi hakuvahteja: ${appBaseUrl}/watchlists\n`;
 
       const htmlBody = `
@@ -616,7 +616,7 @@ const updatesTextLines = buildUpdatedProjectsTextLines(updatedOnly, appBaseUrl);
               <div style="margin:18px 0 6px 0;">
                 <a href="${appBaseUrl}/projects"
                    style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:12px 14px;border-radius:10px;font-weight:800;">
-                  Avaa Työmaat
+                  Avaa Tyomaat
                 </a>
               </div>
 

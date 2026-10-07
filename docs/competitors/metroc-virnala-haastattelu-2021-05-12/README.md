@@ -118,7 +118,7 @@ Virnalan sääntö: tuotteistus pitää olla valmis ennen myyntiä, se pitää s
 **korkeintaan kahteen lauseeseen**, ja sen pitää olla sellainen että **asiakas
 osaa vastata kyllä tai ei** [17:15–17:29].
 
-**Meille: suoraan käytettävissä.** Tämä on testi, jonka Työmaat.fi:n oma
+**Meille: suoraan käytettävissä.** Tämä on testi, jonka Tyomaat.fi:n oma
 yhden lauseen kuvaus kannattaa läpäistä: osaako rakennusalan yrittäjä sanoa
 siihen kyllä tai ei kuulematta lisäkysymyksiä.
 

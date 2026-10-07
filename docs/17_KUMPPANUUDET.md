@@ -1,4 +1,4 @@
-# Työmaat.fi – Kumppanuudet ja jakelukanavat
+# Tyomaat.fi – Kumppanuudet ja jakelukanavat
 
 Jakelu on tämän liiketoiminnan pullonkaula, ei tuote. Markkina on
 myyntirajoitteinen: Metroc kasvaa 16 % neljällä asiantuntijalla, RPT nojaa
@@ -24,8 +24,8 @@ päättelymme eivät saa näyttää samalta.
 |---|---|
 | **Tapahtui** | Johannes tapasi Rakennuslehden toimitusjohtajan messuilla |
 | **Heidän kantansa** | kiinnostuneita tekemään yhteistyötä |
-| **Idea** | Rakennuslehti tarjoaisi Työmaat.fi PRO:ta tilaajilleen alennettuun hintaan |
-| **Malli jota Johannes tarkoittaa** | **tilaajaetu** — ei rahaa liiku, Rakennuslehti saa tilaukseensa lisäarvoa, Työmaat.fi saa pääsyn yleisöön |
+| **Idea** | Rakennuslehti tarjoaisi Tyomaat.fi PRO:ta tilaajilleen alennettuun hintaan |
+| **Malli jota Johannes tarkoittaa** | **tilaajaetu** — ei rahaa liiku, Rakennuslehti saa tilaukseensa lisäarvoa, Tyomaat.fi saa pääsyn yleisöön |
 | **Alennuksen suuruus** | ❗ **ei tiedossa.** "−50 %" on Johanneksen oma havainnollistus keskustelussa, **ei Rakennuslehden ehdotus** |
 | **Alennuksen kesto** | ei tiedossa; voi olla määräaikainen |
 | **Kaikki muu** | yksityiskohdista ei ole keskusteltu |
@@ -104,7 +104,7 @@ arvokkaamman — mikä on heidän puolensa kaupasta.
 *Korjaus 7.10.2026 — tässä luki aiemmin, että listahinta on päättämättä. Se ei
 pitänyt paikkaansa.*
 
-**Työmaat.fi PRO maksaa 149 €/kk ja hinta on julkaistu sivustolla.** Neuvottelu
+**Tyomaat.fi PRO maksaa 149 €/kk ja hinta on julkaistu sivustolla.** Neuvottelu
 käydään siis oikeasta luvusta, ei tyhjästä. Vertailuksi: RPT Smart 600 €/kk
 yhdestä maakunnasta, Hubexo Finlandin keskimääräinen asiakas ~470 €/kk, Metroc
 ~250–350 €/kk.

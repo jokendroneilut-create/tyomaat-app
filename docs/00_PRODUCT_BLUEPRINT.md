@@ -1,7 +1,7 @@
-Työmaat.fi – Product Blueprint v1.0
+Tyomaat.fi – Product Blueprint v1.0
 1. Purpose
 
-Työmaat.fi helps construction industry companies identify business opportunities as early as possible.
+Tyomaat.fi helps construction industry companies identify business opportunities as early as possible.
 
 The goal is not to build only a construction project registry. The goal is to build a system that detects, enriches, follows and prioritizes construction-related opportunities throughout their lifecycle.
 
@@ -98,7 +98,7 @@ Kahdesta luvusta näkee mihin työ kannattaa kohdistaa:
 
 2. Core Vision
 
-Työmaat.fi is a construction market intelligence platform.
+Tyomaat.fi is a construction market intelligence platform.
 
 It answers three questions:
 
@@ -110,7 +110,7 @@ The long-term goal is to show the right opportunity to the right customer at the
 
 3. Product Philosophy
 
-Työmaat.fi should not show everything.
+Tyomaat.fi should not show everything.
 
 It should reduce noise and surface the most relevant opportunities.
 
@@ -118,7 +118,7 @@ The system should collect broadly, but only promote high-quality and relevant in
 
 4. Primary Customer Value
 
-Customers use Työmaat.fi to:
+Customers use Tyomaat.fi to:
 
 find projects earlier
 identify upcoming tender opportunities
@@ -135,7 +135,7 @@ If a feature does not improve data quality, speed up opportunity discovery, or h
 
 6. Strategic Differentiation
 
-The most valuable asset of Työmaat.fi is not the software itself.
+The most valuable asset of Tyomaat.fi is not the software itself.
 
 The most valuable asset is the continuously growing Construction Knowledge Base.
 
@@ -174,15 +174,15 @@ A Candidate Project is the system’s current best understanding of a possible c
 
 It may contain multiple signals from multiple sources.
 
-Candidate Projects are used internally in Työmaat Intelligence Center before being promoted to public projects.
+Candidate Projects are used internally in Tyomaat Intelligence Center before being promoted to public projects.
 
 Project
 
-A Project is a customer-facing construction project published inside Työmaat.fi.
+A Project is a customer-facing construction project published inside Tyomaat.fi.
 
 Projects should be cleaner, more reliable and more relevant than raw signals.
 
-Työmaat Intelligence Center (TIC)
+Tyomaat Intelligence Center (TIC)
 
 TIC is the internal daily command center.
 
@@ -194,7 +194,7 @@ which signals are irrelevant
 which sources are failing
 which market areas are becoming active
 
-TIC is not just an admin page. It is the operational brain of Työmaat.fi.
+TIC is not just an admin page. It is the operational brain of Tyomaat.fi.
 
 8. High-Level Flow
 
@@ -286,7 +286,7 @@ paused
 cancelled
 completed
 
-Työmaat.fi should track the lifecycle, not just the moment when a project is first found.
+Tyomaat.fi should track the lifecycle, not just the moment when a project is first found.
 
 Cancelled or paused projects are also valuable information.
 
@@ -323,7 +323,7 @@ Lists are secondary. Decisions and actions are primary.
 
 15. Long-Term Product Direction
 
-Työmaat.fi should evolve from:
+Tyomaat.fi should evolve from:
 
 construction project list
 
@@ -396,6 +396,6 @@ User behavior, watchlists, CRM activity and customer interest influence opportun
 
 18. Guiding Sentence
 
-Työmaat.fi does not aim to show users everything.
+Tyomaat.fi does not aim to show users everything.
 
-Työmaat.fi aims to show the right construction opportunity to the right user at the right time.
+Tyomaat.fi aims to show the right construction opportunity to the right user at the right time.

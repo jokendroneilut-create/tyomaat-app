@@ -1,4 +1,4 @@
-# Työmaat.fi – Construction Knowledge Log
+# Tyomaat.fi – Construction Knowledge Log
 
 ## Purpose
 
