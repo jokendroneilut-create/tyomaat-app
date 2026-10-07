@@ -5,6 +5,50 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-248 - "Muu osapuoli" -nappi: suunnittelijalle oli vain hylkays
+
+Johannes 8.10.2026: *"tee osapuoli ja ei osapuoli nappi."*
+
+"Ei osapuoli" oli jo olemassa. Puuttui **"Muu osapuoli"**, ja sen puute
+oli aito ansa: suunnittelijalle, maisema-arkkitehdille ja konsultille ei
+ollut yhtaan oikeaa nappia, joten ainoa tapa tyhjentaa rivi jonosta oli
+painaa "Ei osapuoli" — eli **heittaa oikea tieto pois vaarana**.
+Keravan kavelykadulla (D-247) juuri voittaja oli tallainen.
+
+#### Varasto oli jo olemassa
+
+`metadata.related_companies` on ollut kaytossa koko ajan: kahdeksan
+kerainta kirjoittaa siihen ja se nakyy asiakkaalle listarivilla
+paaurakoitsijan vieressa. Siita puuttui vain tapa kirjoittaa kasin.
+Uutta saraketta ei siis tarvittu — vain reitti ja nappi.
+
+#### Lisays tehdaan palvelimella, ei selaimessa
+
+Jos selain lahettaisi "nykyinen lista + uusi nimi", kaksi perakkaista
+klikkausta vanhentuneella listalla pyyhkisi ensimmaisen pois. Siksi
+reitti saa yhden nimen (`related_companies_add`) ja lisaa sen itse.
+Koko listan voi yha korvata (`related_companies`), koska **kaikki mita
+asiakas nakee, pitaa voida korjata** — se on saman reitin oma periaate,
+eika append-only kenttaa saa jaada ilman poistotietä.
+
+Kaksoiskappaleen esto ei katso kirjainkokoa: lahde kirjoittaa saman
+yrityksen milloin "LOCI Maisema-arkkitehdit", milloin "Loci
+maisema-arkkitehdit", ja molemmat listalla nayttaisi asiakkaalle
+kahdelta yritykselta. Ensin kirjattu muoto voittaa ([[title-precedence]]).
+Logiikka on omassa tiedostossaan `lib/projects/liittyvatYritykset.ts`,
+jotta se on testattavissa ilman HTTP-kutsua.
+
+#### TIC nayttaa nyt mita listalle kertyy
+
+Hankesivu ei nayttanyt `related_companies`-kenttaa lainkaan. Ilman sita
+nappi olisi umpikuja: nimi tallentuisi ja nakyisi asiakkaalle, mutta
+TIC:issa ei nakyisi mitaan — eika kukaan huomaisi jos listalle kertyy
+vaaria nimia. "Muut osapuolet" lisattiin hankesivun kenttiin.
+
+Tama oli se varaus jonka esitin nappia vastaan: geneerinen nappi tekee
+helpoksi tallettaa nimen jonka roolia ei tiedeta. Varaus ei poistu
+napilla vaan nakyvyydella.
+
 ### D-247 - Keravan uutiset lahteeksi: kaavasivu ei kerro kuka voitti
 
 Johannes 7.10.2026 antoi lahteeksi sivun jolla Kauppakaaren kavelykadun
@@ -89,8 +133,11 @@ kunniamaininta ei ole osapuolisuhde.
 
 `OsapuoliEhdotus.tsx` tarjoaa vain kaksi roolia (rakennuttaja,
 paaurakoitsija). Tassa hankkeessa oikea toimenpide olisi ollut "muu
-osapuoli" LOCIlle ja "ei osapuoli" kolmelle muulle; kumpaakaan nappia ei
-ole, joten korjaus tehtiin skriptilla. Varaus ennen napin lisaamista:
+osapuoli" LOCIlle ja "ei osapuoli" kolmelle muulle. **Korjaus tahan
+kappaleeseen:** vaitin etta kumpaakaan nappia ei ole — "Ei osapuoli" oli
+jo olemassa (`paata(loydos, null)`), ja luin sen puuttuvaksi siita etta
+roolityypissa on vain kaksi roolia. Puuttui vain "Muu osapuoli", joka
+tehtiin D-248:ssa. Varaus ennen napin lisaamista:
 geneerinen "lisaa osapuoleksi" tekee helpoksi tallettaa nimen jonka
 roolia ei tiedeta, ja juuri niin `related_companies` muuttuu
 sekalaatikoksi — talla hankkeella kolme neljasta nimesta olisi mennyt

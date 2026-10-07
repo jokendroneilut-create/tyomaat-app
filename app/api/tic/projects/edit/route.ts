@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
+import { lisaaYritys, siivoaYritykset } from "@/lib/projects/liittyvatYritykset"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { normalizeLegacyPhase } from "@/lib/projects/phases"
 import { computeManualExpiry } from "@/lib/projects/tenderExpiry"
@@ -275,6 +276,72 @@ export async function POST(request: Request) {
     if (JSON.stringify(next) !== JSON.stringify(nykyinenMeta.contact_persons ?? [])) {
       metaUpdates.contact_persons = next
       changed.push("contact_persons")
+    }
+  }
+
+  /*
+   * MUU OSAPUOLI (D-248).
+   *
+   * `developer` ja `builder` ovat ainoat osapuoliroolit joilla on oma
+   * sarake. Hankkeessa on kuitenkin osapuolia joilla ei ole kumpaakaan
+   * roolia — suunnittelija, maisema-arkkitehti, konsultti. Keravan
+   * kavelykadulla voittaja oli maisema-arkkitehti, eika hanelle ollut
+   * mitaan paikkaa (D-247).
+   *
+   * `related_companies` on ollut olemassa koko ajan: kahdeksan kerainta
+   * kirjoittaa siihen ja se nakyy asiakkaalle listarivilla urakoitsijan
+   * vieressa. Siita puuttui vain tapa kirjoittaa kasin.
+   *
+   * KAKSI TAPAA, ERI TARKOITUS:
+   *   related_companies_add  yksi nimi listan perään (napin kaytto)
+   *   related_companies      koko lista kerralla (vaarin lisatyn korjaus)
+   *
+   * Lisays tehdaan PALVELIMELLA eika selaimessa: jos selain lahettaisi
+   * "nykyinen lista + uusi", kaksi perakkaista klikkausta vanhentuneella
+   * listalla pyyhkisi ensimmaisen pois.
+   */
+  const nykyisetYritykset = siivoaYritykset(nykyinenMeta.related_companies)
+
+  if ("related_companies" in (body?.fields ?? {})) {
+    const raw = body.fields.related_companies
+    if (!Array.isArray(raw)) {
+      return NextResponse.json(
+        { ok: false, error: "related_companies pitää olla lista" },
+        { status: 400 }
+      )
+    }
+    const next = raw
+      .map((n: any) => cleanString(n))
+      .filter((n: string | null): n is string => Boolean(n))
+
+    if (JSON.stringify(next) !== JSON.stringify(nykyisetYritykset)) {
+      metaUpdates.related_companies = next
+      changed.push("related_companies")
+    }
+  }
+
+  if ("related_companies_add" in (body?.fields ?? {})) {
+    const nimi = cleanString(body.fields.related_companies_add)
+    if (!nimi) {
+      return NextResponse.json(
+        { ok: false, error: "related_companies_add on tyhjä" },
+        { status: 400 }
+      )
+    }
+
+    /*
+     * Jo listalla oleva nimi ei ole virhe vaan tyhja muutos: nappia on
+     * ehka painettu kahdesti. Vertailu ei katso kirjainkokoa, jottei
+     * "Loci" ja "LOCI" paady molemmat listalle.
+     */
+    const pohja = Array.isArray(metaUpdates.related_companies)
+      ? metaUpdates.related_companies
+      : nykyisetYritykset
+    const jalkeen = lisaaYritys(pohja, nimi)
+
+    if (jalkeen !== pohja) {
+      metaUpdates.related_companies = jalkeen
+      if (!changed.includes("related_companies")) changed.push("related_companies")
     }
   }
 

@@ -40,16 +40,28 @@ export default function OsapuoliEhdotus({
   const nimet = (ehdotus?.nimet ?? []).filter((n) => n && n.nimi)
   if (!nimet.length) return null
 
-  async function paata(loydos: Loydos, rooli: "developer" | "builder" | null) {
+  type Paatos = "developer" | "builder" | "muu" | null
+
+  async function paata(loydos: Loydos, rooli: Paatos) {
     setKesken(`${loydos.nimi}:${rooli ?? "ei"}`)
     setVirhe(null)
 
     try {
       if (rooli) {
+        /*
+         * "Muu osapuoli" kirjoittaa listaan, roolinapit omaan
+         * sarakkeeseensa. Lisays tehdaan palvelimella (`_add`), jottei
+         * kaksi perakkaista klikkausta pyyhi toisiaan.
+         */
+        const kentta =
+          rooli === "muu"
+            ? { related_companies_add: loydos.nimi }
+            : { [rooli]: loydos.nimi }
+
         const vastaus = await fetch("/api/tic/projects/edit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ projectId, fields: { [rooli]: loydos.nimi } }),
+          body: JSON.stringify({ projectId, fields: kentta }),
         })
         const tulos = await vastaus.json()
         if (!vastaus.ok || !tulos?.ok) {
@@ -90,8 +102,10 @@ export default function OsapuoliEhdotus({
       <p className="mt-1 text-sm text-gray-600">
         Nimi on tunnistettu hankkeen omasta kuvauksesta.{" "}
         <strong>Rooli ei ole luettavissa tekstistä</strong>, joten valitse se
-        alla olevan lauseen perusteella — tai hylkää nimi jos se ei ole
-        hankkeen osapuoli.
+        alla olevan lauseen perusteella. <em>Muu osapuoli</em> on oikea
+        valinta suunnittelijalle, arkkitehdille ja konsultille — se liittää
+        yrityksen hankkeeseen ilman roolia, ja nimi näkyy asiakkaalle.{" "}
+        <em>Ei osapuoli</em> poistaa nimen ilman että mitään tallennetaan.
       </p>
 
       {virhe && (
@@ -143,6 +157,23 @@ export default function OsapuoliEhdotus({
                   ? "Tallennetaan…"
                   : "Pääurakoitsijaksi"}
                 {current.builder ? ` (korvaa: ${current.builder})` : ""}
+              </button>
+
+              {/*
+                * MUU OSAPUOLI (D-248). Suunnittelija, maisema-arkkitehti
+                * tai konsultti ei ole rakennuttaja eika paaurakoitsija,
+                * mutta on silti hankkeen osapuoli. Ilman tata nappia
+                * ainoa vaihtoehto oli "Ei osapuoli" — eli oikea tieto
+                * olisi heitetty pois vaarana.
+                */}
+              <button
+                onClick={() => paata(loydos, "muu")}
+                disabled={Boolean(kesken)}
+                className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {kesken === `${loydos.nimi}:muu`
+                  ? "Tallennetaan…"
+                  : "Muu osapuoli"}
               </button>
 
               <button

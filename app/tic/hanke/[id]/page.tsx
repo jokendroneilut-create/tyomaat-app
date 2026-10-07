@@ -6,6 +6,7 @@ import AiSuggestion from "./AiSuggestion"
 import YhteyshenkiloEhdotus from "./YhteyshenkiloEhdotus"
 import OsapuoliEhdotus from "./OsapuoliEhdotus"
 import Visibility from "./Visibility"
+import { siivoaYritykset } from "@/lib/projects/liittyvatYritykset"
 
 export const dynamic = "force-dynamic"
 
@@ -90,6 +91,18 @@ export default async function TicProjectPage({ params, searchParams }: Props) {
           <div>
             <dt className="text-gray-500">Pääurakoitsija</dt>
             <dd className="font-medium">{(project as any).builder || "—"}</dd>
+          </div>
+          {/*
+            * MUUT OSAPUOLET (D-248). Ilman tata rivia "Muu osapuoli"
+            * -nappi olisi umpikuja: nimi tallentuisi ja nakyisi
+            * asiakkaalle, mutta TIC:issa ei naky mitaan — eika kukaan
+            * huomaisi jos listalle kertyy vaaria nimia.
+            */}
+          <div>
+            <dt className="text-gray-500">Muut osapuolet</dt>
+            <dd className="font-medium">
+              {siivoaYritykset(metadata.related_companies).join(" · ") || "—"}
+            </dd>
           </div>
           <div>
             <dt className="text-gray-500">Arvioitu kustannus</dt>
