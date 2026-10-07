@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { extractContacts, hasPersonContact, mergeContacts, mergeTekstipoiminta, sanitizeEmail } from "./contacts"
+import { extractContacts, hasPersonContact, isPhone, mergeContacts, mergeTekstipoiminta, sanitizeEmail } from "./contacts"
 
 describe("extractContacts", () => {
   /* SRV:n tiedotteen vakiomuoto: nimi, tehtava, yritys, puh, sposti. */
@@ -437,4 +437,24 @@ describe("mergeTekstipoiminta – teksti ei nimea uudelleen", () => {
     }
     expect(mergeTekstipoiminta([laatikko], [uusi])).toHaveLength(2)
   })
+})
+
+/*
+ * LUPATUNNUS EI OLE PUHELINNUMERO (D-249).
+ *
+ * Esimerkit ovat tuotannosta 8.10.2026: 22 hanketta oli saanut
+ * puhelinnumerokseen rakennusluvan tunnuksen.
+ */
+describe("isPhone: lupatunnus hylataan", () => {
+  for (const tunnus of ["049-2026-725", "049-2025-802", "091-2025-0898", "026-2024-1401"]) {
+    it(`hylkaa lupatunnuksen ${tunnus}`, () => {
+      expect(isPhone(tunnus)).toBe(false)
+    })
+  }
+
+  for (const numero of ["040 123 4567", "+358 40 000 1234", "050-5551234", "09 000 12345", "+358400001234"]) {
+    it(`hyvaksyy oikean numeron ${numero}`, () => {
+      expect(isPhone(numero)).toBe(true)
+    })
+  }
 })

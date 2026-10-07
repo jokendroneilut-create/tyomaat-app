@@ -5,6 +5,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-249 - Lupatunnus puhelinnumerona, ja kaksi muuta hyvaksynnan vikaa
+
+Johannes 8.10.2026 kuvasi tyomaakyltin ja pyysi hyvaksymaan hankkeen
+jonosta. Hyvaksynta onnistui, mutta tuotti kolme virhetta — kaikki
+asiakkaalle nakyvia.
+
+#### 1. Tekstipoiminta keksi puhelinnumeron lupatunnuksesta
+
+`PHONE_RE` osuu lupatunnukseen `LP-091-2025-08983` ja `049-2026-725`:
+0-alku ja numeroryhmia valiviivoin on tasmalleen suomalaisen numeron
+hahmo. Olemassa ollut vartija `isPhone` (9-12 numeroa, lisatty
+22.8.2026 juuri tata vikaluokkaa vastaan) ei auttanut, koska
+`049-2026-725` on 10 numeroa.
+
+**Mitattu 8.10.2026: 24 hanketta 6 282 puhelinnumerosta.** Jokaisessa
+oli oikea nimi ja titteli — nimetty Espoon rakennustarkastaja ja numero
+jota ei ole olemassa. Asiakkaalle vaite nayttaa taysin uskottavalta,
+ja virhe paljastuu vasta kun han soittaa.
+
+Erottava piirre on **nelinumeroinen ryhma kahden valiviivan valissa**.
+Suomalainen numero kirjoitetaan korkeintaan yhdella valiviivalla
+("040-123 4567"); `-2026-` ei esiinny numerossa koskaan. Tarkistus
+lisattiin `isPhone`en, ei rinnakkaiseksi funktioksi. Vanhat 24 riviä
+siivottiin: **puhelin poistettiin, nimi ja titteli jaivat** — tyhja on
+parempi kuin vaara numero.
+
+Ensimmainen mittarini oli vaarin: laskin yli 11-numeroiset epailyiksi
+ja sain 1 435 osumaa, koska `+358 40 770 3866` on 12 numeroa ja taysin
+kelvollinen. Maatunnuksen normalisointi pudotti luvun 33:een ja
+lupatunnushahmo 24:aan. Ks. [[name-the-denominator]].
+
+#### 2. Hyvaksynta korvasi hankkeen nimen osoitteella
+
+`buildCustomerProjectName` kaytti ehdokkaan `title`a vasta
+VIIMEISENA, osoitteen jalkeen. "As Oy Sompasaaren Gemma" muuttui siis
+muodoksi "Rakennushanke, Konttinosturinkuja 7 / Sompasaarenlaituri 20,
+Helsinki". Mitattu: vain kaksi hanketta oli nimetty nain, koska lahes
+jokainen lahde asettaa `operation`in — **vika osuu siis juuri niihin
+ehdokkaisiin jotka eivat tule vakiolahteesta**, eli kasin lisattyihin
+ja uusiin lahteisiin. Jarjestys korjattiin: `title` ennen osoitetta.
+
+#### 3. Hanke sijoittui 3,2 km vaaraan paikkaan
+
+Geokoodaus osui Kamppiin, koska annoin `address`-kenttaan kaksi
+osoitetta kauttaviivalla ("Konttinosturinkuja 7 / Sompasaarenlaituri
+20"). Tama oli oma virheeni eika jarjestelman: kenttaan kuuluu yksi
+osoite, toinen kuvaukseen. Kirjattu ohjeeksi
+`docs/18_TYOMAAKUVAT.md`:hen.
+
+#### Mita tasta seuraa
+
+Kolme virhetta yhdessa hyvaksynnassa, ja kaksi niista oli ollut
+kannassa pitkaan huomaamatta. Yhteista on se etta **ne kaikki
+tuottavat uskottavan nakoista vaaraa tietoa** — ei tyhjaa kenttaa,
+vaan nimen, numeron tai paikan joka nayttaa oikealta. Siksi
+tyomaakuvien toimintatapaan kirjattiin erillinen tarkistuslista
+hyvaksynnan JALKEEN, ei vain ennen sita.
+
 ### D-248 - "Muu osapuoli" -nappi: suunnittelijalle oli vain hylkays
 
 Johannes 8.10.2026: *"tee osapuoli ja ei osapuoli nappi."*

@@ -137,6 +137,26 @@ const PHONE_RE =
   /(?:\+358|0)\s?\d{1,3}[\s-]?\d{2,3}[\s-]?\d{2,4}(?:[\s-]?\d{1,4})?/
 
 /*
+ * LUPATUNNUS EI OLE PUHELINNUMERO (D-249).
+ *
+ * Rakennusluvan tunnus on muotoa `049-2026-725` tai `LP-091-2025-08983`,
+ * ja se lapaisee yllä olevan hahmon tasmalleen: 0-alku, numeroryhmia
+ * valiviivoin. Mitattu 8.10.2026: **22 hanketta 6 282 numerosta** oli
+ * saanut puhelinnumerokseen lupatunnuksen — 21 Espoon (049-) ja yksi
+ * Helsingin (091-). Jokaisessa oli oikea nimi ja titteli, joten vaite
+ * nayttaa asiakkaalle taysin uskottavalta: nimetty rakennustarkastaja
+ * ja numero jota ei ole olemassa.
+ *
+ * EROTTAVA PIIRRE ON VUOSILUKU KAHDEN VALIVIIVAN VALISSA. Suomalainen
+ * puhelinnumero kirjoitetaan korkeintaan yhdella valiviivalla
+ * ("040-123 4567"); nelinumeroista ryhmaa kahden valiviivan valissa ei
+ * esiinny. Tunnusta edeltava valiviiva ("LP-091-...") kertoo saman.
+ *
+ * Tyhja on parempi kuin vaara numero.
+ */
+const TUNNUKSEN_HAHMO = /-\d{4}-/
+
+/*
  * Yleiset postilaatikot eivät ole myyntikontakteja: ne ovat kirjaamoja ja
  * palautekanavia. Ne poimitaan silti, mutta merkitään organisaatioksi,
  * jotta käyttöliittymä voi näyttää henkilöt ensin.
@@ -304,7 +324,9 @@ function sameName(a: string, b: string): boolean {
  * 22.8.2026, "Kai Vaisto (026-1401)". Väärä numero on käyttäjälle
  * pahempi kuin puuttuva, koska hän soittaa sen.
  */
-function isPhone(value: string): boolean {
+export function isPhone(value: string): boolean {
+  /* Lupatunnus lapaisi numeromaaran: 049-2026-725 on 10 numeroa. */
+  if (TUNNUKSEN_HAHMO.test(value)) return false
   const numerot = value.replace(/\D/g, "").length
   return numerot >= 9 && numerot <= 12
 }

@@ -2843,11 +2843,31 @@ function buildCustomerProjectName({
 
   if (operation) return operation
 
+  /*
+   * EHDOKKAAN OMA NIMI ENNEN OSOITETTA (D-249).
+   *
+   * Tama oli aiemmin vasta viimeinen vaihtoehto, osoitteen JALKEEN.
+   * Silloin ehdokas jolla on oikea nimi mutta ei `operation`-kenttaa sai
+   * hankkeekseen "Rakennushanke, <osoite>" ja menetti nimensa:
+   * "As Oy Sompasaaren Gemma" -> "Rakennushanke, Konttinosturinkuja 7
+   * / Sompasaarenlaituri 20, Helsinki".
+   *
+   * Mitattu 8.10.2026: vain kaksi hanketta oli nimetty nain, koska
+   * lahes jokainen lahde asettaa `operation`in. Vika osuu siis juuri
+   * niihin ehdokkaisiin jotka eivat tule vakiolahteesta — kasin
+   * lisattyihin ja uusiin lahteisiin.
+   *
+   * Osoitepohjainen nimi jaa yha varalle: se on parempi kuin pelkka
+   * "Rakennushanke", mutta huonompi kuin hankkeen oikea nimi.
+   */
+  const title = typeof potentialProject.title === "string" ? potentialProject.title.trim() : ""
+  if (title) return title
+
   if (projectAddress) {
     return `Rakennushanke, ${projectAddress}`
   }
 
-  return potentialProject.title ?? "Rakennushanke"
+  return "Rakennushanke"
 }
 
 function buildProjectLocation({
