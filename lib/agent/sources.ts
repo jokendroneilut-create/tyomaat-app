@@ -36,6 +36,9 @@ import { fetchJatkeSource } from "./fetchJatkeSource"
 import { fetchEspoonAsunnotSource } from "./fetchEspoonAsunnotSource"
 import { fetchMeijouSource } from "./fetchMeijouSource"
 import { fetchKastelliSource } from "./fetchKastelliSource"
+import { fetchVrjSource } from "./fetchVrjSource"
+import { fetchTorppariSource } from "./fetchTorppariSource"
+import { fetchPeltiAssatSource } from "./fetchPeltiAssatSource"
 import { fetchMangroveSource } from "./fetchMangroveSource"
 import { fetchSrvSource } from "./fetchSrvSource"
 import { fetchYsaatioSource } from "./fetchYsaatioSource"
@@ -123,6 +126,12 @@ export const sources = [
    * kuin muilla rakennusliikkeilla.
    */
   { name: "kastelli", fetch: fetchKastelliSource, enrich: createCompanyEnricher({ publisher: "Kastelli-talot" }) },
+  /*
+   * VRJ ilman rikastajaa (D-250): jutun sivu haetaan jo julkaisupaivan
+   * vuoksi, ja rikastus korvasi kuvauksen sivun kalusteilla
+   * ("Ajankohtaista <otsikko> Rakennusala Tiedote VRJ").
+   */
+  { name: "vrj", fetch: fetchVrjSource },
   { name: "srv", fetch: fetchSrvSource, enrich: createCompanyEnricher({ publisher: "SRV" }) },
   { name: "helsinki_paatokset", fetch: fetchHelsinkiPaatoksetSource },
   { name: "espoo_paatokset", fetch: fetchEspooPaatoksetSource },
@@ -213,6 +222,14 @@ export const sources = [
       endpoint: "https://www.amplit.fi/wp-json/wp/v2/posts",
     }),
   },
+  /*
+   * Sivu-urakoitsijat Squarespace-blogista (D-250): betoni- ja siltarakenteet
+   * (Torppari) ja vesikatot (Pelti-Assat). Kuten talotekniikassa,
+   * julkaisija kirjataan liittyvaksi yritykseksi eika builderiksi, ja
+   * koko teksti tulee jo syotteesta, joten rikastusta ei tarvita.
+   */
+  { name: "torppari", fetch: fetchTorppariSource },
+  { name: "pelti_assat", fetch: fetchPeltiAssatSource },
   { name: "ymparistolupa", fetch: fetchYmparistolupaSource },
   /*
    * Rikastuskoukku lukee hankesivun nimetyt kentät (hankevastaava,

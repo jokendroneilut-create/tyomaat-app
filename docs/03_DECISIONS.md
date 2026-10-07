@@ -5,6 +5,95 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-250 - VRJ, Torppari ja Pelti-Assat lahteiksi; SL Rakennuttaja ei
+
+Johannes 8.10.2026 kuvakaappauksin: hankkeita puuttui kannasta tai ne
+olivat vajaita, vaikka yhtiot kertovat niista omilla sivuillaan.
+
+#### Mitattu ennen rakentamista
+
+| lahde | tapa | julkaisuja | 12 kk | hankkeita 12 kk:ssa | ei kannassa |
+|---|---|---|---|---|---|
+| VRJ | listasivu + jutun sivu | 47 | 10 | 4 | 4/4 |
+| Torppari | Squarespace-RSS | 34 | 6 | 6 | 4/6 |
+| Pelti-Assat | Squarespace-RSS | 243 | 32 | 6 (19 %) | 4/6 |
+| SL Rakennuttaja | (WP, 0 postia) | 2 kohdesivua | 0 | - | 2/2 |
+
+"Ei kannassa" = nimihaku `potential_projects`-tauluun; source_url-osumia
+ei ollut yhdellakaan (uudet lahteet). Kannassa jo olivat Kurkela–Kuusisto
+(Kreate, Vaylavirasto), Makasiinilaituri (GRK) ja Firdo (Skanska).
+Puuttuivat mm. Elmo Areena, Holiday Club Saariselka, Danfoss Editron,
+Hinthaaran sivistyskeskus, Careeria ja Fashion Centerin laajennus.
+
+robots.txt: VRJ kieltaa vain `/media/forms`; Squarespace kieltaa
+`?format=json`-muodot mutta ei RSS:aa. Kummallakaan ei ole REST-
+rajapintaa; SL Rakennuttajan WP-rajapinta on auki mutta tyhja.
+
+#### Sivu-urakoitsija kirjataan liittyvaksi, ei builderiksi
+
+Torppari (betoni, sillat) ja Pelti-Assat (vesikatot) ovat
+aliurakoitsijoita. Arvo on siina etta ne nimeavat paaurakoitsijan ja
+tilaajan — sama asetelma kuin talotekniikassa (D-214). Yhteinen koodi
+`lib/agent/sivuurakoitsijaRss.ts`.
+
+#### Suodatus mitattiin lahteittain eika yhdella saannolla
+
+- **VRJ: poistetaan vain se mika ei koskaan ole hanke** (D-247).
+  Hankeotsikot ovat liian vaihtelevia termilistalle ("Kiimingin
+  Koitelin alueella kaynnistyy ... peruskorjaus").
+- **Pelti-Assat: hankesignaali otsikosta.** Markkinointiotsikot ovat
+  vapaata proosaa ("Isat ja pojat"), eika niita voi luetella; hankejutut
+  otsikoidaan yhdenmukaisesti ("Hankeuutisia:", "toteuttaa",
+  "...urakoitsijaksi"). 40 julkaisulla 6/6 hanketta lapi, 0 muuta.
+- **Torppari: hankesignaali otsikosta.** Henkilojutun otsikko on nimi
+  tai aforismi. 20 julkaisulla 8/11 hanketta lapi, 0/9 muuta; kolme
+  ohitettua ovat 12 kk ikkunan ulkopuolella.
+
+Poissulku katsoo kaikissa vain otsikkoa (D-236, D-241).
+
+#### Kuivaharjoitus loysi kuusi vikaa, jotka lukumaarat eivat nayttaneet
+
+1. **Tilaaja jatkui seuraavaan virkkeeseen**: "Vaylavirasto.
+   Varsinainen". Korjattu yhteiseen `extractClientFromText`-funktioon
+   samalla virkerajalla joka rakentajapoiminnassa jo oli (D-189).
+2. **VRJ:lle ei createCompanyEnricheria**: rikastus korvasi kuvauksen
+   sivun kalusteilla ("Ajankohtaista <otsikko> Rakennusala Tiedote VRJ")
+   ja palautti valmiin Vt 20:n suunnitteluvaiheeseen. Jutun sivu on jo
+   haettu julkaisupaivan takia, joten kentat paatellaan haussa.
+3. **Kaupunki kumppanin nimesta**: "yhteistyossa Varte Lahden kanssa" ->
+   Lahti; kohde on Porvoossa.
+4. **Kaupunki vertailukohteesta**: `detectCityFromText` ei katso
+   sijaintia vaan kuntaluettelon jarjestysta. Elmo Areena -> Helsinki,
+   koska ingressi mainitsee Helsingin jaahallit. Ensimmainen virke
+   luetaan nyt ensin.
+5. **Kaupunki tien nimesta**: "Kuusamontien" ja "Kuusamon suuntaan" ->
+   Kuusamo; tyomaa on Oulun Kiimingissa.
+6. **`\b` a-kirjaimen perassa ei osu koskaan** (JavaScriptin `\b` on
+   ASCII). "on parhaillaan kaynnissa\b" ei olisi tunnistanut yhtaan
+   tyomaata.
+
+Lisaksi sivu-urakoitsijan vaihe: paaurakoitsijan saannot jattivat kaikki
+kuusi Torpparin hanketta suunnitteluun, vaikka teksti sanoo "toteuttaa
+parhaillaan". "Hyrylan Sarma avautuu" jatettiin tarkoituksella
+valmistumattomaksi ([[hiding-threshold]]).
+
+#### Keravan paallekkaisyystarkistus ei tarkistanut mitaan
+
+`lisaa-kerava-uutislahde.ts` laskee `.in("source_url", ...)`, mutta
+`potential_projects`-taulussa ei ole sellaista saraketta — URL on
+`metadata->>source_url`. Kysely palauttaa virheen, count on null, ja
+tulostus oli "0". Uusi skripti kayttaa oikeaa polkua ja heittaa virheen.
+
+#### SL Rakennuttaja: ei keräintä
+
+Kaksi kohdesivua, muuttumattomina 3/2023 lahtien; WP-rajapinnassa 0
+julkaisua. Status Artis (Helsinki, 60 asuntoa) on valmistunut 2025, Villa
+Yttrium (Turku, Vartiovuorenmaki, SL Konserni) on myynnissa. Paivittain
+ajettava keräin kahdelle staattiselle sivulle ei maksa itseaan takaisin;
+Villa Yttrium kannattaa lisata kasin, jos se puuttuu.
+
+---
+
 ### D-249 - Lupatunnus puhelinnumerona, ja kaksi muuta hyvaksynnan vikaa
 
 Johannes 8.10.2026 kuvasi tyomaakyltin ja pyysi hyvaksymaan hankkeen
