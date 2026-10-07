@@ -1002,6 +1002,29 @@ muistin varassa.
 
 ### Lähdekattavuus
 
+- **Päättyvät puitesopimukset — tutkimatta, idea 8.10.2026.** Havaittu
+  kilpailijakartoituksessa: Mercell Hankintavahti myy muun muassa tietoa
+  **päättyvistä puitesopimuksista**
+  ([`11_COMPETITORS.md`](11_COMPETITORS.md), *Vierekkäiset toimijat*).
+
+  **Miksi tämä on kiinnostava.** Puitesopimuksen päättymispäivä kertoo
+  kilpailutuksen tulosta **ennen kuin hankintailmoitus julkaistaan** — eli se
+  on varhaisempi signaali kuin Hilma, ja varhaisuus on se mitä myymme.
+  Nykyiset lähteemme kertovat kilpailutuksesta vasta kun se on auki.
+
+  **Mitä pitäisi selvittää ennen työtä:**
+  1. Onko päättymispäivä rakenteisena tietona Hilman sopimusilmoituksissa vai
+     vain sopimusasiakirjan sisällä (PDF)? Jos jälkimmäinen, poiminta on
+     asiakirjatyötä eikä kenttien lukemista.
+  2. Kuinka moneen sopimukseen päättymispäivä ylipäätään on merkitty — sama
+     kysymys kuin kustannusarvion kanssa, ja vastaus ratkaisee kannattaako
+     tehdä.
+  3. Onko puitesopimus hanke meidän mallissamme? Se ei ole rakennuskohde vaan
+     ostolupa. Todennäköisesti **oma signaalityyppinsä, ei ehdokas** — muuten
+     se saastuttaa hankekannan rivillä jolla ei ole kohdetta.
+
+  Ei aloiteta ennen kuin kohta 2 on mitattu.
+
 - **~~Logicor (logistiikkakiinteistöt) omana lähteenä~~ — EI KANNATA,
   tutkittu 8.9.2026.** Ulkomainen logistiikkakiinteistöjen omistaja, siis
   juuri sitä yksityisten rakennuttajien luokkaa joka ei näy Hilmassa
