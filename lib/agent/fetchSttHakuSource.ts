@@ -177,6 +177,18 @@ const CLIENT_PATTERNS = [
  */
 const EXPLICIT_CLIENT_PATTERNS = CLIENT_PATTERNS.slice(0, 2)
 
+/*
+ * VIRKE KATKAISEE TILAAJAN NIMEN, kuten rakentajan (D-189, D-250).
+ * Yhtiomuodoton nimi jatkui seuraavaan virkkeeseen: Torpparin
+ * tiedotteesta "tilaajana Vaylavirasto. Varsinainen rakentaminen..."
+ * tuli tilaajaksi "Vaylavirasto. Varsinainen" (mitattu 8.10.2026).
+ * Piste yhden ison kirjaimen jaljessa on kirjainlyhenne, ei virkkeen
+ * loppu.
+ */
+function virkkeeseen(raaka: string): string {
+  return raaka.split(/(?<!(?:^|\s)[A-ZÄÖÅ])\.\s+/)[0]
+}
+
 export function extractExplicitClient(text: string | null): string | null {
   const joined = String(text ?? "")
   if (!joined) return null
@@ -185,7 +197,7 @@ export function extractExplicitClient(text: string | null): string | null {
     const match = joined.match(pattern)
     if (!match?.[1]) continue
 
-    const name = cleanCompanyName(match[1])
+    const name = cleanCompanyName(virkkeeseen(match[1]))
     if (name.length >= 4) return name
   }
 
@@ -234,7 +246,7 @@ export function extractClientFromText(
     const match = joined.match(pattern)
     if (!match?.[1]) continue
 
-    const raw = match[1]
+    const raw = virkkeeseen(match[1])
 
     /*
      * Allatiivikuvio palauttaa taivutetun muodon, joka on käännettävä

@@ -210,6 +210,26 @@ describe("extractClientFromText - allatiivi", () => {
 })
 
 /*
+ * VIRKE KATKAISEE TILAAJAN (D-250). Torpparin tiedotteen oikea lause:
+ * yhtiomuodoton nimi jatkui seuraavaan virkkeeseen.
+ */
+describe("extractClientFromText - virkkeen raja", () => {
+  const lause =
+    "Hankkeen pääurakoitsijana toimii Kreate Oy ja tilaajana Väylävirasto. " +
+    "Varsinainen rakentaminen käynnistyi keväällä 2026."
+
+  it("ei jatka nimea seuraavaan virkkeeseen", () => {
+    expect(extractClientFromText("Torppari mukana Mt 180 -hankkeessa", lause)).toBe("Väylävirasto")
+  })
+
+  it("sailyttaa kirjainlyhenteen pisteen", () => {
+    expect(
+      extractClientFromText(null, "Hankkeen tilaajana toimii Rakennusliike J. Malm Oy. Työt alkavat.")
+    ).toBe("Rakennusliike J. Malm Oy")
+  })
+})
+
+/*
  * RAKENTAJA TEKSTISTA (D-189). Kuviot on luettu aineistosta: kaikki 27
  * riviä kaytiin lapi ja jokainen oli pääurakoitsija.
  */
