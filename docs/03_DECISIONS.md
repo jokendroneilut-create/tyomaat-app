@@ -64,6 +64,39 @@ kuin Helsingin kaupungin uutisilla — ainoa aiempi kunnan uutisvirta.
 Seuraava mittaus: kuinka moni 101:sta muuttuu oikeaksi hankkeeksi. Siita
 paatellaan kannattaako sama tehda muille kunnille.
 
+#### Sama lahde korjasi myos sen hankkeen josta kysymys alkoi
+
+"Keravan keskustan kavelykatu" (`4d7be2d5`) oli nelja kuukautta
+vanhentunut: kuvauksessa luki etta "voittaja julkistetaan Keravan
+paivana 14.6.2026". Jono taas ehdotti osapuoliksi VSU:ta ja Swecoa —
+kahta nimea lauseesta joka luetteli kaikki NELJA kilpailijaa
+tasavertaisina. Lausetason poimija ei voi erottaa voittajaa haviajasta
+sellaisesta lauseesta; tieto ei ole siina.
+
+Lahde ratkaisi sen: voitti **LOCI Maisema-arkkitehdit**, kunniamaininta
+VSU:lle, MASU ja Sweco eivat sijoittuneet. Johannes oli lisaamassa
+VSU:n yhteystietoa.
+
+LOCI kirjattiin `metadata.related_companies`-kenttaan, **ei**
+`architectural_design`-kenttaan: lahde sanoo etta tyoryhmaa
+"suositellaan jatkosuunnittelun tarjoajaksi", eli sopimusta ei ole.
+Suunnittelijakenttaan kirjaaminen vaittaisi enemman kuin lahde sanoo.
+`related_companies` nakyy asiakkaalle listarivilla urakoitsijan vieressa
+ja sanoo tasan sen mika on totta. VSU:ta ei kirjattu mihinkaan —
+kunniamaininta ei ole osapuolisuhde.
+
+#### Avoin: "Muu osapuoli" -nappi puuttuu edelleen
+
+`OsapuoliEhdotus.tsx` tarjoaa vain kaksi roolia (rakennuttaja,
+paaurakoitsija). Tassa hankkeessa oikea toimenpide olisi ollut "muu
+osapuoli" LOCIlle ja "ei osapuoli" kolmelle muulle; kumpaakaan nappia ei
+ole, joten korjaus tehtiin skriptilla. Varaus ennen napin lisaamista:
+geneerinen "lisaa osapuoleksi" tekee helpoksi tallettaa nimen jonka
+roolia ei tiedeta, ja juuri niin `related_companies` muuttuu
+sekalaatikoksi — talla hankkeella kolme neljasta nimesta olisi mennyt
+sinne yhdella klikkauksella. Avoin kysymys: talletetaanko rooli nimen
+mukana (nyt kentta on pelkka `string[]`).
+
 ### D-246 - Virheraja ja yksi uusintayritys: paivitys ei saa olla asiakkaan tyokalu
 
 Johannes 7.10.2026: `/today` nautti admin-tunnuksella ruudun *"Application
