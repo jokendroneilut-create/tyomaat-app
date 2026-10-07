@@ -9,7 +9,9 @@ import { detectCityFromText } from "./detectCityFromText"
  */
 const URL = "https://www.varte.fi/varte/ajankohtaista"
 
-const COMPLETED_KEYWORDS = ["valmistui", "valmistunut"]
+const HANKETUNNISTEET = ["Projektit", "Urakat"]
+
+const COMPLETED_KEYWORDS =["valmistui", "valmistunut"]
 
 export async function fetchVarteSource() {
   const results: any[] = []
@@ -25,8 +27,13 @@ export async function fetchVarteSource() {
 
   $(".blog-card").each((_, el) => {
     const $el = $(el)
+    /*
+     * "Urakat" tuli kayttoon lokakuussa 2026: LOAS Baletti (57 asuntoa,
+     * 7.10.2026) oli merkitty vain sillä, ja pelkka "Projektit" pudotti
+     * sen. Hanke loytyi vasta kuvakaappauksesta.
+     */
     const tag = $el.find(".blog-card-tags span").first().text().trim()
-    if (tag !== "Projektit") return
+    if (!HANKETUNNISTEET.includes(tag)) return
 
     const title = $el.find(".blog-card__title").first().text().trim()
     const href = $el.find("a.blog-card__link").first().attr("href")
