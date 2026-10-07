@@ -99,15 +99,33 @@ Ratkaisu on helppo ja itse asiassa parempaa markkinointia: *"Rakennuslehden
 tilaajille X €/kk."* Läpinäkyvä, perusteltu, ja tekee Rakennuslehden tilauksesta
 arvokkaamman — mikä on heidän puolensa kaupasta.
 
-### Listahinta on päätettävä ensin
+### Listahinta on jo olemassa: 149 €/kk
 
-Alennusta pyydetään hinnasta, jota ei ole vielä julkaistu: R1 (julkinen hinta,
-itsepalveluosto, 30 pv irtisanominen) on tekemättä. **Prosentti
-määrittelemättömästä luvusta on määrittelemätön.**
+*Korjaus 7.10.2026 — tässä luki aiemmin, että listahinta on päättämättä. Se ei
+pitänyt paikkaansa.*
 
-Jos listahintaa ei päätetä ennen neuvottelua, kanavahinnasta tulee huomaamatta
-*se* hinta ja listahinta jää paperille. Tämä on konkreettinen syy nostaa R1
-jonon kärkeen — nyt sille on päivämäärä eikä vain periaate.
+**Työmaat.fi PRO maksaa 149 €/kk ja hinta on julkaistu sivustolla.** Neuvottelu
+käydään siis oikeasta luvusta, ei tyhjästä. Vertailuksi: RPT Smart 600 €/kk
+yhdestä maakunnasta, Hubexo Finlandin keskimääräinen asiakas ~470 €/kk, Metroc
+~250–350 €/kk.
+
+Mitä alennus tarkoittaisi käytännössä:
+
+| alennus | hinta tilaajalle | vuodessa |
+|---|---|---|
+| — | 149 €/kk | 1 788 € |
+| −25 % | 112 €/kk | 1 341 € |
+| −50 % | 75 €/kk | 894 € |
+
+Olennainen havainto: **149 €/kk on jo harkinnan rajalla ja alennettuna selvästi
+sen alapuolella.** 1 788 €/v vaatii pieneltä yritykseltä päätöksen; 894 €/v on
+lähempänä heräteostosta. Kanava-alennus siirtää tuotteen harkintaostosta
+impulssiostoon, ja juuri se on tilaajaedun arvo — ei se että saadaan vähän
+enemmän katetta per asiakas.
+
+Siksi **määräaikainen alennus on tässä parempi kuin pysyvä**: se tuo asiakkaan
+sisään impulssihinnalla ja palauttaa hänet listahintaan, kun tuote on jo
+käytössä ja arvo todettu.
 
 ### Alennus ei ole ainoa valuutta
 

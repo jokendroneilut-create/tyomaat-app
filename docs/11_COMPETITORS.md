@@ -24,7 +24,7 @@ Jos luet vain tämän:
 |---|---|
 | **RPT / Hubexo** | Ihmiset soittavat rakennuttajille. **11,3 M€ liikevaihtoa Suomessa, 40,2 % liikevoitto, 63 hlöä, yli 2000 suomalaista asiakasta, 13 000 aktiivista hanketta Suomessa.** **Rise** (17.8.): tekoälyvalmentaja Rune. **Reach** (6.10.): mobiilituote alle 20 hengen yrityksille — meidän segmenttimme, mutta **hintaa ei kerrottu, ohjattiin myyntiin.** |
 | **Metroc** | Sama malli kuin meillä: automaatio julkisista lähteistä. 1,4 M€ / 23 hlöä / 400+ asiakasta → **~250–350 €/kk** (vahvistettu kahdesta pisteestä, 2021 ja 2025). Omistaa suomalaisen julkisen sektorin **asiakirjadatan** (Public Investments) — keruu alkanut jo 2021. Kasvoi 0,5 M€:sta 1,4 M€:oon 4,5 vuodessa, yhä tappiolla. |
-| **Meidän tie** | Julkinen hinta, ostaminen ilman myyjää, **irtisanottavissa 30 päivässä**. Ainoa etu joka seuraa pienuudesta eikä katoa kun kilpailija huomaa sen. |
+| **Meidän tie** | **Julkinen hinta 149 €/kk**, ei pakollista myyntitapaamista, **irtisanottavissa 30 päivässä**. Ainoa etu joka seuraa pienuudesta eikä katoa kun kilpailija huomaa sen. Asemointi on jo elossa; automatisointi (tilaus, laskutus, irtisanominen) on kesken. |
 
 Neljä asiaa jotka on syytä muistaa ilman että niitä tarvitsee etsiä uudelleen:
 
@@ -1013,12 +1013,21 @@ henkeä ja 40 %:n katevaatimus on jaettava 2 000 asiakkaalle.
 
 ### Mitä matala hintapiste tarkoittaa numeroina
 
-| uusia asiakkaita 100 €/kk | liikevaihtoa | mitä se on |
+Listahinta on **149 €/kk** (julkaistu sivustolla; tarkennettu 7.10.2026 — alla
+oleva taulukko käytti aiemmin 100 €:n havainnollistusta):
+
+| uusia asiakkaita 149 €/kk | liikevaihtoa | mitä se on |
 |---|---|---|
-| 300 | 360 k€/v | erittäin hyvä yhden hengen yritys |
-| 500 | 600 k€/v | |
-| 1 000 | 1,2 M€/v | **suurempi kuin Metroc Suomessa — 1 hengellä vs. 23** |
-| 3 000 | 3,6 M€/v | koko markkina kasvaisi ~35 % |
+| 100 | 179 k€/v | yhden hengen yritys kannattaa |
+| 300 | 536 k€/v | erittäin hyvä yhden hengen yritys |
+| 500 | 894 k€/v | |
+| 1 000 | 1,79 M€/v | **enemmän kuin Metrocin koko liikevaihto — 1 hengellä vs. 23** |
+
+Vertailuhinnat: RPT Smart 600 €/kk yhdestä maakunnasta, Hubexon keskimääräinen
+suomalainen asiakas ~470 €/kk, Metroc ~250–350 €/kk. **149 €/kk on noin
+neljännes RPT:n maakuntahinnasta ja noin puolet Metrocin keskihinnasta** —
+riittävän alhaalla ollakseen eri harkintaluokassa, muttei niin alhaalla että
+tuote näyttäisi epäuskottavalta.
 
 Tässä on asian ydin: **kakun ei tarvitse olla iso.** Hubexo tarvitsee
 470 €/kk × 2 000 asiakasta kattaakseen 63 henkeä, Metroc ~300 €/kk × 400
