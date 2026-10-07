@@ -939,6 +939,134 @@ kasvaneet siitä ulos — me emme); ja **"churn ei saa olla ikinä yllätys"**,
 joka on yhdelle tekijälle toteutettavissa käyttöanalytiikalla ilman
 kvartaalisoittoja.
 
+## Vierekkäiset toimijat (8.10.2026)
+
+Tämä luku syntyi siitä, että Johannes kuuli messuilla väitteen *"Vainullakin voi
+etsiä rakennushankkeita"*. Väite osoittautui puoliksi todeksi, ja se nosti
+paremman kysymyksen: **mitä muuta on olemassa, mitä emme tiedä?**
+
+Vastaus ei ole yksittäisten huhujen tarkistaminen vaan kartta. Nämä eivät ole
+kilpailijoita samassa mielessä kuin RPT ja Metroc, mutta ne liikkuvat samalla
+raaka-aineella tai samoissa ostobudjeteissa, ja siksi ne kuuluvat kirjatuksi —
+jottei samaa tutkita uudelleen.
+
+### Kartta
+
+| kategoria | toimijat | päällekkäisyys meihin |
+|---|---|---|
+| **hanketieto** | RPT / Byggfakta Rise, Metroc | suora kilpailu |
+| **kilpailutusseuranta** | Mercell Hankintavahti, Cloudia, Tendium, Hilma (ilmainen) | osittainen — Hilma-osuutemme |
+| **yritystieto + signaalit** | Vainu, Enento/Asiakastieto | vähäinen, eri yksikkö |
+| **kiinteistö- ja hankeanalytiikka sijoittajille** | KTI Rakennushankeseuranta | vähäinen, eri asiakas |
+| **kustannus- ja markkinaennuste** | Haahtela, Tocoman, Forecon PRIX (Hubexo) | ei |
+| **työmaa- ja urakoitsijadata** | Vastuu Group, Zeroni | ei (toistaiseksi tutkimatta) |
+
+### Vainu — yritystieto, ei hanketieto
+
+Pohjoismainen yritystietokanta: 5 M+ yritystä, 9 M+ kontaktia, 700+ kenttää ja
+niiden päällä ostosignaalit (triggerit). Horisontaalinen, ei rakennusalalle
+rakennettu.
+
+**Mistä huhu syntyi.** Signaalikategoriassa *"Public Documents"* ovat
+**myönnetyt luvat**, **hankintailmoitukset** (Contract Notices) ja
+lainsäädäntömuutokset. Ja kallein datapaketti **Full** sisältää nimenomaisesti
+**kokouspöytäkirjat ja kuntien talousarviot** — sama raaka-aine kuin Metrocin
+Public Investments -tuotteessa.
+
+**Miksi se ei silti ole kilpailija.** Vainun perusyksikkö on **yritys, ei
+hanke.** Signaali kiinnittyy yritykseen ("tämä yritys sai luvan"), ei
+hankkeeseen jolla on vaihe, arvo ja osapuolet. Puuttuu elinkaari, puuttuvat
+osapuolet hankkeittain, puuttuu kaavoitus kokonaan.
+
+Käytännössä Vainu sopii sille joka **myy rakennusyrityksille** (konevuokraus,
+vakuutus, ohjelmistot), ei sille joka haluaa voittaa työtä hankkeista.
+
+**Hinta.** Lisenssit Reach alk. 250 €/kk · Data Sync alk. 417 €/kk · Discover
+alk. 583 €/kk, päälle datapaketti Premium +83 €/kk tai **Full +167 €/kk** (se
+jossa kuntien talousarviot ovat). Sisältää yhden maan ja 1–2 käyttäjäpaikkaa,
+vuosilaskutus, alv 0 %. **Kunta-asiakirjat sisältävä kokoonpano ≈ 750 €/kk eli
+~9 000 €/v** — kalliimpi kuin RPT Smart yhdestä maakunnasta.
+
+**Yhtiön tila.** Vainu Finland Oy 2025: liikevaihto 7,5 M€ (**−7,5 %**), 45
+henkeä, liikevoitto 524 k€ (7,0 %), mutta omavaraisuusaste vain **6 %**.
+Emoyhtiö Vainu.io Software Oy on tappiollinen ja ohut. Supistuva liikevaihto ja
+ohut tase: tästä ei ole tulossa aggressiivista tulokasta hanketietoon.
+
+### Mercell Hankintavahti — kilpailutusseuranta
+
+Pohjoismainen hankintaseurannan toimija, jolla on Suomen-yhtiö. Kerää Hilman ja
+TED:n ilmoitukset sekä **pienhankintoja, yksittäisiä B2B-tarjouspyyntöjä,
+budjetointipäätöksiä ja tietoa päättyvistä puitesopimuksista.** Uudemmassa
+Mercell Bidding -alustassa on tekoälytiivistelmät tarjouspyynnöistä.
+
+**Hinnat ovat julkisia** (alkaen-hintoina): Local, yksi alue, 1 380 · National,
+koko Suomi, 2 640 · Business Plus 4 440. ❗ Lähde on ristiriitainen siitä onko
+kyse vuosi- vai kuukausihinnasta; **vuosihinta on ainoa uskottava luenta** tälle
+tuotteelle (National ≈ 220 €/kk), mutta tämä on varmistamatta. Palvelussa on
+myös **ilmainen kokeilu**.
+
+**Kaksi asiaa jotka tästä kannattaa ottaa:**
+
+1. **Päättyvät puitesopimukset on signaali jota meillä ei ole.** Se kertoo
+   kilpailutuksen tulevan ennen kuin ilmoitus julkaistaan — eli juuri sitä
+   varhaisuutta, jota myymme.
+2. **Julkinen hinta ja ilmainen kokeilu eivät ole meidän keksintömme tässä
+   markkinassa.** Ne ovat kilpailutusseurannan normaali käytäntö; poikkeus on
+   hanketieto. Tämä tarkentaa tämän dokumentin väitettä "kukaan ei julkaise
+   hintaa" — se pätee hanketietoon, ei naapurikategoriaan.
+
+### KTI Rakennushankeseuranta — ja mitä se paljastaa Hubexosta
+
+KTI Kiinteistötieto seuraa **merkittäviä toimitila- ja vuokra-asuntohankkeita**
+yhdeksässä suurimmassa kaupungissa ympäristöineen, yli 4 200 hanketta vuodesta
+2007. Hankkeesta näytetään sijainti, aikataulu, osapuolet ja koko; lisäksi
+kartta, graafit ja valmis PowerPoint-koostenäkymä. Päivitys **1–2 kertaa
+kuukaudessa**. Hinta ei ole julkinen. Asiakas on kiinteistösijoittaja ja
+analyytikko, ei urakoitsija.
+
+**Olennaisin yksityiskohta on lähdemaininta:** KTI kertoo keräävänsä tiedot
+sijoittajilta, rakennusliikkeiltä, julkisista lähteistä **ja RPT Byggfakta Oy:n
+tietokannasta.**
+
+Eli **Hubexo myy dataansa myös tukkuna** toiselle toimijalle, joka jalostaa
+siitä oman tuotteensa eri asiakaskunnalle. Se on uusi tieto ja se tarkoittaa
+kahta asiaa: heidän datansa voi ilmestyä kilpailijan tuotteeseen ilman että he
+itse menevät siihen segmenttiin, ja **"kilpailija" voi jatkossa olla joku joka
+ostaa datansa Hubexolta** eikä kerää sitä itse.
+
+### Mitä kartasta seuraa
+
+**1. Kuntien asiakirjakerros ei ole kenenkään yksinoikeus.** Metroc myy sen
+hanketietona, Vainu yrityssignaaleina, Mercellillä on budjetointipäätökset.
+Raaka-aine on kaikilla sama julkinen aineisto. Tämä korjaa painotusta muualla
+tässä dokumentissa: kerros on yhä täytettävä aukko meillä, mutta **se ei ole
+vallihauta.**
+
+**2. Vallihauta on hanke-entiteetti.** Yhdelläkään vierekkäisellä toimijalla ei
+ole hanketta, jolla on vaihe, arvo ja osapuolet. Vainulla on pöytäkirjoja,
+Mercellillä ilmoituksia, KTI:llä analytiikkaa ostetun datan päällä.
+**Asiakirjojen muuttaminen hankkeiksi on se työ, jota kukaan muu ei tee
+halvalla.**
+
+**3. Hinnoitteluvertailu laajenee.** Horisontaalinen B2B-datatyökalu maksaa
+Suomessa 250–750 €/kk, kilpailutusseuranta ~110–370 €/kk (jos vuosihinnat
+pitävät). 149 €/kk on näissä matala muttei epäuskottava.
+
+### Miten tätä skannataan jatkossa
+
+Jottei seuraava löytö tule messukäytävältä:
+
+- **Kerran puolessa vuodessa** käydään yllä oleva kategorialista läpi ja
+  tarkistetaan tulokkaat. Kategoriat muuttuvat harvoin, toimijat useammin.
+- **Tutkimatta on yhä:** Vastuu Group (työmaa- ja urakoitsijadata, Valtti),
+  Zeroni/Movenium, Enento/Asiakastieto signaalituotteineen, Tendium Suomessa,
+  Haahtela ja Tocoman kustannuspuolella.
+- **Kysy asiakkailta.** Paras lähde on "mitä muuta teillä on käytössä" —
+  myyntipuhelussa se on yksi kysymys ja se paljastaa toimijat joita ei löydy
+  hakukoneesta.
+- **Lue kilpailijan lähdemaininnat.** KTI paljasti Hubexon tukkumyynnin yhdellä
+  virkkeellä omalla sivullaan.
+
 ---
 
 ## Vertailu
