@@ -16,11 +16,28 @@ päättelymme eivät saa näyttää samalta.
 
 ---
 
-## Tietoyhteistyö rakennuttajien kanssa — suunniteltu 8.10.2026, EI ALOITETTU
+## Tietoyhteistyö rakennuttajien kanssa — VALMIS LÄHETETTÄVÄKSI, EI LÄHETETTY
 
-> **Tila: idea.** Kenellekään ei ole lähetetty mitään eikä kenenkään
-> kanssa ole puhuttu. Kaikki alla oleva on omaa päättelyä. Tämä on
-> huomisen työlista, ei kuvaus kanavasta.
+> **Tila 8.10.2026: valmista odottamassa.** Kenellekään ei ole lähetetty
+> mitään eikä kenenkään kanssa ole puhuttu. Sähköpostin teksti, otsikko,
+> kohdelista ja lähetysjärjestys ovat valmiina alla. Kaikki muu on omaa
+> päättelyä.
+
+### Mistä jatkaa — kolme askelta, ei tarvitse lukea muuta
+
+1. **Selvitä yksi nimi.** Soita Bonavan vaihteeseen 010 400 2000 tai
+   katso bonava.fi/ota-yhteytta ja kysy viestinnästä vastaavaa. Yksi
+   puhelu riittää.
+2. **Lähetä viesti** (teksti alla, täytä `[etunimi]`, `[Yritys]` ja
+   `[N]` kohdelistan taulukosta — Bonava = 21).
+3. **Kirjaa vastaus tai vaikeneminen tähän dokumenttiin.** Kanavan arvo
+   ratkeaa vastausprosentista, ja se jää mittaamatta jos tuloksia ei
+   kirjata. Tavoite: 10–15 lähetettyä ennen kuin tästä tehdään
+   johtopäätöksiä.
+
+**Älä lähetä kaikille kerralla.** Yksi kerrallaan on tarkoituksellista:
+ensimmäiset vastaukset kertovat mikä viestissä ei toimi, ja sen voi
+korjata ennen kuin loput menevät.
 
 Johannes 8.10.2026: *"koitetaan lähestyä rakennuttajia tietoyhteistyöllä.
 uskon ja toivon että he suostuisivat ja antaisivat meille tietojaan.
@@ -601,3 +618,4 @@ kuin se, joka lukee pelkän tiedotteen.
 | kanava | tila | seuraava askel |
 |---|---|---|
 | Rakennuslehti | keskustelu avattu 7.10.2026; toimitus pyysi tiedotteen ennen yhteistyön aloittamista, tiedote laadittu 7.10. | lähetä tiedote Kari Soudolle, varmistu että tunnukset ja kuvat ovat heti annettavissa; sitten avoimet kysymykset |
+| Rakennuttajien tietoyhteistyö | **valmis lähetettäväksi 8.10.2026, ei lähetetty.** Sähköpostin teksti, otsikko ja kohdelista valmiina; yhteyshenkilöiden nimet selvittämättä | soita Bonavan vaihteeseen tai katso bonava.fi/ota-yhteytta, lähetä ensimmäinen viesti, kirjaa vastaus tähän dokumenttiin |
