@@ -25,8 +25,83 @@
  * jolloin se kelpaa sellaisenaan.
  */
 
-const START_PHRASE =
-  /(?:rakentaminen|rakennusty[öo]t|maanrakennusty[öo]t|ty[öo]maa|louhinta|perustusty[öo]t)\w*\s+(?:on\s+)?(?:alka|k[äa]ynnisty|alkoi|k[äa]ynnistyi|alkanut|k[äa]ynnistynyt)\w*/i
+/*
+ * JAVASCRIPTIN \w EI KATA SUOMEA (D-250).
+ *
+ * `\w` on [A-Za-z0-9_], joten se pysahtyy a:han ja o:hon. Osuma
+ * "rakennustyot kaynnistyisivat" katkesi muotoon "...kaynnistyisiv", ja
+ * ehtomuodon portti ei nahnyt paatetta -isivat lainkaan: suunniteltu
+ * hanke meni lapi alkaneena. Vika loytyi kuivaharjoituksesta, ei
+ * testeista.
+ */
+const SANAMERKKI = "[\\wäöåÄÖÅ]"
+const SANARAJA = "(?![\\wäöåÄÖÅ])"
+/*
+ * SANAMUODOT ON MITATTU AINEISTOSTA, EI ARVATTU (D-250).
+ *
+ * Ensimmainen versio vaati ettei substantiivin ja verbin valissa ole
+ * muuta kuin mahdollinen "on". Mitattu 8.10.2026: suomalainen tiedote
+ * kirjoittaa lahes aina "ovat jo kaynnistyneet", "on nyt alkanut",
+ * "ovat kaynnistyneet helmikuussa" — eli valissa on 1-2 sanaa. Lisaksi
+ * puuttuivat sanat `maatyot`, `kaynnissa` ja `aloitettu`.
+ *
+ * Tasta jai 70 ehdokasta ja 10 hanketta suunnitteluvaiheeseen vaikka
+ * teksti kertoi rakentamisen alkaneen.
+ */
+const ALOITUS_SUBSTANTIIVI =
+  "rakentaminen|rakennusty[öo]t|maanrakennusty[öo]t|maaty[öo]t|ty[öo]maa|louhinta|perustusty[öo]t|kaivuuty[öo]t"
+
+const ALOITUS_VERBI =
+  "alka|k[äa]ynnisty|alkoi|k[äa]ynnistyi|alkanut|k[äa]ynnistynyt|k[äa]ynniss[äa]|aloitettu|meneill[äa][äa]n"
+
+/*
+ * Valiin sallitaan enintaan kaksi sanaa ("ovat jo"). Enempi alkaisi
+ * yhdistaa eri lauseenosia toisiinsa.
+ */
+const START_PHRASE = new RegExp(
+  `(?:${ALOITUS_SUBSTANTIIVI})${SANAMERKKI}*\\s+(?:${SANAMERKKI}+\\s+){0,2}?(?:${ALOITUS_VERBI})${SANAMERKKI}*`,
+  "i"
+)
+
+/*
+ * VALJEMPI HAHMO VAATII OMAN PORTIN.
+ *
+ * Kahden sanan vali paastaa lapi kieltomuodon ja aikomuksen:
+ * "rakentaminen EI OLE alkanut", "rakentaminen PAASEE kaynnistymaan",
+ * "rakentamisen ON MAARA alkaa". Kaikki kolme esiintyvat aineistossa.
+ * Osuma hylataan jos valissa on jokin naista.
+ */
+/*
+ * EHTOMUOTO ON SUUNNITELMA, EI TAPAHTUMA (D-250).
+ *
+ * Kuivaharjoitus 8.10.2026 paljasti kolme vaaraa osumaa, kaikki samaa
+ * lajia:
+ *
+ *   "rakentaminen voi alkaa viimeistaan alkuvuonna"
+ *   "rakennustyot voisivat kaynnistya kesalla 2021"
+ *   "kerrostalon rakentaminen kaynnistyisi vuoden 2026 aikana"
+ *
+ * Kaksi ensimmaista paasi lapi vasta kun valiin sallittiin kaksi
+ * sanaa; kolmas oli vanha vika jota kukaan ei ollut huomannut.
+ *
+ * VUOSITARKISTUS EI PELASTA TASTA: "voisivat kaynnistya kesalla 2021"
+ * on MENNYT vuosi, joten sana "voisivat" on ainoa ero tapahtuneen ja
+ * suunnitellun valilla.
+ */
+const EHTOMUOTO = new RegExp(
+  `${SANAMERKKI}+isi(?:vat|vät)?${SANARAJA}|\\bvoi\\b|\\bvoitaisiin\\b|\\bsaattaa\\b`,
+  "i"
+)
+
+const EI_VIELA = /\b(?:ei|eiv[äa]t|p[äa][äa]se\w*|m[äa][äa]r[äa]|tarkoitus|aikoo|suunnitel\w*|toivottavasti)\b/i
+
+/*
+ * "edennyt" jatettiin tahallaan pois: aineistossa on "hankkeen
+ * rakentaminen on EDENNYT SUUNNITTELUSSA aikataulussa", joka tarkoittaa
+ * paivastoin etta rakentaminen ei ole alkanut. Myos "Tyomaa on edennyt
+ * aikataulussa" jaa siksi tunnistamatta — tiedostettu aukko, ja
+ * vaarin merkitty vaihe nakyy asiakkaalle.
+ */
 
 const MONTHS: [RegExp, number][] = [
   [/tammikuu/i, 1], [/helmikuu/i, 2], [/maaliskuu/i, 3], [/huhtikuu/i, 4],
@@ -57,6 +132,8 @@ export function constructionHasStarted(
 
   const match = source.match(START_PHRASE)
   if (!match) return false
+  if (EI_VIELA.test(match[0])) return false
+  if (EHTOMUOTO.test(match[0])) return false
 
   const at = (match.index ?? 0) + match[0].length
 
@@ -82,7 +159,12 @@ export function constructionHasStarted(
      * viittaava sanamuoto ilman vuotta on silti este - "alkaa ensi
      * vuonna" ei kerro rakentamisen olevan käynnissä.
      */
-    return !/ensi\s+vuonna|my[öo]hemmin|aikanaan|tulevaisuudessa/i.test(window)
+    /*
+     * "rakentaminen alkaa siita, etta etsimme tontin" on
+     * markkinointitekstin MAARITELMA yrityksen tavasta toimia, ei
+     * vaite tasta hankkeesta. Mitattu kuivaharjoituksessa 8.10.2026.
+     */
+    return !/ensi\s+vuonna|my[öo]hemmin|aikanaan|tulevaisuudessa|^\s*siit[äa]\s*,?\s*ett[äa]/i.test(window)
   }
 
   const startYear = Number(year[1])

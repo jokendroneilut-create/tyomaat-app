@@ -268,6 +268,74 @@ Villa Yttrium kannattaa lisata kasin, jos se puuttuu.
 
 ---
 
+### D-250 - Kolme poimintaa jotka kuvaus kertoi mutta kenttä ei
+
+Johannes 8.10.2026 Attendon Oulun hoivakodista: *"onko tasta poimittu
+Pajala Pohjois-Suomi ja hankkeen koko neliometreina. tamahan on myos jo
+rakenteilla, se kerrotaan kuvauksessa."*
+
+Kuvauksessa luki kaikki kolme. Kentissa ei ollut yhtaan.
+
+#### 1. Vaihe: valissa saa olla kaksi sanaa
+
+`constructionHasStarted` vaati ettei substantiivin ja verbin valissa ole
+muuta kuin "on". Suomalainen tiedote kirjoittaa kuitenkin lahes aina
+**"ovat jo kaynnistyneet"**, **"on nyt alkanut"**. Lisaksi puuttuivat
+sanat `maatyot`, `kaynnissa` ja `aloitettu`.
+
+Vali avattiin kahteen sanaan — ja se toi kolme uutta porttia, jotka
+kaikki loytyivat **kuivaharjoituksesta, eivat testeista**:
+
+| portti | miksi | mitattu lause |
+|---|---|---|
+| kieltomuoto | kaksi sanaa paastaa "ei ole" valiin | "rakentaminen ei ole alkanut" |
+| ehtomuoto | vuositarkistus ei auta, kun vuosi on mennyt | "rakennustyot voisivat kaynnistya kesalla 2021" |
+| maaritelma | markkinointiteksti, ei tapahtuma | "rakentaminen alkaa siita, etta etsimme tontin" |
+
+**JS:n `\w` ei kata suomea.** Ehtomuodon portti petti aluksi, koska
+`\w` on `[A-Za-z0-9_]`: osuma "rakennustyot kaynnistyisivat" katkesi
+muotoon "...kaynnistyisiv", eika paatetta `-isivat` nakynyt lainkaan.
+Tilalle `[\wäöåÄÖÅ]`. Tama on vika jota testi ei olisi loytanyt,
+koska testi olisi kirjoitettu samalla virheellisella oletuksella.
+
+**Takautuvasti 60 hanketta ja 6 ehdokasta** siirtyi vaiheeseen
+Rakenteilla. Kuivaharjoitus luettiin rivi rivilta kahdesti; ensimmainen
+luku antoi 70 rivia, joista 8 oli omia regressioitani.
+
+#### 2. Pinta-ala: "kooltaan" sallitaan vain rakennussanan kanssa
+
+`extractFloorAreaFromText` jattaa "kooltaan"-muodon tahallaan pois, ja
+syy on kirjattu: 17 rivista noin puolet oli maa-alaa. **Uusi mittaus
+koko aineistosta (41 uniikkia osumaa) nayttaa etta yleisin vaara osuma
+ei olekaan maa-ala vaan ASUNTOJEN KOOT**, ja ne erottaa kahdesta
+asiasta:
+
+- **vaihteluvali** — "kooltaan 42–160,5 neliometria" on asuntojen vali
+- **pieni luku** — rakennusten alat aineistossa 1 100–34 996 m²,
+  asuntojen 24–160 m²
+
+Uusi ankkuri vaatii kolme asiaa yhdessa: rakennusta tarkoittava sana,
+ei vaihteluvalia, vahintaan 300 m². Vanhaa poissulkua ei siis kumottu
+vaan tarkennettiin. Takautuvasti **9 hanketta ja 1 ehdokas**.
+
+#### 3. Urakoitsija: rekisteri tunnistaa vain tasmallisen nimen
+
+Roolivihjeet odottivat sanaa "urakoitsijana" nimen vieressa, eivat
+verbia. Lisattiin `urakoinnista vastaa`, `urakasta vastaa`,
+`omistajana toimii`, `kehittajana toimii`, ja ikkuna 40 -> 60 merkkia
+("Hankkeen kehittajana ja omistajana toimii " on 41 merkkia).
+
+Taman jalkeen poimija loytaa lauseesta **Plus Hoivakodit Oy:n oikealla
+roolilla** — mutta **ei Pajala Pohjois-Suomi Oy:ta**, ja syy on
+olennainen (ks. alla).
+
+#### Hankkeen osapuolet korjattiin lahteen mukaan
+
+Lahde: *"Hankkeen kehittajana ja omistajana toimii Plus Hoivakodit Oy
+ja urakoinnista vastaa Pajala Pohjois-Suomi Oy."* Resolveri oli
+asettanut rakennuttajaksi **Attendon**, joka on kayttaja ja tiedotteen
+julkaisija. Attendo siirtyi liittyvaksi yritykseksi eika kadonnut.
+
 ### D-249 - Lupatunnus puhelinnumerona, ja kaksi muuta hyvaksynnan vikaa
 
 Johannes 8.10.2026 kuvasi tyomaakyltin ja pyysi hyvaksymaan hankkeen

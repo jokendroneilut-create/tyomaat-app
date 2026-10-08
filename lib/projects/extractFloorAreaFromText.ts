@@ -42,6 +42,32 @@ const YKSIKKO = String.raw`(?:m2|m²|neliömetri\w*|neliötä)`
 const HEDGE = String.raw`(?:noin\s*|n\.\s*|arviolta\s+|cirka\s+|ca\.?\s*)?`
 
 /*
+ * RAKENNUSSANA TEKEE "KOOLTAAN"-MUODOSTA LUETTAVAN (D-250).
+ *
+ * Yllä oleva kommentti kertoo miksi "kooltaan" jätettiin pois: 17
+ * rivistä noin puolet oli maa-alaa. Uusi mittaus 8.10.2026 koko
+ * aineistosta (41 uniikkia osumaa) nayttaa etta yleisin vaara osuma ei
+ * olekaan maa-ala vaan ASUNTOJEN KOOT, ja ne erottaa kahdesta asiasta:
+ *
+ *   vali­viiva   "kooltaan 42–160,5 neliömetriä"   = asuntojen vaihteluvali
+ *   pieni luku  "kooltaan 105 m²"              = yksi asunto tai mökki
+ *
+ * Rakennusten alat aineistossa ovat 1 100–34 996 m², asuntojen
+ * 24–160 m². Siksi tama ankkuri vaatii kolme asiaa yhdessa:
+ * rakennusta tarkoittava sana, ei vaihteluvalia, ja vahintaan 300 m².
+ *
+ * Mitattu tapaus: "Kooltaan noin 2 600 neliömetrin koti" (Attendon
+ * hoivakoti Oulussa) ja "Kooltaan hoivakoti on noin 2 600 m²" — sama
+ * hanke kahdessa muodossa, kumpikaan ei osunut.
+ */
+const RAKENNUS = String.raw`(?:uudisrakennu\w*|rakennu(?:s|kse)\w*|hoivakoti\w*|koti|kodin|talo\w*|halli\w*|keskus\w*|koulu\w*|päiväkoti\w*|varasto\w*|navetta\w*|navetan|terminaali\w*|toimitila\w*|myymälä\w*|laitos\w*|hotelli\w*|sairaala\w*|tuotantotila\w*)`
+
+/* Vaihteluvali kertoo asunnoista, ei rakennuksesta. */
+const VAIHTELUVALI = /\d\s*[–—-]\s*\d/
+
+const KOOLTAAN_MIN_M2 = 300
+
+/*
  * Ankkurit järjestyksessä. Ensimmäinen osuma voittaa, joten vahvin
  * (yksikkö itse) on ensimmäisenä.
  */
@@ -74,7 +100,19 @@ const ANKKURIT: RegExp[] = [
 
   /* "Laitoksen kokonaispinta-ala on noin 600 neliömetriä" */
   new RegExp(String.raw`kokonaispinta-ala\w*\s+(?:on\s+)?${HEDGE}${LUKU}\s*${YKSIKKO}`, "i"),
+
+  /*
+   * "Kooltaan hoivakoti on noin 2 600 m²" ja
+   * "Kooltaan noin 2 600 neliömetrin koti" — rakennussana voi olla
+   * luvun kummalla puolella tahansa, ja toinen niistä riittää.
+   * Ehdot tarkistetaan erikseen (ks. KOOLTAAN_MIN_M2, VAIHTELUVALI).
+   */
+  new RegExp(
+    String.raw`kooltaan\s+(?:[\w\s]{0,40}?${RAKENNUS}\s+(?:on\s+)?)?${HEDGE}${LUKU}\s*${YKSIKKO}n?(?:\s+(?:suuruinen\s+)?${RAKENNUS})?`,
+    "i"
+  ),
 ]
+
 
 /*
  * Esteet luetaan osuman EDESTÄ. Kaikki torjuttavat muodot ovat luvun
@@ -83,7 +121,7 @@ const ANKKURIT: RegExp[] = [
  * katsominen torjui kelvollisia rivejä.
  */
 const EI_RAKENNUS =
-  /suunnittelualue|kaava-alue|asemakaava-alue|tonti[nt]|puiston|puistoalue|ranta-alue|viheralue|katualue|kattoalue|pohjapinta-ala|keskipinta-ala|rakennusoikeu|asunto\w*\s+keski|huoneistoala|kooltaan/i
+  /suunnittelualue|kaava-alue|asemakaava-alue|tonti[nt]|puiston|puistoalue|ranta-alue|viheralue|katualue|kattoalue|pohjapinta-ala|keskipinta-ala|rakennusoikeu|asunto\w*\s+keski|huoneistoala/i
 
 /* Rakennushanke ei ole neliömetrin kokoinen eikä sadan hehtaarin. */
 const MIN_M2 = 20
@@ -102,11 +140,17 @@ export function extractFloorAreaFromText(
     const ennen = text.slice(Math.max(0, at - 60), at + match[0].length)
     if (EI_RAKENNUS.test(ennen)) continue
 
+    /* "kooltaan" on sallittu vain tiukoin ehdoin, ks. kommentti ylla. */
+    const kooltaan = /^kooltaan/i.test(match[0])
+    if (kooltaan && VAIHTELUVALI.test(match[0])) continue
+    if (kooltaan && !new RegExp(RAKENNUS, "i").test(match[0])) continue
+
     /* Ryhmittelijät pois; desimaalit eivät kiinnosta neliöissä. */
     const raaka = String(match[1] ?? "").replace(/[\s .]/g, "")
     const arvo = Number(raaka)
     if (!Number.isFinite(arvo)) continue
     if (arvo < MIN_M2 || arvo > MAX_M2) continue
+    if (kooltaan && arvo < KOOLTAAN_MIN_M2) continue
 
     return Math.round(arvo)
   }

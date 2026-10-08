@@ -155,13 +155,27 @@ function lauseKohdasta(teksti: string, kohta: number): string {
  * Pelkka "rakentaa" EI ole kummassakaan listassa. Se on juuri se sana
  * joka ei erota rooleja.
  */
-const URAKOITSIJA_ENNEN = /\b(urakoitsija(?:na|ksi)?|paaurakoitsija(?:na|ksi)?|pääurakoitsija(?:na|ksi)?|urakoi)\s*:?\s*$/i
+/*
+ * ROOLIVIHJEET ON LAAJENNETTU MITATUSTA TEKSTISTA (D-250).
+ *
+ * Attendon tiedote Oulun hoivakodista: *"Hankkeen kehittajana ja
+ * omistajana toimii Plus Hoivakodit Oy ja urakoinnista vastaa Pajala
+ * Pohjois-Suomi Oy."* Molemmat roolit lukevat lauseessa selvasti, mutta
+ * kumpikaan vihje ei ollut listassa: vanhat hahmot odottivat sanaa
+ * "urakoitsijana" tai "rakennuttajana" nimen vieressa, eivat verbia
+ * ("vastaa", "toimii").
+ *
+ * Vaara rooli on asiakkaalle pahempi kuin tyhja, joten vihjeet ovat
+ * yha tasmallisia sanontoja eivatka yleisia verbeja.
+ */
+const URAKOITSIJA_ENNEN = /\b(urakoitsija(?:na|ksi)?|paaurakoitsija(?:na|ksi)?|pääurakoitsija(?:na|ksi)?|urakoi|urakoinnista\s+vastaa|urakasta\s+vastaa|urakan\s+toteuttaa)\s*:?\s*$/i
 const URAKOITSIJA_JALKEEN = /^\s*(?:on\s+)?(?:valittu\s+)?(?:sai|saa|voitti|urakoi|toteuttaa\s+urakan)\b/i
-const RAKENNUTTAJA_ENNEN = /\b(rakennuttaja(?:na|ksi)?|tilaaja(?:na|ksi)?|hankevastaava(?:na)?|hankkeesta\s+vastaa)\s*:?\s*$/i
+const RAKENNUTTAJA_ENNEN = /\b(rakennuttaja(?:na|ksi)?|tilaaja(?:na|ksi)?|hankevastaava(?:na)?|hankkeesta\s+vastaa|omistajana\s+toimii|kehittäjänä\s+toimii|rakennuttajana\s+toimii)\s*:?\s*$/i
 const RAKENNUTTAJA_JALKEEN = /^\s*(?:on\s+)?(?:rakennuttaa|teettaa|teettää|tilaa|vuokraa|investoi)\b/i
 
 function rooliKohdasta(teksti: string, kohta: number, nimi: string): "developer" | "builder" | null {
-  const ennen = teksti.slice(Math.max(0, kohta - 40), kohta)
+  /* Ikkuna 60 merkkia: "kehittajana ja omistajana toimii " ei mahdu 40:aan. */
+  const ennen = teksti.slice(Math.max(0, kohta - 60), kohta)
   const jalkeen = teksti.slice(kohta + nimi.length, kohta + nimi.length + 40)
 
   if (URAKOITSIJA_ENNEN.test(ennen) || URAKOITSIJA_JALKEEN.test(jalkeen)) return "builder"

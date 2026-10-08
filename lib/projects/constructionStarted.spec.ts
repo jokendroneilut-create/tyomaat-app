@@ -54,3 +54,82 @@ describe("lauseenosan katkaisu", () => {
     ).toBe(true)
   })
 })
+
+/*
+ * MITATUT SANAMUODOT (D-250).
+ *
+ * Lauseet ovat tuotannon kuvauksista 8.10.2026, eivat keksittyja.
+ * Hylattavat ovat yhta tarkeita kuin osuvat: valjempi hahmo paastaa
+ * lapi kieltomuodon ja aikomuksen.
+ */
+describe("constructionHasStarted: mitatut sanamuodot", () => {
+  const alkanut = [
+    "Maatyöt ovat jo käynnistyneet tontilla ja hoivakodin arvioidaan valmistuvan syksyllä 2027.",
+    "Maanrakennustyöt ovat käynnistyneet tontilla, ja hankkeen arvioidaan valmistuvan syksyllä 2027.",
+    "Rakennustyöt ovat käynnistyneet työmaan perustamisella ja valmistelevilla töillä.",
+    "Rakentaminen on jo käynnistynyt valmistelevilla työvaiheilla.",
+    "Hitas-uudiskohteena myytävän Asunto Oy Helsingin Hellikin rakentaminen on nyt alkanut.",
+    "Kohteen urakoitsijaksi on valittu Jatke Toimitilat Oy ja rakennustyöt ovat aloitettu viikolla 49.",
+    "Myös mallihuoneiden rakentaminen on aloitettu.",
+    "Rakennuksen sisätyöt ovat jo pitkällä, ja myös piharakentaminen on käynnissä.",
+    "Päätöksen mukaiset porras- ja hissikuilujen rakennustyöt ovat jo käynnissä.",
+    "Rovaniemen uuden pääpoliisiaseman varsinaiset rakennustyöt ovat käynnistyneet Verstaantiellä.",
+  ]
+
+  for (const lause of alkanut) {
+    it(`tunnistaa alkaneeksi: ${lause.slice(0, 45)}`, () => {
+      expect(constructionHasStarted(lause, new Date("2026-10-08"))).toBe(true)
+    })
+  }
+
+  const eiAlkanut = [
+    /* Tulevaisuus: vuosi ratkaisee. */
+    "Rakentaminen käynnistyy aikaisintaan kesällä 2027, ja kirjasto avaa ovensa 2029.",
+    "Purkutyöt alkavat vuoden 2026 lopussa, ja uuden talon rakentaminen käynnistyy alkuvuonna 2027.",
+    /* Aikomus ja toive, ei tapahtuma. */
+    "Odotamme innolla, että rakentaminen pääsee käynnistymään pitkän suunnittelutyön jälkeen.",
+    "Rakentamisen on määrä alkaa, kun lupa on lainvoimainen.",
+    /* Kieltomuoto: kahden sanan vali paastaisi taman lapi ilman porttia. */
+    "Rakentaminen ei ole alkanut, koska valitus on kesken.",
+    /* Sudenkuoppa: "edennyt suunnittelussa" tarkoittaa paivastaista. */
+    "Olemme tyytyväisiä, että hankkeen rakentaminen on edennyt suunnittelussa aikataulussa.",
+  ]
+
+  for (const lause of eiAlkanut) {
+    it(`ei merkitse alkaneeksi: ${lause.slice(0, 45)}`, () => {
+      expect(constructionHasStarted(lause, new Date("2026-10-08"))).toBe(false)
+    })
+  }
+})
+
+/*
+ * EHTOMUOTO (D-250). Lauseet ovat tuotannosta; kuivaharjoitus loysi ne
+ * ennen kuin takautuva korjaus ajettiin.
+ */
+describe("constructionHasStarted: ehtomuoto ei ole aloitus", () => {
+  const ehdollinen = [
+    "Jätkäsaaren uima- ja liikuntahallin rakentaminen voi alkaa viimeistään alkuvuonna 2027.",
+    "Nopeimmalla mahdollisella aikataululla rakennustyöt voisivat käynnistyä kesällä 2021.",
+    "Korttelin ensimmäisen kerrostalon rakentaminen käynnistyisi vuoden 2026 aikana.",
+  ]
+  for (const lause of ehdollinen) {
+    it(`ei merkitse alkaneeksi: ${lause.slice(0, 45)}`, () => {
+      expect(constructionHasStarted(lause, new Date("2026-10-08"))).toBe(false)
+    })
+  }
+})
+
+/*
+ * Paate -isivat katkesi ennen SANAMERKKI-korjausta, koska JS:n \w ei
+ * kata a:ta eika o:ta. Tama testi pitaa korjauksen paikallaan.
+ */
+describe("constructionHasStarted: ehtomuoto aantein", () => {
+  it("ei merkitse alkaneeksi: rakennustyot kaynnistyisivat", () => {
+    expect(
+      constructionHasStarted(
+        "Alustavan arvion mukaan laajennuksen rakennustyöt käynnistyisivät syksyllä 2026.",
+        new Date("2026-10-08")
+      )
+    ).toBe(false)
+  })
+})

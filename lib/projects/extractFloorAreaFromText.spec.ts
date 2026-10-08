@@ -148,3 +148,39 @@ describe("extractFloorAreaFromText - bruttoneliometri", () => {
     ).toBeNull()
   })
 })
+
+/*
+ * "KOOLTAAN" RAKENNUSSANAN KANSSA (D-250).
+ *
+ * Esimerkit ovat tuotannon kuvauksista 8.10.2026 (41 uniikkia
+ * "kooltaan"-osumaa luettuna). Hylattavat ovat yhta tarkeita: yleisin
+ * vaara osuma on asuntojen kokojen vaihteluvali.
+ */
+describe("extractFloorAreaFromText: kooltaan", () => {
+  const poimitaan: [string, number][] = [
+    ["Kooltaan noin 2 600 neliömetrin koti on suunniteltu yhteistyössä Attendon kanssa.", 2600],
+    ["Kooltaan hoivakoti on noin 2 600 m²", 2600],
+    ["Kooltaan Tikkurilan vanhustenkeskuksen uudisrakennus on 10 338 neliömetriä", 10338],
+  ]
+
+  for (const [teksti, odotus] of poimitaan) {
+    it(`poimii ${odotus}: ${teksti.slice(0, 40)}`, () => {
+      expect(extractFloorAreaFromText(teksti)).toBe(odotus)
+    })
+  }
+
+  const hylataan: [string, string][] = [
+    ["Kooltaan noin 8 700 m² suuruisen puiston vuosittaiset ylläpitokulut", "maa-ala"],
+    ["asunnot ovat kooltaan 42–160,5 neliömetriä ja huonemäärä 2–5", "asuntojen vaihteluväli"],
+    ["kooltaan 31–119 neliömetriä", "asuntojen vaihteluväli"],
+    ["kooltaan 105 m² ja sijaitsee 30 metrin päässä rantaviivasta", "liian pieni"],
+    ["Kooltaan alle 30 k-m²:n talousrakennuksen rakentaminen ei vaadi lupaa", "liian pieni"],
+    ["kooltaan noin 5849 neliömetriä", "ei rakennussanaa"],
+  ]
+
+  for (const [teksti, syy] of hylataan) {
+    it(`hylkaa (${syy}): ${teksti.slice(0, 40)}`, () => {
+      expect(extractFloorAreaFromText(teksti)).toBeNull()
+    })
+  }
+})
