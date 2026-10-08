@@ -1,5 +1,6 @@
 'use client'
 import YhteyshenkilonTaso from '../components/YhteyshenkilonTaso'
+import type { OsapuolenYhteyshenkilo } from '@/lib/metrics/yritysrekisteri'
 
 import Lataus from "@/app/components/Lataus"
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -436,20 +437,39 @@ export default function Projects() {
    *
    * Reitti palauttaa tyhjän jos hankkeella on oma yhteyshenkilö, joten
    * yrityksen yleinen ei koskaan ilmesty oman rinnalle.
+   *
+   * OSAPUOLET (D-253) tulevat samasta kutsusta omana listanaan: ne
+   * näytetään omana ryhmänään myös silloin kun oma yhteyshenkilö on,
+   * koska aliurakoitsija ei ole ostaja eikä kilpaile oman kanssa.
+   * Siksi haku tehdään aina kun metadata on ladattu — kerran per avaus:
+   * riippuvuus on "onko ladattu", ei metadata itse, jottei rekisterin
+   * yhteyshenkilöiden lisääminen metadataan laukaise uutta hakua.
    */
+  const [osapuoltenYhteyshenkilot, setOsapuoltenYhteyshenkilot] = useState<{
+    projectId: string
+    lista: OsapuolenYhteyshenkilo[]
+  } | null>(null)
+  const metadataLadattu = selected?.metadata !== undefined
+  const omiaYhteyshenkiloita = (selected?.metadata?.contact_persons ?? []).length > 0
+
   useEffect(() => {
     const id = selected?.id
-    if (!id || selected?.metadata === undefined) return
+    if (!id || !metadataLadattu) return
 
-    const omat = selected.metadata?.contact_persons ?? []
-    if (omat.length > 0) return
-
+    const onOmia = omiaYhteyshenkiloita
     let cancelled = false
 
     fetch(`/api/yritysrekisteri?projectId=${encodeURIComponent(String(id))}`)
       .then((r) => r.json())
       .then((tulos) => {
-        if (cancelled || !tulos?.ok || !tulos.yhteyshenkilot?.length) return
+        if (cancelled || !tulos?.ok) return
+
+        setOsapuoltenYhteyshenkilot({
+          projectId: String(id),
+          lista: Array.isArray(tulos.osapuolet) ? tulos.osapuolet : [],
+        })
+
+        if (onOmia || !tulos.yhteyshenkilot?.length) return
         setSelected((current) =>
           current && current.id === id
             ? {
@@ -467,7 +487,13 @@ export default function Projects() {
     return () => {
       cancelled = true
     }
-  }, [selected?.id, selected?.metadata])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- tarkoituksella kerran per avaus, ks. yllä
+  }, [selected?.id, metadataLadattu])
+
+  const osapuolet =
+    osapuoltenYhteyshenkilot && osapuoltenYhteyshenkilot.projectId === String(selected?.id ?? '')
+      ? osapuoltenYhteyshenkilot.lista
+      : []
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -1932,6 +1958,41 @@ setTeamModeEnabled(true)
                   <p key={i}>
                     {contact.name}
                     {contact.title ? `, ${contact.title}` : ''}
+                    <YhteyshenkilonTaso level={contact.level} />
+                    {contact.phone ? (
+                      <>
+                        {' — '}
+                        <a href={`tel:${contact.phone}`}>{contact.phone}</a>
+                      </>
+                    ) : null}
+                    {contact.email ? (
+                      <>
+                        {' — '}
+                        <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                      </>
+                    ) : null}
+                  </p>
+                ))}
+              </>
+            ) : null}
+
+            {/*
+              * OSAPUOLTEN YHTEYSHENKILÖT (D-253): aliurakoitsija,
+              * suunnittelija, toimittaja. Oma ryhmä ja yritys roolin kanssa
+              * jokaisella rivillä, jottei osapuolta luule ostajaksi.
+              */}
+            {osapuolet.length > 0 ? (
+              <>
+                <hr className="projects-hr" />
+                <p style={{ marginBottom: 8 }}>
+                  <strong>Muiden osapuolten yhteyshenkilöt</strong>
+                </p>
+                {osapuolet.map((contact, i) => (
+                  <p key={i}>
+                    {contact.name}
+                    {contact.title ? `, ${contact.title}` : ''}
+                    {' — '}
+                    <span style={{ color: '#6b7280' }}>{contact.organization}</span>
                     <YhteyshenkilonTaso level={contact.level} />
                     {contact.phone ? (
                       <>

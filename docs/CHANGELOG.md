@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 7.-8.10.)
 
+### Yritysrekisteri adminille ja osapuolten yhteyshenkilöt (D-253)
+
+Admin-valikkoon **Yritysrekisteri** (`/dashboard/yritysrekisteri`):
+yrityshaku ja yrityssivu, jolla näkyvät yrityksen ihmiset (rekisteri +
+hankkeiden omat yhteyshenkilöt) ja hankkeet rooleittain (rakennuttaja,
+pääurakoitsija, osapuoli). Vain admin; oikeus tarkistetaan sivulla.
+
+Hankekortille oma ryhmä **"Muiden osapuolten yhteyshenkilöt"**:
+rekisterin ihmiset myös `related_companies`- ja aliurakoitsijayrityksiltä,
+yritys roolin kanssa. Yhteystietomittari ei muutu — se mittaa yhä vain
+ostajapuolta.
+
+Admin-valikon ei-klikattavat "CRM" ja "Raportit" piilotettu toistaiseksi.
+
 ### Brändin kirjoitusasu: Tyomaat.fi ilman ö:tä (`7a0f3c6`, `37018d6`)
 
 Brändissä ei ole ö-kirjainta, mutta repositorio oli kirjoittanut sen

@@ -5,6 +5,76 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-253 - Yritysrekisteri adminille, ja osapuolet omana ryhmanaan
+
+Johannes 8.10.2026: *"tee tuo rekisteri myos nakyvaksi admin tunnuksilla
+admin kohtaan. tuosta valikoista voisi piilottaa tuon CRM:n ja raportit
+kohdan toistaiseksi. tee sellainen nakyma jolla voimme avata yrityksen
+ja nahda keta siella toimii ja heidan yhteystiedot seka hankkeet joihin
+he ovat osallistuneet meidan tietojen mukaan."* Aiemmin samana paivana
+aliurakoitsijoista: *"emmeko ole muodostamassa kuvaa verkostosta ja
+siina toimivista ihmisista?"*
+
+#### Osapuolet liitetaan rekisteriin, mutta eri ryhmana
+
+Rekisterin henkilo liittyi hankkeeseen vain rakennuttajan ja
+paaurakoitsijan avaimella. Nyt myos `metadata.related_companies` (D-248)
+ja `metadata.aliurakoitsijat` ({ yritys, tyo }) tuottavat avaimia —
+`lib/metrics/hankkeenYritykset.ts`, sama `yritysavain`-normalisointi.
+
+**Osapuoli ei ole ostaja.** Siksi:
+
+- Hankekortilla osapuolten ihmiset ovat omana ryhmanaan "Muiden
+  osapuolten yhteyshenkilot", ja yritys on rivilla roolin kanssa:
+  "Esimerkki Oy (osapuoli)" tai aliurakoitsijan tyo suluissa.
+- "Taydentaa, ei korvaa" (D-242) koskee yha vain ostajapuolta. Osapuolet
+  naytetaan myos silloin kun hankkeella on oma yhteyshenkilo — ne eivat
+  kilpaile sen kanssa.
+- **Mittari ei muutu.** `laskeKattavuus` lukee yha vain
+  `hankkeenYritysavaimet`ia (developer/builder). D-239 kysyy onko
+  ostajapuolella ihminen; aliurakoitsijan tyonjohtaja ei vastaa siihen.
+  Testi todistaa etta rekisterissa oleva osapuoli ei liikuta neulaa.
+- Jos sama yritys on seka urakoitsija etta osapuolilistalla, se on
+  urakoitsija — ostajapuolen rooli voittaa eika yritysta nayteta kahdesti.
+
+#### Admin-nakyma `/dashboard/yritysrekisteri`
+
+Lista: kaikki yritykset jotka ovat rekisterissa TAI jossain hankkeessa
+rakennuttajana, paaurakoitsijana tai osapuolena, ryhmiteltyna
+`yritysavain`illa, nimena yleisin kirjoitusasu. Jarjestys hankemaaran
+mukaan. Mitattu 8.10.2026: **1 806 yritysta, joista 28 rekisterissa.**
+
+Yrityssivu `/dashboard/yritysrekisteri/<avain>`: ihmiset (rekisterin
+rivit + hankkeiden omat yhteyshenkilot joiden organisaatio osuu samaan
+avaimeen, merkittyna "hankkeelta: <hanke>"; sama ihminen kerran
+sahkopostin tai nimen perusteella) ja hankkeet rooleittain. Valmistuneet
+nakyvat himmeampina ryhman lopussa. Hankkeen henkilo ei tuo yritysta
+listalle yksinaan — kunnan rakennustarkastaja liittyy kuntaan vain jos
+kunta on hankkeen osapuoli.
+
+**Oikeus tarkistetaan sivulla itse** (`lib/auth/onAdmin.ts`), ei vain
+middlewaressa eika piilottamalla linkkia: sama saanto kuin muualla
+(ADMIN_EMAILS tai `user_roles.role = admin`). Rekisteri luetaan
+service-rolella vasta tarkistuksen jalkeen.
+
+**Nopeus.** Koko kanta (~6 600 hanketta) luetaan 1 000 rivin sivuina,
+roolikentat ja yhteyshenkilot rinnakkain JSON-poluilla, ja koottu
+verkosto pidetaan prosessin muistissa 10 minuuttia. Kylmana ~5-8 s
+kehityskoneelta, sen jalkeen haku ja sivut ovat muistista.
+Yrityssivun hanketiedot haetaan `.in()`-paloissa (100).
+
+**Tunnettu vika nakyy myos taalla:** "Pohjola Rakennus Oy Suomi" ja
+"Pohjola Rakennus" ovat eri avaimia (D-252), joten ne ovat listalla
+kahtena yrityksena. Normalisointia ei muutettu tassa.
+
+#### CRM ja Raportit piiloon valikosta
+
+Admin-valikon "Tulossa: CRM / Raportit" (jo valmiiksi ei-klikattavia)
+poistettiin nakyvista toistaiseksi; koodiin jai kommentti. Asiakkaan
+"Omat" (/crm) ei muuttunut. Tilalle admin-valikkoon "Yritysrekisteri".
+
+---
+
 ### D-252 - Tyomaakuvat suoraan kantaan, ja jokainen puuttuva hanke kysyy "miksi"
 
 Johannes 8.10.2026 toi 13 hanketta kuvina (7 tyomaakylttia, 6

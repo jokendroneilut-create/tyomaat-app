@@ -2,7 +2,11 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { haeYritysrekisteri, yrityksenYhteyshenkilot } from "@/lib/metrics/yritysrekisteri"
+import {
+  haeYritysrekisteri,
+  osapuoltenYhteyshenkilot,
+  yrityksenYhteyshenkilot,
+} from "@/lib/metrics/yritysrekisteri"
 
 /*
  * YRITYKSEN YHTEYSHENKILOT YHDELLE HANKKEELLE (D-242).
@@ -43,17 +47,22 @@ export async function GET(request: Request) {
     .maybeSingle()
 
   if (!hanke) {
-    return NextResponse.json({ ok: true, yhteyshenkilot: [] })
+    return NextResponse.json({ ok: true, yhteyshenkilot: [], osapuolet: [] })
   }
 
   const omat = (hanke.metadata as { contact_persons?: unknown } | null)?.contact_persons
-  if (Array.isArray(omat) && omat.length > 0) {
-    return NextResponse.json({ ok: true, yhteyshenkilot: [] })
-  }
+  const onOmia = Array.isArray(omat) && omat.length > 0
 
+  /*
+   * OSAPUOLET OVAT ERI RYHMA (D-253). Aliurakoitsijan tai suunnittelijan
+   * ihminen ei ole ostajapuolta, joten se palautetaan omana listanaan
+   * myos silloin kun hankkeella on oma yhteyshenkilo — ja selain
+   * nayttaa sen omana ryhmanaan, roolin kanssa.
+   */
   const rekisteri = await haeYritysrekisteri()
   return NextResponse.json({
     ok: true,
-    yhteyshenkilot: yrityksenYhteyshenkilot(hanke, rekisteri),
+    yhteyshenkilot: onOmia ? [] : yrityksenYhteyshenkilot(hanke, rekisteri),
+    osapuolet: osapuoltenYhteyshenkilot(hanke, rekisteri),
   })
 }

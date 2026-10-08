@@ -136,3 +136,53 @@ describe("taso: hankekohtainen vai yrityskohtainen", () => {
     expect(r.hankekohtainenOsuus).toBe(0.25)
   })
 })
+
+/*
+ * OSAPUOLI EI NOSTA MITTARIA (D-253). Mittari kysyy onko ostajapuolella
+ * (rakennuttaja tai paaurakoitsija) ihminen. Aliurakoitsijan tai
+ * suunnittelijan rekisterihenkilo nakyy hankekortilla omana ryhmanaan,
+ * mutta harmaa neula ei saa liikkua sen takia. Sama `laskeKattavuus`
+ * ajaa seka TIC:n mittarin etta snapshot-reitin.
+ */
+describe("laskeKattavuus: osapuolet eivat kuulu mittariin", () => {
+  const rekisteri = new Set(["kattotyot", "tilaaja"])
+
+  it("related_companies-osapuoli rekisterissa ei laske yhteystiedoksi", () => {
+    const [rakenteilla] = laskeKattavuus(
+      [
+        {
+          phase: "Rakenteilla",
+          status: "active",
+          is_public: true,
+          developer: "Tuntematon Oy",
+          metadata: {
+            related_companies: ["Kattotyot Oy"],
+            aliurakoitsijat: [{ yritys: "Kattotyot Oy", tyo: "vesikattotyot" }],
+          },
+        },
+      ],
+      rekisteri
+    )
+    expect(rakenteilla.vaihe).toBe("construction")
+    expect(rakenteilla.hankkeita).toBe(1)
+    expect(rakenteilla.yhteystiedolla).toBe(0)
+    expect(rakenteilla.hankekohtaisia).toBe(0)
+  })
+
+  it("ostajapuolen rekisteriosuma laskee edelleen", () => {
+    const [rakenteilla] = laskeKattavuus(
+      [
+        {
+          phase: "Rakenteilla",
+          status: "active",
+          is_public: true,
+          developer: "Tilaaja Oy",
+          metadata: { related_companies: ["Kattotyot Oy"] },
+        },
+      ],
+      rekisteri
+    )
+    expect(rakenteilla.yhteystiedolla).toBe(1)
+    expect(rakenteilla.hankekohtaisia).toBe(0)
+  })
+})

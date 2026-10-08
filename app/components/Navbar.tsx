@@ -116,24 +116,6 @@ export default function Navbar() {
   </div>
 );
 
-  const NavHeading = ({ children }: { children: React.ReactNode }) => (
-  <div
-    style={{
-      borderTop: "1px solid #f0f0f0",
-      paddingTop: 8,
-      marginTop: 4,
-      marginBottom: 2,
-      fontSize: 11,
-      fontWeight: 700,
-      color: "#9ca3af",
-      letterSpacing: "0.08em",
-      textTransform: "uppercase",
-    }}
-  >
-    {children}
-  </div>
-);
-
   const NavItem = ({
     href,
     children,
@@ -228,19 +210,18 @@ export default function Navbar() {
               <NavItem href="/dashboard/users">Käyttäjät</NavItem>
               <NavItem href="/dashboard/analytics">Analytiikka</NavItem>
               <NavItem href="/dashboard/messages">Viestit</NavItem>
+              <NavItem href="/dashboard/yritysrekisteri">Yritysrekisteri</NavItem>
             </NavSection>
 
-            <NavHeading>🚧 Tulossa</NavHeading>
-
-            <NavSection>
-              <NavItem href="#" disabled>
-                CRM
-              </NavItem>
-
-              <NavItem href="#" disabled>
-                Raportit
-              </NavItem>
-            </NavSection>
+            {/*
+             * "Tulossa: CRM / Raportit" piilotettu toistaiseksi —
+             * Johannes 8.10.2026: "tuosta valikoista voisi piilottaa tuon
+             * CRM:n ja raportit kohdan toistaiseksi." (D-253). Kohdat
+             * olivat jo valmiiksi ei-klikattavia (href="#", disabled);
+             * palautus git-historiasta: otsikko "🚧 Tulossa" (NavHeading)
+             * ja kaksi disabled-NavItemia.
+             * Asiakkaan "Omat" (/crm) ei kuulu tähän eikä muutu.
+             */}
           </div>
         )}
       </div>

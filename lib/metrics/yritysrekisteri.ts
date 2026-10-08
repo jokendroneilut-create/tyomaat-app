@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js"
 
 import { hankkeenYritysavaimet } from "@/lib/metrics/yritysavain"
+import {
+  hankkeenOsapuolet,
+  osapuolenNimi,
+  type YritysLahde,
+} from "@/lib/metrics/hankkeenYritykset"
 
 /*
  * YRITYSREKISTERIN LUKU (D-242).
@@ -88,4 +93,34 @@ export function yrityksenYhteyshenkilot(
     if (osuma?.length) return osuma
   }
   return []
+}
+
+/*
+ * OSAPUOLTEN YHTEYSHENKILOT (D-253).
+ *
+ * Aliurakoitsija, suunnittelija tai toimittaja `related_companies`- ja
+ * `aliurakoitsijat`-kentista. Nama ovat ERI RYHMA kuin ylla: ne eivat
+ * ole ostajapuolta, joten "taydentaa, ei korvaa" ei koske niita — ne
+ * naytetaan omana ryhmanaan myos silloin kun hankkeella on oma
+ * yhteyshenkilo.
+ *
+ * Organisaatio kirjoitetaan roolin kanssa ("Esimerkki Oy (osapuoli)"),
+ * jottei asiakas luule aliurakoitsijaa ostajaksi.
+ *
+ * EI MITTARIIN. Mittari (D-239) kysyy onko ostajapuolella ihminen;
+ * `laskeKattavuus` lukee vain `hankkeenYritysavaimet`ia eika tata.
+ */
+export type OsapuolenYhteyshenkilo = YritysYhteyshenkilo & { group: "osapuoli" }
+
+export function osapuoltenYhteyshenkilot(
+  hanke: YritysLahde,
+  rekisteri: Yritysrekisteri
+): OsapuolenYhteyshenkilo[] {
+  const tulos: OsapuolenYhteyshenkilo[] = []
+  for (const osapuoli of hankkeenOsapuolet(hanke)) {
+    for (const henkilo of rekisteri.get(osapuoli.avain) ?? []) {
+      tulos.push({ ...henkilo, organization: osapuolenNimi(osapuoli), group: "osapuoli" })
+    }
+  }
+  return tulos
 }
