@@ -112,46 +112,158 @@ Mistä nimi selvitetään, halvimmasta kalleimpaan:
 - LinkedIn
 - vaihde, ja kysy suoraan
 
-### Sähköpostin luonnos — EI LÄHETETTY
+### Lähetettävä sähköposti (8.10.2026)
 
-Tämä on huomisen muokattavaksi, ei valmis.
+Johannes lähettää yksitellen ja katsoo mitä tapahtuu. Alla valmis teksti.
+Hakasulkeet täytetään kohdetaulukosta.
 
-> **Aihe:** Työmaat.fi — näkyvätkö hankkeenne oikein?
+**Aihe:** `Lyhyt kysymys [Yritys]:n hankkeiden yhteyshenkilöistä`
+
+Vaihtoehto, jos neutraalimpi sopii paremmin:
+`[Yritys]:n hankkeet Työmaat.fi-palvelussa`
+
+---
+
+> Hei [etunimi],
 >
-> Hei [nimi],
+> Olen Johannes Sippola ja pyöritän Työmaat.fi-palvelua. Kokoamme Suomen
+> alkavat ja käynnissä olevat rakennushankkeet yhteen näkymään, jotta
+> aliurakoitsijat ja materiaalitoimittajat löytävät ne ajoissa.
 >
-> Olen Johannes Sippola, ja pyöritän Työmaat.fi-palvelua: kokoamme
-> Suomen rakennushankkeet yhteen paikkaan, jotta aliurakoitsijat ja
-> toimittajat löytävät ne ajoissa.
->
-> [Yritys]-hankkeita on palvelussamme tällä hetkellä [N]. Kokoamme
-> tiedot julkisista lähteistä — päätöksistä, kuulutuksista,
-> tiedotteista — ja se tarkoittaa, että osa tiedoista on meidän
-> tulkintaamme. Mieluummin ne olisivat teidän kertomianne.
+> Palvelussamme on tällä hetkellä **[N] käynnissä olevaa [Yritys]:n
+> hanketta**. Kokoamme tiedot julkisista lähteistä — rakennusluvista,
+> päätöksistä, kuulutuksista ja tiedotteista. Se tarkoittaa, että osa
+> tiedoista on meidän tulkintaamme teidän hankkeistanne. Mieluummin ne
+> olisivat teidän kertomianne.
 >
 > Kysyisin yhtä asiaa: **voisitteko kertoa, kuka on kunkin käynnissä
-> olevan hankkeenne yhteyshenkilö?** Sitä tietoa kysytään meiltä
-> eniten, emmekä löydä sitä luotettavasti mistään.
+> olevan hankkeenne yhteyshenkilö?** Sitä kysytään meiltä eniten, emmekä
+> löydä sitä luotettavasti mistään. Riittää nimi, rooli ja se
+> yhteystieto jonka haluatte näkyvän — ei muuta.
 >
-> Teille tästä ei ole työtä eikä kustannusta. Teidän hankkeenne
-> löytyvät helpommin niiltä, jotka haluavat tarjota niihin — ja
-> tiedot ovat oikein, kun ne tulevat teiltä.
+> Toinen kysymys: **onko teillä jo sovittu tapa luovuttaa hanketietoja?**
+> Jos toimitatte vastaavaa tietoa muille alan palveluille, teen mielelläni
+> saman käytännön mukaan enkä keksi uutta.
 >
-> Vastaan mielelläni mihin tahansa kysymykseen siitä, mitä teemme ja
-> mitä emme.
+> Teille tästä ei tule työtä eikä kustannusta, eikä mitään sovittavaa.
+> Hyöty on molemminpuolinen: hankkeenne löytyvät helpommin niiltä jotka
+> haluavat tarjota niihin, ja tiedot ovat oikein kun ne tulevat teiltä.
+>
+> Vastaan mielelläni mihin tahansa kysymykseen siitä mitä teemme ja mitä
+> emme — myös siitä, kenelle tiedot näkyvät.
 >
 > Ystävällisin terveisin,
+>
 > Johannes Sippola
-> Työmaat.fi | [puhelin] | www.tyomaat.fi
+> Yrittäjä, Työmaat.fi
+> +358 40 9624 170 | info@tyomaat.fi | www.tyomaat.fi
+> Sippola Enterprises Oy, Y-tunnus 3627561-2
 
-Luonnoksen linjavalinnat:
-- **Yksi pyyntö, ei kolmea.** Yhteyshenkilö, ei "tietojanne".
-- **Hankemäärä mukaan.** Osoittaa että heidät tunnetaan jo, ei kylmä
-  mainoskirje.
-- **"Tiedot julkaistaan joka tapauksessa" sanotaan pehmeästi** — se on
-  totta ja vahva, mutta uhkaavana se kaataa keskustelun.
-- **Ei alennusta eikä kauppaa.** Tämä ei ole myyntikirje; sekoittaminen
-  tekisi pyynnöstä epäuskottavan.
+---
+
+#### Linjavalinnat ja miksi
+
+- **"Lyhyt kysymys" otsikossa.** Asettaa odotuksen pienestä pyynnöstä.
+  Sen täytyy sitten myös pitää paikkansa.
+- **Hankemäärä heti toisessa kappaleessa.** Osoittaa ettei tämä ole
+  kylmä massaposti: heidät tunnetaan jo nimeltä ja määrällä.
+- **"Tiedot julkaistaan joka tapauksessa" sanotaan pehmeästi.**
+  Muotoilu "osa tiedoista on meidän tulkintaamme" on tosi ja vahva.
+  Uhkaavana ("julkaisemme nämä joka tapauksessa") se kaataisi
+  keskustelun.
+- **Kysymys muiden palveluiden yhteistyöstä on käännetty.** Suora
+  "teettekö jo yhteistyötä Metrocin kanssa?" kuulostaa kilpailijan
+  urkinnalta ja antaa helpon ei:n ("meillä on jo kumppani"). Muoto
+  *"teen mielelläni saman käytännön mukaan"* tekee siitä
+  mukautumistarjouksen — ja vastaus kertoo silti sen mitä halutaan
+  tietää.
+- **"Riittää nimi, rooli ja se yhteystieto jonka haluatte näkyvän."**
+  Antaa heille kontrollin siitä mitä luovutetaan. Ilman tätä lausetta
+  pyyntö kuulostaa rajattomalta.
+- **Ei hintaa, ei alennusta, ei kokeilutarjousta.** Myyntikirjeeseen
+  sekoitettuna pyyntö muuttuu epäuskottavaksi.
+- **Oma Y-tunnus allekirjoituksessa.** Yhden hengen yritykseltä tuleva
+  pyyntö tarvitsee todisteen siitä että takana on oikea yhtiö.
+
+### Kohdelista — mitattu 8.10.2026
+
+Aktiiviset, asiakkaalle näkyvät hankkeet. Yritys lasketaan mukaan sekä
+rakennuttajana että pääurakoitsijana, koska yhteyshenkilö puuttuu
+molemmissa rooleissa.
+
+| yritys | hankkeita | yhteystieto puuttuu | kattavuus |
+|---|---|---|---|
+| **YIT** | 39 | **32** | 18 % |
+| **Skanska** | 63 | **27** | 57 % |
+| **Hartela** | 50 | **23** | 54 % |
+| **NCC** | 40 | **22** | 45 % |
+| **Bonava** | 21 | **16** | 24 % |
+| Kreate | 61 | 15 | 75 % |
+| Jatke | 39 | 10 | 74 % |
+| Peab | 27 | 10 | 63 % |
+| Pohjola Rakennus | 31 | 10 | 68 % |
+| Varte | 22 | 9 | 59 % |
+| TVT Asunnot | 12 | 8 | 33 % |
+| Espoon Asunnot | 18 | 7 | 61 % |
+| SRV | 36 | 6 | 83 % |
+| Fira | 24 | 5 | 79 % |
+| Rakennusliike Lapti | 22 | 5 | 77 % |
+| T2H | 10 | 3 | 70 % |
+
+**Älä lähetä julkisille tilaajille.** Kaupungeilla ja virastoilla
+kattavuus on jo 78 % (Helsingillä 96 %), koska päätökset ja Hilma
+kantavat yhteystiedot. Yhteistyö ei toisi heiltä juuri mitään.
+
+#### Lähetysjärjestys: helpoin kyllä ensin, ei suurin palkinto
+
+Pyynnöllä on eri sävy riippuen siitä kumpi rooli yrityksellä on:
+
+- **Rakennuttajalle** (Bonava, TVT Asunnot, Espoon Asunnot) näkyvyys on
+  puhtaasti hyvä asia: he haluavat tarjouksia hankkeisiinsa.
+- **Pääurakoitsijalle** (YIT, Skanska, NCC, Hartela) sama tieto
+  tarkoittaa enemmän puheluita työmaapäälliköille. Osa pitää sitä
+  haittana.
+
+Siksi: **aloita 2–3 rakennuttajasta**, opi vastaväitteet halvalla, ja
+mene vasta sitten isojen urakoitsijoiden luo — silloin mukana on
+referenssi. YIT on suurin palkinto (32 puuttuvaa) mutta todennäköisesti
+vaikein ensimmäinen.
+
+### Kenelle — ja miksi nimiä ei arvata
+
+Useimmat kohdeyritykset **eivät julkaise nimettyä viestintäyhteyshenkilöä**
+verkkosivuillaan (tarkistettu 8.10.2026: YIT ohjaa press deskiin ilman
+nimeä, Hartela näyttää vain vaihteen ja osoitemallin
+`etunimi.sukunimi@hartela.fi`). Hakukoneesta löytyvät nimet ovat usein
+vuosien takaisista nimitystiedotteista eivätkä pidä paikkaansa.
+
+**Vanhentunut nimi on pahempi kuin ei nimeä:** väärälle henkilölle mennyt
+pyyntö kuluu hukkaan hiljaisena, eikä siitä opi mitään.
+
+Tavoiteltava rooli, paremmuusjärjestyksessä:
+
+1. **Viestintä- tai markkinointijohtaja / -päällikkö.** Hänen työnsä on
+   saada hankkeet näkyviin — tämä on hänelle helppo kyllä.
+2. **Hankekehitysjohtaja.** Tietää hankkeet ensin, mutta on
+   varovaisempi.
+3. **Kaupallinen johtaja tai asiakkuusjohtaja.** Ymmärtää vastineen.
+
+**Älä lähetä vastaavalle työnjohtajalle.** Hän on hankkeen
+yhteyshenkilö, ei se joka päättää tiedon luovuttamisesta.
+
+Nimen selvitys, halvimmasta kalleimpaan:
+1. Yrityksen oma yhteystieto- tai mediasivu
+2. Tiedotteiden allekirjoitus — näitä on jo `source_documents`-taulussa
+3. LinkedIn
+4. Vaihde: soita ja kysy kuka vastaa viestinnästä
+
+Varmistetut 8.10.2026 (tarkista silti ennen lähetystä):
+
+| yritys | reitti |
+|---|---|
+| Bonava | `viestinta@bonava.fi`; sivusto listaa viestintäpäällikön ja markkinoinnista/viestinnästä vastaavan johtajan — nimet bonava.fi/ota-yhteytta |
+| Hartela | vaihde 010 561 3000, osoitemalli `etunimi.sukunimi@hartela.fi` |
+| YIT | ei julkaistua nimeä; press desk tai vaihde +358 20 433 111 |
 
 ### Ennen kuin mitään lähetetään
 
