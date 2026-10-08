@@ -226,3 +226,44 @@ Kyltissä on yksityishenkilön nimi ja puhelinnumero. Tieto saa mennä
 kantaan — se on tuotteen tarkoitus — mutta **ei koskaan repoon**, joka
 on julkinen. Skriptit jotka sisältävät yhteystietoja kirjoitetaan
 työhakemiston ulkopuolelle, ja lisäys tarkistetaan ennen committia.
+
+## Toinen erä 8.10.2026 illalla: 8 LinkedIn-julkaisua
+
+Kaikki kuvakaappauksia, ei kylttejä. Profiili erosi ensimmäisestä:
+**viisi kahdeksasta oli valmistuneita hankkeita** (Lummen kolme
+hoivakotia, Kasarminkatu, Kuusijärven savusaunat, Keilaniemen Portti,
+DB Schenkerin halli). Yritykset julkaisevat LinkedInissä mieluiten
+valmistumisen ja harjannostajaiset, eivät aloitusta.
+
+| | |
+|---|---|
+| puuttui kannasta | 7/8 (Päijät-Hämeen RV 8 oli, ilman kaupunkia ja rakennuttajaa) |
+| lisätty | 10 riviä, joista 6 valmistunutta ja 4 aktiivista |
+| ohitettu | Schenkerin halli (sijainti ei selvinnyt), Maalinjan yötyö (liian pieni) |
+| hankekohtainen yhteyshenkilö | 0 |
+
+Valmistuneet kirjattiin `phase: "Valmistunut"`, `status: "completed"`
+**ilman vaihehistoriaa**, jottei asiakas saa hälytystä valmiista
+kohteesta. Niiden arvo on osapuolissa: kuka rakentaa kenelle
+(WelCo hoivakoteja Lummelle, VM Suomalainen Vantaalle).
+
+**Arvokkain löydös tuli sivupolulta.** Erkkiheikkilän julkaisu johti
+Kouvolan pöytäkirjoihin, joista löytyi kaksi aktiivista hanketta
+(Kasarminmäentie–Voimalankatu 1,16 M€, Länsiasemantie 1,55 M€) ja
+kierrätyskeskus.
+
+**Sama rakenteellinen aukko kuin Lupapisteessä:** Kouvolan
+päätöslähde alkoi 9.8.2026, joten sitä ennen tehdyt urakkapäätökset
+(10/2024, 5/2026) eivät tulleet. Lähteen alkupäivää vanhemmat
+päätökset ja luvat ovat järjestelmällisesti näkymättömiä — ja juuri
+ne ovat nyt rakenteilla.
+
+**Keilaniemen Portti:** STT-tiedote haettiin 24.9.2026, mutta
+valmistumistiedote ei tuottanut ehdokasta. Todennäköisesti
+tarkoituksellinen suodatus (valmis kohde ei ole myyntimahdollisuus),
+ei vika.
+
+**Lähteitä ei lisätty:** Lumme julkaisee 7 tiedotetta 21 kuukaudessa
+(liian harvoin), LapWall ja Mer Architects valmiita referenssejä,
+Erkkiheikkilä vain LinkedInissä (Kouvolan päätökset kattavat sen
+jatkossa).
