@@ -1,5 +1,5 @@
 import { hilmaNoticeUrl } from "@/lib/agent/hilmaNoticeUrl"
-import { fetchHilmaTulos } from "@/lib/agent/hilmaTulos"
+import { tulosEFormsista } from "@/lib/agent/hilmaTulos"
 import { isCancellationNotice, stripCancellationPrefix } from "@/lib/agent/hilmaCancellation"
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
@@ -295,9 +295,20 @@ export async function resolveHilmaProject({
    * Tuntematon tulos ei muuta mitaan: `tulos === null` tarkoittaa
    * "ei tietoa", ei "ei voittajaa".
    */
+  /*
+   * YKSI HAKU, KOLME KAYTTOA. Sama vastaus sisaltaa tuloksen,
+   * yhteyshenkilot ja suorituspaikan. Ensimmainen versio tasta haki
+   * dokumentin kahdesti, koska en huomannut etta resolveri hakee sen
+   * jo alempana.
+   */
+  const eForm = await fetchHilmaEForm(
+    metadata.procedure_id,
+    metadata.notice_id ?? noticeIdOsa(metadata.notice_number)
+  )
+
   let voittajatRajapinnasta: string[] = []
   if (isContractAward && !isCancelled && winners.length === 0 && !metadata.winner_organisations) {
-    const tulos = await fetchHilmaTulos(metadata.procedure_id, noticeIdOsa(metadata.notice_number))
+    const tulos = tulosEFormsista(eForm ? { eForm } : null)
     if (tulos.tulos === "no-winner") isCancelled = true
     if (tulos.tulos === "winner") voittajatRajapinnasta = tulos.voittajat
   }
@@ -352,7 +363,6 @@ export async function resolveHilmaProject({
    *
    * Yksi haku riittaa molempiin.
    */
-  const eForm = await fetchHilmaEForm(metadata.procedure_id, metadata.notice_id)
   const hilmaContacts = parseHilmaContacts(eForm)
 
   if (!municipality || !resolvedAddress) {

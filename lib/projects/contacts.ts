@@ -51,7 +51,13 @@ export type Contact = {
    * vastuuhenkilöön näkyy tittelissä, ei tekstin osiosta — perustelu
    * `contactRole.ts`:ssä.
    */
-  role?: "authority" | "buyer" | "winner" | "media" | null
+  /*
+   * "agent" = tilaajan ilmoittama hankinnan yhteystaho, usein
+   * ULKOPUOLINEN KONSULTTI (D-252). Han hoitaa kilpailutuksen, joten
+   * han on myyjalle oikea kontakti — mutta han ei ole tilaaja, ja se
+   * on kerrottava kayttajalle.
+   */
+  role?: "authority" | "buyer" | "winner" | "media" | "agent" | null
 }
 
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
@@ -94,6 +100,21 @@ function trimGluedDomain(domain: string): string {
     if (TLD_ENDING.test(alku)) return alku
   }
   return domain
+}
+
+/*
+ * MALLIOSOITE EI OLE KENENKAAN OSOITE (D-252).
+ *
+ * Tekstipoiminta on hylannyt `etunimi.sukunimi@` alusta asti, mutta
+ * sama hahmo osuu myos rakenteiseen dataan: Hilman eForms-ilmoituksessa
+ * Haahtela-rakennuttamisen yhteystahona luki kirjaimellisesti
+ * `etunimi.sukunimi@haahtela.fi`. Vietu omaksi funktioksi, jotta
+ * kaikki poimijat kayttavat samaa saantoa.
+ */
+export function onMalliosoite(email: string | null | undefined): boolean {
+  const local = String(email ?? "").split("@")[0]?.trim()
+  if (!local) return false
+  return PLACEHOLDER_LOCAL.test(local)
 }
 
 export function sanitizeEmail(value: string | null | undefined): string | null {
@@ -261,7 +282,7 @@ function findName(before: string): string | null {
  * "jani.peltomaki@srv.fi" -> "Jani Peltomaki". Ei käytetä
  * roolilaatikoihin eikä lyhenteisiin ("nsalonen@").
  */
-function nameFromEmail(email: string): string | null {
+export function nameFromEmail(email: string): string | null {
   const local = email.split("@")[0]
   if (ROLE_MAILBOX.test(local)) return null
 

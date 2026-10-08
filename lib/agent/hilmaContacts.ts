@@ -1,4 +1,4 @@
-import type { Contact } from "@/lib/projects/contacts"
+import { nameFromEmail, onMalliosoite, type Contact } from "@/lib/projects/contacts"
 
 /*
  * YHTEYSHENKILÖT HILMAN ILMOITUKSESTA.
@@ -32,7 +32,7 @@ import type { Contact } from "@/lib/projects/contacts"
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 const TIMEOUT_MS = 8000
 
-export type HilmaContact = Contact & { role: "buyer" | "winner" }
+export type HilmaContact = Contact & { role: "buyer" | "winner" | "agent" }
 
 const arvo = (x: any): string | null => {
   if (x == null) return null
@@ -87,7 +87,51 @@ export function parseHilmaContacts(eForm: any): HilmaContact[] {
     /* eSender ja muutoksenhakuelin eivät ole hankkeen osapuolia. */
     if (!role) continue
 
-    const contact = company?.contact ?? o?.touchPoint?.contact ?? {}
+    /*
+     * TOUCHPOINT ON OMA YHTEYSTAHONSA, EI VARAREITTI (D-252).
+     *
+     * Aiempi koodi luki sen vain jos organisaatiolla ei ollut omaa
+     * osoitetta — ja luki sen vaarin: `touchPoint` on TAULUKKO, joten
+     * `o?.touchPoint?.contact` oli aina undefined eika varareitti
+     * laukennut koskaan.
+     *
+     * Virolahden ilmoituksessa tilaajalla oli oma osoite JA touchPoint
+     * "TST Consulting Oy" — hankinnasta vastaava konsultti, jonka
+     * yhteystieto katosi kokonaan. Mitattu 9.10.2026: touchPoint on
+     * noin 7 %:lla ilmoituksista, ja otoksen molemmissa tapauksissa se
+     * oli ulkopuolinen konsultti (A-Insinoorit, Sitowise) eri
+     * osoitteella kuin tilaaja.
+     */
+    for (const tp of Array.isArray(o?.touchPoint) ? o.touchPoint : o?.touchPoint ? [o.touchPoint] : []) {
+      const tpEmail = arvo(tp?.contact?.electronicMail)
+      const tpPhone = arvo(tp?.contact?.telephone)
+      const tpNimi = arvo(tp?.contact?.name)
+      if (!tpEmail && !tpPhone) continue
+
+      /*
+       * Mallipohja hylataan, mutta puhelin sailyy jos se on oikea:
+       * Haahtelan ilmoituksessa osoite oli `etunimi.sukunimi@haahtela.fi`.
+       */
+      const kelpoEmail = tpEmail && !onMalliosoite(tpEmail) ? tpEmail : null
+      if (!kelpoEmail && !tpPhone) continue
+
+      /*
+       * Kentassa `name` on kaytannossa aina YRITYKSEN nimi ("Sitowise
+       * Oy"), ei henkilon. Henkilo on luettavissa vain osoitteesta,
+       * ja vain jos se on muotoa etunimi.sukunimi.
+       */
+      tulos.push({
+        name: kelpoEmail ? nameFromEmail(kelpoEmail) : null,
+        title: null,
+        organization: tpNimi,
+        email: kelpoEmail ?? "",
+        phone: tpPhone,
+        kind: kelpoEmail && nameFromEmail(kelpoEmail) ? "person" : "organization",
+        role: "agent",
+      })
+    }
+
+    const contact = company?.contact ?? {}
     const email = arvo(contact?.electronicMail)
     const phone = arvo(contact?.telephone)
     const name = arvo(contact?.name)
@@ -106,8 +150,12 @@ export function parseHilmaContacts(eForm: any): HilmaContact[] {
     })
   }
 
-  /* Tilaaja ensin: hänelle soitetaan ennen kilpailutusta. */
-  return tulos.sort((a, b) => (a.role === b.role ? 0 : a.role === "buyer" ? -1 : 1))
+  /*
+   * Tilaaja ensin, sitten hankinnan hoitaja, viimeisena voittaja:
+   * jarjestys on se, jossa myyja ottaa yhteytta.
+   */
+  const jarjestys: Record<string, number> = { buyer: 0, agent: 1, winner: 2 }
+  return tulos.sort((a, b) => (jarjestys[a.role] ?? 9) - (jarjestys[b.role] ?? 9))
 }
 
 export function hilmaNoticeApiUrl(procedureId: string, noticeId: string): string {

@@ -117,6 +117,69 @@ antaa `pohjolarakennusoysuomi`, rekisterissa avain on `pohjolarakennus`
 
 ---
 
+### D-252 - Hankinnan hoitaja talteen, ja kerrottuna kuka han on
+
+Johannes 9.10.2026: *"poimitaan tuo touchpoint talteen ja
+kerrotaan/naytetaan se kayttajalle selvasti kuka on kyseessa."*
+
+D-251 selvisi etta TST Consulting Oy ei ollut Virolahden hankkeen
+voittaja vaan tilaajan `touchPoint`. Se ei tee yhteystiedosta
+arvotonta — painvastoin: **hankinnasta vastaava konsultti on juuri se
+jolle myyja soittaa.** Sita ei vain saanut luulla tilaajaksi.
+
+#### Kentta oli koodissa, mutta rikki
+
+`parseHilmaContacts` luki touchPointin vain VARAREITTINA (jos
+organisaatiolla ei ollut omaa osoitetta) ja vaarasta polusta:
+`o?.touchPoint?.contact`, vaikka `touchPoint` on TAULUKKO. Varareitti
+ei siis laukennut kertaakaan. Virolahdella tilaajalla oli oma osoite JA
+touchPoint, joten konsultti olisi kadonnut kummassakin tapauksessa.
+
+Nyt touchPoint on **oma kontaktinsa**, rooli `agent`.
+
+#### Mitattu 9.10.2026
+
+Ensimmainen otos 30 ilmoituksesta antoi 7 %. Oikea ajo 150
+ilmoituksella antoi **14 %** — otos oli liian pieni, ja isompi luku on
+se joka patee. Loydetyt ovat poikkeuksetta rakennuttajakonsultteja:
+A-Insinoorit, Sitowise, Granlund, Inmeco, PH-Rakennuttajapalvelu.
+
+Kuivaharjoitus paljasti kaksi vikaa ennen ajoa:
+
+1. **Nolla rivia ilman virhetta.** Kysely oli `select("id,name,title,…")`,
+   mutta `projects`issa ei ole saraketta `title` eika
+   `potential_projects`issa saraketta `name`. Virhetta ei tarkistettu,
+   joten ajo palautti nolla rivia nakyttaen onnistuneelta. Ks.
+   [[dry-run-before-backfill]].
+2. **Malliosoite paasi lapi.** Haahtela-rakennuttamisen yhteystahona
+   luki kirjaimellisesti `etunimi.sukunimi@haahtela.fi`.
+   Tekstipoiminta on hylannyt taman muodon alusta asti; sama saanto
+   vietiin nyt funktioksi `onMalliosoite` ja otettiin kayttoon myos
+   rakenteisessa datassa. Puhelin sailyy, osoite ei.
+
+#### Rooli naytetaan, koska ilman sita se on vaara
+
+`lib/projects/yhteyshenkilonRooli.ts` antaa kolme selitetta:
+
+| rooli | selite | mita se tarkoittaa |
+|---|---|---|
+| `buyer` | tilaaja | hankkeen tilaaja |
+| `agent` | hankinnan hoitaja | tilaajan ilmoittama yhteystaho, **usein ulkopuolinen konsultti** |
+| `winner` | urakoitsija | urakan voittanut yritys |
+
+Asiakkaan hankekortilla rooli nakyy merkkina nimen vieressa ja yritys
+sen perassa: *"Tommi Takanen · hankinnan hoitaja · TST Consulting Oy"*.
+Ilman merkintaa konsultin osoite nayttaa tilaajan omalta, ja myyja
+aloittaa puhelun vaaralla oletuksella siita kuka paattaa.
+
+Jarjestys on se jossa myyja ottaa yhteytta: tilaaja, hoitaja, voittaja.
+
+#### Sivutuote: yksi haku kolmeen kayttoon
+
+D-251:n lisays haki eForm-dokumentin uudestaan, vaikka resolveri hakee
+sen jo yhteyshenkiloita varten. Nyt haku tehdaan kerran ja samasta
+vastauksesta luetaan tulos, yhteyshenkilot ja suorituspaikka.
+
 ### D-251 - Hekan uudiskohdeluettelo lahteeksi
 
 Johannes 8.10.2026: Hekan (Helsingin kaupungin asunnot Oy) sivu

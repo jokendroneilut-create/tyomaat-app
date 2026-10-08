@@ -1,5 +1,6 @@
 'use client'
 import YhteyshenkilonTaso from '../components/YhteyshenkilonTaso'
+import { roolinSelite, roolinKuvaus } from '@/lib/projects/yhteyshenkilonRooli'
 import type { OsapuolenYhteyshenkilo } from '@/lib/metrics/yritysrekisteri'
 
 import Lataus from "@/app/components/Lataus"
@@ -105,6 +106,10 @@ type Project = {
           title: string | null
           phone: string | null
           email: string | null
+          /* Yritys jonka yhteystaho tama on; touchPointilla usein ainoa nimi. */
+          organization?: string | null
+          /* "buyer" | "agent" | "winner" — kenen yhteyshenkilo (D-252). */
+          role?: string | null
           /* "company" = yrityksen yleinen, puuttuva = taman hankkeen oma. */
           level?: string | null
         }[]
@@ -1956,8 +1961,32 @@ setTeamModeEnabled(true)
                 </p>
                 {selected.metadata.contact_persons.map((contact, i) => (
                   <p key={i}>
-                    {contact.name}
+                    {contact.name || contact.organization}
                     {contact.title ? `, ${contact.title}` : ''}
+                    {/*
+                      * ROOLI NAKYVIIN (D-252). Ilman tata tilaajan
+                      * valtuuttaman konsultin osoite nayttaa tilaajan
+                      * omalta, ja myyja aloittaa puhelun vaaralla
+                      * oletuksella siita kuka paattaa.
+                      */}
+                    {roolinSelite(contact.role) ? (
+                      <span
+                        title={roolinKuvaus(contact.role) ?? undefined}
+                        style={{
+                          marginLeft: 6,
+                          padding: '1px 6px',
+                          borderRadius: 999,
+                          fontSize: 12,
+                          background: '#eef2ff',
+                          color: '#3730a3',
+                        }}
+                      >
+                        {roolinSelite(contact.role)}
+                      </span>
+                    ) : null}
+                    {contact.name && contact.organization ? (
+                      <span style={{ color: '#6b7280' }}> · {contact.organization}</span>
+                    ) : null}
                     <YhteyshenkilonTaso level={contact.level} />
                     {contact.phone ? (
                       <>
