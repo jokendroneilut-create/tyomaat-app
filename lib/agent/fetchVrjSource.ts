@@ -237,7 +237,9 @@ export function vrjEhdokas(juttu: VrjJuttu) {
   const otsikko = juttu.title.toLowerCase()
   const lead = juttu.teksti.slice(0, LEAD_LENGTH)
 
-  const completed = VALMIS_OTSIKOSSA.some((k) => otsikko.includes(k))
+  const completed =
+    VALMIS_OTSIKOSSA.some((k) => otsikko.includes(k)) ||
+    sivuurakoitsijanVaihe(juttu.title, lead) === PHASE_LABELS.completed
   /*
    * "Urakoitsijana toimii VRJ Etela-Suomi Oy" (Koitelin peruskorjaus)
    * kertoo sopimuksen olevan tehty, vaikka otsikko ei sita sano.

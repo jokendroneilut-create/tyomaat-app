@@ -123,6 +123,33 @@ describe("sivuurakoitsijanVaihe", () => {
       )
     ).not.toBe("Valmistunut")
   })
+
+  it("merkitsee valmistuneeksi kun ingressi sanoo hankkeen valmistuneen", () => {
+    expect(
+      sivuurakoitsijanVaihe(
+        "Hyrylän Särmä avautuu – Torppari mukana rakentamassa Tuusulan uutta keskustaa",
+        "Hyrylän uusi liike- ja palvelukeskus Särmä avaa ovensa käyttäjilleen. Heinäkuussa 2024 käynnistynyt rakennushanke valmistui elokuussa 2026. Torpparin urakkaan kuuluivat perustukset."
+      )
+    ).toBe("Valmistunut")
+  })
+
+  it("ei lue myohemman virkkeen aiempaa valmistunutta kohdetta", () => {
+    expect(
+      sivuurakoitsijanVaihe(
+        "Torppari toteuttaa runkorakenteet koulu- ja päiväkotihankkeessa",
+        "Torppari Yhtiöt Oy vastaa hankkeessa muottitöistä. Työt ovat parhaillaan käynnissä. Edellinen yhteinen kohde valmistui vuonna 2024."
+      )
+    ).not.toBe("Valmistunut")
+  })
+
+  it("ei pida tulevaa avautumista valmistuneena", () => {
+    expect(
+      sivuurakoitsijanVaihe(
+        "Uusi väylä avautuu liikenteelle 2027 – Torppari rakentaa siltaa",
+        "Torppari toteuttaa parhaillaan risteyssiltaa. Väylän on määrä avautua liikenteelle vuoden 2027 loppupuolella."
+      )
+    ).not.toBe("Valmistunut")
+  })
 })
 
 describe("tekstiksi", () => {

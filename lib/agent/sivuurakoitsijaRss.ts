@@ -189,7 +189,31 @@ const TYOMAALLA = [
 ]
 const SOPIMUS_OTSIKOSSA = [/\btoteuttaa\b/i, /urakoitsijaksi\b/i, /\bvalitsi\b/i]
 
+/*
+ * VALMISTUNUT KUN SE TIEDETAAN. Johannes 8.10.2026: "merkitse sellaiset
+ * hankkeet jo nyt valmistuneeksi jos ne ovat jo valmistuneet ja se
+ * tiedetaan." Torpparin "Hyrylan Sarma avautuu" jai rakenteille, vaikka
+ * ingressin toinen virke on "rakennushanke valmistui elokuussa 2026".
+ *
+ * Naytto vaaditaan silti vahvana, koska kesken oleva hanke valmiina on
+ * pahempi virhe kuin valmis rakenteilla: joko otsikon avautumis- tai
+ * valmistumissana (ei "avautuu": se voi olla tulevaa, "koulu avautuu 2027"),
+ * tai ingressin kahdessa ensimmaisessa virkkeessa
+ * "hanke/kohde/rakennus valmistui <kuukausi|vuosi>". Myohemmin tekstissa
+ * oleva "valmistui" viittaa yleensa aiempaan kohteeseen.
+ */
+const VALMIS_OTSIKOSSA = [/\bvalmistui\b/i, /\bvalmistunut\b/i, /\bluovutettiin\b/i]
+const VALMIS_INGRESSISSA =
+  /\p{L}*(?:hanke|kohde|rakennus|työmaa)\s+valmistui\s+(?:\p{L}+kuussa|vuonna|\d)/iu
+
+export function onValmistunut(otsikko: string, lead: string): boolean {
+  if (VALMIS_OTSIKOSSA.some((re) => re.test(otsikko))) return true
+  const kaksiVirketta = lead.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ")
+  return VALMIS_INGRESSISSA.test(kaksiVirketta)
+}
+
 export function sivuurakoitsijanVaihe(otsikko: string, lead: string): string {
+  if (onValmistunut(otsikko, lead)) return PHASE_LABELS.completed
   const paaurakoitsijanSaanto = inferCompanyPhase(otsikko, lead)
   if (paaurakoitsijanSaanto === PHASE_LABELS.completed) return paaurakoitsijanSaanto
   if (paaurakoitsijanSaanto === PHASE_LABELS.construction) return paaurakoitsijanSaanto
