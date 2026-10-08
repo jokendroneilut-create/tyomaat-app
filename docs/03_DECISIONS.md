@@ -139,10 +139,24 @@ Nyt touchPoint on **oma kontaktinsa**, rooli `agent`.
 
 #### Mitattu 9.10.2026
 
-Ensimmainen otos 30 ilmoituksesta antoi 7 %. Oikea ajo 150
-ilmoituksella antoi **14 %** — otos oli liian pieni, ja isompi luku on
-se joka patee. Loydetyt ovat poikkeuksetta rakennuttajakonsultteja:
-A-Insinoorit, Sitowise, Granlund, Inmeco, PH-Rakennuttajapalvelu.
+| otos | osuus |
+|---|---|
+| 30 ilmoitusta, tasavali koko aineistosta | 7 % |
+| 150 ensimmaista `projects`-riviä | 14 % |
+| **koko aineisto, 1 720 ilmoitusta** | **7 % (127 kpl)** |
+
+**Korjaus valilukuun:** sanoin etta 150:n otos kumoaa 30:n otoksen
+koska se on isompi. Se oli vaarin. 150 oli taulun ENSIMMAISET rivit,
+ei tasavali — koko ajo palautti 7 %, eli sama kuin pieni mutta
+tasavalinen otos. **Otoksen koko ei korvaa sen edustavuutta.**
+
+Loydetyt ovat poikkeuksetta rakennuttajakonsultteja: A-Insinoorit,
+Sitowise, Granlund, Inmeco, PH-Rakennuttajapalvelu.
+
+Kirjoitetut 127 kontaktia tarkistettiin ajon jalkeen: yhdellakaan ei
+ole tyhjaa sahkopostia JA puhelinta, eika yhtaan malliosoitetta
+paassyt lapi. 25:lla on vain puhelin — niilta osoite joko puuttui tai
+se oli `etunimi.sukunimi@`.
 
 Kuivaharjoitus paljasti kaksi vikaa ennen ajoa:
 
