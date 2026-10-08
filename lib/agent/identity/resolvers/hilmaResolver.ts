@@ -1,4 +1,5 @@
 import { hilmaNoticeUrl } from "@/lib/agent/hilmaNoticeUrl"
+import { fetchHilmaTulos } from "@/lib/agent/hilmaTulos"
 import { isCancellationNotice, stripCancellationPrefix } from "@/lib/agent/hilmaCancellation"
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
@@ -116,6 +117,11 @@ function cityFromKnownPlace(...texts: (string | null)[]): string | null {
   return null
 }
 
+
+/* "2026-058692" -> "58692": rajapinta haluaa pelkan ilmoitusnumeron. */
+function noticeIdOsa(noticeNumber: unknown): string {
+  return String(noticeNumber ?? "").split("-").pop() ?? ""
+}
 
 export async function resolveHilmaProject({
   document,
@@ -264,11 +270,37 @@ export async function resolveHilmaProject({
    * etta se kilpailutetaan uudelleen, joten liidi on yha aito - vain
    * vaihe on vaara. Hanke palautetaan kilpailutusvaiheeseen.
    */
-  const isCancelled = isCancellationNotice({
+  let isCancelled = isCancellationNotice({
     title: operation,
     winners,
     winnerOrganisations: metadata.winner_organisations,
   })
+
+  /*
+   * OTSIKKO EI KERRO KAIKKEA (D-251).
+   *
+   * `isCancellationNotice` vaatii otsikkoon sanan "keskeytys". Suurin
+   * osa keskeytyksista ei sano sita: Virolahden lammitysmuodon muutos
+   * oli tavallisen niminen sopimusilmoitus, jonka eForms-koodi oli
+   * `clos-nw` (suljettu ilman voittajaa, kaikki tarjoukset hylatty).
+   * Mitattu 9.10.2026: **82 riviä** oli tassa tilassa, ja ne naytettiin
+   * asiakkaalle myonnettyna sopimuksena.
+   *
+   * Kysytaan siis ilmoituksen omalta rajapinnalta. Tehdaan tama VAIN
+   * kun voittajaa ei ole hakurajapinnassa — muuten lisakutsu olisi
+   * turha. Samasta kutsusta saadaan myos puuttuva voittajan nimi:
+   * mitattu samana paivana, 7 ilmoituksella voittaja loytyi vaikka
+   * hakurajapinnan kentta oli tyhja.
+   *
+   * Tuntematon tulos ei muuta mitaan: `tulos === null` tarkoittaa
+   * "ei tietoa", ei "ei voittajaa".
+   */
+  let voittajatRajapinnasta: string[] = []
+  if (isContractAward && !isCancelled && winners.length === 0 && !metadata.winner_organisations) {
+    const tulos = await fetchHilmaTulos(metadata.procedure_id, noticeIdOsa(metadata.notice_number))
+    if (tulos.tulos === "no-winner") isCancelled = true
+    if (tulos.tulos === "winner") voittajatRajapinnasta = tulos.voittajat
+  }
 
   const phaseHint =
     isContractAward && !isCancelled
@@ -470,10 +502,14 @@ export async function resolveHilmaProject({
       is_contract_award: isContractAward,
       phase_hint: phaseHint,
 
+      /*
+       * Rajapinnasta saatu voittaja taydentaa hakurajapinnan tyhjan
+       * kentan (D-251); se ei koskaan korvaa jo tiedettya.
+       */
       winner_organisations:
-        winnerOrganisations,
+        winnerOrganisations || (voittajatRajapinnasta.join(", ") || null),
 
-      winners,
+      winners: winners.length ? winners : voittajatRajapinnasta,
 
       received_tender_count:
         receivedTenderCount,

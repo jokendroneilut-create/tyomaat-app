@@ -376,7 +376,18 @@ export default async function CandidateDetailPage({ params }: Props) {
                 const bt = new Date(b.date_published ?? b.seen_at).getTime()
                 return bt - at
               })
-              .map((entry, i) => (
+              .map((entry, i) => {
+                /*
+                 * Voittaja voi olla joko taman ilmoituksen omassa
+                 * listassa tai hankkeen metadatassa (D-251:n taydennys
+                 * kirjoitti sen sinne).
+                 */
+                const hasWinner =
+                  (entry.winners?.length ?? 0) > 0 ||
+                  (metadata.winners?.length ?? 0) > 0 ||
+                  Boolean(metadata.winner_organisations)
+
+                return (
                 <li
                   key={entry.source_document_id ?? `${entry.seen_at}-${i}`}
                   className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
@@ -385,11 +396,22 @@ export default async function CandidateDetailPage({ params }: Props) {
                     <span className="font-semibold text-gray-900">
                       {entry.source_name ?? "Tuntematon lähde"}
                     </span>
-                    {entry.is_contract_award && (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                        Voittaja ratkennut
-                      </span>
-                    )}
+                    {/*
+                      * SOPIMUSILMOITUS EI TARKOITA VOITTAJAA (D-251).
+                      * Merkki luki "Voittaja ratkennut" pelkan
+                      * ilmoitustyypin perusteella, vaikka joka viides
+                      * sellainen ilmoitus oli suljettu ILMAN voittajaa.
+                      */}
+                    {entry.is_contract_award &&
+                      (hasWinner ? (
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                          Voittaja ratkennut
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                          Sopimusilmoitus, ei voittajaa
+                        </span>
+                      ))}
                     {entry.notice_type && (
                       <span className="text-sm text-gray-500">
                         {entry.notice_type}
@@ -409,7 +431,8 @@ export default async function CandidateDetailPage({ params }: Props) {
                     </p>
                   )}
                 </li>
-              ))}
+                )
+              })}
           </ol>
         </section>
       )}

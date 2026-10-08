@@ -179,6 +179,69 @@ vuokrakerrostalo ikaantyneille eika hoivakoti, joten se on metadatassa
 
 ---
 
+### D-251 - Sopimusilmoitus ei tarkoita voittajaa
+
+Johannes 9.10.2026 Virolahden lammitysmuodon muutoksesta: *"dokumentista
+ei poimittu TST Consulting Oy joka voitti vaan lukee vain: Hilma,
+Voittaja ratkennut, E4. taman olen huomannut aiemminkin."*
+
+#### Premissi oli vaara, ja vika oli isompi
+
+**TST Consulting Oy ei voittanut.** eFormsissa se on tilaajan
+`touchPoint` eli hankinnasta vastaava konsultti; antamamme
+yhteystiedot olivat tilaajaorganisaation, eivat voittajan.
+
+Oikea loydos on toinen: ilmoituksen `tenderResultCode` on **`clos-nw`**
+(suljettu ilman voittajaa) ja syy `all-rej` — ainoa tarjous hylattiin.
+Me naytimme sen asiakkaalle merkilla **"Voittaja ratkennut"**.
+
+#### Miksi nain kavi
+
+`isCancellationNotice` vaatii otsikkoon sanan "keskeytys". Suurin osa
+keskeytyksista ei sano sita: Virolahden ilmoitus oli tavallisen niminen.
+Kentta `tenderResultCode` on eForms-standardin oma ja yksiselitteinen,
+eika sita luettu missaan.
+
+#### Tyhja voittajalista ei kelpaa todisteeksi
+
+Ensimmainen ajatukseni oli paatella tyhjasta `winnerOrganisations`
+-kentasta. Mittasin sen: kentta on tyhja 102 ilmoituksella, ja
+tarkistin niista 15 ilmoituksen omalta rajapinnalta —
+**14 oli clos-nw mutta yksi oli selec-w.** Voittaja oli valittu, se
+vain puuttui hakurajapinnan vastauksesta. Jos tyhjaa kenttaa olisi
+pidetty todisteena, joka viidestoista aito sopimus olisi merkitty
+vaarin keskeytetyksi. Arvovaltainen tieto haetaan siis ilmoituksen
+omalta rajapinnalta — sama osoite kuin suorituspaikalla (D-??,
+`hilmaRealizedLocation`).
+
+#### Mitattu lopputulos 9.10.2026
+
+| | |
+|---|---|
+| sopimusilmoituksia, joilla ei voittajaa hakurajapinnassa | 102 |
+| niista oikeasti **ilman voittajaa** (`clos-nw`) | **82** |
+| niista joilla **voittaja loytyi** rajapinnasta | **7** |
+| ei tietoa (ei kosketa) | 1 |
+| ohitettu, tunnus puuttui | 12 |
+
+82 hanketta ja ehdokasta oli asiakkaalle vaiheessa "Sopimus myonnetty"
+vaikka hankinta oli suljettu ilman voittajaa. Ne palautettiin
+kilpailutusvaiheeseen — keskeytetty kilpailutus kilpailutetaan yleensa
+uudelleen, joten liidi on yha aito (sama periaate kuin D-196).
+
+Ne 7 saivat puuttuvan voittajan nimen: mm. Rakennustoimisto K Tervo Oy,
+Consti Talotekniikka Oy, Fidelix Oy.
+
+#### Mika muuttui pysyvasti
+
+- `lib/agent/hilmaTulos.ts` lukee `tenderResultCode`:n ja voittajan
+  nimen. **Tuntematon tulos ei ole "ei voittajaa"**: verkkovirhe ei saa
+  merkita aitoa sopimusta keskeytetyksi.
+- `hilmaResolver` kysyy tuloksen **vain** kun voittaja puuttuu
+  hakurajapinnasta, eli lisakutsuja tulee harvoin.
+- TIC:n merkki nayttaa nyt "Sopimusilmoitus, ei voittajaa" silloin kun
+  voittajaa ei ole.
+
 ### D-250 - VRJ, Torppari ja Pelti-Assat lahteiksi; SL Rakennuttaja ei
 
 Johannes 8.10.2026 kuvakaappauksin: hankkeita puuttui kannasta tai ne
