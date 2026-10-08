@@ -1000,6 +1000,51 @@ muistin varassa.
 - Kuvaus alle 200 merkkiä **1 571** hankkeella (29 %). Oli 1 803;
   yrityslähteiden jälkirikastus (15.8.2026) pudotti lukua 232:lla.
 
+- **Maanmittauslaitoksen (MML) rajapinnat — HARKINNASSA, EI TUTKITTU
+  (8.10.2026).** Johannes kysyi onko asiasta aiempaa tietoa. **Ei ole:**
+  haku sanoilla *maanmittaus, MML, kiinteistörekisteri, NLS,
+  paikkatietoalusta, WFS, WMTS, avoindata.maanmittauslaitos* ei tuota
+  osumaa `docs/`-kansiosta eikä koodista. Ainoa osuma koodissa on
+  Suomussalmen viranhaltijan titteli "Maanmittausinsinööri", eikä se
+  liity tähän.
+
+  **Mitä paikkatiedosta on nyt:**
+
+  | | nykytila |
+  |---|---|
+  | karttalaatat | OpenStreetMap (`app/projects/Map.tsx`) |
+  | geokoodaus | Photon (Komoot) ja Nominatim, `lib/geo/` |
+  | koordinaatit | 6 638 / 6 656 hanketta = **100 %** |
+  | kiinteistötunnus `metadata.property_id` | **197 = 3 %** |
+
+  **Se 3 % on päätöksen kannalta ratkaiseva luku.** Kiinteistötunnus on
+  jo olemassa kenttänä ja toimii duplikaattien tunnistuksessa, mutta se
+  tulee lähdeasiakirjoista — ei mistään rekisteristä. Tunnuspohjaiselle
+  MML-kyselylle olisi siis liitoskohta vain 197 hankkeella. Koordinaatti
+  on kaikilla, joten **piste → kiinteistö -suuntainen kysely olisi
+  kattavampi reitti kuin tunnuspohjainen** — tämä on päättelyä, ei
+  mitattua.
+
+  **Avoin kysymys on hyöty, ei toteutettavuus.** Ennen kuin tähän
+  käytetään aikaa, on vastattava: *mitä asiakas tekisi kiinteistötiedolla
+  jota hän ei tee nyt?* Myyjä soittaa hankkeen yhteyshenkilölle;
+  kiinteistön rajat tai omistaja eivät kerro kenelle soittaa.
+  Mahdollisia hyötyjä, kaikki todentamatta:
+
+  - **Kiinteistön omistaja = mahdollinen rakennuttaja** niissä
+    hankkeissa joissa osapuoli puuttuu (vrt.
+    `docs/17_KUMPPANUUDET.md`, yksityisten rakennuttajien kattavuus).
+  - **Sijainnin tarkennus** osoitteettomille hankkeille — mutta
+    koordinaatti on jo 100 %:lla, joten hyöty olisi tarkkuudessa eikä
+    kattavuudessa.
+  - **Kaavahankkeen alueen rajaus** kartalle pisteen sijaan.
+
+  **Ennen kuin tähän tartutaan:** selvitä mitä MML:n avoimista
+  rajapinnoista oikeasti saa, mikä on maksutonta ja mikä vaatii
+  sopimuksen, ja mittaa kuinka monta osapuoletonta hanketta
+  omistajatieto oikeasti ratkaisisi. Jos vastaus on "muutama kymmenen",
+  tämä on halvempi hoitaa käsin.
+
 ### Lähdekattavuus
 
 - **Päättyvät puitesopimukset — tutkimatta, idea 8.10.2026.** Havaittu
