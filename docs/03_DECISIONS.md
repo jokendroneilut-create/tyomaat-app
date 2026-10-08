@@ -5,6 +5,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-252 - Tyomaakuvat suoraan kantaan, ja jokainen puuttuva hanke kysyy "miksi"
+
+Johannes 8.10.2026 toi 13 hanketta kuvina (7 tyomaakylttia, 6
+kuvakaappausta) ja paatti: *"Lisaa hankkeet suoraan kantaan koska ne
+ovat todellisia ja olemassa."* Lisaksi: *"muista lisata lahteeksi jos
+on saatavilla"* ja *"yhteystiedoista tyomaalle riippuu koko palveluni
+tulevaisuus"*.
+
+**Muutos 18_TYOMAAKUVAT.md:n vaiheeseen 4.** Kuva ei enaa mene
+`potential_projects`-jonoon vaan suoraan `projects`iin
+(+ `project_phase_history`, + `project_identifiers` lupatunnukselle).
+Jonoon menee vain epavarma kaksoiskappale. Peruste: kuvan tuoja on jo
+hyvaksyja, ja hyvaksyntareitti tuotti Gemmassa kolme uskottavan
+nakoista virhetta (D-249).
+
+**Mitattu erasta** (luvut 18_TYOMAAKUVAT.md:ssa):
+
+- 9/13 hanketta puuttui kannasta kokonaan.
+- Kylteista 3/7 antoi tyomaan oman ihmisen nimella ja suoralla
+  numerolla (+1 numero ilman nimea). Verkkohaun vertailuluku on 36 %
+  hintaan 0,20 EUR (D-244) — ja se antaa harvoin tyomaan ihmisen.
+- Viisi lahdekorjausta: Varten "Urakat"-tunniste, VRJ, Torppari,
+  Pelti-Assat (D-250) ja Heka (D-251).
+
+**Lupapisteen sokea piste selitetty.** Kuuden kuvatun Helsingin
+hankkeen lupa oli 2024-2025, ja Lupapiste-lahde aloitti 2.7.2026.
+Kuulutus poistuu verkosta, joten nyt rakenteilla oleva kanta on
+lahteelle nakymaton. Tama on rakenteellinen aukko eika vika — se ei
+umpeudu ennen kuin nykyiset tyomaat valmistuvat. Avoin: mista vanhemmat
+luvat saadaan (rakennusvalvonnan karttapalvelu, aloitusilmoitukset).
+
+**Arvio.** Tapa ei skaalaudu tiedonkeruuna, mutta se on paras
+saatavilla oleva mittaus kattavuudesta (otos jota mikaan lahde ei
+valikoi) ja paras yksittainen tyomaan yhteyshenkilon lahde. Kaytetaan
+otoksena ja lahdeauditointina; seurataan suhdetta "puuttui kannasta".
+
+**Havaittu sivutuotteena:** `yritysavain("Pohjola Rakennus Oy Suomi")`
+antaa `pohjolarakennusoysuomi`, rekisterissa avain on `pohjolarakennus`
+— rekisterin johtajat eivat nay naille hankkeille. Erillinen tehtava.
+
+---
+
 ### D-251 - Hekan uudiskohdeluettelo lahteeksi
 
 Johannes 8.10.2026: Hekan (Helsingin kaupungin asunnot Oy) sivu
