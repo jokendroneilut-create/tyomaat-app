@@ -5,6 +5,68 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-251 - Hekan uudiskohdeluettelo lahteeksi
+
+Johannes 8.10.2026: Hekan (Helsingin kaupungin asunnot Oy) sivu
+"Ajankohtaiset uudiskohteemme" listaa rakenteilla olevat vuokrakohteet
+osoitteen, kaupunginosan, asuntomaaran ja tarkan arvioidun
+valmistumispaivan kera. Kahdeksasta kuusi puuttui kannasta.
+
+#### Mitattu ennen rakentamista
+
+| kohde | asuntoja | valmistuu | kannassa |
+|---|---|---|---|
+| Paletinkierto 7, Kuninkaantammi | 68 | 31.5.2027 | ei |
+| Maunulantie 20, Maunula (seniorikohde) | 55 | 28.8.2027 | ei |
+| Tihtaalinkatu 4, Kalasatama | 56 | 31.8.2027 | kahdesti (Skanska + Heka) |
+| Koirasaarentie 24, Laajasalo | 44 | 30.9.2027 | ei |
+| Koirasaarentie 10, Laajasalo | 65 | 29.10.2027 | lisatty kasin 8.10. |
+| Paletinkierto 11, Kuninkaantammi | 78 | 31.10.2027 | ei |
+| Kiribatinkatu 1, Jatkasaari | 128 | 31.10.2027 | ei |
+| Vuosaarentie 3, Vuosaari | 182 | 26.11.2027 | kylla (Skanska) |
+
+"Kannassa" = `projects.location` tai nimi sisaltaa katuosoitteen.
+Tihtaalinkatu 4 on kannassa jo kahtena hankkeena; Heka tuo kolmannen
+ehdokkaan, joka menee kaksoiskappalejonoon.
+
+#### Tapa: HTML, koska REST vaatii kirjautumisen
+
+Sivusto on WordPress, mutta `/wp-json/` ja sivun oma
+`/wp-json/wp/v2/pages/12626` palauttavat 401. robots.txt:ta ei ole
+(404). Yksi sivunhaku per ajo; rivit ovat `.content__body`-elementin
+`<li>`-riveja, ja haku rajataan siihen, koska sivupalkissa on
+`<li>`-linkkeja.
+
+#### source_url = sivu + osoitefragmentti
+
+Kohdesivuja ei ole; kaikki kohteet ovat samalla sivulla. Pelkka sivun
+URL tekisi kahdeksasta yhden lahdedokumentin. Fragmentti johdetaan
+katuosoitteesta (`#koirasaarentie-10`), kuten kaavalistoissa
+(`#kaavatunnus`). Osoite pysyy samana kun kohde siirtyy otsikosta
+toiseen, joten sama hanke paivittyy.
+
+#### Valmistuminen vain sivun omasta sanasta
+
+Heka listaa vain rakenteilla olevia, joten oletusvaihe on Rakenteilla.
+Valmiiksi merkitaan heti, jos valiotsikko tai rivi sanoo sen
+("valmistuneet", "valmistui", "luovutettu"). Mennyt arviopaiva yksin ei
+riita ([[hiding-threshold]]). Jos sama osoite on kahden otsikon alla,
+valmistunut voittaa.
+
+#### Luokka ja prioriteetti
+
+`company_project` kuten Espoon Asunnot (kaupungin vuokrataloyhtio) ja
+kohdekatalogit (Lapti, T2H). Hoas ja muut asuntosaatiot ovat
+`developer_release`, mutta se luokka kuuluu `foundationReleaseParser`in
+tiedotevirralle. Priority 10, kerran vuorokaudessa: luettelo muuttuu
+muutaman kerran vuodessa, eika taattu paikka maksa itseaan (D-210).
+
+Tyyppi on Kerrostalo kaikille. Maunulantie 20:n "seniorikohde" on
+vuokrakerrostalo ikaantyneille eika hoivakoti, joten se on metadatassa
+(`lisatiedot`) eika tyyppina.
+
+---
+
 ### D-250 - VRJ, Torppari ja Pelti-Assat lahteiksi; SL Rakennuttaja ei
 
 Johannes 8.10.2026 kuvakaappauksin: hankkeita puuttui kannasta tai ne

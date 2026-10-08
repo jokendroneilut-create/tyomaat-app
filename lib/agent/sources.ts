@@ -74,6 +74,7 @@ import { fetchLujakotiSource } from "./fetchLujakotiSource"
 import { fetchLaptiKohteetSource } from "./fetchLaptiKohteetSource"
 import { fetchBonavaKohteetSource } from "./fetchBonavaKohteetSource"
 import { fetchT2hKohteetSource } from "./fetchT2hKohteetSource"
+import { fetchHekaSource } from "./fetchHekaSource"
 import {
   fetchNccProjectsSource,
   enrichNccProject,
@@ -285,6 +286,12 @@ export const sources = [
    * luettelo (62 sivua) tulee kayodyksi noin kahdessa viikossa.
    */
   { name: "t2h_kohteet", fetch: fetchT2hKohteetSource },
+  /*
+   * Hekan uudiskohdeluettelo (D-251): Helsingin kaupungin vuokratalojen
+   * rakenteilla olevat kohteet tarkkoine valmistumispaivineen. Ei
+   * rikastajaa: kaikki kentat ovat luettelorivilla, eika kohdesivuja ole.
+   */
+  { name: "heka", fetch: fetchHekaSource },
   /*
    * NCC:n projektisivut - mitattuna rikkain yrityslahde. Ainoa joka tuottaa
    * katuosoitteen postinumeroineen ja suunnittelijat urakkalajeittain.
