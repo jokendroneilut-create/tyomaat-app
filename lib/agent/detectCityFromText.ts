@@ -49,6 +49,14 @@ const IRREGULAR_ALIASES: Record<string, string> = {
   "mynämäelle": "Mynämäki",
   "mynämäellä": "Mynämäki",
   "mynämäeltä": "Mynämäki",
+  /*
+   * Sama k:n kato kuin Mynamaella: "Uusia vuokra-asuntoja Riihimaelle"
+   * (TA:n tiedote, D-254) ei osunut kantaan "riihimak".
+   */
+  "riihimäelle": "Riihimäki",
+  "riihimäellä": "Riihimäki",
+  "riihimäeltä": "Riihimäki",
+  "riihimäen": "Riihimäki",
 }
 
 /*

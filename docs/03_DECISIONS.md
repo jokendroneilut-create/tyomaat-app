@@ -5,6 +5,103 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-254 - TA-Yhtiot lahteeksi; asukashaku on rakenteilla, ei valmis
+
+TA-Yhtiot (TA-Yhtyma Oy, TA-Asumisoikeus Oy ja tytaryhtiot) rakennuttaa
+asumisoikeus-, vuokra- ja omistusasuntoja ympari Suomea. Esimerkki
+8.9.2026: Asunto Oy Naantalin Estelle, Tuulensuunkatu 25, 40 asuntoa,
+urakoitsija Pohjola Rakennus Oy Suomi, valmis alkuvuodesta 2028.
+
+`lib/agent/fetchTaSource.ts` lukee WP RESTin omaa sisaltotyyppia
+`ta.fi/wp-json/wp/v2/announcement` (julkinen, koko teksti mukana), kuten
+Kastelli (D-236). robots.txt kieltaa vain sivuhaun (`?s=`).
+
+#### Mitattu 9.10.2026
+
+120 tiedotetta (2022-2026), joista **26 viimeisen 12 kk:n ikkunassa**:
+
+| ryhma | kpl |
+|---|---|
+| hanketiedote | 21 (19 eri kohdetta) |
+| asukasviestinta (savuttomuus, hinnantarkistukset) | 2 |
+| rajatapaus (kaupungin Malminkentta-tiedote, Sepankallion aluejuttu, valmistuneen Hehkutie 1:n esittelykutsu) | 3 |
+
+Kuivaharjoitus luettu riveittain: 21/21 kaupunki, 21/21 paaurakoitsija,
+21/21 asuntomaara, 19/21 osoite, 20/21 valmistumispaiva; 0 valmiiksi.
+
+**Asukashaku on rakenteilla.** Ennakko-oletus oli etta "asukashaku on
+alkanut" tarkoittaa valmista kohdetta. Mittaus kumosi sen: TA avaa haun
+rakentamisen aikana, ja juuri nama ovat lahteen rikkaimmat tiedotteet —
+vakiolause "Kohteen rakennustyot ovat kaynnissa. Paaurakoitsijana toimii
+X. Arkkitehtisuunnittelusta on vastannut Y. Asuntojen arvioitu
+valmistumisaika on 27.11.2026." Niita on 16 ikkunan 21:sta.
+
+#### Suodatus
+
+- Poissulku vain otsikosta (D-236): savuton, hinnantarkistus,
+  kiinteistonvalitys ym.
+- Teko (rakennuttaa, rakentaa, rakenteilla, urakka ...) otsikossa tai
+  ingressin kahdessa ensimmaisessa virkkeessa. Koko ingressista luettuna
+  lapi meni Sepankallion neljan talon aluejuttu, josta tuli osoitteeksi
+  viimeinen talo ja asuntomaaraksi koko korttelin 356.
+- TA itse otsikossa tai kahdessa ensimmaisessa virkkeessa (myos vuoden
+  2024 me-muoto "Rakennutamme"). Hylkaa kaupungin aluetiedotteen.
+  **Hinta:** koko arkistosta 3 aitoa vuoden 2024 hanketta, joiden
+  ingressi alkaa kohteen kuvailulla; ikkunassa 0.
+
+#### Kentat
+
+- **Rakennuttaja** on se TA:n yhtio jonka teksti nimeaa (TA-Asumisoikeus
+  Oy / TA-Yhtyma Oy / TA-Yhtiot) — samat nimet kuin kannassa jo.
+- **Urakoitsija** tekstista. Ensimmainen versio salli pisteen nimeen,
+  ja 11/22 nimea jatkui virkkeen yli ("Lujatalo Oy. Arkkitehtisuunnittelusta").
+- **Arkkitehti** `related_companies`-listaan (osapuoli, D-253).
+- **Osoite porraskirjaimineen.** Samassa osoitteessa on kaksi eri TA:n
+  hanketta: Kangastie 13 A (35 aso) ja 13 B (77 senioreiden vuokra) Oulussa,
+  Hovivaenkatu 2 A ja B (70 aso) ja 2C (32 vuokra) Turussa.
+  `extractStreetAddress` antoi molemmille "Kangastie 13", jolloin ne olisivat
+  yhdistyneet.
+- **Kaupunki:** otsikko, sitten TA:n toimisto ("TA:n Tampereen
+  toimistolta kerrotaan"), sitten ingressi. Ensimmainen virke antoi
+  Hatanpaan kohteelle Pyhajarven kunnan (Tampereen Pyhajarvi).
+  Riihimaki ei tunnistunut lainkaan ("Riihimaelle") — lisatty
+  `detectCityFromText`in poikkeuksiin kuten Mynamaki.
+- **Valmistumispaiva** tarkkana ("on 27.5.2027", kerran "on30.3.2027"),
+  jota yhteinen jasennin ei lue. Kahden talon kohteelle myohaisin paiva.
+  Karkea arvio vain ensimmaisesta valmistumisvirkkeesta: koko tekstista
+  Nokian kohde sai naapurikohde Kuunliljan paivan.
+- **Vaihe:** "on aloittanut ... rakentamisen" on rakenteilla; futuuri
+  "rakennustyot kaynnistyvat syksylla 2026" + allekirjoitettu urakka on
+  sopimus (Estelle), ei rakenteilla. Valmis vain vahvasta naytosta
+  (`onValmistunut` + "on valmistunut 141 uutta"); menneesta arviopaivasta
+  ei (viidella hankkeella arvio on jo ohi).
+
+#### Luokka company_project, ei developer_release
+
+Kuten Kastelli, Heka ja Espoon Asunnot: legacy-keraaja, julkaisija on
+osapuoli. developer_release kuuluu saatioiden tiedotevirralle
+(`foundationReleaseParser`, Hoas ym.). Se mitattiin samoille 26
+tiedotteelle: **7 hanketta**, koska 18 putoaa sen 180 vrk:n
+arkistorajaan, ja sen otsikkohylkays ("asuntojen haku") osuisi TA:n
+asukashakuihin. Priority 10, ei taattua paikkaa (D-210).
+
+#### Paallekkaisyys kantaan
+
+`metadata->>source_url`: 0 osumaa (uusi lahde). Osoitteella ja nimella
+19 kohteesta kannassa jo 11 (Estelle, Boijenkatu 1, Jalsitie 1, Neulastie
+3, Herttuankulman molemmat, Rahikuja 1, Peippolantie 2, Vaajakoski,
+Kangastie/Tuira ilman porrasta, Seponkatu 5 Hartelan Jarvenpaa+Lahti-
+tiedotteen sisalla). Puuttuu 8: Frosteruksentie 2 A (Haukipudas),
+Paloheimonkatu 40 (Riihimaki), Taskilankuja 2 ja 4 (Oulu), Tattariharjuntie
+48 (Malmi; Lujatalon tiedote hylatty jonosta kolmesti), Kangastie 13 B,
+Nokian Kartanonranta (JM), Ralssitilankuja 4 M-O (Espoo), Konalantie 64.
+
+Havaittu sivutuotteena: "Kerrostalo Hatanpaahan" (Boijenkatu 1) on
+kannassa rakennuttajalla "Pajala Yhtiot Oy" — tiedotteen mukaan TA.
+Ei korjattu tassa.
+
+---
+
 ### D-253 - Yritysrekisteri adminille, ja osapuolet omana ryhmanaan
 
 Johannes 8.10.2026: *"tee tuo rekisteri myos nakyvaksi admin tunnuksilla

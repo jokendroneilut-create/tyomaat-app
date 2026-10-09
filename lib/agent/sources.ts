@@ -75,6 +75,7 @@ import { fetchLaptiKohteetSource } from "./fetchLaptiKohteetSource"
 import { fetchBonavaKohteetSource } from "./fetchBonavaKohteetSource"
 import { fetchT2hKohteetSource } from "./fetchT2hKohteetSource"
 import { fetchHekaSource } from "./fetchHekaSource"
+import { fetchTaSource } from "./fetchTaSource"
 import {
   fetchNccProjectsSource,
   enrichNccProject,
@@ -292,6 +293,13 @@ export const sources = [
    * rikastajaa: kaikki kentat ovat luettelorivilla, eika kohdesivuja ole.
    */
   { name: "heka", fetch: fetchHekaSource },
+  /*
+   * TA-Yhtioiden tiedotteet (D-254): rakennuttajan omat hanketiedotteet
+   * WP RESTista. Ei rikastajaa: rajapinta antaa koko tekstin, ja
+   * `createCompanyEnricher` korvaisi vaiheen yleisella saannolla, joka ei
+   * tunne TA:n muotoja ("on aloittanut ... rakentamisen").
+   */
+  { name: "ta_yhtiot", fetch: fetchTaSource },
   /*
    * NCC:n projektisivut - mitattuna rikkain yrityslahde. Ainoa joka tuottaa
    * katuosoitteen postinumeroineen ja suunnittelijat urakkalajeittain.
