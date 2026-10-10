@@ -1,7 +1,7 @@
 import { hilmaNoticeApiUrl } from "./hilmaRealizedLocation"
 
 /*
- * HANKINNAN TULOS: VOITTAJA VAI EI VOITTAJAA (D-251).
+ * HANKINNAN TULOS: VOITTAJA VAI EI VOITTAJAA (D-258).
  *
  * Johannes 8.10.2026 Virolahden lammitysmuodon muutoksesta: hankkeella
  * luki "Voittaja ratkennut", mutta yhtaan voittajaa ei nakynyt.

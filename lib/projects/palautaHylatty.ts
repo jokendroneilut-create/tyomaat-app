@@ -17,7 +17,7 @@
  * — eli kun kilpailutuksesta tulee tiedossa oleva voittaja.
  *
  * VOITTAJA ON EHTO, EI PELKKA JALKI-ILMOITUS. Sopimusilmoitus ilman
- * voittajaa tarkoittaa usein keskeytysta (D-251, `clos-nw`), eika
+ * voittajaa tarkoittaa usein keskeytysta (D-258, `clos-nw`), eika
  * keskeytys ole syy palauttaa rivia katselmoitavaksi.
  */
 

@@ -156,7 +156,7 @@ function lauseKohdasta(teksti: string, kohta: number): string {
  * joka ei erota rooleja.
  */
 /*
- * ROOLIVIHJEET ON LAAJENNETTU MITATUSTA TEKSTISTA (D-250).
+ * ROOLIVIHJEET ON LAAJENNETTU MITATUSTA TEKSTISTA (D-257).
  *
  * Attendon tiedote Oulun hoivakodista: *"Hankkeen kehittajana ja
  * omistajana toimii Plus Hoivakodit Oy ja urakoinnista vastaa Pajala

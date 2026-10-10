@@ -1,5 +1,5 @@
 /*
- * KENEN YHTEYSHENKILO TAMA ON (D-252).
+ * KENEN YHTEYSHENKILO TAMA ON (D-259).
  *
  * Johannes 9.10.2026: *"poimitaan tuo touchpoint talteen ja
  * kerrotaan/naytetaan se kayttajalle selvasti kuka on kyseessa."*

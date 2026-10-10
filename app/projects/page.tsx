@@ -108,7 +108,7 @@ type Project = {
           email: string | null
           /* Yritys jonka yhteystaho tama on; touchPointilla usein ainoa nimi. */
           organization?: string | null
-          /* "buyer" | "agent" | "winner" — kenen yhteyshenkilo (D-252). */
+          /* "buyer" | "agent" | "winner" — kenen yhteyshenkilo (D-259). */
           role?: string | null
           /* "company" = yrityksen yleinen, puuttuva = taman hankkeen oma. */
           level?: string | null
@@ -1964,7 +1964,7 @@ setTeamModeEnabled(true)
                     {contact.name || contact.organization}
                     {contact.title ? `, ${contact.title}` : ''}
                     {/*
-                      * ROOLI NAKYVIIN (D-252). Ilman tata tilaajan
+                      * ROOLI NAKYVIIN (D-259). Ilman tata tilaajan
                       * valtuuttaman konsultin osoite nayttaa tilaajan
                       * omalta, ja myyja aloittaa puhelun vaaralla
                       * oletuksella siita kuka paattaa.

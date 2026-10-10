@@ -34,7 +34,7 @@ import { tiedotteenAikaraja, YRITYSTIEDOTTEEN_IKKUNA_KK } from "./tiedotteenIkku
  */
 
 /*
- * 12 KUUKAUDEN IKKUNA, KUTEN MUILLAKIN TIEDOTELAHTEILLA (D-254).
+ * 12 KUUKAUDEN IKKUNA, KUTEN MUILLAKIN TIEDOTELAHTEILLA (D-261).
  *
  * Tama puuttui kun lahde lisattiin (D-247), ja se oli poikkeus eika
  * uusi saanto: ikkuna on mitattu D-226:ssa ja kaytossa 16 lahteessa.

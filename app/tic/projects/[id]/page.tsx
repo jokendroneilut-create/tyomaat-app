@@ -379,7 +379,7 @@ export default async function CandidateDetailPage({ params }: Props) {
               .map((entry, i) => {
                 /*
                  * Voittaja voi olla joko taman ilmoituksen omassa
-                 * listassa tai hankkeen metadatassa (D-251:n taydennys
+                 * listassa tai hankkeen metadatassa (D-258:n taydennys
                  * kirjoitti sen sinne).
                  */
                 const hasWinner =
@@ -397,7 +397,7 @@ export default async function CandidateDetailPage({ params }: Props) {
                       {entry.source_name ?? "Tuntematon lähde"}
                     </span>
                     {/*
-                      * SOPIMUSILMOITUS EI TARKOITA VOITTAJAA (D-251).
+                      * SOPIMUSILMOITUS EI TARKOITA VOITTAJAA (D-258).
                       * Merkki luki "Voittaja ratkennut" pelkan
                       * ilmoitustyypin perusteella, vaikka joka viides
                       * sellainen ilmoitus oli suljettu ILMAN voittajaa.

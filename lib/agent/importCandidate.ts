@@ -119,7 +119,7 @@ export async function isSourceUrlSeenRecently(
  * eikä osa keräysputkea.
  */
 /*
- * 7 -> 14 VRK (D-253).
+ * 7 -> 14 VRK (D-260).
  *
  * Yllaoleva saanto "ikkunan on oltava pidempi kuin lahteen ajovali"
  * piti paikkansa kun ikkuna kirjoitettiin, mutta ajovali on kasvanut

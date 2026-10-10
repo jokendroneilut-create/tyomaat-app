@@ -88,7 +88,7 @@ export function parseHilmaContacts(eForm: any): HilmaContact[] {
     if (!role) continue
 
     /*
-     * TOUCHPOINT ON OMA YHTEYSTAHONSA, EI VARAREITTI (D-252).
+     * TOUCHPOINT ON OMA YHTEYSTAHONSA, EI VARAREITTI (D-259).
      *
      * Aiempi koodi luki sen vain jos organisaatiolla ei ollut omaa
      * osoitetta — ja luki sen vaarin: `touchPoint` on TAULUKKO, joten

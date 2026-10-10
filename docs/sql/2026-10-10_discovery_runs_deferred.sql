@@ -1,4 +1,4 @@
--- SIIRRETTYJEN KANDIDAATTIEN MÄÄRÄ NÄKYVIIN (D-253)
+-- SIIRRETTYJEN KANDIDAATTIEN MÄÄRÄ NÄKYVIIN (D-260)
 --
 -- legacyFetchCollector pysähtyy 60 sekunnin tuontibudjettiin ja merkitsee
 -- loput kandidaatit "deferred" eli seuraavaan ajoon siirtyviksi. Luku on

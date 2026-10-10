@@ -6,7 +6,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 }
 
 /*
- * SOPIMUSILMOITUS ILMAN VOITTAJAA (D-251).
+ * SOPIMUSILMOITUS ILMAN VOITTAJAA (D-258).
  *
  * Kysyy ilmoituksen omalta rajapinnalta `tenderResultCode`:n ja korjaa
  * sen mukaan. Kolme lopputulosta:

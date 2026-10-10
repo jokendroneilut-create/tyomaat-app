@@ -26,7 +26,7 @@
  */
 
 /*
- * JAVASCRIPTIN \w EI KATA SUOMEA (D-250).
+ * JAVASCRIPTIN \w EI KATA SUOMEA (D-257).
  *
  * `\w` on [A-Za-z0-9_], joten se pysahtyy a:han ja o:hon. Osuma
  * "rakennustyot kaynnistyisivat" katkesi muotoon "...kaynnistyisiv", ja
@@ -37,7 +37,7 @@
 const SANAMERKKI = "[\\wäöåÄÖÅ]"
 const SANARAJA = "(?![\\wäöåÄÖÅ])"
 /*
- * SANAMUODOT ON MITATTU AINEISTOSTA, EI ARVATTU (D-250).
+ * SANAMUODOT ON MITATTU AINEISTOSTA, EI ARVATTU (D-257).
  *
  * Ensimmainen versio vaati ettei substantiivin ja verbin valissa ole
  * muuta kuin mahdollinen "on". Mitattu 8.10.2026: suomalainen tiedote
@@ -72,7 +72,7 @@ const START_PHRASE = new RegExp(
  * Osuma hylataan jos valissa on jokin naista.
  */
 /*
- * EHTOMUOTO ON SUUNNITELMA, EI TAPAHTUMA (D-250).
+ * EHTOMUOTO ON SUUNNITELMA, EI TAPAHTUMA (D-257).
  *
  * Kuivaharjoitus 8.10.2026 paljasti kolme vaaraa osumaa, kaikki samaa
  * lajia:

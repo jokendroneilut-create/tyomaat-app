@@ -56,7 +56,7 @@ describe("lauseenosan katkaisu", () => {
 })
 
 /*
- * MITATUT SANAMUODOT (D-250).
+ * MITATUT SANAMUODOT (D-257).
  *
  * Lauseet ovat tuotannon kuvauksista 8.10.2026, eivat keksittyja.
  * Hylattavat ovat yhta tarkeita kuin osuvat: valjempi hahmo paastaa
@@ -103,7 +103,7 @@ describe("constructionHasStarted: mitatut sanamuodot", () => {
 })
 
 /*
- * EHTOMUOTO (D-250). Lauseet ovat tuotannosta; kuivaharjoitus loysi ne
+ * EHTOMUOTO (D-257). Lauseet ovat tuotannosta; kuivaharjoitus loysi ne
  * ennen kuin takautuva korjaus ajettiin.
  */
 describe("constructionHasStarted: ehtomuoto ei ole aloitus", () => {

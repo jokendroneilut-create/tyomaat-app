@@ -17,7 +17,7 @@ describe("palautaHylattyJonoon", () => {
   }
 
   /*
-   * Sopimusilmoitus ilman voittajaa on usein keskeytys (D-251), ei syy
+   * Sopimusilmoitus ilman voittajaa on usein keskeytys (D-258), ei syy
    * palauttaa rivia.
    */
   it("ei palauta pelkasta sopimusilmoituksesta ilman voittajaa", () => {

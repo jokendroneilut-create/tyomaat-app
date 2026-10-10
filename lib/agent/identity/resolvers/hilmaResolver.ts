@@ -277,7 +277,7 @@ export async function resolveHilmaProject({
   })
 
   /*
-   * OTSIKKO EI KERRO KAIKKEA (D-251).
+   * OTSIKKO EI KERRO KAIKKEA (D-258).
    *
    * `isCancellationNotice` vaatii otsikkoon sanan "keskeytys". Suurin
    * osa keskeytyksista ei sano sita: Virolahden lammitysmuodon muutos
@@ -514,7 +514,7 @@ export async function resolveHilmaProject({
 
       /*
        * Rajapinnasta saatu voittaja taydentaa hakurajapinnan tyhjan
-       * kentan (D-251); se ei koskaan korvaa jo tiedettya.
+       * kentan (D-258); se ei koskaan korvaa jo tiedettya.
        */
       winner_organisations:
         winnerOrganisations || (voittajatRajapinnasta.join(", ") || null),

@@ -53,7 +53,7 @@ export type Contact = {
    */
   /*
    * "agent" = tilaajan ilmoittama hankinnan yhteystaho, usein
-   * ULKOPUOLINEN KONSULTTI (D-252). Han hoitaa kilpailutuksen, joten
+   * ULKOPUOLINEN KONSULTTI (D-259). Han hoitaa kilpailutuksen, joten
    * han on myyjalle oikea kontakti — mutta han ei ole tilaaja, ja se
    * on kerrottava kayttajalle.
    */
@@ -103,7 +103,7 @@ function trimGluedDomain(domain: string): string {
 }
 
 /*
- * MALLIOSOITE EI OLE KENENKAAN OSOITE (D-252).
+ * MALLIOSOITE EI OLE KENENKAAN OSOITE (D-259).
  *
  * Tekstipoiminta on hylannyt `etunimi.sukunimi@` alusta asti, mutta
  * sama hahmo osuu myos rakenteiseen dataan: Hilman eForms-ilmoituksessa

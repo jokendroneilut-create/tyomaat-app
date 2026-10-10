@@ -3,26 +3,25 @@
 Merkittäviä suunnittelupäätöksiä ja niiden perustelut, jottei niitä käydä
 uudelleen läpi joka sessiossa. Ylin = uusin.
 
-> **⚠ NUMEROT D-250…D-254 OVAT KAHTEEN KERTAAN (todettu 10.10.2026).**
-> Kaksi rinnakkaista sessiota lisasi paatoksia samaan aikaan ja
-> kumpikin otti numeron "suurin + 1" eri hetkella luetusta
-> tiedostosta. Koodissa on 70 viittausta naihin numeroihin, joten
-> pelkka uudelleennumerointi rikkoisi viittaukset enemman kuin
-> korjaisi. **Viittausta lukiessa tarkista otsikko, ei pelkkaa
-> numeroa.** Parit:
+> **Numerot D-250…D-254 olivat kahteen kertaan; korjattu 10.10.2026.**
+> Kaksi rinnakkaista sessiota otti kumpikin numeron "suurin + 1" eri
+> hetkella luetusta tiedostosta. Jalkimmainen sarja nimettiin uudelleen
+> **D-257…D-261** ja sen 28 koodiviittausta paivitettiin:
 >
-> | numero | A | B |
+> | vanha | uusi | aihe |
 > |---|---|---|
-> | D-250 | VRJ, Torppari ja Pelti-Assat lahteiksi | Kolme poimintaa jotka kuvaus kertoi |
-> | D-251 | Hekan uudiskohdeluettelo lahteeksi | Sopimusilmoitus ei tarkoita voittajaa |
-> | D-252 | Tyomaakuvat suoraan kantaan | Hankinnan hoitaja talteen |
-> | D-253 | Yritysrekisteri adminille | Tuontibudjetin hanta nakyviin |
-> | D-254 | TA-Yhtiot lahteeksi | Keravan 12 kuukauden ikkuna |
+> | D-250 | **D-257** | Kolme poimintaa jotka kuvaus kertoi |
+> | D-251 | **D-258** | Sopimusilmoitus ei tarkoita voittajaa |
+> | D-252 | **D-259** | Hankinnan hoitaja talteen |
+> | D-253 | **D-260** | Tuontibudjetin hanta nakyviin |
+> | D-254 | **D-261** | Keravan 12 kuukauden ikkuna |
 >
-> **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista
-> ja varmista ettei numero ole kaytossa — `grep "^### D-" | sort`.
-
----
+> Numerot eivat siksi ole tiedostossa laskevassa jarjestyksessa.
+> Jarjestys on silti aikajarjestys, ylin = uusin; numero on tunniste,
+> ei lajitteluavain.
+>
+> **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
+> `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
 ### D-255 - Monen hankkeen tiedote jaetaan ennen hyvaksyntaa
 
@@ -59,6 +58,7 @@ sijainnin ja vaarat osapuolet.
 Alkuperainen rivi merkittiin `ignored` ja siihen kirjattiin mihin se
 jakautui ([[queue-removal-ignored]]) — ei poistettu.
 `scripts/jaa-espoon-jaostotiedote.ts`.
+---
 
 ### D-256 - Hylkays on paatos hetkesta, ei ikuisuudesta
 
@@ -108,7 +108,7 @@ ratkeaa**. Ehto on tahallaan tiukka:
 
 - vain tilasta `rejected` — hyvaksyttyyn ja jonossa olevaan ei kosketa
 - vain **tiedossa oleva voittaja**, ei pelkka sopimusilmoitus:
-  sellainen tarkoittaa usein keskeytysta (D-251, `clos-nw`)
+  sellainen tarkoittaa usein keskeytysta (D-258, `clos-nw`)
 - ei palauteta jos voittaja oli jo tiedossa hylattaessa
 
 Mikroskoopin, autoleasingin ja kyselytutkimuksen hylkays pysyy siis
@@ -224,7 +224,7 @@ Ei korjattu tassa.
 
 ---
 
-### D-254 - Keravan lahteelta puuttui 12 kuukauden ikkuna
+### D-261 - Keravan lahteelta puuttui 12 kuukauden ikkuna
 
 Johannes 10.10.2026: *"onko tassa 12kk raja? Se pitaisi olla tietaakseni
 kaikissa lahteissa."*
@@ -237,7 +237,7 @@ lisaamastani Keravan uutislahteesta (D-247) se puuttui.
 
 WP:n rajapinta palautti koko arkiston **marraskuusta 2022** eli 127
 juttua, joista 104 lapaisi suodatuksen. Tuontibudjettiin mahtui 37, ja
-64 jai siirrettavaksi (D-253). Kyse ei siis ollut budjetista vaan
+64 jai siirrettavaksi (D-260). Kyse ei siis ollut budjetista vaan
 siita etta nelja vuotta tuli kerralla.
 
 | | ennen | jalkeen |
@@ -352,7 +352,7 @@ poistettiin nakyvista toistaiseksi; koodiin jai kommentti. Asiakkaan
 
 ---
 
-### D-253 - Tuontibudjetin hanta nakyviin, ja ohitusikkuna 7 -> 14 vrk
+### D-260 - Tuontibudjetin hanta nakyviin, ja ohitusikkuna 7 -> 14 vrk
 
 Johannes 10.10.2026 pyysi tarkistamaan nayttaako ajoissa kaikki
 normaalilta. Lahteet ja volyymit olivat kunnossa, mutta kaksi paivaa
@@ -485,12 +485,12 @@ antaa `pohjolarakennusoysuomi`, rekisterissa avain on `pohjolarakennus`
 
 ---
 
-### D-252 - Hankinnan hoitaja talteen, ja kerrottuna kuka han on
+### D-259 - Hankinnan hoitaja talteen, ja kerrottuna kuka han on
 
 Johannes 9.10.2026: *"poimitaan tuo touchpoint talteen ja
 kerrotaan/naytetaan se kayttajalle selvasti kuka on kyseessa."*
 
-D-251 selvisi etta TST Consulting Oy ei ollut Virolahden hankkeen
+D-258 selvisi etta TST Consulting Oy ei ollut Virolahden hankkeen
 voittaja vaan tilaajan `touchPoint`. Se ei tee yhteystiedosta
 arvotonta — painvastoin: **hankinnasta vastaava konsultti on juuri se
 jolle myyja soittaa.** Sita ei vain saanut luulla tilaajaksi.
@@ -558,7 +558,7 @@ Jarjestys on se jossa myyja ottaa yhteytta: tilaaja, hoitaja, voittaja.
 
 #### Sivutuote: yksi haku kolmeen kayttoon
 
-D-251:n lisays haki eForm-dokumentin uudestaan, vaikka resolveri hakee
+D-258:n lisays haki eForm-dokumentin uudestaan, vaikka resolveri hakee
 sen jo yhteyshenkiloita varten. Nyt haku tehdaan kerran ja samasta
 vastauksesta luetaan tulos, yhteyshenkilot ja suorituspaikka.
 
@@ -624,7 +624,7 @@ vuokrakerrostalo ikaantyneille eika hoivakoti, joten se on metadatassa
 
 ---
 
-### D-251 - Sopimusilmoitus ei tarkoita voittajaa
+### D-258 - Sopimusilmoitus ei tarkoita voittajaa
 
 Johannes 9.10.2026 Virolahden lammitysmuodon muutoksesta: *"dokumentista
 ei poimittu TST Consulting Oy joka voitti vaan lukee vain: Hilma,
@@ -656,7 +656,7 @@ tarkistin niista 15 ilmoituksen omalta rajapinnalta —
 vain puuttui hakurajapinnan vastauksesta. Jos tyhjaa kenttaa olisi
 pidetty todisteena, joka viidestoista aito sopimus olisi merkitty
 vaarin keskeytetyksi. Arvovaltainen tieto haetaan siis ilmoituksen
-omalta rajapinnalta — sama osoite kuin suorituspaikalla (D-??,
+omalta rajapinnalta — sama osoite kuin suorituspaikalla (D-092,
 `hilmaRealizedLocation`).
 
 #### Mitattu lopputulos 9.10.2026
@@ -776,7 +776,7 @@ Villa Yttrium kannattaa lisata kasin, jos se puuttuu.
 
 ---
 
-### D-250 - Kolme poimintaa jotka kuvaus kertoi mutta kenttä ei
+### D-257 - Kolme poimintaa jotka kuvaus kertoi mutta kenttä ei
 
 Johannes 8.10.2026 Attendon Oulun hoivakodista: *"onko tasta poimittu
 Pajala Pohjois-Suomi ja hankkeen koko neliometreina. tamahan on myos jo
@@ -6208,7 +6208,12 @@ hyvaksytty vastaus tahan luokkaan - ala ehdota luetteloa uudestaan.
 
 ---
 
-### D-171 - Lupapisteen lomakekentat kannettiin eteenpain; PDF-hanke oli vaara
+### D-262 - Lupapisteen lomakekentat kannettiin eteenpain; PDF-hanke oli vaara
+
+> *Tama oli alun perin numero D-171, joka oli kaytossa kahdesti. Nimetty
+> uudelleen 10.10.2026; D-171 tarkoittaa nykyaan vain taloyhtiopaatosta.
+> Tahan merkintaan ei viitattu koodista kertaakaan, joten vaihto oli
+> riskiton. Vapaita numeroita alle 262:n ei ollut.*
 
 Kirjasin 5.9.2026 tyojonon karkeen "hankesuunnitelmien lukeminen
 liitteista". **Mittaus 6.9. kumosi sen**, ja oikea tyo oli pienempi ja

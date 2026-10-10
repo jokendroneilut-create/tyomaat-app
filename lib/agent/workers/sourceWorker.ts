@@ -265,7 +265,7 @@ result = await withTimeout(
 )
 
     /*
-     * SIIRRETYT KIRJATAAN AJORIVILLE (D-253).
+     * SIIRRETYT KIRJATAAN AJORIVILLE (D-260).
      *
      * `deferred` on tahan asti mennyt vain console.warn-riville eli
      * Vercelin lokiin. Mitattu 10.10.2026: Keravan uutislahde tallensi

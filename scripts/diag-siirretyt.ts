@@ -6,7 +6,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 }
 
 /*
- * MITKA LAHTEET EIVAT EHDI TUODA KAIKKEA (D-253).
+ * MITKA LAHTEET EIVAT EHDI TUODA KAIKKEA (D-260).
  *
  * legacyFetchCollector pysahtyy 60 sekunnin tuontibudjettiin ja siirtaa
  * loput seuraavaan ajoon. Jos sama lahde siirtaa joka ajossa, sen hanta

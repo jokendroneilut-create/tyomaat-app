@@ -150,7 +150,7 @@ describe("extractFloorAreaFromText - bruttoneliometri", () => {
 })
 
 /*
- * "KOOLTAAN" RAKENNUSSANAN KANSSA (D-250).
+ * "KOOLTAAN" RAKENNUSSANAN KANSSA (D-257).
  *
  * Esimerkit ovat tuotannon kuvauksista 8.10.2026 (41 uniikkia
  * "kooltaan"-osumaa luettuna). Hylattavat ovat yhta tarkeita: yleisin

@@ -42,7 +42,7 @@ const YKSIKKO = String.raw`(?:m2|m²|neliömetri\w*|neliötä)`
 const HEDGE = String.raw`(?:noin\s*|n\.\s*|arviolta\s+|cirka\s+|ca\.?\s*)?`
 
 /*
- * RAKENNUSSANA TEKEE "KOOLTAAN"-MUODOSTA LUETTAVAN (D-250).
+ * RAKENNUSSANA TEKEE "KOOLTAAN"-MUODOSTA LUETTAVAN (D-257).
  *
  * Yllä oleva kommentti kertoo miksi "kooltaan" jätettiin pois: 17
  * rivistä noin puolet oli maa-alaa. Uusi mittaus 8.10.2026 koko
