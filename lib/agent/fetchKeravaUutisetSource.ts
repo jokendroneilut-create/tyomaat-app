@@ -1,5 +1,7 @@
 import https from "node:https"
 
+import { tiedotteenAikaraja, YRITYSTIEDOTTEEN_IKKUNA_KK } from "./tiedotteenIkkuna"
+
 /*
  * KERAVAN KAUPUNGIN UUTISET (D-247).
  *
@@ -31,6 +33,21 @@ import https from "node:https"
  * hankkeita. Ks. [[company-source-filtering]]: suodatus on koko tyo.
  */
 
+/*
+ * 12 KUUKAUDEN IKKUNA, KUTEN MUILLAKIN TIEDOTELAHTEILLA (D-254).
+ *
+ * Tama puuttui kun lahde lisattiin (D-247), ja se oli poikkeus eika
+ * uusi saanto: ikkuna on mitattu D-226:ssa ja kaytossa 16 lahteessa.
+ * Ilman sita WP:n rajapinta palautti koko arkiston marraskuusta 2022 —
+ * **104 juttua**, joista tuontibudjettiin mahtui 37 (D-253).
+ *
+ * Keravan oikea julkaisutahti on 2,2 juttua kuukaudessa, eli 0,4 per
+ * ajovali. Kasautuminen ei siis johtunut lahteesta vaan siita etta
+ * nelja vuotta tuli kerralla.
+ *
+ * Rajaus tehdaan rajapinnassa (`after=`) eika suodattamalla jalkikateen:
+ * silloin turhia sivuja ei edes haeta.
+ */
 const KATEGORIAT = "52,56"
 const SIVUKOKO = 100
 const MAX_SIVUT = 3
@@ -202,6 +219,7 @@ export async function haeKeravanUutiset(): Promise<KeravaUutinen[]> {
   for (let sivu = 1; sivu <= MAX_SIVUT; sivu++) {
     const url =
       `https://www.kerava.fi/wp-json/wp/v2/posts?categories=${KATEGORIAT}` +
+      `&after=${encodeURIComponent(tiedotteenAikaraja().toISOString())}` +
       `&per_page=${SIVUKOKO}&page=${sivu}&_fields=id,title,link,date,content`
 
     let erä: any[]

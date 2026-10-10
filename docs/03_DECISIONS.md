@@ -102,6 +102,64 @@ Ei korjattu tassa.
 
 ---
 
+### D-254 - Keravan lahteelta puuttui 12 kuukauden ikkuna
+
+Johannes 10.10.2026: *"onko tassa 12kk raja? Se pitaisi olla tietaakseni
+kaikissa lahteissa."*
+
+**Oli, ja han oli oikeassa.** `YRITYSTIEDOTTEEN_IKKUNA_KK = 12` (D-226)
+on mitattu saanto ja kaytossa 16 lahteessa. Kaksi paivaa aiemmin
+lisaamastani Keravan uutislahteesta (D-247) se puuttui.
+
+#### Mita se aiheutti
+
+WP:n rajapinta palautti koko arkiston **marraskuusta 2022** eli 127
+juttua, joista 104 lapaisi suodatuksen. Tuontibudjettiin mahtui 37, ja
+64 jai siirrettavaksi (D-253). Kyse ei siis ollut budjetista vaan
+siita etta nelja vuotta tuli kerralla.
+
+| | ennen | jalkeen |
+|---|---|---|
+| haettuja juttuja | 127 | **42** |
+| suodatuksen lapi | 104 | **37** |
+| vanhin | 2022-11 | 2025-10 |
+
+Keravan oikea julkaisutahti on **2,2 juttua kuukaudessa** = 0,4 per
+ajovali. Kaupungin pitaisi julkaista 197 juttua kuukaudessa osuakseen
+budjettiin uudelleen.
+
+Rajaus tehdaan rajapinnassa (`after=`) eika jalkikateen suodattamalla:
+turhia sivuja ei edes haeta.
+
+#### Muut lahteet tarkistettiin samalla
+
+64 tiedoteluonteisesta lahteesta kaytiin lapi ne joita saanto koskee:
+
+| lahde | tila |
+|---|---|
+| 16 yrityslahdetta | kayttavat jaettua vakiota |
+| `stt_haku` | 12 kk rajaus API-kyselyssa |
+| `rakennuslehti`, `helsinki_uutiset` | RSS, luonnostaan tuore |
+| `company_project` (44 kpl) | hankelistauksia, **ei julkaisupaivaa** — saanto ei koske |
+| **`kerava_uutiset`** | **puuttui, korjattu** |
+
+Saanto siis oli kaikkialla missa se voi olla. Ainoa poikkeus oli
+viimeksi lisatty lahde.
+
+#### Vanhoja rivejä ei siivota
+
+Kolme jonorivia jaa ikkunan ulkopuolelle. Niita ei poisteta: ikkuna on
+HAKUsaanto, ei takautuva siivous — samoin D-226 ei purkanut vanhoja
+vaan hyvaksyi etta kahdeksan hyvaksyttya hanketta jaa tulematta
+jatkossa.
+
+#### Opetus
+
+Uuden lahteen tarkistuslistaan kuuluu **ikkuna**, ei vain suodatus ja
+kaksoiskappaleet. Ensimmaisen ajon kokoa ei pida katsoa sellaisenaan:
+se kertoo arkiston koon, ei lahteen tahdin. Tahti on mitattava
+erikseen.
+
 ### D-253 - Yritysrekisteri adminille, ja osapuolet omana ryhmanaan
 
 Johannes 8.10.2026: *"tee tuo rekisteri myos nakyvaksi admin tunnuksilla
@@ -237,6 +295,22 @@ tai halytysta.
    putoaa ilman sita, joten koodin voi julkaista ennen SQL:n ajoa.
    Lukeminen: `scripts/diag-siirretyt.ts`, joka nayttaa myos ajovalin
    suhteessa ikkunaan.
+
+#### KORJAUS 10.10.2026 (ks. D-254)
+
+Yllaoleva esittaa "tilapaista vai pysyvaa" ohitusikkunasta riippuvana.
+Keravan tapauksessa se oli harhaanjohtava: ratkaiseva luku on
+**sisaantulotahti**, ja Keravalla se on 2,2 juttua kuukaudessa eli 0,4
+per ajovali — budjettiin mahtuu 37. Kasautuminen olisi purkautunut
+ikkunasta riippumatta.
+
+Johannes epaili tata heti: *"ihmettelen tassa eniten sita miten kerava
+joka on pieni kaupunki voisi aiheuttaa taman ongelman pysyvasti."*
+Epailys oli oikea. Oikea syy oli puuttuva 12 kk:n ikkuna (D-254), ei
+kaupungin koko eika budjetti.
+
+Ikkunan nosto 7 -> 14 vrk on silti oikea: se poistaa riskin etta **jokin
+muu** lahde ajautuu rajan yli ajovalin kasvaessa.
 
 #### Avoin: ajotiheys
 
