@@ -56,9 +56,29 @@ export default async function CandidateDetailPage({ params }: Props) {
       <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex items-start justify-between gap-6">
           <div>
+            {/*
+              * OTSIKKO OLI AINOA JOKA NAYTTI ERI ASIAA (D-263).
+              *
+              * Lista ja hyvaksyntalomake kayttavat `operation ?? title`,
+              * h1 kaytti pelkkaa `title`. Jos rivi kattaa kaksi saman
+              * tyomaan urakkaa, nimi vaihtui kesken katselmoinnin:
+              * listassa "sammutusjarjestelman hankinta", avatessa
+              * "terasrakenne- ja kulkusiltojen urakka".
+              *
+              * h1 kayttaa nyt samaa kuin se nimi joka hyvaksyttaessa
+              * TALLENTUU. Toinen nimi naytetaan sen alla, jottei tieto
+              * katoa — rivi tosiaan kattaa kaksi urakkaa.
+              */}
             <h1 className="text-3xl font-bold text-gray-900">
-              {candidate.title}
+              {metadata.operation ?? candidate.title}
             </h1>
+            {metadata.operation &&
+            candidate.title &&
+            metadata.operation !== candidate.title ? (
+              <p className="mt-1 text-sm text-gray-500">
+                Sama rivi kattaa myös: <span className="italic">{candidate.title}</span>
+              </p>
+            ) : null}
 
             <p className="mt-2 text-gray-600">
               {candidate.city ?? "Ei kaupunkia"}

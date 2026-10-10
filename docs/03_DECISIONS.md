@@ -60,6 +60,66 @@ jakautui ([[queue-removal-ignored]]) — ei poistettu.
 `scripts/jaa-espoon-jaostotiedote.ts`.
 ---
 
+### D-263 - Ehdokkaan nimi vaihtui avattaessa
+
+Johannes 10.10.2026 Hilma-ehdokkaasta: *"onko ISS Palvelut Oy poimittu
+tasta? On muuten erikoinen paaurakoitsija."* Ja heti peraan, kuvien
+kanssa: *"tama muuttuu avatessa."*
+
+Molemmat havainnot osuivat samaan vikaan.
+
+#### Rivi kattaa kaksi saman tyomaan urakkaa
+
+Sairaala Novan helikopterikentalla (Hoitajantie 3, Jyvaskyla) oli kaksi
+Hilma-hankintaa, jotka yhdistyivat samaksi ehdokkaaksi osoitteen
+perusteella:
+
+| kentta | arvo | urakka |
+|---|---|---|
+| `title` | ...terasrakenne- ja kulkusiltojen urakka | A |
+| `permit_number` | 2026-053855 | A |
+| `metadata.operation` | ...sammutusjarjestelman hankinta | B |
+| `metadata.notice_number` | 2026-053858 | B |
+| voittaja | ISS Palvelut Oy | B |
+
+**Yhdistaminen on oikein.** Kyse on yhden tyomaan kahdesta urakasta, ja
+osoite on oikea tunniste. Mitattu 1 164 Hilma-rivista: **58 on tassa
+tilassa**, ja esimerkit vahvistavat saman — "Kaupungintalon
+iv-konehuone: lvi-urakka" + "paaurakka", "Imatran paloasema:
+rakennusurakka" + "IV-urakka". Nama ovat saman kohteen sivu-urakoita.
+
+**Asiakkaalle tama ei paady:** `projects`-taulussa vastaavia on 0,
+koska hyvaksynta kirjoittaa yhden johdonmukaisen nimen.
+
+#### Vika oli esitys, ei yhdistaminen
+
+Kolmesta paikasta kaksi kaytti `metadata.operation ?? title`, mutta
+hankesivun h1 kaytti pelkkaa `title`:
+
+| kohta | kentta |
+|---|---|
+| katselmointilista | `operation ?? title` |
+| **hankesivun h1** | **`title`** |
+| hyvaksyntalomake (= tallentuva nimi) | `operation ?? title` |
+
+Nimi siis vaihtui kesken katselmoinnin, ja h1 naytti eri asiaa kuin se
+nimi joka hyvaksyttaessa TALLENTUU. h1 kayttaa nyt samaa, ja toinen
+nimi naytetaan sen alla ("Sama rivi kattaa myos: ...") jottei tieto
+katoa.
+
+#### ISS Palvelut ei ole erikoinen urakoitsija
+
+Se voitti urakan **B** eli sammutusjarjestelman: putkitukset,
+kaapeloinnit, asennus. Kannassa ISS on paaurakoitsijana nelja kertaa ja
+joka kerta talotekniikassa (sprinklerit, LVI, tekniset tuntityot). Se
+nayttaa oudolta vain siksi etta rivi oli otsikoitu toisen urakan
+mukaan.
+
+Havainto oli silti oikea: **vaarin nimetty rivi tuottaa vaaralta
+nayttavan osapuolen**, ja se on hyva tapa loytaa nimeamisvika.
+
+---
+
 ### D-256 - Hylkays on paatos hetkesta, ei ikuisuudesta
 
 Johannes 10.10.2026 Ruoveden pelastus- ja ensihoitoasemasta: *"jos
