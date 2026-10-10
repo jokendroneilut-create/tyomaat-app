@@ -60,6 +60,73 @@ jakautui ([[queue-removal-ignored]]) — ei poistettu.
 `scripts/jaa-espoon-jaostotiedote.ts`.
 ---
 
+### D-264 - Urakkalajiveto puuttui ehdokkaiden yhdistamisesta
+
+Johannes 10.10.2026: *"eiko aiemmin dokumentoitukin etta esim iv ja lvi
+urakat pidetaan erillisena samassa hankkeessa, ainakin silloin jos ne
+tulevat minulle hyvaksyntaan erillisina hankkeina?"*
+
+**Oli.** `projectMatcher.ts` listaa sen ehdottomana vetona, mitattuna:
+
+> *"Eri urakkalaji = eri hanke, vaikka kohde olisi sama. Sama rakennus
+> kilpailutetaan usein rakennus-, sahko- ja LVI-urakkana erikseen, ja ne
+> ovat eri hankkeita kayttajan kannalta: LVI-alan myyja etsii omaansa,
+> sahkourakoitsija omaansa. Mitattu tapaus: Kuhmon terveysaseman
+> uudisrakennus neljana urakkana."*
+
+#### Saanto oli vain puolessa jarjestelmaa
+
+| polku | veto |
+|---|---|
+| duplikaattiskannaus (ehdokas vs. hanke) | **kylla** |
+| ehdokkaan yhdistaminen ehdokkaaseen, osoitehaara | **ei** |
+
+`resolvePotentialProject` ei tuonut `haveDifferentTrades`ia lainkaan.
+Sen kaskadi yhdistaa **pelkan osoitteen ja kunnan perusteella**, joten
+saman rakennuksen eri urakat valuivat samaksi riviksi.
+
+Seuraus on juuri se jota veton oma kommentti varoittaa:
+*"Yhdistaminen havittaisi kokonaisen urakan nakyvista."* Toinen urakka
+ei paady katselmointijonoon lainkaan.
+
+#### Mitattu
+
+1 164 Hilma-ehdokkaasta **58 kantaa kahta eri ilmoitusta** (eri
+lupanumero JA eri `operation`). Niista **8:ssa urakkalaji on
+tunnistettavasti eri** — esim. "Kaislakatu 3 rakennusurakka" +
+"Kaislakatu 3 LVI-urakka", "Imatran paloaseman rakennusurakka" +
+"IV-urakka".
+
+Loput 50 ovat aitoja pareja: yleisin on keskeytysilmoitus ja
+alkuperainen ilmoitus samasta hankinnasta. Niita ei saa erottaa, ja
+veto ei erotakaan — `haveDifferentTrades` vaatii etta MOLEMMILTA
+loytyy laji ja etta lajit ovat eri.
+
+Luku 8 on alaraja: tunnistin on varovainen eika nae esimerkiksi
+"terasrakenne- ja kulkusillat" vs. "sammutusjarjestelma" -paria.
+
+#### Korjaus
+
+Veto lisattiin osoitehaaraan. **Vain siihen**: lupanumero ja
+kiinteistotunnus ovat vahvoja tunnisteita, osoite on heikko — sama
+rakennus kilpailutetaan useana urakkana.
+
+#### Avoin
+
+Ne 8 (tai useampi) olemassa olevaa riviä ovat yha yhdistettyina.
+Niiden purkaminen on oma tyonsa: toinen urakka on kadonnut rivin
+sisaan eika sita voi palauttaa ilman alkuperaista ilmoitusta.
+
+#### Opetus
+
+Vaitin edellisessa paatoksessa (D-263) etta yhdistaminen on oikein,
+enka tarkistanut asiaa dokumentaatiosta. Saanto oli kirjattu ja
+mitattu. **Kun vaitat etta jokin kayttaytyminen on tarkoitettua,
+tarkista se dokumentista** — eri osissa jarjestelmaa voi olla eri
+saanto, ja juuri se oli tassa vika.
+
+---
+
 ### D-263 - Ehdokkaan nimi vaihtui avattaessa
 
 Johannes 10.10.2026 Hilma-ehdokkaasta: *"onko ISS Palvelut Oy poimittu
@@ -82,8 +149,12 @@ perusteella:
 | `metadata.notice_number` | 2026-053858 | B |
 | voittaja | ISS Palvelut Oy | B |
 
-**Yhdistaminen on oikein.** Kyse on yhden tyomaan kahdesta urakasta, ja
-osoite on oikea tunniste. Mitattu 1 164 Hilma-rivista: **58 on tassa
+**KORJAUS 10.10.2026 (ks. D-264): tama vaite oli vaara.** Kirjoitin
+etta yhdistaminen on oikein koska kyse on saman tyomaan urakoista.
+Johannes huomautti: *"eiko aiemmin dokumentoitukin etta esim iv ja lvi
+urakat pidetaan erillisena samassa hankkeessa?"* Oli — `projectMatcher`
+listaa sen ehdottomana vetona: **eri urakkalaji = eri hanke, vaikka
+kohde olisi sama.** En tarkistanut sita ennen kuin vaitin paivastoin. Mitattu 1 164 Hilma-rivista: **58 on tassa
 tilassa**, ja esimerkit vahvistavat saman — "Kaupungintalon
 iv-konehuone: lvi-urakka" + "paaurakka", "Imatran paloasema:
 rakennusurakka" + "IV-urakka". Nama ovat saman kohteen sivu-urakoita.

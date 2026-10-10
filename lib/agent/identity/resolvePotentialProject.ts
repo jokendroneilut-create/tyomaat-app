@@ -30,6 +30,7 @@ import {
 } from "@/lib/agent/knowledge/negativeProjects"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { palautaHylattyJonoon } from "@/lib/projects/palautaHylatty"
+import { haveDifferentTrades } from "@/lib/projects/contractTrade"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -476,7 +477,33 @@ export async function resolvePotentialProject(
       .maybeSingle()
 
     if (error) throw error
-    existing = data
+
+    /*
+     * ERI URAKKALAJI = ERI HANKE, MYOS TASSA (D-264).
+     *
+     * Saanto on kirjattu `projectMatcher.ts`:n ehdottomiin vetoihin ja
+     * mitattu (Kuhmon terveysaseman uudisrakennus neljana urakkana),
+     * mutta sita sovellettiin vain duplikaattiskannauksessa. Tama
+     * haara yhdisti PELKAN OSOITTEEN perusteella, joten saman
+     * rakennuksen LVI- ja sahkourakka valuivat samaksi ehdokkaaksi.
+     *
+     * Seuraus on juuri se jota veton kommentti varoittaa:
+     * "Yhdistaminen havittaisi kokonaisen urakan nakyvista." Toinen
+     * urakka ei paady katselmointijonoon lainkaan — LVI-alan myyja ei
+     * loyda omaansa.
+     *
+     * Osoite on heikko tunniste: sama rakennus kilpailutetaan useana
+     * urakkana. Lupanumero ja kiinteistotunnus ovat vahvoja, joten
+     * niiden haaroihin tata ei lisata.
+     *
+     * Mitattu 10.10.2026: 58 ehdokasta kantoi kahta eri ilmoitusta, ja
+     * niista 8:ssa urakkalaji oli tunnistettavasti eri.
+     */
+    if (data && haveDifferentTrades(data.title, title)) {
+      existing = null
+    } else {
+      existing = data
+    }
   }
 
   if (existing) {
