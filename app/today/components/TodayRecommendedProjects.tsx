@@ -5,6 +5,7 @@ import TodayProjectModal from "./TodayProjectModal"
 import TodayFeedbackButtons from "./TodayFeedbackButtons"
 import TodayFavoriteActions from "./TodayFavoriteActions"
 import { eraNakyma } from "../services/naytaLisaa"
+import { displayProjectPhase } from "@/lib/projects/phases"
 
 export default function TodayRecommendedProjects({
   projects,
@@ -95,9 +96,23 @@ export default function TodayRecommendedProjects({
                         </span>
                       )}
 
+                      {/*
+                        * KESKEYTYS NAKYY MYOS TASSA (D-196).
+                        *
+                        * Lista naytti raakaa `project.phase`-kenttaa, eli
+                        * keskeytetty kilpailutus luki pelkkana
+                        * "Kilpailutus". Se lupaa myyjalle avoimen
+                        * tarjouskilpailun johon voi juuri nyt tarjota.
+                        * Muut nakymat kayttivat jo `displayProjectPhase`ia;
+                        * tama oli ainoa joka ei — ja juuri tassa asiakas
+                        * paattaa mihin tarttuu tanaan.
+                        */}
                       {project.phase && (
                         <span className="rounded bg-blue-100 px-2 py-1">
-                          {project.phase}
+                          {displayProjectPhase(
+                            project.phase,
+                            project.metadata?.is_cancelled_procurement
+                          )}
                         </span>
                       )}
 
