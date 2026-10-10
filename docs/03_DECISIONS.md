@@ -60,6 +60,60 @@ jakautui ([[queue-removal-ignored]]) — ei poistettu.
 `scripts/jaa-espoon-jaostotiedote.ts`.
 ---
 
+### D-265 - Ulkomainen suorituspaikka pois jonosta
+
+Johannes 11.10.2026: *"saako nama venetsiaan kohdistuvat hankkeet
+jotenkin pois, naita tulee saannollisesti."*
+
+Ulkoministerio kilpailuttaa Venetsian Pohjoismaiden paviljongin
+terassiremonttia. **Suomalainen tilaaja, mutta tyo on Italiassa** —
+suomalaiselle myyjalle se ei ole liidi.
+
+#### Tunniste on rakenteinen, ei sanahaku
+
+eFormsissa on `realizedLocation.address.country`. Venetsialla se on
+**ITA** ja NUTS **ITH35**. Jasennin luki osoitteen ja kaupungin muttei
+maata.
+
+Kaupunkien nimilista olisi vaihtoehto, mutta se on loputon ja osuisi
+joskus suomalaiseen kadunnimeen. Maakoodi on yksiselitteinen.
+
+#### Tyhja ei ole ulkomaa
+
+Suurin osa ilmoituksista ei kerro maata lainkaan. Jos puuttuva
+tulkittaisiin ulkomaaksi, **kotimaiset hankkeet katoaisivat jonosta** —
+virhe olisi tuhansia kertoja isompi kuin ongelma jota korjataan. Veto
+vaatii siis nimenomaisen koodin joka ei ole FIN.
+
+Monen maan hankinnassa ei myoskaan vaiteta mitaan: silloin osa tyosta
+voi olla Suomessa.
+
+#### Mitattu 11.10.2026
+
+| | |
+|---|---|
+| ehdokkaita joiden osoite viittaa ulkomaille | **3** |
+| niista eri hankintoja | **1** (sama paviljonki) |
+| asiakkaalle paatyneita (`projects`) | **0** |
+
+"Saannollisesti" tarkoittaa siis etta **sama hankinta palaa uusina
+ilmoituksina** (korjausilmoitus, jalki-ilmoitus), ei etta ulkomaisia
+hankkeita tulisi monta. Kaksi kolmesta oli jo hylatty kasin; kolmas
+merkittiin nyt `ignored`-tilaan.
+
+#### Mika muuttui
+
+`parseRealizedLocation` palauttaa nyt myos maan, ja `hilmaResolver`
+asettaa `recommended_action: "ignore"` kun maa on jokin muu kuin FIN.
+Rivi jaa historiaan eika katoa — jos saanto osoittautuu vaaraksi,
+rivit ovat tallessa.
+
+Maa luetaan **ehdon ulkopuolella**: aiemmin suorituspaikka jasennettiin
+vain jos kunta tai osoite puuttui, mutta maa kiinnostaa silloinkin kun
+molemmat ovat tiedossa.
+
+---
+
 ### D-264 - Urakkalajiveto puuttui ehdokkaiden yhdistamisesta
 
 Johannes 10.10.2026: *"eiko aiemmin dokumentoitukin etta esim iv ja lvi

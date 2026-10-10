@@ -117,7 +117,6 @@ function cityFromKnownPlace(...texts: (string | null)[]): string | null {
   return null
 }
 
-
 /* "2026-058692" -> "58692": rajapinta haluaa pelkan ilmoitusnumeron. */
 function noticeIdOsa(noticeNumber: unknown): string {
   return String(noticeNumber ?? "").split("-").pop() ?? ""
@@ -365,8 +364,38 @@ export async function resolveHilmaProject({
    */
   const hilmaContacts = parseHilmaContacts(eForm)
 
+  /*
+   * SUORITUSPAIKAN MAA LUETAAN AINA (D-265).
+   *
+   * Johannes 11.10.2026: *"saako nama venetsiaan kohdistuvat hankkeet
+   * jotenkin pois, naita tulee saannollisesti."* Ulkoministerio
+   * kilpailuttaa Venetsian Pohjoismaiden paviljongin terassiremontin:
+   * suomalainen tilaaja, mutta tyo on Italiassa. Suomalaiselle myyjalle
+   * se ei ole liidi.
+   *
+   * TUNNISTE ON RAKENTEINEN, EI SANAHAKU. eFormsissa on
+   * `realizedLocation.address.country` — Venetsialla "ITA", NUTS
+   * "ITH35". Kaupunkien nimilista olisi loputon ja osuisi joskus
+   * suomalaiseen kadunnimeen.
+   *
+   * Luetaan ehdon ULKOPUOLELLA: maa kiinnostaa silloinkin kun kunta ja
+   * osoite ovat jo tiedossa.
+   */
+  const suorituspaikka = parseRealizedLocation(eForm)
+
+  /*
+   * Ulkomainen suorituspaikka -> ei katselmointijonoon. Rivi jaa
+   * historiaan tilaan `ignored` (ks. [[queue-removal-ignored]]), ei
+   * poisteta: jos saanto osoittautuu vaaraksi, rivit ovat tallessa.
+   *
+   * Tyhja maa EI ole ulkomaa: suurin osa ilmoituksista ei kerro maata
+   * lainkaan, ja niiden hylkaaminen pyyhkisi kotimaiset hankkeet.
+   */
+  const ulkomainenKohde =
+    Boolean(suorituspaikka.country) && suorituspaikka.country !== "FIN"
+
   if (!municipality || !resolvedAddress) {
-    const notice = parseRealizedLocation(eForm)
+    const notice = suorituspaikka
 
     if (!resolvedAddress && notice.address) {
       resolvedAddress = notice.address
@@ -542,8 +571,16 @@ export async function resolveHilmaProject({
       business_value:
         classification.business_value,
 
-      recommended_action:
-        classification.recommended_action,
+      /* Ulkomainen suorituspaikka ohittaa luokittelun (D-265). */
+      recommended_action: ulkomainenKohde
+        ? "ignore"
+        : classification.recommended_action,
+      ...(ulkomainenKohde
+        ? {
+            ulkomainen_kohde: suorituspaikka.country,
+            ignore_reason: `Suorituspaikka ${suorituspaikka.country}, ei Suomessa`,
+          }
+        : {}),
 
       classification_confidence:
         classification.confidence,

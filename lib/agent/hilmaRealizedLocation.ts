@@ -24,9 +24,14 @@ const TIMEOUT_MS = 8000
 export type HilmaRealizedLocation = {
   address: string | null
   city: string | null
+  /*
+   * SUORITUSPAIKAN MAA (D-265). ISO-koodi, esim. "FIN" tai "ITA".
+   * null = ilmoitus ei kertonut. Tyhja ei ole sama kuin ulkomaa.
+   */
+  country: string | null
 }
 
-const EMPTY: HilmaRealizedLocation = { address: null, city: null }
+const EMPTY: HilmaRealizedLocation = { address: null, city: null, country: null }
 
 /*
  * "anyw-cou" = missä tahansa maassa, "anyw" = missä tahansa. Nämä ovat
@@ -76,6 +81,7 @@ export function parseRealizedLocation(eForm: any): HilmaRealizedLocation {
 
   const addresses: string[] = []
   const cities: string[] = []
+  const countries: string[] = []
 
   for (const location of locations) {
     const address = location?.address
@@ -87,6 +93,14 @@ export function parseRealizedLocation(eForm: any): HilmaRealizedLocation {
 
     if (city) cities.push(city)
 
+    /*
+     * Maa luetaan ENNEN osoiterajauksia: ulkomainen kohde on
+     * kiinnostava tieto silloinkin kun katuosoite puuttuu tai on
+     * postilokero.
+     */
+    const country = textOf(address?.country?.identificationCode)
+    if (country) countries.push(country.toUpperCase())
+
     /* Pelkkä postinumero, postilokero tai kaupunki ei ole osoite. */
     if (!street || isPostBoxOnly(street)) continue
 
@@ -97,9 +111,16 @@ export function parseRealizedLocation(eForm: any): HilmaRealizedLocation {
   const distinctAddresses = [...new Set(addresses)]
   const distinctCities = [...new Set(cities)]
 
+  const distinctCountries = [...new Set(countries)]
+
   return {
     address: distinctAddresses.length === 1 ? distinctAddresses[0] : null,
     city: distinctCities.length === 1 ? distinctCities[0] : null,
+    /*
+     * Monen maan hankinnassa ei vaiteta mitaan: silloin ainakin osa
+     * tyosta voi olla Suomessa.
+     */
+    country: distinctCountries.length === 1 ? distinctCountries[0] : null,
   }
 }
 

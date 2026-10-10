@@ -15,7 +15,7 @@ describe("parseRealizedLocation", () => {
           cityName: { value: "Lappeenranta" },
         })
       )
-    ).toEqual({ address: "Taipalsaarentie 476, 53100 Lappeenranta", city: "Lappeenranta" })
+    ).toEqual({ address: "Taipalsaarentie 476, 53100 Lappeenranta", city: "Lappeenranta", country: null })
   })
 
   /*
@@ -26,6 +26,7 @@ describe("parseRealizedLocation", () => {
     expect(parseRealizedLocation(lot({ region: { value: "anyw-cou" } }))).toEqual({
       address: null,
       city: null,
+      country: null,
     })
   })
 
@@ -33,6 +34,7 @@ describe("parseRealizedLocation", () => {
     expect(parseRealizedLocation(lot({ cityName: { value: "Vaasa" } }))).toEqual({
       address: null,
       city: "Vaasa",
+      country: null,
     })
   })
 
@@ -47,7 +49,7 @@ describe("parseRealizedLocation", () => {
         { procurementProject: { realizedLocation: [{ address: { streetName: { value: "Tie 9" }, cityName: { value: "Espoo" } } }] } },
       ],
     }
-    expect(parseRealizedLocation(eForm)).toEqual({ address: null, city: "Espoo" })
+    expect(parseRealizedLocation(eForm)).toEqual({ address: null, city: "Espoo", country: null })
   })
 
   it("sallii saman osoitteen toistumisen useassa osassa", () => {
@@ -78,7 +80,7 @@ describe("parseRealizedLocation", () => {
       parseRealizedLocation(
         lot({ streetName: { value: "PL 125" }, postalZone: { value: "76100" }, cityName: { value: "Pieksämäki" } })
       )
-    ).toEqual({ address: null, city: "Pieksämäki" })
+    ).toEqual({ address: null, city: "Pieksämäki", country: null })
   })
 
   it("hyväksyy kadun jonka perässä on postilokero", () => {
@@ -106,7 +108,7 @@ describe("parseRealizedLocation", () => {
   })
 
   it("kestää puuttuvan rakenteen", () => {
-    expect(parseRealizedLocation(null)).toEqual({ address: null, city: null })
-    expect(parseRealizedLocation({})).toEqual({ address: null, city: null })
+    expect(parseRealizedLocation(null)).toEqual({ address: null, city: null, country: null })
+    expect(parseRealizedLocation({})).toEqual({ address: null, city: null, country: null })
   })
 })
