@@ -57,6 +57,17 @@ const IRREGULAR_ALIASES: Record<string, string> = {
   "riihimäellä": "Riihimäki",
   "riihimäeltä": "Riihimäki",
   "riihimäen": "Riihimäki",
+  /*
+   * Parainen taipuu nen -> s ("Paraisille"), eika kanta "paraine" osu
+   * mihinkaan naista. Mitattu 11.10.2026: tiedote "asuntokohde Norra
+   * Famnen -kortteliin Paraisille" jai ilman kuntaa, ja tekstista
+   * poimittiin saman tiedotteen toinen hanke (Raisio).
+   */
+  "paraisille": "Parainen",
+  "paraisilla": "Parainen",
+  "paraisilta": "Parainen",
+  "paraisten": "Parainen",
+  "paraisiin": "Parainen",
 }
 
 /*
@@ -97,8 +108,85 @@ const FI_WORD_CHAR = "\\wäöåÄÖÅ"
 const LEFT_BOUNDARY = `(?<![${FI_WORD_CHAR}])`
 const RIGHT_BOUNDARY = `(?![${FI_WORD_CHAR}])`
 
+/*
+ * ENSIMMAINEN TEKSTISSA VOITTAA, EI ENSIMMAINEN TAULUKOSSA (D-267).
+ *
+ * Funktio palautti ensimmaisen osuman TAULUKON jarjestyksessa, ja
+ * "helsingin / helsingissa / helsinkiin" ovat IRREGULAR_ALIASES-listan
+ * karjessa. Niinpa mika tahansa maininta Helsingista missa tahansa
+ * kohtaa tekstia voitti hankkeen oikean sijainnin — ja yrityksen
+ * paakonttori mainitaan tiedotteen lopussa lahes aina.
+ *
+ * Mitattu 11.10.2026: 283 rivilla kaupunki oli tullut lahteesta, ja
+ * 49:lla tekstintunnistus sanoi eri. Niista kahdeksan kymmenesta sanoi
+ * "Helsinki" — mm. "Datakeskus Kajaaniin", "47 asuntoa Espooseen",
+ * "Sinilahteen palvelutalon Heinolaan".
+ *
+ * SIJAINTI TEKSTISSA ON OIKEA JARJESTYSPERUSTE. Hankkeen paikka
+ * sanotaan ensimmaisessa virkkeessa ("Datakeskus Kajaaniin"),
+ * paakonttori lopussa. Tama ei ole kielioppisaanto vaan tiedotteen
+ * rakenne, ja se patee jokaiseen mitattuun esimerkkiin.
+ */
+/*
+ * "-jarvi"-kunta jonka perassa on rantasana on JARVI, ei kunta.
+ * Lujatalon tiedote sijoittaa Tampereen Hatanpaan pysakointitalon
+ * "Pyhajarven rantamaisemaan", ja tunnistin siirsi hankkeen
+ * Pyhajarven kuntaan Pohjois-Pohjanmaalle. Vesistonimi on sama kuin
+ * kunnan nimi kymmenissa tapauksissa, joten rantasana on luotettavampi
+ * merkki kuin itse nimi.
+ */
+/*
+ * Kaupunginnimi yrityksen nimessa ei kerro hankkeen sijaintia.
+ * Rakennusalalla nimet ovat täynnä kaupunkeja: "Varte Turku Oy toimii
+ * urakoitsijana Saloon rakennettavassa hoivakodissa" luki hankkeen
+ * Turkuun, ja "Skanska ja Helsingin Osuuskauppa Elanto" siirsi Espoon
+ * Prismakeskuksen Helsinkiin. Kumpikin kenttä oli kannassa oikein ja
+ * tunnistin väärässä (mitattu 11.10.2026).
+ */
+const YHTIOMUOTO = /^\s+(Oy|Oyj|Ab|Abp|Ky|Oy:n|Oyj:n|Osuuskauppa|Osuuskunta|Yhtiot|Yhtiöt)\b/i
+
+const RANTASANA = /^\s+(rannal|rannas|rantaan|rantama|rantoj|rannoi|ranta)/i
+
+function aikaisinOsuma(
+  lower: string,
+  kuvio: RegExp,
+  vesistoEhdokas = false,
+  text: string = lower
+): number {
+  let haku = 0
+  for (;;) {
+    const m = lower.slice(haku).match(kuvio)
+    if (!m) return -1
+    const kohta = haku + m.index!
+    const jatko = text.slice(kohta + m[0].length, kohta + m[0].length + 14)
+    const vesisto = vesistoEhdokas && RANTASANA.test(jatko)
+    if (!vesisto && !YHTIOMUOTO.test(jatko)) return kohta
+    haku = kohta + m[0].length
+  }
+}
+
+/*
+ * Lainausmerkeissa oleva sana on NIMI, ei paikka. Kilpailuehdotukset,
+ * korttelinimet ja hankenimet ovat usein paikannimia: Melkinlaiturin
+ * arkkitehtuurikilpailun voitti ehdotus "Luoto", ja tunnistin luki
+ * Helsingin hankkeen Luodon kuntaan. Korvataan valilyonneilla, jotta
+ * merkkien kohdat eivat siirry.
+ */
+const LAINAUSMERKIT = /[“”„″"«»]([^“”„″"«»]{1,40})[“”„″"«»]/g
+
+function haivytaLainaukset(text: string): string {
+  return text.replace(LAINAUSMERKIT, (koko) => " ".repeat(koko.length))
+}
+
 export function detectCityFromText(text: string): string | null {
-  const lower = text.toLowerCase()
+  const siivottu = haivytaLainaukset(text)
+  const lower = siivottu.toLowerCase()
+
+  let paras: { kaupunki: string; kohta: number } | null = null
+  const ehdolle = (kaupunki: string, kohta: number) => {
+    if (kohta < 0) return
+    if (!paras || kohta < paras.kohta) paras = { kaupunki, kohta }
+  }
 
   for (const [alias, city] of Object.entries(IRREGULAR_ALIASES)) {
     /*
@@ -109,7 +197,7 @@ export function detectCityFromText(text: string): string | null {
       `${LEFT_BOUNDARY}${escapeRegex(alias)}${RIGHT_BOUNDARY}`,
       "i"
     )
-    if (aliasRegex.test(lower)) return city
+    ehdolle(city, aikaisinOsuma(lower, aliasRegex, false, siivottu))
   }
 
   for (const municipality of sortedMunicipalities) {
@@ -121,7 +209,8 @@ export function detectCityFromText(text: string): string | null {
       `${LEFT_BOUNDARY}${escapeRegex(name)}${exactPattern}${RIGHT_BOUNDARY}`,
       "i"
     )
-    if (exactRegex.test(lower)) return municipality.name
+    const vesisto = /jarvi$|järvi$/i.test(name)
+    ehdolle(municipality.name, aikaisinOsuma(lower, exactRegex, vesisto, siivottu))
 
     if (isShortName || STEM_MATCH_EXCLUDED.has(municipality.name)) continue
 
@@ -133,14 +222,21 @@ export function detectCityFromText(text: string): string | null {
      * mielivaltaista jokerimerkkiä.
      */
     const stem = name.slice(0, -1)
+    /*
+     * Kantaosuma vaatii sijapaatteen (MANDATORY), toisin kuin tarkka
+     * nimi. Paljas kanta on liian heikko: "Nurme" osui YIT:n Tallinnan
+     * hankkeen nimeen "Nurme 2 ja 4" ja vei suomalaisen tiedotteen
+     * Nurmekseen. Perusmuoto ei jaa tunnistumatta, koska tarkka nimi
+     * + valinnainen paate kattaa sen jo.
+     */
     const stemRegex = new RegExp(
-      `${LEFT_BOUNDARY}${escapeRegex(stem)}${SUFFIX_PATTERN}${RIGHT_BOUNDARY}`,
+      `${LEFT_BOUNDARY}${escapeRegex(stem)}${MANDATORY_SUFFIX_PATTERN}${RIGHT_BOUNDARY}`,
       "i"
     )
-    if (stemRegex.test(lower)) return municipality.name
+    ehdolle(municipality.name, aikaisinOsuma(lower, stemRegex, vesisto, siivottu))
   }
 
-  return null
+  return paras ? (paras as { kaupunki: string }).kaupunki : null
 }
 
 function escapeRegex(value: string): string {

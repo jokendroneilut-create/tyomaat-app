@@ -23,6 +23,74 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-267 - Julkaisijan kotipaikka hankkeen kuntana
+
+Johannes 11.10.2026 Aviapolis-ehdokkaan jaljilta: *"korjaa myos tuo
+julkaisijan kotipaikka."* Vantaalla sijaitseva Aviapolis oli kirjattu
+Turkuun, eika duplikaatti siksi loytynyt nimen ja kaupungin perusteella.
+
+#### Mittaus kaansi oman oletukseni
+
+Oletin ettei tiedotteen tekstia lueta lainkaan. Mitattuna 283 rivilla,
+joilla kunta oli tullut lahteesta:
+
+| | |
+|---|---|
+| teksti sanoo saman | 180 |
+| teksti sanoo **eri** | 49 |
+| tekstista ei tunnistettu | 54 |
+
+Kymmenen esimerkin otos nayttikin **kannan kentan olevan oikeassa ja
+tekstintunnistuksen vaarassa**: kahdeksan kymmenesta sanoi "Helsinki".
+*"Datakeskus Kajaaniin"* -> teksti Helsinki. *"47 asuntoa Espooseen"*
+-> teksti Helsinki. Jos olisin kaantanyt etusijan tekstin hyvaksi
+suoraan, tulos olisi huonontunut.
+
+#### Vika oli taulukon jarjestys, ei lahteen valinta
+
+`detectCityFromText` palautti **ensimmaisen osuman taulukossa**, ja
+`IRREGULAR_ALIASES`-listan karjessa ovat "helsingin / helsingissa /
+helsinkiin". Mika tahansa maininta Helsingista missa tahansa kohtaa
+tekstia voitti hankkeen oikean sijainnin — ja julkaisijan kotipaikka
+mainitaan tiedotteen lopussa lahes aina.
+
+**Oikea jarjestysperuste on sijainti tekstissa:** hankkeen paikka
+sanotaan ensimmaisessa virkkeessa, paakonttori lopussa. Tama ei ole
+kielioppisaanto vaan tiedotteen rakenne.
+
+Pelkka jarjestyksen vaihto paljasti nelja vaikenevaa virhetta, jotka
+vanha taulukkojarjestys oli peittanyt. Kaikki korjattiin mitattuina,
+yksi kerrallaan:
+
+| vika | esimerkki | korjaus |
+|---|---|---|
+| lainausmerkeissa oleva nimi | kilpailuehdotus "Luoto" vei Jatkasaaren hankkeen Luotoon | lainaukset haivytetaan ennen hakua |
+| paljas kanta ilman paatetta | Tallinnan "Nurme 2 ja 4" vei hankkeen Nurmekseen | kantaosuma vaatii sijapaatteen |
+| vesistonimi | "Pyhajarven rantamaisemaan" vei Tampereen hankkeen Pyhajarvelle | rantasana jarvi-kunnan perassa ohittaa osuman |
+| kaupunki yrityksen nimessa | "Varte **Turku** Oy ... Saloon rakennettavassa hoivakodissa" | Oy/Oyj/Osuuskauppa heti nimen perassa ohittaa osuman |
+
+Lisaksi **Parainen** ei taipunut lainkaan (nen -> s, "Paraisille"), ja
+tiedotteesta poimittiin saman julkaisijan toinen hanke (Raisio).
+
+Lopputulos samalla 283 rivin aineistolla: **180 -> 206 osui**, 49 -> 22
+erosi, tunnistamattomat 54 -> 55. Yksi rivi siirtyi vaarasta vastauksesta
+tyhjaan, mika on oikea suunta ([[hiding-threshold]]).
+
+#### Kannan korjaus: nimi on todiste, runko ei
+
+Kirjoitettiin vain rivit joilla tunnistettu kunta on hankkeen **omassa
+nimessa** (3 rivia). Pelkka rungon maininta voi olla saman tiedotteen
+toinen hanke — juuri niin kavi Paraisten kohdalla.
+
+Loput yhdeksan luin yksitellen: kuudella todiste oli yksiselitteinen
+(Senop/Jyvaskyla, Luolavuoren koulu/Turku x2, Marjoniemi/Kouvola,
+Aviapolis/Vantaa), ja ne korjattiin **nimeltaan eika saannolla**.
+Kolmea ei korjattu: "Datakeskus Kajaaniin" on kannassa jo oikein, ja
+CIRCUIT on kansainvalinen tutkimushanke jossa Espoo vain koordinoi.
+
+`scripts/korjaa-julkaisijan-kotipaikka.ts` (kuivaharjoitus oletuksena,
+`--kasin` kasin luetut rivit), `lib/agent/detectCityFromText.spec.ts`.
+
 ### D-255 - Monen hankkeen tiedote jaetaan ennen hyvaksyntaa
 
 Johannes 10.10.2026 Espoon elinkeino- ja kilpailukykyjaoston
