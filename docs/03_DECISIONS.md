@@ -5,6 +5,73 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ---
 
+### D-256 - Hylkays on paatos hetkesta, ei ikuisuudesta
+
+Johannes 10.10.2026 Ruoveden pelastus- ja ensihoitoasemasta: *"jos
+hylkaan taman nyt niin tuleeko se uudestaan myohemmin kun voittaja
+valitaan?"*
+
+**Ei tullut.** `resolvePotentialProject` paivitti hylatyn rivin
+metadatan — voittajan ja kaiken — mutta jatti tilan ennalleen. Koodin
+oma kommentti sanoi sen: *"Hyvaksyttyja/hylattyja ei koskettaa."*
+Paivitys tapahtui hiljaa eika rivi palannut katselmoitavaksi koskaan.
+
+#### Mitattu 10.10.2026
+
+| | |
+|---|---|
+| hylattyja ehdokkaita | 2 360 |
+| niista sai myohemmin voittajan tai lisaa lahdetietoa | **140** |
+| niista Hilman `works`-luokassa | **41** |
+| joilla voittaja jo tiedossa | 19 |
+
+Menetettyja: *Englantilainen koulu, nayttamotekniikkaurakka* -> Helmark
+Interior Oy. *Nanun ylakoulun vaistotilat* -> Koskirent Oyj.
+*Mikroelektroniikan pilotointiekosysteemi* -> Skanska CDF Oy.
+
+#### Vuokramalli oli oma sokea pisteensa
+
+Johannes: *"olen hylannyt nimenomaan naita vuokramalli ehdokkaita."*
+Hilmassa on hankintoja joissa tilaaja vuokraa rakennuksen ja **voittaja
+rakentaa sen**. Kuvaus sanoo sen suoraan: *"vuokranantaja vastaa
+vuokrakohteen suunnittelusta, rakennuttamisesta ja yllapidosta"*,
+*"valittu tarjoaja on rakennushankkeeseen ryhtyva, investori,
+rakennuttaja, paatoteuttaja"*.
+
+Otsikko hamaa (*"hankinta vuokramallilla"*) ja se nayttaa
+palveluhankinnalta. Hilma itse luokittelee ne `works`-hankinnoiksi.
+Myyjan kannalta ne ovat **parempia** kuin tavallinen urakka: voittaja
+on yhta aikaa rakennuttaja ja paatoteuttaja, eli ostaa kaiken itse.
+
+Kaytanto oli ollut epayhtenainen: seitseman hylattya, kolme hyvaksyttya
+ja yksi jonossa.
+
+#### Korjaus
+
+`lib/projects/palautaHylatty.ts`: hylatty palaa jonoon kun **voittaja
+ratkeaa**. Ehto on tahallaan tiukka:
+
+- vain tilasta `rejected` — hyvaksyttyyn ja jonossa olevaan ei kosketa
+- vain **tiedossa oleva voittaja**, ei pelkka sopimusilmoitus:
+  sellainen tarkoittaa usein keskeytysta (D-251, `clos-nw`)
+- ei palauteta jos voittaja oli jo tiedossa hylattaessa
+
+Mikroskoopin, autoleasingin ja kyselytutkimuksen hylkays pysyy siis
+hylkayksena. Alkuperainen `rejected_at` ja `rejected_reason` jaavat
+nakyviin, ja palautus merkitaan (`palautettu_jonoon`,
+`palautuksen_syy`), jotta katselmoija nakee miksi rivi oli poissa.
+
+#### Takautuva palautus: 46 rivia
+
+`scripts/palauta-hylatyt-rakennusurakat.ts`. Rajaus on **Hilman oma
+luokitus** (`procurement_type_code` sisaltaa "works"), ei minun
+arvioni: 99 palvelu- ja tavarahankintaa 140:sta jai hylatyksi.
+
+Mukana on muutama rivi joissa Hilman works-luokitus on loysa
+(koneiden vuokraus, tarkastuspalvelut). Ne jaavat katselmoitavaksi
+tahallaan: oma suodatukseni olisi ollut arvio, ja arvio kuuluu
+ihmiselle.
+
 ### D-254 - TA-Yhtiot lahteeksi; asukashaku on rakenteilla, ei valmis
 
 TA-Yhtiot (TA-Yhtyma Oy, TA-Asumisoikeus Oy ja tytaryhtiot) rakennuttaa

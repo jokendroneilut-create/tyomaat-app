@@ -29,6 +29,7 @@ import {
   hasNonConstructionZoningDisclaimer,
 } from "@/lib/agent/knowledge/negativeProjects"
 import { PHASE_LABELS } from "@/lib/projects/phases"
+import { palautaHylattyJonoon } from "@/lib/projects/palautaHylatty"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -497,6 +498,21 @@ export async function resolvePotentialProject(
             "ignore")
           ? { status: "ignored" }
           : {}),
+        /*
+         * HYLATTY PALAA JONOON KUN VOITTAJA RATKEAA (D-256).
+         *
+         * Aiemmin tama haara jatti hylatyn rivin rauhaan ikuisesti, eli
+         * "liian aikaista" -hylkays oli lopullinen paatos. Mitattu
+         * 10.10.2026: 140 hylattya sai myohemmin voittajan tai lisaa
+         * lahdetietoa eika yksikaan palannut katselmoitavaksi.
+         *
+         * Ehto on tiukka (ks. palautaHylatty.ts): vain tiedossa oleva
+         * voittaja palauttaa. Mikroskoopin tai autoleasingin hylkays
+         * pysyy hylkayksena.
+         */
+        ...(palautaHylattyJonoon(existing, input.metadata as Record<string, any>)
+          ? { status: "new" }
+          : {}),
         title: existing.title ?? title,
         municipality: existing.municipality ?? municipality,
         address: existing.address ?? address,
@@ -517,6 +533,17 @@ export async function resolvePotentialProject(
           ...yhteyshenkilotMetadata(existing.metadata),
           source_history: sourceHistory,
           lastSourceName: input.sourceName ?? null,
+          /*
+           * Alkuperainen hylkays jaa nakyviin (`rejected_at`,
+           * `rejected_reason`), jotta katselmoija nakee miksi rivi oli
+           * poissa ja miksi se palasi.
+           */
+          ...(palautaHylattyJonoon(existing, input.metadata as Record<string, any>)
+            ? {
+                palautettu_jonoon: new Date().toISOString(),
+                palautuksen_syy: "voittaja ratkesi hylkayksen jalkeen",
+              }
+            : {}),
           matched_existing_project_id:
             existing.metadata?.matched_existing_project_id ??
             matchedExistingProjectId,
