@@ -172,6 +172,81 @@ poistettiin nakyvista toistaiseksi; koodiin jai kommentti. Asiakkaan
 
 ---
 
+### D-253 - Tuontibudjetin hanta nakyviin, ja ohitusikkuna 7 -> 14 vrk
+
+Johannes 10.10.2026 pyysi tarkistamaan nayttaako ajoissa kaikki
+normaalilta. Lahteet ja volyymit olivat kunnossa, mutta kaksi paivaa
+aiemmin lisatty Keravan uutislahde **tallensi 101 asiakirjaa ja toi
+niista 37**.
+
+#### Mika portti
+
+`legacyFetchCollector` pysahtyy 60 sekunnin tuontibudjettiin
+(`IMPORT_BUDGET_MS`, portti `ehtiiViela`) ja merkitsee loput
+`deferred`-tilaan. Ne eivat siis olleet hylattyja vaan siirrettyja:
+
+| | |
+|---|---|
+| asiakirjoja | 101 |
+| tuotu budjetin sisalla | 37 |
+| paasi LLM:n relevanssiportille | 34 |
+| siirtyi seuraavaan ajoon | 64 |
+
+Relevanssiportti ei hylannyt niita — **ne eivat paasseet sinne asti.**
+Sama ilmio oli jo kirjattu koodin kommenttiin STT:lla ("110
+kandidaatista 97 oli sellaisia joita ei ollut koskaan tuotu"), eli
+vika ei ollut uusi, se oli vain nakymaton.
+
+#### 37 ei ole kiinteä katto
+
+Raja on aika, ei lukumaara: `stt_haku` toi 83 kandidaattia yhtena
+paivana. Keravan kandidaatit ovat kalliita, koska kuvaukseksi
+tallennetaan 1 200 merkkia artikkelitekstia ja jokainen maksaa kaksi
+mallikutsua.
+
+#### Tilapaista vai pysyvaa — riippuu yhdesta luvusta
+
+Jo tuodut eivat kuluta budjettia uudelleen: `findRecentlySeenSourceUrls`
+karsii ne ennen silmukkaa. **Mutta vain jos ohitusikkuna on pidempi kuin
+lahteen ajovali** — ehto on kirjoitettu koodin kommenttiin.
+
+Mitattu 10.10.2026 kaikista 331 kaytossa olevasta lahteesta:
+
+| | |
+|---|---|
+| ajovalin mediaani | **5,7 vrk** |
+| ohitusikkuna oli | 7 vrk |
+| marginaali | **1,3 vrk** |
+| ikkunan ylittavia lahteita | 0 |
+
+Ehto siis piti, mutta tuskin. Ja raja on liukuva: ajovali oli aiemmin
+kirjattu kahdeksi vuorokaudeksi, ja se on kasvanut kun lahteita on
+tullut 332:een ilman vastaavaa lisaysta ajopaikkoihin. Kun ikkuna
+ylittyy, ison lahteen hanta jaa **pysyvasti** tuomatta — ilman virhetta
+tai halytysta.
+
+#### Kaksi korjausta
+
+1. **Ikkuna 7 -> 14 vrk.** Kaksinkertainen marginaali nykyiseen
+   5,7:aan. Kuukausi olisi liikaa: silloin sivun aito paivitys jaisi
+   huomaamatta.
+2. **`deferred` kirjataan ajoriville** (`discovery_runs.documents_deferred`).
+   Se on tahan asti mennyt vain `console.warn`iin eli Vercelin lokiin,
+   jota kukaan ei lue. Sarake lisataan kasin
+   (`docs/sql/2026-10-10_discovery_runs_deferred.sql`), ja kirjoitus
+   putoaa ilman sita, joten koodin voi julkaista ennen SQL:n ajoa.
+   Lukeminen: `scripts/diag-siirretyt.ts`, joka nayttaa myos ajovalin
+   suhteessa ikkunaan.
+
+#### Avoin: ajotiheys
+
+Discovery ajetaan `0 */6 * * *` eli neljasti vuorokaudessa, ~15
+lahdetta per ajo. Kolmen tunnin vali puolittaisi ajovalin noin 2,9
+vuorokauteen. Sita EI tehty nyt: ikkunan nosto poisti taman ongelman,
+ja tiheyden nosto on perusteltu vasta jos **vanhenevat lahteet**
+(Lupapisteen kuulutukset, ks. muistiinpano) sita vaativat — se on eri
+ongelma ja oma paatoksensa.
+
 ### D-252 - Tyomaakuvat suoraan kantaan, ja jokainen puuttuva hanke kysyy "miksi"
 
 Johannes 8.10.2026 toi 13 hanketta kuvina (7 tyomaakylttia, 6

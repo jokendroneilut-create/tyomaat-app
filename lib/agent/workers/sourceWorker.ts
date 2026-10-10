@@ -264,15 +264,39 @@ result = await withTimeout(
   source.name
 )
 
-    await supabaseAdmin
+    /*
+     * SIIRRETYT KIRJATAAN AJORIVILLE (D-253).
+     *
+     * `deferred` on tahan asti mennyt vain console.warn-riville eli
+     * Vercelin lokiin. Mitattu 10.10.2026: Keravan uutislahde tallensi
+     * 101 asiakirjaa ja toi 37, eika mikaan nakynyt kertovan siita —
+     * lahde naytti taysin onnistuneelta.
+     *
+     * Sarake lisataan kasin (`docs/sql/2026-10-10_discovery_runs_deferred.sql`),
+     * joten kirjoitus yrittaa ensin sen kanssa ja putoaa ilman sita.
+     * Nain koodin voi julkaista ennen SQL:n ajoa.
+     */
+    const ajonTulos = {
+      status: "success",
+      documents_found: result.documentsFound ?? 1,
+      documents_saved: result.documentsSaved ?? 1,
+      finished_at: new Date().toISOString(),
+    }
+
+    const siirretyt = (result as { deferred?: number }).deferred ?? null
+
+    const taysi = await supabaseAdmin
       .from("discovery_runs")
-      .update({
-        status: "success",
-        documents_found: result.documentsFound ?? 1,
-        documents_saved: result.documentsSaved ?? 1,
-        finished_at: new Date().toISOString(),
-      })
+      .update(
+        siirretyt === null
+          ? ajonTulos
+          : { ...ajonTulos, documents_deferred: siirretyt }
+      )
       .eq("id", run.id)
+
+    if (taysi.error && siirretyt !== null) {
+      await supabaseAdmin.from("discovery_runs").update(ajonTulos).eq("id", run.id)
+    }
 
     await supabaseAdmin
       .from("discovery_sources")

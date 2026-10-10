@@ -118,7 +118,23 @@ export async function isSourceUrlSeenRecently(
  * vanhaa 24 tunnin project_sources-tarkistusta. Se on eri rajapinta
  * eikä osa keräysputkea.
  */
-const IMPORT_SEEN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+/*
+ * 7 -> 14 VRK (D-253).
+ *
+ * Yllaoleva saanto "ikkunan on oltava pidempi kuin lahteen ajovali"
+ * piti paikkansa kun ikkuna kirjoitettiin, mutta ajovali on kasvanut
+ * lahteiden myota. Mitattu 10.10.2026: **mediaani 5,7 vrk**, ja
+ * lahteita on 332. Marginaali seitsemaan oli siis 1,3 vrk.
+ *
+ * Raja on liukuva: jokainen uusi lahde tyontaa mediaania lahemmas
+ * ikkunaa. Kun se ylittyy, jo tuodut kandidaatit nayttavat taas uusilta,
+ * palaavat tuontibudjettiin ja ison lahteen hanta jaa pysyvasti
+ * tuomatta — ilman virhetta tai halytysta.
+ *
+ * 14 vrk antaa kaksinkertaisen marginaalin. Kuukausi olisi liikaa:
+ * silloin sivun aito paivitys jaisi huomaamatta.
+ */
+const IMPORT_SEEN_WINDOW_MS = 14 * 24 * 60 * 60 * 1000
 
 /*
  * PALA MITOITETAAN PITUUDEN EIKA MAARAN MUKAAN. Sadan osoitteen pala
