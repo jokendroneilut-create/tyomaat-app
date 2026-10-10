@@ -3,7 +3,62 @@
 Merkittäviä suunnittelupäätöksiä ja niiden perustelut, jottei niitä käydä
 uudelleen läpi joka sessiossa. Ylin = uusin.
 
+> **⚠ NUMEROT D-250…D-254 OVAT KAHTEEN KERTAAN (todettu 10.10.2026).**
+> Kaksi rinnakkaista sessiota lisasi paatoksia samaan aikaan ja
+> kumpikin otti numeron "suurin + 1" eri hetkella luetusta
+> tiedostosta. Koodissa on 70 viittausta naihin numeroihin, joten
+> pelkka uudelleennumerointi rikkoisi viittaukset enemman kuin
+> korjaisi. **Viittausta lukiessa tarkista otsikko, ei pelkkaa
+> numeroa.** Parit:
+>
+> | numero | A | B |
+> |---|---|---|
+> | D-250 | VRJ, Torppari ja Pelti-Assat lahteiksi | Kolme poimintaa jotka kuvaus kertoi |
+> | D-251 | Hekan uudiskohdeluettelo lahteeksi | Sopimusilmoitus ei tarkoita voittajaa |
+> | D-252 | Tyomaakuvat suoraan kantaan | Hankinnan hoitaja talteen |
+> | D-253 | Yritysrekisteri adminille | Tuontibudjetin hanta nakyviin |
+> | D-254 | TA-Yhtiot lahteeksi | Keravan 12 kuukauden ikkuna |
+>
+> **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista
+> ja varmista ettei numero ole kaytossa — `grep "^### D-" | sort`.
+
 ---
+
+### D-255 - Monen hankkeen tiedote jaetaan ennen hyvaksyntaa
+
+Johannes 10.10.2026 Espoon elinkeino- ja kilpailukykyjaoston
+tiedotteesta: *"voitko poimia tasta nuo hankkeet ja tehda niista
+erilliset? en halua sellaisenaan hyvaksya koska samassa olisi monta
+hanketta."*
+
+Kunnan jaostotiedote sisaltaa tyypillisesti useita asioita. Tama
+sisalsi **kaksi hanketta ja yhden hallinnollisen paatoksen**:
+
+| | |
+|---|---|
+| Westendin asemanseudun kehittaminen | suunnitteluvaraus Urbanizator Oy:lle, JM Suomi Oy:lle ja JATS Property Development Oy:lle |
+| Kivenlahden metrokeskuksen liikekeskus | tontti myyty SRV Yhtiot Oyj:lle, 2,4 MEUR |
+| varausmaksuperiaatteet | **ei hanke** — hallinnollinen paatos |
+
+Yhtena rivina sita ei voi hyvaksya: hanke saisi vaaran nimen, vaaran
+sijainnin ja vaarat osapuolet.
+
+#### Kolme ratkaisua jotka eivat ole itsestaan selvia
+
+1. **Kauppahinta ei ole kustannusarvio.** 2,4 MEUR on TONTIN hinta.
+   Kustannusarviokenttaan se olisi ollut yksinkertaisesti vaara luku;
+   se kirjattiin kuvaukseen erikseen merkittyna.
+2. **Jaoston puheenjohtaja ei ole hankkeen yhteyshenkilo.**
+   Luottamushenkilo merkittiin rooliin `authority`, jolloin han ei
+   laske yhteystietokattavuuteen muttei myoskaan katoa (D-207:n
+   periaate).
+3. **Lahteessa oli kirjoitusvirhe.** Ingressissa ostaja on "SVR",
+   leipatekstissa "SRV Yhtiot Oyj". Kaytettiin leipatekstia ja
+   ristiriita kirjattiin kuvaukseen tarkistettavaksi.
+
+Alkuperainen rivi merkittiin `ignored` ja siihen kirjattiin mihin se
+jakautui ([[queue-removal-ignored]]) — ei poistettu.
+`scripts/jaa-espoon-jaostotiedote.ts`.
 
 ### D-256 - Hylkays on paatos hetkesta, ei ikuisuudesta
 
