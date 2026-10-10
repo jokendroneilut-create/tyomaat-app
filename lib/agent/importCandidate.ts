@@ -1,3 +1,4 @@
+import { kanoninenLahdeUrl } from "@/lib/projects/lahdeUrl"
 import { createClient } from "@supabase/supabase-js"
 import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { inferPhaseFromText } from "@/lib/projects/inferPhaseFromText"
@@ -148,7 +149,17 @@ const URL_CHUNK_CHARS = 8000
 export async function findRecentlySeenSourceUrls(
   urls: (string | null | undefined)[]
 ): Promise<Set<string>> {
-  const unique = [...new Set(urls.filter((u): u is string => !!u))]
+  /*
+   * Kyselyyn otetaan myos sisarmuoto: kantaan on tallennettu seka
+   * /tiedote/- etta /release/-polkuja, eika `.in()` osu kuin
+   * tasmalliseen merkkijonoon.
+   */
+  const laajennettu = urls.flatMap((u) => {
+    if (!u) return []
+    const sisar = String(u).replace(/\/release\//i, "/tiedote/").replace(/\/pressrelease\//i, "/tiedote/")
+    return sisar === u ? [u] : [u, sisar]
+  })
+  const unique = [...new Set(laajennettu.filter((u): u is string => !!u))]
   const seen = new Set<string>()
 
   if (unique.length === 0) return seen
@@ -186,7 +197,12 @@ export async function findRecentlySeenSourceUrls(
     if (error) throw error
 
     for (const row of data ?? []) {
-      if (row.source_url) seen.add(row.source_url)
+      /*
+       * Kanoninen muoto, koska sama STT-tiedote on kahdessa polussa
+       * (/tiedote/ ja /release/). Vertailu tehdaan molemmin puolin
+       * kanonisena — ks. lahdeUrl.ts (D-266).
+       */
+      if (row.source_url) seen.add(kanoninenLahdeUrl(row.source_url))
     }
   }
 

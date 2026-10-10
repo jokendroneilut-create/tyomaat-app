@@ -60,6 +60,80 @@ jakautui ([[queue-removal-ignored]]) — ei poistettu.
 `scripts/jaa-espoon-jaostotiedote.ts`.
 ---
 
+### D-266 - Sama tiedote kahdessa osoitemuodossa, ja sivupohja kuvauksen alussa
+
+Johannes 11.10.2026 Aviapolis-hankkeesta: *"paljon roskaa kuvauksessa
+ja paikkakunta on turku. Aviapolin on Vantaalla."* Ja peraan: *"en
+tieda miksi tama tuli uudelleen koska hyvaksyin jo yhden vastaavan tic
+jonosta aiemmin."*
+
+Kolme vikaa samassa rivissa, ja kaksi niista oli yleisia.
+
+#### 1. Sama tiedote tuli kahdesti — osoite erosi yhdella sanalla
+
+```
+sttinfo.fi/release/72371945/hartela-rakentaa-...   (hartela-lahde)
+sttinfo.fi/tiedote/72371945/hartela-rakentaa-...   (stt_haku)
+```
+
+Sama tiedote, sama julkaisija, sama ID. `stt_haku` kayttaa
+suomenkielista polkua, yrityslahteet englanninkielista, ja
+kaksoiskappaleiden esto vertaa osoitteita **merkki merkilta**.
+
+Mitattu: **26 asiakkaalle nakyvaa hanketta ja 42 ehdokasta** oli
+syntynyt kahdesti samasta tiedotteesta.
+
+`lib/projects/lahdeUrl.ts` palauttaa kanonisen muodon
+(`sttinfo.fi/tiedote/<id>`), ja vertailu tehdaan **molemmin puolin**
+kanonisena. Kyselyyn otetaan lisaksi sisarmuoto, koska kantaan on jo
+tallennettu kumpaakin. Tiedotteen ID on identiteetti — ei polku eika
+otsikkoslugi, joka muuttuu kun julkaisija korjaa otsikkoa.
+
+Muita sivustoja **ei yleisteta arvaamalla**: jokaisen osoitelogiikka
+on omansa.
+
+#### 2. Sivupohja kuvauksen alussa
+
+Kuvaus alkoi nain:
+
+> "Hartela rakentaa YES-EU:n uuden paakonttorin Aviapolikseen**6.10.2026
+> 07:59:43 EEST | Hartela | TiedoteJaa**Hartela rakentaa Julius
+> Tallberg-Kiinteistot Oyj:lle..."
+
+Otsikko, aikaleima, julkaisija ja jakopalkki — ja vasta sitten teksti.
+Hantaa siivottiin jo (`cutReleaseTail`), alkua ei.
+
+Ankkuri on **aikaleima**, ei otsikko: otsikko vaihtelee, mutta
+"6.10.2026 07:59:43 EEST |" on aina samaa muotoa. Kuivaharjoitus
+paljasti ennen ajoa etta julkaisijoita voi olla useita putkeen
+("| Senaatti-kiinteistot | Puolustuskiinteistot | Tiedote"), joten
+hahmo sallii niita 1-3.
+
+Siivottu takautuvasti: **115 hanketta ja 214 ehdokasta**, keskimaarin
+66-91 merkkia riviltä. Tyhjaksi ei jateta: jos leikkaus veisi tekstin
+alle 80 merkkiin, alkuperainen sailyy.
+
+#### 3. Paikkakunta oli julkaisijan kotipaikka
+
+Rivilla luki Turku / Varsinais-Suomi, vaikka teksti sanoo *"Äyritie
+6:een Vantaalle"*. `field_sources.city` oli `"lahde"` — kaupunki tuli
+Hartelan omasta lahteesta, ei hankkeen tekstista. Hartelan kotipaikka
+on Turku.
+
+Rivi korjattiin kasin (Vantaa / Uusimaa / Äyritie 6) ja merkittiin
+`possible_duplicate_of`-kentalla oikean kopion pariksi. **Ei yhdistetty
+itse** ([[check-duplicate-reviews]]).
+
+#### Avoin
+
+Julkaisijan kotipaikan paatyminen hankkeen kunnaksi on oma vikansa
+eika sita korjattu tassa. Se on myos syy siihen miksi duplikaatti jai
+huomaamatta myos nimen ja kaupungin perusteella: "Turku" ja "Vantaa"
+eivat tasmaa. Osoitenormalisointi ratkaisee taman tapauksen, mutta
+vaara kunta on silti auki.
+
+---
+
 ### D-265 - Ulkomainen suorituspaikka pois jonosta
 
 Johannes 11.10.2026: *"saako nama venetsiaan kohdistuvat hankkeet

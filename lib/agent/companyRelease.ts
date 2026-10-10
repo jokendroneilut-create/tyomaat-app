@@ -288,8 +288,52 @@ export function extractReleaseBody(html: string): string | null {
 }
 
 /* Murupolun, naapuriartikkelien ja sivukaluston poisto yhdestä ehdokkaasta. */
+/*
+ * STT:N SIVUPOHJA TEKSTIN ALUSSA (D-266).
+ *
+ * Johannes 11.10.2026: *"paljon roskaa kuvauksessa."* Kuvaus alkoi
+ * nain:
+ *
+ *   "Hartela rakentaa YES-EU:n uuden paakonttorin Aviapolikseen
+ *    6.10.2026 07:59:43 EEST | Hartela | TiedoteJaaHartela rakentaa..."
+ *
+ * Eli OTSIKKO, aikaleima, julkaisija, sanat "Tiedote" ja "Jaa" — ja
+ * vasta sitten varsinainen teksti, joka toistaa otsikon. Hanta
+ * siivottiin jo (`cutReleaseTail`), alkua ei.
+ *
+ * ANKKURI ON AIKALEIMA, EI OTSIKKO. Otsikko vaihtelee, mutta
+ * sttinfo.fi:n aikaleima on aina samaa muotoa
+ * "6.10.2026 07:59:43 EEST" ja sita seuraa pystyviiva. Kaikki sita
+ * ENNEN oleva on sivupohjaa.
+ *
+ * Mitattu 11.10.2026: 205 ehdokasta ja 53 asiakkaalle nakyvaa
+ * hanketta. Yleisimmat lahteet stt_haku 88, skanska 42, hartela 31.
+ */
+/*
+ * Julkaisijoita voi olla USEITA putkeen: Sakylan varuskunnan
+ * tiedotteessa lukee "| Senaatti-kiinteistot | Puolustuskiinteistot |
+ * Tiedote Jaa". Yhden segmentin hahmo jatti jaannoksen alkuun.
+ * Mitattu kuivaharjoituksesta ennen ajoa.
+ */
+const STT_ALKUROSKA = new RegExp(
+  "^.{0,200}?" +
+    "\\d{1,2}\\.\\d{1,2}\\.\\d{4}\\s+\\d{1,2}:\\d{2}:\\d{2}\\s+EES?T" +
+    "(?:\\s*\\|[^|]{0,60}){1,3}" +
+    "\\s*\\|?\\s*(?:Tiedote|Uutinen|Pressmeddelande)\\s*(?:Jaa)?\\s*",
+  "i"
+)
+
+export function stripReleaseHead(text: string): string {
+  const siistitty = text.replace(STT_ALKUROSKA, "").trim()
+  /*
+   * Tyhja on pahempi kuin roskainen: jos hahmo soi koko tekstin, se
+   * osui vaarin ja alkuperainen sailytetaan.
+   */
+  return siistitty.length >= 80 ? siistitty : text
+}
+
 export function cleanReleaseText(raw: string): string {
-  let text = raw.replace(/\s+/g, " ").trim()
+  let text = stripReleaseHead(raw.replace(/\s+/g, " ").trim())
 
   for (const marker of CRUMB_MARKERS) {
     const at = text.indexOf(marker)

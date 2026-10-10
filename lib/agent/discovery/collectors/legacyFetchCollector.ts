@@ -7,6 +7,7 @@ import {
   loadProjectsForMatching,
 } from "@/lib/agent/importCandidate"
 import { ehtiiViela } from "@/lib/agent/discovery/tuontiBudjetti"
+import { kanoninenLahdeUrl } from "@/lib/projects/lahdeUrl"
 
 /*
  * Lähteen jo tallennettujen kuvausten pituudet osoitteittain.
@@ -367,8 +368,14 @@ export async function collectLegacySource(source: any) {
    * Karsinta ei muuta semantiikkaa: ohitushaara ei tehnyt muuta kuin kasvatti
    * laskuria.
    */
+  /*
+   * Vertailu kanonisena molemmin puolin (D-266): sama STT-tiedote on
+   * poluissa /tiedote/ ja /release/, ja ilman normalisointia se tuli
+   * kahdesti — 26 asiakkaalle nakyvaa hanketta oli syntynyt nain.
+   */
   const unseen = candidates.filter(
-    (candidate: any) => candidate?.source_url && !seenUrls.has(candidate.source_url)
+    (candidate: any) =>
+      candidate?.source_url && !seenUrls.has(kanoninenLahdeUrl(candidate.source_url))
   )
 
   skipped = candidates.length - unseen.length
