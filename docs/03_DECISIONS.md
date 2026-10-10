@@ -111,11 +111,23 @@ Veto lisattiin osoitehaaraan. **Vain siihen**: lupanumero ja
 kiinteistotunnus ovat vahvoja tunnisteita, osoite on heikko — sama
 rakennus kilpailutetaan useana urakkana.
 
-#### Avoin
+#### Vanhat 8 jatetaan ennalleen — paatos 11.10.2026
 
-Ne 8 (tai useampi) olemassa olevaa riviä ovat yha yhdistettyina.
-Niiden purkaminen on oma tyonsa: toinen urakka on kadonnut rivin
-sisaan eika sita voi palauttaa ilman alkuperaista ilmoitusta.
+Johannes: *"jatetaan nuo 8 siten kun nyt ovat."*
+
+Perustelu: toinen urakka on kadonnut rivin sisaan, eika sita saa
+takaisin ilman alkuperaista ilmoitusta. Purkaminen olisi siis uuden
+rivin **rakentamista arvauksen varassa**, ei palauttamista. Rivit eivat
+myoskaan ole asiakkaalla nakyvissa (`projects`-taulussa vastaavia 0),
+vaan katselmointijonossa, jossa ihminen nakee molemmat nimet nyt kun
+D-263 nayttaa ne.
+
+**Menetys on tiedossa eika nolla:** kahdeksan urakkaa jaa ilman omaa
+rivia. Se on tietoinen vaihtokauppa, ei sivuvaikutus — sama linja kuin
+D-226:ssa (12 kk:n ikkuna) ja D-256:ssa (hylkayksia ei purettu
+takautuvasti).
+
+Veto estaa uudet tapaukset, joten luku ei kasva.
 
 #### Opetus
 
