@@ -60,6 +60,55 @@ selostuksen (Eura ja Helsinki on kytketty, muut eivät). Jäsennin ja
 liitevalitsija ovat jaettuja, vain sivurakenne vaihtelee — ks.
 [muisti: kaava-parser-vs-page].
 
+## Mihin asiakkaan osumat oikeasti kohdistuvat (11.10.2026)
+
+Kannassa olevien ohuiden rivien **määrä** ei kerro kannattaako työtä
+jatkaa — vasta se, mihin asiakkaan avaukset osuvat.
+
+```bash
+npx tsx scripts/mittaa-ohuiden-osumat.ts
+```
+
+490 avausta 2 467:stä osui ohueen hankkeeseen = **19,9 %**, eli tasan
+samassa suhteessa kuin ohuita on kannassa (19,7 %). Asiakkaat eivät siis
+väistä niitä: joka viides avaus näyttää lähes tyhjän hankkeen.
+
+Mutta osumat jakautuvat aivan eri tavalla kuin lähdetyö:
+
+| lähde | ohuita avauksia | osuus | korjattavissa lähteestä? |
+|---|---|---|---|
+| (ei lähdettä) — käsin lisätyt | 245 | 50 % | **kyllä**, 166:lla on elävä osoite |
+| Hilma | 120 | 24 % | **ei** — ilmoituksessa on vain yksi virke |
+| rakennuslehti | 59 | 12 % | ei — artikkeli maksumuurin takana |
+| Lupapiste + Espoon kuulutukset | 22 | 4 % | osin |
+| **kaikki kaavalähteet yhteensä** | **~12** | **2 %** | kyllä, mutta vähän |
+
+**Kaavalähteiden läpikäynti kattaa 2 % asiakkaan ohuista osumista.**
+Se tehtiin loppuun siellä missä se maksaa itsensä takaisin, mutta
+jatkaminen lähde kerrallaan ei enää kannata.
+
+### Hilma: lyhyys ei ole poimintavirhe
+
+Tarkistettu 11.10.2026 eForms-ilmoituksesta (procedure 29821, enotice
+55039): ilmoituksen `procurementProject/description` on **täsmälleen
+sama 144 merkkiä** kuin kannassa. Tilaaja on kirjoittanut yhden
+virkkeen. Lisäteksti olisi tarjouspyyntöasiakirjoissa, ei
+ilmoituksessa. Hilman ohuita rivejä ei siis korjata poimintaa
+parantamalla — eikä niitä pidä pidentää tekstiä keksimällä.
+
+### Käsin lisätyt: suurin yksittäinen vipu
+
+166 käsin lisätyllä ohuella hankkeella on `source_url`. Otos 12
+(tasavälein, ei ensimmäiset): **12/12 osoitetta vastasi ja kaikilla oli
+1 455–6 876 merkkiä tekstiä** — Atrian tehdas, Senaatin virastotalo,
+Firan logistiikkakeskus, OX2:n tuulipuisto.
+
+Varoitus poimintaan: sivujen pisin kappale on usein yrityksen
+vakioesittely ("Skanska on yksi maailman johtavista…", "Senaatti on
+valtion kiinteistöasiantuntija…"). Sama siivous kuin
+`lib/agent/companyRelease.ts`:ssä tarvitaan, ja kuivaharjoitus on
+luettava riveittäin.
+
 ## Umpikuja: lähteessä ei ole tekstiä
 
 Näitä ei kannata yrittää uudelleen samasta lähteestä. Tarkistettu
@@ -94,8 +143,8 @@ väärä osuma on pahempi kuin tyhjä.
 
 | lähde | ohuita | huomio |
 |---|---|---|
-| (ei lähdettä) | 333 | **Johanneksen käsin lisäämiä** helmi–huhtikuussa 2026, ennen kuin keräimiä oli nykymuodossaan. Ei lähdeasiakirjaa josta poimia: 136:lla on `source_url`, lopuilla ei mitään. Ainoa reitti on verkkohaku (mitattu 20 senttiä/hanke) tai käsin. |
-| Hilma | 91 / 814 | hankintailmoituksen oma kuvauskenttä on lyhyt; eForms-asiakirjassa voi olla enemmän |
+| (ei lähdettä) | 333 (**50 % ohuista osumista**) | **Johanneksen käsin lisäämiä** helmi–huhtikuussa 2026, ennen kuin keräimiä oli nykymuodossaan. Ei lähdeasiakirjaa josta poimia: 136:lla on `source_url`, lopuilla ei mitään. Ainoa reitti on verkkohaku (mitattu 20 senttiä/hanke) tai käsin. |
+| Hilma | 91 / 814 (**24 % ohuista osumista**) | tarkistettu: eForms-ilmoituksessa on sama teksti kuin kannassa, tilaaja kirjoitti yhden virkkeen — ei korjattavissa |
 | Lupapiste kuulutukset | 37 / 169 | kuulutus on menettelyteksti; liiteasiakirjat vanhenevat verkosta |
 | rakennuslehti | 32 / 68 | uutisen ingressi; koko artikkeli maksumuurin takana |
 | Väylävirasto hankkeet | 20 / 273 | hankesivu on lyhyt |
