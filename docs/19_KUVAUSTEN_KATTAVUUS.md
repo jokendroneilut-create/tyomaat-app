@@ -22,19 +22,19 @@ piilottaa juuri sen hännän joka näkyy.
 
 ## Tilanne 11.10.2026 (illalla)
 
-6 783 hanketta, mediaani **691** merkkiä (lähtötaso 597), alle 200
-merkin **1 149** (17 %), alle 40 merkin 228.
+6 785 hanketta, mediaani **706** merkkiä (lähtötaso 597), alle 200
+merkin **1 115** (16 %), alle 40 merkin 210.
 
 | merkkiä | hankkeita | osuus |
 |---|---|---|
-| 0–40 | 228 | 3 % |
-| 40–100 | 315 | 5 % |
-| 100–200 | 606 | 9 % |
+| 0–40 | 210 | 3 % |
+| 40–100 | 304 | 4 % |
+| 100–200 | 601 | 9 % |
 | 200–400 | 1 208 | 18 % |
-| 400–800 | 1 270 | 19 % |
-| 800– | 3 156 | 47 % |
+| 400–800 | 1 273 | 19 % |
+| 800– | 3 189 | 47 % |
 
-**Asiakkaan osuma ohueen hankkeeseen: 19,9 % → 15,2 %** (490 → 375
+**Asiakkaan osuma ohueen hankkeeseen: 19,9 % → 13,9 %** (490 → 343
 avausta 2 467:stä). Tämä on se luku jota seurataan, ei rivien määrä.
 
 ## Käyty läpi
@@ -130,9 +130,16 @@ npx tsx scripts/etsi-lahde-verkosta.ts --apply   # kirjoittaa vain VARMAT
 
 167 hankkeesta **95 osumaa, joista 42 varmaa** (hakutuloksen otsikko
 kattaa ≥ 75 % hankkeen nimen sisältösanoista, vähintään kaksi sanaa).
-Varmat kirjoitettiin; **53 jäi tarkistuslistalle**, koska mitattu
+Varmat kirjoitettiin; **53 meni tarkistuslistalle**, koska mitattu
 tarkkuus ilman otsikkotodistetta on vain 60–70 %. 70:llä yksikään
 kolmesta osumasta ei vastannut hanketta.
+
+Johannes kävi listan läpi ja merkitsi 11 vääräksi; hyväksytyistä
+kirjoitettiin **35** (`scripts/kirjoita-tarkistetut.ts`). Seitsemällä
+sivu ei vastannut enää kirjoitushetkellä — ne voi yrittää uudelleen.
+
+Yhteensä käsin lisätyistä on nyt täydennetty **140 + 42 + 35 = 217**
+hanketta.
 
 ## Umpikuja: lähteessä ei ole tekstiä
 

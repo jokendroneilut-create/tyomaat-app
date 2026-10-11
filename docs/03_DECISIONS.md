@@ -99,12 +99,29 @@ puoli — kuvauskenttaan oli kertynyt yhteystietoja.
 
 #### Tulos
 
+#### Johannes tarkisti loput
+
+Listan 53 osumasta Johannes merkitsi vaariksi 11 (mukaan lukien nelja
+joista han ei ollut varma). Kaksi epavarmaa selvitettiin:
+
+- **"Kerrostalo Heka Tihtaalinkatu 4"** — osuma oli oikea: Newsboxin
+  juttu nimeaa nimenomaan Tihtaalinkatu 4:n (Heka) ja Nihdinlaituri 1:n
+  (Haso), eli sama tiedote kattaa aidosti kaksi listan hanketta.
+- **"Toimistorakennus Rovaniemelle"** — sama Senaatin Lahteentien
+  virastotalo on kannassa jo kahtena rivina. Lahdetta ei liitetty:
+  se olisi ollut yhdistaminen salakavalasti, ja kaksoiskappale kuuluu
+  katselmoitavaksi ([[check-duplicate-reviews]]).
+
+Hyvaksytyista 42:sta kirjoitettiin **35**; seitsemalla sivu ei
+vastannut enaa (antoi tekstin tuntia aiemmin), joten ne jaivat
+odottamaan uutta yritysta.
+
 | | ennen paivaa | nyt |
 |---|---|---|
-| ohuita hankkeita | 1 327 | **1 149** |
-| alle 40 merkin | 371 | **228** |
-| mediaani | 622 | **691** |
-| asiakkaan osuma ohueen | 19,9 % | **15,2 %** |
+| ohuita hankkeita | 1 327 | **1 115** |
+| alle 40 merkin | 371 | **210** |
+| mediaani | 622 | **706** |
+| asiakkaan osuma ohueen | 19,9 % | **13,9 %** |
 
 `lib/agent/sivunKuvaus.ts` (jaetut saannot + 14 testia),
 `scripts/etsi-lahde-verkosta.ts`.
