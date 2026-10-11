@@ -130,11 +130,13 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
      * liitteeseen), liian pitkä on väärä luku tai jäsennysvirhe.
      */
     if (sisalto.length < 40) continue
+    if (onLiiteluettelo(sisalto)) continue
+    if (onSisallysluettelo(sisalto)) continue
 
     osat.push(avain === "alue" ? sisalto.slice(0, 400) : sisalto)
   }
 
-  if (!osat.length) return null
+  if (!osat.length) return kaavanKuvausLauseesta(raaka)
 
   const kuvaus = osat.join(" ").replace(/\s+/g, " ").trim()
   if (kuvaus.length <= MAX_PITUUS) return kuvaus
@@ -143,6 +145,82 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
   const leikattu = kuvaus.slice(0, MAX_PITUUS)
   const piste = leikattu.lastIndexOf(". ")
   return piste > MAX_PITUUS * 0.5 ? leikattu.slice(0, piste + 1) : `${leikattu.trim()}…`
+}
+
+/*
+ * LAUSEANKKURI, KUN OTSIKKO EI OLE OMALLA RIVILLAAN (D-271).
+ *
+ * Riviperustainen lukuhaku olettaa etta "1.3 Kaavan tarkoitus" on oma
+ * rivinsa. Osassa PDF:ia koko teksti purkautuu yhdelle riville:
+ * mitattu Kangasalan kaavan 711 selostuksesta 11.10.2026, 18 975
+ * merkkia ja viisi "otsikkoa", joista kaikki sisallysluettelosta.
+ * Silloin ankkuri on itse SANA, ei rivi.
+ *
+ * Sisallysluettelo sisaltaa samat sanat, joten otetaan VIIMEINEN osuma
+ * ja vaaditaan riittavasti tekstia perassa — luettelorivi loppuu
+ * pistejonoon ja sivunumeroon.
+ */
+const ANKKURI =
+  /(kaavan\s+tarkoitus(?:\s+ja\s+tavoitteet)?|(?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen)?\s+tavoitte\w*|suunnittelun\s+tavoitte\w*|kaavamuutoksen\s+tarkoitus)/gi
+
+const LOPETUS =
+  /(perus-\s*ja\s*tunnistetiedot|luettelo\s+selostuksen|selostuksen\s+liite|tiivistelm\w*\s+kaavaprosessi|kaavaprosessin\s+vaihe|suunnittelualueen\s+lähtökohdat|lähtökohdat\s+ja\s+nykytila|osallistumis-\s*ja\s*arviointi|vaikutusten\s+arviointi|asemakaavan\s+kuvaus|aluetta\s+koskevat\s+suunnitelmat)/i
+
+/* Liiteluettelo ei ole kuvaus, vaikka se olisi oikeassa luvussa. */
+const LIITELUETTELO = /^(kaavaselostuksen\s+liitteet|luettelo\s+selostuksen|liitteet|liite\s*\d)/i
+
+function onLiiteluettelo(teksti: string): boolean {
+  if (LIITELUETTELO.test(teksti.trim())) return true
+  /* Kolme "Liite N" ensimmaisessa 300 merkissa = luettelo. */
+  return (teksti.slice(0, 300).match(/liite\s*\d/gi) ?? []).length >= 3
+}
+
+/*
+ * Sisallysluettelo tunnistuu pistejonoista: "4.5. Asemakaavaratkaisun
+ * vaihtoehdot ......... 23". Kangasalan kaavan 876 selostuksessa
+ * ankkurisana osui luetteloon, ei leipatekstiin.
+ */
+function onSisallysluettelo(teksti: string): boolean {
+  /* Kahdeksan perakkaista pistetta ei esiinny proosassa. */
+  return /\.{8,}/.test(teksti)
+}
+
+export function kaavanKuvausLauseesta(raaka: string | null | undefined): string | null {
+  const teksti = siisti(yhdistaTavutus(String(raaka ?? ""))).replace(/\s+/g, " ")
+  if (!teksti) return null
+
+  const osumat = [...teksti.matchAll(ANKKURI)]
+  if (!osumat.length) return null
+
+  for (const osuma of osumat.reverse()) {
+    /*
+     * Ankkurilause otetaan MUKAAN: ilman sita kuvaus alkaa kesken
+     * virkkeen ("on tarkistaa asumiselle osoitetun korttelin...").
+     * Mukana se lukee "Kaavamuutoksen tavoitteena on tarkistaa...".
+     */
+    const alku = osuma.index!
+    let jatko = teksti.slice(alku, alku + MAX_PITUUS * 2)
+    const lopetus = jatko.search(LOPETUS)
+    if (lopetus > 0) jatko = jatko.slice(0, lopetus)
+
+    const sisalto = jatko
+      /* Sisallysluettelon pistejono ja sivunumero pois. */
+      .replace(/\.{3,}\d{1,3}/g, " ")
+      .replace(/^[\s:.–-]+/, "")
+      .replace(/\s+/g, " ")
+      .trim()
+
+    if (sisalto.length < 120) continue
+    if (onLiiteluettelo(sisalto)) continue
+    if (onSisallysluettelo(sisalto)) continue
+
+    if (sisalto.length <= MAX_PITUUS) return sisalto
+    const leikattu = sisalto.slice(0, MAX_PITUUS)
+    const piste = leikattu.lastIndexOf(". ")
+    return piste > MAX_PITUUS * 0.5 ? leikattu.slice(0, piste + 1) : `${leikattu.trim()}…`
+  }
+
+  return null
 }
 
 /*

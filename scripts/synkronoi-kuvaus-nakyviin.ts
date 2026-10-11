@@ -30,10 +30,24 @@ for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8
  *   npx tsx scripts/synkronoi-kuvaus-nakyviin.ts --apply
  */
 
-const LAHTEET = [
+/*
+ * Lahteet annetaan argumentteina; ilman niita kaydaan lapi ne joiden
+ * kuvaukset on taydennetty (D-268, D-270, D-271). Rajaus on tahallinen:
+ * muissa lahteissa `additional_info` voi olla tarkoituksella eri teksti
+ * kuin `metadata.description`.
+ */
+const OLETUSLAHTEET = [
   "Helsingin vireillä olevat asemakaavat (SUKKA)",
   "Euran kaavoitus ja maapolitiikka",
+  "Kangasalan vireillä olevat asemakaavat",
+  "Kauniaisten vireillä olevat asemakaavat",
+  "Kouvolan ajankohtaiset asemakaavat",
+  "Inkoon ajankohtainen kaavoitus",
+  "Mustasaaren vireillä olevat asemakaavat",
 ]
+
+const LAHTEET = process.argv.slice(2).filter((a) => !a.startsWith("--"))
+const KAYTETYT = LAHTEET.length ? LAHTEET : OLETUSLAHTEET
 
 function normalisoi(s: string): string {
   return s.replace(/\s+/g, " ").trim().toLowerCase()
@@ -55,7 +69,7 @@ async function main() {
     if (!data?.length) break
     for (const r of data as any[]) {
       const md = r.metadata ?? {}
-      if (!LAHTEET.includes(String(md.source_name ?? ""))) continue
+      if (!KAYTETYT.includes(String(md.source_name ?? ""))) continue
       hankkeet.push(r)
     }
     if (data.length < 1000) break

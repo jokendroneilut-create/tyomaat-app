@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  kaavanKuvausLauseesta,
   kaavanKuvausTekstista,
   normalisoiLiiteUrl,
   valitseKaavaselostus,
@@ -144,5 +145,41 @@ describe("kaavanKuvausTekstista: luvun valinta", () => {
       "4 SUUNNITTELUALUEEN LÄHTÖKOHDAT",
     ].join("\n")
     expect(kaavanKuvausTekstista(teksti)).toBeNull()
+  })
+})
+
+/* Kangasalan kaavan 711 ja 876 selostuksista 11.10.2026 (D-271). */
+describe("kaavanKuvausLauseesta", () => {
+  it("loytaa tavoitteen kun koko teksti on yhdella rivilla", () => {
+    const yksiRivi =
+      "Kaavaselostus, kaava 711 Kangasalan kaupunki Kaavoitus 1 Perus- ja tunnistetiedot " +
+      "Asemakaavamuutoksen tavoitteena on tarkistaa asumiselle osoitetun asemakaavakorttelin " +
+      "tehokkuutta ja kaupunkikuvaa maaritteleviä kaavamaarayksia. Nykyista kaavaa tehokkaampi " +
+      "rakentaminen mahdollistaa hyvalla sijainnilla joukkoliikenteen tukemisen."
+    const kuvaus = kaavanKuvausLauseesta(yksiRivi)!
+    expect(kuvaus).toContain("tarkistaa asumiselle")
+  })
+
+  it("ottaa ankkurilauseen mukaan eika aloita kesken virkkeen", () => {
+    const teksti =
+      "1 Perus- ja tunnistetiedot Kaavamuutoksen tavoitteena on mahdollistaa nykyisin " +
+      "asumisen ja toimitilarakennusten korttelialueiksi kaavoitetun alueen muuttaminen " +
+      "kaupan ja asumisen alueeksi Lahdentien tuntumassa."
+    expect(kaavanKuvausLauseesta(teksti)!.startsWith("Kaavamuutoksen tavoitteena on")).toBe(true)
+  })
+
+  it("ohittaa sisallysluettelon", () => {
+    const sisallys =
+      "Asemakaavan tavoitteet ......................................................... 32 " +
+      "4.5. Asemakaavaratkaisun vaihtoehdot ja niiden vaikutukset ..................... 33"
+    expect(kaavanKuvausLauseesta(sisallys)).toBeNull()
+  })
+
+  it("ohittaa liiteluettelon", () => {
+    const liitteet =
+      "Kaavan tavoitteet Kaavaselostuksen liitteet Liite 1 Osallistumis- ja " +
+      "arviointisuunnitelma Liite 2 Viranomaisneuvottelun muistio Liite 3 Havainnekuva " +
+      "asemakaavasta Liite 4 Asemakaavan seurantalomake Liite 5 Kaavakartta"
+    expect(kaavanKuvausLauseesta(liitteet)).toBeNull()
   })
 })

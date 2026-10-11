@@ -23,6 +23,69 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-271 - Yksi taydentaja kaikille kaavalahteille
+
+Johannes 11.10.2026: *"jatka seuraavaan."* Eura (D-268) ja Helsinki
+(D-270) tehtiin kerain kerrallaan. Kolmannesta lahteesta eteenpain se
+ei kannata: jasennin ja liitevalitsija ovat jo jaettuja, ja vain
+sivurakenne vaihtelee. `scripts/taydenna-kaavakuvaukset.ts` ottaa
+lahteen nimen argumenttina ja lukee liitteet dokumentin omasta
+`document_url`:sta.
+
+Tulos: Kouvola 14/26, Mustasaari 7/21, Kangasala 7/19, Kauniainen 3/15,
+Inkoo 1/10. Tilanne lahteittain: `docs/19_KUVAUSTEN_KATTAVUUS.md`.
+
+#### Kolme asiaa jotka mittaus pakotti rakentamaan
+
+1. **Listaussivusuoja.** Osalla kunnista `document_url` osoittaa koko
+   kaavoitussivulle, jolla on KAIKKIEN kaavojen liitteet: Nokia 300
+   pdf-linkkia, Pelkosenniemi 199, Pornainen 85, Karkkila 46.
+   Ensimmainen selostus olisi ollut **toisen hankkeen** teksti. Yli
+   12 linkin sivulla liite kelpaa vain jos sen nimi tunnistaa juuri
+   taman kaavan (kaavatunnus tai harvinainen sana otsikosta).
+
+2. **Lauseankkuri, kun otsikko ei ole omalla rivillaan.** Riviperustainen
+   lukuhaku olettaa etta "1.3 Kaavan tarkoitus" on oma rivinsa. Kangasalan
+   kaavan 711 selostuksessa koko 18 975 merkin teksti purkautui yhdelle
+   riville, ja "otsikoita" loytyi viisi — kaikki sisallysluettelosta.
+   `kaavanKuvausLauseesta` ankkuroituu sanaan ja ottaa VIIMEISEN osuman
+   (sisallysluettelo on ensimmainen). Kangasala nousi 2/19 -> 7/19.
+
+   Ankkurilause otetaan mukaan tulokseen: ilman sita kuvaus alkoi kesken
+   virkkeen ("on tarkistaa asumiselle osoitetun korttelin...").
+
+3. **Sisallysluettelo ja liitelista eivat ole kuvauksia.** Kaksi
+   ensimmaista versiota tuottivat "Kaavaselostuksen liitteet Liite 1
+   Osallistumis- ja arviointisuunnitelma Liite 2 ..." ja "Asemakaavan
+   tavoitteet ......... 32 4.5. Asemakaavaratkaisun vaihtoehdot ...".
+   Kumpikin on pitka muttei kerro mitaan. Torjunta: kolme "Liite N"
+   kolmessasadassa merkissa, ja **kahdeksan perakkaista pistetta**
+   (ensimmainen yritys vaati kolme pistejonoa — naissa niita oli kaksi,
+   ja molemmat menivat lapi).
+
+#### Umpikujat kannattaa kirjata yhta tarkasti
+
+Nelja lahdetta ei voi taydentaa niiden omasta lahteesta, ja se on
+tulos siina missa onnistuminen — muuten sama kunta tutkitaan uudelleen:
+
+| lahde | ohuita | havainto |
+|---|---|---|
+| Lahti | 60 | hankesivuilla 0 pdf-liitetta, ei sanaa "selostus", "aineisto" eika "liite" |
+| Lappeenranta | 44 | 0 liitetta; mfiles-isanta on rajattu pois |
+| Kuopio | 30 | 0 liitetta |
+| Rauma | 17 | 13/15 ilman liitetta |
+
+Lahden sivu on 337 kt HTML:aa ja siina on kahdeksan yli 40 merkin
+kappaletta — kaikki menettelyboilerplatea ("Kaupunginhallitus kasittelee
+kaavaehdotusta..."). Se yksi rivi ON kaikki mita Lahti julkaisee.
+
+Lisaksi 333 hanketta on ilman lahdetta: Johannes lisasi ne kasin
+helmi-huhtikuussa 2026 ennen kuin keraimia oli nykymuodossaan. Niille
+ei ole asiakirjaa josta poimia.
+
+`scripts/taydenna-kaavakuvaukset.ts`, `scripts/mittaa-kuvausten-pituus.ts`,
+`docs/19_KUVAUSTEN_KATTAVUUS.md`.
+
 ### D-270 - Helsinki: ohut kuvaus on sama puute kuin tyhja
 
 Johannes 11.10.2026: *"Ala vaan kytkemaan tuota myos muihin ja aloita
