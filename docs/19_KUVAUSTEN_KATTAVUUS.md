@@ -20,19 +20,22 @@ Mittaa **sen kentän jonka asiakas lukee**. Hanke näyttää sarakkeen
 hankenäkymässä lainkaan (D-270). Jakauma, ei keskiarvo — keskiarvo
 piilottaa juuri sen hännän joka näkyy.
 
-## Tilanne 11.10.2026
+## Tilanne 11.10.2026 (illalla)
 
-6 739 hanketta, mediaani **622** merkkiä (lähtötaso 597), alle 200
-merkin **1 327** (20 %), alle 40 merkin 371.
+6 760 hanketta, mediaani **681** merkkiä (lähtötaso 597), alle 200
+merkin **1 189** (18 %), alle 40 merkin 259.
 
 | merkkiä | hankkeita | osuus |
 |---|---|---|
-| 0–40 | 371 | 6 % |
-| 40–100 | 331 | 5 % |
-| 100–200 | 625 | 9 % |
-| 200–400 | 1 199 | 18 % |
-| 400–800 | 1 258 | 19 % |
-| 800– | 2 955 | 44 % |
+| 0–40 | 259 | 4 % |
+| 40–100 | 319 | 5 % |
+| 100–200 | 611 | 9 % |
+| 200–400 | 1 202 | 18 % |
+| 400–800 | 1 265 | 19 % |
+| 800– | 3 104 | 46 % |
+
+**Asiakkaan osuma ohueen hankkeeseen: 19,9 % → 16,1 %** (490 → 396
+avausta 2 467:stä). Tämä on se luku jota seurataan, ei rivien määrä.
 
 ## Käyty läpi
 
@@ -45,6 +48,7 @@ merkin **1 327** (20 %), alle 40 merkin 371.
 | Kangasalan vireillä olevat asemakaavat | 7 / 19 | yleinen täydentäjä |
 | Kauniaisten vireillä olevat asemakaavat | 3 / 15 | yleinen täydentäjä |
 | Inkoon ajankohtainen kaavoitus | 1 / 10 | yleinen täydentäjä |
+| käsin lisätyt (ei lähdettä) | **140 / 165** | oma osoite + `extractReleaseBody`, D-272 |
 
 Yleinen täydentäjä (kuivaharjoitus oletuksena):
 
@@ -103,11 +107,20 @@ parantamalla — eikä niitä pidä pidentää tekstiä keksimällä.
 1 455–6 876 merkkiä tekstiä** — Atrian tehdas, Senaatin virastotalo,
 Firan logistiikkakeskus, OX2:n tuulipuisto.
 
-Varoitus poimintaan: sivujen pisin kappale on usein yrityksen
-vakioesittely ("Skanska on yksi maailman johtavista…", "Senaatti on
-valtion kiinteistöasiantuntija…"). Sama siivous kuin
-`lib/agent/companyRelease.ts`:ssä tarvitaan, ja kuivaharjoitus on
-luettava riveittäin.
+**Tehty 11.10.2026 (D-272): 140 / 165 täydennetty.**
+
+```bash
+npx tsx scripts/taydenna-kasin-lisatyt.ts
+npx tsx scripts/taydenna-kasin-lisatyt.ts --apply
+```
+
+25 jäi täydentämättä perustellusti: 9 navigaatiosivua, 9 sivua joiden
+teksti olisi mennyt 3–6 eri hankkeelle (brändisivu), 4 ilman tekstiä,
+3 jotka eivät liity kyseiseen hankkeeseen.
+
+Jäljellä noin 193 käsin lisättyä riviä, joilla ei ole osoitetta
+lainkaan. Niille ainoa reitti on verkkohaku (mitattu 20 senttiä/hanke,
+≈ 40 €) tai käsin — ei tehty.
 
 ## Umpikuja: lähteessä ei ole tekstiä
 
@@ -143,7 +156,7 @@ väärä osuma on pahempi kuin tyhjä.
 
 | lähde | ohuita | huomio |
 |---|---|---|
-| (ei lähdettä) | 333 (**50 % ohuista osumista**) | **Johanneksen käsin lisäämiä** helmi–huhtikuussa 2026, ennen kuin keräimiä oli nykymuodossaan. Ei lähdeasiakirjaa josta poimia: 136:lla on `source_url`, lopuilla ei mitään. Ainoa reitti on verkkohaku (mitattu 20 senttiä/hanke) tai käsin. |
+| (ei lähdettä) | 193 jäljellä (oli 333, **50 % ohuista osumista**) | **Johanneksen käsin lisäämiä** helmi–huhtikuussa 2026, ennen kuin keräimiä oli nykymuodossaan. Ei lähdeasiakirjaa josta poimia: 136:lla on `source_url`, lopuilla ei mitään. Ainoa reitti on verkkohaku (mitattu 20 senttiä/hanke) tai käsin. |
 | Hilma | 91 / 814 (**24 % ohuista osumista**) | tarkistettu: eForms-ilmoituksessa on sama teksti kuin kannassa, tilaaja kirjoitti yhden virkkeen — ei korjattavissa |
 | Lupapiste kuulutukset | 37 / 169 | kuulutus on menettelyteksti; liiteasiakirjat vanhenevat verkosta |
 | rakennuslehti | 32 / 68 | uutisen ingressi; koko artikkeli maksumuurin takana |

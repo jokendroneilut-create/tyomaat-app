@@ -23,6 +23,70 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-272 - Kasin lisattyjen hankkeiden kuvaus niiden omasta osoitteesta
+
+Johannes 11.10.2026: *"tee kohta 1."* Kohta 1 valikoitui mittauksella,
+ei arvauksella: asiakkaan ohuista osumista **puolet (245 / 490)**
+kohdistui kasin lisattyihin riveihin, kun kaikki kaavalahteet yhteensa
+olivat 2 %.
+
+Johannes lisasi 333 hanketta kasin helmi-huhtikuussa 2026, ennen kuin
+keraimia oli nykymuodossaan. Lahdetta ei ole, mutta **166:lla on
+`metadata.source_url`** — ja otos 12 tasavalein naytti etta 12/12
+osoitetta vastaa ja kaikilla on 1 455-6 876 merkkia tekstia.
+
+Poiminta on sama kuin yritystiedotteilla (`extractReleaseBody`): pisin
+siivottu lohko, hanta ja sivupohja pois. Uutta koodia tarvittiin vain
+suojiin.
+
+#### Nelja suojaa, jokainen luetusta rivista
+
+| suoja | mita esti |
+|---|---|
+| navigaatio ja linkkilista | Kouvolan Dynasty-sivu: "Dynasty tietopalvelu Siirry suoraan paasisaltoon ... RSS-linkki"; Helsingin paatossivu: "Virhe paatosta ladattaessa"; ePressin valikko |
+| **sama teksti 3+ hankkeelle** | Pohjola Rakennuksen "Ihanat kodit" -brandisivu ("Kohtaa luonnonvalo jo ulko-ovella, Horisontti-filosofiamme mukaan...") olisi mennyt **kuuden** eri hankkeen kuvaukseksi |
+| osuuko hankkeeseen | Sivakan "Tulevia kohteita" -listaus antoi tekstia muttei tasta kohteesta |
+| etuliiteroska | murupolku, evastebanneri, "Selaimesi ei tue videota", kirjoittajarivi, kategorialinkit |
+
+Kahden hankkeen jakama teksti kelpaa yha: Caverionin tiedote kattaa
+aidosti kaksi sahkoasemaa. Raja on kolme.
+
+#### Kaksi omaa virhetta, jotka vain rivien lukeminen paljasti
+
+1. **`i`-lippu teki lookaheadista hyodyttoman.** Kategoriasaanto
+   `^(...|rakentaminen|...)\s+(?=[A-ZÄÖÅ])/i` oli tarkoitettu
+   poistamaan sivun kategorialinkit. `i`-lipun alla `[A-ZÄÖÅ]` osuu
+   MYOS pieniin kirjaimiin, joten saanto soi virkkeen alun: Hartelan
+   tiedotteesta "**Rakentaminen** on alkanut maaliskuussa 2025" jai
+   "on alkanut maaliskuussa 2025". Tarkistus siirrettiin koodiin.
+   (Sama ansa osui tanaan jo kerran, D-267:n mittauksessa.)
+
+2. **Liian leveä ikkuna aloitussanalle.** "Tiedote"-ankkuria etsittiin
+   800 merkin ikkunasta ja leikattiin VIIMEISEEN osumaan — sana esiintyi
+   leipatekstissa ja leikkaus vei alun. Ikkuna kavennettiin 150:een.
+
+Kumpikaan ei nakynyt luvuissa: molemmat tuottivat pitkan ja uskottavan
+kuvauksen. Ne loytyivat vain lukemalla 152 riviä lapi
+([[dry-run-before-backfill]]).
+
+#### Tulos
+
+| | ennen | jalkeen |
+|---|---|---|
+| taydennetty | — | **140 / 165** |
+| ohuita hankkeita | 1 327 | **1 189** |
+| alle 40 merkin | 371 | **259** |
+| mediaani | 622 | **681** |
+| **asiakkaan osuma ohueen** | **19,9 %** | **16,1 %** |
+
+Aiempi kasin kirjattu merkinta sailytettiin 28 rivilla merkinnalla
+"Aiempi merkinta:" — niissa on Johanneksen omia faktoja joita
+tiedotteessa ei ole: *"Hankkeen kokonaiskustannusarvio on 74 miljoonaa
+euroa"*, *"Varaston tilavuus 380 000 m3"*, jopa yhteyshenkilon nimi ja
+puhelinnumero.
+
+`scripts/taydenna-kasin-lisatyt.ts`.
+
 ### D-271 - Yksi taydentaja kaikille kaavalahteille
 
 Johannes 11.10.2026: *"jatka seuraavaan."* Eura (D-268) ja Helsinki
