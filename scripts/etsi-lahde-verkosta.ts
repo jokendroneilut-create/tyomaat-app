@@ -59,8 +59,14 @@ async function main() {
 
   const { createClient } = await import("@supabase/supabase-js")
   const cheerio = await import("cheerio")
-  const { kuvausSivusta, osuukoHankkeeseen, puhuukoRakentamisesta, KIELLETYT } =
-    await import("../lib/agent/sivunKuvaus")
+  const {
+    kuvausSivusta,
+    osuukoHankkeeseen,
+    puhuukoRakentamisesta,
+    onVarmaOsuma,
+    otsikonOsuvuus,
+    KIELLETYT,
+  } = await import("../lib/agent/sivunKuvaus")
 
   const db = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -93,6 +99,7 @@ async function main() {
   console.log(`kasin lisattyja ilman osoitetta: ${rivit.length}, kasitellaan ${kohteet.length}\n`)
 
   let loytyi = 0
+  let varmoja = 0
   const syyt = new Map<string, number>()
   const syy = (s: string) => syyt.set(s, (syyt.get(s) ?? 0) + 1)
 
@@ -103,7 +110,7 @@ async function main() {
       ? `${nimi} ${kunta}`
       : nimi
 
-    let linkit: string[] = []
+    let linkit: { url: string; otsikko: string }[] = []
     try {
       const vastaus = await fetch(
         `https://html.duckduckgo.com/html/?q=${encodeURIComponent(kysely)}`,
@@ -119,7 +126,8 @@ async function main() {
         if (!osoite) continue
         if (EI_LAHTEEKSI.test(osoite) || KIELLETYT.test(osoite)) continue
         if (/\.pdf(\?|$)/i.test(osoite)) continue
-        if (!linkit.includes(osoite)) linkit.push(osoite)
+        if (linkit.some((l) => l.url === osoite)) continue
+        linkit.push({ url: osoite, otsikko: $(el).text().replace(/\s+/g, " ").trim() })
       }
     } catch {
       syy("haku epaonnistui")
@@ -133,8 +141,9 @@ async function main() {
       continue
     }
 
-    let osui: { url: string; teksti: string } | null = null
-    for (const osoite of linkit.slice(0, OSUMIA_PER_HANKE)) {
+    let osui: { url: string; teksti: string; otsikko: string; varma: boolean } | null = null
+    for (const linkki of linkit.slice(0, OSUMIA_PER_HANKE)) {
+      const osoite = linkki.url
       try {
         const ohjain = new AbortController()
         const kello = setTimeout(() => ohjain.abort(), 20000)
@@ -157,7 +166,12 @@ async function main() {
         if (!osuukoHankkeeseen(teksti, nimi, "")) continue
         /* Kolmas ehto arvatulle osoitteelle: sivun on puhuttava rakentamisesta. */
         if (!puhuukoRakentamisesta(teksti)) continue
-        osui = { url: osoite, teksti }
+        /*
+         * Sivun oma otsikko on toinen mahdollisuus: hakutuloksen
+         * otsikko on joskus katkaistu tai sivuston nimi.
+         */
+        const varma = onVarmaOsuma(nimi, linkki.otsikko)
+        osui = { url: osoite, teksti, otsikko: linkki.otsikko, varma }
         break
       } catch {
         /* seuraava osuma */
@@ -172,24 +186,46 @@ async function main() {
     }
 
     loytyi += 1
+    if (osui.varma) varmoja += 1
     const nykyinen = String(r.additional_info ?? "").trim()
+    const pisteet = otsikonOsuvuus(nimi, osui.otsikko)
     console.log("=".repeat(98))
-    console.log(`${nimi.slice(0, 60)}  [${kunta}]`)
-    console.log(`  ${nykyinen.length} -> ${osui.teksti.length} merkkia`)
+    console.log(`${osui.varma ? "VARMA   " : "TARKISTA"} ${nimi.slice(0, 56)}  [${kunta}]`)
+    console.log(
+      `  ${nykyinen.length} -> ${osui.teksti.length} merkkia  (otsikko-osuvuus ${Math.round(pisteet.osuus * 100)} %, ${pisteet.osumia}/${pisteet.sanoja} sanaa)`
+    )
+    console.log(`  hakutulos: ${osui.otsikko.slice(0, 88)}`)
     console.log(`  ${osui.url.slice(0, 96)}`)
     console.log(`  ${osui.teksti.slice(0, 240)}${osui.teksti.length > 240 ? "…" : ""}`)
 
-    if (!apply) continue
+    /* Vain varmat kirjoitetaan; loput jaavat tarkistuslistalle. */
+    if (!apply || !osui.varma) continue
+
+    /*
+     * Vanhaa merkintaa ei poisteta. Sama saanto kuin D-272:ssa: niissa
+     * on Johanneksen omia faktoja joita tiedotteessa ei ole.
+     */
+    const pelkkaNimi = nykyinen.toLowerCase() === nimi.toLowerCase()
+    const sisaltyy =
+      !nykyinen ||
+      pelkkaNimi ||
+      osui.teksti.toLowerCase().replace(/\s+/g, " ").includes(nykyinen.toLowerCase().replace(/\s+/g, " "))
+    const kirjoitettava = sisaltyy
+      ? osui.teksti
+      : `${osui.teksti}
+
+Aiempi merkintä: ${nykyinen}`
 
     const { error } = await db
       .from("projects")
       .update({
-        additional_info: osui.teksti,
+        additional_info: kirjoitettava,
         metadata: {
           ...(r.metadata ?? {}),
-          description: osui.teksti,
+          description: kirjoitettava,
           source_url: osui.url,
           source_found_by: "duckduckgo",
+          source_match_title: osui.otsikko,
           description_from_url_at: new Date().toISOString(),
         },
       })
@@ -198,7 +234,7 @@ async function main() {
   }
 
   console.log("=".repeat(98))
-  console.log(`lahde loytyi ${loytyi} / ${kohteet.length}`)
+  console.log(`lahde loytyi ${loytyi} / ${kohteet.length}, joista VARMOJA ${varmoja}`)
   console.log("syyt joilla ei loytynyt:")
   for (const [s, n] of [...syyt.entries()].sort((a, b) => b[1] - a[1])) {
     console.log(`  ${String(n).padStart(3)}  ${s}`)

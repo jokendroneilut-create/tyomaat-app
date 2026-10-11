@@ -193,9 +193,82 @@ const RAKENNUSSANASTO =
  */
 const LISTAUSSIVU = /\d+\s*kpl|hakuehdot|myytavat|myytävät|vapaat asunnot|sivu \d+ \/ \d+/i
 
+/*
+ * Kolme sivutyyppia jotka laapaisivat kaiken muun (mitattu 12.10.2026,
+ * 45 varman osuman joukossa):
+ *   - maksumuuri: "Sisalto vain tilaajille Lukeaksesi..."
+ *   - tyhja sivupohja: "Pennalan datakeskus Sisalto paivittyy."
+ *   - asuntoportaalin taloyhtiosivu: "Kuvat (19)KuvatAsunnot38Taloyhtio..."
+ */
+const MAKSUMUURI = /sis(ä|a)lt(ö|o) vain tilaajille|lukeaksesi (t(ä|a)m(ä|a)n|jutun)|tilaa digilehti/i
+const TYHJA_POHJA = /sis(ä|a)lt(ö|o) p(ä|a)ivittyy/i
+const ASUNTOPORTAALI = /^kuvat \(\d+\)|kuvatasunnot|taloyhti(ö|o)kartta/i
+
 export function puhuukoRakentamisesta(teksti: string): boolean {
   if (LISTAUSSIVU.test(teksti.slice(0, 400))) return false
+  if (MAKSUMUURI.test(teksti.slice(0, 600))) return false
+  if (TYHJA_POHJA.test(teksti.slice(0, 300))) return false
+  if (ASUNTOPORTAALI.test(teksti.replace(/\s+/g, " ").trim())) return false
   return RAKENNUSSANASTO.test(teksti)
+}
+
+
+/*
+ * OTSIKKOVERTAILU: ONKO LOYTYNYT SIVU VARMASTI TAMA HANKE? (D-273)
+ *
+ * Kasin lisattyjen hankkeiden nimi on joko Johanneksen oma lyhyt
+ * merkinta ("Uimahalli Lappeenrantaan") tai suoraan tiedotteen otsikko
+ * ("NCC rakentaa 83 asumisoikeusasuntoa Vasolle"). Jalkimmaisessa
+ * tapauksessa hakutuloksen otsikko on lahes sama teksti, ja osuma on
+ * varma ilman ihmisen tarkistusta. Edellisessa se ei ole.
+ *
+ * Mitattu 12.10.2026 kahdellatoista hankkeella: pelkka kunta + nimen
+ * yksi sana paastaa lapi vaaria osumia (Kouvolan liputuskaytannot,
+ * Tourujoen kunnostus), mutta otsikon sanojen kattavuus erottaa ne.
+ */
+const NIMEN_TAYTESANA = new Set([
+  "rakentaa", "rakennetaan", "rakentuu", "toteuttaa", "uusi", "uudet", "uuden",
+  "ja", "sekä", "seka", "oy", "oyj", "ab", "kaupunki", "kunta", "hanke",
+  "hankkeen", "alkaa", "alkoi", "valmistuu", "myös", "myos",
+])
+
+function nimenSanat(nimi: string): string[] {
+  return nimi
+    .split(/[^\wäöåÄÖÅ]+/)
+    .map((x) => x.toLowerCase())
+    .filter((x) => x.length >= 4 && !NIMEN_TAYTESANA.has(x))
+}
+
+/*
+ * Osuus hankkeen nimen sisaltosanoista jotka loytyvat otsikosta.
+ * Taivutus katkaistaan: "Vasolle" vs "Vasolle Turkuun" ja
+ * "asumisoikeusasuntoa" vs "asumisoikeusasunnot".
+ */
+export function otsikonOsuvuus(nimi: string, otsikko: string): {
+  osuus: number
+  osumia: number
+  sanoja: number
+} {
+  const sanat = nimenSanat(nimi)
+  if (!sanat.length) return { osuus: 0, osumia: 0, sanoja: 0 }
+  const matala = otsikko.toLowerCase()
+  let osumia = 0
+  for (const sana of sanat) {
+    const kanta = sana.length >= 7 ? sana.slice(0, -2) : sana
+    if (matala.includes(kanta)) osumia += 1
+  }
+  return { osuus: osumia / sanat.length, osumia, sanoja: sanat.length }
+}
+
+/*
+ * VARMA = otsikko kattaa kolme neljasosaa nimen sisaltosanoista JA
+ * niita on vahintaan kaksi. Yhden sanan nimella ("Kaupungintalon
+ * saneeraus" -> "kaupungintalon") osuma olisi 100 % vaarallakin
+ * sivulla, joten yksi sana ei riita koskaan.
+ */
+export function onVarmaOsuma(nimi: string, otsikko: string): boolean {
+  const { osuus, osumia } = otsikonOsuvuus(nimi, otsikko)
+  return osumia >= 2 && osuus >= 0.75
 }
 
 /*

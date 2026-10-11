@@ -23,6 +23,92 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-273 - Lahteen etsiminen verkosta: otsikko ratkaisee varmuuden
+
+Johannes 12.10.2026: *"voitko sinä etsiä noille käsin lisätyille
+verkosta lähdettä ilman maksua"*, ja mittauksen jalkeen *"vertaa
+otsikkoa ja kirjoita varmat"*. Kyse on niista 167 kasin lisatysta
+hankkeesta joilla ei ollut osoitetta lainkaan (D-272 hoiti ne 166 joilla
+oli).
+
+#### Claude Coden WebSearch ei kelvannut, DuckDuckGo kelpasi
+
+Oma `WebSearch`-tyokalu on US-painotteinen: kahdesta kokeillusta
+suomalaisesta hankkeesta se loysi **nolla** ja tarjosi tilalle
+Wikipediaa ja eri kaupungin hanketta. DuckDuckGon html-paatepiste loysi
+molemmat ensimmaisella osumalla, vastaa ilman avainta eika maksa
+mitaan. Se on myos skriptattavissa, joten koko joukko voitiin kayda
+lapi kerralla.
+
+#### Pelkka osuma ei riita — tarkkuus oli 60 %
+
+Ensimmainen versio vaati etta sivu mainitsee hankkeen kunnan ja yhden
+sanan nimesta. Kahdentoista otoksessa 11 "loytyi", mutta neljä oli
+vaarin:
+
+| hanke | mihin osui |
+|---|---|
+| Kaupungintalon saneeraus | Kouvolan **liputuskaytannot** ("lipputankoja on 3 kpl") |
+| Kerrostalo Westend | Etuoven myynti-ilmoituslistaus |
+| Kerrostalojen purku Mantassa | paikallislehden navigaatio |
+| Jyvaskylan torin kunnostus | **Kuokkalan** tori |
+
+Kiristys (rakentamisen sanasto + listaussivun hylkays) poisti pahimmat,
+mutta tarkkuus jai 60-70 %:iin: nimet ovat Johanneksen omia lyhyita
+merkintoja eivatka yksiloi hanketta.
+
+#### Otsikkovertailu erottaa varmat
+
+Ratkaisu on se etta **osa nimista ON tiedotteen otsikko**. Silloin
+hakutuloksen otsikko toistaa nimen lahes sanasta sanaan.
+
+> VARMA = otsikko kattaa >= 75 % hankkeen nimen sisaltosanoista JA
+> niita on vahintaan kaksi.
+
+Yhden sanan nimi ei koskaan riita: "Kaupungintalon saneeraus" ->
+"Kaupungintalon liputuskaytannot" olisi 100 % yhdella sanalla.
+
+Tulos 167 hankkeesta: **95 osumaa, joista 42 varmaa** — ne kirjoitettiin.
+53 jai tarkistuslistalle ja 70:lla yksikaan kolmesta osumasta ei
+vastannut hanketta.
+
+Saanto hylkaa myos oikeita osumia, ja se on tarkoitus: "E-metaanilaitos
+Nokialle" osui oikeaan Ylen juttuun, mutta otsikossa luki "Nokian" eika
+"Nokialle", joten se jai listalle.
+
+#### Kolme roskasivutyyppia jotka laapaisivat kaiken muun
+
+45 varman joukosta loytyi lukemalla kuusi jotka eivat olleet kuvauksia:
+asuntoportaalin taloyhtiosivun navigaatio ("Kuvat (19)KuvatAsunnot38
+TaloyhtioKartta"), lehden **maksumuuri** ("Sisalto vain tilaajille") ja
+tyhja sivupohja ("Sisalto paivittyy"). Kolme uutta tunnistinta,
+kirjoitettavia 45 -> 42.
+
+#### Vakava vika joka ei nakynyt luvuissa
+
+Ensimmainen versio **ylikirjoitti** `additional_info`-kentan. Yhdellatoista
+varmalla rivilla siina oli Johanneksen omia merkintoja, ja niissa oli
+**tyonjohtajien nimia ja puhelinnumeroita**:
+
+> "Vastaava tyonjohtaja: <nimi> <puhelinnumero>, Tyomaainsinoori: <nimi>"
+
+Ne olisivat kadonneet. Sama saanto kuin D-272:ssa lisattiin: vanha
+teksti sailyy uuden perassa merkinnalla "Aiempi merkinta:". Tama on
+`yhteystietokentasta ei koskaan poisteta mitaan` -periaatteen toinen
+puoli — kuvauskenttaan oli kertynyt yhteystietoja.
+
+#### Tulos
+
+| | ennen paivaa | nyt |
+|---|---|---|
+| ohuita hankkeita | 1 327 | **1 149** |
+| alle 40 merkin | 371 | **228** |
+| mediaani | 622 | **691** |
+| asiakkaan osuma ohueen | 19,9 % | **15,2 %** |
+
+`lib/agent/sivunKuvaus.ts` (jaetut saannot + 14 testia),
+`scripts/etsi-lahde-verkosta.ts`.
+
 ### D-272 - Kasin lisattyjen hankkeiden kuvaus niiden omasta osoitteesta
 
 Johannes 11.10.2026: *"tee kohta 1."* Kohta 1 valikoitui mittauksella,

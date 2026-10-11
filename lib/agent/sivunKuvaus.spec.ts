@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   onNavigaatiota,
+  onVarmaOsuma,
   puhuukoRakentamisesta,
   rajaaPituus,
   siistiAlku,
@@ -86,5 +87,35 @@ describe("rajaaPituus", () => {
     const tulos = rajaaPituus(pitka)
     expect(tulos.length).toBeLessThanOrEqual(1500)
     expect(tulos.endsWith(".")).toBe(true)
+  })
+})
+
+/* Mitatut tapaukset 12.10.2026, 12 hankkeen otos (D-273). */
+describe("onVarmaOsuma", () => {
+  it("hyvaksyy kun otsikko toistaa hankkeen nimen", () => {
+    expect(
+      onVarmaOsuma(
+        "NCC rakentaa 83 asumisoikeusasuntoa Vasolle",
+        "NCC rakentaa 83 asumisoikeusasuntoa Vasolle Turkuun"
+      )
+    ).toBe(true)
+  })
+
+  it("hylkaa kun vain yksi sana osuu", () => {
+    /* Kouvolan liputuskaytannot osui sanaan "kaupungintalon". */
+    expect(onVarmaOsuma("Kaupungintalon saneeraus", "Kaupungintalon liputuskäytännöt")).toBe(false)
+  })
+
+  it("hylkaa eri hankkeen samasta kaupungista", () => {
+    expect(
+      onVarmaOsuma(
+        "Jyväskylän torin kunnostus",
+        "Tourujoen kunnostushankkeelle on myönnetty kaksi palkintoa"
+      )
+    ).toBe(false)
+  })
+
+  it("ei pida yhden sanan nimea koskaan varmana", () => {
+    expect(onVarmaOsuma("Monitoimiareena", "Monitoimiareena Lappeenrantaan")).toBe(false)
   })
 })

@@ -22,19 +22,19 @@ piilottaa juuri sen hännän joka näkyy.
 
 ## Tilanne 11.10.2026 (illalla)
 
-6 760 hanketta, mediaani **681** merkkiä (lähtötaso 597), alle 200
-merkin **1 189** (18 %), alle 40 merkin 259.
+6 783 hanketta, mediaani **691** merkkiä (lähtötaso 597), alle 200
+merkin **1 149** (17 %), alle 40 merkin 228.
 
 | merkkiä | hankkeita | osuus |
 |---|---|---|
-| 0–40 | 259 | 4 % |
-| 40–100 | 319 | 5 % |
-| 100–200 | 611 | 9 % |
-| 200–400 | 1 202 | 18 % |
-| 400–800 | 1 265 | 19 % |
-| 800– | 3 104 | 46 % |
+| 0–40 | 228 | 3 % |
+| 40–100 | 315 | 5 % |
+| 100–200 | 606 | 9 % |
+| 200–400 | 1 208 | 18 % |
+| 400–800 | 1 270 | 19 % |
+| 800– | 3 156 | 47 % |
 
-**Asiakkaan osuma ohueen hankkeeseen: 19,9 % → 16,1 %** (490 → 396
+**Asiakkaan osuma ohueen hankkeeseen: 19,9 % → 15,2 %** (490 → 375
 avausta 2 467:stä). Tämä on se luku jota seurataan, ei rivien määrä.
 
 ## Käyty läpi
@@ -118,9 +118,21 @@ npx tsx scripts/taydenna-kasin-lisatyt.ts --apply
 teksti olisi mennyt 3–6 eri hankkeelle (brändisivu), 4 ilman tekstiä,
 3 jotka eivät liity kyseiseen hankkeeseen.
 
-Jäljellä noin 193 käsin lisättyä riviä, joilla ei ole osoitetta
-lainkaan. Niille ainoa reitti on verkkohaku (mitattu 20 senttiä/hanke,
-≈ 40 €) tai käsin — ei tehty.
+**Osoitteettomille haettiin lähde verkosta 12.10.2026 (D-273).**
+DuckDuckGon html-päätepiste on ilmainen ja skriptattavissa; Claude
+Coden oma WebSearch ei kelvannut (US-painotteinen, 0/2 suomalaisesta
+hankkeesta).
+
+```bash
+npx tsx scripts/etsi-lahde-verkosta.ts
+npx tsx scripts/etsi-lahde-verkosta.ts --apply   # kirjoittaa vain VARMAT
+```
+
+167 hankkeesta **95 osumaa, joista 42 varmaa** (hakutuloksen otsikko
+kattaa ≥ 75 % hankkeen nimen sisältösanoista, vähintään kaksi sanaa).
+Varmat kirjoitettiin; **53 jäi tarkistuslistalle**, koska mitattu
+tarkkuus ilman otsikkotodistetta on vain 60–70 %. 70:llä yksikään
+kolmesta osumasta ei vastannut hanketta.
 
 ## Umpikuja: lähteessä ei ole tekstiä
 
