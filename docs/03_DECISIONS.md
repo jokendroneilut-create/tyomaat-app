@@ -23,6 +23,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-269 - Kuvaus on tuote, ei tiiviste: tavoite satoja merkkeja
+
+Johannes 11.10.2026: *"tuo alle 40 merkkia on todella olematon. Lisaksi
+kayttajadatasta huomaamme etta kayttajat olettavat ja haluavat etta
+olemme tuoneet kuvauksen koska he eivat avaa juurikaan lahteita. Meidan
+tavoite pitaa olla etta kuvaus olisi useita satoja merkkeja."*
+
+#### Kayttajat eivat avaa lahdetta — mitattu
+
+`analytics_events` 19.8.-10.10.2026, oma kaytto poissuljettuna
+(`project_open` ja `source_link_click` lahtevat samoista naytoista, joten
+suhde on vertailukelpoinen):
+
+| | |
+|---|---|
+| hankkeen avauksia | 2 376 |
+| lahteen avauksia | **62** |
+| osuus | **2,6 %** |
+| hankkeita avanneita | 55 kayttajaa |
+| lahteen avanneita | 18 kayttajaa |
+
+Lahde avataan kerran 39 avauksesta. **Kannassa oleva kuvaus on
+kaytannossa ainoa teksti jonka asiakas lukee hankkeesta.** Tyhja tai
+40 merkin kuvaus ei siis ole pieni puute vaan koko hankkeen sisalto.
+
+#### Lahtotaso 11.10.2026
+
+6 731 hanketta, kuvauksen pituus:
+
+| merkkia | hankkeita | osuus |
+|---|---|---|
+| 0-40 | 377 | 6 % |
+| 40-100 | 361 | 5 % |
+| 100-200 | 675 | 10 % |
+| 200-400 | 1 191 | 18 % |
+| 400-800 | 1 226 | 18 % |
+| 800- | 2 901 | 43 % |
+
+Mediaani 597 merkkia. Jakauma on kaksihuippuinen lahteen mukaan:
+yritystiedotteet antavat mediaanin 1 546 merkkia, kaavalahteet 363 —
+ja juuri kaavapuolella 845 riviä 3 117:sta jaa alle 200 merkin.
+
+#### Tavoite
+
+**Useita satoja merkkeja jokaiselle hankkeelle.** Alle 200 merkkia on
+puute joka korjataan, alle 40 merkkia on tyhja. Mittari on
+`scripts/_pituus.ts`-tyylinen jakauma, ei keskiarvo: keskiarvo piilottaa
+hannan, ja hanta on juuri se mika asiakkaalle nakyy ([[name-the-denominator]]).
+
+Tama EI tarkoita tayteteksti: kuvauksen on oltava hankkeen omaa
+sisaltoa. Liitelista ("KuulutusOsallistumis- ja arviointisuunnitelma")
+ja kaavaprosessin aikataulu ovat pitkia muttei kuvauksia — ne nayttavat
+kuvaukselta olematta sellaisia (D-268).
+
+Alle 200 merkin suurimmat lahteet: tuntematon lahde 333, Hilma 90,
+Lahti 60, Helsinki (SUKKA) 59, Lappeenranta 44, Lupapiste 37,
+Rakennuslehti 32, Kuopio 30.
+
 ### D-268 - Kaavan sisalto on selostuksessa, ei sivulla
 
 Johannes 11.10.2026 Euran korttelin 164 kaavasta, kuvakaappaus luvusta
