@@ -1,4 +1,4 @@
-import { haeKaavaselostuksenTeksti, kaavanKuvausTekstista } from "@/lib/agent/kaavanKuvaus"
+import { haeKaavaselostuksenTeksti, kaavanKuvausTekstista, valitseKaavaselostus } from "@/lib/agent/kaavanKuvaus"
 import { kaavanYhteyshenkilot } from "@/lib/agent/kaavanYhteyshenkilo"
 import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import crypto from "crypto"
@@ -29012,6 +29012,14 @@ async function collectSiuntioKaavaSource(source: DiscoverySource) {
   }
 }
 
+/*
+ * KATTO AJOA KOHDEN. Selostus on iso (mitattu Euran kortteli 164:
+ * 3,6 Mt) ja lahdeajon kova katkaisu on 90 s. Haetaan korkeintaan
+ * kolme per ajo ja vain niille joilta kuvaus puuttuu; loput tulevat
+ * seuraavilla kierroksilla.
+ */
+const EURA_SELOSTUKSIA_PER_AJO = 3
+
 const EURA_LISTING_URL =
   "https://www.eura.fi/asuminen-ja-ymparisto/rakentaminen-ymparisto-ja-luvat/kaavoitus-ja-maapolitiikka/"
 
@@ -29037,7 +29045,11 @@ async function collectEuraKaavaSource(source: DiscoverySource) {
   // few paragraphs run two projects together with just a "<br><br>" between
   // them and no new <p>, so each <strong> direct-child starts a new item
   // rather than trusting one item per <p>
-  type EuraItem = { title: string; text: string }
+  type EuraItem = {
+    title: string
+    text: string
+    links: { teksti: string; href: string }[]
+  }
   const items: EuraItem[] = []
 
   $("#content p").each((_, p) => {
@@ -29048,13 +29060,38 @@ async function collectEuraKaavaSource(source: DiscoverySource) {
         const title = $(node).text().replace(/\s+/g, " ").trim()
         if (title) {
           if (current) items.push(current)
-          current = { title, text: title }
+          current = { title, text: title, links: [] }
           continue
         }
       }
       if (current) {
         const nodeText = $(node).text().replace(/\s+/g, " ").trim()
         if (nodeText) current.text += ` ${nodeText}`
+
+        /*
+         * Liitelinkit talteen: kaavan sisalto on selostuksessa, ei
+         * sivun tekstissa (D-268). Sivulla ei ole hankekohtaisia
+         * alasivuja, joten linkit ovat samassa kappaleessa otsikon
+         * kanssa.
+         */
+        const el = node as unknown as {
+          type?: string
+          name?: string
+          attribs?: Record<string, string>
+        }
+        if (el.type === "tag" && el.name === "a" && el.attribs?.href) {
+          current.links.push({
+            teksti: $(node).text().trim(),
+            href: el.attribs.href,
+          })
+        } else if (el.type === "tag") {
+          for (const a of $(node).find("a[href]").toArray()) {
+            current.links.push({
+              teksti: $(a).text().trim(),
+              href: $(a).attr("href") ?? "",
+            })
+          }
+        }
       }
     }
     if (current) items.push(current)
@@ -29064,6 +29101,21 @@ async function collectEuraKaavaSource(source: DiscoverySource) {
     (item) => /asemakaava/i.test(item.title) || energyPattern.test(item.title)
   )
 
+  /*
+   * Jo haettu kuvaus talteen, jottei samaa selostusta haeta joka ajolla.
+   * Sama rakenne kuin Lieksassa (D-230).
+   */
+  const varastoidut = new Map<string, string | null>()
+  const { data: vanhatRivit } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+  for (const rivi of vanhatRivit ?? []) {
+    const hyoty = ((rivi as any).raw_payload ?? {}) as any
+    varastoidut.set(String((rivi as any).document_url), hyoty.description ?? null)
+  }
+
+  let selostuksiaHaettu = 0
   let saved = 0
   const slugCounts = new Map<string, number>()
 
@@ -29076,7 +29128,29 @@ async function collectEuraKaavaSource(source: DiscoverySource) {
     const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
     const documentUrl = `${EURA_LISTING_URL}#${slug}`
 
-    const rawText = JSON.stringify({ title: item.title, phase, description: null })
+    /*
+     * Kuvaus selostuksesta. Sivun oma teksti on pelkka menettelytieto
+     * ("ehdotuksena nahtavilla 8.10.-9.11.2026") ja liitelista, joten
+     * tassa lahteessa selostus on ainoa sisallon lahde.
+     */
+    let description = varastoidut.get(documentUrl) ?? null
+    if (!description && selostuksiaHaettu < EURA_SELOSTUKSIA_PER_AJO) {
+      const selostusUrl = valitseKaavaselostus(item.links)
+      if (selostusUrl) {
+        selostuksiaHaettu += 1
+        const selostusTeksti = await haeKaavaselostuksenTeksti(selostusUrl)
+        /*
+         * Osa Euran selostuksista on PDF:ia joiden fonteissa ei ole
+         * merkkikarttaa: teksti purkautuu roskaksi ("AABCCDE") seka
+         * pdf-parsella etta popplerilla. `kaavanKuvausTekstista`
+         * palauttaa niille nullin, koska numeroitua otsikkoa ei loydy
+         * — tyhja on parempi kuin roska.
+         */
+        if (selostusTeksti) description = kaavanKuvausTekstista(selostusTeksti)
+      }
+    }
+
+    const rawText = JSON.stringify({ title: item.title, phase, description })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -29095,7 +29169,7 @@ async function collectEuraKaavaSource(source: DiscoverySource) {
           title: item.title,
           slug,
           phase,
-          description: null,
+          description,
           contacts: [],
           completed,
         },

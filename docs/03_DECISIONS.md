@@ -23,6 +23,65 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-268 - Kaavan sisalto on selostuksessa, ei sivulla
+
+Johannes 11.10.2026 Euran korttelin 164 kaavasta, kuvakaappaus luvusta
+1.3: *"tasta hankkeesta olisi pitanyt poimia kohta joka on kuvassa.
+Kannassa on myos muita joissa lukee 'kaava on liian varhaisessa
+vaiheessa'. Saako tahan hankkeeseen poimittua tuon ja jatkossa myos."*
+
+#### Jasennin oli olemassa, keraintä ei ollut kytketty
+
+`kaavanKuvaus.ts` poimii luvut "Kaava-alue" ja "Kaavan tarkoitus"
+(D-217, Savonlinnaa varten) ja Lieksan kerain kutsuu sita (D-230).
+Euran kerain luki sivulta vain otsikon ja vaiheen ja **heitti
+liitelinkit pois**, joten kuvaus jai nulliksi kaikilla 14 rivilla.
+
+Mitattu 11.10.2026: kaavalahteiden 3 839 dokumentista 295 (8 %) on
+ilman kuvausta, ja hanketasolla 394 riville kuvaus on alle 40 merkkia
+(180 hyvaksyttya, 125 aktiivista, 82 hylattya). Suurimmat: Helsinki 69,
+Kauniainen 31, Karkkila 21, Mustasaari 19, Inkoo 19, Eura 18.
+
+#### Kolme asiaa jotka vain mittaus paljasti
+
+1. **Ensimmainen "selostus" on vaara tiedosto.** Euran kaavasivulla on
+   5-11 liitetta, ja kortteli 353:lla yksitoista linkkia joista kymmenen
+   alkaa sanalla "Selostus" — seurantalomake, OAS, lausunnot, vastineet.
+   Lieksan tapa (ensimmainen /selostus/-osuma) olisi poiminut lomakkeen,
+   jossa ei ole proosaa lainkaan. Paaselostus tunnistuu siita etta
+   nimessa EI ole liitesanaa: `valitseKaavaselostus`.
+
+2. **"Tiivistelma" ei ole tiivistelma kaavasta.** Fankkee II:n
+   selostuksen luku 3 "TIIVISTELMA KAAVAPROSESSIN VAIHEISTA" on 2 413
+   merkkia aikataulua ("Vaihe Ajankohta Kaavoituksen kaynnistaminen...")
+   ja se olisi mennyt kuvaukseksi — juuri sellaista tekstia joka ei
+   kerro mitaan. Samassa selostuksessa oli luku 1.1.3 "Kaavamuutoksen
+   tavoitteet", joka ei osunut kuvioon koska se vaati "kaavan tavoit".
+   Molemmat korjattiin.
+
+3. **Kortteli 164:n selostusta ei voi lukea koneellisesti.** Juuri sen
+   hankkeen PDF, josta kysymys alkoi, purkautuu roskaksi ("AABCCDE")
+   seka pdf-parsella etta popplerilla: fonteissa ei ole merkkikarttaa.
+   Sama koskee neljaa muuta saman hankkeen liitetta. Teksti kirjattiin
+   **kuvakaappauksesta** ja alkupera merkittiin
+   `metadata.tiedon_lahteet` (docs/18_TYOMAAKUVAT.md).
+
+#### Tulos
+
+Euran 12 kaavasta 9 saa nyt paaselostuksen ja 7:lle kirjoitettiin
+kuvaus (14 rivia: 7 ehdokasta ja 7 hanketta), jokainen luettu erikseen.
+Loput jaivat tyhjiksi perustellusti: kaksi PDF:aa on lukukelvottomia,
+yhdella sivun linkki on rikki (`http://Selostus__...` ilman isantaa),
+kolmelta puuttuu liite kokonaan. Tyhja on parempi kuin vaara liite.
+
+Avoinna: sama kytkenta puuttuu muilta kaavalahteilta (Helsinki 69
+riviä, Kauniainen 31, Karkkila 21, Mustasaari 19, Inkoo 19). Jasennin
+ja valitsija ovat valmiit, kerain korjataan kunnittain
+([[kaava-parser-vs-page]]).
+
+`lib/agent/kaavanKuvaus.ts`, `scripts/korjaa-euran-kaavakuvaukset.ts`,
+`scripts/lisaa-kortteli164-kuvaus.ts`.
+
 ### D-267 - Julkaisijan kotipaikka hankkeen kuntana
 
 Johannes 11.10.2026 Aviapolis-ehdokkaan jaljilta: *"korjaa myos tuo

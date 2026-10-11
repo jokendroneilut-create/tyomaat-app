@@ -9,9 +9,14 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
-  const { data, error } = await sb.from("projects").select("*").eq("id", process.argv[2]).maybeSingle()
-  if (error) { console.error(error); return }
-  if (!data) { console.log("ei loytynyt"); return }
+  let data: any = null
+  for (const taulu of ["projects", "potential_projects"]) {
+    const r = await sb.from(taulu).select("*").eq("id", process.argv[2]).maybeSingle()
+    if (r.error) { console.error(r.error); return }
+    if (r.data) { data = r.data; console.log(`taulu: ${taulu}
+`); break }
+  }
+  if (!data) { console.log("ei loytynyt kummastakaan taulusta"); return }
   const d: any = data
   for (const k of Object.keys(d)) {
     if (k === "metadata") continue

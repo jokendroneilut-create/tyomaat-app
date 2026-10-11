@@ -37,9 +37,21 @@ const HALUTUT: { avain: string; kuvio: RegExp }[] = [
   {
     avain: "tarkoitus",
     kuvio:
-      /^(kaavan\s+tarkoitus|kaavan\s+tavoit|tavoitteet|suunnittelun\s+tavoit|kaavan\s+tarkoitus\s+ja\s+tavoit|tiivistelm)/i,
+      /^((?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen)?\s+(?:tarkoitus|tavoit)|kaavan\s+muutoksen\s+tavoit|tavoitteet|suunnittelun\s+tavoit|tiivistelm)/i,
   },
 ]
+
+/*
+ * "TIIVISTELMA KAAVAPROSESSIN VAIHEISTA" EI OLE TIIVISTELMA KAAVASTA.
+ *
+ * Maankayttö- ja rakennusasetuksen mukaisessa rakenteessa tiivistelman
+ * alla on kaavaprosessin aikataulu, ei kaavan sisalto. Mitattu Euran
+ * Fankkee II:n selostuksesta 11.10.2026: luku 3 oli 2 413 merkkia
+ * aikataulua ("Vaihe Ajankohta Kaavoituksen kaynnistaminen ...") ja se
+ * olisi mennyt kuvaukseksi, vaikka samassa selostuksessa on luku 1.1.3
+ * "Kaavamuutoksen tavoitteet". Aikataulu ei kerro asiakkaalle mitaan.
+ */
+const MENETTELYLUKU = /tiivistelm\w*\s+kaavaprosessi|kaavaprosessin\s+vaihe|prosessin\s+vaiheist/i
 
 /*
  * PDF katkaisee sanat rivin lopussa tavuviivalla ("joulu-\nkuussa").
@@ -103,7 +115,9 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
   const osat: string[] = []
 
   for (const { avain, kuvio } of HALUTUT) {
-    const luku = luvut.find((l) => kuvio.test(l.otsikko))
+    const luku = luvut.find(
+      (l) => kuvio.test(l.otsikko) && !MENETTELYLUKU.test(l.otsikko)
+    )
     if (!luku) continue
 
     const sisalto = luku.sisalto
@@ -129,6 +143,62 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
   const leikattu = kuvaus.slice(0, MAX_PITUUS)
   const piste = leikattu.lastIndexOf(". ")
   return piste > MAX_PITUUS * 0.5 ? leikattu.slice(0, piste + 1) : `${leikattu.trim()}…`
+}
+
+/*
+ * PAASELOSTUS LIITTEIDEN JOUKOSTA (D-268).
+ *
+ * Kaavasivulla on tyypillisesti 5-11 liitetta, ja niista suurin osa on
+ * nimetty "Selostus_Liite_N_...". Mitattu Euran sivulla 11.10.2026:
+ * kortteli 353:lla yksitoista linkkia, joista kymmenen alkaa sanalla
+ * "Selostus". Ensimmaisen selostus-osuman poimiminen antaisi
+ * seurantalomakkeen tai lausuntoliitteen — lomakkeessa ei ole proosaa
+ * lainkaan.
+ *
+ * Paaselostus tunnistuu siita etta nimessa EI ole liitesanaa. Sama
+ * nimeamistapa toistuu kunnasta toiseen, koska selostuksen rakenne on
+ * maankayttö- ja rakennusasetuksen mukainen ([[kaava-parser-vs-page]]).
+ */
+const SELOSTUS_NIMI = /selostus/i
+
+const LIITESANA =
+  /liite|oas|osallistumis|seuranta|kaavakartta|kartta|lausunto|vastine|havainne|maaper|melu|luonto|selvitys|tarkistus|poytakirja|pöytäkirja/i
+
+/*
+ * Kuntien sivuilla on rikkinaisia linkkeja: Euralla "http://Selostus__
+ * Korttelin_353_AKM_ehdotus_17.6.2026" (isäntä puuttuu) ja
+ * "//www.eura.fi/..." (protokolla puuttuu). Jalkimmainen on kelvollinen
+ * suhteellinen osoite, edellinen ei osoita mihinkaan.
+ */
+export function normalisoiLiiteUrl(href: string | null | undefined): string | null {
+  const raaka = String(href ?? "").trim()
+  if (!raaka) return null
+  const taydennetty = raaka.startsWith("//") ? `https:${raaka}` : raaka
+  let osoite: URL
+  try {
+    osoite = new URL(taydennetty)
+  } catch {
+    return null
+  }
+  if (!/^https?:$/.test(osoite.protocol)) return null
+  /* Isantanimi ilman pistetta ei ole verkkotunnus vaan tiedostonimi. */
+  if (!osoite.hostname.includes(".")) return null
+  if (!/\.pdf$/i.test(osoite.pathname)) return null
+  return osoite.toString()
+}
+
+export function valitseKaavaselostus(
+  linkit: { teksti?: string | null; href?: string | null }[]
+): string | null {
+  for (const linkki of linkit) {
+    const url = normalisoiLiiteUrl(linkki.href)
+    if (!url) continue
+    const nimi = `${decodeURIComponent(url.split("/").pop() ?? "")} ${linkki.teksti ?? ""}`
+    if (!SELOSTUS_NIMI.test(nimi)) continue
+    if (LIITESANA.test(nimi)) continue
+    return url
+  }
+  return null
 }
 
 /*
