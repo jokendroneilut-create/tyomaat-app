@@ -14,7 +14,12 @@ const supabaseAdmin = createClient(
 )
 
 type Props = {
-  searchParams: Promise<{ q?: string; puutteelliset?: string; sivu?: string }>
+  searchParams: Promise<{
+    q?: string
+    puutteelliset?: string
+    lahteeton?: string
+    sivu?: string
+  }>
 }
 
 /*
@@ -49,16 +54,25 @@ const FETCH_CAP = 1000
  * käsin yksitellen.
  */
 export default async function TicProjectSearchPage({ searchParams }: Props) {
-  const { q, puutteelliset, sivu } = await searchParams
+  const { q, puutteelliset, lahteeton, sivu } = await searchParams
   const onlyIncomplete = puutteelliset === "1"
+  /*
+   * LAHTEETON = ei lahteen nimea eika osoitetta. Nama ovat kasin
+   * lisattyja hankkeita ajalta ennen keraimia: tieto on oikein, mutta
+   * sita ei voi jaljittaa mihinkaan. Suodatin tehdaan kyselyssa eika
+   * muistissa, koska FETCH_CAP katkaisisi tuloksen (D-273).
+   */
+  const onlyNoSource = lahteeton === "1"
   const page = Math.max(1, Number(sivu) || 1)
 
   /* Näkymän tila kulkee mukana hankelinkeissä, jotta paluu palaa TÄHÄN. */
   const viewParams = onlyIncomplete
     ? "?puutteelliset=1"
-    : q?.trim()
-      ? `?q=${encodeURIComponent(q.trim())}`
-      : ""
+    : onlyNoSource
+      ? "?lahteeton=1"
+      : q?.trim()
+        ? `?q=${encodeURIComponent(q.trim())}`
+        : ""
 
   let query = supabaseAdmin
     .from("projects")
@@ -70,6 +84,14 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
 
   if (q?.trim()) {
     query = query.ilike("name", `%${q.trim()}%`)
+  }
+
+  if (onlyNoSource) {
+    query = query
+      .is("metadata->>source_name", null)
+      .is("metadata->>source", null)
+      .is("metadata->>source_url", null)
+      .is("metadata->>last_source_url", null)
   }
 
   if (onlyIncomplete) {
@@ -146,6 +168,7 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
   const pageHref = (target: number) => {
     const params = new URLSearchParams()
     if (onlyIncomplete) params.set("puutteelliset", "1")
+    if (onlyNoSource) params.set("lahteeton", "1")
     if (q?.trim()) params.set("q", q.trim())
     if (target > 1) params.set("sivu", String(target))
     const query = params.toString()
@@ -185,6 +208,16 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
           Vain osapuolettomat (suunnittelu / rakenteilla)
         </label>
 
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            name="lahteeton"
+            value="1"
+            defaultChecked={onlyNoSource}
+          />
+          Vain lähteettömät
+        </label>
+
         <button
           type="submit"
           className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white"
@@ -202,7 +235,12 @@ export default async function TicProjectSearchPage({ searchParams }: Props) {
         joilla osapuolet ovat kunnossa. Se näyttää siltä ettei jono tyhjentynyt.
       */}
       <p className="mt-6 text-sm">
-        {onlyIncomplete ? (
+        {onlyNoSource ? (
+          <span className="font-medium text-gray-900">
+            Lähteettömät hankkeet — ei lähteen nimeä eikä osoitetta,
+            käsin lisättyjä ajalta ennen keräimiä
+          </span>
+        ) : onlyIncomplete ? (
           <span className="font-medium text-gray-900">
             Osapuolettomat hankkeet — asiakkaalle näkyvät, suunnittelu tai
             rakentaminen käynnissä, ei rakennuttajaa eikä pääurakoitsijaa
