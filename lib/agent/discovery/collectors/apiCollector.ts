@@ -2632,7 +2632,19 @@ function extractOasDescription(pdfText: string): string | null {
     .join(" ")
     .replace(/\s+/g, " ")
     .trim()
-  return desc ? desc.slice(0, 600) : null
+  /*
+   * Sivutunniste "2 (6)" valahti kahteen kuvaukseen kuudestakymmenesta
+   * (mitattu 11.10.2026): PDF:n ylatunniste on samalla rivilla tekstin
+   * kanssa, joten se ei karsiudu rivisuodatuksessa.
+   */
+  const siivottu = desc.replace(/^\d{1,3}\s*\(\d{1,3}\)\s*/, "").trim()
+  if (!siivottu) return null
+  if (siivottu.length <= HELSINKI_OAS_MAX_PITUUS) return siivottu
+
+  /* Katkaisu virkkeen rajalta, ei keskelta sanaa (kuten kaavanKuvaus). */
+  const leikattu = siivottu.slice(0, HELSINKI_OAS_MAX_PITUUS)
+  const piste = leikattu.lastIndexOf(". ")
+  return piste > HELSINKI_OAS_MAX_PITUUS * 0.5 ? leikattu.slice(0, piste + 1) : `${leikattu.trim()}…`
 }
 
 async function fetchOasDescription(pdfUrl: string): Promise<string | null> {
@@ -2653,6 +2665,23 @@ async function fetchOasDescription(pdfUrl: string): Promise<string | null> {
 }
 
 const HELSINKI_SUKKA_MAX_OAS_FETCHES_PER_RUN = 8
+
+/*
+ * OHUT KUVAUS ON SAMA PUUTE KUIN TYHJA (D-269, D-270).
+ *
+ * Haku laukesi aiemmin vain taysin tyhjalle kuvaukselle, mutta
+ * feature-datan kuvaus on usein yhden rivin otsikko: mitattu
+ * 11.10.2026 etta SUKKA:n 228 kaavasta 64:lla kuvaus oli 40-200
+ * merkkia ("Koskela, Antti Korpin tie 4", 92 merkkia). Kymmenen
+ * otoksesta yhdeksan piteni liitteesta 444-600 merkkiin.
+ *
+ * Kayttaja avaa lahteen kerran 39 hankkeen avauksesta (2,6 %), joten
+ * kannassa oleva kuvaus on kaytannossa ainoa teksti jonka han lukee.
+ */
+const HELSINKI_SUKKA_MIN_KUVAUS = 200
+
+/* Kortin kuvaus; sama katto kuin kaavanKuvaus.ts:n MAX_PITUUS. */
+const HELSINKI_OAS_MAX_PITUUS = 1200
 
 async function collectHelsinkiSukkaSource(source: DiscoverySource) {
   const response = await fetch(source.url, {
@@ -2685,6 +2714,8 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
    */
   const attachmentTitlesByPlan = new Map<number, string[]>()
   const oasUrlByPlan = new Map<number, string>()
+  /* Kaikki liitteet talteen, jotta myos kaavaselostus loytyy (D-270). */
+  const liitteetByPlan = new Map<number, { teksti: string; href: string }[]>()
   try {
     const attUrl = source.url.replace("sukka_asemakaava_user", "sukka_attachment")
     const attRes = await fetch(attUrl, {
@@ -2703,10 +2734,17 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
           if (!list.includes(title)) list.push(title)
           attachmentTitlesByPlan.set(pid, list)
 
+          const url = (att.properties?.url ?? "").replace(/&#x2F;/g, "/").trim()
+
           // Talteen kaavan OAS-PDF:n URL kuvauksen varapoimintaa varten.
           if (!oasUrlByPlan.has(pid) && /osallistumis.*arviointisuunnitelma/i.test(title)) {
-            const url = (att.properties?.url ?? "").replace(/&#x2F;/g, "/").trim()
             if (url) oasUrlByPlan.set(pid, url)
+          }
+
+          if (url) {
+            const lista = liitteetByPlan.get(pid) ?? []
+            lista.push({ teksti: title, href: url })
+            liitteetByPlan.set(pid, lista)
           }
         }
       }
@@ -2730,11 +2768,25 @@ async function collectHelsinkiSukkaSource(source: DiscoverySource) {
      * rajattu HELSINKI_SUKKA_MAX_OAS_FETCHES_PER_RUN per ajo).
      */
     let description: string | null = properties.description || null
-    if (!description && oasFetches < HELSINKI_SUKKA_MAX_OAS_FETCHES_PER_RUN) {
-      const oasUrl = oasUrlByPlan.get(id)
-      if (oasUrl) {
+    if (
+      (description ?? "").length < HELSINKI_SUKKA_MIN_KUVAUS &&
+      oasFetches < HELSINKI_SUKKA_MAX_OAS_FETCHES_PER_RUN
+    ) {
+      /*
+       * OAS ensin, sitten kaavaselostus: mitatussa kymmenen otoksessa
+       * OAS kattoi seitseman ja selostus kaksi joille OAS:aa ei ollut
+       * tai siita ei saatu tekstia. PISIN VOITTAA, jotta rajapinnan
+       * oma kuvaus ei katoa jos liitteesta saadaan vain otsikkorivi.
+       */
+      const liitteet = liitteetByPlan.get(id) ?? []
+      const lahteet = [oasUrlByPlan.get(id), valitseKaavaselostus(liitteet)]
+      for (const url of lahteet) {
+        if (!url) continue
+        if (oasFetches >= HELSINKI_SUKKA_MAX_OAS_FETCHES_PER_RUN) break
         oasFetches += 1
-        description = await fetchOasDescription(oasUrl)
+        const ehdokas = await fetchOasDescription(url)
+        if (ehdokas && ehdokas.length > (description ?? "").length) description = ehdokas
+        if ((description ?? "").length >= HELSINKI_SUKKA_MIN_KUVAUS) break
       }
     }
 

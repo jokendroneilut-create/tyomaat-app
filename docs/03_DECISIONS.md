@@ -23,6 +23,85 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-270 - Helsinki: ohut kuvaus on sama puute kuin tyhja
+
+Johannes 11.10.2026: *"Ala vaan kytkemaan tuota myos muihin ja aloita
+helsingista."* Jatkoa D-268:lle ja tavoitteelle D-269.
+
+#### Helsingissa on kaksi kaavalahdetta ja kaksi eri vikaa
+
+| lahde | rivit | vika |
+|---|---|---|
+| Helsingin vireilla olevat kaavat | 96 ehdokasta, 4 hanketta | **66 taysin ilman kuvausta** |
+| Helsingin vireilla olevat asemakaavat (SUKKA) | 228 ehdokasta, 201 hanketta | **59 hanketta 40-200 merkkia** |
+
+Asiakkaalle nakyvat hankkeet, eivat jonossa olevat ehdokkaat, joten
+tyo aloitettiin SUKKA:sta vaikka tyhjat rivit ovat toisessa lahteessa.
+
+#### Vanhentunut osoite, ei "liian varhainen vaihe"
+
+`fetchHelsinkiKaavaSelostus` arvaa selostuksen osoitteen muodossa
+`hel.fi/static/ksv/kaava/ak{tunnus}_selostus.pdf`, ja koodin kommentti
+selitti tyhjat rivit silla etta *"selostusta ei viela julkaistu, kaava
+on liian varhaisessa vaiheessa"*. Mitattu 20 rivin otoksella: osoite
+vastaa **404 yhdeksassatoista tapauksessa kahdestakymmenesta**. Selitys
+oli siis vaara — kyse ei ole kaavan vaiheesta vaan siita etta hel.fi:n
+rakenne on muuttunut alla ([[metric-premise-expires]]).
+
+Samassa otoksessa **17 kaavaa 20:sta loytyi SUKKA-lahteesta kuvauksen
+kanssa** (88-607 merkkia). Teksti on siis jo kannassa, vaarassa
+rivissa. Sita ei kopioitu tassa: ei ole todistettu ovatko rivit sama
+hanke, ja vaara yhdistaminen on pahempi kuin tyhja kentta
+([[check-duplicate-reviews]]).
+
+#### Mika korjattiin
+
+Haku laukesi vain **tyhjalle** kuvaukselle. Feature-datan kuvaus on
+kuitenkin usein pelkka otsikkorivi ("Koskela, Antti Korpin tie 4",
+92 merkkia), joka nayttaa kuvaukselta olematta sellainen. Nyt:
+
+1. Kynnys on **200 merkkia**, ei nolla.
+2. Liitteista kokeillaan OAS ja sen jalkeen kaavaselostus
+   (`valitseKaavaselostus`, D-268). Mitatussa kymmenen otoksessa OAS
+   kattoi seitseman ja selostus kaksi joille OAS:aa ei ollut.
+3. **Pisin voittaa** — rajapinnan oma kuvaus ei katoa jos liitteesta
+   saadaan vain otsikko.
+4. Katto nostettiin 600 -> 1 200 merkkiin ja katkaisu tehdaan virkkeen
+   rajalta, kuten `kaavanKuvaus.ts`:ssa.
+
+Tulos takautuvasti: **60 riviä 65:sta piteni**, tyypillisesti 63-192
+merkista 350-1 190 merkkiin. Viisi ei parantunut (OAS puuttuu tai siina
+ei ole tavoiteotsikkoa) ja ne jaivat ennalleen.
+
+#### Kuvaus ei nakynyt asiakkaalle ennen kuin kentta vaihtui
+
+Ensimmainen korjaus taydensi `metadata.description`-kentan, ja ehdokkaat
+paranivat heti (228:sta 223 yli 200 merkin). **Hankkeet eivat.** Hanke
+nayttaa asiakkaalle sarakkeen `additional_info` ("Lisatietoja"),
+`metadata.description` ei nay hankenakymassa lainkaan. Approve-reitti
+kirjoittaa sen kerran hyvaksynnassa, joten jo hyvaksytyt hankkeet jaivat
+vanhaan tekstiin.
+
+Mittari olisi nayttanyt onnistumisen jos olisin mitannut ehdokkaita.
+**Mittaa se kentta jonka asiakas lukee**, ei sita johon kirjoitat.
+
+Synkronointi (64 hanketta) ei poista mitaan: vanha teksti on lahteen
+yhden rivin tiivistelma, ja siina on usein faktoja joita pitkasta
+tekstista puuttuu — "Tavoitteena on kaavoittaa alueelle noin 60 000 kem2
+asumista", "uuden **Helen Oy:n** energiantuotantoalueen". Se sailytetaan
+uuden perassa merkinnalla "Tiivistelma lahteesta:", paitsi jos se on
+pelkka hankkeen nimi (9 tapausta 64:sta).
+
+Tulos hanketasolla: SUKKA-hankkeista **198 kappaletta 201:sta** on nyt
+yli 200 merkkia (ennen 142).
+
+Avoinna: ne 66 tyhjaa "vireilla olevat kaavat" -ehdokasta. Reitti on
+joko oikea selostusosoite (vanha arvaus on kuollut) tai SUKKA-rivin
+tunnistaminen samaksi hankkeeksi — jalkimmainen vaatii oman mittauksen.
+
+`scripts/korjaa-helsingin-kaavakuvaukset.ts`,
+`scripts/synkronoi-kuvaus-nakyviin.ts`.
+
 ### D-269 - Kuvaus on tuote, ei tiiviste: tavoite satoja merkkeja
 
 Johannes 11.10.2026: *"tuo alle 40 merkkia on todella olematon. Lisaksi
