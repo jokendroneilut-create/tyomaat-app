@@ -48,10 +48,24 @@ const PURKU = /\b(purku|puretaan|purkutyö|purkuurak|purkamis)/i
 const KORJAUS =
   /\b(peruskorja|perusparann|saneeraus|saneerat|korjausurak|korjaushank|kunnostus|kunnostet|remontti|restauroi|muutostyö|käyttötarkoituksen muutos)/i
 
-const LAAJENNUS = /\b(laajennus|laajenne|laajentam|lisärakenn|korottam|korotus)/i
+/*
+ * "Korottaminen" EI kelpaa laajennuksen merkiksi: Hilmassa korotetaan
+ * useimmiten hankesuunnitelman enimmaishintaa, ei rakennusta.
+ * Mitattu 12.10.2026: "Konalan pelastusaseman uudisrakennuksen
+ * hankesuunnitelman enimmaishinnan korottaminen" luokittui
+ * laajennukseksi.
+ */
+const LAAJENNUS = /\b(laajennus|laajenne|laajentam|lisärakenn)/i
 
+/*
+ * URAKKAMUOTO EI OLE LAAJUUS. "Kokonaisurakka", "KVR-urakka" ja
+ * "projektinjohtourakka" kertovat sopimusmallin, eivat sita mita
+ * tehdaan: "Kokonaisurakka Jyvaskylan yliopiston Agora-rakennuksen
+ * 5. kerroksen tilamuutoksista" on korjaus, ei uudisrakennus
+ * (mitattu 12.10.2026).
+ */
 const UUDISRAKENNUS =
-  /\b(uudisrakenn|uusi\s|uuden\s|uutta\s|rakennetaan|rakentuu|rakentaa|nousee|toteuttaa|valmistuu|rakennushank|kokonaisurak|kvr-?urak|projektinjohtourak)/i
+  /\b(uudisrakenn|uusi\s|uuden\s|uutta\s|rakennetaan|rakentuu|rakentaa|nousee|toteuttaa|valmistuu|rakennushank)/i
 
 const KAAVOITUS = /\b(asemakaava|kaavamuutos|kaavan muutos|osayleiskaava|ranta-?asemakaava|kaavoitus|kaavaehdotus|kaavaluonnos)/i
 

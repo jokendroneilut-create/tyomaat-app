@@ -45,7 +45,7 @@ async function main() {
     if (data.length < 500) break
   }
 
-  const kohteet = rivit.filter((r) => !(r.metadata ?? {}).laajuus)
+  const kohteet = rivit.filter((r) => !(r.metadata ?? {}).tyon_laji)
   console.log(apply ? "=== AJO (--apply) ===" : "=== KUIVAHARJOITUS ===")
   console.log(`hankkeita ${rivit.length}, ilman laajuutta ${kohteet.length}\n`)
 
@@ -60,7 +60,7 @@ async function main() {
     if (!apply) continue
     const { error } = await db
       .from("projects")
-      .update({ metadata: { ...(r.metadata ?? {}), laajuus } })
+      .update({ metadata: { ...(r.metadata ?? {}), tyon_laji: laajuus } })
       .eq("id", r.id)
     if (error) console.log(`  VIRHE ${r.id}: ${error.message}`)
   }

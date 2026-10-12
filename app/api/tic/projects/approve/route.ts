@@ -2645,8 +2645,12 @@ export async function POST(request: Request) {
    * osaurakan 350 k€.
    *
    * Luetaan OTSIKOSTA, ei kuvauksesta — sama syy kuin tyypissa.
+   *
+   * AVAIN ON `tyon_laji`, EI `laajuus`: jalkimmainen oli jo kaytossa
+   * kerrosalalle ("8 400 brm²") 26 rivilla. Sama sana ei saa tarkoittaa
+   * kahta asiaa.
    */
-  laajuus: hankkeenLaajuus(projectName) ?? metadata.laajuus ?? null,
+  tyon_laji: hankkeenLaajuus(projectName) ?? metadata.tyon_laji ?? null,
 
   /*
    * Yhteyshenkilöt omaksi rakenteekseen jo luonnissa. Tieto on ollut
