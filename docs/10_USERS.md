@@ -254,6 +254,48 @@ lähetä.
 
 ---
 
+## Asiakaspalaute: suodatinpyynnot 12.10.2026
+
+Asiakas kysyi kolmea lisasuodatinta hankehakuun. Palaute on tassa
+siksi, etta **vastaus nojaa kattavuuslukuihin** — ja jos luvut
+muuttuvat, vastauskin muuttuu.
+
+| pyydetty suodatin | kentta | kattavuus 12.10.2026 | vastaus |
+|---|---|---|---|
+| Kustannustaso | `estimated_cost` | 938 / 6 497 = **14,4 %** | ei rakenneta |
+| Rakentamisen aloitusajankohta | `start_date` | 4 / 6 497 = **0,1 %** | ei rakenneta |
+| Rakennustyyppi | `property_type` | 4 114 / 6 497 = **63,3 %** | on jo: kartan "Kohdetyyppi" |
+
+(Nimittaja on asiakkaalle nakyva hanke: `status = active` ja
+`is_public`.)
+
+### Periaate: suodatin ilman kattavaa tietoa ei palvele
+
+> "Suodatin olisi yksinkertainen, mutta siita ei olisi hyotya ilman
+> kattavaa kustannustietoa."
+
+Syy ei ole tyomaara vaan se, etta **vajaa suodatin nayttaa tyhjempaa
+maailmaa kuin on olemassa**: kayttaja valitsee "yli 5 M EUR" ja saa
+938 hankkeen joukosta osuman, vaikka kannassa on 6 497 hanketta joista
+valtaosalta summa vain puuttuu. Han paattelee ettei hankkeita ole.
+
+Sama koskee jo olemassa olevaa kohdetyyppi-suodatinta: **kolmasosalta
+hankkeista tyyppi puuttuu** (2 379 kpl), ja ne katoavat nakymasta heti
+kun kayttaja valitsee tyypin. Jos suodattimia laajennetaan, kayttajalle
+on kerrottava kuinka monelta tieto puuttuu.
+
+### Pyynnon takana oleva kaytto on oma tuoteideansa
+
+Asiakas perusteli aloitusaikasuodatinta nain: *"esimerkiksi
+mahdollisuus hakea 4 kuukautta sitten alkaneet hankkeet, jolloin on
+paras aika laittaa kyselya meidan alantoihimme."*
+
+Se on ajoitettu myynti: aliurakoitsija haluaa loytaa hankkeet siina
+vaiheessa kun hanen tyonsa tulee ajankohtaiseksi. Nykyisella datalla
+sita ei voi tehda — aloituspaiva on tiedossa neljalla hankkeella
+6 497:sta. Jos tama halutaan, ensin on poimittava rakentamisen
+aloituspaiva, vasta sitten suodatin.
+
 ## Mittarin muutokset
 
 Jokainen laskentatavan muutos kirjataan tähän päivämäärällä, muuten
