@@ -70,6 +70,13 @@ type Project = {
   /* Keskeytetty Hilma-kilpailutus, näytetään vaiheen yhteydessä (D-196). */
   is_cancelled_procurement?: boolean | null
   property_type: string | null
+  /*
+   * Tyon laji: uudisrakennus, laajennus, korjaus, osaurakka, purku,
+   * kaavoitus. Kertoo MITA kohteessa tehdaan — rakennustyyppi kertoo
+   * vain mika rakennus (D-274). Sama "Koulu" voi olla 17 M€:n
+   * uudisrakennus tai 258 k€:n sprinkleriurakka.
+   */
+  laajuus: string | null
   apartments: number | null
   floor_area: number | null
   estimated_cost: number | null
@@ -253,8 +260,23 @@ function getStatusStyle(status: string) {
  *
  * metadata ei ole mukana tarkoituksella (ks. kommentti haun yhteydessa).
  */
+/*
+ * Tallennettu arvo on lyhyt tunniste, kayttajalle nayteaan selite.
+ * "Korjaus ja saneeraus" on yksi luokka: alalla kaytetaan molempia
+ * sanoja samasta tyosta.
+ */
+const TYON_LAJI: Record<string, string> = {
+  uudisrakennus: 'Uudisrakennus',
+  laajennus: 'Laajennus',
+  korjaus: 'Korjaus ja saneeraus',
+  osaurakka: 'Osaurakka',
+  purku: 'Purku',
+  kaavoitus: 'Kaavoitus',
+}
+
 const LISTAN_KENTAT = `
   id, name, city, region, phase, status, location, developer, builder, property_type,
+  laajuus:metadata->>laajuus,
   apartments, floor_area, estimated_cost, construction_start, estimated_completion,
   structural_design, hvac_design, electrical_design, architectural_design,
   geotechnical_design, earthworks_contractor, additional_info,
@@ -342,6 +364,13 @@ export default function Projects() {
   const [phaseOpen, setPhaseOpen] = useState(false)
   const phaseRef = useRef<HTMLDivElement | null>(null)
   const [propertyType, setPropertyType] = useState<string>('')
+  const [laajuus, setLaajuus] = useState<string>('')
+  /*
+   * OLETUS ON TURVALLINEN: tuntematon laji nakyy. Kayttaja voi
+   * halutessaan rajata ne pois, mutta valinta on hanen — hanketta ei
+   * piiloteta siksi etta me emme tieda (D-274).
+   */
+  const [piilotaTuntematonLaji, setPiilotaTuntematonLaji] = useState(false)
 
   const [visibleCount, setVisibleCount] = useState(pageSize)
 
@@ -872,6 +901,14 @@ setTeamModeEnabled(true)
       if (phase.length > 0 && !phase.includes(displayPhaseLabel(p.phase))) return false
 
       if (propertyType && !(p.property_type || '').toLowerCase().includes(propertyType.toLowerCase())) return false
+      /*
+       * TUNTEMATON EI KATOA. Valinta "uudisrakennus" nayttaa myos ne
+       * joilta laji puuttuu, koska hanketta ei saa piilottaa siksi
+       * etta emme tieda (Johannes 12.10.2026, D-274). Vain TIEDETYSTI
+       * eri lajia olevat rajautuvat pois.
+       */
+      if (laajuus && p.laajuus && p.laajuus !== laajuus) return false
+      if (laajuus && !p.laajuus && piilotaTuntematonLaji) return false
 
       if (!needle) return true
 
@@ -885,6 +922,7 @@ setTeamModeEnabled(true)
         p.builder ?? '',
         p.earthworks_contractor ?? '',
         p.property_type ?? '',
+        p.laajuus ?? '',
         p.additional_info ?? '',
       ]
         .join(' ')
@@ -902,7 +940,7 @@ setTeamModeEnabled(true)
         expandSearchTerm(term).some((syn) => haystack.includes(syn))
       )
     })
-  }, [projects, q, region, city, phase, propertyType])
+  }, [projects, q, region, city, phase, propertyType, laajuus, piilotaTuntematonLaji])
 
   /*
    * Karkeat pisteet lasketaan KOKO aineistosta eika suodatetusta:
@@ -946,7 +984,7 @@ setTeamModeEnabled(true)
 
   useEffect(() => {
     setVisibleCount(pageSize)
-  }, [q, region, city, phase, propertyType, limitToMapView, showNoCoords, mapBounds, pageSize])
+  }, [q, region, city, phase, propertyType, laajuus, piilotaTuntematonLaji, limitToMapView, showNoCoords, mapBounds, pageSize])
 
   const visibleProjects = useMemo(() => listProjects.slice(0, visibleCount), [listProjects, visibleCount])
 
@@ -1158,6 +1196,55 @@ setTeamModeEnabled(true)
                 width: '200px',
               }}
             />
+          </div>
+
+          {/*
+            TYÖN LAJI, EI KOHDETYYPPI. Kohdetyyppi kertoo mikä rakennus,
+            tämä mitä siinä tehdään — sama "Koulu" voi olla 17 M€:n
+            uudisrakennus tai 258 k€:n sprinkleriurakka (D-274).
+
+            Valinta ei piilota hankkeita joilta laji puuttuu: tuntematon
+            näkyy aina, vain tiedetysti eri laji rajautuu pois.
+          */}
+          <div>
+            <label className="projects-label">Työn laji</label>
+            <select
+              value={laajuus}
+              onChange={(e) => setLaajuus(e.target.value)}
+              style={{
+                padding: '10px',
+                borderRadius: '8px',
+                border: '1px solid #ccc',
+                width: '200px',
+              }}
+            >
+              <option value="">Kaikki</option>
+              <option value="uudisrakennus">Uudisrakennus</option>
+              <option value="laajennus">Laajennus</option>
+              <option value="korjaus">Korjaus ja saneeraus</option>
+              <option value="osaurakka">Osaurakka</option>
+              <option value="purku">Purku</option>
+              <option value="kaavoitus">Kaavoitus</option>
+            </select>
+            {laajuus ? (
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginTop: 6,
+                  fontSize: 13,
+                  color: '#555',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={piilotaTuntematonLaji}
+                  onChange={(e) => setPiilotaTuntematonLaji(e.target.checked)}
+                />
+                Piilota ne joiden lajia ei tiedetä
+              </label>
+            ) : null}
           </div>
 
           <button type="button" className="projects-clear" onClick={clearFilters}>
@@ -1798,6 +1885,11 @@ setTeamModeEnabled(true)
                 {selected.property_type ? (
                   <p>
                     <strong>🏢 Kohdetyyppi:</strong> {selected.property_type}
+                  </p>
+                ) : null}
+                {selected.laajuus ? (
+                  <p>
+                    <strong>🔨 Työn laji:</strong> {TYON_LAJI[selected.laajuus] ?? selected.laajuus}
                   </p>
                 ) : null}
               </div>

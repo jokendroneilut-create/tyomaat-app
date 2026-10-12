@@ -95,6 +95,20 @@ tyypin ja laajuuden ristiin niin ohuesti etta vain kymmenkunta paria
 yltaa kahdeksaan havaintoon. Kun laajuus on kertynyt, taulu voidaan
 laskea omista riveista — eika sita ennen.
 
+#### Suodatin kayttajalle: "Tyon laji"
+
+Johannes 12.10.2026: *"pelkkien uudisrakennusten haku olisi varmasti
+myos kayttajalle hyodyllinen suodatus."* Hankkeet-sivulle lisattiin
+valinta **Tyon laji** Kohdetyypin viereen, ja laji nakyy hankekortilla.
+
+Suodattimessa on yksi ristiriita, joka piti ratkaista: jos
+"uudisrakennus" nayttaa myos ne 3 983 joiden lajia ei tiedeta, se ei
+suodata mitaan — mutta jos se piilottaa ne, rikotaan periaatetta.
+Ratkaisu on **valinta kayttajalle**: tuntemattomat nakyvat oletuksena,
+ja erillinen rasti "Piilota ne joiden lajia ei tiedeta" ilmestyy vasta
+kun laji on valittu. Oletus on turvallinen, mutta suodatin on
+kaytettavissa sita haluavalle.
+
 **Periaate jota ei saa rikkoa** (Johannes 12.10.2026): *"en halua etta
 mikaan hanke jaa piiloon koska emme osaa sanoa hanketyyppia tai
 arviota. Eli jos emme tieda niin naytamme."* Suodatin saa siis poistaa
