@@ -95,26 +95,67 @@ tyypin ja laajuuden ristiin niin ohuesti etta vain kymmenkunta paria
 yltaa kahdeksaan havaintoon. Kun laajuus on kertynyt, taulu voidaan
 laskea omista riveista — eika sita ennen.
 
-#### Suodatin kayttajalle: "Tyon laji"
+#### Avain oli jo varattu: laajuus tarkoitti kerrosalaa
+
+Kirjoitin luokan kenttaan `metadata.laajuus`. Sama avain oli jo
+kaytossa 26 rivilla aivan muuhun: *"8 400 brm²"*, *"noin 5 000
+kerrosneliometria"*, *"Kokonais-ala 19 500 brm2, uudisosa n. 15 000
+m2"*. Sama sana tarkoitti siis kahta eri asiaa
+([[name-the-denominator]]).
+
+Vika loytyi vasta kun Johannes kysyi *"ovatko nuo luokitukset nyt
+varmasti oikein?"* — en ollut lukenut otosta luokittain ennen kuin
+kirjoitin 2 612 rivia. **Kuivaharjoituksen lukeminen jai valista, ja
+juuri se olisi paljastanut taman.**
+
+Korjaus: luokka omaan avaimeensa `tyon_laji`, kerrosalarivit koskematta
+(tunnistus arvon perusteella, ei rivin). `scripts/siirra-tyon-laji.ts`.
+
+Sama lukeminen paljasti kaksi liian laveaa kuviota:
+
+| kuvio | mihin osui vaarin |
+|---|---|
+| `korottam\|korotus` | "hankesuunnitelman **enimmaishinnan** korottaminen" -> laajennus |
+| `kokonaisurak\|kvr-urak` | urakkamuoto ei ole laajuus: "Kokonaisurakka Agora-rakennuksen 5. kerroksen **tilamuutoksista**" -> uudisrakennus |
+
+70 rivin luokka muuttui, 56:lta se poistui kokonaan.
+
+#### Suodatin kayttajalle: "Tyon laji" — TEHTY MUTTA EI JULKAISTU
 
 Johannes 12.10.2026: *"pelkkien uudisrakennusten haku olisi varmasti
-myos kayttajalle hyodyllinen suodatus."* Hankkeet-sivulle lisattiin
-valinta **Tyon laji** Kohdetyypin viereen, ja laji nakyy hankekortilla.
+myos kayttajalle hyodyllinen suodatus."*
 
-Suodattimessa on yksi ristiriita, joka piti ratkaista: jos
-"uudisrakennus" nayttaa myos ne 3 983 joiden lajia ei tiedeta, se ei
-suodata mitaan — mutta jos se piilottaa ne, rikotaan periaatetta.
-Ratkaisu on **valinta kayttajalle**: tuntemattomat nakyvat oletuksena,
-ja erillinen rasti "Piilota ne joiden lajia ei tiedeta" ilmestyy vasta
-kun laji on valittu. Oletus on turvallinen, mutta suodatin on
-kaytettavissa sita haluavalle.
+Suodattimessa on ristiriita, joka piti ratkaista: jos "uudisrakennus"
+nayttaa myos ne joiden lajia ei tiedeta, se ei suodata mitaan — mutta
+jos se piilottaa ne, rikotaan periaatetta. Ratkaisu on **valinta
+kayttajalle**: tuntemattomat nakyvat oletuksena, ja valikon sisalla on
+rasti "Piilota ne joiden lajia ei tiedeta". Mitattu paikallisesti:
+uudisrakennus tuntemattomineen 4 383, ilman niita 343.
+
+**TILA: branchissa `tyon-laji-suodatin`, ei mainissa.** Ensimmainen
+versio ehti tuotantoon keskenerinaisena (yhden valinnan valikko, vaara
+jarjestys, laatikot eri tasoilla), ja se vedettiin pois:
+
+> Johannes: *"en olisi halunnut etta teet pushia viela nain
+> keskeneraiseen mutta se meni jo"* ja *"saako tuon julkaisun viela
+> pois kayttajien nakyvilta... en halua etta 100 testikayttajaani
+> katsoo taysin suunnitteilla olevia suodattimia."*
+
+Sääntö tasta eteenpain: **asiakkaalle nakyvaa muutosta ei pushata
+kysymatta** ([[ask-before-publishing-ui]]). Johannes katsoo sen
+paikallisesti (localhost:3000), ja julkaisu tapahtuu vasta luvalla.
+
+Branchissa valmiina: monivalinta samalla komponentilla kuin Vaihe,
+Kohdetyypin vapaahaku viimeisena (valikot samassa pystyrivissa),
+"piilota tuntemattomat" valikon sisalla, laji hankekortilla.
 
 **Periaate jota ei saa rikkoa** (Johannes 12.10.2026): *"en halua etta
 mikaan hanke jaa piiloon koska emme osaa sanoa hanketyyppia tai
 arviota. Eli jos emme tieda niin naytamme."* Suodatin saa siis poistaa
 vain sen mika **tiedetaan** pieneksi; tuntematon jaa nakyviin.
 
-`lib/projects/hankkeenLaajuus.ts`, `scripts/taydenna-laajuus.ts`,
+`lib/projects/hankkeenLaajuus.ts` (+ testit),
+`scripts/taydenna-laajuus.ts`, `scripts/siirra-tyon-laji.ts`,
 `scripts/taydenna-rakennustyyppi.ts`.
 
 ### D-273 - Lahteen etsiminen verkosta: otsikko ratkaisee varmuuden
