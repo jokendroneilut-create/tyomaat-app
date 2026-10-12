@@ -23,6 +23,86 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-274 - Tyyppi kertoo mika rakennus, laajuus mita siina tehdaan
+
+Johannes 12.10.2026, asiakkaan suodatinpyyntojen jalkeen: *"meidan
+pitaisi alkaa kerata myos tietoa siita erilliseen tauluun mita
+minkakilainen hanke yleensa maksaa"* ja *"voitko sinä tehdä tuon
+luokituksen tässä? Parasta olisi tietysti saada se jo tuodessa."*
+
+#### Tyyppi yksin ei riita arvioon
+
+Mitattu 929 hankkeesta joilla kustannus on tiedossa:
+
+| tyyppi | n | mediaani | p25 … p75 | hajonta |
+|---|---|---|---|---|
+| Koulu | 84 | 3,3 M€ | 258 k€ … 17,7 M€ | **69x** |
+| Kulttuurirakennus | 26 | 4,9 M€ | 219 k€ … 25,0 M€ | **114x** |
+| Sairaala | 36 | 8,3 M€ | 1,2 M€ … 50,0 M€ | 42x |
+| Kerrostalo | 42 | 9,8 M€ | 4,2 M€ … 14,1 M€ | 3,3x |
+
+Satakertainen ero ei ole hajontaa vaan **kahden eri asian niputtamista
+samaan luokkaan**: koulun uudisrakennus ja koulun sprinkleriurakka ovat
+molemmat "Koulu". Arvio tyypin mediaanista olisi vaarassa kertaluokan
+verran — ja arviona esitettynakin se harhauttaisi.
+
+#### Puuttuva ulottuvuus on tyon laajuus
+
+`lib/projects/hankkeenLaajuus.ts`: uudisrakennus, laajennus, korjaus,
+osaurakka, purku, kaavoitus. Luetaan **otsikosta**, ei kuvauksesta.
+
+| laajuus | n | mediaani | hajonta |
+|---|---|---|---|
+| uudisrakennus | 60 | **8,4 M€** | 11,3x |
+| laajennus | 42 | 8,0 M€ | 6,8x |
+| korjaus | 113 | 2,4 M€ | 28,2x |
+| osaurakka | 67 | **350 k€** | 5,0x |
+| purku | 19 | 313 k€ | **1,9x** |
+
+**24-kertainen ero mediaanissa.** Yhdessa tyypin kanssa haarukka
+kapenee kayttokelpoiseksi: Koulu yksin 69x, mutta Koulu/laajennus 2,5x
+ja Toimitila/uudisrakennus 4,4x.
+
+Kattavuus 2 514 / 6 497 = 38,7 %, ja luokitus kirjoitetaan nyt myos
+tuonnissa (approve-reitti), joten uudet hankkeet saavat sen heti.
+
+#### Kaksi asiaa jotka mittaus pakotti korjaamaan
+
+1. **Sana "hankinta" ei kelpaa osaurakan merkiksi.** Hilman otsikot
+   paattyvat siihen myos kokonaisista rakennuksista: "Ruoveden
+   pelastus- ja ensihoitoaseman hankinta vuokramallilla" on koko asema
+   ([[vuokramalli-is-construction]]). Poisto kavensi osaurakan
+   hajonnan 15,0x -> 5,0x, eli luokka puhdistui.
+
+2. **Rakennustyypin taydennys rungosta oli virhe.** Ensin mittasin
+   etta `inferBuildingType` antaisi tyypin 415 lisariville, ja sanoin
+   sita paivan parhaaksi tuotoksi. Kuivaharjoituksen lukeminen kumosi
+   sen: luokittelija poimi sanoja kaavaselostusten aluekuvauksista.
+
+   > Kirjasto <- "Kotirannan aurinkovoima-osayleiskaava"
+   > Silta <- "Teknobulevardi 7, 9 ja 11"
+   > Hotelli <- "Siikajarvi Pohjoinen"
+
+   Syy oli tamän paivan oma tyo: kuvaukset pitenivat (D-268…D-273),
+   joten rungossa on nyt enemman sanoja osuttavaksi. Pelkalla otsikolla
+   tulos on **10 rivia, kaikki oikein**. Ne kirjoitettiin, 415:ta ei.
+
+#### Hintataulu: ei viela
+
+Johanneksen ajatus taulusta on oikea, mutta se ei kannata ennen kuin
+laajuusluokka on kertynyt. Nyt havaintoja on 929, ja ne jakautuvat
+tyypin ja laajuuden ristiin niin ohuesti etta vain kymmenkunta paria
+yltaa kahdeksaan havaintoon. Kun laajuus on kertynyt, taulu voidaan
+laskea omista riveista — eika sita ennen.
+
+**Periaate jota ei saa rikkoa** (Johannes 12.10.2026): *"en halua etta
+mikaan hanke jaa piiloon koska emme osaa sanoa hanketyyppia tai
+arviota. Eli jos emme tieda niin naytamme."* Suodatin saa siis poistaa
+vain sen mika **tiedetaan** pieneksi; tuntematon jaa nakyviin.
+
+`lib/projects/hankkeenLaajuus.ts`, `scripts/taydenna-laajuus.ts`,
+`scripts/taydenna-rakennustyyppi.ts`.
+
 ### D-273 - Lahteen etsiminen verkosta: otsikko ratkaisee varmuuden
 
 Johannes 12.10.2026: *"voitko sinä etsiä noille käsin lisätyille

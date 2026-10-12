@@ -31,6 +31,7 @@ import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { resolveRegion } from "@/lib/projects/resolveRegion"
 import { kokonaisluku } from "@/lib/projects/kokonaisluku"
+import { hankkeenLaajuus } from "@/lib/projects/hankkeenLaajuus"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -2633,6 +2634,19 @@ export async function POST(request: Request) {
   source_name: sourceName,
   source_url: sourceUrl,
   documents_url: documentsUrl,
+
+  /*
+   * HANKKEEN LAAJUUS JO TUONNISSA (D-274).
+   *
+   * Rakennustyyppi kertoo mika rakennus, laajuus mita siina tehdaan.
+   * Ilman jalkimmaista saman tyypin hinnat heittavat satakertaisesti:
+   * koulun uudisrakennus ja koulun sprinkleriurakka ovat molemmat
+   * "Koulu". Mitattu 12.10.2026: uudisrakennuksen mediaani 8,4 M€,
+   * osaurakan 350 k€.
+   *
+   * Luetaan OTSIKOSTA, ei kuvauksesta — sama syy kuin tyypissa.
+   */
+  laajuus: hankkeenLaajuus(projectName) ?? metadata.laajuus ?? null,
 
   /*
    * Yhteyshenkilöt omaksi rakenteekseen jo luonnissa. Tieto on ollut
