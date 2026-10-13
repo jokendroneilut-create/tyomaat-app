@@ -133,16 +133,30 @@ muut tuntemattomiksi.
 930 hinnasta 9 eroaa siita mita nykyinen kuvaus sanoo, ja **kolme
 niista on tuhatkertaisia**:
 
-| kannassa | kuvauksessa | hanke |
-|---|---|---|
-| 15 k€ | 15 M€ | Kerrostalo opiskelija-asuntosaatiolle |
-| 130 k€ | 130 M€ | FIN04A Datakeskus |
-| 32 M€ | 75 k€ | Postipuun koulun hankesuunnitelma |
+**Lahdelauseiden lukeminen kumosi oman yhteenvetoni.** Ensin kirjasin
+kolme tuhatkertaista virhetta. Kun avasin lauseet, aitoja virheita oli
+**kaksi**, ja seitsemassa tapauksessa **kanta oli oikeassa ja poimija
+vaarassa**:
 
-Poimija osaa nama lauseet oikein nyt, joten arvot ovat vanhentuneita:
-ne on poimittu ennen kuin kuvaukset paranivat (D-268…D-273). Loput
-kuusi ovat aitoa monitulkintaisuutta (teksti mainitsee useita summia).
-Nama kolme korjataan kasin; sääntöä ei tarvita.
+| hanke | kannassa | kuvauksesta | kumpi oikein |
+|---|---|---|---|
+| Kerrostalo opiskelija-asuntosaatiolle | 15 k€ | 15 M€ | **teksti** — "Sopimuksen arvo YIT:lle on noin 15 miljoonaa euroa" |
+| FIN04A Datakeskus | 130 k€ | 130 M€ | **teksti** — "Sopimuksen arvo on 130 miljoonaa euroa" |
+| Postipuun koulu | 32 M€ | 75 k€ | kanta — 75 k€ on siirtokelpoisen rakennuksen vuokra/vuosi |
+| Turun raitiotie | 465 M€ | 33 M€ | kanta — 33 M€ on ensimmainen vaihe |
+| Vantaan ratikka itaosa | 280 M€ | 750 M€ | kanta — hanke ON itaosa, 750 M€ on koko ratikka |
+| Pysakointilaitos Jyvaskylaan | 15,5 M€ | 210 M€ | kanta — 210 M€ on koko Hipposkeskus |
+| Vetylaitos Utajarvelle | 2 000 M€ | 150 M€ | kanta — 150 M€ on investointi**tuki**, ei hanke |
+| Yhtenaiskoulu Kuusankoski | 16 M€ | 17,8 M€ | molemmat aitoja: kattohinta vs kokonaisarvio |
+| Peijaksen sairaala | 59 M€ | 74 M€ | molemmat aitoja: tavoitebudjetti vs kokonaisarvio |
+
+Korjattiin ne kaksi, **nimelta eika saannolla**. Jos olisin ajanut
+poimijan yli kaikkien yhdeksan, olisin rikkonut seitseman oikeaa
+arvoa — mukaan lukien Turun raitiotien ja Vantaan ratikan, jotka ovat
+kannan isoimpia hankkeita.
+
+Opetus toistaa paivan muut: **mittari kertoo missa katsoa, ei mika on
+vaarin** ([[both-sides-can-be-wrong]]).
 
 #### Mita sen sijaan kannattaa tehda
 
