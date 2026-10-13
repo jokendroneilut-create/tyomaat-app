@@ -32,6 +32,26 @@ varten. Se kattaa (mitattu 2026-09-13):
   tilin luontipäivä luetaan `auth.users.created_at`-kentästä, ei
   `profiles`-taulusta.
 
+### Tiedote kaikille (`send-broadcast`): kuka saa ja montako kertaa
+
+Tarkistettu 13.10.2026 kohdetyyppitiedotteen jälkeen. Kumpikin alla oleva
+näyttää viaalta, mutta kumpikin on tarkoitettu eikä kumpaakaan muuteta.
+
+- **Lukitut jäävät pois.** Käyttäjälista näyttää kaikki tunnukset (116),
+  tiedote meni 105:lle. Erotus 11 oli kaikki lukittuja tunnuksia
+  (`isAccountLocked`: `app_metadata.locked` tai voimassa oleva
+  `banned_until`). Lukitulle ei lähetetä mitään sähköpostia, koska osa on
+  sopinut palaavansa asiaan myöhemmin. Ohitettujen määrä palautuu
+  vastauksen kentässä `skippedLocked`. Jos lukitun halutaan saavan
+  tiedote, lukitus avataan ensin tai viesti lähetetään erikseen.
+- **Lähettäjä saa yhden kopion per erä.** Resend sallii 50 vastaanottajaa
+  per lähetys, joten piilokopiot lähetetään 49:n erissä, ja jokaisen erän
+  näkyvä vastaanottaja (`to`) on lähettävä admin. 105 vastaanottajalla
+  eriä on kolme (49 + 49 + 6), joten admin saa viestin kolmesti; muut
+  kerran. Vastaanottajalistassa ei ollut yhtään tuplaa. Kolme kopiota
+  omaan postiin on siis kuittaus erien määrästä, ei merkki siitä että
+  asiakkaat saivat tuplia.
+
 ---
 
 ## 2. Analytiikkatyökalu
@@ -137,6 +157,10 @@ tuottama luku on avattava lähteestä ennen kuin sen perusteella toimitaan
 ---
 
 ## Päivityshistoria
+
+- **2026-10-13** — Kirjattu tiedotteen vastaanottajasäännöt: 116 tunnuksesta
+  105 sai viestin, erotus 11 on lukittuja; lähettäjä saa kopion jokaisesta
+  49:n erästä (kolme kopiota). Kumpikin tarkoitettua, ei muutettu.
 
 - **2026-09-20** — Lisätty käyttäjäsivulle `Viimeksi käynyt` -sarake (näkymä
   `user_last_activity`, docs/sql/2026-09-20_user_last_activity.sql): 48
