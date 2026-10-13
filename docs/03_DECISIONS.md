@@ -23,6 +23,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-277 - Euromaarainen luokitus jatetaan nyt tekematta
+
+Johannes 13.10.2026, kohdetyypin valikon valmistuttua: *"dokumentoi
+nama uudistukset ja havainnot. myos paatos jattaa euromaarainen
+luokitus nyt tekematta."*
+
+**Paatos:** hankkeelle ei nayteta arvioitua euromaaraa eika
+kustannustason suodatinta rakenneta. Tiedetty summa naytetaan kuten
+ennenkin.
+
+Tama ei ole lykkays resurssipulan takia vaan **mittaustulos** (D-275):
+
+| mitattu | tulos |
+|---|---|
+| kustannusarvio tiedossa | 14,4 % (938 / 6 497) |
+| kokoluokan ennuste tyypista + laajuudesta, pidatetylla otoksella | **+2 prosenttiyksikkoa** "parasta yhta arvausta" vastaan |
+| iso hanke, jonka saanto olisi luokitellut pieneksi | 113 kpl |
+| hintataulu tyypeittain, lapaisi pidatetyn kokeen | 1 luokka 12:sta (Energiantuotanto) |
+
+Kaksi syyta, kumpikin riittaisi yksin:
+
+1. **Arvio ei erottele.** Kahden prosenttiyksikon parannus ei ole
+   suodatin vaan kolikonheitto, jossa on euromerkki edessa. 113 isoa
+   hanketta olisi pudonnut "alle 1 M€" -rajauksen taakse — eli
+   suodatin olisi piilottanut juuri ne hankkeet joita asiakas etsii.
+
+2. **Tyyppi ei selita hintaa, tyon laajuus selittaa**
+   ([[scope-explains-cost]]). Sama "Koulu" on 8,4 M€ uudisrakennus tai
+   350 k€ osaurakka. Luokitus, jota pyydettiin hinnan korvikkeeksi,
+   ei siis voi toimia hinnan korvikkeena.
+
+**Mika ei muutu:** tiedetyt summat naytetaan, ja niita kerataan lisaa.
+Asiakkaalle ei kuitenkaan valehdella tarkkuudesta jota meilla ei ole
+([[never-hide-on-missing-data]]).
+
+**Milla ehdolla tahan palataan.** Ei "kun ehtii", vaan kun jompikumpi
+toteutuu:
+
+- **Kattavuus nousee olennaisesti.** Lahin lahde on Hilman
+  `noticeResult/totalAmount` (~270 uutta tiedettya summaa samasta
+  hausta jonka jo teemme voittajan takia). Jos kattavuus nousee yli
+  ~40 %:n, **poissulkeva** suodatin ("piilota hankkeet jotka tiedetaan
+  alle 1 M€:n") kannattaa harkita — se ei nojaa arvioon lainkaan eika
+  piilota tuntematonta.
+- **Koe toistetaan ja se voitetaan selvasti.** Sama pidatetty otos,
+  sama mittari. Kahden prosenttiyksikon voitto ei riita.
+
+Asiakkaan alkuperainen pyynto (kustannustaso, aloitusaika,
+rakennustyyppi) on kirjattu `10_USERS.md`:hen. Naista **rakennustyyppi
+toteutettiin** (D-276), aloitusaika odottaa Hilman
+`plannedPeriod/startDate`-poimintaa, ja kustannustaso on tama paatos.
+
 ### D-276 - Kohdetyypin valikko luetaan aineistosta, ei luettelosta
 
 Asiakas (Firesafe) 13.10.2026: *"Mita eri kohdetyyppeja on olemassa
