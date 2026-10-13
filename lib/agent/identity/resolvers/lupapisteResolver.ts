@@ -1,6 +1,6 @@
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
-import { isSmallPrivateProject } from "@/lib/agent/knowledge/negativeProjects"
+import { isNonProjectPermit, isSmallPrivateProject } from "@/lib/agent/knowledge/negativeProjects"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { getMunicipality } from "@/lib/geo/municipalities"
 import { tm35finToWgs84 } from "@/lib/geo/tm35fin"
@@ -102,7 +102,16 @@ export async function resolveLupapisteProject({
    * yms.) ovat liian pieniä TICin katselmointijonoon — ohitetaan kokonaan
    * ennen ehdokkaan luontia. Tarkistetaan sekä toimenpide että otsikko.
    */
-  if (isSmallPrivateProject(operation) || isSmallPrivateProject(title)) {
+  /*
+   * Luvan voimassaolon jatkaminen ja puiden kaataminen eivat ole
+   * hankkeita lainkaan — ks. negativeProjects.ts, jossa mittaus.
+   */
+  if (
+    isSmallPrivateProject(operation) ||
+    isSmallPrivateProject(title) ||
+    isNonProjectPermit(operation) ||
+    isNonProjectPermit(title)
+  ) {
     return {
       action: "skipped_small_private",
       potentialProjectId: null,

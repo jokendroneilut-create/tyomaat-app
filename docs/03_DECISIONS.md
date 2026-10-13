@@ -23,6 +23,51 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-280 - Luvan jatkaminen ja puiden kaataminen pois jonosta
+
+Johannes 14.10.2026 katselmointijonoa katsoessaan: *"minusta tuo
+voimassaolon jatkaminen ja puiden kaataminen voisi karsia? Ei tule
+koskaan mitään järkevää niistä."*
+
+Nämä eivät ole "liian pieniä" kuten omakotitalo tai autokatos
+(`isSmallPrivateProject`) vaan **väärä asia**: luvan voimassaolon
+jatkaminen ei ole uutta rakentamista, ja puiden kaataminen ei ole
+rakennushanke lainkaan.
+
+#### Mitattu ennen suodattimen kirjoittamista
+
+Sääntö joka pudottaa aitoja hankkeita on pahempi kuin jonossa oleva
+roska, joten kysyttiin ensin montako tällaista on *hyväksytty*:
+
+| | jonorivejä | hyväksytty hankkeeksi |
+|---|---|---|
+| puiden kaataminen | 26 | **0** |
+| voimassaolon jatkaminen | 25 | 1 |
+
+Se yksi avattiin — ja se on itsekin samaa roskaa: *"Rakennusluvan
+jatkoaika, rakennustyön loppuunsaattaminen, Kallas 1"*, ei
+rakennuttajaa, ei urakoitsijaa, ei kustannusta, ja koko kuvaus on
+*"Rakennustarkastaja hyväksyy anotun jatkoaikahakemuksen… Lupa on
+voimassa 4.8.2027 saakka."* Sääntö ei siis maksa yhtäkään oikeaa
+hanketta.
+
+#### Mitä EI karsittu
+
+**Maisematyölupa jätettiin listan ulkopuolelle**, vaikka se oli samassa
+jonossa vieressä. Se edeltää usein oikeaa hanketta (alueen raivaus
+ennen rakentamista), eikä sen pudottamiselle ollut mittausta — vain
+samannäköisyys. Arvaus ei riitä perusteeksi pudottaa lähdettä.
+
+#### Toteutus
+
+`isNonProjectPermit` (`lib/agent/knowledge/negativeProjects.ts`),
+kutsutaan `lupapisteResolver`issa samassa kohdassa kuin
+`isSmallPrivateProject` — eli ennen ehdokkaan luontia, jolloin rivi ei
+koskaan päädy jonoon. Jonossa odottaneet neljä riviä ohitettiin
+(`status = "ignored"`, ei DELETE — ks. [[queue-removal-ignored]]).
+Jo hylättyihin ei koskettu: ne ovat jo pois jonosta, ja tilan
+muuttaminen hävittäisi tiedon siitä että joku on katsonut rivin.
+
 ### D-279 - Ympäristölupahanke hylättiin koska siitä ei kerrottu mitään
 
 Asiakas (Firesafe) 13.10.2026: *"löysin vain murto-osan niistä

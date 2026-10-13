@@ -93,6 +93,50 @@ export function isSmallPrivateProject(
 }
 
 /*
+ * LUPA-ASIA JOSTA EI KOSKAAN TULE HANKETTA.
+ *
+ * Nämä eivät ole "liian pieniä" vaan väärä asia: luvan voimassaolon
+ * jatkaminen ei ole uutta rakentamista, ja puiden kaataminen ei ole
+ * rakennushanke lainkaan.
+ *
+ * Johannes 14.10.2026 kuulutusjonoa katsoessaan: *"minusta tuo
+ * voimassaolon jatkaminen ja puiden kaataminen voisi karsia? Ei tule
+ * koskaan mitään järkevää niistä."*
+ *
+ * Mitattu ennen suodattimen kirjoittamista, koska sääntö joka pudottaa
+ * aitoja hankkeita on pahempi kuin jonossa oleva roska:
+ *
+ * | | jonorivejä | hyväksytty hankkeeksi |
+ * |---|---|---|
+ * | puiden kaataminen | 26 | **0** |
+ * | voimassaolon jatkaminen | 25 | 1 |
+ *
+ * Se yksi hyväksytty avattiin: "Rakennusluvan jatkoaika, rakennustyön
+ * loppuunsaattaminen, Kallas 1" — ei rakennuttajaa, ei urakoitsijaa, ei
+ * kustannusta, ja kuvauksena "Rakennustarkastaja hyväksyy anotun
+ * jatkoaikahakemuksen… Lupa on voimassa 4.8.2027 saakka." Sekin on
+ * samaa roskaa, joten sääntö ei maksa yhtäkään oikeaa hanketta.
+ *
+ * Vartaloita taivutusten takia. "Maisematyölupa" EI ole listalla:
+ * se edeltää usein oikeaa hanketta (alueen raivaus), ja sen pudotus
+ * olisi ollut arvaus eikä mitattu.
+ */
+const NON_PROJECT_PERMIT_KEYWORDS = [
+  "voimassaolon jatkam",
+  "luvan jatkoaika",
+  "rakennusluvan jatkoaika",
+  "puiden kaatam",
+  "puun kaatam",
+  "puiden poistam",
+]
+
+export function isNonProjectPermit(text: string | null | undefined): boolean {
+  if (!text) return false
+  const t = text.toLowerCase()
+  return NON_PROJECT_PERMIT_KEYWORDS.some((k) => t.includes(k))
+}
+
+/*
  * Kaavan "ajantasaistaminen" (vanhan asemakaavan päivitys vastaamaan jo
  * rakennettua tilannetta) EI ole rakennushanke — se ei tuo uutta rakentamista,
  * vaan mahdolliset muutokset vaativat aina erillisen asemakaavamuutoksen. Näitä

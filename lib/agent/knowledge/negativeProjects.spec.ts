@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { isSmallPrivateProject } from "./negativeProjects"
+import { isSmallPrivateProject, isNonProjectPermit } from "./negativeProjects"
 
 describe("isSmallPrivateProject", () => {
   it("tunnistaa vapaa-ajan asunnot ja muut pienet yksityiskohteet", () => {
@@ -23,5 +23,36 @@ describe("isSmallPrivateProject", () => {
     expect(isSmallPrivateProject(null)).toBe(false)
     expect(isSmallPrivateProject(undefined)).toBe(false)
     expect(isSmallPrivateProject("")).toBe(false)
+  })
+})
+
+describe("isNonProjectPermit", () => {
+  it("osuu luvan voimassaolon jatkamiseen", () => {
+    expect(isNonProjectPermit("Rakennusluvan 2023-560-A voimassaolon jatkaminen")).toBe(true)
+    expect(isNonProjectPermit("Rakennusluvan jatkoaika, rakennustyön loppuunsaattaminen")).toBe(true)
+  })
+
+  it("osuu puiden kaatamiseen", () => {
+    expect(isNonProjectPermit("Puiden kaataminen: Äikkäänranta 15")).toBe(true)
+    expect(isNonProjectPermit("Puun kaataminen, Rastinniementie 12")).toBe(true)
+  })
+
+  it("ei osu maisematyölupaan", () => {
+    /*
+     * Maisematyölupa edeltää usein oikeaa hanketta (alueen raivaus),
+     * joten sen pudottaminen olisi arvaus eikä mitattu sääntö.
+     */
+    expect(isNonProjectPermit("Maisematyölupa: Kalevantie, Rahtimiehentie")).toBe(false)
+  })
+
+  it("ei osu oikeaan rakennushankkeeseen", () => {
+    expect(isNonProjectPermit("Rakentamislupa: varastohallin rakentaminen")).toBe(false)
+    expect(isNonProjectPermit("TEOLLISUUSHALLI JA ALOITTAMISOIKEUS")).toBe(false)
+    expect(isNonProjectPermit("Kerrostalon rakentaminen, aloitusoikeus")).toBe(false)
+  })
+
+  it("kestää tyhjän", () => {
+    expect(isNonProjectPermit(null)).toBe(false)
+    expect(isNonProjectPermit("")).toBe(false)
   })
 })
