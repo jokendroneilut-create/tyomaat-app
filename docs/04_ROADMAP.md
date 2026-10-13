@@ -671,6 +671,48 @@ muistin varassa.
 
 ### Datan laatu
 
+- **Hylätty rivi ei voi palata, vaikka tieto muuttuisi.** (Kirjattu
+  13.10.2026, ei aloitettu. Löytyi D-279:n yhteydessä.)
+
+  `importCandidate.ts` ohittaa ehdokkaan, jos sen osoitteelle löytyy
+  yksikin tuontitapahtuma jossa `action_taken = "queued_for_review"`:
+
+  ```
+  .eq("source_url", body.source_url)
+  .eq("action_taken", "queued_for_review")
+  → "source_url already imported" → skipped
+  ```
+
+  Ehto kysyy **oliko tämä osoite jonossa**, ei **mitä sille tehtiin**.
+  Hylätty rivi on siis pysyvästi näkymätön, vaikka hanke myöhemmin
+  ratkeaisi. Tämä on suoraan ristiriidassa kirjatun periaatteen kanssa:
+  hylätty palaa jonoon kun voittaja ratkeaa.
+
+  **Koko (mitattu 13.10.2026):**
+
+  | | n |
+  |---|---|
+  | osoitteita viety jonoon kertaalleen | 3 448 |
+  | …joista jonorivi yhä olemassa | 3 438 |
+  | jonorivejä tilassa `rejected` | **2 357** |
+  | jonorivejä tilassa `ignored` | 1 052 |
+
+  Ympäristölupalähteessä tämä kierrettiin käsin
+  (`scripts/avaa-ymparistolupa-hylatyt.ts`), koska rikastin toi noille
+  riveille uutta tietoa. Sama tilanne tulee joka kerta kun lähteen
+  poimintaa parannetaan.
+
+  **Älä korjaa ehtoa suoraan.** Jos ohitus poistetaan, jokainen
+  hylätty rivi palaa jonoon joka ajolla — 2 357 riviä kohinaa, ja
+  katselmointi on se pullonkaula jota ei saa tukkia. Ensimmäinen askel
+  on mitata, montako hylättyä rivistä olisi *muuttunut*: onko lähteessä
+  nyt enemmän tietoa kuin hylkäyshetkellä (kuten ympäristöluvassa oli),
+  vai hylättiinkö ne pysyvästi pätevästä syystä.
+
+  Mahdollinen muoto: ohitus purkautuu vain kun rivin **sisältö on
+  muuttunut** (kuvaus pidentynyt, voittaja ratkennut, vaihe vaihtunut)
+  — ei kalenterin perusteella.
+
 - **Kohdetyypiton 37 %: erota kaavahanke siita mista tyyppi jai lukematta.**
   (Kirjattu 13.10.2026, ei aloitettu. Johannes: *"lisaa luokittamattomien
   korjaus tyojonoon"*.)
