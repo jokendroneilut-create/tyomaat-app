@@ -23,6 +23,78 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-275 - Hankkeen kokoa ei arvioida: mitattu hyoty 2 prosenttiyksikkoa
+
+Johannes 13.10.2026: *"keskeytetaan tama tyo hetkeksi huolellista
+suunnittelua varten... jos vain pieni osa saa luokituksen niin pitaa
+miettia onko tata jarkevaa tehda. Ajattelin etta jos voimme jotenkin
+johtaa arviota hankkeen koosta niin se on hyva."*
+
+Vastaus on **ei**, ja se on mitattu eika paatelty.
+
+#### Koe: voiko kokoluokan ennustaa tyypista ja laajuudesta?
+
+930 hanketta joilla hinta on tiedossa. Mediaanit laskettiin
+**puolikkaalla** aineistosta (465) ja tarkkuus mitattiin toisella
+puolikkaalla (465), jota saanto ei ollut nahnyt. Ennuste: tyyppi +
+laajuus -parin mediaani, varalla pelkka laajuus, varalla pelkka tyyppi.
+
+| raja | ennuste osui | paras yksi arvaus | ero |
+|---|---|---|---|
+| 0,5 M€ | 74 % | 70 % | +4 pp |
+| **1,0 M€** | **63 %** | **61 %** | **+2 pp** |
+| 5,0 M€ | 71 % | 62 % | +9 pp |
+
+"Paras yksi arvaus" = jos sanoisi kaikille saman ("kaikki ovat yli
+rajan" tai "kaikki alle"). **Juuri sillä rajalla jota Johannes ehdotti
+(1 M€) ennuste on kahden prosenttiyksikon paassa siita etta ei
+ennustaisi mitaan.**
+
+Virheet eivat myoskaan jakaudu harmittomasti: 1 M€:n rajalla **113
+isoa hanketta arvioitiin pieneksi**. Ne olisivat juuri niita jotka
+katoaisivat nakyvista, kun kayttaja suodattaa pikkuhankkeet pois.
+
+Syy on D-274:ssa mitattu hajonta: laajuus erottaa mediaanit
+24-kertaisesti, mutta luokan SISALLA hajonta on 2,5-15x. Keskiluku
+siirtyy, yksittainen hanke ei.
+
+#### "Liian pieni hanke" -palautetta ei ole
+
+Johannes oletti etta kayttajien palaute antaisi aineistoa. `REASON_PRESETS`
+sisaltaa vaihtoehdon "Liian pieni hanke", mutta mitattu 13.10.2026:
+
+| | |
+|---|---|
+| palautteita yhteensa | **36** |
+| peukku alas / ylos | 29 / 7 |
+| syy annettu | 4 |
+| **"Liian pieni hanke"** | **0** |
+
+Signaalia ei siis ole olemassa. Jos sita halutaan, se on ensin
+kerattava — ja 36 palautetta koko kayttajakunnalta on ohut kanava
+siihen.
+
+#### Mita sen sijaan kannattaa tehda
+
+1. **Nayta tiedetty euromaara, ala arvaa tuntematonta.** Kattavuus
+   14,4 % (938 / 6 497). Lainattu luku on puolustettavissa, arvattu ei
+   ([[never-hide-on-missing-data]]).
+2. **Kerää lisaa TIEDETTYJA summia.** Hilman paatosilmoituksessa on
+   `noticeResult/totalAmount` rakenteisena: mitattu 21 ilmoituksen
+   otoksessa 52 %:lla. 827 Hilma-hankkeesta se toisi ~270 uutta summaa
+   samasta hausta jonka jo teemme voittajan takia. Samasta
+   ilmoituksesta saa myos `plannedPeriod/startDate` (90 %:lla).
+3. **Poissulkeva suodatin tiedetyilla arvoilla.** "Piilota hankkeet
+   jotka tiedetaan alle 1 M€:n" toimii millä tahansa kattavuudella,
+   koska se ei nojaa arvioon.
+4. **`tyon_laji` on hyva suodatin omana itsenaan**, vaikka se ei kelpaa
+   hinnan korvikkeeksi: asiakas pyysi nimenomaan "pelkkien
+   uudisrakennusten hakua" (D-274).
+
+Hintataulua "mita tamantyyppinen hanke maksaa" ei tehda. Jos siihen
+joskus palataan, tama koe on toistettava ensin — ja sen on voitettava
+"paras yksi arvaus" selvasti, ei kahdella prosenttiyksikolla.
+
 ### D-274 - Tyyppi kertoo mika rakennus, laajuus mita siina tehdaan
 
 Johannes 12.10.2026, asiakkaan suodatinpyyntojen jalkeen: *"meidan
