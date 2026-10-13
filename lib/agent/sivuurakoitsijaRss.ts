@@ -185,6 +185,12 @@ const TYOMAALLA = [
    */
   /\bon\s+(?:parhaillaan\s+)?käynnissä(?![\p{L}])/iu,
   /työt\s+(?:[\p{L}-]+\s+){0,5}ovat\s+(?:jo\s+)?käynnisty/iu,
+  /*
+   * "Kesällä 2025 käynnistynyt Hangonsillan koulu ja päiväkoti -hanke"
+   * jäi sopimusvaiheeseen (13.10.2026). Vuosiluku edellä vaaditaan, jottei
+   * kieltolause "rakentaminen ei ole vielä käynnistynyt" osu.
+   */
+  /\b\d{4}\s+käynnistynyt(?![\p{L}])/iu,
   /mukana\s+(?:rakentamassa|toteuttamassa|uudistamassa)/i,
 ]
 const SOPIMUS_OTSIKOSSA = [/\btoteuttaa\b/i, /urakoitsijaksi\b/i, /\bvalitsi\b/i]
@@ -223,6 +229,94 @@ export function sivuurakoitsijanVaihe(otsikko: string, lead: string): string {
   if (SOPIMUS_OTSIKOSSA.some((re) => re.test(otsikko))) return PHASE_LABELS.contract_awarded
   return paaurakoitsijanSaanto
 }
+
+/*
+ * TIETOKORTTI JUTUN LOPUSSA (D-278, Johannes 13.10.2026).
+ *
+ * Torpparin Danfoss-jutun lopussa on kortti "Tilaaja: Lappeenrannan
+ * Yritystila Oy Pääurakoitsija: Raspal Oy Bruttopinta-ala: n. 8200 m²
+ * Sijainti: Lentokentäntie 28, 53600 Lappeenranta Aikataulu: ...".
+ * Ehdokkaalta puuttuivat silti tilaaja, paaurakoitsija, osoite ja ala,
+ * koska osapuolet luettiin vain ingressista (700 merkkia) ja kortti on
+ * merkissa ~2 000.
+ *
+ * Ingressirajaus on olemassa siksi, etta leipateksti mainitsee muita
+ * kohteita. Kortti ei: se on jutun oma tiivistelma, nimetyin kentin,
+ * joten se on vahvempi todiste kuin ingressista paatelty lause ja
+ * voittaa sen.
+ *
+ * Kentan arvo paattyy seuraavaan nimikkeeseen. Siksi nimikelistassa on
+ * myos kenttia joita ei kayteta (arkkitehti, valvoja): muuten niiden
+ * arvo liimautuisi edellisen kentan peraan. Korttina pidetaan vasta
+ * kahta eri nimiketta, jottei yksittainen "Tilaaja:" leipatekstissa
+ * riita.
+ */
+const KORTIN_NIMIKKEET = [
+  "Tilaaja",
+  "Rakennuttaja",
+  "Pääurakoitsija",
+  "Urakoitsija",
+  "Bruttopinta-ala",
+  "Bruttoala",
+  "Kerrosala",
+  "Laajuus",
+  "Sijainti",
+  "Osoite",
+  "Aikataulu",
+  "Urakkamuoto",
+  "Arkkitehti",
+  "Arkkitehtisuunnittelu",
+  "Rakennesuunnittelu",
+  "Rakennesuunnittelija",
+  "Valvoja",
+  "Kustannusarvio",
+  "Hankkeen arvo",
+]
+
+/* Ei i-lippua: nimike alkaa isolla, kuten kortissa (ks. case-insensitive-ansa). */
+const NIMIKE = new RegExp(`(?:^|\\s)(${KORTIN_NIMIKKEET.join("|")})\\s*:\\s*`, "g")
+
+export type Tietokortti = Partial<Record<string, string>>
+
+export function lueTietokortti(teksti: string): Tietokortti | null {
+  const osumat = [...teksti.matchAll(NIMIKE)]
+  if (new Set(osumat.map((o) => o[1])).size < 2) return null
+
+  const kortti: Tietokortti = {}
+  osumat.forEach((osuma, i) => {
+    const alku = (osuma.index ?? 0) + osuma[0].length
+    const loppu = i + 1 < osumat.length ? osumat[i + 1].index ?? teksti.length : teksti.length
+    const arvo = teksti
+      .slice(alku, loppu)
+      /* Kortin jalkeen tulee lahdelinkki tai seuraava kappale. */
+      .split(/\s+https?:\/\//)[0]
+      .split(/(?<!(?:^|\s)[A-ZÄÖÅ]|\bn)\.\s+/)[0]
+      .trim()
+      .replace(/[.,;]$/, "")
+    /* Ensimmainen voittaa: sama nimike myohemmin on toisen kohteen. */
+    if (arvo && arvo.length <= 120 && !kortti[osuma[1]]) kortti[osuma[1]] = arvo
+  })
+
+  return Object.keys(kortti).length >= 2 ? kortti : null
+}
+
+/* "n. 8200 m²", "noin 9 650 brm²" -> 8200 / 9650 */
+export function kortinAla(arvo: string | undefined): number | null {
+  const osuma = arvo?.match(/(\d[\d\s]*)(?:,\d+)?\s*(?:br)?m(?:²|2)(?![\p{L}\d])/u)
+  if (!osuma) return null
+  const luku = Number(osuma[1].replace(/\s/g, ""))
+  return luku >= 20 && luku <= 500_000 ? luku : null
+}
+
+/*
+ * TILAAJANA KAUPUNKI. "Hankkeen paaurakoitsijana toimii GRK Suomi Oy, ja
+ * tilaajana Helsingin kaupunki" (Makasiinilaituri): yhteinen kuvio vaatii
+ * isoa alkukirjainta, joten kaappaukseksi jai "Helsingin", ja se
+ * hylataan kuntanimen taivutusmuotona. Organisaatiosana sallitaan
+ * erikseen, kuten "ja X kaupunki ovat sopineet" -kuviossa.
+ */
+const KUNTA_TILAAJANA =
+  /\b(?:tilaajana|rakennuttajana)\s+(?:toimii\s+|on\s+)?([A-ZÄÖÅ][\p{L}-]+\s+(?:kaupunki|kunta|kuntayhtymä|hyvinvointialue|seurakunta))\b/u
 
 /*
  * Rakentaa ehdokkaan sivu-urakoitsijan julkaisusta. Osapuolet ja kaupunki
@@ -288,20 +382,37 @@ export function sivuurakoitsijanEhdokas(julkaisu: RssJulkaisu, yritys: SivuUrako
   const phase = sivuurakoitsijanVaihe(julkaisu.otsikko, lead)
   const completed = phase === PHASE_LABELS.completed
 
+  const kortti = lueTietokortti(julkaisu.teksti) ?? {}
+  const floorArea = kortinAla(kortti["Bruttopinta-ala"] ?? kortti["Bruttoala"] ?? kortti["Kerrosala"])
+
   return {
     name: julkaisu.otsikko,
     description: julkaisu.teksti || null,
     city,
     region: city ? getMunicipalityByName(city)?.region ?? null : null,
-    location: null,
+    location: kortti["Sijainti"] ?? kortti["Osoite"] ?? null,
     /*
-     * Tilaaja ingressista; yksiselitteinen "tilaajana toimii X" kelpaa
-     * koko tekstista (sama rajaus kuin companyRelease.ts:ssa).
+     * Kortti ensin, sitten ingressi; yksiselitteinen "tilaajana toimii X"
+     * kelpaa koko tekstista (sama rajaus kuin companyRelease.ts:ssa).
      */
     developer:
+      kelpaa(kortti["Tilaaja"] ?? kortti["Rakennuttaja"] ?? null) ??
       kelpaa(extractClientFromText(julkaisu.otsikko, lead)) ??
-      kelpaa(extractExplicitClient(julkaisu.teksti)),
-    builder: kelpaa(extractBuilderFromText(julkaisu.otsikko, lead)),
+      kelpaa(extractExplicitClient(julkaisu.teksti)) ??
+      julkaisu.teksti.match(KUNTA_TILAAJANA)?.[1] ??
+      null,
+    /*
+     * PAAURAKOITSIJA KOKO TEKSTISTA. Sivu-urakoitsijan juttu kertoo
+     * yhdesta tyomaasta, ja paaurakoitsija nimetaan usein vasta lopussa
+     * ("Hankkeen paaurakoitsijana toimii Lujatalo Oy", Hangonsilta,
+     * merkki ~1 900). Kuviot vaativat preesensin ("toimii", "on") tai ei
+     * verbia lainkaan, joten muistelu "paaurakoitsijana oli GRK Suomi Oy"
+     * aiemmasta kohteesta ei osu (GRK-haastattelu).
+     */
+    builder:
+      kelpaa(kortti["Pääurakoitsija"] ?? kortti["Urakoitsija"] ?? null) ??
+      kelpaa(extractBuilderFromText(julkaisu.otsikko, lead)) ??
+      kelpaa(extractBuilderFromText(null, julkaisu.teksti)),
     phase,
     completed,
     source_url: julkaisu.osoite,
@@ -311,6 +422,9 @@ export function sivuurakoitsijanEhdokas(julkaisu: RssJulkaisu, yritys: SivuUrako
       julkaisu.teksti,
       julkaisu.pvm ? julkaisu.pvm.toISOString() : null
     ),
-    metadata: { related_companies: mergeCompanyNames([], [julkaisija]) },
+    metadata: {
+      related_companies: mergeCompanyNames([], [julkaisija]),
+      ...(floorArea ? { floor_area: floorArea } : {}),
+    },
   }
 }

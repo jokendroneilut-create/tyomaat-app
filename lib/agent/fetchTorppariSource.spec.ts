@@ -2,7 +2,14 @@ import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { lapaiseeSuodatuksen, TORPPARI } from "./fetchTorppariSource"
-import { jasennaRss, sivuurakoitsijanEhdokas, sivuurakoitsijanVaihe, tekstiksi } from "./sivuurakoitsijaRss"
+import {
+  jasennaRss,
+  kortinAla,
+  lueTietokortti,
+  sivuurakoitsijanEhdokas,
+  sivuurakoitsijanVaihe,
+  tekstiksi,
+} from "./sivuurakoitsijaRss"
 
 /*
  * Naytteet ovat Torpparin oikeita julkaisuja 8.10.2026 (D-250), eivat
@@ -155,5 +162,105 @@ describe("sivuurakoitsijanVaihe", () => {
 describe("tekstiksi", () => {
   it("purkaa kahdesti koodatun HTML:n ennen tagien poistoa", () => {
     expect(tekstiksi("&amp;lt;p&amp;gt;Silta&amp;lt;/p&amp;gt;")).toBe("Silta")
+  })
+})
+
+/*
+ * Johannes 13.10.2026: Danfoss-ehdokkaalta puuttuivat tilaaja,
+ * paaurakoitsija, osoite ja ala, vaikka jutun lopun tietokortti nimeaa
+ * ne. Tekstit ovat Torpparin oikeita julkaisuja, lyhennettyina.
+ */
+const TAYTE = "Torppari vastaa hankkeen muotti- ja betonointitöistä. ".repeat(16)
+
+const DANFOSS = {
+  otsikko:
+    "Yhteistyö uuden sukupolven rakennusliikkeen kanssa – Torppari mukana rakentamassa Danfoss Editronin tehdasta Lappeenrantaan",
+  osoite: "https://www.torppariyhtiot.fi/ajankohtaista/danfoss",
+  teksti:
+    "Lappeenrannan lentokentän läheisyyteen rakentuu parhaillaan yksi Etelä-Karjalan merkittävimmistä teollisuusinvestoinneista: Danfoss Editronin uusi tuotanto- ja tuotekehityskeskus. " +
+    TAYTE +
+    "LATO konserniin kuuluva Lappeenrannan Yritystila Oy rakennuttaa Danfoss Editronille uudet tilat 18,6 miljoonalla eurolla. Pääurakoitsijana toimii Raspal Oy. " +
+    "Danfoss tehdas- ja toimistotilat Tilaaja: Lappeenrannan Yritystila Oy Pääurakoitsija: Raspal Oy Bruttopinta-ala: n. 8200 m² Sijainti: Lentokentäntie 28, 53600 Lappeenranta Aikataulu: Valmistuu loppuvuodesta 2026 https://www.danfoss.com/fi-fi/",
+  pvm: new Date("2025-11-16"),
+}
+
+describe("tietokortti", () => {
+  it("lukee kortin kentat seuraavaan nimikkeeseen asti", () => {
+    expect(lueTietokortti(DANFOSS.teksti)).toEqual({
+      Tilaaja: "Lappeenrannan Yritystila Oy",
+      "Pääurakoitsija": "Raspal Oy",
+      "Bruttopinta-ala": "n. 8200 m²",
+      Sijainti: "Lentokentäntie 28, 53600 Lappeenranta",
+      Aikataulu: "Valmistuu loppuvuodesta 2026",
+    })
+  })
+
+  it("ei pida yksittaista nimiketta korttina", () => {
+    expect(lueTietokortti("Kohteen tiedot. Tilaaja: Senaatti-kiinteistöt.")).toBeNull()
+  })
+
+  it("lukee alan neliomerkista", () => {
+    expect(kortinAla("n. 8200 m²")).toBe(8200)
+    expect(kortinAla("noin 9 650 brm²")).toBe(9650)
+    expect(kortinAla("kolme kerrosta")).toBeNull()
+  })
+
+  it("kortti antaa ehdokkaalle osapuolet, osoitteen ja alan", () => {
+    const e = sivuurakoitsijanEhdokas(DANFOSS, TORPPARI)
+    expect(e.developer).toBe("Lappeenrannan Yritystila Oy")
+    expect(e.builder).toBe("Raspal Oy")
+    expect(e.location).toBe("Lentokentäntie 28, 53600 Lappeenranta")
+    expect(e.metadata.floor_area).toBe(8200)
+  })
+})
+
+describe("osapuolet ingressin ulkopuolelta", () => {
+  it("lukee jutun lopussa nimetyn paaurakoitsijan (Hangonsilta)", () => {
+    const e = sivuurakoitsijanEhdokas(
+      {
+        otsikko:
+          "Torppari toteuttaa runkorakenteet Hyvinkään Hangonsillan koulu- ja päiväkotihankkeessa",
+        osoite: "https://www.torppariyhtiot.fi/ajankohtaista/hangonsilta",
+        teksti:
+          "Hangonsillan koulu ja päiväkoti Hyvinkäälle. Kesällä 2025 käynnistynyt Hangonsillan koulu ja päiväkoti Vilinä -hanke on merkittävä lisä Hyvinkään kouluverkostoon. " +
+          TAYTE +
+          "Hankkeen pääurakoitsijana toimii Lujatalo Oy. Juha Kolhinoja, Torppari Yhtiöt Oy",
+        pvm: new Date("2025-10-17"),
+      },
+      TORPPARI
+    )
+    expect(e.builder).toBe("Lujatalo Oy")
+    expect(e.phase).toBe("Rakenteilla")
+  })
+
+  it("lukee kaupungin tilaajaksi (Makasiinilaituri)", () => {
+    const e = sivuurakoitsijanEhdokas(
+      {
+        otsikko: "Uutta rantaviivaa betonista – Torppari mukana uudistamassa Helsingin Makasiinilaituria",
+        osoite: "https://www.torppariyhtiot.fi/ajankohtaista/makasiini",
+        teksti:
+          "Helsingin Eteläsatamassa on parhaillaan käynnissä merkittävä infrarakennushanke. Hankkeen pääurakoitsijana toimii GRK Suomi Oy, ja tilaajana Helsingin kaupunki.",
+        pvm: new Date("2026-08-07"),
+      },
+      TORPPARI
+    )
+    expect(e.developer).toBe("Helsingin kaupunki")
+    expect(e.builder).toBe("GRK Suomi Oy")
+  })
+
+  it("ei lue aiemman kohteen paaurakoitsijaa menneesta muodosta (GRK-haastattelu)", () => {
+    const e = sivuurakoitsijanEhdokas(
+      {
+        otsikko: "Kun sopimus pitää – GRK ja Torppari betonoivat yhteistyönsä Karjalan radalla",
+        osoite: "https://www.torppariyhtiot.fi/ajankohtaista/grk",
+        teksti:
+          "GRK:n työpäällikkö on rakentanut siltoja lähes neljän vuosikymmenen ajan. " +
+          TAYTE +
+          "Yhteensä 3,4 miljoonan euron hankkeessa Torppari vastasi betonirakenteista, pääurakoitsijana oli GRK Suomi Oy.",
+        pvm: new Date("2026-06-26"),
+      },
+      TORPPARI
+    )
+    expect(e.builder).toBeNull()
   })
 })

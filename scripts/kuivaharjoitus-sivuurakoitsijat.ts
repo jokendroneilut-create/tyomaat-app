@@ -30,6 +30,7 @@ function tulostaEhdokas(k: any) {
   if (k.metadata?.related_companies) console.log(`   liittyvat=${JSON.stringify(k.metadata.related_companies)}`)
   if (k.estimated_completion) console.log(`   valmistuu=${k.estimated_completion}`)
   if (k.location) console.log(`   osoite=${k.location}`)
+  if (k.metadata?.floor_area) console.log(`   ala=${k.metadata.floor_area}`)
   if (k.property_type) console.log(`   tyyppi=${k.property_type}`)
   console.log(`   kuvaus(${String(k.description ?? "").length}): ${String(k.description ?? "").slice(0, 260)}`)
 }

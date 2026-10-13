@@ -23,6 +23,42 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-278 - Sivu-urakoitsijan juttu: tietokortti ja paaurakoitsija koko tekstista
+
+Johannes 13.10.2026 Torpparin Danfoss-ehdokkaasta: tilaaja (LATO
+-konsernin Lappeenrannan Yritystila Oy), paaurakoitsija (Raspal Oy),
+ala (n. 8200 m²) ja osoite (Lentokentantie 28) puuttuivat, vaikka jutun
+lopun tietokortti nimeaa ne kaikki.
+
+Syy: `sivuurakoitsijaRss.ts` luki osapuolet vain ingressista (700
+merkkia), koska leipateksti mainitsee muita kohteita. Kortti on
+merkissa ~2 000, ja Hangonsillan "Hankkeen paaurakoitsijana toimii
+Lujatalo Oy" merkissa ~1 900.
+
+Paatos, koskee Torpparia ja Pelti-Assia (yhteinen jasennin):
+
+- **Tietokortti voittaa.** "Tilaaja: / Paaurakoitsija: / Sijainti: /
+  Bruttopinta-ala:" -kortti on jutun oma tiivistelma nimetyin kentin,
+  joten se on vahvempi kuin ingressista paatelty lause. Korttina pidetaan
+  vasta kahta eri nimiketta.
+- **Paaurakoitsija koko tekstista.** Sivu-urakoitsijan juttu kertoo
+  yhdesta tyomaasta. Kuviot vaativat preesensin tai ei verbia, joten
+  GRK-haastattelun muistelu "paaurakoitsijana oli GRK Suomi Oy" ei osu.
+- **Kaupunki tilaajana.** "tilaajana Helsingin kaupunki" hylattiin
+  kuntanimen taivutusmuotona (kaappaukseksi jai "Helsingin").
+- **"2025 kaynnistynyt" = rakenteilla.** Hangonsilta jai sopimusvaiheeseen.
+
+Mitattu kuivaharjoituksella: Torpparin 6 julkaisusta 3 sai uuden tiedon,
+Pelti-Assien 6 tulos on tavulleen sama kuin ennen.
+
+Korjattu kantaan (`scripts/fix-torppari-osapuolet.ts`, vain tyhjat
+kentat): Danfoss-jonorivi (tilaaja, paaurakoitsija, osoite, ala, 18,6 M€),
+Hangonsillan jonorivi (Lujatalo Oy, rakenteilla), Makasiinilaituri jonossa
+ja hankkeena (tilaajaksi Helsingin kaupunki).
+
+Ei korjattu: kustannuspoimija lukee yha vain ingressia, joten Danfossin
+18,6 M€ on kirjattu kasin. Kortissa ei ollut summaa.
+
 ### D-277 - Euromaarainen luokitus jatetaan nyt tekematta
 
 Johannes 13.10.2026, kohdetyypin valikon valmistuttua: *"dokumentoi

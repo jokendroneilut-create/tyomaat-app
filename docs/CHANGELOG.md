@@ -11,6 +11,16 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Torpparin hankkeille osapuolet tietokortista (D-278)
+
+Torpparin juttujen lopussa on tietokortti (Tilaaja, Paaurakoitsija,
+Sijainti, Bruttopinta-ala), jota ei luettu, koska osapuolet haettiin vain
+ingressista. Nyt kortti luetaan ja voittaa, ja paaurakoitsija haetaan
+koko tekstista preesensmuodosta. Danfoss Editronin tehdas sai tilaajan
+(Lappeenrannan Yritystila Oy), paaurakoitsijan (Raspal Oy), osoitteen ja
+alan; Hangonsillan koulu Lujatalon ja oikean vaiheen; Makasiinilaituri
+tilaajaksi Helsingin kaupungin. Pelti-Assien tulos ennallaan.
+
 ### Kohdetyyppi vetovalikkona laskureineen (D-276)
 
 Asiakas kysyi *"mita eri kohdetyyppeja on olemassa (tuossahan vaan
