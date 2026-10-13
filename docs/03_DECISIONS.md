@@ -23,6 +23,73 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-276 - Kohdetyypin valikko luetaan aineistosta, ei luettelosta
+
+Asiakas (Firesafe) 13.10.2026: *"Mita eri kohdetyyppeja on olemassa
+(tuossahan vaan tekstikentta)? ... loysin vain murto-osan niista
+teollisuuskohteista joita kilpailijan palvelussa oli."*
+
+Pointti on oikea. Kohdetyyppi on vapaa tekstikentta, ja vapaa tekstikentta
+olettaa etta hakija tietaa mita hakea. Juuri sita han ei voi tietaa.
+Hakukentta korvattiin **monivalintavalikolla, jossa jokaisen tyypin
+perassa on kappalemaara, suurin ensin**. Monivalinta siksi etta se
+periytyy hakuvahtiin (Johannes: *"monivalinta olisi siihen muuten
+tarkea koska se vaikuttaa myos hakuvahtiin"*).
+
+Luvut lasketaan **muiden suodattimien jalkeen mutta ennen kohdetyyppia**,
+joten luku kertoo mita saisi jos tata klikkaisi.
+
+#### Mita listan avaaminen paljasti
+
+Vapaa kentta oli kerannyt kaksi vikaa, jotka nakyivat vasta kun arvot
+pantiin riviin:
+
+1. **Kirjoitusasu.** "Koulu" 296 ja "koulu" 8, "Kerrostalo" 618 ja
+   "kerrostalo" 4, "Rivitalo" 121 ja "rivitalo" 1, "Paivakoti" 141 ja
+   "paivakoti" 2. Kaksi rivia valikossa on kayttajalle virhe, ei tieto.
+
+   Rivit yhdistetaan **lukuhetkella**, yleisin kirjoitusasu nimilapuksi,
+   ja suodatus vertaa kirjainkoosta riippumatta. Kantaa ei siivota:
+   sama lahde voi tuoda huomenna uuden rivin pienella alkukirjaimella,
+   joten kertasiivous ei pysyisi voimassa.
+
+2. **Tyypittomat.** 2 377 / 6 497 nakyvasta hankkeesta (37 %) on ilman
+   tyyppia. Ne ovat omana rivinaan listan lopussa: hanketta ei piiloteta
+   siksi etta me emme tieda sen tyyppia (D-274), mutta puute ei saa
+   myoskaan johtaa listaa.
+
+   **Nimilappu "Ei tyyppia" ei ole kannan arvo.** Hakuvahtiin se on siksi
+   kirjoitettava tunnisteena (`__ei_tyyppia__`), jonka /api/digests
+   kaantaa `is null` -ehdoksi. Ilman tata tallennettu haku olisi tehnyt
+   `property_type = 'Ei tyyppia'` ja antanut **aina nolla osumaa** —
+   hiljaa, koska tyhja digest nayttaa samalta kuin hiljainen viikko.
+
+Molemmat saannot ovat `lib/projects/kohdetyyppi.ts`:ssa, koska sivun
+suodatin ja hakuvahdin digest tekevat saman rajauksen eri koodissa.
+Sama tunniste olisi vuotanut myos hakuvahtilistan ja sahkopostin
+yhteenvetoriville ("Kohdetyyppi: __ei_tyyppia__"), joten selite tulee
+samasta moduulista.
+
+#### Mita tyypittomat ovat
+
+Mitattu 13.10.2026, jotta luku ei jaa pelkaksi havainnoksi:
+
+| | |
+|---|---|
+| tyypittomia | 2 377 (37 % nakyvista) |
+| **kaavalahteista** | **2 041 (86 %)** |
+| tyon laji = kaavoitus | 1 118 |
+| suurin yksittainen muu lahde | Hilma 221 |
+
+Johannes: *"tuo on totta, kaavahanke ei ole rakennus."* Kaavahankkeella
+ei viela ole rakennustyyppia, joten tyhja kentta on niissa osin
+rehellinen — ei sama vika kuin Hilman urakkailmoituksessa, jonka
+otsikosta tyyppi usein luettaisiin. Erottelu on tyojonossa
+(04_ROADMAP.md), ei tassa paatoksessa.
+
+Teollisuuskohteita on tyypitettyna vain 96, mika tukee asiakkaan
+havaintoa. Sita ei korjata valikolla vaan luokituksella ja lahteilla.
+
 ### D-275 - Hankkeen kokoa ei arvioida: mitattu hyoty 2 prosenttiyksikkoa
 
 Johannes 13.10.2026: *"keskeytetaan tama tyo hetkeksi huolellista

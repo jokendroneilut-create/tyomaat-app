@@ -13,6 +13,12 @@ import PhaseTimeline from './PhaseTimeline'
 import { CANONICAL_PHASES, displayPhaseLabel, displayProjectPhase, normalizeLegacyPhase } from '@/lib/projects/phases'
 import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
 import {
+  TYYPPI_PUUTTUU,
+  kohdetyyppiHakuvahdille,
+  laskeKohdetyypit,
+  osuukoKohdetyyppi,
+} from '@/lib/projects/kohdetyyppi'
+import {
   collectProjectCompanies,
   mergeCompanyNames,
 } from '@/lib/projects/projectCompanies'
@@ -341,7 +347,9 @@ export default function Projects() {
   const [phase, setPhase] = useState<string[]>([])
   const [phaseOpen, setPhaseOpen] = useState(false)
   const phaseRef = useRef<HTMLDivElement | null>(null)
-  const [propertyType, setPropertyType] = useState<string>('')
+  const [propertyType, setPropertyType] = useState<string[]>([])
+  const [propertyTypeOpen, setPropertyTypeOpen] = useState(false)
+  const propertyTypeRef = useRef<HTMLDivElement | null>(null)
 
   const [visibleCount, setVisibleCount] = useState(pageSize)
 
@@ -614,7 +622,7 @@ export default function Projects() {
       region.length > 0 ? region.join(', ') : null,
       city || null,
       phase.length > 0 ? phase.join(', ') : null,
-      propertyType || null,
+      propertyType.length > 0 ? propertyType.join(', ') : null,
     ].filter(Boolean) as string[]
     const suggested = parts.length ? parts.join(' – ') : 'Hakuvahti'
     setWatchName(suggested)
@@ -662,7 +670,15 @@ export default function Projects() {
          * merkkijonon (vanhat tallennetut haut) että listan.
          */
         phase: phase.length > 0 ? phase : null,
-        property_type: propertyType || null,
+        /*
+         * Lista kuten vaiheella. /api/digests osaa lukea seka
+         * yksittaisen merkkijonon (vanhat tallennetut haut) etta listan.
+         *
+         * Valinta laajennetaan kaikkiin kirjoitusasuihin ja tyypittomat
+         * kirjoitetaan tunnisteena, koska nimilappu "Ei tyyppia" ei osu
+         * kannassa yhteenkaan riviin — ks. lib/projects/kohdetyyppi.
+         */
+        property_type: kohdetyyppiHakuvahdille(propertyType, projects),
       }
 
       const { error: insErr } = await supabase.from('saved_searches').upsert(
@@ -861,7 +877,32 @@ setTeamModeEnabled(true)
 
   const phases = PHASE_OPTIONS
 
-  const propertyTypes = useMemo(() => uniqSorted(projects.map((p) => p.property_type)), [projects])
+  /*
+   * KOHDETYYPIT LASKUREINEEN, SUURIN ENSIN.
+   *
+   * Asiakas 13.10.2026: *"Mita eri kohdetyyppeja on olemassa (tuossahan
+   * vaan tekstikentta)?"* Vapaa tekstikentta olettaa etta kayttaja
+   * tietaa mita hakea — ja juuri sita han ei voi tietaa. Lista kertoo
+   * sen, ja kappalemaara kertoo kannattaako klikata.
+   *
+   * Laskuri lasketaan MUIDEN suodattimien jalkeen mutta ennen
+   * kohdetyyppia, joten luku kertoo mita saisi jos tata klikkaisi.
+   *
+   * Tyypittomat ovat omana rivinaan eivatka katoa hiljaa: hanketta ei
+   * piiloteta siksi etta me emme tieda sen tyyppia (D-274).
+   *
+   * Yhdistamisen ja tyypittomien saannot ovat lib/projects/kohdetyyppi,
+   * koska hakuvahdin digest tekee saman rajauksen eri koodissa.
+   */
+  const propertyTypeCounts = useMemo(() => {
+    const nakyvat = projects.filter((p) => {
+      if (region.length > 0 && !region.includes(p.region || '')) return false
+      if (city && p.city !== city) return false
+      if (phase.length > 0 && !phase.includes(displayPhaseLabel(p.phase))) return false
+      return true
+    })
+    return laskeKohdetyypit(nakyvat)
+  }, [projects, region, city, phase])
 
   const filteredProjects = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -871,7 +912,7 @@ setTeamModeEnabled(true)
       if (city && p.city !== city) return false
       if (phase.length > 0 && !phase.includes(displayPhaseLabel(p.phase))) return false
 
-      if (propertyType && !(p.property_type || '').toLowerCase().includes(propertyType.toLowerCase())) return false
+      if (!osuukoKohdetyyppi(p.property_type, propertyType)) return false
 
       if (!needle) return true
 
@@ -955,7 +996,7 @@ setTeamModeEnabled(true)
     setRegion([])
     setCity('')
     setPhase([])
-    setPropertyType('')
+    setPropertyType([])
   }
 
   /*
@@ -963,6 +1004,7 @@ setTeamModeEnabled(true)
    * valikko jäisi auki ja peittäisi kartan.
    */
   useCloseOnOutside(phaseOpen, phaseRef, setPhaseOpen)
+  useCloseOnOutside(propertyTypeOpen, propertyTypeRef, setPropertyTypeOpen)
   useCloseOnOutside(regionOpen, regionRef, setRegionOpen)
 
   useEffect(() => {
@@ -1144,20 +1186,60 @@ setTeamModeEnabled(true)
             )}
           </div>
 
-          <div>
+          <div className="projects-multiselect" ref={propertyTypeRef}>
             <label className="projects-label">Kohdetyyppi</label>
-            <input
-              type="text"
-              placeholder="Hae kohdetyyppiä..."
-              value={propertyType}
-              onChange={(e) => setPropertyType(e.target.value)}
-              style={{
-                padding: '10px',
-                borderRadius: '8px',
-                border: '1px solid #ccc',
-                width: '200px',
-              }}
-            />
+
+            <button
+              type="button"
+              className="projects-multiselect-toggle"
+              onClick={() => setPropertyTypeOpen((open) => !open)}
+              aria-expanded={propertyTypeOpen}
+            >
+              <span>
+                {propertyType.length === 0
+                  ? 'Kaikki'
+                  : propertyType.length === 1
+                    ? propertyType[0]
+                    : `${propertyType.length} valittu`}
+              </span>
+              <span aria-hidden>▾</span>
+            </button>
+
+            {propertyTypeOpen && (
+              <div className="projects-multiselect-panel">
+                <div className="projects-multiselect-actions">
+                  <button
+                    type="button"
+                    onClick={() => setPropertyType(propertyTypeCounts.map((t) => t.nimi))}
+                  >
+                    Valitse kaikki
+                  </button>
+                  <button type="button" onClick={() => setPropertyType([])}>
+                    Tyhjennä
+                  </button>
+                </div>
+
+                {propertyTypeCounts.map(({ nimi, lkm }) => (
+                  <label key={nimi} className="projects-multiselect-option">
+                    <input
+                      type="checkbox"
+                      checked={propertyType.includes(nimi)}
+                      onChange={(e) =>
+                        setPropertyType((current) =>
+                          e.target.checked
+                            ? [...current, nimi]
+                            : current.filter((value) => value !== nimi)
+                        )
+                      }
+                    />
+                    <span style={{ flex: 1 }}>{nimi}</span>
+                    <span style={{ color: '#6b7280', fontVariantNumeric: 'tabular-nums' }}>
+                      {lkm}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           <button type="button" className="projects-clear" onClick={clearFilters}>

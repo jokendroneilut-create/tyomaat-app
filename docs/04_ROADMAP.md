@@ -671,6 +671,49 @@ muistin varassa.
 
 ### Datan laatu
 
+- **Kohdetyypiton 37 %: erota kaavahanke siita mista tyyppi jai lukematta.**
+  (Kirjattu 13.10.2026, ei aloitettu. Johannes: *"lisaa luokittamattomien
+  korjaus tyojonoon"*.)
+
+  Kohdetyypin valikko (D-276) teki luvun nakyvaksi: **2 377 / 6 497
+  asiakkaalle nakyvasta hankkeesta (37 %) on ilman kohdetyyppia.**
+  Yksi luku, kaksi eri asiaa:
+
+  | | n | mita se on |
+  |---|---|---|
+  | kaavalahteista | **2 041 (86 %)** | kaavahanke ei ole rakennus — tyhja kentta on osin oikea |
+  | Hilma | 221 | urakkailmoitus; otsikosta tyyppi usein luettavissa |
+  | muut | ~115 | lupapiste, paatokset, tiedotteet |
+
+  **Alykaa korjatko kaikkia samalla saannolla.** Kaavahankkeella tyyppi
+  on usein aidosti auki ("Korttelin 56 asemakaavamuutos"); Hilman
+  rivilla se on otsikossa ("Ranuan kr. kansanopiston asuntolamoduulit",
+  "Salpausselan kirkon purkaminen"). Edellinen on *tieto*, jalkimmainen
+  *lukematta jaanyt*.
+
+  **Ensimmainen askel ei ole luokitin vaan otos:** lue 30 Hilman
+  tyypitonta otsikkoa rivi riviltä ja laske, moniko antaa tyypin
+  **otsikosta** — ei kuvauksesta. Kuvauksesta lukeminen kokeiltiin jo
+  kerran ja se tuotti +415 vaaraa osumaa (D-274): luokitin poimi sanan
+  kaava-alueen tekstista ("Kirjasto" aurinkovoima-osayleiskaavasta).
+  Otsikko-only tuotti 10, kaikki oikein.
+
+  Rajaus: tyypitonta hanketta **ei piiloteta** (D-274) eika tyhjaa
+  kenttaa tayteta arvauksella — mieluummin tyhja kuin vaara.
+
+  Liittyy: asiakkaan havainto teollisuuskohteiden puutteesta
+  (teollisuus tyypitettyna vain 96 kpl). Se voi olla yhta lailla
+  **lahdepuute** kuin luokituspuute, ja ne on erotettava ennen kuin
+  kumpaakaan korjataan.
+
+- **Kohdetyypin kirjoitusasut kannassa.** Yhdistaminen tehdaan nyt
+  lukuhetkella (D-276), mika riittaa kayttoliittymalle. Kantaan jaa
+  silti "koulu" 8, "kerrostalo" 4, "rivitalo" 1, "paivakoti" 2 ja
+  lahikaksoset "Toimitila" 226 / "toimisto" 3, "Tuulivoima" 12 /
+  "Tuulivoimalahankkeet" 11. Niita ei normalisoida ennen kuin
+  **tuontipaa** kirjoittaa yhtenaisen asun — muuten sama siivous on
+  edessa joka kuukausi.
+
 - **KORKEIN PRIORITEETTI, ALOITETAAN PE 2.10.2026: kaavahankkeen
   kuvaus selostuksesta, kunta kerrallaan.**
 
