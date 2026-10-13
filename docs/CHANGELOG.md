@@ -70,6 +70,35 @@ Teollisuuskohteita on tyypitettyna vain 96, mika tukee asiakkaan
 havaintoa kattavuudesta. Se voi olla yhta lailla **lahdepuute** kuin
 luokituspuute, eika kumpaakaan korjata ennen kuin ne on erotettu.
 
+### Luvan jatkaminen ja puiden kaataminen pois jonosta (D-280)
+
+Katselmointijonoon ei enää tuoda rakennusluvan voimassaolon jatkamisia
+eikä puiden kaatamisia. Ne eivät ole "liian pieniä" kuten omakotitalo
+vaan **väärä asia**: luvan jatkaminen ei ole uutta rakentamista eikä
+puiden kaataminen ole rakennushanke lainkaan.
+
+Mitattu ennen säännön kirjoittamista: puiden kaatamisia 26 jonoriviä
+joista **0 hyväksytty**, voimassaolon jatkamisia 25 joista 1 — ja sekin
+on itse samaa roskaa (ei osapuolia, ei kustannusta). Neljä jonossa
+odottanutta riviä ohitettiin.
+
+**Maisematyölupaa ei karsittu**, vaikka se oli jonossa vieressä ja
+näyttää samalta. Sama lupamuoto on sekä metsän harvennushakkuuta että
+ison hankkeen maanrakennusta — turvallista avainsanaa ei ole.
+
+### Vartija: rakentamista valmisteleva työ ei putoa karsinnassa
+
+Maisematyöluvan mittaus paljasti vian yllä olevasta säännöstä. Kannassa
+on kaksi asiakkaalle näkyvää hanketta nimeltä *"Rakentamista
+valmisteleva puiden kaato tontilta"* — ne menivät suodattimen ohi
+**vain kirjaimen takia**: vartalo on `"puiden kaatam"`, eikä "kaato"
+sisällä sitä. Sama lupa otsikoituna *"…puiden kaataminen tontilta"*
+olisi pudonnut väärin, eikä siitä olisi jäänyt jälkeä mihinkään.
+
+Rakentamista valmisteleva työ ei nyt putoa koskaan, vaikka osuisi
+karsinnan avainsanaan. Puiden kaato ennen rakentamista on hankkeen
+aikaisin signaali, ei metsänhoitoa.
+
 ### Ympäristölupahankkeille rikastin: kuvaus asiakirjasta (D-279)
 
 Asiakkaan havainto teollisuuskohteiden puutteesta johti lähteeseen,
