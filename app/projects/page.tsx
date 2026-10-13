@@ -894,15 +894,21 @@ setTeamModeEnabled(true)
    * Yhdistamisen ja tyypittomien saannot ovat lib/projects/kohdetyyppi,
    * koska hakuvahdin digest tekee saman rajauksen eri koodissa.
    */
-  const propertyTypeCounts = useMemo(() => {
-    const nakyvat = projects.filter((p) => {
-      if (region.length > 0 && !region.includes(p.region || '')) return false
-      if (city && p.city !== city) return false
-      if (phase.length > 0 && !phase.includes(displayPhaseLabel(p.phase))) return false
-      return true
-    })
-    return laskeKohdetyypit(nakyvat)
-  }, [projects, region, city, phase])
+  const muillaSuodattimilla = useMemo(
+    () =>
+      projects.filter((p) => {
+        if (region.length > 0 && !region.includes(p.region || '')) return false
+        if (city && p.city !== city) return false
+        if (phase.length > 0 && !phase.includes(displayPhaseLabel(p.phase))) return false
+        return true
+      }),
+    [projects, region, city, phase]
+  )
+
+  const propertyTypeCounts = useMemo(
+    () => laskeKohdetyypit(muillaSuodattimilla),
+    [muillaSuodattimilla]
+  )
 
   const filteredProjects = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -1220,23 +1226,46 @@ setTeamModeEnabled(true)
                 </div>
 
                 {propertyTypeCounts.map(({ nimi, lkm }) => (
-                  <label key={nimi} className="projects-multiselect-option">
-                    <input
-                      type="checkbox"
-                      checked={propertyType.includes(nimi)}
-                      onChange={(e) =>
-                        setPropertyType((current) =>
-                          e.target.checked
-                            ? [...current, nimi]
-                            : current.filter((value) => value !== nimi)
-                        )
-                      }
-                    />
-                    <span style={{ flex: 1 }}>{nimi}</span>
-                    <span style={{ color: '#6b7280', fontVariantNumeric: 'tabular-nums' }}>
-                      {lkm}
-                    </span>
-                  </label>
+                  <div key={nimi}>
+                    <label className="projects-multiselect-option">
+                      <input
+                        type="checkbox"
+                        checked={propertyType.includes(nimi)}
+                        onChange={(e) =>
+                          setPropertyType((current) =>
+                            e.target.checked
+                              ? [...current, nimi]
+                              : current.filter((value) => value !== nimi)
+                          )
+                        }
+                      />
+                      <span style={{ flex: 1 }}>
+                        {nimi}
+                        {nimi === TYYPPI_PUUTTUU && (
+                          <span className="projects-multiselect-info" aria-hidden>
+                            ⓘ
+                          </span>
+                        )}
+                      </span>
+                      <span style={{ color: '#6b7280', fontVariantNumeric: 'tabular-nums' }}>
+                        {lkm}
+                      </span>
+                    </label>
+
+                    {/*
+                      * Suurin rivi ansaitsee selityksen heti vieressa, ei
+                      * ohjesivulla: ilman sita luku nayttaa puutteelta
+                      * vaikka se on enimmakseen kaavahankkeita, joilla
+                      * rakennustyyppia ei viela ole olemassa.
+                      */}
+                    {nimi === TYYPPI_PUUTTUU && (
+                      <p className="projects-multiselect-note">
+                        Kohdetyyppiä ei ole kirjattu. Suurin osa näistä on
+                        kaavoitusvaiheen hankkeita, joille rakennustyyppi ratkeaa vasta
+                        kaavan edetessä.
+                      </p>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

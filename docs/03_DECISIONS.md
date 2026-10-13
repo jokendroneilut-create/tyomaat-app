@@ -64,6 +64,14 @@ pantiin riviin:
    `property_type = 'Ei tyyppia'` ja antanut **aina nolla osumaa** —
    hiljaa, koska tyhja digest nayttaa samalta kuin hiljainen viikko.
 
+Johannes 13.10.2026: *"Se luku nayttaa pahalta ja aiheuttaa varmasti
+huonon kuvan muuten."* Rivin alla on siksi selitys: *"Kohdetyyppia ei
+ole kirjattu. Suurin osa naista on kaavoitusvaiheen hankkeita, joille
+rakennustyyppi ratkeaa vasta kaavan edetessa."* Ilman sita 2 376
+nayttaa puutteelta, vaikka valtaosalla rakennustyyppia **ei viela ole
+olemassa**. Selitys on ilman lukua: *"info nappi ei tarvitse lukua
+vaan vain tuon selityksen."*
+
 Molemmat saannot ovat `lib/projects/kohdetyyppi.ts`:ssa, koska sivun
 suodatin ja hakuvahdin digest tekevat saman rajauksen eri koodissa.
 Sama tunniste olisi vuotanut myos hakuvahtilistan ja sahkopostin
