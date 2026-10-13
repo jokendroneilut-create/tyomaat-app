@@ -74,6 +74,76 @@ Signaalia ei siis ole olemassa. Jos sita halutaan, se on ensin
 kerattava — ja 36 palautetta koko kayttajakunnalta on ohut kanava
 siihen.
 
+#### Tarkennus: ryhmakohtaisesti osa ONNISTUU
+
+Johannes 13.10.2026: *"onko mahdollista johtaa etta kerrostalon
+rakentaminen on esimerkiksi yli miljoonan hanke?"*
+
+Yllä oleva koe mittasi KESKIARVON kaikkien ryhmien yli ja hukkasi sen,
+etta osa ryhmista voi olla luotettavia vaikka muut ovat arpapelia.
+Ryhmittain mitattuna (opetus/testi -jako, raja 1 M€):
+
+| ryhma | n (opetus) | yli rajan | n (testi) | yli rajan |
+|---|---|---|---|---|
+| Energiantuotanto | 14 | **100 %** | 5 | **100 %** |
+| Toimitila | 24 | 88 % | 35 | 83 % |
+| Kerrostalo | 26 | 73 % | 16 | 94 % |
+| Infrahanke | 195 | 49 % | 198 | 54 % |
+| Koulu | 40 | 63 % | 44 | 55 % |
+
+Vain **Energiantuotanto** lapaisee 90 %:n vaatimuksen molemmissa
+puolikkaissa. Se kattaisi 473 hanketta, joista 454:lta hinta puuttuu.
+
+#### Kerrostalo: mekanismi on oikea, otos liian pieni
+
+Johanneksen esimerkki osui silti oikeaan. Kerrostaloja joilla hinta
+tiedetaan on 42, ja niista 8 jaa alle miljoonan. **Jokainen kahdeksasta
+on jotain muuta kuin rakentamista:**
+
+> julkisivujen osittainenkorjaus · 14 kylpyhuoneen uusiminen ·
+> parvekkeiden peruskorjaus · vesikattojen uusiminen · purku-urakka ·
+> hankesuunnittelu
+
+**Kerrostalo + uudisrakennus: 3 hanketta, 0 alle miljoonan.**
+
+Saanto ei siis ole tilastollinen vaan **rakenteellinen**: koko
+rakennuksen tekeminen maksaa enemman kuin saman rakennuksen osaurakka.
+Ryhmaksi on otettava tyyppi JA laajuus, ei tyyppi yksin — juuri siksi
+pelkka "Kerrostalo" jai 73/94 %:iin.
+
+Kolme havaintoa ei kuitenkaan ole todiste. **Este ei ole saanto vaan
+tiedettyjen hintojen maara**: tyyppi+laajuus-pareja joilla on
+vahintaan viisi hintaa on kourallinen, koska laajuus on vain 30 %:lla
+hinnallisista hankkeista.
+
+#### Entä automaattisesti jatkossa?
+
+Molemmat syotteet lasketaan jo automaattisesti: `property_type`
+tuonnissa ja `tyon_laji` hyvaksynnassa. Saanto patisi siis uusiin
+hankkeisiin ilman eri tyota. **Vaikeus ei ole automatiikassa vaan
+kattavuudessa** (63 % ja 38,7 %) ja siina etta ryhma on ensin
+todistettava.
+
+Jarjestys on siis: (1) lisaa tiedettyja hintoja, (2) mittaa ryhmat
+uudelleen, (3) ota kayttoon vain ne jotka lapaisevat testin, (4) jata
+muut tuntemattomiksi.
+
+#### Sivuloydos: yhdeksan hintaa on ristiriidassa kuvauksensa kanssa
+
+930 hinnasta 9 eroaa siita mita nykyinen kuvaus sanoo, ja **kolme
+niista on tuhatkertaisia**:
+
+| kannassa | kuvauksessa | hanke |
+|---|---|---|
+| 15 k€ | 15 M€ | Kerrostalo opiskelija-asuntosaatiolle |
+| 130 k€ | 130 M€ | FIN04A Datakeskus |
+| 32 M€ | 75 k€ | Postipuun koulun hankesuunnitelma |
+
+Poimija osaa nama lauseet oikein nyt, joten arvot ovat vanhentuneita:
+ne on poimittu ennen kuin kuvaukset paranivat (D-268…D-273). Loput
+kuusi ovat aitoa monitulkintaisuutta (teksti mainitsee useita summia).
+Nama kolme korjataan kasin; sääntöä ei tarvita.
+
 #### Mita sen sijaan kannattaa tehda
 
 1. **Nayta tiedetty euromaara, ala arvaa tuntematonta.** Kattavuus
