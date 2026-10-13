@@ -58,6 +58,40 @@ jonossa vieressä. Se edeltää usein oikeaa hanketta (alueen raivaus
 ennen rakentamista), eikä sen pudottamiselle ollut mittausta — vain
 samannäköisyys. Arvaus ei riitä perusteeksi pudottaa lähdettä.
 
+#### Maisematyölupa mitattiin erikseen (14.10.2026) — ei karsita
+
+Jonossa 19 riviä: 18 hylättyä, 1 hyväksytty. Otsikot paljastivat, ettei
+vika ole maisematyöluvassa vaan metsänhoidossa: *"Harvennushakkuu"*,
+*"Siemenpuuhakkuu"*, *"Avohakkuu ja myrskypuiden poisto"*, *"Metsän
+harvennushakkuut"*.
+
+Metsänhoito-kuvio (hakkuu / puiden kaato / poisto) osui 46 jonoriviin —
+mutta myös **kolmeen hyväksyttyyn hankkeeseen**, ja juuri ne kertovat
+miksi sääntöä ei kirjoitettu:
+
+| hanke | miksi se on oikea |
+|---|---|
+| Rakentamista valmisteleva puiden kaato tontilta, Hannusranta 10 ja 12 | puiden kaato ENNEN rakentamista = hankkeen aikaisin signaali |
+| Mikkelin kunnallistekniset-, viherrakennus- ja **metsänhoito**töiden puitejärjestely | Hilman hankinta, osui sanaan "metsänhoito" |
+
+Maisematyöluvalle ei siis ole turvallista avainsanaa: sama lupamuoto
+on sekä metsän harvennusta että ison hankkeen maanrakennusta
+(*"Rakentamista valmistelevat maanrakennustyöt, Gneissitie 4 -
+Maisematyölupa"*, hyväksytty hankkeeksi).
+
+#### Mittaus löysi vian jo julkaistusta säännöstä
+
+Kaksi näkyvää hanketta on nimeltään *"Rakentamista valmisteleva puiden
+kaato tontilta"*. Ne menivät yllä olevan listan ohi **vain kirjaimen
+takia**: vartalo on `"puiden kaatam"`, eikä "kaato" sisällä sitä.
+Sääntö oli siis oikea vahingossa — sama lupa otsikoituna *"…puiden
+kaataminen tontilta"* olisi pudonnut väärin.
+
+Lisättiin eksplisiittinen vartija `VALMISTELEVA_TYO`: rakentamista
+valmisteleva työ ei koskaan putoa, vaikka osuisi avainsanaan. Tämä on
+sama opetus kuin [[both-sides-can-be-wrong]] — oikea lopputulos ei
+todista sääntöä oikeaksi.
+
 #### Toteutus
 
 `isNonProjectPermit` (`lib/agent/knowledge/negativeProjects.ts`),

@@ -130,8 +130,25 @@ const NON_PROJECT_PERMIT_KEYWORDS = [
   "puiden poistam",
 ]
 
+/*
+ * VARTIJA: rakentamista valmisteleva työ ON hanke.
+ *
+ * Mitattu 14.10.2026: kannassa on kaksi asiakkaalle näkyvää hanketta
+ * nimeltä "Rakentamista valmisteleva puiden kaato tontilta,
+ * Hannusranta 10 / 12". Puiden kaato ennen rakentamista on hankkeen
+ * aikaisin signaali, ei metsänhoitoa.
+ *
+ * Ne menivät yllä olevan listan ohi vain kirjaimen takia ("kaato" ei
+ * sisällä vartaloa "kaatam"), eli sääntö oli oikea vahingossa. Sama
+ * lupa toisin otsikoituna ("Rakentamista valmisteleva puiden
+ * kaataminen") olisi pudonnut väärin — siksi tämä on eksplisiittinen
+ * poikkeus eikä kirjainonnen varassa.
+ */
+const VALMISTELEVA_TYO = /rakentamista valmistelev|rakentamisen valmistelev|valmistelevat ty[öo]|valmistelevien t[öo]iden/i
+
 export function isNonProjectPermit(text: string | null | undefined): boolean {
   if (!text) return false
+  if (VALMISTELEVA_TYO.test(text)) return false
   const t = text.toLowerCase()
   return NON_PROJECT_PERMIT_KEYWORDS.some((k) => t.includes(k))
 }

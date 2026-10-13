@@ -56,3 +56,33 @@ describe("isNonProjectPermit", () => {
     expect(isNonProjectPermit("")).toBe(false)
   })
 })
+
+describe("isNonProjectPermit — rakentamista valmisteleva työ", () => {
+  /*
+   * Aidot hankkeet kannasta 14.10.2026. Nämä ovat asiakkaalle näkyviä
+   * hankkeita, eli sääntö joka pudottaa nämä pudottaa tuotantodataa.
+   */
+  it("ei pudota rakentamista valmistelevaa puiden kaatoa", () => {
+    expect(
+      isNonProjectPermit("Rakentamista valmisteleva puiden kaato tontilta, Hannusranta 12")
+    ).toBe(false)
+  })
+
+  it("ei pudota samaa lupaa toisin taivutettuna", () => {
+    /* Tämä muoto OLISI osunut vartaloon "puiden kaatam". */
+    expect(
+      isNonProjectPermit("Rakentamista valmisteleva puiden kaataminen tontilta, Hannusranta 12")
+    ).toBe(false)
+  })
+
+  it("ei pudota valmistelevia maanrakennustöitä", () => {
+    expect(
+      isNonProjectPermit("Rakentamista valmistelevat maanrakennustyöt, Gneissitie 4 - Maisematyölupa")
+    ).toBe(false)
+  })
+
+  it("pudottaa yhä pelkän puiden kaatamisen", () => {
+    expect(isNonProjectPermit("Puiden kaataminen: Äikkäänranta 15")).toBe(true)
+    expect(isNonProjectPermit("Maisematyölupa: Puiden kaataminen.: Kivisalmentie 4")).toBe(true)
+  })
+})
