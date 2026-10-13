@@ -70,6 +70,33 @@ Teollisuuskohteita on tyypitettyna vain 96, mika tukee asiakkaan
 havaintoa kattavuudesta. Se voi olla yhta lailla **lahdepuute** kuin
 luokituspuute, eika kumpaakaan korjata ennen kuin ne on erotettu.
 
+### Ympäristölupahankkeille rikastin: kuvaus asiakirjasta (D-279)
+
+Asiakkaan havainto teollisuuskohteiden puutteesta johti lähteeseen,
+joka toimi mutta jonka tuotos hylättiin käsin — koska jonorivin koko
+kuvaus oli *"Ympäristölupa-asia (diaarinro ...). Hakija: ..."*, 79
+merkkiä, eikä sanaakaan siitä mitä rakennetaan.
+
+Rikastin hakee nyt asian kuulutuksen tai päätöksen ja poimii siitä
+kuvauksen. **Kuvaus parani 10/15 rivillä, mediaani 79 → 214 merkkiä.**
+
+Neljä aiemmin hylättyä riviä avattiin uudelleen katselmoitavaksi
+(Kokkolan nestesäiliöterminaali, Nivalan biokaasulaitos, Kaipolan
+kenttärakenne). Neljä jätettiin hylätyksi, koska rikastettu kuvaus
+osoitti ne luvan raukeamisiksi — rikastin ei vain lisää hankkeita,
+se myös perustelee hylkäykset.
+
+Lähteen suodattimeen lisättiin `"raukeam"`: listalla ollut
+`"rauettamin"` ei osunut taivutuksiin, ja juuri ne pääsivät jonoon.
+
+### Mittaus: teollisuuskattavuus ei ole muuta huonompi
+
+RPT:n 726 hankkeen listalla meillä on 353 (49 %) ja sen
+teollisuushankkeista 8/17 (47 %). Aukko ei siis ole teollisuudessa
+vaan siinä, että yksityiset investoinnit (vety, biokaasu,
+akkumateriaali, datakeskus) näkyvät vain ympäristölupa- ja
+YVA-rekistereissä — eivät Hilmassa eivätkä kaavoissa.
+
 ### Euromaarainen luokitus jatetaan tekematta (D-277)
 
 Hankkeelle ei nayteta arvioitua euromaaraa eika kustannustason

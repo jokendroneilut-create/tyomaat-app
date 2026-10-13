@@ -170,6 +170,18 @@ const VAHIMMAISPITUUS = 60
  * sivunumero, diaarinumero — joten ne karsitaan hännästä eikä koko
  * tekstistä, jottei leipätekstin luvuille käy mitään.
  */
+/*
+ * Luku voi jatkua sivunvaihdon yli, jolloin KESKELLE tekstiä jää
+ * ylätunniste: "...raukeamaan. 205/2026 Asiatunnus LVV-U/23208/2026 1
+ * Perustelut...". Hännän karsinta ei auta, koska roskan perässä on
+ * lisää tekstiä. Tunniste on aina päätösnumero + diaarinumero lähekkäin
+ * — se pari ei esiinny leipätekstissä, joten siihen voi katkaista.
+ */
+function katkaiseSivutunnisteeseen(teksti: string): string {
+  const tunniste = teksti.match(/\s\d{1,4}\/\d{4}\s[\s\S]{0,40}?[A-ZÄÖÅ]{2,}(?:-[A-ZÄÖÅ])?\/\d+\/\d{4}/)
+  return tunniste?.index !== undefined ? teksti.slice(0, tunniste.index) : teksti
+}
+
 function karsiHanta(teksti: string): string {
   const roska = /(?:\s|\|)*(?:\d{1,4}\/\d{4}|\d{1,3} \(\d{1,3}\)|[A-ZÄÖÅ]{2,}(?:-[A-ZÄÖÅ])?\/\d+\/\d{4})(?:\s|\|)*$/
   let tulos = teksti.trim()
@@ -187,7 +199,9 @@ export function kuvausAsiakirjasta(teksti: string): string | null {
   if (!kuvaus) return null
 
   const yhdella = karsiHanta(
-    kuvaus.replace(/\s*\n\s*/g, " ").replace(/\s{2,}/g, " ").trim()
+    katkaiseSivutunnisteeseen(
+      kuvaus.replace(/\s*\n\s*/g, " ").replace(/\s{2,}/g, " ").trim()
+    )
   )
   return yhdella.length >= VAHIMMAISPITUUS ? yhdella : null
 }

@@ -258,3 +258,25 @@ noin 3-4 kilometriä keskustasta kaakkoon osoitteessa Vierikuja 1.
     expect(kuvaus).toContain("Vierikuja 1")
   })
 })
+
+describe("sivutunniste keskella tekstia", () => {
+  it("katkaisee kun luku jatkuu sivunvaihdon yli", () => {
+    const teksti = [
+      "",
+      "Kuulutus",
+      "Paatoksen paaasiallinen sisalto",
+      "Aloite koskee Maalahden kunnassa sijainneen laitoksen ymparistoluvan",
+      "maaraamista raukeamaan toiminnan paatyttya.",
+      "205/2026",
+      "Asiatunnus LVV-U/23208/2026",
+      "1 Perustelut",
+      "Paatos perustuu ymparistonsuojelulain 88 pykalaan ja asiassa saatuun selvitykseen.",
+      "",
+    ].join(String.fromCharCode(10))
+
+    const kuvaus = kuvausAsiakirjasta(teksti) ?? ""
+    expect(kuvaus).toContain("maaraamista raukeamaan")
+    expect(kuvaus).not.toContain("LVV-U/23208/2026")
+    expect(kuvaus).not.toContain("Perustelut")
+  })
+})

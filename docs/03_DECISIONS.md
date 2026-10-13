@@ -23,6 +23,101 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-279 - Ympäristölupahanke hylättiin koska siitä ei kerrottu mitään
+
+Asiakas (Firesafe) 13.10.2026: *"löysin vain murto-osan niistä
+teollisuuskohteista joita kilpailijan palvelussa oli."* Johannes:
+*"teollisuuskohteiden puute johtuu varmaan suurimmaksi osaksi siitä
+että ne ovat yksityisiä hankkeita joita on vaikea löytää."*
+
+Oletus osoittautui puoliksi oikeaksi ja se mitattiin, ei päätelty.
+
+#### Mitä mittatikku sanoi
+
+RPT:n 726 hankkeen lista (`docs/rpt/`) on lähdekartoituksen mittatikku:
+
+| | meillä | |
+|---|---|---|
+| koko lista | 353 / 726 | 49 % |
+| teollisuussanan sisältävät | 8 / 17 | **47 %** |
+
+Teollisuus ei siis jää muusta jälkeen. Mutta kaikki 9 puuttuvaa ovat
+yksityisiä investointeja: vetylaitos, biokaasu, akkumateriaalitehdas,
+datakeskus. Siltä osin oletus osui.
+
+#### Missä ne oikeasti katosivat
+
+Ympäristölupalähde (`fetchYmparistolupaSource`) on kirjoitettu juuri
+tähän aukkoon, ja **se toimii**: valvottu ajo 13.10.2026 palautti 11
+asiaa 28 sekunnissa. Viisi oli jo hankkeena. Loput kuusi oli viety
+jonoon 31.7.2026 ja **hylätty käsin 7.8.2026**.
+
+Hylkäys oli sillä tiedolla oikea. Jonorivin koko kuvaus oli:
+
+> *"Ympäristölupa-asia (diaarinro LSSAVI/26273/2025). Hakija: Berner Oy."*
+
+79 merkkiä, eikä sanaakaan siitä että Kokkolan Syväsatamaan rakennetaan
+nestesäiliöterminaali. Otsikko *"Nestesäiliöterminaalin ympäristölupa
+sekä toiminnan aloittamislupa"* lukee kuin olemassa olevan laitoksen
+lupa-asia.
+
+**Vertailu osoittaa syyn, koska muuttujia on vain yksi.** Sama toimiala,
+sama katselmoija, ero rikastimessa:
+
+| lähde | jonorivejä | hyväksytty | kuvauksen mediaani |
+|---|---|---|---|
+| ympäristölupa (ei rikastinta) | 15 | **47 %** | **79 merkkiä** |
+| YVA (`yvaProjectPage.ts`) | 331 | **85 %** | **4 892 merkkiä** |
+
+Hanke ei siis jäänyt pois siksi että se on yksityinen, vaan siksi
+ettemme kertoneet omalle katselmoijallemme mitä siinä rakennetaan.
+Sama laki kuin asiakaspuolella ([[description-is-the-product]]) —
+nyt se vain puri omaan jonoomme.
+
+#### Mitä tehtiin
+
+Rikastin (`lib/agent/ymparistolupaAsiakirja.ts`) hakee asian asiakirjan
+ja poimii kuvauksen. Kaksi asiakirjatyyppiä kantaa sen:
+
+- **kuulutus** → luku "Asian pääasiallinen sisältö"; syntyy jo
+  vireilletulossa ja on ~100 kt. Ensisijainen.
+- **päätös** → luku "Toiminta"; syntyy vasta päätöksestä, 0,4–5,7 Mt.
+
+Kolme mutkaa, jotka löytyivät vain lukemalla tuotos rivi riviltä:
+
+1. Ennen 1.1.2026 asiat olivat aluehallintovirastossa, jonka muoto on
+   eri ("Päätöksen pääasiallinen sisältö", versaali "TOIMINTA JA SEN
+   SIJAINTI"). Jälkimmäinen osuu ensin sisällysluetteloon.
+2. Asia on siirtynyt uudelle diaarinumerolle, ja asiakirjat ovat sen
+   takana (`caseReferences`). Ilman tätä haaraa puolet jäisi tyhjäksi.
+3. Sivunvaihto jättää ylätunnisteen tekstin sekaan ja perään.
+
+**Tulos:** kuvaus parani 10/15, mediaani 79 → 214 merkkiä.
+
+#### Mitä se ei korjaa
+
+Viidellä rivillä ei ole asiakirjaa josta lukea. Loviisan ja Kouvolan
+datakeskuksilla on vain "Vireilletulotiedot" — 287 merkkiä pelkkää
+diaarinumeroa. Varhaisimmassa vaiheessa rekisterissä ei ole kuvausta,
+emmekä sitä keksi ([[never-hide-on-missing-data]]).
+
+#### Hylätyt avattiin uudelleen — mutta ei kaikkia
+
+Rivit eivät palaa itsestään: kaksoiskappalesuoja kysyy *"onko tämä
+osoite ollut jonossa"*, ei *"mitä sille tehtiin"* (`importCandidate.ts`).
+`scripts/avaa-ymparistolupa-hylatyt.ts` ajoi rikastimen kahdeksan
+hylätyn yli ja avasi neljä (kolme eri hanketta).
+
+Neljä jätettiin hylätyksi, ja **juuri rikastettu kuvaus kertoi miksi**:
+*"Aloite koskee ... laitoksen ympäristöluvan määräämistä raukeamaan."*
+Luvan raukeaminen ei ole koskaan rakennushanke ([[reject-is-not-final]]
+koskee sitä mikä voi vielä ratketa, ei tätä). Rikastin ei siis vain
+lisää hankkeita — se myös perustelee hylkäykset.
+
+Samalla korjattiin lähteen suodatin: `EXCLUDE_KEYWORDS` sisälsi
+`"rauettamin"` mutta ei osunut taivutuksiin `"raukeamaan"` /
+`"raukeaminen"`, ja juuri ne pääsivät jonoon.
+
 ### D-278 - Sivu-urakoitsijan juttu: tietokortti ja paaurakoitsija koko tekstista
 
 Johannes 13.10.2026 Torpparin Danfoss-ehdokkaasta: tilaaja (LATO

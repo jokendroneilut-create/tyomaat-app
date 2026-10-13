@@ -50,6 +50,13 @@ const EXCLUDE_KEYWORDS = [
   "muutta",
   "lupamääräyk",
   "rauettamin",
+  /*
+   * "rauettamin" ei osu taivutuksiin "raukeamaan" / "raukeaminen", ja
+   * juuri ne pääsivät läpi: Kierto Ympäristöpalvelut ja Karjaan
+   * tekstiilitehdas ovat molemmat luvan RAUKEAMISIA eivätkä hankkeita.
+   * Molemmat vietiin jonoon 31.7.2026 ja hylättiin käsin 7.8.2026.
+   */
+  "raukeam",
   "tarkistamin",
   "valvonta",
   "koetoiminta",
