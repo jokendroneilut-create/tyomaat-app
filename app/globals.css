@@ -338,6 +338,23 @@ button:hover {
   background: var(--btn-bg);
 }
 
+.projects-multiselect-info {
+  margin-left: 6px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/*
+ * Selitysrivi "Ei tyyppia" -valinnan alla. Pieni ja hillitty: se
+ * selittaa luvun, ei kilpaile valintojen kanssa.
+ */
+.projects-multiselect-note {
+  margin: -2px 10px 8px 32px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
 .projects-multiselect-actions {
   display: flex;
   gap: 8px;

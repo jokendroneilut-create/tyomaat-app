@@ -23,6 +23,133 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-277 - Euromaarainen luokitus jatetaan nyt tekematta
+
+Johannes 13.10.2026, kohdetyypin valikon valmistuttua: *"dokumentoi
+nama uudistukset ja havainnot. myos paatos jattaa euromaarainen
+luokitus nyt tekematta."*
+
+**Paatos:** hankkeelle ei nayteta arvioitua euromaaraa eika
+kustannustason suodatinta rakenneta. Tiedetty summa naytetaan kuten
+ennenkin.
+
+Tama ei ole lykkays resurssipulan takia vaan **mittaustulos** (D-275):
+
+| mitattu | tulos |
+|---|---|
+| kustannusarvio tiedossa | 14,4 % (938 / 6 497) |
+| kokoluokan ennuste tyypista + laajuudesta, pidatetylla otoksella | **+2 prosenttiyksikkoa** "parasta yhta arvausta" vastaan |
+| iso hanke, jonka saanto olisi luokitellut pieneksi | 113 kpl |
+| hintataulu tyypeittain, lapaisi pidatetyn kokeen | 1 luokka 12:sta (Energiantuotanto) |
+
+Kaksi syyta, kumpikin riittaisi yksin:
+
+1. **Arvio ei erottele.** Kahden prosenttiyksikon parannus ei ole
+   suodatin vaan kolikonheitto, jossa on euromerkki edessa. 113 isoa
+   hanketta olisi pudonnut "alle 1 M€" -rajauksen taakse — eli
+   suodatin olisi piilottanut juuri ne hankkeet joita asiakas etsii.
+
+2. **Tyyppi ei selita hintaa, tyon laajuus selittaa**
+   ([[scope-explains-cost]]). Sama "Koulu" on 8,4 M€ uudisrakennus tai
+   350 k€ osaurakka. Luokitus, jota pyydettiin hinnan korvikkeeksi,
+   ei siis voi toimia hinnan korvikkeena.
+
+**Mika ei muutu:** tiedetyt summat naytetaan, ja niita kerataan lisaa.
+Asiakkaalle ei kuitenkaan valehdella tarkkuudesta jota meilla ei ole
+([[never-hide-on-missing-data]]).
+
+**Milla ehdolla tahan palataan.** Ei "kun ehtii", vaan kun jompikumpi
+toteutuu:
+
+- **Kattavuus nousee olennaisesti.** Lahin lahde on Hilman
+  `noticeResult/totalAmount` (~270 uutta tiedettya summaa samasta
+  hausta jonka jo teemme voittajan takia). Jos kattavuus nousee yli
+  ~40 %:n, **poissulkeva** suodatin ("piilota hankkeet jotka tiedetaan
+  alle 1 M€:n") kannattaa harkita — se ei nojaa arvioon lainkaan eika
+  piilota tuntematonta.
+- **Koe toistetaan ja se voitetaan selvasti.** Sama pidatetty otos,
+  sama mittari. Kahden prosenttiyksikon voitto ei riita.
+
+Asiakkaan alkuperainen pyynto (kustannustaso, aloitusaika,
+rakennustyyppi) on kirjattu `10_USERS.md`:hen. Naista **rakennustyyppi
+toteutettiin** (D-276), aloitusaika odottaa Hilman
+`plannedPeriod/startDate`-poimintaa, ja kustannustaso on tama paatos.
+
+### D-276 - Kohdetyypin valikko luetaan aineistosta, ei luettelosta
+
+Asiakas (Firesafe) 13.10.2026: *"Mita eri kohdetyyppeja on olemassa
+(tuossahan vaan tekstikentta)? ... loysin vain murto-osan niista
+teollisuuskohteista joita kilpailijan palvelussa oli."*
+
+Pointti on oikea. Kohdetyyppi on vapaa tekstikentta, ja vapaa tekstikentta
+olettaa etta hakija tietaa mita hakea. Juuri sita han ei voi tietaa.
+Hakukentta korvattiin **monivalintavalikolla, jossa jokaisen tyypin
+perassa on kappalemaara, suurin ensin**. Monivalinta siksi etta se
+periytyy hakuvahtiin (Johannes: *"monivalinta olisi siihen muuten
+tarkea koska se vaikuttaa myos hakuvahtiin"*).
+
+Luvut lasketaan **muiden suodattimien jalkeen mutta ennen kohdetyyppia**,
+joten luku kertoo mita saisi jos tata klikkaisi.
+
+#### Mita listan avaaminen paljasti
+
+Vapaa kentta oli kerannyt kaksi vikaa, jotka nakyivat vasta kun arvot
+pantiin riviin:
+
+1. **Kirjoitusasu.** "Koulu" 296 ja "koulu" 8, "Kerrostalo" 618 ja
+   "kerrostalo" 4, "Rivitalo" 121 ja "rivitalo" 1, "Paivakoti" 141 ja
+   "paivakoti" 2. Kaksi rivia valikossa on kayttajalle virhe, ei tieto.
+
+   Rivit yhdistetaan **lukuhetkella**, yleisin kirjoitusasu nimilapuksi,
+   ja suodatus vertaa kirjainkoosta riippumatta. Kantaa ei siivota:
+   sama lahde voi tuoda huomenna uuden rivin pienella alkukirjaimella,
+   joten kertasiivous ei pysyisi voimassa.
+
+2. **Tyypittomat.** 2 377 / 6 497 nakyvasta hankkeesta (37 %) on ilman
+   tyyppia. Ne ovat omana rivinaan listan lopussa: hanketta ei piiloteta
+   siksi etta me emme tieda sen tyyppia (D-274), mutta puute ei saa
+   myoskaan johtaa listaa.
+
+   **Nimilappu "Ei tyyppia" ei ole kannan arvo.** Hakuvahtiin se on siksi
+   kirjoitettava tunnisteena (`__ei_tyyppia__`), jonka /api/digests
+   kaantaa `is null` -ehdoksi. Ilman tata tallennettu haku olisi tehnyt
+   `property_type = 'Ei tyyppia'` ja antanut **aina nolla osumaa** —
+   hiljaa, koska tyhja digest nayttaa samalta kuin hiljainen viikko.
+
+Johannes 13.10.2026: *"Se luku nayttaa pahalta ja aiheuttaa varmasti
+huonon kuvan muuten."* Rivin alla on siksi selitys: *"Kohdetyyppia ei
+ole kirjattu. Suurin osa naista on kaavoitusvaiheen hankkeita, joille
+rakennustyyppi ratkeaa vasta kaavan edetessa."* Ilman sita 2 376
+nayttaa puutteelta, vaikka valtaosalla rakennustyyppia **ei viela ole
+olemassa**. Selitys on ilman lukua: *"info nappi ei tarvitse lukua
+vaan vain tuon selityksen."*
+
+Molemmat saannot ovat `lib/projects/kohdetyyppi.ts`:ssa, koska sivun
+suodatin ja hakuvahdin digest tekevat saman rajauksen eri koodissa.
+Sama tunniste olisi vuotanut myos hakuvahtilistan ja sahkopostin
+yhteenvetoriville ("Kohdetyyppi: __ei_tyyppia__"), joten selite tulee
+samasta moduulista.
+
+#### Mita tyypittomat ovat
+
+Mitattu 13.10.2026, jotta luku ei jaa pelkaksi havainnoksi:
+
+| | |
+|---|---|
+| tyypittomia | 2 377 (37 % nakyvista) |
+| **kaavalahteista** | **2 041 (86 %)** |
+| tyon laji = kaavoitus | 1 118 |
+| suurin yksittainen muu lahde | Hilma 221 |
+
+Johannes: *"tuo on totta, kaavahanke ei ole rakennus."* Kaavahankkeella
+ei viela ole rakennustyyppia, joten tyhja kentta on niissa osin
+rehellinen — ei sama vika kuin Hilman urakkailmoituksessa, jonka
+otsikosta tyyppi usein luettaisiin. Erottelu on tyojonossa
+(04_ROADMAP.md), ei tassa paatoksessa.
+
+Teollisuuskohteita on tyypitettyna vain 96, mika tukee asiakkaan
+havaintoa. Sita ei korjata valikolla vaan luokituksella ja lahteilla.
+
 ### D-275 - Hankkeen kokoa ei arvioida: mitattu hyoty 2 prosenttiyksikkoa
 
 Johannes 13.10.2026: *"keskeytetaan tama tyo hetkeksi huolellista

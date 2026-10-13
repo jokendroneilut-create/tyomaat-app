@@ -9,6 +9,77 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-10 (tyo 13.10.)
+
+### Kohdetyyppi vetovalikkona laskureineen (D-276)
+
+Asiakas kysyi *"mita eri kohdetyyppeja on olemassa (tuossahan vaan
+tekstikentta)?"* — ja oli oikeassa: vapaa hakukentta olettaa etta
+hakija tietaa mita hakea. Hankkeet-sivun **Kohdetyyppi** on nyt
+monivalintavalikko, joka lukee tyypit suoraan aineistosta,
+kappalemaara perassa, suurin ensin. Luvut lasketaan muiden
+suodattimien jalkeen, joten luku kertoo mita saisi jos tata klikkaisi.
+
+Monivalinta periytyy **hakuvahtiin**, mika oli koko pyynnon syy.
+
+Valikon avaaminen paljasti kaksi vikaa, jotka korjattiin lukuhetkella
+eika kantaa siivoamalla (sama lahde voi tuoda huomenna uuden rivin
+pienella alkukirjaimella):
+
+- **kirjoitusasut yhdistetaan** — "Koulu" 296 + "koulu" 8 oli kaksi
+  rivia valikossa; suodatus osuu nyt kirjainkoosta riippumatta
+- **tyypittomat saavat oman rivin listan loppuun** — hanketta ei
+  piiloteta siksi etta me emme tieda sen tyyppia (D-274)
+
+**Hakuvahti olisi pettanyt hiljaa.** "Ei tyyppia" on nimilappu, ei
+kannan arvo: tallennettu haku olisi tehnyt `property_type = 'Ei
+tyyppia'` ja palauttanut aina nolla osumaa — eika sita olisi
+huomannut, koska tyhja digest nayttaa samalta kuin hiljainen viikko.
+Valinta tallentuu nyt tunnisteena, jonka `/api/digests` kaantaa
+`is null` -ehdoksi. Sama tunniste olisi vuotanut hakuvahtilistan ja
+sahkopostin yhteenvetoriville, joten selite tulee samasta moduulista
+(`lib/projects/kohdetyyppi.ts`).
+
+### Havainto: 37 % tyypittomia on enimmakseen kaavahankkeita
+
+Mitattu 13.10.2026: **2 377 / 6 497 asiakkaalle nakyvasta hankkeesta
+(37 %) on ilman kohdetyyppia.** Luku nayttaa puutteelta mutta on
+kahta eri asiaa:
+
+| | n | mita se on |
+|---|---|---|
+| vaihe Kaavoitus | **2 016** | niista 2 015 kaavalahteesta — rakennustyyppia ei viela ole olemassa |
+| Kilpailutus / Sopimus myonnetty | 234 | tyyppi usein otsikossa, jaanyt lukematta |
+| muut | 127 | |
+
+Valikossa rivin alla on siksi selitys: kaavahankkeella tyyppi ratkeaa
+vasta kaavan edetessa. Luokittamattomien erottelu on tyojonossa
+(`04_ROADMAP.md`) — Hilman otsikoista aloittaen, otos ensin.
+
+Teollisuuskohteita on tyypitettyna vain 96, mika tukee asiakkaan
+havaintoa kattavuudesta. Se voi olla yhta lailla **lahdepuute** kuin
+luokituspuute, eika kumpaakaan korjata ennen kuin ne on erotettu.
+
+### Euromaarainen luokitus jatetaan tekematta (D-277)
+
+Hankkeelle ei nayteta arvioitua euromaaraa eika kustannustason
+suodatinta rakenneta. Syy on mitattu: kokoluokan ennuste tyypista ja
+laajuudesta voitti "parhaan yhden arvauksen" pidatetylla otoksella
+vain **kahdella prosenttiyksikolla**, ja 113 isoa hanketta olisi
+luokittunut pieneksi — suodatin olisi piilottanut juuri ne hankkeet
+joita asiakas etsii. Tiedetyt summat naytetaan kuten ennenkin.
+
+### Kaksi kustannusarviota korjattu, seitseman jatettiin ennalleen (D-275)
+
+Yhdeksan hintaa 930:sta oli ristiriidassa oman kuvauksensa kanssa.
+Lahdelauseet luettuna **seitsemassa kanta oli oikeassa ja poimija
+vaarassa**: Turun raitiotien 465 M€ on koko hanke, poimijan 33 M€
+ensimmainen vaihe; Vetylaitoksen 150 M€ on investointi*tuki*, ei
+hanke. Korjattiin ne kaksi joissa tuhatkerroin oli jaanyt poimimatta
+— **nimelta eika saannolla**.
+
+---
+
 ## 2026-10 (tyo 7.-8.10.)
 
 ### Yritysrekisteri adminille ja osapuolten yhteyshenkilöt (D-253)

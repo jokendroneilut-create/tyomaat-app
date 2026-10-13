@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { PHASE_LABELS } from "@/lib/projects/phases";
 import { describeFilter, filterValues } from "@/lib/watchlists/filterValues";
+import { TYYPPI_PUUTTUU_AVAIN, kohdetyypinSelite } from "@/lib/projects/kohdetyyppi";
 import { isAccountLocked } from "@/lib/auth/isAccountLocked";
 
 const ROUTE_VERSION = "trace-v3-2026-03-06";
@@ -88,7 +89,8 @@ function summarizeFilters(filters: any): string {
   if (filters.city) parts.push(`Kaupunki: ${filters.city}`);
   const vaihe = describeFilter("Vaihe", filters.phase);
   if (vaihe) parts.push(vaihe);
-  if (filters.property_type) parts.push(`Kohdetyyppi: ${filters.property_type}`);
+  const kohdetyyppi = kohdetyypinSelite(filters.property_type);
+  if (kohdetyyppi) parts.push(kohdetyyppi);
 
   return parts.length ? parts.join(" • ") : "Ei suodattimia";
 }
@@ -112,13 +114,47 @@ function applyListFilter(q: any, column: string, value: unknown) {
   return values.length === 1 ? q.eq(column, values[0]) : q.in(column, values)
 }
 
+/*
+ * Kohdetyyppi erikseen, koska tyypittomat eivat ole arvo vaan sen
+ * puute. Hankkeet-sivu tallentaa valinnan "Ei tyyppia" tunnisteena
+ * (TYYPPI_PUUTTUU_AVAIN); tasavertailu sita vastaan ei osuisi kannassa
+ * yhteenkaan riviin, joten se on kaannettava `is null` -ehdoksi.
+ *
+ * Kun valinnassa on seka tyypittomia etta nimettyja, ehto on `or`.
+ * PostgREST-listassa arvot lainausmerkeissa, jotta valilyonnit ja
+ * pilkut (esim. "Teollisuus- ja varastorakennus") kestavat.
+ */
+function applyPropertyTypeFilter(q: any, column: string, value: unknown) {
+  const values = filterValues(value)
+  if (values.length === 0) return q
+
+  const puuttuu = values.includes(TYYPPI_PUUTTUU_AVAIN)
+  const nimetyt = values.filter((v) => v !== TYYPPI_PUUTTUU_AVAIN)
+
+  if (!puuttuu) {
+    return nimetyt.length === 1 ? q.eq(column, nimetyt[0]) : q.in(column, nimetyt)
+  }
+  if (nimetyt.length === 0) return q.is(column, null)
+
+  const lista = nimetyt
+    .map((v) => `"${v.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`)
+    .join(",")
+  return q.or(`${column}.is.null,${column}.in.(${lista})`)
+}
+
 function applyProjectFilters(q: any, filters: any) {
   if (!filters || typeof filters !== "object") return q;
 
   q = applyListFilter(q, "region", filters.region);
   if (filters.city) q = q.eq("city", filters.city);
   q = applyListFilter(q, "phase", filters.phase);
-  if (filters.property_type) q = q.eq("property_type", filters.property_type);
+  /*
+   * Kohdetyyppi on nyt monivalinta (lista), ks. hankkeet-sivu. Sama
+   * kasittely kuin maakunnalla ja vaiheella: yksi arvo -> eq, useampi
+   * -> in. Vanhat tallennetut haut sisaltavat yhden merkkijonon ja
+   * toimivat ennallaan.
+   */
+  q = applyPropertyTypeFilter(q, "property_type", filters.property_type);
 
   if (filters.q && typeof filters.q === "string" && filters.q.trim()) {
     const needle = filters.q.trim().replaceAll('"', '\\"');
@@ -137,7 +173,7 @@ function applyProjectChangeFilters(q: any, filters: any) {
   if (filters.city) q = q.eq("after->>city", filters.city);
   q = applyListFilter(q, "after->>phase", filters.phase);
 
-  if (filters.property_type) q = q.eq("after->>property_type", filters.property_type);
+  q = applyPropertyTypeFilter(q, "after->>property_type", filters.property_type);
 
   return q;
 }

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { describeFilter } from '@/lib/watchlists/filterValues'
+import { kohdetyypinSelite } from '@/lib/projects/kohdetyyppi'
 
 type SavedSearch = {
   id: string
@@ -56,7 +57,9 @@ function summarizeFilters(filters: any): string {
   if (filters.city) parts.push(`Kaupunki: ${filters.city}`)
   const vaihe = describeFilter('Vaihe', filters.phase)
   if (vaihe) parts.push(vaihe)
-  if (filters.property_type) parts.push(`Kohdetyyppi: ${filters.property_type}`)
+  /* Kaantaa myos tyypittomien tunnisteen nimilapuksi. */
+  const kohdetyyppi = kohdetyypinSelite(filters.property_type)
+  if (kohdetyyppi) parts.push(kohdetyyppi)
 
   return parts.length ? parts.join(' • ') : 'Ei suodattimia'
 }
