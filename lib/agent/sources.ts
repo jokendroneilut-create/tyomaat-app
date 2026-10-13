@@ -60,6 +60,7 @@ import { luoTalotekniikkaLahde, luoTalotekniikkaRikastus } from "./talotekniikka
 import { fetchYmparistolupaSource } from "./fetchYmparistolupaSource"
 import { fetchYvaSource } from "./fetchYvaSource"
 import { createYvaEnricher } from "./yvaProjectPage"
+import { createYmparistolupaEnricher } from "./ymparistolupaEnricher"
 import { fetchSuunnittelukilpailuSource } from "./fetchSuunnittelukilpailuSource"
 import { fetchSitowiseSource } from "./fetchSitowiseSource"
 import {
@@ -232,7 +233,18 @@ export const sources = [
    */
   { name: "torppari", fetch: fetchTorppariSource },
   { name: "pelti_assat", fetch: fetchPeltiAssatSource },
-  { name: "ymparistolupa", fetch: fetchYmparistolupaSource },
+  /*
+   * Rikastuskoukku hakee asian kuulutuksen tai paatoksen ja poimii siita
+   * kuvauksen. Ilman sita jonoriville jai vain "Ymparistolupa-asia
+   * (diaarinro ...). Hakija: ..." — mitattu 13.10.2026: taman lahteen
+   * hyvaksymisaste 47 % (kuvaus 79 merkkia), YVA-lahteen 85 % (4 892).
+   * Ks. lib/agent/ymparistolupaAsiakirja.ts.
+   */
+  {
+    name: "ymparistolupa",
+    fetch: fetchYmparistolupaSource,
+    enrich: createYmparistolupaEnricher(),
+  },
   /*
    * Rikastuskoukku lukee hankesivun nimetyt kentät (hankevastaava,
    * yhteysviranomainen, diaarinumero), joita hakurajapinta ei palauta.
