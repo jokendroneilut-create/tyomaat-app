@@ -708,6 +708,20 @@ muistin varassa.
   reitin oma perustelu pätee yhä: väärä hälytys maksaa asiakassuhteen,
   myöhästynyt havainto muutaman tunnin dataa.
 
+  **Tehty 14.10.2026 (D-284):** hälytys katsoo nyt myös sivulatauksia,
+  150 / 24 h / tunnus, ja kysely sivutettiin. **Auki jää kaksi asiaa:**
+
+  1. *Estäminen* — RLS `using (true)` antaa kirjautuneelle kaikki rivit
+     ja sarakkeet, myös `metadata`n (25,2 MB, 9 230 yhteyshenkilöä,
+     6 451 puhelinnumeroa) ja 155 piilotettua hanketta. Suoraan
+     rajapinnasta haettu ei kirjaa yhtään tapahtumaa, joten se ei näy
+     hälytyksessäkään. Järjestys: siirrä metadatan luku oman API-reitin
+     taakse (hankekortti lukee sen nyt selaimesta), vasta sitten kiristä
+     politiikka.
+  2. *Hidas keruu* — 24 h ikkuna ei summaa päiviä. Mitattu kynnys 400
+     sivua / 7 vrk olisi hiljainen (2 tunnusta 60 vrk aikana), mutta
+     päätettiin 14.10.2026 **olla lisäämättä nyt**.
+
   Huomaa myös, ettei kyse ole tästä asiakkaasta: Nextrentillä **on
   lupa** koneelliseen käyttöön (28.9.2026, ehdoin). Kysymys on siitä,
   näkyisikö luvaton keruu lainkaan.

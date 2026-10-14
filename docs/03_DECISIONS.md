@@ -91,6 +91,35 @@ tehokkaan tiimin jatkuvasti liputetuksi, mikä tekisi ilmoituksista
 kohinaa. Kohina on pahempi kuin tämä aukko, koska luettu ilmoitus on
 ainoa jolla on arvoa.
 
+#### Hidasta keruuta ei valvota nyt
+
+Ikkuna on 24 tuntia, joten **hidas keruu ei laukaise mitään**: 100 sivua
+päivässä kymmenen päivän ajan on 1 000 sivua ilman yhtäkään ilmoitusta.
+Koodissa ollut vanha kommentti *"hitaampi keruu näkyy silti päivien
+summana"* ei pidä paikkaansa — hälytys ei laske päiviä yhteen.
+
+Viikkosignaali mitattiin ennen päätöstä (7 vrk liukuva summa per tunnus,
+60 vrk ajalta, oma käyttö pois):
+
+| | sivuja / 7 vrk |
+|---|---|
+| mediaani | 22 |
+| 90 % alle | 117 |
+| 95 % alle | 201 |
+| suurin | 938 |
+
+| kynnys | eri tunnusta 60 vrk aikana |
+|---|---|
+| 300 | 4 |
+| **400** | **2** |
+| 600 | 2 |
+
+Eli 400 sivua / 7 vrk olisi käytännössä hiljainen mutta nappaisi hitaan
+keruun. **Johannes 14.10.2026: *"ei lisätä hidasta keruuta nyt."***
+Luvut ovat tässä, jotta asiaan voi palata ilman uutta mittausta — mutta
+perustaso vanhenee, joten se kannattaa ajaa uudelleen jos käyttäjämäärä
+kasvaa olennaisesti ([[metric-premise-expires]]).
+
 #### Mitä tämä EI korjaa
 
 Hälytys näkee vain sen mitä selain kirjaa. Suoraan rajapinnasta omalla
