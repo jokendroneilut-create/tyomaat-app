@@ -14,6 +14,7 @@ import { CANONICAL_PHASES, displayPhaseLabel, displayProjectPhase, normalizeLega
 import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
 import { alueetSuodattimeen } from '@/lib/users/alueasetus'
 import { hakuteksti } from '@/lib/projects/hakukentat'
+import { kirjoitaValimuisti, lueValimuisti } from '@/lib/projects/hankevalimuisti'
 import {
   TYYPPI_PUUTTUU,
   kohdetyyppiHakuvahdille,
@@ -279,6 +280,9 @@ const LISTAN_KENTAT = `
  * vapaassa tekstihaussa, joten se haetaan erikseen taustalla.
  */
 const KEVYET_KENTAT = LISTAN_KENTAT.replace(" additional_info,", "")
+
+const VALIMUISTI_HANKKEET = 'projektit'
+const VALIMUISTI_KUVAUKSET = 'kuvaukset'
 
 export default function Projects() {
   const isMobile = useIsMobile(768)
@@ -748,6 +752,79 @@ export default function Projects() {
     } = await supabase.auth.getUser()
 
     setCurrentUserId(user?.id || null)
+
+    /*
+     * Omistajamerkinnat ovat kayttajakohtaisia eivatka mene valimuistiin,
+     * joten sama vaihe ajetaan seka valimuisti- etta hakupolussa.
+     */
+    const sovellaTiimi = async (rivit: Project[]) => {
+      if (!user) {
+        setProjects(rivit)
+        setLoading(false)
+        return
+      }
+
+      const { data: memberRow } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (!memberRow) {
+        setProjects(rivit)
+        setLoading(false)
+        setTeamModeEnabled(false)
+        return
+      }
+
+      setTeamModeEnabled(true)
+      const { data: assignmentsData } = await supabase
+        .from('project_assignments')
+        .select('project_id, owner_id')
+        .eq('team_id', memberRow.team_id)
+
+      const assignmentMap = new Map(
+        (assignmentsData || []).map((a: any) => [a.project_id, a.owner_id])
+      )
+
+      setProjects(
+        rivit.map((project) => ({
+          ...project,
+          owner_id: assignmentMap.has(project.id)
+            ? assignmentMap.get(project.id)
+            : null,
+        }))
+      )
+      setLoading(false)
+    }
+
+    /*
+     * VALIMUISTI ENSIN. Mitattu 15.10.2026: 91 % latauksista tapahtuu
+     * alle 30 min edellisesta, eli sama 5 MB haettaisiin uudelleen
+     * samalle datalle. Merkinta vanhenee kellon mukaan kahdessa
+     * tunnissa — ei istunnon mukaan, ks. lib/projects/hankevalimuisti.
+     */
+    {
+      const valimuistista = await lueValimuisti<Project>(VALIMUISTI_HANKKEET)
+      if (valimuistista) {
+        await sovellaTiimi(valimuistista.rivit)
+
+        const kuvaukset = await lueValimuisti<{ id: string; additional_info: string | null }>(
+          VALIMUISTI_KUVAUKSET
+        )
+        if (kuvaukset) {
+          const kartta = new Map(kuvaukset.rivit.map((r) => [r.id, r.additional_info]))
+          setProjects((edelliset) =>
+            edelliset.map((p) =>
+              kartta.has(p.id) ? { ...p, additional_info: kartta.get(p.id) ?? null } : p
+            )
+          )
+          setKuvauksetLadattu(true)
+        }
+        return
+      }
+    }
+
     setLoadDebug(`Käyttäjä: ${user?.email || 'ei kirjautunut'}. Haetaan projekteja...`)
 
     /*
@@ -867,6 +944,10 @@ export default function Projects() {
               kuvaukset.has(p.id) ? { ...p, additional_info: kuvaukset.get(p.id) ?? null } : p
             )
           )
+          void kirjoitaValimuisti(
+            VALIMUISTI_KUVAUKSET,
+            [...kuvaukset.entries()].map(([id, additional_info]) => ({ id, additional_info }))
+          )
         }
       } catch (virhe) {
         console.error('Kuvausten haku epäonnistui:', virhe)
@@ -892,45 +973,12 @@ export default function Projects() {
 
 setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
 
-    if (!user) {
-      setProjects(activeProjectsData)
-      setLoading(false)
-      void taydennaKuvaukset()
-      return
-    }
-
-    const { data: memberRow } = await supabase
-      .from('team_members')
-      .select('team_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    if (!memberRow) {
-      setProjects(activeProjectsData)
-      setLoading(false)
-      setTeamModeEnabled(false)
-      void taydennaKuvaukset()
-      return
-    }
-setTeamModeEnabled(true)
-    const { data: assignmentsData } = await supabase
-      .from('project_assignments')
-      .select('project_id, owner_id')
-      .eq('team_id', memberRow.team_id)
-
-    const assignmentMap = new Map(
-      (assignmentsData || []).map((a: any) => [a.project_id, a.owner_id])
-    )
-
-    const projectsWithOwners = activeProjectsData.map((project) => ({
-      ...project,
-      owner_id: assignmentMap.has(project.id)
-        ? assignmentMap.get(project.id)
-        : null,
-    }))
-
-    setProjects(projectsWithOwners)
-    setLoading(false)
+    /*
+     * Hankerivit ovat kaikille samat; omistajamerkinta on kayttajan oma,
+     * joten se haetaan aina eika se mene valimuistiin.
+     */
+    await sovellaTiimi(activeProjectsData)
+    void kirjoitaValimuisti(VALIMUISTI_HANKKEET, activeProjectsData)
     void taydennaKuvaukset()
   }
 
@@ -1439,6 +1487,7 @@ setTeamModeEnabled(true)
 
         <div className="projects-counter">
           Kartassa <strong>{mapCount}</strong> / suodatetuista {filteredProjects.length}
+
           {/*
             * Sijainniton hanke ei voi olla kartan rajojen sisällä, joten
             * rajauksen ollessa päällä se on oma valintansa eikä pelkkä

@@ -97,6 +97,7 @@ const summary = await getTodaySummary(user?.id)
         regions={summary.settings.regions}
       />
 
+
       <TodayRecommendedProjects
          projects={summary.recommendedProjects}
          initialCount={summary.recommendedInitial}
