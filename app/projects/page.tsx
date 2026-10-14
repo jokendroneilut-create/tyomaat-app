@@ -14,12 +14,7 @@ import { CANONICAL_PHASES, displayPhaseLabel, displayProjectPhase, normalizeLega
 import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
 import { alueetSuodattimeen } from '@/lib/users/alueasetus'
 import { hakuteksti } from '@/lib/projects/hakukentat'
-import {
-  kirjoitaValimuisti,
-  lueValimuisti,
-  tyhjennaValimuisti,
-  valimuistinIka,
-} from '@/lib/projects/hankevalimuisti'
+import { kirjoitaValimuisti, lueValimuisti } from '@/lib/projects/hankevalimuisti'
 import {
   TYYPPI_PUUTTUU,
   kohdetyyppiHakuvahdille,
@@ -379,13 +374,6 @@ export default function Projects() {
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false)
   /* Vapaa tekstihaku kattaa kuvaukset vasta kun ne on haettu taustalla. */
   const [kuvauksetLadattu, setKuvauksetLadattu] = useState(false)
-  /*
-   * Valimuistin kirjoitushetki nakyy kayttajalle. Jumiin jaanyt
-   * valimuisti nakyy silloin kellonaikana eika vasta siina, etta joku
-   * ihmettelee puuttuvaa hanketta.
-   */
-  const [valimuistiAika, setValimuistiAika] = useState<number | null>(null)
-  const [pakotaHaku, setPakotaHaku] = useState(0)
   const propertyTypeRef = useRef<HTMLDivElement | null>(null)
 
   const [visibleCount, setVisibleCount] = useState(pageSize)
@@ -816,10 +804,9 @@ export default function Projects() {
      * samalle datalle. Merkinta vanhenee kellon mukaan kahdessa
      * tunnissa — ei istunnon mukaan, ks. lib/projects/hankevalimuisti.
      */
-    if (pakotaHaku === 0) {
+    {
       const valimuistista = await lueValimuisti<Project>(VALIMUISTI_HANKKEET)
       if (valimuistista) {
-        setValimuistiAika(valimuistista.tallennettu)
         await sovellaTiimi(valimuistista.rivit)
 
         const kuvaukset = await lueValimuisti<{ id: string; additional_info: string | null }>(
@@ -838,7 +825,6 @@ export default function Projects() {
       }
     }
 
-    setValimuistiAika(null)
     setLoadDebug(`Käyttäjä: ${user?.email || 'ei kirjautunut'}. Haetaan projekteja...`)
 
     /*
@@ -997,7 +983,7 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
   }
 
   fetchProjects()
-}, [pakotaHaku])
+}, [])
 
   useEffect(() => {
     const fetchCRM = async () => {
@@ -1502,37 +1488,6 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
         <div className="projects-counter">
           Kartassa <strong>{mapCount}</strong> / suodatetuista {filteredProjects.length}
 
-          {/*
-            * Valimuistin ika nakyviin. Jos haku jaisi jumiin, se nakyy
-            * tassa kellonaikana — ei vasta siina etta joku ihmettelee
-            * puuttuvaa hanketta. Painike hakee tuoreet heti.
-            */}
-          {valimuistiAika && (
-            <span style={{ marginLeft: 10, color: '#6b7280', fontSize: 12 }}>
-              {' · '}tiedot {valimuistinIka(valimuistiAika)}{' '}
-              <button
-                type="button"
-                onClick={async () => {
-                  await tyhjennaValimuisti(VALIMUISTI_HANKKEET)
-                  await tyhjennaValimuisti(VALIMUISTI_KUVAUKSET)
-                  setLoading(true)
-                  setPakotaHaku((n) => n + 1)
-                }}
-                style={{
-                  marginLeft: 6,
-                  border: 'none',
-                  background: 'none',
-                  padding: 0,
-                  color: '#2563eb',
-                  cursor: 'pointer',
-                  font: 'inherit',
-                  textDecoration: 'underline',
-                }}
-              >
-                päivitä
-              </button>
-            </span>
-          )}
           {/*
             * Sijainniton hanke ei voi olla kartan rajojen sisällä, joten
             * rajauksen ollessa päällä se on oma valintansa eikä pelkkä

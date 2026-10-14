@@ -21,9 +21,15 @@
  *    Mikään ei sido vanhenemista istuntoon tai uloskirjautumiseen.
  *  - avaimessa on VERSIO: jos rivin muoto muuttuu julkaisussa, vanha
  *    merkintä ei kelpaa, eikä vanhentunut muoto voi rikkoa sivua hiljaa.
- *  - tallennushetki palautetaan kutsujalle, jotta sivu voi näyttää sen.
- *    Jumiin jäänyt välimuisti näkyy silloin kellonaikana eikä vasta
- *    siinä, että joku ihmettelee puuttuvaa hanketta.
+ *  - tallennushetki palautetaan kutsujalle, mutta **sitä ei näytetä
+ *    käyttäjälle** (päätös 15.10.2026). Kokeiltiin: hankelistalla luki
+ *    "tiedot 00.52 · päivitä". Mitattu syy poistolle: uusia hankkeita
+ *    ilmestyy mediaanina kahtena tuntina päivässä, käytännössä iltaisin
+ *    klo 18-22 katselmoinnin yhteydessä. Kahden tunnin ikä ei siis
+ *    piilota asiakkaalta mitään, joten kellonaika kertoisi erosta jota
+ *    ei ole — ja herättäisi epäilyn ilman vastinetta. Johannes: *"ei
+ *    näytetä sitä käyttäjälle"*, eikä myöskään varoitusta vanhasta
+ *    datasta. Aikaleima jää rajapintaan diagnostiikkaa varten.
  *
  * Kaikki luku ja kirjoitus on try/catch:in sisällä: yksityisessä
  * ikkunassa tai estetyillä evästeillä IndexedDB voi heittää, eikä se saa

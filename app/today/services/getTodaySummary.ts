@@ -109,13 +109,6 @@ export async function getTodaySummary(userId?: string | null) {
     getTeamOwnership(userId, teamModeOn),
   ])
 
-  /*
-   * Syote tulee valimuistista (2 h, ks. getTodayProjects). `haettu`
-   * kerrotaan sivulla, jotta jumiin jaanyt valimuisti nakyy kellonaikana
-   * eika vasta siina etta joku ihmettelee puuttuvaa hanketta.
-   */
-  const dataHaettu = allProjects.haettu
-
   const filteredProjects = allProjects.rivit
   .filter((project: any) =>
     matchesRegions(project, settings.regions)
@@ -185,8 +178,6 @@ export async function getTodaySummary(userId?: string | null) {
     favorites: Object.fromEntries(
       Array.from(favoritesContext.favoriteProjectIds).map((id) => [id, true])
     ),
-
-    dataHaettu,
 
     metrics: {
       regionTotal,
