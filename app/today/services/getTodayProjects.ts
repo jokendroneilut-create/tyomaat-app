@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache"
 import { lueUudelleen } from "@/lib/supabase/lueUudelleen"
 import { createClient } from "@supabase/supabase-js"
 
@@ -67,7 +68,7 @@ function kokoaMetadata(rivi: any) {
   return { ...rivi, metadata: md }
 }
 
-export async function getTodayProjects(
+async function haeTodayProjects(
   regions?: string[],
   opts?: { tarvitseeTekstit?: boolean }
 ) {
@@ -142,6 +143,64 @@ export async function getTodayProjects(
   }
 
   return rivit.map(kokoaMetadata)
+}
+
+/*
+ * SYOTE VALIMUISTIIN KAHDEKSI TUNNIKSI.
+ *
+ * MIKSI. Mitattu 15.10.2026: tama haku oli kaytannossa koko /today-sivun
+ * odotus — 6,5-7,2 s avainsanojen kanssa, kun kaikki muu yhteensa jai
+ * alle sekuntiin. Samalla mitattiin etta **91 % /today- ja
+ * /projects-latauksista tapahtuu alle 30 min edellisesta** (ilman
+ * koneellista kayttoa laskettuna), eli sama tyo tehdaan uudelleen ja
+ * uudelleen samalle datalle.
+ *
+ * MIKSI VAIN TAMA OSA. Summassa on myos peukut, suosikit ja tiimitiedot.
+ * Jos ne olisivat valimuistissa, kayttajan OMA peukku ei vaikuttaisi
+ * nakymaan kahteen tuntiin. Ne ovat alle 0,5 s, joten ne haetaan
+ * jokaisella latauksella. Tassa valimuistissa ei ole kayttajakohtaista
+ * tietoa lainkaan — avaimena on vain alueet ja tarvitaanko tekstit.
+ *
+ * VANHENEMINEN ON KELLOAIKA, EI ISTUNTO. Johannes 15.10.2026: *"ison
+ * pelkoni on ennemmin etta valimuisti jaa paivittamatta kokonaan kun
+ * kayttaja ei koskaan kirjaudu pois ja siksi emme huomaa sita."* Siksi
+ * `revalidate` on absoluuttinen: merkinta vanhenee kahdessa tunnissa
+ * kirjoitushetkesta riippumatta siita mita kayttaja tekee. Mikaan ei
+ * sido sita istuntoon eika uloskirjautumiseen.
+ *
+ * VERSIOAVAIN. Jos rivin muoto muuttuu, vanha merkinta ei saa kelvata —
+ * muuten vanhentunut muoto rikkoisi sivun hiljaa. Nosta versiota kun
+ * valintalista tai kokoaMetadata muuttuu.
+ */
+const SYOTTEEN_VERSIO = "v1"
+const VALIMUISTI_SEKUNTIA = 2 * 60 * 60
+
+export async function getTodayProjectsMeta(
+  regions?: string[],
+  opts?: { tarvitseeTekstit?: boolean }
+) {
+  const tekstit = opts?.tarvitseeTekstit === true
+  const alueet = [...(regions ?? [])].map((r) => String(r).trim()).filter(Boolean).sort()
+  const avain = [SYOTTEEN_VERSIO, tekstit ? "tekstit" : "kevyt", ...alueet]
+
+  const haeValimuistista = unstable_cache(
+    async () => ({ rivit: await haeTodayProjects(regions, opts), haettu: Date.now() }),
+    avain,
+    { revalidate: VALIMUISTI_SEKUNTIA, tags: ["today-projects"] }
+  )
+
+  return haeValimuistista()
+}
+
+/*
+ * Rivit sellaisenaan: vanhat kutsujat eivat muutu.
+ */
+export async function getTodayProjects(
+  regions?: string[],
+  opts?: { tarvitseeTekstit?: boolean }
+) {
+  const { rivit } = await getTodayProjectsMeta(regions, opts)
+  return rivit
 }
 
 /*

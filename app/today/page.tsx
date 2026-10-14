@@ -97,6 +97,21 @@ const summary = await getTodaySummary(user?.id)
         regions={summary.settings.regions}
       />
 
+      {/*
+        * Hankedata haetaan valimuistista (2 h). Aikaleima kertoo milloin
+        * se on haettu — jumiin jaanyt valimuisti nakyy silloin tassa eika
+        * vasta siina, etta joku ihmettelee puuttuvaa hanketta.
+        */}
+      {summary.dataHaettu ? (
+        <p className="mt-2 text-xs text-gray-500">
+          Hanketiedot haettu klo{" "}
+          {new Date(summary.dataHaettu).toLocaleTimeString("fi-FI", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </p>
+      ) : null}
+
       <TodayRecommendedProjects
          projects={summary.recommendedProjects}
          initialCount={summary.recommendedInitial}

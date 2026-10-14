@@ -1,4 +1,4 @@
-import { getTodayProjects, getRegionProjectCount } from "./getTodayProjects"
+import { getTodayProjectsMeta, getRegionProjectCount } from "./getTodayProjects"
 import { getTodaySettings } from "./getTodaySettings"
 import { getUserFeedbackContext } from "./getUserFeedbackContext"
 import { getUserFavoritesContext } from "./getUserFavoritesContext"
@@ -100,7 +100,7 @@ export async function getTodaySummary(userId?: string | null) {
      * Tekstit haetaan vain kun kayttajalla on avainsanoja: ne ovat rivin
      * painavin osa eika niita tarvita muuhun kuin avainsanapisteytykseen.
      */
-    getTodayProjects(settings.regions, {
+    getTodayProjectsMeta(settings.regions, {
       tarvitseeTekstit: Array.isArray(settings.keywords) && settings.keywords.length > 0,
     }),
     getUserFeedbackContext(userId),
@@ -109,7 +109,14 @@ export async function getTodaySummary(userId?: string | null) {
     getTeamOwnership(userId, teamModeOn),
   ])
 
-  const filteredProjects = allProjects
+  /*
+   * Syote tulee valimuistista (2 h, ks. getTodayProjects). `haettu`
+   * kerrotaan sivulla, jotta jumiin jaanyt valimuisti nakyy kellonaikana
+   * eika vasta siina etta joku ihmettelee puuttuvaa hanketta.
+   */
+  const dataHaettu = allProjects.haettu
+
+  const filteredProjects = allProjects.rivit
   .filter((project: any) =>
     matchesRegions(project, settings.regions)
   )
@@ -178,6 +185,8 @@ export async function getTodaySummary(userId?: string | null) {
     favorites: Object.fromEntries(
       Array.from(favoritesContext.favoriteProjectIds).map((id) => [id, true])
     ),
+
+    dataHaettu,
 
     metrics: {
       regionTotal,

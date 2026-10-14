@@ -15,6 +15,12 @@ import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
 import { alueetSuodattimeen } from '@/lib/users/alueasetus'
 import { hakuteksti } from '@/lib/projects/hakukentat'
 import {
+  kirjoitaValimuisti,
+  lueValimuisti,
+  tyhjennaValimuisti,
+  valimuistinIka,
+} from '@/lib/projects/hankevalimuisti'
+import {
   TYYPPI_PUUTTUU,
   kohdetyyppiHakuvahdille,
   laskeKohdetyypit,
@@ -280,6 +286,9 @@ const LISTAN_KENTAT = `
  */
 const KEVYET_KENTAT = LISTAN_KENTAT.replace(" additional_info,", "")
 
+const VALIMUISTI_HANKKEET = 'projektit'
+const VALIMUISTI_KUVAUKSET = 'kuvaukset'
+
 export default function Projects() {
   const isMobile = useIsMobile(768)
   const pageSize = isMobile ? 15 : 30
@@ -370,6 +379,13 @@ export default function Projects() {
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false)
   /* Vapaa tekstihaku kattaa kuvaukset vasta kun ne on haettu taustalla. */
   const [kuvauksetLadattu, setKuvauksetLadattu] = useState(false)
+  /*
+   * Valimuistin kirjoitushetki nakyy kayttajalle. Jumiin jaanyt
+   * valimuisti nakyy silloin kellonaikana eika vasta siina, etta joku
+   * ihmettelee puuttuvaa hanketta.
+   */
+  const [valimuistiAika, setValimuistiAika] = useState<number | null>(null)
+  const [pakotaHaku, setPakotaHaku] = useState(0)
   const propertyTypeRef = useRef<HTMLDivElement | null>(null)
 
   const [visibleCount, setVisibleCount] = useState(pageSize)
@@ -748,6 +764,81 @@ export default function Projects() {
     } = await supabase.auth.getUser()
 
     setCurrentUserId(user?.id || null)
+
+    /*
+     * Omistajamerkinnat ovat kayttajakohtaisia eivatka mene valimuistiin,
+     * joten sama vaihe ajetaan seka valimuisti- etta hakupolussa.
+     */
+    const sovellaTiimi = async (rivit: Project[]) => {
+      if (!user) {
+        setProjects(rivit)
+        setLoading(false)
+        return
+      }
+
+      const { data: memberRow } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (!memberRow) {
+        setProjects(rivit)
+        setLoading(false)
+        setTeamModeEnabled(false)
+        return
+      }
+
+      setTeamModeEnabled(true)
+      const { data: assignmentsData } = await supabase
+        .from('project_assignments')
+        .select('project_id, owner_id')
+        .eq('team_id', memberRow.team_id)
+
+      const assignmentMap = new Map(
+        (assignmentsData || []).map((a: any) => [a.project_id, a.owner_id])
+      )
+
+      setProjects(
+        rivit.map((project) => ({
+          ...project,
+          owner_id: assignmentMap.has(project.id)
+            ? assignmentMap.get(project.id)
+            : null,
+        }))
+      )
+      setLoading(false)
+    }
+
+    /*
+     * VALIMUISTI ENSIN. Mitattu 15.10.2026: 91 % latauksista tapahtuu
+     * alle 30 min edellisesta, eli sama 5 MB haettaisiin uudelleen
+     * samalle datalle. Merkinta vanhenee kellon mukaan kahdessa
+     * tunnissa — ei istunnon mukaan, ks. lib/projects/hankevalimuisti.
+     */
+    if (pakotaHaku === 0) {
+      const valimuistista = await lueValimuisti<Project>(VALIMUISTI_HANKKEET)
+      if (valimuistista) {
+        setValimuistiAika(valimuistista.tallennettu)
+        await sovellaTiimi(valimuistista.rivit)
+
+        const kuvaukset = await lueValimuisti<{ id: string; additional_info: string | null }>(
+          VALIMUISTI_KUVAUKSET
+        )
+        if (kuvaukset) {
+          const kartta = new Map(kuvaukset.rivit.map((r) => [r.id, r.additional_info]))
+          setProjects((edelliset) =>
+            edelliset.map((p) =>
+              kartta.has(p.id) ? { ...p, additional_info: kartta.get(p.id) ?? null } : p
+            )
+          )
+          setKuvauksetLadattu(true)
+        }
+        return
+      }
+    }
+
+    setValimuistiAika(null)
     setLoadDebug(`Käyttäjä: ${user?.email || 'ei kirjautunut'}. Haetaan projekteja...`)
 
     /*
@@ -867,6 +958,10 @@ export default function Projects() {
               kuvaukset.has(p.id) ? { ...p, additional_info: kuvaukset.get(p.id) ?? null } : p
             )
           )
+          void kirjoitaValimuisti(
+            VALIMUISTI_KUVAUKSET,
+            [...kuvaukset.entries()].map(([id, additional_info]) => ({ id, additional_info }))
+          )
         }
       } catch (virhe) {
         console.error('Kuvausten haku epäonnistui:', virhe)
@@ -892,50 +987,17 @@ export default function Projects() {
 
 setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
 
-    if (!user) {
-      setProjects(activeProjectsData)
-      setLoading(false)
-      void taydennaKuvaukset()
-      return
-    }
-
-    const { data: memberRow } = await supabase
-      .from('team_members')
-      .select('team_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    if (!memberRow) {
-      setProjects(activeProjectsData)
-      setLoading(false)
-      setTeamModeEnabled(false)
-      void taydennaKuvaukset()
-      return
-    }
-setTeamModeEnabled(true)
-    const { data: assignmentsData } = await supabase
-      .from('project_assignments')
-      .select('project_id, owner_id')
-      .eq('team_id', memberRow.team_id)
-
-    const assignmentMap = new Map(
-      (assignmentsData || []).map((a: any) => [a.project_id, a.owner_id])
-    )
-
-    const projectsWithOwners = activeProjectsData.map((project) => ({
-      ...project,
-      owner_id: assignmentMap.has(project.id)
-        ? assignmentMap.get(project.id)
-        : null,
-    }))
-
-    setProjects(projectsWithOwners)
-    setLoading(false)
+    /*
+     * Hankerivit ovat kaikille samat; omistajamerkinta on kayttajan oma,
+     * joten se haetaan aina eika se mene valimuistiin.
+     */
+    await sovellaTiimi(activeProjectsData)
+    void kirjoitaValimuisti(VALIMUISTI_HANKKEET, activeProjectsData)
     void taydennaKuvaukset()
   }
 
   fetchProjects()
-}, [])
+}, [pakotaHaku])
 
   useEffect(() => {
     const fetchCRM = async () => {
@@ -1439,6 +1501,38 @@ setTeamModeEnabled(true)
 
         <div className="projects-counter">
           Kartassa <strong>{mapCount}</strong> / suodatetuista {filteredProjects.length}
+
+          {/*
+            * Valimuistin ika nakyviin. Jos haku jaisi jumiin, se nakyy
+            * tassa kellonaikana — ei vasta siina etta joku ihmettelee
+            * puuttuvaa hanketta. Painike hakee tuoreet heti.
+            */}
+          {valimuistiAika && (
+            <span style={{ marginLeft: 10, color: '#6b7280', fontSize: 12 }}>
+              {' · '}tiedot {valimuistinIka(valimuistiAika)}{' '}
+              <button
+                type="button"
+                onClick={async () => {
+                  await tyhjennaValimuisti(VALIMUISTI_HANKKEET)
+                  await tyhjennaValimuisti(VALIMUISTI_KUVAUKSET)
+                  setLoading(true)
+                  setPakotaHaku((n) => n + 1)
+                }}
+                style={{
+                  marginLeft: 6,
+                  border: 'none',
+                  background: 'none',
+                  padding: 0,
+                  color: '#2563eb',
+                  cursor: 'pointer',
+                  font: 'inherit',
+                  textDecoration: 'underline',
+                }}
+              >
+                päivitä
+              </button>
+            </span>
+          )}
           {/*
             * Sijainniton hanke ei voi olla kartan rajojen sisällä, joten
             * rajauksen ollessa päällä se on oma valintansa eikä pelkkä
