@@ -669,6 +669,49 @@ Tukityö joka ei ole P1–P4 mutta on tiedossa. Aiemmin hajallaan
 päätösten "Auki"-kohdissa; koottu tähän jotta se ei ole yhden session
 muistin varassa.
 
+### Valvonta
+
+- **Poikkeavan käytön hälytys ei näe listasivun keruuta.** (Kirjattu
+  14.10.2026, ei aloitettu. Johannes: *"Nextrentille annettiin lupa
+  koneelliseen tutkimiseen, mutta olisiko tästä pitänyt tulla
+  sähköposti-ilmoitus vai laitoimmeko sen heidän kohdalta pois
+  päältä?"*)
+
+  **Vastaus kysymykseen: ei olisi pitänyt tulla, eikä mitään ole
+  laitettu pois päältä.** Hälytys (`/api/admin/usage-alert`, cron 06:00)
+  laukeaa kun käyttäjä avaa **200 eri hanketta 24 tunnissa**. Rajaus
+  koskee vain ylläpitäjän omia tunnuksia (`ANALYTICS_EXCLUDE_EMAILS`),
+  ei asiakkaita.
+
+  Mitattu kyseisestä tunnuksesta:
+
+  | päivä | sivulatauksia | **eri hanketta avattu** |
+  |---|---|---|
+  | 14.10.2026 | 665 | **13** |
+  | 29.9.2026 | 746 | **14** |
+
+  Käyttö on siis vilkasta sivulatauksissa mutta avaa vain muutaman
+  hankkeen — kynnys on 200, eikä se ollut lähelläkään.
+
+  **Mutta tässä on aukko.** Hälytyksen premissi on, että aineiston
+  kerääminen näkyy *hankeavauksina*. Hankelista lataa koko aineiston
+  selaimeen kahdeksalla pyynnöllä (D-281), joten listan haltuunotto ei
+  vaadi yhtään hankeavausta: 6 667 hankkeen nimi, kaupunki, vaihe,
+  osapuolet ja kuvaus tulevat ilman että yksikään hanke "avataan".
+  Mittari ei siis mittaa sitä mitä sen oli tarkoitus mitata
+  ([[metric-premise-expires]]).
+
+  **Ensimmäinen askel ei ole uusi kynnys vaan mittaus:** montako kertaa
+  käyttäjät oikeasti lataavat koko listan vuorokaudessa? Jos tavallinen
+  asiakas lataa sen 1-5 kertaa ja keruu vaatisi kymmeniä, raja on
+  löydettävissä. Ilman sitä lukua uusi hälytys olisi arvaus, ja
+  reitin oma perustelu pätee yhä: väärä hälytys maksaa asiakassuhteen,
+  myöhästynyt havainto muutaman tunnin dataa.
+
+  Huomaa myös, ettei kyse ole tästä asiakkaasta: Nextrentillä **on
+  lupa** koneelliseen käyttöön (28.9.2026, ehdoin). Kysymys on siitä,
+  näkyisikö luvaton keruu lainkaan.
+
 ### Datan laatu
 
 - **Hylätty rivi ei voi palata, vaikka tieto muuttuisi.** (Kirjattu
