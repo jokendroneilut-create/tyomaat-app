@@ -174,6 +174,37 @@ export default function OhjeetPage() {
           tietoa. Voit valita päivittäisen tai viikoittaisen tahdin.
         </p>
 
+        <p className="mt-3">
+          Vahti tallentaa sen haun joka sinulla on näkyvissä Hankkeet /
+          Kartta -sivulla: maakunnat, kaupungin, vaiheet, kohdetyypit ja
+          hakusanan. <strong>Vahti löytää saman kuin haku</strong> — eli
+          hakusanaa etsitään hankkeen nimestä, kuvauksesta, kaupungista,
+          maakunnasta, osoitteesta, rakennuttajasta, rakennusliikkeestä,
+          maarakentajasta, vaiheesta ja kohdetyypistä.
+        </p>
+
+        <p className="mt-3">
+          Hakusana osuu myös sanan osaan, joten <em>forssa</em> löytää myös
+          muodon <em>Forssaan</em>. Isoilla ja pienillä kirjaimilla ei ole
+          väliä. Jos annat useamman sanan, hankkeesta on löydyttävä ne
+          kaikki — mutta ne voivat olla eri kentissä.
+        </p>
+
+        <p className="mt-3">
+          Hyvä tietää: jos valitset alueeksi <em>Koko Suomi</em>, vahti ei
+          rajaa maakuntaan lainkaan. Kohdetyypin valikko näyttää, mitä
+          tyyppejä aineistossa on ja kuinka monta kutakin — kannattaa
+          valita tyyppi listalta, koska vapaasti kirjoitettu sana ei osu
+          tyyppiin vaan jää ilman osumia.
+        </p>
+
+        <p className="mt-3 text-sm text-gray-600">
+          Päivitetty 14.10.2026: hakusana kattaa nyt myös kuvauksen ja
+          paikkatiedot, ja se koskee myös päivitysilmoituksia. Aiemmin sitä
+          etsittiin vain nimestä, rakennuttajasta ja rakennusliikkeestä,
+          jolloin vahti löysi vähemmän kuin haku.
+        </p>
+
         <H id="omat">6. Omat: suosikit ja merkinnät</H>
 
         <p className="mt-3">

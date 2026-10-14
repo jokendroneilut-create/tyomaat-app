@@ -23,6 +23,63 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-283 - Hakuvahti etsii samoista kentistä kuin haku
+
+Jatkoa D-282:lle. Kolme hakuvahtia oli tallennettu kohdetyypillä jota ei
+ole olemassa (`katto`, `betonirakentaminen`), eivätkä ne olleet
+lähettäneet koskaan mitään. Johannes: *"oletan että käyttäjä on
+tarkoittanut että haluaisi ilmoituksen jos nuo sanat esiintyvät jossain
+hankkeessa?"*
+
+Tulkinta osui, mutta pelkkä kentän vaihto ei olisi riittänyt — ja syy
+selvisi vasta mittaamalla.
+
+#### Vahti etsi kolmesta kentästä, haku kymmenestä
+
+Hankelistan haku ja digest tekevät saman haun eri koodissa: sivu
+suodattaa selaimessa riviolioista, digest kysyy PostgRESTiltä.
+Kenttälistat olivat eri, eikä käyttäjä voinut sitä tietää. Mitattu:
+
+| hakusana | digest löysi | koko haku |
+|---|---|---|
+| koulu | 283 | **792** |
+| helsinki | 75 | **1 237** |
+| Turku | 36 | 241 |
+| parainen | 3 | 24 |
+| katto | 37 | 220 |
+
+Suurin ero oli kuvauksessa ja paikkakentissä: **"helsinki" ei osunut
+Helsingin hankkeeseen, ellei kaupungin nimi sattunut olemaan hankkeen
+nimessä.** Viisi vahtia lähetti siis vajaata — ei tyhjää, mikä on
+vaikeampi huomata.
+
+Lisäksi hakusana ei koskenut päivitysilmoituksia lainkaan, joten vahti
+sai muutoksia hankkeista jotka eivät vastanneet sen hakusanaa.
+
+#### Korjaus
+
+Kenttälista on nyt yhdessä paikassa (`lib/projects/hakukentat.ts`) ja
+sitä käyttävät molemmat: sivun esilaskettu hakuteksti ja digestin
+`or`-ehto, myös muutosriveille (`after->>`). Tarkistettu ennen
+soveltamista, että muutosrivin `after` sisältää kaikki kymmenen kenttää
+— muuten puuttuva kenttä olisi *piilottanut* päivityksiä.
+
+Ehto ajettiin oikeaa kantaa vasten: viiden vahdin uusi viikkomäärä on
+22, 7, 1, 0 ja 31 (päivittäinen, ≈ 4/pv). Postia ei siis ryöpsähdä.
+
+#### Mitä EI tehty
+
+Niiden kolmen vahdin tallennettua arvoa ei siirretty tyyppikentästä
+hakusanaksi. Se olisi toisen ihmisen tallennuksen muuttamista, ja
+`betonirakentaminen` osuisi silti vain kahteen hankkeeseen koko
+aineistossa — sana on harvinainen, ei kenttä väärä. Omistajille
+kerrotaan, ja kohdetyypin valikko (D-276) estää saman syntymisen
+uudelleen.
+
+Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
+että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
+kannattaa valita listalta eikä kirjoittaa vapaasti.
+
 ### D-282 - "Koko Suomi" ei ole maakunta
 
 Löytyi 14.10.2026 navigointia mitattaessa: Tänään-näkymän kortti

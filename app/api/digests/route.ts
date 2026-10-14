@@ -5,6 +5,7 @@ import { Resend } from "resend";
 import { PHASE_LABELS } from "@/lib/projects/phases";
 import { describeFilter, filterValues } from "@/lib/watchlists/filterValues";
 import { kohdetyypinEhdot, kohdetyypinSelite } from "@/lib/projects/kohdetyyppi";
+import { hakuEhto } from "@/lib/projects/hakukentat";
 import { alueetSuodattimeen } from "@/lib/users/alueasetus";
 import { isAccountLocked } from "@/lib/auth/isAccountLocked";
 
@@ -150,11 +151,15 @@ function applyProjectFilters(q: any, filters: any) {
    */
   q = applyPropertyTypeFilter(q, "property_type", filters.property_type);
 
-  if (filters.q && typeof filters.q === "string" && filters.q.trim()) {
-    const needle = filters.q.trim().replaceAll('"', '\\"');
-    q = q.or(
-      `name.ilike."%${needle}%",developer.ilike."%${needle}%",builder.ilike."%${needle}%"`
-    );
+  /*
+   * Vapaa hakusana samoista kentista kuin hankelistalla — ks.
+   * lib/projects/hakukentat.ts. Ennen taalla haettiin vain nimesta,
+   * rakennuttajasta ja rakentajasta, jolloin vahti loysi vahemman kuin
+   * mita kayttaja naki tallentaessaan ("helsinki" 75 vs 1 237).
+   */
+  if (filters.q && typeof filters.q === "string") {
+    const ehto = hakuEhto(filters.q);
+    if (ehto) q = q.or(ehto);
   }
 
   return q;
@@ -168,6 +173,18 @@ function applyProjectChangeFilters(q: any, filters: any) {
   q = applyListFilter(q, "after->>phase", filters.phase);
 
   q = applyPropertyTypeFilter(q, "after->>property_type", filters.property_type);
+
+  /*
+   * Hakusana koskee myos paivityksia. Ennen se ei koskenut, joten vahti
+   * jolla oli hakusana sai muutosilmoituksia hankkeista jotka eivat
+   * vastanneet sita lainkaan. Muutosrivin `after` sisaltaa kaikki
+   * kymmenen hakukenttaa (tarkistettu 14.10.2026), joten mitaan ei jaa
+   * piiloon kentan puuttumisen takia.
+   */
+  if (filters.q && typeof filters.q === "string") {
+    const ehto = hakuEhto(filters.q, "after->>");
+    if (ehto) q = q.or(ehto);
+  }
 
   return q;
 }

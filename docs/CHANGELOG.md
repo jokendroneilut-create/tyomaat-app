@@ -70,6 +70,21 @@ Teollisuuskohteita on tyypitettyna vain 96, mika tukee asiakkaan
 havaintoa kattavuudesta. Se voi olla yhta lailla **lahdepuute** kuin
 luokituspuute, eika kumpaakaan korjata ennen kuin ne on erotettu.
 
+### Hakuvahti etsii samoista kentistä kuin haku (D-283)
+
+Hakuvahdin sähköposti etsi hakusanaa vain nimestä, rakennuttajasta ja
+rakennusliikkeestä, kun hankelistan haku kattaa kymmenen kenttää. Vahti
+löysi siksi vähemmän kuin mitä käyttäjä näki tallentaessaan: *koulu*
+283 vs 792, *helsinki* 75 vs 1 237 — jälkimmäinen siksi, ettei
+kaupungin nimi osunut mihinkään ellei se sattunut olemaan hankkeen
+nimessä.
+
+Kenttälista on nyt yhdessä paikassa ja molemmat käyttävät sitä.
+Hakusana koskee myös päivitysilmoituksia, mitä se ei ennen tehnyt.
+
+Ohje päivitettiin kertomaan mistä vahti etsii ja miksi kohdetyyppi
+kannattaa valita valikosta eikä kirjoittaa vapaasti.
+
 ### Hakuvahti osuu kohdetyyppiin kirjainkoosta riippumatta (D-276)
 
 Tallennettu haku vertasi kohdetyyppiä täsmälleen, joten se osui vain

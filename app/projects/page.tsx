@@ -13,6 +13,7 @@ import PhaseTimeline from './PhaseTimeline'
 import { CANONICAL_PHASES, displayPhaseLabel, displayProjectPhase, normalizeLegacyPhase } from '@/lib/projects/phases'
 import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
 import { alueetSuodattimeen } from '@/lib/users/alueasetus'
+import { hakuteksti } from '@/lib/projects/hakukentat'
 import {
   TYYPPI_PUUTTUU,
   kohdetyyppiHakuvahdille,
@@ -1030,23 +1031,12 @@ setTeamModeEnabled(true)
    * maksaa 3-5 ms. Hakutulokset ovat identtiset.
    */
   const hakutekstit = useMemo(
-    () =>
-      projects.map((p) =>
-        [
-          p.name,
-          p.region ?? '',
-          p.city,
-          p.phase,
-          p.location ?? '',
-          p.developer ?? '',
-          p.builder ?? '',
-          p.earthworks_contractor ?? '',
-          p.property_type ?? '',
-          p.additional_info ?? '',
-        ]
-          .join(' ')
-          .toLowerCase()
-      ),
+    /*
+     * Kentat tulevat lib/projects/hakukentat.ts:sta, koska hakuvahdin
+     * digest tekee saman haun eri koodissa. Listat olivat eri, ja
+     * kayttaja ei voinut sita tietaa.
+     */
+    () => projects.map((p) => hakuteksti(p as unknown as Record<string, unknown>)),
     [projects]
   )
 
