@@ -23,6 +23,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-284 - Hälytys katsoo myös sivulatauksia, ei vain hankeavauksia
+
+Johannes 14.10.2026: *"600-700 luettua sivua päivässä on jo sellainen
+määrä että siitä olisi hyvä tulla ilmoitus, jopa paljon pienemmästä."*
+
+Vanha hälytys laukesi vain **200 eri hankkeen avauksesta** 24 tunnissa.
+Se ei näe aineiston keruuta lainkaan: hankelista lataa koko aineiston
+kahdeksalla pyynnöllä (D-281), joten 6 667 hankkeen tiedot saa
+avaamatta yhtäkään hanketta — ja juuri silloin vanha mittari pysyy
+nollassa. Mittarin premissi oli vanhentunut
+([[metric-premise-expires]]).
+
+#### Kynnys mitattiin, ei arvattu
+
+Perustaso 60 vuorokaudelta ilman omaa käyttöä, 291 käyttäjä-päivää:
+
+| | sivuja / vrk |
+|---|---|
+| mediaani | 12 |
+| 90 % alle | 52 |
+| 95 % alle | 85 |
+| 99 % alle | 268 |
+| suurin | 731 |
+
+| kynnys | ilmoituksia / kk |
+|---|---|
+| 50 | 16 |
+| 100 | 7 |
+| **150** | **4,5** |
+| 200 | 2,5 |
+| 300 | 1 |
+
+Valittiin **150**. Se on tarkoituksella matalampi kuin hankeavausten
+kynnys, koska tämä on *ilmoitus eikä lukitus*: väärä ilmoitus maksaa
+yhden silmäyksen, mutta liian korkea kynnys tarkoittaa ettei keruu näy
+lainkaan.
+
+#### Sivuttamaton kysely olisi laskenut väärin
+
+Sama ajo paljasti vanhassa koodissa piilevän vian: kysely haki
+tapahtumat ilman sivutusta, ja PostgREST palauttaa enintään 1 000
+riviä. Pelkkiä sivulatauksia on vilkkaana vuorokautena **1 375**, joten
+hälytys olisi laskenut nimenomaan vilkkaimman tunnuksen alakanttiin —
+sen jonka takia se on olemassa. Haku on nyt sivutettu.
+
+#### Todennettu oikealla datalla
+
+Logiikka simuloitiin ennen julkaisua kolmelta vuorokaudelta (ei
+sähköpostia). Liputettuja yksi, oikea: 664 sivua / 13 eri hanketta.
+Vanha mittari ei olisi liputtanut sitä lainkaan.
+
+#### Mitä tämä EI korjaa
+
+Hälytys näkee vain sen mitä selain kirjaa. Suoraan rajapinnasta omalla
+istuntotunnuksella haettu aineisto ei kirjaa yhtään tapahtumaa, joten
+se ei näy tässäkään. Sen estäminen on eri työ (RLS:n kiristys ja luvun
+siirto oman API-reitin taakse) ja on työjonossa.
+
 ### D-283 - Hakuvahti etsii samoista kentistä kuin haku
 
 Jatkoa D-282:lle. Kolme hakuvahtia oli tallennettu kohdetyypillä jota ei

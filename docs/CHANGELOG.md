@@ -96,6 +96,19 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Käyttöhälytys katsoo myös sivulatauksia (D-284)
+
+Hälytys laukesi vain 200 eri hankkeen avauksesta, mikä ei näe aineiston
+keruuta lainkaan: koko hankelistan saa ladattua avaamatta yhtäkään
+hanketta. Nyt se laukeaa myös **150 sivulatauksesta 24 tunnissa**.
+
+Kynnys mitattiin: mediaani on 12 sivua/vrk ja 95 % käyttäjä-päivistä
+alle 85, joten 150 tarkoittaa noin 4-5 ilmoitusta kuukaudessa.
+
+Samalla korjattiin piilevä vika: kysely ei sivuttanut, ja pelkkiä
+sivulatauksia on vilkkaana vuorokautena 1 375 — hälytys olisi laskenut
+vilkkaimman tunnuksen alakanttiin.
+
 ### "Koko Suomi" ei enää tyhjennä hakutulosta (D-282)
 
 Tänään-näkymän kortti "Kaikki hankkeet alueellasi" vei osoitteeseen

@@ -672,7 +672,7 @@ muistin varassa.
 ### Valvonta
 
 - **Poikkeavan käytön hälytys ei näe listasivun keruuta.** (Kirjattu
-  14.10.2026, ei aloitettu. Johannes: *"Nextrentille annettiin lupa
+  14.10.2026; **havaitseminen tehty 14.10.2026, ks. D-284 — estäminen auki**. Johannes: *"Nextrentille annettiin lupa
   koneelliseen tutkimiseen, mutta olisiko tästä pitänyt tulla
   sähköposti-ilmoitus vai laitoimmeko sen heidän kohdalta pois
   päältä?"*)
