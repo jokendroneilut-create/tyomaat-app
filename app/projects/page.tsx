@@ -4,7 +4,7 @@ import { roolinSelite, roolinKuvaus } from '@/lib/projects/yhteyshenkilonRooli'
 import type { OsapuolenYhteyshenkilo } from '@/lib/metrics/yritysrekisteri'
 
 import Lataus from "@/app/components/Lataus"
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import type { Dispatch, RefObject, SetStateAction } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import MapClient from './MapClient'
@@ -271,6 +271,13 @@ const LISTAN_KENTAT = `
   created_at
 `
 
+/*
+ * Sama sarakelista ilman additional_infoa. Se on 71 % latauksen koosta
+ * (12,18 MB / 17,26 MB, mitattu 14.10.2026) ja sita tarvitaan vain
+ * vapaassa tekstihaussa, joten se haetaan erikseen taustalla.
+ */
+const KEVYET_KENTAT = LISTAN_KENTAT.replace(" additional_info,", "")
+
 export default function Projects() {
   const isMobile = useIsMobile(768)
   const pageSize = isMobile ? 15 : 30
@@ -330,6 +337,16 @@ export default function Projects() {
 
   const [q, setQ] = useState('')
   /*
+   * Kirjoitettu teksti päivittyy heti, suodatus hieman jäljessä.
+   *
+   * Asiakas 14.10.2026: *"kirjaimien ilmestyminenkin kestää aika
+   * kauan."* Syy ei ollut kenttä vaan se, että jokainen näppäin ajoi
+   * 6 519 hankkeen suodatuksen ja kartan uudelleenpiirron samassa
+   * synkronisessa työssä. useDeferredValue pitää kirjoittamisen
+   * välittömänä ja antaa Reactin tehdä raskaan osan perässä.
+   */
+  const haku = useDeferredValue(q)
+  /*
    * Maakuntasuodatin on monivalinta samasta syystä kuin vaihe alla:
    * urakoitsija toimii tyypillisesti muutamalla naapurimaakunnalla, ei
    * yhdellä eikä koko maassa. Tyhjä lista = ei rajausta.
@@ -349,6 +366,8 @@ export default function Projects() {
   const phaseRef = useRef<HTMLDivElement | null>(null)
   const [propertyType, setPropertyType] = useState<string[]>([])
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false)
+  /* Vapaa tekstihaku kattaa kuvaukset vasta kun ne on haettu taustalla. */
+  const [kuvauksetLadattu, setKuvauksetLadattu] = useState(false)
   const propertyTypeRef = useRef<HTMLDivElement | null>(null)
 
   const [visibleCount, setVisibleCount] = useState(pageSize)
@@ -743,31 +762,85 @@ export default function Projects() {
      * hakeminen selaimeen täytti Supabasen 5 GB egress-kiintiön ~429
      * sivulatauksella. Valitun hankkeen metadata haetaan erikseen alempana.
      *
-     * additional_info sen sijaan jää: sitä käytetään vapaan tekstihaun
-     * hakukentässä kaikille hankkeille, joten sitä ei voi hakea vain
-     * valitulle.
+     * additional_info EI ole enää mukana ensimmäisessä haussa, vaikka
+     * vapaa tekstihaku tarvitsee sen. Mitattu 14.10.2026: se on
+     * **12,18 MB koko latauksen 17,26 megatavusta eli 71 %** — selain
+     * odotti siis kolme neljäsosaa latausajasta kenttää, jota tarvitaan
+     * vain jos käyttäjä kirjoittaa hakusanan. Se haetaan heti perään
+     * taustalla ja sulautetaan riveihin (taydennaKuvaukset alla).
+     *
+     * Asiakas 14.10.2026: *"tätä ruutua tulee liikaa katseltua."*
      */
     const PAGE_SIZE = 1000
-    const projectsData: Project[] = []
 
-    for (let from = 0; ; from += PAGE_SIZE) {
-      const { data: pageData, error: pageError } = await supabase
+    /*
+     * Sivut haetaan RINNAKKAIN. Peräkkäisinä ne kestivät tuotannossa
+     * 10,6 s (7 pyyntöä, joista jokainen odotti edellistä), vaikka
+     * yksikään pyyntö ei ollut 4,2 s pidempi.
+     *
+     * Rinnakkaisuus vaatii vakaan järjestyksen: pelkkä created_at ei
+     * riitä, koska samalla aikaleimalla olevien rivien keskinäinen
+     * järjestys ei ole määrätty ja rivi voisi tulla kahdesti tai jäädä
+     * kokonaan väliin sivurajalla. Toissijainen id ratkaisee tasatilanteet.
+     */
+    const haeSivu = (from: number, kentat: string) =>
+      supabase
         .from('projects')
-        .select(LISTAN_KENTAT)
+        .select(kentat)
         .eq('is_public', true)
         .order('created_at', { ascending: false })
+        .order('id', { ascending: true })
         .range(from, from + PAGE_SIZE - 1)
 
-      if (pageError) {
-        console.error('Supabase error:', pageError)
-        setProjects([])
-        setLoading(false)
-        return
+    const { count, error: countError } = await supabase
+      .from('projects')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_public', true)
+
+    if (countError) {
+      console.error('Supabase error:', countError)
+      setProjects([])
+      setLoading(false)
+      return
+    }
+
+    const sivuja = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE))
+    const sivut = await Promise.all(
+      Array.from({ length: sivuja }, (_, i) => haeSivu(i * PAGE_SIZE, KEVYET_KENTAT))
+    )
+
+    const sivuVirhe = sivut.find((s) => s.error)
+    if (sivuVirhe?.error) {
+      console.error('Supabase error:', sivuVirhe.error)
+      setProjects([])
+      setLoading(false)
+      return
+    }
+
+    const projectsData = sivut.flatMap((s) => (s.data ?? []) as unknown as Project[])
+
+    /*
+     * KUVAUKSET TAUSTALLA. Lista ja kartta ovat jo käytettävissä; tämä
+     * täydentää vapaan tekstihaun kattamaan myös kuvaustekstin. Haku
+     * kertoo käyttäjälle jos tätä vielä odotetaan (kuvauksetLadattu).
+     */
+    const taydennaKuvaukset = async () => {
+      const osat = await Promise.all(
+        Array.from({ length: sivuja }, (_, i) => haeSivu(i * PAGE_SIZE, 'id, additional_info'))
+      )
+      const kuvaukset = new Map<string, string | null>()
+      for (const osa of osat) {
+        for (const rivi of (osa.data ?? []) as any[]) {
+          kuvaukset.set(rivi.id, rivi.additional_info ?? null)
+        }
       }
-
-      projectsData.push(...((pageData as Project[]) || []))
-
-      if (!pageData || pageData.length < PAGE_SIZE) break
+      if (kuvaukset.size === 0) return
+      setProjects((edelliset) =>
+        edelliset.map((p) =>
+          kuvaukset.has(p.id) ? { ...p, additional_info: kuvaukset.get(p.id) ?? null } : p
+        )
+      )
+      setKuvauksetLadattu(true)
     }
 
     /*
@@ -790,6 +863,7 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
     if (!user) {
       setProjects(activeProjectsData)
       setLoading(false)
+      void taydennaKuvaukset()
       return
     }
 
@@ -824,6 +898,7 @@ setTeamModeEnabled(true)
 
     setProjects(projectsWithOwners)
     setLoading(false)
+    void taydennaKuvaukset()
   }
 
   fetchProjects()
@@ -910,32 +985,58 @@ setTeamModeEnabled(true)
     [muillaSuodattimilla]
   )
 
-  const filteredProjects = useMemo(() => {
-    const needle = q.trim().toLowerCase()
+  /*
+   * HAKUTEKSTIT ESILASKETAAN KERRAN, EI JOKA NÄPPÄIMELLÄ.
+   *
+   * Mitattu 14.10.2026: hakukentän tahmeus ei johtunut kentästä vaan
+   * siitä, että jokainen näppäin rakensi 6 667 riville yhdistetyn
+   * merkkijonon ja pienensi sen kirjainkoon — eli lowercase-ajon noin
+   * 17 megatavulle tekstiä. Yksi näppäimenpainallus maksoi 45-166 ms
+   * ennen kuin React oli edes piirtänyt mitään.
+   *
+   * Sama työ kerran etukäteen maksaa 68 ms, ja sen jälkeen näppäin
+   * maksaa 3-5 ms. Hakutulokset ovat identtiset.
+   */
+  const hakutekstit = useMemo(
+    () =>
+      projects.map((p) =>
+        [
+          p.name,
+          p.region ?? '',
+          p.city,
+          p.phase,
+          p.location ?? '',
+          p.developer ?? '',
+          p.builder ?? '',
+          p.earthworks_contractor ?? '',
+          p.property_type ?? '',
+          p.additional_info ?? '',
+        ]
+          .join(' ')
+          .toLowerCase()
+      ),
+    [projects]
+  )
 
-    return projects.filter((p) => {
+  const filteredProjects = useMemo(() => {
+    const needle = haku.trim().toLowerCase()
+
+    /*
+     * Synonyymit laajennetaan kerran hakusanaa kohden. Ennen tämä ajoi
+     * rivin sisällä, eli 6 667 kertaa jokaista sanaa kohden.
+     */
+    const laajennetut = needle
+      ? needle.split(/\s+/).filter(Boolean).map((term) => expandSearchTerm(term))
+      : []
+
+    return projects.filter((p, i) => {
       if (region.length > 0 && !region.includes(p.region || '')) return false
       if (city && p.city !== city) return false
       if (phase.length > 0 && !phase.includes(displayPhaseLabel(p.phase))) return false
 
       if (!osuukoKohdetyyppi(p.property_type, propertyType)) return false
 
-      if (!needle) return true
-
-      const haystack = [
-        p.name,
-        p.region ?? '',
-        p.city,
-        p.phase,
-        p.location ?? '',
-        p.developer ?? '',
-        p.builder ?? '',
-        p.earthworks_contractor ?? '',
-        p.property_type ?? '',
-        p.additional_info ?? '',
-      ]
-        .join(' ')
-        .toLowerCase()
+      if (laajennetut.length === 0) return true
 
       /*
        * Sanahaku: jokaisen hakusanan on löydyttävä (JA), mutta eri kentistä ja
@@ -944,12 +1045,12 @@ setTeamModeEnabled(true)
        * esiinny yhtenäisenä jonona missään kentässä. Osamerkkijono kattaa myös
        * taivutuksen (esim. "forssa" löytyy sanasta "Forssaan").
        */
-      const terms = needle.split(/\s+/).filter(Boolean)
-      return terms.every((term) =>
-        expandSearchTerm(term).some((syn) => haystack.includes(syn))
+      const haystack = hakutekstit[i] ?? ''
+      return laajennetut.every((synonyymit) =>
+        synonyymit.some((syn) => haystack.includes(syn))
       )
     })
-  }, [projects, q, region, city, phase, propertyType])
+  }, [projects, hakutekstit, haku, region, city, phase, propertyType])
 
   /*
    * Karkeat pisteet lasketaan KOKO aineistosta eika suodatetusta:
@@ -993,7 +1094,7 @@ setTeamModeEnabled(true)
 
   useEffect(() => {
     setVisibleCount(pageSize)
-  }, [q, region, city, phase, propertyType, limitToMapView, showNoCoords, mapBounds, pageSize])
+  }, [haku, region, city, phase, propertyType, limitToMapView, showNoCoords, mapBounds, pageSize])
 
   const visibleProjects = useMemo(() => listProjects.slice(0, visibleCount), [listProjects, visibleCount])
 
@@ -1078,6 +1179,18 @@ setTeamModeEnabled(true)
               onChange={(e) => setQ(e.target.value)}
               placeholder="Hae nimen, maakunnan, kaupungin, rakennuttajan…"
             />
+
+            {/*
+              * Kuvaukset haetaan taustalla (ne ovat 71 % latauksesta).
+              * Jos käyttäjä ehtii hakea ennen sitä, haku ei vielä kata
+              * kuvaustekstiä — se on sanottava ääneen, koska muuten
+              * tulos näyttäisi täydeltä mutta olisi vajaa.
+              */}
+            {q.trim() !== '' && !kuvauksetLadattu && (
+              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+                Haetaan vielä kuvaustekstejä — tulos täydentyy hetken kuluttua.
+              </div>
+            )}
           </div>
 
           <div className="projects-multiselect" ref={regionRef}>

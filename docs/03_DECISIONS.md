@@ -23,6 +23,84 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-281 - Hankelistan hitaus oli yhdessä kentässä ja yhdessä silmukassa
+
+Asiakas (Auran ST-Team) 14.10.2026: *"tätä ruutua tulee liikaa
+katseltua"* (kuva latausruudusta). Johannes: *"kun tuohon hakuun alkaa
+kirjoittaa jotain niin se tuntuu edelleen tosi tahmealta. Kirjaimien
+ilmestyminenkin kestää aika kauan."*
+
+Kaksi eri ongelmaa, jotka näyttivät samalta mutta eivät olleet:
+**lataus** on verkkoa, **hakukenttä** on selaimen omaa työtä. Molemmat
+mitattiin ennen kuin koodiin koskettiin.
+
+#### 1. Lataus: 10,6 s, josta suurin osa odottamista
+
+Mitattu tuotannosta kirjautuneena (`performance.getEntriesByType`):
+
+| pyyntö | alkoi | kesto |
+|---|---|---|
+| 1 | 0,9 s | 4,2 s |
+| 2 | 5,2 s | 1,4 s |
+| … | | |
+| 7 | 10,1 s | 0,5 s → **valmis 10,6 s** |
+
+Sivu itse oli auki 0,6 sekunnissa. Jokainen pyyntö odotti edellistä,
+vaikka yksikään ei ollut 4,2 s pidempi.
+
+Kentittäin mitattuna koko lataus oli 17,26 MB, **josta
+`additional_info` 12,18 MB eli 71 %**. Sitä tarvitaan vain vapaassa
+tekstihaussa — selain odotti siis kolme neljäsosaa latausajasta
+kenttää, jota useimmat eivät käytä.
+
+**Korjaus:** sivut rinnakkain, ja kuvaukset erikseen taustalla heti
+perään. Rinnakkaisuus vaati vakaan järjestyksen: pelkkä `created_at`
+ei riitä, koska samalla aikaleimalla olevien rivien järjestys ei ole
+määrätty ja rivi voisi tulla kahdesti tai jäädä väliin sivurajalla.
+Toissijainen `id` ratkaisee sen.
+
+Jos käyttäjä ehtii hakea ennen kuin kuvaukset ovat perillä, hakukentän
+alla lukee *"Haetaan vielä kuvaustekstejä — tulos täydentyy hetken
+kuluttua."* Muuten tulos näyttäisi täydeltä mutta olisi vajaa.
+
+#### 2. Hakukenttä: 882 ms per kirjain
+
+Syy ei ollut kentässä vaan siinä, että **jokainen näppäimenpainallus
+rakensi 6 667 rivin yhdistetyn hakutekstin uudestaan** ja pienensi sen
+kirjainkoon — eli ajoi `toLowerCase`-operaation noin 17 megatavulle
+tekstiä. Lisäksi synonyymit laajennettiin rivin sisällä, eli 6 667
+kertaa jokaista hakusanaa kohden.
+
+A/B samoissa oloissa (dev-build molemmissa, sama kone, sama aineisto):
+
+| | vanha | uusi |
+|---|---|---|
+| ensimmäinen kirjain | **3 214 ms** | 88 ms |
+| seuraavat | 284–556 ms | 53–94 ms |
+| keskiarvo | **882 ms** | **67 ms** |
+
+Hakutulos identtinen (25 osumaa haulla "forssa").
+
+**Korjaus:** hakutekstit esilasketaan kerran kun hankkeet latautuvat
+(68 ms), synonyymit kerran per hakusana, ja `useDeferredValue` pitää
+kirjoittamisen välittömänä — suodatus ja kartan piirto tulevat perässä.
+
+#### Mikä jäi
+
+Jäljelle jäävä ~67 ms on listan ja kartan uudelleenpiirto, ei haku.
+Selainvälimuistia (IndexedDB + `updated_at`-delta) ei tehty: se
+kannattaa mitoittaa vasta nyt kun ladattava määrä on 17,3 MB:n sijaan
+5,0 MB, ja se tuo vanhentumisriskin jota ei ole mitattu.
+
+#### Miksi A/B tehtiin samassa ympäristössä
+
+Ensimmäinen mittaus uudesta versiosta antoi 58–133 ms, mikä näytti
+huonolta — kunnes vertailuluku otettiin samasta dev-buildista, jossa
+React tekee kaksinkertaisen työn. Vanha versio samassa ympäristössä oli
+882 ms. **Tuotantoluvun vertaaminen dev-lukuun olisi antanut väärän
+kuvan molempiin suuntiin**, joten vanha koodi palautettiin hetkeksi
+samaan palvelimeen mittausta varten.
+
 ### D-280 - Luvan jatkaminen ja puiden kaataminen pois jonosta
 
 Johannes 14.10.2026 katselmointijonoa katsoessaan: *"minusta tuo

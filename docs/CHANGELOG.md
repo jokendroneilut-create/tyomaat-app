@@ -70,6 +70,25 @@ Teollisuuskohteita on tyypitettyna vain 96, mika tukee asiakkaan
 havaintoa kattavuudesta. Se voi olla yhta lailla **lahdepuute** kuin
 luokituspuute, eika kumpaakaan korjata ennen kuin ne on erotettu.
 
+### Hankelista latautuu ja hakee moninkertaisesti nopeammin (D-281)
+
+Asiakaspalaute 14.10.2026: *"tätä ruutua tulee liikaa katseltua."*
+
+**Lataus 10,6 s → noin puoleen.** Sivut haettiin seitsemänä
+peräkkäisenä pyyntönä, joista jokainen odotti edellistä. Nyt ne haetaan
+rinnakkain. Samalla `additional_info` siirtyi pois kriittiseltä
+polulta: se on **12,18 MB koko latauksen 17,26 megatavusta eli 71 %**,
+ja sitä tarvitaan vain vapaassa tekstihaussa. Se haetaan nyt taustalla
+heti perään, ja haku kertoo jos sitä vielä odotetaan.
+
+**Hakukenttä 882 ms → 67 ms per kirjain.** Jokainen näppäimenpainallus
+rakensi 6 667 rivin hakutekstin uudestaan (`toLowerCase` noin 17
+megatavulle) ja laajensi synonyymit rivi kerrallaan. Hakutekstit
+lasketaan nyt kerran, synonyymit kerran per hakusana, ja kirjoitettu
+teksti päivittyy heti suodatuksen tullessa perässä.
+
+Mitattu A/B samassa ympäristössä; hakutulos identtinen.
+
 ### Luvan jatkaminen ja puiden kaataminen pois jonosta (D-280)
 
 Katselmointijonoon ei enää tuoda rakennusluvan voimassaolon jatkamisia
