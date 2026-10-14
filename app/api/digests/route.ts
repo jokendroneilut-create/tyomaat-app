@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { PHASE_LABELS } from "@/lib/projects/phases";
 import { describeFilter, filterValues } from "@/lib/watchlists/filterValues";
-import { TYYPPI_PUUTTUU_AVAIN, kohdetyypinSelite } from "@/lib/projects/kohdetyyppi";
+import { kohdetyypinEhdot, kohdetyypinSelite } from "@/lib/projects/kohdetyyppi";
 import { alueetSuodattimeen } from "@/lib/users/alueasetus";
 import { isAccountLocked } from "@/lib/auth/isAccountLocked";
 
@@ -129,18 +129,8 @@ function applyPropertyTypeFilter(q: any, column: string, value: unknown) {
   const values = filterValues(value)
   if (values.length === 0) return q
 
-  const puuttuu = values.includes(TYYPPI_PUUTTUU_AVAIN)
-  const nimetyt = values.filter((v) => v !== TYYPPI_PUUTTUU_AVAIN)
-
-  if (!puuttuu) {
-    return nimetyt.length === 1 ? q.eq(column, nimetyt[0]) : q.in(column, nimetyt)
-  }
-  if (nimetyt.length === 0) return q.is(column, null)
-
-  const lista = nimetyt
-    .map((v) => `"${v.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`)
-    .join(",")
-  return q.or(`${column}.is.null,${column}.in.(${lista})`)
+  const ehdot = kohdetyypinEhdot(column, values)
+  return ehdot ? q.or(ehdot) : q
 }
 
 function applyProjectFilters(q: any, filters: any) {

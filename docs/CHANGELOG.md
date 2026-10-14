@@ -70,6 +70,17 @@ Teollisuuskohteita on tyypitettyna vain 96, mika tukee asiakkaan
 havaintoa kattavuudesta. Se voi olla yhta lailla **lahdepuute** kuin
 luokituspuute, eika kumpaakaan korjata ennen kuin ne on erotettu.
 
+### Hakuvahti osuu kohdetyyppiin kirjainkoosta riippumatta (D-276)
+
+Tallennettu haku vertasi kohdetyyppiä täsmälleen, joten se osui vain
+siihen kirjoitusasuun joka oli valittuna tallennushetkellä. Vahti
+arvolla `liikuntapaikka` ei voinut lähettää koskaan mitään, vaikka
+kannassa on 177 liikuntapaikkaa; `koulu` osui 8:aan 311:stä.
+
+Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
+nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
+lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
+
 ### "Koko Suomi" ei enää tyhjennä hakutulosta (D-282)
 
 Tänään-näkymän kortti "Kaikki hankkeet alueellasi" vei osoitteeseen

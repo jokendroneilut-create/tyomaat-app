@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   TYYPPI_PUUTTUU,
   TYYPPI_PUUTTUU_AVAIN,
+  kohdetyypinEhdot,
   kohdetyypinSelite,
   kohdetyyppiHakuvahdille,
   laskeKohdetyypit,
@@ -131,5 +132,52 @@ describe("kohdetyypinSelite", () => {
 
   it("ei paasta tunnistetta sahkopostiin", () => {
     expect(kohdetyypinSelite([TYYPPI_PUUTTUU_AVAIN])).toBe(`Kohdetyyppi: ${TYYPPI_PUUTTUU}`)
+  })
+})
+
+describe("kohdetyypinEhdot", () => {
+  it("vertaa kirjainkoosta riippumatta", () => {
+    /*
+     * Tama oli vika: tallennettu "liikuntapaikka" ei osunut kannan
+     * arvoon "Liikuntapaikka" lainkaan.
+     */
+    expect(kohdetyypinEhdot("property_type", ["liikuntapaikka"])).toBe(
+      'property_type.ilike."liikuntapaikka"'
+    )
+  })
+
+  it("yhdistaa useat arvot", () => {
+    expect(kohdetyypinEhdot("property_type", ["Koulu", "Päiväkoti"])).toBe(
+      'property_type.ilike."Koulu",property_type.ilike."Päiväkoti"'
+    )
+  })
+
+  it("lainaa arvot joissa on pilkku tai valilyonti", () => {
+    expect(kohdetyypinEhdot("property_type", ["Toimitila, purku"])).toBe(
+      'property_type.ilike."Toimitila, purku"'
+    )
+  })
+
+  it("kaantaa tyypittomien tunnisteen is null -ehdoksi", () => {
+    expect(kohdetyypinEhdot("property_type", [TYYPPI_PUUTTUU_AVAIN])).toBe(
+      "property_type.is.null"
+    )
+  })
+
+  it("osaa seka tyypittomat etta nimetyt", () => {
+    expect(kohdetyypinEhdot("property_type", ["Koulu", TYYPPI_PUUTTUU_AVAIN])).toBe(
+      'property_type.ilike."Koulu",property_type.is.null'
+    )
+  })
+
+  it("toimii myos muutosten JSON-sarakkeelle", () => {
+    expect(kohdetyypinEhdot("after->>property_type", ["Koulu"])).toBe(
+      'after->>property_type.ilike."Koulu"'
+    )
+  })
+
+  it("palauttaa null kun ehtoja ei ole", () => {
+    expect(kohdetyypinEhdot("property_type", [])).toBeNull()
+    expect(kohdetyypinEhdot("property_type", ["  "])).toBeNull()
   })
 })

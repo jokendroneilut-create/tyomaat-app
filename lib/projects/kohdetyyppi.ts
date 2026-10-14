@@ -141,6 +141,37 @@ export function kohdetyyppiHakuvahdille(
 }
 
 /*
+ * HAKUVAHDIN KOHDETYYPPIEHTO POSTGRESTILLE.
+ *
+ * Valikko yhdistaa kirjoitusasut lukuhetkella, mutta digest vertasi
+ * tasmalleen. Vanhat tallennetut haut osuivat siksi vain siihen asuun
+ * joka sattui olemaan valittuna tallennushetkella:
+ *
+ *   "liikuntapaikka" -> 0 osumaa (kannassa vain "Liikuntapaikka", 172)
+ *   "koulu"          -> 8 osumaa (kannassa myos "Koulu", 296)
+ *   "paivakoti"      -> osa (kannassa molemmat asut)
+ *
+ * `ilike` ilman jokerimerkkeja on tasmallinen vertailu kirjainkoosta
+ * riippumatta. Mitattu 14.10.2026: yhdessakaan kannan 56 tyyppiarvossa
+ * ei ole merkkeja % _ tai kenoviivaa, joten jokerimerkkien karkaamisen
+ * vaaraa ei ole. Lainausmerkit ovat silti tarpeen, koska arvoissa on
+ * valilyonteja ja pilkkuja ("Toimitila, purku").
+ */
+function lainaa(arvo: string): string {
+  return `"${arvo.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`
+}
+
+export function kohdetyypinEhdot(sarake: string, arvot: string[]): string | null {
+  const puuttuu = arvot.includes(TYYPPI_PUUTTUU_AVAIN)
+  const nimetyt = arvot.filter((a) => a !== TYYPPI_PUUTTUU_AVAIN && a.trim())
+
+  const ehdot = nimetyt.map((a) => `${sarake}.ilike.${lainaa(a.trim())}`)
+  if (puuttuu) ehdot.push(`${sarake}.is.null`)
+
+  return ehdot.length > 0 ? ehdot.join(",") : null
+}
+
+/*
  * Hakuvahdin yhteenvetorivi sahkopostiin. Kaantaa tunnisteen takaisin
  * nimilapuksi ja luhistaa kirjoitusasut, jottei viestissa lue
  * "Kohdetyyppi: Koulu, koulu" eika pahemmin "__ei_tyyppia__".

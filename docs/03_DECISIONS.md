@@ -506,6 +506,31 @@ nayttaa puutteelta, vaikka valtaosalla rakennustyyppia **ei viela ole
 olemassa**. Selitys on ilman lukua: *"info nappi ei tarvitse lukua
 vaan vain tuon selityksen."*
 
+#### Vanhat tallennetut haut osuivat vain yhteen kirjoitusasuun (14.10.2026)
+
+Valikko yhdistaa kirjoitusasut lukuhetkella, mutta digest vertasi
+tasmalleen. Tallennettu haku osui siksi vain siihen asuun joka sattui
+olemaan valittuna tallennushetkella — mitattu kannasta:
+
+| hakuvahdin arvo | osumia ennen | jalkeen |
+|---|---|---|
+| `liikuntapaikka` | **0** | 177 |
+| `koulu` | 8 | 311 |
+| `paivakoti` | osa | 147 |
+
+`liikuntapaikka`-vahti ei siis voinut lahettaa koskaan mitaan, vaikka
+kannassa on 177 liikuntapaikkaa. Sama hiljainen laji kuin D-282.
+
+Korjaus: digest vertaa `ilike`-ehdolla ilman jokerimerkkeja, eli
+tasmallisesti mutta kirjainkoosta riippumatta (`kohdetyypinEhdot`).
+Mitattu ennen kirjoittamista, etta yhdessakaan kannan 56 tyyppiarvossa
+ei ole merkkeja `%` `_` tai kenoviivaa, joten jokerimerkki ei paase
+levittamaan osumaa.
+
+Kaksi vahtia jaa yha nollaan (`katto`, `betonirakentaminen`): niita
+arvoja ei ole kannassa lainkaan. Se on eri vika eika sita korjata
+arvaamalla mita kayttaja tarkoitti.
+
 Molemmat saannot ovat `lib/projects/kohdetyyppi.ts`:ssa, koska sivun
 suodatin ja hakuvahdin digest tekevat saman rajauksen eri koodissa.
 Sama tunniste olisi vuotanut myos hakuvahtilistan ja sahkopostin
