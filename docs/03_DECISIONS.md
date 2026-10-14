@@ -74,6 +74,23 @@ Logiikka simuloitiin ennen julkaisua kolmelta vuorokaudelta (ei
 sähköpostia). Liputettuja yksi, oikea: 664 sivua / 13 eri hanketta.
 Vanha mittari ei olisi liputtanut sitä lainkaan.
 
+#### Tunnuskohtainen, ei yrityskohtainen
+
+Johannes 14.10.2026: *"ei jaeta keruuta vaikka jollain yrityksellä on
+useammat tunnukset vaan tarkkaillaan yksittäisiä tunnuksia."*
+
+Laskenta on `user_id`-avaimella, eli kynnys koskee yhtä tunnusta 24
+tunnin aikana. Tämä on päätös eikä sattuma, joten sitä ei pidä
+"parantaa" myöhemmin summaamaan saman yrityksen tunnuksia yhteen.
+
+Tiedossa oleva seuraus: kuudella asiakkaalla 72:sta on useampi tunnus
+(suurimmilla 13 ja 12), joten keruun jakaminen monelle tunnukselle jäisi
+havaitsematta. Se vaatii pääsyn useaan tunnukseen, eli on tahallista
+väärinkäyttöä eikä vahinko — ja yrityskohtainen summa nostaisi
+tehokkaan tiimin jatkuvasti liputetuksi, mikä tekisi ilmoituksista
+kohinaa. Kohina on pahempi kuin tämä aukko, koska luettu ilmoitus on
+ainoa jolla on arvoa.
+
 #### Mitä tämä EI korjaa
 
 Hälytys näkee vain sen mitä selain kirjaa. Suoraan rajapinnasta omalla
