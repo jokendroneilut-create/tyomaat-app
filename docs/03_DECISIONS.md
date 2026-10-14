@@ -184,6 +184,87 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-286 - Sama data haetaan kerran, ei joka latauksella
+
+Johannes 15.10.2026: *"Eikö ole mahdollisuutta hakea dataa kerran
+kirjauduttaessa siten että sitä ei tarvitse hakea uudestaan jos käyttäjä
+käy karttasivulla ja palaa takaisin today-sivulle?"*
+
+Kysymys osui paremmin kuin omat ehdotukseni (D-281:n jatkoksi mietityt
+kenttäkarsinnat), ja syy on mitattavissa.
+
+#### Miksi välimuisti eikä sekuntien nipistäminen
+
+Mitattu 15.10.2026, 30 vrk, oma käyttö pois:
+
+| /today- ja /projects-lataukset | kaikki | ilman koneellista käyttöä |
+|---|---|---|
+| istunnon ensimmäinen | 6 % | 9 % |
+| **sama sivu uudelleen alle 30 min** | **92 %** | **87 %** |
+| toiselta sivulta palattu | 3 % | 4 % |
+| **välimuisti auttaisi** | **94 %** | **91 %** |
+
+Yhdeksän kymmenestä latauksesta on toisto samalle datalle. Sekuntien
+nipistäminen olisi parantanut jokaista latausta vähän; välimuisti
+poistaa odotuksen kokonaan 9/10 tapauksessa.
+
+#### Kaksi kerrosta, eri syistä
+
+**Hankelista (selain).** Rivit ja kuvaukset IndexedDB:hen, elinaika 2 h.
+sessionStorage ei riitä: kevyt rivistö on ~5 MB ja kuvaukset 12 MB.
+
+**Tänään-näkymä (palvelin).** `getTodayProjects` oli mitattuna koko
+sivun odotus — 6,5-7,2 s avainsanojen kanssa, kun kaikki muu yhteensä
+jäi alle sekuntiin. Se on nyt `unstable_cache`n takana, ja **edessä on
+yksinkertainen muistivälimuisti**: testissä kävi ilmi ettei
+`unstable_cache` pidä kehityspalvelimella (Johannes: *"karttasivulle jää
+15 min vanha kellonaika, mutta today sinulle päivittyy"*). Paikallista
+tuotantobuildia ei voinut ajaa varmistukseksi, koska buildi kaatuu
+`app/.claude/worktrees/`-jäänteisiin joita ei ole repossa.
+
+**Mitä EI välimuistiteta:** peukut, suosikit ja tiimitiedot. Ne ovat
+alle 0,5 s yhteensä, ja välimuistissa käyttäjän oma peukku ei
+vaikuttaisi näkymään kahteen tuntiin.
+
+#### Johanneksen pelko ohjasi suunnittelun
+
+*"Ison pelkoni on ennemmin että välimuisti jää päivittämättä kokonaan
+kun käyttäjä ei koskaan kirjaudu pois ja siksi emme huomaa sitä."*
+
+Siksi: vanheneminen on **absoluuttinen kelloaika** eikä liity istuntoon
+tai uloskirjautumiseen, ja avaimessa on **versio**, joka mitätöi vanhat
+merkinnät heti kun rivin muoto muuttuu julkaisussa. "Ei päivity
+koskaan" vaatii siis ohjelmointivirheen, ei käyttäjän toimintaa.
+
+#### Ikää ei näytetä käyttäjälle
+
+Ensin kokeiltiin näkyvää merkintää ("tiedot 00.52 · päivitä"). Se
+poistettiin, ja peruste on mitattu: uusia julkisia hankkeita ilmestyy
+**mediaanina kahtena tuntina päivässä** (588 kpl / 30 vrk, 21 päivänä),
+käytännössä iltaisin klo 18-22 katselmoinnin yhteydessä. Kahden tunnin
+ikä ei siis piilota asiakkaalta mitään, joten kellonaika kertoisi
+erosta jota ei ole ja herättäisi epäilyn ilman vastinetta. Myöskään
+varoitusta vanhasta datasta ei näytetä.
+
+#### Mitattu paikallisesti
+
+| | ennen | jälkeen |
+|---|---|---|
+| /projects toinen lataus | 7,0 s, 16 pyyntöä | **1,5 s, 0 hankepyyntöä** |
+| /today toinen lataus | 6,5-12,3 s | **1,6-1,9 s** |
+
+Luvut ovat kehityspalvelimelta; tuotannon luvut on mitattava
+julkaisun jälkeen.
+
+#### Mitä kokeiltiin ja hylättiin
+
+`getTodayProjects`-sivujen rinnakkaistus (sama korjaus joka toimi
+hankelistalla, D-281). Täällä se **pahensi**: kyselyt kaatuivat
+aikakatkaisuun ja toisella ajolla veivät 11,2 s peräkkäisen 6,5 s
+sijaan. Hankelistalla pullonkaula oli siirrettävä datamäärä, täällä
+kysely itse — kolme raskasta kyselyä kilpailee samasta kannasta. Sama
+kuvio ei siirry paikasta toiseen ilman mittausta.
+
 ### D-285 - Jälkitarkastus: 11 koskaan lähettämätöntä hakuvahtia
 
 Korjausten (D-276, D-282, D-283) jälkeen käytiin läpi kaikki hakuvahdit

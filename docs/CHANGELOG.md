@@ -96,6 +96,25 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Sama data haetaan kerran, ei joka latauksella (D-286)
+
+Hankelistan rivit tallennetaan selaimeen ja Tänään-näkymän raskas haku
+palvelimen välimuistiin, molemmat kahdeksi tunniksi. Mitattu syy: **91 %
+latauksista tapahtuu alle 30 minuutin kuluessa edellisestä**, eli sama
+työ tehtiin yhä uudelleen samalle datalle.
+
+Paikallisesti mitattu: /projects 7,0 s → 1,5 s ilman yhtäkään
+hankepyyntöä, /today 6,5-12,3 s → 1,6-1,9 s.
+
+Vanheneminen on absoluuttinen kelloaika eikä liity istuntoon, ja
+avaimessa on versio joka mitätöi vanhat merkinnät julkaisussa.
+Käyttäjälle ei näytetä välimuistin ikää: uusia hankkeita ilmestyy
+mediaanina kahtena tuntina päivässä, joten kahden tunnin ikä ei piilota
+mitään.
+
+Peukut, suosikit ja tiimitiedot haetaan edelleen joka kerta — muuten
+käyttäjän oma peukku ei vaikuttaisi näkymään.
+
 ### Käyttöhälytys katsoo myös sivulatauksia (D-284)
 
 Hälytys laukesi vain 200 eri hankkeen avauksesta, mikä ei näe aineiston
