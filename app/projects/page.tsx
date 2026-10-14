@@ -12,6 +12,7 @@ import type { MapBounds } from './Map'
 import PhaseTimeline from './PhaseTimeline'
 import { CANONICAL_PHASES, displayPhaseLabel, displayProjectPhase, normalizeLegacyPhase } from '@/lib/projects/phases'
 import { expandSearchTerm } from '@/lib/projects/searchSynonyms'
+import { alueetSuodattimeen } from '@/lib/users/alueasetus'
 import {
   TYYPPI_PUUTTUU,
   kohdetyyppiHakuvahdille,
@@ -535,12 +536,12 @@ export default function Projects() {
      */
     const regionParam = params.get('region')
     if (regionParam) {
-      setRegion(
-        regionParam
-          .split(',')
-          .map((value) => value.trim())
-          .filter(Boolean)
-      )
+      /*
+       * "Koko Suomi" ei ole maakunta vaan tarkoittaa "ei rajausta".
+       * Sellaisenaan suodattimeen vietyna se antoi NOLLA hanketta, koska
+       * yhdenkaan hankkeen region ei ole se. Ks. lib/users/alueasetus.ts.
+       */
+      setRegion(alueetSuodattimeen(regionParam.split(',')))
     }
   }, [])
 

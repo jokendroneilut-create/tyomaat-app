@@ -70,6 +70,21 @@ Teollisuuskohteita on tyypitettyna vain 96, mika tukee asiakkaan
 havaintoa kattavuudesta. Se voi olla yhta lailla **lahdepuute** kuin
 luokituspuute, eika kumpaakaan korjata ennen kuin ne on erotettu.
 
+### "Koko Suomi" ei enää tyhjennä hakutulosta (D-282)
+
+Tänään-näkymän kortti "Kaikki hankkeet alueellasi" vei osoitteeseen
+`/projects?region=Koko%20Suomi`, ja lista oli tyhjä: yhdenkään hankkeen
+maakunta ei ole "Koko Suomi" — se tarkoittaa "ei aluerajausta".
+
+Sama arvo oli päässyt **viiteen päällä olevaan hakuvahtiin**, jotka eivät
+siksi ole voineet lähettää koskaan mitään. Vika oli hiljainen: tyhjästä
+digestistä ei lähde sähköpostia lainkaan, joten tilaaja ei saa virhettä
+vaan ei mitään.
+
+Sääntö on nyt yhdessä paikassa ja kaikissa kolmessa polussa (kortin
+linkki, hankelistan osoiteparametri, digestin maakuntarajaus).
+Tallennettuja rivejä ei muutettu — sääntö luetaan lukuhetkellä.
+
 ### Hankelista latautuu ja hakee moninkertaisesti nopeammin (D-281)
 
 Asiakaspalaute 14.10.2026: *"tätä ruutua tulee liikaa katseltua."*

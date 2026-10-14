@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import TodayProjectModal from "./TodayProjectModal"
+import { hankelistanOsoite } from "@/lib/users/alueasetus"
 
 type MetricProject = {
   id: string
@@ -32,10 +33,11 @@ export default function TodayMetrics({
   const [openPopup, setOpenPopup] = useState<PopupKey | null>(null)
   const [openProjectId, setOpenProjectId] = useState<string | null>(null)
 
-  const regionHref =
-    regions && regions.length > 0
-      ? `/projects?region=${encodeURIComponent(regions[0])}`
-      : "/projects"
+  /*
+   * "Koko Suomi" ei ole maakunta: sellaisenaan suodattimeen vietynä se
+   * antoi nolla hanketta. Ks. lib/users/alueasetus.ts.
+   */
+  const regionHref = hankelistanOsoite(regions)
 
   const popups: Record<PopupKey, { title: string; projects: MetricProject[] }> = {
     new: { title: "Uudet hankkeet alueellasi, 7 pv", projects: metricProjects.new },

@@ -5,6 +5,7 @@ import { Resend } from "resend";
 import { PHASE_LABELS } from "@/lib/projects/phases";
 import { describeFilter, filterValues } from "@/lib/watchlists/filterValues";
 import { TYYPPI_PUUTTUU_AVAIN, kohdetyypinSelite } from "@/lib/projects/kohdetyyppi";
+import { alueetSuodattimeen } from "@/lib/users/alueasetus";
 import { isAccountLocked } from "@/lib/auth/isAccountLocked";
 
 const ROUTE_VERSION = "trace-v3-2026-03-06";
@@ -145,7 +146,10 @@ function applyPropertyTypeFilter(q: any, column: string, value: unknown) {
 function applyProjectFilters(q: any, filters: any) {
   if (!filters || typeof filters !== "object") return q;
 
-  q = applyListFilter(q, "region", filters.region);
+  /* "Koko Suomi" ei ole maakunta vaan tarkoittaa "ei rajausta" — ks.
+   * lib/users/alueasetus.ts. Ilman tata viisi paalla olevaa hakuvahtia
+   * ei voinut lahettaa koskaan mitaan. */
+  q = applyListFilter(q, "region", alueetSuodattimeen(filters.region));
   if (filters.city) q = q.eq("city", filters.city);
   q = applyListFilter(q, "phase", filters.phase);
   /*
@@ -169,7 +173,7 @@ function applyProjectFilters(q: any, filters: any) {
 function applyProjectChangeFilters(q: any, filters: any) {
   if (!filters || typeof filters !== "object") return q;
 
-  q = applyListFilter(q, "after->>region", filters.region);
+  q = applyListFilter(q, "after->>region", alueetSuodattimeen(filters.region));
   if (filters.city) q = q.eq("after->>city", filters.city);
   q = applyListFilter(q, "after->>phase", filters.phase);
 

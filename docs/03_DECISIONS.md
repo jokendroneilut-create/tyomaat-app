@@ -23,6 +23,65 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-282 - "Koko Suomi" ei ole maakunta
+
+Löytyi 14.10.2026 navigointia mitattaessa: Tänään-näkymän kortti
+*"Kaikki hankkeet alueellasi"* näyttää 6 519 hanketta, mutta sen linkki
+vie osoitteeseen `/projects?region=Koko%20Suomi` ja lista on **tyhjä**.
+
+Johannes ei ollut havainnut vikaa, ja epäili havaintoa aiheellisesti.
+Asia ratkaistiin kolmella mittauksella, ei väittelyllä:
+
+| | |
+|---|---|
+| hankkeita joiden `region` = "Koko Suomi" | **0 / 6 667** |
+| `projects/page.tsx` | asetti osoiteparametrin sellaisenaan maakuntasuodattimeksi |
+| linkin kohde (kuvakaappaus osoitepalkista) | `?region=Koko Suomi` |
+
+Käyttäjä voi valita alueekseen "Koko Suomi" (StepRegion,
+RoleActivationModal, tiiminäkymä). Se ei ole maakunnan nimi vaan
+tarkoittaa **"ei aluerajausta"**.
+
+#### Sääntö oli olemassa — mutta vain yhdessä polussa
+
+`getTodayProjects.ts:163` on osannut tämän alusta asti:
+
+```ts
+const effectiveRegions = (regions ?? []).filter(
+  (r) => r && r.toLowerCase() !== "koko suomi"
+)
+```
+
+Siksi kortin luku oli oikein. Sama sääntö puuttui kahdesta muusta
+paikasta, ja juuri ne näkyivät asiakkaalle. Tämä toistaa aiemman
+opetuksen: sääntö voi olla voimassa yhdessä polussa ja puuttua
+toisesta ([[check-before-calling-it-intended]]).
+
+#### Hakuvahdit olivat hiljaa rikki
+
+Hankelistan suodattimesta arvo pääsi tallennettuihin hakuihin:
+**viisi päällä olevaa hakuvahtia** oli tallennettu alueella
+`["Koko Suomi"]`. Ne eivät ole voineet lähettää koskaan mitään, koska
+digest rajasi maakuntaan jota ei ole.
+
+Vika oli täysin hiljainen: tyhjästä digestistä ei lähde sähköpostia
+lainkaan (`if (!hasNew && !hasUpdates) continue`), joten tilaaja ei saa
+virhettä vaan ei mitään — eikä erota sitä hiljaisesta viikosta.
+Johannes: *"en tiedä onko kukaan käyttänyt sitä kun en ole saanut
+palautetta."* Palautteen puute oli oire, ei todiste toimivuudesta.
+
+Korjauksen jälkeen ne alkavat lähettää; mitattu määrä viikossa: 187,
+135, 23 (päivittäinen, ~3/pv) ja 2.
+
+#### Toteutus
+
+Sääntö on nyt yhdessä paikassa (`lib/users/alueasetus.ts`, 12 testiä) ja
+sitä käytetään kaikissa kolmessa polussa: Tänään-kortin linkki,
+hankelistan osoiteparametri ja `/api/digests`:n maakuntarajaus.
+
+Tallennettuja rivejä **ei muutettu**: sääntö luetaan lukuhetkellä, joten
+vanhat hakuvahdit ja kirjanmerkit toimivat sellaisinaan.
+
 ### D-281 - Hankelistan hitaus oli yhdessä kentässä ja yhdessä silmukassa
 
 Asiakas (Auran ST-Team) 14.10.2026: *"tätä ruutua tulee liikaa
