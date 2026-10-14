@@ -842,22 +842,35 @@ export default function Projects() {
      * kertoo käyttäjälle jos tätä vielä odotetaan (kuvauksetLadattu).
      */
     const taydennaKuvaukset = async () => {
-      const osat = await Promise.all(
-        Array.from({ length: sivuja }, (_, i) => haeSivu(i * PAGE_SIZE, 'id, additional_info'))
-      )
-      const kuvaukset = new Map<string, string | null>()
-      for (const osa of osat) {
-        for (const rivi of (osa.data ?? []) as any[]) {
-          kuvaukset.set(rivi.id, rivi.additional_info ?? null)
-        }
-      }
-      if (kuvaukset.size === 0) return
-      setProjects((edelliset) =>
-        edelliset.map((p) =>
-          kuvaukset.has(p.id) ? { ...p, additional_info: kuvaukset.get(p.id) ?? null } : p
+      /*
+       * Lippu nostetaan AINA kun yritys on ohi, myös virheessä ja
+       * tyhjällä tuloksella. Muuten hakukentän alle jäisi pysyvästi
+       * teksti "tulos täydentyy hetken kuluttua" vaikka mitään ei ole
+       * tulossa — eli ilmoitus valehtelisi hiljaa.
+       */
+      try {
+        const osat = await Promise.all(
+          Array.from({ length: sivuja }, (_, i) => haeSivu(i * PAGE_SIZE, 'id, additional_info'))
         )
-      )
-      setKuvauksetLadattu(true)
+        const kuvaukset = new Map<string, string | null>()
+        for (const osa of osat) {
+          if (osa.error) console.error('Supabase error (kuvaukset):', osa.error)
+          for (const rivi of (osa.data ?? []) as any[]) {
+            kuvaukset.set(rivi.id, rivi.additional_info ?? null)
+          }
+        }
+        if (kuvaukset.size > 0) {
+          setProjects((edelliset) =>
+            edelliset.map((p) =>
+              kuvaukset.has(p.id) ? { ...p, additional_info: kuvaukset.get(p.id) ?? null } : p
+            )
+          )
+        }
+      } catch (virhe) {
+        console.error('Kuvausten haku epäonnistui:', virhe)
+      } finally {
+        setKuvauksetLadattu(true)
+      }
     }
 
     /*
@@ -1197,18 +1210,6 @@ setTeamModeEnabled(true)
               onChange={(e) => setQ(e.target.value)}
               placeholder="Hae nimen, maakunnan, kaupungin, rakennuttajan…"
             />
-
-            {/*
-              * Kuvaukset haetaan taustalla (ne ovat 71 % latauksesta).
-              * Jos käyttäjä ehtii hakea ennen sitä, haku ei vielä kata
-              * kuvaustekstiä — se on sanottava ääneen, koska muuten
-              * tulos näyttäisi täydeltä mutta olisi vajaa.
-              */}
-            {q.trim() !== '' && !kuvauksetLadattu && (
-              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
-                Haetaan vielä kuvaustekstejä — tulos täydentyy hetken kuluttua.
-              </div>
-            )}
           </div>
 
           <div className="projects-multiselect" ref={regionRef}>
@@ -1401,6 +1402,29 @@ setTeamModeEnabled(true)
               </div>
             )}
           </div>
+
+          {/*
+            * Kuvaukset haetaan taustalla (ne ovat 71 % latauksesta). Jos
+            * käyttäjä ehtii hakea ennen sitä, haku ei vielä kata
+            * kuvaustekstiä — se on sanottava ääneen, koska muuten tulos
+            * näyttäisi täydeltä mutta olisi vajaa.
+            *
+            * Ilmoitus on OMA KOKO LEVEYDEN RIVINSÄ eikä hakukentän sisällä:
+            * kentän sisällä se kasvatti ruudukon ensimmäistä solua, jolloin
+            * hakulaatikko nousi muiden laatikoiden yläpuolelle. Nyt laatikot
+            * pysyvät samassa rivissä ja napit väistävät alaspäin.
+            */}
+          {q.trim() !== '' && !kuvauksetLadattu && (
+            <div
+              style={{
+                gridColumn: '1 / -1',
+                fontSize: 12,
+                color: '#6b7280',
+              }}
+            >
+              Haetaan vielä kuvaustekstejä — tulos täydentyy hetken kuluttua.
+            </div>
+          )}
 
           <button type="button" className="projects-clear" onClick={clearFilters}>
             Tyhjennä

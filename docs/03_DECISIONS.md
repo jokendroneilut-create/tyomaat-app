@@ -92,6 +92,41 @@ Selainvälimuistia (IndexedDB + `updated_at`-delta) ei tehty: se
 kannattaa mitoittaa vasta nyt kun ladattava määrä on 17,3 MB:n sijaan
 5,0 MB, ja se tuo vanhentumisriskin jota ei ole mitattu.
 
+#### Kaksi vikaa jotka tuotantomittaus paljasti heti julkaisun jälkeen
+
+Molemmat olivat **hiljaisia** — mikään ei olisi kertonut niistä:
+
+1. **Kuvausten taustahaku ei käynnistynyt lainkaan käyttäjällä, jolla
+   ei ole tiimiä** eli useimmilla. Muutos osui kahteen paluupolkuun
+   kolmesta. Seuraus: vapaa tekstihaku ei olisi koskaan osunut
+   kuvauksiin, ja hakukentän alla olisi lukenut pysyvästi *"tulos
+   täydentyy hetken kuluttua"* vaikka mitään ei ollut tulossa.
+   Löytyi vain siksi, että tuotantolataus mitattiin julkaisun jälkeen
+   eikä luotettu paikalliseen ajoon.
+
+2. **Sivumäärän laskeva kysely ajoi ennen sivuja** ja maksoi
+   tuotannossa 1,4 s ennen kuin yksikään sivu lähti liikkeelle.
+   Paikallisesti se ei näkynyt. Nyt laskuri ja ensimmäiset sivut
+   haetaan yhtä aikaa; jos arvio on liian pieni, loput haetaan
+   toisella rinnakkaisella kierroksella.
+
+Ilmoituksen lippu nostetaan nyt `finally`-haarassa, eli myös virheessä
+ja tyhjällä tuloksella. Muuten epäonnistunut haku jättäisi ruudulle
+lupauksen jota ei lunasteta.
+
+#### Ilmoitus on oma rivinsä, ei hakukentän sisällä
+
+Johannes: *"laatikoiden pitää pysyä myös aina samassa rivissä vaikka se
+hakisikin jotain. Napin pitää siirtyä sen tieltä alaspäin."*
+
+Hakukentän sisällä ilmoitus kasvatti ruudukon ensimmäistä solua, jolloin
+hakulaatikko nousi muiden laatikoiden yläpuolelle. Nyt se on oma koko
+leveyden rivinsä (`grid-column: 1 / -1`) ennen nappeja: laatikot pysyvät
+samassa rivissä ja napit väistävät alaspäin.
+
+Mitattu selaimesta: laatikot 143 px, ilmoitus 188 px, nappi 210 px —
+ja kun kuvaukset ovat perillä, ilmoitus katoaa ja nappi palaa 146 px:ään.
+
 #### Miksi A/B tehtiin samassa ympäristössä
 
 Ensimmäinen mittaus uudesta versiosta antoi 58–133 ms, mikä näytti
