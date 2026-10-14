@@ -1558,16 +1558,6 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/*
-              * Sama vari on seka "Valmistumassa"- etta "Valmistunut"-
-              * vaiheelle, mutta valmistuneet on suodatettu pois, joten
-              * kartalla se tarkoittaa aina viimeistelyvaihetta.
-              */}
-            <span className="marker-dot marker--done" />
-            <span style={{ fontSize: 14 }}>Valmistumassa</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span className="marker-dot marker--default" />
             <span style={{ fontSize: 14 }}>Peruttu / muu</span>
           </div>

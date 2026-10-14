@@ -184,6 +184,39 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-287 - Kartan selite seuraa suodatinta: "Valmistumassa" pois
+
+Johannes huomasi 15.10.2026 kuvasta: *"kuvassa on vielä tuo
+'valmistumassa' vaihe vaikka sitä ei enää ole meillä tietääkseni
+ollenkaan? Tarkista dokumenteista vielä."*
+
+Dokumentti vahvisti havainnon ja paljasti puolittain tehdyn korjauksen.
+**D-111 poisti vaiheen suodattimesta** perusteella *"valittavissa oleva
+vaihtoehto joka ei tuota tulosta kertoo 'näitä ei ole' eikä 'näitä ei
+näytetä'"* — mutta kartan selite jäi ennalleen.
+
+| | |
+|---|---|
+| julkisia hankkeita vaiheessa "Valmistumassa" | **1 / 6 667** |
+| (sama luku kuin 29.8.2026, kun se poistettiin suodattimesta) | 1 / 5 909 |
+| harmaa `marker--done` kattoi | `nearing_completion` + `completed` |
+| valmistuneet kartalla | suodatettu pois |
+
+Selite siis lupasi kategorian, jota vastasi yksi hanke — ja sen oma
+väri oli varattu vaiheelle jota ei näy lainkaan.
+
+#### Miksi rivin poisto ei yksin riittänyt
+
+Pelkkä selitteen rivin poisto olisi jättänyt kartalle harmaan pisteen
+ilman selitystä. Siksi `nearing_completion` piirtyy nyt
+**rakenteilla-värillä**: viimeistelyvaiheessa oleva hanke ON rakenteilla
+oleva työmaa, eli väri kertoo totuuden eikä jätä aukkoa. `completed` jää
+omaan väriinsä, mutta koska valmistuneet suodatetaan pois, sitä ei
+käytännössä näy.
+
+Vaihe säilyy ennallaan TIC:ssä, hankekortilla ja pisteytyksessä — tämä
+koskee vain kartan väriä ja selitettä.
+
 ### D-286 - Sama data haetaan kerran, ei joka latauksella
 
 Johannes 15.10.2026: *"Eikö ole mahdollisuutta hakea dataa kerran

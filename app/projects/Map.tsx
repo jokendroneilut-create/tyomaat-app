@@ -51,7 +51,17 @@ const PHASE_MARKER_CLASS: Record<PhaseKey, string> = {
   tender: 'marker--tender',
   contract_awarded: 'marker--active',
   construction: 'marker--active',
-  nearing_completion: 'marker--done',
+  /*
+   * "Valmistumassa" piirtyy rakenteilla-varilla, koska se ON rakenteilla
+   * oleva tyomaa — viimeistelyvaiheessa. Oma varinsa luoteli kartalle
+   * kategorian jota ei kaytannossa ole: mitattu 15.10.2026, julkisista
+   * 6 667 hankkeesta YKSI on tassa vaiheessa (sama luku kuin 29.8.2026,
+   * jolloin vaihe poistettiin suodattimesta, D-111).
+   *
+   * "Valmistunut" jaa omaan variinsa, mutta ne on suodatettu pois
+   * listalta ja kartalta, joten sita ei nay.
+   */
+  nearing_completion: 'marker--active',
   completed: 'marker--done',
   cancelled: 'marker--default',
 }
