@@ -183,13 +183,51 @@ export async function getTodayProjectsMeta(
   const alueet = [...(regions ?? [])].map((r) => String(r).trim()).filter(Boolean).sort()
   const avain = [SYOTTEEN_VERSIO, tekstit ? "tekstit" : "kevyt", ...alueet]
 
+  /*
+   * KAKSI KERROSTA, JA SYY ON MITATTU.
+   *
+   * `unstable_cache` on oikea valine tuotantoon: se on jaettu ja pysyva
+   * yli palvelininstanssien. Mutta kehityspalvelimella se ei pidä —
+   * Johannes 15.10.2026: *"karttasivulle jaa 15 min vanha kellonaika,
+   * mutta today sinulle paivittyy"*, vaikka selaimen valimuisti toimi.
+   * Paikallista tuotantobuildia ei voinut ajaa varmistukseksi (buildi
+   * kaatuu `app/.claude/worktrees/`-jaanteisiin, joita ei ole repossa).
+   *
+   * Siksi edessa on yksinkertainen muistivalimuisti, joka ei riipu
+   * Next:n koneistosta lainkaan. Se toimii samalla tavalla kehityksessa
+   * ja lammenneessa tuotantoinstanssissa; kylma instanssi hakee kerran.
+   * Vanheneminen on molemmissa sama kelloaika, ei istunto.
+   */
+  const muistiAvain = avain.join("|")
+  const muistissa = muistiValimuisti.get(muistiAvain)
+  if (muistissa && Date.now() - muistissa.haettu < VALIMUISTI_SEKUNTIA * 1000) {
+    return muistissa
+  }
+
   const haeValimuistista = unstable_cache(
     async () => ({ rivit: await haeTodayProjects(regions, opts), haettu: Date.now() }),
     avain,
     { revalidate: VALIMUISTI_SEKUNTIA, tags: ["today-projects"] }
   )
 
-  return haeValimuistista()
+  const tulos = await haeValimuistista()
+  muistiValimuisti.set(muistiAvain, tulos)
+  siivoaMuisti()
+  return tulos
+}
+
+/*
+ * Avaimia on kaytannossa muutama (alueyhdistelma x tarvitaanko tekstit),
+ * mutta raja on silti olemassa: vuotava Map kaataisi instanssin ennen
+ * kuin kukaan huomaisi.
+ */
+const MUISTIN_RAJA = 20
+const muistiValimuisti = new Map<string, { rivit: any[]; haettu: number }>()
+
+function siivoaMuisti() {
+  if (muistiValimuisti.size <= MUISTIN_RAJA) return
+  const vanhin = [...muistiValimuisti.entries()].sort((a, b) => a[1].haettu - b[1].haettu)[0]
+  if (vanhin) muistiValimuisti.delete(vanhin[0])
 }
 
 /*
