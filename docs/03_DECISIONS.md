@@ -184,6 +184,42 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-285 - Jälkitarkastus: 11 koskaan lähettämätöntä hakuvahtia
+
+Korjausten (D-276, D-282, D-283) jälkeen käytiin läpi kaikki hakuvahdit
+joiden `last_sent_at` oli tyhjä. Jokaiselle ajettiin digestin oma kysely
+nykyisellä koodilla.
+
+| syy | kpl | tilanne korjausten jälkeen |
+|---|---|---|
+| alue "Koko Suomi" tyhjensi tuloksen | 5 | lähettävät nyt: 5/vrk, 10, 23, 135 ja 181 / vk |
+| kohdetyyppi osui vain yhteen kirjoitusasuun | 2 | lähettävät nyt: 8 ja 30 / vk |
+| **kohdetyyppi jota ei ole kannassa** | **3** | yhä 0 — ei korjattavissa koodilla |
+| luotu vasta eilen, ei vielä vuoroa | 1 | lähtee aikataulun mukaan |
+
+Eli **8 vahtia 11:stä oli rikki meidän virheestämme**, ei käyttäjän.
+Vanhin niistä oli odottanut 48 vuorokautta.
+
+#### Ne kolme joita ei korjattu
+
+Arvot `katto` ja `betonirakentaminen` eivät ole kohdetyyppejä, ja ne on
+kirjoitettu vanhaan vapaaseen tekstikenttään. Niitä **ei muutettu**:
+toisen ihmisen tallennuksen arvaaminen on eri asia kuin oman virheen
+korjaaminen. Lisäksi "betonirakentaminen" esiintyy koko aineistossa
+kahdessa hankkeessa, joten sanan siirtäminen hakusanaksikaan ei toisi
+osumia — sana on harvinainen, ei kenttä väärä.
+
+Omistajille kerrotaan. Kohdetyypin valikko (D-276) estää saman
+syntymisen uudelleen, koska se näyttää mitä tyyppejä on olemassa.
+
+#### Mitä tästä opittiin mittarina
+
+Tyhjä hakuvahti ei lähetä sähköpostia lainkaan, joten rikkoutuminen ei
+näy asiakkaalle virheenä vaan hiljaisuutena — eikä palautetta tule.
+**`last_sent_at IS NULL` on siksi hyvä terveysmittari**: se erottaa
+"ei osumia" -tilanteen rikkoutuneesta suodattimesta vasta kun se
+tarkistetaan. Kannattaa katsoa ajoittain, ei vain vian jälkeen.
+
 ### D-282 - "Koko Suomi" ei ole maakunta
 
 Löytyi 14.10.2026 navigointia mitattaessa: Tänään-näkymän kortti
