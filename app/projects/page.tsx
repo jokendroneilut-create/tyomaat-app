@@ -792,22 +792,39 @@ export default function Projects() {
         .order('id', { ascending: true })
         .range(from, from + PAGE_SIZE - 1)
 
-    const { count, error: countError } = await supabase
-      .from('projects')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_public', true)
+    /*
+     * Sivumäärä ei ole tiedossa etukäteen, mutta sen selvittäminen omana
+     * kyselynään maksoi tuotannossa 1,4 s ENNEN kuin yksikään sivu lähti
+     * liikkeelle (mitattu 14.10.2026). Siksi laskuri ja ensimmäiset sivut
+     * haetaan yhtä aikaa: arvaus kattaa nykyisen aineiston, ja jos se on
+     * liian pieni, loput haetaan toisella rinnakkaisella kierroksella.
+     * Liian suuri arvaus maksaa vain tyhjän vastauksen.
+     */
+    const ARVIO_SIVUJA = 8
 
-    if (countError) {
-      console.error('Supabase error:', countError)
+    const [laskuri, ...ensimmaiset] = await Promise.all([
+      supabase.from('projects').select('id', { count: 'exact', head: true }).eq('is_public', true),
+      ...Array.from({ length: ARVIO_SIVUJA }, (_, i) => haeSivu(i * PAGE_SIZE, KEVYET_KENTAT)),
+    ])
+
+    if (laskuri.error) {
+      console.error('Supabase error:', laskuri.error)
       setProjects([])
       setLoading(false)
       return
     }
 
-    const sivuja = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE))
-    const sivut = await Promise.all(
-      Array.from({ length: sivuja }, (_, i) => haeSivu(i * PAGE_SIZE, KEVYET_KENTAT))
-    )
+    const sivuja = Math.max(1, Math.ceil((laskuri.count ?? 0) / PAGE_SIZE))
+    const puuttuvat =
+      sivuja > ARVIO_SIVUJA
+        ? await Promise.all(
+            Array.from({ length: sivuja - ARVIO_SIVUJA }, (_, i) =>
+              haeSivu((ARVIO_SIVUJA + i) * PAGE_SIZE, KEVYET_KENTAT)
+            )
+          )
+        : []
+
+    const sivut = [...ensimmaiset.slice(0, sivuja), ...puuttuvat]
 
     const sivuVirhe = sivut.find((s) => s.error)
     if (sivuVirhe?.error) {
@@ -877,6 +894,7 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
       setProjects(activeProjectsData)
       setLoading(false)
       setTeamModeEnabled(false)
+      void taydennaKuvaukset()
       return
     }
 setTeamModeEnabled(true)
