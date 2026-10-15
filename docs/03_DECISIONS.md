@@ -267,8 +267,47 @@ Rantakuja 105 → 4 000), **4 ohitettiin koska niillä oli jo 1 551-4 273
 merkkiä** — pitkää ei korvata — ja 2 poikkeuksena. Alkuperäinen teksti
 säilyy `metadata.description_alkuperainen`-kentässä.
 
+#### Takautuva korjaus: kanta ei korjaannu itsestään
+
+Johannes kysyi: *"onko kaikki nyt kunnossa kannassa, jonossa ja
+tulevaisuudessa jos tehdään push?"* Mitattu, koska korjaus koskee
+poimintaa eikä jo tuotuja rivejä:
+
+| | |
+|---|---|
+| jono | **0 odottavaa** Dynasty-päätösehdokasta |
+| kanta | **83 hyväksyttyä** hanketta näistä lähteistä |
+| niistä ohuita (< 400 merkkiä) | **11** |
+
+Mediaani 83:n joukossa on 2 729 merkkiä, eli valtaosa oli jo kunnossa —
+niillä osiotunniste osui alkupuolelle, kuten mittauksessa 17/34.
+Takautuva korjaus on `scripts/taydenna-paatoskuvaukset.ts`.
+
+**Kuivaharjoitus paljasti väärän hankkeen.** 11 ohuesta 10 paranee, mutta
+yksi ei kelpaa:
+
+    [276 -> 4000] Taidekasarmin käyttötarkoituksen muutos ja peruskorjaus
+      UUSI: "Kokousasian teksti Lahelan elinkaarihanke,
+             palveluntuottajan valinta …"
+
+Luku näyttää parannukselta, sisältö on kokonaan toisen hankkeen teksti.
+Syy on hankkeen omassa `metadata.source_url`-kentässä, joka osoittaa
+toisen asian sivulle — ja sen tunniste on poikkeava GUID-muotoinen
+(`...id=413DBC3AXB6A1X4F43X889DX9A904590D616-5`), kun muut ovat
+numeerisia. Sama virheluokka kuin NRC:n Mäkelänkatu-tapauksessa (D-288)
+ja juuri se mistä [`19_KUVAUSTEN_KATTAVUUS.md`](19_KUVAUSTEN_KATTAVUUS.md)
+varoittaa: väärä osuma on pahempi kuin tyhjä.
+
+Siksi täydentäjä vaatii, että hankkeen nimen jostakin **erottelevasta**
+sanasta (≥ 6 merkkiä, yleiset sanat kuten "valinta" ja "peruskorjaus"
+rajattu pois) on löydyttävä poiminnasta. Ilman tätä ehtoa luku olisi
+ollut 11/11 ja yksi hanke olisi saanut väärän kuvauksen.
+
 #### Mitä jäi auki
 
+- **Taidekasarmin `source_url` osoittaa väärään asiaan.** Täydentäjä
+  ohittaa sen, mutta itse kenttä on yhä väärä. Ei korjata arvaamalla:
+  oma kohta työjonoon.
 - **Dynastyn vanhempi versio ei jäsenny.** Pälkäneen Yhtenäiskoulun
   liite (`gVersion='7.00.030'`, Paltamolla 7.00.034, päätöslähteillä
   10.4.x) antaa `extractItemText`-funktiolle `null`, vaikka
