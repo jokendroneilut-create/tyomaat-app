@@ -149,6 +149,20 @@ koska luvut ovat piste ajassa):
 - **Poikkeavan käytön perustaso:** hankkeita avanneiden asiakkaiden mediaani ja
   maksimi lasketaan, jotta järjestelmällinen haravointi erottuu kertaluokkana
   eikä muutamana kymmenenä avauksena.
+- **Käyttö kasvaa ja sitoutuminen pitää (mitattu 2026-10-16, 90 vrk):**
+  aktiivisia käyttäjiä **62**, istuntoja **524**, sivulatauksia **8 676**,
+  istunnon keskikesto **12 min**. Pylväät nousevat selvästi kohti lokakuuta.
+  Prosenttihypyt vs. edellinen jakso (+6100 % käyttäjät, +10380 % istunnot,
+  +8242 % sivulataukset) ovat pieneltä pohjalta — seuranta ja oman käytön
+  rajaus vakiintuivat vasta jakson aikana, joten edellinen 90 vrk oli lähes
+  tyhjä. **Ainoa oikealta pohjalta tuleva luku on keskikesto +6 %**, ja 12 min
+  istunto on B2B-työkalulle terve sitoutumissignaali.
+- **MRR/ARR ja trial-suppilo näkyvät käyttäjäsivulla (2026-10-16):**
+  MRR **248 €**, ARR **2 976 €**, maksavia asiakkaita **2**, asiakkaita
+  yhteensä **87** (115 tunnuksesta), **trial-asiakkaita 61**. Potentiaalinen
+  MRR 9 337 € / ARR 112 044 € = *kaikki trialit maksaisivat* (katto, ei
+  ennuste). Avain on asiakas (yritys), ei tunnus — ks. [[customer-billing]].
+  Tulkinnan ja arvon kannalta ks. [15_TYOMAARA_JA_ARVIO.md](15_TYOMAARA_JA_ARVIO.md).
 
 **Opetus, joka toistuu:** mittarin premissi voi vanheta huomaamatta. Työkalun
 tuottama luku on avattava lähteestä ennen kuin sen perusteella toimitaan
@@ -158,6 +172,10 @@ tuottama luku on avattava lähteestä ennen kuin sen perusteella toimitaan
 
 ## Päivityshistoria
 
+- **2026-10-16** — Kirjattu käyttödata (90 vrk: 62 aktiivista, 524 istuntoa,
+  8 676 sivulatausta, 12 min keskikesto; % vs. edellinen jakso pieneltä pohjalta)
+  ja MRR/ARR + trial-suppilo (MRR 248 €, ARR 2 976 €, 2 maksavaa, 61 trialia,
+  potentiaalinen ARR 112 044 €).
 - **2026-10-13** — Kirjattu tiedotteen vastaanottajasäännöt: 116 tunnuksesta
   105 sai viestin, erotus 11 on lukittuja; lähettäjä saa kopion jokaisesta
   49:n erästä (kolme kopiota). Kumpikin tarkoitettua, ei muutettu.

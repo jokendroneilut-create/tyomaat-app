@@ -48,9 +48,11 @@ työläs kopioida ja se on kilpailuetu — mutta realisoituu vain asiakkaiden ka
 | ~2026-07 | 464 | ~15 000 | 734 | ~47 | 34 | Tekninen MVP, ei monetisaatiota |
 | 2026-08-29 | 995 | ~38 000 | 951 | ~45 | 44 | Kokeilujakso + myyjäroolit → alkava vetovoima |
 | 2026-09-13 | 1088 | ~46 000 | 1028 | 49 | 50 | Datavallihaudan syventäminen |
+| 2026-10-16 | 1318 | ~60 800 | 1172 | 59 | 57 | **Ensimmäiset maksavat asiakkaat + go-to-market käyntiin** |
 
-Ensimmäinen commit 2026-02-19 → ~6,8 kk lähes päivittäistä yhden hengen
-kehitystä (1088 committia). Rivit = `app src lib hooks types`, `.ts`/`.tsx`,
+Ensimmäinen commit 2026-02-19 → ~8 kk lähes päivittäistä yhden hengen
+kehitystä (1318 committia, 119 aktiivista committipäivää / 239 kalenteripäivää,
+viime 30 pv 226 committia). Rivit = `app src lib hooks types`, `.ts`/`.tsx`,
 ilman `node_modules`, `.next` ja `.claude`-worktreejä.
 
 ### Kehitystahti (mitattu 2026-09-13)
@@ -84,6 +86,7 @@ liikevaihtoa ei mitata järjestelmässä.
 | ~2026-07 | 40–110 k € | 2–15 k € |
 | 2026-08-29 | 90–180 k € | 10–40 k € |
 | 2026-09-13 | 110–200 k € | 15–45 k € |
+| 2026-10-16 | 140–260 k € | 40–120 k € (ei enää esitulovaiheessa) |
 
 **Rakennuskustannuksen peruste (13.9.2026):** ~46 k riviä testattua ja
 dokumentoitua TypeScriptiä, 49 räätälöityä scraperia, discovery-/agenttiputki,
@@ -95,6 +98,17 @@ Suomessa ~70–110 €/h → ~110–200 k €.
 liikevaihtoa myydään tyypillisesti murto-osalla rakennuskustannuksesta; koodi
 yksin ei tuo lähelle korvausarvoaan.
 
+**Tarkennus (16.10.2026) — ARR-kerroin vs. kauppahinta:** todennettu ARR on
+2 976 €. Pelkkä 2–4× kerroin antaisi ~6–12 k € — se on **lattia ja aliarvioi
+rajusti**, koska se jättää huomiotta sen mistä arvo tässä vaiheessa muodostuu:
+~60 k rivin tuote + 59 keräintä (datavallihauta), 61 trial-asiakkaan lämmin
+suppilo, kasvava käyttö (62 aktiivista / 90 vrk, 12 min istunto) ja strateginen
+kiinnostavuus (Metroc-pariteetti somessa, Rakennuslehti-kumppanuus vireillä).
+Siksi kauppahinta-arvio 40–120 k € on **strategisen/polkuarvon** haarukka, ei
+ARR-kerroin: puhdas finanssiostaja maksaisi lähempänä lattiaa, strateginen
+ostaja tai jakelukumppani ylempää. Haarukka kapenee heti kun konversio
+(trial → maksava) ja churn näkyvät luvuissa.
+
 ### Liikevaihtoskenaariot (havainnollistus, ~2–4× ARR)
 
 | Asiakkaita | Hinta/kk | ARR | Arvo (2–4×) |
@@ -105,6 +119,49 @@ yksin ei tuo lähelle korvausarvoaan.
 
 Nämä ovat esimerkkejä, eivät toteumaa. Kun todellinen asiakasmäärä ja
 kuukausihinta ovat tiedossa, korvaa rivi oikeilla luvuilla.
+
+---
+
+## Vetovoima ja go-to-market (kirjattu 2026-10-16)
+
+Tämä on arvion suurin yksittäinen käänne: tuote siirtyi todistetusti
+maksulliseksi. Pelkkä ARR-kerroin aliarvioi tilanteen vielä, koska
+liikevaihto on pieni mutta **suunta ja riskin pieneneminen** ovat nyt se mitä
+arvioidaan.
+
+- **2 maksavaa asiakasta, MRR 248 € / ARR 2 976 €** (käsin laskutettuna, ks.
+  [[customer-billing]]; ~124 €/asiakas/kk = matala hintapiste). Loppuvuodelle
+  tulossa **3–5 lisää** → vuodenvaihteessa realistisesti 5–7 maksavaa.
+- **Lämmin suppilo: 61 trial-asiakasta** (87 asiakasta / 115 tunnusta).
+  Järjestelmän laskema **potentiaalinen ARR 112 044 €** = jos kaikki trialit
+  maksaisivat — se on katto, ei ennuste, mutta kertoo suppilon koon.
+- **Käyttö kasvaa:** 90 vrk aktiivisia käyttäjiä 62, istuntoja 524,
+  sivulatauksia 8 676, istunnon keskikesto 12 min (sitoutuminen pitää, ks.
+  [16_ADMIN_JA_ANALYTIIKKA.md](16_ADMIN_JA_ANALYTIIKKA.md)).
+- **Markkinointisivu** www.tyomaat.fi julki 27.9.2026, viritetty tuomaan
+  käyttäjiä (erillinen repo `tyomaat-site`).
+- **Instagram ~875 seuraajaa**, tasoissa kilpailija **Metrocin** kanssa; useita
+  itse tehtyjä videoita. Orgaaninen jakelu kasvaa.
+- **Espoon Yrittäjien "viikon vieras" -osio** julkaistaan ensi viikolla (näkyvyys).
+- **Pitch** parin viikon päästä.
+- **FinnBuild-messut**: 3 päivää, kierretty lähes kaikki näytteilleasettajat →
+  suora kontaktipinta ja kerätyt yhteystiedot (ks. [[finnbuild-2026-kierros]]).
+- **Rakennuslehti-yhteistyö vireillä** (tilaajaetu-keskustelu, ks.
+  [[rakennuslehti-partnership]]) → mahdollinen jakelukumppani, jolla on
+  valmis yleisö.
+
+**Miksi tämä nostaa arvoa enemmän kuin pelkkä liikevaihto:** kaksi
+maksavaa asiakasta todistaa maksuhalukkuuden (suurin yksittäinen riskin
+poistaja), ja samaan aikaan syntyy **toistettava jakelukoneisto**
+(sivu + somekasvu + media + kumppani). Arvo on tässä vaiheessa enemmän
+**polku- ja strateginen arvo** kuin nykyisen ARR:n monikerta: incumbentille
+(esim. Metroc) tai jakelukumppanille (Rakennuslehti) datavallihauta +
+jalansija on kiinnostavampi kuin pienelle ostajalle puhdas kassavirta.
+
+**Mistä luku ratkeaa seuraavaksi (3–6 kk):** (1) kääntyvätkö 3–5 lisää
+asiakkaaksi, (2) pysyvätkö ensimmäiset (churn), (3) toistuuko hankinta ilman
+käsityötä. Nämä kolme nostavat kauppahinta-arvion seuraavan rivin, eivät
+rivimäärä tai committahti.
 
 ---
 
@@ -220,6 +277,15 @@ samalla parhaan itsenäisen yrityksen ja parhaan ostokohteen.
 ---
 
 ## Päivityshistoria
+
+- **2026-10-16** — **Ensimmäiset 2 maksavaa asiakasta** (3–5 lisää tulossa
+  loppuvuodelle). Lisätty *Vetovoima ja go-to-market* -osio. Arvio nostettu:
+  rakennuskustannus 140–260 k € (~60,8 k riviä, 1318 committia), kauppahinta
+  40–120 k € — tuote ei ole enää esitulovaiheessa. Käänne ei ole koodimäärä
+  vaan todistettu maksuhalukkuus + syntyvä jakelu (sivu 27.9., IG ~875 tasoissa
+  Metrocin kanssa, Espoon Yrittäjien viikon vieras, pitch, FinnBuild-kierros,
+  Rakennuslehti-yhteistyö vireillä). Seuraava rivi ratkeaa konversiosta ja
+  churnista, ks. [[customer-billing]].
 
 - **2026-10-06** — Lisätty *Strategia, johon arvio nojaa* ja *Yritysosto —
   skenaario*. Taustalla Hubexo Finlandin tilinpäätös (11,3 M€, liikevoitto
