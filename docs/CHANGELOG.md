@@ -96,6 +96,17 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### NRC Group Finland lähteeksi (D-288)
+
+Asiakas ei löytänyt Turun raitiotiestä NRC:tä. Hanke oli meillä, mutta
+vain GRK:n näkökulmasta — ja lisäksi kahtena rivinä, joista ohuempi
+näkyi ensin.
+
+Korjattu kolme asiaa: kaksoisrivi katselmointijonoon, osapuolet
+lauseesta rakenteisiksi (`"GRK, NRC Group"`, alkuperäinen lause säilyy
+metadatassa), ja NRC:n omat projektisivut uudeksi lähteeksi — 27
+käynnissä olevaa infrahanketta (radat, sillat, sähköasemat, ratikat).
+
 ### Sama data haetaan kerran, ei joka latauksella (D-286)
 
 Hankelistan rivit tallennetaan selaimeen ja Tänään-näkymän raskas haku

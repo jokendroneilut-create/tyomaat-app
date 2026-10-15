@@ -82,6 +82,7 @@ import {
   enrichNccProject,
 } from "./fetchNccProjectsSource"
 import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
+import { fetchNrcProjectsSource } from "./fetchNrcProjectsSource"
 import { fetchHartelaAreasSource } from "./fetchHartelaAreasSource"
 import { fetchHcHoivakoditSource } from "./fetchHcHoivakoditSource"
 import { createCompanyEnricher } from "./companyRelease"
@@ -324,6 +325,13 @@ export const sources = [
    * takana.
    */
   { name: "grk_projektit", fetch: fetchGrkProjectsSource },
+  /*
+   * NRC Group Finland, sama kuvio kuin GRK:lla: iso infratoimija jonka
+   * omat hankesivut kertovat kaynnissa olevat kohteet. Lisatty koska
+   * asiakas ei loytanyt Turun raitiotiesta NRC:ta — hanke oli meilla,
+   * mutta vain GRK:n nakokulmasta (D-288).
+   */
+  { name: "nrc_projektit", fetch: fetchNrcProjectsSource },
   /*
    * Hartelan TULEVAT asuinalueet - eri sivu kuin referenssit, jotka ovat
    * valmistuneita. Naiden arvo on katuosoite: 8/15 sivulta loytyy osoite

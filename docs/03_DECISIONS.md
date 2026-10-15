@@ -184,6 +184,74 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-288 - Hanke oli meillä, mutta vain yhden osapuolen silmin
+
+Johannes 15.10.2026, asiakkaan kanssa: *"katsoimme äsken asiakkaan
+kanssa Turun raitiotie -hanketta josta oli löydettävissä melko huonosti
+vielä tietoja. Siinä on mukana ainakin NRC Group Finland. Miksi meillä
+ei ole tätä tietoa lainkaan, eikö se ole meillä lähteenä?"*
+
+Oletus oli, että lähde puuttuu. Mittaus kertoi muuta: **tieto oli
+meillä**, ja lähdekin oli — vapaa haku "NRC" löytää 9 hanketta.
+
+#### Mitä kannassa oikeasti oli
+
+| | "Turun raitiotie" | "Raitiotien rakentaminen Turussa" |
+|---|---|---|
+| luotu | 26.5.2026 | 28.9.2026 |
+| lähde | `grk_projektit` | `rakennuslehti` |
+| kustannus | **465 M€** | – |
+| osapuolet | Turun kaupunki; GRK ja NRC Group; Ramboll ja Sweco | – |
+| kuvaus | **2 334 merkkiä** | 157 merkkiä |
+
+Asiakas katsoi lähes varmasti jälkimmäistä: haku "raitiotie" + Turku
+antaa kaksi riviä, ja **uusin on ensin** — eli 157 merkin uutisrivi
+hallinto-oikeuden päätöksestä. Hyvä rivi jäi sen alle.
+
+#### Kolme eri vikaa, kolme eri korjausta
+
+1. **Kaksoisrivi** vei näkyvyyden. Pari vietiin katselmointijonoon
+   (`pending`); ei yhdistetty itse, ja tarkistettiin ettei parista ollut
+   aiempaa "ei duplikaatti" -päätöstä ([[check-duplicate-reviews]]).
+
+2. **Osapuolet olivat lauseena**: rakentaja-kentässä luki *"Rakentajina
+   allianssissa ovat GRK ja NRC Group"*, jolloin yrityksen mukaan
+   hakeminen löytää sen vain vapaalla tekstillä. Kenttä on nyt
+   `"GRK, NRC Group"` kannan muun konvention mukaisesti, ja alkuperäinen
+   lause säilyy metadatassa — muoto muuttui, tieto ei kadonnut.
+
+   Mitattiin myös laajuus ennen kuin tästä tehtiin yleinen ongelma:
+   1 119 hankkeesta joilla on rakentaja, 54 (5 %) näyttää lauseelta — ja
+   niistäkin useimmat ovat usean yrityksen listoja y-tunnuksineen.
+   **Aitoa proosaa on kourallinen, ei systeeminen vika.**
+
+3. **NRC ei ollut lähteenä**, vaikka GRK on. Siksi hankkeesta oli vain
+   toisen allianssiosapuolen näkökulma.
+
+#### Uusi lähde: nrc_projektit
+
+Sivusto on Craft CMS + Next.js, joten hankkeet luetaan upotetusta
+`__NEXT_DATA__`-JSONista eikä HTML:stä. Listaus antaa otsikon, kaupungin
+ja tilan 0,6 sekunnissa, joten tila suodatetaan ENNEN hankesivujen
+hakua. Mitattu jakauma: Käynnissä 26, Alkava 1, Valmis 19, Valmistunut
+1 — mukaan vain käynnissä ja alkavat, sama päätös kuin GRK:lla.
+**27 ehdokasta 2,2 sekunnissa.**
+
+#### Kaksi virhettä jotka vain kuivaharjoitus paljasti
+
+1. **Jokaisen hankesivun JSON sisältää myös muiden hankkeiden tekstit**
+   ("Tutustu myös näihin"). Kaikki lukemalla Turun raitiotie sai
+   kuvaukseksi Mäkelänkadun ajojohtojärjestelmän — uskottava teksti,
+   väärä hanke. Teksti haetaan nyt sivun oman merkinnän `modules`-
+   viitteiden kautta.
+2. Slugin poiminnassa merkkiluokka `[/?#]` katkaisi osoitteen
+   ensimmäiseen kauttaviivaan, jolloin slugiksi tuli `https:` eikä
+   yhtään hanketta löytynyt.
+
+Kummallekin on oma testi. Kumpikaan ei olisi näkynyt tyyppitarkistuksessa
+eikä kaatanut ajoa — ensimmäinen olisi tuottanut väärää tietoa
+asiakkaalle, toinen hiljaa tyhjän lähteen.
+
 ### D-287 - Kartan selite seuraa suodatinta: "Valmistumassa" pois
 
 Johannes huomasi 15.10.2026 kuvasta: *"kuvassa on vielä tuo
