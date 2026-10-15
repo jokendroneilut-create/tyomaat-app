@@ -182,6 +182,31 @@ väärä osuma on pahempi kuin tyhjä.
 | Väylävirasto hankkeet | 20 / 273 | hankesivu on lyhyt |
 | yva | 19 / 270 | arviointiohjelma on liitteenä |
 
+## Liite on pöytäkirjasivu, ei pdf (D-290, 15.10.2026)
+
+Yleinen täydentäjä hakee **vain `.pdf`-linkkejä** `document_url`-sivulta.
+Osalla kaavarivejä liite on sen sijaan Dynastyn kokousasiasivu, ja sen
+linkki on tallessa `raw_payload.attachments`-kentässä — jota ei lue
+yksikään myöhempi vaihe.
+
+```bash
+npx tsx scripts/taydenna-dynasty-liitteet.ts
+npx tsx scripts/taydenna-dynasty-liitteet.ts --apply
+```
+
+Laajuus on kapea: **7 dokumentilla** on `page=meetingitem`-liite, ja
+niistä 2 muuttui (Paltamon Ouluntie 89 → 4 000, Rantakuja 105 → 4 000).
+4 ohitettiin koska niillä oli jo 1 551-4 273 merkkiä.
+
+Isompi tulos tuli jäsentimen korjauksesta: `extractItemText` hylkäsi
+osiotunnisteen hypyllä mediaanisti 59 % tekstistä, pahimmillaan 96 %.
+Korjaus mitattiin 13 päätöslähteen omilla sivuilla (36 sivua 9 kunnasta):
+18 pidempi, 17 sama, 0 lyhyempi.
+
+**Umpikuja tältä erää:** Dynastyn vanhempi versio (`gVersion='7.00.030'`,
+Pälkäne) antaa `extractItemText`-funktiolle `null`. Älä tutki uudelleen
+ilman uutta mittausta; sivurakenne on eri kuin 7.00.034:ssä ja 10.4.x:ssä.
+
 ## Mitä EI lasketa kuvaukseksi
 
 Pituus ei saa tulla täytteestä. Nämä näyttävät kuvaukselta olematta

@@ -184,6 +184,103 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-290 - Osiotunniste hylkäsi 96 % tekstistä, ja liitettä ei avattu lainkaan
+
+Johannes 15.10.2026, Paltamon Ouluntien teollisuusalueen kaavasta:
+*"tähän pitäisi poimia kuvaukseen ainakin tämä kohta dokumenteista"* —
+ja perään liitetty 1 700 merkin ote, jossa kerrotaan KaiCell Fibersin
+biotuotetehtaasta, Suomen Säätöenergian biometanolitehtaasta ja siitä
+ettei kunnalla ole enää vapaita teollisuustontteja.
+
+Kannassa oli 89 merkkiä: *"Ouluntien teollisuusalueen asemakaava
+Kunnanvaltuusto on hyväksynyt kaavan 8.9.2026 § 38."*
+
+Kaksi erillistä vikaa, ja vain toinen oli siinä mitä ensin epäilin.
+
+#### Vika 1: liitettä ei avannut mikään
+
+Kaavakerääjät kirjoittavat liitelinkit `raw_payload.attachments`-kenttään.
+Mitattu: **kenttää ei lue yksikään myöhempi vaihe** — koko koodipohjan
+ainoa osuma on `backfill-kaavaselostus-contacts.ts`. Yleinen täydentäjä
+`taydenna-kaavakuvaukset.ts` hakee vain `.pdf`-linkkejä
+`document_url`-sivulta, joten HTML-pöytäkirja ohitettiin.
+
+Paltamon liite oli Dynastyn kokousasiasivu, jolla on koko kaavan
+päätöshistoria: **8 574 merkkiä**, mukana 12 tontin pinta-alat ja
+rakennusoikeudet. Linkki oli siis tallessa koko ajan; sitä ei vain
+seurattu.
+
+#### Vika 2: `extractItemText` hylkäsi 96 % siitä mitä sai
+
+Tämä oli isompi. `SECTION_START` katkaisee tekstin ensimmäisestä
+osiotunnisteesta (`Kokouksen tiedot|Asian otsikko|Selostus|Päätös`), jotta
+sivun yläosan kokousmetatieto ohittuu. Monella sivulla ei kuitenkaan ole
+"Selostus"-otsikkoa lainkaan, joten ensimmäinen osuma on isolla
+kirjoitettu "Päätös" **aivan lopussa** — ja hyppy heitti koko asian
+sisällön pois. Paltamolla jäi 350 merkkiä 8 574:stä, ja jäljelle jäi
+tasan se menettelyfraasi jota
+[`19_KUVAUSTEN_KATTAVUUS.md`](19_KUVAUSTEN_KATTAVUUS.md) kieltää
+laskemasta kuvaukseksi.
+
+`extractItemText` on **13 päätöslähteen yhteinen**, joten muutos
+mitattiin niiden omilla sivuilla eikä pelkällä Paltamolla. 36 sivua
+9 kunnasta (`page=meetingitem`), tasavälein kunkin lähteen sisällä:
+
+| | |
+|---|---|
+| sama pituus | 17 |
+| ehdotus pidempi | 18 |
+| **ehdotus lyhyempi** | **0** |
+
+Osiotunnisteen sijainti tekstissä: mediaani **59 %**, pienin 2 %, suurin
+93 %; yli 30 %:n kohdalla 18 / 34. Katto 30 % osuu siis mitatun
+kahtiajaon väliin eikä puolita kumpaakaan ryhmää.
+
+Riveittäin luettuna muutos vaihtaa menettelyn hankkeeseen:
+
+    Porvoo    179 -> 1 420   "Päätös tarkastetaan heti."
+                          -> "Urakoitsijan valinta: Vellamon väestönsuoja"
+    Kouvola 1 119 -> 6 399   päätösvallan perusteet
+                          -> "Kouvolan pääkirjasto - peruskorjauksen
+                              hankesuunnitelma"
+    Joensuu 1 273 -> 4 824   "Hyväksyttiin yksimielisesti."
+                          -> "Niittylahden uusi koulu ja päiväkoti"
+    Tuusula   403 -> 3 463   "valita ... Lakeuden Maanrakennus"
+                          -> "Keskustie-Kirjurintie-Syrjätie vesijohdon
+                              saneeraus, urakoitsijan valinta"
+
+Prosenttikaton rinnalle tuli **lattia 150 merkkiä**: lyhyessä
+asiakirjassa oikea metatieto-osuus voi ylittää 30 %. Lattia ei lyhentänyt
+yhtäkään 36 sivun otoksesta, eli se ei syö mitattua parannusta vaan
+palauttaa hypyn vain siihen mihin se oli tarkoitettu. Olemassa oleva
+testi paljasti tämän: sen katkelmassa tunniste oli tasan 30 %:n rajalla.
+
+#### Täydennys: 2 riviä 7:stä
+
+`scripts/taydenna-dynasty-liitteet.ts` (kuivaharjoitus oletuksena) seuraa
+`attachments`-kentän Dynasty-linkkiä. Laajuus on kapea ja se sanotaan
+eteen: **7 dokumentilla on `page=meetingitem`-liite**, ei 28 — aiempi
+luku tuli väljemmästä kuviosta, joka osui myös muihin Dynasty-osoitteisiin.
+
+Kuivaharjoitus riveittäin: 2 riviä muuttui (Ouluntie 89 → 4 000,
+Rantakuja 105 → 4 000), **4 ohitettiin koska niillä oli jo 1 551-4 273
+merkkiä** — pitkää ei korvata — ja 2 poikkeuksena. Alkuperäinen teksti
+säilyy `metadata.description_alkuperainen`-kentässä.
+
+#### Mitä jäi auki
+
+- **Dynastyn vanhempi versio ei jäsenny.** Pälkäneen Yhtenäiskoulun
+  liite (`gVersion='7.00.030'`, Paltamolla 7.00.034, päätöslähteillä
+  10.4.x) antaa `extractItemText`-funktiolle `null`, vaikka
+  `DATABEGIN`-lohko on 4 305 merkkiä. Tämä hanke on **jo hyväksytty
+  `projects`-tauluun 272 merkin kuvauksella**, eli asiakkaalle näkyvissä.
+- **Täydentäjä kattaa vain jonorivit.** Hyväksyttyjä hankkeita se ei
+  koske, joten yllä oleva Pälkäneen rivi ei korjaannu tälläkään.
+- **Yhdellä dokumentilla ei ole ehdokasta lainkaan** (Paltamon
+  Valkeisvaaran tuulivoimakaava, poiminta toimii ja antaa 13 009
+  merkkiä). Tämä on ilmentymä jo tiedossa olevasta avoimesta kohdasta
+  [[missing-candidates-open]], ei uusi vika.
+
 ### D-289 - Kantaverkko lähteeksi: yritys hankkeissa ≠ yritys lähteenä
 
 Jatkoa D-288:lle. NRC puuttui lähteistä, joten kysymys oli ilmeinen:

@@ -96,6 +96,19 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Pöytäkirjasivun teksti kuvaukseen (D-290)
+
+Paltamon Ouluntien teollisuusalueen kaavassa oli 89 merkkiä, vaikka
+liitteenä olleella pöytäkirjasivulla oli 8 574. Kaksi vikaa: liitelinkkiä
+ei avannut mikään (`attachments`-kenttää ei lue yksikään vaihe, ja yleinen
+täydentäjä hakee vain pdf-linkkejä), ja jäsentimen osiotunniste hylkäsi
+96 % siitä mitä se sai.
+
+Toinen vika oli 13 päätöslähteen yhteinen. Mitattu 36 sivulla 9 kunnasta:
+18 pidempi, 17 sama, **0 lyhyempi**. Kuvaus vaihtui menettelystä
+hankkeeseen — Porvoossa *"Päätös tarkastetaan heti."* (179 merkkiä) →
+*"Urakoitsijan valinta: Vellamon väestönsuoja"* (1 420).
+
 ### Fingridin kantaverkkohankkeet lähteeksi (D-289)
 
 NRC:n puuttuminen johti kysymykseen: ketkä muut yritykset esiintyvät

@@ -292,6 +292,49 @@ const CHROME_TABLE = new RegExp(
 const SECTION_START =
   /(?<![\wåäöÅÄÖ])(?:Kokouksen tiedot|Asian otsikko|Selostus|Päätös)/
 
+/*
+ * HYPPY VAIN TEKSTIN ALKUPUOLELLA.
+ *
+ * Osiotunniste on tarkoitettu kokousmetatiedon ohittamiseen sivun
+ * YLÄOSASSA. Jos tunniste osuu vasta loppupuolelle, kyse ei ole
+ * leipätekstin alusta vaan päätösosasta, ja hyppy heittää koko asian
+ * sisällön pois.
+ *
+ * Näin kävi: monella sivulla ei ole "Selostus"-otsikkoa lainkaan, joten
+ * ensimmäinen osuma on isolla kirjoitettu "Päätös" tai "Päätösehdotus"
+ * aivan lopussa. Paltamon Ouluntien teollisuusalueen kaavasta jäi 350
+ * merkkiä 8 574:stä, eli 96 % hylättiin — ja jäljelle jäi tasan se
+ * menettelyfraasi jota kuvaukseksi ei lasketa (19_KUVAUSTEN_KATTAVUUS).
+ *
+ * Mitattu 15.10.2026, 36 sivua 9 kunnasta (`page=meetingitem`):
+ *
+ *   sama pituus       17
+ *   pidempi           18
+ *   lyhyempi           0
+ *
+ * Tunnisteen sijainti tekstissä: mediaani 59 %, pienin 2 %, suurin 93 %.
+ * Yli 30 %:n kohdalla 18 / 34. Katto on siis selvästi mitatun kahtiajaon
+ * välissä eikä puolita kumpaakaan ryhmää.
+ *
+ * Esimerkkejä, jotka rivi riviltä luettuna vaihtoivat menettelyn
+ * hankkeeseen:
+ *
+ *   Porvoo  179 -> 1 420  "Päätös tarkastetaan heti."
+ *                      -> "Urakoitsijan valinta: Vellamon väestönsuoja"
+ *   Kouvola 1 119 -> 6 399  päätösvallan perusteet
+ *                      -> "Kouvolan pääkirjasto - peruskorjauksen
+ *                          hankesuunnitelma"
+ */
+const HYPPY_KATTO = 0.3
+
+/*
+ * Lattia prosenttikaton rinnalle: lyhyessä asiakirjassa oikea
+ * metatieto-osuus voi silti ylittää 30 %. Mitattu: lattia ei lyhentänyt
+ * yhtäkään 36 sivun otoksesta, eli se ei syö yllä mitattua parannusta
+ * vaan palauttaa hypyn vain siihen mihin se oli tarkoitettu.
+ */
+const HYPPY_LATTIA = 150
+
 export function extractItemText(html: string): string | null {
   const region = html.match(DATA_REGION)?.[1] ?? html
 
@@ -321,7 +364,9 @@ export function extractItemText(html: string): string | null {
   const decoded = decodeHtmlEntities(text).replace(/\s+/g, " ").trim()
 
   const start = decoded.search(SECTION_START)
-  const body = start >= 0 ? decoded.slice(start).trim() : decoded
+  const alkupuolella =
+    start >= 0 && (start <= HYPPY_LATTIA || start <= decoded.length * HYPPY_KATTO)
+  const body = alkupuolella ? decoded.slice(start).trim() : decoded
 
   return body.length >= 40 ? body : null
 }

@@ -228,6 +228,45 @@ describe("extractItemText – liitteet ja osiotunniste", () => {
     expect(text.startsWith("Mansikkamäen koulun ruokalan hankesuunnitelma")).toBe(true)
   })
 
+  /*
+   * Hyppy vain tekstin alkupuolelle. Sivulla ei aina ole "Selostus"-
+   * otsikkoa, jolloin ensimmainen osuma on isolla kirjoitettu "Paatos"
+   * aivan lopussa - ja hyppy heitti koko asian sisallon pois. Paltamon
+   * Ouluntien kaavasta jai 350 merkkia 8 574:sta (96 % hylattiin), ja
+   * jaljelle jai tasan se menettelyfraasi jota kuvaukseksi ei lasketa.
+   */
+  it("ei hyppaa osiotunnisteeseen joka on vasta lopussa", () => {
+    const runko =
+      "Ouluntien teollisuusalueen asemakaavan hyv&auml;ksyminen. " +
+      "Paltamon kunnassa on vireill&auml; suuria teollisen toiminnan hankkeita. " +
+      "KaiCell Fibers Oy:n biotuotetehtaan asemakaavoituksen yhteydess&auml; on " +
+      "asemakaavoitettu teollisuustontteja uuden tehdasalueen etel&auml;puolelle. " +
+      "Kev&auml;&auml;ll&auml; 2024 kunta on p&auml;&auml;tt&auml;nyt varata alueen " +
+      "Suomen S&auml;&ouml;t&ouml;energia Oy:n biometanolitehtaan toimintaa varten. "
+    const html =
+      "<!--DATABEGIN--><div><p>" +
+      runko.repeat(3) +
+      "P&auml;&auml;t&ouml;sehdotus: Kunnanhallitus esitt&auml;&auml; valtuustolle, " +
+      "ett&auml; se hyv&auml;ksyy asemakaavan.</p></div><!--DATAEND-->"
+    const text = extractItemText(html)!
+    expect(text.startsWith("Ouluntien teollisuusalueen")).toBe(true)
+    expect(text).toMatch(/KaiCell Fibers/)
+    expect(text).toMatch(/biometanolitehtaan/)
+  })
+
+  /*
+   * Lattia prosenttikaton rinnalla: lyhyessa asiakirjassa oikea
+   * metatieto-osuus voi ylittaa 30 %, joten hyppy ei saa jaada
+   * tekematta pelkan suhdeluvun takia.
+   */
+  it("hyppaa lyhyen metatieto-osuuden yli vaikka se ylittaa 30 %", () => {
+    const html =
+      "<!--DATABEGIN--><div><p>Kokousmetatietoa alussa. " +
+      "Selostus Hankkeen tavoitteena on korjata koulun sis&auml;ilmaongelmat.</p></div>" +
+      "<!--DATAEND-->"
+    expect(extractItemText(html)!.startsWith("Selostus Hankkeen")).toBe(true)
+  })
+
   /* Iso alkukirjain sanan alussa katkaisee yhä oikein. */
   it("katkaisee isolla kirjoitetusta osiotunnisteesta", () => {
     const html =
