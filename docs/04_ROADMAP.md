@@ -728,6 +728,50 @@ muistin varassa.
 
 ### Datan laatu
 
+- **Taidekasarmin `source_url` osoittaa toisen hankkeen asiaan.**
+  (Kirjattu 15.10.2026, ei aloitettu. Löytyi D-290:n kuivaharjoituksessa.)
+
+  Hanke "Taidekasarmin käyttötarkoituksen muutos ja peruskorjaus"
+  (Tuusula) viittaa osoitteeseen, jonka takana on "Lahelan
+  elinkaarihanke, palveluntuottajan valinta". Takautuva täydentäjä
+  ohittaa rivin täsmäysehdon takia, mutta **kenttä on yhä väärä** ja
+  se on hankkeen ainoa lähdeviite.
+
+  ```
+  id=413DBC3AXB6A1X4F43X889DX9A904590D616-5
+  ```
+
+  Tunniste on GUID-muotoinen, kun muut 82 ovat numeerisia — eli
+  epäilys on, ettei tämä ole poikkeama vain tällä rivillä vaan
+  Tuusulan keräimen tapa muodostaa osoite joissain tapauksissa.
+  **Mitattava ennen korjausta:** montako GUID-muotoista tunnistetta
+  kannassa on ja osoittavatko nekin väärään asiaan. Ei korjata
+  arvaamalla, koska oikeaa osoitetta ei tiedetä.
+
+- **Dynastyn vanhempi versio ei jäsenny.** (Kirjattu 15.10.2026, ei
+  aloitettu. Löytyi D-290:n yhteydessä.)
+
+  Pälkäneen `gVersion='7.00.030'` antaa `extractItemText`-funktiolle
+  `null`, vaikka `DATABEGIN`-lohko on 4 305 merkkiä. Paltamolla on
+  7.00.034 ja päätöslähteillä 10.4.x, ja ne jäsentyvät.
+
+  Vaikutus on tällä hetkellä yksi hanke ("Yhtenäiskoulun ja sen
+  lähiympäristön asemakaavamuutos", 272 merkkiä, **jo hyväksytty eli
+  asiakkaalle näkyvissä**), joten tämä ei ole kiireellinen — mutta
+  versio tulee vastaan uudelleen jos Pälkäneen kaltaisia kuntia
+  lisätään. Umpikujaksi merkitty myös
+  [`19_KUVAUSTEN_KATTAVUUS.md`](19_KUVAUSTEN_KATTAVUUS.md):ssä, ettei
+  sitä tutkita uudelleen ilman uutta mittausta.
+
+- **Liitetäydentäjä kattaa vain jonorivit.** (Kirjattu 15.10.2026, ei
+  aloitettu.)
+
+  `taydenna-dynasty-liitteet.ts` päivittää `potential_projects`-rivejä;
+  hyväksyttyjä hankkeita se ei koske. Hyväksytyille on erillinen
+  `taydenna-paatoskuvaukset.ts`, mutta se lähtee hankkeen omasta
+  `source_url`-kentästä eikä lähdedokumentin liitteistä, joten
+  kaavarivin liite jää hyväksynnän jälkeen avaamatta.
+
 - **Hylätty rivi ei voi palata, vaikka tieto muuttuisi.** (Kirjattu
   13.10.2026, ei aloitettu. Löytyi D-279:n yhteydessä.)
 
