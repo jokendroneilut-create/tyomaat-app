@@ -4,6 +4,7 @@ import { isCancellationNotice, stripCancellationPrefix } from "@/lib/agent/hilma
 import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
+import { maakuntaNutsKoodista } from "@/lib/geo/nutsRegion"
 import {
   getMunicipalityByPlaceName,
   municipalityFromBuyerName,
@@ -471,7 +472,22 @@ export async function resolveHilmaProject({
       description,
       developer,
 
-      region: municipalityObj?.region ?? null,
+      /*
+       * MAAKUNTA MYOS ILMAN KUNTAA (D-292).
+       *
+       * Maakunta johdettiin vain kunnasta, joten tunnistamaton paikka
+       * jatti molemmat tyhjaksi - vaikka ilmoituksessa on rakenteinen
+       * alueen koodi. Fingridin "IV03 - Ivalon sahkoaseman uusiminen"
+       * kantoi koodia FI1D7 eli Lappia, eika sita luettu.
+       *
+       * Kunta voittaa aina: se on tarkempi. NUTS on vararatkaisu, ja se
+       * tunnistaa vain yksialueiset suomalaiset koodit - paljas "FI" ja
+       * ulkomainen koodi jattavat kentan tyhjaksi.
+       */
+      region:
+        municipalityObj?.region ??
+        maakuntaNutsKoodista(document.raw_payload?.original?.nutsCodes) ??
+        null,
 
       buyer_address: buyerAddress,
       project_address: resolvedAddress,

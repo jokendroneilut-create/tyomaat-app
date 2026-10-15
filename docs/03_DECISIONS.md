@@ -184,6 +184,88 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-292 - Kylän nimi kelpaa kenttään, ei vapaaseen tekstiin
+
+Johannes 16.10.2026 Fingridin hankkeesta (`a10be376`): *"maakuntaa eikä
+kaupunkia tunnistettu"*. Otsikko oli "IV03 - Ivalon sähköaseman
+uusiminen", ja kannassa `municipality: null`, `region: null`.
+
+Kaksi eri syytä, ja kummallakin oli jo koneisto talossa.
+
+#### Maakunta: rakenteinen koodi jota ei luettu
+
+Ilmoituksessa on `nutsCodes: "FI1D7"` eli Lappi. Maakunta johdettiin
+kuitenkin **vain kunnasta** (`municipalityObj?.region`), joten
+tunnistamaton paikka jätti molemmat tyhjäksi vaikka alue oli tiedossa.
+
+Mitattu: 1 448 Hilma-dokumentissa 1 544:stä on NUTS-koodi, ja 73
+jonorivillä oli maakuntatasoinen koodi mutta ei maakuntaa.
+
+**Kartta johdettiin omasta aineistosta, ei muistista.** Ensimmäinen
+versio kirjoitettiin muistinvaraisesti, ja siinä oli neljä virhettä:
+`FI198` ei ole Pirkanmaa vaan Keski-Suomi, `FI199` ei ole Keski-Suomi
+vaan Etelä-Pohjanmaa, `FI1C6` ei ole Satakunta vaan Päijät-Häme, ja
+Etelä-Savon koodi on `FI1DA` eikä `FI1DD` — lisäksi kymmenen keksittyä
+koodia joita aineistossa ei esiinny. Oikea kartta johdettiin riveistä
+joilla oli sekä maakunta että yksi NUTS-koodi; koodi hyväksyttiin vain
+kun ääniä oli ≥ 3 ja yksimielisyys ≥ 90 %. Tulos: **18 koodia**,
+yksimielisyys 91-100 %.
+
+**Paljas `FI` ei ole maakunta.** Sillä oli 134 ääntä jakautuneena 16
+maakuntaan — se tarkoittaa koko Suomea. Tuntematon koodi on esteenä eikä
+ohitettavana, jottei monialuehanke näytä yksialueiselta. Ahvenanmaa
+(`FI200`) jätettiin pois: 2 ääntä on alle kynnyksen.
+
+#### Kaupunki: koko kartan kytkeminen mitattiin ja hylättiin
+
+`lib/geo`:n `PLACE_ALIASES` tuntee jo Ivalon (`ivalo: "Inari"`) ja 40
+muuta postitoimipaikkaa — mutta `detectCityFromText` ei lukenut sitä
+karttaa lainkaan. Talossa oli **kaksi paikannimen ratkaisijaa, ja vain
+toinen tiesi Ivalosta.**
+
+Ensimmäinen korjaus kytki koko kartan tekstintunnistukseen. A/B 6 847
+hankkeella (vanha versio haettuna gitistä, ei käsin jäljennettynä):
+
+| | |
+|---|---|
+| sama tulos | 4 077 |
+| uusi löysi, vanha ei | 76 |
+| **uusi sanoo eri kuin vanha** | **7** |
+
+Ja 7 oli liikaa, koska ne olivat kaikki samaa lajia — kylän nimi osuu
+toisen kunnan kaupunginosaan tai rakennuksen nimeen:
+
+    "Nahkurin ja Nummelan asemakaavan muutos"   Ulvila   -> Vihti
+    "Päiväkoti Immola, Daghemmet Staffan"       Helsinki -> Imatra
+    "...2 x (400 kV...)" (Hikiä-johto)          Jämsä    -> Hausjärvi
+
+Lisäksi 76:sta "uudesta osumasta" valtaosa oli pelkkää yhtäpitävyyttä
+lähteen kanssa, joka ei tuo uutta tietoa. **Aidosti tyhjän kunnan
+täyttäviä oli 2.** Kaksi hyötyä vastaan seitsemän virhettä, joten
+muutos peruttiin.
+
+**Oppi: kuratoitu paikannimikartta kelpaa KENTTÄÄN, ei vapaaseen
+tekstiin.** `notice.city` on jo paikannimi, joten siinä alias on turvassa;
+prosassa sama nimi on kaupunginosa, päiväkoti tai voimajohdon nimi.
+Siksi `detectCityFromText`iin lisätään nimi kerrallaan, kuten
+`klaukkalan` ja `nihdin` ennen tätä. "Ivalo" on yksikäsitteinen: se ei ole
+sana eikä osa yhdyssanaa.
+
+#### Takautuva ajo
+
+`scripts/taydenna-maakunta-nutsista.ts`. Kuntamuutokset tulostettiin
+kaikki ennen ajoa, koska näyte katkesi 14 riviin eikä siitä nähnyt mikä
+se yksi oli:
+
+| | ennen | jälkeen |
+|---|---|---|
+| jono ilman maakuntaa | 134 | **63** |
+| jono ilman kuntaa | 139 | 138 |
+| kanta `region` tyhjä | 14 | 12 |
+
+Jäljelle jäävät 63 ovat paljas `FI` (40), ulkomainen koodi, tai
+ilmoitus ilman koodia — kaikki tapauksia joissa tyhjä on oikea vastaus.
+
 ### D-291 - Hilman tarjousasiakirja aukeaa, mutta vain joka 25. rivillä
 
 Johannes 15.10.2026 Hämeenkyrön ikkunaremontista (`0ad8a8c1`):

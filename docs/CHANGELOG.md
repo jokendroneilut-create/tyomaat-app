@@ -96,6 +96,24 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Maakunta NUTS-koodista (D-292)
+
+Fingridin "IV03 - Ivalon sähköaseman uusiminen" oli ilman kuntaa ja
+maakuntaa. Ilmoituksessa oli rakenteinen koodi `FI1D7` (Lappi), mutta
+maakunta johdettiin vain kunnasta — tunnistamaton paikka jätti molemmat
+tyhjäksi.
+
+NUTS-kartta johdettiin omasta aineistosta (18 koodia, yksimielisyys
+91-100 %), ei muistista: muistinvarainen versio oli neljästä kohdasta
+väärä. Paljas `FI` jätetään kääntämättä, koska se tarkoittaa koko Suomea.
+
+Kaupungin osalta koko postitoimipaikkakartan kytkeminen
+tekstintunnistukseen mitattiin ja **hylättiin**: 7 uutta virhettä
+vastaan 2 aitoa hyötyä. Kylän nimi osuu vapaassa tekstissä toisen kunnan
+kaupunginosaan. Ivalo lisättiin yksittäin.
+
+Takautuva ajo: jono ilman maakuntaa 134 → 63.
+
 ### Hilman ennakoitu arvo kustannusarvioksi (D-291)
 
 Ilmoituksen `estimatedValue` (TED BT-27) oli 459 Hilma-dokumentissa

@@ -29,6 +29,30 @@ const IRREGULAR_ALIASES: Record<string, string> = {
   "klaukkalaan": "Nurmijärvi",
   "klaukkalan": "Nurmijärvi",
   "nihdin": "Helsinki",
+  /*
+   * Ivalo on kylä Inarissa, ei kunta, joten kuntaluettelo ei tunne sitä.
+   * Fingridin "IV03 - Ivalon sähköaseman uusiminen" jäi ilman kuntaa — ja
+   * koska maakunta johdetaan kunnasta, myös ilman maakuntaa (D-292).
+   *
+   * MIKSI YKSI RIVI EIKÄ KOKO KARTTA. `lib/geo`:n `PLACE_ALIASES` tuntee
+   * jo Ivalon ja 40 muuta postitoimipaikkaa, ja sen kytkeminen tähän oli
+   * ensimmäinen yritys. Mitattu 6 847 hankkeella: 7 UUTTA VIRHETTÄ ja
+   * vain 2 aidosti tyhjän kunnan täyttöä. Kylän nimi osuu vapaassa
+   * tekstissä toisen kunnan kaupunginosaan tai rakennuksen nimeen:
+   *
+   *   "Nahkurin ja Nummelan asemakaavan muutos"  Ulvila -> Vihti
+   *   "Päiväkoti Immola, Daghemmet Staffan"      Helsinki -> Imatra
+   *   "...2 x (400 kV...)" (Hikiä-johto)         Jämsä -> Hausjärvi
+   *
+   * Kuratoitu kartta kelpaa KENTTÄÄN (`notice.city`), jossa arvo on jo
+   * paikannimi; vapaassa tekstissä se ei kelpaa. Siksi tähän listaan
+   * lisätään nimi kerrallaan, kuten "klaukkalan" ja "nihdin" ennen tätä.
+   * "Ivalo" on yksikäsitteinen: se ei ole sana eikä osa yhdyssanaa.
+   */
+  "ivalo": "Inari",
+  "ivalon": "Inari",
+  "ivalossa": "Inari",
+  "ivaloon": "Inari",
   "lahteen": "Lahti",
   "lahdessa": "Lahti",
   "lahden": "Lahti",
