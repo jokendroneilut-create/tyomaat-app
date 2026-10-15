@@ -337,7 +337,7 @@ export const sources = [
    * Fingridin kantaverkkohankkeet. Tama on se aukko joka on ollut tiedossa
    * pisimpaan: valtakunnalliset suurhankkeet eivat osu Hilmaan, kunnan
    * paatoksiin eivatka kaavoihin. Fingrid oli lahdekartoituksen 15.10.2026
-   * suurin aukko - rakennuttajana 59 hankkeessa ilman omaa lahdetta.
+   * suurin aukko - 31 hanketta ilman omaa lahdetta.
    *
    * Poikkeuksellista on vaiheen tuoreus: 50/52 hanketta on kesken, kun
    * urakoitsijoiden referenssisivuilla valtaosa on historiaa. Vaihe tulee

@@ -100,7 +100,7 @@ lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
 NRC:n puuttuminen johti kysymykseen: ketkä muut yritykset esiintyvät
 hankkeissamme ilman omaa lähdettä? Suurin aukko ei ollut urakoitsija
-vaan **Fingrid — rakennuttajana 59 hankkeessa, ei lähteenä lainkaan.**
+vaan **Fingrid — 31 hanketta, ei lähteenä lainkaan.**
 
 Kantaverkko on juuri se laji jota emme muuten näe: valtakunnallinen
 suurhanke ei osu Hilmaan, kunnan päätöksiin eikä kaavoihin. Se myös

@@ -13,8 +13,8 @@ import { PHASE_LABELS } from "@/lib/projects/phases"
  * teollisuusinvestointeja, koska tehdas tarvitsee sähkön ennen seiniä.
  *
  * Fingrid nousi esiin myös lähdekartoituksessa 15.10.2026: se esiintyy
- * rakennuttajana 59 hankkeessamme, enemmän kuin yksikään muu yritys
- * jolla ei ollut lähdettä.
+ * rakennuttajana 30 hankkeessamme ja rakentajana yhdessä, enemmän kuin
+ * yksikään muu yritys jolla ei ollut lähdettä.
  *
  * MITÄ LÄHDE ANTAA. Mitattu 15.10.2026: listaussivulla 52 hanketta,
  * koko joukon haku 2,8 s. Jokaisella sivulla on nimetyt kentät

@@ -192,8 +192,8 @@ hankkeissa mukana. Ovatko ne meidän lähteenämme?"*
 
 Kartoitus 15.10.2026 ajoi `developer`- ja `builder`-kentät yritysnimiksi
 ja vertasi niitä `lib/agent/sources.ts`:n lähteisiin. Suurin aukko ei
-ollut urakoitsija vaan **Fingrid Oyj: rakennuttajana 59 hankkeessa
-ilman omaa lähdettä** — eli hankkeet olivat tulleet meille jonkun muun
+ollut urakoitsija vaan **Fingrid Oyj: 31 hanketta (30 rakennuttajana,
+1 rakentajana) ilman omaa lähdettä** — eli hankkeet olivat tulleet meille jonkun muun
 kautta (Hilma, päätökset, media), ei koskaan suoraan.
 
 Fingrid on juuri se laji jota
@@ -278,6 +278,20 @@ aikatauluun. Sama koskee tulevia lähteitä: **yhtä arvokas lähde ei ole
 syy nostaa prioriteettia** ([[expiring-sources]] on se syy — katoava
 sisältö, kuten Lupapisteen kuulutus jota 407/484 oli jo mennyt. Fingridin
 hankesivut eivät katoa).
+
+**Luku 59 oli väärä, oikea on 31.** Kartoitus ajettiin uudelleen kun
+lähde rekisteröitiin, ja Fingridin luku avattiin lähteestä riveittäin:
+`developer ilike %fingrid%` 30, `builder` 1, jompikumpi 31. Ensimmäinen
+luku 59 ei kestänyt tarkistusta. Korjattu myös koodin kommentteihin.
+
+Samalla ajolla paljastui kaksi virhettä mittarissa itsessään, ja
+kumpikin tuotti uskottavan näköisen työlistan: suodatin
+`status = "approved"` palautti 0 riviä ilman virhettä (`projects`-taulun
+arvo on `active`), ja "onko lähteenä" -tarkistus vaati nimeltä yli kolme
+merkkiä, jolloin `grk`, `ncc`, `srv` ja `yit` näkyivät puuttuvina
+vaikka kaikki neljä ovat lähteitämme. Koko kartoitus ja sen
+tarkistettu työlista on nyt
+[`20_YRITYSLAHTEET.md`](20_YRITYSLAHTEET.md):ssä.
 
 **Mitä jäi tekemättä.** Kartoituksen muut aukot odottavat omaa
 mittaustaan: Destia (`destia.fi/referenssit/`, JS-renderöity ilman
