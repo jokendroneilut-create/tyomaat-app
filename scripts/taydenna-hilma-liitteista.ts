@@ -164,10 +164,93 @@ async function main() {
     else kirjoitettu++
   }
 
-  console.log(`\n--- tulos ---`)
+  console.log(`\n--- jonon tulos ---`)
   console.log(`kirjoitettu:      ${kirjoitettu}`)
   console.log(`ei tasmaa:        ${eiTasmaa}`)
   for (const [s, n] of [...syyt].sort((a, b) => b[1] - a[1])) console.log(`  ${String(n).padStart(4)}  ${s}`)
+
+  /*
+   * 2. HYVAKSYTYT HANKKEET.
+   *
+   * Nakyva kentta on `additional_info`, ei `metadata.description`
+   * (D-270), joten molemmat paivitetaan - muuten korjaus ei nay missaan.
+   * Jonoskripti ei naita kata, koska jonorivi on jo kasitelty.
+   */
+  const hankkeet: any[] = []
+  for (let alku = 0; ; alku += 1000) {
+    const { data, error } = await db.from("projects").select("id, name, city, additional_info, metadata").range(alku, alku + 999)
+    if (error) {
+      console.error("VIRHE hankkeet:", error.message)
+      process.exit(1)
+    }
+    hankkeet.push(...(data ?? []))
+    if ((data ?? []).length < 1000) break
+  }
+
+  const ohuetHankkeet = hankkeet.filter((p) => {
+    const md = (p.metadata as any) ?? {}
+    const onHilma = /hankintailmoitukset\.fi/i.test(String(md.source_url ?? "")) || String(md.source_name ?? "") === "Hilma"
+    return onHilma && String(p.additional_info ?? "").length < OHUT_RAJA
+  })
+  console.log(`\nKANTA: ohuita Hilma-hankkeita: ${ohuetHankkeet.length}`)
+
+  const syyt2 = new Map<string, number>()
+  let kirjoitettu2 = 0
+  let eiTasmaa2 = 0
+
+  for (const p of ohuetHankkeet) {
+    const md = (p.metadata as any) ?? {}
+    const nykyinen = String(p.additional_info ?? "").trim()
+    const tulos = await haeLaajuus(md.procedure_id, md.notice_id)
+
+    if ("syy" in tulos) {
+      const avain = tulos.syy.split("(")[0].trim()
+      syyt2.set(avain, (syyt2.get(avain) ?? 0) + 1)
+      continue
+    }
+    if (tulos.teksti.length < nykyinen.length + PARANNUS) {
+      syyt2.set("ei paranna riittavasti", (syyt2.get("ei paranna riittavasti") ?? 0) + 1)
+      continue
+    }
+
+    const t = tasmaa(String(p.name), p.city, tulos.teksti)
+    if (!t.ok) {
+      console.log(`  EI TASMAA  ${String(p.name).slice(0, 50)}`)
+      console.log(`    etsittiin kuntaa "${p.city}" tai sanoja [${t.sanat.join(", ")}]`)
+      console.log(`    poiminta: ${tulos.teksti.slice(0, 90)}`)
+      eiTasmaa2++
+      continue
+    }
+
+    const kuvaus = `${nykyinen} ${tulos.teksti}`.trim().slice(0, KUVAUS_KATTO)
+    console.log(`\n  [${nykyinen.length} -> ${kuvaus.length}] ${String(p.name).slice(0, 56)}`)
+    console.log(`    liite: ${tulos.liite.slice(0, 70)}`)
+    console.log(`    UUSI: ${tulos.teksti.slice(0, 200)}…`)
+
+    if (!apply) continue
+
+    const { error: uv } = await db
+      .from("projects")
+      .update({
+        additional_info: kuvaus,
+        metadata: {
+          ...md,
+          description: kuvaus,
+          additional_info_alkuperainen: nykyinen || null,
+          description_lahde: tulos.liite,
+          description_taydennetty: new Date().toISOString(),
+        },
+      })
+      .eq("id", p.id)
+    if (uv) console.log(`    VIRHE: ${uv.message}`)
+    else kirjoitettu2++
+  }
+
+  console.log(`\n--- kannan tulos ---`)
+  console.log(`kirjoitettu:      ${kirjoitettu2}`)
+  console.log(`ei tasmaa:        ${eiTasmaa2}`)
+  for (const [s, n] of [...syyt2].sort((a, b) => b[1] - a[1])) console.log(`  ${String(n).padStart(4)}  ${s}`)
+
   if (!apply) console.log("\nEi muutettu mitaan. Aja --apply kun rivit on luettu.")
 }
 

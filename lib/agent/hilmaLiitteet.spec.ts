@@ -129,6 +129,42 @@ describe("urakanLaajuus", () => {
     expect(laajuus).toMatch(/salaojitus/)
   })
 
+  /*
+   * TVT Jyrkkalanrinteen urakkaohjelma: sisallysluettelo ilman
+   * pistejonoa, sivunumerot kiinni sanoissa. Lapaisi ensimmaisen
+   * suojan, koska kirjainosuus on korkea eika pistejonoa ole.
+   */
+  it("torjuu sisallysluettelon jossa ei ole pistejonoa", () => {
+    const teksti =
+      "URAKKAOHJELMA Urakan laajuus ja tekniset rajaukset4 7 Haitta-aineet ja " +
+      "erityistyöt5 8 Työturvallisuus ja viranomaismenettelyt5 9 Työmaan toteutus ja " +
+      "yhteistoiminta6 10 Tiedottaminen6 11 Työmaasuunnitelma ja -järjestelyt7"
+    expect(urakanLaajuus(teksti)).toBeNull()
+  })
+
+  it("ei torju leipatekstia jossa on lukuja", () => {
+    /* Leipatekstissa numeroa edeltaa valilyonti. */
+    const teksti =
+      "2. Urakan laajuus Purkutyö käsittää vuonna 1979 rakennetun asuinkerrostalon " +
+      "purkamisen. Urakkaan kuuluvat 212 ikkunaa ja 64 parvekeovea kokonaisuudessaan " +
+      "valmiiksi saatettuna tarjousasiakirjojen mukaisesti. 5. Urakkamuoto Kokonaisurakka."
+    const laajuus = urakanLaajuus(teksti)!
+    expect(laajuus).toMatch(/212 ikkunaa/)
+    expect(laajuus).toMatch(/vuonna 1979/)
+  })
+
+  /*
+   * Ilman sanarajaa "rakennuskohteet?" osui sanan "rakennuskohteeseen"
+   * sisaan, ja poiminta alkoi kesken virkettä keskelta YSE-vakiotekstia.
+   */
+  it("ei osu hakusanan sisaan toisessa sanassa", () => {
+    const teksti =
+      "Urakoitsija on velvollinen rakennuskohteeseen sopimuksessa määritetyn " +
+      "työntuloksen ja luovuttamaan sen sopimusasiakirjojen mukaisesti valmiina " +
+      "rakennuttajalle. Urakoitsija toimittaa huoltokirjatiedot tilaajalle."
+    expect(urakanLaajuus(teksti)).toBeNull()
+  })
+
   it("palauttaa null kun osiota ei ole", () => {
     expect(urakanLaajuus("Tarjouspyyntö. Pyydämme tarjoustanne oheisen mukaisesti.")).toBeNull()
     expect(urakanLaajuus(null)).toBeNull()

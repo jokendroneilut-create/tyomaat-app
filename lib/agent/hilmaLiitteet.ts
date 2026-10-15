@@ -88,8 +88,16 @@ export function valitseLiite(liitteet: HilmaLiite[]): HilmaLiite | null {
  * (19_KUVAUSTEN_KATTAVUUS). Siksi osumista valitaan se, jonka perässä
  * on proosaa: pistejonoja ja sivunumeroita vähän, kirjaimia paljon.
  */
+/*
+ * SANARAJA PAKOLLINEN. Ilman sitä `rakennuskohteet?` osui sanan
+ * "rakennuskohteeseen" sisään, ja poiminta alkoi kesken virkettä
+ * keskeltä YSE-vakiotekstiä:
+ *
+ *   "rakennuskohteeseen sopimuksessa määritetyn työntuloksen ja
+ *    luovuttamaan sen sopimusasiakirjojen mukaisesti…"
+ */
 const OTSIKKO =
-  /(?:rakennuskohde ja urakan laajuus|urakan laajuus|rakennuskohde ja sen sijainti|hankkeen kuvaus|rakennuskohteet?)/gi
+  /(?<![\wåäöÅÄÖ])(?:rakennuskohde ja urakan laajuus|urakan laajuus|rakennuskohde ja sen sijainti|hankkeen kuvaus|rakennuskohteet?)(?![\wåäöÅÄÖ])/gi
 
 /* Seuraava numeroitu otsikko päättää osion. */
 const SEURAAVA_OTSIKKO = /\s\d{1,2}\.\s*[A-ZÅÄÖ][a-zåäö]/
@@ -97,10 +105,28 @@ const SEURAAVA_OTSIKKO = /\s\d{1,2}\.\s*[A-ZÅÄÖ][a-zåäö]/
 const VAHIMMAISPITUUS = 120
 const ENIMMAISPITUUS = 2000
 
+/*
+ * SISÄLLYSLUETTELO ILMAN PISTEJONOA.
+ *
+ * Pistejono ei riitä tunnusmerkiksi. TVT Jyrkkälänrinteen urakkaohjelmassa
+ * luettelo läpäisi suojan, koska sivunumerot ovat kiinni sanoissa:
+ *
+ *   "Urakan laajuus ja tekniset rajaukset4 7 Haitta-aineet ja
+ *    erityistyöt5 8 Työturvallisuus ja viranomaismenettelyt5 9 …"
+ *
+ * Kirjainosuus on korkea ja pistejonoa ei ole, joten luettelo näytti
+ * proosalta. Kirjaimeen kiinni liimattu numero sen sijaan on luettelon
+ * varma merkki: leipätekstissä numeroa edeltää välilyönti ("vuonna 1979",
+ * "212 ikkunaa", "3.1 Luonnossuunnitelmat").
+ */
+const LUETTELON_SIVUNUMERO = /[a-zåäö]\d/gi
+const LUETTELON_RAJA = 2
+
 function onProosaa(pala: string): boolean {
   if (pala.length < VAHIMMAISPITUUS) return false
   /* Pistejono on sisällysluettelon tunnusmerkki. */
   if (/\.{4,}/.test(pala)) return false
+  if ((pala.match(LUETTELON_SIVUNUMERO) ?? []).length >= LUETTELON_RAJA) return false
   const kirjaimet = (pala.match(/[a-zåäöA-ZÅÄÖ]/g) ?? []).length
   return kirjaimet / pala.length > 0.6
 }
