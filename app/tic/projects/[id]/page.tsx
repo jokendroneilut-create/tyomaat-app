@@ -6,6 +6,7 @@ import MergeIntoProject from "./MergeIntoProject"
 import EditableCandidate from "./EditableCandidate"
 import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 import { resolveWinnerName } from "@/lib/projects/winnerName"
+import { muotoileKenttaArvo } from "@/lib/format/luvut"
 
 export const dynamic = "force-dynamic"
 
@@ -188,13 +189,13 @@ export default async function CandidateDetailPage({ params }: Props) {
           * Juuri naista naki hankkeen mittaluokan.
           */}
         {(() => {
-          const kentat: [string, unknown][] = [
-            ["🏷️ Kaavan käyttötarkoitus", metadata.plan_use_purpose],
-            ["🗺️ Kaavatilanne", metadata.plan_status],
-            ["📐 Tontin pinta-ala", metadata.site_area_text],
-            ["🏗️ Kerrosala", metadata.floor_area_text],
-            ["📊 Rakennusoikeus", metadata.building_right_text],
-            ["📦 Tilavuus", metadata.volume_text],
+          const kentat: [string, unknown, string][] = [
+            ["🏷️ Kaavan käyttötarkoitus", metadata.plan_use_purpose, "plan_use_purpose"],
+            ["🗺️ Kaavatilanne", metadata.plan_status, "plan_status"],
+            ["📐 Tontin pinta-ala", metadata.site_area_text, "site_area_text"],
+            ["🏗️ Kerrosala", metadata.floor_area_text, "floor_area_text"],
+            ["📊 Rakennusoikeus", metadata.building_right_text, "building_right_text"],
+            ["📦 Tilavuus", metadata.volume_text, "volume_text"],
 
             /*
              * Nama olivat metatiedoissa mutta eivat nakyneet missaan.
@@ -202,15 +203,15 @@ export default async function CandidateDetailPage({ params }: Props) {
              * oli poimittu, mutta katselmoija ei nahnyt sita - eli
              * hankkeen mittaluokka jai arvailun varaan.
              */
-            ["📏 Laajuus", metadata.laajuus],
-            ["🏠 Asuntoja", metadata.apartments],
-            ["📅 Arvioitu valmistuminen", metadata.estimated_completion],
-            ["🚧 Rakentamisen aloitus", metadata.construction_start],
-            ["🗓️ Rakentamisen aikataulu", metadata.rakentamisen_aikataulu],
-            ["💶 Arvioitu kustannus", metadata.estimated_cost],
-            ["📝 Urakkamuoto", metadata.urakkamuoto],
-            ["🔢 Lupanumero", metadata.permit_number],
-            ["🗝️ Kiinteistötunnus", metadata.property_id],
+            ["📏 Laajuus", metadata.laajuus, "laajuus"],
+            ["🏠 Asuntoja", metadata.apartments, "apartments"],
+            ["📅 Arvioitu valmistuminen", metadata.estimated_completion, "estimated_completion"],
+            ["🚧 Rakentamisen aloitus", metadata.construction_start, "construction_start"],
+            ["🗓️ Rakentamisen aikataulu", metadata.rakentamisen_aikataulu, "rakentamisen_aikataulu"],
+            ["💶 Arvioitu kustannus", metadata.estimated_cost, "estimated_cost"],
+            ["📝 Urakkamuoto", metadata.urakkamuoto, "urakkamuoto"],
+            ["🔢 Lupanumero", metadata.permit_number, "permit_number"],
+            ["🗝️ Kiinteistötunnus", metadata.property_id, "property_id"],
           ]
           const naytettavat = kentat.filter(
             ([, v]) =>
@@ -221,9 +222,9 @@ export default async function CandidateDetailPage({ params }: Props) {
 
           return (
             <div className="mt-3 grid gap-1 text-sm text-gray-800 md:grid-cols-2">
-              {naytettavat.map(([otsikko, arvo]) => (
+              {naytettavat.map(([otsikko, arvo, avain]) => (
                 <p key={otsikko}>
-                  <strong>{otsikko}:</strong> {String(arvo)}
+                  <strong>{otsikko}:</strong> {muotoileKenttaArvo(avain, arvo)}
                 </p>
               ))}
             </div>
@@ -279,7 +280,8 @@ export default async function CandidateDetailPage({ params }: Props) {
               <div className="mt-2 grid gap-1 md:grid-cols-2">
                 {muut.map(([avain, arvo]) => (
                   <p key={avain}>
-                    <span className="text-gray-500">{avain}:</span> {String(arvo)}
+                    <span className="text-gray-500">{avain}:</span>{" "}
+                    {muotoileKenttaArvo(avain, arvo)}
                   </p>
                 ))}
               </div>
