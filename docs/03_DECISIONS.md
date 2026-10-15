@@ -245,6 +245,40 @@ sijainnista, otsikosta ja tekstistä tässä järjestyksessä. Rakennuttaja
 on `Fingrid Oyj` — kantaverkkoyhtiö on hankkeen tilaaja omilla
 sivuillaan, ei urakoitsija.
 
+**Prioriteetti 10, ei 12.** Ensimmäinen versio antoi Fingridille
+prioriteetin 12 perustelulla "tuotos on tuoretta eikä historiaa".
+Johannes kysyi onko siinä järkeä, ja käski katsoa dokumentaation. Oli
+oikeassa kahdesti:
+
+Kenttä ei ole arvojärjestys. Mitattu 15.10.2026: 333 lähteestä **330 on
+prioriteetilla 10 ja 2 prioriteetilla 20** — kenttä on käytännössä
+binäärinen. Putki ajaa `priority DESC, last_run_at ASC` ja ottaa 20
+paikkaa, eli `priority > 10` varaa kiinteän paikan **joka ajossa, 4
+kertaa vuorokaudessa**, ja se on pois muiden kierrosta:
+
+| | perustason paikkoja | kierros |
+|---|---|---|
+| 2 taattua (nyt) | 18 × 4 = 72/vrk | 330 / 72 = 4,6 vrk |
+| Fingrid taattuna | 17 × 4 = 68/vrk | 331 / 68 = 4,9 vrk |
+
+`cronConfig.ts` on kirjoittanut tämän ohjeeksi D-210:n jälkeen —
+*"TAATTU PAIKKA ON KALLIS... Jos lisäät taatun lähteen, laske kierros
+tästä uudelleen"* — ja jätin sen laskematta. D-210 on saman virheen
+pöytäkirja: yhdeksän opiskelija-asuntosäätiötä vei taatuilla paikoillaan
+942 ajoa 30 vuorokaudessa ja tuotti 32 ehdokasta.
+
+Premissi oli myös väärä. `priority` ei mittaa lähteen arvoa vaan sitä
+**kuinka usein sivu pitää lukea uudelleen.** Hilma ja STT ovat taattuja
+koska niille ilmestyy uutta päivittäin. Voimajohtohanke on monivuotinen
+— 50/52 on kesken juuri siksi — joten listaus muuttuu muutaman kerran
+vuodessa, ja perustaso antaa vuoron noin 70 kertaa vuodessa. Hankkeen
+vaiheen tuoreus ja sivun muutostiheys ovat eri asia; sekoitin ne.
+Lähteen arvo kuuluu `confidence`-lukuun ja katselmointijonoon, ei
+aikatauluun. Sama koskee tulevia lähteitä: **yhtä arvokas lähde ei ole
+syy nostaa prioriteettia** ([[expiring-sources]] on se syy — katoava
+sisältö, kuten Lupapisteen kuulutus jota 407/484 oli jo mennyt. Fingridin
+hankesivut eivät katoa).
+
 **Mitä jäi tekemättä.** Kartoituksen muut aukot odottavat omaa
 mittaustaan: Destia (`destia.fi/referenssit/`, JS-renderöity ilman
 upotettua JSONia, siis NRC:tä hankalampi) ja suunnittelijat

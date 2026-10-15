@@ -10,8 +10,16 @@ for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8
  * sources.ts:ssa; tama rivi kertoo kierratykselle etta lahde on
  * olemassa (D-001). Muoto kopioitu GRK:n ja NRC:n riveista.
  *
- * Prioriteetti on NRC:ta korkeampi (12 vs. 10): 50/52 hanketta on
- * kesken, eli lahteen tuotos on tuoretta eika historiaa.
+ * PRIORITEETTI 10 ELI PERUSTASO, kuten NRC:lla ja kaikilla muilla
+ * paitsi Hilmalla ja STT:lla (20). `priority > 10` ei ole arvojarjestys
+ * vaan varaa kiinteen paikan joka ajossa eli 4 kertaa vuorokaudessa, ja
+ * se on pois 330 muun lahteen kierrosta: 18 -> 17 paikkaa lyhentaisi
+ * kierron 4,6 -> 4,9 vuorokauteen (cronConfig.ts, D-210).
+ *
+ * Fingrid ei tarvitse taattua paikkaa. Taattu paikka on lahteelle jolle
+ * ilmestyy uutta paivittain (Hilma, STT). Voimajohtohanke on monivuotinen
+ * - 50/52 on kesken juuri siksi - joten listaus muuttuu muutaman kerran
+ * vuodessa, ja perustaso antaa vuoron noin 70 kertaa vuodessa.
  *
  *   npx tsx scripts/rekisteroi-fingrid-lahde.ts
  *   npx tsx scripts/rekisteroi-fingrid-lahde.ts --apply
@@ -27,7 +35,7 @@ async function main() {
     type: "html",
     category: "company_project",
     url: "https://www.fingrid.fi/kantaverkko/rakentaminen/hankkeet/",
-    priority: 12,
+    priority: 10,
     enabled: true,
     refresh_minutes: 1440,
     collector: "legacyFetchCollector",
