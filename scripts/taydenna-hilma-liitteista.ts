@@ -140,7 +140,13 @@ async function main() {
       continue
     }
 
-    const kuvaus = tulos.teksti.slice(0, KUVAUS_KATTO)
+    /*
+     * Tulostetaan TALLENNETTAVAN kentan pituus, ei poiminnan. Ensimmaisessa
+     * versiossa loki sanoi 613 vaikka kantaan tuli 694, koska ilmoituksen
+     * oma kuvaus jaa poiminnan eteen - ja ero nayttaa jalkitarkistuksessa
+     * virheelta joka sita ei ole.
+     */
+    const kuvaus = `${nykyinen} ${tulos.teksti}`.trim().slice(0, KUVAUS_KATTO)
     console.log(`\n  [${nykyinen.length} -> ${kuvaus.length}] ${String(e.title).slice(0, 56)}`)
     console.log(`    liite: ${tulos.liite.slice(0, 70)}`)
     console.log(`    NYT:  ${nykyinen.slice(0, 100)}`)
@@ -153,7 +159,7 @@ async function main() {
       .update({
         metadata: {
           ...md,
-          description: `${nykyinen} ${kuvaus}`.trim().slice(0, KUVAUS_KATTO),
+          description: kuvaus,
           description_alkuperainen: nykyinen || null,
           description_lahde: tulos.liite,
           description_taydennetty: new Date().toISOString(),

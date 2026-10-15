@@ -3,6 +3,10 @@ import { runSourceWorker, reapStuckRuns } from "@/lib/agent/workers/sourceWorker
 import { collectArticleDocument } from "@/lib/agent/discovery/collectors/articleCollector"
 import { runPdfWorker } from "@/lib/agent/workers/pdfWorker"
 import { runTextExtractionWorker } from "@/lib/agent/workers/textExtractionWorker"
+import {
+  nextHilmaAttachmentDocument,
+  processHilmaAttachment,
+} from "../workers/hilmaLiiteWorker"
 import { runFactWorker } from "@/lib/agent/workers/factWorker"
 import { runIdentityWorker } from "@/lib/agent/workers/identityWorker"
 
@@ -26,6 +30,7 @@ type PipelineOptions = {
   maxArticleJobs?: number
   maxPdfJobs?: number
   maxTextJobs?: number
+  maxHilmaLiiteJobs?: number
   maxFactJobs?: number
   maxIdentityCatchUpJobs?: number
   stages?: PipelineStage[]
@@ -120,6 +125,13 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   const maxArticleJobs = options.maxArticleJobs ?? 20
   const maxPdfJobs = options.maxPdfJobs ?? 20
   const maxTextJobs = options.maxTextJobs ?? 20
+  /*
+   * Hilman tarjousasiakirjat: katto on pieni, koska yksi ilmoitus on
+   * rajapintakutsu + PDF:n purku eli noin 4 s. Mitattu 15.10.2026: liite
+   * loytyy vain joka 25. ohuelta rivilta, joten tama ei ole kiireinen
+   * jono vaan hidas tausta-ajo. Viisi per ajo = 20 vuorokaudessa.
+   */
+  const maxHilmaLiiteJobs = options.maxHilmaLiiteJobs ?? 5
   const maxFactJobs = options.maxFactJobs ?? 20
   /*
    * Kiinniotto on pienempi kuin faktabudjetti: jono on normaalisti tyhjä,
@@ -132,6 +144,7 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
   const articleResults = []
   const pdfResults = []
   const textResults = []
+  const hilmaLiiteResults = []
   const factResults = []
   const identityResults = []
 
@@ -237,6 +250,25 @@ articleResults.push(result)
 
     if (result.message === "No PDF documents waiting for text extraction")
       break
+  }
+
+  //
+  // 4b. Hilman tarjousasiakirjat
+  //
+  /*
+   * ENNEN FAKTOJA, koska `extractHilmaFacts` liittaa
+   * `raw_payload.liiteteksti`-kentan kuvauksen peraan (D-291).
+   * Ilmoituksen oma kuvaus on usein yksi virke, kun urakkaohjelmassa
+   * lukee urakan laajuus.
+   *
+   * Porttina on kuvauksen ohuus, ja portti on tyontekijassa: se merkitsee
+   * myos ohitetun, jottei sama rivi tule vastaan joka ajossa.
+   */
+  for (let i = 0; stages.has("facts") && i < maxHilmaLiiteJobs; i++) {
+    if (stopIfOutOfTime("hilma_liitteet")) break
+    const documentId = await nextHilmaAttachmentDocument()
+    if (!documentId) break
+    hilmaLiiteResults.push(await processHilmaAttachment(documentId))
   }
 
   //
@@ -352,6 +384,7 @@ articleResults.push(result)
     articleRuns: articleResults.length,
     pdfRuns: pdfResults.length,
     textRuns: textResults.length,
+    hilmaLiiteRuns: hilmaLiiteResults.length,
     factRuns: factResults.length,
     identityRuns: identityResults.length,
 
@@ -359,6 +392,7 @@ articleResults.push(result)
     articleResults,
     pdfResults,
     textResults,
+    hilmaLiiteResults,
     factResults,
     identityResults,
   }

@@ -87,9 +87,63 @@ describe("resolveProjectCost", () => {
     ).toEqual({ estimated_cost: 82_400_000, cost_source: "manual" })
   })
 
+  /*
+   * ILMOITUKSEN ENNAKOITU ARVO (D-291). Hameenkyron ikkunaremontissa
+   * ilmoituksessa luki 250 000 EUR eika kannassa ollut mitaan, koska
+   * poiminta luki vain ratkaisun summia.
+   */
+  it("lukee ilmoituksen ennakoidun arvon", () => {
+    expect(resolveProjectCost({ noticeValue: 250_000 })).toEqual({
+      estimated_cost: 250_000,
+      cost_source: "notice",
+    })
+  })
+
+  it("ilmoituksen arvio voittaa tekstista poimitun", () => {
+    /* Rakenteinen kentta on luotettavampi kuin tekstista arvattu. */
+    expect(
+      resolveProjectCost({
+        noticeValue: 250_000,
+        text: "Hankkeen kustannusarvio on 45 miljoonaa euroa.",
+      })
+    ).toEqual({ estimated_cost: 250_000, cost_source: "notice" })
+  })
+
+  it("sopimusarvo voittaa ilmoituksen arvion", () => {
+    /* Toteutunut hinta on tarkempi kuin kilpailutusvaiheen arvio. */
+    expect(
+      resolveProjectCost({
+        contractValue: 312_000,
+        noticeValue: 250_000,
+      })
+    ).toEqual({ estimated_cost: 312_000, cost_source: "contract" })
+  })
+
+  it("kasin syotetty voittaa myos ilmoituksen arvion", () => {
+    expect(
+      resolveProjectCost({
+        existingCost: 400_000,
+        existingSource: "manual",
+        noticeValue: 250_000,
+      })
+    ).toEqual({ estimated_cost: 400_000, cost_source: "manual" })
+  })
+
+  it("ilmoituksen arvio ei ylikirjoita aiempaa sopimusarvoa", () => {
+    expect(
+      resolveProjectCost({
+        existingCost: 312_000,
+        existingSource: "contract",
+        noticeValue: 250_000,
+      })
+    ).toEqual({ estimated_cost: 312_000, cost_source: "contract" })
+  })
+
   it("sivuuttaa kelvottomat arvot", () => {
     expect(resolveProjectCost({ contractValue: 0 })).toBeNull()
     expect(resolveProjectCost({ contractValue: "" })).toBeNull()
     expect(resolveProjectCost({ contractValue: "ei numero" })).toBeNull()
+    expect(resolveProjectCost({ noticeValue: 0 })).toBeNull()
+    expect(resolveProjectCost({ noticeValue: -5 })).toBeNull()
   })
 })

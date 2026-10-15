@@ -96,6 +96,21 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Hilman ennakoitu arvo kustannusarvioksi (D-291)
+
+Ilmoituksen `estimatedValue` (TED BT-27) oli 459 Hilma-dokumentissa
+1 544:stä eikä sitä luettu lainkaan — poiminta luki vain ratkaisun
+summia eli jälki-ilmoituksen arvoja. Kenttä on jo tallennetussa
+hyötykuormassa, joten korjaus ei vaadi yhtäkään verkkohakua.
+
+Ennakoitu arvo sai oman alkuperätasonsa (`notice`) tekstistä poimitun
+yläpuolelle ja sopimusarvon alapuolelle. Takautuva ajo: jono 244 riviä,
+kanta 163 hanketta, eikä yhtäkään ylikirjoitusta. Kustannusarvion
+kattavuus 14 % → 16 %.
+
+Lisäksi liitehaku kytkettiin putken omaksi vaiheeksi faktojen edelle —
+ilman sitä vain jo tuodut rivit olisivat korjaantuneet.
+
 ### Tarjousasiakirjan teksti kuvaukseen (D-291)
 
 Hämeenkyrön ikkunaremontissa oli 79 merkkiä, vaikka urakkaohjelmassa

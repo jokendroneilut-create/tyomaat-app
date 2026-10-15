@@ -51,10 +51,21 @@ export function extractHilmaFacts({
   documentId,
   sourceName,
   notice,
+  liiteteksti,
 }: {
   documentId: string
   sourceName: string
   notice: any
+  /*
+   * Tarjousasiakirjasta poimittu urakan laajuus (D-291). Ilmoituksen
+   * oma kuvaus on usein yksi virke - Hameenkyron ikkunaremontissa
+   * "Kirkkokatu 14 ja 16 ikkuna- ja oviremontti." - kun urakkaohjelmassa
+   * lukee 212 ikkunaa, 64 parvekeovea ja seitseman puuovea.
+   *
+   * Taman noutaa `hilmaLiiteWorker` ennen faktavaihetta, koska se on
+   * verkkotyota eika kuulu puhtaaseen poimintaan.
+   */
+  liiteteksti?: string | null
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
 
@@ -129,6 +140,19 @@ export function extractHilmaFacts({
 
   const receivedTenderCount = toNullableNumber(
     notice.receivedTenderCount
+  )
+
+  /*
+   * ILMOITUKSEN ENNAKOITU KOKONAISARVO (TED BT-27).
+   *
+   * Alla oleva `contractValue` lukee vain RATKAISUN summia, eli
+   * jalki-ilmoituksen arvoja. Kilpailutusvaiheen ilmoituksessa niita ei
+   * ole, mutta tilaajan oma arvio on - ja se jai lukematta, vaikka se on
+   * samassa jo tallennetussa oliossa (D-291). Mitattu 15.10.2026: kentta
+   * on 459 Hilma-dokumentissa 1 544:sta, mediaani 400 000 EUR.
+   */
+  const noticeValue = toNullableNumber(
+    notice.estimatedValue
   )
 
   const contractValue =
@@ -217,6 +241,9 @@ export function extractHilmaFacts({
     contract_value:
       contractValue,
 
+    notice_value:
+      noticeValue,
+
     contract_currency:
       contractCurrency,
 
@@ -234,13 +261,22 @@ export function extractHilmaFacts({
     })
   }
 
-  if (description) {
+  /*
+   * Liitteen teksti ilmoituksen kuvauksen PERAAN, ei sijaan: ilmoituksen
+   * oma virke kertoo mika hanke on, liite kertoo laajuuden.
+   */
+  const liite = clean(liiteteksti)
+  const kuvaus = [description, liite].filter(Boolean).join(" ")
+
+  if (kuvaus) {
     facts.push({
       fact_type: "description",
       fact_key: "description",
-      fact_value: truncate(description),
+      fact_value: truncate(kuvaus),
       confidence: 0.95,
-      metadata: commonMetadata,
+      metadata: liite
+        ? { ...commonMetadata, description_sisaltaa_liitteen: true }
+        : commonMetadata,
     })
   }
 
@@ -379,6 +415,24 @@ export function extractHilmaFacts({
       fact_type: "contract_value",
       fact_key: "contract_value",
       fact_number: contractValue,
+      confidence: 0.9,
+      metadata: {
+        ...commonMetadata,
+        currency: contractCurrency,
+      },
+    })
+  }
+
+  if (noticeValue != null) {
+    facts.push({
+      fact_type: "notice_value",
+      fact_key: "notice_value",
+      fact_number: noticeValue,
+      /*
+       * Rakenteinen kentta ilmoituksessa, joten varmuus on korkea -
+       * mutta kyseessa on arvio eika toteutunut hinta, mika nakyy
+       * alkuperassa (`cost_source: "notice"`), ei varmuusluvussa.
+       */
       confidence: 0.9,
       metadata: {
         ...commonMetadata,

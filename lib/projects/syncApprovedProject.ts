@@ -72,6 +72,7 @@ export async function syncApprovedProject(input: {
    */
   const resolvedCost = resolveProjectCost({
     contractValue: baseMetadata.contract_value,
+    noticeValue: baseMetadata.notice_value,
     text: [baseMetadata.description, baseMetadata.operation]
       .filter(Boolean)
       .join(" "),

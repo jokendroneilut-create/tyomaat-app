@@ -350,6 +350,7 @@ export async function resolvePotentialProject(
   ): Record<string, unknown> {
     const resolved = resolveProjectCost({
       contractValue: md.contract_value,
+      noticeValue: md.notice_value,
       text: costText,
       existingCost: existingMetadata?.estimated_cost,
       existingSource: existingMetadata?.cost_source,

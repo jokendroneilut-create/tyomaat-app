@@ -273,9 +273,63 @@ eikä vaadi yhtäkään lisähakua.
 Tämä on paremmassa suhteessa kuin liitereitti (459/1 544 vs. 1/25) ja
 halvempi (ei verkkohakua). Se liittyy myös suoraan
 [[filter-requests-2026-10]]:een: asiakkaan pyytämä kustannussuodatin
-jäi rakentamatta, koska kattavuus oli 14,4 % — ja `estimated_cost`
-puuttuu 5 871 hankkeelta 6 823:sta. **Ei tehty tässä, koska sitä ei
-pyydetty; odottaa päätöstä.**
+jäi rakentamatta, koska kattavuus oli 14,4 %.
+
+**Tehty 16.10.2026.** Ilmoituksen ennakoitu arvo sai oman
+alkuperätasonsa `resolveProjectCost`issa, koska se ei ole kumpaakaan
+olemassa olevaa lajia:
+
+    manual    4   ihmisen korjaus
+    contract  3   toteutunut sopimusarvo
+    notice    2   ilmoituksen ennakoitu arvo (TED BT-27)  <- uusi
+    text      1   kuvaustekstistä poimittu
+
+Taso on tekstin yläpuolella (rakenteinen kenttä, ei arvaus) ja
+sopimusarvon alapuolella (arvio, ei toteutunut hinta). Takautuva ajo
+`scripts/taydenna-hilma-kustannusarvio.ts`:
+
+| | |
+|---|---|
+| jono | **244** riviä sai kustannusarvion |
+| kanta | **163** hanketta sai kustannusarvion |
+| ennallaan | 131 + 101 — niillä oli jo parempi alkuperä |
+| kattavuus | 952 / 6 823 = 14 % → **1 121 / 6 829 = 16 %** |
+
+Kaikki muutokset olivat lisäyksiä tyhjään kenttään; yhtäkään arvoa ei
+ylikirjoitettu, koska resolver suojaa paremman alkuperän.
+
+#### Keräin kytkettiin, muuten tuleva ei korjaannu
+
+Johannes kysyi: *"onko kaikki korjattu kantaan, jonoon ja tuleviin
+hankkeisiin?"* Vastaus oli ensin **ei**: `grep` ei löytänyt yhtäkään
+kutsua poimintaan, eli se oli vain käsin ajettava skripti. Sama aukko
+jonka [`19_KUVAUSTEN_KATTAVUUS.md`](19_KUVAUSTEN_KATTAVUUS.md) on
+kirjannut kaavalähteistä: *"Keräin on kytkettävä erikseen."*
+
+Hilma ei ole `sources.ts`:ssä vaan `apiCollector`issa, joten
+`enrich`-koukku ei koske sitä. Liitehaku on nyt **putken oma vaihe**
+(`hilmaLiiteWorker`) faktojen edellä, samalla kuviolla kuin
+artikkeli- ja pdf-vaiheet: oma katto per ajo, koska yksi ilmoitus on
+rajapintakutsu + PDF:n purku eli noin 4 s. Katto on 5 per ajo = 20
+vuorokaudessa; se riittää, koska liite löytyy vain joka 25. rivillä.
+
+Portti on **työntekijässä, ei valitsimessa**. Ensimmäinen versio
+suodatti paksut rivit valitsimessa, jolloin ne olisivat jääneet
+merkitsemättä ja jono jumittanut niihin joka ajossa. Nyt myös ohitus
+merkitään — ilman verkkohakua.
+
+`extractHilmaFacts` liittää `raw_payload.liiteteksti`-kentän ilmoituksen
+oman kuvauksen **perään**, ei sijaan: ilmoitus kertoo mikä hanke on,
+liite kertoo laajuuden.
+
+#### Loki sanoi 613, kantaan tuli 694
+
+Jälkitarkistus näytti ristiriidan. Syy oli lokissa: se tulosti
+poiminnan pituuden, ei tallennettavan kentän, ja ilmoituksen oma kuvaus
+(80 merkkiä) jää poiminnan eteen. Data oli oikein koko ajan. Korjattu,
+koska juuri tällainen loki tuottaa väärän hälytyksen seuraavalla
+kerralla. Uudelleenajo vahvisti myös idempotenssin: 0 kirjoitettu
+molemmilla kierroksilla.
 
 ### D-290 - Osiotunniste hylkäsi 96 % tekstistä, ja liitettä ei avattu lainkaan
 

@@ -8,6 +8,13 @@ import { extractCostFromText } from "./extractCostFromText"
  *   manual    Ihmisen käsin syöttämä arvo. Vahvin, koska se on nimenomaan
  *             korjaus koneen erehdykseen (D-076).
  *   contract  Hilman ilmoituksen sopimusarvo. Eksakti, toteutunut hinta.
+ *   notice    Hilman ilmoituksen ENNAKOITU kokonaisarvo
+ *             (`estimatedValue`, TED BT-27). Tilaajan itse ilmoittama luku
+ *             kilpailutusvaiheessa: ei toteutunut hinta, mutta rakenteinen
+ *             kenttä eikä tekstistä arvattu. Siksi tekstin yläpuolella ja
+ *             sopimusarvon alapuolella. Lisätty 15.10.2026 (D-291): kenttä
+ *             oli 459 Hilma-dokumentissa 1 544:stä eikä sitä luettu
+ *             lainkaan, vaikka se on jo tallennetussa hyötykuormassa.
  *   text      Kuvaustekstistä ankkuroituna poimittu kustannusarvio. Hankkeen
  *             oma arvio, usein pyöristetty ja hankkeen alkuvaiheesta.
  *   derived   Meidän oma arviomme (esim. kohdetyypin mediaani). EI TÄSSÄ —
@@ -23,7 +30,7 @@ import { extractCostFromText } from "./extractCostFromText"
  * ei poimintapäätös, joten se pidetään erillään kunnes siitä on päätetty.
  */
 
-export type CostSource = "manual" | "contract" | "text"
+export type CostSource = "manual" | "contract" | "notice" | "text"
 
 export type ResolvedCost = {
   estimated_cost: number
@@ -35,8 +42,9 @@ export type ResolvedCost = {
  * arviolla, vaikka arvio tulisi myöhemmästä lähdesignaalista.
  */
 const PRECEDENCE: Record<CostSource, number> = {
-  manual: 3,
-  contract: 2,
+  manual: 4,
+  contract: 3,
+  notice: 2,
   text: 1,
 }
 
@@ -47,7 +55,12 @@ function toPositiveNumber(value: unknown): number | null {
 }
 
 function isCostSource(value: unknown): value is CostSource {
-  return value === "manual" || value === "contract" || value === "text"
+  return (
+    value === "manual" ||
+    value === "contract" ||
+    value === "notice" ||
+    value === "text"
+  )
 }
 
 /*
@@ -58,6 +71,7 @@ function isCostSource(value: unknown): value is CostSource {
  */
 export function resolveProjectCost(input: {
   contractValue?: unknown
+  noticeValue?: unknown
   text?: string | null
   existingCost?: unknown
   existingSource?: unknown
@@ -82,6 +96,11 @@ export function resolveProjectCost(input: {
   const contract = toPositiveNumber(input.contractValue)
   if (contract !== null) {
     candidates.push({ estimated_cost: contract, cost_source: "contract" })
+  }
+
+  const notice = toPositiveNumber(input.noticeValue)
+  if (notice !== null) {
+    candidates.push({ estimated_cost: notice, cost_source: "notice" })
   }
 
   const fromText = extractCostFromText(input.text)

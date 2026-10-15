@@ -280,6 +280,7 @@ export function resolveFacts(document: any) {
         documentId: document.id,
         sourceName: document.source_name,
         notice,
+        liiteteksti: document.raw_payload?.liiteteksti ?? null,
       }),
     }
   }
