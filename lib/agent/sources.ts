@@ -82,6 +82,7 @@ import {
   enrichNccProject,
 } from "./fetchNccProjectsSource"
 import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
+import { fetchFingridProjectsSource } from "./fetchFingridProjectsSource"
 import { fetchNrcProjectsSource } from "./fetchNrcProjectsSource"
 import { fetchHartelaAreasSource } from "./fetchHartelaAreasSource"
 import { fetchHcHoivakoditSource } from "./fetchHcHoivakoditSource"
@@ -332,6 +333,17 @@ export const sources = [
    * mutta vain GRK:n nakokulmasta (D-288).
    */
   { name: "nrc_projektit", fetch: fetchNrcProjectsSource },
+  /*
+   * Fingridin kantaverkkohankkeet. Tama on se aukko joka on ollut tiedossa
+   * pisimpaan: valtakunnalliset suurhankkeet eivat osu Hilmaan, kunnan
+   * paatoksiin eivatka kaavoihin. Fingrid oli lahdekartoituksen 15.10.2026
+   * suurin aukko - rakennuttajana 59 hankkeessa ilman omaa lahdetta.
+   *
+   * Poikkeuksellista on vaiheen tuoreus: 50/52 hanketta on kesken, kun
+   * urakoitsijoiden referenssisivuilla valtaosa on historiaa. Vaihe tulee
+   * lahteesta, ei arvauksesta (D-289).
+   */
+  { name: "fingrid_hankkeet", fetch: fetchFingridProjectsSource },
   /*
    * Hartelan TULEVAT asuinalueet - eri sivu kuin referenssit, jotka ovat
    * valmistuneita. Naiden arvo on katuosoite: 8/15 sivulta loytyy osoite

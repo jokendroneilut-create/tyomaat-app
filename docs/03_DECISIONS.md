@@ -184,6 +184,75 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-289 - Kantaverkko lähteeksi: yritys hankkeissa ≠ yritys lähteenä
+
+Jatkoa D-288:lle. NRC puuttui lähteistä, joten kysymys oli ilmeinen:
+*"katso kaikki muut kannassa olevat yritykset josta tiedämme että ovat
+hankkeissa mukana. Ovatko ne meidän lähteenämme?"*
+
+Kartoitus 15.10.2026 ajoi `developer`- ja `builder`-kentät yritysnimiksi
+ja vertasi niitä `lib/agent/sources.ts`:n lähteisiin. Suurin aukko ei
+ollut urakoitsija vaan **Fingrid Oyj: rakennuttajana 59 hankkeessa
+ilman omaa lähdettä** — eli hankkeet olivat tulleet meille jonkun muun
+kautta (Hilma, päätökset, media), ei koskaan suoraan.
+
+Fingrid on juuri se laji jota
+[[private-developer-blind-spot]] kuvaa: valtakunnallinen suurhanke ei
+osu Hilmaan, kunnan päätöksiin eikä kaavoihin. Kantaverkko ennakoi
+lisäksi teollisuusinvestointeja, koska tehdas tarvitsee sähkön ennen
+seiniä — ja teollisuuskohteiden puute oli asiakkaan (Firesafe) vaiva
+samassa sessiossa.
+
+**Mitattu lähde (15.10.2026):**
+
+| | |
+|---|---|
+| hankkeita listauksella | 52 |
+| koko joukon haku | 2,8 s (6 rinnakkain) |
+| ehdokkaita ajosta | **51** |
+| vaiheet | Ideointi 17, Rakenteilla 17, Suunnittelu 17 |
+| ilman kaupunkia | 1 / 51 |
+| kuvauksen pituus | mediaani 3 639, lyhin 696 merkkiä |
+
+Poikkeuksellista on tuoreus: **50 / 52 on kesken.** Urakoitsijoiden
+referenssisivuilla valtaosa on historiaa, josta suodatamme suurimman
+osan pois (GRK, NRC, Lujatalo). Tässä suodattuu yksi.
+
+**Vaihe tulee lähteestä, ei arvauksesta.** Fingrid kertoo tilan itse
+("Suunnittelu", "Rakentaminen", "YVA-menettely", "Ympäristöselvitys")
+ja se osuu suoraan omiin vaiheisiimme. YVA ja ympäristöselvitys ovat
+hankkeen aikaisin julkinen vaihe — juuri se mitä asiakas haluaa nähdä
+ennen kilpailutusta. Valmistunutta ei tuoda: valmis voimajohto ei ole
+mahdollisuus (sama päätös kuin GRK ja NRC).
+
+**Kaksi ansaa, jotka vain kuivaharjoitus paljasti** — sama kuvio kuin
+NRC:llä ([[dry-run-before-backfill]]):
+
+1. **Kuvaus luettiin `.content`-lohkosta**, joka sisältää sivupalkin
+   kaikkien 52 hankkeen nimillä. Jokaisen hankkeen kuvaukseen olisi
+   vuotanut 51 muun hankkeen nimi. Korjaus: `.content-text`, sivun oma
+   artikkelilohko. Mittaus korjauksen jälkeen: 0/51 kuvauksessa yli
+   kahden muun hankkeen nimeä.
+2. **Kenttien lukeminen lookahead-regexillä palautti 51 tyhjää 52:sta.**
+   Syy: kenttien välissä ei ole välimerkkiä vaan pelkkä välilyönti
+   ("Hankkeen tyyppi: Voimajohto Hankkeen tila: Suunnittelu"). Korjaus:
+   arvo luetaan indeksillä seuraavaan nimettyyn kenttään asti. Kumpikin
+   virhe tuotti uskottavan näköistä tulosta, ei poikkeusta.
+
+Sijainti on usein maakunta ("Lappi, Pohjois-Pohjanmaa") tai toinen maa
+("Norrbotten"), joten kaupunki varmistetaan kuntatunnistuksella
+sijainnista, otsikosta ja tekstistä tässä järjestyksessä. Rakennuttaja
+on `Fingrid Oyj` — kantaverkkoyhtiö on hankkeen tilaaja omilla
+sivuillaan, ei urakoitsija.
+
+**Mitä jäi tekemättä.** Kartoituksen muut aukot odottavat omaa
+mittaustaan: Destia (`destia.fi/referenssit/`, JS-renderöity ilman
+upotettua JSONia, siis NRC:tä hankalampi) ja suunnittelijat
+(Ramboll, Sweco, FCG, Envineer — 116 hanketta). Suunnittelijan
+referenssi ei ole sama asia kuin urakoitsijan: se voi olla vuosia vanha
+ja jo rakennettu, joten vaiheen tuoreus on mitattava ennen kuin lähde
+otetaan.
+
 ### D-288 - Hanke oli meillä, mutta vain yhden osapuolen silmin
 
 Johannes 15.10.2026, asiakkaan kanssa: *"katsoimme äsken asiakkaan

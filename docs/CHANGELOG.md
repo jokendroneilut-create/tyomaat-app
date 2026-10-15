@@ -96,6 +96,28 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Fingridin kantaverkkohankkeet lähteeksi (D-289)
+
+NRC:n puuttuminen johti kysymykseen: ketkä muut yritykset esiintyvät
+hankkeissamme ilman omaa lähdettä? Suurin aukko ei ollut urakoitsija
+vaan **Fingrid — rakennuttajana 59 hankkeessa, ei lähteenä lainkaan.**
+
+Kantaverkko on juuri se laji jota emme muuten näe: valtakunnallinen
+suurhanke ei osu Hilmaan, kunnan päätöksiin eikä kaavoihin. Se myös
+ennakoi teollisuusinvestointeja, koska tehdas tarvitsee sähkön ennen
+seiniä.
+
+Mitattu: 52 hanketta, haku 2,8 s, **51 ehdokasta** ja vaiheet
+tasaisesti Ideointi 17 / Rakenteilla 17 / Suunnittelu 17. Vaihe tulee
+Fingridin omasta tilasta, ei arvauksesta. Tuoreus on poikkeuksellinen:
+50/52 on kesken, kun urakoitsijoiden referenssisivuilta suodattuu
+valtaosa pois.
+
+Kuivaharjoitus paljasti kaksi virhettä, jotka kumpikin tuottivat
+uskottavaa tulosta ilman poikkeusta: sivupalkin hankelista olisi
+vuotanut 51 muun hankkeen nimen joka kuvaukseen, ja kenttien
+lukeminen palautti 51 tyhjää 52:sta.
+
 ### NRC Group Finland lähteeksi (D-288)
 
 Asiakas ei löytänyt Turun raitiotiestä NRC:tä. Hanke oli meillä, mutta
