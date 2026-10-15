@@ -96,6 +96,17 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Tarjousasiakirjan teksti kuvaukseen (D-291)
+
+Hämeenkyrön ikkunaremontissa oli 79 merkkiä, vaikka urakkaohjelmassa
+lukee 212 ikkunaa, 64 parvekeovea ja seitsemän puuovea. Hilman
+liiteluettelo on julkisessa rajapinnassa ja tiedostot avoimella CDN:llä
+ilman kirjautumista, joten reitti toimii.
+
+Kattavuus on silti pieni: otos 25 ohuesta Hilma-rivistä antoi liitteen
+**yhdelle**. Hilmassa on asiakirjat vain jos ilmoitus on tehty Hilmassa;
+muuten ne ovat tilaajan omassa järjestelmässä kirjautumisen takana.
+
 ### Pöytäkirjasivun teksti kuvaukseen (D-290)
 
 Paltamon Ouluntien teollisuusalueen kaavassa oli 89 merkkiä, vaikka

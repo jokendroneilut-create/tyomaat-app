@@ -184,6 +184,99 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-291 - Hilman tarjousasiakirja aukeaa, mutta vain joka 25. rivillä
+
+Johannes 15.10.2026 Hämeenkyrön ikkunaremontista (`0ad8a8c1`):
+*"pitäisi poimia ainakin [urakan laajuus]"*. Kannassa oli 79 merkkiä
+(*"Kirkkokatu 14 ja 16 ikkuna- ja oviremontti."*), kun urakkaohjelmassa
+lukee **212 ikkunaa, 64 parvekeovea ja seitsemän puuovea** sekä
+julkisivupaneloinnit.
+
+[`19_KUVAUSTEN_KATTAVUUS.md`](19_KUVAUSTEN_KATTAVUUS.md) oli nimennyt
+tämän reitin jo 11.10. — *"Lisäteksti olisi tarjouspyyntöasiakirjoissa,
+ei ilmoituksessa"* — ja päätellyt ettei Hilman ohuita korjata poimintaa
+parantamalla. Reittiä ei kuitenkaan ollut kokeiltu: koodissa ei ollut
+yhtäkään mainintaa liitteistä.
+
+#### Reitti on julkinen ja toimii
+
+Liiteluettelo on siinä rajapinnassa jota Hilman oma sivu käyttää, ja
+tiedostot ovat avoimella CDN:llä **ilman kirjautumista**:
+
+    GET /web/api/public/procedure/{procedureId}/enotice/{noticeId}
+        -> attachments: [{ id, name }]
+    GET https://cdn.hankintailmoitukset.fi/public-attachments/{id}
+
+Mitattu: rajapinta 433 ms, 6 liitettä, urakkaohjelmasta 11 787 merkkiä
+tekstiä 3,4 sekunnissa, ja poiminta antoi tasan sen kohdan jonka
+Johannes liitti.
+
+#### Mutta kattavuus on 1 / 25
+
+Otos 25 ohuesta Hilma-rivistä, tasavälein 523:sta
+([[sample-must-be-representative]]):
+
+| | |
+|---|---|
+| liite löytyi | **1** |
+| 0 liitettä | 21 |
+| ei procedure/notice-tunnistetta | 3 |
+
+Syy lukee Hilman omalla sivulla: *"Jos ilmoitus on lähetetty Hilmaan
+toisesta järjestelmästä, silloin otsikon 'Liitteet ja linkit' alta löytyy
+vain Hilmassa julkaistun ilmoituksen PDF."* Asiakirjat ovat siis
+Hilmassa vain kun ilmoitus on tehty Hilmassa; muuten ne ovat tilaajan
+omassa kilpailutusjärjestelmässä (Cloudia, Tarjouspalvelu) kirjautumisen
+takana.
+
+**docs/19:n johtopäätös oli siis oikea syystä jota se ei tiennyt.**
+Reitti ei ole umpikuja — se toimii — mutta se ei ratkaise Hilman ohuita
+rivejä yleisesti. Kuivaharjoitus 14 ohuella `new`-rivillä: 1 parani,
+12:lla 0 liitettä, 1:llä ei laajuusosiota.
+
+#### Kaksi ansaa, molemmat torjuttu mitattuna
+
+1. **Sisällysluettelo.** Urakkaohjelma alkaa luettelolla, jossa sama
+   otsikko on ensimmäisenä: `"2. Rakennuskohde ja urakan laajuus ...... 3"`.
+   Ensimmäinen osuma olisi antanut luettelon — yhden niistä kolmesta
+   jota docs/19 kieltää laskemasta kuvaukseksi. Siksi osumista valitaan
+   se, jonka perässä on proosaa (pistejonoja ei, kirjaimia yli 60 %).
+2. **Sivun alatunniste.** Osio päättyi tekstiin *"Hämeenkyrön
+   Asunnonhankinta Oy | Kirkkokatu 14 ja 16 | Urakkaohjelma – Liite 1"*.
+   Tunnusmerkki on toisto: alatunniste on joka sivulla, joten se
+   esiintyy koko tekstissä useamman kerran. Muotoon perustuva sääntö
+   olisi ollut hauraampi.
+
+Lisäksi täsmäysehto D-290:n opetuksesta: poiminnan on mainittava
+hankkeen kunta tai jokin erotteleva sana otsikosta.
+
+#### Sivulöydös, jota EI ole tehty: `estimatedValue`
+
+Samaa ilmoitusta lukiessa paljastui erillinen aukko. Hilman hyötykuorma,
+**jonka jo tallennamme**, sisältää tilaajan oman arvion:
+
+    "estimatedValue": 250000
+
+`extractHilmaFacts` lukee vain ratkaisun summia (`noticeResultTotalAmount`,
+`lotResultTotalAmount`) eli jälki-ilmoituksen arvoja. Kilpailutusvaiheen
+arviota ei lueta lainkaan, vaikka se on samassa tallennetussa oliossa
+eikä vaadi yhtäkään lisähakua.
+
+| | |
+|---|---|
+| Hilma-dokumentteja | 1 544 |
+| joissa `estimatedValue` > 0 | **459** |
+| mediaani / suurin | 400 000 € / 1 000 000 000 € |
+| yli 1 M€ | 149 |
+| ehdokkaita joilta kustannusarvio puuttuu silti | **244** |
+
+Tämä on paremmassa suhteessa kuin liitereitti (459/1 544 vs. 1/25) ja
+halvempi (ei verkkohakua). Se liittyy myös suoraan
+[[filter-requests-2026-10]]:een: asiakkaan pyytämä kustannussuodatin
+jäi rakentamatta, koska kattavuus oli 14,4 % — ja `estimated_cost`
+puuttuu 5 871 hankkeelta 6 823:sta. **Ei tehty tässä, koska sitä ei
+pyydetty; odottaa päätöstä.**
+
 ### D-290 - Osiotunniste hylkäsi 96 % tekstistä, ja liitettä ei avattu lainkaan
 
 Johannes 15.10.2026, Paltamon Ouluntien teollisuusalueen kaavasta:

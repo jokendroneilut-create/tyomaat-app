@@ -207,6 +207,37 @@ Korjaus mitattiin 13 päätöslähteen omilla sivuilla (36 sivua 9 kunnasta):
 Pälkäne) antaa `extractItemText`-funktiolle `null`. Älä tutki uudelleen
 ilman uutta mittausta; sivurakenne on eri kuin 7.00.034:ssä ja 10.4.x:ssä.
 
+## Hilman tarjousasiakirjat: reitti toimii, kattavuus 1/25 (D-291)
+
+Yllä oleva johtopäätös *"Hilman ohuita rivejä ei korjata poimintaa
+parantamalla"* oli oikea, mutta syystä jota se ei tiennyt. Reitti
+asiakirjoihin **on** olemassa ja julkinen:
+
+```
+GET /web/api/public/procedure/{procedureId}/enotice/{noticeId}  -> attachments
+GET https://cdn.hankintailmoitukset.fi/public-attachments/{id}  -> pdf
+```
+
+```bash
+npx tsx scripts/taydenna-hilma-liitteista.ts
+npx tsx scripts/taydenna-hilma-liitteista.ts --apply
+```
+
+Mitattu 15.10.2026, otos 25 ohuesta rivistä tasavälein 523:sta: liite
+löytyi **1:llä**, 21:llä 0 liitettä, 3:lta puuttuivat tunnisteet. Syy on
+Hilman omalla sivulla: toisesta järjestelmästä lähetetyssä ilmoituksessa
+Hilmassa on vain ilmoituksen PDF, ja asiakirjat ovat tilaajan omassa
+kilpailutusjärjestelmässä kirjautumisen takana.
+
+**Älä tutki uudelleen kattavuuden toivossa.** Reitti on rakennettu ja se
+poimii siellä missä liite on. Loput vaatisivat kirjautumisen Cloudiaan
+tai Tarjouspalveluun, mitä ei tehdä.
+
+**Avoin, parempi vipu samasta aineistosta:** `original.estimatedValue`
+on 459 Hilma-dokumentissa 1 544:stä eikä sitä lueta lainkaan
+(`extractHilmaFacts` lukee vain ratkaisun summia). 244 ehdokkaalta
+kustannusarvio puuttuu silti. Ei vaadi verkkohakua. Ks. D-291.
+
 ## Mitä EI lasketa kuvaukseksi
 
 Pituus ei saa tulla täytteestä. Nämä näyttävät kuvaukselta olematta
