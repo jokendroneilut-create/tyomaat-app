@@ -184,6 +184,67 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-295 - Umpikuja oli oikea arvio väärästä sivusta
+
+Jatkoa D-294:lle. Johannes katsoi jonorivin *"Destia urakoi uusiutuvan
+energian hanketta Vuolijoella"* (Rakennuslehti) ja kysyi: *"olisiko tuo
+hanke tullut meille Destian lähteen kautta?"*
+
+[`20_YRITYSLAHTEET.md`](20_YRITYSLAHTEET.md) oli merkinnyt Destian
+**NRC:tä hankalammaksi**: `destia.fi/referenssit/` renderöi JS:llä ilman
+upotettua JSONia. Arvio oli oikea — mutta **väärästä sivusta**.
+Urakkavoitot eivät ole referensseissä vaan uutishuoneessa, ja se on eri
+toteutus.
+
+#### Reitti löytyi selaimen verkkoliikenteestä
+
+Uutishuone renderöi listan JS:llä, joten HTML:ssä ei ole linkkejä. Kaikki
+vakioreitit näyttivät tyhjiltä — `sitemap.xml` 965 tavua, `/feed/` 763,
+`wp-json/wp/v2/posts` 2 tavua — koska lista tulee **POST**-päätepisteestä:
+
+    POST https://destia.fi/wp-json/destia/posts
+
+Oma runko arvattuna palautti `foundPosts: 0`, joten muoto luettiin teeman
+`main.js`:stä. Ratkaiseva yksityiskohta: parametri on **`postTypes`
+monikossa ja taulukkona** — `postType: "release"` antaa nollan.
+
+#### Mitattu lähde
+
+| | |
+|---|---|
+| tiedotteita arkistossa | 391 |
+| 12 kk:n sisällä | 26 |
+| niistä hankkeita | **8** |
+| haku | 0,9 s |
+| kuvauksen mediaani | 2 853 merkkiä |
+
+Vertailuksi: sama hanke Rakennuslehden kautta on **197 merkkiä**.
+Alkuperäislähde on siis 14-kertainen, ja tuli samana päivänä.
+
+#### Suodatus on koko työ, ja musta lista ei riitä
+
+Ensimmäinen versio luetteloi vain poissuljettavia aiheita. Kuivaharjoitus
+päästi läpi **8 / 16 ei-hanketta**: työturvallisuuden johtaminen,
+tilinpäätös, edunvalvonta, "Innostavimmat työpaikat" -palkinto,
+verkkokaupan avaus, ammattikorkeakouluyhteistyö. Lista olisi kasvanut
+loputtomiin.
+
+Siksi ehtoja on nyt kaksi: **positiivinen urakkasignaali JA** ei
+poissulkevaa aihetta. Rajatapaus joka opetti sen: *"Destia ja Oulun
+ammattikorkeakoulu aloittavat talonrakentamisen koulutuksen"* sisältää
+rakentamissanan mutta on koulutusuutinen. Suodatuksen jälkeen 16 → 8, ja
+kaikki kahdeksan ovat aitoja: Vuolijoen BESS, Länsiratikat, Vantaan
+ratikan 200 M€ osuus, kolme sähköasemaurakkaa Fingridille, kahdeksan
+siltaa Uudellamaalla, Vantaan Energian sähköasema, valtatie 15.
+
+#### Vuolijoki jäi ilman kuntaa — sama ansa kuin Ivalo
+
+Lähteen lippulaivarivi jäi ilman kaupunkia, koska **Vuolijoki liittyi
+Kajaaniin 2007** eikä ole kuntaluettelossa. Lisätty molempiin paikkoihin:
+`MERGED_MUNICIPALITIES` (oikea koti lakanneelle kunnalle) ja
+`detectCityFromText`in omaan aliaslistaan — yksittäin ja harkiten, kuten
+D-292 päätti. Tunnistin löytää nyt Kajaanin suoraan otsikosta.
+
 ### D-294 - Rakennuslehti toistaa puolet, mutta loput ovat sokeasta pisteestä
 
 Johannes 17.10.2026: *"Rakennuslehdestä on tullut melkein ongelma, koska

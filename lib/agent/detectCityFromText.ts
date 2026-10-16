@@ -49,6 +49,16 @@ const IRREGULAR_ALIASES: Record<string, string> = {
    * lisätään nimi kerrallaan, kuten "klaukkalan" ja "nihdin" ennen tätä.
    * "Ivalo" on yksikäsitteinen: se ei ole sana eikä osa yhdyssanaa.
    */
+  /*
+   * Vuolijoki liittyi Kajaaniin 2007 eikä ole kuntaluettelossa. Destian
+   * tiedote "BoP-urakoitsijana 125 MW / 250 MWh:n BESS-projektissa
+   * Vuolijoella" jäi ilman kuntaa (D-295). Yksikäsitteinen paikannimi,
+   * sama yksittäislisäys kuin Ivalo yllä.
+   */
+  "vuolijoki": "Kajaani",
+  "vuolijoen": "Kajaani",
+  "vuolijoella": "Kajaani",
+  "vuolijoelle": "Kajaani",
   "ivalo": "Inari",
   "ivalon": "Inari",
   "ivalossa": "Inari",

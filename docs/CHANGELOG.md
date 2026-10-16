@@ -96,6 +96,19 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Destian tiedotteet lähteeksi (D-295)
+
+Destia oli merkitty umpikujaksi, koska referenssisivu on JS-renderöity.
+Arvio oli oikea väärästä sivusta: urakkavoitot ovat uutishuoneessa, ja
+sen lista tulee POST-päätepisteestä `wp-json/destia/posts`.
+
+Mitattu: 391 tiedotetta, 26 viimeisen 12 kk:n sisällä, **8 hanketta**.
+Kuvauksen mediaani 2 853 merkkiä — sama hanke Rakennuslehden kautta oli
+197. Suodatus vaatii sekä urakkasignaalin että poissulkevan listan;
+pelkkä musta lista päästi läpi 8/16 ei-hanketta.
+
+Lisäksi Vuolijoki (liittyi Kajaaniin 2007) lisättiin kuntatunnistukseen.
+
 ### Rakennuslehden arviointi: ei muutoksia (D-294)
 
 Kysymys oli pitäisikö lähde kääntää kiinni, koska hankkeet tulevat

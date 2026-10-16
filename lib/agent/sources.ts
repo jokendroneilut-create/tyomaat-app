@@ -82,6 +82,7 @@ import {
   enrichNccProject,
 } from "./fetchNccProjectsSource"
 import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
+import { fetchDestiaSource } from "./fetchDestiaSource"
 import { fetchFingridProjectsSource } from "./fetchFingridProjectsSource"
 import { fetchNrcProjectsSource } from "./fetchNrcProjectsSource"
 import { fetchHartelaAreasSource } from "./fetchHartelaAreasSource"
@@ -344,6 +345,17 @@ export const sources = [
    * lahteesta, ei arvauksesta (D-289).
    */
   { name: "fingrid_hankkeet", fetch: fetchFingridProjectsSource },
+  /*
+   * Destian tiedotteet. Uutishuone renderoi listan JS:lla, mutta lista
+   * tulee omasta POST-paatepisteestaan, joka antaa tiedotteet
+   * rakenteisena (`postTypes: ["release"]`). docs/20 merkitsi Destian
+   * hankalaksi, mutta se arvio koski referenssit-listausta (D-295).
+   *
+   * Suodatus on koko tyo: 12 kk:n 26 tiedotteesta 8 on hankkeita,
+   * loput yritysviestintaa. Siksi vaaditaan seka urakkasignaali etta
+   * poissulkeva lista.
+   */
+  { name: "destia_tiedotteet", fetch: fetchDestiaSource },
   /*
    * Hartelan TULEVAT asuinalueet - eri sivu kuin referenssit, jotka ovat
    * valmistuneita. Naiden arvo on katuosoite: 8/15 sivulta loytyy osoite

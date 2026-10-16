@@ -104,14 +104,36 @@ kesken. Hankekehittäjän sivu voi olla vuosia vanha salkkuesittely.
 Lykätty, ei hylätty: lykkäsin energiakehittäjät jo aiemmin samassa
 sessiossa, ja tämä mittaus antaa niille ensimmäisen kerran luvun.
 
-### Destia — 13 hanketta
+### ~~Destia — 13 hanketta~~ → lähteeksi 17.10.2026 (D-295)
 
-Iso infraurakoitsija, `destia.fi/referenssit/`. Tarkistettu: 0 riviä
-`discovery_sources`-taulussa, ei mainintaa `sources.ts`:ssä.
+Iso infraurakoitsija. Oli merkitty **NRC:tä hankalammaksi**, koska
+`destia.fi/referenssit/` renderöi JS:llä ilman upotettua JSONia.
 
-**NRC:tä hankalampi.** NRC:n sivu on Next.js ja hankkeet ovat valmiina
-upotetussa `__NEXT_DATA__`-JSONissa; Destia renderöi JS:llä ilman
-upotettua JSONia, joten jäsennin ei siirry suoraan.
+**Se arvio oli oikea mutta väärästä sivusta.** Referenssit ovat
+JS-renderöidyt, mutta **uutishuone ei ole sama asia** — ja juuri
+uutishuone kertoo urakkavoitot. Lista tulee omasta päätepisteestään:
+
+```
+POST https://destia.fi/wp-json/destia/posts
+     { lang, perPage, page, postTypes: ["release"], year }
+```
+
+Rungon muoto luettiin teeman `main.js`:stä, koska arvaukset palauttivat
+`foundPosts: 0`. Ratkaiseva yksityiskohta: parametri on **`postTypes`
+monikossa ja taulukkona**. Päätepiste on POST, minkä takia `sitemap.xml`,
+`/feed/` ja `wp-json/wp/v2/posts` näyttivät tyhjiltä.
+
+Mitattu 17.10.2026: 391 tiedotetta, **26 viimeisen 12 kk:n sisällä**,
+joista **8 on hankkeita** — loput yritysviestintää. Haku 0,9 s.
+Kuvauksen mediaani 2 853 merkkiä (vrt. Rakennuslehden ingressi 197).
+
+**Suodatus on koko työ.** Pelkkä musta lista päästi kuivaharjoituksessa
+läpi 8 / 16 ei-hanketta (työturvallisuuden johtaminen, tilinpäätös,
+edunvalvonta, "Innostavimmat työpaikat" -palkinto, verkkokaupan avaus),
+joten vaaditaan **myös positiivinen urakkasignaali**. Rajatapaus joka
+opetti sen: *"Destia ja Oulun ammattikorkeakoulu aloittavat
+talonrakentamisen koulutuksen"* sisältää rakentamissanan mutta on
+koulutusuutinen.
 
 ### Metsähallitus — 16 hanketta
 
