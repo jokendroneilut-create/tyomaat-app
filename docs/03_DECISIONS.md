@@ -184,6 +184,94 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-293 - Aikakatkaisu ei johtunut hitaasta kyselystä vaan levylajittelusta
+
+Johannes 16.10.2026: sovellus näytti virhesivun kesken demon, eikä se
+herännyt päivittämällä. *"Katsotko mikä ongelma vai buuttaanko vain
+Supabasen?"*
+
+#### Ensin se mitä EI tehty
+
+Hallintapaneeli sanoi **Unhealthy**, mikä olisi ollut houkutteleva peruste
+uudelleenkäynnistykselle. Mitattuna kaikki palvelut kuitenkin vastasivat:
+Auth 200 (433 ms), REST 200 sekä anon- että service-avaimella, Storage
+200, kyselyt 92-322 ms. Sovellus nousi itsekseen. **Ei buutattu** — se
+olisi ollut itse aiheutettu katko ilman diagnoosia.
+
+Toinen poissuljettu: edellinen push oli 12 tuntia aiemmin, ja demo toimi
+saman koodin päällä tuntia ennen vikaa.
+
+#### Mitä loki sanoi
+
+Postgres-lokin ainoa aito virhe (20 kpl / 24 h):
+
+    ERROR: canceling statement due to statement timeout
+
+Tärkeä erottelu samasta lokista: kaikki `statement:`-rivit päättyvät
+merkintään `-- source: dashboard`. Ne 198 "Postgres-pyyntöä" olivat
+Johanneksen oman hallintapaneelin `auth.users`-laskentaa, eivät
+sovellusta — eli 10 %:n virheosuus laskettiin nimittäjästä joka ei liity
+asiakasliikenteeseen.
+
+#### Väärä hypoteesi ja mikä sen kumosi
+
+Mittasin sovelluksen kyselyt kotikoneelta ja sain:
+
+    /today ilman maakuntarajausta   mediaani   820 ms
+    /today maakuntarajauksella      mediaani 3 960 ms
+
+Päättelin että maakuntarajaus on 5× hitaampi, mikä viittaisi puuttuvaan
+indeksiin. **EXPLAIN kumosi sen:** kanta teki ne 159 ms:ssä ja 19 ms:ssä.
+Asiakasmittaus mittasi verkkoa ja JSON-siirtoa, ei kyselyn suoritusta.
+Ilman suunnitelmaa olisin rakentanut indeksin oikeaan paikkaan väärällä
+perusteella.
+
+#### Oikea syy
+
+Suunnitelma kertoi kaksi asiaa, joita mikään asiakasmittaus ei olisi
+näyttänyt:
+
+1. **Taulussa oli vain perusavain.** Ei indeksiä `status`-, `is_public`-,
+   `phase`-, `region`- eikä `created_at`-sarakkeelle.
+2. **Lajittelu valui levylle joka latauksella:**
+   `Sort Method: external merge  Disk: 6688 kB`, `temp written=840`.
+
+Samassa lokissa checkpointit veivät **8-10 sekuntia** (`write=10.109 s`).
+Kun 6,7 MB:n levylajittelu osui sellaiseen hetkeen, kysely ylitti
+Supabasen 8 sekunnin katon. Se selittää kaiken havaitun: ohimenevyyden,
+sen että vika osui kirjautuneeseen käyttäjään (`/today`), ja itsestään
+korjaantumisen.
+
+#### Korjaus ja mitattu tulos
+
+Kaksi osittaista indeksiä suodattimen ehdoilla ja `created_at`-
+järjestyksessä (`docs/sql/2026-10-16_projects_today_indeksit.sql`):
+
+| | ennen | jälkeen |
+|---|---|---|
+| maakuntarajattu | Seq Scan 159 ms, levylle 2 008 kB | **Index Scan 12 ms, ei lajittelua** |
+| ilman rajausta | Seq Scan 19 ms, levylle 6 688 kB | **Index Scan 9 ms, ei lajittelua** |
+
+Indeksit maksavat 160 kB + 264 kB (taulu 34 MB).
+
+**Asiakkaan kokema aika ei muuttunut, eikä sen pitänytkään.** Mitattu
+samalla skriptillä ennen ja jälkeen: 820 → 1 510 ms ja 3 960 → 2 762 ms,
+eli kohinaa molempiin suuntiin. Aika menee verkkoon ja JSON-siirtoon —
+`metadata` on 15 MB 34:stä, keskimäärin 2 321 tavua rivillä, ja
+`/today` hakee sen 1 000 rivillä. **Indeksin arvo on altistuksen
+poistuminen, ei nopeus**, ja se on syytä sanoa niin eikä esittää
+suorituskykyvoittona.
+
+#### Mitä jäi auki
+
+- **Hyötykuorma on seuraava vipu.** `/projects` keventää jo sarakelistaa
+  (D-281), `/today` ei. Vaatii oman mittauksensa: mitkä
+  `metadata`-kentät pisteytys oikeasti tarvitsee.
+- **Instanssi on NANO.** Checkpointin 8-10 sekunnin levykirjoitus on
+  kokoluokan oire, ei kyselyn vika. Indeksi poisti altistuksen, ei syytä.
+- **Epäonnistuneita kirjautumisia ei kirjata** (D-10.10.), joten
+  asiakkaan "en pääse kirjautumaan" ei näy lokeissa lainkaan.
+
 ### D-292 - Kylän nimi kelpaa kenttään, ei vapaaseen tekstiin
 
 Johannes 16.10.2026 Fingridin hankkeesta (`a10be376`): *"maakuntaa eikä

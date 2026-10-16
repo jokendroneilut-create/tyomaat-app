@@ -96,6 +96,21 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Indeksit /today-kyselylle (D-293)
+
+Sovellus näytti virhesivun kesken demon. Syy ei ollut hidas kysely vaan
+levylle valuva lajittelu: jokainen /today-lataus kirjoitti 6,7 MB
+väliaikaistiedostoa, ja checkpointit seisottivat levyä 8-10 sekuntia.
+Osuma niihin ylitti 8 sekunnin lauseaikakatkaisun.
+
+Kaksi osittaista indeksiä poistivat lajittelun kokonaan: Seq Scan →
+Index Scan, levylle kirjoitus 6 688 kB → 0. Asiakkaan kokema aika ei
+muuttunut (se on verkkoa ja JSON-siirtoa); indeksin arvo on altistuksen
+poistuminen.
+
+Supabasea EI käynnistetty uudelleen: paneeli sanoi Unhealthy, mutta
+kaikki palvelut vastasivat mitattuna.
+
 ### Maakunta NUTS-koodista (D-292)
 
 Fingridin "IV03 - Ivalon sähköaseman uusiminen" oli ilman kuntaa ja
