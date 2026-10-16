@@ -96,6 +96,20 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Urakoitsija poimitaan myös kaksoispisteen jälkeen (D-296)
+
+ELY-keskusten tiedotepohjassa lukee "Urakoitsijana toimii: Ylöjärven
+Kiviset Oy", ja kuvio vaati verbin jälkeen välilyönnin — yhden merkin ero
+jätti rakentajan poimimatta.
+
+Ensimmäinen korjaus rikkoi 17 aiempaa poimintaa ja korjasi 5; A/B koko
+jonon yli paljasti sen. Toinen versio säilyttää alkuperäisen muodon ja
+lisää vain kaksoispisteen. Lisäksi osumista valitaan nyt **ensimmäinen
+tekstissä** eikä ensimmäinen kuviotaulukossa, kuten kaupungin
+tunnistuksessa jo tehdään. Lopputulos: 5 uutta, 0 muuttunutta.
+
+Täydennetty 5 jonoriviä ja 3 hanketta.
+
 ### Destian tiedotteet lähteeksi (D-295)
 
 Destia oli merkitty umpikujaksi, koska referenssisivu on JS-renderöity.

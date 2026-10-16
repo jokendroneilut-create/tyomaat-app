@@ -317,12 +317,41 @@ export type SttParties = {
  * Siksi: ei `i`-lippua (iso alkukirjain vaaditaan), ja "urakoitsijana"
  * vaatii aina verbin "toimii".
  */
+/*
+ * KAKSOISPISTE SALLITAAN VERBIN JÄLKEEN (D-296).
+ *
+ * ELY-keskusten ja Väyläviraston tiedotteissa on vakiopohja, jossa
+ * osapuolet ovat listana kaksoispisteen jälkeen:
+ *
+ *   "Tilaajana toimii: Elinvoimakeskus …
+ *    Urakoitsijana toimii: Ylöjärven Kiviset Oy
+ *    Jari Rutanen puh. 040 713 2139"
+ *
+ * `toimii\s+` ei osunut, koska välissä on kaksoispiste — yhden merkin
+ * ero. Mitattu 17.10.2026: jonossa 6 riviä tässä muodossa, ja 5:ltä
+ * puuttui rakentaja (Destia Oy ×3, Skanska Oy, Ylöjärven Kiviset Oy).
+ * Kaikki ovat samaa tiedotepohjaa, joten kuvio toistuu.
+ *
+ * Kaksoispiste ei löysää kuviota: `NAME` vaatii yhä ison alkukirjaimen
+ * ja yhtiömuodon, eikä `i`-lippua lisätty. Se tiukkuus on mitattu —
+ * löysä ensimmäinen versio antoi 641 riviä ja rakentajaksi tekstejä
+ * kuten "ovat tutustuneet rakennuspaikkaan".
+ */
+/*
+ * Erotin verbin ja nimen välissä: välilyönti TAI kaksoispiste. Ei
+ * `\s*:?\s+`, joka vaatisi välilyönnin myös kaksoispisteettömässä
+ * muodossa — ensimmäinen korjausyritys teki niin ja rikkoi 17 aiemmin
+ * toiminutta poimintaa ("Pääurakoitsijana Stara" ilman verbiä), vaikka
+ * korjasi vain 5. A/B koko jonon yli paljasti sen.
+ */
+const VALI = "(?:\\s+|\\s*:\\s*)"
+
 const BUILDER_PATTERNS = [
-  new RegExp(`[Rr]akentamisesta\\s+vasta\\w*\\s+(${NAME})`),
-  new RegExp(`(?<![Aa]li)[Pp]ääurakoitsija(?:na)?\\s+(?:toimii\\s+|on\\s+)?(${NAME})`),
-  new RegExp(`(?<![Aa]li)[Uu]rakoitsijana\\s+toimii\\s+(${NAME})`),
+  new RegExp(`[Rr]akentamisesta\\s+vasta\\w*${VALI}(${NAME})`),
+  new RegExp(`(?<![Aa]li)[Pp]ääurakoitsija(?:na)?\\s+(?:toimii${VALI}|on${VALI})?(${NAME})`),
+  new RegExp(`(?<![Aa]li)[Uu]rakoitsijana\\s+toimii${VALI}(${NAME})`),
   // "Urakan toteuttaa Destia Oy. Tilaajina toimivat ..." (D-197, Taivalkunnantie)
-  new RegExp(`[Uu]rakan\\s+toteuttaa\\s+(${NAME})`),
+  new RegExp(`[Uu]rakan\\s+toteuttaa${VALI}(${NAME})`),
 ]
 
 export function extractBuilderFromText(
@@ -332,9 +361,27 @@ export function extractBuilderFromText(
   const joined = [title, description].filter(Boolean).join(" ")
   if (!joined) return null
 
-  for (const pattern of BUILDER_PATTERNS) {
-    const match = joined.match(pattern)
-    if (!match?.[1]) continue
+  /*
+   * ENSIMMÄINEN TEKSTISSÄ VOITTAA, EI ENSIMMÄINEN TAULUKOSSA.
+   *
+   * Sama periaate kuin `detectCityFromText`issä (D-267). Kuvioiden
+   * järjestys oli aiemmin merkityksetön, koska vain yksi osui kerrallaan
+   * — mutta kun kaksoispiste sallittiin, Fiskarin tunnelin tiedotteesta
+   * osui kaksi:
+   *
+   *   kohta 2736  "urakoitsijana toimii Skanska Infra Oy"    (leipäteksti)
+   *   kohta 3104  "Pääurakoitsijana toimii: Skanska Oy"      (yhteystiedot)
+   *
+   * Taulukkojärjestys valitsi jälkimmäisen eli emoyhtiön ja menetti
+   * tarkemman tytäryhtiön. Leipäteksti kertoo hankkeen, yhteystietolista
+   * vain kenelle soitetaan — ja leipäteksti tulee ensin.
+   */
+  const osumat = BUILDER_PATTERNS.map((pattern) => joined.match(pattern)).filter(
+    (m): m is RegExpMatchArray => Boolean(m?.[1])
+  )
+  osumat.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+
+  for (const match of osumat) {
 
     /*
      * VIRKE KATKAISEE NIMEN. `cleanCompanyName` katkaisee yhtiömuotoon,

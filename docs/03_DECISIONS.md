@@ -184,6 +184,79 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-296 - Yhden merkin ero: kaksoispiste verbin jälkeen
+
+Johannes 17.10.2026 valtatien 25 hankkeesta (`8288d20e`): urakoitsijaa ei
+ollut poimittu, vaikka tiedotteessa lukee
+
+    Urakoitsijana toimii: Ylöjärven Kiviset Oy
+    Jari Rutanen puh. 040 713 2139
+
+**Yhteyshenkilö oli jo poimittu** — Jari Rutanen puhelinnumeroineen oli
+`contact_persons`-kentässä. Puuttuva oli `builder`.
+
+#### Syy oli yhdessä merkissä
+
+`extractBuilderFromText` tuntee kuvion jo, mutta se vaati verbin jälkeen
+välilyönnin:
+
+    (?<![Aa]li)[Uu]rakoitsijana\s+toimii\s+(NAME)
+
+Tekstissä on **kaksoispiste**. Todennettu suoraan: kaksoispisteellä
+`null`, ilman sitä `Ylöjärven Kiviset Oy`.
+
+Muoto on ELY-keskusten ja Väyläviraston tiedotepohja, joten se toistuu:
+jonossa 6 riviä, joista 5:ltä puuttui rakentaja (Destia Oy ×3, Skanska
+Oy, Ylöjärven Kiviset Oy).
+
+#### Ensimmäinen korjaus rikkoi enemmän kuin korjasi
+
+Muutin erottimen muotoon `\s*:?\s+`, mikä vaati välilyönnin myös
+kaksoispisteettömässä muodossa. A/B koko jonon yli (10 089 riviä):
+
+| | |
+|---|---|
+| uusi löysi, vanha ei | 5 |
+| **uusi sanoo eri** | **17** |
+
+Rikkoutunut tapaus oli `[Pp]ääurakoitsija(?:na)?\s+(?:toimii|on)?` —
+ilman verbiä ("Pääurakoitsijana Stara") kuvio vaati yhtäkkiä kaksi
+erotinta. Korjattu muotoon `(?:\s+|\s*:\s*)`, joka säilyttää
+alkuperäisen ja lisää vain kaksoispisteen vaihtoehdoksi.
+
+#### Ja sitten järjestys ratkaisi väärin
+
+Korjauksen jälkeen 5 uutta mutta **1 muuttunut**: Fiskarin tunneli
+`Skanska Infra Oy` → `Skanska Oy`. Teksti sisältää molemmat:
+
+    kohta 2736  "urakoitsijana toimii Skanska Infra Oy"     (leipäteksti)
+    kohta 3104  "Pääurakoitsijana toimii: Skanska Oy"       (yhteystiedot)
+
+Valinta tehtiin **kuvioiden järjestyksessä**, ja `pääurakoitsija` on
+taulukossa ennen `urakoitsijana` — joten emoyhtiö voitti tarkemman
+tytäryhtiön. Korjattu valitsemaan **ensimmäinen tekstissä**, mikä on
+talon oma periaate jo `detectCityFromText`issä (D-267). Lopputulos:
+**5 uutta, 0 muuttunutta.**
+
+#### Takautuva ajo rajattiin siihen mitä korjaus avasi
+
+Ensimmäinen täydennysskripti täytti jokaisen tyhjän `builder`-kentän, ja
+kuivaharjoitus antoi 34 riviä joista useat olivat vääriä:
+
+    "Töyrykatu 6 DEF. Asuinkerrostalon purkaminen"  ->  "YSE"
+    "OYS - TEP salien siirto G-rakennukseen"        ->  "Pohjois-pohjanmaan"
+    "Oulun Tilapalvelut - Lämsänjärven päiväkoti"   ->  "Oulun Tilapalvelut"
+
+YSE on sopimusehdot eikä yritys; kaksi jälkimmäistä ovat tilaajia ja
+katkenneita. Ne ovat **poiminnan vanhoja vikoja**, eivät tämän
+korjauksen seurausta. Skripti rajattiin kaksoispistemuotoon: **5
+jonoriviä ja 3 hanketta**, kaikki puhtaita.
+
+**Auki:** `cleanCompanyName` päästää läpi `YSE`:n ja katkaisee
+`Pohjois-Pohjanmaan hyvinvointialue` → `Pohjois-pohjanmaan`. Ei korjattu
+tässä, koska kuvioiden löysääminen on juuri se virhe jonka kaksi
+edellistä kohtaa osoittivat — vaatii oman mittauksensa.
+
 ### D-295 - Umpikuja oli oikea arvio väärästä sivusta
 
 Jatkoa D-294:lle. Johannes katsoi jonorivin *"Destia urakoi uusiutuvan

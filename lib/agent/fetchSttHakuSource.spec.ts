@@ -241,6 +241,15 @@ describe("extractBuilderFromText", () => {
     ["Urakoitsijana toimii Oteran Oy ja urakan valvonnasta vastaa WSP Finland Oy", "Oteran Oy"],
     ["hankkeen KVR-urakoitsijana toimii Aura Rakennus Lansi-Suomi Oy", "Aura Rakennus Lansi-Suomi Oy"],
     ["Pääurakoitsijana toimii Rakennusliike J. Malm Oy. Lisatiedot:", "Rakennusliike J. Malm Oy"],
+    /*
+     * KAKSOISPISTE VERBIN JALKEEN (D-296). ELY-keskusten ja
+     * Vaylaviraston tiedotteissa osapuolet ovat listana:
+     * "Urakoitsijana toimii: Ylojarven Kiviset Oy". Yhden merkin ero
+     * jatti rakentajan poimimatta 5 jonorivilta.
+     */
+    ["Urakoitsijana toimii: Ylöjärven Kiviset Oy Jari Rutanen puh. 040 713 2139", "Ylöjärven Kiviset Oy"],
+    ["Pääurakoitsijana toimii: Skanska Oy Leo Lampainen +358 44 515 5180", "Skanska Oy"],
+    ["Urakoitsijana toimii: Destia Oy Olli-Pekka Angeria 040 540 5899", "Destia Oy"],
   ])("lukee rakentajan: %s", (teksti, odotettu) => {
     expect(extractBuilderFromText(null, teksti)).toBe(odotettu)
   })
@@ -279,6 +288,30 @@ describe("resolveParties - rakentaja tekstista", () => {
 })
 
 /* Kuivaharjoituksen paljastamat rajatapaukset (D-189). */
+describe("extractBuilderFromText - ensimmainen tekstissa voittaa", () => {
+  /*
+   * Sama periaate kuin detectCityFromTextissa (D-267). Kuvioiden
+   * jarjestys oli merkityksetön kunnes kaksoispiste sallittiin - sen
+   * jalkeen Fiskarin tunnelin tiedotteesta osui kaksi kuviota, ja
+   * taulukkojarjestys valitsi emoyhtion tarkemman tytaryhtion sijaan.
+   */
+  it("valitsee leipatekstin osuman, ei yhteystietolistan", () => {
+    const teksti =
+      "Rakennuttamisesta vastaa Kaakkois-Suomen elinvoimakeskus ja urakoitsijana toimii " +
+      "Skanska Infra Oy. Fiskarin tunnelin varareitti. Lisatiedot: Kaakkois-Suomen " +
+      "elinvoimakeskus Mikael Sonck puh. +358 50 3509 164. " +
+      "Pääurakoitsijana toimii: Skanska Oy Leo Lampainen +358 44 515 5180"
+    expect(extractBuilderFromText(null, teksti)).toBe("Skanska Infra Oy")
+  })
+
+  it("kaksoispisteellinen kelpaa kun se on ainoa", () => {
+    const teksti =
+      "Tilaajana toimii: Elinvoimakeskus projektipäällikkö Antti Pönni puh. 0295 029 022 " +
+      "Urakoitsijana toimii: Ylöjärven Kiviset Oy Jari Rutanen puh. 040 713 2139"
+    expect(extractBuilderFromText(null, teksti)).toBe("Ylöjärven Kiviset Oy")
+  })
+})
+
 describe("extractBuilderFromText - rajatapaukset", () => {
   it("ei jatka kaappausta virkkeen yli", () => {
     expect(
