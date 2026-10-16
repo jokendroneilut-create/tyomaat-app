@@ -96,6 +96,17 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Rakennuslehden arviointi: ei muutoksia (D-294)
+
+Kysymys oli pitäisikö lähde kääntää kiinni, koska hankkeet tulevat
+tuplana. Mitattu tuotannon täsmäyttäjällä: 76 hankkeesta 34 täsmää
+johonkin (ja tulee mediaanina 21 vrk myöhemmin), mutta **42 ei täsmää
+mihinkään** — ja ne kasautuvat sokeaan pisteeseemme (datakeskuksia 7,
+energiantuotantoa 4).
+
+Varsinainen kipu on että täsmäyttäjä tietää epäilyksen mutta
+katselmointisivu ei näytä sitä. Päätös: ei muuteta nyt.
+
 ### Indeksit /today-kyselylle (D-293)
 
 Sovellus näytti virhesivun kesken demon. Syy ei ollut hidas kysely vaan

@@ -184,6 +184,90 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-294 - Rakennuslehti toistaa puolet, mutta loput ovat sokeasta pisteestä
+
+Johannes 17.10.2026: *"Rakennuslehdestä on tullut melkein ongelma, koska
+hankkeet tulevat tuplana ja joudun etsimään käsin kaksoiskappaletta.
+Minusta lähde pitäisi kääntää kiinni."* Perustelu: *"he lukevat nyt
+samoja lähteitä kuin me ja tekevät niistä uutisia."*
+
+Lähtökohta oli yksi hanke (`9580d14d`): Rakennuslehden
+*"Vartelle töitä Paraisilta – rakentaa uuden K-kaupan"*. Se **oli jo
+kannassa** Varten omasta tiedotteesta (`varte` on lähteemme) —
+Rakennuslehti tuli päivää myöhemmin, ja jonorivi odotti yhä
+käsittelemättä.
+
+#### Premissi on puoliksi oikea
+
+Tuotannon omalla täsmäyttäjällä (`findProjectMatchDetailed`), 76
+hyväksyttyä Rakennuslehti-hanketta:
+
+| | |
+|---|---|
+| täsmää johonkin (≥ 40) | 34 |
+| **ei täsmää mihinkään** | **42** |
+
+Ja kun Rakennuslehti täsmää, se on **myöhempi havainto**: 20 tapauksessa
+26:sta, mediaani **+21 vuorokautta**. Siltä osin väite pitää.
+
+#### Mutta ne 42 ovat juuri sokeasta pisteestä
+
+    Datakeskus 7 · Energiantuotanto 4 · Sairaala 4 · Toimitila 4 · Kerrostalo 6
+
+Esimerkkeinä "Jälleen uusi miljardiluokan datakeskushanke vireille"
+(Jämsä), "Kokkolan alumiinitehdashanke", "Meyer Turun uusi pääkonttori",
+"Skanska sai uuden mittavan datakeskusurakan". Nämä ovat yksityisiä
+suurhankkeita — tasan se laji jota [[private-developer-blind-spot]]
+kuvaa: ne eivät osu Hilmaan, kunnan päätöksiin eivätkä kaavoihin.
+
+Laadultaan ne ovat kuitenkin ohuita: **40 / 42 alle 400 merkkiä**,
+yhteyshenkilö vain 3:lla, rakennuttaja 11:llä. Ne ovat **vihje hankkeen
+olemassaolosta**, eivät valmis liidi — mikä sopii siihen että artikkeli
+on maksumuurin takana ja saamme vain ingressin.
+
+Volyymi: **11,7 ehdokasta viikossa**.
+
+#### Varsinainen kipu ei ole lähde vaan näkymä
+
+Täsmäyttäjä antaa jo 34:lle vähintään 40 pistettä, eli se tietää tasan
+ne joita Johannes etsii käsin. Mutta:
+
+- vihje lasketaan vasta **hyväksynnässä** (`approve/route.ts` kirjoittaa
+  `possible_duplicate_of`), ei katselmoinnissa
+- **katselmointisivu ei näytä sitä lainkaan** — `grep duplicate`
+  `app/tic/projects/[id]/page.tsx`:stä ei anna osumaa
+- `MergeIntoProject.tsx` on olemassa, mutta kohde pitää etsiä itse
+
+Eli kone tietää epäilyksen ja kertoo sen vasta kun päätös on tehty.
+
+#### Kolme vaihtoehtoa, päätös: ei muuteta nyt
+
+1. Näytetään duplikaattivihje katselmoinnissa, lähde jää päälle.
+2. Lähde kiinni + viikkomuistutus TIC:iin (menettää ~4 hanketta/vko,
+   osa datakeskuksia).
+3. Lähde päälle, ≥ 40 pisteen osumat omaan nostoonsa jonossa.
+
+**Johannes 17.10.2026: "antaa olla nyt noin."** Ei kytketä lähdettä
+pois, ei rakenneta kalenteria eikä vihjenäkymää. Kirjattu jotta
+kysymystä ei tarvitse mitata uudelleen.
+
+#### Mittarin ansa, joka maksoi kolme yritystä
+
+`findProjectMatchDetailed(existingProjects, candidate)` — **vertailujoukko
+ensin, ehdokas toisena**, ja pistekentän nimi on `confidence` eikä
+`score`. Väärin päin kutsuttuna se palauttaa `null` kaikille, jolloin
+tulos on "76 / 76 yksinäistä" — uskottava luku joka olisi johtanut
+päinvastaiseen suositukseen. Ehdokas on rakennettava nimetyillä
+kentillä (`name`, `sourceTitle`, `city`, `region`, `location`,
+`permitNumber`, `propertyId`, `developer`, `buildingType`), kuten
+`scripts/measure-rakennuslehti-laukaisin.ts` tekee.
+
+Sama skripti varoitti jo tästä toisesta suunnasta: omatekoinen
+nimivertailu antoi aiemmin "Tampereen taidemuseo ↔ Tampereen Aqua".
+Oma vartalovertailuni toisti saman virheen tänään
+("Hartelalle pääkonttori Vantaalle" ↔ "Rakentamista valmistelevat
+työt", yhteisinä vartaloina `raken` ja `vanta`).
+
 ### D-293 - Aikakatkaisu ei johtunut hitaasta kyselystä vaan levylajittelusta
 
 Johannes 16.10.2026: sovellus näytti virhesivun kesken demon, eikä se
