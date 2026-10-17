@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   hankeslugit,
   jasennaHankesivu,
+  jasennaYhteyshenkilot,
   lueKentta,
   vaiheTilasta,
 } from "./fetchFingridProjectsSource"
@@ -106,5 +107,132 @@ describe("jasennaHankesivu", () => {
 
   it("palauttaa null kun sivu ei ole hankesivu", () => {
     expect(jasennaHankesivu("<html><body>ei mitaan</body></html>")).toBeNull()
+  })
+})
+
+/*
+ * YHTEYSHENKILOT (18.10.2026).
+ *
+ * Johannes Anttila-Lansisalmi-hankkeesta: "ei ole poimittu
+ * yhteyshenkiloita vaikka ne ovat saatavilla". Mitattu 52 sivun yli:
+ * 151 henkiloa, 69 eri nimea, ja vain 3 sivua ilman yhtaan.
+ */
+describe("jasennaYhteyshenkilot", () => {
+  const lohko = (sisalto: string) =>
+    `<html><body><div class="well"><h3 class="title">Lisätietoja</h3>${sisalto}</div></body></html>`
+
+  it("lukee nimen, nimikkeen ja puhelimen", () => {
+    const html = lohko(
+      "<p><strong>Maria Arola</strong><br />Asiantuntija, ympäristö<br />puh. 030 395 5562</p>"
+    )
+    expect(jasennaYhteyshenkilot(html)).toEqual([
+      {
+        nimi: "Maria Arola",
+        nimike: "Asiantuntija, ympäristö",
+        puhelin: "030 395 5562",
+        organisaatio: "Fingrid Oyj",
+      },
+    ])
+  })
+
+  /*
+   * `<br>` ON KORVATTAVA RIVINVAIHDOLLA. `.text()` liittaa rivit ilman
+   * valimerkkia, jolloin tuloksena on "Maria ArolaAsiantuntija,
+   * ympäristöpuh. 030 395 5562" eika nimea voi erottaa nimikkeesta.
+   */
+  it("ei liimaa nimea ja nimiketta yhteen", () => {
+    const html = lohko(
+      "<p><strong>Pasi Saari</strong><br />Vanhempi asiantuntija<br />puh. 030 395 5178</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h[0].nimi).toBe("Pasi Saari")
+    expect(h[0].nimike).toBe("Vanhempi asiantuntija")
+  })
+
+  /* Valiotsikot ovat omia p-elementteja eivatka ole nimia. */
+  it("ohittaa valiotsikot", () => {
+    const html = lohko(
+      "<p><strong>YVA-menettely</strong></p>" +
+        "<p><strong>Tommi Raussi</strong><br />Projektipäällikkö<br />puh. 040 350 7500</p>" +
+        "<p><strong>Yleissuunnittelu</strong></p>"
+    )
+    expect(jasennaYhteyshenkilot(html).map((h) => h.nimi)).toEqual(["Tommi Raussi"])
+  })
+
+  /*
+   * Mittaus 52 sivun yli loysi kolme yritysta henkiloiden seassa:
+   * "Destia Oy", "Eltel Networks Oy", "Rakennuttaja Fingrid Oyj".
+   */
+  it("ei ota yritysta henkiloksi", () => {
+    const html = lohko(
+      "<p><strong>Destia Oy</strong><br />puh. 020 444 11</p>" +
+        "<p><strong>Rakennuttaja Fingrid Oyj</strong><br />puh. 030 395 5000</p>" +
+        "<p><strong>Eero Kujanen</strong><br />Päällikkö<br />puh. 030 395 5190</p>"
+    )
+    expect(jasennaYhteyshenkilot(html).map((h) => h.nimi)).toEqual(["Eero Kujanen"])
+  })
+
+  it("ei toista samaa nimea", () => {
+    const html = lohko(
+      "<p><strong>Eero Kujanen</strong><br />Päällikkö<br />puh. 030 395 5190</p>" +
+        "<p><strong>Eero Kujanen</strong><br />Päällikkö<br />puh. 030 395 5190</p>"
+    )
+    expect(jasennaYhteyshenkilot(html)).toHaveLength(1)
+  })
+
+  /*
+   * Lohko rajataan otsikkoon: sivulla on muita `div.well`-lohkoja
+   * (Liitteet, uutiset) joissa on nimia ilman yhteystietoja.
+   */
+  it("lukee vain Lisatietoja-lohkon", () => {
+    const html =
+      '<html><body><div class="well"><h3 class="title">Liitteet</h3>' +
+      "<p><strong>Jussi Kirjoittaja</strong><br />raportin laatija</p></div></body></html>"
+    expect(jasennaYhteyshenkilot(html)).toEqual([])
+  })
+
+  it("kestaa tyhjan", () => {
+    expect(jasennaYhteyshenkilot("")).toEqual([])
+  })
+})
+
+/*
+ * NAMA KOLME LOYTYIVAT VASTA KUN KUIVAHARJOITUKSEN 7 RIVIA LUETTIIN
+ * YKSITELLEN. Yhden sivun testi nautti kaikki kolme lapi.
+ */
+describe("jasennaYhteyshenkilot - kuivaharjoituksen loydot", () => {
+  const lohko = (sisalto: string) =>
+    `<html><body><div class="well"><h3 class="title">Lisätietoja</h3>${sisalto}</div></body></html>`
+
+  /*
+   * Numero jai NIMIKKEESEEN kolmella rivilla seitsemasta, koska kuvio
+   * vaati numeron heti "puh."-sanan jalkeen eika hyvaksynyt maatunnusta.
+   */
+  it("lukee puhelimen myos maatunnuksella", () => {
+    const html = lohko(
+      "<p><strong>Hannu Kuikka</strong><br />Vanhempi projektipäällikkö<br />puh. +358 30 395 5216</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h[0].puhelin).toBe("+358 30 395 5216")
+    expect(h[0].nimike).toBe("Vanhempi projektipäällikkö")
+  })
+
+  /*
+   * Huittinen-Forssa-sivulla on urakoitsijan projektipaallikko. Hanen
+   * organisaatioksi ei saa kirjata Fingridia.
+   */
+  it("ei kirjaa toisen yhtion vakea Fingridille", () => {
+    const html = lohko(
+      "<p><strong>Jaakko Marttila</strong><br />Electromontaj S.A. projektipäällikkö<br />puh. +358 44 4253772</p>" +
+        "<p><strong>Eero Kujanen</strong><br />Päällikkö<br />puh. 030 395 5190</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h.find((x) => x.nimi === "Jaakko Marttila")?.organisaatio).toBeNull()
+    expect(h.find((x) => x.nimi === "Eero Kujanen")?.organisaatio).toBe("Fingrid Oyj")
+  })
+
+  /* Pelkka nimi ilman nimiketta ja numeroa ei ole yhteystieto. */
+  it("ei ota pelkkaa nimea", () => {
+    expect(jasennaYhteyshenkilot(lohko("<p><strong>Jari Heikkilä</strong></p>"))).toEqual([])
   })
 })

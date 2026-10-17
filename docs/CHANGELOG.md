@@ -96,6 +96,27 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Fingridin hankkeille yhteyshenkilöt (D-302)
+
+Hankesivun "Lisätietoja"-lohko oli `.content-text`-rajauksen
+ulkopuolella, joten jäsennin ei nähnyt sitä lainkaan. Mitattu 52 sivun
+yli: **151 henkilöä, 69 eri nimeä**, vain 3 sivua ilman yhtään.
+
+Ratkaiseva yksityiskohta: `<br>` on korvattava rivinvaihdolla ennen
+tekstin lukemista. `.text()` liittää rivit ilman välimerkkiä, jolloin
+tulos on "Maria ArolaAsiantuntija, ympäristöpuh. 030 395 5562".
+
+Kuivaharjoituksen rivit paljastivat kolme vikaa joita yhden sivun testi
+ei näyttanyt: maatunnuksellinen numero jäi nimikkeeseen, urakoitsijan
+työntekijä oli menossa Fingridin yhteyshenkilöksi, ja pelkkä nimi ilman
+nimikettä ja numeroa pääsi läpi.
+
+Sähköpostia **ei päätellä** vaikka sivu kertoo muodon
+(etunimi.sukunimi@fingrid.fi): sääntö ei kerro miten ä ja ö
+kirjoitetaan, ja väärä osoite on pahempi kuin tyhjä.
+
+Täydennetty 6 jonoriville 18 henkilöä.
+
 ### Tilaaja täydennetty 125 vanhalle riville (D-301)
 
 Poimijan korjaus vaikutti vain uusiin riveihin, joten vanhat

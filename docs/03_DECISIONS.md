@@ -23,6 +23,90 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-302 - Fingridin yhteyshenkilöt: `<br>` on korvattava ennen tekstin lukemista
+
+Johannes 18.10.2026 Anttila–Länsisalmi-hankkeesta (`9173836c`):
+*"ei ole poimittu yhteyshenkilöitä vaikka ne ovat saatavilla."*
+Sivulla on neljä nimeä nimikkeineen ja puhelinnumeroineen, ja rivin
+`metadata.contact_persons` oli tyhjä taulukko.
+
+Lohko on `div.well`, jonka `h3.title` on "Lisätietoja", ja se on
+**`.content-text`-rajauksen ulkopuolella** — siksi D-289:n jäsennin ei
+nähnyt sitä lainkaan. Henkilöt luetaan nyt alkuperäisestä htmlistä
+ennen poistoja.
+
+#### `<br>` ratkaisee, ei `.text()`
+
+Jokainen henkilö on oma `<p>`, jossa rivit erottaa `<br>`:
+
+    <p><strong>Maria Arola</strong><br />Asiantuntija, ympäristö<br />
+       puh. 030 395 5562</p>
+
+`.text()` liittää rivit **ilman välimerkkiä**, jolloin tulos on
+"Maria ArolaAsiantuntija, ympäristöpuh. 030 395 5562" eikä nimeä voi
+erottaa nimikkeestä. `<br>` on siis korvattava rivinvaihdolla ennen
+lukemista.
+
+#### Mitattu 52 hankesivun yli
+
+| | |
+|---|---|
+| henkilöitä | **151** |
+| eri nimeä | 69 |
+| sivuja ilman yhtään | 3 / 52 |
+
+#### Neljä virhettä, joista kolme näkyi vasta rivit lukemalla
+
+Yhden sivun testi hyväksyi kaikki neljä:
+
+1. **Yritys henkilönä** — "Destia Oy", "Eltel Networks Oy",
+   "Rakennuttaja Fingrid Oyj". Nimikuvio hyväksyi ne, koska "Oy" kelpaa
+   isolla alkavaksi sanaksi. Tämä näkyi 52 sivun mittauksesta.
+2. **Numero jäi nimikkeeseen** kolmella rivillä seitsemästä: kuvio
+   vaati numeron heti "puh."-sanan jälkeen, joten
+   "puh. +358 30 395 5216" ei osunut ja nimikkeeksi tuli
+   "Vanhempi projektipäällikkö puh. +358303955216".
+3. **Toisen yhtiön väkeä Fingridille.** Huittinen–Forssa-sivulla on
+   "Jaakko Marttila, Electromontaj S.A. projektipäällikkö" —
+   urakoitsijan työntekijä. Organisaatio on nyt null kun nimike
+   paljastaa toisen työnantajan; väärä organisaatio on huonompi kuin
+   tyhjä.
+4. **Pelkkä nimi** ilman nimikettä ja numeroa ("Jari Heikkilä") ei ole
+   yhteystieto. Vaaditaan vähintään toinen.
+
+#### Sähköpostia ei päätellä
+
+Sivu kertoo säännön: *"Sähköpostiosoitteemme ovat muotoa
+etunimi.sukunimi@fingrid.fi."* Sitä ei käytetä, koska sääntö ei kerro
+miten ä ja ö kirjoitetaan osoitteessa — ja väärä osoite on pahempi
+kuin tyhjä kenttä: viesti menee olemattomaan osoitteeseen tai väärälle
+henkilölle. Aineistossa on jo nimiä kuten "Marja Nuottajärvi" ja
+"Antti Nykänen".
+
+#### Avain on `metadata.contact_persons`, ei ylätason kenttä
+
+`importCandidate` kokoaa jonorivin metadatan muodossa
+`{ ...(body.metadata ?? {}), … }`, joten ylätasolle jätetty arvo olisi
+mennyt `normalized_payload`-lokiin mutta **ei koskaan jonoriville**.
+Tarkistettu koodista ennen kirjoittamista; sama ansa on kirjattu
+Helsingin lähteessä.
+
+#### Takautuva täydennys: 6 riviä, ei 51
+
+Fingrid-ehdokkaita luotiin 15.10. yhteensä 51, mutta **jonossa on vain
+12 Fingrid-riviä** ja hankkeissa nolla — loput yhdistyivät olemassa
+oleviin riveihin, joiden `source_name` on alkuperäinen lähde.
+Tarkistin myös `source_history`-kentän: Fingrid ei esiinny yhdenkään
+muun rivin historiassa, joten rajaus on täydellinen eikä täydennettävää
+jäänyt piiloon.
+
+Seitsemältä riviltä puuttuivat henkilöt, ja kuusi täydennettiin (18
+henkilöä). Seitsemäs on "Helsingin kaapeli", jonka sivulla ei ole
+yhtään kelvollista yhteystietoa. **Käsin lisättyjä ei ylikirjoitettu**:
+rivi ohitetaan jos sillä on jo henkilöitä.
+
+`scripts/taydenna-fingrid-yhteyshenkilot.ts`
+
 ### D-301 - Tilaaja jäi poimimatta yhdestä puuttuvasta kirjaimesta
 
 Johannes 18.10.2026: *"pitäähän se tilaaja myös poimia jos se on

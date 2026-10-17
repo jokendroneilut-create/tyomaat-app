@@ -94,7 +94,14 @@ export function jasennaHankesivu(html: string): {
   tyyppi: string | null
   tila: string | null
   sijainti: string | null
+  yhteyshenkilot: FingridYhteyshenkilo[]
 } | null {
+  /*
+   * Yhteyshenkilöt luetaan ALKUPERÄISESTÄ htmlistä, ennen poistoja ja
+   * ennen `.content-text`-rajausta: "Lisätietoja"-lohko on sen ulkopuolella.
+   */
+  const yhteyshenkilot = jasennaYhteyshenkilot(html)
+
   const $ = cheerio.load(html)
   $("script,style,noscript,nav,header,footer").remove()
 
@@ -115,7 +122,130 @@ export function jasennaHankesivu(html: string): {
     tyyppi: lueKentta(teksti, "Hankkeen tyyppi"),
     tila: lueKentta(teksti, "Hankkeen tila"),
     sijainti: lueKentta(teksti, "Hankkeen sijainti") ?? lueKentta(teksti, "Sijainti"),
+    yhteyshenkilot,
   }
+}
+
+/*
+ * YHTEYSHENKILÖT HANKESIVUN "LISÄTIETOJA"-LOHKOSTA.
+ *
+ * Johannes 18.10.2026 Anttila–Länsisalmi-hankkeesta: *"ei ole poimittu
+ * yhteyshenkilöitä vaikka ne ovat saatavilla."* Sivulla on neljä
+ * nimeä nimikkeineen ja puhelinnumeroineen, eikä yhtään ollut kannassa.
+ *
+ * Lohko on `div.well`, jonka `h3.title` on "Lisätietoja". Jokainen
+ * henkilö on oma `<p>`, jossa rivit erottaa `<br>`:
+ *
+ *     <p><strong>Maria Arola</strong><br />
+ *        Asiantuntija, ympäristö<br />
+ *        puh. 030 395 5562</p>
+ *
+ * `<br>` ON KORVATTAVA RIVINVAIHDOLLA ennen tekstin lukemista.
+ * `.text()` liittää rivit ilman välimerkkiä, jolloin tuloksena on
+ * "Maria ArolaAsiantuntija, ympäristöpuh. 030 395 5562" eikä nimeä voi
+ * erottaa nimikkeestä.
+ *
+ * Lohkossa on myös väliotsikoita ("YVA-menettely", "Yleissuunnittelu")
+ * omina `<p>`-elementteinään. Ne karsiutuvat nimikuviolla: väliotsikko
+ * on yksi sana eikä kaksi isolla alkavaa.
+ *
+ * SÄHKÖPOSTIA EI PÄÄTELLÄ, vaikka sivu kertoo säännön
+ * ("Sähköpostiosoitteemme ovat muotoa etunimi.sukunimi@fingrid.fi").
+ * Sääntö ei kerro miten ä ja ö kirjoitetaan osoitteessa, ja väärä
+ * osoite on pahempi kuin tyhjä kenttä: viesti menee olemattomaan
+ * osoitteeseen tai väärälle henkilölle.
+ */
+export type FingridYhteyshenkilo = {
+  nimi: string
+  nimike: string | null
+  puhelin: string | null
+  /* null kun nimike paljastaa toisen tyonantajan, ks. MUU_TYONANTAJA. */
+  organisaatio: string | null
+}
+
+/*
+ * MAATUNNUS ON SALLITTAVA. Ensimmäinen versio vaati numeron heti
+ * "puh."-sanan jälkeen, joten muoto "puh. +358 30 395 5190" ei
+ * osunut — ja silloin numero jäi NIMIKKEESEEN ("Vanhempi
+ * projektipäällikkö puh. +358303955…") ja puhelinkenttä tyhjäksi.
+ * Mitattu kolmella rivillä seitsemästä.
+ */
+const PUHELIN = /\bpuh\.?\s*(\+?[0-9][0-9\s\-()]{6,})/i
+
+/*
+ * TOISEN YHTIÖN TYÖNTEKIJÄ EI OLE FINGRIDIN YHTEYSHENKILÖ.
+ *
+ * Mitattu: Huittinen–Forssa-sivulla on "Jaakko Marttila,
+ * Electromontaj S.A. projektipäällikkö" — urakoitsijan väkeä.
+ * Organisaatioksi ei saa kirjata Fingridiä, koska se olisi väärä
+ * tieto; nimike kertoo oikean työnantajan.
+ */
+const MUU_TYONANTAJA = /\b(?:Oy|Oyj|Ab|Abp|S\.?A\.?|GmbH|AS|A\/S|Ltd|Group)\b/
+
+/* Kaksi tai kolme isolla alkavaa sanaa: "Maria Arola", "Eero Kujanen". */
+const HENKILONIMI = /^[A-ZÅÄÖ][a-zåäö-]+(?:\s+[A-ZÅÄÖ][a-zåäö-]+){1,2}$/
+
+/*
+ * YRITYS EI OLE HENKILÖ.
+ *
+ * Mittaus 52 sivun yli antoi 154 henkilöä, joista kolme oli muuta:
+ * "Destia Oy", "Eltel Networks Oy" ja "Rakennuttaja Fingrid Oyj".
+ * Nimikuvio hyväksyi ne, koska "Oy" kelpaa isolla alkavaksi sanaksi.
+ */
+const EI_HENKILO = /\b(?:Oy|Oyj|Ab|Abp|Ky|Ltd|Group)\b|^(?:Rakennuttaja|Urakoitsija|Tilaaja|Pääurakoitsija|Toimittaja)\b/i
+
+export function jasennaYhteyshenkilot(html: string): FingridYhteyshenkilo[] {
+  const $ = cheerio.load(html)
+  const out: FingridYhteyshenkilo[] = []
+  const nahdyt = new Set<string>()
+
+  $("div.well").each((_, el) => {
+    const otsikko = $(el).find("h3.title").first().text().trim()
+    if (!/lis[äa]tietoj/i.test(otsikko)) return
+
+    $(el)
+      .find("p")
+      .each((__, pp) => {
+        const rivit = ($(pp).html() ?? "")
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<[^>]+>/g, "")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&auml;/g, "ä")
+          .replace(/&ouml;/g, "ö")
+          .replace(/&aring;/g, "å")
+          .replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n)))
+          .split("\n")
+          .map((r) => r.replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+
+        if (!rivit.length) return
+        const nimi = rivit[0]
+        if (!HENKILONIMI.test(nimi)) return
+        if (EI_HENKILO.test(nimi)) return
+        if (nahdyt.has(nimi)) return
+
+        const loput = rivit.slice(1).join(" ")
+        const puh = loput.match(PUHELIN)
+        const nimike = loput.replace(PUHELIN, "").replace(/[\s,;.]+$/, "").trim()
+
+        /*
+         * PELKKA NIMI EI OLE YHTEYSTIETO. Ilman nimiketta ja numeroa
+         * rivi ei kerro mitaan eika ole varmasti yhteyshenkilo; mitattu
+         * yksi tallainen seitsemasta ("Jari Heikkila", ei muuta).
+         */
+        if (!nimike && !puh) return
+
+        nahdyt.add(nimi)
+        out.push({
+          nimi,
+          nimike: nimike || null,
+          puhelin: puh ? puh[1].replace(/\s+/g, " ").trim() : null,
+          organisaatio: nimike && MUU_TYONANTAJA.test(nimike) ? null : "Fingrid Oyj",
+        })
+      })
+  })
+
+  return out
 }
 
 async function haeHtml(url: string): Promise<string | null> {
@@ -170,6 +300,29 @@ export async function fetchFingridProjectsSource() {
           developer: "Fingrid Oyj",
           builder: null,
           property_type: sivu.tyyppi ?? "Sähköverkko",
+          /*
+           * AVAIN ON `metadata.contact_persons`, EI ylatason kentta.
+           * `importCandidate` kokoaa jonorivin metadatan muodossa
+           * `{ ...(body.metadata ?? {}), ... }`, joten ylatasolle jatetty
+           * arvo menisi `normalized_payload`-lokiin mutta ei koskaan
+           * jonoriville. Tarkistettu importCandidate.ts:sta ennen
+           * kirjoittamista.
+           */
+          ...(sivu.yhteyshenkilot.length
+            ? {
+                metadata: {
+                  contact_persons: sivu.yhteyshenkilot.map((h) => ({
+                    kind: "person" as const,
+                    name: h.nimi,
+                    title: h.nimike,
+                    /* Ks. jasennaYhteyshenkilot: osoitetta ei paatella. */
+                    email: null,
+                    phone: h.puhelin,
+                    organization: h.organisaatio,
+                  })),
+                },
+              }
+            : {}),
           source_url: url,
           confidence: 0.7,
           completed: false,
