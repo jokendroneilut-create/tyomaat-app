@@ -184,6 +184,91 @@ Ohje (`/ohjeet`) päivitettiin kertomaan mistä kentistä vahti etsii,
 että osamerkkijono ja kirjainkoko eivät haittaa, ja että kohdetyyppi
 kannattaa valita listalta eikä kirjoittaa vapaasti.
 
+### D-297 - Cutoff ei ole varmuusmarginaali vaan pysyvä raja
+
+Johannes 17.10.2026 antoi Hilman hakusivun ja kysyi: *"pystytkö lukemaan
+tätä ja kirjoittamaan tänne jokaisen yrityksen jonka tiedämme? Esim
+Ylöjärven Kiviset löytää 2 hanketta ja meillä on vain yksi."*
+
+#### Ensin: lähtöoletus oli osin väärä
+
+Haku kannattaa tehdä **rajapinnasta eikä hakusivulta** — sama päätepiste
+jota keräin käyttää, vapaalla tekstihaulla. Se antaa enemmän:
+"Ylöjärven Kiviset" 6 ilmoitusta, hakusivu näytti 2.
+
+Ja meillä oli enemmän kuin Johannes luuli. Täsmällisellä nimihaulla
+**osapuolikentistä** (ei koko JSON:sta, joka osuu sanaan *kiviset*):
+
+    Ylöjärven Kiviset    2 hanketta
+    Louhintahiekka      16 hanketta  (+3 vain tekstissä mainittuna)
+
+Hakusivu näyttää vain Hilma-ilmoitukset; meillä samat hankkeet tulevat
+myös kunnan päätöksistä ja STT:stä.
+
+#### Audit: 632 yritystä
+
+`scripts/audit-hilma-yritykset.ts` hakee jokaisen tuntemamme
+urakoitsijan Hilmasta ja vertaa `noticeId`-tunnisteella. Kaksi rajausta
+oli pakko lisätä ensimmäisen ajon jälkeen:
+
+1. **CPV 45\***. Ensimmäinen ajo raportoi "aukoiksi" lumenaurausta
+   (90620000), ylläpitourakoita (50232100) ja infrasuunnittelua
+   (71000000) — ne ovat keräimen tarkoituksellisia rajauksia.
+2. **Nimen on esiinnyttävä ilmoituksessa.** Vapaa haku osui sanoihin:
+   *jatke* on suomen sana ja antoi 50 "aukkoa".
+
+#### Juurisyy: cutoff oli 2 vuorokautta
+
+Keräimen silmukka pysähtyy ensimmäiseen cutoffia vanhempaan
+ilmoitukseen. Kommentti sanoi *"varmuusmarginaali jos yöllinen ajo jää
+väliin"* — mutta yli kahden vuorokauden katko tarkoittaa **pysyvää
+menetystä**, koska ajo ei palaa niihin koskaan.
+
+Todennettu: kaikki puuttuneet löytyvät keräimen **omalla kyselyllä**
+sivuilta 10-15. Kysely ei siis ollut vika.
+
+Hinta mitattiin ennen muutosta: **16,7 ilmoitusta vuorokaudessa**,
+vilkkain päivä 41. Neljäntoista vuorokauden ikkuna = noin 234
+ilmoitusta = 3 sivua, kun katto on 20.
+
+#### Oma mittarini oli väärässä, ja se on syytä kirjata
+
+Raportoin ensin "13 puuttuvaa ilmoitusta". Luku laskettiin
+vertailujoukkoa vastaan jossa oli 1 541 tunnistetta — mutta suora
+tarkistus antoi **1 561 dokumenttia ja vain 1 183 uniikkia ilmoitusta**:
+378 ilmoitusta on kannassa kahteen kertaan eri `document_url`-arvolla.
+Vertailujoukko oli siis liian suuri ja aukko todellisuudessa isompi kuin
+13.
+
+#### Takautuva haku
+
+`scripts/taydenna-hilma-historia.ts` käyttää **keräimen omaa
+funktiota** ikkuna- ja sivukatto-ohituksella, ei omaa tuontia — sama
+rivimuoto ja sama dedupaus. Ajettu 120 vuorokauden ikkunalla:
+
+| | ennen | jälkeen |
+|---|---|---|
+| Hilma-dokumentteja | 1 561 | **2 267** |
+| uniikkeja ilmoituksia | 1 183 | **1 727** |
+| aikaväli alkaa | 2026-07-08 | **2026-06-19** |
+
+Aiemmin puuttuneista 13:sta **12 on nyt kannassa**.
+
+Lisäksi `fetchHilmaPage` yrittää 429:n jälkeen uudelleen kasvavalla
+odotuksella. Aiemmin yksikin 429 kaatoi koko lähdeajon, ja pidemmällä
+ikkunalla sivuja on enemmän eli riski kasvoi.
+
+#### Auki
+
+- **`160616` ei löydy yhä.** Tunniste on kuusinumeroinen kun muut ovat
+  viisinumeroisia, eli eri ilmoitusmuoto. Ei selvitetty.
+- **378 kaksoiskappaletta** `source_documents`-taulussa: sama `noticeId`
+  kahdella `document_url`-arvolla. Ei korjattu; vaatii oman mittauksensa
+  siitä kumpi osoite on oikea.
+- **Keräimen kysely on relevanssihaku, ei suodatin.** `cpvCodes:(45*)`
+  ilman `queryType: "full"` päästää läpi noin 20 % muita CPV-luokkia.
+  Toimii käytännössä, mutta ei ole se mitä kommentti lupaa.
+
 ### D-296 - Yhden merkin ero: kaksoispiste verbin jälkeen
 
 Johannes 17.10.2026 valtatien 25 hankkeesta (`8288d20e`): urakoitsijaa ei

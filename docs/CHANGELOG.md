@@ -96,6 +96,18 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Hilman keruuikkuna 2 vrk → 14 vrk ja historia haettu (D-297)
+
+Keräimen silmukka pysähtyy cutoffia vanhempaan ilmoitukseen, joten yli
+kahden vuorokauden katko tarkoitti pysyvää menetystä. 632 yrityksen
+audit paljasti puuttuvia ilmoituksia, jotka löytyivät keräimen omalla
+kyselyllä — kysely ei ollut vika, ikkuna oli.
+
+Mitattu hinta: 16,7 ilmoitusta/vrk, joten 14 vrk = 3 sivua (katto 20).
+
+Takautuva haku 120 vrk:n ikkunalla: uniikkeja Hilma-ilmoituksia
+1 183 → **1 727**, aikaväli alkaa nyt 19.6. eikä 8.7.
+
 ### Urakoitsija poimitaan myös kaksoispisteen jälkeen (D-296)
 
 ELY-keskusten tiedotepohjassa lukee "Urakoitsijana toimii: Ylöjärven

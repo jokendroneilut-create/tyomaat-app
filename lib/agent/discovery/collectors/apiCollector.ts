@@ -294,11 +294,50 @@ async function collectLupapisteSource(source: DiscoverySource) {
  * -koodin), joten erillistä mainType-hakua ei tarvita.
  */
 const HILMA_PAGE_SIZE = 100
-const HILMA_LOOKBACK_DAYS = 2 // varmuusmarginaali jos yöllinen ajo jää väliin
+/*
+ * KATSELUIKKUNA, EI VARMUUSMARGINAALI (D-297).
+ *
+ * Oli 2 vuorokautta "varmuusmarginaalina jos yöllinen ajo jää väliin".
+ * Silmukka pysähtyy ensimmäiseen cutoffia vanhempaan ilmoitukseen, joten
+ * yli kahden vuorokauden katko tarkoittaa **pysyvää menetystä** — ajo ei
+ * palaa niihin koskaan.
+ *
+ * Mitattu 17.10.2026: 632 tunnetun yrityksen auditissa löytyi 13
+ * ilmoitusta jotka ovat keruuikkunassamme mutta puuttuvat kannasta
+ * (Rantasalmen pelastusasema, Hyrylän lähiliikuntapaikka, Metsämaan
+ * päiväkoti, Malmin uimahallin laajennus…). Kaikki 13 löytyvät
+ * keräimen OMALLA kyselyllä sivuilta 10-15, eli kysely ei ole vika —
+ * ne olivat vain cutoffia vanhempia sinä hetkenä kun ajo kävi.
+ *
+ * HINTA ON MITATTU: 16,7 ilmoitusta vuorokaudessa (vilkkain päivä 41),
+ * joten 14 vuorokautta = noin 234 ilmoitusta = 3 sivua. Katto on 20
+ * sivua, joten marginaali säilyy. Upsert on `document_url`-avaimella
+ * eikä kosketa `facts_extracted_at`-kenttää, joten jo käsitellyt rivit
+ * eivät palaa jonoon.
+ */
+const HILMA_LOOKBACK_DAYS = 14
 const HILMA_MAX_PAGES = 20 // turvakatto ettei poikkeuspäivä karkaa 60s-budjetissa
 const HILMA_UPSERT_CHUNK = 100
 
-async function fetchHilmaPage(url: string, apiKey: string, skip: number) {
+/*
+ * 429 ON ODOTETTAVISSA, EI POIKKEUS (D-297).
+ *
+ * Rajapinta rajoittaa tahtia noin kolmenkymmenen pyynnon jalkeen.
+ * Aiemmin yksikin 429 kaatoi koko lahdeajon `throw`-virheeseen, jolloin
+ * kaikki sivut siihen asti menivat hukkaan — ja pidemmalla ikkunalla
+ * sivuja on enemman, joten riski kasvoi.
+ *
+ * Odotus kasvaa yrityksittain (2 s, 4 s, 6 s, 8 s). Muut virheet
+ * heitetaan yha heti: ne eivat korjaannu odottamalla.
+ */
+const HILMA_429_YRITYKSET = 4
+
+async function fetchHilmaPage(
+  url: string,
+  apiKey: string,
+  skip: number,
+  yritys = 0
+): Promise<any> {
   const body = {
     search: "cpvCodes:(45*)",
     top: HILMA_PAGE_SIZE,
@@ -318,6 +357,11 @@ async function fetchHilmaPage(url: string, apiKey: string, skip: number) {
     cache: "no-store",
   })
 
+  if (response.status === 429 && yritys < HILMA_429_YRITYKSET) {
+    await new Promise((r) => setTimeout(r, 2000 * (yritys + 1)))
+    return fetchHilmaPage(url, apiKey, skip, yritys + 1)
+  }
+
   if (!response.ok) {
     throw new Error(`Hilma API fetch failed: ${response.status} ${response.statusText}`)
   }
@@ -325,7 +369,16 @@ async function fetchHilmaPage(url: string, apiKey: string, skip: number) {
   return response.json()
 }
 
-async function collectHilmaSource(source: DiscoverySource) {
+/*
+ * `lookbackDays` on valinnainen ohitus takautuvaa hakua varten
+ * (`scripts/taydenna-hilma-historia.ts`). Normaaliajo ei anna sita,
+ * jolloin kaytossa on HILMA_LOOKBACK_DAYS.
+ */
+export async function collectHilmaSource(
+  source: DiscoverySource,
+  lookbackDays?: number,
+  maxPages?: number
+) {
   const apiKey = process.env.HILMA_API_KEY
 
   if (!apiKey) {
@@ -333,7 +386,7 @@ async function collectHilmaSource(source: DiscoverySource) {
   }
 
   const cutoff = new Date()
-  cutoff.setUTCDate(cutoff.getUTCDate() - HILMA_LOOKBACK_DAYS)
+  cutoff.setUTCDate(cutoff.getUTCDate() - (lookbackDays ?? HILMA_LOOKBACK_DAYS))
 
   const collected: any[] = []
   let odataCount: number | null = null
@@ -341,7 +394,7 @@ async function collectHilmaSource(source: DiscoverySource) {
   // Ilmoitukset tulevat datePublished desc -järjestyksessä (uusin ensin),
   // joten heti kun sivun ilmoitus menee cutoffin taakse, kaikki loput ovat
   // vanhempia ja sivutus voidaan lopettaa.
-  for (let page = 0; page < HILMA_MAX_PAGES; page++) {
+  for (let page = 0; page < (maxPages ?? HILMA_MAX_PAGES); page++) {
     const json = await fetchHilmaPage(source.url, apiKey, page * HILMA_PAGE_SIZE)
 
     if (odataCount == null) {
@@ -368,6 +421,10 @@ async function collectHilmaSource(source: DiscoverySource) {
     }
 
     if (reachedCutoff || notices.length < HILMA_PAGE_SIZE) break
+    /* Takautuvassa haussa rajapinta rajoittaa tahtia ilman taukoa. */
+    if (maxPages && maxPages > HILMA_MAX_PAGES) {
+      await new Promise((r) => setTimeout(r, 250))
+    }
   }
 
   // Rakennetaan rivit ja dedupataan document_url:n mukaan: Postgres-upsert ei
