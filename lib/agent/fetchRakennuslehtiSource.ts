@@ -120,6 +120,36 @@ const COMPLETED_KEYWORDS = [
   "vihittiin käyttöön",
 ]
 
+/*
+ * SUODATTIMEN PÄÄTÖS OMANA FUNKTIONA.
+ *
+ * Erotettu 17.10.2026, kun syöte käytiin läpi kantaa vasten
+ * (`scripts/tarkista-rakennuslehti-syote.ts`). Pudotuksen SYY on se mitä
+ * läpikäynnissä tarvitaan: "ei hankesignaalia" on eri vika kuin
+ * "poissulkeva sana osui", eikä niitä voi erottaa tuloksesta jossa
+ * juttu vain puuttuu. Logiikka ei muuttunut — sama haystack, sama
+ * järjestys, samat listat.
+ */
+export type Hankearvio =
+  | { kelpaa: true; valmistunut: boolean }
+  | { kelpaa: false; syy: "ei_signaalia" }
+  | { kelpaa: false; syy: "poissulku"; sana: string }
+
+export function arvioiJuttu(title: string, description: string | null): Hankearvio {
+  const haystack = `${title} ${description ?? ""}`.toLowerCase()
+
+  if (!PROJECT_KEYWORDS.some((k) => haystack.includes(k))) {
+    return { kelpaa: false, syy: "ei_signaalia" }
+  }
+
+  const poissulku = EXCLUDE_KEYWORDS.find((k) => haystack.includes(k))
+  if (poissulku) {
+    return { kelpaa: false, syy: "poissulku", sana: poissulku }
+  }
+
+  return { kelpaa: true, valmistunut: COMPLETED_KEYWORDS.some((k) => haystack.includes(k)) }
+}
+
 function getTagValue(item: string, tag: string): string | undefined {
   const match = item.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"))
   return match?.[1]
@@ -158,12 +188,11 @@ export async function fetchRakennuslehtiSource() {
 
     if (!title || !link) continue
 
+    const arvio = arvioiJuttu(title, description)
+    if (!arvio.kelpaa) continue
+
     const haystack = `${title} ${description ?? ""}`.toLowerCase()
-
-    if (!PROJECT_KEYWORDS.some((k) => haystack.includes(k))) continue
-    if (EXCLUDE_KEYWORDS.some((k) => haystack.includes(k))) continue
-
-    const completed = COMPLETED_KEYWORDS.some((k) => haystack.includes(k))
+    const completed = arvio.valmistunut
     const city = detectCityFromText(haystack)
     const region = city ? getMunicipalityByName(city)?.region ?? null : null
 

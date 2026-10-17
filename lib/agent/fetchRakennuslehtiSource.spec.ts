@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { trimAtArticleEnd } from "./fetchRakennuslehtiSource"
+import { arvioiJuttu, trimAtArticleEnd } from "./fetchRakennuslehtiSource"
 
 describe("trimAtArticleEnd", () => {
   /*
@@ -40,5 +40,47 @@ describe("trimAtArticleEnd", () => {
 
   it("palauttaa tekstin sellaisenaan jos rajaa ei ole", () => {
     expect(trimAtArticleEnd("Pelkkaa leipatekstia.")).toBe("Pelkkaa leipatekstia.")
+  })
+})
+
+/*
+ * Syotteen lapikaynti 17.10.2026 (`scripts/tarkista-rakennuslehti-syote.ts`)
+ * loysi 50 jutusta kolme aitoa hanketta jotka suodatin pudotti. Nama
+ * testit lukitsevat sen MITA arvio kertoo, jotta syy nakyy eika vain
+ * tulos: "ei_signaalia" on eri vika kuin "poissulku".
+ */
+describe("arvioiJuttu", () => {
+  it("kelpuuttaa hankesignaalin", () => {
+    const a = arvioiJuttu("Nyab rakentaa sahkoaseman Forssaan", "Rakentaminen alkaa elokuussa.")
+    expect(a.kelpaa).toBe(true)
+  })
+
+  it("merkitsee valmistuneen", () => {
+    const a = arvioiJuttu("Kampin uusi sisaankaynti valmistui", "Hanke rakennetaan valmiiksi.")
+    expect(a).toEqual({ kelpaa: true, valmistunut: true })
+  })
+
+  it("kertoo kun hankesignaali puuttuu", () => {
+    const a = arvioiJuttu("Helsinkiin nousee uusi liikuntahalli", "Vesikatto toteutetaan kotelolaatoilla.")
+    expect(a).toEqual({ kelpaa: false, syy: "ei_signaalia" })
+  })
+
+  it("kertoo poissulkevan sanan nimelta", () => {
+    const a = arvioiJuttu("Talotekniikkakonserni osti kolme yritysta", "Konserni rakentaa kasvua yritysostoilla.")
+    expect(a.kelpaa).toBe(false)
+    if (!a.kelpaa && a.syy === "poissulku") {
+      expect(a.sana).toBe("yritysost")
+    } else {
+      throw new Error("odotettiin poissulkua")
+    }
+  })
+
+  /*
+   * Poissulku voittaa signaalin, ja se on tarkoitus: "palkittiin" kertoo
+   * jutun olevan tunnustus eika hanke, vaikka otsikossa olisi urakka.
+   */
+  it("poissulku voittaa hankesignaalin", () => {
+    const a = arvioiJuttu("Oulun jalkapallostadion pokkasi palkinnon", "Stadion rakennettiin kahdessa vuodessa.")
+    expect(a.kelpaa).toBe(false)
   })
 })

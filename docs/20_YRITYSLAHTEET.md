@@ -135,6 +135,68 @@ opetti sen: *"Destia ja Oulun ammattikorkeakoulu aloittavat
 talonrakentamisen koulutuksen"* sisältää rakentamissanan mutta on
 koulutusuutinen.
 
+### Rakennuslehti lähdevihjeenä — mittaus 17.10.2026
+
+Johannes: *"katso nyt siis vain että voisi sieltä saada jotain lähteitä."*
+
+Rajaus on perusteltu: D-294 mittasi että 42 / 76 Rakennuslehti-hanketta
+ei täsmää mihinkään muuhun, eli ne eivät tule meille mitään muuta
+reittiä. Niissä esiintyvä yritys on siksi vahvempi lähde-ehdokas kuin
+yritys joka näkyy jo Hilman kautta.
+
+77 Rakennuslehti-hankkeesta irtosi 53 yritysnimeä: **29 on lähteenämme,
+24 ei.** Yksikään niistä 24:stä ei esiinny kahdessa
+Rakennuslehti-hankkeessa — joten pelkkä kappalemäärä ei kertonut mitään.
+
+#### Ratkaiseva luku ei ole hankemäärä vaan "jäisikö hanke ilman tätä"
+
+Jos yritys on rakennuttaja ja sen rakentaja on jo lähteemme, hanke tulee
+meille ilman uutta lähdettä; uusi lähde toisi nopeutta, ei kattavuutta.
+Siksi nimet mitattiin koko kannan yli ja laskettiin **montako hanketta
+jäisi ilman tätä lähdettä** (ei muuta osapuolta joka on lähteemme tai
+julkinen tilaaja):
+
+| nimi | hankkeita | jäisi ilman | tulee jo muualta |
+|---|---|---|---|
+| **Toivo Group** | 14 | **13** | 1 |
+| **Solarigo Systems** | 11 | **11** | 0 |
+| Caverion | 13 | 3 | **10** |
+| Pajala Yhtiöt | 4 | 3 | 1 |
+| Keski-Suomen Betonirakenne | 3 | 3 | 0 |
+| Hoivarakentajat | 3 | 3 | 0 |
+| Nyab | 3 | 2 | 1 |
+| atNorth | 4 | 1 | 3 |
+
+**Caverion on esimerkki luvusta joka pettää.** 13 hanketta näyttää
+isolta, mutta 10:stä on toinen osapuoli jo lähteenämme: viisi on
+Fingridin sähköasemia, ja Fingrid on lähteemme 15.10. alkaen. Lisäksi
+kolme 13:sta oli väärää osumaa — nimi oli pitkässä urakoitsijalistassa
+(Harjavallan koulukeskus, HUS sprinklerit, Kainuun keskussairaala).
+Rivit oli avattava, luku ei riittänyt ([[verify-findings-against-source]]).
+
+**Avain-yhtiöt eivät ole taulukossa, ja se on mittarin vika.** Nimi
+esiintyy kolmena kirjoitusasuna (Avain Asunnot, Avain Yhtiöt, Avain
+Rakennuttaja), jotka normalisointi jättää erillisiksi — sama ansa kuin
+Rakennusliike Laptilla. Rivit luettuna: 12 hanketta, ja rakentaja on
+lähes aina lähteemme (Peab, Bonava, Pohjola Rakennus, Marvea, Aura),
+eli Avain olisi enimmäkseen päällekkäinen.
+
+#### Johtopäätös: kaksi nimeä, ei kiirettä
+
+- **Toivo Group (13 jäisi ilman)** on paras yksittäinen ehdokas minkä
+  tämä reitti antoi. Se on asuin- ja hoivakotirakennuttaja joka toimii
+  usein omana rakennuttajanaan ilman nimettyä rakentajaa.
+- **Solarigo Systems (11/11)** oli jo listan energiakehittäjissä, mutta
+  vasta tämä mittaus antoi sille "jäisi ilman" -luvun.
+- **Datakeskusryhmä** (atNorth, Sesterce, Data Tank Nordic, CSC, Nala
+  Renewables) on yhdessä 8 hanketta viiden eri sivuston takana, ja
+  atNorthin rakentajat ovat Skanska, NRC ja YIT — kaikki lähteitämme.
+  Heikompi kuin jo lykätty energiakehittäjien ryhmä (6 lähdettä,
+  70 hanketta).
+
+Ei rakennettu nyt. `scripts/kartoita-rakennuslehden-yritykset.ts` ajaa
+mittauksen uudelleen.
+
 ### Metsähallitus — 16 hanketta
 
 Valtion liikelaitos, ei lähteenä. Sama laji kuin Stara
