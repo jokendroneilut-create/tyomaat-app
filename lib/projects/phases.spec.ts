@@ -54,8 +54,13 @@ describe("phaseAdvances", () => {
 
 describe("phaseOrder", () => {
   it("antaa kanonisen järjestyksen ja null tuntemattomalle", () => {
-    expect(phaseOrder("Suunnittelussa")).toBe(3)
-    expect(phaseOrder("Rakenteilla")).toBe(7)
+    /*
+     * Numerot siirtyivat yhdella alas kun Ideointi poistettiin
+     * 18.10.2026: Kaavoitus on nyt 1 ja Suunnittelu 2.
+     */
+    expect(phaseOrder("Kaavoitus")).toBe(1)
+    expect(phaseOrder("Suunnittelussa")).toBe(2)
+    expect(phaseOrder("Rakenteilla")).toBe(6)
     expect(phaseOrder("Peruttu")).toBeNull()
     expect(phaseOrder(null)).toBeNull()
   })

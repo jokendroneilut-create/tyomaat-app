@@ -96,6 +96,21 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Ideointi-vaihe poistettu (D-304)
+
+0 / 6 896 hanketta oli Ideointi-vaiheessa, joten vaihe ei ryhmittänyt
+mitään. Poistettu kokonaan: `/projects`-valikossa on nyt kuusi vaihetta
+(Kaavoitus … Rakenteilla).
+
+Ennen poistoa tarkistettiin asiakkaiden tallennetut valinnat, koska
+rikkoutunut suodatin ei lähetä virhettä vaan hiljaisuutta: yksi
+hakuvahti ja kuusi Today-asetusta luettelivat Ideoinnin, **aina 6–9
+vaiheen joukossa, ei koskaan yksin**. Listat siivottiin, eikä yhdenkään
+suodattimen tulos muutu.
+
+`PhaseKey`-unioni paljasti kaikki neljä käyttökohtaa käännösvirheenä.
+Vanha arvo "Ideointi" normalisoituu nyt Suunnitteluksi.
+
 ### Selvityksen valmistuminen ei enää mene hankkeen päiväksi (D-303)
 
 Harviala–Hangasmäen voimajohdolla oli arvioitu valmistuminen

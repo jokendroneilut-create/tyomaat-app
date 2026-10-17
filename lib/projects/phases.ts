@@ -1,5 +1,4 @@
 export type PhaseKey =
-  | "idea"
   | "zoning"
   | "planning"
   | "permit"
@@ -17,16 +16,40 @@ export type PhaseDefinition = {
   terminal?: boolean
 }
 
+/*
+ * IDEOINTI POISTETTU 18.10.2026.
+ *
+ * Johannes: *"ideointi on pakko poistaa koska ei ole yhtaan hanketta
+ * siina vaiheessa niin siina ei ole jarkea. eika muutenkaan ole
+ * jarkea, suunnittelu riittaa."*
+ *
+ * Mitattu ennen poistoa: **0 / 6 896 hanketta** ja 0 jonorivia oli
+ * Ideointi-vaiheessa. Ainoa lahde joka sita tuotti oli Fingridin
+ * tilakuvio (YVA / ymparistoselvitys), ja se ohjattiin Suunnitteluun
+ * samana paivana (D-303).
+ *
+ * Poisto tarkistettiin asiakkaiden tallennetuista valinnoista, koska
+ * rikkoutunut suodatin ei laheta virhetta vaan hiljaisuutta: yksi
+ * kaytossa oleva hakuvahti ja kuusi `bestSalesMoments`-listaa
+ * luettelivat Ideoinnin, mutta **aina 6-9 vaiheen joukossa, ei
+ * koskaan yksin** - joten poisto ei muuta yhdenkaan suodattimen
+ * tulosta. Listat siivottiin erikseen.
+ *
+ * `Ideointi` jaa LEGACY_PHASE_MAP:iin, jotta tallennettu vanha arvo
+ * normalisoituu Suunnitteluksi eika hiljaa nulliksi.
+ *
+ * Jarjestysnumerot alkavat nyt 1:sta: `order` on vertailuun
+ * (phaseAdvances), eika aukko kentassa auta ketaan.
+ */
 export const CANONICAL_PHASES: PhaseDefinition[] = [
-  { key: "idea", label: "Ideointi", order: 1 },
-  { key: "zoning", label: "Kaavoitus", order: 2 },
-  { key: "planning", label: "Suunnittelu", order: 3 },
-  { key: "permit", label: "Rakennuslupa", order: 4 },
-  { key: "tender", label: "Kilpailutus", order: 5 },
-  { key: "contract_awarded", label: "Sopimus myönnetty", order: 6 },
-  { key: "construction", label: "Rakenteilla", order: 7 },
-  { key: "nearing_completion", label: "Valmistumassa", order: 8 },
-  { key: "completed", label: "Valmistunut", order: 9 },
+  { key: "zoning", label: "Kaavoitus", order: 1 },
+  { key: "planning", label: "Suunnittelu", order: 2 },
+  { key: "permit", label: "Rakennuslupa", order: 3 },
+  { key: "tender", label: "Kilpailutus", order: 4 },
+  { key: "contract_awarded", label: "Sopimus myönnetty", order: 5 },
+  { key: "construction", label: "Rakenteilla", order: 6 },
+  { key: "nearing_completion", label: "Valmistumassa", order: 7 },
+  { key: "completed", label: "Valmistunut", order: 8 },
   { key: "cancelled", label: "Peruttu", order: null, terminal: true },
 ]
 
@@ -43,6 +66,8 @@ export const PHASE_KEYS_IN_ORDER = CANONICAL_PHASES.filter(
 ).map((phase) => phase.key)
 
 const LEGACY_PHASE_MAP: Record<string, PhaseKey> = {
+  /* Poistettu vaihe: tallennettu arvo ohjataan Suunnitteluun. */
+  ideointi: "planning",
   suunnittelussa: "planning",
   "rakentaminen aloitettu": "construction",
   valmistunut: "completed",

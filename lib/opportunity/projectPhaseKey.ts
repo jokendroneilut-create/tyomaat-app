@@ -31,9 +31,14 @@ const ORDER_BY_KEY: Record<PhaseKey, number> = CANONICAL_PHASES.reduce(
  * Tekstivihjeet → PhaseKey. Tarkista useampi; palautetaan edistynein osuma.
  */
 const TEXT_PHASE_PATTERNS: { key: PhaseKey; patterns: RegExp[] }[] = [
-  { key: "idea", patterns: [/\bidea/, /ennakko/] },
   { key: "zoning", patterns: [/kaavoitus/, /\bkaava/, /zoning/, /asemakaava/] },
-  { key: "planning", patterns: [/suunnittel/] },
+  /*
+   * `idea` ja `ennakko` tunnistetaan nyt Suunnitteluksi: Ideointi-vaihe
+   * poistettiin 18.10.2026 (0 / 6 896 hanketta). Kuvioita EI poistettu,
+   * koska teksti voi yhä sanoa "ennakkotieto" — se ohjataan vain
+   * lähimpään jäljellä olevaan vaiheeseen.
+   */
+  { key: "planning", patterns: [/suunnittel/, /\bidea/, /ennakko/] },
   { key: "permit", patterns: [/rakennuslupa/, /\bpermit/, /\blupa/] },
   {
     key: "tender",

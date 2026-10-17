@@ -21,8 +21,13 @@ import {
 export type StageWeights = Partial<Record<PhaseKey, number>>
 
 export const ROLE_STAGE_MATRIX: Record<string, StageWeights> = {
-  Arkkitehti: { idea: 1.0, zoning: 1.0, planning: 0.8 },
-  Kiinteistönomistaja: { idea: 1.0, zoning: 0.8, planning: 0.6 },
+  /*
+   * Ideointi poistettiin 18.10.2026. Sen paino siirtyi Suunnittelulle,
+   * joka oli näiden roolien seuraava vaihe — ei Kaavoitukselle, jolla
+   * paino oli jo yhtä korkea tai korkeampi.
+   */
+  Arkkitehti: { zoning: 1.0, planning: 1.0 },
+  Kiinteistönomistaja: { zoning: 0.8, planning: 1.0 },
   Rakennesuunnittelu: { planning: 1.0, permit: 0.8 },
   Rakennusliike: { tender: 1.0, permit: 0.6, contract_awarded: 0.4 },
   Infra: { zoning: 0.4, tender: 1.0, construction: 0.7 },

@@ -23,6 +23,73 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-304 - Ideointi-vaihe poistettu
+
+Johannes 18.10.2026: *"ideointi on pakko poistaa koska ei ole yhtään
+hanketta siinä vaiheessa niin siinä ei ole järkeä. eikä muutenkaan ole
+järkeä, suunnittelu riittää."* Tarkennus: *"ainakin /projects sivulta
+pois valikosta."*
+
+D-303 jätti vaiheen määrittelyyn ja ohjasi vain Fingridin kuvion
+muualle. Tämä poistaa sen kokonaan.
+
+#### Ennen poistoa mitattiin kuka siihen viittaa
+
+Rikkoutunut suodatin ei lähetä virhettä vaan hiljaisuutta, joten
+asiakkaiden tallennetut valinnat oli käytävä läpi ensin:
+
+| | Ideointiin viittaavia | huomio |
+|---|---|---|
+| hankkeet | **0 / 6 896** | |
+| jonorivit | **0 / 10 109** | D-303 siivosi 5 |
+| hakuvahdit | 1 / 40 | käytössä, 8 vaihetta listassa |
+| `bestSalesMoments` | 6 / 56 | 6–9 vaihetta listassa |
+
+**Ratkaiseva tarkistus: onko Ideointi jonkun listan ainoa alkio?** Jos
+olisi, poisto jättäisi tyhjän listan, joka tarkoittaa eri asiaa kuin
+yksi valittu vaihe. Ei ollut: pienin lista oli kuusi alkiota. Poisto ei
+siis muuta yhdenkään suodattimen tulosta — Ideointi täsmäsi nollaan
+hankkeeseen jo ennen muutosta.
+
+Hakuvahdin **nimi** on "Pirkanmaa – Ideointi, Kaavoitus, Suunnittelu".
+Nimeä ei muutettu: se on asiakkaan itse antama.
+
+#### Tyyppi löysi kaikki käyttökohdat
+
+`PhaseKey` on unioni, joten `idea`-avaimen poisto kaatoi käännöksen
+jokaisessa paikassa joka sitä käytti — neljä tiedostoa, ei yhtään
+etsittyä käsin:
+
+| paikka | ratkaisu |
+|---|---|
+| `app/projects/Map.tsx` | rivi pois; `idea` käytti jo samaa merkkiluokkaa kuin `planning` |
+| `lib/opportunity/projectPhaseKey.ts` | kuviot `/idea/` ja `/ennakko/` siirtyivät Suunnittelulle — EI poistettu, koska teksti voi yhä sanoa "ennakkotieto" |
+| `lib/opportunity/roleStageMatrix.ts` | arkkitehdin ja kiinteistönomistajan paino siirtyi Suunnittelulle |
+| `lib/projects/phases.spec.ts` | järjestysnumerot siirtyivät yhdellä alas |
+
+Valikot eivät tarvinneet muutosta: `/projects`-sivun `PHASE_OPTIONS`,
+hankkeen vaihepalkki ja Today-asetusten `salesMoments` johdetaan
+kaikki `CANONICAL_PHASES`-listasta.
+
+`Ideointi` lisättiin `LEGACY_PHASE_MAP`-karttaan osoittamaan
+Suunnitteluun, jotta mahdollinen jäännösarvo normalisoituu eikä muutu
+hiljaa nulliksi.
+
+#### Mitä EI tehty
+
+`lib/agent/customer/profiles.ts` sisältää yhä `preferredStages: ["idea",
+…]`, ja `lib/agent/knowledge/projectStages.ts` oman `ProjectStage`-
+unioninsa jossa on `"idea"`. Ne ovat **eri sanasto** kuin asiakkaalle
+näkyvät vaiheet, ja `preferredStages`-kenttää ei lue mikään —
+tarkistettu hakemalla koko koodista. Jätetty rauhaan, jotta muutos
+pysyy siinä mitä pyydettiin.
+
+Katselmointi tehtiin koodista eikä selaimesta: `/projects` vaatii
+kirjautumisen, enkä kirjaudu asiakkaan tunnuksilla. Valikon sisältö
+varmistettiin ajamalla `CANONICAL_PHASES` läpi.
+
+`scripts/siivoa-ideointivalinnat.ts`
+
 ### D-303 - Selvityksen valmistuminen ei ole hankkeen valmistuminen
 
 Johannes 18.10.2026 Harviala–Hangasmäen hankkeesta (`6489873a`) kolme

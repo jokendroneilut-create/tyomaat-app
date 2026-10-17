@@ -44,7 +44,6 @@ export type MapBounds = {
  * täsmäisi vahingossa samaan "käynnissä"-hakuun kuin "Rakenteilla".
  */
 const PHASE_MARKER_CLASS: Record<PhaseKey, string> = {
-  idea: 'marker--planning',
   zoning: 'marker--planning',
   planning: 'marker--planning',
   permit: 'marker--tender',

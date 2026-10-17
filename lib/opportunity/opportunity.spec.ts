@@ -142,11 +142,8 @@ describe("uudet roolit (D-071)", () => {
 
 describe("salesMomentsForRole", () => {
   it("johtaa arkkitehdin myyntihetket varhaisista vaiheista", () => {
-    expect(salesMomentsForRole("Arkkitehti")).toEqual([
-      "Ideointi",
-      "Kaavoitus",
-      "Suunnittelu",
-    ])
+    /* Ideointi poistettu 18.10.2026; paino siirtyi Suunnittelulle. */
+    expect(salesMomentsForRole("Arkkitehti")).toEqual(["Kaavoitus", "Suunnittelu"])
   })
 
   it("johtaa rakennusliikkeen kilpailutukseen (paino >= 0.6)", () => {
