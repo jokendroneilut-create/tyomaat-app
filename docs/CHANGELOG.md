@@ -96,6 +96,21 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Tilaaja täydennetty 125 vanhalle riville (D-301)
+
+Poimijan korjaus vaikutti vain uusiin riveihin, joten vanhat
+täydennettiin. Kuivaharjoitus antoi 146 riviä; **rivien lukeminen
+paljasti 23 virhettä** joista yksikään ei näkynyt luvusta: 10 paljasta
+genetiiviä ("Helsingin"), 7 väärää taivutusta ("Vantaa kaupunki"), 3
+suunnittelijaa, 2 urakoitsijaa ja 1 liimattu julkaisijanimi.
+
+Kaksi korjausta meni poimijaan, jottei sama virhe tule uusille
+riveille; A/B:ssä poistui 48 poimintaa ja kaikki 48 olivat roskaa.
+Loput kolme ovat täydennysskriptin sääntöjä, mm. kunnan taivutus
+luetaan lähdetekstistä eikä arvata.
+
+Ajettu 125 riviä (jono 92, hankkeet 43), 45 eri organisaatiota.
+
 ### Tilaaja poimitaan nyt myös isolla alkukirjaimella (D-301)
 
 Kuviot oli luotu ilman `i`-lippua, joten `\btilaajana` ei osunut sanaan

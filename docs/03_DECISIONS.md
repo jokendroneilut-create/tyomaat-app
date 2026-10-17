@@ -97,14 +97,57 @@ kaksoiskappalepareja. Kerros on **kesken, ei hylatty** — se vaatii
 paikannimien ja kadunnimien erottelun. Mittari on tallessa:
 `scripts/measure-tilaajapoiminta.ts`.
 
-#### Auki: takautuva täydennys
+#### Takautuva täydennys: 125 riviä, ja 23 virhettä jotka vain rivit paljastivat
 
-Mitattu: **146 riviä** saisi tilaajan (jono 100, hankkeet 46). Otos
-luettuna valtaosa on oikein (Väylävirasto, Helsingin kaupunki, Keva,
-Oulun Sivakka Oy), mutta mukana on jo yksi virhe:
-**"LPR-arkkitehdit"** Porthanian peruskorjauksessa on arkkitehti, ei
-tilaaja. Täydennys vaatii siis rivien lukemisen ennen ajoa, eikä sitä
-tehty tässä yhteydessä.
+Kuivaharjoitus antoi 146 riviä. **Rivien lukeminen paljasti 23
+virhettä, joista yksikään ei näkynyt luvusta** — eikä myöskään
+kuvioiden A/B-mittauksesta, koska katsoin siinä uusien poimintojen
+**uniikkeja** nimiä ja silloin 28 kertaa toistuva "Helsingin" näkyi
+yhtenä rivinä jota en tunnistanut vääräksi.
+
+| vika | kpl | esimerkki |
+|---|---|---|
+| paljas genetiivi | 10 | "Helsingin" <- "Kreate ja Helsingin Kaupunkiliikenne allekirjoittivat" |
+| väärä taivutus | 7 | "Vantaa kaupunki" (oikein "Vantaan kaupunki") |
+| suunnittelija tilaajaksi | 3 | "LPR-arkkitehdit", "Ramboll Finland Oy" |
+| urakoitsija tilaajaksi | 2 | "Caverion Suomi", "Liedossa Rakennusyhtiö Hartela" |
+| julkaisija liimattu nimeen | 1 | "Humana HC Hoivakodit" |
+
+Kaksi korjausta menivat **poimijaan**, koska muuten sama virhe tulisi
+myös uusille riveille:
+
+- **paljas genetiivi hylätään** jos yksisanainen nimi päättyy
+  n:ään ja ratkeaa kunnaksi. Etuliitteen lattia on **kolme** merkkiä
+  eikä neljä kuin allatiivisuojassa: "Turku" -> "Turun" on
+  vartalonvaihto joka osuu neljänteen merkkiin. Lisäksi pieni mitattu
+  lista (Ruotsin, Ilmavoimien) ja paljas yhtiömuoto ("Asunto Oy").
+- A/B tämän jälkeen: poistui 48 poimintaa, ja **kaikki 48 olivat
+  roskaa** — Helsingin 28, Ilmavoimien 6, Kokkolan 4, Espoon 4,
+  Ruotsin 2, Lieksan 2, "Asunto Oy" 2. Yhtään kelvollista nimeä ei
+  menetetty.
+
+Loput kolme ovat **täydennysskriptin** sääntöjä, koska ne tarvitsevat
+rivin muut kentät tai ovat rivikohtaisia päätelmiä:
+
+- tilaaja ei voi olla sama kuin rakentaja (vertailu **molempiin**
+  suuntiin — pelkkä "rakentaja sisältää tilaajan" päästi läpi
+  "Liedossa Rakennusyhtiö Hartela")
+- suunnittelijoiden hylkylista
+- kunnan taivutus luetaan **lähdetekstistä**, ei arvata: genetiivi ei
+  ole mekaaninen (Turku -> Turun, Helsinki -> Helsingin), joten skripti
+  etsii tekstistä muodon "Vantaan kaupunki" ja käyttää sitä
+
+**Ajettu: 125 riviä** (jono 92, hankkeet 43). Tarkistus ajon jälkeen:
+osumia jäi 10, ja ne ovat juuri suojien hylkäämät. 45 eri
+organisaatiota, suurimmat Väylävirasto 17, Vantaan kaupunki 7,
+Suomen Ekokodit 7, Naantalin Vuokratalot 7, Helsingin kaupunki 7.
+
+Yksi kosmeettinen jäännös: Pääkaupunkiseudun Kaupunkiliikenne
+kirjoittui kolmella eri asulla (2 + 2 + 2). Kaikki osoittavat samaan
+organisaatioon; kirjoitusasujen yhdistäminen on jo docs/20:n omana
+kohtanaan.
+
+`scripts/taydenna-tilaaja-tekstista.ts`
 
 ### D-300 - Toivo Group lähteeksi, ja kolme umpikujaa ennen oikeaa reittiä
 

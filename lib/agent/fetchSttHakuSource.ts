@@ -272,6 +272,7 @@ export function extractExplicitClient(text: string | null): string | null {
     if (!match?.[1]) continue
 
     const name = cleanCompanyName(virkkeeseen(match[1]))
+    if (onPaljasGenetiivi(name)) continue
     if (name.length >= 4) return name
   }
 
@@ -321,6 +322,55 @@ function onPaikannimi(raw: string): boolean {
   /* Monisanainen nimi tai yhtiömuoto kertoo organisaatiosta. */
   if (sana.includes(" ") || /\b(?:Oy|Oyj|Ab|Ky|Ltd)\b/i.test(sana)) return false
   return PAIKAN_LOPPU.test(sana.toLowerCase())
+}
+
+/*
+ * PALJAS GENETIIVI EI OLE NIMI (18.10.2026).
+ *
+ * Takautuvan täydennyksen kuivaharjoitus tuotti 139 riviä, joista
+ * kymmenellä tilaajaksi tuli pelkkä genetiivi: **"Helsingin"**
+ * ("Kreate ja Helsingin Kaupunkiliikenne allekirjoittivat"),
+ * "Kokkolan", "Turun", "Ruotsin", "Ilmavoimien". Kuvio katkaisi nimen
+ * ennen päätesanaa, koska päätesana on pienellä tai se ei kuulu
+ * `ORGANISAATIO`-listaan.
+ *
+ * Nämä eivät näkyneet kuvioiden A/B-mittauksessa, koska katsoin
+ * uusien poimintojen **uniikkeja** nimiä — ja silloin kymmenen samaa
+ * virhettä näkyi yhtenä rivinä jota en tunnistanut vääräksi. Otoksen
+ * on oltava rivikohtainen.
+ *
+ * Vertailu tehdään etuliitteellä kuten `onKuntaAllatiivissa`, koska
+ * genetiivi muuttaa vartaloa: "Turun" vs. "Turku", "Kokkolan" vs.
+ * "Kokkola".
+ */
+const EI_NIMI = /^(?:Ruotsin|Norjan|Viron|Suomen|Ilmavoimien|Maavoimien|Merivoimien)$/i
+const PALJAS_YHTIOMUOTO = /^(?:Asunto|Kiinteistö|As\.?)\s+Oy$/i
+
+function onPaljasGenetiivi(nimi: string): boolean {
+  const sana = nimi.trim()
+  if (PALJAS_YHTIOMUOTO.test(sana)) return true
+  if (sana.includes(" ") || !/n$/i.test(sana)) return false
+  if (EI_NIMI.test(sana)) return true
+
+  const pieni = sana.toLowerCase()
+  for (const kunta of Object.values(MUNICIPALITIES)) {
+    const kuntaNimi = kunta.name.toLowerCase()
+    /*
+     * Etuliitteen lattia on KOLME merkkiä, ei neljä kuten
+     * `onKuntaAllatiivissa`:ssa. Mitattu syy: "Turku" -> "Turun" on
+     * vartalonvaihto joka osuu neljänteen merkkiin (k/u), joten
+     * neljän merkin etuliite "turk" ei osu sanaan "turun".
+     *
+     * Mitattu tapaus: "Hankkeen tilaajana toimii **Turun kaupungin**
+     * 100-prosenttisesti omistama Kiinteistö-oy Turun monitoimitilat"
+     * — oikea tilaaja on monitoimitilayhtiö, mutta kuvio katkesi
+     * sanaan "Turun", koska genetiivi "kaupungin" ei ole
+     * `ORGANISAATIO`-listassa. Tyhjä on parempi kuin "Turun".
+     */
+    const etuliite = kuntaNimi.slice(0, Math.max(3, kuntaNimi.length - 3))
+    if (pieni.startsWith(etuliite) && pieni.length <= kuntaNimi.length + 3) return true
+  }
+  return false
 }
 
 export function extractClientFromText(
@@ -373,6 +423,8 @@ export function extractClientFromText(
      * "Järvenpään kaupungille" ja "Kotiranta Oy:lle" eivät osu tähän.
      */
     if (raw.endsWith("lle") && onPaikannimi(raw)) continue
+
+    if (onPaljasGenetiivi(name)) continue
 
     if (name.length >= 4) return name
   }
