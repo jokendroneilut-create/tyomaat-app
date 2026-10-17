@@ -78,6 +78,32 @@ takautuva haku tuotti 500 katselmoitavaa ja ne jouduttiin perumaan.
 Vihjeen laatu on mitattava ennen kuin sitä käytetään työlistana —
 sama johtopäätös kuin aiemmin 40–69 pisteen kaistasta.
 
+#### Yhdistetty 18.10.2026 Johanneksen päätöksellä
+
+*"yhdistä nuo kaksi turun raitiotiehanketta."* Tehty **tuotannon
+omilla funktioilla** eikä omalla versiolla: vaiheet luettiin
+`app/api/tic/duplicates/review/route.ts`:sta ja ajettiin samassa
+järjestyksessä (`chooseDuplicateSurvivor`, suosikkisuoja,
+`moreAdvancedPhase`, `is_public = false`).
+
+    JAA NAKYVIIN   Turun raitiotie            (26.5., Rakenteilla)
+    PIILOTETAAN    Turun Raitiotieallianssi   (17.10., Rakenteilla)
+    peruste        "yhtä täydelliset (6), vanhempi jää"
+    suosikeissa    0 käyttäjällä
+    vaihe          ei muutosta
+
+Julkisia Turun raitiotie -rivejä on nyt **yksi**.
+
+**Mitä yhdistäminen EI tee: se ei yhdistä kenttiä.** Piilotetulla
+rivillä oli rikkaampi tilaajatieto — "Turun Raitiotie Oy ja Turun
+kaupunki" — kun jäävällä lukee "Turun kaupunki". Tieto ei katoa
+(rivi jää kantaan piilotettuna), mutta se ei myöskään siirry
+asiakkaan näkymään. Rakentajakenttä oli jo kattavampi jäävällä
+("GRK, NRC Group"). Jätetty ihmisen päätettäväksi, koska kenttien
+yhdistäminen ei ole osa tätä polkua eikä sitä pidä keksiä tässä.
+
+`scripts/yhdista-turun-raitiotie.ts`
+
 ### D-305 - Kannan katko 17.10.2026: mitattu tarkasti, syy jaa auki
 
 Johannes: *"tietokanta kaatui, sain myös sähköposti-ilmoituksen."*
