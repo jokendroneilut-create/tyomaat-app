@@ -96,6 +96,22 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Pois päältä oleva lähde ei enää kerää (D-299)
+
+Putken lähdevalinta ei lukenut `enabled`-kenttää lainkaan, joten
+käytöstä poistettu lähde jatkoi keruuta ja kulutti kierrosvuoron.
+`helsinki-kaavat-vireilla` oli ollut pois päältä 29.9. alkaen mutta
+ajoi 14.10. ja toi 2 ehdokasta, jotka molemmat hylättiin.
+
+Käsiajo jää sallituksi, jotta lähdettä voi koeajaa ennen kytkemistä.
+
+Samassa läpikäynnissä ajettiin käsin kolme virhetilassa ollutta
+lähdettä ja kaikki onnistuivat — Destia 8 dokumenttia, Väylävirasto 30,
+Kajaani 8 — eli virheet olivat ohimeneviä. Destia oli niistä ainoa
+huomionarvoinen: se oli juuri rakennettu eikä ollut saanut yhtään
+onnistunutta ajoa, eli lähde näytti valmiilta mutta ei ollut tuonut
+mitään.
+
 ### Mittaus: Hilman sopimuskausi jää hakematta (D-298)
 
 Rakenteilla-hankkeista 39 %:lla on valmistumispäivä, ja Hilma-lähtöisiltä

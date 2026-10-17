@@ -162,9 +162,18 @@ export async function runDiscoveryPipeline(options: PipelineOptions = {}) {
       console.log(`discoveryPipeline: siivottiin ${reaped} kesken jäänyttä ajoa`)
     }
 
+    /*
+     * `enabled` on luettava tassa. Ilman sita kaytosta poistettu lahde
+     * jatkaa keruuta: mitattu 17.10.2026, `helsinki-kaavat-vireilla` oli
+     * ollut pois paalta 29.9. alkaen (D-218) mutta ajoi silti 14.10. ja
+     * toi 2 dokumenttia, joista tuli 2 ehdokasta — molemmat hylattiin.
+     * Kentta naytti Operations-sivulla "pois", eli kaytosta poistaminen
+     * ei tehnyt mita se lupasi, ja lahde kulutti kierrosvuoron.
+     */
     const { data: sources, error: sourcesError } = await supabaseAdmin
       .from("discovery_sources")
       .select("*")
+      .eq("enabled", true)
       .order("priority", { ascending: false })
       .order("last_run_at", { ascending: true, nullsFirst: true })
       .limit(maxSourceCount)

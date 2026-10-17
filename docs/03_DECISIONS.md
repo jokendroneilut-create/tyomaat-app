@@ -23,6 +23,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-299 - Kytkin joka ei katkaise: `enabled = false` ei sammuttanut lähdettä
+
+Ajojen läpikäynti 17.10.2026 paljasti että putken lähdevalinta
+(`lib/agent/pipeline/discoveryPipeline.ts`) järjesti lähteet
+prioriteetin ja vanhimman ajon mukaan **lukematta `enabled`-kenttää
+lainkaan**. Kenttää luki vain Operations-sivu ja
+`scripts/diag-failing-sources.ts`, eli se näytti tilan mutta ei
+aiheuttanut sitä.
+
+Todiste: `helsinki-kaavat-vireilla` kytkettiin pois 29.9.2026 (D-218,
+96 % riveistä hylättiin katselmoinnissa). Mitattu 17.10.:
+
+    viimeinen ajo    2026-10-14 12:02, tila success
+    ajoja yhteensä   30, onnistuneita 29
+    dokumentteja 29.9. jälkeen   2
+    niistä ehdokkaita            2   -> molemmat hylättiin
+
+#### Miksi pieni luku riittää korjaukseen
+
+Kaksi turhaa katselmointiriviä 18 vuorokaudessa ei ole kallista.
+Merkitys on siinä että **kytkin ei tehnyt mitä lupasi**: lähde myös
+kulutti kierrosvuoron noin viiden vuorokauden välein, ja vuoro on
+niukka resurssi (lähde saa vuoron mediaanina 5,7 vrk välein).
+
+Vaarallisempi seuraus on päättely. Rakennuslehden kiinni kääntämistä
+pohdittiin 17.10. (D-294). Jos se olisi tehty tätä kautta, lähde olisi
+jatkanut keruuta ja kaksoiskappaleiden jääminen olisi selitetty
+jollain muulla mekanismilla.
+
+#### Korjaus
+
+`.eq("enabled", true)` lähdevalinnan kyselyyn. Ajojen järjestys ei
+muutu muuten: mitattu ennen ja jälkeen, seuraavat 10 vuoroa ovat samat,
+koska poistettu lähde ehti juuri ajaa eikä ole jonon kärjessä tällä
+hetkellä.
+
+**Käsiajo jää sallituksi** pois päältä olevalle lähteelle
+(`/api/tic/discovery/run-source` ja `scripts/aja-lahde.ts`): lähdettä
+on voitava koeajaa ennen kytkemistä. Vain automaattinen kierros
+noudattaa kenttää.
+
+#### Sivuhavainto: keruusta ei jää historiaa
+
+`agent_runs` kirjaa vain jatkojalostuksen (`identity_worker`,
+`fact_worker`, `pdf_worker`, `text_extraction_worker`,
+`duplicate_scan`) — lähteen keruulle ei ole yhtään riviä. Ainoa jälki
+on `discovery_sources`-rivin `last_run_at` / `last_error_*`, jotka
+**ylikirjoitetaan joka ajossa**. Siksi Destian ohimenevä
+`statement timeout` katosi näkyvistä heti kun lähde onnistui
+seuraavan kerran, eikä ohimenevää virhettä voi erottaa toistuvasta.
+Ei korjattu nyt; kirjattu jotta sitä ei tarvitse löytää uudelleen.
+
 ### D-298 - Sopimuskausi ei ole valmistumispäivä, ja portti rankaisee erosta
 
 Johanneksen hyväksymässä Fingridin hankkeessa "IV03 – Ivalon sähköaseman
