@@ -84,6 +84,7 @@ import {
 import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
 import { fetchDestiaSource } from "./fetchDestiaSource"
 import { fetchFingridProjectsSource } from "./fetchFingridProjectsSource"
+import { fetchToivoSource } from "./fetchToivoSource"
 import { fetchNrcProjectsSource } from "./fetchNrcProjectsSource"
 import { fetchHartelaAreasSource } from "./fetchHartelaAreasSource"
 import { fetchHcHoivakoditSource } from "./fetchHcHoivakoditSource"
@@ -356,6 +357,22 @@ export const sources = [
    * poissulkeva lista.
    */
   { name: "destia_tiedotteet", fetch: fetchDestiaSource },
+  /*
+   * Toivo Groupin lehdistotiedotteet. docs/20:n Rakennuslehti-kartoitus
+   * (17.10.2026) nosti Toivon parhaaksi yksittaiseksi ehdokkaaksi: 14
+   * hanketta kannassa, joista 13 jaisi ilman tata lahdetta, koska Toivo
+   * toimii usein omana rakennuttajanaan ilman nimettya rakentajaa.
+   *
+   * Suodatus tulee aineistosta eika sanastosta: lehdistotiedote on
+   * `PRESS_RELEASE`, omien osakkeiden hankinta `SHARE_REPURCHASE`. Siksi
+   * kohina karsiutuu tunnisteella, ja sanasto tarvitaan vain
+   * tulosjulkistuksen kutsuihin.
+   *
+   * Kuvaus on poikkeuksellisen hyva: mediaani 2 368 merkkia, kun
+   * Rakennuslehden ingressi on 197. Hankkeen arvo, asuntomaara,
+   * kumppani ja valmistumisaika ovat tekstissa.
+   */
+  { name: "toivo_tiedotteet", fetch: fetchToivoSource },
   /*
    * Hartelan TULEVAT asuinalueet - eri sivu kuin referenssit, jotka ovat
    * valmistuneita. Naiden arvo on katuosoite: 8/15 sivulta loytyy osoite

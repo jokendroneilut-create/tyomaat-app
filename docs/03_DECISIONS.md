@@ -23,6 +23,96 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-300 - Toivo Group lähteeksi, ja kolme umpikujaa ennen oikeaa reittiä
+
+Johannes 17.10.2026: *"Toivo group kannattaa ottaa lähteeksi, ainakin
+sijoittajille.toivo.fi löytyy heti tuore hanke ja yritys on muutenkin
+merkittävä ja aktiivinen."* Hän myös oletti sen olevan jo lähteenä — ei
+ollut: tarkistettu `sources.ts`, `companies.ts` ja `discovery_sources`
+myös `url`-sarakkeesta. Lähteenä on **Torppari**, eri yhtiö samankaltaisella
+nimellä.
+
+Peruste on docs/20:n mittauksesta: 14 hanketta kannassa, joista **13
+jäisi ilman tätä lähdettä**, koska Toivo toimii usein omana
+rakennuttajanaan ilman nimettyä rakentajaa.
+
+#### Kolme umpikujaa, jotta niitä ei kokeilla uudelleen
+
+1. **`toivo.fi/wp-json`** — WordPress, mutta vain 3 juttua ja uusin
+   17.1.2025. Blogi, ei hankeuutisia. `kohde`-sisaltötyyppi ei ole
+   REST:ssä (404), vaikka `/kohde/<slug>/`-sivuja on.
+2. **`news.cision.com/fi/toivo-group-oyj`** — jäsentyy siististi
+   (otsikko, `<time datetime>`, leipäteksti), mutta **jakelu loppui
+   18.4.2024**. Cisionin syote on 404/403.
+3. **`files/content/publications.json` ja `publications_compressed`** —
+   molemmat **vanhaa 2022-aineistoa** (176 riviä, uusin 12.9.2022) eikä
+   niissä ole leipätekstiä. Sivu lataa ne yhä joka latauksella, mikä
+   johti harhaan: purin pakatun tiedoston selaimessa ja sain saman
+   vanhan aineiston.
+
+Oikea reitti löytyi vasta selaimen `performance`-listasta, koska
+verkkopyyntölista ei näyttanyt sitä: IR-sivun Inderes-widget hakee datan
+omasta pilvifunktiostaan.
+
+    GET europe-west1-inderes-widgets-prod.cloudfunctions.net/widgetProps/
+        PublicationArchive?publicationLangs=fi&widgetId=<widget>
+    GET .../widgetData?type=Publication&publicationId=<id>
+
+**Vaatii `origin`- JA `referer`-otsakkeen.** Ilman niitä vastaus on
+`403 not allowed`, ja pelkkä `referer` ei riitä.
+
+#### Suodatus tulee aineistosta, ei sanastosta
+
+Toisin kuin Destialla (D-295), kohinaa ei tarvitse tunnistaa sanoista:
+julkaisulla on tunniste. 356 julkaisusta `PRESS_RELEASE` on 121,
+omien osakkeiden hankinta `SHARE_REPURCHASE` ja pörssitiedote
+`STOCK_EXCHANGE_RELEASE`. Sanastoa tarvitaan vain tulosjulkistuksen
+kutsuihin ja rekrytointiuutiseen — 12 kk:n 27 lehdistötiedotteesta
+niitä oli neljä.
+
+Mitattu kuivaharjoituksella, 21 ehdokasta 2,2 s:
+
+| | |
+|---|---|
+| kuvauksen mediaani | **2 368 merkkiä** (Rakennuslehden ingressi 197) |
+| kaupunki tunnistettu | 20 / 21 |
+| tyyppi päätelty | 14 / 21 |
+| osoite poimittu | 0 / 21 |
+| tilaaja poimittu | 0 / 21 |
+
+#### Kuivaharjoitus löysi yhden väärän kentän
+
+"4,2M€ aluerakennushanke Espoon Mankkaalle" sai tyypin **Koulu**.
+Syy oli tiedotteen markkinointilause: *"kahdeksan laadukasta
+rivitalokotia hienolle paikalle Mankkaan palveluiden ja koulujen
+välittömään läheisyyteen"*. Sana "koulujen" oli 56 merkkiä
+"rivitalokotia"-sanan jälkeen ja voitti. Sama laji virhe kuin D-292:ssa:
+naapuruston kuvaus ei ole kohteen ominaisuus.
+
+**Ensimmäinen korjaus oli myös väärin.** Pudotin koko lauseen, jolloin
+"rivitalokotia" katosi mukana ja tyyppi muuttui väärästä **tyhjäksi** —
+se ei ole korjaus vaan toinen tappio. Toinen versio **katkaisee
+lauseen** läheisyyssanasta, jolloin kohteen kuvaus säilyy. A/B 21 rivin
+yli: ainoa muutos on Koulu → Rivitalo, muut 20 ennallaan.
+
+#### Auki
+
+- **Tilaaja jää poimimatta kaikilta 21:ltä**, vaikka nimi on tekstissä:
+  "Premico Asuntorahasto III", "Oulun kaupungille", "VAV Yhtymä Oy:lle",
+  "Norlandia Hoivan kanssa", "Kinland AS:n kanssa". `extractExplicitClient`
+  on viritetty STT:n muotoiluun ("Tilaajana on …"). Nimet ovat
+  kuvauksessa, joten katselmoija näkee ne — mutta kenttä on tyhjä.
+  **Ei korjattu ilman mittausta**: muutos koskisi kaikkia lähteitä jotka
+  käyttävät samaa poimijaa.
+- **Osoite 0 / 21** on oikein: tiedotteet nimeavat kaupunginosan
+  (Verkkosaari, Pakila, Honkasuo), ei katuosoitetta.
+- Yhden tiedotteen leipätekstissä lukee "23.12.2024" vaikka
+  `publishedAt` on 2025-12-23. Ikkunarajaus käyttää `publishedAt`:ia,
+  joten rivi tuli oikein mukaan.
+
+Ensimmäinen ajo: 21 löytyi, 8 tuotiin, 13 siirtyi seuraavaan ajoon
+tuontibudjetin takia (D-260).
+
 ### D-299 - Kytkin joka ei katkaise: `enabled = false` ei sammuttanut lähdettä
 
 Ajojen läpikäynti 17.10.2026 paljasti että putken lähdevalinta

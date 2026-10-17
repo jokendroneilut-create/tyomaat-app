@@ -96,6 +96,29 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Toivo Groupin tiedotteet lähteeksi (D-300)
+
+docs/20:n kartoitus nosti Toivon parhaaksi yksittäiseksi lähde-ehdokkaaksi:
+14 hanketta kannassa, joista 13 jäisi ilman omaa lähdettä, koska Toivo
+toimii usein omana rakennuttajanaan ilman nimettyä rakentajaa.
+
+Kuvaus on poikkeuksellisen hyvä: **mediaani 2 368 merkkiä**, kun
+Rakennuslehden ingressi on 197. Hankkeen arvo, asuntomäärä, kumppani ja
+valmistumisaika ovat tekstissä. 21 ehdokasta 2,2 sekunnissa, kaupunki
+20:lle.
+
+Suodatus tulee aineistosta eikä sanastosta: julkaisulla on tunniste, ja
+`PRESS_RELEASE` erottaa hankkeet omien osakkeiden hankinnasta.
+
+Kolme umpikujaa kirjattu D-300:aan, jotta niitä ei kokeilla uudelleen:
+`toivo.fi/wp-json` on blogi vuodelta 2025, Cisionin jakelu loppui
+18.4.2024, ja IR-sivun `publications.json` on vanhaa 2022-aineistoa
+vaikka sivu lataa sen yhä.
+
+Kuivaharjoitus löysi yhden väärän kentän: Mankkaan aluerakennushanke sai
+tyypin **Koulu** lauseesta "palveluiden ja koulujen välittömään
+läheisyyteen". Naapuruston kuvaus ei ole kohteen ominaisuus (vrt. D-292).
+
 ### Pois päältä oleva lähde ei enää kerää (D-299)
 
 Putken lähdevalinta ei lukenut `enabled`-kenttää lainkaan, joten

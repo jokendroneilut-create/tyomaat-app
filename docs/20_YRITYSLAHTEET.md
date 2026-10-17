@@ -183,9 +183,11 @@ eli Avain olisi enimmäkseen päällekkäinen.
 
 #### Johtopäätös: kaksi nimeä, ei kiirettä
 
-- **Toivo Group (13 jäisi ilman)** on paras yksittäinen ehdokas minkä
-  tämä reitti antoi. Se on asuin- ja hoivakotirakennuttaja joka toimii
-  usein omana rakennuttajanaan ilman nimettyä rakentajaa.
+- ~~**Toivo Group (13 jäisi ilman)**~~ → **lähteeksi 18.10.2026 (D-300)**.
+  Asuin- ja hoivakotirakennuttaja joka toimii usein omana
+  rakennuttajanaan ilman nimettyä rakentajaa. Kuvauksen mediaani
+  2 368 merkkiä; reitti on IR-sivun Inderes-widgetin pilvifunktio, ei
+  mikään kolmesta ilmeisestä vaihtoehdosta.
 - **Solarigo Systems (11/11)** oli jo listan energiakehittäjissä, mutta
   vasta tämä mittaus antoi sille "jäisi ilman" -luvun.
 - **Datakeskusryhmä** (atNorth, Sesterce, Data Tank Nordic, CSC, Nala
