@@ -258,8 +258,51 @@ Lisäksi `fetchHilmaPage` yrittää 429:n jälkeen uudelleen kasvavalla
 odotuksella. Aiemmin yksikin 429 kaatoi koko lähdeajon, ja pidemmällä
 ikkunalla sivuja on enemmän eli riski kasvoi.
 
+#### Rajattu heti perään: 528 oli liikaa
+
+Johannes luki luvun ja sanoi: *"tuo 500 kpl katselmoitavaksi on todella
+iso määrä"*. Oli oikeassa, ja rajaus tehtiin ennen kuin dokumentit
+ehtivät muuttua ehdokkaiksi — putki tuottaa ehdokkaat vasta seuraavissa
+ajoissa, joten kuormaa ei ollut vielä syntynyt (3 ehdokasta).
+
+Rajausperuste: pidetään se mikä on **aidon vuodon paikkausta** eli
+keruuikkunamme sisältä, pudotetaan sitä vanhempi historia.
+`scripts/peru-hilma-historia.ts`:
+
+| | |
+|---|---|
+| tänään luotuja dokumentteja | 706 |
+| historiaa (ennen 1.8.) | 633 |
+| kaksoiskappaletta vanhalla osoitemuodolla | 50 |
+| **poistettu** | **681** |
+| jäi | 25 |
+
+Dokumentit joihin jo viitattiin jonosta jätettiin rauhaan (2 kpl),
+jottei synny ehdokkaita ilman lähdettä.
+
+**Ja samalla korjaantui oma virheeni.** Raportoin "528 uutta, joista
+176 elo–lokakuulta". Todellisuudessa tänään luoduista 706:sta vain
+**73 oli elokuulta ja 0 syys–lokakuulta** — eli aito vuoto oli 23
+dokumenttia, ei 176. Syys–lokakuun ilmoitukset olivat jo kannassa ja
+päivittyivät paikalleen. Skannaukseni vertailujoukko oli viallinen.
+
+#### Kaksi osoitemuotoa samalle ilmoitukselle
+
+Takautuva haku paljasti että kannassa on kaksi osoitemuotoa:
+
+    vanha:  /public/procurement/54072/notice/overview/overview
+    uusi:   /public/procedure/35573/enotice/54072/
+
+Keräin dedupaa `document_url`-avaimella eikä tunnista niitä samoiksi,
+joten haku loi toisen rivin ilmoituksille jotka olivat jo kannassa.
+
 #### Auki
 
+- **Kaksoiskappaleiden siivous.** Sama `noticeId` kahdella osoitteella.
+  Vaatii oman puhtaan mittauksensa: kumpi osoite on oikea ja mitä
+  ehdokkaita niistä on syntynyt. **Mittaukseni `->` ja `->>` -operaattorit
+  antoivat eri lukuja (1 183 / 1 172, 378 / 414), joten lukua ei pidä
+  ottaa tästä.**
 - **`160616` ei löydy yhä.** Tunniste on kuusinumeroinen kun muut ovat
   viisinumeroisia, eli eri ilmoitusmuoto. Ei selvitetty.
 - **378 kaksoiskappaletta** `source_documents`-taulussa: sama `noticeId`

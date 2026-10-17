@@ -96,7 +96,7 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
-### Hilman keruuikkuna 2 vrk → 14 vrk ja historia haettu (D-297)
+### Hilman keruuikkuna 2 vrk → 14 vrk (D-297)
 
 Keräimen silmukka pysähtyy cutoffia vanhempaan ilmoitukseen, joten yli
 kahden vuorokauden katko tarkoitti pysyvää menetystä. 632 yrityksen
@@ -105,8 +105,19 @@ kyselyllä — kysely ei ollut vika, ikkuna oli.
 
 Mitattu hinta: 16,7 ilmoitusta/vrk, joten 14 vrk = 3 sivua (katto 20).
 
-Takautuva haku 120 vrk:n ikkunalla: uniikkeja Hilma-ilmoituksia
-1 183 → **1 727**, aikaväli alkaa nyt 19.6. eikä 8.7.
+Takautuva haku 120 vrk:n ikkunalla toi 706 dokumenttia, mutta
+Johannes luki luvun ja sanoi: *"tuo 500 kpl katselmoitavaksi on todella
+iso määrä"*. Historia **peruttiin** samana päivänä
+(`scripts/peru-hilma-historia.ts`): poistettiin 681 dokumenttia eli
+kesä–heinäkuu, joka on keruuikkunaamme vanhempaa, sekä
+kaksoiskappaleet vanhalla osoitemuodolla. Jäi 25 — se osa joka oli
+**aidon vuodon paikkausta**. Dokumentit joihin jonosta jo viitattiin
+jätettiin rauhaan.
+
+Samalla korjaantui oma virheeni: raportoin "528 uutta, joista 176
+elo–lokakuulta", mutta todellisuudessa elokuulta oli 73 ja
+syys–lokakuulta 0 — aito vuoto oli 23 dokumenttia. Ikkunan laajennus
+14 vrk:een jäi voimaan, eli vuoto on tukittu.
 
 ### Urakoitsija poimitaan myös kaksoispisteen jälkeen (D-296)
 
