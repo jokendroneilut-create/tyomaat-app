@@ -23,6 +23,52 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-298 - Sopimuskausi ei ole valmistumispäivä, ja portti rankaisee erosta
+
+Johanneksen hyväksymässä Fingridin hankkeessa "IV03 – Ivalon sähköaseman
+uusiminen" hän oli hakemassa netistä käsin onko se alle vuoden hanke.
+Hilman ilmoitus tietää vastauksen: 2025-09-30 → 2030-08-15, noin 4 v 10 kk.
+
+Kenttä `procurementProject.plannedPeriod` **ei ole siinä oliossa jonka
+tallennamme** (`raw_payload.original` on hakurajapinnan litteä olio). Se on
+julkisessa web-rajapinnassa, samassa päätepisteessä jota `hilmaLiiteWorker`
+jo kutsuu liitteitä varten:
+
+    GET /web/api/public/procedure/{procedureId}/enotice/{noticeId}
+
+Mitattu 17.10.2026, otos 15 tasavälein: jakso löytyi **8:lta (~53 %)**.
+Kestot olivat aitoja — 107, 168, 197, 211, 300 vrk.
+
+**Miksi tämä houkuttaa.** Rakenteilla-hankkeista vain 39 %:lla on
+valmistumispäivä. Hilma-lähtöisiä niistä on 353 ja **332:lta päivä
+puuttuu**, eli noin 176 uutta päivää ilman yhtään uutta lähdettä.
+
+#### Mutta ansa on portissa, ei kentässä
+
+`plannedPeriod` on **sopimuskauden** loppu, ei "rakennus on valmis":
+mukana on usein takuu- ja luovutusaika, ja osa riveistä on
+puitesopimuksia — otoksessa 791 ja 1 641 vuorokauden "työkonepalvelut"
+ja "kiinteistöautomaation puitejärjestely".
+
+Jos tämä kirjoitettaisiin `estimated_completion`-kenttään, se syöttäisi
+`lib/projects/autoCompleteGate.ts`:ää, joka 90 vuorokauden jälkeen siirtää
+hankkeen Valmistuneeksi ja **piilottaa sen asiakkaalta**. Puitesopimuksen
+päättäminen piilottaisi hankkeen joka on yhä käynnissä. Se on suoraan
+vastoin periaatetta: kesken oleva hanke piilotettuna on pahempi kuin
+valmistunut listalla.
+
+Portin nykytila mitattiin vertailukohdaksi: 1 312 rakenteilla-hanketta →
+`skip` 801, `wait` 511, **`complete` 0**. Yksikään ei piiloudu juuri nyt.
+Portti on siis vaarallinen vasta sitten kun sille annetaan päiviä.
+
+#### Päätös: ei tehdä nyt
+
+Jos tämä joskus tehdään, sopimuspäivä menee **omaan kenttäänsä**
+(`metadata.contract_period_end`), ei `estimated_completion`-kenttään, ja
+portille opetetaan erillinen käsittely vain jos mittaus puoltaa.
+Ensin on mitattava koko 1 558 dokumentin kattavuus ja puitesopimusten
+osuus — 53 % on otos viidestoista.
+
 ### D-284 - Hälytys katsoo myös sivulatauksia, ei vain hankeavauksia
 
 Johannes 14.10.2026: *"600-700 luettua sivua päivässä on jo sellainen

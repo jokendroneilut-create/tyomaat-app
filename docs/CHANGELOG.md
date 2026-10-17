@@ -96,6 +96,21 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Mittaus: Hilman sopimuskausi jää hakematta (D-298)
+
+Rakenteilla-hankkeista 39 %:lla on valmistumispäivä, ja Hilma-lähtöisiltä
+332:lta se puuttuu. Hilman ilmoituksessa on sopimuskauden alku ja loppu,
+ja se on haettavissa samasta web-rajapinnasta jota liitehaku jo käyttää
+— otos 15:stä antoi jakson 8:lle (53 %), kestot 107–300 vrk.
+
+**Ei kytketty.** Sopimuskauden loppu ei ole valmistumispäivä: mukana on
+takuuaika, ja osa riveistä on puitesopimuksia (otoksessa 791 ja 1 641
+vrk). `estimated_completion`-kenttä syöttää porttia joka 90 vrk:n jälkeen
+piilottaa hankkeen asiakkaalta, eli väärä päivä piilottaisi käynnissä
+olevan hankkeen. Portin tila mitattiin: 1 312 rakenteilla-hanketta,
+joista `complete` 0 — portti on vaarallinen vasta kun sille annetaan
+päiviä.
+
 ### Hilman keruuikkuna 2 vrk → 14 vrk (D-297)
 
 Keräimen silmukka pysähtyy cutoffia vanhempaan ilmoitukseen, joten yli
@@ -189,6 +204,17 @@ vastaan 2 aitoa hyötyä. Kylän nimi osuu vapaassa tekstissä toisen kunnan
 kaupunginosaan. Ivalo lisättiin yksittäin.
 
 Takautuva ajo: jono ilman maakuntaa 134 → 63.
+
+### Katselmointinäkymän luvut tuhaterottimella (`ec26cfe1`)
+
+Kustannusarvio 8400000 näytti katselmoinnissa merkkijonolta, ei
+summalta. Johannes: *"parempi tapa olisi laittaa kolme nollaa vain
+peräkkäin ja sitten välilyönti"* — eli 8 400 000.
+
+Muotoilu on kenttäkohtainen eikä koske kaikkea numeerista:
+`RYHMITTELYN_KYNNYS` 10 000 jättää vuosiluvut ja varmuusluvut rauhaan,
+ja tunnistenimien kuvio suojaa kentät kuten `notice_id`. Muuten
+ilmoitustunnus olisi muuttunut muotoon "53 562".
 
 ### Hilman ennakoitu arvo kustannusarvioksi (D-291)
 
