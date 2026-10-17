@@ -23,6 +23,61 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-306 - Turun raitiotie kahtena hankkeena: vihje oli, jono ei
+
+Johannes 18.10.2026: *"turun raitiotie on nyt useana hankkeena."*
+
+Kolme riviä, joista **kaksi julkista**:
+
+| rivi | luotu | tila | julkinen |
+|---|---|---|---|
+| `85a116f7` "Turun raitiotie" | 26.5. | Rakenteilla | **kyllä** |
+| `1fc5e7e7` "Raitiotien rakentaminen Turussa" | 28.9. | Sopimus myönnetty | ei |
+| `09d73bd8` "Turun Raitiotieallianssi" | 17.10. | Rakenteilla | **kyllä** |
+
+Keskimmäinen oli **jo hoidettu**: pari `85a116f7` ↔ `1fc5e7e7`
+vahvistettiin kaksoiskappaleeksi 17.10. klo 19:45, ja rivi on sen
+jälkeen ei-julkinen. Järjestelmä toimi siinä kuten pitää.
+
+#### Kolmannella oli vihje jota mikään ei lukenut
+
+Illalla hyväksytyllä `09d73bd8`:lla on
+`metadata.possible_duplicate_of = 85a116f7` — kone siis **tiesi**
+epäilyksen hyväksymishetkellä. Mutta `project_duplicate_candidates`
+-tauluun ei syntynyt paria, joten epäilys ei päätynyt katselmoitavaksi
+eikä näkynyt missään. Sama havainto kuin aiemmin kirjattu: vihje
+kirjoitetaan hyväksynnässä, mutta sitä ei lueta.
+
+Pari vietiin jonoon käsin (`scripts/lisaa-turun-raitiotie-pari.ts`).
+**Ei yhdistetty itse** — yhdistäminen on katselmoijan päätös.
+Todisteet kirjattiin `reasons`-kenttään: molemmat viittaavat saman
+valtuuston päätökseen toukokuulta 2026, ja vanhemman rivin
+rakentajakentässä lukee jo "GRK, NRC Group".
+
+#### Laajuus mitattiin, eikä sitä purettu jonoon
+
+| | |
+|---|---|
+| hankkeita joilla `possible_duplicate_of` | 1 738 |
+| joista molemmat osapuolet julkisia | 1 646 |
+| **joista paria EI ole jonossa** | **1 631** |
+
+Jono itse on tyhjä: 276 paria, kaikki katselmoitu (149 vahvistettu,
+127 ei-kaksoiskappale).
+
+**Näitä 1 631:tä ei viety jonoon, ja syy on otoksessa.** Samat rivit
+sisältävät selviä vääriä vihjeitä:
+
+    "Helsingin kaapeli"            -> "Pohjola Rakennukselta 34 Hitas-kotia"
+    "Länsiratikat-projekti"        -> "Katusaneeraus Helsinki"
+    "Salo-Ylikoski tuulipuisto"    -> "Tuulipuisto Soiniin"
+    "Harviala-Hangasmäki"          -> "Uusi 110 kV:n sähköasema"
+
+Jonon täyttäminen niillä toistaisi 17.10. tehdyn virheen, jossa
+takautuva haku tuotti 500 katselmoitavaa ja ne jouduttiin perumaan.
+Vihjeen laatu on mitattava ennen kuin sitä käytetään työlistana —
+sama johtopäätös kuin aiemmin 40–69 pisteen kaistasta.
+
 ### D-305 - Kannan katko 17.10.2026: mitattu tarkasti, syy jaa auki
 
 Johannes: *"tietokanta kaatui, sain myös sähköposti-ilmoituksen."*

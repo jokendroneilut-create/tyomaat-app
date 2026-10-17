@@ -96,6 +96,17 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Turun raitiotie kahtena hankkeena (D-306)
+
+Kolmesta rivistä kaksi oli julkisia. Keskimmäinen oli jo hoidettu
+17.10., mutta illalla hyväksytyllä rivillä oli
+`possible_duplicate_of`-vihje jota **mikään ei lue** — epäilys ei
+päätynyt katselmointijonoon. Pari vietiin jonoon käsin; ei yhdistetty.
+
+Mitattu laajuus: **1 631 julkista hankeparia** kantaa vihjettä ilman
+jonoriviä. Niitä ei purettu jonoon, koska otos sisältää selvästi
+vääriä vihjeitä ("Länsiratikat → Katusaneeraus Helsinki").
+
 ### Kannan katko 17.10.2026, noin 20 min (D-305)
 
 `/projects` palautti 504 ja kanta oli tavoittamattomissa 23:07–23:26
