@@ -23,6 +23,98 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-305 - Kannan katko 17.10.2026: mitattu tarkasti, syy jaa auki
+
+Johannes: *"tietokanta kaatui, sain myös sähköposti-ilmoituksen."*
+Sovellus näytti `504 MIDDLEWARE_INVOCATION_TIMEOUT` osoitteessa
+`/projects`, ja omat skriptini saivat `fetch failed`.
+
+Kolmas katko D-293:n (16.10., ei buutattu) ja elokuun jälkeen. Tämä
+**vaati restartin** — toisin kuin D-293, jossa mittaus osoitti kaiken
+vastaavan ja buutti olisi ollut itse aiheutettu katko.
+
+#### Mittaus, joka erotti tämän hitaasta kyselystä
+
+| kohde | tulos |
+|---|---|
+| `https://…supabase.co/` (juuri) | **404**, 195 ms |
+| `/rest/v1/` | **522**, 90 s |
+| kevyin kysely (1 rivi, vain id) | **522**, 90 s |
+| `/auth/v1/health` | **522**, 90 s |
+
+Juuriosoitteen 404 kertoo että nimi selviää ja Cloudflare vastaa; 522
+tarkoittaa ettei Cloudflare saa yhteyttä taustapalvelimeen.
+
+**Ratkaiseva erottelu: myös auth oli alhaalla.** Auth on eri prosessi
+kuin tietokanta, eikä yksittäinen raskas kysely kaada molempia. Siksi
+kyse oli koko instanssista eikä kyselystä — ja siksi sovelluksen 504 oli
+seuraus, ei erillinen vika: middleware odottaa authia.
+
+Supabasen tilasivu sanoi "All Systems Operational" eikä avoimia
+häiriöitä ollut, eli yhden projektin vika eikä alueen häiriö.
+
+#### Kesto ja palautuminen
+
+Katko **23:07–23:26 UTC, noin 20 minuuttia.** Odotin ensin 12
+minuuttia, koska 22.9. katko korjautui itsestään muutamassa
+minuutissa; kun vasteajat sen sijaan pitenevät (90 s → 304 s → ei
+vastausta 12 s:ssa), itsekorjautuminen on poissuljettu.
+
+Restartin jälkeen paluu kesti noin kolme minuuttia ja eteni
+portaittain:
+
+    ei vastausta -> 521 -> 503 PGRST002 ("Could not query the database") -> 200
+
+**Hallintanäyttö näytti "Unhealthy" vielä senkin jälkeen kun kysely jo
+vastasi.** Sama havainto kuin D-293:ssa: merkkivaloon ei voi luottaa
+kumpaankaan suuntaan, vaan kunto mitataan kyselyillä. Mitattu heti
+paluun jälkeen: kuusi kyselyä 231–916 ms, luvut normaalit (6 896
+hanketta, 10 109 jonoriviä, 57 173 analytiikkatapahtumaa).
+
+**Yhtään ajastettua ajoa ei menetetty.** Cron ajaa 00/06/12/18 UTC ja
+katko osui niiden väliin; tarkistettu `agent_runs`-taulusta eikä omista
+yrityksistäni.
+
+#### Syy: ei tiedossa — ja tämä on sanottava suoraan
+
+Supabasen omat Postgres-lokit kertoisivat sen, mutta niitä ei lueta
+REST-rajapinnan kautta eikä niitä haettu katkon aikana. Mitään
+varmistettua juurisyytä ei siis ole.
+
+**Vahvin hypoteesi on oma kuormitukseni, ja todisteet puoltavat sitä
+sen verran että se on kirjattava:**
+
+- Katkoa edeltävänä tuntina ajoin toistuvasti koko aineiston yli
+  meneviä mittauksia: tilaajapoiminnan A/B luki `projects` +
+  `potential_projects` kokonaan (**16 044 riviä**) ja se ajettiin
+  kuudesti; valmistumispäivän A/B luki 16 247 riviä kahdesti;
+  lisäksi neljä täydennysajoa ja kolme Ideointi-kartoitusta, joista
+  jokainen luki molemmat taulut kokonaan.
+- Samana iltana tuli **kaksi `canceling statement due to statement
+  timeout` -virhettä** ennen katkoa — toinen Destian lähdeajossa,
+  toinen `projects`-taulun luvussa. Ne kertovat että instanssi oli jo
+  kireillä.
+- Katko alkoi välittömästi sen skriptin jälkeen, joka luki neljä taulua
+  kokonaan peräkkäin.
+
+**Vastatodiste, joka estää pitämästä tätä varmana:** raskas kysely
+tuottaa tavallisesti hitaan vastauksen tai aikakatkaisun — ei sitä
+että instanssi lakkaa ottamasta yhteyksiä vastaan ja myös auth kaatuu.
+Se sopii paremmin muistin loppumiseen tai alustan omaan vikaan.
+
+#### Mitä tästä seuraa mittausskripteille
+
+Mittausskriptit lukevat koko aineiston, koska A/B vaatii sen. Toisto on
+silti turhaa: sama 16 000 riviä luettiin uudelleen jokaisella
+kierroksella, vaikka teksti ei muutu kierrosten välissä. **Aineisto
+kannattaa lukea kerran tiedostoon ja ajaa vertailut sitä vasten.** Ei
+tehty tässä yhteydessä, koska se on oma muutoksensa eikä sitä voi
+perustella mittaamatta onko kuorma oikeasti syy.
+
+Jos sama toistuu, ensimmäinen askel on hakea Supabasen Postgres-loki
+katkon ajalta — se joko vahvistaa tai kumoaa yllä olevan hypoteesin,
+eikä sitä kannata arvailla uudelleen.
+
 ### D-304 - Ideointi-vaihe poistettu
 
 Johannes 18.10.2026: *"ideointi on pakko poistaa koska ei ole yhtään

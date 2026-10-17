@@ -96,6 +96,22 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Kannan katko 17.10.2026, noin 20 min (D-305)
+
+`/projects` palautti 504 ja kanta oli tavoittamattomissa 23:07–23:26
+UTC. Mitattu: REST **ja** auth molemmat 522, eli koko instanssi — ei
+yksittäinen raskas kysely. Vaati restartin; paluu kesti ~3 min ja eteni
+521 → 503 → 200. Hallintanäyttö näytti "Unhealthy" vielä senkin
+jälkeen kun kysely jo vastasi.
+
+Yhtään ajastettua ajoa ei menetetty: katko osui cron-ajojen väliin.
+
+**Juurisyy ei ole tiedossa.** Vahvin hypoteesi on illan aikana ajetut
+toistuvat koko aineiston mittaukset (16 000 riviä kymmeniä kertoja) ja
+niitä edeltäneet kaksi statement timeout -virhettä — mutta raskas
+kysely ei tavallisesti kaada myös authia. Postgres-loki ratkaisisi
+asian, ks. D-305.
+
 ### Ideointi-vaihe poistettu (D-304)
 
 0 / 6 896 hanketta oli Ideointi-vaiheessa, joten vaihe ei ryhmittänyt
