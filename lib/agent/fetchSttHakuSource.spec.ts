@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import {
   extractBuilderFromText,
   extractClientFromText,
+  extractExplicitClient,
   resolveDeveloper,
   resolveParties,
 } from "./fetchSttHakuSource"
@@ -364,5 +365,92 @@ describe("resolveParties - rakennuttaja tekstistä (D-197)", () => {
       "LogoHub Oy"
     )
     expect(resolveParties(null, "Tuulivoimahankkeen YVA-ohjelma nähtäville", "Ohjelman on laatinut Sitowise Oy.").developer).toBeNull()
+  })
+})
+
+/*
+ * TILAAJA ISOLLA ALKUKIRJAIMELLA (18.10.2026).
+ *
+ * Kuviot oli luotu ilman `i`-lippua, joten `\btilaajana` ei osunut
+ * sanaan "Tilaajana" virkkeen alussa. Mitattu: sana esiintyi 378
+ * tekstissa mutta poiminta onnistui 91:lle 16 044 rivista. Korjauksen
+ * jalkeen 199, eika yksikaan aiempi poiminta menetetty.
+ */
+describe("extractExplicitClient - kirjainkoko ja kopula", () => {
+  it("osuu virkkeen alussa isolla kirjaimella", () => {
+    expect(extractExplicitClient("Tilaajana on Vaylavirasto. Tietoa projektista.")).toBe(
+      "Vaylavirasto"
+    )
+  })
+
+  it("hyvaksyy kopulan on/oli/ovat", () => {
+    expect(extractExplicitClient("Tilaajana oli Sappi Finland I Oy ja urakka-aika oli 11/2021.")).toBe(
+      "Sappi Finland I Oy"
+    )
+    expect(
+      extractExplicitClient("Hankinnassa tilaajana ovat Oulun Sivakka Oy, Sivakka-yhtyma Oy.")
+    ).toBe("Oulun Sivakka Oy")
+  })
+
+  /*
+   * Organisaatiosana on pienella eika kuulu NAME-kuvioon, joten ilman
+   * sita tilaajaksi tulisi pelkka "Porvoon".
+   */
+  it("ottaa organisaatiosanan mukaan", () => {
+    expect(extractExplicitClient("Tilaajana on Porvoon kaupunki ja urakka-aika on 1/2025.")).toBe(
+      "Porvoon kaupunki"
+    )
+    expect(
+      extractExplicitClient("Rakennuttajana toimii Sisa-Suomen elinvoimakeskus ja urakoitsijana Polar Oy.")
+    ).toBe("Sisa-Suomen elinvoimakeskus")
+  })
+
+  /*
+   * NAIDEN ON PYSYTTAVA TYHJINA. Sana esiintyy lainauksessa tai yhtion
+   * omassa kuvauksessa, eika sen jalkeen tule tilaajan nimea.
+   */
+  it("ei poimi lainauksesta eika itsekuvauksesta", () => {
+    for (const teksti of [
+      "Operoimme kiinteistohankkeiden kehittajana, rakennuttajana ja sijoittajana.",
+      "selvitetaan yhtion mahdollisuus toimia uimahallin rakennuttajana seka yllapitajana",
+      "Ilman kayttajilta saamaa tietoa emme rakennuttajana pysty toteuttamaan hanketta",
+      "Senaatti-kiinteistot toimii hankkeen tilaajana ja rakennuttajana.",
+    ]) {
+      expect(extractExplicitClient(teksti), teksti).toBeNull()
+    }
+  })
+})
+
+describe("extractClientFromText - paikannimi ei ole tilaaja", () => {
+  /*
+   * D-188:n kuntasuoja tuntee vain kunnat. "Jyvaskylan Vaajakoskelle"
+   * on kaupunginosa, joten se lapaisi suojan ja kannassa oli
+   * tilaajana "Vaajakoske". Oikea tilaaja oli samassa virkkeessa.
+   */
+  it("ei poimi kaupunginosan allatiivia", () => {
+    const teksti =
+      "Rakennusliike Lapti ja TA Yhtyma ovat allekirjoittaneet sopimuksen " +
+      "asuinkerrostalon toteuttamisesta Jyvaskylan Vaajakoskelle."
+    expect(extractClientFromText("Kerrostalo Vaajakoskelle", teksti)).toBe("TA Yhtyma")
+  })
+
+  it("ei poimi kadunnimen allatiivia", () => {
+    expect(
+      extractClientFromText(null, "Pohjola Rakennus on aloittanut rakentamisen Kannaksenkadulle.")
+    ).toBeNull()
+  })
+
+  /*
+   * Paikannimisuoja ei saa osua yritysnimeen. Tama on se kuvio jonka
+   * varassa koko allatiivipoiminta on (D-188), joten sen on pysyttava.
+   *
+   * HUOM: "Jarvenpaan kaupungille" ei poimiudu tasta kuviosta
+   * lainkaan, koska organisaatiosana on pienella eika kuulu
+   * NAME-kuvioon. Se on vanha rajoite, ei taman muutoksen seuraus.
+   */
+  it("ei esta yritysnimen allatiivia", () => {
+    expect(
+      extractClientFromText(null, "Peab toteuttaa Senaatti-kiinteistoille uuden toimitalon.")
+    ).toBe("Senaatti-kiinteistot")
   })
 })

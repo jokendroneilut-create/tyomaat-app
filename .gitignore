@@ -72,3 +72,4 @@ scripts/out/housing-company-key.json
 # kuuluu historiaan; litteraatti on sen lahdeaineisto ja tarkistettavissa
 # aikaleimoista alkuperaiselta videolta.
 docs/competitors/**/litteraatti.txt
+.tilaaja-perustaso.json

@@ -96,6 +96,27 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Tilaaja poimitaan nyt myös isolla alkukirjaimella (D-301)
+
+Kuviot oli luotu ilman `i`-lippua, joten `\btilaajana` ei osunut sanaan
+"Tilaajana" virkkeen alussa — ja suomenkielisessä tiedotteessa se on
+juuri siellä. Sana esiintyi **378** tekstissä, mutta poiminta onnistui
+**91:lle** 16 044 rivistä.
+
+Korjattu kolme asiaa: kirjainkoko avainsanassa, kopula `on / oli / ovat`
+(ei vain `toimii`) ja organisaatiosana mukaan, jottei "Porvoon kaupunki"
+katkea muotoon "Porvoon". A/B koko aineiston yli: **91 → 199** ja
+**300 → 503**, **0 menetettyä**.
+
+Samalla korjaantui vanha virhe: kaupunginosan allatiivi ("Jyväskylän
+Vaajakoskelle") oli päätynyt tilaajaksi muodossa "Vaajakoske". Rivi sai
+nyt oikean tilaajan "TA Yhtymä".
+
+Päätteleviä kuvioita ("rakentamisen X:lle", "X:n kanssa") **ei
+kytketty**: ne toivat +209 poimintaa, mutta neljännes oli katujen ja
+paikkojen nimiä. Tilaajakenttä syöttää duplikaattiskannausta, joten
+väärä nimi on kalliimpi kuin tyhjä.
+
 ### Toivo Groupin tiedotteet lähteeksi (D-300)
 
 docs/20:n kartoitus nosti Toivon parhaaksi yksittäiseksi lähde-ehdokkaaksi:

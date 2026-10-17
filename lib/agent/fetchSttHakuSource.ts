@@ -126,11 +126,34 @@ function extractCompaniesFromText(
  * tarvitsee saman. Vain kuviot (kuka on tilaaja) ovat lähdekohtaisia.
  */
 
+/*
+ * KIRJAINKOKO VAIN AVAINSANASSA, EI `i`-LIPPUA.
+ *
+ * Kuviot oli luotu ilman lippua, joten `\btilaajana` ei osunut sanaan
+ * **"Tilaajana"** virkkeen alussa — ja suomenkielisessä tiedotteessa se
+ * on juuri siellä. Mitattu 18.10.2026: sana "tilaajana" tai
+ * "rakennuttajana" esiintyy 378 tekstissä, mutta poiminta onnistui vain
+ * 91:lle koko 16 044 rivin aineistossa.
+ *
+ * `i`-lippua EI saa lisätä: sen alla `NAME`-kuvion `[A-ZÅÄÖ]` alkaisi
+ * osua myös pieniin kirjaimiin, jolloin tilaajaksi kelpaisi mikä tahansa
+ * sana. Siksi kirjainkoko sallitaan vain avainsanassa.
+ */
+const KOPULA = "(?:toimii\\s+|toimivan\\s+|toimivien\\s+|on\\s+|oli\\s+|ovat\\s+|olivat\\s+)?"
+
+/*
+ * ORGANISAATIOSANA ON PIENELLÄ eikä kuulu `NAME`-kuvioon, joten ilman
+ * tätä "Tilaajana on Porvoon kaupunki" antaisi tilaajaksi pelkän
+ * "Porvoon". Sama ratkaisu kuin "ja X ovat sopineet" -kuviossa.
+ */
+const ORGANISAATIO =
+  "(?:\\s+(?:kaupunki|kunta|seurakunta|seurakuntayhtymä|kuntayhtymä|hyvinvointialue|elinvoimakeskus|liikelaitos|yhtymä|konserni|säätiö|yliopisto))?"
+
 const CLIENT_PATTERNS = [
-  // "tilaajana toimii Oulun Tilapalvelut Oy"
-  new RegExp(`\\btilaajana\\s+(?:toimii\\s+)?(${NAME})`),
-  // "rakennuttajana on Senaatti-kiinteistöt"
-  new RegExp(`\\brakennuttajana\\s+(?:toimii\\s+|on\\s+)?(${NAME})`),
+  // "tilaajana toimii Oulun Tilapalvelut Oy", "Tilaajana on Porvoon kaupunki"
+  new RegExp(`\\b[Tt]ilaajana\\s+${KOPULA}(${NAME}${ORGANISAATIO})`),
+  // "rakennuttajana on Senaatti-kiinteistöt", "Rakennuttajana toimii Sisä-Suomen elinvoimakeskus"
+  new RegExp(`\\b[Rr]akennuttajana\\s+${KOPULA}(${NAME}${ORGANISAATIO})`),
   // "HMT-Areena Oy:n merkittävä hanke"
   new RegExp(
     `\\b(${NAME}\\s+(?:Oy|Oyj|Ab|Ky|Ltd)):n\\s+(?:[A-Za-zåäöÅÄÖ]+\\s+)?(?:hanke|hanketta|toimeksianto|tilaus)`
@@ -150,14 +173,65 @@ const CLIENT_PATTERNS = [
     `\\b(?:toteuttaa|toteutti|rakentaa|rakensi|rakentanut|peruskorjaa|saneeraa|urakoi)\\s+(${NAME}lle)\\b`
   ),
   /*
+   * SAMA ALLATIIVI MYÖS SUBSTANTIIVIMUODON JÄLKEEN.
+   *
+   * Yllä oleva kuvio vaatii taivutetun VERBIN heti ennen allatiivia,
+   * mutta rakennuttajan tiedote kirjoittaa saman asian substantiivilla:
+   * "käynnistänyt päiväkodin **rakentamisen** Norlandia Päiväkodit
+   * Oy:lle", "valittu **toteuttamaan** päiväkotihanke Yli-Iihin Oulun
+   * kaupungille". Kohde on verbin ja allatiivin välissä, joten väliin
+   * sallitaan enintään neljä sanaa — rajaton väli poimisi minkä tahansa
+   * allatiivin virkkeestä.
+   *
+   * Mitattu 18.10.2026: "rakentamisesta X:lle" esiintyy 136 tekstissä
+   * (31:llä tilaaja puuttuu) ja "toteuttamaan X:lle" 60:ssä (26).
+   *
+   * Kuntasuoja (`onKuntaAllatiivissa`, D-188) ja perusmuotoon palautus
+   * ovat samat kuin verbikuviolla: "rakentamisen Espooseen" ei ole
+   * tilaaja vaan paikka.
+   */
+  /*
    * "Peab ja Evijärven kunta ovat sopineet..." - urakoitsija ja tilaaja
    * rinnasteisina. Organisaatiosana on pienellä eikä kuulu NAME-kuvioon,
    * joten se sallitaan erikseen; ilman sitä tilaajaksi jäisi pelkkä
    * paikannimen genetiivi "Evijärven".
    */
+  /*
+   * `allekirjoitta` lisättiin 18.10.2026 mitatun tapauksen perusteella:
+   * "Rakennusliike Lapti ja TA Yhtymä ovat **allekirjoittaneet**
+   * sopimuksen asuinkerrostalon toteuttamisesta Jyväskylän
+   * Vaajakoskelle". Ilman sitä rivin tilaajaksi tuli allatiivikuviosta
+   * paikannimi "Vaajakoske", ja paikannimisuojan jälkeen ei mitään.
+   */
   new RegExp(
-    `\\bja\\s+(${NAME}(?:\\s+(?:kunta|kaupunki|seurakunta|kuntayhtymä|konserni))?)\\s+(?:ovat|on)\\s+sopi`
+    `\\bja\\s+(${NAME}(?:\\s+(?:kunta|kaupunki|seurakunta|kuntayhtymä|konserni))?)\\s+(?:ovat|on)\\s+(?:sopi|allekirjoitta)`
   ),
+  /*
+   * TÄHÄN EI LISÄTTY PÄÄTTELEVÄÄ KERROSTA, JA SYY ON MITATTU.
+   *
+   * Kokeiltu 18.10.2026 kolmella kuviolla, jotka olisivat tuoneet
+   * Toivon ja muiden rakennuttajien muotoilut:
+   *
+   *   rakentamise(n|sta)/toteuttamaan … X:lle
+   *   kauppakirjan/sopimuksen … X:n kanssa
+   *   X:n kanssa … sopimuksen
+   *
+   * Tulos koko 16 044 rivin yli: +209 uutta poimintaa, 0 menetettyä —
+   * mutta otos luettuna noin **neljännes uusista oli väärin**:
+   *
+   *   "Kadu"           <- "Kadun pääasiallisia käyttäjiä ovat …"
+   *   "Eräjärventie"   <- "rakentamisesta Oriveden Eräjärventielle"
+   *   "Laurilantie", "Kannaksenkadu"   (katujen allatiiveja)
+   *   "Finlandi"       <- "sopimuksen Balder Finlandin kanssa";
+   *                       välimerkkien täyte söi sanan "Balder"
+   *
+   * Tilaajakenttä syöttää duplikaattiskannausta, joten väärä nimi on
+   * kalliimpi kuin tyhjä: se voi tuottaa vääriä kaksoiskappalepareja.
+   * Kerros ei siis ole hylätty vaan kesken — se vaatii paikannimien ja
+   * kadunnimien erottelun, jota ei voi tehdä mittaamatta.
+   *
+   * Mittari on tallessa: `scripts/measure-tilaajapoiminta.ts`.
+   */
 ]
 
 /*
@@ -235,6 +309,20 @@ function onKuntaAllatiivissa(raw: string): boolean {
   return false
 }
 
+/*
+ * Maastosanat joihin suomalainen paikannimi päättyy. Luettu niistä
+ * riveistä joilla allatiivikuvio poimi paikan tilaajaksi, ei keksitty.
+ */
+const PAIKAN_LOPPU =
+  /(?:jarve|järve|mae|mäe|saare|nieme|ranna|kyla|kylä|lahde|koske|harju|puisto|metsa|metsä|vuore|joe|salme|kanka|suo|mäki|maki)lle$/i
+
+function onPaikannimi(raw: string): boolean {
+  const sana = raw.trim()
+  /* Monisanainen nimi tai yhtiömuoto kertoo organisaatiosta. */
+  if (sana.includes(" ") || /\b(?:Oy|Oyj|Ab|Ky|Ltd)\b/i.test(sana)) return false
+  return PAIKAN_LOPPU.test(sana.toLowerCase())
+}
+
 export function extractClientFromText(
   title: string | null,
   description: string | null
@@ -272,6 +360,19 @@ export function extractClientFromText(
      * on organisaatiosana.
      */
     if (raw.endsWith("lle") && (onKuntaAllatiivissa(raw) || getMunicipalityByName(name))) continue
+
+    /*
+     * KAUPUNGINOSA ON MYÖS PAIKKA (18.10.2026).
+     *
+     * D-188:n kuntasuoja tuntee vain kunnat, joten "rakentamisesta
+     * Tampereen **Lahdesjärvelle**" läpäisi sen: Lahdesjärvi on
+     * kaupunginosa eikä kuntaluettelossa. Tilaajaksi tuli paikannimi.
+     *
+     * Suomen paikannimet päättyvät maastosanaan, yritysnimet eivät.
+     * Rajaus koskee vain YKSISANAISTA allatiivia ilman yhtiömuotoa:
+     * "Järvenpään kaupungille" ja "Kotiranta Oy:lle" eivät osu tähän.
+     */
+    if (raw.endsWith("lle") && onPaikannimi(raw)) continue
 
     if (name.length >= 4) return name
   }

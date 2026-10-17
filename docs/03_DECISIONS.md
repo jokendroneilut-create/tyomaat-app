@@ -23,6 +23,89 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-301 - Tilaaja jäi poimimatta yhdestä puuttuvasta kirjaimesta
+
+Johannes 18.10.2026: *"pitäähän se tilaaja myös poimia jos se on
+löydettävissä. tämä siis kaikilta. se vaikuttaa myös
+duplikaattiskannaukseen."*
+
+Lähtökohta oli D-300:n havainto: Toivon 21 tiedotteesta tilaaja poimittiin
+**nollalle**, vaikka nimi oli tekstissä. Mittaus koko aineistosta
+(16 044 riviä, jono + hankkeet) paljasti että vika oli paljon
+laajempi kuin yksi lähde:
+
+| | |
+|---|---|
+| sana "tilaajana" tai "rakennuttajana" tekstissä | **378** |
+| `extractExplicitClient` osui | **91** |
+
+#### Syy: kuviot luotiin ilman `i`-lippua
+
+`new RegExp("\btilaajana…")` ei osu sanaan **"Tilaajana"** virkkeen
+alussa — ja suomenkielisessä tiedotteessa se on juuri siellä
+("Tilaajana on Porvoon kaupunki", "Rakennuttajana toimii Sisä-Suomen
+elinvoimakeskus"). Lisäksi kuvio hyväksyi vain `toimii`, ei kopulaa
+`on / oli / ovat`, joka on aineiston yleisin muoto.
+
+**`i`-lippua ei saa lisätä.** Sen alla `NAME`-kuvion `[A-ZÅÄÖ]` alkaisi
+osua myös pieniin kirjaimiin, jolloin tilaajaksi kelpaisi mikä tahansa
+sana — sama ansa kuin kirjainkoon tarkistuksessa aiemmin. Kirjainkoko
+sallitaan siis vain avainsanassa: `[Tt]ilaajana`.
+
+Kolmas korjaus: organisaatiosana on pienellä eikä kuulu `NAME`-kuvioon,
+joten "Tilaajana on Porvoon kaupunki" antoi tilaajaksi pelkän
+"Porvoon".
+
+#### Tulos, A/B koko aineiston yli
+
+| | ennen | jälkeen |
+|---|---|---|
+| `extractExplicitClient` | 91 | **199** |
+| `extractClientFromText` | 300 | **503** |
+| menetettyjä | | **0** |
+
+Muuttuneet 10 olivat kaikki parannuksia: "Helsingin" → "Helsingin
+kaupunki", "Kurikan" → "Kurikan kaupunki".
+
+#### Kaupunginosa ei ole tilaaja
+
+D-188:n kuntasuoja tuntee vain kunnat, joten "toteuttamisesta
+Jyväskylän **Vaajakoskelle**" läpäisi sen ja kannassa oli tilaajana
+"Vaajakoske". Suomalainen paikannimi päättyy maastosanaan
+(-järvelle, -mäelle, -rannalle, -kadulle, -tielle), yritysnimi ei.
+Rajaus koskee vain yksisanaista allatiivia ilman yhtiömuotoa, joten
+"Senaatti-kiinteistöille" ei osu siihen. Sama rivi sai samalla **oikean**
+tilaajan "TA Yhtymä", kun "ja X ovat sopineet" -kuvioon lisättiin
+`allekirjoitta`.
+
+#### Mitä EI tehty, ja miksi
+
+Toivon omat muotoilut ("rakentamisen X:lle", "kauppakirjan X:n kanssa")
+eivät ole näissä kuvioissa, eli **Toivon tilaaja on yhä tyhjä**.
+Kokeilin kolmea päättelevää kuviota: tulos oli +209 uutta poimintaa ja
+0 menetettyä, mutta otos luettuna noin **neljännes uusista oli
+väärin**:
+
+    "Kadu"           <- "Kadun pääasiallisia käyttäjiä ovat …"
+    "Eräjärventie"   <- "rakentamisesta Oriveden Eräjärventielle"
+    "Laurilantie", "Kannaksenkadu"
+    "Finlandi"       <- "sopimuksen Balder Finlandin kanssa"
+
+Johannes nosti itse esiin syyn miksi tätä ei kytketty: kenttä syöttää
+duplikaattiskannausta, joten väärä nimi voi tuottaa vääriä
+kaksoiskappalepareja. Kerros on **kesken, ei hylatty** — se vaatii
+paikannimien ja kadunnimien erottelun. Mittari on tallessa:
+`scripts/measure-tilaajapoiminta.ts`.
+
+#### Auki: takautuva täydennys
+
+Mitattu: **146 riviä** saisi tilaajan (jono 100, hankkeet 46). Otos
+luettuna valtaosa on oikein (Väylävirasto, Helsingin kaupunki, Keva,
+Oulun Sivakka Oy), mutta mukana on jo yksi virhe:
+**"LPR-arkkitehdit"** Porthanian peruskorjauksessa on arkkitehti, ei
+tilaaja. Täydennys vaatii siis rivien lukemisen ennen ajoa, eikä sitä
+tehty tässä yhteydessä.
+
 ### D-300 - Toivo Group lähteeksi, ja kolme umpikujaa ennen oikeaa reittiä
 
 Johannes 17.10.2026: *"Toivo group kannattaa ottaa lähteeksi, ainakin
