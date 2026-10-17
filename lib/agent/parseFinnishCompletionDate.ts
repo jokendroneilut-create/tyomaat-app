@@ -96,11 +96,66 @@ export function parseReleaseDate(text: string): string | null {
   return d.toISOString().slice(0, 10)
 }
 
+/*
+ * SELVITYS EI OLE HANKE (18.10.2026).
+ *
+ * Johannes Harviala–Hangasmäki-hankkeesta: *"Arvioitu valmistuminen
+ * 2024-12-31 mutta lähde sanoo vuoden 2030 aikana"* — ja tunnisti syyn
+ * itse: *"Voimajohtohankkeen vaikutuksista on käynnistynyt
+ * ympäristöselvitys, joka valmistuu vuoden 2024 aikana. Se tulee
+ * varmasti tästä."*
+ *
+ * Sivulla on kaksi valmistumismainintaa eri asioista:
+ *
+ *   "ympäristöselvitys, joka valmistuu vuoden 2024 aikana"      <- selvitys
+ *   "voimajohdon rakentamisen arvioidaan valmistuvan vuoden 2030" <- hanke
+ *
+ * Poimija otti ensimmäisen, eli selvityksen valmistumisen. Virhe on
+ * kalliimpi kuin tyhjä kenttä: mennyt päivä syöttää
+ * `autoCompleteGate`:a, joka 90 vuorokauden jälkeen siirtää hankkeen
+ * Valmistuneeksi ja **piilottaa sen asiakkaalta** (D-298) — vuonna 2030
+ * valmistuva voimajohto olisi kadonnut listalta.
+ *
+ * Virkkeet joiden aihe on selvitys, suunnitelma tai lupa ohitetaan,
+ * jolloin rakentamista koskeva virke voittaa vaikka se tulee
+ * myöhemmin. Jos yksikään virke ei kelpaa, luetaan koko teksti kuten
+ * ennen — muuten muutos poistaisi päiviä riveiltä joilla on vain
+ * yksi maininta.
+ */
+const EI_HANKKEEN_VALMISTUMINEN =
+  /*
+   * Sanaraja jätetty pois tarkoituksella: suomen yhdyssanassa selvitys
+   * on sanan lopussa ("ympäristöselvitys", "maaperäselvitys"), joten
+   * `\bselvity` ei osuisi niihin.
+   */
+  /selvity|\bYVA\b|arviointiselostu|arviointiohjelma|suunnitelma|suunnittelu|yleiskaava|asemakaava|kaavoitu|raportti|hakemus|lupakäsittely|lupaprosessi|tarjouskilpailu|kilpailutus/i
+
 export function parseEstimatedCompletionDate(
   text: string,
   referenceDate?: string | null
 ): string | null {
-  const normalized = text.replace(/\s+/g, " ")
+  const kokoTeksti = text.replace(/\s+/g, " ")
+
+  /*
+   * Virkejako pisteestä välilyönnin kanssa. Yhden ison kirjaimen
+   * jälkeinen piste on kirjainlyhenne, ei virkkeen loppu — sama
+   * tulkinta kuin osapuolipoiminnassa.
+   */
+  const virkkeet = kokoTeksti.split(/(?<!(?:^|\s)[A-ZÄÖÅ])\.\s+/)
+  const hankevirkkeet = virkkeet.filter((v) => !EI_HANKKEEN_VALMISTUMINEN.test(v))
+
+  if (hankevirkkeet.length && hankevirkkeet.length < virkkeet.length) {
+    const vainHanke = lueValmistuminen(hankevirkkeet.join(". "), referenceDate)
+    if (vainHanke) return vainHanke
+  }
+
+  return lueValmistuminen(kokoTeksti, referenceDate)
+}
+
+function lueValmistuminen(
+  normalized: string,
+  referenceDate?: string | null
+): string | null {
 
   const monthYearRegex = new RegExp(
     `(?:${COMPLETION_KEYWORD})${GAP}(${MONTH_ALTERNATION})ssa\\s+(\\d{4})`,

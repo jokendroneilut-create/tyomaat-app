@@ -96,6 +96,30 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Selvityksen valmistuminen ei enää mene hankkeen päiväksi (D-303)
+
+Harviala–Hangasmäen voimajohdolla oli arvioitu valmistuminen
+**2024-12-31**, kun lähde sanoo **2030**. Sivulla on kaksi
+valmistumismainintaa, ja jäsennin otti ensimmäisen — joka koski
+ympäristöselvitystä, ei voimajohtoa.
+
+Virhe ei ole kosmeettinen: mennyt päivä syöttää porttia joka 90 vrk:n
+jälkeen piilottaa hankkeen asiakkaalta (D-298).
+
+Nyt selvitys-, suunnitelma-, kaava- ja lupavirkkeet ohitetaan.
+A/B 16 247 rivin yli: **7 muuttunutta, 0 menetettyä**, ja kaikki
+seitsemän luettiin lähteestä. Yksi niistä paljasti toisen vanhan vian:
+Kotkansaaren kohteella valmistumispäivänä oli **aloituskuukausi**.
+
+Takautuvasti korjattu 4 riviä; vain koneen tuottamat arvot korvattiin.
+
+### Ideointi-vaihe pois käytöstä lähdekuviossa (D-303)
+
+Mitattu: `Ideointi` on kanoninen vaihe mutta **0 / 6 896 hankkeessa**.
+Jonon viisi Ideointi-riviä tulivat neljä viidestä Fingridin
+tilakuviosta. YVA ja ympäristöselvitys menevät nyt **Suunnitteluun**,
+ja vanhat rivit päivitettiin. Vaihemäärittelyä ei poistettu.
+
 ### Fingridin hankkeille yhteyshenkilöt (D-302)
 
 Hankesivun "Lisätietoja"-lohko oli `.content-text`-rajauksen

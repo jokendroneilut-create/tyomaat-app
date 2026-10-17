@@ -23,6 +23,105 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-303 - Selvityksen valmistuminen ei ole hankkeen valmistuminen
+
+Johannes 18.10.2026 Harviala–Hangasmäen hankkeesta (`6489873a`) kolme
+havaintoa, joista kaksi oli virheitä ja yksi kysymys.
+
+#### 1. Valmistumispäivä oli selvityksen, ei hankkeen
+
+*"Arvioitu valmistuminen 2024-12-31 mutta lähde sanoo vuoden 2030
+aikana"* — ja hän tunnisti syyn itse: *"Voimajohtohankkeen
+vaikutuksista on käynnistynyt ympäristöselvitys, joka valmistuu vuoden
+2024 aikana. Se tulee varmasti tästä."*
+
+Sivulla on kaksi valmistumismainintaa eri asioista, ja jäsennin otti
+ensimmäisen:
+
+    "ympäristöselvitys, joka valmistuu vuoden 2024 aikana"       <- selvitys
+    "voimajohdon rakentamisen arvioidaan valmistuvan vuoden 2030" <- hanke
+
+**Tämä ei ole kosmeettinen virhe.** Mennyt päivä syöttää
+`autoCompleteGate`:a, joka 90 vuorokauden jälkeen siirtää hankkeen
+Valmistuneeksi ja **piilottaa sen asiakkaalta** (D-298). Vuonna 2030
+valmistuva voimajohto olisi kadonnut listalta — juuri se ansa jonka
+kirjasin edellisenä päivänä.
+
+Korjaus: virkkeet joiden aihe on selvitys, suunnitelma, kaava tai lupa
+ohitetaan, jolloin rakentamista koskeva virke voittaa vaikka se tulee
+myöhemmin. Jos yksikään virke ei kelpaa, luetaan koko teksti kuten
+ennen — muuten muutos poistaisi päiviä riveiltä joilla on vain yksi
+maininta.
+
+Sanaraja jätettiin pois `selvity`-osasta tarkoituksella: suomen
+yhdyssanassa se on sanan lopussa ("ympäristöselvitys",
+"maaperäselvitys").
+
+**A/B koko aineiston yli** (16 247 riviä, perustaso HEAD-versiosta):
+**7 muuttunutta, 0 menetettyä, 0 uutta**. Kaikki seitsemän luettiin:
+
+| hanke | ennen | jälkeen | syy |
+|---|---|---|---|
+| Harviala–Hangasmäki | 2024 | **2030** | ympäristöselvitys |
+| Koverharin meriväylä | 2025 | **2028** | rakentamissuunnitelmat |
+| Kotkansaaren kodit | 2026-10 | **2028-08** | aiempi arvo oli ALOITUS |
+| Hesperianpuisto (2 riviä) | 2026-11 | **2027-08** | suunnitelmavirke |
+| Ruskeasuon varikko | 2021 | 2024 | molemmat menneessä, ei kannassa |
+
+Takautuva korjaus: **4 riviä**. Kirjoitettiin vain jos kannassa oleva
+arvo täsmää VANHAN jäsentimen tulokseen — eli arvo on koneen tuottama.
+Neljä riviä ohitettiin käsin asetettuina.
+
+#### 2. Yhteystiedot estyivat nimettömästä kuoresta
+
+D-302:n täydennys ohitti tämän rivin, koska `contact_persons` ei ollut
+tyhjä vaan sisälsi tämän:
+
+    [{ kind: "organization", name: null, email: "", phone: "030 395 5356",
+       title: null, organization: "fingrid" }]
+
+Nimetön ja sähköpostiton rivi ei kerro kenelle soitetaan, joten se ei
+saa estää oikeiden henkilöiden kirjaamista. Suodatin vaatii nyt nimen
+tai sähköpostin; käsin lisätty **nimetty** yhteystieto suojaa rivin
+yhä. Täydennetty 2 riviä (Harviala–Hangasmäki ja Espoo–Framnäs).
+
+Vahvistus että kuori oli sama numero ilman nimeä: Tiina Koivusen
+puhelin on **030 395 5356**, täsmälleen kuoren numero.
+
+**Auki: kuoren kirjoittaja.** Etsin sen `orgContacts`-,
+`contacts`- ja resolver-poluista enkä löytänyt; yksikään löydetty
+kohta ei kirjoita `kind: "organization"` yhdessä puhelimen ja tyhjän
+sähköpostin kanssa. Kirjattu jotta etsintää ei tarvitse aloittaa alusta.
+
+#### 3. Ideointi-vaihe: määritelty mutta käyttämätön
+
+*"ideointi vaihetta ei minusta enää ole eikä käytetä vaan
+suunnittelu? Tarkista dokumenteista."*
+
+Dokumentit sanovat että vaihe on olemassa: `Ideointi` on
+`CANONICAL_PHASES`-listassa (`lib/projects/phases.ts`, order 1) ja
+D-287:n yhteydessä kirjattiin että vaiheet ovat "valittavissa ja
+käytössä". **Aineisto sanoo toista:**
+
+| | Ideointi | yhteensä |
+|---|---|---|
+| hankkeet | **0** | 6 896 |
+| jono (`phase_hint`) | 5 | 10 109 |
+
+Neljä viidestä tuli Fingridin `vaiheTilasta`-kuviosta
+(`yva`/`ympäristö` -> `idea`, D-289), viides on jo hyväksytty
+stt_haku-rivi. Vaihe jonka vain yksi lähde täyttää ei ryhmitä mitään:
+asiakas joka suodattaa vaiheella ei näe näitä rivejä minkään muun
+seurassa.
+
+Kuvio muutettiin: YVA ja ympäristöselvitys -> **Suunnittelu**. Viisi
+vanhaa riviä päivitettiin, ja Ideointi on nyt 0 sekä jonossa että
+hankkeissa. **Vaihemäärittelyä ei poistettu** — se on isompi muutos
+eikä tarpeen tämän korjauksen takia.
+
+`scripts/korjaa-valmistumispaiva.ts`, `scripts/korjaa-ideointivaihe.ts`,
+`scripts/measure-valmistumispaiva.ts`
+
 ### D-302 - Fingridin yhteyshenkilöt: `<br>` on korvattava ennen tekstin lukemista
 
 Johannes 18.10.2026 Anttila–Länsisalmi-hankkeesta (`9173836c`):

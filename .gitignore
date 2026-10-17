@@ -73,3 +73,4 @@ scripts/out/housing-company-key.json
 # aikaleimoista alkuperaiselta videolta.
 docs/competitors/**/litteraatti.txt
 .tilaaja-perustaso.json
+.valmistuminen-perustaso.json

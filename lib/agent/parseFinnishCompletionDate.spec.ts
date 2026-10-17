@@ -117,3 +117,55 @@ describe("parseReleaseDate ilman valilyontia", () => {
     )
   })
 })
+
+/*
+ * SELVITYS EI OLE HANKE (D-303).
+ *
+ * Johannes 18.10.2026 Harviala-Hangasmaen hankkeesta: "Arvioitu
+ * valmistuminen 2024-12-31 mutta lahde sanoo vuoden 2030 aikana" --
+ * ja tunnisti syyn itse: sivulla on kaksi valmistumismainintaa, ja
+ * ensimmainen koskee ymparistoselvitysta.
+ */
+describe("parseEstimatedCompletionDate - selvitysvirke ohitetaan", () => {
+  it("valitsee hankkeen eika selvityksen valmistumisen", () => {
+    const teksti =
+      "Voimajohtohankkeen vaikutuksista on käynnistynyt ympäristöselvitys, " +
+      "joka valmistuu vuoden 2024 aikana. Alustavan aikataulun mukaan " +
+      "voimajohdon rakentamisen arvioidaan valmistuvan vuoden 2030 aikana."
+    expect(parseEstimatedCompletionDate(teksti)).toBe("2030-12-31")
+  })
+
+  it("ohittaa suunnitelman valmistumisen", () => {
+    const teksti =
+      "Rakentamissuunnitelmat valmistuvat vuoden 2025 aikana. " +
+      "Syvennetty meriväylä ja uusi laituri valmistuvat arviolta alkuvuonna 2028."
+    /*
+     * "alkuvuonna" ei ole kausisanastossa, joten tulos on vuoden
+     * viimeinen paiva. Se on tarkoitus: liian myohainen arvio on
+     * turvallisempi kuin liian aikainen, koska kentta syottaa
+     * automaattista valmistumista.
+     */
+    expect(parseEstimatedCompletionDate(teksti)).toBe("2028-12-31")
+  })
+
+  /*
+   * Yhdyssanassa selvitys on sanan lopussa, joten sanarajaa ei voi
+   * vaatia: "ymparistoselvitys", "maaperaselvitys".
+   */
+  it("tunnistaa selvityksen yhdyssanassa", () => {
+    const teksti =
+      "Maaperäselvitys valmistuu keväällä 2026. Rakennus valmistuu vuonna 2029."
+    expect(parseEstimatedCompletionDate(teksti)).toBe("2029-12-31")
+  })
+
+  /*
+   * Jos VAIN selvitysvirke on olemassa, luetaan koko teksti kuten
+   * ennen -- muuten muutos poistaisi paivia riveilta joilla on yksi
+   * maininta. Kirjattu, jotta tama on tiedossa eika yllatys.
+   */
+  it("palaa koko tekstiin jos muuta ei ole", () => {
+    expect(
+      parseEstimatedCompletionDate("Ympäristöselvitys valmistuu vuoden 2024 aikana.")
+    ).toBe("2024-12-31")
+  })
+})

@@ -28,6 +28,24 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 
 const UA = "Mozilla/5.0 (compatible; tyomaat.fi/1.0)"
 
+/*
+ * NIMETON KUORI EI OLE YHTEYSTIETO.
+ *
+ * Harviala-Hangasmaen rivi ohitettiin ensimmaisessa ajossa, koska
+ * `contact_persons` ei ollut tyhja vaan sisalsi taman:
+ *
+ *     [{ kind: "organization", name: null, email: "", phone: "030 395 5356",
+ *        title: null, organization: "fingrid" }]
+ *
+ * Nimeton ja sahkopostiton rivi ei kerro kenelle soitetaan, joten se ei
+ * saa estaa oikeiden henkiloiden kirjaamista. Kasin lisatty NIMETTY
+ * yhteystieto suojaa rivin yha.
+ */
+function onJoYhteyshenkiloita(arvo: unknown): boolean {
+  if (!Array.isArray(arvo)) return false
+  return arvo.some((x: any) => String(x?.name ?? "").trim() || String(x?.email ?? "").trim())
+}
+
 async function main() {
   const apply = process.argv.includes("--apply")
   const { createClient } = await import("@supabase/supabase-js")
@@ -64,7 +82,7 @@ async function main() {
     if (!onFingrid(m)) continue
     const url = String(m.source_url ?? "")
     if (!/^https?:\/\/www\.fingrid\.fi\//.test(url)) continue
-    if (Array.isArray(m.contact_persons) && m.contact_persons.length) continue
+    if (onJoYhteyshenkiloita(m.contact_persons)) continue
     rivit.push({ taulu: "jono", id: String(r.id), otsikko: String(r.title ?? ""), url, metadata: m })
   }
   for (const p of hankkeet) {
@@ -72,7 +90,7 @@ async function main() {
     if (!onFingrid(m)) continue
     const url = String(m.source_url ?? "")
     if (!/^https?:\/\/www\.fingrid\.fi\//.test(url)) continue
-    if (Array.isArray(m.contact_persons) && m.contact_persons.length) continue
+    if (onJoYhteyshenkiloita(m.contact_persons)) continue
     rivit.push({ taulu: "hanke", id: String(p.id), otsikko: String(p.name ?? ""), url, metadata: m })
   }
 

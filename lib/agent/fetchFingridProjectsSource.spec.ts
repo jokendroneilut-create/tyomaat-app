@@ -70,8 +70,13 @@ describe("vaiheTilasta", () => {
   it("kaantaa Fingridin tilan omaksi vaiheeksi", () => {
     expect(vaiheTilasta("Rakentaminen")).toBe("Rakenteilla")
     expect(vaiheTilasta("Suunnittelu")).toBe("Suunnittelu")
-    expect(vaiheTilasta("YVA-menettely")).toBe("Ideointi")
-    expect(vaiheTilasta("Ympäristöselvitys")).toBe("Ideointi")
+    /*
+     * YVA ja ymparistoselvitys -> Suunnittelu, ei Ideointi (18.10.2026).
+     * Mitattu: Ideointi on kanoninen vaihe mutta 0 / 6 896 hankkeessa,
+     * ja jonon 5 Ideointi-rivia tulivat kaikki tasta kuviosta.
+     */
+    expect(vaiheTilasta("YVA-menettely")).toBe("Suunnittelu")
+    expect(vaiheTilasta("Ympäristöselvitys")).toBe("Suunnittelu")
   })
 
   it("hylkaa valmistuneen", () => {

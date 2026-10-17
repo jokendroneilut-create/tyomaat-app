@@ -83,7 +83,26 @@ export function vaiheTilasta(tila: string | null): string | null {
   if (t.includes("valmistunut")) return null
   if (t.includes("rakentaminen") || t.includes("toteutukse")) return PHASE_LABELS.construction
   if (t.includes("suunnittelu")) return PHASE_LABELS.planning
-  if (t.includes("yva") || t.includes("ympäristö")) return PHASE_LABELS.idea
+  /*
+   * YVA JA YMPÄRISTÖSELVITYS -> SUUNNITTELU, EI IDEOINTI (18.10.2026).
+   *
+   * D-289 valitsi näille `idea`-vaiheen, koska YVA on hankkeen
+   * varhaisin julkinen vaihe. Johannes kysyi: *"ideointi vaihetta ei
+   * minusta enää ole eikä käytetä vaan suunnittelu?"*
+   *
+   * Mitattu: `Ideointi` on yhä kanoninen vaihe
+   * (`lib/projects/phases.ts`, order 1) ja valittavissa, mutta
+   * **0 / 6 896 hyväksytyssä hankkeessa** on se vaihe. Jonossa sitä on
+   * 5 rivillä, ja kaikki viisi ovat tästä samasta kuviosta — Fingrid
+   * on ainoa lähde joka sitä tuottaa.
+   *
+   * Vaihe jonka vain yksi lähde täyttää ei ryhmitä mitään: asiakas
+   * joka suodattaa vaiheella ei näe näitä rivejä minkään muun
+   * seurassa. Siksi ne menevät samaan koriin kuin muut varhaiset
+   * hankkeet. Vaihemäärittelyä EI poistettu — se on isompi muutos
+   * kuin tämän kuvion korjaus, eikä sitä tarvitse tehdä tässä.
+   */
+  if (t.includes("yva") || t.includes("ympäristö")) return PHASE_LABELS.planning
   /* Tuntematon tila ei ole valmistunut, joten se otetaan mukaan. */
   return PHASE_LABELS.planning
 }
