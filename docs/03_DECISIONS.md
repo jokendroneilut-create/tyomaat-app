@@ -34,6 +34,79 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-313 - Katsausjuttu: seitsemän hanketta, joista viisi oli jo kannassa
+
+Johannes 18.10.2026 jonorivistä `d0855b1b` ("Tulevaisuuden Oulua
+rakentamassa", Rakennusteho 15.10.2026): *"nämä hankkeet pitää myös
+erotella omiksi hankkeiksiin ja tämä lisätä niihin lähteeksi."*
+
+Yksi katsausjuttu, seitsemän hanketta kolmessa kunnassa. Yhtenä rivinä
+se oli "Oulun koulu" 40 %:n varmuudella, eikä yksikään sen hankkeista
+löytyisi haulla.
+
+#### Erottelu ei tarkoittanut seitsemää uutta riviä
+
+Kannan tarkistus ensin muutti työn kokonaan: **viisi seitsemästä oli jo
+kannassa**, yksi kahteen kertaan. Jos olisin luonut rivit lukematta,
+kantaan olisi tullut viisi kaksoiskappaletta.
+
+| Hanke | Kannassa | Tehtiin |
+|---|---|---|
+| OSAO Kampus 2030 | **kahdesti** (`242b2adf`, `21188ea2`) | täydennys + pari katselmointiin |
+| PSOAS:in Quattro, Välkkylä | `d7660f0d`, tilaaja tyhjä | tilaaja PSOAS, urakkahinta 22,5 M€ |
+| Peltolan vaativan asumisen yksikkö | `4c84069f` | urakkasumma 6,7 M€, laajuus 2 950 brm² |
+| Kuusiluodonrannan Runo | `95e67aa7`, vaihe "Suunnittelussa" | vaihe → Rakenteilla, lähde (puuttui) |
+| Helsingin Mäntytorni | `8658246a`, rakentaja tyhjä | rakentaja Rakennusteho Group Oy |
+| **Jääkärinkankaan monitoimitalo** | **ei lainkaan** | uusi jonorivi |
+| **Kerrostalo Muhoksen kunnalle** | ei (lupa ehkä on) | uusi jonorivi vihjeellä |
+
+#### Oma virhe: ensimmäinen kysely löysi 1/7
+
+Haku ilman sivutusta (`select("*")`) palautti vain 1 000 ensimmäistä
+riviä 6 948:sta, joten kuusi seitsemästä näytti puuttuvan. Tyhjä tulos
+näytti vastaukselta eikä virheeltä. Sivutettu kysely löysi kaikki.
+
+#### Jääkärinkangas oli hylätty kuudesti uutisena
+
+40,2 miljoonan euron monitoimitalo (16 300 brm², 840 oppilaan
+yhtenäiskoulu, päiväkoti, kirjasto, tilaaja Oulun Tilapalvelut) ei ole
+kannassa, vaikka siitä on tullut jonoon **kuusi riviä** — kaikki
+hylättyjä, koska jokainen oli uutispäivitys ("rakennetaan
+energiatehokkaaksi", "etenee!"). Varsinaista hanketta ei syntynyt
+yhdestäkään. Hylkäys oli joka kerta oikea päätös rivistä, mutta
+lopputulos väärä hankkeesta: **kuusi oikeaa hylkäystä voi kadottaa
+hankkeen.**
+
+#### Muhos: lupa ei nimeä rakentajaa, joten yhdistämistä ei tehty
+
+Kannassa on Muhoksen kunnan erityisryhmien vuokrakerrostalon
+rakennuslupa (`c6d7c4dd`, Asematie 16, 13.8.2026). Kunta, tilaaja,
+rakennustyyppi ja ajoitus täsmäävät katsauksen lauseeseen "kerrostalo
+Muhoksen kunnalle", mutta lupapäätös ei nimeä rakentajaa. Rakentajaa ei
+siksi kirjoitettu lupariville: uusi jonorivi saa `liittyva_hanke`
+-vihjeen ja katselmoija ratkaisee (ks. D-312, jossa väärä täsmäys
+kirjoitti kolme kenttää toisen hankkeen päälle).
+
+#### Lähde kuvaukseen, ei pelkkään kenttään
+
+Hankesivu näyttää vain yhden lähdelinkin (`metadata.source_url`), joten
+"lisää tämä lähteeksi" ei voi tarkoittaa toista linkkiä näkyville.
+Katsauksen ja kohdesivujen **tiedot** menevät kuvaukseen, jonka asiakas
+lukee ilman linkin avaamista (lähde avataan 2,6 %:ssa), ja URL
+`source_history`-listaan, jota TIC-sivu lukee varasijana. Tyhjään
+`source_url`-kenttään (Runo) linkki kirjoitettiin.
+
+#### Valmistumispäivää ei laskettu aikataulusta
+
+Quattrolle lähde kertoo vain "rakentaminen alkaa 2028 alussa, kesto noin
+19 kuukautta". Siitä laskettu 8/2029 olisi oma päätelmä, joten kenttä
+jäi tyhjäksi ja aikataulu meni kuvaukseen. OSAOn valmistuminen sen
+sijaan **korjattiin** 2029-12-31 → 2030-12-31, koska lähde sanoo "vuoden
+2030 loppuun mennessä".
+
+`scripts/pura-rakennustehon-oulun-katsaus.ts`, ajettu kuivana ja
+riveittäin luettuna; toinen ajo ei kirjoita mitään.
+
 ### D-311 - CloudNC-kaavasivu: kuulutus kertoi tilan, ei hanketta
 
 Johannes 18.10.2026 Kajaanin Vimpelinlaakson jonorivistä: *"tähän

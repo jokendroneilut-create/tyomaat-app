@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Rakennustehon katsaus seitsemäksi hankkeeksi (D-313)
+
+Yksi katsausjuttu ("Tulevaisuuden Oulua rakentamassa") sisälsi seitsemän
+hanketta kolmessa kunnassa. Viisi oli jo kannassa — OSAO Kampus 2030
+kahteen kertaan — joten erottelu tarkoitti pääosin täydentämistä:
+tilaaja PSOAS Quattrolle, rakentaja Mäntytornille, urakkasummat ja
+laajuudet kohdesivuilta, Runon vaihe Rakenteilla ja OSAOn valmistuminen
+2030 (oli 2029). Uusina jonoon Jääkärinkankaan monitoimitalo (40,2 M€,
+ei ollut kannassa vaikka siitä oli hylätty kuusi uutisriviä) ja
+kerrostalo Muhoksen kunnalle vihjeellä mahdolliseen lupariviin. OSAO-pari
+viety katselmoitavaksi, ei yhdistetty.
+
+
 ### CloudNC-kaavojen kuvaukset: kuulutus ja runko (D-311)
 
 Kajaanin kaavasivuilta luettiin kuvaukseksi vain AJANKOHTAISTA-
