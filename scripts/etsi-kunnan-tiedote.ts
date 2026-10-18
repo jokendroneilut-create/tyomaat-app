@@ -22,10 +22,18 @@
  *   npx tsx scripts/etsi-kunnan-tiedote.ts www.joensuu.fi --lue <url>
  */
 
+/*
+ * Ylatason import tekee tiedostosta MODUULIN. Ilman sita TypeScript
+ * pitaa tiedostoa globaalina skriptina, jolloin sen `main` tormaa
+ * toisen samanlaisen skriptin `main`-funktioon ja koko projektin
+ * kaannos kaatuu ("Duplicate function implementation"). Vercelin
+ * build ajaa tyyppitarkistuksen, joten virhe kaataa julkaisun.
+ */
+import * as cheerio from "cheerio"
+
 const UA = "Mozilla/5.0 (compatible; tyomaat.fi/1.0)"
 
 async function lueSivu(url: string, raja: number) {
-  const cheerio = await import("cheerio")
   const res = await fetch(url, { cache: "no-store", headers: { "user-agent": UA } })
   console.log(`\n[${res.status}] ${url}`)
   if (!res.ok) return

@@ -11,6 +11,15 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Julkaisu kaatui skriptin tyyppivirheeseen (D-315)
+
+Ilman ylätason importtia TypeScript pitää tiedostoa globaalina skriptinä,
+jolloin kahden skriptin `main` törmää ja koko build kaatuu — skriptit
+tyypitarkistetaan osana Next.js:n buildia. Korjattu importilla. Lisäksi
+`tsconfig.tarkista.json`, joka sulkee pois worktree-kopiot ja `.next`:n,
+jotta paikallinen tyyppitarkistus vastaa Vercelin käännöstä.
+
+
 ### Osapuolet kunnan tiedotteesta puretuille riveille (D-314)
 
 Joensuun investointiohjelmasta erotelluilta riveiltä puuttuivat

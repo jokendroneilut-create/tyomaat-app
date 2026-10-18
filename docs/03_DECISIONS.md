@@ -34,6 +34,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-315 - Julkaisu kaatui: skripti ilman importtia on globaali
+
+Vercelin tuotantojulkaisu commitista `332620d9` epäonnistui 19.10.2026:
+*"Command npm run build exited with 1"*, 39 sekuntia.
+
+Syy oli edellisessä commitissa lisätty `scripts/etsi-kunnan-tiedote.ts`.
+Siinä ei ollut yhtään **ylätason importtia** (cheerio haettiin
+`await import()`-kutsulla), joten TypeScript piti tiedostoa globaalina
+skriptinä eikä moduulina. Sen `main`-funktio törmäsi toisen samanlaisen
+skriptin (`scripts/audit-company-sources.ts`) `main`-funktioon:
+
+    scripts/audit-company-sources.ts(31,16):
+    error TS2393: Duplicate function implementation.
+
+`tsconfig.json` ottaa mukaan `**/*.ts`, joten skriptit tyypitarkistetaan
+osana Next.js:n buildia — skriptin virhe kaataa koko julkaisun, vaikka
+sovellus ei käytä skriptiä mitenkään.
+
+Korjaus: ylätason `import * as cheerio from "cheerio"`, jolloin tiedosto
+on moduuli. Kaikki muut `scripts/`-tiedostot olivat jo moduuleja
+(useimmat alkavat `.env.local`-lukijan importilla).
+
+#### Virhe näkyi paikallisesti mutta tulkittiin kohinaksi
+
+Ajoin `npx tsc --noEmit` ennen pushia ja **näin tämän rivin**, mutta
+tulkitsin sen worktree-kopioiden aiheuttamaksi, koska samassa
+tulosteessa oli kolme worktree-virhettä. Claude Coden worktreet ovat
+hakemistossa `app/.claude/worktrees`, eli **Next.js:n app-reitittimen
+sisällä**: Next generoi niille reittityypit `.next/dev/types`-hakemistoon,
+jonka `tsconfig.json` ottaa mukaan, joten 474 worktree-lähdetiedostoa
+päätyy tarkistukseen. Pelkkä `exclude` ei riitä — `.next` on
+suljettava pois samalla.
+
+Siksi `tsconfig.tarkista.json`: se perii pääkonfiguraation ja sulkee pois
+worktreet ja `.next`-generoinnin, jolloin jäljelle jää täsmälleen se mitä
+Vercel kääntää. **Ennen pushia:**
+
+    npx tsc --noEmit -p tsconfig.tarkista.json
+
+Tyhjä tuloste = puhdas. Todistettu kahdesti: korjauksen kanssa tyhjä,
+ilman korjausta (`git stash`) sama virhe jonka Vercel antoi.
+
 ### D-314 - Päätösasiakirja kertoo investoinnin, tiedote kertoo tekijät
 
 Johannes 19.10.2026 jonorivistä `bee597b7` (Noljakan uusi päiväkoti):

@@ -1,0 +1,17 @@
+{
+  "//": [
+    "SAMA TYYPPITARKISTUS KUIN VERCELILLA (D-315).",
+    "Claude Coden worktree-kopiot sijaitsevat hakemistossa app/.claude/worktrees,",
+    "eli Next.js:n app-reitittimen sisalla. Next generoi niille reittityypit",
+    ".next/dev/types-hakemistoon, jonka tsconfig.json ottaa mukaan -- siksi",
+    "`npx tsc --noEmit` raportoi satoja tiedostoja ja kymmenia virheita, joita",
+    "Vercelilla ei ole. Oikea virhe hukkuu joukkoon: 19.10.2026 julkaisu kaatui",
+    "virheeseen, joka NAKYI paikallisesti mutta tulkittiin worktree-kohinaksi.",
+    "Tama tiedosto sulkee pois seka worktreet etta .next-generoinnin, jolloin",
+    "jaljelle jaa tasmalleen se mita Vercel kaantaa.",
+    "",
+    "  npx tsc --noEmit -p tsconfig.tarkista.json     (tyhja tuloste = puhdas)"
+  ],
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", ".claude", "app/.claude", ".next"]
+}
