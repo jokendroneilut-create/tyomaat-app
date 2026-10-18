@@ -125,11 +125,41 @@ luonnokset"** olisi saanut uimahallin 34,6 M€:n rakennuskustannuksen.
 Kaavan laatiminen ei maksa sitä, ja luku olisi näkynyt asiakkaalle.
 Kaavarivit rajattiin pois.
 
+#### Liite kertoi myös tyypin ja hinnan — ja paljasti oman virheeni
+
+Johannes: *"tästä puuttuu liitteen kustannusarvio ja kohdetyyppi on
+koulu, sekin kerrotaan … katso myös muut vastaavat jonossa."*
+
+Kaikki kymmenen eroteltua riviä käytiin läpi. Kaksi vaati korjauksen:
+
+**Tikkarinne 9.** Tyyppi ja kustannus olivat tyhjiä. Rivin **oma**
+päätös (eri kokous kuin investointiohjelma) sisältää 16-sivuisen
+hankesuunnitelman, joka kertoo molemmat: *"kustannusarvio on
+2 250 000 euroa (alv 0 %)"* ja että kohde on Karelia-
+ammattikorkeakoulun Tikkarinne-kampus. Tyyppi `Koulu`.
+
+**Noljakan päiväkoti — oma virheeni.** Kustannukseksi oli tallentunut
+**7 100 000**, vaikka liite sanoo luvun päivittyneen: *"kustannusarvio
+OLI 7,1 milj. euroa. Hankkeen kustannusennuste on päivittynyt
+urakkatarjousten saamisten jälkeen 6,5 milj. euroon."*
+
+Kirjoitin kuvaukseen molemmat luvut, ja poimija otti ensimmäisen eli
+vanhentuneen. **Kaksi lukua samassa kuvauksessa on ansa**: antamani
+`metadata.estimated_cost` ei voittanut tekstistä poimittua. Korjattiin
+sekä arvo että kuvauksen järjestys niin, että voimassa oleva luku on
+ensin.
+
+Muilla kahdeksalla tyyppi oli paikallaan eikä kustannusta ole:
+purkukohteille ei ole omaa summaa investointiosassa, ja
+hankesuunnitteluvaiheen kolmelle ei vielä ole arviota. Tyhjä on
+oikea arvo, ei puute.
+
 `scripts/pura-joensuun-purkukohteet.ts`,
 `scripts/korjaa-niittylahden-purku.ts`,
 `scripts/palauta-purkurivit-jonoon.ts`,
 `scripts/pura-joensuun-liitehankkeet.ts`,
-`scripts/taydenna-joensuun-kustannukset.ts`
+`scripts/taydenna-joensuun-kustannukset.ts`,
+`scripts/korjaa-joensuun-puutteet.ts`
 
 ### D-307 - Piilotetun rivin tiedot näkyviin yhdistämisessä
 
