@@ -190,3 +190,67 @@ export function porvooKuvaus($: CheerioAPI): string | null {
   }
   return koostaKuvaus(kappaleet)
 }
+
+/* ----------------------------------------------------------------------- */
+
+/*
+ * CLOUDNC-KAAVASIVU: KUULUTUS *JA* RUNKO (D-311).
+ *
+ * Johannes 18.10.2026 Kajaanin Vimpelinlaakson rivista: *"tahan
+ * kuvaukseen olisi pitanyt poimia myos: Asemakaavan tavoite on
+ * mahdollistaa uusien palloilu- ja monitoimihallin sijoittuminen
+ * Vimpelin urheilualueelle ja kehittaa urheilualuetta."*
+ *
+ * Kajaani luki kuvaukseksi vain `.kuulutus-info`-lohkon, joka on
+ * AJANKOHTAISTA-tilapaivitys ("Asemakaavan vireilletulo 9.10.2026")
+ * -- ei sita mita alueelle rakennetaan. Hollolan keraaja luki
+ * paivastoin vain `.basic-content`-lohkon ja jatti kuulutuksen pois,
+ * eli kumpikin sivusto antoi puolet tiedosta. Sama alusta, sama
+ * korjaus: molemmat lohkot, runko ensin.
+ *
+ * JARJESTYS. Runko ensin, kuulutus perään: kuvauksen alku kertoo MIKA
+ * hanke on (D-194), ja budjetin taytyttya tilapaivitys on se josta
+ * voi tinkia -- vaihe tallennetaan omaan kenttaansa (`.phase.box`).
+ *
+ * MITA PUDOTETAAN. Rungon kappaleista noin puolet on asiointiohjetta,
+ * liiteluetteloa ja kayntiosoitetta. Ne eivat kerro hankkeesta mitaan
+ * ja syovat kuvauksen budjetin. Prosessikappaleet (vireilletulo,
+ * nahtavillaolo, valtuuston paatokset) JAAVAT, koska niissa on
+ * paivamaarat ja paatospykalat.
+ */
+const CLOUDNC_ROSKA = [
+  /^Kaavakartta\b/i,
+  /^Kaavaselostuksen liitteet/i,
+  /^Vain viranomais/i,
+  /^Palautetta voi antaa/i,
+  /^Osayleiskaavan taustaselvitykset/i,
+  /* Sahkopostitiedotteen tilauslomakkeen ohje, ei hanketietoa. */
+  /ilmoittaa osoitteesi|haluan tiedotteita/i,
+  /käyntiosoite/i,
+  /^PL\s*\d/,
+  /ympäristötekninen toimiala/i,
+  /* "3. kerroksen aulassa" sisaltaa pisteen, joten [^.] ei kay. */
+  /on (?:esillä|nähtävillä).{0,80}(?:aulassa|lukusali|kirjasto)/i,
+]
+
+export function onCloudncRoska(kappale: string): boolean {
+  const text = siisti(kappale)
+  if (text.length < 25) return true
+  /* Erotinrivit: ****, '''', ---- eivat sisalla sanoja. */
+  if (!/[A-Za-zÅÄÖåäö]{3,}/.test(text)) return true
+  /* Liiteluettelo: "Liite 1. OAS Liite 2. Havainnekuvat Liite 3 ..." */
+  if ((text.match(/\bLiite\s*\d/gi) ?? []).length >= 2) return true
+  if (/^Liite\s*\d/i.test(text)) return true
+  return CLOUDNC_ROSKA.some((r) => r.test(text))
+}
+
+export function cloudncKuvaus($: CheerioAPI): string | null {
+  const runko = $(".basic-content p")
+    .toArray()
+    /* Kappale, joka on pelkka linkki kaavalistaukseen, ei ole kuvausta. */
+    .filter((p) => !onPelkkaLinkki($, p))
+    .map((p) => siisti($(p).text()))
+    .filter((p) => p && !onCloudncRoska(p))
+  const kuulutus = siisti($(".kuulutus-info").first().text())
+  return koostaKuvaus([...runko, kuulutus])
+}

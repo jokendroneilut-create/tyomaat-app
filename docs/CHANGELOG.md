@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### CloudNC-kaavojen kuvaukset: kuulutus ja runko (D-311)
+
+Kajaanin kaavasivuilta luettiin kuvaukseksi vain AJANKOHTAISTA-
+tilapäivitys ("Asemakaavan vireilletulo 9.10.2026") ja Hollolan samalta
+alustalta vain rungon kolme ensimmäistä kappaletta — kumpikin puolet
+tiedosta. Nyt molemmat keräjät lukevat kuulutuksen ja rungon samalla
+funktiolla, runko ensin, ja asiointiohje (liiteluettelot, käyntiosoite,
+tilauslomake, pelkät linkit) pudotetaan. Mitattu kaikilta 30
+kaavasivulta: 30/30 kasvoi, 0 kutistui. Vanhat rivit täydennetty
+lähteestä uudelleen: 40 riviä 46:sta, päivämäärällinen lause säilytetään
+vaikka sivu ei enää kerro sitä.
+
+
 ### Torpparin hankkeille osapuolet tietokortista (D-278)
 
 Torpparin juttujen lopussa on tietokortti (Tilaaja, Paaurakoitsija,

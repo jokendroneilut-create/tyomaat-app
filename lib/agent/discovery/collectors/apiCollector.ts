@@ -25,6 +25,7 @@ import type { DiscoverySource } from "../registry/sources"
 import { parseKaavaPaatos } from "@/lib/agent/kaavaVoimaantulo"
 import { pietarsaariKaavaDescription } from "@/lib/agent/pietarsaariKaavaDescription"
 import {
+  cloudncKuvaus,
   jamsaKuvaus,
   kaarinaKuvaus,
   naantaliKuvaus,
@@ -7630,7 +7631,8 @@ async function fetchKajaaniKaavaDetails(url: string) {
     const $ = cheerio.load(html)
 
     const kaavaTunnus = $(".kaavatunnus-info").first().text().replace(/\s+/g, " ").trim() || null
-    const description = $(".kuulutus-info").first().text().replace(/\s+/g, " ").trim() || null
+    /* Kuulutus JA runko, ks. cloudncKuvaus (D-311). */
+    const description = cloudncKuvaus($)
 
     const phase = $(".phase.box").first().find(".phase-header b").first().text().replace(/\s+/g, " ").trim() || null
 
@@ -7737,10 +7739,10 @@ async function collectKajaaniKaavaSource(source: DiscoverySource) {
 
 /*
  * Hollola käyttää samaa CloudNC-alustaa kuin Kajaani (samat CSS-luokat:
- * .kaavatunnus-info, .yhteyshenkilo-info, .phase.box .phase-header b),
- * mutta kuvaus on eri paikassa — .kuulutus-info sisältää AJANKOHTAISTA-
- * tilapäivityksen, ei tavoitekuvausta, joka löytyy sen sijaan omasta
- * .basic-content-lohkosta.
+ * .kaavatunnus-info, .yhteyshenkilo-info, .phase.box .phase-header b).
+ * Kuvaus on kahdessa lohkossa: .kuulutus-info on AJANKOHTAISTA-
+ * tilapäivitys ja .basic-content on tavoitekuvaus. Molemmat luetaan,
+ * runko ensin — ks. cloudncKuvaus (D-311).
  */
 const HOLLOLA_LISTING_URL = "https://hollola.cloudnc.fi/fi-FI/Kaavat/Aktiiviset"
 const HOLLOLA_LINK_PATTERN = /^\/fi-FI\/content\/\d+\/12722$/
@@ -7758,13 +7760,8 @@ async function fetchHollolaKaavaDetails(url: string) {
 
     const kaavaTunnus = $(".kaavatunnus-info").first().text().replace(/\s+/g, " ").trim() || null
 
-    const description =
-      $(".basic-content p")
-        .map((_, p) => $(p).text().replace(/\s+/g, " ").trim())
-        .get()
-        .filter(Boolean)
-        .slice(0, 3)
-        .join(" ") || null
+    /* Sama CloudNC-saanto kuin Kajaanilla: kuulutus mukaan (D-311). */
+    const description = cloudncKuvaus($)
 
     const phase =
       $(".phase.box").first().find(".phase-header b").first().text().replace(/\s+/g, " ").trim() || null

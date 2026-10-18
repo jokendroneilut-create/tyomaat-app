@@ -23,6 +23,77 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-311 - CloudNC-kaavasivu: kuulutus kertoi tilan, ei hanketta
+
+Johannes 18.10.2026 Kajaanin Vimpelinlaakson jonorivistä: *"tähän
+kuvaukseen olisi pitänyt poimia myös: Asemakaavan tavoite on
+mahdollistaa uusien palloilu- ja monitoimihallin sijoittuminen Vimpelin
+urheilualueelle ja kehittää urheilualuetta."*
+
+Rivin kuvaus oli 127 merkkiä: *"Asemakaavan vireilletulo 9.10.2026,
+osallistumis- ja arviointisuunnitelma nähtävillä 9.10.2026 alkaen koko
+kaavaprosessin ajan."* Se kertoo kaavan tilan, ei sitä mitä alueelle
+rakennetaan — eli hanketta ei tunnistaisi kuvauksesta lainkaan.
+
+#### Korjaus oli jo löydetty toiselle kunnalle, mutta ei viety tähän
+
+Kajaanin keräjä luki `.kuulutus-info`-lohkon. Hollolan keräjä samalta
+CloudNC-alustalta luki `.basic-content`-lohkon kolme ensimmäistä
+kappaletta, ja sen funktion yllä oli kommentti joka kertoi eron:
+*".kuulutus-info sisältää AJANKOHTAISTA-tilapäivityksen, ei
+tavoitekuvausta."* Kumpikin siis luki vain toisen puolen. Kuvaus on
+molemmissa lohkoissa, ja nyt molemmat keräjät käyttävät samaa
+funktiota `cloudncKuvaus` (`lib/agent/discovery/collectors/sivunKuvaus.ts`).
+
+Järjestys: **runko ensin, kuulutus perään.** Kuvauksen alku kertoo mikä
+hanke on (D-194), ja budjetin täyttyessä tilapäivitys on se josta voi
+tinkiä — vaihe tallennetaan omaan kenttäänsä `.phase.box`-lohkosta.
+
+#### Mitä rungosta pudotetaan
+
+Rungon kappaleista noin puolet on asiointiohjetta: liiteluetteloita
+("Liite 1. OAS Liite 2. Havainnekuvat"), erotinrivejä (`****`, `''''`),
+käyntiosoitteita, sähköpostitiedotteen tilauslomakkeen ohjeita ja
+pelkkiä linkkejä kaavalistaukseen. **Prosessikappaleet jäävät**
+(vireilletulo, nähtävilläolo, valtuuston päätökset pykälineen), koska
+niissä on päivämäärät. Pudotussääntö `onCloudncRoska` on testattu.
+
+Yksi sääntö ei aluksi lauennut lainkaan: `on esillä [^.]{0,60} aulassa`
+ei osunut, koska "3. kerroksen aulassa" sisältää pisteen. Näytöllä
+näkyvä sääntö ei siis todista että se ajaa (vrt. D-299).
+
+#### Mittaus ennen kirjoittamista
+
+Kaikki 30 kaavasivua (Kajaani 15, Hollola 15) haettiin ja vanha ja uusi
+kuvaus tulostettiin rinnakkain: **30/30 kasvoi, 0 kutistui, 0 tyhjeni.**
+Kajaanilla 93–696 merkistä 315–1 423 merkkiin.
+`scripts/mittaa-cloudnc-kuvaus.ts`.
+
+#### Täydennys: 40 riviä 46:sta
+
+Vanhat rivit eivät korjaannu itsestään, koska keräjä ei kirjoita jo
+tuotua riviä uudelleen. `scripts/taydenna-cloudnc-kuvaukset.ts` hakee
+jokaisen sivun uudelleen ja laskee kuvauksen samalla funktiolla kuin
+keräjä — tekstiä ei keksitä. Kolme porttia:
+
+- **Käsin muokattuun ei kosketa.** Kirjoitetaan vain jos nykyinen teksti
+  sisältyy uuteen tai on täsmälleen se minkä vanha poimija antaa samasta
+  sivusta. Muuten rivi jää ennalleen ja tulostuu kohtaan "KÄSIN?".
+- **Päivämäärä ei katoa.** Kuulutusteksti vaihtuu sivulla kaavan
+  edetessä: Otanmäki–Alussuon sivu kertoo nyt valtuuston hyväksynnän
+  9.6.2026 mutta **ei enää vireilletuloa 27.11.2024**, joka oli
+  kannassa. Pelkkä korvaaminen olisi hävittänyt sen. Lause, jonka päivää
+  uusi teksti ei kerro, liitetään perään. Tämä löytyi vain lukemalla
+  kuivaharjoituksen rivit yksitellen.
+- **Kappalejaot säilyvät.** Hankesivu näyttää kuvauksen
+  `white-space: pre-wrap` -lohkossa, joten tyhjä rivi erottaa kappaleet
+  myös asiakkaalle. Ensimmäinen ajo kirjoitti tekstin siistittynä ja
+  jaot katosivat; korjattu ja ajettu uudelleen.
+
+Tulos: 40 riviä kirjoitettu (24 jonoriviä + 22 hanketta, joista 6
+ennallaan koska kannassa oleva teksti oli pidempi), 0 ohitettu käsin
+muokattuna. Toinen ajo kirjoittaa 0 riviä.
+
 ### D-310 - Oteran lähteeksi: koko RSS-syöte, koostejutut eriteltyinä
 
 Oteran Oy (Lohkare Infra) on silta-, vesi- ja maarakentamisen

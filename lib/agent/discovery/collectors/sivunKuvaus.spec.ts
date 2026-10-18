@@ -2,10 +2,12 @@ import * as cheerio from "cheerio"
 import { describe, expect, it } from "vitest"
 
 import {
+  cloudncKuvaus,
   jamsaKuvaus,
   kaarinaKuvaus,
   koostaKuvaus,
   naantaliKuvaus,
+  onCloudncRoska,
   porvooKuvaus,
   puolustuskiinteistotKuvaus,
   ylojarviKuvaus,
@@ -164,5 +166,79 @@ describe("koostaKuvaus", () => {
     const pitka = "a".repeat(1600)
     expect(koostaKuvaus([pitka, "lisää"])).toBe(pitka)
     expect(koostaKuvaus([])).toBeNull()
+  })
+})
+
+/*
+ * CLOUDNC (D-311). Katkelma on Kajaanin Vimpelinlaakson sivun rakenne
+ * (haettu 18.10.2026); teksti lyhennetty.
+ */
+const VIMPELINLAAKSO = `
+<div class="kuulutus-info">Asemakaavan vireilletulo 9.10.2026, osallistumis- ja arviointisuunnitelma nähtävillä 9.10.2026 alkaen koko kaavaprosessin ajan.</div>
+<div class="basic-content">
+  <p>KAJAANI, osa tilasta 205-401-1-83 Lahjoitusmaa</p>
+  <p>Asemakaavan tavoite on mahdollistaa uusien palloilu- ja monitoimihallin sijoittuminen Vimpelin urheilualueelle ja kehittää urheilualuetta.</p>
+  <p>Asemakaavan osallistumis- ja arviointisuunnitelma on esillä kaupungintalon 3. kerroksen aulassa, Pohjolankatu 13, pääkirjaston lukusalissa, Seminaarinkatu 15.</p>
+  <p>Kajaanin kaupunki, ympäristötekninen toimiala, 9.10.2026</p>
+  <p>PL 133, 87101 Kajaani, käyntiosoite Pohjolankatu 13.</p>
+</div>`
+
+describe("cloudncKuvaus", () => {
+  it("poimii tavoitelauseen rungosta eika vain kuulutusta", () => {
+    const kuvaus = cloudncKuvaus(cheerio.load(VIMPELINLAAKSO)) ?? ""
+    expect(kuvaus).toContain("Asemakaavan tavoite on mahdollistaa uusien palloilu- ja monitoimihallin")
+    expect(kuvaus).toContain("osa tilasta 205-401-1-83")
+  })
+
+  it("pitaa kuulutuksen mukana mutta rungon jalkeen", () => {
+    const kuvaus = cloudncKuvaus(cheerio.load(VIMPELINLAAKSO)) ?? ""
+    expect(kuvaus).toContain("Asemakaavan vireilletulo 9.10.2026")
+    expect(kuvaus.indexOf("tavoite on mahdollistaa")).toBeLessThan(kuvaus.indexOf("vireilletulo 9.10.2026"))
+  })
+
+  it("jattaa asiointiohjeen ja kayntiosoitteen pois", () => {
+    const kuvaus = cloudncKuvaus(cheerio.load(VIMPELINLAAKSO)) ?? ""
+    expect(kuvaus).not.toContain("pääkirjaston lukusalissa")
+    expect(kuvaus).not.toContain("käyntiosoite")
+    expect(kuvaus).not.toContain("ympäristötekninen toimiala")
+  })
+
+  it("palauttaa kuulutuksen kun runkoa ei ole", () => {
+    const $ = cheerio.load(`<div class="kuulutus-info">Kaava on tullut voimaan 24.7.2026 ja hyväksymispäätös sai lainvoiman.</div>`)
+    expect(cloudncKuvaus($)).toBe("Kaava on tullut voimaan 24.7.2026 ja hyväksymispäätös sai lainvoiman.")
+  })
+
+  it("palauttaa null kun kumpaakaan lohkoa ei ole", () => {
+    expect(cloudncKuvaus(cheerio.load("<div><p>muuta sisältöä</p></div>"))).toBeNull()
+  })
+})
+
+describe("onCloudncRoska", () => {
+  it("pudottaa liiteluettelot, erottimet ja osoitteet", () => {
+    expect(onCloudncRoska("Kaavakartta Kaavaselostus")).toBe(true)
+    expect(onCloudncRoska("Liite 1. Osallistumis- ja arviointisuunnitelma Liite 2. Havainnekuvat")).toBe(true)
+    expect(onCloudncRoska("Vain viranomaiskäyttöön laaditut, salassapidettävät selvitykset")).toBe(true)
+    expect(onCloudncRoska("'''''''''''''''''''''''''''''''''''''''")).toBe(true)
+    expect(onCloudncRoska("PL 133, 87101 Kajaani, käyntiosoite Pohjolankatu 13")).toBe(true)
+    expect(onCloudncRoska("Palautetta voi antaa 30.10.2026 asti (maankäyttö- ja rakennusasetus 30 §).")).toBe(true)
+  })
+
+  it("sailyttaa prosessikappaleet, joissa on paivamaarat ja pykalat", () => {
+    expect(
+      onCloudncRoska(
+        "Kajaanin kaupunginhallitus on hyväksynyt 17.12.2019 § 236 kaavoitusaloitteen kaavoituksen valmistelusta."
+      )
+    ).toBe(false)
+    expect(
+      onCloudncRoska(
+        "Asemakaava on tullut vireille 27.11.2024 ja osallistumis- ja arviointisuunnitelma on asetettu nähtäväksi."
+      )
+    ).toBe(false)
+  })
+
+  it("sailyttaa yhden maininnan liitteesta osana lausetta", () => {
+    expect(
+      onCloudncRoska("Kaavaluonnos ja siihen liittyvä kaavaselostus Liite 3 olivat nähtävillä kaupungin sivuilla.")
+    ).toBe(false)
   })
 })
