@@ -81,9 +81,55 @@ takaisin. LLM:n arvio jäi näkyviin katselmoijalle.
 
 Lopputulos: **viisi riviä jonossa**, kaikki `new`.
 
+#### Liite oli arvokkaampi kuin itse päätösteksti
+
+Johannes kysyi voiko lähderivin hylätä turvallisesti. **Ei voinut:**
+päätöksellä on kaksi liitettä, ja liite 2 "Talousarvio 2027
+Toimitilahankkeiden kuvaukset 2027–2029" sisältää **kymmenen
+nimettyä hanketta** kustannusarvioineen, urakkamuotoineen ja
+aikatauluineen. Rivi oli ainoa osoite siihen.
+
+Liitelinkit löytyivät vasta toisella yrityksellä: Dynasty kirjoittaa
+`href`-arvot **yksinkertaisilla lainausmerkeillä**, ja ensimmäinen
+haku etsi kaksoislainausmerkkejä — tulos oli "0 liitettä", mikä olisi
+ollut väärä vastaus kysymykseen.
+
+| liitteen hanke | tilanne |
+|---|---|
+| Mehtimäen uimahalli 34,6 M€ | oli jo |
+| Taidemuseon piha 0,7 M€ | oli jo |
+| Reijolan päiväkoti 7,32 M€ | oli jo |
+| Niittylahden koulu 22,1 M€ | oli jo |
+| Musiikki- ja kulttuuritalo | oli jo |
+| **Noljakan uusi päiväkoti 6,5 M€** | **puuttui** |
+| **Mehtimäen jalkapallostadion** | **puuttui** |
+| **Utran koulu ja päiväkoti** | **puuttui** |
+| **Pääkirjaston peruskorjaus** | **puuttui** |
+| Tikkarinne 9 keittiö 2,25 M€ | jonossa, **LLM ohitti** |
+
+Neljä luotiin, Tikkarinne palautettiin. Sen LLM-perustelu oli
+"hallinnollinen päätös … ei rakennushankkeen kehitysvaihetta", kun
+liite kertoo kustannusarvion, jaetun urakan ja kaupunginhallituksen
+päätöksen 12.1.2026 §6. Toinen kerta samana iltana kun portti hylkäsi
+hankkeen jolla on päätös ja urakkamuoto.
+
+Kaikille kymmenelle eroteltuun riviin lisättiin `paatos_url` ja
+`liite_urlt`, jotta lähderivin voi hylätä ketjun katkeamatta.
+
+#### Kustannusarviot myös jo olemassa oleviin
+
+Liite antoi arvion neljälle hankkeelle joilla kenttä oli tyhjä —
+täytettiin D-307:n säännöllä (vain tyhjä). Kuivaharjoitus paljasti
+yhden väärän osuman: **"Mehtimäen uimahallin asemakaavan muutoksen
+luonnokset"** olisi saanut uimahallin 34,6 M€:n rakennuskustannuksen.
+Kaavan laatiminen ei maksa sitä, ja luku olisi näkynyt asiakkaalle.
+Kaavarivit rajattiin pois.
+
 `scripts/pura-joensuun-purkukohteet.ts`,
 `scripts/korjaa-niittylahden-purku.ts`,
-`scripts/palauta-purkurivit-jonoon.ts`
+`scripts/palauta-purkurivit-jonoon.ts`,
+`scripts/pura-joensuun-liitehankkeet.ts`,
+`scripts/taydenna-joensuun-kustannukset.ts`
 
 ### D-307 - Piilotetun rivin tiedot näkyviin yhdistämisessä
 

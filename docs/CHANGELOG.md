@@ -110,6 +110,17 @@ korkealla varmuudella.
 
 Viisi riviä on nyt jonossa katselmoitavana.
 
+Päätöksen **liite** osoittautui arvokkaammaksi kuin itse teksti:
+"Toimitilahankkeiden kuvaukset 2027–2029" sisältää kymmenen nimettyä
+hanketta kustannusarvioineen. Neljä puuttui kannasta kokonaan
+(mm. Noljakan päiväkoti 6,5 M€, Utran koulu, pääkirjaston
+peruskorjaus) ja yhden oli LLM-portti ohittanut. Kaikki kymmenen
+eroteltua riviä saivat päätös- ja liitelinkin, joten lähderivin voi
+hylätä.
+
+Liitteen kustannusarviot täydennettiin myös neljälle jo olemassa
+olevalle hankkeelle, joilla kenttä oli tyhjä.
+
 ### Piilotetun kaksoiskappaleen tiedot näkyviin (D-307)
 
 Yhdistäminen siirsi vain vaiheen, joten muut kentät jäivät kantaan
