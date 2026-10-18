@@ -21,7 +21,10 @@ laajuudet kohdesivuilta, Runon vaihe Rakenteilla ja OSAOn valmistuminen
 2030 (oli 2029). Uusina jonoon Jääkärinkankaan monitoimitalo (40,2 M€,
 ei ollut kannassa vaikka siitä oli hylätty kuusi uutisriviä) ja
 kerrostalo Muhoksen kunnalle vihjeellä mahdolliseen lupariviin. OSAO-pari
-viety katselmoitavaksi, ei yhdistetty.
+viety katselmoitavaksi, ei yhdistetty. Jälkikorjauksena 19.10. osapuolet
+kirjoitettiin roolikenttiin (arkkitehti-, rakenne- ja LVIA-suunnittelu) sen
+sijaan että ne olisivat jääneet roolittomaksi "Liittyvä yritys" -listaksi, ja
+Peltolalta puuttunut tilaaja Pohde lisättiin.
 
 
 ### CloudNC-kaavojen kuvaukset: kuulutus ja runko (D-311)

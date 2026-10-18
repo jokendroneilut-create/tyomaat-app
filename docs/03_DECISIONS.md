@@ -107,6 +107,48 @@ sijaan **korjattiin** 2029-12-31 → 2030-12-31, koska lähde sanoo "vuoden
 `scripts/pura-rakennustehon-oulun-katsaus.ts`, ajettu kuivana ja
 riveittäin luettuna; toinen ajo ei kirjoita mitään.
 
+#### Jälkikorjaus 19.10.2026: osapuolet roolikenttiin
+
+Johannes kysyi: *"lisäsitkö myös uudet osapuolet noihin jos hanke oli jo
+olemassa?"* — ja täsmensi: *"riittää että kaikki hankkeen osapuolet on
+listattu jos ei saa sen tarkemmin. lähdehän kertoo osapuolen."*
+
+Ei riittänyt. Olin kirjoittanut suunnittelijat vain
+`metadata.related_companies`-listaan, jossa `collectProjectCompanies`
+antaa niille roolin **"Liittyvä yritys"**, ja hanketaulun omat
+roolisarakkeet jäivät tyhjiksi. Lähde kertoo roolit sanatarkasti
+("Rakennesuunnittelu: WSP Finland Oy"), joten rooli oli tiedossa ja
+heitettiin silti pois. Lisäksi **Peltolalta puuttui tilaaja kokonaan**
+(Pohde) — osapuoli oli lähteessä mutta ei kannassa, eli juuri se mitä
+kysymys koski.
+
+Kirjoitettiin: arkkitehdit, rakenne- ja LVIA-suunnittelu OSAOlle, Inaro
+Oy Quattrolle, Arco Peltolalle ja Pohde Peltolan tilaajaksi.
+
+**Erotin on `//`, ei pilkku.** Kannassa pilkku on tavallisempi, mutta
+`splitCompanyField` katkaisee vain `//`-merkillä tai sulun jälkeisellä
+pilkulla — joten arvo "Ramboll, Sweco" näkyy hankekortilla **yhtenä
+yrityksenä nimeltä "Ramboll, Sweco"**. Näitä pilkulla yhdistettyjä on
+kannassa neljä riviä, eli niillä osapuolet eivät ole listattuina.
+
+**Sama yritys oli kahtena osapuolena.** `builder` oli "Rakennusteho" ja
+lisäsin listaan "Rakennusteho Oy"; `dedupeKey` ei poista "Oy":tä, joten
+kortilla ne olivat kaksi yritystä. Korjattu niin kuin
+`mergeCompanyNames` tekee — pisin kirjoitusasu voittaa — ja turha
+listamerkintä poistettiin.
+
+**Jonorivin suunnittelija ei siirry hyväksynnässä.**
+`app/api/tic/projects/approve/route.ts` lukee jonorivin metadatasta
+vain `earthworks_contractor`- ja `related_companies`-kentät, ei muita
+suunnittelijakenttiä. Jääkärinkankaan Sweco on siksi listassa ja
+päätyy hyväksynnässä rooliin "Liittyvä yritys"; sarakkeeseen se on
+kirjattava hyväksynnän jälkeen. Tämä on kerääjien puolella aito aukko:
+`fetchNccProjectsSource.ts` osaa jäsentää roolit kenttänimiksi, mutta
+hyväksyntä ei vie niitä perille.
+
+`scripts/taydenna-rakennustehon-osapuolet.ts` tulostaa osapuolet
+rooleineen ennen ja jälkeen, jotta muutos on luettavissa rivinä.
+
 ### D-311 - CloudNC-kaavasivu: kuulutus kertoi tilan, ei hanketta
 
 Johannes 18.10.2026 Kajaanin Vimpelinlaakson jonorivistä: *"tähän
