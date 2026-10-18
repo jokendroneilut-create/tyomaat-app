@@ -96,6 +96,20 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Joensuun viisi purkukohdetta omiksi hankkeiksi (D-308)
+
+Yksi päätösasia sisälsi viisi eri purkukohdetta. Yhtenä rivinä ne
+eivät löydä haulla eivätkä osu hakuvähtiin.
+
+Kolme asiaa meni toisin kuin suunnittelin: sama `source_url` olisi
+hylännyt kaikki viisi (ratkaisu: oma fragmentti kullekin), Niittylahti
+täsmäsi **uuden koulun** hankkeeseen ja merkitsi sen virheellisesti
+purettavaksi, ja LLM-portti ohitti kaksi viidestä ristiriitaisesti —
+neljä samasta lauseesta tullutta kohdetta sai vastakkaiset tuomiot
+korkealla varmuudella.
+
+Viisi riviä on nyt jonossa katselmoitavana.
+
 ### Piilotetun kaksoiskappaleen tiedot näkyviin (D-307)
 
 Yhdistäminen siirsi vain vaiheen, joten muut kentät jäivät kantaan

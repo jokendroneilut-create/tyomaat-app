@@ -23,6 +23,68 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-308 - Luettelo yhdessä rivssä ei löydy haulla
+
+Johannes 18.10.2026 jonorivistä `9beb523a` (Joensuun konsernijaoston
+investointiohjelma): *"tästä lähteestä pitäisi purkaa erillisiksi
+hankkeiksi … teet niistä omat hankkeet tic:iin hyväksyttäväksi."*
+
+Yksi päätösasia sisälsi viisi eri purkukohdetta eri osoitteissa.
+Yhtenä rivinä ne eivät löydy haulla eivätkä osu kenenkään
+hakuvähtiin — purku-urakoitsija etsii "Rantakylän terveysasema", ei
+"Tilakeskuksen investointiohjelma".
+
+#### Nimet korjattiin lähteen kirjoitusvirheistä
+
+Kaupungin oma teksti sanoo "Nittylahden" ja "Heinävaaran vanhan
+päiväkoti". Oikeat muodot tarkistettiin verkosta Joensuun omilta
+sivuilta ennen kirjoittamista. Alkuperäinen sanamuoto jäi kuvaukseen
+ja metadataan (`eroteltu_lahteen_sanamuoto`), jotta ketju lähteeseen
+säilyy.
+
+Vaihe on **Suunnittelussa**, ei sopimus: teksti on esitys, jonka
+konsernijaosto käsittelee 19.10.2026.
+
+#### Kolme asiaa meni toisin kuin suunnittelin
+
+**1. Sama `source_url` olisi hylännyt kaikki viisi.**
+`importCandidate` palauttaa `duplicate_source`, jos samasta
+osoitteesta on jo jonorivi — ja lähderivi tuli samasta osoitteesta.
+Ratkaisu: jokaiselle oma fragmentti (`#rantakylan-terveysasema`).
+Palvelin ei saa fragmenttia, joten linkki avaa saman päätössivun, ja
+dedupointiavain on yksilöllinen.
+
+**2. Niittylahti täsmäsi väärään hankkeeseen.** Tuonti yhdisti
+"Niittylahden koulun ja päiväkodin purku" olemassa olevaan hankkeeseen
+**"Niittylahden UUSI koulu ja päiväkoti"**. Nimet ovat lähellä, mutta
+toinen on uudisrakennus ja toinen vanhan purku — eri työ, eri
+urakoitsija, eri mahdollisuus. Täsmäys ehti myös kirjoittaa
+purkuhankkeen lipun (`purettava: true`) uuden koulun riville. Lippu
+poistettiin ja purku luotiin omaksi rivikseen.
+
+**3. LLM-portti ohitti kaksi viidestä — ristiriitaisesti.** Neljä
+kohdetta tulee **samasta lauseesta** samassa ohjelmassa, ja portti
+antoi vastakkaiset tuomiot korkealla varmuudella molempiin suuntiin:
+
+| kohde | tuomio | perustelu |
+|---|---|---|
+| Heinävaara | **ohita** (0,85) | "ei merkitse aktiivista hankkeen vaihetta" |
+| Rantakylä | **ohita** | "hallinnollinen ilmoitus, liian kaukainen" |
+| Petäikkölä | säilytä | "konkreettinen infrastruktuurihanke" |
+| Tuupovaara | säilytä (0,85) | "konkreettinen rakennushanke, relevantti" |
+
+Varmuusluku ei erottele oikeaa väärästä; **erimielisyys identtisten
+tapausten välillä erottelee**. `ignored` ei näy katselmoinnissa, joten
+kaksi riviä olisi kadonnut äänettömästi. Ne palautettiin tilaan
+`new` ja automaattilippu poistettiin, jottei tunnistusajo valuta niitä
+takaisin. LLM:n arvio jäi näkyviin katselmoijalle.
+
+Lopputulos: **viisi riviä jonossa**, kaikki `new`.
+
+`scripts/pura-joensuun-purkukohteet.ts`,
+`scripts/korjaa-niittylahden-purku.ts`,
+`scripts/palauta-purkurivit-jonoon.ts`
+
 ### D-307 - Piilotetun rivin tiedot näkyviin yhdistämisessä
 
 Johannes 18.10.2026: *"haluan että käyttäjälle on näkyvissä kaikki
