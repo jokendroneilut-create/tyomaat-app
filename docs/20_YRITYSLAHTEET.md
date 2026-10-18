@@ -61,6 +61,13 @@ Pelkkä tiedostohaku olisi väittänyt sitä puuttuvaksi.
 
 ## Tehty
 
+### Oteran Oy — lähteeksi 18.10.2026 (D-310)
+
+Taulukossa alla yhdeksällä hankkeella (kannassa 18.10. jo 11, kaikki
+Hilman tai Väyläviraston kautta). Oma syöte toi 14 hanketta 12
+kuukaudessa, joista 11 puuttui. Reitti on `/feed/`, koska REST antaa
+401; koostejutut eritellään osioittain.
+
 ### Fingrid Oyj — lähteeksi 15.10.2026 (D-289)
 
 Kartoituksen suurin yksittäinen aukko. 31 hanketta (30 rakennuttajana,

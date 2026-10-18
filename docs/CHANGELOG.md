@@ -96,6 +96,20 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Oteran lähteeksi (D-310)
+
+Silta- ja vesirakentamisen pääurakoitsija Oteran (Lohkare Infra)
+luetaan WordPressin RSS-syötteestä, koska REST-rajapinta on suljettu.
+12 kuukaudessa 26 julkaisua, joista 7 kertoo hankkeista. Kaksi niistä on
+koostejuttuja, jotka eritellään osioittain omiksi hankkeikseen: yhteensä
+15 ehdokasta, 14 eri hanketta, joista 11 puuttui kannasta (mm.
+Luikonlahden puuterminaali, Aspön yhteysaluslaituri, Bogskärin majakka,
+Puutossalmen lauttapaikat ja neljä elinvoimakeskusten siltaurakkaa).
+
+Kategoria ei yksin riitä: uusin hankejuttu oli vain "Ajankohtaista",
+joten myös hankeotsikko kelpaa. Kurikka tunnistetaan nyt myös muodosta
+"Kurikassa" ja Jalasjärvestä.
+
 ### Länsiratikat kahdeksi allianssiksi (D-309)
 
 Kannassa oli neljä julkista riviä samasta hankkeesta, eikä yksikään

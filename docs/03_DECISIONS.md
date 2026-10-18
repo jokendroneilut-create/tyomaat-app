@@ -23,6 +23,109 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-310 - Oteran lähteeksi: koko RSS-syöte, koostejutut eriteltyinä
+
+Oteran Oy (Lohkare Infra) on silta-, vesi- ja maarakentamisen
+pääurakoitsija; docs/20 listasi sen yhdeksällä hankkeella. Kannassa oli
+11 hanketta rakentajana Oteran, kaikki Hilman tai Väyläviraston kautta.
+`lib/agent/fetchOteranSource.ts`.
+
+#### Reitti: `/feed/`, ei REST eikä sivun kaavinta
+
+`/wp-json/wp/v2/posts` palauttaa 401, mutta WordPressin RSS on auki:
+100 julkaisua (noin kaksi vuotta) yhdellä pyynnöllä, koko teksti
+`content:encoded`-kentässä ja kategoriat mukana. Jutun sivuja ei siksi
+haeta. robots.txt kieltää vain yhden lisäosan JSON-tiedoston. Haku 1,4 s.
+
+#### Kategoria ei riitä — koko syöte, ei kategoriasyöte
+
+Lähtöoletus oli, että vain `urakkavoitot` ja `tyomaalla` ovat ehdokkaita.
+Mittaus kumosi sen: **uusin hankejuttu** (Kurikan Vt 3 / Vt 19,
+15.10.2026) ja Puutossalmen lauttapaikat ovat vain kategoriassa
+"Ajankohtaista". `/category/tyomaalla/feed/` olisi pudottanut molemmat.
+
+Siksi hanke = hankekategoria **tai** hankeotsikko ("Työmaalla:",
+"Urakkakuulumisia", "Mielenkiintoiset ajankohtaiset urakat:" …), ja
+poissulku tehdään kategoriasta (Nimitysuutiset, Oteranilaiset,
+Työhyvinvointi, Vastuullisuus) ja otsikosta. Hankekategoria ei sekään
+yksin riitä: "RT:n turvallisuusviikko" ja "TET/talk" ovat
+Työmaalla-kategoriassa.
+
+Mitattu 18.10.2026: 12 kk ikkunassa **26 julkaisua, 7 hanketta**, kaikki
+19 hylättyä luettu otsikoittain (rekrytointi, nimitykset, yrityskaupat,
+juhlapuheet).
+
+#### Koostejutut eritellään
+
+Kaksi seitsemästä on koosteita: "Urakkakuulumisia" (2 hanketta) ja
+"Laskentakauden kuulumisia" (5 osiota, joista viimeinen luettelee neljä
+siltasopimusta puolipistein). Yhtenä rivinä "Laskentakauden
+kuulumisia" ei löydy haulla eikä osu hakuvahtiin (D-308). Osio alkaa
+⚒-emojilla lihavoidussa kappaleessa, otsikko on muotoa
+`<hanke>, tilaajana <tilaaja>`. Jokainen osio saa oman
+fragmentin (`#luikonlahden-puuterminaalin-parantaminen`), koska sama
+`source_url` hylkäisi kaikki paitsi ensimmäisen (`duplicate_source`).
+
+Eriteltynä **15 ehdokasta, 14 eri hanketta** (Porvoon silta kahdesti).
+
+#### Oteran on pääurakoitsija — paitsi kun tilaaja on rakennusliike
+
+Builder on "Oteran Oy". Työyhteenliittymän kumppani ("työyhteenliittymänä
+Kuortaneen Kaivin kanssa") menee `related_companies`-listaan. Poikkeus:
+"Snackön louhinta ja ruoppausurakka, tilaajana Erikkson Bygg Ab" —
+Erikkson rakentaa laiturin ja Oteran louhii, joten rakennusliike
+kirjataan pääurakoitsijaksi ja Oteran liittyväksi, kuten
+sivu-urakoitsijoilla (D-250).
+
+Tilaaja: osion otsikko, sitten Oteranin oma "X:lle urakoimamme"
+(myös lähteen kirjoitusvirhe "Väylävirastollelle"), sitten LinkedInista
+kopioitu organisaatiotagi ("Porvoon kaupunki – Borgå stad – City of
+Porvoo"). Siltasopimuksen tunnus antaa elinvoimakeskuksen (LOU, ITA,
+UUD, EPO; vain mitatut neljä, tuntematonta ei arvata).
+
+#### Vaihe: vähintään sopimus, valmis vain vahvasta näytöstä
+
+Oteran tiedottaa voitetusta urakasta, joten pohja on "Sopimus
+myönnetty"; "Työmaalla:" -otsikko on rakenteilla. Valmistunut vain
+`onValmistunut`-säännöllä — 15:stä ei yksikään. "Parhaillaan
+käynnistymässä" ei ole rakenteilla (Aspön laiturin työt alkavat
+keväällä), vaikka yleinen sääntö osuisi sanaan "parhaillaan".
+Valmistuminen urakka-ajasta "ajanjaksolla 09/2026-12/2027".
+
+#### Kuivaharjoitus löysi kuusi vikaa joita luvut eivät näyttäneet
+
+1. Kurikka jäi ilman kuntaa: astevaihtelu (kk → k) ei osu kantaan
+   "kurikk". Lisätty Kurikan muodot ja Jalasjärvi (liitos 2016)
+   yksittäin, kuten D-292.
+2. Tilaajaksi tuli "Varsinais-Suomen ELY-keskukse": yhteinen
+   allatiivimuunnos tekee -kse → -s vain jos perusmuoto löytyy
+   tekstistä.
+3. Rauman pysäköintialue sai tyypin Koulu ("lähikoulun") ja Aspön
+   laituri Logistiikka. Tyyppi luetaan nyt vain nimestä.
+4. Porvoon jutussa sulkematon `<div>` kääri kappaleet sisäänsä, ja
+   elementtipohjainen luku pudotti avausvirkkeet. Teksti luetaan nyt
+   riveinä lohkotagien kohdalta.
+5. Rivijaon jälkeen `<span class=...>` jäi tekstiin, koska lähteen
+   rivinvaihto oli tagin sisällä.
+6. Kurikan "Työmaan ajankohtaiset" -luettelo käyttää samaa ⚒-emojia,
+   ja jokainen luettelorivi tuli omaksi hankkeekseen. Osion otsikolta
+   vaaditaan nyt lihavointi.
+
+#### Päällekkäisyys kantaan
+
+Sama `source_url`: 0 (oteran.fi ei ole ollut lähteenä). Nimen perusteella
+**3 hanketta 14:stä on jo kannassa**: Kurikan Vt 3 / Vt 19, Porvoon
+Aleksanterinkadun silta ja Melsorkanavan silta (kannassa
+"Mälsorkanavan sillan uusiminen Mustasaaressa" — Oteran kirjoittaa
+"Melsor", joten täsmäys voi jäädä tekemättä ja rivi tulla
+katselmointiin). Lähin naapuri ei ole sama: "Särkilahti 154" on
+alueen asemakaava ja "Päiväkoti Härkämäkeen" eri hanke kuin Härkämäen
+vesihuolto. **11 uutta hanketta.**
+
+Rekisteröinti: `scripts/lisaa-oteran-lahde.ts` (priority 10,
+company_project kuten VRJ). Kuivaharjoitus:
+`scripts/kuivaharjoitus-oteran.ts`.
+
 ### D-309 - Länsiratikat: kaksi allianssia, neljä riviä
 
 Johannes 18.10.2026: *"länsiratikat hanke pitäisi tutkia kannassa.

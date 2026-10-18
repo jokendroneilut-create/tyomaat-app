@@ -59,6 +59,20 @@ const IRREGULAR_ALIASES: Record<string, string> = {
   "vuolijoen": "Kajaani",
   "vuolijoella": "Kajaani",
   "vuolijoelle": "Kajaani",
+  /*
+   * Kurikka taipuu astevaihtelulla (kk -> k), joten kanta "kurikk" ei osu
+   * muotoon "Kurikassa". Jalasjarvi liittyi Kurikkaan 2016. Oteranin
+   * "Vt 3:n ja Vt 19:n liittymajarjestelyiden parantaminen Kurikassa"
+   * jai ilman kuntaa, vaikka ingressi sanoo myos "Jalasjarvelle" (D-310).
+   */
+  "kurikassa": "Kurikka",
+  "kurikan": "Kurikka",
+  "kurikasta": "Kurikka",
+  "kurikkaan": "Kurikka",
+  "jalasjärvi": "Kurikka",
+  "jalasjärven": "Kurikka",
+  "jalasjärvellä": "Kurikka",
+  "jalasjärvelle": "Kurikka",
   "ivalo": "Inari",
   "ivalon": "Inari",
   "ivalossa": "Inari",

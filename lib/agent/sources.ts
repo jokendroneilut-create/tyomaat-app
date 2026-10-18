@@ -83,6 +83,7 @@ import {
 } from "./fetchNccProjectsSource"
 import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
 import { fetchDestiaSource } from "./fetchDestiaSource"
+import { fetchOteranSource } from "./fetchOteranSource"
 import { fetchFingridProjectsSource } from "./fetchFingridProjectsSource"
 import { fetchToivoSource } from "./fetchToivoSource"
 import { fetchNrcProjectsSource } from "./fetchNrcProjectsSource"
@@ -373,6 +374,14 @@ export const sources = [
    * kumppani ja valmistumisaika ovat tekstissa.
    */
   { name: "toivo_tiedotteet", fetch: fetchToivoSource },
+  /*
+   * Oteran Oy (Lohkare Infra), silta- ja vesirakentamisen paaurakoitsija
+   * (D-310). WordPressin RSS, koska REST palauttaa 401. Koostejutut
+   * ("Laskentakauden kuulumisia") eritellaan osioittain omiksi
+   * ehdokkaikseen fragmentti-osoitteella. Ilman rikastajaa: syote antaa
+   * koko tekstin, ja rikastus hakisi sivun koko koosteena uudelleen.
+   */
+  { name: "oteran", fetch: fetchOteranSource },
   /*
    * Hartelan TULEVAT asuinalueet - eri sivu kuin referenssit, jotka ovat
    * valmistuneita. Naiden arvo on katuosoite: 8/15 sivulta loytyy osoite

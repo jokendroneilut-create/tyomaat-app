@@ -57,6 +57,7 @@ const MERGED_MUNICIPALITIES: Record<string, string> = {
   haukipudas: "Oulu", // 2013
   mänttä: "Mänttä-Vilppula", // 2009
   jurva: "Kurikka", // 2009
+  jalasjärvi: "Kurikka", // 2016
   pertunmaa: "Mäntyharju", // 2025, tuorein kuntaliitos
   vuolijoki: "Kajaani", // 2007
 }
