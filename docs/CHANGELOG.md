@@ -96,6 +96,20 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Länsiratikat kahdeksi allianssiksi (D-309)
+
+Kannassa oli neljä julkista riviä samasta hankkeesta, eikä yksikään
+kuvannut allianssijakoa — Destian rivin rakentajakentässä oli koko
+asia yhtenä lainauksena.
+
+Kaksi riippumatonta lähdettä vahvistaa kaksi allianssia: Destia–WSP
+(~187 M€, Niemenmäki ja Turunväylän liittymä) sekä YIT–NRC–Sitowise–
+Sweco. Nyt rivejä on kaksi, yksi per allianssi, ja kaksi STT:n
+ohjelmatason uutista on yhdistetty.
+
+Kokonaisarvo 340 M€ kuvaukseen ja metadataan; kustannuskenttään vain
+allianssin oma osuus, jottei kaksi riviä näyttäisi 680 miljoonalta.
+
 ### Joensuun viisi purkukohdetta omiksi hankkeiksi (D-308)
 
 Yksi päätösasia sisälsi viisi eri purkukohdetta. Yhtenä rivinä ne

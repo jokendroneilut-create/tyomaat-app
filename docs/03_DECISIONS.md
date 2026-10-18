@@ -23,6 +23,61 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-309 - Länsiratikat: kaksi allianssia, neljä riviä
+
+Johannes 18.10.2026: *"länsiratikat hanke pitäisi tutkia kannassa.
+siinä on käsittääkseni kaksi eri allianssia … tutkitko asiaa ja teet
+ehdotuksen miten saadaan kaksi jos niitä todella on kaksi."*
+
+**Oli kaksi.** Kaksi riippumatonta lähdettä sanoo sen suoraan:
+
+> Destia: *"Länsiratikoiden toteutus on jaettu kahteen allianssiin,
+> joista toisen muodostavat Destia ja WSP. Projektin kokonaisarvio on
+> noin 340 miljoonaa euroa, josta Destian johtaman allianssin osuus on
+> arviolta noin 187 miljoonaa euroa."*
+>
+> NRC: *"Pikaraitiotiehanke toteutetaan kahden allianssin voimin ja
+> tilataan kolmessa osassa."*
+
+| | Destian allianssi | YIT–NRC |
+|---|---|---|
+| osapuolet | Destia Oy, Destia Rail Oy, Proxion Plan Oy, WSP Finland Oy | YIT Infra Oy, NRC Group Finland Oy, Sitowise Oy, Sweco Finland Oy |
+| osuus | ~187 M€ | ei kerrota |
+| kohteet | Niemenmäki, Turunväylän liittymä, Linnankoskenkatu, Töölön pysäköinti | ei kerrota |
+
+#### Neljä julkista riviä samasta asiasta
+
+Kannassa oli Destian tiedotteesta, kahdesta STT:n uutisesta ja NRC:n
+sivulta syntyneet rivit. Yksikään ei kuvannut allianssijakoa: Destian
+rivin **rakentajakentässä oli koko asia yhtenä lainauksena**
+("kaksi ryhmittymää, toisen muodostavat …"), mikä ei ole osapuolitieto.
+
+Ratkaisu: **kaksi riviä, yksi per allianssi.** Perustelu on asiakkaan
+kysymys — alliansseilla on eri yhtiöt ja eri kohteet, joten
+aliurakoitsijan on tiedettävä kumpaan ottaa yhteyttä. Kaksi STT:n
+ohjelmatason uutista yhdistettiin Destian riviin; ne eivät ole
+kolmas hanke.
+
+**Voittaja valittiin käsin**, ei `chooseDuplicateSurvivor`-funktiolla:
+Destian rivi on se jonka teimme allianssiriviksi, eikä valinta saanut
+riippua siitä kumpi sattuu olemaan täydempi.
+
+#### Kustannus: 340 M€ kokonaisuus, 187 M€ kenttään
+
+Kannassa luki **600 M€**, mikä ei ole lähdetekstissä. Johannes valitsi
+kokonaisarvoksi **340 M€**. Luku kirjattiin molempien kuvaukseen ja
+metadataan (`hankkeen_kokonaisarvo`), mutta **kustannuskenttään tuli
+vain allianssin oma osuus** — muuten kaksi riviä näyttäisi yhteensä
+680 miljoonalta. Destialle 187 M€ koska lähde sanoo sen, toiselle
+tyhjä koska ei sano; erotusta ei laskettu.
+
+#### Sivulöytö
+
+Destian rivin vaihe oli "Sopimus myönnetty", vaikka sen **oma tiedote**
+sanoo rakentamisen alkaneen toukokuun lopussa. Korjattu Rakenteilla.
+
+`scripts/jarjesta-lansiratikat.ts`
+
 ### D-308 - Luettelo yhdessä rivssä ei löydy haulla
 
 Johannes 18.10.2026 jonorivistä `9beb523a` (Joensuun konsernijaoston
