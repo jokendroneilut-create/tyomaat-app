@@ -126,6 +126,66 @@ Rekisteröinti: `scripts/lisaa-oteran-lahde.ts` (priority 10,
 company_project kuten VRJ). Kuivaharjoitus:
 `scripts/kuivaharjoitus-oteran.ts`.
 
+### D-310 - Kolme sähköasemaurakkaa kolmessa kunnassa
+
+Johannes 18.10.2026 jonorivistä `f523183a` ("Kolme keskeistä
+sähköasemaurakkaa Fingridille"): *"tästä pitäisi purkaa nuo hankkeet
+myös omiksi hankkeikseen ja lisätä tämä lähteeksi."*
+
+Yksi Destian tiedote, kolme urakkaa **kolmessa eri kunnassa**. Yhtenä
+rivinä ne olivat Hämeenlinnassa, eivätkä Isojoen ja Mikkelin urakat
+löytyneet sieltä haulla.
+
+#### Tarkistus ensin: yksi kolmesta oli jo kannassa kahdesti
+
+| urakka | kunta | tilanne |
+|---|---|---|
+| Harvialan 110 kV sähköasema | Hämeenlinna | puuttui |
+| Lähteenkylän 400 kV ulkokytkinlaitos | Isojoki | puuttui |
+| Visulahden 110 kV laajennus | Mikkeli | **oli jo kahdesti** |
+
+Visulahti oli sekä Hilman ilmoituksena (`45d33b38`, VT21) että rivinä
+jonka kuvaus on tästä samasta tiedotteesta (`a846a62b`). Kolmatta ei
+luotu: jälkimmäiselle lisättiin puuttuva lähdeosoite ja pari vietiin
+katselmoitavaksi. **Ei yhdistetty itse.**
+
+#### Täsmäys osui taas naapurihankkeeseen — ja ylikirjoitti kolme kenttää
+
+`importCandidate` täsmäsi "Harvialan 110 kV sähköasema" -ehdokkaan
+hankkeeseen **"Harviala–Hangasmäki, Hämeenlinna"**, joka on 14
+kilometrin **voimajohto**. Nimet alkavat samalla sanalla ja molemmat
+ovat Fingridin hankkeita Hämeenlinnassa, mutta kyse on eri työstä ja
+eri sopimuksesta.
+
+Täsmäys ehti muuttaa voimajohdon riviä:
+
+    phase                 Suunnittelu  ->  Sopimus myönnetty
+    builder               (tyhjä)      ->  Destia Oy
+    estimated_completion  2030-12-31   ->  2028-03-31
+
+**Viimeinen on pahin.** 2030 oli juuri samana päivänä korjattu arvo
+(D-303), jossa jäsennin oli poiminut ympäristöselvityksen valmistumisen
+hankkeen valmistumiseksi. Sähköaseman 2028 ei ole voimajohdon
+valmistumispäivä, ja korjaus olisi kumoutunut huomaamatta.
+
+Rivi palautettiin ja sähköasema luotiin omaksi rivikseen, viittaus
+naapurihankkeeseen metadatassa.
+
+#### Sama ansa kolmannen kerran
+
+Tämä on **kolmas kerta samana päivänä** kun erottelussa täsmäys osuu
+naapurihankkeeseen: Niittylahden purku → uusi koulu (D-308),
+Mehtimäen uimahallin kaava → uimahallin kustannus (D-308), ja nyt
+sähköasema → voimajohto. Kaikissa sama rakenne: **sama paikka, sama
+tilaaja, eri työ.**
+
+Jokainen `matched`-tulos on siis avattava. Luku "1 matched" ei kerro
+osuiko se oikeaan, ja väärä osuma ei vain jätä riviä luomatta vaan
+**kirjoittaa ehdokkaan tiedot toisen hankkeen päälle**.
+
+`scripts/pura-destian-sahkoasemaurakat.ts`,
+`scripts/korjaa-harvialan-sahkoasema.ts`
+
 ### D-309 - Länsiratikat: kaksi allianssia, neljä riviä
 
 Johannes 18.10.2026: *"länsiratikat hanke pitäisi tutkia kannassa.

@@ -110,6 +110,20 @@ Kategoria ei yksin riitä: uusin hankejuttu oli vain "Ajankohtaista",
 joten myös hankeotsikko kelpaa. Kurikka tunnistetaan nyt myös muodosta
 "Kurikassa" ja Jalasjärvestä.
 
+### Destian kolme sähköasemaurakkaa omiksi hankkeiksi (D-310)
+
+Yksi tiedote, kolme urakkaa kolmessa eri kunnassa. Visulahti oli jo
+kannassa kahdesti (Hilma + sama tiedote), joten kolmatta ei luotu —
+pari vietiin katselmoitavaksi. Harviala ja Lähteenkylä puuttuivat.
+
+Täsmäys osui taas naapurihankkeeseen: Harvialan **sähköasema**
+yhdistyi samannimiseen 14 km:n **voimajohtoon** ja ylikirjoitti sen
+vaiheen, rakentajan ja valmistumispäivän — jälkimmäinen oli juuri
+samana päivänä korjattu arvo (D-303). Rivi palautettiin.
+
+Kolmas kerta samana päivänä samalla kuviolla: sama paikka, sama
+tilaaja, eri työ. Jokainen `matched`-tulos on avattava.
+
 ### Länsiratikat kahdeksi allianssiksi (D-309)
 
 Kannassa oli neljä julkista riviä samasta hankkeesta, eikä yksikään
