@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { chooseDuplicateSurvivor, moreAdvancedPhase } from "@/lib/projects/duplicateSurvivor"
+import { SIIRRETTAVAT_KENTAT, siirrettavatArvot } from "@/lib/projects/duplicateFieldCarry"
 import { phaseOrder } from "@/lib/projects/phases"
 
 export const runtime = "nodejs"
@@ -52,8 +53,12 @@ export async function POST(req: Request) {
    */
   const { data: hankkeet, error: hankeVirhe } = await supabaseAdmin
     .from("projects")
+    /*
+     * Sarakelistaan kuuluvat kaikki siirrettavat kentat, muuten
+     * `siirrettavatArvot` ei nae niita ja tieto jaisi piiloon.
+     */
     .select(
-      "id,name,phase,created_at,developer,builder,location,lat,lng,apartments,floor_area,estimated_cost,construction_start,property_type,metadata,is_public"
+      ["id", "name", "phase", "created_at", "metadata", "is_public", ...SIIRRETTAVAT_KENTAT].join(",")
     )
     .in("id", [pari.project_id_a, pari.project_id_b])
 
@@ -115,8 +120,25 @@ export async function POST(req: Request) {
    */
   const nostettuVaihe = moreAdvancedPhase(jaava?.phase, piilotettava?.phase, phaseOrder)
 
-  if (nostettuVaihe) {
-    await supabaseAdmin.from("projects").update({ phase: nostettuVaihe }).eq("id", valinta.keepId)
+  /*
+   * SAMA PERIAATE KUIN VAIHEELLA, MUIHIN KENTTIIN.
+   *
+   * Vaihe siirrettiin jo, koska piilotettu voi tietaa hankkeen
+   * edenneen pidemmalle. Muut kentat jaivat kuitenkin kantaan
+   * nakymattomiin: mitattu 18.10.2026, **71 / 150** vahvistetusta
+   * parista oli jattanyt jotain piilotetulle riville, yleisimmin
+   * tilaajan, koordinaatit ja sijainnin. Perustelut ja rajaukset
+   * ovat `lib/projects/duplicateFieldCarry.ts`:ssa.
+   */
+  const siirrettavat = siirrettavatArvot(jaava, piilotettava)
+
+  const paivitys: Record<string, unknown> = {
+    ...siirrettavat,
+    ...(nostettuVaihe ? { phase: nostettuVaihe } : {}),
+  }
+
+  if (Object.keys(paivitys).length) {
+    await supabaseAdmin.from("projects").update(paivitys).eq("id", valinta.keepId)
   }
 
   const { error: piilotusVirhe } = await supabaseAdmin
@@ -135,5 +157,7 @@ export async function POST(req: Request) {
     keepName: jaava?.name ?? null,
     reason: valinta.reason,
     phaseLifted: nostettuVaihe,
+    /* Katselmoija nakee mita piilotetulta siirtyi nakyviin. */
+    fieldsCarried: Object.keys(siirrettavat),
   })
 }

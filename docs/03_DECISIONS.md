@@ -23,6 +23,77 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+### D-307 - Piilotetun rivin tiedot näkyviin yhdistämisessä
+
+Johannes 18.10.2026: *"haluan että käyttäjälle on näkyvissä kaikki
+mahdollinen tieto mitä meillä on."*
+
+Taustalla D-306: Turun raitiotien yhdistämisessä piilotetulla rivillä
+oli rikkaampi tilaajatieto kuin voittajalla. Kaksoiskappaleen
+vahvistus siirsi vain **vaiheen** ja piilotti loput.
+
+#### Mitattu, ei arvattu
+
+150 vahvistetusta parista **71 oli jättänyt jotain piilotetulle
+riville**:
+
+| kenttä | pareja |
+|---|---|
+| developer | 20 |
+| lat / lng | 19 |
+| location | 12 |
+| estimated_completion | 11 |
+| construction_start | 8 |
+| floor_area | 6 |
+| apartments | 4 |
+| builder | 3 |
+
+Koordinaattien puuttuminen on näkyvin: ilman niitä hanke ei piirry
+kartalle lainkaan.
+
+#### Osapuolten yhdistäminen kokeiltiin ja hylättiin
+
+Ensimmäinen versio yhdisti osapuolikentät projektin omalla
+`mergeCompanyNames`-apurilla, mikä näytti oikealta ja nosti
+muutosten määrän 69:stä 83:een. **Kuivaharjoituksen rivit luettuna se
+olisi huonontanut kenttiä**, koska apurin tunniste ei normalisoi
+yhtiömuotoa eikä väliviivaa:
+
+    "Skanska Oy"           -> "Skanska Oy, Skanska"
+    "Kreate Oy"            -> "Kreate Oy, Kreate"
+    "Peab Oy (1509374-8)"  -> "Peab Oy (1509374-8), Peab"
+    "Senaatti-kiinteistöt" -> "Senaatti-kiinteistöt, Muu"
+    "GRK, NRC Group"       -> "GRK, NRC Group, GRK"
+
+Sama yritys olisi näkynyt asiakkaalle kahdesti eri kirjoitusasulla, ja
+"Muu" on roska-arvo. Luku olisi näyttänyt paremmalta ja tulos olisi
+ollut huonompi — rivien lukeminen oli ainoa tapa nähdä se.
+
+**Sääntö on siis: vain tyhjä täytetään.** Olemassa olevaa arvoa ei
+korvata eikä täydennetä: se voi olla ihmisen käsin korjaama.
+Kirjoitusasujen yhdistäminen on oma työnsä (docs/20).
+
+#### Kaksi rajausta jotka estävät vahingon
+
+- **Roska-arvot** ("Muu", "Ei tiedossa", "-") eivät siirry.
+- **Mennyt valmistumispäivä ei siirry.** Se syöttäisi
+  `autoCompleteGate`:a, joka 90 vrk:n jälkeen piilottaa hankkeen
+  asiakkaalta (D-298, D-303) — "lisää tietoa näkyviin" muuttuisi
+  piilotukseksi. Takautuvassa ajossa näitä oli neljä, yksi vuodelta
+  2020.
+
+#### Tehty
+
+- **Takautuvasti 69 hanketta** täydennetty
+  (`scripts/taydenna-yhdistetyt-kentat.ts`); tarkistus ajon jälkeen
+  antoi 0 jäljellä.
+- **Jatkoa varten** sama logiikka
+  (`lib/projects/duplicateFieldCarry.ts`) ajetaan
+  katselmointireitissä vaiheen siirron rinnalla. Vaihe oli jo tämän
+  periaatteen soveltamista yhteen kenttään; nyt se koskee kaikkia.
+- Vastaus kertoo `fieldsCarried`-listassa mitä siirtyi, jottei
+  katselmoija joudu arvaamaan.
+
 ### D-306 - Turun raitiotie kahtena hankkeena: vihje oli, jono ei
 
 Johannes 18.10.2026: *"turun raitiotie on nyt useana hankkeena."*

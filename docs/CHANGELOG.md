@@ -96,6 +96,21 @@ Digest vertaa nyt kirjainkoosta riippumatta. Kaksi vahtia jää yhä
 nollaan (`katto`, `betonirakentaminen`) — niitä arvoja ei ole kannassa
 lainkaan, mikä on eri vika eikä sitä korjata arvaamalla.
 
+### Piilotetun kaksoiskappaleen tiedot näkyviin (D-307)
+
+Yhdistäminen siirsi vain vaiheen, joten muut kentät jäivät kantaan
+näkymättömiin. Mitattu: **71 / 150** vahvistetusta parista oli
+jättänyt jotain piilotetulle riville — tilaajan (20), koordinaatit
+(19), sijainnin (12). Ilman koordinaatteja hanke ei piirry kartalle.
+
+Takautuvasti täydennetty **69 hanketta**, ja jatkossa siirto tapahtuu
+yhdistämisen yhteydessä.
+
+Vain tyhjä täytetään. Osapuolinimien yhdistäminen kokeiltiin ja
+hylättiin: se olisi tuottanut "Skanska Oy, Skanska" ja
+"Senaatti-kiinteistöt, Muu". Mennyttä valmistumispäivää ei siirretä,
+koska se piilottaisi hankkeen (D-298).
+
 ### Turun raitiotie kahtena hankkeena (D-306)
 
 Kolmesta rivistä kaksi oli julkisia. Keskimmäinen oli jo hoidettu
