@@ -34,6 +34,75 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-314 - Päätösasiakirja kertoo investoinnin, tiedote kertoo tekijät
+
+Johannes 19.10.2026 jonorivistä `bee597b7` (Noljakan uusi päiväkoti):
+*"tässä ja muissa äsken puretuissa hankkeissa ei ole yhtään osapuolta.
+tälle on ainakin löydettävissä ne täältä: <joensuu.fi:n tiedote>. Katso
+onko muihin purettuihin löydettävissä muita lisätietoja."*
+
+Joensuun investointiohjelmasta erotellut rivit (D-308) saivat tilaajaksi
+kaupungin, mutta **pääurakoitsija ja suunnittelijat puuttuivat
+kaikilta** — päätösasiakirja kertoo mitä rakennetaan ja paljonko se
+maksaa, ei kuka sen tekee. Kunnan oma tiedote kertoo juuri sen.
+
+#### WordPressin hakurajapinta löytää tiedotteen hankkeen nimellä
+
+joensuu.fi on WordPress, ja `wp-json/wp/v2/search?search=<hanke>` antaa
+tiedotteet ilman kaavintaa (tyyppi `joe_release`, kuulutus `joe_notice`,
+kaava `joe_zone_plan` — tyyppinimet ovat kuntakohtaisia). Sivuston oma
+`?s=`-haku ei palauttanut tiedotelinkkejä lainkaan, rajapinta palautti.
+Työkalu: `scripts/etsi-kunnan-tiedote.ts` (vain luku).
+
+Löytyi lisätietoa **neljälle rivistä kuudesta**:
+
+| Rivi | Mitä tiedote antoi |
+|---|---|
+| Noljakan uusi päiväkoti | **pääurakoitsija Rakennustoimisto K. Tervo Oy, pääsuunnittelija VAAKA-ARK Oy**, kerrosala 1 835 m², valmistuu 11/2027, maalämpö + aurinkopaneelit, RTS 4/5 |
+| Mehtimäen jalkapallostadion | kh 25.5.2026 käynnisti hankesuunnitelman; 750 paikkaa, Veikkausliiga vaatii ≥2 500 katettua; investoinnit 2027–2029 suunnitteluun |
+| Utran uusi koulu ja päiväkoti | valtuusto 15.6.2026; 3-sarjainen alakoulu + 3-ryhmäinen päiväkoti; **valmistuu 2031**; Pataluodon koulu lakkaa |
+| Joensuun pääkirjaston peruskorjaus | suunnittelu 2026, hankesuunnitelma valtuustolle 2028, toteutus 2029–2031, väistötila, EIP-laina |
+
+Purkukohteista (Heinävaara, Petäikkölä, Rantakylä, Tuupovaara) ei
+tiedoteta — niille ei löytynyt mitään. Fingridin kahdelle
+sähköasemalle ei ole hankesivua: 52 hankesivua läpi, vain
+Harviala–Hangasmäki, joka on eri hanke (voimajohto).
+
+#### Kustannus: uudempi lähde voittaa, ei se joka löytyi viimeksi
+
+Noljakan tiedote (17.8.2026) sanoo kustannusarvioksi 7,1 milj. euroa,
+kannassa on 6,5. **Pidettiin 6,5**: lähdeasiakirja on konsernijaoston
+esityslista **19.10.2026** — kaksi kuukautta tiedotetta uudempi — ja se
+sanoo nimenomaan "kustannusennuste on päivittynyt urakkatarjousten
+saamisen jälkeen 6,5 milj. euroon". Asiakirjan päivä luettiin sivulta,
+ei muistista. Molemmat luvut jäävät kuvaukseen.
+
+#### Sama `matched`-ansa kolmannen kerran — nyt hyväksynnässä
+
+Niittylahden purkurivin **hyväksyntä** täsmäsi uuden koulun
+hankkeeseen `3dc2566f`, ja koulun kuvaukseksi tuli purkuteksti: asiakas
+näki hankkeen nimeltä "Niittylahden uusi koulu ja päiväkoti", jonka
+kuvaus kertoi vanhan rakennuksen purkamisesta 2027. Kustannus (22,1
+M€) ja nimi olivat koulun, kuvaus purun. Aiemmat kaksi kertaa osuivat
+tuontiin (D-308, D-312); tämä osui hyväksyntään, eli korjaus
+tuontipuolella ei riitä.
+
+Korjattu: koululle oma kuvaus kaupungin hankesivulta (Kummuntie 9,
+2-sarjainen alakoulu + 3-ryhmäinen päiväkoti, ~300 oppilasta, valtuusto
+8.12.2025, kaava lainvoimaan 2027 alkuun, rakentaminen 2027–2029,
+käyttöön 1/2030), `purettava`-lippu pois, valmistuminen 2029-12-31, ja
+**purku omaksi hankkeeksi** kuten neljä muuta purkukohdetta. Riviä ei
+palautettu jonoon, koska Johannes oli jo hyväksynyt sen — järjestelmä
+vain kirjasi sen väärään paikkaan. Molemmille laitettiin
+`liittyva_hanke`-viite toiseen, jottei yhdistämistä yritetä uudelleen.
+
+Koulun nimi oli päätösotsikko ("– hankesuunnitelman ja kustannusarvion
+hyväksyminen"); nimeksi tuli kaupungin oma muoto ja päätösotsikko
+siirtyi `also_known_as`-listaan.
+
+`scripts/taydenna-joensuun-puretut.ts`, ajettu kuivana ja riveittäin
+luettuna; toinen ajo ei kirjoita mitään.
+
 ### D-313 - Katsausjuttu: seitsemän hanketta, joista viisi oli jo kannassa
 
 Johannes 18.10.2026 jonorivistä `d0855b1b` ("Tulevaisuuden Oulua

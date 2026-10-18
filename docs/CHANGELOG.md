@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Osapuolet kunnan tiedotteesta puretuille riveille (D-314)
+
+Joensuun investointiohjelmasta erotelluilta riveiltä puuttuivat
+pääurakoitsija ja suunnittelijat: päätösasiakirja kertoo investoinnin,
+ei tekijöitä. Kunnan WordPress-hakurajapinta löytää tiedotteet hankkeen
+nimellä (`scripts/etsi-kunnan-tiedote.ts`), ja niistä saatiin lisätietoa
+neljälle riville kuudesta — mm. Noljakan päiväkodin pääurakoitsija
+Rakennustoimisto K. Tervo Oy ja pääsuunnittelija VAAKA-ARK Oy, kerrosala
+ja valmistuminen 11/2027. Purkukohteista ei tiedoteta eikä Fingridillä
+ole sivua kahdelle sähköasemalle. Samalla korjattiin hyväksynnässä
+tapahtunut sekaannus: Niittylahden purku oli kirjautunut uuden koulun
+hankkeeseen ja korvannut sen kuvauksen; koulu sai oman kuvauksensa ja
+purku oman hankkeensa.
+
+
 ### Rakennustehon katsaus seitsemäksi hankkeeksi (D-313)
 
 Yksi katsausjuttu ("Tulevaisuuden Oulua rakentamassa") sisälsi seitsemän
