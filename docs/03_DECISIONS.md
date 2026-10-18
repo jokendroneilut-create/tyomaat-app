@@ -23,6 +23,17 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > **Uutta numeroa valitessa:** lue tiedosto juuri ennen kirjoittamista,
 > `grep "^### D-" docs/03_DECISIONS.md | sort -u`.
 
+> **Sama kahdennus toistui 18.10.2026: numero D-310 oli kahdesti.**
+> Oteran-lähde sai numeron ensin (commit `15927b0c`), Destian
+> sähköasemaurakat ottivat sen toisena (`23e7dc35`). Jälkimmäinen
+> nimettiin uudelleen **D-312**:ksi ja sen neljä viittausta
+> päivitettiin (tämä tiedosto, `CHANGELOG.md`,
+> `scripts/pura-destian-sahkoasemaurakat.ts`,
+> `scripts/korjaa-harvialan-sahkoasema.ts`). D-310 on nyt yksin
+> Oteranin, ja D-311 on CloudNC-kaavakuvaukset. Syy oli sama kuin
+> ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
+> rinnakkainen työ kirjoitti omansa.
+
 ### D-311 - CloudNC-kaavasivu: kuulutus kertoi tilan, ei hanketta
 
 Johannes 18.10.2026 Kajaanin Vimpelinlaakson jonorivistä: *"tähän
@@ -197,7 +208,7 @@ Rekisteröinti: `scripts/lisaa-oteran-lahde.ts` (priority 10,
 company_project kuten VRJ). Kuivaharjoitus:
 `scripts/kuivaharjoitus-oteran.ts`.
 
-### D-310 - Kolme sähköasemaurakkaa kolmessa kunnassa
+### D-312 - Kolme sähköasemaurakkaa kolmessa kunnassa
 
 Johannes 18.10.2026 jonorivistä `f523183a` ("Kolme keskeistä
 sähköasemaurakkaa Fingridille"): *"tästä pitäisi purkaa nuo hankkeet

@@ -9,7 +9,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 }
 
 /*
- * DESTIAN KOLME SAHKOASEMAURAKKAA OMIKSI HANKKEIKSEEN (D-310).
+ * DESTIAN KOLME SAHKOASEMAURAKKAA OMIKSI HANKKEIKSEEN (D-312).
  *
  * Johannes 18.10.2026 jonorivista `f523183a`: *"tasta pitaisi purkaa
  * nuo hankkeet myos omiksi hankkeikseen ja lisata tama lahteeksi."*

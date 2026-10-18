@@ -123,7 +123,7 @@ Kategoria ei yksin riitä: uusin hankejuttu oli vain "Ajankohtaista",
 joten myös hankeotsikko kelpaa. Kurikka tunnistetaan nyt myös muodosta
 "Kurikassa" ja Jalasjärvestä.
 
-### Destian kolme sähköasemaurakkaa omiksi hankkeiksi (D-310)
+### Destian kolme sähköasemaurakkaa omiksi hankkeiksi (D-312)
 
 Yksi tiedote, kolme urakkaa kolmessa eri kunnassa. Visulahti oli jo
 kannassa kahdesti (Hilma + sama tiedote), joten kolmatta ei luotu —

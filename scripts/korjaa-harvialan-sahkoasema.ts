@@ -9,7 +9,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 }
 
 /*
- * HARVIALAN SAHKOASEMA OMAKSI RIVIKSEEN JA VOIMAJOHTO ENNALLEEN (D-310).
+ * HARVIALAN SAHKOASEMA OMAKSI RIVIKSEEN JA VOIMAJOHTO ENNALLEEN (D-312).
  *
  * `importCandidate` tasmasi "Harvialan 110 kV sahkoasema" -ehdokkaan
  * olemassa olevaan hankkeeseen `215c8088` **"Harviala-Hangasmaki,
