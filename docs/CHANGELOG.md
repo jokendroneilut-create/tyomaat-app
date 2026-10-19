@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Kaksi aurinkopuistoa omiksi hankkeikseen (D-320)
+
+Rakennuslehden juttu sisälsi kaksi puistoa kahdessa maakunnassa, ja
+kertoi niistä vain yhteenlasketun vuosituotannon. Puistokohtaiset luvut
+haettiin omistajan omalta hankesivulta, ja niiden summa (98,6 GWh)
+täsmäsi jutun lukuun — Lamminneva 36,7 MWp Lappajärvelle ja Isoneva
+71,5 MWp Suonenjoelle. Rakentajaa ei kirjattu, koska lähde ei nimeä
+urakoitsijaa; rivillä ollut "Ruotsalaisyhtiö" oli otsikosta poimittu
+sana. Rivit vietiin jonoon täsmäyksen ohi, koska kannassa on
+samanniminen tuulivoimahanke toisessa kunnassa.
+
+
 ### Liitteen luku kerääjiin jaetulla apufunktiolla (D-319)
 
 Kaavan tavoiteluku luetaan nyt liitteestä myös tuontihetkellä, ei vain

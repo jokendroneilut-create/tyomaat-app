@@ -34,6 +34,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-320 - Yhteissumma jutussa, puistokohtaiset luvut omistajan sivulla
+
+Johannes 19.10.2026 jonorivistä `538a6c88`: *"tämä hanke pitäisi jakaa
+erillisiksi hankkeiksi ja lisätä lähde kuten ennen."* Rakennuslehden
+juttu kertoi kahdesta aurinkopuistosta kahdessa maakunnassa —
+Lamminneva Lappajärvellä ja Isoneva Suonenjoella — ja yhtenä rivinä
+kumpikaan ei löytyisi haulla; rivin kunta oli tyhjä.
+
+#### Juttu kertoi vain yhteissumman
+
+Juttu antoi puistoille yhden luvun: *"arvioitu yhteenlaskettu
+vuosituotanto on noin 98 gigawattituntia."* Yhteissummasta ei voi
+jakaa kahta riviä — ja puolittaminen olisi ollut oma päätelmä, ei
+lähteen tieto.
+
+**Omistajan oma hankesivu antoi puistokohtaiset luvut**, ja niiden summa
+toimi tarkistuksena:
+
+| Puisto | Kunta | Teho | Vuosituotanto |
+|---|---|---|---|
+| Lamminneva | Lappajärvi | 36,7 MWp | 33,8 GWh |
+| Isoneva | Suonenjoki | 71,5 MWp | 64,8 GWh |
+| | | | **98,6 GWh** ≈ jutun "noin 98" |
+
+Täsmäys ei ole koriste: se todistaa, että sivun luvut koskevat samoja
+puistoja kuin juttu, eikä esimerkiksi aiempaa suunnitelmaversiota.
+
+#### Rakentajaa ei kirjattu
+
+Rivin `builder` oli **"Ruotsalaisyhtiö"** — otsikosta poimittu sana, ei
+yrityksen nimi. Juttu nimeää vain omistajan (Rabbalshede Kraft) ja
+kehittäjän (Neova), ei urakoitsijaa, joten kenttä jätettiin tyhjäksi.
+
+#### Sama nimi, eri hanke — täsmäys ohitettiin
+
+Kannassa on "Lamminnevan tuulivoimahanke, Seinäjoki ja Lapua": sama
+nimen alku, **eri työ, eri kunnat, eri energiamuoto**. Rivit
+kirjoitettiin siksi suoraan jonoon eikä `importCandidate`-täsmäyksen
+kautta, joka on kolmesti tänä viikkona kirjoittanut kentät väärän
+hankkeen päälle (D-312, D-314).
+
+Vaiheeksi Suunnittelu: sijoituspäätös on tehty ja omistus siirtynyt,
+mutta urakoitsijaa ei ole nimetty eikä rakentamisen kerrota alkaneen.
+Omistajan sivu sanoo "rakentamisen valmistelussa", käyttöönotto
+keväällä 2027.
+
+`scripts/pura-rabbalsheden-aurinkopuistot.ts`
+
 ### D-319 - Liitteen luku kerääjiin: jaettu apufunktio, ei 241 kopiota
 
 Johannes 19.10.2026: *"kyllä on varmasti järkevää nuo pdf:t lukea jos
