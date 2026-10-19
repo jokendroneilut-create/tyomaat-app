@@ -84,6 +84,7 @@ import {
 import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
 import { fetchDestiaSource } from "./fetchDestiaSource"
 import { fetchOteranSource } from "./fetchOteranSource"
+import { fetchVexatecSource } from "./fetchVexatecSource"
 import { fetchFingridProjectsSource } from "./fetchFingridProjectsSource"
 import { fetchToivoSource } from "./fetchToivoSource"
 import { fetchNrcProjectsSource } from "./fetchNrcProjectsSource"
@@ -382,6 +383,13 @@ export const sources = [
    * koko tekstin, ja rikastus hakisi sivun koko koosteena uudelleen.
    */
   { name: "oteran", fetch: fetchOteranSource },
+  /*
+   * Vexatec Oy: hoiva- ja palvelurakentamisen KVR-urakoitsija. Tiedotteet
+   * ovat WordPressin omassa tyypissa `tiedotteet`, eivat RSS-syotteessa
+   * -- syotteessa on vain henkilostojuttuja. Mitattu: 31 tiedotetta,
+   * joista 15 kertoo kohteesta; 12 kk ikkunassa kuusi (D-322).
+   */
+  { name: "vexatec", fetch: fetchVexatecSource },
   /*
    * Hartelan TULEVAT asuinalueet - eri sivu kuin referenssit, jotka ovat
    * valmistuneita. Naiden arvo on katuosoite: 8/15 sivulta loytyy osoite

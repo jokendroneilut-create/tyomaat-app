@@ -62,3 +62,24 @@ describe("detectCityFromText", () => {
     expect(detectCityFromText("Uusi koulu Espoonlahteen")).not.toBe("Lahti")
   })
 })
+
+/*
+ * TAIVUTUSMUODOT JOISSA VARTALO MUUTTUU (D-322). Mitattu 19.10.2026
+ * kahdeksallatoista muodolla; nama nelja pettivat.
+ */
+describe("detectCityFromText: vartalon muuttavat muodot", () => {
+  it("tunnistaa Seinäjoen ja Rovaniemen k:n kadotessa", () => {
+    expect(detectCityFromText("rakennamme seinäjoelle uuden kohteen")).toBe("Seinäjoki")
+    expect(detectCityFromText("kohde seinäjoella valmistuu")).toBe("Seinäjoki")
+    expect(detectCityFromText("rakennamme rovaniemelle hoivakodin")).toBe("Rovaniemi")
+  })
+
+  it("tunnistaa Nurmeksen s -> kse -vaihtelun", () => {
+    expect(detectCityFromText("rakennamme nurmekseen päiväkodin")).toBe("Nurmes")
+    expect(detectCityFromText("kohde nurmeksessa")).toBe("Nurmes")
+  })
+
+  it("tunnistaa pitkään vokaaliin päättyvän nimen illatiivin", () => {
+    expect(detectCityFromText("rakennamme joensuuhun palveluasumisyksikön")).toBe("Joensuu")
+  })
+})

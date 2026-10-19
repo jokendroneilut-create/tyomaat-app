@@ -34,6 +34,114 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-322 - Vexatec lähteeksi: mittasin ensin väärän sivun
+
+Johannes 19.10.2026: *"onhan täällä paljonkin hankkeita"* — vastaus
+edelliseen mittaukseeni, jossa totesin saaliin olemattomaksi.
+
+**Olin mitannut väärää sivua.** Katsoin `/tiedotteet/`-listausta (ei
+anna linkkejä ilman selainta) ja RSS-syötettä (kaksi henkilöstöjuttua)
+ja päättelin, ettei lähteestä tule mitään. `/ajankohtaista/` näyttää
+tiedotteet, ja niitä on 31. Oikea reitti on WordPressin oma tyyppi:
+`wp-json/wp/v2/tiedotteet?per_page=100` antaa kaikki yhdellä pyynnöllä
+otsikoineen, päivineen ja koko tekstinä.
+
+Opetus ei ole "mittaa", vaan **mittaa se mitä käyttäjä katsoo**: kysyin
+sivustolta reittiä, jota yrityksen oma navigaatio ei käytä.
+
+#### Suodatus on koko työ
+
+31 tiedotteesta 15 kertoo kohteesta ja 16 on yrityksen omaa asiaa
+(sulautuminen, tilauskanta, rekrytointi, brändi, AI-pilotti,
+henkilökuvat, markkinointijuttu "Rakenna kauppa, joka kannattaa").
+Sääntö: otsikossa on rakennustyyppi JA otsikko ei ole yritysuutinen.
+Pelkkä kaupungin nimi ei riitä — "Vexatec kovassa kasvuvauhdissa"
+mainitsee kaupunkeja olematta kohde. Kaikki 31 luettiin riviltä.
+
+12 kuukauden ikkuna jättää kuusi ehdokasta; tahti on noin yksi
+hankejuttu kuukaudessa.
+
+#### Kaupunkitunnistus petti neljällä muodolla — korjaus kaikille
+
+"Palveluasumisyksikkö **Joensuuhun**" jäi ilman kuntaa. Mittasin 18
+taivutusmuotoa, joista neljä petti, ja kaikissa vartalo muuttuu:
+
+| muoto | kunta | syy |
+|---|---|---|
+| joensuuhun | Joensuu | pitkä vokaali → illatiivi -hun |
+| seinäjoelle | Seinäjoki | k:n kato |
+| rovaniemelle | Rovaniemi | i → e |
+| nurmekseen | Nurmes | s → kse |
+
+Seinäjoki ja Rovaniemi ovat kymmenien hankkeiden kuntia, joten aukko ei
+koskenut vain tätä lähdettä. Korjaus meni jaettuun
+`detectCityFromText`-karttaan, jota kaikki lähteet käyttävät.
+
+#### Tilaajaa ei poimita
+
+Vexatecin otsikot kertovat tilaajan allatiivissa ("Dahlin LVI-tukulle",
+"Novus Family Homesille", "Kiinteistötahkolalle"). Allatiivin
+purkaminen nimeksi on oma työnsä, jossa on helppo tuottaa roskaa, joten
+tilaaja jää kuvaukseen — josta katselmoija näkee sen.
+
+**Yhteyshenkilöt sen sijaan poimitaan**: tiedotteen lopussa on nimi,
+puhelin ja sähköposti ("Pekka Ervasti, 050 383 8630"), ja Perusmäen
+jutussa myös tilaajan puolelta (Kuuskodit). Vain henkilöt — sama lohko
+sisältää yrityksen vaihteen, joka tulisi mukaan organisaationa nimellä
+"Oulu Espoo".
+
+#### Kaksi riviä oli tuttua kohdetta
+
+Ensimmäinen ajo toi kuusi riviä, eikä yksikään täsmännyt vanhaan
+hankkeeseen (ei siis hiljaista ylikirjoitusta). Kaksi niistä tunnettiin:
+
+- **Perusmäki** on sama hanke kuin `f7534625`, jonka juuri täydensin
+  samasta tiedotteesta (D-321) → merkitty käsitellyksi.
+- **Joensuu EI yhdistetty.** Kannassa on `f1dd9a74` "Asumispalveluyksikkö,
+  Rantakylä": sama kaupunki, sama rakentaja ja sama tilaajapari (Toivo +
+  Norlandia) — mutta **eri katu ja eri käyttäjäryhmä** (Rantakylänkatu
+  10&12, 120 asuntoa ikääntyneille vs. Penttilänkadun tontti, 60 paikkaa
+  kehitysvammaisille, 2 487 brm²). Rivi sai viitteen naapurihankkeeseen
+  ja katselmoija ratkaisee.
+
+`lib/agent/fetchVexatecSource.ts`, `scripts/kuivaharjoitus-vexatec.ts`,
+`scripts/lisaa-vexatec-lahde.ts`
+
+### D-321 - Kuvakaappauksesta lisätyllä rivillä ei ole lähdettä
+
+Johannes 19.10.2026: *"tämä hanke löytyy tästä: <Vexatecin tiedote>
+onko tämä meillä lähteenä … vai oliko meillä jo tämä?"*
+
+Kolme vastausta: Vexatec ei ollut lähteenä, hanke **oli** jo kannassa
+(`f7534625`, Johanneksen itse lisäämänä kuvakaappauksesta), ja
+Rakennuslehden rivi **ei yhdistynyt** siihen vaan jäi jonoon omaksi
+rivikseen.
+
+#### Miksi ei yhdistynyt
+
+Kannassa oleva nimi on "Rivitaloja Espoon Perusmäkeen, Lambertintie",
+tuleva "Vexatec urakoi rivitaloja Espooseen". Ei yhteistä nimeä, ei
+osoitetta tulevalla rivillä — täsmäys ei voinut löytää sitä. Tämä on
+odotettu: uutisotsikko ja hankkeen nimi ovat eri asioita.
+
+#### Kuvakaappausrivillä ei ollut lähdelinkkiä lainkaan
+
+`source_url` oli tyhjä, eli hankekortilla ei ollut yhtään linkkiä.
+Kuvakaappauksesta lisätty rivi on arvokas, mutta se syntyy ilman
+osoitetta — ja lähde löytyy myöhemmin vain jos joku etsii sen.
+Yrityksen oma tiedote on nyt lähteenä, Rakennuslehti lähdehistoriassa
+ja alkuperäinen tapa metadatassa.
+
+#### Tiedote täytti puuttuvan tilaajan
+
+Kuvauksessa luki *"Tilaajaa ei mainita julkaisussa"* — tiedote nimeää
+sen: Novus Family Homes, Kuuskodit Investment Managementin ja Niamin
+yhteinen yhtiö. Lisäksi osoite Lambertintie 10, 32 asuntoa (13 kolmiota,
+19 vähintään neljän huoneen asuntoa) ja kuusi yksikerroksista
+puurakenteista rivitaloa. Kuvaus 276 → 1 218 merkkiä.
+
+`scripts/yhdista-perusmaen-rivitalot.ts`
+
 ### D-320 - Yhteissumma jutussa, puistokohtaiset luvut omistajan sivulla
 
 Johannes 19.10.2026 jonorivistä `538a6c88`: *"tämä hanke pitäisi jakaa

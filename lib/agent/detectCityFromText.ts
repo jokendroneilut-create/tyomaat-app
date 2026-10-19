@@ -106,6 +106,31 @@ const IRREGULAR_ALIASES: Record<string, string> = {
   "riihimäeltä": "Riihimäki",
   "riihimäen": "Riihimäki",
   /*
+   * SAMA K:N KATO KAHDESSA ISOSSA KAUPUNGISSA (D-322). Mitattu
+   * 19.10.2026 kahdeksallatoista taivutusmuodolla: neljä petti, ja
+   * kolme niistä on tätä samaa tyyppiä. Seinäjoki ja Rovaniemi ovat
+   * kymmenien hankkeiden kuntia, joten aukko ei koske vain yhtä
+   * lähdettä. "rovaniemen" osui jo, loput eivät.
+   */
+  "seinäjoelle": "Seinäjoki",
+  "seinäjoella": "Seinäjoki",
+  "seinäjoelta": "Seinäjoki",
+  "seinäjoen": "Seinäjoki",
+  "rovaniemelle": "Rovaniemi",
+  "rovaniemellä": "Rovaniemi",
+  "rovaniemeltä": "Rovaniemi",
+  /* Nurmes taipuu s -> kse, kuten Parainen nen -> s. */
+  "nurmekseen": "Nurmes",
+  "nurmeksessa": "Nurmes",
+  "nurmeksen": "Nurmes",
+  "nurmekselle": "Nurmes",
+  /*
+   * Pitkaan vokaaliin paattyva nimi saa illatiivin -hun: "Rakennamme
+   * Joensuuhun 60-paikkaisen palveluasumisyksikon" (Vexatecin tiedote).
+   * Muut Joensuun muodot osuivat jo.
+   */
+  "joensuuhun": "Joensuu",
+  /*
    * Parainen taipuu nen -> s ("Paraisille"), eika kanta "paraine" osu
    * mihinkaan naista. Mitattu 11.10.2026: tiedote "asuntokohde Norra
    * Famnen -kortteliin Paraisille" jai ilman kuntaa, ja tekstista

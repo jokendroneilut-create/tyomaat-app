@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Vexatec lähteeksi ja kaupunkitunnistus kuntoon (D-321, D-322)
+
+Vexatecin tiedotteet ovat WordPressin omassa `tiedotteet`-tyypissä, ei
+RSS-syötteessä: 31 tiedotetta, joista 15 kertoo kohteesta ja 12 kk
+ikkunassa kuusi. Suodatus vaatii otsikkoon rakennustyypin, koska pelkkä
+kaupungin nimi osuu myös yritysuutisiin. Samalla korjattiin jaettuun
+kaupunkitunnistukseen neljä taivutusmuotoa, joissa vartalo muuttuu
+(Joensuuhun, Seinäjoelle, Rovaniemelle, Nurmekseen) — Seinäjoki ja
+Rovaniemi ovat kymmenien hankkeiden kuntia. Lisäksi Perusmäen rivitalot
+yhdistettiin olemassa olevaan hankkeeseen ja sille lisättiin lähde, jota
+kuvakaappauksesta lisätyllä rivillä ei ollut lainkaan.
+
+
 ### Kaksi aurinkopuistoa omiksi hankkeikseen (D-320)
 
 Rakennuslehden juttu sisälsi kaksi puistoa kahdessa maakunnassa, ja
