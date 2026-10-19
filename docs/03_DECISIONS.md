@@ -34,6 +34,59 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-318 - Kaavan tavoitteet kaikille kunnille: mittaus, listasivuansa
+
+Johannes 19.10.2026 Salon kytkennän (D-317) jälkeen: *"käy muiden
+kuntien kaavakerääjät myös läpi."*
+
+Kaavajäsentimiä on **241**, jokainen omanlaisensa. Niiden kytkeminen
+yksitellen on eri työ kuin vanhojen rivien korjaaminen, joten työ
+jaettiin kahtia ja aloitettiin mittauksella
+(`scripts/mittaa-kaavakuvaukset.ts`):
+
+- 6 490 kaavariviä, joista **2 509:llä kuvaus alle 300 merkkiä**
+- 241 lähdettä; **kymmenen suurinta kattaa vain 32 %** ohuista riveistä
+
+Häntä on pitkä, joten kuntakohtainen kytkentä ei korjaisi tätä
+kohtuullisessa ajassa. Vanhat rivit sen sijaan voi korjata **ilman
+kuntakohtaista koodia**: rivillä on sivuosoite, sivulla liitelinkit, ja
+liitteen jäsennys on jo yhteinen (D-317).
+
+#### Listasivu ei ole hankkeen sivu — 955 riviä oli vaarassa
+
+Kuivaharjoitus 40 sivulla näytti "kirjoitetaan 179", mikä vaikutti
+hyvältä. Jakauma kertoi muuta: **yksi selostus olisi kirjoitettu 77 eri
+Nokian hankkeelle**, 46 Hämeenlinnan ja 36 Pelkosenniemen hankkeelle.
+Noilla lähteillä `documents_url` on koko kunnan kaavalista, ei hankkeen
+oma sivu, joten ensimmäisen kaavan teksti olisi mennyt kaikkien muiden
+päälle.
+
+Portti ilman kuntakohtaista tietoa: ryhmitä rivit sivuosoitteen mukaan
+ja **ohita osoite, johon osuu useampi eri hankkeen nimi**. Sama hanke
+kahdessa taulussa (jonorivi + hanke) on sallittu. Portti löysi 85
+listasivua ja rajasi käsiteltävät 2 439 rivistä 1 484:ään.
+
+Summa näytti oikealta; vasta jakauma paljasti virheen.
+
+#### Ajo on katkaistava ja jatkettava
+
+Sivuja on satoja ja osa liitteistä on kymmeniä megatavuja, joten ajo
+tehdään erissä (`--max`) ja käsitellyt rivit merkitään
+(`metadata.tavoitteet_haettu`). Seuraava ajo jatkaa siitä mihin edellinen
+jäi, eikä samaa sivua haeta kahdesti. Merkintä tehdään myös silloin kun
+lisäystä ei tullut.
+
+#### Avoinna: kerääjien kytkentä
+
+Täydennys korjaa VANHAT rivit kaikissa kunnissa, mutta uudet rivit
+tulevat edelleen ilman liitettä: vain viisi kerääjää hakee liitteen
+(Helsingin SUKKA, Salo, Savonlinna, Eura ja yksi kuulutuslähde).
+Työjärjestys on mittauksen mukainen — Lahti 150 ohutta riviä,
+Lappeenranta 118, Nokia 79, Kuopio 77 — mutta kytkentä vaatii
+kuntakohtaisen sivurakenteen lukemisen, eikä sitä tehdä arvaamalla.
+
+`scripts/taydenna-kaavatavoitteet.ts`
+
 ### D-317 - Tavoitteet ovat liitteessä, ei kaavasivulla
 
 Johannes 19.10.2026 jonorivistä `6094c737` (Helenankatu 12, Salo):

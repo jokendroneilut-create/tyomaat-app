@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Kaavan tavoitteet kaikille kunnille (D-318)
+
+Kaavajäsentimiä on 241, joten vanhojen rivien korjaus tehdään ilman
+kuntakohtaista koodia: rivin sivuosoitteesta liitteeseen ja liitteestä
+tavoitteisiin. Mitattu ensin: 6 490 kaavarivistä 2 509:llä kuvaus on
+alle 300 merkkiä, eikä kymmenen suurinta lähdettä kata kuin 32 %.
+Kuivaharjoitus paljasti listasivuansan — yksi selostus olisi mennyt 77
+eri Nokian hankkeelle — joten ajo ohittaa osoitteet, joihin osuu useampi
+eri hanke. Kerääjien kytkentä kunnittain jää avoimeksi; vain viisi
+kerääjää hakee liitteen.
+
+
 ### Kaavan tavoitteet liitteestä (D-317)
 
 Salon kaavasivut kertoivat missä alue on ja kuka kaavaa haki, muttei
