@@ -11,6 +11,17 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Liitteen luku kerääjiin jaetulla apufunktiolla (D-319)
+
+Kaavan tavoiteluku luetaan nyt liitteestä myös tuontihetkellä, ei vain
+täydennysajossa. `lib/agent/kaavanLiite.ts` tekee kytkennästä kahden
+rivin työn ja osaa rajata linkit yhteen lohkoon, jottei listasivulta
+valita väärän kaavan selostusta. Kytketty Salo, Nokia, Lahti ja
+Lappeenranta; kukin mitattu erikseen. Vanhojen rivien täydennys
+valmistui: 260 riviä, eniten Lahti ja Lappeenranta (88 kumpikin).
+Liitettä ei tallenneta — rivi pitää entisen lähdeviitteensä.
+
+
 ### Kaavan tavoitteet kaikille kunnille (D-318)
 
 Kaavajäsentimiä on 241, joten vanhojen rivien korjaus tehdään ilman

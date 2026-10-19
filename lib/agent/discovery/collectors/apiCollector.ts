@@ -5,6 +5,7 @@ import {
   valitseKaavaselostus,
   yhdistaKuvaukset,
 } from "@/lib/agent/kaavanKuvaus"
+import { liitelinkit, taydennaKuvausLiitteesta, type LiiteBudjetti } from "@/lib/agent/kaavanLiite"
 import { kaavanYhteyshenkilot } from "@/lib/agent/kaavanYhteyshenkilo"
 import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import crypto from "crypto"
@@ -4070,7 +4071,7 @@ async function collectSaloSource(source: DiscoverySource) {
   }
 
   let contactFetches = 0
-  let pdfHaut = 0
+  const saloLiiteBudjetti: LiiteBudjetti = { haettu: 0, raja: SALO_MAX_PDF_FETCHES_PER_RUN }
   let saved = 0
 
   for (const item of items) {
@@ -4130,18 +4131,7 @@ async function collectSaloSource(source: DiscoverySource) {
      * Selostus ensin, OAS vasta jos selostusta ei ole; lauseet
      * yhdistetaan toistamatta sivun omia virkkeitä.
      */
-    if (pdfHaut < SALO_MAX_PDF_FETCHES_PER_RUN) {
-      const linkit = $("a[href]")
-        .toArray()
-        .map((a) => ({ href: $(a).attr("href") ?? null, teksti: $(a).text() }))
-      const asiakirja = valitseKaavanAsiakirja(linkit)
-      if (asiakirja) {
-        pdfHaut += 1
-        const teksti = await haeKaavaselostuksenTeksti(asiakirja)
-        const asiakirjanKuvaus = teksti ? kaavanKuvausTekstista(teksti) : null
-        if (asiakirjanKuvaus) description = yhdistaKuvaukset(description, asiakirjanKuvaus)
-      }
-    }
+    description = await taydennaKuvausLiitteesta(description, liitelinkit($, url), saloLiiteBudjetti)
 
     const kaavaTunnus = item.id ? String(item.id) : null
 
@@ -6143,6 +6133,9 @@ async function collectNokiaKaavaSource(source: DiscoverySource) {
   const $ = cheerio.load(page.content.rendered)
   const items = $(".block-child-accordion-item")
 
+  /* Liitehaun katto per ajo, ks. kaavanLiite.ts. */
+  const liiteBudjetti = { haettu: 0, raja: 12 }
+
   let found = 0
   let saved = 0
 
@@ -6164,12 +6157,24 @@ async function collectNokiaKaavaSource(source: DiscoverySource) {
     const content = $item.find(".child-content")
     const leadHtml = content.find("p.is-style-lead").first().html() ?? ""
     const diaarinumero = leadHtml.match(/Diaarinumero:\s*([^)<]+)/)?.[1]?.trim() ?? null
-    const description =
+    let description =
       leadHtml
         .replace(/\(Diaarinumero:[^)]*\)/i, "")
         .replace(/<[^>]+>/g, " ")
         .replace(/\s+/g, " ")
         .trim() || null
+
+    /*
+     * Ingressi kertoo osoitteen ja diaarinumeron, ei sita mita alueelle
+     * rakennetaan — se lukee selostuksen tavoiteluvussa (D-317).
+     * Linkit rajataan TAMAN kaavan lohkoon: koko listasivulla on 302
+     * pdf-linkkia, ja ensimmainen niista olisi vaaran kaavan selostus.
+     */
+    description = await taydennaKuvausLiitteesta(
+      description,
+      liitelinkit($, page.link, content),
+      liiteBudjetti
+    )
 
     const aikatauluHeading = content
       .find("h2")
@@ -26333,7 +26338,7 @@ type LahtiDetails = {
   center: { x: number; y: number } | null
 }
 
-async function fetchLahtiDetails(url: string): Promise<LahtiDetails> {
+async function fetchLahtiDetails(url: string, liiteBudjetti: LiiteBudjetti): Promise<LahtiDetails> {
   const empty: LahtiDetails = {
     completed: false,
     kaavaTunnus: null,
@@ -26376,7 +26381,16 @@ async function fetchLahtiDetails(url: string): Promise<LahtiDetails> {
       stages.find((s) => s.status === "Meneillään")?.title ??
       (completed ? "Voimaantulo" : null)
 
-    const description = $(".acf-block-text-content .content p").first().text().trim() || null
+    /*
+     * Sivun ensimmainen kappale kertoo missa alue on; tavoiteluku on
+     * selostuksessa (D-317). Kaavan oma sivu, joten koko sivun linkit
+     * kelpaavat — listasivun vaaraa ei ole.
+     */
+    const description = await taydennaKuvausLiitteesta(
+      $(".acf-block-text-content .content p").first().text().trim() || null,
+      liitelinkit($, url),
+      liiteBudjetti
+    )
 
     const contacts: LahtiContact[] = []
     $("li.contact-card").each((_, li) => {
@@ -26430,6 +26444,9 @@ async function collectLahtiSource(source: DiscoverySource) {
 
   const listingHtml = await listingResponse.text()
   const $listing = cheerio.load(listingHtml)
+
+  /* Liitehaun katto per ajo, ks. kaavanLiite.ts. */
+  const liiteBudjetti: LiiteBudjetti = { haettu: 0, raja: 12 }
 
   const items: { url: string; title: string }[] = []
   const seen = new Set<string>()
@@ -26486,7 +26503,7 @@ async function collectLahtiSource(source: DiscoverySource) {
     let detailsAttempted = Boolean(known)
 
     if (!detailsAttempted && detailFetches < LAHTI_MAX_DETAIL_FETCHES_PER_RUN) {
-      details = await fetchLahtiDetails(item.url)
+      details = await fetchLahtiDetails(item.url, liiteBudjetti)
       detailFetches += 1
       detailsAttempted = details.description !== null || details.completed
     }
@@ -28285,7 +28302,7 @@ type LappeenrantaDetails = {
   center: { x: number; y: number } | null
 }
 
-async function fetchLappeenrantaDetails(url: string): Promise<LappeenrantaDetails> {
+async function fetchLappeenrantaDetails(url: string, liiteBudjetti: LiiteBudjetti): Promise<LappeenrantaDetails> {
   const empty: LappeenrantaDetails = {
     description: null,
     phase: null,
@@ -28322,6 +28339,19 @@ async function fetchLappeenrantaDetails(url: string): Promise<LappeenrantaDetail
 
       description = collectDescription(paragraphs)
     })
+
+    /*
+     * Sivun Tavoite-osio on usein yksi lause; selostuksen tavoiteluku
+     * kertoo enemman (D-317). Kaavan oma sivu, joten koko sivun linkit
+     * kelpaavat.
+     *
+     * MITATTU 19.10.2026: Lappeenrannan kaavasivuilla ei tallä hetkella
+     * ole yhtaan pdf-linkkia (1 741 linkkia, 0 pdf) -- liitteet ovat
+     * jossain muualla kuin sivun rungossa. Kutsu jaa silti paikalleen:
+     * se ei maksa mitaan ilman liitetta ja alkaa toimia jos liitteet
+     * ilmestyvat sivulle. Ala tutki tata uudelleen ilman uutta mittausta.
+     */
+    description = await taydennaKuvausLiitteesta(description, liitelinkit($, url), liiteBudjetti)
 
     const steps: { heading: string; reached: boolean }[] = []
     $(".process-body").each((_, body) => {
@@ -28365,6 +28395,9 @@ async function fetchLappeenrantaDetails(url: string): Promise<LappeenrantaDetail
 async function collectLappeenrantaSource(source: DiscoverySource) {
   const items = await fetchLappeenrantaListing()
 
+  /* Liitehaun katto per ajo, ks. kaavanLiite.ts. */
+  const liiteBudjetti: LiiteBudjetti = { haettu: 0, raja: 12 }
+
   const { data: existingRows } = await supabaseAdmin
     .from("source_documents")
     .select("document_url, raw_payload")
@@ -28396,7 +28429,7 @@ async function collectLappeenrantaSource(source: DiscoverySource) {
     let detailsAttempted = Boolean(known)
 
     if (!detailsAttempted && detailFetches < LAPPEENRANTA_MAX_DETAIL_FETCHES_PER_RUN) {
-      details = await fetchLappeenrantaDetails(item.url)
+      details = await fetchLappeenrantaDetails(item.url, liiteBudjetti)
       detailFetches += 1
       detailsAttempted = details.description !== null || details.completed
     }

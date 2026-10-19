@@ -34,6 +34,60 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-319 - Liitteen luku kerääjiin: jaettu apufunktio, ei 241 kopiota
+
+Johannes 19.10.2026: *"kyllä on varmasti järkevää nuo pdf:t lukea jos
+niitä on. tehdään sellainen muutos jos niitä ei ole nyt jossain
+luettu."* Sitä ennen hän tarkensi mitä tavoitellaan: *"liitettä ei
+tarvita. riittää että lähteeseen viitataan ja kuvauksessa on olennainen
+teksti."*
+
+Niin se tehdäänkin: **liitettä ei tallenneta mihinkään**. Rivi pitää
+entisen lähdeviitteensä, PDF:stä luetaan vain tavoiteluku kuvaukseen ja
+loput heitetään pois. PDF on avattava, koska teksti ei ole muualla.
+
+#### Apufunktio, jotta kytkentä on kaksi riviä
+
+`lib/agent/kaavanLiite.ts` tekee kytkennästä kahden rivin työn: kerääjä
+antaa kuvauksen ja sivun linkit, saa takaisin kuvauksen johon liitteen
+tavoiteluku on yhdistetty. Kolme rajausta pitävät ajon kohtuullisena:
+vain ohut kuvaus (< 300 merkkiä) avaa PDF:n, haut on budjetoitu per ajo,
+ja liite valitaan samalla säännöllä kuin muualla (selostus ensin).
+
+`liitelinkit` osaa rajata linkit **yhteen lohkoon**: listasivulla
+jokaisella kaavalla on oma osionsa, ja koko sivun linkeistä valittaisiin
+väärän kaavan selostus (Nokian sivulla on 302 pdf-linkkiä).
+
+#### Neljä kerääjää kytketty, kukin mitattu
+
+| Kerääjä | Mitattu tulos |
+|---|---|
+| Salo | siirretty jaettuun apufunktioon (oli oma koodinsa) |
+| Nokia | jäsennin tuottaa tekstin, mutta **ingressissä on jo sama tavoitelause** — `yhdistaKuvaukset` estää toiston, eli lisäys 0 |
+| Lahti | toimii: Kilpiäinen, Valkamankatu 7 297 → 565 merkkiä |
+| Lappeenranta | **sivuilla ei ole yhtään pdf-linkkiä** (1 741 linkkiä, 0 pdf) — kutsu jää paikalleen, mutta älä tutki uudelleen ilman mittausta |
+
+Nokian tulos on hyvä uutinen eikä huono: se tarkoittaa, että sivu kertoo
+jo olennaisen, ja että toistoneston sisältyvyysvertailu (D-317) toimii.
+
+#### Vanhojen rivien täydennys valmistui
+
+Yleinen ajo (D-318) kävi 440 sivua: **260 riviä täydennettiin** (15
+pilottierästä + 245 isosta erästä). Eniten lisäyksiä saivat Lahti ja
+Lappeenranta (88 kumpikin), Kerava 42, Tampere 33 ja Helsinki 30.
+
+Listasivuportti kesti: jaettuja liitteitä oli vain kaksi, ja molemmat
+olivat oikein — Raahen yhteinen tuulivoima-OAS kahdelle saman
+kokonaisuuden kaavalle ja Seinäjoen selostus saman kaavan kolmelle
+riville eri tiloissa.
+
+#### Mitä jää
+
+237 kerääjää lukee edelleen vain sivun. Jokainen vaatii oman
+sivurakenteen lukemisen, mutta kytkentä on nyt kaksi riviä, ja
+työjärjestys on mitattu (`scripts/mittaa-kaavakuvaukset.ts`).
+Vanhat rivit korjaantuvat joka tapauksessa yleisellä ajolla.
+
 ### D-318 - Kaavan tavoitteet kaikille kunnille: mittaus, listasivuansa
 
 Johannes 19.10.2026 Salon kytkennän (D-317) jälkeen: *"käy muiden
