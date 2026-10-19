@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Kaavan tavoitteet liitteestä (D-317)
+
+Salon kaavasivut kertoivat missä alue on ja kuka kaavaa haki, muttei
+mitä alueelle rakennetaan — se lukee liitteen (OAS tai kaavaselostus)
+Tavoitteet-luvussa, ja kerääjä suodatti liitelinkit pois. Jäsennin osasi
+poimia luvun jo ennestään, mutta se ei tunnistanut OAS:n numeroimattomia
+otsikoita eikä valinnut OAS:ää lainkaan; molemmat korjattu kaikille
+kunnille yhteisesti. Samalla kuvauksesta siivottiin kolme PDF-artefaktia
+(konsultin alatunniste, ©-kuvateksti, seuraavan luvun otsikot).
+39 Salon riviä täydennetty, esim. Kajalanrinne 83 → 1 213 merkkiä.
+
+
 ### Katselmoijan ohjeet pois asiakkaan kuvauksesta (D-316)
 
 Erotteluissa kirjoitetut "HUOM KATSELMOIJALLE" -muistiinpanot olivat

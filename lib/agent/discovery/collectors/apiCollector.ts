@@ -1,4 +1,10 @@
-import { haeKaavaselostuksenTeksti, kaavanKuvausTekstista, valitseKaavaselostus } from "@/lib/agent/kaavanKuvaus"
+import {
+  haeKaavaselostuksenTeksti,
+  kaavanKuvausTekstista,
+  valitseKaavanAsiakirja,
+  valitseKaavaselostus,
+  yhdistaKuvaukset,
+} from "@/lib/agent/kaavanKuvaus"
 import { kaavanYhteyshenkilot } from "@/lib/agent/kaavanYhteyshenkilo"
 import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import crypto from "crypto"
@@ -4013,6 +4019,9 @@ function saloExtractSectionText($: cheerio.CheerioAPI, heading: any): string {
  */
 const SALO_MAX_CONTACT_FETCHES_PER_RUN = 15
 
+/* Sama kattomalli kuin yhteystiedoille: liite haetaan enintaan naille. */
+const SALO_MAX_PDF_FETCHES_PER_RUN = 12
+
 async function fetchSaloContacts(url: string) {
   try {
     const response = await fetch(url, { cache: "no-store" })
@@ -4061,6 +4070,7 @@ async function collectSaloSource(source: DiscoverySource) {
   }
 
   let contactFetches = 0
+  let pdfHaut = 0
   let saved = 0
 
   for (const item of items) {
@@ -4104,6 +4114,33 @@ async function collectSaloSource(source: DiscoverySource) {
           .toArray()
           .map((p) => $(p).text())
       )
+    }
+
+    /*
+     * TAVOITTEET OVAT LIITTEESSA, EIVAT SIVULLA (D-317).
+     *
+     * Sivun teksti kertoo missa alue on ja kuka kaavaa haki, mutta
+     * aloitusvaiheessa se EI kerro mita alueelle aiotaan rakentaa. Se
+     * lukee OAS:n "Tavoitteet"-luvussa ("edellytykset
+     * toteuttamiskelpoisen asuinkerrostalon rakentamiselle
+     * Helenankadulle ja palveluasumiselle tarkoitetun kerrostalon
+     * rakentaminen Turuntien varteen"). Kerääjä suodatti liitelinkit
+     * pois eika avannut PDF:aa lainkaan.
+     *
+     * Selostus ensin, OAS vasta jos selostusta ei ole; lauseet
+     * yhdistetaan toistamatta sivun omia virkkeitä.
+     */
+    if (pdfHaut < SALO_MAX_PDF_FETCHES_PER_RUN) {
+      const linkit = $("a[href]")
+        .toArray()
+        .map((a) => ({ href: $(a).attr("href") ?? null, teksti: $(a).text() }))
+      const asiakirja = valitseKaavanAsiakirja(linkit)
+      if (asiakirja) {
+        pdfHaut += 1
+        const teksti = await haeKaavaselostuksenTeksti(asiakirja)
+        const asiakirjanKuvaus = teksti ? kaavanKuvausTekstista(teksti) : null
+        if (asiakirjanKuvaus) description = yhdistaKuvaukset(description, asiakirjanKuvaus)
+      }
     }
 
     const kaavaTunnus = item.id ? String(item.id) : null

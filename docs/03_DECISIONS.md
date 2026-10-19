@@ -34,6 +34,89 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-317 - Tavoitteet ovat liitteessä, ei kaavasivulla
+
+Johannes 19.10.2026 jonorivistä `6094c737` (Helenankatu 12, Salo):
+*"tästä pdf:stä olisi pitänyt poimia [Tavoitteet-luku] … korjataan
+tähän hankkeeseen, aiempiin, jonoon ja tuleviin hankkeisiin."*
+
+Rivin kuvaus kertoi missä alue on, kuka kaavaa haki ja mitä
+kaupunginhallitus päätti — muttei sanaakaan siitä **mitä alueelle
+aiotaan rakentaa**. Se lukee OAS:n Tavoitteet-luvussa: *"edellytykset
+toteuttamiskelpoisen asuinkerrostalon rakentamiselle Helenankadulle ja
+palveluasumiselle tarkoitetun kerrostalon rakentaminen Turuntien
+varteen."*
+
+#### Kerääjä suodatti liitteet pois
+
+Salon kerääjä luki vain kaavasivun ACF-lohkon ja **jätti liitelinkit
+tarkoituksella pois** ("sisältävät vain latauslinkin, ei
+kuvaustekstiä") — PDF:ää ei avattu lainkaan. Jäsennin (`kaavanKuvaus.ts`,
+D-217) osasi poimia tavoiteluvun jo ennestään, ja Savonlinnan ja Euran
+kerääjät kutsuvat sitä; Salon kerääjä ei. Sama kuvio kuin D-311:
+korjaus oli olemassa, se ei vain ollut kytketty tähän lähteeseen
+([[kaava-parser-vs-page]]).
+
+#### Kaksi jäsentimen puutetta, jotka siirtyvät kaikkiin kuntiin
+
+1. **OAS:n otsikot eivät ole numeroituja.** `OTSIKKORIVI` vaatii
+   numeron ("1.2 Kaavan tarkoitus"), mutta aloitusvaiheen asiakirjassa
+   otsikot ovat paljaita sanoja omalla rivillään (Suunnittelualue,
+   Aloite, Tavoitteet). Paljaat otsikot ovat nyt **varasija**: numeroitu
+   jäsennys ajetaan ensin, ja vain jos se ei tuota mitään, kokeillaan
+   paljaita. Selostusten käsittely ei siis muutu, ja Euran rikkinäisten
+   fonttien roska palautuu edelleen nullina, koska mikään paljas rivi ei
+   vastaa sanaa "Tavoitteet".
+
+2. **Aloitusvaiheessa selostusta ei ole.** `valitseKaavaselostus` sulkee
+   OAS:n pois tarkoituksella, koska selostus on parempi lähde — mutta
+   vireilletulovaiheessa OAS on ainoa asiakirja, ja juuri se vaihe on
+   myyjälle arvokkain. `valitseKaavanAsiakirja` ottaa selostuksen jos se
+   on, OAS:n vasta muuten.
+
+#### Kolme vikaa, jotka näkyivät vasta kuivaharjoituksen riveillä
+
+Kaikki 41 lisäystä luettiin yksitellen, ja kolme PDF-artefaktia olisi
+mennyt asiakkaalle asti:
+
+- **"Nosto Consulting Oy 5 (19)"** keskellä virkettä — kaavakonsultin
+  alatunniste, joka ei toistu samanlaisena (sivunumero vaihtuu), joten
+  toistuvien rivien poisto ei siihen pure. Poistetaan muodosta "N (M)".
+- **"Sijaintikartta © Salon kaupunki"** kuvauksen keskellä — ©-merkki
+  on luotettava tunnus kuvatekstille.
+- **"3 Lähtökohdat 3.1 Selvitys suunnittelualueen oloista …"** — osassa
+  PDF:iä rivinvaihdot katoavat ja seuraavan luvun otsikko jatkuu samalla
+  rivillä, jolloin koko loppuselostus valuu kuvaukseen. Katkaisu
+  tehdään ensimmäiseen rakenteelliseen otsikkoon (pieni numero + luvun
+  vakionimi); sanalista on suljettu, jottei "korttelin 9 Armfeltin"
+  katkaise oikeaa lausetta.
+
+#### Sivu ja asiakirja yhteen ilman toistoa
+
+Sivun teksti ja OAS kertovat osin samat asiat. Pelkkä peräänliittäminen
+toistaisi puolet, pelkkä korvaaminen hukkaisi sivun omat lauseet
+(kaupunginhallituksen päätös, sopimusalueen pinta-ala). `yhdistaKuvaukset`
+ottaa asiakirjasta vain ne lauseet, joita sivulla ei ole.
+
+**Vertailu on sisältyvyys, ei täsmävertailu.** Hiekkarannan rivillä
+sivun ja asiakirjan lause olivat sulautuneet yhdeksi virkkeeksi ilman
+välipistettä, joten täsmävertailu ei tunnistanut sitä ja sama lause
+olisi lisätty joka ajolla uudelleen. Tämä näkyi vain siitä, että toinen
+ajo halusi kirjoittaa yhden rivin.
+
+#### Tulos
+
+49 Salon kaavariviä (jono + hankkeet), liite löytyi 25 sivulta,
+**39 riviä täydennettiin**. Esimerkiksi Kajalanrinne 83 → 1 213 merkkiä
+ja Hiekkaranta 104 → 860. Kahdeksan sivun PDF ei tuottanut tekstiä
+(fonttiongelma) — niille ei kirjoitettu mitään, koska tyhjä on parempi
+kuin roska.
+
+Muut kaavakerääjät eivät vieläkään avaa liitteitä: jäsennin on yhteinen,
+mutta kytkentä tehdään kunnittain.
+
+`scripts/taydenna-salon-kaavatavoitteet.ts`; kolmas ajo kirjoittaa 0.
+
 ### D-316 - Katselmoijan ohje ei kuulu asiakkaan kuvaukseen
 
 Johannes 19.10.2026 jonorivistä `5fb9058b`: *"käyttäjälle ei voida

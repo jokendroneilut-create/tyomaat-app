@@ -3,8 +3,11 @@ import { describe, expect, it } from "vitest"
 import {
   kaavanKuvausLauseesta,
   kaavanKuvausTekstista,
+  onPaljasOtsikko,
   normalisoiLiiteUrl,
   valitseKaavaselostus,
+  valitseKaavanAsiakirja,
+  yhdistaKuvaukset,
 } from "./kaavanKuvaus"
 
 /*
@@ -181,5 +184,110 @@ describe("kaavanKuvausLauseesta", () => {
       "arviointisuunnitelma Liite 2 Viranomaisneuvottelun muistio Liite 3 Havainnekuva " +
       "asemakaavasta Liite 4 Asemakaavan seurantalomake Liite 5 Kaavakartta"
     expect(kaavanKuvausLauseesta(liitteet)).toBeNull()
+  })
+})
+
+/*
+ * OAS:N PALJAAT OTSIKOT (D-317). Otos Salon Helenankatu 12:n
+ * osallistumis- ja arviointisuunnitelmasta (päivitetty 8.10.2026)
+ * sellaisena kuin pdf-parse sen antaa: otsikot ovat paljaita sanoja,
+ * mukana kuvateksti ja sivun alatunniste.
+ */
+const OAS = [
+  "Osallistumis- ja arviointisuunnitelma (oas)",
+  "Asemakaavan muutos Helenankatu 12",
+  "Suunnittelualue",
+  "Asemakaavan muutosalue koskee Armfeltin kaupunginosan korttelin 9 tontteja 16,15 ja 14.",
+  "Alue rajautuu koillisesta Helenankatuun ja lounaasta Turuntiehen.",
+  "Aloite",
+  "Asemakaavamuutostyö on lähtenyt maanomistajan toiveesta.",
+  "Tavoitteet",
+  "Kaupungin tavoitteena on tutkia asemakaavamuutoksella edellytykset toteuttamiskelpoisen",
+  "asuinkerrostalon rakentamiselle Helenankadulle ja palveluasumiselle tarkoitetun kerrostalon",
+  "rakentaminen Turuntien varteen.",
+  "Kuva 2 Kaava-alueen sijaintikartta. @Salon kaupunki",
+  "Salon kaupunki  4",
+  "Lähtötiedot",
+  "Suunnittelualue sijoittuu Salon ydinkeskustaan. Alueella on nelikerroksinen rakennus.",
+].join("\n")
+
+describe("kaavanKuvausTekstista: OAS", () => {
+  it("poimii tavoiteluvun vaikka otsikot eivät ole numeroituja", () => {
+    const kuvaus = kaavanKuvausTekstista(OAS) ?? ""
+    expect(kuvaus).toContain("edellytykset toteuttamiskelpoisen asuinkerrostalon rakentamiselle")
+    expect(kuvaus).toContain("palveluasumiselle tarkoitetun kerrostalon")
+  })
+
+  it("jättää kuvatekstin ja sivun alatunnisteen pois", () => {
+    const kuvaus = kaavanKuvausTekstista(OAS) ?? ""
+    expect(kuvaus).not.toContain("Kuva 2")
+    expect(kuvaus).not.toContain("Salon kaupunki 4")
+  })
+
+  it("ei pidä sivunumerorivia eikä virkettä otsikkona", () => {
+    expect(onPaljasOtsikko("Tavoitteet")).toBe(true)
+    expect(onPaljasOtsikko("Suunnittelualue")).toBe(true)
+    expect(onPaljasOtsikko("Salon kaupunki  4")).toBe(false)
+    expect(onPaljasOtsikko("Kuva 2 Kaava-alueen sijaintikartta.")).toBe(false)
+    expect(onPaljasOtsikko("Alue rajautuu koillisesta Helenankatuun ja lounaasta Turuntiehen.")).toBe(false)
+  })
+
+  it("roskaksi purkautuva pdf ei tuota kuvausta paljailla otsikoillakaan", () => {
+    const roska = ["AABCCDE", "FFGHIJ KLMNOP", "QRSTU VWXYZ ABCDEFGH IJKLMNOPQRS"].join("\n")
+    expect(kaavanKuvausTekstista(roska)).toBeNull()
+  })
+})
+
+describe("valitseKaavanAsiakirja", () => {
+  it("valitsee selostuksen kun se on olemassa", () => {
+    const linkit = [
+      { href: "https://salo.fi/OAS-Helenankatu-12.pdf", teksti: "OAS" },
+      { href: "https://salo.fi/Kaavaselostus.pdf", teksti: "Selostus" },
+    ]
+    expect(valitseKaavanAsiakirja(linkit)).toBe("https://salo.fi/Kaavaselostus.pdf")
+  })
+
+  it("ottaa OAS:n vasta kun selostusta ei ole", () => {
+    const linkit = [
+      { href: "https://salo.fi/kaavakartta.pdf", teksti: "Kaavakartta" },
+      { href: "https://salo.fi/OAS-Helenankatu-12.pdf", teksti: "Osallistumis- ja arviointisuunnitelma" },
+    ]
+    expect(valitseKaavanAsiakirja(linkit)).toBe("https://salo.fi/OAS-Helenankatu-12.pdf")
+  })
+
+  it("ei valitse liitekarttaa eikä selvitystä", () => {
+    expect(valitseKaavanAsiakirja([{ href: "https://salo.fi/meluselvitys.pdf", teksti: "Meluselvitys" }])).toBeNull()
+    expect(valitseKaavanAsiakirja([{ href: "https://salo.fi/havainnekuva.pdf", teksti: "Havainnekuva" }])).toBeNull()
+  })
+})
+
+describe("yhdistaKuvaukset", () => {
+  it("lisää vain ne lauseet joita sivulla ei ole", () => {
+    const sivu = "Alue rajautuu koillisesta Helenankatuun. Muutoshakemus on saapunut 3.3.2017."
+    const asiakirja = "Alue rajautuu koillisesta Helenankatuun. Kaupungin tavoitteena on tutkia edellytykset."
+    expect(yhdistaKuvaukset(sivu, asiakirja)).toBe(
+      "Alue rajautuu koillisesta Helenankatuun. Muutoshakemus on saapunut 3.3.2017. Kaupungin tavoitteena on tutkia edellytykset."
+    )
+  })
+
+  it("ei välitä kirjainkoosta eikä välimerkeistä vertailussa", () => {
+    const sivu = "Kaava-alue on kooltaan noin 4 189 neliömetriä."
+    const asiakirja = "Kaava-alue on kooltaan noin 4 189 neliömetriä!"
+    expect(yhdistaKuvaukset(sivu, asiakirja)).toBe(sivu)
+  })
+
+  it("palauttaa toisen kun toinen puuttuu", () => {
+    expect(yhdistaKuvaukset(null, "Tavoitteena on rakentaa.")).toBe("Tavoitteena on rakentaa.")
+    expect(yhdistaKuvaukset("Sivun teksti.", null)).toBe("Sivun teksti.")
+    expect(yhdistaKuvaukset(null, null)).toBeNull()
+  })
+})
+
+describe("yhdistaKuvaukset: sulautunut virke", () => {
+  it("ei lisää lausetta joka on sulautunut sivun virkkeen sisään", () => {
+    const sivu =
+      "Elinvoimajaosto käsitteli kaavaluonnosta 16.4.2024 § 46 Hankkeen tarkoituksena on laatia rantaasemakaava."
+    const asiakirja = "Hankkeen tarkoituksena on laatia rantaasemakaava. Kaavassa määritetään rakennuspaikat."
+    expect(yhdistaKuvaukset(sivu, asiakirja)).toBe(`${sivu} Kaavassa määritetään rakennuspaikat.`)
   })
 })

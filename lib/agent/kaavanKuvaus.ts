@@ -96,22 +96,132 @@ function poistaToistuvatRivit(teksti: string): string {
     .join("\n")
 }
 
-export function kaavanKuvausTekstista(raaka: string | null | undefined): string | null {
-  const teksti = poistaToistuvatRivit(siisti(yhdistaTavutus(String(raaka ?? ""))))
-  if (!teksti) return null
+/*
+ * OAS:N OTSIKOT EIVAT OLE NUMEROITUJA (D-317).
+ *
+ * Aloitusvaiheen kaavalla ei ole viela selostusta, vaan ainoa asiakirja
+ * on osallistumis- ja arviointisuunnitelma. Sen rakenne on sama kaikissa
+ * kunnissa, mutta otsikot ovat PALJAITA SANOJA omalla rivillaan:
+ *
+ *   Suunnittelualue / Aloite / Tavoitteet / Lahtotiedot / Kaavatilanne
+ *
+ * `OTSIKKORIVI` vaatii numeron, joten Salon Helenankatu 12:n OAS:sta ei
+ * loytynyt yhtaan lukua ja koko tavoiteluku jai pois -- juuri se kohta
+ * joka kertoo MITA alueelle rakennetaan ("edellytykset
+ * toteuttamiskelpoisen asuinkerrostalon rakentamiselle Helenankadulle
+ * ja palveluasumiselle tarkoitetun kerrostalon rakentaminen Turuntien
+ * varteen").
+ *
+ * Tama on VARASIJA, ei uusi oletus: numeroitu jasennys ajetaan ensin,
+ * ja paljaat otsikot kokeillaan vasta jos se ei tuottanut mitaan. Nain
+ * selostusten kasittely ei muutu lainkaan, ja Euran rikkinaisten
+ * fonttien roska ("AABCCDE") palautuu edelleen nullina, koska mikaan
+ * paljas rivi ei vastaa sanaa "Tavoitteet".
+ */
+const PALJAS_OTSIKKO = /^[A-ZÄÖÅ][A-Za-zÄÖÅäöå\- ]{2,44}$/
 
-  const rivit = teksti.split("\n")
+/* Sivun alatunniste ("Salon kaupunki  4") ja kuvateksti eivat ole otsikoita. */
+const EI_OTSIKKO = /^(kuva|taulukko|liite)\b|\d\s*$/i
+
+export function onPaljasOtsikko(rivi: string): boolean {
+  const t = rivi.trim()
+  if (!PALJAS_OTSIKKO.test(t)) return false
+  if (EI_OTSIKKO.test(t)) return false
+  /* Otsikko on nimi, ei virke: enintaan neljä sanaa. */
+  return t.split(/\s+/).length <= 4
+}
+
+/*
+ * Kuvateksti ja sivun alatunniste ovat luvun sisalla omina riveinaan.
+ * Numeroidussa selostuksessa ne ovat aina olleet mukana, joten niita ei
+ * suodateta sielta (muutos vaatisi oman mittauksen); OAS-varasijalla ne
+ * poistetaan, koska muuten kuvaus paattyy sanoihin "Kuva 2
+ * Kaava-alueen sijaintikartta. @Salon kaupunki Salon kaupunki 4".
+ */
+const KUVATEKSTI = /^(kuva|kuvio|taulukko)\s*\d/i
+const ALATUNNISTE = /^[A-Za-zÄÖÅäöå\- ]{3,40}\s+\d{1,3}$/
+
+/*
+ * "Nosto Consulting Oy 5 (19)" on kaavakonsultin alatunniste, jossa on
+ * sivunumero ja sivumaara. Se ei toistu samanlaisena (numero vaihtuu),
+ * joten `poistaToistuvatRivit` ei poista sita, ja se katkaisi Salon
+ * Kajalanrinteen kuvauksessa virkkeen keskelta: "Voimassa olevan
+ * ranta-asemakaavan Nosto Consulting Oy 5 (19) mukainen LV-alue...".
+ *
+ * Tama muoto poistetaan MOLEMMISSA jasennyksissa, koska se ei voi olla
+ * leipatekstia: "N (M)" rivin lopussa on aina sivulaskuri. Vaaljempi
+ * alatunnistesaanto jaa OAS-varasijalle, koska se voisi osua oikeaan
+ * lauseeseen ("Kaava-alueen pinta-ala on 4189").
+ */
+const SIVULASKURI = /\b\d{1,3}\s*\(\s*\d{1,3}\s*\)\s*$/
+
+/* Kuvateksti ja kuvan lahdemerkinta: "Sijaintikartta © Salon kaupunki". */
+const TEKIJANOIKEUS = /[©]/
+
+/*
+ * SEURAAVAN LUVUN OTSIKKO SAMALLA RIVILLA (D-317).
+ *
+ * Osassa PDF:ia rivinvaihdot katoavat niin, etta seuraavan luvun
+ * otsikko jatkuu samalla rivilla edellisen tekstin perassa:
+ *
+ *   "...yleiskaavan tavoitteiden mukaisesti. 3 Lähtökohdat 3.1
+ *    Selvitys suunnittelualueen oloista 3.1.1 Alueen yleiskuvaus ..."
+ *
+ * Silloin rivijako ei loyda luvun loppua ja koko loppuselostus valuu
+ * kuvaukseen. Katkaisu tehdaan ensimmaiseen rakenteelliseen otsikkoon:
+ * pieni numero (ei vuosiluku) ja sita seuraava selostuksen vakioluvun
+ * nimi. Sanalista on suljettu, jotta "korttelin 9 Armfeltin" ei katkaise
+ * oikeaa lausetta.
+ */
+const LUVUN_ALKU =
+  /\s\d{1,2}(?:\.\d{1,2})*\.?\s+(Tiivistelmä|Lähtökohdat|Selvitys|Suunnittelun|Asemakaavan kuvaus|Perus-|Osallistumis|Vaikutusten|Kaavaratkaisu)/
+
+function katkaiseLukuun(sisalto: string): string {
+  const osuma = sisalto.match(LUVUN_ALKU)
+  let teksti = sisalto
+  if (osuma && osuma.index !== undefined) {
+    /*
+     * Alle 30 merkin kohdalla otsikko on luvun omassa nimessa, ei
+     * seuraavan luvun alku. Raja oli ensin 60, mutta silloin Salon
+     * Inkerinkadun kuvaus ("...mukaisesti. 3 Lähtökohdat 3.1 Selvitys
+     * suunnittelualueen oloista...") jai katkaisematta.
+     */
+    if (osuma.index >= 30) teksti = sisalto.slice(0, osuma.index).trim()
+  }
+  /* Irrallinen sivunumero lopussa: "Kaava-alue on kooltaan 1,6 ha. 2". */
+  return teksti.replace(/(?<=[.!?])\s+\d{1,3}\s*$/, "").trim()
+}
+
+function jaaLuvuiksi(rivit: string[], salliPaljaat: boolean) {
   const luvut: { otsikko: string; sisalto: string[] }[] = []
-
   for (const rivi of rivit) {
     const otsikko = rivi.match(OTSIKKORIVI)
     if (otsikko) {
       luvut.push({ otsikko: otsikko[2].trim(), sisalto: [] })
       continue
     }
+    if (salliPaljaat && onPaljasOtsikko(rivi)) {
+      luvut.push({ otsikko: rivi.trim(), sisalto: [] })
+      continue
+    }
+    if (SIVULASKURI.test(rivi.trim()) || TEKIJANOIKEUS.test(rivi)) continue
+    if (salliPaljaat && (KUVATEKSTI.test(rivi.trim()) || ALATUNNISTE.test(rivi.trim()))) continue
     if (luvut.length) luvut[luvut.length - 1].sisalto.push(rivi)
   }
+  return luvut
+}
 
+/* Katkaisu virkkeen tai sanan rajalta, ei keskelta sanaa. */
+function katkaise(teksti: string, pituus: number): string {
+  if (teksti.length <= pituus) return teksti
+  const leikattu = teksti.slice(0, pituus)
+  const piste = leikattu.lastIndexOf(". ")
+  if (piste > pituus * 0.5) return leikattu.slice(0, piste + 1).trim()
+  const vali = leikattu.lastIndexOf(" ")
+  return `${(vali > 0 ? leikattu.slice(0, vali) : leikattu).trim()}…`
+}
+
+function poimiOsat(luvut: { otsikko: string; sisalto: string[] }[]): string[] {
   const osat: string[] = []
 
   for (const { avain, kuvio } of HALUTUT) {
@@ -120,10 +230,7 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
     )
     if (!luku) continue
 
-    const sisalto = luku.sisalto
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim()
+    const sisalto = katkaiseLukuun(luku.sisalto.join(" ").replace(/\s+/g, " ").trim())
 
     /*
      * Liian lyhyt luku on otsikko ilman sisältöä (esim. viittaus
@@ -133,8 +240,20 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
     if (onLiiteluettelo(sisalto)) continue
     if (onSisallysluettelo(sisalto)) continue
 
-    osat.push(avain === "alue" ? sisalto.slice(0, 400) : sisalto)
+    osat.push(avain === "alue" ? katkaise(sisalto, 400) : sisalto)
   }
+
+  return osat
+}
+
+export function kaavanKuvausTekstista(raaka: string | null | undefined): string | null {
+  const teksti = poistaToistuvatRivit(siisti(yhdistaTavutus(String(raaka ?? ""))))
+  if (!teksti) return null
+
+  const rivit = teksti.split("\n")
+
+  let osat = poimiOsat(jaaLuvuiksi(rivit, false))
+  if (!osat.length) osat = poimiOsat(jaaLuvuiksi(rivit, true))
 
   if (!osat.length) return kaavanKuvausLauseesta(raaka)
 
@@ -203,12 +322,14 @@ export function kaavanKuvausLauseesta(raaka: string | null | undefined): string 
     const lopetus = jatko.search(LOPETUS)
     if (lopetus > 0) jatko = jatko.slice(0, lopetus)
 
-    const sisalto = jatko
-      /* Sisallysluettelon pistejono ja sivunumero pois. */
-      .replace(/\.{3,}\d{1,3}/g, " ")
-      .replace(/^[\s:.–-]+/, "")
-      .replace(/\s+/g, " ")
-      .trim()
+    const sisalto = katkaiseLukuun(
+      jatko
+        /* Sisallysluettelon pistejono ja sivunumero pois. */
+        .replace(/\.{3,}\d{1,3}/g, " ")
+        .replace(/^[\s:.–-]+/, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    )
 
     if (sisalto.length < 120) continue
     if (onLiiteluettelo(sisalto)) continue
@@ -263,6 +384,42 @@ export function normalisoiLiiteUrl(href: string | null | undefined): string | nu
   if (!osoite.hostname.includes(".")) return null
   if (!/\.pdf$/i.test(osoite.pathname)) return null
   return osoite.toString()
+}
+
+/*
+ * ALOITUSVAIHEESSA OAS ON AINOA ASIAKIRJA (D-317).
+ *
+ * `valitseKaavaselostus` sulkee OAS:n pois tarkoituksella: kun selostus
+ * on olemassa, se on parempi lahde. Vireilletulovaiheessa selostusta ei
+ * kuitenkaan OLE, ja OAS:n "Tavoitteet"-luku on ainoa paikka jossa
+ * kerrotaan mita alueelle aiotaan rakentaa. Juuri se vaihe on myyjalle
+ * arvokkain, joten OAS kelpaa varasijaksi -- ei koskaan selostuksen
+ * ohi.
+ */
+const OAS_NIMI = /\boas\b|osallistumis/i
+
+/* Kaavakartta ja selvitykset ovat liitteita, eivat OAS:ia. */
+const EI_OAS = /kaavakartta|kartta|havainne|melu|luonto|maaper|selvitys|lausunto|vastine|poytakirja|pöytäkirja/i
+
+export function valitseOas(
+  linkit: { teksti?: string | null; href?: string | null }[]
+): string | null {
+  for (const linkki of linkit) {
+    const url = normalisoiLiiteUrl(linkki.href)
+    if (!url) continue
+    const nimi = `${decodeURIComponent(url.split("/").pop() ?? "")} ${linkki.teksti ?? ""}`
+    if (!OAS_NIMI.test(nimi)) continue
+    if (EI_OAS.test(nimi)) continue
+    return url
+  }
+  return null
+}
+
+/* Selostus ensin, OAS vasta jos selostusta ei ole. */
+export function valitseKaavanAsiakirja(
+  linkit: { teksti?: string | null; href?: string | null }[]
+): string | null {
+  return valitseKaavaselostus(linkit) ?? valitseOas(linkit)
 }
 
 export function valitseKaavaselostus(
@@ -357,4 +514,54 @@ export function kuulutuksenOmaSisalto(teksti: string | null | undefined): string
 
   if (!virkkeet.length) return null
   return virkkeet.join(" ")
+}
+
+/*
+ * SIVU JA ASIAKIRJA YHTEEN ILMAN TOISTOA (D-317).
+ *
+ * Kaavasivun teksti ja OAS kertovat osin samat asiat: Salon
+ * Helenankatu 12:n sivulla on sama suunnittelualue- ja aloitekappale
+ * kuin OAS:ssa, mutta EI tavoitelukua. Pelkka peraan liittaminen
+ * toistaisi puolet kuvauksesta, ja pelkka korvaaminen hukkaisi sivun
+ * omat lauseet (kaupunginhallituksen paatos, sopimusalueen pinta-ala).
+ *
+ * Siksi lauseittain: asiakirjan lause otetaan mukaan vain jos sita ei
+ * ole jo sivun tekstissa. Vertailu tehdaan kirjainkoosta ja
+ * valimerkeista riippumatta, koska PDF ja HTML eroavat juuri niissa.
+ */
+function lauseAvain(lause: string): string {
+  return lause
+    .toLowerCase()
+    .replace(/[^a-zåäö0-9]+/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+export function yhdistaKuvaukset(
+  sivu: string | null | undefined,
+  asiakirja: string | null | undefined
+): string | null {
+  const a = String(sivu ?? "").trim()
+  const b = String(asiakirja ?? "").trim()
+  if (!b) return a || null
+  if (!a) return b
+
+  /*
+   * SISALTYVYYS, EI TASMA VERTAILU. Salon Hiekkarannassa sivun ja
+   * asiakirjan lause olivat sulautuneet yhdeksi virkkeeksi ilman
+   * valipistetta ("...16.4.2024 § 46 Hankkeen tarkoituksena on laatia
+   * ... rantaasemakaava."), joten tasmavertailu ei tunnistanut sita ja
+   * sama lause olisi lisatty joka ajolla uudelleen.
+   */
+  const kokoAvain = lauseAvain(a)
+  const uudet = b
+    .split(/(?<=[.!?])\s+/)
+    .map((l) => l.trim())
+    .filter((l) => {
+      const avain = lauseAvain(l)
+      return avain && !kokoAvain.includes(avain)
+    })
+
+  if (!uudet.length) return a
+  return `${a} ${uudet.join(" ")}`.replace(/\s+/g, " ").trim()
 }
