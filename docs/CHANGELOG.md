@@ -11,6 +11,17 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Katselmoijan ohjeet pois asiakkaan kuvauksesta (D-316)
+
+Erotteluissa kirjoitetut "HUOM KATSELMOIJALLE" -muistiinpanot olivat
+kuvauskentässä, joka siirtyy hyväksynnässä asiakkaalle näkyvään
+`additional_info`-sarakkeeseen — yksi rivi ehti jo julkaistuksi.
+Siivottu 14 riviltä: työohjeet pois, naapurihanketta koskeva oikea tieto
+kirjoitettu neutraaliksi lauseeksi, ja lähteen kirjoitusasun
+dokumentointi poistettu (se on metadatassa). Lähteen omat huomautukset
+jätettiin ennalleen.
+
+
 ### Julkaisu kaatui skriptin tyyppivirheeseen (D-315)
 
 Ilman ylätason importtia TypeScript pitää tiedostoa globaalina skriptinä,

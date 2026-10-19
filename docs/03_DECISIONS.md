@@ -34,6 +34,53 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-316 - Katselmoijan ohje ei kuulu asiakkaan kuvaukseen
+
+Johannes 19.10.2026 jonorivistä `5fb9058b`: *"käyttäjälle ei voida
+näyttää tällaista tekstiä: … HUOM KATSELMOIJALLE: … Jos sama hanke,
+lisää lupariville rakentajaksi Rakennusteho ja hylkää tämä rivi."*
+
+Kirjoitin erotteluissa (D-312, D-313, D-314) katselmoijalle tarkoitetut
+muistiinpanot **kuvaukseen**, koska se oli ainoa kenttä jonka tiesin
+näkyvän TIC:ssä. Kuvaus on kuitenkin sama teksti, joka siirtyy
+hyväksynnässä `additional_info`-sarakkeeseen ja **näkyy asiakkaalle**.
+Jääkärinkankaan rivi ehti jo hyväksytyksi, eli työohje oli julkaistussa
+hankkeessa.
+
+#### Kolme luokkaa, 14 riviä
+
+| Mitä | Miten korjattiin |
+|---|---|
+| `HUOM KATSELMOIJALLE: …` | poistettu kokonaan — puhdasta työohjetta ("hylkää tämä rivi") |
+| `HUOM: … — tämä rivi koskee X:ää` | kirjoitettu neutraaliksi faktaksi: naapurihanke on oikeaa tietoa, sen muotoilu ei |
+| `Lähteen sanamuoto: "…"` | poistettu; sama on metadatassa (`eroteltu_lahteen_sanamuoto`) |
+
+Lisäksi Muhoksen rivin jäljelle jäävä kappale siteerasi lähdelausetta,
+joka kertoo **myös Peltolan hankkeesta** — toisen hankkeen nimi keskellä
+kuvausta on hämmentävä, joten sama tieto kirjoitettiin suoraan.
+
+#### Mitä EI poistettu
+
+Hilman ilmoituksesta tuleva *"(HUOM: Samassa rakennuksessa toinen osuus
+Lumo kotien omistuksessa, se EI sisälly tähän urakkaan.)"* on tilaajan
+oma huomautus urakan laajuudesta ja kuuluu asiakkaalle. Kivenlahden
+rivien *"Huom: tiedotteen ingressissä ostaja on kirjoitettu muotoon
+'SVR'…"* on toimituksellinen muistiinpano lähteen kirjoitusasusta, ei
+tästä erottelusta; jätettiin ennalleen ja kerrottiin Johannekselle.
+
+#### Mihin katselmoijan huomio sitten kuuluu
+
+TIC-sivu näyttää nimetyn joukon metadata-kenttiä, eikä niiden joukossa
+ole vapaata muistiinpanokenttää. Keksitty kenttä olisi kuollut kenttä
+(vrt. `possible_duplicate_of`, jota ei lue mikään), joten huomiota ei
+siirretty minnekään: naapurihankkeen viite on jo
+`metadata.liittyva_hanke`-kentässä, ja päätös on kirjattu tänne.
+Jos vapaa katselmointikenttä halutaan, se vaatii oman rivin TIC-sivulle.
+
+`scripts/siivoa-katselmoijan-ohjeet.ts` käy läpi KAIKKI rivit molemmista
+tauluista, ei vain tiedettyjä id:itä; tulostaa jokaisesta sen mikä
+oikeasti poistuu. Toinen ajo löytää 0 riviä.
+
 ### D-315 - Julkaisu kaatui: skripti ilman importtia on globaali
 
 Vercelin tuotantojulkaisu commitista `332620d9` epäonnistui 19.10.2026:
