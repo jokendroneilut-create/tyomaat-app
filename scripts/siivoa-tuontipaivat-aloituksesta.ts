@@ -42,6 +42,21 @@ import { parseFinnishStartDate } from "../lib/agent/parseFinnishStartDate"
 const ALKU = "2026-02-01"
 const LOPPU = "2026-02-28"
 
+/*
+ * `--ristiriidat` laajentaa ajon KAIKKIIN kuukausiin, mutta vain
+ * riveihin joilla teksti kertoo ERI kuukauden kuin kentassa on. Loput
+ * jaavat koskematta.
+ *
+ * Syy rajaukseen (D-324, mitattu 21.10.2026): helmikuun ulkopuolella
+ * samaan paivaan osuvia on 117, mutta ne EIVAT ole massatuontia kuten
+ * helmikuussa. Ryhmat ovat 2-12 riviä, luontiajat painottuvat iltaan
+ * (21-23 UTC) ja metadata on rikasta -- jalki on kasityota. Mikaan
+ * koodi ei kirjoita kenttaa automaattisesti, joten paivat ovat joko
+ * kasin annettuja tai vanhan polun jaljilta. Niita ei tyhjenneta
+ * arvaamalla; vain kiistatta vaarat korjataan.
+ */
+const VAIN_RISTIRIIDAT = process.argv.includes("--ristiriidat")
+
 async function main() {
   const apply = process.argv.includes("--apply")
   const { createClient } = await import("@supabase/supabase-js")
@@ -56,6 +71,13 @@ async function main() {
     const { data, error } = await db
       .from("projects")
       .select("id, name, phase, created_at, construction_start, is_public, status, additional_info, metadata")
+      /*
+       * Vain rivit joilla aloituspaiva on: muut eivat voi olla
+       * kohteita. Rajaus pudottaa kyselyn 7 000 rivista noin 280:aan --
+       * ilman sita koko taulun `additional_info` (12 MB) aikakatkaisi
+       * kyselyn 21.10.2026.
+       */
+      .not("construction_start", "is", null)
       .range(a, a + 999)
     if (error) {
       console.error(`VIRHE: ${error.message}`)
@@ -82,9 +104,14 @@ async function main() {
   const kohteet = rivit.filter((p) => {
     if (!p.construction_start) return false
     const alku = String(p.construction_start).slice(0, 10)
-    if (alku < ALKU || alku > LOPPU) return false
     const ero = eroVuorokausina(p)
-    return ero === 0 || ero === 1
+    if (!(ero === 0 || ero === 1)) return false
+    if (VAIN_RISTIRIIDAT) {
+      const teksti = `${p.additional_info ?? ""} ${p.metadata?.description ?? ""}`.trim()
+      const t = parseFinnishStartDate(teksti)
+      return Boolean(t && t.paiva.slice(0, 7) !== alku.slice(0, 7))
+    }
+    return alku >= ALKU && alku <= LOPPU
   })
 
   const kaikkiHelmikuussa = rivit.filter(
@@ -93,10 +120,14 @@ async function main() {
       String(p.construction_start).slice(0, 10) >= ALKU &&
       String(p.construction_start).slice(0, 10) <= LOPPU
   )
-  console.log(
-    `\nHelmikuun 2026 aloituspäiviä ${kaikkiHelmikuussa.length}, niistä luontipäivä tai sitä seuraava ${kohteet.length}`
-  )
-  console.log(`Koskematta jäävät ${kaikkiHelmikuussa.length - kohteet.length} (aloitus ei osu luontipäivään)\n`)
+  if (VAIN_RISTIRIIDAT) {
+    console.log(`\nKaikki kuukaudet, vain rivit joilla teksti kertoo eri kuukauden: ${kohteet.length}\n`)
+  } else {
+    console.log(
+      `\nHelmikuun 2026 aloituspäiviä ${kaikkiHelmikuussa.length}, niistä luontipäivä tai sitä seuraava ${kohteet.length}`
+    )
+    console.log(`Koskematta jäävät ${kaikkiHelmikuussa.length - kohteet.length} (aloitus ei osu luontipäivään)\n`)
+  }
 
   let tekstista = 0
   let vahvistettu = 0
