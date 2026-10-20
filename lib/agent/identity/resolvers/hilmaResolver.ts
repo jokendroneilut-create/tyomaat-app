@@ -15,6 +15,7 @@ import {
 import { extractWorksite } from "@/lib/agent/identity/extractWorksiteAddress"
 import { parseRealizedLocation } from "@/lib/agent/hilmaRealizedLocation"
 import { fetchHilmaEForm, parseHilmaContacts } from "@/lib/agent/hilmaContacts"
+import { poimiSopimuskausi, kelpaaAloitukseksi } from "@/lib/agent/hilmaSopimuskausi"
 
 function findFact(
   facts: any[],
@@ -313,6 +314,9 @@ export async function resolveHilmaProject({
     if (tulos.tulos === "winner") voittajatRajapinnasta = tulos.voittajat
   }
 
+  const sopimuskausi = poimiSopimuskausi(eForm)
+  const aloitus = kelpaaAloitukseksi(sopimuskausi, operation).kelpaa ? sopimuskausi.alku : null
+
   const phaseHint =
     isContractAward && !isCancelled
       ? PHASE_LABELS.contract_awarded
@@ -506,6 +510,29 @@ export async function resolveHilmaProject({
 
       deadline,
       expiration_date: expirationDate,
+
+      /*
+       * RAKENTAMISEN ALOITUS SOPIMUSKAUDEN ALUSTA (D-325).
+       *
+       * Sama eForm-haku, neljäs käyttö: `plannedPeriod` ei ole
+       * hakurajapinnan litteässä oliossa, mutta se on tässä
+       * vastauksessa jonka resolveri hakee jo yllä. Karsinta
+       * (`works`, ei puitesopimus, ei vuokrakausi) on moduulissa.
+       *
+       * Sopimuskauden LOPPU jää `hilma_sopimuskausi`-kenttään eikä
+       * mene `estimated_completion`-kenttään: se syöttäisi
+       * `autoCompleteGate`-porttia, joka piilottaisi hankkeen.
+       */
+      construction_start: aloitus,
+      hilma_sopimuskausi: sopimuskausi.alku
+        ? {
+            alku: sopimuskausi.alku,
+            loppu: sopimuskausi.loppu,
+            luonne: sopimuskausi.luonne,
+            cpv: sopimuskausi.cpv,
+            kelpasi: Boolean(aloitus),
+          }
+        : null,
 
       cpv_code: cpvCode,
       documents_url: documentsUrl,

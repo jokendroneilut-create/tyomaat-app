@@ -11,6 +11,35 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Rakentamisen aloituspäivä: 13,4 % -> 39,6 % (D-324, D-325)
+
+Aloituspäivä luetaan nyt kahdesta lähteestä. **Tekstistä** kuukauden
+tarkkuudella ("rakennustyöt alkavat toukokuussa 2026", "urakka-aika
+04-09/2026") ja **Hilman sopimuskaudesta**, joka ei ole
+hakurajapinnan oliossa vaan ilmoituksen omassa päätepisteessä — samassa
+vastauksessa jonka resolveri hakee jo, eli ilman lisäkutsua.
+
+Karsinta tulee ilmoituksen omista kentistä: vain `works`-luonne, ei
+puitesopimusta eikä dynaamista hankintajärjestelmää. Kolme sääntöä
+syntyi vasta kuivaharjoituksen rivejä lukemalla — vuokramallissa jakso on
+**vuokrakausi**, ei rakentamisaika (2028 -> 2047), yli kahdeksan vuoden
+jakso ei ole urakka (pisin 27 vuotta), ja otsikon puitesana hylkää silloin
+kun ilmoituksen kenttä on jätetty täyttämättä.
+
+Sopimuskauden **loppu** jää omaan metadata-kenttäänsä: se sisältää takuu-
+ja luovutusajan, ja `estimated_completion`-kentässä se syöttäisi
+piilotusporttia.
+
+Kattavuus rakentamisvaiheissa 251 -> 746 hanketta (13,4 % -> 39,6 %),
+Kilpailutus 0 % -> 48,4 %. Kaava- ja suunnitteluhankkeet (72 % listasta)
+pysyvät tyhjinä, koska niillä ei ole rakentamisen aloitusta.
+
+Samalla korjattiin se, että hyväksyntä ei siirtänyt
+`metadata.construction_start`-kenttää hankkeen sarakkeeseen lainkaan —
+poimittu päivä näkyi katselmoijalle mutta katosi hyväksynnässä. Lisäksi
+helmikuun 2026 tuontierän 212 väärää päivää siivottiin; käsin lisätyt 117
+jätettiin koskematta.
+
 ### Vaihe ja valmistuminen tekstistä tarkemmin (D-323)
 
 Kerääjä lukee nyt ilmoitetun aloituskuukauden ja siirtää vaiheen

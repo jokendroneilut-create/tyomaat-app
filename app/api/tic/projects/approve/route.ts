@@ -2224,6 +2224,20 @@ export async function POST(request: Request) {
       metadata.estimated_completion ??
       null
 
+    /*
+     * RAKENTAMISEN ALOITUS EI SIIRTYNYT HYVAKSYNNASSA (D-325).
+     *
+     * `metadata.construction_start` on nakynyt katselmoijalle
+     * kuratoidussa kenttalistassa, mutta mikaan ei kirjoittanut sita
+     * `construction_start`-sarakkeeseen. Siksi `helsinkiSukkaResolver`in
+     * poimima aito aloituspaiva jai metadataan, ja sarake tayttyi vain
+     * kasin (dashboard-lomake tai TIC:n muokkaus). Sama ansa kuin
+     * `apartments`- ja `estimated_cost`-kentissa yllä.
+     */
+    const constructionStart =
+      metadata.construction_start ??
+      null
+
     const phase =
   metadata.phase_hint ??
   (isHilma
@@ -2471,6 +2485,12 @@ export async function POST(request: Request) {
           apartments: existingProject.apartments ?? kokonaisluku(metadata.apartments),
           estimated_completion:
             existingProject.estimated_completion ?? estimatedCompletion,
+          /*
+           * Vanha arvo voittaa: kasin annettu aloituspaiva on parempi
+           * kuin lahteesta johdettu ([[manual-start-dates-are-real]]).
+           */
+          construction_start:
+            existingProject.construction_start ?? constructionStart,
           latitude: existingProject.latitude ?? coords.lat,
           longitude: existingProject.longitude ?? coords.lon,
           lat: existingProject.lat ?? coords.lat,
@@ -2600,6 +2620,7 @@ export async function POST(request: Request) {
          */
         apartments: kokonaisluku(metadata.apartments),
         estimated_completion: estimatedCompletion,
+        construction_start: constructionStart,
         /*
          * Kustannusarvio kulkee metadatassa jonoriviltä. Ilman tätä riviä
          * poimittu summa katosi hyväksynnässä: `estimated_cost` on ollut

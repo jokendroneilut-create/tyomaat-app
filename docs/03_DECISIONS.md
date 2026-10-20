@@ -34,6 +34,111 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-325 - Hilman sopimuskauden alku aloituspäiväksi, loppu ei minnekään
+
+Johannes 21.10.2026: *"otetaan hilman sopimuskausi, ei vielä tässäkään
+vaiheessa tehdä mitään asiakkaalle näkyvää vaan katsotaan miten tämä
+edistyy."*
+
+**Lähtötilanne mitattiin ensin, ja nimittäjä ratkaisi.** Aloituspäivä oli
+282 hankkeella 6 711:stä (4,2 %), mutta se luku mittaa väärää asiaa:
+kaavahankkeella ei ole rakentamisen aloitusta lainkaan, ja Kaavoitus +
+Suunnittelu + Rakennuslupa on 4 800 riviä eli 72 % listasta. Oikea
+nimittäjä on rakentamisvaiheet: **251 / 1 879 = 13,4 %**. Niistä 906 on
+Hilmasta ja aloituspäivä oli 5:llä (0,6 %) — koko puute oli yhdessä
+lähteessä.
+
+**Reitti oli jo auki.** `plannedPeriod` ei ole siinä oliossa jonka
+tallennamme (`raw_payload.original` on hakurajapinnan litteä olio), vaan
+samassa päätepisteessä jota resolveri hakee jo ("YKSI HAKU, KOLME
+KAYTTOA"). Tämä on neljäs käyttö samasta vastauksesta: **ei yhtään
+lisäkutsua tuonnissa.**
+
+**Kolme ansaa, jotka ilmoitus itse paljastaa.** Ensimmäinen versio karsi
+otsikon sanoista; eForm kertoo saman eksaktisti:
+
+| kenttä | mitä karsii | mitattu |
+|---|---|---|
+| `contract-nature` | `supplies` = toimitusaika, `services` = palvelu | 16 riviä |
+| `framework-agreement` / `dps-usage` | puitesopimuksen sopimuskausi | 59 riviä |
+| — | jaksoa ei ilmoitettu | 168 riviä |
+
+Otsikkoa käytetään vain toissijaisena varmistuksena, koska se tuomitsi
+"Sähkötöiden tuntityötarjous 2026-2028" puitesopimukseksi vaikka ilmoitus
+sanoo `works` ja `framework-agreement: none`.
+
+**Kolme sääntöä syntyi vasta kuivaharjoituksen riveistä.** Mittarin
+yhteenveto ei olisi paljastanut yhtäkään:
+
+1. **Vuokramalli: jakso on vuokrakausi.** "Ylämyllyn päiväkoti
+   vuokramallilla" 2028-01-01 -> **2047-12-31**. Vuokra alkaa kun rakennus
+   luovutetaan, joten jakson alku on lähempänä valmistumista kuin
+   aloitusta — virhe olisi mennyt **väärään suuntaan**, ei vain ohi. Tämä
+   ei kumoa sitä että vuokramallihanke on aito rakennushanke (D-306):
+   hanketta ei hylätä, vain tämä päivä jätetään ottamatta.
+2. **Yli kahdeksan vuoden jakso ei ole rakentamisaika.** Pisin osuma
+   2026-09-01 -> 2053-12-31 (27 vuotta). Malmin uuden sairaalan yhdeksän
+   vuotta menetetään, mutta se on halvempi kuin kahdenkymmenen vuoden
+   vuokrakauden alku aloituspäivänä.
+3. **Puitesana otsikossa.** Vahva sana (puitesopimus, puitejärjestely,
+   vuosiurakka, vuosikorjaus) hylkää yksin, koska
+   "KAUKOLÄMPÖVERKON RAKENTAMISEN VUOSIURAKKA 2026" ei ilmoittanut loppua
+   lainkaan eikä kestosääntö olisi osunut siihen. Heikko sana (tuntityö,
+   työkonepalvelu) vaatii yli kahden vuoden jakson.
+
+**Tulos:** 497 uutta aloituspäivää 754 rivistä (66 %), 320 mennyttä ja
+177 tulevaa. Rakentamisvaiheiden kattavuus **13,4 % -> 39,6 %**,
+Kilpailutus 0 % -> 48,4 % ja Sopimus myönnetty 0,6 % -> 47,6 %.
+
+**Loppu ei mene `estimated_completion`-kenttään.** Se syöttäisi
+`lib/projects/autoCompleteGate.ts`-porttia, joka 90 vrk:n jälkeen siirtää
+hankkeen Valmistuneeksi ja piilottaa sen asiakkaalta — ja sopimuskauden
+loppu sisältää takuu- ja luovutusajan. Loppu jää
+`metadata.hilma_sopimuskausi.loppu`-kenttään. Alulla ei ole porttia.
+
+**Sivulöydös: hyväksyntä ei siirtänyt aloituspäivää sarakkeeseen.**
+`metadata.construction_start` näkyi katselmoijalle kuratoidussa
+kenttälistassa, mutta mikään ei kirjoittanut sitä
+`construction_start`-sarakkeeseen. Siksi `helsinkiSukkaResolver`in
+poimima aito päivä jäi metadataan ja sarake täyttyi vain käsin. Lisättiin
+molempiin kirjoituskohtiin; vanha arvo voittaa, koska käsin annettu päivä
+on parempi kuin lähteestä johdettu (D-324).
+
+Ks. `lib/agent/hilmaSopimuskausi.ts`,
+`scripts/taydenna-hilman-aloituspaivat.ts`,
+`scripts/mittaa-hilman-sopimuskausi.ts`.
+
+### D-324 - Aloituspäivä tekstistä kuukauden tarkkuudella, ja tuontipäivien siivous
+
+Johannes 20.10.2026: *"yritetään hakea tuota aloituspäivää kuukauden
+tarkkuudella. katsotaan mitä saadaan ja mietitään sitten teemmekö siitä
+käyttäjälle näkyvää."*
+
+`parseFinnishStartDate` lukee aloituksen tekstistä kuukauden
+tarkkuudella: palautetaan kuukauden ensimmäinen päivä, koska aloitus
+tapahtuu kuukauden aikana ja ensimmäinen päivä on ainoa jota ei tarvitse
+arvata. Kolme sääntöä jotka eivät saa sekoittua: aloitus ei ole
+valmistuminen, hankkeen aloitus ei ole kaavan tai suunnittelun aloitus,
+ja mennyt aikamuoto kelpaa — mutta vuosiluku ilman kuukautta hylätään,
+koska menneen muodon kohde voi olla vanha rakennus. 106 uutta päivää.
+
+Kaksi virhettä, jotka vain otos paljasti: *"Uutiset 5.2.2026"* jäsentyi
+aloituspäiväksi (lisättiin `JULKAISUSANA`-portti), ja ensimmäinen versio
+tyhjensi kentän myös silloin kun teksti **vahvisti** sen (4 riviä
+säästyi).
+
+**Tuontipäivien siivous.** `construction_start` oli 234 rivillä sama kuin
+rivin luontipäivä. Helmikuun 2026 erä oli aito tuontiartefakti — 77 / 41
+/ 41 hanketta samana päivänä, ja teksti kiisti ne suoraan — ja se
+siivottiin (212 riviä). Loput 117 **eivät** ole virhe: Johannes
+21.10.2026 *"ovat varmasti omia merkintöjäni siltä ajalta kun lisäsin
+vain noita käsin."* Ne erottaa kolmesta merkistä: ryhmäkoko 2–12 eikä
+77, luontiaika ilta 21–23 UTC, ja rikas metadata (101/117
+yhteyshenkilö). Käsin annettua päivää muutetaan vain tekstin perusteella.
+
+Ks. `lib/agent/parseFinnishStartDate.ts`,
+`scripts/siivoa-tuontipaivat-aloituksesta.ts`.
+
 ### D-323 - "Alkavat toukokuussa 2026" on mennyttä, kun rivi luetaan lokakuussa
 
 Johannes 20.10.2026 Karesuvannon rivistä: *"kuvauksessa sanotaan että
