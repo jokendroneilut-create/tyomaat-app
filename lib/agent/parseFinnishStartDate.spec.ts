@@ -57,3 +57,14 @@ describe("vuodeton kuukausi ennen osumaa (D-324)", () => {
     expect(parseFinnishStartDate("Rakentaminen alkaa elo–syyskuussa 2026.")?.paiva).toBe("2026-08-01")
   })
 })
+
+describe("julkaisuleima ei ole aloituspäivä (D-324)", () => {
+  it("ei lue uutissivun päivämääräleimaa aloitukseksi", () => {
+    expect(parseFinnishStartDate("Myllypellon koulun rakentaminen alkaa Uutiset 5.2.2026")).toBeNull()
+    expect(parseFinnishStartDate("Rakennustyöt alkavat Julkaistu 12.3.2026")).toBeNull()
+  })
+
+  it("lukee silti oikean tarkan päivän", () => {
+    expect(parseFinnishStartDate("Rakentaminen alkoi Akaan Toijalassa 11.2.2025")?.paiva).toBe("2025-02-11")
+  })
+})

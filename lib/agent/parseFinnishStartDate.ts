@@ -81,8 +81,18 @@ export function parseFinnishStartDate(teksti: string | null | undefined): Aloitu
   const t = String(teksti ?? "").replace(/\s+/g, " ")
   if (!t) return null
 
+  /*
+   * JULKAISULEIMA EI OLE ALOITUSPAIVA (D-324). Uutissivun teksti
+   * alkaa usein leimalla, joka osuu numeropaivahakuun: "rakentaminen
+   * alkaa Uutiset 5.2.2026". Mitattu 21.10.2026: yksi viidesta
+   * "vahvistetusta" aloituspaivasta oli tata.
+   */
+  const JULKAISUSANA = /\b(uutiset|uutinen|julkaistu|tiedote|artikkeli|blogi)\b/i
+
   const tarkka = t.match(TARKKA_PAIVA)
-  if (tarkka) {
+  if (tarkka && JULKAISUSANA.test(tarkka[0])) {
+    /* Leima syo numeropaivan, mutta kuukausinimi voi yha kelvata. */
+  } else if (tarkka) {
     const [, d, m, y] = tarkka
     const kuukausi = Number(m)
     const paiva = Number(d)
