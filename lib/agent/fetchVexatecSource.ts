@@ -3,7 +3,7 @@ import * as cheerio from "cheerio"
 import { detectCityFromText } from "@/lib/agent/detectCityFromText"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { inferBuildingType } from "@/lib/agent/buildingType"
-import { parseEstimatedCompletionDate } from "@/lib/agent/parseFinnishCompletionDate"
+import { MONTHS, parseEstimatedCompletionDate } from "@/lib/agent/parseFinnishCompletionDate"
 import { extractContacts } from "@/lib/projects/contacts"
 import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
 
@@ -107,11 +107,37 @@ export function hankkeenNimi(otsikko: string): string {
   return otsikko.replace(/^tiedote:\s*/i, "").trim()
 }
 
-export function vexatecinVaihe(otsikko: string, teksti: string): string {
+/*
+ * ILMOITETTU ALOITUSKUUKAUSI, JOKA ON JO MENNYT (D-323).
+ *
+ * Johannes 20.10.2026 Karesuvannon rivista: *"kuvauksessa sanotaan etta
+ * on jo alkanut ja valmistuu kesakuussa 2027."* Tiedote on
+ * maaliskuulta 2026 ja sanoo "rakennustyot alkavat toukokuussa 2026" --
+ * kirjoitushetkella tulevaisuutta, lukuhetkella mennyttä. Vaihe ei siis
+ * seuraa pelkasta sanamuodosta vaan myos siita, milloin rivi luetaan.
+ */
+const ALOITUS = new RegExp(
+  `(?:rakennusty[oö]t|rakentaminen|ty[oö]maa|urakka)\\w*\\s+(?:alka\\w+|k[aä]ynnisty\\w+)[^.]{0,30}?\\b(${Object.keys(MONTHS).join("|")})\\w*\\s+(\\d{4})`,
+  "i"
+)
+
+export function aloituskuukausi(teksti: string): Date | null {
+  const osuma = teksti.match(ALOITUS)
+  if (!osuma) return null
+  const kuukausi = MONTHS[osuma[1].toLowerCase()]
+  const vuosi = Number(osuma[2])
+  if (!kuukausi || !vuosi) return null
+  /* Kuukauden viimeinen paiva: aloitus on viimeistaan silloin alkanut. */
+  return new Date(Date.UTC(vuosi, kuukausi, 0))
+}
+
+export function vexatecinVaihe(otsikko: string, teksti: string, nyt: Date = new Date()): string {
   const kaikki = `${otsikko} ${teksti.slice(0, 400)}`
   if (/valmistui|luovutettiin|otettiin käyttöön|valmis kalustettavaksi/i.test(kaikki)) return "Valmistunut"
   if (/työmaa on käynnissä|rakennustyöt ovat käynniss|rakentaminen on käynniss|jo pitkällä|harjakorkeu/i.test(kaikki))
     return "Rakenteilla"
+  const alkoi = aloituskuukausi(teksti)
+  if (alkoi && alkoi <= nyt) return "Rakenteilla"
   if (/sai rakennusluvan|rakennuslupa myönnet/i.test(kaikki)) return "Rakennuslupa"
   return "Sopimus myönnetty"
 }

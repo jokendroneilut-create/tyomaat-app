@@ -79,6 +79,22 @@ async function main() {
       muutokset.push(`yhteyshenkilöt ${yhteys.map((c) => c.name).join(", ")}`)
     }
 
+    /*
+     * VAIHE JA VALMISTUMINEN UUDELLA SAANNOLLA (D-323). Rivit luotiin
+     * ennen kuin jasennin oppi "on maara valmistua kesakuussa 2027" ja
+     * ennen kuin vaihe alkoi katsoa ilmoitettua aloituskuukautta.
+     * Keraaja ei kirjoita jo tuotua rivia uudelleen, joten ne
+     * paivitetaan tassa samoilla funktioilla.
+     */
+    if (ehdokas?.phase && ehdokas.phase !== md.phase_hint) {
+      paivitys.phase_hint = ehdokas.phase
+      muutokset.push(`vaihe ${md.phase_hint} -> ${ehdokas.phase}`)
+    }
+    if (ehdokas?.estimated_completion && !md.estimated_completion) {
+      paivitys.estimated_completion = ehdokas.estimated_completion
+      muutokset.push(`valmistuminen -> ${ehdokas.estimated_completion}`)
+    }
+
     let tila: string | null = null
     if (String(md.source_url ?? "").includes("32-rivitaloasuntoa-espoon-perusmakeen")) {
       paivitys.matched_existing_project_id = PERUSMAKI_HANKE

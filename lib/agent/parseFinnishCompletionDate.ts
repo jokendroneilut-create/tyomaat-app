@@ -11,7 +11,8 @@
  * aikaisin.
  */
 
-const MONTHS: Record<string, number> = {
+/* Jaettu myos muualle: aloituskuukauden lukemiseen (D-323). */
+export const MONTHS: Record<string, number> = {
   tammikuu: 1,
   helmikuu: 2,
   maaliskuu: 3,
@@ -59,8 +60,25 @@ const SEASON_ALTERNATION = Object.keys(SEASONS).join("|")
  * osumista ei yksikään koskenut hanketta itseään vaan purettavaa vanhaa
  * rakennusta, valmistunutta kaavaselvitystä tai naapurirakennusta.
  */
+/*
+ * KOLME MITATTUA AUKKOA LISAA (D-323). Vexatecin ja Rabbalsheden
+ * tiedotteet 19.-20.10.2026:
+ *
+ *   "Urakan on määrä valmistua kesäkuussa 2027"     A-infinitiivi
+ *   "otetaan käyttöön keväällä 2027"                 otetaan, ei "käyttöönotto"
+ *   "uusiin tiloihin päästään muuttamaan kesäkuussa 2027"
+ *
+ * "valmistua" on turvallinen lisays: se on infinitiivi, ei koskaan
+ * mennyt muoto. "käyttöön" kattaa "otetaan/päästään käyttöön", ja
+ * "päästään muuttamaan" on kokonainen fraasi, koska pelkka "muuttaa"
+ * tarkoittaa kaavoituksessa aivan muuta.
+ *
+ * EI LISATTY: "Syksyllä 2026 valmistuvien tilojen..." -- siina paiva on
+ * ENNEN avainsanaa, ja kaannetty jarjestys vaatisi oman mittauksensa.
+ * Ks. GAP-kommentti: vaara ankkuri on tassa jasentimessa tunnettu riski.
+ */
 const COMPLETION_KEYWORD =
-  "valmistuu|valmistuva|valmistunee|valmistumas|valmistumi|luovutetaan|käyttöönotto"
+  "valmistuu|valmistua|valmistuva|valmistunee|valmistumas|valmistumi|luovutetaan|käyttöönotto|käyttöön|päästään muuttamaan"
 
 /*
  * Väli valmistumissanan ja päivämäärän välillä. Piste on suljettu pois,

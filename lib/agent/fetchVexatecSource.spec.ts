@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  aloituskuukausi,
   hankkeenNimi,
   jasennaJulkaisut,
   lapaiseeSuodatuksen,
@@ -96,5 +97,20 @@ describe("hankkeenNimi", () => {
   it("poistaa Tiedote-etuliitteen mutta ei keksi nimeä", () => {
     expect(hankkeenNimi("Tiedote: Jokin asia")).toBe("Jokin asia")
     expect(hankkeenNimi("Kouvolaan koti 58 ikäihmiselle")).toBe("Kouvolaan koti 58 ikäihmiselle")
+  })
+})
+
+describe("aloituskuukausi ja vaihe (D-323)", () => {
+  const karesuvanto =
+    "Monitoimitalon rakennustyöt alkavat toukokuussa 2026 ja uusiin tiloihin päästään muuttamaan kesäkuussa 2027."
+
+  it("lukee ilmoitetun aloituskuukauden", () => {
+    expect(aloituskuukausi(karesuvanto)?.toISOString().slice(0, 10)).toBe("2026-05-31")
+    expect(aloituskuukausi("Hanke on suunnitteluvaiheessa.")).toBeNull()
+  })
+
+  it("on Rakenteilla vasta kun ilmoitettu aloitus on mennyt", () => {
+    expect(vexatecinVaihe("Monitoimitalo", karesuvanto, new Date("2026-03-15"))).toBe("Sopimus myönnetty")
+    expect(vexatecinVaihe("Monitoimitalo", karesuvanto, new Date("2026-10-20"))).toBe("Rakenteilla")
   })
 })

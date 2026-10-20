@@ -11,6 +11,16 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Vaihe ja valmistuminen tekstistä tarkemmin (D-323)
+
+Kerääjä lukee nyt ilmoitetun aloituskuukauden ja siirtää vaiheen
+Rakenteilla-tilaan vasta kun se on ohi — sama lause on kirjoitushetkellä
+tulevaisuutta ja lukuhetkellä mennyttä. Jaettuun valmistumisjäsentimeen
+korjattiin kolme mitattua sanamuotoa: "on määrä valmistua kesäkuussa",
+"otetaan käyttöön keväällä" ja "tiloihin päästään muuttamaan kesäkuussa".
+Karesuvannon monitoimitalo on nyt Rakenteilla ja valmistuu 2027-06-30.
+
+
 ### Vexatec lähteeksi ja kaupunkitunnistus kuntoon (D-321, D-322)
 
 Vexatecin tiedotteet ovat WordPressin omassa `tiedotteet`-tyypissä, ei

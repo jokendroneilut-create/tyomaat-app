@@ -34,6 +34,51 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-323 - "Alkavat toukokuussa 2026" on mennyttä, kun rivi luetaan lokakuussa
+
+Johannes 20.10.2026 Karesuvannon rivistä: *"kuvauksessa sanotaan että
+on jo alkanut ja valmistuu kesäkuussa 2027. korjataan."*
+
+Rivillä luki vaiheena "Sopimus myönnetty" eikä valmistumisaikaa ollut,
+vaikka kuvaus kertoo molemmat: *"Monitoimitalon rakennustyöt alkavat
+toukokuussa 2026 ja uusiin tiloihin päästään muuttamaan kesäkuussa
+2027."*
+
+#### Vaihe riippuu myös lukuhetkestä
+
+Tiedote on maaliskuulta 2026. Kirjoitushetkellä "alkavat toukokuussa"
+oli tulevaisuutta, lukuhetkellä mennyttä. Sääntö ei siis voi katsoa
+pelkkää sanamuotoa: kerääjä lukee nyt **ilmoitetun aloituskuukauden** ja
+siirtää vaiheen Rakenteilla-tilaan vasta kun se on ohi.
+`vexatecinVaihe` ottaa vertailuajan parametrina, joten testi voi
+todeta saman rivin olevan maaliskuussa "Sopimus myönnetty" ja
+lokakuussa "Rakenteilla".
+
+#### Kolme mitattua aukkoa valmistumisjäsentimessä
+
+Mittasin seitsemän sanamuotoa; kolme petti ja ne korjattiin jaettuun
+`parseFinnishCompletionDate`-jäsentimeen:
+
+| sanamuoto | ennen | nyt |
+|---|---|---|
+| "on määrä **valmistua** kesäkuussa 2027" | – | 2027-06-30 |
+| "otetaan **käyttöön** keväällä 2027" | – | 2027-05-31 |
+| "tiloihin **päästään muuttamaan** kesäkuussa 2027" | – | 2027-06-30 |
+
+"valmistua" on A-infinitiivi eikä koskaan mennyt muoto, joten se on
+turvallinen lisäys sääntöön, joka tarkoituksella sulkee pois
+menneen aikamuodon. "päästään muuttamaan" on kokonainen fraasi, koska
+pelkkä "muuttaa" tarkoittaa kaavoituksessa aivan muuta.
+
+**Yhtä ei korjattu:** *"Syksyllä 2026 valmistuvien tilojen…"* — siinä
+päivä on ENNEN avainsanaa, ja käännetty järjestys vaatii oman
+mittauksensa. Väärä ankkuri on tässä jäsentimessä tunnettu riski
+(D-303: ympäristöselvityksen valmistuminen meni voimajohdon päiväksi).
+
+Karesuvannon rivi on nyt Rakenteilla ja valmistuu 2027-06-30. Muut
+viisi Vexatecin riviä olivat jo kunnossa — putken rikastus oli
+täydentänyt niistä kolmelle valmistumispäivän.
+
 ### D-322 - Vexatec lähteeksi: mittasin ensin väärän sivun
 
 Johannes 19.10.2026: *"onhan täällä paljonkin hankkeita"* — vastaus
