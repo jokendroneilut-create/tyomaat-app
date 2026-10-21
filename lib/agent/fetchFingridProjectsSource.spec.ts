@@ -241,3 +241,83 @@ describe("jasennaYhteyshenkilot - kuivaharjoituksen loydot", () => {
     expect(jasennaYhteyshenkilot(lohko("<p><strong>Jari Heikkilä</strong></p>"))).toEqual([])
   })
 })
+
+/*
+ * KOLME MUOTOA SAMASSA LOHKOSSA (D-329).
+ *
+ * Katkelmat ovat oikeilta sivuilta, jotta muodot ovat tarkistettavissa
+ * jos Fingrid muuttaa sivujaan.
+ */
+describe("jasennaYhteyshenkilot - muodot B ja C", () => {
+  const lohko = (sisalto: string) =>
+    `<html><body><div class="well"><h3 class="title">Lisätietoja</h3>${sisalto}</div></body></html>`
+
+  /*
+   * MUOTO B, murtopera-pysayspera: yksi <p>, henkilot <br>-eroteltuina,
+   * organisaatio ja nimike kaksoispisteen edella, puhelin "p.".
+   */
+  it("lukee muodon B: organisaatio, nimike: Nimi, p. numero", () => {
+    const html = lohko(
+      "<p>Fingrid Oyj, asiantuntija, maankäyttö ja ympäristö: Maria Arola, p. 030&nbsp;395 5562<br>" +
+        "Fingrid Oyj, erikoisasiantuntija, voimajohtojen reittisuunnittelu: Pasi Saari, p. 030 395 5178<br><br></p>"
+    )
+    expect(jasennaYhteyshenkilot(html)).toEqual([
+      {
+        nimi: "Maria Arola",
+        nimike: "asiantuntija, maankäyttö ja ympäristö",
+        puhelin: "030 395 5562",
+        organisaatio: "Fingrid Oyj",
+      },
+      {
+        nimi: "Pasi Saari",
+        nimike: "erikoisasiantuntija, voimajohtojen reittisuunnittelu",
+        puhelin: "030 395 5178",
+        organisaatio: "Fingrid Oyj",
+      },
+    ])
+  })
+
+  /*
+   * MUOTO C, helsingin-kaapeli: nimi omassa <h4>:ssa, nimike ja
+   * puhelin seuraavassa <p>:ssa. Tama jatti 14 rivia poimimatta.
+   */
+  it("lukee muodon C: nimi otsikossa, nimike ja puhelin seuraavassa kappaleessa", () => {
+    const html = lohko(
+      "<h4>Rakennuttaja Fingrid Oyj</h4>" +
+        "<h4>Risto Ryynänen</h4><p>Projektijohtaja<br>puh. 030 395 5219</p>" +
+        "<h4>Jussi Rantanen</h4><p>Projektipäällikkö (kaapeliyhteys)<br>puh. 030 395 5274</p>"
+    )
+    expect(jasennaYhteyshenkilot(html).map((h) => [h.nimi, h.nimike, h.puhelin])).toEqual([
+      ["Risto Ryynänen", "Projektijohtaja", "030 395 5219"],
+      ["Jussi Rantanen", "Projektipäällikkö (kaapeliyhteys)", "030 395 5274"],
+    ])
+  })
+
+  /*
+   * VALIOTSIKKO KERTOO TYONANTAJAN. Konsultti ei ole Fingridin vakea,
+   * ja otsikosta tiedamme oikean yrityksen -- se on parempi kuin null.
+   */
+  it("lukee tyonantajan valiotsikosta", () => {
+    const html = lohko(
+      "<h4>Rakennuttaja Fingrid Oyj</h4>" +
+        "<h4>Risto Ryynänen</h4><p>Projektijohtaja<br>puh. 030 395 5219</p>" +
+        "<h4><strong>Kaapeliyhteyden yleissuunnittelu ja rakennuttajakonsultti Ramboll Finland Oy</strong></h4>" +
+        "<p>&nbsp;</p><p><strong>Jari Heikkilä</strong></p>" +
+        "<p>Rakennuttajakonsultti<br>puh. 040 725 2673&nbsp;</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h.find((x) => x.nimi === "Risto Ryynänen")?.organisaatio).toBe("Fingrid Oyj")
+    const jari = h.find((x) => x.nimi === "Jari Heikkilä")
+    expect(jari?.organisaatio).toBe("Ramboll Finland Oy")
+    expect(jari?.nimike).toBe("Rakennuttajakonsultti")
+    expect(jari?.puhelin).toBe("040 725 2673")
+  })
+
+  /* "p." vaatii pisteen: `\bp\b` osui aiemmin nimikkeeseen. */
+  it("ei lue p-kirjainta nimikkeesta puhelimeksi", () => {
+    const html = lohko("<p><strong>Lotta Hakanpää</strong><br>viestintä päällikkö<br>puh. 030 395 5365</p>")
+    const h = jasennaYhteyshenkilot(html)
+    expect(h[0].nimike).toBe("viestintä päällikkö")
+    expect(h[0].puhelin).toBe("030 395 5365")
+  })
+})

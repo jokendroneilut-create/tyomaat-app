@@ -186,7 +186,14 @@ export type FingridYhteyshenkilo = {
  * projektipäällikkö puh. +358303955…") ja puhelinkenttä tyhjäksi.
  * Mitattu kolmella rivillä seitsemästä.
  */
-const PUHELIN = /\bpuh\.?\s*(\+?[0-9][0-9\s\-()]{6,})/i
+/*
+ * "p." ON MYOS PUHELIN (D-329). Murtopera-Pysayspera-sivulla numero on
+ * muodossa "p. 030 395 5562" eika "puh.". Piste on PAKOLLINEN lyhyessa
+ * muodossa, ja sita ennen ei saa olla kirjainta: `\bp\b` osui aiemmin
+ * nimikkeeseen "viestinta paallikko", koska a-umlaut ei ole JS:n
+ * regexissa sanamerkki.
+ */
+const PUHELIN = /(?:\bpuh\.?|(?<![a-zåäöA-ZÅÄÖ])p\.)\s*(\+?[0-9][0-9\s\-()]{6,})/i
 
 /*
  * TOISEN YHTIÖN TYÖNTEKIJÄ EI OLE FINGRIDIN YHTEYSHENKILÖ.
@@ -210,54 +217,192 @@ const HENKILONIMI = /^[A-ZÅÄÖ][a-zåäö-]+(?:\s+[A-ZÅÄÖ][a-zåäö-]+){1,
  */
 const EI_HENKILO = /\b(?:Oy|Oyj|Ab|Abp|Ky|Ltd|Group)\b|^(?:Rakennuttaja|Urakoitsija|Tilaaja|Pääurakoitsija|Toimittaja)\b/i
 
+/*
+ * KOLME MUOTOA SAMASSA LOHKOSSA (D-329).
+ *
+ * Johannes 22.10.2026 Murtopera-Pysayspera-rivista: *"yhteystiedot
+ * poimimatta."* Syy ei ollut puuttuva lohko vaan se, etta jasennin
+ * oletti nimen loytyvan aina `<p>`-elementin ensimmaiselta rivilta.
+ * Sama "Lisatietoja"-lohko kayttaa kolmea eri muotoa eri sivuilla:
+ *
+ *   A  nimi, nimike ja puhelin yhdessa <p>:ssa <br>-eroteltuina
+ *      <p><strong>Maria Arola</strong><br>Asiantuntija<br>puh. 030...</p>
+ *
+ *   B  yksi <p>, henkilot <br>-eroteltuina, kaikki samalla rivilla
+ *      "Fingrid Oyj, asiantuntija, maankaytto: Maria Arola, p. 030..."
+ *
+ *   C  nimi omassa <h4>- tai <p><strong>-elementissaan, nimike ja
+ *      puhelin SEURAAVASSA <p>:ssa
+ *      <h4>Risto Ryynanen</h4><p>Projektijohtaja<br>puh. 030...</p>
+ *
+ * Mitattu 22.10.2026 kaikilta 39 sivulta: muoto A 38, muoto B 1 --
+ * mutta muoto C esiintyy A-sivujen SISALLA, ja juuri se jatti
+ * Helsingin kaapelin 14 rivia kokonaan poimimatta.
+ *
+ * Siksi lohkon lapset kavellaan JARJESTYKSESSA ja muistetaan kaksi
+ * tilaa: edellinen nimi (joka odottaa nimikettaan) ja viimeisin
+ * organisaatio-otsikko. Nain muoto C ratkeaa luonnostaan.
+ */
+
+/* Yrityksen nimi valiotsikosta: "... rakennuttajakonsultti Ramboll Finland Oy". */
+const YRITYS_OTSIKOSSA =
+  /([A-ZÅÄÖ][\wÅÄÖåäö&.\-]*(?:\s+[A-ZÅÄÖ0-9][\wÅÄÖåäö&.\-]*){0,3}\s(?:Oyj|Oy|Ab|Abp|AS|A\/S|GmbH|Ltd|Group|S\.?A\.?))\s*$/
+
+/*
+ * ROOLISANA EI KUULU YRITYKSEN NIMEEN. "Rakennuttaja Fingrid Oyj"
+ * -otsikossa kaikki kolme sanaa alkavat isolla, joten nimikuvio nappasi
+ * roolinkin mukaan ja organisaatioksi tuli "Rakennuttaja Fingrid Oyj".
+ */
+const ROOLISANA = /^(?:Rakennuttaja|Urakoitsija|P[äa][äa]urakoitsija|Tilaaja|Toimittaja|Konsultti)\s+/i
+
+function yritysOtsikosta(teksti: string): string | null {
+  const m = teksti.match(YRITYS_OTSIKOSSA)
+  if (!m) return null
+  const nimi = m[1].replace(ROOLISANA, "").trim()
+  return nimi || null
+}
+
+/*
+ * Muoto B yhdella rivilla. Nimi on kaksoispisteen jalkeen, ja sita
+ * ennen on organisaatio ja nimike pilkuilla eroteltuina.
+ */
+const MUOTO_B_RIVI =
+  /^(.{2,90}?):\s*([A-ZÅÄÖ][a-zåäö-]+(?:\s+[A-ZÅÄÖ][a-zåäö-]+){1,2})\s*,?\s*(.*)$/
+
+function pilkoRivit(sisalto: string | null): string[] {
+  return (sisalto ?? "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&auml;/g, "ä")
+    .replace(/&ouml;/g, "ö")
+    .replace(/&aring;/g, "å")
+    .replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n)))
+    .split("\n")
+    .map((r) => r.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+}
+
+function onHenkilonimi(teksti: string): boolean {
+  return HENKILONIMI.test(teksti) && !EI_HENKILO.test(teksti)
+}
+
 export function jasennaYhteyshenkilot(html: string): FingridYhteyshenkilo[] {
   const $ = cheerio.load(html)
   const out: FingridYhteyshenkilo[] = []
   const nahdyt = new Set<string>()
 
   $("div.well").each((_, el) => {
-    const otsikko = $(el).find("h3.title").first().text().trim()
-    if (!/lis[äa]tietoj/i.test(otsikko)) return
+    const lohkonOtsikko = $(el).find("h3.title").first().text().trim()
+    if (!/lis[äa]tietoj/i.test(lohkonOtsikko)) return
 
-    $(el)
-      .find("p")
-      .each((__, pp) => {
-        const rivit = ($(pp).html() ?? "")
-          .replace(/<br\s*\/?>/gi, "\n")
-          .replace(/<[^>]+>/g, "")
-          .replace(/&nbsp;/g, " ")
-          .replace(/&auml;/g, "ä")
-          .replace(/&ouml;/g, "ö")
-          .replace(/&aring;/g, "å")
-          .replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n)))
-          .split("\n")
-          .map((r) => r.replace(/\s+/g, " ").trim())
-          .filter(Boolean)
+    /* Viimeisin valiotsikossa nimetty tyonantaja, null = Fingrid. */
+    let organisaatio: string | null = null
+    /* Nimi joka odottaa nimikettaan seuraavasta elementista (muoto C). */
+    let odottavaNimi: string | null = null
 
-        if (!rivit.length) return
-        const nimi = rivit[0]
-        if (!HENKILONIMI.test(nimi)) return
-        if (EI_HENKILO.test(nimi)) return
-        if (nahdyt.has(nimi)) return
+    const lisaa = (nimi: string, loput: string) => {
+      if (!onHenkilonimi(nimi) || nahdyt.has(nimi)) return
+      const puh = loput.match(PUHELIN)
+      const nimike = loput.replace(PUHELIN, "").replace(/^[\s,;:]+|[\s,;.]+$/g, "").trim()
 
-        const loput = rivit.slice(1).join(" ")
-        const puh = loput.match(PUHELIN)
-        const nimike = loput.replace(PUHELIN, "").replace(/[\s,;.]+$/, "").trim()
+      /*
+       * PELKKA NIMI EI OLE YHTEYSTIETO. Ilman nimiketta ja numeroa rivi
+       * ei kerro mitaan eika ole varmasti yhteyshenkilo.
+       */
+      if (!nimike && !puh) return
 
+      nahdyt.add(nimi)
+      out.push({
+        nimi,
+        nimike: nimike || null,
+        puhelin: puh ? puh[1].replace(/\s+/g, " ").trim() : null,
         /*
-         * PELKKA NIMI EI OLE YHTEYSTIETO. Ilman nimiketta ja numeroa
-         * rivi ei kerro mitaan eika ole varmasti yhteyshenkilo; mitattu
-         * yksi tallainen seitsemasta ("Jari Heikkila", ei muuta).
+         * Valiotsikosta luettu yritys on parempi kuin null: silloin
+         * TIEDAMME tyonantajan. Nimikkeesta sita ei voi erottaa, joten
+         * siina tapauksessa jaa null ([[show-everything-we-know]]).
          */
-        if (!nimike && !puh) return
+        organisaatio:
+          organisaatio ?? (nimike && MUU_TYONANTAJA.test(nimike) ? null : "Fingrid Oyj"),
+      })
+    }
 
-        nahdyt.add(nimi)
-        out.push({
-          nimi,
-          nimike: nimike || null,
-          puhelin: puh ? puh[1].replace(/\s+/g, " ").trim() : null,
-          organisaatio: nimike && MUU_TYONANTAJA.test(nimike) ? null : "Fingrid Oyj",
-        })
+    /*
+     * `find` palauttaa dokumenttijarjestyksessa, joten otsikon ja sita
+     * seuraavan kappaleen suhde sailyy myos kun ne ovat eri syvyydella.
+     */
+    $(el)
+      .find("h1,h2,h3,h4,h5,h6,p")
+      .each((__, elementti) => {
+        const tagi = String((elementti as any).tagName ?? "").toLowerCase()
+        if (tagi === "h3" && ($(elementti).attr("class") ?? "").includes("title")) return
+
+        const rivit = pilkoRivit($(elementti).html())
+        if (!rivit.length) return
+        const koko = rivit.join(" ")
+
+        /* Otsikko: joko henkilon nimi (muoto C) tai tyonantaja. */
+        if (/^h[1-6]$/.test(tagi)) {
+          if (onHenkilonimi(koko)) {
+            odottavaNimi = koko
+            return
+          }
+          const yritys = yritysOtsikosta(koko)
+          if (yritys) {
+            organisaatio = yritys
+            odottavaNimi = null
+          }
+          return
+        }
+
+        if (tagi !== "p") return
+
+        /* MUOTO B: nimi kaksoispisteen jalkeen samalla rivilla. */
+        let bOsui = false
+        for (const rivi of rivit) {
+          const m = rivi.match(MUOTO_B_RIVI)
+          if (!m || !onHenkilonimi(m[2])) continue
+          bOsui = true
+          /*
+           * Kaksoispisteen EDELLA on organisaatio ja nimike: "Fingrid
+           * Oyj, asiantuntija, maankaytto ja ymparisto". Yritys
+           * irrotetaan ensimmaisesta osasta, loput on nimike.
+           */
+          const osat = m[1].split(",").map((o) => o.trim()).filter(Boolean)
+          const paikallinenOrg = osat[0] ? yritysOtsikosta(osat[0]) : null
+          const nimike = (paikallinenOrg ? osat.slice(1) : osat).join(", ")
+          const edellinen = organisaatio
+          if (paikallinenOrg) organisaatio = paikallinenOrg
+          lisaa(m[2], `${nimike} ${m[3] ?? ""}`.trim())
+          organisaatio = edellinen
+        }
+        if (bOsui) {
+          odottavaNimi = null
+          return
+        }
+
+        /* MUOTO A: ensimmainen rivi on nimi. */
+        if (onHenkilonimi(rivit[0])) {
+          if (rivit.length === 1) {
+            /* Nimi yksin: nimike ja puhelin ovat seuraavassa <p>:ssa. */
+            odottavaNimi = rivit[0]
+            return
+          }
+          lisaa(rivit[0], rivit.slice(1).join(" "))
+          odottavaNimi = null
+          return
+        }
+
+        /* MUOTO C: nimi tuli edellisesta otsikosta tai kappaleesta. */
+        if (odottavaNimi) {
+          lisaa(odottavaNimi, koko)
+          odottavaNimi = null
+          return
+        }
+
+        /* Tyonantajan valiotsikko voi olla myos kappaleessa. */
+        const yritys = yritysOtsikosta(koko)
+        if (yritys) organisaatio = yritys
       })
   })
 

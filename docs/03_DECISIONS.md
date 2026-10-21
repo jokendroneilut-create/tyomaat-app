@@ -34,6 +34,76 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-329 - Yhteyshenkilöt: sama lohko, kolme eri muotoa
+
+Johannes 22.10.2026 Murtoperä–Pysäysperä-rivistä: *"yhteystiedot
+poimimatta. korjataan ja tarkista kaikki fingridin muutkin hankkeet onko
+poimittu ja selvitä syy miksi tästä ei poimittu."*
+
+**Syy ei ollut puuttuva lohko.** `div.well` + "Lisätietoja" löytyi, ja
+siinä oli kaksi henkilöä. Jäsennin oletti nimen löytyvän aina
+`<p>`-elementin ensimmäiseltä riviltä, ja sama lohko käyttää **kolmea eri
+muotoa** eri sivuilla:
+
+| muoto | rakenne | sivuja |
+|---|---|---|
+| **A** | nimi, nimike ja puhelin yhdessä `<p>`:ssä `<br>`-eroteltuina | 38 |
+| **B** | yksi `<p>`, rivit muodossa "Org, nimike: **Nimi**, p. numero" | 1 |
+| **C** | nimi `<h4>`:ssä tai omassa `<p>`:ssä, nimike ja puhelin SEURAAVASSA `<p>`:ssä | A-sivujen sisällä |
+
+Muoto C oli se kallis: se ei näy sivujakaumassa lainkaan, koska se
+esiintyy A-sivujen sisällä. **Helsingin kaapelin 14 riviä jäi kokonaan
+poimimatta** juuri siksi.
+
+Jäsennin kirjoitettiin kävelemään lohkon elementit dokumenttijärjestyksessä
+kahdella tilalla: *edellinen nimi joka odottaa nimikettään* ja *viimeisin
+organisaatio-otsikko*. Muoto C ratkeaa silloin luonnostaan.
+
+**Väliotsikko kertoo työnantajan, ja se on parempi kuin null.** Aiemmin
+toisen yhtiön väki sai `organisaatio: null`, koska työnantaja luettiin
+nimikkeestä. Helsingin kaapelissa se on otsikossa:
+"…rakennuttajakonsultti **Ramboll Finland Oy**" → Jari Heikkilä saa
+oikean yrityksen. Nimikkeestä sitä ei voi erottaa, joten siinä
+tapauksessa jää edelleen null.
+
+Lisäksi: puhelimen etuliite voi olla **"p."** eikä "puh.". Piste on
+pakollinen lyhyessä muodossa ja sitä ennen ei saa olla kirjainta —
+`\bp\b` osui aiemmin nimikkeeseen "viestintä päällikkö", koska ä ei ole
+JS:n regexissä sanamerkki.
+
+**Tulos:** jäsennin löytää 125 → **136** henkilöä 39 sivulta.
+Murtoperä 0 → 2, Helsingin kaapeli 0 → 8. Kantaan lisättiin 31
+yhteyshenkilöä 10 riville.
+
+**Täydennys vain lisää, ei poista.** Kannassa on merkintöjä joita sivulla
+ei enää ole: sivu on voinut muuttua tai ne on lisätty käsin.
+
+**Mittarin virhe, joka melkein tuli raportoituna ulos.** Sivutuotteena
+mittasin "yhteyshenkilö ilman nimeä" ja sain **2 243 merkintää 9 522:sta**
+`projects`-taulussa. Olin raportoimassa sitä rikkinäisenä datana. Mittasin
+vain nimen puuttumisen enkä sitä mitä merkinnässä muuten on:
+
+| nimettömien sisältö | |
+|---|---|
+| tyhjiä | **0** |
+| `kind: organization` | 2 169 — aitoja kirjaamo- ja vaihdekontakteja |
+| sähköposti mukana | 1 893, lisäksi 310 joilla myös puhelin |
+
+Aidosti viallisia on noin **325 merkintää 14 531:stä (2 %)**: yritys
+henkilönä 110, duplikaatti 150, liimautunut nimike 55, ja 10
+`person`-merkintää ilman nimeä. Siivousta ei tehty — se on poistoa ja
+oma päätös. Ks. [[name-the-denominator]].
+
+**Ohjausmerkkivahti maksoi itsensä takaisin samana päivänä.** D-328:ssa
+laajennettu `lib/ohjausmerkit.spec.ts` kaatui tämän työn testiin:
+kirjoitin spec-kommentin pythonin `unicode_escape`-purulla, ja `\b`
+muuttui askelpalauttimeksi. Vahti nappasi sen ennen committia.
+
+Ks. `lib/agent/fetchFingridProjectsSource.ts`,
+`scripts/mittaa-fingridin-yhteyshenkilot.ts`,
+`scripts/taydenna-fingridin-yhteyshenkilot.ts`,
+`scripts/mittaa-rikki-yhteyshenkilot.ts`.
+
 ### D-328 - Urakoitsija Fingridin hankesivun tekstistä, ja kaksi regex-virhettä
 
 Johannes 22.10.2026 Lakeuslinjan jonorivistä: *"tässä kuvauksessa on

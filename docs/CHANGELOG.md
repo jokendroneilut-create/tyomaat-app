@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Yhteyshenkilöt: sama lohko, kolme eri muotoa (D-329)
+
+Fingridin "Lisätietoja"-lohko käyttää kolmea eri rakennetta eri sivuilla,
+ja jäsennin tunsi vain yhden. Kalleinta oli muoto jossa nimi on omassa
+otsikossaan ja nimike seuraavassa kappaleessa — se ei näy sivujakaumassa,
+koska se esiintyy "tunnetun" muodon sivujen sisällä, ja jätti Helsingin
+kaapelin 14 riviä kokonaan poimimatta.
+
+Jäsennin kävelee nyt lohkon elementit järjestyksessä ja muistaa sekä
+odottavan nimen että viimeisimmän organisaatio-otsikon. Väliotsikosta
+luettu työnantaja on parempi kuin tyhjä: konsultti saa oikean yrityksen
+eikä Fingridiä. Löydöt 125 → 136 henkilöä; kantaan lisättiin 31.
+
 ### Urakoitsija Fingridin hankesivun tekstistä (D-328)
 
 Fingrid kertoo urakoitsijan hankesivullaan ("Urakoitsijaksi on valittu
