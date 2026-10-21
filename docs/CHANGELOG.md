@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Urakoitsija Fingridin hankesivun tekstistä (D-328)
+
+Fingrid kertoo urakoitsijan hankesivullaan ("Urakoitsijaksi on valittu
+Leonhard Weiss Oü"), mutta kenttä oli aina tyhjä. Poiminta on nyt
+kerääjässä ja olemassa olevat rivit täydennettiin: `builder` kolmelle
+hankkeelle ja osuuskohtaiset urakoitsijat `winners`-kenttään kahdelle
+(Helsingin kaapeli 3 yritystä, Lakeuslinja 3).
+
+Yksi urakoitsija menee `builder`-kenttään, joka on myös hankehaun
+kenttä. Monta osuuskohtaista menee `winners`-kenttään roolilla
+"Urakoitsija", koska niistä ei voi päätellä pääurakoitsijaa.
+
+Samalla korjattiin se, että monta voittajaa yhdistettiin pilkulla:
+hankekortti katkaisee pilkusta vain y-tunnuksen jälkeen, joten lista jäi
+yhdeksi "yritykseksi". Erotin on nyt `//`.
+
 ### Rakentamisen aloituspäivä: 13,4 % -> 43,9 % (D-324, D-325, D-326)
 
 Aloituspäivä luetaan nyt kahdesta lähteestä. **Tekstistä** kuukauden

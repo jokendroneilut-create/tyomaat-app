@@ -2,6 +2,7 @@ import * as cheerio from "cheerio"
 
 import { detectCityFromText } from "./detectCityFromText"
 import { PHASE_LABELS } from "@/lib/projects/phases"
+import { poimiUrakoitsijat } from "@/lib/agent/poimiUrakoitsija"
 
 /*
  * FINGRIDIN KANTAVERKKOHANKKEET.
@@ -313,7 +314,30 @@ export async function fetchFingridProjectsSource() {
           description: sivu.teksti.slice(0, 4000),
           /* Kantaverkkoyhtiö on hankkeen tilaaja omilla sivuillaan. */
           developer: "Fingrid Oyj",
-          builder: null,
+          /*
+           * URAKOITSIJA LUETAAN TEKSTISTA (D-328).
+           *
+           * Fingrid kertoo urakoitsijan hankesivulla ("Urakoitsijaksi on
+           * valittu Leonhard Weiss Oü"), mutta kenttä oli aina null.
+           * Mitattu 22.10.2026: nimi löytyi 5 hyväksytystä hankkeesta ja
+           * 6 jonorivistä, eikä yhdelläkään ollut sitä missään kentässä.
+           *
+           * POIMINTA KOKO TEKSTISTA, ei `description`-kentästä: se
+           * katkaistaan 4 000 merkkiin, ja Lakeuslinjan kuvaus oli
+           * täsmälleen rajassa -- osuuskohtainen urakoitsija voi olla
+           * katkaisun takana.
+           *
+           * YKSI nimi on pääurakoitsija ja menee `builder`-kenttään,
+           * joka on myös hankehaun kenttä. MONTA nimeä on
+           * osuuskohtaisia, eikä niistä voi päätellä pääurakoitsijaa,
+           * joten ne menevät `winners`-kenttään (rooli "Urakoitsija").
+           */
+          ...(() => {
+            const urakoitsijat = poimiUrakoitsijat(sivu.teksti)
+            if (urakoitsijat.length === 1) return { builder: urakoitsijat[0], winners: null }
+            if (urakoitsijat.length > 1) return { builder: null, winners: urakoitsijat }
+            return { builder: null }
+          })(),
           property_type: sivu.tyyppi ?? "Sähköverkko",
           /*
            * AVAIN ON `metadata.contact_persons`, EI ylatason kentta.

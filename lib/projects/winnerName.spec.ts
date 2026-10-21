@@ -25,7 +25,11 @@ describe("resolveWinnerName", () => {
   })
 
   it("yhdistää useamman voittajan", () => {
-    expect(resolveWinnerName({ winners: ["A Oy", "B Oy"] })).toBe("A Oy, B Oy")
+    /*
+   * Erotin on "//" eika pilkku: pilkulla yhdistetty lista ei katkea
+   * hankekortilla, jos nimissa ei ole y-tunnusta (D-328).
+   */
+    expect(resolveWinnerName({ winners: ["A Oy", "B Oy"] })).toBe("A Oy // B Oy")
   })
 
   it("putoaa merkkijonoon kun taulukko on tyhjä", () => {

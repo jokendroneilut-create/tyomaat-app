@@ -34,6 +34,78 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-328 - Urakoitsija Fingridin hankesivun tekstistä, ja kaksi regex-virhettä
+
+Johannes 22.10.2026 Lakeuslinjan jonorivistä: *"tässä kuvauksessa on
+mainittu: Urakoitsijaksi on valittu Leonhard Weiss Oü ja Enersense PN
+Oy. lisää nämä hankkeeseen liittyviksi yrityksiksi. katso myös muut
+(osa jo hyväksytty) fingridistä tulleet hankkeet (myös jono) ja etsi
+onko muissa samaa löydettävissä."*
+
+**Rivillä oli enemmän kuin pyynnössä.** Kuvaus nimeää neljän osuuden
+urakoitsijat, ei kahta: Jylkkä–Kukonkylä **Leonhard Weiss Oü**,
+Kukonkylä–Ullava **Caverion Suomi Oy**, Ullava–Halsua **Enersense PN
+Oy**, Ullava–Alajärvi **Caverion Suomi Oy**.
+
+**Kaksi kenttää, koska kaksi eri tilannetta.** Yksi urakoitsija menee
+`builder`-sarakkeeseen (rooli "Pääurakoitsija"), joka on myös hankehaun
+kenttä. Monta osuuskohtaista menee `metadata.winners`-kenttään (rooli
+"Urakoitsija") — se on juuri tätä varten: *"emme voi päätellä mikä
+osaurakoista on pääurakka"* (`projectCompanies.ts`). Pyyntö sanoi
+"liittyviksi yrityksiksi", mutta `related_companies` antaisi roolin
+"Liittyvä yritys", ja osapuoli kuuluu roolikenttään (D-313) —
+"Urakoitsija" kertoo enemmän.
+
+**Mittari petti ensin, ja 1/56 näytti uskottavalta.** Kaksi
+nolla-arvoista regex-virhettä, joita yhteenveto ei paljastanut:
+
+1. **`i`-lippu puuttui.** Vain pienellä kirjaimella alkavat osumat
+   kelpasivat: "sähköasemaurakoitsijaksi" osui, mutta "Urakoitsijaksi"
+   virkkeen alussa ei.
+2. **`\b` ei toimi non-ASCII-päätteessä.** JS:n `\w` on ASCII, joten
+   "Leonhard Weiss Oü." putosi juuri siihen. Tilalle `(?=[\s.,:;)]|$)`.
+
+Korjauksen jälkeen 5/56 hyväksytystä ja 6/56 jonorivistä, mikä vastaa
+niitä 6 riviä joilla sana "urakoitsija" ylipäätään esiintyy.
+
+**Kolmas virhe oli oma ohjeeni väärin sovellettuna.** Lisäsin `i`-lipun
+ja tarkistin ison alkukirjaimen koodissa, kuten
+[[case-insensitive-lookahead-trap]] neuvoo. Se oli väärin: `i`-lipun
+alla regex osui **pidempään**, pienellä alkavaan ehdokkaaseen ("toimii
+ITALIALAINEN Tecnolines Italia s.r.l."), ja koodin tarkistus heitti
+osuman pois — jolloin oikea nimi jäi kokonaan löytymättä. Ohje pätee
+**lookaheadiin**, jossa osuman pituus ei muutu, ei kaappaavaan osaan.
+Kirjainkoko on nyt regexissä (`[Uu]rakoitsija`, `[A-ZÄÖÅÜ]`), jolloin
+hylätty ehdokas ei kuluta osumaa.
+
+**Viisi sanamuotoa, kaikki havaittu oikeista kuvauksista:**
+"Urakoitsijaksi on valittu X", "Pääurakoitsijana hankkeessa toimii
+italialainen X" (sana verbin molemmin puolin), "Urakoitsijana toimii
+X", "Urakoitsija X Oy:" (otsikkomuoto ilman verbiä, esittelee
+yhteyshenkilöt) ja "sähköasemaurakoitsijaksi" (yhdyssanan sisällä, joten
+sanarajaa ei voi vaatia eteen).
+
+**Sivulöydös: voittajat yhdistettiin pilkulla.** `resolveWinnerName`
+liitti monta voittajaa pilkulla, mutta `splitCompanyField` katkaisee
+pilkusta vain y-tunnuksen sulkeen jälkeen — ja se on tarkoituksellista,
+koska yrityksen nimessä voi olla pilkku ("Destia Oy,
+Kunnossapitopalvelut"). Ilman y-tunnusta lista jäi yhdeksi
+"yritykseksi". Erotin on nyt `//`, sama jota Hilma käyttää. Mitattu:
+16 riviä 1 170:stä sisältää katkeamattoman pilkun, mutta niitä ei
+korjata takautuvasti, koska aitoa listaa ja pilkullista nimeä ei voi
+erottaa säännöllä.
+
+**Poiminta on nyt kerääjässä, ja se ajetaan KOKO tekstistä** eikä
+`description`-kentästä: kuvaus katkaistaan 4 000 merkkiin, ja
+Lakeuslinjan kuvaus oli täsmälleen rajassa.
+
+Kirjoitettu: `builder` 3 hankkeelle, `metadata.winners` 1 hankkeelle
+(Helsingin kaapeli, 3 yritystä) ja 1 jonoriville (Lakeuslinja).
+
+Ks. `lib/agent/poimiUrakoitsija.ts`,
+`scripts/mittaa-fingridin-urakoitsijat.ts`,
+`scripts/taydenna-fingridin-urakoitsijat.ts`.
+
 ### D-327 - Aloituspäivän tutkiminen päätetään tähän, eikä sarake tule
 
 Johannes 22.10.2026: *"lopetetaan aloituspäivän tutkiminen nyt tähän."*
@@ -1633,7 +1705,7 @@ etsittyä käsin:
 | paikka | ratkaisu |
 |---|---|
 | `app/projects/Map.tsx` | rivi pois; `idea` käytti jo samaa merkkiluokkaa kuin `planning` |
-| `lib/opportunity/projectPhaseKey.ts` | kuviot `/idea/` ja `/ennakko/` siirtyivät Suunnittelulle — EI poistettu, koska teksti voi yhä sanoa "ennakkotieto" |
+| `lib/opportunity/projectPhaseKey.ts` | kuviot `/\bidea/` ja `/ennakko/` siirtyivät Suunnittelulle — EI poistettu, koska teksti voi yhä sanoa "ennakkotieto" |
 | `lib/opportunity/roleStageMatrix.ts` | arkkitehdin ja kiinteistönomistajan paino siirtyi Suunnittelulle |
 | `lib/projects/phases.spec.ts` | järjestysnumerot siirtyivät yhdellä alas |
 
@@ -6784,7 +6856,7 @@ ovat viranomaisen omia. Osapuolen NIMI on eri asia.
 
 #### Kaksi mittausvirhetta matkalla
 
-- `/HAKIJA/` osui **nollaan** 446:sta, koska PDF-tekstissa otsikko
+- `/\bHAKIJA\b/` osui **nollaan** 446:sta, koska PDF-tekstissa otsikko
   on kiinni arvossa: `HAKIJAAsuntorakennuttajat hankeyhtio 4 Oy`.
   Paattava sananraja poistettiin, alkuraja jai (muuten osuu sanaan
   MUUTOKSENHAKIJA).
