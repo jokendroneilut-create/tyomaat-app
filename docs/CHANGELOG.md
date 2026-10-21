@@ -11,6 +11,20 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Viallisten yhteystietojen siivous (D-330)
+
+Neljä "vikaluokkaa" osoittautuivat neljäksi eri asiaksi, ja vain yksi oli
+oikeasti rikki. Yritysnimiset merkinnät (asianajotoimisto, kirjaamo,
+hankintapostilaatikko) olivat dataltaan kunnossa — vain laji oli
+`person`; se vaihdettiin `organization`:ksi eikä tietoa poistettu.
+Duplikaateista vain 14/150 oli turvallisia poistaa: loput kantavat eri
+sähköpostia tai puhelinta. Nimikkeistä riisuttiin yhteystiedot ja
+alkuperäinen arvo jäi talteen.
+
+Viallisia merkintöjä 312 → 153. Jäljelle jäävät ovat tietoisia: 136
+täydentävää kaksosta, 10 nimetöntä merkintää joilla on toimiva
+sähköposti, ja 7 erottumatonta nimikettä.
+
 ### Yhteyshenkilöt: sama lohko, kolme eri muotoa (D-329)
 
 Fingridin "Lisätietoja"-lohko käyttää kolmea eri rakennetta eri sivuilla,

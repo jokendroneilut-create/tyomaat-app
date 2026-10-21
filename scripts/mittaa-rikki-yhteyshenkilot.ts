@@ -71,7 +71,8 @@ async function main() {
         const nimike = String(c?.title ?? "").trim()
         const viallinen: string[] = []
         if (!nimi) viat.nimeton += 1, viallinen.push("nimeton")
-        else if (YRITYS.test(nimi)) viat.yritys += 1, viallinen.push("yritys")
+        else if (YRITYS.test(nimi) && String(c?.kind ?? "") !== "organization")
+          viat.yritys += 1, viallinen.push("yritys")
         else if (nahdyt.has(nimi.toLowerCase())) viat.duplikaatti += 1, viallinen.push("duplikaatti")
         if (nimi) nahdyt.add(nimi.toLowerCase())
         if (nimike && LIIMAUTUNUT.test(nimike)) viat.liimautunut += 1, viallinen.push("liimautunut nimike")

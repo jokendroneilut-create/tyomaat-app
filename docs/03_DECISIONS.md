@@ -34,6 +34,84 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-330 - Viallisten yhteystietojen siivous: luokka kerrallaan, rivit luettuna
+
+Johannes 22.10.2026: *"käy ne 325 läpi, en ihan ymmärtänyt mikä niissä
+oli vikana. annatko esimerkin."*
+
+**Luvut eivät kertoneet mitä vika oli.** Kun merkinnät luettiin
+kokonaisina luokittain, neljä "vikaluokkaa" osoittautuivat neljäksi eri
+asiaksi — ja vain yksi niistä oli oikeasti rikki:
+
+| luokka | mikä oli vikana | korjaus |
+|---|---|---|
+| yritys henkilönä 110 | data kunnossa, **laji** väärä | `kind` → `organization` |
+| duplikaatti 150 | 14 aitoa osajoukkoa, 136 kantaa omaa tietoaan | vain osajoukot pois |
+| liimautunut nimike 55 | nimike roskaa, yhteystieto kunnossa | yhteystiedot riisutaan nimikkeestä |
+| nimetön person 10 | sähköposti ja puhelin tallella | jätettiin |
+
+**Yritys henkilönä ei ollut virhe vaan väärä laji.** Hilman ilmoitus
+antaa yhteystiedoksi usein organisaation — asianajotoimiston, kirjaamon
+tai hankintapostilaatikon:
+
+    {"kind":"person","name":"Suomen Hankintajuristit Asianajotoimisto Oy",
+     "email":"info@hankintajuristit.fi","phone":"+358 400383842",
+     "organization":"Kiinteistö Oy Helsingin Toimitilat"}
+
+Sähköposti ja puhelin ovat aitoja. Poistaminen olisi hävittänyt
+käyttökelpoisen yhteystiedon; laji vaihdettiin ja tieto jäi.
+
+**Duplikaateista vain 14/150 oli turvallisia poistaa.** Poisto vaatii
+aidon osajoukon: sama nimi, eikä poistettavassa yhtään kenttää jota
+jäävässä ei ole samana. Vertailu kahdesta parista:
+
+    Päivi Muhonen | sama posti | sama puhelin | "Aluearkkitehti"
+    Päivi Muhonen | sama posti | sama puhelin | (ei nimikettä)   <- POISTUU
+
+    Ilpo Luhtala  | ilpo.luhtala@skanska.fi | 040 572 1579 | -
+    Ilpo Luhtala  | media@skanska.fi        | 050 311 1773 | "…mediayhteydet"
+                                                           <- EI POISTU
+
+**Nimikkeen tyhjentäminen oli väärä korjaus, ja kuivaharjoitus kertoi
+sen.** Ensimmäinen sääntö tyhjensi nimikkeen aina kun siinä oli
+sähköpostiosoite tai merkinnän oma nimi. Rivit paljastivat että se olisi
+hävittänyt aitoja nimikkeitä:
+
+| ennen | mitä sääntö olisi tehnyt | mitä pitää jäädä |
+|---|---|---|
+| `ylitarkastaja etunimi.sukunimi@ely-keskus.fi` | tyhjä | **ylitarkastaja** |
+| `Sijoitussuunnittelija 040 7184466 simo…@rejlers.fi` | tyhjä | **Sijoitussuunnittelija** |
+| `Arkkitehtitoimisto Jarmo Lokio Oy, kaavanlaatija` | tyhjä | **koko nimike** |
+
+Viimeinen osui vain siksi, että toimiston nimessä on henkilön oma nimi —
+eli **nimi ei ole roskan merkki**. Oikea toimenpide on riisua
+yhteystiedot nimikkeestä ja pitää loput. Tyhjäksi jää vain se mikä
+tyhjenee riisumisen jälkeen, toistaa nimen, tai jää liimautuneeksi
+("`…YhteyshenkilötJanne KananenLiiketoimintajohtaja`"). Alkuperäinen arvo
+talletetaan `title_alkuperainen`-kenttään, joten mikään ei katoa
+lopullisesti.
+
+**Tulos:** laji 100 korjattu, 14 kaksosta poistettu, 221 nimike
+siistitty tai tyhjennetty — 283 rivillä, 0 virhettä. Viallisia
+merkintöjä 312 → **153**, ja jäljelle jäävät ovat tietoisia: 136
+täydentävää kaksosta (yhdistäminen on oma päätös), 10 nimetöntä
+`person`-merkintää joilla on toimiva sähköposti, ja 7 nimikettä joita ei
+saa erotetuksi.
+
+**Mittari raportoi korjatun datan rikkinäisenä.** Siivouksen jälkeen
+sama diagnoosiskripti näytti yhä 110 "yritys henkilönä" -vikaa, koska se
+luokitteli pelkän nimen perusteella eikä katsonut `kind`-kenttää.
+Molemmat skriptit korjattiin: **mittari joka näyttää korjatun datan
+rikkinäisenä on pahempi kuin ei mittaria**, koska seuraava sessio
+"löytää" saman vian uudelleen ja korjaa sen toiseen kertaan.
+
+Ei korjattu: 95 merkintää joiden **nimi** on roskaa ("Vanttausjärventie
+Rovaniemen", "621 5125" eli puhelinnumeron pala). Nimen arvaaminen on
+arvausta, ja monella niistä oikea nimi on nyt siistityssä nimikkeessä.
+
+Ks. `scripts/nayta-rikki-yhteyshenkilot.ts`,
+`scripts/siivoa-yhteyshenkilot.ts`, `scripts/mittaa-rikki-yhteyshenkilot.ts`.
+
 ### D-329 - Yhteyshenkilöt: sama lohko, kolme eri muotoa
 
 Johannes 22.10.2026 Murtoperä–Pysäysperä-rivistä: *"yhteystiedot
