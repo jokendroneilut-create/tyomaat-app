@@ -321,6 +321,40 @@ puute on usein sama syy kuin yhteyshenkilön puute. Avoin "etsi uusi
 työmaa" -tehtävä on ainoa tapa löytää kannasta kokonaan puuttuvat
 (omassa kävelyssä 5/7 kylteistä).
 
+### Tarkennus: työmaan oma ihminen on harvinainen (mitattu 21.10.2026)
+
+Johannes: *"kyltissä oleva vastaavan nimi on eri asia kuin joku yleinen
+yritysnumero."* Mittarin "hankekohtainen" (D-241) tarkoittaa mitä
+tahansa hankkeen omasta asiakirjasta poimittua nimettyä henkilöä —
+myös tilaajan projektipäällikköä, toimitusjohtajaa tai tiedotteen
+viestintäpäällikköä. Se ei kerro onko hankkeella **työmaan** ihmistä.
+
+Rakenteilla 850 hanketta, luokiteltu yhteyshenkilön nimikkeen mukaan
+(työmaan rooli = vastaava työnjohtaja, työnjohtaja, työmaapäällikkö,
+työpäällikkö, työmaainsinööri, rakennuspäällikkö):
+
+| | hankkeita |
+|---|---|
+| työmaan oma ihminen | **45 (5 %)** |
+| muu nimetty henkilö | 511 (60 %) |
+| ei hankekohtaista | 294 (35 %) |
+
+"Muu nimetty" -ryhmän henkilöistä 439:llä ei ole nimikettä lainkaan;
+nimetyt ovat projektipäälliköitä (37), toimitusjohtajia (26),
+viestintää (31) ja johtoa. Osa nimikkeettömistä voi olla työmaan
+väkeä, mutta valtaosa tulee tiedotteiden ja päätösten
+yhteystietolohkoista.
+
+**Kohdelista tällä määritelmällä:** 805 rakenteilla olevaa hanketta
+ilman työmaan ihmistä, joista **213 valmiita karttakohteiksi**
+(tarkka koordinaatti + katuosoite) ja 480 tarkalla koordinaatilla.
+Aiempi 75 on niiden osajoukko, joilta puuttuu yhteyshenkilö kokonaan
+— luonteva pilotin ensimmäinen erä, mutta koko potentiaali on 213.
+
+**Mittari ei näe tätä.** Jos työmaan ihminen on tavoite, se tarvitsee
+oman lukunsa (esim. kolmas neula tai rivi TIC:iin). Ei rakennettu —
+päätös Johannekselle.
+
 ### Crowdsorsa (Finnora Oy) — mitä siitä tiedetään
 
 - Tampere, perustettu 2020 (Toni Paju), 8 henkeä, liikevaihto 587 000 €
