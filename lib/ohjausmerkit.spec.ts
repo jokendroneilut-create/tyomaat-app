@@ -18,8 +18,18 @@ import { join } from "node:path"
  * ohjausmerkkejä. Sarkain ja rivinvaihto ovat sallittuja.
  */
 
-const JUURET = ["lib", "app", "scripts", "middleware.ts"]
-const PAATTEET = [".ts", ".tsx"]
+/*
+ * DOKUMENTIT MUKAAN 22.10.2026 (D-328).
+ *
+ * Tama vahti kattoi vain lahdekoodin, ja juuri siksi sama vika pääsi
+ * repoon kahdesti huomaamatta: `docs/03_DECISIONS.md`:ssa oli kaksi
+ * askelpalautinta `\b`:n paikalla (`/<BS>idea/` ja `/<BS>HAKIJA<BS>/`),
+ * kirjoitettu heredocilla eri sessioissa. Dokumentissa vaurio on
+ * vaarallisempi kuin koodissa, koska mikaan ei aja sita: kuvio
+ * nayttaa oikealta ja seuraava session kopioi sen koodiin.
+ */
+const JUURET = ["lib", "app", "scripts", "middleware.ts", "docs"]
+const PAATTEET = [".ts", ".tsx", ".md"]
 
 /*
  * Kaikki ohjausmerkit paitsi sarkain (U+0009), rivinvaihto (U+000A) ja
