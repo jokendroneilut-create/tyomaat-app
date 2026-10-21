@@ -421,3 +421,45 @@ Interreg Europe (Forssa), Tampereen yliopiston kenttätutkimus.
   oikeudet ja sivullisten sumennus. Kylteissä on yksityishenkilön nimi
   ja numero — se on tarkoitus.
 - Turvallisuus: kuva aidan ulkopuolelta, ei työmaa-alueelle.
+
+### Arvio 21.10.2026: työmaan ihminen tuotteena ja Crowdsorsa kumppanina
+
+**Työmaan oma ihminen erottaa meidät.** RPT/Hubexon tutkijat soittavat
+rakennuttajille ja omistajille (yhteyshenkilö omistaja- ja
+päättäjätasolla), Metroc lukee julkisia päätöksiä (päättäjätaso).
+Kumpikaan ei lupaa työmaan vastaavaa työnjohtajaa — ja pienelle
+aliurakoitsijalle tai toimittajalle juuri hän on ostaja. Viesti
+"soita suoraan työmaalle" sopii matalan hinnan omaan markkinaan
+eikä kilpaile Hubexon vahvuudella. Kuvan aikaleima antaa todisteen:
+"tarkistettu työmaalla [pvm]".
+
+**Crowdsorsa kumppanina on hyvää markkinointia:**
+- Tekee yhden hengen palvelusta uskottavan: kenttäverkosto ilman
+  palkattuja tutkijoita — moderni vastine Hubexon 63 hengen
+  puhelintiimille.
+- Kumppanin maine (Business Finland, kuntareferenssit, vieraslajit)
+  siirtyy osin meille.
+- Crowdsorsa tarvitsee ensimmäisen yksityisen datankeruun referenssin,
+  joten se todennäköisesti tiedottaa ja käyttää meitä myynnissään —
+  ilmaista näkyvyyttä myös startup- ja kuntapiireihin.
+
+**Riskit ja niiden hallinta:**
+
+| riski | hallinta |
+|---|---|
+| Pelillisyys kuulostaa kevyeltä B2B-ostajalle | viestitään tulosta (tarkistettu työmaatieto pvm:llä), ei peliä |
+| Kuvaaja aidan sisällä tai kuvaa työntekijöitä | tehtäväohje + Crowdsorsan tarkistus hylkää |
+| Kumppani on 8 hengen startup | kohdelista ja käsittelyputki pidetään omana — kumppani vaihdettavissa |
+| Kopioitavuus: Crowdsorsa myy kenelle tahansa | pyydä **toimialan yksinoikeus määräajaksi** (esim. 12 kk); neuvotteluasema olemassa, koska olemme ensimmäinen |
+| Liian aikainen julkisuus kertoo mallin kilpailijoille | **tiedotetaan vasta pilotin tulosten jälkeen** |
+| Henkilötiedot: kerätty muualta kuin henkilöltä itseltään | GDPR 14 art. informointi ja oikeutettu etu tarkistetaan (juristi) ennen volyymia; tietosuojaseloste kattamaan kylttitiedot |
+| Työnjohtajan kuormitus myyntipuheluilla | puhutaan "työmaan yhteystiedosta", ei "henkilökohtaisesta numerosta"; ehdot 3.5.5 rajaavat asialliseen hankekohtaiseen B2B-yhteydenottoon |
+| Lupaus ilman katetta (nyt 45/850 = 5 %) | ei markkinoida ennen kuin pilotti näyttää luvun |
+
+**Kilpailijat:** Hubexo tuskin reagoi julkisesti pieneen toimijaan;
+työmaatason keruu ei ole sen ydinmallia, mutta se voisi ostaa saman
+Crowdsorsalta, jos malli näkyy toimivana. Metroc keskittyy julkisiin
+päätöksiin eikä tähän.
+
+**Järjestys:** pilotti → tietosuoja kuntoon → yksinoikeus sopimukseen →
+vasta sitten markkinointi.
