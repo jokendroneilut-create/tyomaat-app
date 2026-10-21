@@ -34,6 +34,70 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-331 - Keskeytysilmoituksen teksti jäi rakenteilla olevalle hankkeelle
+
+Johannes 22.10.2026 löysi LinkedInistä Lohkare Infran tiedotteen ja
+huomasi: *"tässä annetaan myös työpäällikön nimi ja puhelin numero. en
+usko että meillä oli niitä tiedossa."* Ei ollut — mutta samalla rivillä
+oli pahempi vika.
+
+**Rivi oli sisäisesti ristiriitainen.** "Ferry Terminal Turku /
+S2-Laituriurakka" oli jo kannassa Hilmasta, ja siinä oli
+
+| kenttä | arvo | mistä |
+|---|---|---|
+| `builder` | Oteran Oy | **ratkaisu**ilmoituksesta |
+| `additional_info` | *"…Hankinta on keskeytetty."* | **keskeytys**ilmoituksesta |
+| `phase` | Sopimus myönnetty | ratkaisuilmoituksesta |
+
+Samasta hankinnasta oli kaksi Hilma-ilmoitusta, ja **myöhemmin saapunut
+keskeytysilmoitus kirjoitti kuvauksen** voittajan päälle. Asiakas luki
+rakenteilla olevasta hankkeesta että hankinta peruttiin. Mekanismi on
+yleinen: `importCandidate` päivittää `additional_info`-kentän uudemmasta
+lähteestä, eikä "uudempi" tarkoita "ajantasaisempi tila".
+
+**Kuvaus korvattiin tiedotteen tekstillä**, 695 → 1 205 merkkiä, ja
+keskeytys jäi vain historiaksi viimeiseen lauseeseen. Kuivaharjoitus
+paljasti lisäksi että `metadata.description` oli **eri teksti** (1 263
+merkkiä) kuin asiakkaan lukema `additional_info` (695): kentät olivat
+eriytyneet, koska keskeytysprefiksi oli vain toisessa. Molemmat
+päivitettiin — pelkkä `additional_info` olisi jättänyt vanhan version
+duplikaattivertailuun ([[measure-the-field-the-user-reads]]).
+
+**Vaihe korjattiin Rakenteilla-tilaan** `recordPhaseChange`-reitillä
+lähteellä `manual_correction`, jottei vaihehistoriaan jää aukkoa —
+hälytysmäärä johdetaan siitä taulusta
+([[alert-volume-follows-approvals]]). Kirjattiin
+`contract_awarded → construction`.
+
+**Neljä yhteyshenkilöä lisättiin**, muun muassa työpäällikkö Timo
+Luukkonen; rivillä oli ennen vain tilaajan vaihde
+(`info@portofturku.fi`). Valmistuminen 2028 puuttui kokonaan ja
+kirjattiin vuoden loppuun, jottei `autoCompleteGate` piilota hanketta
+liian aikaisin.
+
+**Sähköpostin kirjoitusvirhe oli lähteessä.** Tiedotteessa lukee
+`timo.luukkonen@oteran.f` sekä linkin tekstissä **että**
+`mailto:`-osoitteessa; tarkistin raa'asta HTML:stä ennen kuin epäilin
+omaa purkuani. Päätelty `.fi` kirjattiin, koska paikallinen osa on
+annettu sellaisenaan ja domain näkyy samassa listassa
+(`jukka.seeslinna@oteran.fi`) — se on eri asia kuin koko osoitteen
+johtaminen säännöstä, joka on kielletty. Alkuperäinen arvo jäi
+metadataan.
+
+**172 miljoonaa ei mennyt kustannuskenttään.** Se on koko Ferry Terminal
+Turku -hankkeen satama-alueinvestointi, ei tämän urakan arvo; kentässä
+on Hilman antama 67,39 M€ ([[combined-figure-split-by-owner-page]]).
+
+**Mitä tästä seuraa lähteen lisäämiseen.** Lohkare julkaisee hankkeen
+vasta kun sopimus on tehty, eli rivi on jo kannassa Hilmasta. Kerääjän
+arvo on osapuolissa, yhteyshenkilöissä, laajuudessa ja **vanhentuneen
+tilan korjaamisessa** — ei uusien rivien löytämisessä.
+
+Ks. `scripts/taydenna-s2-laituri.ts`,
+`scripts/korjaa-s2-laiturin-kuvaus.ts`,
+`scripts/korjaa-s2-laiturin-vaihe.ts`.
+
 ### D-330 - Viallisten yhteystietojen siivous: luokka kerrallaan, rivit luettuna
 
 Johannes 22.10.2026: *"käy ne 325 läpi, en ihan ymmärtänyt mikä niissä

@@ -11,6 +11,18 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Keskeytysilmoitus jäi rakenteilla olevan hankkeen kuvaukseksi (D-331)
+
+Turun sataman S2-laituriurakan kuvaus päättyi sanoihin "Hankinta on
+keskeytetty", vaikka sopimus oli allekirjoitettu ja urakka käynnissä:
+samasta hankinnasta oli kaksi Hilma-ilmoitusta, ja myöhemmin saapunut
+keskeytysilmoitus kirjoitti kuvauksen voittajan päälle. Kuvaus
+korvattiin urakoitsijan tiedotteella, vaihe korjattiin Rakenteilla-tilaan
+vaihehistoriamerkinnällä, ja hankkeelle lisättiin neljä yhteyshenkilöä
+sekä puuttuva valmistumisvuosi.
+
+Huomio jatkoon: "uudempi lähde" ei tarkoita "ajantasaisempi tila".
+
 ### Viallisten yhteystietojen siivous (D-330)
 
 Neljä "vikaluokkaa" osoittautuivat neljäksi eri asiaksi, ja vain yksi oli
