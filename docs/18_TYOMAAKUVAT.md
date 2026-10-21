@@ -349,7 +349,12 @@ Interreg Europe (Forssa), Tampereen yliopiston kenttätutkimus.
 ### Pilotin rakenne (ehdotus)
 
 1. **Kohdistettu osa:** 75 valmista karttakohdetta koordinaatteineen;
-   budjetti ennustettava (kohteet × palkkio).
+   budjetti ennustettava (kohteet × palkkio). **Johannes 21.10.2026:
+   tämä 75 kohteen lista käy pilotiksi sellaisenaan** — kaupunkirajaus
+   (Turku/Tampere) ei ole välttämätön, kun kohteet annetaan listana.
+   Lista jakautuu: Helsinki 18, Tampere 12, Espoo 8, muut alle 5;
+   kysy Crowdsorsalta, riittääkö pelaajia pienten kaupunkien kohteisiin.
+   Lista mitataan uudelleen juuri ennen lähettämistä (vanhenee).
 2. **Avoin osa:** "kuvaa työmaa jota ei ole kartalla" — maksetaan vain
    kannasta puuttuvista. Kysy onko heillä tällaista tehtävätyyppiä.
 3. **Palkkio tiedosta, ei kuvasta:** täysi palkkio jos kyltissä on
