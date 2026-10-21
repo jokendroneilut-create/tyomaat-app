@@ -338,6 +338,15 @@ työmaa" -tehtävä on ainoa tapa löytää kannasta kokonaan puuttuvat
   24 tunnissa — kiinteä esine tunnetussa paikassa, yksi kuva riittää.
   Sama tehtävätyyppi kuin työmaataulu. Muut: Helsinki 550 km pyöräteitä
   90 minuutissa, vieraslajeja 500 000 m² neljässä viikossa.
+- **Yksityiset asiakkaat tähän mennessä (STT-uutishuone, 7 tiedotetta
+  4/2025–10/2026):** vain **Kotipizza Group** (5/2025: henkilöstö teki
+  pelissä yli 1 000 ilmastotekoa — vastuullisuus- ja sitouttamiskäyttö,
+  ei datankeruuta) ja **Riesa Consultative Oy** (Riihimäen
+  esteettömyyspalautteen kehityskumppani, ei maksava asiakas). Muut
+  tiedotteet: kunnat (Rovaniemi, Riihimäki, Kajaani, Kemi) ja WWF.
+  **Yksityistä datankeruun asiakasta ei ole julkisesti** — Tyomaat.fi
+  olisi ensimmäinen, ja toistuva tarve (työmaat vaihtuvat) on heille
+  uusi markkina. Tämä on neuvotteluvaltti hinnoittelussa.
 - Sijainti ja aikaleima tallentuvat (videoissa varmasti, kuvissa
   Johanneksen kokemuksen mukaan); toimitusmuotoa (API, CSV) ei ole
   kuvattu julkisesti.
