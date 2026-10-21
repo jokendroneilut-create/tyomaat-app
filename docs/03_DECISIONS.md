@@ -34,6 +34,59 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-327 - Aloituspäivän tutkiminen päätetään tähän, eikä sarake tule
+
+Johannes 22.10.2026: *"lopetetaan aloituspäivän tutkiminen nyt tähän."*
+
+**Lopputila.** Kattavuus nousi kahdessa päivässä 13,4 % → 43,9 %
+rakentamisvaiheista (D-325 Hilman sopimuskausi, D-326 teksti +
+kerääjäkytkentä):
+
+| nimittäjä | kattavuus 22.10.2026 |
+|---|---|
+| kaikki julkiset | 879 / 6 717 = 13,1 % |
+| rakentamisvaiheet | 826 / 1 883 = **43,9 %** |
+| Kilpailutus | 267 / 547 = 48,8 % |
+| Sopimus myönnetty | 237 / 484 = 49,0 % |
+| Rakenteilla | 119 / 464 = 25,6 % |
+| Kaavoitus + Suunnittelu + Rakennuslupa | 49 / 4 809 |
+
+**Sarake on väärä väline, ei vain ennenaikainen.** `/projects`-listan
+sarake näkyy kaikilla riveillä, joten sen nimittäjä on 13,1 % — tyhjä
+87 %:lla. Eikä se korjaannu työllä: `Kaavoitus` on yksin 2 919 riviä
+(43 % listasta) eikä kaavahankkeella ole rakentamisen aloitusta
+lainkaan. Vaikka rakentamisvaiheet saataisiin täyteen, koko listan
+sarake jäisi noin 28 %:iin. Päivä näkyy jo hankekortilla, kartalla ja
+Tänään-modaalissa silloin kun se tiedetään, ja se riittää siihen mitä
+kentältä haluttiin: *"siitä voi päätellä kuinka pitkällä hanke on nyt."*
+
+Sama koskee asiakkaan pyytämää **aloitusaikasuodatinta**: 26 %:n
+kattavuudella se näyttäisi tyhjempää maailmaa kuin on olemassa:
+asiakas luulisi ettei hankkeita ole, vaikka vain kenttä puuttuu. Sama
+peruste kuin kustannussuodattimen kiellossa (`estimated_cost` 14,4 %).
+
+**Mitä jäi tutkimatta, ja miksi luku ei ole lupaus.** Rakenteilla
+olevista 345 päivättömästä rivistä 289:llä on yli 600 merkkiä tekstiä,
+ja **116:lla esiintyy sekä aloitussana että kuukauden nimi**, mutta
+jäsennin ei poimi mitään. Luku on **yläraja eikä saanto**: löysä
+yhteisesiintymä 600 merkin sisällä ei todista että kuukausi kuuluu
+aloitukseen. Jos tähän joskus palataan, oikea ensimmäinen askel on
+lukea otos niistä 116:sta — ei virittää jäsennintä tämän luvun
+perusteella.
+
+**Hylätty reitti: vaihehistoriasta johtaminen.** Jos rivi siirtyi
+Rakenteilla-tilaan 3.4., se on päivä jolloin *me* opimme asiasta, ei
+päivä jolloin työ alkoi. Johdettu päivä näyttäisi hankekortilla aivan
+yhtä varmalta kuin tiedotteesta luettu. Sama syy kuin koon arvioinnin
+hylkäämisessä (D-275: mitattu hyöty kaksi prosenttiyksikköä).
+
+**Mitä jäi käyttöön.** Poiminta on tuonnissa, joten kattavuus nousee
+itsestään uusien rivien mukana ilman eri ajoa. Kolme avointa kohtaa on
+kirjattu muistiin (`start-date-open-items`): 153 tunnisteetonta
+Hilma-riviä, Hilman kustannusarvio samassa rajapintavastauksessa, ja 11
+riviä joilla aloituspäivä on mennyt mutta vaihe on yhä
+`Suunnittelussa` — niissä vaihe on vanhentunut, ei päivä.
+
 ### D-326 - Aloituspäivä kerääjiin, ja kolme virhettä jotka vain lauseet paljastivat
 
 Johannes 21.10.2026: *"asiakkaat ovat kiinnostuneita aloituspäivästä
