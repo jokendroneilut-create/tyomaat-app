@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { inferPhaseFromText } from "@/lib/projects/inferPhaseFromText"
 import { parseEstimatedCompletionDate } from "@/lib/agent/parseFinnishCompletionDate"
+import { parseFinnishStartDate } from "@/lib/agent/parseFinnishStartDate"
 import {
   inferCompletionDateFromText,
   isPastDate,
@@ -289,7 +290,7 @@ export async function loadProjectsForMatching(): Promise<any[]> {
       .from("projects")
       .select(
         "id,name,city,region,location,phase,completed_at,status,developer,builder," +
-          "property_type,estimated_completion,additional_info," +
+          "property_type,estimated_completion,construction_start,additional_info," +
           "meta_permit_number:metadata->>permit_number," +
           "meta_property_id:metadata->>property_id," +
           "meta_developer:metadata->>developer," +
@@ -443,6 +444,25 @@ export async function importCandidate(
       `${body.name ?? ""} ${body.description ?? body.metadata?.description ?? ""}`
     ) ?? null
 
+  /*
+   * RAKENTAMISEN ALOITUS LEIPATEKSTISTA (D-326).
+   *
+   * Sama kuvio kuin valmistumisajalla yllä: lähde antaa harvoin omaa
+   * kenttää, mutta tiedotteessa lukee "rakennustyöt käynnistyivät
+   * elokuussa 2025". Mitattu 22.10.2026: 104 hanketta joilta kenttä
+   * puuttui, ja niistä **72 oli Rakenteilla** -- juuri se vaihe jossa
+   * kattavuus oli heikoin (10,8 %).
+   *
+   * Toisin kuin valmistumisessa, MENNYT AIKAMUOTO KELPAA: "alkoi
+   * toukokuussa" on nimenomaan se tieto jota haetaan. Jäsennin hylkää
+   * kaavan ja suunnittelun aloituksen sekä paljaan vuosiluvun, koska
+   * menneen muodon kohde voi olla purettava vanha rakennus.
+   */
+  const textStartDate =
+    parseFinnishStartDate(
+      `${body.name ?? ""} ${body.description ?? body.metadata?.description ?? ""}`
+    )?.paiva ?? null
+
   const candidate = {
     name: matchTitle || body.name || null,
     city: body.city || null,
@@ -495,6 +515,10 @@ export async function importCandidate(
       body.estimated_completion ??
       body.metadata?.estimated_completion ??
       textCompletionDate,
+    constructionStart:
+      body.construction_start ??
+      body.metadata?.construction_start ??
+      textStartDate,
     description: body.description ?? body.metadata?.description ?? null,
   }
 
@@ -586,6 +610,21 @@ export async function importCandidate(
           body.metadata?.estimated_completion ||
           match.estimated_completion ||
           textCompletionDate ||
+          null,
+        /*
+         * KANNASSA OLEVA ALOITUSPAIVA VOITTAA, toisin kuin
+         * valmistumisajassa yllä. Syy on mitattu (D-326): käsin annettu
+         * päivä on usein tarkempi kuin tekstistä johdettu, ja sama
+         * virke voi koskea kahta hanketta -- "rakentaminen alkaa
+         * huhtikuussa ja As Oy Nihdin Horizonin elokuussa 2026" antaa
+         * jäsentimeltä huhtikuun molemmille, kun kannassa Horizonilla
+         * on oikea elokuu. Vain tyhjä täytetään.
+         */
+        construction_start:
+          match.construction_start ||
+          body.construction_start ||
+          body.metadata?.construction_start ||
+          textStartDate ||
           null,
         /*
          * needs_review nousee kun hanke merkitään valmiiksi, jotta ihminen
@@ -915,6 +954,7 @@ export async function importCandidate(
       property_id: candidate.propertyId,
       phase_hint: insertPhase,
       estimated_completion: candidate.estimatedCompletion,
+      construction_start: candidate.constructionStart,
     },
   })
 

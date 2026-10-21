@@ -11,7 +11,7 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
-### Rakentamisen aloituspäivä: 13,4 % -> 39,6 % (D-324, D-325)
+### Rakentamisen aloituspäivä: 13,4 % -> 43,9 % (D-324, D-325, D-326)
 
 Aloituspäivä luetaan nyt kahdesta lähteestä. **Tekstistä** kuukauden
 tarkkuudella ("rakennustyöt alkavat toukokuussa 2026", "urakka-aika
@@ -30,9 +30,18 @@ Sopimuskauden **loppu** jää omaan metadata-kenttäänsä: se sisältää takuu
 ja luovutusajan, ja `estimated_completion`-kentässä se syöttäisi
 piilotusporttia.
 
-Kattavuus rakentamisvaiheissa 251 -> 746 hanketta (13,4 % -> 39,6 %),
-Kilpailutus 0 % -> 48,4 %. Kaava- ja suunnitteluhankkeet (72 % listasta)
-pysyvät tyhjinä, koska niillä ei ole rakentamisen aloitusta.
+Tekstipoiminta on nyt myös tuonnissa (`importCandidate`), joten uudet
+rivit saavat päivän ilman erillistä ajoa. Poiminnasta löytyi kolme
+virhettä, jotka näkyivät vain niissä lauseissa joihin päivä perustui:
+pääurakoitsijan **yrityssaneerauksen** aloitus, hankkeen jo valmistuneen
+osuuden aloitus vuodelta 2014, ja **valmistumis**kuukausi silloin kun
+virke sanoo vain että rakentaminen on aloitettu.
+
+Kattavuus rakentamisvaiheissa 251 -> 826 hanketta (13,4 % -> 43,9 %),
+Kilpailutus 0 % -> 48,8 % ja **Rakenteilla 10,8 % -> 25,6 %** — se vaihe
+jota asiakas kysyi. Kaava- ja suunnitteluhankkeet (72 % listasta)
+pysyvät tyhjinä, koska niillä ei ole rakentamisen aloitusta. Vaihetta ei
+johdeta aloituspäivästä.
 
 Samalla korjattiin se, että hyväksyntä ei siirtänyt
 `metadata.construction_start`-kenttää hankkeen sarakkeeseen lainkaan —

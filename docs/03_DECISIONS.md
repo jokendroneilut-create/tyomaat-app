@@ -34,6 +34,72 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-326 - Aloituspäivä kerääjiin, ja kolme virhettä jotka vain lauseet paljastivat
+
+Johannes 21.10.2026: *"asiakkaat ovat kiinnostuneita aloituspäivästä
+koska siitä voi päätellä kuinka pitkällä hanke on nyt."*
+
+`parseFinnishStartDate` oli valmis ja testattu (D-324), mutta **sitä ei
+kutsunut yksikään kerääjä** — vain mittaus- ja siivousskripti — eikä
+mitattuja päiviä ollut kirjoitettu kantaan. Nyt poiminta on
+`importCandidate`-tuonnissa valmistumisajan vieressä, ja olemassa olevat
+rivit täydennettiin.
+
+**Kytkentä noudattaa valmistumisajan kuviota, mutta eri
+etuoikeusjärjestyksellä.** Valmistumisessa `body` voittaa `match`in;
+aloituksessa **kannassa oleva voittaa**, kahdesta mitatusta syystä:
+käsin annettu päivä on tarkempi (117 riviä, D-324), ja sama virke voi
+koskea kahta hanketta — *"rakentaminen alkaa huhtikuussa ja As Oy
+Nihdin Horizonin elokuussa 2026"* antaa jäsentimeltä huhtikuun
+molemmille, kun kannassa Horizonilla on oikea elokuu. Kuusi ristiriitaa
+raportoitiin eikä kirjoitettu.
+
+**Kolme jäsenninvirhettä, joista yksikään ei näkynyt yhteenvedossa.**
+Kaikki löytyivät lukemalla ne 104 lausetta joihin poiminta perustui:
+
+| virhe | lause | mistä oikeasti kyse |
+|---|---|---|
+| yrityssaneeraus | *"hakeutui yrityssaneerausmenettelyyn ja se aloitettiin 10.10.2022"* | pääurakoitsijan saneeraus käräjäoikeudessa |
+| historian kertaus | *"Alakylän ohituskaistojen rakentaminen alkoi maaliskuussa 2014"* | hankkeen jo valmistunut aiempi osuus |
+| valmistumissana välissä | *"rakentaminen on aloitettu, ja se valmistuu tammikuun 2026"* | aloitus tapahtunut, päivä on valmistuminen |
+
+Korjaukset:
+
+1. **`saneeraus` ei aina ole rakennuksen saneeraus.** Sanarajaa ei voi
+   vaatia KOHTEEN eteen, koska aidot yhdyssanat ovat yleisiä ja
+   arvokkaita (linjasaneeraus, putkisaneeraus). Siksi suljetaan nimetyt
+   ei-rakentamiset: yrityssaneeraus, saneerausmenettely, konkurssi.
+2. **Yli viisi vuotta vanha aloitus hylätään.** Kentän tarkoitus rajaa
+   tämän: yli viisi vuotta sitten alkanut hanke, joka on yhä listalla,
+   on joko vanhentunut rivi tai virke kertoo historiasta. Raja pudotti
+   yhden rivin 104:sta. `nyt` annetaan parametrina, jottei testi
+   vanhene itsestään (D-323:n opetus).
+3. **Valmistumissana avainsanan ja päivän välissä** tarkoittaa että
+   löytyvä päivä on valmistuminen. Portti tarvittiin **molempiin
+   haaroihin**: ensimmäinen versio oli vain kuukausi+vuosi-haarassa, ja
+   tarkan päivän haara päästi läpi *"valmistuu aikataulun mukaan
+   30.11.2027"*.
+
+**Yksi sääntö hylättiin mittauksen perusteella.** Ajattelin hylätä
+menneen aloituspäivän silloin kun rivi on yhä suunnitteluvaiheessa:
+ristiriita on aito. Mittaus kertoi hinnan — se olisi pudottanut **11
+oikeaa päivää** (esim. "Skanska rakentaa Kokkolan uuden Sote-keskuksen",
+aloitus 9/2024) yhden epävarman takia. Niissä päivä on oikea ja
+**vaihe** on vanhentunut, joten päivän kirjoittaminen jopa paljastaa
+sen.
+
+**Tulos:** 100 uutta päivää. `Rakenteilla` **10,8 % → 25,6 %** — se
+vaihe jossa kattavuus oli heikoin ja jota asiakas kysyi. Kaikkien
+rakentamisvaiheiden kattavuus 39,6 % → 43,9 %.
+
+Vaihetta **ei** johdeta aloituspäivästä. Johannes 22.10.2026: *"se ei
+minusta haittaa että meillä on olemassa aloituspäivä vaikka vaihetta ei
+päätellä siitä."*
+
+Ks. `lib/agent/parseFinnishStartDate.ts`,
+`scripts/taydenna-aloituspaivat-tekstista.ts`,
+`lib/agent/importCandidate.ts`.
+
 ### D-325 - Hilman sopimuskauden alku aloituspäiväksi, loppu ei minnekään
 
 Johannes 21.10.2026: *"otetaan hilman sopimuskausi, ei vielä tässäkään

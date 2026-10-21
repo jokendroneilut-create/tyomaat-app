@@ -77,9 +77,66 @@ export type Aloitus = {
   osuma: string
 }
 
-export function parseFinnishStartDate(teksti: string | null | undefined): Aloitus | null {
+/*
+ * SANEERAUS EI AINA OLE RAKENNUKSEN SANEERAUS (D-326).
+ *
+ * "Tärkeät Tekijät Oy hakeutui yrityssaneerausmenettelyyn ja se
+ * aloitettiin 10.10.2022 Helsingin käräjäoikeuden päätöksellä."
+ * KOHDE-listan `saneeraus` osui sanan sisälle, ja pääurakoitsijan
+ * yrityssaneerauksen aloituspäivä päätyi hankkeen aloituspäiväksi.
+ *
+ * Sanarajaa ei voi vaatia KOHTEEN eteen, koska aidot yhdyssanat ovat
+ * yleisiä ja arvokkaita: linjasaneeraus, putkisaneeraus,
+ * julkisivusaneeraus. Siksi suljetaan nimetyt ei-rakentamiset.
+ */
+const EI_RAKENTAMISTA = /yrityssaneeraus|saneerausmenettely|velkajarjestely|velkaj[äa]rjestely|konkurssi/i
+
+/*
+ * YLI VIISI VUOTTA VANHA ALOITUS KERTOO HISTORIASTA (D-326).
+ *
+ * "Alakylän ohituskaistojen rakentaminen alkoi maaliskuussa 2014" --
+ * virke on täydellinen osuma, mutta kohde on hankkeen JO VALMISTUNUT
+ * aiempi osuus, jota kuvaus kertaa menneessä muodossa ("Hankkeessa
+ * rakennettiin ... kokonaiskustannukset olivat").
+ *
+ * Kentän tarkoitus rajaa tämän: Johannes 21.10.2026 *"asiakkaat ovat
+ * kiinnostuneita aloituspäivästä koska siitä voi päätellä kuinka
+ * pitkällä hanke on nyt."* Yli viisi vuotta sitten alkanut hanke, joka
+ * on yhä listalla, on joko vanhentunut rivi tai virke kertoo
+ * historiasta -- kumpikaan ei palvele sitä päättelyä.
+ *
+ * Mitattu 22.10.2026: raja pudottaa yhden rivin 104:sta. Pitkät
+ * suurhankkeet menettävät aidon aloituspäivänsä, mutta tyhjä on
+ * parempi kuin väärä.
+ */
+const LIIAN_VANHA_VUOTTA = 5
+
+/*
+ * VALMISTUMISSANA AVAINSANAN JA PAIVAN VALISSA (D-326).
+ *
+ * "rakentaminen on aloitettu, ja se valmistuu tammikuun 2026" ja
+ * "rakentaminen on aloitettu ja se valmistuu aikataulun mukaan
+ * 30.11.2027": virke kertoo että aloitus on TAPAHTUNUT mutta ei
+ * milloin, ja löytyvä päivä on valmistuminen. Oikea vastaus on tyhjä.
+ *
+ * Kumpikin haara tarvitsee tämän erikseen: ensimmäinen versio portista
+ * oli vain kuukausi+vuosi-haarassa, ja tarkan päivän haara päästi
+ * Vartiokylän koulun läpi.
+ */
+const VALMISTUMISSANA = /valmistu|k[äa]ytt[öo][öo]n|luovute|valmista on/i
+
+export function parseFinnishStartDate(
+  teksti: string | null | undefined,
+  nyt: Date = new Date()
+): Aloitus | null {
   const t = String(teksti ?? "").replace(/\s+/g, " ")
   if (!t) return null
+
+  const liianVanha = (paiva: string) => {
+    const raja = new Date(nyt)
+    raja.setFullYear(raja.getFullYear() - LIIAN_VANHA_VUOTTA)
+    return paiva < raja.toISOString().slice(0, 10)
+  }
 
   /*
    * JULKAISULEIMA EI OLE ALOITUSPAIVA (D-324). Uutissivun teksti
@@ -91,17 +148,22 @@ export function parseFinnishStartDate(teksti: string | null | undefined): Aloitu
 
   const tarkka = t.match(TARKKA_PAIVA)
   if (tarkka && JULKAISUSANA.test(tarkka[0])) {
-    /* Leima syo numeropaivan, mutta kuukausinimi voi yha kelvata. */
+    /* Leima syo numeropaivan, mutta kuukausinimi voi yhä kelvata. */
   } else if (tarkka) {
     const [, d, m, y] = tarkka
     const kuukausi = Number(m)
     const paiva = Number(d)
-    if (kuukausi >= 1 && kuukausi <= 12 && paiva >= 1 && paiva <= 31) {
-      return {
-        paiva: `${y}-${String(kuukausi).padStart(2, "0")}-${String(paiva).padStart(2, "0")}`,
-        tarkkuus: "paiva",
-        osuma: tarkka[0].slice(0, 120),
-      }
+    const ehdotus = `${y}-${String(kuukausi).padStart(2, "0")}-${String(paiva).padStart(2, "0")}`
+    if (
+      kuukausi >= 1 &&
+      kuukausi <= 12 &&
+      paiva >= 1 &&
+      paiva <= 31 &&
+      !EI_RAKENTAMISTA.test(tarkka[0]) &&
+      !VALMISTUMISSANA.test(tarkka[0].slice(0, tarkka[0].lastIndexOf(d))) &&
+      !liianVanha(ehdotus)
+    ) {
+      return { paiva: ehdotus, tarkkuus: "paiva", osuma: tarkka[0].slice(0, 120) }
     }
   }
 
@@ -128,15 +190,33 @@ export function parseFinnishStartDate(teksti: string | null | undefined): Aloitu
     const aiempi =
       ennen.match(new RegExp(`\\b(${KUUKAUDET})\\w*`, "i")) ??
       ennen.match(new RegExp(`\\b(${VARTALOT})\\s*[-–]\\s*$`, "i"))
+    /*
+     * VALMISTUMISSANA VALISSA: KUUKAUSI ON VALMISTUMINEN (D-326).
+     *
+     * "rakentaminen on aloitettu, ja se valmistuu tammikuun 2026" --
+     * vuosi on kiinni VALMISTUMISkuukaudessa, eika aiempaa vuodetonta
+     * kuukautta ole, joten edellinen sääntö ei pelastanut: jäsennin
+     * palautti tammikuun aloituksena. Virke kertoo että aloitus on
+     * TAPAHTUNUT mutta ei milloin -- oikea vastaus on tyhjä.
+     *
+     * Tarkistus tehdään vain kun aiempaa kuukautta EI löytynyt: jos se
+     * löytyi, se on aloitus ja valmistumissana kuuluu sen jälkeiseen
+     * osaan ("alkavat huhtikuussa ja valmista on lokakuussa 2026").
+     */
+    if (!aiempi && VALMISTUMISSANA.test(ennen)) return null
+
     const avain = aiempi?.[1]?.toLowerCase() ?? kv[1].toLowerCase()
     const kuukausi = MONTHS[avain] ?? MONTHS[`${avain}kuu`]
     const vuosi = Number(kv[2])
-    if (kuukausi && vuosi >= 2000 && vuosi <= 2100) {
-      return {
-        paiva: `${vuosi}-${String(kuukausi).padStart(2, "0")}-01`,
-        tarkkuus: "kuukausi",
-        osuma: kv[0].slice(0, 120),
-      }
+    const ehdotus = `${vuosi}-${String(kuukausi).padStart(2, "0")}-01`
+    if (
+      kuukausi &&
+      vuosi >= 2000 &&
+      vuosi <= 2100 &&
+      !EI_RAKENTAMISTA.test(kv[0]) &&
+      !liianVanha(ehdotus)
+    ) {
+      return { paiva: ehdotus, tarkkuus: "kuukausi", osuma: kv[0].slice(0, 120) }
     }
   }
 
@@ -145,12 +225,15 @@ export function parseFinnishStartDate(teksti: string | null | undefined): Aloitu
     const kuukausi = Number(ua[1])
     /* "04-09/2026": alkuvuosi puuttuu, jolloin se on sama kuin loppu. */
     const vuosi = Number(ua[2] ?? ua[3])
-    if (kuukausi >= 1 && kuukausi <= 12 && vuosi >= 2000 && vuosi <= 2100) {
-      return {
-        paiva: `${vuosi}-${String(kuukausi).padStart(2, "0")}-01`,
-        tarkkuus: "kuukausi",
-        osuma: ua[0].slice(0, 120),
-      }
+    const ehdotus = `${vuosi}-${String(kuukausi).padStart(2, "0")}-01`
+    if (
+      kuukausi >= 1 &&
+      kuukausi <= 12 &&
+      vuosi >= 2000 &&
+      vuosi <= 2100 &&
+      !liianVanha(ehdotus)
+    ) {
+      return { paiva: ehdotus, tarkkuus: "kuukausi", osuma: ua[0].slice(0, 120) }
     }
   }
 

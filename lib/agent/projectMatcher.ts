@@ -44,6 +44,7 @@ export type MatchableProject = {
   builder?: string | null
   property_type?: string | null
   estimated_completion?: string | null
+  construction_start?: string | null
   additional_info?: string | null
   /* Duplikaattiskannauksen sijaintivertailua varten (D-180). */
   latitude?: number | string | null
