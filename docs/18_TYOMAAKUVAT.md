@@ -267,3 +267,109 @@ ei vika.
 (liian harvoin), LapWall ja Mer Architects valmiita referenssejä,
 Erkkiheikkilä vain LinkedInissä (Kouvolan päätökset kattavat sen
 jatkossa).
+
+## Joukkoistettu kuvaus: Crowdsorsa (selvitys 21.10.2026)
+
+**Tila:** Johannes lähetti Crowdsorsalle pilottiehdotuksen (Turku ja
+Tampere, palkkio hyväksytystä työmaataulun kuvasta). Vastausta ei ole
+vielä. Johannes on itse kokeillut palvelua pelaajana (lupiinitehtävä:
+kohde kartalla, kuva ennen ja jälkeen, tarkistus, palkkio tai ei).
+
+### Miksi tämä on yhteystietotavoitteen ydin
+
+Tavoite on, että **jokaisella hankkeella on yhteystieto**, ja
+rakenteilla olevilla sen pitäisi onnistua juuri kylttien kautta:
+rakenteilla olevalla työmaalla on aina kyltti, ja kyltti antaa työmaan
+oman ihmisen (3/7 omassa kävelyssä, ks. yllä). Mikään automaattinen
+lähde ei tuota vastaavaa työnjohtajaa.
+
+Mittarin taso (TIC, `yhteystieto_kattavuus`, D-239/D-241), 21.10.2026:
+
+| vaihe | hankkeita | hankekohtainen | kaikki (myös yrityksen) |
+|---|---|---|---|
+| Rakenteilla | 850 | **556 (65 %)** | 648 (76 %) |
+| Suunnittelussa | 1 702 | 1 287 (76 %) | 1 368 (80 %) |
+
+**Osuus ei liiku.** 6.10. rakenteilla oli 474/725 (65 %), 21.10.
+556/850 (65 %): uusia hankkeita tulee 125, ja ne tulevat samalla
+osuudella kuin vanhat. Lähteiden lisääminen kasvattaa nimittäjää ja
+osoittajaa samassa suhteessa — osuuden nostaminen vaatii uuden
+mekanismin, ei lisää samaa.
+
+### Kohdelista: mitä kuvaajille voisi antaa
+
+Rakenteilla olevista **294 hankkeelta puuttuu hankekohtainen
+yhteyshenkilö** (mitattu 21.10.2026, sama joukko kuin mittarissa).
+
+| | hankkeita |
+|---|---|
+| ilman hankekohtaista yhteyshenkilöä | 294 |
+| joilla tarkka koordinaatti (ei kaupungin keskipiste) | 187 |
+| joilla katuosoite numerolla | 82 |
+| **molemmat — valmis karttakohteeksi** | **75** |
+
+Kaupungeittain (294): Helsinki 50, Tampere 32, Espoo 22, Turku 19,
+Oulu 17, Vantaa 12. Karttakohteiksi kelpaavat 75: Helsinki 18, Tampere
+12, Espoo 8, muut alle 5. Tyypeittäin: infra 81 + sillat 14 (kyltti
+on, mutta työmaa on pitkä tieosuus — vaikea kohdistaa), loput
+rakennuksia (kerrostalo 65, koulu 28, toimitila 15, hoivakoti 12…).
+
+**Johtopäätös:** kohdistettuun pilottiin on heti valmiina noin 75
+kohdetta. Loput ~110 tarkan koordinaatin kohdetta tarvitsevat
+osoitteen ennen kuin ne voi antaa kuvaajille — ja juuri osoitteen
+puute on usein sama syy kuin yhteyshenkilön puute. Avoin "etsi uusi
+työmaa" -tehtävä on ainoa tapa löytää kannasta kokonaan puuttuvat
+(omassa kävelyssä 5/7 kylteistä).
+
+### Crowdsorsa (Finnora Oy) — mitä siitä tiedetään
+
+- Tampere, perustettu 2020 (Toni Paju), 8 henkeä, liikevaihto 587 000 €
+  (2024). Business Finland -rahoitus; toimintaa Suomessa, Ruotsissa,
+  Virossa, Isossa-Britanniassa, Kanadassa ja Yhdysvalloissa.
+- **Hakee nyt yksityisen sektorin asiakkaita** (Business Finland 2025);
+  tähän asti asiakkaat kuntia ja luonnonsuojelujärjestöjä.
+- Malli: asiakas tilaa tehtävän ja rahoittaa palkkiot, Crowdsorsa ajaa
+  tehtävän pelissä ja tarkistaa laadun. Tehtävät ovat sijaintiin
+  sidottuja, ja kerätty kohde katoaa kartalta kaikilta — sama kohde ei
+  tule kahdesti. Pelaajia "tuhansia", paljon nuoria.
+- Pelaajan ansio "jopa 20 €/h"; Helsingin pyörätiekartoituksessa
+  keskimäärin yli 3 €/km. **Asiakashintoja ei ole julkaistu.**
+- **Lähin vastine:** Tampereen kaivonkannet, 23 500 kpl kuvattu
+  24 tunnissa — kiinteä esine tunnetussa paikassa, yksi kuva riittää.
+  Sama tehtävätyyppi kuin työmaataulu. Muut: Helsinki 550 km pyöräteitä
+  90 minuutissa, vieraslajeja 500 000 m² neljässä viikossa.
+- Sijainti ja aikaleima tallentuvat (videoissa varmasti, kuvissa
+  Johanneksen kokemuksen mukaan); toimitusmuotoa (API, CSV) ei ole
+  kuvattu julkisesti.
+
+Lähteet: businessfinland.fi (Crowdsorsa improves the world with data
+and crowd power, 2025), crowdsorsa.com, tuusula.fi 29.4.2025,
+Interreg Europe (Forssa), Tampereen yliopiston kenttätutkimus.
+
+### Pilotin rakenne (ehdotus)
+
+1. **Kohdistettu osa:** 75 valmista karttakohdetta koordinaatteineen;
+   budjetti ennustettava (kohteet × palkkio).
+2. **Avoin osa:** "kuvaa työmaa jota ei ole kartalla" — maksetaan vain
+   kannasta puuttuvista. Kysy onko heillä tällaista tehtävätyyppiä.
+3. **Palkkio tiedosta, ei kuvasta:** täysi palkkio jos kyltissä on
+   nimetty henkilö numeroineen, pienempi jos vain yrityksen vaihde.
+4. **Katto:** liikevaihto 248 €/kk (10/2026); 200 kuvaa × 3–5 € +
+   alustamaksu on kuukausien liikevaihto. Pilotti 100–200 kuvaa.
+5. **Mitataan samat luvut kuin omassa kävelyssä:** kuinka moni puuttui
+   kannasta, kuinka moni antoi työmaan oman ihmisen, ja muuttuuko
+   rakenteilla-mittarin hankekohtainen osuus.
+6. **Käsittelyputki ennen volyymia:** käsin yksi kyltti vie ~10 min.
+   Satoja kuvia varten tarvitaan kuvasta rakenteinen poiminta, vertailu
+   kantaan ja kuivaharjoitus.
+
+### Kysymykset palaveriin
+
+- Toimitusmuoto: kuvat, koordinaatit ja aikaleimat — API, CSV?
+- Voiko kohteet antaa koordinaattilistana? Onko avoin "etsi"-tehtävä?
+- Voiko hyväksymisehdon määritellä itse ("kyltti luettavissa")?
+- Alustamaksu vs. pelaajan palkkio; pilotin vähimmäiskoko.
+- Henkilötiedot: kumpi on rekisterinpitäjä, käsittelysopimus, kuvien
+  oikeudet ja sivullisten sumennus. Kylteissä on yksityishenkilön nimi
+  ja numero — se on tarkoitus.
+- Turvallisuus: kuva aidan ulkopuolelta, ei työmaa-alueelle.
