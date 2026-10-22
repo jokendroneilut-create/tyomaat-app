@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Väliaikainen ja pysyvä skeittihalli eroteltiin (D-333)
+
+Malmin rivi osoittautui kahdeksi hankkeeksi. Lautakunnan oikea asiakirja
+kertoi, että tarveselvitys koskee kokonaan Malmin jäähallin vuokrausta
+(1.11.2026–30.6.2028, 3 463 htm², ~443 440 €/vuosi) ja että pysyvästä
+hallista on vain sijaintiselvitys käynnissä — ilman paikkaa, laajuutta,
+aikataulua tai kustannusta.
+
+Jäähallin rivi sai kuvauksen päätösasiakirjan luvuilla, ja pysyvälle
+hallille tehtiin oma rivi tietoisesti ohuena. Opetus: kun lähde on
+tiivistelmä, avaa alkuperäinen asiakirja ennen kuin päätät mitä rivi
+kuvaa — tiivistäminen ei paljasta mitä tekstistä puuttuu.
+
 ### Lautakunnan päätöstiedote tiivistettiin yhdeksi hankkeeksi (D-332)
 
 Malmin skeitti- ja harrastushallin jonorivin kuvaus oli lautakunnan

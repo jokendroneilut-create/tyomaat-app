@@ -34,6 +34,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-333 - Väliaikainen ja pysyvä halli ovat eri hankkeet, ja tiedote ei kertonut sitä
+
+Johannes 22.10.2026 korjasi minua: *"ymmärsit väärin. nykyinen halli
+otetaan käyttöön tammikuuhun 2027 mennessä, mutta suunnittelussa on
+kokonaan uusi halli. Hanke koskee sitä."*
+
+**Olin tiivistänyt kuvauksen väliaikaisjärjestelyyn ja esittänyt sen
+hankkeena** (D-332). Virhe oli premississä, ei poiminnassa: STT:n
+tiedotteessa pysyvä halli mainitaan vain sivulauseessa *"Pysyvän
+skeittihallin sijaintia koskevan selvityksen ollessa käynnissä…"*, ja
+luin sen taustaksi enkä toiseksi hankkeeksi.
+
+**Lähde ratkaisi, ei tiedote.** Hain lautakunnan oikean asiakirjan
+(`hel-2026-016045`) Helsingin päätösindeksistä, ja se kertoi mitä
+kumpikaan meistä ei tiennyt:
+
+| | |
+|---|---|
+| vuokrasopimus | 1.11.2026 – 30.6.2028 |
+| laajuus | 3 463 htm² |
+| vuokra | ~10,67 €/m²/kk ≈ 443 440 €/vuosi |
+| käynnistämiskustannus | ~40 000 € |
+
+Tarveselvitys koskee **kokonaan Malmin jäähallia**, ja se on
+vuokrahanke. Pysyvästä hallista on vain **sijaintiselvitys käynnissä**:
+ei paikkaa, laajuutta, aikataulua eikä kustannusta — eikä sen tarvitse
+olla Malmilla, koska Malmi on nimenomaan väliaikainen.
+
+Jäähallissa on silti aitoa rakennettavaa: hyppyreitä,
+vauhdinottoramppeja, muunneltava street-skeittialue, erotettava
+tanssialue ja kädentaidon tiloja.
+
+**Kaksi riviä, Johanneksen valinta.** Jäähallin rivi sai kuvauksen
+päätösasiakirjan luvuilla (1 259 → 1 719 merkkiä), ja pysyvälle hallille
+tehtiin oma rivi tietoisesti ohuena. Nimessä **ei ole Malmia**
+(`Helsingin pysyvä skeittihalli`), koska sijainti on auki ja muuten
+rivit sekoittuisivat. Rivillä on `odottaa`-kenttä, joka kertoo
+katselmoijalle miksi se on ohut, ja `liittyva_hanke` viittaa jäähallin
+riviin. Lähteeksi päätösasiakirja eikä tiedote, koska
+`paatokset.hel.fi` on pysyvä arkisto (D-237) ja sama asiakirja on
+molempien rivien peruste.
+
+**Opetus mittarista ja lukemisesta.** Tiivistin kuvauksen kolmesta
+asiasta yhteen ja luulin työn valmiiksi, mutta **tiivistäminen ei
+paljasta mitä tekstistä puuttuu**. Kun lähde on tiivistelmä
+(STT-tiedote, lautakunnan päätöstiedote), varsinainen asiakirja voi
+sisältää toisen hankkeen — tai kertoa että se mitä pidin hankkeena on
+vain väliaikainen järjestely. Avaa alkuperäinen asiakirja ennen kuin
+päätät mitä rivi kuvaa.
+
+Ks. `scripts/erottele-skeittihallit.ts`.
+
 ### D-332 - Lautakunnan päätöstiedote: tiivistä kuvaus, älä tee uutta hanketta
 
 Johannes 22.10.2026 Malmin skeittihallista: *"tässä on olennaista
