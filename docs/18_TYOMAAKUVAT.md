@@ -530,7 +530,7 @@ Tihtaalinkatu 4 oli jo katselmoitu `not_duplicate`.
 **Pilottilista:** 98 osoitetta (104 hanketta; samassa osoitteessa
 olevat yhdellä rivillä, koska riittää yksi kuva): Helsinki 56, Espoo 31,
 Vantaa 10, Kauniainen 1. Prioriteetti 1 (ei yhteyshenkilöä): 30.
-Tiedosto `exports/Tyomaat_Crowdsorsa_kohdelista_v2_PKS_98kohdetta_2026-10-22.xlsx`
+Tiedosto `exports/Tyomaat_Crowdsorsa_kohdelista_v3_PKS_97kohdetta_2026-10-22.xlsx`
 (ei repossa, ei henkilötietoja). Santahamina ja muut puolustusvoimien
 alueet suljettu pois (Johannes: varuskuntaa ei saa kuvata).
 
@@ -559,3 +559,5 @@ osoiterekisteristä. Rautatientoria lähimmät listan kohteet (Fabianinkatu
 saa oikeaan paikkaan samasta osoiterekisteristä. Muualla tarvitaan
 vastaava lähde (MML:n osoiterajapinta, vaatii avaimen). Ei tehty —
 oma tehtävänsä.
+
+**v3 (22.10.2026):** Sunan koulu (Espoo) poistettu — Johannes oli merkinnyt sen käsin valmistuneeksi. Kaikkien listan hankkeiden tila tarkistettiin kannasta uudelleen; muut 103 ovat rakenteilla. Lista 97 osoitetta: Helsinki 56, Espoo 30, Vantaa 10, Kauniainen 1. **Tarkista hankkeiden tila kannasta juuri ennen jokaista lähetystä.**
