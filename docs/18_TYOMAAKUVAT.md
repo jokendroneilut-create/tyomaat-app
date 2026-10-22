@@ -536,3 +536,26 @@ alueet suljettu pois (Johannes: varuskuntaa ei saa kuvata).
 
 **Opetus muualle:** sama rekisteri korjaisi PKS:n kaikki hankkeet,
 ei vain pilotin — 34/104 (33 %) piste oli yli 60 m väärässä.
+
+### Kunnan varapiste: 61 % näkyvistä hankkeista (mitattu 22.10.2026)
+
+Kun geokoodaus ei löydä hankkeen paikkaa, se antaa kunnan
+keskipisteen. Helsingin varapiste on **60.1666, 24.9435** (Esplanadin
+ja Rautatientorin tienoo) — siinä on **562 hanketta**, osalla jopa
+katuosoite (esim. Meripihkatie 8), joka olisi geokoodattavissa.
+
+Asiakkaalle näkyvät 6 738 hanketta: **4 103 (61 %) on pisteessä, jossa
+on vähintään kolme hanketta** (265 pistettä). Suurimmat: Helsinki 562,
+Oulu 93, Seinäjoki 77, Tampere 76, Kouvola 68, Turku 68, Jyväskylä 65,
+Raasepori 65, Rovaniemi 64, Espoo 53. Osa yhteisistä pisteistä on
+aitoja (sama kaava-alue), mutta valtaosa on kuntien keskipisteitä.
+
+**Crowdsorsa-lista on tästä puhdas:** ehdokkaista karsittiin pisteet,
+joissa on ≥ 3 hanketta, ja lopulliset koordinaatit tulevat kokonaan
+osoiterekisteristä. Rautatientoria lähimmät listan kohteet (Fabianinkatu
+28, Mannerheimintie 14, Rauhankatu 17) ovat oikeita keskustaosoitteita.
+
+**Korjattavissa:** PKS:ssä varapisteen hankkeet, joilla on katuosoite,
+saa oikeaan paikkaan samasta osoiterekisteristä. Muualla tarvitaan
+vastaava lähde (MML:n osoiterajapinta, vaatii avaimen). Ei tehty —
+oma tehtävänsä.
