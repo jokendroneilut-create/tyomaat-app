@@ -73,6 +73,43 @@ export function liitelinkit(
 }
 
 /*
+ * ONKO KUVAUS PELKKIA LIITEOTSIKOITA (D-334).
+ *
+ * Kokemaen listasivulla haitarin tekstisisalto on vain liitteiden
+ * nimia: "Kaavaluonnos Kaavaselostus Osallistumis- ja
+ * arviointisuunnitelma (OAS) Seurantalomake Kaavakartta ja maaraykset
+ * A4". Sellaista ei saa jattaa kuvauksen alkuun, kun selostuksesta
+ * saadaan oikea teksti.
+ *
+ * TARKKA YHTASUURUUS EI RIITA, ja kuivaharjoitus kertoi sen: lohkon
+ * tekstissa on "(OAS)" joka on linkin ULKOPUOLELLA, joten pelkistetty
+ * vertailu linkkien tekstien yhdisteeseen ei osunut. Siksi linkkien
+ * tekstit poistetaan kuvauksesta ja katsotaan mita jaa: jos jaljelle
+ * jaa alle `JAANNOS_RAJA` kirjainta, kuvauksessa ei ole omaa sisaltoa.
+ */
+const JAANNOS_RAJA = 25
+
+export function onVainLiiteotsikot(
+  kuvaus: string | null | undefined,
+  linkit: { teksti?: string | null }[]
+): boolean {
+  const teksti = String(kuvaus ?? "").trim()
+  if (!teksti) return true
+  if (!linkit.length) return false
+
+  let jaannos = teksti
+  /* Pisin ensin, jottei lyhyt otsikko syo pidemman osaa. */
+  for (const l of [...linkit]
+    .map((x) => String(x.teksti ?? "").trim())
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)) {
+    jaannos = jaannos.split(l).join(" ")
+  }
+  const kirjaimia = (jaannos.match(/[A-Za-zÀ-ɏ]/g) ?? []).length
+  return kirjaimia < JAANNOS_RAJA
+}
+
+/*
  * Palauttaa kuvauksen, johon liitteen tavoiteluku on yhdistetty. Jos
  * liitetta ei ole, siita ei saada tekstia tai kuvaus on jo riittava,
  * palautetaan alkuperainen kuvaus muuttumattomana.

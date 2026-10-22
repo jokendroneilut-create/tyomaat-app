@@ -5,7 +5,12 @@ import {
   valitseKaavaselostus,
   yhdistaKuvaukset,
 } from "@/lib/agent/kaavanKuvaus"
-import { liitelinkit, taydennaKuvausLiitteesta, type LiiteBudjetti } from "@/lib/agent/kaavanLiite"
+import {
+  liitelinkit,
+  onVainLiiteotsikot,
+  taydennaKuvausLiitteesta,
+  type LiiteBudjetti,
+} from "@/lib/agent/kaavanLiite"
 import { kaavanYhteyshenkilot } from "@/lib/agent/kaavanYhteyshenkilo"
 import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import crypto from "crypto"
@@ -15579,9 +15584,36 @@ function kokemakiPhaseFromText(text: string): string {
   return "Vireilletulo"
 }
 
+/*
+ * KOKEMAEN HAITARISSA EI OLE KUVAUSTA, VAIN LINKKIOTSIKOT (D-334).
+ *
+ * Johannes 22.10.2026 Kartanon asemakaavasta: *"tasta pitaisi olla
+ * kuvauksessa ainakin [1.2 Kaava-alueen sijainti ja 1.3 Kaavan
+ * tarkoitus] ... loytyy dokumenteista."*
+ *
+ * Kuvaukseksi otettiin haitarin tekstisisalto, mutta Kokemaella se on
+ * pelkka lista liitteiden nimia: "Kaavaluonnos Kaavaselostus
+ * Osallistumis- ja arviointisuunnitelma (OAS) Seurantalomake
+ * Kaavakartta ja maaraykset A4" -- 114 merkkia joista yksikaan ei kerro
+ * hankkeesta.
+ *
+ * Jasennin oli jo valmis: `taydennaKuvausLiitteesta` poimi kaikilta
+ * neljalta Kokemaen kaavalta tavoiteluvun sellaisenaan (378-906
+ * merkkia). Kerraajaa oli korjattava, ei jasenninta
+ * ([[kaava-parser-vs-page]]).
+ *
+ * Haitarin teksti PUDOTETAAN kun se on pelkkia linkkiotsikoita:
+ * muuten `yhdistaKuvaukset` jattaisi otsikkolistan kuvauksen alkuun.
+ * Saanto on jaettu apuri `onVainLiiteotsikot`, jottei tama keraaja ja
+ * taydennysskripti ehdi eriytya toisistaan.
+ */
+
 async function collectKokemakiKaavaSource(source: DiscoverySource) {
   const response = await fetch(KOKEMAKI_LISTING_URL, { cache: "no-store" })
   if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  /* Liitehaun katto per ajo, ks. kaavanLiite.ts. */
+  const liiteBudjetti: LiiteBudjetti = { haettu: 0, raja: 12 }
 
   const $ = cheerio.load(await response.text())
 
@@ -15605,9 +15637,19 @@ async function collectKokemakiKaavaSource(source: DiscoverySource) {
     if (!title || !/asemakaava/i.test(title) || /yleiskaava|ranta-asemakaava/i.test(title)) continue
 
     const content = item.find(".accordion__item__content").first()
-    const description = content.text().replace(/\s+/g, " ").trim()
+    const haitarinTeksti = content.text().replace(/\s+/g, " ").trim()
+    const linkit = liitelinkit($, KOKEMAKI_LISTING_URL, content)
 
-    const phase = kokemakiPhaseFromText(`${title} ${description}`)
+    /*
+     * Vaihe luetaan HAITARIN tekstista, ei taydennetysta kuvauksesta:
+     * selostuksen tavoiteluku kertoo mita kaavalla halutaan, ei missa
+     * vaiheessa se on, ja sana "luonnos" tai "ehdotus" siina johtaisi
+     * vaiheen harhaan.
+     */
+    const phase = kokemakiPhaseFromText(`${title} ${haitarinTeksti}`)
+
+    const pohja = onVainLiiteotsikot(haitarinTeksti, linkit) ? "" : haitarinTeksti
+    const description = (await taydennaKuvausLiitteesta(pohja, linkit, liiteBudjetti)) ?? pohja
     const completed = phase === "Voimaantulo"
     const contacts = [KOKEMAKI_CONTACT]
 

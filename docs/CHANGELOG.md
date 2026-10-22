@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Kokemäen kaavakuvaukset selostuksista (D-334)
+
+Kokemäen kerääjä otti kuvaukseksi haitarin tekstin, joka on pelkkä lista
+liitteiden nimiä. Jäsennin oli jo valmis: selostuksen tavoiteluku poimii
+kaikilta neljältä kaavalta tekstin sellaisenaan (43–114 merkkiä →
+277–820). Kerääjä kytkettiin ja olemassa olevat rivit täydennettiin —
+myös kolme hankeriviä, koska hyväksytyn jonorivin metadata ei enää
+tavoita asiakasta.
+
+Otsikkolistan tunnistus on nyt jaettu apuri `onVainLiiteotsikot`:
+tarkka yhtäsuuruus ei riittänyt, koska lohkossa oli "(OAS)" linkin
+ulkopuolella.
+
 ### Väliaikainen ja pysyvä skeittihalli eroteltiin (D-333)
 
 Malmin rivi osoittautui kahdeksi hankkeeksi. Lautakunnan oikea asiakirja

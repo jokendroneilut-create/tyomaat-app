@@ -34,6 +34,73 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-334 - Kokemäen kaavakuvaus: haitarissa ei ole kuvausta, vain liiteotsikot
+
+Johannes 22.10.2026 Kartanon asemakaavasta: *"tästä pitäisi olla
+kuvauksessa ainakin [1.2 Kaava-alueen sijainti ja 1.3 Kaavan tarkoitus]
+… löytyy dokumenteista. katso myös muut tuosta lähteestä aiemmin tulleet
+ja jonossa olevat."*
+
+**Jäsennin oli jo valmis, kerääjä ei kutsunut sitä.** Kokemäen kerääjä
+otti kuvaukseksi haitarin tekstisisällön, joka on pelkkä lista
+liitteiden nimiä — "Kaavaluonnos Kaavaselostus Osallistumis- ja
+arviointisuunnitelma (OAS) Seurantalomake Kaavakartta ja määräykset A4",
+114 merkkiä joista yksikään ei kerro hankkeesta.
+`taydennaKuvausLiitteesta` poimi tavoiteluvun **kaikilta neljältä**
+Kokemäen kaavalta sellaisenaan. Kerääjä korjattiin, ei jäsennintä
+([[kaava-parser-vs-page]]).
+
+| kaava | kuvaus ennen | jälkeen |
+|---|---|---|
+| Kartanon asemakaava | 114 | **778** |
+| Koomanojantien itäosan muutos | 85 | **820** |
+| Valtatien 2 eteläpuolen | 43 | **379** |
+| Pitkäjärven majan muutos | 100 | **277** |
+
+**Kolme virhettä, jotka kuivaharjoitus paljasti yksi kerrallaan.**
+
+1. **Tarkka yhtäsuuruus ei tunnistanut otsikkolistaa.** Ensimmäinen
+   sääntö vertasi haitarin tekstiä linkkien tekstien yhdisteeseen, ja
+   kahdella kaavalla se ei osunut: lohkossa on "**(OAS)**" joka on
+   linkin **ulkopuolella**. Otsikkolista jäi kuvauksen alkuun. Sääntö on
+   nyt jaettu apuri `onVainLiiteotsikot`: linkkien tekstit poistetaan
+   kuvauksesta, ja jos jäljelle jää alle 25 kirjainta, omaa sisältöä ei
+   ole. Apuri on jaettu, jottei kerääjä ja täydennysskripti ehdi
+   eriytyä.
+2. **Maanomistuspoiminta nappasi koko tavoitevirkkeen**, koska
+   "omist**amalle**" osui sen sisällä. Vaaditaan nyt sana
+   "omistuksessa" ja alle 200 merkin lause.
+3. **Hyväksytty jonorivi ei enää tavoita asiakasta.** Kolme neljästä oli
+   tilassa `approved`, eli niistä on jo hanke, ja asiakas lukee
+   hankkeen `additional_info`-saraketta. Jonorivin metadata ei siirry
+   hyväksynnän jälkeen mihinkään, joten korjaus tehtiin erikseen myös
+   hankeriveille ([[measure-the-field-the-user-reads]]).
+
+**Funktion nimessä oli kyrillinen а.** `kokemakiPelkistа` (U+0430)
+typecheckasi puhtaasti — homoglyfi on ansa, jota kääntäjä ei näe.
+Korjattu ASCII-kirjaimeksi ennen committia.
+
+**Heredoc söi kenoviivan viidennen kerran, ja vahti nappasi sen.**
+`/\bomistuksessa\b/i` meni tiedostoon muodossa
+`/<BS>omistuksessa<BS>/i`, joten maanomistuspoiminta oli **hiljainen
+no-op** — se ei kaatunut, se vain ei löytänyt mitään. D-328:ssa
+dokumentteihin laajennettu `lib/ohjausmerkit.spec.ts` kaatui ja osoitti
+rivin. Ilman sitä olisin committannut toimimattoman säännön.
+
+**Hakijaa ei kirjoitettu.** Kenttä `hakija` ei ole olemassa yhdelläkään
+rivillä (0 / 2 915 kaavariviä), ja `developer` on täytetty vain 114:llä
+— kaikki Vantaalta, arvoilla "Yksityinen", "Muu", "Kaupunki", jotka ovat
+lähteen oma hakijaluokittelu eivätkä yrityksiä. Selostukset kertovat
+**maanomistuksen**, mikä ei ole sama asia kuin hakija: "Valtatien 2
+eteläpuolen" on osittain yksityisessä, valtion ja kaupungin
+omistuksessa. Omistus talletettiin
+`metadata.maanomistus_selostuksesta`-kenttään luettavaksi, ja
+kenttäpäätös jää erikseen tehtäväksi.
+
+Ks. `lib/agent/kaavanLiite.ts` (`onVainLiiteotsikot`),
+`scripts/taydenna-kokemaen-kaavakuvaukset.ts`,
+`scripts/taydenna-kokemaen-hankekuvaukset.ts`.
+
 ### D-333 - Väliaikainen ja pysyvä halli ovat eri hankkeet, ja tiedote ei kertonut sitä
 
 Johannes 22.10.2026 korjasi minua: *"ymmärsit väärin. nykyinen halli
