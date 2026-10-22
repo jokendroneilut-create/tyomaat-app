@@ -39,6 +39,10 @@ kuvaa — tiivistäminen ei paljasta mitä tekstistä puuttuu.
 
 ### Lautakunnan päätöstiedote tiivistettiin yhdeksi hankkeeksi (D-332)
 
+> **Osittain kumottu seuraavana päivänä, ks. D-333 yllä.** Tiivistys oli
+> oikea, mutta jäljelle jäänyt asia oli väliaikainen vuokrajärjestely eikä
+> varsinainen hanke; rivi eroteltiin lopulta kahdeksi.
+
 Malmin skeitti- ja harrastushallin jonorivin kuvaus oli lautakunnan
 päätöstiedote kolmesta eri asiasta: 4 000 merkistä yli puolet oli
 uimahallien perhelippua, lautakunnan kokoonpanoa ja avainsanoja.

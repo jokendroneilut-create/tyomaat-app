@@ -155,6 +155,14 @@ Ks. `scripts/erottele-skeittihallit.ts`.
 
 ### D-332 - Lautakunnan päätöstiedote: tiivistä kuvaus, älä tee uutta hanketta
 
+> **OSITTAIN KUMOTTU, ks. D-333.** Tämän päätöksen *päätössääntö* pätee
+> (muokkaa, kun rivi kantaa oikean identiteetin), mutta sen **soveltaminen
+> tähän tapaukseen oli väärin**: pidin Malmin jäähallia hankkeena, kun se
+> on väliaikainen vuokrajärjestely, ja varsinainen pysyvä halli mainittiin
+> vain sivulauseessa. D-333 erotteli rivin kahdeksi ja loi uuden rivin.
+> Voimassa jäivät yhteyshenkilön karsinta ja kenttäkartoitus
+> (`additional_info = metadata.description`).
+
 Johannes 22.10.2026 Malmin skeittihallista: *"tässä on olennaista
 tiivistää kuvaukseen vaan tuo uusi skeitti ja harrastushalli. muokkaatko
 kuvausta vai miten se kannattaisi tehdä? Vai kokonaan uusi hanke ja tuo
