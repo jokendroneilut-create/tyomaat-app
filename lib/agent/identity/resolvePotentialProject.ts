@@ -16,7 +16,7 @@ import {
 } from "@/lib/projects/contacts"
 import { merkitseRoolit } from "@/lib/projects/contactRole"
 import { housingCompanyName } from "@/lib/projects/housingCompanyKey"
-import { kaavanRakennuttaja } from "@/lib/projects/kaavanRakennuttaja"
+import { kaavanRakennuttaja, onLuokkasana } from "@/lib/projects/kaavanRakennuttaja"
 import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
 import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
 import { resolveBuildingType } from "@/lib/agent/quality/resolveBuildingType"
@@ -225,18 +225,28 @@ export async function resolvePotentialProject(
   }
 
   /*
-   * KAAVAN RAKENNUTTAJA KUVAUKSESTA (D-195). Vain tyhjaan kenttaan ja
-   * vain kaavalahteille - perustelu `kaavanRakennuttaja`ssa.
+   * KAAVAN RAKENNUTTAJA KUVAUKSESTA (D-195, D-338). Vain tyhjaan
+   * kenttaan tai luokkasanan paalle, ja vain kaavalahteille -
+   * perustelu `kaavanRakennuttaja`ssa.
    */
   function rakennuttajaMetadata(
     existingMetadata?: Record<string, any> | null
   ): Record<string, unknown> {
+    const nykyinen = existingMetadata?.developer ?? md.developer
     const developer = kaavanRakennuttaja({
       sourceName: input.sourceName ?? md.source_name,
       description: md.description,
-      nykyinen: existingMetadata?.developer ?? md.developer,
+      nykyinen,
     })
-    return developer ? { developer } : {}
+    if (!developer) return {}
+
+    /*
+     * Luokkasana ei katoa vaan siirtyy omaan kenttaansa: se on lahteen
+     * oma tieto maanomistuksen lajista, vaikkei se ole rakennuttaja
+     * ([[show-everything-we-know]]).
+     */
+    const luokka = onLuokkasana(nykyinen) ? String(nykyinen).trim() : null
+    return luokka ? { developer, hakija_luokka: luokka } : { developer }
   }
 
   /*

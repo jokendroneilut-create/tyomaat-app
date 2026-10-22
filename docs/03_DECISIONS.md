@@ -34,7 +34,94 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-338 - Kaavan osapuoli: mekanismi oli olemassa, sanasto puuttui
+
+Johannes 23.10.2026 Samppalinnan koulutontista: *"tästä ei ole poimittu
+hankkeeseen liittyvää yritystä TKU-Rakennus Oy joka on kuvauksessa.
+selvitetään syy, korjataan tämä, takautuvasti, jonosta jos on ja
+tulevista hankkeista."*
+
+**Syy ei ollut puuttuva poiminta.** `kaavanRakennuttaja` (D-195) ajetaan
+jo kaikille kaavalähteille `resolvePotentialProject`issa. Sen käyttämän
+`extractYvaDeveloper`in ankkurit ovat kuitenkin **YVA-tekstin sanastoa**:
+"hankkeesta vastaa", "hankevastaava", "X suunnittelee / selvittää /
+hakee / toteuttaa". Samppalinnan kuvaus sanoo *"Turun kaupungin ja
+TKU-Rakennus Oy:n välinen määräaikainen innovaatiokumppanuus"* — ei
+yhtään niistä. Mekanismi oli siis paikallaan ja ajossa; puuttuva osa oli
+**kaavapäätöksen oma kieli**.
+
+**Ankkurit laskettiin aineistosta.** 6 092 kaavarivistä 578:lla on
+yritysnimi kuvauksessa, vanha sääntö löytää rakennuttajan 151:ltä ja 346
+jää ilman. Niiden 675 nimiesiintymän ympäriltä laskettu sanajakauma
+antoi kuviot suoraan:
+
+| nimen jälkeen | | nimen edellä | |
+|---|---|---|---|
+| aloitteesta | 18 | hyväksyä | 10 |
+| kaavoitusaloite(en/sta) | 23 | vireille | 8 |
+| hakemuksesta | 8 | rakennusliike | 6 |
+| omistuksessa | 6 | lisätietoja | 6 |
+| esityksestä | 4 | aloitteen / tehnyt | 8 |
+| haluaa / suunnittelevat / esittää | 11 | omistaa | 4 |
+| **välinen** | **3** | | |
+
+**Samassa jakaumassa on konsultti:** "laatija" 14, "kaavakonsultti" 12,
+"konsultti(na)" 10, "laatimisen" 5. Nimilista ei riitä, koska pienet
+paikalliset toimistot eivät ole listalla, joten hylkäys perustuu
+**roolisanaan nimen edellä** eikä nimeen.
+
+**Luokkasana ei ole rakennuttaja.** Vantaan kaavasivun "Hakija"-kentässä
+lukee useimmiten maanomistuksen laji, ja se tallentui rakennuttajaksi:
+asiakas näkee *"Rakennuttaja: Yksityinen"*. Mitattu: Kaupunki 86,
+Yksityinen 62, Muu 16, yhdistelmiä 10, Seurakunta 2 — **176 riviä**.
+Hakijan oikea nimi lukee näissä kuvauksessa (*"Lisätietoja hakijasta:
+Sato-Asunnot Oy"*). Luokkasana käsitellään nyt tyhjänä ja säilyy
+kentässä `metadata.hakija_luokka`.
+
+Lista on **lueteltu eikä pääteltu** säännöllä "ei yhtiömuotoa": samassa
+joukossa oli kahdeksan yhtiömuodotonta **aitoa** nimeä (Metsähallitus,
+Joensuun kaupunki, Lempäälän kunta, Bonava, wpd Suomi, …), jotka
+sääntö olisi pyyhkinyt.
+
+**Kolme virhettä, jotka vain mittaus paljasti.**
+
+1. *Yleinen CamelCase-katkaisu rikkoi aidot nimet.* "Pienestä
+   kirjaimesta isoon" korjasi liimautuneen paikannimen
+   ("OlkkajärviApukka Resort Oy") mutta rikkoi `WestWind Oy` →
+   "Wind Oy" ja `RovaLappi Rakennus Oy` → "Lappi Rakennus Oy".
+   Rakenteellisesti niitä ei voi erottaa, joten katkaisu rajattiin
+   **numeroon** ("kaupunginosa nro 3RovaLappi"): yksi epätarkka nimi on
+   halvempi kuin neljä katkaistua.
+2. *Pieni sidesana katkaisee nimen keskeltä.* `NAME` vaatii joka sanalta
+   ison alkukirjaimen, joten "Napapiirin Energia ja Vesi Oy" poimittiin
+   muodossa "Vesi Oy" (3 riviä). Nimi hylätään nyt, jos sen edellä on
+   " ja " ja sitä ennen iso sana joka ei pääty genetiiviin — genetiivi
+   säilyy, koska se erottaa aidon listan ("Wärtsilä Finland Oy:n **ja**
+   EPV Energia Oy:n aloitteesta" on kaksi yritystä).
+3. *Kuvio ei osunut omaan esimerkkiinsä.* `v[äa]lise\w*` ei osu sanaan
+   "väli**n**en" — vain sen genetiiviin "välisen". Kolme ensimmäistä
+   mittausajoa näyttivät uskottavia lukuja (70–79 osumaa) **ilman että
+   Johanneksen oma rivi oli joukossa**; vasta yksikkötesti juuri siitä
+   lauseesta paljasti sen. Kuvio on nyt `v[äa]li(?:nen|se\w*)`.
+
+**Tulos:** jono 62, hankkeet 58 (joista 43 luokkasanan tilalle), 0
+virhettä. Poimijat ajetaan järjestyksessä: YVA-sanasto ensin, kaavan oma
+sanasto sen jälkeen — ja takautuva ajo kutsuu **samaa funktiota** kuin
+live-polku, jottei kaksi sääntöä voi erkaantua.
+
+Ks. `lib/projects/kaavanOsapuolet.ts`,
+`lib/projects/kaavanOsapuolet.spec.ts`,
+`lib/projects/kaavanRakennuttaja.ts`,
+`scripts/mittaa-kaavan-ankkurisanat.ts`,
+`scripts/taydenna-kaavojen-rakennuttajat.ts`.
+
+**Avoinna:** monen hakijan rivit saavat vain yhden nimen ("Sanoma Oyj,
+Sponda Oy ja Vantaan kaupunki" → Sanoma Oyj), ja 457 kaavarivillä olisi
+poimittavissa *liittyviä* yrityksiä (`extractYvaCompanies`, D-192) joita
+ei vielä ajeta kaavalähteille — kentässä niitä on 41.
+
 ### D-337 - Sama budjettivika oli Tampereella ja Porilla, ja 404-sivu antoi otsikon
+
 
 Johannes 23.10.2026: *"korjaa tampere ja pori."* Turun korjauksen
 (D-336) jälkeen kysymys oli: onko sama kuvio muualla?

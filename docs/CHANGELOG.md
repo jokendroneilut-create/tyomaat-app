@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Kaavahankkeiden rakennuttaja kuvauksesta (D-338)
+
+Poimintamekanismi oli olemassa ja ajossa, mutta sen ankkurit olivat
+YVA-tekstin sanastoa. Kaavapaatos puhuu toisin ("X Oy:n
+kaavoitusaloite", "X Oy:n valinen kumppanuus"), ja ankkurit laskettiin
+nyt aineistosta: 578 kaavarivilla on yritysnimi kuvauksessa, vanha
+saanto loysi 151.
+
+Lisaksi Vantaan "Hakija"-kentassa lukee useimmiten maanomistuksen laji,
+joten asiakas nakee "Rakennuttaja: Yksityinen" (176 rivia). Luokkasana
+kasitellaan nyt tyhjana ja oikea nimi luetaan kuvauksesta; vanha arvo
+sailyy metadata.hakija_luokka-kentassa.
+
+Takautuva ajo taytti jonoon 62 ja hankkeisiin 58 rakennuttajaa (43
+luokkasanan tilalle), 0 virhetta. Konsultti ei kelpaa osapuoleksi:
+hylkays perustuu roolisanaan nimen edella, ei nimilistaan.
+
 ### Hakubudjetti: sama vika Tampereella ja Porilla (D-337)
 
 Kolme kerääjää yritti kuollutta osoitetta joka ajossa. Tampereella se
