@@ -89,6 +89,36 @@ export function liitelinkit(
  */
 const JAANNOS_RAJA = 25
 
+/*
+ * KUVAUS ILMAN LIITEOTSIKOITA (D-335).
+ *
+ * Paraisten lohkoissa pituus tulee TOISTUVISTA ilmoitusriveista ja
+ * liitenimista:
+ *
+ *   "Kaavaehdotus on ollut julkisesti nahtavana 11.9-13.10.2025:
+ *    Kaavaehdotus merkkienselityksineen Kaavaselostus liitteineen
+ *    Luontoselvitys 2025 ... Aloitusvaiheen aineisto, kaava on
+ *    ilmoitettu vireille lehti-ilmoituksella 6.6.2024: ..."
+ *
+ * 461 merkkia, nolla hankesisaltoa. Mitattu 23.10.2026: viisi
+ * Paraisten lohkoa yhdeksasta oli tassa tilassa, eli kynnyksen takana
+ * vaarin perustein.
+ */
+export function omaSisalto(
+  kuvaus: string | null | undefined,
+  linkit: { teksti?: string | null }[]
+): string {
+  let jaannos = String(kuvaus ?? "")
+  /* Pisin ensin, jottei lyhyt otsikko syo pidemman osaa. */
+  for (const l of [...linkit]
+    .map((x) => String(x.teksti ?? "").trim())
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)) {
+    jaannos = jaannos.split(l).join(" ")
+  }
+  return jaannos.replace(/\s+/g, " ").trim()
+}
+
 export function onVainLiiteotsikot(
   kuvaus: string | null | undefined,
   linkit: { teksti?: string | null }[]
@@ -97,15 +127,7 @@ export function onVainLiiteotsikot(
   if (!teksti) return true
   if (!linkit.length) return false
 
-  let jaannos = teksti
-  /* Pisin ensin, jottei lyhyt otsikko syo pidemman osaa. */
-  for (const l of [...linkit]
-    .map((x) => String(x.teksti ?? "").trim())
-    .filter(Boolean)
-    .sort((a, b) => b.length - a.length)) {
-    jaannos = jaannos.split(l).join(" ")
-  }
-  const kirjaimia = (jaannos.match(/[A-Za-zÀ-ɏ]/g) ?? []).length
+  const kirjaimia = (omaSisalto(teksti, linkit).match(/[A-Za-zÀ-ɏ]/g) ?? []).length
   return kirjaimia < JAANNOS_RAJA
 }
 
@@ -120,7 +142,13 @@ export async function taydennaKuvausLiitteesta(
   budjetti: LiiteBudjetti,
   kynnys: number = OHUEN_KUVAUKSEN_RAJA
 ): Promise<string | null> {
-  if ((kuvaus ?? "").length >= kynnys) return kuvaus
+  /*
+   * KYNNYS OMAA SISALTOA VASTEN, ei raakaa pituutta (D-335). Tama vain
+   * LISAA hakuja siella missa pohja oli tayteaineista; aito kappale jaa
+   * yha kynnyksen ylle eika sita haeta turhaan. Hakujen maaran kattaa
+   * `budjetti.raja` per ajo.
+   */
+  if (omaSisalto(kuvaus, linkit).length >= kynnys) return kuvaus
   if (budjetti.haettu >= budjetti.raja) return kuvaus
 
   const asiakirja = valitseKaavanAsiakirja(linkit)

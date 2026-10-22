@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Liferay-liitteet löytyvät, ja kynnys mittaa omaa sisältöä (D-335)
+
+Kaksi estettä, molemmat yleisiä: liitteen osoite hylättiin kun `.pdf` ei
+ollut polun lopussa (Liferay panee tiedostonimen keskelle ja UUID:n
+perään), ja ohuen kuvauksen kynnys mittasi raakaa pituutta, jota
+Paraisten toistuvat nähtävilläoloilmoitukset venyttivät yli rajan ilman
+hankesisältöä.
+
+Molemmat korjattu: kuusi lohkoa yhdeksästä sai oikean selostustekstin,
+ja täydennettiin 5 jonoriviä sekä 3 hanketta. Kolme jäi: kahdella
+selostus on kaksikielinen ruotsi/suomi-taitto josta otsikkojäsennin ei
+löydä lukuja, yhdellä ilmoitukset ylittävät kynnyksen aidosti.
+
 ### Kokemäen kaavakuvaukset selostuksista (D-334)
 
 Kokemäen kerääjä otti kuvaukseksi haitarin tekstin, joka on pelkkä lista

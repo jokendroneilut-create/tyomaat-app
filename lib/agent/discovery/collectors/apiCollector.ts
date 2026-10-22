@@ -15107,12 +15107,38 @@ function parainenPhaseFromText(text: string): string {
   return "Vireilletulo"
 }
 
+/*
+ * PARAISTEN LOHKOSSA ON ILMOITUKSIA JA LIITENIMIA, EI HANKESISALTOA
+ * (D-335).
+ *
+ * Johannes 23.10.2026 Pappilanmalmin korttelista: *"tassa pitaisi olla
+ * poimittu liitteista [1.3 Kaavan tarkoitus]."* Lohkon teksti oli 288
+ * merkkia: vireilletuloilmoitus ja viisi liitteen nimea.
+ *
+ * Kaksi korjausta tarvittiin ennen kuin selostus loytyi:
+ *
+ *   1. `normalisoiLiiteUrl` vaati `.pdf`:n polun LOPPUUN, mutta
+ *      Liferay-alustalla tiedostonimi on keskella ja perassa on UUID.
+ *      Se hylkasi KAIKKI Paraisten liitteet.
+ *   2. Kynnys mittasi raakaa pituutta, ja Paraisten toistuvat
+ *      nahtavilla-ilmoitukset venyttavat sen yli 300:n ilman
+ *      hankesisaltoa. Kynnys katsoo nyt `omaSisalto`-pituutta.
+ *
+ * Mitattu 23.10.2026: kuusi lohkoa yhdeksasta sai oikean tekstin
+ * (288 -> 1 286 merkkia Johanneksen rivilla). Kolme jai: kahdella
+ * selostus on kaksikielinen ruotsi/suomi-taitto, josta otsikkojasennin
+ * ei loyda numeroituja lukuja, ja yhdella lohkon omat
+ * nahtavilla-ilmoitukset ylittavat kynnyksen aidosti.
+ */
 async function collectParainenKaavaSource(source: DiscoverySource) {
   const response = await fetch(PARAINEN_LISTING_URL, {
     cache: "no-store",
     headers: { "Accept-Language": "fi" },
   })
   if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
+
+  /* Liitehaun katto per ajo, ks. kaavanLiite.ts. */
+  const parainenLiiteBudjetti: LiiteBudjetti = { haettu: 0, raja: 12 }
 
   const $ = cheerio.load(await response.text())
   const h1 = $("h1")
@@ -15183,12 +15209,21 @@ async function collectParainenKaavaSource(source: DiscoverySource) {
         url: new URL($(a).attr("href") ?? "", PARAINEN_LISTING_URL).toString(),
       }))
 
+    /*
+     * Liitelinkit siina muodossa jonka `valitseKaavanAsiakirja` lukee.
+     * `liitelinkit`-apuri odottaa cheerio-valintaa, ja lohko on taalla
+     * irrallisten solmujen lista, joten muoto rakennetaan tasta.
+     */
+    const kaavaLinkit = attachments.map((a) => ({ teksti: a.label, href: a.url }))
+    const description =
+      (await taydennaKuvausLiitteesta(bodyText, kaavaLinkit, parainenLiiteBudjetti)) ?? bodyText
+
     found += 1
 
     const slug = kemiSlug(block.title)
     const documentUrl = `${PARAINEN_LISTING_URL}#${slug}`
 
-    const rawText = JSON.stringify({ title: block.title, phase, description: bodyText, contacts, attachments })
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts, attachments })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -15208,7 +15243,7 @@ async function collectParainenKaavaSource(source: DiscoverySource) {
           slug,
           kaava_tunnus: null,
           phase,
-          description: bodyText,
+          description,
           contacts,
           attachments,
           completed,

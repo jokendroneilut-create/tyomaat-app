@@ -382,7 +382,20 @@ export function normalisoiLiiteUrl(href: string | null | undefined): string | nu
   if (!/^https?:$/.test(osoite.protocol)) return null
   /* Isantanimi ilman pistetta ei ole verkkotunnus vaan tiedostonimi. */
   if (!osoite.hostname.includes(".")) return null
-  if (!/\.pdf$/i.test(osoite.pathname)) return null
+  /*
+   * `.pdf` SAA OLLA POLUN KESKELLA (D-335).
+   *
+   * Liferay-alustalla tiedostonimi on polun keskella ja perassa on
+   * UUID, esim.
+   *   /documents/41921/181653/Selostus__Pappilanmalmi.pdf/c7859695-...
+   * Osoite palvelee aidon PDF:n (tarkistettu: application/pdf, 5,1 MB,
+   * "%PDF-1.7"), mutta loppuun sidottu tarkistus hylkasi KAIKKI
+   * Paraisten liitteet -- eli yksikaan selostus ei loytynyt.
+   *
+   * Liferay on yleinen Suomen kunnissa, joten korjaus siirtyy muihinkin
+   * ([[shared-platform-fix-transfers]]).
+   */
+  if (!/\.pdf(\/|$)/i.test(osoite.pathname)) return null
   return osoite.toString()
 }
 

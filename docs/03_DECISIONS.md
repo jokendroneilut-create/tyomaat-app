@@ -34,6 +34,67 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-335 - Liferay-osoite hylättiin, ja kynnys mittasi väärää pituutta
+
+Johannes 23.10.2026 Paraisten Pappilanmalmin korttelista: *"tässä pitäisi
+olla poimittu liitteistä [1.3 Kaavan tarkoitus] … korjataan tämä,
+tarkistetaan jo hyväksytyistä ja korjataan että tulisi jatkossa myös
+nämä."*
+
+**Kaksi erillistä estettä, molemmat yleisiä eivätkä Paraisten omia.**
+
+**1. `.pdf` sai olla vain polun lopussa.** Liferay-alustalla tiedostonimi
+on polun keskellä ja perässä on UUID:
+
+    /documents/41921/181653/Selostus__Pappilanmalmi…pdf/c7859695-2c37-…
+
+`normalisoiLiiteUrl` vaati `/\.pdf$/`, joten se hylkäsi **kaikki**
+Paraisten liitteet — yksikään selostus ei löytynyt. Tarkistin että osoite
+palvelee aidon tiedoston ennen kuin löysäsin säännön:
+`application/pdf`, 5,1 MB, alkutavut `%PDF-1.7`. Sääntö on nyt
+`/\.pdf(\/|$)/`. Liferay on yleinen Suomen kunnissa, joten korjaus
+siirtyy muihinkin ([[shared-platform-fix-transfers]]).
+
+**2. Kynnys mittasi raakaa pituutta.** `OHUEN_KUVAUKSEN_RAJA` on 300
+merkkiä, mutta Paraisten lohkoissa pituus tulee **toistuvista
+nähtävilläoloilmoituksista ja liitenimistä**:
+
+> "Kaavaehdotus on ollut julkisesti nähtävänä 11.9-13.10.2025:
+> Kaavaehdotus merkkienselityksineen Kaavaselostus liitteineen
+> Luontoselvitys 2025 … Aloitusvaiheen aineisto, kaava on ilmoitettu
+> vireille lehti-ilmoituksella 6.6.2024: …"
+
+461 merkkiä, nolla hankesisältöä — ja silti kynnyksen yllä, joten
+selostusta ei haettu. **Viisi lohkoa yhdeksästä oli tässä tilassa.**
+Kynnys katsoo nyt `omaSisalto`-pituutta eli kuvausta ilman
+liiteotsikoita. Muutos vain **lisää** hakuja siellä missä pohja oli
+täyteainesta; aito kappale jää yhä kynnyksen ylle, ja `budjetti.raja`
+kattaa määrän per ajo. Sama apuri palvelee nyt myös
+`onVainLiiteotsikot`-sääntöä, joten logiikka on yhdessä paikassa.
+
+**Tulos:** kuusi lohkoa yhdeksästä sai oikean tekstin, Johanneksen rivi
+**294 → 1 286 merkkiä**. Täydennettiin 5 jonoriviä ja 3 hanketta —
+hankkeet erikseen, koska hyväksytyn jonorivin metadata ei enää tavoita
+asiakasta (D-334).
+
+**Kolme jäi, ja syy on nimetty.** Kaksi lohkoa: selostus on
+**kaksikielinen ruotsi/suomi-taitto** ("BESKRIVNING MED BILAGOR SELOSTUS
+JA LIITTEET"), josta teksti irtoaa 14–17 k merkkiä mutta otsikkojäsennin
+ei löydä numeroituja lukuja. Yksi lohko: sen omat nähtävilläoloilmoitukset
+ylittävät kynnyksen aidosti (722 merkkiä viidestä eri päivätystä
+ilmoituksesta). Yksi jonorivi ei enää vastaa mitään lohkoa sivulla —
+otsikko on muuttunut tai kaava poistunut; ei koskettu.
+
+**Epäilin ensin väärää syytä.** Arvelin että `LIITESANA` hylkää
+"Kaavaselostus **liitteineen**" sanan "liite" takia. Diagnoosi osoitti
+toisin: selostus valittiin oikein kaikissa kolmessa, ja vika oli
+kaksikielisessä taitossa. Kirjoitin sen muistiin ennen kuin ehdin
+"korjata" toimivaa sääntöä.
+
+Ks. `lib/agent/kaavanKuvaus.ts` (`normalisoiLiiteUrl`),
+`lib/agent/kaavanLiite.ts` (`omaSisalto`),
+`scripts/taydenna-paraisten-kaavakuvaukset.ts`.
+
 ### D-334 - Kokemäen kaavakuvaus: haitarissa ei ole kuvausta, vain liiteotsikot
 
 Johannes 22.10.2026 Kartanon asemakaavasta: *"tästä pitäisi olla

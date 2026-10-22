@@ -114,6 +114,25 @@ describe("valitseKaavaselostus", () => {
 })
 
 describe("normalisoiLiiteUrl", () => {
+  /*
+   * LIFERAY-OSOITE: tiedostonimi polun keskella, perassa UUID (D-335).
+   * Paraisten sivuilla kaikki liitteet ovat tassa muodossa, ja osoite
+   * palvelee aidon PDF:n (tarkistettu: application/pdf, "%PDF-1.7").
+   * Loppuun sidottu tarkistus hylkasi ne kaikki.
+   */
+  it("hyvaksyy .pdf:n polun keskella kun perassa on tunniste", () => {
+    const url =
+      "https://www.pargas.fi/documents/41921/181653/" +
+      "Selostus__Pappilanmalmin_korttelin_3_AKM_Luonnos_10.9.2026_FIN.pdf/" +
+      "c7859695-2c37-0775-42ff-a11958666114?t=1792521826600"
+    expect(normalisoiLiiteUrl(url)).toBe(url)
+  })
+
+  it("ei hyvaksy osoitetta jossa ei ole pdf-paatetta lainkaan", () => {
+    expect(normalisoiLiiteUrl("https://www.pargas.fi/documents/41921/181653/kuvaus")).toBeNull()
+    expect(normalisoiLiiteUrl("https://kunta.fi/liite.pdfx/123")).toBeNull()
+  })
+
   /* Euran sivulla oli "http://Selostus__Korttelin_353_AKM_ehdotus_17.6.2026". */
   it("hylkaa osoitteen jonka isantanimi on tiedostonimi", () => {
     expect(normalisoiLiiteUrl("http://Selostus__Korttelin_353_AKM_ehdotus_17.6.2026")).toBeNull()
