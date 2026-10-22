@@ -487,3 +487,52 @@ Tiedosto: `exports/Tyomaat_Crowdsorsa_kohdelista_Helsinki_2026-10-22.xlsx`
 prioriteetti). Prioriteetti 1 = ei yhteyshenkilöä lainkaan (33),
 2 = ei työmaan omaa (57). Tyypeittäin kerrostalo 43, infra 10, koulu 6,
 toimitila 6, päiväkoti 5.
+
+### Koordinaattien varmistus ennen pilottia (22.10.2026)
+
+Johannes: *"pelaajat suunnistavat oikeasti niiden mukaan"* — jokainen
+piste on oltava varma. Alue laajennettiin pääkaupunkiseutuun
+(tavoite 100 ± 20 kohdetta), mutta vain varmistetuin pistein.
+
+**OpenStreetMap ei kelpaa tarkistukseen yksin.** Kannan pisteet on
+alun perin haettu Nominatimista, joten saman palvelun uusi haku vain
+toistaa saman virheen (Siilitie 12 Helsinki → Siilipuistontie 12
+Vantaa molemmilla kerroilla; Sibeliuksenkatu 10 → Järvenpää).
+Ristiintarkistus (käänteinen haku: onko piste oikeassa kunnassa ja
+kadulla) löysi virheet, mutta ei antanut talotarkkuutta.
+
+**Ratkaisu: kuntien virallinen osoiterekisteri.**
+`kartta.hel.fi/ws/geoserver/avoindata/wfs`, tyyppi
+`avoindata:PKS_osoiteluettelo` — 145 692 osoitetta (Helsinki, Espoo,
+Vantaa, Kauniainen), WGS84 parametrilla `srsName=EPSG:4326`,
+haku `CQL_FILTER=katunimi='X' AND osoitenumero=N AND kaupunki='K'`,
+päivitetään päivittäin. Riippumaton OSM:stä.
+
+Tulos 231 PKS:n rakenteilla olevasta (ei työmaan ihmistä):
+
+| luokka | hankkeita |
+|---|---|
+| rekisteriosoite ≤ 60 m kannan pisteestä (varma) | 70 |
+| kannan piste väärässä, rekisterin piste korjattu kantaan | 34 |
+| ei katuosoitetta (alue, linjahanke) | 110 |
+| osoite ei rekisterissä | 9 |
+| pois (valmistunut, puolustusvoimat) | 8 |
+
+**Kanta korjattu:** 34 hankkeen koordinaatit rekisterin mukaisiksi
+(`metadata.geocode_source = "pks_osoiteluettelo_2026-10-21"`), mm.
+Herttoniemen liikuntapuisto 16 km (oli Vantaalla), Peijinkadun
+päiväkoti 5,4 km, Heka Koirasaarentie 24 1,6 km. Lisäksi 8 Helsingin
+pistettä korjattiin aiemmin samana päivänä OSM-ristiintarkistuksella ja
+Itä-Hakkilan koulun kunta Helsinki → Vantaa. Kolme kaksoiskappaleparia
+(Jasmiinikuja 3, Niipperintie 97, Rauhankatu 17) tarkistusjonoon;
+Tihtaalinkatu 4 oli jo katselmoitu `not_duplicate`.
+
+**Pilottilista:** 98 osoitetta (104 hanketta; samassa osoitteessa
+olevat yhdellä rivillä, koska riittää yksi kuva): Helsinki 56, Espoo 31,
+Vantaa 10, Kauniainen 1. Prioriteetti 1 (ei yhteyshenkilöä): 30.
+Tiedosto `exports/Tyomaat_Crowdsorsa_kohdelista_PKS_2026-10-22.xlsx`
+(ei repossa, ei henkilötietoja). Santahamina ja muut puolustusvoimien
+alueet suljettu pois (Johannes: varuskuntaa ei saa kuvata).
+
+**Opetus muualle:** sama rekisteri korjaisi PKS:n kaikki hankkeet,
+ei vain pilotin — 34/104 (33 %) piste oli yli 60 m väärässä.
