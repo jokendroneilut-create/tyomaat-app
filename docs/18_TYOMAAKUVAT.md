@@ -463,3 +463,27 @@ päätöksiin eikä tähän.
 
 **Järjestys:** pilotti → tietosuoja kuntoon → yksinoikeus sopimukseen →
 vasta sitten markkinointi.
+
+### Pilotin alue päätetty 22.10.2026: Helsinki, 90 kohdetta
+
+Crowdsorsan toimitusjohtaja Toni Paju soitti 22.10.2026 ja pyysi
+kohdelistan Excelinä hinnoittelua varten. Johannes: *"pitäisi olla
+maantieteellisesti mahdollisimman tiivis alue"* — 75 kohteen lista oli
+hajallaan ympäri Suomea, joten se hylättiin pilotin pohjana.
+
+Tiiviysvertailu (rakenteilla, ei työmaan omaa yhteyshenkilöä, tarkka
+sijainti):
+
+| alue | kohteita | prio 1 | mediaani keskipisteestä | 90 % säteellä |
+|---|---|---|---|---|
+| **Helsinki (valittu)** | **90** | 33 | 5,1 km | 8,3 km |
+| Tampere | 40 | 23 | 3,2 km | 7,6 km |
+| Pääkaupunkiseutu | 160 | 57 | 7,9 km | 13,0 km |
+
+Helsinki valittiin: riittävä otos tiiviillä alueella, ja Helsingistä on
+jo näyttö Lupapisteen sokeasta pisteestä (6/6 kuvattua puuttui).
+Tiedosto: `exports/Tyomaat_Crowdsorsa_kohdelista_Helsinki_2026-10-22.xlsx`
+(ei repossa; ei henkilötietoja — nimi, osoite, koordinaatit, tyyppi,
+prioriteetti). Prioriteetti 1 = ei yhteyshenkilöä lainkaan (33),
+2 = ei työmaan omaa (57). Tyypeittäin kerrostalo 43, infra 10, koulu 6,
+toimitila 6, päiväkoti 5.
