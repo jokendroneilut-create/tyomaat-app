@@ -530,7 +530,7 @@ Tihtaalinkatu 4 oli jo katselmoitu `not_duplicate`.
 **Pilottilista:** 98 osoitetta (104 hanketta; samassa osoitteessa
 olevat yhdellä rivillä, koska riittää yksi kuva): Helsinki 56, Espoo 31,
 Vantaa 10, Kauniainen 1. Prioriteetti 1 (ei yhteyshenkilöä): 30.
-Tiedosto `exports/Tyomaat_Crowdsorsa_kohdelista_PKS_2026-10-22.xlsx`
+Tiedosto `exports/Tyomaat_Crowdsorsa_kohdelista_v2_PKS_98kohdetta_2026-10-22.xlsx`
 (ei repossa, ei henkilötietoja). Santahamina ja muut puolustusvoimien
 alueet suljettu pois (Johannes: varuskuntaa ei saa kuvata).
 
