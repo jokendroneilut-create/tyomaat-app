@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Lautakunnan päätöstiedote tiivistettiin yhdeksi hankkeeksi (D-332)
+
+Malmin skeitti- ja harrastushallin jonorivin kuvaus oli lautakunnan
+päätöstiedote kolmesta eri asiasta: 4 000 merkistä yli puolet oli
+uimahallien perhelippua, lautakunnan kokoonpanoa ja avainsanoja.
+Tiivistettiin 1 259 merkkiin pelkkää hanketta, ja samalla poistettiin
+perhelipun yhteyshenkilö — vuoto oli kuvauksen lisäksi
+yhteyshenkilöissä.
+
+Rivistä ei tehty uutta hanketta: se kantoi jo oikean otsikon, kunnan,
+rakennuttajan ja lähde-URL:n, ja hylkääminen olisi riskeerannut hankkeen
+katoamisen.
+
 ### Keskeytysilmoitus jäi rakenteilla olevan hankkeen kuvaukseksi (D-331)
 
 Turun sataman S2-laituriurakan kuvaus päättyi sanoihin "Hankinta on

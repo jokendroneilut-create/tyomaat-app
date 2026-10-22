@@ -34,6 +34,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-332 - Lautakunnan päätöstiedote: tiivistä kuvaus, älä tee uutta hanketta
+
+Johannes 22.10.2026 Malmin skeittihallista: *"tässä on olennaista
+tiivistää kuvaukseen vaan tuo uusi skeitti ja harrastushalli. muokkaatko
+kuvausta vai miten se kannattaisi tehdä? Vai kokonaan uusi hanke ja tuo
+lähteeksi?"*
+
+**Päätössääntö: muokkaa, kun rivi kantaa jo oikean identiteetin.**
+
+| tilanne | tee |
+|---|---|
+| rivillä on oikea otsikko, kunta, rakennuttaja ja lähde-URL | muokkaa kuvausta |
+| rivin identiteetti kuuluu jollekin muulle asialle | uusi rivi, tämä lähteeksi |
+
+Tässä päti ensimmäinen: Johannes oli jo korjannut otsikon, ja kunta
+(Helsinki), osoite (Malmi), rakennuttaja (Helsingin kaupunki) sekä
+lähde-URL olivat oikein. Uuden rivin tekeminen olisi vaatinut tämän
+hylkäämisen, ja hylätty rivi on helppo tapa kadottaa hanke
+(D-313). Tarkistettu ettei Malmin hallista ole toista riviä kummassakaan
+taulussa.
+
+**Vuoto oli kahdessa paikassa, ja toinen jäi melkein huomaamatta.**
+Kulttuuri- ja vapaa-aikalautakunnan tiedote käsitteli kolmea asiaa:
+skeittihalli, uimahallien perhelippukokeilu ja ehkäisevän päihdetyön
+suunnitelma.
+
+1. **Kuvaus** oli 4 000 merkkiä eli täydessä katkaisurajassa, ja siitä
+   yli puolet oli perhelippua, lautakunnan kokoonpanoa, avainsanoja ja
+   viestintäpäällikön esittelyä. Tiivistettynä **1 259 merkkiä** pelkkää
+   hanketta.
+2. **Yhteyshenkilöissä** oli Anu Jokela (alueliikuntapäällikkö), joka on
+   **perhelipun** yhteyshenkilö — ei tämä hanke. Teemu Kosunen
+   (projektipäällikkö) on oikea ja jäi.
+
+Kysymys koski kuvausta, joten toinen olisi helposti jäänyt. Sääntö:
+**kun karsit asian pois kuvauksesta, karsi myös sen yhteyshenkilö.**
+
+Perhelippukokeilu ei ole rakennushanke eikä siitä jätetty omaa riviä.
+
+Valmistuminen 2027-01-31 lauseesta *"Tavoitteena on avata tilat ainakin
+osittain joulukuussa 2026 ja kokonaisuudessaan tammikuussa 2027"* —
+otettiin kokonaisuudessaan-päivä, koska se on hankkeen valmistuminen.
+
+**Muokkaus kohdistuu `metadata.description`-kenttään, koska hyväksynnässä
+`additional_info = metadata.description`** (tarkistettu approve-reitiltä
+ennen kirjoittamista). Alkuperäinen 4 000 merkin teksti talteen
+`metadata.kuvaus_tiivistetty`-kenttään.
+
+Ks. `scripts/tiivista-malmin-skeittihalli.ts`. Sama lähdekuvio kuin
+D-308/D-313, mutta eri ratkaisu: siellä rivi **eritellään** moneksi
+hankkeeksi, tässä **tiivistetään** yhdeksi.
+
 ### D-331 - Keskeytysilmoituksen teksti jäi rakenteilla olevalle hankkeelle
 
 Johannes 22.10.2026 löysi LinkedInistä Lohkare Infran tiedotteen ja
