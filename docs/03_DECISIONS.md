@@ -34,6 +34,89 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-336 - Kuollut osoite poltti hakubudjetin, ja kenttärivit sotkivat yhteyshenkilöt
+
+Johannes 23.10.2026 Kähärin puistotien rivistä: *"kuvaus ja
+yhteyshenkilöitä ei ole poimittu. korjataan tämä, takautuvasti, jonon
+muut hankkeet tästä lähteestä ja tulevat hankkeet."*
+
+**Vika ei ollut valitsimessa eikä jäsentimessä.** Molemmat toimivat
+sivua vasten heti kun testasin: kuvaus 474 merkkiä ja 10 siistiä
+tunnistetietokenttää. Kaksi muuta syytä:
+
+**1. Kuollut osoite poltti hakubudjetin joka ajossa.** Turussa haetaan
+enintään **5 hankesivua per ajo**
+(`TURKU_MAX_DETAIL_FETCHES_PER_RUN`), ja `detailsAttempted` asetettiin
+vain kun kuvaus **löytyi**. Siksi 404-sivu yritettiin uudelleen joka
+kerta.
+
+| | |
+|---|---|
+| dokumentteja lähteellä | 99 |
+| ilman kuvausta | 24 |
+| niistä aidosti kuollut osoite | **15** |
+| niistä toimiva, vain ilman vuoroa | **9** |
+
+Kuolleissa on kolme vikaa, kaikki WFS-syötteestä: vanha
+`/rakentaminen/kaavoitus/`-polku, **alkuväli** slugissa
+(`/kaavoitus/ vilhonkatu12a-…`) ja iso alkukirjain. Testasin
+normalisoinnin — se ei palauta niitä, sivut ovat poissa. Epäonnistunut
+haku merkitään nyt `detail_fetch_failed_at`-kenttään aikaleimoineen,
+joten budjetti menee uusiin kaavoihin. **Johanneksen rivi oli näistä
+yhdeksästä**: sen sivulla oli koko ajan 474 merkkiä kuvausta, mutta se
+ei saanut vuoroa.
+
+**2. Tunnistetiedot liitettiin kuvaustekstiin.** Resolveri rakensi
+kuvauksen muodossa *kuvaus + "Label: Value" -rivit*, ja yleinen
+tekstipoimija teki niistä yhteyshenkilöitä:
+
+    {"name":"Jani Etelakoski","title":"Vastuuhenkilön"}
+    {"name":"Harry Jaakkola","title":"Vastuuhenkilön jani.etelakoski@ .fi Liikennesuunnittelijan"}
+
+Nimistä katosivat ä:t ("Jani Etelakoski", "Päivi" → "Paivi") ja
+nimikkeiksi tuli katkelmia. **Kaikilla 72 Turun hankkeella oli tällaisia
+merkintöjä.**
+
+Sivu antaa saman tiedon siistinä, roolin ja osoitteen erillisinä
+kenttinä. Parit luetaan **sivun järjestyksessä** — sähköpostikenttä
+seuraa aina omaa roolikenttäänsä — joten suomen genetiiviä ei tarvitse
+mallintaa ("Liikennesuunnittelija" → "Liikennesuunnittelijan
+sähköposti"). Poimija on omassa moduulissaan
+`lib/agent/turunYhteyshenkilot.ts`, koska resolveri luo Supabase-asiakkaan
+moduulitasolla eikä sitä voi ladata testissä — testattavuus olisi
+kadonnut sivutuotteena.
+
+Kuvaus jää nyt puhtaaksi: tunnistetiedot ovat omina kenttinään ja
+yhteyshenkilöt rakenteisina, joten niitä ei liitetä asiakkaan lukemaan
+tekstiin.
+
+**Takautuva korjaus, ja yksi sääntö jonka kuivaharjoitus pakotti.**
+Ensimmäinen versio korvasi kuvauksen vain jos uusi oli pidempi — ja
+silloin **hankkeiden kuvaukset eivät olisi korjaantuneet lainkaan**,
+koska niihin oli hyväksynnässä kopioitu kuvaus *ja* kenttärivit, eli ne
+olivat pidempiä mutta sisälsivät juuri sen kohinan:
+
+> "Tavoitteena on lisätä pientalotonttitarjontaa Haarlan kaupunginosaan.
+> Piirtäjä: Ahlqvist Reeta / Kaavatunnus: 46/2005 / Vastuuhenkilön
+> sähköposti: jani.etelakoski@turku.fi"
+
+Lyhyempi saa korvata **vain todistetussa tapauksessa**: kun sivun kuvaus
+on tallennetun alkuosa, loppu on kenttärivit. Ehto on tarkistettavissa,
+toisin kuin oletus "lyhyempi on parempi".
+
+**Yhteyshenkilöt korvataan vain samalla osoitteella.** Rivillä oleva
+merkintä jota sivulla ei ole jää koskematta — se voi olla käsin lisätty
+([[manual-parties-linkedin]]).
+
+**Tulos:** jono 90 kuvausta ja 92 yhteystietoa, hankkeet 69 ja 70; 0
+virhettä, 99 sivua haettu. Liimautuneita nimikkeitä jonossa 0 (oli 97
+riviä ilman yhteyshenkilöitä). Jäljelle jää 9 kuollutta osoitetta, joista
+6 hankkeella on yhä vanha sotkeutunut merkintä — niitä ei voi korjata
+sivulta, joten ne jätettiin ennemmin kuin poistettiin.
+
+Ks. `lib/agent/turunYhteyshenkilot.ts`,
+`scripts/taydenna-turun-kaavat.ts`.
+
 ### D-335 - Liferay-osoite hylättiin, ja kynnys mittasi väärää pituutta
 
 Johannes 23.10.2026 Paraisten Pappilanmalmin korttelista: *"tässä pitäisi

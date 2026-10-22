@@ -3,6 +3,8 @@ import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialPr
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { gk23ToWgs84 } from "@/lib/geo/gk23"
+import { turunYhteyshenkilot } from "@/lib/agent/turunYhteyshenkilot"
+
 
 function findFact(facts: any[], type: string) {
   return facts.find((fact) => fact.fact_type === type)
@@ -61,12 +63,37 @@ export async function resolveTurkuKaavaProject({
     title: operation,
   })
 
-  const fullDescription = [
-    description,
-    ...Object.entries(identifyingInfo).map(([label, value]) => `${label}: ${value}`),
-  ]
-    .filter(Boolean)
-    .join("\n")
+  /*
+   * YHTEYSHENKILOT KOLMIKOISTA, EI KUVAUSTEKSTISTA (D-336).
+   *
+   * Tunnistetietolaatikko antaa roolin, nimen ja sahkopostin erillisina
+   * kenttina sivun jarjestyksessa:
+   *
+   *   Vastuuhenkilo:                     Christiane Eskolin
+   *   Vastuuhenkilon sahkoposti:         christiane.eskolin@turku.fi
+   *   Piirtaja:                          Karin Kekkonen
+   *   Piirtajan sahkoposti:              karin.kekkonen@turku.fi
+   *
+   * Ennen nama liitettiin KUVAUSTEKSTIIN "Label: Value" -riveina, ja
+   * yleinen tekstipoimija teki niista rikkinaisia yhteyshenkiloita:
+   * nimista katosivat a-umlautit ("Jani Etelakoski", "Paivi Siponen")
+   * ja nimikkeiksi tuli katkelmia ("Piirtajan karin.kekkonen@ .fi
+   * Vastuuhenkilon"). Mitattu 23.10.2026: 72 Turun hankkeesta jokaisella
+   * oli tallaisia merkintoja.
+   *
+   * Parit luetaan sivun JARJESTYKSESSA: sahkopostikentta seuraa aina
+   * omaa roolikenttaansa. Niin ei tarvitse mallintaa suomen genetiivia
+   * ("Liikennesuunnittelija" -> "Liikennesuunnittelijan sahkoposti").
+   */
+  const contactPersons = turunYhteyshenkilot(identifyingInfo)
+
+  /*
+   * KUVAUS JAA PUHTAAKSI. Tunnistetiedot ovat jo omina kenttinaan
+   * (`kaava_tunnus`, `kaavalaji`) ja yhteyshenkilot nyt rakenteisina,
+   * joten niita ei liiteta asiakkaan lukemaan tekstiin
+   * ([[description-is-the-product]]).
+   */
+  const fullDescription = description
 
   const result = await resolvePotentialProject({
     title: operation,
@@ -87,6 +114,9 @@ export async function resolveTurkuKaavaProject({
       operation,
       kaava_tunnus: kaavaTunnus,
       kaavalaji,
+      contact_persons: contactPersons,
+      /* Tunnistetiedot talteen, jotta myohempi korjaus ei vaadi uutta hakua. */
+      identifying_info: identifyingInfo,
       municipality_code: null,
       region: municipality?.region ?? null,
       district_name: district,

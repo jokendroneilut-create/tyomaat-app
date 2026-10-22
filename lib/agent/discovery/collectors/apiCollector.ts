@@ -1218,9 +1218,13 @@ function parseTurkuFeatures(xml: string): {
 async function fetchTurkuKaavaDetails(planUrl: string): Promise<{
   description: string | null
   identifyingInfo: Record<string, string>
+  /* false kun sivu vastasi mutta siina ei ollut sisaltoa (404). */
+  pageFound: boolean
 }> {
   try {
-    const html = await (await fetch(planUrl, { cache: "no-store" })).text()
+    const vastaus = await fetch(planUrl, { cache: "no-store" })
+    if (!vastaus.ok) return { description: null, identifyingInfo: {}, pageFound: false }
+    const html = await vastaus.text()
     const $ = cheerio.load(html)
 
     const description =
@@ -1239,9 +1243,9 @@ async function fetchTurkuKaavaDetails(planUrl: string): Promise<{
       if (label && value) identifyingInfo[label] = value
     })
 
-    return { description, identifyingInfo }
+    return { description, identifyingInfo, pageFound: true }
   } catch {
-    return { description: null, identifyingInfo: {} }
+    return { description: null, identifyingInfo: {}, pageFound: false }
   }
 }
 
@@ -1274,12 +1278,36 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
     string,
     { description: string | null; identifyingInfo: Record<string, string> }
   >()
+  /*
+   * KUOLLUTTA OSOITETTA EI YRITETA IKUISESTI (D-336).
+   *
+   * Johannes 23.10.2026 Kaharin puistotien rivista: *"kuvaus ja
+   * yhteyshenkiloita ei ole poimittu."* Syy ei ollut valitsin eika
+   * jasennin -- molemmat toimivat sivua vasten.
+   *
+   * `detailsAttempted` asetettiin vain kun kuvaus LOYTYI, joten
+   * 404-sivu yritettiin uudelleen joka ajossa. Mitattu 23.10.2026:
+   * 99 dokumentista 24 oli ilman kuvausta, ja niista 15 on aidosti
+   * kuollut osoite (WFS antaa vanhan `/rakentaminen/`-polun, alkuvalin
+   * tai ison alkukirjaimen). Ne polttivat
+   * `TURKU_MAX_DETAIL_FETCHES_PER_RUN`-budjetin joka ajossa, joten
+   * **yhdeksan tyopaa osoitetta ei saanut koskaan vuoroa** -- Johanneksen
+   * rivi mukaan lukien, vaikka sen sivulla on 474 merkkia kuvausta.
+   *
+   * Epaonnistunut haku merkitaan nyt `detail_fetch_failed_at`-kenttaan,
+   * eika sita yriteta uudelleen. Jos Turku korjaa osoitteen, WFS antaa
+   * uuden ja rivi tulee uutena dokumenttina.
+   */
+  /* Osoite -> milloin haku epaonnistui, jotta aikaleima ei katoa. */
+  const deadUrls = new Map<string, string>()
   for (const row of existingRows ?? []) {
     if (row.raw_payload?.description) {
       knownDetails.set(row.document_url, {
         description: row.raw_payload.description,
         identifyingInfo: row.raw_payload.identifying_info ?? {},
       })
+    } else if (row.raw_payload?.detail_fetch_failed_at) {
+      deadUrls.set(row.document_url, String(row.raw_payload.detail_fetch_failed_at))
     }
   }
 
@@ -1306,8 +1334,11 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
     let identifyingInfo: Record<string, string> = known?.identifyingInfo ?? {}
     let detailsAttempted = Boolean(known)
 
+    let detailFetchFailedAt: string | null = null
+
     if (
       !detailsAttempted &&
+      !deadUrls.has(documentUrl) &&
       feature.planUrl &&
       detailFetches < TURKU_MAX_DETAIL_FETCHES_PER_RUN
     ) {
@@ -1319,6 +1350,10 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
 
       if (detailsAttempted) {
         inRunDetails.set(documentUrl, { description, identifyingInfo })
+      } else {
+        /* Kuollut osoite: merkitaan, jottei se polta budjettia uudelleen. */
+        detailFetchFailedAt = new Date().toISOString()
+        deadUrls.set(documentUrl, detailFetchFailedAt)
       }
     }
 
@@ -1347,6 +1382,14 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
             kaavatilanne: feature.kaavatilanne,
             ...(detailsAttempted
               ? { description, identifying_info: identifyingInfo }
+              : {}),
+            /*
+             * Kuolleen osoitteen merkinta jaa talteen, jottei sita
+             * yriteta uudelleen (D-336). Olemassa oleva merkinta
+             * sailyy, koska upsert korvaa koko payloadin.
+             */
+            ...(detailFetchFailedAt ?? (detailsAttempted ? null : deadUrls.get(documentUrl))
+              ? { detail_fetch_failed_at: detailFetchFailedAt ?? deadUrls.get(documentUrl) }
               : {}),
             original: feature,
           },

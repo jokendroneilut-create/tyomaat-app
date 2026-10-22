@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Turun kaavat: kuvaus ja yhteyshenkilöt (D-336)
+
+Turussa haetaan 5 hankesivua per ajo, ja epäonnistunutta hakua ei
+merkitty, joten 15 kuollutta osoitetta yritettiin joka kerta uudelleen.
+Budjetti paloi niihin, eikä 9 toimivaa sivua saanut koskaan vuoroa.
+Epäonnistuminen merkitään nyt, ja olemassa olevat rivit täydennettiin.
+
+Yhteyshenkilöt luetaan nyt tunnistetietojen rooli/nimi/sähköposti
+-kolmikoista sivun järjestyksessä. Ennen kentät liitettiin
+kuvaustekstiin, josta yleinen poimija teki rikkinäisiä merkintöjä —
+nimistä katosivat ä:t ja nimikkeiksi tuli katkelmia; näin oli kaikilla
+72 Turun hankkeella.
+
+Täydennetty: jono 90 kuvausta ja 92 yhteystietoa, hankkeet 69 ja 70.
+
 ### Liferay-liitteet löytyvät, ja kynnys mittaa omaa sisältöä (D-335)
 
 Kaksi estettä, molemmat yleisiä: liitteen osoite hylättiin kun `.pdf` ei
