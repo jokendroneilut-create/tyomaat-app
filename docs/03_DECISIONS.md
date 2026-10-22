@@ -34,6 +34,63 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-337 - Sama budjettivika oli Tampereella ja Porilla, ja 404-sivu antoi otsikon
+
+Johannes 23.10.2026: *"korjaa tampere ja pori."* Turun korjauksen
+(D-336) jälkeen kysymys oli: onko sama kuvio muualla?
+
+**On, kahdessa kerääjässä kolmesta.** Tampereen ja Porin kerääjät
+asettivat `detailsAttempted`-lipun vain kun haku **onnistui**, joten
+kuollut osoite yritettiin uudelleen joka ajossa ja poltti saman
+`*_MAX_DETAIL_FETCHES_PER_RUN`-budjetin. Tampereen koodissa tämä oli
+jopa kirjattu tarkoitukselliseksi: *"vain onnistuneet haut jäävät
+muistiin, epäonnistuneita yritetään joka ajolla uudelleen."* Aikomus on
+oikea ohimenevälle virheelle, mutta kukaan ei ollut mitannut mitä
+**pysyvä** virhe tekee budjetille ([[check-before-calling-it-intended]]).
+
+**Mitattu 23.10.2026, kaksi lukua erikseen:**
+
+| lähde | dokumentteja | ilman kuvausta | kuollut osoite | elossa, vain ilman vuoroa |
+|---|---|---|---|---|
+| Tampere | 136 | 3 | **3** | 0 |
+| Pori | 26 | 0 | 0 | 0 |
+| (Turku ennen korjausta, D-336) | 99 | 24 | 15 | **9** |
+
+**Mitään ei ollut mennyt ohi.** Tampereella 3 kuollutta söi 60 % ajon
+budjetista (3/5), mutta kaikilla muilla dokumenteilla oli jo kuvaus,
+joten yksikään työpää sivu ei jäänyt vuoroa odottamaan. Porilla ei ollut
+yhtään epäonnistunutta. Turun 9 menetettyä sivua oli oma tapauksensa:
+siellä kuolleita oli enemmän kuin katto. **Vika oli silti sama, ja se
+olisi puhjennut heti kun kuolleita tulee kattoa enemmän.**
+
+**Korjaus on laskuri, ei pysyvä merkintä.** D-336 merkitsi Turussa
+epäonnistumisen aikaleimalla `detail_fetch_failed_at` eikä yrittänyt
+enää koskaan uudelleen. Se on liian jyrkkä: aikakatkaisu ja hetkellinen
+503 ovat yleisempiä kuin poistettu sivu. Kaikki kolme kerääjää lukevat
+nyt `raw_payload.detail_fetch_failures`-laskuria ja lopettavat vasta
+`MAX_DETAIL_FETCH_FAILURES = 3` jälkeen. Turku siirrettiin samaan
+kuvioon, jottei tiedostoon jää **kahta eri sääntöä samaan ongelmaan**
+([[shared-platform-fix-transfers]]).
+
+Turussa laskuriin jää myös `detail_fetch_page_found`, koska kaksi eri
+epäonnistumista maksaa saman haun mutta tarkoittaa eri asiaa: osoite on
+kuollut (ei täyty koskaan) vai sivu aukeaa mutta kuvaus on tyhjä (voi
+täyttyä kun kaava edistyy). Ero jää mitattavaksi, ei arvattavaksi
+([[name-the-denominator]]).
+
+**Sivulöydös: epäonnistunut haku antoi otsikon.** Tampereen kerääjä
+luki `details.title`-kentän ennen kuin tarkisti onnistuiko haku, joten
+kolmen kuolleen kaavan otsikoksi tallentui Tampereen 404-sivun otsikko
+**"Harmi - sivua ei löytynyt"**. Rivit eivät olleet koskaan tuottaneet
+ehdokasta (`status: "downloaded"`), joten asiakas ei nähnyt niitä, mutta
+sääntö on nyt kirjoitettu auki: **epäonnistuneesta hausta ei oteta
+mitään kenttää**. Otsikot korjattiin varasäännön mukaisiksi
+(`Asemakaava nro 8829`, `8185`, `8376`).
+
+Ks. `lib/agent/discovery/collectors/apiCollector.ts`,
+`scripts/mittaa-tampere-pori-haut.ts`,
+`scripts/korjaa-tampereen-404-otsikot.ts`.
+
 ### D-336 - Kuollut osoite poltti hakubudjetin, ja kenttärivit sotkivat yhteyshenkilöt
 
 Johannes 23.10.2026 Kähärin puistotien rivistä: *"kuvaus ja
@@ -62,7 +119,9 @@ Kuolleissa on kolme vikaa, kaikki WFS-syötteestä: vanha
 (`/kaavoitus/ vilhonkatu12a-…`) ja iso alkukirjain. Testasin
 normalisoinnin — se ei palauta niitä, sivut ovat poissa. Epäonnistunut
 haku merkitään nyt `detail_fetch_failed_at`-kenttään aikaleimoineen,
-joten budjetti menee uusiin kaavoihin. **Johanneksen rivi oli näistä
+joten budjetti menee uusiin kaavoihin. (**Kenttä on korvattu
+laskurilla, ks. D-337** — pysyvä merkintä oli liian jyrkkä ohimenevälle
+virheelle.) **Johanneksen rivi oli näistä
 yhdeksästä**: sen sivulla oli koko ajan 474 merkkiä kuvausta, mutta se
 ei saanut vuoroa.
 

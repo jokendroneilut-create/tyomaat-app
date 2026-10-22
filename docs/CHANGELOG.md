@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Hakubudjetti: sama vika Tampereella ja Porilla (D-337)
+
+Kolme kerääjää yritti kuollutta osoitetta joka ajossa. Tampereella se
+söi 60 % ajon budjetista (3 kuollutta, katto 5), Porilla 0. Yksikään
+työpää sivu ei ollut jäänyt vuoroa odottamaan, toisin kuin Turussa —
+mutta vika olisi puhjennut heti kun kuolleita tulee kattoa enemmän.
+Kaikki kolme lukevat nyt samaa laskuria ja lopettavat kolmen
+epäonnistumisen jälkeen; Turun pysyvä merkintä korvattiin laskurilla,
+jottei ohimenevä aikakatkaisu sulje sivua lopullisesti.
+
+Sivulöydös: Tampere luki otsikon myös epäonnistuneesta hausta, joten
+kolmen kaavan otsikoksi tallentui 404-sivun **"Harmi - sivua ei
+löytynyt"**. Rivit eivät olleet tuottaneet ehdokasta, mutta otsikot
+korjattiin ja sääntö kirjoitettiin auki: epäonnistuneesta hausta ei
+oteta mitään kenttää.
+
 ### Turun kaavat: kuvaus ja yhteyshenkilöt (D-336)
 
 Turussa haetaan 5 hankesivua per ajo, ja epäonnistunutta hakua ei

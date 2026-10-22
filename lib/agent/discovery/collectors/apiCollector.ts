@@ -971,6 +971,29 @@ async function collectHelsinkiKaavaSource(source: DiscoverySource) {
 }
 
 // Ks. VANTAA_MAX_HAKIJA_FETCHES_PER_RUN yllä — sama syy pieneen rajaan.
+/*
+ * MONTA KERTAA EPAONNISTUNUTTA HAKUA EI YRITETA ENAA (D-337).
+ *
+ * Turun kerraajassa (D-336) epaonnistunut hankesivuhaku yritettiin joka
+ * ajossa uudelleen, ja 15 kuollutta osoitetta poltti viiden haun
+ * budjetin niin ettei yhdeksan tyopaa sivua saanut koskaan vuoroa.
+ *
+ * Sama kuvio oli Tampereella ja Porilla, ja Tampereen koodissa se oli
+ * jopa kirjattu tarkoitukselliseksi: *"vain onnistuneet haut jaavat
+ * muistiin, epaonnistuneita yritetaan joka ajolla uudelleen."* Aikomus
+ * on oikea -- ohimeneva virhe korjautuu seuraavassa ajossa -- mutta
+ * kukaan ei mitannut mita PYSYVA virhe tekee budjetille.
+ *
+ * Mitattu 23.10.2026: Tampereella 3 jumissa 5 haun budjetista (60 %),
+ * Porilla 2 viidesta (40 %).
+ *
+ * Siksi laskuri eika pysyva merkinta: ohimeneva virhe saa yha kolme
+ * yritysta, pysyva lakkaa syomasta budjettia
+ * ([[check-before-calling-it-intended]] -- saanto oli tarkoituksellinen,
+ * mutta sen hinta oli mittaamaton).
+ */
+const MAX_DETAIL_FETCH_FAILURES = 3
+
 const TAMPERE_MAX_DETAIL_FETCHES_PER_RUN = 5
 
 /*
@@ -1036,8 +1059,9 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
   const features = Array.isArray(json.features) ? json.features : []
 
   /*
-   * Sama malli kuin Helsingin selostushaussa: vain onnistuneet haut
-   * jäävät muistiin, epäonnistuneita yritetään joka ajolla uudelleen.
+   * Onnistuneet haut jäävät muistiin. Epäonnistuneita yritetään
+   * uudelleen, mutta enintään `MAX_DETAIL_FETCH_FAILURES` kertaa —
+   * muuten kuollut osoite syö hakubudjetin ikuisesti (D-337).
    */
   const { data: existingRows } = await supabaseAdmin
     .from("source_documents")
@@ -1048,7 +1072,12 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
     string,
     { phase: string | null; description: string | null; diaarinumero: string | null; decisionMaker: string | null; title: string | null }
   >()
+  /* Osoite -> montako kertaa haku on epaonnistunut. */
+  const detailFailures = new Map<string, number>()
   for (const row of existingRows ?? []) {
+    if (!row.raw_payload?.description && row.raw_payload?.detail_fetch_failures) {
+      detailFailures.set(row.document_url, Number(row.raw_payload.detail_fetch_failures))
+    }
     if (row.raw_payload?.description) {
       knownDetails.set(row.document_url, {
         phase: row.raw_payload.phase ?? null,
@@ -1077,19 +1106,31 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
     let planTitle: string | null = known?.title ?? null
     let detailsAttempted = knownDetails.has(documentUrl)
 
+    let failures = detailFailures.get(documentUrl) ?? 0
+
     if (
       !detailsAttempted &&
+      failures < MAX_DETAIL_FETCH_FAILURES &&
       planUrl &&
       detailFetches < TAMPERE_MAX_DETAIL_FETCHES_PER_RUN
     ) {
       const details = await fetchTampereKaavaDetails(planUrl)
-      phase = details.phase
-      description = details.description
-      diaarinumero = details.diaarinumero ?? properties.DIAARINRO ?? null
-      decisionMaker = details.decisionMaker
-      planTitle = details.title
       detailFetches += 1
       detailsAttempted = details.description !== null
+      if (detailsAttempted) {
+        phase = details.phase
+        description = details.description
+        diaarinumero = details.diaarinumero ?? properties.DIAARINRO ?? null
+        decisionMaker = details.decisionMaker
+        planTitle = details.title
+      } else {
+        /*
+         * Epaonnistuneesta hausta ei oteta MITAAN kenttaa. Otsikko
+         * luettiin ennen myos 404-sivulta, joten kolmen kuolleen
+         * kaavan otsikoksi tuli "Harmi - sivua ei loytynyt" (D-337).
+         */
+        failures += 1
+      }
     }
 
     const rawText = JSON.stringify(feature)
@@ -1115,7 +1156,9 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
             diaarinumero,
             ...(detailsAttempted
               ? { phase, description, decision_maker: decisionMaker, plan_title: planTitle }
-              : {}),
+              : failures
+                ? { detail_fetch_failures: failures }
+                : {}),
             original: feature,
           },
           processed_at: new Date().toISOString(),
@@ -1294,20 +1337,22 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
    * **yhdeksan tyopaa osoitetta ei saanut koskaan vuoroa** -- Johanneksen
    * rivi mukaan lukien, vaikka sen sivulla on 474 merkkia kuvausta.
    *
-   * Epaonnistunut haku merkitaan nyt `detail_fetch_failed_at`-kenttaan,
-   * eika sita yriteta uudelleen. Jos Turku korjaa osoitteen, WFS antaa
-   * uuden ja rivi tulee uutena dokumenttina.
+   * Epaonnistuminen lasketaan nyt `detail_fetch_failures`-kenttaan, ja
+   * haku lopetetaan `MAX_DETAIL_FETCH_FAILURES`:n jalkeen. Laskuri eika
+   * pysyva merkinta, jotta ohimeneva virhe (aikakatkaisu, hetkellinen
+   * 503) saa yha yrityksensa -- sama saanto kuin Tampereella ja
+   * Porilla, jottei samaan ongelmaan jaa kahta eri kuviota (D-337).
    */
-  /* Osoite -> milloin haku epaonnistui, jotta aikaleima ei katoa. */
-  const deadUrls = new Map<string, string>()
+  /* Osoite -> montako kertaa haku on epaonnistunut. */
+  const detailFailures = new Map<string, number>()
   for (const row of existingRows ?? []) {
     if (row.raw_payload?.description) {
       knownDetails.set(row.document_url, {
         description: row.raw_payload.description,
         identifyingInfo: row.raw_payload.identifying_info ?? {},
       })
-    } else if (row.raw_payload?.detail_fetch_failed_at) {
-      deadUrls.set(row.document_url, String(row.raw_payload.detail_fetch_failed_at))
+    } else if (row.raw_payload?.detail_fetch_failures) {
+      detailFailures.set(row.document_url, Number(row.raw_payload.detail_fetch_failures))
     }
   }
 
@@ -1334,11 +1379,18 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
     let identifyingInfo: Record<string, string> = known?.identifyingInfo ?? {}
     let detailsAttempted = Boolean(known)
 
-    let detailFetchFailedAt: string | null = null
+    let failures = detailFailures.get(documentUrl) ?? 0
+    /*
+     * Kaksi eri epaonnistumista maksaa saman haun, joten molemmat
+     * lasketaan: osoite on kuollut, TAI sivu aukeaa mutta kuvaus on
+     * tyhja. Ero jaa payloadiin, jotta se voi myohemmin mitata --
+     * tyhja sivu voi viela tayttya, kuollut osoite ei.
+     */
+    let pageFound: boolean | null = null
 
     if (
       !detailsAttempted &&
-      !deadUrls.has(documentUrl) &&
+      failures < MAX_DETAIL_FETCH_FAILURES &&
       feature.planUrl &&
       detailFetches < TURKU_MAX_DETAIL_FETCHES_PER_RUN
     ) {
@@ -1351,9 +1403,9 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
       if (detailsAttempted) {
         inRunDetails.set(documentUrl, { description, identifyingInfo })
       } else {
-        /* Kuollut osoite: merkitaan, jottei se polta budjettia uudelleen. */
-        detailFetchFailedAt = new Date().toISOString()
-        deadUrls.set(documentUrl, detailFetchFailedAt)
+        /* Epaonnistui: lasketaan, jottei se polta budjettia ikuisesti. */
+        failures += 1
+        pageFound = details.pageFound
       }
     }
 
@@ -1384,12 +1436,14 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
               ? { description, identifying_info: identifyingInfo }
               : {}),
             /*
-             * Kuolleen osoitteen merkinta jaa talteen, jottei sita
-             * yriteta uudelleen (D-336). Olemassa oleva merkinta
-             * sailyy, koska upsert korvaa koko payloadin.
+             * Epaonnistumislaskuri jaa talteen, koska upsert korvaa koko
+             * payloadin (D-336, D-337).
              */
-            ...(detailFetchFailedAt ?? (detailsAttempted ? null : deadUrls.get(documentUrl))
-              ? { detail_fetch_failed_at: detailFetchFailedAt ?? deadUrls.get(documentUrl) }
+            ...(!detailsAttempted && failures
+              ? {
+                  detail_fetch_failures: failures,
+                  ...(pageFound === null ? {} : { detail_fetch_page_found: pageFound }),
+                }
               : {}),
             original: feature,
           },
@@ -26883,9 +26937,13 @@ async function collectPoriSource(source: DiscoverySource) {
     .eq("source_id", source.id)
 
   const knownDetails = new Map<string, any>()
+  /* Osoite -> montako kertaa haku on epaonnistunut (D-337). */
+  const detailFailures = new Map<string, number>()
   for (const row of existingRows ?? []) {
     if (row.raw_payload?.kaava_tunnus) {
       knownDetails.set(row.document_url, row.raw_payload)
+    } else if (row.raw_payload?.detail_fetch_failures) {
+      detailFailures.set(row.document_url, Number(row.raw_payload.detail_fetch_failures))
     }
   }
 
@@ -26912,10 +26970,17 @@ async function collectPoriSource(source: DiscoverySource) {
 
     let detailsAttempted = Boolean(known)
 
-    if (!detailsAttempted && detailFetches < PORI_MAX_DETAIL_FETCHES_PER_RUN) {
+    let failures = detailFailures.get(item.url) ?? 0
+
+    if (
+      !detailsAttempted &&
+      failures < MAX_DETAIL_FETCH_FAILURES &&
+      detailFetches < PORI_MAX_DETAIL_FETCHES_PER_RUN
+    ) {
       details = await fetchPoriDetails(item.url)
       detailFetches += 1
       detailsAttempted = details.kaavaTunnus !== null
+      if (!detailsAttempted) failures += 1
     }
 
     const description = [details?.sijainti, details?.tavoitteet].filter(Boolean).join("\n\n") || null
@@ -26949,7 +27014,9 @@ async function collectPoriSource(source: DiscoverySource) {
                   decision_maker: details.decisionMaker,
                   contacts: details.contacts,
                 }
-              : {}),
+              : failures
+                ? { detail_fetch_failures: failures }
+                : {}),
           },
           processed_at: new Date().toISOString(),
           last_seen_at: new Date().toISOString(),
