@@ -163,6 +163,18 @@ koska luvut ovat piste ajassa):
   MRR 9 337 € / ARR 112 044 € = *kaikki trialit maksaisivat* (katto, ei
   ennuste). Avain on asiakas (yritys), ei tunnus — ks. [[customer-billing]].
   Tulkinnan ja arvon kannalta ks. [15_TYOMAARA_JA_ARVIO.md](15_TYOMAARA_JA_ARVIO.md).
+- **Ulkoiset lähteet luettu suoraan (2026-10-24):**
+  - *TIC:* 127 tunnusta, 94 asiakasta, **68 trialia**, MRR **248 €** / ARR
+    **2 976 €** (yhä 2 maksavaa, ei muutosta 16.10. jälkeen), potentiaalinen
+    ARR 124 560 €. 84 kokeilua ohi, 10 päättyy viikon sisällä. YIT:n 3 tunnusta
+    luotu 23.10.
+  - *Google Analytics (markkinointisivu, 90 vrk):* 713 aktiivista käyttäjää
+    (+23,8 %), 685 uutta, 106 tärkeää tapahtumaa; huippu elokuussa.
+  - *Search Console (3 kk):* 313 klikkausta, 3 590 näyttökertaa, CTR 8,7 %,
+    sijainti 11,5 — näyttökerrat kiihtyvät lokakuussa.
+  - *Vercel:* infrakulut ~1,69 $ / 20 $, On-Demand 0 $ (lähes olematon
+    kulurakenne). tyomaat-app ei käytä Vercel Analyticsiä (oma analytiikka
+    korvaa); traffiikin auktoritatiivinen lähde on GA + oma seuranta.
 
 **Opetus, joka toistuu:** mittarin premissi voi vanheta huomaamatta. Työkalun
 tuottama luku on avattava lähteestä ennen kuin sen perusteella toimitaan
@@ -172,6 +184,10 @@ tuottama luku on avattava lähteestä ennen kuin sen perusteella toimitaan
 
 ## Päivityshistoria
 
+- **2026-10-24** — Luettu viisi lähdettä suoraan (TIC/GA/SC/Vercel/ajankohtaista)
+  ja kirjattu tulokset: TIC 127 tunnusta / 68 trialia / MRR 248 € ennallaan,
+  GA 713 akt.käyttäjää/90 vrk, SC 313 klikkausta / 3 590 näyttökertaa (kiihtyy),
+  Vercel-infrakulut ~1,69 $/20 $.
 - **2026-10-16** — Kirjattu käyttödata (90 vrk: 62 aktiivista, 524 istuntoa,
   8 676 sivulatausta, 12 min keskikesto; % vs. edellinen jakso pieneltä pohjalta)
   ja MRR/ARR + trial-suppilo (MRR 248 €, ARR 2 976 €, 2 maksavaa, 61 trialia,

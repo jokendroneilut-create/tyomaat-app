@@ -87,6 +87,7 @@ liikevaihtoa ei mitata järjestelmässä.
 | 2026-08-29 | 90–180 k € | 10–40 k € |
 | 2026-09-13 | 110–200 k € | 15–45 k € |
 | 2026-10-16 | 140–260 k € | 40–120 k € (ei enää esitulovaiheessa) |
+| 2026-10-24 | 150–280 k € | 40–120 k € (ennallaan: MRR ei liikkunut) |
 
 **Rakennuskustannuksen peruste (13.9.2026):** ~46 k riviä testattua ja
 dokumentoitua TypeScriptiä, 49 räätälöityä scraperia, discovery-/agenttiputki,
@@ -119,6 +120,48 @@ ostaja tai jakelukumppani ylempää. Haarukka kapenee heti kun konversio
 
 Nämä ovat esimerkkejä, eivät toteumaa. Kun todellinen asiakasmäärä ja
 kuukausihinta ovat tiedossa, korvaa rivi oikeilla luvuilla.
+
+---
+
+## Elävä tilannekuva 2026-10-24 (viisi lähdettä luettu)
+
+Luettu suoraan: TIC-käyttäjät, Google Analytics, Search Console, Vercel ja
+www.tyomaat.fi/ajankohtaista.
+
+**Keskeinen jännite: suppilo kasvaa, konversio jumissa.**
+
+- **TIC:** 127 asiakastunnusta (16.10. 115), 94 asiakasta, **68 trialia**.
+  **MRR 248 € / ARR 2 976 € — EI muutosta 16.10. jälkeen, yhä 2 maksavaa.**
+  Potentiaalinen ARR 112 k → **124 560 €**. 84 kokeilua ohi, 10 päättyy viikon
+  sisällä. Paljon lukittuja saatteilla "palataan tammikuussa/vuodenvaihteessa"
+  → putki takapainottuu Q1:een. Huom: 94:ssä on kohinaa (Koneunioni ei
+  laskuteta, Sarlin ~13 maaliskuista kuollutta trialia, testitunnukset).
+- **Uudet arvokkaat tunnukset:** **YIT (3 tunnusta, luotu 23.10, aktiivisia)**,
+  Sortera (4), Rakennuslehti (kari.souto), Polygon, Firesafe, Nextrent.
+- **Demot 24.10.:** 3 demoa, kaksi pörssiyhtiölle (**YIT, Saint-Gobain PAM**),
+  erittäin lupaavia. Nämä eivät ole 124 €/kk:n pk-asiakkaita — yksikin
+  konversio voi olla monen käyttäjän diili + referenssilogo. Epäsymmetrinen
+  nousuvara (sopii matalan hinnan strategiaan: monta käyttäjää × matala hinta).
+- **GA (sivu, 90 pv):** 713 aktiivista käyttäjää (+23,8 %), 685 uutta, 106
+  tärkeää tapahtumaa; huippu elokuussa, sitten tasaantunut.
+- **Search Console (3 kk):** 313 klikkausta, 3 590 näyttökertaa, CTR 8,7 %,
+  sijainti 11,5 — **näyttökerrat kiihtyvät lokakuussa** (paras yksittäinen
+  signaali: orgaaninen haku kumuloituu).
+- **Vercel:** infrakulut **~1,69 $ / 20 $**, On-Demand 0 $ — lähes olematon
+  kulurakenne, ~jokainen uusi euro on katetta. Sovellus ei käytä Vercel
+  Analyticsiä (oma analytiikka korvaa).
+- **Ajankohtaista:** pitch **4.11 INFRA ry:n startup-tilaisuudessa**, Espoon
+  Yrittäjät Viikon vieras (19.10), +6000 hanketta.
+
+**Arvio ei noussut (24.10.), ja se on oikein.** Koodi, suppilo ja näkyvyys
+kasvoivat, mutta ainoa arvon todella siirtävä luku — maksava liikevaihto — ei
+liikkunut ~6 viikkoon. 2 maksavaa ei vielä ole hintatason product-market-fit,
+ja paikallaan ollut MRR on keltainen lippu. Käänne osuu seuraavaan 1–3 kk:een
+(vuodenvaihteen budjetit + kypsyvät trialit + YIT/Saint-Gobain-jatkot), eli
+juuri sinne mihin lukitut tunnukset lupasivat palata. **Mitä seurata:**
+(1) syys–lokakuun kohortin ensikonversiot, (2) kääntyvätkö YIT/Saint-Gobain ja
+millä käyttäjämäärällä/hinnalla, (3) irtoaako MRR 248 €:sta, (4) jatkaako SC:n
+näyttökerrat kumuloitumista.
 
 ---
 
@@ -277,6 +320,13 @@ samalla parhaan itsenäisen yrityksen ja parhaan ostokohteen.
 ---
 
 ## Päivityshistoria
+
+- **2026-10-24** — Viiden lähteen elävä tilannekuva (TIC, GA, SC, Vercel,
+  ajankohtaista). Suppilo kasvaa (127 tunnusta, 68 trialia, YIT:n 3 tunnusta,
+  demot YIT + Saint-Gobain PAM), SEO kiihtyy (SC-näyttökerrat), kulut olemattomat
+  (Vercel ~1,69 $/20 $), **mutta MRR 248 € ennallaan ~6 vk** → kauppahinta-arvio
+  ei noussut, rakennuskustannus hieman ylös (150–280 k €). Käänne 1–3 kk:n
+  päässä (Q1-budjetit + kypsyvät trialit + enterprise-jatkot). Ks. [[traction-2026-10]].
 
 - **2026-10-16** — **Ensimmäiset 2 maksavaa asiakasta** (3–5 lisää tulossa
   loppuvuodelle). Lisätty *Vetovoima ja go-to-market* -osio. Arvio nostettu:
