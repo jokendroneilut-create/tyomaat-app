@@ -1233,6 +1233,41 @@ muistin varassa.
 
 ### Lähdekattavuus
 
+- **Jalon (`jalon.fi/yhteystiedot/tyomaat/`) — EI ole lähteenä,
+  tarkistettu 25.10.2026.** Johannes: *"tarkista onko tämä jo
+  lähteenä"*. Ei ole: `discovery_sources` 0 osumaa, ei `sources.ts`:ssä
+  eikä `20_YRITYSLAHTEET.md`:ssä. Yhtiö esiintyy kannassa kerran
+  rakentajana (Malmin peruskoulu ja päiväkoti, **Jalon Uusimaa Oy**);
+  muut "Jalon"-osumat ovat eri yritys (Maarakennus Jalonen Oy).
+
+  **Sivu on poikkeuksellisen hyvä, ja se on mitattu eikä arvattu.**
+  Sivulla on **10 käynnissä olevaa työmaata**, ja jokaisella:
+
+  | kenttä | kattavuus |
+  |---|---|
+  | kohteen nimi | 10/10 |
+  | rakennuttaja | 10/10 (HOK Elanto, Kesko, Riihimäen kaupunki…) |
+  | **katuosoite + postinumero** | **10/10** |
+  | **työmaan puhelinnumero** | **10/10** |
+  | valmistumiskuukausi | 9/10 |
+
+  Työmaan oma numero on juuri se tieto jota kyltinkuvistakin haetaan
+  ([[site-sign-as-source]]) — ja tässä se on valmiina listana.
+  `robots.txt` on `Disallow:` (tyhjä), eli haku on sallittu.
+
+  **Työ on pieni:** yksi staattinen sivu, toistuva rakenne
+  (`Rakennuttaja:` / `Osoite:` / `Puhelin:` / `Valmistuu M/VVVV`), ei
+  sivutusta. Valmistumiskuukausi antaa suoraan `estimated_completion`in
+  ja osoite geokoodauksen. Rajaus 12 kuukauteen ei tässä tarvita, koska
+  sivu listaa vain käynnissä olevat.
+
+  **Ennen tekemistä kaksi asiaa päätettäväksi:**
+  1. **Rooli.** Jalon on rakentaja ja sivun "Rakennuttaja" on tilaaja —
+     eli kentät menevät ristiin verrattuna moneen muuhun yrityslähteeseen
+     ([[party-role-fields]]).
+  2. **Duplikaatit.** S-Marketit ja kaupungin kohteet tulevat osin jo
+     Hilman kautta; yhdistämisen avain on osoite, ei nimi.
+
 - **Oikotie.fi ennakkomarkkinoinnin kautta — tutkimatta, kysytty
   25.10.2026.** Johannes: *"voiko oikotie.fi olla lähteenä
   suodatuksella ennakkomarkkinoinnissa?"*
