@@ -150,7 +150,8 @@ describe("päättymisviesti", () => {
   it("sanoo että kokeilu on päättynyt eikä lupaa katkaisua", () => {
     const { text } = muistutuksenTeksti("Matti", 0, "https://app.tyomaat.fi")
     expect(text).toContain("on päättynyt tänään")
-    expect(text).toContain("Tunnuksesi on toistaiseksi käytössä.")
+    expect(text).toContain("lukittuu lähipäivinä, ellet ota yhteyttä")
+    expect(text).toContain("kerromme hinnoittelun")
     expect(muistutuksenOtsikko(0)).toBe("Tyomaat.fi PRO -kokeilujaksosi on päättynyt")
   })
 

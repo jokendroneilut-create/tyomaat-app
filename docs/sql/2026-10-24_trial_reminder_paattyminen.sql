@@ -19,7 +19,11 @@ alter table public.trial_reminder_log
   add constraint trial_reminder_log_virstanpylvas_check
   check (virstanpylvas in (0, 7, 14, 21));
 
--- Tarkistus (pitaa palauttaa rivi jossa nolla on mukana):
---   select pg_get_constraintdef(oid)
---   from pg_constraint
---   where conname = 'trial_reminder_log_virstanpylvas_check';
+-- TARKISTUS AJETAAN, EI KOMMENTOIDA. Ensimmaisella kerralla tama oli
+-- kommenttina, jolloin editori palautti vain ALTERin "no rows" -- ja
+-- rajoite oli jaanyt muuttumatta ilman etta se nakyi mistaan. Nyt
+-- viimeinen lause palauttaa rivin, jossa nollan pitaa nakya.
+
+select conname, pg_get_constraintdef(oid) as rajoite
+from pg_constraint
+where conname = 'trial_reminder_log_virstanpylvas_check';

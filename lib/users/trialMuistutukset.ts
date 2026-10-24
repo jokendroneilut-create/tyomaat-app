@@ -173,9 +173,15 @@ export function muistutuksenTeksti(
   const tervehdys = etunimi ? `Hei ${etunimi},` : "Hei,"
 
   /*
-   * PAATTYMISVIESTI EI LUPAA KATKAISUA. Palvelu ei sulje tunnusta
-   * automaattisesti -- tilausautomaatiota ei ole -- joten teksti sanoo
-   * mika on totta: kokeilu on paattynyt, tunnus on yha kaytossa.
+   * PAATTYMISVIESTI LUPAA LUKITUKSEN, JA SE ON KASIN PIDETTAVA LUPAUS.
+   *
+   * Johannes 24.10.2026 valitsi sanamuodon *"Tunnuksesi on toistaiseksi
+   * kaytossa, mutta lukittuu lahipaivina, ellet ota yhteytta."*
+   * Palvelu EI lukitse tunnusta automaattisesti -- tilausautomaatiota ei
+   * ole ([[no-subscription-tracking]]) -- joten lukitus on Johanneksen
+   * oma tyovaihe. Jos sita ei tehda, viesti opettaa asiakkaat siihen
+   * ettei maaraaika tarkoita mitaan.
+   *
    * "Tanaan" vain jos se on tanaan ([[future-wording-expires]]).
    */
   if (paivia <= 0) {
@@ -185,9 +191,9 @@ export function muistutuksenTeksti(
       "",
       `Maksuton kokeilujaksosi Tyomaat.fi PRO:hon on päättynyt${milloin}.`,
       "",
-      "Jos haluat jatkaa, vastaa tähän viestiin — kerron hinnoittelun ja jatkamme siitä mihin jäit.",
+      "Jos haluat jatkaa, vastaa tähän viestiin — kerromme hinnoittelun ja jatkamme siitä mihin jäit.",
       "",
-      "Tunnuksesi on toistaiseksi käytössä.",
+      "Tunnuksesi on toistaiseksi käytössä, mutta lukittuu lähipäivinä, ellet ota yhteyttä.",
       "",
       "Ystävällisin terveisin,",
       "Johannes Sippola",
@@ -198,8 +204,8 @@ export function muistutuksenTeksti(
       `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#111827;">` +
       `<p>${tervehdys}</p>` +
       `<p>Maksuton kokeilujaksosi <strong>Tyomaat.fi PRO</strong>:hon on päättynyt${milloin}.</p>` +
-      `<p>Jos haluat jatkaa, vastaa tähän viestiin — kerron hinnoittelun ja jatkamme siitä mihin jäit.</p>` +
-      `<p>Tunnuksesi on toistaiseksi käytössä.</p>` +
+      `<p>Jos haluat jatkaa, vastaa tähän viestiin — kerromme hinnoittelun ja jatkamme siitä mihin jäit.</p>` +
+      `<p>Tunnuksesi on toistaiseksi käytössä, mutta lukittuu lähipäivinä, ellet ota yhteyttä.</p>` +
       `<p><a href="${appBaseUrl}" style="color:#1d4ed8;">Avaa Tyomaat.fi</a></p>` +
       `<p>Ystävällisin terveisin,<br />Johannes Sippola<br />Tyomaat.fi</p>` +
       `</div>`

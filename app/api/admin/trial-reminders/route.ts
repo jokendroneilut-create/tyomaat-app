@@ -204,11 +204,16 @@ export async function GET(req: Request) {
       const { error } = await supabase.from("trial_reminder_log").insert(rivit)
       if (error) {
         /*
-         * Viesti on jo lahtenyt, joten epaonnistunut kirjaus on vakava:
-         * ilman rivia sama viesti lahtisi huomenna uudelleen. Nostetaan
-         * nakyviin eika vain konsoliin.
+         * KIRJAUKSEN EPAONNISTUMINEN PYSAYTTAA AJON.
+         *
+         * Viesti on jo lahtenyt, ja ilman lokiriviä se lahtisi huomenna
+         * uudelleen -- joka paiva. Mitattu 24.10.2026: `check`-rajoite
+         * salli vain arvot 7, 14 ja 21, joten paattymisviesti (0) olisi
+         * lahtenyt ja jaanyt kirjaamatta. Yksi toistuva viesti on paha,
+         * kymmenen on pahempi, joten loput jaavat huomiseen.
          */
         virheet.push(`LOKI ${m.email}: ${error.message}`)
+        break
       }
     }
 
