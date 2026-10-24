@@ -160,9 +160,15 @@ ja yhteensä 78 viestiä 40 vuorokaudessa.
 Simulaatio paljasti myös kaksi asiaa joita brief ei kattanut: **sama
 asiakas saa yhtä monta viestiä kuin sillä on tunnuksia** (Sortera 4, YIT
 3, Firesafe 2 samana päivänä), ja **Rakennuslehti on Trial-tilassa**, eli
-kumppanuuskontakti saa kokeilumuistutuksen. Kumpikaan ei ole virhe
-säännössä, mutta kumpikin on päätös — ne jätettiin ennalleen ja
-kerrottiin.
+kumppanuuskontakti saa kokeilumuistutuksen.
+
+**Viesti jokaiselle tunnukselle on tahallinen.** Johannes 24.10.2026:
+*"Minusta tuo viesti on pakko lähettää kaikille saman yrityksen
+käyttäjille, koska on mahdoton erottaa kuka on päättävä taho. toisaalta
+myös varmistamme sen että kokeilun päättyminen ei yllätä ketään."*
+Päättäjää ei voi päätellä tunnuksesta, ja yhdelle lähetetty viesti
+olettaisi juuri sen. Sääntö on siis: **laskutustila on asiakkaalla,
+viesti tunnuksella.**
 
 Ks. `lib/users/trialMuistutukset.ts` (+ spec),
 `app/api/admin/trial-reminders/route.ts`,
