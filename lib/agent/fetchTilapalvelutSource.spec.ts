@@ -147,6 +147,8 @@ describe("suodatus ja ehdokas", () => {
     const [e] = tilapalvelutEhdokkaat(nimella("Harjun"), NYT)
     expect(e.builder).toBe("Rakennusliike J.Malm Oy")
     expect(e.phase).toBe("Rakenteilla")
+    /* Otsikon "valmistuivat" ei saa sulkea hanketta importerissa. */
+    expect(e.phase_authoritative).toBe(true)
     expect((e.metadata as any).aliurakoitsijat).toContainEqual(
       expect.objectContaining({ yritys: "Bravida Finland Oy", tyo: "sähköurakka" })
     )

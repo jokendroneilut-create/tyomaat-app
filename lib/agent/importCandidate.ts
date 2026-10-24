@@ -421,10 +421,20 @@ export async function importCandidate(
    * osuneen hankkeen tilan valmiiksi - samaa polkua kuin lähteen oma
    * merkintä käyttäisi.
    */
-  const completionFromText = textIndicatesCompletion(
-    body.name,
-    body.metadata?.description
-  )
+  /*
+   * LÄHDE JONKA VAIHE ON VARMA OHITTAA TEKSTIPÄÄTTELYN (D-339).
+   *
+   * Tampereen Tilapalveluiden juttu "Harjun koulun B- ja C-rakennukset
+   * valmistuivat – perusparannus jatkuu A-rakennuksessa" on julkaisijan
+   * luokassa "Meneillään", ja fetcher päätteli vaiheen aikataulukentästä
+   * (A valmis kesällä 2027). Otsikon "valmistuivat" kuitenkin merkitsi
+   * osuneen hankkeen valmiiksi 24.10.2026, eli käynnissä oleva työmaa
+   * piiloutui. Fetcher, joka lukee vaiheen rakenteisesta kentästä,
+   * asettaa `phase_authoritative`, ja silloin vain sen oma lippu ratkaisee.
+   */
+  const completionFromText = body.phase_authoritative
+    ? false
+    : textIndicatesCompletion(body.name, body.metadata?.description)
 
   const isCompleted = Boolean(body.completed) || completionFromText
 
@@ -788,7 +798,7 @@ export async function importCandidate(
   const inferredCompletionDate = inferCompletionDateFromText(
     `${body.name ?? ""} ${body.metadata?.description ?? ""}`
   )
-  const isStaleCompletion = isPastDate(inferredCompletionDate)
+  const isStaleCompletion = !body.phase_authoritative && isPastDate(inferredCompletionDate)
 
   /*
    * Tänne päädytään vain kun täsmäävää hanketta EI löytynyt. Valmistumisesta

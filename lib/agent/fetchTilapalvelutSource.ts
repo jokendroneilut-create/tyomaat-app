@@ -393,6 +393,8 @@ export function tilapalvelutEhdokkaat(j: TilapalvelutJulkaisu, nyt: Date = new D
       builder,
       phase,
       completed: phase === PHASE_LABELS.completed,
+      /* Vaihe luokituksesta ja aikataulusta; importer ei saa päätellä otsikosta. */
+      phase_authoritative: true,
       property_type: inferBuildingType(j.otsikko, j.teksti),
       estimated_completion: valmistuu,
       construction_start: alku,
