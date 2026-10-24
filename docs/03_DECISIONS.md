@@ -107,6 +107,69 @@ avainta. Sama käyttö kuin PKS:n rekisterillä.
   "Purkutyön arvioidaan valmistuvan elokuussa 2026" (purku itse
   hankkeena). Turtola palautettiin jonoon.
 
+### D-339 - Kokeilumuistutukset: kolme viestiä, yksi sääntö, luku laskettuna
+
+Johannes 23.10.2026: *"Tarvitsemme ominaisuuden joka muistuttaa trial
+käyttäjiä. Muistutuksia voisi lähteä testikäyttäjille viikon välein
+trialin aikana."*
+
+**Luku lasketaan, ei kirjoiteta.** Alkuperäinen luonnos lupasi 21 / 14 /
+7 päivää viikon välein, mutta kokeilu on 30 vuorokautta — viikon
+kuluttua jäljellä on 23, ei 21. Johannes 24.10.2026: *"laske
+kokeilujakson jäljellä olevat päivät ja ilmoitetaan käyttäjälle
+todelliset luvut."* Laukaisu on siis tunnuksen iässä **9, 16 ja 23**, ja
+viestiin menee laskettu luku. Jos ajo myöhästyy päivällä, teksti kertoo
+20 eikä 21 — eikä kukaan joudu tarkistamaan oliko lupaus totta.
+
+**Kenelle: valkolista, ei mustalista.** Johannes 24.10.2026:
+*"koneunionilla on valittuna tila 'ei maksava' -> heille ei lähetetä
+mitään eikä kenellekään muullekaan jonka tila on 'ei maksava'."* Ehto on
+`customer_billing.tila = "testi"` (näytöllä **Trial**), joten
+`ei_maksava`, `maksava`, tuntematon ja **puuttuva** tila eivät saa
+viestiä. Valkolista on tässä oikea suunta: uusi tila tai merkitsemätön
+asiakas ei saa viestiä vahingossa.
+
+Lisäksi ei lukituille ([[locked-accounts-get-no-mail]]) eikä adminille
+tai myyjälle. Ikä luetaan `auth.users.created_at`:sta, ei profiilista.
+
+**Ei takautuvaa postitusta.** Johannes: *"ne joilla trial on nyt mennyt
+jo yli niin hoidan käsin."* Rajapyykki ohitetaan pysyvästi, jos tunnus
+oli jo sen ohi käyttöönottopäivänä (`ALOITUSPAIVA = 2026-10-24`). Ilman
+tätä käyttöönotto olisi lähettänyt kerralla kymmeniä viestejä menneistä
+rajapyykeistä.
+
+**Myöhästynyt ajo ei lähetä vanhentunutta lukua.** Jos cron on ollut
+poikki ja tunnus ohitti kaksi rajapyykkiä, lähetetään vain kiireisin ja
+vanhempi kirjataan tilaan `ohitettu`. Muuten se lähtisi seuraavana
+päivänä tekstillä "jäljellä 21 päivää" kun niitä on 13.
+
+**Tupla estetään kannassa, ei koodissa.** `trial_reminder_log` on
+uniikki parilla `(user_id, virstanpylvas)`. Jos ajo kaatuu kesken, jo
+kirjatut rivit estävät uusinnan. Lokitaulun puuttuminen **pysäyttää**
+ajon näkyvästi (500) sen sijaan että se jatkaisi ilman tuplasuojaa —
+tämä on tarkoituksellinen poikkeus talon tapaan "puuttuva taulu ei kaada
+näkymää", koska tässä hiljainen jatkaminen tarkoittaisi samaa viestiä
+joka päivä.
+
+**Mitattu ennen kuin yksikään viesti lähti.**
+`scripts/esikatsele-kokeilumuistutukset.ts` ajaa **samaa
+valintafunktiota** kuin reitti ja simuloi 45 vrk eteenpäin. Tulos
+24.10.2026: ensimmäisenä päivänä 0 viestiä, seuraavana 2, huippupäivä 12
+ja yhteensä 78 viestiä 40 vuorokaudessa.
+
+Simulaatio paljasti myös kaksi asiaa joita brief ei kattanut: **sama
+asiakas saa yhtä monta viestiä kuin sillä on tunnuksia** (Sortera 4, YIT
+3, Firesafe 2 samana päivänä), ja **Rakennuslehti on Trial-tilassa**, eli
+kumppanuuskontakti saa kokeilumuistutuksen. Kumpikaan ei ole virhe
+säännössä, mutta kumpikin on päätös — ne jätettiin ennalleen ja
+kerrottiin.
+
+Ks. `lib/users/trialMuistutukset.ts` (+ spec),
+`app/api/admin/trial-reminders/route.ts`,
+`app/api/admin/trial-reminder-log/route.ts`,
+`docs/sql/2026-10-24_trial_reminder_log.sql`,
+`scripts/esikatsele-kokeilumuistutukset.ts`.
+
 ### D-338 - Kaavan osapuoli: mekanismi oli olemassa, sanasto puuttui
 
 Johannes 23.10.2026 Samppalinnan koulutontista: *"tästä ei ole poimittu

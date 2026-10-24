@@ -21,6 +21,21 @@ ajo: 20 ehdokasta. Kanjonin koulun rivi korjattiin samalla käsin, koska
 tuonti oli lukenut purku + uudisrakennuksen rakenteilla olevaksi
 peruskorjaukseksi.
 
+### Kokeilumuistutukset trial-asiakkaille (D-339)
+
+Kolme sahkopostia kokeilujakson aikana: kun jaljella on 21, 14 ja 7
+paivaa. Luku LASKETAAN, joten myohastynyt ajo kertoo todellisen maaran
+eika lupaa vaaraa. Lahtee vain laskutustilassa "Trial" oleville, ei
+lukituille eika adminille/myyjalle.
+
+Kaytoonotto ei laheta takautuvia viesteja: rajapyykki joka oli jo ohi
+24.10.2026 ohitetaan pysyvasti. Tupla estetaan kannassa uniikilla
+avaimella (user_id, virstanpylvas), ei koodin muistilla.
+
+Viestit-sivulle tuli oma loki lahteneista muistutuksista. Esikatselu
+(scripts/esikatsele-kokeilumuistutukset.ts) ajaa samaa valintafunktiota
+kuin reitti: 78 viestia 40 vrk aikana, huippupaiva 12.
+
 ### Kaavahankkeiden rakennuttaja kuvauksesta (D-338)
 
 Poimintamekanismi oli olemassa ja ajossa, mutta sen ankkurit olivat
