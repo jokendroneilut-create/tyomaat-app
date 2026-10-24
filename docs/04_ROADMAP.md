@@ -1233,6 +1233,56 @@ muistin varassa.
 
 ### Lähdekattavuus
 
+- **Pörssitiedotteet hankelähteenä — osittain mitattu 24.10.2026, työ
+  auki.** Johannes: *"tutki tämä lähde
+  `inderes.fi/releases/toivo-group-oyj-on-allekirjoittanut-kauppakirjan-espooseen-rakenteilla-olevasta-paivakodista-kinland-asn-kanssa`
+  — tästä olisimme saaneet tiedon että päiväkoti on jo valmistunut tai
+  olisi pitänyt valmistua. Katso myös muiden pörssissä olevien lähteiden
+  pörssitiedotteet saisiko ne inderesin tai jonkun muun kautta. Tai
+  voimmeko seurata pörssitiedotteita muuten ja poimia niistä hankkeita
+  ja tietoja?"*
+
+  **Tämä yksittäinen tiedote tuli meille jo** — Toivo on lähteenä
+  17.10.2026 alkaen (`fetchToivoSource.ts`, Inderes-widgetin
+  pilvifunktio, D-300). Mitattu: tiedote on 23.12.2025, tunniste
+  `PRESS_RELEASE`, ja otsikko läpäisee `onHanketiedote`-seulan
+  ("kauppakirja", "päiväkod"). Rivi on kannassa
+  (`fb41c036`, *"Päiväkoti Espooseen Puustellinmäkeen"*, Valmistunut,
+  lähde `sijoittajille.toivo.fi/...?publicationId=9771267a`). Inderesiä
+  ei siis tarvittu tähän.
+
+  **Mutta mittaus nosti kolme oikeaa havaintoa:**
+
+  1. **Tunnisteen laajentaminen pörssitiedotteisiin ei kannata Toivolla.**
+     357 julkaisusta `STOCK_EXCHANGE_RELEASE` on 88, joista 81 on
+     12 kk:n sisällä — ja niiden otsikot ovat lähes kaikki *"Omien
+     osakkeiden hankinta ajalla…"*, johdon liiketoimia ja katsauksia.
+     Hankkeet ovat `PRESS_RELEASE`-puolella. Jos muita yhtiöitä
+     lisätään, tunnistejakauma on mitattava yhtiökohtaisesti ennen
+     seulan valintaa — ei oletettava Toivon perusteella.
+
+  2. **Avoin kysymys on Inderesin KOOSTE, ei yksittäinen yhtiö.**
+     Nykyinen reitti vaatii yhtiökohtaisen `widgetId`:n IR-sivulta, eli
+     joka pörssiyhtiö on oma keräjänsä. `inderes.fi/releases/` on
+     monen yhtiön yhteinen listaus — **jos siitä löytyy koneluettava
+     listaus, yksi keräjä kattaisi kaikki pörssiyhtiöt kerralla.** Tämä
+     on se mitä pitää probata (robots.txt, `__NEXT_DATA__`,
+     mahdollinen hakurajapinta). Vasta sen jälkeen päätetään yhtiöiden
+     suodatus: rakennusalan ja kiinteistösijoittajien tunnisteet, ei
+     koko pörssi.
+
+  3. **Kaksi riviä samasta päiväkodista — katselmoitava, EI yhdistetä
+     ohi jonon.** `a58e8137` *"Päiväkoti, Puustellinmäki"* (luotu
+     21.2.2026, tilaaja Toivo Group Oyj, **rakentaja Kinland AS**) ja
+     `fb41c036` *"Päiväkoti Espooseen Puustellinmäkeen"* (luotu
+     24.10.2026, rakentaja Toivo Group Oyj, liittyvä yritys Kinland AS)
+     ovat ilmeisesti sama kohde. Vanhemmalla rivillä Kinland on
+     **rakentajana**, mikä on väärä rooli: Kinland on ostaja ja
+     käyttäjä, ei urakoitsija. Lisäksi `fb41c036` on vaiheessa
+     Valmistunut mutta sen arvioitu valmistuminen on 31.12.2026.
+
+  Ei aloiteta kohdasta 1; työ alkaa kohdan 2 probesta.
+
 - **Päättyvät puitesopimukset — tutkimatta, idea 8.10.2026.** Havaittu
   kilpailijakartoituksessa: Mercell Hankintavahti myy muun muassa tietoa
   **päättyvistä puitesopimuksista**
