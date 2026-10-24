@@ -51,6 +51,67 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-350 - Jalonin työmaaluettelo lähteeksi, ja purku ≠ rakentaminen
+
+Johannes 25.10.2026: *"tee tuo jalon lähteeksi"*.
+
+**Tämä lähde on eri lajia kuin muut yrityslähteet.** Muut ovat
+tiedotteita, joista kentät kaivetaan leipätekstistä. Tämä on
+julkaisijan oma **työmaaluettelo**, jossa jokaisella rivillä on samat
+kentät — ja niiden joukossa työmaan oma puhelinnumero. Mitattu
+25.10.2026, 13 kohdetta: nimi 13/13, rakennuttaja 13/13, katuosoite
+13/13, **työmaan puhelin 13/13**, valmistumiskuukausi 13/13. Työmaan
+numero on sama tieto jota työmaakylttien kuvista haetaan
+([[site-sign-as-source]]), mutta valmiina listana.
+
+**Reitti:** WordPressin oma sisältötyyppi `tyomaatiedot`,
+`wp-json/wp/v2/tyomaatiedot?per_page=100`. Selainsivu näyttää 10,
+rajapinta antaa **13** — sivun paikkakuntasuodatin piilottaa osan.
+`robots.txt` on `Disallow:` (tyhjä).
+
+**Roolit menevät ristiin** muihin yrityslähteisiin nähden: Jalon on
+**rakentaja** ja sivun "Rakennuttaja" on **tilaaja**. Rakentajaksi
+kirjataan konserni "Jalon Group Oy" eikä alueyhtiötä: luokitus kertoo
+alueen (uusimaa / jyväskylä / mikkeli), ei yhtiötä, ja alueyhtiön nimen
+päätteleminen olisi arvaus. Tämä ei syö tarkempaa tietoa, koska
+`importCandidate` säilyttää olemassa olevan rakentajan.
+
+**Tuotos ensimmäisestä ajosta:** 13 kohdetta → **12 jonoriviin**, 1
+täsmäsi. Kuivaharjoituksen mukaan 7 on kannalle uusia; lopuille lähde
+tuo **puuttuvan rakentajan ja työmaan numeron** — arvo on siis sekä
+uusissa riveissä että täydennyksessä.
+
+**Ja yksi täsmäys meni väärin — se on tämän päätöksen tärkein osa.**
+Kohde *"Malmin peruskoulu ja päiväkoti"* täsmäsi luottamuksella **tasan
+70** riviin *"Malmin peruskoulun liikuntahallin purkaminen,
+Kirkonkyläntie 17"*. Syyt: `same_city`, `same_region`,
+`same_developer`, `name_in_description` — purkupäätöksen perusteluissa
+mainitaan laajennushanke nimeltä. Purkuriville kirjoittui rakentaja,
+työmaan numero ja **valmistumispäivä 2026-05-31 → 2028-04-30**, eli
+purku olisi näyttänyt kestävän kaksi vuotta.
+
+**Urakkalajiveto ei pelastanut, koska se vaatii urakkanimityksen.**
+`detectTrades` tunnistaa lajin vain sanasta joka päättyy urakkaan tai
+työhön ("purku-urakka", "purkutyöt"). Päätösotsikossa lukee
+**"purkaminen"**, joten kummallakaan puolella ei ollut lajia eikä veto
+voinut laueta.
+
+Lisätty kapea veto `haveDifferentDemolition`: kun **vain toisella**
+puolella on purkusana nimessä, rivit ovat eri työ samassa paikassa.
+Negatiivinen todiste kuten urakkalajikin — se estää osuman, ei luo
+sitä. Sama kuvio osui ennenkin (D-308, *"Niittylahden koulun ja
+päiväkodin purku"* → *"Niittylahden UUSI koulu"*), joten tämä on toinen
+mitattu kerta eikä yksittäistapaus.
+
+Jo kirjoitettu peruttiin käsin: purkurivin rakentaja tyhjennettiin,
+valmistumispäivä palautettiin rivin omasta metadatasta ja työmaan
+numero siirrettiin sille riville jolle se kuuluu (`853a0698`,
+rakentaja Jalon Uusimaa Oy).
+
+Ks. `lib/agent/fetchJalonSource.ts` (+ spec, 18 testiä),
+`lib/projects/contractTrade.ts`, `scripts/kuivaharjoitus-jalon.ts`,
+`scripts/lisaa-jalon-lahde.ts`, `scripts/korjaa-malmin-purkurivi.ts`.
+
 ### D-349 - Yhdistäminen siirtää myös piilotetun rivin omat merkinnät
 
 Johannes 25.10.2026: *"yhdistä ilmasotakoulun rivit"* — sama hanke

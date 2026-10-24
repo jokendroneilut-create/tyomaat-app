@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { detectTrades, haveDifferentTrades } from "./contractTrade"
+import { detectTrades, haveDifferentTrades, haveDifferentDemolition, onPurkuhanke } from "./contractTrade"
 
 describe("detectTrades", () => {
   it("tunnistaa urakkalajin yhdyssanasta", () => {
@@ -135,5 +135,31 @@ describe("haveDifferentTrades", () => {
   it("sietää tyhjät", () => {
     expect(haveDifferentTrades(null, "Sähköurakka")).toBe(false)
     expect(haveDifferentTrades("", "")).toBe(false)
+  })
+})
+
+describe("purku ei ole rakentamista (D-350)", () => {
+  it("tunnistaa purkusanan myos ilman urakkanimitysta", () => {
+    expect(onPurkuhanke("Malmin peruskoulun liikuntahallin purkaminen, Kirkonkyläntie 17")).toBe(true)
+    expect(onPurkuhanke("Vanhan tehtaan purkutyöt")).toBe(true)
+    expect(onPurkuhanke("Rakennus puretaan tontilta")).toBe(true)
+    expect(onPurkuhanke("Malmin peruskoulu ja päiväkoti")).toBe(false)
+  })
+
+  it("estaa osuman kun vain toinen on purku", () => {
+    expect(
+      haveDifferentDemolition(
+        "Malmin peruskoulu ja päiväkoti",
+        "Malmin peruskoulun liikuntahallin purkaminen, Kirkonkyläntie 17"
+      )
+    ).toBe(true)
+  })
+
+  it("ei estä kun molemmat ovat purkua", () => {
+    expect(haveDifferentDemolition("Koulun purkaminen", "Koulun purkutyöt")).toBe(false)
+  })
+
+  it("ei estä kun kumpikaan ei ole purkua", () => {
+    expect(haveDifferentDemolition("Päiväkoti Kouvolaan", "Päiväkoti Kouvolaan, laajennus")).toBe(false)
   })
 })

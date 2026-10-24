@@ -182,3 +182,40 @@ export function haveDifferentTrades(
 
   return true
 }
+
+/*
+ * PURKU EI OLE RAKENTAMISTA (D-350).
+ *
+ * `detectTrades` vaatii urakkanimityksen ("purku-urakka", "purkutyöt"),
+ * mutta päätösotsikossa lukee tavallisesti **"purkaminen"**:
+ *
+ *   hanke     "Malmin peruskoulun liikuntahallin purkaminen, Kirkonkyläntie 17"
+ *   ehdokas   "Malmin peruskoulu ja päiväkoti"
+ *
+ * Kumpikaan ei saanut lajia, joten urakkalajiveto ei lauennut — ja osuma
+ * syntyi luottamuksella tasan 70 (`same_city`, `same_region`,
+ * `same_developer`, `name_in_description`), koska purkupäätöksen
+ * perusteluissa mainitaan laajennushanke nimeltä. Jalonin työmaalistan
+ * koulu kirjoittui purkuriville: rakentaja ja **valmistumispäivä 2026-05-31
+ * -> 2028-04-30**, eli purku olisi näyttänyt kestävän kaksi vuotta.
+ *
+ * Sama kuvio on osunut ennenkin (D-308: "Niittylahden koulun ja päiväkodin
+ * purku" -> "Niittylahden UUSI koulu ja päiväkoti"), joten tämä on toinen
+ * mitattu kerta eikä yksittäistapaus.
+ *
+ * Veto on NEGATIIVINEN todiste kuten urakkalajikin: se estää osuman, ei luo
+ * sitä. Kun vain toisella puolella on purkusana, rivit ovat eri työ samassa
+ * paikassa. Jos molemmilla on, kyse voi olla samasta purkutyöstä eikä estetä.
+ */
+const PURKUSANA = /\bpurkami(?:nen|sen|sta)\b|\bpurku\w*|\bpuretaan\b|\bpurettava\w*/i
+
+export function onPurkuhanke(nimi: string | null | undefined): boolean {
+  return PURKUSANA.test(String(nimi ?? ""))
+}
+
+export function haveDifferentDemolition(
+  first: string | null | undefined,
+  second: string | null | undefined
+): boolean {
+  return onPurkuhanke(first) !== onPurkuhanke(second)
+}

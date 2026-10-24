@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Jalonin tyomaaluettelo lahteeksi (D-350)
+
+Julkaisijan oma tyomaalista, jossa jokaisella rivilla rakennuttaja,
+katuosoite, valmistumiskuukausi ja TYOMAAN PUHELINNUMERO. 13 kohdetta,
+kaikki kentat taynna. Ensimmainen ajo: 12 jonoriviin, 1 tasmasi.
+
+Roolit menevat ristiin muihin yrityslahteisiin nahden: Jalon on
+rakentaja ja sivun "Rakennuttaja" on tilaaja.
+
+Yksi tasmays meni vaaraan riviin: koulukohde osui saman osoitteen
+purkupaatokseen ja siirsi sen valmistumisen 2026 -> 2028.
+Urakkalajiveto ei lauennut, koska se vaatii urakkanimityksen eika
+"purkaminen" ole sellainen. Lisatty kapea veto: kun vain toisella
+puolella on purkusana nimessa, osumaa ei synny.
+
 ### Tyhjien valmistumiskenttien lapikaynti (D-348)
 
 113 rivia joilla kentta on tyhja mutta jasennin loytaa paivan.

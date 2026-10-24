@@ -4,7 +4,7 @@ import {
 } from "@/lib/projects/identity"
 import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
 import { isSameOrganization } from "@/lib/projects/organizationName"
-import { haveDifferentTrades } from "@/lib/projects/contractTrade"
+import { haveDifferentDemolition, haveDifferentTrades } from "@/lib/projects/contractTrade"
 import { haveDifferentNameNumbers } from "@/lib/projects/nameNumbers"
 import {
   haveSameEnergySite,
@@ -745,6 +745,9 @@ export function haveHardVeto(
   candidate: Pick<NormalizedProjectCandidate, "name" | "city" | "description">
 ): boolean {
   if (haveDifferentTrades(candidate.name, project.name)) return true
+
+  /* Purku ja rakentaminen samassa osoitteessa ovat eri tyo (D-350). */
+  if (haveDifferentDemolition(candidate.name, project.name)) return true
 
   return haveDifferentEnergySites(
     candidate.name,

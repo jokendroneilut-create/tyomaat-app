@@ -84,6 +84,7 @@ import {
 import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
 import { fetchDestiaSource } from "./fetchDestiaSource"
 import { fetchOteranSource } from "./fetchOteranSource"
+import { fetchJalonSource } from "./fetchJalonSource"
 import { fetchLohkareSource } from "./fetchLohkareSource"
 import { fetchVexatecSource } from "./fetchVexatecSource"
 import { fetchTilapalvelutSource } from "./fetchTilapalvelutSource"
@@ -397,6 +398,14 @@ export const sources = [
    * laajuuden ja valmistumisvuoden.
    */
   { name: "lohkare", fetch: fetchLohkareSource },
+  /*
+   * Jalonin oma TYOMAALUETTELO (D-350) -- ei tiedotteita vaan kenttalista,
+   * jossa jokaisella rivilla on rakennuttaja, katuosoite, valmistumiskuukausi
+   * ja TYOMAAN PUHELINNUMERO. Mitattu 25.10.2026: 13 kohdetta, kaikki kentat
+   * taynna. Roolit menevat ristiin muihin yrityslahteisiin nahden: Jalon on
+   * rakentaja, sivun "Rakennuttaja" on tilaaja.
+   */
+  { name: "jalon_tyomaat", fetch: fetchJalonSource },
   /*
    * Vexatec Oy: hoiva- ja palvelurakentamisen KVR-urakoitsija. Tiedotteet
    * ovat WordPressin omassa tyypissa `tiedotteet`, eivat RSS-syotteessa
