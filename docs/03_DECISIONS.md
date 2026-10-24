@@ -51,6 +51,82 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-343 - Tunnettu yritysnimi kuvauksesta liittyväksi yritykseksi
+
+Johannes 24.10.2026 Toivon tiedotteesta: *"tästä ei ole poimittu
+tilaajaa VAV Yhtymä Oy"* — ja kun yritin lauseesta päättelevää sääntöä,
+hän kysyi paremman kysymyksen: *"Eikö VAV Yhtymä Oy voi lisätä
+yrityslistaamme ja sen avulla poimia sen aina ainakin hankkeeseen
+liittyväksi yritykseksi? Nyt sitä ei oltu poimittu mihinkään."*
+
+**Ensin yritin väärää tietä, ja mittaus pysäytti sen.**
+`extractClientFromText`issä oli valmis muistiinpano 18.10.2026:
+päättelevä kerros ("sopimuksen X:n kanssa", "toteuttamisesta X:lle")
+kokeiltiin ja lykättiin, koska neljännes uusista osumista oli
+kadunnimiä. Laajensin paikannimisuojan katusanoihin ja ajoin A/B:n koko
+16 589 rivin yli. Este oli isompi kuin muistiinpano tiesi:
+
+| | |
+|---|---|
+| paikannimet läpäisevät yhä | Myllykoske, Karhinkankaa, Niinivaara, Tapiola — kaupunginosia, ei katuja |
+| **rooli kääntyy väärin** | *"Espoon Asunnot on solminut urakkasopimuksen SSA Rakennus Oy:n kanssa"* kirjaisi **rakentajan tilaajaksi** |
+
+Jälkimmäinen on uusi havainto; 18.10. mittaus ei tunnistanut sitä. Se
+on vakavampi kuin paikannimet, koska se kirjoittaa oikean yrityksen
+väärään kenttään. Muutos palautettiin.
+
+**Johanneksen idea ohittaa molemmat esteet.** Tunnettu yritysnimi ei
+voi olla paikannimi, eikä *liittyvä yritys* väitä roolia — se ei siis
+voi kirjata rakentajaa tilaajaksi. Lista rakennetaan **omasta
+datasta**: nimet jotka ovat jo `developer`-, `builder`- tai
+`related_companies`-kentissä. VAV oli jo siellä neljänä muunnelmana,
+eli lista olisi poiminut sen.
+
+**Kolme suodatinta, jokainen mitattu:**
+
+1. **Yhtiömuoto vaaditaan.** Rajaa pois kuntanimet ("Helsingin
+   kaupunki", 563 esiintymää) ja yksisanaiset arkisanat.
+2. **Katkennut nimi pois listalta.** Omissa kentissämme on aiempia
+   katkelmia ("Kiinteistö Oy", "Vesi Oy"), ja listalla ne osuisivat
+   lähes joka tekstiin.
+3. **Sama yritys eri kirjoitusasussa ei ole uusi osapuoli.** Rivillä on
+   rakentajana "SRV" ja tiedotteen otsikkorivillä *"SRV YHTIÖT OYJ
+   LEHDISTÖTIEDOTE"* — yhteen suuntaan vertaaminen päästi sen läpi
+   **126 kertaa**. Vertailu tehdään yhtiömuoto riisuttuna molempiin
+   suuntiin.
+
+**Neljäs suodatin löytyi vasta koko ajosta: verkkoyhtiöt.** Helsingin
+katusuunnitelmapäätöksessä on vakioluettelo kadun alla kaapeleita
+omistavista yhtiöistä. Ne olisivat olleet **635 / 2 378 eli 27 %**
+kaikista lisätyistä nimistä — neljännes kentästä samaa luetteloa.
+
+**Ja tässä tein virheen jonka luku itse paljasti:** kerroin ensin
+osuudeksi 6 %, koska laskin sen kuivaharjoituksen **näytteestä**
+(400 ensimmäistä riviä) enkä koko ajosta. Sama ansa kuin aiemmin
+([[sample-must-be-representative]]) — otoksen on oltava edustava, ei
+ensimmäinen N.
+
+**Tulos:** jono 826, hankkeet 532, yhteensä 1 738 uutta liittyvää
+yritystä, 0 virhettä. Otos luettuna: tilaajia (Länsi-Turunmaan
+Vuokratalot, Tampereen Vuokra-asunnot), urakoitsijoita, arkkitehtejä ja
+purku-urakan tarjoajia. Kärjessä ovat suunnittelutoimistot (Afry 86,
+Ramboll 54, Sitowise 53) — juuri ne joiden D-192 sanoo kuuluvan
+liittyviin yrityksiin eikä rakennuttajaksi.
+
+**Lista on itsestään kasvava** eikä sitä ylläpidetä käsin: uusi
+yritys tulee listalle heti kun se kirjataan johonkin kenttään. Lataus
+on välimuistissa tunnin ajan, koska discovery-ajo käsittelee satoja
+ehdokkaita.
+
+Ks. `lib/projects/tunnetutYritykset.ts` (+ spec, 13 testiä),
+`lib/agent/importCandidate.ts`,
+`scripts/taydenna-tunnetut-yritykset.ts`,
+`scripts/mittaa-tunnetut-yritykset.ts`.
+
+**Avoin:** osa listan nimistä on taivutettuna ("Asunto Oy Helsingin
+Kruununvoutiin"), koska ne ovat kentissä siinä muodossa. Korjaantuu kun
+kentät siivotaan; ei korjattu tässä.
+
 ### D-342 - Urakka-aika kertoo valmistumisen ilman valmistumissanaa
 
 Johannes 24.10.2026 Åbackan sähköaseman rivistä: *"tästä ei ole poimittu

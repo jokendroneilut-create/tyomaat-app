@@ -24,6 +24,11 @@ import {
 } from "@/lib/projects/projectCompanies"
 import { mergeContacts } from "@/lib/projects/contacts"
 import {
+  haeTunnetutYritykset,
+  etsiTunnetutYritykset,
+  erotteleNimet,
+} from "@/lib/projects/tunnetutYritykset"
+import {
   findByIdentifiers,
   linkIdentifier,
   type IdentifierType,
@@ -483,6 +488,52 @@ export async function importCandidate(
     parseFinnishStartDate(
       `${body.name ?? ""} ${body.description ?? body.metadata?.description ?? ""}`
     )?.paiva ?? null
+
+  /*
+   * TUNNETUT YRITYKSET KUVAUKSESTA LIITTYVIKSI YRITYKSIKSI (D-343).
+   *
+   * Johannes 24.10.2026: *"Eikö VAV Yhtymä Oy voi lisätä
+   * yrityslistaamme ja sen avulla poimia sen aina ainakin hankkeeseen
+   * liittyväksi yritykseksi?"*
+   *
+   * Lisataan `body.metadata.related_companies`iin ENNEN tasmaytysta,
+   * jolloin sama tieto kulkee seka uuteen jonoriviin etta osuvan
+   * hankkeen yhdistamiseen -- jalkimmainen yhdistaa listan eika korvaa
+   * ([[matched-overwrites-contacts]]).
+   *
+   * Lista ja osuman logiikka ovat omassa moduulissaan, jotta saannot
+   * voi testata ilman kantaa. Virhe listan haussa ei saa kaataa
+   * tuontia: ehdokas menee jonoon ilman liittyvia yrityksia.
+   */
+  try {
+    const lista = await haeTunnetutYritykset(supabase)
+    const joTiedossa = [
+      ...erotteleNimet(body.developer ?? body.metadata?.developer),
+      ...erotteleNimet(body.builder ?? body.metadata?.builder),
+      ...(Array.isArray(body.metadata?.related_companies)
+        ? body.metadata.related_companies.flatMap(erotteleNimet)
+        : []),
+      ...awardWinnersFromMetadata(body.metadata),
+    ]
+    const loydetyt = etsiTunnetutYritykset(
+      `${body.name ?? ""} ${body.description ?? body.metadata?.description ?? ""}`,
+      lista,
+      joTiedossa
+    )
+    if (loydetyt.length) {
+      body.metadata = {
+        ...(body.metadata ?? {}),
+        related_companies: mergeCompanyNames(
+          Array.isArray(body.metadata?.related_companies)
+            ? body.metadata.related_companies
+            : [],
+          loydetyt
+        ),
+      }
+    }
+  } catch (virhe: any) {
+    console.error("TUNNETUT YRITYKSET:", virhe?.message ?? virhe)
+  }
 
   const candidate = {
     name: matchTitle || body.name || null,

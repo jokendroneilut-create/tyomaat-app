@@ -11,6 +11,24 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Tunnettu yritys kuvauksesta liittyvaksi yritykseksi (D-343)
+
+Johanneksen idea: sen sijaan etta lauseesta paatellaan rooli, poimitaan
+kuvauksesta ne yritysnimet jotka ovat jo kannassamme -- ja kirjataan ne
+liittyviksi yrityksiksi, jotka eivat vaita roolia.
+
+Lista rakentuu omasta datasta (developer, builder, related_companies),
+joten se kasvaa itsestaan. Nelja suodatinta: yhtiomuoto vaaditaan,
+katkennut nimi pois, sama yritys eri kirjoitusasussa tunnistetaan, ja
+katusuunnitelmien verkkoyhtiovakioluettelo rajataan pois (olisi ollut
+27 % lisayksista).
+
+Takautuva ajo: jono 826, hankkeet 532, 1 738 uutta liittyvaa yritysta.
+
+Lauseesta paatteleva tilaajapoiminta kokeiltiin ensin ja palautettiin:
+se poimii yha paikannimia ja kaantaa roolin vaarin kun julkaisija onkin
+tilaaja.
+
 ### Valmistuminen urakka-ajasta (D-342)
 
 Urakkailmoituksessa ei sanota "valmistuu" vaan kerrotaan jakso, jonka
