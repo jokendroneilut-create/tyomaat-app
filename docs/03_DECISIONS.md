@@ -151,11 +151,34 @@ tämä on tarkoituksellinen poikkeus talon tapaan "puuttuva taulu ei kaada
 näkymää", koska tässä hiljainen jatkaminen tarkoittaisi samaa viestiä
 joka päivä.
 
+**Neljäs viesti: päättymispäivä.** Johannes 24.10.2026: *"Ilmoitus
+pitää tulla myös päättymispäivä. Ei katkaista palvelun käyttöä, mutta
+ilmoitetaan että se on päättynyt. Soitamme sitten niille asiakkaille
+jotka eivät itse reagoi ilmoitukseen."* Viesti on siis myös työlista.
+
+Teksti sanoo mikä on totta: *"Tunnuksesi on toistaiseksi käytössä."*
+Palvelu ei sulje tunnusta automaattisesti, koska tilausautomaatiota ei
+ole ([[no-subscription-tracking]]) — lupaus katkaisusta olisi väärä
+kumpaankin suuntaan. Sana "tänään" tulee mukaan vain kun viesti lähtee
+päättymispäivänä ([[future-wording-expires]]).
+
+Päättymisviesti kestää myöhästymisen, muut eivät: *"jäljellä −3 päivää"*
+olisi virhe, *"on päättynyt"* on yhä totta. Siksi positiivinen rajapyykki
+ei enää laukea kokeilun jälkeen vaan merkitään ohitetuksi, ja yli
+viikon myöhässä oleva tunnus jää kokonaan käsin hoidettavaksi.
+
+**Brändi kirjoitetaan ilman ö:tä.** Johannes 24.10.2026 korjasi
+otsikon; tarkistus paljasti että koko koodipohja käyttää muotoa
+`Tyomaat.fi` ja ainoat kuusi poikkeusta olivat juuri tässä uudessa
+tiedostossa. Testi vahtii tätä, koska virhe toistuu muuten seuraavassa
+viestissä.
+
 **Mitattu ennen kuin yksikään viesti lähti.**
 `scripts/esikatsele-kokeilumuistutukset.ts` ajaa **samaa
 valintafunktiota** kuin reitti ja simuloi 45 vrk eteenpäin. Tulos
 24.10.2026: ensimmäisenä päivänä 0 viestiä, seuraavana 2, huippupäivä 12
-ja yhteensä 78 viestiä 40 vuorokaudessa.
+ja yhteensä **123 viestiä 45 vuorokaudessa** (neljä viestiä mukaan
+luettuna).
 
 Simulaatio paljasti myös kaksi asiaa joita brief ei kattanut: **sama
 asiakas saa yhtä monta viestiä kuin sillä on tunnuksia** (Sortera 4, YIT

@@ -23,8 +23,10 @@ peruskorjaukseksi.
 
 ### Kokeilumuistutukset trial-asiakkaille (D-339)
 
-Kolme sahkopostia kokeilujakson aikana: kun jaljella on 21, 14 ja 7
-paivaa. Luku LASKETAAN, joten myohastynyt ajo kertoo todellisen maaran
+Nelja sahkopostia: kun jaljella on 21, 14 ja 7 paivaa seka kokeilun
+paattyessa. Paattymisviesti ei lupaa katkaisua ("Tunnuksesi on
+toistaiseksi kaytossa"), koska palvelu ei sulje tunnusta
+automaattisesti -- reagoimattomille soitetaan. Luku LASKETAAN, joten myohastynyt ajo kertoo todellisen maaran
 eika lupaa vaaraa. Lahtee vain laskutustilassa "Trial" oleville, ei
 lukituille eika adminille/myyjalle.
 

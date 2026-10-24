@@ -29,8 +29,23 @@ import { TRIAL_DAYS, daysSince } from "@/lib/users/trial"
  * laukaise kerralla kymmenia viesteja menneista rajapyykeista.
  */
 
-/* Paivia jaljella, suurimmasta pienimpaan. */
-export const MUISTUTUKSET = [21, 14, 7] as const
+/*
+ * Paivia jaljella, suurimmasta pienimpaan. Nolla on paattymispaiva.
+ *
+ * Johannes 24.10.2026: *"Ilmoitus pitaa tulla myos paattymispaiva. Ei
+ * katkaista palvelun kayttoa, mutta ilmoitetaan etta se on paattynyt.
+ * Soitamme sitten niille asiakkaille jotka eivat itse reagoi
+ * ilmoitukseen."* Viesti on siis myos tyolista: siihen vastaamatta
+ * jattaneille soitetaan.
+ */
+export const MUISTUTUKSET = [21, 14, 7, 0] as const
+
+/*
+ * Paattymisviesti kestaa myohastymisen, muut eivat: "jaljella -3
+ * paivaa" olisi virhe, "on paattynyt" on yha totta. Tata vanhempaa
+ * tunnusta ei enaa muistuteta lainkaan -- se on kasin hoidettava.
+ */
+export const MYOHASSA_ENINTAAN = 7
 
 /* Ominaisuus otettiin kayttoon tana paivana; sita ennen menneet rajapyykit hoidetaan kasin. */
 export const ALOITUSPAIVA = "2026-10-24"
@@ -91,9 +106,10 @@ export function valitseMuistutettavat(
     if (e.rooli && EI_ASIAKAS.has(e.rooli)) continue
 
     const jaljella = paiviaJaljella(e.createdAt, now)
-    if (jaljella == null || jaljella <= 0) continue
+    if (jaljella == null) continue
 
     const ika = daysSince(e.createdAt, now)
+    if (ika != null && ika >= TRIAL_DAYS + MYOHASSA_ENINTAAN) continue
     const ikaAloituspaivana = daysSince(e.createdAt, aloitus)
     if (ika == null) continue
 
@@ -116,6 +132,15 @@ export function valitseMuistutettavat(
     if (!erantyneet.length) continue
 
     const kiireisin = Math.min(...erantyneet)
+
+    /*
+     * "Jaljella N paivaa" ei kelpaa kun kokeilu on jo ohi. Normaalisti
+     * paattymisviesti (0) on talloin kiireisin ja vanhemmat merkitaan
+     * ohitetuiksi; jos se on jo lahetetty, jaljelle jaava rajapyykki on
+     * vanhentunut eika siita lahde mitaan.
+     */
+    if (kiireisin > 0 && jaljella <= 0) continue
+
     tulos.push({
       userId: e.userId,
       email: e.email,
@@ -136,7 +161,8 @@ export function valitseMuistutettavat(
  * PRO maksutonta kokeilujaksoasi on jaljella viela N paivaa."*
  */
 export function muistutuksenOtsikko(paivia: number): string {
-  return `Työmaat.fi PRO -kokeilujaksoasi on jäljellä ${paivia} ${paivia === 1 ? "päivä" : "päivää"}`
+  if (paivia <= 0) return "Tyomaat.fi PRO -kokeilujaksosi on päättynyt"
+  return `Tyomaat.fi PRO -kokeilujaksoasi on jäljellä ${paivia} ${paivia === 1 ? "päivä" : "päivää"}`
 }
 
 export function muistutuksenTeksti(
@@ -145,12 +171,48 @@ export function muistutuksenTeksti(
   appBaseUrl: string
 ): { text: string; html: string } {
   const tervehdys = etunimi ? `Hei ${etunimi},` : "Hei,"
+
+  /*
+   * PAATTYMISVIESTI EI LUPAA KATKAISUA. Palvelu ei sulje tunnusta
+   * automaattisesti -- tilausautomaatiota ei ole -- joten teksti sanoo
+   * mika on totta: kokeilu on paattynyt, tunnus on yha kaytossa.
+   * "Tanaan" vain jos se on tanaan ([[future-wording-expires]]).
+   */
+  if (paivia <= 0) {
+    const milloin = paivia === 0 ? " tänään" : ""
+    const rivit = [
+      tervehdys,
+      "",
+      `Maksuton kokeilujaksosi Tyomaat.fi PRO:hon on päättynyt${milloin}.`,
+      "",
+      "Jos haluat jatkaa, vastaa tähän viestiin — kerron hinnoittelun ja jatkamme siitä mihin jäit.",
+      "",
+      "Tunnuksesi on toistaiseksi käytössä.",
+      "",
+      "Ystävällisin terveisin,",
+      "Johannes Sippola",
+      "Tyomaat.fi",
+    ]
+
+    const html =
+      `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#111827;">` +
+      `<p>${tervehdys}</p>` +
+      `<p>Maksuton kokeilujaksosi <strong>Tyomaat.fi PRO</strong>:hon on päättynyt${milloin}.</p>` +
+      `<p>Jos haluat jatkaa, vastaa tähän viestiin — kerron hinnoittelun ja jatkamme siitä mihin jäit.</p>` +
+      `<p>Tunnuksesi on toistaiseksi käytössä.</p>` +
+      `<p><a href="${appBaseUrl}" style="color:#1d4ed8;">Avaa Tyomaat.fi</a></p>` +
+      `<p>Ystävällisin terveisin,<br />Johannes Sippola<br />Tyomaat.fi</p>` +
+      `</div>`
+
+    return { text: rivit.join("\n"), html }
+  }
+
   const maara = `${paivia} ${paivia === 1 ? "päivä" : "päivää"}`
 
   const rivit = [
     tervehdys,
     "",
-    `Työmaat.fi PRO -maksutonta kokeilujaksoasi on jäljellä vielä ${maara}.`,
+    `Tyomaat.fi PRO -maksutonta kokeilujaksoasi on jäljellä vielä ${maara}.`,
     "",
     "Kokeilujakson aikana käytössäsi on koko palvelu: hankkeet kaikista lähteistä, hakuvahdit ja yhteystiedot.",
     "",
@@ -160,7 +222,7 @@ export function muistutuksenTeksti(
     "",
     "Ystävällisin terveisin,",
     "Johannes Sippola",
-    "Työmaat.fi",
+    "Tyomaat.fi",
   ]
 
   const text = rivit.join("\n")
@@ -168,11 +230,11 @@ export function muistutuksenTeksti(
   const html =
     `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#111827;">` +
     `<p>${tervehdys}</p>` +
-    `<p>Työmaat.fi PRO -maksutonta kokeilujaksoasi on jäljellä vielä <strong>${maara}</strong>.</p>` +
+    `<p>Tyomaat.fi PRO -maksutonta kokeilujaksoasi on jäljellä vielä <strong>${maara}</strong>.</p>` +
     `<p>Kokeilujakson aikana käytössäsi on koko palvelu: hankkeet kaikista lähteistä, hakuvahdit ja yhteystiedot.</p>` +
-    `<p><a href="${appBaseUrl}" style="color:#1d4ed8;">Avaa Työmaat.fi</a></p>` +
+    `<p><a href="${appBaseUrl}" style="color:#1d4ed8;">Avaa Tyomaat.fi</a></p>` +
     `<p>Jos haluat jatkaa kokeilun jälkeen tai sinulla on kysyttävää, vastaa tähän viestiin.</p>` +
-    `<p>Ystävällisin terveisin,<br />Johannes Sippola<br />Työmaat.fi</p>` +
+    `<p>Ystävällisin terveisin,<br />Johannes Sippola<br />Tyomaat.fi</p>` +
     `</div>`
 
   return { text, html }

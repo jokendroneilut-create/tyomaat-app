@@ -302,7 +302,7 @@ export default function MessagesPage() {
 
         <p style={{ marginTop: 6, fontSize: 13, color: '#6b7280' }}>
           Lähtevät automaattisesti Trial-asiakkaille kun kokeilua on jäljellä 21, 14 ja 7
-          päivää. Ei lukituille eikä muille laskutustiloille.
+          päivää sekä kokeilun päättyessä. Ei lukituille eikä muille laskutustiloille.
         </p>
 
         <div style={{ marginTop: 12, overflowX: 'auto' }}>
@@ -321,7 +321,8 @@ export default function MessagesPage() {
                   <td style={{ padding: '8px 4px' }}>{formatDate(rivi.sent_at)}</td>
                   <td style={{ padding: '8px 4px' }}>{rivi.email ?? '-'}</td>
                   <td style={{ padding: '8px 4px' }}>
-                    {rivi.virstanpylvas} pv
+                    {/* Nolla on päättymisviesti, ei "0 pv jäljellä". */}
+                    {rivi.virstanpylvas === 0 ? 'päättynyt' : `${rivi.virstanpylvas} pv`}
                     {rivi.tila === 'ohitettu' && (
                       <span style={{ marginLeft: 6, fontSize: 12, color: '#b45309' }}>
                         (ohitettu)
@@ -329,7 +330,9 @@ export default function MessagesPage() {
                     )}
                   </td>
                   <td style={{ padding: '8px 4px' }}>
-                    {rivi.paivia_jaljella == null ? '-' : `${rivi.paivia_jaljella} pv`}
+                    {rivi.paivia_jaljella == null || rivi.paivia_jaljella <= 0
+                      ? '-'
+                      : `${rivi.paivia_jaljella} pv`}
                   </td>
                 </tr>
               ))}

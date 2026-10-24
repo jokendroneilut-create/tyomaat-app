@@ -82,8 +82,34 @@ describe("valitseMuistutettavat", () => {
     expect(valitseMuistutettavat([ehdokas({ rooli: "seller" })], NYT)).toHaveLength(0)
   })
 
-  it("ei lähetä kun kokeilu on jo ohi", () => {
-    expect(valitseMuistutettavat([ehdokas({ createdAt: luotu(31) })], NYT)).toHaveLength(0)
+  it("lähettää päättymisviestin kokeilun viimeisenä päivänä", () => {
+    const [m] = valitseMuistutettavat(
+      [ehdokas({ createdAt: luotu(30), kasitellyt: [21, 14, 7] })],
+      NYT
+    )
+    expect(m.virstanpylvas).toBe(0)
+    expect(m.paiviaJaljella).toBe(0)
+  })
+
+  it("lähettää päättymisviestin vielä myöhässäkin, mutta ei ikuisesti", () => {
+    const myohassa = valitseMuistutettavat(
+      [ehdokas({ createdAt: luotu(33), kasitellyt: [21, 14, 7] })],
+      NYT
+    )
+    expect(myohassa[0].virstanpylvas).toBe(0)
+    expect(myohassa[0].paiviaJaljella).toBe(-3)
+
+    /* Viikkoa myöhemmin tunnus on käsin hoidettava, ei enää postitettava. */
+    expect(
+      valitseMuistutettavat([ehdokas({ createdAt: luotu(37), kasitellyt: [21, 14, 7] })], NYT)
+    ).toHaveLength(0)
+  })
+
+  it("ei lupaa jäljellä olevia päiviä kun niitä ei ole", () => {
+    /* Ajo on ollut poikki yli viikon: 7 pv:n raja ei saa laueta jälkikäteen. */
+    const [m] = valitseMuistutettavat([ehdokas({ createdAt: luotu(31), kasitellyt: [21, 14] })], NYT)
+    expect(m.virstanpylvas).toBe(0)
+    expect(m.vanhentuneet).toEqual([7])
   })
 
   it("ei lähetä takautuvasti rajapyykistä joka oli ohi jo käyttöönottopäivänä", () => {
@@ -120,10 +146,32 @@ describe("valitseMuistutettavat", () => {
   })
 })
 
+describe("päättymisviesti", () => {
+  it("sanoo että kokeilu on päättynyt eikä lupaa katkaisua", () => {
+    const { text } = muistutuksenTeksti("Matti", 0, "https://app.tyomaat.fi")
+    expect(text).toContain("on päättynyt tänään")
+    expect(text).toContain("Tunnuksesi on toistaiseksi käytössä.")
+    expect(muistutuksenOtsikko(0)).toBe("Tyomaat.fi PRO -kokeilujaksosi on päättynyt")
+  })
+
+  it("jättää 'tänään' pois kun viesti on myöhässä", () => {
+    const { text } = muistutuksenTeksti(null, -3, "https://app.tyomaat.fi")
+    expect(text).toContain("on päättynyt.")
+    expect(text).not.toContain("tänään")
+  })
+})
+
 describe("viestin teksti", () => {
   it("käyttää laskettua lukua, ei virstanpylvästä", () => {
     expect(muistutuksenOtsikko(19)).toContain("19 päivää")
     expect(muistutuksenOtsikko(1)).toContain("1 päivä")
+  })
+
+  it("kirjoittaa brändin kuten muu koodipohja, ilman ö:tä", () => {
+    const { text, html } = muistutuksenTeksti("Matti", 21, "https://app.tyomaat.fi")
+    expect(text).not.toContain("Työmaat")
+    expect(html).not.toContain("Työmaat")
+    expect(muistutuksenOtsikko(21)).toContain("Tyomaat.fi")
   })
 
   it("tervehtii etunimellä kun se on tiedossa", () => {
