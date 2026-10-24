@@ -1,7 +1,7 @@
 import { TRIAL_DAYS, daysSince } from "@/lib/users/trial"
 
 /*
- * KOKEILUJAKSON MUISTUTUKSET (D-339).
+ * KOKEILUJAKSON MUISTUTUKSET (D-340).
  *
  * Johannes 23.10.2026: *"Tarvitsemme ominaisuuden joka muistuttaa trial
  * kayttajia. Muistutuksia voisi lahtea testikayttajille viikon valein

@@ -1,4 +1,4 @@
--- KOKEILUJAKSON MUISTUTUSTEN LOKI (D-339)
+-- KOKEILUJAKSON MUISTUTUSTEN LOKI (D-340)
 --
 -- Aja tama Supabasen SQL-editorissa. Ohjelmallista DDL:aa ei ole.
 --

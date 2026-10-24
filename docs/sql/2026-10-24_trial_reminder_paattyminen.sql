@@ -1,4 +1,4 @@
--- PAATTYMISVIESTI LOKIIN (D-339, jatko)
+-- PAATTYMISVIESTI LOKIIN (D-340, jatko)
 --
 -- Aja tama Supabasen SQL-editorissa SEN JALKEEN kun
 -- 2026-10-24_trial_reminder_log.sql on ajettu.

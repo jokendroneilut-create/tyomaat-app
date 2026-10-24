@@ -15,7 +15,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 /*
- * KOKEILUJAKSON MUISTUTUKSET (D-339).
+ * KOKEILUJAKSON MUISTUTUKSET (D-340).
  *
  * Yksi reitti kaikille kolmelle viestille: ero on vain rajapyykissa,
  * jonka `valitseMuistutettavat` paattaa. Kolme reittia olisi kolme

@@ -5,7 +5,7 @@ import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 export const runtime = "nodejs"
 
 /*
- * LAHETETYT KOKEILUMUISTUTUKSET (D-339).
+ * LAHETETYT KOKEILUMUISTUTUKSET (D-340).
  *
  * Johannes 24.10.2026: *"Viestit osioon pitaa tehda loki tallekin jotta
  * voin seurata noita lahteneita muistutuksia."*

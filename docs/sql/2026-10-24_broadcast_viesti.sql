@@ -1,4 +1,4 @@
--- JOUKKOVIESTIN TEKSTI TALTEEN (D-339, jatko)
+-- JOUKKOVIESTIN TEKSTI TALTEEN (D-340, jatko)
 --
 -- Aja tama Supabasen SQL-editorissa.
 --

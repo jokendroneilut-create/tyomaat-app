@@ -152,7 +152,7 @@ export async function POST(req: Request) {
     }
 
     /*
-     * VIESTIN RUNKO TALTEEN (D-339). Loki tallensi otsikon ja
+     * VIESTIN RUNKO TALTEEN (D-340). Loki tallensi otsikon ja
      * vastaanottajat muttei tekstia, joten jalkikateen ei nahnyt mita
      * asiakkaalle oli sanottu -- teksti eli vain Resendin puolella.
      *

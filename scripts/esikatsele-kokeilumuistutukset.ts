@@ -9,7 +9,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 }
 
 /*
- * KUKA SAA KOKEILUMUISTUTUKSEN JA MILLOIN (D-339).
+ * KUKA SAA KOKEILUMUISTUTUKSEN JA MILLOIN (D-340).
  *
  * Ajaa OIKEAA valintafunktiota (`valitseMuistutettavat`) eika omaa
  * kopiota saannosta, ja simuloi sillä 45 vrk eteenpain: nain naen

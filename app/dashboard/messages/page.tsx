@@ -15,7 +15,7 @@ type LogEntry = {
 }
 
 /*
- * KOKEILUMUISTUTUKSET (D-339). Lahtevat automaattisesti cronilla, joten
+ * KOKEILUMUISTUTUKSET (D-340). Lahtevat automaattisesti cronilla, joten
  * tama on ainoa paikka josta nakee mita on lahtenyt.
  */
 type MuistutusRivi = {
@@ -151,7 +151,7 @@ export default function MessagesPage() {
 
   return (
     /*
-     * KAKSI PALSTAA (D-339).
+     * KAKSI PALSTAA (D-340).
      *
      * Johannes 24.10.2026: *"asettele kokeilumuistutukset oikealle
      * puolelle. Jono pitenee niin se painuu muuten koko ajan
@@ -314,7 +314,7 @@ export default function MessagesPage() {
       </div>
 
       {/*
-        * KOKEILUMUISTUTUKSET (D-339). Nama lahtevat automaattisesti
+        * KOKEILUMUISTUTUKSET (D-340). Nama lahtevat automaattisesti
         * cronilla neljassa vaiheessa (21, 14 ja 7 paivaa jaljella seka
         * paattymispaivana), joten loki on ainoa paikka josta lahteneet
         * nakee.

@@ -21,7 +21,7 @@ ajo: 20 ehdokasta. Kanjonin koulun rivi korjattiin samalla käsin, koska
 tuonti oli lukenut purku + uudisrakennuksen rakenteilla olevaksi
 peruskorjaukseksi.
 
-### Kokeilumuistutukset trial-asiakkaille (D-339)
+### Kokeilumuistutukset trial-asiakkaille (D-340)
 
 Nelja sahkopostia: kun jaljella on 21, 14 ja 7 paivaa seka kokeilun
 paattyessa. Paattymisviesti ei lupaa katkaisua ("Tunnuksesi on

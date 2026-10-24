@@ -34,6 +34,23 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+> **Sama kahdennus toistui kolmannen kerran 24.10.2026: numero D-339
+> oli kahdesti.** Tampereen Tilapalvelut sai numeron ensin (commit
+> `02b6415c`, klo 10:39), kokeilumuistutukset ottivat sen toisena
+> (`f8433696`, klo 11:37). Jalkimmainen nimettiin uudelleen
+> **D-340**:ksi ja sen 20 viittausta paivitettiin (tama tiedosto,
+> `CHANGELOG.md`, nelja SQL-tiedostoa, `lib/users/trialMuistutukset.ts`,
+> kolme reittia, `app/dashboard/messages/page.tsx` ja
+> `scripts/esikatsele-kokeilumuistutukset.ts`).
+>
+> **Ohje "lue tiedosto juuri ennen kirjoittamista" ei auta, kun kaksi
+> sessiota tyoskentelee rinnakkain tunteja.** Molemmat lukivat
+> tiedoston oikein; numero varattiin kirjoitushetkella, eika
+> kumpikaan nahnyt toisen committia. Kahdennus huomataan vasta
+> lukemalla tiedosto kokonaisuutena, joten se kannattaa tarkistaa
+> `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
+> rinnakkainen.
+
 ### D-339 - Tampereen Tilapalvelut lähteeksi: vaihe julkaisijan luokituksesta
 
 Johannes 24.10.2026 Aamulehden jutusta: *"tarkista onko meillä tämä
@@ -107,7 +124,7 @@ avainta. Sama käyttö kuin PKS:n rekisterillä.
   "Purkutyön arvioidaan valmistuvan elokuussa 2026" (purku itse
   hankkeena). Turtola palautettiin jonoon.
 
-### D-339 - Kokeilumuistutukset: kolme viestiä, yksi sääntö, luku laskettuna
+### D-340 - Kokeilumuistutukset: neljä viestiä, yksi sääntö, luku laskettuna
 
 Johannes 23.10.2026: *"Tarvitsemme ominaisuuden joka muistuttaa trial
 käyttäjiä. Muistutuksia voisi lähteä testikäyttäjille viikon välein
@@ -156,11 +173,18 @@ pitää tulla myös päättymispäivä. Ei katkaista palvelun käyttöä, mutta
 ilmoitetaan että se on päättynyt. Soitamme sitten niille asiakkaille
 jotka eivät itse reagoi ilmoitukseen."* Viesti on siis myös työlista.
 
-Teksti sanoo mikä on totta: *"Tunnuksesi on toistaiseksi käytössä."*
-Palvelu ei sulje tunnusta automaattisesti, koska tilausautomaatiota ei
-ole ([[no-subscription-tracking]]) — lupaus katkaisusta olisi väärä
-kumpaankin suuntaan. Sana "tänään" tulee mukaan vain kun viesti lähtee
-päättymispäivänä ([[future-wording-expires]]).
+**Lopullinen teksti lupaa lukituksen, ja lupaus on käsin pidettävä.**
+Ensimmäinen versio sanoi vain *"Tunnuksesi on toistaiseksi käytössä."*,
+koska palvelu ei sulje tunnusta automaattisesti — tilausautomaatiota ei
+ole ([[no-subscription-tracking]]). Johannes valitsi vahvemman
+sanamuodon: *"Tunnuksesi on toistaiseksi käytössä, mutta lukittuu
+lähipäivinä, ellet ota yhteyttä."* Se on tosi vain jos lukitus
+oikeasti tehdään, joten lukituksesta tuli osa prosessia eikä pelkkä
+mahdollisuus. Jos sitä ei tehdä, viesti opettaa asiakkaat siihen ettei
+määräaika tarkoita mitään.
+
+Sana "tänään" tulee mukaan vain kun viesti lähtee päättymispäivänä
+([[future-wording-expires]]).
 
 Päättymisviesti kestää myöhästymisen, muut eivät: *"jäljellä −3 päivää"*
 olisi virhe, *"on päättynyt"* on yhä totta. Siksi positiivinen rajapyykki
@@ -207,6 +231,15 @@ molemmat lokit tallentavat tekstin ja näyttävät sen rivin avaamalla.
 Ennen 24.10.2026 lähetetyt viisi joukkoviestiä jäävät ilman tekstiä; ei
 ole mistä rakentaa.
 
+**Muistutukset omaan palstaansa.** Johannes 24.10.2026: *"asettele
+kokeilumuistutukset oikealle puolelle. Jono pitenee niin se painuu
+muuten koko ajan alaspäin."* Joukkoviestien loki kasvaa rajatta, joten
+allekkain muistutukset valuisivat näkyvistä. Oikea palsta on lisäksi
+`sticky`, joten se pysyy näkyvissä kun vasenta vieritetään; kapealla
+näytöllä palstat palaavat allekkain. Mitattu 1440 px:ssä: vasen 624,
+oikea 584, ei vaakavieritystä — muistutustaulukon vähimmäisleveyttä
+kavennettiin 520:stä 440:een jotta se mahtuu.
+
 **Mitattu ennen kuin yksikään viesti lähti.**
 `scripts/esikatsele-kokeilumuistutukset.ts` ajaa **samaa
 valintafunktiota** kuin reitti ja simuloi 45 vrk eteenpäin. Tulos
@@ -227,11 +260,26 @@ Päättäjää ei voi päätellä tunnuksesta, ja yhdelle lähetetty viesti
 olettaisi juuri sen. Sääntö on siis: **laskutustila on asiakkaalla,
 viesti tunnuksella.**
 
-Ks. `lib/users/trialMuistutukset.ts` (+ spec),
-`app/api/admin/trial-reminders/route.ts`,
-`app/api/admin/trial-reminder-log/route.ts`,
-`docs/sql/2026-10-24_trial_reminder_log.sql`,
+**Tiedostot.** Valinta `lib/users/trialMuistutukset.ts` (+ spec, 24
+testiä), lähetys `app/api/admin/trial-reminders/route.ts` (cron
+`0 9 * * *`), loki `app/api/admin/trial-reminder-log/route.ts` ja
+`app/api/admin/send-broadcast/route.ts`, näkymä
+`app/dashboard/messages/page.tsx`, esikatselu
 `scripts/esikatsele-kokeilumuistutukset.ts`.
+
+Käsin ajettava DDL neljässä osassa, kaikki ajettu 24.10.2026:
+`docs/sql/2026-10-24_trial_reminder_log.sql` (taulu),
+`…_trial_reminder_paattyminen.sql` (nolla sallituksi arvoksi),
+`…_trial_reminder_viesti.sql` (otsikko ja teksti),
+`…_broadcast_viesti.sql` (joukkoviestin teksti).
+
+**Rajoitetta ei uskottu vaan kokeiltiin.** Päättymisviestin DDL näytti
+menneen läpi (*"Success. No rows returned"*), mutta tarkistuskysely oli
+SQL-kommentin sisällä eikä ajanut. Koekirjoitus paljasti että rajoite
+hylkäsi yhä nollan — eli päättymisviesti olisi lähtenyt ja jäänyt
+kirjaamatta, ja lähtenyt sitten joka päivä uudelleen. Sen jälkeen
+tarkistuskyselyt ovat tiedostoissa ajettavina lauseina, ja
+kirjausvirhe pysäyttää koko ajon.
 
 ### D-338 - Kaavan osapuoli: mekanismi oli olemassa, sanasto puuttui
 

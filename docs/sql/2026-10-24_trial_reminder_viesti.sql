@@ -1,4 +1,4 @@
--- LAHETETTY VIESTI TALTEEN LOKIIN (D-339, jatko)
+-- LAHETETTY VIESTI TALTEEN LOKIIN (D-340, jatko)
 --
 -- Aja tama Supabasen SQL-editorissa.
 --
