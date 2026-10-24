@@ -165,3 +165,37 @@ describe("valmistumissana myos tarkan paivan haarassa (D-326)", () => {
     ).toBe("2026-02-02")
   })
 })
+
+describe("vuodenaika aloituksena (D-347)", () => {
+  it("lukee kauden ensimmaisen kuukauden", () => {
+    expect(
+      parseFinnishStartDate("Aurinkovoimalan rakentaminen alkaa keväällä 2027.")?.paiva
+    ).toBe("2027-04-01")
+    expect(parseFinnishStartDate("Rakennustyöt alkavat syksyllä 2027.")?.paiva).toBe("2027-09-01")
+    expect(parseFinnishStartDate("Rakentaminen käynnistyy kesällä 2028.")?.paiva).toBe("2028-06-01")
+    expect(parseFinnishStartDate("Purkutyöt alkavat talvella 2027.")?.paiva).toBe("2027-12-01")
+  })
+
+  it("merkitsee tarkkuudeksi kauden", () => {
+    expect(
+      parseFinnishStartDate("Rakentaminen alkaa keväällä 2027.")?.tarkkuus
+    ).toBe("kausi")
+  })
+
+  it("kuukausi voittaa kauden kun molemmat mainitaan", () => {
+    expect(
+      parseFinnishStartDate("Rakentaminen alkaa toukokuussa 2027, eli keväällä 2027.")?.paiva
+    ).toBe("2027-05-01")
+  })
+
+  it("ei lue kaavan eika suunnittelun aloitusta", () => {
+    expect(parseFinnishStartDate("Kaavoitus alkaa keväällä 2027.")).toBeNull()
+    expect(parseFinnishStartDate("Suunnittelu käynnistyy syksyllä 2027.")).toBeNull()
+  })
+
+  it("valmistumissana valissa estaa kauden", () => {
+    expect(
+      parseFinnishStartDate("Rakentaminen on aloitettu, ja se valmistuu keväällä 2027.")
+    ).toBeNull()
+  })
+})

@@ -77,8 +77,28 @@ const SEASON_ALTERNATION = Object.keys(SEASONS).join("|")
  * ENNEN avainsanaa, ja kaannetty jarjestys vaatisi oman mittauksensa.
  * Ks. GAP-kommentti: vaara ankkuri on tassa jasentimessa tunnettu riski.
  */
+/*
+ * TUOTANNON KAYNNISTYMINEN ON VOIMALAN VALMISTUMINEN (D-347).
+ *
+ * Johannes 25.10.2026 Nivalan aurinkovoimalasta: *"lisaa aloitus ja
+ * valmistumispaiva jotka ovat loydettavissa tekstista"*. Teksti sanoo
+ * *"sahkontuotannon on tarkoitus kaynnistya syksylla 2027"* -- voimalassa
+ * ei ole muuttajia eika luovutusta, vaan tuotannon alku ON valmistuminen.
+ *
+ * PELKKA "kaynnistyy" EI KELPAA, koska se on myos aloitussana
+ * ("rakentaminen kaynnistyy kevaalla"). Siksi vaaditaan tuotantoa
+ * tarkoittava tekija, ja valista suljetaan rakentamisen sanat: muuten
+ * "voimalan rakentaminen kaynnistyy kevaalla 2027" luettaisiin
+ * valmistumiseksi -- juuri painvastoin.
+ */
+const TUOTANTO_KAYNNISTYY =
+  "(?:s[äa]hk[öo]n|energian|l[äa]mm[öo]n)?tuotanto\\w*|tuotannon|voimala\\w*|laitoksen|liikenn[öo]int\\w*"
+const EI_RAKENTAMISEN_SANA = "(?:(?!rakenta|rakennus|ty[öo]|purku|urakk|asennu|hanke|hankkeen)[^.\\d])"
+const TUOTANNON_ALKU = `(?:${TUOTANTO_KAYNNISTYY})${EI_RAKENTAMISEN_SANA}{0,30}k[äa]ynnisty`
+
 const COMPLETION_KEYWORD =
-  "valmistuu|valmistua|valmistuva|valmistunee|valmistumas|valmistumi|luovutetaan|käyttöönotto|käyttöön|päästään muuttamaan"
+  "valmistuu|valmistua|valmistuva|valmistunee|valmistumas|valmistumi|luovutetaan|käyttöönotto|käyttöön|päästään muuttamaan|" +
+  TUOTANNON_ALKU
 
 /*
  * Väli valmistumissanan ja päivämäärän välillä. Piste on suljettu pois,

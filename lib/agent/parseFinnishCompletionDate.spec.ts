@@ -169,3 +169,33 @@ describe("parseEstimatedCompletionDate - selvitysvirke ohitetaan", () => {
     ).toBe("2024-12-31")
   })
 })
+
+describe("tuotannon kaynnistyminen on valmistuminen (D-347)", () => {
+  it("lukee sahkontuotannon alun valmistumiseksi", () => {
+    expect(
+      parseEstimatedCompletionDate("Sähköntuotannon on tarkoitus käynnistyä syksyllä 2027.")
+    ).toBe("2027-11-30")
+    expect(parseEstimatedCompletionDate("Tuotanto käynnistyy syksyllä 2027.")).toBe("2027-11-30")
+    expect(
+      parseEstimatedCompletionDate("Laitoksen on määrä käynnistyä kesäkuussa 2028.")
+    ).toBe("2028-06-30")
+  })
+
+  it("EI lue rakentamisen kaynnistymista valmistumiseksi", () => {
+    expect(
+      parseEstimatedCompletionDate("Voimalan rakentaminen käynnistyy keväällä 2027.")
+    ).toBeNull()
+    expect(
+      parseEstimatedCompletionDate("Hankkeen rakennustyöt käynnistyvät toukokuussa 2027.")
+    ).toBeNull()
+    expect(
+      parseEstimatedCompletionDate("Laitoksen purkutyöt käynnistyvät syksyllä 2027.")
+    ).toBeNull()
+  })
+
+  it("lukee molemmat paivat samasta virkkeesta", () => {
+    const teksti =
+      "Aurinkovoimalan rakentaminen alkaa keväällä 2027, ja sähköntuotannon on tarkoitus käynnistyä syksyllä 2027."
+    expect(parseEstimatedCompletionDate(teksti)).toBe("2027-11-30")
+  })
+})

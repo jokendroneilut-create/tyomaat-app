@@ -37,6 +37,32 @@ const KOHDE = "(?:rakennusty[öo]t|rakennusurakka|rakentaminen|ty[öo]maa|urakka
 /* Miten aloitus ilmaistaan. Mennyt muoto kelpaa. */
 const ALKAA = "(?:alkaa|alkavat|alkoi|alkoivat|k[äa]ynnisty\\w+|aloitet\\w+|aloitta\\w+|p[äa][äa]stiin\\s+alkuun)"
 
+/*
+ * VUODENAIKA ALOITUKSENA (D-347).
+ *
+ * Johannes 25.10.2026 Nivalan aurinkovoimalasta: *"lisaa aloitus ja
+ * valmistumispaiva jotka ovat loydettavissa tekstista"*. Teksti sanoo
+ * *"Aurinkovoimalan rakentaminen alkaa kevaalla 2027"*, eika jasennin
+ * tuntenut vuodenaikoja lainkaan -- vain kuukausinimia.
+ *
+ * KAUDEN ENSIMMAINEN KUUKAUSI, koska kentan lukutapa on "aikaisintaan
+ * tasta". Kuukausiosuma palauttaa jo nyt kuukauden ensimmaisen paivan
+ * samasta syysta. Valmistumisjasennin tekee painvastoin (kauden VIIMEINEN
+ * kuukausi), ja se on tarkoituksellista: valmistuminen luetaan
+ * "viimeistaan tahan mennessa".
+ *
+ * Kaudet ovat samat kuin valmistumisjasentimessa, jottei sama sana
+ * tarkoita kahta eri jaksoa: kevat huhti-touko, kesa kesa-elo, syksy
+ * syys-marras, talvi joulu-helmi.
+ */
+const KAUDET: Record<string, number> = {
+  keväällä: 4,
+  kesällä: 6,
+  syksyllä: 9,
+  talvella: 12,
+}
+const KAUSI_ALTERNAATIO = Object.keys(KAUDET).join("|")
+
 const KUUKAUDET = Object.keys(MONTHS).join("|")
 /* Yhdyssanan ensimmainen osa: "elo-syyskuussa" -> elo. */
 const VARTALOT = Object.keys(MONTHS)
@@ -52,6 +78,11 @@ const VALI = "[^.\\d]{0,40}?"
 
 const KUUKAUSI_VUOSI = new RegExp(
   `${KOHDE}\\w*\\s+(?:\\w+\\s+){0,2}?${ALKAA}${VALI}\\b(${KUUKAUDET})\\w*\\s+(\\d{4})`,
+  "i"
+)
+
+const KAUSI_VUOSI = new RegExp(
+  `${KOHDE}\\w*\\s+(?:\\w+\\s+){0,2}?${ALKAA}${VALI}\\b(${KAUSI_ALTERNAATIO})\\s+(\\d{4})`,
   "i"
 )
 
@@ -73,7 +104,7 @@ const URAKKA_AIKA = new RegExp(
 
 export type Aloitus = {
   paiva: string
-  tarkkuus: "paiva" | "kuukausi"
+  tarkkuus: "paiva" | "kuukausi" | "kausi"
   osuma: string
 }
 
@@ -123,7 +154,15 @@ const LIIAN_VANHA_VUOTTA = 5
  * oli vain kuukausi+vuosi-haarassa, ja tarkan päivän haara päästi
  * Vartiokylän koulun läpi.
  */
-const VALMISTUMISSANA = /valmistu|k[äa]ytt[öo][öo]n|luovute|valmista on/i
+/*
+ * AVAJAISET OVAT MYOS LOPPU, EI ALKU (D-347). Kuivaharjoitus 110
+ * vuodenaikaosumasta nosti yhden vaaran: *"rakentaminen kaynnistyy nyt
+ * paattyen avajaisiin kevaalla 2027"* -- kausi kuuluu avajaisiin, ja
+ * alku on "nyt". Portti on sama kuin valmistumissanalla: jos sana on
+ * avainsanan ja paivan VALISSA, paiva ei ole aloitus.
+ */
+const VALMISTUMISSANA =
+  /valmistu|k[äa]ytt[öo][öo]n|luovute|valmista on|avaja|avataan|p[äa][äa]tty|valmiiksi/i
 
 export function parseFinnishStartDate(
   teksti: string | null | undefined,
@@ -217,6 +256,27 @@ export function parseFinnishStartDate(
       !liianVanha(ehdotus)
     ) {
       return { paiva: ehdotus, tarkkuus: "kuukausi", osuma: kv[0].slice(0, 120) }
+    }
+  }
+
+  const kausi = t.match(KAUSI_VUOSI)
+  if (kausi) {
+    const alku = kausi[0]
+    const ennen = alku.slice(0, alku.toLowerCase().lastIndexOf(kausi[1].toLowerCase()))
+    /* Sama portti kuin kuukausihaarassa: valmistumissana valissa = ei aloitus. */
+    if (!VALMISTUMISSANA.test(ennen)) {
+      const kuukausi = KAUDET[kausi[1].toLowerCase()]
+      const vuosi = Number(kausi[2])
+      const ehdotus = `${vuosi}-${String(kuukausi).padStart(2, "0")}-01`
+      if (
+        kuukausi &&
+        vuosi >= 2000 &&
+        vuosi <= 2100 &&
+        !EI_RAKENTAMISTA.test(alku) &&
+        !liianVanha(ehdotus)
+      ) {
+        return { paiva: ehdotus, tarkkuus: "kausi", osuma: alku.slice(0, 120) }
+      }
     }
   }
 

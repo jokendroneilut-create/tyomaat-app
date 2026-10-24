@@ -51,6 +51,82 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-347 - Vuodenaika aloituksena ja tuotannon alku valmistumisena
+
+Johannes 25.10.2026 Nivalan aurinkovoimalasta: *"lisää aloitus ja
+valmistumispäivä jotka ovat löydettävissä tekstistä. miksi eivät ole
+täydentyneet?"* Teksti sanoo molemmat yhdessä virkkeessä:
+
+> *"Aurinkovoimalan rakentaminen alkaa **keväällä 2027**, ja
+> sähköntuotannon on tarkoitus **käynnistyä syksyllä 2027**."*
+
+**Kaksi eri aukkoa, eri jäsentimissä — kumpikaan ei ollut rikki, vaan
+kummaltakin puuttui sanasto:**
+
+| | puuttui | oli jo |
+|---|---|---|
+| `parseFinnishStartDate` | **vuodenajat kokonaan** | kuukausinimet, tarkat päivät, urakka-aika |
+| `parseEstimatedCompletionDate` | **tuotannon käynnistyminen** | vuodenajat, "valmistuu", "otetaan käyttöön" |
+
+Aloitusjäsennin tunsi vain kuukausinimet: *"alkaa toukokuussa 2027"*
+luki, *"alkaa keväällä 2027"* ei. Valmistumisjäsennin tunsi vuodenajat
+mutta ei sitä, että **voimalassa tuotannon alku on valmistuminen** —
+siinä ei ole muuttajia eikä luovutusta.
+
+**Kausi luetaan eri päähän kuin valmistumisessa, ja se on
+tarkoituksellista.** Aloitus = kauden **ensimmäinen** kuukausi (kevät →
+huhtikuu), koska kenttä luetaan "aikaisintaan tästä" — sama lukutapa
+kuin kuukausiosumassa, joka palauttaa kuukauden ensimmäisen päivän.
+Valmistuminen = kauden **viimeinen** kuukausi, koska se luetaan
+"viimeistään tähän mennessä". Kaudet ovat molemmissa samat, jottei sama
+sana tarkoita kahta eri jaksoa ([[name-the-denominator]]).
+
+**Pelkkä "käynnistyy" ei kelpaa valmistumissanaksi**, koska se on myös
+aloitussana. Siksi vaaditaan tuotantoa tarkoittava tekijä (tuotanto,
+sähköntuotanto, voimala, laitos, liikennöinti) ja väliin kielletään
+rakentamisen sanat — muuten *"voimalan rakentaminen käynnistyy keväällä
+2027"* luettaisiin valmistumiseksi, eli täsmälleen päinvastoin.
+
+**Kuivaharjoitus esti kaksi virhettä, ja molemmat olivat omiani.**
+
+1. **Liian löysä rajaus takautuvassa ajossa.** Ensimmäinen versio
+   hyväksyi minkä tahansa valmistumisosuman tyhjään kenttään, kunhan
+   tekstissä esiintyi "käynnisty". Ajo olisi kirjoittanut mm.
+   `1982-08-31`, *"Tiesuunnitelma on valmistunut keväällä 2025"* ja
+   *"asemakaavan muutoksen on tavoitteena valmistua"* — vanhoja rivejä
+   joilla kenttä on tyhjä muista syistä. Mennyt päivä syöttää
+   `autoCompleteGate`ä ja **piilottaa hankkeen** 90 päivän kuluttua
+   (D-298). Korjaus: A/B samassa ajossa — osuma kelpaa vain jos se
+   katoaa kun "käynnisty" neutraloidaan tekstistä.
+2. **Avajaiset luettiin aloitukseksi.** *"rakentaminen käynnistyy nyt
+   päättyen avajaisiin keväällä 2027"* — kausi kuuluu avajaisiin, alku
+   on "nyt". Portti oli olemassa (valmistumissana avainsanan ja päivän
+   välissä) mutta sanasto puuttui: lisätty `avaja|avataan|päätty|
+   valmiiksi`. 1 / 110 osumasta.
+
+**Takautuva ajo:** 109 aloituspäivää ja 6 valmistumispäivää
+(`scripts/taydenna-vuodenaikapaivat.ts`, 114 riviä kahdessa taulussa).
+Vain tyhjät kentät täytettiin. **11 ristiriitaa jätettiin koskematta** —
+niissä kannassa oleva päivä on tarkka (esim. 2026-03-24), eli
+käsin kirjattu ([[manual-start-dates-are-real]]); ne tulostetaan
+luettavaksi eikä niitä korvata.
+
+Kaikki kuusi valmistumisosumaa luettiin lähteestä ennen kirjoitusta:
+Nivalan aurinkovoimala (2027-11-30), Metsä Groupin Kerto LVL -tehdas
+(*"tuotannon arvioidaan käynnistyvän syksyllä 2026"*), Metson
+murskaintehdas (*"tuotannon arvioidaan käynnistyvän syksyllä 2028"*) ja
+Oulun grafiittilaitos (2031).
+
+**Sivuhavainto omaan mittaukseen:** löysällä rajauksella jäsennin
+tuotti **121 osumaa riveille joilla valmistumiskenttä on tyhjä**, ja
+otoksessa oli sekä oikeita että törkeän vääriä. Nuo rivit ovat
+pääosin vanhoja, eli jäsennin on parantunut niiden tuonnin jälkeen.
+Niiden läpikäynti vaatii oman mittauksensa eikä kuulu tähän.
+
+Ks. `lib/agent/parseFinnishStartDate.ts`,
+`lib/agent/parseFinnishCompletionDate.ts` (+ spectit, 47 testiä),
+`scripts/taydenna-vuodenaikapaivat.ts`.
+
 ### D-346 - Avoterapiahankinnat pois jonosta: kysely ei suodattanut mitään
 
 Johannes 25.10.2026 jonosta: *"jonossa on paljon avoterapiahankintoja?

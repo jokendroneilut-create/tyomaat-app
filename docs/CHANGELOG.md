@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Vuodenaika aloituksena, tuotannon alku valmistumisena (D-347)
+
+"Rakentaminen alkaa kevaalla 2027" ei taydentynyt, koska aloitusjasennin
+tunsi vain kuukausinimet. "Sahkontuotannon on tarkoitus kaynnistya
+syksylla 2027" ei taydentynyt, koska valmistumisjasennin ei tiennyt etta
+voimalassa tuotannon alku on valmistuminen.
+
+Kausi luetaan eri paahan: aloitus kauden ensimmaiseen kuukauteen,
+valmistuminen viimeiseen. Pelkka "kaynnistyy" ei kelpaa
+valmistumissanaksi, koska se on myos aloitussana.
+
+Takautuva ajo 114 rivia (109 aloitusta, 6 valmistumista). Kuivaharjoitus
+esti kaksi virhetta: liian loysa rajaus olisi kirjoittanut mm. vuoden
+1982 valmistumispaivan, ja avajaisten kausi luettiin aloitukseksi.
+
 ### Avoterapiahankinnat pois jonosta (D-346)
 
 Hilman keraimen kysely cpvCodes:(45*) ei ole koskaan suodattanut CPV:n
