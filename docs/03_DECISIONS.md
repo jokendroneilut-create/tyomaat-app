@@ -51,6 +51,77 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-342 - Urakka-aika kertoo valmistumisen ilman valmistumissanaa
+
+Johannes 24.10.2026 Åbackan sähköaseman rivistä: *"tästä ei ole poimittu
+Arvioitu urakka-aika on huhtikuu 2026 - joulukuu 2026."*
+
+**Jäsennin vaati sanan jota urakkailmoituksessa ei ole.**
+`parseEstimatedCompletionDate` etsii valmistumissanaa ("valmistuu",
+"luovutetaan", "käyttöön") ja lukee päivän vasta sen jälkeen. Hilman ja
+kuntien urakkailmoituksissa valmistumista ei sanota lainkaan —
+kerrotaan **jakso**, jonka loppu on valmistuminen.
+
+**Mitattu ennen kuin sääntö kirjoitettiin.** 16 379 rivistä 373:lla on
+jaksolause; 276:lta puuttui valmistuminen, ja 16:lle nykyinen jäsennin
+löysi sen muualta tekstistä. **260 jäi poimimatta.** Sanojen jakauma:
+urakka-aika 146, rakennusaika 96, toteutusaika 94, sopimusaika 31,
+ajanjaksolla 13.
+
+**Sopimusaika jätettiin kokonaan pois.** Vuokramallissa sopimuskausi on
+vuokrakausi, jonka loppu on vuosia valmistumisen jälkeen
+([[lease-period-is-not-build-period]]) — sama syy miksi Hilman
+rakenteinen `sopimuskausi.loppu` on kielletty tässä kentässä
+([[hilma-contract-period]]).
+
+**Kolme asiaa joihin sääntö ei saa osua, kaikki aineistosta luettuja:**
+
+| | |
+|---|---|
+| johdos | "rakennusaikaiset muutostyöt", "Rakennusaikainen tärinä", "sopimusaikana" |
+| ei päivää | "urakka-aika alkaa kun sopimus on allekirjoitettu" |
+| aikataululista | "toteutusaikataulu on seuraava: … 8/2026–2/2027 urakkalaskenta" |
+
+Johdokset karsiutuvat **sananrajalla**: `aika\b` ei osu sanaan
+"aikainen" eikä "aikana". Lista karsiutuu **ikkunalla**: jakson on
+alettava 40 merkin sisällä avainsanasta.
+
+**Kuivaharjoitus paljasti kolmannen muodon jota ikkuna ei nähnyt.**
+Helsingin päätösteksteissä luetelmaviivat ovat tavallisia viivoja heti
+kaksoispisteen jälkeen:
+
+> "toteutusaikataulu on seuraava:**-** suunnittelu 2020**-**
+> rakentaminen/käyttöönotto 9/2020 **-** 12/2020**-** muutto…"
+
+Ensimmäinen viiva on kiinni avainsanassa, joten 40 merkin ikkuna
+hyväksyi sen. Ilman korjausta Laakson sairaalalle olisi kirjattu
+2020-12-31 ja Kontulan terveysasemalle 2021-04-30 — molemmat vuosia
+menneisyydessä ja molemmat riveillä jotka ovat yhä **Suunnittelussa**.
+Mennyt päivä siirtää hankkeen Valmistuneeksi 90 vrk kuluttua ja
+**piilottaa sen asiakkaalta** (D-298). Lisättiin erillinen ehto: "on
+seuraava" on lista, ei jakso.
+
+**Takautuva ajo kirjoittaa vain tulevia päiviä.** 13 osumaa oli
+menneisyydessä, ja ne ohitettiin kirjoittamatta — kesken oleva hanke
+piilotettuna on pahempi kuin valmistunut listalla
+([[hiding-threshold]]). Ne tulostetaan luettavaksi, jotta niistä voi
+päättää erikseen. Tuleva poiminta ei tarvitse tätä rajausta: siellä
+mennyt päivä kulkee jo `isPastDate`-portin läpi.
+
+**Tulos:** jono 48, hankkeet 34, 0 virhettä. Yhdeksän osumaa avattiin
+lähteestä ennen ajoa ja kaikki yhdeksän täsmäsivät
+([[verify-findings-against-source]]) — mm. *"Urakka-aika on 1.10.2026 -
+16.4.2027"*, *"Urakka-aika Käynnissä 10/2025 - 09/2028"*,
+*"rakennusaika on 1.4.2026-2.4.2027"*.
+
+**Järjestys live-polulla on tarkoituksellinen:** nimenomainen
+valmistumismaininta voittaa jakson, ja jakso luetaan vain jos
+valmistumissanaa ei ole.
+
+Ks. `lib/agent/urakkaAika.ts` (+ spec, 12 testiä),
+`lib/agent/importCandidate.ts`, `scripts/mittaa-urakka-ajat.ts`,
+`scripts/taydenna-urakka-ajat.ts`.
+
 ### D-341 - Lohkare Infra lähteeksi: arvo on täydennyksessä, ja matched pyyhki yhteyshenkilöt
 
 Johannes 22.10.2026 LinkedInistä löytäneenä: *"tänne on tullut eilen

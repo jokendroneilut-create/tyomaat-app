@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Valmistuminen urakka-ajasta (D-342)
+
+Urakkailmoituksessa ei sanota "valmistuu" vaan kerrotaan jakso, jonka
+loppu on valmistuminen: "Arvioitu urakka-aika on huhtikuu 2026 -
+joulukuu 2026". Jasennin vaati valmistumissanaa, joten jakso jai
+lukematta.
+
+Mitattu: 16 379 rivista 373:lla on jaksolause ja 260:lta puuttui
+valmistuminen. Takautuva ajo taytti jonoon 48 ja hankkeisiin 34.
+
+Saanto ei osu johdoksiin ("rakennusaikainen", "sopimusaikana") eika
+aikataululistaan, ja sopimusaika on kokonaan ulkona koska vuokramallissa
+se on vuokrakausi. Menneita paivia ei kirjoitettu takautuvasti: mennyt
+valmistuminen piilottaisi kesken olevan hankkeen asiakkaalta.
+
 ### Lohkare Infra lähteeksi (D-341)
 
 Konserni lisattiin vaikka sen tytaryhtio Oteran on jo lahteena: pieni

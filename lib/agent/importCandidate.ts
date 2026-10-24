@@ -4,6 +4,7 @@ import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { inferPhaseFromText } from "@/lib/projects/inferPhaseFromText"
 import { parseEstimatedCompletionDate } from "@/lib/agent/parseFinnishCompletionDate"
 import { parseFinnishStartDate } from "@/lib/agent/parseFinnishStartDate"
+import { urakkaAjanLoppu } from "@/lib/agent/urakkaAika"
 import {
   inferCompletionDateFromText,
   isPastDate,
@@ -450,10 +451,16 @@ export async function importCandidate(
    * Valmistumisaika leipätekstistä. Poimitaan kerran ja käytetään sekä uuden
    * hankkeen luonnissa että olemassa olevan täydennyksessä.
    */
+  /*
+   * URAKKA-AIKA TOISENA (D-342). `parseEstimatedCompletionDate` vaatii
+   * valmistumissanan; urakkailmoituksessa sita ei ole, vaan jakso
+   * jonka LOPPU on valmistuminen ("Arvioitu urakka-aika on huhtikuu
+   * 2026 - joulukuu 2026"). Jarjestys on tarkoituksellinen:
+   * nimenomainen valmistumismaininta voittaa jakson.
+   */
+  const completionText = `${body.name ?? ""} ${body.description ?? body.metadata?.description ?? ""}`
   const textCompletionDate =
-    parseEstimatedCompletionDate(
-      `${body.name ?? ""} ${body.description ?? body.metadata?.description ?? ""}`
-    ) ?? null
+    parseEstimatedCompletionDate(completionText) ?? urakkaAjanLoppu(completionText) ?? null
 
   /*
    * RAKENTAMISEN ALOITUS LEIPATEKSTISTA (D-326).
