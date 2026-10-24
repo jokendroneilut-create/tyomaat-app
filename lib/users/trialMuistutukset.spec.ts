@@ -191,6 +191,14 @@ describe("viestin teksti", () => {
     )
   })
 
+  it("allekirjoittaa jokaisen viestin tiimin nimellä", () => {
+    for (const paivia of [21, 14, 7, 0]) {
+      const { text, html } = muistutuksenTeksti("Matti", paivia, "https://app.tyomaat.fi")
+      expect(text.trimEnd().endsWith("Tyomaat.fi Tiimi")).toBe(true)
+      expect(html).toContain("Tyomaat.fi Tiimi")
+    }
+  })
+
   it("tervehtii etunimellä kun se on tiedossa", () => {
     const { text } = muistutuksenTeksti("Matti", 21, "https://app.tyomaat.fi")
     expect(text.startsWith("Hei Matti,")).toBe(true)

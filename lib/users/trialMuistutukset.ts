@@ -60,6 +60,14 @@ export const MYOHASSA_ENINTAAN = 7
  * teksti ja `tel:`-linkki, jotta puhelimessa riittaa napautus.
  */
 export const PUHELIN = "+358 40 9624 170"
+
+/*
+ * ALLEKIRJOITTAJA. Johannes 24.10.2026: *"Lisaa allekirjoittajaksi
+ * Tyomaat.fi Tiimi."* Viestit puhuvat monikossa ("kerromme"), joten
+ * tiimi on myos johdonmukainen -- ja numero on silti Johanneksen, joten
+ * soittaja tavoittaa ihmisen eika vaihteen.
+ */
+export const ALLEKIRJOITUS = "Tyomaat.fi Tiimi"
 const PUHELIN_TEL = "+358409624170"
 
 /* Ominaisuus otettiin kayttoon tana paivana; sita ennen menneet rajapyykit hoidetaan kasin. */
@@ -213,8 +221,7 @@ export function muistutuksenTeksti(
       "Tunnuksesi on toistaiseksi käytössä, mutta lukittuu lähipäivinä, ellet ota yhteyttä.",
       "",
       "Ystävällisin terveisin,",
-      "Johannes Sippola",
-      "Tyomaat.fi",
+      ALLEKIRJOITUS,
     ]
 
     const html =
@@ -225,7 +232,7 @@ export function muistutuksenTeksti(
       `<p>Voit myös soittaa numeroon <a href="tel:${PUHELIN_TEL}" style="color:#1d4ed8;">${PUHELIN}</a>.</p>` +
       `<p>Tunnuksesi on toistaiseksi käytössä, mutta lukittuu lähipäivinä, ellet ota yhteyttä.</p>` +
       `<p><a href="${appBaseUrl}" style="color:#1d4ed8;">Avaa Tyomaat.fi</a></p>` +
-      `<p>Ystävällisin terveisin,<br />Johannes Sippola<br />Tyomaat.fi</p>` +
+      `<p>Ystävällisin terveisin,<br />${ALLEKIRJOITUS}</p>` +
       `</div>`
 
     return { text: rivit.join("\n"), html }
@@ -245,8 +252,7 @@ export function muistutuksenTeksti(
     `Jos haluat tukea palvelun käyttöön voit vastata tähän viestiin tai soittaa ${PUHELIN}.`,
     "",
     "Ystävällisin terveisin,",
-    "Johannes Sippola",
-    "Tyomaat.fi",
+    ALLEKIRJOITUS,
   ]
 
   const text = rivit.join("\n")
@@ -258,7 +264,7 @@ export function muistutuksenTeksti(
     `<p>Kokeilujakson aikana käytössäsi on koko palvelu: hankkeet kaikista lähteistä, hakuvahdit ja yhteystiedot.</p>` +
     `<p><a href="${appBaseUrl}" style="color:#1d4ed8;">Avaa Tyomaat.fi</a></p>` +
     `<p>Jos haluat tukea palvelun käyttöön voit vastata tähän viestiin tai soittaa <a href="tel:${PUHELIN_TEL}" style="color:#1d4ed8;">${PUHELIN}</a>.</p>` +
-    `<p>Ystävällisin terveisin,<br />Johannes Sippola<br />Tyomaat.fi</p>` +
+    `<p>Ystävällisin terveisin,<br />${ALLEKIRJOITUS}</p>` +
     `</div>`
 
   return { text, html }

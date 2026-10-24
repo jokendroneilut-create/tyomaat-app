@@ -180,6 +180,17 @@ maatunnusta jotta on virallinen"*. Numero on yhtenä vakiona kahdessa
 muodossa: luettava `+358 40 9624 170` ja `tel:`-linkki, jotta
 puhelimessa riittää napautus.
 
+**Allekirjoittaja on tiimi, numero on Johanneksen.** Johannes
+24.10.2026: *"Lisää allekirjoittajaksi Tyomaat.fi Tiimi."* Viestit
+puhuvat monikossa (*"kerromme hinnoittelun"*), joten tiimi on myös
+johdonmukainen — ja koska numero on silti henkilökohtainen, soittaja
+tavoittaa ihmisen eikä vaihdetta. Allekirjoitus on yhtenä vakiona
+(`ALLEKIRJOITUS`), jottei se ehdi erota viestien välillä.
+
+Muissa sähköposteissa allekirjoitusta ei ole: hakuvahdit ja hälytykset
+ovat automaattiviestejä pelkällä Tyomaat.fi-otsakkeella, ja
+joukkoviestiin menee täsmälleen se teksti jonka Johannes kirjoittaa.
+
 **Loki tallentaa lähetetyn tekstin, ei johda sitä.** Johannes:
 *"molemmissa olisi hyvä näkyä kenelle viesti meni ja mitä siinä luki."*
 Muistutuksen tekstin voisi rakentaa uudelleen lokin luvuista, koska se
