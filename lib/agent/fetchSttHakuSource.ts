@@ -227,8 +227,32 @@ const CLIENT_PATTERNS = [
    *
    * Tilaajakenttä syöttää duplikaattiskannausta, joten väärä nimi on
    * kalliimpi kuin tyhjä: se voi tuottaa vääriä kaksoiskappalepareja.
-   * Kerros ei siis ole hylätty vaan kesken — se vaatii paikannimien ja
-   * kadunnimien erottelun, jota ei voi tehdä mittaamatta.
+   *
+   * KOKEILTU UUDELLEEN 24.10.2026 JA PALAUTETTU (D-343).
+   *
+   * Laajensin paikannimisuojan (`PAIKAN_LOPPU`) katusanoihin, koska
+   * ylläoleva muistiinpano nimesi juuri ne esteeksi — ja ajoin A/B:n
+   * koko 16 589 rivin yli. Este on isompi kuin tämä muistiinpano
+   * tiesi, kahdesta syystä:
+   *
+   *   1. PAIKANNIMET LÄPÄISEVÄT YHÄ. "Myllykoske", "Karhinkankaa",
+   *      "Niinivaara", "Tapiola" ovat kaupunginosia eivätkä katuja,
+   *      joten katusanalista ei auta niihin.
+   *
+   *   2. ROOLI KÄÄNTYY VÄÄRIN kun julkaisija onkin tilaaja: "Espoon
+   *      Asunnot on solminut urakkasopimuksen SSA Rakennus Oy:n
+   *      kanssa" kirjaisi RAKENTAJAN tilaajaksi. Tätä 18.10. mittaus
+   *      ei tunnistanut, ja se on pahempi kuin paikannimi: oikea
+   *      yritys päätyy väärään kenttään.
+   *
+   * Kuvio "sopimuksen X:n kanssa" on turvallinen vain kun julkaisijan
+   * rooli tiedetään urakoitsijaksi (`companyRelease.ts`:n `role`).
+   * Siihen asti kerros pysyy poissa.
+   *
+   * SAMA TIETO SAADAAN TOISTA TIETÄ ILMAN KUMPAAKAAN ANSAA (D-343):
+   * tunnettu yritysnimi poimitaan kuvauksesta LIITTYVÄKSI yritykseksi
+   * (`lib/projects/tunnetutYritykset.ts`). Tunnettu nimi ei voi olla
+   * paikannimi, eikä liittyvä yritys väitä roolia.
    *
    * Mittari on tallessa: `scripts/measure-tilaajapoiminta.ts`.
    */
