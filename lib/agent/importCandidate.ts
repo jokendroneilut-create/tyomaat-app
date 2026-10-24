@@ -4,7 +4,7 @@ import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { inferPhaseFromText } from "@/lib/projects/inferPhaseFromText"
 import { parseEstimatedCompletionDate } from "@/lib/agent/parseFinnishCompletionDate"
 import { parseFinnishStartDate } from "@/lib/agent/parseFinnishStartDate"
-import { urakkaAjanLoppu } from "@/lib/agent/urakkaAika"
+import { urakkaAjanLoppu, valmiinaMennessa } from "@/lib/agent/urakkaAika"
 import {
   inferCompletionDateFromText,
   isPastDate,
@@ -460,7 +460,10 @@ export async function importCandidate(
    */
   const completionText = `${body.name ?? ""} ${body.description ?? body.metadata?.description ?? ""}`
   const textCompletionDate =
-    parseEstimatedCompletionDate(completionText) ?? urakkaAjanLoppu(completionText) ?? null
+    parseEstimatedCompletionDate(completionText) ??
+    urakkaAjanLoppu(completionText) ??
+    valmiinaMennessa(completionText) ??
+    null
 
   /*
    * RAKENTAMISEN ALOITUS LEIPATEKSTISTA (D-326).

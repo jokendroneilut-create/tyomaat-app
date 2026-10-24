@@ -27,7 +27,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
  *   npx tsx scripts/tarkista-urakka-ajat.ts --apply
  */
 
-import { urakkaAjanLoppu } from "../lib/agent/urakkaAika"
+import { urakkaAjanLoppu, valmiinaMennessa } from "../lib/agent/urakkaAika"
 
 async function main() {
   const apply = process.argv.includes("--apply")
@@ -70,7 +70,7 @@ async function main() {
           : String(p.metadata?.description ?? "")
 
       const vanha = String(p.metadata?.estimated_completion ?? "")
-      const uusi = urakkaAjanLoppu(kuvaus)
+      const uusi = urakkaAjanLoppu(kuvaus) ?? valmiinaMennessa(kuvaus)
       const nimi = String(p.name ?? p.title ?? "").slice(0, 44)
 
       if (uusi === vanha) {

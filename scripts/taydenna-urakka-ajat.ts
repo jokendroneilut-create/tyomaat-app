@@ -28,7 +28,7 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
  *   npx tsx scripts/taydenna-urakka-ajat.ts --apply
  */
 
-import { urakkaAjanLoppu } from "../lib/agent/urakkaAika"
+import { urakkaAjanLoppu, valmiinaMennessa } from "../lib/agent/urakkaAika"
 
 async function main() {
   const apply = process.argv.includes("--apply")
@@ -76,7 +76,8 @@ async function main() {
         taulu === "projects"
           ? String(p.additional_info ?? p.metadata?.description ?? "")
           : String(p.metadata?.description ?? "")
-      const loppu = urakkaAjanLoppu(kuvaus)
+      /* Jakso ensin, sitten "valmiina X mennessa" (D-342). */
+      const loppu = urakkaAjanLoppu(kuvaus) ?? valmiinaMennessa(kuvaus)
       if (!loppu) continue
 
       const nimi = String(p.name ?? p.title ?? "").slice(0, 44)

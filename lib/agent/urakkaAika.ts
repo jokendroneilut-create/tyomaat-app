@@ -108,6 +108,66 @@ const SIJAMUOTOJAKSO = new RegExp(
   "iu"
 )
 
+/*
+ * "VALMIINA X MENNESSA" (D-342 jatko).
+ *
+ * Johannes 24.10.2026: *"lisaa myos muoto 'sen tulee olla valmiina
+ * 30.6.2027 mennessa'."* Muoto loytyi rivilta, jolla jakso ei kertonut
+ * valmistumista -- eika kumpikaan jasennin tunne sita:
+ * `parseEstimatedCompletionDate` vaatii oman avainsanansa EIKA osaa
+ * paivamuotoa 30.6.2027 lainkaan.
+ *
+ * ANKKURI ON "VALMIINA", EI "VIIMEISTAAN". Mitattu 24.10.2026: sana
+ * "viimeistaan + paiva" esiintyy 316 rivilla, ja valtaosa on muiden
+ * asioiden maaraaikoja -- *"mielipiteet tulee toimittaa viimeistaan
+ * 5.12.2025"*, *"ilmoittautumaan tilaisuuteen viimeistaan 17.8.2026"*,
+ * *"muistutukset tulee jattaa viimeistaan 6.7.2026"*. Pelkka
+ * "viimeistaan" olisi kirjannut kaavan kuulutusajan hankkeen
+ * valmistumiseksi.
+ *
+ * Siksi ankkuri on valmiusssana, ja paiva luetaan sen jalkeisesta
+ * lyhyesta ikkunasta -- "viimeistaan" ja "mennessa" saavat olla
+ * valissa mutta eivat yksin riita.
+ */
+const VALMIS_ANKKURI =
+  /\bvalmii(?:na|t|ksi|den)\b|\bvalmis\b|\bluovutettavissa\b|\bluovutuskunnossa\b/giu
+
+/* Ikkuna valmiussanan jalkeen: "osalta viimeistaan 30.10.2026" mahtuu. */
+const VALMIS_IKKUNA = 70
+
+/*
+ * SUUNNITELMA EI OLE HANKE. Sama rajaus kuin
+ * `parseEstimatedCompletionDate`issa (D-298): virke jonka aihe on
+ * selvitys, suunnitelma tai lupa jatetaan lukematta, koska sen
+ * valmistuminen ei ole hankkeen valmistuminen.
+ */
+const EI_HANKKEEN_VALMIUS =
+  /selvity|suunnitelm|suunnittelu|hakemus|tarjous|lupa|asiakirja|piirustu|kaava/iu
+
+export function valmiinaMennessa(teksti: string | null | undefined): string | null {
+  const t = String(teksti ?? "").replace(/\s+/g, " ")
+  if (!t) return null
+
+  const loydetyt: string[] = []
+
+  VALMIS_ANKKURI.lastIndex = 0
+  for (const osuma of t.matchAll(VALMIS_ANKKURI)) {
+    const alku = (osuma.index ?? 0) + osuma[0].length
+
+    /* Virke ankkurin ymparilta: onko aihe hanke vai asiakirja? */
+    const virkeAlku = t.lastIndexOf(". ", osuma.index ?? 0) + 1
+    const virkeLoppu = t.indexOf(". ", alku)
+    const virke = t.slice(virkeAlku, virkeLoppu === -1 ? t.length : virkeLoppu)
+    if (EI_HANKKEEN_VALMIUS.test(virke)) continue
+
+    const paiva = jaksonLoppu(t.slice(alku, alku + VALMIS_IKKUNA))
+    if (paiva) loydetyt.push(paiva)
+  }
+
+  if (!loydetyt.length) return null
+  return loydetyt.sort().at(-1) ?? null
+}
+
 export function urakkaAjanLoppu(teksti: string | null | undefined): string | null {
   const t = String(teksti ?? "").replace(/\s+/g, " ")
   if (!t) return null

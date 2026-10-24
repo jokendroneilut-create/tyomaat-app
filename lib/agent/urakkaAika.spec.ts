@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { urakkaAjanLoppu } from "./urakkaAika"
+import { urakkaAjanLoppu, valmiinaMennessa } from "./urakkaAika"
 
 /*
  * Jokainen tapaus on AITO katkelma kannasta (mitattu 24.10.2026),
@@ -127,6 +127,65 @@ describe("urakkaAjanLoppu", () => {
       expect(urakkaAjanLoppu(null)).toBeNull()
       expect(urakkaAjanLoppu("")).toBeNull()
       expect(urakkaAjanLoppu("Kohde valmistuu vuonna 2027.")).toBeNull()
+    })
+  })
+})
+
+/*
+ * Kaikki tapaukset ovat aitoja katkelmia kannasta (24.10.2026).
+ */
+describe("valmiinaMennessa", () => {
+  it("lukee päivän valmiussanan jälkeen", () => {
+    expect(
+      valmiinaMennessa("Pääurakan urakka-aika alkaa marraskuussa ja sen tulee olla valmiina 30.6.2027 mennessä.")
+    ).toBe("2027-06-30")
+    expect(valmiinaMennessa("Töiden tulee olla valmiina osalta viimeistään 30.10.2026.")).toBe(
+      "2026-10-30"
+    )
+  })
+
+  it("lukee luovutuksen ja kuukausimuodon", () => {
+    expect(
+      valmiinaMennessa("työt tulee olla valmiit ja kohteen luovutettavissa tilaajalle viimeistään 30.4.2027.")
+    ).toBe("2027-04-30")
+    expect(
+      valmiinaMennessa("Tavoitteena on, että kohde on luovutettavissa valmiina tilaajalle lokakuussa 2026 ja toiminta alkaa")
+    ).toBe("2026-10-31")
+    expect(valmiinaMennessa("Aikataulu: asennustyöt valmiiksi 12/2026")).toBe("2026-12-31")
+  })
+
+  it("ottaa myöhäisimmän kun välitavoitteita on monta", () => {
+    expect(
+      valmiinaMennessa(
+        "Välitavoite 1: Valmis 31.12.2026 > Töölönlahden pohjukka Välitavoite 2: Valmis 31.5.2027 > Ravintolan edusta Välitavoite 3: Valmis 30.6.2027 > Rantaraitin sisääntulo"
+      )
+    ).toBe("2027-06-30")
+  })
+
+  describe("ei saa osua", () => {
+    it("muun asian määräaikaan", () => {
+      /*
+       * Mitattu: "viimeistaan + paiva" on 316 rivilla, ja valtaosa on
+       * mielipiteiden ja ilmoittautumisten maaraaikoja. Siksi ankkuri on
+       * valmiussana, ei "viimeistaan".
+       */
+      expect(
+        valmiinaMennessa("Kaavaa koskevat mielipiteet tulee jättää viimeistään 22.5.2026 klo 15.00 mennessä")
+      ).toBeNull()
+      expect(valmiinaMennessa("Mielipiteet pyydetään viimeistään 3.6.2026 mennessä.")).toBeNull()
+      expect(
+        valmiinaMennessa("Pyydämme ilmoittautumaan tilaisuuteen viimeistään 17.8.2026 klo 9.00")
+      ).toBeNull()
+    })
+
+    it("asiakirjan valmistumiseen", () => {
+      expect(valmiinaMennessa("Suunnitelmien tulee olla valmiina 1.3.2026 mennessä.")).toBeNull()
+      expect(valmiinaMennessa("Selvityksen tulee olla valmis 1.3.2026 mennessä.")).toBeNull()
+    })
+
+    it("tekstiin ilman päivää", () => {
+      expect(valmiinaMennessa("Kohteen tulee olla valmiina sovitusti.")).toBeNull()
+      expect(valmiinaMennessa(null)).toBeNull()
     })
   })
 })

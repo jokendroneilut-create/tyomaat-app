@@ -144,9 +144,40 @@ uudelleen** (`scripts/tarkista-urakka-ajat.ts`, tunniste
 `metadata.valmistuminen_urakka_ajasta`): 81 ennallaan, 2 tyhjennettiin.
 Juuri tätä varten takautuva ajo kirjoitti tunnisteen.
 
-**Avoin:** Leppävaaran rivillä oikea päivä on tekstissä muodossa *"sen
-tulee olla valmiina 30.6.2027 mennessä"*, jota kumpikaan jäsennin ei
-tunne. Oma mittauksensa, ei lisätty tässä.
+**Kolmas muoto: "valmiina X mennessä".** Johannes 24.10.2026: *"lisää
+myös muoto 'sen tulee olla valmiina 30.6.2027 mennessä' ja tarkista
+kanta."* Muoto löytyi Leppävaaran riviltä, jolla jakso ei kertonut
+valmistumista.
+
+**Ankkuri on valmiussana, ei "viimeistään".** Mitattu: sana
+"viimeistään + päivä" on 316 rivillä, ja valtaosa on **muiden asioiden
+määräaikoja** — *"mielipiteet tulee toimittaa viimeistään 5.12.2025"*,
+*"ilmoittautumaan tilaisuuteen viimeistään 17.8.2026"*, *"muistutukset
+tulee jättää viimeistään 6.7.2026"*. Pelkkä "viimeistään" olisi
+kirjannut kaavan kuulutusajan hankkeen valmistumiseksi. Ankkureiksi
+tulivat `valmiina / valmiit / valmiiksi / valmis / luovutettavissa`, ja
+päivä luetaan niiden jälkeisestä 70 merkin ikkunasta.
+
+Sama rajaus kuin `parseEstimatedCompletionDate`issa: virke jonka aihe
+on selvitys, suunnitelma, lupa tai tarjous jätetään lukematta —
+*"Suunnitelmien tulee olla valmiina 1.3.2026"* ei ole hankkeen
+valmistuminen.
+
+**Sana "valmis" lisättiin vasta kun sen vaikutus luettiin.** Ilman sitä
+osumia oli 56, sen kanssa 71. Kaikki 15 lisäosumaa avattiin lähteestä:
+*"Koko urakan on oltava valmis luovutusaineistoineen 30.12.2026
+mennessä"*, *"Välitavoite 3: Valmis 30.6.2027"*, *"Koko hanke valmis
+03/2028"* — kaikki oikein, nolla väärää.
+
+**Sivutulos: toinen virke korjasi ensimmäisen kirjoitusvirheen.**
+Pihkapuiston ilmoituksessa jakso on mahdoton (*"15.12.2026 –
+22.2.2026"*), mutta sama asiakirja sanoo toisaalla *"olla täysin
+valmiit **22.2.2027** mennessä"*. Rivi sai siis oikean päivän, jota
+jakso ei voinut antaa.
+
+**Tulos:** jono 44, hankkeet 27. Tarkistusajo kaikkien 152 merkityn
+rivin yli: **152 ennallaan, 0 muuttuu, 0 poistuu** — kanta vastaa
+sääntöä.
 
 Ks. `lib/agent/urakkaAika.ts` (+ spec, 12 testiä),
 `lib/agent/importCandidate.ts`, `scripts/mittaa-urakka-ajat.ts`,

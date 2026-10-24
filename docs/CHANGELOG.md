@@ -27,6 +27,11 @@ ALKUPAIVA paatyi valmistumiseksi. Kaikki 83 kirjoitettua rivia ajettiin
 korjatulla saannolla uudelleen: 81 ennallaan, 2 tyhjennettiin. Jakso
 jonka loppu on ennen alkua on lahteen virhe eika sita kirjoiteta.
 
+Lisaksi kolmas muoto: "sen tulee olla valmiina 30.6.2027 mennessa".
+Ankkuri on valmiussana EIKA "viimeistaan" -- se on 316 rivilla ja
+valtaosa on mielipiteiden ja ilmoittautumisten maaraaikoja. Jono 44,
+hankkeet 27 lisaa.
+
 Saanto ei osu johdoksiin ("rakennusaikainen", "sopimusaikana") eika
 aikataululistaan, ja sopimusaika on kokonaan ulkona koska vuokramallissa
 se on vuokrakausi. Menneita paivia ei kirjoitettu takautuvasti: mennyt
