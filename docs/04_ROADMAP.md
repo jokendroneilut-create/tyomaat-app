@@ -1233,6 +1233,42 @@ muistin varassa.
 
 ### Lähdekattavuus
 
+- **Oikotie.fi ennakkomarkkinoinnin kautta — tutkimatta, kysytty
+  25.10.2026.** Johannes: *"voiko oikotie.fi olla lähteenä
+  suodatuksella ennakkomarkkinoinnissa?"*
+
+  **Miksi kiinnostava.** Ennakkomarkkinointi on **varhainen** signaali:
+  asunnot ovat myynnissä ennen kuin rakentaminen alkaa, usein ennen
+  RS-vaihetta. Se on samaa varhaisuutta jota myymme, ja se kattaisi
+  pienet rakennuttajat joilla ei ole omaa tiedotusta — sama perustelu
+  kuin konsernilähteissä ([[group-source-worth-adding]]).
+
+  **Mitä on mitattava ennen työtä, järjestyksessä:**
+
+  1. **Saako sen hakea.** Oikotie on Schibstedin/Sanoman palvelu ja
+     ilmoitukset ovat välittäjien aineistoa. Luettava robots.txt ja
+     käyttöehdot ensin; jos haku on kielletty, työ loppuu tähän eikä
+     sitä kierretä.
+  2. **Mitä rivillä on.** Ennakkomarkkinointikohteesta tarvitaan
+     vähintään **rakennuttaja tai rakentaja + sijainti**. Jos rivillä on
+     vain taloyhtiön nimi, hinta ja välittäjä, se ei ole meille hanke
+     vaan asuntoilmoitus — ja taloyhtiön nimi on identiteetti, ei
+     osapuoli (D-343).
+  3. **Montako UUTTA hanketta se tuottaisi.** Meillä on jo
+     kohdekatalogit Bonavalta, Laptilta, T2H:lta, Pohjola Rakennukselta
+     ja Lujakodilta, eli iso osa RS-kohteista tulee jo rakennuttajan
+     omasta kanavasta. Mittari on sama kuin muilla yrityslähteillä:
+     montako **kesken olevaa** hanketta jää ilman tätä lähdettä.
+  4. **Duplikaattiriski on tässä poikkeuksellisen suuri,** koska sama
+     taloyhtiö tulee sekä rakennuttajan katalogista että Oikotiestä eri
+     nimellä ("As Oy Tampereen Hymni" vs. "Hymni, Kaukajärvi").
+     Yhdistämissääntö on päätettävä ennen ensimmäistä ajoa, ei sen
+     jälkeen.
+
+  Huom. **asuntokohde ei ole koko tuote**: Oikotie ei kerro
+  toimitiloista, infrasta eikä julkisista hankkeista. Tämä on
+  asuntopuolen täydennys, ei uusi runko.
+
 - **Pörssitiedotteet hankelähteenä — osittain mitattu 24.10.2026, työ
   auki.** Johannes: *"tutki tämä lähde
   `inderes.fi/releases/toivo-group-oyj-on-allekirjoittanut-kauppakirjan-espooseen-rakenteilla-olevasta-paivakodista-kinland-asn-kanssa`

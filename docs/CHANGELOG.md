@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Kahden kohteen kauppatiedote erilleen (D-345)
+
+Toivon tiedote myi kaksi rakenteilla olevaa hoivakohdetta yhdella
+kaupalla. Joensuun 23-paikkainen vammaispalvelun koti puuttui kannasta
+ja luotiin; Lappeenrannan Joutsenon 19-paikkainen oli jo kahdesti, joten
+rivit taydennettiin ja pari vietiin katselmointiin.
+
+Johanneksen havainto kirjattu: duplikaattiskannaus ei voi loytaa naita,
+koska monihankkeisen jonorivin identiteetti on tiedotteen otsikko, jossa
+ei ole kohteen nimea eika osoitetta. Monihankkeinen rivi on loydettava
+ennen skannausta, ei sen avulla.
+
+Purkuskripti pysayttaa nyt itsensa jos tasmays ylittaa 70:n kynnyksen,
+koska yli kynnyksen osuma kirjoittaisi kentat vanhan hankkeen paalle.
+
 ### Tunnettu yritys kuvauksesta liittyvaksi yritykseksi (D-343)
 
 Johanneksen idea: sen sijaan etta lauseesta paatellaan rooli, poimitaan

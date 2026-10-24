@@ -51,6 +51,70 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-345 - Kahden kohteen kauppatiedote erilleen, ja miksi duplikaattiskannaus ei voi löytää niitä
+
+Johannes 25.10.2026 jonorivistä `adf63f15`: *"nämä toivon tiedotteet
+ovat todella epämääräisiä eikä näistä meinaa selvitä oikein mitään.
+mutta tässä on kaksi eri hanketta. puratko ne ja pidetään tässä oleva
+lähde. — duplikaattiskannaus ei muuten ikinä voisi löytää niitä."*
+
+Tiedote 19.12.2025 on **kiinteistökaupan tiedote, ei hanketiedote**:
+Toivo myi Cofinimmo SA:lle kaksi rakenteilla olevaa hoivakohdetta,
+joiden vuokralaiseksi tulee Esperi Care Oy. Kohteet ovat eri kunnissa
+ja luovutetaan eri aikaan, joten ne ovat eri hankkeita
+([[phases-are-separate-projects]]).
+
+**Tarkistettu ensin mitä kannassa jo on — ja puolet oli:**
+
+| kohde | kannassa | teko |
+|---|---|---|
+| Joensuu, vammaispalvelu, 23 paikkaa | ei ollut | luotiin jonoon |
+| Lappeenranta/Joutseno, kehitysvammaiset, 19 paikkaa | **kahdesti** | täydennettiin, pari katselmointiin |
+
+Joensuun kolme muuta hoivariviä ovat eri kohteita (Penttilän ikäihmisten
+hoivakoti 9 M€/Norlandia, Penttilänkadun 60-paikkainen, Rantakylän
+60+60) — ne luettiin yksitellen, koska samankaltainen nimi samassa
+kaupungissa on juuri se tilanne jossa väärä yhdistäminen tapahtuu.
+
+**Johanneksen havainto on rakenteellinen, ja se kannattaa kirjata.**
+Duplikaattiskannaus vertaa hankkeiden *identiteettejä*: nimeä, osoitetta,
+kuntaa, osapuolia. Monihankkeisen jonorivin identiteetti on **tiedotteen
+otsikko** — *"Toivo Group Oyj on solminut kaupat kahdesta Esperi Care
+Oy:lle toteutettavasta yhteiskuntakiinteistöstä Cofinimmo SA:n
+kanssa"* — jossa ei ole kohteen nimeä, osoitetta eikä kuntaa (kunta
+poimittiin tekstistä: Joensuu, eli toinen kahdesta). Se ei voi osua
+nimiin *"Hoivakoti kehitysvammaisille"* tai *"Lappeenrantaan uusi
+hoivakoti"*, oli kynnys mikä tahansa. **Monihankkeinen rivi on siis
+löydettävä ennen skannausta, ei sen avulla** — katselmoinnissa tai
+rivin sisältöä mittaavalla mittarilla ([[multi-project-rows]]).
+
+**Kolme asiaa jätettiin tietoisesti kirjoittamatta:**
+
+1. **Kokonaisarvo ei mene kustannuskenttään.** Tiedote antaa vain
+   yhteissumman kahdesta kohteesta (*"reilut 6 miljoonaa euroa"*), ei
+   kohdekohtaista lukua. Summa jää kuvaukseen
+   ([[combined-figure-split-by-owner-page]]).
+2. **Joutsenon valmistumispäivä jää tyhjäksi,** koska lähteet ovat
+   ristiriidassa: Toivo (19.12.2025) sanoo luovutuksen *"aivan vuoden
+   2027 alkuun"*, Vexatecin oma tiedote *"syksyllä 2026 valmistuvien
+   tilojen"*. Väärä päivä piilottaisi hankkeen 90 päivää myöhemmin
+   (D-298), joten tyhjä on turvallisempi ([[hiding-threshold]]).
+3. **Pari ei yhdistetty itse** vaan vietiin
+   `project_duplicate_candidates`-jonoon luottamuksella 92
+   ([[check-duplicate-reviews]]).
+
+**Täsmäys tarkistettiin ennen kirjoitusta.** Uusi Joensuun rivi sai
+osuman 46 (`same_city, same_region, same_building_type,
+similar_description, different_name_subjects`) — alle 70:n kynnyksen,
+joten se meni jonoon eikä kirjoittanut kenttiä Penttilän hankkeen päälle
+([[matched-overwrites-fields]]). Skripti pysäyttää itsensä jos osuma on
+yli kynnyksen; sitä ei ollut aiemmissa purkuskripteissä.
+
+Samalla korjattiin kirjoitusvirhe omassa kentässämme: rivin `3c29f2a2`
+rakentaja oli *"Vexatex Oy"*.
+
+Ks. `scripts/pura-toivon-esperi-kohteet.ts`.
+
 ### D-343 - Tunnettu yritysnimi kuvauksesta liittyväksi yritykseksi
 
 Johannes 24.10.2026 Toivon tiedotteesta: *"tästä ei ole poimittu
