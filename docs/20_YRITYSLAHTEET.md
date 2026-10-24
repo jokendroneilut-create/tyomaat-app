@@ -61,6 +61,17 @@ Pelkkä tiedostohaku olisi väittänyt sitä puuttuvaksi.
 
 ## Tehty
 
+### Lohkare Infra -konserni — lähteeksi 24.10.2026 (D-341)
+
+Emoyhtiö, jonka tytäryhtiö **Oteran on jo lähteenä** (D-310). Lisättiin
+silti, ks. periaate alla. Mitattu: 22 juttua, 12 suomeksi, **1 hanke** —
+loput yritysostoja ja nimityksiä. Jokainen juttu julkaistaan FI+EN-parina
+ja englanninkielinen pudotetaan osoitteen `/en/`-polusta.
+
+Ensimmäinen ajo ei tuonut mitään uutta: ainoa ehdokas osui olemassa
+olevaan riviin samalla lähdeosoitteella. Se on odotettu tulos — arvo on
+täydennyksessä, ja se alkaa seuraavasta tiedotteesta.
+
 ### Tampereen Tilapalvelut Oy — lähteeksi 24.10.2026 (D-339)
 
 Kaupungin rakennuttaja (koulut, päiväkodit, kulttuuri- ja liikuntatilat).
@@ -245,6 +256,35 @@ Suunnittelijan referenssi ei ole sama asia kuin urakoitsijan: se voi
 olla vuosia vanha ja jo rakennettu. Vaiheen tuoreus on mitattava ennen
 kuin lähde otetaan — juuri se mittaus jonka Fingrid läpäisi (50/52
 kesken) ja jonka urakoitsijoiden referenssisivut läpäisevät huonosti.
+
+---
+
+## Konserni kannattaa lisätä, vaikka jäsenyritys olisi jo lähteenä
+
+Johannes 24.10.2026, kun Lohkare Infra lisättiin vaikka sen tytäryhtiö
+Oteran oli jo lähteenä:
+
+> *"näiden group tyyppisten lisääminen vaikka niiden jäsenyritykset
+> ovatkin jo on se, että yksittäinen pieni toimija ei välttämättä
+> ylläpidä ajantasaista tiedotusta urakoistaan mutta group voi. eli
+> voimme silti saada tärkeää tietoa mitä meillä ei vielä ole."*
+
+**Päällekkäisyys ei ole peruste jättää lisäämättä.** Pieni urakoitsija
+tiedottaa epäsäännöllisesti: sivut voivat olla vuosia vanhat, eikä
+yhtiöllä ole ketään jonka työhön tiedottaminen kuuluu. Konsernilla on —
+viestintä on osa sen omaa tarinaa kasvusta, ja se julkaisee myös
+jäsenyritystensä urakoista.
+
+Käytännössä tämä tarkoittaa, että **sama hanke voi tulla kahta reittiä**,
+ja kumpikin reitti voi olla se ainoa joka toimii juuri sillä kertaa.
+Kerääjä on rakennettava sen mukaan: ehdokas osuu olemassa olevaan riviin,
+ja osuman pitää **täydentää** eikä korvata (D-341,
+[[matched-overwrites-contacts]]).
+
+Sama koskee muita konserneja joiden jäseniä on jo lähteinä. Lohkareen
+yhdeksän jäsenyritystä ovat samalla valmis lähdelista: Oteran (lähteenä),
+Maalinja, EPR-Asennus, Länsi-Suomen Verkkopalvelut, Infra Kiri, Oulun
+Lämpöputkitus, Ylöjärven Kiviset, Nordic Electro Power, VM Suomalainen.
 
 ---
 

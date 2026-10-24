@@ -13,6 +13,10 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ### Lohkare Infra lähteeksi (D-341)
 
+Konserni lisattiin vaikka sen tytaryhtio Oteran on jo lahteena: pieni
+toimija ei valttamatta yllapida ajantasaista tiedotusta urakoistaan,
+mutta konserni voi -- paallekkaisyys ei ole peruste jattaa lisaamatta.
+
 WordPressin REST auki; jokainen juttu julkaistaan FI+EN-parina ja
 englanninkielinen pudotetaan osoitteen /en/-polusta. 22 jutusta 12 on
 suomeksi ja niista tasan yksi kertoo hankkeesta -- loput ovat

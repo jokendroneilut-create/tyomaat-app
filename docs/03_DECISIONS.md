@@ -57,6 +57,19 @@ Johannes 22.10.2026 LinkedInistä löytäneenä: *"tänne on tullut eilen
 uutinen ja arvelen että jatkossa alkaa tulla myös tiedotteita."*
 Esiselvitys tehtiin silloin, lähde lisättiin 24.10.2026.
 
+**Miksi konserni lisätään vaikka tytäryhtiö on jo lähteenä.** Johannes
+24.10.2026: *"näiden group tyyppisten lisääminen vaikka niiden
+jäsenyritykset ovatkin jo on se, että yksittäinen pieni toimija ei
+välttämättä ylläpidä ajantasaista tiedotusta urakoistaan mutta group
+voi. eli voimme silti saada tärkeää tietoa mitä meillä ei vielä ole."*
+
+Päällekkäisyys ei siis ole peruste jättää lisäämättä. Pieni urakoitsija
+tiedottaa epäsäännöllisesti eikä sillä ole ketään jonka työhön
+tiedottaminen kuuluu; konsernilla on, koska viestintä on osa sen omaa
+kasvutarinaa. Seuraus kerääjälle on se, että **sama hanke tulee kahta
+reittiä** ja osuman pitää täydentää eikä korvata — juuri se vika löytyi
+tätä lähdettä lisätessä (alla).
+
 **Reitti on auki ilman temppuja.** WordPressin REST
 (`lohkare.fi/wp-json/wp/v2/posts?per_page=100`) antaa koko tekstin
 yhdellä pyynnöllä; juttuja on 22.
