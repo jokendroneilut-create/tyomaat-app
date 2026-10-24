@@ -42,8 +42,35 @@ describe("lista", () => {
     expect(kelpaaListalle("EPV Energia Oy")).toBe(true)
   })
 
-  it("vaatii yhtiömuodon", () => {
+  it("hyväksyy ulkomaisen yhtiömuodon", () => {
+    /* Johannes 24.10.2026: "liittyva yritys on Kinland AS". */
+    expect(kelpaaListalle("Kinland AS")).toBe(true)
+    expect(kelpaaListalle("Leonhard Weiss Oü")).toBe(true)
+  })
+
+  it("hyväksyy muodottoman nimen kun se on monisanainen", () => {
+    /* Johannes 24.10.2026: "Norlandia Health & Care lisataan yrityslistaan". */
+    expect(kelpaaListalle("Norlandia Health & Care")).toBe(true)
+    expect(kelpaaListalle("Senaatti-kiinteistöt")).toBe(false)
+  })
+
+  it("hylkää taloyhtiön", () => {
+    /* Tiedote luettelee muitakin kohteita: toisen hankkeen taloyhtio. */
+    expect(kelpaaListalle("Asunto Oy Oulun Graadi")).toBe(false)
+    expect(kelpaaListalle("As Oy Nihdin Skyline")).toBe(false)
+    /* Kiinteisto Oy on usein aito tilaaja. */
+    expect(kelpaaListalle("Kiinteistö Oy Myyrinmäki")).toBe(true)
+  })
+
+  it("hylkää lauseen", () => {
+    expect(kelpaaListalle("Neve Oy:n ja Merus Power")).toBe(false)
+    expect(kelpaaListalle("Peabin ja YH Kotien yhteishanke")).toBe(false)
+  })
+
+  it("hylkää julkisyhteisön ja kuntanimen", () => {
     expect(kelpaaListalle("Helsingin kaupunki")).toBe(false)
+    expect(kelpaaListalle("Pirkanmaan hyvinvointialue")).toBe(false)
+    expect(kelpaaListalle("Siun sote kuntayhtymä")).toBe(false)
     expect(kelpaaListalle("Metsähallitus")).toBe(false)
   })
 

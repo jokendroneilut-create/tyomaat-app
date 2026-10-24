@@ -29,6 +29,19 @@ Lauseesta paatteleva tilaajapoiminta kokeiltiin ensin ja palautettiin:
 se poimii yha paikannimia ja kaantaa roolin vaarin kun julkaisija onkin
 tilaaja.
 
+Jatkona samana paivana: ulkomaiset yhtiomuodot (Kinland AS) ja kasin
+lisattavat muodottomat nimet (Norlandia Health & Care) paasevat nyt
+listalle. Muodottomalle nimelle kokeiltu yleissaanto hylattiin: se
+olisi tuonut 311 lisaysta, mutta ne ovat valtaosin julkisyhteisoja ja
+lauseita ("Helsingin kaupunki" 1 445 rivia).
+
+Kaksi suodatinta lisaa: kokonainen lause ei ole nimi, eika taloyhtio
+ole osapuoli vaan hankkeen identiteetti. Jo lisatyt taloyhtiot
+siivottiin: 83 rivilta 85 vierasta nimea pois, 49 rivin omaa
+jatettiin -- kuivaharjoitus paljasti etta suora vertailu olisi
+poistanut rivin oman taloyhtion, koska otsikossa nimi on taivutettuna
+("Kalevan Kaiku" vs. "Kalevan Kaiun").
+
 ### Valmistuminen urakka-ajasta (D-342)
 
 Urakkailmoituksessa ei sanota "valmistuu" vaan kerrotaan jakso, jonka

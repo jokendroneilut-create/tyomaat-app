@@ -202,7 +202,25 @@ export function allativeToNominative(raw: string, konteksti?: string | null): st
  * turvallinen rajaus: mitatusta 25 YVA-hankkeesta jokaisessa mainittiin
  * Oy, Oyj, Ab tai Ky.
  */
+/*
+ * SANANRAJA EI TUNNE AAKKOSIA (24.10.2026).
+ *
+ * `\b` on JavaScriptissa ASCII-sidonnainen, joten muodon peraan
+ * kirjoitettu sananraja EI osu kun muoto paattyy aakkoseen:
+ * **"Leonhard Weiss Oü"** jai tunnistamatta yritykseksi, vaikka `Oü` on
+ * `COMPANY_FORMS`-listalla. Sama ansa kuin urakoitsijapoiminnassa
+ * (D-328), jossa `\b` sanan "Oü" jalkeen esti osuman.
+ *
+ * Raja tarkistetaan nyt eteen- ja taaksepain katsovalla ehdolla, joka
+ * tuntee myos aakkoset.
+ */
+const EI_SANAMERKKIA_ENNEN = "(?<![\\wÅÄÖåäöÜü])"
+const EI_SANAMERKKIA_JALKEEN = "(?![\\wÅÄÖåäöÜü])"
+
 export function looksLikeCompany(name: string | null | undefined): boolean {
   if (!name) return false
-  return new RegExp(`\\b(?:${COMPANY_FORM_PATTERN})\\b|\\bB\\.V\\.|\\bN\\.V\\.`).test(name)
+  return new RegExp(
+    `${EI_SANAMERKKIA_ENNEN}(?:${COMPANY_FORM_PATTERN})${EI_SANAMERKKIA_JALKEEN}` +
+      `|${EI_SANAMERKKIA_ENNEN}B\\.V\\.|${EI_SANAMERKKIA_ENNEN}N\\.V\\.`
+  ).test(name)
 }

@@ -127,6 +127,80 @@ Ks. `lib/projects/tunnetutYritykset.ts` (+ spec, 13 testiä),
 Kruununvoutiin"), koska ne ovat kentissä siinä muodossa. Korjaantuu kun
 kentät siivotaan; ei korjattu tässä.
 
+
+#### D-343 jatko — ulkomainen muoto, muodoton nimi ja taloyhtiösiivous (24.10.2026)
+
+Johannes toi samana päivänä kaksi riviä, joista kumpaakaan lista ei
+olisi poiminut:
+
+> *"tästä hankkeesta ei ole poimittu tilaajaa: Norlandia Health & Care
+> lisätään se yrityslistaan ... katso onko se muissa hyväksytyissä
+> hankkeissa mukana"* — ja toisesta rivistä: *"liittyvä yritys on
+> Kinland AS"*.
+
+**Kaksi eri estettä, kaksi eri korjausta:**
+
+| Nimi | Miksi ei läpäissyt | Korjaus |
+|---|---|---|
+| `Kinland AS` | listalla oli vain suomalaiset yhtiömuodot | muodot luetaan nyt `companyName.ts`:n yhteisestä listasta (AS, Oü, B.V., GmbH) |
+| `Norlandia Health & Care` | **ei yhtiömuotoa lainkaan** | käsin lisättävä `KURATOIDUT`-lista |
+
+**Muodottomalle nimelle kokeiltiin yleissääntöä, ja se hylättiin
+mitattuna.** "Vähintään kaksi isolla alkavaa sanaa" olisi tuonut 311
+lisäystä, mutta kenttien muodottomat nimet ovat valtaosin
+julkisyhteisöjä ja lauseita: "Helsingin kaupunki" 1 445 riviä,
+"Kaupunki" 84, "Yksityinen" 31, *"Peabin ja YH Kotien yhteishanke"*,
+*"Raksila 2.0, jonka muodostavat SRV ja Trevian"* — ja hankkeen nimi
+"Garden Helsinki" olisi päätynyt yritykseksi. Muotovaatimus siis suojaa
+oikeasti, joten muodoton nimi lisätään **käsin** yksi kerrallaan, kuten
+Johannes pyysi. Ihminen vastaa siitä että nimi on yritys eikä hanke.
+
+**`looksLikeCompany` ei tunnistanut Oü:tä, vaikka muoto oli listassa.**
+Syy on sama ansa joka on kaatanut tämän koodipohjan ennenkin: `\b` on
+ASCII, joten *"Oü"*:n jälkeen sanarajaa ei ole olemassa
+([[case-insensitive-lookahead-trap]] sukulaisena). Korjattu
+Unicode-tietoisiin reunoihin `(?<![\wÅÄÖåäöÜü])…(?![\wÅÄÖåäöÜü])`.
+
+**Konserni ja Suomen yhtiö ovat eri yhtiöitä.** Teksteissä esiintyy
+"Norlandia Hoiva", "Norlandia Health & Care" ja "Norlandia Päiväkodit
+Oy". Täydennysskripti valitsee sen nimen joka tekstissä lukee, eikä
+korvaa päiväkotiyhtiötä konsernin nimellä — väärin yhdistetty nimi on
+pahempi kuin kaksi riviä ([[title-precedence]]). Rooli on **käyttäjä
+tai vuokralainen**, ei tilaaja, joten se kirjataan liittyväksi
+yritykseksi joka ei väitä roolia. 4 riviä.
+
+**Kaksi suodatinta lisää, molemmat omasta ajosta löytyneitä:**
+
+5. **Lause ei ole nimi.** Kentissä on kokonaisia ilmauksia *("Neve
+   Oy:n ja Merus Power", "Peabin ja YH Kotien yhteishanke")*, ja
+   listalla ne lisättäisiin riville sellaisenaan.
+6. **Taloyhtiö on hankkeen identiteetti, ei osapuoli.** Rakennuttajan
+   tiedote luettelee muitakin kohteitaan, joten helsinkiläinen
+   kerrostalo sai liittyväksi yritykseksi *"Asunto Oy Oulun Graadi"*.
+   Taloyhtiö kuuluu omalle rivilleen ja tulee sinne `housing_company`-
+   kentästä. (Kiinteistö Oy **ei** ole tässä: se on usein aito tilaaja,
+   kaavan hakija "Kiinteistö Oy Myyrinmäki".)
+
+**Jo lisätyt taloyhtiöt siivottiin — ja kuivaharjoitus pelasti 49
+riviä.** Ensimmäinen siivousversio vertasi nimeä otsikkoon suoraan ja
+olisi poistanut rivin **oman** taloyhtiön, koska otsikossa nimi on
+taivutettuna ja astevaihtelu muuttaa vartalon kolmannesta kirjaimesta:
+*"Asunto Oy Tampereen Kalevan Kaiku"* ↔ otsikko *"…Kalevan **Kaiun**
+rakentamisen"*, *"Asunto Oy Helsingin Islan"* ↔ *"…Helsingin Isla"*.
+Vertailu tehdään nyt sanojen alkuvartaloilla järjestyksessä, jolloin
+löysä vertailu erehtyy turvalliseen suuntaan: epävarma nimi jää
+riville. Tulos: **83 riviä, 85 vierasta nimeä pois, 49 rivin omaa
+jätettiin**. Tieto ei katoa, koska nimi on yhä siinä kuvauksessa josta
+se luettiin.
+
+Taloyhtiösuodatin ratkaisi myös edellä avoimeksi jääneen taivutetun
+nimen: "Asunto Oy Helsingin Kruununvoutiin" ei enää pääse listalle
+lainkaan. Muissa nimissä taivutusta ei havaittu.
+
+Ks. `lib/projects/tunnetutYritykset.ts` (+ spec, 17 testiä),
+`lib/agent/companyName.ts`, `scripts/taydenna-norlandia.ts`,
+`scripts/siivoa-taloyhtiot-liittyvista.ts`.
+
 ### D-342 - Urakka-aika kertoo valmistumisen ilman valmistumissanaa
 
 Johannes 24.10.2026 Åbackan sähköaseman rivistä: *"tästä ei ole poimittu

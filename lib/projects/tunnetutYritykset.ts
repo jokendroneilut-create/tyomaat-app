@@ -1,3 +1,5 @@
+import { looksLikeCompany } from "@/lib/agent/companyName"
+
 /*
  * TUNNETTU YRITYS KUVAUKSESTA LIITTYVAKSI YRITYKSEKSI (D-343).
  *
@@ -20,7 +22,40 @@
 
 export type TunnettuYritys = { nimi: string; kuvio: RegExp }
 
-const YHTIOMUOTO = /\b(?:Oy|Oyj|Ab|Abp|Ky|Ltd|plc|GmbH)\b/i
+/*
+ * ULKOMAINEN YHTIOMUOTO JA MUODOTON NIMI (24.10.2026).
+ *
+ * Ensimmainen versio vaati suomalaisen yhtiomuodon, jolloin KUMPIKAAN
+ * Johanneksen nimeamista ei olisi paassyt listalle:
+ *
+ *   "Kinland AS"               norjalainen muoto puuttui listasta
+ *   "Norlandia Health & Care"  ei yhtiomuotoa lainkaan
+ *
+ * Muodot luetaan nyt `companyName.ts`:n yhteisesta listasta
+ * (`looksLikeCompany`), joka tuntee myos AS:n, Oü:n, B.V.:n ja GmbH:n.
+ *
+ * MUODOTON NIMI KELPAA, KUN IHMINEN ON SEN KENTTAAN KIRJOITTANUT.
+ * Lista rakennetaan `developer`-, `builder`- ja
+ * `related_companies`-kentista, eli nimen on jo pitanyt lapaista
+ * katselmointi. Muotovaatimus suojasi roskalta, ei muodottomilta
+ * nimilta -- ja roska karsitaan nyt omilla ehdoillaan: vahintaan kaksi
+ * sanaa, ei julkisyhteison sanaa (kaupunki, kunta, virasto...) eika
+ * kuntanimi. Ilman naita "Helsingin kaupunki" (563 esiintymaa) osuisi
+ * joka helsinkilaiseen tekstiin.
+ */
+/*
+ * KASIN LISATYT NIMET ILMAN YHTIOMUOTOA.
+ *
+ * Tanne lisataan nimi kerrallaan, kun se on todettu yritykseksi.
+ * Johannes 24.10.2026: *"Norlandia Health & Care lisataan se
+ * yrityslistaan"* -- konsernin nimessa ei ole yhtiomuotoa, joten se ei
+ * paase listalle automaattisesti. Suomen-yhtiot (Norlandia Paivakodit
+ * Oy) tulevat omalla muodollaan eivatka tarvitse tata.
+ */
+export const KURATOIDUT = ["Norlandia Health & Care", "Norlandia Hoiva"]
+
+const JULKISYHTEISO =
+  /\b(?:kaupunki|kaupungin|kunta|kunnan|seurakunta|seurakuntayhtym[äa]|kuntayhtym[äa]|hyvinvointialue|liikelaitos|virasto|ministeri[öo]|yliopisto|ammattikorkeakoulu|elinvoimakeskus|ELY|AVI)\b/i
 
 /*
  * KATKENNUT NIMI EI KELPAA LISTALLE. Omissa kentissamme on aiemmin
@@ -59,9 +94,54 @@ export function erotteleNimet(kentta: unknown): string[] {
     .filter(Boolean)
 }
 
+/*
+ * LAUSE EI OLE NIMI. Kentissa on muutama kokonainen ilmaus ("Neve Oy:n
+ * ja Merus Power", "Peabin ja YH Kotien yhteishanke"), ja listalle
+ * paastyaan ne lisataan rivelle sellaisenaan.
+ */
+const LAUSE = /\s(?:ja|sekä|och)\s|:n\s/i
+
+/*
+ * TALOYHTIO ON HANKKEEN IDENTITEETTI, EI OSAPUOLI.
+ *
+ * Rakennuttajan tiedote luettelee usein muitakin kohteitaan, jolloin
+ * toisen hankkeen taloyhtio paatyisi taman liittyvaksi yritykseksi:
+ * mitattu 24.10.2026, helsinkilainen kerrostalo sai nimen "Asunto Oy
+ * Oulun Graadi". Taloyhtio kuuluu omalle rivilleen, ja sinne se tulee
+ * jo `housing_company`-kentasta -- ei tata kautta.
+ *
+ * Kiinteisto Oy EI ole tassa: se on usein aito tilaaja (kaavan hakija
+ * "Kiinteisto Oy Myyrinmaki").
+ */
+const TALOYHTIO = /^(?:As\.?|Asunto|Bostads)[\s-]*(?:Oy|Ab)\b/i
+
 export function kelpaaListalle(nimi: string): boolean {
   const n = nimi.trim()
-  return n.length >= 6 && YHTIOMUOTO.test(n) && !KATKENNUT.test(n) && !VERKKOYHTIO.test(n)
+  if (n.length < 6) return false
+  if (LAUSE.test(n)) return false
+  if (TALOYHTIO.test(n)) return false
+  if (KATKENNUT.test(n) || VERKKOYHTIO.test(n)) return false
+  if (JULKISYHTEISO.test(n)) return false
+
+  /* Yhtiomuoto riittaa yksin: "Kinland AS", "Lujatalo Oy". */
+  if (looksLikeCompany(n)) return true
+
+  /*
+   * MUODOTON NIMI KELPAA VAIN KURATOITUNA.
+   *
+   * Kokeiltu 24.10.2026 yleissaantona ("vahintaan kaksi isolla alkavaa
+   * sanaa"): se olisi tuonut 311 lisaysta, mutta kenttien muodottomat
+   * nimet ovat valtaosin julkisyhteisoja ja lauseita --
+   * "Helsingin kaupunki" 1 445 rivia, "Kaupunki" 84, "Yksityinen" 31,
+   * "Peabin ja YH Kotien yhteishanke", "Raksila 2.0, jonka muodostavat
+   * SRV ja Trevian". Lisaksi hankkeen nimi paatyi listalle ("Garden
+   * Helsinki"). Muotovaatimus siis suojaa oikeasti.
+   *
+   * Siksi muodoton nimi lisataan KASIN alla olevaan listaan, kuten
+   * Johannes pyysi: *"lisataan se yrityslistaan"*. Ihminen vastaa
+   * siita etta nimi on yritys eika hanke tai lause.
+   */
+  return KURATOIDUT.some((k) => k.toLowerCase() === n.toLowerCase())
 }
 
 /*
@@ -93,8 +173,14 @@ export function teeKuviot(nimet: Iterable<string>): TunnettuYritys[] {
     .sort((a, b) => b.length - a.length)
     .map((nimi) => ({
       nimi,
+      /*
+       * SIJAPAATE SALLITAAN LOPUSSA. Ilman tata "Norlandia Hoivan
+       * kanssa" ei osu nimeen "Norlandia Hoiva" -- suomessa nimi on
+       * tekstissa lahes aina taivutettuna.
+       */
       kuvio: new RegExp(
-        `(?<![\\wÅÄÖåäö])${nimi.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\wÅÄÖåäö])`,
+        `(?<![\\wÅÄÖåäö])${nimi.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}` +
+          `(?:n|a|ä|lle|lla|llä|ssa|ssä|sta|stä|ksi|in)?(?![\\wÅÄÖåäö])`,
         "i"
       ),
     }))
