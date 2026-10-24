@@ -51,6 +51,94 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-341 - Lohkare Infra lähteeksi: arvo on täydennyksessä, ja matched pyyhki yhteyshenkilöt
+
+Johannes 22.10.2026 LinkedInistä löytäneenä: *"tänne on tullut eilen
+uutinen ja arvelen että jatkossa alkaa tulla myös tiedotteita."*
+Esiselvitys tehtiin silloin, lähde lisättiin 24.10.2026.
+
+**Reitti on auki ilman temppuja.** WordPressin REST
+(`lohkare.fi/wp-json/wp/v2/posts?per_page=100`) antaa koko tekstin
+yhdellä pyynnöllä; juttuja on 22.
+
+**Kieli luetaan osoitteesta.** Jokainen juttu julkaistaan kahdesti,
+suomeksi ja englanniksi, erillisinä postauksina samalla päivämäärällä.
+Rajapinnassa **ei** ole `lang`- eikä `translations`-kenttää
+(tarkistettu), mutta englanninkielinen on aina polussa `/en/` — ja
+kategoria (News/Stories vs. Uutiset/Tarinat) vahvistaa saman jaon.
+Ilman karsintaa jokaisesta hankkeesta syntyisi kaksi ehdokasta.
+
+**Suodatus on koko työ: 1/12.** Suomenkielisiä on 12, ja niistä tasan
+yksi kertoo hankkeesta. Loput ovat yritysostoja (*"X liittyy osaksi
+Lohkare Infraa"*) ja nimityksiä. Sääntö vaatii hankesanan **otsikossa**
+eikä katso leipätekstiä, koska yritysostotiedotteet puhuvat hankkeista
+yleisesti (*"toteuttaa vaativia infrarakentamisen hankkeita"*). Ajettu
+kaikkia 12:ta otsikkoa vasten: yksi osuma, nolla väärää.
+
+**Arvo on täydennyksessä, ei uusissa riveissä.** Konserni tiedottaa
+vasta kun sopimus on tehty, joten hanke on jo kannassa Hilmasta — ja
+tytäryhtiö Oteran on oma lähteensä (D-310). Lisäysajo vahvisti tämän:
+ainoa ehdokas osui olemassa olevaan riviin samalla lähdeosoitteella, ja
+uusia yhteyshenkilöitä oli **0**, koska ne oli jo poimittu käsin
+22.10. Mitattuna silloin tiedote antoi neljä nimettyä yhteyshenkilöä,
+valmistumisvuoden ja urakan laajuuden riville jolla oli ennen vain
+tilaajan vaihde.
+
+**Jaettu vika jonka tämä lähde paljasti: `matched` pyyhki
+yhteyshenkilöt.** `importCandidate`in osumahaara yhdistää metadatan
+matalalla levityksellä (`...body.metadata`), joten osuva lähde korvasi
+hankkeen koko `contact_persons`-listan omallaan. S2-laiturilla oli
+viisi merkintää ja tiedotteessa neljä — tilaajan vaihde olisi kadonnut,
+ja käsin lisätty merkintä olisi kadonnut samalla tavalla
+([[manual-parties-linkedin]]). `related_companies` yhdistettiin jo
+oikein; yhteyshenkilöt eivät. Korjattu `mergeContacts`illa, jonka
+avaimena on sähköposti tai nimi+puhelin ja jossa vanha arvo voittaa
+kenttä kentältä. **Vika koski kaikkia lähteitä jotka antavat
+yhteyshenkilöitä, ei vain tätä.**
+
+**Kaksi täydennystä samasta tiedotteesta, molemmat todisteella.**
+
+1. *Katkennut verkkotunnus.* Lähteessä lukee
+   `timo.luukkonen@oteran.f` sekä linkin tekstissä että
+   `mailto:`-osoitteessa. Samassa lohkossa on
+   `jukka.seeslinna@oteran.fi`, joten tunnus täydennetään — mutta vain
+   kun katkennut tunnus on toisen, **samassa lohkossa** esiintyvän
+   tunnuksen alku. Se on eri asia kuin osoitteen johtaminen säännöstä:
+   paikallinen osa on annettu sellaisenaan. Ilman tätä kantaan jäisi
+   osoite johon ei voi lähettää.
+2. *Tilaajan nimi.* Leipätekstissä lukee "Turun Satama",
+   yhteystiedoissa "Turun Satama Oy". Ilman täydennystä osuma olisi
+   kirjoittanut lyhyemmän nimen kannassa olevan päälle.
+
+**Yhteyshenkilöt rakenteesta, ei tekstipoimijalla.** "Lisätiedot"-lohko
+antaa organisaation, nimen, nimikkeen, puhelimen ja osoitteen omilla
+riveillään, ja ne luetaan järjestyksessä
+([[fields-into-prose-break-contacts]]). Lohko myös katkaistaan pois
+kuvauksesta: yhteystiedot eivät kuulu asiakkaan lukemaan tekstiin.
+
+**Hiljainen virhe jonka kiinteä otos paljasti.** `tekstiksi` muutti
+nimetyn entiteetin välilyönniksi (`&auml;`), jolloin otsikosta
+"Lisätiedot" tuli "Lis tiedot" eikä koko yhteystietolohkoa löytynyt.
+Live-rajapinta palauttaa UTF-8:aa, joten vika ei näkynyt
+kuivaharjoituksessa — vain testiotoksessa, joka oli kirjoitettu
+entiteeteillä. Oire olisi ollut pelkkä puuttuva kenttä.
+
+**Oma skripti kaatoi tyypit.** `scripts/mittaa-lohkare.ts` ei
+sisältänyt yhtään importtia, joten TypeScript käsitteli sen globaalina
+skriptinä ja sen `main` törmäsi toisen skriptin `main`-funktioon
+([[scripts-break-the-build]]). Poistettiin: kuivaharjoitusskripti
+kattaa saman mittauksen.
+
+**Sivutuote: konsernin jäsenyritykset ovat valmis lähdelista.** Oteran
+(jo lähteenä), Maalinja, EPR-Asennus, Länsi-Suomen Verkkopalvelut,
+Infra Kiri, Oulun Lämpöputkitus, Ylöjärven Kiviset, Nordic Electro
+Power, VM Suomalainen. Lista on myös kerääjässä: urakoitsijaksi
+kirjataan jäsenyritys, ei konserni.
+
+Ks. `lib/agent/fetchLohkareSource.ts` (+ spec),
+`lib/agent/lohkareYhteyshenkilot.ts` (+ spec),
+`scripts/kuivaharjoitus-lohkare.ts`, `scripts/lisaa-lohkare-lahde.ts`.
+
 ### D-339 - Tampereen Tilapalvelut lähteeksi: vaihe julkaisijan luokituksesta
 
 Johannes 24.10.2026 Aamulehden jutusta: *"tarkista onko meillä tämä

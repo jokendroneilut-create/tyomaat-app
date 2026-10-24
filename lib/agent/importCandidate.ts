@@ -21,6 +21,7 @@ import {
   awardWinnersFromMetadata,
   mergeCompanyNames,
 } from "@/lib/projects/projectCompanies"
+import { mergeContacts } from "@/lib/projects/contacts"
 import {
   findByIdentifiers,
   linkIdentifier,
@@ -696,6 +697,32 @@ export async function importCandidate(
               awardWinnersFromMetadata(body.metadata)
             )
             return related.length > 0 ? { related_companies: related } : {}
+          })(),
+          /*
+           * YHTEYSHENKILOT YHDISTETAAN, EI KORVATA (D-341).
+           *
+           * Matalan tason levitys `...body.metadata` korvasi koko
+           * listan, joten osuva lahde pyyhki hankkeen aiemmat
+           * yhteyshenkilot -- myos kasin lisatyt
+           * ([[manual-parties-linkedin]]). Havaittu Lohkareen lahdetta
+           * lisatessa: S2-laiturilla oli viisi merkintaa, ja tiedotteen
+           * nelja olisi korvannut ne kaikki, jolloin tilaajan vaihde
+           * olisi kadonnut.
+           *
+           * `mergeContacts` avaimena on sahkoposti tai nimi+puhelin, ja
+           * vanha arvo voittaa kentta kentalta -- sama periaate kuin
+           * `related_companies`illa yllä.
+           */
+          ...(() => {
+            const yhteyshenkilot = mergeContacts(
+              Array.isArray(match.metadata?.contact_persons)
+                ? match.metadata.contact_persons
+                : [],
+              Array.isArray(body.metadata?.contact_persons)
+                ? body.metadata.contact_persons
+                : []
+            )
+            return yhteyshenkilot.length > 0 ? { contact_persons: yhteyshenkilot } : {}
           })(),
           // Vanhenemismerkinnät pois, jottei kortti väitä hanketta yhä
           // vanhentuneeksi. Peruste jää talteen unexpired_reason-kenttään.

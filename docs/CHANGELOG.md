@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Lohkare Infra lähteeksi (D-341)
+
+WordPressin REST auki; jokainen juttu julkaistaan FI+EN-parina ja
+englanninkielinen pudotetaan osoitteen /en/-polusta. 22 jutusta 12 on
+suomeksi ja niista tasan yksi kertoo hankkeesta -- loput ovat
+yritysostoja ja nimityksia.
+
+Arvo on taydennyksessa: konserni tiedottaa vasta sopimuksesta, joten
+hanke on jo kannassa Hilmasta. Tiedote antaa yhteyshenkilot, laajuuden
+ja valmistumisvuoden.
+
+Lahde paljasti jaetun vian: osuva lahde korvasi hankkeen koko
+contact_persons-listan omallaan, jolloin myos kasin lisatyt
+yhteyshenkilot olisivat kadonneet. Nyt ne yhdistetaan kuten
+related_companies.
+
 ### Tampereen Tilapalvelut lähteeksi (D-339)
 
 Tampereen kaupungin rakennuttajan hankesivut WordPressin

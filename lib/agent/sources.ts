@@ -84,6 +84,7 @@ import {
 import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
 import { fetchDestiaSource } from "./fetchDestiaSource"
 import { fetchOteranSource } from "./fetchOteranSource"
+import { fetchLohkareSource } from "./fetchLohkareSource"
 import { fetchVexatecSource } from "./fetchVexatecSource"
 import { fetchTilapalvelutSource } from "./fetchTilapalvelutSource"
 import { fetchFingridProjectsSource } from "./fetchFingridProjectsSource"
@@ -384,6 +385,18 @@ export const sources = [
    * koko tekstin, ja rikastus hakisi sivun koko koosteena uudelleen.
    */
   { name: "oteran", fetch: fetchOteranSource },
+  /*
+   * Lohkare Infra -konserni, Oteranin emo (D-341). WordPressin REST on
+   * auki ja antaa koko tekstin. Jokainen juttu julkaistaan FI+EN-parina,
+   * ja englanninkielinen pudotetaan osoitteen `/en/`-polusta.
+   *
+   * SUODATUS ON KOKO TYO: 22 jutusta 12 on suomeksi ja niista yksi
+   * kertoo hankkeesta -- loput ovat yritysostoja ja nimityksia. Arvo on
+   * TAYDENNYKSESSA: konserni tiedottaa vasta sopimuksesta, joten hanke
+   * on jo kannassa Hilmasta, mutta tiedote antaa yhteyshenkilot,
+   * laajuuden ja valmistumisvuoden.
+   */
+  { name: "lohkare", fetch: fetchLohkareSource },
   /*
    * Vexatec Oy: hoiva- ja palvelurakentamisen KVR-urakoitsija. Tiedotteet
    * ovat WordPressin omassa tyypissa `tiedotteet`, eivat RSS-syotteessa
