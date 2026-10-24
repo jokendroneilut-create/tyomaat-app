@@ -312,6 +312,23 @@ export function vaihe(
   return PHASE_LABELS.construction
 }
 
+/*
+ * KOKONAISUUDEN VALMISTUMINEN, KUN VAIHEITA ON MONTA.
+ *
+ * Takahuhdin juttu (ei aikataulukenttaa) sanoo "Paivakotirakennus
+ * valmistuu vuonna 2027" ja "Vuoteen 2029 mennessa koulun B-rakennus on
+ * remontoitu"; otsikko "Valmista 2029". Tekstipoimija otti ensimmaisen,
+ * ja valmistumisajo olisi sulkenut hankkeen kaksi vuotta liian aikaisin
+ * (Johannes 24.10.2026). Myohaisin ilmoitettu vuosi voittaa.
+ */
+export function kokonaisuudenValmistuminen(otsikko: string, teksti: string): string | null {
+  const vuodet = [
+    ...`${otsikko} ${teksti}`.matchAll(/vuoteen\s+(20\d\d)\s+mennessä|valmista\w*\s+(?:vuonna\s+)?(20\d\d)/gi),
+  ].map((m) => m[1] ?? m[2])
+  const vuosi = vuodet.sort().at(-1)
+  return vuosi ? `${vuosi}-12-31` : null
+}
+
 const SUUNNITTELU: [RegExp, string][] = [
   [/^(pää- ja )?arkkitehti(suunnittel\w*)?$/i, "architectural_design"],
   [/^rakennesuunnittel/i, "structural_design"],
@@ -350,7 +367,13 @@ export function tilapalvelutEhdokkaat(j: TilapalvelutJulkaisu, nyt: Date = new D
 
   const alku = aloitus(aikataulu)
   const pvm = j.pvm ? j.pvm.toISOString() : null
-  const valmistuu = valmistuminen(aikataulu) ?? parseEstimatedCompletionDate(j.teksti, pvm)
+  const valmistuu = [
+    valmistuminen(aikataulu) ?? parseEstimatedCompletionDate(j.teksti, pvm),
+    kokonaisuudenValmistuminen(j.otsikko, j.teksti),
+  ]
+    .filter((p): p is string => Boolean(p))
+    .sort()
+    .at(-1) ?? null
   const phase = vaihe(j, alku, valmistuu, builder, nyt)
   const cost = kustannus(k.get("kustannusarvio"))
 

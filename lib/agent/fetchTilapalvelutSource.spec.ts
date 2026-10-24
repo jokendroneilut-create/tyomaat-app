@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest"
 import {
   aloitus,
   jasennaJulkaisut,
+  kokonaisuudenValmistuminen,
   kustannus,
   lapaiseeSuodatuksen,
   tilapalvelutEhdokkaat,
@@ -74,6 +75,20 @@ describe("kentät", () => {
     ).toBe("2027-08-31")
     expect(valmistuminen("Heinäkuu 2026 – marraskuu 2027")).toBe("2027-11-30")
     expect(valmistuminen("Rakennustyöt alkoivat maaliskuussa 2024 ja päättyivät lokakuussa 2025.")).toBe("2025-10-31")
+  })
+})
+
+describe("kokonaisuudenValmistuminen", () => {
+  it("myöhäisin vaihe voittaa (Takahuhti)", () => {
+    expect(
+      kokonaisuudenValmistuminen(
+        "Takahuhdin koulu ja päiväkoti uudistuvat – Valmista 2029",
+        "Vuoteen 2029 mennessä koulun B-rakennus on remontoitu perusteellisesti. Päiväkotirakennus valmistuu vuonna 2027."
+      )
+    ).toBe("2029-12-31")
+  })
+  it("ei osu vanhan rakennuksen valmistumisvuoteen", () => {
+    expect(kokonaisuudenValmistuminen("X", "Nykyinen, vuonna 1987 valmistunut rakennus puretaan.")).toBeNull()
   })
 })
 
