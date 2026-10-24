@@ -52,6 +52,7 @@ import {
 import { detectCityFromText } from "../../detectCityFromText"
 import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
 import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
+import { estettyPerhe } from "../../hilmaRakentamisenIlmoitus"
 import {
   fetchLupapisteBulletinPdfText,
   bestBulletinDescription,
@@ -444,8 +445,22 @@ export async function collectHilmaSource(
   // voi osua samaan conflict-riviin kahdesti samassa kutsussa (esim. jos
   // useammalta ilmoitukselta puuttuu noticeId ja url putoaa source.url:ksi).
   const rowsByUrl = new Map<string, any>()
+  const estetyt = new Map<string, number>()
 
   for (const notice of collected) {
+    /*
+     * EI-RAKENTAMISEN HANKINNAT POIS (D-346). Kysely on leveämpi kuin
+     * `cpvCodes:(45*)` antaa ymmärtää, eikä sitä tiukenneta: 15
+     * hyväksyttyä hanketta tuli ilman 45*-koodia. Suodatus on siksi
+     * tässä ja koskee vain perheitä joista ei ole koskaan tullut
+     * hyväksyttyä hanketta — ks. lib/agent/hilmaRakentamisenIlmoitus.ts.
+     */
+    const estetty = estettyPerhe(notice.cpvCodes)
+    if (estetty) {
+      estetyt.set(estetty, (estetyt.get(estetty) ?? 0) + 1)
+      continue
+    }
+
     const noticeId = notice.noticeId ?? notice.id
     /*
      * Osoite tarvitsee myös procedureId:n - pelkällä ilmoitusnumerolla
@@ -497,6 +512,16 @@ export async function collectHilmaSource(
     if (error) throw error
 
     saved += chunk.length
+  }
+
+  if (estetyt.size) {
+    const yhteensa = [...estetyt.values()].reduce((a, b) => a + b, 0)
+    console.log(
+      `HILMA: ohitettu ${yhteensa} ei-rakentamisen ilmoitusta (${[...estetyt.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([p, n]) => `CPV ${p}=${n}`)
+        .join(", ")})`
+    )
   }
 
   return {

@@ -51,6 +51,68 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-346 - Avoterapiahankinnat pois jonosta: kysely ei suodattanut mitään
+
+Johannes 25.10.2026 jonosta: *"jonossa on paljon avoterapiahankintoja?
+Miksi? korjataan ja siivoa jono"* — Kelan ratsastus-, musiikki-, puhe-
+ja perheterapian tarjouspyyntöjä, kaikki CPV 85000000.
+
+**Syy ei ollut poiminnassa vaan kyselyssä.** Hilman keräin hakee
+`cpvCodes:(45*)`, mutta Azure Searchin oletus on `queryType: "simple"`,
+jossa kenttäkohtaista syntaksia `kenttä:(arvo)` **ei tueta** — se
+luetaan pelkkinä sanoina, ja `searchMode: "any"` päästää läpi rivin
+jolla osuu yksikin sana. Kysely ei siis ole koskaan suodattanut CPV:n
+mukaan, vaikka koodi ja kommentit sanovat niin.
+
+Mitattu samalla kyselyllä 25.10.2026, 100 ilmoitusta sivulta:
+
+| kysely | osumia | ilman yhtään 45*-koodia |
+|---|---|---|
+| nykyinen (`simple` + `any`) | 43 356 | **21 / 100** |
+| `queryType: "full"` | 36 426 | **0 / 100** |
+
+**Kyselyä ei silti tiukennettu, ja se on mittauksen tulos.** Sääntö
+ajettiin hyväksyttyjen yli ennen julkaisua
+([[test-filter-against-approved]]): 939 hyväksytystä Hilma-hankkeesta
+**15:llä ei ole yhtään 45*-koodia**, ja yhdeksän niistä on
+suunnittelu-urakoita (CPV 71: *"Piiluvan kurssi- ja tapahtumakeskuksen
+pää- ja arkkitehtisuunnittelu"*, *"Siltojen ja taitorakenteiden
+suunnittelu"*), loput kalustehankintoja, purkua ja
+kiinteistöautomaatiota. Tiukka kysely olisi pudottanut ne kaikki. Leveä
+verkko siis **tuottaa hankkeita joita tarkka kysely ei toisi** — vahinko
+alun perin, mutta mitattuna hyödyllinen.
+
+**Suodatus tehdään siksi tuonnissa ja vain nollatuloksen perheistä.**
+Jakauma Hilman riveistä (hyväksytty / hylätty+ohitettu):
+
+| CPV | ala | hyv. | hyl. |
+|---|---|---|---|
+| 85 | terveys- ja sosiaalipalvelut | **0** | 26 |
+| 79 | liikkeenjohdon palvelut | **0** | 16 |
+| 38 | laboratorio- ja mittauslaitteet | **0** | 11 |
+| 60 | kuljetuspalvelut | **0** | 9 |
+| 64 | posti- ja teleliikenne | **0** | 7 |
+| 30 | toimistokoneet | **0** | 5 |
+
+Alle viiden hylkäyksen perheitä ei otettu listalle (75, 18, 73, 80, 55,
+15, 03): näyttö on liian ohut, eikä väärä esto jätä jälkeä jonoon.
+Perheet joista on tullut edes yksi hyväksytty jäävät katselmoinnin
+päätettäviksi — myös 33 (lääkintälaitteet), jossa PET/TT-laite
+hylättiin mutta yksi meni läpi. **45* kumoaa eston**, koska sairaalan
+uudisrakennus kantaa usein molemmat koodit.
+
+**Jono siivottiin samalla säännöllä**, jottei siivous ole eri mieltä
+kuin suodatin: 11 riviä (9 Kelan terapiaa, Turun mielen
+työhyvinvointivalmennus, palkkahallinnon palvelut) tilaan `rejected`
+syineen. Tila on `rejected` eikä `ignored`, koska kyse on
+katselmointipäätöksestä ja Johannes on hylännyt samaa luokkaa olevat 26
+riviä käsin.
+
+Ks. `lib/agent/hilmaRakentamisenIlmoitus.ts` (+ spec, 12 testiä),
+`lib/agent/discovery/collectors/apiCollector.ts`,
+`scripts/siivoa-ei-rakentamisen-hankinnat.ts`,
+`scripts/mittaa-hilman-cpv-suodatus.ts`.
+
 ### D-345 - Kahden kohteen kauppatiedote erilleen, ja miksi duplikaattiskannaus ei voi löytää niitä
 
 Johannes 25.10.2026 jonorivistä `adf63f15`: *"nämä toivon tiedotteet

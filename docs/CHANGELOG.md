@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Avoterapiahankinnat pois jonosta (D-346)
+
+Hilman keraimen kysely cpvCodes:(45*) ei ole koskaan suodattanut CPV:n
+mukaan: Azure Searchin oletus simple-syntaksi ei tue kenttahakua, ja
+searchMode any paastaa lapi yhden sanan osumalla. Mitattu: 21 / 100
+ilmoitusta ilman yhtaan 45*-koodia.
+
+Kyselya ei tiukennettu, koska saanto ajettiin ensin hyvaksyttyjen yli:
+939 Hilma-hankkeesta 15:lla ei ole 45*-koodia ja yhdeksan niista on
+suunnittelu-urakoita. Suodatus tehdaan tuonnissa ja vain niista
+CPV-perheista joista ei ole koskaan tullut hyvaksyttya hanketta
+(85, 79, 38, 60, 64, 30). 45* kumoaa eston.
+
+Jono siivottiin samalla saannolla: 11 rivia hylatyksi syineen.
+
 ### Kahden kohteen kauppatiedote erilleen (D-345)
 
 Toivon tiedote myi kaksi rakenteilla olevaa hoivakohdetta yhdella
