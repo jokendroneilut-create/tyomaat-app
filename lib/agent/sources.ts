@@ -85,6 +85,7 @@ import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
 import { fetchDestiaSource } from "./fetchDestiaSource"
 import { fetchOteranSource } from "./fetchOteranSource"
 import { fetchVexatecSource } from "./fetchVexatecSource"
+import { fetchTilapalvelutSource } from "./fetchTilapalvelutSource"
 import { fetchFingridProjectsSource } from "./fetchFingridProjectsSource"
 import { fetchToivoSource } from "./fetchToivoSource"
 import { fetchNrcProjectsSource } from "./fetchNrcProjectsSource"
@@ -390,6 +391,13 @@ export const sources = [
    * joista 15 kertoo kohteesta; 12 kk ikkunassa kuusi (D-322).
    */
   { name: "vexatec", fetch: fetchVexatecSource },
+  /*
+   * Tampereen Tilapalvelut Oy, kaupungin rakennuttaja (D-339).
+   * WordPressin `portfolio`-tyyppi; vaihe julkaisijan luokituksesta
+   * (tulevat / meneillaan / asiakastarinat) ja aikataulukentasta.
+   * Jokaisessa jutussa hankepaallikko puhelimineen ja sahkoposteineen.
+   */
+  { name: "tampereen_tilapalvelut", fetch: fetchTilapalvelutSource },
   /*
    * Hartelan TULEVAT asuinalueet - eri sivu kuin referenssit, jotka ovat
    * valmistuneita. Naiden arvo on katuosoite: 8/15 sivulta loytyy osoite

@@ -11,6 +11,16 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Tampereen Tilapalvelut lähteeksi (D-339)
+
+Tampereen kaupungin rakennuttajan hankesivut WordPressin
+portfolio-rajapinnasta. Vaihe tulee julkaisijan omasta luokituksesta
+(tulevat / meneillään / asiakastarinat) ja aikataulukentästä, ja jokaisella
+hankkeella on hankepäällikkö puhelimineen ja sähköposteineen. Ensimmäinen
+ajo: 20 ehdokasta. Kanjonin koulun rivi korjattiin samalla käsin, koska
+tuonti oli lukenut purku + uudisrakennuksen rakenteilla olevaksi
+peruskorjaukseksi.
+
 ### Kaavahankkeiden rakennuttaja kuvauksesta (D-338)
 
 Poimintamekanismi oli olemassa ja ajossa, mutta sen ankkurit olivat

@@ -61,6 +61,13 @@ Pelkkä tiedostohaku olisi väittänyt sitä puuttuvaksi.
 
 ## Tehty
 
+### Tampereen Tilapalvelut Oy — lähteeksi 24.10.2026 (D-339)
+
+Kaupungin rakennuttaja (koulut, päiväkodit, kulttuuri- ja liikuntatilat).
+Löytyi Aamulehden Kanjonin koulu -jutusta: hanke oli kannassa väärin
+tiedoin, ja omistajan hankesivu kertoi urakoitsijan, aikataulun, hinnan ja
+hankepäällikön. Ensimmäinen ajo 20 ehdokasta, kaikilla hankepäällikkö.
+
 ### Oteran Oy — lähteeksi 18.10.2026 (D-310)
 
 Taulukossa alla yhdeksällä hankkeella (kannassa 18.10. jo 11, kaikki

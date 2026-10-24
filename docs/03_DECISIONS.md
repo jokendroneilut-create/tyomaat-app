@@ -34,6 +34,65 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > ensimmäisellä kerralla: numero luettiin tiedostosta ennen kuin
 > rinnakkainen työ kirjoitti omansa.
 
+### D-339 - Tampereen Tilapalvelut lähteeksi: vaihe julkaisijan luokituksesta
+
+Johannes 24.10.2026 Aamulehden jutusta: *"tarkista onko meillä tämä
+hanke"* (Kanjonin koulu ja päiväkoti, Hervanta).
+
+**Hanke oli kannassa, mutta tunnistamattomana.** Rivi oli syntynyt
+19.2.2026 tuonnista nimellä "Koulun ja päiväkodin peruskorjaus ja
+laajennus Tampereella", ja Tampereen päätösten ajo 8.8. täsmäsi siihen
+osoitteella. Kentät olivat väärin: peruskorjaus (oikeasti purku +
+uudisrakennus), vaihe "Rakentaminen aloitettu" (rakentaminen alkaa
+3/2027), 26,5 M€ ja 5 300 m² (päätöksessä 22,9 M€ ja 9 119 brm²),
+piste muualla Tampereella, ei kuvausta, yhteyshenkilönä vain kirjaamo.
+Nimihaku "Kanjon" ei löytänyt sitä; osoitehaku löysi. Rivi korjattiin
+käsin, vanhat arvot `metadata.korjattu_2026_10_24`-kenttään.
+
+**Omistajan sivu kertoi enemmän kuin uutinen tai päätös.**
+tampereentilapalvelut.fi/hankkeet antaa KVR-urakoitsijan (Peab),
+aikataulun, kustannusarvion ja hankepäällikön puhelimen ja
+sähköpostin. Tilapalvelut on kaupungin rakennuttaja, ja sen hankkeissa
+työmaayhteys puuttuu päätöksistä: päätöksessä on valmistelija,
+hankesivulla hankkeen oma hankepäällikkö.
+
+**Reitti:** WordPressin tyyppi `portfolio` (`wp-json/wp/v2/portfolio`),
+68 juttua koko tekstinä yhdellä pyynnöllä.
+
+**Vaihe tulee julkaisijan luokituksesta eikä sanastosta.**
+`portfolio-types`: Tulevat (3) ja Meneillään (9) ovat aina mukana ilman
+ikkunaa; Asiakastarinat (56) vain 12 kk ikkunassa, koska niissä on
+2018–2023 kehityshankkeita ja lokerikkojuttuja. Luokka ei silti riitä
+yksin, ja aikataulukenttä ratkaisee:
+- "Tulevat"-luokan Peltolammi on jo työmaalla (elokuu 2026 – elokuu 2028).
+- "Meneillään"-luokan Kissanmaan koulu päättyi lokakuussa 2025.
+- Harjun koulun otsikko "B- ja C-rakennukset valmistuivat" kertoo vain
+  ensimmäisestä vaiheesta. Siksi valmistumisesta otetaan aikataulun
+  **myöhäisin** päivä, eikä otsikon valmistumissana päde
+  Meneillään-luokassa.
+
+**Kuivaharjoitus löysi viisi vikaa:**
+1. Kenttälohkon ensimmäinen kenttä alkaa ilman `<p>`-avausta, joten
+   osoite puuttui 20/20:lta. Korjaus: lyhytkoodit korvataan
+   kappalerajalla.
+2. `[vc_raw_html]` (base64-murupolku) tuli kuvaukseksi.
+3. "Tammelan koulu" tuli kunnaksi Tammela. Korjaus: kunta luetaan vain
+   sijaintikentästä, muuten Tampere.
+4. Samassa kappaleessa peräkkäiset kentät liimautuivat yhteen.
+5. Kolme valmistunutta jäi rakenteille.
+
+Yhteyshenkilö rakennetaan laatikon kolmikosta, ja kuvaus katkaistaan
+ennen kenttälohkoa ([[fields-into-prose-break-contacts]]). Ensimmäinen
+ajo: 20 ehdokasta, 20 hankepäällikköä, 14 pääurakoitsijaa kentästä ja
+aliurakoitsijat urakkalajeittain. Noin puolet oli jo kannassa eri
+nimellä ("Koulusaneeraus Tampereen Rahola" = Harjun koulu,
+Nokiantie 22).
+
+**Sivuhavainto: Tampereen virallinen osoiterekisteri on avoin.**
+`geodata.tampere.fi/geoserver/wfs`, `osoitteet:OSOITTEET_ALL_GSVIEW`
+(`C_NIMI_FIN`, `C_OSOITENUMERO`), 169 092 osoitetta, EPSG:4326, ilman
+avainta. Sama käyttö kuin PKS:n rekisterillä.
+
 ### D-338 - Kaavan osapuoli: mekanismi oli olemassa, sanasto puuttui
 
 Johannes 23.10.2026 Samppalinnan koulutontista: *"tästä ei ole poimittu
