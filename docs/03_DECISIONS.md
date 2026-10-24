@@ -51,6 +51,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-349 - Yhdistäminen siirtää myös piilotetun rivin omat merkinnät
+
+Johannes 25.10.2026: *"yhdistä ilmasotakoulun rivit"* — sama hanke
+(Ilmasotakoulun lentokonehalli Tikkakoskella) oli kannassa kahtena
+rivinä samasta Puolustuskiinteistöjen uutisesta.
+
+**Säilyvä valittiin sijainnin perusteella, ei iän.** Vanhempi rivi
+`c5326ae1` (21.3.2026) on Jyväskylä / Tikkakoski, uudempi `c8e2c136`
+(17.7.2026) **Loppi / Kanta-Häme** — uutisessa lukee Tikkakoski, joten
+uudemman kaupunki on väärä. Tässä vanhempi olisi voittanut myös
+[[title-precedence]]-säännöllä, mutta ratkaisu oli sijainti: väärä
+kaupunki on asiakkaalle näkyvä virhe, jota yhdistäminen ei korjaa.
+
+Rivi ei poistunut vaan piilotettiin (`is_public = false`), kuten
+`merge-duplicate-projects.ts` tekee: päätös on peruttavissa.
+
+**Yhdistäminen täyttää tyhjät metadata-avaimet poistettavalta, ja
+silloin tulee mukana avaimia jotka kuvaavat PIILOTETTUA riviä.**
+Tässä neljä:
+
+| avain | arvo | miksi väärin |
+|---|---|---|
+| `region` | Kanta-Häme | rivin oma sarake on Keski-Suomi |
+| `geocode_source` | kaupunki | kertoo **Lopen** koordinaatin alkuperän |
+| `geocoded_at` | 8.9.2026 | sama |
+| `possible_duplicate_of` | c5326ae1 | osoittaa riviin itseensä |
+
+Ne poistettiin käsin jälkikäteen. **Sääntöä ei yleistetty**, koska
+yhdistämisiä on tehty vähän eikä kolmesta tapauksesta tiedä kumpi
+muoto on yleisempi — mutta kun seuraava yhdistäminen tehdään, nämä
+avaimet on syytä katsoa.
+
+Samalla korjattiin osapuolet, jotka teksti ratkaisee: *"Puolustus-
+kiinteistöt suunnittelee Ilmasotakoululle Tikkakoskelle uutta
+lentokonehallia"*. Rakennuttaja on Puolustuskiinteistöt, ei konsernin
+emo Senaattikiinteistöt (joka on julkaisija ja jää liittyväksi
+yritykseksi). Metadatan `builder` poistettiin: Puolustuskiinteistöt ei
+ole rakentaja ([[party-role-fields]]).
+
+**Vaihe jäi ennalleen (Suunnittelussa), vaikka piilotetulla rivillä
+luki Rakenteilla.** Yhdistäminen ei siirrä vaihetta, eikä sitä johdeta
+aloituspäivästä: uutinen on 29.4.2025 ja kertoo että työt oli
+*tarkoitus* aloittaa elokuussa 2025, mutta mikään lähde ei sano että ne
+alkoivat. Vaihe on Johanneksen asetettavissa.
+
+Ks. `scripts/merge-duplicate-projects.ts`,
+`scripts/siivoa-ilmasotakoulun-yhdistys.ts`.
+
 ### D-348 - Tyhjien valmistumiskenttien läpikäynti: kaksi jäsenninvikaa ja 26 luettua päivää
 
 Johannes 25.10.2026: *"katso nuo 121 läpi voisiko sieltä poimia
