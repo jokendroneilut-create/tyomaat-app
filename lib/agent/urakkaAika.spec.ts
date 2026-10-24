@@ -42,6 +42,38 @@ describe("urakkaAjanLoppu", () => {
     ).toBe("2027-08-31")
   })
 
+  it("ei lue avainsanan omaa yhdysmerkkiä jakson viivaksi", () => {
+    /*
+     * Aito katkelma: otsikko ja virke perakkain. Ilman korjausta
+     * ensimmainen viiva oli sanan "Urakka-aika" yhdysmerkki, ja
+     * ALKUPAIVA luettiin loppupaivaksi (2026-12-15).
+     */
+    expect(
+      urakkaAjanLoppu("URAKKA-AIKA Urakka-aika on 15.12.2026 – 22.2.2027. TARJOUKSEN LAADINTA")
+    ).toBe("2027-02-22")
+  })
+
+  it("sallii välilyönnittömän jakson", () => {
+    expect(urakkaAjanLoppu("Kohteen alustava rakennusaika on 1.4.2026-2.4.2027.")).toBe(
+      "2027-04-02"
+    )
+  })
+
+  it("lukee suomalaisen lyhennetyn jakson", () => {
+    /* Viivaa edeltaa piste, ei numero: "1.3.-15.6.2027". */
+    expect(urakkaAjanLoppu("URAKKA-AIKA Urakka-aika on 1.3.-15.6.2027. Urakassa ei ole")).toBe(
+      "2027-06-15"
+    )
+    expect(urakkaAjanLoppu("alustava urakka-aika 1.10.–31.12.2026). Työt on rajattu")).toBe(
+      "2026-12-31"
+    )
+  })
+
+  it("hylkää jakson jonka loppu on ennen alkua", () => {
+    /* Lahteesta puuttuu loppuvuosi: "15.12.2026 - 22.2.2026" on mahdoton. */
+    expect(urakkaAjanLoppu("Urakka-aika on 15.12.2026 – 22.2.2026.")).toBeNull()
+  })
+
   describe("ei saa osua", () => {
     it("johdokseen", () => {
       expect(urakkaAjanLoppu("Hankkeen rakennusaikaiset muutostyöt 1.1.2026 - 1.6.2026")).toBeNull()

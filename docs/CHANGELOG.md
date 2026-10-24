@@ -21,6 +21,12 @@ lukematta.
 Mitattu: 16 379 rivista 373:lla on jaksolause ja 260:lta puuttui
 valmistuminen. Takautuva ajo taytti jonoon 48 ja hankkeisiin 34.
 
+Korjattu samana paivana: avainsanan oma yhdysmerkki ("URAKKA-AIKA
+Urakka-aika", "marras-joulukuussa") luettiin jakson viivaksi, jolloin
+ALKUPAIVA paatyi valmistumiseksi. Kaikki 83 kirjoitettua rivia ajettiin
+korjatulla saannolla uudelleen: 81 ennallaan, 2 tyhjennettiin. Jakso
+jonka loppu on ennen alkua on lahteen virhe eika sita kirjoiteta.
+
 Saanto ei osu johdoksiin ("rakennusaikainen", "sopimusaikana") eika
 aikataululistaan, ja sopimusaika on kokonaan ulkona koska vuokramallissa
 se on vuokrakausi. Menneita paivia ei kirjoitettu takautuvasti: mennyt

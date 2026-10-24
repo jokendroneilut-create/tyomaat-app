@@ -118,6 +118,36 @@ lähteestä ennen ajoa ja kaikki yhdeksän täsmäsivät
 valmistumismaininta voittaa jakson, ja jakso luetaan vain jos
 valmistumissanaa ei ole.
 
+**Korjaus samana päivänä: yhdysmerkki ei ole jakson viiva.** Johannes
+Pihkapuiston stabilointiurakasta: *"tästä on mainittu 'Urakka-aika on
+15.12.2026 – 22.2.2026' mutta poimimme 'Arvioitu valmistuminen:
+2026-12-15'."*
+
+Avainsana itse sisältää yhdysmerkin, ja ilmoituksissa se toistuu
+otsikkona ja virkkeenä peräkkäin: *"URAKKA-AIKA **Urakka-aika** on
+15.12.2026 – 22.2.2026"*. Ensimmäisen osuman ikkunassa ensimmäinen
+viiva oli silloin sanan `Urakka-aika` oma yhdysmerkki, ja sen jälkeinen
+pala *"aika on 15.12.2026"* luki **alkupäivän loppupäiväksi**. Sama
+osui sanaan "marras-joulukuussa".
+
+Viiva kelpaa nyt vain numeron, pisteen tai välilyönnin jälkeen. Piste
+on sallittava, koska suomalainen lyhennetty jakso päättyy siihen
+(*"1.3.-15.6.2027"*) — ensimmäinen, tiukempi versio hylkäsi kaksi
+oikeaa riviä, ja **vain kannan uudelleenajo paljasti sen**.
+
+**Loppu ennen alkua on lähteen virhe, ei jakso.** Pihkapuiston
+ilmoituksesta puuttuu loppuvuosi (2027). Jaksoa ei voi lukea oikein,
+joten kenttä jätetään tyhjäksi.
+
+**Kaikki 83 kirjoitettua riviä ajettiin korjatulla säännöllä
+uudelleen** (`scripts/tarkista-urakka-ajat.ts`, tunniste
+`metadata.valmistuminen_urakka_ajasta`): 81 ennallaan, 2 tyhjennettiin.
+Juuri tätä varten takautuva ajo kirjoitti tunnisteen.
+
+**Avoin:** Leppävaaran rivillä oikea päivä on tekstissä muodossa *"sen
+tulee olla valmiina 30.6.2027 mennessä"*, jota kumpikaan jäsennin ei
+tunne. Oma mittauksensa, ei lisätty tässä.
+
 Ks. `lib/agent/urakkaAika.ts` (+ spec, 12 testiä),
 `lib/agent/importCandidate.ts`, `scripts/mittaa-urakka-ajat.ts`,
 `scripts/taydenna-urakka-ajat.ts`.

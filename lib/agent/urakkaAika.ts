@@ -49,7 +49,22 @@ const IKKUNA = 40
 /* Jakso luetaan tasta ikkunasta: kaksi perakkaista valia mahtuu. */
 const LUKUIKKUNA = 120
 
-const VIIVA = "[-–—]"
+/*
+ * JAKSON VIIVA, EI YHDYSMERKKI (korjattu 24.10.2026).
+ *
+ * Avainsana itse sisaltaa yhdysmerkin, ja ilmoituksissa se toistuu
+ * otsikkona ja virkkeena perakkain: *"URAKKA-AIKA Urakka-aika on
+ * 15.12.2026 - 22.2.2026"*. Ensimmaisen osuman ikkunassa ensimmainen
+ * viiva oli silloin sanan `Urakka-aika` oma yhdysmerkki, ja sen
+ * jalkeinen pala "aika on 15.12.2026" luki ALKUPAIVAN loppupaivaksi.
+ *
+ * Viiva kelpaa vain numeron, pisteen tai valilyonnin jalkeen, ja sen
+ * jalkeen on tultava numero tai valilyonti. Piste on sallittava, koska
+ * suomalainen lyhennetty jakso paattyy siihen: "1.3.-15.6.2027" ja
+ * "1.10.-31.12.2026" (mitattu kahdella rivilla, jotka ensimmainen
+ * tiukempi versio hylkasi). Kirjainten valinen yhdysmerkki ei kelpaa.
+ */
+const VIIVA = "(?<=[\\d\\s.])[-–—](?=[\\d\\s])"
 
 /* "joulukuu 2026", "elokuuhun 2027", "kesäkuuta 2027" */
 const KUUKAUSI_VUOSI = new RegExp(`(${KUUKAUDET})\\w*\\s+(\\d{4})`, "iu")
@@ -158,5 +173,37 @@ export function urakkaAjanLoppu(teksti: string | null | undefined): string | nul
   }
 
   if (!loput.length) return null
-  return loput.sort().at(-1) ?? null
+
+  const loppu = loput.sort().at(-1) ?? null
+  if (!loppu) return null
+
+  /*
+   * LOPPU ENNEN ALKUA ON LAHTEEN VIRHE, EI JAKSO.
+   *
+   * Mitattu 24.10.2026: *"Urakka-aika on 15.12.2026 - 22.2.2026"* --
+   * loppuvuosi on jaanyt kirjoittamatta (2027). Jaksoa ei voi lukea
+   * oikein, joten kentta jatetaan tyhjaksi: vaara valmistuminen
+   * siirtaa hankkeen Valmistuneeksi ja piilottaa sen asiakkaalta
+   * (D-298).
+   */
+  const alku = jaksonAlku(t)
+  if (alku && loppu < alku) return null
+
+  return loppu
+}
+
+/*
+ * Jakson ALKU samasta lauseesta, vain jarkevyystarkistusta varten.
+ * Ensimmainen paivays avainsanan jalkeen ennen viivaa.
+ */
+function jaksonAlku(teksti: string): string | null {
+  AVAINSANA.lastIndex = 0
+  for (const osuma of teksti.matchAll(AVAINSANA)) {
+    const alku = (osuma.index ?? 0) + osuma[0].length
+    const ikkuna = teksti.slice(alku, alku + IKKUNA)
+    const ennenViivaa = ikkuna.split(new RegExp(VIIVA, "u"))[0] ?? ""
+    const paiva = jaksonLoppu(ennenViivaa)
+    if (paiva) return paiva
+  }
+  return null
 }
