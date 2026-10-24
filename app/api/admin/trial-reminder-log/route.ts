@@ -27,11 +27,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("trial_reminder_log")
-    .select("id, sent_at, email, virstanpylvas, paivia_jaljella, tila")
-    .order("sent_at", { ascending: false })
-    .limit(200)
+  const KENTAT = "id, sent_at, email, virstanpylvas, paivia_jaljella, tila, otsikko, viesti"
+
+  let { data, error }: { data: any[] | null; error: { message: string } | null } =
+    await supabaseAdmin
+      .from("trial_reminder_log")
+      .select(KENTAT)
+      .order("sent_at", { ascending: false })
+      .limit(200)
+
+  /* Tekstisarakkeet lisataan kasin; ilman niita luetaan vanha muoto. */
+  if (error && /otsikko|viesti/.test(error.message)) {
+    ;({ data, error } = await supabaseAdmin
+      .from("trial_reminder_log")
+      .select("id, sent_at, email, virstanpylvas, paivia_jaljella, tila")
+      .order("sent_at", { ascending: false })
+      .limit(200))
+  }
 
   if (error) {
     return NextResponse.json({ ok: true, log: [], puuttuu: error.message })

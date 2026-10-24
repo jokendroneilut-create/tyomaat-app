@@ -15,11 +15,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("broadcast_message_log")
-    .select("id, sent_at, subject, recipient_count, recipients, test_only")
-    .order("sent_at", { ascending: false })
-    .limit(100)
+  /* `viesti` lisataan kasin; ilman sita luetaan vanha muoto. */
+  let { data, error }: { data: any[] | null; error: { message: string } | null } =
+    await supabaseAdmin
+      .from("broadcast_message_log")
+      .select("id, sent_at, subject, recipient_count, recipients, test_only, viesti")
+      .order("sent_at", { ascending: false })
+      .limit(100)
+
+  if (error && /viesti/.test(error.message)) {
+    ;({ data, error } = await supabaseAdmin
+      .from("broadcast_message_log")
+      .select("id, sent_at, subject, recipient_count, recipients, test_only")
+      .order("sent_at", { ascending: false })
+      .limit(100))
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

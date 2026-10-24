@@ -47,6 +47,21 @@ export const MUISTUTUKSET = [21, 14, 7, 0] as const
  */
 export const MYOHASSA_ENINTAAN = 7
 
+/*
+ * PUHELINNUMERO JOKAISESSA VIESTISSA.
+ *
+ * Johannes 24.10.2026: *"lisaa viela viimeiseen viestiin joka lahtee
+ * asiakkaalle puhelinnumeroni johon asiakas voi myos soittaa"* ja
+ * *"lisaa myos 21/14/7 viesteihin teksti: 'Jos haluat tukea palvelun
+ * kayttoon voit vastata tahan viestiin tai soittaa xxxx.'"*
+ *
+ * Numero on sama kuin rakennuttajakirjeen allekirjoituksessa
+ * (`docs/17_KUMPPANUUDET.md`). Yksi vakio, kaksi muotoa: luettava
+ * teksti ja `tel:`-linkki, jotta puhelimessa riittaa napautus.
+ */
+export const PUHELIN = "+358 40 9624 170"
+const PUHELIN_TEL = "+358409624170"
+
 /* Ominaisuus otettiin kayttoon tana paivana; sita ennen menneet rajapyykit hoidetaan kasin. */
 export const ALOITUSPAIVA = "2026-10-24"
 
@@ -193,6 +208,8 @@ export function muistutuksenTeksti(
       "",
       "Jos haluat jatkaa, vastaa tähän viestiin — kerromme hinnoittelun ja jatkamme siitä mihin jäit.",
       "",
+      `Voit myös soittaa numeroon ${PUHELIN}.`,
+      "",
       "Tunnuksesi on toistaiseksi käytössä, mutta lukittuu lähipäivinä, ellet ota yhteyttä.",
       "",
       "Ystävällisin terveisin,",
@@ -205,6 +222,7 @@ export function muistutuksenTeksti(
       `<p>${tervehdys}</p>` +
       `<p>Maksuton kokeilujaksosi <strong>Tyomaat.fi PRO</strong>:hon on päättynyt${milloin}.</p>` +
       `<p>Jos haluat jatkaa, vastaa tähän viestiin — kerromme hinnoittelun ja jatkamme siitä mihin jäit.</p>` +
+      `<p>Voit myös soittaa numeroon <a href="tel:${PUHELIN_TEL}" style="color:#1d4ed8;">${PUHELIN}</a>.</p>` +
       `<p>Tunnuksesi on toistaiseksi käytössä, mutta lukittuu lähipäivinä, ellet ota yhteyttä.</p>` +
       `<p><a href="${appBaseUrl}" style="color:#1d4ed8;">Avaa Tyomaat.fi</a></p>` +
       `<p>Ystävällisin terveisin,<br />Johannes Sippola<br />Tyomaat.fi</p>` +
@@ -224,7 +242,7 @@ export function muistutuksenTeksti(
     "",
     `Avaa palvelu: ${appBaseUrl}`,
     "",
-    "Jos haluat jatkaa kokeilun jälkeen tai sinulla on kysyttävää, vastaa tähän viestiin.",
+    `Jos haluat tukea palvelun käyttöön voit vastata tähän viestiin tai soittaa ${PUHELIN}.`,
     "",
     "Ystävällisin terveisin,",
     "Johannes Sippola",
@@ -239,7 +257,7 @@ export function muistutuksenTeksti(
     `<p>Tyomaat.fi PRO -maksutonta kokeilujaksoasi on jäljellä vielä <strong>${maara}</strong>.</p>` +
     `<p>Kokeilujakson aikana käytössäsi on koko palvelu: hankkeet kaikista lähteistä, hakuvahdit ja yhteystiedot.</p>` +
     `<p><a href="${appBaseUrl}" style="color:#1d4ed8;">Avaa Tyomaat.fi</a></p>` +
-    `<p>Jos haluat jatkaa kokeilun jälkeen tai sinulla on kysyttävää, vastaa tähän viestiin.</p>` +
+    `<p>Jos haluat tukea palvelun käyttöön voit vastata tähän viestiin tai soittaa <a href="tel:${PUHELIN_TEL}" style="color:#1d4ed8;">${PUHELIN}</a>.</p>` +
     `<p>Ystävällisin terveisin,<br />Johannes Sippola<br />Tyomaat.fi</p>` +
     `</div>`
 

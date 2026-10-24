@@ -152,6 +152,7 @@ describe("päättymisviesti", () => {
     expect(text).toContain("on päättynyt tänään")
     expect(text).toContain("lukittuu lähipäivinä, ellet ota yhteyttä")
     expect(text).toContain("kerromme hinnoittelun")
+    expect(text).toContain("Voit myös soittaa numeroon +358 40 9624 170")
     expect(muistutuksenOtsikko(0)).toBe("Tyomaat.fi PRO -kokeilujaksosi on päättynyt")
   })
 
@@ -173,6 +174,21 @@ describe("viestin teksti", () => {
     expect(text).not.toContain("Työmaat")
     expect(html).not.toContain("Työmaat")
     expect(muistutuksenOtsikko(21)).toContain("Tyomaat.fi")
+  })
+
+  it("tarjoaa tukea ja puhelinnumeron jokaisessa viestissä", () => {
+    for (const paivia of [21, 14, 7, 0, -2]) {
+      const { text, html } = muistutuksenTeksti("Matti", paivia, "https://app.tyomaat.fi")
+      expect(text).toContain("+358 40 9624 170")
+      expect(html).toContain('href="tel:+358409624170"')
+    }
+  })
+
+  it("kehottaa vastaamaan tai soittamaan tuen saamiseksi", () => {
+    const { text } = muistutuksenTeksti(null, 14, "https://app.tyomaat.fi")
+    expect(text).toContain(
+      "Jos haluat tukea palvelun käyttöön voit vastata tähän viestiin tai soittaa +358 40 9624 170."
+    )
   })
 
   it("tervehtii etunimellä kun se on tiedossa", () => {

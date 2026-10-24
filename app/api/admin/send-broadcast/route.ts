@@ -151,13 +151,33 @@ export async function POST(req: Request) {
       }
     }
 
-    const { error: logError } = await supabase.from("broadcast_message_log").insert({
+    /*
+     * VIESTIN RUNKO TALTEEN (D-339). Loki tallensi otsikon ja
+     * vastaanottajat muttei tekstia, joten jalkikateen ei nahnyt mita
+     * asiakkaalle oli sanottu -- teksti eli vain Resendin puolella.
+     *
+     * Sarake lisataan kasin (`docs/sql/2026-10-24_broadcast_viesti.sql`),
+     * joten ilman sita kirjataan vanhassa muodossa. Loki on tarkeampi
+     * kuin sen uusi kentta: kirjauksen kaatuminen piilottaisi koko
+     * lahetyksen.
+     */
+    const lokirivi: Record<string, unknown> = {
       sent_by: user.id,
       subject,
       recipient_count: recipients.length,
       recipients,
       test_only: testOnly,
-    })
+      viesti: message,
+    }
+
+    let { error: logError } = await supabase.from("broadcast_message_log").insert(lokirivi)
+
+    if (logError && /viesti/.test(logError.message)) {
+      const { viesti, ...ilmanTekstia } = lokirivi
+      ;({ error: logError } = await supabase
+        .from("broadcast_message_log")
+        .insert(ilmanTekstia))
+    }
 
     if (logError) {
       console.error("BROADCAST LOG INSERT ERROR:", logError)

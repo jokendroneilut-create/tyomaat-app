@@ -10,6 +10,8 @@ type LogEntry = {
   recipient_count: number
   recipients: string[]
   test_only: boolean
+  /* Lahetetty teksti; null ennen DDL:aa ja vanhoissa riveissa. */
+  viesti?: string | null
 }
 
 /*
@@ -23,6 +25,9 @@ type MuistutusRivi = {
   virstanpylvas: number
   paivia_jaljella: number | null
   tila: string
+  /* Lahetetty teksti sellaisena kuin se lahti; null ennen DDL:aa ja ohitetuilla. */
+  otsikko?: string | null
+  viesti?: string | null
 }
 
 function formatDate(value: string) {
@@ -43,6 +48,7 @@ export default function MessagesPage() {
   const [muistutukset, setMuistutukset] = useState<MuistutusRivi[]>([])
   const [muistutusLoading, setMuistutusLoading] = useState(true)
   const [muistutusPuuttuu, setMuistutusPuuttuu] = useState<string | null>(null)
+  const [avattuMuistutus, setAvattuMuistutus] = useState<string | null>(null)
 
   const fetchLog = async () => {
     setLogLoading(true)
@@ -144,7 +150,20 @@ export default function MessagesPage() {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 700 }}>
+    /*
+     * KAKSI PALSTAA (D-339).
+     *
+     * Johannes 24.10.2026: *"asettele kokeilumuistutukset oikealle
+     * puolelle. Jono pitenee niin se painuu muuten koko ajan
+     * alaspain."* Joukkoviestien loki kasvaa rajatta, joten allekkain
+     * muistutukset valuisivat nakyvista. Oikea palsta on lisaksi
+     * `sticky`, joten se pysyy nakyvissa kun vasenta vieritetaan.
+     *
+     * Kapealla naytolla `flexWrap` palauttaa palstat allekkain.
+     */
+    <div style={{ padding: 24, maxWidth: 1240 }}>
+      <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <div style={{ flex: '1 1 460px', minWidth: 0, maxWidth: 700 }}>
       <h1>Lähetä viesti asiakkaille</h1>
 
       <div style={{ marginTop: 16 }}>
@@ -257,8 +276,23 @@ export default function MessagesPage() {
                   </tr>
                   {expandedId === entry.id && (
                     <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
-                      <td colSpan={3} style={{ padding: '4px 4px 12px 4px', fontSize: 13, color: '#6b7280' }}>
-                        {entry.recipients.join(', ')}
+                      <td colSpan={3} style={{ padding: '4px 4px 16px 4px' }}>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: '#374151',
+                            whiteSpace: 'pre-wrap',
+                            background: '#f9fafb',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: 6,
+                            padding: 12,
+                          }}
+                        >
+                          {entry.viesti ?? 'Viestin tekstiä ei ole tallessa (lähetetty ennen 24.10.2026).'}
+                        </div>
+                        <div style={{ marginTop: 8, fontSize: 13, color: '#6b7280' }}>
+                          {entry.recipients.join(', ')}
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -277,12 +311,15 @@ export default function MessagesPage() {
         </div>
       </div>
 
+      </div>
+
       {/*
         * KOKEILUMUISTUTUKSET (D-339). Nama lahtevat automaattisesti
-        * cronilla kolmessa vaiheessa (21, 14 ja 7 paivaa jaljella), joten
-        * loki on ainoa paikka josta lahteneet nakee.
+        * cronilla neljassa vaiheessa (21, 14 ja 7 paivaa jaljella seka
+        * paattymispaivana), joten loki on ainoa paikka josta lahteneet
+        * nakee.
         */}
-      <div style={{ marginTop: 40 }}>
+      <div style={{ flex: '1 1 420px', minWidth: 0, position: 'sticky', top: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={{ fontSize: 18 }}>Kokeilumuistutukset ({muistutukset.length})</h2>
           <button
@@ -303,10 +340,11 @@ export default function MessagesPage() {
         <p style={{ marginTop: 6, fontSize: 13, color: '#6b7280' }}>
           Lähtevät automaattisesti Trial-asiakkaille kun kokeilua on jäljellä 21, 14 ja 7
           päivää sekä kokeilun päättyessä. Ei lukituille eikä muille laskutustiloille.
+          Avaa rivi nähdäksesi lähetetyn viestin.
         </p>
 
         <div style={{ marginTop: 12, overflowX: 'auto' }}>
-          <table style={{ width: '100%', minWidth: 520, borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', minWidth: 440, borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>
                 <th style={{ padding: '8px 4px' }}>Ajankohta</th>
@@ -317,24 +355,62 @@ export default function MessagesPage() {
             </thead>
             <tbody>
               {muistutukset.map((rivi) => (
-                <tr key={rivi.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                  <td style={{ padding: '8px 4px' }}>{formatDate(rivi.sent_at)}</td>
-                  <td style={{ padding: '8px 4px' }}>{rivi.email ?? '-'}</td>
-                  <td style={{ padding: '8px 4px' }}>
-                    {/* Nolla on päättymisviesti, ei "0 pv jäljellä". */}
-                    {rivi.virstanpylvas === 0 ? 'päättynyt' : `${rivi.virstanpylvas} pv`}
-                    {rivi.tila === 'ohitettu' && (
-                      <span style={{ marginLeft: 6, fontSize: 12, color: '#b45309' }}>
-                        (ohitettu)
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ padding: '8px 4px' }}>
-                    {rivi.paivia_jaljella == null || rivi.paivia_jaljella <= 0
-                      ? '-'
-                      : `${rivi.paivia_jaljella} pv`}
-                  </td>
-                </tr>
+                <Fragment key={rivi.id}>
+                  <tr
+                    style={{
+                      borderBottom: '1px solid #f0f0f0',
+                      cursor: rivi.viesti ? 'pointer' : 'default',
+                    }}
+                    onClick={() =>
+                      rivi.viesti &&
+                      setAvattuMuistutus(avattuMuistutus === rivi.id ? null : rivi.id)
+                    }
+                  >
+                    <td style={{ padding: '8px 4px' }}>{formatDate(rivi.sent_at)}</td>
+                    <td style={{ padding: '8px 4px' }}>{rivi.email ?? '-'}</td>
+                    <td style={{ padding: '8px 4px' }}>
+                      {/* Nolla on päättymisviesti, ei "0 pv jäljellä". */}
+                      {rivi.virstanpylvas === 0 ? 'päättynyt' : `${rivi.virstanpylvas} pv`}
+                      {rivi.tila === 'ohitettu' && (
+                        <span style={{ marginLeft: 6, fontSize: 12, color: '#b45309' }}>
+                          (ohitettu)
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '8px 4px' }}>
+                      {rivi.paivia_jaljella == null || rivi.paivia_jaljella <= 0
+                        ? '-'
+                        : `${rivi.paivia_jaljella} pv`}
+                    </td>
+                  </tr>
+                  {avattuMuistutus === rivi.id && rivi.viesti && (
+                    <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <td colSpan={4} style={{ padding: '4px 4px 16px 4px' }}>
+                        {/*
+                          * Teksti nayttaa mita LAHETETTIIN, ei mita
+                          * lahetettaisiin nyt: se luetaan lokista eika
+                          * rakenneta uudelleen.
+                          */}
+                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                          {rivi.otsikko ?? '(ei otsikkoa)'}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: '#374151',
+                            whiteSpace: 'pre-wrap',
+                            background: '#f9fafb',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: 6,
+                            padding: 12,
+                          }}
+                        >
+                          {rivi.viesti}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
 
               {!muistutusLoading && muistutukset.length === 0 && (
@@ -349,6 +425,7 @@ export default function MessagesPage() {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   )

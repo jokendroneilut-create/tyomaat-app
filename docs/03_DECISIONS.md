@@ -173,6 +173,29 @@ otsikon; tarkistus paljasti että koko koodipohja käyttää muotoa
 tiedostossa. Testi vahtii tätä, koska virhe toistuu muuten seuraavassa
 viestissä.
 
+**Puhelinnumero jokaisessa viestissä.** Johannes 24.10.2026: *"lisää
+myös 21/14/7 viesteihin teksti: 'Jos haluat tukea palvelun käyttöön voit
+vastata tähän viestiin tai soittaa xxxx.'"* ja *"käytä puhelinnumerossa
+maatunnusta jotta on virallinen"*. Numero on yhtenä vakiona kahdessa
+muodossa: luettava `+358 40 9624 170` ja `tel:`-linkki, jotta
+puhelimessa riittää napautus.
+
+**Loki tallentaa lähetetyn tekstin, ei johda sitä.** Johannes:
+*"molemmissa olisi hyvä näkyä kenelle viesti meni ja mitä siinä luki."*
+Muistutuksen tekstin voisi rakentaa uudelleen lokin luvuista, koska se
+syntyy niistä — mutta silloin näkymä näyttäisi **nykyisen** sanamuodon
+eikä sitä joka asiakkaalle meni. Teksti ehti muuttua kahdesti saman
+päivän aikana (puhelinnumero, lukitusmaininta), joten johdettu teksti
+olisi valehdellut heti. Loki on tosite siitä mitä tehtiin, ei
+esikatselu siitä mitä tekisimme nyt ([[newer-source-is-not-current-state]]).
+
+Sama puute oli **joukkoviesteissä**: loki tallensi otsikon ja
+vastaanottajat muttei runkoa, joten jälkikäteen ei nähnyt mitä
+asiakkaalle oli sanottu — teksti eli vain Resendin puolella. Nyt
+molemmat lokit tallentavat tekstin ja näyttävät sen rivin avaamalla.
+Ennen 24.10.2026 lähetetyt viisi joukkoviestiä jäävät ilman tekstiä; ei
+ole mistä rakentaa.
+
 **Mitattu ennen kuin yksikään viesti lähti.**
 `scripts/esikatsele-kokeilumuistutukset.ts` ajaa **samaa
 valintafunktiota** kuin reitti ja simuloi 45 vrk eteenpäin. Tulos

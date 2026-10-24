@@ -183,13 +183,22 @@ export async function GET(req: Request) {
       lahetetty += 1
       if (test) continue
 
-      const rivit = [
+      const rivit: Record<string, unknown>[] = [
         {
           user_id: m.userId,
           email: m.email,
           virstanpylvas: m.virstanpylvas,
           paivia_jaljella: m.paiviaJaljella,
           tila: "lahetetty",
+          /*
+           * Teksti talteen sellaisena kuin se LAHTI. Sen voisi rakentaa
+           * uudelleen lokin luvuista, mutta silloin nakyma nayttaisi
+           * nykyisen sanamuodon eika sita joka asiakkaalle meni -- ja
+           * teksti on jo muuttunut kahdesti. Loki on tosite, ei
+           * esikatselu ([[newer-source-is-not-current-state]]).
+           */
+          otsikko: muistutuksenOtsikko(m.paiviaJaljella),
+          viesti: text,
         },
         ...m.vanhentuneet.map((v) => ({
           user_id: m.userId,
@@ -201,7 +210,22 @@ export async function GET(req: Request) {
       ]
       ohitettu += m.vanhentuneet.length
 
-      const { error } = await supabase.from("trial_reminder_log").insert(rivit)
+      /*
+       * VARAREITTI KUNNES DDL ON AJETTU. Tekstisarakkeet lisataan kasin
+       * (`docs/sql/2026-10-24_trial_reminder_viesti.sql`). Jos koodi
+       * ehtii tuotantoon ensin, koko kirjaus epaonnistuisi ja ajo
+       * pysahtyisi -- joten ilman sarakkeita kirjataan samat rivit
+       * ilman tekstia. Sama kaytanto kuin profiilin puhelinsarakkeella
+       * (D-238).
+       */
+      let { error } = await supabase.from("trial_reminder_log").insert(rivit)
+      if (error && /otsikko|viesti/.test(error.message)) {
+        const ilmanTekstia = rivit.map((r: Record<string, unknown>) => {
+          const { otsikko, viesti, ...muut } = r
+          return muut
+        })
+        ;({ error } = await supabase.from("trial_reminder_log").insert(ilmanTekstia))
+      }
       if (error) {
         /*
          * KIRJAUKSEN EPAONNISTUMINEN PYSAYTTAA AJON.

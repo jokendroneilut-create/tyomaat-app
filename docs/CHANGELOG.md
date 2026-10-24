@@ -34,7 +34,12 @@ Kaytoonotto ei laheta takautuvia viesteja: rajapyykki joka oli jo ohi
 24.10.2026 ohitetaan pysyvasti. Tupla estetaan kannassa uniikilla
 avaimella (user_id, virstanpylvas), ei koodin muistilla.
 
-Viestit-sivulle tuli oma loki lahteneista muistutuksista. Esikatselu
+Jokaisessa viestissa on puhelinnumero kansainvalisessa muodossa ja
+kehotus ottaa yhteytta. Viestit-sivulle tuli oma loki lahteneista
+muistutuksista, ja molemmat lokit (muistutukset ja joukkoviestit)
+tallentavat nyt LAHETETYN tekstin: rivin avaamalla nakee kenelle viesti
+meni ja mita siina luki. Muistutukset ovat omassa palstassaan oikealla,
+jottei pitenevä joukkoviestiloki tyonna niita alas. Esikatselu
 (scripts/esikatsele-kokeilumuistutukset.ts) ajaa samaa valintafunktiota
 kuin reitti: 78 viestia 40 vrk aikana, huippupaiva 12.
 
