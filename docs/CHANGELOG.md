@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Tyhjien valmistumiskenttien lapikaynti (D-348)
+
+113 rivia joilla kentta on tyhja mutta jasennin loytaa paivan.
+Luokittelu paljasti kaksi jasenninvikaa: "vuoden 2026 alussa" luettiin
+joulukuuksi, ja hylatty kaava- tai selvitysvirke palasi varareitin
+kautta kun muita paivia ei ollut.
+
+Molemmat korjattu; EI_HANKE-luokka tyhjeni 7 -> 0 ja osumien maara
+113 -> 75. Jaljelle jaaneista 33 tulevasta luettiin jokainen: 26
+kirjoitettiin, 7 jatettiin koska paiva koskee muuta kuin tata hanketta
+(viereisen tontin kohde, UPS-laite, toinen sairaala).
+
+Kannasta loytyi myos kaksi jo kirjoitettua kaavapaivaa (toinen vuodelta
+2013); ne tyhjennettiin.
+
 ### Vuodenaika aloituksena, tuotannon alku valmistumisena (D-347)
 
 "Rakentaminen alkaa kevaalla 2027" ei taydentynyt, koska aloitusjasennin

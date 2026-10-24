@@ -159,14 +159,27 @@ describe("parseEstimatedCompletionDate - selvitysvirke ohitetaan", () => {
   })
 
   /*
-   * Jos VAIN selvitysvirke on olemassa, luetaan koko teksti kuten
-   * ennen -- muuten muutos poistaisi paivia riveilta joilla on yksi
-   * maininta. Kirjattu, jotta tama on tiedossa eika yllatys.
+   * MUUTETTU D-348:ssa. Aiemmin: jos VAIN selvitysvirke on olemassa,
+   * luettiin koko teksti kuten ennen, jottei muutos poistaisi paivia
+   * riveilta joilla on yksi maininta.
+   *
+   * Se kirjoitti kuitenkin tunnetusti VAARAN paivan juuri siina
+   * tapauksessa jota saanto oli tehty estamaan: selvityksen
+   * valmistuminen ei ole hankkeen valmistuminen, ja mennyt paiva
+   * piilottaa hankkeen 90 vrk:n kuluttua (D-298).
+   *
+   * Mitattu ennen muutosta 25.10.2026: koskee kahta riviä
+   * ("Kaavan on tarkoitus valmistua vuoden 2027 aikana",
+   * "kaavaehdotus ... valmistuu vuoden 2026 loppuun mennessa").
+   * Tyhja on niissa oikea vastaus.
    */
-  it("palaa koko tekstiin jos muuta ei ole", () => {
+  it("ei palaa koko tekstiin jos kaikki virkkeet on suljettu pois", () => {
     expect(
       parseEstimatedCompletionDate("Ympäristöselvitys valmistuu vuoden 2024 aikana.")
-    ).toBe("2024-12-31")
+    ).toBeNull()
+    expect(
+      parseEstimatedCompletionDate("Kaavan on tarkoitus valmistua vuoden 2027 aikana.")
+    ).toBeNull()
   })
 })
 

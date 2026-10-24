@@ -51,6 +51,86 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-348 - Tyhjien valmistumiskenttien läpikäynti: kaksi jäsenninvikaa ja 26 luettua päivää
+
+Johannes 25.10.2026: *"katso nuo 121 läpi voisiko sieltä poimia
+jotain"* — rivit joilla `estimated_completion` on tyhjä mutta jäsennin
+löytää tekstistä päivän. D-347:n otos näytti sekä oikeita että törkeän
+vääriä, joten joukko luokiteltiin ensin.
+
+**Luokittelu kertoi heti, ettei joukkoa voi kirjoittaa sellaisenaan**
+(`scripts/mittaa-tyhjat-valmistumiset.ts`, 5 821 julkista hanketta):
+
+| luokka | ennen korjauksia | korjausten jälkeen |
+|---|---|---|
+| MENNYT (päivä jo mennyt) | 58 | 36 |
+| TULEVA | 41 | 33 |
+| EI_HANKE (kaava, selvitys) | 7 | **0** |
+| VANHA_RAK (vanha rakennus) | 7 | 6 |
+| **yhteensä** | **113** | **75** |
+
+**Kaksi vikaa löytyi lukemalla, ei mittaamalla.**
+
+1. **"Vuoden 2026 alussa" luettiin joulukuuksi.** `yearOnlyRegex` otti
+   vuosiluvun ja pyöristi joulukuun loppuun, eikä lukenut tarkennetta
+   lainkaan: *"Talo valmistuu vuoden 2026 alussa"* → 2026-12-31, eli
+   yksitoista kuukautta liian myöhään. Viisi riviä 41:stä oli tätä.
+   Tarkenne luetaan nyt kauden viimeiseksi kuukaudeksi (alussa /
+   alkupuolella / alkuun mennessä → huhtikuu, puolivälissä → kesäkuu,
+   kevät/kesä/syksy → touko/elo/marraskuu).
+
+2. **Hylätty virke palasi varareitin kautta.** Selvitys- ja
+   kaavavirkkeet suljetaan pois virkkeittäin (D-323), mutta jos
+   jäljelle jäävistä ei löytynyt päivää, koko teksti luettiin
+   uudelleen — ja silloin tuli juuri se hylätty virke. Lisäksi pelkkä
+   `kaava` puuttui hylkylistalta (vain `asemakaava`, `yleiskaava`,
+   `kaavoitu` olivat). Yhdessä nämä kirjoittivat *"Kaavan on tarkoitus
+   valmistua vuoden 2027 aikana"* hankkeen valmistumispäiväksi.
+
+   `kaava` lisättiin listalle **vain valmistumisen tekijänä**
+   (`kaava\w*\s+(?:\w+\s+){0,3}valmistu`), koska sana esiintyy myös
+   aidoissa virkkeissä ("kaavan mukainen rakennus valmistuu 2027").
+
+**Tämä kumoaa aiemman päätöksen, ja se on tietoinen.** D-323:ssa
+varareitti jätettiin voimaan, jottei muutos poistaisi päiviä riveiltä
+joilla on vain yksi maininta — mutta juuri siinä tapauksessa se
+kirjoittaa tunnetusti väärän päivän, ja mennyt päivä piilottaa
+hankkeen 90 vuorokaudessa (D-298). Testi `palaa koko tekstiin jos
+muuta ei ole` on päivitetty päinvastaiseksi perusteluineen. Mitattu
+vaikutus: kaksi riviä.
+
+**26 päivää kirjoitettiin, 7 jätettiin — käsin luettuna, ei säännöllä.**
+Jäljelle jääneet 33 tulevaa osumaa luettiin yksitellen. Seitsemässä
+päivä on tekstissä, mutta se koskee **jotakin muuta kuin tätä
+hanketta**, eikä jäsennin voi sitä tietää:
+
+| rivi | mitä päivä oikeasti koskee |
+|---|---|
+| Mikonkorven risteyssilta | "ajoradalla tehtävät työt", osa urakasta |
+| Tuulipuisto Kauhava | sähköasema valmistuu vasta keväällä 2027 |
+| Kainuun ravintokeskus | UPS-laitteen käyttöönotto |
+| Kerrostalo Nihdin Pollari | **viereisen tontin** kohde |
+| Purkamislupahakemus | Laakson yhteissairaala |
+| Kasvatuslautakunnan lausunto | eri päiväkoti, 2033 |
+| Porthania | rivi on jo vaiheessa Valmistunut |
+
+**Jo kirjoitetut kaavapäivät siivottiin.** Koko kanta käytiin läpi
+samalla säännöllä: vain kaksi riviä oli saanut kaavan tai selvityksen
+valmistumisen, kumpaakaan ei ollut muokattu käsin. Suovu-Palosen
+osayleiskaava (2026-11-30, olisi piilottanut rivin helmikuussa 2027) ja
+Pursialan asemakaavan muutos (**2013**-12-31). Molemmat tyhjennettiin,
+koska tuntematon valmistuminen näyttää hankkeen listalla
+([[never-hide-on-missing-data]]).
+
+**Avoin, tietoisesti:** 36 MENNYT-luokan riviä (*"Rakennus on otettu
+käyttöön vuonna 1934"*) ja 6 VANHA_RAK-riviä jäävät tyhjiksi. Niissä
+osuma koskee vanhaa rakennusta, ja tyhjä on oikea vastaus.
+
+Ks. `lib/agent/parseFinnishCompletionDate.ts`,
+`scripts/mittaa-tyhjat-valmistumiset.ts`,
+`scripts/taydenna-luetut-valmistumiset.ts`,
+`scripts/korjaa-kaavan-valmistumispaivat.ts`.
+
 ### D-347 - Vuodenaika aloituksena ja tuotannon alku valmistumisena
 
 Johannes 25.10.2026 Nivalan aurinkovoimalasta: *"lisää aloitus ja

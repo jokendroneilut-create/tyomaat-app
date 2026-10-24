@@ -166,7 +166,14 @@ const EI_HANKKEEN_VALMISTUMINEN =
    * on sanan lopussa ("ympäristöselvitys", "maaperäselvitys"), joten
    * `\bselvity` ei osuisi niihin.
    */
-  /selvity|\bYVA\b|arviointiselostu|arviointiohjelma|suunnitelma|suunnittelu|yleiskaava|asemakaava|kaavoitu|raportti|hakemus|lupakäsittely|lupaprosessi|tarjouskilpailu|kilpailutus/i
+  /*
+   * "KAAVA VALMISTUU" ON KAAVAN VALMISTUMINEN (D-348). Pelkka `kaava`
+   * ei ole listalla eika saa olla: sana esiintyy aidoissakin virkkeissa
+   * ("kaavan mukainen rakennus valmistuu 2027"). Suljetaan vain virke
+   * jossa kaava on VALMISTUMISEN TEKIJA, eli sana on valmistumissanan
+   * edella muutaman sanan paassa.
+   */
+  /selvity|\bYVA\b|arviointiselostu|arviointiohjelma|suunnitelma|suunnittelu|yleiskaava|asemakaava|kaavoitu|raportti|hakemus|lupakäsittely|lupaprosessi|tarjouskilpailu|kilpailutus|kaava\w*\s+(?:\w+\s+){0,3}valmistu/i
 
 export function parseEstimatedCompletionDate(
   text: string,
@@ -182,9 +189,37 @@ export function parseEstimatedCompletionDate(
   const virkkeet = kokoTeksti.split(/(?<!(?:^|\s)[A-ZÄÖÅ])\.\s+/)
   const hankevirkkeet = virkkeet.filter((v) => !EI_HANKKEEN_VALMISTUMINEN.test(v))
 
+  /*
+   * KAIKKI VIRKKEET SULJETTU = EI HANKKEEN VALMISTUMISTA (D-348).
+   *
+   * Lyhyessa tekstissa virkkeita voi olla vain yksi, ja jos se on
+   * kaavan valmistuminen, `hankevirkkeet` jaa tyhjaksi -- jolloin
+   * ehto alla ei lauennut ja varareitti luki saman virkkeen koko
+   * tekstista. Mitattu 25.10.2026: "Kaavan on tarkoitus valmistua
+   * vuoden 2027 aikana" paatyi nain kaavoitusvaiheen hankkeen
+   * valmistumispaivaksi.
+   */
+  if (virkkeet.length && !hankevirkkeet.length) return null
+
   if (hankevirkkeet.length && hankevirkkeet.length < virkkeet.length) {
     const vainHanke = lueValmistuminen(hankevirkkeet.join(". "), referenceDate)
     if (vainHanke) return vainHanke
+    /*
+     * VARAREITTI EI SAA PALAUTTAA HYLÄTTYÄ VIRKETTÄ (D-348).
+     *
+     * Jos virkkeitä on suljettu pois eikä jäljelle jäävistä löydy
+     * päivää, koko tekstin lukeminen palauttaa juuri sen hylätyn
+     * virkkeen: mitattu 25.10.2026, *"Tavoitteena on, että kaava
+     * valmistuu valtuuston hyväksyttäväksi vuoden 2026 alkupuolella"*
+     * ja *"kaavaehdotus pientaloalueen osalta valmistuu vuoden 2026
+     * loppuun mennessä"* olisivat menneet hankkeen
+     * valmistumispäiväksi — ja kaavoitusvaiheessa olevasta hankkeesta
+     * on vuosia rakentamisen valmistumiseen.
+     *
+     * Varareitti jää voimaan vain kun MITÄÄN ei suljettu pois, eli
+     * yhden maininnan riveille joita varten se tehtiin.
+     */
+    return null
   }
 
   return lueValmistuminen(kokoTeksti, referenceDate)
@@ -249,13 +284,39 @@ function lueValmistuminen(
     }
   }
 
+  /*
+   * VUODEN OSA LUETAAN, EI PYÖRISTETÄ JOULUKUUHUN (D-348).
+   *
+   * "valmistuu vuoden 2026 alussa" antoi 2026-12-31, eli yksitoista
+   * kuukautta liian myöhään. Mitattu 25.10.2026 tyhjien
+   * valmistumiskenttien läpikäynnissä: viisi riviä 41:stä oli tätä
+   * ("vuoden 2026 alkupuolella", "vuoden 2027 alkuun mennessä").
+   *
+   * Tarkenne luetaan kauden VIIMEISEKSI kuukaudeksi, kuten vuodenajat:
+   * valmistuminen on "viimeistään tähän mennessä". Ilman tarkennetta
+   * ("vuoden 2026 aikana", "loppuun mennessä") joulukuu on oikein.
+   */
   const yearOnlyRegex = new RegExp(
-    `(?:${COMPLETION_KEYWORD})${GAP}vuo(?:nna|den)\\s+(\\d{4})`,
+    `(?:${COMPLETION_KEYWORD})${GAP}vuo(?:nna|den)\\s+(\\d{4})(\\s+[a-zäöå]+(?:\\s+[a-zäöå]+)?)?`,
     "i"
   )
   const yearOnlyMatch = normalized.match(yearOnlyRegex)
   if (yearOnlyMatch) {
     const year = Number(yearOnlyMatch[1])
+    const tarkenne = (yearOnlyMatch[2] ?? "").toLowerCase()
+    if (/\balku(?:un|puolella|puoliskolla)?\b|\balussa\b|\bensimm[äa]isell[äa]\b/.test(tarkenne)) {
+      return lastDayOfMonth(year, 4)
+    }
+    /*
+     * Sanarajaa EI voi kayttaa lopussa: `\b` on ASCII, eika "puolivälissä"
+     * paaty sanarajaan a-kirjaimen jalkeen ([[case-insensitive-lookahead-trap]]).
+     */
+    if (/puoliv[äa]liss[äa]|keskiv[äa]iheill[äa]/.test(tarkenne)) {
+      return lastDayOfMonth(year, 6)
+    }
+    if (/kev[äa][äa]ll[äa]|kev[äa][äa]n/.test(tarkenne)) return lastDayOfMonth(year, 5)
+    if (/kes[äa]ll[äa]|kes[äa]n/.test(tarkenne)) return lastDayOfMonth(year, 8)
+    if (/syksyll[äa]|syksyn/.test(tarkenne)) return lastDayOfMonth(year, 11)
     return lastDayOfMonth(year, 12)
   }
 
