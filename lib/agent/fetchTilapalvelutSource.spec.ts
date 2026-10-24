@@ -87,6 +87,9 @@ describe("kokonaisuudenValmistuminen", () => {
       )
     ).toBe("2029-12-31")
   })
+  it("työn kesto illatiivissa (Turtola)", () => {
+    expect(kokonaisuudenValmistuminen("X", "Rakennustyöt kestävät kesäkuuhun 2027, ja toiminta alkaa elokuussa 2027.")).toBe("2027-06-30")
+  })
   it("ei osu vanhan rakennuksen valmistumisvuoteen", () => {
     expect(kokonaisuudenValmistuminen("X", "Nykyinen, vuonna 1987 valmistunut rakennus puretaan.")).toBeNull()
   })

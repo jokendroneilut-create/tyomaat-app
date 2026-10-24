@@ -325,8 +325,13 @@ export function kokonaisuudenValmistuminen(otsikko: string, teksti: string): str
   const vuodet = [
     ...`${otsikko} ${teksti}`.matchAll(/vuoteen\s+(20\d\d)\s+mennessä|valmista\w*\s+(?:vuonna\s+)?(20\d\d)/gi),
   ].map((m) => m[1] ?? m[2])
-  const vuosi = vuodet.sort().at(-1)
-  return vuosi ? `${vuosi}-12-31` : null
+  const paivat = vuodet.map((v) => `${v}-12-31`)
+  /* "Rakennustyöt kestävät kesäkuuhun 2027" (Turtola): kuun loppu. */
+  for (const m of teksti.matchAll(/(?:kestävät|jatkuvat)\s+(\S+?kuu)hun\s+(20\d\d)/gi)) {
+    const kk = MONTHS[m[1].toLowerCase()]
+    if (kk) paivat.push(kuunLoppu(kk, Number(m[2])))
+  }
+  return paivat.sort().at(-1) ?? null
 }
 
 const SUUNNITTELU: [RegExp, string][] = [

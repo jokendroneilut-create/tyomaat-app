@@ -102,6 +102,15 @@ const PREPARATION = /valmistelu|valmistele|valmisteil|valmistava|valmistav/i
  */
 const TEMPORARY_PREMISES = /väistötil|väliaikais(?:i|e)/i
 
+/*
+ * PURKUPÄIVÄ EI OLE VALMISTUMINEN. "Nykyinen, vuonna 1991 valmistunut
+ * päiväkotirakennus purettiin marraskuussa 2025" (Turtolan päiväkoti,
+ * 24.10.2026): valmistumissana kuvaa purettavaa vanhaa rakennusta, ja
+ * päivä on purun. Rakenteilla oleva hanke (valmis 6/2027) meni jonossa
+ * suoraan hylätyksi. Este luetaan samasta lauseesta kuin väistötila.
+ */
+const DEMOLITION = /purettiin|puretaan|purettava|purkutyö|purku-urakka/i
+
 function findGuardedDate(
   text: string,
   regex: RegExp,
@@ -121,6 +130,13 @@ function findGuardedDate(
     /* Este luetaan vain lauseen alusta, ei koko tekstistä. */
     const clause = precedingWindow.slice(precedingWindow.lastIndexOf(".") + 1)
     if (TEMPORARY_PREMISES.test(clause)) continue
+    /*
+     * Vain valmistumissanan JALKEEN: "rakennus puretaan ja uudisrakennus
+     * on valmis 2028" ja "Purkutyon arvioidaan valmistuvan elokuussa"
+     * (purku itse hankkeena) kertovat valmistumisesta.
+     */
+    const viimeinenValmis = Math.max(clause.lastIndexOf("valmis"), clause.lastIndexOf("käyttöön"))
+    if (viimeinenValmis >= 0 && DEMOLITION.test(clause.slice(viimeinenValmis))) continue
     if (PREPARATION.test(clause) && !/valmistu/i.test(clause)) continue
 
     const subjectWindow = text.slice(Math.max(0, match.index - 120), match.index)

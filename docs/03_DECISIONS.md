@@ -93,6 +93,20 @@ Nokiantie 22).
 (`C_NIMI_FIN`, `C_OSOITENUMERO`), 169 092 osoitetta, EPSG:4326, ilman
 avainta. Sama käyttö kuin PKS:n rekisterillä.
 
+**Ensimmäinen ajo (24.10.2026) löysi vielä kaksi vikaa:**
+- **Takahuhti:** päiväkoti valmistuu 2027, mutta koko kokonaisuus vasta
+  "vuoteen 2029 mennessä". Myöhäisin ilmoitettu vuosi voittaa myös
+  silloin, kun aikataulukenttää ei ole.
+- **Turtola** meni jonossa suoraan hylätyksi. Keskitetty D-008-sääntö
+  (`inferCompletionDateFromText`) luki lauseen "vuonna 1991 valmistunut
+  päiväkotirakennus purettiin marraskuussa 2025" valmistumiseksi.
+  Purkusana valmistumissanan ja päivän välissä on nyt este, samaan
+  tapaan kuin väistötila. Mitattu koko kannasta (17 484 riviä): muutos
+  osuu vain Turtolaan. Laajempi este (koko lause) olisi vienyt päivän
+  myös riveiltä "rakennus puretaan ja uudisrakennus on valmis 2028" ja
+  "Purkutyön arvioidaan valmistuvan elokuussa 2026" (purku itse
+  hankkeena). Turtola palautettiin jonoon.
+
 ### D-338 - Kaavan osapuoli: mekanismi oli olemassa, sanasto puuttui
 
 Johannes 23.10.2026 Samppalinnan koulutontista: *"tästä ei ole poimittu

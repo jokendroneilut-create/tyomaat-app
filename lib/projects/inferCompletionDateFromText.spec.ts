@@ -311,3 +311,19 @@ describe("pelkka vuosi ja valmistelu", () => {
     ).toBe("2025-09-30")
   })
 })
+
+describe("purkupaiva", () => {
+  it("vanhan rakennuksen purku ei ole valmistuminen (Turtola 24.10.2026)", () => {
+    expect(
+      inferCompletionDateFromText(
+        "Rakennustyöt kestävät kesäkuuhun 2027. Nykyinen, vuonna 1991 valmistunut päiväkotirakennus purettiin marraskuussa 2025."
+      )
+    ).toBeNull()
+  })
+
+  it("purku ennen valmistumissanaa ei estä", () => {
+    expect(
+      inferCompletionDateFromText("Purkutyön arvioidaan valmistuvan elokuussa 2026.")
+    ).toBe("2026-08-31")
+  })
+})
