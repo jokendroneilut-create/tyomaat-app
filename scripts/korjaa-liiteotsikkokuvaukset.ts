@@ -40,7 +40,7 @@ import {
   kaavanKuvausTekstista,
   valitseKaavanAsiakirja,
 } from "../lib/agent/kaavanKuvaus"
-import { liitelinkit } from "../lib/agent/kaavanLiite"
+import { liitelinkit, lohkonLinkit } from "../lib/agent/kaavanLiite"
 
 /* Sama tunnistus kuin mittarissa (D-351). */
 const LIITESANA =
@@ -317,50 +317,39 @@ async function main() {
      * se on kaavan oma lohko riippumatta siita onko se <section>,
      * <div> vai <li>.
      */
+    /*
+     * LOHKO OTSIKOSTA ETEENPAIN (D-353). Kaavan liitteet ovat otsikon
+     * JALKEEN, ja lohko loppuu seuraavaan samantasoiseen otsikkoon.
+     * Aiempi yritys etsi lohkoa otsikon isannasta ylospain ja osui joko
+     * liian laajaan sailioon tai ei mihinkaan.
+     */
     const haluttu = normalisoi(r.otsikko)
-    let lohko: any = null
-    if (haluttu.length >= 10) {
-      /*
-       * VAIN OTSIKKOELEMENTTI KELPAA ANKKURIKSI, ja lohkossa saa olla
-       * VAIN YKSI otsikko. Ensimmainen versio hyvaksyi myos <a>- ja
-       * <strong>-elementit ja minka tahansa sailion jossa on
-       * pdf-linkkeja -- ja kuivaharjoitus naytti mihin se johti:
-       * Toholammin "Datakeskuksen alueen asemakaava" sai **Ullavan
-       * sahkoaseman** OAS:n ja Nivalan opiskelija-asuntola 95 hehtaarin
-       * sahkoasema-alueen selostuksen. Kaksi viidesta oli vaaran kaavan
-       * tekstia ([[listing-page-is-not-project-page]]).
-       *
-       * Jos sailiossa on useampi otsikko, se kattaa monta kaavaa eika
-       * ole taman kaavan lohko.
-       */
-      $("h1, h2, h3, h4, summary").each((_: any, el: any) => {
-        if (lohko) return
-        const t = normalisoi($(el).text())
-        if (!t || (t !== haluttu && !t.startsWith(haluttu.slice(0, 40)) && !haluttu.startsWith(t.slice(0, 40)))) return
-        let p = $(el).parent()
-        for (let i = 0; i < 5 && p.length; i++) {
-          if (p.find('a[href*=".pdf"], a[href*=".PDF"]').length) {
-            const otsikoita = p.find("h1, h2, h3, h4, summary").length
-            if (otsikoita <= 1) lohko = p
-            return
-          }
-          p = p.parent()
-        }
-      })
-    }
+    const lohkoLinkit =
+      haluttu.length >= 10
+        ? lohkonLinkit($, osoite, r.otsikko, (sivulla, haettu) => {
+            const a = normalisoi(sivulla)
+            const b = normalisoi(haettu)
+            return (
+              a.length >= 10 &&
+              b.length >= 10 &&
+              (a === b || a.startsWith(b.slice(0, 40)) || b.startsWith(a.slice(0, 40)))
+            )
+          })
+        : null
+    const lohko = null
 
-    let linkit = lohko ? liitelinkit($, osoite, lohko) : liitelinkit($, osoite)
-    linkit = linkit.filter((l) => /\.pdf(\?|$)/i.test(l.href))
+    let linkit = lohkoLinkit ?? liitelinkit($, osoite).filter((l) => /\.pdf(\?|$)/i.test(l.href))
 
     if (!linkit.length) {
-      syy(lohko ? "lohkossa ei pdf-liitteitä" : "sivulla ei pdf-liitteitä")
+      syy(lohkoLinkit ? "lohkossa ei pdf-liitteitä" : "sivulla ei pdf-liitteitä")
       continue
     }
     /*
      * TIUKKA LOHKO = yksi otsikko ja vahan liitteita. Silloin liitteet
      * ovat varmasti taman kaavan. Muuten nimen on tunnistettava kaava.
      */
-    const tiukkaLohko = Boolean(lohko) && linkit.length <= 6
+    /* Lohko on kaavan oma, joten nimen tunnistusta ei tarvita. */
+    const tiukkaLohko = Boolean(lohkoLinkit) && linkit.length <= 8
     if (!tiukkaLohko) {
       /*
        * TUNNISTEEN ON EROTELTAVA, EI VAIN OSUTTAVA (D-352). Inarin
@@ -431,7 +420,7 @@ async function main() {
     korjattu += 1
     console.log(`\n${r.taulu === "projects" ? "HANKE" : "JONO "} [${r.lahde.slice(0, 34)}] ${r.otsikko.slice(0, 48)}`)
     console.log(`   vanha (${r.kuvaus.length}): ${r.kuvaus.slice(0, 70)}`)
-    console.log(`   liite: ${decodeURIComponent(asiakirja.split("/").pop() ?? "").slice(0, 60)}${lohko ? "  [lohko]" : "  [koko sivu]"}`)
+    console.log(`   liite: ${decodeURIComponent(asiakirja.split("/").pop() ?? "").slice(0, 60)}${lohkoLinkit ? "  [lohko]" : "  [koko sivu]"}`)
     console.log(`   UUSI (${uusi.length}): ${uusi.slice(0, 240)}`)
 
     if (!apply) continue

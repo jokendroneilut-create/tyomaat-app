@@ -51,6 +51,62 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-353 - Lohkorajaus on pakko, ja se on yleinen: sisarukset eteenpäin, ei isäntä ylöspäin
+
+Johannes 26.10.2026: *"eikö tuo lohkorajaus ole pakko tehdä jos halutaan
+se kuvaus hyvin tehtyä?"* — on, ja päätelmäni että se olisi
+kuntakohtaista työtä oli väärä.
+
+**Virhe oli omassa toteutuksessani, ei yleisessä tavassa.** D-352:ssa
+etsin lohkoa otsikon **isäntäelementistä ylöspäin**: se osui joko liian
+laajaan säiliöön (toisen kaavan selostus) tai, kun tiukensin sen
+yhteen otsikkoon, ei mihinkään. Tutkiessani Suonenjokea olin käyttänyt
+aivan toista tapaa — **otsikosta eteenpäin sisaruksia seuraavaan
+otsikkoon asti** — ja se tuotti täydellisen liitelistan jokaiselle
+kaavalle. Sitä en koskaan kokeillut yleisessä ajossa. Päättelin
+"kuntakohtainen työ" yhdestä epäonnistuneesta toteutuksesta.
+
+**Sääntö kattaa molemmat sivurakenteet:**
+
+```
+<h2>Kaava A</h2> <ul>…liitteet…</ul> <h2>Kaava B</h2>      sisarukset
+<div class="lohko"> <h2>Kaava A</h2> <ul>…</ul> </div>      säiliö
+```
+
+Kerätään sisarukset seuraavaan samantasoiseen otsikkoon asti; jos niistä
+ei löydy liitteitä, otetaan otsikon säiliö — mutta vain jos siinä on
+yksi otsikko. `lohkonLinkit` on `lib/agent/kaavanLiite.ts`:ssä, jotta
+myös kerääjät saavat sen suoraan.
+
+**Kun lohko löytyy, nimen tunnistusta ei tarvita.** Liitteet ovat
+julkaisijan itsensä ryhmittelemiä, eli ne ovat tämän kaavan — ja juuri
+se avasi rivit, joiden tiedostonimi ei kerro kaavasta mitään
+("OAS.pdf", "OAS_060921.pdf").
+
+**Tulos: 223 → 208, kaikki 15 lohkoreittiä.** Mittari liikkui kahdessa
+kohdassa oikeaan suuntaan: *"sivulla ei pdf-liitteitä"* 40 → 27 ja
+*"liitteen nimi ei tunnista kaavaa"* 69 → 53. Koko työ tänään: **251 →
+208, 43 korjattua kuvausta**, jokainen luettuna otsikko–liite-parina.
+
+**Jäljellä 181 riviä, syyt mitattuina:**
+
+| syy | rivejä | mitä se tarkoittaa |
+|---|---|---|
+| liitteen nimi ei tunnista kaavaa | 53 | sivulla ei lohkorakennetta eikä nimessä tunnistetta |
+| tunniste ei erottele | 31 | sama sana monen kaavan nimessä (Inarin "Ivalon") |
+| selostuksesta ei lukua | 30 | PDF luettu, otsikko tuntematon tai taitto hajalla |
+| sivulla ei pdf-liitteitä | 27 | liitteet JS:n takana tai rivin osoite väärä |
+| sivua ei saatu | 20 | HTTP-virhe |
+| ei selostusta eikä OAS:ia | 13 | sivulla vain kuulutus ja kartta |
+| luku liian lyhyt / merkistö rikki | 7 | |
+
+Nämä eivät ole yhden säännön päässä: 53 + 27 vaatii kerääjään
+kytkettävän kuntakohtaisen valitsimen (kuten Suonenjoen
+`.block-link-list`), 30 vaatii selostuskohtaista otsikkotyötä ja 20 on
+rikkinäisiä osoitteita. Ne ovat työjonossa lukuineen.
+
+Ks. `lib/agent/kaavanLiite.ts`, `scripts/korjaa-liiteotsikkokuvaukset.ts`.
+
 ### D-352 - Liiteotsikkokuvaukset kaikissa kunnissa: viisi estoa, 28 korjattua
 
 Johannes 26.10.2026: *"korjaa nuo muutkin samalla"* — D-351:n mittaama

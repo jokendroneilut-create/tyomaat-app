@@ -161,3 +161,71 @@ export async function taydennaKuvausLiitteesta(
 
   return yhdistaKuvaukset(kuvaus, liitteenKuvaus)
 }
+
+/*
+ * KAAVAN OMA LOHKO OTSIKON PERUSTEELLA (D-353).
+ *
+ * Johannes 26.10.2026: *"eiko tuo lohkorajaus ole pakko tehda jos
+ * halutaan se kuvaus hyvin tehtya?"* -- on, ja yleinen ratkaisu on
+ * olemassa. Aiempi yritys (D-352) etsi lohkoa otsikon ISANTAelementista
+ * ylospain, ja se osui joko liian laajaan sailioon (toisen kaavan
+ * selostus) tai ei mihinkaan. Oikea suunta on ETEENPAIN: kaavan liitteet
+ * ovat otsikon JALKEEN, ja lohko loppuu seuraavaan samantasoiseen
+ * otsikkoon.
+ *
+ * Kaksi sivurakennetta, joista kumpikin toimii samalla saannolla:
+ *
+ *   <h2>Kaava A</h2> <ul>...liitteet...</ul> <h2>Kaava B</h2>
+ *   <div class="lohko"> <h2>Kaava A</h2> <ul>...</ul> </div>
+ *
+ * Ensimmaisessa sisarukset haetaan otsikon tasolta, toisessa otsikon
+ * oma sailio sisaltaa vain taman kaavan. Siksi: kerataan sisarukset
+ * seuraavaan otsikkoon asti, ja jos niista ei loydy linkkeja, otetaan
+ * otsikon sailio -- mutta vain jos siina on yksi otsikko.
+ */
+export function lohkonLinkit(
+  $: CheerioAPI,
+  sivunOsoite: string,
+  otsikko: string,
+  tasma: (otsikkoSivulla: string, haettu: string) => boolean
+): { href: string; teksti: string }[] | null {
+  const OTSIKOT = "h1, h2, h3, h4, h5, summary, dt"
+  const osumat = $(OTSIKOT)
+    .toArray()
+    .filter((el) => tasma($(el).text().replace(/\s+/g, " ").trim(), otsikko))
+
+  for (const el of osumat) {
+    const taso = ($(el)[0] as any).tagName?.toLowerCase() ?? ""
+    const kerays: any[] = []
+    let n = $(el).next()
+    let askel = 0
+    while (n.length && askel < 12) {
+      const nimi = (n[0] as any).tagName?.toLowerCase() ?? ""
+      /* Seuraava samantasoinen tai ylempi otsikko paattaa lohkon. */
+      if (/^h[1-5]$/.test(nimi) || nimi === "summary" || nimi === "dt") {
+        if (nimi <= taso || !/^h[1-5]$/.test(taso)) break
+      }
+      kerays.push(n)
+      n = n.next()
+      askel += 1
+    }
+
+    const sisarusten = kerays.flatMap((osa) => liitelinkit($, sivunOsoite, osa))
+    const pdf = (lista: { href: string; teksti: string }[]) =>
+      lista.filter((l) => /\.pdf(\?|$)/i.test(l.href))
+    if (pdf(sisarusten).length) return pdf(sisarusten)
+
+    /* Otsikko on lohkon sisalla: sailio kelpaa jos siina on vain tama otsikko. */
+    let p = $(el).parent()
+    for (let i = 0; i < 4 && p.length; i++) {
+      const linkit = pdf(liitelinkit($, sivunOsoite, p))
+      if (linkit.length) {
+        if (p.find(OTSIKOT).length <= 1) return linkit
+        break
+      }
+      p = p.parent()
+    }
+  }
+
+  return null
+}
