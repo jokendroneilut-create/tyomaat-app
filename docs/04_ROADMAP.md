@@ -728,8 +728,15 @@ muistin varassa.
 
 ### Datan laatu
 
-- **251 kaavariviä, joiden kuvaus on pelkkiä liiteotsikoita — mitattu
-  26.10.2026.** Löytyi Suonenjoen korjauksen yhteydessä (D-351):
+- **223 kaavariviä, joiden kuvaus on pelkkiä liiteotsikoita — 28
+  korjattu 26.10.2026 (D-352), loput vaativat kuntakohtaisen
+  lohkorajauksen.** Jäljellä olevien syyt on mitattu: 69 riviä joilla
+  liitteen nimi ei tunnista kaavaa, 40 ilman pdf-liitteitä, 36 joilla
+  tunniste ei erottele, 20 sivunhakuvirhettä, 19 ilman lukua, 19 ilman
+  selostusta. Kaksi ensimmäistä ratkeavat vain kytkemällä kerääjään
+  lohkorajaus kunta kerrallaan, kuten Suonenjoella (D-351).
+
+  ALKUPERÄINEN MITTAUS 251: Löytyi Suonenjoen korjauksen yhteydessä (D-351):
   13 726 kuvauksesta 251 on muotoa *"Kuulutus 17.9.2026
   Asemakaavaselostusehdotus Asemakaavakartta Tonttijako"* — pituutta on,
   sisältöä ei.

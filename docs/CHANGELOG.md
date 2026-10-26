@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Liiteotsikkokuvaukset kaikissa kunnissa (D-352)
+
+Yksi yleinen korjaus 251 rivin joukolle: lohko etsitaan otsikon
+tekstilla, ei kuntakohtaisella koodilla. Loysa saanto tuotti vaaraa
+tekstia viidella kierroksella, ja jokainen loytyi lukemalla: datakeskus
+sai sahkoaseman OAS:n, Takkukangas Harjakankaan, Ivalon asemakaava
+Ivalon yleiskaavan. Jokaiselle oma esto.
+
+Tulos 251 -> 223. Jaljella olevien syyt mitattu; 109 niista on
+sivurakenteen ongelma joka ratkeaa vain kerääjään kytketylla
+lohkorajauksella kunta kerrallaan.
+
+Kanta kaatui ajojen aikana. Skripti luki molemmat taulut kokonaan joka
+ajolla; nyt se rajaa kaavalahteisiin palvelimella (196 rivia, ei
+17 000). Johannes kaynnisti projektin uudelleen, kirjoitukset tallessa.
+
 ### Kaavan tarkoitus selostuksesta (D-351)
 
 Suonenjoen kaavarivien kuvaus oli pelkkia liiteotsikoita. Esteita oli

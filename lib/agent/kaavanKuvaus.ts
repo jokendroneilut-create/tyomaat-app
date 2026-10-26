@@ -48,8 +48,16 @@ const HALUTUT: { avain: string; kuvio: RegExp }[] = [
      * Suonenjoen rivistä kaksi kaatui tähän ("selostuksesta ei lukua"),
      * vaikka selostus oli haettu ja luettu.
      */
+    /*
+     * KAKSI VAKIO-OTSIKKOA LISAA (D-352). 24 selostuksesta, joista
+     * lukua ei loytynyt, nama kaksi toistuivat:
+     *   "1.2 Suunnittelutehtävä – Mitä on tekeillä"  (Toholampi)
+     *   "1. Mihin ja mitä suunnitellaan?"            (Inarin OAS)
+     * Jalkimmainen on OAS-pohjan kysymysmuoto, joka on kaytossa
+     * monessa kunnassa.
+     */
     kuvio:
-      /^((?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen|ty[öo]n|ty[öo])?\s+(?:tarkoitus|tavoit)|kaavan\s+muutoksen\s+tavoit|tavoitteet|suunnittelun\s+tavoit|tiivistelm)/i,
+      /^((?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen|ty[öo]n|ty[öo])?\s+(?:tarkoitus|tavoit)|kaavan\s+muutoksen\s+tavoit|tavoitteet|suunnittelun\s+tavoit|suunnitteluteht[äa]v|mihin\s+ja\s+mit[äa]\s+suunnitellaan|tiivistelm)/i,
   },
 ]
 
@@ -270,6 +278,17 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
   if (!osat.length) return kaavanKuvausLauseesta(raaka)
 
   const kuvaus = osat.join(" ").replace(/\s+/g, " ").trim()
+
+  /*
+   * KYSYMYSLISTA EI OLE KUVAUS (D-352). Inarin Vilkontien OAS:ssa luku
+   * "1. Mihin ja mitä suunnitellaan?" jäi tyhjäksi taitossa, jolloin
+   * luvuksi tuli seuraavien lukujen OTSIKOT: *"2. Mitä vaikutuksia
+   * kaavalla saattaa olla ja miten vaikutuksia arvioidaan? 3. Miten ja
+   * missä vaiheessa voi vaikuttaa kaavan valmisteluun?"*. Kaksi
+   * kysymysmerkkia lyhyessa tekstissa on sisallysluettelon merkki, ei
+   * kuvauksen.
+   */
+  if ((kuvaus.match(/\?/g) ?? []).length >= 2) return kaavanKuvausLauseesta(raaka)
   if (kuvaus.length <= MAX_PITUUS) return kuvaus
 
   /* Katkaisu virkkeen rajalta, ei keskeltä sanaa. */

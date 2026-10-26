@@ -51,6 +51,77 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-352 - Liiteotsikkokuvaukset kaikissa kunnissa: viisi estoa, 28 korjattua
+
+Johannes 26.10.2026: *"korjaa nuo muutkin samalla"* — D-351:n mittaama
+251 riviä, joiden kuvaus on pelkkiä liitelinkkien nimiä.
+
+**Yksi yleinen korjaus, ei kuntakohtaista koodia.** Kuntien sivut ovat
+erilaisia, mutta rakenne on sama: kaavan otsikko ja sen alla sen omat
+liitteet. `scripts/korjaa-liiteotsikkokuvaukset.ts` etsii lohkon
+otsikon tekstillä ja lukee liitteet vain siitä.
+
+**Löysä sääntö tuotti väärää tekstiä joka kierroksella, ja jokainen
+kierros löytyi lukemalla — ei mittarista.** Tämä on päätöksen ydin:
+
+| kierros | mitä meni väärin | esto |
+|---|---|---|
+| 1 | Toholammin *datakeskus* sai **Ullavan sähköaseman** OAS:n, Nivalan *opiskelija-asuntola* 95 ha:n sähköasema-alueen | lohkoksi kelpaa vain otsikkoelementti, jonka säiliössä on **yksi** otsikko |
+| 2 | sama virhe koko sivun reitillä | liitteen nimen on **tunnistettava kaava** (tunnus tai harvinainen sana) |
+| 3 | *Takkukangas* sai **Harjakankaan**, *Poleenkangas* **Eskolan** | tyyppisana (tuulivoimapuisto, teollisuusalue…) ei ole tunniste |
+| 4 | *"Ivalon asemakaavan muutos; Vilkontie"* sai Ivalon **yleiskaavan**, sitten Ivalon **ampumaradan** | kaavalajiveto (asema ≠ yleis) + tunnisteen on **eroteltava**: sana joka on lähteen monessa otsikossa ei yksilöi |
+| 5 | Kannuksen teksti purkautui muodossa *"Tuohir‰meen"* | merkistörikon esto ([[unreadable-pdf-fonts]]) |
+
+Neljännen eston laskenta on **lähdekohtainen**: "Ivalon" on joka toisen
+Inarin kaavan nimessä, joten se osuu toisen kaavan liitteeseen yhtä
+hyvin kuin omaan. Erottelukyky lasketaan lähteen **kaikista**
+otsikoista, ei vain korjattavista ([[anchor-vocabulary-per-source]]).
+
+**Jäsentimeen kaksi vakio-otsikkoa lisää ja yksi esto.** 24
+selostuksesta, joista lukua ei löytynyt, toistuivat *"1.2
+Suunnittelutehtävä"* ja OAS-pohjan kysymysmuoto *"1. Mihin ja mitä
+suunnitellaan?"*. Jälkimmäinen paljasti heti oman ansansa: Inarin
+OAS:ssa luku jäi taitossa tyhjäksi, ja kuvaukseksi tuli seuraavien
+lukujen otsikot (*"2. Mitä vaikutuksia… 3. Miten ja missä vaiheessa…"*).
+Kaksi kysymysmerkkiä on sisällysluettelon merkki, ei kuvauksen.
+
+**Tulos: 251 → 223.** 28 riviä sai oikean kuvauksen, jokainen luettuna
+otsikko–liite-parina ennen kirjoitusta. Loput kaatuvat nimettyihin
+syihin, ja ne ovat nyt mitattuja eivätkä arvailua:
+
+| syy | rivejä |
+|---|---|
+| liitteen nimi ei tunnista kaavaa | 69 |
+| sivulla ei pdf-liitteitä | 40 |
+| tunniste ei erottele | 36 |
+| sivua ei saatu (HTTP) | 20 |
+| selostuksesta ei lukua | 19 |
+| ei selostusta eikä OAS:ia | 19 |
+| luku liian lyhyt / merkistö rikki | 7 |
+
+Kaksi ensimmäistä ovat sivurakenteen ongelmia: liitteet ovat sivulla,
+mutta mikään ei kerro kenen ne ovat. Ne ratkeavat vain kerääjään
+kytketyllä lohkorajauksella kunta kerrallaan, kuten Suonenjoella
+(D-351) — ei tällä yleisellä ajolla.
+
+**Ohjausmerkkivahti nappasi oman virheeni.** Skriptin `\b`-sanarajat
+olivat muuttuneet **backspace-merkeiksi** putkessa, jossa kenoviiva on
+kadonnut ennenkin ([[heredoc-eats-backslash]]): kaavalajiveto toimi vain
+osittain. Kirjoitettu data oli silti oikein, koska jokainen rivi
+luettiin käsin ennen ajoa — mutta vahti löysi sen, ei testien tulos
+eikä silmä.
+
+**Kanta kaatui ajojen aikana (klo ~22:5x).** Skripti luki molemmat
+taulut **kokonaan joka ajolla** (~17 000 riviä), ja ajoin sitä
+toistakymmentä kertaa tunnissa sääntöä virittäessäni. Syytä ei ole
+todistettu, mutta kuorma oli tarpeetonta: vika on kaavalähteissä, ja
+ne rajataan nyt palvelimella (`ilike "%kaav%"`), jolloin luettavia
+rivejä on 196 eikä 17 000. Johannes käynnisti projektin uudelleen ja
+kaikki kirjoitukset olivat tallessa ([[supabase-outage-history]]).
+
+Ks. `scripts/korjaa-liiteotsikkokuvaukset.ts`,
+`lib/agent/kaavanKuvaus.ts`, `scripts/mittaa-liiteotsikkokuvaukset.ts`.
+
 ### D-351 - Kaavan tarkoitus selostuksesta: kolme estettä, ei yksi
 
 Johannes 26.10.2026 Suonenjoen rivistä `8652187f`: *"pitää poimia
