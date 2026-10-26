@@ -728,6 +728,36 @@ muistin varassa.
 
 ### Datan laatu
 
+- **Klaukkalan Urheilupuiston koulu: aloitus ja valmistuminen
+  Aamupostin jutusta — kirjattu 26.10.2026.** Johannes: *"poimi tästä
+  tietoja äsken hyväksymääni hankkeeseen
+  `aamuposti.fi/paikalliset/9893437`"*. Hanke on
+  **`b6cf3f9d-0f31-4d17-a837-db0af712551e`** (*Uusi Urheilupuiston
+  koulu Klaukkalaan, Kisatie*, Nurmijärvi, tilaaja Nurmijärven kunta,
+  rakentaja Rakennusliike Lapti, lähde rakennuslehti). Rivillä on
+  272 merkin kuvaus eikä kumpaakaan päivää.
+
+  **Juttu on maksumuurin takana, mutta sivun julkinen metakuvaus
+  kertoo molemmat:** *"rakennustyöt käynnistyvät **helmikuussa 2027**.
+  Koulun arvioidaan valmistuvan **kevätlukukaudeksi 2029**."* Muuta ei
+  luettu — maksumuuria ei kierretä.
+
+  **Kaksi asiaa päätettäväksi ennen kirjoitusta:**
+
+  1. **"Kevätlukukaudeksi 2029" ei ole "keväällä 2029".** Jäsentimemme
+     lukee kevään kauden VIIMEISEKSI kuukaudeksi (31.5.), mutta
+     "valmistuu kevätlukukaudeksi" tarkoittaa valmista **lukukauden
+     alkuun**, eli tammikuuhun 2029. Jos tämä kirjataan, oikea arvo on
+     `2029-01-31` — ja jos sanonta on yleinen koulukohteissa, se
+     kuuluu jäsentimeen omana sääntönään (ks. [[period-end-is-completion]]).
+  2. **Vaihe.** Rivi on Suunnittelussa; helmikuu 2027 on tulevaisuudessa,
+     joten vaihe pysyy — aloituspäivä ei siirrä vaihetta
+     ([[start-date-open-items]]).
+
+  Maksumuurillinen paikallislehti ei kelpaa lähteeksi, mutta
+  **metakuvaus on luettavissa ilmaiseksi**, ja se sisältää usein juuri
+  päivät. Jos tämä toistuu, mittaa ensin montako hanketta hyötyisi.
+
 - **181 kaavariviä, joiden kuvaus on pelkkiä liiteotsikoita — 43
   korjattu 26.10.2026 (D-352, D-353).** Yleinen lohkorajaus
   (`lohkonLinkit`) hoiti mitä pystyi; loput vaativat kuntakohtaisen
