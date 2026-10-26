@@ -728,6 +728,45 @@ muistin varassa.
 
 ### Datan laatu
 
+- **GTK Mintecin koetehdas Outokummussa: sama hanke kolmena rivinä —
+  kirjattu 26.10.2026.** Johannes: *"poimi tästä tiedot äsken
+  hyväksymääni hankkeeseen. tämä tieto tulee meille varmasti myös
+  omista lähteistä"* (`senaatti.fi/.../gtk-mintecille-rakennetaan-uusi-koetehdas-outokumpuun/`).
+
+  **Hän oli oikeassa, ja enemmän kuin arvasi: tieto on tullut jo
+  kolmesti.** Sama Senaatin uutinen on `source_documents`-taulussa
+  kahdesti (STT-tiedotteet 22.10., Rakennuslehti 25.10.), ja
+  Senaatin oma hankesivu tuotti rivit jo 16.7.2026. **Puute ei ole
+  lähdekattavuudessa vaan yhdistämisessä.**
+
+  | rivi | nimi | vaihe | ala | valm. | rakentaja | lähde |
+  |---|---|---|---|---|---|---|
+  | `9f899384` | GTK Mintecin uudisrakennus Outokummussa | **Valmistunut** | 3 300 | 2024-12-31 | Rakennustyö Salminen | Senaatti hankkeet |
+  | `fe8c9611` | Geologian tutkimuskeskus, GTK Mintec, uusi koetehdas | **Suunnittelu** | 5 300 | 2024-12-31 | – | Senaatti hankkeet |
+  | `f8f7eb97` | GTK Mintecille rakennetaan uusi koetehdas Outokumpuun | **Rakenteilla** | 5 300 | – | Rakennustyö Salminen | rakennuslehti (hyväksytty 26.10.) |
+
+  Kaikki kolme ovat julkisia. Uusin kantaa jo vihjeen `fe8c9611`:een,
+  eikä sitä lue mikään ([[duplicate-hint-open-items]]).
+
+  **Kolme asiaa ratkaistavaksi, järjestyksessä:**
+
+  1. **Onko `9f899384` sama hanke vai aiempi rakennus?** Sen ala on
+     3 300 m² ja uutinen puhuu 5 300 brm²:stä. Jos se on aiempi vaihe,
+     rivit ovat oikein erillään ([[phases-are-separate-projects]]); jos
+     sama, kaksi Senaatin omaa riviä ovat kaksoiskappaleita keskenään.
+     **Tämä ratkaistaan Senaatin hankesivulta, ei päättelemällä.**
+  2. **Valmistuminen 2024-12-31 on väärin kahdella rivillä.** Lokakuun
+     2026 uutinen kertoo rakentamisen olevan käynnissä. Toinen riveistä
+     on sen takia vaiheessa **Valmistunut** ja katoaa asiakkaalta
+     90 vuorokauden päästä (D-298) — eli väärä päivä piilottaa käynnissä
+     olevan hankkeen ([[hiding-threshold]]).
+  3. **Vasta sitten uutisen tiedot** (aikataulu, kustannus,
+     yhteyshenkilö, ontelolaattojen uusiokäyttö) yhteen riviin. Niitä
+     ei kannata kirjoittaa kolmeen.
+
+  Pari viedään katselmointiin, ei yhdistetä itse
+  ([[check-duplicate-reviews]]).
+
 - **Klaukkalan Urheilupuiston koulu: aloitus ja valmistuminen
   Aamupostin jutusta — kirjattu 26.10.2026.** Johannes: *"poimi tästä
   tietoja äsken hyväksymääni hankkeeseen
