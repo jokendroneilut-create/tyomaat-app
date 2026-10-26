@@ -49,6 +49,23 @@ työläs kopioida ja se on kilpailuetu — mutta realisoituu vain asiakkaiden ka
 | 2026-08-29 | 995 | ~38 000 | 951 | ~45 | 44 | Kokeilujakso + myyjäroolit → alkava vetovoima |
 | 2026-09-13 | 1088 | ~46 000 | 1028 | 49 | 50 | Datavallihaudan syventäminen |
 | 2026-10-16 | 1318 | ~60 800 | 1172 | 59 | 57 | **Ensimmäiset maksavat asiakkaat + go-to-market käyntiin** |
+| 2026-10-27 | 1433 | **200 220** (ks. alla) | 1775 | 76 | 59 | Lähdetyö ja datan laatu: 10 päätöstä, 2 uutta lähdettä |
+
+**Riviluku ei ole vertailukelpoinen aiempiin riveihin, ja se on
+mitattu 27.10.2026.** Dokumentin oma menetelmäkuvaus (`app src lib
+hooks types`, `.ts`/`.tsx`) antaa tänään **200 220 riviä** — mutta
+sama mitta **16.10. commitista** antaa **189 615**, ei taulukon
+~60 800. Aiemmat luvut on siis laskettu jollain kapeammalla perustalla,
+jota ei ole kirjattu. Tiedostomäärä sen sijaan täsmää (1 172 = taulukon
+luku), joten se sarake on samalla perustalla.
+
+Käytännön tulkinta: **rivikasvua ei voi lukea tästä sarakkeesta** ennen
+kuin vanhat luvut mitataan uudelleen samalla komennolla. Kasvu
+16.10. → 27.10. oli samalla mitalla +10 605 riviä (189 615 → 200 220),
+mikä vastaa yhdentoista päivän työtä — ei kolminkertaistumista.
+
+Aktiivisia committipäiviä 129 / 249 kalenteripäivää; viime 30 pv
+297 committia.
 
 Ensimmäinen commit 2026-02-19 → ~8 kk lähes päivittäistä yhden hengen
 kehitystä (1318 committia, 119 aktiivista committipäivää / 239 kalenteripäivää,

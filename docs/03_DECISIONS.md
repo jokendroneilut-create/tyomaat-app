@@ -51,6 +51,75 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-354 - Jälleenjulkaisija on viimesijainen, ja naapurin päivä on hankkeen päivä vain jos naapuri on sama hanke
+
+Kaksi hanketta samana iltana, sama opetus: **tieto on jo meillä, mutta
+se on väärällä rivillä.**
+
+**Klaukkalan Urheilupuiston koulu.** Johannes antoi Aamupostin jutun ja
+pyysi poimimaan siitä tiedot. Juttu on maksumuurin takana, mutta sivun
+julkinen metakuvaus kertoo molemmat päivät. Kuivaharjoitus paljasti
+oikean vian: rivin kuvauksessa luki *"rakennustöiden on tarkoitus alkaa
+helmikuussa **2007**"* — kaksikymmentä vuotta väärin, ja juuri siksi
+aloituspäivä oli tyhjä: `parseFinnishStartDate` hylkää yli viisi vuotta
+vanhan aloituksen, koska se yleensä kertoo historiasta (D-326). Vuosi
+korjattiin paikalleen, ei lisätty toistavaa virkettä.
+
+Valmistumisesta päätti Johannes: *"laita arvioiduksi
+valmistumisajankohdaksi 1.1.2029"*. Lähde sanoo *"valmistuu
+kevätlukukaudeksi 2029"*, ja se on monitulkintainen — jäsennin oli
+lukenut sen kevään kauden **viimeiseksi** kuukaudeksi (2029-12-31),
+vaikka lukukaudeksi valmistuminen tarkoittaa valmista kauden **alkuun**.
+
+**GTK Mintecin koetehdas, Outokumpu.** Johannes antoi Senaatin uutisen
+ja arveli: *"tämä tieto tulee meille varmasti myös omista lähteistä."*
+Tuli, **neljää reittiä**: Senaatin hankesivu (16.7.), STT (22.10.),
+Rakennuslehti (25.10.) ja Johanneksen linkki (26.10.). Lähdekattavuus
+siis toimi — ja juuri siksi sama hanke oli kannassa kolmena julkisena
+rivinä.
+
+**Kysymys ei ollut "mitkä ovat duplikaatteja" vaan "mikä on sama
+rakennus".** Senaatin oma teksti vastasi: *"Koetehdas rakennetaan
+vuonna 2024 valmistuneen toimisto- ja laboratoriorakennuksen
+**viereen**."* Kaksi eri rakennusta samalla tontilla, 3 300 ja
+5 300 brm². Vanhempi rivi on oikein sellaisenaan, ja kaksoiskappale on
+koetehdasrivien välillä.
+
+**Koetehtaan rivillä oli naapurin valmistuminen** (2024-12-31). Käynnissä
+olevalla työmaalla mennyt päivä olisi siirtänyt rivin Valmistuneeksi ja
+piilottanut sen 90 vuorokaudessa (D-298). Oikea on Senaatin oma
+aikataulu: vaihe 1 käyttöön 6/2028, vaihe 2 1/2029 — ja koko hanke on
+valmis jälkimmäisessä. Yksi rakennus kahdessa käyttöönottoerässä ei ole
+kaksi hanketta ([[phases-are-separate-projects]] koskee eri urakoita).
+
+**Johanneksen sääntö, joka ratkaisi kumpi rivi jää:**
+
+> *"Rakennuslehti on aina viimesijainen tällaisessa valintatilanteessa
+> — se lukee itsekin alkuperäisiä lähteitä."*
+
+Jälleenjulkaisijan juttu on referaatti, ja matkalla katoaa kenttiä:
+Senaatin sivulla oli rakennuttajapäällikkö numeroineen, kustannus,
+vaiheistettu aikataulu ja viisi suunnittelijaa — Rakennuslehden jutussa
+ei mitään näistä. Sääntö koskee myös STT:n välittämiä tiedotteita ja
+paikallislehtiä, eikä se alenna lähteen arvoa: Rakennuslehti löytää
+hankkeita joita emme muuten näkisi. Kirjattu muistiin
+([[rakennuslehti-is-secondary]]).
+
+**Poikkeus on kirjattu sääntöön:** jälleenjulkaisijalta kelpaa kenttä,
+jota alkuperäisessä ei ole. Tässä se oli pääurakoitsija Rakennustyö
+Salminen Oy, joka siirtyi säilyvälle riville.
+
+Täydennys Senaatin sivulta: vaihe Rakenteilla (*"Rakennustyöt
+käynnissä"* — luettu, ei johdettu päivästä), aloitus 8/2026,
+valmistuminen 1/2029, kustannus 23 M€, Uki Arkkitehdit ja Ramboll omiin
+suunnittelukenttiinsä. Kuivaharjoitus esti kaksi virhettä: Uki olisi
+tullut kahtena kirjoitusasuna, ja suunnittelijat olisivat toistuneet
+sekä roolisarakkeissa että liittyvissä yrityksissä
+([[party-role-fields]]).
+
+Ks. `scripts/korjaa-klaukkalan-koulu.ts`, `scripts/korjaa-gtk-mintec.ts`,
+`scripts/taydenna-gtk-mintec.ts`.
+
 ### D-353 - Lohkorajaus on pakko, ja se on yleinen: sisarukset eteenpäin, ei isäntä ylöspäin
 
 Johannes 26.10.2026: *"eikö tuo lohkorajaus ole pakko tehdä jos halutaan

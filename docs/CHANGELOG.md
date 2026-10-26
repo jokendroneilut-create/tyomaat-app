@@ -9,6 +9,73 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-10-25…27 (lähdetyö ja datan laatu)
+
+Kahden vuorokauden jakso, 17 committia ja kymmenen päätöstä (D-345…D-354).
+Teemana oli se, että **tieto on usein jo meillä mutta väärällä rivillä
+tai väärässä muodossa** — ei se, että lähteitä puuttuisi.
+
+### Mitattu tulos kantaan
+
+| mitä | määrä |
+|---|---|
+| kaavakuvausta poimittu selostuksesta | **43** (251 → 208 liiteotsikkoriviä) |
+| aloitus- ja valmistumispäivää tekstistä | **114 + 26** |
+| ei-rakentamisen hankintaa pois jonosta | **11** (Kelan terapiat ym.) |
+| uutta jonoriviä uudesta lähteestä | **12** (Jalonin työmaaluettelo) |
+| yhdistettyä kaksoisriviä | **2** (Ilmasotakoulu, GTK Mintec) |
+| katselmointiin vietyä kaksoisparia | **2** |
+
+### Kaksi uutta lähdettä
+
+- **Jalonin työmaaluettelo** (D-350): julkaisijan oma lista, jossa
+  jokaisella rivillä rakennuttaja, katuosoite, valmistumiskuukausi ja
+  **työmaan puhelinnumero** — 13/13 kaikissa kentissä.
+- **Lohkare Infra** (D-341, edellinen jakso) jatkoi tuotantoa.
+
+### Jäsentimiin seitsemän korjausta, kaikki mitattuja
+
+Vuodenaika aloituksena, tuotannon käynnistyminen valmistumisena,
+"Kaavatyön tarkoitus", "Alueen sijainti", vuoden osa ("alussa" ≠
+joulukuu), lauseankkurin virkeraja ja kysymyslistan esto.
+
+### Mitä tästä opittiin — neljä toistuvaa kuviota
+
+1. **Löysä sääntö tuottaa uskottavaa mutta väärää tekstiä, ja sen
+   löytää vain lukemalla.** Liiteotsikkokorjauksessa viisi kierrosta,
+   joista jokainen paljasti uuden väärän osuman (datakeskus sai
+   sähköaseman OAS:n, Takkukangas Harjakankaan). Mittari ei olisi
+   löytänyt niistä yhtäkään.
+2. **Kysely voi olla voimassa suodattamatta mitään.** Hilman
+   `cpvCodes:(45*)` ei ole koskaan rajannut CPV:tä (D-346) — ja
+   leveäksi jäänyt verkko osoittautui mitattuna hyödylliseksi, joten
+   sitä ei tiukennettu vaan suodatus tehtiin tuonnissa.
+3. **Täsmäys kirjoittaa väärän rivin päälle.** Purkupäätös sai
+   koulukohteen valmistumisen (D-350), koetehdas naapurirakennuksen
+   päivän (D-354). Molemmat olisivat piilottaneet käynnissä olevan
+   työmaan 90 vuorokaudessa.
+4. **Jälleenjulkaisija on viimesijainen** (D-354, Johanneksen sääntö):
+   se lukee itsekin alkuperäisiä lähteitä, ja matkalla katoaa kenttiä.
+
+### Omat virheet, jotka jäivät kiinni
+
+- Pushasin commitin joka olisi kaatanut Vercelin buildin (globaali
+  `main` skriptissä); korjattu seuraavassa commitissa.
+- Ohjausmerkkivahti nappasi `\b`-sanarajat, jotka olivat muuttuneet
+  backspace-merkeiksi — kaavalajiveto toimi vain osittain.
+- **Kanta kaatui ajojen aikana.** Korjausskripti luki molemmat taulut
+  kokonaan joka ajolla (~17 000 riviä) ja ajoin sitä toistakymmentä
+  kertaa tunnissa. Syytä ei todistettu, mutta kuorma oli tarpeetonta:
+  rajaus tehdään nyt palvelimella (196 riviä). Johannes käynnisti
+  projektin uudelleen; mitään ei hukkunut.
+
+### Työjonoon kirjattua (mitattuine lukuineen)
+
+181 liiteotsikkokuvausta syineen, pörssitiedotteet, Oikotien
+ennakkomarkkinointi, Klaukkalan koulun kevätlukukausisanonta.
+
+---
+
 ## 2026-10 (tyo 13.10.)
 
 ### Liiteotsikkokuvaukset kaikissa kunnissa (D-352)
