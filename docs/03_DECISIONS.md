@@ -51,6 +51,76 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-355 - Senaatin tekijälohko: tieto oli omassa datassamme, lukematta
+
+Johannes 27.10.2026: *"miksi tästä lähteestä ei ole poimittu kaikkia
+hankkeeseen liittyviä yrityksiä jotka on annettu? Sama toistuu lähteen
+muissakin hankkeissa. Korjataan kantaan ja jatkossa."* ja *"myös
+jonossa on hankkeita joista noita puuttuu."*
+
+**Kerääjä luki sivulta otsikon, kuvauksen, vaiheen, sijainnin ja
+yhteyshenkilöt — ja jätti lukematta koko tekijälohkon.** Lohko on
+sivun arvokkain osa: jokainen osapuoli omalla rivillään roolinsa
+kanssa.
+
+**Yhtään verkkohakua ei tarvittu.** Sivun koko sisältö on tallessa
+omassa datassamme (`raw_payload.original.content.rendered`), joten sekä
+mittaus että korjaus luettiin sieltä — eikä Senaattia eikä kantaa
+kuormitettu turhaan ([[supabase-outage-history]]).
+
+**Sanasto laskettiin aineistosta, ei arvattu.** 52 hankedokumenttia,
+joista **47:ssä on tekijälohko** ja yhteensä **382 osapuolta**. Roolit:
+Rakennuttaja 44, Rakennuttajapäällikkö 44, Käyttäjä 39,
+Rakennuttajakonsultti 35, Rakennesuunnittelu 34, Pääsuunnittelu 30,
+Sähkösuunnittelu 27, Pääurakoitsija 27, LVI-suunnittelu 22 — ja häntä,
+jossa on lähteen omat kirjoitusvirheet ("Rakennesuunittelu")
+([[anchor-vocabulary-per-source]]).
+
+**Jäsennys rakenteesta, ei tekstistä.** Ensimmäinen mittaus luki
+pelkästä tekstistä ja roolit menivät sekaisin
+("Senaatti-kiinteistöt Rakennuttajapäällikkö"), koska rivinvaihtoa ei
+ole. Rakenne on `<p><strong>Rooli:</strong> Arvo</p>`, ja kaksoispiste
+on **joskus `<strong>`:in sisällä ja joskus ulkopuolella**.
+
+**Kuusi vikaa löytyi lukemalla kuivaharjoituksen tulosta, ei mittarista:**
+
+| vika | esimerkki | korjaus |
+|---|---|---|
+| arvo nieli kappaleen | *"Sarc + Sigge Arkkitehdit Oy Kansallisarkiston päärakennus on tullut peruskorjausikään…"* | katkaisu virkkeeseen ja yhtiömuodon jälkeen |
+| nimikirjain katkaisi | *"Rakennus Oy Antti J. Ahola"* → *"…Antti J"* | sama lookbehind kuin muualla virkejaossa |
+| sulkulauseke katkesi | *"YIT Business Premises Oy (ent"* | pariton sulku pois |
+| luettelo yhtenä nimenä | 15 vuokralaisvirastoa yhtenä merkkijonona | pilkotaan, mutta vain kolmesta ylöspäin |
+| täytesana arvona | *"Täydentyy"*, *"Tarkentuu"* | ei kirjoiteta |
+| monta osahanketta | Immolan kasarmialue: **kolme** pääurakoitsijaa | sarake jää tyhjäksi, kaikki liittyviin ([[contractor-from-text]]) |
+
+**Ja yksi vika omassa kartassani:** vein roolisarakkeen arvon *myös*
+liittyviin yrityksiin — juuri sen toiston, jonka Johannes huomasi GTK
+Mintecissä edellisenä iltana ([[party-role-fields]]).
+
+**Kaksi ristiriitaa korvattiin, muut jätettiin.** Takautuva ajo löysi
+**40 ristiriitaa**, joista kaksi luokkaa on virhettä eikä erimielisyyttä:
+
+1. **Tilaaja rakentajan kentässä, 30 riviä.** Rakentajaksi oli kirjattu
+   *"Senaatti-kiinteistöt"* — tilaaja itse — vaikka sama sivu kertoo
+   oikean pääurakoitsijan (SRV, Peab, NCC, Lujatalo…). Rakennuttaja ei
+   ole oman hankkeensa urakoitsija.
+2. **Lyhenne vs. toiminimi:** *"NCC"* → *"NCC Suomi Oy"*, *"SRV"* →
+   *"SRV Rakennus Oy"*.
+
+Aito erimielisyys jätettiin koskematta ja tulostettiin: GTK Mintecin
+**viereisellä** rakennuksella on eri urakoitsija, ja Kansallismuseon
+tilaajaksi on kirjattu museo eikä Senaatti. Niitä ei ratkaista
+säännöllä.
+
+**Tulos: 76 riviä (63 hanketta + 75 jonoriviä käytiin läpi), 34
+virheellistä arvoa korjattu.** Kytketty myös resolveriin, joten uudet
+rivit saavat osapuolet suoraan — se oli Johanneksen pyynnön toinen
+puoli ("kantaan ja jatkossa").
+
+Ks. `lib/agent/senaattiTekijat.ts` (+ spec, 15 testiä),
+`lib/agent/identity/resolvers/senaattiResolver.ts`,
+`scripts/taydenna-senaatin-osapuolet.ts`.
+
 ### D-354 - Jälleenjulkaisija on viimesijainen, ja naapurin päivä on hankkeen päivä vain jos naapuri on sama hanke
 
 Kaksi hanketta samana iltana, sama opetus: **tieto on jo meillä, mutta

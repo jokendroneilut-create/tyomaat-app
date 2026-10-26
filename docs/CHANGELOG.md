@@ -9,6 +9,25 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-10-27 (Senaatin osapuolet)
+
+### Tekijalohko osapuoliksi (D-355)
+
+Senaatin hankesivulla jokainen osapuoli on omalla rivillaan roolinsa
+kanssa, mutta keraaja ei lukenut lohkoa lainkaan. Tieto oli koko ajan
+omassa datassamme, joten korjaus ei vaatinut yhtaan verkkohakua.
+
+Sanasto laskettiin aineistosta: 52 dokumenttia, 47 tekijalohkoa, 382
+osapuolta. Kuusi vikaa loytyi kuivaharjoitusta lukemalla (arvo nieli
+kappaleen, nimikirjain katkaisi, sulkulauseke katkesi, luettelo yhtena
+nimena, taytesana arvona, monta osahanketta samalla sivulla).
+
+76 riviä taydennetty ja 34 virheellista arvoa korjattu -- 30 niista oli
+rivejä joilla rakentajaksi oli kirjattu tilaaja itse. Kytketty myos
+resolveriin, joten uudet rivit saavat osapuolet suoraan.
+
+---
+
 ## 2026-10-25…27 (lähdetyö ja datan laatu)
 
 Kahden vuorokauden jakso, 17 committia ja kymmenen päätöstä (D-345…D-354).

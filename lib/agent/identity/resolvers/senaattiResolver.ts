@@ -2,6 +2,8 @@ import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
+import { looksLikeCompany } from "@/lib/agent/companyName"
+import { senaatinOsapuolet, senaatinTekijat } from "@/lib/agent/senaattiTekijat"
 
 function findFact(facts: any[], type: string) {
   return facts.find((fact) => fact.fact_type === type)
@@ -50,6 +52,22 @@ export async function resolveSenaattiProject({
 
   const contactPersons = contacts.filter((c) => c?.name)
 
+  /*
+   * TEKIJALOHKO OSAPUOLIKSI (D-355).
+   *
+   * Johannes 27.10.2026: *"miksi tasta lahteesta ei ole poimittu
+   * kaikkia hankkeeseen liittyvia yrityksia jotka on annettu?"*
+   * Sivun koko sisalto on dokumentin omassa payloadissa, joten tama ei
+   * vaadi yhtaan lisahakua.
+   *
+   * `developer` EI tule taalta: se on kovakoodattu Senaatiksi yllä
+   * olevan kommentin mukaisesti, ja sivun "Rakennuttaja" voi olla
+   * kayttajavirasto.
+   */
+  const tekijat = senaatinTekijat(document.raw_payload?.original?.content?.rendered ?? "")
+  const osapuolet = senaatinOsapuolet(tekijat, looksLikeCompany)
+  const { developer: _sivunRakennuttaja, ...tekijakentat } = osapuolet.kentat
+
   const result = await resolvePotentialProject({
     title: operation,
     municipality: municipality?.name ?? location,
@@ -83,6 +101,11 @@ export async function resolveSenaattiProject({
 
       description,
       contact_persons: contactPersons,
+
+      ...tekijakentat,
+      ...(osapuolet.liittyvat.length ? { related_companies: osapuolet.liittyvat } : {}),
+      ...(osapuolet.monta.length ? { senaatti_monta_osahanketta: osapuolet.monta } : {}),
+      ...(osapuolet.henkilot.length ? { senaatti_henkilot: osapuolet.henkilot } : {}),
 
       phase_hint: phaseHint,
 
