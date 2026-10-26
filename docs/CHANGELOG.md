@@ -11,6 +11,22 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10 (tyo 13.10.)
 
+### Kaavan tarkoitus selostuksesta (D-351)
+
+Suonenjoen kaavarivien kuvaus oli pelkkia liiteotsikoita. Esteita oli
+kolme: keraajaa ei oltu kytketty liitteenlukuun, luvun nimi
+"Kaavatyon tarkoitus" ei ollut sanastossa, ja lauseankkuri osui
+keskelle virketta poimien MRL:n yleiset tavoitteet (1 127 merkkia
+lakitekstia).
+
+Kaikki kolme korjattu; liitteet luetaan lohkokohtaisesti, koska sivu
+listaa kaikki kaavat. 11 rivista 5 korjattiin.
+
+Mitattu samalla koko kannasta: 251 rivia 13 726:sta on pelkkia
+liiteotsikoita, lahes kaikki kuntien kaavalahteita. Kirjattu
+tyojonoon; jasenninkorjaukset auttavat niita kaikkia, mutta kytkenta
+on kuntakohtainen.
+
 ### Jalonin tyomaaluettelo lahteeksi (D-350)
 
 Julkaisijan oma tyomaalista, jossa jokaisella rivilla rakennuttaja,

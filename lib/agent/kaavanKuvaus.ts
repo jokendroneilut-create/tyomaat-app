@@ -33,11 +33,23 @@ const OTSIKKORIVI = /^\s*(\d+(?:\.\d+)*)\.?\s+(\S.{1,70})$/
 
 /* Halutut luvut. Sanamuoto vaihtelee kunnittain. */
 const HALUTUT: { avain: string; kuvio: RegExp }[] = [
-  { avain: "alue", kuvio: /^(kaava-?alue|suunnittelualue|sijainti)\b/i },
+  /*
+   * "Alueen sijainti" (D-351): sama sanajarjestysansa kuin tarkoituksessa.
+   * Kuvio vaati sijainnin ENSIMMAISEKSI sanaksi, joten Suonenjoen luku 1.2
+   * jai lukematta ja kuvauksesta puuttui MISSA-puoli.
+   */
+  { avain: "alue", kuvio: /^(kaava-?alue|suunnittelualue|sijainti|alueen\s+sijainti)\b/i },
   {
     avain: "tarkoitus",
+    /*
+     * "KAAVATYÖN TARKOITUS" (D-351). Suonenjoen selostuksissa luku 1.3 on
+     * *"Kaavatyön tarkoitus"*, eikä `kaava(?:n|muutoksen|hankkeen)?` osu
+     * siihen: väliin jää "työn". Mitattu 26.10.2026: viidestä ohuesta
+     * Suonenjoen rivistä kaksi kaatui tähän ("selostuksesta ei lukua"),
+     * vaikka selostus oli haettu ja luettu.
+     */
     kuvio:
-      /^((?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen)?\s+(?:tarkoitus|tavoit)|kaavan\s+muutoksen\s+tavoit|tavoitteet|suunnittelun\s+tavoit|tiivistelm)/i,
+      /^((?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen|ty[öo]n|ty[öo])?\s+(?:tarkoitus|tavoit)|kaavan\s+muutoksen\s+tavoit|tavoitteet|suunnittelun\s+tavoit|tiivistelm)/i,
   },
 ]
 
@@ -318,6 +330,27 @@ export function kaavanKuvausLauseesta(raaka: string | null | undefined): string 
      * Mukana se lukee "Kaavamuutoksen tavoitteena on tarkistaa...".
      */
     const alku = osuma.index!
+
+    /*
+     * ANKKURIN ON ALOITETTAVA VIRKE (D-351).
+     *
+     * Suonenjoen korttelin 963 OAS:ssa ei ole numeroituja otsikoita
+     * lainkaan, joten lauseankkuri oli ainoa reitti -- ja se osui
+     * KESKELLE virkettä, maankäyttö- ja rakennuslain yleisiin
+     * tavoitteisiin: *"...suunnittelun tavoitteet, joista tärkeimmät
+     * ovat hyvä elinympäristö ja kestävä kehitys, 4 - toimia
+     * kaavoituksen ennakoivan ... viranomaistyön välineenä"*. 1 127
+     * merkkiä lakitekstiä, nolla hankesisältöä.
+     *
+     * Aito luku tai virke alkaa isolla kirjaimella tai edeltävästä
+     * virkkeen lopusta. Pieni kirjain keskellä virkettä ei ole
+     * otsikko, vaan sivulause.
+     */
+    const edellinen = teksti.slice(0, alku).trimEnd().slice(-1)
+    const alkaaVirkkeen =
+      /[A-ZÅÄÖ]/.test(teksti[alku] ?? "") || !edellinen || /[.:;!?]/.test(edellinen)
+    if (!alkaaVirkkeen) continue
+
     let jatko = teksti.slice(alku, alku + MAX_PITUUS * 2)
     const lopetus = jatko.search(LOPETUS)
     if (lopetus > 0) jatko = jatko.slice(0, lopetus)

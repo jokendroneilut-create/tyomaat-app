@@ -51,6 +51,73 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-351 - Kaavan tarkoitus selostuksesta: kolme estettä, ei yksi
+
+Johannes 26.10.2026 Suonenjoen rivistä `8652187f`: *"pitää poimia
+pdf:stä kuvaukseen ainakin 1.3 Kaavatyön tarkoitus … korjataan tämä ja
+tarkista onko muita päässyt kantaan tai jonoon samasta lähteestä"*.
+
+Rivin kuvaus oli *"Kuulutus 17.9.2026 Asemakaavaselostusehdotus
+Asemakaavakartta Tonttijako"* — pelkät liitelinkkien nimet, nolla
+hankesisältöä. Esteitä oli **kolme peräkkäin**, ja vain ensimmäinen
+näkyi päältä päin.
+
+**1. Kerääjä ei avannut liitettä lainkaan.** `kaavanLiite.ts` on
+olemassa juuri tähän (D-319, "kahden rivin työ"), mutta Suonenjoen
+kerääjää ei ollut kytketty siihen. Kytketty nyt — ja **lohkokohtaisesti**:
+sivu listaa kaikki vireillä olevat kaavat (24 pdf-linkkiä), joten koko
+sivun linkeistä valittaisiin toisen kaavan selostus
+([[listing-page-is-not-project-page]]). `.block-link-list` on yhden
+kaavan oma lohko, ja `liitelinkit` osaa rajata siihen.
+
+**2. Luvun nimi ei ollut sanastossa.** Selostuksen luku 1.3 on
+*"Kaavatyön tarkoitus"*, eikä kuvio `kaava(?:n|muutoksen|hankkeen)?`
+osu siihen: väliin jää **"työn"**. Sama sanajärjestysansa kaatoi luvun
+1.2 *"Alueen sijainti"*, koska kuvio vaati sijainnin ensimmäiseksi
+sanaksi. Molemmat lisätty.
+
+Mitattu ennen korjausta: viidestä ohuesta Suonenjoen dokumentista kaksi
+kaatui tähän (*"selostuksesta ei lukua"*) vaikka selostus oli haettu ja
+luettu, kaksi siihen ettei liitettä löytynyt, yksi listaussivusuojaan.
+
+**3. Lauseankkuri osui keskelle virkettä.** Korttelin 963 OAS:ssa ei
+ole numeroituja otsikoita lainkaan, joten ainoa reitti oli
+lauseankkuri — ja se osui maankäyttö- ja rakennuslain yleisiin
+tavoitteisiin: *"…suunnittelun tavoitteet, joista tärkeimmät ovat hyvä
+elinympäristö ja kestävä kehitys, 4 - toimia kaavoituksen ennakoivan ja
+vuorovaikutteisen viranomaistyön välineenä…"*. **1 127 merkkiä
+lakitekstiä**, joka olisi mennyt kahden rivin kuvaukseksi.
+
+Kuivaharjoitus näytti sen, mittari ei olisi: teksti on pitkä, suomea ja
+näyttää asialliselta. Vasta lukeminen paljastaa, ettei se kerro tästä
+kaavasta mitään. Veto: **ankkurin on aloitettava virke** — iso
+alkukirjain tai edeltävä virkkeen loppu. Pieni kirjain keskellä
+virkettä on sivulause, ei otsikko.
+
+**Tulos:** 11 riviä lähteestä, **5 korjattiin**. Loput: kaksi lohkoa ei
+löydy sivulta (kaava on poistunut listalta), kahdella ei ole selostusta
+liitteissä, kahdesta ei saada lukua (OAS ilman otsikoita — ja nyt
+oikein tyhjä, ei lakitekstiä).
+
+Johanneksen pyytämä teksti on nyt rivillä `8652187f`:
+*"Kaavamuutoksessa tutkitaan mahdollisuus laajentaa tonttia
+778-3-314-7 … varaosamyyntiä harjoittava yritys suunnittelee toimitilan
+laajentamista autokorjaamoa varten … rakennusoikeutta osoitetaan lisää
+500 k-m2 yhteensä 1800 k-m2."* (478 merkkiä.)
+
+**Sama vika on muuallakin, ja määrä on mitattu:** 13 726 kuvauksesta
+**251** on pelkkiä liiteotsikoita, ja ne keskittyvät kuntien
+kaavalähteisiin (Kauniainen 13, Kannus 11, Alajärvi 10, Inari 10,
+Pudasjärvi 9, Inkoo 9…). Jäsentimen kaksi korjausta auttavat niitä
+kaikkia, mutta kytkentä liitteeseen on kuntakohtainen työ
+([[kaava-parser-vs-page]]). Kirjattu työjonoon mittalukuineen, ei
+aloitettu tässä.
+
+Ks. `lib/agent/kaavanKuvaus.ts` (+ spec, 34 testiä),
+`lib/agent/discovery/collectors/apiCollector.ts`,
+`scripts/korjaa-suonenjoen-kaavakuvaukset.ts`,
+`scripts/mittaa-liiteotsikkokuvaukset.ts`.
+
 ### D-350 - Jalonin työmaaluettelo lähteeksi, ja purku ≠ rakentaminen
 
 Johannes 25.10.2026: *"tee tuo jalon lähteeksi"*.

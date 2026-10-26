@@ -728,6 +728,35 @@ muistin varassa.
 
 ### Datan laatu
 
+- **251 kaavariviä, joiden kuvaus on pelkkiä liiteotsikoita — mitattu
+  26.10.2026.** Löytyi Suonenjoen korjauksen yhteydessä (D-351):
+  13 726 kuvauksesta 251 on muotoa *"Kuulutus 17.9.2026
+  Asemakaavaselostusehdotus Asemakaavakartta Tonttijako"* — pituutta on,
+  sisältöä ei.
+
+  Kärki (`scripts/mittaa-liiteotsikkokuvaukset.ts`):
+
+  | lähde | rivejä |
+  |---|---|
+  | Kauniaisten vireillä olevat asemakaavat | 13 |
+  | Kannuksen vireillä olevat asemakaavat | 11 |
+  | Alajärven vireillä olevat asemakaavat | 10 |
+  | Inarin vireillä olevat asemakaavat | 10 |
+  | Pudasjärven kaavoitus | 9 |
+  | Inkoon ajankohtainen kaavoitus | 9 |
+  | Toholammin, Karkkilan, Kuusamon, Savitaipaleen… | 8 kukin |
+
+  **Jäsennin on jo korjattu** (D-351: "Kaavatyön tarkoitus", "Alueen
+  sijainti", lauseankkurin virkeraja), joten työ on pelkkä **kytkentä
+  kuntakohtaisesti**: kerääjälle `liitelinkit($, url, lohko)` ja
+  `taydennaKuvausLiitteesta`. Kytkentä on kaksi riviä per kerääjä, mutta
+  **lohkon rajaus on sivukohtainen** — ilman sitä listaussivulta
+  valitaan toisen kaavan selostus ([[listing-page-is-not-project-page]]).
+
+  **Järjestys:** aloita niistä lähteistä joilla on eniten rivejä ja
+  joiden sivulla on selvä lohkorakenne. Mittari ajetaan uudelleen joka
+  kytkennän jälkeen, jolloin näkyy paljonko luku laski.
+
 - **Taidekasarmin `source_url` osoittaa toisen hankkeen asiaan.**
   (Kirjattu 15.10.2026, ei aloitettu. Löytyi D-290:n kuivaharjoituksessa.)
 

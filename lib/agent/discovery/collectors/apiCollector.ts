@@ -36577,7 +36577,7 @@ async function collectSuonenjokiKaavaSource(source: DiscoverySource) {
 
   const $ = cheerio.load(await response.text())
 
-  const items: { title: string; description: string }[] = []
+  const items: { title: string; description: string; linkit: { href: string; teksti: string }[] }[] = []
   $(".block-link-list").each((_, el) => {
     const $el = $(el)
     const title = $el.find("h2").first().text().replace(/\s+/g, " ").trim()
@@ -36586,8 +36586,27 @@ async function collectSuonenjokiKaavaSource(source: DiscoverySource) {
       .find(".link-list-links a span")
       .map((_, span) => $(span).text().replace(/\s+/g, " ").trim())
       .get()
-    items.push({ title, description: links.join(" ") })
+    /*
+     * LIITTEET VAIN TASTA LOHKOSTA (D-351). Sivu listaa kaikki vireilla
+     * olevat kaavat (24 pdf-linkkia), joten koko sivun linkeista
+     * valittaisiin toisen kaavan selostus
+     * ([[listing-page-is-not-project-page]]). `.block-link-list` on
+     * yhden kaavan oma lohko, ja `liitelinkit` osaa rajata siihen.
+     */
+    items.push({
+      title,
+      description: links.join(" "),
+      linkit: liitelinkit($, SUONENJOKI_LISTING_URL, $el),
+    })
   })
+
+  /*
+   * Kuvaus on pelkkia liiteotsikoita ("Kuulutus 17.9.2026
+   * Asemakaavaselostusehdotus Asemakaavakartta Tonttijako") eika kerro
+   * hankkeesta mitaan; selostuksen tarkoitusluku kertoo
+   * ([[extract-text-not-attachments]]).
+   */
+  const suonenjokiLiiteBudjetti: LiiteBudjetti = { haettu: 0, raja: 8 }
 
   let saved = 0
   const slugCounts = new Map<string, number>()
@@ -36595,13 +36614,16 @@ async function collectSuonenjokiKaavaSource(source: DiscoverySource) {
   for (const item of items) {
     const phase = pohjoisSavoPhaseFromItems([item.title, item.description])
     const completed = phase === "Voimaantulo"
+    const kuvaus =
+      (await taydennaKuvausLiitteesta(item.description, item.linkit, suonenjokiLiiteBudjetti)) ??
+      item.description
     const baseSlug = kemiSlug(item.title)
     const occurrence = (slugCounts.get(baseSlug) ?? 0) + 1
     slugCounts.set(baseSlug, occurrence)
     const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
     const url = `${SUONENJOKI_LISTING_URL}#${slug}`
 
-    const rawText = JSON.stringify({ title: item.title, phase, description: item.description })
+    const rawText = JSON.stringify({ title: item.title, phase, description: kuvaus })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -36620,7 +36642,7 @@ async function collectSuonenjokiKaavaSource(source: DiscoverySource) {
           title: item.title,
           slug,
           phase,
-          description: item.description,
+          description: kuvaus,
           contacts: [],
           completed,
         },

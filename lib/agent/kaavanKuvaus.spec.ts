@@ -310,3 +310,23 @@ describe("yhdistaKuvaukset: sulautunut virke", () => {
     expect(yhdistaKuvaukset(sivu, asiakirja)).toBe(`${sivu} Kaavassa määritetään rakennuspaikat.`)
   })
 })
+
+describe("lauseankkurin on aloitettava virke (D-351)", () => {
+  it("ei poimi MRL:n yleisiä tavoitteita keskeltä virkettä", () => {
+    const oas =
+      "Maankäyttö- ja rakennuslain mukaan valtakunnallisten alueidenkäyttötavoitteiden tehtävänä on " +
+      "varmistaa alueiden käytön suunnittelun tavoitteet, joista tärkeimmät ovat hyvä elinympäristö ja " +
+      "kestävä kehitys, 4 - toimia kaavoituksen ennakoivan ja vuorovaikutteisen viranomaistyön välineenä " +
+      "valtakunnallisesti merkittävissä alueidenkäytön kysymyksissä sekä edistää kansainvälisten " +
+      "sopimusten täytäntöönpanoa Suomessa. Alueidenkäyttötavoitteet jakautuvat viiteen kokonaisuuteen."
+    expect(kaavanKuvausLauseesta(oas)).toBeNull()
+  })
+
+  it("poimii yhä virkkeen alusta alkavan tavoiteluvun", () => {
+    const selostus =
+      "Kaavamuutoksen tavoitteena on tutkia mahdollisuus laajentaa tonttia rakentamattoman katualueen " +
+      "puolelle. Tontilla toimiva varaosamyyntiä harjoittava yritys suunnittelee toimitilan laajentamista " +
+      "autokorjaamoa varten. Kokonaistilantarve on noin 1500 neliömetriä ja rakennusoikeutta osoitetaan lisää."
+    expect(kaavanKuvausLauseesta(selostus)).toContain("varaosamyyntiä")
+  })
+})
