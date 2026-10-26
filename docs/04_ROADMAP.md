@@ -748,7 +748,29 @@ muistin varassa.
   Kaikki kolme ovat julkisia. Uusin kantaa jo vihjeen `fe8c9611`:een,
   eikä sitä lue mikään ([[duplicate-hint-open-items]]).
 
-  **Kolme asiaa ratkaistavaksi, järjestyksessä:**
+  **KOHTA 1 RATKAISTU 26.10.2026 Senaatin hankesivulta: EI ole sama
+  hanke.** Senaatin oma teksti sanoo sen suoraan: *"Koetehdas
+  rakennetaan vuonna 2024 valmistuneen toimisto- ja
+  laboratoriorakennuksen viereen."* `9f899384` on viereinen 3 300 brm²:n
+  toimisto- ja laboratoriorakennus, joka todella valmistui alkuvuonna
+  2024 — se on oikein sellaisenaan. Kaksoiskappale on `fe8c9611` ↔
+  `f8f7eb97` (sama 5 300 brm²:n koetehdas kahdesta lähteestä), ja pari
+  on viety katselmointiin luottamuksella 95.
+
+  **Kohta 2 tehty:** koetehtaan riville oli kirjattu NAAPURIN
+  valmistuminen (2024-12-31). Korjattu Senaatin sivun mukaiseksi
+  (2029-01-31: vaihe 1 käyttöön 6/2028, vaihe 2 1/2029) — väärä mennyt
+  päivä olisi piilottanut käynnissä olevan työmaan 90 vrk:ssa.
+
+  **Kohta 3 odottaa katselmointia.** Senaatin sivu antaa jäljelle
+  jäävälle riville: kustannus **23 M€**, aikataulu 8/2026–2028,
+  rakennuttajakonsultti A-insinöörit Rakennuttaminen Oy, pääurakoitsija
+  Rakennustyö Salminen Oy, pää- ja arkkitehtisuunnittelu Uki Arkkitehdit
+  Oy, rakenne-, LVIA- ja sähkösuunnittelu Ramboll Finland Oy,
+  rakennuttajapäällikkö Outi Hiltunen. Näitä ei kirjoiteta kahteen
+  riviin, joten ne odottavat kumpi jää.
+
+  **Alkuperäinen kolmen kohdan lista:**
 
   1. **Onko `9f899384` sama hanke vai aiempi rakennus?** Sen ala on
      3 300 m² ja uutinen puhuu 5 300 brm²:stä. Jos se on aiempi vaihe,
