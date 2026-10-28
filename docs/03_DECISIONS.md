@@ -51,6 +51,82 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-356 - Väärä kynnys piilotti 1 900 riviä, ja koko joukko ajettiin otannalla
+
+Johannes 29.10.2026 Muuramen Kiuastiesta: *"tästä ei ole poimittu
+tarkoitusta … korjataan tämä ja tarkista kanta sekä jono myös."*
+
+**Jäsennin osasi luvun jo — rivi ei ollut korjausjoukossa.** D-352:n
+ajo etsi rivejä joiden kuvaus on **pelkkiä liiteotsikoita**, ja tämän
+rivin kuvaus oli 118 merkkiä oikeaa tekstiä (kaava-alueen sijainti
+selostuksesta). Rajaus oli siis liian kapea: `kaavanLiite.ts` pitää
+**alle 300 merkin** kuvausta ohuena, ja sama kynnys kuuluu tähän.
+Kynnyksen korjaus nosti ehdokkaat **208 → 2 111**.
+
+Opetus ei ole kynnysluku vaan se, että **mittarin rajaus oli eri kuin
+moduulin oma määritelmä samasta asiasta**. Kaksi paikkaa sanoi "ohut
+kuvaus" eri tavalla, ja se ero jäi näkymättömiin kunnes Johannes avasi
+yhden rivin.
+
+**Kaksi jäsenninestoa lisää, molemmat kuivaharjoituksesta:**
+
+1. **Kaavaprosessin aikataulu tiivistelmän sisältönä.** Luvun otsikko
+   oli hyväksyttävä, mutta sisältö oli *"Kaavaprosessin vaiheet
+   Vireilletulosta ilmoittaminenkuulutus 23.9.2026…"* — 598 merkkiä
+   päivämääriä. `MENETTELYLUKU` tarkisti vain otsikon; nyt myös
+   sisällön alun.
+2. **Kahdelle riville jakautuneen otsikon häntä** sisällön alussa:
+   *"ja alustavat tavoitteet Suunnittelualueen kaavoituksella on…"*.
+
+**Kolme omaa virhettä ajossa, jotka kaatoivat sen kolmesti:**
+
+| virhe | seuraus | korjaus |
+|---|---|---|
+| `ilike` JSON-kenttään | kannan aikakatkaisu (statement timeout) | sivutus + suodatus JavaScriptissä |
+| kaikkien rivien kasaaminen muistiin | `JavaScript heap out of memory` | sivu kerrallaan, metadata vasta kirjoitettaessa |
+| cheerio-sivujen välimuisti | sama kaatuminen uudelleen | rivit järjestetään sivun mukaan, muistissa yksi sivu |
+
+Neljäs ei kaatanut mitään mutta poltti budjetin: alle 300 merkin luvun
+saaneet rivit valikoituivat **uudelleen joka ajolla**, ja yksi erä
+käytti 40 PDF-hakua kahteen jo korjattuun riviin. Tunniste
+(`kuvaus_selostuksesta`) ohittaa ne nyt ([[backfill-marker]]).
+
+**Johannes valitsi kolmesta vaihtoehdosta otantatarkastuksen:** *"aja
+loput kerralla ja luen jälkikäteen satunnaisotos."* Perusteena oli, että
+säännöt oli siinä vaiheessa koeteltu noin sadalla luetulla rivillä ja
+jokainen löytynyt vika estetty.
+
+**Koko ajo:** 2 052 ehdokasta, **304 PDF-hakua, 127 korjattua riviä**,
+ei kaatumisia. Hakujen väliin lisättiin puoli sekuntia, koska rivit on
+järjestetty sivun mukaan ja peräkkäiset haut osuvat samaan kuntaan.
+
+**Otos 24 riviä tasavälein (ei ensimmäiset N,
+[[sample-must-be-representative]]): 24/24 oikein.** Jokainen kuvaus
+koski omaa hankettaan ja tuli oikeasta liitteestä. Kuvauspituus:
+mediaani 376, lyhin 136, pisin 1 190 merkkiä. Kaksi riviä katkeaa
+kesken virkettä luvun rajalla ja muutamassa on PDF:n välilyöntivika
+("väl jään") — kosmeettista, ei väärää tietoa.
+
+**Jäljelle jää ~1 925 riviä, syyt mitattuina:**
+
+| syy | rivejä |
+|---|---|
+| sivulla ei pdf-liitteitä | 686 |
+| liitteen nimi ei tunnista kaavaa | 461 |
+| tunniste ei erottele | 309 |
+| sivua ei saatu (HTTP) | 151 |
+| selostuksesta ei lukua | 151 |
+| ei selostusta eikä OAS:ia | 141 |
+| luku liian lyhyt / rikki | 26 |
+
+Nämä eivät ratkea säännöllä: 686 riviä on sivuja joilla liitteet ovat
+JS:n takana tai rivin osoite on väärä, ja 770 on tapauksia joissa
+liitettä ei voi yhdistää kaavaan ilman kuntakohtaista lohkovalitsinta.
+
+Ks. `scripts/korjaa-liiteotsikkokuvaukset.ts`,
+`scripts/korjaa-yksi-kaavakuvaus.ts`,
+`scripts/tarkista-otos-kaavakuvaukset.ts`, `lib/agent/kaavanKuvaus.ts`.
+
 ### D-355 - Senaatin tekijälohko: tieto oli omassa datassamme, lukematta
 
 Johannes 27.10.2026: *"miksi tästä lähteestä ei ole poimittu kaikkia

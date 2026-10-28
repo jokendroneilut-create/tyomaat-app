@@ -819,6 +819,14 @@ muistin varassa.
   **metakuvaus on luettavissa ilmaiseksi**, ja se sisältää usein juuri
   päivät. Jos tämä toistuu, mittaa ensin montako hanketta hyötyisi.
 
+- **~1 925 kaavariviä ilman selostuksen tarkoituslukua — 300 korjattu
+  26.-29.10.2026 (D-351…D-356), loput vaativat kuntakohtaisen
+  lohkovalitsimen.** Syyt mitattu koko joukosta: 686 sivua joilla ei ole
+  pdf-liitteitä, 461 joilla liitteen nimi ei tunnista kaavaa, 309 joilla
+  tunniste ei erottele, 151 sivunhakuvirhettä, 151 ilman lukua, 141
+  ilman selostusta. Otos 24 riviä korjatuista: 24/24 oikein.
+
+  VANHA MERKINTÄ (208 liiteotsikkoriviä):
 - **181 kaavariviä, joiden kuvaus on pelkkiä liiteotsikoita — 43
   korjattu 26.10.2026 (D-352, D-353).** Yleinen lohkorajaus
   (`lohkonLinkit`) hoiti mitä pystyi; loput vaativat kuntakohtaisen
