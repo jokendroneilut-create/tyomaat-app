@@ -289,6 +289,28 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
    * kuvauksen.
    */
   if ((kuvaus.match(/\?/g) ?? []).length >= 2) return kaavanKuvausLauseesta(raaka)
+
+  /*
+   * MENETTELYLUKU MYOS SISALLON PERUSTEELLA (D-356).
+   *
+   * `MENETTELYLUKU` hylkaa luvun OTSIKON perusteella, mutta Hartolan
+   * selostuksessa tiivistelman SISALTO oli aikataulu: *"Kaavaprosessin
+   * vaiheet Vireilletulosta ilmoittaminenkuulutus 23.9.2026
+   * Asemakaavaluonnos nahtavana AKL 62§..."* -- 598 merkkia
+   * paivamaaria, nolla hankesisaltoa (D-268 sama opetus).
+   */
+  if (MENETTELYLUKU.test(kuvaus.slice(0, 80))) return kaavanKuvausLauseesta(raaka)
+
+  /*
+   * OTSIKON HANTA POIS ALUSTA. Kun luvun otsikko jakautuu kahdelle
+   * riville, jalkimmainen rivi jaa sisallon alkuun: *"ja alustavat
+   * tavoitteet Suunnittelualueen kaavoituksella on tavoitteena..."*.
+   * Pieni alkukirjain kertoo katkelmasta.
+   */
+  if (/^[a-zäöå]/.test(kuvaus)) {
+    const iso = kuvaus.search(/[A-ZÄÖÅ]/)
+    if (iso > 0 && iso < 60) return kuvaus.slice(iso)
+  }
   if (kuvaus.length <= MAX_PITUUS) return kuvaus
 
   /* Katkaisu virkkeen rajalta, ei keskeltä sanaa. */

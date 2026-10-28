@@ -40,7 +40,7 @@ import {
   kaavanKuvausTekstista,
   valitseKaavanAsiakirja,
 } from "../lib/agent/kaavanKuvaus"
-import { liitelinkit, lohkonLinkit } from "../lib/agent/kaavanLiite"
+import { liitelinkit, lohkonLinkit, OHUEN_KUVAUKSEN_RAJA } from "../lib/agent/kaavanLiite"
 
 /* Sama tunnistus kuin mittarissa (D-351). */
 const LIITESANA =
@@ -180,8 +180,15 @@ async function main() {
   const rivit: Rivi[] = []
   const kaikkiOtsikot = new Map<string, Set<string>>()
 
+  /*
+   * SIVU KERRALLAAN, EI KASAAMISTA (D-356).
+   *
+   * Edellinen versio keräsi kaikki rivit muistiin ennen suodatusta ja
+   * Node kaatui `JavaScript heap out of memory` -virheeseen: 17 000
+   * riviä metadatoineen ei mahdu. Nyt jokainen sivu kasitellaan heti ja
+   * vain ehdokkaat jaavat muistiin -- sama kevennys kuin kyselyssa.
+   */
   for (const taulu of ["projects", "potential_projects"] as const) {
-    const data: any[] = []
     for (let a = 0; ; a += 1000) {
       /*
        * VAIN KAAVALAHTEET, EI KOKO TAULUA (D-352).
@@ -201,18 +208,20 @@ async function main() {
             ? "id,name,city,additional_info,metadata"
             : "id,title,municipality,status,metadata"
         )
-      if (!process.argv.includes("--kaikki")) {
-        kysely = kysely.ilike("metadata->>source_name", "%kaav%")
-      }
+      /*
+       * EI ILIKE JSON-KENTTAAN (D-356). `ilike("metadata->>source_name",
+       * "%kaav%")` on taulun taysi skannaus ilman indeksia, ja
+       * `projects`-taulussa se kaatui kannan aikakatkaisuun
+       * (statement timeout). Haetaan sivuttaen ja suodatetaan
+       * JavaScriptissa -- yksi kevyt lapikaynti per ajo, ei
+       * indeksoimatonta hakua.
+       */
       const { data: era, error } = await kysely.range(a, a + 999)
       if (error) {
         console.error(`VIRHE ${taulu}: ${error.message}`)
         process.exit(1)
       }
-      data.push(...(era ?? []))
-      if ((era ?? []).length < 1000) break
-    }
-    for (const r of data) {
+      for (const r of (era ?? []) as any[]) {
       if (taulu === "potential_projects" && (r.status === "ignored" || r.status === "rejected")) continue
       /*
        * Otsikot kerataan KAIKISTA lahteen riveista, ei vain
@@ -227,9 +236,30 @@ async function main() {
         kaikkiOtsikot.set(lahdeNimi, otsikot)
       }
       const kuvaus = String(r.additional_info ?? r.metadata?.description ?? "").replace(/\s+/g, " ").trim()
-      if (!kuvaus || kuvaus.length >= 400) continue
-      if (jaannos(kuvaus).length >= JAANNOS_RAJA) continue
+      /*
+       * KYNNYS ON MODUULIN OMA, EI VAIN LIITEOTSIKKOTESTI (D-356).
+       *
+       * Johannes 29.10.2026 Muuramen Kiuastiesta: *"tasta ei ole
+       * poimittu tarkoitusta"*. Rivin kuvaus oli 118 merkkia OIKEAA
+       * tekstia (kaava-alueen sijainti), joten liiteotsikkotesti ei
+       * poiminut sita -- mutta selostuksen tarkoitusluku puuttui silti.
+       * `kaavanLiite.ts` pitaa alle 300 merkin kuvausta ohuena, ja sama
+       * kynnys patee tassa.
+       */
+      if (!kuvaus) continue
+      /*
+       * JO KASITELTY EI PALAA JONOON (D-356). Osa selostuksista antaa
+       * alle 300 merkin luvun, jolloin rivi jaa kynnyksen alle ja
+       * valikoituu uudelleen joka ajolla -- toinen erä poltti 40
+       * PDF-hakua kahteen riviin, jotka oli jo korjattu. Tunniste
+       * kertoo etta juuri tama ajo on kasitellyt rivin
+       * ([[backfill-marker]]).
+       */
+      if (r.metadata?.kuvaus_selostuksesta) continue
+      const liiteotsikot = jaannos(kuvaus).length < JAANNOS_RAJA && kuvaus.length < 400
+      if (!liiteotsikot && kuvaus.length >= OHUEN_KUVAUKSEN_RAJA) continue
       const lahde = String(r.metadata?.source_name ?? r.metadata?.source ?? "")
+      if (!process.argv.includes("--kaikki") && !/kaav/i.test(lahde)) continue
       if (vainLahde && lahde !== vainLahde) continue
       const sivu = String(r.metadata?.documents_url ?? r.metadata?.source_url ?? "")
       if (!/^https?:\/\//i.test(sivu)) continue
@@ -243,6 +273,8 @@ async function main() {
         kunta: (r.city ?? r.municipality ?? null) as string | null,
         metadata: r.metadata ?? {},
       })
+      }
+      if ((era ?? []).length < 1000) break
     }
   }
 
@@ -284,7 +316,16 @@ async function main() {
 
 
   /* Sivu haetaan kerran, vaikka silta tulisi monta riviä. */
-  const sivut = new Map<string, any>()
+  /*
+   * VAIN YKSI SIVU KERRALLAAN MUISTISSA (D-356). Sivut pidettiin
+   * Mapissa, ja cheerio-dokumentti on megatavuja: sadan sivun jalkeen
+   * Node kaatui vaikka rivit itse oli jo kevennetty. Rivit jarjestetaan
+   * sivun mukaan, jolloin jokainen sivu haetaan tasan kerran ja
+   * vapautuu kun osoite vaihtuu.
+   */
+  rivit.sort((a, b) => a.sivu.split("#")[0].localeCompare(b.sivu.split("#")[0]))
+  let avoinOsoite: string | null = null
+  let avoinSivu: any = null
   const syyt = new Map<string, number>()
   const syy = (s: string) => syyt.set(s, (syyt.get(s) ?? 0) + 1)
   let haettu = 0
@@ -297,15 +338,17 @@ async function main() {
     }
 
     const osoite = r.sivu.split("#")[0]
-    if (!sivut.has(osoite)) {
+    if (avoinOsoite !== osoite) {
+      avoinSivu = null
+      avoinOsoite = osoite
       try {
         const res = await fetch(osoite, { headers: { "user-agent": "Mozilla/5.0" }, cache: "no-store" })
-        sivut.set(osoite, res.ok ? cheerio.load(await res.text()) : null)
+        avoinSivu = res.ok ? cheerio.load(await res.text()) : null
       } catch {
-        sivut.set(osoite, null)
+        avoinSivu = null
       }
     }
-    const $ = sivut.get(osoite)
+    const $ = avoinSivu
     if (!$) {
       syy("sivua ei saatu")
       continue
@@ -425,8 +468,15 @@ async function main() {
 
     if (!apply) continue
 
+    /*
+     * METADATA HAETAAN VASTA KIRJOITETTAESSA (D-356). Ehdokkaita on yli
+     * 2 000, ja niiden metadatan pitaminen muistissa kaatoi Noden
+     * (`JavaScript heap out of memory`). Kirjoitettavia on enintaan
+     * budjetin verran, joten yksi lisahaku per rivi on halpa.
+     */
+    const { data: nykyinenRivi } = await db.from(r.taulu).select("metadata").eq("id", r.id).single()
     const md = {
-      ...r.metadata,
+      ...((nykyinenRivi as any)?.metadata ?? {}),
       description: uusi,
       kuvaus_selostuksesta: { liite: asiakirja, milloin: new Date().toISOString().slice(0, 10) },
     }
