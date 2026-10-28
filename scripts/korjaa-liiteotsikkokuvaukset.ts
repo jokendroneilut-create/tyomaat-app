@@ -424,6 +424,12 @@ async function main() {
     }
 
     haettu += 1
+    /*
+     * TAUKO HAKUJEN VALIIN. Rivit on jarjestetty sivun mukaan, joten
+     * perakkaiset haut osuvat samaan kuntaan. Puoli sekuntia pitaa
+     * tahdin inhimillisena pitkassakin ajossa.
+     */
+    if (haettu > 1) await new Promise((r) => setTimeout(r, 500))
     const teksti = await haeKaavaselostuksenTeksti(asiakirja)
     if (!teksti) {
       syy("liitettä ei saatu luettua")
