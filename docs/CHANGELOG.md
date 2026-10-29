@@ -11,6 +11,23 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10-29 (Jalonin kaksoiskappaleet)
 
+### Katselmointijonosta ei saa kadota pareja (D-358)
+
+Kaksoiskappalelista otti sata odottavaa luottamusjarjestyksessa, joten
+katon ylittava pari olisi kadonnut nakymasta ilman mitaan merkkia --
+samalla kun navigaation lukumaara olisi nayttanyt oikean luvun. Katto
+poistettiin: haku sivuttaa koko jonon lapi ja sivu hakee lukumaaran
+erikseen todistaakseen nayttavansa kaiken, ja eroavasta luvusta tulee
+punainen varoitus.
+
+Samalla paljastui pahempi vika: jarjestys oli pelkka `confidence desc`
+ilman ratkaisijaa, joten rivit joilla on sama luku eivat olleet
+maaratyssa jarjestyksessa. Mitattuna 343 rivin yli sivukoolla 25 **44
+riviä katosi ja 44 tuli kahdesti**. Ratkaisijaksi lisattiin `created_at`
+ja `id`. Lisaksi hankkeiden haku pilkottiin sataan tunnisteeseen
+kerrallaan, koska 51 paria tuotti jo 102 tunnistetta yhteen kyselyyn.
+Tarkistus: `scripts/tarkista-duplikaattijonon-sivutus.ts`.
+
 ### Osoite tunnistaa hankkeen, jonka otsikko ei tunnista (D-357)
 
 Jalonin tyomaaluettelo nimeaa kohteen osoitteella, kun sama hanke on

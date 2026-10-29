@@ -8,17 +8,26 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 /*
  * NAYTTAA KATSELMOINTIJONON NIIN KUIN SIVU SEN NAYTTAA.
  *
- * Kayttaa sivun omaa palvelua, joten rajaus (status=pending), jarjestys
- * (luottamus laskevasti) ja KATTO 100 RIVIA ovat samat. Katto on syy
- * ajaa tama: jos jonossa on yli 100 odottavaa, matalan luottamuksen
- * parit putoavat nakymasta eika niita kukaan nae.
+ * Kayttaa sivun omaa palvelua, joten rajaus (status=pending) ja jarjestys
+ * ovat samat. Kattoa ei enaa ole (D-358), ja skripti todistaa sen:
+ * se vertaa listan pituutta jonon lukumaaraan ja huutaa jos ne eroavat.
  *
  *   npx tsx scripts/nayta-duplikaattijono.ts
  */
 async function main() {
-  const { getDuplicateCandidates } = await import("../app/tic/services/getDuplicateCandidates")
-  const rivit = await getDuplicateCandidates(100)
-  console.log(`Sivu nayttaisi ${rivit.length} paria (katto 100)\n`)
+  const { getDuplicateCandidates, getPendingDuplicateCount } = await import(
+    "../app/tic/services/getDuplicateCandidates"
+  )
+  const [rivit, odottaa] = await Promise.all([
+    getDuplicateCandidates(),
+    getPendingDuplicateCount(),
+  ])
+  console.log(`Sivu nayttaisi ${rivit.length} paria; jonossa odottaa ${odottaa}`)
+  console.log(
+    rivit.length === odottaa
+      ? "TASMAA: mitaan ei putoa listalta\n"
+      : `EROAA: ${odottaa - rivit.length} paria ei nay!\n`
+  )
   for (const c of rivit) {
     console.log(`Varmuus: ${c.confidence}%   [${c.reasons.join("] [")}]`)
     console.log(`   A: ${c.projectA?.name ?? "(puuttuu)"} — ${c.projectA?.city ?? "-"} / ${c.projectA?.phase ?? "-"}`)

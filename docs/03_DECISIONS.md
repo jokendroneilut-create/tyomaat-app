@@ -51,6 +51,50 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-358 - Katselmointijonosta ei saa kadota pareja: katto pois, jarjestykselle ratkaisija
+
+Johannes 29.10.2026: *"duplikaattijonosta ei saa kadota hankkeita koskaan,
+korjaa se"* -- vastaus edellisen kohdan havaintoon, etta lista nayttaa
+vain sata odottavaa.
+
+**Kaksi erillista tapaa kadota, molemmat korjattu.**
+
+**1. Katto.** `getDuplicateCandidates` otti `limit 100`. Kun jonoon vietiin
+39 osoiteparia (D-357), odottavia oli 51 -- katto oli yhtakkia lahella, ja
+sen ylittava pari olisi havinnyt nakymasta ilman mitaan merkkia. Pahinta
+oli, etta **navigaation lukumaara olisi silti nayttanyt oikean luvun**,
+koska `getPendingDuplicateCount` laskee erikseen: jono olisi nayttanyt
+lyhenevan vaikka parit vain jaivat katon taakse.
+
+Nyt haku sivuttaa koko jonon lapi, ja sivu hakee lukumaaran erikseen
+**todistaakseen** nayttavansa kaiken. Jos luvut eroavat, sivulle tulee
+punainen varoitus -- hiljaista eroa ei voi syntya.
+
+**2. Jarjestys ilman ratkaisijaa.** Haku oli `order("confidence", desc)` ja
+ei muuta. Kun kymmenilla rivilla on sama luku (26 osoiteparia sai nollan),
+**jarjestys ei ole maaratty**, ja sivutuksessa se tarkoittaa etta sama rivi
+voi tulla kahdesti ja toinen jaa kokonaan pois.
+
+Tama ei ole teoreettista. Mitattu koko taulun yli
+(`scripts/tarkista-duplikaattijonon-sivutus.ts`, 343 rivia):
+
+| jarjestys | sivukoko | tulos |
+|---|---|---|
+| confidence + created_at + id | 25 / 100 / 1000 | 343 rivia, 343 uniikkia -- **OK** |
+| pelkka confidence | 25 | 343 rivia, **299 uniikkia -- 44 katosi** |
+
+Ratkaisijaksi `created_at` ja viimeiseksi `id`, joka on uniikki.
+
+**Kolmas, pienempi:** hankkeiden haku oli yksi `.in(projectIds)`. Pareja on
+kaksi hanketta kohden, joten 51 paria tuotti jo 102 tunnistetta, ja liian
+pitka URL olisi jattanyt osan hakematta -- jolloin pari olisi nakynyt
+tyhjana korttina. Haku pilkotaan nyt sataan tunnisteeseen kerrallaan
+(ks. muisti: supabase-schema).
+
+Muutetut: `app/tic/services/getDuplicateCandidates.ts`,
+`app/tic/discovery/duplicates/page.tsx`. Tarkistus:
+`scripts/nayta-duplikaattijono.ts` vertaa listan pituutta jonon lukuun.
+
 ### D-357 - Postinumero esti osoiteosuman; katselmointijono ennen tasmayttimen avaamista
 
 Johannes 29.10.2026: *"Katso Jalon lähteistä tulleet hankkeet vielä ja yritä
