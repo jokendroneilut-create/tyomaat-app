@@ -114,13 +114,24 @@ ei taydentanyt mitaan, koska kentissa oli **tyhja merkkijono** eika
 `null`. `??` ei korvaa tyhjaa. Kolme suunnittelijakenttaa jai C:lta ja
 nelja H:lta tayttamatta, ja se nakyi vasta tarkistusajossa.
 
-**Aikatauluristiriita jatettiin nakyviin.** C-rivin oma kuvaus
-(Pohteen sopimusuutinen, Q4/2025) sanoo *"luovutetaan tilaajalle
-elokuun 2029 loppuun mennessa"*; NCC:n hankesivu sanoo nyt *"2025–2030"*
-ja *"luovutetaan tilaajalle syksylla 2030"*. Kenttaan kirjattiin NCC:n
-luku urakoitsijan omana ja tuoreempana, mutta **kuvaus on yha vanha** ja
-ristiriita on `field_sources`issa nakyvissa
+**Aikatauluristiriita korjattiin molemmista paikoista.** Kentassa oli
+NCC:n luku (syksy 2030), mutta kuvaus oli yha Pohteen sopimusuutisesta
+ja sanoi *"vuosille 2025-2029 ... elokuun 2029 loppuun mennessa"* --
+asiakas luki siis kuvauksesta eri vuoden kuin kentasta. Johannes:
+*"paivita kuvaus"*. Kuvaus kirjoitettiin uusiksi tiivistaen (591 ->
+854 merkkia), ei liittamalla kahta tekstia perakkain
+([[condense-dont-recreate]]): mukaan tulivat osoite, laajuus,
+rakennuksen sisalto, allianssimalli, arvo, oikea aikataulu ja
+suunnittelijat. Vanha teksti talteen metadataan, koska se on ainoa jalki
+siita mita sopimushetkella sanottiin
 ([[newer-source-is-not-current-state]]).
+
+Samalla paljastui, etta **sama vanhentunut aikataulu on toisella
+julkisella rivilla**: `e39120fe` (Pohteen sopimusuutinen) sanoo yha
+*"2025-2029"* ja on vaiheessa Suunnittelussa, vaikka NCC rakentaa
+parhaillaan. Sita EI kirjoitettu uusiksi: teksti on uutisreferaatti ja
+sen muuttaminen olisi lahteen vaarin siteeraamista. Oikea ratkaisu on
+katselmointipari -- kun rivit yhdistetaan, rikkaampi jaa.
 
 Ks. `scripts/pura-oys-2030.ts`, `scripts/korjaa-oys-c-rakennus.ts`,
 `scripts/tarkista-oys-purku.ts`.
