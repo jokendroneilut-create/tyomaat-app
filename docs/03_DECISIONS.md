@@ -51,6 +51,65 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-357 - Postinumero esti osoiteosuman; katselmointijono ennen tasmayttimen avaamista
+
+Johannes 29.10.2026: *"Katso Jalon lähteistä tulleet hankkeet vielä ja yritä
+etsiä käsin kaksoiskappaleita. He kertovat huonosti mistä hankkeesta on kyse.
+Esimerkiksi tämä paletinkierto hanke voisimme tunnistaa että kyseessä on tuo
+hekan kohde."*
+
+**Jalon nimeaa kohteen osoitteella**, kun sama hanke on kannassa tilaajan
+nimella: "Kuninkaantammi, Paletinkierto 11 00430 Helsinki" vs. "Heka
+Kuninkaantammi, Paletinkierto 11". Otsikkovertailu ei voi osua. Kaytiin 12
+rivia lapi, ja kaksi hakua (katu + talonumero, seka loysempi katunimi +
+erisnimet) antoivat saman viiden parin joukon:
+
+| osoite | Jalonin rivi | kannassa | tuomio |
+|---|---|---|---|
+| Pomonkatu 2, Mikkeli | tilamuutokset | Hilma-urakka, voittajana Jalon Rakentajat Oy | **sama** |
+| Paletinkierto 11, Helsinki | Kuninkaantammi | Heka Kuninkaantammi | **sama** |
+| Kiribatinkatu 1, Helsinki | As Oy Aruba ja HEKA | Heka Jatkasaari | **sama** (oli jo jonossa) |
+| Kalevankatu 1, Riihimaki | kaupungintalon urakka | asemakaava: suojelu + laajennusosan purku | eri hanke |
+| Sepankatu 3, Jyvaskyla | Gradia Harju A | kampuksen asemakaavamuutos | eri hanke |
+
+Kaksi uutta paria kirjattiin `project_duplicate_candidates`iin; ei yhdistetty
+kasin (ks. muisti: check-duplicate-reviews).
+
+**Mekaaninen syy loytyi:** `same_location` vaati tasmalleen saman
+merkkijonon, joten postinumero yksin esti osuman
+("kirkonkylantie 17 00700 helsinki" != "kirkonkylantie 17 helsinki").
+Todiste: Jalonin 13. kohde "Malmin peruskoulu ja paivakoti" ei loyda omaa
+hankettaan samasta osoitteesta, vaan ajautuu 65 pisteella TOISEN
+kaupunginosan kouluun ("Peruskoulu ja paivakoti Vartiokylaan").
+
+**Korjaus kokeiltiin ja PERUTTIIN.** Postinumeron pudottaminen
+osoitevertailusta mitattiin koko aineiston yli
+(`scripts/mittaa-postinumero-osumat.ts`): 21 paria muuttuu
+"eri osoite" -> "sama osoite", ja 70 pisteen yhdistamisraja ylittyy **0 -> 3**:
+
+- Tammelan koulu 50 -> 90 (oikein, sama hanke)
+- Meri-Rastilan monitoimitalo 38 -> 78 (oikein, sama hanke)
+- Espoon kulttuurikeskus 58 -> **98 (vaarin)**: *vesikaton korjaustyot* ja
+  *Tapiolasalin akustiset parannukset* ovat eri urakat samassa talossa.
+  Urakkalajiveto ei laukea, koska se vaatii urakkanimityksen eika
+  "parannukset" ole sellainen.
+
+Kaksi oikeaa osumaa ei maksa yhta vaaraa yhdistamista, joka kirjoittaa kentat
+toisen hankkeen paalle (ks. muisti: matched-overwrites-fields). Sama signaali
+on turvallinen katselmointijonossa, jossa ihminen paattaa, joten osoiteavain
+jaa **loytotyokaluksi, ei pisteeksi**. Tasmayttimen avaaminen edellyttaa
+ensin urakkalajiveton laajentamista.
+
+Tyokalut: `scripts/etsi-jalon-kaksoiskappaleet.ts` (katu + talonumero),
+`scripts/etsi-jalon-kaksoiskappaleet-loysa.ts` (katunimi + erisnimet),
+`scripts/lisaa-jalon-kaksoisparit.ts`, `scripts/mittaa-osoiteparit.ts`,
+`scripts/mittaa-postinumero-osumat.ts`.
+
+**Avoimet:** osoiteavain loysi 39 paria muista lahteista joita tasmaytin ei
+nae -- ei viela jonossa. Jalonin sivu ilmoittaa Gradia Harju A:n
+rakennuttajaksi *Osuuskauppa Keskimaan*; kampus on Gradian, mutta kahdella
+haulla ei loytynyt kumoavaa tietoa, joten kenttaa ei muutettu.
+
 ### D-356 - Väärä kynnys piilotti 1 900 riviä, ja koko joukko ajettiin otannalla
 
 Johannes 29.10.2026 Muuramen Kiuastiesta: *"tästä ei ole poimittu

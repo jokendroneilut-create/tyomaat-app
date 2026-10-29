@@ -9,6 +9,32 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-10-29 (Jalonin kaksoiskappaleet)
+
+### Osoite tunnistaa hankkeen, jonka otsikko ei tunnista (D-357)
+
+Jalonin tyomaaluettelo nimeaa kohteen osoitteella, kun sama hanke on
+kannassa tilaajan nimella ("Kuninkaantammi, Paletinkierto 11 00430
+Helsinki" vs. "Heka Kuninkaantammi, Paletinkierto 11"). Kaikki 12
+Jalonin riviä kaytiin lapi kahdella haulla; **kolme oli kaksoiskappaletta**
+(Pomonkatu 2 Mikkeli, Paletinkierto 11, Kiribatinkatu 1) ja kaksi saman
+osoitteen eri hanketta (Riihimaen kaupungintalo ja Gradia Harju A, joiden
+parina oli kyseisen alueen asemakaavamuutos). Kaksi uutta paria vietiin
+katselmointijonoon; kolmas oli siella jo.
+
+### Postinumero esti osoiteosuman - muutos mitattiin ja peruttiin (D-357)
+
+`same_location` vaati tasmalleen saman merkkijonon, joten postinumero
+yksin esti osuman. Pudottaminen mitattiin koko aineiston yli: 21 paria
+muuttuu samaksi osoitteeksi ja 70 pisteen yhdistamisraja ylittyy 0 -> 3.
+Kolmesta kaksi oli oikein, mutta kolmas yhdistaisi Espoon
+kulttuurikeskuksen **vesikaton korjauksen ja Tapiolasalin akustiikan**
+samaksi hankkeeksi 98 pisteella. Muutosta ei otettu kayttoon; osoiteavain
+jaa loytotyokaluksi katselmointijonoon. Avoimena 39 saman osoitteen paria
+muista lahteista.
+
+---
+
 ## 2026-10-27 (Senaatin osapuolet)
 
 ### Tekijalohko osapuoliksi (D-355)
