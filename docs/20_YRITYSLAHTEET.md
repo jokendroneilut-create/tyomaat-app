@@ -61,6 +61,21 @@ Pelkkä tiedostohaku olisi väittänyt sitä puuttuvaksi.
 
 ## Tehty
 
+### JM Suomi — lähteeksi 30.10.2026 (D-359)
+
+Asuntorakennuttaja joka on myös oma rakentajansa. Taulukossa alla
+yhdellätoista hankkeella, joista seitsemältä puuttui valmistumispäivä ja
+kymmeneltä lähde — eli ne oli luotu käsin.
+
+Reitti on poikkeuksellisen hyvä: sivukartta antaa kohdesivut ja jokaisen
+takana on sama data JSONina (`/GetViewModel`). Mitattu 22 kohdetta, joilla
+nimi, katuosoite, kunta ja asuntomäärä 22/22 ja muuttopäivä 17/22.
+Työmaan henkilöitä sivulla ei ole, vain asuntomyynti.
+
+Ensimmäinen ajo: 6 jonoriviä, 6 osumaa, 10 kirjautui valmiina (yksitoista
+22:sta on jo muuttovalmiita, eikä valmis rakennus ole liidi). Arvo on
+siis sekä uusissa riveissä että täydennyksessä.
+
 ### Lohkare Infra -konserni — lähteeksi 24.10.2026 (D-341)
 
 Emoyhtiö, jonka tytäryhtiö **Oteran on jo lähteenä** (D-310). Lisättiin
@@ -236,7 +251,7 @@ rakennuttaja mutta ei käyttäydy kuten kaupunki eikä kuten yritys.
 |---|---|
 | Louhintahiekka | 12 |
 | TVT Asunnot | 12 |
-| JM Suomi | 11 |
+| ~~JM Suomi~~ | ~~11~~ → **lähteeksi 30.10.2026 (D-359)**, ks. Tehty |
 | Toivo | 10 |
 | HSY | 9 |
 | Oteran | 9 |

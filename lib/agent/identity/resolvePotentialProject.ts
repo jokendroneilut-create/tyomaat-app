@@ -135,7 +135,36 @@ export async function resolvePotentialProject(
     .filter(Boolean)
     .join(" ")
   const inferredCompletion = inferCompletionDateFromText(completionText)
-  const staleCompleted = !!inferredCompletion && isPastDate(inferredCompletion)
+
+  /*
+   * LAHTEEN OMA TULEVA PAIVA KUMOAA TEKSTISTA PAATELLYN MENNEEN (D-359).
+   *
+   * Saanto luki vain tekstia, joten rivi saattoi olla yhta aikaa
+   * "valmistunut 2022" ja "valmistuu 20.12.2028" -- ja jalkimmainen oli
+   * lahteen OMA rakenteinen kentta. Teksti kertoi joka kerta jostain
+   * muusta kuin tasta hankkeesta.
+   *
+   * Mitattu 29.10.2026 koko jonon yli (10 617 rivia): syylla
+   * `valmistunut_menneisyydessa` oli ohitettu 159 rivia, joista
+   * kahdeksalla oli oma tuleva paiva. Kaikki kahdeksan luettiin:
+   *
+   *   OYS 2030          "ensimmaisen vaiheen rakennukset valmistuivat 2023"  (oma 2030)
+   *   Fingrid x4        "YVA valmistunut vuonna 2024"                        (oma 2027-2028)
+   *   Prisma Hyllykallio "edellinen iso laajennus valmistunut vuonna 2012"   (oma 2027)
+   *   JM Konemestari    "korttelin ensimmaiset yhtiot valmistuneet 2022"     (oma 2028)
+   *   Malmin sairaala   (jo hyvaksytty kasin)
+   *
+   * Yksikaan ei ollut valmis hanke: teksti puhui edellisesta vaiheesta,
+   * YVA-menettelysta, aiemmasta laajennuksesta tai naapuritalosta
+   * ([[summary-hides-the-second-project]]). Sama periaate kuin
+   * `phase_authoritative`illa (D-339): rakenteinen kentta voittaa
+   * tekstipaattelyn.
+   */
+  const omaValmistuminen = String(md.estimated_completion ?? "").trim()
+  const omaTulevaisuudessa = Boolean(omaValmistuminen) && !isPastDate(omaValmistuminen)
+
+  const staleCompleted =
+    !!inferredCompletion && isPastDate(inferredCompletion) && !omaTulevaisuudessa
 
   /*
    * Kaavan ajantasaistaminen (vanhan asemakaavan päivitys, ei uudisrakentamista)

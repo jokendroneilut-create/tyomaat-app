@@ -9,6 +9,44 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-10-30 (JM Suomi lähteeksi)
+
+### JM Suomen asuntokohteet lähteeksi (D-359)
+
+Sivukartta antaa 22 kohdesivua ja jokaisen takana on sama data JSONina
+(`/GetViewModel`), joten kentät ovat rakenteisia: nimi, katuosoite, kunta
+ja asuntomäärä 22/22, muuttopäivä 17/22. JM on sekä rakennuttaja että
+rakentaja. Ensimmäinen ajo: **6 jonoriviä, 6 osumaa, 10 kirjautui
+valmiina**. Osuneet saivat rakentajan, valmistumispäivän ja
+lähdeosoitteen — juuri ne puuttuivat kannan JM-riveiltä.
+
+Neljä ansaa löytyi lukemalla: muuttopäivä on paikallinen keskiyö (suora
+`slice` olisi antanut aina päivää liian aikaisin), kuvauskentässä on
+40 kt Wordista liitettyä roskaa ja 65 nimettyä entiteettiä, myyntitila
+ei ole rakentamisen vaihe (loppuunmyyty kohde vuodelta 2024 olisi mennyt
+jonoon "Rakenteilla"), ja oma kuivaharjoitukseni raportoi kolme
+vaihemuutosta joita ei tapahtuisi.
+
+Käsin työmaakyltistä täydennetty vastaava työnjohtaja säilyi: yhdistys
+ajettiin oikeilla riveillä ennen tuontia.
+
+### Lähteen oma valmistumispäivä kumoaa tekstistä päätellyn (D-359)
+
+JM:n hanke paljasti yleisen vian: `resolvePotentialProject` ohitti
+ehdokkaan kun KUVAUSTEKSTISTÄ poimittu valmistumispäivä oli mennyt,
+katsomatta lähteen omaa rakenteista päivää. Rivi saattoi siis olla yhtä
+aikaa "valmistunut 2022" ja "valmistuu 20.12.2028".
+
+Mitattu koko jonon yli (10 617 riviä): syyllä
+`valmistunut_menneisyydessä` oli ohitettu 159 riviä, joista kahdeksalla
+oli oma tuleva päivä. Kaikki luettiin, eikä **yksikään** ollut valmis
+hanke — teksti puhui edellisestä vaiheesta, YVA-menettelystä, aiemmasta
+laajennuksesta tai naapuritalosta. Mukana OYS 2030 ja neljä Fingridin
+voimajohtohanketta. Sääntö katsoo nyt lähteen omaa päivää, ja seitsemän
+ohitettua riviä palautettiin jonoon.
+
+---
+
 ## 2026-10-29 (Jalonin kaksoiskappaleet)
 
 ### Katselmointijonosta ei saa kadota pareja (D-358)

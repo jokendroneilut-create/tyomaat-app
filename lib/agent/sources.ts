@@ -85,6 +85,7 @@ import { fetchGrkProjectsSource } from "./fetchGrkProjectsSource"
 import { fetchDestiaSource } from "./fetchDestiaSource"
 import { fetchOteranSource } from "./fetchOteranSource"
 import { fetchJalonSource } from "./fetchJalonSource"
+import { fetchJmSource } from "./fetchJmSource"
 import { fetchLohkareSource } from "./fetchLohkareSource"
 import { fetchVexatecSource } from "./fetchVexatecSource"
 import { fetchTilapalvelutSource } from "./fetchTilapalvelutSource"
@@ -406,6 +407,14 @@ export const sources = [
    * rakentaja, sivun "Rakennuttaja" on tilaaja.
    */
   { name: "jalon_tyomaat", fetch: fetchJalonSource },
+  /*
+   * JM Suomen asuntokohteet (D-359). Sivukartta antaa kohdesivut ja
+   * jokaisen takana on sama data JSONina (`/GetViewModel`), joten kentat
+   * ovat rakenteisia. JM on seka rakennuttaja etta rakentaja. Mitattu
+   * 29.10.2026: 22 kohdetta, nimi/osoite/kunta/asuntomaara 22/22 ja
+   * muuttopaiva 17/22; niista 11 on jo valmiita.
+   */
+  { name: "jm_kohteet", fetch: fetchJmSource },
   /*
    * Vexatec Oy: hoiva- ja palvelurakentamisen KVR-urakoitsija. Tiedotteet
    * ovat WordPressin omassa tyypissa `tiedotteet`, eivat RSS-syotteessa

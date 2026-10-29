@@ -51,6 +51,125 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-359 - JM Suomi lahteeksi, ja lahteen oma paiva kumoaa tekstista paatellyn
+
+Johannes 29.10.2026: *"Tee JM Suomesta (jmoy.fi) lahde."* Kannassa oli 11
+JM-hanketta, joista seitsemalta puuttui valmistumispaiva ja kymmenelta
+lahde -- eli ne olivat tulleet kasin.
+
+**Reitti on rakenteinen.** Sivukartta `sitemap.projects.xml` antaa
+kohdesivut, ja jokaisen takana on sama data JSONina osoitteessa
+`<kohdesivu>/GetViewModel`. Mitattu 29.10.2026, 22 kohdetta:
+
+| kentta | kattavuus |
+|---|---|
+| nimi, katuosoite, postinumero, kunta | 22/22 |
+| asuntojen lukumaara | 22/22 |
+| koordinaatit | 22/22 (ei kaytossa) |
+| muuttopaiva | 17/22 |
+| julkaisijan oma tila | 22/22 |
+| `timeline.buildStart` / `buildEnd` | **0/22** |
+
+Sivu kutsuu myos `web.jmapi.io/residence/search_stage` -rajapintaa, joka
+toisi kaikki yhdella pyynnolla. Pyynnon muotoa ei saatu selville kolmella
+arvauksella eika listaussivu lahetä sita lainkaan, joten reitti jai
+arvaukseksi -- 23 pyyntoa kerran vuorokaudessa on halvempi kuin arvaus.
+
+**Koordinaatteja ei oteta,** vaikka ne ovat tarkkoja: `importCandidate`
+ei ota niita vastaan, ja metadataan kirjoitettu kentta jota mikaan ei lue
+on tunnettu ansa (`possible_duplicate_of` on 1 499 hankkeella eika sita
+lue mikaan). Osoite on tarkka, ja piste haetaan kunnan rekisterista.
+
+**Nelja ansaa, jotka loytyivat lukemalla eika mittarista:**
+
+1. **Muuttopaiva on paikallinen keskiyo.** `"2027-05-18T21:00:00+00:00"`
+   on 19.5. Suomen aikaa. Suora `slice(0, 10)` olisi antanut JOKA KERTA
+   yhta vuorokautta liian aikaisen paivan -- kaikki 17 paivaa ovat tata
+   muotoa.
+2. **Kuvauskentassa on Wordista liitetty roska.** Yhden kohteen `body` on
+   40 184 merkkia, josta oikeaa tekstia 3 100; loput ovat `<xml>`-lohkoja
+   ja `mso-`tyylimaarittelyja. Lisaksi tekstissa on 65 nimettya
+   entiteettia, ja niiden pyyhkiminen olisi tuottanut asiakkaalle
+   kuvauksen *"kodit on suunniteltu kest m n aikaa"* -- sama hiljainen
+   vika kuin D-341:ssa, nyt luettavassa tekstissa.
+3. **Myyntitila ei ole rakentamisen vaihe.** `moveinready` ja `planned`
+   kertovat rakentamisesta, muut kolme vain asuntokaupasta. Pahempaa:
+   `soldout`-kohde Vaskiseppa oli myyty loppuun ja muuttopaiva 2.12.2024,
+   mutta tilaa ei ollut kaannetty -- se olisi mennyt jonoon vaiheessa
+   Rakenteilla. Tavallisesti `importCandidate` estaisi sen itse
+   (`isStaleCompletion`), MUTTA se ehto on `!body.phase_authoritative`:
+   kun lahde ilmoittaa lukevansa vaiheen rakenteisesta kentasta, se
+   samalla luopuu tasta suojasta. Mennyt muuttopaiva luetaan siksi
+   valmistumiseksi lahteessa itsessaan.
+4. **Oma mittarini valehteli kolmesti.** Kuivaharjoitus vertasi vaiheita
+   merkkijonona ja raportoi muutoksia joita ei tapahtuisi:
+   "Suunnittelussa" -> "Suunnittelu" on sama vaihe eri nimella, ja
+   "Rakentaminen aloitettu" -> "Suunnittelu" ei toteudu lainkaan, koska
+   `phaseAdvances` sallii vain etenemisen. Korjattu vertaamaan samalla
+   funktiolla jota tuonti kayttaa.
+
+**Valmistuneita ei suodateta kerääjässä.** Yksitoista 22:sta on valmiita,
+ja `importCandidate` kasittelee ne oikein ilman eri saantoa: osumaton
+valmis EI mene jonoon vaan kirjautuu tapahtumana (`completed_source`), ja
+osuva paivittaa rivin tilan ja nostaa `needs_review`-lipun.
+
+**Ensimmainen ajo:** 22 ehdokasta -> **6 jonoriviä, 6 osumaa, 10
+kirjautui valmiina**. Osuneet saivat rakentajan, valmistumispaivan ja
+lahdeosoitteen. Kolme paivaa tarkentui kasin merkityista
+kuukaudenlopuista lahteen omiksi paiviksi (31.5. -> 19.5., 31.12. ->
+15.12., 31.10. -> 21.10.), ja Mantylanhuippu siirtyi Valmistuneeksi
+(muuttopaiva 17.4.2024) -- se poistuu julkiselta listalta
+automaattiportin kautta, ja `needs_review` nousi.
+
+**Kasin lisatty tyonjohtaja sailyi.** Vellamonneidon riville oli
+taydennetty tyomaakyltista vastaava tyonjohtaja Perttu Sivula. Yhdistys
+ajettiin oikeilla riveilla ennen tuontia: han sailyi muuttumattomana, ja
+asuntomyynnin merkinta yhdistyi sahkopostin perusteella eika tullut
+kahdesti (D-341:n `mergeContacts` toimii).
+
+**Ja loytyi yleinen vika, joka ei ole taman lahteen oma.**
+`resolvePotentialProject` ohittaa ehdokkaan kun KUVAUSTEKSTISTA poimittu
+valmistumispaiva on mennyt. Saanto ei katsonut lahteen omaa rakenteista
+paivaa, joten rivi saattoi olla yhta aikaa *"valmistunut 2022"* ja
+*"valmistuu 20.12.2028"*.
+
+Mitattu koko jonon yli (10 617 rivia): syylla
+`valmistunut_menneisyydessa` oli ohitettu **159 rivia, joista
+kahdeksalla oli oma tuleva paiva**. Kaikki kahdeksan luettiin:
+
+| rivi | mita teksti oikeasti sanoi | oma paiva |
+|---|---|---|
+| OYS 2030, Oulu | "ensimmaisen vaiheen rakennukset valmistuivat 2023" | 2030 |
+| Fingrid x4 | "YVA valmistunut vuonna 2024" | 2027-2028 |
+| Prisma Hyllykallio | "edellinen iso laajennus valmistunut 2012" | 2027 |
+| JM Konemestari | "korttelin ensimmaiset yhtiot valmistuneet 2022" | 2028 |
+| Malmin sairaala | (jo hyvaksytty kasin) | 2035 |
+
+**Yksikaan ei ollut valmis hanke.** Teksti puhui joka kerta jostain
+muusta: edellisesta vaiheesta, YVA-menettelysta, aiemmasta laajennuksesta
+tai naapuritalosta. Saanto katsoo nyt lahteen omaa paivaa, ja seitseman
+`ignored`-rivia palautettiin jonoon tunnisteella
+`palautettu_2026_10_29`. Periaate on sama kuin `phase_authoritative`illa
+(D-339): rakenteinen kentta voittaa tekstipaattelyn.
+
+**Avoimia, mitattuja:**
+
+- **Osuma ei tuo kuvausta.** `importCandidate` ei kirjoita
+  `additional_info`-kenttaa osuneelle riville lainkaan, joten kolme
+  osunutta JM-rivia jai ilman kuvausta vaikka lahteella on sellainen.
+  Muutos koskisi kaikkia lahteita, joten sita ei tehty tassa.
+- **Aikabudjetti.** Yksi ajo ehtii noin kahdeksan ehdokasta (keskikesto
+  16 s, suurin osa tasmaytysta 7 164 hanketta vastaan), joten
+  ensimmainen kierros vaati kolme ajoa. Jatkossa jo nahdyt ohitetaan.
+- **"Kerrostalo Nokialle"** on ilmeisesti sama hanke kuin Kartanonrannan
+  Kuunlilja, mutta tasmays jai 40 pisteeseen eika niita yhdistetty.
+
+Ks. `lib/agent/fetchJmSource.ts` (+ spec, 19 testia),
+`scripts/kuivaharjoitus-jm.ts`, `scripts/lisaa-jm-lahde.ts`,
+`scripts/tarkista-jm-ajo.ts`,
+`scripts/mittaa-vanhentunut-valmistuminen.ts`,
+`scripts/palauta-vaarin-ohitetut.ts`.
+
 ### D-358 - Katselmointijonosta ei saa kadota pareja: katto pois, jarjestykselle ratkaisija
 
 Johannes 29.10.2026: *"duplikaattijonosta ei saa kadota hankkeita koskaan,
