@@ -9,7 +9,28 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
-## 2026-10-30 (Jätkäsaaren kortteli ja JM Suomi)
+## 2026-10-30 (OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
+
+### OYS 2030 -ohjelmasivu osahankkeiksi (D-361)
+
+NCC:n ohjelmasivu "OYS 2030, Oulu" oli jonossa yhtenä rivinä, vaikka
+sivun Tiedot-osiossa on viisi omaa lohkoa työnumeroineen, osoitteineen
+ja laajuuksineen. Resolveri oli poiminut ensimmäisen lohkon kentät koko
+ohjelman nimiin: laajuudeksi 35 538 brm² ja suunnittelijoiksi
+C-rakennuksen suunnittelijat, ilman osoitetta.
+
+C ja H täydennettiin (osoite, laajuus, aikataulu, suunnittelijat),
+Kuuraparkki 1C vietiin jonoon, F ja A jätettiin luomatta koska ne ovat
+valmistuneet, ja ohjelmasivun rivi hylättiin — se ei voi koskaan olla
+yksi hanke. C-rakennuksen kaksi riviä vietiin katselmointipariksi.
+
+**Oma virhe, joka maksoi korjausajon:** skripti täydensi ensin
+C-rakennuksen osoitteen ja vei vasta sitten Kuuraparkin täsmäyttimeen.
+Samassa osoitteessa oleva Kuuraparkki osui juuri täydennettyyn riviin 90
+pisteellä ja kirjoitti siihen tyypin "Pysäköintilaitos". Täsmäys oli
+tarkistettu etukäteen ja näytti 60 — mutta tarkistus tehtiin ennen omaa
+täydennystä. Kun sama ajo sekä muuttaa kantaa että täsmäyttää sitä
+vasten, täsmäys on laskettava muutosten jälkeen.
 
 ### Kaksi tonttia yhdellä rivillä puretaan (D-360)
 

@@ -51,6 +51,80 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-361 - Ohjelmasivu osahankkeiksi, ja oma taydennys loi vaaran osuman
+
+Johannes 30.10.2026 jonorivista `bb6d981e`: *"tassa ehdokkaassa on monta
+osahanketta: c, h, kuuraparkki, f ja a. pura tama osahankkeiksi ja kerro
+mita tuolle hankkeelle tehdaan sen jalkeen."*
+
+Rivi on NCC:n **ohjelmasivu** "OYS 2030, Oulu", ei hanke. Sivun
+Tiedot-osiossa on viisi omaa lohkoa, jokaisella tyonumero, rakennusaika,
+katuosoite, laajuus ja suunnittelijat:
+
+| osahanke | tyonro | rakennusaika | osoite | laajuus |
+|---|---|---|---|---|
+| C-rakennus | 13819 | 10/2025–syksy 2030 | Kajaanintie 50 | 35 538 brm² |
+| H-rakennus | 13847 | 2/2026–12/2030 | Kiviharjuntie 19 | 26 500 brm² |
+| Kuuraparkki 1C | 13820 | 10/2025–syksy 2030 | Kajaanintie 50 | 18 610 brm² |
+| F-rakennus | 13542 | 1/2022–6/2025 | Kiviharjuntie 7 | 33 000 brm² |
+| A-rakennus | 13414 | 1/2019–5/2023 | Kajaanintie 50 | 58 700 brm² |
+
+**Mita rivi oli ehtinyt tehda.** Resolveri poimi ENSIMMAISEN lohkon
+kentat ja kirjasi ne koko ohjelman nimiin: laajuudeksi 35 538 brm² ja
+suunnittelijoiksi C-rakennuksen suunnittelijat, otsikolla "OYS 2030,
+Oulu". Osoitetta ei ollut lainkaan, vaikka jokaisella lohkolla on oma.
+Sama kuvio kuin D-345:ssa ja D-360:ssa ([[multi-project-rows]]).
+
+**Ratkaisu osahankkeittain:**
+
+- **C ja H olivat jo kannassa** omina riveinaan toisista lahteista
+  (Pohteen sopimusuutinen ja NCC:n tiedote), mutta ilman osoitetta,
+  laajuutta ja aikataulua. Taydennettiin.
+- **Kuuraparkki 1C** ei ollut kannassa -> jonoon.
+- **F ja A ovat valmiita** (6/2025 ja 5/2023) -> ei luoda. Valmis
+  rakennus ei ole liidi, ja sama linja on `importCandidate`issa.
+- **Ohjelmasivun rivi hylattiin** (`rejected`): se ei voi koskaan olla
+  yksi hanke, eli se on juuri se tapaus jonka saa hylata lopullisesti
+  ([[reject-is-not-final]]). Osahankkeiden tunnisteet kirjattiin sen
+  metadataan, jotta purku on jaljitettavissa.
+- **C-rakennuksesta on kaksi rivia** (NCC:n hankesivu ja STT:n uutinen
+  samasta sopimuksesta) -> pari katselmointijonoon, ei yhdistetty.
+
+**OMA VIRHE, JOKA ON TAMAN PAATOKSEN TARKEIN OSA.** Skripti taydensi
+ensin C-rakennuksen osoitteeksi "Kajaanintie 50, 90220 Oulu" ja vei
+vasta sitten Kuuraparkin `importCandidate`iin. Kuuraparkki on samassa
+osoitteessa, joten se osui juuri taydennettyyn C-riviin **90 pisteella**
+(`same_location`, `name_in_description`) ja kirjoitti siihen tyypin
+**"Pysakointilaitos"**.
+
+Tasmays oli tarkistettu etukateen ja se naytti 60 -- mutta **tarkistus
+tehtiin ennen omaa taydennysta**, eli vanhentuneella aineistolla. Juuri
+se taydennys loi osuman. Suoja oli siis olemassa ja silti hyodyton,
+koska se mittasi tilaa joka ei enaa ollut voimassa kirjoitushetkella.
+
+Opetus on yleinen: **kun sama ajo seka muuttaa kantaa etta tasmayttaa
+sita vasten, tasmays on laskettava muutosten JALKEEN** -- tai
+kirjoitettava eri ajoon. Kuuraparkki luotiin korjauksessa suoraan
+jonoon ilman tasmaytinta, koska se ja C-rakennus ovat pysyvasti samassa
+katuosoitteessa (sairaala-alue) ja tasmaytin osuu niihin aina. Ihminen
+erottaa ne, kone ei.
+
+**Toinen oma virhe samassa skriptissa:** `c.architectural_design ?? ...`
+ei taydentanyt mitaan, koska kentissa oli **tyhja merkkijono** eika
+`null`. `??` ei korvaa tyhjaa. Kolme suunnittelijakenttaa jai C:lta ja
+nelja H:lta tayttamatta, ja se nakyi vasta tarkistusajossa.
+
+**Aikatauluristiriita jatettiin nakyviin.** C-rivin oma kuvaus
+(Pohteen sopimusuutinen, Q4/2025) sanoo *"luovutetaan tilaajalle
+elokuun 2029 loppuun mennessa"*; NCC:n hankesivu sanoo nyt *"2025–2030"*
+ja *"luovutetaan tilaajalle syksylla 2030"*. Kenttaan kirjattiin NCC:n
+luku urakoitsijan omana ja tuoreempana, mutta **kuvaus on yha vanha** ja
+ristiriita on `field_sources`issa nakyvissa
+([[newer-source-is-not-current-state]]).
+
+Ks. `scripts/pura-oys-2030.ts`, `scripts/korjaa-oys-c-rakennus.ts`,
+`scripts/tarkista-oys-purku.ts`.
+
 ### D-360 - Kaksi tonttia yhdella rivilla: julkaisijan tyomaa ei ole meidan hanke
 
 Johannes 30.10.2026 katselmointijonosta: *"siina on minusta kaksi
