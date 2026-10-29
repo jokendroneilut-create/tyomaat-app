@@ -24,8 +24,12 @@ Julkaisijan **työmaa on urakka, meidän hanke on rakennus** — sama
 urakoitsija ja yksi työmaanumero eivät tee niistä yhtä hanketta. Rivi
 nimettiin Arubaksi omalla osoitteellaan, Hekan rivi sai Jalonin tuoman
 rakentajan ja työmaan numeron, ja pari merkittiin ei-duplikaatiksi.
-Lähde ajettiin heti perään: 13 dokumenttia, 13 ohitettu, 0 tallennettu —
-korjaus kesti, koska jo nähty lähdeosoite ei etene täsmäyttimeen asti.
+Lähde ajettiin heti perään: 13 dokumenttia, 13 ohitettu, 0 tallennettu.
+Korjaus kestää, mutta kahdesta eri syystä: tänään ohituksen teki kerääjän
+14 vrk:n ikkuna, ja sen umpeuduttua `duplicate_source` nappaa osoitteen
+pysyvästi, koska se kirjattiin aikanaan `queued_for_review`-tilaan. Sama
+suoja EI koske osumalla syntyneitä rivejä — ne käsitellään uudelleen 14
+vrk:n välein, jotta lähteen oma päivitys pääsee läpi.
 
 ### JM Suomen asuntokohteet lähteeksi (D-359)
 

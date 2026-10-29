@@ -117,11 +117,31 @@ yhtaan.
 
 Lahde ajettiin heti korjauksen jalkeen: **13 dokumenttia, 13 ohitettu,
 0 tallennettu**. Molemmat rivit sailyivat ennallaan eika uutta
-jonorivia syntynyt (Jalonin jonorivit yha 12, kaikki 24.10.). Syy on
-kerääjän oma dokumenttitason ohitus: jo nahty lahdeosoite ei etene
-`importCandidate`iin lainkaan, joten tasmayttimen pistemaara ei paase
-ratkaisemaan mitaan. Huoli oli siis aiheeton -- mutta se selvisi vain
-ajamalla.
+jonorivia syntynyt (Jalonin jonorivit yha 12, kaikki 24.10.).
+
+**Suojia on kaksi, ja vain toinen on pysyva.** Tama on syyta erottaa,
+koska siita riippuu kestaako kasin tehty korjaus:
+
+| suoja | missa | kesto | ehto |
+|---|---|---|---|
+| jo nahty lahdeosoite | keraaja (`findRecentlySeenSourceUrls`) | **14 vrk** | mika tahansa tuontitapahtuma |
+| `duplicate_source` | `importCandidate` | **pysyva** | aiempi tapahtuma jonka `action_taken` on `queued_for_review` |
+
+Tanaan ohitus tuli 14 vrk:n ikkunasta (tapahtuma 24.10.). Kun ikkuna
+umpeutuu 7.11., ehdokas etenee `importCandidate`iin -- ja siella
+`duplicate_source` nappaa sen pysyvasti, koska Aruban osoite kirjattiin
+24.10. tilaan `queued_for_review`. Korjaus on siis turvassa.
+
+**Mutta tama EI pade riviin joka syntyi osumalla.** `duplicate_source`
+vaatii nimenomaan `queued_for_review`-tapahtuman; `matched`-tapahtuma ei
+kelpaa. Osumalla syntyneet rivit (esim. Jalonin Malmin peruskoulu ja JM:n
+kuusi osunutta rivia) kasitellaan siis uudelleen aina 14 vrk:n jalkeen.
+Se on tarkoitus -- niin lahteen oma paivitys paasee lapi -- mutta samalla
+se tarkoittaa, etta **noille riveille kasin tehty korjaus voi kirjoittua
+yli**, jos lahde yha sanoo toisin.
+
+Huoli oli siis aiheeton tassa tapauksessa, mutta vasta kahden eri suojan
+erottaminen kertoo miksi.
 
 Ks. `scripts/pura-kiribatinkatu-kortteli.ts`.
 
