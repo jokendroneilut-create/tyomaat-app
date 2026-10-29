@@ -100,13 +100,40 @@ on turvallinen katselmointijonossa, jossa ihminen paattaa, joten osoiteavain
 jaa **loytotyokaluksi, ei pisteeksi**. Tasmayttimen avaaminen edellyttaa
 ensin urakkalajiveton laajentamista.
 
+**Jatko 29.10.2026: 39 paria vietiin jonoon.** Johannes: *"vie nuo 39 paria
+jonoon"*. Kaikki luettiin ensin riveittain kuivaharjoituksesta. Jakauma:
+
+| tasmaytin | pareja | mita ne ovat |
+|---|---|---|
+| 38-62 p. | 13 | kaksi lahdetta samasta hankkeesta, eri otsikolla |
+| 0 p. (veto) | 26 | osoite tasmaa, mutta veto erottaa (purku vs. rakentaminen, eri urakkalaji) |
+
+Nollat EIVAT ole roskaa: joukossa on mm. Lempaalan jateasema (Hilman
+urakka + Lupapisteen rakentamislupa) ja Nokian keskuspuhdistamo (kaava +
+Skanskan tiedote), jotka ovat samoja hankkeita eri asiakirjoissa. Veto
+sanoo vain "ala yhdista automaattisesti", ei "nama ovat eri hankkeet".
+
+Luottamukseksi kirjattiin **tasmayttimen oma luku, ei 100**: nama ovat
+saman osoitteen pareja, eivat kasin todettuja kaksoiskappaleita. Koska
+lista nayttaa "Varmuus: 0%", joka ilman selitysta nayttaa virheelta,
+nolla sai oman perustelulapun *"osoite tasmaa, veto erottaa"*.
+
+**Jonon katto on 100 riviä.** `getDuplicateCandidates` hakee
+`status=pending` luottamuksen mukaan laskevasti, `limit 100`. Ennen ajoa
+odottavia oli 13 (kaikki >= 70), jalkeen 51, joten kaikki nakyvat. Jos
+jono kasvaa yli sadan, **juuri nama matalan luottamuksen parit putoavat
+nakymasta ensimmaisena**. Tarkistus: `scripts/nayta-duplikaattijono.ts`.
+
+Skripti: `scripts/lisaa-osoiteparit-jonoon.ts` (laskee parit uudelleen,
+ei kovakoodattua listaa; ohittaa jo katselmoidut myos `not_duplicate`
+-tilassa).
+
 Tyokalut: `scripts/etsi-jalon-kaksoiskappaleet.ts` (katu + talonumero),
 `scripts/etsi-jalon-kaksoiskappaleet-loysa.ts` (katunimi + erisnimet),
 `scripts/lisaa-jalon-kaksoisparit.ts`, `scripts/mittaa-osoiteparit.ts`,
 `scripts/mittaa-postinumero-osumat.ts`.
 
-**Avoimet:** osoiteavain loysi 39 paria muista lahteista joita tasmaytin ei
-nae -- ei viela jonossa. Jalonin sivu ilmoittaa Gradia Harju A:n
+**Avoin:** Jalonin sivu ilmoittaa Gradia Harju A:n
 rakennuttajaksi *Osuuskauppa Keskimaan*; kampus on Gradian, mutta kahdella
 haulla ei loytynyt kumoavaa tietoa, joten kenttaa ei muutettu.
 

@@ -30,8 +30,18 @@ muuttuu samaksi osoitteeksi ja 70 pisteen yhdistamisraja ylittyy 0 -> 3.
 Kolmesta kaksi oli oikein, mutta kolmas yhdistaisi Espoon
 kulttuurikeskuksen **vesikaton korjauksen ja Tapiolasalin akustiikan**
 samaksi hankkeeksi 98 pisteella. Muutosta ei otettu kayttoon; osoiteavain
-jaa loytotyokaluksi katselmointijonoon. Avoimena 39 saman osoitteen paria
-muista lahteista.
+jaa loytotyokaluksi katselmointijonoon.
+
+### 39 saman osoitteen paria jonoon (D-357)
+
+Osoiteavain loysi 39 paria muista lahteista, joita tasmaytin ei nae, ja
+ne vietiin katselmointijonoon. 13 saa tasmayttimelta 38-62 pistetta ja 26
+nollan, koska jokin veto erottaa rivit (purku vs. rakentaminen, eri
+urakkalaji). Nollat eivat ole roskaa: mukana mm. Lempaalan jateasema ja
+Nokian keskuspuhdistamo, joissa sama hanke on kahdessa eri asiakirjassa.
+Luottamukseksi kirjattiin tasmayttimen oma luku, ei 100, ja nolla sai
+oman perustelulapun. Odottavia pareja 13 -> 51; listan katto on 100,
+joten kaikki nakyvat (`scripts/nayta-duplikaattijono.ts`).
 
 ---
 
