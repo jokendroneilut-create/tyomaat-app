@@ -330,3 +330,36 @@ describe("lauseankkurin on aloitettava virke (D-351)", () => {
     expect(kaavanKuvausLauseesta(selostus)).toContain("varaosamyyntiä")
   })
 })
+
+/*
+ * Ankkuri ei saa alkaa keskelta sanaa, ja uusin vaihe voittaa (D-362).
+ */
+describe("Asemakaavan tarkoitus ja vaihejarjestys", () => {
+  it("lukee luvun vaikka otsikko on muotoa 'Asemakaavan tarkoitus'", () => {
+    const teksti =
+      "Asemakaavalla muodostuu: Korttelit 448-454 sekä katu- ja virkistysalueita. " +
+      "Asemakaavan tarkoitus: Osoitetaan 60 rakennettua kiinteistöä toteutuneiden " +
+      "käyttötarkoitustensa mukaisilla korttelialueilla sijaitseviksi ohjeellisiksi " +
+      "tonteiksi sekä muodostetaan 5 uutta ohjeellista asuintonttia kiinteistöstä " +
+      "886-401-3-510 Hiidenmäki."
+    const tulos = kaavanKuvausLauseesta(teksti)
+    expect(tulos).toContain("Asemakaavan tarkoitus")
+    expect(tulos).toContain("Osoitetaan 60 rakennettua kiinteistöä")
+  })
+
+  it("valitsee ehdotuksen luonnoksen sijaan myos kun luonnos on listassa ensin", () => {
+    const perus = "https://www.ulvila.fi/wp-content/uploads/2026/03/"
+    const valinta = valitseKaavaselostus([
+      { href: perus + "SELOSTUS_LUONNOS_Palovainio.pdf", teksti: "" },
+      { href: perus + "SELOSTUS_EHDOTUS_Palovainio.pdf", teksti: "" },
+    ])
+    expect(valinta).toContain("EHDOTUS")
+  })
+
+  it("pitaa merkitsemattoman selostuksen kun muuta ei ole", () => {
+    const perus = "https://www.ulvila.fi/wp-content/uploads/2026/03/"
+    expect(valitseKaavaselostus([{ href: perus + "SELOSTUS_Palovainio.pdf", teksti: "" }])).toContain(
+      "SELOSTUS_Palovainio"
+    )
+  })
+})

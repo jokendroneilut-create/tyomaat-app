@@ -66,93 +66,11 @@ function normalisoi(teksti: string): string {
 /*
  * LIITTEEN ON TUNNISTETTAVA JUURI TAMA KAAVA (D-352).
  *
- * Kuivaharjoitus kahdella eri lohkosaannolla naytti saman virheen:
- * Toholammin *"Datakeskuksen alueen asemakaava"* sai **Ullavan
- * sahkoaseman** OAS:n, koska se sattui olemaan sivun ensimmainen
- * OAS. Lohkon rajaus ei riita, koska osalla kunnista lohkoa ei ole
- * lainkaan -- silloin ainoa todiste on liitteen NIMI.
- *
- * Saanto on sama kuin `taydenna-kaavakuvaukset.ts`:ssa (D-271):
- * otsikon kaavatunnus tai harvinainen sana on loydyttava liitteen
- * nimesta tai linkin tekstista.
+ * Saanto siirrettiin `lib/agent/kaavanLiite.ts`:aan D-362:ssa, jotta
+ * myos yhden rivin korjaustyokalu kayttaa samaa — se kirjoitti ilman
+ * sita vaaran kaavan kuvauksen ([[same-term-two-definitions]]).
  */
-const YLEISSANA =
-  /^(asemakaava|asemakaavan|asemakaavamuutos|kaava|kaavan|kaavamuutos|muutos|muutoksen|ranta|yleis|yleiskaava|osayleiskaava|osa|osaa|ja|sekä|alue|alueen|alueella|kortteli|korttelin|korttelia|kaupunginosa|vireillä|luonnos|ehdotus|tie|katu|kuja|puisto|laajennus|tonttijaon|tonttijako|koskeva|siihen|liittyvä)$/i
-
-/*
- * TYYPPISANA EI YKSILOI KAAVAA (D-352). Kuivaharjoitus 37 rivista:
- * Toholammin *"Takkukankaan tuulivoimapuiston osayleiskaava"* sai
- * **Harjakankaan** OAS:n ja Kannuksen *"Poleenkankaan
- * teollisuusalueen asemakaava"* sai **Eskolan** teollisuusalueen
- * OAS:n -- molemmissa osuma syntyi sanasta joka kertoo hankkeen
- * TYYPIN, ei sen nimen. Erotteleva sana on "Takkukankaan",
- * "Poleenkankaan".
- *
- * Myos kunnan nimi on pois: Inarin *"Ivalon asemakaavan muutos;
- * Vilkontie"* osui Ivalon TOISEN kaavan selostukseen.
- */
-const TYYPPISANA =
-  /tuulivoima|aurinkovoima|voimapuisto|voimalaitos|teollisuusalue|yritysalue|liikealue|asuinalue|datakeskus|keskusta|kaava|kortteli|tontti|laajennus|muutos|hanke|alue|rakentamis|paloasema|koulu|päiväkoti|satama/i
-
-function tunnisteet(
-  otsikko: string,
-  kunta?: string | null,
-  yleinen?: (sana: string) => boolean
-): string[] {
-  const ulos: string[] = []
-  for (const m of otsikko.matchAll(/\b[A-Za-zÅÄÖåäö]{0,3}\s?\d{2,5}(?:-\d{2,5})?\b/g)) {
-    const t = m[0].replace(/\s+/g, "").toLowerCase()
-    if (t.length >= 3) ulos.push(t)
-  }
-  const kuntaNimi = normalisoi(kunta ?? "")
-  for (const sana of otsikko.split(/[^\wäöåÄÖÅ-]+/)) {
-    if (sana.length < 6 || YLEISSANA.test(sana) || TYYPPISANA.test(sana)) continue
-    /* Kunnan nimi ei erota saman kunnan kaavoja toisistaan. */
-    const s = sana.toLowerCase()
-    if (kuntaNimi && (s.startsWith(kuntaNimi.slice(0, 5)) || kuntaNimi.startsWith(s.slice(0, 5)))) continue
-    if (yleinen?.(s)) continue
-    ulos.push(s)
-  }
-  return ulos
-}
-
-/*
- * ASEMAKAAVA JA YLEISKAAVA OVAT ERI KAAVA (D-352). Inarin *"Ivalon
- * asemakaavan muutos; Vilkontie"* osui tiedostoon
- * "kaavaselostus-ivalon-alueen-**yk**-muutos-uusijoki", koska sana
- * "ivalon" on molemmissa -- mutta toinen on yleiskaavan muutos
- * toisaalla Ivalossa. Kun otsikko ja liite ovat eri kaavalajia, osuma
- * on vaara riippumatta yhteisesta paikannimesta.
- */
-function kaavalaji(teksti: string): "asema" | "yleis" | null {
-  const t = teksti.toLowerCase().replace(/[_\s-]+/g, "")
-  const yleis = /(osa)?yleiskaav|\byk\b|\boyk\b|oykm|ykmuutos/.test(t)
-  const asema = /asemakaav|\bak\b|akm|ranta-?asemakaav/.test(t)
-  if (yleis && !asema) return "yleis"
-  if (asema && !yleis) return "asema"
-  return null
-}
-
-function osuukoKaavaan(
-  linkki: { teksti: string; href: string },
-  otsikko: string,
-  kunta?: string | null,
-  yleinen?: (sana: string) => boolean
-): boolean {
-  const nimi = `${decodeURIComponent(linkki.href.split("/").pop() ?? "")} ${linkki.teksti}`
-    .toLowerCase()
-    .replace(/[_\s-]+/g, "")
-  const otsikonLaji = kaavalaji(otsikko)
-  const liitteenLaji = kaavalaji(`${linkki.href.split("/").pop() ?? ""} ${linkki.teksti}`)
-  if (otsikonLaji && liitteenLaji && otsikonLaji !== liitteenLaji) return false
-
-  for (const t of tunnisteet(otsikko, kunta, yleinen)) {
-    /* Kannan alku riittaa: "Kappelinkierron" vs "kappelinkierto". */
-    const kanta = (t.length > 7 ? t.slice(0, -2) : t).replace(/[_\s-]+/g, "")
-    if (kanta.length >= 3 && nimi.includes(kanta)) return true
-  }
-  return false
-}
+import { osuukoKaavaan, tunnisteet } from "../lib/agent/kaavanLiite"
 
 async function main() {
   const apply = process.argv.includes("--apply")

@@ -26,6 +26,9 @@ export type KaavanYhteyshenkilo = {
   nimi: string
   /* Nimike sellaisena kuin se tekstissa lukee. */
   rooli: string
+  /* Vain kun ne ovat nimen vieressa, ks. YHTEYSTIETO-ikkuna alla. */
+  puhelin?: string | null
+  sahkoposti?: string | null
 }
 
 /*
@@ -59,6 +62,53 @@ const NIMIPARI = new RegExp(`^\\s*[:,-]?\\s*(${NIMI}\\s+${NIMI})\\b`)
 /* Sanat jotka nayttavat nimelta mutta eivat ole. */
 const EI_NIMI = /^(Lieksan|Kaupungin|Kaupunki|Kunnan|Kunta|Pohjois|Etelä|Länsi|Itä|Suomen)\b/
 
+/*
+ * PUHELIN JA SAHKOPOSTI, KUN NE OVAT NIMEN VIERESSA (D-362).
+ *
+ * Alkuperainen muistiinpano sanoi ettei niita ole selostuksessa. Se
+ * piti paikkansa Lieksassa, muttei yleisesti: Ulvilan selostuksen
+ * kansilehdella lukee *"Asiaa hoitaa: Kaavoitusarkkitehti Mikko
+ * Toivanen puh. 0400 134 777 mikko.toivanen@ulvila.fi"*. Premissi oli
+ * siis kirjattu faktana ([[check-before-calling-it-intended]]).
+ *
+ * Kaksi rajausta, jotta toisen ihmisen numero ei tartu nimeen:
+ *
+ * 1. IKKUNA. Vain 120 merkkia nimen jalkeen. Selostuksessa on muitakin
+ *    numeroita (kaupungin vaihde, ELY-keskus), ja ne ovat kauempana.
+ * 2. SAHKOPOSTIN ON VASTATTAVA NIMEA. Yhteinen laatikko
+ *    (`kaupunkikehitys@`, `kirjaamo@`) EI ole taman henkilon osoite,
+ *    eika sita saa kirjata hanen nimiinsa. Vaaditaan etu- tai
+ *    sukunimi osoitteen paikallisosassa.
+ *
+ * Puhelin vaatii `puh.`/`p.`-merkinnan: paljas numerosarja voi olla
+ * kaavatunnus, diaarinumero tai kiinteistotunnus.
+ */
+const YHTEYSTIETO_IKKUNA = 120
+const PUHELIN = /\b(?:puh\.?|p\.|puhelin)\s*:?\s*((?:\+358|0)[\d\s-]{6,16}\d)/i
+const SAHKOPOSTI = /([A-Za-z0-9._%+-]+)@([A-Za-z0-9.-]+\.[A-Za-z]{2,})/
+
+const skandit = (s: string) =>
+  s.toLowerCase().replace(/å/g, "a").replace(/ä/g, "a").replace(/ö/g, "o")
+
+export function yhteystiedotNimenVierelta(
+  jatko: string,
+  nimi: string
+): { puhelin: string | null; sahkoposti: string | null } {
+  const ikkuna = jatko.slice(0, YHTEYSTIETO_IKKUNA)
+
+  const puh = ikkuna.match(PUHELIN)?.[1]?.replace(/\s+/g, " ").trim() ?? null
+
+  const posti = ikkuna.match(SAHKOPOSTI)
+  let sahkoposti: string | null = null
+  if (posti) {
+    const paikallinen = skandit(posti[1])
+    const osat = skandit(nimi).split(/\s+/).filter((o) => o.length >= 3)
+    if (osat.some((o) => paikallinen.includes(o))) sahkoposti = `${posti[1]}@${posti[2]}`
+  }
+
+  return { puhelin: puh, sahkoposti }
+}
+
 export function kaavanYhteyshenkilot(teksti: string | null | undefined): KaavanYhteyshenkilo[] {
   const puhdas = String(teksti ?? "").replace(/\s+/g, " ")
   if (!puhdas) return []
@@ -80,7 +130,17 @@ export function kaavanYhteyshenkilot(teksti: string | null | undefined): KaavanY
       if (nahdyt.has(avain)) continue
       nahdyt.add(avain)
 
-      loydot.push({ nimi, rooli: puhdas.slice(osuma.index, osuma.index + osuma[0].length) })
+      const { puhelin, sahkoposti } = yhteystiedotNimenVierelta(
+        jatko.slice(jatko.indexOf(nimi) + nimi.length),
+        nimi
+      )
+
+      loydot.push({
+        nimi,
+        rooli: puhdas.slice(osuma.index, osuma.index + osuma[0].length),
+        puhelin,
+        sahkoposti,
+      })
     }
   }
 

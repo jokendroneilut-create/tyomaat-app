@@ -51,6 +51,93 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-362 - Neljä estettä yhden kaavarivin ja koko lähteen välissä
+
+Johannes 30.10.2026 Ulvilan rivista `0ffc3bae`: *"pitaa poimia kuvaus
+joka loytyy taalta"* (linkki selostukseen) ja *"poimi myos yhteystieto"*,
+seka *"tarkista myos muut tuon lahteen hankkeet jo hyvaksytyista ja
+jonosta"*.
+
+Yhden rivin korjaus paljasti **neljä eri estetta**, joista kolme koski
+koko lahdetta eika tata rivia.
+
+**1. Ankkuri alkoi keskelta sanaa.** Selostuksessa lukee *"Asemakaavan
+tarkoitus:"*. `ANKKURI`-kuvion tarkoitus-haara oli `kaavan\s+tarkoitus`
+ILMAN etuliitetta, joten osuma alkoi sanan sisalta
+("Asema|kaavan tarkoitus"). Silloin `alkaaVirkkeen` naki edeltavaksi
+merkiksi kirjaimen ja hylkasi osuman -- aivan oikein, koska keskelta
+sanaa alkava ankkuri ei ole otsikko. Sanasto siis tunsi luvun, mutta ei
+paassyt siihen kasiksi. Lisattiin `(?:asema|ranta|yleis)?` kuten
+tavoitteet-haarassa jo oli, ja takauma joka estaa sanansisaisen alun
+kaikissa haaroissa.
+
+**2. Valinta otti vanhemman vaiheen.** Sivulla on sama selostus kahdesti,
+`SELOSTUS_LUONNOS_...` ja `SELOSTUS_EHDOTUS_...`, ja luonnos oli
+listassa ensin. `valitseKaavaselostus` palautti ensimmaisen osuman, eli
+vanhemman tekstin. Nyt uusin vaihe voittaa.
+
+*Ja tassa tein saman virheen jota muisti varoittaa:* ensimmainen
+vaihekuvio oli `\bluonnos`, eika se osunut tiedostonimeen
+`SELOSTUS_LUONNOS_` lainkaan -- **alaviiva on sanamerkki**, joten
+siina ei ole sananrajaa. Korjattu paljaaksi osasanaksi.
+
+**3. Kuvaus jatkui kansilehden lomakkeeseen.** Tarkoitus-luku on
+kansilehdella, ja heti perassa jatkuu *"Kaavan laatija: ... puh. 02 677
+4511 kaupunkikehitys@ulvila.fi ... Vireilletulo ... Hyvaksyminen:
+Kaupunginhallitus xx.xx.xxxx § xx ... SISALLYSLUETTELO"*. Kuvauksesta
+1 012 merkista puolet oli lomaketta -- ja mukana yhteystiedot, jotka
+tekstipoimija lukisi myohemmin rikkinaisiksi yhteyshenkiloiksi
+([[fields-into-prose-break-contacts]]). `LOPETUS`-kuvioon lisattiin
+kaavaselostuksen vakiokentat; kuvaus on nyt 534 merkkia ja paattyy
+oikeaan virkkeeseen.
+
+**4. Yhteystieto jai poimimatta, koska premissi oli kirjattu faktana.**
+`kaavanYhteyshenkilo.ts` palautti vain nimen ja roolin, ja kutsupaikan
+kommentti perusteli sen: *"Sahkopostia ja puhelinta EI arvata: niita ei
+ole selostuksessa."* Lieksassa niin oli, muttei yleisesti: Ulvilan
+kansilehdella lukee *"Kaavoitusarkkitehti Mikko Toivanen puh. 0400 134
+777 mikko.toivanen@ulvila.fi"*. Premissi oli siis vanhentunut
+([[check-before-calling-it-intended]]).
+
+Poiminta rajattiin kahdella ehdolla, jottei toisen ihmisen numero
+tartu: **120 merkin ikkuna** nimen jalkeen, ja **sahkopostin
+paikallisosan on vastattava nimea** -- yhteinen laatikko
+(`kirjaamo@`, `kaupunkikehitys@`) ei ole taman henkilon osoite.
+Puhelin vaatii `puh.`-merkinnan, koska paljas numerosarja voi olla
+kaavatunnus.
+
+**Lahteen muut rivit: 13 (6 hyvaksyttya, 7 jonossa).** Kuivaharjoitus
+kolmelle muulle ohuelle riville olisi kirjoittanut **Palovainion
+kuvauksen niille kaikille** -- sivulla on 26 liitetta eika lohkorajaus
+osunut, joten valinta otti ensimmaisen selostuksen. Virhe jai kiinni
+vain siita etta kuivaharjoituksen tuotos luetaan riveittain
+([[dry-run-before-backfill]]).
+
+Syy oli rakenteellinen: **D-352:n tunnistesaanto oli vain massa-ajon
+sisalla**, eika yhden rivin tyokalu -- se jota kaytetaan useimmiten --
+tuntenut sita. Saanto siirrettiin `lib/agent/kaavanLiite.ts`:aan ja
+molemmat kayttavat nyt samaa ([[same-term-two-definitions]]).
+
+Portin kanssa tuli viela yksi oma virhe: ensimmainen versio laski saman
+kaavan luonnoksen ja ehdotuksen kahdeksi eri kaavaksi ja esti kaksi
+OIKEAA rivia. Vertailu tehdaan nyt kaavoittain, vaihemerkinta riisuttuna.
+
+**Lopputulos:**
+
+| rivi | tulos |
+|---|---|
+| `0ffc3bae` jonossa, Palovainio | kuvaus 534 merkkia + yhteyshenkilo |
+| `e8380345` Palovainio | kuvaus 580 merkkia + yhteyshenkilo |
+| `efdfd553` Nahkuri | kuvaus 332 merkkia + yhteyshenkilo |
+| `a5da1fce` Friitala | oikea asiakirja, mutta selostuksesta ei lukua |
+| `ef01b1b5` Friitala/Nahkuri | tunniste ei erottele -- otsikossa on kahden kaavan nimi |
+
+Kaksi viimeista jaivat tietoisesti korjaamatta, syyt nimettyina.
+
+Ks. `lib/agent/kaavanKuvaus.ts`, `lib/agent/kaavanYhteyshenkilo.ts`,
+`lib/agent/kaavanLiite.ts`, `scripts/korjaa-yksi-kaavakuvaus.ts`,
+`scripts/tarkista-ulvilan-kaavat.ts`.
+
 ### D-361 - Ohjelmasivu osahankkeiksi, ja oma taydennys loi vaaran osuman
 
 Johannes 30.10.2026 jonorivista `bb6d981e`: *"tassa ehdokkaassa on monta

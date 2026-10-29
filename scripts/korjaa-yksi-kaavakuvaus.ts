@@ -70,8 +70,64 @@ async function main() {
       const n = (x: string) => x.toLowerCase().replace(/[^\wåäö]+/g, " ").trim()
       return n(sivulla).length >= 10 && n(sivulla).includes(n(haettu).slice(0, 30))
     })
-    const linkit = (lohko ?? liite.liitelinkit($, sivu)).filter((l: any) => /\.pdf(\?|$)/i.test(l.href))
-    console.log(`   liitteitä: ${linkit.length}${lohko ? " (lohkosta)" : ""}`)
+    /*
+     * KUN LOHKOA EI LOYDY, NIMEN ON TUNNISTETTAVA KAAVA (D-362).
+     *
+     * Lohkosta tulleet liitteet ovat julkaisijan itsensä ryhmittelemiä,
+     * eli varmasti taman kaavan. Jos lohkoa ei loydy, jaljelle jaa KOKO
+     * sivun liitelista -- Ulvilassa 26 pdf:aa -- ja valinta ottaisi
+     * ensimmaisen selostuksen. Mitattu: *"Nahkurin ja Nummelan
+     * asemakaavan muutos"* olisi saanut **Palovainion** kuvauksen, ja
+     * sama olisi toistunut kahdella muulla rivilla.
+     *
+     * Suoja on sama kuin massa-ajossa (D-352), nyt jaetusta moduulista.
+     */
+    const kaikki = (lohko ?? liite.liitelinkit($, sivu)).filter((l: any) => /\.pdf(\?|$)/i.test(l.href))
+    const linkit = lohko
+      ? kaikki
+      : kaikki.filter((l: any) => liite.osuukoKaavaan(l, otsikko, rivi.city ?? rivi.municipality))
+    console.log(`   liitteitä: ${linkit.length}${lohko ? " (lohkosta)" : ` / ${kaikki.length} (nimen tunnistettava kaava)`}`)
+    if (!lohko && !linkit.length) {
+      console.error(`   liitteen nimi ei tunnista kaavaa (${kaikki.length} linkkiä sivulla)`)
+      return
+    }
+
+    /*
+     * TUNNISTEEN ON EROTELTAVA (D-352, portti siirretty D-362).
+     *
+     * Ulvilan rivin otsikko on *"Keskustan, Suurpään, **Nahkurin**,
+     * Nummelan ja Sahamäen asemakaava ... (**Friitalan**
+     * esitasoliittymä)"* -- siina on kahden eri kaavan nimi, joten
+     * tunnistesaanto paastaa lapi seka Nahkurin etta Friitalan
+     * selostuksen. Ensimmainen voitti ja rivi olisi saanut VAARAN
+     * kaavan tarkoituksen. Kun ehdokkaita on monta, oikeaa ei voi
+     * valita nimesta -- silloin ei kirjoiteta mitaan.
+     */
+    if (!lohko) {
+      const selostukset = linkit.filter((l: any) =>
+        /selostus/i.test(decodeURIComponent(String(l.href).split("/").pop() ?? "") + " " + (l.teksti ?? ""))
+      )
+      /*
+       * Vertailu KAAVOITTAIN, ei tiedostoittain: saman kaavan luonnos
+       * ja ehdotus ovat sama kaava kahdessa vaiheessa, ja niiden valilla
+       * valitsee `valitseKaavaselostus` (uusin voittaa). Ensimmainen
+       * versio tasta portista laski ne kahdeksi ja esti kaksi oikeaa
+       * riviä.
+       */
+      const kaavaAvain = (href: string) =>
+        decodeURIComponent(String(href).split("/").pop() ?? "")
+          .toLowerCase()
+          .replace(/\.pdf$/, "")
+          .replace(/selostus|luonnos|ehdotus|valmisteluvaihe|ehdotusvaihe/g, "")
+          .replace(/[^a-zåäö0-9]+/g, "")
+      const eri = new Set(selostukset.map((l: any) => kaavaAvain(l.href)))
+      if (eri.size > 1) {
+        console.error(`   tunniste ei erottele (${eri.size} eri kaavan selostus osuu):`)
+        for (const l of selostukset)
+          console.error(`      ${decodeURIComponent(String(l.href).split("/").pop() ?? "")}`)
+        return
+      }
+    }
 
     const asiakirja = kuvaus.valitseKaavanAsiakirja(linkit)
     if (!asiakirja) {
@@ -90,6 +146,35 @@ async function main() {
     const uusi = kuvaus.yhdistaKuvaukset(nykyinen, luku) ?? luku
     console.log(`\n   UUSI (${uusi.length}):\n   ${uusi.replace(/\s+/g, " ")}`)
 
+    /*
+     * YHTEYSHENKILO SAMASTA TEKSTISTA (D-362).
+     *
+     * Johannes: *"poimi myos yhteystieto"*. Selostus on jo haettu, joten
+     * tama ei maksa yhtaan lisahakua -- sama peruste kuin D-230:ssa.
+     * Kaavoittaja on juuri se henkilo jolle hankkeesta soitetaan, ja
+     * hanen numeronsa ja osoitteensa ovat kansilehdella nimen vieressa.
+     */
+    const { kaavanYhteyshenkilot } = await import("../lib/agent/kaavanYhteyshenkilo")
+    const { mergeContacts } = await import("../lib/projects/contacts")
+    const loydot = kaavanYhteyshenkilot(teksti)
+    const uudetKontaktit = loydot.map((y) => ({
+      kind: "person" as const,
+      name: y.nimi,
+      title: y.rooli,
+      organization: null,
+      email: y.sahkoposti ?? "",
+      phone: y.puhelin ?? null,
+      role: "authority" as const,
+    }))
+    const vanhatKontaktit = Array.isArray(rivi.metadata?.contact_persons)
+      ? rivi.metadata.contact_persons
+      : []
+    const kontaktit = mergeContacts(vanhatKontaktit as any, uudetKontaktit as any)
+
+    console.log(`\n   YHTEYSHENKILOT (${vanhatKontaktit.length} -> ${kontaktit.length}):`)
+    for (const c of kontaktit)
+      console.log(`      ${c.name ?? "(nimetön)"} / ${c.title ?? "-"} / ${c.phone ?? "-"} / ${c.email || "-"}`)
+
     if (!apply) {
       console.log("\nEi kirjoitettu. Aja --apply kun rivi on luettu.")
       return
@@ -98,6 +183,7 @@ async function main() {
     const md = {
       ...(rivi.metadata ?? {}),
       description: uusi,
+      ...(kontaktit.length ? { contact_persons: kontaktit } : {}),
       kuvaus_selostuksesta: { liite: asiakirja, milloin: new Date().toISOString().slice(0, 10) },
     }
     const paivitys: Record<string, any> = { metadata: md }

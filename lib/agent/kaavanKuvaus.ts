@@ -332,11 +332,42 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
  * ja vaaditaan riittavasti tekstia perassa — luettelorivi loppuu
  * pistejonoon ja sivunumeroon.
  */
+/*
+ * ANKKURI EI SAA ALKAA KESKELTA SANAA (D-362).
+ *
+ * "tarkoitus"-haara oli `kaavan\s+tarkoitus` ilman etuliitetta, joten
+ * Ulvilan selostuksen *"Asemakaavan tarkoitus:"* tuotti osuman jonka
+ * alku oli sanan SISALLA ("Asema|kaavan tarkoitus"). Silloin
+ * `alkaaVirkkeen` naki edeltavaksi merkiksi kirjaimen "a" ja hylkasi
+ * osuman -- oikein, koska keskelta sanaa alkava ankkuri ei ole otsikko.
+ * Luku jai siis poimimatta vaikka sanasto tunsi sen.
+ *
+ * Etuliite `(?:asema|ranta|yleis)?` oli jo "tavoitteet"-haarassa; sama
+ * puuttui tarkoitukselta. Lisaksi takaumalla varmistetaan ettei ankkuri
+ * ala kesken sanan missaan haarassa -- `\b` ei kelpaa, koska se on
+ * ASCII-rajainen eika tunne a-umlautia ([[period-end-is-completion]]).
+ */
 const ANKKURI =
-  /(kaavan\s+tarkoitus(?:\s+ja\s+tavoitteet)?|(?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen)?\s+tavoitte\w*|suunnittelun\s+tavoitte\w*|kaavamuutoksen\s+tarkoitus)/gi
+  /(?<![A-Za-zÅÄÖåäö])((?:asema|ranta|yleis)?kaavan\s+tarkoitus(?:\s+ja\s+tavoitteet)?|(?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen)?\s+tavoitte\w*|suunnittelun\s+tavoitte\w*|kaavamuutoksen\s+tarkoitus)/gi
 
+/*
+ * KANSILEHDEN LOMAKEKENTAT PAATTAVAT KUVAUKSEN (D-362).
+ *
+ * Ulvilan selostuksessa tarkoitus-luku on kansilehdella, ja heti sen
+ * perassa jatkuu lomake: *"Kaavan laatija: Ulvilan kaupunki ... puh. 02
+ * 677 4511 kaupunkikehitys@ulvila.fi ... Vireilletulo: 25.9.2025 ...
+ * Hyvaksyminen: Kaupunginhallitus xx.xx.xxxx § xx ...
+ * SISALLYSLUETTELO"*. Ilman katkaisua kuvauksesta puolet oli
+ * lomaketta -- ja mukana yhteystiedot, jotka tekstipoimija lukisi
+ * myohemmin rikkinaisiksi yhteyshenkiloiksi
+ * ([[fields-into-prose-break-contacts]]). Yhteystiedot kuuluvat omaan
+ * kenttaansa, ei asiakkaan lukemaan tekstiin.
+ *
+ * Nama ovat kaavaselostuksen vakiokenttia eivatka esiinny tarkoitusta
+ * kuvaavassa proosassa.
+ */
 const LOPETUS =
-  /(perus-\s*ja\s*tunnistetiedot|luettelo\s+selostuksen|selostuksen\s+liite|tiivistelm\w*\s+kaavaprosessi|kaavaprosessin\s+vaihe|suunnittelualueen\s+lähtökohdat|lähtökohdat\s+ja\s+nykytila|osallistumis-\s*ja\s*arviointi|vaikutusten\s+arviointi|asemakaavan\s+kuvaus|aluetta\s+koskevat\s+suunnitelmat)/i
+  /(perus-\s*ja\s*tunnistetiedot|luettelo\s+selostuksen|selostuksen\s+liite|tiivistelm\w*\s+kaavaprosessi|kaavaprosessin\s+vaihe|suunnittelualueen\s+lähtökohdat|lähtökohdat\s+ja\s+nykytila|osallistumis-\s*ja\s*arviointi|vaikutusten\s+arviointi|asemakaavan\s+kuvaus|aluetta\s+koskevat\s+suunnitelmat|kaavan\s+laatija|asiaa\s+hoitaa|vireilletulo\s*:|hyväksyminen\s*:|voimaantulo\s*:|sisällysluettelo|lisätietoja\s+(?:antaa|kaavasta))/i
 
 /* Liiteluettelo ei ole kuvaus, vaikka se olisi oikeassa luvussa. */
 const LIITELUETTELO = /^(kaavaselostuksen\s+liitteet|luettelo\s+selostuksen|liitteet|liite\s*\d)/i
@@ -509,18 +540,49 @@ export function valitseKaavanAsiakirja(
   return valitseKaavaselostus(linkit) ?? valitseOas(linkit)
 }
 
+/*
+ * UUSIN VAIHE VOITTAA (D-362).
+ *
+ * Sivulla on usein saman kaavan selostus kahdessa vaiheessa. Ulvilan
+ * Palovainiolla ne olivat `SELOSTUS_LUONNOS_...pdf` ja
+ * `SELOSTUS_EHDOTUS_...pdf`, ja luonnos oli listassa ensin -- joten
+ * valinta otti vanhemman. Kaavaprosessissa ehdotus seuraa luonnosta ja
+ * sen teksti on se joka on voimassa.
+ *
+ * Jarjestys vain naiden kahden valilla: merkitsematon jaa valiin, koska
+ * se on useimmiten ainoa selostus eika siita tieda kumpaa vaihetta se
+ * edustaa. Ei arvata enempaa kuin tiedetaan.
+ */
+/*
+ * EI SANARAJAA: tiedostonimessa erotin on ALAVIIVA
+ * (`SELOSTUS_LUONNOS_Palovainio.pdf`), ja `\b` ei tunnista sita rajaksi
+ * koska alaviiva on sanamerkki. Ensimmainen versio tasta ei siksi
+ * osunut lainkaan, ja luonnos voitti yha. Paljas osasana kelpaa:
+ * "kaavaluonnos" ja "luonnosvaihe" ovat molemmat luonnoksia.
+ */
+function vaiheenPaino(nimi: string): number {
+  if (/ehdotus/i.test(nimi)) return 2
+  if (/luonnos|valmisteluvaihe/i.test(nimi)) return 0
+  return 1
+}
+
 export function valitseKaavaselostus(
   linkit: { teksti?: string | null; href?: string | null }[]
 ): string | null {
+  let paras: { url: string; paino: number } | null = null
+
   for (const linkki of linkit) {
     const url = normalisoiLiiteUrl(linkki.href)
     if (!url) continue
     const nimi = `${decodeURIComponent(url.split("/").pop() ?? "")} ${linkki.teksti ?? ""}`
     if (!SELOSTUS_NIMI.test(nimi)) continue
     if (LIITESANA.test(nimi)) continue
-    return url
+
+    const paino = vaiheenPaino(nimi)
+    /* Tasapelissa ensimmainen jaa: jarjestys on julkaisijan oma. */
+    if (!paras || paino > paras.paino) paras = { url, paino }
   }
-  return null
+  return paras?.url ?? null
 }
 
 /*

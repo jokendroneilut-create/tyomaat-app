@@ -9,7 +9,31 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
-## 2026-10-30 (OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
+## 2026-10-30 (Ulvilan kaavat, OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
+
+### Neljä estettä yhden kaavarivin ja koko lähteen välissä (D-362)
+
+Ulvilan kaavarivin kuvaus jäi poimimatta neljästä syystä, joista kolme
+koski koko lähdettä. Ankkuri `kaavan tarkoitus` osui keskelle sanaa
+"Asema**kaavan tarkoitus**", jolloin virkkeenalkusuoja hylkäsi sen
+oikein — etuliite puuttui. Asiakirjan valinta otti luonnoksen vaikka
+ehdotus on uudempi (ja ensimmäinen korjaus siihen ei osunut lainkaan,
+koska `` ei tunnista alaviivaa rajaksi). Kuvaus jatkui kansilehden
+lomakkeeseen yhteystietoineen, mikä rikkoisi yhteyshenkilöt myöhemmin.
+Ja yhteystietoa ei poimittu lainkaan, koska koodissa luki faktana
+"niitä ei ole selostuksessa" — premissi joka päti Lieksassa muttei
+yleisesti.
+
+Yhteyshenkilö poimitaan nyt nimen vierestä 120 merkin ikkunasta, ja
+sähköpostin paikallisosan on vastattava nimeä: yhteinen laatikko ei ole
+henkilön osoite.
+
+**Lähteen muut rivit:** kuivaharjoitus kolmelle olisi kirjoittanut
+Palovainion kuvauksen niille kaikille, koska sivulla on 26 liitettä
+eikä lohkorajaus osunut. Syy oli rakenteellinen: D-352:n tunnistesääntö
+oli vain massa-ajon sisällä eikä yhden rivin työkalu — se jota
+käytetään useimmiten — tuntenut sitä. Sääntö siirrettiin jaettuun
+moduuliin. Kolme riviä korjattu, kaksi jätetty nimetyin syin.
 
 ### OYS 2030 -ohjelmasivu osahankkeiksi (D-361)
 
