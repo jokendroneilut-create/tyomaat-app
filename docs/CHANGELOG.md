@@ -9,7 +9,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
-## 2026-10-30 (JM Suomi lähteeksi)
+## 2026-10-30 (Jätkäsaaren kortteli ja JM Suomi)
+
+### Kaksi tonttia yhdellä rivillä puretaan (D-360)
+
+Jalonin työmaaluettelosta tullut rivi "As Oy Helsingin Aruba ja HEKA
+Kiribatinkatu 1" sisälsi kaksi hanketta, ja duplikaattiskannaus ehdotti
+sitä pariksi Hekan omalle riville. Rakennuttajan myyntiesite ratkaisi:
+korttelissa 20079 on kaksi tonttia, tontilla 2 Aruba (Barbadoksenkatu 4,
+Hitas, 46 asuntoa) ja tontilla 4 Heka Kiribatinkatu 1 (vuokra, 128
+asuntoa). Kyse ei ole duplikaatista vaan naapurista.
+
+Julkaisijan **työmaa on urakka, meidän hanke on rakennus** — sama
+urakoitsija ja yksi työmaanumero eivät tee niistä yhtä hanketta. Rivi
+nimetään Arubaksi omalla osoitteellaan, Hekan rivi saa Jalonin tuoman
+rakentajan ja työmaan numeron, ja pari merkitään ei-duplikaatiksi.
 
 ### JM Suomen asuntokohteet lähteeksi (D-359)
 

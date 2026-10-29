@@ -51,6 +51,72 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-360 - Kaksi tonttia yhdella rivilla: julkaisijan tyomaa ei ole meidan hanke
+
+Johannes 30.10.2026 katselmointijonosta: *"siina on minusta kaksi
+kohdetta. ehdottaa duplikaattia mutta en pysty paattamaan jos on kaksi
+kohdetta samassa."*
+
+Rivi `f2915026` tuli Jalonin tyomaaluettelosta otsikolla **"As Oy
+Helsingin Aruba ja HEKA Kiribatinkatu 1"**, ja duplikaattiskannaus
+ehdotti sita pariksi Hekan omalle riville `c29ea9d9` (70 p.,
+`same_coordinates`). Pari oli mahdoton ratkaista, koska toinen rivi
+sisalsi kaksi hanketta.
+
+**Rakennuttajan oma myyntiesite ratkaisi sen yhdella lauseella:**
+
+> *"Kortteliin sijoittuu kaksi tonttia. Tontille numero 2 sijoittuu
+> Asunto Oy Helsingin Aruba ja tontille 4 Heka Jatkasaari Kiribatinkatu 1.
+> Rakennusten valiin jaa yhteiskayttoinen piha-alue."*
+
+| | tontti | osoite | hallintamuoto | asuntoja |
+|---|---|---|---|---|
+| As Oy Helsingin Aruba | 2 | Barbadoksenkatu 4 / Kanariankatu 10 | Hitas-omistus | 46 |
+| Heka Jatkasaari Kiribatinkatu 1 | 4 | Kiribatinkatu 1 | vuokra | 128 |
+
+Eri tontti, eri osoite, eri hallintamuoto, melkein kolminkertainen
+kokoero. **Kyseessa ei ole duplikaatti vaan naapuri.**
+
+**Miksi rivi oli vaarin, vaikka lahde oli oikeassa.** Jalon listaa
+molemmat tontit yhtena tyomaana, koska sama urakoitsija rakentaa ne ja
+tyomaalla on yksi puhelinnumero. Julkaisijan tyomaa on urakka; meidan
+hanke on rakennus. Nama eivat ole sama yksikko, ja juuri siksi
+**monihankkeinen rivi on loydettava ennen skannausta, ei sen avulla**
+([[multi-project-rows]], sama havainto kuin D-345:ssa). Lisamerkki oli
+osoitekentassa: rivi vaitti osoitteekseen Kiribatinkatu 1:ta, joka
+kuuluu TOISELLE hankkeelle.
+
+**Esitteen loytaminen vaati kaksi askelta.** Haku kertoi vain etta
+Aruban osoite ei ole Kiribatinkatu. Esite on PDF, josta `WebFetch`
+palautti binaaria; teksti irtosi repon omalla reitilla
+(`pdf-parse/lib/pdf-parse.js`), ja vasta silloin nakyi korttelin 20079
+tonttijako ([[unreadable-pdf-fonts]]: kokeile toista purkajaa ennen kuin
+luovutat).
+
+**Korjaus.** Rivi `f2915026` nimetaan Arubaksi ja saa oman osoitteensa,
+rakennuttajan (ATT, kannan vakiintuneella kirjoitusasulla), 46 asuntoa,
+paasuunnittelijan (Lahdelma & Mahlamaki Oy) ja esitteen kuvauksen.
+Vanha yhdistetty otsikko jaa `also_known_as`-listaan
+([[title-precedence]]). Hekan rivi saa Jalonin tuoman **rakentajan ja
+tyomaan numeron**, joita silla ei ollut. Katselmointipari merkitaan
+`not_duplicate` perusteluineen.
+
+**Valmistumispaiva esitteesta, ei luettelosta.** Jalon sanoo koko
+tyomaalle 9/2027; esite sanoo Aruban asunnoille 8/2027-10/2027, ja
+jakson loppu on valmistuminen ([[period-end-is-completion]]). Rivi saa
+siis 31.10.2027.
+
+**Tarkistettu ennen kirjoitusta: kumoaako seuraava ajo taman?** Jalonin
+ehdokas osuu nyt omaan riviinsa 65 pisteella (alle kynnyksen), ja
+nimenmuutoksen jalkeen 65 pistetta menee TOISEEN Jalonin hankkeeseen --
+eli se ei kirjoita Hekan rivin paalle, mutta voi tuottaa uuden
+jonorivin. `duplicate_source`-suoja ei auta, koska se vaatii aiemman
+`queued_for_review`-tapahtuman samalle osoitteelle eika niita ole
+yhtaan. Lahde on ajettu viimeksi 24.10., joten asia ei ole kiireellinen,
+mutta **ajo on toistettava korjauksen jalkeen ja tulos luettava**.
+
+Ks. `scripts/pura-kiribatinkatu-kortteli.ts`.
+
 ### D-359 - JM Suomi lahteeksi, ja lahteen oma paiva kumoaa tekstista paatellyn
 
 Johannes 29.10.2026: *"Tee JM Suomesta (jmoy.fi) lahde."* Kannassa oli 11
