@@ -106,14 +106,22 @@ tyomaalle 9/2027; esite sanoo Aruban asunnoille 8/2027-10/2027, ja
 jakson loppu on valmistuminen ([[period-end-is-completion]]). Rivi saa
 siis 31.10.2027.
 
-**Tarkistettu ennen kirjoitusta: kumoaako seuraava ajo taman?** Jalonin
-ehdokas osuu nyt omaan riviinsa 65 pisteella (alle kynnyksen), ja
-nimenmuutoksen jalkeen 65 pistetta menee TOISEEN Jalonin hankkeeseen --
-eli se ei kirjoita Hekan rivin paalle, mutta voi tuottaa uuden
-jonorivin. `duplicate_source`-suoja ei auta, koska se vaatii aiemman
+**Kumoaako seuraava ajo taman? Ei -- mitattuna, ei paateltyna.**
+Tasmaytin oli huolen aihe: Jalonin ehdokas osuu omaan riviinsa vain 65
+pisteella, ja nimenmuutoksen jalkeen sama 65 menee TOISEEN Jalonin
+hankkeeseen. Se ei kirjoittaisi Hekan rivin paalle, mutta voisi tuottaa
+uuden jonorivin samalla yhdistetylla otsikolla, eika
+`duplicate_source`-suoja auta: se vaatii aiemman
 `queued_for_review`-tapahtuman samalle osoitteelle eika niita ole
-yhtaan. Lahde on ajettu viimeksi 24.10., joten asia ei ole kiireellinen,
-mutta **ajo on toistettava korjauksen jalkeen ja tulos luettava**.
+yhtaan.
+
+Lahde ajettiin heti korjauksen jalkeen: **13 dokumenttia, 13 ohitettu,
+0 tallennettu**. Molemmat rivit sailyivat ennallaan eika uutta
+jonorivia syntynyt (Jalonin jonorivit yha 12, kaikki 24.10.). Syy on
+kerääjän oma dokumenttitason ohitus: jo nahty lahdeosoite ei etene
+`importCandidate`iin lainkaan, joten tasmayttimen pistemaara ei paase
+ratkaisemaan mitaan. Huoli oli siis aiheeton -- mutta se selvisi vain
+ajamalla.
 
 Ks. `scripts/pura-kiribatinkatu-kortteli.ts`.
 
