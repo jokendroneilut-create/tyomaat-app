@@ -63,9 +63,13 @@ const NIMET: Record<string, string> = {
   /*
    * Oma tiedonkeruu. Asiakkaalle kerrotaan mistä tieto on peräisin, ei
    * työtapaa: "kasin_kuvakaappaus" on meidän sisäinen asia.
+   *
+   * BRÄNDI KIRJOITETAAN ILMAN Ö:TÄ, kuten muu koodipohja: 49 osumaa
+   * muodossa "Tyomaat.fi", ei yhtään ö:llistä. Vahti on
+   * `lib/brandi.spec.ts`.
    */
-  kasin_kuvakaappaus: "Työmaat.fi:n oma tiedonkeruu",
-  linkedin_manual: "Työmaat.fi:n oma tiedonkeruu",
+  kasin_kuvakaappaus: "Tyomaat.fi oma tiedonkeruu",
+  linkedin_manual: "Tyomaat.fi oma tiedonkeruu",
   tyomaakyltti: "Työmaakyltti",
 
   /* Yritykset joissa kirjoitusasu ei synny siistimisellä. */

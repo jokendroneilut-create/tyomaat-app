@@ -49,8 +49,20 @@ describe("lahteenNimi", () => {
 
   /* Tyotapa on meidan sisainen asia, ei asiakkaan. */
   it("ei kerro omaa tyotapaa asiakkaalle", () => {
-    expect(lahteenNimi("kasin_kuvakaappaus")).toBe("Työmaat.fi:n oma tiedonkeruu")
+    expect(lahteenNimi("kasin_kuvakaappaus")).toBe("Tyomaat.fi oma tiedonkeruu")
     expect(lahteenNimi("kasin_kuvakaappaus")).not.toMatch(/kuvakaappaus/i)
+  })
+
+  /*
+   * Brandi kirjoitetaan ilman o:ta kuten muu koodipohja. Sama saanto
+   * on jo testattu kokeilumuistutuksissa, mutta se ei kattanut tata
+   * tiedostoa -- siksi kirjoitin sen ensin vaarin.
+   */
+  it("kirjoittaa brandin ilman o:ta", () => {
+    for (const tunniste of ["kasin_kuvakaappaus", "linkedin_manual"]) {
+      expect(lahteenNimi(tunniste)).toContain("Tyomaat.fi")
+      expect(lahteenNimi(tunniste)).not.toContain("Työmaat")
+    }
   })
 
   /*
