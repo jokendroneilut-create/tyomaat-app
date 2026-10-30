@@ -141,6 +141,48 @@ ne uudelleen samalla funktiolla kuin kerääjä
 vain tuotoksen lukeminen ([[look-at-visual-work]],
 [[dry-run-before-backfill]]).
 
+#### 5. Vihje jonoriville: laheisyys + sama laji, ei kumpikaan yksin
+
+Johannes 31.10.2026: *"kirjoita tunnistettu hanke jonoriville."*
+
+Jonorivi saa `metadata.duplikaattiehdotus`in, jonka katselmointisivu
+näyttää **ilman klikkausta**. Sivulla on jo *"Etsi olemassa oleva
+hanke"*, mutta se ei auta tässä: katselmoija ei tiedä että kannattaisi
+etsiä, koska täsmäytin ei näytä mitään.
+
+Rajaus mitattiin kolmella säännöllä, ei valittu:
+
+| vertailujoukko | pareja | laatu |
+|---|---|---|
+| kaikki koordinaatilliset rivit | 73 | roskaa |
+| vain ne joilla katuosoite | 71 | yhä roskaa |
+| **vain samaa lajia** | **32** | mielekästä |
+
+Oletin ensin että vika on kunnan varapisteessä ja että *"rivillä on
+katuosoite"* kelpaisi yleiseksi korjaukseksi. **Mittaus kumosi sen:**
+osoitteellisetkin rivit tuottivat 0,0 km:n pareja täysin eri
+hankkeiden välille ("Polarnode Kuopio, Mustakorpi" ↔ "Hoivakoti
+Kuopioon"). Katuosoite ei siis takaa tarkkaa koordinaattia. Oikea
+sääntö on **läheisyys JA sama laji** — datakeskus ja hoivakoti voivat
+olla samassa korttelissa.
+
+Osoitetta ei vaadita lajin lisäksi, vaikka se pudottaisi 32:sta
+30:een: ne kaksi ovat oikeita pareja, ja suodatin poistaa vain sen
+minkä tiedämme ([[never-hide-on-missing-data]]).
+
+Kerääjä tallentaa nyt myös rekisterin oman koordinaatin
+(`metadata.lahteen_koordinaatit`, 124 hanketta 150:stä), ja
+hyväksyntäreitti käyttää sitä geokoodauksen sijaan samaan tapaan kuin
+Lupapisteen koordinaattia. Riveillä ei ole katuosoitetta lainkaan,
+joten geokoodaus olisi osunut kunnan varapisteeseen.
+
+Logiikka on `lib/agent/jononDuplikaattivihje.ts` (15 testiä), kirjoitus
+`scripts/ehdota-jonon-duplikaatit.ts`, näyttö
+`app/tic/projects/[id]/DuplikaattiEhdotus.tsx`. Ensimmäinen ajo: **12
+vihjettä 24 avoimesta rivistä**, kahdelta puuttui koordinaatti.
+Liittäminen käyttää samaa reittiä kuin *"Liitä hankkeeseen"*, joten
+mitään ei ylikirjoiteta.
+
 **Jäljellä:** ~124 ehdokasta tulee cronin mukana (~8–10 ajossa), ja 32
 koordinaattiparia on käsin katsottava. Rekisterin `/tietoa`-sivun
 luettelemat ylävirran lähteet (Ryhti/SYKE, PRH YTJ, MML) ovat omana

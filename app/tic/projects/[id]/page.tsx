@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { getCandidate } from "../../services/getCandidate"
 import ProjectActions from "./ProjectActions"
 import MergeIntoProject from "./MergeIntoProject"
+import DuplikaattiEhdotus from "./DuplikaattiEhdotus"
 import EditableCandidate from "./EditableCandidate"
 import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 import { resolveWinnerName } from "@/lib/projects/winnerName"
@@ -101,6 +102,16 @@ export default async function CandidateDetailPage({ params }: Props) {
 
         <div className="mt-6 border-t border-gray-100 pt-4">
           <ProjectActions candidateId={candidate.id} />
+
+          {/*
+            * Koordinaattivihje ennen hakunappia: tama on osuma jota
+            * tasmaytin EI loyda, joten katselmoija ei tietaisi etsia
+            * (D-365).
+            */}
+          <DuplikaattiEhdotus
+            candidateId={candidate.id}
+            ehdotus={metadata.duplikaattiehdotus ?? null}
+          />
 
           {/*
             * Osa ehdokkaista on uutta tietoa jo tunnetusta hankkeesta - esim.

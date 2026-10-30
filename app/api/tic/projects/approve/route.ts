@@ -2171,9 +2171,22 @@ export async function POST(request: Request) {
      */
     const lupapisteCoords = metadata.lupapiste_coordinates_wgs84
 
+    /*
+     * LAHTEEN OMA KOORDINAATTI ENNEN GEOKOODAUSTA (D-365).
+     *
+     * Sama periaate kuin Lupapisteella yllä, mutta lahdesta riippumaton:
+     * jos lahde antaa pisteen valmiina, se on parempi kuin osoitteesta
+     * johdettu. Datakeskusrekisterin riveilla ei ole katuosoitetta
+     * lainkaan, joten geokoodaus saisi vain kunnan nimen ja osuisi kunnan
+     * varapisteeseen ([[address-register-geocode]]).
+     */
+    const lahteenCoords = metadata.lahteen_koordinaatit
+
     const coords =
       lupapisteCoords?.lat != null && lupapisteCoords?.lon != null
         ? { lat: lupapisteCoords.lat, lon: lupapisteCoords.lon }
+        : lahteenCoords?.lat != null && lahteenCoords?.lon != null
+        ? { lat: lahteenCoords.lat, lon: lahteenCoords.lon }
         : location || city || region
           ? await geocodeProjectLocation({
               location,

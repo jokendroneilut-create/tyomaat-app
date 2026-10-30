@@ -35,7 +35,13 @@ käsin täydennetty Kiteen rivi säilyi täsmälleen.
 
 Nimet eivät täsmää kumpaankaan suuntaan: koordinaatti löysi
 **32 ehdokasta 150:stä jo kannasta, täsmäytin 0.** Päällekkäisyys jää
-duplikaattijonoon ihmiselle. Sivutuotteena rekisteri erottelee
+duplikaattijonoon ihmiselle. Siksi jonorivi saa nyt
+`metadata.duplikaattiehdotus`in, jonka katselmointisivu näyttää ilman
+klikkausta: *"Samassa paikassa on jo hanke"*, etäisyys kilometreinä ja
+nappi liittämiseen. Rajaus on **läheisyys JA sama laji** — pelkkä
+läheisyys tuotti 73 paria joista suurin osa roskaa, eikä katuosoitteen
+vaatiminen auttanut (71). Ensimmäinen ajo: 12 vihjettä 24 avoimesta
+rivistä. Sivutuotteena rekisteri erottelee
 hankkeita jotka olemme niputtaneet yhdeksi – "Datakeskus Lahteen"
 kattaa kaksi eri hanketta, "Datakeskus Visulahteen" kolme.
 

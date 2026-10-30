@@ -80,6 +80,8 @@ export type DatakeskusHanke = {
 
 export type DatakeskusTiedot = {
   maakunta?: string | null
+  sijainti_lat?: number | null
+  sijainti_lon?: number | null
   teho_mw?: number | null
   it_teho_mw?: number | null
   pinta_ala_ha?: number | null
@@ -226,6 +228,22 @@ export function datakeskusEhdokas(h: DatakeskusHanke, t: DatakeskusTiedot | null
       teho_mw: t?.teho_mw ?? null,
       pinta_ala_ha: t?.pinta_ala_ha ?? null,
       lisenssi: "CC BY 4.0",
+      /*
+       * REKISTERIN OMA KOORDINAATTI TALTEEN (D-365).
+       *
+       * Rivilla ei ole katuosoitetta, joten geokoodaus saisi vain kunnan
+       * nimen ja osuisi kunnan varapisteeseen -- 61 % riveistamme on
+       * siella ([[address-register-geocode]]). Rekisteri antaa pisteen
+       * valmiina 124 hankkeelle 150:sta.
+       *
+       * Kaytetaan kahteen asiaan: hyvaksyntareitti sijoittaa hankkeen
+       * kartalle oikeaan paikkaan, ja jonon duplikaattivihje mittaa
+       * etaisyyden olemassa oleviin hankkeisiin.
+       */
+      lahteen_koordinaatit:
+        t?.sijainti_lat != null && t?.sijainti_lon != null
+          ? { lat: t.sijainti_lat, lon: t.sijainti_lon, lahde: "datakeskusrekisteri" }
+          : null,
       field_sources: {
         developer: toimija ? "datakeskusrekisteri (koostaja)" : null,
         phase: h.vaihe ? `rekisterin tila (${h.vaihe})` : null,
