@@ -11,6 +11,16 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10-30 (Välimuistin tyhjä merkintä, Ulvilan kaavat, OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
 
+### Lukituksen perustelu muutettavissa (D-364)
+
+Lukituksen perustelu kysytään kerran eikä sitä voi muuttaa
+käyttöliittymästä. Teksti on kahdessa paikassa ja vain
+`app_metadata.locked_reason` näkyy käyttäjälistalla;
+`account_lifecycle` on pysyvä päiväkirja. Näyttöteksti korvataan,
+mutta päiväkirjaan jää alkuperäinen sanamuoto kenttään
+`reason_alkuperainen` korjauspäivineen. Työkalu
+`scripts/muuta-lukitusperuste.ts`.
+
 ### Tyhjä välimuistimerkintä näytti asiakkaalle tyhjää karttaa (D-363)
 
 `/projects` lukee ensin 2 tunnin IndexedDB-välimuistin. Jos haku oli

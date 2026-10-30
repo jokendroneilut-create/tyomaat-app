@@ -51,6 +51,37 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-364 - Lukituksen perustelua ei voi muuttaa kayttoliittymasta
+
+Johannes 30.10.2026: *"pystytko muuttamaan tekstin 'trial ohi ei
+tavoitettu' tilalle 'ei riittavasti yhteystietoja palataan kevaalla'.
+Ei ole editointinappulaa."*
+
+**Teksti on kahdessa paikassa, ja vain toinen nakyy:**
+
+| paikka | rooli |
+|---|---|
+| `auth.users.app_metadata.locked_reason` | **tama nakyy** kayttajalistalla (`list-users`) |
+| `account_lifecycle.metadata.reason` | pysyva paivakirja ([[account-lifecycle-log]]) |
+
+`lock-user`-reitti kysyy perustelun kerran ja vaatii sen (`Lukitseminen
+vaatii perustelun`), mutta muuttaminen jalkeenpain vaatisi uuden
+lukituksen -- eika sellaista nappia ole.
+
+**Nayttoteksti korvattiin, paivakirjaa ei ylikirjoitettu.** Elinkaaririvi
+sai uuden sanamuodon kenttaan `reason`, mutta alkuperainen jai talteen
+kenttaan `reason_alkuperainen` ja korjaus merkittiin paivayksella.
+Paivakirja kertoo mita tapahtui, ei mita jalkeenpain haluttiin sanoa --
+mutta nayttoteksti saa olla se jonka omistaja haluaa nayttaa.
+
+Tyokalu on yleinen, ei kertakaytto: `scripts/muuta-lukitusperuste.ts
+<sahkoposti> "<teksti>" [--apply]`. Se kieltaytyy jos tunnus ei ole
+lukittu, ja nayttaa vanhan ja uuden tekstin kuivaharjoituksessa.
+
+**Avoin, ei tehty:** editointinappi kayttajalistalle. Se on asiakkaalle
+nakymaton admin-toiminto, mutta UI-muutos silti -- ei tehda kysymatta
+([[ask-before-publishing-ui]]).
+
 ### D-363 - Tyhja valimuistimerkinta naytti asiakkaalle tyhjaa karttaa
 
 Johannes 30.10.2026: *"huomasin etta admin tunnuksilla ei hetkellisesti
