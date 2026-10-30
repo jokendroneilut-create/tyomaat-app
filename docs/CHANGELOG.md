@@ -11,6 +11,21 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-10-30 (Datakeskusrekisteri, välimuistin tyhjä merkintä, Ulvilan kaavat, OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
 
+### Lähteen nimi asiakkaalle, ei sisäistä tunnistetta
+
+Hankesivu näytti `metadata.source_name`in sellaisenaan, ja
+`lib/agent/*.ts`:ssä määritellyillä lähteillä se on sisäinen tunniste:
+asiakas näki rivejä **"Lähde: helsinki_paatokset"** ja
+**"Lähde: ysaatio"**. Mitattu 31.10.2026: 324 eri arvoa, joista 83 on
+tunnisteen näköisiä ja ne kattavat 1 798 hanketta.
+
+`lib/projects/lahteenNimi.ts` kääntää ne nimiksi ("Helsingin kaupungin
+päätökset", "Y-Säätiö", "Ympäristövaikutusten arviointi (YVA)").
+Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
+**tuntematon tunniste siistitään** alaviivoista — unohtunut kartan rivi
+ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
+ja TIC:n hankenäkymässä.
+
 ### Datakeskusrekisteri lähteeksi (D-365)
 
 Datakeskushankkeiden kansallinen rekisteri (CC BY 4.0) kattaa

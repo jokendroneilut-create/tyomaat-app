@@ -1,5 +1,6 @@
 "use client"
 import YhteyshenkilonTaso from "../../components/YhteyshenkilonTaso"
+import { lahteenNimi } from "@/lib/projects/lahteenNimi"
 
 import Lataus from "@/app/components/Lataus"
 import { useEffect, useState } from "react"
@@ -519,7 +520,8 @@ export default function TodayProjectModal({
 
                   {project.metadata?.source_name ? (
                     <p>
-                      <strong>Lähde:</strong> {project.metadata.source_name}
+                      <strong>Lähde:</strong>{" "}
+                      {lahteenNimi(project.metadata.source_name as string)}
                     </p>
                   ) : null}
 

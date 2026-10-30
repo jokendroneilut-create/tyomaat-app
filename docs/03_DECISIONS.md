@@ -271,7 +271,24 @@ koska kysymys nousee uudelleen:
 sisäinen tunniste: `helsinki_paatokset`, `jm_kohteet`, `nrc_projektit`,
 `ysaatio` — 55 kappaletta. Näyttönimien karttaa ei ole. Rekisteri ei
 siis kuulosta epämääräiseltä lähteenä vaan siksi että se on tunniste.
-Korjaus kuuluu kaikille lähteille kerralla, ei tälle yhdelle. Rekisterin `/tietoa`-sivun
+Korjaus kuuluu kaikille lähteille kerralla, ei tälle yhdelle.
+
+**Tehty 31.10.2026:** `lib/projects/lahteenNimi.ts` kääntää tunnisteen
+nimeksi kolmella säännöllä. Valmis nimi palautetaan sellaisenaan (ei
+tunnisteen muotoinen), tunnettu tunniste kartasta, ja **tuntematon
+siistitään eikä jätetä raakana** — unohtunut kartan rivi näkyy
+"Rajukivi"-muodossa, ei koskaan alaviivoineen.
+
+Taivutus on kirjoitettu käsin jokaiselle päätöslähteelle erikseen
+("Helsingin kaupungin päätökset"), koska genetiivi ei synny
+merkkijonoa liittämällä — sama ansa kuin tämän päätöksen kohdassa 4.
+
+Viisi nimeä olin arvannut väärin siistimällä, koska tunniste on
+tappanut ääntiömerkit ja lyhentänyt nimen: *Pelti assat* → **Pelti-Ässät**,
+*Marttilan* → **Marttilan Rakennus**, *Aura* → **Aura Rakennus**,
+*Hoivakodit* → **HC Hoivakodit**, *KAS-Asunnot* → **KAS Asunnot**.
+Oikeat nimet olivat koko ajan `discovery_sources.name`-sarakkeessa.
+Uutta lähdettä nimetessä se on totuuden lähde, ei oma päättely. Rekisterin `/tietoa`-sivun
 luettelemat ylävirran lähteet (Ryhti/SYKE, PRH YTJ, MML) ovat omana
 kohtanaan tiekartalla.
 

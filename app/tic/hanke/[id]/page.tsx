@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { lahteenNimi } from "@/lib/projects/lahteenNimi"
 import { notFound } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
 import EditProject from "./EditProject"
@@ -127,7 +128,7 @@ export default async function TicProjectPage({ params, searchParams }: Props) {
                   rel="noreferrer"
                   className="text-blue-700 underline"
                 >
-                  {metadata.source_name ?? "Avaa lähde"}
+                  {lahteenNimi(metadata.source_name) ?? "Avaa lähde"}
                 </a>
               ) : (
                 <span className="text-red-600">puuttuu</span>

@@ -1,5 +1,6 @@
 'use client'
 import YhteyshenkilonTaso from '../components/YhteyshenkilonTaso'
+import { lahteenNimi } from "@/lib/projects/lahteenNimi"
 import { roolinSelite, roolinKuvaus } from '@/lib/projects/yhteyshenkilonRooli'
 import type { OsapuolenYhteyshenkilo } from '@/lib/metrics/yritysrekisteri'
 
@@ -2182,7 +2183,7 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
                   {selected.metadata?.source_name ? (
                     <p>
                       <strong>Lähde:</strong>{" "}
-                      {selected.metadata.source_name}
+                      {lahteenNimi(selected.metadata.source_name)}
                     </p>
                   ) : null}
 
