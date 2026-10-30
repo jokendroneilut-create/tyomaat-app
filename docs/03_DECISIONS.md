@@ -238,7 +238,40 @@ koska aikabudjetti voi täyttyä jo nähtyjen uudelleenkäsittelyyn.
 
 **Lopputulos:** 150 ehdokasta käsitelty, **134 jonoriviä**, 16 osumaa
 tai valmiina kirjautunutta. Duplikaattivihje 28 rivillä; 26 rivillä ei
-ole koordinaattia, mikä vastaa rekisterin omaa aukkoa (150 − 124). Rekisterin `/tietoa`-sivun
+ole koordinaattia, mikä vastaa rekisterin omaa aukkoa (150 − 124).
+
+#### 8. Rekisteri saa näkyä asiakkaalle
+
+Johannes kysyi 31.10.2026 voisiko asiakkaalle näyttää alkuperäisen
+lähteen rekisterin sijaan, koska *"datakeskusrekisteri on epämääräisen
+kuuloinen"*. Vastaus mitattiin: **kyllä voisi.** Rekisteri kertoo
+kenttäkohtaiset lähdeviitteensä (`lahteet.hankkeet[]`), ja kun sen omat
+apuvälineet suodatetaan pois (Nominatim-geokoodaus, datacentermap,
+karttapalvelut), käyttökelpoinen alkuperäislähde löytyy **150/150**
+hankkeelle, viranomaislähde 77:lle (ymparisto.fi:n YVA sekä kuntien
+oncloudos, Dynasty ja CloudNC).
+
+**Päätös oli silti jättää rekisteri näkyviin.** Perusteet kirjataan,
+koska kysymys nousee uudelleen:
+
+1. `metadata.source_url` on yhtä aikaa asiakkaan linkki ja kerääjän
+   tunnistusavain (`findRecentlySeenSourceUrls`, dokumenttitiiviste
+   `source_url|name`). Sen korvaaminen tekisi kaikista 134 rivistä
+   uuden näköisiä, ja kaksi hanketta samassa kunnassa voisi saada saman
+   osoitteen ([[listing-page-is-not-project-page]]).
+2. Lähdeviitteet ovat **kenttäkohtaisia**: "Riihimäki Portti VI →
+   yle.fi" tarkoittaa että Yle oli lähde *kunta*-kentälle. Sen
+   esittäminen hankkeen lähteenä olisi tarkempi väite kuin data kantaa.
+3. CC BY 4.0 edellyttää maininnan, ja rekisteri antaa vaaditun tekstin
+   JSONissaan. Näkyvä maininta on yksinkertaisin tapa olla sen kanssa
+   linjassa.
+
+**Oikea juurisyy oli muualla.** Asiakkaalle näytetään
+`metadata.source_name` sellaisenaan, ja se on **jokaisella** lähteellä
+sisäinen tunniste: `helsinki_paatokset`, `jm_kohteet`, `nrc_projektit`,
+`ysaatio` — 55 kappaletta. Näyttönimien karttaa ei ole. Rekisteri ei
+siis kuulosta epämääräiseltä lähteenä vaan siksi että se on tunniste.
+Korjaus kuuluu kaikille lähteille kerralla, ei tälle yhdelle. Rekisterin `/tietoa`-sivun
 luettelemat ylävirran lähteet (Ryhti/SYKE, PRH YTJ, MML) ovat omana
 kohtanaan tiekartalla.
 
