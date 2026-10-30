@@ -9,7 +9,24 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
-## 2026-10-30 (Ulvilan kaavat, OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
+## 2026-10-30 (Välimuistin tyhjä merkintä, Ulvilan kaavat, OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
+
+### Tyhjä välimuistimerkintä näytti asiakkaalle tyhjää karttaa (D-363)
+
+`/projects` lukee ensin 2 tunnin IndexedDB-välimuistin. Jos haku oli
+kerran palauttanut nolla riviä **ilman virhettä** (hetkellinen
+tunnistautumis- tai verkkohäiriö riittää), tyhjä lista tallentui — ja
+lukupuolen ehto `if (valimuistista)` ei erottanut tyhjää täydestä, joten
+sivu palasi heti nollalla hankkeella. Vanheneminen on kellon mukaan eikä
+mikään tyhjennä välimuistia kirjautumisen yhteydessä, joten tila olisi
+kestänyt kaksi tuntia ilman yhtään virheilmoitusta.
+
+Korjaus on välimuistimoduulissa eikä kutsupaikassa: kirjoitus ohittaa
+tyhjän listan ja luku käsittelee tyhjän merkinnän ohiosumana ja poistaa
+sen. Lukupuolen suoja siivoaa myös vanhalla koodilla kirjoitetut
+merkinnät, joten selainta ei tarvitse tyhjentää käsin. Sääntö eristettiin
+puhtaaksi funktioksi, koska IndexedDB:tä ei ole Nodessa eikä sitä muuten
+voisi testata.
 
 ### Neljä estettä yhden kaavarivin ja koko lähteen välissä (D-362)
 

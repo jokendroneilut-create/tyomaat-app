@@ -51,6 +51,49 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-363 - Tyhja valimuistimerkinta naytti asiakkaalle tyhjaa karttaa
+
+Johannes 30.10.2026: *"huomasin etta admin tunnuksilla ei hetkellisesti
+loytynyt karttasivulta mitaan hankkeita, mutta kun kirjauduin uudestaan
+niin toimi normaalisti"* -- ja kun vika oli nimetty: *"joo ehdottomasti
+korjataan tuo, olisi paha jos valimuistin takia asiakkaalle nakyisi 2
+tuntia tyhja kartta"*.
+
+**Data oli kunnossa koko ajan:** 6 980 julkista hanketta, Supabase
+healthy, ei katkosta. Vika oli selaimen valimuistissa.
+
+`/projects` lukee ensin 2 tunnin IndexedDB-valimuistin
+([[projects-list-cache]]), ja siina oli kaksi aukkoa jotka yhdessa
+tuottavat juuri taman oireen:
+
+1. **Tyhja tulos tallentui.** Jos haku palautti nolla rivia ILMAN
+   virhetta -- hetkellinen tunnistautumis- tai verkkohairio riittaa --
+   `kirjoitaValimuisti(..., [])` tallensi tyhjan listan.
+2. **Lukupuoli ei erottanut tyhjaa taydesta.** Ehto oli
+   `if (valimuistista)`, ei `rivit.length`. Tyhja merkinta on tosi,
+   joten koodi palasi heti nollalla hankkeella.
+
+Vanheneminen on kellon mukaan eika mikaan tyhjenna valimuistia
+kirjautumisen yhteydessa, joten tila olisi kestanyt **kaksi tuntia ilman
+yhtaan virheilmoitusta**. Se ei huuda vaan vaikenee
+([[silent-watch-failure]]).
+
+**Korjaus on valimuistimoduulissa, ei kutsupaikassa:** kirjoitus ohittaa
+tyhjan listan, ja luku kasittelee tyhjan merkinnan ohiosumana ja poistaa
+sen. Sama suoja kahdessa suunnassa, koska selaimessa voi olla vanhalla
+koodilla kirjoitettu merkinta -- lukupuolen suoja siivoaa senkin
+itsestaan, eika kenenkaan tarvitse tyhjentaa selainta kasin.
+
+Saanto eristettiin puhtaaksi funktioksi `kelpaakoMerkinta`, koska
+IndexedDB:ta ei ole Nodessa eika saantoa muuten voisi testata lainkaan
+(6 testia).
+
+**Mita EI muutettu:** tyhja tulos on edelleen mahdollinen aito tilanne
+(suodatin ei osu). Sita ei vain valimuistiteta, koska haku on silloin
+halpa.
+
+Ks. `lib/projects/hankevalimuisti.ts` (+ spec).
+
 ### D-362 - Neljä estettä yhden kaavarivin ja koko lähteen välissä
 
 Johannes 30.10.2026 Ulvilan rivista `0ffc3bae`: *"pitaa poimia kuvaus
