@@ -24,6 +24,18 @@ Kaksi hakua ajossa eikä 198: `/muutokset/json` antaa 197 hanketta
 yhdellä pyynnöllä ja `sitemap.xml` loput. Täydet kentät haetaan vasta
 `enrich`issä, vain vielä näkemättömille.
 
+Jono purettiin käsin uudella työkalulla
+`scripts/aja-lahde-tyhjaksi.ts`: cron antaa lähteelle vuoron 4,7
+vuorokauden välein (342 lähdettä, 18 perustason paikkaa per ajo, 4 ajoa
+vuorokaudessa), joten odottaminen olisi kestänyt viikkoja. Kuusi ajoa,
+neljä minuuttia, **150 ehdokasta käsitelty → 134 jonoriviä** ja 16
+osumaa tai valmiina kirjautunutta.
+
+12 kuukauden ikkunaa **ei tehty**: se olisi suodattanut 0 riviä 150:stä
+(vanhin `paivitetty_pvm` 53 vrk), ja ikkuna on väärä mekanismi
+tilatietueille — tuoreuden suodatin on vaihe, ja `toiminnassa` sekä
+`peruttu` on jo jätetty pois.
+
 Rekisteri on **koostaja**, ja sen asema tehtiin mekaaniseksi eikä
 muistisäännöksi: ehdokas jättää `developer`-kentän tyhjäksi ja kirjaa
 toimijan `metadata.developer`iin, koska osuva lähde kirjoittaa
@@ -40,8 +52,7 @@ duplikaattijonoon ihmiselle. Siksi jonorivi saa nyt
 klikkausta: *"Samassa paikassa on jo hanke"*, etäisyys kilometreinä ja
 nappi liittämiseen. Rajaus on **läheisyys JA sama laji** — pelkkä
 läheisyys tuotti 73 paria joista suurin osa roskaa, eikä katuosoitteen
-vaatiminen auttanut (71). Ensimmäinen ajo: 12 vihjettä 24 avoimesta
-rivistä. Sivutuotteena rekisteri erottelee
+vaatiminen auttanut (71). Vihjeitä 28 rivillä. Sivutuotteena rekisteri erottelee
 hankkeita jotka olemme niputtaneet yhdeksi – "Datakeskus Lahteen"
 kattaa kaksi eri hanketta, "Datakeskus Visulahteen" kolme.
 

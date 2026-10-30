@@ -183,8 +183,62 @@ vihjettä 24 avoimesta rivistä**, kahdelta puuttui koordinaatti.
 Liittäminen käyttää samaa reittiä kuin *"Liitä hankkeeseen"*, joten
 mitään ei ylikirjoiteta.
 
-**Jäljellä:** ~124 ehdokasta tulee cronin mukana (~8–10 ajossa), ja 32
-koordinaattiparia on käsin katsottava. Rekisterin `/tietoa`-sivun
+#### 6. Ei 12 kuukauden ikkunaa — suodatin olisi kuollut JA väärä
+
+Johannes 31.10.2026: *"onko raja 12 kk vai onko sitä järkeä datakeskusten
+kohdalla edes tehdä. en usko että siellä on vanhoja hankkeita ollenkaan."*
+
+Yrityslähteen 12 kuukauden ikkuna on pakollinen
+([[company-source-filtering]]), joten kysymys on oikea. **Tähän
+lähteeseen sitä ei tule.** Mitattu kaikista 150 ehdokkaasta:
+
+| kenttä | tuorein | mediaani | vanhin | yli 12 kk |
+|---|---|---|---|---|
+| `paivitetty_pvm` | 4 vrk | 19 vrk | 53 vrk | **0** |
+| `luotu_pvm` | 4 vrk | 57 vrk | 69 vrk | **0** |
+| `vanhin_vahvistettu_pvm` | 5 vrk | 58 vrk | 320 vrk | **0** |
+
+Raja suodattaisi nollan riviä 150:stä, eli se olisi kuollutta koodia —
+ja kuollut suodatin on pahempi kuin puuttuva, koska seuraava lukija
+luulee sen tekevän jotain.
+
+**Tärkeämpi syy on että ikkuna on väärä mekanismi.** 12 kk:n sääntö on
+yritystiedotteille, joissa sivu listaa vuosien arkiston eikä vanha
+tiedote ole liidi. Rekisterin rivit eivät ole julkaisuja vaan
+**tilatietueita**: rivi kertoo missä vaiheessa hanke on nyt, ja
+`paivitetty_pvm` kertoo vain milloin rekisteri viimeksi kosketti sitä.
+Tuoreuden suodatin on `vaihe`, ja se on jo käytössä — `toiminnassa`
+(45) ja `peruttu` (3) pois. Valmis konesali on juuri se "vanha hanke"
+jota ikkunalla haettaisiin.
+
+**Varaus:** rekisteri itse on vasta ~69 vrk vanha, joten "ei vanhoja
+hankkeita" on osin sen oman iän seuraus. Pysähtynyt kaavahanke jää
+roikkumaan `kaavoitus`-tilaan vuosiksi. Jos se joskus haittaa, mittari
+ei ole julkaisuikkuna vaan **aika samassa vaiheessa**.
+
+#### 7. Jono purettiin käsin, ja oma ajoarvioni oli väärä
+
+Cron antaa lähteelle vuoron kerran kierroksessa, ja kierros on mitattu:
+342 lähdettä, joista taattuja (priority > 10) vain Hilma ja STT, eli
+18 perustason paikkaa × 4 ajoa = 72 vuoroa/vrk → **4,7 vrk**. Kaikilla
+340 perustason lähteellä on sama prioriteetti 10, joten järjestys on
+puhdas `last_run_at`-vuorottelu.
+
+Arvioin jäljellä olevien 124 ehdokkaan valuvan sisään ~75 vuorokaudessa
+ja perustin sen havaintoon "26 tapahtumaa kolmessa ajossa" eli
+8/ajo. **Luku oli väärä, koska otos oli ensimmäiset ajot**: todellinen
+purku oli 8 → 51 → 51 → 14, keskikesto per ehdokas 17,3 s → 5,8 s.
+Kuusi ajoa riitti, neljä minuuttia. Sama virhe kuin
+[[sample-must-be-representative]]: hitain ajo ei edusta tahtia.
+
+Työkalu on `scripts/aja-lahde-tyhjaksi.ts` (yleinen, ei lähdekohtainen):
+se ajaa `runSourceWorker`ia kunnes kaksi peräkkäistä ajoa ei tuota uutta
+riviä eikä uutta tapahtumaa. Yksi tyhjä ajo ei riitä lopetusehdoksi,
+koska aikabudjetti voi täyttyä jo nähtyjen uudelleenkäsittelyyn.
+
+**Lopputulos:** 150 ehdokasta käsitelty, **134 jonoriviä**, 16 osumaa
+tai valmiina kirjautunutta. Duplikaattivihje 28 rivillä; 26 rivillä ei
+ole koordinaattia, mikä vastaa rekisterin omaa aukkoa (150 − 124). Rekisterin `/tietoa`-sivun
 luettelemat ylävirran lähteet (Ryhti/SYKE, PRH YTJ, MML) ovat omana
 kohtanaan tiekartalla.
 
