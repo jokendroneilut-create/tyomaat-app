@@ -78,7 +78,30 @@ export type DatakeskusHanke = {
   vaihe: string | null
 }
 
+/*
+ * OSAPUOLI ROOLEINEEN (D-365, laajennettu 31.10.2026).
+ *
+ * Merkinta on omavarainen: nimi, roolin ihmisluettava muoto seka
+ * todiste (`lahde_url` + `lahde_kohta`, esim. YVA-selostuksen PDF ja
+ * "s. 1"). Mitattu: 46 hanketta 150:sta, 64 merkintaa.
+ */
+export type DatakeskusOrganisaatio = {
+  rooli?: string | null
+  rooli_meta?: { nimi?: string | null } | null
+  organisaatio?: { nimi?: string | null } | null
+  lahde_url?: string | null
+  lahde_kohta?: string | null
+}
+
+/* Paatos on KIRJOITETTUA TEKSTIA, ei linkki: mediaani 159 merkkia. */
+export type DatakeskusPaatos = {
+  kuvaus?: string | null
+  pvm?: string | null
+}
+
 export type DatakeskusTiedot = {
+  organisaatiot?: DatakeskusOrganisaatio[] | null
+  paatokset?: DatakeskusPaatos[] | null
   maakunta?: string | null
   sijainti_lat?: number | null
   sijainti_lon?: number | null
@@ -129,6 +152,87 @@ export function kunnaksi(nimi: string | null | undefined): string | null {
  * kuvaustekstia lainkaan. Luvut kerrotaan vain kun ne ovat olemassa --
  * tyhja on parempi kuin arvattu, ja se on myos rekisterin oma linja.
  */
+/*
+ * ROOLI MEIDAN MALLIIN.
+ *
+ * Konsultti menee `metadata.consultants`iin, joka on jo olemassa ja
+ * nakyy seka TIC:ssa etta Tanaan-modaalissa. Muut osapuolet menevat
+ * liittyviksi yrityksiksi.
+ *
+ * KAKSI ROOLIA JATETAAN POIS TAHALLAAN:
+ *   `yhteysviranomainen` on valvova viranomainen, ei hankkeen tekija.
+ *   `muu` ei kerro roolia, eika osapuolelle saa keksia sellaista
+ *   ([[party-role-fields]]).
+ */
+const KONSULTTIROOLIT: Record<string, string> = {
+  yva_konsultti: "YVA-konsultti",
+  kaavan_laatija: "Kaavan laatija",
+  kaavoittaja: "Kaavoittaja",
+  selvityksen_laatija: "Selvityksen laatija",
+  lupahakemuksen_laatija: "Lupahakemuksen laatija",
+}
+
+const LIITTYVAT_ROOLIT = new Set(["hankeyhtio", "emoyhtio", "vuokralainen", "toimija"])
+
+export function datakeskusKonsultit(
+  t: DatakeskusTiedot | null
+): { name: string; role: string | null }[] {
+  const ulos: { name: string; role: string | null }[] = []
+  const nahdyt = new Set<string>()
+
+  for (const o of t?.organisaatiot ?? []) {
+    const nimi = o?.organisaatio?.nimi?.trim()
+    const rooli = String(o?.rooli ?? "")
+    if (!nimi || !KONSULTTIROOLIT[rooli]) continue
+
+    /* Rekisterin oma ihmisluettava muoto voittaa oman kartan. */
+    const rooliNimi = o?.rooli_meta?.nimi?.trim() || KONSULTTIROOLIT[rooli]
+    const avain = `${nimi.toLowerCase()}|${rooliNimi.toLowerCase()}`
+    if (nahdyt.has(avain)) continue
+    nahdyt.add(avain)
+    ulos.push({ name: nimi, role: rooliNimi })
+  }
+
+  return ulos
+}
+
+export function datakeskusLiittyvat(t: DatakeskusTiedot | null): string[] {
+  const ulos: string[] = []
+  for (const o of t?.organisaatiot ?? []) {
+    const nimi = o?.organisaatio?.nimi?.trim()
+    if (nimi && LIITTYVAT_ROOLIT.has(String(o?.rooli ?? ""))) ulos.push(nimi)
+  }
+  return ulos
+}
+
+/* ISO-paiva suomalaiseen muotoon; kelvoton jatetaan pois. */
+function suomeksiPaiva(arvo: string | null | undefined): string | null {
+  const m = String(arvo ?? "").match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return null
+  return `${Number(m[3])}.${Number(m[2])}.${m[1]}`
+}
+
+/* Enintaan kolme tuoreinta: mediaani on 1, mutta yhdella on seitseman. */
+const PAATOKSIA_ENINTAAN = 3
+
+export function datakeskusPaatokset(t: DatakeskusTiedot | null): string[] {
+  return (t?.paatokset ?? [])
+    .filter((p) => (p?.kuvaus ?? "").trim())
+    .sort((a, b) => String(b?.pvm ?? "").localeCompare(String(a?.pvm ?? "")))
+    .slice(0, PAATOKSIA_ENINTAAN)
+    .map((p) => {
+      const pvm = suomeksiPaiva(p?.pvm)
+      const teksti = String(p!.kuvaus).trim()
+      /*
+       * Paiva kirjoitetaan eteen VAIN jos teksti ei kerro sita itse.
+       * Moni paatos aloittaa omalla paivallaan, jolloin etuliite
+       * tuotti "7.8.2026: Lupa- ja valvontavirasto antoi 7.8.2026 ...".
+       */
+      if (!pvm || teksti.includes(pvm)) return teksti
+      return `${pvm}: ${teksti}`
+    })
+}
+
 export function datakeskusKuvaus(h: DatakeskusHanke, t: DatakeskusTiedot | null): string {
   const osat: string[] = []
   const toimija = t?.toimija?.nimi?.trim()
@@ -159,6 +263,16 @@ export function datakeskusKuvaus(h: DatakeskusHanke, t: DatakeskusTiedot | null)
   if (t?.kaavatunnus) osat.push(`Kaava: ${t.kaavatunnus}.`)
   if (t?.kortteli) osat.push(`Kortteli ${t.kortteli}.`)
   if (t?.sijaintiperustelu) osat.push(String(t.sijaintiperustelu).trim())
+
+  /*
+   * PAATOKSET OVAT KUVAUKSEN PARAS OSA.
+   *
+   * Ne ovat kirjoitettua tekstia eivatka linkkeja: "Lupa- ja
+   * valvontavirasto antoi 7.8.2026 yhteysviranomaisen lausunnon ...".
+   * Kuvaus on se mita asiakas lukee, ja lahde avataan vain 2,6 %:ssa
+   * ([[description-is-the-product]]).
+   */
+  for (const rivi of datakeskusPaatokset(t)) osat.push(rivi)
 
   /*
    * Rekisteri on koostaja ja sanoo itse olevansa esiversio, joten
@@ -222,7 +336,15 @@ export function datakeskusEhdokas(h: DatakeskusHanke, t: DatakeskusTiedot | null
     metadata: {
       /* Hyvaksyntareitti lukee taman sarakkeeseen; osuma ei. */
       developer: toimija,
-      related_companies: mergeCompanyNames([], toimija ? [toimija] : []),
+      related_companies: mergeCompanyNames(
+        [],
+        [...(toimija ? [toimija] : []), ...datakeskusLiittyvat(t)]
+      ),
+      /*
+       * Konsultit rooleineen samasta vastauksesta (31.10.2026). Kentta
+       * on jo olemassa ja nakyy TIC:ssa seka Tanaan-modaalissa.
+       */
+      consultants: datakeskusKonsultit(t),
       contact_persons: [],
       rekisterin_vaihe: h.vaihe ?? null,
       teho_mw: t?.teho_mw ?? null,
@@ -248,6 +370,9 @@ export function datakeskusEhdokas(h: DatakeskusHanke, t: DatakeskusTiedot | null
         developer: toimija ? "datakeskusrekisteri (koostaja)" : null,
         phase: h.vaihe ? `rekisterin tila (${h.vaihe})` : null,
         property_type: "lahde on datakeskusrekisteri",
+        consultants: (t?.organisaatiot ?? []).length
+          ? "datakeskusrekisterin osapuolet rooleineen"
+          : null,
       },
     },
   }
@@ -268,8 +393,23 @@ async function hae(url: string): Promise<Response> {
 export async function haeHankkeenTiedot(id: string): Promise<DatakeskusTiedot | null> {
   const vastaus = await hae(`${PERUSTA}/hankkeet/${id}/json`)
   if (!vastaus.ok) return null
-  const j = (await vastaus.json()) as { hanke?: DatakeskusTiedot }
-  return j?.hanke ?? null
+  /*
+   * `organisaatiot` ja `paatokset` ovat `hanke`-olion SISARUKSIA, eivat
+   * sen sisalla. Ensimmainen versio palautti pelkan `hanke`n ja heitti
+   * ne pois, vaikka ne tulivat samassa vastauksessa -- puuttuva tieto
+   * oli jo omassa hallussa ([[own-data-unread]]).
+   */
+  const j = (await vastaus.json()) as {
+    hanke?: DatakeskusTiedot
+    organisaatiot?: DatakeskusOrganisaatio[]
+    paatokset?: DatakeskusPaatos[]
+  }
+  if (!j?.hanke) return null
+  return {
+    ...j.hanke,
+    organisaatiot: j.organisaatiot ?? [],
+    paatokset: j.paatokset ?? [],
+  }
 }
 
 export async function fetchDatakeskusrekisteriSource() {

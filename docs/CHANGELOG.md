@@ -26,6 +26,26 @@ Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
 ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
 ja TIC:n hankenäkymässä.
 
+### Konsultit ja päätökset datakeskusrekisteristä (D-365)
+
+Hankekohtainen JSON, jonka kerääjä jo hakee, sisälsi kaksi kenttää
+joita ei luettu: `organisaatiot` (46/150 hanketta, 64 merkintää) ja
+`paatokset` (87/150, 140 merkintää). Ne ovat `hanke`-olion sisaruksia,
+ja hakufunktio palautti vain `hanke`n.
+
+**Konsultit** menevät `metadata.consultants`iin rooleineen — kaavan
+laatija 31, YVA-konsultti 14, selvityksen laatija 4. Valvova
+viranomainen ja rooli "muu" jätetään pois. Hankeyhtiö, emoyhtiö ja
+vuokralainen menevät liittyviksi yrityksiksi vanhojen rinnalle.
+
+**Päätökset** ovat kirjoitettua tekstiä (mediaani 159 merkkiä), ja
+kolme tuoreinta liitetään kuvaukseen. Takautuva ajo: 97 riviä
+134:stä muuttui, kuvauksen mediaanipituus 465 merkkiä.
+
+Toimija- ja konsulttilistat erillisinä sivuina jätettiin tekemättä:
+123 toimijasta 45 oli jo kannassa, loput tulevat jonorivien mukana,
+eikä Y-tunnukselle ole kenttää.
+
 ### Datakeskusrekisteri lähteeksi (D-365)
 
 Datakeskushankkeiden kansallinen rekisteri (CC BY 4.0) kattaa

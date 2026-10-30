@@ -266,6 +266,68 @@ koska kysymys nousee uudelleen:
    JSONissaan. Näkyvä maininta on yksinkertaisin tapa olla sen kanssa
    linjassa.
 
+#### 9. Sama vastaus sisälsi konsultit ja päätökset — luettiin vasta nyt
+
+Johannes pyysi 31.10.2026 tutkimaan koko sivuston. Toimijalista
+(`/toimijat`, 123 organisaatiota) oli hänen arvauksensa, ja se mitattiin:
+**45 on jo meillä, 78 uutta**, mutta ne 78 tulevat joka tapauksessa kun
+jonorivit hyväksytään, Y-tunnukselle ei ole kenttää koko koodipohjassa,
+ja rekisterillä on sama nimimuunnelmaongelma kuin meillä (*Arcem*,
+*Arcem AS*, *Arcem, Inc.* erikseen). Arvo oli muualla.
+
+**Hankekohtainen JSON, jonka jo haemme, sisälsi kaksi käyttämätöntä
+kenttää** ([[own-data-unread]]). Ne ovat `hanke`-olion **sisaruksia**,
+ja `haeHankkeenTiedot` palautti vain `hanke`n — tieto tuli joka
+pyynnöllä ja heitettiin pois:
+
+| kenttä | hankkeilla | merkintöjä | käyttö |
+|---|---|---|---|
+| `organisaatiot` | 46/150 | 64 | konsultit rooleineen |
+| `paatokset` | 87/150 | 140 | kuvaus |
+
+**Konsultit** menevät `metadata.consultants`iin, joka oli jo olemassa ja
+näkyy TIC:ssä ja Tänään-modaalissa. Merkintä on omavarainen: nimi,
+roolin ihmisluettava muoto sekä todiste (`lahde_url` + `lahde_kohta`,
+esim. YVA-selostus ja "s. 1"). Roolit kaavan laatija 31, YVA-konsultti
+14, selvityksen laatija 4, lupahakemuksen laatija 1. **Kaksi roolia
+jätetään pois tahallaan:** `yhteysviranomainen` on valvoja eikä tekijä,
+ja `muu` ei kerro roolia — osapuolelle ei saa keksiä sellaista
+([[party-role-fields]]). `hankeyhtio`, `emoyhtio` ja `vuokralainen`
+menevät liittyviksi yrityksiksi, vanhojen rinnalle eivät päälle.
+
+**Päätökset** ovat kirjoitettua tekstiä, eivät linkkejä: mediaani 159
+merkkiä, kaikilla päivämäärä. Kuvaus on tuote
+([[description-is-the-product]]), joten kolme tuoreinta liitetään
+siihen.
+
+**Takautuva ajo:** 97 riviä 134:stä muuttui, konsultti 35 rivillä (39
+merkintää), kuvauksen mediaanipituus 465 merkkiä.
+
+**Kaksi asiaa löytyi vain lukemalla tuotos:**
+
+1. Päivä toistui: *"7.8.2026: Lupa- ja valvontavirasto antoi 7.8.2026
+   lausunnon…"*. Etuliite kirjoitetaan nyt vain jos teksti ei kerro
+   päivää itse.
+2. Luulin löytäneeni kuolleen hankkeen jonosta (Teuvan kunnanhallitus
+   oli purkanut suunnitteluvarauksen). **Hälytys oli väärä ja syy oli
+   omassa tarkistusskriptissäni:** siitä puuttui vaihesuodatin, ja rivin
+   vaihe on `peruttu` eli se oli jo rajattu pois. Ehdokkaiden 140
+   päätöksestä yksikään ei kerro hankkeen kaatuneen.
+
+Myös kaksi omaa virhettä matkalla, molemmat tuttuja: korvaus ilman
+tarkistusta oli **hiljainen tyhjäkäynti** (sama kuin changelogin
+askelpalautin), ja `.eq("metadata->>source_name")` kaatui satunnaisesti
+aikakatkaisuun, koska se on täysi taulunluku ilman indeksiä — suodatus
+siirrettiin sivutettuun lukuun.
+
+**Loput sivustosta mitattiin eikä otettu käyttöön:** `asiakirjat`
+(150/150, 1 002 kpl) on sekalaista YVA-selostuksista
+datacentermap-linkkeihin, `maaraajat` (26) on vaikuttamisen määräaikoja
+eikä liidi, `johdot` vain yhdellä hankkeella, ja `tarkistukset` (126) on
+rekisterin omaa laadunvalvontaa. `/konsultit`- ja `/toimijat`-sivut
+erillisinä lähteinä jätettiin tekemättä, koska sama tieto tulee
+hankekohtaisesta JSONista ilman lisähakua.
+
 **Oikea juurisyy oli muualla.** Asiakkaalle näytetään
 `metadata.source_name` sellaisenaan, ja se on **jokaisella** lähteellä
 sisäinen tunniste: `helsinki_paatokset`, `jm_kohteet`, `nrc_projektit`,

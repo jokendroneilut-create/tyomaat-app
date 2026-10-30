@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest"
 
 import {
   datakeskusEhdokas,
+  datakeskusKonsultit,
   datakeskusKuvaus,
+  datakeskusLiittyvat,
+  datakeskusPaatokset,
   jasennaMuutosloki,
   jasennaSivukartta,
   kunnaksi,
@@ -148,5 +151,107 @@ describe("datakeskusKuvaus", () => {
     expect(kuvaus).toContain("Datakeskushankkeiden kansallinen rekisteri")
     expect(kuvaus).toContain("CC BY 4.0")
     expect(kuvaus).toContain("tarkista alkuperäinen lähde")
+  })
+})
+
+/* Mitattu rekisterin vastauksesta 31.10.2026. */
+const ORGANISAATIOT = [
+  {
+    rooli: "yva_konsultti",
+    rooli_meta: { nimi: "YVA-konsultti" },
+    organisaatio: { nimi: "Ramboll" },
+    lahde_url: "https://www.ymparisto.fi/sites/default/files/x.pdf",
+    lahde_kohta: "s. 1",
+  },
+  {
+    rooli: "kaavan_laatija",
+    rooli_meta: { nimi: "Kaavan laatija" },
+    organisaatio: { nimi: "Sweco Finland Oy" },
+  },
+  { rooli: "hankeyhtio", organisaatio: { nimi: "Pikku-Muolaan Kehitys Oy" } },
+  /* Valvova viranomainen ei ole hankkeen tekija. */
+  { rooli: "yhteysviranomainen", organisaatio: { nimi: "Lupa- ja valvontavirasto" } },
+  /* Rooli tuntematon: sille ei saa keksia sellaista. */
+  { rooli: "muu", organisaatio: { nimi: "Joku Oy" } },
+]
+
+describe("datakeskusKonsultit", () => {
+  it("poimii konsultit rooleineen", () => {
+    const k = datakeskusKonsultit({ organisaatiot: ORGANISAATIOT } as any)
+    expect(k).toEqual([
+      { name: "Ramboll", role: "YVA-konsultti" },
+      { name: "Sweco Finland Oy", role: "Kaavan laatija" },
+    ])
+  })
+
+  it("jattaa pois viranomaisen ja tuntemattoman roolin", () => {
+    const nimet = datakeskusKonsultit({ organisaatiot: ORGANISAATIOT } as any).map((x) => x.name)
+    expect(nimet).not.toContain("Lupa- ja valvontavirasto")
+    expect(nimet).not.toContain("Joku Oy")
+  })
+
+  it("kayttaa rekisterin omaa roolinimea kun se on", () => {
+    const k = datakeskusKonsultit({
+      organisaatiot: [
+        { rooli: "kaavan_laatija", rooli_meta: { nimi: "Kaavan laatija (konsultti)" }, organisaatio: { nimi: "X Oy" } },
+      ],
+    } as any)
+    expect(k[0].role).toBe("Kaavan laatija (konsultti)")
+  })
+
+  it("ei toista samaa nimea ja roolia", () => {
+    const kahdesti = [ORGANISAATIOT[0], { ...ORGANISAATIOT[0] }]
+    expect(datakeskusKonsultit({ organisaatiot: kahdesti } as any)).toHaveLength(1)
+  })
+
+  it("kestaa tyhjan", () => {
+    expect(datakeskusKonsultit(null)).toEqual([])
+    expect(datakeskusKonsultit({} as any)).toEqual([])
+  })
+})
+
+describe("datakeskusLiittyvat", () => {
+  it("poimii hankeyhtion muttei konsulttia eika viranomaista", () => {
+    const l = datakeskusLiittyvat({ organisaatiot: ORGANISAATIOT } as any)
+    expect(l).toEqual(["Pikku-Muolaan Kehitys Oy"])
+  })
+})
+
+describe("datakeskusPaatokset", () => {
+  const PAATOKSET = [
+    { pvm: "2026-05-02", kuvaus: "Vanhempi paatos." },
+    { pvm: "2026-08-07", kuvaus: "Uusin paatos." },
+    { pvm: "2026-07-01", kuvaus: "Keskimmainen." },
+    { pvm: "2026-01-01", kuvaus: "Neljas jaa pois." },
+    { pvm: "2026-09-09", kuvaus: "   " },
+  ]
+
+  it("jarjestaa tuoreimman ensin ja rajaa kolmeen", () => {
+    const r = datakeskusPaatokset({ paatokset: PAATOKSET } as any)
+    expect(r).toHaveLength(3)
+    expect(r[0]).toBe("7.8.2026: Uusin paatos.")
+    expect(r.join(" ")).not.toContain("Neljas")
+  })
+
+  it("jattaa tyhjan kuvauksen pois", () => {
+    expect(datakeskusPaatokset({ paatokset: PAATOKSET } as any).join(" ")).not.toMatch(/\s{3}/)
+  })
+
+  /* Paiva kirjoitetaan suomeksi, ei ISO-muodossa. */
+  it("muotoilee paivan suomeksi", () => {
+    expect(datakeskusPaatokset({ paatokset: [{ pvm: "2026-08-07", kuvaus: "X." }] } as any)[0]).toBe("7.8.2026: X.")
+  })
+
+  /* Moni paatos aloittaa omalla paivallaan; etuliite toisti sen. */
+  it("ei toista paivaa jonka teksti kertoo itse", () => {
+    const r = datakeskusPaatokset({
+      paatokset: [{ pvm: "2026-08-07", kuvaus: "Virasto antoi 7.8.2026 lausunnon." }],
+    } as any)
+    expect(r[0]).toBe("Virasto antoi 7.8.2026 lausunnon.")
+    expect(r[0]).not.toMatch(/7\.8\.2026.*7\.8\.2026/)
+  })
+
+  it("kelpuuttaa kuvauksen ilman paivaa", () => {
+    expect(datakeskusPaatokset({ paatokset: [{ pvm: null, kuvaus: "X." }] } as any)[0]).toBe("X.")
   })
 })
