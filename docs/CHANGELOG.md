@@ -18,7 +18,7 @@ koski koko lähdettä. Ankkuri `kaavan tarkoitus` osui keskelle sanaa
 "Asema**kaavan tarkoitus**", jolloin virkkeenalkusuoja hylkäsi sen
 oikein — etuliite puuttui. Asiakirjan valinta otti luonnoksen vaikka
 ehdotus on uudempi (ja ensimmäinen korjaus siihen ei osunut lainkaan,
-koska `` ei tunnista alaviivaa rajaksi). Kuvaus jatkui kansilehden
+koska `\b` ei tunnista alaviivaa rajaksi). Kuvaus jatkui kansilehden
 lomakkeeseen yhteystietoineen, mikä rikkoisi yhteyshenkilöt myöhemmin.
 Ja yhteystietoa ei poimittu lainkaan, koska koodissa luki faktana
 "niitä ei ole selostuksessa" — premissi joka päti Lieksassa muttei
