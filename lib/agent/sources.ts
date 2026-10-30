@@ -86,6 +86,10 @@ import { fetchDestiaSource } from "./fetchDestiaSource"
 import { fetchOteranSource } from "./fetchOteranSource"
 import { fetchJalonSource } from "./fetchJalonSource"
 import { fetchJmSource } from "./fetchJmSource"
+import {
+  fetchDatakeskusrekisteriSource,
+  enrichDatakeskusCandidate,
+} from "./fetchDatakeskusrekisteriSource"
 import { fetchLohkareSource } from "./fetchLohkareSource"
 import { fetchVexatecSource } from "./fetchVexatecSource"
 import { fetchTilapalvelutSource } from "./fetchTilapalvelutSource"
@@ -415,6 +419,19 @@ export const sources = [
    * muuttopaiva 17/22; niista 11 on jo valmiita.
    */
   { name: "jm_kohteet", fetch: fetchJmSource },
+  /*
+   * Datakeskushankkeiden kansallinen rekisteri (D-365). Koostaja, ei
+   * alkuperainen lahde: sen tieto on viimesijaista (D-354). Luettelo
+   * saadaan YHDELLA haulla muutoslokista (197/198 hanketta), ja tayet
+   * kentat vain `enrich`issa -- muuten ajo olisi 198 hakua. Mitattu
+   * 30.10.2026: 198 hanketta, meilla 59. Toiminnassa ja peruttu
+   * jatetaan pois.
+   */
+  {
+    name: "datakeskusrekisteri",
+    fetch: fetchDatakeskusrekisteriSource,
+    enrich: enrichDatakeskusCandidate,
+  },
   /*
    * Vexatec Oy: hoiva- ja palvelurakentamisen KVR-urakoitsija. Tiedotteet
    * ovat WordPressin omassa tyypissa `tiedotteet`, eivat RSS-syotteessa

@@ -51,6 +51,101 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-365 – Datakeskusrekisteri lähteeksi: koostajan nimi ei saa korvata omaa tietoa
+
+Johannes 30.10.2026: *"Tee datakeskusrekisteri.fi:stä lähde."*
+
+Rekisteri kattaa juuri sen katvealueen jota emme muuten näe: yksityinen
+rakennuttaja, ei Hilmaa, ei kunnan päätöstä ennen kuin kaava on pitkällä
+([[private-developer-blind-spot]]). Mitattu 30.10.2026: **rekisterissä
+198 hanketta, meillä 59 datakeskusta.**
+
+**Reitti on kaksi hakua, ei 198.** `/muutokset/json` sisältää
+`hanke`-olion jokaisessa muutoksessa, joten yksi pyyntö antaa 197
+hanketta tunnisteineen; `sitemap.xml` antaa 198 uuid:ta, eli erotus on
+yksi. Täydet kentät (toimija, teho, pinta-ala) haetaan vasta
+`enrich`issä, jota kerääjä kutsuu vain vielä näkemättömille. Ilman tätä
+jokainen ajo olisi 198 hakua ja 3 Mt.
+
+**Vaiheet rekisterin omasta kentästä** (sama kuvio kuin D-339), YVA
+suunnitteluun kuten Fingridillä (D-303). `toiminnassa` (45) ja `peruttu`
+(3) jätetään pois: valmis konesali ei ole liidi eikä peruttu hanke ole
+hanke. Jäljelle jää **150 ehdokasta** – Kaavoitus 45, Suunnittelu 50,
+Rakennuslupa 26, Rakenteilla 29.
+
+#### 1. Koostajan asema tehtiin mekaaniseksi, ei muistisäännöksi
+
+Rekisteri sanoo itse olevansa esiversio ja kehottaa tarkistamaan
+alkuperäisen lähteen. Sääntö "jälleenjulkaisija on viimesijainen"
+(D-354, [[rakennuslehti-is-secondary]]) ei kuitenkaan toteudu
+lukemalla sitä: osuva lähde kirjoittaa `developer`-kentän olemassa
+olevan päälle (`body.developer || match.developer`, D-341).
+
+Siksi ehdokas jättää `developer`-kentän **tyhjäksi** ja kirjaa toimijan
+`metadata.developer`iin, josta hyväksyntäreitti lukee sen sarakkeeseen
+vain uudelle riville. Kuivaharjoitus mittasi kaksi riviä joilla vanha
+arvo olisi kadonnut, ja kummassakin meidän arvo oli parempi:
+
+| kunta | meillä (alkuperäisestä lähteestä) | rekisteri olisi kirjoittanut |
+|---|---|---|
+| Forssa | QTS Data Centers (Blackstone) | Pikku-Muolaan Kehitys Oy *(tonttiyhtiö)* |
+| Nurmijärvi | DigitalLand Services Kinetic DC Oy | DayOne |
+
+Kolme ajoa jälkeenpäin: 24 jonoriviä, 2 osumaa, **0 ylikirjoitusta.**
+Käsin täydennetty Kiteen rivi (`ca192c26`) osui ja säilyi
+täsmälleen – tilaaja Scale42, 4 liittyvää yritystä, 3 yhteyshenkilöä,
+1 474 merkin kuvaus.
+
+#### 2. Nimi ei kerro onko hanke jo meillä – eikä täsmäytin löydä sitä
+
+Rekisterin nimet ovat sen omia ("Hyperco Lohja, Virkkala"), meidän
+nimet lähteidemme omia ("Lohjan datakeskus"). Yhteisiä sanoja ei ole,
+joten täsmäytin ei yhdistä niitä. **Koordinaatti löysi 32 ehdokasta
+150:stä jo kannasta; täsmäytin olisi yhdistänyt ne nimen perusteella
+0 kertaa.** Päällekkäisyys jää siis ihmiselle duplikaattijonoon, ja se
+on tiedostettu hinta: 150 riviä jonoon on halvempi kuin väärä
+automaattinen yhdistäminen.
+
+Sivutuote on arvokkaampi kuin uudet rivit: **rekisteri erottelee
+hankkeet joita me olemme niputtaneet yhdeksi.** Meidän yleisnimi
+"Datakeskus Lahteen" kattaa kaksi eri hanketta (Ecogrid Kujala ja FCDC
+Ilmarisentie), "Datakeskus Kajaaniin" kaksi (XTX Markets ja LUMI-AI) ja
+"Datakeskus Visulahteen" kolme (Compute Nordic, Orka EcoSairila,
+Regant). Lähteen arvo on nimeämisessä ja erottelussa, ei määrässä.
+
+#### 3. Oma ensimmäinen päällekkäisyysmittaus oli väärä
+
+Ensimmäinen versio vertasi koordinaattia **kaikkiin** hankkeisiin ja
+tuotti 73 paria, joista yksi oli "XTX Marketsin datakeskus, Kajaani"
+↔ "Lohtajan lähiliikunta-alueen maanrakennusurakka". Syy on tunnettu
+mutta en muistanut sitä mitatessani: **61 % riveistä on geokoodattu
+kunnan varapisteeseen** ([[address-register-geocode]]), joten saman
+kunnan rivit ovat kaikki satojen metrien päässä toisistaan. Kolmen
+kilometrin säde mittasi kuntaa, ei paikkaa. Vertailujoukon rajaus
+datakeskuksiin pudotti luvun 32:een.
+
+Kolmen kilometrin säde tuottaa yhä vääriä pareja saman kunnan sisällä
+(Winda Rajakangas ↔ Sarvenmaan datakeskus), joten **32 on yläraja, ei
+duplikaattien määrä.**
+
+#### 4. Kuvauksen taivutusvirhe löytyi lukemalla, ei testistä
+
+Kuvausgeneraattori liitti kunnan ja toimijan nimen merkkijonona:
+"Saarijärvilla", "Mikkelilla", "Lapinlahtilla", "Oyn", "ASn". Suomen
+paikallissijat ja yhtiömuodon genetiivi eivät taivu liittämällä, joten
+nimet kirjoitetaan perusmuodossa ("kunta Saarijärvi, toimija Aurora
+Core Technology Oy"). Kahdeksan riviä oli ehtinyt jonoon ennen
+havaintoa; `scripts/korjaa-datakeskusrekisterin-kuvaukset.ts` rakensi
+ne uudelleen samalla funktiolla kuin kerääjä
+([[same-term-two-definitions]]). Mikään testi ei olisi löytänyt tätä –
+vain tuotoksen lukeminen ([[look-at-visual-work]],
+[[dry-run-before-backfill]]).
+
+**Jäljellä:** ~124 ehdokasta tulee cronin mukana (~8–10 ajossa), ja 32
+koordinaattiparia on käsin katsottava. Rekisterin `/tietoa`-sivun
+luettelemat ylävirran lähteet (Ryhti/SYKE, PRH YTJ, MML) ovat omana
+kohtanaan tiekartalla.
+
 ### D-364 - Lukituksen perustelua ei voi muuttaa kayttoliittymasta
 
 Johannes 30.10.2026: *"pystytko muuttamaan tekstin 'trial ohi ei

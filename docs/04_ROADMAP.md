@@ -1405,6 +1405,69 @@ muistin varassa.
   2. **Duplikaatit.** S-Marketit ja kaupungin kohteet tulevat osin jo
      Hilman kautta; yhdistämisen avain on osoite, ei nimi.
 
+- **Datakeskusrekisterin omat ylävirran lähteet — tutkimatta, kysytty
+  30.10.2026.** Johannes: *"olisiko joku luetelluista lähteistä
+  meillekin hyödyllinen"* (www.datakeskusrekisteri.fi/tietoa).
+
+  **Rekisteri itse on jo lähteenä** (D-365, 30.10.2026) — tämä kohta
+  koskee vain sen *ylävirran* lähteitä, eli sitä mistä rekisteri kokoaa
+  tietonsa.
+
+  Rekisteri kertoo avoimesti mistä se itse kokoaa tietonsa. Lista
+  luettiin 30.10.2026, ja siinä on **kolme meille suoraan
+  kiinnostavaa** ja neljä sivuavaa. Mitään ei ole vielä tutkittu.
+
+  **1. Ryhti (SYKE) — tärkein, osuu isoimpaan tunnettuun aukkoomme.**
+  `paikkatiedot.ymparisto.fi/geoserver/ryhti_plan/ogc/features/v1/collections`
+  on kansallinen kaavatietovaranto OGC API Features -rajapintana.
+  Meillä kaavatieto kerätään **kunta kerrallaan** ja kerääjä on
+  kuntakohtainen ([[kaava-parser-vs-page]]); jäljellä on ~1 925 riviä
+  joiden kuvaus puuttuu, ja 686 niistä kaatuu siihen ettei sivulta
+  löydy liitteitä. Jos Ryhti antaa saman tiedon yhdestä rajapinnasta,
+  se ei ole yksi lähde lisää vaan **korvaa osan kerääjistä**.
+
+  Mitattava ennen työtä, järjestyksessä:
+  1. **Mitä kokoelmia rajapinnassa on** ja mitkä kunnat ovat mukana —
+     Ryhti on käyttöönotossa, eivätkä kaikki kunnat vielä toimita.
+     Kattavuus kuntina on koko kysymys.
+  2. **Onko kaavaselostus tai sen tarkoitus-luku mukana** vai pelkkä
+     geometria ja kaavatunnus. Helsingin WFS antoi aikanaan vain
+     geometrian, ja juuri siksi siirryttiin SUKKAan (D-005).
+  3. **Onko vireillä olevat mukana vai vain voimaan tulleet.** Meille
+     kelpaa vain vireillä oleva; voimaan tullut kaava ei ole liidi.
+  4. Vasta sitten: montako **uutta** hanketta ja montako nykyistä
+     kuntakerääjää voisi poistaa.
+
+  **2. PRH:n avoin YTJ-rajapinta.**
+  `avoindata.prh.fi/opendata-ytj-api/v3/companies`. Meillä on
+  tunnettujen yritysten lista omasta datasta ([[known-company-list]]),
+  mutta nimimuunnelmat ovat tunnettu vika: "Rakennusliike Lapti" ja
+  "Lapti" ovat eri nimiä mittarille (docs/20), ja sama toistuu
+  soittolistan yritysavaimessa. PRH antaa y-tunnuksen ja virallisen
+  nimen, eli **muunnelmat voisi yhdistää tunnukseen nimen sijaan**.
+  Mitattava: montako kannan nimeä osuu yksikäsitteisesti PRH:hon.
+
+  **3. MML:n avoin osoiteaineisto ja käänteisgeokoodaus.**
+  `paikkatiedot.ymparisto.fi/geoserver/www/open_address.json.gz` ja
+  `avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v2/pelias/reverse`.
+  Geokoodaus on mitattu ongelma: 33 % Nominatimin pisteistä oli yli
+  60 m väärässä ja 61 % jäi kunnan varapisteeseen
+  ([[address-register-geocode]]). Ratkaisu on tähän asti ollut
+  kuntakohtainen WFS (PKS, Tampere). **Kansallinen osoiteaineisto
+  korvaisi ne kaikki yhdellä.** Mitattava: kattaako se haja-asutuksen
+  ja uudet kaava-alueet, joissa kunnan oma rekisteri on ollut ainoa.
+
+  **Sivuavat, ei kiirettä:** SYKEn kuulutukset ja
+  `rajapinnat.ymparisto.fi` RSS (YVA-kuulutukset — osin jo omana
+  lähteenään), Fingridin dataset 192 (Fingrid on jo lähteenä, D-289),
+  Tilastokeskuksen PxWeb (väestö, ei hankkeita) ja Overpass/OSM
+  (ei hanketietoa).
+
+  **Huomio lisenssistä:** nämä ovat rekisterin lähteitä, eivät
+  rekisterin dataa — ne haetaan suoraan alkuperäisestä, jolloin
+  rekisterin CC BY -maininta ei koske niitä. Samalla se on
+  D-354:n mukainen järjestys: alkuperäinen voittaa koostajan.
+
 - **Oikotie.fi ennakkomarkkinoinnin kautta — tutkimatta, kysytty
   25.10.2026.** Johannes: *"voiko oikotie.fi olla lähteenä
   suodatuksella ennakkomarkkinoinnissa?"*

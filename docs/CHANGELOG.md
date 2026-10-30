@@ -9,7 +9,35 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
-## 2026-10-30 (Välimuistin tyhjä merkintä, Ulvilan kaavat, OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
+## 2026-10-30 (Datakeskusrekisteri, välimuistin tyhjä merkintä, Ulvilan kaavat, OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
+
+### Datakeskusrekisteri lähteeksi (D-365)
+
+Datakeskushankkeiden kansallinen rekisteri (CC BY 4.0) kattaa
+yksityisten rakennuttajien hankkeet joita Hilma ja kunnan päätökset
+eivät näytä: **rekisterissä 198 hanketta, meillä 59 datakeskusta.**
+Vaiheet tulevat rekisterin omasta kentästä (`toiminnassa` ja `peruttu`
+pois), joten 150 ehdokasta – Kaavoitus 45, Suunnittelu 50,
+Rakennuslupa 26, Rakenteilla 29.
+
+Kaksi hakua ajossa eikä 198: `/muutokset/json` antaa 197 hanketta
+yhdellä pyynnöllä ja `sitemap.xml` loput. Täydet kentät haetaan vasta
+`enrich`issä, vain vielä näkemättömille.
+
+Rekisteri on **koostaja**, ja sen asema tehtiin mekaaniseksi eikä
+muistisäännöksi: ehdokas jättää `developer`-kentän tyhjäksi ja kirjaa
+toimijan `metadata.developer`iin, koska osuva lähde kirjoittaa
+`developer`in olemassa olevan päälle (D-341). Kuivaharjoitus mittasi
+kaksi riviä joilla parempi arvo olisi kadonnut (Forssa "QTS Data
+Centers (Blackstone)", Nurmijärvi "DigitalLand Services Kinetic DC
+Oy"). Kolmen ajon jälkeen 24 jonoriviä, 2 osumaa, 0 ylikirjoitusta;
+käsin täydennetty Kiteen rivi säilyi täsmälleen.
+
+Nimet eivät täsmää kumpaankaan suuntaan: koordinaatti löysi
+**32 ehdokasta 150:stä jo kannasta, täsmäytin 0.** Päällekkäisyys jää
+duplikaattijonoon ihmiselle. Sivutuotteena rekisteri erottelee
+hankkeita jotka olemme niputtaneet yhdeksi – "Datakeskus Lahteen"
+kattaa kaksi eri hanketta, "Datakeskus Visulahteen" kolme.
 
 ### Lukituksen perustelu muutettavissa (D-364)
 
