@@ -64,9 +64,28 @@ Ei ole editointinappulaa."*
 | `auth.users.app_metadata.locked_reason` | **tama nakyy** kayttajalistalla (`list-users`) |
 | `account_lifecycle.metadata.reason` | pysyva paivakirja ([[account-lifecycle-log]]) |
 
-`lock-user`-reitti kysyy perustelun kerran ja vaatii sen (`Lukitseminen
-vaatii perustelun`), mutta muuttaminen jalkeenpain vaatisi uuden
-lukituksen -- eika sellaista nappia ole.
+**KORJAUS: vapauta ja lukitse uudelleen OLISI toiminut.** Kirjoitin
+ensin ettei sellaista nappia ole. Johannes huomautti: *"olisin muuten
+voinut vapauttaa tunnuksen ja lukita uudelleen ja silla tavalla
+paivittaa tekstin."* Niin olisi: kayttajalistan nappi on vaihtokytkin
+(`lock: !locked`) ja lukitessa se kysyy perustelun, joka kirjoittuu
+uutena. Vaite oli vaara.
+
+Erotus ei silti ole tyhja, ja siksi tyokalu jai:
+
+| | vapauta + lukitse | `muuta-lukitusperuste.ts` |
+|---|---|---|
+| nayttoteksti | paivittyy | paivittyy |
+| `locked_at` | **nollautuu** uuteen hetkeen | sailyy (30.10. klo 08.24) |
+| paivakirjan `occurred_at` | **ylikirjoittuu** upsertissa | sailyy |
+| alkuperainen sanamuoto | **katoaa** | jaa `reason_alkuperainen`-kenttaan |
+| tunnus valissa | **auki** -- kayttaja voi kirjautua | ei avaudu |
+
+Kolme ylintä johtuvat samasta asiasta: lukitusreitti kirjoittaa
+`locked_at`in ja paivakirjarivin aina uusiksi, ja uniikkirajoite
+`(user_id, event)` tarkoittaa etta lukitusrivejä on vain yksi. Jos
+lukituspaivalla ei ole merkitysta, vapauta-ja-lukitse on nopeampi ja
+taysin kelvollinen tapa.
 
 **Nayttoteksti korvattiin, paivakirjaa ei ylikirjoitettu.** Elinkaaririvi
 sai uuden sanamuodon kenttaan `reason`, mutta alkuperainen jai talteen
