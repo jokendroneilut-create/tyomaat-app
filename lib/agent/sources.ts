@@ -96,6 +96,10 @@ import { fetchTilapalvelutSource } from "./fetchTilapalvelutSource"
 import { fetchFingridProjectsSource } from "./fetchFingridProjectsSource"
 import { fetchToivoSource } from "./fetchToivoSource"
 import { fetchNrcProjectsSource } from "./fetchNrcProjectsSource"
+import {
+  fetchNrcNewsSource,
+  enrichNrcNewsCandidate,
+} from "@/lib/agent/fetchNrcNewsSource"
 import { fetchHartelaAreasSource } from "./fetchHartelaAreasSource"
 import { fetchHcHoivakoditSource } from "./fetchHcHoivakoditSource"
 import { createCompanyEnricher } from "./companyRelease"
@@ -345,6 +349,17 @@ export const sources = [
    * mutta vain GRK:n nakokulmasta (D-288).
    */
   { name: "nrc_projektit", fetch: fetchNrcProjectsSource },
+  /*
+   * NRC:n UUTISOSIO ON ERI LAHDE KUIN PROJEKTISIVUT (D-367).
+   * Projektisivut ovat referensseja, uutiset urakkavoittoja. Juuri
+   * siksi "NRC Group sai ylikulkusiltojen rakennusurakan" tuli meille
+   * Rakennuslehden kautta eika NRC:lta itseltaan.
+   */
+  {
+    name: "nrc_uutiset",
+    fetch: fetchNrcNewsSource,
+    enrich: enrichNrcNewsCandidate,
+  },
   /*
    * Fingridin kantaverkkohankkeet. Tama on se aukko joka on ollut tiedossa
    * pisimpaan: valtakunnalliset suurhankkeet eivat osu Hilmaan, kunnan

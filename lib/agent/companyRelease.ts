@@ -413,6 +413,27 @@ export type CompanyEnricherOptions = {
 export { inferBuildingType, LEAD_LENGTH }
 
 /*
+ * OTSIKKO EI OLE LEIPATEKSTIA.
+ *
+ * `extractReleaseBody` lukee sivun sisaltolohkon, ja monella sivulla
+ * otsikko on sen sisalla. Silloin kuvaus alkaa otsikolla joka jatkuu
+ * SUORAAN leipatekstiin ilman valimerkkia: "Uusimme Kouvola-Luumaki-
+ * valin rataaVaylavirasto on valinnut...". Mitattu 31.10.2026: NRC:n
+ * uutisosiossa 24 riviä 24:sta, muissa lahteissa 1-7 satunnaista.
+ *
+ * Otsikko nakyy jo hankkeen nimena, joten toisto ei tuo mitaan.
+ * Poistetaan vain TARKKA toisto alusta -- jos teksti alkaa muuten, sita
+ * ei kosketa.
+ */
+export function poistaToistuvaOtsikko(body: string, otsikko: string | null): string {
+  const t = String(otsikko ?? "").trim()
+  if (t.length < 15) return body
+  const b = body.trimStart()
+  if (!b.startsWith(t)) return body
+  return b.slice(t.length).replace(/^[\s.:\-–—]+/, "").trimStart() || body
+}
+
+/*
  * Palauttaa enrich-koukun, jota legacyFetchCollector kutsuu VAIN vielä
  * näkemättömille ehdokkaille - eli yksi sivuhaku per uusi tiedote.
  */
@@ -426,8 +447,9 @@ export function createCompanyEnricher({
     const html = await fetchHtml(candidate.source_url)
     if (!html) return candidate
 
-    const body = extractReleaseBody(html)
-    if (!body) return candidate
+    const raaka = extractReleaseBody(html)
+    if (!raaka) return candidate
+    const body = poistaToistuvaOtsikko(raaka, candidate.name)
 
     /*
      * Urakoitsijan tiedotteessa rakennuttaja otetaan tekstistä löytyvästä

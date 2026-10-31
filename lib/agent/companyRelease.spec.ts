@@ -6,6 +6,7 @@ import {
   createCompanyEnricher,
   stripPublisherName,
   cutReleaseTail,
+  poistaToistuvaOtsikko,
 } from "./companyRelease"
 import { allativeToNominative } from "./companyName"
 import { extractClientFromText, extractExplicitClient } from "./fetchSttHakuSource"
@@ -468,5 +469,46 @@ describe("cutReleaseTail - STT Infon kaluste", () => {
 
   it("jättää tavallisen tekstin rauhaan", () => {
     expect(cutReleaseTail(`${runko}Hanke valmistuu 2027.`)).toBe(`${runko}Hanke valmistuu 2027.`)
+  })
+})
+
+describe("poistaToistuvaOtsikko", () => {
+  /*
+   * Mitattu NRC:n uutisosiosta: otsikko on sisaltolohkon sisalla ja
+   * jatkuu suoraan leipatekstiin ilman valimerkkia.
+   */
+  it("poistaa otsikon joka jatkuu suoraan leipatekstiin", () => {
+    const otsikko = "Uusimme Kouvola–Luumäki-välin rataa"
+    const body = otsikko + "Väylävirasto on valinnut NRC Groupin."
+    expect(poistaToistuvaOtsikko(body, otsikko)).toBe(
+      "Väylävirasto on valinnut NRC Groupin."
+    )
+  })
+
+  it("poistaa myos valimerkin kanssa", () => {
+    const otsikko = "Rakennamme Länsiratikoita Helsinkiin"
+    expect(poistaToistuvaOtsikko(`${otsikko}. Hanke alkaa.`, otsikko)).toBe("Hanke alkaa.")
+    expect(poistaToistuvaOtsikko(`${otsikko} – Hanke alkaa.`, otsikko)).toBe("Hanke alkaa.")
+  })
+
+  /* Muuten alkavaa tekstia ei kosketa. */
+  it("ei kosketa tekstia joka ei ala otsikolla", () => {
+    const body = "Väylävirasto on valinnut NRC Groupin."
+    expect(poistaToistuvaOtsikko(body, "Uusimme Kouvola–Luumäki-välin rataa")).toBe(body)
+  })
+
+  /* Lyhyt otsikko voi olla aito lauseen alku. */
+  it("ei kosketa lyhytta otsikkoa", () => {
+    const body = "Silta valmis ja liikenne alkaa."
+    expect(poistaToistuvaOtsikko(body, "Silta valmis")).toBe(body)
+  })
+
+  it("ei tyhjenna kuvausta kun teksti on pelkka otsikko", () => {
+    const otsikko = "Rakennamme Länsiratikoita Helsinkiin"
+    expect(poistaToistuvaOtsikko(otsikko, otsikko)).toBe(otsikko)
+  })
+
+  it("kestaa puuttuvan otsikon", () => {
+    expect(poistaToistuvaOtsikko("Teksti tässä.", null)).toBe("Teksti tässä.")
   })
 })

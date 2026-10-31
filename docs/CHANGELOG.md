@@ -26,6 +26,27 @@ Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
 ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
 ja TIC:n hankenäkymässä.
 
+### NRC:n uutisosio lähteeksi, ja kaksi siltaa yhdestä jutusta (D-367)
+
+Jonorivi "NRC Group sai ylikulkusiltojen rakennusurakan" sisälsi kaksi
+hanketta kahdessa kunnassa. NRC:n oma tiedote nimesi molemmat, mitä
+maksumuurin takainen Rakennuslehti ei kertonut: **Sänkimäen
+ylikulkusilta** (Kuopio, Pajulahti) ja **Kuuslahden ylikulkusilta**
+(Siilinjärvi, Marjomäentie). Purettiin kahdeksi riviksi, koska yksi
+rivi ei voi olla kahdessa kunnassa. Sopimuksen 3,8 M€ jätettiin
+molemmilta tyhjäksi — se on yhteisarvo ja kerrotaan kuvauksessa.
+
+Juurisyy: NRC on jo lähteenä, mutta kerääjä katsoo
+`nrcgroup.fi/projektit` eli referenssejä. Urakkavoitot ovat
+`/uutiset`-osiossa, jota mikään ei lukenut. Nyt se on lähde
+(`nrc_uutiset`): yksi haku antaa **171 uutista** rakenteisena JSONina,
+12 kk:n ikkunassa 41, suodatuksen jälkeen **28 ehdokasta**. Ensimmäinen
+ajo tuotti 24 jonoriviä, kaikilla kuvaus.
+
+Samalla korjattiin jaettu tiedotekerääjä: kuvaus alkoi otsikolla joka
+jatkui suoraan leipätekstiin ilman välimerkkiä ("…välin
+rataaVäylävirasto on valinnut…"), 24 riviä 24:stä.
+
 ### Kaavalle peruskuvaus kun lähteellä ei ole sivua
 
 Johannes kysyi Vantaan kaavarivistä *"miksi kuvausta ei tullut, lähde

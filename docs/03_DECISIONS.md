@@ -51,6 +51,88 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-367 – Yksi juttu, kaksi siltaa; ja NRC:n uutisosio lähteeksi
+
+Johannes 31.10.2026 jonorivistä *"NRC Group sai ylikulkusiltojen
+rakennusurakan"*: *"sisältää kaksi hanketta pitää purkaa tai hylätä?
+onko meillä nämä hankkeet jo?"*
+
+**Alkuperäinen lähde nimesi sillat, jälleenjulkaisija ei.**
+Rakennuslehden juttu on maksumuurin takana, ja sen julkinen kärki
+kertoo vain *"Siilinjärvellä ja Kuopiossa"*. NRC:n oma tiedote nimeää
+molemmat ja kertoo toteutustavan ([[rakennuslehti-is-secondary]]):
+
+| | Sänkimäen ylikulkusilta | Kuuslahden ylikulkusilta |
+|---|---|---|
+| kunta | Kuopio, Pajulahti | Siilinjärvi, Marjomäentie |
+| toteutus | uusi silta nykyisen länsipuolelle, tielinjaus oikaistaan | uusi silta nykyiselle paikalle, kiertotie varasillan kautta |
+
+**Purettiin kahdeksi, koska yksi rivi ei voi olla kahdessa kunnassa** ja
+liidin on löydyttävä paikan perusteella ([[multi-project-rows]]).
+Kustannus 3,8 M€ **jätettiin molemmilta tyhjäksi**: se on sopimuksen
+yhteisarvo, ja sama luku kahdessa kentässä kaksinkertaistaisi markkinan
+([[alliance-split]]). Se kerrotaan kuvauksessa yhteisarvona.
+
+Vaihe on **Sopimus myönnetty**, ei Rakenteilla: tiedote sanoo töiden
+alkavan *"heti kuluvan syksyn aikana"*, mikä on tulevaa eikä
+tapahtunutta ([[future-wording-expires]]). Valmistuminen 31.8.2027 on
+lähteen oma ilmoitus ([[declared-date-beats-text-date]]).
+
+**Kumpaakaan siltaa ei ollut kannassa, mutta emohanke oli**
+("Ruokosuo–Sänkimäki-radan sähköistys ja raakapuun kuormausalue",
+Suunnittelu). Molemmat rivit viittaavat siihen. **Yksi ansa**: kannassa
+on `SK-2601 Ruokosuon ylikulkusilta` (Siilinjärvi, Rakenteilla), joka ei
+ole Kuuslahti vaan eri silta — tierekisteriosoite 75-1-4961,
+betonisillan peruskorjaus. Pelkkä nimi olisi vienyt yhdistämään väärin.
+
+#### NRC:n uutisosio lähteeksi
+
+Juurisyy sille että tämä tuli jälleenjulkaisijan kautta: NRC on jo
+lähteenä, mutta kerääjä katsoo `nrcgroup.fi/projektit` — referenssejä.
+Urakkavoitot ovat `/uutiset`-osiossa, jota mikään ei lukenut. Tiedotetta
+ei ollut lähdedokumenteissamme lainkaan.
+
+Rakenne on sama kuin projektisivuilla (Next.js, `__NEXT_DATA__`), joten
+**yksi haku antaa 171 uutista** otsikoineen, osoitteineen ja
+julkaisupäivineen. Päivä on rakenteisessa kentässä eikä tekstistä
+pääteltyä. Vain suomenkielinen rivistö, joten kieliparin pudotusta ei
+tarvita toisin kuin Lohkareella.
+
+**Suodatus mitattiin lukemalla kaikki 41 otsikkoa 12 kk:n ikkunasta,
+molemmat puolet:**
+
+| | |
+|---|---|
+| uutisia yhteensä | 171 |
+| 12 kk:n ikkunassa | 41 |
+| suodatuksen jälkeen | **28** |
+| pois pudotetut | 13 — sertifikaatit, nimitys, rekrytointi, yrityskauppa, markkinointi |
+
+Pois pudotetut tarkistettiin yksitellen: kaikki 13 ovat oikein. Läpi
+menneistä noin kuusi on markkinointia (*"Siltaosaamisemme näkyy…"*,
+*"menestysresepti"*), eli ~21 % kohinaa. **Sanastoa ei kiristetty
+enempää**, koska tiukennus pudottaisi aitoja: *"Erikoisosaamisemme näkyy
+uusissa sähkörakentamisen urakoissa"* on oikea urakkauutinen.
+
+**Ensimmäinen ajo tuotti 24 jonoriviä**, kaikilla kuvaus ja 23:lla
+kunta.
+
+#### Otsikko oli liimattu leipätekstiin
+
+Tuotosta lukemalla löytyi vika: kuvaus alkoi otsikolla joka jatkui
+suoraan leipätekstiin ilman välimerkkiä — *"…välin
+rataaVäylävirasto on valinnut…"*. Mitattu: **24 riviä 24:stä**, muissa
+lähteissä 1–7 satunnaista.
+
+Korjaus on jaetussa `createCompanyEnricher`issa
+(`poistaToistuvaOtsikko`), koska vika on sivurakenteessa eikä tässä
+lähteessä: `extractReleaseBody` lukee sisältölohkon, ja monella sivulla
+otsikko on sen sisällä. Poistetaan vain **tarkka** toisto alusta.
+
+Mittasin myös laajemman kuvion: 1 911 riviä 81 lähteessä alkaa
+otsikolla. Useimmissa se on kunnossa — oma datakeskuskuvauskin alkaa
+hankkeen nimellä. Vika on nimenomaan puuttuva välimerkki, ei toisto.
+
 ### D-366 – Kaavalle peruskuvaus rajapinnan kentistä, kun sivua ei ole
 
 Johannes 31.10.2026 Vantaan kaavarivistä: *"miksi kuvausta ei tullut,
