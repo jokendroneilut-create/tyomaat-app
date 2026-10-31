@@ -35,18 +35,25 @@ pitkä lukitusperustelu, "Odottaa kutsun hyväksyntää") on **1 399 px**.
 Lattia oli nostettu aikanaan siksi, ettei Lukitse/Poista jäisi
 piiloon — se hoiti oiretta, ei syytä.
 
-Mitattu tiivistyksen jälkeen: **1 266 px**. Neljä muutosta, joista
-yksikään ei poista tietoa:
+Mitattu tiivistyksen jälkeen: **1 078 px**, eli 321 px vähemmän.
+Yksikään muutos ei poista tietoa — kaikki siirtyy `title`-attribuuttiin:
 
-- `minWidth` 1620 → 1180
-- "+ myyjäksi" → "+" (teksti vei 95 px joka rivillä; merkitys on
-  `title`-tekstissä)
-- "€/kk" → "€", yksikkö inputin `title`-tekstiin
-- lukitusperustelu katkaistaan 150 pikseliin; koko teksti oli jo
-  `title`-attribuutissa. Tämä yksin vei Tila-sarakkeen 194 pikseliin.
+| muutos | säästö |
+|---|---|
+| Ikä: teksti " · kokeilu ohi" pois (71/109 käyttäjää on siinä tilassa; punainen lihavointi ja otsikkorivi kertovat saman) | ~90 px |
+| Kellonaika pois kahdesta päivämääräsarakkeesta | ~100 px |
+| Tila: "Odottaa kutsun hyväksyntää" → "Odottaa" (sarakkeen nimi on jo Tila) | ~60 px |
+| Lukitusperustelu katkaistaan 150 pikseliin | ~45 px |
+| "+ myyjäksi" → "+" | ~65 px |
+| Laskutusvalikon "— ei merkintää —" → "—" | ~40 px |
+| "€/kk" → "€" | ~20 px |
 
-Lisäksi Yritys-kenttä 150 → 130 px, myyjävalikko 190 → 165 px, ja
+Lisäksi Yritys-kenttä 150 → 130 px, myyjävalikko 190 → 140 px, ja
 laajennetun rivin vanhentunut `colSpan={14}` → 9 (soluja on yhdeksän).
+
+**Mittaus tehtiin esikatselulla, ei oikealla sivulla** (admin vaatii
+kirjautumisen), ja esikatselu aliarvioi todellisen leveyden kahdesti.
+Siksi lopullinen leikkaus on reilu eikä hiottu.
 
 ### Kohdetyyppi hankelistaan
 

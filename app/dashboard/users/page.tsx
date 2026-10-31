@@ -72,6 +72,23 @@ type SortDirection = 'asc' | 'desc'
  * leveytta eika kukaan lue tunnuksen luontihetkea sekunnin tarkkuudella.
  * Tila meni Yritys-sarakkeelle (D-224).
  */
+/*
+ * LYHYT PAIVA TAULUKKOON, KOKO AIKALEIMA HIIREN ALLE (1.11.2026).
+ *
+ * Kellonaika vei kahdessa paivamaarasarakkeessa noin 100 px joka
+ * rivilla, ja se oli yksi syy siihen etta adminin taulukko vaati
+ * vaakavieritysta. Tieto ei katoa: koko aikaleima on `title`-
+ * attribuutissa ja tarkka kayttohistoria "Kaytto"-painikkeen takana.
+ */
+function formatDateShort(value: string | null) {
+  if (!value) return '-'
+  return new Date(value).toLocaleDateString('fi-FI', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  })
+}
+
 function formatDate(value: string | null) {
   if (!value) return '-'
   return new Date(value).toLocaleString('fi-FI', {
@@ -931,12 +948,15 @@ export default function UsersPage() {
             * se tarvitsee, ja 1280 pikselin naytolla se tarkoitti
             * vaakavieritysta vaikka sisalto olisi mahtunut.
             *
-            * Mitattu uudelleen taman tiivistyksen jalkeen: 1180 px.
+            * Mitattu uudelleen tiivistyksen jalkeen: 1078 px, eli 321 px
+            * vahemman kuin alussa. Lattia jatetaan hieman sen alle,
+            * jottei se enaa koskaan pakota taulukkoa leveammaksi kuin
+            * sisalto tarvitsee.
             */}
           <table
             style={{
               width: '100%',
-              minWidth: isAdminView ? 1180 : 900,
+              minWidth: isAdminView ? 1040 : 900,
               borderCollapse: 'collapse',
             }}
           >
@@ -992,23 +1012,47 @@ export default function UsersPage() {
             {sortedUsers.flatMap((u) => [
               <tr key={u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                 <td style={{ padding: '8px 4px' }}>{u.email}</td>
-                <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>{formatDate(u.created_at)}</td>
+                <td
+                  style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}
+                  title={formatDate(u.created_at)}
+                >
+                  {formatDateShort(u.created_at)}
+                </td>
                 <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
                   {(() => {
                     const days = daysSince(u.created_at)
                     const tila = trialState(days)
                     const tyyli = TRIAL_STYLE[tila]
                     return (
-                      <span style={{ color: tyyli.color, fontWeight: tyyli.weight }}>
+                      /*
+                       * TEKSTI POIS, VARI JA title JAAVAT (1.11.2026).
+                       *
+                       * " · kokeilu ohi" levitti saraketta noin 90 px, ja
+                       * 71 kayttajaa 109:sta on siina tilassa. Punainen
+                       * lihavointi kertoo saman, otsikkorivi sanoo
+                       * "71 kokeilu ohi", ja tasmallinen tieto on hiiren
+                       * alla.
+                       */
+                      <span
+                        style={{ color: tyyli.color, fontWeight: tyyli.weight }}
+                        title={
+                          tila === 'ohi'
+                            ? 'Kokeilu ohi'
+                            : tila === 'pian'
+                              ? `${daysLeft(days)} pv jäljellä`
+                              : undefined
+                        }
+                      >
                         {days == null ? '-' : days}
-                        {tila === 'ohi' ? ' · kokeilu ohi' : null}
-                        {tila === 'pian' ? ` · ${daysLeft(days)} pv jäljellä` : null}
                       </span>
                     )
                   })()}
                 </td>
-                <td style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}>
-                  {formatDate(u.last_seen_at ?? null)}
+                <td
+                  style={{ padding: '8px 4px', whiteSpace: 'nowrap' }}
+                  title={formatDate(u.last_seen_at ?? null)}
+                >
+                  {formatDateShort(u.last_seen_at ?? null)}
                   <button
                     onClick={() => avaaKaytto(u)}
                     title="Käyntipäivät, kirjautumiset ja käytetty aika"
@@ -1055,7 +1099,15 @@ export default function UsersPage() {
                   ) : u.confirmed ? (
                     <span style={{ color: '#15803d', fontWeight: 600 }}>Aktivoitu</span>
                   ) : (
-                    <span style={{ color: '#b45309', fontWeight: 600 }}>Odottaa kutsun hyväksyntää</span>
+                    /* Sarakkeen nimi on jo "Tila", joten "kutsun
+                       hyvaksyntaa" oli toistoa ja levitti saraketta
+                       60 px. Koko teksti on hiiren alla. */
+                    <span
+                      style={{ color: '#b45309', fontWeight: 600 }}
+                      title="Odottaa kutsun hyväksyntää"
+                    >
+                      Odottaa
+                    </span>
                   )}
                 </td>
 
@@ -1106,7 +1158,7 @@ export default function UsersPage() {
                             border: '1px solid #d1d5db',
                             background: '#fff',
                             /* Pitka sahkoposti ei saa levittaa saraketta. */
-                            maxWidth: 165,
+                            maxWidth: 140,
                           }}
                         >
                           <option value="">— ei myyjää —</option>
@@ -1406,7 +1458,9 @@ function BillingCell({
           fontWeight: tila === 'maksava' ? 700 : 400,
         }}
       >
-        <option value="">— ei merkintää —</option>
+        {/* Valikon leveyden maaraa sen pisin vaihtoehto; "— ei
+            merkintaa —" vei noin 40 px enemman kuin "Ei maksava". */}
+        <option value="">—</option>
         <option value="maksava">{BILLING_LABEL.maksava}</option>
         <option value="ei_maksava">{BILLING_LABEL.ei_maksava}</option>
         <option value="testi">{BILLING_LABEL.testi}</option>
