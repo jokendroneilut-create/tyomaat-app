@@ -26,6 +26,23 @@ Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
 ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
 ja TIC:n hankenäkymässä.
 
+### Jonorivien joukkohyväksyntä
+
+`scripts/hyvaksy-jonorivit.ts` kutsuu **samaa reittiä** jota
+käyttöliittymän nappi käyttää (`/api/tic/projects/approve`,
+tunnistautuminen `CRON_SECRET`illa). Hyväksyntälogiikkaa ei kirjoitettu
+toiseen kertaan: reitti on 2 600 riviä ja sisältää geokoodauksen,
+täsmäytyksen, kenttien yhdistämisen ja tapahtumakirjauksen.
+
+**Rivit joilla on duplikaattivihje jätetään pois.** Vihje tarkoittaa
+että samassa paikassa on jo samanlajinen hanke eikä täsmäytin ole sitä
+löytänyt — juuri se tapaus jossa automaattinen hyväksyntä tekee
+kaksoiskappaleen (D-365).
+
+Datakeskusrekisteri: 46 hyväksyttyä, 0 virhettä, 3 jätettiin käsin
+(Lahden ja Mikkelin rypäät). **Datakeskuksia kannassa 107 → 215**,
+niistä 213:lla koordinaatti ja 102 eri kuntaa.
+
 ### Adminin käyttäjätaulukko tiiviimmäksi
 
 Sivu vaati vaakavieritystä. Syy ei ollut sisältö vaan koodiin
