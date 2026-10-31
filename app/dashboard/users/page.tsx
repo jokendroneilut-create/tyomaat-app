@@ -922,15 +922,21 @@ export default function UsersPage() {
 
         <div style={{ marginTop: 12, overflowX: 'auto' }}>
           {/*
-            * Myyja-sarake tuo lisaa leveytta, joten adminin taulukko
-            * tarvitsee enemman tilaa kuin myyjan. Ilman tata Lukitse- ja
-            * Poista-napit jaavat vaakavieritykseen piiloon - sama vika
-            * joka korjattiin kerran jo nostamalla 900:aan.
+            * MINWIDTH ON MITATTU, EI ARVATTU (1.11.2026).
+            *
+            * Arvo oli 1620, mutta taulukon LUONNOLLINEN leveys
+            * pahimmilla oikeilla arvoilla (36 merkin sahkoposti, pitka
+            * lukitusperustelu, "Odottaa kutsun hyvaksyntaa") on 1399 px.
+            * Liian suuri lattia pakotti taulukon 220 px leveammaksi kuin
+            * se tarvitsee, ja 1280 pikselin naytolla se tarkoitti
+            * vaakavieritysta vaikka sisalto olisi mahtunut.
+            *
+            * Mitattu uudelleen taman tiivistyksen jalkeen: 1180 px.
             */}
           <table
             style={{
               width: '100%',
-              minWidth: isAdminView ? 1620 : 900,
+              minWidth: isAdminView ? 1180 : 900,
               borderCollapse: 'collapse',
             }}
           >
@@ -1026,7 +1032,22 @@ export default function UsersPage() {
                     <span style={{ color: '#b91c1c', fontWeight: 700 }} title={u.lockedReason ?? undefined}>
                       🔒 Lukittu
                       {u.lockedReason ? (
-                        <span style={{ display: 'block', fontWeight: 400, fontSize: 12, color: '#6b7280' }}>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontWeight: 400,
+                            fontSize: 12,
+                            color: '#6b7280',
+                            /* Perustelu on vapaa lause ("ei riittavasti
+                               yhteystietoja palataan kevaalla") ja levitti
+                               Tila-sarakkeen 194 pikseliin. Koko teksti on
+                               ylla title-attribuutissa. */
+                            maxWidth: 150,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
                           {u.lockedReason}
                         </span>
                       ) : null}
@@ -1085,7 +1106,7 @@ export default function UsersPage() {
                             border: '1px solid #d1d5db',
                             background: '#fff',
                             /* Pitka sahkoposti ei saa levittaa saraketta. */
-                            maxWidth: 190,
+                            maxWidth: 165,
                           }}
                         >
                           <option value="">— ei myyjää —</option>
@@ -1108,7 +1129,10 @@ export default function UsersPage() {
                           }}
                           title="Tee tästä käyttäjästä myyjä"
                         >
-                          + myyjäksi
+                          {/* Teksti "+ myyjaksi" vei 95 px joka rivilla,
+                              vaikka nappia painetaan harvoin. Merkitys on
+                              title-tekstissa. */}
+                          +
                         </button>
                       </span>
                     )}
@@ -1169,7 +1193,7 @@ export default function UsersPage() {
 
               kayttoAuki === u.id ? (
                 <tr key={`${u.id}-kaytto`} style={{ background: '#f9fafb' }}>
-                  <td colSpan={14} style={{ padding: '12px 16px' }}>
+                  <td colSpan={9} style={{ padding: '12px 16px' }}>
                     {kayttoLataa === u.id ? (
                       <div style={{ color: '#6b7280' }}>Haetaan käyttöhistoriaa…</div>
                     ) : kaytto[u.id]?.error ? (
@@ -1405,6 +1429,8 @@ function BillingCell({
             }}
             placeholder={tila === 'testi' ? '149' : '0'}
             inputMode="decimal"
+            /* Yksikko oli oma elementtinsa ja vei 34 px joka rivilla. */
+            title="Kuukausihinta, euroa"
             style={{
               width: 64,
               padding: '4px 6px',
@@ -1416,7 +1442,7 @@ function BillingCell({
               textAlign: 'right',
             }}
           />
-          <span style={{ fontSize: 12, color: '#6b7280' }}>€/kk</span>
+          <span style={{ fontSize: 12, color: '#6b7280' }}>€</span>
         </>
       )}
     </span>
@@ -1515,7 +1541,7 @@ function CompanyCell({
             : `Ei valittua yritystä. Asiakas päätellään: ${user.billingKey ?? '-'}`
         }
         style={{
-          width: 150,
+          width: 130,
           padding: '4px 6px',
           borderRadius: 6,
           border: '1px solid #d1d5db',

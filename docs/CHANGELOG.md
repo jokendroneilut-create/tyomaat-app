@@ -26,6 +26,28 @@ Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
 ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
 ja TIC:n hankenäkymässä.
 
+### Adminin käyttäjätaulukko tiiviimmäksi
+
+Sivu vaati vaakavieritystä. Syy ei ollut sisältö vaan koodiin
+kirjoitettu lattia: `minWidth` oli **1 620 px**, kun taulukon
+todellinen tarve pahimmilla oikeilla arvoilla (36 merkin sähköposti,
+pitkä lukitusperustelu, "Odottaa kutsun hyväksyntää") on **1 399 px**.
+Lattia oli nostettu aikanaan siksi, ettei Lukitse/Poista jäisi
+piiloon — se hoiti oiretta, ei syytä.
+
+Mitattu tiivistyksen jälkeen: **1 266 px**. Neljä muutosta, joista
+yksikään ei poista tietoa:
+
+- `minWidth` 1620 → 1180
+- "+ myyjäksi" → "+" (teksti vei 95 px joka rivillä; merkitys on
+  `title`-tekstissä)
+- "€/kk" → "€", yksikkö inputin `title`-tekstiin
+- lukitusperustelu katkaistaan 150 pikseliin; koko teksti oli jo
+  `title`-attribuutissa. Tämä yksin vei Tila-sarakkeen 194 pikseliin.
+
+Lisäksi Yritys-kenttä 150 → 130 px, myyjävalikko 190 → 165 px, ja
+laajennetun rivin vanhentunut `colSpan={14}` → 9 (soluja on yhdeksän).
+
 ### Kohdetyyppi hankelistaan
 
 Johannes 1.11.2026: *"monessa hankkeessa varsinkin nimi ei kerro
