@@ -26,6 +26,23 @@ Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
 ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
 ja TIC:n hankenäkymässä.
 
+### Datakeskusrekisterin luvut kantavat lähteen epävarmuuden (D-368)
+
+Rekisterin lainaukset tarkistettiin alkuperäisiä sivuja vasten:
+tasavälein poimitusta 10 hankkeesta **10/10 lainausta löytyi
+sanatarkasti**. Rekisteri ei keksi viitteitä.
+
+Luvut ovat silti usein ylärajoja tai jonkun muun arvioita, ja rekisteri
+merkitsee sen itse. Kuvaus tulosti ne faktana: Polarnode Kuopion
+*"Teho 250 MW"* oli rakennuttajan markkinointisivun rivi *"Maximum
+available grid capacity | 250 MW"* eli tontin verkkokapasiteetti.
+
+Vahvistamaton luku kirjoitetaan nyt muodossa *"Teho noin 250 MW
+(rekisterin merkintä, ei vahvistettu)"*. Lukua ei pudoteta. **34 riviä
+134:stä** sai varauksen, ja `field_sources.phase` kertoo
+katselmoijalle vaiheen vahvistusstatuksen (28 riviä merkitty
+vahvistamattomaksi).
+
 ### NRC:n uutisosio lähteeksi, ja kaksi siltaa yhdestä jutusta (D-367)
 
 Jonorivi "NRC Group sai ylikulkusiltojen rakennusurakan" sisälsi kaksi

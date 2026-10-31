@@ -102,6 +102,19 @@ export type DatakeskusPaatos = {
 export type DatakeskusTiedot = {
   organisaatiot?: DatakeskusOrganisaatio[] | null
   paatokset?: DatakeskusPaatos[] | null
+  /*
+   * REKISTERIN OMA ARVIO TIEDON VARMUUDESTA.
+   *
+   * Mitattu 31.10.2026: `teho_mw` on lahteen mielesta vahvistettu vain
+   * 14 rivilla 56:sta (25 %) ja `it_teho_mw` 3:lla 16:sta. Ilman tata
+   * kuvaus tulostaisi arvion faktana -- ja tulostikin: Polarnode
+   * Kuopion "Teho 250 MW" oli rakennuttajan markkinointisivun rivi
+   * "Maximum available grid capacity | 250 MW", eli tontin
+   * verkkokapasiteetti eika datakeskuksen teho.
+   */
+  kentat_ihmisen_vahvistama?: Record<string, boolean> | null
+  kentat_viranomaislahde?: Record<string, boolean> | null
+  lahteet?: { hankkeet?: { kentta?: string | null; luottamus?: string | null }[] } | null
   maakunta?: string | null
   sijainti_lat?: number | null
   sijainti_lon?: number | null
@@ -233,6 +246,40 @@ export function datakeskusPaatokset(t: DatakeskusTiedot | null): string[] {
     })
 }
 
+/*
+ * ONKO KENTTA REKISTERIN MIELESTA VARMA.
+ *
+ * Kolme toisistaan riippumatonta merkkia, ja mika tahansa riittaa:
+ * ihminen on vahvistanut kentan, lahde on viranomaislahde, tai
+ * kenttaviitteen oma luottamus on "vahvistettu".
+ */
+export function kenttaVahvistettu(
+  t: DatakeskusTiedot | null,
+  kentta: string
+): boolean {
+  if (t?.kentat_ihmisen_vahvistama?.[kentta]) return true
+  if (t?.kentat_viranomaislahde?.[kentta]) return true
+  return (t?.lahteet?.hankkeet ?? []).some(
+    (l) => l?.kentta === kentta && l?.luottamus === "vahvistettu"
+  )
+}
+
+/*
+ * Luku kuvaukseen varauksineen. Epavarmaa arvoa EI pudoteta -- se on
+ * silti tietoa ([[never-hide-on-missing-data]]) -- mutta se ei saa
+ * esiintya faktana.
+ */
+function luku(
+  t: DatakeskusTiedot | null,
+  kentta: string,
+  otsikko: string,
+  arvo: number,
+  yksikko: string
+): string {
+  if (kenttaVahvistettu(t, kentta)) return `${otsikko} ${arvo} ${yksikko}.`
+  return `${otsikko} noin ${arvo} ${yksikko} (rekisterin merkintä, ei vahvistettu).`
+}
+
 export function datakeskusKuvaus(h: DatakeskusHanke, t: DatakeskusTiedot | null): string {
   const osat: string[] = []
   const toimija = t?.toimija?.nimi?.trim()
@@ -257,9 +304,10 @@ export function datakeskusKuvaus(h: DatakeskusHanke, t: DatakeskusTiedot | null)
   if (toimija) alku.push(`, toimija ${toimija}`)
   osat.push(`${h.nimi}. ${alku.join("")}.`)
 
-  if (t?.teho_mw) osat.push(`Teho ${t.teho_mw} MW.`)
-  if (t?.it_teho_mw) osat.push(`IT-teho ${t.it_teho_mw} MW.`)
-  if (t?.pinta_ala_ha) osat.push(`Tontin pinta-ala ${t.pinta_ala_ha} ha.`)
+  if (t?.teho_mw) osat.push(luku(t, "teho_mw", "Teho", t.teho_mw, "MW"))
+  if (t?.it_teho_mw) osat.push(luku(t, "it_teho_mw", "IT-teho", t.it_teho_mw, "MW"))
+  if (t?.pinta_ala_ha)
+    osat.push(luku(t, "pinta_ala_ha", "Tontin pinta-ala", t.pinta_ala_ha, "ha"))
   if (t?.kaavatunnus) osat.push(`Kaava: ${t.kaavatunnus}.`)
   if (t?.kortteli) osat.push(`Kortteli ${t.kortteli}.`)
   if (t?.sijaintiperustelu) osat.push(String(t.sijaintiperustelu).trim())
@@ -368,7 +416,18 @@ export function datakeskusEhdokas(h: DatakeskusHanke, t: DatakeskusTiedot | null
           : null,
       field_sources: {
         developer: toimija ? "datakeskusrekisteri (koostaja)" : null,
-        phase: h.vaihe ? `rekisterin tila (${h.vaihe})` : null,
+        /*
+         * VAHVISTUSSTATUS KATSELMOIJALLE. Vaihe tulee rekisterin
+         * rakenteisesta kentasta, mutta 30 hanketta 150:sta on
+         * vaiheessa jota rekisteri ei ole ihmisvahvistanut eika saanut
+         * viranomaislahteesta. `phase_authoritative` jatetaan silti
+         * paalle: se estaa VAIN tekstipaattelya merkitsemasta hanketta
+         * valmistuneeksi, ja kaynnissa oleva hanke merkittyna valmiiksi
+         * on pahempi virhe kuin vanhentunut vaihe ([[hiding-threshold]]).
+         */
+        phase: h.vaihe
+          ? `rekisterin tila (${h.vaihe})${kenttaVahvistettu(t, "vaihe") ? "" : ", ei vahvistettu"}`
+          : null,
         property_type: "lahde on datakeskusrekisteri",
         consultants: (t?.organisaatiot ?? []).length
           ? "datakeskusrekisterin osapuolet rooleineen"
@@ -403,12 +462,18 @@ export async function haeHankkeenTiedot(id: string): Promise<DatakeskusTiedot | 
     hanke?: DatakeskusTiedot
     organisaatiot?: DatakeskusOrganisaatio[]
     paatokset?: DatakeskusPaatos[]
+    kentat_ihmisen_vahvistama?: Record<string, boolean>
+    kentat_viranomaislahde?: Record<string, boolean>
+    lahteet?: { hankkeet?: { kentta?: string | null; luottamus?: string | null }[] }
   }
   if (!j?.hanke) return null
   return {
     ...j.hanke,
     organisaatiot: j.organisaatiot ?? [],
     paatokset: j.paatokset ?? [],
+    kentat_ihmisen_vahvistama: j.kentat_ihmisen_vahvistama ?? null,
+    kentat_viranomaislahde: j.kentat_viranomaislahde ?? null,
+    lahteet: j.lahteet ?? null,
   }
 }
 

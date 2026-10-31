@@ -51,6 +51,90 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-368 – Datakeskusrekisterin luotettavuus mitattiin; luvut kantavat nyt lähteen epävarmuuden
+
+Johannes 31.10.2026: *"katsoitko datakeskusrekisterin hankkeiden
+paikkaansapitävyyttä, onko se varmasti täysin luotettava lähde?"*
+
+**En ollut katsonut.** Olin varmistanut rakenteen, kenttien merkityksen
+ja päällekkäisyyden kantaan, mutta en avannut yhtäkään alkuperäistä
+asiakirjaa ja verrannut rekisterin väitteitä siihen
+([[verify-findings-against-source]]).
+
+#### Lainaukset pitävät paikkansa
+
+Rekisteri tallentaa jokaisesta kentästä lainauksen lähteestä. Otin
+tasavälein 10 hanketta ([[sample-must-be-representative]]) ja hain
+jokaisen lainauksen siltä sivulta johon rekisteri viittaa:
+**10/10 löytyi sanatarkasti.** Se ei keksi viitteitä eikä lähteitä.
+
+#### Mutta luvut eivät ole sitä miltä ne näyttävät
+
+| kenttä | rivejä | lähteen mielestä vahvistettu |
+|---|---|---|
+| `pinta_ala_ha` | 117 | 103 |
+| `vaihe` | 150 | 122 |
+| `teho_mw` | 56 | 36 |
+| `it_teho_mw` | 16 | 8 |
+
+Viranomaislähde on takana vain 17–36 %:ssa käyttämistämme kentistä, ja
+`kentat_lahde_tarkistettu` on ~0 % — rekisteri ei ole käynyt omia
+linkkejään uudelleen läpi.
+
+**Konkreettinen virhe oli meidän, ei heidän.** Polarnode Kuopion
+kuvauksessa luki *"Teho 250 MW."* Rekisterin lainaus on rakennuttajan
+markkinointisivulta: *"Maximum available grid capacity | 250 MW"* —
+tontilla saatavilla oleva verkkokapasiteetti, ei datakeskuksen teho.
+Rekisteri merkitsi sen `epavarma`; me pudotimme varauksen ja
+tulostimme sen faktana. Sama kuvio: Ecogrid Raisio *"500–600 MW"* →
+tallennettu yläpää, Järvenpää *"vaihtoehdossa VE1 noin 125 MW"* → yksi
+YVA-vaihtoehto ilman mainintaa.
+
+**Korjaus:** `kenttaVahvistettu` lukee kolme toisistaan riippumatonta
+merkkiä (ihmisvahvistus, viranomaislähde, viitteen oma luottamus), ja
+vahvistamaton luku kirjoitetaan muodossa *"Teho noin 250 MW (rekisterin
+merkintä, ei vahvistettu)."* Lukua **ei pudoteta** — epävarmakin tieto
+on tietoa ([[never-hide-on-missing-data]]) — mutta se ei esiinny
+faktana. Tulos: 34 riviä 134:stä sai varauksen (teho 18, IT-teho 8,
+pinta-ala 14).
+
+#### Ehdotukseni `phase_authoritative`in poistosta oli väärä
+
+Esitin että lippu poistettaisiin 30 riviltä joiden vaihetta rekisteri
+ei ole vahvistanut. **Koodia kirjoittaessa tarkistin mitä lippu
+ohjaa, ja se kumosi ehdotuksen.** Lippu tekee tasan yhden asian
+(`importCandidate.ts`): estää tekstipäättelyä merkitsemästä hanketta
+**valmistuneeksi**.
+
+```
+const completionFromText = body.phase_authoritative
+  ? false
+  : textIndicatesCompletion(body.name, body.metadata?.description)
+```
+
+Poisto olisi siis antanut tekstin merkitä käynnissä olevia hankkeita
+valmiiksi — se on pahempi virhe kuin vanhentunut vaihe
+([[hiding-threshold]]). Lippu jää päälle. Tilalle vahvistusstatus
+katselmoijalle: `field_sources.phase` on nyt
+*"rekisterin tila (lupamenettely), ei vahvistettu"*, **28 rivillä
+134:stä**.
+
+Microsoft Vaasa–Mustasaari on rekisterissä vaiheessa `lupamenettely`,
+mutta sitä tukeva lainaus puhuu esisopimuksesta maakaupoista
+*mahdollista* datakeskusta varten. Tämä merkintä tekee sen näkyväksi.
+
+#### Takautuva ajo kirjoitti ensin väärin
+
+Ensimmäinen ajo antoi varauksen **115 riville 42:n sijaan**. Syy: ajo
+liitti levyltä vain `organisaatiot` ja `paatokset`, ei
+vahvistuslippuja, joten `kenttaVahvistettu` palautti aina false.
+Takautuvan ajon syötteen on oltava sama kuin kerääjän
+([[same-term-two-definitions]]). Toinen versio jätti vaihemerkinnän
+pois riveiltä joilla kuvaus ei muuttunut — ja **vajaa merkintä on
+harhaanjohtavampi kuin ei merkintää**, koska puuttuminen näyttäisi
+vahvistukselta. Molemmat korjattiin, ja lopputulos vastaa ennustetta
+rivin tarkkuudella.
+
 ### D-367 – Yksi juttu, kaksi siltaa; ja NRC:n uutisosio lähteeksi
 
 Johannes 31.10.2026 jonorivistä *"NRC Group sai ylikulkusiltojen

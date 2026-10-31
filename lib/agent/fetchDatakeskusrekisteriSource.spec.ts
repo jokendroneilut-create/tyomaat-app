@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   datakeskusEhdokas,
   datakeskusKonsultit,
+  kenttaVahvistettu,
   datakeskusKuvaus,
   datakeskusLiittyvat,
   datakeskusPaatokset,
@@ -123,7 +124,12 @@ describe("datakeskusEhdokas", () => {
 
 describe("datakeskusKuvaus", () => {
   it("kertoo luvut vain kun ne ovat olemassa", () => {
-    const kuvaus = datakeskusKuvaus(KITEE, { teho_mw: 200, pinta_ala_ha: 15 })
+    /* Vahvistettuina, jotta tama testi mittaa esiintymista eika varausta. */
+    const kuvaus = datakeskusKuvaus(KITEE, {
+      teho_mw: 200,
+      pinta_ala_ha: 15,
+      kentat_ihmisen_vahvistama: { teho_mw: true, pinta_ala_ha: true },
+    } as any)
     expect(kuvaus).toContain("Teho 200 MW.")
     expect(kuvaus).toContain("Tontin pinta-ala 15 ha.")
     expect(kuvaus).not.toContain("IT-teho")
@@ -253,5 +259,64 @@ describe("datakeskusPaatokset", () => {
 
   it("kelpuuttaa kuvauksen ilman paivaa", () => {
     expect(datakeskusPaatokset({ paatokset: [{ pvm: null, kuvaus: "X." }] } as any)[0]).toBe("X.")
+  })
+})
+
+describe("kenttaVahvistettu", () => {
+  it("hyvaksyy ihmisvahvistuksen, viranomaislahteen ja vahvistetun viitteen", () => {
+    expect(kenttaVahvistettu({ kentat_ihmisen_vahvistama: { teho_mw: true } } as any, "teho_mw")).toBe(true)
+    expect(kenttaVahvistettu({ kentat_viranomaislahde: { teho_mw: true } } as any, "teho_mw")).toBe(true)
+    expect(
+      kenttaVahvistettu(
+        { lahteet: { hankkeet: [{ kentta: "teho_mw", luottamus: "vahvistettu" }] } } as any,
+        "teho_mw"
+      )
+    ).toBe(true)
+  })
+
+  it("ei hyvaksy epavarmaa", () => {
+    expect(
+      kenttaVahvistettu(
+        {
+          kentat_ihmisen_vahvistama: { teho_mw: false },
+          kentat_viranomaislahde: { teho_mw: false },
+          lahteet: { hankkeet: [{ kentta: "teho_mw", luottamus: "epavarma" }] },
+        } as any,
+        "teho_mw"
+      )
+    ).toBe(false)
+    expect(kenttaVahvistettu(null, "teho_mw")).toBe(false)
+  })
+})
+
+describe("datakeskusKuvaus: epavarma luku", () => {
+  /*
+   * Mitattu tapaus: Polarnode Kuopion "Teho 250 MW" oli rakennuttajan
+   * markkinointisivun rivi "Maximum available grid capacity | 250 MW"
+   * eli tontin verkkokapasiteetti, ei datakeskuksen teho. Rekisteri
+   * merkitsi sen epavarmaksi; kuvaus tulosti sen faktana.
+   */
+  it("merkitsee vahvistamattoman luvun arvioksi", () => {
+    const kuvaus = datakeskusKuvaus(KITEE, {
+      teho_mw: 250,
+      lahteet: { hankkeet: [{ kentta: "teho_mw", luottamus: "epavarma" }] },
+    } as any)
+    expect(kuvaus).toContain("Teho noin 250 MW (rekisterin merkintä, ei vahvistettu).")
+    expect(kuvaus).not.toContain("Teho 250 MW.")
+  })
+
+  it("kirjoittaa vahvistetun luvun suoraan", () => {
+    const kuvaus = datakeskusKuvaus(KITEE, {
+      teho_mw: 200,
+      kentat_ihmisen_vahvistama: { teho_mw: true },
+    } as any)
+    expect(kuvaus).toContain("Teho 200 MW.")
+    expect(kuvaus).not.toContain("ei vahvistettu")
+  })
+
+  it("koskee myos IT-tehoa ja pinta-alaa", () => {
+    const kuvaus = datakeskusKuvaus(KITEE, { it_teho_mw: 60, pinta_ala_ha: 15 } as any)
+    expect(kuvaus).toContain("IT-teho noin 60 MW (rekisterin merkintä, ei vahvistettu).")
+    expect(kuvaus).toContain("Tontin pinta-ala noin 15 ha (rekisterin merkintä, ei vahvistettu).")
   })
 })

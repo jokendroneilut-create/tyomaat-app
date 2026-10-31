@@ -33,8 +33,13 @@ async function main() {
   const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false },
   })
-  const { datakeskusKuvaus, datakeskusKonsultit, datakeskusLiittyvat, haeHankkeenTiedot } =
-    await import("../lib/agent/fetchDatakeskusrekisteriSource")
+  const {
+    datakeskusKuvaus,
+    datakeskusKonsultit,
+    datakeskusLiittyvat,
+    haeHankkeenTiedot,
+    kenttaVahvistettu,
+  } = await import("../lib/agent/fetchDatakeskusrekisteriSource")
   const { mergeCompanyNames } = await import("../lib/projects/projectCompanies")
 
   /*
@@ -91,10 +96,22 @@ async function main() {
     if (polku && existsSync(polku)) {
       const koko = JSON.parse(readFileSync(polku, "utf8"))
       if (koko?.hanke) {
+        /*
+         * KAIKKI SISARKENTAT, EI OSAA NIISTA.
+         *
+         * Ensimmainen versio liitti vain `organisaatiot` ja
+         * `paatokset`, jolloin vahvistusliput puuttuivat ja
+         * `kenttaVahvistettu` palautti aina false -- ajo kirjoitti
+         * varauksen 115 riville 42:n sijaan. Takautuvan ajon syotteen
+         * on oltava sama kuin keraajan ([[same-term-two-definitions]]).
+         */
         tiedot = {
           ...koko.hanke,
           organisaatiot: koko.organisaatiot ?? [],
           paatokset: koko.paatokset ?? [],
+          kentat_ihmisen_vahvistama: koko.kentat_ihmisen_vahvistama ?? null,
+          kentat_viranomaislahde: koko.kentat_viranomaislahde ?? null,
+          lahteet: koko.lahteet ?? null,
         }
       }
     } else {
@@ -118,12 +135,24 @@ async function main() {
       : []
     const liittyvat = mergeCompanyNames(vanhatLiittyvat, datakeskusLiittyvat(tiedot))
 
+    /*
+     * Vahvistusmerkinta lasketaan ENNEN muutostestia: jos se jaa pois
+     * riveilta joilla kuvaus ei muuttunut, merkinnan PUUTTUMINEN
+     * nayttaisi vahvistukselta. Vajaa merkinta on harhaanjohtavampi
+     * kuin ei merkintaa lainkaan.
+     */
+    const vaiheLahde = r.metadata?.rekisterin_vaihe
+      ? `rekisterin tila (${r.metadata.rekisterin_vaihe})` +
+        (kenttaVahvistettu(tiedot, "vaihe") ? "" : ", ei vahvistettu")
+      : (r.metadata?.field_sources?.phase ?? null)
+    const vaiheMuuttuu = vaiheLahde !== (r.metadata?.field_sources?.phase ?? null)
+
     const kuvausMuuttuu = uusi !== vanha
     const konsultitMuuttuu =
       JSON.stringify(konsultit) !== JSON.stringify(vanhatKonsultit)
     const liittyvatMuuttuu =
       JSON.stringify(liittyvat) !== JSON.stringify(vanhatLiittyvat)
-    if (!kuvausMuuttuu && !konsultitMuuttuu && !liittyvatMuuttuu) continue
+    if (!kuvausMuuttuu && !konsultitMuuttuu && !liittyvatMuuttuu && !vaiheMuuttuu) continue
     muuttuu++
 
     console.log(`\n${r.title}`)
@@ -149,6 +178,8 @@ async function main() {
           description: uusi,
           consultants: konsultit,
           related_companies: liittyvat,
+          /* Vahvistusstatus katselmoijalle, sama muoto kuin keraajassa. */
+          field_sources: { ...(r.metadata?.field_sources ?? {}), phase: vaiheLahde },
         },
       })
       .eq("id", r.id)
