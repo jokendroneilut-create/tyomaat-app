@@ -274,6 +274,43 @@ kesken) ja jonka urakoitsijoiden referenssisivut läpäisevät huonosti.
 
 ---
 
+## Umpikuja: datakeskusrekisterin toimija- ja konsulttilistat
+
+**Mitattu 31.10.2026, älä tutki uudelleen.** Johannes kysyi tukisiko
+`datakeskusrekisteri.fi/toimijat` yrityslistaamme. Vastaus on ei, ja
+syyt kannattaa lukea ennen kuin vastaava lista houkuttaa uudelleen.
+
+| havainto | luku |
+|---|---|
+| toimijoita listalla | 123 |
+| jo kannassamme | 45 |
+| ei kannassa | 78 (Y-tunnus 42:lla) |
+
+Kolme syytä jättää tekemättä:
+
+1. **Ne 78 tulevat joka tapauksessa.** Toimija on hankkeen
+   rakennuttaja, ja se kirjautuu kun jonorivi hyväksytään. Lista ei
+   anna uutta tietoa, vain aikaisemmin.
+2. **Y-tunnukselle ei ole kenttää.** Koko koodipohjassa ei ole
+   `y_tunnus`- eikä `business_id`-saraketta. Y-tunnus olisi arvokas
+   nimimuunnelmien ratkomiseen, mutta se koskisi 71:tä yritystä kun
+   kannassa on 2 284 eri yritysnimeä.
+3. **Listalla on sama nimimuunnelmaongelma kuin meillä:** *Arcem*,
+   *Arcem AS* ja *Arcem, Inc.* ovat kolme erillistä riviä. Se ei siis
+   ole kanoninen nimilähde.
+
+Sama koskee `/konsultit`-sivua (31 organisaatiota: Sweco, Ramboll,
+AFRY, Sitowise, Granlund, FCG, Anthesis, arkkitehtitoimistoja).
+**Tieto on arvokasta mutta sivu ei ole lähde:** samat konsultit
+rooleineen tulevat hankekohtaisesta JSONista, jonka kerääjä jo hakee,
+ilman yhtään lisähakua. Ne luetaan nyt `metadata.consultants`iin
+(D-365, kohta 9) — 46 hanketta 150:stä.
+
+`/maaraajat` ei ole määrääviä omistajia vaan vaikuttamisen määräaikoja.
+JSON-päätepisteitä listasivuille ei ole lainkaan.
+
+---
+
 ## Konserni kannattaa lisätä, vaikka jäsenyritys olisi jo lähteenä
 
 Johannes 24.10.2026, kun Lohkare Infra lisättiin vaikka sen tytäryhtiö

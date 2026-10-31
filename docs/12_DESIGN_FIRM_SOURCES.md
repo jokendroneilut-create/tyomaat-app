@@ -216,3 +216,29 @@ lähteitä lisätään.
    Kaakkois-Suomeen.
 3. **SARC Sigge** — paras kenttäkattavuus, mutta proosan jäsennys on työ.
 4. Maaskola ja Indepro vasta, jos edelliset kannattivat.
+
+---
+
+## Konsultti ilman omaa lähdettä (31.10.2026)
+
+Tämä dokumentti kysyy mitkä suunnittelutoimistot kelpaavat **lähteeksi**
+eli julkaisevat koneluettavan hankeluettelon. Datakeskusrekisteri
+osoitti toisen reitin samaan tietoon: **hanke kertoo konsulttinsa**,
+kun lähde julkaisee osapuolet rooleineen.
+
+Mitattu 150 datakeskushankkeesta: 46:lla on vähintään yksi konsultti,
+yhteensä 64 merkintää — kaavan laatija 31, YVA-konsultti 14,
+selvityksen laatija 4, lupahakemuksen laatija 1. Nimet ovat samoja
+kuin tämän dokumentin taulukossa (Sweco, Ramboll, FCG, Envineer,
+Sitowise, Granlund, AFRY) plus pienempiä (Projoplan, Plandea, Nosto
+Consulting, Sipti Environment, Arkkitehtitoimisto Jarmo Lokio).
+
+Merkintä on omavarainen ja sisältää todisteen: `lahde_url` osoittaa
+asiakirjaan ja `lahde_kohta` kohtaan siinä ("s. 1"). Tieto menee
+`metadata.consultants`iin (D-365).
+
+**Opetus muille lähteille:** ennen kuin suunnittelutoimistosta tehdään
+oma lähde, kannattaa katsoa kertooko jokin olemassa oleva lähde jo
+konsultin hankekohtaisesti. Se on halvempi reitti eikä vaadi toimiston
+oman sivun jäsentämistä — eikä kärsi siitä että referenssisivu voi olla
+vuosia vanha.
