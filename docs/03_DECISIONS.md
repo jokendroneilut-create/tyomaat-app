@@ -51,6 +51,60 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-366 – Kaavalle peruskuvaus rajapinnan kentistä, kun sivua ei ole
+
+Johannes 31.10.2026 Vantaan kaavarivistä: *"miksi kuvausta ei tullut,
+lähde on pelkkää merkkijonoa. hylkäänkö vain?"*
+
+**Ei hylätä.** Rivi on Vantaan virallisessa vireillä olevien kaavojen
+tasossa, geometria ja koordinaatit mukana, eikä se ole kaksoiskappale
+(lähin oma rivi 280 m, eri kaava). Puuttuva kuvaus ei ole peruste
+piilottaa ([[hiding-threshold]]), ja hylkäys poistaisi juuri sen mitä
+emme tiedä ([[never-hide-on-missing-data]]).
+
+**Syy on rakenteellinen, ei rivissä.** Kaavat tulevat karttapalvelun
+WFS-rajapinnasta ja kuvaus luetaan kaavan omalta sivulta, jonka osoite
+on kentässä `kaavalinkki`. Mitattu: **7 kaavaa 98:sta on ilman
+linkkiä.** Vantaan oma haku ei löydä näille sivua — sitä ei ole vielä
+julkaistu. Tietue on kokonaisuudessaan kuusi kenttää:
+
+```
+vaihe  kaavalinkki  kaavanimi1  kaavatunnus  kasit_pvm  oas_pvm
+```
+
+"Lähde on pelkkää merkkijonoa" on tarkka havainto: `document_url` on
+WFS-kysely `…?typeNames=kaava:kaavat_vireilla…#002258`. Se on rehellinen
+alkuperämerkintä mutta ei avattava sivu.
+
+**Peruskuvaus kirjoitetaan niistä kentistä mitä on.** Kaksi asiaa
+jätetään väittämättä:
+
+1. **Kaavalajia ei sanota.** "002258" on asemakaava, mutta samassa
+   aineistossa on sarjat 251900, 181200 ja 920600, jotka eivät ole.
+   Kirjoitetaan "Kaava", ei "Asemakaava".
+2. **Vaihe kirjoitetaan sellaisenaan.** Arvoja ovat myös "Alustava
+   kuuleminen (MRL 62 §)" ja "Ensimmäinen nähtävilläolo (MRA 27§)
+   loppupäivä"; pykäläviite ja kirjainkoko rikkoutuisivat siistimisestä
+   ([[curated-map-field-not-prose]]).
+
+OAS-päivä 14.12.2027 näytti ensin virheeltä. Tarkistin jakauman
+(2019–2028, 2027 kahdella ja 2028 yhdellä kaavalla) — se on aito tuleva
+päivä. Hanke on siis poikkeuksellisen aikainen, mikä on lähteen arvo.
+
+**Ajo paljasti laajemman vian kuin kysymys koski.** Seitsemästä
+rivistä vain yksi oli jonossa: neljä oli jo **hyväksytty ja julkista**,
+ja niiden `projects.additional_info` oli pelkkä nimi toistettuna,
+16–29 merkkiä. Jonorivin kuvaus ei näy asiakkaalle hyväksynnän
+jälkeen — hän lukee hankkeen omaa kenttää
+([[measure-the-field-the-user-reads]]). Siksi ajo päivittää molemmat,
+ja ylikirjoittaa vain kuvauksen joka on tyhjä tai sama kuin nimi.
+
+Peruskuvaus on myös kytketty `vantaaKaavaResolver`iin, joten se
+kirjoitetaan jatkossa heti eikä takautuvasti
+([[own-data-unread]]: "korjataan kantaan ja jatkossa").
+
+**Tulos:** 7 jonoriviä, 4 hanketta.
+
 ### D-365 – Datakeskusrekisteri lähteeksi: koostajan nimi ei saa korvata omaa tietoa
 
 Johannes 30.10.2026: *"Tee datakeskusrekisteri.fi:stä lähde."*

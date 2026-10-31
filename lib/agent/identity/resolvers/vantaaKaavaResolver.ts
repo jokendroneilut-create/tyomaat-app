@@ -3,6 +3,7 @@ import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialPr
 import { PHASE_LABELS } from "@/lib/projects/phases"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { gk25ToWgs84 } from "@/lib/geo/gk25"
+import { kaavanPeruskuvaus } from "@/lib/agent/kaavanPeruskuvaus"
 
 function findFact(facts: any[], type: string) {
   return facts.find((fact) => fact.fact_type === type)
@@ -24,8 +25,30 @@ export async function resolveVantaaKaavaProject({
 
   const metadata = facts[0]?.metadata ?? {}
   const contactPersons = metadata.contacts ?? []
-  const description = metadata.description ?? null
   const municipality = getMunicipalityByName("Vantaa")
+
+  /*
+   * KUVAUS LUETAAN KAAVAN SIVULTA, JA JOS SIVUA EI OLE, SE
+   * KIRJOITETAAN RAJAPINNAN KENTISTA.
+   *
+   * `kaavalinkki` on tyhja 7 kaavalla 98:sta (mitattu 31.10.2026),
+   * eika niille tule kuvausta lainkaan. Rivi on silti aito hanke --
+   * Vantaan virallisessa vireillä olevien kaavojen tasossa, geometria
+   * mukana -- ja puuttuva tieto ei ole peruste piilottaa
+   * ([[hiding-threshold]]).
+   *
+   * Peruskuvaus ei paattele mitaan: se kertoo tunnuksen, kohteen,
+   * vaiheen ja OAS-paivan, eli juuri sen mita rajapinta antaa.
+   */
+  const description =
+    metadata.description ??
+    kaavanPeruskuvaus({
+      kunta: "Vantaa",
+      kaavaTunnus: kaavaTunnus,
+      nimi: operation,
+      vaihe,
+      oasPvm: metadata.oas_pvm ?? null,
+    })
 
   const coordinates = metadata.coordinates ?? null
   const wgs84 =

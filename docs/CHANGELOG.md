@@ -26,6 +26,30 @@ Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
 ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
 ja TIC:n hankenäkymässä.
 
+### Kaavalle peruskuvaus kun lähteellä ei ole sivua
+
+Johannes kysyi Vantaan kaavarivistä *"miksi kuvausta ei tullut, lähde
+on pelkkää merkkijonoa. hylkäänkö vain?"* Ei hylätä: rivi on aito.
+Kaavat tulevat Vantaan karttapalvelun WFS-rajapinnasta, kuvaus
+luetaan kaavan omalta sivulta, ja **7 kaavaa 98:sta on ilman linkkiä**
+— niille ei tullut kuvausta lainkaan. Myöskään Vantaan oma haku ei
+löydä näille sivua; sitä ei ole vielä julkaistu.
+
+`lib/agent/kaavanPeruskuvaus.ts` kirjoittaa kuvauksen niistä kuudesta
+kentästä jotka rajapinta antaa:
+
+> Kaava 002258, Vantaa. Kohde Perintötie 6 ja Robert Huberintie 5.
+> Vaihe: Vireilletullut. Osallistumis- ja arviointisuunnitelma 14.12.2027.
+
+Kaavalajia **ei väitetä** ("Kaava", ei "Asemakaava"), koska aineistossa
+on muitakin sarjoja kuin asemakaavat, eikä vaiheen sanamuotoa muuteta
+("Alustava kuuleminen (MRL 62 §)").
+
+Takautuva ajo kirjoitti 7 jonoriviä ja **4 hanketta**: ne olivat jo
+julkisia, ja niiden kuvaus oli pelkkä nimi toistettuna (16–29
+merkkiä). Jonorivin kuvaus ei näy asiakkaalle hyväksynnän jälkeen —
+hän lukee `projects.additional_info`-kenttää.
+
 ### Konsultit ja päätökset datakeskusrekisteristä (D-365)
 
 Hankekohtainen JSON, jonka kerääjä jo hakee, sisälsi kaksi kenttää
