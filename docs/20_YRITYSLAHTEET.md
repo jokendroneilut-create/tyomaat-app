@@ -61,6 +61,36 @@ Pelkkä tiedostohaku olisi väittänyt sitä puuttuvaksi.
 
 ## Tehty
 
+### NRC Group uutisosio — lähteeksi 31.10.2026 (D-367)
+
+**NRC oli jo lähteenä, mutta väärästä osiosta.** Kerääjä katsoi
+`nrcgroup.fi/projektit` eli referenssisivuja; urakkavoitot julkaistaan
+`/uutiset`-osiossa. Vika näkyi konkreettisesti: *"NRC Group sai
+ylikulkusiltojen rakennusurakan"* tuli meille **Rakennuslehden**
+kautta, ja sen juttu on maksumuurin takana. NRC:n oma tiedote nimesi
+molemmat sillat; Rakennuslehti kertoi vain kunnat.
+
+Rakenne on sama kuin projektisivuilla (Next.js, `__NEXT_DATA__`): yksi
+haku antaa **171 uutista** otsikoineen, osoitteineen ja
+julkaisupäivineen, ilman sivutusta. Päivä on rakenteisessa kentässä.
+
+| | |
+|---|---|
+| uutisia | 171 |
+| 12 kk:n ikkunassa | 41 |
+| suodatuksen jälkeen | **28** |
+| ensimmäinen ajo | 24 jonoriviä, 4 osumaa |
+
+Pois pudotetut 13 tarkistettiin yksitellen ja kaikki ovat oikein
+(sertifikaatit, nimitys, rekrytointi, yrityskauppa, markkinointi). Läpi
+menneistä noin kuusi on markkinointia, eli ~21 % kohinaa. Sanastoa ei
+kiristetty, koska tiukennus pudottaisi aitoja: *"Erikoisosaamisemme
+näkyy uusissa sähkörakentamisen **urakoissa**"* on oikea urakkauutinen.
+
+**Opetus muille lähteille:** yrityksellä voi olla kaksi eri osiota, ja
+referenssisivu ei korvaa uutisosiota. Referenssi kertoo mitä on tehty,
+uutinen mitä on juuri voitettu.
+
 ### JM Suomi — lähteeksi 30.10.2026 (D-359)
 
 Asuntorakennuttaja joka on myös oma rakentajansa. Taulukossa alla
