@@ -1665,6 +1665,7 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
                 <div>Kaupunki</div>
                 <div>Maakunta</div>
                 <div>Vaihe</div>
+                <div>Kohdetyyppi</div>
                 <div />
               </div>
 
@@ -1736,6 +1737,17 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
                   <div>{p.city}</div>
                   <div>{p.region || '-'}</div>
                   <div>{displayProjectPhase(p.phase, p.is_cancelled_procurement)}</div>
+
+                  {/*
+                    * Kohdetyyppi riville: hankkeen nimi ei useinkaan kerro
+                    * mista on kyse ("Arcem Joroinen, Huutokoski"). Tyyppi oli
+                    * jo suodattimena ja hankekortissa, mutta listassa sita ei
+                    * nakynyt. Tyhja jaa tyhjaksi -- 36 %:lla sita ei ole, eika
+                    * puuttuvaa tietoa kirjoiteta auki.
+                    */}
+                  <div className="projects-type" title={p.property_type ?? undefined}>
+                    {p.property_type || ''}
+                  </div>
 
                   <div className="projects-actions" style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                     <button className="projects-btn" onClick={() => setSelected(p)}>
@@ -1834,6 +1846,7 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
 
                   <div className="projects-cardMeta">
                     {p.city} • {p.region || '-'} • {displayProjectPhase(p.phase, p.is_cancelled_procurement)}
+                    {p.property_type ? ` • ${p.property_type}` : ''}
                   </div>
 
                   <div style={{ marginTop: 6 }}>

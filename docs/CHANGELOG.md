@@ -26,6 +26,35 @@ Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
 ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
 ja TIC:n hankenäkymässä.
 
+### Kohdetyyppi hankelistaan
+
+Johannes 1.11.2026: *"monessa hankkeessa varsinkin nimi ei kerro
+mitään. Etenkin datakeskuksien kohdalla nimi esimerkiksi 'Arcem
+Joroinen, Huutokoski' ei kerro mitään."*
+
+Kohdetyyppi oli jo suodattimena ja hankekortissa, mutta listassa sitä
+ei näkynyt. Nyt se on oma sarake vaiheen jälkeen, ja mobiilin
+korttinäkymässä metarivin lopussa.
+
+Data oli valmiina: **64 % julkisista hankkeista** (4 516/7 068) kantaa
+tyypin, ja `property_type` oli jo `LISTAN_KENTAT`-listassa — eli se
+haettiin ja välimuistitettiin jo ennestään, joten vanha välimuisti ei
+näytä tyhjää saraketta kahta tuntia (vrt. D-363).
+
+Kaksi asiaa korjattiin matkalla:
+
+- **Otsikon ja rivin CSS-ruudukot eivät täsmänneet** (170px vs. 70px
+  neljännessä sarakkeessa). Ero ei näkynyt, koska otsikon viides
+  sarake oli tyhjä, mutta uusi sarake olisi siirtänyt otsikon 100
+  pikseliä sivuun. Sivuvaikutuksena "Rakentaminen aloitettu" rivittyy
+  nyt kahdelle riville kolmen sijaan.
+- **Arvot eivät ole kaikki lyhyitä nimikkeitä.** Pisin on 79 merkkiä
+  (ympäristölupaluokitus). Vain 1 % ylittää 18 merkkiä, joten sarake on
+  mitoitettu sen mukaan ja pitkät katkaistaan; koko arvo näkyy hiiren
+  alla ja hankekortissa.
+
+36 %:lla tyyppiä ei ole ja solu jää tyhjäksi.
+
 ### Datakeskusrekisterin luvut kantavat lähteen epävarmuuden (D-368)
 
 Rekisterin lainaukset tarkistettiin alkuperäisiä sivuja vasten:
