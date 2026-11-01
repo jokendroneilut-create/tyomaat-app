@@ -40,13 +40,31 @@ const JONORIVI = "7fde476c-84ac-47f9-aa5e-fe9c415923ec"
 const LAHDE = "https://www.nrcgroup.fi/uutiset/toteutamme-kaksi-uutta-ylikulkusiltaa-ita-suomessa"
 const EMO = "Ruokosuo–Sänkimäki-radan sähköistys ja raakapuun kuormausalue"
 
+/*
+ * TYHJA KUSTANNUSKENTTA EI SUOJAA MITAAN (1.11.2026).
+ *
+ * Jatin `estimated_cost`in tahallaan tyhjaksi, koska 3,8 M€ on
+ * MOLEMPIEN siltojen yhteisarvo ([[alliance-split]]). Molemmille
+ * hyvaksytyille hankkeille kirjautui silti 3,8 M€,
+ * `cost_source: "text"`.
+ *
+ * KAKSI ASIAA MENI TOISIN KUIN OLETIN:
+ *   1. Tama kuvaus ei paatynyt kantaan lainkaan. Rikastus haki
+ *      tiedotesivun ja korvasi sen julkaisijan omalla ingressilla.
+ *   2. Luku poimittiin siita ingressista ("Sopimuksen arvo on noin
+ *      3,8 miljoonaa euroa"), ei tasta tekstista.
+ *
+ * Eli kentan tyhjaksi jattaminen ei estä mitaan, jos luku on MISSA
+ * TAHANSA kuvauksessa -- ei edes omassa. Oikea suoja on tyhjentaa
+ * kustannus hyvaksynnan JALKEEN, kun lahde kertoo yhteissumman.
+ */
 const YHTEINEN =
   "Väylävirasto on valinnut NRC Groupin rakentamaan kaksi uutta rautatien " +
   "ylittävää ylikulkusiltaa sekä niihin liittyvät tiejärjestelyt " +
   "Viinijärvi–Siilinjärvi-rataosuudella. Urakassa uusitaan elinkaarensa " +
   "päähän tulleet 1950-luvulla rakennetut sillat. Siltatyöt käynnistyvät " +
-  "syksyllä 2026 ja valmistuvat elokuun 2027 loppuun mennessä. Sopimuksen " +
-  `yhteisarvo on noin 3,8 miljoonaa euroa, eli se kattaa molemmat sillat. ` +
+  "syksyllä 2026 ja valmistuvat elokuun 2027 loppuun mennessä. Sama " +
+  "sopimus kattaa molemmat sillat. " +
   `Hanke on osa Väyläviraston ${EMO}-hanketta.`
 
 const SILLAT = [

@@ -26,6 +26,23 @@ Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
 ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
 ja TIC:n hankenäkymässä.
 
+### Yhteissumma kirjautui molemmille silloille
+
+Jätin `estimated_cost`in tahallaan tyhjäksi NRC:n kahdella sillalla,
+koska 3,8 M€ on niiden **yhteissopimuksen** arvo. Molemmille
+hyväksytyille hankkeille kirjautui silti 3,8 M€ (`cost_source:
+"text"`), eli markkina kaksinkertaistui juuri niin kuin yritin estää.
+
+Kaksi asiaa meni toisin kuin oletin: kirjoittamani kuvaus **ei
+päätynyt kantaan lainkaan** — rikastus haki tiedotesivun ja korvasi sen
+julkaisijan ingressillä — ja luku poimittiin siitä ingressistä
+("Sopimuksen arvo on noin 3,8 miljoonaa euroa").
+
+Tyhjä kenttä ei siis suojaa mitään, jos luku on missä tahansa
+kuvauksessa, ei edes omassa. Kustannus tyhjennettiin molemmilta;
+lähteen oma teksti jätettiin ennalleen, koska se on asiayhteydessään
+tosi.
+
 ### Jonorivien joukkohyväksyntä
 
 `scripts/hyvaksy-jonorivit.ts` kutsuu **samaa reittiä** jota
