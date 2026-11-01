@@ -107,8 +107,16 @@ Turun pari oli **jo katselmoitu `confirmed_duplicate`**-tilaan
 tietoja ei ollut yhdistetty, eli työ jäi kesken. Säilyvä on molemmissa
 vanhempi ja rikkaampi rivi.
 
-**Avoin kohta:** napin varmistusteksti lupaa yhä väärin. Se on yhden
-rivin korjaus, mutta asiakkaalle näkyvä teksti vaatii luvan.
+**Korjattu 2.11.2026.** Varmistusteksti kertoo nyt sekä säännön että
+poikkeuksen, ja sanoo mistä vanha teksti saadaan takaisin:
+
+> *"Tyhjät kentät täyttyvät eikä olemassa olevia sarakearvoja
+> ylikirjoiteta. HUOM: kuvaus korvautuu tämän ehdokkaan tekstillä.
+> Vanha kuvaus säilyy sen jonorivin metadatassa, josta se tuli."*
+
+Sama lupaus oli kolmessa paikassa — `MergeIntoProject`in
+varmistustekstissä ja moduulikommentissa sekä `DuplikaattiEhdotus`in
+varmistuksessa — ja kaikki korjattiin.
 
 ### D-368 – Datakeskusrekisterin luotettavuus mitattiin; luvut kantavat nyt lähteen epävarmuuden
 

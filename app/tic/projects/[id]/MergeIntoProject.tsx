@@ -13,8 +13,18 @@ import { useState } from "react"
  * olla täysin eri, vaikka kyse on samasta kohteesta.
  *
  * Liittäminen käyttää samaa hyväksyntäreittiä kuin tavallinen hyväksyntä,
- * joten kentät täydentyvät samalla logiikalla: tyhjät täyttyvät, olemassa
- * olevia ei ylikirjoiteta.
+ * joten SARAKKEET täydentyvät samalla logiikalla: tyhjät täyttyvät,
+ * olemassa olevia ei ylikirjoiteta.
+ *
+ * KUVAUS ON POIKKEUS, ja varmistusteksti sanoi siitä väärin 2.11.2026
+ * asti (D-369). Kuvaus korvautuu liitettävän ehdokkaan tekstillä.
+ * Mitattu: Elenian sähköaseman 2 424 merkin kuvaus hävisi kun samaan
+ * hankkeeseen liitettiin vahingossa toinen juttu. Vanha teksti saadaan
+ * takaisin sen jonorivin `metadata.description`-kentästä josta se tuli
+ * -- se säilyy siellä myös `approved`-tilan jälkeen.
+ *
+ * Korvautuminen ei ole pelkkä vika: vanhentunut kuvaus vaihtuu
+ * nykytilaan, mikä on yleensä juuri se mitä halutaan.
  */
 type Suggestion = {
   projectId: string
@@ -116,8 +126,10 @@ export default function MergeIntoProject({ candidateId }: { candidateId: string 
   async function mergeInto(projectId: string, name: string) {
     const confirmed = window.confirm(
       `Liitetäänkö tämä ehdokas hankkeeseen "${name}"?\n\n` +
-        "Ehdokkaan tiedot täydentävät hankkeen tyhjiä kenttiä. " +
-        "Olemassa olevia arvoja ei ylikirjoiteta."
+        "Tyhjät kentät täyttyvät eikä olemassa olevia sarakearvoja " +
+        "ylikirjoiteta.\n\n" +
+        "HUOM: kuvaus korvautuu tämän ehdokkaan tekstillä. " +
+        "Vanha kuvaus säilyy sen jonorivin metadatassa, josta se tuli."
     )
 
     if (!confirmed) return

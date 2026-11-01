@@ -49,8 +49,9 @@ export default function DuplikaattiEhdotus({
   async function liita(osuma: Osuma) {
     const varmistus = window.confirm(
       `Liitetäänkö tämä ehdokas hankkeeseen "${osuma.nimi}"?\n\n` +
-        `Etäisyys ${osuma.etaisyys_km} km. Ehdokkaan tiedot täydentävät ` +
-        "hankkeen tyhjiä kenttiä. Olemassa olevia arvoja ei ylikirjoiteta."
+        `Etäisyys ${osuma.etaisyys_km} km. Tyhjät kentät täyttyvät eikä ` +
+        "olemassa olevia sarakearvoja ylikirjoiteta.\n\n" +
+        "HUOM: kuvaus korvautuu tämän ehdokkaan tekstillä."
     )
     if (!varmistus) return
 
