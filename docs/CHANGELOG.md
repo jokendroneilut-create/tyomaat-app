@@ -26,6 +26,24 @@ Kuntien kaavalähteet kantavat jo valmiin nimen eikä niihin kosketa, ja
 ei pääse asiakkaalle raakana. Käytössä hankesivulla, Tänään-modaalissa
 ja TIC:n hankenäkymässä.
 
+### NRC:n uutisjono purettu, ja "Liitä hankkeeseen" korvaa kuvauksen
+
+Kaksikymmentä avointa NRC-uutisriviä käytiin läpi yksitellen: **9
+liitettiin** olemassa olevaan hankkeeseen, 1 hyväksyttiin uutena, 1
+purettiin kolmeksi, ja kaksi omaa kaksoiskappaleparia yhdistettiin
+(Turun raitiotie, Kouvola–Luumäki).
+
+**Liitos korvaa kuvauksen, vaikka nappi lupaa muuta.** Varmistusteksti
+sanoo *"Olemassa olevia arvoja ei ylikirjoiteta"*, mutta kuvaus
+korvautuu uusimman lähteen tekstillä. Liitin kolmen urakan jutun
+väärään Hämeenlinnan sähköasemaan — kaupungissa on kaksi, Elenian ja
+rautatien Kukkola — ja Elenian 2 424 merkin kuvaus hävisi. Teksti
+löytyi jonoriviltä ja palautettiin, samoin väärä alias poistettiin.
+
+Korvautuminen ei aina ole vahinko: Kuopion sillan vuoden vanha
+*"aloittaa loppuvuoden aikana suunnittelun"* vaihtui nykytilaan, jossa
+kantta betonoidaan.
+
 ### Yhteissumma kirjautui molemmille silloille
 
 Jätin `estimated_cost`in tahallaan tyhjäksi NRC:n kahdella sillalla,
