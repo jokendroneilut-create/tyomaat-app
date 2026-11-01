@@ -105,6 +105,7 @@ liikevaihtoa ei mitata järjestelmässä.
 | 2026-09-13 | 110–200 k € | 15–45 k € |
 | 2026-10-16 | 140–260 k € | 40–120 k € (ei enää esitulovaiheessa) |
 | 2026-10-24 | 150–280 k € | 40–120 k € (ennallaan: MRR ei liikkunut) |
+| 2026-11-02 | 150–280 k € | 50–140 k € (MRR 2,6×, konversio todistettu) |
 
 **Rakennuskustannuksen peruste (13.9.2026):** ~46 k riviä testattua ja
 dokumentoitua TypeScriptiä, 49 räätälöityä scraperia, discovery-/agenttiputki,
@@ -137,6 +138,30 @@ ostaja tai jakelukumppani ylempää. Haarukka kapenee heti kun konversio
 
 Nämä ovat esimerkkejä, eivät toteumaa. Kun todellinen asiakasmäärä ja
 kuukausihinta ovat tiedossa, korvaa rivi oikeilla luvuilla.
+
+---
+
+## Elävä tilannekuva 2026-11-02 — MRR-tasanne murtui
+
+**Käänne, jota 24.10. jäätiin odottamaan, tapahtui:** konversio lähti liikkeelle.
+
+- **MRR 646 € / ARR 7 752 €** (24.10. 248 € / 2 976 €) → **2,6× ~9 päivässä**,
+  ~6 viikon tasanne murtui.
+- **Maksavia asiakkaita 5** (oli 2) — kolme uutta tällä viikolla. ARPU
+  ~129 €/kk (matala hintapiste vahvistuu; esim. Maakunnan Lasi 149 €/kk).
+- Trial-asiakkaita 52, asiakkaita yhteensä 75, tunnuksia 108. Huom: tunnukset
+  127 → 108 ja asiakkaat 94 → 75 = **vanhaa kohinaa siivottu pois** (kuolleet
+  Sarlin-/trial-tunnukset), joten konversion nimittäjä on nyt rehellisempi.
+- Potentiaalinen ARR 112 k → 125 k → **100 728 €** (laski kun kuolleet trialit
+  poistettiin — terveempi luku).
+
+**Miksi tämä siirtää arviota:** 24.10. paikallaan ollut MRR oli ainoa keltainen
+lippu. Nyt **konversiokone toimii** — se oli se yksi todistamaton asia. ARR 7 752 €
+on yhä pieni (2–4× = ~15–31 k €), mutta tasanteen murtuminen poistaa suurimman
+yksittäisen epävarmuuden ja nostaa kauppahinta-arvion lattiaa. Enterprise-putki
+(YIT, Saint-Gobain PAM) ja Q1:een lukitut trialit ovat yhä lunastamatta —
+seuraava kysymys on pysyykö kasvukäyrä (toistuvatko konversiot marras–tammikuussa)
+ja pysyvätkö uudet maksavat (churn).
 
 ---
 
@@ -337,6 +362,12 @@ samalla parhaan itsenäisen yrityksen ja parhaan ostokohteen.
 ---
 
 ## Päivityshistoria
+
+- **2026-11-02** — **MRR-tasanne murtui: 248 € → 646 € (ARR 7 752 €), 5 maksavaa
+  (oli 2), 3 uutta tällä viikolla**, ARPU ~129 €/kk. Kohinaa siivottu (tunnukset
+  127→108). Konversio — ainoa todistamaton asia 24.10. — toimii nyt; kauppahinta-
+  arvion lattia ylös 50–140 k €. Rakennuskustannus ennallaan (ei remittausta).
+  Avoinna yhä: kasvun jatkuvuus, churn, enterprise-lunastukset (YIT/Saint-Gobain).
 
 - **2026-10-24** — Viiden lähteen elävä tilannekuva (TIC, GA, SC, Vercel,
   ajankohtaista). Suppilo kasvaa (127 tunnusta, 68 trialia, YIT:n 3 tunnusta,
