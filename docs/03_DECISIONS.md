@@ -51,6 +51,65 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-369 – "Liitä hankkeeseen" korvaa kuvauksen, vaikka nappi lupaa muuta
+
+Johannes pyysi 2.11.2026 käymään NRC:n 20 avointa uutisriviä läpi ja
+liittämään ne olemassa oleviin hankkeisiin. Yhdeksän liittyi puhtaasti,
+mutta kymmenes paljasti kaksi asiaa.
+
+#### Nappi lupaa enemmän kuin pitää
+
+`MergeIntoProject.tsx` varmistaa näin:
+
+> *"Ehdokkaan tiedot täydentävät hankkeen tyhjiä kenttiä. Olemassa
+> olevia arvoja ei ylikirjoiteta."*
+
+**Kuvaus kuitenkin korvautuu** uusimman lähteen tekstillä. Mitattu:
+liitin NRC:n kolmen urakan jutun Hämeenlinnan sähköasemaan, ja Elenian
+**2 424 merkin kuvaus hävisi kokonaan** — ei liitetty perään vaan
+korvattu. Sarakkeet (tilaaja, rakentaja, kustannus) säilyivät, eli
+lupaus pitää niiden osalta.
+
+**Korvautuminen ei aina ole vahinko.** Kuopion sillan vuoden vanha
+*"NRC Group aloittaa loppuvuoden aikana suunnittelun"* vaihtui
+nykytilaan, jossa kantta betonoidaan — se on parannus
+([[newer-source-is-not-current-state]]). Vahinko syntyy vain kun
+liitos osuu väärään hankkeeseen tai kun liitettävä juttu kertoo
+monesta kohteesta.
+
+**Palautus onnistuu jonorivistä:** alkuperäinen teksti on yhä oikean
+jonorivin `metadata.description`-kentässä, vaikka rivi on `approved`.
+Niin Elenian kuvaus saatiin takaisin.
+
+#### Kaksi samannimistä kohdetta samassa kaupungissa
+
+Hämeenlinnassa on **"Sähköverkon sähköasema Hämeenlinna"** (Elenian
+jakeluverkko) ja **"Kukkolan sähkönsyöttöasema"** (rautatien
+syöttöasema). Luulin UUID:n kuuluvan Kukkolalle. Kohteen tunnus on
+kopioitava listauksesta joka kerta, ei muistettava
+([[matched-overwrites-fields]]).
+
+#### Monesta kohteesta kertovaa juttua ei liitetä mihinkään
+
+Juttu "Erikoisosaamisemme näkyy uusissa sähkörakentamisen urakoissa"
+kattaa kolme urakkaa kolmessa paikassa. Liittäminen mihin tahansa
+niistä korvaisi kohteen kuvauksen tekstillä joka kertoo kolmesta
+kohteesta. Se **purettiin** kahdeksi uudeksi riviksi (Roihupellon
+metrovarikko, Rantaradan asetinlaitteet); kolmas kohde oli jo kannassa
+eikä alkuperäistä liitetty siihenkään. Yhteisarvo 4,5 M€ jätettiin
+kaikilta pois ([[alliance-split]]).
+
+#### Sivutuloksena kaksi omaa kaksoiskappaletta yhdistettiin
+
+Turun raitiotie ja Kouvola–Luumäki olivat kumpikin kannassa kahdesti.
+Turun pari oli **jo katselmoitu `confirmed_duplicate`**-tilaan
+17.10.2026: duplikaattinäkymä oli piilottanut toisen rivin mutta
+tietoja ei ollut yhdistetty, eli työ jäi kesken. Säilyvä on molemmissa
+vanhempi ja rikkaampi rivi.
+
+**Avoin kohta:** napin varmistusteksti lupaa yhä väärin. Se on yhden
+rivin korjaus, mutta asiakkaalle näkyvä teksti vaatii luvan.
+
 ### D-368 – Datakeskusrekisterin luotettavuus mitattiin; luvut kantavat nyt lähteen epävarmuuden
 
 Johannes 31.10.2026: *"katsoitko datakeskusrekisterin hankkeiden
