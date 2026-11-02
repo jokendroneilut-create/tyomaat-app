@@ -22759,3 +22759,65 @@ pelkkä luku näyttäisi aukolta: **4** on poistettu jonosta tarkoituksella
 (`ignored`), **3** odottaa katselmointia, **3** ei ole koskaan tullut
 jonoon, ja **2** on hyväksytty mutta hanketta ei löydy osoitteella
 (`hikia-inkoo`, `juurikkapera-toivila`) — vain nämä kaksi on selvitettävä.
+
+## D-371 — Kreate: kunta otsikosta, tilaaja ei mistään (3.11.2026)
+
+Johannes Laakson yhteissairaalan katu-urakasta: *"miksi tästä puuttuu
+maakunta, rakennuttaja ja kaupunki vaikka ne on kerrottu kuvauksessa?"*
+
+### Kunta: otsikko luettiin, osoitekenttä ei
+
+`kreateResolver.ts:25` päätteli kunnan **otsikosta**
+(`inferMunicipalityFromText(operation)`). Otsikossa ei ole kuntaa, mutta
+sivun oma `Osoite`-kenttä sanoo *"Lääkärinkatu, Helsinki"*. Maakunta
+puuttui samasta syystä — se johdetaan kunnasta.
+
+Mitattu koko lähteen yli: **14/44 rivillä ei ollut kuntaa, ja 13 oli jo
+hyväksyttyjä** eli eläviä hankkeita listalla ilman kaupunkia.
+
+**Häntä haetaan nimellä, ei tekstihaulla.** Osoitteen pilkun jälkeinen osa
+annetaan `getMunicipalityByAnyForm`ille. Vapaa tekstihaku pudottaa
+kaksikirjaimisen `Ii`:n ja `Pedersöre`n (virallinen nimi "Pedersören
+kunta"); nimihaku ratkaisee molemmat. Häntä luetaan **lopusta alkuun**,
+koska katunimi voi olla toisen kunnan nimi (*"Tampereentie 88, Ulvila"*).
+
+**Kuvauksesta ei päätellä.** Kokeiltu samalla mittauksella: Iijoen
+ratasilta (osoite Ii) antaisi *Tornio* ja Kimolan kanava *Pyhäjärvi* — kaksi
+uskottavaa mutta väärää arvoa. Osoite on rakenteinen kenttä, kuvaus proosaa.
+
+### Tilaaja: poiminta oli olemassa, sitä ei vain kutsuttu
+
+Kreaten sivulla **ei ole tilaajakenttää**. Luettelin kaikki rakenteiset
+kentät 44 dokumentista: Valmistuminen 44, Kategoria 43, Osoite 37,
+Projektinjohtaja 18. Tilaaja on vain leipätekstissä, *"Tilaajana on
+Helsingin kaupunki ja pääurakoitsijana SRV"* — näin **24/44** kuvauksessa.
+
+`git log -S"developer"` vahvistaa: resolverilla ei ole koskaan ollut
+`developer`-kenttää. Ne 27 riviä joilla rakennuttaja oli, saivat sen
+15.7.2026 edeltävästä kaapimesta (poistettu commitissa 44f49856) tai
+käsin.
+
+**Ratkaisu oli olemassa valmiina.** STT-lähteen `extractClientFromText`
+sisältää virkerajauksen, allatiivin peruutuksen ja kuntasuojan (D-188).
+Ajettuna koko Kreaten aineiston yli: **26 osui nykyiseen arvoon, 0 eri, 1
+uusi.** Eli poiminta oli jo todistettu täsmälleen tästä tekstistä — se ei
+vain ollut kytketty tähän resolveriin. Uuden kopion kirjoittaminen olisi
+ollut toinen määritelmä samasta asiasta.
+
+### Oma mittausvirhe
+
+Totesin ensin että `extractExplicitClient` antaa 0/44 ja oli siis rikki.
+Se ottaa **yhden** argumentin, ja kutsuin sitä kahdella — `text` oli
+`null`. Funktio oli kunnossa, kutsu ei.
+
+### Tulos
+
+Takautuva ajo `scripts/taydenna-kreaten-kunnat.ts` (tunniste
+`kreate_kunta_tilaaja_2026_11`): **11 jonoriviä** sai kunnan ja maakunnan,
+**8 hanketta** kaupungin, 1 rivi tilaajan. Täyttää vain tyhjän kentän.
+
+Kaksi hyväksyttyä riviä ei päivittänyt hankettaan — ja se on oikein:
+molemmilla hankkeilla oli jo kaupunki, maakunta ja rakennuttaja toisesta
+lähteestä (John Stenbergin ranta STT:ltä). Jäljelle jää 3 riviä ilman
+kuntaa: kahdella ei ole osoitetta lainkaan ja yhdellä osoite on *"Kimolan
+kanava"*, joka ei ole kunta.

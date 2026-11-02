@@ -4,6 +4,7 @@ import {
   kreateCompletionToIso,
   parseKreateDescription,
   parseKreateFields,
+  kreatenKuntaOsoitteesta,
 } from "./kreateProject"
 
 const KENTTALOHKO = `
@@ -102,5 +103,35 @@ describe("parseKreateDescription", () => {
     expect(parseKreateDescription("<p>Lyhyt.</p>")).toBeNull()
     expect(parseKreateDescription("")).toBeNull()
     expect(parseKreateDescription(null)).toBeNull()
+  })
+})
+
+describe("kreatenKuntaOsoitteesta", () => {
+  it("lukee kunnan osoitteen viimeisesta osasta", () => {
+    expect(kreatenKuntaOsoitteesta("Lääkärinkatu, Helsinki")?.name).toBe("Helsinki")
+    expect(kreatenKuntaOsoitteesta("Lääkärinkatu, Helsinki")?.region).toBe("Uusimaa")
+  })
+
+  /*
+   * Katunimi voi olla toisen kunnan nimi. Alusta luettuna "Tampereentie"
+   * voittaisi oikean kunnan.
+   */
+  it("ei ota katunimea kunnaksi", () => {
+    expect(kreatenKuntaOsoitteesta("Tampereentie 88, Ulvila")?.name).toBe("Ulvila")
+  })
+
+  /*
+   * Nama kaksi pudottaa vapaa tekstihaku: `Ii` on kaksikirjaiminen ja
+   * Pedersoren virallinen nimi on eri kuin osoitteessa kirjoitettu.
+   */
+  it("tunnistaa kaksikirjaimisen ja eri nimella kirjoitetun kunnan", () => {
+    expect(kreatenKuntaOsoitteesta("Maalismaantie 1, Ii")?.name).toBe("Ii")
+    expect(kreatenKuntaOsoitteesta("Joksholman silta, Pedersöre")?.name).toBe("Pedersören kunta")
+  })
+
+  it("palauttaa nullin kun osoitteessa ei ole kuntaa", () => {
+    expect(kreatenKuntaOsoitteesta("Vierumäentie, Kimolan kanava")).toBeNull()
+    expect(kreatenKuntaOsoitteesta(null)).toBeNull()
+    expect(kreatenKuntaOsoitteesta("")).toBeNull()
   })
 })

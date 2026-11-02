@@ -2,6 +2,9 @@ import { classifyProject } from "@/lib/agent/knowledge/projectClassifier"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { PHASE_LABELS, normalizeLegacyPhase } from "@/lib/projects/phases"
 import { inferMunicipalityFromText } from "@/lib/geo/inferMunicipalityFromText"
+import { extractClientFromText } from "@/lib/agent/fetchSttHakuSource"
+import { kreatenKuntaOsoitteesta } from "@/lib/agent/kreateProject"
+
 
 function findFact(facts: any[], type: string) {
   return facts.find((fact) => fact.fact_type === type)
@@ -22,7 +25,13 @@ export async function resolveKreateProject({
   const contacts: { title: string | null; name: string | null; phone: string | null; email: string | null }[] =
     metadata.contacts ?? []
 
-  const inferredMunicipality = inferMunicipalityFromText(operation)
+  /*
+   * Osoite luetaan ennen kuntapaattelya, koska se on parempi lahde kuin
+   * otsikko. Otsikko jaa varalle: osoite puuttuu 7 sivulta 44:sta.
+   */
+  const osoiteKentta: string | null = metadata.project_address ?? null
+  const inferredMunicipality =
+    kreatenKuntaOsoitteesta(osoiteKentta) ?? inferMunicipalityFromText(`${operation} ${osoiteKentta ?? ""}`)
 
   /*
    * Kreaten oma "Käynnissä"/"Valmistuneet" -tila on jo kanoninen
@@ -87,7 +96,23 @@ export async function resolveKreateProject({
    * kentta voittaa arvauksen ilman erillista koodia.
    */
   const kuvaus: string | null = metadata.description ?? null
-  const osoite: string | null = metadata.project_address ?? null
+  const osoite: string | null = osoiteKentta
+
+  /*
+   * TILAAJA KUVAUKSESTA. Kreaten sivulla EI OLE tilaajakenttaa: kaikki
+   * rakenteiset kentat lueteltiin 44 dokumentista ja niita on nelja
+   * (Valmistuminen 44, Kategoria 43, Osoite 37, Projektinjohtaja 18).
+   * Tilaaja kerrotaan vain leipatekstissa, "Tilaajana on Helsingin
+   * kaupunki ja paaurakoitsijana SRV", ja nain 24/44 kuvauksessa.
+   *
+   * Kaytetaan STT-lahteen omaa poimintaa eika uutta kopiota: se
+   * sisaltaa virkerajauksen, allatiivin peruutuksen ja kuntasuojan
+   * (D-188: "rakentaa Tampereelle" on paikka, ei tilaaja). Ajettu koko
+   * Kreaten aineiston yli: 26 osui nykyiseen arvoon, 0 eri, 1 uusi --
+   * eli poiminta on jo todistettu tasta samasta tekstista, se ei vain
+   * ollut kytketty tahan resolveriin ([[own-data-unread]]).
+   */
+  const tilaaja = kuvaus ? extractClientFromText(null, kuvaus) : null
   const valmistuminen: string | null = metadata.estimated_completion ?? null
 
   const result = await resolvePotentialProject({
@@ -108,6 +133,12 @@ export async function resolveKreateProject({
 
       operation,
       builder: "Kreate",
+      ...(tilaaja
+        ? {
+            developer: tilaaja,
+            field_sources: { developer: "Kreaten hankesivun teksti: tilaajamaininta" },
+          }
+        : {}),
 
       ...(kuvaus ? { description: kuvaus } : {}),
       ...(osoite ? { project_address: osoite } : {}),

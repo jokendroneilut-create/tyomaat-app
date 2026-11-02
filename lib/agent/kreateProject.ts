@@ -1,3 +1,5 @@
+import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
+
 /*
  * KREATEN HANKESIVUN SISÄLTÖ.
  *
@@ -136,4 +138,44 @@ export function parseKreateDescription(
   }
 
   return teksti.length >= MIN_PITUUS ? teksti : null
+}
+
+/*
+ * KUNTA OSOITEKENTASTA, EI OTSIKOSTA (D-371).
+ *
+ * Johannes Laakson yhteissairaalan katu-urakasta: *"miksi tasta puuttuu
+ * maakunta, rakennuttaja ja kaupunki vaikka ne on kerrottu
+ * kuvauksessa?"* Kunta paateltiin pelkasta OTSIKOSTA, vaikka sivun oma
+ * `Osoite`-kentta sanoo "Laakarinkatu, Helsinki". Maakunta puuttui
+ * samasta syysta: se johdetaan kunnasta.
+ *
+ * Mitattu 3.11.2026: 14/44 Kreate-rivilta puuttui kunta, ja 13 niista
+ * oli jo hyvaksyttyja hankkeita. Osoitteen pilkun jalkeinen hanta
+ * ratkaisee 11.
+ *
+ * HANTA HAETAAN NIMELLA, EI TEKSTIHAULLA. Vapaa tekstihaku pudottaa
+ * kaksikirjaimisen `Ii`:n ja `Pedersore`n, jonka virallinen nimi on
+ * "Pedersoren kunta" -- molemmat ratkeavat kun hanta annetaan
+ * `getMunicipalityByAnyForm`ille ([[declared-field-beats-title-regex]]).
+ *
+ * KUVAUSTA EI KAYTETA. Kokeiltu samalla mittauksella: Iijoen ratasilta
+ * (osoite Ii) antaisi "Tornio" ja Kimolan kanava "Pyhajarvi" -- kaksi
+ * uskottavaa mutta vaaraa arvoa. Osoite on lahteen rakenteinen kentta,
+ * kuvaus on proosaa ([[curated-map-field-not-prose]]).
+ *
+ * Hanta luetaan LOPUSTA ALKUUN, koska kunta on osoitteen viimeinen osa
+ * ("Mossin puistokatu, Kangasala"). Katunimi voi olla kunnan nimi
+ * ("Tampereentie 88, Ulvila"), ja alusta luettuna se voittaisi.
+ */
+export function kreatenKuntaOsoitteesta(osoite: string | null | undefined) {
+  const osat = String(osoite ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .reverse()
+  for (const osa of osat) {
+    const kunta = getMunicipalityByAnyForm(osa)
+    if (kunta) return kunta
+  }
+  return null
 }
