@@ -128,6 +128,78 @@ ARR-kerroin: puhdas finanssiostaja maksaisi lähempänä lattiaa, strateginen
 ostaja tai jakelukumppani ylempää. Haarukka kapenee heti kun konversio
 (trial → maksava) ja churn näkyvät luvuissa.
 
+
+### Kokopäiväisyyden kynnys (laskettu 2.11.2026)
+
+Konkreettisempi virstanpylväs kuin kauppahinta: **montako asiakasta tarvitaan,
+jotta Johannes voi nostaa itselleen palkkaa ja olla kokopäiväinen yrittäjä.**
+Luku riippuu hinnasta, joka on strateginen valinta eikä annettu — siksi se on
+laskettu molemmilla hinnoilla.
+
+#### 5 000 € brutto
+
+| erä | €/kk |
+|---|---|
+| bruttopalkka | 5 000 |
+| **YEL** 24,1 % työtulosta 5 000 € | **1 205** |
+| ajokulut (Supabase, API:t, kirjanpito, vakuutukset, työkalut) — ❗ **arvio, ei mitattu** | ~400 |
+| **yhtiön tarvitsema kate** | **~6 600 €/kk** |
+
+| hinta | asiakkaita |
+|---|---|
+| listahinta 149 €/kk | **~45** |
+| toteutunut ARPU 129 €/kk | **~52** |
+
+#### 5 000 € käteen
+
+Bruttoa tarvitaan karkeasti 7 000–7 500 €/kk kunnasta ja vähennyksistä
+riippuen; alla 7 300 €.
+
+| | |
+|---|---|
+| bruttopalkka | 7 300 |
+| YEL 24,1 % | 1 759 |
+| ajokulut | ~400 |
+| **yhteensä** | **~9 500 €/kk** |
+| asiakkaita @ 149 € | **~64** |
+| asiakkaita @ 129 € | **~74** |
+
+#### YEL on ainoa merkittävä sivukulu — ja se unohtuu
+
+YEL on neljännes päälle, ja se maksetaan **YEL-työtulosta, ei palkasta.** Jos
+työtulo on nyt matalalla (tavallista sivutoimisena), kulu on tänään pienempi,
+mutta kokopäiväiseksi siirryttäessä työtulon kuuluu vastata työpanoksen arvoa
+ja vakuutusyhtiö tarkistaa sen. **Laskelmaa ei rakenneta matalan YEL:n varaan.**
+
+Myönteinen puoli: YEL-yrittäjänä omasta palkasta **ei makseta työnantajan
+sairausvakuutusmaksua, TyEL:iä, työttömyysvakuutusta eikä pakollista
+tapaturmavakuutusta.** Siksi laskelma on palkka + YEL ja siinä se — selvästi
+kevyempi kuin palkatulla työntekijällä.
+
+Infrakulut eivät ole tässä tekijä: Vercel ~1,69 $ / 20 $ (mitattu, ks. yllä).
+Muut ajokulut ovat arvio; korvaa ne mitatulla luvulla kun ne on kerätty.
+
+#### Mittasuhde
+
+| tavoite | asiakkaita | nykytilasta (5 maksavaa) |
+|---|---|---|
+| **kokopäiväisyys, 5 k brutto** | **45** | **+40** |
+| 5 k käteen | 64 | +59 |
+| 500 k€ ARR (Metroc ylitti 18 kk:ssa myynnin alusta, 170 asiakasta) | 280 | +275 |
+
+**Kokopäiväisyys on noin seitsemäsosa matkasta 500 k€:n ARR:ään.** Tahdilla
+3 uutta/kk se on reilu vuosi, tahdilla 5/kk kahdeksan kuukautta.
+
+#### Älä tähtää tasan 45:een
+
+Viiden asiakkaan churn on **−745 €/kk**, eli yksi huono kuukausi jättää palkan
+vajaaksi. Realistinen kynnys on pikemminkin **~55 asiakasta**, jolloin yksi
+irtisanoutumisaalto ei näy omassa taloudessa. Laskutus on käsin, joten
+kassavirta tulee epätasaisesti: muutaman kuukauden puskuri ei ole ylimitoitus.
+
+*Suuruusluokka, ei veroneuvo — tarkat luvut kirjanpitäjältä.*
+
+---
 ### Liikevaihtoskenaariot (havainnollistus, ~2–4× ARR)
 
 | Asiakkaita | Hinta/kk | ARR | Arvo (2–4×) |
