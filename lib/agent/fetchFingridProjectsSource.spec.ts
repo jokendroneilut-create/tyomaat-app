@@ -135,6 +135,7 @@ describe("jasennaYhteyshenkilot", () => {
         nimi: "Maria Arola",
         nimike: "Asiantuntija, ympäristö",
         puhelin: "030 395 5562",
+        sahkoposti: null,
         organisaatio: "Fingrid Oyj",
       },
     ])
@@ -194,6 +195,168 @@ describe("jasennaYhteyshenkilot", () => {
       '<html><body><div class="well"><h3 class="title">Liitteet</h3>' +
       "<p><strong>Jussi Kirjoittaja</strong><br />raportin laatija</p></div></body></html>"
     expect(jasennaYhteyshenkilot(html)).toEqual([])
+  })
+
+  /*
+   * YKSI <p> VOI SISALTAA MONTA HENKILOA. Aiempi versio luki nimen
+   * kappaleen ensimmaiselta rivilta ja liitti KAIKEN muun hanen
+   * nimikkeekseen, joten jalkimmaiset nimet ja numerot katosivat
+   * nimikkeen sisaan. Mitattu 2.11.2026: 6 henkiloa 169:sta.
+   */
+  it("lukee monta henkiloa samasta kappaleesta", () => {
+    const html = lohko(
+      "<p><strong>Mikko Kuoppala</strong><br />Vanhempi asiantuntija<br />" +
+        "puh. 030 395 5220<br /><strong>Eero Kujanen</strong><br />" +
+        "Asiantuntija, puustonpoisto<br />puh. 030 395 5190</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h.map((x) => x.nimi)).toEqual(["Mikko Kuoppala", "Eero Kujanen"])
+    expect(h[0].nimike).toBe("Vanhempi asiantuntija")
+    expect(h[0].puhelin).toBe("030 395 5220")
+    expect(h[1].puhelin).toBe("030 395 5190")
+  })
+
+  /*
+   * NIMI EI OLE AINA RIVILLA 0. Siikajoki-Raahen sivulla kappale alkaa
+   * tyonantajalla, ja juuri se jatti sivun ainoan yhteyshenkilon
+   * poimimatta.
+   */
+  it("lukee tyonantajan nimea edeltavalta rivilta", () => {
+    const html = lohko(
+      "<p><strong>Rakennuttaja Fingrid Oyj</strong></p>" +
+        "<p><strong>TLT Building Oy</strong><br /><strong>Erkka Salmi</strong>" +
+        "<br />Sijoitussuunnittelu<br />puh. 040 713 1803</p>"
+    )
+    expect(jasennaYhteyshenkilot(html)).toEqual([
+      {
+        nimi: "Erkka Salmi",
+        nimike: "Sijoitussuunnittelu",
+        puhelin: "040 713 1803",
+        sahkoposti: null,
+        organisaatio: "TLT Building Oy",
+      },
+    ])
+  })
+
+  /* Saateteksti nimen edella ei ole tyonantaja eika saa estaa poimintaa. */
+  it("lukee nimen myos saatetekstin jalkeen", () => {
+    const html = lohko(
+      "<p>Fingrid Oyj:ssä lisätietoja hankkeesta antaa:<br />" +
+        "<strong>Antti Linna</strong><br />Projektipäällikkö<br />puh. 040 522 7124</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h.map((x) => x.nimi)).toEqual(["Antti Linna"])
+    expect(h[0].organisaatio).toBe("Fingrid Oyj")
+  })
+
+  /*
+   * ILMOITETTU OSOITE OTETAAN, PAATELTYA EI. Sivu kertoo myos saannon
+   * "etunimi.sukunimi@fingrid.fi", mutta sita ei sovelleta: saanto ei
+   * kerro miten a ja o kirjoitetaan osoitteessa.
+   */
+  it("purkaa [at]-muodossa ilmoitetun osoitteen", () => {
+    const html = lohko(
+      "<p><strong>Urakoitsija ENP Power Oy:</strong></p>" +
+        "<p><strong>Lauri Tolpanniemi</strong><br />Työmaapäällikkö<br />" +
+        "puh. 050 366 1566<br />lauri.tolpanniemi[at]enp.fi</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h[0].sahkoposti).toBe("lauri.tolpanniemi@enp.fi")
+    expect(h[0].nimike).toBe("Työmaapäällikkö")
+    expect(h[0].organisaatio).toBe("ENP Power Oy")
+  })
+
+  it("ei paattele osoitetta sivun kertomasta saannosta", () => {
+    const html = lohko(
+      "<p><strong>Maria Arola</strong><br />Asiantuntija<br />puh. 030 395 5562</p>" +
+        "<p>Sähköpostiosoitteemme ovat muotoa etunimi.sukunimi@fingrid.fi.</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h).toHaveLength(1)
+    expect(h[0].sahkoposti).toBeNull()
+  })
+
+  /*
+   * VIERAS VERKKOTUNNUS KUMOAA OLETUSTYONANTAJAN. Isohaaran sivulla
+   * urakoitsijan vaki on omassa kappaleessaan ilman yritysotsikkoa, ja
+   * oletus olisi kirjannut heidat Fingridille. Yrityksen nimea ei
+   * arvata verkkotunnuksesta.
+   */
+  it("ei kirjaa Fingridia tyonantajaksi kun osoite on toisen yhtion", () => {
+    const html = lohko(
+      "<p><strong>Ümit Menekse</strong><br />Maanomistajien yhdyshenkilö<br />" +
+        "puh. 046 841 26 97<br />umit.menekse[at]tecnolines.it</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h.map((x) => x.nimi)).toEqual(["Ümit Menekse"])
+    expect(h[0].organisaatio).toBeNull()
+  })
+
+  /*
+   * YHDYSNIMEN ISO KIRJAIN JA Ü. Kirjainluokka `[A-ZÅÄÖ][a-zåäö-]+`
+   * hylkasi molemmat, ja kumpikaan mittari ei nahnyt sita koska ne
+   * kayttivat samaa kuviota kuin jasennin.
+   */
+  it("hyvaksyy yhdysnimen ja muut kuin suomalaiset kirjaimet", () => {
+    const html = lohko(
+      "<p><strong>Erkka-Pekka Impivaara</strong><br />Asiantuntija<br />puh. 030 395 5606</p>"
+    )
+    expect(jasennaYhteyshenkilot(html).map((x) => x.nimi)).toEqual([
+      "Erkka-Pekka Impivaara",
+    ])
+  })
+
+  /* "Simo Keskisaari (Konrap Oy)" -- sulkeet estivat nimikuvion osumisen. */
+  it("lukee tyonantajan nimen perassa olevista sulkeista", () => {
+    const html = lohko(
+      "<p><strong>Simo Keskisaari (Konrap Oy)</strong><br />Työmaavalvonta<br />" +
+        "puh. 050 326 5782</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h[0].nimi).toBe("Simo Keskisaari")
+    expect(h[0].organisaatio).toBe("Konrap Oy")
+  })
+
+  /*
+   * "Infratek Finland Oy (OMEXOM)" on urakkaosuuden otsikko, ei
+   * henkilo. Ilman tata kolme Infratekin henkiloa kirjautui
+   * Fingridille.
+   */
+  it("tunnistaa yrityksen myos aputunnuksen suluissa", () => {
+    const html = lohko(
+      "<p><strong>Infratek Finland Oy (OMEXOM)</strong></p>" +
+        "<p><strong>Charles Cocuelle</strong><br />Project manager<br />puh. 040 111 2222</p>"
+    )
+    expect(jasennaYhteyshenkilot(html)[0].organisaatio).toBe("Infratek Finland Oy")
+  })
+
+  /* Virolainen Oü puuttui yritysmuotojen listasta. */
+  it("tunnistaa virolaisen yritysmuodon", () => {
+    const html = lohko(
+      "<p><strong>Pääurakoitsija Leonhard Weiss Oü:</strong></p>" +
+        "<p><strong>Janis Perzins</strong><br />Työmaapäällikkö<br />puh. 040 111 3333</p>"
+    )
+    expect(jasennaYhteyshenkilot(html)[0].organisaatio).toBe("Leonhard Weiss Oü")
+  })
+
+  /* Ulkomaisilla urakoitsijoilla numerosta puuttuu "puh."-etuliite. */
+  it("lukee puhelimen myos ilman etuliitetta", () => {
+    const html = lohko(
+      "<p><strong>Deniss Vinokurovs</strong><br />Projektipäällikkö<br />+371 286 57428</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h[0].puhelin).toBe("+371 286 57428")
+    expect(h[0].nimike).toBe("Projektipäällikkö")
+  })
+
+  /* Nimikkeen oma luku ei ole puhelinnumero. */
+  it("ei lue nimikkeen lukua puhelimeksi", () => {
+    const html = lohko(
+      "<p><strong>Mika Kuivalainen</strong><br />Työmaavalvoja (osat 2-4)</p>"
+    )
+    const h = jasennaYhteyshenkilot(html)
+    expect(h[0].puhelin).toBeNull()
+    expect(h[0].nimike).toBe("Työmaavalvoja (osat 2-4)")
   })
 
   it("kestaa tyhjan", () => {
@@ -266,12 +429,14 @@ describe("jasennaYhteyshenkilot - muodot B ja C", () => {
         nimi: "Maria Arola",
         nimike: "asiantuntija, maankäyttö ja ympäristö",
         puhelin: "030 395 5562",
+        sahkoposti: null,
         organisaatio: "Fingrid Oyj",
       },
       {
         nimi: "Pasi Saari",
         nimike: "erikoisasiantuntija, voimajohtojen reittisuunnittelu",
         puhelin: "030 395 5178",
+        sahkoposti: null,
         organisaatio: "Fingrid Oyj",
       },
     ])

@@ -5843,3 +5843,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
   `user_project_favorites`, omistajuus) — poistettavan hankkeen suosikit eivät
   seuraa mukana. Mahdollinen tuleva feature: "mahdollinen duplikaatti"
   -varoitus hyväksyntähetkeen (läheisyys + nimi/rakennuttaja).
+- Fingridin yhteyshenkilöjäsennin korjattu: 164 → 185 henkilöä, 33 hanketta täydennetty takautuvasti (D-370)

@@ -22696,3 +22696,66 @@ framework-testejä. Vitest-testit nimetään siksi `*.spec.ts`. CI ajaa
 Pelkkä collectorin committaaminen ei riitä — lähde tarvitsee rivin
 `discovery_sources`-tauluun. Ks. [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md)
 (luotettavuushuomio + 8-tiedosto-kaava).
+
+## D-370 — Fingridin yhteyshenkilöt: yksi oletus, kolme vikaa (2.11.2026)
+
+Johannes Siikajoki-Raahen jonorivistä: *"yhteyshenkilöä ei ole poimittu,
+korjataan."* Sivulla on yksi yhteyshenkilö, eikä yhtään ollut poimittu.
+
+Jäsennin oletti, että **yksi `<p>` on yksi henkilö ja nimi on rivillä 0.**
+Mittaus kaikilta 53 hankesivulta: lohkoissa on 169 nimiriviä, joista 9 jäi
+saamatta ja 46 rivillä oli väärä työnantaja tai nimikkeeseen valunut
+sähköposti.
+
+**Ensimmäinen mittari antoi väärän kuvan.** Laskin montako sivua tuottaa
+*nolla* henkilöä → **1 sivu 52:sta**. Oikea mittari on nimirivit vs.
+palautetut → **9 henkilöä 8 sivulta**. Sivu voi tuottaa osan ja pudottaa
+yhden, eikä summa paljasta sitä.
+
+**Toinen mittari oli sokea omalle premissilleen.** Se käytti samaa
+nimikuviota kuin jäsennin, joten `"Erkka-Pekka Impivaara"` ja
+`"Ümit Menekse"` eivät olleet sille nimiä lainkaan. Ne löytyivät vain
+lukemalla jäsentimen tuotos rivi riviltä ja vertaamalla lähteeseen.
+
+### Viisi erillistä syytä
+
+| Syy | Esimerkki lähteestä |
+|---|---|
+| Monta henkilöä samassa `<p>`:ssä | muiden nimet valuivat ensimmäisen nimikkeeseen |
+| Nimi ei ole rivillä 0 | `["TLT Building Oy","Erkka Salmi","Sijoitussuunnittelu",…]` |
+| Kirjainluokka `[A-ZÅÄÖ][a-zåäö-]+` | `Erkka-Pekka`, `Ümit` |
+| Sulkeet rivin lopussa | `Infratek Finland Oy (OMEXOM)` → 3 henkilöä Fingridille |
+| Kaksoispiste yritysmuodon perässä | `Pääurakoitsija ENP Power Oy:` |
+
+Lisäksi virolainen **Oü** puuttui yritysmuodoista, `&lt;` jäi purkamatta ja
+ulkomaisen numero ilman `puh.`-etuliitettä jäi nimikkeeseen.
+
+### Sähköposti otetaan nyt — mutta vain ilmoitettu
+
+Urakoitsijoiden osoitteet on kirjoitettu näkyviin (`lauri.tolpanniemi[at]enp.fi`),
+ja ne poimitaan. Sivun kertomaa **sääntöä** `etunimi.sukunimi@fingrid.fi` ei
+sovelleta: se ei kerro miten ä ja ö kirjoitetaan osoitteessa.
+
+**Vieras verkkotunnus kumoaa oletustyönantajan.** Isohaaran sivulla
+urakoitsijan väki on omassa kappaleessaan ilman yritysotsikkoa, joten oletus
+olisi kirjannut Tecnolines Italian väen Fingridille. Yrityksen nimeä ei
+arvata verkkotunnuksesta — kenttä jää tyhjäksi.
+
+### Tulos
+
+164 → **185 henkilöä**, mitään ei kadonnut. Työnantaja korjautui 46
+rivillä; `Infratek Finland Oy` sai 3 henkilöä (oli 0) ja `Leonhard Weiss Oü`
+3 (oli 0). Takautuva ajo `scripts/taydenna-fingrid-yhteystiedot.ts`
+kosketti **33 hanketta**: 11 uutta henkilöä, 92 täydennettyä kenttää.
+Fingrid-hankkeita ilman yhteyshenkilöä: **0**.
+
+**Takautuva ajo yhdistää, ei korvaa** — toisin kuin tuontireitti, joka
+kirjoittaa koko `contact_persons`-listan yli (D-341). Käsin lisätty jää.
+
+### Sivu ilman hanketta ei ole aukko
+
+12 sivua 53:sta ei löydä hankettaan. Skripti kertoo syyn riveittäin, koska
+pelkkä luku näyttäisi aukolta: **4** on poistettu jonosta tarkoituksella
+(`ignored`), **3** odottaa katselmointia, **3** ei ole koskaan tullut
+jonoon, ja **2** on hyväksytty mutta hanketta ei löydy osoitteella
+(`hikia-inkoo`, `juurikkapera-toivila`) — vain nämä kaksi on selvitettävä.

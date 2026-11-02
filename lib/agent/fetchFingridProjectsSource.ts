@@ -175,9 +175,19 @@ export type FingridYhteyshenkilo = {
   nimi: string
   nimike: string | null
   puhelin: string | null
+  /*
+   * ILMOITETTU osoite, ei paateltu. Urakoitsijoiden yhteystiedoissa se
+   * on kirjoitettu nakyviin ("lauri.tolpanniemi[at]enp.fi"), ja
+   * `[at]` on purettava. Fingridin oman vaen kohdalla kentta jaa
+   * tyhjaksi: sivun saantoa ei sovelleta, ks. lohkon kommentti.
+   */
+  sahkoposti: string | null
   /* null kun nimike paljastaa toisen tyonantajan, ks. MUU_TYONANTAJA. */
   organisaatio: string | null
 }
+
+/* "lauri.tolpanniemi[at]enp.fi" ja "ajdin.skejic@tecnolines.it". */
+const SAHKOPOSTI = /([A-Za-z0-9._%+-]+)\s*(?:@|\[at\])\s*([A-Za-z0-9.-]+\.[A-Za-z]{2,})/
 
 /*
  * MAATUNNUS ON SALLITTAVA. Ensimmäinen versio vaati numeron heti
@@ -196,6 +206,19 @@ export type FingridYhteyshenkilo = {
 const PUHELIN = /(?:\bpuh\.?|(?<![a-zåäöA-ZÅÄÖ])p\.)\s*(\+?[0-9][0-9\s\-()]{6,})/i
 
 /*
+ * ETULIITE VOI PUUTTUA KOKONAAN. Ulkomaisilla urakoitsijoilla numero on
+ * kirjoitettu ilman "puh."-sanaa ("Projektipaallikko +371 286 57428"),
+ * jolloin se jai NIMIKKEESEEN ja puhelinkentta tyhjaksi -- sama vika
+ * kuin maatunnuksella aikanaan, eri syysta.
+ *
+ * Kaytetaan vain kun `PUHELIN` ei osunut, ja vaaditaan kahdeksan
+ * numeroa rivin lopussa. Nimikkeiden omat luvut ovat lyhyempia
+ * ("Tyomaavalvoja (osat 2-4)", "yleissuunnittelu 2026"), joten ne eivat
+ * osu.
+ */
+const PUHELIN_PALJAS = /(\+?[0-9][0-9\s\-()]{7,})\s*$/
+
+/*
  * TOISEN YHTIÖN TYÖNTEKIJÄ EI OLE FINGRIDIN YHTEYSHENKILÖ.
  *
  * Mitattu: Huittinen–Forssa-sivulla on "Jaakko Marttila,
@@ -205,8 +228,31 @@ const PUHELIN = /(?:\bpuh\.?|(?<![a-zåäöA-ZÅÄÖ])p\.)\s*(\+?[0-9][0-9\s\-()
  */
 const MUU_TYONANTAJA = /\b(?:Oy|Oyj|Ab|Abp|S\.?A\.?|GmbH|AS|A\/S|Ltd|Group)\b/
 
-/* Kaksi tai kolme isolla alkavaa sanaa: "Maria Arola", "Eero Kujanen". */
-const HENKILONIMI = /^[A-ZÅÄÖ][a-zåäö-]+(?:\s+[A-ZÅÄÖ][a-zåäö-]+){1,2}$/
+/*
+ * Kaksi tai kolme isolla alkavaa sanaa: "Maria Arola", "Eero Kujanen".
+ *
+ * KIRJAINLUOKKA OLI LIIAN KAPEA (`[A-ZÅÄÖ][a-zåäö-]+`). Kaksi nimea jai
+ * poimimatta eika kumpikaan mittari nahnyt sita, koska ne kayttivat
+ * samaa kuviota kuin jasennin ([[verify-findings-against-source]]):
+ *
+ *   "Erkka-Pekka Impivaara"  yhdysnimen jalkiosa alkaa isolla, mutta
+ *                            kuvio hyvaksyi ison kirjaimen vain sanan
+ *                            alussa -- ei yhdysviivan jalkeen.
+ *   "Ümit Menekse"           Ü ei ole A-Z eika ÅÄÖ.
+ *
+ * Unicode-ominaisuudet kattavat molemmat ilman kirjainlistan
+ * yllapitoa: urakoitsijoiden vaki on kansainvalista.
+ */
+const NIMISANA = "\\p{Lu}\\p{Ll}+(?:[-'’]\\p{Lu}?\\p{Ll}+)*"
+const HENKILONIMI = new RegExp(`^${NIMISANA}(?:\\s+${NIMISANA}){1,2}$`, "u")
+
+/*
+ * TYONANTAJA SULUISSA NIMEN PERASSA: "Simo Keskisaari (Konrap Oy)".
+ * Sulkeet estivat nimikuvion osumisen, joten rivi putosi kokonaan pois
+ * -- ei nimena eika yritysotsikkona, koska jalkimmainen vaatii
+ * yritysmuodon rivin LOPUSSA eika sulkeva sulje kelpaa.
+ */
+const NIMI_JA_SULUISSA_YRITYS = /^(.{4,60}?)\s*\(([^()]{2,60})\)\s*$/
 
 /*
  * YRITYS EI OLE HENKILÖ.
@@ -246,7 +292,7 @@ const EI_HENKILO = /\b(?:Oy|Oyj|Ab|Abp|Ky|Ltd|Group)\b|^(?:Rakennuttaja|Urakoits
 
 /* Yrityksen nimi valiotsikosta: "... rakennuttajakonsultti Ramboll Finland Oy". */
 const YRITYS_OTSIKOSSA =
-  /([A-ZÅÄÖ][\wÅÄÖåäö&.\-]*(?:\s+[A-ZÅÄÖ0-9][\wÅÄÖåäö&.\-]*){0,3}\s(?:Oyj|Oy|Ab|Abp|AS|A\/S|GmbH|Ltd|Group|S\.?A\.?))\s*$/
+  /([A-ZÅÄÖ][\wÅÄÖåäö&.\-]*(?:\s+[A-ZÅÄÖ0-9][\wÅÄÖåäö&.\-]*){0,3}\s(?:Oyj|Oy|O[üÜ]|Ab|Abp|AS|A\/S|GmbH|Ltd|Group|S\.?A\.?|S\.?r\.?l\.?))\s*$/
 
 /*
  * ROOLISANA EI KUULU YRITYKSEN NIMEEN. "Rakennuttaja Fingrid Oyj"
@@ -256,7 +302,13 @@ const YRITYS_OTSIKOSSA =
 const ROOLISANA = /^(?:Rakennuttaja|Urakoitsija|P[äa][äa]urakoitsija|Tilaaja|Toimittaja|Konsultti)\s+/i
 
 function yritysOtsikosta(teksti: string): string | null {
-  const m = teksti.match(YRITYS_OTSIKOSSA)
+  /*
+   * KAKSOISPISTE RIVIN LOPUSSA ESTI TUNNISTUKSEN. Urakkaosuudet on
+   * otsikoitu muodossa "Urakoitsija ENP Power Oy:", ja yritysmuotoa
+   * vaadittiin rivin LOPUSTA -- joten otsikko ei osunut ja sen alla
+   * olevat urakoitsijan henkilot kirjautuivat Fingridille.
+   */
+  const m = teksti.replace(/[\s:;.]+$/, "").match(YRITYS_OTSIKOSSA)
   if (!m) return null
   const nimi = m[1].replace(ROOLISANA, "").trim()
   return nimi || null
@@ -274,6 +326,9 @@ function pilkoRivit(sisalto: string | null): string[] {
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ")
+    .replace(/&lt;?/g, "<")
+    .replace(/&gt;?/g, ">")
+    .replace(/&quot;?/g, '"')
     .replace(/&auml;/g, "ä")
     .replace(/&ouml;/g, "ö")
     .replace(/&aring;/g, "å")
@@ -303,27 +358,48 @@ export function jasennaYhteyshenkilot(html: string): FingridYhteyshenkilo[] {
 
     const lisaa = (nimi: string, loput: string) => {
       if (!onHenkilonimi(nimi) || nahdyt.has(nimi)) return
-      const puh = loput.match(PUHELIN)
-      const nimike = loput.replace(PUHELIN, "").replace(/^[\s,;:]+|[\s,;.]+$/g, "").trim()
+      const posti = loput.match(SAHKOPOSTI)
+      const ilmanPostia = loput.replace(SAHKOPOSTI, "").trim()
+      let puh = ilmanPostia.match(PUHELIN)
+      if (!puh) {
+        const paljas = ilmanPostia.match(PUHELIN_PALJAS)
+        if (paljas && (paljas[1].match(/[0-9]/g) ?? []).length >= 8) puh = paljas
+      }
+      const nimike = ilmanPostia
+        .replace(puh ? puh[0] : "", "")
+        .replace(/^[\s,;:<>&]+|[\s,;.<>&]+$/g, "")
+        .trim()
 
       /*
        * PELKKA NIMI EI OLE YHTEYSTIETO. Ilman nimiketta ja numeroa rivi
        * ei kerro mitaan eika ole varmasti yhteyshenkilo.
        */
-      if (!nimike && !puh) return
+      if (!nimike && !puh && !posti) return
+
+      /*
+       * ILMOITETTU OSOITE KUMOAA OLETUSTYONANTAJAN. Isohaaran sivulla
+       * urakoitsijan vaki on omassa kappaleessaan ilman yritysotsikkoa
+       * (yritys mainitaan edellisen kappaleen virkkeen SISALLA), joten
+       * oletus olisi kirjannut Tecnolines Italian vaen Fingridille.
+       * Verkkotunnuksesta ei arvata yrityksen nimea -- se jaa tyhjaksi,
+       * mutta vaara nimi on pahempi kuin tyhja ([[party-role-fields]]).
+       */
+      const vieraasta = posti ? !/(?:^|\.)fingrid\.fi$/i.test(posti[2]) : false
 
       nahdyt.add(nimi)
       out.push({
         nimi,
         nimike: nimike || null,
         puhelin: puh ? puh[1].replace(/\s+/g, " ").trim() : null,
+        sahkoposti: posti ? `${posti[1]}@${posti[2]}`.toLowerCase() : null,
         /*
          * Valiotsikosta luettu yritys on parempi kuin null: silloin
          * TIEDAMME tyonantajan. Nimikkeesta sita ei voi erottaa, joten
          * siina tapauksessa jaa null ([[show-everything-we-know]]).
          */
         organisaatio:
-          organisaatio ?? (nimike && MUU_TYONANTAJA.test(nimike) ? null : "Fingrid Oyj"),
+          organisaatio ??
+          (vieraasta || (nimike && MUU_TYONANTAJA.test(nimike)) ? null : "Fingrid Oyj"),
       })
     }
 
@@ -381,28 +457,103 @@ export function jasennaYhteyshenkilot(html: string): FingridYhteyshenkilo[] {
           return
         }
 
-        /* MUOTO A: ensimmainen rivi on nimi. */
-        if (onHenkilonimi(rivit[0])) {
-          if (rivit.length === 1) {
-            /* Nimi yksin: nimike ja puhelin ovat seuraavassa <p>:ssa. */
-            odottavaNimi = rivit[0]
-            return
+        /*
+         * MUODOT A, C ja D: rivit kavellaan jarjestyksessa.
+         *
+         * Aiempi versio luki nimen AINA kappaleen ensimmaiselta
+         * rivilta. Mitattu 2.11.2026 kaikilta 53 sivulta: lohkoissa on
+         * 169 nimirivia, joista 9 jai saamatta, ja syy jakautui
+         * kahteen ([[same-block-many-formats]]):
+         *
+         *   - Yksi <p> sisaltaa MONTA henkiloa <br>-eroteltuina.
+         *     Ensimmainen poimittiin, ja muiden nimet ja numerot
+         *     valuivat hanen NIMIKKEESEENSA.
+         *   - Nimi ei ole rivilla 0, vaan sita ennen on tyonantaja
+         *     ("Enersense PY Oy") tai saateteksti ("Fingrid Oyj:ssa
+         *     lisatietoja hankkeesta antaa:").
+         *
+         * Kavely ratkaisee molemmat: nimirivi aloittaa uuden
+         * henkilon, sita seuraavat rivit kuuluvat hanelle, ja ennen
+         * ensimmaista nimea tullut yritysnimi on heidan tyonantajansa.
+         */
+        let paikallinenOrg: string | null = null
+        let nykyinen: string | null = odottavaNimi
+        let kertyma: string[] = []
+        let loytyiNimi = false
+
+        const huuhdo = () => {
+          if (nykyinen) {
+            const edellinen = organisaatio
+            if (paikallinenOrg) organisaatio = paikallinenOrg
+            lisaa(nykyinen, kertyma.join(" "))
+            organisaatio = edellinen
           }
-          lisaa(rivit[0], rivit.slice(1).join(" "))
-          odottavaNimi = null
+          nykyinen = null
+          kertyma = []
+        }
+
+        for (const rivi of rivit) {
+          if (onHenkilonimi(rivi)) {
+            huuhdo()
+            nykyinen = rivi
+            loytyiNimi = true
+            continue
+          }
+
+          /*
+           * SULKEET RIVIN LOPUSSA, kaksi eri merkitysta:
+           *   "Simo Keskisaari (Konrap Oy)"    nimi + tyonantaja
+           *   "Infratek Finland Oy (OMEXOM)"   yritys + aputunnus
+           * Jalkimmainen on urakkaosuuden otsikko, ja ilman sita kolme
+           * Infratekin henkiloa kirjautui Fingridille.
+           */
+          const suluissa = rivi.match(NIMI_JA_SULUISSA_YRITYS)
+          if (suluissa && onHenkilonimi(suluissa[1].trim())) {
+            huuhdo()
+            nykyinen = suluissa[1].trim()
+            loytyiNimi = true
+            paikallinenOrg = yritysOtsikosta(suluissa[2].trim()) ?? paikallinenOrg
+            continue
+          }
+          if (suluissa && !nykyinen) {
+            const ennenSulkeita = yritysOtsikosta(suluissa[1].trim())
+            if (ennenSulkeita) {
+              paikallinenOrg = ennenSulkeita
+              continue
+            }
+          }
+
+          if (nykyinen) {
+            kertyma.push(rivi)
+            continue
+          }
+
+          /* Ennen ensimmaista nimea: rivi voi nimeta tyonantajan. */
+          const yritys = yritysOtsikosta(rivi)
+          if (yritys) paikallinenOrg = yritys
+        }
+
+        /*
+         * MUOTO C: nimi yksin kappaleen lopussa, nimike ja puhelin
+         * seuraavassa <p>:ssa. Tyonantaja on muistettava mukana, koska
+         * se luettiin TASTA kappaleesta.
+         */
+        if (nykyinen && !kertyma.length) {
+          odottavaNimi = nykyinen
+          if (paikallinenOrg) organisaatio = paikallinenOrg
           return
         }
 
-        /* MUOTO C: nimi tuli edellisesta otsikosta tai kappaleesta. */
-        if (odottavaNimi) {
-          lisaa(odottavaNimi, koko)
-          odottavaNimi = null
-          return
-        }
+        huuhdo()
+        odottavaNimi = null
 
-        /* Tyonantajan valiotsikko voi olla myos kappaleessa. */
-        const yritys = yritysOtsikosta(koko)
-        if (yritys) organisaatio = yritys
+        /*
+         * Pelkka yritysnimi omana kappaleenaan nimeaa SEURAAVIEN
+         * kappaleiden henkiloiden tyonantajan -- nain urakkaosuudet on
+         * kirjoitettu Jarvilinjan sivulla ("Eltel Networks Oy" ja sen
+         * alla kolme henkiloa omina kappaleinaan).
+         */
+        if (paikallinenOrg && !loytyiNimi) organisaatio = paikallinenOrg
       })
   })
 
@@ -499,8 +650,8 @@ export async function fetchFingridProjectsSource() {
                     kind: "person" as const,
                     name: h.nimi,
                     title: h.nimike,
-                    /* Ks. jasennaYhteyshenkilot: osoitetta ei paatella. */
-                    email: null,
+                    /* Vain ILMOITETTU osoite; ks. jasennaYhteyshenkilot. */
+                    email: h.sahkoposti,
                     phone: h.puhelin,
                     organization: h.organisaatio,
                   })),
