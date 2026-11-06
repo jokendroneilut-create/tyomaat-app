@@ -544,6 +544,20 @@ export default function Projects() {
           })
         }
 
+        /*
+         * NIMETTY IHMINEN VOITTAA YRITYKSEN LISTAN (D-373).
+         *
+         * Ilman tata korvaus alla pyyhkisi juuri lisatyn taydennyksen:
+         * se ajetaan jalkeen ja kirjoittaa `contact_persons`in yli.
+         * Mahkonsillan urakalla se tarkoitti etta hankkeen OMASTA
+         * tekstista loytynyt Ari Valimaa katosi ja tilalle tuli
+         * Kreaten 17 hengen lista.
+         *
+         * Jarjestys on myos oikea tuotteen kannalta: hankkeen itse
+         * nimeama ihminen on parempi kuin yrityksen yleinen lista.
+         */
+        if (taydennykset.some((t: { loytyi?: string }) => t.loytyi === "teksti")) return
+
         if (onOmia || !tulos.yhteyshenkilot?.length) return
         setSelected((current) =>
           current && current.id === id
