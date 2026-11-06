@@ -23272,3 +23272,44 @@ Ii, koska säilyvä rivi on sen. Molemmilla riveillä luki aiemmin "Lappi",
 mikä oli Ii:n osalta väärin — mutta nyt Simo ei löydy Lappi-suodattimella.
 Se on yhdistämisen hinta, ja jos se haittaa, oikea ratkaisu on kaksi
 riviä eikä väärä maakunta.
+
+## D-379 — Väylän sähköposti: sivulla kaksi mallia, vanhempi voitti (7.11.2026)
+
+Huomasin yhdistämisen yhteydessä että yhteyshenkilön osoite oli
+`vesa.pakarinen@vaylavirasto.fi`, vaikka Väyläviraston verkkotunnus on
+**vayla.fi**. Johannes: *"korjaa ensin tuo sähköposti."*
+
+### Syy on lähteessä, ei jäsentimessä
+
+Osoitteet ovat Cloudflaren `data-cfemail`-suojauksen takana. Purettuna:
+
+| sivu | mallit |
+|---|---|
+| Ii | `etunimi.sukuni@vayla.fi` — **kirjoitusvirhe**, nykykoodi hylkää oikein |
+| Simo | `etunimi.sukunimi@vaylavirasto.fi` **ja** `etunimi.sukunimi@vayla.fi` |
+| emohanke | purettuna `vesa.pakarinen@vayla.fi` |
+
+`vaylaContactBox` ottaa `.contact-information .contact` -laatikoista
+**ensimmäisen**, ja Simon sivulla se oli vanhentuneella tunnuksella.
+`expandPlaceholderEmail` säilyttää sivun tunnuksen eikä keksi sitä — se
+toimi oikein, syöte vain oli vanha.
+
+Mittaus: `@vaylavirasto.fi` oli **2 rivillä 8 300 yhteystiedosta**,
+`@vayla.fi` 88:lla. Molemmat korjattu; jäljellä 0.
+
+### Emohankkeelta tuli samalla toinen oikea ihminen
+
+Purin emosivun yhteystietolohkon ja siinä on kaksi: Vesa Pakarinen
+(Väylävirasto) ja **Matti Tervonen, Welado Oy, projektipäällikkö**
+(rakennuttajakonsultti). Jälkimmäinen lisättiin.
+
+### Löydetty rajoitus, ei vielä korjattu
+
+`vaylaContactBox` lukee **vain ensimmäisen** yhteystietolaatikon.
+Laskettu neljältä sivulta: laatikoita on **1–3**. Kirjalansalmen sivulla
+niitä on kolme — Saramaria Cowell (Väylävirasto), Tero Haaramäki (Kreate
+Oy) ja Riitta Sirén (tiedottaja) — eli juuri ne jotka Johannes näki
+lähteestä, ja joista saamme yhden.
+
+**Urakoitsijan projektipäällikkö jää siis järjestelmällisesti saamatta**
+Väylän sivuilta. Se on oma korjauksensa.

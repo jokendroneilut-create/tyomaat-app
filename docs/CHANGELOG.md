@@ -5852,3 +5852,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
 - Lähdeosoite palautettu 33 hankkeelle; 116 yhteyshenkilöehdotusta tarkistettu lähdettä vasten, 100 läpäisi (D-376)
 - Väylän hankesivun kenttälohko luetaan: 7 urakoitsijaa ja 14 kustannusarviota (D-377)
 - Oulu–Kemi-rataosan kaksi suunnitelmariviä yhdistetty yhdeksi, vaihe Rakenteilla ja kustannus 15 M€ (D-378)
+- Väylän yhteyshenkilön sähköposti korjattu vayla.fi-tunnukseen; emohankkeelta lisätty Welado Oy:n projektipäällikkö (D-379)
