@@ -23082,3 +23082,69 @@ sen luotettavammin kuin kuvio, ja tapauksia on muutama vuodessa.
 Jos sääntö joskus tehdään, se on ajettava hyväksyttyjen yli ennen
 julkaisua ([[test-filter-against-approved]]) ja Espoon kaupunkiradan
 alueurakka 4 on se rivi jolla se testataan.
+
+## D-376 — Lähdeosoite ja yhteyshenkilöehdotus kannasta (7.11.2026)
+
+Johannes Kirjalansalmesta: *"en löydä lähdettä eli en voi tarkistaa onko
+tuo oikein"*, ja Rataverkon kunnossapidosta: *"toisestakaan ei löytynyt
+aiheeseen liittyvää henkilöä ollenkaan joten ihmettelen mistä ne oli
+poimittu?"*
+
+### Mistä ne nimet tulivat
+
+`kokoa-yritysrekisteri.ts` johti ne Väyläviraston **muista** hankkeista.
+`lahde` kertoo sen: *"johdettu yrityksen omasta lahteesta, 12 hanketta"*.
+He ovat oikeita Väyläviraston ihmisiä mutta eivät liity siihen
+hankkeeseen jolla heidät näytettiin — juuri niin kuin merkintä "yrityksen
+yhteyshenkilö" lupaa (D-241), mutta 51 hengen organisaatiossa se on arpa.
+
+### Parempi tieto oli jo kannassa
+
+`metadata.yhteyshenkiloehdotus` on **116 julkisella hankkeella**: nimi,
+nimike, sähköposti, puhelin, organisaatio, lähde-URL, varmuus ja
+perustelu. Tuottanut claude-opus-5 6.10.2026, eikä sitä lue mikään
+([[own-data-unread]]). **85:llä niistä ei ole omia yhteyshenkilöitä.**
+
+### Vaihe 1 — lähdeosoite takaisin (tehty)
+
+39 lähdeosoitteetonta hanketta sai osoitteen `yhteyshenkiloehdotus.lahteet`
+-kentästä. **Kuusi hylättiin** kun kuivaharjoitus luettiin riveittäin: ne
+olivat sivuja joilta *yhteyshenkilö* löytyi, eivät hankkeen lähteitä —
+kaksi `/yhteystiedot/`-sivua, `/contact`, Peabin tiedotelistaus
+(`ListItems`), Kaarinan "kaupunki rakentaa" -listaus, ja yksi osoitti
+**tyomaat.fi:hin eli omaan sivuumme**. Väärä linkki on pahempi kuin
+puuttuva, koska nappi lupaa "Avaa alkuperäinen ilmoitus"
+([[listing-page-is-not-project-page]]).
+
+**Kirjoitettu 33.** Ilman lähdettä jää 251.
+
+### Vaihe 2 — ehdotukset lähdettä vasten (tehty)
+
+Portti on **esiintyykö ehdotettu nimi sillä sivulla johon ehdotus
+vetoaa**, ei `varmuus`. Mittaus vahvisti miksi: varmuus "high" osuu 95 %,
+"low" 85 % — kymmenen prosenttiyksikön ero ei erottele mitään
+([[llm-two-vote-gate]]).
+
+| luokka | kpl |
+|---|---|
+| nimi sivulla | **100** (93 % haetuista) |
+| vain sukunimi | 1 |
+| ei lainkaan | 6 |
+| haku epäonnistui (PDF, 403, 404, 500) | 9 |
+
+**Portti vahvistaa muttei hylkää.** Luin kaikki 7 hylättyä, ja useimmat
+ovat hakuvirheitä: Turun tuomiokirkon osoitteessa lukee `Markku+Konno`
+eli sivu on juuri hänestä, mutta Liferay-blogi renderöi tekstin
+selaimessa; jmoy.fi ja Hilman overview ovat samoin JS-renderöityjä.
+`EI_OSU` ei siis tarkoita väärää ehdotusta.
+
+### Vaihe 3 — ei tehty
+
+**73 hanketta** on sellaisia joilla ehdotus läpäisi lähdetarkistuksen eikä
+omia yhteyshenkilöitä ole. Ne saisivat hankekohtaisen ihmisen (taso
+`project`, koska lähde on hankkeen oma sivu) — 24-kertaisesti enemmän kuin
+D-373:n kolme.
+
+**Portin raja on tiedossa:** se todistaa että nimi on sillä sivulla, ei
+että hän on *tämän hankkeen* oikea yhteyshenkilö. Jos sivu listaa koko
+yksikön, väärä ihminen läpäisee.
