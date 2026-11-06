@@ -5850,3 +5850,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
 - Kunnossapitosopimukset pois näkyvistä: 8 piilotettu, Espoon kaupunkiradan alueurakka jätettiin (D-375)
 - Nimetyn ihmisen yhteystiedot täydentyvät yritysrekisteristä; yritykseltä näytetään enintään 3 (D-373, D-374)
 - Lähdeosoite palautettu 33 hankkeelle; 116 yhteyshenkilöehdotusta tarkistettu lähdettä vasten, 100 läpäisi (D-376)
+- Väylän hankesivun kenttälohko luetaan: 7 urakoitsijaa ja 14 kustannusarviota (D-377)

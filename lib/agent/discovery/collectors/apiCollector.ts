@@ -1,3 +1,4 @@
+import { parseVaylaInfoFields } from "@/lib/agent/vaylaInfoFields"
 import {
   haeKaavaselostuksenTeksti,
   kaavanKuvausTekstista,
@@ -2134,6 +2135,8 @@ async function fetchVaylaProjectDetails(projectUrl: string, title?: string | nul
   contact: { organization: string | null; title: string | null; name: string | null; phone: string | null; email: string | null } | null
   progress: string | null
   description: string | null
+  /* Kenttalohko: urakoitsija ja kustannus (D-377). */
+  kentat: ReturnType<typeof parseVaylaInfoFields> | null
 }> {
   try {
     const html = await (await fetch(projectUrl, { cache: "no-store" })).text()
@@ -2178,9 +2181,17 @@ async function fetchVaylaProjectDetails(projectUrl: string, title?: string | nul
      */
     const description = parseVaylaDescription(html, title)
 
-    return { contact, progress, description }
+    /*
+     * KENTTALOHKO (D-377). Sivulla lukee "Urakoitsija: Kreate Oy" ja
+     * "Kustannukset: 128 miljoonaa euroa" omassa lohkossaan, eika sita
+     * luettu lainkaan -- Johannes huomasi sen avaamalla lahteen.
+     * Jasennin karsii kuntalistat, tilakuvaukset ja suunnittelijat.
+     */
+    const kentat = parseVaylaInfoFields(html)
+
+    return { contact, progress, description, kentat }
   } catch {
-    return { contact: null, progress: null, description: null }
+    return { contact: null, progress: null, description: null, kentat: null }
   }
 }
 
@@ -2239,7 +2250,15 @@ async function collectVaylaSource(source: DiscoverySource) {
     }
   }
 
-  const inRunDetails = new Map<string, { contact: any; progress: string | null; description?: string | null }>()
+  const inRunDetails = new Map<
+    string,
+    {
+      contact: any
+      progress: string | null
+      description?: string | null
+      kentat?: ReturnType<typeof parseVaylaInfoFields> | null
+    }
+  >()
   let saved = 0
   let detailFetches = 0
 
@@ -2250,6 +2269,11 @@ async function collectVaylaSource(source: DiscoverySource) {
     let contact = known?.contact ?? null
     let progress = known?.progress ?? null
     let description: string | null = known?.description ?? null
+    /*
+     * Ei lueta `known`ista: kenttalohko kirjoitetaan vain kun sivu on
+     * juuri haettu, eika aiemman ajon muistissa ole sita kenttaa.
+     */
+    let kentat: ReturnType<typeof parseVaylaInfoFields> | null = null
     let detailsAttempted = Boolean(known)
 
     let checkedNow = false
@@ -2259,11 +2283,12 @@ async function collectVaylaSource(source: DiscoverySource) {
       contact = details.contact
       progress = details.progress
       description = details.description
+      kentat = details.kentat
       detailFetches += 1
       checkedNow = true
       detailsAttempted = Boolean(details.contact || details.progress)
 
-      inRunDetails.set(item.link, { contact, progress, description })
+      inRunDetails.set(item.link, { contact, progress, description, kentat })
     }
 
     const rawText = JSON.stringify(item)
@@ -2292,6 +2317,7 @@ async function collectVaylaSource(source: DiscoverySource) {
             region: item.region,
             phase: item.phase,
             ...(detailsAttempted ? { contact, progress } : {}),
+            ...(kentat?.urakoitsija || kentat?.kustannusEur ? { vayla_kentat: kentat } : {}),
             ...(checkedNow ? { contact_checked_at: new Date().toISOString() } : {}),
             original: item,
           },

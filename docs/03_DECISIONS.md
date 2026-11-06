@@ -23148,3 +23148,67 @@ D-373:n kolme.
 **Portin raja on tiedossa:** se todistaa että nimi on sillä sivulla, ei
 että hän on *tämän hankkeen* oikea yhteyshenkilö. Jos sivu listaa koko
 yksikön, väärä ihminen läpäisee.
+
+## D-377 — Väylän kenttälohko: urakoitsija ja kustannus (7.11.2026)
+
+Johannes avasi Kirjalansalmen lähteen ja vertasi: *"eri yhteyshenkilöt
+tässä ainakin localissa ja kreate puuttuu sekä kustannusarvio."*
+
+Sivulla lukee omassa lohkossaan **Urakoitsija: Kreate Oy** ja
+**Kustannukset: 128 miljoonaa euroa**. `fetchVaylaProjectDetails` poimi
+sivulta yhteystiedon, edistymisen ja kuvauksen — **muttei tätä lohkoa**.
+
+Ja nimet jotka näytettiin tulivat `kokoa-yritysrekisteri.ts`:ltä
+Väyläviraston **muista** hankkeista (D-376).
+
+### Lohko on harvinainen, ja se pitää sanoa
+
+Tasavälinen 24 sivun otos kannan 272 vayla.fi-osoitteesta antoi **2
+osumaa**. Lohko on isojen nimettyjen hankkeiden sivuilla; tavallisilla
+tieparannussivuilla ei ole `project__info`-elementtiä lainkaan. Koko ajo
+löysi lohkon 31 sivulta.
+
+### Haun epäonnistuminen näytti puuttuvalta lohkolta
+
+Ensimmäinen ajo viidellä rinnakkaisella epäonnistui **107 kertaa
+272:sta (39 %)**. Joka kolmas sivu tuskin on poissa — kuristus.
+Kahdella rinnakkaisella, 350 ms:n tauolla ja kolmella yrityksellä
+epäonnistumisia oli **0**. Ilman tätä 107 sivua olisi laskettu
+"ei lohkoa" -tapauksiksi ([[failed-fetch-burns-budget]]).
+
+### Neljä porttia, jokainen aineistosta luettu
+
+Kuivaharjoitus luettiin riveittäin kolmesti, ja joka kierros löytyi uusi
+ansa:
+
+| portti | mitä se karsii |
+|---|---|
+| yhtiömuoto vaaditaan | *"Useita urakoitsijoita"*, *"Kilpailutetaan loppuvuonna 2026"* |
+| kuntia sisältävä arvo hylätään | Hajala-Nunna: *"Salon, Paimion ja Kaarinan kaupungit, Sitowise Oy, Ramboll Oy"* |
+| tunnettu suunnittelija hylätään | Vt 27 Kiuruvesi: *Afry Finland Oy* |
+| selvityksen hinta hylätään | Merenkurkku: *"Noin 200 000 euroa (esiselvitys)"* |
+
+Kuntaportti on olennainen: Oy-osien poimiminen osapuolilistasta olisi
+tehnyt **suunnittelijasta pääurakoitsijan**. Suunnitteluvaiheen
+hankkeessa Väylävirasto merkitsee konsultin "Urakoitsija"-kenttään.
+
+Suunnittelijatarkistus kytkee ensimmäistä kertaa käyttöön
+`lib/agent/knowledge/companies.ts`:n, jota **ei ole käyttänyt mikään**
+([[extractor-exists-unwired]]).
+
+### Tulos
+
+**7 urakoitsijaa** (Kreate ×2, GRK Suomi, Destia, Sundström Infra,
+MP Infra // Arkos, Juhan Paja) ja **14 kustannusarviota**. Kirjalansalmi
+sai Kreate Oy:n ja 128 M€.
+
+Jäsennin on kytketty myös `fetchVaylaProjectDetails`iin, joten uudet
+hankkeet saavat kentät ilman takautuvaa ajoa.
+
+### Seitsemän ristiriitaa jätettiin koskematta
+
+Sivulla on eri luku kuin meillä: Kehä I 25,8 → 30 M€, Kurkela–Kuusisto
+80 → 114,4 M€, Jokelan asema 163 → 546 M€, **Seinäjoki–Vaasa 157 → 4,2
+M€**. Ajo täyttää vain tyhjän. Seinäjoki–Vaasan kertaluokan ero kertoo
+että luvut koskevat eri laajuutta — se on selvitettävä erikseen, ei
+ylikirjoittamalla.
