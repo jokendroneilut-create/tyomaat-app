@@ -5847,3 +5847,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
 - Kreate: kunta luetaan Osoite-kentästä ja tilaaja kuvauksen tilaajamaininnasta; 11 riviä + 8 hanketta täydennetty (D-371)
 - Louhintahiekan 8 työpäällikköä yritysrekisteriin louhintahiekka.fi/yhteydenotot-sivulta
 - Yritysrekisteriin vain työmaalle tavoitettavat; Louhintahiekan 8 työpäällikköä, muut 11 jätetty (D-372)
+- Kunnossapitosopimukset pois näkyvistä: 8 piilotettu, Espoon kaupunkiradan alueurakka jätettiin (D-375)

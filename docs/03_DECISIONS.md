@@ -23015,3 +23015,62 @@ samanpainoisia, joten kärki on aakkosjärjestys. Alue on nimikkeessä
 näkyvissä, mutta Varsinais-Suomen hankkeelle olisi oikeampi näyttää
 Ville Lonka kuin Aleksi Vipusaari. Aluetäsmäys on seuraava askel jos
 tämä osoittautuu häiritseväksi.
+
+## D-375 — Kunnossapitosopimus ei ole hanke (6.11.2026)
+
+Johannes Rataverkon kunnossapidosta: *"koko lähde on minusta väärin?"* ja
+tarkennuksena: *"poista nuo kunnossapitosopimukset kokonaan, eivät ole
+hankkeita. Olen itse ollut ehkä vähän epäjohdonmukainen hankkeita
+hyväksyessä."*
+
+### Peruste
+
+Kunnossapitosopimus ei ole työmaa: **voittaja ei rakenna vaan ylläpitää**,
+valmistumispäivää ei ole, ja kaupunki on mielivaltainen. Rataverkon
+kunnossapito oli sijoitettu Ylivieskaan, vaikka sopimus kattaa pääradan
+Kokkolasta Ouluun sekä Tuomioja–Raahe ja Ylivieska–Iisalmi.
+
+Tämä on `vuokramalli-is-construction` -säännön peilikuva: siellä tilaaja
+vuokraa mutta **voittaja rakentaa**, joten rivi kelpaa. Tässä voittaja ei
+rakenna, joten ei kelpaa.
+
+### Sanahaku ei riitä — yksi osuma oli 73 M€:n urakka
+
+| haku | osumia | kelpaako |
+|---|---|---|
+| kuvaukseen | **562** | ei: "kunnossapito" on tavallisten katusuunnitelmien kuvauksissa |
+| otsikkoon | **10** | kelpaa ehdokkaaksi, mutta rivit on luettava |
+
+Kymmenestä otsikko-osumasta yksi on aito rakennushanke: **Espoon
+kaupunkiradan alueurakka 4**, 73 M€, YIT, urakkasopimus 5.3.2026.
+"Alueurakka" tarkoittaa siinä kaupunkiradan rakennusurakan osaa, ei
+kunnossapitoaluetta. Sanahaku olisi poistanut sen
+([[verify-findings-against-source]]). Siksi `piilota-kunnossapitosopimukset.ts`
+listaa tunnisteet käsin eikä hae kuviolla.
+
+### Poisto on piilotus, ei DELETE
+
+`is_public: false` + `metadata.piilotuksen_syy`, sama konventio kuin 201
+muulla piilotetulla (*"Ei hanke – pelkkä uutinen tai markkinointi"*,
+*"liian pieni"*). Historia säilyy, eikä sama sopimus palaa lähteestä uutena
+rivinä ([[queue-removal-ignored]]).
+
+### Piilotettiin 8
+
+Kuusi kunnossapito- tai huoltosopimusta (rataverkko ×2, siltojen
+ylläpitourakka, valaistuksen vuosihuolto, talvikunnossapito, ilmanvaihdon
+ennakkohuolto) ja kaksi jotka eivät ole hankintoja lainkaan:
+*"Markkinakartoitus: Kuiturakentaminen"* ja *"KUTSU
+MARKKINAVUOROPUHELUUN"*. Julkisia 7 051 → 7 043.
+
+**Rajatapaus jätettiin:** Omnian puitesopimus *"korjaus-, kunnossapito- ja
+muutostyöt"* (4 M€, 8 urakoitsijaa) sisältää myös korjaus- ja muutostyöt
+eli oikeaa rakentamista. Puitesopimuksella ei ole työmaata, mutta sen alla
+tehdään töitä — jätetty Johanneksen päätettäväksi ([[reject-is-not-final]]).
+
+### Avoin
+
+Sääntöä ei ole karsinnassa, joten seuraava kunnossapitosopimus menee
+jonoon ja mahdollisesti läpi samalla tavalla. Jos sellainen tehdään, se on
+ajettava hyväksyttyjen yli ennen julkaisua ([[test-filter-against-approved]])
+— ja Espoon alueurakka on se rivi jolla sääntö testataan.
