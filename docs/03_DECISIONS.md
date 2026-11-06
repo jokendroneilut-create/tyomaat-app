@@ -23432,6 +23432,27 @@ urakoitsija ovat eri yhtiöt.
 Rekisteri 171 → **163** riviä. SRV 8→5, Pohjola Rakennus 7→4, Lapti 1→0,
 Espoon Asunnot 2→1. Varareitti laukeaa 144 hankkeella.
 
-**Hankkeiden omiin yhteyshenkilöihin ei koskettu.** Sääntö osuisi niistä
-131:een (9 484:stä), mutta ne ovat hankkeen omasta lähteestä eikä
-poistaminen ollut tämän päätöksen aihe — se on oma kysymyksensä.
+### Raja: karsitaan vain se mitä me valitsemme
+
+**Hankkeiden omiin yhteyshenkilöihin ei kosketa.** Sääntö osuisi niistä
+131:een (9 484:stä) — viestintäpäälliköitä SRV:ltä ja NCC:ltä,
+asuntomyyntiä, henkilöstöjohtajia. Johannes 7.11.2026:
+
+> *"antaa näiden olla että on edes joku yhteyshenkilö. Voihan asiakas
+> tuoltakin kaivaa sitä oikeaa henkilöä jota me emme tiedä."*
+
+Tämä on sääntö eikä poikkeus, ja se erottaa kaksi eri asiaa:
+
+| | mistä tulee | mitä tehdään |
+|---|---|---|
+| **yritysrekisteri ja varareitti** | me valitsemme kenet näytämme | karsitaan rooli |
+| **hankkeen oma yhteyshenkilö** | hankkeen omasta lähteestä | ei kosketa |
+
+Varareitillä väärä rooli on **meidän tuottamaamme kohinaa**: ihminen ei
+liity hankkeeseen mitenkään, vaan arvoimme hänet yrityksen listalta.
+Hankkeen omassa kontaktissa sama nimike on **ovi hankkeeseen** — SRV:n
+viestintäpäällikkö osaa kertoa kuka työmaasta vastaa, ja tyhjä kenttä ei
+osaa.
+
+Sama logiikka kuin [[never-hide-on-missing-data]]: emme poista tietoa
+siksi että se ei ole paras mahdollinen.
