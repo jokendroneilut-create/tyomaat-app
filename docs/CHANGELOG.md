@@ -5848,3 +5848,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
 - Louhintahiekan 8 työpäällikköä yritysrekisteriin louhintahiekka.fi/yhteydenotot-sivulta
 - Yritysrekisteriin vain työmaalle tavoitettavat; Louhintahiekan 8 työpäällikköä, muut 11 jätetty (D-372)
 - Kunnossapitosopimukset pois näkyvistä: 8 piilotettu, Espoon kaupunkiradan alueurakka jätettiin (D-375)
+- Nimetyn ihmisen yhteystiedot täydentyvät yritysrekisteristä; yritykseltä näytetään enintään 3 (D-373, D-374)
