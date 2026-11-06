@@ -5845,3 +5845,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
   -varoitus hyväksyntähetkeen (läheisyys + nimi/rakennuttaja).
 - Fingridin yhteyshenkilöjäsennin korjattu: 164 → 185 henkilöä, 33 hanketta täydennetty takautuvasti (D-370)
 - Kreate: kunta luetaan Osoite-kentästä ja tilaaja kuvauksen tilaajamaininnasta; 11 riviä + 8 hanketta täydennetty (D-371)
+- Louhintahiekan 8 työpäällikköä yritysrekisteriin louhintahiekka.fi/yhteydenotot-sivulta
