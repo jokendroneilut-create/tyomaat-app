@@ -23246,7 +23246,7 @@ olisi ollut väärä — **emosivu ratkaisi sen, ei päättely**
 | | ennen | jälkeen |
 |---|---|---|
 | nimi | Uusi liikennepaikka, ratasuunnitelma, Ii | **Oulu–Kemi-rataosa, uudet liikennepaikat** |
-| vaihe | Suunnittelu | **Rakenteilla** |
+| vaihe | Suunnittelu | **Valmistunut** (ks. korjaus alla) |
 | kustannus | 7,5 M€ | **15 M€** |
 | maakunta | Lappi | Pohjois-Pohjanmaa |
 | kuvaus | 1 752 mrk | 2 086 mrk |
@@ -23313,3 +23313,44 @@ lähteestä, ja joista saamme yhden.
 
 **Urakoitsijan projektipäällikkö jää siis järjestelmällisesti saamatta**
 Väylän sivuilta. Se on oma korjauksensa.
+
+## D-380 — Tilarivi oli vanhentunut, leipäteksti ei (7.11.2026)
+
+Asetin D-378:ssa Oulu–Kemin vaiheeksi **Rakenteilla**, koska alasivujen
+tilarivi sanoo *"Ratasuunnitelma on valmistunut. Hanke on toteutuksessa."*
+
+Johannes luki emosivun pidemmälle:
+
+> *"Varsinainen rakentaminen alkoi keväällä 2022, ja kohtausraiteet
+> saatiin käyttöön vuoden 2022 lopussa. — Vuonna 2023 on tehty
+> pienimuotoisia viimeistelytöitä. Tämä hanke on jo valmis."*
+
+Ja sivulla on päivätty uutinen: **19.12.2022 Uudet liikennepaikat on
+saatu käyttöön Simon Maksniemessä ja Iin Lähessuolla.**
+
+### Tilarivi on sanamuoto, päivätty teksti on tapahtuma
+
+Tilarivi *"Hanke on toteutuksessa"* oli kirjoitettu joskus eikä sitä ole
+päivitetty. Sen vieressä samalla sivustolla on päivätty uutinen joka
+kertoo tapahtuneen. **Otin sanamuodon ja jätin päivämäärän lukematta** —
+sama virhe jota [[future-wording-expires]] varoittaa, eri suunnasta:
+siellä tuleva aikamuoto oli jo mennyttä, tässä käynnissä oleva oli jo
+ohi.
+
+### Korjattu
+
+| | ennen | jälkeen |
+|---|---|---|
+| vaihe | Rakenteilla | **Valmistunut** |
+| status | active | completed |
+| completed_at | – | **2022-12-19** |
+
+Rivi jää julkiseksi, kuten 78 muuta valmistunutta. Myös kuvauksen kärki
+korjattiin: siinä luki minun kirjoittamanani *"hanke on toteutuksessa"*.
+
+### Sääntö
+
+Kun lähdesivulla on sekä **tilarivi** että **päivätty leipäteksti tai
+uutinen**, päivätty voittaa. Tilarivi kertoo mitä joskus kirjoitettiin;
+päivämäärä kertoo mitä tapahtui ja milloin
+([[completion-date-from-text]]).
