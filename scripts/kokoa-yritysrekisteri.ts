@@ -26,6 +26,7 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { kelpaaYhteyshenkiloksi } = await import("../lib/metrics/yhteystiedonKattavuus")
   const { yritysavain, hankkeenYritysavaimet } = await import("../lib/metrics/yritysavain")
+  const { eiTyomaaRooli } = await import("../lib/projects/tyomaayhteys")
   const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
 
   const kaikki: any[] = []
@@ -81,7 +82,7 @@ async function main() {
        * vastaavat haastattelupyyntoihin eivat hankinnoista.
        */
       if (String(c.role ?? "") === "media") continue
-      if (/viestint|tiedott|media|markkinoin/i.test(String(c.title ?? ""))) continue
+      if (eiTyomaaRooli(c.title)) continue
 
       /*
        * RIKKINAINEN NIMIKE PALJASTAA RIKKINAISEN POIMINNAN. Yksi rivi oli

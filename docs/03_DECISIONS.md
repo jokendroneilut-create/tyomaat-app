@@ -23383,3 +23383,55 @@ Kun lähdesivulla on sekä **tilarivi** että **päivätty leipäteksti tai
 uutinen**, päivätty voittaa. Tilarivi kertoo mitä joskus kirjoitettiin;
 päivämäärä kertoo mitä tapahtui ja milloin
 ([[completion-date-from-text]]).
+
+## D-381 — Varareitin yrityskohtainen läpikäynti (7.11.2026)
+
+Vaihe 4 D-376:n suunnitelmasta. Varareitti (`yrityksenYhteyshenkilot`)
+laukesi 145 hankkeella ja 19 yrityksellä vaiheen 3 jälkeen. Kävin listan
+läpi ja nostin neljä tapausta; Johannes: *"ne voi karsia heti."*
+
+| yritys | ongelma |
+|---|---|
+| Pohjola Rakennus | myyntipäällikkö LKV, kaksi asuntomyyjää |
+| SRV | kaksi *viestinnän asiantuntijaa* |
+| Lapti | Myyntipäällikkö, Asuntomyynti |
+| Espoon Asunnot | kärjessä **SRV:n** johtaja |
+
+### Kaksi eri vikaa, kaksi eri korjausta
+
+**1. Väärä rooli.** D-242 lisäsi suodattimen
+`/viestint|tiedott|media|markkinoin/i`, mutta se **ei osu sanaan
+"viestinnän"** — `viestint` vaatii kirjaimet `t,i,n,t` peräkkäin, ja
+taivutusmuodossa on `n,n`. Siksi SRV:n kaksi viestinnän asiantuntijaa
+näkyivät asiakkaalle kolmella hankkeella. Myyntirooleille ei ollut
+suodatinta lainkaan.
+
+**Sääntö on nyt yhdessä paikassa** (`lib/projects/tyomaayhteys.ts`) ja
+kytketty sekä generaattoriin että julkaisuskriptiin. Ne olivat eri
+määritelmiä samasta asiasta: toinen suodatti myynnin, toinen viestinnän,
+kumpikaan ei molempia ([[same-term-two-definitions]]).
+
+**Oma testini löysi heti liian leveän kuvion:** `\bmyy` olisi karsinut
+*"Projektipäällikkö, **Myyr**mäen hanke"*. Paikannimi ei ole rooli.
+
+**Hankesana kumoaa karsinnan**, koska nimike voi olla sekamuotoinen:
+*"Myynti- ja hankekehityspäällikkö"* on puoliksi hankekehitystä. Ilman
+tätä sääntö olisi karsinut BRAND toimitilojen ainoan merkinnän.
+`asiakaspäällikkö` jätettiin kokonaan pois karsinnasta: omistajan
+puolella (Senaatti) hän on aito vastinpari.
+
+**2. Väärä avain.** Jorma Seppä on SRV:n ihminen mutta oli myös avaimella
+`espoonasunnot`, koska johdos liittää hankkeen yhteyshenkilön **molempiin**
+osapuoliin. Rivi poistettiin vasta kun varmistui että hän on oikealla
+avaimella `srv` — poisto ei saa hukata ihmistä. **Johdosvika jäi
+työjonoon:** se toistuu jokaisella hankkeella jossa rakennuttaja ja
+urakoitsija ovat eri yhtiöt.
+
+### Tulos
+
+Rekisteri 171 → **163** riviä. SRV 8→5, Pohjola Rakennus 7→4, Lapti 1→0,
+Espoon Asunnot 2→1. Varareitti laukeaa 144 hankkeella.
+
+**Hankkeiden omiin yhteyshenkilöihin ei koskettu.** Sääntö osuisi niistä
+131:een (9 484:stä), mutta ne ovat hankkeen omasta lähteestä eikä
+poistaminen ollut tämän päätöksen aihe — se on oma kysymyksensä.

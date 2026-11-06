@@ -1396,6 +1396,25 @@ muistin varassa.
   verkkotunnuksen valinta on ratkaistava samalla.
 
 
+- **Urakoitsijan ihminen päätyy rakennuttajan avaimen alle.**
+  (Kirjattu 7.11.2026, D-381, ei korjattu.)
+
+  Jorma Seppä on SRV:n ihminen (`jorma.seppa@srv.fi`), mutta
+  `kokoa-yritysrekisteri.ts` kirjasi hänet myös avaimella
+  `espoonasunnot` — SRV rakentaa Espoon Asunnoille, ja johdos liittää
+  hankkeen yhteyshenkilön hankkeen **molempiin** osapuoliin.
+
+  Seuraus: Espoon Asuntojen yritystason varareitin kärjessä oli toisen
+  yrityksen johtaja. Rivi poistettiin käsin (hän on oikealla avaimella
+  `srv`), mutta **johdos tekee saman uudelleen** jokaiselle hankkeelle
+  jossa rakennuttaja ja urakoitsija ovat eri yhtiöt.
+
+  Oikea sääntö: yhteyshenkilö kuuluu sille yritykselle jonka **omasta
+  lähteestä** hanke tuli, ei kaikille osapuolille
+  ([[party-role-fields]]). Mittaamatta on, montako riviä on tällä
+  tavalla väärän avaimen alla.
+
+
 ### Lähdekattavuus
 
 - **Jalon (`jalon.fi/yhteystiedot/tyomaat/`) — EI ole lähteenä,

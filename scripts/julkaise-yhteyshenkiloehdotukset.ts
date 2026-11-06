@@ -47,8 +47,13 @@ const TAUKO_MS = 300
 const TUNNISTE = "yhteyshenkiloehdotus_julkaistu_2026_11"
 const RAPORTTI = "C:/Users/johan/tyomaat-app/.tmp-ehdotusjulkaisu.txt"
 
-/* Myyntirooli ei ole tyomaayhteys. */
-const MYYNTIROOLI = /\b(myynti|sales|kaupallinen johtaja|asiakasp[aä][aä]llikk)/i
+/*
+ * Rooli luetaan yhteisesta maaritelmasta, ei omasta kuviosta
+ * ([[same-term-two-definitions]]). Talla skriptilla ja
+ * `kokoa-yritysrekisteri.ts`:lla oli eri saanto samasta asiasta:
+ * tama suodatti myynnin, se viestinnan, kumpikaan ei molempia.
+ */
+import { eiTyomaaRooli } from "../lib/projects/tyomaayhteys"
 
 /*
  * UNICODE JAI PURKAMATTA YHDESSA EHDOTUKSESSA:
@@ -140,7 +145,7 @@ async function main() {
         const e = h.metadata.yhteyshenkiloehdotus
         const nimike = siistiNimike(e.nimike)
 
-        if (nimike && MYYNTIROOLI.test(nimike)) {
+        if (eiTyomaaRooli(nimike)) {
           luokat.myyntirooli = (luokat.myyntirooli ?? 0) + 1
           console.log(`  OHITA (myynti)  ${String(h.name).slice(0, 36).padEnd(36)} ${e.nimi} — ${nimike}`)
           continue
