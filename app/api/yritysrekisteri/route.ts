@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import {
   haeYritysrekisteri,
+  nimetytTaydennykset,
   osapuoltenYhteyshenkilot,
   yrityksenYhteyshenkilot,
 } from "@/lib/metrics/yritysrekisteri"
@@ -42,12 +43,12 @@ export async function GET(request: Request) {
 
   const { data: hanke } = await supabaseAdmin
     .from("projects")
-    .select("developer, builder, metadata")
+    .select("developer, builder, additional_info, metadata")
     .eq("id", projectId)
     .maybeSingle()
 
   if (!hanke) {
-    return NextResponse.json({ ok: true, yhteyshenkilot: [], osapuolet: [] })
+    return NextResponse.json({ ok: true, yhteyshenkilot: [], osapuolet: [], taydennykset: [] })
   }
 
   const omat = (hanke.metadata as { contact_persons?: unknown } | null)?.contact_persons
@@ -64,5 +65,12 @@ export async function GET(request: Request) {
     ok: true,
     yhteyshenkilot: onOmia ? [] : yrityksenYhteyshenkilot(hanke, rekisteri),
     osapuolet: osapuoltenYhteyshenkilot(hanke, rekisteri),
+    /*
+     * NIMETYN IHMISEN YHTEYSTIEDOT (D-373). Eri asia kuin ylla: nama
+     * ovat hankkeen OMIA ihmisia, joiden sahkoposti ja puhelin ovat
+     * rekisterissa. Palautetaan myos kun `onOmia` on tosi, koska juuri
+     * silloin taydennettava rivi on olemassa.
+     */
+    taydennykset: nimetytTaydennykset(hanke, rekisteri),
   })
 }

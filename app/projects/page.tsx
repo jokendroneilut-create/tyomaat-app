@@ -508,6 +508,42 @@ export default function Projects() {
           lista: Array.isArray(tulos.osapuolet) ? tulos.osapuolet : [],
         })
 
+        /*
+         * NIMETYN IHMISEN YHTEYSTIEDOT REKISTERISTA (D-373).
+         *
+         * Nama eivat korvaa listaa vaan taydentavat sita: nimella
+         * loytynyt rivi saa puuttuvan sahkopostin ja puhelimen, ja
+         * tekstista loytynyt lisataan vain jos tavoitettavaa ei ole.
+         * Reitti on jo tehnyt rajauksen, joten tassa vain yhdistetaan.
+         */
+        const taydennykset = Array.isArray(tulos.taydennykset) ? tulos.taydennykset : []
+        if (taydennykset.length) {
+          setSelected((current) => {
+            if (!current || current.id !== id) return current
+            const omat = [...((current.metadata?.contact_persons ?? []) as any[])]
+            const avain = (n: unknown) =>
+              String(n ?? '').toLowerCase().replace(/\s+/g, ' ').trim()
+            for (const t of taydennykset) {
+              const i = omat.findIndex((k) => avain(k?.name) === avain(t.name))
+              if (i >= 0) {
+                /* Vain tyhja kentta taytetaan; olemassa olevaa ei ylikirjoiteta. */
+                omat[i] = {
+                  ...omat[i],
+                  email: omat[i]?.email || t.email,
+                  phone: omat[i]?.phone || t.phone,
+                  title: omat[i]?.title || t.title,
+                }
+              } else {
+                omat.push(t)
+              }
+            }
+            return {
+              ...current,
+              metadata: { ...(current.metadata ?? {}), contact_persons: omat },
+            }
+          })
+        }
+
         if (onOmia || !tulos.yhteyshenkilot?.length) return
         setSelected((current) =>
           current && current.id === id

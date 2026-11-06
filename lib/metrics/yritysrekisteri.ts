@@ -124,3 +124,99 @@ export function osapuoltenYhteyshenkilot(
   }
   return tulos
 }
+
+/*
+ * NIMETYN HENKILON YHTEYSTIEDOT REKISTERISTA (D-373).
+ *
+ * Johannes 6.11.2026: *"jos meilla tulee esimerkiksi hanke jossa on
+ * vain mainittu 'Louhintahiekan tyopaallikko Jani Pullikka' niin
+ * saamme hankkeelle hanen sahkopostin ja puhelinnumeron myos, koska ne
+ * ovat meilla tallessa omassa rekisterissa."*
+ *
+ * Tama on ERI ASIA kuin `yrityksenYhteyshenkilot`. Se tarjoaa yrityksen
+ * yleisia ihmisia kun hankkeella ei ole ketaan; tama taydentaa ihmisen
+ * jonka HANKE ITSE nimeaa. Siksi taso on `project`, ei `company`:
+ * henkilo on hankkeen oma, vain yhteystiedot tulevat rekisterista.
+ *
+ * YRITYKSEN ON OLTAVA HANKKEEN OSAPUOLI. Pelkka nimiosuma ei riita --
+ * kaksi ihmista voi olla samannimisia, ja vaara numero on pahempi kuin
+ * puuttuva (sama peruste kuin D-242:n avaimessa).
+ *
+ * TEKSTISTA LOYTYNYT VAIN KUN MUUTA EI OLE. Jos hankkeella on jo
+ * tavoitettava ihminen, tekstissa mainittua ei lisata: kortille
+ * kertyisi rinnakkain tyomaan vastaava ja yrityksen aluejohtaja, mika
+ * on juuri se mita `yrityksenYhteyshenkilot`in "taydentaa, ei korvaa"
+ * -saanto estaa. Kontaktissa jo olevan taydennys ei ole lisays, joten
+ * sita tama rajaus ei koske.
+ *
+ * MITATTU 6.11.2026, 7 051 julkista hanketta: kontaktissa nimi ilman
+ * tietoja 0, tekstista loytyvia ilman tavoitettavaa 3. Luku on pieni
+ * koska rekisterin 163 henkilosta valtaosa on JOHDETTU hankkeiden
+ * omista yhteyshenkiloista, eli he ovat niilla jo tietoineen. Arvo on
+ * kasin lisatyissa (esim. Louhintahiekan 8 tyopaallikkoa): heita ei ole
+ * yhdellakaan hankkeella, ja ensimmainen maininta liittaa numeron.
+ */
+export type NimettyTaydennys = Omit<YritysYhteyshenkilo, "level"> & {
+  level: "project"
+  /* Mista nimi loytyi — nakyy perusteluna, ei pelkkana arvona. */
+  loytyi: "kontakti" | "teksti"
+}
+
+type TaydennysLahde = YritysLahde & {
+  additional_info?: string | null
+  metadata?: (YritysLahde["metadata"] & { description?: unknown; contact_persons?: unknown }) | null
+}
+
+const nimiavain = (nimi: unknown) => String(nimi ?? "").toLowerCase().replace(/\s+/g, " ").trim()
+
+const tavoitettavissa = (k: unknown) => {
+  const r = k as { email?: unknown; phone?: unknown } | null
+  return Boolean(String(r?.email ?? "").trim() || String(r?.phone ?? "").trim())
+}
+
+export function nimetytTaydennykset(
+  hanke: TaydennysLahde,
+  rekisteri: Yritysrekisteri
+): NimettyTaydennys[] {
+  const omat = Array.isArray(hanke.metadata?.contact_persons)
+    ? (hanke.metadata!.contact_persons as unknown[])
+    : []
+  const onTavoitettava = omat.some(tavoitettavissa)
+  const omatNimet = new Map<string, unknown>()
+  for (const k of omat) omatNimet.set(nimiavain((k as { name?: unknown })?.name), k)
+
+  const teksti = `${hanke.additional_info ?? ""} ${String(hanke.metadata?.description ?? "")}`
+
+  const tulos: NimettyTaydennys[] = []
+  const nahdyt = new Set<string>()
+
+  for (const avain of hankkeenYritysavaimet(hanke)) {
+    for (const henkilo of rekisteri.get(avain) ?? []) {
+      /* Ilman sahkopostia ja puhelinta ei ole mitaan taydennettavaa. */
+      if (!henkilo.email && !henkilo.phone) continue
+      const nimi = nimiavain(henkilo.name)
+      if (!nimi || nahdyt.has(nimi)) continue
+
+      const kontakti = omatNimet.get(nimi)
+      if (kontakti !== undefined) {
+        /* Jo tavoitettavissa: rekisterilla ei ole lisattavaa. */
+        if (tavoitettavissa(kontakti)) continue
+        nahdyt.add(nimi)
+        tulos.push({ ...henkilo, level: "project", loytyi: "kontakti" })
+        continue
+      }
+
+      if (onTavoitettava) continue
+      /*
+       * Nimi tekstista sellaisenaan. Ei osittaista osumaa: pelkka
+       * sukunimi osuisi myos toiseen ihmiseen, ja hankkeen teksti on
+       * pitka.
+       */
+      if (!teksti.includes(henkilo.name)) continue
+      nahdyt.add(nimi)
+      tulos.push({ ...henkilo, level: "project", loytyi: "teksti" })
+    }
+  }
+
+  return tulos
+}

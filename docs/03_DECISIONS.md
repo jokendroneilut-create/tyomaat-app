@@ -22877,3 +22877,75 @@ dedup tapahtuu sähköpostilla; rivit kertyisivät vain tauluun.
 todistettiin ajamalla kahdesti: 8 riviä → 8 riviä. Indeksi on
 `docs/sql/2026-11-06_yritys_yhteyshenkilot_uniikki.sql` käsin ajettavaksi;
 kahdentuneita ei ole ennestään (0/171), joten se luodaan turvallisesti.
+
+## D-373 — Nimetyn ihmisen yhteystiedot rekisteristä (6.11.2026)
+
+Johannes: *"jos meillä tulee esimerkiksi hanke jossa on vain mainittu
+'Louhintahiekan työpäällikkö Jani Pullikka' niin saamme hankkeelle hänen
+sähköpostin ja puhelinnumeron myös, koska ne ovat meillä tallessa omassa
+rekisterissä. En tiedä onko meillä nyt tätä toimintoa edes?"*
+
+Ei ollut. **D-242 kertoo rekisterin tarkoituksen täsmälleen näin**, ja
+`/api/yritysrekisteri` on olemassa — mutta se laukeaa ehdosta
+`omat.length > 0`, joka on *"onko rivejä"* eikä *"onko tavoitettavissa"*.
+Rivi `{name: "Jani Pullikka", email: null, phone: null}` lasketaan omaksi
+yhteyshenkilöksi, joten reitti palautti tyhjän eikä hänen tiedossa olevaa
+numeroaan liitetty.
+
+### Kolme eri reittiä, vain yksi on tämä
+
+| reitti | mitä palauttaa | laukeaa |
+|---|---|---|
+| `yrityksenYhteyshenkilot` | yrityksen **koko lista**, ei nimikesuodatusta | 176 hanketta, vain kun `contact_persons` on tyhjä |
+| `osapuoltenYhteyshenkilot` | **kaikki** jokaisesta osapuoliyrityksestä | 62 hanketta, **myös kun hankkeella on oma** |
+| `nimetytTaydennykset` (uusi) | vain hankkeen itse nimeämä ihminen | 3 hanketta |
+
+Johannes: *"katsotaan vaikka yrityskohtaisesti läpi tuo 2, koska muuten
+johonkin YIT tyyliseen hankkeeseen voi tulla YIT toimitusjohtajan
+yhteystiedot missä ei ole mitään järkeä."* Juuri niin: toinen rivi
+palauttaa listan suodattamatta. Ehtoa `omat.length > 0` **ei siis
+muutettu** — se jää yrityskohtaiseen läpikäyntiin.
+
+Tämä selittää myös miksi D-372:n "ei lisätä noita muita" oli oikein, mutta
+eri syystä kuin sanottiin: ongelma ei ole rekisterin sisältö vaan se, että
+kaksi reittiä näyttää siitä kaiken. Louhintahiekan 8 työpäällikköä näkyvät
+näitä reittejä pitkin 5 hankkeella (1 varareitti + 4 osapuolena).
+
+### Säännöt
+
+- **Yrityksen on oltava hankkeen osapuoli.** Pelkkä nimiosuma ei riitä;
+  kaksi ihmistä voi olla samannimisiä ja väärä numero on pahempi kuin
+  puuttuva (sama peruste kuin D-242:n avaimessa).
+- **Taso on `project`, ei `company`.** Henkilö on hankkeen oma — vain
+  yhteystiedot tulevat rekisteristä.
+- **Tekstistä löytynyt vain kun muuta ei ole.** Jos hankkeella on jo
+  tavoitettava ihminen, tekstissä mainittua ei lisätä. Kontaktissa jo
+  olevan täydennys ei ole lisäys, joten sitä rajaus ei koske.
+- **Ei osittaista osumaa.** Pelkkä sukunimi osuisi toiseen ihmiseen.
+- **Vain tyhjä kenttä täytetään**, olemassa olevaa ei ylikirjoiteta.
+
+### Annoin ensin väärän luvun
+
+Ehdotin tätä sanoen että se kattaa **69 hanketta**. Oikea luku on **3**.
+Laskin mukaan rekisterihenkilöt jotka olivat hankkeella jo yhteystietoineen
+— eivät siis täydennettäviä. Syy: rekisterin 163 henkilöstä valtaosa on
+`kokoa-yritysrekisteri.ts`:n **johtamia hankkeiden omista
+yhteyshenkilöistä**, joten heidän nimensä esiintyy juuri niissä hankkeissa.
+Jakauma oikein mitattuna:
+
+| tapaus | hankkeita |
+|---|---|
+| nimi kontaktissa, tiedot puuttuvat | **0** |
+| nimi vain tekstissä, ei tavoitettavaa | **3** |
+| nimi vain tekstissä, tavoitettava on jo (ei lisätä) | 6 |
+
+Arvo on käsin lisätyissä: Louhintahiekan 8 työpäällikköä eivät ole
+yhdelläkään hankkeella, ja ensimmäinen maininta liittää numeron. Ne 3 jotka
+osuvat nyt: SRV/Tero Karislahti, SRV/Jorma Seppä, Kreate/Ari Välimaa.
+
+### Ei tarkistettu selaimessa
+
+`/projects` vaatii kirjautumisen, eikä minun kuulu kirjautua Johanneksen
+tunnuksilla. Funktio ja reitti on varmistettu 16 testillä ja ajamalla
+oikealla datalla (3 hanketta, oikeat nimet ja numerot); käyttöliittymän
+yhdistys on luettu mutta ei renderöity. **Ei pushattu.**

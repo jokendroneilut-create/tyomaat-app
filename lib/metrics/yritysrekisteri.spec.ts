@@ -4,6 +4,7 @@ import {
   osapuoltenYhteyshenkilot,
   yrityksenYhteyshenkilot,
   type Yritysrekisteri,
+  nimetytTaydennykset,
 } from "./yritysrekisteri"
 
 const rekisteri: Yritysrekisteri = new Map([
@@ -101,5 +102,140 @@ describe("osapuoltenYhteyshenkilot", () => {
         osapuoliRekisteri
       )
     ).toEqual([])
+  })
+})
+
+describe("nimetytTaydennykset", () => {
+  const rekisteri = new Map([
+    [
+      "louhintahiekka",
+      [
+        {
+          name: "Jani Pullikka",
+          title: "Työpäällikkö, Pirkanmaa",
+          email: "jani.pullikka@louhintahiekka.fi",
+          phone: "040 418 3603",
+          organization: "Louhintahiekka Oy",
+          level: "company" as const,
+        },
+        {
+          name: "Ville Lonka",
+          title: "Työpäällikkö, Varsinais-Suomi",
+          email: null,
+          phone: "040 829 0089",
+          organization: "Louhintahiekka Oy",
+          level: "company" as const,
+        },
+      ],
+    ],
+  ])
+
+  it("taydentaa kontaktissa olevan nimen jolta puuttuvat tiedot", () => {
+    const tulos = nimetytTaydennykset(
+      {
+        builder: "Louhintahiekka Oy",
+        metadata: { contact_persons: [{ name: "Jani Pullikka", email: null, phone: null }] },
+      },
+      rekisteri
+    )
+    expect(tulos).toHaveLength(1)
+    expect(tulos[0].phone).toBe("040 418 3603")
+    /* Henkilo on hankkeen oma; vain yhteystiedot tulevat rekisterista. */
+    expect(tulos[0].level).toBe("project")
+    expect(tulos[0].loytyi).toBe("kontakti")
+  })
+
+  it("ei taydenna kontaktia joka on jo tavoitettavissa", () => {
+    expect(
+      nimetytTaydennykset(
+        {
+          builder: "Louhintahiekka Oy",
+          metadata: { contact_persons: [{ name: "Jani Pullikka", email: null, phone: "040 111 2222" }] },
+        },
+        rekisteri
+      )
+    ).toEqual([])
+  })
+
+  it("loytaa nimen hankkeen tekstista kun tavoitettavaa ei ole", () => {
+    const tulos = nimetytTaydennykset(
+      {
+        builder: "Louhintahiekka Oy",
+        additional_info: "Urakasta vastaa Louhintahiekan työpäällikkö Jani Pullikka.",
+        metadata: { contact_persons: [] },
+      },
+      rekisteri
+    )
+    expect(tulos.map((t) => t.name)).toEqual(["Jani Pullikka"])
+    expect(tulos[0].loytyi).toBe("teksti")
+  })
+
+  /*
+   * Tama on `yrityksenYhteyshenkilot`in "taydentaa, ei korvaa" -saanto:
+   * kortille ei kerryta tyomaan vastaavaa ja yrityksen aluejohtajaa
+   * rinnakkain.
+   */
+  it("ei lisaa tekstista loytynytta kun hankkeella on jo tavoitettava", () => {
+    expect(
+      nimetytTaydennykset(
+        {
+          builder: "Louhintahiekka Oy",
+          additional_info: "Työpäällikkö Jani Pullikka vastaa urakasta.",
+          metadata: { contact_persons: [{ name: "Toinen Ihminen", phone: "040 000 0000" }] },
+        },
+        rekisteri
+      )
+    ).toEqual([])
+  })
+
+  /* Vaara numero on pahempi kuin puuttuva: kaksi ihmista voi olla samannimisia. */
+  it("ei taydenna kun yritys ei ole hankkeen osapuoli", () => {
+    expect(
+      nimetytTaydennykset(
+        {
+          builder: "Joku Muu Oy",
+          additional_info: "Jani Pullikka kommentoi hanketta.",
+          metadata: { contact_persons: [] },
+        },
+        rekisteri
+      )
+    ).toEqual([])
+  })
+
+  it("ei palauta henkiloa jolta puuttuu sekä sahkoposti etta puhelin", () => {
+    const vajaa = new Map([
+      [
+        "louhintahiekka",
+        [{ name: "Tyhjä Rivi", title: null, email: null, phone: null, organization: "Louhintahiekka Oy", level: "company" as const }],
+      ],
+    ])
+    expect(
+      nimetytTaydennykset(
+        { builder: "Louhintahiekka Oy", additional_info: "Tyhjä Rivi mainitaan.", metadata: { contact_persons: [] } },
+        vajaa
+      )
+    ).toEqual([])
+  })
+
+  /* Osittainen osuma ei kelpaa: pelkka sukunimi osuisi toiseen ihmiseen. */
+  it("ei osu pelkkaan sukunimeen", () => {
+    expect(
+      nimetytTaydennykset(
+        {
+          builder: "Louhintahiekka Oy",
+          additional_info: "Pullikka vastaa urakasta.",
+          metadata: { contact_persons: [] },
+        },
+        rekisteri
+      )
+    ).toEqual([])
+  })
+
+  it("kelpuuttaa henkilon jolta puuttuu vain sahkoposti", () => {
+    const tulos = nimetytTaydennykset(
+      { builder: "Louhintahiekka Oy", additional_info: "Ville Lonka vastaa.", metadata: { contact_persons: [] } },
+      rekisteri
+    )
+    expect(tulos.map((t) => t.phone)).toEqual(["040 829 0089"])
   })
 })
