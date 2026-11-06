@@ -23221,3 +23221,54 @@ portti pysäyttää. Vain "täytä vain tyhjä" -sääntö esti ylikirjoituksen.
 **7 500 000 €** omilta sivuiltaan, ja niillä on sama kuvausteksti. Joko
 kumpikin maksaa sen, tai luku on parin yhteisarvo kopioituna molemmille
 ([[combined-figure-split-by-owner-page]]). Sivulta ei voi ratkaista.
+
+## D-378 — Oulu–Kemi: kaksi suunnitelmasivua, yksi hanke (7.11.2026)
+
+Johannes luki molemmat lähteet: *"molemmissa on linkki joka vie samaan
+paikkaan. 'Ratasuunnitelma on valmistunut. Hanke on toteutuksessa.'
+korjaa vaihe ja yhdistä."*
+
+Molemmat sivut sanovat saman ja linkittävät emohankkeeseen
+`/oulu-kemi-uudet-liikennepaikat`. Ne ovat saman hankkeen
+**suunnitelmavaiheen alasivuja**, eivät kaksi hanketta.
+
+### Se ratkaisi myös kustannusepäilyn
+
+Epäilin edellisessä kohdassa (D-377) että sama 7,5 M€ kahdella rivillä
+voisi olla kaksoislaskentaa. Emosivu sanoo **15 000 000 €** eli tasan
+kaksinkertaisen: luku oli oikein per liikennepaikka, mutta yhdistetylle
+riville kuuluu emon kokonaisluku. Epäily oli aiheellinen, johtopäätös
+olisi ollut väärä — **emosivu ratkaisi sen, ei päättely**
+([[combined-figure-split-by-owner-page]]).
+
+### Mitä muuttui
+
+| | ennen | jälkeen |
+|---|---|---|
+| nimi | Uusi liikennepaikka, ratasuunnitelma, Ii | **Oulu–Kemi-rataosa, uudet liikennepaikat** |
+| vaihe | Suunnittelu | **Rakenteilla** |
+| kustannus | 7,5 M€ | **15 M€** |
+| maakunta | Lappi | Pohjois-Pohjanmaa |
+| kuvaus | 1 752 mrk | 2 086 mrk |
+
+**Säilyvä rivi on Ii**, koska siinä on `manually_edited_at` — käsin tehty
+ei saa kadota. Simon rivi piilotettiin, ei poistettu.
+
+**Nimi vaihdettiin, poikkeuksena [[title-precedence]]-sääntöön.** Kumpikaan
+vanha nimi ei kuvaa yhdistettyä kokonaisuutta: *"Uusi liikennepaikka,
+ratasuunnitelma, Ii"* olisi väärä otsikko rivillä joka kattaa myös Simon.
+Molemmat vanhat nimet jäivät `also_known_as`-listaan.
+
+**Kuvausta ei korvattu vaan täydennettiin.** Oma tekstini olisi kutistanut
+sen 1 752 → 729 merkkiin eli hävittänyt tuhat merkkiä lähteen omaa
+tekstiä ([[description-is-the-product]]). Uusi kärki kertoo yhdistämisen
+ja laajuuden, vanha teksti jäi sen alle.
+
+### Sijainti on ainoa arvaus
+
+Hanke rakentaa kaksi liikennepaikkaa **kahdessa maakunnassa** (Ii /
+Pohjois-Pohjanmaa ja Simo / Lappi), ja rivi voi näyttää yhden. Valittiin
+Ii, koska säilyvä rivi on sen. Molemmilla riveillä luki aiemmin "Lappi",
+mikä oli Ii:n osalta väärin — mutta nyt Simo ei löydy Lappi-suodattimella.
+Se on yhdistämisen hinta, ja jos se haittaa, oikea ratkaisu on kaksi
+riviä eikä väärä maakunta.

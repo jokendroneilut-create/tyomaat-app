@@ -5851,3 +5851,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
 - Nimetyn ihmisen yhteystiedot täydentyvät yritysrekisteristä; yritykseltä näytetään enintään 3 (D-373, D-374)
 - Lähdeosoite palautettu 33 hankkeelle; 116 yhteyshenkilöehdotusta tarkistettu lähdettä vasten, 100 läpäisi (D-376)
 - Väylän hankesivun kenttälohko luetaan: 7 urakoitsijaa ja 14 kustannusarviota (D-377)
+- Oulu–Kemi-rataosan kaksi suunnitelmariviä yhdistetty yhdeksi, vaihe Rakenteilla ja kustannus 15 M€ (D-378)
