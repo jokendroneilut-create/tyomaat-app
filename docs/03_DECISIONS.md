@@ -23209,6 +23209,15 @@ hankkeet saavat kentät ilman takautuvaa ajoa.
 
 Sivulla on eri luku kuin meillä: Kehä I 25,8 → 30 M€, Kurkela–Kuusisto
 80 → 114,4 M€, Jokelan asema 163 → 546 M€, **Seinäjoki–Vaasa 157 → 4,2
-M€**. Ajo täyttää vain tyhjän. Seinäjoki–Vaasan kertaluokan ero kertoo
-että luvut koskevat eri laajuutta — se on selvitettävä erikseen, ei
-ylikirjoittamalla.
+M€**. Ajo täyttää vain tyhjän.
+
+**Seinäjoki–Vaasa ratkesi 7.11.2026 ja meidän luku oli oikein.** Johannes
+tarkisti: kokonaiskustannusarvio on 157 M€, josta nopeudennoston osuus 7
+M€ ja **suunnittelun 4,2 M€**. Sivun luku oli siis suunnittelun hinta,
+eikä kenttä sanonut sitä — toisin kuin Merenkurkun `(esiselvitys)`, jonka
+portti pysäyttää. Vain "täytä vain tyhjä" -sääntö esti ylikirjoituksen.
+
+**Avoin:** kaksi Oulu–Kemi-radan liikennepaikkaa (Ii ja Simo) sai saman
+**7 500 000 €** omilta sivuiltaan, ja niillä on sama kuvausteksti. Joko
+kumpikin maksaa sen, tai luku on parin yhteisarvo kopioituna molemmille
+([[combined-figure-split-by-owner-page]]). Sivulta ei voi ratkaista.
