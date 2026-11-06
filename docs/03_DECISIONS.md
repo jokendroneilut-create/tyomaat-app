@@ -22821,3 +22821,59 @@ molemmilla hankkeilla oli jo kaupunki, maakunta ja rakennuttaja toisesta
 lähteestä (John Stenbergin ranta STT:ltä). Jäljelle jää 3 riviä ilman
 kuntaa: kahdella ei ole osoitetta lainkaan ja yhdellä osoite on *"Kimolan
 kanava"*, joka ei ole kunta.
+
+## D-372 — Yritysrekisteriin vain työmaalle tavoitettavat (6.11.2026)
+
+Lisäsin Louhintahiekan 8 työpäällikköä yritysrekisteriin
+(`louhintahiekka.fi/yhteydenotot`). Rekisterissä oli **0 riviä** avaimella
+`louhintahiekka`: Jani Pullikka näkyi vain kahden hankkeen
+`contact_persons`-listalta, ja **ilman nimikettä**.
+
+Tarjosin lisäksi sivun 11 muuta nimeä — johto (3), liiketoimintajohtajat
+(4) ja hallinto (4). Johannes: *"ei lisätä noita muita koska ne eivät ole
+yhteyshenkilöitä työmaalle."*
+
+### Valintaperuste
+
+Rekisteriin tulee ihminen jonka **saa kiinni työmaasta**: työpäällikkö,
+työmaapäällikkö, projektipäällikkö, vastaava työnjohtaja, hankepäällikkö.
+Ei viestintä-, henkilöstö-, rekrytointi-, talous- tai kalustopäällikkö, eikä
+liiketoimintajohtaja — vaikka heidän yhteystietonsa olisivat samalla sivulla
+yhtä valmiina. Rekisteri on myynnin soittolista hankkeesta, ei yrityksen
+puhelinluettelo.
+
+**Pieni yhtiö on reunatapaus, ei poikkeus.** Rekisterissä on ennestään 15
+toimitusjohtajaa (SL Yhtiöt, Varte, Welco, Lapwall, Peltiässät…). Ne eivät
+riko sääntöä: pienessä yhtiössä toimitusjohtaja on lähin — usein ainoa —
+ihminen joka vastaa työmaasta. Peruste on **tavoitettavuus työmaan asiassa**,
+ei nimike sinänsä, joten näitä ei pidä siivota pois. Nimikejakauma
+6.11.2026: Projektipäällikkö 37, Työpäällikkö 19, Toimitusjohtaja 14,
+Työmaapäällikkö 6, Vastaava työnjohtaja 5, 16 ilman nimikettä.
+
+### Lähteen luotettavuus
+
+Nimi, nimike, sähköposti ja puhelin ovat sivun rakenteisessa
+`team_item`-lohkossa; osoite on `mailto:`-linkissä kokonaisena, joten mitään
+ei pääteltä. Jokaisen osoitteen paikallisosa tarkistettiin nimeä vastaan:
+**19/19 täsmäsi**, eli nimi–osoite-parit eivät olleet menneet ristiin.
+
+### Pullikka kirjoitettiin mukaan vaikka hän oli jo tiedossa
+
+`yrityksenHenkilot` yhdistää saman ihmisen **sähköpostin** perusteella ja
+käyttää rekisterin riviä pohjana, joten rivi antoi hänelle puuttuvan
+nimikkeen eikä kahdentanut häntä. Näkymä varmistettu ajamalla: 8 henkilöä,
+Pullikka kertaalleen, `hankkeilta 2`.
+
+### Taululta puuttuu uniikkirajoite
+
+`upsert`in `onConflict: "avain,email"` kaatuu (*"there is no unique or
+exclusion constraint matching the ON CONFLICT specification"*), ja molemmat
+kirjoittavat skriptit putoavat varareitille joka tekee suoran `INSERT`in —
+eli **uudelleenajo kahdentaisi rivit**. Näkymä ei paljastaisi sitä, koska
+dedup tapahtuu sähköpostilla; rivit kertyisivät vain tauluun.
+
+`lisaa-louhintahiekan-tyopaallikot.ts` tarkistaa olemassaolon itse
+(tunnettu sähköposti päivitetään, tuntematon lisätään), ja toistettavuus
+todistettiin ajamalla kahdesti: 8 riviä → 8 riviä. Indeksi on
+`docs/sql/2026-11-06_yritys_yhteyshenkilot_uniikki.sql` käsin ajettavaksi;
+kahdentuneita ei ole ennestään (0/171), joten se luodaan turvallisesti.
