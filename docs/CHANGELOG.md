@@ -5854,3 +5854,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
 - Oulu–Kemi-rataosan kaksi suunnitelmariviä yhdistetty yhdeksi, vaihe Rakenteilla ja kustannus 15 M€ (D-378)
 - Väylän yhteyshenkilön sähköposti korjattu vayla.fi-tunnukseen; emohankkeelta lisätty Welado Oy:n projektipäällikkö (D-379)
 - Oulu–Kemi valmistuneeksi 19.12.2022: sivun tilarivi oli vanhentunut, päivätty uutinen kertoi todellisen tilan (D-380)
+- 60 yhteyshenkilöehdotusta julkaistu hankekohtaisena; yhteystiedot tarkistettu lähdesivulta, 11 pudotettiin koska sivu ei vahvistanut niitä (D-376 vaihe 3)

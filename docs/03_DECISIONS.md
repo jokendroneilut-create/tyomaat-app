@@ -23138,16 +23138,45 @@ eli sivu on juuri hänestä, mutta Liferay-blogi renderöi tekstin
 selaimessa; jmoy.fi ja Hilman overview ovat samoin JS-renderöityjä.
 `EI_OSU` ei siis tarkoita väärää ehdotusta.
 
-### Vaihe 3 — ei tehty
+### Vaihe 3 — tehty 7.11.2026, ja porttia tiukennettiin
 
-**73 hanketta** on sellaisia joilla ehdotus läpäisi lähdetarkistuksen eikä
-omia yhteyshenkilöitä ole. Ne saisivat hankekohtaisen ihmisen (taso
-`project`, koska lähde on hankkeen oma sivu) — 24-kertaisesti enemmän kuin
-D-373:n kolme.
+Vaihe 2 tarkisti vain **nimen**. Puhelin ja sähköposti tulivat mallilta,
+ja juuri ne asiakas käyttää: väärä numero on pahempi kuin puuttuva, koska
+käyttäjä luulee tavoittaneensa oikean ihmisen. Siksi julkaisuajo tarkistaa
+myös **yhteystiedot samalta sivulta** — sähköpostin myös
+Cloudflare-suojauksen takaa (D-379) ja puhelimen numeroiksi riisuttuna,
+koska sivulla se voi olla `029 534 3342` ja ehdotuksessa
+`+358 29 534 3342`.
 
-**Portin raja on tiedossa:** se todistaa että nimi on sillä sivulla, ei
-että hän on *tämän hankkeen* oikea yhteyshenkilö. Jos sivu listaa koko
-yksikön, väärä ihminen läpäisee.
+| | kpl |
+|---|---|
+| ehdokkaita (ei ketään tavoitettavaa) | 86 |
+| **julkaistu** | **60** |
+| nimi sivulla, muttei sähköpostia eikä puhelinta | **11** |
+| nimi ei sivulla | 8 |
+| myyntirooli, jätetty pois | 4 |
+| haku epäonnistui | 3 |
+
+**Ne 11 ovat tiukennuksen arvo:** pelkällä nimitarkistuksella ne olisi
+julkaistu mallin antamilla yhteystiedoilla, joita sivu ei vahvista.
+
+Julkaistuista 30:llä on sekä sähköposti että puhelin, 26:lla vain puhelin
+ja 4:llä vain sähköposti. Jos vain toinen vahvistui, toinen jätetään
+tyhjäksi — ei koko ihmistä.
+
+**Myyntiväki jätettiin pois** ([[register-is-worksite-contacts]]):
+*"myyntipäällikkö, LKV"* myy asuntoja ja *"Sales Manager, Electricity
+Networks"* myy asiakkaille, kumpikaan ei vastaa työmaasta.
+
+**Yhdessä ehdotuksessa unicode oli jäänyt purkamatta**
+(`Ty"omaapäällikkö`); nimike puretaan ja karanneet
+lainausmerkit poistetaan ennen tallennusta.
+
+**Portin raja on yhä tiedossa:** se todistaa että nimi ja yhteystieto ovat
+sillä sivulla, ei että hän on *tämän hankkeen* oikea yhteyshenkilö. Jos
+sivu listaa koko yksikön, väärä ihminen läpäisee.
+
+Julkisia hankkeita ilman tavoitettavaa yhteyshenkilöä jäi **1 150**.
 
 ## D-377 — Väylän kenttälohko: urakoitsija ja kustannus (7.11.2026)
 
