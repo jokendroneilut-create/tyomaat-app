@@ -5,6 +5,8 @@ import {
   yrityksenYhteyshenkilot,
   type Yritysrekisteri,
   nimetytTaydennykset,
+  jarjestysPaino,
+  NAYTA_YRITYKSELTA_ENINTAAN,
 } from "./yritysrekisteri"
 
 const rekisteri: Yritysrekisteri = new Map([
@@ -237,5 +239,60 @@ describe("nimetytTaydennykset", () => {
       rekisteri
     )
     expect(tulos.map((t) => t.phone)).toEqual(["040 829 0089"])
+  })
+})
+
+describe("jarjestysPaino", () => {
+  /* Kasin lisatylla ei ole viela yhtaan hanketta johon toistuvuus perustuisi. */
+  it("kasin lisatty voittaa toistuvimmankin johdetun", () => {
+    expect(jarjestysPaino("kasin: louhintahiekka.fi/yhteydenotot, luettu 6.11.2026")).toBeGreaterThan(
+      jarjestysPaino("johdettu yrityksen omasta lahteesta, 28 hanketta")
+    )
+  })
+
+  it("lukee hankemaaran johdetusta lahteesta", () => {
+    expect(jarjestysPaino("johdettu yrityksen omasta lahteesta, 28 hanketta")).toBe(28)
+    expect(jarjestysPaino("johdettu yrityksen omasta lahteesta, 2 hanketta")).toBe(2)
+  })
+
+  it("tuntematon ja tyhja lahde painavat nolla", () => {
+    expect(jarjestysPaino(null)).toBe(0)
+    expect(jarjestysPaino("jostain muualta")).toBe(0)
+  })
+})
+
+describe("yritykselta naytetaan enintaan kolme", () => {
+  const moni: Yritysrekisteri = new Map([
+    [
+      "väylävirasto",
+      Array.from({ length: 51 }, (_, i) => ({
+        name: `Henkilo ${i}`,
+        title: "Projektipäällikkö",
+        email: `h${i}@vayla.fi`,
+        phone: null,
+        organization: "Väylävirasto",
+        level: "company" as const,
+      })),
+    ],
+  ])
+
+  it("yritystason lista katkaistaan kolmeen", () => {
+    expect(yrityksenYhteyshenkilot({ developer: "Väylävirasto" }, moni)).toHaveLength(
+      NAYTA_YRITYKSELTA_ENINTAAN
+    )
+  })
+
+  /*
+   * Katto on PER YRITYS: hankkeella voi olla monta olennaista ihmista
+   * kunhan he ovat eri yrityksista.
+   */
+  it("kaksi osapuoliyritysta antaa kuusi", () => {
+    const kaksi: Yritysrekisteri = new Map([
+      ["alfa", Array.from({ length: 9 }, (_, i) => ({ name: `A${i}`, title: null, email: null, phone: "1", organization: "Alfa Oy", level: "company" as const }))],
+      ["beeta", Array.from({ length: 9 }, (_, i) => ({ name: `B${i}`, title: null, email: null, phone: "1", organization: "Beeta Oy", level: "company" as const }))],
+    ])
+    expect(
+      osapuoltenYhteyshenkilot({ metadata: { related_companies: ["Alfa Oy", "Beeta Oy"] } }, kaksi)
+    ).toHaveLength(2 * NAYTA_YRITYKSELTA_ENINTAAN)
   })
 })

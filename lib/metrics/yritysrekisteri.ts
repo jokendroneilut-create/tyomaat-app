@@ -48,12 +48,33 @@ export type YritysYhteyshenkilo = {
 
 export type Yritysrekisteri = Map<string, YritysYhteyshenkilo[]>
 
+/*
+ * YRITYKSELTA NAYTETAAN ENINTAAN KOLME (D-374).
+ *
+ * Johannes 6.11.2026 nahtyaan Mahkonsillan kortin: *"korjataan ettei
+ * asiakkaalle nayteta 51 vayylaviraston nimea koska sekaan ei ole
+ * oikein."*
+ *
+ * Mitattu 6.11.2026: yritystason lista nakyi 176 hankkeella, keskimaarin
+ * 18,2 henkiloa, ja 69 hankkeella kymmenen tai enemman. Vaylavirastolla
+ * 51, Senaatti-kiinteistoilla 13, Kreatella 17. Lista ei ollut
+ * jarjestetty mitenkaan, joten kolme ensimmaista oli mielivaltaiset.
+ *
+ * KATTO ON PER YRITYS, EI PER HANKE. Johannes: *"hankkeella voi olla
+ * vaikka 10 olennaista yhteyshenkiloa mutta ne ovat eri yrityksista."*
+ * Nelja osapuoliyritysta antaa siis edelleen 12 ihmista.
+ *
+ * EI KOSKE `nimetytTaydennykset`ia (D-373): se haetaan nimiavaimella,
+ * ja katto voisi pudottaa juuri sen ihmisen jonka hanke nimeaa.
+ */
+export const NAYTA_YRITYKSELTA_ENINTAAN = 3
+
 const TYHJA: Yritysrekisteri = new Map()
 
 export async function haeYritysrekisteri(): Promise<Yritysrekisteri> {
   const { data, error } = await admin()
     .from("yritys_yhteyshenkilot")
-    .select("avain, yritys, nimi, nimike, email, puhelin")
+    .select("avain, yritys, nimi, nimike, email, puhelin, lahde")
     .limit(2000)
 
   /*
@@ -65,6 +86,12 @@ export async function haeYritysrekisteri(): Promise<Yritysrekisteri> {
     return TYHJA
   }
 
+  /*
+   * JARJESTYS RATKAISTAAN LUKUHETKELLA, koska `lahde` ei saa paatya
+   * selaimeen: se kertoo miten rivi on syntynyt, mika on sisainen asia.
+   * Lajiteltu lista riittaa, ja kutsuja ottaa vain karjen.
+   */
+  const painot = new Map<unknown, number>()
   const rekisteri: Yritysrekisteri = new Map()
   for (const rivi of data ?? []) {
     const avain = String(rivi.avain)
@@ -77,10 +104,38 @@ export async function haeYritysrekisteri(): Promise<Yritysrekisteri> {
       organization: String(rivi.yritys),
       level: "company",
     })
+    painot.set(lista[lista.length - 1], jarjestysPaino(rivi.lahde))
     rekisteri.set(avain, lista)
   }
 
+  for (const lista of rekisteri.values()) {
+    lista.sort(
+      (a, b) =>
+        (painot.get(b) ?? 0) - (painot.get(a) ?? 0) || a.name.localeCompare(b.name, "fi")
+    )
+  }
+
   return rekisteri
+}
+
+/*
+ * KAHDELLA HANKKEELLA TOISTUVA ON TARKEAMPI KUIN YHDELLA.
+ *
+ * `lahde` kertoo sen valmiiksi: johdetun rivin teksti on "johdettu
+ * yrityksen omasta lahteesta, N hanketta", ja D-242 perustelee rekisterin
+ * juuri tasta — *"28 hankkeella toistuva rakennuttaja on organisaation
+ * vakiokontakti"*.
+ *
+ * KASIN LISATTY VOITTAA AINA. Johannes on valinnut sen itse, eika
+ * Louhintahiekan tyopaallikolla ole viela yhtaan hanketta johon hanen
+ * toistuvuutensa voisi perustua -- toistuvuusluku syrjayttaisi juuri sen
+ * tiedon joka on tarkoituksella kerätty.
+ */
+export function jarjestysPaino(lahde: unknown): number {
+  const teksti = String(lahde ?? "")
+  if (/^kasin/i.test(teksti)) return 1_000_000
+  const n = teksti.match(/,\s*(\d+)\s+hanketta/)
+  return n ? Number(n[1]) : 0
 }
 
 /* Yrityksen yhteyshenkilot hankkeelle, tai tyhja jos yritysta ei tunneta. */
@@ -90,7 +145,7 @@ export function yrityksenYhteyshenkilot(
 ): YritysYhteyshenkilo[] {
   for (const avain of hankkeenYritysavaimet(hanke)) {
     const osuma = rekisteri.get(avain)
-    if (osuma?.length) return osuma
+    if (osuma?.length) return osuma.slice(0, NAYTA_YRITYKSELTA_ENINTAAN)
   }
   return []
 }
@@ -118,7 +173,8 @@ export function osapuoltenYhteyshenkilot(
 ): OsapuolenYhteyshenkilo[] {
   const tulos: OsapuolenYhteyshenkilo[] = []
   for (const osapuoli of hankkeenOsapuolet(hanke)) {
-    for (const henkilo of rekisteri.get(osapuoli.avain) ?? []) {
+    /* Katto per yritys: nelja osapuolta antaa edelleen 12 ihmista. */
+    for (const henkilo of (rekisteri.get(osapuoli.avain) ?? []).slice(0, NAYTA_YRITYKSELTA_ENINTAAN)) {
       tulos.push({ ...henkilo, organization: osapuolenNimi(osapuoli), group: "osapuoli" })
     }
   }

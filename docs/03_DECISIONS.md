@@ -22949,3 +22949,69 @@ osuvat nyt: SRV/Tero Karislahti, SRV/Jorma Seppä, Kreate/Ari Välimaa.
 tunnuksilla. Funktio ja reitti on varmistettu 16 testillä ja ajamalla
 oikealla datalla (3 hanketta, oikeat nimet ja numerot); käyttöliittymän
 yhdistys on luettu mutta ei renderöity. **Ei pushattu.**
+
+## D-374 — Yritykseltä näytetään enintään kolme (6.11.2026)
+
+Johannes nähtyään Mähkönsillan kortin localhostissa: *"korjataan ettei
+asiakkaalle näytetä 51 väyläviraston nimeä koska sekään ei ole oikein."*
+
+Hän huomasi ensin Kreaten 17 nimeä ja kysyi oliko se tarkoitus. **Ei
+ollut, eikä se ollut uusi:** korvauskoodi on ollut tuotannossa D-242:sta
+asti, ja Johannes vahvisti *"tuo on muuten livenä ihan samanlainen"*.
+Rekisteri vain kasvoi niin isoksi ettei kukaan ollut katsonut mitä
+yksittäinen kortti näyttää ([[look-at-visual-work]]).
+
+### Mitattu ennen korjausta
+
+| | |
+|---|---|
+| yritystason lista näkyi | 176 hanketta |
+| henkilöitä yhteensä | 3 198, keskimäärin **18,2** |
+| hankkeita joilla 10+ | 69 |
+| suurin | Väylävirasto **51**, Kreate 17, Senaatti 13 |
+
+Lista ei ollut järjestetty mitenkään, joten kolme ensimmäistä olisi ollut
+mielivaltainen valinta.
+
+### Katto on per yritys
+
+Johannes: *"hankkeella voi olla vaikka 10 olennaista yhteyshenkilöä mutta
+ne ovat eri yrityksistä."* Siksi `NAYTA_YRITYKSELTA_ENINTAAN = 3` leikkaa
+**jokaisen yrityksen listan erikseen**, ei hankkeen yhteismäärää: neljä
+osapuoliyritystä antaa edelleen 12 ihmistä.
+
+**Ei koske `nimetytTaydennykset`ia (D-373):** se haetaan nimiavaimella, ja
+katto voisi pudottaa juuri sen ihmisen jonka hanke itse nimeää.
+
+### Järjestys tulee datasta joka oli jo olemassa
+
+`lahde` kertoo toistuvuuden valmiiksi (*"johdettu yrityksen omasta
+lahteesta, N hanketta"*), ja D-242 perustelee rekisterin juuri tästä:
+*"28 hankkeella toistuva rakennuttaja on organisaation vakiokontakti."*
+
+**Käsin lisätty voittaa aina.** Louhintahiekan työpäälliköillä ei ole
+vielä yhtään hanketta johon toistuvuus voisi perustua, joten
+toistuvuusluku syrjäyttäisi juuri sen tiedon joka on tarkoituksella
+kerätty.
+
+Järjestys ratkaistaan lukuhetkellä `haeYritysrekisteri`ssä, koska `lahde`
+ei saa päätyä selaimeen — se kertoo miten rivi on syntynyt, mikä on
+sisäinen asia. Lajiteltu lista riittää, ja kutsuja ottaa kärjen.
+
+### Tulos
+
+| | ennen | jälkeen |
+|---|---|---|
+| henkilöitä yhteensä | 3 198 | **435** |
+| keskimäärin / hanke | 18,2 | **2,5** |
+| suurin yhdeltä yritykseltä | 51 | **3** |
+
+Kärkeen jäävät ovat mielekkäitä: Väylävirastolta rakennuttaja ja kaksi
+suunnitteluvastaavaa, Kreatelta kolme työpäällikköä, Senaatilta kaksi
+rakennuttajapäällikköä.
+
+**Avoin tarkennus:** Louhintahiekan kaikki 8 ovat käsin lisättyjä eli
+samanpainoisia, joten kärki on aakkosjärjestys. Alue on nimikkeessä
+näkyvissä, mutta Varsinais-Suomen hankkeelle olisi oikeampi näyttää
+Ville Lonka kuin Aleksi Vipusaari. Aluetäsmäys on seuraava askel jos
+tämä osoittautuu häiritseväksi.
