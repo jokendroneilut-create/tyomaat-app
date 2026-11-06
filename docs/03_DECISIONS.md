@@ -23063,14 +23063,22 @@ ennakkohuolto) ja kaksi jotka eivät ole hankintoja lainkaan:
 *"Markkinakartoitus: Kuiturakentaminen"* ja *"KUTSU
 MARKKINAVUOROPUHELUUN"*. Julkisia 7 051 → 7 043.
 
-**Rajatapaus jätettiin:** Omnian puitesopimus *"korjaus-, kunnossapito- ja
-muutostyöt"* (4 M€, 8 urakoitsijaa) sisältää myös korjaus- ja muutostyöt
-eli oikeaa rakentamista. Puitesopimuksella ei ole työmaata, mutta sen alla
-tehdään töitä — jätetty Johanneksen päätettäväksi ([[reject-is-not-final]]).
+**Rajatapaus jää näkyviin.** Omnian puitesopimus *"korjaus-, kunnossapito-
+ja muutostyöt"* (4 M€, 8 urakoitsijaa) sisältää myös korjaus- ja
+muutostyöt eli oikeaa rakentamista. Puitesopimuksella ei ole työmaata,
+mutta sen alla tehdään töitä. Johannes 7.11.2026: *"jätä tuo omnian
+puitesopimus."* Eli raja kulkee siinä, sisältyykö sopimukseen
+rakentamista — ei siinä, onko sanaa "kunnossapito" otsikossa.
 
-### Avoin
+### Karsintasääntöä ei tehdä
 
-Sääntöä ei ole karsinnassa, joten seuraava kunnossapitosopimus menee
-jonoon ja mahdollisesti läpi samalla tavalla. Jos sellainen tehdään, se on
-ajettava hyväksyttyjen yli ennen julkaisua ([[test-filter-against-approved]])
-— ja Espoon alueurakka on se rivi jolla sääntö testataan.
+Johannes 7.11.2026: *"ei tarvitse tehdä sääntöä tuolle, yritän muistaa."*
+
+Päätös on perusteltu: sääntö joutuisi erottamaan "ylläpitourakan"
+"alueurakasta", ja juuri se erottelu oli tässä se joka olisi mennyt
+väärin — 73 M€:n YIT-urakka olisi karsiutunut. Katselmoijan silmä tekee
+sen luotettavammin kuin kuvio, ja tapauksia on muutama vuodessa.
+
+Jos sääntö joskus tehdään, se on ajettava hyväksyttyjen yli ennen
+julkaisua ([[test-filter-against-approved]]) ja Espoon kaupunkiradan
+alueurakka 4 on se rivi jolla se testataan.
