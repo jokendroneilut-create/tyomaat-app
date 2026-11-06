@@ -1368,6 +1368,34 @@ muistin varassa.
   omistajatieto oikeasti ratkaisisi. Jos vastaus on "muutama kymmenen",
   tämä on halvempi hoitaa käsin.
 
+- **Väylän hankesivulta luetaan vain ensimmäinen yhteyshenkilö.**
+  (Kirjattu 7.11.2026, D-379, ei aloitettu.)
+
+  `vaylaContactBox` (`apiCollector.ts`) ottaa
+  `.contact-information .contact` -laatikoista **ensimmäisen**. Laskettu
+  neljältä sivulta: laatikoita on **1–3**.
+
+  Kirjalansalmen sivulla niitä on kolme — Saramaria Cowell
+  (Väylävirasto), **Tero Haaramäki (Kreate Oy)** ja Riitta Sirén
+  (tiedottaja). Saamme yhden. Johannes huomasi sen vertaamalla
+  hankekorttia lähteeseen.
+
+  **Urakoitsijan projektipäällikkö jää siis järjestelmällisesti
+  saamatta** Väylän sivuilta, vaikka hän on juuri se ihminen jonka saa
+  kiinni työmaasta ([[register-is-worksite-contacts]]). Väylävirasto on
+  rakennuttajana 329 julkisella hankkeella, joista 272:lla on
+  vayla.fi-osoite, joten vaikutus on mitattavissa ennen korjausta.
+
+  Samalla sivulla kannattaa tarkistaa **tiedottaja**: hän ei ole
+  työmaayhteys, joten kolmesta laatikosta kaksi on meille arvokkaita.
+
+  Huomaa myös että sivu voi tarjota **kaksi eri sähköpostimallia**
+  (`etunimi.sukunimi@vaylavirasto.fi` ja `…@vayla.fi`), joista
+  ensimmäinen on vanhentunut — ensimmäisen laatikon ottaminen poimi
+  juuri sen (D-379). Jos poiminta laajennetaan kaikkiin laatikoihin,
+  verkkotunnuksen valinta on ratkaistava samalla.
+
+
 ### Lähdekattavuus
 
 - **Jalon (`jalon.fi/yhteystiedot/tyomaat/`) — EI ole lähteenä,
