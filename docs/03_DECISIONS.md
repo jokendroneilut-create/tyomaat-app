@@ -23456,3 +23456,47 @@ osaa.
 
 Sama logiikka kuin [[never-hide-on-missing-data]]: emme poista tietoa
 siksi että se ei ole paras mahdollinen.
+
+## D-382 — Kirjalansalmi: väärä otsikko paljasti kaksoiskappaleen (7.11.2026)
+
+Johannes pyysi korjaamaan otsikon ja `tyon_laji`-kentän: rivin nimi oli
+*"Kirjalansalmen vanhan sillan purku"* ja `tyon_laji: "purku"`, mutta
+kuvaus, urakoitsija ja 128 M€ olivat koko uusimishankkeen. **Vanhan
+sillan purku on hankkeen myöhempi vaihe, ei tämä hanke**
+([[phases-are-separate-projects]]).
+
+Korjatessa paljastui että sama hanke oli kannassa **kahdesti**: Väylän
+rivin lisäksi Kreaten omalta sivulta tullut rivi omalla
+markkinointiotsikollaan. Pelkkä otsikon korjaus olisi jättänyt kaksi
+lähes samannimistä riviä asiakkaalle näkyviin.
+
+### 128 M€ on koko allianssin hinta
+
+Väylän sivu sanoo sen suoraan: *"Allianssihankkeen kehitysvaihe
+käynnistyi lokakuussa 2021 … Hankkeen kustannukset ovat 128 miljoonaa
+euroa."* Summa kattaa **molemmat sillat**, Kirjalansalmen ja
+Hessundinsalmen. Yksi rivi, yksi luku — ei kahta riviä samalla summalla
+([[alliance-split]]).
+
+### Yhdistäminen
+
+| | ennen | jälkeen |
+|---|---|---|
+| nimi | *Suomen vaativimpiin siltaprojekteihin kuuluva…* | **Mt 180 Kirjalansalmen ja Hessundinsalmen siltojen uusiminen** |
+| rakennuttaja | – | Väylävirasto |
+| kustannus | – | 128 M€ |
+| yhteyshenkilöt | 3 | **4** |
+| `tyon_laji` | – | uudisrakennus |
+
+**Säilyvä rivi on Kreaten**, koska siinä on `manually_edited_at` ja kolme
+yhteyshenkilöä yhden sijaan. **Nimi otettiin lähteestä**, koska kumpikaan
+vanha ei kelpaa: toinen nimeää väärän vaiheen, toinen on
+markkinointiotsikko. Molemmat jäivät `also_known_as`-listaan.
+
+### Katkos kesken ajon
+
+`--apply` ajettiin juuri kun Supabase kaatui. Tulos oli tuntematon:
+skripti päivittää ensin säilyvän rivin ja piilottaa sitten toisen, joten
+puolittainen lopputulos oli mahdollinen. **Skriptiä ei ajettu uudelleen
+sokkona** — ensin tarkistettiin molemmat rivit, ja ne olivat ennallaan
+eli katkos osui lukuvaiheeseen. Vasta sitten ajo tehtiin loppuun.

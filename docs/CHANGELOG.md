@@ -5856,3 +5856,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
 - Oulu–Kemi valmistuneeksi 19.12.2022: sivun tilarivi oli vanhentunut, päivätty uutinen kertoi todellisen tilan (D-380)
 - 60 yhteyshenkilöehdotusta julkaistu hankekohtaisena; yhteystiedot tarkistettu lähdesivulta, 11 pudotettiin koska sivu ei vahvistanut niitä (D-376 vaihe 3)
 - Yritysrekisterin roolikarsinta: 8 riviä pois (myynti, viestintä, väärä avain); sääntö yhteen paikkaan (D-381)
+- Kirjalansalmi: väärä otsikko paljasti kaksoiskappaleen; yhdistetty, 128 M€ on koko allianssin hinta (D-382)
