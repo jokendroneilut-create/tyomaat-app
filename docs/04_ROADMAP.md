@@ -854,6 +854,13 @@ muistin varassa.
   | Inkoon ajankohtainen kaavoitus | 9 |
   | Toholammin, Karkkilan, Kuusamon, Savitaipaleen… | 8 kukin |
 
+  **Kuusamo tehty 8.11.2026 toisella tavalla (D-393):** sen sivulla
+  kuvaus ei ole liitteessa vaan `<h1>`:n jalkeisessa ingressissa, jota
+  keraimen `.accordion-row`-rajaus ei nahnyt. 4 / 7 dokumenttia parani,
+  loput 3 ovat HTTP 404 (sivu poistettu). Liiteotsikkomittari kannattaa
+  ajaa uudelleen ennen kuin seuraava kunta valitaan taman listan
+  perusteella.
+
   **Jäsennin on jo korjattu** (D-351: "Kaavatyön tarkoitus", "Alueen
   sijainti", lauseankkurin virkeraja), joten työ on pelkkä **kytkentä
   kuntakohtaisesti**: kerääjälle `liitelinkit($, url, lohko)` ja

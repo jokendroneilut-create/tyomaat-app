@@ -14995,6 +14995,55 @@ async function collectKuusamoKaavaSource(source: DiscoverySource) {
     let description = ""
     const attachments: { label: string; url: string }[] = []
 
+    /*
+     * KUVAUS ON HAITARIN YLAPUOLELLA (D-393).
+     *
+     * Johannes 8.11.2026: *"tasta puuttuu kuvaus."* Haitarirruivit ovat
+     * VAIHEITA, ja niiden sisalto on menettelytekstia ("Osallistumis- ja
+     * arviointisuunnitelma nahtavilla 2.9.-1.10.2026 Kuulutus"). Hankkeen
+     * oma kuvaus on `<h1>`:n jalkeisessa kappaleessa:
+     *
+     *   "Asemakaavan muutos on kaynnistetty maanomistajan aloitteesta.
+     *    Suunnittelualue sijaitsee Kuusamon taajama-alueella Valtatie 5:n
+     *    varressa Nilonjarven rannalla…"
+     *
+     * Sama kuvio kuin Seinajoella (D-390): kerain oli rajattu yhteen
+     * lohkoon, ja sisalto on sen ulkopuolella
+     * ([[scoped-selector-hides-other-data]]).
+     *
+     * RAJA ON HAITARI, EI PITUUS. Sivun lopussa on kayntiosoite
+     * ("Keskuskuja 6 PL 9, 93601 Kuusamo Vaihde 040 860 8600"), joka
+     * menisi pituusrajan lapi. Kappaleet luetaan siksi vain `<h1>`:n ja
+     * ENSIMMAISEN haitarirruivin valista.
+     *
+     * RIVI ON `li.accordion-row`, EI `div`. Ensimmainen versio rajasi
+     * `div.accordion-row`iin, jolloin raja ei lauennut KERTAAKAAN ja
+     * kuvauksen perään tuli seka vaiheen menettelyteksti etta
+     * alatunnisteen kayntiosoite. Valitsin on siksi elementitoin.
+     */
+    const ingressi: string[] = []
+    {
+      let h1Nahty = false
+      let haitariAlkoi = false
+      $("h1, p, .accordion-row").each((__, el) => {
+        if (haitariAlkoi) return
+        const $el = $(el)
+        if ($el.is(".accordion-row")) {
+          haitariAlkoi = true
+          return
+        }
+        /* Sivuston omat lohkot eivat ole hankkeen kuvausta. */
+        if ($el.closest("header, nav, footer, .is-sr-only").length) return
+        if ($el.is("h1")) {
+          h1Nahty = true
+          return
+        }
+        if (!h1Nahty) return
+        const teksti = $el.text().replace(/\s+/g, " ").trim()
+        if (teksti.length >= 40) ingressi.push(teksti)
+      })
+    }
+
     for (const row of $(".accordion-row").toArray()) {
       const label = $(row).find(".accordion-title-text").first().text().replace(/\s+/g, " ").trim()
       const contentEl = $(row).find(".accordion-content").first()
@@ -15018,6 +15067,13 @@ async function collectKuusamoKaavaSource(source: DiscoverySource) {
           }))
       )
     }
+
+    /*
+     * Ingressi voittaa vaiheen menettelytekstin; jos ingressia ei ole,
+     * vanha kayttaytyminen jaa voimaan.
+     */
+    const ingressiKuvaus = collectDescription(ingressi)
+    if (ingressiKuvaus) description = ingressiKuvaus
 
     const completed = phase === "Voimaantulo"
     const contacts = [KUUSAMO_CONTACT]

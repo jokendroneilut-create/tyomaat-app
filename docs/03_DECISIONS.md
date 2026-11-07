@@ -51,6 +51,81 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-393 – Haitari on vaiheita, kuvaus on sen yläpuolella — ja valitsin osui väärään elementtiin
+
+Johannes 8.11.2026 Kuusamon rivistä (`02ddaf4e`): *"tästä puuttuu
+kuvaus, lisätään, tarkista on muualla samasta lähteestä sama ongelma
+jono+kanta ja korjataan"*, ja perään sivun oma teksti: *"Asemakaavan
+muutos on käynnistetty maanomistajan aloitteesta. Suunnittelualue
+sijaitsee Kuusamon taajama-alueella Valtatie 5:n varressa Nilonjärven
+rannalla…"*
+
+#### Keräin luki vaiheet, ei hanketta
+
+Kuusamon kaavasivulla on viisi haitarirriviä — Vireilletulo,
+Valmisteluvaihe, Ehdotusvaihe, Hyväksymisvaihe, Lainvoima — ja
+saavuttamattomat sisältävät pelkän pisteen. Keräin otti kuvaukseksi
+viimeisen saavutetun rivin sisällön, joka on **menettelytekstiä**:
+
+> *"Osallistumis- ja arviointisuunnitelma nähtävillä 2.9.–1.10.2026
+> Kuulutus 2.9.2026 Osallistumis- ja arviointisuunnitelma"* (119 merkkiä)
+
+Hankkeen oma kuvaus on `<h1>`:n jälkeisessä kappaleessa, haitarin
+yläpuolella. Sama kuvio kuin Seinäjoella (D-390): keräin on rajattu
+yhteen lohkoon, ja sisältö on sen ulkopuolella
+([[scoped-selector-hides-other-data]]). **Tämä on kuvion kolmas
+esiintymä kahdessa päivässä.**
+
+#### Oma virhe, jonka vain tuotoksen lukeminen paljasti
+
+Ensimmäinen korjaus rajasi kappaleet väliin `<h1>` … ensimmäinen
+`div.accordion-row`. Haitarirrivi on sivulla **`li.accordion-row`**,
+joten raja ei lauennut kertaakaan — ja kuvauksen perään tuli sekä
+vaiheen menettelyteksti että alatunnisteen käyntiosoite:
+
+> *"…tutkia korttelin 201 laajennustarpeita. Osallistumis- ja
+> arviointisuunnitelma nähtävillä 2.9.-1.10.2026. Keskuskuja 6 PL 9,
+> 93601 Kuusamo Vaihde 040 860 8600"* (445 merkkiä)
+
+Luku näytti hyvältä (119 → 445), eikä mikään kaatunut. Virhe näkyi vain
+lukemalla kirjoitettu teksti. Valitsin on nyt elementitön
+(`.accordion-row`), ja sivuston omat lohkot (`header`, `nav`, `footer`,
+`.is-sr-only`) rajataan pois erikseen.
+
+**Toinen oma virhe samassa ketjussa:** korjattu sääntö tuottaa
+**lyhyemmän** tekstin, ja takautuvan ajon ehto oli *"kirjoita vain jos
+uusi on pidempi"* — se olisi estänyt oman korjauksensa. Lisäksi näkyvän
+kentän *"vanhaa ei heitetä pois"* -sääntö liitti saman kuvauksen
+perään toistona. Molemmat ratkaistiin samalla ehdolla: jos vanha teksti
+**alkaa** uuden ensimmäisellä kappaleella, se on saman tekstin vanha
+versio ja korvataan.
+
+#### Tulos
+
+| | |
+|---|---|
+| Kuusamon dokumentteja | 7 |
+| kuvaus parani | **4** |
+| ei parantunut | 3, kaikki **HTTP 404** — sivu poistettu kaavan valmistuttua |
+| kirjoitettu | 4 dokumenttia, 4 jonoriviä, 3 hanketta |
+
+Esimerkit ovat hankkeen omaa tekstiä, eivät menettelyä: Rukan kortteli
+121 *"hotelli- ja majoituspalveluiden sekä liikuntapalveluiden
+sijoittaminen… FIS-vaatimukset täyttävä rinnealue"*, Keisarinharju
+*"lisätä alueelle lomarakennustontteja"*, Mäntyselkä *"rakennusoikeutta,
+liikennejärjestelyjä sekä mahdollisia tonttirajojen muutostarpeita"*.
+
+#### Yleinen täydentäjä ei pysty tähän lähteeseen
+
+`taydenna-kaavakuvaukset.ts` hakee `fetch`illä Mozilla-tunnisteella ja
+saa Kuusamosta **HTTP 500**; keräimen oma reitti (`node:https` ilman
+omia otsikoita) toimii. Tunnistetta ei lähdetty kiertämään — takautuva
+ajo käyttää samaa reittiä kuin keräin
+(`scripts/taydenna-kuusamon-kuvaukset.ts`).
+
+Muutetut: `lib/agent/discovery/collectors/apiCollector.ts`,
+`scripts/taydenna-kuusamon-kuvaukset.ts` (uusi).
+
 ### D-392 – Liite oli skannattu kuva, ei jäsennysvirhe: nolla fonttia, kymmenen kuvaobjektia
 
 Johannes 8.11.2026 Pornaisten Läpimurrontien rivistä (`e8fc52d2`):

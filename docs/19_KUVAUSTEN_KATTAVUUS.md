@@ -45,6 +45,7 @@ avausta 2 467:stä). Tämä on se luku jota seurataan, ei rivien määrä.
 | Helsingin asemakaavat (SUKKA) | 60 riviä 65:stä; hankkeista 198/201 yli 200 merkin | kynnys 200 merkkiä, OAS + selostus, D-270 |
 | Kouvolan ajankohtaiset asemakaavat | 14 / 26 | yleinen täydentäjä, D-271 |
 | Pornaisten vireillä olevat kaavat | 9 / 25 (hankkeista 12 / 27 yli 200 merkin) | yleinen täydentäjä 8.11.2026, D-392 |
+| Kuusamon vireillä olevat asemakaavat | 4 / 7 (3 sivua poistettu, HTTP 404) | ingressi `<h1>`:n jälkeen, D-393 |
 | Mustasaaren vireillä olevat asemakaavat | 7 / 21 | yleinen täydentäjä |
 | Kangasalan vireillä olevat asemakaavat | 7 / 19 | yleinen täydentäjä |
 | Kauniaisten vireillä olevat asemakaavat | 3 / 15 | yleinen täydentäjä |
@@ -58,6 +59,30 @@ npx tsx scripts/taydenna-kaavakuvaukset.ts "<source_name>"
 npx tsx scripts/taydenna-kaavakuvaukset.ts "<source_name>" --apply
 npx tsx scripts/synkronoi-kuvaus-nakyviin.ts --apply   # hankkeen näkyvä kenttä
 ```
+
+**HAITARI ON VAIHEITA, KUVAUS ON SEN YLÄPUOLELLA (D-393).** Kuusamon
+kaavasivulla keräin luki vain `.accordion-row` -rivit, ja ne ovat
+menettelytekstiä (*"Osallistumis- ja arviointisuunnitelma nähtävillä
+2.9.–1.10.2026"*). Hankkeen oma kuvaus on `<h1>`:n jälkeisessä
+kappaleessa, haitarin yläpuolella. Sama kuvio kuin Seinäjoella (D-390):
+**keräin on rajattu lohkoon, ja sisältö on sen ulkopuolella** — tarkista
+aina mitä sivulla on rajauksen ulkopuolella.
+
+Kaksi omaa virhettä samassa korjauksessa, ja kumpikaan ei näkynyt
+luvuissa: valitsin oli `div.accordion-row`, mutta rivi on
+`li.accordion-row`, joten raja ei lauennut ja kuvauksen perään tuli
+alatunnisteen käyntiosoite (119 → 445 merkkiä näytti onnistumiselta).
+Korjattu sääntö tuottaa **lyhyemmän** tekstin, joten takautuvan ajon ehto
+*"vain jos pidempi"* olisi estänyt oman korjauksensa, ja näkyvän kentän
+säilytyssääntö liitti saman kuvauksen perään toistona. Molemmat
+ratkaistiin ehdolla *"jos vanha alkaa uuden ensimmäisellä kappaleella,
+se on saman tekstin vanha versio"*.
+
+**Kuusamoon ei pääse yleisellä täydentäjällä.**
+`taydenna-kaavakuvaukset.ts` hakee `fetch`illä Mozilla-tunnisteella ja
+saa HTTP 500; keräimen oma reitti (`node:https`, ei omia otsikoita)
+toimii. Takautuva ajo on siksi omanaan:
+`scripts/taydenna-kuusamon-kuvaukset.ts`.
 
 **SKANNATTU LIITE EI OLE JÄSENNYSVIRHE (D-392).** Jos liitteessä on
 kuvaobjekteja mutta **nolla fonttia**, siinä ei ole tekstikerrosta eikä
