@@ -486,3 +486,56 @@ describe("jasennaYhteyshenkilot - muodot B ja C", () => {
     expect(h[0].puhelin).toBe("030 395 5365")
   })
 })
+
+describe("jasennaYhteyshenkilot - muoto E: nimi nimikkeen jaljessa (D-391)", () => {
+  /*
+   * Harjulinjan jatkon sivu 8.11.2026. Yritys ja nimike ovat ENNEN
+   * nimea, puhelin perassa, ja molemmat henkilot ovat samassa <p>:ssa
+   * <br>-eroteltuina. Entiteetit ovat numeerisia, kuten sivulla.
+   */
+  const HTML = [
+    '<div class="well">',
+    '<h3 class="title">Lis&#228;tietoja</h3>',
+    "<p>Fingrid Oyj, vanhempi asiantuntija, ymp&#228;rist&#246; Marja Nuottaj&#228;rvi p. 030 395 5301<br />",
+    "Fingrid Oyj, vanhempi asiantuntija, voimajohtojen reittisuunnittelu Pasi Saari, puh. 030&nbsp;395 5178</p>",
+    "</div>",
+  ].join("")
+
+  it("poimii molemmat henkilot nimikkeineen ja numeroineen", () => {
+    expect(jasennaYhteyshenkilot(HTML)).toEqual([
+      {
+        nimi: "Marja Nuottajärvi",
+        nimike: "vanhempi asiantuntija, ympäristö",
+        puhelin: "030 395 5301",
+        sahkoposti: null,
+        organisaatio: "Fingrid Oyj",
+      },
+      {
+        nimi: "Pasi Saari",
+        nimike: "vanhempi asiantuntija, voimajohtojen reittisuunnittelu",
+        puhelin: "030 395 5178",
+        sahkoposti: null,
+        organisaatio: "Fingrid Oyj",
+      },
+    ])
+  })
+
+  it("ei ota yritysnimea henkiloksi", () => {
+    /*
+     * "Fingrid Oyj" on kaksi isolla alkavaa sanaa, joten ilman
+     * `EI_HENKILO`-estetta se kelpaisi nimeksi.
+     */
+    const html =
+      '<div class="well"><h3 class="title">Lisätietoja</h3>' +
+      "<p>Fingrid Oyj puh. 030 395 5000</p></div>"
+    expect(jasennaYhteyshenkilot(html)).toEqual([])
+  })
+
+  it("purkaa heksamuotoisen entiteetin", () => {
+    /* Kasin yllapidetty lista ei tuntenut heksamuotoa lainkaan. */
+    const html =
+      '<div class="well"><h3 class="title">Lis&#xE4;tietoja</h3>' +
+      "<p>Fingrid Oyj, asiantuntija Marja Nuottaj&#xE4;rvi p. 030 395 5301</p></div>"
+    expect(jasennaYhteyshenkilot(html)[0]?.nimi).toBe("Marja Nuottajärvi")
+  })
+})

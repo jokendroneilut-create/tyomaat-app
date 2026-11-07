@@ -152,12 +152,29 @@ async function main() {
   for (let a = 0; ; a += 1000) {
     const { data, error } = await db
       .from("potential_projects")
-      .select("id,status,url:metadata->>source_url,hanke:metadata->>matched_existing_project_id")
+      .select("id,status,title,metadata,url:metadata->>source_url,hanke:metadata->>matched_existing_project_id")
       .range(a, a + 999)
     if (error) throw error
     jonorivit.push(...(data ?? []))
     if ((data ?? []).length < 1000) break
   }
+  /*
+   * KATSELMOINTIA ODOTTAVA RIVI TAYDENNETAAN MYOS (D-391).
+   *
+   * Aiemmin tama ajo kosketti vain hankkeita, joten uusi sivu jonka
+   * rivi on vielä jonossa jai ilman yhteyshenkiloita -- ja juuri siita
+   * Johannes huomautti: *"tasta on yhteyshenkilot poimimatta."*
+   * Hyvaksynta kopioi metadatan sellaisenaan, joten jonoriville
+   * kirjoitettu lista siirtyy hankkeelle ilman eri ajoa.
+   */
+  const odottavatSivulta = new Map<string, any[]>()
+  for (const rivi of jonorivit) {
+    if (rivi.status !== "new") continue
+    const s2 = slugista(rivi.url)
+    if (!s2) continue
+    odottavatSivulta.set(s2, [...(odottavatSivulta.get(s2) ?? []), rivi])
+  }
+
   let jononKautta = 0
   for (const rivi of jonorivit) {
     if (rivi.status !== "approved" || !rivi.hanke) continue
@@ -176,14 +193,23 @@ async function main() {
   let yhtLisatty = 0
   let yhtTaydennetty = 0
   let kosketut = 0
+  let jonoKosketut = 0
   const ilmanHanketta: string[] = []
 
   for (const slug of slugit) {
-    const kohteet = sivulta.get(slug)
-    if (!kohteet?.length) {
+    const kohteet = sivulta.get(slug) ?? []
+    const odottavat = odottavatSivulta.get(slug) ?? []
+    /*
+     * SIVU KASITELLAAN MYOS ILMAN HANKETTA, jos sen rivi odottaa
+     * katselmointia (D-391). Ennen tama `continue` ohitti juuri ne
+     * sivut joiden rivi on vielä jonossa — eli uudet hankkeet, joilta
+     * yhteyshenkilot puuttuvat kaikkein todennakoisimmin.
+     */
+    if (!kohteet.length && !odottavat.length) {
       ilmanHanketta.push(slug)
       continue
     }
+    if (!kohteet.length) ilmanHanketta.push(slug)
     const html = await hae(`${LISTAUS}${slug}/`)
     if (!html) {
       console.log(`  HAKU EPAONNISTUI: ${slug}`)
@@ -235,10 +261,46 @@ async function main() {
       const { error } = await db.from("projects").update({ metadata: md }).eq("id", hanke.id)
       if (error) console.log(`   VIRHE: ${error.message}`)
     }
+
+    /* Katselmointia odottavat jonorivit samalta sivulta. */
+    for (const rivi of odottavatSivulta.get(slug) ?? []) {
+      const md0 = rivi.metadata ?? {}
+      const vanha: Kontakti[] = Array.isArray(md0.contact_persons) ? md0.contact_persons : []
+      const { lista, lisatty, taydennetty } = yhdista(vanha, poimitut)
+      if (!lisatty && !taydennetty) continue
+
+      jonoKosketut++
+      console.log(
+        `${slug} -> JONORIVI ${String(rivi.title ?? "").slice(0, 40)}
+` +
+          `   ${vanha.length} -> ${lista.length} yhteyshenkiloa (uusia ${lisatty}, taydennetty ${taydennetty})`
+      )
+      for (const k of lista.slice(vanha.length)) {
+        console.log(`     + ${k.name} | ${k.title ?? "-"} | ${k.phone ?? "-"} | ${k.organization ?? "(tyhja)"} | ${k.email ?? "-"}`)
+      }
+
+      if (!APPLY) continue
+      const { error } = await db
+        .from("potential_projects")
+        .update({
+          metadata: {
+            ...md0,
+            contact_persons: lista,
+            takautuvat_ajot: [
+              ...new Set([
+                ...(Array.isArray(md0.takautuvat_ajot) ? md0.takautuvat_ajot : []),
+                TUNNISTE,
+              ]),
+            ],
+          },
+        })
+        .eq("id", rivi.id)
+      if (error) console.log(`   VIRHE jonorivi: ${error.message}`)
+    }
   }
 
   console.log(`\n=== ${APPLY ? "AJETTU" : "KUIVAHARJOITUS"} ===`)
-  console.log(`  hankkeita kosketettu ${kosketut}`)
+  console.log(`  hankkeita kosketettu ${kosketut}, jonoriveja ${jonoKosketut}`)
   console.log(`  uusia yhteyshenkiloita ${yhtLisatty}, taydennettyja ${yhtTaydennetty}`)
   /*
    * SYY KERROTAAN RIVEITTAIN. Pelkka luku "12 sivua ilman hanketta"

@@ -51,6 +51,87 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-391 – Viides rivimuoto samassa lohkossa, ja takautuva ajo ohitti juuri jonossa olevat rivit
+
+Johannes 8.11.2026 Harjulinjan jatkon rivistä (`7c9abb43`): *"tästä on
+yhteyshenkilöt poimimatta. lisää ne, tarkista jono sekä kanta ja korjaa
+jatkoa varten että poimimme ne."*
+
+#### Väärä selitys ensin, ja miksi se tarkistettiin
+
+Ensimmäinen havainto oli, että sivun otsikko on `Lis&#228;tietoja`
+numeroentiteeteillä ja että `pilkoRivit` purkaa entiteetit **käsin
+lueteltuna listana**. Se näytti syyltä — sama ansa on kirjattu
+D-341:ssä ("Lisätiedot" → "Lis tiedot").
+
+**Ajoin purun läpi ennen kuin muutin mitään, ja selitys kaatui:**
+listassa oli jo numeerinen `&#(\d+);`, joten rivit purkautuivat oikein:
+
+```
+"Fingrid Oyj, vanhempi asiantuntija, ympäristö Marja Nuottajärvi p. 030 395 5301"
+"Fingrid Oyj, vanhempi asiantuntija, voimajohtojen reittisuunnittelu Pasi Saari, puh. 030 395 5178"
+```
+
+Entiteettipurku vaihdettiin silti cheeriolle, mutta **eri perusteella**:
+lista on vajaa (`&ndash;` ja `&amp;` ovat samalla sivulla, heksamuotoa
+`&#xE4;` ei lainkaan), joten seuraava sivu kaatuisi siihen. Mitattu
+54 sivun yli: purun vaihto ei muuttanut yhdenkään sivun tulosta.
+
+#### Varsinainen syy: nimi on rivin keskellä
+
+Lohko tunsi neljä muotoa (D-329, [[same-block-many-formats]]). Kaikki
+olettavat, että nimi on **rivin ainoa sisältö** tai **kaksoispisteen
+jälkeen**. Tässä rivissä on kolme tietoa peräkkäin: yritys, nimike
+pilkuilla, nimi, puhelin. Rivi ei siis ollut kenenkään nimi eikä
+kenenkään nimike, ja koko lohko tuotti **nollan**.
+
+Viides muoto ankkuroituu **puhelinmerkintään** (`p.` / `puh.`), ei
+pilkkuun: pilkku erottaa myös nimikkeen osat ("vanhempi asiantuntija,
+ympäristö"), joten siihen ei voi ankkuroida. Nimen on läpäistävä
+`onHenkilonimi`, joten "Fingrid Oyj" ei kelpaa nimeksi vaikka onkin
+kaksi isolla alkavaa sanaa.
+
+**Mitattu vanha vastaan uusi kaikilta 54 hankesivulta:**
+
+| | |
+|---|---|
+| sama tulos | **53** |
+| muuttui | 1 (juuri tämä sivu) |
+| uusia henkilöitä | 2 |
+| kadonneita | **0** |
+
+#### Toinen vika, jonka vasta tämä rivi paljasti
+
+Takautuva ajo (`taydenna-fingrid-yhteystiedot.ts`, D-370) kosketti vain
+**hankkeita**. Sen oma raportti kertoi tämän sivun kohdalla *"odottaa
+katselmointia"* ja ohitti sen — eli ajo ohitti järjestelmällisesti juuri
+ne sivut, joiden rivi on vielä jonossa. Ne ovat uusimpia, ja niiltä
+yhteyshenkilöt puuttuvat kaikkein todennäköisimmin.
+
+Nyt ajo täydentää myös `status = "new"` -rivit. Hyväksyntä kopioi
+metadatan sellaisenaan, joten jonoriville kirjoitettu lista siirtyy
+hankkeelle ilman eri ajoa.
+
+#### Jono ja kanta tarkistettu
+
+| | |
+|---|---|
+| Fingrid-rivejä jonossa | 51, ilman nimettyä henkilöä **1** (tämä) |
+| Fingrid-hankkeita | 44, ilman nimettyä henkilöä **0** |
+
+Ajo kirjoitti: 1 jonorivi (2 henkilöä) ja 4 hanketta (1 uusi henkilö,
+4 täydennettyä kenttää) — jälkimmäiset ovat sivujen omaa muutosta
+2.11. jälkeen, eivät tämän korjauksen tulosta.
+
+Rivi `7c9abb43` sai Marja Nuottajärven (vanhempi asiantuntija,
+ympäristö) ja Pasi Saaren (vanhempi asiantuntija, voimajohtojen
+reittisuunnittelu) puhelinnumeroineen. Sähköpostia ei päätellä, vaikka
+Fingridin sivu kertoo säännön — sääntö ei kerro miten ä ja ö
+kirjoitetaan osoitteessa (lohkon alkuperäinen perustelu pätee yhä).
+
+Muutetut: `lib/agent/fetchFingridProjectsSource.ts`,
+`scripts/taydenna-fingrid-yhteystiedot.ts`.
+
 ### D-390 – Yhteyshenkilöt olivat sivupalkissa, johon kuvausrajaus oli nimenomaan kiellettu katsomasta
 
 Johannes 8.11.2026 Seinäjoen Rahkolan kaavarivistä (`58e3c219`):

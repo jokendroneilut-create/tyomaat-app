@@ -321,18 +321,59 @@ function yritysOtsikosta(teksti: string): string | null {
 const MUOTO_B_RIVI =
   /^(.{2,90}?):\s*([A-ZÅÄÖ][a-zåäö-]+(?:\s+[A-ZÅÄÖ][a-zåäö-]+){1,2})\s*,?\s*(.*)$/
 
+/*
+ * MUOTO E: NIMI YRITYKSEN JA NIMIKKEEN JALJESSA, PUHELIN PERASSA (D-391).
+ *
+ * Johannes 8.11.2026 Harjulinjan jatkon rivista: *"tasta on
+ * yhteyshenkilot poimimatta."* Lohko loytyi ja rivit purkautuivat
+ * oikein — syy oli jarjestys:
+ *
+ *   "Fingrid Oyj, vanhempi asiantuntija, ympäristö Marja Nuottajärvi
+ *    p. 030 395 5301"
+ *
+ * Muoto B vaatii KAKSOISPISTEEN nimen edelle ja muodot A/C/D sen, etta
+ * nimi on rivin AINOA sisalto. Tassa nimi on keskella: ennen sita on
+ * yritys ja nimike pilkuilla, perassa puhelin. Kaikki kolme tietoa ovat
+ * samalla rivilla, joten rivi ei ollut kenenkaan nimi eika kenenkaan
+ * nimike — koko lohko tuotti nollan
+ * ([[same-block-many-formats]]: nyt viisi muotoa samassa lohkossa).
+ *
+ * ANKKURI ON PUHELINMERKINTA, EI PILKKU. Pilkku erottaa myos nimikkeen
+ * osat ("vanhempi asiantuntija, ympäristö"), joten siihen ei voi
+ * ankkuroida. "p." tai "puh." sen sijaan aloittaa aina rivin lopun, ja
+ * sita juuri ennen on nimi.
+ *
+ * NIMEN ON LAPAISTAVA `onHenkilonimi`, joten "Fingrid Oyj" ei kelpaa
+ * nimeksi (EI_HENKILO tuntee yhtiomuodot) vaikka se onkin kaksi isolla
+ * alkavaa sanaa.
+ */
+const MUOTO_E_RIVI = new RegExp(
+  `^(.{2,120}?)[\\s,]+(${NIMISANA}(?:\\s+${NIMISANA}){1,2})\\s*,?\\s*((?:\\bpuh\\.?|(?<![a-zåäöA-ZÅÄÖ])p\\.)\\s*\\+?[0-9].*)$`,
+  "u"
+)
+
+/*
+ * ENTITEETIT PURETAAN CHEERIOLLA, EI KASIN LUETELLEN.
+ *
+ * TAMA EI OLLUT D-391:n SYY — tarkistin sen ennen kuin muutin mitaan:
+ * Harjulinjan sivun rivit purkautuivat jo oikein, koska numeerinen
+ * `&#228;` oli listassa. Mutta lista on silti vajaa: samalla sivulla on
+ * `&ndash;` ja `&amp;`, eika heksamuotoa (`&#xE4;`) ole lainkaan, joten
+ * seuraava sivu voi kaatua samaan ansaan kuin D-341 ("Lisätiedot" ->
+ * "Lis tiedot").
+ *
+ * Kasin yllapidetty entiteettilista on aina vajaa, joten purku annetaan
+ * cheeriolle, joka tuntee koko taulun. `<br>` korvataan ensin
+ * ohjausmerkilla, koska `.text()` haivyttaisi rivijaon.
+ */
+const RIVIMERKKI = "\u0001"
+
 function pilkoRivit(sisalto: string | null): string[] {
-  return (sisalto ?? "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&lt;?/g, "<")
-    .replace(/&gt;?/g, ">")
-    .replace(/&quot;?/g, '"')
-    .replace(/&auml;/g, "ä")
-    .replace(/&ouml;/g, "ö")
-    .replace(/&aring;/g, "å")
-    .replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n)))
+  const html = (sisalto ?? "").replace(/<br\s*\/?>/gi, RIVIMERKKI)
+  return cheerio
+    .load(`<div>${html}</div>`)("div")
+    .text()
+    .replace(new RegExp(RIVIMERKKI, "g"), "\n")
     .split("\n")
     .map((r) => r.replace(/\s+/g, " ").trim())
     .filter(Boolean)
@@ -453,6 +494,29 @@ export function jasennaYhteyshenkilot(html: string): FingridYhteyshenkilo[] {
           organisaatio = edellinen
         }
         if (bOsui) {
+          odottavaNimi = null
+          return
+        }
+
+        /*
+         * MUOTO E: nimi yrityksen ja nimikkeen jaljessa, puhelin
+         * perassa. Kasittely on sama kuin muodossa B — vain ankkuri
+         * eroaa (puhelinmerkinta kaksoispisteen sijaan).
+         */
+        let eOsui = false
+        for (const rivi of rivit) {
+          const m = rivi.match(MUOTO_E_RIVI)
+          if (!m || !onHenkilonimi(m[2])) continue
+          eOsui = true
+          const osat = m[1].split(",").map((o) => o.trim()).filter(Boolean)
+          const paikallinenOrgE = osat[0] ? yritysOtsikosta(osat[0]) : null
+          const nimike = (paikallinenOrgE ? osat.slice(1) : osat).join(", ")
+          const edellinen = organisaatio
+          if (paikallinenOrgE) organisaatio = paikallinenOrgE
+          lisaa(m[2], `${nimike} ${m[3] ?? ""}`.trim())
+          organisaatio = edellinen
+        }
+        if (eOsui) {
           odottavaNimi = null
           return
         }
