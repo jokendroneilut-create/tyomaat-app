@@ -1555,6 +1555,38 @@ muistin varassa.
   nimijärjestys sähköpostia vasten, kuten Seinäjoella tehtiin (58
   korttia, 0 poikkeamaa).
 
+- **Aurora Line ei ole koskaan tullut jonoon** (tarkistettu 8.11.2026,
+  D-391). Fingridin hankesivuista `aurora-line` on **ainoa**, jolle ei
+  löydy jonoriviä eikä hanketta — ei lähdeosoitteella eikä nimellä.
+  Muut yhdeksän "ilman hanketta" -sivua selittyvät: viisi on jonosta
+  poistettu tarkoituksella, yksi odottaa katselmointia ja **neljä on
+  kannassa nimellä**, lähdeosoite vain eri (ne tulivat YVA- tai
+  STT-reittiä, ja niillä on Fingridin yhteyshenkilöt).
+
+  Aurora Line on Suomen ja Ruotsin välinen siirtoyhteys, eli kokoluokka
+  on iso. Selvitä miksi sivu ei tuota ehdokasta: tuoreusikkuna, LLM-portti
+  vai se ettei sivu ole listaussivulla silloin kun keräin käy
+  (ks. muisti: missing-candidates-open).
+
+- **Rikkinäisiä yhteyshenkilömerkintöjä 19, luettu riveittäin**
+  (mitattu 8.11.2026). Kaksi vikaluokkaa, eri syytä ja eri korjaus
+  (ks. muisti: contact-entry-cleanup):
+
+  | vika | kpl | esimerkki |
+  |---|---|---|
+  | katuosoite nimenä | 15 | "Aleksanterinkatu 8" (Lahden Palveluasunnot Oy), "Lepokankaantie 2, 74300 SONKAJÄRVI", "Keskustie Puumala", "Läkkisepäntie Helsinki" |
+  | koko lohko nimikkeeseen | 4 | "Maria Arola", nimike 193 merkkiä: *"Asiantuntija, YVA-menettely ja ympäristö Tiina Koivunen Erikoisasiantuntija… Tommi Olsson Projektipäällikkö…"* |
+
+  Koskee 17 hanketta. Jälkimmäisessä luokassa **nimikkeeseen valuneet
+  nimet ovat oikeita ihmisiä**, jotka pitäisi erottaa omiksi
+  merkinnöikseen — eli korjaus lisää yhteyshenkilöitä, ei vain siivoa.
+
+  **Mittari oli ensin väärässä, ja se kannattaa muistaa:** katusana
+  yksin löysi 22 merkintää, joista seitsemän oli aitoja sukunimiä
+  (Talvitie, Metsärinne, Suvitie). Osoite tunnistuu vasta numerosta tai
+  katusanan perässä olevasta kunnasta. Älä aja korjausta pelkällä
+  katusanalla.
+
 ### Lähdekattavuus
 
 - **Jalon (`jalon.fi/yhteystiedot/tyomaat/`) — EI ole lähteenä,

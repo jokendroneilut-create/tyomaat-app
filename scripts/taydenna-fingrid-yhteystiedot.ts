@@ -314,15 +314,53 @@ async function main() {
     const s = slugista(rivi.url)
     if (s) jonoSivulta.set(s, rivi.status)
   }
+  /*
+   * LISTA EI SAA YLI-ILMOITTAA (D-391 jatko).
+   *
+   * Osuma etsittiin vain LAHDEOSOITTEELLA, joten sama Fingridin hanke
+   * nayttaa hankkeettomalta silloin kun se on tullut kantaan toista
+   * reittia (YVA tai ELY-keskuksen tiedote) ja sen `source_url` on eri.
+   * Mitattu 8.11.2026: viidesta "ilman hanketta" -sivusta kaksi
+   * (lieto-raisio, seinajoki-hirvisuo) OLI kannassa, loydettavissa
+   * nimella. Vaara tyolista on yhta haitallinen kuin puuttuva: se vie
+   * aikaa selvityksiin joita ei tarvita.
+   *
+   * Nimiosuma on tassa vain RAPORTIN tarkennus, ei kirjoitusperuste:
+   * yhteyshenkiloita ei kirjoiteta nimiosuman perusteella, koska
+   * samankaltainen nimi ei todista samaa hanketta
+   * ([[proximity-needs-same-kind]]).
+   */
+  const nimiOsuu = (slug: string): any | null => {
+    const sanat = slug.split("-").filter((x) => x.length >= 5)
+    /*
+     * KAKSI PITKAA SANAA, EI YKSI. Yhdella sanalla "aurora-line" osui
+     * hankkeeseen "Auroran alueen paihdepalveluiden rakennus" — eri
+     * hanke, eri kunta, eri toimiala. Voimajohtohankkeen nimi on
+     * kaytannossa aina kaksiosainen (paatepisteet), joten kahden sanan
+     * vaatimus ei hukkaa aitoja osumia mutta torjuu taman.
+     */
+    if (sanat.length < 2) return null
+    for (const h of hankkeet) {
+      const nimi = String(h.name ?? "")
+        .toLowerCase()
+        .replace(/[äå]/g, "a")
+        .replace(/ö/g, "o")
+      if (sanat.every((x) => nimi.includes(x))) return h
+    }
+    return null
+  }
+
   for (const slug of ilmanHanketta) {
     const tila = jonoSivulta.get(slug)
-    const selite =
-      tila === "ignored"
+    const nimella = nimiOsuu(slug)
+    const selite = nimella
+      ? `hanke on kannassa NIMELLA: ${nimella.id} (${String(nimella.name).slice(0, 46)})`
+      : tila === "ignored"
         ? "jonosta poistettu tarkoituksella"
         : tila === "new"
           ? "odottaa katselmointia"
           : tila === "approved"
-            ? "HYVAKSYTTY mutta hanketta ei loydy osoitteella -- selvitettava"
+            ? "HYVAKSYTTY mutta hanketta ei loydy -- selvitettava"
             : "ei koskaan tullut jonoon"
     console.log(`     ${slug.padEnd(40)} ${selite}`)
   }
