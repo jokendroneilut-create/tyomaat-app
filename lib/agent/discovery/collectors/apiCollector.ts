@@ -1,4 +1,8 @@
 import { vaylanYhteyshenkilot } from "@/lib/agent/vaylaContacts"
+import {
+  seinajoenYhteyshenkilot,
+  type SeinajoenYhteyshenkilo,
+} from "@/lib/agent/seinajoenYhteystiedot"
 import { parseVaylaInfoFields } from "@/lib/agent/vaylaInfoFields"
 import {
   haeKaavaselostuksenTeksti,
@@ -3206,6 +3210,12 @@ type SeinajokiDetails = {
   phase: string | null
   description: string | null
   /*
+   * Sivupalkin yhteystietokortit (D-390). Kuvaus luetaan
+   * <article>-elementista nimenomaan siksi, ettei haku jatku
+   * sivupalkkiin — ja juuri siella yhteyshenkilot ovat.
+   */
+  contacts: SeinajoenYhteyshenkilo[]
+  /*
    * Paattyiko kaavoitus voimaantuloon vai kumoamiseen, ja milloin.
    * Paiva ratkaisee onko hanke tuore liidi vai vuosien takainen kaava:
    * ilman sita 2012 ja 2026 nayttavat samalta.
@@ -3259,6 +3269,7 @@ async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
     completed: false,
     phase: null,
     description: null,
+    contacts: [],
     tila: "kesken",
     voimaantulo: null,
   }
@@ -3356,6 +3367,7 @@ async function fetchSeinajokiDetails(url: string): Promise<SeinajokiDetails> {
       completed,
       phase: phase || null,
       description,
+      contacts: seinajoenYhteyshenkilot($),
       tila: paatos.tila,
       voimaantulo: paatos.paiva,
     }
@@ -3416,6 +3428,14 @@ async function collectSeinajokiSource(source: DiscoverySource) {
         completed: row.raw_payload.completed ?? false,
         phase: row.raw_payload.phase,
         description: row.raw_payload.description ?? null,
+        /*
+         * Yhteyshenkilot myos valimuistista: ilman tata kerran haettu
+         * rivi menettaisi heidat heti seuraavassa ajossa, koska
+         * detaljisivua ei haeta uudelleen.
+         */
+        contacts: Array.isArray(row.raw_payload.contacts)
+          ? row.raw_payload.contacts
+          : [],
         tila: row.raw_payload.kaava_tila,
         voimaantulo: row.raw_payload.voimaantulo ?? null,
       })
@@ -3458,6 +3478,7 @@ async function collectSeinajokiSource(source: DiscoverySource) {
             completed: details?.completed ?? false,
             kaava_tila: details?.tila ?? null,
             voimaantulo: details?.voimaantulo ?? null,
+            contacts: details?.contacts ?? [],
           },
           processed_at: new Date().toISOString(),
           last_seen_at: new Date().toISOString(),

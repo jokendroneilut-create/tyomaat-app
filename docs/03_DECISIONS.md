@@ -51,6 +51,94 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-390 – Yhteyshenkilöt olivat sivupalkissa, johon kuvausrajaus oli nimenomaan kiellettu katsomasta
+
+Johannes 8.11.2026 Seinäjoen Rahkolan kaavarivistä (`58e3c219`):
+*"yhteyshenkilöitä ei ole poimittu vaikka ne ovat lähteessä annettu.
+korjaa, tarkista kanta sekä jono ja korjaa poimijat jatkoa varten."*
+
+#### Syy on yhden kommentin mitassa
+
+Sivulla on kolme rakenteista korttia sivupalkissa:
+
+```html
+<aside>
+  <section class="s-sidebar-contact-card">
+    <h2 class="…__full-name"> Kuusinen Jyrki </h2>
+    <span class="…__title"> yleiskaavapäällikkö </span>
+    <a class="…__mobile-number" href="tel: 044 754 1645">…</a>
+    <a class="…__email" href="mailTo: &#106;&#121;r&#107;i&#046;…">…</a>
+  </section>
+```
+
+`fetchSeinajokiDetails` lukee kuvauksen `<article>`-elementistä, ja sen
+oma kommentti kertoo miksi: *"Haku on rajattava `<article>`-elementtiin,
+koska muuten se voi jatkua sivun `<aside>`-sivupalkkiin."* Rajaus oli
+**oikea kuvaukselle ja väärä yhteyshenkilöille** — ja juuri siksi
+kortteja ei kukaan hakenut. Kahta eri tietoa ei voi lukea saman
+rajauksen alla.
+
+#### Kolme yksityiskohtaa, jotka sivu pakotti
+
+**1. Nimi on sukunimi ensin** ("Kuusinen Jyrki"). Järjestys **päätellään
+sähköpostista** eikä arvata: `jyrki.kuusinen@seinajoki.fi` kertoo kumpi
+sana on etunimi. Ilman osoitetta käännetään vain tasan kaksi sanaa;
+kolmen sanan nimi ("von Hertzen Maija") jätetään, koska arvaus menisi
+yhtä usein väärin kuin oikein.
+
+**Tarkistettu koko tuotoksesta:** 58 poimitusta kortista (10 eri
+henkilöä) **jokaisen** nimi täsmää sähköpostin paikallisosaan ääkköset
+normalisoituna — 0 poikkeamaa. Nimien järjestys on siis todistettu, ei
+oletettu.
+
+**2. Sähköposti on hämäytetty numeroentiteeteillä**
+(`&#106;&#121;r&#107;i&#046;…`), ja `href` alkaa muodossa `mailTo: `
+välilyönnillä, joka ei ole kelpo osoite. Linkin **teksti** riittää,
+koska cheerio purkaa entiteetit — omaa purkua ei tarvita.
+
+**3. Rooliksi EI merkitä `authority`.** Mitattu kannasta ennen
+päätöstä: kaavahankkeiden **2 938 yhteyshenkilöstä vain kahdella** on se
+merkintä, ja yleisimmät nimikkeet ovat kaavoitusarkkitehti (265),
+asemakaava-arkkitehti (197) ja kaavasuunnittelija (168). Kunnan
+kaavoittaja on tässä lähteessä hankkeen oma yhteyshenkilö, toisin kuin
+luvan ratkaissut rakennustarkastaja (D-207).
+
+#### Kortti on tämän lähteen oma — mitattu, ei oletettu
+
+Hain yhden hankekohtaisen sivun **kaikilta 78 kaavalähteeltä** ja etsin
+samaa rakennetta. `s-sidebar-contact-card` esiintyy **vain
+Seinäjoella**. Noin 30 muulla lähteellä on hankesivulla `mailto:`-linkkejä
+(Uusikaupunki 6, Kirkkonummi 5, Salo 4, Siuntio 4, Uurainen 4, Vaala 4,
+Espoo 3, Järvenpää 3, Mustasaari 3, Naantali 3, Vaasa 3,
+Kristiinankaupunki 3…), mutta rakenne on joka kunnassa eri
+([[kaava-parser-vs-page]]). Kortista saa nimikkeen ja puhelimen,
+paljaasta mailto-linkistä ei kumpaakaan — ja kunnan kirjaamo-osoite
+näyttää siinä samalta kuin kaavoittaja. Se on oma työ, ja se on kirjattu
+työjonoon mitattuine lukuineen.
+
+#### Tulos
+
+| | |
+|---|---|
+| haettu | 111 Seinäjoen kaavasivua, 1 haku epäonnistui |
+| yhteystietokortteja | **58** (10 eri henkilöä) |
+| kirjoitettu | 34 dokumenttia, 34 jonoriviä, **32 hanketta** |
+| Rahkolan rivi | 3 yhteyshenkilöä: Jyrki Kuusinen (yleiskaavapäällikkö), Joonas Kinnari, Jenni Ström |
+| Seinäjoen julkiset hankkeet | 87, joista 47:llä nimetty henkilö + sähköposti tai puhelin |
+
+Välimuisti kantaa yhteyshenkilöt mukanaan: ilman sitä kerran haettu rivi
+olisi menettänyt heidät seuraavassa ajossa, koska detaljisivua ei haeta
+uudelleen.
+
+**Kannan laajempi tila:** kaavavaiheen julkisista hankkeista **934 /
+3 002 (31 %) on ilman yhtään nimettyä henkilöä**. Jonossa odottavia
+kaavarivejä on enää muutama, eli työ on hankepuolella.
+
+Muutetut: `lib/agent/seinajoenYhteystiedot.ts` (uusi, testattu),
+`lib/agent/discovery/collectors/apiCollector.ts`,
+`lib/agent/identity/resolvers/seinajokiKaavaResolver.ts`,
+`scripts/taydenna-seinajoen-yhteyshenkilot.ts`.
+
 ### D-389 – Kohdetyyppi jäi tyhjäksi, koska tyyppiä päätteli kaksi konetta eikä kumpikaan tunne sanaa
 
 Johannes 8.11.2026 Euran Panelian datakeskuksen rivistä: *"ei saanut

@@ -1525,6 +1525,36 @@ muistin varassa.
   sitä ole tehty. Tee se ennen kuin 601 ohutta täydennetään, jottei
   samaa työtä tehdä kahdesti.
 
+- **Kaavasivujen `mailto:`-yhteyshenkilöt: noin 30 lähdettä, rakenne joka
+  kunnassa eri** (mitattu 8.11.2026, D-390). Hain yhden hankekohtaisen
+  sivun kaikilta **78 kaavalähteeltä**: Seinäjoen rakenteinen
+  yhteystietokortti (`s-sidebar-contact-card`) on vain Seinäjoella, mutta
+  `mailto:`-linkkejä on noin 30 lähteellä.
+
+  | lähde | mailto | tel |
+  |---|---|---|
+  | Uudenkaupungin vireillä olevat asemakaavat | 6 | 3 |
+  | Kirkkonummen kaavoitus | 5 | 2 |
+  | Salon ajankohtaiset asemakaavat | 4 | 2 |
+  | Siuntion vireillä olevat asemakaavat | 4 | 3 |
+  | Uuraisten / Vaalan kaavoitus | 4 | 0 |
+  | Espoo, Järvenpää, Mustasaari, Naantali, Vaasa, Kristiinankaupunki | 3 | 0–4 |
+  | Kotka, Lahti, Lappeenranta, Oulu, Vantaa, Saarijärvi, Kouvola… | 1–2 | 0–4 |
+
+  **Miksi tämä ei ole yksi poimija.** Kortista saa nimen, nimikkeen ja
+  puhelimen; paljaasta mailto-linkistä ei kumpaakaan, ja kunnan
+  kirjaamo-osoite näyttää siinä samalta kuin kaavoittaja. Nimi on
+  haettava linkin ympäriltä, ja se rakenne vaihtuu kunnittain
+  (ks. muisti: kaava-parser-vs-page). Kattavuusmittari laskee vain
+  **nimetyn henkilön, jolla on sähköposti tai puhelin**, joten pelkkä
+  osoite ei nosta lukua.
+
+  **Mitta tälle työlle:** kaavavaiheen julkisista hankkeista
+  **934 / 3 002 (31 %) on ilman yhtään nimettyä henkilöä**. Aja lähde
+  kerrallaan ja lue kuivaharjoitus riveittäin — ja tarkista
+  nimijärjestys sähköpostia vasten, kuten Seinäjoella tehtiin (58
+  korttia, 0 poikkeamaa).
+
 ### Lähdekattavuus
 
 - **Jalon (`jalon.fi/yhteystiedot/tyomaat/`) — EI ole lähteenä,

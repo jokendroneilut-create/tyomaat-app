@@ -56,6 +56,19 @@ export async function resolveSeinajokiKaavaProject({
 
       description,
 
+      /*
+       * YHTEYSHENKILOT SIVUPALKIN KORTEISTA (D-390). Kerain poimii ne
+       * `raw_payload.contacts`iin; ilman tata ne jaisivat dokumenttiin
+       * eivatka nakyisi hankkeella. Rooliksi ei merkita "authority":
+       * kaavahankkeiden 2 938 yhteyshenkilosta kannassa vain kahdella on
+       * se merkinta, eli kunnan kaavoittaja on tassa lahteessa hankkeen
+       * oma yhteyshenkilo.
+       */
+      ...(Array.isArray(document.raw_payload?.contacts) &&
+      document.raw_payload.contacts.length
+        ? { contact_persons: document.raw_payload.contacts }
+        : {}),
+
       phase_hint: phaseHint,
 
       construction_type: classification.construction_type,
