@@ -271,6 +271,21 @@ async function main() {
       continue
     }
 
+    /*
+     * KUVATIEDOSTO EI OLE JASENNYSVIRHE (D-392).
+     *
+     * Pornaisten Lapimurrontien ainoa liite on skannattu kuulutus:
+     * PDF:ssa on kymmenen kuvaobjektia ja NOLLA fonttia, joten
+     * `pdf-parse` palauttaa kaksi merkkia. Ilman tata rivi sai syyn
+     * "selostuksesta ei lukua", joka ohjaa korjaamaan otsikkosanastoa —
+     * vaikka mitaan tekstia ei ollut. Erottelu tekee tyolistasta
+     * rehellisen: sanastoa kannattaa korjata, skannia ei.
+     */
+    if (teksti.trim().length < 50) {
+      syy("liite on kuvatiedosto, ei tekstikerrosta")
+      continue
+    }
+
     const kuvaus = kaavanKuvausTekstista(teksti)
     if (!kuvaus || kuvaus.length <= nykyinen.length) {
       syy(kuvaus ? "selostus ei pidempi" : "selostuksesta ei lukua")

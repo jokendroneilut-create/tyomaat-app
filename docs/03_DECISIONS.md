@@ -51,6 +51,72 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-392 – Liite oli skannattu kuva, ei jäsennysvirhe: nolla fonttia, kymmenen kuvaobjektia
+
+Johannes 8.11.2026 Pornaisten Läpimurrontien rivistä (`e8fc52d2`):
+*"ei ole poimittu olennaisinta lähteestä"* ja kuvakaappaus luvusta
+**"Hankkeen kuvaus ja tavoitteet"**.
+
+#### Jäsennin ei ollut rikki — tekstiä ei ollut
+
+Rivin kuvaus oli 96 merkkiä menettelytekstiä (*"Nähtävillä
+11.11.–11.12.2026, mielipiteet tulee toimittaa…"*), eli juuri sitä mitä
+kaavalähteistä ei haluta.
+
+Kaavasivulla tällä kaavalla on **tasan yksi liite**,
+`Kuulutus-taululle.pdf`. Se on kuvatiedosto:
+
+| | |
+|---|---|
+| kuvaobjekteja | 10 |
+| fontteja (`/Font`, `/Type1`, `/TrueType`) | **0** |
+| `pdf-parse`in tuottama teksti | **2 merkkiä** |
+
+Tämä on eri vika kuin D-268:n Euran kortteli 164, jossa fontit olivat
+olemassa mutta ilman merkkikarttaa ja teksti purkautui roskaksi
+("AABCCDE"). Tässä fontteja ei ole lainkaan — mitään ei ollut
+poimittavissa koneellisesti, ei paremmallakaan jäsentimellä.
+
+**Tarkistin myös muut reitit ennen johtopäätöstä:** kunnan oma
+kuulutussivu (`/kuulutus/lapimurrontien-…`) on WordPress-sivu, jonka
+`content.rendered` on tyhjä ja jonka ainoa liite on sama skannattu PDF;
+ACF-kentät ovat tyhjät. Verkkohaku ei löydä OAS:ia erillisenä
+tiedostona — kaava on tullut nähtäville 11.11., joten sitä ei
+todennäköisesti ole vielä julkaistu.
+
+#### Teksti kirjattiin kuvakaappauksesta
+
+Sama ratkaisu kuin D-268:ssa: sisältö luetaan kuvasta ja **alkuperä
+merkitään** (`field_sources.description` kertoo että liite on
+kuvatiedosto ja teksti on luettu kuvakaappauksesta,
+ks. muisti: screenshot-intake). Kirjoitettu sekä jonoriville että
+dokumenttiin, jottei kerääjä kirjoita menettelytekstiä takaisin.
+
+Kuvaus on nyt 907 merkkiä ja kertoo mitä alueelle tulee: 2,7 hehtaaria
+Pornaisten Portin yritysalueella, pääosa T-korttelialueesta muutetaan
+**T/kem**-alueeksi (merkittävä vaarallisia kemikaaleja valmistava tai
+varastoiva laitos), osa MY-alueeksi, ja tavoitteena on uusi katuyhteys
+Järvenpääntielle.
+
+#### Jatkoa varten: kuvatiedosto on oma syynsä
+
+Yleinen täydentäjä raportoi tämän ennen syyllä *"selostuksesta ei
+lukua"*, joka ohjaa korjaamaan otsikkosanastoa — turhaan. Nyt alle 50
+merkin tuotos raportoidaan erikseen: **"liite on kuvatiedosto, ei
+tekstikerrosta"**. Pornaisten ajossa luokat erottuvat heti: 1
+kuvatiedosto, 1 aito jäsennysvirhe.
+
+> Erottelu ei ole kosmeettinen. Sanastoa kannattaa korjata, skannia ei
+> — ja väärä syy työlistalla vie aikaa selvitykseen jota ei voi
+> ratkaista koodilla.
+
+**Auki jäi:** Pornaisten yhdeksän muuta ohutta riviä saisivat kuvauksen
+samalla ajolla (kuivaharjoitus luettu, kaikki osuvat omaan kaavaansa).
+Niitä ei ajettu tässä, koska kysymys koski yhtä riviä.
+
+Muutetut: `scripts/taydenna-kaavakuvaukset.ts`,
+`scripts/korjaa-lapimurrontien-kuvaus.ts`.
+
 ### D-391 – Viides rivimuoto samassa lohkossa, ja takautuva ajo ohitti juuri jonossa olevat rivit
 
 Johannes 8.11.2026 Harjulinjan jatkon rivistä (`7c9abb43`): *"tästä on
