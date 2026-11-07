@@ -51,6 +51,133 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-387 – /tic latautui 27 sekuntia, koska mittari haki koko metadatan; välimuisti vain mittareille
+
+Johannes 8.11.2026: *"pystytkö tekemään tälle sivulle välimuistin esim
+myös 2 tuntia kuten karttasivulla on. tämä hyväksyminen hidastuu paljon
+kun sivun lataus kestää niin kauan. mittaa sivun latauksen kesto ensin
+jotta nähdään paljonko saatiin sitä nopeutettua."*
+
+**Mittaus ensin, ja se siirsi koko tehtävän.** Pyyntö oli välimuisti,
+mutta erittely (`scripts/mittaa-tic-lataus.ts`, 3 kierrosta
+tuotantokantaa vasten) näytti ettei hitaus ollut sivussa vaan **yhdessä
+kyselyssä**:
+
+| palvelu | kesto |
+|---|---|
+| `getPotentialProjectsForReview` (jono) | 0,2–0,6 s |
+| `getPendingReviewCount` | 0,1–0,4 s |
+| `getTicDailySummary` (6 laskuria) | 0,2–2,2 s |
+| **`getYhteystietoMittarit`** | **12,3–24,4 s** |
+| sivun data yhteensä | **26 802 ms** (15 436–48 855) |
+
+`getYhteystietoMittarit` luki koko `projects`-taulun tuhannen rivin
+paloissa **`metadata`-sarake mukaan lukien**: 7 396 riviä, **28,5 Mt**.
+Sama haku ilman metadataa oli 0,77 Mt, eli metadata oli **97 %
+siirtokuormasta** — ja mittari lukee siitä tasan yhden kentän,
+`contact_persons`in (`onYhteyshenkilo`,
+`onHankekohtainenYhteyshenkilo`).
+
+**Kysely oli jo kaatumisrajalla.** Mittausten aikana vanha haku alkoi
+palauttaa `57014 canceling statement due to statement timeout`. Palvelu
+nielee virheen ja palauttaa tyhjän (tarkoituksella: jono on sivun
+varsinainen työ), joten **neulat katoavat silloin sivulta kokonaan**
+ilman mitään ilmoitusta. Hidas kysely ei siis ollut vain hidas, se oli
+myös hiljainen vikalähde.
+
+#### Korjaus 1: kenttärajaus kannassa, ei Nodessa
+
+PostgREST osaa poimia JSON-avaimen suoraan
+(`yhteyshenkilot:metadata->contact_persons`), ja sama kuvio on jo
+käytössä `getIncompleteProjectCount`issa
+(`source_name:metadata->>source_name`). Lisäksi `status` ja `is_public`
+suodatetaan kannassa, koska `laskeKattavuus` suodattaa niillä tasan
+samoin — se jättää 355 riviä hakematta eikä muuta lukua.
+
+| kysely | koko | kesto |
+|---|---|---|
+| koko metadata | 28,53 Mt | 5–31 s |
+| vain `contact_persons` | 2,30 Mt | 2,4–3,3 s |
+| + status ja julkisuus | 2,19 Mt | 2,1–2,3 s |
+
+**Vaihetta EI suodateta kannassa**, vaikka mittari laskee vain kaksi
+vaihetta: `normalizeLegacyPhase` tuntee vanhat kirjoitusasut
+("Suunnittelu", "Rakentaminen aloitettu"), ja niiden luettelo kyselyyn
+olisi kaksoiskappale joka ehtii eriytyä. Säästö olisi ollut noin
+sekunti.
+
+**Luku todistettiin samaksi riveittäin.** 3 000 riviä luettiin
+molemmilla tavoilla ja verrattiin `onYhteyshenkilo`- ja
+`onHankekohtainenYhteyshenkilo`-tuloksia: **0 eroa**. Mittarin luvut
+ennen ja jälkeen: construction 726/902, planning 1412/1776.
+
+Sivun data tämän jälkeen: **2 700 ms** (2 452–2 857).
+
+#### Korjaus 2: kaksi tuntia välimuistia, mutta vain mittareille
+
+Sivun neljä palvelua eivät ole samanarvoisia välimuistin kannalta:
+
+| palvelu | saa vanhentua? | miksi |
+|---|---|---|
+| katselmointijono | **ei** | juuri hyväksytty rivi palaisi näkyviin ja näyttäisi virheeltä |
+| jonon laskurit | **ei** | ne ovat jonon lukuja |
+| mittarit | kyllä | luku muuttuu hitaasti: hyväksyntä siirtää yhden hankkeen tuhannesta |
+
+Siksi välimuisti koskee vain mittareita. Toteutus on sama
+kaksikerroksinen kuvio kuin karttasivulla (`getTodayProjects`):
+`unstable_cache` on jaettu ja pysyvä tuotannossa muttei pidä
+kehityspalvelimella, joten edessä on prosessin muistivälimuisti.
+
+**Tämä on tietoinen poikkeus D-239:ään**, joka sanoo että neula näyttää
+nykytilan eikä viime yötä. Perustelu on mitattu: neulan tuoreus maksoi
+2,5 sekuntia *jokaisesta* hyväksynnästä. Siksi mittaushetki kulkee
+tuloksen mukana ja sivu sanoo luvun iän — *"Mitattu 14 minuuttia
+sitten."* Vanhentunut luku ilman ikää näyttäisi tuoreelta, ja se on eri
+asia kuin vanhentunut luku joka kertoo olevansa vanhentunut
+([[displayed-state-is-not-enforced]]).
+
+Kaksi pientä mutta olennaista yksityiskohtaa:
+
+- **Tyhjää tulosta ei jätetä muistiin.** Muuten yksi aikakatkaisu
+  piilottaisi mittarit kahdeksi tunniksi.
+- **`unstable_cache` heittää pyynnön ulkopuolella**
+  (*"Invariant: incrementalCache missing"*), ja juuri niin
+  mittausskripti sitä kutsuu. Ilman vartijaa välimuistin lisääminen
+  olisi rikkonut sen työkalun jolla muutos mitataan.
+
+#### Mittari ei saa mitata omaa välimuistiaan
+
+Ensimmäinen versio mittausskriptistä kutsui `getYhteystietoMittarit`in
+kahdesti kierroksessa, joten välimuistin lisäämisen jälkeen se raportoi
+**0 ms** ja sivun ajan liian hyvänä. Skripti mittaa nyt kylmän kutsun
+kerran prosessia kohden ja lämpimät erikseen, ja ajaa molemmat kyselyt
+(vanha ja uusi) rinnakkain vertailuksi
+([[metric-shares-parser-blind-spot]] samassa muodossa: työkalu peri
+juuri sen ominaisuuden jota sen oli määrä mitata).
+
+Samalla selvisi että **ulkoasu ajaa omat neljä kyselyään joka
+latauksella** (jonon, kaksoiskappaleiden, health-hälytysten ja
+osapuolettomien luvut), eli mittaus pelkästä `page.tsx`:stä oli liian
+hyvä. Layout on 1 071 ms ja ajetaan rinnakkain sivun kanssa.
+
+#### Lopputulos
+
+| | ennen | jälkeen |
+|---|---|---|
+| sivun data | 26 802 ms (15 436–48 855) | **784 ms** (547–1 047) |
+| layout (rinnakkain) | 1 071 ms | 1 071 ms |
+| mittarit kylmänä | — | 3 589 ms, kerran 2 tunnissa |
+
+Johannes 8.11.2026: *"hienoa, toimii hyvin localissa."*
+
+Muutetut: `app/tic/services/getYhteystietoMittarit.ts`,
+`app/tic/page.tsx`. Mittaus: `scripts/mittaa-tic-lataus.ts`.
+
+**Auki:** sama kuvio kannattaa etsiä muualta — mikä tahansa palvelu joka
+hakee `metadata`-sarakkeen koko taulun yli maksaa saman 28 Mt:n. Tämän
+sivun `getTicDailySummary` (6 erillistä `count: exact` -laskuria,
+0,2–2,2 s) on seuraava hitain, mutta se on laskuri eikä siirtokuormaa.
+
 ### D-386 – Urakoitsijan valinta Helsingin päätöksistä: voittaja, hinta ja neljä vikaa jotka kuivaharjoitus paljasti
 
 Johannes 7.11.2026: Koulupuistikon aukion rivillä oli katusuunnitelma,

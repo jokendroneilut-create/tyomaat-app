@@ -9,6 +9,29 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-08 (/tic-sivun nopeutus)
+
+### /tic latautuu 27 sekunnin sijaan sekunnissa (D-387)
+
+Katselmointisivun lataus kesti mitattuna **26,8 s** (vaihteluväli
+15–49 s), ja hyväksynnän jälkeen sivu ladataan uudelleen — eli odotus
+tuli jokaisen päätöksen väliin.
+
+Syy oli yhdessä kyselyssä: yhteystietomittari luki koko
+`projects`-taulun `metadata`-sarakkeineen (**28,5 Mt**), vaikka lukee
+siitä vain `contact_persons`-kentän. Kysely oli myös jo kannan
+aikakatkaisun rajalla, ja koska virhe nielaistaan, mittarit katosivat
+silloin sivulta kokonaan.
+
+Nyt JSON-avain poimitaan kannassa (2,3 Mt) ja mittareilla on kahden
+tunnin välimuisti. Sivun data: **784 ms**. Luvun ikä näkyy sivulla,
+koska välimuistitettu neula ei enää näytä nykytilaa.
+
+**Katselmointijono ja sen laskurit jäävät eläviksi** — välimuistista
+tuleva jono palauttaisi juuri hyväksytyn rivin näkyviin.
+
+---
+
 ## 2026-11-07 (Helsingin urakoitsijavalinnat, voittajalause, kuvausosuman katkaisu)
 
 ### Urakoitsijan valinta Helsingin päätöksistä (D-386)
