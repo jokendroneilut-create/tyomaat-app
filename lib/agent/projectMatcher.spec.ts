@@ -347,3 +347,62 @@ describe("titleCoverage", () => {
     expect(titleCoverage("Jotain", "")).toEqual({ coverage: 0, sharedWords: [] })
   })
 })
+
+describe("name_in_description_only (D-386)", () => {
+  /*
+   * MITATTU TAPAUS. Sigurd Frosteruksen puiston urakoitsijavalinta sai
+   * NAAPURIN katusuunnitelmasta 70 % -- tasan yhdistamisrajan -- pelkalla
+   * kaupungilla, maakunnalla, rakennuttajalla ja silla etta hankkeen nimi
+   * loytyi naapurin kuvauksesta. Oikea rivi jai 65:een, koska sen nimessa
+   * on Hilman kirjoitusvirhe. Vaara rivi voitti siis oikean.
+   *
+   * Koko tuontihistoriasta (9 796 osumaa) 192 oli ratkennut nain, ja
+   * luetut rivit olivat kuviomaisia: Tampereen viisi eri koulua samaan
+   * riviin, Helsingin kymmenen eri paatosta riviin "Ala-aste ja
+   * paivakoti".
+   */
+  it("painaa pelkan kuvausosuman kynnyksen alle", () => {
+    const match = findProjectMatchDetailed(
+      [
+        project("1", "Merikannontie välillä Toivo Kuulan puisto, katusuunnitelma", {
+          city: "Helsinki",
+          region: "Uusimaa",
+          developer: "Helsingin kaupunki",
+          additional_info:
+            "Katusuunnitelma liittyy Sigurd Frosteruksen puiston esirakentamiseen ja puistosuunnitelmaan Taka-Töölössä.",
+        }),
+      ],
+      {
+        ...BLANK,
+        name: "Sigurd Frosteruksen puiston esirakentaminen, kokonaisurakka",
+        city: "Helsinki",
+        region: "Uusimaa",
+        developer: "Helsingin kaupunki",
+      } as any
+    )
+    expect(match?.reasons).toContain("name_in_description")
+    expect(match?.reasons).toContain("name_in_description_only")
+    expect(match!.confidence).toBeLessThan(70)
+    /* Rajoittava, ei estava: pari jaa duplikaattijonoon ihmiselle. */
+    expect(match!.confidence).toBeGreaterThanOrEqual(40)
+  })
+
+  it("ei katkaise kun nimi itse tasmaa", () => {
+    const match = findProjectMatchDetailed(
+      [
+        project("1", "Kipparlahden laiturin korjaus, kokonaisurakka", {
+          city: "Helsinki",
+          region: "Uusimaa",
+        }),
+      ],
+      {
+        ...BLANK,
+        name: "Kipparlahden laiturin korjaus, kokonaisurakka",
+        city: "Helsinki",
+        region: "Uusimaa",
+      } as any
+    )
+    expect(match?.reasons ?? []).not.toContain("name_in_description_only")
+    expect(match!.confidence).toBeGreaterThanOrEqual(70)
+  })
+})

@@ -9,6 +9,51 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-07 (Helsingin urakoitsijavalinnat, voittajalause, kuvausosuman katkaisu)
+
+### Urakoitsijan valinta Helsingin päätöksistä (D-386)
+
+Helsingin päätöslähde haki neljää kategoriaa, jotka ovat kaikki
+suunnittelupäätöksiä — urakoitsijan valinta on omassa luokassaan
+"Kilpailutus", jota ei haettu lainkaan. Siksi hankkeella saattoi olla
+katusuunnitelma mutta ei voittajaa, vaikka päätös oli tehty.
+
+Viides luokka mukaan, mutta vain kolme otsikkomuotoa (urakoitsijan,
+kokonaisurakoitsijan ja toteuttajan valinta): 20 valintaa 382 asiasta.
+Lisä- ja muutostyöt, puitejärjestelyt, DPS-hankinnat ja
+oikaisuvaatimukset jäävät ulos. Asian pöydällepano ei kelpaa valinnaksi.
+
+Hinta tulee päätöksen omasta lauseesta `contract_value`-kenttään (20/20),
+ja se on tarkempi kuin tekstistä poimittu arvio.
+
+### Voittaja tarjouksen hyväksymislauseesta
+
+`extractDecisionWinners` tunsi kymmenen lausemuotoa, mutta ei Helsingin
+hankintapäätöksen muotoa ("hyväksyi X Oy:n tarjouksen
+kokonaistaloudellisesti edullisimpana") — mitatusti 0/21 valinnasta tuotti
+voittajan. Yhdestoista muoto lisätty: 220 päätöstä sai voittajan, 0
+menetti sen. Ryhmittymä luetaan kokonaan, jolloin molemmat yhtiöt
+tulevat erikseen.
+
+### Pelkkä kuvausosuma ei enää yhdistä hankkeita
+
+Kun ainoa todiste oli hankkeen nimen esiintyminen toisen hankkeen
+kuvauksessa, varmuus nousi tasan yhdistämisrajaan 70 — ja koko
+tuontihistoriasta mitattuna 192 osumaa oli ratkennut näin: Tampereen
+viisi eri koulua samaan riviin, Helsingin kymmenen päätöstä riviin
+"Ala-aste ja päiväkoti". Nyt pelkkä kuvausosuma katkaistaan 65:een,
+jolloin pari jää katselmoitavaksi eikä kirjoita toisen hankkeen kenttiä.
+Tunniste ja paikkatodiste voittavat tämän.
+
+### Päätöshaun sivutukseen ratkaisija
+
+Sama kokouspäivä kymmenillä päätöksillä teki järjestyksen
+määräämättömäksi, ja sivutus saattoi antaa saman rivin kahdesti ja toisen
+ei kertaakaan (mitattu: 460 osumaa -> 458 uniikkia). Lähde on voinut
+hiljaisesti ohittaa päätöksiä alusta asti.
+
+---
+
 ## 2026-10-30 (Datakeskusrekisteri, välimuistin tyhjä merkintä, Ulvilan kaavat, OYS 2030, Jätkäsaaren kortteli ja JM Suomi)
 
 ### Lähteen nimi asiakkaalle, ei sisäistä tunnistetta

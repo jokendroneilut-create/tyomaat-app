@@ -42,6 +42,18 @@ const DECISION_KINDS = [
   "rakennusurakan kilpailuttaminen",
   "urakan kilpailuttaminen",
   "urakan hankinta",
+  /*
+   * Hankintapäätöksen muodot luettu Ahjon Kilpailutus-luokasta
+   * 7.11.2026 (D-386). Pisin ensin, koska lyhyempi ei ulotu otsikon
+   * loppuun eikä siksi osuisi lainkaan:
+   *
+   *   "…projektinjohtourakka, toteuttajan valinta sekä toteutusvaiheen
+   *    sopimuksen teko"
+   */
+  "toteuttajan valinta sekä toteutusvaiheen sopimuksen teko",
+  "toteuttajan valinta sekä sopimuksen teko",
+  "toteuttajan valinta",
+  "kokonaisurakoitsijan valinta",
   "urakoitsijan valinta",
   "urakoitsijoiden valinta",
   "hankintapäätös",
@@ -62,6 +74,58 @@ const TAIL = new RegExp(
   `(?:\\s*,\\s*|\\s+[–—-]\\s*)(?:${DECISION_KINDS.join("|")})\\s*$`,
   "i"
 )
+
+/*
+ * PÄÄTÖSLAJI ON MYÖS OTSIKON ALUSSA (D-386).
+ *
+ * Helsingin hankintapäätöksissä laji on etuliite eikä häntä:
+ *
+ *   "Minikilpailutus, Capellanaukion rantaportaat, kokonaisurakka,
+ *    urakoitsijan valinta"
+ *   "Hankintapäätös, Veturitien alikulkukäytävä, urakoitsijan valinta"
+ *
+ * Etuliite on asiakkaalle hankintasanastoa, ei hankkeen nimi — mutta
+ * tärkeämpi syy poistaa se on täsmäytys: "Hankintapäätös, Veturitien
+ * alikulkukäytävä" jäi 63 pisteeseen vaikka kannassa on sama hanke
+ * nimellä "Veturitien alikulkukäytävä, kokonaisurakka", eli
+ * seitsemän pistettä yhdistämisrajasta. Etuliitteen poisto nostaa
+ * osuman tarkaksi otsikko-osumaksi.
+ *
+ * Poisto vaatii erottimen (pilkku tai ajatusviiva) heti perään, joten
+ * se ei voi katkaista nimeä jossa sana on osa kohdetta.
+ */
+const LEAD_KINDS = [
+  "hankintapäätös",
+  "yksikönjohtajan hankintapäätös",
+  "minikilpailutus",
+  "sisäinen kilpailutus \\(dps\\)",
+  "suorahankinta",
+]
+
+const LEAD = new RegExp(`^\\s*(?:${LEAD_KINDS.join("|")})\\s*(?:,|[–—-]\\s)\\s*`, "i")
+
+/*
+ * HINTA EI OLE NIMI. "Kipparlahden laiturin korjaus, kokonaisurakka,
+ * 124 000 euroa, urakoitsijan valinta" — summa on otsikossa vain osassa
+ * päätöksiä, joten se erotti saman hankkeen kahdeksi riviksi
+ * (63 pistettä samannimiseen hankkeeseen).
+ *
+ * POISTETAAN VAIN KOKONAINEN PILKKUJAKSO. Ensimmäinen versio söi
+ * desimaalit keskeltä lausetta: "…lisätyötilaus 22 986,20 euroa ja
+ * päätöksen 15.10.2026 § 126 poistaminen" jäi muotoon "…lisätyötilaus
+ * 22 986 ja päätöksen…", koska kuvio tarttui lukuun kuuluvaan
+ * pilkkuun. Kaksi rajausta, molemmat mitatusta virheestä:
+ *
+ *   1. Jakson on päätyttävä pilkkuun tai otsikon loppuun, joten
+ *      keskellä lausetta oleva summa jää rauhaan.
+ *   2. Aloittavaa pilkkua ei saa edeltää numero. Ilman tätä
+ *      "lisätyötilaus 194.951,33 euroa" katkesi muotoon
+ *      "lisätyötilaus 194.951": desimaalipilkku näytti jakson alulta.
+ *      Kuvio ajetaan 2 071 otsikon yli ja tuotos luetaan, joten
+ *      tällainen jää kiinni (`.tmp-otsikkovertailu.txt`).
+ */
+const PRICE_SEGMENT =
+  /(?<!\d)\s*,\s*\d[\d   .]*(?:,\d+)?\s*euroa(?=\s*(?:,|$))/gi
 
 /*
  * Vuosiluku ja kuntakoodi sulkeissa lopussa ("2026 (KU)"). Nämä erottavat
@@ -150,6 +214,12 @@ export function genericizeDecisionTitle(
   if (!title) return ""
 
   let out = title.replace(CONFIDENTIALITY, "")
+
+  /*
+   * Etuliite ja hinta ensin: häntien poisto vaatii osuman otsikon
+   * LOPUSTA, joten hinta keskellä estäisi hännän löytymisen.
+   */
+  out = out.replace(LEAD, "").replace(PRICE_SEGMENT, "")
 
   /*
    * Häntiä voi olla useita peräkkäin ("..., korjausurakan kilpailuttaminen,

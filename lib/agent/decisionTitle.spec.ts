@@ -151,3 +151,46 @@ describe("genericizeDecisionTitle – rinnasteinen asiakirja", () => {
     ).toBe("Koulun ja päiväkodin hankesuunnitelma")
   })
 })
+
+describe("hankintapaatoksen otsikko (D-386)", () => {
+  it("poistaa paatoslajin otsikon alusta", () => {
+    expect(
+      genericizeDecisionTitle(
+        "Minikilpailutus, Capellanaukion rantaportaat, kokonaisurakka, urakoitsijan valinta"
+      )
+    ).toBe("Capellanaukion rantaportaat, kokonaisurakka")
+    expect(
+      genericizeDecisionTitle("Hankintapäätös, Veturitien alikulkukäytävä, urakoitsijan valinta")
+    ).toBe("Veturitien alikulkukäytävä")
+  })
+
+  it("poistaa hinnan omana pilkkujaksona", () => {
+    expect(
+      genericizeDecisionTitle(
+        "Kipparlahden laiturin korjaus, kokonaisurakka, 124 000 euroa, urakoitsijan valinta"
+      )
+    ).toBe("Kipparlahden laiturin korjaus, kokonaisurakka")
+  })
+
+  it("ei katkaise lukua keskelta lausetta", () => {
+    /* Desimaalipilkku nautti jakson alulta ja sorsi otsikon. */
+    expect(
+      genericizeDecisionTitle(
+        "Viikinkentän perusparannus, kokonaisurakka, lisätyötilaus 22 986,20 euroa ja päätöksen 15.10.2026 § 126 poistaminen"
+      )
+    ).toBe(
+      "Viikinkentän perusparannus, kokonaisurakka, lisätyötilaus 22 986,20 euroa ja päätöksen 15.10.2026 § 126 poistaminen"
+    )
+  })
+
+  it("poistaa kokonaisurakoitsijan ja toteuttajan valinnan hannan", () => {
+    expect(
+      genericizeDecisionTitle("Kontulan päiväkoti, korvaava uudisrakennus, kokonaisurakoitsijan valinta")
+    ).toBe("Kontulan päiväkoti, korvaava uudisrakennus")
+    expect(
+      genericizeDecisionTitle(
+        "Töölön Kisahallin perusparannus, projektinjohtourakka, toteuttajan valinta sekä sopimuksen teko"
+      )
+    ).toBe("Töölön Kisahallin perusparannus, projektinjohtourakka")
+  })
+})

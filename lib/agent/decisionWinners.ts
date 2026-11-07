@@ -357,6 +357,116 @@ const PURCHASE_WINDOW = 220
 const CONTRACT_TERMINATED =
   /purki\s+.{0,40}?urakkasopimu|urakkasopimu\w*\s+purettiin|sopimus\s+purettiin|purkanut\s+urakkasopimu/i
 
+/*
+ * TARJOUKSEN HYVAKSYMINEN. Yhdestoista lausemuoto, ja Helsingin
+ * hankintapaatoksissa ainoa (D-386).
+ *
+ *   "Infrapaallikko hyvaksyi GRK Suomi Oy:n tarjouksen
+ *    kokonaistaloudellisesti edullisimpana ja paatti, etta GRK Suomi
+ *    Oy:n kanssa tehdaan Veturitien alikulkukaytavaa koskeva
+ *    hankintasopimus."
+ *
+ * Lauseessa EI OLE ROOLISANAA: ei "urakoitsijaksi", ei "toteuttajaksi".
+ * Kaikki kymmenen aiempaa muotoa nojaavat rooliin tai ostoverbiin, joten
+ * mitatusti **0/21** Helsingin urakoitsijavalinnasta tuotti voittajan
+ * ennen tata (7.11.2026). Juuri voittaja on se mita naista paatoksista
+ * haetaan, joten lahde olisi ollut ilman sita hyodyton.
+ *
+ * ANKKURI ON NIMEN OIKEALLA PUOLELLA, koska vasemmalla voi olla
+ * ryhmittyma jota yhden nimen kuvio ei kata:
+ *
+ *   "paatti hyvaksya kokonaistaloudellisesti edullisimpana Ryhmittyma
+ *    Rakennustoimisto K. Tervo Helsinki Oy ja Rakennustoimisto
+ *    K. Tervo Oy:n tarjouksen"
+ *
+ * Nimen jalkeen tuleva ":n tarjouksen" on silloin ainoa kiintopiste.
+ * Hyvaksymisverbi vaaditaan edeltavasta ikkunasta -- ilman sita kuvio
+ * osuisi tarjousvertailuun ("X Oy:n tarjoushinta oli..."), joka on juuri
+ * se ansa jonka takia tama tiedosto on kirjoitettu.
+ *
+ * HYLKAYS KUMOAA. Samassa paatoksessa suljetaan tarjoajia pois
+ * ("Savon Julkisivurakennus Oy suljetaan pois tarjouskilpailusta"),
+ * joten hylkayssana ikkunassa hylkaa osuman.
+ *
+ * KOLME KIRISTYSTA, KAIKKI MITATUSTA VAARASTA OSUMASTA. Ensimmainen
+ * versio ajettiin 2 061 paatoksen yli ja sen tuotos luettiin riveittain
+ * (`.tmp-voittajavertailu.txt`): kymmenesta muuttuneesta rivista kolme
+ * oli vaarin. Kukin kiristys poistaa tasan yhden syyn:
+ *
+ *   1. OBJEKTI ON "tarjouksen", EI "tarjou". Loysa alku osui myos
+ *      sanaan *tarjouskilpailusta*: "sulki Hvidrum Oy:n, Lehtovuori
+ *      Oy:n ja Kehä-Tuote Oy:n tarjouskilpailusta" antoi voittajaksi
+ *      POISSULJETUN tarjoajan.
+ *   2. VERBI ON PAATOSMUODOSSA. Pelkka `hyväksy` osui vaatimuslauseeseen
+ *      "Hyväksyttävän tarjouksen tuli täyttää tarjouspyyntöasiakirjoissa
+ *      asetetut vähimmäisvaatimukset", joka esiintyy jokaisen
+ *      tarjousarvioinnin alussa -- ja perassa on arvioitavan eli usein
+ *      HYLATTAVAN tarjoajan nimi ("CPE Production Oy:n tarjouksen
+ *      tarjouspyynnönmukaisuuden arviointi"). Kaksi vaaraa osumaa
+ *      kahdesta.
+ *   3. HYLKAYS MYOS MENNEESSA MUODOSSA. Tiedoston yhteinen `REJECTION`
+ *      tuntee vain preesensin ("suljetaan", "ei täytä"), mutta
+ *      kertausteksti kayttaa imperfektia ("sulki", "eivät täyttäneet").
+ *      Laajennus on tassa ankkurissa paikallinen, jottei se muuta
+ *      luettelopoiminnan kayttaytymista.
+ */
+const OFFER_ACCEPTED = new RegExp(`(${NAME})\\s*:n\\s+tarjouksen`, "g")
+const ACCEPT_VERB = new RegExp(
+  `hyv[aä]ksy(?:i|[aä]|y|t[aä][aä]n|ttiin)${FI_BOUNDARY}`,
+  "i"
+)
+const REJECTION_WIDE =
+  /hyl[äk]|suljet|sulki|sulkenut|poissuljet|ei\s+t[aä]yt|eiv[aä]t\s+t[aä]ytt/i
+const ACCEPT_WINDOW = 200
+
+/*
+ * RYHMITTYMA ON KAKSI YRITYSTA, EI PUOLIKAS NIMI.
+ *
+ * `OFFER_ACCEPTED` ankkuroi nimen oikealta (":n tarjouksen"), ja nimen
+ * sanabudjetti on viisi. Kun voittaja on ryhmittyma, nimia on kaksi ja
+ * valissa "ja", jolloin budjetti ei riita koko jaksoon -- ja poiminta
+ * alkaa KESKELTA nimea. Mitattu 7.11.2026 Kontulan paivakodista:
+ *
+ *   "hyvaksya kokonaistaloudellisesti edullisimpana Ryhmittyma
+ *    Rakennustoimisto K. Tervo Helsinki Oy ja Rakennustoimisto
+ *    K. Tervo Oy:n tarjouksen"
+ *
+ * Tuotos oli *"Helsinki Oy ja Rakennustoimisto K. Tervo Oy"* -- yritys
+ * jota ei ole olemassa.
+ *
+ * Tunnusmerkki on se, etta nimen EDELLA on isolla alkava sana: aidossa
+ * muodossa edella on verbi tai pienellä alkava perustelu
+ * ("hyvaksyi", "edullisimpana"). Silloin:
+ *
+ *   - jos isojen sanojen jakso alkaa ryhmittymasanalla, jakso luetaan
+ *     kokonaan ja pilkotaan "ja"-sanasta kahdeksi yritykseksi;
+ *   - muuten osuma HYLATAAN, koska poiminta alkoi nimen keskelta.
+ *
+ * Ryhmittymasanasto on suljettu joukko (ryhmittyma,
+ * tyoyhteenliittyma, konsortio), joten saanto ei ole yleinen loysennys.
+ */
+const PRECEDING_CAPS = new RegExp(
+  `(?:(?:[A-ZÅÄÖ0-9&]${NAME_CHAR}*|ja)\\s+)+$`
+)
+const CONSORTIUM = /^(?:Ryhmittym[aä]|Ty[oö]yhteenliittym[aä]|Konsortio)\s+/
+const COMPANY_TAIL = new RegExp(`(?:${COMPANY_FORMS})$`)
+
+function ryhmittymaHuomioiden(name: string, before: string): string[] {
+  const edella = before.match(PRECEDING_CAPS)
+  if (!edella) return [name]
+
+  const koko = `${edella[0]}${name}`
+  if (!CONSORTIUM.test(koko)) return []
+
+  const osat = koko
+    .replace(CONSORTIUM, "")
+    .split(/\s+ja\s+/)
+    .map((osa) => osa.trim())
+    .filter((osa) => COMPANY_TAIL.test(osa))
+
+  return osat.length ? osat : [name]
+}
+
 export function extractDecisionWinners(description: string | null | undefined): string[] {
   if (!description) return []
   if (CONTRACT_TERMINATED.test(description)) return []
@@ -448,6 +558,25 @@ export function extractDecisionWinners(description: string | null | undefined): 
       if (AWARD_GIVE_VERB.test(before) && AWARD_CONTEXT.test(before)) {
         found.push(match[1])
       }
+    }
+
+    for (const match of text.matchAll(OFFER_ACCEPTED)) {
+      const start = Math.max(0, (match.index ?? 0) - ACCEPT_WINDOW)
+      const before = text.slice(start, match.index)
+      if (!ACCEPT_VERB.test(before)) continue
+      /*
+       * Hylkays tarkistetaan sekä verbin ja nimen välistä että nimen
+       * perästä: "hylätään X Oy:n tarjous" ja "hyväksyi ... X Oy:n
+       * tarjouksen ... hylätään" ovat kumpikin aineistossa.
+       */
+      const end = (match.index ?? 0) + match[0].length
+      if (
+        REJECTION_WIDE.test(before) ||
+        REJECTION_WIDE.test(text.slice(end, end + 60))
+      ) {
+        continue
+      }
+      found.push(...ryhmittymaHuomioiden(match[1], before))
     }
   }
 

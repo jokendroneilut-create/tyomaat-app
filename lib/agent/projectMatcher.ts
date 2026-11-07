@@ -122,6 +122,7 @@ export type ProjectMatchReason =
    * kuin different_name_numbers, mutta sanoille.
    */
   | "different_name_subjects"
+  | "name_in_description_only"
   /*
    * Sama tuuli-/aurinkohanke kahdesta menettelystä (kunnan osayleiskaava ja
    * ELY:n YVA). Vahva todiste: paikannimi on kunnan sisällä yksilöivä.
@@ -139,6 +140,12 @@ const NUMBER_MISMATCH_CAP = 65
  * kuin numeroero, mutta vaikutus on sama: pari jää ihmisen katsottavaksi.
  */
 const SUBJECT_MISMATCH_CAP = 65
+
+/*
+ * Sama kynnys sille, etta nimi loytyy vain toisen KUVAUKSESTA. Peruste
+ * on kirjoitettu osumakohdan viereen (D-386).
+ */
+const NAME_IN_DESCRIPTION_CAP = 65
 
 export type ProjectMatchResult = {
   project: MatchableProject
@@ -1160,6 +1167,56 @@ export function calculateMatch(
   if (cappedBySubjects) {
     confidence = Math.min(confidence, SUBJECT_MISMATCH_CAP)
     reasons.push("different_name_subjects")
+  }
+
+  /*
+   * NIMI TOISEN KUVAUKSESSA ON LÖYTÖSIGNAALI, EI PÄÄTÖSSIGNAALI (D-386).
+   *
+   * `name_in_description` antaa 30 pistettä, ja pohja on 40 kun kaupunki,
+   * maakunta ja rakennuttaja täsmäävät. Kunnan päätöksissä ne täsmäävät
+   * AINA (sama kaupunki, sama rakennuttaja), joten summa on tasan 70 eli
+   * yhdistämisraja — ilman yhtään nimi- tai kuvausosumaa.
+   *
+   * Löytyi tätä lähdettä lisätessä: Sigurd Frosteruksen puiston urakka
+   * olisi yhdistynyt NAAPURIN katusuunnitelmaan (Merikannontie, 70 %),
+   * kun oikea rivi jäi 65:een — sen nimessä on Hilman kirjoitusvirhe
+   * "Frosteriuksen", joka laukaisi `different_name_subjects`-kapin.
+   * Väärä rivi voitti siis oikean.
+   *
+   * MITATTU KOKO TUONTIHISTORIASTA (9 796 osumaa): 192 osumaa on
+   * ratkennut pelkällä `name_in_description`illa, ja luetut rivit
+   * paljastavat kuvion — pitkä, geneerinen kuvaus imee kaiken:
+   *
+   *   Tampereen Tammelan, Metsäniityn, Hatanpään, Raholan ja Pyynikin
+   *   koulut  ->  kaikki samaan riviin "Lamminpään koulun perusparannus"
+   *   Suomenlinnan, Herttoniemen, Siltamäen, Pikku Huopalahden päätökset
+   *           ->  kaikki samaan riviin "Ala-aste ja päiväkoti"
+   *
+   * Nämä eivät ole rajatapauksia vaan eri hankkeita, ja yhdistäminen
+   * kirjoittaa kentät toisen hankkeen päälle
+   * (ks. muisti: matched-overwrites-fields).
+   *
+   * KATKAISU EI OLE VETO. 65 jää yli duplikaattijonon rajan (40), joten
+   * pari näkyy ihmiselle katselmoitavana — sama ratkaisu kuin
+   * osoiteavaimella D-357:ssä: *"sama signaali on turvallinen
+   * katselmointijonossa, jossa ihminen päättää."*
+   *
+   * TUNNISTE JA PAIKKA VOITTAVAT TÄMÄN. Tuulivoimahankkeissa
+   * `same_energy_site` on suora todiste samasta kohteesta, ja sillä
+   * ratkenneet 18 osumaa ovat luettuina oikein — ne jäävät voimaan.
+   * Mitattu kääntyvien määrä: 174 / 9 796 (1,8 %).
+   */
+  const cappedByDescriptionOnly =
+    reasons.includes("name_in_description") &&
+    !hasStrongIdentifier &&
+    !hasStrongLocation &&
+    !reasons.includes("exact_title") &&
+    !reasons.includes("exact_distinctive_title") &&
+    !reasons.includes("similar_title")
+
+  if (cappedByDescriptionOnly) {
+    confidence = Math.min(confidence, NAME_IN_DESCRIPTION_CAP)
+    reasons.push("name_in_description_only")
   }
 
   return {

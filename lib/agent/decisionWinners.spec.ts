@@ -503,3 +503,51 @@ describe("extractDecisionWinners – purettu urakkasopimus", () => {
     ).toEqual([])
   })
 })
+
+describe("tarjouksen hyvaksyminen (D-386)", () => {
+  /*
+   * Helsingin hankintapaatosten ainoa lausemuoto: ei roolisanaa, ei
+   * ostoverbia. Mitattu 7.11.2026, 0/21 valinnasta tuotti voittajan
+   * ennen tata muotoa.
+   */
+  it("poimii voittajan viranhaltijan ja jaoston paatoksesta", () => {
+    expect(
+      extractDecisionWinners(
+        "Päätös Infrapäällikkö hyväksyi GRK Suomi Oy:n tarjouksen kokonaistaloudellisesti edullisimpana ja päätti, että GRK Suomi Oy:n kanssa tehdään Veturitien alikulkukäytävää koskeva hankintasopimus."
+      )
+    ).toEqual(["GRK Suomi Oy"])
+
+    expect(
+      extractDecisionWinners(
+        "Päätös Kaupunkiympäristön toimialan tekninen johtaja päätti hyväksyä NCC Suomi Oy:n tarjouksen Katajanokan ala-asteen koulun perusparannuksen projektinjohtourakan toteuttajaksi kokonaistaloudellisesti edullisimpana."
+      )
+    ).toEqual(["NCC Suomi Oy"])
+  })
+
+  it("poimii ryhmittyman molemmat yritykset", () => {
+    expect(
+      extractDecisionWinners(
+        "Tekninen johtaja päätti hyväksyä kokonaistaloudellisesti edullisimpana Ryhmittymä Rakennustoimisto K. Tervo Helsinki Oy ja Rakennustoimisto K. Tervo Oy:n tarjouksen Kontulan päiväkodin kokonaisurakan hankinnassa arvonlisäverottomaan kokonaishintaan 8 333 000 euroa."
+      )
+    ).toEqual([
+      "Rakennustoimisto K. Tervo Helsinki Oy",
+      "Rakennustoimisto K. Tervo Oy",
+    ])
+  })
+
+  it("ei poimi arvioitavaa eika poissuljettua tarjoajaa", () => {
+    /* Vaatimuslause esiintyy jokaisen tarjousarvioinnin alussa. */
+    expect(
+      extractDecisionWinners(
+        "Hyväksyttävän tarjouksen tuli täyttää tarjouspyyntöasiakirjoissa tarjoukselle asetetut vähimmäisvaatimukset. CPE Production Oy:n tarjouksen tarjouspyynnönmukaisuuden arviointi Tarkistaessaan CPE Production Oy:n tarjousta hankintayksikkö havaitsi puutteen."
+      )
+    ).toEqual([])
+
+    /* Imperfektimuotoinen poissulkeminen kertausosiossa. */
+    expect(
+      extractDecisionWinners(
+        "Päätöksessä kaupunkitila- ja maisemasuunnittelupäällikkö hyväksyi osa-alueet ja sulki Hvidrum Oy:n, Lehtovuori Oy:n ja Kehä-Tuote Oy:n tarjouksen tarjouskilpailusta, koska ne eivät täyttäneet vaatimuksia."
+      )
+    ).toEqual([])
+  })
+})

@@ -51,6 +51,170 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-386 – Urakoitsijan valinta Helsingin päätöksistä: voittaja, hinta ja neljä vikaa jotka kuivaharjoitus paljasti
+
+Johannes 7.11.2026: Koulupuistikon aukion rivillä oli katusuunnitelma,
+mutta infrapäällikön päätös 6.7.2026 (HEL 2026-010171, **Tieluiska Oy,
+1 097 273 €**) ei ollut tullut mitään reittiä. Hän oli täydentänyt rivin
+käsin työmaakylttikuvasta ja päätöksistä.
+
+**Syy: viides luokka jäi hakematta.** `fetchHelsinkiPaatoksetSource`
+hakee neljää kategoriaa, jotka kaikki ovat *suunnittelupäätöksiä*.
+Urakoitsijan valinta on omassa luokassaan **"Kilpailutus"**. Aukko ei
+täyty muualta: nämä ovat enimmäkseen minikilpailutuksia puitesopimuksen
+sisällä, eikä minikilpailutuksesta tehdä Hilma-ilmoitusta.
+
+**Suodatus on koko työ: 20/382.** Kolmen kuukauden ikkunassa luokassa on
+382 asiaa. Niistä 28 mainitsee otsikossa valinnan ja 21 on urakoitsijan
+valinta; yksi näistä on pöydällepano (alla), joten läpi menee 20. Loput
+361 ovat lisä- ja muutostyötilauksia (62), puitejärjestelyjä,
+palveluhankintoja, keskeytyksiä ja oikaisuvaatimuksia.
+
+Sääntö on **otsikossa**, koska päätöslaji on otsikossa, ja se hyväksyy
+kolme aineistosta luettua muotoa: *urakoitsijan valinta* (18, kattaa myös
+*kokonaisurakoitsijan valinnan*), *toteuttajan valinta* (2) ja
+*urakoitsijoiden valinta* (1). Ulkona ovat tarjoajien valinta (kilpailun
+avaaminen, ei voittaja), lisä- ja muutostyöt, DPS:n toimittajavalinnat,
+leikki- ja erikoisvälinehankinnat sekä hankintaoikaisuvaatimukset.
+
+**Muutostyöpäätöksillä voisi myöhemmin päivittää olemassa olevan rivin
+vaihetta, mutta uutta riviä niistä ei synny.** Ei nyt.
+
+#### Kuivaharjoitus luettiin riveittäin, ja se paljasti neljä vikaa
+
+**1. Voittaja jäi poimimatta 20/20 rivillä.** Helsingin
+hankintapäätöksen lause ei sisällä roolisanaa eikä ostoverbia:
+*"Infrapäällikkö hyväksyi GRK Suomi Oy:n tarjouksen
+kokonaistaloudellisesti edullisimpana…"*. Kaikki kymmenen aiempaa
+lausemuotoa (`decisionWinners.ts`) nojaavat rooliin ("urakoitsijaksi")
+tai ostoverbiin, joten juuri se tieto jota näistä päätöksistä haetaan
+jäi saamatta. Lisätty yhdestoista muoto, ankkurina `":n tarjouksen"`.
+
+Ensimmäinen versio ajettiin **2 061 päätöksen** yli ja tuotos luettiin
+riveittäin: kymmenestä muuttuneesta rivistä kolme oli väärin, ja kukin
+antoi oman kiristyksen — löysä `tarjou` osui sanaan *tarjouskilpailusta*
+(poissuljettu tarjoaja voittajaksi), pelkkä `hyväksy` osui
+vaatimuslauseeseen *"Hyväksyttävän tarjouksen tuli täyttää…"* (kaksi
+väärää), ja yhteinen `REJECTION` tunsi vain preesensin, kun kertausteksti
+käyttää imperfektiä ("sulki", "eivät täyttäneet"). Lopputulos: **220
+päätöstä sai voittajan, 0 menetti sen, eikä yksikään nykyisen neljän
+luokan rivi muuttunut.**
+
+**Ryhmittymä oli poimittuna puolikas nimi.** Kontulan päiväkodin
+voittajaksi tuli *"Helsinki Oy ja Rakennustoimisto K. Tervo Oy"* — yritys
+jota ei ole. Nimen sanabudjetti ei riitä ryhmittymän yli, joten poiminta
+alkoi keskeltä nimeä. Tunnusmerkki on isolla alkava sana nimen EDELLÄ;
+nyt jakso luetaan kokonaan jos se alkaa ryhmittymäsanalla, muuten osuma
+hylätään. Tuotos: molemmat K. Tervon yhtiöt erikseen.
+
+**2. Hinta jäi poimimatta 17/20 rivillä, ja kolme poimittua oli väärä
+luku.** Yleinen `extractCostFromText` jättää *hankinta*-sanan summat
+tarkoituksella ulos, koska tiedotteissa ne ovat mitatusti väärin
+(ajoneuvojen huoltoleasing). Hankintapäätöksessä sama lause on
+päinvastoin kaikkein luotettavin tieto, joten summa poimitaan
+lähdekohtaisesti ja kirjataan **`contract_value`**-kenttään — ei
+`estimated_cost`iin. Kolme muotoa kattaa 20/20: *"Hankinnan arvo on
+1 563 700 euroa (alv 0 %)"* (18), *"arvonlisäverottomaan
+kokonaishintaan"* ja *"…projektinjohtourakan tavoitehintaan"*.
+
+Sopimusarvo on myös **oikeampi** kuin tekstistä arvattu: Katajanokan
+koululla teksti antoi 15 800 000 € (vanha enimmäishinta) ja sopimus
+15 720 744,34 €; Kontulan päiväkodilla 12 660 000 € vs. 8 333 000 €.
+`resolveProjectCost` antaa sopimusarvolle korkeamman painon kuin
+tekstille muttei ylitä käsin annettua.
+
+**3. Asian pöydällepano näytti valinnalta.** Töölön Kisahallin otsikko on
+*"…toteuttajan valinta sekä sopimuksen teko"*, mutta päätösteksti on
+*"jaosto päätti panna asian pöydälle"*. Ilman tarkistusta olisi syntynyt
+rivi jonka vaihe on "Sopimus myönnetty" ja hinta 115 M€ — luku
+esittelijän ehdotuksesta jota jaosto ei hyväksynyt, ja esitetty voittaja
+(Fira Rakennus Oy) voi vielä vaihtua. Tarkistus on ennen `seen`-merkintää,
+jotta saman asian aiempi oikea päätös pääsee vielä läpi samalla ajolla.
+
+**4. Otsikko esti osuman omaan hankkeeseen.** Päätöslaji on Helsingissä
+myös otsikon ALUSSA ("Minikilpailutus, …", "Hankintapäätös, …"), ja hinta
+voi olla keskellä ("…, 124 000 euroa, urakoitsijan valinta"). Molemmat
+estivät tarkan otsikko-osuman: *Hankintapäätös, Veturitien
+alikulkukäytävä* jäi 63 pisteeseen vaikka kannassa on sama hanke nimellä
+*Veturitien alikulkukäytävä, kokonaisurakka*, ja Kipparlahti samoin.
+Poiston jälkeen 78 ja 100. Mitattu 2 071 otsikon yli: muuttui 279, kaikki
+Kilpailutus-luokassa, eikä yksikään nykyisen neljän luokan otsikko
+muuttunut. Hinnan poisto vaatii **kokonaisen pilkkujakson**, koska
+ensimmäinen versio söi desimaalit keskeltä lausetta
+("lisätyötilaus 194.951,33 euroa" -> "…194.951").
+
+#### Kaksi vikaa jotka löytyivät tätä tehdessä, eivätkä koske vain tätä lähdettä
+
+**Nimi toisen kuvauksessa ratkaisi yhdistämisen — väärin 146 kertaa.**
+Sigurd Frosteruksen puiston urakka olisi yhdistynyt **naapurin**
+katusuunnitelmaan (Merikannontie, tasan 70 %), koska kaupunki, maakunta
+ja rakennuttaja täsmäävät aina kunnan päätöksissä (40 p.) ja
+`name_in_description` tuo 30 p. Oikea rivi jäi 65:een, koska sen nimessä
+on Hilman kirjoitusvirhe "Frosteriuksen", joka laukaisi
+`different_name_subjects`-kapin. **Väärä rivi siis voitti oikean.**
+
+Mitattu koko tuontihistoriasta (**9 796 osumaa**): 192 oli ratkennut
+pelkällä kuvausosumalla, ja luetut rivit olivat kuviomaisia —
+Tampereen Tammelan, Metsäniityn, Hatanpään, Raholan ja Pyynikin koulut
+kaikki samaan riviin *"Lamminpään koulun perusparannus"*, ja
+Suomenlinnan, Herttoniemen, Siltamäen ja Pikku Huopalahden päätökset
+riviin *"Ala-aste ja päiväkoti"*. Nämä eivät ole rajatapauksia vaan eri
+hankkeita, ja yhdistäminen kirjoittaa kentät toisen päälle.
+
+Nyt pelkkä kuvausosuma katkaistaan 65:een. **Katkaisu ei ole veto:** 65
+jää yli duplikaattijonon rajan, joten pari näkyy ihmiselle — sama
+ratkaisu kuin osoiteavaimella D-357:ssä. Tunniste ja paikka voittavat
+tämän, joten tuulivoiman `same_energy_site`-osumat (18, luettuina
+oikein) jäävät voimaan. Kääntyviä: **174 / 9 796 (1,8 %)**.
+
+**Sivutuksesta katosi rivejä, sama vika kuin D-358:ssa.** Kipparlahden
+valinta oli ensimmäisessä kuivaharjoituksessa mukana ja seuraavassa ei.
+Syy ei ollut säännössä: `meeting_date` on sama kymmenillä päätöksillä,
+joten järjestys oli määräämätön ja `from`-sivutus antoi saman rivin
+kahdesti ja toisen ei kertaakaan. Mitattu koko ikkunan yli:
+
+| järjestys | sivukoko | tulos |
+|---|---|---|
+| pelkkä `meeting_date` | 100 | 460 osumaa -> 460 uniikkia |
+| pelkkä `meeting_date` | 50 | 460 osumaa -> **458 uniikkia, 2 duplikaattia** |
+| + asiatunnus + päätöksen osoite | 100 ja 50 | 460 -> 460 |
+
+Ratkaisijaksi `unique_issue_id` ja viimeiseksi `decision_url`. Vika koski
+myös neljää aiempaa kategoriaa, eli lähde on voinut hiljaisesti ohittaa
+päätöksiä koko olemassaolonsa ajan.
+
+#### Mitä tuotantoon menee
+
+20 valintaa kolmen kuukauden ikkunasta: **10 osuu olemassa olevaan
+riviin** (Suvilahdenkatu 100 %, Arkadiankatu 100 %, Aurinkolahti 100 %,
+Kipparlahti 100 %, Katajanokka 98 %, Kontulan päiväkoti 98 %, Veturitie
+78 %, Pohjoisranta 78 %, Eläintarhanlahti 78 %, Hesperianpuisto 78 %) ja
+**10 syntyy uutena rivinä** katselmointijonoon. Voittaja 20/20, hinta
+20/20.
+
+Koulupuistikon valinta testattiin erikseen: se osuu riviin
+`962b2753` **91 %:lla**, eikä käsin täydennetty tieto katoa —
+`estimated_cost`-saraketta ei kirjoiteta osumapolulla lainkaan,
+yhteyshenkilöt yhdistetään (D-341, Stefan Malm ja Katri Bäckman
+säilyvät), tunnettua urakoitsijaa ei ylikirjoiteta ja vaihe ei peräänny
+("Rakenteilla" pysyy).
+
+**Sigurd Frosteruksen puisto jää katselmoitavaksi:** urakka syntyy uutena
+rivinä, ja oikea pari (`33eb8c2b`, Hilman kirjoitusvirheellä
+"Frosteriuksen") näkyy 65 pisteellä. Se on yhdistettävä käsin.
+
+**Tiedossa oleva aukko jota otsikko ei korjaa.** Staran johtokunta
+myöntää urakoita otsikolla joka ei nimeä päätöslajia:
+*"Uimastadionin uima-altaiden laatoitusten uusiminen"* on 4 039 600 euron
+urakka Tiilikaari Oy:lle. Näitä ei saa otsikosta
+(ks. muisti: winner-extraction-open-items).
+
+Muutetut: `lib/agent/fetchHelsinkiPaatoksetSource.ts`,
+`lib/agent/decisionWinners.ts`, `lib/agent/decisionTitle.ts`,
+`lib/agent/projectMatcher.ts`. Kuivaharjoitus:
+`scripts/kuivaharjoitus-helsingin-kilpailutus.ts` (ajaa tuotannon oman
+säännön ja ehdokasrakennuksen, ei omaa kopiota).
+
 ### D-369 – "Liitä hankkeeseen" korvaa kuvauksen, vaikka nappi lupaa muuta
 
 Johannes pyysi 2.11.2026 käymään NRC:n 20 avointa uutisriviä läpi ja
