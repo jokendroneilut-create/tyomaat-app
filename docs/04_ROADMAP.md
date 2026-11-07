@@ -1420,6 +1420,46 @@ muistin varassa.
   tavalla väärän avaimen alla.
 
 
+- **Sigurd Frosteruksen puisto: urakka ja Hilman rivi yhdistettävä
+  käsin** (kirjattu 8.11.2026, D-386). Urakoitsijavalinta
+  (HEL 2026-015559, VM Suomalainen Oy, 3 811 040 €) syntyy uutena
+  rivinä, koska oikea pari jää 65 pisteeseen: kannassa oleva Hilman rivi
+  on nimellä **"Sigurd Frosteri*u*ksen puiston esirakentaminen"**
+  (`33eb8c2b`), ja ylimääräinen kirjain laukaisee
+  `different_name_subjects`-kapin. Lisäksi samasta puistosta on
+  puistosuunnitelmarivi `ce156e9a`.
+
+  Ennen korjausta valinta olisi yhdistynyt **naapurin** katusuunnitelmaan
+  (Merikannontie, 70 %). Nyt se jää jonoon, mutta yhdistäminen on
+  tekemättä. Nimen kirjoitusasu kannattaa samalla korjata — Hilman
+  virhe estää kaikki tulevat osumat samaan hankkeeseen
+  (ks. muisti: title-precedence: vanha nimi voittaa, mutta tässä vanha
+  nimi on virheellinen).
+
+- **Kuvausosumalla syntyneet vanhat yhdistämiset ovat yhä kannassa**
+  (kirjattu 8.11.2026, D-386). Korjaus estää uudet, mutta **ei pura
+  tehtyjä**: tuontihistoriasta mitattuna 192 osumaa oli ratkennut
+  pelkällä `name_in_description`illa, ja luetut rivit olivat
+  kuviomaisia:
+
+  | yhdistetty rivi | mitä siihen on valunut |
+  |---|---|
+  | *Lamminpään koulun perusparannus Tampereella* | Tammelan, Metsäniityn, Hatanpään, Raholan ja Pyynikin koulut |
+  | *Ala-aste ja päiväkoti* (Helsinki) | Suomenlinna, Herttoniemi, Siltamäki, Pikku Huopalahti, Puistolanraitti, Malmi… |
+  | *Länsiratikat, Destian allianssi* | kymmenkunta eri katusuunnitelmaa |
+
+  Nämä ovat eri hankkeita, ja yhdistäminen kirjoitti kentät toisen
+  päälle (ks. muisti: matched-overwrites-fields). Kaksi kysymystä auki:
+  **(1)** moneen eri hankkeeseen tämä osuu uniikkeina pareina (192 on
+  tapahtumien, ei parien, määrä), ja **(2)** kannattaako purkaminen —
+  alkuperäinen rivi ei ole tallessa, joten "purku" tarkoittaa käytännössä
+  päätöksen tuomista uudelleen jonoon lähdeosoitteen kautta.
+
+  Älä pura sokeasti: osa 78 pisteen osumista oli luettuina **oikein**
+  (Tyks Kompassisairaala, Kouvolan pääkirjasto, Kuusankosken
+  yhtenäiskoulu). Lue rivit ennen kuin kosket
+  (ks. muisti: verify-findings-against-source).
+
 ### Lähdekattavuus
 
 - **Jalon (`jalon.fi/yhteystiedot/tyomaat/`) — EI ole lähteenä,
@@ -1935,6 +1975,42 @@ muistin varassa.
   **LLM on perusteltu vasta kaistalle 70–78** (37 paria), jossa sääntö ei
   erota oikeaa väärästä. Tee se vasta kun nuo 32 on katselmoitu —
   katselmoinnin tulos kertoo onko uusi sääntö oikeassa.
+
+- **Staran johtokunnan urakat jäävät poimimatta** (kirjattu 8.11.2026,
+  D-386). Helsingin Kilpailutus-luokan sääntö on otsikossa, koska
+  päätöslaji on otsikossa — mutta Rakentamispalveluliikelaitoksen
+  johtokunta ja toimitusjohtaja myöntävät urakoita otsikolla joka ei
+  nimeä päätöslajia lainkaan:
+
+  | otsikko | mitä päätöksessä tehtiin |
+  |---|---|
+  | *Uimastadionin uima-altaiden laatoitusten uusiminen* | sopimus Tiilikaari Oy:n kanssa, **4 039 600 €** |
+  | *Uimastadionin sääsuojat* | tilaus Cramo Finland Oy:ltä, 424 753 € |
+  | *Tuentamateriaali Malminkentälle 2026* | materiaalihankinta Be Group Oy Ab:lta (ei urakka) |
+
+  Lause on muodossa *"päätti oikeuttaa … tekemään sopimuksen
+  tarjouskilpailussa parhaiten sijoittuneen tarjoajan X Oy:n kanssa"*,
+  eli voittajapoiminta osaisi sen jos rivi tulisi ylipäätään läpi.
+
+  **Mitä tarvitaan:** toinen suodatin Staran päätöksille. Otsikko ei
+  kelpaa, joten ehto olisi tekijässä (johtokunta /
+  rakentamispalveluliikelaitos) ja päätöslauseessa. Mittaa ensin kuinka
+  monta aitoa urakkaa näin tulisi ja kuinka paljon kohinaa
+  (kalustehankinnat, palvelut) — sama suodatustyö kuin itse luokassa.
+  Ks. muisti: winner-extraction-open-items.
+
+- **Muutostyöpäätöksellä voisi päivittää vaiheen** (kirjattu 8.11.2026,
+  D-386; **ei nyt, Johanneksen rajaus**). Kilpailutus-luokassa on 62
+  lisä- ja muutostyötilausta kolmessa kuukaudessa, ja ne kertovat että
+  urakka on käynnissä juuri nyt — esim. *"Telakkarannan rakentaminen
+  2025–2026, kokonaisurakka, muutostyötilaus"* on todiste siitä että
+  työmaa on auki. Teksti sisältää myös alkuperäisen urakoitsijan nimen
+  (voittajapoiminta lukee sen jo oikein).
+
+  **Uutta riviä niistä ei synny** — vain olemassa olevan rivin vaihe.
+  Tämä on siksi eri työ kuin valintojen poiminta: täsmäytys osuu
+  urakkaan eikä hankkeeseen, ja osuman pitää olla varma ennen kuin
+  vaihetta koskee.
 
 ### Operointi
 
