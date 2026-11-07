@@ -1460,6 +1460,31 @@ muistin varassa.
   yhtenäiskoulu). Lue rivit ennen kuin kosket
   (ks. muisti: verify-findings-against-source).
 
+- **Pilkulla erotellut osapuolet näkyvät kortilla yhtenä yrityksenä**
+  (mitattu 8.11.2026). `splitCompanyField` katkaisee vain `//`-merkillä
+  tai sulun jälkeisellä pilkulla (D-313), joten pilkuilla kirjoitettu
+  lista menee kortille yhtenä nimenä. Kannassa on **12 tällaista
+  kenttää**, mm.:
+
+  | hanke | kenttä |
+  |---|---|
+  | Länsiratikat, Destian allianssi | `builder`: Destia Oy, Destia Rail Oy, Proxion Plan Oy, WSP Finland Oy |
+  | Länsiratikat, YIT:n ja NRC:n allianssi | `builder`: YIT Infra Oy, NRC Group Finland Oy, Sitowise Oy, Sweco Finland Oy |
+  | Kunnallisteknisten pienkohteet 2026 | `builder`: viisi urakoitsijaa pilkuilla |
+  | Kerrostalo Heka Tihtaalinkatu 4 | `developer`: Helsingin kaupungin asunnot Oy, Helsingin Asumisoikeus Oy |
+  | Tampereen henkilöratapihan uudistus | `developer`: Väylävirasto **ja erillissopimuksilla** Tampereen kaupunki, Fintraffic Raide Oy ja VR-Yhtymä Oyj |
+
+  **Ei ole mekaaninen korjaus.** Osa riveistä on proosaa eikä listaa
+  ("Väylävirasto ja erillissopimuksilla…", "Suomen Hyvä Koti Oy,
+  Honkarakenne sekä VRP Etelä-Suomi Oy"), ja yhdessä on roskaa
+  ("Bull Team Oy, WeKas Oy, Toholammilla Bull Team Oy"). Rivit on
+  luettava yksitellen: osa jaetaan `//`:llä, osa kirjoitetaan uudelleen,
+  osassa ylimääräinen osapuoli kuuluu `related_companies`iin.
+
+  Löytyi Espoon jaostotiedotetta jakaessa: D-255:n jakoskripti kirjoitti
+  osapuolet pilkuilla, eli vanhan skriptin kopiointi uusintaa vian
+  (ks. muisti: multi-project-rows).
+
 ### Lähdekattavuus
 
 - **Jalon (`jalon.fi/yhteystiedot/tyomaat/`) — EI ole lähteenä,
