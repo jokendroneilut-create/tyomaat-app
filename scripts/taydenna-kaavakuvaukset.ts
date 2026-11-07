@@ -36,12 +36,32 @@ const LISTAUSRAJA = 12
 
 /* Sanoja jotka eivat yksiloi kaavaa. */
 const YLEISSANA =
-  /^(asemakaava|asemakaavan|kaava|kaavan|muutos|muutoksen|ranta|yleis|osa|ja|sekä|alue|alueen|kortteli|korttelin|kaupunginosa|vireillä|luonnos|ehdotus|tie|katu|kuja|puisto)$/i
+  /^(asemakaava|asemakaavan|kaava|kaavan|muutos|muutoksen|ranta|yleis|osa|ja|sekä|alue|alueen|kortteli|korttelin|korttelit|kaupunginosa|vireillä|luonnos|ehdotus|tie|katu|kuja|puisto)$/i
+
+/*
+ * PAIVAMAARA EI OLE KAAVATUNNUS (D-388).
+ *
+ * Otsikossa on usein nahtavillaoloaika ("ehdotus nahtavilla
+ * 17.12.2025-30.1.2026"), ja sen luvut kelpasivat tunnisteiksi.
+ * Liitteen nimessa on niin ikaan paiva, joten osuma syntyi pelkista
+ * paivanumeroista: Euran "muutos 2, kortteli 2 (ehdotus nahtavilla
+ * 17.12.2025-...)" sai liitteekseen `..._rakm3_luonnos_17.12..pdf` eli
+ * muutos KOLMEN selostuksen, koska "17" ja "12" osuivat.
+ *
+ * Paivamaarajaksot poistetaan otsikosta ennen numeroiden poimintaa ja
+ * vuosiluvut hylataan. Kaavatunnus ("697", "02-326") jaa.
+ */
+const PAIVAMAARA = /\b\d{1,2}\.\d{1,2}\.(?:\d{2,4})?/g
+const VUOSILUKU = /^(?:19|20)\d{2}$/
 
 function tunnisteet(otsikko: string): string[] {
   const ulos: string[] = []
   /* Kaavatunnus, esim. "697", "02-326", "Ak 216". */
-  for (const m of otsikko.matchAll(/\b\d{2,4}(?:-\d{2,4})?\b/g)) ulos.push(m[0])
+  const ilmanPaivia = otsikko.replace(PAIVAMAARA, " ")
+  for (const m of ilmanPaivia.matchAll(/\b\d{2,4}(?:-\d{2,4})?\b/g)) {
+    if (VUOSILUKU.test(m[0])) continue
+    ulos.push(m[0])
+  }
   /* Harvinaiset sanat: pitka, ei yleissana. */
   for (const sana of otsikko.split(/[^\wäöåÄÖÅ-]+/)) {
     if (sana.length < 6 || YLEISSANA.test(sana)) continue
@@ -50,14 +70,76 @@ function tunnisteet(otsikko: string): string[] {
   return ulos
 }
 
-function osuukoKaavaan(linkki: { teksti: string; href: string }, otsikko: string): boolean {
-  const nimi = `${decodeURIComponent(linkki.href.split("/").pop() ?? "")} ${linkki.teksti}`.toLowerCase()
-  for (const t of tunnisteet(otsikko)) {
+/*
+ * AAKKOSET POIS MOLEMMILTA PUOLILTA (D-388).
+ *
+ * Liitteiden tiedostonimet ovat ASCII-muotoon muunnettuja
+ * (`selostus__pyhajarven_lansirannan_...pdf`), mutta otsikko on oikein
+ * kirjoitettu ("Pyhäjärven länsirannan..."). Vertailu ilman
+ * normalisointia ei siis osunut OMAAN liitteeseen lainkaan — ja kun
+ * oikea omistaja sai nollan, liitteen saattoi viedä toinen kaava
+ * yhteisella sanalla. Mitattu Euralla: Pyhajarven rivit saivat omasta
+ * selostuksestaan 0, ja "Keskustan asemakaavan muutos, korttelit 353 ja
+ * 354" sai siita 0,25 sanalla "korttelit".
+ */
+function ilmanAakkosia(teksti: string): string {
+  return teksti
+    .toLowerCase()
+    .replace(/[äå]/g, "a")
+    .replace(/ö/g, "o")
+}
+
+function liitteenNimi(linkki: { teksti: string; href: string }): string {
+  return ilmanAakkosia(
+    `${decodeURIComponent(linkki.href.split("/").pop() ?? "")} ${linkki.teksti}`
+  )
+}
+
+/*
+ * Liitteen osuvuus otsikkoon KAHTENA LUKUNA, ja jarjestys naiden
+ * valilla on mitattu (D-388):
+ *
+ *   1. OSUVIEN TUNNISTEIDEN MAARA. Oma OAS
+ *      `euran-panelian-datakeskuksen-ak-oas.pdf` osuu kahteen
+ *      tunnisteeseen ("panelian", "datakeskuksen"), sisarkaava
+ *      "Panelian korttelin 7" vain yhteen. Jos vertailu olisi pelkka
+ *      osuus, sisaren 1/1 estaisi oman 2/2:n — ja juuri niin kavi
+ *      ensimmaisessa versiossa.
+ *   2. OSUUS RATKAISIJANA. Korttelin 7 selostus osuu molempiin
+ *      otsikoihin yhdella tunnisteella ("panelian"), joten maara on
+ *      tasa — osuus erottaa: kortteli 7 saa 1/1, datakeskus 1/2, eli
+ *      selostus jaa oikealle riville.
+ */
+type Osuvuus = { maara: number; osuus: number }
+
+function osumapisteet(
+  linkki: { teksti: string; href: string },
+  otsikko: string
+): Osuvuus {
+  const t = tunnisteet(otsikko)
+  if (!t.length) return { maara: 0, osuus: 0 }
+  const nimi = liitteenNimi(linkki)
+  let osuvat = 0
+  for (const x of t) {
     /* Kannan alku riittaa: "Kappelinkierron" vs "kappelinkierto". */
-    const kanta = t.length > 7 ? t.slice(0, -2) : t
-    if (nimi.includes(kanta.toLowerCase())) return true
+    const kanta = x.length > 7 ? x.slice(0, -2) : x
+    if (nimi.includes(ilmanAakkosia(kanta))) osuvat += 1
   }
-  return false
+  return { maara: osuvat, osuus: osuvat / t.length }
+}
+
+/* Onko a aidosti parempi kuin b? Maara ensin, osuus ratkaisijana. */
+function parempi(a: Osuvuus, b: Osuvuus): boolean {
+  if (a.maara !== b.maara) return a.maara > b.maara
+  return a.osuus > b.osuus
+}
+
+function osumaosuus(linkki: { teksti: string; href: string }, otsikko: string): number {
+  return osumapisteet(linkki, otsikko).osuus
+}
+
+function osuukoKaavaan(linkki: { teksti: string; href: string }, otsikko: string): boolean {
+  return osumaosuus(linkki, otsikko) > 0
 }
 
 async function main() {
@@ -70,7 +152,7 @@ async function main() {
 
   const { createClient } = await import("@supabase/supabase-js")
   const cheerio = await import("cheerio")
-  const { kaavanKuvausTekstista, haeKaavaselostuksenTeksti, valitseKaavaselostus } =
+  const { kaavanKuvausTekstista, haeKaavaselostuksenTeksti, valitseKaavanAsiakirja } =
     await import("../lib/agent/kaavanKuvaus")
 
   const db = createClient(
@@ -131,19 +213,55 @@ async function main() {
       continue
     }
 
-    /* Listaussivu: vaadi etta liite tunnistaa juuri taman kaavan. */
+    /*
+     * Listaussivu: vaadi etta liite tunnistaa juuri taman kaavan JA
+     * erottaa sen sisarkaavoista.
+     *
+     * SISARVERTAILU LISATTIIN 8.11.2026 (D-388), koska kuivaharjoitus
+     * olisi kirjoittanut vaaran tekstin. Euran sivulla on kaksi
+     * Panelian kaavaa, ja *"Panelian Datakeskuksen asemakaava"* osui
+     * liitteeseen `selostus__panelian_korttelin_7_akm_luonnos.pdf`
+     * yhteisella sanalla "panelian" — eli TOISEN kaavan selostukseen.
+     *
+     * Osumaosuus ratkaisee: liitteen on osuttava tahan otsikkoon
+     * paremmin kuin yhteenkaan sisarotsikkoon. Korttelin 7 selostus saa
+     * omalta otsikoltaan 1/1 ja datakeskukselta 1/2, joten se jaa
+     * oikealle riville ja hylataan vaaralta.
+     */
     if (linkit.length > LISTAUSRAJA) {
-      const omat = linkit.filter((l) => osuukoKaavaan(l, otsikko))
+      const sisarotsikot = (dokit ?? [])
+        .map((muu: any) => String(muu.title ?? ""))
+        .filter((muu) => muu && muu !== otsikko)
+
+      const omat = linkit.filter((l) => {
+        const oma = osumapisteet(l, otsikko)
+        if (oma.maara === 0) return false
+        return sisarotsikot.every((sisar) => parempi(oma, osumapisteet(l, sisar)))
+      })
+
       if (!omat.length) {
-        syy(`listaussivu (${linkit.length} linkkia), ei tunnistettavaa liitetta`)
+        const osuvia = linkit.filter((l) => osuukoKaavaan(l, otsikko)).length
+        syy(
+          osuvia
+            ? `listaussivu (${linkit.length} linkkia), liite ei erota sisarkaavasta`
+            : `listaussivu (${linkit.length} linkkia), ei tunnistettavaa liitetta`
+        )
         continue
       }
       linkit = omat
     }
 
-    const selostus = valitseKaavaselostus(linkit)
+    /*
+     * OAS KELPAA KUN SELOSTUSTA EI OLE (D-388). Vireilletulovaiheen
+     * kaavalla ainoa liite on osallistumis- ja arviointisuunnitelma, ja
+     * siina on tavoiteluku. `valitseKaavanAsiakirja` kokeilee
+     * selostuksen jalkeen OAS:n; tama skripti kutsui yha pelkkaa
+     * selostusvalitsinta, joten OAS-vaiheen kaavat putosivat syylla
+     * "ei paaselostusta liitteissa".
+     */
+    const selostus = valitseKaavanAsiakirja(linkit)
     if (!selostus) {
-      syy("ei paaselostusta liitteissa")
+      syy("ei paaselostusta eika OAS:ia liitteissa")
       continue
     }
 

@@ -383,9 +383,38 @@ function onLiiteluettelo(teksti: string): boolean {
  * vaihtoehdot ......... 23". Kangasalan kaavan 876 selostuksessa
  * ankkurisana osui luetteloon, ei leipatekstiin.
  */
+/*
+ * SISALLYSLUETTELO ILMAN PISTEJONOA (D-388).
+ *
+ * Ylivieskan selostuksissa luettelo on ladottu sarkaimilla, joten
+ * pistejonoa ei ole — ja ankkurisana osui luetteloon:
+ *
+ *   "ASEMAKAAVAN TAVOITTEET 4.4.1 Lahtokohta-aineiston antamat
+ *    tavoitteet 27 4.4.2 Prosessin aikana syntyneet tavoitteet,
+ *    tavoitteiden tarkentuminen 28 5"
+ *
+ * Kuivaharjoitus olisi kirjoittanut tuon kolmen hankkeen kuvaukseksi.
+ * Kaksi tunnusmerkkia, molemmat luettu naista riveista:
+ *
+ *   1. PALJAITA SIVUNUMEROITA. Kolme tai useampi yksinaan seisova
+ *      1-3-numeroinen luku. Oikeassa tekstissa niita on harvassa:
+ *      mitattu kolmella hyvaksytylla kuvauksella (Panelian datakeskus
+ *      0, Euran kortteli 353/354 kaksi, Ylivieskan Toivonpuisto yksi).
+ *   2. ALALUKUNUMEROINTI. Kaksi tai useampi "4.4.1"-muotoista numeroa.
+ *      Proosassa esiintyy pykalia ja paivamaaria, mutta ei kahta
+ *      kolmitasoista lukunumeroa.
+ */
+const PALJAS_SIVUNUMERO = /(?:^|\s)\d{1,3}(?=\s|$)/g
+const ALALUKUNUMERO = /\b\d+\.\d+(?:\.\d+)?(?=\s|$)/g
+
 function onSisallysluettelo(teksti: string): boolean {
   /* Kahdeksan perakkaista pistetta ei esiinny proosassa. */
-  return /\.{8,}/.test(teksti)
+  if (/\.{8,}/.test(teksti)) return true
+
+  const alku = teksti.slice(0, 400)
+  if ((alku.match(PALJAS_SIVUNUMERO) ?? []).length >= 3) return true
+  if ((alku.match(ALALUKUNUMERO) ?? []).length >= 2) return true
+  return false
 }
 
 export function kaavanKuvausLauseesta(raaka: string | null | undefined): string | null {

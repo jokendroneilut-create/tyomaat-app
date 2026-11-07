@@ -41,7 +41,7 @@ avausta 2 467:stä). Tämä on se luku jota seurataan, ei rivien määrä.
 
 | lähde | tulos | miten |
 |---|---|---|
-| Euran kaavoitus ja maapolitiikka | 7 kuvausta (12 kaavasta 9 saa pääselostuksen) | keräin hakee selostuksen, D-268 |
+| Euran kaavoitus ja maapolitiikka | 7 kuvausta (12 kaavasta 9 saa pääselostuksen) | keräin hakee selostuksen, D-268; **OAS kytketty 8.11.2026, D-388** |
 | Helsingin asemakaavat (SUKKA) | 60 riviä 65:stä; hankkeista 198/201 yli 200 merkin | kynnys 200 merkkiä, OAS + selostus, D-270 |
 | Kouvolan ajankohtaiset asemakaavat | 14 / 26 | yleinen täydentäjä, D-271 |
 | Mustasaaren vireillä olevat asemakaavat | 7 / 21 | yleinen täydentäjä |
@@ -57,6 +57,20 @@ npx tsx scripts/taydenna-kaavakuvaukset.ts "<source_name>"
 npx tsx scripts/taydenna-kaavakuvaukset.ts "<source_name>" --apply
 npx tsx scripts/synkronoi-kuvaus-nakyviin.ts --apply   # hankkeen näkyvä kenttä
 ```
+
+**OAS KELPAA KUN SELOSTUSTA EI OLE (D-388).** Vireilletulovaiheen
+kaavalla ainoa liite on osallistumis- ja arviointisuunnitelma, ja sen
+tavoiteluku kertoo mitä alueelle tulee. `valitseKaavanAsiakirja`
+(selostus ensin, OAS vasta jos selostusta ei ole) on ollut olemassa
+D-317:stä, mutta Euran keräin ja tämä yleinen täydentäjä kutsuivat yhä
+pelkkää `valitseKaavaselostus`ta. Molemmat kytketty 8.11.2026.
+
+**Listaussivulla liitteen on erotettava sisarkaava (D-388).** Täydentäjä
+vaatii nyt, että liite osuu tähän otsikkoon paremmin kuin yhteenkään
+saman lähteen toiseen otsikkoon — osumien määrä ensin, osuus
+ratkaisijana. Samalla korjattiin kaksi syytä joilla oikea omistaja jäi
+nollaan: ääkköset (tiedostonimi on ASCII, otsikko ei) ja otsikon
+päivämäärät, jotka kelpasivat kaavatunnukseksi.
 
 **Keräin on kytkettävä erikseen.** Takautuva täydennys korjaa olemassa
 olevat rivit; uudet rivit jäävät ohuiksi kunnes kunnan oma keräin hakee

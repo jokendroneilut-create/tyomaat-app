@@ -29548,10 +29548,26 @@ async function collectEuraKaavaSource(source: DiscoverySource) {
      * Kuvaus selostuksesta. Sivun oma teksti on pelkka menettelytieto
      * ("ehdotuksena nahtavilla 8.10.-9.11.2026") ja liitelista, joten
      * tassa lahteessa selostus on ainoa sisallon lahde.
+     *
+     * OAS KELPAA KUN SELOSTUSTA EI VIELA OLE (D-388).
+     *
+     * Vireilletulovaiheen kaavalla ei ole selostusta lainkaan, vaan
+     * ainoa liite on osallistumis- ja arviointisuunnitelma — ja juuri
+     * siina on luku joka kertoo MITA alueelle tulee. Euran Panelian
+     * datakeskuksen OAS:ssa se on luku 3 "SUUNNITTELUTEHTAVA JA SEN
+     * TAVOITTEET": *"Asemakaavan tavoitteena on mahdollistaa
+     * datakeskuksen ja sita palvelevan teknisen infrastruktuurin
+     * rakentaminen…"*
+     *
+     * `valitseKaavanAsiakirja` (selostus ensin, OAS vasta jos
+     * selostusta ei ole) oli olemassa jo D-317:sta, mutta tama kerain
+     * kutsui yha pelkkaa `valitseKaavaselostus`ta — eli varareitti oli
+     * kirjoitettu muttei kytketty
+     * (ks. muisti: extractor-exists-unwired).
      */
     let description = varastoidut.get(documentUrl) ?? null
     if (!description && selostuksiaHaettu < EURA_SELOSTUKSIA_PER_AJO) {
-      const selostusUrl = valitseKaavaselostus(item.links)
+      const selostusUrl = valitseKaavanAsiakirja(item.links)
       if (selostusUrl) {
         selostuksiaHaettu += 1
         const selostusTeksti = await haeKaavaselostuksenTeksti(selostusUrl)

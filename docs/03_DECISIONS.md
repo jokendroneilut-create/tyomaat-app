@@ -51,6 +51,125 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-388 – Kaavan kuvaus OAS:sta: varareitti oli kirjoitettu muttei kytketty, ja liitevalinta osui naapurikaavaan
+
+Johannes 8.11.2026 Euran Panelian datakeskuksen jonorivistä: *"tästä ei
+ole poimittu olennaisinta eli kuvausta"* — ja liitti perään juuri sen
+tekstin joka puuttui (OAS:n luku 3). *"Korjataan tähän hankkeeseen,
+tarkista nykyiset hankkeet sekä jono ja korjaa poimija että jatkossa
+poimitaan tuo."*
+
+#### Syy: kaava on OAS-vaiheessa, eikä keräin katso OAS:ia
+
+Rivin kuvaus oli **0 merkkiä**. Euran sivulla kaavalla on tasan yksi
+liite, `euran-panelian-datakeskuksen-ak-oas-26.10.2026.pdf` — selostusta
+ei ole, koska kaava on vireilletulovaiheessa.
+
+Keräin kutsui `valitseKaavaselostus`ta, joka palauttaa OAS:lle **nullin**.
+Yhdistetty valitsin `valitseKaavanAsiakirja` (selostus ensin, OAS vasta
+jos selostusta ei ole) on ollut olemassa **D-317:stä** asti, mutta tämä
+keräin ei kutsunut sitä. Varareitti oli siis kirjoitettu muttei
+kytketty — sama kuvio kuin [[extractor-exists-unwired]].
+
+Kun OAS annetaan jäsentimelle, se tuottaa täsmälleen Johanneksen
+liittämän tekstin (658 merkkiä, luku *"3 SUUNNITTELUTEHTÄVÄ JA SEN
+TAVOITTEET"*): otsikkosanasto tunsi muodon jo (`suunnitteluteht[äa]v`,
+D-352), eli jäsentimessä ei ollut vikaa lainkaan.
+
+Kytketty kahteen paikkaan: Euran keräin (`apiCollector.ts`) ja yleinen
+täydentäjä (`scripts/taydenna-kaavakuvaukset.ts`), joka hylkäsi
+OAS-vaiheen kaavat syyllä *"ei pääselostusta liitteissä"*.
+
+#### Kuivaharjoitus paljasti kolme vikaa liitevalinnassa
+
+Yleisen täydentäjän kuivaharjoitus Euralle olisi kirjoittanut **väärän
+tekstin** — ja koska tuotos luettiin riveittäin, se jäi kiinni. Kaikki
+kolme vikaa ovat Euran sivun kaltaisilla **listaussivuilla**, joilla
+yhden sivun 90 liitelinkkiä kuuluvat 15 eri kaavalle
+([[listing-page-is-not-project-page]]):
+
+**1. Liite ei erottanut sisarkaavaa.** *"Panelian Datakeskuksen
+asemakaava"* osui liitteeseen
+`selostus__panelian_korttelin_7_akm_luonnos.pdf` yhteisellä sanalla
+"panelian" — eli naapurikaavan selostukseen. Ratkaisu: liitteen on
+osuttava tähän otsikkoon **paremmin kuin yhteenkään sisarotsikkoon**.
+Järjestys on osumien MÄÄRÄ ensin, osuus ratkaisijana:
+
+| liite | datakeskus | kortteli 7 | kummalle |
+|---|---|---|---|
+| `...datakeskuksen-ak-oas.pdf` | 2 tunnistetta (2/2) | 1 (1/1) | datakeskus |
+| `...panelian_korttelin_7_akm.pdf` | 1 (1/2) | 1 (1/1) | kortteli 7 |
+
+Pelkkä osuus ei riittäisi: sisaren 1/1 olisi estänyt oman 2/2:n.
+
+**2. Ääkköset eivät osu tiedostonimiin.** Liitteiden nimet ovat
+ASCII-muotoon muunnettuja (`selostus__pyhajarven_lansirannan_...`),
+otsikko ei ("Pyhäjärven länsirannan…"). Vertailu ei siis osunut
+**omaan** liitteeseen lainkaan, ja kun oikea omistaja sai nollan,
+liitteen vei toinen kaava yhteisellä sanalla: *"Keskustan asemakaavan
+muutos, korttelit 353 ja 354"* sai Pyhäjärven selostuksen sanalla
+"korttelit". Normalisointi molemmille puolille, ja "korttelit"
+yleissanaksi (lista tunsi "kortteli" ja "korttelin" muttei monikkoa).
+
+**3. Päivämäärä ei ole kaavatunnus.** Otsikossa on nähtävilläoloaika, ja
+sen luvut kelpasivat tunnisteiksi: *"muutos 2, kortteli 2 (ehdotus
+nähtävillä 17.12.2025-30.1.2026)"* sai liitteekseen
+`..._rakm3_luonnos_17.12..pdf` eli **muutos kolmen** selostuksen, koska
+"17" ja "12" osuivat. Päivämääräjaksot poistetaan otsikosta ennen
+numeroiden poimintaa ja vuosiluvut hylätään; kaavatunnus ("697",
+"02-326") jää.
+
+Euran kuivaharjoitus näiden jälkeen: **1 parannus 6 ohuesta**, ja se on
+oikea (Keskustan kortteleiden 353 ja 354 oma OAS). Loput hylätään
+nimetyllä syyllä.
+
+#### Neljäs vika: sisällysluettelo meni kuvaukseksi
+
+Ylivieskan kuivaharjoitus paljasti saman luokan vian jäsentimessä.
+`onSisallysluettelo` tunsi vain pistejonon (`....... 23`), mutta
+Ylivieskan selostuksissa luettelo on ladottu sarkaimilla:
+
+> *"ASEMAKAAVAN TAVOITTEET 4.4.1 Lähtökohta-aineiston antamat tavoitteet
+> 27 4.4.2 Prosessin aikana syntyneet tavoitteet, tavoitteiden
+> tarkentuminen 28 5"*
+
+Kolme hanketta olisi saanut tuon kuvaukseksi. Kaksi tunnusmerkkiä,
+molemmat luettu näistä riveistä: **kolme paljasta sivunumeroa** tai
+**kaksi alalukunumeroa** (4.4.1-muotoa). Mitattu hyväksytyillä
+kuvauksilla, että raja ei osu proosaan: Panelian datakeskus 0 paljasta
+numeroa, Euran kortteli 353/354 kaksi, Ylivieskan Toivonpuisto yksi.
+
+**Hylkäys paransi myös tulosta**, ei vain estänyt roskaa: kun luettelo
+ei enää voita, oikea luku löytyy myöhempää otsikkoa myöten. Ylivieskan
+kuivaharjoitus ennen: neljä parannusta, joista **kolme sisällysluetteloa**
+ja yksi aito. Jälkeen: kaksi parannusta, **molemmat aitoja** (Koskipuhto
+kortteli 25, 819 merkkiä; Toivonpuisto kortteli 74, 827 merkkiä).
+
+#### Mitä kannassa on nyt
+
+| | | |
+|---|---|---|
+| jono, kaavarivejä | 3 398 | kuvaus alle 200 merkkiä: 743 |
+| — niistä vielä odottamassa (`new`) | **6** | kuusi eri kuntaa, ei Euraa |
+| julkisia kaavahankkeita | 2 998 | kuvaus alle 200 merkkiä: **601** |
+
+Jono on siis käytännössä kunnossa; backlog on hankepuolella (601), ja
+suurimmat lähteet ovat Lahti 58, Lappeenranta 44, Kuopio 30, Turku 29,
+Nokia 23. Niitä ei täydennetty tässä: yleinen täydentäjä on
+sivurakennekohtainen, ja jokaisen lähteen kuivaharjoitus on luettava
+erikseen ([[kaava-parser-vs-page]]).
+
+Panelian datakeskuksen rivi korjattiin keräimen omalla polulla
+(`scripts/korjaa-panelian-datakeskuksen-kuvaus.ts`), joka jäsentää sivun
+**itemeittäin** kuten keräin — ei yleisellä skriptillä, joka lukee kaikki
+90 linkkiä. Kuvaus kirjoitettiin myös
+`source_documents.raw_payload.description`iin, jottei keräin hae
+selostusta uudelleen joka ajolla.
+
+Muutetut: `lib/agent/kaavanKuvaus.ts`,
+`lib/agent/discovery/collectors/apiCollector.ts`,
+`scripts/taydenna-kaavakuvaukset.ts`.
+
 ### D-387 – /tic latautui 27 sekuntia, koska mittari haki koko metadatan; välimuisti vain mittareille
 
 Johannes 8.11.2026: *"pystytkö tekemään tälle sivulle välimuistin esim

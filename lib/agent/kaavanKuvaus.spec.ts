@@ -363,3 +363,56 @@ describe("Asemakaavan tarkoitus ja vaihejarjestys", () => {
     )
   })
 })
+
+describe("sisallysluettelo ilman pistejonoa (D-388)", () => {
+  /*
+   * Ylivieskan selostuksissa luettelo on ladottu sarkaimilla, joten
+   * `\.{8,}` ei osu. Kuivaharjoitus olisi kirjoittanut nama kolmen
+   * hankkeen kuvaukseksi.
+   */
+  it("hylkaa sivunumeroilla ladotun luettelon", () => {
+    const teksti = [
+      "1 PERUS- JA TUNNISTETIEDOT",
+      "Asemakaavan muutos koskee korttelia 25.",
+      "4.4 ASEMAKAAVAN TAVOITTEET",
+      "4.4.1 Lähtökohta-aineiston antamat tavoitteet 27 4.4.2 Prosessin aikana syntyneet tavoitteet, tavoitteiden tarkentuminen 28 5 ASEMAKAAVAN KUVAUS 29",
+    ].join(String.fromCharCode(10))
+    /* Luettelo hylataan, eika muuta lukua ole -> tyhja on oikea tulos. */
+    expect(kaavanKuvausTekstista(teksti)).toBeNull()
+  })
+
+  it("hylkaa kysymysluettelon jossa on sivunumerot", () => {
+    const teksti = [
+      "1 ASEMAKAAVAN TAVOITTEET",
+      "MITKÄ OVAT KAAVOITUKSEN LÄHTÖKOHDAT? 2 YLEISTÄ 2 VALTAKUNNALLISET ALUEIDENKÄYTTÖTAVOITTEET 3 MAAKUNTAKAAVA 4 YLEISKAAVA 5",
+    ].join(String.fromCharCode(10))
+    expect(kaavanKuvausTekstista(teksti)).toBeNull()
+  })
+
+  it("paastaa lapi proosan jossa on muutama luku", () => {
+    /*
+     * Aito kuvaus Euran korttelin 353 OAS:sta: kaksi paljasta
+     * numeroa (353 ja 354) ei tee tekstista luetteloa.
+     */
+    const teksti = [
+      "3 SUUNNITTELUTEHTÄVÄ JA SEN TAVOITTEET",
+      "Suunnittelualue sijaitsee Euran keskustaajamassa. Aluetta rajaavat pohjoisessa Lauttakyläntie, etelässä Satakunnankatu, lännessä Laitilantie ja idässä Eurantie. Asemakaavan muutos koskee kortteleita 353 ja 354 sekä kortteleiden välistä katualuetta.",
+    ].join(String.fromCharCode(10))
+    const kuvaus = kaavanKuvausTekstista(teksti)
+    expect(kuvaus).toContain("Euran keskustaajamassa")
+    expect(kuvaus).toContain("353 ja 354")
+  })
+
+  it("lukee OAS:n tavoiteluvun (Panelian datakeskus)", () => {
+    const teksti = [
+      "2 KAAVAN NIMI JA SUUNNITTELUALUEEN SIJAINTI",
+      "Kaavan nimi on Panelian datakeskuksen asemakaava.",
+      "3 SUUNNITTELUTEHTÄVÄ JA SEN TAVOITTEET",
+      "Asemakaavan tavoitteena on mahdollistaa datakeskuksen ja sitä palvelevan teknisen infrastruktuurin rakentaminen. Kaava mahdollistaa muun muassa energia- ja varavoimajärjestelmien sekä jäähdytysratkaisujen toteuttamisen vaiheittain tulevien investointien mukaisesti.",
+      "4 ALOITE KAAVAN LAATIMISEKSI",
+    ].join(String.fromCharCode(10))
+    expect(kaavanKuvausTekstista(teksti)).toContain(
+      "mahdollistaa datakeskuksen ja sitä palvelevan teknisen infrastruktuurin"
+    )
+  })
+})
