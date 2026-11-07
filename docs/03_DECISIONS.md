@@ -51,6 +51,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-389 – Kohdetyyppi jäi tyhjäksi, koska tyyppiä päätteli kaksi konetta eikä kumpikaan tunne sanaa
+
+Johannes 8.11.2026 Euran Panelian datakeskuksen rivistä: *"ei saanut
+kohdetyyppiä = datakeskus. Miksi katso vielä tämä ja korjataan."*
+
+#### Kolme päättelijää, eikä se joka tuntee sanan ollut polussa
+
+| päättelijä | missä käytössä | tunteeko datakeskuksen |
+|---|---|---|
+| `classifyProject` | kaavaresolverit (mm. Eura) | **ei** — sanasto on pienaakkosinen ("kerrostalo", "koulu") eikä sisällä datakeskusta |
+| `resolveBuildingType` | keskitetty portti `resolvePotentialProject`issa | kysyy **mallilta**: kaksi kutsua, 0,8:n varmuusraja, erimielisyys jättää tyhjäksi |
+| `inferBuildingType` | **kymmenen keräintä** (`fetchDynastySource`, `fetchDestiaSource`, …) | **kyllä**: `/datakesku/i → "Datakeskus"` |
+
+Kolmas antaa otsikosta *"Panelian Datakeskuksen asemakaava"* suoraan
+oikean vastauksen, mutta sitä ei kutsuttu tässä polussa lainkaan. Sama
+kuvio kolmatta kertaa tänään: poimija on olemassa muttei kytketty
+([[extractor-exists-unwired]]), ja samasta asiasta on kaksi eri
+määritelmää ([[same-term-two-definitions]]).
+
+Lisäksi mallin portti on juuri tällaisessa tapauksessa heikoin: se
+jättää kentän tyhjäksi kun kaksi kutsua ovat eri mieltä — eli silloin kun
+otsikko on moniselitteinen. Sanakuvio ei arvaa lainkaan, se osuu tai ei
+osu.
+
+**Korjaus keskitettyyn polkuun**, ei Euran resolveriin:
+`resolvePotentialProject` kokeilee nyt järjestyksessä **lähteen oma
+kenttä → sanakuvio → malli**, ja sanakuviosta tullut arvo myös ohittaa
+mallikutsun (arvot ovat samat kuin mallin sallittu lista). Yksi muutos
+korjaa kaikki resolverit ja säästää kutsuja.
+
+#### Rajaus on mittauksen tulos, ei varovaisuutta
+
+Sanakuvion käyttö sellaisenaan olisi tuonut enemmän väärää kuin oikeaa.
+Mitattu jonon 67 tyypittä jääneestä rivistä:
+
+| tapa | tyypin saisi | luettuna |
+|---|---|---|
+| otsikko **ja kuvaus** | 13 | **3 väärin**: *"Rakentamisen ja kunnossapidon rakennustyöt"* ja *"Ennakkotiedote: kasvatus- ja koulutuslautakunta kokoontuu"* saivat **Päiväkoti**n sivulauseesta |
+| pelkkä otsikko | 8 | **6 lupapäätöstä** muotoa *"Asuinrakennuksen rakentaminen: Aunankierto 12"* → **Kerrostalo**, mikä on arvaus: useimmiten omakotitalo |
+| otsikko, asuntosana pois | **2** | molemmat oikein |
+
+Kaksi rajausta siis:
+
+1. **Vain otsikosta.** Otsikossa sana on rivin aihe, kuvauksessa se voi
+   olla naapuri — sama ansa on kirjattu `buildingType.ts`:ään
+   ("teksti mainitsi lähipalvelut").
+2. **`/asuinrakennu/` pois.** Kuvio → "Kerrostalo" on oikein tiedotteessa
+   ("asuntohanke") mutta arvaus lupapäätöksessä. Väärä kohdetyyppi sekä
+   piilottaa hankkeen oikeasta suodattimesta että nostaa sen väärään,
+   joten tyhjä on parempi.
+
+#### Takautuva ajo: 2 jonoriviä + 9 hanketta, kaikki luettu
+
+`scripts/korjaa-puuttuvat-kohdetyypit.ts`. Hankepuolella sääntö osui
+yhdeksään riviin 2 504:stä tyypittömästä, ja jokainen luettiin:
+Nestesäiliöterminaali → Logistiikka, Skeittipuisto → Liikuntapaikka,
+Kivenlahden liikekeskus → Kauppa, Hansasilta → Silta, HAMKin
+keskustakampus → Koulu, Alapitkän datakeskus → Datakeskus, kaksi
+päiväkotia, Kaivannon sairaala-alue → Sairaala.
+
+#### Oma virhe samassa ketjussa: tyyppi kuolleeseen kenttään
+
+Kirjoitin samana päivänä Espoon jaostotiedotteen jakoskriptissa tyypin
+avaimella `metadata.property_type`. **Hyväksyntäreitti lukee
+`metadata.building_type`**, eikä `metadata.property_type`ia lue mikään
+koodi — molemmat jaetut rivit olisivat menneet hankkeeksi ilman tyyppiä.
+Löytyi vain siksi, että tyypitöntä jonoa mitattiin tätä varten: oma
+uusi rivi oli listalla.
+
+Korjattu kannassa ja skriptissä. Opetus on yleinen: **kun kirjoitat
+kenttää käsin, tarkista mikä avain luetaan** — kirjoittava ja lukeva
+paikka ovat eri tiedostoissa, eikä väärä avain kaadu mihinkään.
+
+Muutetut: `lib/agent/identity/resolvePotentialProject.ts`,
+`scripts/jaa-espoon-jaosto-marraskuu.ts`,
+`scripts/korjaa-puuttuvat-kohdetyypit.ts`.
+
 ### D-388 – Kaavan kuvaus OAS:sta: varareitti oli kirjoitettu muttei kytketty, ja liitevalinta osui naapurikaavaan
 
 Johannes 8.11.2026 Euran Panelian datakeskuksen jonorivistä: *"tästä ei

@@ -1485,6 +1485,46 @@ muistin varassa.
   osapuolet pilkuilla, eli vanhan skriptin kopiointi uusintaa vian
   (ks. muisti: multi-project-rows).
 
+- **Kaavakuvaukset: 601 ohutta hankeriviä, lähde kerrallaan** (mitattu
+  8.11.2026, D-388). Julkisista kaavahankkeista 601:llä kuvaus on alle
+  200 merkkiä. Jono sen sijaan on kunnossa: odottavia ohuita on **6**,
+  kuudesta eri kunnasta.
+
+  | lähde | ohuita |
+  |---|---|
+  | Lahden kaavatyökohteet | 58 |
+  | Lappeenrannan vireillä olevat asemakaavat | 44 |
+  | Kuopion vireillä olevat kaavat | 30 |
+  | Turun vireillä olevat kaavat | 29 |
+  | Nokian vireillä olevat asemakaavat | 23 |
+  | Inarin / Pelkosenniemen vireillä olevat asemakaavat | 15 + 15 |
+  | Rauman vireillä olevat asemakaavat | 14 |
+
+  D-388:n korjaukset (OAS kytketty, liitteen sisarvertailu, ääkköset,
+  päivämäärät pois tunnisteista, sisällysluettelon torjunta) avaavat
+  näistä osan: muistiin mitatussa syytaulukossa "tunniste ei erottele"
+  oli 309 riviä ja "ei selostusta eikä OAS:ia" 141.
+
+  **Aja lähde kerrallaan ja lue kuivaharjoitus riveittäin**
+  (`scripts/taydenna-kaavakuvaukset.ts "<lähde>"`). Euran ja Ylivieskan
+  harjoitukset olivat molemmat kirjoittamassa väärää tekstiä ennen
+  korjauksia, eikä vika näkynyt lukumäärissä vaan vain riveissä.
+  Yhden rivin korjaus kannattaa tehdä keräimen omalla polulla
+  (`scripts/korjaa-panelian-datakeskuksen-kuvaus.ts` on malli), koska
+  yleisskripti lukee listaussivun kaikki liitteet.
+
+- **Sisällysluettelo saattaa olla jo kirjoitettuna kuvaukseksi**
+  (kirjattu 8.11.2026, D-388; **mittaamatta**). Jäsennin hyväksyi ennen
+  sarkaimilla ladotun sisällysluettelon ("ASEMAKAAVAN TAVOITTEET 4.4.1
+  Lähtökohta-aineiston antamat tavoitteet 27 4.4.2 …"), ja se on nyt
+  estetty — mutta aiemmin kirjoitetut rivit ovat kannassa.
+
+  Tunnusmerkki on sama kuin esteessä: kolme paljasta sivunumeroa tai
+  kaksi alalukunumeroa kuvauksen alussa. Mittaus on halpa (ei
+  verkkohakuja, pelkkä `additional_info`-kyselyn yli ajettu kuvio), eikä
+  sitä ole tehty. Tee se ennen kuin 601 ohutta täydennetään, jottei
+  samaa työtä tehdä kahdesti.
+
 ### Lähdekattavuus
 
 - **Jalon (`jalon.fi/yhteystiedot/tyomaat/`) — EI ole lähteenä,

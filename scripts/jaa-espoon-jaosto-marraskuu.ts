@@ -99,7 +99,14 @@ async function main() {
         ...pohja.metadata,
         location: "Kalastajantie 23, Espoo",
         phase_hint: "Suunnittelussa",
-        property_type: "Kerrostalo",
+        /*
+         * AVAIN ON `building_type`, EI `property_type` (D-389).
+         * Hyvaksyntareitti lukee `metadata.building_type`, eika
+         * `metadata.property_type`ia lue mikaan koodi — ensimmainen
+         * versio tasta skriptista kirjoitti tyypin kuolleeseen
+         * kenttaan, ja rivit olisivat menneet hankkeeksi ilman tyyppia.
+         */
+        building_type: "Kerrostalo",
         /*
          * Tontin vuokralainen rakennuttaa, eli myyjan kannalta oikea
          * osapuoli. Espoon kaupunki on maanomistaja ja jaa liittyvaksi
@@ -134,7 +141,14 @@ async function main() {
          * Tiedotteesta yksin lukisi "Suunnittelussa".
          */
         phase_hint: "Kilpailutus",
-        property_type: "Kerrostalo",
+        /*
+         * AVAIN ON `building_type`, EI `property_type` (D-389).
+         * Hyvaksyntareitti lukee `metadata.building_type`, eika
+         * `metadata.property_type`ia lue mikaan koodi — ensimmainen
+         * versio tasta skriptista kirjoitti tyypin kuolleeseen
+         * kenttaan, ja rivit olisivat menneet hankkeeksi ilman tyyppia.
+         */
+        building_type: "Kerrostalo",
         /*
          * Kolme rakennuttajaa, erottimena `//` (D-313): pilkulla
          * erotettu lista nakyisi kortilla yhtena yrityksena.
@@ -169,7 +183,7 @@ async function main() {
   for (const u of uudet) {
     console.log("=== " + u.title)
     console.log("   sijainti    ", u.address)
-    console.log("   vaihe       ", u.metadata.phase_hint, "| varmuus", u.confidence, "| tyyppi", u.metadata.property_type)
+    console.log("   vaihe       ", u.metadata.phase_hint, "| varmuus", u.confidence, "| tyyppi", u.metadata.building_type)
     console.log("   rakennuttaja", u.metadata.developer)
     console.log("   liittyvat   ", JSON.stringify(u.metadata.related_companies))
     console.log("   aloitus     ", (u.metadata as any).construction_start ?? "-")

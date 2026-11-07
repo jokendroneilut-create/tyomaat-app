@@ -18,6 +18,7 @@ import { merkitseRoolit } from "@/lib/projects/contactRole"
 import { housingCompanyName } from "@/lib/projects/housingCompanyKey"
 import { kaavanRakennuttaja, onLuokkasana } from "@/lib/projects/kaavanRakennuttaja"
 import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
+import { inferBuildingType } from "@/lib/agent/buildingType"
 import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
 import { resolveBuildingType } from "@/lib/agent/quality/resolveBuildingType"
 import {
@@ -384,6 +385,74 @@ export async function resolvePotentialProject(
     return { contact_persons: yhdistetty }
   }
 
+  /*
+   * KOHDETYYPPI SANASTA, KUN LAHDE EI SITA ANNA (D-389).
+   *
+   * Johannes 8.11.2026 Euran Panelian datakeskuksen rivista: *"ei saanut
+   * kohdetyyppia = datakeskus. Miksi katso viela tama ja korjataan."*
+   *
+   * Syy oli kolmas tapaus samasta kuviosta: **tyyppia paatteli kaksi eri
+   * konetta, eika kumpikaan tunne sanaa.**
+   *
+   *   `classifyProject`      kaavaresolverien kaytossa, sanasto on
+   *                          pienaakkosinen eika sisalla datakeskusta
+   *   `resolveBuildingType`  tama keskitetty portti, joka kysyy MALLILTA
+   *                          (kaksi kutsua, 0,8:n varmuusraja)
+   *   `inferBuildingType`    sanakuvio `/datakesku/i -> "Datakeskus"`,
+   *                          kaytossa kymmenessa keraimessa muttei
+   *                          taalla
+   *
+   * Kolmas tuntee sanan ja antaa otsikosta "Panelian Datakeskuksen
+   * asemakaava" suoraan oikean vastauksen — mutta sita ei kutsuttu
+   * tassa polussa lainkaan ([[extractor-exists-unwired]],
+   * [[same-term-two-definitions]]).
+   *
+   * JARJESTYS: lahteen oma kentta, sitten sanakuvio, sitten malli.
+   * Sanakuvio ennen mallia ei ole vain nopeampi ja halvempi vaan myos
+   * varmempi: `resolveBuildingType` hylkaa tuloksen jos kaksi kutsua
+   * ovat eri mielta, joten malli jattaa kentan tyhjaksi juuri silloin
+   * kun otsikko on moniselitteinen — ja sanakuvio ei arvaa lainkaan,
+   * se osuu tai ei osu.
+   *
+   * KANONISET ARVOT. `inferBuildingType`in otsikot ovat samat kuin
+   * mallin sallittu lista (`BUILDING_TYPES`), joten sanakuviosta tullut
+   * arvo myos ohittaa malliportin eika kuluta kutsua.
+   */
+  /*
+   * VAIN OTSIKOSTA, EI KUVAUKSESTA. Mitattu 8.11.2026 jonon 67 tyypitta
+   * jaaneesta rivista: kuvaus mukaan luettuna sanakuvio antoi 13 tyyppia
+   * joista kolme oli vaarin, ja virheet tulivat kaikki kuvauksesta —
+   * *"Rakentamisen ja kunnossapidon rakennustyot"* ja
+   * *"Ennakkotiedote: kasvatus- ja koulutuslautakunta kokoontuu"* saivat
+   * tyypin **Paivakoti** sivulauseesta. Sama ansa on kirjattu
+   * `buildingType.ts`:aan ("teksti mainitsi lahipalvelut"). Otsikossa
+   * sana on rivin AIHE, kuvauksessa se voi olla naapuri.
+   *
+   * MONISELITTEINEN ASUNTOSANA POIS. `/asuinrakennu/` -> "Kerrostalo" on
+   * oikein tiedotteessa ("asuntohanke") mutta arvaus lupapaatoksessa:
+   * *"Asuinrakennuksen rakentaminen: Aunankierto 12"* on useimmiten
+   * omakotitalo. Kuusi kahdeksasta otsikko-osumasta oli tata muotoa,
+   * joten ilman rajausta kaytto olisi tuonut enemman vaaraa kuin oikeaa.
+   * Vaara kohdetyyppi seka piilottaa hankkeen oikeasta suodattimesta
+   * etta nostaa sen vaaraan, joten tyhja on parempi.
+   */
+  const MONISELITTEINEN_ASUNTOSANA = /asuinrakennu/i
+  const otsikonTyyppi = MONISELITTEINEN_ASUNTOSANA.test(title ?? "")
+    ? null
+    : inferBuildingType(title ?? "", null)
+
+  const saannonTyyppi = String(md.building_type ?? "").trim() || otsikonTyyppi || null
+
+  function tyyppiMetadata(
+    existingMetadata?: Record<string, any> | null
+  ): Record<string, unknown> {
+    if (!saannonTyyppi) return {}
+    /* Tunnettua tyyppia ei ylikirjoiteta, vain tyhja taytetaan. */
+    if (String(existingMetadata?.building_type ?? "").trim()) return {}
+    if (String(md.building_type ?? "").trim()) return {}
+    return { building_type: saannonTyyppi, building_type_source: "sana" }
+  }
+
   function costMetadata(
     existingMetadata?: Record<string, any> | null
   ): Record<string, unknown> {
@@ -593,6 +662,7 @@ export async function resolvePotentialProject(
           ...(input.metadata ?? {}),
           ...completionField(existing.metadata),
           ...completionMetadata,
+          ...tyyppiMetadata(existing.metadata),
           ...costMetadata(existing.metadata),
           ...alaMetadata(existing.metadata),
           ...taloyhtioMetadata(existing.metadata),
@@ -676,7 +746,8 @@ export async function resolvePotentialProject(
     resolveBuildingType({
       title,
       description: md.description ?? md.operation ?? null,
-      ruleBuildingType: md.building_type,
+      /* Sanakuviosta tullut tyyppi estaa mallikutsun (D-389). */
+      ruleBuildingType: saannonTyyppi,
     }),
   ])
 
@@ -696,6 +767,7 @@ export async function resolvePotentialProject(
         ...(input.metadata ?? {}),
         ...completionField(null),
         ...completionMetadata,
+        ...tyyppiMetadata(null),
         ...costMetadata(null),
         ...alaMetadata(null),
         ...taloyhtioMetadata(null),
