@@ -44,6 +44,7 @@ avausta 2 467:stä). Tämä on se luku jota seurataan, ei rivien määrä.
 | Euran kaavoitus ja maapolitiikka | 7 kuvausta (12 kaavasta 9 saa pääselostuksen) | keräin hakee selostuksen, D-268; **OAS kytketty 8.11.2026, D-388** |
 | Helsingin asemakaavat (SUKKA) | 60 riviä 65:stä; hankkeista 198/201 yli 200 merkin | kynnys 200 merkkiä, OAS + selostus, D-270 |
 | Kouvolan ajankohtaiset asemakaavat | 14 / 26 | yleinen täydentäjä, D-271 |
+| Pornaisten vireillä olevat kaavat | 9 / 25 (hankkeista 12 / 27 yli 200 merkin) | yleinen täydentäjä 8.11.2026, D-392 |
 | Mustasaaren vireillä olevat asemakaavat | 7 / 21 | yleinen täydentäjä |
 | Kangasalan vireillä olevat asemakaavat | 7 / 19 | yleinen täydentäjä |
 | Kauniaisten vireillä olevat asemakaavat | 3 / 15 | yleinen täydentäjä |
@@ -57,6 +58,13 @@ npx tsx scripts/taydenna-kaavakuvaukset.ts "<source_name>"
 npx tsx scripts/taydenna-kaavakuvaukset.ts "<source_name>" --apply
 npx tsx scripts/synkronoi-kuvaus-nakyviin.ts --apply   # hankkeen näkyvä kenttä
 ```
+
+**SKANNATTU LIITE EI OLE JÄSENNYSVIRHE (D-392).** Jos liitteessä on
+kuvaobjekteja mutta **nolla fonttia**, siinä ei ole tekstikerrosta eikä
+mitään ole poimittavissa. Täydentäjä raportoi sen omalla syyllään
+*"liite on kuvatiedosto, ei tekstikerrosta"*, jottei sitä sekoiteta
+otsikkosanaston puutteeseen. Sisältö saadaan talteen vain
+kuvakaappauksesta, ja alkuperä merkitään `field_sources`iin.
 
 **OAS KELPAA KUN SELOSTUSTA EI OLE (D-388).** Vireilletulovaiheen
 kaavalla ainoa liite on osallistumis- ja arviointisuunnitelma, ja sen
