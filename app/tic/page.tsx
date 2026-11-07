@@ -9,6 +9,22 @@ import { getYhteystietoMittarit } from "./services/getYhteystietoMittarit"
 
 export const dynamic = "force-dynamic"
 
+/*
+ * Mittarin ika sanoiksi. Minuutit riittavat: valimuisti on kaksi tuntia,
+ * eika sekunnin tarkkuus kerro mitaan.
+ */
+function mittarinIka(haettu: number): string {
+  const minuuttia = Math.round((Date.now() - haettu) / 60_000)
+  if (minuuttia < 1) return "juuri nyt"
+  if (minuuttia === 1) return "minuutti sitten"
+  if (minuuttia < 60) return `${minuuttia} minuuttia sitten`
+  const tuntia = Math.floor(minuuttia / 60)
+  const loput = minuuttia % 60
+  return loput === 0
+    ? `${tuntia} h sitten`
+    : `${tuntia} h ${loput} min sitten`
+}
+
 export default async function TicPage({
   searchParams,
 }: {
@@ -79,6 +95,13 @@ export default async function TicPage({
             lasketaan vain nimetty henkilö, jolla on sähköposti tai puhelin —
             ei nimettömiä postilaatikoita eikä päätöksen tehnyttä
             viranomaista.
+            {/*
+              * LUVUN IKA NAKYVIIN (D-387). Mittari tulee nyt kahden
+              * tunnin valimuistista, jotta sivu latautuu nopeasti
+              * hyvaksyntojen valissa. Vanhentunut luku ilman ikaa
+              * nayttaisi tuoreelta, joten ika sanotaan aaneen.
+              */}
+            {mittarit.haettu > 0 && ` Mitattu ${mittarinIka(mittarit.haettu)}.`}
           </p>
         </section>
       )}
