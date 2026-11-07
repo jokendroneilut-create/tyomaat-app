@@ -67,8 +67,8 @@ async function main() {
     const yritys = parseriYritys.get(lahdeNimi)
     if (!yritys) continue
 
-    const avain = yritysavain(yritys)
-    if (!avain) continue
+    const lahteenAvain = yritysavain(yritys)
+    if (!lahteenAvain) continue
 
     const lista = (p.metadata ?? {}).contact_persons
     if (!Array.isArray(lista)) continue
@@ -92,8 +92,79 @@ async function main() {
       if (String(c.title ?? "").length > 60) continue
       if (/yhteyshenkil/i.test(String(c.title ?? ""))) continue
 
+      /*
+       * PROOSASTA REVITTY NIMI EI OLE IHMINEN.
+       *
+       * Kuivaharjoitus 8.11.2026 nosti Skanskan listalle rivin
+       * **"Kiiskila Skanskasta"** -- virkkeesta "...Kiiskila Skanskasta
+       * kertoo..." poimittu palanen, jossa sukunimen paikalla on
+       * yrityksen nimi elatiivissa. `isPersonName` ei nappaa sita, koska
+       * se on kieliopillisesti kaksi isolla alkavaa sanaa.
+       *
+       * Tunnistus: nimen sanassa on lahdeyrityksen nimi. Oikealla
+       * ihmisella sita ei ole.
+       */
+      const nimenSanat = String(c.name ?? "").toLowerCase().split(/\s+/)
+      const yritysSanat = String(yritys).toLowerCase().split(/\s+/).filter((w) => w.length >= 5)
+      if (yritysSanat.some((w) => nimenSanat.some((n) => n.includes(w)))) continue
+
+      /*
+       * KATKENNUT NIMIKE. Samasta syysta kentassa oli "Oyj",
+       * "n toimitusjohtaja" ja "o Liiketoimintajohtaja": poiminta on
+       * katkennut kesken sanan. Nimike joka on pelkka yhtiomuoto tai
+       * alkaa yksittaisella pienella kirjaimella ei ole nimike
+       * ([[contact-entry-cleanup]]).
+       */
+      const nimike = String(c.title ?? "").trim()
+      if (/^(oy|oyj|ab|abp|ky)$/i.test(nimike)) continue
+      if (/^[a-zåäö]\s/.test(nimike)) continue
+
+      /*
+       * IHMINEN KUULUU OMALLE YRITYKSELLEEN, EI LAHTEEN YRITYKSELLE
+       * (D-385).
+       *
+       * Lahde kertoo kenen SIVULTA hanke tuli, ei kenen IHMINEN
+       * yhteyshenkilo on. Fingridin hankesivulla on urakoitsijan
+       * projektipaallikko, SRV:n sivulla tilaajan edustaja, Senaatin
+       * sivulla kayttajaviraston vaki -- ja kaikki paatyivat sivun
+       * omistajan avaimen alle.
+       *
+       * Johannes huomasi sen Espoon Asuntojen kohdalla: varareitin
+       * karjessa oli SRV:n johtaja. Mitattu 8.11.2026: **277 / 879
+       * yhteyshenkiloa (32 %)** oli nain vaarassa paikassa.
+       *
+       * Ihmisen oma `organization` ratkaisee, ja se on luotettava:
+       * 241/245 tasmasi sahkopostin verkkotunnukseen. Jos sita ei ole
+       * JA verkkotunnus on ristiriidassa lahteen kanssa, rivi jatetaan
+       * kokonaan pois -- vaara yritys on pahempi kuin puuttuva
+       * ([[party-role-fields]]).
+       */
+      const omaAvain = yritysavain(String(c.organization ?? ""))
+      const verkkotunnus = String(c.email ?? "").split("@")[1]?.toLowerCase() ?? ""
+      const runko = verkkotunnus
+        .replace(/\.(fi|com|net|org|se|eu)$/, "")
+        .toLowerCase()
+        .replace(/[äå]/g, "a")
+        .replace(/ö/g, "o")
+        .replace(/[^a-z0-9]/g, "")
+      const siisti = (x: string) =>
+        x.toLowerCase().replace(/[äå]/g, "a").replace(/ö/g, "o").replace(/[^a-z0-9]/g, "")
+      const ristiriita =
+        Boolean(runko) &&
+        !siisti(lahteenAvain).includes(runko) &&
+        !runko.includes(siisti(lahteenAvain))
+
+      let avain = lahteenAvain
+      let yrityksenNimi = yritys
+      if (omaAvain && omaAvain !== lahteenAvain) {
+        avain = omaAvain
+        yrityksenNimi = String(c.organization).trim()
+      } else if (ristiriita) {
+        continue
+      }
+
       const tunniste = String(c.email ?? c.name).toLowerCase()
-      const rek = rekisteri.get(avain) ?? { yritys, hlot: new Map<string, Hlo>() }
+      const rek = rekisteri.get(avain) ?? { yritys: yrityksenNimi, hlot: new Map<string, Hlo>() }
       const vanha = rek.hlot.get(tunniste)
       if (vanha) vanha.kpl++
       else rek.hlot.set(tunniste, { nimi: String(c.name), nimike: c.title ?? null, email: c.email ?? null, puhelin: c.phone ?? null, kpl: 1 })

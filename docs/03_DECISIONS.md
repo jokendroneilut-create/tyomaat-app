@@ -23562,3 +23562,92 @@ tavalla eri kerroilla), eikä luettu otos enää vastaisi kirjoitettua.
 Nimi on liian yleinen eikä erotu ("Päiväkoti Espooseen", "Voimajohtohanke
 Reisjärvi"), tai hanketta ei ole verkossa. Ne vaativat ihmisen, eivät
 tiukempaa kuviota.
+
+## D-384 — Väylän sivulta luettiin vain ensimmäinen yhteyshenkilö (8.11.2026)
+
+Johannes vertasi Kirjalansalmen hankekorttia lähteeseen: sivulla on
+**kolme** yhteystietolaatikkoa — Saramaria Cowell (Väylävirasto), **Tero
+Haaramäki (Kreate Oy)** ja Riitta Sirén (tiedottaja) — ja saimme yhden.
+
+`vaylaContactBox` otti `.contact-information .contact` -laatikoista
+`.first()`. Mitattu 270 sivulta: **428 laatikkoa**, eli keskimäärin 1,6
+per sivu. Urakoitsijan projektipäällikkö jäi järjestelmällisesti
+saamatta, ja juuri hän on se jonka saa kiinni työmaasta
+([[register-is-worksite-contacts]]).
+
+### Osoite laatikkokohtaisesti — ja D-379 ratkesi samalla
+
+Aiemmin otettiin ensimmäinen `data-cfemail` koko lohkosta. Simon sivulla
+ensimmäinen oli vanhentuneella tunnuksella
+(`etunimi.sukunimi@vaylavirasto.fi`) vaikka samalla sivulla oli myös
+nykyinen `@vayla.fi`. Kun **jokainen laatikko lukee omansa**, jokainen
+saa oman organisaationsa osoitteen.
+
+Malliosoitteiden kesken voittaa **sivun yleisin verkkotunnus**:
+vanhentunut jäännös on harvinainen, nykyinen toistuu.
+
+### Tulos
+
+**186 uutta yhteyshenkilöä** 136 hankkeelle, 24 täydennettyä. Uudet
+jakautuvat Väylävirastoon (24), Rambolliin (14), Oulun kaupunkiin (10),
+Destiaan (9), Sitowiseen (7) — konsultteja, urakoitsijoita, kuntia.
+
+Kirjalansalmi sai myös Cowellin **sähköpostin**, joka puuttui
+yhteyshenkilöehdotuksesta mutta oli sivun Cloudflare-koodauksessa.
+
+**Tiedottaja otetaan mukaan.** Hän ei ole työmaayhteys, mutta tämä on
+hankkeen **oma** yhteyshenkilö lähteestä — ja hankkeen omaan ei kosketa
+roolin takia (D-381).
+
+## D-385 — Yhteyshenkilö kuului lähteen yritykselle, ei omalleen (8.11.2026)
+
+Lähde kertoo kenen **sivulta** hanke tuli, ei kenen **ihminen**
+yhteyshenkilö on. `kokoa-yritysrekisteri.ts` liitti jokaisen
+yhteyshenkilön sivun omistajan avaimen alle.
+
+Johannes huomasi sen Espoon Asuntojen kohdalla (D-381): varareitin
+kärjessä oli **SRV:n** johtaja. Poistin rivin, mutta johdos olisi luonut
+sen uudelleen.
+
+### Mitattu 8.11.2026: 277 / 879 (32 %)
+
+| lähde | kenen ihmisiä sen alla oli |
+|---|---|
+| Fingrid | Enersense, ENP, Omexom — urakoitsijoita |
+| SRV | SOK, Trevian, Helsingin kaupunki — tilaajia |
+| Senaatti-kiinteistöt | Rajavartiolaitos — käyttäjävirasto |
+| Väylävirasto | elinvoimakeskukset — 35 riviä |
+
+### Ihmisen oma organisaatio ratkaisee
+
+`contact.organization` on luotettava: **241/245 täsmäsi sähköpostin
+verkkotunnukseen**. Jos sitä ei ole *ja* verkkotunnus on ristiriidassa
+lähteen kanssa, rivi jätetään kokonaan pois — väärä yritys on pahempi
+kuin puuttuva ([[party-role-fields]]).
+
+### Mittarini oli kahdesti väärässä ennen kuin se oli oikeassa
+
+1. Ensimmäinen versio vertasi verkkotunnusta avaimeen sellaisenaan ja
+   antoi **66 osumaa** — mutta `erkkiheikkilä` vs. `erkkiheikkilaoy.com`
+   eroaa vain ä:stä ja `beamnet` vs. `beam-net.fi` yhdysviivasta.
+2. Toinen versio luki **kaikki** lähteet, kun generaattori rajaa kolmeen
+   kategoriaan. Siksi listalla oli "Hilma" ja "STT-tiedotteet", jotka
+   eivät ole yrityksiä lainkaan ([[same-term-two-definitions]]).
+
+Vasta kun mittari käytti generaattorin omaa rajausta ja normalisoi
+diakriitit, luku oli 277 ja tarkistettavissa.
+
+### Sivulöydös: proosasta revitty nimi
+
+Kuivaharjoitus nosti Skanskan listalle rivin **"Kiiskilä Skanskasta"** —
+virkkeestä poimittu palanen, jossa sukunimen paikalla on yrityksen nimi
+elatiivissa. `isPersonName` ei nappaa sitä, koska se on kieliopillisesti
+kaksi isolla alkavaa sanaa. Tunnistus: **nimen sanassa on lähdeyrityksen
+nimi**. Samasta syystä nimikkeinä oli `"Oyj"` ja `"n toimitusjohtaja"`.
+
+### Tulos
+
+Rekisteri **164 → 217** riviä, **49 yritystä** (oli 38), kattaa **236
+hanketta** (oli 213). Elinvoimakeskukset saivat omat 35 riviään
+Väyläviraston alta. Käsin lisätyt 64 säilyivät, Louhintahiekan 8 mukaan
+lukien. Väärän yrityksen alla: **0**.

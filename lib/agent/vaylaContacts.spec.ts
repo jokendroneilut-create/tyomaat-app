@@ -1,6 +1,7 @@
+import * as cheerio from "cheerio"
 import { describe, expect, it } from "vitest"
 
-import { expandPlaceholderEmail, isPersonName, normalizeVaylaContact } from "./vaylaContacts"
+import { expandPlaceholderEmail, isPersonName, normalizeVaylaContact, vaylanYhteyshenkilot} from "./vaylaContacts"
 
 describe("isPersonName", () => {
   it("hyväksyy tavallisen nimen", () => {
@@ -122,5 +123,89 @@ describe("normalizeVaylaContact", () => {
     expect(
       normalizeVaylaContact({ organization: null, title: null, name: "Kari Partiainen", phone: null, email: null })
     ).toEqual([])
+  })
+})
+
+describe("vaylanYhteyshenkilot", () => {
+  /* Cloudflare-purku testissä: avaintavu + XOR, sama kuin tuotannossa. */
+  const koodaa = (osoite: string, avain = 0x2a) =>
+    avain.toString(16).padStart(2, "0") +
+    [...osoite].map((c) => (c.charCodeAt(0) ^ avain).toString(16).padStart(2, "0")).join("")
+  const pura = (koodattu: string) => {
+    const avain = parseInt(koodattu.slice(0, 2), 16)
+    let ulos = ""
+    for (let i = 2; i < koodattu.length; i += 2) {
+      ulos += String.fromCharCode(parseInt(koodattu.slice(i, i + 2), 16) ^ avain)
+    }
+    return ulos || null
+  }
+
+  const laatikko = (org: string, nimike: string, nimi: string, puh: string, posti: string[]) =>
+    `<div class="contact">
+       <div class="organization">${org}</div>
+       <div class="title">${nimike}</div>
+       <div class="full-name">${nimi}</div>
+       <ul class="phones"><li>${puh}</li></ul>
+       ${posti.map((p) => `<span class="__cf_email__" data-cfemail="${koodaa(p)}"></span>`).join("")}
+     </div>`
+
+  const sivu = (sisalto: string) =>
+    cheerio.load(`<html><body><div class="contact-information">${sisalto}</div></body></html>`)
+
+  /*
+   * Kirjalansalmen sivu: kolme laatikkoa, joista saatiin yksi.
+   * Urakoitsijan projektipaallikko oli se joka jai saamatta.
+   */
+  it("lukee kaikki laatikot, ei vain ensimmaista", () => {
+    const $ = sivu(
+      laatikko("Väylävirasto", "PROJEKTIPÄÄLLIKKÖ", "Saramaria Cowell", "029 534 3342", ["saramaria.cowell@vayla.fi"]) +
+        laatikko("Kreate Oy", "PROJEKTIPÄÄLLIKKÖ", "Tero Haaramäki", "040 544 3661", ["tero.haaramaki@kreate.fi"]) +
+        laatikko("", "TIEDOTTAJA", "Riitta Sirén", "050 547 9544", ["riitta.siren@valve.fi"])
+    )
+    const h = vaylanYhteyshenkilot($, pura)
+    expect(h.map((x) => x.name)).toEqual(["Saramaria Cowell", "Tero Haaramäki", "Riitta Sirén"])
+    expect(h[1].organization).toBe("Kreate Oy")
+    expect(h[1].email).toBe("tero.haaramaki@kreate.fi")
+  })
+
+  /* Jokainen saa OMAN organisaationsa osoitteen, ei ensimmaisen. */
+  it("lukee osoitteen laatikkokohtaisesti", () => {
+    const $ = sivu(
+      laatikko("Väylävirasto", "PP", "Aino Virtanen", "029 1", ["aino.virtanen@vayla.fi"]) +
+        laatikko("Destia Oy", "PP", "Matti Meikäläinen", "040 2", ["matti.meikalainen@destia.fi"])
+    )
+    expect(vaylanYhteyshenkilot($, pura).map((x) => x.email)).toEqual([
+      "aino.virtanen@vayla.fi",
+      "matti.meikalainen@destia.fi",
+    ])
+  })
+
+  /*
+   * D-379: Simon sivulla oli KAKSI malliosoitetta, vanhentunut
+   * @vaylavirasto.fi ja nykyinen @vayla.fi. Sivun yleisin tunnus voittaa.
+   */
+  it("valitsee malliosoitteista sivun yleisimman tunnuksen", () => {
+    const $ = sivu(
+      laatikko("Väylävirasto", "PP", "Vesa Pakarinen", "029 534 3149", [
+        "etunimi.sukunimi@vaylavirasto.fi",
+        "etunimi.sukunimi@vayla.fi",
+      ]) + laatikko("Väylävirasto", "PP", "Aino Virtanen", "029 1", ["aino.virtanen@vayla.fi"])
+    )
+    expect(vaylanYhteyshenkilot($, pura)[0].email).toBe("etunimi.sukunimi@vayla.fi")
+  })
+
+  /* Oikea nimi voittaa mallin aina, vaikka malli olisi ensin. */
+  it("oikea osoite voittaa malliosoitteen", () => {
+    const $ = sivu(
+      laatikko("Väylävirasto", "PP", "Vesa Pakarinen", "029 1", [
+        "etunimi.sukunimi@vayla.fi",
+        "vesa.pakarinen@vayla.fi",
+      ])
+    )
+    expect(vaylanYhteyshenkilot($, pura)[0].email).toBe("vesa.pakarinen@vayla.fi")
+  })
+
+  it("palauttaa tyhjan kun lohkoa ei ole", () => {
+    expect(vaylanYhteyshenkilot(cheerio.load("<html><body></body></html>"), pura)).toEqual([])
   })
 })

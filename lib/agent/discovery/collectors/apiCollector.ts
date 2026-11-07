@@ -1,3 +1,4 @@
+import { vaylanYhteyshenkilot } from "@/lib/agent/vaylaContacts"
 import { parseVaylaInfoFields } from "@/lib/agent/vaylaInfoFields"
 import {
   haeKaavaselostuksenTeksti,
@@ -2118,17 +2119,18 @@ function decodeCloudflareEmail(encoded: string): string | null {
 
 type VaylaContactBoxData = { organization: string | null; title: string | null; name: string | null; phone: string | null; email: string | null }
 
+/*
+ * KAIKKI LAATIKOT, EI VAIN ENSIMMAINEN (D-384). Jasennin on
+ * `lib/agent/vaylaContacts.ts`:ssa testattavana funktiona; tama palauttaa
+ * yha ensimmaisen, koska `payload.contact` on yksikollinen -- kaikki
+ * menevat `payload.contacts`-listaan.
+ */
+function vaylaContactBoxes($: cheerio.CheerioAPI): VaylaContactBoxData[] {
+  return vaylanYhteyshenkilot($, decodeCloudflareEmail)
+}
+
 function vaylaContactBox($: cheerio.CheerioAPI): VaylaContactBoxData | null {
-  const contactBox = $(".contact-information .contact").first()
-  if (!contactBox.length) return null
-  const emailEncoded = contactBox.find(".__cf_email__").first().attr("data-cfemail")
-  return {
-    organization: contactBox.find(".organization").first().text().trim() || null,
-    title: contactBox.find(".title").first().text().trim() || null,
-    name: contactBox.find(".full-name").first().text().trim() || null,
-    phone: contactBox.find(".phones li").first().text().trim() || null,
-    email: emailEncoded ? decodeCloudflareEmail(emailEncoded) : null,
-  }
+  return vaylaContactBoxes($)[0] ?? null
 }
 
 async function fetchVaylaProjectDetails(projectUrl: string, title?: string | null): Promise<{

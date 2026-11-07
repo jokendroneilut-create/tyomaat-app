@@ -1,3 +1,5 @@
+import type * as cheerio from "cheerio"
+
 import type { Contact } from "@/lib/projects/contacts"
 
 /*
@@ -160,4 +162,82 @@ export function normalizeVaylaContact(box: VaylaContactBox | null | undefined): 
       kind: "person",
     },
   ]
+}
+
+/*
+ * KAIKKI YHTEYSTIETOLAATIKOT, EI VAIN ENSIMMAINEN (D-384).
+ *
+ * `vaylaContactBox` (apiCollector.ts) otti `.contact-information
+ * .contact` -laatikoista `.first()`. Johannes vertasi Kirjalansalmen
+ * hankekorttia lahteeseen ja huomasi puutteen: sivulla on **kolme**
+ * laatikkoa -- Saramaria Cowell (Vaylavirasto), **Tero Haaramaki
+ * (Kreate Oy)** ja Riitta Siren (tiedottaja) -- ja saimme yhden.
+ *
+ * Urakoitsijan projektipaallikko on juuri se ihminen jonka saa kiinni
+ * tyomaasta ([[register-is-worksite-contacts]]), joten han on naista
+ * kolmesta arvokkain -- ja han oli se joka jai saamatta.
+ *
+ * OSOITE LUETAAN LAATIKKOKOHTAISESTI, ja se korjaa samalla toisen vian:
+ * aiemmin otettiin ensimmainen `data-cfemail` koko lohkosta, ja Simon
+ * sivulla ensimmainen oli vanhentuneella tunnuksella
+ * (`etunimi.sukunimi@vaylavirasto.fi`) vaikka samalla sivulla oli myos
+ * nykyinen `@vayla.fi` (D-379). Kun jokainen laatikko lukee omansa,
+ * jokainen saa oman organisaationsa osoitteen.
+ *
+ * MALLIOSOITTEISTA VOITTAA SIVUN OMA TUNNUS. Jos laatikossa on useampi
+ * ja kaikki ovat malleja, valitaan se jonka verkkotunnus esiintyy
+ * sivulla useimmin -- vanhentunut jaannos on harvinainen, nykyinen
+ * toistuu.
+ */
+const MALLIOSOITE = /^(etunimi|firstname|fornamn)/i
+
+export function vaylanYhteyshenkilot(
+  $: cheerio.CheerioAPI,
+  puraOsoite: (koodattu: string) => string | null
+): VaylaContactBox[] {
+  const laatikot = $(".contact-information .contact")
+  if (!laatikot.length) return []
+
+  /* Verkkotunnusten yleisyys koko sivulla, malliosoitteiden ratkaisuun. */
+  const tunnusten_maara = new Map<string, number>()
+  $(".__cf_email__").each((_, el) => {
+    const koodi = $(el).attr("data-cfemail")
+    const osoite = koodi ? puraOsoite(koodi) : null
+    const tunnus = osoite?.split("@")[1]?.toLowerCase()
+    if (tunnus) tunnusten_maara.set(tunnus, (tunnusten_maara.get(tunnus) ?? 0) + 1)
+  })
+
+  const ulos: VaylaContactBox[] = []
+  laatikot.each((_, el) => {
+    const laatikko = $(el)
+
+    const osoitteet = laatikko
+      .find(".__cf_email__")
+      .toArray()
+      .map((e) => {
+        const koodi = $(e).attr("data-cfemail")
+        return koodi ? puraOsoite(koodi) : null
+      })
+      .filter((o): o is string => Boolean(o))
+
+    /* Oikea nimi voittaa mallin; mallien kesken sivun yleisin tunnus. */
+    const oikeat = osoitteet.filter((o) => !MALLIOSOITE.test(o.split("@")[0] ?? ""))
+    const jarjestetyt = oikeat.length
+      ? oikeat
+      : [...osoitteet].sort(
+          (a, b) =>
+            (tunnusten_maara.get(b.split("@")[1]?.toLowerCase() ?? "") ?? 0) -
+            (tunnusten_maara.get(a.split("@")[1]?.toLowerCase() ?? "") ?? 0)
+        )
+
+    ulos.push({
+      organization: laatikko.find(".organization").first().text().trim() || null,
+      title: laatikko.find(".title").first().text().trim() || null,
+      name: laatikko.find(".full-name").first().text().trim() || null,
+      phone: laatikko.find(".phones li").first().text().trim() || null,
+      email: jarjestetyt[0] ?? null,
+    })
+  })
+
+  return ulos
 }
