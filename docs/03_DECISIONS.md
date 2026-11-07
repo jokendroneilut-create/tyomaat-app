@@ -23500,3 +23500,65 @@ skripti päivittää ensin säilyvän rivin ja piilottaa sitten toisen, joten
 puolittainen lopputulos oli mahdollinen. **Skriptiä ei ajettu uudelleen
 sokkona** — ensin tarkistettiin molemmat rivit, ja ne olivat ennallaan
 eli katkos osui lukuvaiheeseen. Vasta sitten ajo tehtiin loppuun.
+
+## D-383 — Lähteettömät hankkeet: 285 → 86 (7.11.2026)
+
+Johannes Kirjalansalmesta: *"en löydä lähdettä eli en voi tarkistaa onko
+tuo oikein."* Mitattu: **285 julkista hanketta (4,0 %)** oli ilman mitään
+lähdelinkkiä — ei `source_url`, ei `documents_url`, ei `source_history`.
+Lähes kaikki helmi–heinäkuulta 2026, ennen kuin putki tallensi osoitteen.
+
+### Kolme reittiä, halvin ensin
+
+| reitti | hankkeita |
+|---|---|
+| `yhteyshenkiloehdotus.lahteet` (kannasta) | **33** |
+| `source_document_id` → `source_documents.document_url` | **13** |
+| verkkohaku | **152** |
+| **jäi ilman** | **86** (1,2 %) |
+
+**Kaksi ensimmäistä olivat ilmaisia ja antoivat alkuperäisen
+julkaisijan.** Osoite oli koko ajan kannassa, lukematta
+([[own-data-unread]]).
+
+### Kaapija läpäisee sanatarkistuksen vaivatta
+
+Ensimmäinen koko ajo löysi 179 osumaa (71 %), mutta tuotosta lukiessa
+paljastui että joukossa oli **Hilman uudelleenjulkaisijoita**:
+`app.cobrief.com` 8 kertaa, `fi.openprocurements.com` 3,
+`b2b.profinder.fi` 3, `mercell.com` 1. Ne kopioivat ilmoituksen otsikon
+sellaisenaan, joten ne osuvat *paremmin* kuin alkuperäinen
+([[rakennuslehti-is-secondary]]).
+
+Ja juuri niille 13:lle oikea Hilma-osoite löytyi kannasta — eli reitti
+kaksi ei vain säästänyt hakuja, se **esti väärän lähteen**.
+
+### Portti on koko työ, ei haku
+
+Otos 20 hankkeesta paljasti ensimmäisen vian: osumatarkkuus 85 %, mutta
+kaksi oli **kunnan osastosivuja** — *"Uimahallin laajennus"* osui Kotkan
+uimahallisivulle ja *"Marttilan asemakaavan muutos"* Taivassalon
+kaavoitussivulle. Molemmissa osui **vain yksi erottuva sana**.
+
+Vaatimus nostettiin kahteen sanaan: tarkkuus 85 % → 65 %, ja molemmat
+väärät poistuivat. Yksi sana riittää löytöön muttei päätökseen
+([[finding-signal-not-deciding-signal]]).
+
+Toinen vika löytyi vasta koko ajon tuotoksesta: **"Asunto Oy X"
+-nimiset hankkeet osuvat yritysrekisteriin**,
+`kauppalehti.fi/yritykset/yritys/<id>` (5) ja `asiakastieto.fi` (2).
+Sivulla on y-tunnus ja tilinpäätös, ei hanketta. Huomaa että
+kauppalehti.fi on muuten kelpo lähde — sen `/lehdistotiedotteet/` kelpaa
+— joten **sääntö on polussa eikä verkkotunnuksessa**.
+
+### Kirjoitus luettiin tuotoksesta, ei haettu uudelleen
+
+`kirjoita-loydetyt-lahteet.ts` lukee saman tiedoston jonka luin
+riveittäin. Uusi haku antaisi eri tuloksia (hakukone järjestää osumat eri
+tavalla eri kerroilla), eikä luettu otos enää vastaisi kirjoitettua.
+
+### Jäljelle jäi 86
+
+Nimi on liian yleinen eikä erotu ("Päiväkoti Espooseen", "Voimajohtohanke
+Reisjärvi"), tai hanketta ei ole verkossa. Ne vaativat ihmisen, eivät
+tiukempaa kuviota.

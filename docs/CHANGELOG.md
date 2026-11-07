@@ -5857,3 +5857,4 @@ isot hankkeet halutaan kiinni ennen rakennuslupaa ja urakkakilpailutusta.
 - 60 yhteyshenkilöehdotusta julkaistu hankekohtaisena; yhteystiedot tarkistettu lähdesivulta, 11 pudotettiin koska sivu ei vahvistanut niitä (D-376 vaihe 3)
 - Yritysrekisterin roolikarsinta: 8 riviä pois (myynti, viestintä, väärä avain); sääntö yhteen paikkaan (D-381)
 - Kirjalansalmi: väärä otsikko paljasti kaksoiskappaleen; yhdistetty, 128 M€ on koko allianssin hinta (D-382)
+- Lähteettömät hankkeet 285 → 86: 33 ehdotuksesta, 13 dokumentista, 152 verkkohausta (D-383)
