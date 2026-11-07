@@ -1368,8 +1368,11 @@ muistin varassa.
   omistajatieto oikeasti ratkaisisi. Jos vastaus on "muutama kymmenen",
   tämä on halvempi hoitaa käsin.
 
-- **Väylän hankesivulta luetaan vain ensimmäinen yhteyshenkilö.**
-  (Kirjattu 7.11.2026, D-379, ei aloitettu.)
+- **TEHTY 8.11.2026 (D-384).** ~~Väylän hankesivulta luetaan vain
+  ensimmäinen yhteyshenkilö.~~ Kaikki laatikot luetaan nyt; 428
+  laatikkoa 270 sivulla, **186 uutta yhteyshenkilöä**. Osoite luetaan
+  laatikkokohtaisesti, mikä ratkaisi myös vanhentuneen
+  `@vaylavirasto.fi`-tunnuksen (D-379).
 
   `vaylaContactBox` (`apiCollector.ts`) ottaa
   `.contact-information .contact` -laatikoista **ensimmäisen**. Laskettu
@@ -1396,8 +1399,10 @@ muistin varassa.
   verkkotunnuksen valinta on ratkaistava samalla.
 
 
-- **Urakoitsijan ihminen päätyy rakennuttajan avaimen alle.**
-  (Kirjattu 7.11.2026, D-381, ei korjattu.)
+- **TEHTY 8.11.2026 (D-385).** ~~Urakoitsijan ihminen päätyy
+  rakennuttajan avaimen alle.~~ Mitattu 277/879 (32 %); ihmisen oma
+  `organization` ratkaisee nyt, ja ilman sitä ristiriitainen rivi
+  jätetään pois. Rekisteri 164 → 217 riviä, väärän yrityksen alla 0.
 
   Jorma Seppä on SRV:n ihminen (`jorma.seppa@srv.fi`), mutta
   `kokoa-yritysrekisteri.ts` kirjasi hänet myös avaimella
