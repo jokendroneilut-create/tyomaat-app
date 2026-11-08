@@ -960,10 +960,27 @@ muistin varassa.
   paivittyy viikoittain) sisaltaa tasot `hanketiedot:tiehankkeet`
   (181 eri hanketta), `hanketiedot:ratahankkeet` (94),
   `hanketiedot:vesivaylahankkeet` (4) ja `hanketiedot:paattyneet_hankkeet`
-  (632). Mitattu: **279 eri hanketta joiden nimea meilla ei ole
-  lainkaan**. Kentat ovat nimi, tieosoite, tilaajaorganisaatio,
-  aloitus- ja lopetusvuosi seka geometria -- kuvausta ja
-  yhteyshenkiloita EI ole, ne ovat vain hankesivuilla.
+  (632) seka suunnitelmatasot `tiesuunnitelmat` (424 eri hanketta) ja
+  `ratasuunnitelmat` (103). Mitattu: **279 eri hanketta joiden nimea
+  meilla ei ole lainkaan**.
+
+  **KENTAT LUETTU SKEEMASTA 9.11.2026 (korjaus edelliseen).** Vaitin
+  ensin ettei kuvausta ole; se oli vaarin, koska katsoin yhden featuren
+  ei-tyhjat kentat. `DescribeFeatureType` ja taytto kaikista riveista:
+
+  | taso | rivejä | eri hanketta | kuvaus | linkki | kustannusarvio |
+  |---|---|---|---|---|---|
+  | tiehankkeet | 369 | 181 | 54 % | 20 % | **0 %** |
+  | ratahankkeet | 167 | 94 | 50 % | 16 % | 0 % |
+  | tiesuunnitelmat | 573 | 424 | 53 % | `hankesivu` 100 % | 0 % |
+  | ratasuunnitelmat | 272 | 103 | 53 % | `hankesivu` 100 % | 0 % |
+  | paattyneet_hankkeet | 632 | | | | 0 % |
+
+  Suunnitelmatasoilla lisaksi `tila` ja `vaihe` 100 %,
+  `suunnittelu_alkaa/loppuu` 100 %, `arvioitu_toteutus` 70 %.
+  Kustannusarvio on kenttana olemassa mutta tyhja KAIKILLA (0/2013).
+  Yhteyshenkiloita ei ole missaan tasossa -- ne ovat vain
+  hankesivuilla.
 
   Lahdetyo tehdaan toisessa keskustelussa ([[sources-in-other-session]]).
   Ratkaistava ennen kytkemista: toimiiko avoinapi.vaylapilvi.fi
