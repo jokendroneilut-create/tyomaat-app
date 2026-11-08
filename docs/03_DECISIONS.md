@@ -51,6 +51,106 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-396 – Kaava eteni, hanke ei: dokumentti luettiin kerran ja tulos kerran
+
+Satunnaisotannan toinen arpa (1 : 7 111) osui Tampereen kaavaan 8839, ja
+rivi näytti hyvältä: kunta, kuvaus, lähde, koordinaatit. Vaihe oli
+silti väärä — sivu sanoo *"Tarkistettu ehdotus, meneillään"*, meillä
+luki **Ehdotusvaihe**. Johannes: *"eikö tämä sama ongelma koske kaikkia
+kaavoitus tilassa olevia hankkeita?"*
+
+Koskee, mutta **kahdesta eri syystä**, ja vain toinen oli Tampereen.
+
+#### Syy 1: lähde ei päivity (Tampere)
+
+`collectTampereKaavaSource` haki kaavasivun kerran:
+
+```ts
+let detailsAttempted = knownDetails.has(documentUrl)
+```
+
+Sen jälkeen vaihe, kuvaus ja päätöksentekijä jäivät siihen hetkeen,
+vaikka itse jäsennin lukee `.field-phase`-kentän oikein. Mitattu
+tasavälisellä 15 sivun otoksella 137:stä: **4 riviä (27 %) jäljessä**,
+ja yksi niistä oli sivulla jo **lainvoimainen**.
+
+Nyt sivu luetaan uudelleen 14 vrk:n välein, kunnes kaava saavuttaa
+lopputilan — silloin sivu ei enää muutu ja budjetti kuuluu eläville.
+Epäonnistunut tuoreutus **ei pyyhi vanhaa**: ennen tähän haaraan
+päädyttiin vain lukemattomilla sivuilla, joten mitään ei ollut
+menetettävänä; nyt hetkellinen 500 olisi tyhjentänyt kuvauksen.
+Aikaleima siirtyy silti, jottei kuollut sivu poltettaisi budjettia joka
+ajossa ([[failed-fetch-burns-budget]]).
+
+#### Syy 2: lähde päivittyy, hanke ei (kaikki muut)
+
+```ts
+if (document.identity_resolved_at) return "Identity already resolved for document"
+```
+
+Dokumentti ratkaistaan **kerran**. Kun kunta päivittää kaavan vaiheen,
+dokumentti päivittyy kannassa, mutta hanke ei saa siitä tietää. Tieto
+oli siis jo meillä, lukematta ([[own-data-unread]]).
+
+Mitattu 8.11.2026, asiakkaalle näkyvät hankkeet vaiheessa Kaavoitus:
+
+| | |
+|---|---|
+| hankkeita | 3 011 |
+| dokumentti sanoo eri vaihetta | **208** |
+| dokumentti kertoo kaavan lopputilan | **37** (34 lainvoimaista, 3 keskeytettyä) |
+
+#### Mitä lopputila saa tehdä: katselmointi, ei automaattinen siirto
+
+Johanneksen valinta kahdesta vaihtoehdosta. Perustelu on kirjattu
+koodiin: lähde kertoo että **kaava** on valmis, ei että hanke olisi
+siirtynyt suunnitteluun — automaattinen siirto väittäisi enemmän kuin
+lähde sanoo ([[finding-signal-not-deciding-signal]]). Rivi saa siis
+`needs_review`-merkin ja todisteen metadataan, ja ihminen päättää.
+
+**`kaava_tila`-kenttää ei kirjoiteta.** Se on olemassa olevan
+`advance-effective-zoning`-säännön ehto, ja sen asettaminen siirtäisi
+hankkeen automaattisesti seuraavana yönä — juuri se mitä vältettiin.
+Sääntö on sen sijaan **kytketty samaan vuorokausiajoon**, koska se
+lataa jo tismalleen samat kaksi joukkoa.
+
+Sanasto luettiin kannasta, ei keksitty: *"Voimaantulo"*,
+*"Lainvoimaisuus"*, *"Kaava on saanut lainvoiman 20.10.2026"*,
+*"kuulutetaan voimaan 17.8.2026"*, *"Kaavaprosessin keskeyttäminen"*.
+**Hyväksyminen ei ole lainvoima** — se aloittaa valitusajan, ja sivuilla
+lukee sanatarkasti *"on hyväksytty kaupunginvaltuustossa 30.9.2026,
+mutta se ei ole vielä lainvoimainen"*.
+
+#### Vaihe saa vain edetä
+
+Kuivaharjoitus paljasti, että 208 päivityksestä **9 olisi mennyt
+taaksepäin** (*"Hyväksyminen" → "Vireilletulo"*). Osa on aitoja — kaava
+voidaan palauttaa valmisteluun — mutta taaksepäin hyppäävä arvo on myös
+jäsennysvirheen vakiomuoto, eikä tieto hyväksymisvaiheesta saa kadota
+sen takia. Sama periaate kuin `phaseAdvances` hankkeen omassa vaiheessa.
+Kuntakohtainen sanasto ei ole järjestettävissä yleisesti, joten
+tunnistamaton teksti saa sijan −1 eikä sitä verrata mihinkään.
+
+#### Tulos
+
+Takautuva ajo `scripts/nosta-kaavojen-lopputilat.ts` kutsuu samaa
+funktiota kuin vuorokausiajo: **37 riviä katselmointiin, 199 vaihetta
+päivitetty**, 9 jätetty taaksepäin menevänä, 2 ilman dokumenttia.
+
+**Rajoitus, joka jäi:** `needs_review` on jo kyllästetty.
+Asiakkaalle näkyvistä hankkeista **1 576** on merkitty tarkistettavaksi,
+ja niistä **1 536** on duplikaattivihjeitä ([[duplicate-hint-open-items]],
+lykätty 24.9.2026). Nämä 37 eivät siis erotu listalla ilman omaa
+suodatinta tai merkkiä — metadatassa on `kaava_lopputila`, josta ne
+löytää, mutta hallintanäkymä ei vielä erottele syytä.
+
+Muutetut: `lib/projects/kaavanLopputila.ts` (uusi),
+`lib/projects/kaavanKatselmointi.ts` (uusi),
+`lib/projects/nostaLopputilat.ts` (uusi),
+`app/api/admin/advance-effective-zoning/route.ts`,
+`lib/agent/discovery/collectors/apiCollector.ts`,
+`scripts/nosta-kaavojen-lopputilat.ts` (uusi).
+
 ### D-395 – Satunnaisotannan osuma: kunta puuttui 98 hankkeelta, ja koordinaatti olisi kirjoittanut väärän
 
 Johannes 8.11.2026 pyysi arpomaan hankkeen tarkasteluun: *"näin isoa

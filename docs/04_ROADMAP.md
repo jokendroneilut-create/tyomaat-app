@@ -898,6 +898,19 @@ muistin varassa.
   Ks. [[multi-project-rows]]. Jakaminen on kasityota, eika sita tehty
   tassa yhteydessa.
 
+- **Katselmointimerkki on kyllastetty: 1 576 riviä, joista 1 536
+  duplikaattivihjeita (mitattu 8.11.2026, D-396).** Kaavan lopputilasta
+  nostetut 37 riviä eivät erotu listalla, koska sama `needs_review`
+  -merkki on jo lähes kaikilla duplikaattivihjeellisillä. Tieto on
+  metadatassa (`kaava_lopputila`), joten erottelu on tehtävissä
+  hallintanäkymässä suodattimena tai merkin tekstinä — se on
+  asiakkaalle näkymätön muutos, mutta se on silti UI-muutos eikä sitä
+  tehty kysymättä ([[ask-before-publishing-ui]]).
+
+  Taustalla on vanha lykätty päätös: `possible_duplicate_of` on 1 499
+  hankkeella eikä sitä lue mikään ([[duplicate-hint-open-items]]).
+  Kumpi tahansa ratkaistaan ensin, se vapauttaa toisen.
+
 - **Taidekasarmin `source_url` osoittaa toisen hankkeen asiaan.**
   (Kirjattu 15.10.2026, ei aloitettu. Löytyi D-290:n kuivaharjoituksessa.)
 

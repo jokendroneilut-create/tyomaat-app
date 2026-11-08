@@ -30,6 +30,7 @@ import { vaylaSubprojectLinks } from "@/lib/agent/vaylaSubprojects"
 import { parseSenaattiContacts } from "@/lib/agent/senaattiContacts"
 import { parseVaylaDescription } from "@/lib/agent/vaylaProjectDescription"
 import { haeKaavanKuvaus, kuulutuksenOmaSisalto } from "@/lib/agent/kaavanKuvaus"
+import { kaavanLopputila } from "@/lib/projects/kaavanLopputila"
 import {
   savonlinnaSelostusLinkit,
   savonlinnaSelostusOtsikolle,
@@ -1028,6 +1029,14 @@ const MAX_DETAIL_FETCH_FAILURES = 3
 const TAMPERE_MAX_DETAIL_FETCHES_PER_RUN = 5
 
 /*
+ * Kuinka vanhana kaavasivu luetaan uudelleen (D-396). Kaava etenee
+ * vaiheesta toiseen kuukausien valein, joten kahden viikon tuoreutus
+ * riittaa: 137 sivua / 5 per ajo -> kierros kestaa noin viikon, kun ajo
+ * on neljasti vuorokaudessa.
+ */
+const TAMPERE_DETAIL_REFRESH_DAYS = 14
+
+/*
  * Tampereen kaavan omalta sivulta (tampere.fi/kaavat/{nro}) poimitaan
  * vaiheen tila ja kuvausteksti. Diaarinumero ja päätöksentekijä ovat
  * upotettuina kuvaustekstin loppuun ("... Diaarinumero: TRE:xxx
@@ -1101,7 +1110,14 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
 
   const knownDetails = new Map<
     string,
-    { phase: string | null; description: string | null; diaarinumero: string | null; decisionMaker: string | null; title: string | null }
+    {
+      phase: string | null
+      description: string | null
+      diaarinumero: string | null
+      decisionMaker: string | null
+      title: string | null
+      haettu: string | null
+    }
   >()
   /* Osoite -> montako kertaa haku on epaonnistunut. */
   const detailFailures = new Map<string, number>()
@@ -1116,6 +1132,12 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
         diaarinumero: row.raw_payload.diaarinumero ?? null,
         decisionMaker: row.raw_payload.decision_maker ?? null,
         title: row.raw_payload.plan_title ?? null,
+        /*
+         * Vanhoilla riveilla merkintaa ei ole, jolloin `null` tarkoittaa
+         * "haettu joskus ennen tuoreutusta" -- ne luetaan uudelleen
+         * ensimmaisina.
+         */
+        haettu: row.raw_payload.details_fetched_at ?? null,
       })
     }
   }
@@ -1135,7 +1157,29 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
     let diaarinumero: string | null = known?.diaarinumero ?? properties.DIAARINRO ?? null
     let decisionMaker: string | null = known?.decisionMaker ?? null
     let planTitle: string | null = known?.title ?? null
-    let detailsAttempted = knownDetails.has(documentUrl)
+
+    /*
+     * KAAVASIVU LUETAAN UUDELLEEN KUNNES KAAVA ON VALMIS (D-396).
+     *
+     * Ehto oli `knownDetails.has(documentUrl)`: sivu haettiin KERRAN, ja
+     * sen jälkeen vaihe, kuvaus ja päätöksentekijä jäivät siihen
+     * hetkeen. Mitattu 8.11.2026 tasavälisellä 15 sivun otoksella
+     * 137:stä: **4 riviä (27 %) oli jäljessä**, ja yksi niistä oli
+     * sivulla jo lainvoimainen — eli kaavan valmistuminen, se hetki
+     * jolloin hanke kiinnostaa asiakasta eniten, jäi meiltä kokonaan
+     * huomaamatta.
+     *
+     * Uudelleenluku loppuu kun kaava on saavuttanut lopputilan: silloin
+     * sivu ei enää muutu, ja budjetti kuuluu niille jotka elävät.
+     */
+    const haettu = known?.haettu ? new Date(known.haettu).getTime() : 0
+    const tuoreutettava =
+      knownDetails.has(documentUrl) &&
+      !kaavanLopputila(known?.phase ?? null) &&
+      Date.now() - haettu > TAMPERE_DETAIL_REFRESH_DAYS * 24 * 60 * 60 * 1000
+
+    let detailsAttempted = knownDetails.has(documentUrl) && !tuoreutettava
+    let haettiinNyt = false
 
     let failures = detailFailures.get(documentUrl) ?? 0
 
@@ -1147,6 +1191,7 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
     ) {
       const details = await fetchTampereKaavaDetails(planUrl)
       detailFetches += 1
+      haettiinNyt = true
       detailsAttempted = details.description !== null
       if (detailsAttempted) {
         phase = details.phase
@@ -1161,6 +1206,18 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
          * kaavan otsikoksi tuli "Harmi - sivua ei loytynyt" (D-337).
          */
         failures += 1
+        /*
+         * EPAONNISTUNUT TUOREUTUS EI SAA PYYHKIA VANHAA (D-396).
+         *
+         * Ennen tuoreutusta tahan haaraan paadyttiin vain sivuilla joita
+         * ei ollut koskaan luettu, joten mitaan ei ollut menetettavana.
+         * Nyt sama haara osuu rivriin jolla ON kuvaus ja vaihe, ja
+         * hetkellinen 500 pyyhkisi ne. Vanhat arvot ovat yha muuttujissa
+         * (`known`), joten merkitaan haku onnistuneeksi ja annetaan
+         * aikaleiman siirtya: seuraava yritys on vasta 14 vrk:n paasta
+         * eika joka ajossa ([[failed-fetch-burns-budget]]).
+         */
+        if (known) detailsAttempted = true
       }
     }
 
@@ -1186,7 +1243,15 @@ async function collectTampereKaavaSource(source: DiscoverySource) {
             kaava_tunnus: kaavaTunnus,
             diaarinumero,
             ...(detailsAttempted
-              ? { phase, description, decision_maker: decisionMaker, plan_title: planTitle }
+              ? {
+                  phase,
+                  description,
+                  decision_maker: decisionMaker,
+                  plan_title: planTitle,
+                  details_fetched_at: haettiinNyt
+                    ? new Date().toISOString()
+                    : (known?.haettu ?? null),
+                }
               : failures
                 ? { detail_fetch_failures: failures }
                 : {}),

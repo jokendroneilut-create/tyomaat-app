@@ -6,6 +6,7 @@ import {
   TUORE_KUUKAUDET,
   evaluateEffectiveZoning,
 } from "@/lib/projects/effectiveZoning"
+import { nostaLopputilat } from "@/lib/projects/nostaLopputilat"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -67,7 +68,7 @@ export async function GET(req: Request) {
     for (let from = 0; ; from += 1000) {
       const { data, error } = await supabaseAdmin
         .from("projects")
-        .select("id,name,city,phase,status,metadata")
+        .select("id,name,city,phase,status,needs_review,metadata")
         .eq("phase", PHASE_LABELS.zoning)
         .range(from, from + 999)
       if (error) throw error
@@ -100,6 +101,21 @@ export async function GET(req: Request) {
       siirrettavat.push({ h, tila, voimaantulo, lahde: doc?.source_name ?? md.source_name ?? null })
     }
 
+    /*
+     * TOINEN VAIHE: LOPPUTILA VAIHETEKSTISTÄ -> KATSELMOINTIIN (D-396).
+     *
+     * Yllä oleva siirto vaatii rakenteisen `kaava_tila` + `voimaantulo`
+     * -parin, jonka vain osa kerääjistä tuottaa. Sivupohjaiset
+     * kaavalähteet kertovat saman asian VAIHETEKSTISSÄ ("Voimaantulo",
+     * "Kaava on saanut lainvoiman 20.10.2026"), ja mitattuna 8.11.2026
+     * se koski 37 asiakkaalle näkyvää hanketta.
+     *
+     * Nämä EI siirretä automaattisesti vaan nostetaan ihmisen
+     * katselmoitavaksi (Johanneksen valinta): lähde kertoo kaavan
+     * valmistuneen, ei hankkeen siirtyneen suunnitteluun.
+     */
+    const katselmointi = await nostaLopputilat(supabaseAdmin, hankkeet, dryRun)
+
     if (dryRun) {
       return NextResponse.json({
         ok: true,
@@ -117,6 +133,7 @@ export async function GET(req: Request) {
           kaupunki: s.h.city,
           voimaantulo: s.voimaantulo,
         })),
+        katselmointi,
       })
     }
 
@@ -161,6 +178,7 @@ export async function GET(req: Request) {
       kaavoitusvaiheessa: hankkeet.length,
       siirretty: tulokset.filter((t) => t.ok).length,
       virheet: tulokset.filter((t) => !t.ok),
+      katselmointi,
     })
   } catch (err: any) {
     console.error(err)
