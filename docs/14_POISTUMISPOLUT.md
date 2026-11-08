@@ -213,7 +213,19 @@ Poistuneiden 63 syyt:
 Lisäksi **40 riviä on siirtynyt eteenpäin** vaiheeseen "Suunnittelu"
 (`phase_source = kaavan_lainvoima`, `advance-effective-zoning` 5:15).
 
-### 1. Pääpolku on yhä kytkin pois päältä
+### 1. Pääpolku kytkettiin päälle 8.11.2026 (D-398)
+
+`UNLISTED_EXPIRY_ENABLED = true`. Tätä ennen ehdot käytiin läpi:
+kuivaharjoitus luettu riveittäin (10 vanhennettavaa — kahdeksan Tornion
+kaavaa, yksi Ulvilan, yksi Pihtiputaan), kaikkien kolmen lähteen
+terveys tarkistettu (onnistuneet 1–2,6 vrk sitten, **ei yhtäkään
+kirjattua virhettä**), kynnys mitattu ja toipumisaika lisätty (D-397).
+
+Ensimmäinen aito vanheneminen tapahtuu seuraavassa cron-ajossa (5:45).
+Vanheneminen on peruutettavissa: `revive` palauttaa rivin heti kun
+dokumentti näkyy lähteellä uudelleen.
+
+**Alla oleva kuvaus on siltä ajalta jolloin kytkin oli pois:**
 
 `expire-unlisted-projects` (5:45) on **tarkkailija, ei poistaja**:
 `UNLISTED_EXPIRY_ENABLED = false`. Kytkin jätettiin tarkoituksella

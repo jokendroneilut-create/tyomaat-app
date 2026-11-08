@@ -40,7 +40,22 @@
  * Ennen kytkemista: aja kuivaharjoitus ja lue tulos riveittain.
  *   npx tsx scripts/dry-run-unlisted-expiry.ts
  */
-export const UNLISTED_EXPIRY_ENABLED = false
+/*
+ * KYTKETTY PÄÄLLE 8.11.2026 (D-398). Ehdot täyttyivät:
+ *
+ *   - Kuivaharjoitus luettu riveittäin: 10 vanhennettavaa, joista
+ *     kahdeksan Tornion kaavoja, yksi Ulvilan ja yksi Pihtiputaan.
+ *   - Kaikki kolme lähdettä terveitä: onnistuneet 1–2,6 vrk sitten
+ *     eikä yhdelläkään ole yhtäkään kirjattua virhettä.
+ *   - Kynnys mitattu samana päivänä: hitaimpien TERVEIDEN lähteiden
+ *     kierto on p90 40–55 vrk, joten 60 vrk on sen yllä mutta ei
+ *     ylimitoitettu.
+ *   - Toipumisaika lisätty (D-397), joten eston purkautuminen ei
+ *     vanhenna lähteen koko listaa kerralla.
+ *   - Vanheneminen on peruutettavissa: `revive` palauttaa rivin heti
+ *     kun dokumentti näkyy lähteellä uudelleen.
+ */
+export const UNLISTED_EXPIRY_ENABLED = true
 
 /*
  * Kirjoitetaanko tallä ajolla. Kytkin voittaa aina: kuivaharjoituksen voi
