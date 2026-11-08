@@ -949,12 +949,28 @@ muistin varassa.
   vanhene vaarin, koska vanhenemissaanto vaatii terveen lahteen ja
   toipumisajan (D-397).
 
-  **Mita voi tehda:** (1) pyytaa paasya -- Vayla on virasto jolla on
-  avoimen datan velvoite, ja pyynto on rehellinen tie; (2) ajaa nama
-  kolme keraajaa suomalaisesta IP:sta (oma kone tai pieni VPS) ja
-  kirjoittaa tulos samaan kantaan; (3) etsia Vaylalle virallinen
-  rajapinta HTML-listan tilalle. ALA kierra estoa tunnistetta
-  vaihtamalla.
+  **PAIKALLISAJO TEHTY 8.11.2026:** `scripts/aja-estetyt-lahteet.ts`
+  ajaa nama kolme samalla koodipolulla kuin cron
+  (`runSourceWorker(sourceId)`), vain omalta koneelta. Ensimmainen
+  kierros onnistui kaikilla: Vayla 30 dokumenttia (7 uutta hanketta),
+  Kuopio 55, Tuusniemi 2. Kerran viikossa riittaa.
+
+  **VAYLALLE ON VIRALLINEN RAJAPINTA, ja se on parempi pitkan ajan
+  ratkaisu.** `https://avoinapi.vaylapilvi.fi/vaylatiedot/ows` (WFS,
+  paivittyy viikoittain) sisaltaa tasot `hanketiedot:tiehankkeet`
+  (181 eri hanketta), `hanketiedot:ratahankkeet` (94),
+  `hanketiedot:vesivaylahankkeet` (4) ja `hanketiedot:paattyneet_hankkeet`
+  (632). Mitattu: **279 eri hanketta joiden nimea meilla ei ole
+  lainkaan**. Kentat ovat nimi, tieosoite, tilaajaorganisaatio,
+  aloitus- ja lopetusvuosi seka geometria -- kuvausta ja
+  yhteyshenkiloita EI ole, ne ovat vain hankesivuilla.
+
+  Lahdetyo tehdaan toisessa keskustelussa ([[sources-in-other-session]]).
+  Ratkaistava ennen kytkemista: toimiiko avoinapi.vaylapilvi.fi
+  tuotannosta, ja miten WFS-rivit yhdistetaan nykyisiin hankesivuriveihin
+  (linkkikenttaa ei ole). Yksi hanke on monta geometriariviä, joten
+  laske eri nimet.
+
 
   Vaylan 403 on todennakoisesti esto, ei katkos: ajo kaynnistyy joka
   kerta (ajettu 0 vrk sitten) mutta saa 403:n. Vaylalla on 155
