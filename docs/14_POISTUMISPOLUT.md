@@ -222,6 +222,37 @@ viimeksi nähty 31.8.–1.9. — eli samalta päivältä. Ennen kytkimen
 kääntämistä kannattaa tarkistaa, onko kyse kuntien sivumuutoksista vai
 siitä että yksi lähde lakkasi tuottamasta.
 
+### 1b. Kalenterimerkinnät 28.10. ja marraskuu — molemmat tehty 8.11.2026
+
+**Kuivaharjoitus luettu riveittäin.** 10 vanhennettavaa, joista yhdeksän
+kaavoitusvaiheessa. Kahdeksan niistä on **Tornion** kaavoja (851 X418
+Laivakankaan suora, 851 X23 Kirkonmäki, Röyttän merituulivoima,
+Kyläjoki-Laivajärvi, Martimo, Valkiavaara, Kirkkolahti, Asematien
+ympäristö) ja ne on viimeksi nähty 31.8.–1.9. **Tornion kaavatori on
+elossa** — sen tuorein dokumentti on kahden vuorokauden takaa — joten
+kyse on aidosta katoamisesta lähteen listalta, ei kuolleesta lähteestä.
+Sääntö siis toimii niin kuin pitää.
+
+**Kynnys mitattu (marraskuun merkintä).** Kerääjän kierron pituus näkyy
+siitä, kuinka vanhoja viimeiset havainnot ovat terveellä lähteellä:
+
+| lähde | n | mediaani | p90 | max |
+|---|---|---|---|---|
+| Helsinki (SUKKA) | 222 | 3 | 3 | 35 |
+| Tampere | 137 | 3 | 3 | 54 |
+| **Oulu** | 139 | 19 | **40** | 45 |
+| **Raasepori** | 68 | 4 | **55** | 55 |
+| Rovaniemi | 80 | 3 | 40 | 63 |
+| Helsingin vireillä olevat kaavat | 80 | 25 | 25 | 36 |
+
+Koko aineisto: mediaani 8 vrk, p90 45 vrk, p99 65 vrk.
+
+**Johtopäätös: 60 vrk ei ole ylimitoitettu, eikä sitä pidä lyhentää.**
+Alkuperäinen perustelu oli "pisin tiedetty kierros 10 vrk × 6", mutta
+mitattuna hitaimpien lähteiden p90 on 40–55 vrk — eli kynnys on vain
+hieman sen yli. Lyhyempi kynnys vanhentaisi Raaseporin ja Oulun rivejä
+pelkän kierroksen hitauden takia.
+
 ### 2. Kumpikin käytössä oleva polku vaatii kenttää jota harva lähde antaa
 
 Sekä siirto että vanheneminen lukevat `kaava_tila` + `voimaantulo`

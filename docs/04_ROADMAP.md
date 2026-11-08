@@ -911,6 +911,23 @@ muistin varassa.
   hankkeella eikä sitä lue mikään ([[duplicate-hint-open-items]]).
   Kumpi tahansa ratkaistaan ensin, se vapauttaa toisen.
 
+- **Nelja lahdetta on hiljaa juuri nyt (mitattu 8.11.2026).** Kaytossa
+  343 lahteesta nelja ei ole onnistunut yli viikkoon, ja yksi niista on
+  iso:
+
+  | lahde | viimeksi onnistui | virhe |
+  |---|---|---|
+  | **Vaylavirasto hankkeet** | 22 vrk | **403 Forbidden** |
+  | Tuusniemen kaavoitus | 21 vrk | connect timeout |
+  | Kuopion vireilla olevat kaavat | 19 vrk | connect timeout |
+  | Vantaan vireilla olevat kaavat | 10 vrk | 400 Bad Request |
+
+  Vaylan 403 on todennakoisesti esto, ei katkos: ajo kaynnistyy joka
+  kerta (ajettu 0 vrk sitten) mutta saa 403:n. Vaylalla on 155
+  dokumenttia ja se on yksi parhaista yhteyshenkilolahteista
+  ([[fingrid-contacts]] vertailukohtana). Lahteen hiljaisuus ei laukaise
+  halytysta ([[silent-watch-failure]]).
+
 - **Taidekasarmin `source_url` osoittaa toisen hankkeen asiaan.**
   (Kirjattu 15.10.2026, ei aloitettu. Löytyi D-290:n kuivaharjoituksessa.)
 
