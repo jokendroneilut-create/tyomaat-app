@@ -61,7 +61,37 @@ export type SourceHealth = {
   lastSuccessAt: string | null
   /* Milloin lahde viimeksi kirjoitti YHDENKAAN dokumentin. */
   lastWriteAt: string | null
+  /*
+   * Milloin lahde viimeksi EPAONNISTUI. Vasta toipunut lahde nayttaa
+   * terveelta (`lastSuccessAt` on tuore) vaikka se ei ole viela ehtinyt
+   * kayda listaansa lapi -- ks. `TOIPUMISAIKA_VRK`.
+   */
+  lastErrorAt?: string | null
 }
+
+/*
+ * VASTA TOIPUNUT LAHDE EI SAA VANHENTAA MITAAN (D-397).
+ *
+ * Johannes 8.11.2026: *"eikö voida tehdä niin että jos lähde ei onnistu
+ * = ei tapahdu mitään. Ja samalla lähteen täytyy pystyä onnistumaan ja
+ * toteamaan muutos jotta se saa muuttaa vaihetta?"*
+ *
+ * Ensimmainen puoli oli jo olemassa: lahteen on pitanyt onnistua
+ * kolmen ja kirjoittaa seitseman vuorokauden sisalla. Toinen puoli
+ * puuttui, ja juuri se on vaarallinen: Vaylavirasto sai **403 Forbidden
+ * 22 vuorokauden ajan** (mitattu 8.11.2026). Sina hetkena kun esto
+ * poistuu, `lastSuccessAt` on nolla vuorokautta -- lahde nayttaa
+ * terveelta -- mutta se on ehtinyt nahda vasta murto-osan
+ * dokumenteistaan. Loput nayttaisivat kadonneilta yhta aikaa.
+ *
+ * Siksi lahteen on oltava VIRHEETON kokonaisen kierroksen ajan.
+ * Mitattu 8.11.2026 keraajien kierroista: nopeat lahteet kiertavat
+ * listansa 2-5 vuorokaudessa, hitaimmat terveet (Oulu p90 40 vrk,
+ * Raasepori p90 55 vrk) selvasti hitaammin. 14 vuorokautta kattaa
+ * valtaosan ja on sama suuruusluokka kuin se aika jonka esto tyypillisesti
+ * kestaa; hitaimpia suojaa lisaksi itse 60 vrk:n kynnys.
+ */
+export const TOIPUMISAIKA_VRK = 14
 
 export type UnlistedInput = {
   now: Date
@@ -124,6 +154,16 @@ export function evaluateUnlisted(
   const kirjoitusVrk = vrk(input.now, input.source.lastWriteAt)
   if (ajoVrk === null || ajoVrk > 3) return "keep"
   if (kirjoitusVrk === null || kirjoitusVrk > 7) return "keep"
+
+  /*
+   * VASTA TOIPUNUT LAHDE EI SAA VANHENTAA (D-397). Virheen jalkeen on
+   * annettava kokonainen kierros aikaa, jotta lahde on voinut TODETA
+   * dokumenttinsa uudelleen. Ilman tata esto (esim. Vaylan 403) nayttaa
+   * terveelta heti ensimmaisen onnistumisen jalkeen, vaikka listasta on
+   * kaytu vasta murto-osa.
+   */
+  const virheVrk = vrk(input.now, input.source.lastErrorAt)
+  if (virheVrk !== null && virheVrk < TOIPUMISAIKA_VRK) return "keep"
 
   /* Toinen lahde on nahnyt hankkeen askettain: se on yha elossa. */
   const muuVrk = vrk(input.now, input.otherSourceSeenAt)

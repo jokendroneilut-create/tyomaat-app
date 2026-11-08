@@ -80,7 +80,7 @@ export async function GET(req: Request) {
      */
     const { data: lahteet, error: lErr } = await supabaseAdmin
       .from("discovery_sources")
-      .select("id,name,last_success_at")
+      .select("id,name,last_success_at,last_error_at")
     if (lErr) throw lErr
 
     /* Tarkistetaan vain ne lähteet joilla on vanhentuneita dokumentteja. */
@@ -104,6 +104,8 @@ export async function GET(req: Request) {
         {
           lastSuccessAt: s.last_success_at ?? null,
           lastWriteAt: kirjoitus.get(String(s.id)) ?? null,
+          /* Vasta toipunut lahde ei saa vanhentaa mitaan (D-397). */
+          lastErrorAt: s.last_error_at ?? null,
         },
       ])
     )
@@ -161,6 +163,7 @@ export async function GET(req: Request) {
           terveys.get(String(doc.source_id)) ?? {
             lastSuccessAt: null,
             lastWriteAt: null,
+            lastErrorAt: null,
           },
         expiredReason: h.expired_reason ?? null,
       })

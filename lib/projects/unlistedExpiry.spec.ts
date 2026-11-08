@@ -121,3 +121,55 @@ describe("writesAllowed", () => {
     expect(writesAllowed(true, true)).toBe(false)
   })
 })
+
+/*
+ * VASTA TOIPUNUT LAHDE (D-397). Johannes 8.11.2026: "lähteen täytyy
+ * pystyä onnistumaan ja toteamaan muutos jotta se saa muuttaa vaihetta".
+ */
+describe("evaluateUnlisted - toipunut lahde", () => {
+  /* Sama kiintea NYT kuin muissa testeissa, muuten lahde nayttaa kuolleelta. */
+  const kadonnut = {
+    now: NYT,
+    status: "active",
+    phase: "Kaavoitus",
+    lastSeenAt: vrkSitten(90),
+  }
+
+  it("ei vanhenna kun lahde on juuri toipunut virheesta", () => {
+    /* Vaylan 403 kesti 22 vrk; heti sen jalkeen lahde nayttaa terveelta. */
+    expect(
+      evaluateUnlisted({
+        ...kadonnut,
+        source: { lastSuccessAt: vrkSitten(0.2), lastWriteAt: vrkSitten(0.2), lastErrorAt: vrkSitten(1) },
+      })
+    ).toBe("keep")
+  })
+
+  it("vanhentaa kun virheesta on kulunut kokonainen kierros", () => {
+    expect(
+      evaluateUnlisted({
+        ...kadonnut,
+        source: { lastSuccessAt: vrkSitten(0.2), lastWriteAt: vrkSitten(0.2), lastErrorAt: vrkSitten(20) },
+      })
+    ).toBe("expire")
+  })
+
+  it("vanhentaa kun lahde ei ole koskaan epaonnistunut", () => {
+    expect(
+      evaluateUnlisted({
+        ...kadonnut,
+        source: { lastSuccessAt: vrkSitten(0.2), lastWriteAt: vrkSitten(0.2), lastErrorAt: null },
+      })
+    ).toBe("expire")
+  })
+
+  it("ei vanhenna kun lahde on epaonnistunut juuri nyt", () => {
+    /* Tama oli jo ennestaan: epaonnistuva lahde ei vanhenna mitaan. */
+    expect(
+      evaluateUnlisted({
+        ...kadonnut,
+        source: { lastSuccessAt: vrkSitten(22), lastWriteAt: vrkSitten(22), lastErrorAt: vrkSitten(0.1) },
+      })
+    ).toBe("keep")
+  })
+})

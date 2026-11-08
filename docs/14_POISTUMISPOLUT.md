@@ -101,6 +101,13 @@ SQL: [docs/sql/2026-08-29_last_seen_at.sql](sql/2026-08-29_last_seen_at.sql)
 
 ## Suojat väärää vanhentamista vastaan
 
+**TOIPUMISAIKA 14 VRK (D-397, 8.11.2026).** Lähde ei saa vanhentaa
+mitään ennen kuin sen viimeisimmästä virheestä on kulunut 14
+vuorokautta. Pelkkä "onnistui äsken" ei riitä: Väylävirasto sai 403
+Forbidden 22 vuorokauden ajan, ja eston purkautuessa lähde näyttää
+terveeltä vaikka se on ehtinyt nähdä vasta murto-osan listastaan.
+`last_error_at` säilyy onnistumisen yli, joten se kelpaa mittariksi.
+
 Vanheneminen on väärä vastaus useammin kuin katoaminen on aito, joten
 sääntö kieltäytyy neljässä tilanteessa:
 

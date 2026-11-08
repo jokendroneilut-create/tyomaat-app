@@ -51,6 +51,64 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-397 – Vasta toipunut lähde ei saa vanhentaa mitään
+
+Johannes 8.11.2026, kun neljä lähdettä löytyi hiljaisina: *"eikö voida
+tehdä niin että jos lähde ei onnistu = ei tapahdu mitään. Ja samalla
+lähteen täytyy pystyä onnistumaan ja toteamaan muutos jotta se saa
+muuttaa vaihetta?"*
+
+Tarkistin kummankin puolen koodista. **Ensimmäinen oli jo olemassa,
+toinen puuttui — ja juuri se puuttuva on se joka olisi purrut.**
+
+#### Mikä oli jo kunnossa
+
+`evaluateUnlisted` vaatii, että lähde on onnistunut **3 vrk:n** ja
+kirjoittanut jotain **7 vrk:n** sisällä. Epäonnistuva lähde ei siis
+vanhenna mitään: *"hiljainen lähdevika ei saa vanhentaa hankkeita"*.
+
+Vaiheen muuttaminen taas nojaa aina lähteen **omaan havaintoon**, ei
+tiedon puuttumiseen: `advance-effective-zoning` vaatii dokumentilta
+`kaava_tila = voimassa` + voimaantulopäivän, ja D-396:n katselmointinosto
+lukee dokumentin oman vaihetekstin. Vanhentunut dokumentti ei voi
+keksiä näitä — se voi vain olla vanha. Toinen puoli kysymyksestä on
+siis jo rakenteessa: **positiivinen muutos vaatii havainnon, pelkkä
+hiljaisuus ei muuta mitään.**
+
+#### Mikä puuttui: toipumishetki
+
+Vanhenemisen suoja katsoi vain nykyhetkeä. Mitattu samana päivänä:
+**Väylävirasto on saanut 403 Forbidden 22 vuorokauden ajan.** Sinä
+hetkenä kun esto poistuu, `last_success_at` on nolla vuorokautta ja
+lähde näyttää terveeltä — mutta se on ehtinyt nähdä vasta murto-osan
+155 dokumentistaan. Loput näyttäisivät kadonneen yhtä aikaa, ja 60
+vrk:n kynnys olisi jo täynnä.
+
+Sääntöön lisättiin siksi **toipumisaika**: lähde ei saa vanhentaa
+mitään ennen kuin sen viimeisimmästä virheestä on kulunut
+`TOIPUMISAIKA_VRK = 14`. Luku on sama suuruusluokka kuin kerääjän
+kierros: mitattu 8.11.2026, nopeat lähteet kiertävät listansa 2–5
+vuorokaudessa, hitaimmat terveet (Oulu p90 40 vrk, Raasepori p90 55)
+selvästi hitaammin — niitä suojaa lisäksi itse 60 vrk:n kynnys.
+
+**`last_error_at` säilyy onnistumisen yli.** Tarkistin sen ennen kuin
+nojasin siihen: onnistuminen tyhjentää `last_error_message`in ja
+`error_count`in muttei virheaikaa (`sourceWorker.ts`). Mitattu: 18
+lähteellä on tuore onnistuminen ja vanhempi virheaika tallessa, eli
+kenttä kelpaa toipumisen mittariksi.
+
+#### Vaikutus
+
+Kuivaharjoitus ennen ja jälkeen: **10 vanhennettavaa, sama lista** — eli
+suoja ei muuta tämän päivän päätöksiä. Tänään se estää vanhentamisen
+yhdeltä lähteeltä (STT-tiedotteet, virhe 1,9 vrk sitten, 30 dokumenttia
+yli kynnyksen). Arvo on siinä mitä se estää *myöhemmin*: Väylän eston
+purkautuessa sen 155 dokumenttia eivät vanhene yhtä aikaa.
+
+Muutetut: `lib/projects/unlistedExpiry.ts`,
+`app/api/admin/expire-unlisted-projects/route.ts`,
+`lib/projects/unlistedExpiry.spec.ts` (4 uutta testiä).
+
 ### D-396 – Kaava eteni, hanke ei: dokumentti luettiin kerran ja tulos kerran
 
 Satunnaisotannan toinen arpa (1 : 7 111) osui Tampereen kaavaan 8839, ja
