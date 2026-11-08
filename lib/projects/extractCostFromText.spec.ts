@@ -285,3 +285,51 @@ describe("extractCostFromText - hankinnan raja", () => {
     expect(extractCostFromText("Hankinnan kustannukset ovat 1,3 miljoonaa euroa.")).toBeNull()
   })
 })
+
+/*
+ * RAKENTAMISKUSTANNUS SUUNNITTELUVAIHEEN HANKKEELLA (D-395).
+ *
+ * Kaikki tapaukset on luettu kannasta 8.11.2026, ja kolme viimeista
+ * olisi kirjoitettu vaarin ilman estetta.
+ */
+describe("extractCostFromText - rakentamiskustannukset", () => {
+  it("lukee ehdollisen arvion (Merven raide)", () => {
+    expect(
+      extractCostFromText(
+        "Hankkeen kustannukset Hallinnollisen Ratasuunnittelun kustannukset ovat noin 0,6 miljoonaa euroa. Tämän hetken alustavan arvion mukaan rakentamiskustannukset olisivat noin 11 miljoonaa euroa riippuen valittavasta toteutusvaihtoehdosta."
+      )
+    ).toBe(11_000_000)
+  })
+
+  it("lukee arvioidun kustannuksen osakustannuksen edelta (Vt 3)", () => {
+    expect(
+      extractCostFromText(
+        "Hankkeen rakentamiskustannuksiksi on arvioitu 28,4 miljoonaa euroa, josta lunastus- ja korvauskustannusten osuus on noin 1,4 miljoonaa euroa."
+      )
+    ).toBe(28_400_000)
+  })
+
+  it("ei lue suunnittelun kustannusta hankkeen hinnaksi", () => {
+    expect(
+      extractCostFromText(
+        "Hallinnollisen Ratasuunnittelun kustannukset ovat noin 0,6 miljoonaa euroa."
+      )
+    ).toBeNull()
+  })
+
+  it("ei lue kahden vaihtoehdon hintaa (Parainen-Nauvo)", () => {
+    expect(
+      extractCostFromText(
+        "YVA:n mukaisen siltavaihtoehdon (45 m) rakentamiskustannukset ovat 140 milj. euroa ja tunnelivaihtoehdon 95 milj. euroa."
+      )
+    ).toBeNull()
+  })
+
+  it("ei lue kahden sijainnin erotusta (Ounasvaaran lukio)", () => {
+    expect(
+      extractCostFromText(
+        "Koska kaupungin tuottamana ateriakustannukset ovat noin 80 000-160 000 euroa vuodessa edullisemmat ja myös rakentamiskustannukset ovat 450 000 euroa edullisemmat, Lappi Areenan yläpuolinen vaihtoehto on kokonaisuutena edullisempi."
+      )
+    ).toBeNull()
+  })
+})

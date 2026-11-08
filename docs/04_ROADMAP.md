@@ -872,6 +872,32 @@ muistin varassa.
   joiden sivulla on selvä lohkorakenne. Mittari ajetaan uudelleen joka
   kytkennän jälkeen, jolloin näkyy paljonko luku laski.
 
+- **Kunta puuttuu 90 hankkeelta, kustannusarvio 5 871:lta (mitattu
+  8.11.2026, D-395).** Kuntapuute on nyt karsittu 98 -> 90: loput eivat
+  ratkea tekstista, koska 57 rivilla ei ole kuntanimea otsikossa eika
+  kuvauksen alussa lainkaan ja 25 on alueellisia urakkapaketteja
+  ("Siltatyot Kainuussa"), joilla ei OLE yhta kuntaa.
+
+  Seuraava askel jos tahan palataan: Hilman rivit (46 ilman kuntaa)
+  kantavat usein hankintayksikon osoitteen, josta kunta on luettavissa
+  ilman tekstipaattelya. Koordinaattia EI saa kayttaa
+  ([[centroid-is-not-location]]).
+
+  Kustannusarvio on iso ja eri kysymys: 5 871 rivia, ja suurin osa
+  niista ei sisalla summaa tekstissaan lainkaan. Kustannussuodatin on
+  jo todettu esteeksi asiakkaalle (14,4 % kattavuus).
+
+- **Kaksi riviä odottaa jakamista (D-395).** Molemmat loytyivat
+  kuntaotannan kuivaharjoituksesta, eika kumpaankaan kirjoitettu
+  kuntaa:
+  - *"ASPRI1182 Pyhanselan ja ASPRI1183 Vuolijoen 400 kV laajennukset"*
+    (`9edeb986`) kattaa kaksi sahkoasemaa, Muhoksella ja Kajaanissa.
+  - *"Vt 11 Koiviston ja Pikkuhaaran sillat"* sijaitsee Porin JA
+    Ulvilan alueella.
+
+  Ks. [[multi-project-rows]]. Jakaminen on kasityota, eika sita tehty
+  tassa yhteydessa.
+
 - **Taidekasarmin `source_url` osoittaa toisen hankkeen asiaan.**
   (Kirjattu 15.10.2026, ei aloitettu. Löytyi D-290:n kuivaharjoituksessa.)
 

@@ -49,8 +49,12 @@ export type VaylaInfoFields = {
  * kuin mikään tekstikuvio ([[declared-field-beats-title-regex]]). Siksi
  * arvosta riittää lukea pelkkä numero.
  */
-const MILJOONA = /(\d+(?:[.,]\d+)?)\s*(?:milj(?:oonaa)?\.?)\s*(?:euroa|€)/i
-const EUROA = /(\d[\d\s ]*)\s*(?:euroa|€)/i
+/*
+ * Lyhenne "eur" luetaan euroksi (D-395): Vaylan kentassa lukee
+ * *"Noin 0,6 milj. eur (suunnittelu)"*.
+ */
+const MILJOONA = /(\d+(?:[.,]\d+)?)\s*(?:milj(?:oonaa)?\.?)\s*(?:euroa|eur\b|€)/i
+const EUROA = /(\d[\d\s ]*)\s*(?:euroa|eur\b|€)/i
 
 /*
  * SELVITYKSEN HINTA EI OLE HANKKEEN HINTA.
@@ -60,8 +64,23 @@ const EUROA = /(\d[\d\s ]*)\s*(?:euroa|€)/i
  * kertaluokkia enemmän, ja 200 000 € kustannusarviona aliarvioisi
  * hankkeen rajusti. Arvo kertoo rajauksensa itse, joten se luetaan
  * ([[source-marks-own-uncertainty]]).
+ *
+ * SULKUMERKINTÄ RIITTÄÄ RAJAUKSEKSI (D-395). Merven raiteen sivulla
+ * kentässä lukee *"Noin 0,6 milj. eur (suunnittelu)"*, ja saman sivun
+ * leipäteksti arvioi rakentamisen 11 miljoonaksi — suunnittelun hinta
+ * aliarvioisi hankkeen 18-kertaisesti. Ensimmäisessä versiossa tämä
+ * meni ohi VAIN siksi ettei lyhennettä "eur" luettu lainkaan; kun
+ * lyhenne lisättiin, rajaus oli pakko lisätä samassa muutoksessa.
  */
-const SELVITYKSEN_HINTA = /\b(esiselvity|selvityksen|suunnittelukustannu|suunnittelun\s+kustannu)/i
+/*
+ * `\b` EI KELPAA KOKO RYHMAN ETEEN. Ensimmainen versio oli
+ * `/\b(esiselvity|...|\(\s*suunnittelu)/i`, ja sulkuhaara ei osunut
+ * KOSKAAN: "(" on ei-sana-merkki, joten sen eteen ei synny sanarajaa
+ * valilyonnista. Mitattu suoraan: "Noin 0,6 milj. eur (suunnittelu)"
+ * palautti 600 000 euroa. Sanaraja kuuluu siis vain sanahaaroihin.
+ */
+const SELVITYKSEN_HINTA =
+  /(?:\b(?:esiselvity|selvityksen|suunnittelukustannu|suunnittelun\s+kustannu|hallinnollinen\s+suunnittelu|(?:rata|tie|yleis|hanke|katu)suunnitt)|\(\s*suunnittelu)/i
 
 export function vaylanKustannus(arvo: string | null | undefined): number | null {
   const teksti = String(arvo ?? "")

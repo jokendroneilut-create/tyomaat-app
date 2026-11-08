@@ -75,7 +75,7 @@ Tähän lähteeseen ei myöskään ollut kytketty liitteen lukijaa lainkaan:
 `taydennaKuvausLiitteesta` on kahden rivin työ, ja se oli tehty vain
 osalle kerääjistä ([[extractor-exists-unwired]]).
 
-**Kaksi ansaa, joihin astuin matkalla.** `` ei tunne ääkköstä, joten
+**Kaksi ansaa, joihin astuin matkalla.** `\b` ei tunne ääkköstä, joten
 kysymyssanan ehto palautti `false` otsikolle *"Mitkä ovat…"* (sama ansa
 kuin `ANKKURI`ssa, D-362). Ja virkejako katkaisee järjestysluvun
 ("Koskipuhdon 3. kaupunginosan"), mikä sekä pudotti kuvauksen alun että

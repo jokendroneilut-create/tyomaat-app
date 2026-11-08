@@ -51,6 +51,142 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-395 – Satunnaisotannan osuma: kunta puuttui 98 hankkeelta, ja koordinaatti olisi kirjoittanut väärän
+
+Johannes 8.11.2026 pyysi arpomaan hankkeen tarkasteluun: *"näin isoa
+datamassaa ei oikein pysty tarkastelemaan muuten kuin
+satunnaistarkistamisella."* Arpa (1 : 7 111) osui **Merven raiteen
+ratasuunnitelmaan**, ja rivistä puuttui kaksi asiaa: kunta ja
+kustannusarvio. Perään: *"korjaa nuo kaksi havaintoa, selvitä miksi ne
+puuttuvat ja korjataan kantaan jos muistakin puuttuu."*
+
+Otanta on nyt skripti, `scripts/satunnainen-hanke.ts`. **Arpa, ei
+valinta**: jos hankkeen valitsee, otos on vino — huomio hakeutuu siihen
+mikä näyttää poikkeavalta. Nimittäjä tulostetaan aina näkyviin.
+
+#### Miksi kunta puuttui: lähteessä ei ole kuntakenttää
+
+Väylän, Hilman ja STT:n riveillä on vain **maakunta**. Mitattu koko
+kannasta: **98 asiakkaalle näkyvää hanketta ilman kuntaa**, kärki
+Hilma 46, Väylä 28, STT 13. Kunta on suodatin ja haku, joten tyhjä
+kenttä **piilottaa hankkeen sitä kuntaa selaavalta** — se ei ole vain
+puuttuva merkkijono.
+
+#### Koordinaatti näytti ratkaisulta ja oli ansa
+
+Kokeilin ensin käänteistä hakua: koordinaatti → kunta Tilastokeskuksen
+rajapinnasta (`geo.stat.fi`, WFS, ETRS-TM35FIN). Reitti toimii
+teknisesti — Merven piste osuu Hattulaan — mutta kuivaharjoitus 98
+rivillä paljasti, että **koordinaatit ovat keskipisteitä**:
+
+| | |
+|---|---|
+| 597 hanketta | sama piste 60,1666 / 24,9435 (Helsinki) |
+| 113 | Seinäjoki |
+| 109 | Oulu |
+| 84 | Tampere |
+
+Kanta-Hämeen keskipiste osuu Hattulaan, joten **Riihimäen S-marketista
+olisi tullut "Hattula"** ja Leppävirran tiehankkeesta "Siilinjärvi".
+Koordinaatti kelpaa vasta kun `metadata.geocode_source` kertoo
+osoitetarkkuudesta — näillä 98:lla se ei kerro **yhdelläkään** (80 ilman
+merkintää, 4 "maakunta", 14 ilman koordinaattia).
+
+#### Sääntö luettiin riveittäin, ja se hylkää enemmän kuin hyväksyy
+
+`lib/geo/kuntaHankkeesta.ts`, kolme ehtoa:
+
+1. **Alueellinen paketti ei ole yksi kunta.** "Siltatyöt Kainuussa",
+   "Päällystystyöt 2026 - Satakunta", "LOU maanteiden kuivatusurakka",
+   "Putkisiltaurakka 2026 - Itä-Suomi" — **25 riviä 98:sta**.
+2. **Kaksi kuntaa samassa virkkeessä = ei kuntaa.** *"sillat sijaitsevat
+   Porin ja Ulvilan kaupunkien alueella"*.
+3. **Kuvauksesta kelpaa vain sijaintilause.** Ilman tätä *"Rantarata
+   kulkee Helsingin ja Turun välillä"* sijoitti Karjaa–Kauklahti-hankkeen
+   Helsinkiin ja *"laitureihin Järvenpään, Saunakallion ja Jokelan
+   asemilla"* sijoitti Jokelan aseman (Tuusula) Järvenpäähän.
+
+**Ikkunan koko oli oma virheeni, ja se hylkäsi juuri tämän rivin.**
+Ensin otin kaksi ensimmäistä virkettä yhtenä ikkunana — Merven toinen
+virke sanoo *"Raide erkanee Helsinki Tampere pääradalla"*, eli kolme
+kuntaa, ja sääntö hylkäsi oman esimerkkinsä. Yhden virkkeen ikkuna taas
+hävitti Jyväskylän, jonka sijaintilause on vasta toisessa virkkeessä.
+Ratkaisu: **kolme ensimmäistä virkettä, virke kerrallaan**, ja
+ensimmäinen joka on sijaintilause ja jossa on tasan yksi kunta.
+
+Tulos: **8 kuntaa 98:sta**. Loput jäävät tyhjiksi, ja se on oikein —
+57:llä ei ole kuntanimeä otsikossa eikä kuvauksen alussa lainkaan.
+
+#### Kustannus: kaksi lukua samassa luvussa
+
+Väylän hankesivulla kustannukset ovat omassa luvussaan ja siellä on
+**kaksi** lukua: suunnittelu 0,6 M€ ja rakentaminen 11 M€ —
+18-kertainen ero. Kenttälohkossa lukee *"Noin 0,6 milj. eur
+(suunnittelu)"*, ja se meni kantaan kirjoittamatta **vain siksi ettei
+lyhennettä "eur" luettu lainkaan**. Kun lyhenteen lisäsi, rajaus oli
+pakko lisätä samassa muutoksessa: `(suunnittelu)`, "hallinnollinen
+suunnittelu" ja `(rata|tie|yleis|hanke|katu)suunnitt` hylkäävät arvon.
+
+Leipätekstistä puuttui ankkuri muodolle *"rakentamiskustannukset
+olisivat noin 11 miljoonaa euroa"*. Uusi ankkuri vaatii **rakentamisen**
+(ei pelkkää sanaa "kustannukset"), sallii ehdollisen verbin
+(olisivat, arvioidaan) ja on **päätöspassin viimeinen** — ensimmäisenä se
+voitti vahvemman tiedon: Helsingin päiväkotipäätöksessä on
+"kustannusarvio 8 255 000 euroa" ja samassa tekstissä
+"rakentamiskustannukset 7 238 000 euroa", eli uusi ankkuri olisi
+korvannut hankkeen hinnan sen yhdellä osalla.
+
+Kaksi estettä, molemmat mitattuja: **erotus** (*"rakentamiskustannukset
+ovat 450 000 euroa edullisemmat"*, Ounasvaaran lukio) ja
+**vaihtoehtolaskelma** (*"siltavaihtoehdon ... 140 milj. euroa ja
+tunnelivaihtoehdon 95 milj. euroa"*, Parainen–Nauvo). Tunnusmerkki on
+**toinen summa, ei sana** — Merven oma arvio sanoo *"riippuen
+valittavasta toteutusvaihtoehdosta"* ilman toista lukua, ja juuri se
+luku puuttui kannasta.
+
+**Laajennus hylättiin mittauksella.** Kokeilin samaa estettä kaikille
+ankkureille: **15 riviä menetti oikean kustannuksensa** (Hermannin
+rantatie 99,5 M€, Turun raitiotie 465 M€, Asemapäällikönkatu 5,2 M€).
+Helsingin katusuunnitelmissa "osuus on" ja "vaihtoehto" esiintyvät
+oikean summan vieressä, joten este jäi vain uuteen ankkuriin
+([[test-filter-against-approved]]).
+
+#### A/B ja tulos
+
+Vanha vs. uusi kustannuspoimija **7 472 hankkeen kuvauksen yli**:
+8 muutosta, kaikki tyhjään kenttään, **0 ristiriitaa** kannassa olevan
+arvon kanssa.
+
+| | ennen | jälkeen |
+|---|---|---|
+| kunta tyhjä | 98 | **90** |
+| kustannusarvio tyhjä | 5 896 | **5 871** |
+
+Takautuva ajo `scripts/taydenna-kunta-ja-kustannus.ts`: **8 kuntaa ja
+25 kustannusarviota**. Kustannuspuolen 25 on enemmän kuin A/B:n 8,
+koska samalla kirjoitettiin ne rivit joilla vanha ankkuri olisi
+osunut mutta joita kukaan ei ollut ajanut (*"Urakan arvo Skanskalle on
+noin 35 miljoonaa euroa"*). **Jokainen 25:stä luettiin lähdevirkkeenä
+ennen kirjoittamista**, ja kolme hylättiin luettuina:
+
+- Pyhänselän ja Vuolijoen 400 kV -laajennukset: kaksi sähköasemaa,
+  Muhos ja Kajaani — yksi kunta olisi puolet oikein.
+- Tornion museovarasto: VE1 350 000 € ja VE2 300 000 €, valittua ei
+  kerrota.
+- Länsiratikat (YIT/NRC-allianssi): *ensimmäisen tilauksen* arvio
+  30 M€, ei hankkeen hinta.
+
+Jatkoa varten: kuntasääntö on kytketty hyväksyntäreittiin
+(`app/api/tic/projects/approve/route.ts`), ja kustannuspoimija on jo
+keskitetty (`resolvePotentialProject`), joten korjaus koskee uusia
+rivejä ilman eri kytkentää. Provenienssi kirjataan
+`metadata.field_sources`iin ("nimi" / "kuvaus" / "kuvauksen
+rakentamiskustannukset").
+
+Muutetut: `lib/geo/kuntaHankkeesta.ts` (uusi), `lib/projects/extractCostFromText.ts`,
+`lib/agent/vaylaInfoFields.ts`, `app/api/tic/projects/approve/route.ts`,
+`scripts/satunnainen-hanke.ts`, `scripts/taydenna-kunta-ja-kustannus.ts` (uusi).
+
 ### D-394 – OAS-pohjan otsikot ovat kysymyksiä, ja liitteen lukija oli kirjoitettu muttei kytketty
 
 Johannes 8.11.2026 Ylivieskan Koskipuhdon korttelin 102 rivistä

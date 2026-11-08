@@ -22,6 +22,7 @@ import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { computeManualExpiry } from "@/lib/projects/tenderExpiry"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { inferMunicipalityFromText } from "@/lib/geo/inferMunicipalityFromText"
+import { kuntaHankkeesta } from "@/lib/geo/kuntaHankkeesta"
 import {
   findByIdentifiers,
   linkIdentifier,
@@ -2146,13 +2147,34 @@ export async function POST(request: Request) {
         )
       : null
 
-    const city = isHilma
-      ? metadata.project_municipality ??
-        metadata.site_municipality ??
-        potentialProject.municipality ??
-        inferredMunicipality?.name ??
-        null
-      : potentialProject.municipality ?? null
+    /*
+     * KUNTA HANKKEEN OMASTA TEKSTISTÄ, KUN LÄHTEESSÄ EI OLE KENTTÄÄ
+     * (D-395).
+     *
+     * Väylän, Hilman ja STT:n riveillä kunta jäi pysyvästi tyhjäksi,
+     * koska lähde antaa vain maakunnan — mitattu 8.11.2026: 98
+     * asiakkaalle näkyvää hanketta ilman kuntaa. Kunta on suodatin ja
+     * haku, joten tyhjä kenttä piilottaa hankkeen sitä kuntaa
+     * selaavalta.
+     *
+     * Sääntö on tiukka ja sen rajat on luettu riveittäin
+     * (`kuntaHankkeesta`): alueellinen urakkapaketti ja kahden kunnan
+     * lause eivät tuota kuntaa lainkaan.
+     */
+    const paateltyKunta = kuntaHankkeesta({
+      name: potentialProject.title,
+      description: metadata.description,
+      region: metadata.region ?? null,
+    })
+
+    const city =
+      (isHilma
+        ? metadata.project_municipality ??
+          metadata.site_municipality ??
+          potentialProject.municipality ??
+          inferredMunicipality?.name ??
+          null
+        : potentialProject.municipality ?? null) ?? paateltyKunta?.kunta ?? null
 
     const region =
       resolveRegion({ metadataRegion: metadata.region, city, buyerName: metadata.developer, title: potentialProject.title }) ??

@@ -231,6 +231,34 @@ function documentAnchorsFor(amount: string): RegExp[] {
     new RegExp(`kustannusarvio\\w*\\s+(?:on\\s+|oli\\s+)?${HEDGE}${amount}`, "i"),
     /* "Hankkeelle on varattu investointiohjelmassa 2,0 M€" */
     new RegExp(`varattu\\s+(?:\\S+\\s+){0,3}?${HEDGE}${amount}`, "i"),
+    /*
+     * "Tämän hetken alustavan arvion mukaan rakentamiskustannukset
+     * olisivat noin 11 miljoonaa euroa" (D-395).
+     *
+     * Väyläviraston hankesivulla kustannukset ovat omassa luvussaan, ja
+     * siellä on KAKSI lukua: suunnittelun hinta ja rakentamisen hinta.
+     * Merven raiteen sivulla edellinen on 0,6 ja jälkimmäinen 11
+     * miljoonaa — 18-kertainen ero. Lukua ei siis saa poimia pelkän
+     * sanan "kustannukset" perusteella, ja saman kappaleen
+     * "Hallinnollisen Ratasuunnittelun kustannukset ovat noin 0,6
+     * miljoonaa euroa" ei osu tähän ankkuriin.
+     *
+     * KAKSI EROA YLLÄ OLEVAAN `rakennuskustannu`-ankkuriin: yhdyssanan
+     * alkuosa on "rakentamis", ja verbi on ehdollinen. Suunnitteluvaiheen
+     * hanke puhuu arviosta eikä sopimushinnasta
+     * ([[winner-can-change]]).
+     *
+     * VIIMEISENÄ, ja syy on mitattu: kokeilin tätä ensin tiedotepassin
+     * ensimmäisenä ankkurina, ja se voitti vahvemman tiedon. Helsingin
+     * päiväkotipäätöksessä lukee "kustannusarvio on 8 255 000 euroa" ja
+     * samassa tekstissä "rakentamiskustannukset 7 238 000 euroa" —
+     * kenttään oli kirjattu suurempi, oikein, ja uusi ankkuri olisi
+     * korvannut sen hankkeen YHDELLÄ OSALLA.
+     */
+    new RegExp(
+      `rakentamiskustannu\\w*\\s+(?:\\S+\\s+){0,2}?(?:ovat|on|olisivat|olisi|arvioidaan|arvioitu)\\s+(?:olevan\\s+)?(?:yhteens[aä]\\s+)?${HEDGE}${amount}`,
+      "i"
+    ),
   ]
 }
 
@@ -255,6 +283,37 @@ const DOCUMENT_SETS: { anchors: RegExp[]; multiplier: number; min: number }[] = 
  */
 const SIDE_COST =
   /yll[aä]pitokustannu|k[aä]ynnist[aä]miskustannu|k[aä]ynnist[aä]misraha|irtaimist|vuokrakustannu|euroa\s*\/\s*m|(?:p[aä][aä]tt[aä][aä]|p[aä][aä]tt[aä]nyt|p[aä][aä]tti|hyv[aä]ksyy)\s+tilahank|p[aä][aä]t[oö]svalta/i
+
+/*
+ * VAIHTOEHTOLASKELMA EI OLE HANKKEEN HINTA (D-395).
+ *
+ * Paatosasiakirjan ja YVA:n vakiomuoto on kaksi ratkaisua hintoineen,
+ * eika valittua ole viela kerrottu:
+ *
+ *   "pienemman VE1:n kustannusarvio on 350 000 euroa ja isomman VE2:n
+ *    kustannusarvio on 300 000 euroa"            (Tornion museovarasto)
+ *   "siltavaihtoehdon rakentamiskustannukset ovat 140 milj. euroa ja
+ *    tunnelivaihtoehdon 95 milj. euroa"          (Parainen-Nauvo)
+ *   "ensimmaisen tilauksen kustannusarvio on 30 miljoonaa euroa, josta
+ *    NRC:n osuus on noin 12 miljoonaa euroa"     (Lansiratikat)
+ *
+ * TUNNUSMERKKI ON TOINEN SUMMA, EI SANA. Merven raiteen oma arvio on
+ * *"rakentamiskustannukset olisivat noin 11 miljoonaa euroa riippuen
+ * valittavasta toteutusvaihtoehdosta"* -- yksi arvio varauksella, ja
+ * juuri se luku puuttui kannasta. Siksi este vaatii seka
+ * vaihtoehtomerkinnan ETTA toisen summan heti perassa.
+ *
+ * "osuus on" on mukana, koska allianssirivilla kokonaissumma ja yhden
+ * osapuolen osuus esiintyvat samassa lauseessa ([[alliance-split]]).
+ */
+const VAIHTOEHTOMERKINTA = /\bVE\s?\d|vaihtoehd/i
+const TOINEN_SUMMA = /\d[\d\s .,]*\s*(?:milj\w*|euroa|eur\b|€)/i
+
+function onVaihtoehtolaskelma(teksti: string, kohta: number, pituus: number): boolean {
+  const ikkuna = teksti.slice(Math.max(0, kohta - 220), kohta + pituus + 120)
+  const jatko = teksti.slice(kohta + pituus, kohta + pituus + 120)
+  return VAIHTOEHTOMERKINTA.test(ikkuna) && TOINEN_SUMMA.test(jatko)
+}
 
 export function extractCostFromText(
   text: string | null | undefined
@@ -336,6 +395,68 @@ export function extractCostFromText(
       const at = match.index ?? 0
       const window = text.slice(Math.max(0, at - 220), at + match[0].length)
       if (SIDE_COST.test(window)) continue
+
+      /*
+       * VAIHTOEHDON HINTA EI OLE HANKKEEN HINTA (D-395).
+       *
+       * Parainen–Nauvon kiinteästä yhteydestä kannassa lukee: *"YVA:n
+       * mukaisen siltavaihtoehdon (45 m) rakentamiskustannukset ovat
+       * 140 milj. euroa ja tunnelivaihtoehdon 95 milj. euroa."* Kaksi
+       * hintaa kahdelle ratkaisulle, eikä valintaa ole tehty — yhden
+       * poimiminen kustannusarvioksi olisi arvaus
+       * ([[source-marks-own-uncertainty]]). Tämä este koskee vain
+       * rakentamiskustannusankkuria, jossa muoto esiintyy; vanhat
+       * ankkurit pysyvät ennallaan.
+       */
+      /*
+       * EROTUS EI MYOSKAAN OLE HANKKEEN HINTA. Rovaniemen Ounasvaaran
+       * lukiosta: *"...ja myös rakentamiskustannukset ovat 450 000 euroa
+       * edullisemmat, Lappi Areenan yläpuolinen vaihtoehto on
+       * kokonaisuutena edullisempi."* 450 000 € on kahden sijainnin
+       * EROTUS, ei lukion hinta. Vertailusanat tulevat summan JALKEEN,
+       * joten tama este katsoo myos eteenpain — toisin kuin
+       * `SIDE_COST`, jonka kaikki muodot ovat luvun edella.
+       */
+        /*
+         * VAIN UUDELLE `rakentamiskustannu`-ANKKURILLE, ja raja on
+         * mitattu. Kokeilin tätä kaikille päätöspassin ankkureille ja
+         * myös tiedotepassiin: **15 riviä menetti kustannuksensa**,
+         * jotka oli kannassa oikein (Hermannin rantatie 99,5 M€, Turun
+         * raitiotie 465 M€, Asemapäällikönkatu 5,2 M€…). Helsingin
+         * katusuunnitelmateksteissä esiintyy sekä "osuus on" että
+         * "vaihtoehto" aivan oikean summan lähellä, joten laajempi este
+         * poisti enemmän kuin se korjasi ([[test-filter-against-approved]]).
+         */
+        if (
+          /^rakentamiskustannu/i.test(match[0]) &&
+          onVaihtoehtolaskelma(text, at, match[0].length)
+        ) {
+          continue
+        }
+
+      if (/^rakentamiskustannu/i.test(match[0])) {
+        const vertailuIkkuna = text.slice(Math.max(0, at - 220), at + match[0].length + 120)
+        const jatko = text.slice(at + match[0].length, at + match[0].length + 120)
+        /* Toinen summa heti perässä: kaksi hintaa, ei yhtä. */
+        const toinenSumma = /\d[\d  .,]*\s*(?:milj\w*|euroa|eur\b|€)/i.test(jatko)
+        if (
+          /edullisemp|kalliimp|halvemp|korkeamp|suuremp|pienemp|enemm[aä]n|v[aä]hemm[aä]n/i.test(
+            vertailuIkkuna
+          )
+        ) {
+          continue
+        }
+        /*
+         * "VAIHTOEHTO" YKSIN EI RIITA ESTEEKSI, ja tama raja on mitattu.
+         * Merven raiteen oma arvio on *"rakentamiskustannukset olisivat
+         * noin 11 miljoonaa euroa riippuen valittavasta
+         * toteutusvaihtoehdosta"* — yksi arvio varauksella, ja juuri se
+         * luku puuttui kannasta. Parainen–Nauvossa taas on KAKSI lukua
+         * ("siltavaihtoehdon ... 140 milj. euroa ja tunnelivaihtoehdon
+         * 95 milj. euroa"). Ero on toinen summa, ei sana.
+         */
+        if (/vaihtoehd/i.test(vertailuIkkuna) && toinenSumma) continue
+      }
 
       const raw = String(match[1] ?? "")
       const normalized =
