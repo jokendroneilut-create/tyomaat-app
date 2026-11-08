@@ -911,16 +911,50 @@ muistin varassa.
   hankkeella eikä sitä lue mikään ([[duplicate-hint-open-items]]).
   Kumpi tahansa ratkaistaan ensin, se vapauttaa toisen.
 
-- **Nelja lahdetta on hiljaa juuri nyt (mitattu 8.11.2026).** Kaytossa
-  343 lahteesta nelja ei ole onnistunut yli viikkoon, ja yksi niista on
-  iso:
+- **Kolme lahdetta on hiljaa (tilanne 8.11.2026 illalla, Vantaa
+  korjattu).** Kaytossa 343 lahteesta nelja ei ollut onnistunut yli
+  viikkoon. Yksi oli meidan vikamme ja on korjattu; kolme muuta eivat
+  ole:
 
-  | lahde | viimeksi onnistui | virhe |
-  |---|---|---|
-  | **Vaylavirasto hankkeet** | 22 vrk | **403 Forbidden** |
-  | Tuusniemen kaavoitus | 21 vrk | connect timeout |
-  | Kuopion vireilla olevat kaavat | 19 vrk | connect timeout |
-  | Vantaan vireilla olevat kaavat | 10 vrk | 400 Bad Request |
+  **VANTAA KORJATTU.** Virhe oli `400 Bad Request`, ja syy luettavissa
+  GeoServerin vastauksesta: *"Feature type kaava:kaavat_vireilla
+  unknown"*. Taso on jaettu kahtia (`kaava:asemakaavat_vireilla`, 84
+  kohdetta, ja `kaava:yleiskaavat_vireilla`, 2 kohdetta). Lahteen
+  osoite paivitettiin asemakaavatasoon, jonka kentat (`kaavalinkki`,
+  `kaavatunnus`, `kaavanimi1`) vastaavat keraajan odotuksia
+  sellaisenaan. **Yleiskaavataso jai kytkematta**: sen kentat ovat eri
+  nimisia (`nimi`, `kaavatunnusyleinen`), eika kahta tasoa voi hakea
+  samassa kutsussa (HTTP 500).
+
+  **KOLME MUUTA: vika ei ole koodissa vaan siina mista haku lahtee.**
+  Kaikki kolme vastaavat minun koneeltani normaalisti (HTTP 200,
+  0,4-2,7 s), mutta tuotannosta ne epaonnistuvat:
+
+  | lahde | viimeksi onnistui | virhe tuotannossa | omalta koneelta |
+  |---|---|---|---|
+  | **Vaylavirasto hankkeet** | 22 vrk | **403 Forbidden** | HTTP 200, 2,7 s |
+  | Tuusniemen kaavoitus | 21 vrk | connect timeout | HTTP 200, 0,4 s |
+  | Kuopion vireilla olevat kaavat | 19 vrk | connect timeout | HTTP 200, 0,6 s |
+
+  **Yhteinen piirre:** kaikki kolme ovat IPv4-only suomalaisilla
+  palvelimilla (31.172.159.2, 185.59.116.51, 185.192.15.105). Saman
+  kaupungin toinen lahde (Kuopion paatokset, 34.36.134.239 = Google
+  Cloud) toimii tuotannosta normaalisti. IPv6-selitys on poissuljettu:
+  yhdellakaan kolmesta ei ole AAAA-tietuetta. Jaljelle jaa, etta
+  palvelin pudottaa pyynnot ulkomaiselta pilvi-IP:lta -- 403 on WAF,
+  connect timeout on palomuuri.
+
+  **Vaikutus:** Vayla 269 hanketta ja 281 dokumenttia (26 jo yli 60
+  vrk nakematta), Kuopio 56 hanketta, Tuusniemi 2. Hankkeet eivat
+  vanhene vaarin, koska vanhenemissaanto vaatii terveen lahteen ja
+  toipumisajan (D-397).
+
+  **Mita voi tehda:** (1) pyytaa paasya -- Vayla on virasto jolla on
+  avoimen datan velvoite, ja pyynto on rehellinen tie; (2) ajaa nama
+  kolme keraajaa suomalaisesta IP:sta (oma kone tai pieni VPS) ja
+  kirjoittaa tulos samaan kantaan; (3) etsia Vaylalle virallinen
+  rajapinta HTML-listan tilalle. ALA kierra estoa tunnistetta
+  vaihtamalla.
 
   Vaylan 403 on todennakoisesti esto, ei katkos: ajo kaynnistyy joka
   kerta (ajettu 0 vrk sitten) mutta saa 403:n. Vaylalla on 155
