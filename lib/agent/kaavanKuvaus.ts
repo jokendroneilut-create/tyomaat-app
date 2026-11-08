@@ -38,7 +38,18 @@ const HALUTUT: { avain: string; kuvio: RegExp }[] = [
    * Kuvio vaati sijainnin ENSIMMAISEKSI sanaksi, joten Suonenjoen luku 1.2
    * jai lukematta ja kuvauksesta puuttui MISSA-puoli.
    */
-  { avain: "alue", kuvio: /^(kaava-?alue|suunnittelualue|sijainti|alueen\s+sijainti)\b/i },
+  /*
+   * "MITKA OVAT KAAVOITUKSEN LAHTOKOHDAT?" (D-394). OAS-pohjan
+   * kysymysotsikko, jonka alla on juuri se mita alue-osa hakee:
+   * sijainti, nykyiset tontit, omistus ja kulkuyhteydet. Alaotsikko
+   * ("Yleista") jaa luvun sisallon alkuun, joten se karsitaan
+   * `poimiOsat`issa.
+   */
+  {
+    avain: "alue",
+    kuvio:
+      /^(kaava-?alue|suunnittelualue|sijainti|alueen\s+sijainti|mitk[äa]\s+ovat\s+(?:kaavoituksen|kaavan)\s+l[äa]ht[öo]kohdat)\b/i,
+  },
   {
     avain: "tarkoitus",
     /*
@@ -56,8 +67,14 @@ const HALUTUT: { avain: string; kuvio: RegExp }[] = [
      * Jalkimmainen on OAS-pohjan kysymysmuoto, joka on kaytossa
      * monessa kunnassa.
      */
+    /*
+     * KOLMAS KYSYMYSMUOTO (D-394): *"Mitä alueelle suunnitellaan ja
+     * mitkä ovat asemakaavan tavoitteet?"* on Ylivieskan ja monen muun
+     * kunnan OAS-pohjan vakio-otsikko. Sanasto tunsi jo Inarin muodon
+     * ("Mihin ja mitä suunnitellaan?"), mutta ei tata.
+     */
     kuvio:
-      /^((?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen|ty[öo]n|ty[öo])?\s+(?:tarkoitus|tavoit)|kaavan\s+muutoksen\s+tavoit|tavoitteet|suunnittelun\s+tavoit|suunnitteluteht[äa]v|mihin\s+ja\s+mit[äa]\s+suunnitellaan|tiivistelm)/i,
+      /^((?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen|ty[öo]n|ty[öo])?\s+(?:tarkoitus|tavoit)|kaavan\s+muutoksen\s+tavoit|tavoitteet|suunnittelun\s+tavoit|suunnitteluteht[äa]v|mihin\s+ja\s+mit[äa]\s+suunnitellaan|mit[äa]\s+alueelle\s+suunnitellaan|tiivistelm)/i,
   },
 ]
 
@@ -140,6 +157,79 @@ function poistaToistuvatRivit(teksti: string): string {
  */
 const PALJAS_OTSIKKO = /^[A-ZÄÖÅ][A-Za-zÄÖÅäöå\- ]{2,44}$/
 
+/*
+ * OAS-POHJAN KYSYMYSOTSIKOT (D-394).
+ *
+ * Ylivieskan OAS:ssa — ja samassa muodossa monen muun kunnan — luvut
+ * ovat kysymyksia ilman numerointia:
+ *
+ *   Mika on Osallistumis- ja arviointisuunnitelma (OAS)?
+ *   Mita alueelle suunnitellaan ja mitka ovat asemakaavan tavoitteet?
+ *   Mitka ovat kaavoituksen lahtokohdat?
+ *
+ * `OTSIKKORIVI` vaatii numeron ja `onPaljasOtsikko` enintaan nelja sanaa
+ * ilman valimerkkeja, joten kumpikaan ei tunnistanut naita: Ylivieskan
+ * Koskipuhdon kortteli 102:n OAS:sta ei loytynyt YHTAAN lukua, ja
+ * lauseankkurin ainoa kelpaava osuma oli sisallysluettelossa.
+ *
+ * Kysymysotsikko on turvallinen tuntomerkki, koska se vaatii kolme
+ * asiaa yhdessa: kysymyssana alussa, kysymysmerkki lopussa eika
+ * sivunumeroa perassa. Sisallysluettelon rivi paattyy sivunumeroon
+ * ("...TAVOITTEET? 2"), joten se ei kelpaa otsikoksi.
+ */
+/*
+ * SANARAJA EI OLE `\b` (sama ansa kuin `ANKKURI`ssa). JavaScriptin `\b`
+ * on ASCII-rajainen, joten "Mitkä ovat…" ei tuottanut osumaa lainkaan:
+ * sanan viimeinen merkki "ä" on `\w`:n ulkopuolella, eika sen ja
+ * valilyonnin valiin synny rajaa. Mitattu suoraan: ehto palautti
+ * `false` otsikolle *"Mitkä ovat kaavoituksen lähtökohdat?"*.
+ */
+const KYSYMYSSANA =
+  /^(mik[äa]|mit[äa]|mitk[äa]|miten|mihin|milloin|miksi|ketk[äa]|kuka|kuinka)(?![A-Za-zÅÄÖåäö])/i
+
+const KYSYMYSOTSIKKO_MAX = 110
+
+export function onKysymysotsikko(rivi: string): boolean {
+  const t = rivi.trim()
+  if (!t.endsWith("?")) return false
+  if (t.length > KYSYMYSOTSIKKO_MAX) return false
+  return KYSYMYSSANA.test(t)
+}
+
+/*
+ * KYSYMYSOTSIKKO JAKAUTUU KAHDELLE RIVILLE. Taitto katkaisee pitkan
+ * otsikon kesken:
+ *
+ *   "Mita alueelle suunnitellaan ja mitka ovat asemakaavan"
+ *   "tavoitteet?"
+ *
+ * Rivit yhdistetaan ennen lukujakoa. Ehdot ovat tiukat, jottei oikea
+ * virke liity otsikkoon: alkurivi alkaa kysymyssanalla eika pääty
+ * kysymysmerkkiin, ja jatkorivi on lyhyt ja paattyy kysymysmerkkiin.
+ */
+function yhdistaKysymysotsikot(rivit: string[]): string[] {
+  const JATKO_MAX = 40
+  const tulos: string[] = []
+  for (let i = 0; i < rivit.length; i += 1) {
+    const t = rivit[i].trim()
+    const seuraava = (rivit[i + 1] ?? "").trim()
+    const yhdessa = `${t} ${seuraava}`
+    if (
+      KYSYMYSSANA.test(t) &&
+      !t.endsWith("?") &&
+      seuraava.endsWith("?") &&
+      seuraava.length <= JATKO_MAX &&
+      yhdessa.length <= KYSYMYSOTSIKKO_MAX
+    ) {
+      tulos.push(yhdessa)
+      i += 1
+      continue
+    }
+    tulos.push(rivit[i])
+  }
+  return tulos
+}
+
 /* Sivun alatunniste ("Salon kaupunki  4") ja kuvateksti eivat ole otsikoita. */
 const EI_OTSIKKO = /^(kuva|taulukko|liite)\b|\d\s*$/i
 
@@ -193,8 +283,16 @@ const TEKIJANOIKEUS = /[©]/
  * nimi. Sanalista on suljettu, jotta "korttelin 9 Armfeltin" ei katkaise
  * oikeaa lausetta.
  */
+/*
+ * "2.3 ASEMAKAAVAN TOTEUTTAMINEN" (D-394). Ylivieskan Koskipuhdon
+ * korttelin 25 kuvauksessa — seka kannassa etta uudessa poiminnassa —
+ * luku jatkui seuraavan luvun otsikkoon ja siita eteenpain
+ * toteutusvastuisiin ("Vesijohtoverkoston yllapidosta vastaa...").
+ * Nimi on kaavaselostuksen vakioluku, joten se kuuluu tahan suljettuun
+ * sanastoon.
+ */
 const LUVUN_ALKU =
-  /\s\d{1,2}(?:\.\d{1,2})*\.?\s+(Tiivistelmä|Lähtökohdat|Selvitys|Suunnittelun|Asemakaavan kuvaus|Perus-|Osallistumis|Vaikutusten|Kaavaratkaisu)/
+  /\s\d{1,2}(?:\.\d{1,2})*\.?\s+(Tiivistelmä|Lähtökohdat|Selvitys|Suunnittelun|Asemakaavan kuvaus|Asemakaavan toteuttaminen|Perus-|Osallistumis|Vaikutusten|Kaavaratkaisu)/
 
 function katkaiseLukuun(sisalto: string): string {
   const osuma = sisalto.match(LUVUN_ALKU)
@@ -213,7 +311,7 @@ function katkaiseLukuun(sisalto: string): string {
 }
 
 function jaaLuvuiksi(rivit: string[], salliPaljaat: boolean) {
-  const luvut: { otsikko: string; sisalto: string[] }[] = []
+  const luvut: { otsikko: string; sisalto: string[]; kysymys?: boolean }[] = []
   for (const rivi of rivit) {
     const otsikko = rivi.match(OTSIKKORIVI)
     if (otsikko) {
@@ -222,6 +320,15 @@ function jaaLuvuiksi(rivit: string[], salliPaljaat: boolean) {
     }
     if (salliPaljaat && onPaljasOtsikko(rivi)) {
       luvut.push({ otsikko: rivi.trim(), sisalto: [] })
+      continue
+    }
+    /*
+     * Kysymysotsikko kelpaa MOLEMMISSA jasennyksissa (D-394), koska se
+     * ei voi olla leipatekstia: numeroidussa selostuksessa tallaista
+     * rivia ei ole, joten selostusten kasittely ei muutu.
+     */
+    if (onKysymysotsikko(rivi)) {
+      luvut.push({ otsikko: rivi.trim(), sisalto: [], kysymys: true })
       continue
     }
     if (SIVULASKURI.test(rivi.trim()) || TEKIJANOIKEUS.test(rivi)) continue
@@ -241,7 +348,7 @@ function katkaise(teksti: string, pituus: number): string {
   return `${(vali > 0 ? leikattu.slice(0, vali) : leikattu).trim()}…`
 }
 
-function poimiOsat(luvut: { otsikko: string; sisalto: string[] }[]): string[] {
+function poimiOsat(luvut: { otsikko: string; sisalto: string[]; kysymys?: boolean }[]): string[] {
   const osat: string[] = []
 
   for (const { avain, kuvio } of HALUTUT) {
@@ -250,7 +357,20 @@ function poimiOsat(luvut: { otsikko: string; sisalto: string[] }[]): string[] {
     )
     if (!luku) continue
 
-    const sisalto = katkaiseLukuun(luku.sisalto.join(" ").replace(/\s+/g, " ").trim())
+    /*
+     * ALAOTSIKKO POIS KYSYMYSLUVUN ALUSTA (D-394). OAS-pohjassa
+     * kysymysotsikon alla on paljas alaotsikko ("Yleista"), joka jaa
+     * muuten kuvauksen ensimmaiseksi sanaksi. Karsinta tehdaan VAIN
+     * kysymysluvusta: numeroidussa selostuksessa luvun ensimmainen rivi
+     * voi olla taittunut virke joka nayttaa paljaalta otsikolta, ja sen
+     * pudottaminen poistaisi oikeaa sisaltoa.
+     */
+    const rivit = [...luku.sisalto]
+    if (luku.kysymys) {
+      while (rivit.length && (!rivit[0].trim() || onPaljasOtsikko(rivit[0]))) rivit.shift()
+    }
+
+    const sisalto = katkaiseLukuun(rivit.join(" ").replace(/\s+/g, " ").trim())
 
     /*
      * Liian lyhyt luku on otsikko ilman sisältöä (esim. viittaus
@@ -270,7 +390,7 @@ export function kaavanKuvausTekstista(raaka: string | null | undefined): string 
   const teksti = poistaToistuvatRivit(siisti(yhdistaTavutus(String(raaka ?? ""))))
   if (!teksti) return null
 
-  const rivit = teksti.split("\n")
+  const rivit = yhdistaKysymysotsikot(teksti.split("\n"))
 
   let osat = poimiOsat(jaaLuvuiksi(rivit, false))
   if (!osat.length) osat = poimiOsat(jaaLuvuiksi(rivit, true))

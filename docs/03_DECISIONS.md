@@ -51,6 +51,110 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-394 – OAS-pohjan otsikot ovat kysymyksiä, ja liitteen lukija oli kirjoitettu muttei kytketty
+
+Johannes 8.11.2026 Ylivieskan Koskipuhdon korttelin 102 rivistä
+(`0c6cc397`): *"tästä pitäisi poimia kuvaukseen liitteessä oleva
+kuvaus… tarkista kanta jos tästä lähteestä on tullut muita aiemmin ja
+korjaa jatkoa varten myös poimija."*
+
+Rivillä oli 156 merkkiä menettelytietoa (*"…on tullut vireille
+teknisten palveluiden lautakunnan päätöksellä 3.11.2026 § 118."*).
+Hankkeen sisältö — lämpölaitostoimintojen kehittäminen Herrforsin
+aloitteesta — on OAS-liitteessä. **Kaksi erillistä syytä**, ja kumpikin
+olisi yksinään riittänyt tyhjään tulokseen.
+
+#### 1. Keräin ei avannut liitettä lainkaan
+
+`collectYlivieskaKaavaSource` luki vain sivun `<p>`-tekstin. Yleinen
+kytkentä `taydennaKuvausLiitteesta` (D-319) on ollut olemassa kolme
+viikkoa ja se on kahden rivin työ, mutta tätä kerääjää ei ollut
+kytketty — sama kuvio kuin Euralla D-388:ssa
+([[extractor-exists-unwired]]).
+
+#### 2. Jäsennin ei tunnistanut yhtään lukua OAS:sta
+
+Ylivieskan OAS:n otsikot ovat **numeroimattomia kysymyksiä**:
+
+> *Mikä on Osallistumis- ja arviointisuunnitelma (OAS)?*
+> *Mitä alueelle suunnitellaan ja mitkä ovat asemakaavan tavoitteet?*
+> *Mitkä ovat kaavoituksen lähtökohdat?*
+
+`OTSIKKORIVI` vaatii numeron ja `onPaljasOtsikko` enintään neljä sanaa
+ilman välimerkkejä, joten kumpikaan ei osunut. Lauseankkurin ainoa
+kelpaava osuma oli **sisällysluettelossa**, ja `onSisallysluettelo`
+hylkäsi sen oikein (D-388) — eli tulos oli `null` vaikka teksti oli
+luettu kokonaan.
+
+Kysymysotsikko vaatii nyt kolme asiaa yhdessä: kysymyssana alussa,
+kysymysmerkki lopussa eikä sivunumeroa perässä. Sisällysluettelon rivi
+päättyy sivunumeroon (*"…TAVOITTEET? 2"*), joten se ei kelpaa
+otsikoksi. Pitkä otsikko taittuu kahdelle riville (*"…mitkä ovat
+asemakaavan"* / *"tavoitteet?"*), joten rivit yhdistetään ennen
+lukujakoa.
+
+**Oma virhe matkalla: `\b` ei tunne ääkköstä.** Ensimmäinen versio
+kysymyssanasta päättyi `\b`:hön, ja ehto palautti `false` otsikolle
+*"Mitkä ovat kaavoituksen lähtökohdat?"* — "ä" on JavaScriptin `\w`:n
+ulkopuolella, eikä sen ja välilyönnin väliin synny sanarajaa. Sama ansa
+on kirjattu `ANKKURI`in jo D-362:ssa, ja astuin siihen silti.
+
+#### Kuivaharjoitus hylkäsi oman ensimmäisen ratkaisuni
+
+Yritin samalla parantaa sivun kuvausta: kaikki kappaleet mukaan ja
+menettelyvirkkeet pois `kuulutuksenOmaSisalto`lla. Se oli väärin, ja
+**vain tuotoksen lukeminen kertoi sen**:
+
+- Koskipuhdon Rantavainiosta tuli 1 180 merkkiä vuoden 2021
+  yleisötilaisuuden ohjetta: *"Ennen tapahtumaa: – Tarkista, että
+  internetyhteys…"*. Sivuille jää vanhoja vaiheita, joita
+  menettelysuodatin ei tunne.
+- Virkejako katkaisee **järjestysluvun**: "Koskipuhdon 3. kaupunginosan"
+  pilkkoutuu pisteestä, ja alle 25 merkin pala putosi pois — kuvaus
+  alkoi sanalla "kaupunginosan".
+
+Sivun kuvaus jäi siksi ennalleen (yksi kappale), ja muutos on vain
+liitteen lukeminen. Sama järjestyslukuansa pakotti takautuvassa ajossa
+kasvattamaan vertailutunnisteen 60 merkkiin: 14 merkin "Koskipuhdon 3."
+olisi tunnistanut **jokaisen** Koskipuhdon tekstin saman tekstin
+vanhaksi versioksi ja kirjoittanut 974 merkin kuvauksen päälle 400
+merkkiä ([[backfill-shorter-is-cleanup]]).
+
+#### Tulos
+
+| | |
+|---|---|
+| lähteen kaavasivuja | 8 |
+| kuvaus parani | **3** (156 → 825, 165 → 647, 74 → 361) |
+| ei parantunut | 5: sivun oma kuvaus yli 300 merkin kynnyksen, joten liitettä ei haeta |
+| kirjoitettu | 3 dokumenttia, 2 jonoriviä, 0 hanketta |
+
+Kaksi jonoriviä ja hanketta ohitettiin tarkoituksella: Koskipuhdon
+korttelilla 25 oli jo 974 merkkiä, jonka yleinen täydentäjä oli hakenut
+samasta selostuksesta. **Vertailu tehdään kohteen omaa tekstiä vasten,
+ei dokumentin** — dokumentissa oli 74 merkkiä, ja pelkkä
+dokumenttivertailu olisi kirjoittanut lyhyemmän päälle
+([[both-sides-can-be-wrong]]).
+
+Samalla korjattiin `LUVUN_ALKU`-sanastoon **"Asemakaavan
+toteuttaminen"**: korttelin 25 kuvaus jatkui seuraavan luvun otsikkoon
+ja siitä toteutusvastuisiin (*"Vesijohtoverkoston ylläpidosta vastaa
+vesiosuuskunta"*). Sama roska on yhä kannassa olevassa 974 merkin
+tekstissä, mutta uusi poiminta ei enää tuota sitä.
+
+#### Muutos ei koske muita lähteitä
+
+A/B-ajo **55 oikealla kaava-PDF:llä 30 kunnasta** (vanha jäsennin
+`git show HEAD` vs. uusi, sama teksti molemmille): **55 samaa, 0
+muuttunutta**. Kysymysotsikko vain *lisää* lukurajoja, eikä numeroidussa
+selostuksessa ole tällaisia rivejä ([[test-filter-against-approved]]).
+Lisäksi kolme uutta yksikkötestiä ja 2 595 testiä läpi.
+
+Muutetut: `lib/agent/kaavanKuvaus.ts`,
+`lib/agent/discovery/collectors/apiCollector.ts`,
+`lib/agent/kaavanKuvaus.spec.ts`,
+`scripts/taydenna-ylivieskan-kuvaukset.ts` (uusi).
+
 ### D-393 – Haitari on vaiheita, kuvaus on sen yläpuolella — ja valitsin osui väärään elementtiin
 
 Johannes 8.11.2026 Kuusamon rivistä (`02ddaf4e`): *"tästä puuttuu

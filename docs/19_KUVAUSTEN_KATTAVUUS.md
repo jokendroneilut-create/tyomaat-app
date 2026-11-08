@@ -46,6 +46,7 @@ avausta 2 467:stä). Tämä on se luku jota seurataan, ei rivien määrä.
 | Kouvolan ajankohtaiset asemakaavat | 14 / 26 | yleinen täydentäjä, D-271 |
 | Pornaisten vireillä olevat kaavat | 9 / 25 (hankkeista 12 / 27 yli 200 merkin) | yleinen täydentäjä 8.11.2026, D-392 |
 | Kuusamon vireillä olevat asemakaavat | 4 / 7 (3 sivua poistettu, HTTP 404) | ingressi `<h1>`:n jälkeen, D-393 |
+| Ylivieskan vireillä olevat asemakaavat | 3 / 8 (5:llä sivun oma kuvaus yli kynnyksen) | liite kytketty + OAS:n kysymysotsikot, D-394 |
 | Mustasaaren vireillä olevat asemakaavat | 7 / 21 | yleinen täydentäjä |
 | Kangasalan vireillä olevat asemakaavat | 7 / 19 | yleinen täydentäjä |
 | Kauniaisten vireillä olevat asemakaavat | 3 / 15 | yleinen täydentäjä |
@@ -59,6 +60,30 @@ npx tsx scripts/taydenna-kaavakuvaukset.ts "<source_name>"
 npx tsx scripts/taydenna-kaavakuvaukset.ts "<source_name>" --apply
 npx tsx scripts/synkronoi-kuvaus-nakyviin.ts --apply   # hankkeen näkyvä kenttä
 ```
+
+**OAS-POHJAN OTSIKOT OVAT KYSYMYKSIÄ (D-394).** Ylivieskan OAS:ssa luvut
+ovat numeroimattomia kysymyksiä (*"Mitä alueelle suunnitellaan ja mitkä
+ovat asemakaavan tavoitteet?"*, *"Mitkä ovat kaavoituksen
+lähtökohdat?"*). `OTSIKKORIVI` vaatii numeron ja `onPaljasOtsikko`
+enintään neljä sanaa ilman välimerkkejä, joten koko OAS:sta ei löytynyt
+yhtään lukua. Kysymysotsikko vaatii nyt kolme asiaa yhdessä:
+kysymyssana alussa, kysymysmerkki lopussa eikä sivunumeroa perässä —
+sisällysluettelon rivi päättyy sivunumeroon, joten se ei kelpaa.
+Taittunut otsikko yhdistetään kahdelta riviltä.
+
+Tähän lähteeseen ei myöskään ollut kytketty liitteen lukijaa lainkaan:
+`taydennaKuvausLiitteesta` on kahden rivin työ, ja se oli tehty vain
+osalle kerääjistä ([[extractor-exists-unwired]]).
+
+**Kaksi ansaa, joihin astuin matkalla.** `` ei tunne ääkköstä, joten
+kysymyssanan ehto palautti `false` otsikolle *"Mitkä ovat…"* (sama ansa
+kuin `ANKKURI`ssa, D-362). Ja virkejako katkaisee järjestysluvun
+("Koskipuhdon 3. kaupunginosan"), mikä sekä pudotti kuvauksen alun että
+teki takautuvan ajon vertailutunnisteesta 14 merkin mittaisen — se olisi
+kirjoittanut 974 merkin kuvauksen päälle 400 merkkiä.
+
+**Muutos ei koske muita lähteitä:** A/B-ajo 55 kaava-PDF:llä 30
+kunnasta antoi 55 samaa, 0 muuttunutta.
 
 **HAITARI ON VAIHEITA, KUVAUS ON SEN YLÄPUOLELLA (D-393).** Kuusamon
 kaavasivulla keräin luki vain `.accordion-row` -rivit, ja ne ovat

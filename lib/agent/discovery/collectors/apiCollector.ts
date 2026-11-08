@@ -11672,6 +11672,20 @@ async function collectYlivieskaKaavaSource(source: DiscoverySource) {
   let found = 0
   let saved = 0
 
+  /*
+   * LIITTEEN KUVAUS MYOS TASTA LAHTEESTA (D-394).
+   *
+   * Johannes 8.11.2026 Koskipuhdon korttelin 102 rivista: *"tasta
+   * pitaisi poimia kuvaukseen liitteessa oleva kuvaus."* Sivun oma
+   * teksti on menettelytietoa (mika lautakunta, milloin nahtavilla,
+   * mihin mielipiteet), ja MITA alueelle tulee lukee ainoastaan
+   * OAS-liitteessa. Kytkenta on kahden rivin tyo
+   * (`taydennaKuvausLiitteesta`), mutta se oli tehty vain osalle
+   * keraajista -- tama oli yksi puuttuvista
+   * ([[extractor-exists-unwired]]).
+   */
+  const liiteBudjetti: LiiteBudjetti = { haettu: 0, raja: 12 }
+
   for (const link of planLinks) {
     found += 1
 
@@ -11687,7 +11701,18 @@ async function collectYlivieskaKaavaSource(source: DiscoverySource) {
       .map((p) => $(p).text().replace(/\s+/g, " ").trim())
       .filter(Boolean)
     const statusLine = paragraphs[0] ?? ""
-    const description = paragraphs.find((p, index) => index > 0 && p.length > 40) ?? null
+    /*
+     * SIVUN KUVAUS PYSYY ENNALLAAN: yksi kappale, ei koko sivu.
+     *
+     * Kokeilin ottaa kaikki kappaleet ja karsia menettelyvirkkeet
+     * `kuulutuksenOmaSisalto`lla. Kuivaharjoitus kertoi miksi se ei
+     * kelpaa: Ylivieskan sivuille jaa vanhoja vaiheita, ja Koskipuhdon
+     * Rantavainiosta tuli 1 180 merkkia vuoden 2021 yleisotilaisuuden
+     * ohjetta (*"Ennen tapahtumaa: - Tarkista, etta internetyhteys..."*).
+     * Lisaksi virkejako katkaisee jarjestysluvun ("Koskipuhdon 3.
+     * kaupunginosan") ja pudotti kuvauksen alun.
+     */
+    const sivunKuvaus = paragraphs.find((p, index) => index > 0 && p.length > 40) ?? null
     const phase = ylivieskaPhaseFromText(content.text())
     const completed = phase === "Voimaantulo"
 
@@ -11698,6 +11723,12 @@ async function collectYlivieskaKaavaSource(source: DiscoverySource) {
 
     const slugMatch = link.href.match(/\/([^/]+)\/?$/)
     const slug = slugMatch ? slugMatch[1] : null
+
+    const description = await taydennaKuvausLiitteesta(
+      sivunKuvaus,
+      liitelinkit($, link.href, content),
+      liiteBudjetti
+    )
 
     const rawText = JSON.stringify({ title: link.title, phase, description: description ?? statusLine, contacts })
     const contentHash = hashContent(rawText)

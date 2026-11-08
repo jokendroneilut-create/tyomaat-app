@@ -403,6 +403,58 @@ describe("sisallysluettelo ilman pistejonoa (D-388)", () => {
     expect(kuvaus).toContain("353 ja 354")
   })
 
+  it("lukee OAS:n kysymysotsikot (Ylivieskan kortteli 102)", () => {
+    /*
+     * D-394: otsikot ovat numeroimattomia kysymyksia, ja pitka otsikko
+     * on taittunut kahdelle riville. Kumpikaan vanha saanto ei
+     * tunnistanut niita, joten koko OAS:sta ei loytynyt yhtaan lukua.
+     */
+    const teksti = [
+      "Mita alueelle suunnitellaan ja mitka ovat asemakaavan",
+      "tavoitteet?",
+      "Oy Herrfors Ab:n aloitteesta ryhdytaan alueidenkayttolain mukaisiin toimenpiteisiin asemakaavan muuttamiseksi voimassa olevan asemakaavan mukaisen 3. kaupunginosan korttelin 102 osalla. Asemakaavan muutoksen tavoitteena on mahdollistaa lampolaitostoimintojen kehittaminen.",
+      "Mitka ovat kaavoituksen lahtokohdat?",
+      "Yleista",
+      "Suunnittelualue sijoittuu kaavoitetulle teollisuusalueelle ja se muodostuu yhdyskuntateknista huoltoa palvelevien rakennusten ja laitosten alueen (ET) tontista. ET-tontilla sijaitsee kaukolampolaitos.",
+    ].join(String.fromCharCode(10))
+    const kuvaus = kaavanKuvausTekstista(teksti)
+    expect(kuvaus).toContain("mahdollistaa lampolaitostoimintojen kehittaminen")
+    /* Lahtokohdat-luku antaa MISSA-puolen... */
+    expect(kuvaus).toContain("teollisuusalueelle")
+    /* ...mutta alaotsikko "Yleista" ei jaa kuvauksen alkuun. */
+    expect(kuvaus?.startsWith("Yleista")).toBe(false)
+  })
+
+  it("ei pida sisallysluettelon kysymysrivia otsikkona", () => {
+    /*
+     * Sisallysluettelon rivi paattyy sivunumeroon, ei kysymysmerkkiin,
+     * joten se ei kelpaa otsikoksi -- muuten luvuksi tulisi luettelon
+     * loppu.
+     */
+    const teksti = [
+      "Sisallys",
+      "MITA ALUEELLE SUUNNITELLAAN JA MITKA OVAT ASEMAKAAVAN TAVOITTEET? 2",
+      "MITKA OVAT KAAVOITUKSEN LAHTOKOHDAT? 2",
+      "YLEISTA 2 VALTAKUNNALLISET ALUEIDENKAYTTOTAVOITTEET 3 YLEISKAAVA 5 ASEMAKAAVA 6",
+    ].join(String.fromCharCode(10))
+    expect(kaavanKuvausTekstista(teksti)).toBeNull()
+  })
+
+  it("katkaisee luvun otsikkoon 'Asemakaavan toteuttaminen'", () => {
+    /*
+     * D-394: Ylivieskan korttelin 25 kuvaus jatkui seuraavaan lukuun ja
+     * siita toteutusvastuisiin.
+     */
+    const teksti = [
+      "2.2 Suunnittelun tavoitteet",
+      "Suunnittelun tavoitteena on muuttaa nykyinen ALK-tontti asuinpientalojen korttelialueeksi (AP). Ajoneuvoliikenne tontille tapahtuu Jousitien kautta. 2.3 Asemakaavan toteuttaminen Asemakaavan toteuttamisesta vastaa kaupunki jate- ja hulevesiviemarointien osalta. Vesijohtoverkoston yllapidosta vastaa vesiosuuskunta.",
+    ].join(String.fromCharCode(10))
+    const kuvaus = kaavanKuvausTekstista(teksti)
+    expect(kuvaus).toContain("Jousitien kautta.")
+    expect(kuvaus).not.toContain("Asemakaavan toteuttaminen")
+    expect(kuvaus).not.toContain("vesiosuuskunta")
+  })
+
   it("lukee OAS:n tavoiteluvun (Panelian datakeskus)", () => {
     const teksti = [
       "2 KAAVAN NIMI JA SUUNNITTELUALUEEN SIJAINTI",
