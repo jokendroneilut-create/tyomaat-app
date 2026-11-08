@@ -183,6 +183,59 @@ Kuivaharjoituksen voi ajaa milloin vain, se ei kirjoita mitaan:
 
 ---
 
+## Tilanne 8.11.2026 — mitattu, ja kolme asiaa on eri kuin yllä
+
+Johannes kysyi uudelleen: *"missä vaiheessa kaavoitusvaiheessa oleva
+hanke poistuu?"* Kysymys toistuu, koska **tämä dokumentti kuvaa polun
+joka ei ole käytössä**. Mitattu koko kannasta:
+
+| kaavoitusvaiheen rivejä | 3 103 |
+|---|---|
+| asiakkaalle näkyviä | **3 011** |
+| `expired` | 63 |
+| käsin piilotettuja (`is_public = false`) | 29 |
+
+Poistuneiden 63 syyt:
+
+| syy | kpl | kuka |
+|---|---|---|
+| `kaava_lainvoimainen_yli_24kk` | 41 | `expire-stale-zoning` (5:20) |
+| `lahteen_arkisto_osio` | 21 | kerääjä, joka lukee lähteen arkisto-osion |
+| `kaava_kumottu` | 1 | `expire-stale-zoning` |
+
+Lisäksi **40 riviä on siirtynyt eteenpäin** vaiheeseen "Suunnittelu"
+(`phase_source = kaavan_lainvoima`, `advance-effective-zoning` 5:15).
+
+### 1. Pääpolku on yhä kytkin pois päältä
+
+`expire-unlisted-projects` (5:45) on **tarkkailija, ei poistaja**:
+`UNLISTED_EXPIRY_ENABLED = false`. Kytkin jätettiin tarkoituksella
+pois, jotta ensimmäinen aito vanheneminen tehdään tietoisesti ja
+kuivaharjoitus luetaan riveittäin. **Yksikään kaavarivi ei siis ole
+koskaan poistunut listalta katoamisen takia**, vaikka tämä dokumentti
+on kertonut sen pääpolkuna 29.8.2026 alkaen.
+
+Kuivaharjoitus 8.11.2026 (`npx tsx scripts/dry-run-unlisted-expiry.ts`):
+313 dokumenttia yli 60 vrk:n kynnyksen, **10 vanhennettavaa**, 0
+palautettavaa. Yhdeksän niistä on kaavoitusvaiheessa ja kahdeksan on
+viimeksi nähty 31.8.–1.9. — eli samalta päivältä. Ennen kytkimen
+kääntämistä kannattaa tarkistaa, onko kyse kuntien sivumuutoksista vai
+siitä että yksi lähde lakkasi tuottamasta.
+
+### 2. Kumpikin käytössä oleva polku vaatii kenttää jota harva lähde antaa
+
+Sekä siirto että vanheneminen lukevat `kaava_tila` + `voimaantulo`
+-parin. Ne tuottaa vain osa kerääjistä, joten 3 011 näkyvästä rivistä
+valtaosa ei voi poistua kummankaan säännön kautta.
+
+### 3. Lopputila nostaa nyt katselmointiin (D-396, 8.11.2026)
+
+Sivupohjaiset kaavalähteet kertovat saman asian vaihetekstinä
+("Voimaantulo", "Kaava on saanut lainvoiman 20.10.2026"). Niistä **ei**
+tehdä automaattista siirtoa eikä poistoa, vaan rivi saa
+`needs_review`-merkin ja todiste kirjataan `metadata.kaava_lopputila`iin.
+Ensimmäinen ajo nosti 37 riviä (34 lainvoimaista, 3 keskeytettyä).
+
 ## Avoimet aukot
 
 - **Rakentamisvaiheen hankkeille ei ole poistumispolkua.** Noin 2400
