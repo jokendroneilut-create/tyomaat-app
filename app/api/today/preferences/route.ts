@@ -1,22 +1,87 @@
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { createServerClient } from "@supabase/ssr"
 import { createClient } from "@supabase/supabase-js"
+
+export const runtime = "nodejs"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+/*
+ * KUTSUJA LUETAAN ISTUNNOSTA, EI PYYNNON PARAMETRISTA (D-400).
+ *
+ * Taulu `user_today_preferences` on RLS:n takana ILMAN policya
+ * (docs/sql/2026-07-30_enable_rls_exposed_tables.sql, luokka C), eli
+ * siihen paasee vain `service_role`. Kun paasy suljettiin selaimelta,
+ * TAMA REITTI jai ainoaksi lukoksi -- ja lukko puuttui: `userId` tuli
+ * kyselysta ja kirjoituksen rungosta sellaisenaan, joten kenen tahansa
+ * tunnuksen asetukset olisi voinut lukea ja ylikirjoittaa pelkalla
+ * UUID:lla.
+ *
+ * Sama periaate on kirjoitettu naapurireittiin `analytics/track`
+ * heinakuussa: *"user_id luetaan aina palvelimella session-evasteesta,
+ * ei koskaan clientin lahettamasta arvosta"*. Nyt se patee myos tassa.
+ *
+ * Evastepohjainen istunto on valittu Bearer-tokenin sijaan, koska
+ * kaikki nelja kutsupaikkaa ovat selaimesta samalta originilta eivatka
+ * ne lahetä tokenia -- naita ei siis tarvitse muuttaa.
+ */
+async function kirjautunutKayttaja(): Promise<string | null> {
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll() {},
+      },
+    }
+  )
+  const { data, error } = await supabase.auth.getUser()
+  return error ? null : (data.user?.id ?? null)
+}
+
+/*
+ * Palauttaa kayttajatunnuksen jota pyynto saa kasitella, tai
+ * virhevastauksen. Clientin lahettama `userId` sailyy rajapinnassa,
+ * mutta sita EI kayteta valintaan: jos se on eri kuin istunnon
+ * kayttaja, pyynto hylataan. Nain vanha kutsutapa toimii eika
+ * hiljaista kayttajan vaihtoa voi tapahtua.
+ */
+function tarkistaKayttaja(
+  istunnonId: string | null,
+  pyynnonId: unknown
+): { ok: true; userId: string } | { ok: false; vastaus: NextResponse } {
+  if (!istunnonId) {
+    return {
+      ok: false,
+      vastaus: NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 }),
+    }
+  }
+  if (typeof pyynnonId === "string" && pyynnonId && pyynnonId !== istunnonId) {
+    return {
+      ok: false,
+      vastaus: NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 }),
+    }
+  }
+  return { ok: true, userId: istunnonId }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId")
-
-    if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: "userId missing" },
-        { status: 400 }
-      )
-    }
+    const tarkistus = tarkistaKayttaja(
+      await kirjautunutKayttaja(),
+      searchParams.get("userId")
+    )
+    if (!tarkistus.ok) return tarkistus.vastaus
+    const userId = tarkistus.userId
 
     const { data, error } = await supabaseAdmin
       .from("user_today_preferences")
@@ -96,14 +161,10 @@ async function saveSettings(userId: string, settings: any) {
 
 export async function POST(request: Request) {
   try {
-    const { userId, settings } = await request.json()
-
-    if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: "userId missing" },
-        { status: 400 }
-      )
-    }
+    const { userId: pyydetty, settings } = await request.json()
+    const tarkistus = tarkistaKayttaja(await kirjautunutKayttaja(), pyydetty)
+    if (!tarkistus.ok) return tarkistus.vastaus
+    const userId = tarkistus.userId
 
     return NextResponse.json({
       ok: true,
@@ -124,14 +185,10 @@ export async function POST(request: Request) {
  */
 export async function PATCH(request: Request) {
   try {
-    const { userId, settings: patch } = await request.json()
-
-    if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: "userId missing" },
-        { status: 400 }
-      )
-    }
+    const { userId: pyydetty, settings: patch } = await request.json()
+    const tarkistus = tarkistaKayttaja(await kirjautunutKayttaja(), pyydetty)
+    if (!tarkistus.ok) return tarkistus.vastaus
+    const userId = tarkistus.userId
 
     if (!patch || typeof patch !== "object") {
       return NextResponse.json(

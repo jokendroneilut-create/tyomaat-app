@@ -51,6 +51,99 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-400 – RLS siirsi oven, eikä uutta lukkoa laitettu: `today/preferences` luotti clientin lähettämään userId:hen
+
+Johannes kysyi 9.11.2026, miten palvelin erottaa koneellisen hakijan
+(Google vs. me) ja **pitäisikö meillä olla vastaava esto**. Kysymys
+johti oman sovelluksen tarkistukseen, ja sieltä löytyi aukko — ei
+siitä mitä etsittiin, vaan viereltä.
+
+#### Löytö
+
+`app/api/today/preferences/route.ts` käytti `service_role`-avainta ja
+otti käyttäjätunnuksen **suoraan pyynnöstä**:
+
+```
+GET  /api/today/preferences?userId=<uuid>     -> kenen tahansa asetukset
+POST /api/today/preferences  { userId, … }    -> kenen tahansa asetukset ylikirjoitettuna
+PATCH … (sama)
+```
+
+Sisältönä ovat Today-näkymän hakuasetukset: alueet, kunnat,
+hanketyypit, avainsanat, yritysprofiili ja hälytysasetukset. UUID:ta ei
+voi arvata, joten avointa vuotoa ei ollut — mutta tunnuksen tietävä
+olisi voinut lukea ja muuttaa toisen käyttäjän asetukset.
+
+#### Miksi se syntyi: korjaus siirsi oven
+
+Aukko ei ole unohdus vaan **dokumentoidun päätöksen toinen puoli**.
+`docs/sql/2026-07-30_enable_rls_exposed_tables.sql` sulki 16 taulua,
+jotka olivat auki anon-avaimelle, ja luokitteli
+`user_today_preferences` luokkaan C:
+
+> *"C) 14 taulua — vain service role (agentti/pipeline/API-reitit)"*
+> *"service_role … OHITTAA RLS:n aina — siksi puhtaasti palvelinpuolen
+> taulut tarvitsevat vain 'enable', ei policya."*
+
+Taulu suljettiin oikein. Mutta kun selaimen suora pääsy katkaistiin,
+**API-reitistä tuli ainoa lukko** — eikä sitä lukkoa laitettu. Sama
+heinäkuun korjaus kirjoitti periaatteen naapurireittiin
+`analytics/track`:
+
+> *"user_id luetaan aina palvelimella session-evästeestä, ei koskaan
+> clientin lähettämästä arvosta."*
+
+Periaate oli siis tiedossa ja kirjoitettu ylös yhden hakemiston päässä.
+Se vain ei koskenut tätä reittiä.
+
+#### Tarkistettu koko joukko, ei vain löytynyttä riviä
+
+Kaikki ei-admin-reitit jotka käyttävät `service_role`-avainta:
+
+| reitti | ottaa userId:n | tarkistaa kutsujan |
+|---|---|---|
+| `today/preferences` | kyllä | **ei** ← korjattu |
+| `feedback` | kyllä | varmistaa tunnuksen `auth.admin.getUserById`illa |
+| `digests`, `opportunity-alerts` | kyllä | `CRON_SECRET` |
+| `analytics/track`, `record-phase-change`, `yritysrekisteri` | ei | `getUser()` |
+| `agent/run-source`, `agent/verify` | ei | `verifyAdminRequest` |
+
+Tämä oli ainoa poikkeus.
+
+#### Korjaus
+
+Käyttäjä luetaan istunnon evästeestä (`createServerClient` +
+`auth.getUser()`). Clientin lähettämä `userId` säilyy rajapinnassa
+mutta **ei ohjaa valintaa**: jos se eroaa istunnon käyttäjästä, pyyntö
+hylätään 403:lla. Evästepohjainen istunto valittiin Bearer-tokenin
+sijaan, koska kaikki neljä kutsupaikkaa ovat selaimesta samalta
+originilta eivätkä lähetä tokenia — niitä ei siis tarvinnut muuttaa.
+
+Varmistettu ajossa olevaa kehityspalvelinta vasten:
+
+```
+GET   ?userId=<vieras uuid>  -> 401 {"ok":false,"error":"unauthorized"}
+POST  { userId: <vieras> }   -> 401
+PATCH { userId: <vieras> }   -> 401
+```
+
+#### robots.txt
+
+Samalla lisättiin `app/robots.ts` (`Disallow: /`). Sovellus on
+kokonaan kirjautumisen takana, joten indeksoitavaa ei ole, ja
+login-sivu hakutuloksissa näyttää rikkinäiseltä. **Se ei ole
+bottisuoja** vaan pyyntö, jota rehelliset indeksoijat noudattavat —
+sama kohteliaisuus jota itse pyydämme muilta
+(`lib/agent/kielletytLahteet.ts`).
+
+Varsinaista bottiestoa ei lisätty: suojana toimii kirjautuminen ja RLS,
+ja tunnisteeseen tai IP:hen perustuva esto osuisi ensin omiin
+työkaluihimme. Todellinen jäljellä oleva riski on kirjautunut tili joka
+imuroi kannan — sitä ei estä suodatin vaan tilikohtaisen volyymin
+seuranta, ja `analytics_events` sisältää jo datan sen mittaamiseen.
+
+Muutetut: `app/api/today/preferences/route.ts`, `app/robots.ts` (uusi).
+
 ### D-397 – Vasta toipunut lähde ei saa vanhentaa mitään
 
 Johannes 8.11.2026, kun neljä lähdettä löytyi hiljaisina: *"eikö voida
