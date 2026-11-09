@@ -151,6 +151,29 @@ omalta koneelta suomalaisesta liittymästä, ja kolme suomalaista palvelinta on
 jo estänyt meidät sieltä ([[finnish-host-blocks-cloud]], D-399). Tämä on
 ensimmäinen asia joka on todettava ennen kuin kerääjää kirjoitetaan.
 
+Reittiä ei voi todeta ilman koodia: tarkistettu 9.11.2026, ettei meillä ole
+yhtään tuotantoon vietyä reittiä joka hakisi annetun osoitteen. Testi vaatisi
+siis väliaikaisen API-reitin tai curl-askeleen CI:hin.
+
+#### Päätös 9.11.2026: ei tehdä nyt, löydöt odottavat
+
+Johannes: *"en ole varma haluanko alkaa tekemään mitään?"* — ja koska testi
+vaatisi koodia tuotantoon, työ jätetään tekemättä tietoisesti.
+
+Perustelu on se, ettei odottaminen maksa mitään: mikään ei ole rikki, ne 267
+vaihe-epäilyä ovat olleet kannassa koko ajan, ja **aineisto on rekisteri eikä
+verkkosivu** — se karttuu eikä katoa, toisin kuin Lupapisteen kuulutukset
+([[expiring-sources]]). Ainoa vanheneva asia on tämän mittauksen numerot ja
+vastaus siihen toimiiko rajapinta Vercelistä; molemmat saa uusittua yhdessä
+illassa.
+
+Aloituskohta jos asiaan palataan: (1) toimiiko rajapinta Vercelistä,
+(2) vaihesignaali katselmointijonoon, (3) kerrosalan täydennys,
+(4) vasta sitten uusien lupien louhinta.
+
+**Sivutuote, tekemättä:** tonttikartan linkkitaulusta puuttuvat meiltä Juuka,
+Parikkala ja Rääkkylä. Kolme pientä kuntaa on lisätyötä eikä korjaus.
+
 ### D-400 – RLS siirsi oven, eikä uutta lukkoa laitettu: `today/preferences` luotti clientin lähettämään userId:hen
 
 Johannes kysyi 9.11.2026, miten palvelin erottaa koneellisen hakijan
