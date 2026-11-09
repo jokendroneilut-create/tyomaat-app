@@ -106,6 +106,7 @@ liikevaihtoa ei mitata järjestelmässä.
 | 2026-10-16 | 140–260 k € | 40–120 k € (ei enää esitulovaiheessa) |
 | 2026-10-24 | 150–280 k € | 40–120 k € (ennallaan: MRR ei liikkunut) |
 | 2026-11-02 | 150–280 k € | 50–140 k € (MRR 2,6×, konversio todistettu) |
+| 2026-11-10 | 150–280 k € | 50–150 k € (1. pörssiyhtiö: Saint-Gobain PAM, 1/2027) |
 
 **Rakennuskustannuksen peruste (13.9.2026):** ~46 k riviä testattua ja
 dokumentoitua TypeScriptiä, 49 räätälöityä scraperia, discovery-/agenttiputki,
@@ -210,6 +211,35 @@ kassavirta tulee epätasaisesti: muutaman kuukauden puskuri ei ole ylimitoitus.
 
 Nämä ovat esimerkkejä, eivät toteumaa. Kun todellinen asiakasmäärä ja
 kuukausihinta ovat tiedossa, korvaa rivi oikeilla luvuilla.
+
+---
+
+## Elävä tilannekuva 2026-11-09 — ensimmäinen pörssiyhtiö lunastui
+
+**Kuudes asiakas: Saint-Gobain PAM.** Sopimus alkaa **vuoden 2027 alusta
+(1/2027)**, eli tämä on **sidottua tulevaa liikevaihtoa**, ei vielä nykyistä
+MRR:ää (joka pysyy ~646 € kunnes sopimus käynnistyy). Merkitys ei ole euroissa
+nyt vaan tässä:
+
+- **Ensimmäinen pörssiyhtiön konversio.** 24.10. ja 2.11. merkitsin
+  YIT/Saint-Gobain-demot "epäsymmetriseksi nousuvaraksi" — toinen niistä on nyt
+  lunastettu. Enterprise-putki ei ole enää hypoteesi.
+- **Referenssilogo.** Saint-Gobain PAM (monikansallinen Saint-Gobainin
+  valurautaputkiliiketoiminta) on nimi, joka de-riskaa seuraavat
+  enterprise-keskustelut ja antaa uskottavuutta pk-myyntiinkin.
+- **Konversio todistettu molemmissa segmenteissä:** 5 pk-asiakasta (~129 €/kk)
+  JA yksi enterprise. Tämä leveys on arvon kannalta enemmän kuin pelkkä kuudes
+  rivi.
+- **Hinta ei tiedossa / ei dokumentoitu tähän;** enterprise-sopimus ei
+  todennäköisesti ole pk-hintapisteessä, mutta en oleta lukua. Kun 2027-sopimus
+  käynnistyy ja hinta on tiedossa, kirjataan MRR-vaikutus.
+- YIT (toinen pörssiyhtiödemo) on yhä auki.
+
+**Vaikutus arvioon:** nykyARR ei muutu (Saint-Gobain alkaa 2027), joten
+ARR-kerroin ei liiku. Mutta ensimmäinen pörssiyhtiöreferenssi nostaa
+**strategista kattoa** (incumbentille/kumppanille ja enterprise-uskottavuudelle)
+enemmän kuin lattiaa. Kauppahinta-arvion yläpää ylös. Avoinna yhä: churn,
+kasvun jatkuvuus ja se, toistuuko enterprise-konversio (YIT).
 
 ---
 
@@ -434,6 +464,13 @@ samalla parhaan itsenäisen yrityksen ja parhaan ostokohteen.
 ---
 
 ## Päivityshistoria
+
+- **2026-11-10** — **Kuudes asiakas Saint-Gobain PAM, sopimus alkaa 1/2027**
+  (sidottua tulevaa liikevaihtoa, ei vielä MRR:ää). Ensimmäinen pörssiyhtiön
+  konversio = 24.10. merkitty enterprise-nousuvara osin lunastettu +
+  referenssilogo. NykyARR ennallaan, joten ARR-kerroin ei liiku; strateginen
+  katto ylös → kauppahinta-arvion yläpää 140 → 150 k €. Hintaa ei dokumentoitu.
+  YIT yhä auki.
 
 - **2026-11-02** — **MRR-tasanne murtui: 248 € → 646 € (ARR 7 752 €), 5 maksavaa
   (oli 2), 3 uutta tällä viikolla**, ARPU ~129 €/kk. Kohinaa siivottu (tunnukset
