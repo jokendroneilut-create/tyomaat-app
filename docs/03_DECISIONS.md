@@ -51,6 +51,106 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-401 – Ryhti mitattu: kaavapuoli on tyhjä, mutta rakennuslupa-aineisto on kansallinen ja tuore
+
+Johannes löysi 9.11.2026 harrastusprojektina tehdyn **tonttikartta.fi**-palvelun
+ja kysyi onko siitä opittavaa tai lähteitä joita emme ole huomanneet. Palvelun
+oma lähdeluettelo (`/app/static/source-links.js`, `/datasets/catalog.json`) on
+julkinen, joten sen voi lukea suoraan. Se nimeää kahdeksan ylävirran lähdettä,
+joista yksi oli meille uusi: **Ryhdin rakennusaineisto**.
+
+Ryhti oli jo tiekartalla (30.10.2026, datakeskusrekisterin ylävirrat), mutta
+vain kaavapuolen osalta eikä sitä ollut mitattu. Nyt se on.
+
+#### 1. Kaavapuoli (`ryhti_plan`) ei kelpaa vielä mihinkään — mitattu 9.11.2026
+
+| kokoelma | rivejä |
+|---|---|
+| Valmisteilla olevat asemakaavat (`pub_prep_ld_plan_ix_gs`) | **1** |
+| Valmisteilla olevat yleiskaavat (`pub_prep_lm_plan_ix_gs`) | **1** |
+| Asemakaavahakemisto, voimassa (`pub_valid_ld_plan_ix_gs`) | 5 777 |
+| Yleiskaavahakemisto, voimassa (`pub_valid_lm_plan_ix_gs`) | 651 |
+
+Tiekartan kysymykset 1–3 saivat siis vastauksen kerralla: rakenne on oikea
+(nimi, kuvauskenttä, vireilletulopäivä, nähtävilläoloaika ja `documents`-lista
+kaavaselostuksen liitelinkkeineen), mutta **vireillä olevia kaavoja on koko
+maassa kaksi**. Kunnat toimittavat Ryhtiin vasta hyväksytyn kaavan.
+Kuntakohtaiset kerääjät eivät siis korvaudu tällä — eikä tätä kannata tutkia
+uudelleen ennen kuin luku on kolminumeroinen. Ainoan vireillä olevan rivin
+`description_fin` oli lisäksi tyhjä, eli kuvaus ei tulisi sieltäkään.
+
+Voimassa olevien hakemisto (5 777) ei ole liidilähde, mutta se on
+**lainvoimaisuuden koneellinen todiste**: kaavan ilmestyminen hakemistoon
+päivämäärineen on sama signaali jonka D-396 nostaa nyt katselmointijonoon
+tekstistä luettuna.
+
+#### 2. Rakennusluvat (`ryhti_building/avoimet_lupa_rakennukset`) — tämä on uusi ja iso
+
+**2 741 671 lupariviä koko Suomesta**, tuorein päätös mittaushetkellä
+6.11.2026 eli kolme päivää vanha. Kenttinä mm. päätöspäivä, toimenpiteen laji
+ja tila, **aloittamispäivämäärä**, **valmistumispäivämäärä**, pääasiallinen
+käyttötarkoitus, kerrosala, tilavuus, kerrosluku, huoneistojen lukumäärä,
+sijaintikiinteistö ja piste (WGS84).
+
+Rajaus "uusi rakennus, päätös 12 kk sisällä, kerrosala yli 1 000 m², ei
+valmistunut" antoi **760 riviä, yhteensä 3,68 milj. m²**, joista 175 yli
+5 000 m². Tiloina Suunniteltu 393 ja Aloitettu 365.
+
+**Mitä siitä puuttuu:** nimi, rakennuttaja, urakoitsija, kustannus,
+yhteyshenkilö. Sama linja kuin Väylällä (henkilötietoa ei julkaista), ja
+yritysnimi puuttuu kokonaan. Rivi ei siis ole liidi sellaisenaan.
+
+**Mihin se silti kelpaa.** Peittotesti 9.11.2026: 175 isosta luvasta **80
+osui alle 300 metrin päähän hankkeeseen joka meillä jo on**. Loput 95 eivät
+ole kaikki uusia — Lohjan datakeskus (518 m), Espoon datakeskusalue (475 m) ja
+Hyperco Loviisa (2,4 km) ovat samoja hankkeita, joiden piste on eri kohdassa
+laajaa aluetta. Läheisyys yksin ei siis todista mitään
+([[proximity-needs-same-kind]], [[centroid-is-not-location]]). Arvo on
+kolmessa muussa asiassa:
+
+1. **Kerrosala on mitattu luku.** Koon arviointi luokittelusta hylättiin
+   mittauksen perusteella ([[no-derived-size-estimate]]) ja työn laajuus on se
+   mikä selittää hinnan ([[scope-explains-cost]]). Lupa antaa neliöt suoraan.
+2. **Vaihe ja valmistuminen koneellisesti.** `aloittamispaivamaara` ja
+   `valmistumispaivamaara` ovat juuri ne päivät jotka luemme nyt tiedotteen
+   tekstistä ([[completion-date-from-text]]) tai tarkistamme käsin neljännesvuosittain
+   ([[rakenteilla-quarterly-check]]). Testi: 562:sta aktiivisesta
+   Rakenteilla-hankkeesta **267:lla on alle 150 metrin päässä iso rakennus jonka
+   lupa sanoo valmistuneen**. Osa on vääriä osumia (Vaasassa viisi eri
+   hankettamme osui samaan rakennukseen, koska niillä on kaupungin
+   keskipiste), joten tämä on **katselmointisignaali, ei automaattinen
+   vaiheenvaihto** — sama ratkaisu kuin D-396.
+3. **Yksityisen rakennuttajan katvealue.** Iso lupa ilman hankeriviä on
+   lähtökohtaisesti juuri se hanke jota emme muuten näe
+   ([[private-developer-blind-spot]]). Nimen saa kunnan omasta
+   lupapäätöksestä; rivillä on `pysyva_lupatunnus` ja `dvv_lupatunnus` jolla
+   päätöksen löytää.
+
+#### 3. Kansallinen osoiteaineisto on saman rajapinnan takana
+
+`ryhti_building/open_address`: **3 870 589 osoitetta**, kenttinä osoitenimi
+suomeksi ja ruotsiksi, numero, postinumero, kuntanumero ja piste. Tuorein
+muutos mittaushetkellä 3.11.2026. Tiekartan kohta 3 (kansallinen osoiteaineisto
+korvaisi kuntakohtaiset WFS:t) on siis toteutettavissa yhdellä latauksella —
+ja se osuu samaan juureen kuin edellä: 597 hanketta jakaa Helsingin
+keskipisteen ([[centroid-is-not-location]]).
+
+#### Mitä tonttikartta.fi:stä EI kannata ottaa
+
+Palvelun kuntakohtainen linkkitaulu (308 kuntaa, joista 103:lla "vireillä
+olevat kaavat" -sivu) vertautui omiin lähteisiimme: **99/103 on meillä jo**.
+Puuttuvat ovat Juuka, Parikkala ja Rääkkylä. Turku näytti puuttuvan vain
+nimivertailun takia — se on kannassa nimellä "Turun vireillä olevat kaavat" ja
+ajaa WFS:ää vastaan. Kuntakattavuudessa olemme siis edellä, eikä sieltä ole
+otettavaa.
+
+#### Avoin ennen työtä
+
+Toimiiko `paikkatiedot.ymparisto.fi` Vercelin konesalista? Mittaus tehtiin
+omalta koneelta suomalaisesta liittymästä, ja kolme suomalaista palvelinta on
+jo estänyt meidät sieltä ([[finnish-host-blocks-cloud]], D-399). Tämä on
+ensimmäinen asia joka on todettava ennen kuin kerääjää kirjoitetaan.
+
 ### D-400 – RLS siirsi oven, eikä uutta lukkoa laitettu: `today/preferences` luotti clientin lähettämään userId:hen
 
 Johannes kysyi 9.11.2026, miten palvelin erottaa koneellisen hakijan

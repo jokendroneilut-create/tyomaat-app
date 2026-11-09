@@ -1791,17 +1791,40 @@ muistin varassa.
   löydy liitteitä. Jos Ryhti antaa saman tiedon yhdestä rajapinnasta,
   se ei ole yksi lähde lisää vaan **korvaa osan kerääjistä**.
 
-  Mitattava ennen työtä, järjestyksessä:
-  1. **Mitä kokoelmia rajapinnassa on** ja mitkä kunnat ovat mukana —
-     Ryhti on käyttöönotossa, eivätkä kaikki kunnat vielä toimita.
-     Kattavuus kuntina on koko kysymys.
-  2. **Onko kaavaselostus tai sen tarkoitus-luku mukana** vai pelkkä
-     geometria ja kaavatunnus. Helsingin WFS antoi aikanaan vain
-     geometrian, ja juuri siksi siirryttiin SUKKAan (D-005).
-  3. **Onko vireillä olevat mukana vai vain voimaan tulleet.** Meille
-     kelpaa vain vireillä oleva; voimaan tullut kaava ei ole liidi.
-  4. Vasta sitten: montako **uutta** hanketta ja montako nykyistä
-     kuntakerääjää voisi poistaa.
+  **MITATTU 9.11.2026 (D-401) — kaavapuoli ei kelpaa vielä mihinkään.**
+  Valmisteilla olevia asemakaavoja koko maassa **1**, yleiskaavoja **1**.
+  Voimassa olevien hakemistoissa 5 777 ja 651. Rakenne on oikea (nimi,
+  kuvauskenttä, vireilletulopäivä, nähtävilläolo, liitelinkit), mutta
+  kunnat toimittavat Ryhtiin vasta hyväksytyn kaavan — ja ainoan
+  vireillä olevan rivin kuvauskenttä oli tyhjä. Kuntakerääjät eivät
+  korvaudu tällä. **Älä tutki uudelleen ennen kuin vireillä olevien
+  luku on kolminumeroinen.**
+
+  Jäljelle jäävä käyttö: voimassa olevien hakemisto on
+  **lainvoimaisuuden koneellinen todiste** — sama signaali jonka D-396
+  nostaa nyt katselmointijonoon tekstistä luettuna.
+
+- **Ryhdin rakennusluvat — uusi, mitattu 9.11.2026 (D-401).**
+  `paikkatiedot.ymparisto.fi/geoserver/ryhti_building/ogc/features/v1/collections/avoimet_lupa_rakennukset`:
+  **2,74 milj. lupariviä**, tuorein päätös mittaushetkellä kolme päivää
+  vanha. Rajaus "uusi rakennus, 12 kk, yli 1 000 m², ei valmistunut"
+  antoi **760 riviä / 3,68 milj. m²**. Nimeä, rakennuttajaa,
+  urakoitsijaa tai kustannusta ei ole — kerrosala, aloituspäivä,
+  valmistumispäivä, käyttötarkoitus ja sijainti ovat.
+
+  Kolme käyttöä, tärkeysjärjestyksessä:
+  1. **Vaihesignaali katselmointiin.** 562:sta Rakenteilla-hankkeesta
+     267:lla on alle 150 m:n päässä iso rakennus jonka lupa sanoo
+     valmistuneen. Osa on vääriä osumia keskipisteen takia, joten
+     jonoon eikä automaattiseksi muutokseksi (kuten D-396).
+  2. **Kerrosala mitattuna lukuna** sinne missä kokoa ei ole
+     ([[no-derived-size-estimate]], [[scope-explains-cost]]).
+  3. **Yksityisen rakennuttajan katvealue**: iso lupa ilman hankeriviä.
+     Nimen saa kunnan lupapäätöksestä, rivillä on lupatunnus.
+
+  Ensin todettava: toimiiko rajapinta Vercelistä
+  ([[finnish-host-blocks-cloud]], D-399). Mittaus tehtiin omalta
+  koneelta.
 
   **2. PRH:n avoin YTJ-rajapinta.**
   `avoindata.prh.fi/opendata-ytj-api/v3/companies`. Meillä on
@@ -1812,7 +1835,10 @@ muistin varassa.
   nimen, eli **muunnelmat voisi yhdistää tunnukseen nimen sijaan**.
   Mitattava: montako kannan nimeä osuu yksikäsitteisesti PRH:hon.
 
-  **3. MML:n avoin osoiteaineisto ja käänteisgeokoodaus.**
+  **3. Kansallinen osoiteaineisto — MITATTU 9.11.2026 (D-401):
+  `ryhti_building/open_address` antaa 3 870 589 osoitetta (nimi fi/sv,
+  numero, postinumero, kuntanumero, piste), tuorein muutos kolme päivää
+  vanha. Yksi lataus korvaisi kuntakohtaiset WFS:t.**
   `paikkatiedot.ymparisto.fi/geoserver/www/open_address.json.gz` ja
   `avoin-paikkatieto.maanmittauslaitos.fi/geocoding/v2/pelias/reverse`.
   Geokoodaus on mitattu ongelma: 33 % Nominatimin pisteistä oli yli
