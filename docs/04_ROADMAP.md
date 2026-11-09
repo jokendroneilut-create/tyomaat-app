@@ -978,9 +978,25 @@ muistin varassa.
 
   Suunnitelmatasoilla lisaksi `tila` ja `vaihe` 100 %,
   `suunnittelu_alkaa/loppuu` 100 %, `arvioitu_toteutus` 70 %.
-  Kustannusarvio on kenttana olemassa mutta tyhja KAIKILLA (0/2013).
-  Yhteyshenkiloita ei ole missaan tasossa -- ne ovat vain
-  hankesivuilla.
+
+  **VAYLAN VASTAUS 10.11.2026 (Antti-Pekka / paikkatietopalvelut):**
+
+  - **Kustannusarvio palaa.** Tyhjyys johtui heidan lahdejarjestelmansa
+    muutoksesta, jota korjataan parhaillaan. Uusi sisalto on **vapaata
+    tekstia**: *"mahdollisesti lueteltu useampi vaihtoehto
+    kustannusarvioista tai eritelty rakennusosien, tyomaatehtavien ja
+    tilaajatehtavien osalta kustannukset."* Osalla hankkeista kentta jaa
+    yha tyhjaksi. Kentta on siis luettava kuin leipateksti, ei lukuna --
+    juuri vaihtoehdot ja osakustannukset ovat ne muodot jotka EIVAT ole
+    hankkeen hinta (D-395).
+  - **Yhteyshenkiloa ei tule koskaan.** *"Emme julkaise henkilotietoa
+    Vaylaviraston avoimessa rajapinnassa."* Lopullinen vastaus: ne on
+    haettava hankesivuilta tai ihmistyolla.
+  - **Hakutahti kerran vuorokaudessa on sallittu**, vaikka heidan oma
+    paivitysvalinsa on viikko.
+  - **403-esto on yha auki**: asia on siirretty Vaylaviraston
+    viestinnalle. Siihen asti hankesivut haetaan omalta koneelta
+    (`scripts/aja-estetyt-lahteet.ts`).
 
   Lahdetyo tehdaan toisessa keskustelussa ([[sources-in-other-session]]).
   Ratkaistava ennen kytkemista: toimiiko avoinapi.vaylapilvi.fi
