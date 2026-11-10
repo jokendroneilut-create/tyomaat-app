@@ -51,6 +51,175 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-404 – Asetusmodaalista poistettiin vieritys vierityksen sisällä
+
+Johannes 11.11.2026: *"saatko tehtyä siitä sellaisen, että sitä ei
+tarvitsisi vierittää ollenkaan? Kaikista pahin minusta on tuo kuvassa
+näkyvä vieritys vierityksen sisällä."*
+
+Maakuntaruudukossa oli `max-h-[300px] overflow-y-auto` modaalin oman
+vieritysalueen sisällä — kaksi vierityspalkkia päällekkäin. Syy oli
+mitoitus: 18 maakuntaa kahdessa sarakkeessa on yhdeksän riviä eikä
+mahdu, joten lista oli laitettu omaan ikkunaansa sen sijaan että se
+olisi mahdutettu.
+
+**Neljä muutosta, kaikki mitoitukseen:**
+
+1. **Kiinteä korkeus rajaksi.** `h-[min(90vh,760px)]` pakotti jokaisen
+   askeleen 760 pikselin laatikkoon: lyhyillä jäi tyhjää, pitkillä tuli
+   vierityspalkki. Nyt `max-h-[95vh]` + `min-h`, eli laatikko on
+   sisältönsä kokoinen.
+2. **Leveämpi modaali, vähemmän rivejä.** 672 → 768 px ja neljä
+   saraketta kolmen sijaan. Profiilit 5 rivistä 4:ään, maakunnat
+   6 rivistä 5:een.
+3. **Sähköpostihälytykset omalle askeleelleen.** Ne olivat
+   avainsana-askeleella vain koska siihen jäi tilaa; kun samalle
+   askeleelle tuli rajausrasti (D-402), se kasvoi yli modaalin. Askel
+   "Kuinka paljon haluat nähdä?" oli lähes tyhjä, joten siirto poisti
+   vierityksen molemmilta.
+4. **Tiiviimmät rivit** kaikissa valintaruudukoissa (`py-2` eikä `p-3`).
+
+#### Mitattiin pikseleinä, ei silmämääräisesti
+
+Askelten markupista tehtiin mittasivu, joka ajettiin `public/`-polun
+kautta selaimessa usealla ikkunakoolla ja luettiin jokaisen askeleen
+`scrollHeight` vs. `clientHeight`. Dialogin korkeus 1024x600:ssa:
+
+| askel | ennen | jälkeen |
+|---|---|---|
+| Profiili | 557 px | **492 px** |
+| Alueet | 630 px | **570 px** |
+| Myyntihetki | 563 px | **504 px** |
+| Määrä + hälytykset | 526 px | **510 px** |
+| Avainsanat (22 kpl) | 641 px, vieritti | **535 px** |
+
+**Matalin ikkunakorkeus jolla kaikki mahtuu on 600 px** (Alueet 570 /
+0,95). Rungon `overflow-y-auto` jäi varaverkoksi sen alle.
+
+Ensimmäinen versio mitoitettiin liian tiukalle, koska testasin vain
+1280x720:ssa ja sitä isommassa. Johanneksen kuvakaappauksesta näkyi
+isompi tekstikoko eli selaimen zoom, joka kutistaa todellista
+ikkunakorkeutta — **mitoituksen alaraja on luettava käyttäjän ruudusta,
+ei omasta**.
+
+### D-403 – Hanketyyppi Tänään-kortille: lähteen nimi ei kerro mistä on kyse
+
+Johannes 11.11.2026: *"esimerkiksi tuo fcdc ei suoraan kerro että
+kyseessä on datakeskus. Eikä muutenkaan otsikko kerro aina mistä
+hankkeesta on kyse."*
+
+"FCDC Vaasa, Kuriiritie" ja "Hyperco Kouvola-Koria, Fin Holdco 1" ovat
+molemmat datakeskuksia. Nimi on lähteen oma eikä lähde kirjoita sitä
+myyjälle. **Tyyppi oli kannassa valmiina — se ei vain näkynyt
+missään.**
+
+`lib/projects/hankkeenTyyppi.ts` lukee kolme kenttää, koska ne
+täyttyvät eri lähteistä: `property_type` (2 449/3 000),
+`metadata.building_type` ja `metadata.construction_type` (+101 riviä
+joilla pääkenttä on tyhjä). Yhteensä **merkintä näkyy 2 550 kortilla
+3 000:sta (85 %)**.
+
+Kaksi siivousta, molemmat mitattuja:
+
+- **Alkukirjain yhtenäistetään.** Kannassa on "Koulu" 177 kertaa ja
+  "koulu" 12 — sama tyyppi näyttäisi kahdelta vierekkäisillä korteilla.
+  Normalisoinnin jälkeen "Koulu" on 189.
+- **Yli 34 merkkiä katkaistaan sanan rajalta.** Pisin arvo on 79
+  merkkiä ("Metallimalmien ja muiden kaivoskivennäisten louhinta,
+  rikastaminen ja käsittely") ja rikkoisi kortin rivityksen.
+  Katkaistuja on 12 riviä 2 550:stä.
+
+Katkaisu on **kortin rajoite, ei tiedon**: hankemodaali näyttää arvon
+kokonaan (`hankkeenTyyppi(project, Infinity)`). Modaali näytti ennen
+raakaa saraketta ja viivaa, eli ne 101 riviä joilla tieto on vain
+varakentässä näkyivät tyhjinä.
+
+Tyhjällä ei näytetä mitään — keksittyä "Muu"-arvoa ei kirjoiteta.
+
+### D-402 – Avainsanat nostivat muttei rajanneet, eikä tyyppisuodatinta ollut
+
+Asiakaspalaute 10.11.2026 (YIT, Tänään-näkymä): *"Päivän tärkeimmissä
+hankkeissa jostain syystä nousee ensisijaisesti kouluja,
+päiväkotirakennuksia yms. vaikka, mikäli osasin tehdä oikein, asetin
+'mukauta näkymää' asetuksista rajaukset vain datakeskus ja
+teollisuusrakentamisen hankkeisiin."*
+
+**Asiakas teki kaiken oikein.** Hänen asetuksissaan on 22 avainsanaa
+(datakeskus, konesali, palvelinkeskus, akkutehdas, vetylaitos…) —
+täsmälleen se rajaus jonka hän kuvaa. Kentät `buildingTypes` ja
+`constructionTypes` olivat tyhjät, koska **velho ei tarjoa
+tyyppivalintaa lainkaan**: kentät ovat koodissa, mutta mikään ei lue
+niitä. Ainoa rajaukselta näyttävä kohta oli avainsanalaatikko.
+
+#### Miksi nosto ei riitä
+
+| pisteet | mistä |
+|---|---|
+| 50 | "Suuri hanke" (`metadata.business_value: high`) |
+| 40 | vaihe sopii rooliin |
+| 25 | uusi tänään |
+| **25** | **avainsanat, katto** |
+| 20 | valittu myyntihetki |
+| 15 | lähde on Hilma |
+
+Mitattu hänen 3 000 hankkeen syötteestään: avainsanoihin osui **234
+hanketta**, mutta **TOP 25:ssä niitä oli 0** ja TOP 100:ssa yksi. Paras
+datakeskus oli sijalla **656** (59 p), mediaanisija 1 210; kärjessä oli
+Kauraslammen koulu 150 p.
+
+**Juurisyy on `business_value`.** Se ainoa 50 pisteen bonus on täytetty
+vain **196 rivillä 3 000:sta (6,5 %)** ja valtaosin Hilmasta tulleilla
+riveillä — datakeskuksista **0/167**. Datakeskukset tulevat meille
+kaavoitusvaiheessa kuntien kaavalistoilta, joilla ei ole hankearvoa.
+Pisteytys siis palkitsee rakenteellisesti juuri sitä joukkoa jonka
+asiakas haluaa pois, eikä 25 pistettä kumoa 90 pisteen eroa.
+
+#### Kenttää käytetään rajaukseen, ei ammattisanastoon
+
+Ohjeteksti neuvoo erikoisalan sanoja (*"sähköurakoitsija: sähkö,
+valaistus"*). Kannassa oli 11.11.2026 seitsemän avainsanoja käyttävää
+tiliä, ja **viisi oli kirjoittanut hanketyyppejä**: "rivitalo,
+erillistalo, paritalo, asuinalue", "datakeskus, konesali,
+palvelinkeskus", "linjasaneeraus, putkiremontti". Palaute ei siis ole
+yksittäistapaus.
+
+#### Ratkaisu: opt-in rasti, ei oletusmuutos
+
+"Näytä vain hankkeet joissa nämä mainitaan", oletuksena pois ja näkyy
+vasta kun sanoja on lisätty. Kenenkään nykyisen käyttäjän näkymä ei
+muutu ennen kuin hän itse rastittaa.
+
+**Kaksi porttia, molemmat mittauksen tulosta:**
+
+1. **Ei piilota tuntematonta.** Jos rivillä ei ole kuvausta eikä
+   tyyppiä, osumattomuus ei todista mitään. Syötteessä tällaisia on
+   0/3 000, joten portti on halpa mutta oikea.
+2. **Ei tyhjennä näkymää.** Sääntö ajettiin kaikkien seitsemän
+   avainsanakäyttäjän yli ennen julkaisua, ja **kahdella osumia oli
+   nolla** ("paineilma, typpi" ja "lasi, metalliovet"). Rasti olisi
+   antanut tyhjän sivun, joka näyttää rikkinäiseltä tuotteelta eikä
+   valinnan seuraukselta. Nyt suodatin perääntyy ja sivu kertoo sen
+   ääneen keltaisella huomautuksella.
+
+Sivutulos: noiden kahden tilin avainsanat ovat jo nyt kuolleita — ne
+eivät osu mihinkään eivätkä tuota pisteitäkään.
+
+#### Osuma lukee nyt myös tyyppisarakkeen — mutta se ei ollut ratkaisu
+
+Pisteytys luki nimen, kuvauksen ja `metadata.building_type`in muttei
+`property_type`-saraketta, jossa tyyppi oikeasti on. Korjattiin, ja
+**osumia tuli +1 kahdelle käyttäjälle ja ±0 viidelle**: sana
+"datakeskus" on käytännössä aina jo nimessä tai kuvauksessa. Muutos on
+silti oikein — pisteytys ja suodatus lukevat nyt saman tekstin eivätkä
+voi ajautua erilleen siitä mitä "osuu" tarkoittaa — mutta se ei ollut
+se mikä asiakkaan ongelman ratkaisi. Odotin siltä enemmän.
+
+#### Jäi tekemättä
+
+`business_value`-kentän kattavuus (6,5 %) on oikea juurisyy ja se on
+yhä auki. Sen korjaaminen muuttaisi järjestystä kaikille käyttäjille,
+joten se on oma työnsä eikä palautteen korjaus.
+
 ### D-401 – Ryhti mitattu: kaavapuoli on tyhjä, mutta rakennuslupa-aineisto on kansallinen ja tuore
 
 Johannes löysi 9.11.2026 harrastusprojektina tehdyn **tonttikartta.fi**-palvelun
