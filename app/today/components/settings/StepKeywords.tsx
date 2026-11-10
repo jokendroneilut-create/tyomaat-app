@@ -56,8 +56,9 @@ export default function StepKeywords({
       </h3>
 
       <p className="mt-2 text-gray-600">
-        Sanoja omalta erikoisalaltasi — esim. sähköurakoitsija:{" "}
-        <em>sähkö, valaistus, sähköistys</em>. Voit jättää tyhjäksi.
+        Sanoja omalta erikoisalaltasi, esim. sähköurakoitsija:{" "}
+        <em>sähkö, valaistus</em>. Hankkeet joissa ne mainitaan nousevat
+        listasi kärkeen.
       </p>
 
       <div className="mt-4">
@@ -119,9 +120,9 @@ export default function StepKeywords({
             />
             <span className="text-gray-700">
               <span className="font-semibold text-gray-900">
-                Näytä vain hankkeet joissa nämä mainitaan.
+                Näytä vain nämä hankkeet.
               </span>{" "}
-              Ilman rastia ne vain nousevat ylemmäs.
+              Muut piilotetaan listalta kokonaan.
             </span>
           </label>
         )}
