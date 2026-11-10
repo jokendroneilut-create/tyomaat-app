@@ -53,6 +53,14 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 
 ### D-404 – Asetusmodaalista poistettiin vieritys vierityksen sisällä
 
+> **TIEDOTETTU KÄYTTÄJILLE 11.11.2026.** Kolmesta muutoksesta
+> (D-402, D-403, D-404) lähti joukkoviesti kaikille käyttäjille
+> otsikolla "Tänään-näkymään kolme parannusta". Teksti on tallessa
+> `broadcast_message_log`-taulussa. Tiedotteeseen otettiin vain se
+> mitä käyttäjä tekee tai etsii — ei sitä että avainsanakenttää oli
+> käytetty rajaukseen vaikka se vain nosti, eikä yksittäisen
+> asiakkaan palautetta. Ks. [[broadcast-message-tool]].
+
 Johannes 11.11.2026: *"saatko tehtyä siitä sellaisen, että sitä ei
 tarvitsisi vierittää ollenkaan? Kaikista pahin minusta on tuo kuvassa
 näkyvä vieritys vierityksen sisällä."*
