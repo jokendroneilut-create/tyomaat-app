@@ -6,6 +6,7 @@ import TodayFeedbackButtons from "./TodayFeedbackButtons"
 import TodayFavoriteActions from "./TodayFavoriteActions"
 import { eraNakyma } from "../services/naytaLisaa"
 import { displayProjectPhase } from "@/lib/projects/phases"
+import { hankkeenTyyppi } from "@/lib/projects/hankkeenTyyppi"
 
 export default function TodayRecommendedProjects({
   projects,
@@ -113,6 +114,22 @@ export default function TodayRecommendedProjects({
                             project.phase,
                             project.metadata?.is_cancelled_procurement
                           )}
+                        </span>
+                      )}
+
+                      {/*
+                        * HANKETYYPPI NIMEN RINNALLE.
+                        *
+                        * Lähteen oma nimi ei kerro myyjälle mistä on kyse:
+                        * "FCDC Vaasa, Kuriiritie" ja "Hyperco
+                        * Kouvola-Koria, Fin Holdco 1" ovat molemmat
+                        * datakeskuksia, mutta sitä ei arvaa otsikosta.
+                        * Tieto oli kannassa valmiina (82 % riveistä),
+                        * se ei vain näkynyt. Tyhjällä ei näytetä mitään.
+                        */}
+                      {hankkeenTyyppi(project) && (
+                        <span className="rounded border border-gray-300 bg-white px-2 py-1 text-gray-700">
+                          {hankkeenTyyppi(project)}
                         </span>
                       )}
 

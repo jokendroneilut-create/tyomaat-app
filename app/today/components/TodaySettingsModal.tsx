@@ -42,6 +42,7 @@ export default function TodaySettingsModal() {
 
   const [keywords, setKeywords] = useState<string[]>([])
 
+  const [keywordsOnly, setKeywordsOnly] = useState(false)
   const [opportunityAlerts, setOpportunityAlerts] = useState(true)
 
   // Tiimi-asetukset: ei UI:ta täällä (oma TeamModeToggle), mutta kannetaan
@@ -137,6 +138,8 @@ export default function TodaySettingsModal() {
         setKeywords(
           Array.isArray(settings.keywords) ? settings.keywords : []
         )
+
+        setKeywordsOnly(settings.keywordsOnly === true)
 
         setOpportunityAlerts(settings.opportunityAlerts !== false)
 
@@ -262,6 +265,7 @@ export default function TodaySettingsModal() {
 
             bestSalesMoments: selectedSalesMoments,
             keywords,
+            keywordsOnly,
             opportunityAlerts,
             teamModeInToday,
             hideTeammateOwned,
@@ -380,6 +384,8 @@ export default function TodaySettingsModal() {
           <StepMaxProjects
             selectedValue={maxProjects}
             onChange={setMaxProjects}
+            opportunityAlerts={opportunityAlerts}
+            onAlertsChange={setOpportunityAlerts}
           />
         )
 
@@ -388,8 +394,8 @@ export default function TodaySettingsModal() {
           <StepKeywords
             keywords={keywords}
             onChange={setKeywords}
-            opportunityAlerts={opportunityAlerts}
-            onAlertsChange={setOpportunityAlerts}
+            keywordsOnly={keywordsOnly}
+            onKeywordsOnlyChange={setKeywordsOnly}
           />
         )
 
@@ -413,13 +419,26 @@ export default function TodaySettingsModal() {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3"
           role="dialog"
           aria-modal="true"
           aria-labelledby="today-settings-title"
         >
-          <div className="flex h-[min(90vh,760px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-            <div className="shrink-0 border-b px-6 py-5">
+          {/*
+            * KIINTEÄ KORKEUS VAIHDETTIIN RAJAKSI.
+            *
+            * `h-[min(90vh,760px)]` pakotti jokaisen askeleen 760 pikselin
+            * laatikkoon: lyhyillä askelilla jäi tyhjää, pitkillä tuli
+            * vierityspalkki. Nyt laatikko on sisältönsä kokoinen ja
+            * kasvaa korkeintaan ruudun mittaiseksi, joten vierityspalkkia
+            * ei synny silloin kun sisältö mahtuu. `min-h` estää
+            * laatikkoa kutistumasta nappulakokoiseksi tervetuloaskeleella.
+            *
+            * Rungon `overflow-y-auto` jää varaverkoksi matalalle ruudulle
+            * (esim. 1280x720), mutta normaalilla näytöllä se ei aktivoidu.
+          */}
+          <div className="flex max-h-[95vh] min-h-[min(380px,80vh)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className="shrink-0 border-b px-6 py-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   {mode === "wizard" && (
@@ -460,7 +479,7 @@ export default function TodaySettingsModal() {
               )}
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
               {loading ? (
                 <Lataus teksti="Ladataan asetuksia…" keskita />
               ) : mode === "summary" ? (

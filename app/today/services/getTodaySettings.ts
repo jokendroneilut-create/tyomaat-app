@@ -14,6 +14,12 @@ export type TodaySettings = {
   buildingTypes: string[]
   bestSalesMoments: string[]
   keywords: string[]
+  /*
+   * Opt-in: avainsanat rajaavat näkymän sen sijaan että vain nostaisivat.
+   * Oletus false, eli vanha käytös säilyy kaikilla kunnes käyttäjä itse
+   * rastittaa. Ks. todayFilters.matchesKeywordFilter.
+   */
+  keywordsOnly: boolean
   maxProjects: number
   showRejected: boolean
   showArchived: boolean
@@ -36,6 +42,7 @@ export const defaultTodaySettings: TodaySettings = {
   buildingTypes: [],
   bestSalesMoments: [],
   keywords: [],
+  keywordsOnly: false,
   maxProjects: 20,
   showRejected: false,
   showArchived: false,

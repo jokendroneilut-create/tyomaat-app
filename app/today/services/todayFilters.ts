@@ -215,3 +215,108 @@ export function matchesRegions(
 
   return normalizedRegions.includes(projectRegion)
 }
+/*
+ * AVAINSANAT: MISTÄ TEKSTISTÄ OSUMAA HAETAAN.
+ *
+ * `property_type` on mukana, koska siinä hankkeen tyyppi oikeasti on —
+ * 73 arvoa, 82 % täytetty syötteessä (mitattu 10.11.2026). Ilman sitä
+ * sana "datakeskus" ei osunut hankkeeseen jonka tyyppi on Datakeskus
+ * mutta jonka nimessä tai kuvauksessa sanaa ei ole; kannassa on 167
+ * datakeskusriviä. `metadata.building_type` ja `construction_type`
+ * jäävät mukaan, koska osalla rivejä tyyppi on vain niissä.
+ */
+export function projectKeywordText(project: any): string {
+  return [
+    project.name,
+    project.property_type,
+    project.metadata?.description,
+    project.additional_info,
+    project.metadata?.operation,
+    project.metadata?.building_type,
+    project.metadata?.construction_type,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+export function keywordMatches(text: string, keyword: string): boolean {
+  const needle = keyword.trim().toLowerCase()
+  if (needle.length < 2) return false
+
+  /*
+   * Pitkät sanat: alimerkkijono käy — suomen taivutus/yhdyssanat toimivat
+   * eduksi ("sähkö" osuu sanoihin "sähköistys", "sähköurakka"). Lyhyet
+   * (esim. "iv", "lvi") vaativat sananrajan, etteivät osu yhdyssanan sisään.
+   */
+  if (needle.length >= 4) return text.includes(needle)
+
+  const boundary = "\\wäöåÄÖÅ"
+  const re = new RegExp(
+    `(?<![${boundary}])${escapeRegex(needle)}(?![${boundary}])`,
+    "i"
+  )
+  return re.test(text)
+}
+
+/* Mitkä käyttäjän sanoista osuvat hankkeeseen; järjestys = käyttäjän oma. */
+export function matchedKeywords(project: any, keywords: string[]): string[] {
+  if (!keywords?.length) return []
+
+  const text = projectKeywordText(project)
+  if (!text) return []
+
+  const osumat: string[] = []
+  const nahty = new Set<string>()
+
+  for (const keyword of keywords) {
+    const label = keyword.trim()
+    const key = label.toLowerCase()
+    if (!label || nahty.has(key)) continue
+    if (keywordMatches(text, label)) {
+      osumat.push(label)
+      nahty.add(key)
+    }
+  }
+
+  return osumat
+}
+
+/*
+ * OPT-IN-SUODATIN: "Näytä vain hankkeet joissa nämä mainitaan".
+ *
+ * Asiakaspalaute 10.11.2026: *"asetin rajaukset vain datakeskus- ja
+ * teollisuusrakentamisen hankkeisiin"* — mutta avainsanat vain nostivat
+ * (enintään 25 pistettä, kun "Suuri hanke" antaa 50). Mitattuna hänen
+ * 3 000 hankkeen syötteestään 234 osui sanoihin, mutta TOP 25:ssä niitä
+ * oli 0 ja paras datakeskus oli sijalla 656. Seitsemästä avainsanoja
+ * käyttäneestä tilistä viisi oli kirjoittanut hanketyyppejä, ei
+ * ammattisanastoa — kenttää käytetään rajaukseen.
+ *
+ * EI PIILOTA TUNTEMATONTA. Jos hankkeesta ei ole kuvausta eikä tyyppiä,
+ * osumattomuus ei todista mitään eikä riviä pudoteta — nimi yksin on
+ * liian ohut peruste ([[never-hide-on-missing-data]]). Syötteessä
+ * tällaisia oli 0/3 000, joten portti on halpa.
+ *
+ * Oletus on pois päältä, joten yhdenkään nykyisen käyttäjän näkymä ei
+ * muutu ennen kuin hän itse rastittaa.
+ */
+export function matchesKeywordFilter(
+  project: any,
+  keywords: string[],
+  keywordsOnly: boolean
+) {
+  if (!keywordsOnly || !keywords?.length) return true
+
+  const tiedetaan =
+    Boolean(String(project.property_type ?? "").trim()) ||
+    Boolean(String(project.additional_info ?? "").trim()) ||
+    Boolean(String(project.metadata?.description ?? "").trim())
+  if (!tiedetaan) return true
+
+  return matchedKeywords(project, keywords).length > 0
+}

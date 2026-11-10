@@ -122,6 +122,12 @@ function normalizeSettings(settings: any) {
           .filter((k: string) => k.length > 0)
           .slice(0, 30)
       : [],
+    /*
+     * Opt-in-suodatin: `=== true` eikä `!== false`, koska oletus on POIS.
+     * Vanhoilla riveillä kenttää ei ole, ja silloin näkymä ei saa kaventua
+     * itsestään.
+     */
+    keywordsOnly: settings?.keywordsOnly === true,
     maxProjects: settings?.maxProjects ?? 40,
     showRejected: settings?.showRejected ?? false,
     showArchived: settings?.showArchived ?? false,

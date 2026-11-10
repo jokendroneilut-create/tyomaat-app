@@ -4,6 +4,7 @@ import { getUserFeedbackContext } from "./getUserFeedbackContext"
 import { getUserFavoritesContext } from "./getUserFavoritesContext"
 import {
   matchesBestSalesMoments,
+  matchesKeywordFilter,
   matchesRegions,
 } from "./todayFilters"
 import { rankTodayProjects } from "./todayRanking"
@@ -109,7 +110,7 @@ export async function getTodaySummary(userId?: string | null) {
     getTeamOwnership(userId, teamModeOn),
   ])
 
-  const filteredProjects = allProjects.rivit
+  const perusjoukko = allProjects.rivit
   .filter((project: any) =>
     matchesRegions(project, settings.regions)
   )
@@ -122,6 +123,28 @@ export async function getTodaySummary(userId?: string | null) {
   .filter((project: any) =>
     !favoritesContext.hiddenProjectIds.has(project.id)
   )
+
+  /*
+   * AVAINSANASUODATIN EI SAA TYHJENTÄÄ NÄKYMÄÄ.
+   *
+   * Mitattu 11.11.2026 kaikilla seitsemällä avainsanoja käyttävällä
+   * tilillä: kahdella osumia oli **nolla** ("paineilma, typpi" ja "lasi,
+   * metalliovet"), eli rasti olisi antanut tyhjän Tänään-sivun. Tyhjä
+   * sivu näyttää rikkinäiseltä tuotteelta, ei valinnan seuraukselta.
+   *
+   * Siksi suodatin perääntyy: jos se ei jätä yhtään hanketta, käytetään
+   * suodattamatonta listaa. `keywordFilterEmpty` kertoo näkymälle että
+   * näin kävi, jotta käyttäjälle voidaan sanoa se ääneen eikä hän luule
+   * rajauksen olevan voimassa ([[displayed-state-is-not-enforced]]).
+   */
+  const suodatettu = perusjoukko.filter((project: any) =>
+    matchesKeywordFilter(project, settings.keywords, settings.keywordsOnly)
+  )
+  const keywordFilterEmpty =
+    settings.keywordsOnly === true &&
+    (settings.keywords?.length ?? 0) > 0 &&
+    suodatettu.length === 0
+  const filteredProjects = keywordFilterEmpty ? perusjoukko : suodatettu
 
   const rankedProjects = rankTodayProjects(
     filteredProjects,
@@ -213,6 +236,12 @@ export async function getTodaySummary(userId?: string | null) {
       .map(kevytRivi),
     recommendedInitial: maxProjects,
     recommendedTotal: teamRankedProjects.length,
+
+    /*
+     * true = käyttäjä on rastittanut "näytä vain nämä", mutta yksikään
+     * hanke ei osunut, joten rajaus on ohitettu ja lista on normaali.
+     */
+    keywordFilterEmpty,
 
     // Ohjaa opt-in-kytkimen näkymisen /today-sivulla.
     team: { inTeam: teamOwnership.inTeam },

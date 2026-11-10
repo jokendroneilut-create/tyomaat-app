@@ -91,6 +91,21 @@ const summary = await getTodaySummary(user?.id)
   <TeamModeToggle userId={user.id} initialSettings={summary.settings} />
 )}
 
+      {/*
+        Rajaus on päällä muttei osunut yhteenkään hankkeeseen. Lista on siis
+        normaali, ja se sanotaan ääneen — muuten käyttäjä luulee näkevänsä
+        rajatun näkymän.
+      */}
+      {summary.keywordFilterEmpty && (
+        <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span className="font-semibold">
+            Avainsanarajauksesi ei osunut yhteenkään hankkeeseen,
+          </span>{" "}
+          joten näytämme listan rajaamattomana. Kokeile väljempiä sanoja
+          kohdasta &rdquo;Mukauta näkymää&rdquo; tai poista rajauksen rasti.
+        </div>
+      )}
+
       <TodayMetrics
         metrics={summary.metrics}
         metricProjects={summary.metricProjects}

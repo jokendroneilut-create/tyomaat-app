@@ -6,6 +6,7 @@ import Lataus from "@/app/components/Lataus"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import PhaseTimeline from "@/app/projects/PhaseTimeline"
+import { hankkeenTyyppi } from "@/lib/projects/hankkeenTyyppi"
 import { displayProjectPhase } from "@/lib/projects/phases"
 import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 import { trackEvent } from "@/lib/analytics/trackEvent"
@@ -368,7 +369,8 @@ export default function TodayProjectModal({
                   <strong>👷 Rakennusliike:</strong> {project.builder || "-"}
                 </p>
                 <p>
-                  <strong>🏢 Kohdetyyppi:</strong> {project.property_type || "-"}
+                  <strong>🏢 Kohdetyyppi:</strong>{" "}
+                  {hankkeenTyyppi(project, Infinity) || "-"}
                 </p>
               </div>
 

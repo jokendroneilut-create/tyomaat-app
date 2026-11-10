@@ -5,8 +5,8 @@ import { useState } from "react"
 type StepKeywordsProps = {
   keywords: string[]
   onChange: (keywords: string[]) => void
-  opportunityAlerts: boolean
-  onAlertsChange: (enabled: boolean) => void
+  keywordsOnly: boolean
+  onKeywordsOnlyChange: (enabled: boolean) => void
 }
 
 const MAX_KEYWORDS = 30
@@ -14,8 +14,8 @@ const MAX_KEYWORDS = 30
 export default function StepKeywords({
   keywords,
   onChange,
-  opportunityAlerts,
-  onAlertsChange,
+  keywordsOnly,
+  onKeywordsOnlyChange,
 }: StepKeywordsProps) {
   const [draft, setDraft] = useState("")
 
@@ -56,24 +56,18 @@ export default function StepKeywords({
       </h3>
 
       <p className="mt-2 text-gray-600">
-        Lisää sanoja, jotka kuvaavat erikoisalaasi. Hankkeet, joiden tiedoissa
-        nämä mainitaan, nousevat näkymässäsi ylemmäs. Esim.
-        sähköurakoitsija: <em>sähkö, valaistus, sähköistys</em>. Voit jättää
-        tyhjäksi.
+        Sanoja omalta erikoisalaltasi — esim. sähköurakoitsija:{" "}
+        <em>sähkö, valaistus, sähköistys</em>. Voit jättää tyhjäksi.
       </p>
 
-      <div className="mt-5">
-        <label className="mb-1 block text-sm font-semibold text-gray-700">
-          Avainsana
-        </label>
-
+      <div className="mt-4">
         <div className="flex gap-2">
           <input
             type="text"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Kirjoita ja paina Enter"
+            placeholder="Kirjoita avainsana ja paina Enter"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
           />
           <button
@@ -87,11 +81,11 @@ export default function StepKeywords({
         </div>
 
         {keywords.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {keywords.map((keyword) => (
               <span
                 key={keyword}
-                className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-800"
+                className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-800"
               >
                 {keyword}
                 <button
@@ -107,33 +101,32 @@ export default function StepKeywords({
           </div>
         )}
 
-        <p className="mt-3 text-xs text-gray-400">
+        <p className="mt-2 text-xs text-gray-400">
           {keywords.length}/{MAX_KEYWORDS} avainsanaa
         </p>
+
+        {/*
+          Rasti näkyy vasta kun sanoja on: tyhjällä listalla se ei tee
+          mitään, ja tyhjä valinta näyttäisi lupaavan rajauksen jota ei ole.
+        */}
+        {keywords.length > 0 && (
+          <label className="mt-4 flex items-start gap-3 rounded-lg border p-3 text-sm">
+            <input
+              type="checkbox"
+              checked={keywordsOnly}
+              onChange={(event) => onKeywordsOnlyChange(event.target.checked)}
+              className="mt-0.5 h-4 w-4"
+            />
+            <span className="text-gray-700">
+              <span className="font-semibold text-gray-900">
+                Näytä vain hankkeet joissa nämä mainitaan.
+              </span>{" "}
+              Ilman rastia ne vain nousevat ylemmäs.
+            </span>
+          </label>
+        )}
       </div>
 
-      <div className="mt-8 border-t pt-6">
-        <h4 className="text-base font-bold text-gray-900">
-          Sähköpostihälytykset
-        </h4>
-
-        <label className="mt-3 flex items-start gap-3 rounded-lg border p-3 text-sm">
-          <input
-            type="checkbox"
-            checked={opportunityAlerts}
-            onChange={(event) => onAlertsChange(event.target.checked)}
-            className="mt-0.5 h-4 w-4"
-          />
-          <span className="text-gray-700">
-            <span className="font-semibold text-gray-900">
-              Ilmoita kun hanke etenee sinulle otolliseen vaiheeseen.
-            </span>{" "}
-            Saat sähköpostin kun kiinnostavan alueesi hanke saavuttaa juuri
-            roolillesi osuvimman vaiheen (esim. materiaalitoimittaja, kun
-            rakentaminen alkaa). Edellyttää valittua yritysprofiilia.
-          </span>
-        </label>
-      </div>
     </div>
   )
 }

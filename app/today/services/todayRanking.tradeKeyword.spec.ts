@@ -12,6 +12,7 @@ const baseSettings: TodaySettings = {
   buildingTypes: [],
   bestSalesMoments: [],
   keywords: [],
+  keywordsOnly: false,
   maxProjects: 20,
   showRejected: false,
   showArchived: false,

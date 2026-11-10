@@ -54,8 +54,8 @@ export default function StepSalesMoment({
         </div>
       )}
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-2">
-        <label className="flex items-center gap-2 rounded-lg border p-3 text-sm font-semibold">
+      <div className="mt-4 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
+        <label className="flex items-center gap-2 rounded-lg border px-2.5 py-2 text-sm font-semibold">
           <input
             type="checkbox"
             checked={allSelected}
@@ -67,7 +67,7 @@ export default function StepSalesMoment({
         {salesMoments.map((moment) => (
           <label
             key={moment}
-            className="flex items-center gap-2 rounded-lg border p-3 text-sm"
+            className="flex items-center gap-2 rounded-lg border px-2.5 py-2 text-sm"
           >
             <input
               type="checkbox"
