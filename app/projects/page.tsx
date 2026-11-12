@@ -1899,20 +1899,42 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
                     {p.property_type ? ` • ${p.property_type}` : ''}
                   </div>
 
-                  <div style={{ marginTop: 6 }}>
-                    <span
-                      style={{
-                        ...getStatusStyle(statuses[p.id] ?? 'new'),
-                        padding: '4px 10px',
-                        borderRadius: 999,
-                        fontSize: 12,
-                        fontWeight: 700,
-                        display: 'inline-block',
-                      }}
-                    >
-                      {humanizeStatus(statuses[p.id] ?? 'new')}
-                    </span>
-                  </div>
+                  {/*
+                    * OMA MYYNTITILA NAKYY VAIN KUN SE ON ASETETTU.
+                    *
+                    * Pilleri naytti oletusarvoa 'new' eli tekstia "Uusi"
+                    * jokaisessa kortissa. Johannes 12.11.2026: *"tuosta tulee
+                    * nyt kasitys etta hanke on jotenkin uusi ja vasta
+                    * ilmestynyt"* -- vaikka kyse on kayttajan OMASTA
+                    * myyntitilasta (Uusi / Kontaktoitu / Tarjous lahetetty /
+                    * Voitettu / Havitty).
+                    *
+                    * Mitattu 12.11.2026: tilamerkintoja on koko kannassa 33
+                    * kpl seitsemalta kayttajalta, nakyvia hankkeita 7 120 --
+                    * eli pilleri naytti oletusta 99,5 %:ssa korteista.
+                    *
+                    * Sama arvo on heti alapuolella pudotusvalikossa, joten
+                    * mitaan ei katoa. Tyopoytalistassa pilleria ei ole
+                    * koskaan ollutkaan, vaan tila nakyy valikon omana
+                    * arvona ja varina. Nyt pilleri tarkoittaa jotain: se
+                    * nakyy vain kun joku on oikeasti merkinnyt hankkeen.
+                  */}
+                  {statuses[p.id] && statuses[p.id] !== 'new' ? (
+                    <div style={{ marginTop: 6 }}>
+                      <span
+                        style={{
+                          ...getStatusStyle(statuses[p.id]),
+                          padding: '4px 10px',
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          display: 'inline-block',
+                        }}
+                      >
+                        {humanizeStatus(statuses[p.id])}
+                      </span>
+                    </div>
+                  ) : null}
 
                   <div className="projects-cardActions">
                     <button className="projects-btn projects-btnFull" onClick={() => setSelected(p)}>
