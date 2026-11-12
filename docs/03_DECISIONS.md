@@ -51,6 +51,88 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-408 – Eri Hilma-hankinta on eri hanke
+
+Jatkoa D-407:lle. Kun Sigurd Frosteruksen puiston hintaristiriita
+johti kahteentoista samanlaiseen riviin, Johannes pyysi avaamaan yhden
+ja selvittämään syyn. Avattu rivi oli **Piikatu 6, Imatra**.
+
+#### Mitä rivillä oli
+
+Ei yhden hankinnan osia vaan **kaksi eri Hilma-hankintaa**:
+
+| hankinta | ilmoitukset | voittaja | summa |
+|---|---|---|---|
+| **35852** esirakentaminen, maanrakennusurakka | 12.8. + jälki-ilm. 20.10. | Koneurakointi Ovaska | 169 511 € |
+| **36768** koulutusrakennus, jaettu urakka | 4.9. + jälki-ilm. 12.11. | Bravida, Forsman, Pallas, Ilmastointiasennus Partanen, Fidelix | 2 332 442 € |
+
+Hanke oli nimetty ensimmäisen mukaan ja kantoi sen hinnan, mutta
+metadatassa oli toisen hankintanumero, viisi voittajaa ja 2,33 M€.
+
+#### Miksi urakkalajiveto ei estänyt
+
+`haveDifferentTrades` palauttaa `false` jos **kummalta tahansa**
+puolelta puuttuu urakkalaji:
+
+    "...esirakentaminen, maanrakennusurakka"  -> ["maanrakennus"]
+    "...koulutusrakennus, jaettu urakka"      -> []
+    haveDifferentTrades(...) = false
+
+"Jaettu urakka" ei ole urakkalaji vaan hankintatapa, eikä sanastossa
+ole sille vartaloa. Veto kytkeytyy siis pois juuri siinä nimessä jonka
+takana osia on eniten. Jos sama rivi olisi nimetty "rakennusurakka",
+"sähköurakka" tai "jaetun urakan rakennusurakka", veto olisi lauennut
+joka kerta (mitattu).
+
+**Sanaston laajentaminen ei korjaa tätä:** 96 % hankkeiden nimistä ei
+tuota urakkalajia lainkaan, koska valtaosa ei ole urakkailmoituksia.
+Veto toimii vain kun molemmat nimet sattuvat nimeämään lajin.
+
+#### Mittaus ennen sääntöä (13.11.2026)
+
+Lähdehistoria on Hilman osalta se kirjanpito jossa jokainen liitos
+näkyy. Koko kannasta (7 523 hanketta):
+
+| | |
+|---|---|
+| Hilman toistokäyntejä ensimmäisen jälkeen | **70** |
+| sama hankinta → osuma säilyy | **36** (51 %) |
+| **eri hankinta → sääntö estäisi** | **34** (49 %) |
+| koskisi hankkeita | **15**, kaikki asiakkaalle näkyviä |
+
+Puolet toistokäynneistä on siis saman hankinnan ilmoituksia
+(hankintailmoitus → korjausilmoitus → jälki-ilmoitus) eikä sääntö
+kajoa niihin. Pahimmat kasaumat:
+
+    Oulun yliopiston normaalikoulu   5 hankintaa, 5 eri voittajaa
+    Campuskoti laajennus, Salo       5 hankintaa
+    Oulun vesiliikuntakeskus         5 hankintaa
+
+#### Sääntö
+
+`lib/projects/hilmaProcedure.ts`: hankintanumero luetaan osoitteesta
+(`/procedure/<id>/enotice/<id>/`), hankkeen omat numerot kerätään
+`metadata.procedure_id`:stä, lähdeosoitteesta ja jokaisesta
+lähdehistorian käynnistä. Veto on `haveHardVeto`ssa urakkalajiveton
+rinnalla, joten se pätee sekä tuonnissa (`findProjectMatchDetailed`),
+duplikaattiskannauksessa että TIC:n yhdistämisehdotuksissa.
+
+Kaksi rajausta, molemmat tahallisia:
+
+1. **Tuntematon ei ole eri.** Jos numero puuttuu kummalta tahansa
+   puolelta, mitään ei estetä — sama periaate kuin muissa vetoissa.
+   Hilma-hankkeista 86 %:lla numero on tallessa.
+2. **Jo kasautunut rivi hyväksyy omansa.** Ne 15 riviä ovat keränneet
+   useita numeroita, ja niiden omien hankintojen myöhemmät ilmoitukset
+   saavat yhä osua. Veto laukeaa vain uudelle numerolle, eli tilanne ei
+   huonone mutta ei myöskään korjaannu itsestään.
+
+#### Jäi tekemättä
+
+Ne 15 riviä on purettava käsin: osaurakat pitäisi irrottaa omiksi
+hankkeikseen, ja osa niistä on jo ehtinyt saada hankkeelta muuta
+tietoa. Sääntö estää uudet kasaumat, se ei pura vanhoja.
+
 ### D-407 – Sopimushinta voittaa myös yhdistämisessä; yksi kirjoitusvirhe esti parin löytymisen
 
 Johannes 12.11.2026 Sigurd Frosteruksen puiston riveistä: *"katso

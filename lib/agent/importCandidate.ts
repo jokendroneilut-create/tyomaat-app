@@ -549,6 +549,13 @@ export async function importCandidate(
     location: body.location || null,
     permitNumber: body.permit_number ?? body.metadata?.permit_number ?? null,
     propertyId: body.property_id ?? body.metadata?.property_id ?? null,
+    /*
+     * Hilman hankintanumero: eri hankinta on eri hanke, vaikka kohde
+     * olisi sama (D-408). Jaetussa urakassa jokainen urakkalaji on oma
+     * hankintansa omalla voittajallaan ja summallaan.
+     */
+    procedureId: body.metadata?.procedure_id ?? null,
+    sourceUrl: body.source_url ?? body.metadata?.source_url ?? null,
     developer: body.developer ?? body.metadata?.developer ?? null,
     /*
      * Urakoitsija erikseen rakennuttajasta: lähde voi tietää molemmat, esim.

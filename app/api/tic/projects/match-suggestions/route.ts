@@ -120,6 +120,9 @@ export async function POST(request: Request) {
       developer: metadata.developer ?? null,
       buildingType: metadata.building_type ?? null,
       description: metadata.description ?? null,
+      /* Eri Hilma-hankinta on eri hanke (D-408). */
+      procedureId: (metadata.procedure_id as string | null) ?? null,
+      sourceUrl: (metadata.source_url as string | null) ?? null,
     }
 
     /*

@@ -5,6 +5,7 @@ import {
 import { getMunicipalityByAnyForm } from "@/lib/geo/municipalityFromName"
 import { isSameOrganization } from "@/lib/projects/organizationName"
 import { haveDifferentDemolition, haveDifferentTrades } from "@/lib/projects/contractTrade"
+import { haveDifferentProcedures } from "@/lib/projects/hilmaProcedure"
 import { haveDifferentNameNumbers } from "@/lib/projects/nameNumbers"
 import {
   haveSameEnergySite,
@@ -25,6 +26,13 @@ export type NormalizedProjectCandidate = {
   developer?: string | null
   buildingType?: string | null
   description?: string | null
+  /*
+   * Hilman hankintanumero ja ilmoituksen osoite. Eri hankinta on eri
+   * hanke, vaikka kohde olisi sama (D-408, lib/projects/hilmaProcedure).
+   * Tyhjinä eivät vaikuta mihinkään.
+   */
+  procedureId?: string | null
+  sourceUrl?: string | null
 }
 
 export type MatchableProject = {
@@ -749,8 +757,19 @@ function getProjectTitles(
  */
 export function haveHardVeto(
   project: MatchableProject,
-  candidate: Pick<NormalizedProjectCandidate, "name" | "city" | "description">
+  candidate: Pick<
+    NormalizedProjectCandidate,
+    "name" | "city" | "description" | "procedureId" | "sourceUrl"
+  >
 ): boolean {
+  /*
+   * 3. Eri Hilma-hankinta = eri hanke (D-408). Jaetussa urakassa jokainen
+   *    urakkalaji on oma hankintansa omalla voittajallaan ja summallaan,
+   *    eikä urakkalajiveto ehdi väliin kun toinen nimi on "jaettu urakka"
+   *    eikä sisällä lajia lainkaan.
+   */
+  if (haveDifferentProcedures(project, candidate)) return true
+
   if (haveDifferentTrades(candidate.name, project.name)) return true
 
   /* Purku ja rakentaminen samassa osoitteessa ovat eri tyo (D-350). */

@@ -239,6 +239,9 @@ async function runScan(
         propertyId: a.metadata?.property_id ?? null,
         developer: a.developer ?? a.metadata?.developer ?? null,
         buildingType: a.property_type ?? a.metadata?.building_type ?? null,
+        /* Eri Hilma-hankinta on eri hanke myös parivertailussa (D-408). */
+        procedureId: (a.metadata?.procedure_id as string | null) ?? null,
+        sourceUrl: (a.metadata?.source_url as string | null) ?? null,
       })
 
       /*
