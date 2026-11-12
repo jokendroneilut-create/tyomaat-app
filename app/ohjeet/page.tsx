@@ -33,11 +33,24 @@ const SECTIONS = [
   { id: "palaute", title: "Palaute ja yhteydenotto" },
 ]
 
+/*
+ * ANKKURILINKIN KOHDISTUS: scroll-mt-20 = 80 px, ei 24 px.
+ *
+ * Sisallysluettelon linkki vei otsikon navipalkin alle. Palkki on
+ * position: sticky ja 60 px korkea (mitattu 12.11.2026, sama
+ * tyopoydalla ja mobiilissa), ja vanha scroll-mt-6 pysaytti otsikon
+ * 24 pikseliin eli palkin taakse. Otsikon oma pt-6 siirsi tekstin
+ * viela 24 px alemmas, joten nakyviin jai vasta leipateksti -- juuri
+ * se mita kayttaja EI klikannut.
+ *
+ * 80 px jattaa palkin alle 20 px ilmaa. Jos navipalkin korkeus joskus
+ * muuttuu, tama luku on muutettava sen mukana.
+ */
 function H({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     <h2
       id={id}
-      className="mt-10 scroll-mt-6 border-t border-gray-200 pt-6 text-xl font-bold text-gray-900"
+      className="mt-10 scroll-mt-20 border-t border-gray-200 pt-6 text-xl font-bold text-gray-900"
     >
       {children}
     </h2>
