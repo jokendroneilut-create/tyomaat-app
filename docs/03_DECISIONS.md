@@ -127,11 +127,56 @@ Kaksi rajausta, molemmat tahallisia:
    saavat yhä osua. Veto laukeaa vain uudelle numerolle, eli tilanne ei
    huonone mutta ei myöskään korjaannu itsestään.
 
-#### Jäi tekemättä
+#### Purkuyritys 13.11.2026: ei onnistunut, ja syy paljasti toisen aukon
 
-Ne 15 riviä on purettava käsin: osaurakat pitäisi irrottaa omiksi
-hankkeikseen, ja osa niistä on jo ehtinyt saada hankkeelta muuta
-tietoa. Sääntö estää uudet kasaumat, se ei pura vanhoja.
+Johannes pyysi purkamaan ne 15 riviä. Kartoitus: 34 vierasta
+hankintaa, joista **32:lla alkuperäinen ilmoitus yhä tallessa**
+faktoineen (9–15 faktaa/dokumentti), eikä yhdelläkään ollut vielä omaa
+hankeriviä. Kaksi (Nivalan salaojaurakat 35318 ja 35321) oli menetetty,
+koska dokumenttia ei enää ole.
+
+Kaikki 36 dokumenttia ajettiin identiteettivaiheen läpi uudelleen
+(`identity_resolved_at` tyhjäksi → `runIdentityWorker`). **36 ajoa,
+0 virhettä, 0 uutta riviä.**
+
+**Syy: tämän päätöksen veto on väärässä kerroksessa.** Se on
+`calculateMatch`issa, mutta ehdokkaiden yhdistäminen tapahtuu
+aiemmin `resolvePotentialProject`issa, joka etsii osumaa ensin
+tunnisteilla ja sitten **osoitteella + kunnalla**. Se polku ei kutsu
+`calculateMatch`ia lainkaan.
+
+Konkreettisesti: Oulun vesiliikuntakeskuksen neljä hankintaa (32419,
+32420, 32421, 32427) eivät ole neljä jonoriviä vaan **yksi jonorivi**
+(`ee016cb6`), joka oli kerännyt ne jo ehdokasvaiheessa. Uudelleenajo
+vain päivitti saman rivin.
+
+Osoitehaarassa on oma urakkalajivetonsa (D-264), mutta se kaatuu
+täsmälleen samaan asiaan kuin tämän päätöksen alussa: "Jaetun urakan
+talotekninen sivu-urakka" ei tuota urakkalajia, joten veto ei laukea.
+
+> **Kasautuminen tapahtuu ehdokasvaiheessa, ei hankevaiheessa.**
+> D-408 estää sen hankkeisiin. Ehdokasrivit voivat yhä kasata saman
+> paikan eri hankinnat yhdeksi riviksi, ja silloin hyväksyntä tuottaa
+> yhden hankkeen monesta urakasta.
+
+#### Päätös 13.11.2026: 15 riviä jätetään
+
+Johannes: *"antaa noiden olla. tulevat hankkeet menevät oikein niin
+voimme elää sen kanssa."*
+
+Tarkennus siihen mikä menee oikein: **hankepolku** on suojattu, eli
+valmis hanke ei enää ime vierasta hankintaa. **Ehdokaspolku on yhä
+auki**, joten uusi jaettu urakka voi edelleen kasautua yhdeksi
+jonoriviksi ennen hyväksyntää.
+
+Purku vaatisi kaksi askelta tässä järjestyksessä: sama procedure-veto
+`resolvePotentialProject`in osoitehaaraan, ja vasta sitten rivien
+irrotus käsin — uudelleenajo ei riitä, koska tunniste osuu olemassa
+olevaan riviin ja rivit olisi luotava nimenomaisesti uusina.
+
+Mitään ei rikkoutunut yrityksessä: kaikki 36 dokumenttia ovat taas
+ratkaistuja, jonorivien määrä ennallaan (11 296), yksikään hanke ei
+muuttunut.
 
 ### D-407 – Sopimushinta voittaa myös yhdistämisessä; yksi kirjoitusvirhe esti parin löytymisen
 
