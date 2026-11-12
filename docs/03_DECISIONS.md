@@ -51,6 +51,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-405 – Oletusarvo näytettynä on kohinaa: "Uusi" luki joka mobiilikortissa
+
+Johannes 12.11.2026: *"miksi mobiililla karttasivulla näyttää että
+kaikissa hankkeissa lukee 'uusi'?"* ja perään se mikä tekee tästä
+vian eikä makuasian: *"tuosta tulee nyt käsitys että hanke on jotenkin
+uusi ja vasta ilmestynyt"*.
+
+Pilleri näytti **käyttäjän omaa myyntitilaa** (Uusi / Kontaktoitu /
+Tarjous lähetetty / Voitettu / Hävitty) oletusarvolla `'new'`:
+
+    {humanizeStatus(statuses[p.id] ?? 'new')}
+
+Kun tilaa ei ole asetettu, pilleri näytti oletusta — eikä teksti
+"Uusi" kerro lukijalle myyntitilasta mitään, vaan hankkeesta.
+
+**Mitattu 12.11.2026: tilamerkintöjä on koko kannassa 33 kpl
+seitsemältä käyttäjältä ja näkyviä hankkeita 7 120.** Pilleri näytti
+siis oletusta **99,5 %:ssa korteista**. Kenttä, joka näyttää
+oletustaan lähes aina, ei erota mitään mistään — se on kohinaa, ja
+tässä tapauksessa myös harhaanjohtavaa.
+
+**Korjaus:** pilleri näkyy vain kun tila on asetettu ja muu kuin
+`'new'`. Sama arvo on heti alapuolella pudotusvalikossa, joten mitään
+ei katoa; nyt pilleri erottuu niissä harvoissa korteissa joissa joku on
+oikeasti merkinnyt hankkeen.
+
+**Vika oli vain mobiilissa.** Työpöytälistassa pilleriä ei ole koskaan
+ollut — siellä tila näkyy pudotusvalikon omana arvona ja värinä.
+Mobiilikortti sai sen lisäksi, ja siitä tuli toisto.
+
+#### Ohjesivu oli luvannut 2,5 kuukautta asetusta jota ei ole
+
+Samalla päivitettiin `/ohjeet` vastaamaan Tänään-näkymän muutoksia
+(D-402…D-404). Tarkistuksessa löytyi erillinen vika: ohjeen kohta
+"Mukauta näkymää" lupasi neljä asetusta, joista yksi oli
+**"Tietolähteet — mistä hankkeet saa näkyviin"**. Sellaista valintaa ei
+ole: lähdevalinta poistettiin **29.8.2026**, koska se kysyi käyttäjältä
+jotain jota ei tallennettu mihinkään. Ohje jäi lupaamaan sitä.
+
+> **Kun asetus poistetaan tai lisätään, `/ohjeet` on osa muutosta.**
+> Ohjesivu ei riko mitään eikä kaadu testeihin, joten se vanhenee
+> hiljaa — ja se on ainoa paikka jossa kerromme asiakkaalle miten
+> palvelu toimii.
+
+Ohjeeseen lisättiin myös kortin kohdetyyppi (D-403), avainsanojen oma
+alakohta (nosto vai rajaus) ja UKK:hon rivi siitä että
+avainsanarajauskin voi olla syy vähäiseen hankemäärään. Avainsanojen
+esimerkeissä on nyt sekä erikoisalan sanoja että hanketyyppejä, koska
+seitsemästä kenttää käyttäneestä tilistä viisi oli kirjoittanut
+hanketyyppejä — ohje kannattaa sovittaa siihen miten kenttää
+käytetään, ei siihen miten sitä oli tarkoitus käyttää.
+
 ### D-404 – Asetusmodaalista poistettiin vieritys vierityksen sisällä
 
 > **TIEDOTETTU KÄYTTÄJILLE 11.11.2026.** Kolmesta muutoksesta
