@@ -51,6 +51,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-406 – Sipoon päätökset lähteeksi: jälleenjulkaisija paljasti puuttuvan alkulähteen
+
+Johannes 12.11.2026 kysyi jonorivistä *"Sipoon Boxiin suunnitteilla yli
+70 000 neliön logistiikkakeskus"*: **"onko meillä seurannassa nuo
+Sipoon päätökset?"**
+
+Ei ollut. Rivi tuli Rakennuslehdestä, vaikka päätöksen oli tehnyt
+**Sipoon rakennus- ja ympäristövaliokunta 3.11.** — eli meillä oli
+jälleenjulkaisijan referaatti kunnan omasta päätöksestä. Sipoosta oli
+seurannassa vain kaavalähde.
+
+**Alusta oli jo tuttu.** Osoite ei löytynyt aliverkkotunnus-
+arvauksella (`sipoo.oncloudos.com` ei vastaa) vaan kunnan oman
+hallintosivun linkistä: **`sipoofi.oncloudos.com`** — sama "fi"-pääte
+kuin Porvoolla, joka jäi aikanaan samasta syystä löytymättä 40 kunnan
+testissä. Kyseessä on siis sama Dynasty/oncloudos-asennus kuin
+Espoolla, Kirkkonummella, Kuopiolla, Porvoolla, Savonlinnalla,
+Torniolla ja Tuusulalla.
+
+Työ oli kolme riviä: `createDynastyFetcher`-määrittely, rekisteröinti
+`sources.ts`:ään ja rivi `discovery_sources`-tauluun Porvoon asetuksilla
+(`api`, `legacyFetchCollector`, 1 440 min).
+
+#### Ensimmäinen ajo 12.11.2026
+
+17 dokumenttia löytyi, 8 tuotiin, 9 siirtyi aikabudjetin täytyttyä
+seuraavaan ajoon. Ei virheitä, ääkköset oikein. Saalis on juuri sitä
+mitä haettiin:
+
+    Tekniska utskottet 09.06.2026 / Urheilutien- ja Latokujan
+      saneeraus, urakoitsijan valinta
+    Hankintapäätös hankinnassa TOTI 590750 Söderkulla skola,
+      kokonaisurakka
+    Östersundomin pumppaamosaneerauksen urakoitsijan valinta
+    Urakoitsijan valinta: Nikkilän kartanon alueen ensimmäiset...
+
+**Kunta on kaksikielinen**, joten nimikkeet ovat muotoa "Valiokunta /
+Utskott" ja osa pelkästään ruotsiksi. Rakentamisen sanasto osuu
+suomenkieliseen puoliskoon; jos ruotsinkielisiä päätöksiä alkaa jäädä
+väliin, syy on tässä.
+
+**Tämä ei palauta Boxin päätöstä takautuvasti** — syöte on liukuva
+ikkuna ja 3.11. kokous oli jo vierähtänyt pois. Se hanke jää
+Rakennuslehden rivin varaan.
+
+**Yleistys, joka ei ole uusi mutta vahvistui:** kun jonossa on
+jälleenjulkaisijan rivi kunnan päätöksestä, kysymys ei ole vain siitä
+kumpi rivi jää, vaan siitä **puuttuuko meiltä kokonainen lähde**
+([[rakennuslehti-is-secondary]]).
+
 ### D-405 – Oletusarvo näytettynä on kohinaa: "Uusi" luki joka mobiilikortissa
 
 Johannes 12.11.2026: *"miksi mobiililla karttasivulla näyttää että

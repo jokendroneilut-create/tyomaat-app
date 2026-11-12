@@ -12,6 +12,7 @@ import {
   fetchJoensuuPaatoksetSource,
   fetchKouvolaPaatoksetSource,
   fetchPorvooPaatoksetSource,
+  fetchSipooPaatoksetSource,
 } from "./fetchDynastySource"
 import {
   fetchTamperePaatoksetSource,
@@ -166,6 +167,7 @@ export const sources = [
   { name: "joensuu_paatokset", fetch: fetchJoensuuPaatoksetSource },
   { name: "kouvola_paatokset", fetch: fetchKouvolaPaatoksetSource },
   { name: "porvoo_paatokset", fetch: fetchPorvooPaatoksetSource },
+  { name: "sipoo_paatokset", fetch: fetchSipooPaatoksetSource },
   { name: "tampere_paatokset", fetch: fetchTamperePaatoksetSource },
   { name: "jyvaskyla_paatokset", fetch: fetchJyvaskylaPaatoksetSource },
   { name: "rovaniemi_paatokset", fetch: fetchRovaniemiPaatoksetSource },

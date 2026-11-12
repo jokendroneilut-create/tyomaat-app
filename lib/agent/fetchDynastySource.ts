@@ -575,3 +575,23 @@ export const fetchPorvooPaatoksetSource = createDynastyFetcher({
   city: "Porvoo", region: "Uusimaa",
   developer: "Porvoon kaupunki", sourceName: "porvoo_paatokset",
 })
+
+/*
+ * Sipoossa on sama "fi"-paate aliverkkotunnuksessa kuin Porvoolla, eli
+ * `sipoofi.oncloudos.com`. Osoite ei loytynyt aliverkkotunnusarvauksella
+ * vaan kunnan oman hallintosivun linkista.
+ *
+ * MIKSI LISATTIIN (12.11.2026): Boxin yli 70 000 m2:n logistiikkakeskus
+ * tuli meille vasta Rakennuslehden kautta, vaikka paatoksen teki Sipoon
+ * rakennus- ja ymparistovaliokunta 3.11. Alkulahde on aina parempi kuin
+ * jalleenjulkaisija ([[rakennuslehti-is-secondary]]), ja Sipoosta meilla
+ * oli ennen tata vain kaavalahde.
+ *
+ * Kunta on kaksikielinen, joten nimikkeet ovat muotoa "Valiokunta /
+ * Utskott". Rakentamisen sanasto osuu suomenkieliseen puoliskoon.
+ */
+export const fetchSipooPaatoksetSource = createDynastyFetcher({
+  host: "sipoofi",
+  city: "Sipoo", region: "Uusimaa",
+  developer: "Sipoon kunta", sourceName: "sipoo_paatokset",
+})
