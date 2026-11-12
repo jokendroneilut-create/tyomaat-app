@@ -112,6 +112,14 @@ export default function OhjeetPage() {
         </p>
 
         <p className="mt-3">
+          Kortilla näkyy osuman lisäksi hankkeen <strong>vaihe</strong> ja{" "}
+          <strong>kohdetyyppi</strong> (esim. Datakeskus, Koulu, Kerrostalo).
+          Tyyppi kannattaa lukea: hankkeen nimi on aina lähteen oma eikä se
+          aina kerro mistä on kyse — &rdquo;FCDC Vaasa, Kuriiritie&rdquo; on
+          datakeskus. Jos tyyppiä ei tiedetä, merkintää ei näytetä.
+        </p>
+
+        <p className="mt-3">
           👍👎 <strong>Peukut ovat tärkein tapa parantaa näkymää.</strong> Kun
           annat hankkeelle peukun alas, kerrot ettei tämänkaltainen hanke ole
           sinulle relevantti, ja vastaavat hankkeet laskevat listalla. Peukku
@@ -122,7 +130,7 @@ export default function OhjeetPage() {
         <H id="mukauta">3. Mukauta näkymää</H>
 
         <p className="mt-3">
-          <strong>Mukauta näkymää</strong> -napista asetat neljä asiaa, ja ne
+          <strong>Mukauta näkymää</strong> -napista käyt läpi viisi asiaa, ja ne
           ohjaavat kaikkea mitä Tänään näyttää:
         </p>
 
@@ -133,17 +141,47 @@ export default function OhjeetPage() {
             hankkeen eri vaiheessa, joten tämä vaikuttaa eniten.
           </li>
           <li>
+            <strong>Alueet</strong> — maakunnat joilla toimit.
+          </li>
+          <li>
             <strong>Myyntihetket</strong> — missä vaiheessa haluat kuulla
             hankkeesta. Kaavoitusvaihe on vuosia ennen urakkaa; rakennuslupa tai
             urakkakilpailu on lähempänä kauppaa.
           </li>
           <li>
-            <strong>Alueet</strong> — maakunnat joilla toimit.
+            <strong>Montako hanketta</strong> kerralla näkyviin — ja samalla
+            sivulla valinta <strong>sähköpostihälytyksistä</strong>, jotka
+            ilmoittavat kun hanke etenee juuri sinun roolillesi otolliseen
+            vaiheeseen.
           </li>
           <li>
-            <strong>Tietolähteet</strong> — mistä hankkeet saa näkyviin.
+            <strong>Oman alasi avainsanat</strong> — ks. alla.
           </li>
         </ul>
+
+        <p className="mt-4 font-semibold text-gray-900">
+          Avainsanat: nosto vai rajaus
+        </p>
+
+        <p className="mt-1">
+          Avainsanat ovat sanoja jotka kuvaavat sinua kiinnostavia hankkeita:
+          erikoisalaasi (<em>sähkö, valaistus, linjasaneeraus</em>) tai
+          hanketyyppejä (<em>datakeskus, konesali, rivitalo</em>). Hankkeet
+          joissa sanat mainitaan nousevat listasi kärkeen.
+        </p>
+
+        <p className="mt-3">
+          Sanalistan alla on rasti{" "}
+          <strong>&rdquo;Näytä vain nämä hankkeet&rdquo;</strong>. Ilman rastia
+          kaikki hankkeet näkyvät ja osuvat ovat vain ylimpänä; rastilla muut
+          jäävät listalta kokonaan pois. Rasti on oletuksena pois päältä.
+        </p>
+
+        <p className="mt-3">
+          Sanaa etsitään hankkeen nimestä, kuvauksesta ja kohdetyypistä. Jos
+          rajaus ei osu yhteenkään hankkeeseen, näytämme listan rajaamattomana
+          ja kerromme sen sivulla — tyhjää näkymää et siis saa.
+        </p>
 
         <p className="mt-3">
           Asetukset kannattaa käydä läpi kerran huolella. Jos näkymä tuntuu
@@ -391,8 +429,11 @@ export default function OhjeetPage() {
         <p className="mt-1">
           Tänään on valikoima, ei koko lista. Jos hankkeita on liian vähän,
           laajenna alueita tai myyntihetkiä kohdasta{" "}
-          <strong>Mukauta näkymää</strong>. Koko hankekanta on aina saatavilla
-          kohdassa <strong>Hankkeet / Kartta</strong>.
+          <strong>Mukauta näkymää</strong>. Tarkista samalla ettet ole
+          rastittanut avainsanojen kohdalla{" "}
+          <strong>&rdquo;Näytä vain nämä hankkeet&rdquo;</strong> — se rajaa
+          näkymän tiukasti. Koko hankekanta on aina saatavilla kohdassa{" "}
+          <strong>Hankkeet / Kartta</strong>.
         </p>
 
         <H id="palaute">13. Palaute ja yhteydenotto</H>
