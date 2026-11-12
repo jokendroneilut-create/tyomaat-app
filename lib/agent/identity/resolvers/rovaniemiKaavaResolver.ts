@@ -22,23 +22,29 @@ export async function resolveRovaniemiKaavaProject({
   const address = metadata.address ?? null
   const decisionNumber = metadata.decision_number ?? null
   const processingSteps = metadata.processing_steps ?? null
-  const contact: { name: string | null; title: string | null; phone: string | null; email: string | null } | null =
-    metadata.contact ?? null
+  /*
+   * Lohkossa voi olla monta henkiloa (D-409). Vanha yhden kentan muoto
+   * luetaan yha, jotta ennen muutosta tallennetut faktat toimivat.
+   */
+  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] =
+    Array.isArray(metadata.contacts)
+      ? metadata.contacts
+      : metadata.contact
+        ? [metadata.contact]
+        : []
 
   const description = [metadata.description, processingSteps ? `Käsittelyvaiheet: ${processingSteps}` : null]
     .filter(Boolean)
     .join(" ") || null
 
-  const contactPersons = contact?.name
-    ? [
-        {
-          name: contact.name,
-          title: contact.title,
-          phone: contact.phone,
-          email: contact.email,
-        },
-      ]
-    : []
+  const contactPersons = contacts
+    .filter((c) => c?.name)
+    .map((c) => ({
+      name: c.name,
+      title: c.title,
+      phone: c.phone,
+      email: c.email,
+    }))
 
   const municipality = getMunicipalityByName("Rovaniemi")
 

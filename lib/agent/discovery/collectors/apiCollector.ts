@@ -26,6 +26,10 @@ import zlib from "zlib"
 import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
 import { extractContacts, type Contact } from "@/lib/projects/contacts"
+import {
+  parseRovaniemiContacts,
+  type RovaniemiContact,
+} from "@/lib/agent/rovaniemiContacts"
 import { vaylaSubprojectLinks } from "@/lib/agent/vaylaSubprojects"
 import { parseSenaattiContacts } from "@/lib/agent/senaattiContacts"
 import { parseVaylaDescription } from "@/lib/agent/vaylaProjectDescription"
@@ -3583,19 +3587,12 @@ async function collectSeinajokiSource(source: DiscoverySource) {
 const ROVANIEMI_MAX_DETAIL_FETCHES_PER_RUN = 8
 const ROVANIEMI_STALE_YEARS = 2
 
-type RovaniemiContact = {
-  name: string | null
-  title: string | null
-  phone: string | null
-  email: string | null
-}
-
 type RovaniemiDetails = {
   address: string | null
   phase: string | null
   decisionNumber: string | null
   processingSteps: string | null
-  contact: RovaniemiContact | null
+  contacts: RovaniemiContact[]
   stale: boolean
 }
 
@@ -3605,28 +3602,6 @@ function rovaniemiExtractLastYear(text: string): number | null {
   return parseInt(matches[matches.length - 1], 10)
 }
 
-function parseRovaniemiContact(text: string | null): RovaniemiContact | null {
-  if (!text) return null
-
-  const withoutPrefix = text.replace(/^Lisätietoja\s*:?\s*/i, "")
-
-  const emailMatch = withoutPrefix.match(/[\w.+-]+@[\w.-]+\.\w+/)
-  const email = emailMatch ? emailMatch[0] : null
-  const withoutEmail = email ? withoutPrefix.replace(email, "") : withoutPrefix
-
-  const phoneMatch = withoutEmail.match(/puh\.?\s*([\d\s,()+-]+)/i)
-  const phone = phoneMatch ? phoneMatch[1].trim().replace(/[,.]+$/, "").replace(/\s+/g, " ") : null
-  const withoutPhone = phoneMatch ? withoutEmail.replace(phoneMatch[0], "") : withoutEmail
-
-  const cleaned = withoutPhone.replace(/[,.]+$/, "").trim()
-  const words = cleaned.split(/\s+/).filter(Boolean)
-  const name = words.length >= 2 ? words.slice(-2).join(" ") : cleaned || null
-  const title = words.length > 2 ? words.slice(0, -2).join(" ") : null
-
-  if (!name && !phone && !email) return null
-
-  return { name, title, phone, email }
-}
 
 async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
   const empty: RovaniemiDetails = {
@@ -3634,7 +3609,7 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
     phase: null,
     decisionNumber: null,
     processingSteps: null,
-    contact: null,
+    contacts: [],
     stale: false,
   }
 
@@ -3660,7 +3635,7 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
 
     let decisionNumber: string | null = null
     let processingSteps: string | null = null
-    let contact: RovaniemiContact | null = null
+    let contacts: RovaniemiContact[] = []
 
     $("span.label").each((_, el) => {
       const label = $(el).text().trim()
@@ -3686,7 +3661,7 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
         const stepParagraphs = paragraphs.filter((p) => p !== contactParagraph)
 
         processingSteps = stepParagraphs.join(" ") || null
-        contact = parseRovaniemiContact(contactParagraph)
+        contacts = parseRovaniemiContacts(contactParagraph)
       }
     })
 
@@ -3694,7 +3669,7 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
     const currentYear = new Date().getFullYear()
     const stale = lastYear !== null && lastYear <= currentYear - ROVANIEMI_STALE_YEARS
 
-    return { address, phase, decisionNumber, processingSteps, contact, stale }
+    return { address, phase, decisionNumber, processingSteps, contacts, stale }
   } catch {
     return empty
   }
@@ -3745,13 +3720,22 @@ async function collectRovaniemiSource(source: DiscoverySource) {
   for (const row of existingRows ?? []) {
     // processingSteps/contact lisättiin myöhemmin — vanhat rivit haetaan
     // siis uudelleen kunnes nekin sisältävät nämä kentät.
-    if (row.raw_payload?.phase && row.raw_payload?.processing_steps !== undefined) {
+    /*
+     * `contacts` korvasi yhden henkilon `contact`-kentan 13.11.2026
+     * (D-409). Vanha rivi haetaan uudelleen, jotta rikki jasennetty
+     * yhteystieto korjaantuu itsestaan seuraavalla ajolla.
+     */
+    if (
+      row.raw_payload?.phase &&
+      row.raw_payload?.processing_steps !== undefined &&
+      row.raw_payload?.contacts !== undefined
+    ) {
       knownDetails.set(row.document_url, {
         address: row.raw_payload.address ?? null,
         phase: row.raw_payload.phase,
         decisionNumber: row.raw_payload.decision_number ?? null,
         processingSteps: row.raw_payload.processing_steps ?? null,
-        contact: row.raw_payload.contact ?? null,
+        contacts: row.raw_payload.contacts ?? [],
         stale: row.raw_payload.stale ?? false,
       })
     }
@@ -3792,7 +3776,7 @@ async function collectRovaniemiSource(source: DiscoverySource) {
             phase: details?.phase ?? null,
             decision_number: details?.decisionNumber ?? null,
             processing_steps: details?.processingSteps ?? null,
-            contact: details?.contact ?? null,
+            contacts: details?.contacts ?? [],
             stale: details?.stale ?? false,
             description: item.description,
           },

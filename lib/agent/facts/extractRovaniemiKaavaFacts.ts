@@ -25,7 +25,7 @@ export function extractRovaniemiKaavaFacts({
   decisionNumber,
   description,
   processingSteps,
-  contact,
+  contacts,
 }: {
   documentId: string
   sourceName: string
@@ -36,7 +36,7 @@ export function extractRovaniemiKaavaFacts({
   decisionNumber: string | null
   description: string | null
   processingSteps?: string | null
-  contact?: { name: string | null; title: string | null; phone: string | null; email: string | null } | null
+  contacts?: { name: string | null; title: string | null; phone: string | null; email: string | null }[]
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
 
@@ -53,7 +53,7 @@ export function extractRovaniemiKaavaFacts({
     decision_number: clean(decisionNumber),
     description: clean(description),
     processing_steps: clean(processingSteps ?? null),
-    contact: contact ?? null,
+    contacts: contacts ?? [],
   }
 
   if (cityPlanId) {

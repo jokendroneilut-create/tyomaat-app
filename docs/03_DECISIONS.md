@@ -51,6 +51,98 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-409 – Rovaniemen yhteystiedot: yksi henkilö viidessä eri muodossa
+
+Johannes 13.11.2026 hankkeesta c2d463bd: *"yhteystiedot ovat sekaisin
+jotenkin. korjaa jonon hankkeet ja poimija. tarkista myös jo hyväksytyt
+käyttäjille näkyvät hankkeet."*
+
+Rivillä luki:
+
+    name  "sähköposti: etu.sukunimi@rovaniemi.fi"
+    title "Kaavoituspäällikkö Markku Pyhäjärvi, sähköposti:
+           Kaavasuunnittelija Ville Mäkitalo, puh. 040 671 2219"
+    phone "016 322 8927"
+    email "etu.sukunimi@rovaniemi.fi"
+
+Eli kaksi ihmistä, kaksi puhelinnumeroa ja malliosoite yhdeksi
+merkinnäksi survottuna — eikä yksikään kenttä oikein.
+
+#### Vanha poimija oletti yhden henkilön
+
+`parseRovaniemiContact` otti ensimmäisen sähköpostin, ensimmäisen
+puhelinnumeron ja piti lopusta **kahta viimeistä sanaa** nimenä. Kaksi
+vikaa yhdessä: henkilöitä ei eroteltu, ja `replace(email, "")` poistaa
+vain ENSIMMÄISEN osuman, joten toinen samanlainen osoite jäi tekstiin ja
+päätyi nimeksi.
+
+#### Viisi muotoa, kaikki luettu sivulta
+
+Jokainen löytyi vasta kun edellinen oli korjattu — eli yksikään ei
+tullut arvaamalla:
+
+| | muoto | mitä se rikkoi |
+|---|---|---|
+| A | kaksi henkilöä, yhteinen malliosoite | perusvika |
+| B | `Jarmo Lokio / Arkkitehtitoimisto Jarmo Lokio Oy` | nimeksi tuli "Lokio Oy" |
+| C | nimike pienellä: "maankäyttöasiantuntija Niina Alanenpää" | — |
+| D | **osoite ennen numeroa** | Ville Pitkänen sai Markku Pyhäjärven osoitteen |
+| E | **`puh. +358 40 194 6870`** | Elias Ritolaa ei tunnistettu henkilöksi lainkaan |
+
+Muoto E oli pahin hiljainen vika: numeroa etsivä kuvio vaati alkuun
+numeron, joten plussalla alkava jäi tunnistamatta ja henkilön nimi valui
+**seuraavan henkilön nimikkeeseen**.
+
+> **Ratkaiseva ei ole puhelinnumero vaan nimi.** Osoite voi olla numeron
+> kummalla puolella tahansa, joten se liitetään sille jonka nimen
+> JÄLKEEN se on; nimeä edeltävä kuuluu edelliselle henkilölle.
+
+#### Malliosoitetta ei tallenneta
+
+`etu.sukunimi@rovaniemi.fi` ei ole kenenkään osoite vaan ohje muodosta.
+Sitä ei myöskään johdeta nimestä: rekisteriin kuuluu vain se jolla
+ihmisen oikeasti tavoittaa ([[register-is-worksite-contacts]]), ja
+puhelinnumero on tässä se. Konsultin oma osoite ja toimiston nimi sen
+sijaan säilyvät.
+
+#### Korjaus ja takautuva ajo
+
+`lib/agent/rovaniemiContacts.ts` + 9 testiä, kaikki sivuilta kopioidusta
+tekstistä. Keräin, faktat ja päättelijä lukevat nyt **listaa** yhden
+kentän sijaan, ja keräimen välimuistiportti vaatii `contacts`-kentän,
+joten vanhat rivit haetaan uudelleen itsestään.
+
+| | ennen | jälkeen |
+|---|---|---|
+| dokumenteista poimittuja henkilöitä | 0 kunnollista | **57** |
+| jonorivien nimettyjä henkilöitä | 13 (lähes kaikki rikki) | **22** |
+| hankkeiden nimettyjä henkilöitä | 15 | **19** |
+| rikkinäisiä rivejä | 11 jonossa, 8 hankkeessa | **2 + 2** |
+
+**Uudelleenratkaisu ei riittänyt.** 78 dokumenttia ajettiin
+identiteettivaiheen läpi, mutta jonorivien `contact_persons` ei
+päivittynyt: olemassa olevan ehdokkaan metadataa ei ylikirjoiteta
+([[candidate-path-skips-match-veto]]). Korjaus kirjoitettiin siksi
+suoraan dokumenteista `kaava_tunnus`-avaimella.
+
+**Ehjät merkinnät säilyivät:** takautuva ajo korvasi vain ne jotka
+tunnistuivat rikkinäisiksi ja yhdisti loput nimen perusteella, joten
+käsin lisätty osapuoli ei kadonnut.
+
+#### Neljä riviä jätettiin ennalleen
+
+Kahdelta kaavasivulta **"Lisätietoja"-lohko on poistunut kokonaan**
+(tarkistettu molemmilta). Dokumentissa ei siis ole millä korvata, mutta
+vanhassa rikkinäisessä merkinnässä on silti oikea nimi. Tyhjentäminen
+hävittäisi tiedon jonka olemme joskus saaneet, joten ne jäävät —
+kaksi jonorivillä ja kaksi hankkeessa.
+
+#### Sama vika muualla, mittaamatta korjaamatta
+
+Kartoitus koko kannasta: rikkinäisiä yhteysmerkintöjä **118**, joista
+Rovaniemi oli 17. Suurin yksittäinen on **Hilma 58**, sitten Vesilahti
+14 ja Lohja 11. Ne ovat eri poimijoita eikä niihin koskettu.
+
 ### D-408 – Eri Hilma-hankinta on eri hanke
 
 Jatkoa D-407:lle. Kun Sigurd Frosteruksen puiston hintaristiriita

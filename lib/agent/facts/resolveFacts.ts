@@ -476,7 +476,7 @@ export function resolveFacts(document: any) {
     const decisionNumber = document.raw_payload?.decision_number ?? null
     const description = document.raw_payload?.description ?? null
     const processingSteps = document.raw_payload?.processing_steps ?? null
-    const contact = document.raw_payload?.contact ?? null
+    const contacts = document.raw_payload?.contacts ?? []
 
     return {
       decisions: [],
@@ -490,7 +490,7 @@ export function resolveFacts(document: any) {
         decisionNumber,
         description,
         processingSteps,
-        contact,
+        contacts,
       }),
     }
   }
