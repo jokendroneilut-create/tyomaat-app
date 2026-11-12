@@ -90,3 +90,35 @@ describe("siirrettavatArvot", () => {
     expect(tulos).toEqual({ developer: "X" })
   })
 })
+
+describe("kustannus ratkaistaan alkuperan mukaan (D-407)", () => {
+  const sopimus = (n: number) => ({ estimated_cost: n, metadata: { cost_source: "contract" } })
+  const arvio = (n: number) => ({ estimated_cost: n, metadata: { cost_source: "notice" } })
+
+  it("piilotettavan sopimushinta voittaa sailyjan ennakkoarvion", () => {
+    /* Sigurd Frosteruksen puisto: Hilman arvio 5,1 M, urakkasumma 3,81 M. */
+    expect(siirrettavatArvot(arvio(5100000), sopimus(3811040))).toEqual({
+      estimated_cost: 3811040,
+    })
+  })
+
+  it("ennakkoarvio EI korvaa sailyjan sopimushintaa", () => {
+    expect(siirrettavatArvot(sopimus(3811040), arvio(5100000))).toEqual({})
+  })
+
+  it("sama alkupera: sailyjan arvo jaa", () => {
+    expect(siirrettavatArvot(sopimus(100), sopimus(200))).toEqual({})
+  })
+
+  it("tyhja sailyjan kentta taytetaan alkuperasta riippumatta", () => {
+    expect(siirrettavatArvot({ estimated_cost: null }, arvio(5100000))).toEqual({
+      estimated_cost: 5100000,
+    })
+  })
+
+  it("merkitsematon alkupera on heikoin, joten sopimushinta voittaa sen", () => {
+    expect(siirrettavatArvot({ estimated_cost: 999 }, sopimus(123))).toEqual({
+      estimated_cost: 123,
+    })
+  })
+})

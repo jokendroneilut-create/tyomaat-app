@@ -51,6 +51,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-407 – Sopimushinta voittaa myös yhdistämisessä; yksi kirjoitusvirhe esti parin löytymisen
+
+Johannes 12.11.2026 Sigurd Frosteruksen puiston riveistä: *"katso
+ennemmin miksi tuossa kuvassa oleva kilpailutuksessa oleva
+esirakentamisen ja sopimus myönnetty vaihe eivät yhdistyneet
+automaattisesti. Koska jos olisivat yhdistyneet niin eikö myös tuo
+hinta olisi korjaantunut?"*
+
+Kysymys osui kahteen eri vikaan, ja **vain ensimmäinen oli se jota
+etsin**.
+
+#### 1. Pari jäi löytymättä yhdestä kirjaimesta
+
+Hilman rivillä luki **"Sigurd Froster*i*uksen"**, päätösrivillä
+"Frosteruksen". Ajettu täsmäytin molemmilla nimillä:
+
+| nimet | varmuus | laatuportti |
+|---|---|---|
+| "Frosteriuksen" vs "Frosteruksen" | **65** | **hylätty** |
+| sama nimi | **100** | hyväksytty |
+
+Osumasyissä oli `similar_title, same_city, same_region,
+name_in_description` ja mukana **`different_name_subjects`**:
+täsmäytin lukee kaksi erisnimeä eri kohteiksi. Rivit siis vertailtiin
+(molemmat Helsinki-ryhmässä), mutta lähteen kirjoitusvirhe pudotti
+varmuuden laatuportin alle.
+
+Rivillä oli lisäksi `possible_duplicate_of` osoittamassa
+puistosuunnitelmaan. Kenttää ei lue kukaan
+([[duplicate-hint-open-items]]).
+
+#### 2. Yhdistäminen EI olisi korjannut hintaa
+
+Tämä on se osa jossa olin väärässä ennen mittausta. Yhdistin rivit
+käsin ja **hinta jäi silti 5,1 miljoonaan** kunnes korjasin sen
+erikseen.
+
+`duplicateFieldCarry.siirrettavatArvot` siirsi kentän vain jos
+säilyjän oma oli tyhjä (`if (!onTyhja(oma)) continue`). Säilyjäksi
+valitaan täyteisempi rivi — tässä Hilman kilpailutusrivi
+ennakkoarvioineen — joten piilotetun päätösrivin **toteutunut
+urakkasumma 3 811 040 € ei päässyt 5 100 000 €:n päälle**.
+Automaattinen yhdistäminen olisi tuottanut saman väärän luvun.
+
+**Korjaus:** kustannus ei enää noudata "oma voittaa" -sääntöä, vaan
+samaa etusijajärjestystä joka oli jo kirjoitettu
+`resolveProjectCost`iin: **manual > contract > notice > text**.
+Heikompi alkuperä ei koskaan korvaa vahvempaa, joten tekstistä
+poimittu arvio ei pääse sopimusarvon päälle tätäkään reittiä.
+Merkitsemätön alkuperä tulkitaan heikoimmaksi, kuten tuonnissakin.
+
+#### Takautuva ajo: 19 osumaa, 7 korjattu, 12 jätetty
+
+Kuivaharjoitus 7 124 julkisesta hankkeesta löysi 19 riviä joilla
+`metadata.contract_value` poikkesi näytetystä hinnasta. **Rivien
+lukeminen jakoi ne kahteen, eikä sääntö ratkaise molempia:**
+
+**Korjattu (7).** Viidellä ei ollut hintaa lainkaan, kahdella hinta oli
+tekstistä poimittu. Suurimmat: Sähköasema Åbacken 9,46 M€ ja Kulosaaren
+metrosillan korjausurakka 8,65 M€ — molemmilla kortilla ei lukenut
+hintaa, vaikka sopimusarvo oli metadatassa. Aiempi arvo talteen
+`metadata.aiempi_kustannus`iin, merkki `sopimushinta_voittaa_2026_11`.
+
+**Jätetty koskematta (12).** Näillä **molemmat luvut ovat
+sopimushintoja**, ja jokaisella rivillä on joko useita voittajia tai yli
+kaksi lähdekäyntiä: kyse on jaetun urakan osista samalla rivillä, ei
+vanhentuneesta arviosta. Esimerkiksi "Oulun vesiliikuntakeskus, jaetun
+urakan talotekninen sivu-urakka" näyttää 3 758 000 € kun
+`contract_value` on 2 772 000 € ja kuvauksessa mainitaan 5 404 000 € —
+kolme eri lukua, kaikki oikeita jostain urakasta. Kummankaan
+valitseminen ilman lukemista olisi arvaus
+([[cost-figure-is-not-project-cost]]).
+
+> **Sääntö ratkaisee vain eri alkuperät.** Kun molemmat luvut ovat
+> yhtä vahvoja, kyse ei ole etusijasta vaan siitä että rivillä on monta
+> urakkaa — ja se on oma ongelmansa ([[multi-project-rows]]).
+
 ### D-406 – Sipoon päätökset lähteeksi: jälleenjulkaisija paljasti puuttuvan alkulähteen
 
 Johannes 12.11.2026 kysyi jonorivistä *"Sipoon Boxiin suunnitteilla yli

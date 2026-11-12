@@ -58,6 +58,16 @@ export const SIIRRETTAVAT_KENTAT = [
 
 export type SiirrettavaKentta = (typeof SIIRRETTAVAT_KENTAT)[number]
 
+import type { CostSource } from "./resolveProjectCost"
+
+/* Sama jarjestys kuin resolveProjectCostissa; pidetaan yhtena totuutena. */
+const KUSTANNUS_JARJESTYS: Record<CostSource, number> = {
+  manual: 4,
+  contract: 3,
+  notice: 2,
+  text: 1,
+}
+
 /*
  * Roska-arvot joita ei kannata siirtää näkyviin. "Muu" löytyi
  * tilaajakentästä lähdekartoituksessa (docs/20): se on kentän
@@ -91,6 +101,47 @@ function menneisyydessa(arvo: unknown, nyt: string): boolean {
 }
 
 /*
+ * Kumman kustannus jää, säilyjän vai piilotettavan.
+ *
+ * Alkuperä luetaan `metadata.cost_source`ista; puuttuva tulkitaan
+ * heikoimmaksi ("text") samoin kuin `resolveProjectCost`issa, koska
+ * ennen 15.8.2026 kirjoitetuilla riveillä merkintää ei ole.
+ *
+ * Palauttaa `estimated_cost`in ja sen alkuperän vain jos piilotettavan
+ * arvo on AIDOSTI parempi. Tasatilanteessa ei kirjoiteta mitään, eli
+ * säilyjän luku jää — sama periaate kuin muissa kentissä.
+ */
+function kustannusAlkupera(rivi: Record<string, unknown>): CostSource {
+  const meta = (rivi.metadata ?? {}) as Record<string, unknown>
+  const arvo = meta.cost_source
+  return arvo === "manual" || arvo === "contract" || arvo === "notice"
+    ? arvo
+    : "text"
+}
+
+function positiivinen(arvo: unknown): number | null {
+  const n = Number(arvo)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+export function parempiKustannus(
+  jaava: Record<string, unknown>,
+  piilotettava: Record<string, unknown>
+): { estimated_cost: number; metadata?: unknown } | null {
+  const toinen = positiivinen(piilotettava.estimated_cost)
+  if (toinen === null) return null
+
+  const oma = positiivinen(jaava.estimated_cost)
+  if (oma === null) return { estimated_cost: toinen }
+
+  const omaTaso = KUSTANNUS_JARJESTYS[kustannusAlkupera(jaava)]
+  const toinenTaso = KUSTANNUS_JARJESTYS[kustannusAlkupera(piilotettava)]
+  if (toinenTaso <= omaTaso) return null
+
+  return { estimated_cost: toinen }
+}
+
+/*
  * Palauttaa ne kentät jotka voittajalle kirjoitetaan. Tyhjä olio
  * tarkoittaa ettei siirrettävää ole.
  */
@@ -103,7 +154,32 @@ export function siirrettavatArvot(
 
   const paivitys: Record<string, unknown> = {}
 
+  /*
+   * KUSTANNUS EI NOUDATA "OMA VOITTAA" -SÄÄNTÖÄ (D-407).
+   *
+   * Muissa kentissä säilyjän arvo voittaa, koska kaksi arvoa ovat
+   * yhtä hyviä ja vanhempi on ehtinyt kerätä historiaa. Kustannus ei
+   * ole sellainen: sillä on järjestys, joka on kirjoitettu jo
+   * `resolveProjectCost`iin (manual > contract > notice > text).
+   *
+   * Sigurd Frosteruksen puiston esirakentaminen 12.11.2026: Hilman
+   * kilpailutusrivi (ennakkoarvio 5,1 M€) oli täyteisempi ja jäi
+   * säilyjäksi, joten piilotetun päätösrivin **toteutunut
+   * urakkasumma 3,81 M€ ei päässyt sen päälle**. Yhdistäminen siis
+   * säilytti vanhentuneen luvun juuri siinä vaiheessa kun oikea on
+   * tiedossa — sopimus on tehty ja summa julkaistu.
+   *
+   * Siksi kustannus ratkaistaan samalla etusijajärjestyksellä kuin
+   * tuonnissa. Heikompi alkuperä ei koskaan korvaa vahvempaa, joten
+   * tekstistä poimittu arvio ei pääse sopimusarvon päälle tätäkään
+   * reittiä.
+   */
+  const kustannus = parempiKustannus(jaava, piilotettava)
+  if (kustannus) Object.assign(paivitys, kustannus)
+
   for (const kentta of SIIRRETTAVAT_KENTAT) {
+    if (kentta === "estimated_cost") continue
+
     const oma = jaava[kentta]
     const toinen = piilotettava[kentta]
 
