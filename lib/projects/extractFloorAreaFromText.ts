@@ -35,8 +35,23 @@
 /* Luku ryhmittelijöineen: "6 921", "10 300", "3212". */
 const LUKU = String.raw`(\d{1,3}(?:[\s .]\d{3})+|\d+)(?:[.,]\d+)?`
 
-/* Yksiköt joissa ala voi olla. */
-const YKSIKKO = String.raw`(?:m2|m²|neliömetri\w*|neliötä)`
+/*
+ * Yksiköt joissa ala voi olla.
+ *
+ * KERROSNELIÖ ON OMA YKSIKKÖNSÄ (D-411). Rovaniemen kaavahakemuksessa
+ * luki "kokonaiskerrosalaltaan 13200 kem2", ja `kerrosala`-ankkuri olisi
+ * osunut — mutta yksikkö "kem2" ei ollut listalla, joten luku jäi
+ * poimimatta. Mitattu 13.11.2026: 482 riviä mainitsee kerrosneliön ja
+ * 450:llä kenttä on tyhjä.
+ *
+ * Yksikkö EI yksin riitä todisteeksi, toisin kuin `brm²`. Niistä 450:stä
+ * valtaosa on jotain muuta kuin hankkeen ala: "Rakennusoikeus on
+ * arvioilta 12-16 000 k-m2", "Uutta asuinkerrosalaa tulee
+ * kerrostaloihin 9 000 k-m²", "liiketila 48 k-m2". Siksi kerrosneliö
+ * lisätään vain YKSIKKÖNÄ olemassa oleviin ankkureihin, joissa lause
+ * kertoo mistä luvusta on kyse — eikä omaksi ankkurikseen.
+ */
+const YKSIKKO = String.raw`(?:kem2|kem²|k-m2|k-m²|m2|m²|(?:kerros)?neliömetri\w*|neliötä)`
 
 /* Pehmentimet luvun edessä. */
 const HEDGE = String.raw`(?:noin\s*|n\.\s*|arviolta\s+|cirka\s+|ca\.?\s*)?`
@@ -115,13 +130,26 @@ const ANKKURIT: RegExp[] = [
 
 
 /*
+ * NELJÄ UUTTA ESTETTÄ (D-411), kaikki mitattu kannasta 13.11.2026
+ * kerrosneliöyksikön lisäämisen yhteydessä. Jokainen on lause, jossa
+ * ankkuri osuu oikein mutta luku ei ole HANKKEEN ala:
+ *
+ *   "Rakennettu kerrosala on 4 438 k-m2"              nykyinen, ei tuleva
+ *   "olemassa olevan toimistorakennuksen kerrosala"   nykyinen rakennus
+ *   "Vanhojen, suojeltavien rakennusten laajuus"      säilytettävä osa
+ *   "17 majoitusrakennusta kerrosalaltaan 29,5 k-m2"  yhden mökin ala
+ *
+ * Kolme ensimmäistä kertovat mitä tontilla JO on; asiakas ostaa sen mitä
+ * sinne tulee. Neljäs on lukumäärä kertaa yksikkökoko, ja ilman
+ * kertolaskua luku on kertaluokan pieleen.
+ *
  * Esteet luetaan osuman EDESTÄ. Kaikki torjuttavat muodot ovat luvun
  * edellä ("suunnittelualueen pinta-ala on ..."), joten ikkuna päättyy
  * osumaan — sama ratkaisu kuin kustannuspoimijassa, jossa jälkeenpäin
  * katsominen torjui kelvollisia rivejä.
  */
 const EI_RAKENNUS =
-  /suunnittelualue|kaava-alue|asemakaava-alue|tonti[nt]|puiston|puistoalue|ranta-alue|viheralue|katualue|kattoalue|pohjapinta-ala|keskipinta-ala|rakennusoikeu|asunto\w*\s+keski|huoneistoala/i
+  /suunnittelualue|kaava-alue|asemakaava-alue|tonti[nt]|puiston|puistoalue|ranta-alue|viheralue|katualue|kattoalue|pohjapinta-ala|keskipinta-ala|rakennusoikeu|asunto\w*\s+keski|huoneistoala|rakennettu\s+kerrosala|olemassa\s+olevan|nykyisen\s+rakennu|vanhojen|suojeltavien|\d+\s+\w*rakennusta/i
 
 /* Rakennushanke ei ole neliömetrin kokoinen eikä sadan hehtaarin. */
 const MIN_M2 = 20

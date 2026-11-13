@@ -137,6 +137,24 @@ describe("nimike siistitään reunoilta", () => {
   })
 })
 
+/*
+ * Numero ilman tunnusta, pilkuilla eroteltuna (D-411). Näin se luki
+ * Rovaniemen Aittatien kaavamuutoksen vaihekentässä 13.11.2026.
+ */
+describe("Rovaniemi: pilkkueroteltu rivi ilman puh.-tunnusta", () => {
+  it("poimii nimen, nimikkeen, numeron ja osoitteen", () => {
+    const [c] = parseYhteystietolohko(
+      "Lisätietoja: Kaupunginarkkitehti Sipi Hintsanen, 050 562 6314, sipi.hintsanen@rovaniemi.fi"
+    )
+    expect(c).toMatchObject({
+      name: "Sipi Hintsanen",
+      title: "Kaupunginarkkitehti",
+      phone: "050 562 6314",
+      email: "sipi.hintsanen@rovaniemi.fi",
+    })
+  })
+})
+
 /* Rovaniemen muodot: yhteystietolohko.rovaniemi.spec.ts (D-409). */
 
 describe("tyhjä syöte", () => {

@@ -3665,6 +3665,27 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
       }
     })
 
+    /*
+     * "LISÄTIETOJA" EI OLE AINA OMA KAPPALEENSA (D-411).
+     *
+     * Yllä oleva haku vaatii kaksi asiaa: että lohko on
+     * "Käsittelyvaiheet"-säiliössä ja että kappale ALKAA sanalla
+     * "Lisätietoja". Aittatien kaavamuutoksessa se oli kumpaakaan
+     * olematta — "Uusin vaihe" -tekstin perässä samalla rivillä:
+     *
+     *   "Vireilletulovaihe 12.-25.11.2026 Lisätietoja:
+     *    Kaupunginarkkitehti Sipi Hintsanen, 050 562 6314, sipi...@..."
+     *
+     * Yhteystieto meni silloin kokonaisuudessaan vaihekenttään ja
+     * yhteyshenkilöt jäivät tyhjiksi. Vaihe myös siistitään: kenttä
+     * kertoo vaiheen, ei yhteystietoja.
+     */
+    if (!contacts.length && phase && /Lisätietoja/i.test(phase)) {
+      const kohta = String(phase).search(/Lisätietoja/i)
+      contacts = parseYhteystietolohko(String(phase).slice(kohta))
+      if (contacts.length) phase = String(phase).slice(0, kohta).trim() || null
+    }
+
     const lastYear = phase ? rovaniemiExtractLastYear(phase) : null
     const currentYear = new Date().getFullYear()
     const stale = lastYear !== null && lastYear <= currentYear - ROVANIEMI_STALE_YEARS

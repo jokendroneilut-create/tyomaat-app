@@ -184,3 +184,72 @@ describe("extractFloorAreaFromText: kooltaan", () => {
     })
   }
 })
+
+/*
+ * KERROSNELIÖ YKSIKKÖNÄ (D-411). Rovaniemen kaavahakemuksessa luki
+ * "kokonaiskerrosalaltaan 13200 kem2": ankkuri osui, yksikkö ei ollut
+ * listalla. Torjuvat tapaukset ovat kaikki kannasta 13.11.2026.
+ */
+describe("kerrosneliö yksikkönä (D-411)", () => {
+  it("poimii kem2:n kerrosala-ankkurista", () => {
+    expect(
+      extractFloorAreaFromText(
+        "Eurotum Oy hakee 27.1.2026 päivätyllä kaavamuutoshakemuksella kiinteistöä " +
+          "majoitus- ja asuinrakennusten korttelialueeksi kerrosluvulla VII ja " +
+          "kokonaiskerrosalaltaan 13200 kem2."
+      )
+    ).toBe(13200)
+  })
+
+  it("poimii myös k-m2-muodon", () => {
+    expect(extractFloorAreaFromText("Rakennusten kokonaiskerrosala on 3 600 k-m2")).toBe(3600)
+  })
+
+  it("ei poimi rakennusoikeutta", () => {
+    expect(
+      extractFloorAreaFromText("Rakennusoikeus on arvioilta 12-16 000 k-m2, josta liiketilaa")
+    ).toBeNull()
+    expect(
+      extractFloorAreaFromText("rakennusoikeuden arvo 400,50 euroa/m2, määrä 15 000 kem2")
+    ).toBeNull()
+  })
+
+  it("ei poimi hankkeen osaa", () => {
+    expect(
+      extractFloorAreaFromText("Uutta asuinkerrosalaa tulee kerrostaloihin 9 000 k-m².")
+    ).toBeNull()
+    expect(extractFloorAreaFromText("sen liiketila 48 k-m2 ja varastotila")).toBeNull()
+    expect(extractFloorAreaFromText("Laajennus 107,5 kem² / 495 m³")).toBeNull()
+  })
+})
+
+/* Lauseita joissa ankkuri osuu mutta luku ei ole hankkeen ala (D-411). */
+describe("nykyinen ja osa eivät ole hankkeen ala (D-411)", () => {
+  it("ei poimi jo rakennettua kerrosalaa", () => {
+    expect(
+      extractFloorAreaFromText("(km2960 jaettuna). Rakennettu kerrosala on 4 438 k-m2. Suurin sallittu")
+    ).toBeNull()
+  })
+
+  it("ei poimi olemassa olevaa rakennusta", () => {
+    expect(
+      extractFloorAreaFromText(
+        "Alueella olemassa olevan liike- ja toimistorakennuksen kerrosala on 11 317 k-m²."
+      )
+    ).toBeNull()
+  })
+
+  it("ei poimi säilytettävää osaa", () => {
+    expect(
+      extractFloorAreaFromText("Vanhojen, suojeltavien rakennusten laajuus on noin 460 k-m².")
+    ).toBeNull()
+  })
+
+  it("ei poimi yksikkökokoa lukumäärän takaa", () => {
+    expect(
+      extractFloorAreaFromText(
+        "lupaa saada rakentaa kiinteistöille 17 majoitusrakennusta kerrosalaltaan 29,5 k-m2"
+      )
+    ).toBeNull()
+  })
+})

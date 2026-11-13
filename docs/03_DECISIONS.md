@@ -51,6 +51,83 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-411 – Kerrosneliö on yksikkö, ja "Lisätietoja" ei ole aina oma kappaleensa
+
+Johannes 13.11.2026 hankkeesta 1c6dc7d8: *"tästä puuttuu 13200 kem2 joka
+tarkoittaa pinta-alaa ja Lisätietoja: Kaupunginarkkitehti Sipi Hintsanen,
+050 562 6314 … Korjaa tämä hanke, jono ja tarkista takautuvasti onko
+muilla saman lähteen kautta tulleilla tapahtunut sama."*
+
+Yksi rivi, kaksi toisistaan riippumatonta vikaa.
+
+#### 1. Yksikkö "kem2" puuttui listalta
+
+Kuvauksessa luki *"kokonaiskerrosalaltaan 13200 kem2"*. `kerrosala`-ankkuri
+osui oikein, mutta `YKSIKKO` tunsi vain `m2|m²|neliömetriä|neliötä` — joten
+luku jäi poimimatta. Lisätty: `kem2`, `kem²`, `k-m2`, `k-m²`,
+`kerrosneliömetriä`.
+
+> **Kerrosneliö ei kelpaa yksin ankkuriksi, toisin kuin `brm²`.** Mitattu
+> koko kannasta: 482 riviä mainitsee kerrosneliön, 450:llä kenttä on
+> tyhjä — mutta valtaosa niistä on jotain muuta kuin hankkeen ala
+> (*"Rakennusoikeus on arvioilta 12-16 000 k-m2"*, *"Uutta
+> asuinkerrosalaa tulee kerrostaloihin 9 000 k-m²"*, *"liiketila 48
+> k-m2"*). Siksi yksikkö lisättiin vain olemassa oleviin ankkureihin,
+> joissa lause itse kertoo mistä luvusta on kyse.
+
+Vanhan ja uuden säännön vertailu koko kannasta: **29 riviä** (≈18
+hanketta) saisi alan jota ei ennen saanut. Luettuna yksitellen **neljä
+oli väärin**, ja jokainen omalla kuviollaan:
+
+| luku | lause | mikä meni pieleen |
+|---|---|---|
+| 4 438 | "Rakennettu kerrosala on 4 438 k-m2" | nykyinen, ei tuleva |
+| 11 317 | "olemassa olevan toimistorakennuksen kerrosala" | nykyinen rakennus |
+| 460 | "Vanhojen, suojeltavien rakennusten laajuus" | säilytettävä osa |
+| 29 | "17 majoitusrakennusta kerrosalaltaan 29,5 k-m2" | yhden mökin ala |
+
+Kolme ensimmäistä kertovat mitä tontilla **jo on**; asiakas ostaa sen
+mitä sinne tulee. Neljäs on lukumäärä kertaa yksikkökoko, eli kertaluokan
+pieleen. Kaikki neljä estettiin `EI_RAKENNUS`-kuviossa ennen kuin yksikkö
+päästettiin tuotantoon — muuten muutos olisi vienyt **22 %:n virheen**
+asiakkaalle näkyvään kenttään.
+
+#### 2. Yhteystieto oli vaihekentässä
+
+Kerääjä etsi "Lisätietoja"-lohkoa kahdella ehdolla: sen piti olla
+**"Käsittelyvaiheet"-säiliössä** ja kappaleen piti **alkaa** sanalla
+"Lisätietoja". Tällä sivulla se oli kumpaakaan olematta — "Uusin vaihe"
+-tekstin perässä samalla rivillä:
+
+    "Vireilletulovaihe 12.-25.11.2026 Lisätietoja: Kaupunginarkkitehti
+     Sipi Hintsanen, 050 562 6314, sipi.hintsanen@rovaniemi.fi"
+
+Koko merkkijono meni `decision_status`-kenttään ja `contact_persons` jäi
+tyhjäksi. D-410:n jäsennin osasi tekstin sellaisenaan (numero ilman
+`puh.`-tunnusta, pilkkueroteltu) — sitä ei vain koskaan kutsuttu. Nyt
+vaihetekstistä luetaan "Lisätietoja" mistä kohtaa tahansa, ja vaihekenttä
+siistitään: se kertoo vaiheen, ei yhteystietoja.
+
+#### Takautuva tarkistus: tasan yksi rivi
+
+| | osumia |
+|---|---|
+| Rovaniemen rivejä jonossa ja hankkeissa | 190 |
+| yhteystieto vaihekentässä | **1** |
+| pinta-ala poimittavissa, kenttä tyhjä | **1** |
+| lähdedokumentteja samalla vialla | **1 / 144** |
+
+Molemmat viat osuivat samaan riviin eivätkä yhteenkään muuhun. Korjattu
+`scripts/backfill-rovaniemi-vaihekentta.ts`:lla, joka on sääntöpohjainen
+eikä id-kohtainen, ja joka korjaa myös lähdedokumentin — ilman sitä
+kerääjän välimuistiportti olisi jättänyt vanhan muodon paikalleen.
+
+#### Avoinna
+
+Muiden lähteiden 29 riviä (≈15 oikeaa hanketta) saisi nyt pinta-alan,
+mutta niitä **ei ajettu** — kysymys oli Rovaniemen lähteestä. Uudet rivit
+poimitaan oikein itsestään.
+
 ### D-410 – Yksi yhteystietojäsennin kolmen kopion sijaan
 
 Johannes 13.11.2026 Rovaniemen korjauksen jälkeen: *"korjaa nuo muutkin
