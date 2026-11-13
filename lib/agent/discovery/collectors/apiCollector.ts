@@ -13,6 +13,7 @@ import {
 } from "@/lib/agent/kaavanKuvaus"
 import {
   liitelinkit,
+  omaSisalto,
   onVainLiiteotsikot,
   taydennaKuvausLiitteesta,
   type LiiteBudjetti,
@@ -16596,6 +16597,9 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
 
   const items = $(".wp-block-pb-accordion-item").toArray()
 
+  /* Liitehaun katto per ajo, ks. kaavanLiite.ts. */
+  const liiteBudjetti: LiiteBudjetti = { haettu: 0, raja: 12 }
+
   let found = 0
   let saved = 0
 
@@ -16613,11 +16617,38 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
     }
 
     const contentEl = item.find(".c-accordion__content").first()
-    const description = contentEl.text().replace(/\s+/g, " ").trim()
+    const haitarinTeksti = contentEl.text().replace(/\s+/g, " ").trim()
 
-    const phase = hattulaPhaseFromText(`${title} ${description}`)
+    /*
+     * Vaihe luetaan HAITARIN tekstista, ei taydennetysta kuvauksesta:
+     * selostuksen sanat "luonnos", "ehdotus" ja "hyvaksy" johtaisivat
+     * vaiheen harhaan (sama saanto kuin Kokemaella).
+     */
+    const phase = hattulaPhaseFromText(`${title} ${haitarinTeksti}`)
     const completed = phase === "Voimaantulo"
     const contacts = HATTULA_CONTACTS
+
+    /*
+     * KUVAUS SELOSTUKSESTA, HANKE ENSIN (D-412).
+     *
+     * Johannes 14.11.2026: *"Kuvauksessa pitaa pyrkia kertomaan
+     * kayttajalle mita ollaan tekemassa."* Haitarissa on vain
+     * menettelylause ja liitteiden nimet: "Elinvoimalautakunta on
+     * 29.10.2024 (§ 114) paattanyt asettaa kaavaehdotuksen julkisesti
+     * nahtaville ... Kaavakartta Kaavaselostus Elinvoimalautakunnan
+     * poytakirjan asian liitteet". Se mita alueelle tehdaan lukee
+     * selostuksessa.
+     *
+     * JARJESTYS KAANNETAAN TASSA, ei yhteisessa `yhdistaKuvaukset`issa:
+     * se laittaa sivun tekstin ensin, mika on oikein kunnissa joiden
+     * sivu kertoo hankkeesta. Hattulan sivu kertoo vain menettelysta,
+     * joten selostuksen sisalto ensin ja menettelylause peraan.
+     * Liitteiden nimet pudotetaan (`omaSisalto`).
+     */
+    const linkit = liitelinkit($, HATTULA_LISTING_URL, contentEl)
+    const menettely = onVainLiiteotsikot(haitarinTeksti, linkit) ? "" : omaSisalto(haitarinTeksti, linkit)
+    const liitteesta = await taydennaKuvausLiitteesta("", linkit, liiteBudjetti)
+    const description = liitteesta ? yhdistaKuvaukset(liitteesta, menettely) ?? liitteesta : menettely
 
     const attachments = contentEl
       .find("a")

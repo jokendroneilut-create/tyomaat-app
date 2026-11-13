@@ -1,3 +1,5 @@
+import { kiellettyOsoite } from "./kielletytLahteet"
+
 /*
  * KAAVAN KUVAUS SELOSTUKSESTA (D-217).
  *
@@ -45,10 +47,16 @@ const HALUTUT: { avain: string; kuvio: RegExp }[] = [
    * ("Yleista") jaa luvun sisallon alkuun, joten se karsitaan
    * `poimiOsat`issa.
    */
+  /*
+   * "KAAVA-ALUEEN SIJAINTI:" (D-412). Hattulan Vihtolan selostuksessa
+   * luvun nimi on genetiivissa, eika `kaava-?alue\b` osu siihen: `\b`
+   * vaatii rajan heti "alue"n jalkeen, ja sita seuraa "en". Oma
+   * vaihtoehto ensimmaiseksi, jotta lyhyempi muoto ei ehdi ensin.
+   */
   {
     avain: "alue",
     kuvio:
-      /^(kaava-?alue|suunnittelualue|sijainti|alueen\s+sijainti|mitk[äa]\s+ovat\s+(?:kaavoituksen|kaavan)\s+l[äa]ht[öo]kohdat)\b/i,
+      /^((?:kaava-?|suunnittelu)alueen\s+sijainti|kaava-?alue|suunnittelualue|sijainti|alueen\s+sijainti|mitk[äa]\s+ovat\s+(?:kaavoituksen|kaavan)\s+l[äa]ht[öo]kohdat)\b/i,
   },
   {
     avain: "tarkoitus",
@@ -155,7 +163,15 @@ function poistaToistuvatRivit(teksti: string): string {
  * fonttien roska ("AABCCDE") palautuu edelleen nullina, koska mikaan
  * paljas rivi ei vastaa sanaa "Tavoitteet".
  */
-const PALJAS_OTSIKKO = /^[A-ZÄÖÅ][A-Za-zÄÖÅäöå\- ]{2,44}$/
+/*
+ * KAKSOISPISTE OTSIKON LOPUSSA (D-412). Hattulan selostuksessa luvut
+ * ovat muotoa "Kaava-alueen sijainti:" ja "Kaavan laatija:" omilla
+ * riveillaan. Ilman kaksoispistetta niita ei tunnistettu otsikoiksi,
+ * eika selostuksesta loytynyt yhtaan lukua. Rivin KESKELLA oleva
+ * kaksoispiste ("Kunta: Hattulan Kunta") ei kelpaa: se on kentta, ei
+ * otsikko.
+ */
+const PALJAS_OTSIKKO = /^[A-ZÄÖÅ][A-Za-zÄÖÅäöå\- ]{2,44}:?$/
 
 /*
  * OAS-POHJAN KYSYMYSOTSIKOT (D-394).
@@ -348,8 +364,42 @@ function katkaise(teksti: string, pituus: number): string {
   return `${(vali > 0 ? leikattu.slice(0, vali) : leikattu).trim()}…`
 }
 
+/*
+ * TARKOITUS ALUELUVUN SISALLA (D-412).
+ *
+ * Alueluku katkaistaan 400 merkkiin, koska se kertoo normaalisti vain
+ * MISSA, ja MITA tulee tarkoitusluvusta. Hattulan Vihtolan
+ * selostuksessa tarkoitusluku on pelkkaa menettelya ("perustuu ...
+ * kaavoitussopimukseen") eika osu kuvioon, ja itse hanke on kuvattu
+ * sijaintiluvun TOISESSA virkkeessa: "Tarkoituksena on tehda asemakaava
+ * siten, etta se sallii asuin-, vapaa-ajan- ja tyopaikkarakentamisen...".
+ * 400 merkin katkaisu pudotti juuri sen.
+ *
+ * Kun tarkoituslukua ei loydy MUTTA alueluvussa on tarkoituslause,
+ * alueluku on ainoa paikka jossa MITA lukee -- silloin sita ei
+ * katkaista. Muuten kaytos ei muutu.
+ */
+const TARKOITUSLAUSE = /(tarkoituksena|tavoitteena|tarkoitus)\s+on(?![A-Za-zÅÄÖåäö])/i
+
+/*
+ * KUVATEKSTIT POIS KATKAISEMATTOMASTA ALUELUVUSTA (D-412).
+ *
+ * 400 merkin katkaisu oli piilottanut ne: Sattulantie 68:n alueluvun
+ * lopussa on "Kuva 1. Suunnittelualueen likimaarainen sijainti on
+ * esitetty punaisella ympyralla. 5 Kuva 2. ..." Kun luku otetaan
+ * kokonaan, ne tulisivat kuvaukseen. Poisto vain tassa haarassa, jotta
+ * muiden lukujen kaytos ei muutu (vrt. KUVATEKSTI-kommentti ylla).
+ */
+function ilmanKuvatekstejä(teksti: string): string {
+  return teksti
+    .replace(/\s*(?:Kuva|Kuvio|Taulukko)\s+\d+\.[^.]*\./g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/(?<=[.!?])\s+\d{1,3}\s*$/, "")
+    .trim()
+}
+
 function poimiOsat(luvut: { otsikko: string; sisalto: string[]; kysymys?: boolean }[]): string[] {
-  const osat: string[] = []
+  const loydetyt: { avain: string; sisalto: string }[] = []
 
   for (const { avain, kuvio } of HALUTUT) {
     const luku = luvut.find(
@@ -380,13 +430,40 @@ function poimiOsat(luvut: { otsikko: string; sisalto: string[]; kysymys?: boolea
     if (onLiiteluettelo(sisalto)) continue
     if (onSisallysluettelo(sisalto)) continue
 
-    osat.push(avain === "alue" ? katkaise(sisalto, 400) : sisalto)
+    loydetyt.push({ avain, sisalto })
   }
 
-  return osat
+  const onTarkoitusluku = loydetyt.some((o) => o.avain === "tarkoitus")
+  return loydetyt.map(({ avain, sisalto }) => {
+    if (avain !== "alue") return sisalto
+    if (!onTarkoitusluku && TARKOITUSLAUSE.test(sisalto)) return ilmanKuvatekstejä(sisalto)
+    return katkaise(sisalto, 400)
+  })
 }
 
+/*
+ * KARTAN LAHDEVIITE EI OLE KUVAUS (D-412).
+ *
+ * Hattulan Niinimaen tuulivoimaosayleiskaavan OAS:sta jasennin palautti
+ * kuvaukseksi koko tuloksena *"Lahde: Pohjakartta, OpenStreetMap)."* --
+ * karttakuvan alle kirjoitetun tekijanoikeusrivin. Keraaja olisi
+ * laittanut sen kuvauksen ALKUUN, ennen kunnan omaa tekstia.
+ *
+ * Tarkistus on tulokselle, ei yksittaiselle polulle, koska jasentimella
+ * on useita paluukohtia (luvut, varasija, lauseankkuri). Vain LYHYT
+ * tulos hylataan: pitkassa kuvauksessa sama sana voi olla aidon lauseen
+ * osa.
+ */
+const LAHDEVIITE = /l[äa]hde\s*:|pohjakartta|openstreetmap|maanmittauslaitos|©/i
+const LAHDEVIITE_MAX = 120
+
 export function kaavanKuvausTekstista(raaka: string | null | undefined): string | null {
+  const tulos = kaavanKuvausTekstistaRaaka(raaka)
+  if (tulos && tulos.length < LAHDEVIITE_MAX && LAHDEVIITE.test(tulos)) return null
+  return tulos
+}
+
+function kaavanKuvausTekstistaRaaka(raaka: string | null | undefined): string | null {
   const teksti = poistaToistuvatRivit(siisti(yhdistaTavutus(String(raaka ?? ""))))
   if (!teksti) return null
 
@@ -750,7 +827,57 @@ const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
  * mitattu Lieksan Brahean selostuksesta, jossa yhteyshenkilot ovat
  * sivulla 4 ja tiivistelma sivulla 6.
  */
+/*
+ * RIKKINAINEN FONTTIKOODAUS (D-412).
+ *
+ * Kahden Hattulan selostuksen teksti tuli PDF:sta muodossa
+ *
+ *   "l‰hell‰ Hattulan ja H‰meenlinnan v‰list‰ kuntarajaa ... Tiiriˆn"
+ *
+ * eli a-umlaut on promillemerkki (U+2030) ja o-umlaut sirkumfleksi
+ * (U+02C6). Sisalto on oikeaa, mutta sellaisenaan se menisi asiakkaalle
+ * roskana. Katinalan selostuksessa oikeita a/o-kirjaimia oli 0 ja
+ * vaaria 124; Yllitynmaessa 0 ja 109.
+ *
+ * KORJATAAN VAIN YKSISELITTEISELLA TUNNISTEELLA. Aidossa suomen-
+ * kielisessa selostuksessa a/o-kirjaimia on satoja (Vihtola 213), ja
+ * promillemerkki esiintyy vain numeron perassa ("5 ‰"). Ehto: vaaria
+ * merkkeja KIRJAINTEN VALISSA vahintaan viisi, ja oikeita a/o-kirjaimia
+ * alle 5 % niiden maarasta. Muuten tekstiin ei kosketa.
+ *
+ * Kartta on luettu naista kahdesta tiedostosta, ei arvattu:
+ *   ‰ -> a-umlaut   ˆ -> o-umlaut   ß -> §  ("5.9.2024 ß __")
+ *   U+2010 -> "-"  jotta tavutus "kortte‐\nlialueeksi" yhdistyy
+ * Isoja kirjaimia ei kartoiteta, koska niita ei esiintynyt.
+ */
+const VAARA_KIRJAIN = /[A-Za-z][‰ˆ]|[‰ˆ][a-z]/g
+
+export function korjaaFonttikoodaus(teksti: string): string {
+  const vaaria = (teksti.match(VAARA_KIRJAIN) ?? []).length
+  if (vaaria < 5) return teksti
+  const oikeita = (teksti.match(/[äöÄÖ]/g) ?? []).length
+  if (oikeita >= vaaria * 0.05) return teksti
+
+  return teksti
+    .replace(/‰/g, "ä")
+    .replace(/ˆ/g, "ö")
+    .replace(/ß/g, "§")
+    .replace(/‐/g, "-")
+}
+
 export async function haeKaavaselostuksenTeksti(url: string): Promise<string | null> {
+  /*
+   * KIELTOLISTA MYOS LIITTEILLE (D-412).
+   *
+   * Lahteen oma osoite tarkistetaan `sourceWorker`issa, mutta liitteen
+   * osoite ei -- ja liite voi olla eri isannalla kuin sivu. Hattulan
+   * kaavasivu (sallittu) linkittaa selostuksiin Triplan Cloudissa
+   * (kielletty). Tahan asti suojana oli sattuma: KTweb-osoitteessa ei
+   * ole ".pdf"-paatetta, joten `normalisoiLiiteUrl` hylkasi sen. Kun
+   * jokin kielletty isanta palvelee ".pdf"-osoitteen, sattuma ei suojaa.
+   */
+  if (kiellettyOsoite(url)) return null
+
   const ohjain = new AbortController()
   const kello = setTimeout(() => ohjain.abort(), AIKAKATKAISU_MS)
 
@@ -771,7 +898,7 @@ export async function haeKaavaselostuksenTeksti(url: string): Promise<string | n
     const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default as any
     const jasennetty = await pdfParse(buf, { max: MAX_SIVUJA })
 
-    return String(jasennetty?.text ?? "") || null
+    return korjaaFonttikoodaus(String(jasennetty?.text ?? "")) || null
   } catch {
     return null
   } finally {

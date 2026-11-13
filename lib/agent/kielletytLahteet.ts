@@ -49,6 +49,28 @@ export const KIELLETYT_LAHTEET: KiellettyLahde[] = [
     jarjestelma: "Tweb",
     paatos: "D-098 (21.8.2026)",
   },
+  /*
+   * TRIPLAN CLOUD ON SAMAA TWEB-PERHETTA (D-412, 14.11.2026).
+   *
+   * Hattulan kaavasivu linkittaa selostukset ja OAS:t osoitteeseen
+   * `hattula-julkaisu.triplancloud.fi/ktwebscr/fileshow?...`. Isanta ei
+   * ollut tassa listassa, koska sita ei tunnettu D-098:n aikaan -- mutta
+   * sen robots.txt on sama tuotetoimittajan vakio:
+   *
+   *   User-Agent: *
+   *   Disallow: /
+   *
+   * D-098:n mukaan kielto on tuotteen, ei kunnan, joten se koskee myos
+   * tata isantaa. Lisatty ennen kuin yksikaan keraaja ehti hakea siita.
+   * Kaksi testipyyntoa tehtiin sisaltotyypin tarkistamiseksi ennen
+   * robots.txt:n lukemista; muita ei.
+   */
+  {
+    tunniste: "triplancloud.fi",
+    kaupunki: "Triplan Cloud -kunnat",
+    jarjestelma: "Tweb (KTweb)",
+    paatos: "D-098 / D-412 (14.11.2026, robots.txt)",
+  },
   {
     tunniste: "asianhallinta.vantaa.fi",
     kaupunki: "Vantaa",

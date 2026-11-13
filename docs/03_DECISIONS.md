@@ -51,6 +51,80 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-412 – Hattulan kuvaus selostuksesta, ja kieltolista koskee myös liitteitä
+
+Johannes 14.11.2026 hankkeesta 85e11864 (Vihtolan asemakaava): *"pitää
+poimia kuvaukseen liitteestä … Korjaa tämä ja lisää muihinkin tuosta
+lähteestä jonossa, nähtävillä oleviin ja tuleviin jos ei vielä ole.
+Kuvauksessa pitää pyrkiä kertomaan käyttäjälle mitä ollaan tekemässä."*
+
+Hattulan kuvaus oli haitarin teksti: menettelylause ja liitteiden nimet
+(*"…asettaa kaavaehdotuksen julkisesti nähtäville … Kaavakartta
+Kaavaselostus Elinvoimalautakunnan pöytäkirjan asian liitteet"*).
+Valmis koneisto (`taydennaKuvausLiitteesta`, D-319) oli olemassa mutta
+kytkemättä — sama tilanne kuin 236 muulla keräimellä 241:stä.
+
+#### Kytkentä paljasti viisi aukkoa yhteisessä jäsentimessä
+
+Jokainen löytyi Hattulan kymmenestä dokumentista, ei arvaamalla:
+
+| | aukko | korjaus |
+|---|---|---|
+| 1 | `"Kaava-alueen sijainti:"` — kaksoispiste otsikon lopussa | `PALJAS_OTSIKKO` hyväksyy `:?$` |
+| 2 | `"Kaava-alueen"`, `"SUUNNITTELUALUEEN"` — genetiivi, `\b` ei osu | `(?:kaava-?\|suunnittelu)alueen\s+sijainti` |
+| 3 | Hanke kuvattu alueluvun **lopussa**, 400 merkin katkaisu pudotti | ei katkaista jos tarkoituslukua ei ole ja luvussa on tarkoituslause |
+| 4 | Fonttikoodaus rikki: ä → ‰, ö → ˆ (0 oikeaa ä/ö:ta, 124 väärää) | `korjaaFonttikoodaus`, vain yksiselitteisellä tunnisteella |
+| 5 | Karttakuvan lähdeviite *"Lähde: Pohjakartta, OpenStreetMap)."* koko tuloksena | lyhyt lähdeviite ei ole kuvaus |
+
+Kohta 3 on oleellisin: sekä Vihtolassa että Sattulantie 68:ssa alueluvun
+ensimmäinen virke kertoo MISSÄ ja viimeinen MITÄ (*"Alueelle on
+suunnitteilla kuusi erillispientalotonttia."*). Kun katkaisu poistettiin,
+esiin tulivat kuvatekstit, jotka se oli aiemmin piilottanut — ne
+poistetaan samassa haarassa.
+
+> **Järjestys käännettiin keräimessä, ei yhteisessä funktiossa.**
+> `yhdistaKuvaukset` laittaa sivun tekstin ensin, mikä on oikein kunnissa
+> joiden sivu kertoo hankkeesta. Hattulan sivu kertoo vain menettelystä,
+> joten selostuksen sisältö ensin ja menettelylause perään.
+
+#### Triplan Cloud lisättiin kieltolistaan
+
+Neljän Hattulan kaavan (Pelto-Orvokki ×2, Poransaari, Parola S-market)
+selostukset ovat osoitteessa
+`hattula-julkaisu.triplancloud.fi/ktwebscr/fileshow?…`. Isäntä ei ollut
+kieltolistalla, mutta sen robots.txt on Tweb-tuotetoimittajan vakio:
+
+    User-Agent: *
+    Disallow: /
+
+D-098:n mukaan kielto on **tuotteen, ei kunnan** — sama perhe, sama
+kielto. Lisätty listaan ennen kuin yksikään keräin ehti hakea siitä.
+
+**Kaksi testipyyntöä tehtiin** sisältötyypin tarkistamiseksi ennen
+robots.txt:n lukemista. Järjestys oli väärä: robots.txt ensin.
+
+> **Kieltolista ei koskenut liitteitä lainkaan.** Vain lähteen oma osoite
+> tarkistettiin (`sourceWorker`), mutta liite voi olla eri isännällä kuin
+> sivu. Tähän asti suojana oli sattuma: KTweb-osoitteessa ei ole
+> `.pdf`-päätettä, joten `normalisoiLiiteUrl` hylkäsi sen.
+> `haeKaavaselostuksenTeksti` tarkistaa nyt kieltolistan itse.
+
+#### Tulos
+
+| | rivejä | hankkeita |
+|---|---|---|
+| kuvaus selostuksesta — ajettu | 9 (5 jonossa, 4 näkyvissä) | 4 |
+| selostus kielletyllä isännällä | — | 4 |
+| liitteestä vain lähdeviite — ennallaan | — | 1 (Niinimäki) |
+
+Ajettu: Vihtola, Katinalan Rinne, Yllitynmäki, Sattulantie 68. Uudet ja
+päivittyvät rivit poimitaan keräimessä itsestään.
+
+**Avoinna:** Yllitynmäen kuvauksessa on kaksi kuvatekstiä ilman
+"Kuva N." -alkua (*"Suunnittelualueen likimääräinen sijainti on osoitettu
+punaisella ympyrällä."*). Ei korjattu: tunnistaminen vaatisi sisältöön
+perustuvan säännön yhden tapauksen takia.
+
 ### D-411 – Kerrosneliö on yksikkö, ja "Lisätietoja" ei ole aina oma kappaleensa
 
 Johannes 13.11.2026 hankkeesta 1c6dc7d8: *"tästä puuttuu 13200 kem2 joka

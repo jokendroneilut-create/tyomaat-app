@@ -44,3 +44,18 @@ describe("kiellettyOsoite", () => {
     expect(kiellettyOsoite("")).toBeNull()
   })
 })
+
+/* Triplan Cloud on Tweb-perhetta, robots.txt "Disallow: /" (D-412). */
+describe("Triplan Cloud (D-412)", () => {
+  it("estää Hattulan KTweb-liitteet", () => {
+    expect(
+      kiellettyOsoite("https://hattula-julkaisu.triplancloud.fi/ktwebscr/fileshow?doctype=3&docid=108050")
+    ).not.toBeNull()
+  })
+
+  it("ei estä kunnan omaa sivustoa", () => {
+    expect(
+      kiellettyOsoite("https://hattula.fi/wp-content/uploads/2024/11/kaavaselostus_vihtolan_asemakaava.pdf")
+    ).toBeNull()
+  })
+})

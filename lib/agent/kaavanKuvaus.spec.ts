@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import {
+  haeKaavaselostuksenTeksti,
   kaavanKuvausLauseesta,
   kaavanKuvausTekstista,
+  korjaaFonttikoodaus,
   onPaljasOtsikko,
   normalisoiLiiteUrl,
   valitseKaavaselostus,
@@ -466,5 +468,174 @@ describe("sisallysluettelo ilman pistejonoa (D-388)", () => {
     expect(kaavanKuvausTekstista(teksti)).toContain(
       "mahdollistaa datakeskuksen ja sitä palvelevan teknisen infrastruktuurin"
     )
+  })
+})
+
+/*
+ * HATTULAN VIHTOLA (D-412). Rivit sellaisina kuin selostus-PDF ne
+ * antaa 14.11.2026. Kolme aukkoa samassa tekstissa: otsikko paattyy
+ * kaksoispisteeseen, nimi on genetiivissa ("Kaava-alueen"), ja hanke
+ * on kuvattu alueluvun toisessa virkkeessa, jonka 400 merkin katkaisu
+ * pudotti. Tarkoitusluku ("Kaavan nimi ja tarkoitus") on menettelya
+ * eika sita saa ottaa mukaan.
+ */
+describe("Hattulan Vihtola: numeroimaton selostus (D-412)", () => {
+  const teksti = [
+    "PERUS- JA TUNNISTETIEDOT",
+    "Kunta: Hattulan Kunta",
+    "Alue: Vihtola",
+    "Kaava: Uusi asemakaava",
+    "Kaavan laatija:",
+    "Petri Ilmarinen, Arkkitehti SAFA, M.Sc.Arch.USA",
+    "Veneentekijäntie 14, 00210 Helsinki, puh0505267707,",
+    "Kaava-alueen sijainti:",
+    "Vihtolan asemakaava Nikkilä – Rantanen välisellä ranta-alueella",
+    "Vihtolassa Sattulantien ja Hattulantien rajaamalla ranta-alueella",
+    "käsittää Vihtolan asemakaavan alueen. Tarkoituksena on tehdä",
+    "asemakaava siten, että se sallii asuin-, vapaa-ajan- ja",
+    "työpaikkarakentamisen pientalomaisena asuinalueena, kylämäisenä",
+    "keskustana kaupan ja palvelujen alueena sekä sellaisen hotelli-,",
+    "majoitus- ja senioripalvelutalon joka ei edellytä evakuointia",
+    "kriisitilanteessa rakentamisen alueelle.",
+    "Kaavan nimi ja tarkoitus",
+    "Kaavan nimi on Vihtolan asemakaava. Alueen asemakaavan",
+    "laatiminen perustuu kunnanhallituksen hyväksymään Hattulan",
+    "kunnan sopimaan kaavoitussopimukseen alueen kaavoituksesta",
+    "2021 alkaen.",
+    "3.1 Viranomaiskokoukset",
+  ].join("\n")
+
+  it("poimii sijaintiluvun ja sen tarkoituslauseen kokonaan", () => {
+    const kuvaus = kaavanKuvausTekstista(teksti) ?? ""
+    expect(kuvaus).toContain("Sattulantien ja Hattulantien rajaamalla ranta-alueella")
+    expect(kuvaus).toContain("hotelli-, majoitus- ja senioripalvelutalon")
+  })
+
+  it("ei ota menettelyä mukaan", () => {
+    expect(kaavanKuvausTekstista(teksti)).not.toContain("kaavoitussopimukseen")
+  })
+
+  it("ei ota kaavan laatijaa mukaan", () => {
+    expect(kaavanKuvausTekstista(teksti)).not.toContain("Ilmarinen")
+  })
+})
+
+/* Ilman tarkoituslausetta alueluku katkaistaan kuten ennenkin. */
+describe("alueluvun katkaisu ennallaan ilman tarkoituslausetta (D-412)", () => {
+  it("katkaisee pitkän sijaintikuvauksen", () => {
+    const pitka = "Alue rajautuu pohjoisessa Kirkkotiehen ja etelässä rantaan. ".repeat(12)
+    const kuvaus = kaavanKuvausTekstista(["1.1 Kaava-alue", pitka, "1.2 Lähtökohdat", "x"].join("\n")) ?? ""
+    expect(kuvaus.length).toBeLessThanOrEqual(401)
+  })
+})
+
+/*
+ * RIKKINAINEN FONTTIKOODAUS (D-412). Rivit Hattulan Katinalan ja
+ * Yllitynmaen selostuksista sellaisina kuin pdf-parse ne antoi.
+ */
+describe("korjaaFonttikoodaus (D-412)", () => {
+  const KATINALA =
+    "Suunnittelualue sijaitsee Hattulan Katinalassa, l‰hell‰ Hattulan ja H‰meenlinnan " +
+    "v‰list‰ kuntarajaa. Alueelta on matkaa H‰meenlinnan Tiiriˆn alueen palveluihin. " +
+    "Kaavatyˆ on k‰ynnistynyt alueen yksityisten maanomistajien aloitteesta. 5.9.2024 ß __"
+
+  it("palauttaa ä- ja ö-kirjaimet", () => {
+    const t = korjaaFonttikoodaus(KATINALA)
+    expect(t).toContain("lähellä Hattulan ja Hämeenlinnan välistä kuntarajaa")
+    expect(t).toContain("Tiiriön")
+    expect(t).toContain("Kaavatyö on käynnistynyt")
+  })
+
+  it("palauttaa pykälämerkin", () => {
+    expect(korjaaFonttikoodaus(KATINALA)).toContain("5.9.2024 § __")
+  })
+
+  it("yhdistää tavutuksen kun yhdysmerkki on U+2010", () => {
+    const t = korjaaFonttikoodaus(KATINALA + " erillispientalojen kortte‐\nlialueeksi")
+    expect(t).toContain("kortte-\nlialueeksi")
+  })
+
+  it("ei koske aitoon tekstiin jossa on promillemerkki", () => {
+    const aito = "Kaavan tavoitteena on lisätä pientalotontteja. Kaltevuus on 5 ‰ ja ylläpito jatkuu."
+    expect(korjaaFonttikoodaus(aito)).toBe(aito)
+  })
+
+  it("ei koske tekstiin jossa on oikeita ä-kirjaimia, vaikka mukana olisi muutama ‰", () => {
+    const sekoitus = "Hämeenlinnan ja Hattulan välinen alue on lähellä. " + "l‰h ".repeat(5)
+    expect(korjaaFonttikoodaus(sekoitus)).toBe(sekoitus)
+  })
+})
+
+/*
+ * KIELTOLISTA MYOS LIITTEILLE (D-412). Hattulan kaavasivu linkittaa
+ * selostukseen Triplan Cloudissa, jonka robots.txt kieltaa kaiken.
+ */
+describe("haeKaavaselostuksenTeksti ja kieltolista (D-412)", () => {
+  it("ei tee pyyntöä kielletylle isännälle", async () => {
+    const haku = vi.spyOn(globalThis, "fetch")
+    const tulos = await haeKaavaselostuksenTeksti(
+      "https://hattula-julkaisu.triplancloud.fi/ktwebscr/fileshow?doctype=3&docid=108050&version=1"
+    )
+    expect(tulos).toBeNull()
+    expect(haku).not.toHaveBeenCalled()
+    haku.mockRestore()
+  })
+})
+
+/*
+ * SATTULANTIE 68 (D-412). Numeroitu luku, mutta nimi genetiivissa:
+ * "SUUNNITTELUALUEEN SIJAINTI JA HANKKEEN TARKOITUS". Hanke kuvattu
+ * luvun lopussa, ja perassa kuvatekstit jotka 400 merkin katkaisu
+ * oli aiemmin piilottanut.
+ */
+describe("Hattulan Sattulantie 68: genetiivi numeroidussa otsikossa (D-412)", () => {
+  const teksti = [
+    "1 PERUS- JA TUNNISTETIEDOT",
+    "1.1 TUNNISTETIEDOT",
+    "Kaavan nimi:  Sattulantie 68 asemakaava",
+    "1.2 SUUNNITTELUALUEEN SIJAINTI JA HANKKEEN TARKOITUS",
+    "Suunnittelualue sijaitsee Hattulan kunnan Sattulan kylässä Lehijärven etelärannalla. Alue rajautuu",
+    "Sattulantiehen (yhdystie 13899). Alueelta on n. 4 km matkaa Parolan taajamaan.",
+    "Asemakaavoitettava alue on aiemmin kuulunut Nikkilän kartanon kiinteistöön. Määräalojen pinta-ala on",
+    "yhteensä noin 1,71 ha. Suunnittelualue on pääosin Hattula Golfin entistä harjoituslyöntikentän aluetta.",
+    "Asemakaavan tarkoituksena on kaavoittaa alue asuinalueeksi. Alueelle on suunnitteilla kuusi eril-",
+    "lispientalotonttia. Tonteille ajo on suunniteltu tulevaksi Sattulantieltä olemassa olevan liittymän",
+    "kautta.",
+    "Kuva 1. Suunnittelualueen likimääräinen sijainti on esitetty punaisella ympyrällä.",
+    "5",
+    "Kuva 2. Suunnittelualueen likimääräinen rajaus on esitetty punaisella viivalla.",
+    "2 TIIVISTELMÄ",
+    "2.1 KAAVAPROSESSIN VAIHEET",
+  ].join("\n")
+
+  it("poimii hankkeen tarkoituksen luvun lopusta", () => {
+    expect(kaavanKuvausTekstista(teksti)).toContain(
+      "Alueelle on suunnitteilla kuusi erillispientalotonttia."
+    )
+  })
+
+  it("jättää kuvatekstit ja sivunumeron pois", () => {
+    const kuvaus = kaavanKuvausTekstista(teksti) ?? ""
+    expect(kuvaus).not.toContain("Kuva 1")
+    expect(kuvaus).not.toContain("punaisella")
+    expect(kuvaus).toMatch(/kautta\.$/)
+  })
+})
+
+/*
+ * KARTAN LAHDEVIITE EI OLE KUVAUS (D-412). Hattulan Niinimaen OAS:sta
+ * jasennin palautti koko tuloksena karttakuvan tekijanoikeusrivin.
+ */
+describe("lähdeviite ei kelpaa kuvaukseksi (D-412)", () => {
+  it("hylkää pelkän karttakuvan lähdeviitteen", () => {
+    expect(kaavanKuvausTekstista("1.1 Suunnittelualue\nLähde: Pohjakartta, OpenStreetMap). Lisää tähän.")).toBeNull()
+  })
+
+  it("ei hylkää pitkää kuvausta jossa sana esiintyy", () => {
+    const pitka =
+      "1.1 Suunnittelualue\nSuunnittelualue sijaitsee Hattulan Katinalassa lähellä kuntarajaa. " +
+      "Alueen rajaus on esitetty pohjakartalla, ja alueelle suunnitellaan pientaloja sekä " +
+      "pienempiä rivitaloja yksityisten maanomistajien aloitteesta."
+    expect(kaavanKuvausTekstista(pitka)).toContain("pientaloja")
   })
 })
