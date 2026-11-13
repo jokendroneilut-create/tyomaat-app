@@ -151,6 +151,21 @@ const ANKKURIT: RegExp[] = [
 const EI_RAKENNUS =
   /suunnittelualue|kaava-alue|asemakaava-alue|tonti[nt]|puiston|puistoalue|ranta-alue|viheralue|katualue|kattoalue|pohjapinta-ala|keskipinta-ala|rakennusoikeu|asunto\w*\s+keski|huoneistoala|rakennettu\s+kerrosala|olemassa\s+olevan|nykyisen\s+rakennu|vanhojen|suojeltavien|\d+\s+\w*rakennusta/i
 
+/*
+ * YKSIKÖN JÄLKEINEN ALASANA KERTOO MIKÄ ALA ON KYSEESSÄ (D-411).
+ *
+ * Esteet luetaan muuten osuman edestä, mutta tässä todiste on perässä:
+ *
+ *   "Vihertie 44-46 kaavaillaan: 6850 k-m2 kerrosalaa
+ *    noin 6450 k-m2 asuinalaa noin 400 ..."
+ *
+ * Kerrosala on 6850, mutta ankkuri vaatii sanan ENNEN lukua, ja ainoa
+ * sellainen on "kerrosalaa noin 6450". Luku on oikein poimittu mutta
+ * väärä suure. Kun yksikön jälkeen tulee toinen alasana, osuma
+ * hylätään: tyhjä kenttä on parempi kuin väärä luku.
+ */
+const TOINEN_ALA = /^\s*(?:asuin|liike|toimisto|varasto|huoneisto|myymälä|asunto|kerros)\w*ala/i
+
 /* Rakennushanke ei ole neliömetrin kokoinen eikä sadan hehtaarin. */
 const MIN_M2 = 20
 const MAX_M2 = 500_000
@@ -167,6 +182,9 @@ export function extractFloorAreaFromText(
     const at = match.index ?? 0
     const ennen = text.slice(Math.max(0, at - 60), at + match[0].length)
     if (EI_RAKENNUS.test(ennen)) continue
+
+    /* Yksikön jälkeen toinen alasana: luku on eri suure. */
+    if (TOINEN_ALA.test(text.slice(at + match[0].length, at + match[0].length + 24))) continue
 
     /* "kooltaan" on sallittu vain tiukoin ehdoin, ks. kommentti ylla. */
     const kooltaan = /^kooltaan/i.test(match[0])

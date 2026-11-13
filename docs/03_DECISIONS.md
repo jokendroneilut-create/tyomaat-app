@@ -122,11 +122,38 @@ Molemmat viat osuivat samaan riviin eivätkä yhteenkään muuhun. Korjattu
 eikä id-kohtainen, ja joka korjaa myös lähdedokumentin — ilman sitä
 kerääjän välimuistiportti olisi jättänyt vanhan muodon paikalleen.
 
-#### Avoinna
+#### Viides este löytyi vasta takautuvasta ajosta
 
-Muiden lähteiden 29 riviä (≈15 oikeaa hanketta) saisi nyt pinta-alan,
-mutta niitä **ei ajettu** — kysymys oli Rovaniemen lähteestä. Uudet rivit
-poimitaan oikein itsestään.
+Johannes 13.11.2026: *"aja nuo 15 muutakin."* Kuivaharjoitus paljasti
+vielä yhden kuvion, jota neljä estettä eivät torjuneet:
+
+    "Vihertie 44-46 kaavaillaan: 6850 k-m2 kerrosalaa
+     noin 6450 k-m2 asuinalaa noin 400 ..."
+
+Kerrosala on 6850, mutta ankkuri vaatii sanan **ennen** lukua, ja ainoa
+sellainen on "kerrosalaa noin 6450". Luku poimittiin oikein mutta se on
+väärä suure.
+
+> **Tässä todiste on perässä, ei edessä.** Muut esteet luetaan osuman
+> edestä, koska torjuttavat muodot ovat siellä. Kun yksikön jälkeen
+> tulee toinen alasana (`asuinala`, `liikeala`, `huoneistoala`), osuma
+> hylätään kokonaan — tyhjä kenttä on parempi kuin väärä luku.
+
+#### Takautuva ajo: rajaus tehdään poimitun luvun, ei tekstin mukaan
+
+Ensimmäinen rajaus oli "kuvauksessa esiintyy kem2", ja se tuotti 40
+riviä — selvästi enemmän kuin ne ~15 joista oli puhe. Syy: samassa
+tekstissä on usein **myös `brm2`**, ja poimija otti luvun ankkurista
+joka oli olemassa jo ennen D-411:ta. Rajaus korjattiin katsomaan mikä
+yksikkö oli juuri sen luvun perässä jonka poimija otti.
+
+| | rivejä | hankkeita |
+|---|---|---|
+| kerrosneliöstä poimittu — **ajettu** | 19 | 14 |
+| vanhasta ankkurista, tyhjä muusta syystä — ei ajettu | 18 | ~17 |
+
+Jälkimmäiset ovat eri kysymys: ne eivät ole jääneet tyhjiksi D-411:n
+takia, eikä niitä ole luettu läpi. `--kaikki` ottaa nekin mukaan.
 
 ### D-410 – Yksi yhteystietojäsennin kolmen kopion sijaan
 

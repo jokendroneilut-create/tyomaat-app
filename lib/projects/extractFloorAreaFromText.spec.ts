@@ -253,3 +253,18 @@ describe("nykyinen ja osa eivät ole hankkeen ala (D-411)", () => {
     ).toBeNull()
   })
 })
+
+/* Yksikön jälkeinen alasana kertoo että luku on eri suure (D-411). */
+describe("asuinala ei ole kerrosala (D-411)", () => {
+  it("hylkää osuman jota seuraa toinen alasana", () => {
+    expect(
+      extractFloorAreaFromText(
+        "Vihertie 44-46 kaavaillaan: 6850 k-m2 kerrosalaa noin 6450 k-m2 asuinalaa noin 400"
+      )
+    ).toBeNull()
+  })
+
+  it("ei estä tavallista lausetta", () => {
+    expect(extractFloorAreaFromText("Rakennuksen kerrosala on 192 kem², josta seinävahvuuden")).toBe(192)
+  })
+})
