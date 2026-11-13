@@ -1,4 +1,4 @@
-import { nameFromEmail, onMalliosoite, type Contact } from "@/lib/projects/contacts"
+import { nameFromEmail, onMallinimi, onMalliosoite, type Contact } from "@/lib/projects/contacts"
 
 /*
  * YHTEYSHENKILÖT HILMAN ILMOITUKSESTA.
@@ -132,10 +132,36 @@ export function parseHilmaContacts(eForm: any): HilmaContact[] {
     }
 
     const contact = company?.contact ?? {}
-    const email = arvo(contact?.electronicMail)
+    const rawEmail = arvo(contact?.electronicMail)
     const phone = arvo(contact?.telephone)
-    const name = arvo(contact?.name)
+    const rawName = arvo(contact?.name)
     const organization = arvo(first(company?.partyName)?.name)
+
+    /*
+     * OSOITE EI OLE NIMI (D-410).
+     *
+     * `contact.name` on valilla kirjaimellisesti sahkopostiosoite.
+     * Mitattu 13.11.2026: 10 merkintaa, joissa nimena luki
+     * "kirjaamo@parainen.fi" tai "harri.hyyrylainen@paltamo.fi".
+     * Sama kasittely kuin touchPoint-haarassa: nimi johdetaan
+     * osoitteesta vain jos siita saa henkilonimen, ja roolilaatikko
+     * ("kirjaamo", "hankinnat") jaa organisaatioksi ilman nimea.
+     */
+    const name = rawName && /@/.test(rawName) ? nameFromEmail(rawName) : rawName
+
+    /* Mallinimi: koko lohko on taytetta, numero mukaan lukien. */
+    if (onMallinimi(name)) continue
+
+    /*
+     * MALLIOSOITE HYLATAAN TAALLAKIN (D-410).
+     *
+     * `touchPoint`-haara teki taman jo, mutta tilaajan oma yhteystieto
+     * ei: `etunimi.sukunimi@naistinki.fi` meni suoraan lapi. Mitattu
+     * 13.11.2026: 48 tallaista merkintaa kannassa, eniten yhdesta
+     * lahteesta. Puhelin sailyy, koska se on oikea ja sillä ihmisen
+     * tavoittaa; pelkka mallipohja ei ole kenenkaan osoite.
+     */
+    const email = rawEmail && !onMalliosoite(rawEmail) ? rawEmail : null
 
     if (!email && !phone) continue
 

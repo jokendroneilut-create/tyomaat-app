@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { parseRovaniemiContacts } from "./rovaniemiContacts"
+import { parseYhteystietolohko as parseRovaniemiContacts } from "./yhteystietolohko"
 
 /*
  * Kolme lohkoa sellaisina kuin ne Kaavatorin sivuilla ovat 13.11.2026.

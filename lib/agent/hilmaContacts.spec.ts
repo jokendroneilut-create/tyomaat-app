@@ -116,3 +116,130 @@ describe("parseHilmaContacts", () => {
     expect(parseHilmaContacts({})).toEqual([])
   })
 })
+
+describe("malliosoite tilaajan yhteystiedossa (D-410)", () => {
+  const mallipohja = {
+    contractingParty: [
+      { party: { partyIdentification: [{ id: { value: "ORG-0001" } }] } },
+    ],
+    ublExtensions: [
+      {
+        extensionContent: {
+          eformsExtension: {
+            organizations: {
+              organization: [
+                {
+                  company: {
+                    partyIdentification: { id: { value: "ORG-0001" } },
+                    partyName: [{ name: { value: "Naistingin kaupunki" } }],
+                    contact: {
+                      telephone: { value: "+358 401294790" },
+                      electronicMail: { value: "etunimi.sukunimi@naistinki.fi" },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    ],
+  }
+
+  it("pudottaa mallipohjan mutta sailyttaa puhelimen", () => {
+    const tulos = parseHilmaContacts(mallipohja as any)
+    expect(tulos).toHaveLength(1)
+    expect(tulos[0].email).toBe("")
+    expect(tulos[0].phone).toBe("+358 401294790")
+  })
+})
+
+/*
+ * OSOITE NIMIKENTASSA (D-410). Mitattu 13.11.2026: 10 merkintaa.
+ * Hilma antaa `contact.name`-kentassa valilla sahkopostiosoitteen.
+ */
+describe("osoite nimikentassa (D-410)", () => {
+  const ilmoitus = (nimi: string, osoite: string) => ({
+    contractingParty: [{ party: { partyIdentification: [{ id: "ORG-0001" }] } }],
+    ublExtensions: [
+      {
+        extensionContent: {
+          eformsExtension: {
+            organizations: {
+              organization: [
+                {
+                  company: {
+                    partyIdentification: { id: "ORG-0001" },
+                    partyName: [{ name: "Paraisten kaupunki" }],
+                    contact: {
+                      name: nimi,
+                      electronicMail: osoite,
+                      telephone: "+358 406201405",
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    ],
+  })
+
+  it("roolilaatikko jaa organisaatioksi ilman nimea", () => {
+    const [c] = parseHilmaContacts(ilmoitus("kirjaamo@parainen.fi", "kirjaamo@parainen.fi"))
+    expect(c.name).toBeNull()
+    expect(c.kind).toBe("organization")
+    expect(c.email).toBe("kirjaamo@parainen.fi")
+    expect(c.phone).toBe("+358 406201405")
+  })
+
+  it("henkilon osoitteesta johdetaan nimi", () => {
+    const [c] = parseHilmaContacts(
+      ilmoitus("harri.hyyrylainen@paltamo.fi", "harri.hyyrylainen@paltamo.fi")
+    )
+    expect(c.name).toBe("Harri Hyyrylainen")
+    expect(c.kind).toBe("person")
+  })
+
+  it("oikea nimi sailyy ennallaan", () => {
+    const [c] = parseHilmaContacts(ilmoitus("Marko Heininen", "marko.heininen@tvt.fi"))
+    expect(c.name).toBe("Marko Heininen")
+  })
+})
+
+/*
+ * KOKO MERKINTA MALLIPOHJANA (D-410). Vaylan ilmoituksessa luki nimi
+ * "Etunimi Sukunimi", numero +358 401234567 ja osoite etu.suku@vayla.fi.
+ */
+describe("mallinimi kumoaa merkinnan (D-410)", () => {
+  it("ei tuota yhteystietoa taytelohkosta", () => {
+    const tulos = parseHilmaContacts({
+      contractingParty: [{ party: { partyIdentification: [{ id: "ORG-0001" }] } }],
+      ublExtensions: [
+        {
+          extensionContent: {
+            eformsExtension: {
+              organizations: {
+                organization: [
+                  {
+                    company: {
+                      partyIdentification: { id: "ORG-0001" },
+                      partyName: [{ name: "Väylävirasto" }],
+                      contact: {
+                        name: "Etunimi Sukunimi",
+                        electronicMail: "etu.suku@vayla.fi",
+                        telephone: "+358 401234567",
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      ],
+    })
+    expect(tulos).toEqual([])
+  })
+})

@@ -117,6 +117,22 @@ export function onMalliosoite(email: string | null | undefined): boolean {
   return PLACEHOLDER_LOCAL.test(local)
 }
 
+/*
+ * MALLINIMI KUMOAA KOKO MERKINNAN (D-410).
+ *
+ * Vaylan Hilma-ilmoituksessa yhteystahona luki nimi "Etunimi Sukunimi",
+ * numero "+358 401234567" ja osoite "etu.suku@vayla.fi" — kolme
+ * taytetta, ei yhtaan tietoa. Osoitteen pudottaminen ei riita, koska
+ * jaljelle jaa numero johon soittava asiakas ei tavoita ketaan: kun
+ * NIMI on mallipohja, koko lohko on mallipohja.
+ */
+const PLACEHOLDER_NAME =
+  /^(etunimi|etu|firstname|fornamn)\s+(sukunimi|suku|lastname|efternamn)$/i
+
+export function onMallinimi(name: string | null | undefined): boolean {
+  return PLACEHOLDER_NAME.test(String(name ?? "").trim())
+}
+
 export function sanitizeEmail(value: string | null | undefined): string | null {
   /* Välilyönti tai rivinvaihto päättää osoitteen: perässä on usein puhelin. */
   const raw = String(value ?? "").trim().split(/\s/)[0]
@@ -197,8 +213,13 @@ const ROLE_MAILBOX =
  * Hahmo on tarkoituksella tiukka — löysempi ("alkaa sanalla etunimi")
  * osuisi joskus oikeaan osoitteeseen ja pudottaisi sen.
  */
+/*
+ * Myos lyhennetty muoto: Vaylan ilmoituksessa luki `etu.suku@vayla.fi`
+ * ja nimena "Etunimi Sukunimi", numerona +358 401234567 — koko merkinta
+ * oli mallipohja. Pelkka "sukunimi" ei riittanyt (D-410).
+ */
 const PLACEHOLDER_LOCAL =
-  /^(etunimi|etu|firstname|fornamn)\.(sukunimi|sukunimet|lastname|efternamn)$/i
+  /^(etunimi|etu|firstname|fornamn)\.(sukunimi|sukunimet|suku|lastname|efternamn)$/i
 
 /*
  * Nimi: kaksi tai kolme isolla alkavaa sanaa. Suomalaisissa sukunimissä

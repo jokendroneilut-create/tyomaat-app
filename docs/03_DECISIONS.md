@@ -51,6 +51,74 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-410 – Yksi yhteystietojäsennin kolmen kopion sijaan
+
+Johannes 13.11.2026 Rovaniemen korjauksen jälkeen: *"korjaa nuo muutkin
+joissa on sama vika."*
+
+D-409:n kartoitus löysi kannasta 118 rikkinäistä yhteysmerkintää, joista
+Rovaniemi oli 17. Loput olivat **kolmessa muussa poimijassa, jotka olivat
+kaikki ratkaisseet saman ongelman itse ja kaikki väärin**:
+
+| lähde | kpl | vika |
+|---|---|---|
+| Hilma | 48 | malliosoite `etunimi.sukunimi@` tallennettuna |
+| Hilma | 10 | nimikentässä sähköpostiosoite (`kirjaamo@parainen.fi`) |
+| Vesilahti | 14 | koko kappale yhdessä `name`-kentässä |
+| Lohja | 11 | vain `(at)`-hämätty osoite tunnistettiin |
+
+Siksi jäsennin vietiin yhteen moduuliin `lib/projects/yhteystietolohko.ts`
+ja vanha `rovaniemiContacts.ts` poistettiin. Sen 9 testiä jäivät
+kuitenkin voimaan: ne on kirjoitettu oikeista sivuteksteistä, joten ne
+ovat paras suoja sille ettei korjaus riko Rovaniemeä.
+
+#### Neljä muotoa jotka löytyivät vasta kun jäsennin oli yhteinen
+
+Rovaniemen data ei näyttänyt näitä lainkaan:
+
+| muoto | mitä se rikkoi |
+|---|---|
+| `Seppo Lamppu DI kaavakonsultti` | nimi oli ENNEN nimikettä → nimi hävisi kokonaan |
+| `DI Jarmo Mäkelä 0400-220082` | numero ilman `puh.`-tunnusta → henkilöä ei tunnistettu |
+| `Juri Pelkonen, Suomen Aluerakennuttaja Oy -SARA` | **pilkku** erotti yrityksen → nimeksi tuli "Aluerakennuttaja Oy" |
+| `etu.suku@vayla.fi` + nimi "Etunimi Sukunimi" | `PLACEHOLDER_LOCAL` tunsi vain `sukunimi`, ei lyhennettä |
+
+> **Kun nimi on mallipohja, koko lohko on mallipohja.** Väylän
+> ilmoituksessa luki nimi "Etunimi Sukunimi", numero +358 401234567 ja
+> osoite `etu.suku@vayla.fi`. Osoitteen pudottaminen ei riitä: jäljelle
+> jää numero, johon soittava asiakas ei tavoita ketään. Uusi
+> `onMallinimi` kumoaa merkinnän kokonaan.
+
+#### Kuivaharjoitus esti 23 rivin huononnuksen
+
+Ensimmäinen ajo kohdistui kaikkiin lähteisiin joiden merkintä *näytti*
+rikkinäiseltä, ja osui 23 riviin joita kukaan ei ollut pyytänyt.
+stt_haku, Oulu ja Hyvinkää kirjoittavat yhteystietonsa eri muodossa, ja
+jäsennin teki niistä **huonompaa** jälkeä: Fingridin "Fingrid Oyj" sai
+nimikkeen "osoitteet ovat muotoa". Ajo rajattiin kolmeen mitattuun
+lähteeseen. Mitattu lähde korjataan, arvattua ei
+([[measure-before-and-after-backfill]]).
+
+#### Takautuva ajo alkuperäisestä rivistä, ei sivulta
+
+`scripts/backfill-yhteystietolohko.ts` **rakentaa alkuperäisen tekstin
+rikkinäisestä rivistä itsestään** eikä hae sivua uudelleen. Kaksi syytä:
+rikkinäisessä rivissä on kaikki palat tallella, vain väärissä kentissä;
+ja sivu on voinut muuttua — D-409:ssä kahdelta Rovaniemen sivulta oli
+"Lisätietoja"-lohko poistunut, joten uudelleenhaku olisi *tyhjentänyt*
+merkinnän jossa oli oikea nimi.
+
+| | ennen | jälkeen |
+|---|---|---|
+| rikkinäisiä merkintöjä kannassa | 118 | **24** |
+| Hilma / Vesilahti / Lohja | 83 | **0** |
+| korjattuja rivejä | | 84 |
+| merkintöjä jotka poistuivat tyhjänä | | 7 |
+
+Poistuneissa oli pelkkä malliosoite ilman nimeä ja numeroa — niistä ei
+häviä tietoa. Jäljellä olevat 24 ovat seitsemässä muussa poimijassa
+(Rovaniemen 6 jätettiin tieten D-409:ssä) ja odottavat omaa mittaustaan.
+
 ### D-409 – Rovaniemen yhteystiedot: yksi henkilö viidessä eri muodossa
 
 Johannes 13.11.2026 hankkeesta c2d463bd: *"yhteystiedot ovat sekaisin

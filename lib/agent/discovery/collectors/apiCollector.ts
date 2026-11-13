@@ -27,9 +27,9 @@ import * as cheerio from "cheerio"
 import { createClient } from "@supabase/supabase-js"
 import { extractContacts, type Contact } from "@/lib/projects/contacts"
 import {
-  parseRovaniemiContacts,
-  type RovaniemiContact,
-} from "@/lib/agent/rovaniemiContacts"
+  parseYhteystietolohko,
+  type Yhteyshenkilo,
+} from "@/lib/projects/yhteystietolohko"
 import { vaylaSubprojectLinks } from "@/lib/agent/vaylaSubprojects"
 import { parseSenaattiContacts } from "@/lib/agent/senaattiContacts"
 import { parseVaylaDescription } from "@/lib/agent/vaylaProjectDescription"
@@ -3592,7 +3592,7 @@ type RovaniemiDetails = {
   phase: string | null
   decisionNumber: string | null
   processingSteps: string | null
-  contacts: RovaniemiContact[]
+  contacts: Yhteyshenkilo[]
   stale: boolean
 }
 
@@ -3635,7 +3635,7 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
 
     let decisionNumber: string | null = null
     let processingSteps: string | null = null
-    let contacts: RovaniemiContact[] = []
+    let contacts: Yhteyshenkilo[] = []
 
     $("span.label").each((_, el) => {
       const label = $(el).text().trim()
@@ -3661,7 +3661,7 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
         const stepParagraphs = paragraphs.filter((p) => p !== contactParagraph)
 
         processingSteps = stepParagraphs.join(" ") || null
-        contacts = parseRovaniemiContacts(contactParagraph)
+        contacts = parseYhteystietolohko(contactParagraph)
       }
     })
 
@@ -5895,37 +5895,30 @@ async function collectEspooKaavaSource(source: DiscoverySource) {
  */
 const LOHJA_PLAN_CODE_PATTERN = /^(L|K|RA|Y)\d+[a-z]?\b/
 
+/*
+ * YKSI JÄSENNIN KOLMEN KOPION SIJAAN (D-410).
+ *
+ * Tämä luki vain "(at)"-hämätyn osoitteen, joten tavallisessa muodossa
+ * kirjoitettu osoite jäi `name`-kenttään: 11 riviä kannassa luki
+ * "kaavasuunnittelija Klaus Seppänen klaus.seppanen@lohja.fi".
+ * Nimikettä ei eroteltu lainkaan.
+ *
+ * `<br>`-raja säilyy, koska se on Lohjan sivuilla luotettava
+ * henkilöraja — jokainen palanen annetaan erikseen jäsentimelle.
+ */
 function lohjaParseContacts($: cheerio.CheerioAPI) {
-  const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+  const contacts: Yhteyshenkilo[] = []
 
   $("p").each((_, el) => {
     const html = $(el).html() ?? ""
     if (!/Lisätiedot/i.test(html)) return
 
     const withoutLabel = html.replace(/^[\s\S]*?Lisätiedot:?\s*/i, "")
-    const fragments = withoutLabel.split(/<br\s*\/?>/i)
 
-    for (const fragment of fragments) {
+    for (const fragment of withoutLabel.split(/<br\s*\/?>/i)) {
       const line = cheerio.load(`<div>${fragment}</div>`)("div").text().replace(/\s+/g, " ").trim()
       if (!line) continue
-
-      const emailMatch = line.match(/([\w.+-]+)\(at\)([\w.-]+\.\w+)/i)
-      const email = emailMatch ? `${emailMatch[1]}@${emailMatch[2]}` : null
-      const phoneMatch = line.match(/p\.?\s*(\d[\d\s-]{6,}\d)/i)
-      const phone = phoneMatch ? phoneMatch[1].replace(/\s+/g, " ").trim() : null
-
-      let rest = line
-      if (emailMatch) rest = rest.replace(emailMatch[0], "")
-      if (phoneMatch) rest = rest.replace(phoneMatch[0], "")
-      rest = rest
-        .replace(/^Kaupunginarkkitehti:?/i, "")
-        .replace(/[,|]+/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-
-      if (rest || email || phone) {
-        contacts.push({ name: rest || null, title: null, phone, email })
-      }
+      contacts.push(...parseYhteystietolohko(line))
     }
   })
 
@@ -25594,8 +25587,16 @@ async function collectVesilahtiKaavaSource(source: DiscoverySource) {
 
     const description = detail$(".basic-content p").first().text().replace(/\s+/g, " ").trim() || null
 
+    /*
+     * Koko kappale meni ennen `name`-kenttään (D-410): 14 riviä luki
+     * "Kunnanjohtaja Mikko Latvala p. 044 431 4340 etunimi.sukunimi@
+     * vesilahti.fi tai kaavan suunnittelija ... Helena Väisänen p. ...",
+     * eli kaksi ihmistä, kaksi numeroa ja malliosoite yhtenä nimenä.
+     * Kajaanin kuvio ei auta: se vaatii nimen, numeron JA osoitteen
+     * samasta rivistä, ja Vesilahdella osoite on malli.
+     */
     const contactText = detail$(".yhteyshenkilo-info").first().text().replace(/\s+/g, " ").trim()
-    const contacts = contactText ? [{ name: contactText, title: null, phone: null, email: null }] : []
+    const contacts = parseYhteystietolohko(contactText)
 
     const attachments = detail$("p.attachment a")
       .toArray()
