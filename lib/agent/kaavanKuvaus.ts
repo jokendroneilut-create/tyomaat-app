@@ -34,7 +34,14 @@ const MAX_PITUUS = 1200
 const OTSIKKORIVI = /^\s*(\d+(?:\.\d+)*)\.?\s+(\S.{1,70})$/
 
 /* Halutut luvut. Sanamuoto vaihtelee kunnittain. */
-const HALUTUT: { avain: string; kuvio: RegExp }[] = [
+const HALUTUT: {
+  avain: string
+  kuvio: RegExp
+  /* Luvun SISALLON on taytettava ehto, ks. D-413 alla. */
+  vaatii?: "tarkoituslause"
+  /* Kaytetaan vain jos tata avainta ei loytynyt. */
+  vainIlman?: string
+}[] = [
   /*
    * "Alueen sijainti" (D-351): sama sanajarjestysansa kuin tarkoituksessa.
    * Kuvio vaati sijainnin ENSIMMAISEKSI sanaksi, joten Suonenjoen luku 1.2
@@ -83,6 +90,37 @@ const HALUTUT: { avain: string; kuvio: RegExp }[] = [
      */
     kuvio:
       /^((?:asema|ranta|yleis)?kaava(?:n|muutoksen|hankkeen|ty[öo]n|ty[öo])?\s+(?:tarkoitus|tavoit)|kaavan\s+muutoksen\s+tavoit|tavoitteet|suunnittelun\s+tavoit|suunnitteluteht[äa]v|mihin\s+ja\s+mit[äa]\s+suunnitellaan|mit[äa]\s+alueelle\s+suunnitellaan|tiivistelm)/i,
+  },
+  /*
+   * "KAAVAN NIMI JA TARKOITUS" VAIN SISALLON PERUSTEELLA (D-413).
+   *
+   * Sama otsikko tarkoittaa kahta eri asiaa. Huittisten Greensky
+   * Energyn selostuksessa siina on hanke: *"asemakaavan tavoitteena on
+   * mahdollistaa ... enimmillaan noin 250 MW:n datakeskuskokonaisuus"*.
+   * Hattulan Vihtolassa (D-412) siina on menettely: *"Kaavan nimi on
+   * Vihtolan asemakaava. ... perustuu ... kaavoitussopimukseen"*.
+   * Erottaja on tarkoituslause. Ilman sita luku hylataan.
+   */
+  {
+    avain: "tarkoitus",
+    kuvio: /^kaavan\s+nimi\s+ja\s+tarkoitus/i,
+    vaatii: "tarkoituslause",
+  },
+  /*
+   * "ASEMAKAAVAN MUUTOS" TIIVISTELMAN ALLA (D-413).
+   *
+   * Huittisten selostuspohja: "1. Tiivistelma / 1.1 Kaavaprosessin
+   * vaiheet / 1.2 Asemakaavan muutos". Luku 1.2 kertoo mita kaava
+   * tekee (*"laajentaa TY-aluetta ... 28 415 m2 osoitetaan TY-6-
+   * alueeksi"*), mutta otsikossa ei ole sanaa tarkoitus tai tavoite.
+   * Ja "1. Tiivistelma" osuu tarkoitus-kuvioon ENSIN mutta on tyhja,
+   * joten haku pysahtyi siihen. Vain tarkka otsikko, ja vain jos
+   * varsinaista tarkoituslukua ei loytynyt.
+   */
+  {
+    avain: "ratkaisu",
+    kuvio: /^asemakaavan\s+muutos\s*$/i,
+    vainIlman: "tarkoitus",
   },
 ]
 
@@ -392,16 +430,37 @@ const TARKOITUSLAUSE = /(tarkoituksena|tavoitteena|tarkoitus)\s+on(?![A-Za-zÅÄ
  */
 function ilmanKuvatekstejä(teksti: string): string {
   return teksti
-    .replace(/\s*(?:Kuva|Kuvio|Taulukko)\s+\d+\.[^.]*\./g, " ")
+    /* "Kuva 1." ja "Kuva 1:" (Greensky) */
+    .replace(/\s*(?:Kuva|Kuvio|Taulukko)\s+\d+[.:][^.]*\./g, " ")
+    /* "(Lähde: MML:n maastokartta)." */
+    .replace(/\s*\((?:l[äa]hde|kuva)\s*:[^)]*\)\.?/gi, " ")
     .replace(/\s+/g, " ")
     .replace(/(?<=[.!?])\s+\d{1,3}\s*$/, "")
+    .trim()
+}
+
+/*
+ * Vain kokonaiset virkkeet. Greenskyn tarkoitusluvun keskelle on
+ * pudonnut kartan tekstit (*"...tavoitteena on noin OX2 Finland Oy:n
+ * Huittisten aurinkovoimalan osayleiskaava Karsitun..."*). Virke jota
+ * ei paateta pisteeseen on katkennut, joten se jatetaan pois.
+ */
+function kokonaisetVirkkeet(teksti: string): string {
+  return teksti
+    .split(/(?<=[.!?])\s+/)
+    .filter((v) => /[.!?]$/.test(v.trim()))
+    .join(" ")
     .trim()
 }
 
 function poimiOsat(luvut: { otsikko: string; sisalto: string[]; kysymys?: boolean }[]): string[] {
   const loydetyt: { avain: string; sisalto: string }[] = []
 
-  for (const { avain, kuvio } of HALUTUT) {
+  for (const { avain, kuvio, vaatii, vainIlman } of HALUTUT) {
+    /* Sama avain vain kerran; varakuvio ei kumoa ensisijaista. */
+    if (loydetyt.some((o) => o.avain === avain)) continue
+    if (vainIlman && loydetyt.some((o) => o.avain === vainIlman)) continue
+
     const luku = luvut.find(
       (l) => kuvio.test(l.otsikko) && !MENETTELYLUKU.test(l.otsikko)
     )
@@ -420,7 +479,12 @@ function poimiOsat(luvut: { otsikko: string; sisalto: string[]; kysymys?: boolea
       while (rivit.length && (!rivit[0].trim() || onPaljasOtsikko(rivit[0]))) rivit.shift()
     }
 
-    const sisalto = katkaiseLukuun(rivit.join(" ").replace(/\s+/g, " ").trim())
+    let sisalto = katkaiseLukuun(rivit.join(" ").replace(/\s+/g, " ").trim())
+
+    if (vaatii === "tarkoituslause") {
+      if (!TARKOITUSLAUSE.test(sisalto)) continue
+      sisalto = kokonaisetVirkkeet(sisalto)
+    }
 
     /*
      * Liian lyhyt luku on otsikko ilman sisältöä (esim. viittaus
@@ -433,11 +497,17 @@ function poimiOsat(luvut: { otsikko: string; sisalto: string[]; kysymys?: boolea
     loydetyt.push({ avain, sisalto })
   }
 
-  const onTarkoitusluku = loydetyt.some((o) => o.avain === "tarkoitus")
+  const onTarkoitusluku = loydetyt.some((o) => o.avain === "tarkoitus" || o.avain === "ratkaisu")
   return loydetyt.map(({ avain, sisalto }) => {
     if (avain !== "alue") return sisalto
-    if (!onTarkoitusluku && TARKOITUSLAUSE.test(sisalto)) return ilmanKuvatekstejä(sisalto)
-    return katkaise(sisalto, 400)
+    /*
+     * Kuvatekstit pois MOLEMMISSA haaroissa (D-413): Greenskyn
+     * alueluku alkoi "Kuva 1: Suunnittelualueen likimaarainen rajaus".
+     * Ennen katkaisua, jottei 400 merkkia kulu kuvateksteihin.
+     */
+    const puhdas = ilmanKuvatekstejä(sisalto)
+    if (!onTarkoitusluku && TARKOITUSLAUSE.test(puhdas)) return puhdas
+    return katkaise(puhdas, 400)
   })
 }
 
@@ -865,7 +935,7 @@ export function korjaaFonttikoodaus(teksti: string): string {
     .replace(/‐/g, "-")
 }
 
-export async function haeKaavaselostuksenTeksti(url: string): Promise<string | null> {
+async function haePdfPuskuri(url: string): Promise<Buffer | null> {
   /*
    * KIELTOLISTA MYOS LIITTEILLE (D-412).
    *
@@ -893,17 +963,55 @@ export async function haeKaavaselostuksenTeksti(url: string): Promise<string | n
 
     const buf = Buffer.from(await vastaus.arrayBuffer())
     if (buf.length > MAX_TAVUJA) return null
-
-    /* Paketin juuri ajaa debug-tilassa oman testitiedostonsa ja kaatuu. */
-    const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default as any
-    const jasennetty = await pdfParse(buf, { max: MAX_SIVUJA })
-
-    return korjaaFonttikoodaus(String(jasennetty?.text ?? "")) || null
+    return buf
   } catch {
     return null
   } finally {
     clearTimeout(kello)
   }
+}
+
+async function pdfTeksti(buf: Buffer, maxSivuja: number): Promise<string | null> {
+  try {
+    /* Paketin juuri ajaa debug-tilassa oman testitiedostonsa ja kaatuu. */
+    const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default as any
+    const jasennetty = await pdfParse(buf, { max: maxSivuja })
+    return korjaaFonttikoodaus(String(jasennetty?.text ?? "")) || null
+  } catch {
+    return null
+  }
+}
+
+export async function haeKaavaselostuksenTeksti(url: string): Promise<string | null> {
+  const buf = await haePdfPuskuri(url)
+  return buf ? pdfTeksti(buf, MAX_SIVUJA) : null
+}
+
+/*
+ * YHTEYSTIEDOT OVAT OAS:N LOPUSSA (D-413).
+ *
+ * `MAX_SIVUJA = 6` riittaa kuvaukselle, ja yllaoleva kommentti sanoo
+ * etta myos yhteyshenkilot mahtuvat siihen -- se pitaa paikkansa
+ * selostuksessa, jossa ne ovat perustiedoissa alussa. OAS-pohjassa
+ * "YHTEYSTIEDOT" on VIIMEINEN luku: Huittisten Hiukkamaen OAS:ssa
+ * sivulla 17/17, eika sita luettu koskaan.
+ *
+ * Yksi lataus, kaksi tekstia: `alku` kuvaukselle kuten ennenkin (jotta
+ * kuvauksen jasennys ei muutu mittaamatta), `kaikki` yhteystiedoille.
+ * Mitattu: 17 sivun jasennys 113 ms 3 Mt:n tiedostosta, joka ladataan
+ * joka tapauksessa kokonaan -- loppusivujen lukeminen on kaytannossa
+ * ilmaista.
+ */
+const MAX_SIVUJA_KAIKKI = 40
+
+export async function haeKaavanLiitteenTekstit(
+  url: string
+): Promise<{ alku: string | null; kaikki: string | null } | null> {
+  const buf = await haePdfPuskuri(url)
+  if (!buf) return null
+  const alku = await pdfTeksti(buf, MAX_SIVUJA)
+  const kaikki = await pdfTeksti(buf, MAX_SIVUJA_KAIKKI)
+  return { alku, kaikki }
 }
 
 export async function haeKaavanKuvaus(url: string): Promise<string | null> {

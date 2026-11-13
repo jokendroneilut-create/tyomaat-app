@@ -51,6 +51,72 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-413 – Huittinen: kuvaus ja yhteystiedot OAS:sta, jäsentimen loppusivut
+
+Johannes 14.11.2026 hankkeesta be4e2b08 (Hiukkamäen teollisuusalue):
+*"tästä hankkeesta puuttuu lähteen pdf tiedostossa oleva erittäin
+oleellinen tieto eli kuvaus"* ja *"myös yhteystiedot ovat pdf liitteessä,
+ne pitää poimia"*. Hanke on **datakeskus**, ja kuvaus oli tyhjä.
+
+Sama vika kuin Hattulassa tuntia aiemmin (D-412): liitekoneisto oli
+kytkemättä. Siksi kytkentä tehtiin nyt **yhteiseksi apuriksi**:
+
+    kaavanLiitteenSisalto(sivunTeksti, linkit, budjetti)
+      -> { kuvaus, yhteystiedot }
+
+Hanke ensin, menettely perään, liitteiden nimet pois. Sama funktio
+keräimessä ja takautuvassa skriptissä (`backfill-kuvaus-liitteesta.ts
+--lahde=…`), jotta ne eivät ehdi eriytyä. Hattula käyttää sitä myös.
+
+#### Yhteystiedot olivat sivuilla joita ei luettu
+
+`MAX_SIVUJA = 6`, ja koodin kommentti sanoi *"molemmat mahtuvat"*. Se
+pitää selostuksessa (yhteystiedot perustiedoissa alussa), mutta
+**OAS-pohjassa "YHTEYSTIEDOT" on viimeinen luku** — Hiukkamäessä sivulla
+17/17. Kaikkien sivujen jäsennys maksoi 113 ms 3 Mt:n tiedostosta, joka
+ladataan joka tapauksessa kokonaan.
+
+Yksi lataus, kaksi tekstiä: kuvaus luetaan alusta kuten ennenkin (ettei
+sen jäsennys muutu mittaamatta), yhteystiedot koko tiedostosta.
+
+#### Uusi jäsennin `oasYhteystiedot`, kolme pohjaa
+
+`kaavanYhteyshenkilot` (D-230) poimii nimen vain nimikkeen perästä, joten
+**"Juha Pöntinen, FCDC Corp Oy"** — hanketoimija eli rakennuttaja — olisi
+jäänyt pois. Uusi jäsennin lukee luvun rivi kerrallaan:
+
+| pohja | rakenne | löytyi |
+|---|---|---|
+| Hiukkamäki | rooli → "Nimike Nimi, Yritys" | pilkun jälkeen yritys |
+| Lintukangas | rooli → yritys omalla rivillä → "Nimi, nimike" | pilkun jälkeen **nimike**; "A-  Insinöörit" oli tulkittu henkilöksi |
+| Niinimäki | sama, "Nimi, FM, johtava konsultti" | **tutkintolyhenne** isolla, oli tulkittu yritykseksi |
+
+Lisäksi *"Puh. vaihde 0207 911 888"* merkitään vaihteeksi, ja kaupungin
+yleinen postilaatikko ennen ensimmäistä henkilöä ei kuulu kenellekään.
+
+#### Kolme jäsenninaukkoa lisää
+
+| | aukko | korjaus |
+|---|---|---|
+| 1 | "1. Tiivistelmä" osuu tarkoitus-kuvioon **ensin** mutta on tyhjä; hanke on luvussa "1.2 Asemakaavan muutos" | `ratkaisu`-avain, vain jos tarkoitusta ei löytynyt |
+| 2 | "Kaavan nimi ja tarkoitus" on Greenskyssa hanke (250 MW datakeskus), Vihtolassa menettely | hyväksytään **vain jos luvussa on tarkoituslause** |
+| 3 | kuvateksti "Kuva 1:" kaksoispisteellä ja "(Lähde: MML:n maastokartta)" | poistetaan alueluvusta molemmissa haaroissa |
+
+Greenskyn luvun keskelle oli pudonnut karttakuvan tekstit, joten
+ehdollisesta luvusta otetaan vain pisteeseen päättyvät virkkeet.
+
+#### Tulos
+
+| lähde | rivejä | mitä |
+|---|---|---|
+| Huittinen | 13 (7 jonossa, 6 näkyvissä) | 6 kuvausta, 2 hankkeen yhteystiedot |
+| Hattula (uudelleen) | 9 | Niinimäen 3 henkilöä; Triplan-kaavoista liitteiden nimet pois |
+
+Kuvaus korvataan vain jos se on tyhjä tai keräimen tekstiä. Keräimen
+teksti tunnistetaan alusta, pelkästä vaiheen nimestä tai
+**tiedostokokomerkinnästä "(pdf, 8 Mt)"**, jota kukaan ei kirjoita käsin.
+Lintukankaan oikea kuvaus säilyi.
+
 ### D-412 – Hattulan kuvaus selostuksesta, ja kieltolista koskee myös liitteitä
 
 Johannes 14.11.2026 hankkeesta 85e11864 (Vihtolan asemakaava): *"pitää

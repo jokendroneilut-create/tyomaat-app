@@ -12,8 +12,9 @@ import {
   yhdistaKuvaukset,
 } from "@/lib/agent/kaavanKuvaus"
 import {
+  kaavanLiitteenSisalto,
+  kuvausHankeEnsin,
   liitelinkit,
-  omaSisalto,
   onVainLiiteotsikot,
   taydennaKuvausLiitteesta,
   type LiiteBudjetti,
@@ -15791,6 +15792,9 @@ async function collectHuittinenKaavaSource(source: DiscoverySource) {
   // recognized stage label wins
   const planDetails = $("main").first().children("details.wp-block-details").toArray()
 
+  /* Liitehaun katto per ajo, ks. kaavanLiite.ts. */
+  const liiteBudjetti: LiiteBudjetti = { haettu: 0, raja: 12 }
+
   let found = 0
   let saved = 0
 
@@ -15844,8 +15848,35 @@ async function collectHuittinenKaavaSource(source: DiscoverySource) {
       description = topLevelNote || description
     }
 
+    /*
+     * KUVAUS OAS:STA TAI SELOSTUKSESTA, HANKE ENSIN (D-413).
+     *
+     * Hiukkamaen teollisuusalueen kuvaus oli TYHJA: kaavalla ei ollut
+     * viela tunnistettua vaihetta, joten vaiheen teksti jai ottamatta,
+     * ja ainoa sisalto oli liitteena olevassa OAS:ssa. Sen luvussa
+     * "2.2 ASEMAKAAVAN TAVOITTEET" lukee mita alueelle tehdaan
+     * ("mahdollistaa datakeskuskokonaisuuden ... sijoittuminen").
+     *
+     * Vaihe luettiin jo ennen tata vaiheiden otsikoista, joten liitteen
+     * sanat eivat vaikuta siihen.
+     *
+     * YHTEYSTIEDOT SAMASTA OAS:STA. Luvussa "6. YHTEYSTIEDOT" ovat
+     * hanketoimija (rakennuttaja), kaavakonsultti ja kaupungin
+     * kaavoittaja puhelimineen. Nimetyt henkilot ensin, kaupungin
+     * kirjaamo viimeisena varalle.
+     */
+    const liite = await kaavanLiitteenSisalto(
+      description,
+      attachments.map((a) => ({ href: a.url, teksti: a.label })),
+      liiteBudjetti
+    )
+    description = liite.kuvaus
+
     const completed = phase === "Voimaantulo"
-    const contacts = [HUITTINEN_CONTACT]
+    const contacts = [
+      ...liite.yhteystiedot.filter((h) => h.email !== HUITTINEN_CONTACT.email),
+      HUITTINEN_CONTACT,
+    ]
 
     found += 1
 
@@ -16639,16 +16670,11 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
      * poytakirjan asian liitteet". Se mita alueelle tehdaan lukee
      * selostuksessa.
      *
-     * JARJESTYS KAANNETAAN TASSA, ei yhteisessa `yhdistaKuvaukset`issa:
-     * se laittaa sivun tekstin ensin, mika on oikein kunnissa joiden
-     * sivu kertoo hankkeesta. Hattulan sivu kertoo vain menettelysta,
-     * joten selostuksen sisalto ensin ja menettelylause peraan.
-     * Liitteiden nimet pudotetaan (`omaSisalto`).
+     * Selostuksen sisalto ensin ja menettelylause peraan, liitteiden
+     * nimet pois -- ks. `kuvausHankeEnsin`.
      */
     const linkit = liitelinkit($, HATTULA_LISTING_URL, contentEl)
-    const menettely = onVainLiiteotsikot(haitarinTeksti, linkit) ? "" : omaSisalto(haitarinTeksti, linkit)
-    const liitteesta = await taydennaKuvausLiitteesta("", linkit, liiteBudjetti)
-    const description = liitteesta ? yhdistaKuvaukset(liitteesta, menettely) ?? liitteesta : menettely
+    const description = await kuvausHankeEnsin(haitarinTeksti, linkit, liiteBudjetti)
 
     const attachments = contentEl
       .find("a")

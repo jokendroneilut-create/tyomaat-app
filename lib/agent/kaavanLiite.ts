@@ -1,11 +1,13 @@
 import type { CheerioAPI } from "cheerio"
 
 import {
+  haeKaavanLiitteenTekstit,
   haeKaavaselostuksenTeksti,
   kaavanKuvausTekstista,
   valitseKaavanAsiakirja,
   yhdistaKuvaukset,
 } from "./kaavanKuvaus"
+import { oasYhteystiedot, type OasYhteystieto } from "./oasYhteystiedot"
 
 /*
  * KAAVAN LIITE KUVAUKSEEN, SAMALLA TAVALLA JOKA KUNNASSA (D-319).
@@ -160,6 +162,64 @@ export async function taydennaKuvausLiitteesta(
   if (!liitteenKuvaus) return kuvaus
 
   return yhdistaKuvaukset(kuvaus, liitteenKuvaus)
+}
+
+/*
+ * HANKE ENSIN, MENETTELY PERAAN (D-412, D-413).
+ *
+ * Johannes 14.11.2026: *"Kuvauksessa pitaa pyrkia kertomaan
+ * kayttajalle mita ollaan tekemassa."*
+ *
+ * `taydennaKuvausLiitteesta` liittaa liitteen sivun tekstin PERAAN,
+ * mika on oikein kun sivu kertoo hankkeesta. Monen kunnan kaavasivulla
+ * on kuitenkin vain menettelylause ja liitteiden nimet ("Elinvoima-
+ * lautakunta paatti ... asettaa nahtaville ... Kaavakartta
+ * Kaavaselostus"), ja silloin se mita alueelle tehdaan pitaa olla
+ * ensimmaisena.
+ *
+ * Tama on kytkenta keraajalle yhdella rivilla. Sama funktio ajetaan
+ * takautuvassa skriptissa, jotta keraaja ja skripti eivat ehdi
+ * eriytya (vrt. Kokemaen kommentti apiCollectorissa).
+ *
+ * Kayttajat: Hattula (D-412), Huittinen (D-413).
+ */
+export async function kuvausHankeEnsin(
+  sivunTeksti: string | null | undefined,
+  linkit: { href?: string | null; teksti?: string | null }[],
+  budjetti: LiiteBudjetti
+): Promise<string> {
+  return (await kaavanLiitteenSisalto(sivunTeksti, linkit, budjetti)).kuvaus
+}
+
+/*
+ * KUVAUS JA YHTEYSTIEDOT SAMASTA LATAUKSESTA (D-413).
+ *
+ * Huittisten OAS:ssa on molemmat: tavoiteluku kuvaukseksi ja
+ * "YHTEYSTIEDOT"-luku henkiloiksi (hanketoimija, kaavakonsultti,
+ * kaupungin kaavoittaja). PDF ladataan kerran; kuvaus luetaan alusta
+ * kuten ennenkin, yhteystiedot koko tiedostosta.
+ */
+export async function kaavanLiitteenSisalto(
+  sivunTeksti: string | null | undefined,
+  linkit: { href?: string | null; teksti?: string | null }[],
+  budjetti: LiiteBudjetti
+): Promise<{ kuvaus: string; yhteystiedot: OasYhteystieto[] }> {
+  const teksti = String(sivunTeksti ?? "").replace(/\s+/g, " ").trim()
+  const menettely = onVainLiiteotsikot(teksti, linkit) ? "" : omaSisalto(teksti, linkit)
+  const tyhja = { kuvaus: menettely, yhteystiedot: [] as OasYhteystieto[] }
+
+  if (budjetti.haettu >= budjetti.raja) return tyhja
+  const asiakirja = valitseKaavanAsiakirja(linkit)
+  if (!asiakirja) return tyhja
+
+  budjetti.haettu += 1
+  const tekstit = await haeKaavanLiitteenTekstit(asiakirja)
+  if (!tekstit) return tyhja
+
+  const liitteesta = tekstit.alku ? kaavanKuvausTekstista(tekstit.alku) : null
+  const kuvaus = liitteesta ? yhdistaKuvaukset(liitteesta, menettely) ?? liitteesta : menettely
+
+  return { kuvaus, yhteystiedot: oasYhteystiedot(tekstit.kaikki) }
 }
 
 /*
