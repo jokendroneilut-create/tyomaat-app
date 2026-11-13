@@ -268,3 +268,14 @@ describe("asuinala ei ole kerrosala (D-411)", () => {
     expect(extractFloorAreaFromText("Rakennuksen kerrosala on 192 kem², josta seinävahvuuden")).toBe(192)
   })
 })
+
+/* Monen rakennuksen summa ei ole hankkeen ala (D-411). */
+describe("yhteenlaskettu ala ei ole hankkeen ala (D-411)", () => {
+  it("ei poimi kymmenen rakennuksen summaa", () => {
+    expect(
+      extractFloorAreaFromText(
+        "Tontilla sijaitsevien 10 rakennuksen yhteenlaskettu pinta-ala on arviolta 25 962 brm2."
+      )
+    ).toBeNull()
+  })
+})

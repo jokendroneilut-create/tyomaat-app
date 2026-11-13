@@ -138,6 +138,7 @@ const ANKKURIT: RegExp[] = [
  *   "olemassa olevan toimistorakennuksen kerrosala"   nykyinen rakennus
  *   "Vanhojen, suojeltavien rakennusten laajuus"      säilytettävä osa
  *   "17 majoitusrakennusta kerrosalaltaan 29,5 k-m2"  yhden mökin ala
+ *   "10 rakennuksen yhteenlaskettu pinta-ala"         monta rakennusta
  *
  * Kolme ensimmäistä kertovat mitä tontilla JO on; asiakas ostaa sen mitä
  * sinne tulee. Neljäs on lukumäärä kertaa yksikkökoko, ja ilman
@@ -149,7 +150,7 @@ const ANKKURIT: RegExp[] = [
  * katsominen torjui kelvollisia rivejä.
  */
 const EI_RAKENNUS =
-  /suunnittelualue|kaava-alue|asemakaava-alue|tonti[nt]|puiston|puistoalue|ranta-alue|viheralue|katualue|kattoalue|pohjapinta-ala|keskipinta-ala|rakennusoikeu|asunto\w*\s+keski|huoneistoala|rakennettu\s+kerrosala|olemassa\s+olevan|nykyisen\s+rakennu|vanhojen|suojeltavien|\d+\s+\w*rakennusta/i
+  /suunnittelualue|kaava-alue|asemakaava-alue|tonti[nt]|puiston|puistoalue|ranta-alue|viheralue|katualue|kattoalue|pohjapinta-ala|keskipinta-ala|rakennusoikeu|asunto\w*\s+keski|huoneistoala|rakennettu\s+kerrosala|olemassa\s+olevan|nykyisen\s+rakennu|vanhojen|suojeltavien|\d+\s+\w*rakennusta|yhteenlaskettu/i
 
 /*
  * YKSIKÖN JÄLKEINEN ALASANA KERTOO MIKÄ ALA ON KYSEESSÄ (D-411).

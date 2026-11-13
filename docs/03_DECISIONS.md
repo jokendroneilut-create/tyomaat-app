@@ -152,8 +152,29 @@ yksikkö oli juuri sen luvun perässä jonka poimija otti.
 | kerrosneliöstä poimittu — **ajettu** | 19 | 14 |
 | vanhasta ankkurista, tyhjä muusta syystä — ei ajettu | 18 | ~17 |
 
-Jälkimmäiset ovat eri kysymys: ne eivät ole jääneet tyhjiksi D-411:n
-takia, eikä niitä ole luettu läpi. `--kaikki` ottaa nekin mukaan.
+Jälkimmäiset luettiin läpi 14.11.2026 Johanneksen pyynnöstä. 18
+rivistä **12 oli oikein, 6 väärin** — ja kuudesta vain kaksi oli
+erotettavissa säännöllä:
+
+| luku | lause | miksi hylätty | miten |
+|---|---|---|---|
+| 25 962 | "10 rakennuksen yhteenlaskettu pinta-ala" | monen rakennuksen summa | **sääntö** `yhteenlaskettu` |
+| 257 | "Rakennuksenkerrosala on 257 m2" | kaavamuutos; halli on jo tontilla | lista |
+| 3 398 | "Laulu-Miesten talon laajuus on 3398 br-m2" | suojeltu, ei lisärakennusoikeutta | lista |
+| 3 964 | "Kankun koulu on 3964 brm²" | rivi kattaa kaksi urakkaa | lista |
+| 1 609 | taulukkodumppi, 1609.0 ja 537.0 | kaksi rakennusta, poiminta sattumaa | lista (2 riviä) |
+
+> **Neljä viimeistä eroavat merkityksessä, eivät muodossa.** Lause on
+> kieliopillisesti identtinen oikeiden kanssa ("X:n laajuus on N") —
+> ero on siinä mitä X on. Sellaista ei voi jäsentää, joten ne ovat
+> skriptissä nimettynä listana perusteluineen. Oikea lopputulos
+> niille on **tyhjä kenttä**: emme tiedä hankkeen alaa.
+
+Peruskorjaukset (Kilpisen koulu 8 372, Leikkipuisto Kimmo 130)
+otettiin mukaan: korjattavan rakennuksen ala on urakoitsijalle juuri
+se luku joka kertoo työn koon.
+
+Ajettu 12 riviä. Pinta-alan takautuva täydennys on tältä erää valmis.
 
 ### D-410 – Yksi yhteystietojäsennin kolmen kopion sijaan
 
