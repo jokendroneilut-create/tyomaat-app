@@ -7,7 +7,7 @@ import {
   valitseKaavanAsiakirja,
   yhdistaKuvaukset,
 } from "./kaavanKuvaus"
-import { oasYhteystiedot, type OasYhteystieto } from "./oasYhteystiedot"
+import { oasYhteystiedot, osapuoletYhteystiedoista, type OasYhteystieto } from "./oasYhteystiedot"
 
 /*
  * KAAVAN LIITE KUVAUKSEEN, SAMALLA TAVALLA JOKA KUNNASSA (D-319).
@@ -192,6 +192,26 @@ export async function kuvausHankeEnsin(
 }
 
 /*
+ * LIITTEEN HENKILOT JA KIINTEAT YHTEYSTIEDOT YHTEEN (D-413).
+ *
+ * Liitteen nimetyt henkilot ensin, keraajan kiinteat perassa. Sama
+ * henkilo (sahkoposti tai nimi) ei tule kahdesti; kiintea voittaa,
+ * koska se on tarkistettu kasin.
+ */
+export function yhdistaYhteystiedot<T extends { name?: string | null; email?: string | null }>(
+  liitteesta: OasYhteystieto[],
+  kiinteat: T[]
+): (OasYhteystieto | T)[] {
+  const tunnetut = new Set(
+    kiinteat.flatMap((k) => [String(k.email ?? "").toLowerCase(), String(k.name ?? "").toLowerCase()]).filter(Boolean)
+  )
+  const uudet = liitteesta.filter(
+    (h) => !tunnetut.has(String(h.email ?? "").toLowerCase()) && !tunnetut.has(h.name.toLowerCase())
+  )
+  return [...uudet, ...kiinteat]
+}
+
+/*
  * KUVAUS JA YHTEYSTIEDOT SAMASTA LATAUKSESTA (D-413).
  *
  * Huittisten OAS:ssa on molemmat: tavoiteluku kuvaukseksi ja
@@ -203,10 +223,19 @@ export async function kaavanLiitteenSisalto(
   sivunTeksti: string | null | undefined,
   linkit: { href?: string | null; teksti?: string | null }[],
   budjetti: LiiteBudjetti
-): Promise<{ kuvaus: string; yhteystiedot: OasYhteystieto[] }> {
+): Promise<{
+  kuvaus: string
+  yhteystiedot: OasYhteystieto[]
+  /* Rooli tunnistettu -> developer; muut yritykset -> related (D-414). */
+  osapuolet: { developer: string | null; related: string[] }
+}> {
   const teksti = String(sivunTeksti ?? "").replace(/\s+/g, " ").trim()
   const menettely = onVainLiiteotsikot(teksti, linkit) ? "" : omaSisalto(teksti, linkit)
-  const tyhja = { kuvaus: menettely, yhteystiedot: [] as OasYhteystieto[] }
+  const tyhja = {
+    kuvaus: menettely,
+    yhteystiedot: [] as OasYhteystieto[],
+    osapuolet: { developer: null, related: [] as string[] },
+  }
 
   if (budjetti.haettu >= budjetti.raja) return tyhja
   const asiakirja = valitseKaavanAsiakirja(linkit)
@@ -219,7 +248,8 @@ export async function kaavanLiitteenSisalto(
   const liitteesta = tekstit.alku ? kaavanKuvausTekstista(tekstit.alku) : null
   const kuvaus = liitteesta ? yhdistaKuvaukset(liitteesta, menettely) ?? liitteesta : menettely
 
-  return { kuvaus, yhteystiedot: oasYhteystiedot(tekstit.kaikki) }
+  const yhteystiedot = oasYhteystiedot(tekstit.kaikki)
+  return { kuvaus, yhteystiedot, osapuolet: osapuoletYhteystiedoista(yhteystiedot) }
 }
 
 /*

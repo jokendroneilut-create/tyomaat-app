@@ -30,6 +30,15 @@ export async function resolveHattulaKaavaProject({
   const contacts = metadata.contacts ?? []
   const slug = document.raw_payload?.slug ?? null
 
+  /*
+   * Yritykset rooleineen OAS:n yhteystiedoista (D-414). Luetaan
+   * dokumentista suoraan, kuten slug: faktavaihe ei kopioi niita.
+   */
+  const developer: string | null = document.raw_payload?.developer ?? null
+  const relatedCompanies: string[] = Array.isArray(document.raw_payload?.related_companies)
+    ? document.raw_payload.related_companies
+    : []
+
   const completed = false
   const phaseHint = mapHattulaPhase(phase)
 
@@ -65,6 +74,8 @@ export async function resolveHattulaKaavaProject({
 
       description,
       contact_persons: contacts,
+      ...(developer ? { developer } : {}),
+      ...(relatedCompanies.length ? { related_companies: relatedCompanies } : {}),
 
       phase_hint: phaseHint,
       completed,

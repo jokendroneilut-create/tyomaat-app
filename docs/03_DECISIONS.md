@@ -51,6 +51,70 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-414 – Yritykset rooleineen OAS:sta, ja OAS:t joita ei ole luettu
+
+Johannes 14.11.2026: *"liittyvät yritykset pitäisi vielä poimia esim
+fcdc ja noar. toinen asia onko muita pdf tiedostoja luettu noin
+'vajaasti' että sen takia olisi jäänyt yhteystietoja tai yrityksiä
+saamatta?"*
+
+#### Yritykset roolisarakkeeseen
+
+OAS kertoo roolin sanatarkasti, joten yritys menee roolisarakkeeseen
+eikä "Liittyvä yritys" -listaan ([[party-role-fields]], D-313):
+
+| OAS:n rooli | kenttä | esimerkki |
+|---|---|---|
+| Hanketoimija, Hankkeesta vastaava, Hankevastaava, Hankekehitys… | `developer` (Rakennuttaja) | FCDC Corp Oy, Myrsky Energia Oy |
+| kaavakonsultti, YVA-konsultti, rooliton yritys | `related_companies` | NOAR Oy, A-Insinöörit, Ecobio Oy |
+| kaupunki, kunta | — (viranomainen, ei yritys) | |
+
+Kaavakonsultille ei ole roolisaraketta: kaavan laatija ei ole
+rakennuksen arkkitehtisuunnittelija, joten `architectural_design` olisi
+väärin. Rooli näkyy yhteyshenkilön nimikkeessä. Rakennuttaja kirjoitetaan
+vain tyhjään kenttään — jonorivillä `metadata.developer`, jonka hyväksyntä
+vie hankkeen `developer`-sarakkeeseen.
+
+Keräin → `raw_payload.developer / related_companies` → resolveri →
+ehdokkaan metadata. Ajettu: Hiukkamäki (FCDC Corp Oy + NOAR Oy),
+Lintukangas ja Niinimäki (Myrsky Energia Oy + konsultit), 5 riviä.
+
+#### Vastaus kysymykseen: ei vajaasti vaan ei lainkaan
+
+Kartoitettu kaikki PDF-polut:
+
+| polku | sivukatto | poimiiko yhteystietoja |
+|---|---|---|
+| `haeKaavaselostuksenTeksti` (liitekoneisto) | 6 | ei — vain kuvauksen |
+| `fetchKaavaselostus` (yksi takautuva skripti) | 6 | kyllä, **selostuksesta**, jossa ne ovat kansilehdellä — katto perusteltu |
+| Lieksa | 6 | kyllä, selostuksen alusta |
+| `kaavanLiitteenSisalto` (D-413) | koko tiedosto | kyllä, OAS:sta |
+
+Vajaa lukeminen ei siis hukannut tietoa missään muualla. Aukko on toinen:
+**OAS-dokumentteja ei ole luettu yhteystietojen vuoksi lainkaan.** Niitä on
+kannassa liitteinä **280 kappaletta 61 lähteessä**, kaikki sallituilla
+isännillä.
+
+Otos, yksi OAS kustakin lähteestä (`scripts/mittaa-oas-yhteystiedot.ts`):
+
+| | |
+|---|---|
+| OAS:eja | 40 |
+| YHTEYSTIEDOT-luku löytyi | 24 |
+| henkilöitä saatiin | 11:stä (27 henkilöä) |
+| luku löytyi mutta henkilöitä 0 | 13 |
+
+Otoksessa myös roskaa jota ei saa päästää asiakkaalle: *"Kunnanarkkitehti,
+sessin ajan. Suunnitte…"*, organisaationa *"Kaavan laatija YKS-611"*.
+**Laajaa ajoa ei tehty**: jokainen kunta voi käyttää omaa OAS-pohjaansa,
+ja kahdesta kunnasta löytyi jo kolme. Se vaatii pohjakohtaiset testit.
+
+#### Epävakaa testi
+
+`lib/brandi.spec.ts` lukee koko lähdekoodin (1,4 s yksinään) ja kaatui
+kolmesti viidestä koko paketin ajossa 5 s oletuskattoon. Katto nostettu
+30 sekuntiin; sisältö ei ollut syy.
+
 ### D-413 – Huittinen: kuvaus ja yhteystiedot OAS:sta, jäsentimen loppusivut
 
 Johannes 14.11.2026 hankkeesta be4e2b08 (Hiukkamäen teollisuusalue):

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { oasYhteystiedot } from "./oasYhteystiedot"
+import { oasYhteystiedot, osapuoletYhteystiedoista } from "./oasYhteystiedot"
 
 /*
  * Huittisten Hiukkamaen teollisuusalueen OAS 9.11.2026, luku 6 ja
@@ -248,5 +248,36 @@ describe("oasYhteystiedot: tutkintolyhenne pilkun jälkeen (D-413)", () => {
   it("lyhenteenä kirjoitettu yritys yhtiömuodon kanssa on yhä yritys", () => {
     const t = "YHTEYSTIEDOT\nArkkitehti Markus Makkonen, NOAR Oy\np. 040 123 4567"
     expect(oasYhteystiedot(t)[0].organization).toBe("NOAR Oy")
+  })
+})
+
+/*
+ * YRITYKSET ROOLEINEEN (D-414). Johannes: *"liittyvat yritykset
+ * pitaisi viela poimia esim fcdc ja noar."*
+ */
+describe("osapuoletYhteystiedoista (D-414)", () => {
+  it("hanketoimija on rakennuttaja, kaavakonsultti liittyvä yritys, kaupunki ei kumpikaan", () => {
+    expect(osapuoletYhteystiedoista(oasYhteystiedot(HIUKKAMAKI))).toEqual({
+      developer: "FCDC Corp Oy",
+      related: ["NOAR Oy"],
+    })
+  })
+
+  it("hankkeesta vastaava on rakennuttaja, konsultit liittyviä", () => {
+    expect(osapuoletYhteystiedoista(oasYhteystiedot(LINTUKANGAS))).toEqual({
+      developer: "Myrsky Energia Oy",
+      related: ["A-Insinöörit", "Ecobio Oy"],
+    })
+  })
+
+  it("tunnistaa hankevastaavan ja hankekehityspäällikön (40 OAS:n otos)", () => {
+    const y = (title: string, org: string) => ({ name: "A B", title, phone: "1", email: null, organization: org })
+    expect(osapuoletYhteystiedoista([y("Hankevastaava", "Energiequelle Oy")]).developer).toBe("Energiequelle Oy")
+    expect(osapuoletYhteystiedoista([y("Hankekehityspäällikkö", "Ilmatar Energy Oy")]).developer).toBe("Ilmatar Energy Oy")
+  })
+
+  it("ilman roolia yritys on liittyvä, ei rakennuttaja", () => {
+    const y = { name: "Tomi Mäkipelto", title: null, phone: "1", email: null, organization: "Pohjan Voima Oy" }
+    expect(osapuoletYhteystiedoista([y])).toEqual({ developer: null, related: ["Pohjan Voima Oy"] })
   })
 })

@@ -221,3 +221,51 @@ export function oasYhteystiedot(teksti: string | null | undefined): OasYhteystie
   /* Ilman puhelinta ja sahkopostia nimi ei ole yhteystieto. */
   return tulos.filter((h) => h.phone || h.email)
 }
+
+/*
+ * YRITYKSET ROOLEINEEN YHTEYSTIEDOISTA (D-414).
+ *
+ * Johannes 14.11.2026: *"liittyvat yritykset pitaisi viela poimia esim
+ * fcdc ja noar."* OAS kertoo roolin sanatarkasti, joten yritys menee
+ * ROOLISARAKKEESEEN eika "Liittyva yritys" -listaan
+ * ([[party-role-fields]]):
+ *
+ *   "Hanketoimija" / "Hankkeesta vastaava"  -> developer (Rakennuttaja)
+ *   kaavakonsultti, YVA-konsultti            -> related_companies
+ *
+ * Kaavakonsultille ei ole roolisaraketta: kaavan laatija ei ole
+ * rakennuksen arkkitehtisuunnittelija, joten `architectural_design`
+ * olisi vaara. Rooli nakyy yhteyshenkilon nimikkeessa.
+ *
+ * Kunta ja kaupunki eivat ole yrityksia vaan viranomainen.
+ */
+/*
+ * Sanasto: Huittinen ("Hanketoimija"), Lintukangas ja Niinimaki
+ * ("Hankkeesta vastaava") seka 40 OAS:n otos 14.11.2026: Ahtari
+ * ("Hankevastaava", Energiequelle Oy), Hameenkyro
+ * ("Hankekehityspaallikko", Ilmatar Energy Oy).
+ */
+const KEHITTAJA =
+  /hanketoimija|hankkeesta\s+vastaava|hankevastaava|hankekehit|hankkeen\s+(?:toteuttaja|vastuutaho|kehitt[äa]j[äa])|rakennuttaja|toiminnanharjoittaja|hakija/i
+const VIRANOMAINEN = /(kaupunki|kunta|kuntayhtym[äa]|ely-keskus|maakuntaliitto|virasto)\b/i
+
+export function osapuoletYhteystiedoista(yhteystiedot: OasYhteystieto[]): {
+  developer: string | null
+  related: string[]
+} {
+  let developer: string | null = null
+  const related: string[] = []
+
+  for (const h of yhteystiedot) {
+    const org = String(h.organization ?? "").trim()
+    if (!org || VIRANOMAINEN.test(org)) continue
+
+    if (!developer && KEHITTAJA.test(h.title ?? "")) {
+      developer = org
+      continue
+    }
+    if (org !== developer && !related.includes(org)) related.push(org)
+  }
+
+  return { developer, related: related.filter((r) => r !== developer) }
+}

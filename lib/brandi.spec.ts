@@ -59,5 +59,12 @@ describe("brändin kirjoitusasu", () => {
     }
 
     expect(osumat).toEqual([])
-  })
+    /*
+     * AIKAKATTO 30 s (14.11.2026). Testi lukee koko lahdekoodin: yksinaan
+     * 1,4 s, mutta koko paketin rinnakkaisajossa se kaatui kolmesti
+     * viidesta vitestin 5 s oletuskattoon -- ajot olivat 53 s tavallisen
+     * 35 s sijaan. Sisalto ei ollut syy: samat tiedostot menivat lapi
+     * kolme kertaa perakkain.
+     */
+  }, 30_000)
 })

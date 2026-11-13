@@ -13,8 +13,8 @@ import {
 } from "@/lib/agent/kaavanKuvaus"
 import {
   kaavanLiitteenSisalto,
-  kuvausHankeEnsin,
   liitelinkit,
+  yhdistaYhteystiedot,
   onVainLiiteotsikot,
   taydennaKuvausLiitteesta,
   type LiiteBudjetti,
@@ -15873,17 +15873,18 @@ async function collectHuittinenKaavaSource(source: DiscoverySource) {
     description = liite.kuvaus
 
     const completed = phase === "Voimaantulo"
-    const contacts = [
-      ...liite.yhteystiedot.filter((h) => h.email !== HUITTINEN_CONTACT.email),
-      HUITTINEN_CONTACT,
-    ]
+    const contacts = yhdistaYhteystiedot(liite.yhteystiedot, [HUITTINEN_CONTACT])
+
+    /* Yritykset rooleineen (D-414): FCDC Corp Oy hanketoimijana jne. */
+    const developer = liite.osapuolet.developer
+    const related_companies = liite.osapuolet.related
 
     found += 1
 
     const slug = kemiSlug(title)
     const documentUrl = `${HUITTINEN_LISTING_URL}#${slug}`
 
-    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments, developer, related_companies })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -15907,6 +15908,8 @@ async function collectHuittinenKaavaSource(source: DiscoverySource) {
           contacts,
           attachments,
           completed,
+          developer,
+          related_companies,
         },
         processed_at: new Date().toISOString(),
         last_seen_at: new Date().toISOString(),
@@ -16657,7 +16660,6 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
      */
     const phase = hattulaPhaseFromText(`${title} ${haitarinTeksti}`)
     const completed = phase === "Voimaantulo"
-    const contacts = HATTULA_CONTACTS
 
     /*
      * KUVAUS SELOSTUKSESTA, HANKE ENSIN (D-412).
@@ -16671,10 +16673,17 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
      * selostuksessa.
      *
      * Selostuksen sisalto ensin ja menettelylause peraan, liitteiden
-     * nimet pois -- ks. `kuvausHankeEnsin`.
+     * nimet pois -- ks. `kaavanLiitteenSisalto`.
+     *
+     * Samasta liitteesta OAS:n yhteystiedot ja yritykset rooleineen
+     * (D-413, D-414): Niinimaen OAS:ssa hankkeesta vastaava Myrsky
+     * Energia Oy ja kaavakonsultti A-Insinoorit. Liitteen henkilot
+     * ensin, kunnan kiinteat yhteystiedot peraan; sama henkilo ei kahdesti.
      */
     const linkit = liitelinkit($, HATTULA_LISTING_URL, contentEl)
-    const description = await kuvausHankeEnsin(haitarinTeksti, linkit, liiteBudjetti)
+    const liite = await kaavanLiitteenSisalto(haitarinTeksti, linkit, liiteBudjetti)
+    const description = liite.kuvaus
+    const contacts = yhdistaYhteystiedot(liite.yhteystiedot, HATTULA_CONTACTS)
 
     const attachments = contentEl
       .find("a")
@@ -16689,7 +16698,10 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
     const slug = kemiSlug(title)
     const documentUrl = `${HATTULA_LISTING_URL}#${slug}`
 
-    const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
+    const developer = liite.osapuolet.developer
+    const related_companies = liite.osapuolet.related
+
+    const rawText = JSON.stringify({ title, phase, description, contacts, attachments, developer, related_companies })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -16713,6 +16725,8 @@ async function collectHattulaKaavaSource(source: DiscoverySource) {
           contacts,
           attachments,
           completed,
+          developer,
+          related_companies,
         },
         processed_at: new Date().toISOString(),
         last_seen_at: new Date().toISOString(),

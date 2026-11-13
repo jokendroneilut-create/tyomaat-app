@@ -22,6 +22,10 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
  * ja ehdokasrivin metadataa ei paivity kun lahde muuttuu. Kasin
  * kirjoitettu kuvaus ei ala samalla 120 merkin menettelylauseella.
  *
+ * YRITYKSET (D-414): rakennuttaja vain jos kentta on tyhja (jonorivilla
+ * metadata.developer, hankkeella developer-sarake); muut yritykset
+ * related_companies-listaan, ei kahdesti eika rakennuttajaa uudelleen.
+ *
  * YHTEYSTIEDOT LISATAAN, EI KORVATA. Uudet nimetyt henkilot ensin,
  * olemassa olevat peraan; sama henkilo (sahkoposti tai nimi) ei tule
  * kahdesti. Kasin lisatty osapuoli sailyy.
@@ -56,7 +60,7 @@ async function main() {
   console.log(`[${LAHDE}] lähdedokumentteja: ${dokut?.length ?? 0}`)
 
   const budjetti = { haettu: 0, raja: 60 }
-  const tulokset = new Map<string, { vanha: string; uusi: string; yht: any[]; url: string; linkit: any[] }>()
+  const tulokset = new Map<string, { vanha: string; uusi: string; yht: any[]; url: string; linkit: any[]; osapuolet: { developer: string | null; related: string[] } }>()
 
   for (const d of (dokut ?? []) as any[]) {
     const p = d.raw_payload ?? {}
@@ -69,7 +73,7 @@ async function main() {
       console.log(`  EI LIITTEESTÄ  ${String(d.title).slice(0, 60)}`)
       continue
     }
-    tulokset.set(d.id, { vanha: sivu, uusi: uusiKuvaus, yht: liite.yhteystiedot, url: d.document_url, linkit })
+    tulokset.set(d.id, { vanha: sivu, uusi: uusiKuvaus, yht: liite.yhteystiedot, url: d.document_url, linkit, osapuolet: liite.osapuolet })
   }
   console.log(`liitteestä tietoa: ${tulokset.size} / ${dokut?.length ?? 0}   (PDF-hakuja ${budjetti.haettu})`)
 
@@ -78,7 +82,7 @@ async function main() {
   for (const [taulu, nimiKentta] of [["potential_projects", "title"], ["projects", "name"]] as const) {
     const { data: rivit, error: e2 } = await db
       .from(taulu)
-      .select(`id,${nimiKentta},status,kuvaus:metadata->>description,yht:metadata->contact_persons,doku:metadata->>source_document_id,url:metadata->>documents_url`)
+      .select(`id,${nimiKentta},status,kuvaus:metadata->>description,yht:metadata->contact_persons,doku:metadata->>source_document_id,url:metadata->>documents_url,liittyvat:metadata->related_companies,${taulu === "projects" ? "kehittaja:developer" : "kehittaja:metadata->>developer"}`)
       .eq("metadata->>source_name", LAHDE)
     if (e2) throw e2
 
@@ -135,7 +139,22 @@ async function main() {
         .map((h) => ({ kind: "person", ...h }))
       if (uudet.length) paivitys.contact_persons = [...uudet, ...vanhat]
 
-      if (Object.keys(paivitys).length) muutokset.push({ r, paivitys, nykyinen, vanhat, uudet })
+      /* Yritykset rooleineen (D-414). */
+      const sarakkeet: Record<string, unknown> = {}
+      const nykyKehittaja = String(r.kehittaja ?? "").trim()
+      const uusiKehittaja = !nykyKehittaja && osuma.osapuolet.developer ? osuma.osapuolet.developer : null
+      if (uusiKehittaja) {
+        if (taulu === "projects") sarakkeet.developer = uusiKehittaja
+        else paivitys.developer = uusiKehittaja
+      }
+      const kehittaja = (nykyKehittaja || uusiKehittaja || "").toLowerCase()
+      const vanhatYritykset: string[] = Array.isArray(r.liittyvat) ? r.liittyvat : []
+      const tunnetutYritykset = new Set([kehittaja, ...vanhatYritykset.map((x) => String(x).toLowerCase())])
+      const uudetYritykset = osuma.osapuolet.related.filter((x) => !tunnetutYritykset.has(x.toLowerCase()))
+      if (uudetYritykset.length) paivitys.related_companies = [...vanhatYritykset, ...uudetYritykset]
+
+      if (Object.keys(paivitys).length || Object.keys(sarakkeet).length)
+        muutokset.push({ r, paivitys, sarakkeet, nykyinen, vanhat, uudet, uusiKehittaja, uudetYritykset })
     }
 
     console.log(`\n=== ${taulu.toUpperCase()}: korjattavia ${muutokset.length} / ${rivit?.length ?? 0}`)
@@ -145,6 +164,8 @@ async function main() {
         console.log(`    KUVAUS ENNEN:   ${m.nykyinen ? m.nykyinen.slice(0, 160) : "(tyhjä)"}`)
         console.log(`    KUVAUS JÄLKEEN: ${String(m.paivitys.description).slice(0, 700)}`)
       }
+      if (m.uusiKehittaja) console.log(`    RAKENNUTTAJA: ${m.uusiKehittaja}`)
+      if (m.uudetYritykset.length) console.log(`    LIITTYVÄT YRITYKSET: +${m.uudetYritykset.join(" // ")}`)
       if (m.uudet.length) {
         console.log(`    YHTEYSTIEDOT: ${m.vanhat.length} olemassa, +${m.uudet.length} uutta:`)
         for (const h of m.uudet) {
@@ -163,7 +184,7 @@ async function main() {
         if (e3) throw e3
         const meta = { ...(rivi?.metadata ?? {}), ...m.paivitys }
         meta.takautuvat_ajot = [...new Set([...(meta.takautuvat_ajot ?? []), MERKKI])]
-        const { error: e4 } = await db.from(taulu).update({ metadata: meta }).eq("id", m.r.id)
+        const { error: e4 } = await db.from(taulu).update({ ...m.sarakkeet, metadata: meta }).eq("id", m.r.id)
         if (e4) throw e4
       }
       console.log(`\n  kirjoitettu ${muutokset.length}`)
