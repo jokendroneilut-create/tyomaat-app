@@ -66,6 +66,7 @@ import { detectCityFromText } from "../../detectCityFromText"
 import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
 import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
 import { estettyPerhe } from "../../hilmaRakentamisenIlmoitus"
+import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
 import {
   fetchLupapisteBulletinPdfText,
   bestBulletinDescription,
@@ -3698,14 +3699,6 @@ async function fetchRovaniemiDetails(url: string): Promise<RovaniemiDetails> {
   }
 }
 
-function stripHtmlToText(html: string): string {
-  return cheerio
-    .load(`<div>${html}</div>`)("div")
-    .text()
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
 async function collectRovaniemiSource(source: DiscoverySource) {
   const response = await fetch(source.url, { cache: "no-store" })
 
@@ -3728,7 +3721,8 @@ async function collectRovaniemiSource(source: DiscoverySource) {
 
     items.push({
       title,
-      description: descriptionHtml ? stripHtmlToText(descriptionHtml) : null,
+      /* Kaupunginosalinkki pois ja <br> valilyonniksi (D-417): ennen "nro 20Arctic". */
+      description: rovaniemenKuvaus(descriptionHtml),
       url: link,
       guid,
     })

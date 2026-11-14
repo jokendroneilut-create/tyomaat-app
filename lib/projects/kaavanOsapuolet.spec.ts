@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { kaavanOsapuoli, siivoaKaavanNimi } from "./kaavanOsapuolet"
+import { kaavanLaatija, kaavanOsapuoli, siivoaKaavanNimi } from "./kaavanOsapuolet"
 import { onLuokkasana } from "./kaavanRakennuttaja"
 
 /*
@@ -114,5 +114,61 @@ describe("onLuokkasana", () => {
     expect(onLuokkasana("Joensuun kaupunki")).toBe(false)
     expect(onLuokkasana("Sato-Asunnot Oy")).toBe(false)
     expect(onLuokkasana("")).toBe(false)
+  })
+})
+
+/* Aidot kuvaukset 14.11.2026 (D-417). */
+describe("kaavanLaatija", () => {
+  it("lukee laatijan joka esitetään kaavanlaatijaksi (Rovaniemen Mellavaara)", () => {
+    const t =
+      "Arctic Lapland Investment Oy on hakenut asemakaavan laatimista omistamalleen kiinteistölle 698-408-428-6 Mellavaarassa. Hakija esittää kaavanlaatijaksi Arkkitehtitoimisto Jarmo Lokio Oy:tä."
+    expect(kaavanLaatija(t)).toBe("Arkkitehtitoimisto Jarmo Lokio Oy")
+    /* Hakija on edelleen rakennuttaja, ei laatija. */
+    expect(kaavanOsapuoli(t)).toBe("Arctic Lapland Investment Oy")
+  })
+
+  it("kaavakonsultti ja henkilö perässä", () => {
+    expect(kaavanLaatija("Kaavakonsultti: Alusta Consulting Oy Lauri Solin, puh. 044 704 6281")).toBe("Alusta Consulting Oy")
+    expect(kaavanLaatija("hyväksyy kaavanlaatijaksi Ramboll Finland Oy / Anne Koskela.")).toBe("Ramboll Finland Oy")
+    expect(kaavanLaatija("Kaavan laatijana toimii Karttaako Oy. Kaupunki ohjaa kaavan laadintaa")).toBe("Karttaako Oy")
+  })
+
+  it("henkilö nimen edellä: tyhjä mieluummin kuin henkilö yrityksenä", () => {
+    expect(kaavanLaatija("Kaavan laatijana toimii DI Pertti Hartikainen Karttaako Oy:stä.")).toBeNull()
+  })
+
+  it("ilman yhtiömuotoa ei laatijaa", () => {
+    expect(kaavanLaatija("Kaavan laatijana toimii Rovaniemen kaupungin kaavoitus.")).toBeNull()
+  })
+})
+
+/* Aidot Rovaniemen ja Imatran kuvaukset 14.11.2026 (D-417). */
+describe("kaavanOsapuoli: uudet ankkurit", () => {
+  it("aloite on tullut yritykseltä", () => {
+    expect(kaavanOsapuoli("Aloite kaavatyön aloittamisesta on tullut Roy Service Oy:ltä.")).toBe("Roy Service Oy")
+    expect(
+      kaavanOsapuoli("Aloite alueen maankäytölliseen tarkasteluun on tullut Mitra Imatran Rakennuttaja Oy:ltä.")
+    ).toBe("Mitra Imatran Rakennuttaja Oy")
+  })
+
+  it("hakijat ovat", () => {
+    expect(
+      kaavanOsapuoli("Asemakaavamuutoksen hakijat ovat Kiinteistö Oy Lapinmaa ja Asunto Oy Rovapekka. Asemakaavan muutosalue käsittää")
+    ).toBe("Kiinteistö Oy Lapinmaa")
+  })
+
+  it("on esittänyt kaupungille ja on valtakirjalla hakenut, nimi kokonaisena", () => {
+    expect(
+      kaavanOsapuoli("Rakennusliike Jouko Pesonen Oy on esittänyt kaupungille omistuksessaan olevalle korttelin 13 tontille")
+    ).toBe("Rakennusliike Jouko Pesonen Oy")
+    expect(kaavanOsapuoli("Rakennusliike LapTi Oy on valtakirjalla hakenut kiinteistölle asemakaavan muutosta")).toBe(
+      "Rakennusliike LapTi Oy"
+    )
+  })
+
+  it("pelkkä 'on esittänyt' ei tee aloitteentekijää (Oulu)", () => {
+    expect(
+      kaavanOsapuoli("TeliaSonera Oyj on esittänyt aiemman suunnittelun yhteydessä mastoalueen huomioimista.")
+    ).toBeNull()
   })
 })

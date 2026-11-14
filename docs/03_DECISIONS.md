@@ -51,6 +51,57 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-417 – Rovaniemen Kaavatori: tyhjät jonorivit, kaavan laatija ja liimattu kuvaus
+
+Johannes 14.11.2026 Mellavaarasta: *"jonossa on tämä hanke ja kymmeniä
+rovaniemi lähteen hankkeita joista puuttuu kuvaus ja liittyvä yritys
+esimerkiksi tässä Arctic Lapland Investment Oy. Tässä kerrotaan myös
+arkkitehti Arkkitehtitoimisto Jarmo Lokio Oy."*
+
+#### Mitä oli rikki
+
+| | mitä | korjaus |
+|---|---|---|
+| 1 | 12.11.2026 jonoon syntyi **31 riviä ilman faktoja**: kuvaus, kaavatunnus, vaihe ja yhteystiedot `null`, vaikka kaikki lukee dokumentin `raw_payload`issa | resolveri lukee dokumentista kun faktat puuttuvat |
+| 2 | Niistä **28 on jäätyneitä** kaavoja (viimeisin vaihe ≥ 2 v sitten). Keräin merkitsee ne `stale` ja tarkoitus oli, ettei ehdokasta synny | resolveri ohittaa `stale`-dokumentin (`skipped_stale`) |
+| 3 | RSS-kuvauksen alussa kaupunginosalinkki, ja `.text()` liimasi sen: *"kaupunginosa nro 20Arctic Lapland…"* — 88 riviä | `rovaniemenKuvaus` (linkki pois, `<br>` välilyönniksi), kannassa olevat `korjaaLiimattuKuvaus` |
+| 4 | Kaavan laatijaa ei poimittu mistään: `kaavanOsapuoli` hylkää roolisanan "laatija" jälkeisen nimen tarkoituksella (konsultti ei ole rakennuttaja) | `kaavanLaatija` → `related_companies`, kaikille kaavalähteille |
+| 5 | Aloitteentekijä jäi löytymättä lauseista *"Aloite … on tullut X Oy:ltä"*, *"hakijat ovat X"*, *"X Oy on esittänyt kaupungille"*, *"on valtakirjalla hakenut"* | neljä ankkuria lisää |
+
+Rakennuttaja (Arctic Lapland Investment Oy) olisi poimittu jo ennen —
+kuvaus vain ei koskaan päätynyt riville. Kaavan laatija meni D-414:n
+säännöllä Liittyviin yrityksiin: kaavakonsultille ei ole roolisaraketta.
+
+#### Mitattu ennen kytkentää
+
+- `kaavanLaatija` näkyvien hankkeiden kuvauksista (289 riviä joissa
+  laatij/konsult/laatii): 21 osumaa, kaikki oikein; 14 oli jo listalla.
+  Kaksi virhettä korjattiin ennen kytkentää: *"Alusta Consulting Oy"* →
+  "Consulting Oy" (etuosan sijapääte) ja *"DI Pertti Hartikainen
+  Karttaako Oy"* (henkilö nimen edellä → tyhjä).
+- Uudet osapuoliankkurit vanhaa vastaan 648 rivillä: 4 muutosta, kaikki
+  oikein (Imatra, Rovaniemi). *"on esittänyt"* yksinään antoi Oulussa
+  TeliaSonera Oyj:n lausunnosta — rajattu muotoon *"on esittänyt
+  kaupungille/kunnalle/kaavaa"*.
+- *"Rakennusliike"* isolla on nimen osa (*Rakennusliike Jouko Pesonen
+  Oy*); vain pienellä se on rooli. Muutos ei koskenut muita rivejä.
+
+#### Tulos (`scripts/korjaa-rovaniemen-kaavatori.ts`)
+
+| | rivejä |
+|---|---|
+| kuvaus dokumentista tyhjälle jonoriville | 31 |
+| liimattu kuvaus korjattu (jono + näkyvät) | 88 |
+| rakennuttaja | 8 |
+| kaavan laatija | 1 (Mellavaara) |
+| yhteystiedot jonoriville | 5 |
+
+Näkyvillä 53 hankkeella kuvaus oli jo; niistä korjattiin liimaus ja
+Lapin Kiinteistöt Oy rakennuttajaksi. Uusinta-ajo: 0.
+
+**Avoinna:** 28 jäätynyttä kaavaa ovat jonossa. Niitä ei hylätty —
+päätös on Johanneksen. Uusia jäätyneitä ei enää synny.
+
 ### D-416 – OAS-yhteystiedot loppuihin 51 lähteeseen: palstat, otsikot ja vanhojen virheiden korjaus
 
 Jatkoa D-415:lle (*"käy lähteet läpi isoimmasta alkaen"*). Kolme erää:

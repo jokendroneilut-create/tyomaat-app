@@ -16,7 +16,8 @@ import {
 } from "@/lib/projects/contacts"
 import { merkitseRoolit } from "@/lib/projects/contactRole"
 import { housingCompanyName } from "@/lib/projects/housingCompanyKey"
-import { kaavanRakennuttaja, onLuokkasana } from "@/lib/projects/kaavanRakennuttaja"
+import { kaavanRakennuttaja, onKaavalahde, onLuokkasana } from "@/lib/projects/kaavanRakennuttaja"
+import { kaavanLaatija } from "@/lib/projects/kaavanOsapuolet"
 import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
 import { inferBuildingType } from "@/lib/agent/buildingType"
 import { gateCandidateRelevance } from "@/lib/agent/quality/gateCandidateRelevance"
@@ -252,6 +253,27 @@ export async function resolvePotentialProject(
     )
 
     return { housing_company: nimi, related_companies: lista }
+  }
+
+  /*
+   * KAAVAN LAATIJA LIITTYVAKSI YRITYKSEKSI (D-417). Konsultti ei ole
+   * rakennuttaja, mutta se on hankkeeseen liittyva yritys: Rovaniemen
+   * Mellavaarassa "Hakija esittaa kaavanlaatijaksi Arkkitehtitoimisto
+   * Jarmo Lokio Oy:ta". Yhdistetaan taloyhtion kanssa samaan listaan,
+   * koska molemmat kirjoittavat `related_companies`-kenttaan.
+   */
+  function yrityksetMetadata(existingMetadata?: Record<string, any> | null): Record<string, unknown> {
+    const taloyhtio = taloyhtioMetadata(existingMetadata)
+    if (!onKaavalahde(input.sourceName ?? md.source_name)) return taloyhtio
+    const laatija = kaavanLaatija(md.description)
+    if (!laatija) return taloyhtio
+    const lista = mergeCompanyNames(
+      (existingMetadata?.related_companies as string[]) ?? [],
+      (md.related_companies as string[]) ?? [],
+      (taloyhtio.related_companies as string[]) ?? [],
+      [laatija]
+    )
+    return { ...taloyhtio, related_companies: lista }
   }
 
   /*
@@ -665,7 +687,7 @@ export async function resolvePotentialProject(
           ...tyyppiMetadata(existing.metadata),
           ...costMetadata(existing.metadata),
           ...alaMetadata(existing.metadata),
-          ...taloyhtioMetadata(existing.metadata),
+          ...yrityksetMetadata(existing.metadata),
           ...rakennuttajaMetadata(existing.metadata),
           ...yhteyshenkilotMetadata(existing.metadata),
           source_history: sourceHistory,
@@ -770,7 +792,7 @@ export async function resolvePotentialProject(
         ...tyyppiMetadata(null),
         ...costMetadata(null),
         ...alaMetadata(null),
-        ...taloyhtioMetadata(null),
+        ...yrityksetMetadata(null),
         ...rakennuttajaMetadata(null),
         ...yhteyshenkilotMetadata(null),
         ...relevanceGate.metadata,
