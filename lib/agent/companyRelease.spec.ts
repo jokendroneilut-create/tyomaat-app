@@ -236,6 +236,16 @@ describe("extractReleaseBody", () => {
     expect(body).not.toMatch(/Tätä tarjoamme/)
   })
 
+  it("ei valitse pidempää evästedialogia vaikka sillä on sama luokka (D-419)", () => {
+    const eväste = "Sivusto sisältää evästeitä. Evästeet ovat pieniä tekstitiedostoja. ".repeat(40)
+    const html =
+      `<html><body><main class="main"><div class="article"><div class="article__body"><p>${VAASA_BODY}</p></div></div></main>` +
+      `<div id="dialog" class="dialog"><div class="dialog__inner"><div class="article"><p>${eväste}</p></div></div></div></body></html>`
+    const body = extractReleaseBody(html)
+    expect(body).toMatch(/^Peab toteuttaa Senaatti-kiinteistöille/)
+    expect(body).not.toMatch(/evästeitä/)
+  })
+
   it("palauttaa nullin liian lyhyestä sivusta", () => {
     expect(extractReleaseBody("<html><body><p>Lyhyt</p></body></html>")).toBeNull()
   })

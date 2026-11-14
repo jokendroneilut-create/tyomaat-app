@@ -9,6 +9,30 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-14 (valmistuneiden verkkohaku, NCC- ja Peab-kuvaukset)
+
+### Rakenteilla mutta jo valmis (D-419)
+
+Testiasiakas oli soittanut hankkeeseen, joka meillä oli rakenteilla
+mutta oli valmistunut jo aiemmin. Kaikille 1 489 rakentamisvaiheen
+hankkeelle haettiin verkosta valmistumisuutinen
+(`hae-valmistuneet-verkosta.ts`). 61 osumasta 12 hanketta todettiin
+lähdesivulta valmistuneiksi ja siirrettiin Valmistunut-vaiheeseen
+valmistumispäivineen; vanhin oli valmistunut jo 2022. Kuusi osumaa oli
+samannimisestä eri talosta, joten siirto tehdään käsin eikä
+automaattisesti. Polsun silta oli kahtena rivinä ja yhdistettiin.
+
+### Kuvauksiin evästetekstiä ja sivukalustetta
+
+Tarkistuksessa löytyi kaksi poimijaa, jotka toivat asiakkaille roskaa:
+Peabin tiedotteen tilalle valikoitui evästeseloste (dialogissa sama
+luokka kuin tiedotteella), ja NCC:n projektisivuilta tallentui koko
+sivu ohituslinkkeineen ja lomakkeineen. Molemmat korjattu keräimessä,
+ja 27 vanhaa kuvausta vaihdettu (`korjaa-ncc-peab-kuvaukset.ts`).
+Akaan Toijalan alakoulu näytti toisen hankkeen kuvausta; korjattu.
+
+---
+
 ## 2026-11-14 (OAS-yhteystiedot kaikista 61 lähteestä)
 
 ### Yhteyshenkilöt ja yritykset osallistumis- ja arviointisuunnitelmista (D-414, D-415, D-416)

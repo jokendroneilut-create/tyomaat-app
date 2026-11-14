@@ -209,6 +209,30 @@ export function extractNccFields($: cheerio.CheerioAPI): Map<string, string> {
   return fields
 }
 
+/*
+ * KUVAUS ON SIVUN PÄÄSISÄLTÖ, EI KOKO SIVU (D-419).
+ *
+ * Kuvaukseksi tallentui `body`-teksti: alussa ohituslinkki "Siirry
+ * sisältöön" ja viikkotiedotekehote, lopussa NCC:n mainosnosto,
+ * tiedotetilauslomake, karttakrediitti, tietolaatikko ja palautelomake.
+ * 16/17 jonon NCC-rivistä alkoi "Siirry sisältöön" (mitattu 14.11.2026).
+ * Tietolaatikon kentät (rakennusaika, osoite, rakennuttaja) luetaan
+ * erikseen `extractNccFields`illa, joten niiden leikkaus ei hävitä tietoa.
+ */
+const NCC_HANTA =
+  /(?<=[\s.!?])(?:Lue lisää:|Lue lisää [^.]{0,80}?osaamisestamme|NCC \p{L}+jana\b|Työmaan tiedotteiden tilaus|Map data ©|Tiedot Rakennusaika:|Palaute Anna palautetta)/u
+const NCC_ALKU = /^(?:Siirry sisältöön\s*)?(?:Lue (?:tästä )?työmaan viimeisin viikkotiedote!?\s*)?/i
+
+export function nccKuvaus($: cheerio.CheerioAPI): string | null {
+  /* Murupolku ja työmaatiedotteiden sivulista ovat nav-elementeissä. */
+  $("script, style, noscript, nav, header, footer").remove()
+  const juuri = $("main").first().length ? $("main").first() : $("body")
+  let teksti = juuri.text().replace(/\s+/g, " ").trim().replace(NCC_ALKU, "")
+  const hanta = teksti.search(NCC_HANTA)
+  if (hanta > 0) teksti = teksti.slice(0, hanta).trim()
+  return teksti.length >= 80 ? teksti.slice(0, 4000) : null
+}
+
 export async function enrichNccProject(candidate: any): Promise<any> {
   if (!candidate?.source_url) return candidate
 
@@ -225,9 +249,9 @@ export async function enrichNccProject(candidate: any): Promise<any> {
   const fields = extractNccFields($)
 
   $("script, style, noscript, nav, header, footer").remove()
-  /* Koko runko vaihepäättelyyn, katkaistu vain talletusta varten. */
+  /* Koko runko vaihepäättelyyn. */
   const fullText = $("body").text().replace(/\s+/g, " ").trim()
-  const description = fullText.slice(0, 4000)
+  const description = nccKuvaus($) ?? fullText.slice(0, 4000)
 
   const address = fields.get("osoite") ?? null
   const developer = fields.get("rakennuttaja") ?? fields.get("tilaaja") ?? null

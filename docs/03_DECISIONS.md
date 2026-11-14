@@ -51,6 +51,97 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-419 – Valmistuneiden verkkohaku rakentamisvaiheen hankkeille, 12 siirtoa ja kaksi kuvauspoimijaa
+
+Johannes 14.11.2026: *"Testiasiakas sanoi, että oli soittanut johonkin
+hankkeeseen jossa meillä oli vaihe "rakenteilla" ja se oli valmistunut
+jo jonkin aikaa sitten. Pystytkö ajamaan verkkohaun noille "rakenteilla"
+vaiheessa oleville"* — asiakas ei muistanut mikä hanke. Päätös siirroista:
+*"tee kaikki kohdat 1-3 ja dokumentoi"*.
+
+#### Haku (`scripts/hae-valmistuneet-verkosta.ts`)
+
+Kaikki näkyvät aktiiviset hankkeet vaiheissa Rakenteilla, Rakentaminen
+aloitettu, Valmistumassa ja Sopimus myönnetty: **1 489**. Jokaiselle yksi
+DuckDuckGo-haku (html-rajapinta, ilmainen) `nimi kunta valmistui`, 4 s
+väli, jatkuva tiedosto (`--ulos`, keskeytynyt ajo jatkuu). Ajo kesti noin
+2 h, rajoituksia 4 ensimmäisillä 80 haulla 2,5 s välillä, 0 sen jälkeen.
+
+Osuma vaatii kaiken tämän samasta tuloksesta:
+
+- otsikko osuu nimeen (`otsikonOsuvuus`, ≥ 2 sanaa ja ≥ 0,6, kuntasanat pois)
+- virkkeessä **finiittinen** valmistumisverbi (*valmistui, otettiin
+  käyttöön, avattiin, luovutettiin…*). Partisiippi *"2012 valmistuneen"*
+  oli otoksessa väärä osuma.
+- ei suunnitelman, kaavan tai selvityksen valmistumista
+- samassa virkkeessä nimen **yksilöivä** sana (ei *koulu*, *kerrostalo*)
+- ei ilmoitus-, myynti- tai somesivua
+
+#### Tulos: 61 osumaa → 12 valmistunutta
+
+| | |
+|---|---|
+| valmistunut, todettu lähdesivulta | **12 hanketta (13 riviä)** |
+| osittain valmis, työ jatkuu | 5 (Ivalo, Kt 68, Härmälänoja, OYS, Poikkimaantie) |
+| vanha rakennus (*"valmistui vuonna 1929"*) tai muu kuin rakennustyö | 38 |
+| samanniminen eri kohde | 6 |
+
+Valmistuneista vanhin oli **Harjulan koulu (Järvenpää), valmis 2022** —
+rivi oli luotu 3/2026 vanhasta Firan uutisesta. Kupittaa–Turku-ratahanke
+valmistui 10/2025, Jyväskylän Paperitehtaankatu 15 1/2026 (meillä vielä
+"Sopimus myönnetty"). Loput valmistuivat 5–10/2026.
+
+**Kuusi samannimistä väärää** on se syy, miksi siirtoa ei voi
+automatisoida: Vermonniitty, Aviapolis, Verkkosaari ja Oulunkylä × 2 —
+samalla alueella valmistui *eri* talo, ja otsikko oli täsmälleen yhtä
+hyvä kuin oikealla. Samoin Vanha Vaasa (valmistui uusi rakennus, meillä
+peruskorjaus 2028) ja Hirvensalo (2024 valmistunut rivistö vs. uusi).
+Tämä toistaa D-221:n (Roihupelto): ks. [[hiding-threshold]].
+
+#### Siirrot (`scripts/fix-verkkohaun-valmistuneet.ts`)
+
+12 riviä → Valmistunut / completed, `completed_at` tekstin päivästä
+(tarkka päivä kun on, muuten kauden viimeinen) ja vaihemuutos
+perusteluineen ja lähdeosoitteineen (`sourceName`
+`verkkohaku-valmistuneet`). Rivi muutetaan vain jos se on yhä haun
+aikaisessa vaiheessa. Harjun stadionin sivu palautti 403; todiste on
+kaupungin uutisen otsikko ja päivä osoitteessa.
+
+**Polsun silta oli kahdesti** (Kreaten hankesivu ja tiedote) →
+yhdistetty `merge-duplicate-projects.ts`:llä, Kreaten rivi piilotettu.
+
+#### Sivulöydös: kaksi kuvauspoimijaa toi asiakkaille roskaa
+
+1. **Peab: evästeseloste kuvauksena.** Peabin evästedialogi
+   (`#dialog.dialog`) sisältää `.article`-elementin — saman luokan kuin
+   tiedote. Seloste oli 1 607 merkkiä, tiedote 1 585, joten "pisin
+   voittaa" (`extractReleaseBody`) valitsi selosteen. Vanhan Vaasan
+   sairaalan F- ja T-rakennusten kuvaus oli asiakkaille evästeteksti.
+   Korjaus: dialogit, modaalit ja cookie/consent-kääreet poistetaan
+   ennen valintaa. Koskee kaikkia yrityslähteitä, jotka käyttävät
+   jaettua poimijaa.
+2. **NCC: koko sivu kuvauksena.** Keräin tallensi `body`-tekstin:
+   *"Siirry sisältöön"*, viikkotiedotekehote, mainosnosto,
+   tilauslomake, *"Map data ©2026 Google"*, tietolaatikko ja
+   palautelomake. **16/17 jonon NCC-riviä.** Korjaus `nccKuvaus`:
+   `main` ilman nav-elementtejä, häntä katkaistaan ensimmäiseen
+   tunnettuun merkkiin. Tietolaatikon kentät luetaan edelleen erikseen.
+3. **Akaan Toijalan alakoulu** näytti *toisen* hankkeen kuvausta
+   (yhtenäiskoulun markkinakartoitus Hilmasta). Korvattu NCC-sivun
+   kuvauksella.
+
+Takautuvasti `scripts/korjaa-ncc-peab-kuvaukset.ts`: **27 riviä** —
+9 hanketta (8 NCC + Vanha Vaasa) ja 18 jonoriviä. Vain tunnistettava
+roska (alkaa *"Siirry sisältöön"*, *"Sivusto sisältää evästeitä"* tai
+Toijalan vieras teksti) vaihdetaan.
+
+#### Kvartaalitarkistukseen
+
+Verkkohaku löysi tapauksia, joita kannan oma signaali (D-220) ei
+löydä: todiste ei ole kannassa lainkaan. Ajetaan
+`tarkista-rakenteilla.ts`:n rinnalla kvartaaleittain; ajo vie noin
+2 h ja jokainen osuma luetaan käsin.
+
 ### D-418 – Pihtiputaan kaavasivut: kuvaus tekstiwidgeteistä, ei koko sivua
 
 Johannes 14.11.2026 (korttelit 53, 55 ja 58): *"hankkeesta puuttuu

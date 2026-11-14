@@ -250,6 +250,17 @@ export function extractReleaseBody(html: string): string | null {
    * osapuolten poimintaan valokuvaajana eikä rakentajana.
    */
   $("script, style, noscript, nav, header, footer, iframe, form, figcaption").remove()
+  /*
+   * DIALOGIT JA EVÄSTEBANNERIT POIS (D-419). Peabin evästeilmoitus on
+   * `#dialog.dialog`-kääreessä, jonka sisällä on `.article` — sama luokka
+   * kuin itse tiedotteella. Evästeseloste oli 1 607 merkkiä ja tiedote
+   * 1 585, joten "pisin voittaa" valitsi selosteen: Vanhan Vaasan
+   * sairaalan F- ja T-rakennusten kuvaukseksi tuli evästeteksti ja se
+   * näkyi asiakkaille (löytyi 14.11.2026 valmistuneiden verkkohaussa).
+   */
+  $(
+    'dialog, [role="dialog"], .dialog, .modal, [id*="cookie" i], [class*="cookie" i], [id*="consent" i], [class*="consent" i]',
+  ).remove()
 
   /*
    * PISIN SIIVOTTU OSUMA, EI ENSIMMÄINEN.
