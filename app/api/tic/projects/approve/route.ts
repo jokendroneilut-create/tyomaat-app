@@ -19,6 +19,7 @@ import {
   normalizeLegacyPhase,
 } from "@/lib/projects/phases"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
+import { completionStatusPatch, mennytPaiva } from "@/lib/projects/completionStatus"
 import { computeManualExpiry } from "@/lib/projects/tenderExpiry"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { inferMunicipalityFromText } from "@/lib/geo/inferMunicipalityFromText"
@@ -2531,6 +2532,14 @@ export async function POST(request: Request) {
           lat: existingProject.lat ?? coords.lat,
           lng: existingProject.lng ?? coords.lon,
           phase: mergedPhase,
+          /* Tila seuraa vaihetta (D-421): Valmistunut = completed. */
+          ...(phaseAdvances
+            ? completionStatusPatch(mergedPhase, {
+                status: existingProject.status,
+                completed_at:
+                  existingProject.completed_at ?? mennytPaiva(estimatedCompletion),
+              })
+            : {}),
 
           /*
            * Lisätiedot uudemmasta lähteestä. Kenttä ei ollut aiemmin
@@ -2668,6 +2677,16 @@ export async function POST(request: Request) {
         is_public: true,
         needs_review: Boolean(possibleDuplicateOf),
         status: "active",
+        /*
+         * Valmistuneeksi hyväksytty saa myös tilan (D-421). Ilman tätä
+         * 16 hyväksyttyä referenssiä ja valmista kohdetta jäi
+         * Valmistunut / active -tilaan. Valmistumisaika lähteen
+         * päivästä kun se on mennyt, muuten hyväksymishetki.
+         */
+        ...completionStatusPatch(phase, {
+          status: "active",
+          completed_at: mennytPaiva(estimatedCompletion),
+        }),
 
         additional_info:
           metadata.description ??

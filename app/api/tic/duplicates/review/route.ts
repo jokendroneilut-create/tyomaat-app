@@ -4,6 +4,7 @@ import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { chooseDuplicateSurvivor, moreAdvancedPhase } from "@/lib/projects/duplicateSurvivor"
 import { SIIRRETTAVAT_KENTAT, siirrettavatArvot } from "@/lib/projects/duplicateFieldCarry"
 import { phaseOrder } from "@/lib/projects/phases"
+import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 
 export const runtime = "nodejs"
 
@@ -139,6 +140,23 @@ export async function POST(req: Request) {
 
   if (Object.keys(paivitys).length) {
     await supabaseAdmin.from("projects").update(paivitys).eq("id", valinta.keepId)
+  }
+
+  /*
+   * Nosto kirjataan vaihehistoriaan kuten muutkin vaihemuutokset (D-421):
+   * Porthanian nosto 3.10.2026 jäi ilman jälkeä, ja sen syy löytyi vasta
+   * duplikaattitaulusta kuusi viikkoa myöhemmin.
+   */
+  if (nostettuVaihe) {
+    await recordPhaseChange({
+      supabase: supabaseAdmin,
+      projectId: valinta.keepId,
+      newPhase: nostettuVaihe,
+      previousPhase: jaava?.phase ?? null,
+      source: "dashboard_admin",
+      sourceName: "duplikaattikatselmointi",
+      reason: `Vaihe nostettu piilotetulta duplikaatilta ${valinta.hideId}`,
+    })
   }
 
   const { error: piilotusVirhe } = await supabaseAdmin

@@ -97,6 +97,17 @@ describe("moreAdvancedPhase", () => {
     expect(moreAdvancedPhase("Rakenteilla", "Rakenteilla", jarjestys)).toBeNull()
   })
 
+  /*
+   * Porthania 3.10.2026: saman koordinaatin pari oli naapuritalo
+   * Vuorikatu 3 (valmistunut), ja nosto piilotti kaynnissa olevan
+   * peruskorjauksen asiakkailta (D-421).
+   */
+  it("ei peri valmistunutta eika peruttua", () => {
+    expect(moreAdvancedPhase("Suunnittelussa", "Valmistunut", jarjestys)).toBeNull()
+    expect(moreAdvancedPhase("Rakenteilla", "Valmistunut", jarjestys)).toBeNull()
+    expect(moreAdvancedPhase("Suunnittelussa", "Peruttu", jarjestys)).toBeNull()
+  })
+
   it("tuntematon vaihe ei nosta mitaan", () => {
     expect(moreAdvancedPhase("Suunnittelussa", "Roskaa", jarjestys)).toBeNull()
     expect(moreAdvancedPhase("Suunnittelussa", null, jarjestys)).toBeNull()

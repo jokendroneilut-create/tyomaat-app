@@ -3,6 +3,8 @@ import { sources as legacySources } from "@/lib/agent/sources"
 import { resolveProjectCost } from "@/lib/projects/resolveProjectCost"
 import { extractFloorAreaFromText } from "@/lib/projects/extractFloorAreaFromText"
 import { phaseAdvances } from "@/lib/projects/phases"
+import { completionStatusPatch } from "@/lib/projects/completionStatus"
+import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -138,7 +140,7 @@ async function applyToStoredRows(
   const { data: projectRows } = await supabaseAdmin
     .from("projects")
     .select(
-      "id, name, phase, city, location, developer, builder, property_type, estimated_cost, floor_area, additional_info, metadata"
+      "id, name, phase, status, completed_at, city, location, developer, builder, property_type, estimated_cost, floor_area, additional_info, metadata"
     )
     .eq("metadata->>source_url", documentUrl)
 
@@ -173,6 +175,8 @@ async function applyToStoredRows(
         builder: firstFilled(r.builder, enriched.builder),
         property_type: firstFilled(r.property_type, enriched.building_type),
         phase: nextPhase,
+        /* Tila seuraa vaihetta (D-421): Valmistunut = completed. */
+        ...(nextPhase !== r.phase ? completionStatusPatch(nextPhase, r) : {}),
         ...(costChanged ? { estimated_cost: cost!.estimated_cost } : {}),
         ...(ala ? { floor_area: ala } : {}),
         metadata: {
@@ -188,6 +192,23 @@ async function applyToStoredRows(
       .eq("id", r.id)
 
     if (!error) projects++
+
+    /*
+     * Vaihemuutos historiaan kuten tuonnissa (D-421). Tämä polku vaihtoi
+     * vaihetta jäljettömästi: Porthanian Suunnittelussa → Sopimus
+     * myönnetty 20.10.2026 ei näkynyt aikajanalla lainkaan.
+     */
+    if (!error && nextPhase !== r.phase) {
+      await recordPhaseChange({
+        supabase: supabaseAdmin,
+        projectId: r.id,
+        newPhase: nextPhase,
+        previousPhase: r.phase,
+        source: "agent_import",
+        sourceName: "release_body_worker",
+        reason: `Tiedotteen runko: ${documentUrl}`,
+      })
+    }
   }
 
   return { queue, projects }

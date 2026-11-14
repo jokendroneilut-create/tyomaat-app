@@ -1,3 +1,4 @@
+import { normalizeLegacyPhase } from "./phases"
 /*
  * KUMPI KAKSOISKAPPALEISTA JÄÄ.
  *
@@ -116,12 +117,23 @@ export function chooseDuplicateSurvivor(
  * Vaihe kulkee vain ETEENPÄIN: jos jompikumpi tietää hankkeen edenneen
  * pidemmälle, se on totta. Taaksepäin ei siirretä, koska myöhempi
  * havainto ei kumoa aiempaa edistymistä.
+ *
+ * VALMISTUNUTTA EI PERITÄ (D-421). Porthania 3.10.2026: saman
+ * koordinaatin pari oli naapuritalo Vuorikatu 3 (valmistunut 2025), ja
+ * katselmointi nosti käynnissä olevan peruskorjauksen valmistuneeksi —
+ * eli piilotti sen asiakkailta, ilman vaihehistoriaa ja tilaa. Väärä
+ * pari on yleisin virhe juuri koordinaattiosumissa, ja valmistuneen
+ * vaiheen nosto on sen kallein seuraus ([[hiding-threshold]]).
+ * Valmistuminen on säilyvän rivin oma tieto; sen merkitsee ihminen.
  */
 export function moreAdvancedPhase(
   keepPhase: string | null | undefined,
   hidePhase: string | null | undefined,
   phaseOrder: (p: string | null | undefined) => number | null
 ): string | null {
+  const loppu = normalizeLegacyPhase(hidePhase)
+  if (loppu === "completed" || loppu === "cancelled") return null
+
   const jaava = phaseOrder(keepPhase)
   const piiloon = phaseOrder(hidePhase)
 

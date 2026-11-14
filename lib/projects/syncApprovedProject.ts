@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { phaseAdvances as phaseAdvancesFrom } from "./phases"
 import { recordPhaseChange } from "./recordPhaseChange"
+import { completionStatusPatch } from "./completionStatus"
 import { shouldUnexpire } from "./tenderExpiry"
 import { resolveProjectCost } from "./resolveProjectCost"
 import {
@@ -27,7 +28,7 @@ export async function syncApprovedProject(input: {
 }) {
   const { data: project, error } = await input.supabase
     .from("projects")
-    .select("id, phase, status, metadata, estimated_cost")
+    .select("id, phase, status, completed_at, metadata, estimated_cost")
     .eq("id", input.projectId)
     .maybeSingle()
 
@@ -112,6 +113,8 @@ export async function syncApprovedProject(input: {
       last_verified_at: nowIso,
       ...(costChanged ? { estimated_cost: resolvedCost!.estimated_cost } : {}),
       ...(unexpire ? { status: "active" } : {}),
+      /* Tila seuraa vaihetta (D-421): Valmistunut = completed. */
+      ...(phaseAdvances ? completionStatusPatch(mergedPhase, project as any, nowIso) : {}),
       metadata: unexpire
         ? {
             ...mergedMetadata,

@@ -13,7 +13,7 @@ import {
   textIndicatesCompletion,
   stripCompletionWords,
 } from "@/lib/projects/detectCompletionFromText"
-import { PHASE_LABELS, phaseAdvances } from "@/lib/projects/phases"
+import { PHASE_LABELS, normalizeLegacyPhase, phaseAdvances } from "@/lib/projects/phases"
 import { constructionHasStarted } from "@/lib/projects/constructionStarted"
 import { builderFromHeadline } from "@/lib/agent/builderFromHeadline"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
@@ -647,6 +647,17 @@ export async function importCandidate(
       : match.phase
 
     /*
+     * TILA SEURAA VAIHETTA (D-421). Lähde voi antaa vaiheen "Valmistunut"
+     * ilman completed-lippua (Rovaniemen päätökset, Skanskan
+     * referenssit), jolloin vaihe vaihtui mutta tila jäi aktiiviseksi.
+     * Mitattu 15.11.2026: 4 riviä tästä polusta.
+     */
+    const valmistuuNyt =
+      normalizeLegacyPhase(matchedNewPhase) === "completed" &&
+      normalizeLegacyPhase(match.phase) !== "completed"
+    const valmis = isCompleted || normalizeLegacyPhase(matchedNewPhase) === "completed"
+
+    /*
      * Täsmäytyslista ei enää kanna metadataa (se oli 58 % siirretystä
      * datasta), joten olemassa oleva metadata haetaan vasta tässä - eli
      * vain osuneelle hankkeelle. Ilman tätä yhdistäminen alempana
@@ -710,15 +721,15 @@ export async function importCandidate(
          * vahvistaa päätelmän - erityisesti kun se tuli tekstistä eikä
          * lähteen omasta tilamerkinnästä.
          */
-        needs_review: isCompleted ? true : false,
+        needs_review: isCompleted || valmistuuNyt ? true : false,
         source_confidence: body.confidence ?? null,
-        status: isCompleted
+        status: valmis
           ? "completed"
           : unexpire
             ? "active"
             : match.status ?? "active",
-        completed_at: isCompleted
-          ? new Date().toISOString()
+        completed_at: valmis
+          ? match.completed_at ?? new Date().toISOString()
           : match.completed_at ?? null,
         metadata: {
           ...(match.metadata ?? {}),

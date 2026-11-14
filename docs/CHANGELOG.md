@@ -25,9 +25,17 @@ riveistä, Helsingin puistosuunnitelmista ja Väylän hankesivuilta.
 Kilpailutusvaiheesta ei löytynyt yhtään edennyttä.
 
 Samalla löytyi päinvastainen virhe: Porthanian peruskorjaus näkyi
-valmistuneena, vaikka rakentaminen alkoi lokakuussa. Korjattu;
-samassa tilassa olevat 29 muuta riviä ja juurisyy selvitetään
-erikseen.
+valmistuneena, vaikka rakentaminen alkoi lokakuussa.
+
+### Valmistunut-vaihe ja -tila pysyvät yhdessä (D-421)
+
+30 hankkeella vaihe oli Valmistunut mutta tila aktiivinen, koska kuusi
+eri polkua (hyväksyntä, muokkaus, dashboard, tuonti, duplikaattien
+yhdistäminen, tiedotteiden rikastus) kirjoitti vaiheen mutta ei tilaa.
+Nyt kaikki käyttävät samaa sääntöä. Lisäksi duplikaattien yhdistäminen
+ei enää siirrä hanketta valmistuneeksi toiselta riviltä: Porthania oli
+yhdistetty naapuritalon valmistuneeseen remonttiin ja piiloutui siksi
+asiakkailta.
 
 ---
 

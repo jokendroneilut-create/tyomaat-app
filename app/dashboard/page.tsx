@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { geocodeProjectLocation } from "@/lib/geo/geocode"
 import { CANONICAL_PHASES } from "@/lib/projects/phases"
+import { completionStatusPatch } from "@/lib/projects/completionStatus"
 import { findProjectMatchDetailed, type ProjectMatchResult } from "@/lib/agent/projectMatcher"
 
 const DUPLICATE_REASON_LABELS: Record<string, string> = {
@@ -287,7 +288,16 @@ export default function Dashboard() {
     }
 
     if (editingId) {
-      const { error } = await supabase.from('projects').update(payload).eq('id', editingId)
+      /* Tila seuraa vaihetta (D-421): Valmistunut = completed. */
+      const alkuperainen = projects.find((p) => p.id === editingId) as any
+      const tila =
+        payload.phase !== editingOriginalPhase
+          ? completionStatusPatch(payload.phase, alkuperainen)
+          : {}
+      const { error } = await supabase
+        .from('projects')
+        .update({ ...payload, ...tila })
+        .eq('id', editingId)
       if (error) return showErrorUI('Päivitys epäonnistui', error)
 
       await notifyPhaseChange(editingId, payload.phase, editingOriginalPhase)
@@ -301,7 +311,7 @@ export default function Dashboard() {
 
     const { data: insertedRow, error } = await supabase
       .from('projects')
-      .insert([payload])
+      .insert([{ ...payload, ...completionStatusPatch(payload.phase, null) }])
       .select()
       .single()
     if (error) return showErrorUI('Lisäys epäonnistui', error)

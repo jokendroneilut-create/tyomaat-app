@@ -4,6 +4,7 @@ import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { lisaaYritys, siivoaYritykset } from "@/lib/projects/liittyvatYritykset"
 import { recordPhaseChange } from "@/lib/projects/recordPhaseChange"
 import { normalizeLegacyPhase } from "@/lib/projects/phases"
+import { completionStatusPatch } from "@/lib/projects/completionStatus"
 import { computeManualExpiry } from "@/lib/projects/tenderExpiry"
 import { sailytaVanhaOtsikko } from "@/lib/projects/otsikkoHistoria"
 import {
@@ -194,6 +195,8 @@ export async function POST(request: Request) {
       updates.phase = nextPhase
       changed.push("phase")
       phaseChangedFrom = (project as any).phase ?? null
+      /* Tila seuraa vaihetta (D-421): Valmistunut = completed. */
+      Object.assign(updates, completionStatusPatch(nextPhase, project as any))
     }
   }
 

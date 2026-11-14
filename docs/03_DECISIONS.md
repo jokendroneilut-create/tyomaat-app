@@ -51,6 +51,74 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-421 – Valmistunut-vaihe ilman valmistunut-tilaa: kuusi kirjoituspolkua, 30 riviä
+
+D-420:n sivulöydös: Porthania (rakenteilla 10/2026 alkaen) oli
+**Valmistunut / active**, eikä vaihehistoriassa ollut muutosta. Samassa
+tilassa oli 30 riviä. Johannes 15.11.2026: *"Tee tämä tehtävä tässä"*.
+
+#### Miksi tila ja vaihe erosivat
+
+"Valmistunut" on sekä vaihe (`phase`) että tila (`status: completed`,
+`completed_at`). Vaiheen kirjoitti kuusi polkua, joista mikään ei
+asettanut tilaa:
+
+| polku | rivejä | huom. |
+|---|---|---|
+| TIC-hyväksyntä, uusi rivi (`approve`, `status: "active"` kiinteänä) | 16 | referenssit ja lähteen valmiiksi merkitsemät |
+| TIC-muokkaus ja dashboard (käsin) | 8 | Johanneksen omat merkinnät |
+| agentin tuonti, täsmätty rivi | 4 | lähde antoi vaiheen ilman `completed`-lippua |
+| TIC-hyväksyntä, täsmätty rivi | 1 | |
+| **duplikaattikatselmointi** | 1 (Porthania) | **ei edes vaihehistoriaa** |
+| runkotyöntekijä (`releaseBodyWorker`) | 0 | ei historiaa; vaihtoi Porthanian vaiheen 20.10. jäljettä |
+
+Asiakkaan hankelista suodattaa **vaiheella**, mittarit ja kooste
+**tilalla**, joten sama hanke oli eri näkymissä eri tilassa.
+
+#### Porthanian juurisyy: koordinaattipari naapuritaloon
+
+Duplikaattikatselmointi vahvisti 3.10.2026 parin Porthania ↔ *"Skanska
+toteuttaa Vuorikatu 3:n kiinteistön peruskorjausurakan"* (syy
+`same_coordinates`, 70). Eri talot samassa korttelissa. Vuorikatu 3 oli
+valmistunut 2025, ja `moreAdvancedPhase` nosti sen vaiheen säilyvälle
+Porthanialle — **käynnissä oleva peruskorjaus piiloutui asiakkailta**
+eikä jälkeä jäänyt. Väärä pari on yleisin juuri koordinaattiosumissa, ja
+valmistuneen nosto on sen kallein seuraus ([[hiding-threshold]]).
+
+#### Korjaus
+
+- `lib/projects/completionStatus.ts`: `completionStatusPatch(vaihe,
+  nykyinen)` palauttaa tilakentät — valmiiksi → `completed` (vanha
+  `completed_at` säilyy), pois valmiista → `active`. Käytössä kaikissa
+  kuudessa polussa. `mennytPaiva` hyväksyy lähteen valmistumispäivän
+  vain jos se on mennyt.
+- `moreAdvancedPhase` **ei peri Valmistunutta eikä Peruttua**.
+  Valmistuminen on säilyvän rivin oma tieto; sen merkitsee ihminen.
+- Duplikaattinosto ja runkotyöntekijän vaihemuutos kirjataan
+  vaihehistoriaan.
+- Tuonnissa täsmätty rivi, joka siirtyy valmiiksi lähteen vaiheesta,
+  saa `needs_review`-merkin kuten tekstistä päätelty valmistuminen.
+
+#### Rivit (`scripts/fix-valmistunut-tila.ts`)
+
+29 riviä tarkistettiin lähteestä ja verkosta:
+
+- **26 aidosti valmiita** → tila `completed`, aika lähteen päivästä
+  (Sunan koulu 12.8., S-Market Peltola 22.10., Ison Pörrin silta 31.10.,
+  Aleksanterinkadun silta 10.8.) tai vaiheen vaihtumishetkestä.
+  Epävarmimmat: Uudenkaupungin kaksi kesäurakkaa, Puustellinmäen
+  päiväkoti, Jääkärinkangas.
+- **3 väärin valmiita** → takaisin:
+  - **OYS:n L-rakennus** (julkinen): väärä täsmäys Skanskan referenssiin,
+    todellisuudessa NCC rakentaa 6/2026–10/2027.
+  - **Break Sokos Hotel Ruka** (piilotettu): rakenteilla, avataan
+    2027–28.
+  - **Runeberginkadun katusuunnitelma**: Granlundin
+    suunnittelureferenssi merkitsi valmiiksi, kadun rakentamisesta ei
+    näyttöä → Suunnittelu ([[never-hide-on-missing-data]]).
+- Kaksoisrivit: Aleksanterinkadun silta ×2 (Oteran), Puustellinmäen
+  päiväkoti ×2.
+
 ### D-420 – Aloitettujen verkkohaku suunnitteluvaiheen hankkeille: 26 siirtoa, 10 yhdistämistä
 
 Johannes 15.11.2026, D-419:n jatkoksi: *"voitko tehdä tämän saman
@@ -167,7 +235,7 @@ Porthanian SRV-rivi oli **Valmistunut / active**, vaikka rakentaminen
 alkoi 10/2026 — pahin suunta [[hiding-threshold]]:n mukaan. Vaihehistoriassa
 oli vain hyväksyntä (*planning*), joten jokin polku vaihtaa vaiheen
 kirjaamatta. Kaikkiaan **30 riviä** oli Valmistunut / active. Korjattu
-tässä vain Porthania; juurisyy ja loput 29 erillisenä tehtävänä.
+tässä vain Porthania; juurisyy ja loput 29: **D-421**.
 
 ### D-419 – Valmistuneiden verkkohaku rakentamisvaiheen hankkeille, 12 siirtoa ja kaksi kuvauspoimijaa
 
