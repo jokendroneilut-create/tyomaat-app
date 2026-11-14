@@ -37,6 +37,12 @@ ei enää siirrä hanketta valmistuneeksi toiselta riviltä: Porthania oli
 yhdistetty naapuritalon valmistuneeseen remonttiin ja piiloutui siksi
 asiakkailta.
 
+Kaikki 29 muuta riviä tarkistettiin: 26 oli aidosti valmiita ja saivat
+oikean tilan ja valmistumispäivän. Kolme oli väärin valmiina ja palasi
+näkyviin: OYS:n L-rakennus ja Break Sokos Hotel Ruka rakenteilla-
+vaiheeseen, Runeberginkadun katusuunnitelma suunnitteluun. Kaksi
+kaksoisriviä yhdistettiin.
+
 ---
 
 ## 2026-11-14 (valmistuneiden verkkohaku, NCC- ja Peab-kuvaukset)

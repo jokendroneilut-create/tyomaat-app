@@ -119,6 +119,14 @@ valmistuneen nosto on sen kallein seuraus ([[hiding-threshold]]).
 - Kaksoisrivit: Aleksanterinkadun silta ×2 (Oteran), Puustellinmäen
   päiväkoti ×2.
 
+Johannes 15.11.2026: *"aja korjaus, yhdistämiset ja dokumentoi"*.
+Ajettu `--apply`: 26 tilaa + 3 palautusta (vaihehistoriaan
+`manual_correction` / `valmistunut-tila`). Yhdistetty
+`merge-duplicate-projects.ts`:llä: Aleksanterinkadun silta (säilyy
+`77000044`, piilotettu `b95d1c78`) ja Puustellinmäen päiväkoti (säilyy
+Toivon `fb41c036`, piilotettu dashboardin `a58e8137`, jonka vastuutus
+siirtyi säilyvälle). Ajon jälkeen **Valmistunut / active: 0 riviä**.
+
 ### D-420 – Aloitettujen verkkohaku suunnitteluvaiheen hankkeille: 26 siirtoa, 10 yhdistämistä
 
 Johannes 15.11.2026, D-419:n jatkoksi: *"voitko tehdä tämän saman
