@@ -1671,6 +1671,17 @@ muistin varassa.
   sitä ole tehty. Tee se ennen kuin 601 ohutta täydennetään, jottei
   samaa työtä tehdä kahdesti.
 
+- **OAS-yhteystiedot keräimiin: 59 lähdettä kytkemättä** (kirjattu
+  14.11.2026, D-416). Kaikki 61 OAS-lähdettä on ajettu takautuvasti, mutta
+  vain Huittisten ja Hattulan keräimet lukevat OAS:n itse
+  (`kaavanLiitteenSisalto` → `raw_payload.developer / related_companies`
+  → resolveri). Muiden uudet hankkeet jäävät ilman, kunnes ne ajetaan
+  käsin `backfill-kuvaus-liitteesta.ts --lahde=... --vain-yhteystiedot`.
+  `apiCollector.ts`:ssä on 61 samannäköistä `raw_payload`-lohkoa, joten
+  keskitetty vaihe (yksi kohta, sallittujen lähteiden lista) on
+  turvallisempi kuin 59 käsinmuokkausta. Aja jäsennintä muutettaessa
+  kuivaharjoitus kaikille 61:lle ja vertaa diffiä edelliseen ajoon.
+
 - **Kaavasivujen `mailto:`-yhteyshenkilöt: noin 30 lähdettä, rakenne joka
   kunnassa eri** (mitattu 8.11.2026, D-390). Hain yhden hankekohtaisen
   sivun kaikilta **78 kaavalähteeltä**: Seinäjoen rakenteinen

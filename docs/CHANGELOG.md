@@ -9,6 +9,39 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-14 (OAS-yhteystiedot kaikista 61 lähteestä)
+
+### Yhteyshenkilöt ja yritykset osallistumis- ja arviointisuunnitelmista (D-414, D-415, D-416)
+
+Kannassa oli liitteinä 280 OAS:ia 61 kaavalähteessä, eikä niistä ollut
+poimittu yhteystietoja (paitsi Huittinen ja Hattula). OAS:n
+YHTEYSTIEDOT-luku kertoo kunnan kaavoittajan, kaavakonsultin ja
+hankkeesta vastaavan yrityksen numeroineen — juuri ne ihmiset, joille
+asiakas soittaa.
+
+Kaikki 61 lähdettä on ajettu isoimmasta alkaen: 336 riviä sai
+uusia yhteyshenkilöitä, ja hankkeesta vastaava yritys meni
+Rakennuttaja-kenttään, kaavakonsultti Liittyviin yrityksiin
+(`backfill-kuvaus-liitteesta.ts --vain-yhteystiedot`). Kuvauksiin ei
+koskettu.
+
+OAS-pohjia on kymmeniä, joten jäsennin (`lib/agent/oasYhteystiedot.ts`)
+lukee rivin soluiksi ja tunnistaa kaksipalstaiset taulukot,
+palstakohtaiset otsikot, proosamuotoiset yhteystiedot ja
+"Lisätietoja"-lohkot. Jokaisesta pohjasta on testi oikealla tekstillä.
+
+**Väärä numero väärälle ihmiselle jäi kiinni neljä kertaa** —
+kolmesti kuivaharjoituksessa ja kerran kannassa jo ennestään. Kaikki
+syntyivät kaksipalstaisista taulukoista, joissa numero valuu viereiselle
+henkilölle. `korjaa-vaihtuneet-numerot.ts` tarkistaa kannan jälkikäteen:
+ristiin menneet numerot, toisen henkilön nimike ja kunnan nimi yrityksen
+väen organisaationa. Korjattuja rivejä 72.
+
+**Avoinna:** keräimet lukevat OAS:n vain Huittisissa ja Hattulassa;
+muiden lähteiden uudet hankkeet eivät vielä saa OAS-yhteystietoja.
+
+---
+
 ## 2026-11-08 (/tic-sivun nopeutus)
 
 ### /tic latautuu 27 sekunnin sijaan sekunnissa (D-387)
