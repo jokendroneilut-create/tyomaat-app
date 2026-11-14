@@ -51,6 +51,79 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-416 – OAS-yhteystiedot loppuihin 51 lähteeseen: palstat, otsikot ja vanhojen virheiden korjaus
+
+Jatkoa D-415:lle (*"käy lähteet läpi isoimmasta alkaen"*). Kolme erää:
+erä 2 (7 lähdettä, 55 riviä), erä 3 (15 lähdettä, 64 riviä) ja erä 4
+(29 pientä lähdettä, 59 riviä). Jokainen kuivaharjoitus luettiin rivi
+riviltä ja epäilyttävät tarkistettiin PDF:stä ennen ajoa.
+
+#### Väärä numero väärälle ihmiselle — neljäs kerta
+
+Toholammin Toristojannevan OAS (FCG) on kaksipalstainen ilman
+palstaväliä: *"Mikko Polet Markus Jokitalo"* / *"puh. 040 150 5302 puh.
+040 150 5310"*. Rivi luettiin proosana, ja **Markus Jokitalo sai Mikko
+Poletin numeron, Antti Kumpula Arto Sipisen**. Kiinni kuivaharjoituksessa.
+Korjaus `palstoitaYksivali`: kun rivillä on tasan kaksi numeroa eikä
+muuta, nimirivi (tasan neljä nimisanaa), nimikerivi ja osoiterivi
+jaetaan kahdeksi soluksi. Jos nimiriviä ei voi jakaa varmasti, numerot
+jätetään pois.
+
+#### Palstakohtaiset otsikot
+
+Pellossa *"Pellon kunta   Kaavaa laativa konsultti"* / *"Kunnantie 4
+A-Insinöörit Suunnittelu Oy"*: kunnan tekninen johtaja sai
+organisaatioksi A-Insinöörit ja nimikkeeksi kaavakonsultin, koska solut
+kulkivat yhden tilan läpi. Nyt monisoluiset otsikkorivit talletetaan
+palstoittain, ja henkilö saa roolin ja organisaation omasta palstastaan
+— **vain kun palstalla on oma nimetty organisaatio**. Pyhtään
+nimiö/arvo-taulukossa (*"Kaavakonsultti   Yhteyshenkilö:"*) periytyminen
+antoi Arja Sippolalle kunnan rivin, joten ilman omaa organisaatiota
+käytös on ennallaan. Sisennetty yksisoluinen rivi kuuluu oikeaan
+palstaan (Rautjärven Osmo Riikonen → 3Flash).
+
+#### Muut jäsenninkorjaukset
+
+| lähde | ennen | korjaus |
+|---|---|---|
+| Hyrynsalmi, Pälkäne | 0 henkilöä | "Lisätietoja" otsikkona kun Yhteystiedot-lukua ei ole |
+| Hyrynsalmi | numero organisaationa | paljas numero pilkkujen välissä |
+| Hyrynsalmi | "Suunnittelutoimisto Punainen" henkilönä | *-toimisto* yritykseksi (vain arkkitehti/insinööri/suunnittelu/kaava) |
+| Alajärvi | "Kaavoituspäällikkö Kirsi" nimenä, "Sa" yrityksenä | nimike ei ole nimisana; "Haapa-aho"; katkennut katuosoite yhteen |
+| Hausjärvi, Keminmaa | "Pieni Roobertinkatu" henkilönä, "Kunnantie 3" yrityksenä | kadunnimi ei ole nimi eikä organisaatio |
+| Puolanka | Prokonin ja Rambollin väki "PUOLANGAN KUNTA" | yhtiömuotoon päättyvä rooliotsikko saa olla pitkä |
+| Muonio | "Persson Puurula", yritys "Oy" | kolmiosainen nimi; pelkkä yhtiömuoto ei ole yritys; *"FCG Suunnittelu ja tekniikka Oy"* |
+| Rautjärvi | yritys "CEO" | CEO on nimike |
+| Pello | Marja Savolaisen nimikkeessä Venla Liljeström | nimike katkaistaan toisen nimen kohdalta |
+| Ranua | "+358 040 …" | suuntanumeron nolla pois |
+
+#### Kannassa jo olleet virheet
+
+`korjaa-vaihtuneet-numerot.ts` laajennettiin: kunta-organisaatio
+yhtiöksi, tyhjä organisaatio saman dokumentin jäsennyksestä ja **toisen
+henkilön nimike** pois. Puolangan Pieni-Paljakassa Marko Kristola
+(Prokon) ja Pirjo Pellikka (Ramboll) olivat kannassa
+"Rakennustarkastaja" — Kalevi Huovisen nimike. 27 riviä erissä 1–2 ja
+43 erissä 3–4 (lähinnä tyhjä organisaatio täytetty). Vaihtuneita
+numeroita ei löytynyt.
+
+#### Tulos
+
+| erä | rivejä | suurimmat |
+|---|---|---|
+| 2 | 55 | Puolanka 10, Liminka 10, Kemijärvi 9 |
+| 3 | 64 | Toholampi 8, Kokemäki 8, Hyrynsalmi 8, Pihtipudas 7 |
+| 4 | 59 | Suomussalmi 6, Rautjärvi 6, Pello 4, Muonio 4 |
+| korjaukset | 27 + 43 | Puolanka, Huittinen, Toholampi, Rautjärvi |
+
+Kaikki 61 lähdettä, joissa on OAS-liite, on nyt käyty läpi.
+Kauniainen (17 dokumenttia), Uurainen, Sulkava, Juva, Jokioinen,
+Punkalaidun, Somero, Heinävesi, Hirvensalmi, Kaskinen, Mänttä-Vilppula
+ja Pälkäne: ei lisättävää tai luku puuttuu.
+
+**Avoinna:** keräimet on kytketty vain Huittisiin ja Hattulaan; muiden
+59 lähteen uudet rivit eivät saa OAS-yhteystietoja itsestään.
+
 ### D-415 – OAS-yhteystiedot kahdeksasta suurimmasta lähteestä: jäsennin soluihin ja tarkkuuskerros
 
 Johannes 14.11.2026: *"käy lähteet läpi isoimmasta alkaen."*

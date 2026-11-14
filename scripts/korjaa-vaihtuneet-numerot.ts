@@ -18,6 +18,17 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
  * henkilon omalla numerolla. Vain tama tasmallinen tapaus; muihin
  * eroihin ei kosketa, koska kasin korjattu numero voi poiketa liitteesta.
  *
+ * VAARA ORGANISAATIO (D-416): Puolangan Pieni-Paljakassa Prokonin ja
+ * Rambollin henkilot perivat edellisen lohkon "PUOLANGAN KUNTA".
+ * Korjataan vain kun tallennettu organisaatio on kunta/kaupunki ja uusi
+ * jasennys antaa yhtiomuotoisen organisaation. Tyhja organisaatio
+ * taydennetaan saman dokumentin jasennyksesta.
+ *
+ * TOISEN HENKILON NIMIKE (D-416): samassa Pieni-Paljakassa Marko
+ * Kristola (Prokon) ja Pirjo Pellikka (Ramboll) olivat kannassa
+ * "Rakennustarkastaja" -- Kalevi Huovisen nimike. Korjataan vain kun
+ * tallennettu nimike on dokumentissa TOISEN henkilon nimike.
+ *
  *   npx tsx scripts/korjaa-vaihtuneet-numerot.ts --lahde="..."   kuiva
  *   ... --apply
  */
@@ -39,16 +50,24 @@ async function main() {
 
     /* Uusi jasennys dokumenteittain: nimi -> numero. */
     const oikeat = new Map<string, Map<string, string>>()
+    const oikeatOrg = new Map<string, Map<string, string>>()
+    const nimikkeet = new Map<string, Map<string, string | null>>()
     for (const d of (dokut ?? []) as any[]) {
       const linkit = (Array.isArray(d.liitteet) ? d.liitteet : []).map((a: any) => ({ href: a.url, teksti: a.label }))
       const urlit = [...new Set([valitseKaavanAsiakirja(linkit), valitseOas(linkit)].filter(Boolean) as string[])]
       const kartta = new Map<string, string>()
+      const orgKartta = new Map<string, string>()
+      const nimikeKartta = new Map<string, string | null>()
       for (const u of urlit) {
         for (const h of oasYhteystiedot((await haeKaavanLiitteenTekstit(u))?.kaikki)) {
           if (h.phone && !kartta.has(h.name.toLowerCase())) kartta.set(h.name.toLowerCase(), h.phone)
+          if (h.organization && !orgKartta.has(h.name.toLowerCase())) orgKartta.set(h.name.toLowerCase(), h.organization)
+          if (!nimikeKartta.has(h.name.toLowerCase())) nimikeKartta.set(h.name.toLowerCase(), h.title)
         }
       }
       if (kartta.size) oikeat.set(d.id, kartta)
+      if (orgKartta.size) oikeatOrg.set(d.id, orgKartta)
+      if (nimikeKartta.size) nimikkeet.set(d.id, nimikeKartta)
     }
 
     for (const [taulu, nimiKentta] of [["potential_projects", "title"], ["projects", "name"]] as const) {
@@ -59,11 +78,32 @@ async function main() {
       if (e2) throw e2
 
       for (const r of (rivit ?? []) as any[]) {
-        const kartta = oikeat.get(r.doku)
-        if (!kartta) continue
+        const kartta = oikeat.get(r.doku) ?? new Map<string, string>()
+        const orgKartta = oikeatOrg.get(r.doku) ?? new Map<string, string>()
+        const nimikeKartta = nimikkeet.get(r.doku) ?? new Map<string, string | null>()
+        if (!kartta.size && !orgKartta.size && !nimikeKartta.size) continue
         const yht: any[] = Array.isArray(r.yht) ? r.yht : []
         const muutokset: string[] = []
-        const uusi = yht.map((c) => {
+        const uusi = yht.map((c0) => {
+          let c = c0
+          const omaOrg = orgKartta.get(String(c.name ?? "").toLowerCase())
+          if (omaOrg && /(kunta|kaupunki)$/i.test(String(c.organization ?? "")) && /\b(oy|oyj|ab|ky|ltd)\.?$/i.test(omaOrg)) {
+            muutokset.push(`${c.name}: organisaatio ${c.organization} -> ${omaOrg}`)
+            c = { ...c, organization: omaOrg }
+          } else if (omaOrg && !c.organization) {
+            muutokset.push(`${c.name}: organisaatio tyhja -> ${omaOrg}`)
+            c = { ...c, organization: omaOrg }
+          }
+          const nimi = String(c.name ?? "").toLowerCase()
+          if (c.title && nimikeKartta.has(nimi)) {
+            const omaNimike = nimikeKartta.get(nimi) ?? null
+            const sama = (a: unknown, b: unknown) => String(a ?? "").toLowerCase() === String(b ?? "").toLowerCase()
+            const toisen = [...nimikeKartta.entries()].some(([n, t]) => n !== nimi && sama(t, c.title))
+            if (toisen && !sama(omaNimike, c.title)) {
+              muutokset.push(`${c.name}: nimike ${c.title} (toisen) -> ${omaNimike ?? "tyhja"}`)
+              c = { ...c, title: omaNimike }
+            }
+          }
           const oma = kartta.get(String(c.name ?? "").toLowerCase())
           if (!oma || !c.phone || numerot(c.phone) === numerot(oma)) return c
           /* Vain jos tallennettu numero kuuluu jollekulle toiselle tassa dokumentissa. */

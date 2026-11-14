@@ -694,3 +694,251 @@ describe("oasYhteystiedot: Vt.-etuliite ja palstan nimike (Taraskallio 14.8.2024
     expect(oasYhteystiedot(t).map((h) => h.title)).toEqual([null, null])
   })
 })
+
+describe("oasYhteystiedot: erä 3 (D-415)", () => {
+  it("Lisätietoja-otsikko kun Yhteystiedot-lukua ei ole (Hyrynsalmi)", () => {
+    const t = [
+      "Lisätietoja",
+      "Hyrynsalmen kunta www.hyrynsalmi.fi",
+      "kunnanjohtaja Jouni Ponnikas",
+      "040 574 0804",
+      "jouni.ponnikas@hyrynsalmi.fi",
+      "kunnanrakennusmestari Jouni Romppainen",
+      "044 710 4421",
+      "jouni.romppainen@hyrynsalmi.fi",
+      "Kaavan laatija:",
+      "Kimmo Mustonen, Kimmokaava",
+      "0400 703 521",
+      "kimmo.mustonen@kimmokaava.fi",
+    ].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.title, h.phone, h.email])).toEqual([
+      ["Jouni Ponnikas", "Kunnanjohtaja", "040 574 0804", "jouni.ponnikas@hyrynsalmi.fi"],
+      ["Jouni Romppainen", "Kunnanrakennusmestari", "044 710 4421", "jouni.romppainen@hyrynsalmi.fi"],
+      ["Kimmo Mustonen", "Kaavan laatija", "0400 703 521", "kimmo.mustonen@kimmokaava.fi"],
+    ])
+  })
+
+  it("isolla alkava nimikerivi nimen jälkeen (Pälkäne)", () => {
+    const t = [
+      "Lisätietoja:",
+      "Aarni-Pekka Jakonen",
+      "Maankäytön suunnittelija, Pälkäneen kunta",
+      "aarni-pekka.jakonen@palkane.fi , p. 040 737 5390",
+    ].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.title, h.organization, h.email])).toEqual([
+      ["Aarni-Pekka Jakonen", "Maankäytön suunnittelija", "Pälkäneen kunta", "aarni-pekka.jakonen@palkane.fi"],
+    ])
+    expect(oasYhteystiedot(t)[0].phone?.replace(/\D/g, "")).toBe("0407375390")
+  })
+
+  it("yhdysnimen pieni kirjain ja nimike ei ole etunimi (Alajärvi)", () => {
+    const t = ["YHTEYSTIEDOT", "Kaavoituspäällikkö Kirsi Haapa-aho", "puh. 040 123 4567"].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.title])).toEqual([["Kirsi Haapa-aho", "Kaavoituspäällikkö"]])
+  })
+
+  it("kadunnimi ei ole henkilö eikä organisaatio (Hausjärvi, Keminmaa)", () => {
+    const t = [
+      "YHTEYSTIEDOT",
+      "Pieni Roobertinkatu 5",
+      "Kunnantie 3",
+      "Matti Meikäläinen",
+      "puh. 040 123 4567",
+    ].join("\n")
+    const tulos = oasYhteystiedot(t)
+    expect(tulos.map((h) => h.name)).toEqual(["Matti Meikäläinen"])
+    expect(tulos[0].organization ?? "").not.toMatch(/tie|katu/i)
+  })
+
+  it("yhdellä välilyönnillä erotetut palstat (Toholammin Toristojanneva)", () => {
+    const t = [
+      "1 Yhteystiedot ",
+      "Toholammin kunta ",
+      " Lampintie 5 ",
+      " 69300 Toholampi ",
+      " www.toholampi.fi  ",
+      " ",
+      "Tekninen johtaja Rakennustarkastaja ",
+      "Mikko Polet Markus Jokitalo  ",
+      "puh. 040 150 5302 puh. 040 150 5310 ",
+      "mikko.polet@toholampi.fi rakennustarkastaja@toholampi.fi ",
+      "  ",
+      "Kaavaa laativa konsultti  ",
+      " FCG Finnish Consulting Group Oy ",
+      " Elektroniikkatie 6 ",
+      " 90590 Oulu ",
+      "  ",
+      "Kaavaa laativa konsultti Projektijohtaja ",
+      "Arto Sipinen Antti Kumpula ",
+      "puh. 041 731 9560 puh. 040 192 8970 ",
+      "arto.sipinen@fcg.fi antti.kumpula@fcg.fi  ",
+    ].join("\n")
+    const tulos = oasYhteystiedot(t)
+    const numero = (nimi: string) => tulos.find((h) => h.name === nimi)?.phone?.replace(/\D/g, "").replace(/^358/, "0")
+    expect(numero("Mikko Polet")).toBe("0401505302")
+    expect(numero("Markus Jokitalo")).toBe("0401505310")
+    expect(numero("Arto Sipinen")).toBe("0417319560")
+    expect(numero("Antti Kumpula")).toBe("0401928970")
+    expect(tulos.find((h) => h.name === "Antti Kumpula")?.email).toBe("antti.kumpula@fcg.fi")
+  })
+
+  it("nimirivi jota ei voi jakaa varmasti: numerot pois", () => {
+    const t = ["YHTEYSTIEDOT", "Anna Maria Polet Markus Jokitalo", "puh. 040 150 5302 puh. 040 150 5310"].join("\n")
+    expect(oasYhteystiedot(t).filter((h) => h.phone)).toEqual([])
+  })
+
+  it("numero pilkkujen välissä ja toimisto on yritys (Hyrynsalmen Isto)", () => {
+    const t = [
+      "Lisätietoja ",
+      "Hyrynsalmen kunta www.hyrynsalmi.fi  ",
+      "Kunnanjohtaja Heimo Keränen, 044 710 4400, heimo.keranen@hyrynsalmi.fi  ",
+      " ",
+      "kaavan laatija: ",
+      "Suunnittelutoimisto Punainen viiva, Ulla-Maija Oikarinen, 040 835 1602, ",
+      "aluearkkitehti@gmail.com  ",
+    ].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.title, h.phone, h.organization])).toEqual([
+      ["Heimo Keränen", "Kunnanjohtaja", "044 710 4400", "Hyrynsalmen kunta"],
+      ["Ulla-Maija Oikarinen", "Kaavan laatija", "040 835 1602", "Suunnittelutoimisto Punainen viiva"],
+    ])
+  })
+
+  it("katkennut katuosoite ei ole yritys (Alajärven Pöllömännikkö)", () => {
+    const t = [
+      "11. YHTEYSTIEDOT ",
+      "Alajärven kaupunki ",
+      "Kaavoitus ja mittaus ",
+      "Sa  hapolku 49 ",
+      "62900 Alajärvi ",
+      " ",
+      "Kaavoituspäällikkö Kirsi Haapa-aho ",
+      "puh. 06 2412 2274, 044 297 0264   ",
+      "sähköposti: kirsi.haapa-aho@alajarvi.fi ",
+    ].join("\n")
+    const tulos = oasYhteystiedot(t)
+    expect(tulos.map((h) => [h.name, h.title, h.email])).toEqual([["Kirsi Haapa-aho", "Kaavoituspäällikkö", "kirsi.haapa-aho@alajarvi.fi"]])
+    expect(tulos[0].organization ?? "").not.toBe("Sa")
+  })
+
+  it("pitkä rooliotsikko yhtiöineen aloittaa uuden lohkon (Puolangan Pieni-Paljakka)", () => {
+    const t = [
+      "YHTEYSTIEDOT: ",
+      "PUOLANGAN KUNTA ",
+      "Vaarankyläntie 7, 88300 Paltamo ",
+      "Kalevi Huovinen ",
+      "Rakennustarkastaja ",
+      "p. 040 546 2018 ",
+      " ",
+      "TUULIVOIMAHANKEVASTAAVA / Prokon Wind Energy Finland Oy ",
+      "Marko Kristola ",
+      "p. 0400 466 134 ",
+      " ",
+      "YMPÄRISTÖVAIKUTUSTEN ARVIOINTIA LAATIVA KONSULTTI / Ramboll Finland Oy ",
+      "Susanna Hirvonen ",
+      "projektipäällikkö ",
+      "p. 044 709 3257 ",
+    ].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.organization])).toEqual([
+      ["Kalevi Huovinen", "PUOLANGAN KUNTA"],
+      ["Marko Kristola", "Prokon Wind Energy Finland Oy"],
+      ["Susanna Hirvonen", "Ramboll Finland Oy"],
+    ])
+  })
+
+  it("pelkkä Arkkitehtitoimisto ei ole yritys (Urjala)", () => {
+    const t = ["YHTEYSTIEDOT", "Kaavan laatija:", " Arkkitehtitoimisto ", " Helena Väisänen", "Puh. 040 5576 086"].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.organization])).toEqual([["Helena Väisänen", null]])
+  })
+
+  it("palstakohtaiset otsikot: kunnan johtaja ei saa konsultin yritystä (Pello)", () => {
+    const t = [
+      "10 YHTEYSTIEDOT ",
+      "Pellon kunta   Kaavaa laativa konsultti ",
+      "Kunnantie 4   A-Insinöörit Suunnittelu Oy ",
+      "95700 Pello   Satakunnankatu 23, 33210 Tampere ",
+      "Esa Kassinen, tekninen johtaja  Johanna Närhi, arkkitehti YKS-490 ",
+      "Puh. +358 40 634 1900   Puh. +358 40 746 5533 ",
+      "esa.kassinen@pello.fi    johanna.narhi@ains.fi ",
+      "YVA-konsultti   YVA-yhteysviranomainen ",
+      "Ecobio Oy   Lapin ELY-keskus ",
+      "Malminrinne 3 B, 00100 Helsinki    Hallituskatu 3 B, 96100 Rovaniemi ",
+      "Marja Savolainen, DI, johtava konsultti Venla Liljeström, tuulivoima-asiantuntija ",
+      "Puh. +358 20 765 6149  Puh. +358 295 037 421 ",
+      "marja.savolainen@ecobio.fi    venla.liljestrom@ely-keskus.fi ",
+    ].join("\n")
+    const tulos = oasYhteystiedot(t)
+    const h = (nimi: string) => tulos.find((x) => x.name === nimi)
+    expect([h("Esa Kassinen")?.title, h("Esa Kassinen")?.organization]).toEqual(["Tekninen johtaja", "Pellon kunta"])
+    expect(h("Johanna Närhi")?.organization).toBe("A-Insinöörit Suunnittelu Oy")
+    expect(h("Esa Kassinen")?.phone?.replace(/\D/g, "")).toBe("358406341900")
+    expect(h("Johanna Närhi")?.phone?.replace(/\D/g, "")).toBe("358407465533")
+    expect(h("Marja Savolainen")?.title ?? "").not.toMatch(/Liljeström|tuulivoima/)
+    expect(h("Marja Savolainen")?.organization).not.toBe("Lapin ELY-keskus")
+  })
+
+  it("CEO on nimike, ei yritys (Rautjärvi)", () => {
+    const t = [
+      "YHTEYSTIEDOT ",
+      "Kaavaa laativa konsultti:   Hankekehitys: ",
+      "Vuoksen Arkkitehdit   3Flash Finland Oy ",
+      "Torkkelinkatu 11 as 4, 55100 Imatra  Neulekatu 10, 55120 Imatra ",
+      "Erkki Jouhki, arkkitehti SAFA  Miko Huomo, CEO ",
+      "p. 0400 752729   p. 050 410 1270 ",
+      "erkki.jouhki@gmail.com   miko.huomo@3flash.fi  ",
+    ].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.phone, h.organization])).toEqual([
+      ["Erkki Jouhki", "0400 752729", "Vuoksen Arkkitehdit"],
+      ["Miko Huomo", "050 410 1270", "3Flash Finland Oy"],
+    ])
+  })
+
+  it("kolmiosainen nimi ja pelkkä Oy ei ole yritys (Muonio)", () => {
+    const t = [
+      "8 Yhteystiedot ",
+      "Lisätietoja  saa  Muonion  kunnalta  ja  kaavan  laatijalta  FCG  Suunnittelu  ja  tekniikka  ",
+      "Oy:stä. ",
+      "FCG Suunnittelu ja tekniikka Oy ",
+      "Eva Persson Puurula ",
+      "projektipäällikkö, arkkit. SAFA ",
+      "p. 050 3120281 ",
+    ].join("\n")
+    const tulos = oasYhteystiedot(t)
+    expect(tulos.map((h) => h.name)).toEqual(["Eva Persson Puurula"])
+    expect(tulos[0].organization).toBe("FCG Suunnittelu ja tekniikka Oy")
+  })
+
+  it("nimiö/arvo-taulukko: yritys samalla rivillä, kunta ja nimike samassa solussa (Pyhtää)", () => {
+    const t = [
+      "10 Yhteystiedot ",
+      "Kaavoittaja                                   Yhteyshenkilö:            ",
+      "Pyhtään kunta elinvoimapäällikkö Laura Lahti ",
+      "Motellikuja 4  puh. 050 345 6495 ",
+      "49220 Siltakylä sähköposti: etunimi.sukunimi@pyhtaa.fi ",
+      "Kaavakonsultti                                Yhteyshenkilö:            ",
+      "FCG Rakennettu Ympäristö Oy/  kaupunkisuunnittelupäällikkö Arja Sippola ",
+      "FCG Arkkitehdit puh. 044 748 0315 ",
+      "PL 950 sähköposti: etunimi.sukunimi@fcg.fi ",
+    ].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.phone, h.organization])).toEqual([
+      ["Laura Lahti", "050 345 6495", "Pyhtään kunta"],
+      ["Arja Sippola", "044 748 0315", "FCG Rakennettu Ympäristö Oy"],
+    ])
+  })
+
+  it("sisennetty rivi kuuluu oikeaan palstaan (Rautjärven Osmo Riikonen)", () => {
+    const t = [
+      "YHTEYSTIEDOT ",
+      "Kaavaa laativa konsultti:   Hankekehitys: ",
+      "Vuoksen Arkkitehdit   3Flash Finland Oy ",
+      "Erkki Jouhki, arkkitehti SAFA  Miko Huomo, CEO ",
+      "p. 0400 752729   p. 050 410 1270 ",
+      "    Osmo Riikonen ",
+      "    p. 0400 794564 ",
+    ].join("\n")
+    expect(oasYhteystiedot(t).find((h) => h.name === "Osmo Riikonen")?.organization).toBe("3Flash Finland Oy")
+  })
+
+  it("nimike kunnan perässä ei kuulu organisaatioon (Suomussalmi)", () => {
+    const t = ["YHTEYSTIEDOT", "Suomussalmen kunta Tekninen johtaja", "Niina Kinnunen", "puh. 044 123 4567"].join("\n")
+    expect(oasYhteystiedot(t)[0]?.organization).toBe("Suomussalmen kunta")
+  })
+})

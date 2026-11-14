@@ -43,6 +43,7 @@ export type OasYhteystieto = {
 }
 
 const OTSIKKO = /^\s*(?:\d+\.?\s+)?(YHTEYSTIEDOT|YHTEYSHENKIL[ÖO]T)\s*:?\s*$/i
+const LISATIETOJA_OTSIKKO = /^\s*(?:\d+\.?\s+)?LIS[ÄA]TIETOJA\s*:?\s*$/i
 
 /* Seuraava numeroitu luku paattaa luvun. */
 const SEURAAVA_LUKU = /^\s*\d{1,2}(?:\.\d+)*\.?\s+[A-ZÄÖÅ]{3}/
@@ -68,17 +69,25 @@ const KATUOSOITE = /\b\d{5}\b|\b\S*(?:katu|tie|kuja|polku|väylä|vayla|tori|kaa
  * organisaatioksi, koska sanassa on "kaupunki".
  */
 const ORGANISAATIO =
-  /((?<![A-Za-zÅÄÖåäö])(?:kaupunki|kunta)(?![A-Za-zÅÄÖåäö])|\boy\b|\boyj\b|\bab\b|\bky\b|\bry\b|yhtym[äa]|liitto|virasto|keskus)/i
+  /((?<![A-Za-zÅÄÖåäö])(?:kaupunki|kunta)(?![A-Za-zÅÄÖåäö])|\boy\b|\boyj\b|\bab\b|\bky\b|\bry\b|yhtym[äa]|liitto|virasto|keskus|(?:arkkitehti|insin[öo][öo]ri|suunnittelu|kaava)toimisto(?![A-Za-zÅÄÖåäö])|(?:arkkitehdit|insin[öo][öo]rit|konsultit|suunnittelijat)(?![A-Za-zÅÄÖåäö]))/i
 
 /*
  * Nimen sana: iso alkukirjain ja sen perassa pienia, valissa sallittu
  * yksi yhdysmerkki ("Anna-Liisa"). Lintukankaan OAS:ssa yrityksen nimi
  * "A-  Insinöörit" tulkittiin ensin henkiloksi, koska "A-" alkaa isolla.
  */
-const NIMISANA = /^[A-ZÄÖÅ][a-zåäö]+(?:-[A-ZÄÖÅ][a-zåäö]+)?$/
+/* "Haapa-aho" (Alajärvi): yhdysmerkin jalkeen voi olla pieni kirjain. */
+const NIMISANA = /^[A-ZÄÖÅ][a-zåäö]+(?:-[A-ZÄÖÅa-zåäö][a-zåäö]+)?$/
+
+/*
+ * Nimisana ei ole nimike eika kadunnimi (D-415): "Kaavoituspäällikkö
+ * Kirsi" (Alajärvi) ja "Pieni Roobertinkatu" (Hausjärvi) tulkittiin
+ * henkiloiksi, koska molemmat sanat alkavat isolla.
+ */
+const KATU_PAATE = /(katu|tie|kuja|polku|v[äa]yl[äa]|tori|aukio|bulevardi)$/i
 
 function onNimisana(sana: string): boolean {
-  return NIMISANA.test(sana)
+  return NIMISANA.test(sana) && !NIMIKE_PAATE.test(sana) && !KATU_PAATE.test(sana)
 }
 
 /* "kaavaa laativa konsultti" -> "Kaavaa..." ; "YVA-konsultti" sailyy. */
@@ -91,7 +100,10 @@ function pieniAlku(t: string): string {
 
 /* "A-  Insinöörit" -> "A-Insinöörit" */
 function siistiOrganisaatio(t: string): string {
-  return t.replace(/-\s+(?=[A-ZÄÖÅ])/g, "-").replace(/,.*$/, "").replace(/\s+/g, " ").trim()
+  return t
+    /* "Hyrynsalmen kunta www.hyrynsalmi.fi" */
+    .replace(/\s*(?:www\.|https?:\/\/)\S+/gi, " ")
+    .replace(/-\s+(?=[A-ZÄÖÅ])/g, "-").replace(/,.*$/, "").replace(/\s+/g, " ").trim()
 }
 
 /*
@@ -170,7 +182,12 @@ function siistiRooli(rivi: string): string | null {
  * Vaara numero on pahempi kuin puuttuva: asiakas soittaa sen.
  */
 function siistiPuhelin(numero: string): string | null {
-  const siisti = numero.replace(/\s+/g, " ").trim().replace(/^358(?=[\s\d])/, "+358")
+  const siisti = numero
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^358(?=[\s\d])/, "+358")
+    /* "+358 040 704 9623" (Ranua): suuntanumeron nolla pois kansainvalisesta. */
+    .replace(/^\+358\s*\(?0\)?\s*(?=[1-9])/, "+358 ")
   const numerot = siisti.replace(/\D/g, "").replace(/^358/, "0")
   if (/^(04|050)/.test(numerot) && numerot.length < 9) return null
   return siisti
@@ -198,9 +215,27 @@ function onPuhelinnumero(t: string): boolean {
  * Oy" olisi henkilo nimelta "Energia Oy".
  */
 function etsiNimi(osa: string): { nimi: string; ennen: string; jalkeen: string } | null {
+  /*
+   * Organisaatio, pienella nimike ja nimi samassa osassa (Pyhtää):
+   * "Pyhtään kunta elinvoimapäällikkö Laura Lahti". Organisaatio
+   * palautetaan `jalkeen`-kentassa, jonka nimisolu tulkitsee yritykseksi.
+   */
+  const yhdistetty = osa.match(
+    /^(.*?(?:kunta|kaupunki|Oy|Oyj|Ab))\s+([a-zåäö][\wåäö-]*(?:\s+[a-zåäö][\wåäö-]*){0,2})\s+(\S+)\s+(\S+)$/,
+  )
+  if (yhdistetty && onNimisana(yhdistetty[3]) && onNimisana(yhdistetty[4]) && NIMIKE_VARSI.test(yhdistetty[2])) {
+    return { nimi: `${yhdistetty[3]} ${yhdistetty[4]}`, ennen: yhdistetty[2], jalkeen: yhdistetty[1] }
+  }
   if (ORGANISAATIO.test(osa)) return null
   const sanat = osa.split(/\s+/).filter(Boolean)
   if (sanat.length < 2 || sanat.length > 6) return null
+  /*
+   * Kolmiosainen nimi kun osassa on vain nimisanoja: "Eva Persson Puurula"
+   * (Muonio, eva.persson-puurula@). Muuten viimeinen pari oli "Persson Puurula".
+   */
+  if (sanat.length === 3 && sanat[0].length <= 11 && sanat.every(onNimisana) && !sanat.some((x) => NIMIKE_VARSI.test(x) || NIMI_EI.test(x))) {
+    return { nimi: sanat.join(" "), ennen: "", jalkeen: "" }
+  }
   for (let i = sanat.length - 2; i >= 0; i--) {
     if (NIMI_EI.test(sanat[i]) || NIMI_EI.test(sanat[i + 1])) continue
     if (onNimisana(sanat[i]) && onNimisana(sanat[i + 1])) {
@@ -239,6 +274,21 @@ function nimisolu(solu: string): { name: string; title: string | null; organizat
       nimikkeet.push(ilmanNimiota)
       continue
     }
+    /* "Miko Huomo, CEO" (Rautjärvi): englanninkielinen nimike, ei yritys. */
+    if (/^(CEO|CTO|CFO|COO)$/.test(osa)) {
+      nimikkeet.push(osa)
+      continue
+    }
+    /*
+     * Toinen henkilo samassa solussa (Pello): "Marja Savolainen, DI,
+     * johtava konsultti Venla Liljeström, tuulivoima-asiantuntija".
+     * Nimike katkaistaan toisen nimen kohdalta, ja loput jaavat pois.
+     */
+    const toinen = henkilo && /^[a-zåäö]/.test(osa) ? osa.match(/\s[A-ZÄÖÅ][a-zåäö]+\s+[A-ZÄÖÅ][a-zåäö]+/) : null
+    if (toinen && toinen.index !== undefined) {
+      nimikkeet.push(osa.slice(0, toinen.index).trim())
+      break
+    }
     if (ORGANISAATIO.test(osa)) {
       organisaatio ??= osa
     } else if (/^[a-zåäö]/.test(osa) || TUTKINTO.test(osa)) {
@@ -264,11 +314,11 @@ function nimisolu(solu: string): { name: string; title: string | null; organizat
  * jatetaan tyhjaksi. Tyhja on parempi kuin vaara.
  */
 const NIMIKE_VARSI =
-  /(insin[öo][öo]ri|arkkitehti|p[äa][äa]llikk[öo]|johtaja|suunnittelija|kaavoittaja|konsultti|asiantuntija|assistentti|teknikko|vastaava|tarkastaja|sihteeri|koordinaattori|kehitt[äa]j[äa]|projekti|neuvos|toimija|laatija|ekologi|maanmittari|lakimies|juristi|dipl\.?\s*ins|\bDI\b|\bFM\b)/i
+  /(insin[öo][öo]ri|arkkitehti|p[äa][äa]llikk[öo]|johtaja|suunnittelija|valmistelija|mestari|kaavoittaja|konsultti|asiantuntija|assistentti|avustaja|rehtori|toimittaja|teknikko|vastaava|tarkastaja|sihteeri|koordinaattori|kehitt[äa]j[äa]|projekti|neuvos|toimija|laatija|ekologi|maanmittari|lakimies|juristi|dipl\.?\s*ins|\bDI\b|\bFM\b)/i
 
 /* Sana joka PAATTYY nimikkeeseen: "Maankäyttöpäällikkö" (ei "A-Insinöörit"). */
 const NIMIKE_PAATE =
-  /(insin[öo][öo]ri|arkkitehti|p[äa][äa]llikk[öo]|johtaja|suunnittelija|kaavoittaja|konsultti|asiantuntija|assistentti|teknikko|vastaava|tarkastaja|sihteeri|koordinaattori)$/i
+  /(insin[öo][öo]ri|arkkitehti|p[äa][äa]llikk[öo]|johtaja|suunnittelija|valmistelija|mestari|kaavoittaja|konsultti|asiantuntija|assistentti|teknikko|vastaava|tarkastaja|sihteeri|koordinaattori)$/i
 
 /* Isolla kirjoitetut sanat jotka sallitaan nimikkeen keskella. */
 const NIMIKE_LYHENNE = /^(Vt\.?|Vs\.?|vt\.?|vs\.?|DI|FM|SAFA|FISE|AMK|YAMK|KTM|MMM|FT|TkT|TkL|YTM|Dipl\.ins\.?|\(AMK\)|\(YAMK\)|YKS(?:-\d+)?|\d+)$/
@@ -311,11 +361,26 @@ function siistiOrg(o: string | null): string | null {
     if (pala) t = pala
   }
   /* Roolietuliite pois: "Kaavaa laativa konsultti Sweco Finland Oy" */
-  const yhtio = t.match(/((?:[A-ZÄÖÅ0-9][\wÄÖÅäöå&.-]*\s+){0,4}(?:Oy|Oyj|Ab|Ky|Ltd)\b\.?)/)
+  /* "FCG Suunnittelu ja tekniikka Oy" (Muonio): pienella kirjoitettu ja-liitos sallitaan. */
+  const yhtio = t.match(
+    /((?:[A-ZÄÖÅ0-9][\wÄÖÅäöå&.-]*\s+(?:(?:ja|och|&)\s+[\wÄÖÅäöå-]+\s+)?){0,4}(?:Oy|Oyj|Ab|Ky|Ltd)\b\.?)/,
+  )
   if (yhtio) t = yhtio[1].trim()
   t = t.replace(/,.*$/, "").trim()
 
   if (!t || /^[a-zåäö]/.test(t) || PATEVYYS.test(t) || /@|\d{3,}|\bpuh/i.test(t)) return null
+  /*
+   * Pelkka "Arkkitehtitoimisto" on katkennut nimi (Urjala: "Arkkitehtitoimisto"
+   * / "Helena Väisänen") tai kunnan yksikko (Loviisa), ei yritys.
+   */
+  if (/^\S*toimisto$/i.test(t)) return null
+  /* Nimike kunnan perassa pois: "Suomussalmen kunta Tekninen johtaja". */
+  const kunnanPerassa = t.match(/^(.*?\S+\s+(?:kunta|kaupunki))\s+(.+)$/i)
+  if (kunnanPerassa && NIMIKE_VARSI.test(kunnanPerassa[2])) t = kunnanPerassa[1]
+  /* Pelkka yhtiomuoto: "Oy:stä." rivin alussa (Muonio, Veteli). */
+  if (/^(oy|oyj|ab|ky|ltd)(?![A-Za-zÅÄÖåäö])/i.test(t)) return null
+  /* Katuosoite ei ole organisaatio: "Kunnantie 3" (Keminmaa). */
+  if (KATUOSOITE.test(t) || KATU_PAATE.test(t.split(" ")[0] ?? "")) return null
   if (!ORGANISAATIO.test(t)) {
     /* Pelkka nimike ("Kaavoitusassistentti") tai henkilo nimikkeineen. */
     if (NIMIKE_VARSI.test(t) && /^[A-ZÄÖÅ][a-zäöå]+$/.test(t)) return null
@@ -350,7 +415,79 @@ function sopiiNimeen(email: string, nimi: string): boolean {
 
 /* Valilyonneilla kirjoitettu osoite: "Matti.piispanen @ saarijarvi.fi" (Saarijarvi). */
 function korjaaOsoitteet(t: string): string {
-  return t.replace(/([\w.-])\s+@\s+([\w-]+\.)/g, "$1@$2")
+  return (
+    t
+      .replace(/([\w.-])\s+@\s+([\w-]+\.)/g, "$1@$2")
+      /*
+       * Katkennut katuosoite: "Sa  hapolku 49" (Alajärvi). Ilman tata
+       * "Sa" tulkittiin organisaatioksi ja liittyvaksi yritykseksi.
+       */
+      .replace(/^(\s*[A-ZÄÖÅ][a-zåäö]{0,3})\s{2,}([a-zåäö]+\s+\d)/, (m, a: string, b: string) =>
+        KATUOSOITE.test(a.trim() + b) ? a.trim() + b : m,
+      )
+  )
+}
+
+/*
+ * YHDELLA VALILYONNILLA EROTETUT PALSTAT (D-415). Toholammin
+ * Toristojannevan OAS (FCG):
+ *
+ *   Tekninen johtaja Rakennustarkastaja
+ *   Mikko Polet Markus Jokitalo
+ *   puh. 040 150 5302 puh. 040 150 5310
+ *   mikko.polet@toholampi.fi rakennustarkastaja@toholampi.fi
+ *
+ * Palstavali puuttuu, joten rivi luettiin proosana ja Markus Jokitalo
+ * sai Mikko Poletin numeron -- pahin virhe. Kun rivilla on TASAN kaksi
+ * numeroa eika muuta, rivit palstoitetaan kahdeksi soluksi: numerorivi,
+ * sen ylapuolinen nimirivi (tasan nelja nimisanaa) ja nimikerivi, seka
+ * alapuolinen kahden osoitteen rivi. Jos nimirivia ei voi jakaa
+ * varmasti, numerorivi poistetaan: tyhja on parempi kuin vaara.
+ */
+const KAKSI_NUMEROA = new RegExp(
+  `^\\s*((?:p|puh|puhelin|tel|gsm)\\.?\\s*:?\\s*\\+?\\d[\\d\\s-]{5,}\\d)\\s+((?:p|puh|puhelin|tel|gsm)\\.?\\s*:?\\s*\\+?\\d[\\d\\s-]{5,}\\d)\\s*$`,
+  "i",
+)
+
+function palstoitaYksivali(rivit: string[]): string[] {
+  const tulos = [...rivit]
+  const edellinenEiTyhja = (i: number) => {
+    for (let j = i - 1; j >= 0; j--) if (tulos[j].trim()) return j
+    return -1
+  }
+  for (let i = 0; i < tulos.length; i++) {
+    if (solut(tulos[i]).length !== 1) continue
+    const m = tulos[i].match(KAKSI_NUMEROA)
+    if (!m) continue
+
+    const n = edellinenEiTyhja(i)
+    const sanat = n >= 0 ? tulos[n].trim().split(/\s+/) : []
+    if (n < 0 || solut(tulos[n]).length !== 1 || sanat.length !== 4 || !sanat.every(onNimisana)) {
+      tulos[i] = ""
+      continue
+    }
+    tulos[i] = `${m[1].trim()}   ${m[2].trim()}`
+    tulos[n] = `${sanat[0]} ${sanat[1]}   ${sanat[2]} ${sanat[3]}`
+
+    /* Nimikerivi: jako pienen ja ison alkukirjaimen rajasta, jos raja on yksiselitteinen. */
+    const t = edellinenEiTyhja(n)
+    if (t >= 0 && solut(tulos[t]).length === 1) {
+      const rajat = [...tulos[t].trim().matchAll(/([a-zåäö])\s+(?=[A-ZÄÖÅ])/g)]
+      if (rajat.length === 1 && rajat[0].index !== undefined) {
+        const r = tulos[t].trim()
+        const kohta = rajat[0].index + 1
+        tulos[t] = `${r.slice(0, kohta)}   ${r.slice(kohta).trim()}`
+      }
+    }
+
+    /* Osoiterivi alla. */
+    const o = i + 1 < tulos.length ? i + 1 : -1
+    if (o > 0) {
+      const osoitteet = tulos[o].trim().split(/\s+/)
+      if (osoitteet.length === 2 && osoitteet.every((x) => OSOITE.test(x))) tulos[o] = osoitteet.join("   ")
+    }
+  }
+  return tulos
 }
 
 function luvunRivit(teksti: string): string[] {
@@ -360,6 +497,16 @@ function luvunRivit(teksti: string): string[] {
   rivit.forEach((r, i) => {
     if (OTSIKKO.test(r)) alku = i
   })
+  /*
+   * "Lisätietoja" VARALLA (D-415): Hyrynsalmen ja Pälkäneen OAS:ssa
+   * yhteystietolohkon otsikko on "Lisätietoja". Vain jos YHTEYSTIEDOT-
+   * lukua ei ole, koska "Lisätietoja" voi esiintya muuallakin.
+   */
+  if (alku < 0) {
+    rivit.forEach((r, i) => {
+      if (LISATIETOJA_OTSIKKO.test(r)) alku = i
+    })
+  }
   if (alku < 0) return []
 
   const tulos: string[] = []
@@ -496,12 +643,39 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
       }
     }
   }
-  const uusiHenkilo = (nimi: { name: string; title: string | null; organization: string | null }) => {
+  /*
+   * PALSTAKOHTAISET OTSIKOT (D-416). Pellon OAS:
+   *
+   *   Pellon kunta                   Kaavaa laativa konsultti
+   *   Kunnantie 4                    A-Insinöörit Suunnittelu Oy
+   *   Esa Kassinen, tekninen johtaja Johanna Närhi, arkkitehti YKS-490
+   *
+   * Solut kulkivat yhden rooli/organisaatio-tilan lapi, joten MOLEMMAT
+   * saivat viimeisen: kunnan tekninen johtaja "A-Insinöörit, kaavaa
+   * laativa konsultti". Monisoluiset otsikkorivit (ei nimea, numeroa
+   * eika osoitetta) talletetaan palstoittain, ja henkilo saa roolin ja
+   * organisaation OMASTA palstastaan.
+   */
+  type Otsikko = { rooli: string | null; org: string | null }
+  let palstaOtsikot: Otsikko[] = []
+  let edellinenOtsikkorivi = false
+
+  const uusiHenkilo = (nimi: { name: string; title: string | null; organization: string | null }, sarake = 0) => {
+    /*
+     * Palstan otsikot kaytetaan vain kun palstalla on OMA, otsikkorivilla
+     * nimetty organisaatio. Muuten yhteinen tila kuten ennen: Pyhtaalla
+     * "Kaavakonsultti   Yhteyshenkilö:" on nimio/arvo-taulukko, ja
+     * Arja Sippolan yritys (FCG) on samalla rivilla vasemmassa solussa.
+     */
+    const palsta = palstaOtsikot.length >= 2 ? palstaOtsikot[sarake] : undefined
+    const oma = palsta?.org ? palsta : null
+    const r = oma ? oma.rooli : rooli
+    const o = oma ? oma.org : organisaatio
     /*
      * Oma nimike ja edeltavan rivin rooli yhteen:
      * "Arkkitehti" + "Kaavaa laativa asiantuntija".
      */
-    const yhdessa = nimi.title && rooli ? `${nimi.title}, ${pieniAlku(rooli)}` : nimi.title ?? rooli
+    const yhdessa = nimi.title && r ? `${nimi.title}, ${pieniAlku(r)}` : nimi.title ?? r
     nykyinen = {
       name: nimi.name,
       /*
@@ -512,7 +686,7 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
       title: siistiNimike(yhdessa),
       phone: null,
       email: null,
-      organization: nimi.organization ? siistiOrganisaatio(nimi.organization) : organisaatio,
+      organization: nimi.organization ? siistiOrganisaatio(nimi.organization) : o,
     }
     tulos.push(nykyinen)
   }
@@ -523,15 +697,44 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
     puhelinPalsta = 0
 
     const rivinSolut = solut(rivi)
+
+    /* Enintaan kolme palstaa: tasattu proosa ("Lisätietoja  saa  Muonion ...") ei ole otsikkorivi. */
+    const otsikkorivi =
+      rivinSolut.length >= 2 &&
+      rivinSolut.length <= 3 &&
+      rivinSolut.every((x) => !SISAPUHELIN.test(x) && !OSOITE.test(x) && !onPuhelinnumero(x) && !nimisolu(x))
+    if (otsikkorivi) {
+      if (!edellinenOtsikkorivi) {
+        palstaOtsikot = rivinSolut.map(() => ({ rooli: null, org: null }))
+      }
+      rivinSolut.forEach((x, i) => {
+        const o = (palstaOtsikot[i] ??= { rooli: null, org: null })
+        const t = x.replace(/:$/, "").trim()
+        /* Numero nimessa ei tee yrityksesta osoitetta: "3Flash Finland Oy". */
+        if (!t || KATUOSOITE.test(t) || (/\d/.test(t) && !ORGANISAATIO.test(t)) || VERKKOSIVU.test(t)) return
+        /* Roolin jalkeen tuleva on organisaatio, vaikka yhtiomuotoa ei olisi ("Vuoksen Arkkitehdit"). */
+        if (ORGANISAATIO.test(t) || (o.rooli && !o.org)) {
+          o.org = siistiOrganisaatio(t)
+        } else if (!o.rooli) o.rooli = siistiRooli(t)
+      })
+    }
+
     if (
       rivinSolut.length >= 2 &&
       rivinSolut.every((x) => !SISAPUHELIN.test(x) && !OSOITE.test(x) && !nimisolu(x) && siistiNimike(x))
     ) {
       palstaNimikkeet = rivinSolut.map((x) => siistiNimike(x))
+      edellinenOtsikkorivi = otsikkorivi
       continue
     }
 
-    for (let solu of rivinSolut) {
+    /*
+     * Sisennetty yksisoluinen rivi kuuluu oikeaan palstaan (Rautjärvi):
+     * "    Osmo Riikonen" on 3Flashin, ei Vuoksen Arkkitehtien.
+     */
+    const sisennetty = rivinSolut.length === 1 && palstaOtsikot.length >= 2 && /^\s{3,}\S/.test(rivi)
+    for (let [sarake, solu] of rivinSolut.entries()) {
+      if (sisennetty) sarake = palstaOtsikot.length - 1
       if (TYHJA_OTSIKKO.test(solu)) continue
 
       /*
@@ -543,11 +746,30 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
        */
       const p = solu.match(SISAPUHELIN)
       if (p) solu = solu.replace(p[0], " ")
+      /*
+       * Paljas numero pilkkujen valissa (Hyrynsalmi): "Kunnanjohtaja
+       * Heimo Keränen, 044 710 4400, heimo.keranen@..." -- ilman tata
+       * numero tulkittiin organisaatioksi.
+       */
+      let pilkkuNumero: string | null = null
+      if (!p && solu.includes(",")) {
+        const osat = solu.split(",")
+        const k = osat.findIndex((o) => onPuhelinnumero(o.trim()))
+        if (k >= 0) {
+          pilkkuNumero = osat[k].trim()
+          osat.splice(k, 1)
+          solu = osat.join(",")
+        }
+      }
       const osoitteet = solu.match(kaikkiOsoitteet) ?? []
       if (osoitteet.length) solu = solu.replace(kaikkiOsoitteet, " ")
       solu = solu.replace(/\s+/g, " ").trim()
 
-      let puhelin: { numero: string; vaihde: boolean } | null = p ? { numero: p[2], vaihde: Boolean(p[1]) } : null
+      let puhelin: { numero: string; vaihde: boolean } | null = p
+        ? { numero: p[2], vaihde: Boolean(p[1]) }
+        : pilkkuNumero
+          ? { numero: pilkkuNumero, vaihde: false }
+          : null
       if (!puhelin && !osoitteet.length && onPuhelinnumero(solu)) {
         puhelin = { numero: solu, vaihde: false }
         solu = ""
@@ -558,7 +780,7 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
         if (nimi) {
           /* Henkilo ja numero samassa solussa: numero on hanen, ei palstan. */
           palstat = []
-          uusiHenkilo(nimi)
+          uusiHenkilo(nimi, sarake)
         } else if (solu && /^[a-zåäö]/.test(solu)) {
           /* "kaupunkisuunnittelupäällikkö  puh. 0440 555 403" (Loviisa) */
           const h = nykyinen as OasYhteystieto | null
@@ -595,7 +817,7 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
 
       const nimi = nimisolu(solu)
       if (nimi) {
-        uusiHenkilo(nimi)
+        uusiHenkilo(nimi, sarake)
         continue
       }
 
@@ -609,6 +831,21 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
       if (edellinen && !edellinen.title && /^[a-zåäö]/.test(solu) && siistiNimike(solu)) {
         edellinen.title = siistiNimike(solu)
         continue
+      }
+      /*
+       * Isolla alkava nimike HETI nimen jalkeen, ennen yhteystietoja
+       * (Pälkäne): "Aarni-Pekka Jakonen" -> "Maankäytön suunnittelija,
+       * Pälkäneen kunta". Pilkun jalkeen organisaatio.
+       */
+      if (edellinen && !edellinen.title && !edellinen.phone && !edellinen.email) {
+        const [nimikeOsa, ...orgOsat] = solu.split(",").map((x) => x.trim())
+        const nimike = siistiNimike(nimikeOsa)
+        if (nimike && !nimisolu(nimikeOsa)) {
+          edellinen.title = nimike
+          const org = orgOsat.join(", ")
+          if (org && !edellinen.organization && ORGANISAATIO.test(org)) edellinen.organization = siistiOrganisaatio(org)
+          continue
+        }
       }
 
       /*
@@ -641,8 +878,15 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
        * siina ei olisi yhtiomuotoa: Lintukankaassa "Kaavaa laativa
        * konsultti" -> "A-  Insinöörit" -> henkilo.
        */
-      const sanoja = solu.split(/\s+/).length
-      if (sanoja <= 6 && !/\d/.test(solu) && !solu.endsWith(":")) {
+      /*
+       * Yhtiomuotoon paattyva rooliotsikko saa olla pidempi (Puolanka):
+       * "YMPÄRISTÖVAIKUTUSTEN ARVIOINTIA LAATIVA KONSULTTI / Ramboll
+       * Finland Oy". Ilman tata otsikko ohitettiin, ja Rambollin ja
+       * Prokonin henkilot perivat edellisen lohkon "PUOLANGAN KUNTA".
+       */
+      const sanoja = solu.split(/\s+/).filter((s) => s !== "/").length
+      const yhtioOtsikko = sanoja <= 9 && /\b(oy|oyj|ab|ky|ltd)\.?\s*$/i.test(solu)
+      if ((sanoja <= 6 || yhtioOtsikko) && !/\d/.test(solu) && !solu.endsWith(":")) {
         if (nykyinen) {
           rooli = null
           organisaatio = null
@@ -675,6 +919,9 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
       for (const h of rivinHenkilot) if (h.title === roolista) h.title = null
     }
     if (rivinSolut.length) palstaNimikkeet = []
+    if (rivinSolut.length) edellinenOtsikkorivi = otsikkorivi
+    /* Yksisoluinen valiotsikko tai nimio aloittaa uuden lohkon: palstaotsikot pois. */
+    if (rivinSolut.length === 1 && nykyinen === null && tulos.length === ennenRivia) palstaOtsikot = []
     if (rivinHenkilot.length >= 2) palstat = rivinHenkilot
     else if (rivinHenkilot.length === 1) palstat = []
   }
@@ -688,7 +935,7 @@ function rakenteiset(rivit: string[]): OasYhteystieto[] {
 }
 
 export function oasYhteystiedot(teksti: string | null | undefined): OasYhteystieto[] {
-  const rivit = luvunRivit(String(teksti ?? ""))
+  const rivit = palstoitaYksivali(luvunRivit(String(teksti ?? "")))
   if (!rivit.length) return []
 
   let tulos = rakenteiset(rivit)
