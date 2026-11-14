@@ -5,6 +5,7 @@ import {
   haeKaavaselostuksenTeksti,
   kaavanKuvausTekstista,
   valitseKaavanAsiakirja,
+  valitseOas,
   yhdistaKuvaukset,
 } from "./kaavanKuvaus"
 import { oasYhteystiedot, osapuoletYhteystiedoista, type OasYhteystieto } from "./oasYhteystiedot"
@@ -248,7 +249,23 @@ export async function kaavanLiitteenSisalto(
   const liitteesta = tekstit.alku ? kaavanKuvausTekstista(tekstit.alku) : null
   const kuvaus = liitteesta ? yhdistaKuvaukset(liitteesta, menettely) ?? liitteesta : menettely
 
-  const yhteystiedot = oasYhteystiedot(tekstit.kaikki)
+  /*
+   * YHTEYSTIEDOT OAS:STA, VAIKKA KUVAUS TULISI SELOSTUKSESTA (D-415).
+   *
+   * Kuvaukseen valitaan selostus ennen OAS:ia, mutta "YHTEYSTIEDOT" on
+   * OAS-pohjan viimeinen luku -- selostuksessa sita ei yleensa ole.
+   * Kun kaavalla on molemmat, yhteystiedot luettiin vaarasta
+   * tiedostosta. Toinen lataus tehdaan vain jos OAS on eri tiedosto
+   * ja jos valitusta ei loytynyt ketaan.
+   */
+  let yhteystiedot = oasYhteystiedot(tekstit.kaikki)
+  const oas = valitseOas(linkit)
+  if (!yhteystiedot.length && oas && oas !== asiakirja && budjetti.haettu < budjetti.raja) {
+    budjetti.haettu += 1
+    const oasTekstit = await haeKaavanLiitteenTekstit(oas)
+    yhteystiedot = oasYhteystiedot(oasTekstit?.kaikki)
+  }
+
   return { kuvaus, yhteystiedot, osapuolet: osapuoletYhteystiedoista(yhteystiedot) }
 }
 

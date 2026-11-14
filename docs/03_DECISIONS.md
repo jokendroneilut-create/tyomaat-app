@@ -51,6 +51,74 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-415 – OAS-yhteystiedot kahdeksasta suurimmasta lähteestä: jäsennin soluihin ja tarkkuuskerros
+
+Johannes 14.11.2026: *"käy lähteet läpi isoimmasta alkaen."*
+
+#### Pohja kerrallaan ei skaalaudu
+
+Pelkosenniemestä löytyi kolme uutta OAS-pohjaa, Kittilästä neljäs
+(proosa). 61 lähteessä niitä on kymmeniä, joten jäsennin yleistettiin
+rivistä **soluihin**:
+
+| rakenne | esimerkki | ratkaisu |
+|---|---|---|
+| kaksipalstainen rivi | *"KUNTA:  Emmi Mäkelä     Pelkosenniemen kunta"* | solut erottaa ≥2 välilyöntiä |
+| puhelin missä tahansa | *"Sari Niemi puh.040-4809187,"*, *"(puh. 044 700 2155)"* | puhelin ja sähköposti irti ensin |
+| otsikko kaksoispisteellä | *"Kaavanlaatija:"*, *"KUNTA:"* | nimiö |
+| yritys henkilön jälkeen | *"Johanna Ilola-Pesonen"* → *"Maankäyttö Pesonen Oy"* | liitetään henkilölle |
+| nimike nimen alla | Loviisa *"kaavoitusinsinööri"* | edelliselle, ei seuraavalle |
+| proosa | Kittilä: kolme henkilöä yhdessä virkkeessä | jaetaan numeroiden kohdalta |
+| taulukko nimikeriveineen | Taraskallio (FCG) | nimikkeet ja numerot palstoittain |
+
+#### Määrä ei ollut laatu
+
+Yleistyksen jälkeen kattavuus nousi, mutta **noin puolessa riveistä oli
+roskaa**: lause nimikkeenä (*"kaavamuutos laaditaan Paraist…"*), henkilö
+organisaationa (*"Kaupunkisuunnittelupäällikkö Marko Luukkonen"* —
+"kaupunki" osui sanan sisään), osoitelohko henkilönä (*"Kotipaikka
+Helsinki"*). Tarkkuuskerros: nimikkeeksi kelpaa vain nimikesanastoon
+osuva lauseeton pala, organisaation on näytettävä nimeltä, sähköposti
+liitetään **nimen mukaan** eikä järjestyksen. Tyhjä on parempi kuin väärä.
+
+#### Väärä numero väärälle ihmiselle — kolme kertaa
+
+| | mitä tapahtui | korjaus |
+|---|---|---|
+| Kallo | kaksipalstainen: Anne Rämö sai Katariina Viirin numeron | numerot palstoittain |
+| Kittilä | proosa: Veli-Matti Virtanen sai Roni Jänkälän numeron | proosatila |
+| **Taraskallio** | **kannassa jo ennestään**: Marjo Kirillowin ja Olli Poutasen numerot ristissä | `korjaa-vaihtuneet-numerot.ts`, 2 riviä |
+
+Kaksi ensimmäistä jäivät kiinni kuivaharjoituksessa ennen kantaa. Kolmas
+oli vanha virhe jostain aiemmasta poiminnasta, ja asiakas olisi soittanut
+väärälle ihmiselle. Tarkistus ajettiin kaikille kymmenelle lähteelle:
+muita ei löytynyt.
+
+Myös numero, joka ei voi olla oikea, jätetään pois: *"05067757"*
+(Katinala) on 050-alkuiseksi liian lyhyt.
+
+#### Tulos
+
+| lähde | rivejä |
+|---|---|
+| Pelkosenniemi | 28 |
+| Inari | 28 |
+| Ikaalinen | 24 (rakennuttajat Tevaniemi Wind, Ilmatar Energy, Metsähallitus) |
+| Loviisa | 22 |
+| Parainen | 18 |
+| Muurame | 16 |
+| Saarijärvi | 8 |
+| Kittilä | 6 |
+| Huittinen | 6 (Greensky Energy Oy rakennuttajaksi datakeskukselle) + 2 numerokorjausta |
+| Hattula | 2 |
+
+`--vain-yhteystiedot`: kuvauksiin ei kosketa, ne ovat eri muutos.
+Kuvaus luetaan selostuksesta, yhteystiedot OAS:sta — ennen ne luettiin
+samasta tiedostosta, ja OAS jäi lukematta kun selostus oli olemassa.
+
+**Avoinna:** keräimet on kytketty vain Huittisiin ja Hattulaan; muiden
+kahdeksan uudet rivit eivät vielä saa yhteystietoja itsestään.
+
 ### D-414 – Yritykset rooleineen OAS:sta, ja OAS:t joita ei ole luettu
 
 Johannes 14.11.2026: *"liittyvät yritykset pitäisi vielä poimia esim

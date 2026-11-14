@@ -35,6 +35,12 @@ for (const line of readFileSync("C:/Users/johan/tyomaat-app/.env.local", "utf8")
 
 const APPLY = process.argv.includes("--apply")
 const LAHDE = process.argv.find((a) => a.startsWith("--lahde="))?.slice("--lahde=".length)
+/*
+ * --vain-yhteystiedot (D-415): kuvaukseen ei kosketa. OAS-yhteystietojen
+ * kayttoonotossa lahde kerrallaan kuvaukset ovat eri muutos, jota ei ole
+ * luettu lapi.
+ */
+const VAIN_YHTEYSTIEDOT = process.argv.includes("--vain-yhteystiedot")
 const MERKKI = "kuvaus_liitteesta_2026_11"
 
 const siisti = (t: unknown) => String(t ?? "").replace(/\s+/g, " ").trim()
@@ -97,7 +103,7 @@ async function main() {
 
       /* Kuvaus: vain tyhja tai keraajan oma teksti. */
       const nykyinen = siisti(r.kuvaus)
-      if (osuma.uusi && nykyinen !== siisti(osuma.uusi)) {
+      if (!VAIN_YHTEYSTIEDOT && osuma.uusi && nykyinen !== siisti(osuma.uusi)) {
         const alku = osuma.vanha.slice(0, 120)
 
         /*

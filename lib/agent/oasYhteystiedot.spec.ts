@@ -281,3 +281,416 @@ describe("osapuoletYhteystiedoista (D-414)", () => {
     expect(osapuoletYhteystiedoista([y])).toEqual({ developer: null, related: ["Pohjan Voima Oy"] })
   })
 })
+
+/*
+ * PELKOSENNIEMI, KOLME POHJAA (D-415). Tekstit sellaisina kuin
+ * pdf-parse ne antoi 14.11.2026, rivien valilyonnit mukaan lukien.
+ */
+describe("oasYhteystiedot: Pelkosenniemen pohjat (D-415)", () => {
+  it("otsikko kaksoispisteellä, puhelin ja sähköposti samalla rivillä, yritys henkilön jälkeen", () => {
+    const t = [
+      "Yhteystiedot ",
+      "Pelkosenniemen kunta: ",
+      "Emmi Mäkelä, maankäyttöinsinööri ",
+      "Puh. 040 704 4508, s.posti: emmi.makela@pelkosenniemi.fi ",
+      " ",
+      "Kaavanlaatija: ",
+      "Johanna Ilola-Pesonen ",
+      "Maankäyttö Pesonen Oy ",
+      "Puh. 040 5931 569, s.posti: maankayttopesonen@outlook.com ",
+      "",
+      "10 ",
+      " ",
+      "Palaute: ",
+      "Kirjalliset mielipiteet ja muistutukset tulee toimittaa osoitteeseen: ",
+      "Pelkosenniemen kunta ",
+      "Tekninen toimisto ",
+      "Sodankyläntie 1 ",
+      "98500 Pelkosenniemi  ",
+      "Tai sähköpostitse: kirjaamo@pelkosenniemi.fi",
+    ].join("\n")
+    expect(oasYhteystiedot(t)).toEqual([
+      {
+        name: "Emmi Mäkelä",
+        title: "Maankäyttöinsinööri",
+        phone: "040 704 4508",
+        email: "emmi.makela@pelkosenniemi.fi",
+        organization: "Pelkosenniemen kunta",
+      },
+      {
+        name: "Johanna Ilola-Pesonen",
+        title: "Kaavanlaatija",
+        phone: "040 5931 569",
+        email: "maankayttopesonen@outlook.com",
+        organization: "Maankäyttö Pesonen Oy",
+      },
+    ])
+  })
+
+  it("kaksipalstainen asettelu (KimmoKaava)", () => {
+    const t = [
+      "YHTEYSTIEDOT ",
+      " ",
+      "KAAVOITTAJA:  Kimmo Mustonen KimmoKaava       ",
+      "",
+      "DI (maanmittaus, YKS 124)  Kitkantie 34 F 40 ",
+      "0400 703 521     93600 KUUSAMO ",
+      "  ",
+      "kimmo.mustonen@kimmokaava.fi   ",
+      "  www.kimmokaava.fi ",
+      " ",
+      "KUNTA:  Emmi Mäkelä     Pelkosenniemen kunta ",
+      "maankäyttöinsinööri Sodankyläntie 1 A ",
+      "040 7044 508                              98500 PELKOSENNIEMI ",
+      "  ",
+      "emmi.makela@pelkosenniemi.fi  kirjaamo@pelkosenniemi.fi  ",
+      "    www.pelkosenniemi.fi  ",
+      " ",
+      "PALAUTE OSALLISTUMIS- JA ARVIOINTISUUNNITELMASTA ",
+      "Mielipiteet osallistumis- ja arviointisuunnitelmasta voi esittää kunnan virkamiehille tai kaavoittajalle. ",
+      "Kuusamossa, 5.2.2025, päivitetty viimeksi 27.4.2026 ",
+      "DI (maanmittaus, YKS 124) ",
+      "  Kimmo Mustonen ",
+    ].join("\n")
+    expect(oasYhteystiedot(t)).toEqual([
+      {
+        name: "Kimmo Mustonen",
+        title: "Kaavoittaja",
+        phone: "0400 703 521",
+        email: "kimmo.mustonen@kimmokaava.fi",
+        organization: "KimmoKaava",
+      },
+      {
+        name: "Emmi Mäkelä",
+        title: "Maankäyttöinsinööri",
+        phone: "040 7044 508",
+        email: "emmi.makela@pelkosenniemi.fi",
+        organization: "Pelkosenniemen kunta",
+      },
+    ])
+  })
+
+  it("rastilista: yritys ennen nimeä ja puhelin sulkeissa (Lokio)", () => {
+    const t = [
+      "14. Yhteystiedot ",
+      " ",
+      "Kaavoituksesta ja maankäytöstä vastaa Pelkosenniemen kunnassa  ",
+      "✓ Maankäyttöinsinööri Emmi Mäkelä (puh. 040 7044 508) ",
+      "emmi.makela@pelkosenniemi.fi, Sodankyläntie 1 A, 98500 Pelkosenniemi ",
+      "Konsulttina ja kaavan laatijana toimii  ",
+      "✓ Arkkitehtitoimisto Jarmo Lokio Oy, arkkitehti Jarmo Lokio (puh. 044 700 2155) ",
+      "jarmo.lokio@lokio.fi, Ainonkatu 1, 96200 Rovaniemi  ",
+      "  ",
+      "Rovaniemellä 7.4.2025 ",
+      "Jarmo Lokio ",
+      "arkkitehti FISE YKS 122 ",
+    ].join("\n")
+    expect(oasYhteystiedot(t)).toEqual([
+      {
+        name: "Emmi Mäkelä",
+        title: "Maankäyttöinsinööri",
+        phone: "040 7044 508",
+        email: "emmi.makela@pelkosenniemi.fi",
+        organization: null,
+      },
+      {
+        name: "Jarmo Lokio",
+        title: "Arkkitehti, kaavan laatija",
+        phone: "044 700 2155",
+        email: "jarmo.lokio@lokio.fi",
+        organization: "Arkkitehtitoimisto Jarmo Lokio Oy",
+      },
+    ])
+  })
+})
+
+/* Pelkosenniemen Kotitunturin OAS 2023: puhelin keskella solua (D-415). */
+describe("oasYhteystiedot: puhelin keskellä solua ja pätevyystunnus (D-415)", () => {
+  const KOTITUNTURI = [
+    "YHTEYSTIEDOT: ",
+    "Pelkosenniemen kunnassa kaavoituksen vastuuhenkilö on: ",
+    "Elinvoimajohtaja Sari Niemi puh.040-4809187,  ",
+    "email, sari.niemi@pelkosenniemi.fi ",
+    " ",
+    "Pelkosenniemen kunta  ",
+    "               Sodankyläntie 1 A ",
+    "               98500 Pelkosenniemi ",
+    "emai, kirjaamo@pelkosenniemi.fi ",
+    " ",
+    "Kaavan laatija:  ",
+    "Seitap Oy, www.seitap.fi ",
+    "Tapani Honkanen, maanmittausteknikko, YKS 282, puh. 0400-391 468 ",
+    "email, tapani.honkanen@seitap.fi ",
+  ].join("\n")
+
+  it("irrottaa puhelimen nimen perästä ja pilkkulistan lopusta", () => {
+    expect(oasYhteystiedot(KOTITUNTURI)).toEqual([
+      {
+        name: "Sari Niemi",
+        title: "Elinvoimajohtaja",
+        phone: "040-4809187",
+        email: "sari.niemi@pelkosenniemi.fi",
+        organization: null,
+      },
+      {
+        name: "Tapani Honkanen",
+        title: "Maanmittausteknikko, kaavan laatija",
+        phone: "0400-391 468",
+        email: "tapani.honkanen@seitap.fi",
+        organization: "Seitap Oy",
+      },
+    ])
+  })
+})
+
+/* Kittilan OAS 23.9.2026: proosaa, rivi katkeaa nimen keskelta (D-415). */
+describe("oasYhteystiedot: proosa (Kittilä, D-415)", () => {
+  const KITTILA = [
+    "13. Yhteystiedot ",
+    " ",
+    "Kittilän kunta, maanmittausinsinööri Mika Palovaara, puh. 040 7622 917 tekninen johtaja Roni Jän-",
+    "kälä, puh. 040 5406 357 ja maanmittausteknikko Veli-Matti Virtanen, puh. 040 5811 889 ",
+    "Osoite: Valtatie 15, 99100 Kittilä ",
+    "kirjaamo@kittila.fi ",
+    " ",
+    "Kittilässä, 23.9.2026 ",
+    " ",
+    "Mika Palovaara ",
+    "Mika Palovaara ",
+  ].join("\n")
+
+  it("jokainen henkilö saa oman numeronsa", () => {
+    expect(oasYhteystiedot(KITTILA).map((h) => [h.name, h.title, h.phone])).toEqual([
+      ["Mika Palovaara", "Maanmittausinsinööri", "040 7622 917"],
+      ["Roni Jänkälä", "Tekninen johtaja", "040 5406 357"],
+      ["Veli-Matti Virtanen", "Maanmittausteknikko", "040 5811 889"],
+    ])
+  })
+
+  it("organisaatio periytyy virkkeen alusta", () => {
+    expect(oasYhteystiedot(KITTILA).every((h) => h.organization === "Kittilän kunta")).toBe(true)
+  })
+})
+
+/* Loviisan Länsiportin OAS: nimike nimen ALLA (D-415). */
+describe("oasYhteystiedot: nimike nimen alla (Loviisa, D-415)", () => {
+  const LOVIISA = [
+    "7 YHTEYSTIEDOT ",
+    "Kirjalliset mielipiteet ja muistutukset voi jättää Loviisan kaupungin asiakaspalvelupiste Lovinfoon tai ",
+    "Loviisan kaupunki, Lovinfo sähköposti: kaupunki@loviisa.fi ",
+    "Mariankatu 12 A puh. 019 555 555 ",
+    "07900 LOVIISA  Avoinna  ma–ke, pe klo 9–11.30 ja 12.30–15 ",
+    "Loviisan kaupunki, kaupunkikehitys    sähköposti: etunimi.sukunimi@loviisa.fi ",
+    " ",
+    "Perttu Huhtiniemi      puh. 040 671 7674 ",
+    "kaavoitusinsinööri ",
+    " ",
+    "Marko Luukkonen ",
+    "kaupunkisuunnittelupäällikkö      puh. 0440 555 403",
+  ].join("\n")
+
+  it("nimike kuuluu nimen yläpuoliselle henkilölle, ei seuraavalle", () => {
+    expect(oasYhteystiedot(LOVIISA).map((h) => [h.name, h.title, h.phone])).toEqual([
+      ["Perttu Huhtiniemi", "Kaavoitusinsinööri", "040 671 7674"],
+      ["Marko Luukkonen", "Kaupunkisuunnittelupäällikkö", "0440 555 403"],
+    ])
+  })
+})
+
+/* Tarkkuuskerros (D-415): roska jaa pois, ei asiakkaalle. */
+describe("oasYhteystiedot: tarkkuuskerros (D-415)", () => {
+  it("lause ei kelpaa nimikkeeksi, osoitelohko ei ole henkilö", () => {
+    const t = [
+      "YHTEYSTIEDOT",
+      "Pasi Hyvärilä, kaavoitusarkkitehti, kaavamuutos laaditaan Paraisten kaupungin kaavoituksessa",
+      "puh. 040 488 5918, pasi.hyvarila@parainen.fi",
+      "FCG Rakennettu Ympäristö Oy",
+      "Kotipaikka Helsinki, puh. 010 4090",
+    ].join("\n")
+    expect(oasYhteystiedot(t)).toEqual([
+      {
+        name: "Pasi Hyvärilä",
+        title: "Kaavoitusarkkitehti",
+        phone: "040 488 5918",
+        email: "pasi.hyvarila@parainen.fi",
+        organization: null,
+      },
+    ])
+  })
+
+  it("välilyönneillä kirjoitettu osoite liitetään nimen mukaan", () => {
+    const t = [
+      "YHTEYSTIEDOT",
+      "Kaavasuunnittelija Matti Piispanen, Saarijärven kaupunki",
+      "puh. 044 459 8225",
+      "Matti.piispanen @ saarijarvi.fi",
+    ].join("\n")
+    expect(oasYhteystiedot(t)[0].email).toBe("Matti.piispanen@saarijarvi.fi")
+  })
+})
+
+describe("oasYhteystiedot: henkilö ei ole organisaatio (D-415)", () => {
+  it("nimikkeen sisällä oleva 'kaupunki' ei tee henkilöstä organisaatiota", () => {
+    const t = [
+      "YHTEYSTIEDOT",
+      "Kaupunkisuunnittelupäällikkö Marko Luukkonen",
+      "Kaavoittaja Heta Tuunanen, Alusta Consulting Oy",
+      "puh. 040 734 0239, heta.tuunanen@alustaconsulting.fi",
+    ].join("\n")
+    expect(oasYhteystiedot(t)).toEqual([
+      {
+        name: "Heta Tuunanen",
+        title: "Kaavoittaja",
+        phone: "040 734 0239",
+        email: "heta.tuunanen@alustaconsulting.fi",
+        organization: "Alusta Consulting Oy",
+      },
+    ])
+  })
+})
+
+describe("oasYhteystiedot: kunnan otsikko ei periydy konsultille (D-415)", () => {
+  it("jättää organisaation tyhjäksi kun sähköposti on toisen talon", () => {
+    const t = [
+      "YHTEYSTIEDOT",
+      "Loviisan kaupunki",
+      "Kaavoittaja Heta Tuunanen",
+      "puh. 040 734 0239, heta.tuunanen@alustaconsulting.fi",
+      "Kaavoitusinsinööri Perttu Huhtiniemi",
+      "puh. 040 671 7674, perttu.huhtiniemi@loviisa.fi",
+    ].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.organization])).toEqual([
+      ["Heta Tuunanen", null],
+      ["Perttu Huhtiniemi", "Loviisan kaupunki"],
+    ])
+  })
+})
+
+describe("oasYhteystiedot: nimiot ja maatunnus (Inari, Ikaalinen, D-415)", () => {
+  it("nimio ei kuulu nimikkeeseen eikä organisaatioon", () => {
+    const t = [
+      "YHTEYSTIEDOT",
+      "Toimeksi: kaavoitus",
+      "Reetta-Mari Tammela, Lisätietoja: tekninen johtaja",
+      "puh. 040 655 1611",
+    ].join("\n")
+    expect(oasYhteystiedot(t)[0]).toMatchObject({ title: "Tekninen johtaja", organization: null })
+  })
+
+  it("maatunnukseen lisätään plusmerkki", () => {
+    const t = ["YHTEYSTIEDOT", "Kaavaa laativa konsultti", "Petri Tuormala, Projoplan Oy", "puh. 358 40 575 61 07"].join("\n")
+    expect(oasYhteystiedot(t)[0].phone).toBe("+358 40 575 61 07")
+  })
+})
+
+/* Huittisten Kallon OAS 6.9.2021: kaksipalstainen (D-415). */
+describe("oasYhteystiedot: kaksipalstainen rivi (Kallo, D-415)", () => {
+  const KALLO = [
+    "Yhteyshenkilöt: ",
+    " ",
+    "Kaavoitusinsinööri Katariina Viiri   Suunnitteluavustaja Anne Rämö ",
+    "p. 044 5604 195   p. 044 5604 386 ",
+    "katariina.viiri@huittinen.fi   anne.ramo@huittinen.fi  ",
+  ].join("\n")
+
+  it("ensimmäinen numero ensimmäiselle, ei viimeksi luodulle", () => {
+    expect(oasYhteystiedot(KALLO).map((h) => [h.name, h.phone, h.email])).toEqual([
+      ["Katariina Viiri", "044 5604 195", "katariina.viiri@huittinen.fi"],
+      ["Anne Rämö", "044 5604 386", "anne.ramo@huittinen.fi"],
+    ])
+  })
+})
+
+/* Hattulan Katinalan OAS 18.9.2024 (D-415). */
+describe("oasYhteystiedot: tutkinto nimen perässä ja liian lyhyt numero (Katinala, D-415)", () => {
+  const KATINALA = [
+    "YHTEYSTIEDOT",
+    "Kaavakonsultti ",
+    "Markku Niemi DI ",
+    "05067757 ",
+    "markku.t.niemi@outlook.com ",
+  ].join("\n")
+
+  it("tutkinto on nimike, ja vajaa matkapuhelinnumero jätetään pois", () => {
+    expect(oasYhteystiedot(KATINALA)).toEqual([
+      {
+        name: "Markku Niemi",
+        title: "DI, kaavakonsultti",
+        phone: null,
+        email: "markku.t.niemi@outlook.com",
+        organization: null,
+      },
+    ])
+  })
+})
+
+/* Huittisten Taraskallion OAS 31.1.2024, FCG-taulukko (D-415). */
+describe("oasYhteystiedot: taulukko nimikeriveineen (Taraskallio, D-415)", () => {
+  const TARASKALLIO = [
+    "Yhteystiedot ",
+    " ",
+    "Huittisten kaupunki  ",
+    "Huittisten kaupunki ",
+    "Tekninen johtaja    Maankäyttöpäällikkö ",
+    "Ulla Ojala    Seija Holmi ",
+    "puh: +358 44 560 4341      puh: +358 44 560 4395 ",
+    "ulla.ojala@huittinen.fi   mailto: seija.holmi@huittinen.fi",
+    "  ",
+    "Risto Rytin katu 36 ",
+    "32700 HUITTINEN ",
+    "kaupunki@huittinen.fi  ",
+    "Kaavoituksesta vastaava konsultti  ",
+    " FCG Finnish Consulting Group Oy ",
+    " Projektipäällikkö Seurantaryhmän koordinointi ",
+    " Marjo Kirillow    Olli Poutanen ",
+    " puh: +358 41 732 0391      puh. +358 50 370 2693 ",
+    " marjo.kirillow@fcg.fi  olli.poutanen@fcg.fi",
+  ].join("\n")
+  const tulos = oasYhteystiedot(TARASKALLIO)
+
+  it("nimikkeet ja numerot palstoittain", () => {
+    expect(tulos.slice(0, 2).map((h) => [h.name, h.title, h.phone, h.email])).toEqual([
+      ["Ulla Ojala", "Tekninen johtaja", "+358 44 560 4341", "ulla.ojala@huittinen.fi"],
+      ["Seija Holmi", "Maankäyttöpäällikkö", "+358 44 560 4395", "seija.holmi@huittinen.fi"],
+    ])
+  })
+
+  it("konsulttien numerot eivät mene ristiin", () => {
+    expect(tulos.slice(2).map((h) => [h.name, h.phone])).toEqual([
+      ["Marjo Kirillow", "+358 41 732 0391"],
+      ["Olli Poutanen", "+358 50 370 2693"],
+    ])
+  })
+
+  it("nimike ei ole organisaatio", () => {
+    expect(tulos.map((h) => h.organization)).not.toContain("Maankäyttöpäällikkö")
+    expect(tulos.map((h) => h.organization)).not.toContain("Seurantaryhmän koordinointi")
+  })
+})
+
+describe("oasYhteystiedot: Vt.-etuliite ja palstan nimike (Taraskallio 14.8.2024, D-415)", () => {
+  it("nimikerivi palstoittain myös etuliitteen kanssa", () => {
+    const t = [
+      "Yhteystiedot",
+      "Huittisten kaupunki ",
+      "Tekninen johtaja   Vt. Maankäyttöpäällikkö ",
+      "Seija Holmi   Juha Mustanoja ",
+      "puh: +358 44 560 4341   puh: +358 44 560 4388 ",
+      "seija.holmi@huittinen.fi    juha.mustanoja@huittinen.fi  ",
+    ].join("\n")
+    expect(oasYhteystiedot(t).map((h) => [h.name, h.title, h.phone])).toEqual([
+      ["Seija Holmi", "Tekninen johtaja", "+358 44 560 4341"],
+      ["Juha Mustanoja", "Vt. Maankäyttöpäällikkö", "+358 44 560 4388"],
+    ])
+  })
+
+  it("roolista peritty nimike ei koske kahta palstaa", () => {
+    const t = [
+      "YHTEYSTIEDOT",
+      "Tekninen johtaja",
+      "Seija Holmi   Juha Mustanoja",
+      "puh. 044 560 4341   puh. 044 560 4388",
+    ].join("\n")
+    expect(oasYhteystiedot(t).map((h) => h.title)).toEqual([null, null])
+  })
+})
