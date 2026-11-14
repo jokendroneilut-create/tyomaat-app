@@ -35,9 +35,29 @@ for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8
  * Jatkuu keskeytyksesta: jo haetut hankkeet luetaan tulostiedostosta.
  *
  *   npx tsx scripts/hae-valmistuneet-verkosta.ts --ulos=polku.jsonl [--raja=20]
+ *   npx tsx scripts/hae-valmistuneet-verkosta.ts --aloitetut --ulos=polku.jsonl
  */
 
-const VAIHEET = ["Rakenteilla", "Rakentaminen aloitettu", "Valmistumassa", "Sopimus myönnetty"]
+/*
+ * KAKSI MOODIA.
+ *
+ *   oletus        rakentamisvaiheet -> onko jo VALMISTUNUT
+ *   --aloitetut   suunnitteluvaiheet -> onko jo ALOITETTU, sovittu tai
+ *                 valmistunut (Johannes 14.11.2026: "tarkistat onko joku
+ *                 jo rakenteilla minka luulemme olevan viela suunnittelussa")
+ *
+ * Kaavoitus ei ole mukana: kaava ei ole rakennus, ja 3 041 kaavaa veisi
+ * yli neljä tuntia hakua lähes ilman osumia.
+ *
+ * Ensimmäinen ajo 15.11.2026 (D-420): 2 633 hanketta, 75 osumaa, 31
+ * edennyttä, joista 10 kaksoisrivejä. Kilpailutus (634) antoi 0 oikeaa
+ * osumaa -- sen voi jättää pois. Ennen siirtoa tarkista onko samasta
+ * hankkeesta jo oikeassa vaiheessa oleva rivi, ja yhdistä silloin.
+ */
+const ALOITETUT = process.argv.includes("--aloitetut")
+const VAIHEET = ALOITETUT
+  ? ["Kilpailutus", "Rakennuslupa", "Suunnittelu", "Suunnittelussa"]
+  : ["Rakenteilla", "Rakentaminen aloitettu", "Valmistumassa", "Sopimus myönnetty"]
 /* 2,5 s antoi 4 rajoitusta 80 haussa (14.11.2026). */
 const HAKU_VIIVE_MS = 4000
 
@@ -87,6 +107,24 @@ const VALMIS =
 const EI_RAKENNUS =
   /(suunnitelm\w*|kaav\w*|selvity\w*|arvioin\w*|ohjelm\w*|raport\w*|luonno\w*|ehdotu\w*|tarjousk\w*|kilpailu\w*|hankesuunnitelm\w*|tarveselvity\w*)\s+(?:on\s+|oli\s+)?(?:nyt\s+)?valmistu/i
 
+/*
+ * ALOITUS MENNEESSA AIKAMUODOSSA. "rakentaminen alkaa keväällä" on
+ * aikomus, ei tapahtuma -- vain alkoi/alkanut/käynnistyi kelpaa.
+ * Harjannostajaiset ja peruskivi kertovat rungon jo nousevan.
+ * Urakkasopimuksen allekirjoitus siirtaa vasta Sopimus myönnetyksi.
+ */
+const ALOITETTU =
+  /(?<![\wåäö])(rakentaminen\s+(?:on\s+)?(?:nyt\s+)?(?:alkoi|alkanut|käynnistyi|käynnistynyt)|(?:rakennus|maanrakennus|purku)?työt\s+(?:ovat\s+)?(?:nyt\s+)?(?:alkoivat|alkaneet|käynnistyivät|käynnistyneet)|työmaa\s+(?:on\s+)?(?:alkoi|alkanut|käynnistyi|käynnistynyt)|aloitti\s+(?:\S+\s+){0,3}rakentamisen|(?:on|ovat)\s+aloittane(?:et|t)\s+(?:\S+\s+){0,4}rakentamisen|peruskivi\s+muurattiin|muurattiin\s+peruskivi|harjannostajai\w*|harjakorkeu\w*|lapionpisto|(?:on|ovat)\s+(?:jo\s+)?rakenteilla|urakkasopimus\s+(?:on\s+)?allekirjoitettiin|allekirjoittivat\s+(?:\S+\s+){0,3}urakkasopimuksen)(?![\wåäö])/i
+/* Suunnittelun, kaavoituksen tai kilpailutuksen alkaminen ei ole rakentamisen. */
+const EI_ALOITUS =
+  /(suunnittelu\w*|kaavoitu\w*|kaava\w*|selvity\w*|kilpailutu\w*|hankinta\w*|arvioin\w*|valmistelu\w*|neuvottelu\w*|vuoropuhelu\w*|yva\w*|lupa\w*)\s+(?:on\s+|ovat\s+)?(?:nyt\s+)?(?:alkoi|alkoivat|alkanut|alkaneet|käynnisty\w*)/i
+
+function signaali(v: string): "valmistunut" | "aloitettu" | null {
+  if (VALMIS.test(v) && !EI_RAKENNUS.test(v)) return "valmistunut"
+  if (ALOITETUT && ALOITETTU.test(v) && !EI_ALOITUS.test(v)) return "aloitettu"
+  return null
+}
+
 const EI_LAHTEEKSI =
   /facebook|linkedin|twitter|x\.com|instagram|youtube|tiktok|pinterest|wikipedia|duckduckgo|fonecta|finder\.fi|asiakastieto|vainu|ytj\.fi|tyomaat\.fi|tarjouspalvelu|tenqual|hankintailmoitukset|hilma|cloudia|oikotie|etuovi|vuokraovi/i
 
@@ -128,7 +166,7 @@ async function main() {
     hankkeet.push(...(data ?? []))
     if (!data || data.length < 1000) break
   }
-  /* Rakenteilla ensin: asiakas puhui niista. */
+  /* Pisimmalle edennyt vaihe ensin (rakenteilla / kilpailutus). */
   hankkeet.sort((a, b) => VAIHEET.indexOf(a.phase) - VAIHEET.indexOf(b.phase))
 
   const tehty = new Set<string>()
@@ -136,14 +174,14 @@ async function main() {
     for (const r of readFileSync(ulos, "utf8").split("\n").filter(Boolean)) tehty.add(JSON.parse(r).id)
   }
   const jono = hankkeet.filter((h) => !tehty.has(h.id))
-  console.log(`rakentamisvaiheissa ${hankkeet.length}, jo haettu ${tehty.size}, haetaan ${raja ? Math.min(raja, jono.length) : jono.length}`)
+  console.log(`vaiheissa ${VAIHEET.join(", ")}: ${hankkeet.length}, jo haettu ${tehty.size}, haetaan ${raja ? Math.min(raja, jono.length) : jono.length}`)
 
   let n = 0
   let ehdokkaita = 0
   let estetty = 0
   for (const h of raja ? jono.slice(0, raja) : jono) {
     const nimi = String(h.name).split(/\s+/).slice(0, 12).join(" ")
-    const kysely = `${nimi} ${h.city ?? ""} valmistui`
+    const kysely = `${nimi} ${h.city ?? ""} ${ALOITETUT ? "rakentaminen alkoi" : "valmistui"}`
     let html = ""
     for (let yritys = 0; yritys < 4; yritys++) {
       const vastaus = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(kysely)}`, {
@@ -184,7 +222,7 @@ async function main() {
        */
       const virkkeet = teksti.split(/(?<=[.!?])\s+|\s[|–-]\s/)
       const todiste = virkkeet.find(
-        (v) => VALMIS.test(v) && !EI_RAKENNUS.test(v) && sisaltaaOminaisen(v, ominaisetSanat(nimiIlmanKuntaa))
+        (v) => signaali(v) !== null && sisaltaaOminaisen(v, ominaisetSanat(nimiIlmanKuntaa))
       )
       if (!todiste) continue
       const kuntaMainittu = !kunta || `${teksti} ${osoite}`.toLowerCase().includes(kunta)
@@ -199,6 +237,7 @@ async function main() {
         vuodet,
         valmisOtsikossa: VALMIS.test(otsikko),
         todiste: todiste.slice(0, 240),
+        signaali: signaali(todiste),
         jatkuu: JATKUU.test(katkelma),
       })
     }

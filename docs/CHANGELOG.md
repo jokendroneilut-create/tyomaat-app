@@ -9,6 +9,28 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-15 (aloitettujen verkkohaku suunnitteluvaiheelle)
+
+### Suunnittelussa mutta jo rakenteilla tai valmis (D-420)
+
+Sama verkkohaku kuin edellisenä päivänä ajettiin kaikille 2 633
+kilpailutus-, rakennuslupa- ja suunnitteluvaiheen hankkeelle
+(`hae-valmistuneet-verkosta.ts --aloitetut`): onko rakentaminen jo
+alkanut tai hanke valmistunut? 75 osumasta 31 hanketta todettiin
+lähdesivulta edenneiksi. **13 siirrettiin Valmistunut-vaiheeseen**
+(vanhin valmistunut 2024), **13 Rakenteilla-vaiheeseen**, ja **10
+kaksoisriviä yhdistettiin** (uutisesta luotu rivi ja keräimen rivi
+samasta hankkeesta). Virheet tulivat pääosin uutisotsikoista luoduista
+riveistä, Helsingin puistosuunnitelmista ja Väylän hankesivuilta.
+Kilpailutusvaiheesta ei löytynyt yhtään edennyttä.
+
+Samalla löytyi päinvastainen virhe: Porthanian peruskorjaus näkyi
+valmistuneena, vaikka rakentaminen alkoi lokakuussa. Korjattu;
+samassa tilassa olevat 29 muuta riviä ja juurisyy selvitetään
+erikseen.
+
+---
+
 ## 2026-11-14 (valmistuneiden verkkohaku, NCC- ja Peab-kuvaukset)
 
 ### Rakenteilla mutta jo valmis (D-419)

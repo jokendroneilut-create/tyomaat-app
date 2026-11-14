@@ -51,6 +51,124 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-420 – Aloitettujen verkkohaku suunnitteluvaiheen hankkeille: 26 siirtoa, 10 yhdistämistä
+
+Johannes 15.11.2026, D-419:n jatkoksi: *"voitko tehdä tämän saman
+suunnitteilla oleville hankkeille? Ajat kaikki verkkohakuna ja tarkistat
+onko joku jo rakenteilla minkä luulemme olevan vielä suunnittelussa?"*
+Päätös listan nähtyään: *"tee kaikki siirrot, yhdistämiset ja
+dokumentoi"*.
+
+#### Haku (`hae-valmistuneet-verkosta.ts --aloitetut`)
+
+Sama skripti kuin D-419, uusi tila `--aloitetut`: vaiheet Kilpailutus
+(634), Rakennuslupa (210), Suunnittelu ja vanha Suunnittelussa (1 789),
+yhteensä **2 633**. Kaavoitus (3 041) jätettiin pois: kaava ei ole
+rakennus, ja haku olisi vienyt toiset 4 h. Hakusana `nimi kunta
+rakentaminen alkoi`, ajo noin 4 h, 0 rajoitusta.
+
+Valmistumisosuman lisäksi osuma on **aloitus mennessä aikamuodossa**:
+*rakentaminen alkoi / käynnistyi, rakennustyöt alkoivat, peruskivi
+muurattiin, harjannostajaiset, harjakorkeus, lapionpisto, on
+rakenteilla, urakkasopimus allekirjoitettiin*. Aikomus (*"rakentaminen
+alkaa keväällä"*) ei kelpaa, eikä suunnittelun, kaavoituksen,
+kilpailutuksen, YVA:n tai luvan alkaminen (`EI_ALOITUS`).
+
+#### Tulos: 75 osumaa → 31 hanketta edennyt
+
+| | |
+|---|---|
+| valmistunut, todettu lähdesivulta | **15** (2 kaksoisriviä, joilla jo oikea Valmistunut-rivi) |
+| rakenteilla | **15** (3 kaksoisriviä, joilla jo oikea rakenteilla-rivi) |
+| sopimusvaihe | 1 (kolme riviä) |
+| jätetty ennalleen (epäselvä tai vaihe oikein) | 4 |
+| väärä: suunnitelma/selvitys valmistui, vanha tai eri rakennus | 40 |
+
+**Kilpailutuksesta (634) ei yhtään oikeaa osumaa** — urakat ovat
+tarjousvaiheessa, ja haku palauttaa vain tarjouspyyntöjä. Seuraavalla
+kerralla Kilpailutus voi jäädä pois (~1 h säästö).
+
+Valmistuneista vanhin oli **As Oy Helsingin Hellikki (5/2024)** ja
+Haakoninlahdenpuiston eteläosa (10/2024, vuosi päätelty).
+
+#### Mistä virheet tulivat: kolme lähdettä
+
+1. **Uutisotsikkorivit vanhassa Suunnittelussa-vaiheessa** (13/26). Rivi
+   on luotu 2–3/2026 STT:n tai yrityksen uutisesta, ja vaihe jäi
+   suunnitteluun vaikka otsikossa lukee *"harjannostajaiset
+   vietettiin"*, *"peruskivi muurattiin"* tai *"saavutti
+   harjakorkeuden"*. Julkisia Suunnittelussa-rivejä on 1 257, joista
+   165 ilman lähdettä.
+2. **Helsingin puistosuunnitelmat** (4). `helsinki_paatokset` luo rivin
+   suunnitelman hyväksymisestä eikä mikään päivitä sitä, kun puisto
+   valmistuu.
+3. **Väylän hankesivut** (5). Hankesivu kertoo suunnittelusta vielä
+   silloin kun rakentaminen on alkanut; urakan alku näkyy vain
+   elinvoimakeskuksen, maakuntaliiton tai paikallislehden uutisessa.
+
+Loput neljä: YVA-rivi (keskuspuhdistamo), datakeskusrekisteri (Data
+Tank), Senaatin hankesivu (Kallanranta) ja SRV (Porthania, ks. alla).
+
+Keräimet eivät palauta siirrettyjä rivejä taaksepäin: vaihe päivittyy
+vain `phaseAdvances`-säännöllä eteenpäin.
+
+#### Siirrot (`scripts/fix-verkkohaun-aloitetut.ts`)
+
+26 riviä, `sourceName` `verkkohaku-aloitetut`, perusteluna todiste ja
+osoite. Rivi muutetaan vain jos se on yhä haun aikaisessa vaiheessa;
+aloituspäivä kirjoitetaan vain tyhjään kenttään.
+
+- **13 → Valmistunut / completed**: Keljonkankaantien kevyen liikenteen
+  väylä, TAMKin musiikin keskus, Tove Janssonin puisto, Aino Acktén
+  kuntoportaat, Vallilanpuisto, Haakoninlahdenpuiston eteläosa,
+  Kalevanniemen kampus, Liedon keskuskoulu, Jäkärlän koulu, Limingan
+  koulukoti, Karjasillan Verstas, As Oy Helsingin Hellikki, Sulkavuoren
+  keskuspuhdistamo.
+- **13 → Rakenteilla**: Data Tank Nordic, Turun satamarata, Vt 5
+  Leppävirta–Palokangas, Vt 27 Kiuruvesi, Vt 4 Haurukylä, Esplanadin
+  vesihuoltotunneli, Logicenters Tuusula, Minna Canthin koulu, Puistolan
+  koulu, Porthania, Hartelan palvelutalo Laitila, Ferry Terminal Turku
+  (ARE), Kallanrannan kampus.
+
+Epävarmat merkitty perusteluun: Haakoninlahden vuosi päätelty (hel.fi:n
+robots.txt kieltää sivun), Vallilanpuiston vuosi urakoitsijan
+referenssistä, Laitilan ja Logicentersin valmistumista ei vahvistettu
+(siksi Rakenteilla eikä Valmistunut), Kallanrannan aloitus vain
+rakennuttajan ennakkotiedotteesta.
+
+#### Yhdistämiset (`merge-duplicate-projects.ts`, 10 kpl)
+
+| säilyy | piilotettu |
+|---|---|
+| Vanhan Vaasan sairaalan uudisrakennus (Senaatti, Valmistunut) | harjannostajaisuutinen |
+| Vantaan uusi oikeustalo (Senaatti, Valmistunut) | NCC:n uutinen; poistetun vastuutus poistettiin, säilyvällä jo omistaja |
+| Vt 4 Haurukylä (Väylä) | elinvoimakeskuksen tiedote |
+| Porthania (SRV) | STT:n investointiuutinen |
+| Apianlahden palvelukortteli (Hartela) | kaksi riviä |
+| Artukaisten asumispalveluyksikkö | Aura Rakennuksen uutinen |
+| Kallanrannan kampus (Senaatti) | STT:n tiedote |
+| S-market Neulamäki (Lujatalo, Sopimus myönnetty) | kaksi riviä (PeeÄssä/STT, Rakennuslehti) |
+
+**Kaksoisrivejä oli 10 / 31** — kolmannes. Uutisrivi ja keräinrivi
+samasta hankkeesta eivät yhdistyneet, koska otsikko (*"NCC toteuttaa
+Vantaan uuden oikeustalon Tikkurilaan"*) ja hankenimi (*"Vantaan uusi
+oikeustalo"*) eroavat liikaa.
+
+#### Ennalleen
+
+Vt 5 Palokangas–Humalajoki (alkaa 2027, vaihe oikein), Vt 5
+Leppävirran kohdalla (ei selvinnyt kuuluuko alkaneeseen urakkaan),
+Pelimannin päiväkodin purku (ei vahvistusta), Korkeimman oikeuden
+julkisivut (vain koekorjaukset).
+
+#### Sivulöydös: keskeneräinen näkyi valmistuneena
+
+Porthanian SRV-rivi oli **Valmistunut / active**, vaikka rakentaminen
+alkoi 10/2026 — pahin suunta [[hiding-threshold]]:n mukaan. Vaihehistoriassa
+oli vain hyväksyntä (*planning*), joten jokin polku vaihtaa vaiheen
+kirjaamatta. Kaikkiaan **30 riviä** oli Valmistunut / active. Korjattu
+tässä vain Porthania; juurisyy ja loput 29 erillisenä tehtävänä.
+
 ### D-419 – Valmistuneiden verkkohaku rakentamisvaiheen hankkeille, 12 siirtoa ja kaksi kuvauspoimijaa
 
 Johannes 14.11.2026: *"Testiasiakas sanoi, että oli soittanut johonkin
