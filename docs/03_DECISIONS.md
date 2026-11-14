@@ -51,6 +51,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-418 – Pihtiputaan kaavasivut: kuvaus tekstiwidgeteistä, ei koko sivua
+
+Johannes 14.11.2026 (korttelit 53, 55 ja 58): *"hankkeesta puuttuu
+kuvaus. korjaa jonoon jos on muita tässä lähteestä. tarkista käyttäjille
+näkyvät hankkeet kannasta ja korjaa poimija että seuraavissa hankkeissa
+on kuvaus"*
+
+#### Kaksi vikaa samassa kohdassa
+
+Keräin luki kuvaukseksi koko `.entry-content`-lohkon tekstinä.
+
+1. **Uudella sivupohjalla (11/2026) lohkoa ei ole.** Kuvaus, liitteet
+   ja vaihe jäivät tyhjiksi; vaiheeksi tuli oletus Vireilletulo, vaikka
+   sivulla lukee *"Kaava-aineisto, valmisteluvaihe"* ja liitteinä on
+   luonnos. Koski yhtä hanketta (uusin), mutta koskee jatkossa kaikkia
+   uusia sivuja.
+2. **Vanhoilla sivuilla kuvaukseen tuli koko sivu**: otsikko kolmesti,
+   murupolku *"Asuminen ja ympäristö » Kaavoitus ja mittaus » …"*,
+   kuvateksti, liitelista ja yhteystiedot, kappaleet liimattuina
+   (*"16,5 ha.Tason alueen"*). Kaikki seitsemän näkyvää hanketta.
+
+Molemmissa pohjissa kuvaus on Elementorin tekstiwidgeteissä
+`[data-elementor-type="wp-page"]`-lohkossa ennen "Yhteystiedot"-,
+"Ladattavat liitteet"- tai "Kaava-aineisto"-otsikkoa
+(`lib/agent/pihtipudasKuvaus.ts`). Vaihe ja liitteet luetaan edelleen
+koko sisällöstä, jottei vanhojen sivujen vaihe muutu.
+
+#### Takautuvasti (`scripts/korjaa-pihtiputaan-kuvaukset.ts`)
+
+| | |
+|---|---|
+| tyhjä dokumentti ja jonorivi | kuvaus 1 040 merkkiä, 8 liitettä, vaihe Vireilletulo → **Luonnos** |
+| näkyvät hankkeet | 6 kuvausta siistitty (esim. Varisvuori 3 918 → 2 146 merkkiä) |
+| hyväksytyt jonorivit | 6 samoin |
+
+**Vain vanha sivuteksti korvataan.** Uusimon näkyvään kuvaukseen on
+yhdistetty YVA-lähteen teksti perään; se säilyi (7 789 → 6 889).
+Kuvaus jota ei tunnisteta vanhaksi sivutekstiksi jätetään ennalleen.
+Asematien sivu on poistunut (404), joten sen vanhentunut hanke jäi
+ennalleen. Uusinta-ajo: 0.
+
 ### D-417 – Rovaniemen Kaavatori: tyhjät jonorivit, kaavan laatija ja liimattu kuvaus
 
 Johannes 14.11.2026 Mellavaarasta: *"jonossa on tämä hanke ja kymmeniä

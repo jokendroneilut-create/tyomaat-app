@@ -67,6 +67,7 @@ import { stripCompanyPrefixFromHeadline } from "../../stripCompanyPrefix"
 import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
 import { estettyPerhe } from "../../hilmaRakentamisenIlmoitus"
 import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
+import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
 import {
   fetchLupapisteBulletinPdfText,
   bestBulletinDescription,
@@ -21665,7 +21666,7 @@ function pihtipudasSlug(value: string): string {
     .replace(/^-+|-+$/g, "")
 }
 
-function pihtipudasPhaseFromText(text: string): string {
+export function pihtipudasPhaseFromText(text: string): string {
   const normalized = text.toLowerCase()
   const negatedLainvoima = /(?<![\wäöåÄÖÅ])(ei|eikä)(?![\wäöåÄÖÅ])[^.]{0,40}lainvoima/i.test(
     normalized
@@ -21752,11 +21753,22 @@ async function collectPihtipudasKaavaSource(source: DiscoverySource) {
     const detailResponse = await fetch(detailUrl, { cache: "no-store", headers: LOPPI_FETCH_HEADERS })
     if (!detailResponse.ok) continue
 
-    const $$ = cheerio.load(await detailResponse.text())
-    const main = $$(".entry-content").first()
+    const sivuHtml = await detailResponse.text()
+    const $$ = cheerio.load(sivuHtml)
+    /*
+     * Uudella sivupohjalla (11/2026) ei ole .entry-contentia lainkaan, ja
+     * kuvaus, liitteet ja vaihe jaivat tyhjiksi (D-418). Sisalto on
+     * Elementorin wp-page-lohkossa. Vaihe ja liitteet luetaan koko
+     * sisallosta kuten ennen; kuvaus vain tekstiwidgeteista ennen
+     * "Yhteystiedot"-otsikkoa (`pihtipudasKuvaus`), ei murupolkua,
+     * kuvatekstia, liitelistaa eika yhteystietoja.
+     */
+    const vanhaSisalto = $$(".entry-content").first()
+    const main = vanhaSisalto.length ? vanhaSisalto : $$('[data-elementor-type="wp-page"]').first()
     const title = item.title
-    const description = main.text().replace(/\s+/g, " ").trim()
-    const phase = pihtipudasPhaseFromText(`${title} ${description}`)
+    const sivunTeksti = main.text().replace(/\s+/g, " ").trim()
+    const description = pihtipudasKuvaus(sivuHtml) ?? sivunTeksti
+    const phase = pihtipudasPhaseFromText(`${title} ${sivunTeksti}`)
     const completed = phase === "Voimaantulo"
     const contacts = [PIHTIPUDAS_CONTACT]
 
