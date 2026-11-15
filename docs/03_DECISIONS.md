@@ -51,6 +51,77 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-422 – Markkinavuoropuhelu: liitetään tunnettuun hankkeeseen, uutena vain jos hanke on uusi
+
+Johannes 15.11.2026 jonorivistä *"KUTSU MARKKINAVUOROPUHELUUN:
+Länsiprojekti - P1 Satamatunneliallianssi, toteuttajahankinta"*:
+*"pitäisikö sinusta tällaiset hankkeet hyväksyä?"* Sääntö sovittiin
+(*"samaa mieltä. tee nuo molemmat ja dokumentoi"*):
+
+1. **Hanke on jo kannassa → liitä siihen** (TIC "Liitä hankkeeseen").
+   Ilmoitus tuo aikataulun, suunnittelijat ja yhteyshenkilön.
+2. **Uusi rakennushanke → hyväksy, vaihe Kilpailutus.** Vuoropuhelu
+   on aikaisin merkki tulevasta urakasta, usein kuukausia ennen
+   tarjouspyyntöä — aliurakoitsijalle juuri se arvo.
+3. **Palvelu, ylläpito tai muu kuin rakentaminen → hylkää**
+   ([[maintenance-is-not-project]]). Rakennustöiden puitejärjestely
+   jää (Omnia-rajatapaus).
+
+Ilmoitus itsessään ei ole hankinta, mutta sen takana oleva hanke
+yleensä on. Ennen tätä linja oli kahtalainen: jonossa 34 hyväksytty,
+38 hylätty.
+
+#### Satamatunneli
+
+Jonorivi `92c1decc` liitettiin hankkeeseen `c6161d89` (P1
+Satamatunneliallianssi, Kilpailutus) approve-reitin
+`mergeIntoProjectId`-haaralla — samalla koodilla kuin TIC, ajettuna
+paikallisesti `CRON_SECRET`-tunnisteella. Rakennuslehden rinnakkaisrivi
+`a58152c4` "Satamatunneli Helsinkiin" yhdistettiin samaan.
+
+**Sivulöydös: liittäminen ei tuonut ilmoituksen uutta tietoa.**
+`chooseAdditionalInfo` pitää vanhan kuvauksen, kun uusi on alle 40 %
+sen pituudesta (alkuperäinen hankintailmoitus 3 409 merkkiä, vuoropuhelu
+noin 1 300). Suunnittelijat (Finnmap Infra, A-Insinöörit, WSP, Nodeon)
+ja joulukuun 2026 uusintakilpailutus jäivät pois; suunnittelijat
+lisättiin käsin liittyviin yrityksiin. Lyhyen mutta *uudemman*
+ilmoituksen tosiasiat katoavat samalla tavalla muissakin liitoksissa —
+ei korjattu tässä.
+
+#### 33 hyväksytyn läpikäynti
+
+Jokaiselle haettiin saman kunnan hankkeet otsikon yksilöivillä sanoilla
+ja luettiin osumat. **7 kaksoisryhmää, 8 riviä piilotettu**
+(`merge-duplicate-projects.ts`):
+
+| säilyy | piilotettu |
+|---|---|
+| Tupurin koulu ja päiväkoti, Salo (tarjouspyyntö) | vuoropuhelu |
+| Luke Piikkiö uusi kasvihuone (KVR-tarjouspyyntö) | vuoropuhelu + Senaatin kilpailutuskalenteri |
+| Pansion Poiju varuskuntaravintola (vuoropuhelu, rikkain kuvaus) | Senaatin kilpailutuskalenteri |
+| Kilpisen koulun peruskorjaus, Jyväskylä (päätösrivi) | vuoropuhelu |
+| Vt 27 Ylivieskan eteläinen ylikulkusilta (Väylä) | vuoropuhelu |
+| Topinojan lajitteluasema, Turku | vuoropuhelu |
+
+Vaiheet: Kilpisen koulu Suunnittelussa → Kilpailutus (urakka
+valmisteilla, 19,6 M€); **Vt 27 Rakenteilla → Kilpailutus** —
+Väylän oma sivu sanoo rakentamisen alkavan keväällä 2027, joten
+rakenteilla oli väärin (D-420:n Väylä-viive toiseen suuntaan).
+
+**Ei yhdistetty, koska eri urakka tai kaava:** Tikkurilan
+oppilaitoskorttelin rakennusautomaatio (osaamiskampus rakenteilla
+omana rivinään), Rauman stadionin katsomo (maarakennus oma urakka),
+Mukkulan monitoimitalo (kaava erikseen), Kevätniemi (ajoyhteys eri
+urakka), Kutilan kanava (Mantereentien parantaminen Väylän rivinä),
+Vaasan hovioikeus (konsulttihankinta), Karhunaukion kaava-alueen
+infra (monitoimitalo erikseen).
+
+**Huomioita jatkoon:** Karhunaukion monitoimitalolla on kaksi riviä
+(`36e123a5`, `d7f646ef`); Vaasan rivi `45d72a94` *"Kutsu
+markkinavuoropuheluun rakennus- ja talotekniikkaurakoitsijoille"* on
+Keskustan yhtenäiskoulu (Kauppapuistikko 22 + Raastuvankatu 33), mutta
+nimestä sitä ei tunnista.
+
 ### D-421 – Valmistunut-vaihe ilman valmistunut-tilaa: kuusi kirjoituspolkua, 30 riviä
 
 D-420:n sivulöydös: Porthania (rakenteilla 10/2026 alkaen) oli
