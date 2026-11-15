@@ -70,6 +70,12 @@ import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
 import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
 import { etsiKaavasivut } from "../../vantaaKaavaSivu"
 import {
+  VIHTI_KAAVOITUS_YHTEYSTIEDOT,
+  jasennaVihtiYhteystiedot,
+  vihtiLaatikonYhteyshenkilot,
+  type VihtiHenkilo,
+} from "../../vihtiKaavaYhteys"
+import {
   fetchLupapisteBulletinPdfText,
   bestBulletinDescription,
   extractBulletinOfficials,
@@ -6608,7 +6614,7 @@ function vihtiPhaseFromText(text: string): string {
   return "Vireilletulo"
 }
 
-async function fetchVihtiKaavaDetails(url: string) {
+async function fetchVihtiKaavaDetails(url: string, henkilot: Map<string, VihtiHenkilo> = new Map()) {
   const empty = { description: null, phase: "Vireilletulo", contacts: [] }
 
   try {
@@ -6620,6 +6626,12 @@ async function fetchVihtiKaavaDetails(url: string) {
 
     const contactBoxText = $(".s-content-box__contacts").text().replace(/\s+/g, " ").trim()
     const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
+    /*
+     * Nimetty valmistelija ensin (D-428): laatikossa on myös
+     * "Kaavan valmistelija: Tarja Johansson", ja se jäi poimimatta.
+     * Puhelin ja sähköposti kunnan kaavoituksen yhteystietosivulta.
+     */
+    contacts.push(...vihtiLaatikonYhteyshenkilot($(".s-content-box__contacts").html() ?? "", henkilot))
     const emailMatch = contactBoxText.match(/([\w.-]+)\((?:a|ät|at)\)([\w.-]+\.\w+)/i)
     if (emailMatch) {
       contacts.push({
@@ -7224,6 +7236,15 @@ async function collectSastamalaKaavaSource(source: DiscoverySource) {
 async function collectVihtiKaavaSource(source: DiscoverySource) {
   const links = await fetchVihtiPlanLinks()
 
+  /* Suunnittelijoiden nimikkeet ja puhelimet kerran per ajo (D-428). */
+  let henkilot = new Map<string, VihtiHenkilo>()
+  try {
+    const r = await fetch(VIHTI_KAAVOITUS_YHTEYSTIEDOT, { cache: "no-store" })
+    if (r.ok) henkilot = jasennaVihtiYhteystiedot(await r.text())
+  } catch {
+    /* Ilman sivua valmistelija tulee nimellä ilman numeroa. */
+  }
+
   let saved = 0
 
   for (const link of links) {
@@ -7231,7 +7252,7 @@ async function collectVihtiKaavaSource(source: DiscoverySource) {
     if (!titleMatch) continue
 
     const kaavaTunnus = titleMatch[1]
-    const details = await fetchVihtiKaavaDetails(link.url)
+    const details = await fetchVihtiKaavaDetails(link.url, henkilot)
 
     const rawText = JSON.stringify({ link, kaavaTunnus, ...details })
     const contentHash = hashContent(rawText)

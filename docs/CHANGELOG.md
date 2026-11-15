@@ -27,6 +27,13 @@ Kilpailutusvaiheesta ei löytynyt yhtään edennyttä.
 Samalla löytyi päinvastainen virhe: Porthanian peruskorjaus näkyi
 valmistuneena, vaikka rakentaminen alkoi lokakuussa.
 
+### Vihdin kaavoille nimetty kaavoittaja (D-428)
+
+Vihdin kaavahankkeissa näkyy nyt kaavan valmistelija nimeltä,
+puhelinnumeron ja sähköpostin kanssa, pelkän kaavoituksen yleisen
+osoitteen sijaan. Seitsemän olemassa olevaa hanketta ja jonoriviä
+täydentyi.
+
 ### Hoivarakentajat uutena lähteenä (D-427)
 
 Hoiva-, palvelu- ja päiväkotirakennuksia rakentavan Hoivarakentajien

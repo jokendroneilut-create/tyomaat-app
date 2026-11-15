@@ -51,6 +51,40 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-428 – Vihdin kaavan valmistelija yhteyshenkilöksi
+
+Johannes 16.11.2026 kaavasta N202b Etelä-Nummelan työpaikka-alue III:
+*"tästä ei ole poimittu yhteystietoa: Kaavan valmistelija: Tarja
+Johansson. tarkista jono, kanta ja korjataan"*.
+
+**Syy:** Vihdin keräin luki kaavasivun yhteystietolaatikosta vain
+yleisen osoitteen `kaavoitus(ät)vihti.fi`. Mitattu kaikki 19
+kaavasivua — laatikossa on kolme muotoa:
+
+| muoto | sivuja |
+|---|---|
+| "Kaavan valmistelija: Tarja Johansson" (vain nimi) | 3 |
+| roolikappaleet: rooli, nimi, nimike, puhelin (N163b: kaavoitus, liikenne, kadut) | 1 |
+| vain yleinen osoite | 15 |
+
+**Puhelin ja sähköposti kunnan omalta sivulta.** Kaavoituksen
+yhteystietosivulla (päivitetty 18.8.2026) on jokaisen suunnittelijan
+nimike ja puhelin, ja sivu sanoo itse *"Sähköpostit ovat muotoa
+etunimi.sukunimi@vihti.fi"*. Sähköposti muodostetaan vain tämän
+ilmoituksen perusteella. Tarja Johanssonin numero on sivulla 050 302 4695 —
+vuoden 2021 OAS-asiakirjassa oli eri numero, joten nykyinen sivu voittaa
+vanhan PDF:n.
+
+**Korjaus:** `lib/agent/vihtiKaavaYhteys.ts` (yhteystietosivun jäsennys,
+laatikon molemmat muodot), kytketty `collectVihtiKaavaSource`en
+(yhteystietosivu haetaan kerran per ajo). Yhteystietosivun jäsennyksessä
+oli kolme merkintämuunnelmaa (rivinvaihto `<em>`:n sisällä, `p.&nbsp;`,
+kaksiosainen nimike); kaikki 9 henkilöä jäsentyvät.
+
+**Takautuvasti** `scripts/taydenna-vihdin-valmistelijat.ts`: 7 riviä
+(4 jonoriviä, 3 hanketta) sai nimetyn yhteyshenkilön, N163b kolme.
+Olemassa olevat yhteyshenkilöt säilyivät; nimetty lisättiin ensimmäiseksi.
+
 ### D-427 – Hoivarakentajat lähteeksi: tiedotteet ja rakenteilla-luettelo yhtenä
 
 Johannes 16.11.2026 Oulun palvelukodista (Attendo, Sarvikangas): *"tätä
