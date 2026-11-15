@@ -5,6 +5,7 @@ import ProjectActions from "./ProjectActions"
 import MergeIntoProject from "./MergeIntoProject"
 import DuplikaattiEhdotus from "./DuplikaattiEhdotus"
 import EditableCandidate from "./EditableCandidate"
+import VieritaYlos from "./VieritaYlos"
 import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 import { resolveWinnerName } from "@/lib/projects/winnerName"
 import { muotoileKenttaArvo } from "@/lib/format/luvut"
@@ -51,6 +52,7 @@ export default async function CandidateDetailPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-8">
+      <VieritaYlos key={id} />
       <Link href="/tic" className="text-sm text-gray-600 hover:text-gray-900">
         ← Takaisin TICiin
       </Link>

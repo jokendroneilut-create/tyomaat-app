@@ -51,6 +51,24 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-426 – TIC:n hankesivu aukeaa aina ylhäältä
+
+Johannes 16.11.2026: *"kun avaan TIC:issä hankkeen niin sivun vieritys
+ei ole automaattisesti sivun ylälaidassa vaan ainakin tuntuu riippuvan
+siitä missä kohtaa TIC:in sivuvieritys on kun avaan ehdokkaan."*
+
+**Syy:** Next.js ei vieritä siirtymässä sivun alkuun vaan vain niin, että
+uuden segmentin yläreuna on näkyvissä. TIC:ssä välissä on lisäksi
+`tic/loading.tsx` (D-229): lyhyt latausnäkymä piirtyy ensin, selain
+rajaa vierityksen sen korkeuteen, ja varsinainen sivu piirtyy siihen
+kohtaan mihin vieritys jäi.
+
+**Korjaus:** `app/tic/projects/[id]/VieritaYlos.tsx` vierittää ylös kun
+hankkeen sisältö on piirtynyt (`useLayoutEffect`, avaimena hankkeen id,
+joten myös hankkeesta toiseen siirtyminen alkaa ylhäältä). Paluu listaan
+selaimen taaksepäin-napilla ei kulje tämän kautta, joten listan kohta
+säilyy. Johannes vahvisti toiminnan localhostissa ennen pushia.
+
 ### D-425 – Rakennuslehti: vaihe artikkelin avoimesta tekstistä, ei vain otsikosta
 
 D-424:n jatko. Johannes 16.11.2026: *"korjaa se seuraavaksi ja
