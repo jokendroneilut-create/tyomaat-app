@@ -103,6 +103,7 @@ import {
 } from "@/lib/agent/fetchNrcNewsSource"
 import { fetchHartelaAreasSource } from "./fetchHartelaAreasSource"
 import { fetchHcHoivakoditSource } from "./fetchHcHoivakoditSource"
+import { createHoivarakentajatEnricher, fetchHoivarakentajatSource } from "./fetchHoivarakentajatSource"
 import { createCompanyEnricher } from "./companyRelease"
 
 export const sources = [
@@ -475,4 +476,13 @@ export const sources = [
    * ennen kuin siihen nojataan.
    */
   { name: "hc_hoivakodit", fetch: fetchHcHoivakoditSource },
+  /*
+   * Hoivarakentajat (D-427): tiedotteet ja rakenteilla-luettelo samassa
+   * keräimessä, kortti liitetään tiedotteeseen. Rikastus vain tiedotteille.
+   */
+  {
+    name: "hoivarakentajat",
+    fetch: fetchHoivarakentajatSource,
+    enrich: createHoivarakentajatEnricher(createCompanyEnricher({ publisher: "Hoivarakentajat" })),
+  },
 ]

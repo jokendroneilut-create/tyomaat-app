@@ -103,6 +103,7 @@ const NIMET: Record<string, string> = {
   marttilan: "Marttilan Rakennus",
   aura: "Aura Rakennus",
   hc_hoivakodit: "HC Hoivakodit",
+  hoivarakentajat: "Hoivarakentajat",
   jalon_tyomaat: "Jalon",
   lapti: "Rakennusliike Lapti",
   lapti_kohteet: "Rakennusliike Lapti",
