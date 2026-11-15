@@ -130,6 +130,12 @@ const IRREGULAR_ALIASES: Record<string, string> = {
    * Muut Joensuun muodot osuivat jo.
    */
   "joensuuhun": "Joensuu",
+  /* Vihti taipuu i-vartalolla ("Vihdissä"), toisin kuin Lahti (D-424). */
+  "vihdin": "Vihti",
+  "vihdissä": "Vihti",
+  "vihdistä": "Vihti",
+  "vihdille": "Vihti",
+  "vihdillä": "Vihti",
   /*
    * Parainen taipuu nen -> s ("Paraisille"), eika kanta "paraine" osu
    * mihinkaan naista. Mitattu 11.10.2026: tiedote "asuntokohde Norra
@@ -224,7 +230,8 @@ function aikaisinOsuma(
   lower: string,
   kuvio: RegExp,
   vesistoEhdokas = false,
-  text: string = lower
+  text: string = lower,
+  vesistoSana: RegExp | null = null
 ): number {
   let haku = 0
   for (;;) {
@@ -232,7 +239,8 @@ function aikaisinOsuma(
     if (!m) return -1
     const kohta = haku + m.index!
     const jatko = text.slice(kohta + m[0].length, kohta + m[0].length + 14)
-    const vesisto = vesistoEhdokas && RANTASANA.test(jatko)
+    const vesisto =
+      (vesistoEhdokas && RANTASANA.test(jatko)) || (vesistoSana !== null && vesistoSana.test(jatko))
     if (!vesisto && !YHTIOMUOTO.test(jatko)) return kohta
     haku = kohta + m[0].length
   }
@@ -307,10 +315,58 @@ export function detectCityFromText(text: string): string | null {
       "i"
     )
     ehdolle(municipality.name, aikaisinOsuma(lower, stemRegex, vesisto, siivottu))
+
+    /*
+     * ASTEVAIHTELU: k JA t KATOAVAT TAI HEIKKENEVÄT (D-424).
+     *
+     * "Pyhäjoki" -> "Pyhäjoen", "Riihimäki" -> "Riihimäellä", "Lahti" ->
+     * "Lahdessa". Kanta "pyhäjok" ei osu näihin, joten Rakennuslehden
+     * "Pyhäjoen kunnantalo rakennetaan hirrestä" jäi ilman kuntaa
+     * (15.11.2026). Aiemmin aukko paikattiin nimi kerrallaan
+     * (Seinäjoki, Riihimäki, Mynämäki, Vuolijoki), mutta sama muoto on 23
+     * kunnalla. Heikko kanta + pakollinen pääte kattaa ne kaikki.
+     *
+     * Joen nimi on usein sama kuin kunnan (Pyhäjoki, Kalajoki, Siikajoki
+     * virtaavat useamman kunnan läpi), joten jokisana perässä
+     * ("Pyhäjoen varrella", "Kalajoen suulla") ei ole kunta.
+     */
+    const heikko = heikkoKanta(name)
+    if (heikko) {
+      const heikkoRegex = new RegExp(
+        `${LEFT_BOUNDARY}${escapeRegex(heikko)}${MANDATORY_SUFFIX_PATTERN}${RIGHT_BOUNDARY}`,
+        "i"
+      )
+      ehdolle(
+        municipality.name,
+        aikaisinOsuma(lower, heikkoRegex, false, siivottu, /joki$/.test(name) ? JOKISANA : null)
+      )
+    }
   }
 
   return paras ? (paras as { kaupunki: string }).kaupunki : null
 }
+
+/*
+ * Heikon asteen kanta: "pyhäjoki" -> "pyhäjoe", "riihimäki" -> "riihimäe",
+ * "lahti" -> "lahde". Vain nämä kolme päätettä: niissä vaihtelu on
+ * säännöllinen, ja jokainen on kymmenen tai useamman kunnan muoto.
+ * "Vihti" (-> "vihdi") on poikkeus ja on luettelossa erikseen.
+ */
+export function heikkoKanta(nimi: string): string | null {
+  /*
+   * Lapinlahti on myös Helsingin paikka (Lapinlahden sairaala, silta).
+   * Mitattu 15.11.2026: 3 Helsingin riviä 5:stä olisi siirtynyt väärin.
+   */
+  if (nimi === "lapinlahti") return null
+  if (/joki$/.test(nimi)) return `${nimi.slice(0, -4)}joe`
+  if (/mäki$/.test(nimi)) return `${nimi.slice(0, -4)}mäe`
+  if (/lahti$/.test(nimi)) return `${nimi.slice(0, -5)}lahde`
+  return null
+}
+
+/* "Siikajoen ja Lamujoen rantasuojaus, Siikalatva": kaksi jokea peräkkäin. */
+const JOKISANA =
+  /^\s+(varre|varsi|vartee|suu|suis|uoma|vesist|latva|rannal|rannas|rantaa|yläjuoks|alajuoks|joki|ja\s+\S+jo[ek])/i
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")

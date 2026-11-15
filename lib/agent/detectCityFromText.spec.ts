@@ -82,4 +82,27 @@ describe("detectCityFromText: vartalon muuttavat muodot", () => {
   it("tunnistaa pitkään vokaaliin päättyvän nimen illatiivin", () => {
     expect(detectCityFromText("rakennamme joensuuhun palveluasumisyksikön")).toBe("Joensuu")
   })
+
+  /*
+   * D-424: astevaihtelu yleissääntönä -joki, -mäki ja -lahti -kunnille.
+   * Rakennuslehden "Pyhäjoen kunnantalo rakennetaan hirrestä" jäi ilman
+   * kuntaa 15.11.2026.
+   */
+  it("tunnistaa -joki, -mäki ja -lahti -kunnat heikossa asteessa", () => {
+    expect(detectCityFromText("Pyhäjoen kunnantalo rakennetaan hirrestä")).toBe("Pyhäjoki")
+    expect(detectCityFromText("Pyhäjoella on kehitetty hirsirakentamista")).toBe("Pyhäjoki")
+    expect(detectCityFromText("Kärsämäen yleiskaavan päivitys")).toBe("Kärsämäki")
+    expect(detectCityFromText("Kylmäojan koulun piha, Kontiolahden kunta")).toBe("Kontiolahti")
+    expect(detectCityFromText("Vt4 Utsjoen sillat")).toBe("Utsjoki")
+    expect(detectCityFromText("Vihdin kirkonkylän liikekeskus")).toBe("Vihti")
+  })
+
+  it("joki ei ole kunta kun perässä on jokisana tai toinen joki", () => {
+    expect(detectCityFromText("satama Kalajoen suulla")).toBeNull()
+    expect(detectCityFromText("Siikajoen ja Lamujoen rantasuojausten rakentaminen, Siikalatva")).toBe("Siikalatva")
+  })
+
+  it("Lapinlahti ei tule Helsingin Lapinlahden sairaalasta", () => {
+    expect(detectCityFromText("Lapinlahden sairaala-alueen rantamuurin peruskorjaus")).toBeNull()
+  })
 })

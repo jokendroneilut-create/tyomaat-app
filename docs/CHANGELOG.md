@@ -27,6 +27,13 @@ Kilpailutusvaiheesta ei löytynyt yhtään edennyttä.
 Samalla löytyi päinvastainen virhe: Porthanian peruskorjaus näkyi
 valmistuneena, vaikka rakentaminen alkoi lokakuussa.
 
+### Kunnan tunnistus -joki-, -mäki- ja -lahti-kunnille (D-424)
+
+Hankkeen kunta tunnistetaan nyt myös taivutetusta muodosta, kuten
+"Pyhäjoen", "Kärsämäen" tai "Kontiolahden". Aiemmin noin 70 hanketta ja
+jonoriviä jäi ilman kuntaa tämän takia. Joen nimeä (esimerkiksi
+"Kalajoen suulla") ei tulkita kunnaksi.
+
 ### Vantaan uusille kaavoille kuvaus ja yhteyshenkilö (D-423)
 
 Osa Vantaan uusista kaavoista tuli ilman kuvausta, ja lähteenä näkyi

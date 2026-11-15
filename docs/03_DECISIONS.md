@@ -51,6 +51,70 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-424 – Pyhäjoen kunnantalo: hanke ennen keräyksen alkua, ja -joki-kunnat jäivät tunnistamatta
+
+Johannes 15.11.2026 jonorivistä *"Pyhäjoen kunnantalo rakennetaan
+hirrestä"* (Rakennuslehti): *"miksi tätä hanketta ei ole tullut meille
+minkään lähteen kautta tai en ainakaan löydä sitä?"*
+
+#### Miksi vain uutisen kautta
+
+Hanke on vanhempi kuin keräyksemme:
+
+| | |
+|---|---|
+| kunnanhallituksen esitys | 19.8.2024 |
+| vanhan kunnantalon purku (Tapani Saari Oy) | 1/2025 |
+| KVR-sopimus Rakennusliike Sorvoja Oy, 4 285 000 € | 8.8.2025 |
+| rakentaminen alkoi | 9/2025 |
+| harjakorkeus | 11/2026 |
+| valmis | kesä 2027 |
+
+Hilman ja Lupapisteen keruu alkoi 2.7.2026. Kilpailutus, sopimus ja
+rakennuslupa olivat kaikki sitä ennen, joten mikään lähde ei voinut
+tuoda niitä. Pyhäjoelta meillä on 19 hanketta (kaavat, Hilma, YVA,
+datakeskukset), mutta kunnan päätöksiä (Dynasty,
+`poytakirjat.pyhajoki.fi`) ei kerätä. Ennen keruun alkua käynnistyneet
+työmaat tulevat vain uutisista — tämä on rakenteellinen katve, ei
+tämän rivin vika.
+
+#### Rivin omat viat
+
+1. **Kunta puuttui.** `detectCityFromText` ei tunnistanut muotoja
+   "Pyhäjoen" ja "Pyhäjoella": k katoaa, joten kanta "pyhäjok" ei osu.
+   Aukkoa oli paikattu nimi kerrallaan (Seinäjoki, Riihimäki, Mynämäki,
+   Vuolijoki), mutta muoto on 23 kunnalla.
+2. **Vaihe oli Suunnittelussa**, vaikka rakennus on harjakorkeudessa.
+   Rakennuslehden keräin asettaa `completed ? Valmistunut :
+   Suunnittelussa`, ja RSS-ingressi ei kertonut työmaasta mitään. Jutun
+   avoin ensimmäinen kappale ("juuri harjakorkeuteen noussut", "valmistua
+   kesällä 2027") olisi kertonut — sitä ei lueta. Ei korjattu tässä.
+3. **Rakennustyyppi "Toimitila"** (kielimalli) — kunnantalo on julkinen
+   rakennus.
+
+#### Korjaus
+
+- **Astevaihtelu yleissääntönä:** -joki → *-joe-*, -mäki → *-mäe-*,
+  -lahti → *-lahde-* + pakollinen sijapääte. Vihti lisätty erikseen
+  (i-vartalo "Vihdissä"). Joen nimi on usein sama kuin kunnan, joten
+  jokisana perässä (*varrella, suulla, uoma*) tai toinen joki
+  (*"Siikajoen ja Lamujoen"*) ei ole kunta. **Lapinlahti suljettu
+  pois:** Helsingin Lapinlahden sairaala ja silta olisivat siirtyneet.
+- **Mitattu ennen käyttöönottoa** vanha vs. uusi koko kannan nimillä:
+  7 610 hanketta ja 11 406 jonoriviä. Muuttui 32 + 39, käytännössä
+  kaikki tyhjästä oikeaan kuntaan (esim. Kauhajoen kirjasto, Pieksämäen
+  alakoulu, Utsjoen sillat, Vihdin datakeskus). Kaksi virhettä
+  löytyi mittauksessa ja korjattiin (Lapinlahti, Siikajoki joen
+  nimenä).
+- Jonorivi täydennettiin käsin lähteistä: kunta, osoite Kuntatie 1,
+  vaihe Rakenteilla, tilaaja Pyhäjoen kunta, urakoitsija Sorvoja,
+  4,285 M€, alku 9/2025, valmis 7/2027, 1 680 brm², tyyppi Julkinen
+  rakennus.
+
+Olemassa olevien rivien kuntaa ei päivitetty takautuvasti: ne ovat
+pääosin jo oikein (kunta tuli lähteen kentästä), ja kuntattomista vain
+3/94 muuttui.
+
 ### D-423 – Vantaan linkittömälle kaavalle sivu RSS:stä ja kaavalistauksesta
 
 Johannes 15.11.2026 jonorivistä "002657 Tuomelan koulutontti": *"miksi
