@@ -27,6 +27,16 @@ Kilpailutusvaiheesta ei löytynyt yhtään edennyttä.
 Samalla löytyi päinvastainen virhe: Porthanian peruskorjaus näkyi
 valmistuneena, vaikka rakentaminen alkoi lokakuussa.
 
+### Hoivarakentajat uutena lähteenä (D-427)
+
+Hoiva-, palvelu- ja päiväkotirakennuksia rakentavan Hoivarakentajien
+tiedotteet ja rakenteilla olevien kohteiden luettelo tulevat nyt
+mukaan. Jokaiselle työmaalle tulee nimetty projektipäällikkö
+puhelinnumeroineen. Kuusi uutta hanketta jonoon ja kolme olemassa
+olevaa täydentyi osoitteella, vaiheella ja yhteyshenkilöllä. Samalla
+korjattiin hankkeeseen liittäminen: lähteen tuomat yhteyshenkilöt eivät
+enää katoa, kun uusi tieto liitetään jo tunnettuun hankkeeseen.
+
 ### Rakennuslehden hankkeille oikea vaihe (D-425)
 
 Rakennuslehden uutisista tulleet hankkeet jäivät suunnitteluvaiheeseen,

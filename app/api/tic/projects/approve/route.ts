@@ -2479,13 +2479,27 @@ export async function POST(request: Request) {
        * poimitaan vasta tässä — niidenkin viestintähenkilö ja
        * viranomainen on erotuttava hankkeen vastuuhenkilöstä.
        */
+      /*
+       * EHDOKKAAN OMAT YHTEYSHENKILÖT MUKAAN (D-427).
+       *
+       * Yhdistäminen luki vain tekstistä poimitut henkilöt, ei ehdokkaan
+       * valmista `contact_persons`-listaa. Lähteet, jotka tuovat henkilön
+       * kenttänä (Hoivarakentajien projektipäällikkö, Jalonin
+       * työmaapuhelin, Vantaan kaavoittaja), menettivät sen kun ehdokas
+       * liitettiin olemassa olevaan hankkeeseen: Hyvinkään Kotirinne sai
+       * urakoitsijan ja vaiheen mutta ei projektipäällikköä (16.11.2026).
+       * Vanha voittaa kenttä kentältä kuten muuallakin.
+       */
       const mergedContacts = mergeTekstipoiminta(
         mergeTekstipoiminta(
-          (existingProject.metadata?.contact_persons as any[]) ?? [],
-          merkitseRoolit(
-            extractContacts(existingProject.additional_info ?? null),
-            existingProject.additional_info ?? null
-          )
+          mergeTekstipoiminta(
+            (existingProject.metadata?.contact_persons as any[]) ?? [],
+            merkitseRoolit(
+              extractContacts(existingProject.additional_info ?? null),
+              existingProject.additional_info ?? null
+            )
+          ),
+          Array.isArray(metadata.contact_persons) ? (metadata.contact_persons as any[]) : []
         ),
         merkitseRoolit(
           extractContacts(metadata.description ?? null),

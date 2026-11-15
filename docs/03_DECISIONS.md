@@ -51,6 +51,74 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-427 – Hoivarakentajat lähteeksi: tiedotteet ja rakenteilla-luettelo yhtenä
+
+Johannes 16.11.2026 Oulun palvelukodista (Attendo, Sarvikangas): *"tätä
+hanketta emme minusta tienneet, olisimme voineet löytää sen täältä:
+hoivarakentajat.fi … katso tilanne ja lisää lähde tarvittaessa"*.
+
+#### Tilanne
+
+Hoivarakentajat (hirsirakenteiset hoiva-, palvelu- ja päiväkotirakennukset)
+ei ollut lähteenä. Sivustolla on kaksi käyttökelpoista osaa
+(robots.txt sallii):
+
+- `/rakenteilla-olevat-hoivarakennukset`: 14 korttia, joissa tyyppi,
+  käyttäjä, katuosoite, toiminnan alkamiskuukausi ja projektipäällikkö.
+  **Meillä niistä oli 2–3.**
+- `/tiedotteet/rss.xml` (HubSpot): tiedote kertoo hankkeen jo
+  sopimusvaiheessa.
+
+Yhteystietosivulla on jokaisen projektipäällikön puhelin ja sähköposti
+schema.org Person -merkinnöin, joten jokaiselle työmaalle tulee nimetty
+ihminen.
+
+#### Rakenne (`lib/agent/fetchHoivarakentajatSource.ts`, lähde `hoivarakentajat`)
+
+- **Kortti liitetään tiedotteeseen**, kun kunta on sama ja tiedotteen
+  otsikko nimeää kortin käyttäjän. Kuivaharjoitus näytti, että erillisinä
+  lähteinä *"Palvelukoti Humana, Radiotie 9, Vaasa"* ja *"Hoivarakentajilta
+  Humanalle … Vaasaan"* olisivat syntyneet kahdeksi riviksi. Tiedotteen
+  otsikko säilyy nimenä (kannan rivit ovat syntyneet siitä), kortilta
+  tulevat osoite, projektipäällikkö, toiminnan alku ja vaihe Rakenteilla.
+- Käyttäjä allatiivista (*"Tavanalle", "Norlandia Hoivalle ja
+  Aberialle"*): yleinen tilaajapoiminta tunnisti viidestä yhden. Tyyppi
+  otsikon kohteesta, ei sivulauseesta (*"sairaalan lähelle"* antoi
+  Sairaalan).
+- **Kortti, jonka toiminta on jo alkanut, ei tule omana rivinään.**
+  Luettelo jää jälkeen: Norlandian Kurttilan päiväkoti avautui 8/2026 mutta
+  oli yhä "Rakenteilla nyt".
+- Rikastus vain tiedotteille, ja **kortin tieto voittaa**: vaihe saa vain
+  edetä, osoite ja yhteyshenkilö tulevat kortilta.
+
+#### Ensimmäinen ajo paljasti neljä vikaa
+
+1. **Kaikilla korteilla sama lähdeosoite** → dokumentit tallennetaan
+   osoitteen mukaan, ja 8 kortista talteen jäi yksi. Nyt
+   `…#katu-kunta-kayttaja`.
+2. Jo alkaneet kortit (Espoo, Kangasala, Mikkeli) menivät jonoon: jono ei
+   käytä tuonnin vanhentuneen valmistumisen sääntöä. Merkitty ohitetuiksi.
+3. **Yritysrikastin laski vaihetta** tiedotetekstin perusteella (Tavana
+   jäi suunnitteluun, Jyväskylä putosi). Korjattu rikastimen kääreessä ja
+   lisäksi `releaseBodyWorker`issa, joka kirjoitti jonorivin vaiheen
+   rikastuksesta tarkistamatta suuntaa.
+4. **"Liitä hankkeeseen" hukkasi ehdokkaan yhteyshenkilöt.** Approve-reitin
+   yhdistäminen luki vain tekstistä poimitut, ei ehdokkaan
+   `contact_persons`-listaa. Koskee kaikkia lähteitä, jotka tuovat henkilön
+   kenttänä (Jalon, Vantaan kaavat). Korjattu.
+
+#### Tulos 16.11.2026
+
+| | |
+|---|---|
+| jonoon uusina | Oulu (Attendo), Kuopio (Attendo), Jyväskylä (Norlandia Hoiva + Aberia), Tampere (Norlandia), Vantaa × 2 (kaupungin päiväkodit) |
+| olemassa olevat täydennetty | Humana Vaasa, Tavana Hämeenlinna (→ Rakenteilla), Kotirinne Hyvinkää (liitetty, → Rakenteilla, urakoitsija + projektipäällikkö) |
+| ohitettu | Espoo, Kangasala, Mikkeli (toiminta alkanut), Hämeenlinnan saattohoitokoti (10/2026) |
+| kaksoiskappale | Rakennuslehden Oulun rivi `911e53e0` → Hoivarakentajien rivi |
+
+Lähteen lisäys `scripts/lisaa-hoivarakentajat-lahde.ts`, kuivaharjoitus
+`scripts/kuivaharjoitus-hoivarakentajat.ts`.
+
 ### D-426 – TIC:n hankesivu aukeaa aina ylhäältä
 
 Johannes 16.11.2026: *"kun avaan TIC:issä hankkeen niin sivun vieritys
