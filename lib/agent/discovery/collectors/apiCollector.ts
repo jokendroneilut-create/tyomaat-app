@@ -68,6 +68,7 @@ import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
 import { estettyPerhe } from "../../hilmaRakentamisenIlmoitus"
 import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
 import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
+import { etsiKaavasivut } from "../../vantaaKaavaSivu"
 import {
   fetchLupapisteBulletinPdfText,
   bestBulletinDescription,
@@ -584,6 +585,13 @@ function boundingBoxCenter(geometry: any): { x: number; y: number } | null {
  */
 const VANTAA_MAX_HAKIJA_FETCHES_PER_RUN = 5
 
+/*
+ * Linkittömän kaavan sivuhaku (D-423): RSS ja listaussivut eivät kuluta
+ * tätä, vain ehdokassivujen avaukset. Linkittömiä on muutama kerrallaan,
+ * ja löydetty muistetaan, joten pieni raja riittää.
+ */
+const VANTAA_MAX_PAGE_LOOKUPS_PER_RUN = 4
+
 export type VantaaContact = {
   name: string
   title: string | null
@@ -596,7 +604,7 @@ export type VantaaContact = {
  * varsinaista sisältöä (osoiteslugi voi muuttua). fetch() ei seuraa tätä
  * automaattisesti, joten se puretaan käsin.
  */
-async function fetchVantaaPlanDetails(
+export async function fetchVantaaPlanDetails(
   planUrl: string
 ): Promise<{ hakija: string | null; contacts: VantaaContact[]; description: string | null }> {
   try {
@@ -716,11 +724,63 @@ async function collectVantaaKaavaSource(source: DiscoverySource) {
     }
   }
 
+  /*
+   * KAAVAN SIVU KUN RAJAPINTA EI ANNA LINKKIÄ (D-423). Kerran löydetty
+   * sivu muistetaan dokumentin raw_payloadissa (`kaavalinkki_lahde`),
+   * joten haku tehdään kullekin kaavalle vain kerran.
+   */
+  const linkkiTunnukselle = new Map<string, string>()
+  for (const row of existingRows ?? []) {
+    if (row.raw_payload?.kaavalinkki_lahde && row.raw_payload?.kaavatunnus) {
+      linkkiTunnukselle.set(String(row.raw_payload.kaavatunnus), row.document_url)
+    }
+  }
+  const puuttuvat = features
+    .map((f: any) => f.properties ?? {})
+    .filter((p: any) => !p.kaavalinkki && p.kaavatunnus && !linkkiTunnukselle.has(String(p.kaavatunnus)))
+    .map((p: any) => ({ tunnus: String(p.kaavatunnus), nimi: String(p.kaavanimi1 ?? p.kaavatunnus) }))
+  const uudetLinkit = await etsiKaavasivut({
+    puuttuvat,
+    tunnetutSivut: new Set(
+      [...features.map((f: any) => f.properties?.kaavalinkki), ...linkkiTunnukselle.values()].filter(Boolean)
+    ),
+    hae: async (url) => {
+      try {
+        const r = await fetch(url, { cache: "no-store" })
+        return r.ok ? await r.text() : null
+      } catch {
+        return null
+      }
+    },
+    budjetti: VANTAA_MAX_PAGE_LOOKUPS_PER_RUN,
+  })
+
   let saved = 0
   let hakijaFetches = 0
 
-  for (const feature of features) {
+  for (const rawFeature of features) {
+    const rawProperties = rawFeature.properties ?? {}
+    const tunnus = String(rawProperties.kaavatunnus ?? "")
+    const haettuLinkki = rawProperties.kaavalinkki
+      ? null
+      : linkkiTunnukselle.get(tunnus) ?? uudetLinkit.get(tunnus) ?? null
+
+    /*
+     * Löydetty sivu kirjoitetaan tietueeseen kuin rajapinta olisi sen
+     * antanut, jotta faktapoiminta ja tunnistus käsittelevät sen samoin.
+     * Vanha WFS-osoitteinen dokumentti nimetään uudelleen, ettei samasta
+     * kaavasta synny kahta.
+     */
+    const feature = haettuLinkki
+      ? { ...rawFeature, properties: { ...rawProperties, kaavalinkki: haettuLinkki } }
+      : rawFeature
     const properties = feature.properties ?? {}
+    if (haettuLinkki && uudetLinkit.has(tunnus)) {
+      await supabaseAdmin
+        .from("source_documents")
+        .update({ document_url: haettuLinkki })
+        .eq("document_url", `${source.url}#${tunnus}`)
+    }
     const documentUrl = properties.kaavalinkki || `${source.url}#${properties.kaavatunnus}`
 
     const known = knownDetails.get(documentUrl)
@@ -762,6 +822,7 @@ async function collectVantaaKaavaSource(source: DiscoverySource) {
             priority: source.priority,
             center: boundingBoxCenter(feature.geometry),
             ...(detailsAttempted ? { hakija, contacts, description } : {}),
+            ...(haettuLinkki ? { kaavatunnus: tunnus, kaavalinkki_lahde: "vantaa.fi" } : {}),
             original: feature,
           },
           processed_at: new Date().toISOString(),

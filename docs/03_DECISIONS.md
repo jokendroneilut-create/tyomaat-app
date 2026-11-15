@@ -51,6 +51,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-423 – Vantaan linkittömälle kaavalle sivu RSS:stä ja kaavalistauksesta
+
+Johannes 15.11.2026 jonorivistä "002657 Tuomelan koulutontti": *"miksi
+tästä ei ole oikein mitään tietoa ja lähde on vain bittejä?"*
+
+#### Syy
+
+Sama kuin D-366: Vantaan WFS-rajapinnassa kentät `kaavalinkki` on
+tyhjä (nyt **5 kaavaa 84:stä**), jolloin kuvaus, hakija ja
+yhteyshenkilöt jäävät hakematta ja lähteeksi jää rajapinnan
+GeoJSON-osoite. D-366 kirjoitti näille peruskuvauksen kuudesta
+kentästä ja oletti, että **sivua ei ole vielä julkaistu**.
+
+**Oletus oli väärä.** Tuomelan sivu *"Hämeenkylässä Tuomelan
+koulutontille pientaloja"* oli julkaistu 23.9.2026, ja sen kenttä
+"Kaavan nimi" on sama `002657 Tuomelan koulutontti` kuin rajapinnassa.
+Rajapinnasta puuttuu vain linkki. Vantaan kaava-RSS
+(`/fi/rss/city-plannings`, 20 uusinta) löysi 3/5, kaavalistauksen
+otsikot neljännen (002640 Raappavuorentie 38, OAS 10/2025). Viidennelle
+(002599 Kivivuorentie 4-6) sivua ei löytynyt.
+
+#### Korjaus
+
+- `lib/agent/vantaaKaavaSivu.ts`: `etsiKaavasivut` hakee RSS:n, sitten
+  listaussivut, ja avaa ehdokassivun vain jos otsikko osuu kaavan
+  nimen sanoihin (kuuden merkin vartalo, ääkköset normalisoitu).
+  **Sivu hyväksytään vain jos sen "Kaavan nimi" -kentässä on sama
+  numero** — listauksessa on kolme Raappavuori-kaavaa.
+- Vantaan keräin käyttää tätä linkittömille kaavoille (enintään 4
+  sivunavausta per ajo) ja kirjoittaa löydetyn linkin tietueeseen kuin
+  rajapinta olisi sen antanut. Dokumentti nimetään WFS#tunnus-osoitteesta
+  sivun osoitteeseen, ja löytö muistetaan (`kaavalinkki_lahde`).
+- Takautuvasti `scripts/taydenna-vantaan-kaavasivut.ts`: 4 kaavaa,
+  4 jonoriviä, 2 hanketta (Kivistön Mestarintie, Vantaanjänne 5).
+  Kuvaus korvattiin vain jos se oli D-366:n peruskuvaus. Vanhan
+  rajapintaosoitteen (`kaavat_vireilla`) dokumentit jätettiin, koska
+  sama sivuosoite kahdelle rikkoisi yksilöllisyysehdon.
+
+#### Rakennustyyppi oli arvattu otsikosta
+
+Tuomelan jonorivillä oli tyyppi **"Koulu"** (kielimalli, varmuus 0,95)
+pelkästä otsikosta *"koulutontti"*. Sivun mukaan koulutontille
+kaavoitetaan **pientaloja** ja lakkautetulle koululle käyttötarkoituksen
+muutosta. Korjattu "Pientalo" (`building_type_source: manual`).
+Varmuusluku ei erottanut oikeaa väärästä ([[llm-two-vote-gate]]).
+
+**Huomio:** Raappavuorentie 38 (Vantaan Energian kaukolämmön tuotanto)
+oli hylätty jonosta, kun tietoa ei ollut. Nyt sillä on kuvaus ja hakija
+— hylkäys kannattaa katsoa uudelleen ([[reject-is-not-final]]).
+
 ### D-422 – Markkinavuoropuhelu: liitetään tunnettuun hankkeeseen, uutena vain jos hanke on uusi
 
 Johannes 15.11.2026 jonorivistä *"KUTSU MARKKINAVUOROPUHELUUN:
@@ -3282,7 +3332,9 @@ emme tiedä ([[never-hide-on-missing-data]]).
 WFS-rajapinnasta ja kuvaus luetaan kaavan omalta sivulta, jonka osoite
 on kentässä `kaavalinkki`. Mitattu: **7 kaavaa 98:sta on ilman
 linkkiä.** Vantaan oma haku ei löydä näille sivua — sitä ei ole vielä
-julkaistu. Tietue on kokonaisuudessaan kuusi kenttää:
+julkaistu. *(Korjattu D-423: sivu oli usein julkaistu, vain linkki
+puuttui rajapinnasta; nyt se haetaan RSS:stä ja kaavalistauksesta.)*
+Tietue on kokonaisuudessaan kuusi kenttää:
 
 ```
 vaihe  kaavalinkki  kaavanimi1  kaavatunnus  kasit_pvm  oas_pvm

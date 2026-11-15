@@ -27,6 +27,14 @@ Kilpailutusvaiheesta ei löytynyt yhtään edennyttä.
 Samalla löytyi päinvastainen virhe: Porthanian peruskorjaus näkyi
 valmistuneena, vaikka rakentaminen alkoi lokakuussa.
 
+### Vantaan uusille kaavoille kuvaus ja yhteyshenkilö (D-423)
+
+Osa Vantaan uusista kaavoista tuli ilman kuvausta, ja lähteenä näkyi
+pelkkä karttarajapinnan osoite. Kaavan oma sivu oli kuitenkin jo
+julkaistu, ja nyt se haetaan kaupungin kaavasyötteestä ja
+kaavalistauksesta. Neljä kaavaa sai takautuvasti kuvauksen, hakijan ja
+kaavoittajan yhteystiedot.
+
 ### Markkinavuoropuhelut tunnettuihin hankkeisiin (D-422)
 
 Kutsu markkinavuoropuheluun liitetään jatkossa jo tunnettuun
