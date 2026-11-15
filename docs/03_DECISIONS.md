@@ -116,11 +116,22 @@ urakka), Kutilan kanava (Mantereentien parantaminen Väylän rivinä),
 Vaasan hovioikeus (konsulttihankinta), Karhunaukion kaava-alueen
 infra (monitoimitalo erikseen).
 
-**Huomioita jatkoon:** Karhunaukion monitoimitalolla on kaksi riviä
-(`36e123a5`, `d7f646ef`); Vaasan rivi `45d72a94` *"Kutsu
-markkinavuoropuheluun rakennus- ja talotekniikkaurakoitsijoille"* on
-Keskustan yhtenäiskoulu (Kauppapuistikko 22 + Raastuvankatu 33), mutta
-nimestä sitä ei tunnista.
+**Jatkokorjaukset** (Johannes: *"tee molemmat ja dokumentoi"*):
+
+- Karhunaukion monitoimitalon kaksi riviä yhdistetty: säilyy
+  `36e123a5` (osoite Raadinkatu 7, aloitus 3/2027, kaupungin
+  hankesivu), piilotettu Hartelan tiedoterivi `d7f646ef`. Teksti oli
+  sama, joten mitään ei kadonnut.
+- Vaasan rivi `45d72a94` nimettiin *"Vaasan Keskustan yhtenäiskoulu,
+  Kauppapuistikko 22 peruskorjaus ja Raastuvankatu 33 uudisrakennus"*.
+  Vanha nimi *"Kutsu markkinavuoropuheluun rakennus- ja
+  talotekniikkaurakoitsijoille"* ei kertonut kohdetta lainkaan. Muutos
+  tehtiin TIC:n muokkausreitillä, joten vanha otsikko jäi
+  `source_title`-kenttään ja haku löytää sen edelleen.
+
+**Opittavaa nimistä:** vuoropuhelun otsikko kertoo usein vain
+hankintatavan, ei kohdetta. Hyväksyessä nimi kannattaa korjata kohteen
+mukaiseksi.
 
 ### D-421 – Valmistunut-vaihe ilman valmistunut-tilaa: kuusi kirjoituspolkua, 30 riviä
 

@@ -35,7 +35,9 @@ satamatunneli on nyt yksi rivi kolmen sijaan, ja sille lisättiin
 suunnittelijat. Aiemmin hyväksytyistä 33 vuoropuhelusta kahdeksan oli
 saman hankkeen kaksoisrivejä, ja ne yhdistettiin. Valtatien 27
 Ylivieskan ylikulkusilta palautettiin kilpailutukseen, koska
-rakentaminen alkaa vasta keväällä 2027.
+rakentaminen alkaa vasta keväällä 2027. Lisäksi Karhunaukion
+monitoimitalon kaksi riviä yhdistettiin, ja Vaasan Keskustan
+yhtenäiskoulu sai nimen, josta kohteen tunnistaa.
 
 ### Valmistunut-vaihe ja -tila pysyvät yhdessä (D-421)
 
