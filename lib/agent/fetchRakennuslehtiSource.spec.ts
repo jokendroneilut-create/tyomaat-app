@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest"
-import { arvioiJuttu, trimAtArticleEnd } from "./fetchRakennuslehtiSource"
+import {
+  arvioiJuttu,
+  paakuvanKuvateksti,
+  trimAtArticleEnd,
+  vaiheTekstista,
+  yhdistaAvoimetOsat,
+} from "./fetchRakennuslehtiSource"
 
 describe("trimAtArticleEnd", () => {
   /*
@@ -82,5 +88,50 @@ describe("arvioiJuttu", () => {
   it("poissulku voittaa hankesignaalin", () => {
     const a = arvioiJuttu("Oulun jalkapallostadion pokkasi palkinnon", "Stadion rakennettiin kahdessa vuodessa.")
     expect(a.kelpaa).toBe(false)
+  })
+})
+
+/*
+ * D-425: maksumuurin alla avoimet palat yhdessä, ja vaihe tekstistä.
+ * Mitattu tapaus: "Pyhäjoen kunnantalo rakennetaan hirrestä" jäi
+ * suunnitteluun, vaikka rakennus oli harjakorkeudessa.
+ */
+describe("Rakennuslehden avoimet osat ja vaihe (D-425)", () => {
+  const HTML = `<figure class="wp-caption aim-skip post-thumbnail ">
+    <img src="x.jpg"><figcaption class="wp-caption-text aim-skip">
+    Uusi kunnantalo nousee vanhan kunnantalon paikalle Pyhäjoen keskustassa. Hirsirakennuksen on määrä valmistua kesällä 2027. Kuva: Anna Niemelä
+    </figcaption></figure>`
+
+  it("lukee pääkuvan kuvatekstin ilman kuvaajaa", () => {
+    expect(paakuvanKuvateksti(HTML)).toBe(
+      "Uusi kunnantalo nousee vanhan kunnantalon paikalle Pyhäjoen keskustassa. Hirsirakennuksen on määrä valmistua kesällä 2027."
+    )
+    expect(paakuvanKuvateksti("<figure><figcaption>Kuva: X</figcaption></figure>")).toBeNull()
+  })
+
+  it("yhdistää ingressin, kuvatekstin ja kappaleen ilman toistoa", () => {
+    const ingressi = "Pyhäjoella on viime vuosina kehitetty hirsirakentamisen ratkaisuja."
+    expect(yhdistaAvoimetOsat([ingressi, "Kuvateksti tässä on.", `${ingressi} Ja jatkuu.`])).toBe(
+      `${ingressi}\n\nKuvateksti tässä on.`
+    )
+  })
+
+  it("harjakorkeus vie rakenteilla-vaiheeseen", () => {
+    const body = "Pyhäjoen keskustaan saapuessa juuri harjakorkeuteen noussut uusi kunnantalo erottuu."
+    expect(vaiheTekstista({ name: "Pyhäjoen kunnantalo rakennetaan hirrestä", phase: "Suunnittelussa" }, body)).toEqual({
+      phase: "Rakenteilla",
+    })
+  })
+
+  it("urakkasopimus vie sopimusvaiheeseen", () => {
+    const body = "Nurmijärven kunta ja Rakennusliike Lapti ovat allekirjoittaneet urakkasopimuksen koulun toteuttamisesta."
+    expect(vaiheTekstista({ name: "Uusi koulu Klaukkalaan", phase: "Suunnittelu" }, body)).toEqual({
+      phase: "Sopimus myönnetty",
+    })
+  })
+
+  it("ei peruuta vaihetta eikä lue valmistumista leipätekstistä", () => {
+    expect(vaiheTekstista({ name: "Koulu", phase: "Rakenteilla" }, "Urakkasopimus allekirjoitettiin.")).toEqual({})
+    expect(vaiheTekstista({ name: "Koulu", phase: "Suunnittelussa" }, "Edellinen koulu valmistui 2019.")).toEqual({})
   })
 })

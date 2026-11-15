@@ -27,6 +27,15 @@ Kilpailutusvaiheesta ei löytynyt yhtään edennyttä.
 Samalla löytyi päinvastainen virhe: Porthanian peruskorjaus näkyi
 valmistuneena, vaikka rakentaminen alkoi lokakuussa.
 
+### Rakennuslehden hankkeille oikea vaihe (D-425)
+
+Rakennuslehden uutisista tulleet hankkeet jäivät suunnitteluvaiheeseen,
+ellei otsikko kertonut muuta, vaikka jutun avoin alku kertoi työmaan
+olevan käynnissä tai urakkasopimuksen tehdyksi. Nyt vaihe luetaan
+ingressistä, kuvatekstistä ja avoimesta kappaleesta. Kuusi hanketta
+siirtyi oikeaan vaiheeseen, ja harjakorkeus tunnistetaan nyt merkiksi
+käynnissä olevasta rakentamisesta.
+
 ### Kunnan tunnistus -joki-, -mäki- ja -lahti-kunnille (D-424)
 
 Hankkeen kunta tunnistetaan nyt myös taivutetusta muodosta, kuten

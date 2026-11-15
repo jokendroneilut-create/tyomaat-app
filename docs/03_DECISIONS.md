@@ -51,6 +51,58 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-425 – Rakennuslehti: vaihe artikkelin avoimesta tekstistä, ei vain otsikosta
+
+D-424:n jatko. Johannes 16.11.2026: *"korjaa se seuraavaksi ja
+dokumentoi"* — Rakennuslehden rivi jäi suunnitteluun, vaikka jutun
+avoin teksti kertoi rakennuksen olevan harjakorkeudessa.
+
+#### Kolme vikaa samassa ketjussa
+
+1. **Syöte päättää vaiheen otsikosta ja ingressistä:** `completed ?
+   Valmistunut : Suunnittelussa`. Työmaa tai urakkasopimus näkyy vasta
+   tekstissä, ja rikastus (`enrichRakennuslehtiCandidate`) täydensi vain
+   kunnan ja urakoitsijan, **ei vaihetta**.
+2. **Maksumuurin alla avoin kappale on lyhyt.** Pyhäjoella 245 merkkiä,
+   ja runkotyöntekijän raja on 400, joten teksti hylättiin kokonaan
+   (`body_unavailable`). Olennainen oli kahdessa muussa avoimessa
+   palassa: RSS-ingressissä ja pääkuvan kuvatekstissä (*"Hirsirakennuksen
+   on määrä valmistua kesällä 2027"*), jota ei luettu lainkaan.
+3. **`inferCompanyPhase` ei tuntenut harjakorkeutta** — vain
+   harjannostajaiset ja peruskiven.
+
+#### Korjaus
+
+- Rikastus yhdistää **ingressin, pääkuvan kuvatekstin (ilman kuvaajaa)
+  ja avoimen kappaleen** toistot poistaen (`yhdistaAvoimetOsat`,
+  `paakuvanKuvateksti`).
+- `vaiheTekstista` päättelee vaiheen yhdistetystä tekstistä
+  `inferCompanyPhase`lla, **vain eteenpäin** (`phaseAdvances`).
+  Valmistumista ei lueta leipätekstistä — se viittaa lähes aina aiempaan
+  kohteeseen. Päättely tehdään myös silloin kun kuvaus on jo pidempi
+  (runkotyöntekijä ehti hakea sen): Oulun palvelukodilla oli koko
+  teksti, ja vaihe oli silti suunnittelussa.
+- `CONSTRUCTION_PATTERNS`iin `harjakorkeu(teen|den|dessa)`. Koskee kaikkia
+  yrityslähteitä, jotka käyttävät jaettua rikastinta; harjakorkeus
+  tarkoittaa aina käynnissä olevaa työmaata.
+
+#### Takautuvasti (`scripts/korjaa-rakennuslehti-vaiheet.ts`)
+
+Kuivaharjoitus 42 suunnitteluvaiheen rivillä (julkiset + jonon uudet):
+6 muuttuu, kaikki luettu ja perusteltu tekstin lauseella:
+
+| rivi | → | peruste |
+|---|---|---|
+| Enervio, sähkövarasto Kittilä | Rakenteilla | "Pohjatyöt ovat jo käynnissä" |
+| Jatke, toimitilaurakka Helsinki | Sopimus myönnetty | "tehty urakkasopimus" |
+| Urheilupuiston koulu, Klaukkala | Sopimus myönnetty | "allekirjoittaneet urakkasopimuksen" |
+| YIT, datakeskus Kajaani | Sopimus myönnetty | "tehneet urakkasopimuksen" |
+| Kreate, Valtioneuvoston linna | Sopimus myönnetty | "allekirjoittanut … sopimuksen" |
+| Oulun palvelukoti (jono) | Sopimus myönnetty | "rakentaa Attendolle" |
+
+Julkisten hankkeiden muutos kirjattiin vaihehistoriaan
+(`manual_correction` / `rakennuslehti-vaiheet`).
+
 ### D-424 – Pyhäjoen kunnantalo: hanke ennen keräyksen alkua, ja -joki-kunnat jäivät tunnistamatta
 
 Johannes 15.11.2026 jonorivistä *"Pyhäjoen kunnantalo rakennetaan
@@ -88,7 +140,7 @@ tämän rivin vika.
    Rakennuslehden keräin asettaa `completed ? Valmistunut :
    Suunnittelussa`, ja RSS-ingressi ei kertonut työmaasta mitään. Jutun
    avoin ensimmäinen kappale ("juuri harjakorkeuteen noussut", "valmistua
-   kesällä 2027") olisi kertonut — sitä ei lueta. Ei korjattu tässä.
+   kesällä 2027") olisi kertonut — sitä ei lueta. Korjattu: **D-425**.
 3. **Rakennustyyppi "Toimitila"** (kielimalli) — kunnantalo on julkinen
    rakennus.
 

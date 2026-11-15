@@ -57,6 +57,12 @@ const CONSTRUCTION_PATTERNS = [
   /rakennustyöt\s+(?:ovat\s+)?(?:alkaneet|käynnissä)/i,
   /rakentaminen\s+on\s+(?:alkanut|käynnissä)/i,
   /harjannostajaisia/i,
+  /*
+   * Harjakorkeus on rungon valmistuminen, eli työmaa on käynnissä
+   * ("juuri harjakorkeuteen noussut", "saavutti harjakorkeuden"). Puuttui:
+   * Rakennuslehden Pyhäjoen kunnantalo jäi suunnitteluun (D-425).
+   */
+  /harjakorkeu(?:teen|den|dessa)/i,
   /peruskivi/i,
   /*
    * Tiedotteissa toistuvat muodot, jotka kertovat töiden olevan käynnissä

@@ -1,4 +1,5 @@
-import { extractReleaseBody } from "./companyRelease"
+import { extractReleaseBody, inferCompanyPhase } from "./companyRelease"
+import { normalizeLegacyPhase, phaseAdvances } from "@/lib/projects/phases"
 import { detectCityFromText } from "./detectCityFromText"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { builderFromHeadline } from "./builderFromHeadline"
@@ -266,6 +267,50 @@ export function trimAtArticleEnd(text: string): string {
   return text.slice(0, cut).trim()
 }
 
+/*
+ * MAKSUMUURIN ALLA JUTUSTA ON KOLME AVOINTA PALAA (D-425).
+ *
+ * Tilaajajutussa avoimena on vain ensimmäinen kappale. Mitattu
+ * 15.11.2026 "Pyhäjoen kunnantalo rakennetaan hirrestä": kappale oli 245
+ * merkkiä, ja runkotyöntekijä hylkäsi sen ("runko liian lyhyt") — eikä
+ * RSS-ingressikään kertonut työmaasta mitään. Olennainen oli kahdessa
+ * muussa avoimessa palassa:
+ *
+ *   ingressi (RSS)  "Pyhäjoella on viime vuosina kehitetty hirsirakentamisen..."
+ *   kuvateksti      "Uusi kunnantalo nousee vanhan kunnantalon paikalle
+ *                    Pyhäjoen keskustassa. Hirsirakennuksen on määrä
+ *                    valmistua kesällä 2027."
+ *   kappale         "...juuri harjakorkeuteen noussut uusi kunnantalo..."
+ *
+ * Kaikki kolme yhdessä kertovat kunnan, vaiheen ja valmistumisen.
+ * Kuvatekstistä pudotetaan kuvaajan nimi ("Kuva: Anna Niemelä").
+ */
+export function paakuvanKuvateksti(html: string): string | null {
+  const m = html.match(
+    /<figure[^>]*post-thumbnail[^>]*>[\s\S]*?<figcaption[^>]*>([\s\S]*?)<\/figcaption>/i
+  )
+  if (!m) return null
+  const teksti = m[1]
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\s*Kuva:\s*[^.]*$/i, "")
+    .trim()
+  return teksti.length >= 20 ? teksti : null
+}
+
+export function yhdistaAvoimetOsat(osat: (string | null | undefined)[]): string {
+  const tulos: string[] = []
+  for (const osa of osat) {
+    const t = String(osa ?? "").trim()
+    if (!t) continue
+    const alku = t.slice(0, 40).toLowerCase()
+    if (tulos.some((x) => x.toLowerCase().includes(alku))) continue
+    tulos.push(t)
+  }
+  return tulos.join("\n\n")
+}
+
 export async function enrichRakennuslehtiCandidate(candidate: any): Promise<any> {
   if (!candidate?.source_url) return candidate
 
@@ -276,18 +321,48 @@ export async function enrichRakennuslehtiCandidate(candidate: any): Promise<any>
     })
     if (!res.ok) return candidate
 
-    const body = trimAtArticleEnd(extractReleaseBody(await res.text()) ?? "")
+    const html = await res.text()
+    const runko = trimAtArticleEnd(extractReleaseBody(html) ?? "")
+    const body = yhdistaAvoimetOsat([candidate.description, paakuvanKuvateksti(html), runko])
 
     /*
      * Lyhyempi kuin RSS:n ingressi tarkoittaa että poiminta epäonnistui;
      * silloin pidetään se mitä oli.
      */
-    if (body.length <= String(candidate.description ?? "").length) return candidate
+    if (body.length <= String(candidate.description ?? "").length) {
+      /*
+       * Kuvaus on jo pidempi (runkotyöntekijä ehti hakea sen), mutta
+       * vaihe päätellään silti: Oulun palvelukodilla oli koko teksti
+       * ("Hoivarakentajat rakentaa Attendolle..."), ja vaihe oli yhä
+       * Suunnittelussa.
+       */
+      return { ...candidate, ...vaiheTekstista(candidate, String(candidate.description ?? "")) }
+    }
 
-    return { ...candidate, ...poiminnatTekstista(candidate, body), description: body }
+    return {
+      ...candidate,
+      ...poiminnatTekstista(candidate, body),
+      ...vaiheTekstista(candidate, body),
+      description: body,
+    }
   } catch {
     return candidate
   }
+}
+
+/*
+ * VAIHE LEIPÄTEKSTISTÄ, VAIN ETEENPÄIN (D-425).
+ *
+ * Syöte asettaa `completed ? Valmistunut : Suunnittelussa` otsikosta ja
+ * ingressistä. Työmaa ("harjakorkeuteen noussut", "rakennustyöt ovat
+ * käynnissä") tai urakkasopimus näkyy vasta tekstissä. Valmistuminen
+ * luetaan edelleen VAIN otsikosta (`inferCompanyPhase`): leipätekstin
+ * "valmistui" viittaa lähes aina aiempaan kohteeseen.
+ */
+export function vaiheTekstista(candidate: any, body: string): Record<string, any> {
+  const paatelty = inferCompanyPhase(String(candidate?.name ?? ""), body)
+  if (normalizeLegacyPhase(paatelty) === "completed") return {}
+  return phaseAdvances(candidate?.phase, paatelty) ? { phase: paatelty } : {}
 }
 
 /*
