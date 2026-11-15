@@ -124,7 +124,15 @@ async function applyToStoredRows(
             (row as any).metadata?.building_type,
             enriched.building_type
           ),
-          phase_hint: firstFilled(enriched.phase, (row as any).metadata?.phase_hint),
+          /*
+           * Vaihe saa vain edetä, kuten hankeriveillä alempana (D-427).
+           * Aiemmin tiedotteen päättely voitti aina: Hoivarakentajien
+           * kortin "Rakenteilla" olisi korvautunut tiedotteen
+           * "Sopimus myönnetty" -päättelyllä.
+           */
+          phase_hint: phaseAdvances((row as any).metadata?.phase_hint, enriched.phase)
+            ? enriched.phase
+            : firstFilled((row as any).metadata?.phase_hint, enriched.phase),
           ...(ala ? { floor_area: ala } : {}),
           ...(cost
             ? { estimated_cost: cost.estimated_cost, cost_source: cost.cost_source }

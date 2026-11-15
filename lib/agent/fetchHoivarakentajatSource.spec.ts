@@ -117,12 +117,21 @@ describe("yhdistaKohteetJaTiedotteet (D-427)", () => {
     NYT
   )
 
-  it("kortti liitetään tiedotteeseen, ei tule kahta riviä", () => {
+  /*
+   * Espoon kortti (toiminta alkoi 8/2026) ei tule omana rivinään:
+   * ensimmäinen ajo vei sen jonoon, vaikka päiväkoti oli jo auki.
+   */
+  it("kortti liitetään tiedotteeseen, ja jo alkanut kortti jää pois", () => {
     expect(tulos.map((t) => t.name)).toEqual([
       "Hoivarakentajilta Humanalle uusi vammaispalveluyksikkö Vaasaan",
       "Hoivarakentajat rakentaa Jyväskylään palvelukodit Norlandia Hoivalle ja Aberialle",
-      "Päiväkoti Norlandia, Alustalaisentie 1, Espoo",
     ])
+  })
+
+  it("jokaisella kortilla on oma osoite", () => {
+    const osoitteet = jasennaRakenteilla(LUETTELO).map((k) => hoivaKohdeEhdokas(k, new Map(), NYT).source_url)
+    expect(new Set(osoitteet).size).toBe(osoitteet.length)
+    expect(osoitteet[1]).toBe(`${RAKENTEILLA_URL}#radiotie-9-vaasa-humana`)
   })
 
   it("tiedotteen rivi saa kortilta osoitteen, vaiheen ja linkin ilman hsLang-parametria", () => {
@@ -142,7 +151,26 @@ describe("yhdistaKohteetJaTiedotteet (D-427)", () => {
 describe("createHoivarakentajatEnricher", () => {
   it("ei rikasta luettelon korttia luettelosivulta", async () => {
     const rikastin = createHoivarakentajatEnricher(async (c) => ({ ...c, rikastettu: true }))
-    expect((await rikastin({ source_url: RAKENTEILLA_URL })).rikastettu).toBeUndefined()
+    expect((await rikastin({ source_url: `${RAKENTEILLA_URL}#radiotie-9-vaasa` })).rikastettu).toBeUndefined()
     expect((await rikastin({ source_url: "https://hoivarakentajat.fi/tiedotteet/x" })).rikastettu).toBe(true)
+  })
+
+  /* Ensimmäinen ajo: rikastin laski Tavanan ja Jyväskylän suunnitteluun. */
+  it("rikastus ei laske kortin vaihetta eikä hukkaa osoitetta tai yhteyshenkilöä", async () => {
+    const rikastin = createHoivarakentajatEnricher(async (c) => ({
+      ...c,
+      phase: "Suunnittelu",
+      location: null,
+      metadata: { contact_persons: [{ name: "Tiedotteen yhteyshenkilö" }] },
+    }))
+    const r = await rikastin({
+      source_url: "https://hoivarakentajat.fi/tiedotteet/x",
+      phase: "Rakenteilla",
+      location: "Radiotie 9, 65370 Vaasa",
+      metadata: { contact_persons: [{ name: "Mauri Heinonen" }], related_companies: ["Humana"] },
+    })
+    expect(r.phase).toBe("Rakenteilla")
+    expect(r.location).toBe("Radiotie 9, 65370 Vaasa")
+    expect(r.metadata.contact_persons.map((c: any) => c.name)).toEqual(["Mauri Heinonen", "Tiedotteen yhteyshenkilö"])
   })
 })

@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio"
 import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
-import { PHASE_LABELS } from "@/lib/projects/phases"
+import { PHASE_LABELS, phaseAdvances } from "@/lib/projects/phases"
 import { mergeCompanyNames } from "@/lib/projects/projectCompanies"
 import { detectCityFromText } from "./detectCityFromText"
 import { extractClientFromText } from "./fetchSttHakuSource"
@@ -155,7 +155,12 @@ export function hoivaKohdeEhdokas(
     completed: false,
     property_type: inferBuildingType(k.tyyppi, kuvaus) ?? (/päiväkoti/i.test(k.tyyppi) ? "Päiväkoti" : "Hoivakoti"),
     estimated_completion: valmistuu,
-    source_url: RAKENTEILLA_URL,
+    /*
+     * OMA OSOITE JOKAISELLE KORTILLE. Dokumentit tallennetaan osoitteen
+     * mukaan; ensimmäisessä ajossa kaikilla korteilla oli luettelon
+     * osoite, ja 8 kortista talteen jäi yksi (16.11.2026).
+     */
+    source_url: korttiOsoite(k),
     confidence: 0.8,
     source_name: "hoivarakentajat",
     metadata: {
@@ -184,6 +189,21 @@ export function hoivaKohdeEhdokas(
       },
     },
   }
+}
+
+export function korttiOsoite(k: HoivaKohde): string {
+  const avain = `${k.katu ?? ""} ${k.kunta ?? ""} ${k.tilaaja ?? ""}`
+    .toLowerCase()
+    .replace(/[äå]/g, "a")
+    .replace(/ö/g, "o")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+  return `${RAKENTEILLA_URL}#${avain}`
+}
+
+/* Toiminta alkanut ennen kuluvaa kuukautta: luettelo on jäänyt jälkeen. */
+export function toimintaJoAlkanut(k: HoivaKohde, nyt: Date = new Date()): boolean {
+  return k.toimintaAlkaa != null && k.toimintaAlkaa < nyt.toISOString().slice(0, 7)
 }
 
 async function hae(url: string): Promise<string | null> {
@@ -342,8 +362,14 @@ export function yhdistaKohteetJaTiedotteet(
     }
   }
 
-  korttiEhdokkaat.forEach(({ e }, i) => {
-    if (!kaytetyt.has(i)) tulos.push(e)
+  /*
+   * Kortti ilman tiedotetta tulee omana rivinään vain jos toiminta ei ole
+   * vielä alkanut. Ensimmäinen ajo vei jonoon Espoon, Kangasalan ja
+   * Mikkelin kortit, joiden toiminta alkoi 8–10/2026: jono ei käytä
+   * tuonnin vanhentuneen valmistumisen sääntöä, joten se on tehtävä tässä.
+   */
+  korttiEhdokkaat.forEach(({ k, e }, i) => {
+    if (!kaytetyt.has(i) && !toimintaJoAlkanut(k, nyt)) tulos.push(e)
   })
   return tulos
 }
@@ -366,5 +392,35 @@ export async function fetchHoivarakentajatSource() {
  * listan yhden hankkeen kuvaukseksi.
  */
 export function createHoivarakentajatEnricher(yritysrikastin: (c: any) => Promise<any>) {
-  return async (c: any) => (c?.source_url && c.source_url !== RAKENTEILLA_URL ? yritysrikastin(c) : c)
+  return async (c: any) => {
+    if (!c?.source_url || c.source_url.startsWith(RAKENTEILLA_URL)) return c
+    const r = await yritysrikastin(c)
+    /*
+     * KORTIN TIETO VOITTAA TIEDOTTEEN PÄÄTTELYN (D-427).
+     *
+     * Ensimmäisessä ajossa rikastin päätteli vaiheen tiedotteen tekstistä
+     * ja korvasi kortin "Rakenteilla" -vaiheen: Tavana jäi
+     * suunnitteluun ja Jyväskylä putosi suunnitteluun. Kortti on
+     * julkaisijan oma tilannetieto, tiedote kuukausia vanhempi kertomus.
+     * Vaihe saa vain edetä; osoite, käyttäjä, valmistuminen ja
+     * yhteyshenkilö tulevat kortilta jos kortti on.
+     */
+    const yhteys = [...(c.metadata?.contact_persons ?? []), ...(r.metadata?.contact_persons ?? [])].filter(
+      (h: any, i: number, kaikki: any[]) => kaikki.findIndex((x) => x.name === h.name) === i
+    )
+    return {
+      ...r,
+      phase: phaseAdvances(r.phase, c.phase) ? c.phase : r.phase,
+      phase_authoritative: c.phase_authoritative ?? r.phase_authoritative,
+      location: c.location ?? r.location,
+      developer: c.developer ?? r.developer,
+      estimated_completion: c.estimated_completion ?? r.estimated_completion,
+      metadata: {
+        ...(r.metadata ?? {}),
+        ...(c.metadata ?? {}),
+        related_companies: mergeCompanyNames(c.metadata?.related_companies ?? [], r.metadata?.related_companies ?? []),
+        contact_persons: yhteys,
+      },
+    }
+  }
 }
