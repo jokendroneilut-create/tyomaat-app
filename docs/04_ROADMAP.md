@@ -1746,6 +1746,17 @@ muistin varassa.
 
 ### Lähdekattavuus
 
+- **Hoivarakentajat (`hoivarakentajat.fi`) — lähteeksi 16.11.2026
+  (D-427).** Tiedote-RSS + rakenteilla-luettelo (14 työmaata, meillä
+  oli 2–3) + projektipäälliköiden yhteystiedot. Ensimmäinen ajo: 6
+  uutta jonoon, 3 täydentyi. Ajon paljastamat yleiset viat korjattu:
+  yhteinen lähdeosoite kaatoi kortit yhdeksi dokumentiksi, rikastin
+  laski vaihetta, ja "Liitä hankkeeseen" hukkasi ehdokkaan
+  yhteyshenkilöt kaikilta lähteiltä.
+  **Seurattava:** luettelossa on myös jo avattuja kohteita; keräin
+  jättää pois kortit, joiden toiminta on alkanut ennen kuluvaa
+  kuukautta.
+
 - **Jalon (`jalon.fi/yhteystiedot/tyomaat/`) — EI ole lähteenä,
   tarkistettu 25.10.2026.** Johannes: *"tarkista onko tämä jo
   lähteenä"*. Ei ole: `discovery_sources` 0 osumaa, ei `sources.ts`:ssä

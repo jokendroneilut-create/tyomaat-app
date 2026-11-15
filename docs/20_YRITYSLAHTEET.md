@@ -61,6 +61,36 @@ Pelkkä tiedostohaku olisi väittänyt sitä puuttuvaksi.
 
 ## Tehty
 
+### Hoivarakentajat — lähteeksi 16.11.2026 (D-427)
+
+Johannes Oulun palvelukodista: *"tätä hanketta emme minusta tienneet,
+olisimme voineet löytää sen täältä"*. Yhtiö oli tällä listalla jo
+17.10.2026 (3 hanketta, kaikki 3 "jäisi ilman"), mutta merkitty "ei
+kiirettä" — pieni hankemäärä kannassa ei kertonut, montako hanketta
+yhtiöllä oikeasti on käynnissä.
+
+**Mitattu sivustolta:** rakenteilla-luettelossa 14 työmaata, joista
+meillä oli 2–3. Jokaisella kortilla on katuosoite, käyttäjä
+(Attendo, Norlandia, Humana, Vantaan kaupunki…), toiminnan alkamiskuukausi
+ja nimetty projektipäällikkö, jonka puhelin ja sähköposti ovat
+yhteystietosivulla.
+
+**Reitti:** tiedote-RSS (`/tiedotteet/rss.xml`, HubSpot) +
+rakenteilla-luettelo + yhteystiedot samassa keräimessä
+(`fetchHoivarakentajatSource`, lähde `hoivarakentajat`). Kortti liitetään
+tiedotteeseen kunnan ja käyttäjän perusteella, jotta samasta hankkeesta ei
+synny kahta riviä. Jo alkaneen toiminnan kortit jätetään pois — luettelo
+jää jälkeen.
+
+**Tulos ensimmäisellä ajolla:** 6 uutta jonoon, 3 olemassa olevaa
+täydentyi (osoite, projektipäällikkö, vaihe Rakenteilla), 4 jo
+valmistunutta ohitettu.
+
+**Opetus listalle:** "jäisi ilman" -luku mittaa kannassa jo olevia
+hankkeita, ei sitä montako yhtiöllä on. Kun yhtiö julkaisee oman
+työmaaluettelon, avaa se ennen kuin päätät kiireellisyyden — sama kuin
+Jalonilla (D-350).
+
 ### NRC Group uutisosio — lähteeksi 31.10.2026 (D-367)
 
 **NRC oli jo lähteenä, mutta väärästä osiosta.** Kerääjä katsoi
@@ -233,7 +263,7 @@ julkinen tilaaja):
 | Caverion | 13 | 3 | **10** |
 | Pajala Yhtiöt | 4 | 3 | 1 |
 | Keski-Suomen Betonirakenne | 3 | 3 | 0 |
-| Hoivarakentajat | 3 | 3 | 0 |
+| Hoivarakentajat → **lähteeksi 16.11.2026 (D-427)**; sivulla 14 työmaata | 3 | 3 | 0 |
 | Nyab | 3 | 2 | 1 |
 | atNorth | 4 | 1 | 3 |
 
