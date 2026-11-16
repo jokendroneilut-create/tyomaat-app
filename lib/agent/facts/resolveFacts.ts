@@ -4013,6 +4013,10 @@ export function resolveFacts(document: any) {
         title,
         phase,
         description,
+        /* Yhteystietolaatikon osapuolet (D-429). */
+        contacts: document.raw_payload?.contacts ?? [],
+        developer: document.raw_payload?.developer ?? null,
+        relatedCompanies: document.raw_payload?.related_companies ?? [],
       }),
     }
   }

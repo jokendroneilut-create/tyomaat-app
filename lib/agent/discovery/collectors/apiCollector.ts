@@ -69,6 +69,7 @@ import { estettyPerhe } from "../../hilmaRakentamisenIlmoitus"
 import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
 import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
 import { etsiKaavasivut } from "../../vantaaKaavaSivu"
+import { aloitteentekija, tervolanKaavasivu, type TervolaOsapuolet } from "../../tervolaKaava"
 import {
   VIHTI_KAAVOITUS_YHTEYSTIEDOT,
   jasennaVihtiYhteystiedot,
@@ -35943,24 +35944,32 @@ async function collectTervolaKaavaSource(source: DiscoverySource) {
   for (const url of urls) {
     let title = ""
     let description = ""
+    /*
+     * Ingressi, yhteystietolaatikon osapuolet ja kuvaus ilman sivun
+     * yhteisiä moduuleja (D-429). Ennen tätä kuvaus päättyi "Jaa sivu
+     * eteenpäin … Seuraa meitä", yhteyshenkilö oli kunnan vaihde ja
+     * hankevastaava jäi pois kaikilta kahdeksalta kaavalta.
+     */
+    let osapuolet: TervolaOsapuolet = { contacts: [], developer: null, consultants: [] }
+    let aloite: string | null = null
     try {
       const detailResponse = await fetch(url, { cache: "no-store" })
       if (detailResponse.ok) {
-        const $$ = cheerio.load(await detailResponse.text())
+        const html = await detailResponse.text()
+        const $$ = cheerio.load(html)
         title = $$("h1").first().text().replace(/\s+/g, " ").trim()
-        const paragraphs = $$(".editor-container")
-          .toArray()
-          .map((el) => $$(el).text().replace(/\s+/g, " ").trim())
-          .filter(Boolean)
-        const attachmentTitles = $$(".link-text")
-          .toArray()
-          .map((el) => $$(el).text().replace(/\s+/g, " ").trim())
-          .filter(Boolean)
-        description = [...paragraphs, ...attachmentTitles].join(" ")
+        const sivu = tervolanKaavasivu(html)
+        description = sivu.kuvaus
+        osapuolet = sivu.osapuolet
+        aloite = aloitteentekija(sivu.ingressi)
       }
     } catch {
       // Skip documents whose detail page fails to load.
     }
+    const developer = osapuolet.developer ?? aloite
+    const relatedCompanies = [developer, aloite, ...osapuolet.consultants].filter(
+      (x, i, kaikki): x is string => !!x && kaikki.indexOf(x) === i
+    )
 
     if (!title) continue
 
@@ -35972,7 +35981,7 @@ async function collectTervolaKaavaSource(source: DiscoverySource) {
     slugCounts.set(baseSlug, occurrence)
     const slug = occurrence > 1 ? `${baseSlug}-${occurrence}` : baseSlug
 
-    const rawText = JSON.stringify({ title, phase, description })
+    const rawText = JSON.stringify({ title, phase, description, osapuolet })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -35992,7 +36001,9 @@ async function collectTervolaKaavaSource(source: DiscoverySource) {
           slug,
           phase,
           description,
-          contacts: [],
+          contacts: osapuolet.contacts,
+          developer,
+          related_companies: relatedCompanies,
           completed,
         },
         processed_at: new Date().toISOString(),

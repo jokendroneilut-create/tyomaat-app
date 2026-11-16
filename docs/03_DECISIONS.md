@@ -51,6 +51,69 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-429 – Asiakaspalaute Pukinselästä: tieto oli lähdesivulla ja toisella rivillä
+
+YIT:n käyttäjän hankepalaute 16.11.2026 Pukinselän osayleiskaavasta
+(Tervola): *"Hankkeesta on julkisesti tiedossa lisäksi hankekehittäjä:
+Helios Nordic Energy Finland/ Helios 1 Cranberry Oy."* Johannes: *"katso
+puuttuuko meiltä joku lähde"* → *"tee kaikki kolme"*.
+
+**Lähde ei puuttunut.** Tieto oli meillä kahdesta suunnasta:
+
+1. **Tervolan kaavasivulla itsellään** — ingressi (*"…24.9.2026 Helios 1
+   Cranberry Oy:n pyynnöstä…"*) ja rakenteinen laatikko "Lisätietoja
+   kaavoituksesta antavat": kunta, HANKETOIMIJA Helios Nordic Energy
+   Finland Oy kahdella nimetyllä henkilöllä, KAAVAKONSULTTI Alusta
+   Consulting. Keräin ei lukenut kumpaakaan: kuvaus oli leipäteksti +
+   sivun alatunniste ("Jaa sivu eteenpäin … Seuraa meitä"), ja
+   yhteyshenkilöksi oli poimittu alatunnisteen vaihde ja kirjaamo.
+   Faktapoiminta ja tunnistaja kirjoittivat yhteyshenkilöt kiinteästi
+   tyhjiksi.
+2. **Datakeskusrekisterin rivillä "Helios Tervola-Koivu"** (31.10.2026),
+   rakennuttaja Helios — sama hanke (860 ha, Koivun alue), mutta rivejä
+   ei ollut yhdistetty: nimet eroavat ja kaavarivin piste oli geokoodattu
+   kirkonkylään 20 km päähän.
+
+#### Korjaus 1: Tervolan keräin (`lib/agent/tervolaKaava.ts`)
+
+Laatikko on kaikilla 8 Tervolan kaavasivulla viidellä kirjoitusasulla,
+joten jäsennys on rivipohjainen tilakone: rooliotsikko (TERVOLAN KUNTA /
+HANKEVASTAAVA / HANKKEESTA VASTAAVA / HANKETOIMIJA / KAAVAKONSULTTI),
+yhtiörivi, henkilö (nimi ennen tai jälkeen nimikkeen), puhelin ja
+sähköposti. Hankevastaava → rakennuttaja, konsultti → `role: agent`,
+kunnan henkilöt ilman roolia ([[kaava-contact-coverage]]). Ingressistä
+luetaan aloitteentekijä liittyväksi yritykseksi. **Unicode-ansa:**
+Vitsakankaan "Seppänen" oli a + U+0308, jota `\p{L}` ei hyväksy — teksti
+normalisoidaan NFC:ksi. Kytketty keräimeen, `extractTervolaKaavaFacts`iin
+ja `tervolaKaavaResolver`iin.
+
+Takautuvasti `scripts/korjaa-tervolan-kaavat.ts`: 8 hanketta + 9
+jonoriviä. Jokainen sai 3–6 nimettyä henkilöä, alatunnisteen vaihde ja
+kirjaamo poistettiin, kuvaus sai ingressin. Rakennuttaja täyttyi
+Kolopetäjälle (Energiequelle) ja Pukinselälle (Helios); **Kuoringissa
+vaihtui** Myrsky Energiasta ABO Energyyn, koska sivu nimeää nyt ABO:n
+hankkeesta vastaavaksi (Myrsky Energia oli kaavoitusaloitteen tekijä ja
+jäi liittyväksi yritykseksi).
+
+Samaa laatikkoa ei ole muilla kaavalähteillä: 240 sivustosta vain Iitillä
+on `contact-banner`, ja siellä se on koko kaavalistan yleinen yhteystieto.
+
+#### Korjaus 2: yhdistäminen
+
+Helios Tervola-Koivu yhdistetty Pukinselkään (kaavarivi säilyy, Helios
+Nordic Energy AB liittyväksi). Piste siirretty Koivuun rekisterin
+koordinaatteihin.
+
+#### Mittaus 3: datakeskusrekisteri vs. muut lähteet
+
+Rekisterin 131 julkisesta rivistä 68:lla on saman kunnan datakeskusrivi
+toisesta lähteestä. Luettuna noin **19 selvää samaa hanketta** (sama
+erisnimi, Raumalla sama kaavatunnus 26-006), esim. Polarnode Mustakorpi ↔
+YVA, Neoen Yllikkälä ↔ asemakaava, Helios Iisalmi-Tervamäki ↔ kaava + YVA
+(YVA:n toimija *Blackcurrant Oy* — Heliosin hankeyhtiö, kuten Cranberry),
+Solano Uusi-Olkkola ↔ YVA + kaava (kolme riviä). Yhdistämisestä päättää
+Johannes; lista `scratchpad`ista D-429:n jatkoon.
+
 ### D-428 – Vihdin kaavan valmistelija yhteyshenkilöksi
 
 Johannes 16.11.2026 kaavasta N202b Etelä-Nummelan työpaikka-alue III:

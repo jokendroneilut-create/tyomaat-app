@@ -27,6 +27,15 @@ Kilpailutusvaiheesta ei löytynyt yhtään edennyttä.
 Samalla löytyi päinvastainen virhe: Porthanian peruskorjaus näkyi
 valmistuneena, vaikka rakentaminen alkoi lokakuussa.
 
+### Tervolan kaavoille hankkeen vastaava ja yhteyshenkilöt (D-429)
+
+Asiakaspalautteen pohjalta: Tervolan kaavahankkeissa näkyy nyt hankkeesta
+vastaava yhtiö (esimerkiksi Helios, ABO Energy, Energiequelle), sen
+nimetyt yhteyshenkilöt puhelinnumeroineen sekä kaavakonsultti.
+Kuvauksista poistui sivun alatunniste, ja kunnan vaihde vaihtui
+nimettyihin henkilöihin. Pukinselän datakeskuskaava yhdistettiin samaa
+hanketta koskevaan datakeskusrekisterin riviin.
+
 ### Vihdin kaavoille nimetty kaavoittaja (D-428)
 
 Vihdin kaavahankkeissa näkyy nyt kaavan valmistelija nimeltä,

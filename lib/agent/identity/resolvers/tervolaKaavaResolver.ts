@@ -63,7 +63,10 @@ export async function resolveTervolaKaavaProject({
       source_url: document.document_url,
 
       description,
-      contact_persons: [],
+      /* Yhteystietolaatikon osapuolet (D-429). */
+      contact_persons: Array.isArray(metadata.contacts) ? metadata.contacts : [],
+      developer: metadata.developer ?? null,
+      related_companies: Array.isArray(metadata.related_companies) ? metadata.related_companies : [],
 
       phase_hint: phaseHint,
       completed,

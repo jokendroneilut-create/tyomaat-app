@@ -21,12 +21,18 @@ export function extractTervolaKaavaFacts({
   title,
   phase,
   description,
+  contacts = [],
+  developer = null,
+  relatedCompanies = [],
 }: {
   documentId: string
   sourceName: string
   title: string | null
   phase: string | null
   description: string | null
+  contacts?: any[]
+  developer?: string | null
+  relatedCompanies?: string[]
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
 
@@ -40,7 +46,10 @@ export function extractTervolaKaavaFacts({
     decision_index: title ?? "tervola-kaava",
 
     description: clean(description),
-    contacts: [],
+    /* Yhteystietolaatikosta (D-429). */
+    contacts,
+    developer: clean(developer),
+    related_companies: relatedCompanies,
   }
 
   if (operation) {
