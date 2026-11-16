@@ -11,6 +11,13 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-17 (puitejärjestelyt)
 
+### Duplikaattinapin teksti: "Lisää duplikaattilistalle" (D-433)
+
+TIC:n hankekortin nappi "Yhdistä valittuun" ei yhdistänyt rivejä vaan
+lisäsi parin duplikaattilistalle. Siksi Rauman seisakkeen kaksi riviä jäivät
+molemmat näkyviin. Teksti korjattiin vastaamaan toimintaa, ja Rauman rivit
+yhdistettiin.
+
 ### Porvoon uusi sairaala ja Lohjan sairaalan peruskorjaus jonoon (D-432)
 
 RKP:n tiedote HUSin vuoden 2027 talousarviosta jaettiin kahdeksi

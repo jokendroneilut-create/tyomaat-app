@@ -51,6 +51,40 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-433 – TIC:n duplikaattinappi lisää parin listalle, ei yhdistä: teksti korjattu
+
+Johannes 17.11.2026, kuvakaappaus listalta jossa näkyi kaksi riviä
+*"Rauman seisake"* ja *"Rauman uusi henkilöjunaseisake"* (NRC Group):
+*"koitin yhdistää nuo kuvan kaksi hanketta, mutta ne näkyvät edelleen
+varmaan välimuistituksen takia"*.
+
+**Syy ei ollut välimuisti.** Hankekortin ylläpitäjänappi toimii kahdessa
+vaiheessa. Ensin painetaan "Merkitse duplikaatiksi", sitten toisella
+hankkeella nappia, jonka teksti oli **"Yhdistä valittuun"**. Toinen
+painallus kutsuu reittiä `/api/tic/duplicates/manual`, joka *ei yhdistä
+mitään*. Reitin oma kommentti sanoo saman: se vain kirjaa parin
+`project_duplicate_candidates`-listalle (`pending`, varmuus 100).
+Varsinainen yhdistäminen tapahtuu vasta, kun pari hyväksytään
+duplikaattilistalla (`/api/tic/duplicates/review`,
+`confirmed_duplicate`). Ilmoitus "Pari lisätty katselmointiin" kertoi
+tämän, mutta napin teksti lupasi muuta. Pari `0a74ba00` oli jäänyt
+listalle odottamaan.
+
+**Korjaus:** napin teksti on nyt **"Lisää duplikaattilistalle"**.
+Ohjeteksti kertoo, että rivit yhdistetään vasta, kun pari hyväksytään
+listalla. Toiminta ei muuttunut. Johannes valitsi tekstimuutoksen
+vaihtoehdoista "muuta teksti" ja "nappi yhdistää suoraan".
+
+**Rauman rivit:** `6f0ba818` "Rauman seisake" yhdistettiin
+(`merge-duplicate-projects.ts`) riviin `6cb0106a` "Rauman uusi
+henkilöjunaseisake". Siihen NRC:n jonorivi `a5ebf180` oli jo liitetty
+hyväksynnässä 16.11. Kaksi yhteyshenkilöä siirtyi, ja vanha nimi jäi
+`also_known_as`-kenttään. Pari kuitattiin listalla tilaan
+`confirmed_duplicate`.
+
+Ks. `app/projects/page.tsx` (duplikaattinappi),
+`app/api/tic/duplicates/manual/route.ts`.
+
 ### D-432 – HUSin talousarviotiedote jaettu: Porvoon uusi sairaala ja Lohjan peruskorjaus
 
 Johannes 17.11.2026 jonorivistä `9dbc19fb` (RKP:n STT-tiedote *"Porvoon
