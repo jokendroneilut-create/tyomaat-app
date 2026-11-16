@@ -87,6 +87,13 @@ Hovioikeuden talotekninen peruskorjaus"* ovat aitoja hankkeita: ne ovat
 puitejärjestelyn alla tilattuja yksittäisiä kohteita. Mahdollisen säännön
 on päästettävä ne läpi, samoin Omnian rajatapaus (D-375).
 
+**Ei karsintasääntöä, ei massapiilotusta.** Johannes 17.11.2026, kun
+hänelle esitettiin 46 jäljellä olevaa riviä ja automaattinen karsinta:
+*"antaa olla noin ja niiden tulla läpi, katson tapauskohtaisesti"*. Sama
+ratkaisu kuin kunnossapitosopimuksilla D-375:ssä. Puitejärjestely tulee
+jonoon ja katselmoija päättää. Kannassa olevat rivit piilotetaan vain
+yksitellen.
+
 ### D-430 – Datakeskusrekisterin rivit yhdistetty saman hankkeen kaava- ja YVA-riveihin
 
 D-429:n mittauksen jatko. Johannes 16.11.2026: *"yhdistä selvät parit ja

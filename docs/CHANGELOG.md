@@ -18,7 +18,8 @@ Viisi Vihdin riviä *"Puitejärjestely, … vuosisopimusperiaatteella
 rakennushanke, ja tämän erän sopimuskausi on jo päättynyt.
 Karsintasääntöä ei ole, joten linja on katselmoinnissa: marraskuun 19
 puitejärjestelyä on hylätty jonossa käsin. Kantaan jäi 46 aiemmin
-hyväksyttyä puitejärjestelyriviä odottamaan päätöstä.
+hyväksyttyä puitejärjestelyriviä. Johanneksen päätös: ei massapiilotusta eikä
+karsintasääntöä, vaan tapauskohtainen harkinta.
 
 ## 2026-11-15 (aloitettujen verkkohaku suunnitteluvaiheelle)
 
