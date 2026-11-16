@@ -51,6 +51,33 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-432 – HUSin talousarviotiedote jaettu: Porvoon uusi sairaala ja Lohjan peruskorjaus
+
+Johannes 17.11.2026 jonorivistä `9dbc19fb` (RKP:n STT-tiedote *"Porvoon
+uuden sairaalan suunnittelu käynnistyy – investointimäärärahoja
+Raaseporin ja Lohjan sairaaloille"*): *"tässä on ainakin kaksi hanketta
+jotka ovat merkittäviä ja pitää purkaa omiksi hankkeikseen"*.
+
+Kannassa ei ollut kumpaakaan millään nimellä. Lohjalta löytyi vain HUSin
+lämmitysjärjestelmän muutos, joka on eri työ. Jonoon luotiin kaksi
+riviä (`resolver: manual-split`, oma fragmentti lähdeosoitteeseen):
+
+| rivi | vaihe | tiedot |
+|---|---|---|
+| `8ad41ac7` Porvoon uusi sairaala | Suunnittelussa | HUSin osuus 90 M€, investointi 2027–2032; Itä-Uudenmaan hyvinvointialue liittyvänä |
+| `fd4b54b1` Lohjan sairaalan peruskorjaus | Suunnittelussa | käynnistyy 2027, Sairaalatie 8; laajuus ja kustannus puuttuvat |
+
+Raaseporin dialyysin vedenpuhdistusjärjestelmä on laitehankinta, joten
+siitä ei tehty riviä. Tiedotteen yhteyshenkilöt ovat RKP:n edustajia
+HUSin hallituksessa, joten heidän roolinsa on `authority`.
+Alkuperäisen rivin Johannes hylkää itse.
+
+**Sivulöydös:** kaksi Lohjan lämmitysjärjestelmärivia (`abb48ae6`,
+`6569d338`) ovat kunnassa Helsinki, koska kunta on otettu HUSin
+osoitteesta (Paciuksenkatu 21). Riviä ei korjattu.
+
+Skripti: `scripts/jaa-hus-talousarviotiedote.ts`.
+
 ### D-431 – Puitejärjestelyt eivät ole rakennushankkeita: Vihdin päättynyt erä piilotettu
 
 Johannes 17.11.2026, kuvakaappaus listalta jossa näkyi kaksi Vihdin riviä

@@ -11,6 +11,11 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-17 (puitejärjestelyt)
 
+### Porvoon uusi sairaala ja Lohjan sairaalan peruskorjaus jonoon (D-432)
+
+RKP:n tiedote HUSin vuoden 2027 talousarviosta jaettiin kahdeksi
+ehdokkaaksi. Kumpaakaan hanketta ei ollut kannassa.
+
 ### Vihdin päättynyt puitejärjestelyerä piilotettu (D-431)
 
 Viisi Vihdin riviä *"Puitejärjestely, … vuosisopimusperiaatteella
