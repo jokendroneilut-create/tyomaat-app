@@ -9,6 +9,17 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-17 (puitejärjestelyt)
+
+### Vihdin päättynyt puitejärjestelyerä piilotettu (D-431)
+
+Viisi Vihdin riviä *"Puitejärjestely, … vuosisopimusperiaatteella
+1.5.–30.10.2026"* piilotettiin asiakkaalta. Puitejärjestely ei ole
+rakennushanke, ja tämän erän sopimuskausi on jo päättynyt.
+Karsintasääntöä ei ole, joten linja on katselmoinnissa: marraskuun 19
+puitejärjestelyä on hylätty jonossa käsin. Kantaan jäi 46 aiemmin
+hyväksyttyä puitejärjestelyriviä odottamaan päätöstä.
+
 ## 2026-11-15 (aloitettujen verkkohaku suunnitteluvaiheelle)
 
 ### Suunnittelussa mutta jo rakenteilla tai valmis (D-420)

@@ -51,6 +51,42 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-431 – Puitejärjestelyt eivät ole rakennushankkeita: Vihdin päättynyt erä piilotettu
+
+Johannes 17.11.2026, kuvakaappaus listalta jossa näkyi kaksi Vihdin riviä
+(*"Puitejärjestely, IV-työt / sähkötyöt vuosisopimusperiaatteella
+1.5.–30.10.2026"*): *"siivoa nämä puitejärjestelyt pois koska ovat jo
+menneet ja linjasimme jo ettei noita puitejärjestelyjä jatkossa poimita
+koska eivät ole rakennushankkeita"*.
+
+**Puitejärjestely ei ole hanke.** Sillä ei ole yhtä kohdetta, työmaata
+eikä valmistumista. Tilaaja valitsee urakoitsijat tekemään yhden
+ammattialan töitä omissa kiinteistöissään sopimuskauden ajan, ja
+yksittäinen työ tilataan myöhemmin ilman julkista ilmoitusta.
+
+**Piilotettiin 5.** Kuvan kaksi riviä kuuluivat samaan Hilman erään:
+rakennusautomaatio-, sähkö-, IV-, LV- ja
+rakennustekniset työt, kaikki Sopimus myönnetty ja sopimuskausi päättynyt
+30.10.2026. Tapa on `is_public: false` + `metadata.piilotuksen_syy`, ei
+DELETE, sama kuin D-375:ssä. Skripti: `scripts/piilota-puitejarjestelyt.ts`.
+
+**Linja on katselmoinnissa, ei koodissa.** Jonossa puitejärjestelyistä
+hyväksyttiin heinä–lokakuussa 53 ja hylättiin 21. Marraskuussa kaikki
+19 hylättiin (ensimmäiset 7.11.). Karsintasääntöä ei ole:
+`hilmaSopimuskausi.ts` tunnistaa puitesopimuksen (eForms
+`framework-agreement`, otsikon `VAHVA_PUITESANA`), mutta vain
+aloituspäivän hylkäämiseen, ei ehdokkaan. Siksi jokainen puitejärjestely
+tulee edelleen jonoon ja hylätään käsin.
+
+**Kantaan jäi 46 julkista puitejärjestely- tai vuosisopimusriviä**
+heinä–lokakuun hyväksynnöistä, esimerkiksi Vihdin seuraava erä
+1.11.2026–30.10.2028, Kalajoen kolme, Eduskunnan kanslian kolme ja
+Mäntsälän kaksi. Niitä ei piilotettu ilman Johanneksen päätöstä. Kaksi
+Vaasan riviä *"Puitejärjestelyn sisäinen hankinta, Vaasan vankilan /
+Hovioikeuden talotekninen peruskorjaus"* ovat aitoja hankkeita: ne ovat
+puitejärjestelyn alla tilattuja yksittäisiä kohteita. Mahdollisen säännön
+on päästettävä ne läpi, samoin Omnian rajatapaus (D-375).
+
 ### D-430 – Datakeskusrekisterin rivit yhdistetty saman hankkeen kaava- ja YVA-riveihin
 
 D-429:n mittauksen jatko. Johannes 16.11.2026: *"yhdistä selvät parit ja
