@@ -74,7 +74,11 @@ Alkuperäisen rivin Johannes hylkää itse.
 
 **Sivulöydös:** kaksi Lohjan lämmitysjärjestelmärivia (`abb48ae6`,
 `6569d338`) ovat kunnassa Helsinki, koska kunta on otettu HUSin
-osoitteesta (Paciuksenkatu 21). Riviä ei korjattu.
+osoitteesta (Paciuksenkatu 21). Myös koordinaatit
+osoittivat Helsinkiin. Johanneksen pyynnöstä kunnaksi korjattiin Lohja,
+koordinaateiksi Sairaalatie 8 (60.2235, 24.0180, Nominatim) ja osoitteeksi
+Sairaalatie 8, 08200 Lohja. Vanhat arvot ovat kentässä
+`metadata.kunnan_korjaus`.
 
 Skripti: `scripts/jaa-hus-talousarviotiedote.ts`.
 
