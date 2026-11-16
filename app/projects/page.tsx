@@ -2146,14 +2146,14 @@ setLoadDebug('Projektit haettu. Tarkistetaan mahdollinen tiimi...')
                     }}
                     title={
                       dupPari && dupPari.id !== selected.id
-                        ? `Merkitse duplikaatiksi hankkeen "${dupPari.name}" kanssa`
+                        ? `Lisää pari duplikaattilistalle hankkeen "${dupPari.name}" kanssa. Rivit yhdistetään vasta, kun pari hyväksytään listalla.`
                         : 'Merkitse tämä ja avaa sitten toinen hanke'
                     }
                   >
                     {dupPari
                       ? dupPari.id === selected.id
                         ? 'Peru valinta'
-                        : 'Yhdistä valittuun'
+                        : 'Lisää duplikaattilistalle'
                       : 'Merkitse duplikaatiksi'}
                   </button>
                 )}
