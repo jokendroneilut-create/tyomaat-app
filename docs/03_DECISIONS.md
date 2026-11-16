@@ -112,7 +112,7 @@ erisnimi, Raumalla sama kaavatunnus 26-006), esim. Polarnode Mustakorpi ↔
 YVA, Neoen Yllikkälä ↔ asemakaava, Helios Iisalmi-Tervamäki ↔ kaava + YVA
 (YVA:n toimija *Blackcurrant Oy* — Heliosin hankeyhtiö, kuten Cranberry),
 Solano Uusi-Olkkola ↔ YVA + kaava (kolme riviä). Yhdistämisestä päättää
-Johannes; lista `scratchpad`ista D-429:n jatkoon.
+Johannes; parilista on alla vastauksessa ja tarvittaessa D-430:ssa.
 
 ### D-428 – Vihdin kaavan valmistelija yhteyshenkilöksi
 
