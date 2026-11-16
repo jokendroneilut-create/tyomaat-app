@@ -51,6 +51,37 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-435 – Raahen kaavoittajien puhelin ja sähköposti henkilöstöhausta
+
+Johannes 17.11.2026: *"hae raahen kaavoittajien numerot henkilöhausta"*.
+Tämä on jatkoa D-434:lle, jonka jälkeen Raahen kaavoista tiedettiin
+kaavoittajien rooli ja nimi mutta ei yhteystietoja.
+
+**Lähde:** kaavasivujen Lisätietoja-laatikko linkittää kaupungin
+henkilöstöhakuun. Haun kaavoitusyksikön suodatin (`term_node_tid_depth=87`)
+listaa kaikki kymmenen henkilöä taulukkona: nimi muodossa "Sukunimi
+Etunimi", matkapuhelin ja tehtävä. Sivun ingressi ilmoittaa sähköpostin
+muodon: *"Henkilöstön sähköpostiosoitteet ovat muotoa etunimi.sukunimi
+[at] raahe.fi"*. robots.txt ei kiellä polkua.
+
+**Sääntö on sama kuin Vihdissä (D-428).** Osoite muodostetaan vain, kun
+muoto on ilmoitettu sivulla, ja vain nimistä, joissa ä/å/ö-muunnoksen
+jälkeen on pelkkiä a–z-kirjaimia. Mathias Holmén sai puhelinnumeron mutta
+ei sähköpostia, koska é:n muunnosta ei ole ilmoitettu. Olemassa oleva
+arvo voittaa aina.
+
+**Toteutus:**
+
+- `lib/agent/raaheKaava.ts`: `jasennaRaahenHenkilosto` ja
+  `taydennaRaahenYhteystiedot`, testejä nyt 14.
+- Keräin hakee henkilöstölistan kerran ajoa kohden ja täydentää jokaisen
+  kaavasivun henkilöt. Jos haku epäonnistuu, keruu jatkuu ilman numeroita.
+- Takautuva täydennys `scripts/taydenna-raahen-numerot.ts` muutti 47 riviä
+  (21 hanketta ja 26 jonoriviä) sekä 26 dokumenttia.
+
+Nyt jokaisella Raahen kaavahankkeella on vähintään yksi nimetty
+kaavoittaja numeroineen.
+
 ### D-434 – Raahen kaavasivut: kuvaus, vaihe ja yhteyshenkilöt uudesta pohjasta, tunnus nimen lopusta
 
 Johannes 17.11.2026 jonorivistä `530a2491` (*"Pattijärvien teollisuusalueen

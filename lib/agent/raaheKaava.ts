@@ -20,17 +20,77 @@ import * as cheerio from "cheerio"
  *     "Lisätietoja" omassa kappaleessaan. Vanha keräin luki vain
  *     Lisätietoja-kappaleen ja siitä vain ensimmäisen parin.
  *
- * Sähköpostia ja puhelinta sivuilla ei ole, eikä osoitetta arvata.
+ * Kaavasivulla ei ole sähköpostia eikä puhelinta. Ne haetaan kaupungin
+ * henkilöstöhausta (`jasennaRaahenHenkilosto`, D-435).
  */
 
 export type RaaheYhteys = {
   kind: "person"
   name: string
   title: string | null
-  phone: null
-  email: null
+  phone: string | null
+  email: string | null
   organization: string
   role: null
+}
+
+/*
+ * HENKILÖSTÖHAKU (D-435).
+ *
+ * Kaavasivulla on vain rooli ja nimi, mutta sivu linkittää kaupungin
+ * henkilöstöhakuun. Kaavoituksen toimipisteen (term 87) taulukossa on
+ * jokaisen nimi, matkapuhelin ja tehtävä. Sivun ingressi ilmoittaa
+ * osoitteiden muodon: "Henkilöstön sähköpostiosoitteet ovat muotoa
+ * etunimi.sukunimi [at] raahe.fi". Osoite muodostetaan vain, kun muoto
+ * on sivulla, ja vain nimistä joissa on pelkkiä a–z-kirjaimia ä/å/ö:n
+ * muunnoksen jälkeen (sama linja kuin Vihdissä, D-428): é:n muunnosta
+ * ei ole ilmoitettu, joten Holménille ei arvata osoitetta.
+ *
+ * Taulukossa nimi on muodossa "Sukunimi Etunimi" — käännetään.
+ */
+export const RAAHE_KAAVOITUS_HENKILOSTO_URL =
+  "https://www.raahe.fi/yhteystiedot/henkiloston-yhteystiedot?combine=&term_node_tid_depth=87"
+
+export type RaaheHenkilo = { puhelin: string | null; tehtava: string | null; sahkoposti: string | null }
+
+function raahenSahkoposti(etunimi: string, sukunimi: string): string | null {
+  const osat = [etunimi, sukunimi].map((o) => o.toLowerCase().replace(/[äå]/g, "a").replace(/ö/g, "o"))
+  if (osat.some((o) => !/^[a-z-]+$/.test(o))) return null
+  return `${osat[0]}.${osat[1]}@raahe.fi`
+}
+
+/** Henkilöstöhaun taulukko → "Etunimi Sukunimi" → puhelin, tehtävä, sähköposti. */
+export function jasennaRaahenHenkilosto(html: string): Map<string, RaaheHenkilo> {
+  const $ = cheerio.load(html)
+  const muotoIlmoitettu = /etunimi\.sukunimi\s*(?:\[at\]|@)\s*raahe\.fi/i.test(siisti($("body").text()))
+  const tulos = new Map<string, RaaheHenkilo>()
+  $("table.views-table tbody tr").each((_, tr) => {
+    const nimiSolu = siisti($(tr).find("td.views-field-title").text())
+    const osat = nimiSolu.split(" ").filter(Boolean)
+    if (osat.length < 2) return
+    const sukunimi = osat[0]
+    const etunimi = osat.slice(1).join(" ")
+    const puhelin = siisti($(tr).find("td.views-field-field-gsm").text()) || null
+    const tehtava = siisti($(tr).find("td.views-field-field-tehtava").text()) || null
+    tulos.set(`${etunimi} ${sukunimi}`, {
+      puhelin,
+      tehtava,
+      sahkoposti: muotoIlmoitettu && osat.length === 2 ? raahenSahkoposti(etunimi, sukunimi) : null,
+    })
+  })
+  return tulos
+}
+
+/** Täydentää kaavasivun henkilöille puhelimen ja sähköpostin; olemassa oleva arvo voittaa. */
+export function taydennaRaahenYhteystiedot<T extends { name?: string | null; phone?: string | null; email?: string | null }>(
+  yhteydet: T[],
+  henkilosto: Map<string, RaaheHenkilo>
+): T[] {
+  return yhteydet.map((c) => {
+    const h = c.name ? henkilosto.get(siisti(c.name)) : undefined
+    if (!h) return c
+    return { ...c, phone: c.phone || h.puhelin, email: c.email || h.sahkoposti }
+  })
 }
 
 export type RaaheKaavasivu = {

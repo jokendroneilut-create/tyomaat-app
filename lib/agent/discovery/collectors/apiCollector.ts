@@ -70,7 +70,14 @@ import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
 import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
 import { etsiKaavasivut } from "../../vantaaKaavaSivu"
 import { aloitteentekija, tervolanKaavasivu, type TervolaOsapuolet } from "../../tervolaKaava"
-import { raahenKaavasivu, raahenKaavatunnus } from "../../raaheKaava"
+import {
+  jasennaRaahenHenkilosto,
+  RAAHE_KAAVOITUS_HENKILOSTO_URL,
+  raahenKaavasivu,
+  raahenKaavatunnus,
+  taydennaRaahenYhteystiedot,
+  type RaaheHenkilo,
+} from "../../raaheKaava"
 import {
   VIHTI_KAAVOITUS_YHTEYSTIEDOT,
   jasennaVihtiYhteystiedot,
@@ -6987,13 +6994,30 @@ async function fetchRaaheKaavaDetails(url: string) {
   }
 }
 
+/*
+ * Kaavoituksen henkilöstölista kerran ajoa kohden: kaavasivulla on vain
+ * rooli ja nimi, numerot ja osoitteet ovat henkilöstöhaussa (D-435).
+ * Epäonnistunut haku ei estä keruuta — henkilöt jäävät ilman numeroa.
+ */
+async function fetchRaahenHenkilosto(): Promise<Map<string, RaaheHenkilo>> {
+  try {
+    const response = await fetch(RAAHE_KAAVOITUS_HENKILOSTO_URL, { cache: "no-store" })
+    if (!response.ok) return new Map()
+    return jasennaRaahenHenkilosto(await response.text())
+  } catch {
+    return new Map()
+  }
+}
+
 async function collectRaaheKaavaSource(source: DiscoverySource) {
   const links = await fetchRaahePlanLinks()
+  const henkilosto = await fetchRaahenHenkilosto()
 
   let saved = 0
 
   for (const link of links) {
-    const details = await fetchRaaheKaavaDetails(link.url)
+    const haettu = await fetchRaaheKaavaDetails(link.url)
+    const details = { ...haettu, contacts: taydennaRaahenYhteystiedot(haettu.contacts, henkilosto) }
     const title = details.title ?? link.title
     const completed = /voimaantulo|lainvoima/i.test(details.phase ?? "")
 

@@ -11,6 +11,12 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-17 (puitejärjestelyt)
 
+### Raahen kaavoittajille puhelin ja sähköposti (D-435)
+
+Raahen keräin täydentää kaavasivun henkilöille numerot ja sähköpostit
+kaupungin henkilöstöhausta. Sähköposti muodostetaan sivun ilmoittamasta
+muodosta. Takautuvasti täydennettiin 21 hanketta ja 26 jonoriviä.
+
 ### Raahen kaavoille kuvaus ja kaikki kaavoittajat (D-434)
 
 Raahen keräin lukee nyt kuvauksen myös sivuilta, joilla ei ole väliotsikoita.
