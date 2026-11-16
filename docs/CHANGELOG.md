@@ -27,6 +27,13 @@ Kilpailutusvaiheesta ei löytynyt yhtään edennyttä.
 Samalla löytyi päinvastainen virhe: Porthanian peruskorjaus näkyi
 valmistuneena, vaikka rakentaminen alkoi lokakuussa.
 
+### Datakeskushankkeet yhdelle riville (D-430)
+
+20 datakeskushanketta näkyi kahtena tai kolmena rivinä, koska
+datakeskusrekisteri, kaavoitus ja YVA nimeävät saman hankkeen eri
+tavoin. Rivit yhdistettiin: jokaisesta hankkeesta on nyt yksi rivi, jossa
+on rakennuttaja, kaavan tiedot ja YVA:n kuvaus yhdessä.
+
 ### Tervolan kaavoille hankkeen vastaava ja yhteyshenkilöt (D-429)
 
 Asiakaspalautteen pohjalta: Tervolan kaavahankkeissa näkyy nyt hankkeesta

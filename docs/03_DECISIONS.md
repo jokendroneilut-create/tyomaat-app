@@ -51,6 +51,61 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-430 – Datakeskusrekisterin rivit yhdistetty saman hankkeen kaava- ja YVA-riveihin
+
+D-429:n mittauksen jatko. Johannes 16.11.2026: *"yhdistä selvät parit ja
+dokumentoi"*.
+
+**Miksi parit eivät yhdistyneet itsestään:** rekisteri nimeää hankkeen
+toimijan ja kylän mukaan ("Polarnode Kuopio, Mustakorpi"), kaavalähde
+kaavan nimellä ("Mustakorven yritysalueen asemakaava"), YVA hankkeen
+nimellä ("Mustakorven datakeskus, Kuopio"). Lisäksi toimijat esiintyvät
+hankeyhtiöinä: Heliosin Iisalmen YVA:n toimija on *Blackcurrant Oy*,
+Tervolan *Helios 1 Cranberry Oy*. Nimivertailu ei yhdistä näitä, eikä
+koordinaatti aina auta (kaavarivi on usein geokoodattu kirkonkylään).
+
+**Valintasääntö:** säilyy rivi, jonka vaihe on pisimmällä (yhdistäminen
+ei nosta vaihetta); tasatilanteessa rikkaampi kaava- tai YVA-rivi, jolloin
+rekisterin rakennuttaja täydentyy siihen. Yhdistetty
+`merge-duplicate-projects.ts`:llä, piilotetut säilyvät (`is_public =
+false`).
+
+**20 ryhmää, 24 riviä piilotettu:**
+
+| säilyy | piilotettu |
+|---|---|
+| Alapitkän datakeskuksen asemakaava (Lapinlahti) | Greensky Lapinlahti |
+| Mustakorven datakeskus (YVA, Kuopio) | Polarnode Mustakorpi |
+| Uus-Olkkolan datakeskus (YVA, Pyhäjärvi) | Solano Uusi-Olkkola + Uusi-Olkkolan asemakaava |
+| Greensky Energyn datakeskusasemakaava (Huittinen) | Greensky Korvenkylä |
+| Yllikkälän datakeskuksen asemakaava (Lappeenranta) | Neoen Yllikkälä → rakennuttaja Neoen |
+| Koskenkorvan asemakaavan laajennus (Ilmajoki) | Greensky Koskenkorva → rakennuttaja Greensky Data |
+| Datakeskuksen alueen asemakaava (Toholampi) | Greensky Kiertokangas → rakennuttaja Greensky Energy |
+| Seimikankaan asemakaava (Merijärvi) | Pohjan Voima Seimikangas |
+| Mustanlahden datakeskushanke (YVA, Mänttä-Vilppula) | Pohjan Voima Mustanlahti + Mustalahden YVA-kaksoisrivi |
+| Fortum Jyväskylä Seppälänkangas (Rakennuslupa) | Seppälänkankaan YVA |
+| Fortum Rauma Lakari (Rakennuslupa) | kaava 26-006 + Lakarin YVA → rakennuttaja Fortum Rauma Oy |
+| Hietavaaran asemakaava (Rovaniemi) | FCDC Hietavaara → rakennuttaja FCDC |
+| Pispantallin datakeskushanke (YVA, Valkeakoski) | Fortum Pispantalli |
+| Tervamäen datakeskus (YVA, Iisalmi) | Helios Iisalmi-Tervamäki + Tervamäen kaava |
+| Hanhelan asemakaava (Pyhäjoki) | Verda Hanhela |
+| Hyperco Pyhäjoki Keskikylä (Rakenteilla) | Pyhäjoen datakeskuksen YVA |
+| Porin Kupariteollisuuspuiston datakeskus (Rakenteilla) | ASP Pori |
+| Sesterce Jämsä Kaipola | Rakennuslehden uutisrivi → rakennuttaja Sesterce |
+| atNorth FIN04 Myllykoski (Rakenteilla) | FIN04-kampuksen YVA |
+| Fortum Orimattila Pennala (Rakennuslupa) | Pennalan YVA |
+
+Uus-Olkkolan YVA-rivin rakennuttajakentässä oli henkilö ("Projektipäällikkö
+Marc Ribeiro Saez") → korjattu rekisterin mukaan Solanoksi.
+
+**Jätettiin:** Eura Panelia (rekisterissä kaksi eri toimijaa samalla
+paikalla: Transistor DC ja Gridnode — ei tiedetä kumpi kaava on),
+Kajaanin datakeskukset (useita rinnakkaisia), Lapinlahden "Alapitkän
+muuntoaseman datakeskuksen asemakaava" (Helios vai Greensky epäselvä),
+Kouvolan FIN04A/Ph2-rivit (vaiheet ovat omia rivejään,
+[[phases-are-separate-projects]]) ja Hanhelan osayleiskaava (eri kaava
+kuin asemakaava).
+
 ### D-429 – Asiakaspalaute Pukinselästä: tieto oli lähdesivulla ja toisella rivillä
 
 YIT:n käyttäjän hankepalaute 16.11.2026 Pukinselän osayleiskaavasta
@@ -111,8 +166,7 @@ toisesta lähteestä. Luettuna noin **19 selvää samaa hanketta** (sama
 erisnimi, Raumalla sama kaavatunnus 26-006), esim. Polarnode Mustakorpi ↔
 YVA, Neoen Yllikkälä ↔ asemakaava, Helios Iisalmi-Tervamäki ↔ kaava + YVA
 (YVA:n toimija *Blackcurrant Oy* — Heliosin hankeyhtiö, kuten Cranberry),
-Solano Uusi-Olkkola ↔ YVA + kaava (kolme riviä). Yhdistämisestä päättää
-Johannes; parilista on alla vastauksessa ja tarvittaessa D-430:ssa.
+Solano Uusi-Olkkola ↔ YVA + kaava (kolme riviä). Yhdistetty: **D-430**.
 
 ### D-428 – Vihdin kaavan valmistelija yhteyshenkilöksi
 
