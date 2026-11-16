@@ -51,6 +51,66 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-434 – Raahen kaavasivut: kuvaus, vaihe ja yhteyshenkilöt uudesta pohjasta, tunnus nimen lopusta
+
+Johannes 17.11.2026 jonorivistä `530a2491` (*"Pattijärvien teollisuusalueen
+asemakaava ja asemakaavan muutos (Akm 233)"*): *"kuvaus puuttuu vaikka se on
+saatavilla. tarkista tästä lähteestä tulleet näkyvillä olevat hankkeet, jono
+ja korjaa poimija"*. Lisäksi: *"Kaavoituspäällikkö Anu Syrjäpalo on myös
+kerrottu"*.
+
+**Neljä vikaa, kaikki sivupohjan vaihtelusta.** Raahen Drupal-sivuilla on
+yhteinen runko mutta vapaa sisältö.
+
+1. **Kuvaus** luettiin vain "Ajankohtaista"-otsikon *jälkeisestä* h2-osiosta.
+   Otsikottomilta sivuilta (Pattijärvi, Hummastinvaara, Yhteinenkangas) ja
+   sivuilta, joilla Ajankohtaista on ainoa otsikko (Pitkäkari), ei saatu
+   mitään. Kahdella julkisella hankkeella (Pattijärvi, Vanha kaupunki)
+   kuvaukseksi oli tallentunut pelkkä nimi.
+2. **Yhteyshenkilöt** luettiin vain siitä kappaleesta, jossa
+   "Lisätietoja" on, ja siitäkin vain ensimmäinen rooli–nimi-pari.
+   Useimmilla sivuilla henkilöt ovat omissa kappaleissaan, joten
+   kaavoituspäällikkö puuttui lähes kaikilta.
+3. **Vaihe** arvattiin Ajankohtaista-osion ensimmäisestä h3:sta
+   ("Vireilletulo ja OAS", "Osayleiskaava materiaali:"). Sivulla on
+   kuitenkin erillinen vaihekaavio, jossa nykyinen vaihe on korostettu
+   (`#kaavoitusvaiheet .vaihe-active`).
+4. **Kaavatunnus** haettiin nimen alusta (`^(AK|AKM)`). Raahe muutti nimet
+   muodosta *"Akm 233: Pattijärvien…"* muotoon *"Pattijärvien… (Akm 233)"*
+   ja samalla sivujen osoitteet. Tunnus jäi tyhjäksi, joten tunnistus
+   (`raahe_kaava_id`) ei enää yhdistänyt sivua vanhaan hankkeeseen, ja
+   sama kaava tuli jonoon uudelleen. Näin kävi Akm 233:lle, 250:lle,
+   252:lle, 256:lle, 258:lle ja 259:lle. Akm 259 oli julkisena kahdesti.
+
+**Korjaus:** jäsennys on omassa moduulissaan `lib/agent/raaheKaava.ts`
+(`raahenKaavasivu`, `raahenKuvaus`, `raahenVaihe`, `raahenYhteyshenkilot`,
+`raahenKaavatunnus`), ja sillä on 10 testiä.
+
+- Kuvaukseksi valitaan ensisijaisesti viimeinen kaavaosio
+  ("Asemakaavamuutos", "Osayleiskaava"), muuten otsikoton runko tai
+  Ajankohtaista-osio.
+- Linkkikappaleet ja menettelyohjeet (palaute, yleisötilaisuus) jätetään
+  kuvauksesta pois.
+- Yhteyshenkilöiksi poimitaan kaikki rooli–nimi-parit. Sähköpostia ei
+  arvata, koska sivu ei kerro osoitteen muotoa.
+
+Mitattu kaikilla 18 vireillä olevalla sivulla: kaikki saivat kuvauksen ja
+vähintään yhden yhteyshenkilön, ja 7 sivua sai tunnuksen.
+
+**Takautuvasti** (`scripts/korjaa-raahen-kaavat.ts`) muutettiin 42 riviä
+ja 26 dokumenttia.
+
+- Kuvaus täytettiin kahdelle hankkeelle ja kolmelle jonoriville.
+- Puuttuvat yhteyshenkilöt lisättiin 17 hankkeelle.
+- Jonorivien `decision_status` vaihdettiin kaavion mukaiseksi.
+- Kaupunginrannan kaksoisrivi `ac21d693` yhdistettiin riviin `e52e3bb4`.
+- Jonon Pattijärvi `530a2491` liitettiin hankkeeseen `14698579`
+  approve-reitin `mergeIntoProjectId`-haaralla. Reitti tunnisti sen jo
+  tunnuksella (`matchedVia: identifier`).
+
+**Huom:** Pattijärven kaavaa on käsitelty viimeksi 2016 (luonnos), eli se
+on käytännössä pysähdyksissä.
+
 ### D-433 – TIC:n duplikaattinappi lisää parin listalle, ei yhdistä: teksti korjattu
 
 Johannes 17.11.2026, kuvakaappaus listalta jossa näkyi kaksi riviä

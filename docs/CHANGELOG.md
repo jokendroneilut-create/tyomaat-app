@@ -11,6 +11,15 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-17 (puitejärjestelyt)
 
+### Raahen kaavoille kuvaus ja kaikki kaavoittajat (D-434)
+
+Raahen keräin lukee nyt kuvauksen myös sivuilta, joilla ei ole väliotsikoita.
+Se poimii Lisätietoja-laatikon kaikki henkilöt, ottaa vaiheen sivun
+vaihekaaviosta ja lukee kaavatunnuksen nimen lopusta. Raahe oli muuttanut
+nimien muotoa, minkä takia vanhat kaavat tulivat jonoon uudelleen.
+Takautuvasti täydennettiin 42 riviä, ja Kaupunginrannan kaksoisrivi
+yhdistettiin.
+
 ### Duplikaattinapin teksti: "Lisää duplikaattilistalle" (D-433)
 
 TIC:n hankekortin nappi "Yhdistä valittuun" ei yhdistänyt rivejä vaan

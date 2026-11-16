@@ -70,6 +70,7 @@ import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
 import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
 import { etsiKaavasivut } from "../../vantaaKaavaSivu"
 import { aloitteentekija, tervolanKaavasivu, type TervolaOsapuolet } from "../../tervolaKaava"
+import { raahenKaavasivu, raahenKaavatunnus } from "../../raaheKaava"
 import {
   VIHTI_KAAVOITUS_YHTEYSTIEDOT,
   jasennaVihtiYhteystiedot,
@@ -6910,17 +6911,13 @@ async function collectImatraKaavaSource(source: DiscoverySource) {
  * Raahen kaavasivun "Vireillä olevat" -listaus jakautuu Drupalin
  * sivutukseen (?page=0, ?page=1, ...) — kummallakin sivulla on oma
  * "Vireillä olevat" -otsikko ja linkkilista, joten molemmat haetaan ja
- * yhdistetään. Yksittäisen kaavan sivulla nykyinen vaihe on suoraan
- * "Ajankohtaista"-otsikon ALLA oleva ENSIMMÄINEN h3-otsikko (esim.
- * "Hyväksyminen") — sivu näyttää tämän aina erillään "Aiemmat
- * suunnitteluvaiheet" -osiosta, joten vaihetta ei tarvitse päätellä
- * tekstistä kuten useimmilla muilla sivustoilla.
+ * yhdistetään. Kaavasivun jäsennys (kuvaus, vaihe, yhteyshenkilöt) on
+ * moduulissa `lib/agent/raaheKaava.ts` (D-434).
  */
 const RAAHE_LISTING_URLS = [
   "https://raahe.fi/elinymparisto/kaavoitus",
   "https://raahe.fi/elinymparisto/kaavoitus?page=1",
 ]
-const RAAHE_TUNNUS_PATTERN = /^(AK|AKM)\s*(\d+)/i
 
 async function fetchRaahePlanLinks(): Promise<{ title: string; url: string; kaavaTunnus: string | null }[]> {
   const seen = new Set<string>()
@@ -6952,8 +6949,8 @@ async function fetchRaahePlanLinks(): Promise<{ title: string; url: string; kaav
           if (seen.has(absoluteUrl)) return
           seen.add(absoluteUrl)
 
-          const tunnusMatch = text.match(RAAHE_TUNNUS_PATTERN)
-          const kaavaTunnus = tunnusMatch ? `${tunnusMatch[1].toUpperCase()}${tunnusMatch[2]}` : null
+          /* Tunnus on nimen lopussa: "… (Akm 233)" (D-434). */
+          const kaavaTunnus = raahenKaavatunnus(text)
 
           links.push({ title: text, url: absoluteUrl, kaavaTunnus })
         })
@@ -6964,73 +6961,27 @@ async function fetchRaahePlanLinks(): Promise<{ title: string; url: string; kaav
   return links
 }
 
+/*
+ * Jäsennys on moduulissa `lib/agent/raaheKaava.ts` (D-434): kuvaus
+ * rungon kaavaosiosta tai otsikottomasta rungosta, vaihe kaaviosta
+ * (`.vaihe-active`) ja kaikki Lisätietoja-laatikon rooli–nimi-parit.
+ * Vanha toteutus luki vain "Ajankohtaista"-otsikon jälkeisen osion ja
+ * Lisätietoja-kappaleen ensimmäisen parin, joten otsikottomilta sivuilta
+ * jäi kuvaus ja useimmilta yhteyshenkilö pois.
+ */
 async function fetchRaaheKaavaDetails(url: string) {
-  const empty = { title: null as string | null, description: null, phase: "Vireilletulo", contacts: [] as any[] }
+  const empty = { title: null as string | null, description: null as string | null, phase: "Vireilletulo", contacts: [] as any[] }
 
   try {
     const response = await fetch(url, { cache: "no-store" })
     if (!response.ok) return empty
-
-    const html = await response.text()
-    const $ = cheerio.load(html)
-
-    const title = $("h1").first().text().replace(/\s+/g, " ").trim() || null
-
-    const textUntilNextH2 = (heading: any) => {
-      let text = ""
-      let el = $(heading).next()
-      while (el.length && el[0].tagName !== "h2") {
-        text += ` ${$(el).text().replace(/\s+/g, " ").trim()}`
-        el = el.next()
-      }
-      return text.trim()
+    const sivu = raahenKaavasivu(await response.text())
+    return {
+      title: sivu.title,
+      description: sivu.description,
+      phase: sivu.phase ?? "Vireilletulo",
+      contacts: sivu.contacts as any[],
     }
-
-    /*
-     * Kuvausotsikko vaihtelee suunnitelmatyypin mukaan (asemakaavoilla
-     * "Asemakaava", yleiskaavoilla "Osayleiskaava", jne.) — sen sijaan
-     * että arvattaisiin otsikon teksti, käytetään sijaintia: kuvaus on
-     * aina ensimmäinen h2 "Ajankohtaista"-osion JÄLKEEN.
-     */
-    const ajankohtaistaHeading = $("h2")
-      .filter((_, el) => $(el).text().trim() === "Ajankohtaista")
-      .first()
-    const descriptionHeading = ajankohtaistaHeading.length
-      ? ajankohtaistaHeading.nextAll("h2").first()
-      : null
-    const description =
-      descriptionHeading && descriptionHeading.length ? textUntilNextH2(descriptionHeading) || null : null
-
-    const firstH3 = ajankohtaistaHeading.length
-      ? $(ajankohtaistaHeading).nextAll("h3").first()
-      : null
-    const phase = firstH3 && firstH3.length ? firstH3.text().replace(/\s+/g, " ").trim() : "Vireilletulo"
-
-    /*
-     * "Lisätietoja"-kappaleen sisältö vaihtelee: yleensä yksi otsikko +
-     * nimi ("Kaavasuunnittelija" + "Mathias Holmén"), joskus useampi
-     * henkilö samassa kappaleessa. Ilman luotettavaa erotinta useamman
-     * henkilön tapaus ei erotu varmasti otsikko/nimi-parista, joten
-     * poimitaan vain ENSIMMÄINEN pari (otsikko, sitten nimi) ja
-     * jätetään mahdolliset lisähenkilöt pois — puhelin/sähköposti ei
-     * ole tällä sivustolla muutenkaan saatavilla.
-     */
-    const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
-    const lisatietojaLabel = $("strong")
-      .filter((_, el) => $(el).text().trim() === "Lisätietoja")
-      .first()
-    if (lisatietojaLabel.length) {
-      const paragraph = lisatietojaLabel.closest("p")
-      const fullText = paragraph.text().replace(/\s+/g, " ").trim()
-      const rest = fullText.replace(/^Lisätietoja\s*/, "").trim()
-      const parts = rest.split(/\s*(?:\r?\n|(?<=[a-zäöå])(?=[A-ZÄÖÅ]))/).filter(Boolean)
-
-      if (parts.length >= 2 && !/henkilöstöhaku|yhteystiedot/i.test(parts[0])) {
-        contacts.push({ name: parts[1], title: parts[0], phone: null, email: null })
-      }
-    }
-
-    return { title, description, phase, contacts }
   } catch {
     return empty
   }
