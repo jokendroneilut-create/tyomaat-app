@@ -121,16 +121,56 @@ Ei varmaa tietoa: Alajärvi, Eura Panelia, Liminka Erilä, Mäntsälä
 Ojamäentie, Mikkeli Portinhoikka, Oulu Laakeritie, Valkeakoski Huhtakatu
 ja Kerava Nybackantie 6.
 
-**Ohuet rivit olivat usein kaksoiskappaleita.** Neljä ryhmää odottaa
-Johanneksen päätöstä yhdistämisestä:
+**Ohuet rivit olivat usein kaksoiskappaleita, ja ne yhdistettiin.** Johannes
+17.11.2026: *"yhdistä nuo neljä kaksoiskappaleryhmää"*. Säilyväksi valittiin
+rivi, jonka vaihe on pisimmällä; tasatilanteessa rikkaampi. Piilotetun rivin
+kuvaus liitettiin säilyvän kuvaukseen omaksi kappaleekseen, koska
+`merge-duplicate-projects.ts` täyttää vain tyhjät kentät eikä rikkaampi
+uutis- tai kaavateksti olisi muuten näkynyt.
 
-- Orimattila: "Datakeskus, Pennala" ja "Fortum Orimattila, Pennala"
-- Nurmijärvi: Sudentullin kaava, YVA-rivi ja DayOnen uutisrivi
-- Lapinlahti: muuntoaseman kaava ja "Helios Lapinlahti-Alapitkä"
-- Kerava: Eteläisen Jokilaakson kaava ja "Datakeskus, Kerava" (FCDC)
+| säilyi | piilotettiin | huom |
+|---|---|---|
+| `e2dbc764` Fortum Orimattila, Pennala (Rakennuslupa) | `0f5528ae` Datakeskus, Pennala | uutisteksti liitettiin, kuvaus 538 -> 2 242 merkkiä |
+| `7ab4924b` Datakeskus Nurmijärvelle Klaukkalaan (Suunnittelu) | `6e085c08` YVA-rivi, `6134f860` kaava 3-351 | kaavan kuvaus liitettiin; YVA-rivin tilateksti ei |
+| `d6a5bf9d` Helios Lapinlahti-Alapitkä (Rakennuslupa) | `b157a8cc` Alapitkän muuntoaseman kaava | kaava ja kaava-aloitteen tiedot liitettiin |
+| `19469539` Datakeskus, Kerava (Rakennuslupa) | `956e26e4` Eteläisen Jokilaakson kaava | kaava ja LVV:n YVA-päätös liitettiin |
 
-Laajaa verkkohakua 105 riville, joilla on rakennuttaja mutta ei tehoa
-eikä kustannusta, ei tehty.
+Kaavariveiltä siirtyi kuusi yhteyshenkilöä ja kaksi vastuutusta.
+
+**Tehoja ei haeta.** Johannes 17.11.2026: *"ei haeta tehoja, se ei ole
+niin oleellinen tieto"*. Laajaa verkkohakua 105 riville, joilla on
+rakennuttaja mutta ei tehoa, ei tehdä. Rekisteristä saatu teho jää
+metadataan, mutta sitä ei etsitä erikseen.
+
+#### Verkkohaut 17.11.2026
+
+Hakutyökalu: Clauden oma verkkohaku, koska DuckDuckGo oli estänyt
+automaattiset haut. Haettiin kerran per rivi, ja tarvittaessa tehtiin
+toinen haku tarkemmalla sanalla.
+
+| rivi | haku | tulos |
+|---|---|---|
+| Alajärvi, datakeskustontit | "Alajärvi Luoma-aho datakeskus tontti"; "… hinnoittelu 2026" | ei datakeskustoimijaa; maakuntaliiton kohdekortti (Luoma-aho noin 20–50 ha, metalliteollisuus) |
+| Eura, Panelian kaava | "Eura Panelia datakeskus asemakaava yhtiö" | ei osumaa; Fankkee 2:n kaava on eri alue |
+| Järvenpää, sähköasema Emalikatu 11 | "Järvenpää Emalikatu datakeskus sähköasema" | viereinen Emalikatu 13: Data Prop Link Oy (YVA); maininta kuvaukseen |
+| Kerava, Eteläinen Jokilaakso | "Kerava Eteläinen Jokilaakso datakeskus asemakaava" | **FCDC Corp Oy, 250 MW** (LVV:n YVA-päätös 12.6.2026) |
+| Kerava, Nybackantie 6 | "… Nybackantie datakeskus kaasuturbiinivoimalaitos"; "Kerava Nybackantie 6 datakeskus" | osoitetta ei yhdistä mikään lähde; todennäköisesti FCDC, ei kirjattu |
+| Lapinlahti, muuntoaseman kaava | "Lapinlahti Alapitkä muuntoasema datakeskus"; "… Alapitkän muuntoaseman …" | **Helios 2 Dewberry Oy**, kaava-aloite 12.8.2026, 87 ha (kunnan pöytäkirja) |
+| Liminka, Erilä | "Liminka Erilä asemakaava puhtaan siirtymän datakeskus" | ei datakeskustoimijaa; kaavassa yhdyskuntateknisen huollon kortteli, alueella Erilä Energyn aurinkopuisto |
+| Mäntsälä, Ojamäentie 73 | "Mäntsälä Ojamäentie 73 datakeskus Nebius" | osoitetta ei löytynyt |
+| Mäntsälä, Caverionin sähköasema | sama haku | **Nebius**, toinen datakeskus Kapulissa, valmis syksyllä 2027 |
+| Mikkeli, Portinhoikka | "Mikkeli Portinhoikka asemakaava datakeskus" | OAS (17 ha, yksityinen maanomistaja), ei toimijaa |
+| Nurmijärvi, Sudentulli | — | sama hanke kuin DayOnen rivit, yhdistettiin |
+| Orimattila, Pennala | "Orimattila Pennala datakeskus Fortum operaattori" | **Fortum Power and Heat Oy** (kaupungin sopimus); operaattori yhä tuntematon |
+| Oulu, Laakeritie 22 | "Oulu Rusko Laakeritie 22 datakeskus asemakaavan muutos" | OAS (OUKA/1515/2026), ei mainintaa datakeskuksesta |
+| Seinäjoki, Kivenneva | "Seinäjoki Kivenneva datakeskus hankeyhtiö" | **ShelCo 294 Oy** (OAS 16003); yhteyttä Pure DC:hen ei vahvistettu |
+| Valkeakoski, Huhtakatu 11a | "Valkeakoski Huhtakatu datalämpölaitos datakeskus" | ei osumaa; E-Heatin laitos on Radanvarsitiellä |
+| Vantaa, Mittalinja 1 | "Vantaa Mittalinja 1 datakeskus rakentaminen" | **Verne** The Air -kampus (datakeskusluettelot, ei viranomaislähde) |
+| Kajaani, YIT:n urakka | — | **XTX Markets**, rivin omasta kuvauksesta |
+| Skanskan 77 M€:n urakka | "Skanska datakeskusurakka 77 miljoonaa euroa" | aikataulu (loppusyksy 2026 – alkusyksy 2027); tilaajaa ei nimetty |
+
+Lihavoidut tiedot kirjattiin kantaan. Muut jätettiin, koska lähde ei
+yhdistänyt tietoa riviin varmasti.
 
 ### D-435 – Raahen kaavoittajien puhelin ja sähköposti henkilöstöhausta
 

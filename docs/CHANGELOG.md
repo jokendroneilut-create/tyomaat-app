@@ -17,7 +17,8 @@ Riihimäenportti VI:n datakeskukselle päivitettiin rakennuttaja ja aikataulu Yl
 jutusta. Datakeskusrekisterin nykytiedoilla päivitettiin 70 hanketta:
 rakennuttaja 15:lle, teho 31:lle ja pinta-ala 21:lle. Lisäksi 32 hanketta
 siirtyi kunnan keskipisteestä oikealle paikalleen kartalla. Verkkohaulla
-täydennettiin yhdeksän rakennuttajatonta riviä.
+täydennettiin yhdeksän rakennuttajatonta riviä, ja neljä kaksoiskappaleryhmää
+(Orimattila, Nurmijärvi, Lapinlahti, Kerava) yhdistettiin.
 
 ### Raahen kaavoittajille puhelin ja sähköposti (D-435)
 
