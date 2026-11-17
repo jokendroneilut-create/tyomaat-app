@@ -51,6 +51,87 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-436 – Datakeskukset: rekisterin nykytiedot, koordinaatit pois kunnan keskipisteestä, verkkohaku ohuille
+
+Johannes 17.11.2026: *"https://yle.fi/a/74-20257198 lisää tästä tiedot
+kannassa olevalle hankkeelle. tee myös verkkohaku kaikille hankkeille
+joiden tyyppi on 'datakeskus' jos saadaan niistä lisää tietoa ja
+täydennä"*.
+
+**Riihimäki.** Rekisterin rivi *"Riihimäki Portti VI"* (`91134140`) oli
+pelkkä nimi. Ylen 16.11.2026 jutusta täydennettiin:
+
+- nimi: "Riihimäenportti VI:n datakeskus" (vanha nimi on `also_known_as`-kentässä)
+- rakennuttaja: Northern Europe Energy Group
+- tavoiteltu rakennusoikeus: 80 000 k-m², tontti noin 16 ha
+- sijainti: valtatie 3:n ja kantatie 54:n risteysalue
+- aikataulu: esisopimus 10/2026, kaavoitus alkaa 2027, valtuusto 2029,
+  ensimmäinen vaihe 2030-luvulla
+- yhtiö on varautunut YVA:han, ja alueella on ojakaalin esiintymä
+
+Koordinaattia ei arvattu, koska geokoodain ei löydä Riihimäenporttia.
+
+**Rekisteri oli lukematta jälkikäteen.** Keräin hakee rekisterin täydet
+kentät (`/hankkeet/<id>/json`) vain kun se näkee hankkeen ensimmäistä
+kertaa. Rekisteri täydentyy sen jälkeen, mutta meidän rivimme eivät
+päivity. Rekisterilinkki oli 145 rivillä 206:sta.
+`scripts/paivita-datakeskukset-rekisterista.ts` päivitti 70 riviä ja
+noudattaa D-365:n linjaa, jonka mukaan rekisteri on koostaja.
+
+| kenttä | rivejä | sääntö |
+|---|---|---|
+| rakennuttaja | 15 | vain tyhjään; poikkeava toimija lisätään liittyväksi yritykseksi |
+| teho / IT-teho (MW) | 31 | metadataan, vain tyhjään |
+| pinta-ala (ha) | 21 | metadataan, vain tyhjään |
+| kuvaus | 15 | vain jos nykyinen on rekisterin pohjateksti eikä uusi ole lyhyempi |
+| koordinaatti | 32 | vain jos meidän pisteemme oli kunnan keskipiste |
+| konsultti | 9 | yhdistetään, vanhat säilyvät |
+
+**Koordinaatit.** Rekisterin piste poikkesi meidän pisteestämme yli 2 km
+33 rivillä. Kaikista 32:sta meidän pisteemme oli täsmälleen kunnan
+keskipiste: esimerkiksi Kajaani-Otanmäki oli 33 km väärässä, Närpiön
+Pirttikylä 29,5 km ja Iin Herva 26,6 km. Ne siirrettiin rekisterin
+ihmisen vahvistamaan sijaintiin, ja vanha piste jäi
+`metadata.koordinaattikorjaus`-kenttään. Rovaniemen Hietavaaran pistettä
+ei siirretty, koska se on oma sijainti eikä kunnan keskipiste.
+
+**Kolme kuvausta jätettiin ennalleen** (Polarnode Nokia, Regant Salo ja
+Verne Kapuli), koska rekisterin uusi teksti olisi ollut lyhyempi.
+Rekisteristä oli siis poistunut jotain.
+
+**Verkkohaku.** DuckDuckGo palautti 17.11. bottitarkistuksen ensimmäisestä
+hausta lähtien, eikä sitä kierretty. Haku tehtiin muulla hakutyökalulla
+niille 18 riville, jotka jäivät rekisterinkin jälkeen ilman
+rakennuttajaa. Täydennettiin yhdeksän riviä
+(`scripts/taydenna-datakeskukset-verkosta.ts`). Jokaisen kentän lähde on
+merkitty `field_sources`-kenttään.
+
+- Kerava, Eteläinen Jokilaakso: FCDC Corp Oy, 250 MW (LVV:n YVA-päätös 12.6.2026).
+- Lapinlahti, Alapitkän muuntoasema: Helios 2 Dewberry Oy, 87 ha (kunnan
+  pöytäkirja, kaava-aloite 12.8.2026).
+- Orimattila, Pennala: Fortum Power and Heat Oy (kaupungin kokousasiakirja).
+- Seinäjoki, Kivenneva: ShelCo 294 Oy (OAS 16003).
+- Mäntsälä, sähköasema: Nebius. Kajaani: XTX Markets ja YIT. Vantaa,
+  Mittalinja 1: Verne (datakeskusluettelot, ei viranomaislähde).
+- Skanskan 77 M€:n urakka: aikataulu tiedotteesta, tilaajaa ei ole nimetty.
+- Järvenpää, sähköasema: maininta viereisestä Data Prop Link Oy:n
+  hankkeesta, ilman rakennuttajaa.
+
+Ei varmaa tietoa: Alajärvi, Eura Panelia, Liminka Erilä, Mäntsälä
+Ojamäentie, Mikkeli Portinhoikka, Oulu Laakeritie, Valkeakoski Huhtakatu
+ja Kerava Nybackantie 6.
+
+**Ohuet rivit olivat usein kaksoiskappaleita.** Neljä ryhmää odottaa
+Johanneksen päätöstä yhdistämisestä:
+
+- Orimattila: "Datakeskus, Pennala" ja "Fortum Orimattila, Pennala"
+- Nurmijärvi: Sudentullin kaava, YVA-rivi ja DayOnen uutisrivi
+- Lapinlahti: muuntoaseman kaava ja "Helios Lapinlahti-Alapitkä"
+- Kerava: Eteläisen Jokilaakson kaava ja "Datakeskus, Kerava" (FCDC)
+
+Laajaa verkkohakua 105 riville, joilla on rakennuttaja mutta ei tehoa
+eikä kustannusta, ei tehty.
+
 ### D-435 – Raahen kaavoittajien puhelin ja sähköposti henkilöstöhausta
 
 Johannes 17.11.2026: *"hae raahen kaavoittajien numerot henkilöhausta"*.

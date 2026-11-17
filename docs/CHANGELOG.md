@@ -11,6 +11,14 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-17 (puitejärjestelyt)
 
+### Datakeskushankkeet: rekisterin nykytiedot ja verkkohaku (D-436)
+
+Riihimäenportti VI:n datakeskukselle päivitettiin rakennuttaja ja aikataulu Ylen
+jutusta. Datakeskusrekisterin nykytiedoilla päivitettiin 70 hanketta:
+rakennuttaja 15:lle, teho 31:lle ja pinta-ala 21:lle. Lisäksi 32 hanketta
+siirtyi kunnan keskipisteestä oikealle paikalleen kartalla. Verkkohaulla
+täydennettiin yhdeksän rakennuttajatonta riviä.
+
 ### Raahen kaavoittajille puhelin ja sähköposti (D-435)
 
 Raahen keräin täydentää kaavasivun henkilöille numerot ja sähköpostit
