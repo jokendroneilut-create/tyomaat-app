@@ -29,10 +29,12 @@ import {
   erotteleNimet,
 } from "@/lib/projects/tunnetutYritykset"
 import {
+  IDENTIFIER_TYPES,
   findByIdentifiers,
   linkIdentifier,
   type IdentifierType,
 } from "@/lib/projects/identity"
+import { paivitettyKuvaus } from "@/lib/projects/kuvauksenPaivitys"
 import { resolvePotentialProject } from "@/lib/agent/identity/resolvePotentialProject"
 import { stripCompanyPrefixFromHeadline } from "@/lib/agent/stripCompanyPrefix"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
@@ -613,6 +615,18 @@ export async function importCandidate(
     })
   }
 
+  /*
+   * LAHTEEN OMAT TUNNISTEET (YVA:n diaarinumero). Sivun osoite voi
+   * vaihtua (Plug Power Porvoo 9/2026), mutta diaarinumero pysyy, joten
+   * se sitoo uuden osoitteen samaan hankkeeseen. Vain tunnetut tyypit.
+   */
+  const lahteenOmatTunnisteet: { type: IdentifierType; value: string | null }[] = (
+    Array.isArray(body.identifiers) ? body.identifiers : []
+  ).filter(
+    (t: any) => t && IDENTIFIER_TYPES.includes(t.type) && typeof t.value === "string" && t.value.trim()
+  )
+  candidateIdentifiers.push(...lahteenOmatTunnisteet)
+
   const exactMatch = await findByIdentifiers(candidateIdentifiers, supabase)
 
   const projects = options.projects ?? (await loadProjectsForMatching())
@@ -678,10 +692,54 @@ export async function importCandidate(
     const unexpire = shouldUnexpire(match.status, mergedMetadata)
     const nowIso = new Date().toISOString()
 
+    /*
+     * KUVAUS PAIVITTYY SAMAN LAHTEEN TAYDENNYKSESTA (kuvauksenPaivitys.ts).
+     * Sama lahde = sama osoite, tai lahteen oma tunniste osui (YVA-sivu
+     * nimetty uudelleen, diaarinumero sama). Jalkimmaisessa myos
+     * lahdelinkki siirtyy uuteen osoitteeseen, koska vanha ei enaa
+     * kerro hankkeesta.
+     */
+    const samaOsoite =
+      !!body.source_url &&
+      kanoninenLahdeUrl(String(body.source_url)) ===
+        kanoninenLahdeUrl(String(match.metadata?.source_url ?? ""))
+    const samaTunniste =
+      !!exactMatch?.projectId &&
+      exactMatch.projectId === matchedProjectId &&
+      exactMatch.rows.some(
+        (r: any) =>
+          r.project_id === matchedProjectId &&
+          lahteenOmatTunnisteet.some((t) => t.type === r.identifier_type)
+      ) &&
+      (body.source_name || "agent") === match.metadata?.source_name
+    let uusiKuvaus = paivitettyKuvaus({
+      nykyinen: existing.additional_info,
+      lahteenEdellinen: (match.metadata as any)?.description ?? null,
+      uusi: body.description ?? body.metadata?.description ?? null,
+      samaLahde: samaOsoite || samaTunniste,
+    })
+
+    /*
+     * JAETTU OSOITE EI OLE SAMA LAHDE. Mitattu 18.11.2026: 169 hanketta
+     * jakaa lahdeosoitteen toisen kanssa (Vaylan kokoomasivut, 11
+     * siltatyota yhdella sivulla; Espoon viikkopaatos-PDF:t; usean
+     * hankkeen STT-tiedotteet). Niissa toisen hankkeen teksti korvaisi
+     * kuvauksen. Haetaan vain kun paivitys muuten tapahtuisi.
+     */
+    if (uusiKuvaus && samaOsoite && !samaTunniste && match.metadata?.source_url) {
+      const { data: samalla } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("metadata->>source_url", match.metadata.source_url)
+        .limit(2)
+      if ((samalla ?? []).length > 1) uusiKuvaus = null
+    }
+
     await supabase
       .from("projects")
       .update({
         last_verified_at: new Date().toISOString(),
+        ...(uusiKuvaus ? { additional_info: uusiKuvaus } : {}),
         city: body.city || match.city || null,
         region: body.region || match.region || null,
         location: body.location || match.location || null,
@@ -758,6 +816,16 @@ export async function importCandidate(
           last_source_name: body.source_name || "agent",
           last_source_url: body.source_url || null,
           last_imported_at: new Date().toISOString(),
+          /*
+           * Lahteen teksti pysyy vertailukohtana: seuraava paivitys
+           * tunnistaa kuvauksen koskemattomaksi vain jos se on sama kuin
+           * tama.
+           */
+          ...(uusiKuvaus ? { description: uusiKuvaus, kuvaus_paivitetty: nowIso } : {}),
+          /* Uudelleen nimetty sivu: linkki uuteen osoitteeseen kuvauksesta riippumatta. */
+          ...(samaTunniste && !samaOsoite && body.source_url
+            ? { source_url: body.source_url, aiempi_source_url: match.metadata?.source_url ?? null }
+            : {}),
           /*
            * Voittajat talteen listanäkymää varten: se lukee
            * related_companies-kentän suoraan, kun taas source_history on

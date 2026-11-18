@@ -51,6 +51,75 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-437 – Osuneen hankkeen kuvaus päivittyy lähteen täydennyksestä, ja YVA:n diaarinumero tunnisteeksi
+
+Johannes 18.11.2026 Plug Powerin Porvoon e-metaanilaitoksesta: rivin kuvaus
+oli *"Tämä sivu täydentyy myöhemmin"*, vaikka YVA-sivulla oli jo koko
+hankekuvaus, neljä putkireittiä ja yhteyshenkilöt. *"tee nuo kaikki kolme"*.
+
+**Kaksi vikaa, joista toinen on yleinen.**
+
+1. **Osumapolku ei päivittänyt kuvausta lainkaan.** `importCandidate`
+   kirjoitti osuneelle hankkeelle metadataa, osapuolia ja
+   yhteyshenkilöitä, mutta `additional_info`, jonka asiakas lukee, jäi
+   hyväksyntähetken tekstiksi. YVA-sivu julkaistaan usein tynkänä ja
+   täydentyy vasta arviointiohjelman myötä. Tuontitapahtumien mukaan
+   vanhentuneet rivit osuivat oikeaan riviin joka ajossa
+   (`verified/matched`), mutta kuvaus ei vaihtunut.
+2. **YVA-sivun osoite ei ole pysyvä.** Plug Powerin sivu nimettiin
+   9/2026 uudelleen. Uusi osoite tuli jonoon erillisenä ehdokkaana ja
+   hylättiin duplikaattina, joten täydentynyt sisältö ei päätynyt
+   minnekään. Diaarinumero (LVV-U/120061/2026) pysyi samana, mutta sitä
+   ei tallennettu.
+
+**Mitattu 18.11.2026 YVA-haun 310 sivua vasten:**
+- 26 riviä, joiden kuvaus oli moninkertaisesti lyhyempi kuin sivu nyt
+  (Mustakorven datakeskus 87 vs. 4 038 merkkiä, Harjulinjan jatko 234
+  vs. 14 495);
+- niistä 24 oli koskemattomia, eli kuvaus oli sama kuin lähteen
+  alkuperäinen teksti;
+- D-208:n skripti ei auta, koska se vaatii vanhan sisältyvän uuteen, ja
+  tynkä ei sisälly täydentyneeseen tekstiin.
+
+**Ratkaisu, `lib/projects/kuvauksenPaivitys.ts`.** Osumassa kuvaus
+korvataan vain, kun kaikki ehdot täyttyvät:
+- lähde on sama: sama osoite tai lähteen oma tunniste osui;
+- nykyinen kuvaus on koskematon (= `metadata.description`), tyhjä tai
+  tunnettu tynkä, joten käsin tai verkkohaulla kirjoitettu säilyy;
+- uusi ei ole lyhyempi.
+
+Lähteen teksti päivittyy samalla `metadata.description`-kenttään
+vertailukohdaksi.
+
+**Kuivaharjoitus löysi kaksi ansaa ennen kirjoitusta:**
+- **80 %:n lyhennysraja** olisi pudottanut tekstiä päättyneiltä
+  YVA:ilta, joiden sivu supistuu (Jokelan datakeskus 5 398 → 4 658).
+  Raja kiristettiin nollaan.
+- **Jaettu osoite:** 169 hanketta jakaa lähdeosoitteen toisen kanssa
+  (Väylän kokoomasivut, joista yhdellä 11 siltatyötä; Espoon
+  viikkopäätös-PDF:t; usean hankkeen STT-tiedotteet). Niissä toisen
+  hankkeen teksti olisi korvannut kuvauksen, joten jaettu osoite ei
+  kelpaa samaksi lähteeksi.
+
+**Diaarinumero:** uusi tunnistetyyppi `yva_diaarinumero`.
+- YVA-keräin poimii numerot muodolla, koska "Diaarinumero:"-otsikko on
+  vain 11/450 sivulla. Kuvio löytyy 395/450 sivulta.
+- Neljällä sivulla on kaksi numeroa, tyypillisesti vanha ELY-numero ja
+  uusi LVV-numero, joten molemmat otetaan.
+- `importCandidate` ottaa nyt lähteen omat tunnisteet (`body.identifiers`)
+  mukaan täsmäykseen ja linkittää ne osumassa.
+- Kun osuma tulee tunnisteella eri osoitteesta, myös lähdelinkki
+  siirtyy uuteen osoitteeseen (`aiempi_source_url` talteen).
+
+**Takautuva ajo** `scripts/korjaa-yva-kuvaukset.ts` käyttää samaa
+funktiota, ja kosketut rivit saavat merkinnän `yva_kuvaus_korjattu`.
+- Kuivaharjoituksessa 199 kuvausta, joista 0 lyhenee:
+  - 40 aitoa täydentymistä;
+  - 159 saa vain YVA-tilarivin ("YVA-menettelyn tila: …"), jota keräin
+    alkoi lisätä hyväksynnän jälkeen.
+- 2 uudelleen nimettyä sivua.
+- 243 diaarinumeroa linkitetään.
+
 ### D-436 – Datakeskukset: rekisterin nykytiedot, koordinaatit pois kunnan keskipisteestä, verkkohaku ohuille
 
 Johannes 17.11.2026: *"https://yle.fi/a/74-20257198 lisää tästä tiedot

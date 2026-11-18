@@ -280,6 +280,14 @@ export type IdentifierType =
   | "kaskinen_kaava_slug"
   | "ruovesi_kaava_slug"
   | "virrat_kaava_slug"
+  /*
+   * YVA-menettelyn diaarinumero (LVV-U/120061/2026, POPELY/2271/2023).
+   * Sivun osoite voi vaihtua, numero ei: Plug Powerin Porvoon sivu
+   * nimettiin uudelleen 9/2026 ja taydentynyt sisalto jai jonoon
+   * hylattyna. ELY:lta LVV:lle siirtyneella hankkeella voi olla kaksi
+   * numeroa; molemmat ovat saman hankkeen tunnisteita.
+   */
+  | "yva_diaarinumero"
 
 export const IDENTIFIER_TYPES: IdentifierType[] = [
   "property_id",
@@ -533,6 +541,7 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "kaskinen_kaava_slug",
   "ruovesi_kaava_slug",
   "virrat_kaava_slug",
+  "yva_diaarinumero",
 ]
 
 /*

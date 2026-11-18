@@ -6,6 +6,7 @@ import {
   cleanYvaContent,
   readYvaStatus,
   yvaStatusIsConcluded,
+  yvaDiaarinumerot,
 } from "./fetchYvaSource"
 
 describe("readYvaStatus", () => {
@@ -274,5 +275,21 @@ describe("extractYvaCompanies - kaavatekstien etuliiteroska", () => {
 
   it("ei palauta paljasta etumuotoa", () => {
     expect(extractYvaCompanies("As. Oy Piikkiön Kirkonkulma hakee kaavamuutosta.")).toEqual([])
+  })
+})
+
+describe("yvaDiaarinumerot", () => {
+  it("poimii numerot ilman otsikkoa ja säilyttää ELY- ja LVV-numeron", () => {
+    expect(
+      yvaDiaarinumerot("Yhteysviranomainen: Niklas Virkkala, LVV. Diaarinumero: LVV-U/120061/2026")
+    ).toEqual(["LVV-U/120061/2026"])
+    expect(yvaDiaarinumerot("POPELY/2271/2023 ... siirtyi LVV-U/55708/2026")).toEqual([
+      "POPELY/2271/2023",
+      "LVV-U/55708/2026",
+    ])
+  })
+
+  it("ei poimi päivämääriä eikä pelkkiä lukuja", () => {
+    expect(yvaDiaarinumerot("Nähtävillä 22.9.–22.10.2026, 60 MW, 18 900 t/v")).toEqual([])
   })
 })

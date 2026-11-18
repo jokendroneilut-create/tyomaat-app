@@ -353,6 +353,26 @@ function firstFinnishMunicipality(raw: unknown): string | null {
   return null
 }
 
+/*
+ * DIAARINUMERO TUNNISTEEKSI (yva_diaarinumero).
+ *
+ * Sivun osoite ei ole pysyva: Plug Powerin Porvoon sivu nimettiin 9/2026
+ * uudelleen, uusi osoite tuli jonoon erillisena ja hylattiin, eika
+ * taydentynyt kuvaus paatynyt hankkeelle. Diaarinumero pysyy.
+ *
+ * Mitattu 18.11.2026: kuvio loytyy 395/450 sivulta, mutta
+ * "Diaarinumero:"-otsikko vain 11:lta -- numero on yleensa
+ * yhteystietolohkossa ilman otsikkoa, joten haetaan muodolla. Neljalla
+ * sivulla on kaksi numeroa, tyypillisesti vanha ELY-numero ja uusi
+ * LVV-numero samalle hankkeelle, joten molemmat otetaan. Kolme riittaa;
+ * enemman viittaisi jo muihin hankkeisiin.
+ */
+const DIAARINUMERO = /\b([A-ZÄÖ]{2,12}(?:-[A-Z])?\/\d{1,7}\/\d{4})\b/g
+
+export function yvaDiaarinumerot(text: string | null | undefined): string[] {
+  return [...new Set(String(text ?? "").match(DIAARINUMERO) ?? [])].slice(0, 3)
+}
+
 export async function fetchYvaSource() {
   const cutoffDate = new Date()
   cutoffDate.setMonth(cutoffDate.getMonth() - RECENCY_MONTHS)
@@ -469,13 +489,17 @@ export async function fetchYvaSource() {
       yvaDeveloper
     )
 
+    const diaarinumerot = yvaDiaarinumerot(`${s.content ?? ""} ${s.description ?? ""}`)
+
     results.push({
       name: title,
       description: yvaStatus
         ? `YVA-menettelyn tila: ${yvaStatus}.\n\n${baseDescription}`
         : baseDescription,
+      identifiers: diaarinumerot.map((value) => ({ type: "yva_diaarinumero", value })),
       metadata: {
         yva_status: yvaStatus,
+        ...(diaarinumerot.length ? { yva_diaarinumerot: diaarinumerot } : {}),
         ...(yvaCompanies.length ? { related_companies: yvaCompanies } : {}),
       },
       city,

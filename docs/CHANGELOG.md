@@ -9,6 +9,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-18 (kuvausten päivitys)
+
+### Osuneen hankkeen kuvaus päivittyy, YVA:n diaarinumero tunnisteeksi (D-437)
+
+Kun lähde osuu olemassa olevaan hankkeeseen, asiakkaalle näkyvä kuvaus
+päivittyy nyt saman lähteen täydentyneestä tekstistä. Ehdot ovat, että
+nykyinen kuvaus on koskematon tai tynkä, uusi ei ole lyhyempi ja
+osoite ei ole usean hankkeen yhteinen. Käsin kirjoitettuun kuvaukseen
+ei kosketa. YVA-hankkeet saavat diaarinumeron tunnisteeksi, joten
+uudelleen nimetty sivu osuu oikeaan riviin. Takautuva ajo korjasi
+YVA-rivien kuvaukset, joista Plug Powerin, Mustakorven ja Harjulinjan
+kaltaiset olivat jääneet tyngäksi.
+
 ## 2026-11-17 (puitejärjestelyt)
 
 ### Datakeskushankkeet: rekisterin nykytiedot ja verkkohaku (D-436)
