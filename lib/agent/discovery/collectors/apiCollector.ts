@@ -78,6 +78,7 @@ import {
   taydennaRaahenYhteystiedot,
   type RaaheHenkilo,
 } from "../../raaheKaava"
+import { haeOasAloite, valitseOasLinkki } from "../../oasAloite"
 import {
   VIHTI_KAAVOITUS_YHTEYSTIEDOT,
   jasennaVihtiYhteystiedot,
@@ -26351,7 +26352,41 @@ async function collectKangasalaKaavaSource(source: DiscoverySource) {
       if (!firstPara) firstPara = text
       if (!goalPara && /tavoit/i.test(text)) goalPara = text
     })
-    const description = goalPara ?? firstPara ?? null
+    /* Muuttujat asetetaan takaisinkutsussa, joten TS kaventaisi ne null-tyypiksi. */
+    let description = ((goalPara as string | null) ?? (firstPara as string | null) ?? null) as string | null
+
+    /*
+     * OAS:N ALOITE JA TAVOITTEET (D-439).
+     *
+     * Sivulla on yleensä yksi tavoitelause; OAS-liitteessä on aloitteen
+     * tekijä (rakennuttaja) ja mitä tämä hakee. Liite haetaan vain kun
+     * sen osoite on vaihtunut, muuten käytetään edellisen ajon poimintaa
+     * -- keräin ajaa kaikki sivut joka kerta ja OAS on megatavujen PDF.
+     */
+    const oasUrl = valitseOasLinkki(
+      $("a[href]")
+        .toArray()
+        .map((a) => ({ href: $(a).attr("href") ?? "", teksti: $(a).text() }))
+    )
+    let developer: string | null = null
+    let oasKuvaus: string | null = null
+    if (oasUrl) {
+      const { data: aiempi } = await supabaseAdmin
+        .from("source_documents")
+        .select("raw_payload")
+        .eq("document_url", page.link as string)
+        .maybeSingle()
+      const p = (aiempi?.raw_payload ?? {}) as Record<string, any>
+      if (p.oas_url === oasUrl && "oas_kuvaus" in p) {
+        developer = p.developer ?? null
+        oasKuvaus = p.oas_kuvaus ?? null
+      } else {
+        const oas = await haeOasAloite(oasUrl)
+        developer = oas?.aloitteentekija ?? null
+        oasKuvaus = oas?.kuvaus ?? null
+      }
+      if (oasKuvaus && oasKuvaus.length > (description?.length ?? 0)) description = oasKuvaus
+    }
 
     const contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[] = []
     $(".card-contact").each((_, card) => {
@@ -26367,7 +26402,7 @@ async function collectKangasalaKaavaSource(source: DiscoverySource) {
 
     const completed = /voimaan|lainvoima/i.test(phase ?? "")
 
-    const rawText = JSON.stringify({ url, title, kaavaTunnus, phase, description, contacts })
+    const rawText = JSON.stringify({ url, title, kaavaTunnus, phase, description, contacts, developer })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin
@@ -26391,6 +26426,9 @@ async function collectKangasalaKaavaSource(source: DiscoverySource) {
             description,
             contacts,
             completed,
+            developer,
+            oas_url: oasUrl,
+            oas_kuvaus: oasKuvaus,
           },
           processed_at: new Date().toISOString(),
           last_seen_at: new Date().toISOString(),

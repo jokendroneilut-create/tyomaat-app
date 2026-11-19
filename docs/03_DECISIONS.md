@@ -51,6 +51,59 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-439 – Kangasalan kaavat: OAS:n Aloite- ja Tavoitteet-luvut kuvaukseksi, aloitteen tekijä rakennuttajaksi
+
+Johannes 19.11.2026 jonorivistä `46a80f58` (*"914 Tarastenjärven asemakaavan
+muutos"*): *"tästä pitäisi poimia"* + OAS:n Aloite- ja Tavoitteet-luvut
+(*"Aloitteen asemakaavan muuttamiseksi on tehnyt Tarasten Kiertotalousalue
+Oy …"*).
+
+**Syy.** Kangasalan kaavasivulla on yleensä vain yksi tavoitelause, ja
+keräin otti sen. Aloitteen tekijä ja se, mitä hakija hakee, ovat sivun
+liitteenä olevassa OAS-PDF:ssä luvuissa "Aloite" ja "Tavoitteet". Liitettä
+ei luettu.
+
+**Mitattu 21 Kangasalan OAS:sta.**
+
+- Luvun otsikko on "Aloite", "Aloite/hakija" tai "SUUNNITTELUN ALOITE".
+- Nimetty aloitteen tekijä on kahdessa: Tarasten Kiertotalousalue Oy (912)
+  ja Kiinteistö Oy Taloherttua (910).
+- Muissa aloitteen on tehnyt kaupunki tai nimeämätön maanomistaja, eikä
+  sellaista kirjata rakennuttajaksi.
+- Kolmessa ei ole Aloite-lukua, joten niille jää sivun kuvaus.
+
+**Toteutus:** yleiskäyttöinen `lib/agent/oasAloite.ts`, 8 testiä.
+
+- `jasennaOasAloite` ja `jasennaAloitteentekija` lukevat luvut ja tekijän.
+- `valitseOasLinkki` valitsee uusimman OAS-liitteen. Palauteraportti,
+  liite ja yleisötilaisuuden ohjelma rajataan pois, koska pelkkä
+  aakkosjärjestys valitsi ne kahdessa kaavassa.
+- Ylä- ja alatunnisteet poistetaan, luettelot säilyvät riveinä ja tavutus
+  yhdistetään, mutta "osallistumis- ja" säilyy.
+- Monipalstaisessa pohjassa luku pysähtyy seuraavan luvun otsikkoon.
+
+Keräin hakee PDF:n vain, kun liitteen osoite on vaihtunut. Muuten se
+käyttää `raw_payload.oas_kuvaus`-kenttää. Rakennuttaja kulkee
+faktoissa ja resolverissa `developer`- ja `related_companies`-kenttiin.
+
+**Takautuvasti** (`scripts/taydenna-kangasalan-oas.ts`):
+
+- kuvaus 8 hankkeelle ja 9 jonoriville
+- rakennuttaja kahdelle hankkeelle (Tarastenjärvi ja Annalantie) ja kolmelle jonoriville
+
+Kuvaus vaihdettiin vain, jos vanha oli tyhjä, sisältyi OAS:n tekstiin
+tai oli alle 250 merkin sivulause.
+
+**Jonorivi oli kaksoiskappale.** Kangasala vaihtoi sivun otsikon numeron
+912 numeroksi 914, vaikka liitteissä lukee yhä 912. Kaavatunnus muuttui,
+joten tunnistus ei yhdistänyt sivua hankkeeseen `6184e151` ja kaava tuli
+jonoon uudelleen. Sama ilmiö oli Raahessa ([[title-format-change-breaks-identity]],
+D-434). Jonorivi liitettiin hankkeeseen approve-reitin
+`mergeIntoProjectId`-haaralla, ja numero 914 jäi `also_known_as`-kenttään.
+
+**Jatko:** sama Aloite-luku on muidenkin kuntien OAS:issa. Moduuli on
+tehty yleiseksi, mutta kytketty vain Kangasalaan.
+
 ### D-438 – Hilman jälki-ilmoitus päättyneestä urakasta: varoitus katselmoijalle, ei karsintaa
 
 Johannes 19.11.2026 jonorivistä `386dcb35` (*"Maatullinpuisto,

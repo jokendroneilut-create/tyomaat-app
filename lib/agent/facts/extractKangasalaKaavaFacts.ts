@@ -23,6 +23,8 @@ export function extractKangasalaKaavaFacts({
   phase,
   description,
   contacts,
+  developer = null,
+  oasUrl = null,
 }: {
   documentId: string
   sourceName: string
@@ -31,6 +33,9 @@ export function extractKangasalaKaavaFacts({
   phase: string | null
   description: string | null
   contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[]
+  /* OAS:n Aloite-luvun nimetty tekijä (D-439). */
+  developer?: string | null
+  oasUrl?: string | null
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
 
@@ -45,6 +50,8 @@ export function extractKangasalaKaavaFacts({
 
     description: clean(description),
     contacts,
+    developer: clean(developer),
+    oas_url: oasUrl,
   }
 
   if (kaavaTunnus) {

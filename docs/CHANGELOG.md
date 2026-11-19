@@ -24,6 +24,13 @@ kaltaiset olivat jääneet tyngäksi.
 
 ## 2026-11-19 (Hilman jälki-ilmoitukset)
 
+### Kangasalan kaavoille aloitteen tekijä ja OAS:n tavoitteet (D-439)
+
+Kangasalan keräin lukee kaavasivun OAS-liitteestä Aloite- ja Tavoitteet-luvut
+kuvaukseksi ja nimetyn aloitteen tekijän rakennuttajaksi. Takautuvasti
+täydennettiin 9 hanketta ja 10 jonoriviä. Tarastenjärven kaava oli tullut
+jonoon uudelleen numerolla 914, ja se liitettiin olemassa olevaan hankkeeseen.
+
 ### Varoitus päättyneestä sopimuskaudesta TIC:ssä (D-438)
 
 Hilman jälki-ilmoitus voi tulla kuukausia urakan jälkeen. Jos sopimuskauden

@@ -1217,6 +1217,8 @@ export function resolveFacts(document: any) {
         phase,
         description,
         contacts,
+        developer: document.raw_payload?.developer ?? null,
+        oasUrl: document.raw_payload?.oas_url ?? null,
       }),
     }
   }

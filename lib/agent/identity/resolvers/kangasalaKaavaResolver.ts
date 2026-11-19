@@ -30,6 +30,8 @@ export async function resolveKangasalaKaavaProject({
   const metadata = facts[0]?.metadata ?? {}
   const description = metadata.description ?? null
   const contacts = metadata.contacts ?? []
+  /* OAS:n aloitteen tekijä on hankkeen rakennuttaja (D-439). */
+  const developer = metadata.developer ?? null
 
   const completed = false
   const phaseHint = mapKangasalaPhase(phase)
@@ -66,6 +68,10 @@ export async function resolveKangasalaKaavaProject({
 
       description,
       contact_persons: contacts,
+      developer,
+      related_companies: developer ? [developer] : [],
+      oas_url: metadata.oas_url ?? null,
+      ...(developer ? { field_sources: { developer: "OAS:n Aloite-luku" } } : {}),
 
       phase_hint: phaseHint,
       completed,
