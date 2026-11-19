@@ -1,5 +1,5 @@
 /*
- * SOPIMUSKAUSI ON JO PÄÄTTYNYT (D-437).
+ * SOPIMUSKAUSI ON JO PÄÄTTYNYT (D-438).
  *
  * Hilman jälki-ilmoitus julkaistaan usein kuukausia urakan jälkeen.
  * Maatullinpuiston massastabiloinnin sopimuskausi oli 29.5.–20.7.2026,

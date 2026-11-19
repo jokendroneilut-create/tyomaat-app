@@ -225,7 +225,7 @@ export default function PotentialProjectsReviewList({
                       </span>
                     )}
 
-                    {/* Hilman jälki-ilmoitus urakasta, joka on jo ohi (D-437). */}
+                    {/* Hilman jälki-ilmoitus urakasta, joka on jo ohi (D-438). */}
                     {(() => {
                       const p = sopimuskausiPaattynyt(metadata)
                       return p ? (

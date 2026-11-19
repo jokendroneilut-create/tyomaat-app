@@ -24,7 +24,7 @@ kaltaiset olivat jääneet tyngäksi.
 
 ## 2026-11-19 (Hilman jälki-ilmoitukset)
 
-### Varoitus päättyneestä sopimuskaudesta TIC:ssä (D-437)
+### Varoitus päättyneestä sopimuskaudesta TIC:ssä (D-438)
 
 Hilman jälki-ilmoitus voi tulla kuukausia urakan jälkeen. Jos sopimuskauden
 loppu on mennyt, TIC:n jonolista ja hankesivu näyttävät merkinnän

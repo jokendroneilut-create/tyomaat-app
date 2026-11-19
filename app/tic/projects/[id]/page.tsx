@@ -91,7 +91,7 @@ export default async function CandidateDetailPage({ params }: Props) {
             </p>
 
             {/*
-              * SOPIMUSKAUSI PÄÄTTYNYT (D-437). Hilman jälki-ilmoitus voi
+              * SOPIMUSKAUSI PÄÄTTYNYT (D-438). Hilman jälki-ilmoitus voi
               * tulla kuukausia urakan jälkeen; katselmoija päättää, mutta
               * näkee heti että työ on jo tehty.
               */}
