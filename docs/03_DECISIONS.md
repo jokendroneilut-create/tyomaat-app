@@ -306,6 +306,16 @@ uutis- tai kaavateksti olisi muuten näkynyt.
 
 Kaavariveiltä siirtyi kuusi yhteyshenkilöä ja kaksi vastuutusta.
 
+**Kerava, Nybackantie 6 (19.11.2026).** Keravan kaupungin uutinen 17.11.
+vahvisti, että Lupapisteen rakentamislupa (datakeskus, yksitoista
+sähköenergiansiirtorakennusta ja kaasuturbiinivoimalaitos, Nybackantie 6)
+on FCDC Corp Oy:n hanke. Johannes liitti uutisrivin hankkeeseen
+`19469539` "Datakeskus, Kerava" ja pyysi yhdistämään lupakuulutuksen
+samaan (*"tee sinä tuo lupapisteen liitos vielä"*). Lupakuulutus `99ab1a00`
+yhdistettiin ja piilotettiin. Säilyvälle riville siirtyivät kerrosala
+23 754 m², katuosoite ja luvan kuvaus. Koordinaattia ei siirretty, koska
+säilyvän piste ei ollut kunnan keskipiste.
+
 **Tehoja ei haeta.** Johannes 17.11.2026: *"ei haeta tehoja, se ei ole
 niin oleellinen tieto"*. Laajaa verkkohakua 105 riville, joilla on
 rakennuttaja mutta ei tehoa, ei tehdä. Rekisteristä saatu teho jää
