@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { resolveRegion } from "@/lib/projects/resolveRegion"
+import { sopimuskausiPaattynyt, suomeksi } from "@/lib/projects/sopimuskausiPaattynyt"
 
 function formatArea(value: number) {
   return `${Math.round(value).toLocaleString("fi-FI")} m²`
@@ -223,6 +224,16 @@ export default function PotentialProjectsReviewList({
                         Maakunta puuttuu
                       </span>
                     )}
+
+                    {/* Hilman jälki-ilmoitus urakasta, joka on jo ohi (D-437). */}
+                    {(() => {
+                      const p = sopimuskausiPaattynyt(metadata)
+                      return p ? (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                          ⚠️ Sopimuskausi päättynyt {suomeksi(p.loppu)}
+                        </span>
+                      ) : null
+                    })()}
                   </div>
 
                   {isZoning ? (

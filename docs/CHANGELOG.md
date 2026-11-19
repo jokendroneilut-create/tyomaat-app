@@ -22,6 +22,15 @@ uudelleen nimetty sivu osuu oikeaan riviin. Takautuva ajo korjasi
 YVA-rivien kuvaukset, joista Plug Powerin, Mustakorven ja Harjulinjan
 kaltaiset olivat jääneet tyngäksi.
 
+## 2026-11-19 (Hilman jälki-ilmoitukset)
+
+### Varoitus päättyneestä sopimuskaudesta TIC:ssä (D-437)
+
+Hilman jälki-ilmoitus voi tulla kuukausia urakan jälkeen. Jos sopimuskauden
+loppu on mennyt, TIC:n jonolista ja hankesivu näyttävät merkinnän
+"Sopimuskausi päättynyt". Rivi tulee jonoon kuten ennenkin, ja katselmoija
+päättää siitä.
+
 ## 2026-11-17 (puitejärjestelyt)
 
 ### Datakeskushankkeet: rekisterin nykytiedot ja verkkohaku (D-436)

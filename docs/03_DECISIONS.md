@@ -120,6 +120,53 @@ funktiota, ja kosketut rivit saavat merkinnän `yva_kuvaus_korjattu`.
 - 2 uudelleen nimettyä sivua.
 - 243 diaarinumeroa linkitetään.
 
+### D-437 – Hilman jälki-ilmoitus päättyneestä urakasta: varoitus katselmoijalle, ei karsintaa
+
+Johannes 19.11.2026 jonorivistä `386dcb35` (*"Maatullinpuisto,
+vaihe2,massastabilointi"*): *"miksi tulee toukokuun aikaisia hankkeita
+hyväksyntään?"*
+
+**Syy.** Rivi oli Hilman jälki-ilmoitus (E4, sopimus tehty), joka
+julkaistiin 18.11.2026. Stara kilpailutti urakan toukokuussa (ilmoitus
+5.5.), urakoitsijaksi tuli Tieluiska Oy ja urakkasumma oli 0,56 M€.
+Sopimuskausi oli 29.5.–20.7.2026, joten ilmoitus julkaistiin neljä
+kuukautta urakan päättymisen jälkeen.
+
+Toukokuun tarjouspyyntöä ei ollut meillä, koska Hilman keruu alkoi
+2.7.2026. Jälki-ilmoituksella ei siksi ollut mihin liittyä, ja se tuli
+jonoon uutena. Keräin poimii sopimuskauden lopun
+(`metadata.hilma_sopimuskausi.loppu`), mutta sitä ei käytetty mihinkään.
+Loppua ei tarkoituksella viedä `estimated_completion`-kenttään, koska
+automaattinen valmistuminen piilottaisi hankkeen ja kauteen sisältyy
+takuuaika (D-324).
+
+**Mitattu 30 vuorokaudelta:** jonoon tuli 122 Hilman jälki-ilmoitusta,
+joista 9:llä sopimuskausi oli jo päättynyt. Johannes oli hyväksynyt
+niistä 4 ja hylännyt 1, ja 4 oli jonossa.
+
+**Päätös:** vaihtoehto 2, eli varoitus eikä karsintaa (*"tee vaihtoehto
+2"*). Kun loppupäivä on tiedossa ja mennyt, TIC näyttää:
+
+- jonolistassa merkinnän "⚠️ Sopimuskausi päättynyt 20.7.2026"
+- hankesivulla otsikon alla huomautuksen kauden päivineen ja tiedon, päättyikö
+  kausi jo ennen ilmoituksen julkaisua
+
+Tuntematon loppu ei laukaise mitään ([[never-hide-on-missing-data]]).
+Myös puitesopimuksen loppu kelpaa, koska `kelpasi: false` koskee vain
+aloituspäivää.
+
+Toteutus: `lib/projects/sopimuskausiPaattynyt.ts` (6 testiä),
+`app/tic/projects/[id]/page.tsx` ja
+`app/tic/components/PotentialProjectsReviewList.tsx`.
+
+**Jonossa 19.11.2026** oli Maatullinpuiston jälkeen kaksi vastaavaa
+riviä 38:sta. Kummankin kausi päättyi ennen ilmoituksen julkaisua:
+
+- `d0094e57` Sydänpuunpuiston kuorielementtien asennustyöt, Helsinki
+  (Ram Holding Oy), 1.9.–1.10.2026
+- `532b7e6a` Katujen päällystys 2026, Ilmajoki (Peab Industri Oy),
+  1.6.–31.10.2026
+
 ### D-436 – Datakeskukset: rekisterin nykytiedot, koordinaatit pois kunnan keskipisteestä, verkkohaku ohuille
 
 Johannes 17.11.2026: *"https://yle.fi/a/74-20257198 lisää tästä tiedot

@@ -9,6 +9,7 @@ import VieritaYlos from "./VieritaYlos"
 import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 import { resolveWinnerName } from "@/lib/projects/winnerName"
 import { muotoileKenttaArvo } from "@/lib/format/luvut"
+import { sopimuskausiPaattynyt, suomeksi } from "@/lib/projects/sopimuskausiPaattynyt"
 
 export const dynamic = "force-dynamic"
 
@@ -88,6 +89,25 @@ export default async function CandidateDetailPage({ params }: Props) {
               {candidate.city ?? "Ei kaupunkia"}
               {candidate.location ? ` · ${candidate.location}` : ""}
             </p>
+
+            {/*
+              * SOPIMUSKAUSI PÄÄTTYNYT (D-437). Hilman jälki-ilmoitus voi
+              * tulla kuukausia urakan jälkeen; katselmoija päättää, mutta
+              * näkee heti että työ on jo tehty.
+              */}
+            {(() => {
+              const p = sopimuskausiPaattynyt(metadata)
+              if (!p) return null
+              return (
+                <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  <strong>⚠️ Sopimuskausi päättynyt {suomeksi(p.loppu)}.</strong>{" "}
+                  {p.alku ? `Kausi oli ${suomeksi(p.alku)}–${suomeksi(p.loppu)}. ` : ""}
+                  {p.ennenJulkaisua
+                    ? "Kausi päättyi jo ennen kuin ilmoitus julkaistiin, joten työ on todennäköisesti tehty."
+                    : "Työ on todennäköisesti tehty tai loppusuoralla."}
+                </div>
+              )
+            })()}
 
             {candidate.reason && (
               <p className="mt-4 text-gray-700">{candidate.reason}</p>
