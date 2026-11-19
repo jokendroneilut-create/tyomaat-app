@@ -24,6 +24,13 @@ kaltaiset olivat jääneet tyngäksi.
 
 ## 2026-11-19 (Hilman jälki-ilmoitukset)
 
+### FCDC Corp Oy lähteeksi (D-440)
+
+Datakeskuskehittäjä FCDC:n tiedotteet ovat nyt lähde. Tiedote kohdistuu kunnan
+FCDC-hankkeeseen ja tuo sille kuvauksen, vaiheen ja yhteyshenkilöt. Ensimmäinen
+ajo päivitti viisi hanketta. Lahden kaksi riviä yhdistettiin, ja Akaan rakennuslupa
+lisättiin Verda Akaan riville.
+
 ### Kangasalan kaavoille aloitteen tekijä ja OAS:n tavoitteet (D-439)
 
 Kangasalan keräin lukee kaavasivun OAS-liitteestä Aloite- ja Tavoitteet-luvut

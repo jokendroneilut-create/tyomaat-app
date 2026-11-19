@@ -51,6 +51,85 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-440 – FCDC Corp Oy lähteeksi; Lahden pari yhteen, Akaan lupa Verda Akaalle
+
+Johannes 19.11.2026 FCDC:n Keravan tiedotteesta: *"onko meillä tämä
+lähteenä tai saammeko sieltä mitään uutta tietoa?"* Lähde ei ollut
+käytössä. Ehdotuksiin (lähde, Lahden yhdistäminen, Akaa) Johannes
+vastasi: *"tee kaikki kolme"*.
+
+**Keravalle FCDC:n tiedotteesta** (`19469539`):
+
+- rakentamislupa myönnettiin 16.11.2026, ja se kattaa 18 000 k-m²
+- enintään viisi rakennusta, joista ensimmäisessä vaiheessa yksi
+- rakentaminen alkaa tavoitteen mukaan 2027, ja ensimmäinen vaihe kestää noin 1,5–2 vuotta
+- yhteyshenkilö: Jaakko Leinonen (maanhankinta- ja kehitysjohtaja,
+  050 518 7826)
+
+Yhdelläkään kannan kymmenestä FCDC-hankkeesta ei ollut rakennuttajan
+yhteyshenkilöä.
+
+**1. FCDC lähteeksi** (`lib/agent/fetchFcdcSource.ts`, 7 testiä;
+`discovery_sources` id `legacy-fcdc`; näyttönimi "FCDC").
+
+- **Haku:** keräin lukee sivukartan `/news/*`-sivut. Framerin luokkanimet
+  ovat satunnaisia, joten sivu jäsennetään rakenteen mukaan: h1,
+  ensimmäinen `<time>`, kappaleet "Lisätietoja"-riviin asti ja
+  yhteystiedot, kunnes "lisää uutisia" -päivät alkavat.
+- **Rajaus:** yhtiötiedotteet ilman hanketta ohitetaan (yhteisövero,
+  COP31, sähkömarkkinalaki).
+- **Yhteystiedot:** yksi `<p>`, rivit `<br>`:n kohdalta, ja lihavointi on nimi.
+  Organisaatio on nimeä edeltävällä rivillä tai nimikkeen perässä.
+- **Sähköposti:** saman henkilön yleisin osoite voittaa, ja tasapelissä
+  @fcdc.fi. Karjaan tiedotteessa on kirjoitusvirhe "@fcd.fi".
+- **Kunta:** kuntatunnistin ei tunnistanut muotoa "Huittisiin", joten
+  -nen-kunnille lisättiin s-vartalon taivutukset.
+- **Vaihe:** myönnetty rakennus- tai rakentamislupa on Rakennuslupa, haettu ei.
+  Säännössä on u-lippu, koska `\w` ei tunnista ä-kirjainta ("myöntänyt").
+- **Kohdistus:** kuivaharjoituksessa (`scripts/kuivaharjoitus-fcdc.ts`)
+  7/7 tiedotetta jäi rajan alle (65 < 70), koska uutisotsikko ei täsmää
+  kannan nimeen. Siksi tiedote kohdistetaan kunnan ainoaan julkiseen
+  FCDC-datakeskukseen, ja otsikko jää `tiedotteen_otsikko`-kenttään.
+  Jos kunnassa on useampi FCDC-rivi, valitaan se, jonka nimen paikkasana
+  esiintyy tiedotteessa. Esimerkiksi Huittisissa "Raumantien"
+  valitsi rivin "FCDC Huittinen, Raumantie" Hiukkamäen kaavan sijaan.
+- **Hankesivut** (`/projects/*`) eivät ole ehdokkaita. Niitä on neljä,
+  kaikki rakenteilla, ja niiden tiedot vietiin kerran käsin
+  (`scripts/taydenna-fcdc-hankkeet.ts`).
+
+Ensimmäinen ajo 19.11.2026 tuotti 7 dokumenttia. Kuusi päivitti suoraan
+kannan hankkeet: Kerava, Vaasa (kaksi tiedotetta), Huittinen, Karjaa ja
+Simo. Simo ja Karjaa saivat kunnan ja FCDC:n yhteyshenkilöt. Yksi
+dokumentti meni jonoon (Akaa).
+
+**2. Lahti yhteen.** "FCDC Lahti, Ilmarisentie" (`32a9ac02`,
+rekisteri) yhdistettiin riviin "Datakeskus Lahteen" (`12986da3`, Day One,
+Ilmarisentie 3). FCDC:n hankesivun mukaan FCDC kehitti kohteen ja myi sen
+DayOnelle (180 MW, tontti 98 901 m²). Piilotetun rivin kuvaus liitettiin
+säilyvään.
+
+**3. Akaa.** Akaan rakennuslupa 18.9.2026 (noin 44 000 m², Akaa Point)
+lisättiin riville "Verda Akaa" (`37c0fadc`):
+
+- vaihe Suunnittelu → Rakennuslupa, kirjattu vaihehistoriaan
+- FCDC liittyväksi yritykseksi
+- yhteyshenkilöt: Joonas Viita-aho (FCDC) ja Lasse Silván (Akaan kaupunki)
+
+Tiedote ei nimeä operaattoria, ja kytkös perustuu samaan Akaa Point
+-alueeseen. Kuvauksessa kerrotaan tämä. Jonon Akaa-tiedote liitettiin
+samaan riviin.
+
+**Hankesivujen tiedot kantaan:**
+
+| rivi | tiedot |
+|---|---|
+| Verne, Kapuli | Gneissitie 3, rakennusoikeus 59 100 k-m², 70 MW, FCDC ja Nivos liittyviksi yrityksiksi |
+| FCDC Vaasa, Kuriiritie | Kuriirintie 7, rakennusoikeus 96 000 k-m², 250 MW |
+| Datakeskus Lahteen | FCDC ja DayOne liittyviksi yrityksiksi, hankesivun luvut kuvaukseen |
+
+Mäntsälä 2 (Graniittitie 6) jätettiin, koska lähteet eivät kerro, onko
+se Nebiuksen toinen Mäntsälän kohde.
+
 ### D-439 – Kangasalan kaavat: OAS:n Aloite- ja Tavoitteet-luvut kuvaukseksi, aloitteen tekijä rakennuttajaksi
 
 Johannes 19.11.2026 jonorivistä `46a80f58` (*"914 Tarastenjärven asemakaavan

@@ -104,6 +104,7 @@ import {
 import { fetchHartelaAreasSource } from "./fetchHartelaAreasSource"
 import { fetchHcHoivakoditSource } from "./fetchHcHoivakoditSource"
 import { createHoivarakentajatEnricher, fetchHoivarakentajatSource } from "./fetchHoivarakentajatSource"
+import { fetchFcdcSource } from "./fetchFcdcSource"
 import { createCompanyEnricher } from "./companyRelease"
 
 export const sources = [
@@ -485,4 +486,10 @@ export const sources = [
     fetch: fetchHoivarakentajatSource,
     enrich: createHoivarakentajatEnricher(createCompanyEnricher({ publisher: "Hoivarakentajat" })),
   },
+  /*
+   * FCDC Corp Oy (D-440): datakeskusten kehittäjän tiedotteet. Keräin lukee
+   * koko tiedotteen ja yhteystiedot itse, joten rikastinta ei tarvita, ja
+   * kohdistaa tiedotteen kunnan ainoaan FCDC-hankkeeseen.
+   */
+  { name: "fcdc", fetch: fetchFcdcSource },
 ]
