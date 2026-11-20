@@ -1008,6 +1008,81 @@ Sama vuosi, samat yksiköt:
 Tämä on se asetelma jota vastaan molemmat meistä toimivat — ja se selittää
 miksi Metrocin on kasvettava ja Hubexon ei.
 
+#### Milloin Metrocilta loppuu rahoitus? (arvioitu 21.11.2026)
+
+Kysymys esitettiin suoraan, ja siihen voi vastata osittain — mutta vastaus
+nojaa yhteen epävarmaan lukuun.
+
+| | |
+|---|---|
+| taseen loppusumma 2025 | **~2,4 M€** ⚠️ lähde merkitsi oman tekstinsä sekavaksi; **tarkistettava** |
+| omavaraisuusaste 2025 | 31 % (Vainu) / 41 % (Asiakastieto) |
+| tilikauden tulos 2025 | −162,4 k€ |
+
+**Omaa pääomaa euroina ei ilmoiteta missään julkisessa lähteessä**, mutta se on
+johdettavissa: 31–41 % × 2,4 M€ ≈ **0,74–0,98 M€**.
+
+**Ristiintarkistus kahdella riippumattomalla reitillä.** Rahoitusta kerätty
+~2,3 M€, kumulatiivinen tappio ~1,38 M€ → 2,3 − 1,38 ≈ **0,9 M€**. Sama
+haarukka kuin taseesta johdettu. **Oma pääoma on siis suuruusluokaltaan
+0,7–1,0 M€**, ja tähän voi nojata vaikka yksittäinen luku on epävarma.
+
+##### Vastaus riippuu yhdestä kysymyksestä
+
+| skenaario | vuosivauhti | aikaa oman pääoman loppuun |
+|---|---|---|
+| 2025 on uusi normaali | −160 k€ | **~5–6 vuotta** |
+| 2024 palaa | −644 k€ | **~1,5 vuotta** → rahoitustarve 2027 |
+
+Kysymys ei siis ole *"koska raha loppuu"* vaan **"oliko 2025 rakenteellinen vai
+kertaluonteinen"** — ja juuri sitä ei tilinpäätöstiedoista näe (ks. *Koko
+sarja*: tappio putosi 487 k€ samalla kun henkilöstö kasvoi viidellä).
+
+**Jos 2025 pitää, he eivät juokse rahoista loppuun** vaan kulkevat kohti
+nollatulosta: −52,5 % → −8,4 % on yksi vuosi kannattavuudesta.
+
+##### Kolme varausta
+
+- **Oma pääoma ei ole kassa.** 2,4 M€:n taseessa 1,4 M€:n liikevaihdolla on
+  todennäköisesti aktivoituja kehityskuluja. Alaskirjaus pudottaisi oman
+  pääoman kerralla ilman että mitään "loppuu". **Kassavaroja ei näy missään
+  lähteessä.**
+- **Velkaa on paljon.** Tase 2,4 M€ − oma pääoma ~0,9 M€ ≈ **1,5 M€ velkaa.**
+  Lähteiden 10 pp:n ero omavaraisuudessa vastaa noin **240 k€:n
+  pääomalainaa** — se selittää erimielisyyden, koska pääomalaina lasketaan
+  joko velaksi tai omaksi pääomaksi.
+- **Tarkka vastaus on saatavilla.** PRH:n tilinpäätösrekisteri (Y-tunnus
+  3019226-9) antaa oman pääoman, rahavarat ja pääomalainat euroina. Se on
+  ainoa tapa päästä arvailusta eroon, ja se kannattaa hakea jos asia muuttuu
+  päätöksen kannalta tärkeäksi.
+
+##### Mitä seurata arvailun sijaan
+
+Nämä näkyvät ilmaiseksi ja **kuukausia ennen tilinpäätöstä**:
+
+1. **Henkilöstömäärä LinkedInissä.** 23 → kasvu tarkoittaa että raha riittää;
+   irtisanomiset tai rekrytointistoppi päinvastaista.
+2. **Uusi rahoituskierros** — kertoo kumman skenaarion he itse uskovat.
+3. **Ruotsin vetäytyminen** — kallein panostus, selvin kulusignaali.
+4. **Hinnankorotus tai paketoinnin muutos** — katetta tarvitseva nostaa hintaa.
+5. **Seuraava tilinpäätös** (2026-luvut, saatavilla ~loppukesä 2027).
+
+##### Todennäköisempi päätepiste on yritysosto
+
+Rahan loppuminen ei ole näillä luvuilla todennäköisin loppu. **Metroc on
+1,4 M€:n liikevaihdolla, hidastuvalla kasvulla ja lähes nollatuloksella juuri
+sen kokoinen ja hintainen kohde, jonka 40 %:n katteella operoiva Hubexo voi
+ostaa pois kertakuluna** — sama päättely joka on kirjattu kohdassa
+*Yritysosto — skenaario* ([`15_TYOMAARA_JA_ARVIO.md`](15_TYOMAARA_JA_ARVIO.md)),
+ja se pätee heihin vielä paremmin kuin meihin.
+
+**Mitä tämä muuttaa meidän suunnitelmassamme: ei mitään.** Tässä dokumentissa
+lukee jo *"älä suunnittele sen varaan, että Metroc kaatuu"*, ja uudet luvut
+vahvistavat sen — he ovat lähempänä kannattavuutta kuin konkurssia. Ainoa
+muutos olisi se, että **jos Hubexo ostaa heidät, markkinalla on yksi toimija ja
+yksi hinnoittelu** — ja se olisi matalan hinnan vaihtoehdolle hyvä uutinen,
+ei huono.
+
 ### Johdettu hinta ≈ 290 €/kk
 
 Hintaa ei julkaista, mutta se on laskettavissa: 1,4 M€ / 400+ asiakasta ≈
