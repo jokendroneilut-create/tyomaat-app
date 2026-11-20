@@ -11,6 +11,14 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-20 (Vantaan kaavasivut)
 
+### Vantaan kaavojen kuvaus alkaa sivun ingressillä (D-444)
+
+Keräin luki Vantaan kaavasivulta vain leipätekstin, joten sivun ensimmäinen
+kappale puuttui kaikilta kaavoilta. Siinä kaupunki kertoo hankkeen yhdellä
+lauseella ja usein sen koon (esim. "noin 12 000 k-m²:n logistiikkakortteli").
+Ingressi luetaan nyt, ja se lisättiin takautuvasti 91 Vantaan kaavahankkeen
+kuvauksen alkuun.
+
 ### Myönnetyt rakennusluvat eivät enää katoa kuulutusajan jälkeen (D-443)
 
 Lupapisteen ja kuntien kuulutukset poistuvat listalta aina kuulutusajan jälkeen,

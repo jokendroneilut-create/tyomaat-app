@@ -68,7 +68,7 @@ import { hilmaNoticeUrl } from "../../hilmaNoticeUrl"
 import { estettyPerhe } from "../../hilmaRakentamisenIlmoitus"
 import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
 import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
-import { etsiKaavasivut } from "../../vantaaKaavaSivu"
+import { etsiKaavasivut, kaavasivunIngressi, kuvausIngressinKanssa } from "../../vantaaKaavaSivu"
 import { aloitteentekija, tervolanKaavasivu, type TervolaOsapuolet } from "../../tervolaKaava"
 import {
   jasennaRaahenHenkilosto,
@@ -692,9 +692,10 @@ export async function fetchVantaaPlanDetails(
         if (text) bodyParagraphs.push(text)
       })
 
+    /* Sivun ingressi leipätekstin yläpuolella: usein hankkeen koko (D-444). */
     const descriptionParts = [
       hakijaLisatiedot ? `Lisätietoja hakijasta: ${hakijaLisatiedot}` : null,
-      ...bodyParagraphs,
+      ...kuvausIngressinKanssa(kaavasivunIngressi(html), bodyParagraphs),
     ].filter((part): part is string => Boolean(part))
 
     const description = descriptionParts.length > 0 ? descriptionParts.join("\n\n") : null
@@ -729,14 +730,22 @@ async function collectVantaaKaavaSource(source: DiscoverySource) {
 
   const knownDetails = new Map<
     string,
-    { hakija: string | null; contacts: VantaaContact[]; description: string | null }
+    { hakija: string | null; contacts: VantaaContact[]; description: string | null; ingressiLuettu: boolean }
   >()
+  /*
+   * INGRESSI (D-444): ennen ingressin poimintaa haettujen sivujen
+   * kuvauksesta puuttuu sen ensimmäinen kappale, joten ne luetaan
+   * kertaalleen uudelleen samalla ajokohtaisella rajalla. Siihen asti
+   * vanhat tiedot säilytetään — upsert korvaa koko raw_payloadin, ja
+   * odottava sivu menettäisi muuten kuvauksensa.
+   */
   for (const row of existingRows ?? []) {
     if (row.raw_payload?.description !== undefined) {
       knownDetails.set(row.document_url, {
         hakija: row.raw_payload.hakija ?? null,
         contacts: row.raw_payload.contacts ?? [],
         description: row.raw_payload.description ?? null,
+        ingressiLuettu: row.raw_payload.ingressi_luettu === true,
       })
     }
   }
@@ -804,19 +813,24 @@ async function collectVantaaKaavaSource(source: DiscoverySource) {
     let hakija: string | null = known?.hakija ?? null
     let contacts: VantaaContact[] = known?.contacts ?? []
     let description: string | null = known?.description ?? null
-    let detailsAttempted = knownDetails.has(documentUrl)
+    let detailsAttempted = Boolean(known)
+    let ingressiLuettu = known?.ingressiLuettu === true
 
     if (
-      !detailsAttempted &&
+      !ingressiLuettu &&
       properties.kaavalinkki &&
       hakijaFetches < VANTAA_MAX_HAKIJA_FETCHES_PER_RUN
     ) {
       const details = await fetchVantaaPlanDetails(properties.kaavalinkki)
-      hakija = details.hakija
-      contacts = details.contacts
-      description = details.description
       hakijaFetches += 1
-      detailsAttempted = true
+      /* Epäonnistunut uusintahaku ei saa pyyhkiä aiemmin luettua kuvausta. */
+      if (!known || details.description !== null) {
+        hakija = details.hakija
+        contacts = details.contacts
+        description = details.description
+        detailsAttempted = true
+        ingressiLuettu = true
+      }
     }
 
     const rawText = JSON.stringify(feature)
@@ -839,6 +853,7 @@ async function collectVantaaKaavaSource(source: DiscoverySource) {
             priority: source.priority,
             center: boundingBoxCenter(feature.geometry),
             ...(detailsAttempted ? { hakija, contacts, description } : {}),
+            ...(ingressiLuettu ? { ingressi_luettu: true } : {}),
             ...(haettuLinkki ? { kaavatunnus: tunnus, kaavalinkki_lahde: "vantaa.fi" } : {}),
             original: feature,
           },

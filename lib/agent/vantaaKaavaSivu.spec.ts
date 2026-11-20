@@ -4,6 +4,8 @@ import {
   VANTAA_KAAVA_RSS,
   etsiKaavasivut,
   kaavanTunnuksetSivulta,
+  kaavasivunIngressi,
+  kuvausIngressinKanssa,
   listauksenLinkit,
   nimenVartalot,
   osuuOtsikkoon,
@@ -131,5 +133,36 @@ describe("etsiKaavasivut", () => {
       budjetti: 1,
     })
     expect(haut).toBe(1)
+  })
+})
+
+describe("kaavasivunIngressi (D-444)", () => {
+  const sivu = `
+    <div class="fragmented fragmented--as-project">
+      <div class="fragmented__ingress fragment">
+        <div class="tags">Asiasanat <a>Aviapoliksen suuralue</a> … Näytä kaikki asiasanat</div>
+        <div class="text-ingress"><p>Aviapoliksen Viinikkalan logistiikka-alueelle muodostetaan
+          noin 12 000 k-m²:n laajuinen logistiikka- ja teollisuustoimintojen työpaikkakortteli.</p></div>
+      </div>
+    </div>
+    <div class="field field--body"><div class="field__item"><p>Kaavoitettava alue sijaitsee Aviapoliksen suuralueella.</p></div></div>`
+
+  it("lukee ingressin ilman asiasanoja", () => {
+    expect(kaavasivunIngressi(sivu)).toBe(
+      "Aviapoliksen Viinikkalan logistiikka-alueelle muodostetaan noin 12 000 k-m²:n laajuinen logistiikka- ja teollisuustoimintojen työpaikkakortteli."
+    )
+  })
+
+  it("palauttaa null kun ingressiä ei ole", () => {
+    expect(kaavasivunIngressi(`<div class="field--body"><p>x</p></div>`)).toBeNull()
+  })
+
+  it("lisää ingressin kuvauksen alkuun", () => {
+    expect(kuvausIngressinKanssa("Ingressi.", ["Leipä."])).toEqual(["Ingressi.", "Leipä."])
+  })
+
+  it("ei toista ingressiä joka on jo leipätekstissä", () => {
+    expect(kuvausIngressinKanssa("Ingressi.", ["Ingressi.", "Leipä."])).toEqual(["Ingressi.", "Leipä."])
+    expect(kuvausIngressinKanssa(null, ["Leipä."])).toEqual(["Leipä."])
   })
 })

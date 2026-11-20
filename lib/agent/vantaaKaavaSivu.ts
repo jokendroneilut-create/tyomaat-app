@@ -159,3 +159,34 @@ export async function etsiKaavasivut(input: {
 
   return loydetyt
 }
+
+/*
+ * KAAVASIVUN INGRESSI (D-444).
+ *
+ * Kuvaus luettiin vain leipätekstistä (`.field--body`), mutta sivun
+ * ensimmäinen kappale on sen yläpuolella omana ingressinään
+ * (`.text-ingress`). Juuri siinä kaupunki kertoo hankkeen yhdellä
+ * lauseella ja usein sen koon: "Aviapoliksen Viinikkalan
+ * logistiikka-alueelle muodostetaan noin 12 000 k-m²:n laajuinen
+ * logistiikka- ja teollisuustoimintojen työpaikkakortteli." (531000
+ * Tikkurilantie 151 ja 153). Mitattu 20.11.2026: ingressi oli kolmella
+ * kolmesta tarkistetusta kaavasivusta, eikä kertaakaan leipätekstissä.
+ *
+ * Ympäröivä `.fragmented__ingress` sisältää myös asiasanat ("Näytä kaikki
+ * asiasanat"), joten luetaan vain sisempi `.text-ingress`.
+ */
+export function kaavasivunIngressi(html: string): string | null {
+  const $ = cheerio.load(html)
+  const teksti = $(".text-ingress").first().text().replace(/\s+/g, " ").trim()
+  return teksti || null
+}
+
+/*
+ * Ingressi kuvauksen alkuun, ellei leipäteksti jo toista sitä (vanhalla
+ * pohjalla ensimmäinen kappale saattoi olla molemmissa).
+ */
+export function kuvausIngressinKanssa(ingressi: string | null, kappaleet: string[]): string[] {
+  if (!ingressi) return kappaleet
+  const sama = (a: string) => a.replace(/\s+/g, " ").trim() === ingressi
+  return kappaleet.some(sama) ? kappaleet : [ingressi, ...kappaleet]
+}

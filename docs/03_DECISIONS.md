@@ -51,6 +51,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-444 – Vantaan kaavasivun ingressi kuvauksen alkuun
+
+Johannes 20.11.2026 kysyi jonorivistä *"531000 Tikkurilantie 151 ja 153"*
+(`6200a9a8`): *"onko tästä mitään tietoja? vaikea päättää onko relevantti
+vai ei"*. Ratkaiseva tieto oli kaavasivun ensimmäisessä kappaleessa:
+*"…muodostetaan noin 12 000 k-m²:n laajuinen logistiikka- ja
+teollisuustoimintojen työpaikkakortteli."* Keräin ei poiminut sitä.
+
+**Vika.** `fetchVantaaPlanDetails` luki kuvauksen vain leipätekstistä
+(`.field--body .field__item`). Sivun ingressi on sen yläpuolella omana
+elementtinään (`.text-ingress`), joten se puuttui kaikilta Vantaan
+kaavoilta. Juuri siinä kaupunki kertoo hankkeen yhdellä lauseella ja usein
+sen koon. Sama puute näkyi jo D-441:ssä (Aviapolis).
+
+**Korjaus** (`lib/agent/vantaaKaavaSivu.ts`, 4 uutta testiä):
+
+- `kaavasivunIngressi(html)` lukee sisemmän `.text-ingress`-elementin.
+  Ympäröivä `.fragmented__ingress` sisältää myös asiasanat, joten sitä ei
+  lueta.
+- `kuvausIngressinKanssa` lisää ingressin kuvauksen alkuun ("Lisätietoja
+  hakijasta" -rivin jälkeen), ellei leipäteksti jo toista sitä.
+- Keräimen välimuistin merkki on nyt `raw_payload.ingressi_luettu`.
+  Merkittömät sivut luetaan kertaalleen uudelleen samalla ajokohtaisella
+  rajalla (5). Siihen asti vanhat tiedot säilyvät, koska upsert korvaa koko
+  `raw_payload`in ja odottava sivu olisi muuten menettänyt kuvauksensa.
+  Epäonnistunut uusintahaku ei pyyhi aiemmin luettua kuvausta.
+
+**Takautuva ajo** (`scripts/taydenna-vantaan-ingressit.ts`, rivit luettu
+kuivaharjoituksesta ennen ajoa):
+
+- 98 kaavasivua, joista 94:llä ingressi.
+- 94 dokumenttia ja 91 hanketta sai ingressin kuvauksensa alkuun.
+- Jonossa ei ollut yhtään avointa Vantaan riviä.
+- Ilman ingressiä jäivät Veromäen paviljonki (sivulla ei ingressiä), kaksi
+  vanhaa uutisosoitetta ja yksi sivu, jonka haku epäonnistui. Keräin lukee
+  ne uudelleen merkin puuttuessa.
+
+**Tikkurilantie 151–153.** Kaavasivun ja OAS:n tiedot kirjattiin
+riville: kuvaus, yhteyshenkilö Agon Shala ja OAS-linkki. Rakennuttajaksi
+merkittiin Finavia Oyj perusteluineen (`field_sources`), koska OAS:n
+mukaan alue on osittain Finavian ja osittain kaupungin, ja *"Maanomistajan
+tavoitteena on toteuttaa nopealla aikataululla hanke"*. Hakijaksi
+kaavasivu ilmoittaa "Muu", joten aloitteentekijä ei ole varma.
+
+**Avoinna.** Vantaan OAS:n tavoiteosa on otsikolla "1. Maanomistajan
+tavoitteet", ei "Aloite", joten D-439:n `oasAloite` ei tunnista sitä.
+Vantaan OAS-PDF:iä ei vielä lueta keräimessä.
+
 ### D-443 – Lupa- ja kuntakuulutukset rajattu "ei enää lähteen listalla" -vanhenemisen ulkopuolelle
 
 Johannes 20.11.2026 halusi verkkohaun vanhentuneesta Keravan hankkeesta
