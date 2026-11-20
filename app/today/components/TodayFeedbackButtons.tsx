@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
+import { LIIAN_PIENI } from "../services/pienetHankkeet"
 
-const REASON_PRESETS = ["Liian pieni hanke", "Väärä alue", "Ei kiinnosta", "Muu syy"]
+/* "Liian pieni hanke" piilottaa TIC:ssä pieniksi merkityt (D-442) — teksti tulee vakiosta, ettei se eriydy suodattimesta. */
+const REASON_PRESETS = [LIIAN_PIENI, "Väärä alue", "Ei kiinnosta", "Muu syy"]
 
 type ProjectAttributes = {
   region: string | null

@@ -51,6 +51,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-442 – "Liian pieni hanke" -alapeukku piilottaa TIC:ssä pieniksi merkityt Tänään-näkymästä
+
+Johannes 20.11.2026: *"onko käyttäjän antama palaute 'liian pieni hanke'
+yhteydessä siihen että minä määrittelen tic:issä hankkeen pieneksi
+hankkeeksi?"* Hän tarkoitti hyväksynnän valintaa *"⏳ Aseta vanhenemaan
+vuoden kuluttua (pienet hankkeet: maalaus, maalämpö, katon uusinta…)"*.
+Jatko: *"tuntuisi järkevältä että käyttäjä joka on valinnut alapeukun ja
+'liian pieni hanke' ei näkisi noita omassa tänään näkymässään"*.
+
+**Ennen tätä yhteyttä ei ollut.**
+
+- Palautteen syy (`project_feedback.reason_category`) tallentui, mutta sitä
+  ei luettu mihinkään.
+- Alapeukku piilotti vain kyseisen hankkeen. Lisäksi se painoi
+  ominaisuuksien painoarvoja, mutta kokoluokka (`size_class`) on julkisilla
+  hankkeilla aina tyhjä tai "unknown", joten koosta ei opittu mitään.
+- TIC:n valinta asetti vain `metadata.expire_at`-päivän eikä tallentanut
+  tietoa siitä, että hanke on pieni.
+- Mitattu 20.11.2026: 424 palautetta, joista yksikään ei ollut "Liian
+  pieni hanke".
+
+**Toteutus:**
+
+- Hyväksynnän valinta tallentaa nyt myös `metadata.pieni_hanke = true`
+  (`app/api/tic/projects/approve/route.ts`).
+- Takautuvasti (`scripts/merkitse-pienet-hankkeet.ts`) merkittiin 325
+  hanketta. `expire_at` tunnistaa ne, koska sen asettavat vain tämä valinta
+  ja TIC:n käsin muokkaus, eivät lähteet.
+- `app/today/services/pienetHankkeet.ts` (testit): yksi alapeukku syyllä
+  "Liian pieni hanke" riittää, koska se on käyttäjän nimenomainen kanta
+  kokoon.
+  - `getUserFeedbackContext` palauttaa `piilotaPienet`-tiedon.
+  - `getTodaySummary` jättää pieniksi merkityt pois, ellei käyttäjä ole
+    valinnut "näytä hylätyt".
+- Tänään-haku lukee kentän `metadata->>pieni_hanke`. Välimuistin
+  versio nostettiin arvoon v2, ettei vanha muoto jää voimaan.
+- Palautenappien syyteksti tulee samasta vakiosta (`LIIAN_PIENI`) kuin
+  suodatin.
+
+Muutos koskee vain Tänään-näkymää. Kartta ja hankelista näyttävät pienet
+hankkeet edelleen kaikille.
+
 ### D-441 – Vantaan kaavasivun uusi pohja: kentät div-elementteinä, ja nimeen osuvat RSS-linkit ensin
 
 Johannes 20.11.2026 jonorivistä `9a78f02c` (*"002568 Aviapoliksen viihde- ja

@@ -1,6 +1,7 @@
 import { getTodayProjectsMeta, getRegionProjectCount } from "./getTodayProjects"
 import { getTodaySettings } from "./getTodaySettings"
 import { getUserFeedbackContext } from "./getUserFeedbackContext"
+import { onPieniHanke } from "./pienetHankkeet"
 import { getUserFavoritesContext } from "./getUserFavoritesContext"
 import {
   matchesBestSalesMoments,
@@ -119,6 +120,13 @@ export async function getTodaySummary(userId?: string | null) {
   )
   .filter((project: any) =>
     settings.showRejected || !feedbackContext.downvotedProjectIds.has(project.id)
+  )
+  /*
+   * "Liian pieni hanke" -alapeukku piilottaa kaikki TIC:ssä pieniksi
+   * merkityt (D-442). Sama "näytä hylätyt" -valinta palauttaa ne.
+   */
+  .filter((project: any) =>
+    settings.showRejected || !(feedbackContext.piilotaPienet && onPieniHanke(project))
   )
   .filter((project: any) =>
     !favoritesContext.hiddenProjectIds.has(project.id)

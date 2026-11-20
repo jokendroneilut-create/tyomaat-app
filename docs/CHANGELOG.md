@@ -11,6 +11,13 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-20 (Vantaan kaavasivut)
 
+### "Liian pieni hanke" piilottaa pienet Tänään-näkymästä (D-442)
+
+Kun käyttäjä antaa alapeukun syyllä "Liian pieni hanke", hänen Tänään-
+näkymästään jäävät pois kaikki TIC:ssä pieniksi merkityt hankkeet (maalaus,
+maalämpö, katon uusinta ym.). Merkintä tallentuu hyväksynnän valinnasta, ja
+takautuvasti merkittiin 325 hanketta.
+
 ### Vantaan kaavasivun uusi pohja luetaan (D-441)
 
 Vantaa vaihtoi kaavasivujen pohjan, ja keräin sai uusilta sivuilta tyhjän

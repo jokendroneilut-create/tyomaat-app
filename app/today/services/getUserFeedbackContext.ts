@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { piilottaaPienet } from "./pienetHankkeet"
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,12 +19,15 @@ export type FeedbackContext = {
   downvotedProjectIds: Set<string>
   ratings: Record<string, "up" | "down">
   affinity: Record<string, Record<string, number>>
+  /* Käyttäjä on antanut alapeukun syyllä "Liian pieni hanke" (D-442). */
+  piilotaPienet: boolean
 }
 
 const EMPTY_CONTEXT: FeedbackContext = {
   downvotedProjectIds: new Set(),
   ratings: {},
   affinity: {},
+  piilotaPienet: false,
 }
 
 export async function getUserFeedbackContext(
@@ -34,7 +38,7 @@ export async function getUserFeedbackContext(
   const { data, error } = await supabaseAdmin
     .from("project_feedback")
     .select(
-      "project_id, rating, region, business_value, construction_type, building_type, size_class, source_name"
+      "project_id, rating, reason_category, region, business_value, construction_type, building_type, size_class, source_name"
     )
     .eq("user_id", userId)
 
@@ -59,5 +63,5 @@ export async function getUserFeedbackContext(
     }
   }
 
-  return { downvotedProjectIds, ratings, affinity }
+  return { downvotedProjectIds, ratings, affinity, piilotaPienet: piilottaaPienet(data ?? []) }
 }

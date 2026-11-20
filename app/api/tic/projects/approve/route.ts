@@ -2782,6 +2782,14 @@ export async function POST(request: Request) {
     ? computeManualExpiry(metadata, new Date().toISOString())
     : metadata.expire_at ?? null,
 
+  /*
+   * PIENI HANKE (D-442). Sama valinta merkitsee hankkeen pieneksi, jotta
+   * Tänään-näkymä voi jättää sen pois käyttäjältä, joka on antanut
+   * alapeukun syyllä "Liian pieni hanke". Pelkästä expire_at:sta sitä ei
+   * voi päätellä, koska Hilman tarjouspyynnöt saavat sen muutenkin.
+   */
+  ...(autoExpire ? { pieni_hanke: true } : {}),
+
   developer,
   buyer_address: buyerAddress,
   project_address: projectAddress,

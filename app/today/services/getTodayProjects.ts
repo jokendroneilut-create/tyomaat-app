@@ -49,6 +49,8 @@ const METADATA_KENTAT = [
   "md_procurement_type_code:metadata->>procurement_type_code",
   "md_region:metadata->>region",
   "md_maakunta:metadata->>maakunta",
+  /* TIC:n "pienet hankkeet" -merkintä (D-442). */
+  "md_pieni_hanke:metadata->>pieni_hanke",
 ].join(",")
 
 /* Litteat aliakset takaisin metadata-olioksi, jotta lukijat eivat muutu. */
@@ -172,7 +174,8 @@ async function haeTodayProjects(
  * muuten vanhentunut muoto rikkoisi sivun hiljaa. Nosta versiota kun
  * valintalista tai kokoaMetadata muuttuu.
  */
-const SYOTTEEN_VERSIO = "v1"
+/* Nosta kun haettavat kentät muuttuvat, muuten välimuisti palauttaa vanhan muodon (v2: pieni_hanke, D-442). */
+const SYOTTEEN_VERSIO = "v2"
 const VALIMUISTI_SEKUNTIA = 2 * 60 * 60
 
 export async function getTodayProjectsMeta(
