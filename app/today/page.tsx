@@ -7,6 +7,7 @@ import RoleActivationModal from "./components/RoleActivationModal"
 import WelcomeInfoModal from "./components/WelcomeInfoModal"
 import OmatTiedotModal from "./components/OmatTiedotModal"
 import TeamModeToggle from "./components/TeamModeToggle"
+import PienetPiilotettuIlmoitus from "./components/PienetPiilotettuIlmoitus"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { haeOmatTiedot } from "./services/haeOmatTiedot"
 import { tervehdi } from "@/lib/users/tervehdys"
@@ -105,6 +106,9 @@ const summary = await getTodaySummary(user?.id)
           kohdasta &rdquo;Mukauta näkymää&rdquo; tai poista rajauksen rasti.
         </div>
       )}
+
+      {/* Pienet piilotettu "Liian pieni hanke" -palautteen takia, ja paluu (D-442). */}
+      {summary.pienetPiilotettu > 0 && <PienetPiilotettuIlmoitus maara={summary.pienetPiilotettu} />}
 
       <TodayMetrics
         metrics={summary.metrics}

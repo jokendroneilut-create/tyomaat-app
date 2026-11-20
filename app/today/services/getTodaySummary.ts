@@ -148,6 +148,19 @@ export async function getTodaySummary(userId?: string | null) {
   const suodatettu = perusjoukko.filter((project: any) =>
     matchesKeywordFilter(project, settings.keywords, settings.keywordsOnly)
   )
+  /*
+   * Montako pieneksi merkittyä jäi pois "Liian pieni hanke" -palautteen
+   * takia (D-442). Näkymä kertoo sen ja tarjoaa paluun — muuten yksi
+   * klikkaus piilottaisi pienet pysyvästi, koska piilotetulle hankkeelle ei
+   * voi enää antaa uutta palautetta.
+   */
+  const pienetPiilotettu =
+    feedbackContext.piilotaPienet && !settings.showRejected
+      ? allProjects.rivit.filter(
+          (project: any) => matchesRegions(project, settings.regions) && onPieniHanke(project)
+        ).length
+      : 0
+
   const keywordFilterEmpty =
     settings.keywordsOnly === true &&
     (settings.keywords?.length ?? 0) > 0 &&
@@ -250,6 +263,9 @@ export async function getTodaySummary(userId?: string | null) {
      * hanke ei osunut, joten rajaus on ohitettu ja lista on normaali.
      */
     keywordFilterEmpty,
+
+    /* > 0 = pienet piilotettu "Liian pieni hanke" -palautteen takia (D-442). */
+    pienetPiilotettu,
 
     // Ohjaa opt-in-kytkimen näkymisen /today-sivulla.
     team: { inTeam: teamOwnership.inTeam },

@@ -93,6 +93,33 @@ Jatko: *"tuntuisi järkevältä että käyttäjä joka on valinnut alapeukun ja
 Muutos koskee vain Tänään-näkymää. Kartta ja hankelista näyttävät pienet
 hankkeet edelleen kaikille.
 
+**Paluutie (vaihtoehto 1).** Käyttöliittymässä ei ole "näytä hylätyt" -valintaa:
+`showRejected` tallentuu aina arvolla `false`. Piilotetulle hankkeelle ei voi
+antaa uutta palautetta, joten ilman paluutietä yksi klikkaus olisi pysyvä.
+Tänään-näkymä näyttää nyt ilmoituksen "N pientä hanketta on piilotettu…"
+(`PienetPiilotettuIlmoitus`). Sen "Näytä ne" -nappi poistaa käyttäjän
+palautteista syyn "Liian pieni hanke". Alapeukku jää, joten juuri se
+hanke pysyy piilossa.
+
+**Merkintöjen korjaus.** Johannes: *"Minulla oli jossain vaiheessa käsitys
+että merkitsemällä hankkeen valmistumaan vuoden kuluttua saan sen
+poistumaan käyttäjältä kun hanke valmistuu. Näinhän ei pitäisi toimia"*.
+Vanheneminen ei liity valmistumiseen: kun `expire_at` on ohitettu,
+ajastettu tehtävä asettaa `status = "expired"`, ja hanke katoaa kaikista
+asiakasnäkymistä riippumatta siitä, onko työ valmis. 325 merkittyä luettiin
+käsin (`scripts/korjaa-pienet-hankkeet.ts`, vanhat arvot
+`metadata.pieni_korjaus`-kentässä):
+
+| luokka | kpl | muutos | esimerkkejä |
+|---|---|---|---|
+| iso ja pitkäkestoinen | 34 | pieni pois ja `expire_at` pois | hotellit, Hyvinkää Areena, Keravan maauimala, Puuilo Loviisa, Ylämyllyn pelastusasema, Vt27:n ylikulkusilta |
+| vuosiurakka, -ohjelma tai palvelu | 18 | pieni pois, `expire_at` jää | alueelliset päällystys- ja siltatyöohjelmat 2026, liikennemerkit, aluevalaistus |
+| pieni | 273 | ennallaan | maalaus, katto, ikkunat, parvekkeet, maalämpö, mastot, muuntamot, pienet purut |
+
+Tilassa "expired" oleva teollisuusrakennuksen laajennus (`e4a19eac`) jäi
+edelleen vanhentuneeksi. `expire_at` poistettiin, mutta tilaa ei palautettu
+ilman Johanneksen päätöstä.
+
 ### D-441 – Vantaan kaavasivun uusi pohja: kentät div-elementteinä, ja nimeen osuvat RSS-linkit ensin
 
 Johannes 20.11.2026 jonorivistä `9a78f02c` (*"002568 Aviapoliksen viihde- ja
