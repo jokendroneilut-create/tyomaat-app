@@ -121,9 +121,126 @@ R1 on P-sarjan rinnalla, ei sen sisällä: P1–P4 tekevät tuotteesta paremman,
 R1 tekee siitä ostettavan. Alkuperäisessä ehdotuksessa (7.10.2026) oli myös
 R2–R6 — kapea kärki, osapuolitieto, P1 perusteluun suunnattuna, kaksiraiteinen
 elinkaari ja investointipäätöslähde — mutta niitä ei ole päätetty, eikä niihin
-viitata muissa dokumenteissa. Ne ovat ehdotuksia, R1 on tilannekuva.
+viitata muissa dokumenteissa. Ne ovat ehdotuksia, R1 on tilannekuva. Myös
+*Julkiset hankesivut* alla on ehdotus eikä päätös — se sai oman lohkonsa vasta
+kun kilpailijan ajoitus antoi sille perusteen (19.11.2026).
+
+## Julkiset hankesivut (ehdotus; kilpailijan ajoitus tukee 19.11.2026)
+
+**Ei päätetty.** Kirjattu tänne koska peruste vahvistui olennaisesti eikä
+suunnitelma saa jäädä vain keskusteluun.
+
+**Tavoite.** Julkisesti hakukoneindeksoitavat hankesivut `tyomaat.fi`-
+verkkotunnukseen: orgaaninen asiakashankinta joka kumuloituu ja maksaa vain
+hostingin. Yhden hengen yritykselle tämä on ainoa markkinointikanava joka tekee
+työtä ilman että kukaan myy.
+
+### Miksi juuri nyt — kilpailijan ajoitus
+
+Kaksi havaintoa [`11_COMPETITORS.md`](11_COMPETITORS.md):sta:
+
+1. **RPT:n vanha ilmainen hankelista `rakennushankkeet.rpt.fi` on rikki**
+   (HTTP 526) eikä sitä ole korjattu — hylätty hakukonepositio jolla on
+   olemassa olevaa kysyntää.
+2. **19.11.2026: rpt.fi ohjataan osoitteeseen byggfakta.com/fi** ja brändinimi
+   vaihtuu suomalaisesta ruotsalaiseen. Markkinajohtaja siirtää suomalaisen
+   hakuhistoriansa `.fi`-tunnuksesta `.com`:in kielipolulle.
+
+Metroc ja Rise ovat molemmat kirjautumisen takana, eli **kumpikaan ei kilpaile
+orgaanisesta liikenteestä.** Ikkuna ei ole ikuinen, mutta se on auki.
+
+### Ratkaiseva päätös ensin: älä julkaise kaikkea
+
+Google luokittelee lähes identtiset ohutsisältöiset sivut *thin content* -
+kategoriaan, jolloin ne eivät indeksoidu tai eivät rankkaa. Viisi faktaa
+mallipohjassa × tuhansia hankkeita on juuri sitä.
+
+**Aseta julkaisukynnys ja laske ensin montako läpäisee.** Sama sääntö joka on
+jo kirjattu D-027:ssä: hanketta ei julkaista ilman lähdettä, pelkkä nimi
+hylätään. **Tuhat hyvää sivua voittaa viisi tuhatta ohutta.**
+
+### Rakenne
+
+Uusi julkinen puu omana route groupinaan, autentikoidun layoutin ulkopuolella:
+
+```
+app/(julkinen)/hanke/[slug]/page.tsx      → /hanke/kauraslammen-koulu-ylojarvi
+app/(julkinen)/kaupunki/[slug]/page.tsx   → /kaupunki/tampere
+app/(julkinen)/hankkeet/page.tsx          → hakemistosivu
+app/sitemap.ts · app/robots.ts
+```
+
+- **Slug on oma sarakkeensa**, generoidaan kerran eikä muuteta: jos nimi
+  tarkentuu, URL pysyy. `/projects/[id]` ei kelpaa — UUID ei kanna hakusanoja
+  ja polku on middlewaren takana.
+- **Middleware:** uusia polkuja ei lisätä `isProtected`-ehtoon, ja ne rajataan
+  kokonaan pois `config.matcher`ista — muuten jokainen pyyntö tekee turhan
+  `getUser()`-kutsun ja estää staattisen tarjoilun.
+- **Keskittymäsivut ovat pakollisia.** Ilman kaupunkisivuja syvät sivut eivät
+  tule indeksoiduiksi: botti tarvitsee polun. Kaupunkisivu rankkaa myös itse
+  ("rakennushankkeet Tampere").
+
+### Sivun sisältö
+
+Hyödyllinen ihmiselle joka ei koskaan osta:
+
+1. Nimi ja ingressi omin sanoin (ei kopioitua tiedotetekstiä — duplikaatti- ja
+   tekijänoikeuskysymys)
+2. **Vaiheaikajana päivämäärineen** `project_phase_history`:stä — sivun
+   arvokkain ja uniikein osa, eikä kukaan muu näytä tätä julkisesti
+3. Faktataulukko: kaupunki, osoite, kohdetyyppi, laajuus, kustannus, aikataulu
+4. **Osapuolet organisaatioina — ei henkilönimiä.** Henkilötieto
+   indeksoituvalle sivulle on GDPR-riski; yhteyshenkilöt pysyvät maksumuurin
+   takana
+5. Lähteet linkkeinä ja päivämäärineen
+6. Sisäiset linkit kaupunkisivulle ja 3–5 samankaltaiseen hankkeeseen
+
+### Maksumuurin raja
+
+| julkista | maksumuurin takana |
+|---|---|
+| hanke on olemassa, vaihe, aikajana, lähteet | hälytykset ja hakuvahdit |
+| | relevanssipisteytys ja perustelut |
+| | yhteyshenkilöt |
+| | `/today`, koko kartta, vienti |
+
+Yksi toiminto sivulla, ei kolmea: **"Seuraa tätä hanketta — saat ilmoituksen
+kun vaihe muuttuu."** Se on juuri mitä hakukoneesta tullut haluaa, ja se vie
+R1:n ostopolulle.
+
+### Tekniikka
+
+ISR (`revalidate = 86400`) + `generateStaticParams` kärjelle, loput
+on-demand · `generateMetadata` per sivu, canonical · `app/sitemap.ts`
+lastModified kannasta · `robots.ts` kieltää `/today`, `/tic`, `/dashboard`,
+`/projects`, `/settings`, `/api` · JSON-LD `BreadcrumbList` (näkyy
+hakutuloksessa) · julkiselta puolelta pois Navbar ja unpkg-Leaflet-CSS
+(render-blocking, Core Web Vitals).
+
+### Järjestys
+
+1. julkaisukynnys + laskenta → määrittää laajuuden
+2. `slug`-sarake + backfill → tehdään kerran oikein
+3. `/hanke/[slug]` + metadata + JSON-LD
+4. kaupunkisivut + hakemisto → ilman näitä 3 ei indeksoidu
+5. `sitemap.ts` + `robots.ts`
+6. CTA ja rekisteröityminen → ilman tätä liikenne valuu läpi
+7. Search Console, sitemapin lähetys → mittaus alkaa vasta tästä
+
+### Avoin kysymys
+
+Johanneksella oli aiemmin vastaava julkinen sivusto, **joka toi paljon
+liikennettä.** Jos ne URL:t ovat yhä Googlen indeksissä tai niihin on
+linkkejä, **301-uudelleenohjaus** uusiin osoitteisiin siirtää kertyneen
+auktoriteetin — nopein yksittäinen voitto tässä. Search Consolen
+"Sivut → Ei indeksoitu → 404" kertoo mitä on menetetty. Selvitettävä ennen
+kohtaa 2, koska se voi muuttaa slug-rakenteen.
+
+**Odotus:** SEO kumuloituu 3–6 kuukaudessa. Siksi tämä aloitetaan aikaisin tai
+ei lainkaan — ei "sitten kun muu on valmista".
 
 ---
+
 ## P1 — Opportunity Engine: per-asiakas relevanssipisteytys ⭐
 
 **Tavoite.** Jokainen hanke saa asiakaskohtaisen relevanssipisteen +

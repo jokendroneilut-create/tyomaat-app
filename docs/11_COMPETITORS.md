@@ -73,6 +73,60 @@ Omistuspohja on pääomasijoittajavetoinen. Se tarkoittaa katteen optimointia ja
 tuotteiden yhdenmukaistamista yli maiden — ei nopeaa paikallista reagointia
 Suomen erityispiirteisiin.
 
+### Brändi- ja domainmuutos 19.11.2026: rpt.fi → byggfakta.com/fi
+
+Lähde: Hubexo Finlandin blogi *"Yksi nimi ja osoite neljällä markkinalla"*,
+julkaistu 19.11.2026.
+
+**Mitä muuttuu.** Byggfakta-sivustot neljällä markkinalla siirtyvät yhteiseen
+osoitteeseen **byggfakta.com**, kielipoluilla:
+
+| markkina | ennen | jälkeen |
+|---|---|---|
+| **Suomi** | **rpt.fi** | **byggfakta.com/fi** — ja sivusto ottaa nimen **Byggfakta** |
+| Ruotsi | byggfakta.se | byggfakta.com |
+| Tanska | *Byggefakta* | *Byggfakta* (kirjoitusasu) |
+| Norja | ei kerrottu | sama osoite ja nimi |
+
+Blogin oma lause: *"rpt.fi ohjaa automaattisesti osoitteeseen
+byggfakta.com/fi."* Perustelut Caroline Letsjöltä (Head of Global Marketing):
+*"Se ei ole enää järkevää… Nyt asiakkaamme kohtaavat yhden ja saman
+Byggfaktan"* ja *"Kun kaikissa Pohjoismaissa on yksi nimi ja yksi alusta,
+asiakkaamme saavat yhtenäisen käyttökokemuksen."* Nimenmuutoksen sanotaan
+*"seuraavan Byggfakta Risen julkaisua."*
+
+**Asiakkaalle luvataan ettei mikään muutu:** tunnukset, sopimukset,
+yhteyshenkilöt ja hanketietokanta pysyvät ennallaan. Hinnoittelusta ja tuesta
+ei sanota mitään.
+
+#### Mitä blogi ei kerro
+
+- **Siirron päivämäärää ei ole.** Verbit ovat tulevassa ja nykyisessä muodossa,
+  joten ei tiedetä onko siirto jo tehty.
+- **Smartin kohtalo on auki.** Nimi esiintyy vain muodossa "RPT Byggfakta
+  Smart", eikä kerrota lopetetaanko se vai nimetäänkö uudelleen. Risen sanotaan
+  perustuvan samaan hanketietoon.
+
+#### Kaksi seurausta meille
+
+**1. Suomalainen hakukonejalanjälki puretaan.** Viisikymmentä vuotta
+suomalaista brändiä ja hakuhistoriaa ohjataan `.fi`-verkkotunnuksesta
+kansainvälisen `.com`:in kielipolulle, ja haettava brändinimi vaihtuu
+suomalaisesta ruotsalaiseen. Tällainen siirto maksaa tyypillisesti näkyvyyttä
+ainakin väliaikaisesti, ja suomenkielisessä haussa `.fi` on rakenteellisesti
+vahvempi kuin `.com/fi`.
+
+Yhdessä sen kanssa että heidän vanha ilmainen hankelistansa
+`rakennushankkeet.rpt.fi` on ollut rikki (HTTP 526) eikä sitä ole korjattu:
+**markkinajohtaja purkaa suomalaista hakukonenäkyvyyttään juuri nyt.** Se ei
+tee omasta työstä helpompaa, mutta tekee ajoituksesta poikkeuksellisen hyvän —
+ks. [`04_ROADMAP.md`](04_ROADMAP.md), *Julkiset hankesivut*.
+
+**2. Asemointikontrasti terävöityy, ja he tekivät sen itse.** Suomalaiselle
+pk-ostajalle toimittaja näyttää tämän jälkeen pohjoismaiselta konsernilta
+ruotsalaisella nimellä ja .com-osoitteella. Vastapuolella on suomalainen
+yritys, suomalainen verkkotunnus, hinta euroina näkyvissä ja yksi tavoitettava
+ihminen. Tämä ei ole keksitty väite vaan heidän oma tiedotteensa.
 ### Talousluvut — Hubexo Finland Oy 2025 (lisätty 6.10.2026)
 
 Nämä luvut muuttavat tämän dokumentin kantavaa väitettä, joten ne ovat omassa
@@ -687,12 +741,16 @@ ongelmaan** — ja rakenteellinen ongelma ei katoa paketoimalla.
 Tämä johtopäätös on ehdollinen ja se ratkeaa 6.10. Jos hinta on julkinen ja
 ostaminen itsepalvelua, tämä kohta on kirjoitettava uusiksi.
 
-#### Webinaari 6.10.2026 — tuote julkaistiin, hintaa ei kerrottu
+#### Webinaari 6.10.2026 — Suomen esittely, hintaa ei kerrottu
 
 Johannes osallistui. Puhujat Lasse Paavola ja **Elina Kyytsönen** (kutsussa
-luki Ella Tuominen). Tuote julkaistiin samana päivänä, sovelluksen versio
-ruudulla **v1.6.0** — eli kyse ei ole ensimmäisestä kokeiluversiosta vaan
-iteroidusta tuotteesta, jota on rakennettu pidempään.
+luki Ella Tuominen). Sovelluksen versio ruudulla oli **v1.6.0** — eli kyse ei
+ollut ensimmäisestä kokeiluversiosta vaan iteroidusta tuotteesta.
+
+> **Korjaus 19.11.2026.** Tässä luki aiemmin, että tuote julkaistiin samana
+> päivänä. Hubexon oma blogi kertoo **Reachin julkaisupäiväksi 1.7.2026**, eli
+> webinaari oli Suomen esittely kolme kuukautta julkaisun jälkeen — ei
+> lanseeraus. Se myös selittää version 1.6.0.
 
 ##### Ratkaiseva kysymys sai vastauksen: maailma 1
 
