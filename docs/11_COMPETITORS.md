@@ -954,6 +954,60 @@ Varaus kolmannen osapuolen lähteisiin: Metrocin henkilöstömääräksi ilmoite
 eri paikoissa 23, 25 tai 31 ja rahoitukseksi 2,3 tai 2,7 M$. **Tilinpäätös on
 ainoa johon kannattaa nojata** — muut ovat johdannaisia.
 
+#### Koko sarja 2022–2025 (lisätty 21.11.2026)
+
+Kasvuprosenttien alla olevat euromäärät, pari Hubexon neljän vuoden sarjalle.
+
+| vuosi | liikevaihto | kasvu | liiketulos | henkilöstö | omavaraisuus |
+|---|---|---|---|---|---|
+| 2022 | 775 k€ | ~+100 % | −132 k€ | | **1–2 %** |
+| 2023 | 1 026 k€ | +32,4 % | −446 k€ | 13 | 67 % / 56 % |
+| 2024 | ~1 200 k€ | +19,6 % | **−644 k€** (−52,5 %) | 18 | 48 % / 40 % |
+| **2025** | **1 423 k€** | **+16,0 %** | **−157 k€** (−8,4 %) | **23** | 41 % / 31 % |
+
+Kaksi lukua omavaraisuudessa = lähteet ovat eri mieltä (Asiakastieto /
+Vainu). Ero johtuu siitä lasketaanko **pääomalainat** velaksi vai omaksi
+pääomaksi; Asiakastieto kertoo tämän itse. Myös 2024:n liiketulos vaihtelee:
+−644 k€ (Proff) vs. −582 k€ (Vainu).
+
+**1. Neljän vuoden kumulatiivinen tappio on ~1,38 M€.** Rahoitusta on kerätty
+noin 2,3 M€, eli **noin 60 % kierroksesta on poltettu.** Tätä lukua ei ollut
+aiemmin missään.
+
+**2. Tappio romahti 2025: −644 k€ → −157 k€.** Se on 76 %:n pudotus yhdessä
+vuodessa — samaan aikaan kun henkilöstö kasvoi 18 → 23 ja liikevaihto vain
++0,22 M€. Kulut siis laskivat noin 0,27 M€ viidestä lisähengestä huolimatta.
+**Tilinpäätöstiedoista ei näe miksi.** Mahdollisia selityksiä on useita
+(2024:n kertaerät, kehityskulujen aktivointi, Ruotsin panostuksen
+alaskirjaus), eikä niiden välillä voi valita näillä tiedoilla. Merkitty tähän
+selittämättömäksi, ei arvattu — sama kuri kuin Hubexon katehypyn kanssa.
+
+**3. Omavaraisuus kertoo rahoituskierroksen ajoituksen.** 1–2 % vuonna 2022 →
+~60 % vuonna 2023 on 2 M€:n kierros kirjautumassa taseeseen. Sen jälkeen se
+valuu joka vuosi tappioiden mukana: ~60 → ~44 → ~36 (lähteiden keskiväli).
+**Mutta 2025 muutti kaltevuuden:** −157 k€:n tappiolla tase kestää vuosia, kun
+−644 k€:lla se ei olisi kestänyt. Jos taso pitää, **rahoitustarve ei ole enää
+se pakottava kysymys** joka se vuoden 2024 luvuilla olisi ollut.
+
+**4. Kasvukäyrä täydentyy.** ~+100 % → +32 % → +20 % → +16 %. Vuoden 2022
+mukana deceleraatio on vielä selvempi kuin kolmen vuoden sarjassa: tyypillinen
+hiipuva käyrä, ei notkahdus.
+
+#### Mittasuhde Hubexoon
+
+Sama vuosi, samat yksiköt:
+
+| | Hubexo Finland | Metroc |
+|---|---|---|
+| liikevaihto 2025 | 11,3 M€ | 1,4 M€ |
+| kasvu | +5,3 % | +16,0 % |
+| liiketulos | **+5,2 M€** | **−157 k€** |
+| henkilöstö | 63 | 23 |
+
+**Hubexo tekee voittoa 3,7-kertaisesti sen mitä Metroc tekee liikevaihtoa.**
+Tämä on se asetelma jota vastaan molemmat meistä toimivat — ja se selittää
+miksi Metrocin on kasvettava ja Hubexon ei.
+
 ### Johdettu hinta ≈ 290 €/kk
 
 Hintaa ei julkaista, mutta se on laskettavissa: 1,4 M€ / 400+ asiakasta ≈
