@@ -151,6 +151,54 @@ eikä "luottavat meihin" välttämättä tarkoita maksavaa Smart-tilausta. Luku 
 silti paras suomalainen ankkuri mitä on ollut: mitattu 600 €/kk yhdestä
 maakunnasta on **keskiarvon yläpuolella**, ei tyypillinen hinta.
 
+#### Neljän vuoden sarja (lisätty 21.11.2026)
+
+Yksi vuosi ei kerro mitä tapahtuu. Sarja kertoo.
+
+| vuosi | liikevaihto | kasvu | liikevoitto | liikevoitto-% | henkilöstö |
+|---|---|---|---|---|---|
+| 2022 | 9,7 M€ | | 3,7 M€ | | 57 |
+| 2023 | 10,4 M€ | ~+7 % | 3,7 M€ | 35,1 % | 64 |
+| 2024 | 10,7 M€ | ~+3 % | 3,5 M€ | 32,9 % | 64 |
+| **2025** | **11,3 M€** | **+5,3 %** | **5,2 M€** | **40,2 %** | **63** |
+
+Lähde: julkiset tilinpäätöstiedot (Asiakastieto, Proff). Vuosien 2022–2024
+luvut ovat eri pyöristyksillä eri lähteissä; suuruusluokka on silti selvä.
+
+**1. Liikevaihto kasvaa hitaasti mutta tasaisesti.** 9,7 → 11,3 M€ neljässä
+vuodessa on noin 5 % vuodessa. Tämä vahvistaa aiemman päätelmän: **Suomi on
+kypsä lypsylehmä, ei kasvutarina.**
+
+**2. Kate hyppäsi 2025 — ja se on uutta.** Liikevoitto 3,5 → 5,2 M€ on
+**+1,7 M€ yhdessä vuodessa**, kun liikevaihto kasvoi vain +0,6 M€. Kateprosentti
+32,9 → 40,2. Tuo ei ole normaalia operatiivista vipua vaan askelmuutos:
+selityksenä voi olla kustannusleikkaus, konsernikulujen uudelleenkohdistus,
+kertaerä tai hinnankorotus. **Emme tiedä kumpi — tilinpäätöstiedoista ei näe.**
+
+**Miksi tällä on väliä meille.** Tässä dokumentissa todetaan, että 40 %:n
+kate antaisi heille varaa hintasotaan, mutta he eivät halua koska se söisi
+5,2 M€:n katteen (ks. *Korjaus dokumentin kantavaan väitteeseen* alla).
+Sarja tarkentaa sen: **tuo 5,2 M€ on juuri saavutettu, ei vanha vakio.**
+Vuotta aiemmin se oli 3,5 M€. Kate jota on juuri nostettu seitsemällä
+prosenttiyksiköllä on kate, josta joku on tilivelvollinen — ja se tekee
+hinnan laskemisesta **vähemmän** todennäköistä kuin vakaa 40 % tekisi.
+Suoja on siis vahvempi kuin arvioitiin, muttei sen kestävämpi: se nojaa
+omistajan tahtoon, ei rakenteeseen.
+
+**3. Henkilöstö ei kasva: 64 → 64 → 63.** Liikevoitto per työntekijä nousi
+~55 k€:sta ~83 k€:oon vuodessa. Samalla Rise ja Reach rakennettiin
+konsernitasolla, ei Suomessa. Yhdessä nämä viittaavat siihen, että **Suomen
+yhtiötä ajetaan jakelu- ja tutkimusorganisaationa** — myynti ja tutkijat
+täällä, tuotekehitys muualla. Se sopii siihen mitä Risen tanskalainen
+koulutusdata ja ruotsalainen data scientist jo kertoivat.
+
+**Varaus konsernilukuihin.** Yhdessä lähteessä (Vainu) näkyy erikseen
+konsernitaso: **11,9 M€ liikevaihtoa ja 137 henkilöä.** Henkilöstöero
+yhtiötasoon (63) on suuri eikä liikevaihtoero vastaava, joten konserniin
+kuuluu todennäköisesti muutakin toimintaa. **Älä sekoita näitä lukuja
+yhtiötason lukuihin** — tämän dokumentin kaikki laskelmat käyttävät
+yhtiötasoa (Hubexo Finland Oy, Y-tunnus 0727323-9).
+
 #### Korjaus dokumentin kantavaan väitteeseen
 
 Tässä dokumentissa on toistuvasti sanottu, että kilpailija **ei voi** laskea
