@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 import {
   UNLISTED_EXPIRY_ENABLED,
   UNLISTED_REASON,
+  ILMOITUSTAULU_KATEGORIAT,
   UNLISTED_THRESHOLD_DAYS,
   evaluateUnlisted,
   writesAllowed,
@@ -80,8 +81,11 @@ export async function GET(req: Request) {
      */
     const { data: lahteet, error: lErr } = await supabaseAdmin
       .from("discovery_sources")
-      .select("id,name,last_success_at,last_error_at")
+      .select("id,name,category,last_success_at,last_error_at")
     if (lErr) throw lErr
+
+    /* Ilmoitustaululähteet rajataan säännön ulkopuolelle (D-443). */
+    const kategoria = new Map((lahteet ?? []).map((s: any) => [String(s.id), s.category ?? null]))
 
     /* Tarkistetaan vain ne lähteet joilla on vanhentuneita dokumentteja. */
     const kiinnostavat = new Set(vanhat.map((d) => String(d.source_id)))
@@ -166,6 +170,7 @@ export async function GET(req: Request) {
             lastErrorAt: null,
           },
         expiredReason: h.expired_reason ?? null,
+        ilmoitustaulu: ILMOITUSTAULU_KATEGORIAT.has(String(kategoria.get(String(doc.source_id)) ?? "")),
       })
 
       if (paatos === "keep") continue

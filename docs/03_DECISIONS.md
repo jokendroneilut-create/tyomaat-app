@@ -51,6 +51,48 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-443 – Lupa- ja kuntakuulutukset rajattu "ei enää lähteen listalla" -vanhenemisen ulkopuolelle
+
+Johannes 20.11.2026 halusi verkkohaun vanhentuneesta Keravan hankkeesta
+*"Rakentamislupa – teollisuusrakennuksen laajennus …, Ahjonkulma 8"*
+(`e4a19eac`): oliko se valmis. Verkkohaku ei kertonut valmistumisesta. Se
+paljasti kuitenkin, ettei hanke ollut vanhentunut D-442:n pieni-merkinnän
+takia (vanhenemispäivä olisi ollut 18.10.2027). Se oli vanhentunut
+17.11. syyllä "ei_enaa_lahteen_listalla".
+
+**Vika.** "Ei enää lähteen listalla" -sääntö (D-398) tehtiin kaavalistoille,
+joilta kaava katoaa, kun kaavoitus on ohi. Se koski kuitenkin kaikkia
+lähteitä. Lupapisteen lupakuulutus ja kunnan kuulutus poistuvat listalta
+aina kuulutusajan päätyttyä, ja juuri silloin rakentaminen tyypillisesti
+alkaa.
+
+- Mitattu 20.11.2026: 18 myönnettyä rakennuslupaa vanhentui ja katosi
+  asiakkailta 12.–17.11.
+- 180 julkista Lupapiste-hanketta oli matkalla samaan.
+- 346 Lupapiste-dokumenttia oli ollut näkymättä yli 45 vuorokautta.
+
+**Korjaus** (`lib/projects/unlistedExpiry.ts`, 3 uutta testiä):
+
+- Lähdekategoriat `building_permits` (Lupapiste) ja `municipality_notices`
+  (kuntien kuulutukset) ovat ilmoitustauluja. Niiden hankkeita ei
+  vanhenneta tällä säännöllä.
+- Tästä syystä jo vanhennetut palautetaan samalla `revive`-haaralla kuin
+  uudelleen nähdyt. Ajastettu tehtävä
+  (`app/api/admin/expire-unlisted-projects`) lukee lähteen kategorian.
+
+Kuivaharjoitus ennen ajoa: 18 palautettavaa, kaikki myönnettyjä
+rakennuslupia (Ahjonkulma mukana), ja 1 vanhennettava kaava (002439
+Veromäen koulun laajennus). Kaava vanhenee tavallisen säännön mukaan, eikä
+korjaus vaikuta siihen.
+
+**Ahjonkulma 8.** Kiinteistöllä toimii Rasilaisen Hapankaali Oy. Luvan
+"muhitustila" on hapankaalin käymistila. Laajennus on 505 m², ja lupa
+myönnettiin 9/2026 aloitusoikeudella. Hanke sai rakennuttajan ja
+kuvauksen.
+
+**Avoinna.** Lupapisteen hankkeille ei nyt ole poistumistapaa. Ne
+poistuvat näkyvistä vasta, kun ne merkitään valmistuneiksi.
+
 ### D-442 – "Liian pieni hanke" -alapeukku piilottaa TIC:ssä pieniksi merkityt Tänään-näkymästä
 
 Johannes 20.11.2026: *"onko käyttäjän antama palaute 'liian pieni hanke'

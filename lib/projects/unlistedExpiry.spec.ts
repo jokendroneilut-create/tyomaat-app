@@ -173,3 +173,30 @@ describe("evaluateUnlisted - toipunut lahde", () => {
     ).toBe("keep")
   })
 })
+
+describe("evaluateUnlisted - ilmoitustaulu (D-443)", () => {
+  /* Lupakuulutus poistuu Lupapisteestä kuulutusajan jälkeen; rakentaminen vasta alkaa. */
+  it("ei vanhenna ilmoitustaulun hanketta vaikka sitä ei ole nähty kynnystä kauempaa", () => {
+    expect(
+      evaluateUnlisted({ ...perus, phase: "Rakennuslupa", ilmoitustaulu: true, lastSeenAt: vrkSitten(UNLISTED_THRESHOLD_DAYS + 30) })
+    ).toBe("keep")
+  })
+
+  it("palauttaa ilmoitustaulun hankkeen joka vanhennettiin tästä syystä", () => {
+    expect(
+      evaluateUnlisted({
+        ...perus,
+        status: "expired",
+        expiredReason: UNLISTED_REASON,
+        ilmoitustaulu: true,
+        lastSeenAt: vrkSitten(UNLISTED_THRESHOLD_DAYS + 5),
+      })
+    ).toBe("revive")
+  })
+
+  it("ei koske muusta syystä vanhennettua ilmoitustaulun hanketta", () => {
+    expect(
+      evaluateUnlisted({ ...perus, status: "expired", expiredReason: "muu", ilmoitustaulu: true, lastSeenAt: vrkSitten(90) })
+    ).toBe("keep")
+  })
+})

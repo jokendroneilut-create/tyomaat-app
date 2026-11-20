@@ -120,9 +120,23 @@ export type UnlistedInput = {
   /* Tuorein havainto MISTA TAHANSA muusta lahteesta samalle hankkeelle. */
   otherSourceSeenAt?: string | null
   expiredReason?: string | null
+  /* Lähde on ilmoitustaulu (lupa- tai kuntakuulutukset), jolta ilmoitus poistuu aina (D-443). */
+  ilmoitustaulu?: boolean
 }
 
 export const UNLISTED_REASON = "ei_enaa_lahteen_listalla"
+
+/*
+ * ILMOITUSTAULU EI OLE "VIREILLÄ OLEVAT" -LISTA (D-443).
+ *
+ * Sääntö tehtiin kaavalistoille: kaava katoaa listalta kun kaavoitus on
+ * ohi. Lupapisteen lupakuulutus ja kunnan kuulutus taas poistuvat AINA
+ * kuulutusajan päätyttyä — juuri kun rakentaminen tyypillisesti alkaa.
+ * Mitattu 20.11.2026: 18 myönnettyä rakennuslupaa vanhentui 12.–17.11.
+ * (mm. Kerava, Ahjonkulma 8: Rasilaisen Hapankaalin laajennus), ja 180
+ * julkista Lupapiste-hanketta oli matkalla samaan.
+ */
+export const ILMOITUSTAULU_KATEGORIAT = new Set(["building_permits", "municipality_notices"])
 
 function vrk(a: Date, b: string | null | undefined): number | null {
   if (!b) return null
@@ -135,6 +149,14 @@ export function evaluateUnlisted(
   input: UnlistedInput
 ): "expire" | "revive" | "keep" {
   const nahtyVrk = vrk(input.now, input.lastSeenAt)
+
+  /*
+   * Ilmoitustaululla katoaminen ei kerro mitään hankkeesta (D-443): ei
+   * vanhenneta, ja tästä syystä jo vanhennetut palautetaan.
+   */
+  if (input.ilmoitustaulu) {
+    return input.status === "expired" && input.expiredReason === UNLISTED_REASON ? "revive" : "keep"
+  }
 
   /*
    * PALAUTUS ENSIN. Jos hanke on vanhennettu juuri tasta syysta ja

@@ -11,6 +11,13 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-20 (Vantaan kaavasivut)
 
+### Myönnetyt rakennusluvat eivät enää katoa kuulutusajan jälkeen (D-443)
+
+Lupapisteen ja kuntien kuulutukset poistuvat listalta aina kuulutusajan jälkeen,
+ja "ei enää lähteen listalla" -sääntö piilotti siksi myönnettyjä rakennuslupia
+juuri kun rakentaminen alkoi. Ilmoitustaululähteet on rajattu säännön
+ulkopuolelle, ja 18 jo piilotettua lupahanketta palautettiin näkyviin.
+
 ### "Liian pieni hanke" piilottaa pienet Tänään-näkymästä (D-442)
 
 Kun käyttäjä antaa alapeukun syyllä "Liian pieni hanke", hänen Tänään-
