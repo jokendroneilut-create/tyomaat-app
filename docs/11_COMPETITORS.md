@@ -886,6 +886,26 @@ skaalautuu ja he ovat lähellä kannattavuutta 23 hengellä. Mutta **kasvu on
 16 %**, mikä on riskirahoitetulle ohjelmistoyhtiölle vaatimatonta. Markkina ei
 siis räjähdä; se on hidas ja myyntivetoinen.
 
+#### Kasvu hidastuu johdonmukaisesti (lisätty 21.11.2026)
+
+Yksittäisten vuosien sijaan käyrä, Asiakastiedon kolmen vuoden sarjasta:
+
+| vuosi | kasvu |
+|---|---|
+| 2023 | **+32 %** |
+| 2024 | **+20 %** |
+| 2025 | **+16 %** |
+
+**Kolme vuotta peräkkäin hidastuva kasvu on eri tarina kuin "hidas kasvu".**
+Se on käyrä eikä piste, ja se sopii yhteen toisen tässä dokumentissa mitatun
+havainnon kanssa: keskihinta nousi neljässä vuodessa vain ~19 % vaikka
+tuotteita tuli kolme lisää (ks. *Johdettu hinta*). Lisätuotteet eivät nosta
+asiakaskohtaista laskutusta, eikä asiakasmäärän kasvu kiihdy.
+
+Varaus kolmannen osapuolen lähteisiin: Metrocin henkilöstömääräksi ilmoitetaan
+eri paikoissa 23, 25 tai 31 ja rahoitukseksi 2,3 tai 2,7 M$. **Tilinpäätös on
+ainoa johon kannattaa nojata** — muut ovat johdannaisia.
+
 ### Johdettu hinta ≈ 290 €/kk
 
 Hintaa ei julkaista, mutta se on laskettavissa: 1,4 M€ / 400+ asiakasta ≈
@@ -1014,6 +1034,7 @@ jottei samaa tutkita uudelleen.
 |---|---|---|
 | **hanketieto** | RPT / Byggfakta Rise, Metroc | suora kilpailu |
 | **kilpailutusseuranta** | Mercell Hankintavahti, Cloudia, Tendium, Hilma (ilmainen) | osittainen — Hilma-osuutemme |
+| **tarjouskilpailusta toteutukseen** | TenderMap (8 maata, ml. Suomi) | kapea — Hilma-lähde yhteinen, ei suunnitteluvaihetta |
 | **yritystieto + signaalit** | Vainu, Enento/Asiakastieto | vähäinen, eri yksikkö |
 | **kiinteistö- ja hankeanalytiikka sijoittajille** | KTI Rakennushankeseuranta | vähäinen, eri asiakas |
 | **kustannus- ja markkinaennuste** | Haahtela, Tocoman, Forecon PRIX (Hubexo) | ei |
@@ -1091,6 +1112,67 @@ siitä oman tuotteensa eri asiakaskunnalle. Se on uusi tieto ja se tarkoittaa
 kahta asiaa: heidän datansa voi ilmestyä kilpailijan tuotteeseen ilman että he
 itse menevät siihen segmenttiin, ja **"kilpailija" voi jatkossa olla joku joka
 ostaa datansa Hubexolta** eikä kerää sitä itse.
+
+### TenderMap — tarjouskilpailusta toteutukseen, kahdeksassa maassa
+
+Löytyi 21.11.2026 verkkohaulla, ei ollut kartassa aiemmin. Sivu on
+JavaScript-renderöity, joten se luettiin selaimella (`tendermap.com/fi`).
+
+**Mikä se on.** Ei hanketietopalvelu vaan **tarjouskilpailusta toteutukseen
+-alusta**: löydä kilpailutus → hinnoittele → pyydä toimittajilta tarjoukset →
+vertaile → allekirjoita → johda projektia. Kolme käyttäjätyyppiä: rakennuttajat
+ja tilaajat (julkaisevat kilpailutuksia), rakennusyritykset (etsivät ja
+tarjoavat), toimittajat (materiaalit, koneet, vuokraus, palvelut).
+
+**Maat ja lähteet.** Kahdeksan markkinaa: Latvia, Ruotsi, Liettua, Viro,
+**Suomi**, Norja, Tanska, Puola. Kerää julkiset *ja yksityiset* kilpailutukset
+kansallisista portaaleista — Suomesta **Hilma**, Ruotsista e-Avrop ja Mercell,
+Norjasta Doffin, Virosta Riigihanked, Latviasta EIS, Tanskasta udbud.dk,
+Liettuasta CVP IS, Puolasta e-Zamówienia, plus TED.
+
+**Moduulit:** ilmoitukset · tekoälyhaku · toimittajatietokanta arvioineen ja
+sertifikaatteineen · tarjousvertailu ja sopimukset · **EU-rahoitus** (avoimet
+haut, tekoäly tarkistaa tukikelpoisuuden hakuilmoitusta vasten, budjetti ja
+yhteisrahoitus, määräaikamuistutukset) · projektinhallinta voiton jälkeen
+(Gantt, kassavirta, tuntikirjaus, työmaapäiväkirja, omavalvonnat, lisä- ja
+muutostyöt).
+
+#### Kolme havaintoa
+
+**1. Sama tekoälykuvio kuin Risellä ja meillä.** Osuvuusluku ("94 %
+vastaavuus") ja sen alla **"MIKSI SE SOPII SINULLE"** perusteluineen: työlaji,
+alue, sertifikaatit, kapasiteetti. Tämä on **kolmas tuote joka tekee
+pisteytys + perustelu -yhdistelmän**, ja se vahvistaa mitä muualla tässä
+dokumentissa jo todetaan: se on kilpailukelpoisuuden minimi, ei erottautuja.
+
+**2. Laajuus on varoitus, ei uhka.** Kahdeksan maata ja kuusi moduulia,
+kilpailutuksen löytämisestä EU-tukihakemuksiin ja työmaapäiväkirjaan. Se on
+**täsmälleen päinvastainen veto kuin meidän** ([`15_TYOMAARA_JA_ARVIO.md`](15_TYOMAARA_JA_ARVIO.md),
+*Strategia johon arvio nojaa*). Hyödyllinen vertailukohta siitä miltä se toinen
+tie näyttää.
+
+**3. EU-rahoitusmoduuli on aidosti uusi idea.** Kukaan muu kartoitetuista ei
+tee sitä. Meille se on selvästi ulkopuolella, mutta se kannattaa tietää
+olevan olemassa.
+
+#### Mitä EI tiedetä — älä käytä näitä lukuina
+
+- **"12K+ projektia"** ja **"yli 1 500 yrityksen luottama"** ovat
+  markkinointilukuja kahdeksalta markkinalta. **Suomen osuutta ei kerrota.**
+- Etusivun esimerkkilistaukset näyttävät havainnollistavalta mallidatalta
+  (geneeriset nimet, pyöreät määräajat), eivät välttämättä elävältä aineistolta.
+  Osa sivun laskureista jäi nollaan.
+- **Hintaa ei kerrota sivulla lainkaan.** Ei yritystietoja, ei
+  perustamisvuotta, ei henkilöstömäärää.
+
+Emme siis tiedä onko tämä iso vai pieni toimija — vain että se on olemassa ja
+että Suomi on mukana.
+
+#### Päällekkäisyys meihin
+
+**Kapea.** Hilma-puolella sama lähde, mutta TenderMapilla ei ole
+suunnitteluvaihetta, kaavoitusta eikä hanketta ennen kilpailutusta. He
+aloittavat siitä mihin meidän varhaisuuslupauksemme päättyy.
 
 ### Mitä kartasta seuraa
 
