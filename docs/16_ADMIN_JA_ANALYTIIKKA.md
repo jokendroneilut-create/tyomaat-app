@@ -163,6 +163,11 @@ koska luvut ovat piste ajassa):
   MRR 9 337 € / ARR 112 044 € = *kaikki trialit maksaisivat* (katto, ei
   ennuste). Avain on asiakas (yritys), ei tunnus — ks. [[customer-billing]].
   Tulkinnan ja arvon kannalta ks. [15_TYOMAARA_JA_ARVIO.md](15_TYOMAARA_JA_ARVIO.md).
+- **ARR ~4,6× viidessä viikossa (TIC, 2026-11-20):** MRR **1 143 €** / ARR
+  **13 716 €** (2.11. 646 €/7 752 €), **maksavia asiakkaita 8** (23 tunnusta),
+  yhtenäinen 149 €/kk 1.1.2027 alkaen. Trialit 36 (oli 52), asiakkaita 72,
+  tunnuksia 111, potentiaalinen ARR 78 084 €. Suppilo tiivistyy konversioiden
+  myötä.
 - **MRR-tasanne murtui (TIC, 2026-11-02):** MRR **646 €** / ARR **7 752 €**
   (24.10. 248 € / 2 976 €), **maksavia asiakkaita 5** (oli 2, +3 tällä viikolla),
   ARPU ~129 €/kk. Trial-asiakkaita 52, asiakkaita 75, tunnuksia 108 (kuollutta
@@ -189,6 +194,8 @@ tuottama luku on avattava lähteestä ennen kuin sen perusteella toimitaan
 
 ## Päivityshistoria
 
+- **2026-11-20** — TIC: MRR 646 € → 1 143 € (ARR 13 716 €), maksavia 5 → 8,
+  yhtenäinen 149 €/kk 1.1.2027; trialit 52 → 36.
 - **2026-11-02** — MRR-tasanne murtui: MRR 248 € → 646 €, ARR 7 752 €, maksavia
   2 → 5 (3 uutta tällä viikolla); kuollutta kohinaa siivottu (tunnukset 127→108).
 - **2026-10-24** — Luettu viisi lähdettä suoraan (TIC/GA/SC/Vercel/ajankohtaista)

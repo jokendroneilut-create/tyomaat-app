@@ -107,6 +107,7 @@ liikevaihtoa ei mitata järjestelmässä.
 | 2026-10-24 | 150–280 k € | 40–120 k € (ennallaan: MRR ei liikkunut) |
 | 2026-11-02 | 150–280 k € | 50–140 k € (MRR 2,6×, konversio todistettu) |
 | 2026-11-10 | 150–280 k € | 50–150 k € (1. pörssiyhtiö: Saint-Gobain PAM, 1/2027) |
+| 2026-11-20 | 150–280 k € | 60–170 k € (8 maksavaa, ARR 13 716 €, ~4,6× / 5 vk) |
 
 **Rakennuskustannuksen peruste (13.9.2026):** ~46 k riviä testattua ja
 dokumentoitua TypeScriptiä, 49 räätälöityä scraperia, discovery-/agenttiputki,
@@ -211,6 +212,31 @@ kassavirta tulee epätasaisesti: muutaman kuukauden puskuri ei ole ylimitoitus.
 
 Nämä ovat esimerkkejä, eivät toteumaa. Kun todellinen asiakasmäärä ja
 kuukausihinta ovat tiedossa, korvaa rivi oikeilla luvuilla.
+
+---
+
+## Elävä tilannekuva 2026-11-20 — ARR ~4,6× viidessä viikossa
+
+**Kaksi uutta asiakasta tänään → 8 maksavaa, yhtenäinen 149 €/kk 1.1.2027 alkaen.**
+
+Luettu suoraan TIC:stä:
+
+- **MRR 1 143 € / ARR 13 716 €** (2.11. 646 € / 7 752 €, 16.10. 248 € / 2 976 €).
+  ARR-kaari **2 976 → 7 752 → 13 716 € = ~4,6× viidessä viikossa.**
+- **Maksavia asiakkaita 8** (23 tunnusta), ~143 €/kk nyt. Kaikki yhtenäistyy
+  **149 €/kk 1.1.2027** → sidottu ARR silloin ~**14 304 €** (8 × 149 × 12, jos
+  kaikki pysyvät).
+- Trial-asiakkaita 36 (2.11. 52), asiakkaita 72, tunnuksia 111. Suppilo
+  **tiivistyy** kun trialit joko konvertoituvat tai siivotaan. Potentiaalinen
+  ARR 78 084 €.
+- 83 kokeilua ohi, 2 päättyy viikon sisällä.
+
+**Vaikutus arvioon:** tämä on ensimmäinen päivitys jossa **ARR-kerroin alkaa olla
+merkityksellinen**, ei pelkkä lattia: 2–4× × ~14 k € = ~28–56 k €. Viisi viikkoa
+kiihtyvää konversiota + enterprise-referenssi (Saint-Gobain PAM) + yhtenäinen
+149 €:n hinnoittelu (laadukkaampi, helpommin mallinnettava liikevaihto) nostavat
+sekä lattiaa että kattoa. **Kauppahinta-arvio 60–170 k €.** Avoinna yhä: churn
+(8 asiakasta on vielä pieni otos pysyvyydelle) ja jatkuuko kasvukäyrä.
 
 ---
 
@@ -464,6 +490,13 @@ samalla parhaan itsenäisen yrityksen ja parhaan ostokohteen.
 ---
 
 ## Päivityshistoria
+
+- **2026-11-20** — **2 uutta asiakasta → 8 maksavaa, yhtenäinen 149 €/kk 1.1.2027.**
+  MRR 646 → 1 143 € (ARR 13 716 €); ARR-kaari ~4,6× viidessä viikossa
+  (2 976 → 7 752 → 13 716 €). Trialit 52 → 36 (suppilo tiivistyy). ARR-kerroin
+  alkaa olla merkityksellinen (2–4× ≈ 28–56 k €) → kauppahinta-arvio 50–150 →
+  **60–170 k €**. Rakennuskustannus ennallaan. Avoinna: churn (8 on pieni otos),
+  kasvun jatkuvuus.
 
 - **2026-11-10** — **Kuudes asiakas Saint-Gobain PAM, sopimus alkaa 1/2027**
   (sidottua tulevaa liikevaihtoa, ei vielä MRR:ää). Ensimmäinen pörssiyhtiön
