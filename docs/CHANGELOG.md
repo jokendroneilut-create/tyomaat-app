@@ -16,7 +16,10 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 Kun käyttäjä antaa alapeukun syyllä "Liian pieni hanke", hänen Tänään-
 näkymästään jäävät pois kaikki TIC:ssä pieniksi merkityt hankkeet (maalaus,
 maalämpö, katon uusinta ym.). Merkintä tallentuu hyväksynnän valinnasta, ja
-takautuvasti merkittiin 325 hanketta.
+takautuvasti merkittiin 325 hanketta, joista 52 isoa korjattiin pois käsin.
+Tänään-näkymä kertoo, montako pientä on piilotettu, ja "Näytä ne" palauttaa
+ne. Pitkäkestoisilta hankkeilta (34) poistettiin vuoden vanheneminen, joka olisi
+piilottanut ne kesken rakentamisen.
 
 ### Vantaan kaavasivun uusi pohja luetaan (D-441)
 
