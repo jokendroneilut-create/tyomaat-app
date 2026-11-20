@@ -51,6 +51,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-441 – Vantaan kaavasivun uusi pohja: kentät div-elementteinä, ja nimeen osuvat RSS-linkit ensin
+
+Johannes 20.11.2026 jonorivistä `9a78f02c` (*"002568 Aviapoliksen viihde- ja
+hyvinvointikeskus"*): *"onko tästä mitään kuvausta saatavilla mistä on
+kyse?"* Rivillä oli vain kaavapalvelun perustiedot. Johannes löysi
+kaavasivun, jota haku (D-423) ei ollut löytänyt.
+
+**Kaksi vikaa.**
+
+1. **Vantaa vaihtoi sivupohjan 11/2026.** Kenttäparit olivat ennen
+   `<dt class="point__term">` / `<dd class="point__description">`, nyt ne
+   ovat `<div>`-elementtejä. `kaavanTunnuksetSivulta` ja keräimen
+   `fetchVantaaPlanDetails` hakivat `dt.point__term`-valitsimella ja saivat
+   uudelta pohjalta hiljaa tyhjän tuloksen.
+   - Linkittömälle kaavalle ei löytynyt sivua, vaikka sivulla on
+     kaavanumero seitsemän kertaa.
+   - Hakija jäi tyhjäksi uusilta sivuilta.
+   - Vahinko oli vielä pieni: yksi kaava ilman hakijaa (002678
+     Koivukylänväylä 66) ja 10 linkitöntä kaavaa.
+   - Korjaus: valitsin on nyt luokka eikä elementti
+     (`.point__term` → `.point__description`).
+2. **Haun budjetti kului RSS:n ensimmäisiin linkkeihin.** Aviapolis oli
+   RSS:ssä, mutta sitä ei avattu kolmella ajolla, koska neljä sivua
+   avattiin syötteen järjestyksessä. Nyt nimeen osuvat linkit avataan
+   ensin. Muut tulevat perään, koska osoite voi poiketa nimestä
+   (Koivukylänväylä 66 → "paivittaistavarakaupan-laajennus-ilolaan").
+
+**Tulos.** Keräin ajettiin neljästi. Yhdeksästä linkittömästä kaavasta
+seitsemällä on nyt sivu: Aviapolis, Jaalakuja, Otavantie 18, Kivistön
+Mestarintie, Raappavuorentie 38, Vantaanjänne 5 ja Tikkurilantie 151–153.
+Osa näistä oli löydetty jo D-423:ssa. Koivukylänväylä 66 sai hakijan.
+Ilman sivua jäivät 002599 Kivivuorentie 4–6 (ei sivua, D-423) ja 002258
+Perintötie 6.
+
+**Aviapoliksen jonorivi:**
+
+- **Kuvaus:** viihde- ja liikuntakeskus Tikkurilantien ja
+  Lentoasemantien kulmaan, 2,47 ha.
+  - Konseptiin kuuluvat tapahtuma-areena noin 5 000 katsojalle,
+    hotelli, liikunta- ja liiketilaa, asuntoja ja pysäköintilaitos.
+  - OAS on päivätty 16.11.2026, mielipiteet 16.12.2026 mennessä.
+- **Rakennuttaja:** Aviapolis Live Kiinteistöosakeyhtiö, joka on
+  nimetty leipätekstissä aloitteentekijäksi. Hakija-kentässä lukee vain
+  "Kaupunki; Yksityinen".
+- **Arkkitehti:** Huttunen-Lipasti Arkkitehdit Oy (havainnekuvan
+  kuvateksti).
+- **Yhteyshenkilö:** asemakaava-arkkitehti Päivi Veijola.
+
+Testit: `lib/agent/vantaaKaavaSivu.spec.ts` (uusi pohja ja RSS-järjestys).
+
 ### D-440 – FCDC Corp Oy lähteeksi; Lahden pari yhteen, Akaan lupa Verda Akaalle
 
 Johannes 19.11.2026 FCDC:n Keravan tiedotteesta: *"onko meillä tämä

@@ -640,9 +640,10 @@ export async function fetchVantaaPlanDetails(
     let hakija: string | null = null
     let hakijaLisatiedot: string | null = null
 
-    $("dt.point__term").each((_, el) => {
+    /* Vanha <dt>/<dd> ja 11/2026 alkaen <div> (D-441): luokka ratkaisee. */
+    $(".point__term").each((_, el) => {
       const label = $(el).text().trim().toLowerCase()
-      const value = $(el).next("dd.point__description").text().trim()
+      const value = $(el).next(".point__description").text().trim()
 
       if (label === "hakija") {
         hakija = value.length > 0 ? value : null

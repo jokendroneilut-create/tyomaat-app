@@ -35,9 +35,15 @@ export const VANTAA_KAAVALISTAUS = "https://www.vantaa.fi/fi/kaavoitus/kaavat"
 export function kaavanTunnuksetSivulta(html: string): string[] {
   const $ = cheerio.load(html)
   const tunnukset = new Set<string>()
-  $("dt.point__term").each((_, el) => {
+  /*
+   * Vantaa vaihtoi pohjan 11/2026: <dt>/<dd> -> <div class="point__term">
+   * / <div class="point__description">. Vanha valitsin palautti uudelta
+   * pohjalta hiljaa tyhjän, joten linkittömälle kaavalle ei löytynyt sivua
+   * (002568 Aviapolis, D-441). Luokka ratkaisee, ei elementti.
+   */
+  $(".point__term").each((_, el) => {
     if ($(el).text().trim().toLowerCase() !== "kaavan nimi") return
-    const arvo = $(el).next("dd.point__description").text()
+    const arvo = $(el).next(".point__description").text()
     for (const m of arvo.matchAll(/(?<![\dA-Za-z])([A-Z]{0,2}\d{4,6})(?!\d)/g)) tunnukset.add(m[1])
   })
   return [...tunnukset]
@@ -123,8 +129,17 @@ export async function etsiKaavasivut(input: {
 
   if (!input.puuttuvat.length) return loydetyt
 
+  /*
+   * NIMEEN OSUVAT ENSIN (D-441). Budjetti kului syötteen neljään
+   * ensimmäiseen linkkiin, joten myöhemmin syötteessä ollut Aviapolis
+   * (002568) ei löytynyt kolmella ajolla. Kaikkia ei voi suodattaa
+   * nimellä, koska osoite voi poiketa kaavan nimestä (Koivukylänväylä 66 ->
+   * "paivittaistavarakaupan-laajennus-ilolaan"), joten muut tulevat perään.
+   */
   const xml = await input.hae(VANTAA_KAAVA_RSS)
-  for (const href of xml ? rssLinkit(xml) : []) {
+  const rss = xml ? rssLinkit(xml) : []
+  const osuu = (href: string) => avoimet().some((k) => osuuOtsikkoon(k.nimi, { href, otsikko: "" }))
+  for (const href of [...rss.filter(osuu), ...rss.filter((h) => !osuu(h))]) {
     if (!avoimet().length) break
     if (input.tunnetutSivut.has(href)) continue
     await tarkista(href)

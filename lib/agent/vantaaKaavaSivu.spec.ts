@@ -29,6 +29,13 @@ describe("kaavanTunnuksetSivulta", () => {
     expect(kaavanTunnuksetSivulta(sivu("002494 ja 002494va Väritehdas 1"))).toEqual(["002494"])
     expect(kaavanTunnuksetSivulta(sivu("YK0048 - Vantaan uusi yleiskaava 2020"))).toContain("YK0048")
   })
+  it("uusi pohja 11/2026: div-elementit dt/dd:n sijaan (Aviapolis, D-441)", () => {
+    const uusi = `<ul><li class="point point--with-icon"><span class="point__icon icon"></span>
+      <div class="point__term">Kaavan nimi</div>
+      <div class="point__description">002568 Aviapoliksen viihde- ja hyvinvointikeskus</div></li>
+      <li class="point"><div class="point__term">Hakija</div><div class="point__description">Kaupunki; Yksityinen</div></li></ul>`
+    expect(kaavanTunnuksetSivulta(uusi)).toEqual(["002568"])
+  })
   it("ei lue muita kenttiä", () => {
     expect(kaavanTunnuksetSivulta("<dt class='point__term'>Hakija</dt><dd class='point__description'>002657</dd>")).toEqual([])
   })
@@ -81,6 +88,25 @@ describe("etsiKaavasivut", () => {
       budjetti: 10,
     })
     expect(Object.fromEntries(tulos)).toEqual({ "002657": TUOMELA, "002640": RAAPPA })
+  })
+
+  it("nimeen osuva RSS-linkki avataan ennen muita, vaikka budjetti on pieni (Aviapolis, D-441)", async () => {
+    const MUU = "https://www.vantaa.fi/fi/kaavoitus/kaavat/paivittaistavarakaupan-laajennus-ilolaan"
+    const AVIA = "https://www.vantaa.fi/fi/kaavoitus/kaavat/aviapoliksen-viihde-ja-hyvinvointikeskus"
+    const avattu: string[] = []
+    const tulos = await etsiKaavasivut({
+      puuttuvat: [{ tunnus: "002568", nimi: "002568 Aviapoliksen viihde- ja hyvinvointikeskus" }],
+      tunnetutSivut: new Set(),
+      hae: async (url) => {
+        avattu.push(url)
+        if (url === VANTAA_KAAVA_RSS) return `<rss><channel><item><link>${MUU}</link></item><item><link>${AVIA}</link></item></channel></rss>`
+        if (url === AVIA) return `<div class="point__term">Kaavan nimi</div><div class="point__description">002568 Aviapoliksen viihde- ja hyvinvointikeskus</div>`
+        return ""
+      },
+      budjetti: 1,
+    })
+    expect(Object.fromEntries(tulos)).toEqual({ "002568": AVIA })
+    expect(avattu).not.toContain(MUU)
   })
 
   it("väärä Raappavuori-sivu ei kelpaa", async () => {

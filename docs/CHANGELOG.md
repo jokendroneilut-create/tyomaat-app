@@ -9,6 +9,16 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-20 (Vantaan kaavasivut)
+
+### Vantaan kaavasivun uusi pohja luetaan (D-441)
+
+Vantaa vaihtoi kaavasivujen pohjan, ja keräin sai uusilta sivuilta tyhjän
+hakijan eikä löytänyt linkittömille kaavoille sivua. Kentät luetaan nyt
+luokan perusteella, ja nimeen osuvat RSS-linkit avataan ensin. Seitsemän
+kaavaa sai sivunsa, ja Aviapoliksen viihde- ja hyvinvointikeskus sai kuvauksen,
+rakennuttajan ja yhteyshenkilön.
+
 ## 2026-11-18 (kuvausten päivitys)
 
 ### Osuneen hankkeen kuvaus päivittyy, YVA:n diaarinumero tunnisteeksi (D-437)
