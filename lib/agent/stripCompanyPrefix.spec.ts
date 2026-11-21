@@ -69,6 +69,12 @@ describe("stripCompanyPrefixFromHeadline", () => {
     )
   })
 
+  it("palauttaa -inen-sanan genetiivin perusmuotoon", () => {
+    expect(
+      stripCompanyPrefixFromHeadline("SRV käynnistää Kuopion uuden pääpoliisiaseman rakentamisen")
+    ).toBe("Kuopion uuden pääpoliisiaseman rakentaminen")
+  })
+
   it("jättää rauhaan otsikon jossa ei ole yritysetuliitettä", () => {
     expect(stripCompanyPrefixFromHeadline("Espoonkartanoon valmistuu uusi koulu")).toBe(
       "Espoonkartanoon valmistuu uusi koulu"

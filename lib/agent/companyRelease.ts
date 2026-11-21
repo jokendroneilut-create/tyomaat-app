@@ -218,7 +218,14 @@ const TAIL_MIN_POSITION = 0.4
  * jättänyt ne siivoamatta; lyhinkin jäljelle jäävä teksti oli 809
  * merkkiä, joten leikkaus ei tyhjennä yhtäkään kuvausta.
  */
-const VARMAT_TAIL_MARKERS = /tilaa tiedotteet sähköpostiisi|lue lisää julkaisijalta/i
+/*
+ * "Jakelu:" on pörssiyhtiön tiedotteen jakelurivi, jonka jälkeen tulee vain
+ * yhtiön esittely ("SRV lyhyesti ...", liikevaihto, some-linkit). Lisätiedot
+ * ja kuvakrediitti (arkkitehti) ovat ENNEN sitä ja säilyvät. Mitattu
+ * 22.11.2026 SRV:n Kuopion pääpoliisiaseman tiedotteesta.
+ */
+const VARMAT_TAIL_MARKERS =
+  /tilaa tiedotteet sähköpostiisi|lue lisää julkaisijalta|jakelu:\s*(?:tiedotusvälineet|keskeiset tiedotusvälineet|nasdaq)/i
 
 /*
  * Hännän alkukohta tai -1. Varma merkki voittaa aina, monitulkintainen
@@ -340,8 +347,37 @@ const STT_ALKUROSKA = new RegExp(
   "i"
 )
 
+/*
+ * CISIONIN SIVUPOHJA JA PÖRSSIYHTIÖN TIEDOTEOTSAKE (22.11.2026).
+ *
+ * Johannes 22.11.2026: SRV:n Kuopion pääpoliisiaseman kuvauksessa roskaa.
+ * news.cision.com-sivulta luettu teksti alkoi näin:
+ *
+ *   "pe, marras 20, 2026 14.45 CET Report this content SRV YHTIÖT OYJ
+ *    LEHDISTÖTIEDOTE 20.11.2026 KLO 15.45 SRV käynnistää ..."
+ *
+ * LEADING_JUNK tunsi "Report this content" -sanat vain TEKSTIN ALUSSA,
+ * mutta Cision laittaa niiden eteen julkaisuajan. Perään tulee yhtiön
+ * oma otsake (YHTIÖ OYJ + LEHDISTÖTIEDOTE/SIJOITTAJAUUTINEN + aika),
+ * joka on myös SRV:n oman sivun page-data-rungon alussa.
+ */
+const CISION_ALKUROSKA =
+  /^.{0,80}?\d{4}\s+\d{1,2}[.:]\d{2}\s+CES?T\s+Report this content\s*/i
+
+const TIEDOTEOTSAKE = new RegExp(
+  "^[\\p{Lu}0-9 .,&-]{2,60}?\\s+" +
+    "(?:LEHDISTÖTIEDOTE|SIJOITTAJAUUTINEN|PÖRSSITIEDOTE|TIEDOTE)\\s+" +
+    "\\d{1,2}\\.\\d{1,2}\\.\\d{4}(?:\\s+KLO\\s+\\d{1,2}[.:]\\d{2})?\\s*",
+  "u"
+)
+
 export function stripReleaseHead(text: string): string {
-  const siistitty = text.replace(STT_ALKUROSKA, "").trim()
+  const siistitty = text
+    .replace(STT_ALKUROSKA, "")
+    .replace(CISION_ALKUROSKA, "")
+    .trim()
+    .replace(TIEDOTEOTSAKE, "")
+    .trim()
   /*
    * Tyhja on pahempi kuin roskainen: jos hahmo soi koko tekstin, se
    * osui vaarin ja alkuperainen sailytetaan.

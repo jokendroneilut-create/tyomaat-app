@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { stripReleaseHead } from "./companyRelease"
+import { cutReleaseTail, stripReleaseHead } from "./companyRelease"
 
 /* Naytteet ovat tuotannon kuvauksista 11.10.2026. */
 describe("stripReleaseHead", () => {
@@ -41,5 +41,40 @@ describe("stripReleaseHead", () => {
     expect(stripReleaseHead(raw)).toBe(
       "Puolustuskiinteistöt valmistelee Säkylän varuskunnan kuntotalon peruskorjausta vuodelle 2027."
     )
+  })
+})
+
+/* SRV:n Kuopion pääpoliisiaseman tiedote 20.11.2026 (news.cision.com). */
+describe("stripReleaseHead - Cision", () => {
+  const leipa =
+    "SRV käynnistää Kuopion uuden pääpoliisiaseman rakentamisen Kuopion Savilahdessa. Kärkihanke-allianssimallilla toteutettavan hankkeen kokonaisarvo on noin 75 miljoonaa euroa."
+
+  it("poistaa julkaisuajan, Report this content -linkin ja tiedoteotsakkeen", () => {
+    const raw =
+      "pe, marras 20, 2026 14.45 CET Report this content SRV YHTIÖT OYJ LEHDISTÖTIEDOTE 20.11.2026 KLO 15.45 " + leipa
+    expect(stripReleaseHead(raw)).toBe(leipa)
+  })
+
+  it("poistaa pelkän tiedoteotsakkeen (SRV:n page-data-runko)", () => {
+    expect(stripReleaseHead("SRV YHTIÖT OYJ LEHDISTÖTIEDOTE 20.11.2026 KLO 15.45 " + leipa)).toBe(leipa)
+  })
+
+  it("ei koske leipätekstiin joka alkaa isolla yritysnimellä", () => {
+    const puhdas = "SRV YHTIÖT OYJ:n hallitus päätti käynnistää hankkeen. " + leipa
+    expect(stripReleaseHead(puhdas)).toBe(puhdas)
+  })
+})
+
+describe("cutReleaseTail - pörssiyhtiön jakelurivi", () => {
+  it("leikkaa jakelurivin ja yhtiöesittelyn mutta jättää lisätiedot ja kuvakrediitin", () => {
+    const raw =
+      "Hankkeen on tarkoitus valmistua kesällä 2029. ".repeat(4) +
+      "Lisätiedot: Kimmo Hyry, yksikönjohtaja, SRV Tiedotteen liitteenä olevat kuvat: UKI Arkkitehdit Oy " +
+      "Jakelu: Tiedotusvälineet www.srv.fi SRV lyhyesti SRV on suomalainen rakennusyhtiö."
+    const out = cutReleaseTail(raw)
+    expect(out).toContain("UKI Arkkitehdit Oy")
+    expect(out).toContain("Lisätiedot")
+    expect(out).not.toContain("SRV lyhyesti")
+    expect(out).not.toContain("Jakelu")
   })
 })

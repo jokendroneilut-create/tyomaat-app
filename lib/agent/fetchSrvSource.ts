@@ -2,6 +2,7 @@ import { YRITYSTIEDOTTEEN_IKKUNA_KK } from "@/lib/agent/tiedotteenIkkuna"
 import { detectCityFromText } from "./detectCityFromText"
 import { stripHtml } from "./stripHtml"
 import { extractStreetAddress } from "./extractStreetAddress"
+import { cleanReleaseText, poistaToistuvaOtsikko } from "./companyRelease"
 
 /*
  * SRV:n oma "ajankohtaista"-sivu on Gatsby-sovellus, jonka HTML ei
@@ -142,7 +143,14 @@ export async function fetchSrvSource() {
      * ei voi arvioida. Runko on tiedotteen koko teksti: kohteen nimi,
      * asuntomäärä, aikataulu ja tilaaja.
      */
-    const description = stripHtml(body) || null
+    /*
+     * Rungon alussa on tiedoteotsake ("SRV YHTIÖT OYJ LEHDISTÖTIEDOTE
+     * 20.11.2026 KLO 15.45") ja otsikon toisto, lopussa jakelurivi ja
+     * yhtiöesittely. Sama siivous kuin tiedotesivulta luetulle tekstille
+     * (22.11.2026).
+     */
+    const raw = stripHtml(body)
+    const description = raw ? poistaToistuvaOtsikko(cleanReleaseText(raw), title) || null : null
 
     results.push({
       name: title,

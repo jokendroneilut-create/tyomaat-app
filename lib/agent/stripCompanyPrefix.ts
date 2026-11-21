@@ -106,6 +106,12 @@ const RECIPIENT_ENDING = /(lle|lla|llä)$/iu
  */
 function nominativeHead(word: string): string {
   if (/ksen$/u.test(word)) return word.replace(/ksen$/u, "s")
+  /*
+   * -inen-sanan genetiivi on -isen. Yleissääntö alla pudotti vain n:n:
+   * "SRV käynnistää Kuopion uuden pääpoliisiaseman rakentamisen" ->
+   * "... rakentamise" (22.11.2026).
+   */
+  if (/isen$/u.test(word)) return word.replace(/isen$/u, "inen")
   if (/kkeen$/u.test(word)) return word.replace(/kkeen$/u, "ke")
   if (/tteen$/u.test(word)) return word.replace(/tteen$/u, "te")
   if (/[^aeiouyäöåAEIOUYÄÖÅ][aeiouyäöåAEIOUYÄÖÅ]n$/u.test(word)) return word.slice(0, -1)
