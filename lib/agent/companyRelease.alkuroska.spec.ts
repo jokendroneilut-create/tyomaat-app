@@ -55,6 +55,12 @@ describe("stripReleaseHead - Cision", () => {
     expect(stripReleaseHead(raw)).toBe(leipa)
   })
 
+  it("poistaa myös pitkän otsikon aikaleiman edestä ja UUTINEN-otsakkeen", () => {
+    const raw =
+      "SRV on valittu Porvoon Kokonniemen liikuntakeskuksen toteuttajaksi – suunnittelussa käyttäjien toiveet keskiössä ti, marras 11, 2025 08.00 CET Report this content SRV YHTIÖT OYJ UUTINEN 11.11.2025 KLO 10.00 " + leipa
+    expect(stripReleaseHead(raw)).toBe(leipa)
+  })
+
   it("poistaa pelkän tiedoteotsakkeen (SRV:n page-data-runko)", () => {
     expect(stripReleaseHead("SRV YHTIÖT OYJ LEHDISTÖTIEDOTE 20.11.2026 KLO 15.45 " + leipa)).toBe(leipa)
   })

@@ -361,12 +361,21 @@ const STT_ALKUROSKA = new RegExp(
  * oma otsake (YHTIÖ OYJ + LEHDISTÖTIEDOTE/SIJOITTAJAUUTINEN + aika),
  * joka on myös SRV:n oman sivun page-data-rungon alussa.
  */
-const CISION_ALKUROSKA =
-  /^.{0,80}?\d{4}\s+\d{1,2}[.:]\d{2}\s+CES?T\s+Report this content\s*/i
+/*
+ * Edessä on usein OTSIKKO, joka voi olla yli 200 merkkiä ("SRV on valittu
+ * Porvoon Kokonniemen liikuntakeskuksen toteuttajaksi – ..."). Siksi ikkuna
+ * on leveä, ja osuma rajataan Cisionin tarkkaan aikaleimamuotoon
+ * "ti, marras 11, 2025 08.00 CET" ennen sanoja Report this content.
+ */
+const CISION_ALKUROSKA = new RegExp(
+  "^[^]{0,320}?(?:ma|ti|ke|to|pe|la|su|mon|tue|wed|thu|fri|sat|sun),\\s+\\p{L}+\\s+\\d{1,2},\\s+\\d{4}\\s+" +
+    "\\d{1,2}[.:]\\d{2}\\s+CES?T\\s+Report this content\\s*",
+  "iu"
+)
 
 const TIEDOTEOTSAKE = new RegExp(
   "^[\\p{Lu}0-9 .,&-]{2,60}?\\s+" +
-    "(?:LEHDISTÖTIEDOTE|SIJOITTAJAUUTINEN|PÖRSSITIEDOTE|TIEDOTE)\\s+" +
+    "(?:LEHDISTÖTIEDOTE|SIJOITTAJAUUTINEN|PÖRSSITIEDOTE|UUTINEN|TIEDOTE)\\s+" +
     "\\d{1,2}\\.\\d{1,2}\\.\\d{4}(?:\\s+KLO\\s+\\d{1,2}[.:]\\d{2})?\\s*",
   "u"
 )
