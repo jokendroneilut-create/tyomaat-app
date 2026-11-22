@@ -60,11 +60,25 @@ export function turunYhteyshenkilot(
     const nimi = String(value ?? "").trim()
     if (!HENKILONIMI.test(nimi)) continue
 
-    const seuraava = kentat[i + 1]
-    const email =
-      seuraava && ON_EPOSTI.test(seuraava[0]) && EPOSTI_ARVO.test(String(seuraava[1]).trim())
-        ? String(seuraava[1]).trim()
-        : null
+    /*
+     * PARI KENTÄN NIMESTÄ, EI JÄRJESTYKSESTÄ (D-449). Tunnistetiedot
+     * tallentuvat jsonb-kenttään, joka järjestää avaimet uudelleen
+     * ("Piirtäjä", "Kaavatunnus", …, "Piirtäjän sähköposti"), joten
+     * "seuraava kenttä" ei enää ollut sähköposti: Tuureporinkadun kaavan
+     * molemmat henkilöt jäivät ilman sähköpostia 22.11.2026. Pari on
+     * genetiivi ("Vastuuhenkilö" -> "Vastuuhenkilön sähköposti"), ja
+     * varalla osoitteen nimiosa (fanni.tuomaala@).
+     */
+    const sahkopostit = kentat.filter(
+      ([l, v]) => ON_EPOSTI.test(l) && EPOSTI_ARVO.test(String(v ?? "").trim())
+    )
+    const omaKentta = sahkopostit.find(([l]) => l.toLowerCase().startsWith(label.toLowerCase()))
+    const nimiOsat = nimi.toLowerCase().split(/\s+/)
+    const nimestaan = sahkopostit.find(([, v]) =>
+      nimiOsat.every((osa) => String(v).toLowerCase().split("@")[0].includes(osa.replace(/[åä]/g, "a").replace(/ö/g, "o")))
+    )
+    const pari = omaKentta ?? nimestaan ?? (kentat[i + 1] && ON_EPOSTI.test(kentat[i + 1][0]) ? kentat[i + 1] : null)
+    const email = pari && EPOSTI_ARVO.test(String(pari[1]).trim()) ? String(pari[1]).trim() : null
 
     ulos.push({
       kind: "person",

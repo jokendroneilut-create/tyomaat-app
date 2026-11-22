@@ -51,6 +51,42 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-449 – Turun kaavasivut: välilyönti osoitteessa, jumiutuva fetch ja jsonb:n avainjärjestys
+
+Johannes 22.11.2026 jonorivistä *"VI 006-23-3., -8., -1002., -2002, os.
+Tuureporinkatu 6b-12"* (`c593a701`): *"miksi tämä lähde ei näytä mitään?
+Turusta on tullut vastaavia joskus ennenkin"*. Neljä erillistä vikaa:
+
+1. **Välilyönti osoitteessa.** Turun WFS antaa kaavasivun osoitteen käsin
+   kirjoitettuna: `…/kaavoitus/tuureporinkatu 6b-12-3858-2022` (404),
+   oikea `…/tuureporinkatu-6b-12-3858-2022` (200). D-336 tunsi nämä vain
+   "kuolleina osoitteina". `turunKaavasivunOsoite` poistaa polun osien
+   reunavälit ja muuttaa sisävälit väliviivoiksi; kaksi dokumenttia
+   nimettiin uudelleen korjattuun osoitteeseen.
+2. **fetch() jää jumiin www.turku.fi:hin.** Mitattu: undici-pohjainen
+   fetch aikakatkesi 15 s:ssa jokaisella User-Agentilla ja IPv4:llä, kun
+   Noden `https`-moduuli ja curl vastasivat alle 0,13 s:ssa (Fastly).
+   Sivut ohjautuvat lisäksi aina 301:llä. `haeTurunSivu` käyttää
+   https-moduulia, seuraa ohjaukset ja aikakatkaisee 15 s:ssa. Lisäksi
+   ajon sisällä epäonnistunut osoite muistetaan: kaavan useat alueet
+   yrittivät samaa sivua ja kuluttivat viiden haun budjetin.
+3. **Osoite "-8."** Resolveri otti osoitteeksi nimen toisen pilkulla
+   erotetun osan, ja kiinteistöluettelossa on pilkkuja. `os.`-merkintä
+   voittaa nyt (`turunKaupunginosaJaOsoite`).
+4. **Sähköposti paritettiin järjestyksestä.** `turunYhteyshenkilot` oletti
+   sähköpostin olevan henkilön jälkeinen kenttä, mutta jsonb järjestää
+   avaimet uudelleen ("Piirtäjä", "Kaavatunnus", …, "Piirtäjän
+   sähköposti"). Pari tunnistetaan nyt kentän nimestä (genetiivi), varalla
+   osoitteen nimiosasta.
+
+**Tulos:** Turun 100 dokumentista kuvaus 86 → 93; jäljellä 7 aidosti
+poistettua sivua (404). Jonorivi sai kuvauksen (Aninkaisten alue,
+toimisto- ja kokoontumistilat asumiseen, Tuureporinkatu 6b, 8 ja 10),
+osoitteen ja yhteyshenkilöt Fanni Tuomaala (vastuuhenkilö) ja Mona
+Aaltonen (piirtäjä) sähköposteineen. Kupittaan liikuntakeskittymä sai
+puuttuvan sähköpostin. Testejä 10 uutta (`turkuKaava.spec.ts`,
+`turunYhteyshenkilot.spec.ts`).
+
 ### D-448 – Ilmoitustyyppi pois hankkeen nimestä
 
 Johannes 22.11.2026: *"jos hyväksyn hankkeen jossa lukee esim.

@@ -93,3 +93,22 @@ describe("turunYhteyshenkilot", () => {
     expect(turunYhteyshenkilot(null)).toEqual([])
   })
 })
+
+describe("turunYhteyshenkilot: jsonb:n järjestys (D-449)", () => {
+  it("parittaa sähköpostin kentän nimestä, vaikka järjestys on vaihtunut", () => {
+    const tallennettu = {
+      Piirtäjä: "Mona Aaltonen",
+      Kaavatunnus: "9/2026",
+      Diaarinumero: "3858-2022",
+      "Kaavan tyyppi": "Asemakaava",
+      Vastuuhenkilö: "Fanni Tuomaala",
+      "Hyväksyvä taho": "Valtuusto",
+      "Piirtäjän sähköposti": "mona.aaltonen@turku.fi",
+      "Vastuuhenkilön sähköposti": "fanni.tuomaala@turku.fi",
+    }
+    expect(turunYhteyshenkilot(tallennettu).map((h) => [h.name, h.email])).toEqual([
+      ["Mona Aaltonen", "mona.aaltonen@turku.fi"],
+      ["Fanni Tuomaala", "fanni.tuomaala@turku.fi"],
+    ])
+  })
+})

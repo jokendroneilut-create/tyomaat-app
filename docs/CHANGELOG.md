@@ -11,6 +11,13 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-22 (tiedotteiden siivous)
 
+### Turun kaavoille kuvaus ja yhteyshenkilö myös hankalista osoitteista (D-449)
+
+Turun kaavasivu jäi lukematta, kun rajapinnan osoitteessa oli välilyönti, ja
+sivun haku saattoi jäädä jumiin. Molemmat korjattu: kuvaus löytyy nyt 93 Turun
+kaavalta 100:sta (aiemmin 86). Lisäksi osoite ja yhteyshenkilöiden sähköpostit
+poimitaan luotettavammin.
+
 ### Hankkeen nimestä pois "Osallistumispyyntö", "Jälki-ilmoitus" ym. (D-448)
 
 Hankintailmoituksen tyyppi ei enää jää hankkeen nimeen. Se poistetaan

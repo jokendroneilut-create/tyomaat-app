@@ -4,30 +4,15 @@ import { PHASE_LABELS } from "@/lib/projects/phases"
 import { getMunicipalityByName } from "@/lib/geo/municipalities"
 import { gk23ToWgs84 } from "@/lib/geo/gk23"
 import { turunYhteyshenkilot } from "@/lib/agent/turunYhteyshenkilot"
+import { turunKaupunginosaJaOsoite } from "@/lib/agent/turkuKaava"
 
 
 function findFact(facts: any[], type: string) {
   return facts.find((fact) => fact.fact_type === type)
 }
 
-/*
- * KaavanNimi on muotoa "{kaupunginosa} {kiinteistötunnus}, os. {osoite}"
- * (esim. "Perno 065-40-3, os. Heinikonkatu 2") — puretaan kaupunginosa
- * ja osoite parhaan kyvyn mukaan, mutta koko nimi jää joka tapauksessa
- * otsikoksi jos jäsennys ei osu kohdalleen.
- */
-function parseDistrictAndAddress(kaavanNimi: string | null): {
-  district: string | null
-  address: string | null
-} {
-  if (!kaavanNimi) return { district: null, address: null }
-
-  const [left, right] = kaavanNimi.split(",").map((part) => part.trim())
-  const address = right ? right.replace(/^os\.\s*/i, "").trim() || null : null
-  const district = left?.match(/^([A-ZÅÄÖa-zåäö]+(?:\s[A-ZÅÄÖa-zåäö]+)*)/)?.[1]?.trim() ?? null
-
-  return { district, address }
-}
+/* Kaupunginosa ja osoite kaavan nimestä: lib/agent/turkuKaava.ts (D-449). */
+const parseDistrictAndAddress = turunKaupunginosaJaOsoite
 
 export async function resolveTurkuKaavaProject({
   document,

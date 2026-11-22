@@ -70,6 +70,7 @@ import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
 import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
 import { etsiKaavasivut, kaavasivunIngressi, kuvausIngressinKanssa } from "../../vantaaKaavaSivu"
 import { haeUlvilanKaavanTiedot } from "../../ulvilaKaava"
+import { haeTurunSivu, turunKaavasivunOsoite } from "../../turkuKaava"
 import { aloitteentekija, tervolanKaavasivu, type TervolaOsapuolet } from "../../tervolaKaava"
 import {
   jasennaRaahenHenkilosto,
@@ -1463,9 +1464,10 @@ async function fetchTurkuKaavaDetails(planUrl: string): Promise<{
   pageFound: boolean
 }> {
   try {
-    const vastaus = await fetch(planUrl, { cache: "no-store" })
+    /* https-moduuli: fetch() jää jumiin www.turku.fi:hin (D-449). */
+    const vastaus = await haeTurunSivu(planUrl)
     if (!vastaus.ok) return { description: null, identifyingInfo: {}, pageFound: false }
-    const html = await vastaus.text()
+    const html = vastaus.text
     const $ = cheerio.load(html)
 
     const description =
@@ -1568,7 +1570,16 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
     { description: string | null; identifyingInfo: Record<string, string> }
   >()
 
-  for (const feature of features) {
+  /*
+   * Ajon aikana epäonnistuneet: kaavalla voi olla useita alueita samalla
+   * osoitteella, ja jokainen yritti sivua uudelleen samassa ajossa
+   * kuluttaen viiden haun budjetin (D-449).
+   */
+  const epaonnistuiAjossa = new Map<string, boolean>()
+
+  for (const rawFeature of features) {
+    /* Välilyönnit pois WFS:n osoitteesta (D-449): "tuureporinkatu 6b-12-…" on 404. */
+    const feature = { ...rawFeature, planUrl: turunKaavasivunOsoite(rawFeature.planUrl) }
     const documentUrl =
       feature.planUrl || `${source.url}#${feature.kaavaTunnus ?? "unknown"}`
 
@@ -1586,7 +1597,10 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
      */
     let pageFound: boolean | null = null
 
-    if (
+    if (epaonnistuiAjossa.has(documentUrl)) {
+      failures += 1
+      pageFound = epaonnistuiAjossa.get(documentUrl) ?? null
+    } else if (
       !detailsAttempted &&
       failures < MAX_DETAIL_FETCH_FAILURES &&
       feature.planUrl &&
@@ -1604,6 +1618,7 @@ async function collectTurkuKaavaSource(source: DiscoverySource) {
         /* Epaonnistui: lasketaan, jottei se polta budjettia ikuisesti. */
         failures += 1
         pageFound = details.pageFound
+        epaonnistuiAjossa.set(documentUrl, details.pageFound)
       }
     }
 
