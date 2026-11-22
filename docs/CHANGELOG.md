@@ -11,6 +11,13 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-22 (tiedotteiden siivous)
 
+### Hankkeeseen liitetyn uutisen lähde säilyy (D-446)
+
+TIC:n "Liitä hankkeeseen" ja automaattinen täsmäys hukkasivat liitetyn
+uutisen tai ilmoituksen lähteen hankkeen historiasta: näin oli käynyt 62 %:lle
+liitoksista. Reitti korjattu, ja 109 hankkeen historia täydennettiin käsin
+valituista ja tunnisteella tehdyistä liitoksista.
+
 ### NRC Groupin tiedotteista pois sivun linkkilista ja toistot (D-445)
 
 NRC:n uutis- ja projektisivuilta luettuun tekstiin tuli sivun alaosan

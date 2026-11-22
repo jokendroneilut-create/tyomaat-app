@@ -33,6 +33,7 @@ import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { resolveRegion } from "@/lib/projects/resolveRegion"
 import { kokonaisluku } from "@/lib/projects/kokonaisluku"
+import { yhdistaLahdehistoria } from "@/lib/projects/yhdistaLahdehistoria"
 import { hankkeenLaajuus } from "@/lib/projects/hankkeenLaajuus"
 
 const supabaseAdmin = createClient(
@@ -2517,6 +2518,28 @@ export async function POST(request: Request) {
         last_seen_at: new Date().toISOString(),
         last_source_name:
           sourceName ?? existingProject.metadata?.last_source_name ?? null,
+        /*
+         * Ehdokkaan lähde hankkeen historiaan (22.11.2026). Yllä oleva
+         * levitys antaa hankkeen omalle `source_history`lle etusijan, joten
+         * ilman tätä liitetty tiedote katosi hankkeelta jäljettömiin.
+         */
+        source_history: yhdistaLahdehistoria(
+          existingProject.metadata?.source_history,
+          metadata.source_history,
+          {
+            source_name: sourceName ?? null,
+            source_document_id: metadata.source_document_id ?? null,
+            document_url: sourceUrl ?? documentsUrl ?? null,
+            notice_type: metadata.notice_type ?? null,
+            main_type: metadata.main_type ?? null,
+            date_published: metadata.date_published ?? null,
+            is_contract_award: metadata.is_contract_award === true,
+            winners: Array.isArray(metadata.winners) && metadata.winners.length > 0 ? metadata.winners : null,
+            seen_at: new Date().toISOString(),
+          }
+        ),
+        last_source_url:
+          sourceUrl ?? documentsUrl ?? existingProject.metadata?.last_source_url ?? null,
       }
 
       const { data: updatedProject, error: updateError } = await supabaseAdmin
@@ -2628,6 +2651,8 @@ export async function POST(request: Request) {
             ...metadata,
             approved_at: new Date().toISOString(),
             approved_project_id: matchedProjectId,
+            /* Sama kenttä jota täsmäys ja duplikaattitarkistus lukevat. */
+            matched_existing_project_id: matchedProjectId,
           },
         })
         .eq("id", potentialProject.id)

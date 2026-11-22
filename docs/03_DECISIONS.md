@@ -51,6 +51,50 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-446 – Liitos kirjaa lähteen hankkeen historiaan
+
+Johannes 22.11.2026: *"korjaa tuo liitosreitti myös"*. TIC:n "Liitä
+hankkeeseen" ja automaattinen täsmäys hukkasivat liitetyn ehdokkaan
+lähteen (havaittu samana päivänä Kuopion pääpoliisiasemassa ja HERI2:ssa,
+D-445).
+
+**Vika** (`app/api/tic/projects/approve/route.ts`, täsmäyshaara).
+Metatiedot yhdistettiin muodossa `{ ...ehdokas, ...hanke }`, joten
+hankkeen oma `source_history` voitti ja ehdokkaan lähde katosi.
+`last_source_url` jäi asettamatta, eikä jonorivi saanut kenttää
+`matched_existing_project_id` (vain `approved_project_id`). Mitattu
+`project_imports`-taulusta: **299/486 liitoksesta (62 %)** lähde puuttui
+hankkeen historiasta, heinäkuusta lähtien.
+
+**Korjaus:**
+
+- `lib/projects/yhdistaLahdehistoria.ts` (5 testiä): hankkeen historia
+  ensin, sitten ehdokkaan rivit joita siinä ei ole. Sama rivi tunnistetaan
+  dokumentin id:stä, ilman sitä osoitteesta. Jos ehdokkaalla ei ole
+  historiaa, sen oma lähde kirjataan varariviksi.
+- Reitti asettaa `last_source_url`-kentän ja jonoriville
+  `matched_existing_project_id`:n.
+
+**Takautuva täydennys** (`scripts/taydenna-liitosten-lahdehistoria.ts`):
+vain tunnisteella tehdyt liitokset, joihin kuuluu myös TIC:n
+käsin valittu liitos. **109 hanketta sai 132 lähderiviä** ja 269
+jonoriviä liitostiedon. Rivit on merkitty `taydennetty: "project_imports
+22.11.2026"`, eikä niihin kirjattu voittajia, joten liittyvät yritykset
+eivät muuttuneet.
+
+**Sumeita liitoksia ei täydennetty.** Niistä 166:lta lähde puuttuu, ja
+otoksessa oli vääriä jopa 95–100 pisteellä. 7.8.2026 SRV:n tiedotteet
+menivät viiteen väärään hankkeeseen: Helmin monitoimitalo Hartelan
+A-Kruunuun, Rautatientorin metroasema Folkhälsanin senioriasuntoihin,
+Kirkkonummen kampus Rajakummun hautausmaahan, Hämeenlinnan More-alue
+NRC:n sähköasemaan ja SRV:n Raisio Mangroven Raisioon. Lähteen
+kirjaaminen historiaan vakiinnuttaisi virheen. Lista on tiedostossa
+`.tmp-sumeat-liitokset.txt` (ei versionhallinnassa) katsottavaksi.
+
+**Uudet liitokset** kirjaavat lähteen myös sumeassa täsmäyksessä, koska
+historia kertoo mitä hankkeeseen on yhdistetty, oli täsmäys oikein tai
+väärin. Väärä liitos näkyy silloin historiasta.
+
 ### D-445 – NRC Groupin sivuroska pois tiedotekuvauksista
 
 Johannes 22.11.2026 pyysi liittämään NRC:n tiedotteen *"Aloitamme
