@@ -11,6 +11,13 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-22 (tiedotteiden siivous)
 
+### Hankkeen nimestä pois "Osallistumispyyntö", "Jälki-ilmoitus" ym. (D-448)
+
+Hankintailmoituksen tyyppi ei enää jää hankkeen nimeen. Se poistetaan
+hyväksynnässä ja kun hanke etenee seuraavaan vaiheeseen, ja 123 nykyisen
+hankkeen nimi siivottiin. Esimerkiksi "JÄLKI-ILMOITUS: Osallistumispyyntö: Malmin
+uusi sairaala…" on nyt "Malmin uusi sairaala…".
+
 ### Ulvilan kaavoille kuvaus ja yhteyshenkilö (D-447)
 
 Ulvilan kaavojen kuvaus ja yhteyshenkilö luetaan nyt kaavan kuulutuksesta,

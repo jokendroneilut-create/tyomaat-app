@@ -51,6 +51,47 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-448 – Ilmoitustyyppi pois hankkeen nimestä
+
+Johannes 22.11.2026: *"jos hyväksyn hankkeen jossa lukee esim.
+Ennakkoilmoitus ja kutsu markkinavuoropuheluun tai muuta vastaavaa. niin
+jääkö nuo tekstit edelleen vaikka hanke eteneekin jo seuraavaan
+vaiheeseen?"* Jäivät: liitos ei koskaan muuta nimeä (title-precedence),
+eikä hyväksyntä siivonnut ilmoitustyyppiä. Mitattu: 125 hankkeen nimessä
+ilmoitustyyppi, 40 niistä jo sopimusvaiheessa ("JÄLKI-ILMOITUS:
+Osallistumispyyntö: Malmin uusi sairaala…", "Osallistumispyyntö, Turun
+satamaradan siirto…"). Johannes valitsi kaikki kolme korjausta.
+
+**Sääntö** (`lib/projects/ilmoitustyyppiNimesta.ts`, 6 testiä):
+ilmoitustyyppi (ennakkoilmoitus, kutsu markkinavuoropuheluun,
+markkinakartoitus, tietopyyntö, osallistumispyyntö, tarjouspyyntö,
+tarjouskilpailukutsu, jälki-ilmoitus ym.) poistetaan nimen **alusta ja
+lopusta**, niin monta kertaa peräkkäin kuin niitä on, kun sen ja nimen
+välissä on erotin tai välilyönti. Keskeltä ei poisteta mitään
+("Tarkk’ampujankuja 1B, Julkisivun maalauksen jälki-ilmoitus" jää).
+**KESKEYTYS ei ole ilmoitustyyppi** vaan tieto keskeytetystä hankinnasta,
+joten se jää. Nimeen kosketaan vain jos tyyppi todella poistettiin:
+ensimmäinen versio isonsi myös "atNorth"- ja "wpd"-nimet, mikä löytyi
+kuivaharjoituksesta. Jos kohteen nimeä ei jää, alkuperäinen säilyy.
+
+**Kolme kytkentää:**
+
+1. **Hyväksyntä** (`app/api/tic/projects/approve/route.ts`): uuden
+   hankkeen nimi siivotaan, ja lähteen alkuperäinen nimi tallentuu
+   `metadata.also_known_as`-listaan, jota täsmäys lukee.
+2. **Vaiheen edetessä** (sama reitti ja `lib/agent/importCandidate.ts`):
+   kun liitos nostaa vaihetta, olemassa olevan nimen ilmoitustyyppi
+   poistetaan ja vanha nimi menee `also_known_as`-listaan. Tämä on
+   rajattu poikkeus sääntöön "liitos ei muuta nimeä": käsin kirjoitettu
+   nimi ilman ilmoitustyyppiä säilyy ennallaan.
+3. **Nykyiset** (`scripts/siivoa-ilmoitustyyppi-nimista.ts`): 123 aktiivista
+   ja valmistunutta hanketta, jokainen rivi luettu kuivaharjoituksesta.
+   Merkitty `metadata.nimi_siivottu`.
+
+Hankintanumerot nimen alussa ("PPHVADno-2026-29300 / OYS – …",
+"PKI202514 – Leijona Catering…") jäivät, koska niillä ei ole yhtä
+tunnistettavaa muotoa.
+
 ### D-447 – Ulvilan kaavoille kuvaus ja yhteyshenkilö kuulutuksesta ja OAS:sta
 
 Johannes 22.11.2026 jonorivistä *"Pirunkynnen teollisuusalueen asemakaava"*

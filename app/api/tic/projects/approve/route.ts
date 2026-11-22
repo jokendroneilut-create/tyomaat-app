@@ -34,6 +34,7 @@ import { verifyAdminRequest } from "@/lib/auth/verifyAdminRequest"
 import { resolveRegion } from "@/lib/projects/resolveRegion"
 import { kokonaisluku } from "@/lib/projects/kokonaisluku"
 import { yhdistaLahdehistoria } from "@/lib/projects/yhdistaLahdehistoria"
+import { poistaIlmoitustyyppi } from "@/lib/projects/ilmoitustyyppiNimesta"
 import { hankkeenLaajuus } from "@/lib/projects/hankkeenLaajuus"
 
 const supabaseAdmin = createClient(
@@ -2281,11 +2282,19 @@ export async function POST(request: Request) {
     ? PHASE_LABELS.tender
     : PHASE_LABELS.planning)
 
-    const projectName = buildCustomerProjectName({
+    /*
+     * Ilmoitustyyppi pois nimestä (D-448): "JÄLKI-ILMOITUS: Osallistumispyyntö:
+     * Malmin uusi sairaala" -> "Malmin uusi sairaala". Vaihe on omassa
+     * kentässään, ja liitos ei koskaan muuta nimeä, joten sana jäisi
+     * nimeen hankkeen edetessä. Alkuperäinen tallentuu also_known_as-listaan,
+     * jota täsmäys lukee.
+     */
+    const lahteenNimi = buildCustomerProjectName({
       potentialProject,
       isHilma,
       projectAddress,
     })
+    const projectName = poistaIlmoitustyyppi(lahteenNimi)
 
     function phaseOrder(rawPhase: string | null | undefined) {
       const key = normalizeLegacyPhase(rawPhase)
@@ -2427,6 +2436,18 @@ export async function POST(request: Request) {
         existingProject.metadata?.also_known_as ?? []
       )
       if (existingProject.name !== projectName) alsoKnownAs.add(projectName)
+      if (lahteenNimi !== projectName && existingProject.name !== lahteenNimi) alsoKnownAs.add(lahteenNimi)
+
+      /*
+       * VAIHEEN EDETESSÄ ILMOITUSTYYPPI POIS NIMESTÄ (D-448). Poikkeus
+       * sääntöön "liitos ei muuta nimeä": vain ilmoitustyypin sana nimen
+       * alusta tai lopusta poistetaan, joten käsin kirjoitettu nimi ilman
+       * niitä säilyy ennallaan. Vanha nimi jää also_known_as-listaan.
+       */
+      const siistiNimi = phaseAdvances
+        ? poistaIlmoitustyyppi(existingProject.name)
+        : existingProject.name
+      if (siistiNimi !== existingProject.name) alsoKnownAs.add(existingProject.name)
 
       /*
        * Liittyvät yritykset yhdistetään, ei korvata: hankkeeseen kertyy tietoa
@@ -2545,6 +2566,7 @@ export async function POST(request: Request) {
       const { data: updatedProject, error: updateError } = await supabaseAdmin
         .from("projects")
         .update({
+          ...(siistiNimi !== existingProject.name ? { name: siistiNimi } : {}),
           city: existingProject.city ?? city,
           region: existingProject.region ?? region,
           location: existingProject.location ?? location,
@@ -2739,6 +2761,15 @@ export async function POST(request: Request) {
    * approve-reitin muuttamista.
    */
   ...metadata,
+
+  /* Lähteen alkuperäinen nimi täsmäystä varten, jos siitä poistettiin ilmoitustyyppi (D-448). */
+  ...(lahteenNimi !== projectName
+    ? {
+        also_known_as: Array.from(
+          new Set([...(Array.isArray(metadata.also_known_as) ? metadata.also_known_as : []), lahteenNimi])
+        ),
+      }
+    : {}),
 
   /*
    * Alla olevat kentät kirjoitetaan tarkoituksella spreadin jälkeen,

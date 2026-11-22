@@ -1,4 +1,5 @@
 import { kanoninenLahdeUrl } from "@/lib/projects/lahdeUrl"
+import { poistaIlmoitustyyppi } from "@/lib/projects/ilmoitustyyppiNimesta"
 import { createClient } from "@supabase/supabase-js"
 import { findProjectMatchDetailed } from "@/lib/agent/projectMatcher"
 import { inferPhaseFromText } from "@/lib/projects/inferPhaseFromText"
@@ -735,10 +736,17 @@ export async function importCandidate(
       if ((samalla ?? []).length > 1) uusiKuvaus = null
     }
 
+    /*
+     * Vaiheen edetessä ilmoitustyyppi pois nimestä (D-448), kuten TIC:n
+     * hyväksynnässä. Vanha nimi jää also_known_as-listaan täsmäystä varten.
+     */
+    const siistiNimi = matchedNewPhase ? poistaIlmoitustyyppi(match.name) : match.name
+
     await supabase
       .from("projects")
       .update({
         last_verified_at: new Date().toISOString(),
+        ...(siistiNimi && siistiNimi !== match.name ? { name: siistiNimi } : {}),
         ...(uusiKuvaus ? { additional_info: uusiKuvaus } : {}),
         city: body.city || match.city || null,
         region: body.region || match.region || null,
@@ -792,6 +800,13 @@ export async function importCandidate(
         metadata: {
           ...(match.metadata ?? {}),
           ...(body.metadata ?? {}),
+          ...(siistiNimi && siistiNimi !== match.name
+            ? {
+                also_known_as: Array.from(
+                  new Set([...(Array.isArray(match.metadata?.also_known_as) ? match.metadata.also_known_as : []), match.name])
+                ),
+              }
+            : {}),
           permit_number:
             body.permit_number ??
             body.metadata?.permit_number ??
