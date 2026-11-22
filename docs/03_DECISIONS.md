@@ -99,6 +99,13 @@ valmistumisen 12/2029 ja nimestä poistettiin vanhentunut
 "osallistumispyyntövaihe". Kustannusarvio jäi Hilman 75 M€:ksi, koska
 tiedote sanoo vain "yli 50 miljoonaa".
 
+**Liitosreitin puute toistui.** "Liitä hankkeeseen" ei lisännyt NRC:n
+osoitetta hankkeen `source_history`-listaan eikä `last_source_url`-kenttään,
+eikä se merkinnyt jonoriville `matched_existing_project_id`:tä. Sama
+havaittiin samana päivänä Kuopion pääpoliisiaseman liitoksessa. Lisäksi
+lisätiedot-kenttä korvautui jonorivin raakatekstillä, josta roska tuli
+näkyviin. Kentät korjattiin käsin; reitin korjaus on tekemättä.
+
 ### D-444 – Vantaan kaavasivun ingressi kuvauksen alkuun
 
 Johannes 20.11.2026 kysyi jonorivistä *"531000 Tikkurilantie 151 ja 153"*
