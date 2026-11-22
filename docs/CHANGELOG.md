@@ -9,6 +9,14 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-22 (tiedotteiden siivous)
+
+### NRC Groupin tiedotteista pois sivun linkkilista ja toistot (D-445)
+
+NRC:n uutis- ja projektisivuilta luettuun tekstiin tuli sivun alaosan
+linkkilista muista uutisista, jakonapin teksti ja lainaus toiseen kertaan.
+Jäsennin leikkaa ne nyt, ja 11 hankkeen kuvaus siivottiin takautuvasti.
+
 ## 2026-11-20 (Vantaan kaavasivut)
 
 ### Vantaan kaavojen kuvaus alkaa sivun ingressillä (D-444)

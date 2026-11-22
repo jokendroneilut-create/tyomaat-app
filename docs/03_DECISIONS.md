@@ -51,6 +51,54 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-445 – NRC Groupin sivuroska pois tiedotekuvauksista
+
+Johannes 22.11.2026 pyysi liittämään NRC:n tiedotteen *"Aloitamme
+Helsinki–Riihimäki-rataosan kapasiteettia parantavat uusimistyöt"* Hilman
+hankkeeseen HERI2 Nuppulinna–Jokela (`53854c96`) ja katsomaan *"ettei
+kuvaukseen tullut mitään roskaa"*. Lisätiedot-kenttään oli tullut koko
+NRC:n sivu.
+
+**Kolme roskan lajia**, kaikki yleisestä tiedotejäsentimestä
+(`lib/agent/companyRelease.ts`), joka lukee sivun tekstin loppuun asti:
+
+1. **Sivun alaosa**: "Tutustu myös näihin" tai "Lue lisää projekteistamme",
+   sen jälkeen muiden NRC-uutisten otsikot ja ingressit ja "Missasitko?".
+   Lisätty hännän merkkeihin (`TAIL_MARKERS`, sijaintiraja 40 % ennallaan).
+2. **Jakonapin teksti** liimautuneena lainauksen eteen: "…joulukuussa
+   2029.Jaa”Tämä projekti…". `poistaJakonappi` poistaa vain tämän tarkan
+   muodon: virkkeen loppu, "Jaa" ja heti perään lainausmerkki.
+3. **Nostolainaus toiseen kertaan** sivun lopussa puhujan nimen kanssa.
+   `poistaToistettuNosto` leikkaa sen, kun kolme ehtoa täyttyy: virke
+   tekstin jälkipuoliskolla, sen 60 ensimmäistä merkkiä esiintyvät
+   aiemmin lainausmerkin perässä, ja leikattavaa on enintään 700 merkkiä
+   ja 30 % tekstistä.
+
+**Säännön rajaus mitattiin ennen käyttöönottoa.** Kaikki 7 448
+tallennettua kuvausta ajettiin säännön läpi:
+
+| versio | leikattavia |
+|---|---|
+| pelkkä toisto | 473 (päätökset, YVA, Hilma toistavat lauseita oikeutetusti) |
+| + aiempi esiintymä lainausmerkin perässä | 28 (Helsingin päätöksissä sopimusten nimet ovat lainausmerkeissä, leikkaus vei 2 500 merkkiä) |
+| + enintään 700 merkkiä ja 30 % | 6, joista 3 oikeita NRC-nostoja |
+
+Kolme jäljelle jäänyttä väärää osumaa (Helsingin päätös ja kaksi Hilma-riviä)
+ovat lähteistä, jotka eivät kulje tämän jäsentimen läpi.
+
+**Takautuva siivous** (`scripts/siivoa-nrc-sivuroska.ts`, rivit luettu
+kuivaharjoituksesta): 11 aktiivista hanketta, mm. Turun raitiotie,
+Länsiratikat, Oulun henkilöratapiha, Kuopion ja Siilinjärven
+ylikulkusillat, Rauman henkilöjunaseisake ja kaksi atNorthin
+datakeskuksen sähköasemaa. Skripti lisää myös välilyönnin, kun virke ja
+puhujan nimi olivat liimautuneet ("Suomessa.maajohtaja Harri Lukkarinen"),
+ja poistaa kuvagallerian kuvatekstit ("…käynnissä1 / 3").
+
+**HERI2.** Hanke sai vaiheen Sopimus myönnetty, rakentajaksi NRC Groupin,
+valmistumisen 12/2029 ja nimestä poistettiin vanhentunut
+"osallistumispyyntövaihe". Kustannusarvio jäi Hilman 75 M€:ksi, koska
+tiedote sanoo vain "yli 50 miljoonaa".
+
 ### D-444 – Vantaan kaavasivun ingressi kuvauksen alkuun
 
 Johannes 20.11.2026 kysyi jonorivistä *"531000 Tikkurilantie 151 ja 153"*

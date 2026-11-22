@@ -190,7 +190,7 @@ const MIN_BODY_LENGTH = 120
  * kohta on vasta 70 %:n kohdalla.
  */
 const TAIL_MARKERS =
-  /sinua (?:saattaisi|voisi) kiinnostaa|saattaisit pitää|lue myös|muita uutisia|muut tiedotteet|muut artikkelit|muut julkaisut|muut hankkeet|lisää uutisia|liittyvät uutiset|uusimmat artikkelit|tilaa uutiskirje|tilaa postia|jaa artikkeli|seuraa meitä|muualla verkossa/i
+  /sinua (?:saattaisi|voisi) kiinnostaa|saattaisit pitää|lue myös|muita uutisia|muut tiedotteet|muut artikkelit|muut julkaisut|muut hankkeet|lisää uutisia|liittyvät uutiset|uusimmat artikkelit|tilaa uutiskirje|tilaa postia|jaa artikkeli|seuraa meitä|muualla verkossa|tutustu myös näihin|lue lisää projekteistamme|missasitko\?/i
 
 /*
  * Roskamerkki hyväksytään katkaisukohdaksi vasta tästä eteenpäin. Kaikki
@@ -435,7 +435,60 @@ export function cleanReleaseText(raw: string): string {
 
   const trimmed = cut > 0 ? text.slice(0, cut) : text
 
-  return trimmed.trim().replace(LEADING_JUNK, "")
+  return poistaToistettuNosto(poistaJakonappi(trimmed.trim())).replace(LEADING_JUNK, "")
+}
+
+/*
+ * JAKONAPIN TEKSTI LAINAUKSEN EDESSÄ (22.11.2026).
+ *
+ * NRC Groupin sivulla jakopainike on kappaleen ja nostolainauksen
+ * välissä, ja `.text()` liimaa sen molempiin: "…joulukuussa 2029.Jaa”Tämä
+ * projekti…". Poistetaan vain tämä tarkka muoto: virkkeen loppu, "Jaa" ja
+ * heti perään lainausmerkki. Sana "jaa" tekstin sisällä ei osu.
+ */
+export function poistaJakonappi(text: string): string {
+  return text.replace(/([.!?])\s?Jaa\s?(?=[”"“])/g, "$1 ")
+}
+
+/*
+ * NOSTOLAINAUS TOISTUU SIVUN LOPUSSA (22.11.2026).
+ *
+ * NRC:n uutissivu toistaa artikkelin lainauksen lopussa isona nostona
+ * puhujan nimen kanssa ("…rataosalla. Mikko Mäkelä, liiketoimintajohtaja,
+ * Rautatiet-divisioona"). Se on sama teksti toiseen kertaan. Leikataan
+ * tekstin loppupuolelta ensimmäisestä virkkeestä, jonka alku (60 merkkiä)
+ * on jo esiintynyt aiemmin LAINAUSMERKIN PERÄSSÄ. Ilman lainausehtoa sääntö
+ * olisi leikannut 473 tallennettua kuvausta (päätökset, YVA, Hilma toistavat
+ * lauseita aivan oikeutetusti); mitattu 22.11.2026. Lainausehtokaan ei
+ * riittänyt: Helsingin päätöksissä sopimusten nimet ovat lainausmerkeissä
+ * ("Yhteinen kunnallistekninen työmaa” sopimus), ja leikkaus olisi vienyt
+ * niistä 2 500 merkkiä. Siksi leikattavaa saa olla enintään 700 merkkiä ja
+ * 30 % tekstistä: nosto ja puhujan nimi, kun sivun alaosa on jo poistettu. Vain loppupuolelta, jotta artikkelin oma
+ * kertaus keskellä tekstiä säilyy, eikä koskaan alle vähimmäispituuden.
+ */
+const NOSTON_TUNNISTE = 60
+const NOSTON_MAKSIMI = 700
+
+export function poistaToistettuNosto(text: string): string {
+  const alku = Math.floor(text.length * 0.5)
+  const virkkeenAlku = /(?:^|[.!?”"]\s*)(?=\p{Lu})/gu
+  for (const osuma of text.matchAll(virkkeenAlku)) {
+    const kohta = (osuma.index ?? 0) + osuma[0].length
+    if (kohta < alku) continue
+    const pala = text.slice(kohta, kohta + NOSTON_TUNNISTE)
+    if (pala.length < NOSTON_TUNNISTE) break
+    const aiempi = text.indexOf(pala)
+    /* Noston tunnusmerkki: aiemmin sama teksti oli lainausmerkkien sisällä. */
+    const lainauksessa = aiempi > 0 && /[”“"]\s?$/.test(text.slice(Math.max(0, aiempi - 2), aiempi))
+    /* Nosto on lyhyt ja viimeisenä: lainaus ja puhujan nimi, ei pitkää tekstiä. */
+    const loppu = text.length - kohta
+    const lyhytHanta = loppu <= NOSTON_MAKSIMI && loppu <= text.length * 0.3
+    if (aiempi >= 0 && aiempi < kohta && lainauksessa && lyhytHanta) {
+      const lyhennetty = text.slice(0, kohta).trim()
+      return lyhennetty.length >= MIN_BODY_LENGTH ? lyhennetty : text
+    }
+  }
+  return text
 }
 
 async function fetchHtml(url: string): Promise<string | null> {

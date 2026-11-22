@@ -7,6 +7,9 @@ import {
   stripPublisherName,
   cutReleaseTail,
   poistaToistuvaOtsikko,
+  cleanReleaseText,
+  poistaJakonappi,
+  poistaToistettuNosto,
 } from "./companyRelease"
 import { allativeToNominative } from "./companyName"
 import { extractClientFromText, extractExplicitClient } from "./fetchSttHakuSource"
@@ -520,5 +523,37 @@ describe("poistaToistuvaOtsikko", () => {
 
   it("kestaa puuttuvan otsikon", () => {
     expect(poistaToistuvaOtsikko("Teksti tässä.", null)).toBe("Teksti tässä.")
+  })
+})
+
+describe("NRC:n sivuroska (22.11.2026)", () => {
+  const runko =
+    "Väylävirasto on valinnut NRC Groupin toteuttamaan Helsinki–Riihimäki-ratahankkeen rakennusurakkaa Nuppulinna–Jokela-osuudella sekä Hyvinkää–Riihimäki-välillä. Sopimuksen arvo on yli 50 miljoonaa euroa. Työt alkavat välittömästi ja niiden on määrä valmistua joulukuussa 2029."
+  const lainaus =
+    "Tämä projekti sisältää meidän vahvaa rautateiden ydinosaamistamme. Olemme erittäin tyytyväisiä, että pääsemme osoittamaan ammattitaitomme tällä rataosalla"
+  const lisaa =
+    " Nuppulinna–Jokela-välille rakennetaan kaksi uutta raidetta ja rakennetaan uusi laituri Jokelan asemalle. Osuudelle rakennetaan myös kuusi uutta betonisiltaa sekä yksi putkisilta Palojokeen."
+  const sivu =
+    `${runko}Jaa”${lainaus} ja voimme osaltamme parantaa olosuhteita”, liiketoimintajohtaja Mikko Mäkelä sanoo.${lisaa}` +
+    `${lainaus}. Mikko Mäkelä, liiketoimintajohtaja, Rautatiet-divisioona` +
+    "Tutustu myös näihinUutisetArtikkeliJulkaistu November 17, 2026Toteutamme kaksi uutta ylikulkusiltaa Itä-SuomessaMissasitko?NRC Groupille lisätilaus Turun raitiotien arkeologisista töistä"
+
+  it("leikkaa sivun alaosan, jakonapin ja toistetun noston", () => {
+    const puhdas = cleanReleaseText(sivu)
+    expect(puhdas).not.toMatch(/Tutustu myös|Missasitko|Jaa”|Rautatiet-divisioona/)
+    expect(puhdas.startsWith(runko)).toBe(true)
+    expect(puhdas).toContain("liiketoimintajohtaja Mikko Mäkelä sanoo.")
+    expect(puhdas.endsWith("putkisilta Palojokeen.")).toBe(true)
+  })
+
+  it("jakonappi poistuu vain lainausmerkin edestä", () => {
+    expect(poistaJakonappi("valmistuu 2029.Jaa”Hanke on")).toBe("valmistuu 2029. ”Hanke on")
+    expect(poistaJakonappi("Kustannukset jaa kahteen osaan. Jaa tontti.")).toBe("Kustannukset jaa kahteen osaan. Jaa tontti.")
+  })
+
+  it("ei leikkaa toistoa tekstin alkupuolelta eikä tekstiä ilman toistoa", () => {
+    expect(poistaToistettuNosto(runko + lisaa)).toBe(runko + lisaa)
+    const alussa = `${lainaus}. ${lainaus}. ${runko}${lisaa}${lisaa}`
+    expect(poistaToistettuNosto(alussa).length).toBeGreaterThan(alussa.length * 0.5)
   })
 })
