@@ -69,6 +69,7 @@ import { estettyPerhe } from "../../hilmaRakentamisenIlmoitus"
 import { rovaniemenKuvaus } from "../../rovaniemenKuvaus"
 import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
 import { etsiKaavasivut, kaavasivunIngressi, kuvausIngressinKanssa } from "../../vantaaKaavaSivu"
+import { haeUlvilanKaavanTiedot } from "../../ulvilaKaava"
 import { aloitteentekija, tervolanKaavasivu, type TervolaOsapuolet } from "../../tervolaKaava"
 import {
   jasennaRaahenHenkilosto,
@@ -13098,6 +13099,27 @@ async function collectUlvilaKaavaSource(source: DiscoverySource) {
   const $ = cheerio.load(await response.text())
   const list = $("ol.wp-block-list").first()
 
+  /*
+   * KUVAUS JA YHTEYSHENKILÖ LIITTEISTÄ (22.11.2026). Luetaan uudelleen vain
+   * kun kaavan liitelista muuttuu (uusi vaihe tuo uuden kuulutuksen), joten
+   * neljän kaavan PDF:iä ei ladata joka ajolla. Ks. lib/agent/ulvilaKaava.ts.
+   */
+  const { data: aiemmat } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+  const tunnetut = new Map<string, { description: string | null; contacts: any[]; liitteet: string[] }>()
+  for (const rivi of aiemmat ?? []) {
+    const rp = (rivi as any).raw_payload ?? {}
+    if (Array.isArray(rp.liitteet)) {
+      tunnetut.set((rivi as any).document_url, {
+        description: rp.description ?? null,
+        contacts: Array.isArray(rp.contacts) ? rp.contacts : [],
+        liitteet: rp.liitteet,
+      })
+    }
+  }
+
   let found = 0
   let saved = 0
 
@@ -13119,7 +13141,25 @@ async function collectUlvilaKaavaSource(source: DiscoverySource) {
     const slug = kemiSlug(title)
     const documentUrl = `${ULVILA_LISTING_URL}#${slug}`
 
-    const rawText = JSON.stringify({ title, phase, description: null, contacts: [] })
+    const liitteet = $li
+      .find("a")
+      .map((_, a) => ({ teksti: $(a).text().trim(), href: $(a).attr("href") ?? null }))
+      .get()
+    const liiteUrlit = liitteet.map((l) => String(l.href ?? "")).filter(Boolean)
+    const tunnettu = tunnetut.get(documentUrl)
+    const ennallaan =
+      tunnettu &&
+      tunnettu.liitteet.length === liiteUrlit.length &&
+      tunnettu.liitteet.every((u, i) => u === liiteUrlit[i])
+    const tiedot = ennallaan
+      ? tunnettu!
+      : completed
+        ? { description: null, contacts: [], liitteet: liiteUrlit }
+        : await haeUlvilanKaavanTiedot(liitteet, undefined, undefined, title)
+    const description = tiedot.description
+    const contacts = tiedot.contacts
+
+    const rawText = JSON.stringify({ title, phase, description, contacts })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -13139,8 +13179,9 @@ async function collectUlvilaKaavaSource(source: DiscoverySource) {
           slug,
           kaava_tunnus: null,
           phase,
-          description: null,
-          contacts: [],
+          description,
+          contacts,
+          liitteet: tiedot.liitteet,
           completed,
         },
         processed_at: new Date().toISOString(),

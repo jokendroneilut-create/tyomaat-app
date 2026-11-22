@@ -39,6 +39,10 @@ const NIMIKKEET = [
   "maankäytön suunnittelija",
   "maankäyttöpäällikkö",
   "kaavoituspäällikkö",
+  /* Ulvilan kuulutus 19.11.2026: "Lisätietoja antaa kaupunkisuunnittelun johtaja Juha Virola". */
+  "kaupunkisuunnittelun johtaja",
+  "kaupunkisuunnittelujohtaja",
+  "kaavoitusjohtaja",
   "kaavoitusarkkitehti",
   "kaava-arkkitehti",
   "asemakaava-arkkitehti",

@@ -51,6 +51,56 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-447 – Ulvilan kaavoille kuvaus ja yhteyshenkilö kuulutuksesta ja OAS:sta
+
+Johannes 22.11.2026 jonorivistä *"Pirunkynnen teollisuusalueen asemakaava"*
+(`7670145c`): kuvaus ja yhteyshenkilö löytyvät kuulutuksesta; korjaa
+hanke, tarkista jono ja näkyvät hankkeet ja korjaa poimija.
+
+**Vika.** Ulvilan keräin kirjoitti kaikille kaavoille `description: null,
+contacts: []`, vaikka faktapoiminta ja resolveri osasivat lukea molemmat.
+Listaussivulla jokaisella kaavalla on liitelista: kuulutus
+(vireilletulo- tai nähtävilläoloilmoitus), OAS ja vaiheen mukaan selostus.
+
+**Korjaus** (`lib/agent/ulvilaKaava.ts`, 6 testiä):
+
+- **Kuvaus:** selostus, sen puuttuessa OAS, yleisellä jäsentimellä
+  (`haeKaavanKuvaus`). Vireilletulokuulutuksen oma kappale ("…koskee …
+  Tavoitteena on …") lisätään eteen ilman toistoa (`yhdistaKuvaukset`).
+- **Yhteyshenkilö:** kuulutuksen virke "Lisätietoja (asiasta) antaa
+  *nimike* *nimi*, puh. …, …@ulvila.fi", uusimmasta luettavasta
+  kuulutuksesta alkaen. `kaavanYhteyshenkilo.ts` sai nimikkeet
+  "kaupunkisuunnittelun johtaja", "kaupunkisuunnittelujohtaja" ja
+  "kaavoitusjohtaja".
+- Keräin lukee liitteet uudelleen vain kun kaavan liitelista muuttuu
+  (`raw_payload.liitteet`).
+
+**Neljä Ulvilan omaa sudenkuoppaa**, kaikki mitattu elävistä
+asiakirjoista:
+
+1. Pirunkynnen kuulutuksen tiedostonimi on
+   "KUULUTUS-…-vireille-ja-OAS-…pdf", joten yleinen `valitseOas` valitsi
+   kuulutuksen OAS:ksi. Ulvilan valinta jättää kuulutukset pois.
+2. **Yhteiskuulutus:** Nahkurin vireilletulokuulutuksessa on myös
+   Friitalan kappale. Kappale alkaa kaavan nimellä isoin kirjaimin; kun
+   niitä on useita, valitaan se, jonka nimisanat vastaavat parhaiten
+   kaavan otsikkoa (Friitala 0,67 / Nahkuri 0,2 ja päinvastoin 0,5 / 0,17).
+   Väliotsikko "(AkL 62 §, MRA 30 §)" liimautui seuraavaan kappaleeseen,
+   joten pykäläviittaus päättää nyt virkkeen.
+3. Palovainion ehdotusilmoituksen **fonttikoodaus on rikki**. Alle 95 %
+   luettavia merkkejä sisältävästä tekstistä ei poimita mitään, ja
+   yhteyshenkilö haetaan vanhemmasta kuulutuksesta.
+4. Luonnosvaiheen selostuksesta (Friitala) ei saatu kuvausta, joten OAS
+   on varalla.
+
+**Data:** Pirunkynnen jonorivi sai kuvauksen (1 427 merkkiä: teollisuus,
+kemian- ja vetyteollisuus tai palvelinkeskus, voimalinjan varareitti
+Fingridin Ulvilan sähköasemalta) ja yhteyshenkilöksi kaupunkisuunnittelun
+johtaja Juha Virolan. Näkyvä Friitalan eritasoliittymä (`ef01b1b5`) oli
+ilman kuvausta ja yhteyshenkilöä; sai molemmat (Mikko Toivanen).
+Nahkurille lisättiin kuulutuksen virke kortteleista. Palovainio oli jo
+kunnossa. Muita avoimia Ulvilan jonorivejä ei ollut.
+
 ### D-446 – Liitos kirjaa lähteen hankkeen historiaan
 
 Johannes 22.11.2026: *"korjaa tuo liitosreitti myös"*. TIC:n "Liitä

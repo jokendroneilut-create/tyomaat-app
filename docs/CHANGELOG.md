@@ -11,6 +11,12 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-22 (tiedotteiden siivous)
 
+### Ulvilan kaavoille kuvaus ja yhteyshenkilö (D-447)
+
+Ulvilan kaavojen kuvaus ja yhteyshenkilö luetaan nyt kaavan kuulutuksesta,
+OAS:sta ja selostuksesta. Aiemmin ne jäivät kokonaan tyhjiksi. Pirunkynnen
+teollisuusalue ja Friitalan eritasoliittymä saivat kuvauksen ja yhteyshenkilön.
+
 ### Hankkeeseen liitetyn uutisen lähde säilyy (D-446)
 
 TIC:n "Liitä hankkeeseen" ja automaattinen täsmäys hukkasivat liitetyn
