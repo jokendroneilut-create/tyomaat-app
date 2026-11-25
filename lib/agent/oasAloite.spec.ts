@@ -111,3 +111,15 @@ describe("valitseOasLinkki", () => {
     expect(valitseOasLinkki([{ href: `${U}/2026/06/912-kaavaluonnos.pdf` }])).toBeNull()
   })
 })
+
+describe("jasennaAloitteentekija: yhtiön aloitteesta (Toholampi 25.11.2026)", () => {
+  it("poimii yhtiön genetiivimuodosta", () => {
+    expect(jasennaAloitteentekija("Kaavoitus on tullut ajankohtaiseksi Greensky Energy Oy:n aloitteesta. Toimijan tavoitteena")).toBe("Greensky Energy Oy")
+    expect(jasennaAloitteentekija("Toholammin kunnanhallitus hyväksyi Fu-Gen Energia Oy:n kaavoitusaloitteen ja käynnisti kaavan")).toBe("Fu-Gen Energia Oy")
+    expect(jasennaAloitteentekija("Fu-Gen Oy:n toimittama kaavoitusaloite on hyväksytty Toholammin kaupunginhallituksessa 17.8.2026 § 6.")).toBe("Fu-Gen Oy")
+  })
+
+  it("ei poimi kunnan aloitetta yhtiöksi", () => {
+    expect(jasennaAloitteentekija("Asemakaavan laatiminen on käynnistetty Ulvilan kaupungin aloitteesta.")).toBeNull()
+  })
+})

@@ -9,6 +9,16 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-25 (kaavaliitteet)
+
+### Toholammin kaavoille kuvaus ja rakennuttaja OAS:sta (D-450)
+
+Toholammin kaavojen kuvaus luetaan nyt kaavan OAS:sta tai selostuksesta, ja
+rakennuttaja tunnistetaan OAS:n maininnasta "X Oy:n aloitteesta". Aiemmin
+kuvaukseksi tallentui pelkkä liitteen nimi. Kunnan nimenmuutos ei enää synnytä
+samasta kaavasta uutta riviä.
+
+
 ## 2026-11-22 (tiedotteiden siivous)
 
 ### Turun kaavoille kuvaus ja yhteyshenkilö myös hankalista osoitteista (D-449)

@@ -2559,6 +2559,8 @@ export function resolveFacts(document: any) {
         phase,
         description,
         contacts,
+        developer: document.raw_payload?.developer ?? null,
+        asiakirjaUrl: document.raw_payload?.asiakirja_url ?? null,
       }),
     }
   }

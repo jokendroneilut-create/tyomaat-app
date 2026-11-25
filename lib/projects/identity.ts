@@ -43,6 +43,12 @@ export type IdentifierType =
    */
   | "senaatti_tender_id"
   | "kuopio_kaava_tunnus"
+  /*
+   * Kaavan selostuksen tai OAS:n osoite (D-450). Pysyy samana kun kunta
+   * muuttaa kaavan nimeä, toisin kuin nimestä tehty slug (Toholampi:
+   * "Datakeskuksen alueen" -> "Datakeskuksen alueen/ Kiertokangas").
+   */
+  | "kaava_asiakirja_url"
   | "lahti_kaava_tunnus"
   | "pori_kaava_tunnus"
   | "oulu_kaava_tunnus"
@@ -542,6 +548,7 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "ruovesi_kaava_slug",
   "virrat_kaava_slug",
   "yva_diaarinumero",
+  "kaava_asiakirja_url",
 ]
 
 /*

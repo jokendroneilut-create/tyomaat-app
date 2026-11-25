@@ -107,7 +107,14 @@ export function jasennaAloitteentekija(teksti: string): string | null {
   const m =
     t.match(/aloitteen\b[^.]{0,80}?\bon\s+(?:tehnyt|tehneet|jättänyt|jättäneet)\s+(.+?)(?=\.\s|\.$|,\s|\s+ja\s+(?:kaavoituksen|kaavan|hakemus)|$)/i) ??
     t.match(/(?:kaavamuutosta|asemakaavan\s+muutosta|asemakaavaa|kaavaa)\s+(?:on\s+)?hakenut\s+(.+?)(?=\.\s|\.$|,\s|$)/i) ??
-    t.match(/(?:aloitteen\s+tekijä|hakija)\s*:\s*(.+?)(?=\.\s|\.$|,\s|$)/i)
+    t.match(/(?:aloitteen\s+tekijä|hakija)\s*:\s*(.+?)(?=\.\s|\.$|,\s|$)/i) ??
+    /*
+     * "Kaavoitus on tullut ajankohtaiseksi Greensky Energy Oy:n
+     * aloitteesta" ja "hyväksyi Fu-Gen Energia Oy:n kaavoitusaloitteen"
+     * (Toholampi 25.11.2026). Nimi = isolla alkavia sanoja + yhtiömuoto,
+     * joten "Toholammin kunnanhallitus" ei tartu mukaan.
+     */
+    t.match(/(\p{Lu}[\p{L}\d&-]*(?:\s+\p{Lu}[\p{L}\d&-]*)*\s+(?:Oy|Oyj|Ab|Ky|Ltd|Oy Ab))\s*:n\s+(?:\p{Ll}+\s+){0,2}(?:kaavoitus)?aloit(?:teesta|teen|e)\b/u)
   const nimi = m?.[1]?.trim().replace(/\s+/g, " ") ?? null
   if (!nimi || nimi.length > 80 || EI_NIMI.test(nimi)) return null
   /* Yhtiö tai yhteisö tunnistetaan isosta alkukirjaimesta. */

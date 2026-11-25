@@ -71,6 +71,7 @@ import { pihtipudasKuvaus } from "../../pihtipudasKuvaus"
 import { etsiKaavasivut, kaavasivunIngressi, kuvausIngressinKanssa } from "../../vantaaKaavaSivu"
 import { haeUlvilanKaavanTiedot } from "../../ulvilaKaava"
 import { haeTurunSivu, turunKaavasivunOsoite } from "../../turkuKaava"
+import { haeKaavanLiitetiedot, lohkonOmaTeksti } from "../../kaavanLiitetiedot"
 import { aloitteentekija, tervolanKaavasivu, type TervolaOsapuolet } from "../../tervolaKaava"
 import {
   jasennaRaahenHenkilosto,
@@ -17664,13 +17665,41 @@ async function collectToholampiKaavaSource(source: DiscoverySource) {
     }
   }
 
+  /*
+   * KUVAUS JA ALOITTEENTEKIJÄ LIITTEESTÄ (D-450). Lohkon teksti oli
+   * pelkkä liitteen nimi, joten sisältö luetaan selostuksesta tai OAS:sta.
+   * Uudelleen vain kun liitteet muuttuvat.
+   */
+  const { data: aiemmatToholampi } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+  const tunnetutLiitteet = new Map<string, { kuvaus: string | null; aloitteentekija: string | null; asiakirja: string | null; liitteet: string[] }>()
+  for (const rivi of aiemmatToholampi ?? []) {
+    const rp = (rivi as any).raw_payload ?? {}
+    if (Array.isArray(rp.liitteet_luettu)) {
+      tunnetutLiitteet.set((rivi as any).document_url, {
+        kuvaus: rp.liitteen_kuvaus ?? null,
+        aloitteentekija: rp.developer ?? null,
+        asiakirja: rp.asiakirja_url ?? null,
+        liitteet: rp.liitteet_luettu,
+      })
+    }
+  }
+
   let found = 0
   let saved = 0
 
   for (const block of blocks) {
+    /*
+     * Viimeinen lohko jatkuu sivun alaosaan asti ("Karttapalvelu …
+     * Toholammin maisemia yläilmoista. Kuva: …"), joten se katkaistaan.
+     */
     const bodyText = block.nodes
       .map((node) => $(node).text().replace(/\s+/g, " ").trim())
       .join(" ")
+      .split(/\bKarttapalvelu\b/)[0]
+      .trim()
 
     const phase = toholampiPhaseFromText(`${block.title} ${bodyText}`)
     const completed = phase === "Voimaantulo"
@@ -17688,7 +17717,20 @@ async function collectToholampiKaavaSource(source: DiscoverySource) {
     const slug = kemiSlug(block.title)
     const documentUrl = `${TOHOLAMPI_LISTING_URL}#${slug}`
 
-    const rawText = JSON.stringify({ title: block.title, phase, description: bodyText, contacts, attachments })
+    const liiteUrlit = attachments.map((a) => a.url)
+    const tunnettu = tunnetutLiitteet.get(documentUrl)
+    const ennallaan =
+      tunnettu &&
+      tunnettu.liitteet.length === liiteUrlit.length &&
+      tunnettu.liitteet.every((u, i) => u === liiteUrlit[i])
+    const liite = ennallaan
+      ? tunnettu!
+      : completed
+        ? { kuvaus: null, aloitteentekija: null, asiakirja: null }
+        : await haeKaavanLiitetiedot(attachments)
+    const description = liite.kuvaus ?? lohkonOmaTeksti(bodyText, attachments)
+
+    const rawText = JSON.stringify({ title: block.title, phase, description, contacts, attachments })
     const contentHash = hashContent(rawText)
 
     const { error } = await supabaseAdmin.from("source_documents").upsert(
@@ -17708,9 +17750,13 @@ async function collectToholampiKaavaSource(source: DiscoverySource) {
           slug,
           kaava_tunnus: null,
           phase,
-          description: bodyText,
+          description,
           contacts,
           attachments,
+          liitteet_luettu: liiteUrlit,
+          liitteen_kuvaus: liite.kuvaus,
+          developer: liite.aloitteentekija,
+          asiakirja_url: liite.asiakirja,
           completed,
         },
         processed_at: new Date().toISOString(),

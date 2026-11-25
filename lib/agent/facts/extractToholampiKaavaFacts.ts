@@ -22,6 +22,8 @@ export function extractToholampiKaavaFacts({
   phase,
   description,
   contacts,
+  developer = null,
+  asiakirjaUrl = null,
 }: {
   documentId: string
   sourceName: string
@@ -29,6 +31,9 @@ export function extractToholampiKaavaFacts({
   phase: string | null
   description: string | null
   contacts: { name: string | null; title: string | null; phone: string | null; email: string | null }[]
+  /* OAS:n tai selostuksen aloitteentekijä (D-450). */
+  developer?: string | null
+  asiakirjaUrl?: string | null
 }): ExtractedFact[] {
   const facts: ExtractedFact[] = []
 
@@ -43,6 +48,8 @@ export function extractToholampiKaavaFacts({
 
     description: clean(description),
     contacts,
+    developer: clean(developer),
+    asiakirja_url: clean(asiakirjaUrl),
   }
 
   if (operation) {

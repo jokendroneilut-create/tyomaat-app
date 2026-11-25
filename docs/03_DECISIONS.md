@@ -51,6 +51,60 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-450 – Toholammin kaavoille kuvaus ja aloitteentekijä OAS:sta; asiakirjan osoite tunnisteeksi
+
+Johannes 25.11.2026 jonorivistä *"Datakeskuksen alueen/ Kiertokangas
+asemakaava"* (`4885d03d`): kuvaus ja liittyvä yritys ovat lähteessä
+saatavilla; katso myös lähteen muut kohteet, ovatko ne jo meillä; korjaa
+poimija.
+
+**Vika.** Toholammin keräin tallensi kuvaukseksi lohkon tekstin, joka oli
+pelkkä liitteen nimi ("Datakeskuksen alueen OAS-11052026"); viimeiseen
+lohkoon tarttui lisäksi sivun alaosan karttapalveluohje. Sisältö on OAS:ssa:
+*"Kaavoitus on tullut ajankohtaiseksi Greensky Energy Oy:n aloitteesta …
+n. 100 MW:n datakeskus"*, alue noin 80 ha Kiertokankaalla kantatie 63:n
+varrella, Fingridin uusi 400 kV sähköasema noin 500 m päässä.
+
+**Korjaus:**
+
+- `lib/agent/kaavanLiitetiedot.ts` (4 testiä, yleiskäyttöinen): selostus
+  tai OAS liitteistä (`valitseKaavanAsiakirja`), yhdellä latauksella
+  kuvaus (`kaavanKuvausTekstista`) ja aloitteentekijä. Liitteen nimi ei
+  kelpaa kuvaukseksi (`lohkonOmaTeksti`).
+- `jasennaAloitteentekija` tuntee nyt muodot "*Yhtiö Oy*:n aloitteesta",
+  "*Yhtiö Oy*:n kaavoitusaloitteen" ja "*Yhtiö Oy*:n toimittama
+  kaavoitusaloite". Nimi = isolla alkavat sanat + yhtiömuoto, joten
+  "Toholammin kunnanhallitus" tai "Ulvilan kaupungin aloitteesta" eivät
+  tartu.
+- Keräin lukee liitteet uudelleen vain kun liitelista muuttuu, katkaisee
+  lohkon tekstin "Karttapalvelu"-kohdasta ja kirjaa `developer`- ja
+  `asiakirja_url`-kentät; faktat ja resolveri vievät rakennuttajan
+  jonoriville (`developer`, `related_companies`, `field_sources`).
+- **Uusi tunniste `kaava_asiakirja_url`.** Kunta muutti nimen
+  "Datakeskuksen alueen asemakaava" → "Datakeskuksen alueen/ Kiertokangas
+  asemakaava", jolloin nimestä tehty slug vaihtui ja samasta kaavasta
+  syntyi uusi jonorivi. OAS-liitteen osoite pysyi samana, joten se on nyt
+  toinen tunniste.
+
+**Lähteen kuusi kohdetta:** neljä tuuli- ja aurinkovoimakaavaa ovat jo
+meillä. Kaksi avointa jonoriviä ovat kaksoiskappaleita:
+
+- Kiertokangas (`4885d03d`) = hyväksytty `36ea8c5e` "Datakeskuksen alueen
+  asemakaava". Sama kaava on näkyvissä myös rekisteririvinä `00d0354f`
+  "Greensky Toholampi, Kiertokangas" (samat koordinaatit), eli asiakkaalla
+  kahdesti.
+- Marjokangas (`f55787cc`) = rekisterin `358e0158` "Fu-Gen Toholampi,
+  Marjokangas". Rekisterihanke sai OAS:n kuvauksen; aloitteentekijä on
+  OAS:n mukaan Fu-Gen Oy (rekisterissä Fu-Gen Energia Oy).
+
+Molemmat jonorivit saivat kuvauksen ja rakennuttajan. Liitokset ja
+kaksoiskappaleen yhdistäminen jätettiin Johanneksen päätettäviksi.
+
+**Avoinna.** Ramboll-pohjan OAS:ssa luvun otsikossa ei ole välilyöntiä
+("4.SUUNNITTELUN LÄHTÖKOHDAT"), joten yleinen jäsennin ei tunnista luvun
+loppua ja Marjokankaan kuvaus vuotaa seuraavaan lukuun. Ei korjattu, koska
+jäsennin palvelee kymmeniä lähteitä.
+
 ### D-449 – Turun kaavasivut: välilyönti osoitteessa, jumiutuva fetch ja jsonb:n avainjärjestys
 
 Johannes 22.11.2026 jonorivistä *"VI 006-23-3., -8., -1002., -2002, os.

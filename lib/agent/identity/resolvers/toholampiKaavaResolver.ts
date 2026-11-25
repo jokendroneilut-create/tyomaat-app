@@ -28,6 +28,9 @@ export async function resolveToholampiKaavaProject({
   const metadata = facts[0]?.metadata ?? {}
   const description = metadata.description ?? null
   const contacts = metadata.contacts ?? []
+  /* OAS:n aloitteentekijä rakennuttajaksi (D-450). */
+  const developer = metadata.developer ?? null
+  const asiakirjaUrl = metadata.asiakirja_url ?? null
   const slug = document.raw_payload?.slug ?? null
 
   const completed = false
@@ -47,7 +50,16 @@ export async function resolveToholampiKaavaProject({
 
     sourceName: document.source_name,
 
-    identifiers: [{ type: "toholampi_kaava_slug", value: slug }],
+    /*
+     * Asiakirjan osoite toiseksi tunnisteeksi (D-450): kunta muutti nimen
+     * "Datakeskuksen alueen asemakaava" -> "Datakeskuksen alueen/
+     * Kiertokangas asemakaava", jolloin nimestä tehty slug vaihtui ja
+     * samasta kaavasta syntyi uusi jonorivi. OAS-liite pysyi samana.
+     */
+    identifiers: [
+      { type: "toholampi_kaava_slug", value: slug },
+      ...(asiakirjaUrl ? [{ type: "kaava_asiakirja_url" as const, value: asiakirjaUrl }] : []),
+    ],
 
     metadata: {
       source: "Toholammin kaavoitus",
@@ -65,6 +77,14 @@ export async function resolveToholampiKaavaProject({
 
       description,
       contact_persons: contacts,
+      ...(developer
+        ? {
+            developer,
+            related_companies: [developer],
+            field_sources: { developer: "OAS: kaavoitus on tullut vireille yhtiön aloitteesta" },
+          }
+        : {}),
+      ...(asiakirjaUrl ? { oas_url: asiakirjaUrl } : {}),
 
       phase_hint: phaseHint,
       completed,
