@@ -51,6 +51,31 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-452 – Hausjärven kaavakuvauksiin raakaa HTML:ää noscript-kuvista
+
+Johannes 25.11.2026 jonorivistä *"Oitin asemakaavamuutos kortteleissa 343
+ja 344"* (`86410bd4`): *"katsotko mikä kuvauksessa on vikana"*.
+
+**Vika.** Kuvaus oli lähes kokonaan raakaa HTML:ää: `<img width=1024 …
+srcset=…>` kymmenine kuvakokoineen, sekä sivuvalikon painikkeet ("Avaa
+sivuvalikko Sulje sivuvalikko") ja leivänmurut. Varsinaista kuvausta oli
+yksi lause. Syy: keräin poisti `img`-elementit mutta ei `noscript`-
+elementtejä, joiden sisällön (laiska kuvalataus) cheerio palauttaa
+tekstinä, ja se luki koko `main`-elementin.
+
+**Korjaus** (Hausjärven keräin, `apiCollector.ts`): poistetaan myös
+`noscript`, `button`, `figure` ja `figcaption`; kuvaus luetaan
+`article`-elementistä ilman otsikkoa; tiedostolinkit ("Kaavakartta (pdf
+728 kt)") pois kuvauksesta, koska ne ovat jo `attachments`-kentässä.
+
+**Laajuus mitattu ennen korjausta:** vain Hausjärvi (5 dokumenttia, 3
+näkyvää hanketta, 1 avoin jonorivi); muissa lähteissä ei `<img`- tai
+`srcset`-roskaa. Kaikki korjattu, jäljellä 0.
+
+**Lisäksi:** näkyvän hankkeen `ae795fbb` nimi oli "Asemakaava vireillä"
+(kunnan sivun vanha otsikko). Nimetty dokumentin nykyiseen otsikkoon
+"Monnin uuden alakoulun asemakaava"; vanha nimi `also_known_as`-listaan.
+
 ### D-451 – Toholammin datakeskuskaavat liitetty, rekisterin kaksoiskappale yhdistetty
 
 Johannes 25.11.2026 D-450:n jälkeen: *"tee kaikki kolme ja dokumentoi"*.

@@ -11,6 +11,12 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-25 (kaavaliitteet)
 
+### Hausjärven kaavakuvauksista pois raaka HTML (D-452)
+
+Hausjärven kaavojen kuvauksiin oli tullut kuvien HTML-koodia ja sivuvalikon
+tekstejä. Keräin lukee nyt vain kaavan sisältöosan, ja kolmen hankkeen
+kuvaus korjattiin.
+
 ### Toholammin datakeskuskaavat yhdistetty olemassa oleviin hankkeisiin (D-451)
 
 Kiertokankaan datakeskuskaava näkyi kahdesti (kunnan kaava ja

@@ -21109,11 +21109,22 @@ async function collectHausjarviKaavaSource(source: DiscoverySource) {
     if (!detailResponse.ok) continue
 
     const $$ = cheerio.load(await detailResponse.text())
-    $$("nav, aside, img, script, style").remove()
+    /*
+     * RAAKA HTML KUVAUKSESSA (D-452). Laiskan kuvalatauksen <noscript>
+     * sisältää <img>-tagin tekstinä, ja cheerio palauttaa sen sellaisenaan:
+     * Oitin kaavan kuvaus oli lähes kokonaan "<img width=1024 … srcset=…>".
+     * Lisäksi `main` toi sivuvalikon painikkeet ("Avaa sivuvalikko Sulje
+     * sivuvalikko") ja leivänmurut. Kaavan sisältö on `article`-elementissä.
+     */
+    $$("nav, aside, img, script, style, noscript, button, figure, figcaption").remove()
 
     const main = $$("main, article").first()
     const title = $$("h1").first().text().replace(/\s+/g, " ").trim() || item.title
-    const description = main.text().replace(/\s+/g, " ").trim()
+    const sisalto = $$("main article").first().length ? $$("main article").first().clone() : main.clone()
+    sisalto.find("h1").remove()
+    /* Liitelinkit ("Kaavakartta (pdf 728 kt)") ovat attachments-kentässä, eivät kuvausta. */
+    sisalto.find("a").filter((_, a) => /\.(pdf|docx?|xlsx?|zip)(\?|$)|\/uploads\//i.test($$(a).attr("href") ?? "")).remove()
+    const description = sisalto.text().replace(/\s+/g, " ").trim()
 
     const phase = hausjarviPhaseFromText(`${title} ${description}`)
     const completed = phase === "Voimaantulo"
