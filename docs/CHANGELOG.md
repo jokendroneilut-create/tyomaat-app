@@ -11,6 +11,12 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-25 (kaavaliitteet)
 
+### Toholammin datakeskuskaavat yhdistetty olemassa oleviin hankkeisiin (D-451)
+
+Kiertokankaan datakeskuskaava näkyi kahdesti (kunnan kaava ja
+datakeskusrekisteri); rivit yhdistettiin. Kiertokankaan ja Marjokankaan
+jonorivit liitettiin olemassa oleviin hankkeisiin.
+
 ### Toholammin kaavoille kuvaus ja rakennuttaja OAS:sta (D-450)
 
 Toholammin kaavojen kuvaus luetaan nyt kaavan OAS:sta tai selostuksesta, ja

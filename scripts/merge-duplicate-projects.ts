@@ -69,6 +69,7 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js")
   const { mergeCompanyNames } = await import("../lib/projects/projectCompanies")
   const { mergeContacts } = await import("../lib/projects/contacts")
+  const { yhdistaLahdehistoria } = await import("../lib/projects/yhdistaLahdehistoria")
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -141,10 +142,12 @@ async function main() {
     Array.isArray(removeMeta.contact_persons) ? removeMeta.contact_persons : []
   )
 
-  const sourceHistory = [
-    ...(Array.isArray(keepMeta.source_history) ? keepMeta.source_history : []),
-    ...(Array.isArray(removeMeta.source_history) ? removeMeta.source_history : []),
-  ]
+  /*
+   * Sama dokumentti vain kerran (D-451): rekisteririvi ja kaavahanke
+   * olivat molemmat saaneet saman datakeskusrekisterin sivun, ja pelkkä
+   * peräkkäin liittäminen kirjasi sen kahdesti.
+   */
+  const sourceHistory = yhdistaLahdehistoria(keepMeta.source_history, removeMeta.source_history, null)
 
   const relatedCompanies = mergeCompanyNames(
     keepMeta.related_companies,

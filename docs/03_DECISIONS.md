@@ -51,6 +51,38 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-451 – Toholammin datakeskuskaavat liitetty, rekisterin kaksoiskappale yhdistetty
+
+Johannes 25.11.2026 D-450:n jälkeen: *"tee kaikki kolme ja dokumentoi"*.
+
+1. **Kiertokankaan jonorivi** (`4885d03d`) liitettiin hankkeeseen
+   `36ea8c5e` "Datakeskuksen alueen asemakaava". Kunnan uusi nimi
+   ("Datakeskuksen alueen/ Kiertokangas asemakaava") tallentui
+   vaihtoehtoiseksi nimeksi.
+2. **Marjokankaan jonorivi** (`f55787cc`) liitettiin rekisterin
+   hankkeeseen `358e0158` "Fu-Gen Toholampi, Marjokangas". Liittyviin
+   yrityksiin tuli OAS:n "Fu-Gen Oy" rekisterin "Fu-Gen Energia Oy":n rinnalle.
+3. **Rekisteririvi `00d0354f`** "Greensky Toholampi, Kiertokangas"
+   yhdistettiin hankkeeseen `36ea8c5e` (`merge-duplicate-projects.ts`,
+   piilotettu, ei poistettu). Rekisterin kuvauksesta lisättiin vain
+   puuttuvat lauseet ja CC BY 4.0 -lähdemaininta.
+
+**D-446 todennettu oikeassa liitoksessa:** molempien hankkeiden
+lähdehistoriaan tuli Toholammin kaavalähde, `last_source_url` päivittyi ja
+jonorivit saivat `matched_existing_project_id`:n.
+
+**Yhdistämisskriptin korjaus.** `merge-duplicate-projects.ts` liitti
+lähdehistoriat peräkkäin, joten sama datakeskusrekisterin sivu kirjautui
+kahdesti (molemmat rivit olivat saaneet sen). Skripti käyttää nyt
+`yhdistaLahdehistoria`a (sama dokumentti vain kerran), ja tämän hankkeen
+historia siivottiin (3 → 2).
+
+**Tarkistettu:** näkyviä hankkeita, joiden vaihtoehtoinen nimi on toisen
+näkyvän hankkeen nimi, on vain kaksi paria, eikä kumpikaan liity
+rekisteriin: Kuhmon terveysaseman rakennus- ja sähköurakka (eri
+hankinnat) ja Lujatalon Päijät-Hämeen keskussairaala / rakennusvaihe 8
+(mahdollinen kaksoiskappale, jätetty Johannekselle).
+
 ### D-450 – Toholammin kaavoille kuvaus ja aloitteentekijä OAS:sta; asiakirjan osoite tunnisteeksi
 
 Johannes 25.11.2026 jonorivistä *"Datakeskuksen alueen/ Kiertokangas
