@@ -11,6 +11,19 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-27 (datakeskukset)
 
+### Katselmointijono varoittaa vanhasta tiedosta (D-461)
+
+Jonossa näkyy nyt keltainen merkki, kun rivi todennäköisesti koskee jo
+käynnissä olevaa tai valmista työtä:
+- Hilman sopimusmuutos
+- Lupapisteen jatkolupa
+- rakentamisenaikainen muutos aiempaan lupaan
+- yli vuoden vanha lupahakemus
+
+Rivejä ei karsita, vaan hyväksyjä päättää itse. Samalla selvitettiin, miksi
+Kauhavan heinäkuun tarjouspyynnöt puuttuivat: Hilman keruu alkoi vasta 8.7.
+2 vuorokauden ikkunalla, ja nyt ikkuna on 14 vuorokautta.
+
 ### Vanhojen Hilma-urakoiden varoitus toimii myös kestolla ilmoitetuille (D-459)
 
 Hilman jälki-ilmoituksen "Sopimuskausi päättynyt" -varoitus ei näkynyt, jos

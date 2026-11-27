@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { resolveRegion } from "@/lib/projects/resolveRegion"
 import { sopimuskausiPaattynyt, suomeksi } from "@/lib/projects/sopimuskausiPaattynyt"
+import { vanhaTietoMerkit } from "@/lib/projects/vanhaTietoMerkit"
 
 function formatArea(value: number) {
   return `${Math.round(value).toLocaleString("fi-FI")} m²`
@@ -234,6 +235,17 @@ export default function PotentialProjectsReviewList({
                         </span>
                       ) : null
                     })()}
+
+                    {/* Sopimusmuutos, jatkolupa, muutos aiempaan lupaan, vanha hakemus (D-461). */}
+                    {vanhaTietoMerkit({ title: project.title, permitNumber: project.permit_number, metadata }).map((m) => (
+                      <span
+                        key={m.avain}
+                        title={m.selitys}
+                        className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+                      >
+                        ⚠️ {m.lyhyt}
+                      </span>
+                    ))}
                   </div>
 
                   {isZoning ? (

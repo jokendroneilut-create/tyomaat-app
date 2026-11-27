@@ -149,6 +149,8 @@ export async function getCandidate(id: string): Promise<CandidateDetail | null> 
         title: potentialProject.title,
       }),
       location: potentialProject.address,
+      /* Vanhan tiedon merkit lukevat hakemuksen vuoden tunnuksesta (D-461). */
+      permit_number: potentialProject.permit_number ?? metadata.permit_number ?? null,
       reason: metadata.operation ?? null,
       score: potentialProject.confidence ?? 0,
       confidence: metadata.classification_confidence ?? potentialProject.confidence ?? 0,

@@ -10,6 +10,7 @@ import { resolveExpiry } from "@/lib/projects/tenderExpiry"
 import { resolveWinnerName } from "@/lib/projects/winnerName"
 import { muotoileKenttaArvo } from "@/lib/format/luvut"
 import { sopimuskausiPaattynyt, suomeksi } from "@/lib/projects/sopimuskausiPaattynyt"
+import { vanhaTietoMerkit } from "@/lib/projects/vanhaTietoMerkit"
 
 export const dynamic = "force-dynamic"
 
@@ -108,6 +109,16 @@ export default async function CandidateDetailPage({ params }: Props) {
                 </div>
               )
             })()}
+
+            {/* VANHAA TIETOA (D-461): sama periaate, katselmoija päättää. */}
+            {vanhaTietoMerkit({ title: candidate.title, permitNumber: candidate.permit_number, metadata }).map((m) => (
+              <div
+                key={m.avain}
+                className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+              >
+                <strong>⚠️ {m.lyhyt}.</strong> {m.selitys}
+              </div>
+            ))}
 
             {candidate.reason && (
               <p className="mt-4 text-gray-700">{candidate.reason}</p>

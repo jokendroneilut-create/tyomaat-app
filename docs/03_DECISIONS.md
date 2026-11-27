@@ -51,6 +51,74 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-461 – Vanhaa tietoa -merkit jonoon ja Hilman käynnistysaukko
+
+Johannes 27.11.2026: *"tämä ja jonossa muitakin tuntuu nyt olevan vanhaa
+tietoa ja jo valmistuneita kohteita. äsken hyväksytty kauhavan hankekin
+epäilytti minua. jari nuutila oli voittanut. tarkista viimeisen 5 jo
+hyväksyttyä ja katso jono läpi"*. Läpikäynnin jälkeen: *"tee nuo kolme ja
+dokumentoi"*.
+
+#### Viisi viimeksi hyväksyttyä olivat ajankohtaisia
+
+Kauhavan kaksi urakkaa (voittaja Jari Nuutila, sopimuskausi toukokuuhun
+2027), TVT, Wareena ja Mankkaan Alvea. Kauhavan epäily oli aiheellinen
+kysymys mutta ei virhe: jälki-ilmoitus tuli 26.11., ja urakka on kesken.
+
+#### A ja B: varoitus katselmoijalle, ei karsintaa
+
+Jonon 147 rivistä vanhaa tietoa oli neljää lajia. Ne tunnistaa nyt
+`lib/projects/vanhaTietoMerkit.ts`, ja merkki näkyy jonolistassa (lyhyt
+merkki, selitys hiiren alla) ja hankesivulla (keltainen laatikko D-438:n
+"Sopimuskausi päättynyt" -varoituksen alla):
+
+| merkki | tunnistus | jonossa 27.11. |
+|---|---|---|
+| Sopimusmuutos | Hilma `notice_type` 38 / `main_type` Modification / otsikko "Sopimusmuutos:" | 3 |
+| Jatkolupa | "jatkolupa", "jatkoaikalupa", "voimassaoloajan pidentäminen" otsikossa tai toimenpiteessä | 4 |
+| Muutos vuoden X lupaan | "rakentamisenaikainen muutos" tai viittaus omaa vanhempaan LP-tunnukseen | 1 |
+| Lupahakemus vuodelta X | oma LP-tunnus vuodelta ≤ nykyinen − 2 | 2 |
+
+Yhteensä 10/147. Vuosiraja on kaksi, koska tunnus LP-…-Y tarkoittaa
+hakemusta viimeistään 31.12.Y: nykyinen − 2 on varmasti yli vuoden vanha,
+mutta edellisen vuoden tunnus ei ole (tammikuussa joulukuun hakemukset ovat
+tuoreita). Siksi LP-208-2025-00344 ja LP-529-2025-00044 eivät saa merkkiä.
+
+Periaate on sama kuin D-438:ssa: jatkolupa voi silti olla myyntimahdollisuus
+(työ kesken), ja vanha hakemus voi olla vasta nyt alkava hanke. Johannes
+päättää rivi kerrallaan. `getCandidate` palauttaa nyt myös `permit_number`,
+jotta hankesivu näkee hakemuksen vuoden.
+
+Ei vielä: talousnäkymätiedotteet (~4 jonossa) ja Vennynpuiston
+jälki-ilmoitus, jonka loppu on tuntematon. Ensimmäisille ei ole luotettavaa
+tunnistetta, ja tuntematon loppu ei laukaise mitään.
+
+#### C: Kauhavan tarjouspyynnöt jäivät Hilman käynnistysaukkoon
+
+Kauhavan kahden urakan tarjouspyynnöt (2026-053147, 2026-053200) julkaistiin
+6.7.2026. Ne eivät koskaan tulleet meille, vain 26.11. jälki-ilmoitus
+(62955, `parentId` 53147). Syy:
+
+- Hilma-lähde luotiin 2.7.2026, mutta ensimmäiset dokumentit ovat
+  julkaisupäivältä 8.7.
+- Keruuikkuna oli silloin **2 vuorokautta** (`HILMA_LOOKBACK_DAYS = 2`,
+  nostettu 14:ään 17.10.2026, D-297).
+- 2.–7.7. Hilmassa oli 159 CPV 45 -ilmoitusta: 51 tarjouspyyntöä, 43
+  jälki-ilmoitusta, 5 ennakkoilmoitusta ja 1 muutos. Meillä on niistä
+  enintään 19 menettelyä (myöhempien ilmoitusten kautta).
+
+Jatkuva kattavuus on kunnossa: 8.7. jälkeen ainoa ohut arkipäivä on 21.7.
+(meillä 1). Hilmassakin oli silloin vain 5 ilmoitusta, ja niistä 2 on meillä
+menettelyn kautta. 14 vuorokauden ikkuna kattaa nyt kahden viikon
+keräinkatkon.
+
+**Ei takautuvaa hakua jonoon.** Heinäkuun tarjouspyyntöjen jättöajat
+päättyivät elokuussa, joten ne toisivat jonoon juuri sitä vanhaa tietoa,
+josta Johannes huomautti. Jälki-ilmoitukset tulevat joka tapauksessa
+omina ilmoituksinaan (kuten Kauhavan 62955), ja vastaava tarkistus on
+D-438:n ja tämän päätöksen varoituksilla. Jos aukko halutaan täyttää,
+`scripts/taydenna-hilma-historia.ts` hakee ikkunan takautuvasti.
+
 ### D-460 – Espoon Keilaniemi-tiedote purettu: AB Investin hotelli- ja toimistokokonaisuus
 
 Johannes 27.11.2026 jonorivistä *"Keilaniemen hankkeet etenevät –
