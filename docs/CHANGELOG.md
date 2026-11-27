@@ -11,6 +11,12 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-27 (datakeskukset)
 
+### Lähteen päivitys ei enää pyyhi hankkeen kuvausta tai yhteyshenkilöitä (D-456)
+
+Kun hyväksytyn hankkeen lähde päivittyi, lähteen tyhjä kuvaus tai tyhjä
+yhteyshenkilölista saattoi korvata hankkeen olemassa olevat tiedot. Nyt tyhjä
+arvo ei koskaan korvaa tietoa.
+
 ### Ähtärin kaavoille kuvaus kaavaselostuksesta (D-455)
 
 Ähtärin kaavojen kuvauksena näkyi liitteiden nimilista. Kuvaus luetaan nyt

@@ -20,6 +20,36 @@ import {
  * peruuteta taaksepäin), jottei virheellinen/vanhentunut ilmoitus voi
  * vahingossa siirtää hanketta väärään suuntaan.
  */
+/*
+ * TYHJÄ EI KORVAA TIETOA (D-456).
+ *
+ * Metatiedot yhdistettiin `{ ...hanke, ...uusi }`, joten resolverin tyhjä
+ * arvo pyyhki hankkeen tiedon: dokumentin `description: null` vei käsin
+ * kirjoitetun kuvauksen ja `contact_persons: []` yhteyshenkilöt
+ * (havaittu Ähtärin Moksunniemessä 27.11.2026, D-455). Uusi arvo voittaa
+ * vain kun se on jotain: ei null, undefined, tyhjä merkkijono eikä tyhjä
+ * lista. Tahallinen tyhjennys (vanhenemisen palautus) tehdään erikseen
+ * yhdistämisen jälkeen.
+ */
+function onTyhja(arvo: unknown): boolean {
+  if (arvo === null || arvo === undefined) return true
+  if (typeof arvo === "string") return arvo.trim() === ""
+  if (Array.isArray(arvo)) return arvo.length === 0
+  return false
+}
+
+export function yhdistaMetatiedot(
+  vanha: Record<string, unknown> | null | undefined,
+  uusi: Record<string, unknown> | null | undefined
+): Record<string, unknown> {
+  const tulos: Record<string, unknown> = { ...(vanha ?? {}) }
+  for (const [avain, arvo] of Object.entries(uusi ?? {})) {
+    if (onTyhja(arvo) && !onTyhja(tulos[avain])) continue
+    tulos[avain] = arvo
+  }
+  return tulos
+}
+
 export async function syncApprovedProject(input: {
   supabase: SupabaseClient
   projectId: string
@@ -40,10 +70,7 @@ export async function syncApprovedProject(input: {
 
   const mergedPhase = phaseAdvances ? newPhaseHint : project.phase
 
-  const baseMetadata = {
-    ...(project.metadata ?? {}),
-    ...input.newMetadata,
-  }
+  const baseMetadata = yhdistaMetatiedot(project.metadata, input.newMetadata)
 
   /*
    * Voittajat talteen related_companies-kenttään. Usean osaurakan hankinnassa

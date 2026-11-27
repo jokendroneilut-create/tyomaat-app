@@ -51,6 +51,32 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-456 – Synkronointi: tyhjä arvo ei korvaa hankkeen tietoa; Ähtärin jonorivit käsitelty
+
+Johannes 27.11.2026: *"tee molemmat ja korjaa synkronointi ja dokumentoi"*.
+
+**Synkronoinnin vika** (`lib/projects/syncApprovedProject.ts`). Kun jo
+hyväksytyn hankkeen lähde päivittyy, resolverin metatiedot yhdistettiin
+`{ ...hanke, ...uusi }`. Uuden puolen tyhjä arvo pyyhki siis hankkeen
+tiedon: dokumentin `description: null` vei käsin kirjoitetun kuvauksen ja
+`contact_persons: []` yhteyshenkilöt. Havaittu D-455:ssä (Ähtärin
+Moksunniemi), koskee kaikkia lähteitä.
+
+**Korjaus:** `yhdistaMetatiedot` (3 testiä). Uusi arvo voittaa vain kun
+se ei ole tyhjä (null, undefined, tyhjä merkkijono tai tyhjä lista); jos
+hankkeella ei ole arvoa, tyhjäkin kirjoitetaan kuten ennen. Tahallinen
+tyhjennys (vanhenemisen palautus: `expired_at`, `expired_reason`) tehdään
+erikseen yhdistämisen jälkeen, joten se toimii ennallaan. Taulun sarakkeita
+(`additional_info` ym.) synkronointi ei kirjoittanut tyhjällä aiemminkaan.
+
+**Ähtärin jonorivit (D-454):**
+
+- `bcc8f40d` "Kimpilamminkankaan tuulivoimaosayleiskaava (hyv. KV
+  5.10.2026 § 82)" liitettiin hankkeeseen `aef662cb`; kunnan muutettu nimi
+  tallentui vaihtoehtoiseksi nimeksi, kuvaus säilyi.
+- `329009fe` "- Sivua päivitetty marraskuu 2026" hylättiin syyllä "Ei
+  hanke: sivun päivitysmerkintä (D-454)".
+
 ### D-455 – Ähtärin kaavoille kuvaus selostuksesta liitteiden nimilistan sijaan
 
 Johannes 27.11.2026 jonorivistä Kimpilamminkankaan tuulivoimaosayleiskaava
@@ -83,7 +109,7 @@ lähdedokumenttiin, koska…
 resolverin metatiedot hankkeen metatietojen päälle (`{ ...hanke, ...uusi }`),
 joten dokumentin tyhjä kuvaus pyyhkisi hankkeen `metadata.description`-
 kentän seuraavalla synkronoinnilla. `additional_info` säilyy. Tätä ei
-korjattu (vaikuttaa kaikkiin lähteisiin); avoinna.
+korjattu tässä (vaikuttaa kaikkiin lähteisiin); korjattu D-456:ssa.
 
 ### D-454 – Ähtärin kaavalistalta päivitysmerkintä hankkeeksi ja käsittelymerkintä nimeen
 
