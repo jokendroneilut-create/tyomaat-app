@@ -49,6 +49,11 @@ export type IdentifierType =
    * "Datakeskuksen alueen" -> "Datakeskuksen alueen/ Kiertokangas").
    */
   | "kaava_asiakirja_url"
+  /*
+   * Dynasty-päätöspalvelun asiakohdan tunniste, etuliitteenä lähteen nimi
+   * ("kouvola_paatokset:C67A7543X…-8"). Oli aiemmin lupanumerona (D-457).
+   */
+  | "dynasty_item_id"
   | "lahti_kaava_tunnus"
   | "pori_kaava_tunnus"
   | "oulu_kaava_tunnus"
@@ -549,6 +554,7 @@ export const IDENTIFIER_TYPES: IdentifierType[] = [
   "virrat_kaava_slug",
   "yva_diaarinumero",
   "kaava_asiakirja_url",
+  "dynasty_item_id",
 ]
 
 /*

@@ -11,6 +11,12 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-27 (datakeskukset)
 
+### Kuntien päätöksillä ei enää näy päätöksen tunnistetta lupanumerona (D-457)
+
+Kaupunkien päätöspalveluista (Dynasty) tulleilla hankkeilla näkyi päätöksen
+sisäinen tunniste tai jopa linkki lupanumerona. Lupanumero on nyt tyhjä, ja
+tunniste on omassa kentässään. Korjattu 167 jonoriville ja 86 hankkeelle.
+
 ### Lähteen päivitys ei enää pyyhi hankkeen kuvausta tai yhteyshenkilöitä (D-456)
 
 Kun hyväksytyn hankkeen lähde päivittyi, lähteen tyhjä kuvaus tai tyhjä

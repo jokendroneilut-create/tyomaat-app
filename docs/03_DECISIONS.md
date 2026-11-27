@@ -51,6 +51,41 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-457 – Dynasty-päätöksen tunniste pois lupanumerosta
+
+Johannes 27.11.2026 jonorivistä *"Ruokokosken voimalapadon purkamisen ja
+koskialueen ennallistamisen suunnittelua koskeva yhteistyösopimus"*
+(`0f2d2081`): *"katso miksi lupanumerossa on linkki ja korjataan"*.
+
+**Syy.** Dynasty-päätöslähteet (Espoo, Kuopio, Kirkkonummi, Tuusula,
+Savonlinna, Tornio, Joensuu, Kouvola, Porvoo, Sipoo ym.) tallensivat
+päätöskohdan id:n lupanumeroksi. Id poimittiin lausekkeella
+`id=([0-9\-]+)`, joka hyväksyi vain numerot. Kouvola siirtyi muotoon
+`id=C67A7543X8496X…-8`: lauseke poimi alusta vain numerot ("4", "7", "895"
+— eri päätöksille sama arvo) tai ei mitään, ja lupanumeroksi jäi koko
+linkki. Lupanumero toimi samalla saman päätöksen tunnistuksena
+(`resolvePotentialProject` hakee jonoriviä lupanumerolla), joten sitä ei
+voinut vain tyhjentää.
+
+**Korjaus:**
+
+- `dynastyKohdanTunniste` poimii id:n kokonaan (2 testiä). Keräin antaa
+  sen tyypitettynä tunnisteena `dynasty_item_id` = "<lähde>:<id>"
+  (lähde etuliitteenä, etteivät eri kuntien numerot törmää), ja
+  lupanumero jää tyhjäksi.
+- **Takautuvasti ensin tunnisteet, sitten tyhjennys**
+  (`scripts/siirra-dynasty-tunnisteet.ts`): 176 jonoriviä ja 104 hanketta
+  saivat tunnisteen (167 eri päätöstä; yhdeksän oli tuotu kahdesti), ja
+  väärä lupanumero tyhjennettiin 167 jonoriviltä ja 86 hankkeelta — vain
+  kun se oli tämä id, sen numeroalku tai linkki. Lisäksi kolme jäänyttä:
+  kaksi Espoon riviä, joilla oli saman asian aiemman käsittelyn id
+  (talteen `aiempi_dynasty_item_id`), ja SRV-lähteinen "Yhtenäiskoulu
+  Kouvolaan", jolle Kouvolan päätöksen linkki oli tullut yhdistämisessä.
+- **Todennettu:** Kouvolan lähde ajettiin heti: 28 päätöksestä 27
+  tunnistettiin jo nähdyiksi uudella tunnisteella, yksi oli aidosti uusi
+  (purkukehotus kiinteistöllä 286-476) ja sai tunnisteen ilman
+  lupanumeroa.
+
 ### D-456 – Synkronointi: tyhjä arvo ei korvaa hankkeen tietoa; Ähtärin jonorivit käsitelty
 
 Johannes 27.11.2026: *"tee molemmat ja korjaa synkronointi ja dokumentoi"*.

@@ -5,6 +5,7 @@ import {
   isConstructionSubject,
   upgradePermitTitle,
   extractItemText,
+  dynastyKohdanTunniste,
 } from "./fetchDynastySource"
 
 /*
@@ -274,5 +275,18 @@ describe("extractItemText – liitteet ja osiotunniste", () => {
       "Selostus Hankkeen tavoitteena on korjata koulun sis&auml;ilmaongelmat " +
       "ja uusia ilmanvaihto kokonaisuudessaan.</p></div><!--DATAEND-->"
     expect(extractItemText(html)!.startsWith("Selostus Hankkeen tavoitteena")).toBe(true)
+  })
+})
+
+describe("dynastyKohdanTunniste (D-457)", () => {
+  it("poimii sekä numeerisen että Kouvolan uuden tunnisteen kokonaan", () => {
+    expect(dynastyKohdanTunniste("https://espoo.oncloudos.com/cgi/DREQUEST.PHP?page=meetingitem&id=20261625-6")).toBe("20261625-6")
+    expect(
+      dynastyKohdanTunniste("https://ep10.kouvola.fi:443/cgi/DREQUEST.PHP?page=meetingitem&id=C67A7543X8496X4138XAC79XE81276D74CFE-8")
+    ).toBe("C67A7543X8496X4138XAC79XE81276D74CFE-8")
+  })
+
+  it("palauttaa null ilman id-parametria", () => {
+    expect(dynastyKohdanTunniste("https://ep10.kouvola.fi/cgi/DREQUEST.PHP?page=meeting")).toBeNull()
   })
 })

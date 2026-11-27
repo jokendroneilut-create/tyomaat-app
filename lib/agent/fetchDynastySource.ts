@@ -146,6 +146,19 @@ export type DynastyConfig = {
  * hajosivat: "Liitteenä" -> "LiitteenÃ¤". Vika koski KAIKKIA 73 Dynasty-
  * ehdokasta - kuvaus oli lukukelvoton ihmiselle ja täsmäytykselle.
  */
+/*
+ * DYNASTYN PÄÄTÖSKOHDAN TUNNISTE OSOITTEESTA (D-457).
+ *
+ * Vanha lauseke `id=([0-9\-]+)` hyväksyi vain numerot. Kouvola siirtyi
+ * muotoon "id=C67A7543X8496X4138XAC79XE81276D74CFE-8", jolloin lauseke
+ * poimi alusta vain numerot ("4", "7", "895" — eri päätöksille sama) tai ei
+ * mitään, ja tunnisteeksi jäi koko linkki.
+ */
+export function dynastyKohdanTunniste(link: string | null | undefined): string | null {
+  const id = String(link ?? "").match(/[?&]id=([^&#\s]+)/)?.[1]
+  return id ? decodeURIComponent(id) : null
+}
+
 export async function fetchDecoded(url: string, fallback = "utf-8"): Promise<string | null> {
   try {
     const res = await fetch(url, {
@@ -421,7 +434,7 @@ export function createDynastyFetcher(config: DynastyConfig) {
       if (date && date < cutoff) continue
       if (!isConstructionSubject(subject)) continue
 
-      const itemId = link.match(/id=([0-9\-]+)/)?.[1] ?? link
+      const itemId = dynastyKohdanTunniste(link) ?? link
 
       /*
        * Sama asia käsitellään ketjussa: lautakunta valmistelee, valtuusto
@@ -468,7 +481,14 @@ export function createDynastyFetcher(config: DynastyConfig) {
         region: config.region,
         location: extractStreetAddress(subject) ?? extractStreetAddress(description),
         developer: config.developer,
-        permit_number: itemId,
+        /*
+         * Päätöskohdan tunniste ei ole lupanumero (D-457): se näkyi TIC:ssä
+         * "Lupanumerona", ja Kouvolan uudessa muodossa ("C67A7543X…") koko
+         * linkkinä. Tunniste kulkee nyt omana tyyppinään kunnan nimellä
+         * etuliitettynä, jottei eri kuntien numerot törmää.
+         */
+        permit_number: null,
+        identifiers: [{ type: "dynasty_item_id", value: `${config.sourceName}:${itemId}` }],
         property_type: inferBuildingType(subject, description),
         winners,
         phase: inferDecisionPhase({
