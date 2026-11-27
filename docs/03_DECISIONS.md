@@ -78,10 +78,12 @@ likimääräinen (Keilaniementie 9), koska Keilarannan kadulla ei vielä ole
 osoitteita. Tiedotteen yhteyshenkilö (kaupunkiympäristön toimialajohtaja)
 on merkitty viranomaiseksi.
 
-Alkuperäinen rivi jätettiin jonoon Johanneksen päätettäväksi
-(`scripts/pura-keilaniemen-tiedote.ts`). Rampit ovat kannassa kahdesti
-(Väyläviraston hanke ja GRK:n urakkauutinen); yhdistäminen jätetty
-Johannekselle.
+Johanneksen päätöksellä ("yhdistä nuo hankkeet ja hylkää purettu hanke"):
+rampit yhdistettiin, säilyi `c4975822` (Väyläviraston hanke: 25,8 M€, valmis
+11/2028, yhteyshenkilöt) ja GRK:n uutisrivi `e0a7d09a` piilotettiin; sen
+otsikko jäi vaihtoehtoiseksi nimeksi ja teksti kuvaukseen. Alkuperäinen
+tiedoterivi `fa33e1e4` hylättiin syyllä "Purettu omiksi hankkeiksi"
+(`scripts/pura-keilaniemen-tiedote.ts`).
 
 ### D-459 – Hilman sopimuskauden loppu lasketaan kestosta, kun päivää ei ilmoiteta
 
