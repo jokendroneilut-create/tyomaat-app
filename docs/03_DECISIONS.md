@@ -72,8 +72,9 @@ keräin toimii kumpaankin suuntaan. Muissa keräimissä ei ole kiinteää
 yksitavuista tulkintaa. Ajon jälkeen kaikki seitsemän Sodankylän kaavaa
 luettiin oikein ja palasivat alkuperäisiin dokumentteihinsa.
 
-**Avoinna:** kaksi kaksoiskappaleriviä (`e078c5c3` → hanke `fc6c1918`,
-`c1c85703` → hanke `c706c536`) odottavat Johanneksen hylkäystä.
+**Jonorivit hylätty** Johanneksen päätöksellä ("hylkää nuo"): `e078c5c3` →
+hanke `fc6c1918`, `c1c85703` → hanke `c706c536`, syynä merkistövirheen
+kaksoiskappale.
 Liittämistä ei suositella, koska se veisi vääristyneet nimet hankkeiden
 vaihtoehtoisiksi nimiksi.
 
