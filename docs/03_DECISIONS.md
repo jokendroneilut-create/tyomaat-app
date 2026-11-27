@@ -51,6 +51,32 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-458 – Sodankylän kaavalista: merkistö tunnistetaan, ei oleteta
+
+Johannes 27.11.2026 jonorivistä *"KirkonkylÃ¤n asemakaavan muutos,
+Poikkijoen ranta"* (`e078c5c3`): *"selvitä miksi tässä on kyrillisiä
+merkkejä ja korjataan"*.
+
+**Syy.** Merkit eivät olleet kyrillisiä vaan merkistövirhe: UTF-8:n "ä"
+luettiin ISO-8859-1:nä kahdeksi merkiksi ("Ã¤"). Sodankylän keräin
+dekoodasi listan aina `new TextDecoder("iso-8859-1")`:llä, ja
+solinum.fi-palvelu oli siirtynyt UTF-8:aan. Vääristynyt nimi tuotti uuden
+tunnisteen, joten kahdesta jo hankkeena olevasta kaavasta syntyi
+jonoriville kaksoiskappale ("KirkonkylÃ¤n …", "KiiloselÃ¤n …"). Mitattu:
+vain Sodankylä (2 dokumenttia, 2 jonoriviä); näkyvät hankkeet olivat
+ehjiä.
+
+**Korjaus:** `lib/agent/dekoodaaTeksti.ts` (2 testiä) kokeilee ensin tiukkaa
+UTF-8:aa ja vasta virheellisillä tavuilla Windows-1252/ISO-8859-1:tä, joten
+keräin toimii kumpaankin suuntaan. Muissa keräimissä ei ole kiinteää
+yksitavuista tulkintaa. Ajon jälkeen kaikki seitsemän Sodankylän kaavaa
+luettiin oikein ja palasivat alkuperäisiin dokumentteihinsa.
+
+**Avoinna:** kaksi kaksoiskappaleriviä (`e078c5c3` → hanke `fc6c1918`,
+`c1c85703` → hanke `c706c536`) odottavat Johanneksen hylkäystä.
+Liittämistä ei suositella, koska se veisi vääristyneet nimet hankkeiden
+vaihtoehtoisiksi nimiksi.
+
 ### D-457 – Dynasty-päätöksen tunniste pois lupanumerosta
 
 Johannes 27.11.2026 jonorivistä *"Ruokokosken voimalapadon purkamisen ja

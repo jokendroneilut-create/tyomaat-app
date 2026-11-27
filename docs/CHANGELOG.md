@@ -11,6 +11,11 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-27 (datakeskukset)
 
+### Sodankylän kaavojen ä- ja ö-kirjaimet korjattu (D-458)
+
+Sodankylän kaavalista luettiin väärällä merkistöllä, jolloin "Kirkonkylän" näkyi
+muodossa "KirkonkylÃ¤n". Merkistö tunnistetaan nyt automaattisesti.
+
 ### Kuntien päätöksillä ei enää näy päätöksen tunnistetta lupanumerona (D-457)
 
 Kaupunkien päätöspalveluista (Dynasty) tulleilla hankkeilla näkyi päätöksen

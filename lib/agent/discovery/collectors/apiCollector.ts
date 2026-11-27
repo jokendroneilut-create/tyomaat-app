@@ -73,6 +73,7 @@ import { haeUlvilanKaavanTiedot } from "../../ulvilaKaava"
 import { haeTurunSivu, turunKaavasivunOsoite } from "../../turkuKaava"
 import { haeKaavanLiitetiedot, lohkonOmaTeksti } from "../../kaavanLiitetiedot"
 import { jaaOtsikkoJaTila, onPaivitysmerkinta } from "../../ahtariKaava"
+import { dekoodaaTeksti } from "../../dekoodaaTeksti"
 import { aloitteentekija, tervolanKaavasivu, type TervolaOsapuolet } from "../../tervolaKaava"
 import {
   jasennaRaahenHenkilosto,
@@ -24473,7 +24474,12 @@ async function collectSodankylaKaavaSource(source: DiscoverySource) {
   if (!response.ok) return { documentsFound: 0, documentsSaved: 0 }
 
   const buffer = await response.arrayBuffer()
-  const html = new TextDecoder("iso-8859-1").decode(buffer)
+  /*
+   * MERKISTÖ TUNNISTETAAN, EI OLETETA (D-458). Lähde oli ISO-8859-1, ja
+   * keräin dekoodasi aina sillä. Palvelu siirtyi UTF-8:aan, jolloin
+   * "Kirkonkylän" luettiin "KirkonkylÃ¤n" ja nimestä tehty tunniste vaihtui.
+   */
+  const html = dekoodaaTeksti(buffer)
   const $ = cheerio.load(html)
 
   const rows = $("tr.share_list_tr_odd, tr.share_list_tr_even").toArray()
