@@ -51,6 +51,38 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-460 – Espoon Keilaniemi-tiedote purettu: AB Investin hotelli- ja toimistokokonaisuus
+
+Johannes 27.11.2026 jonorivistä *"Keilaniemen hankkeet etenevät –
+uusimpina alueen ensimmäinen hotelli ja KONEen uusi toimistorakennus"*
+(`fa33e1e4`): *"tässä on useita hankkeita. katso onko meillä jo nämä ja
+pura tarvittaessa omiksi hankkeikseen"*.
+
+Tiedotteessa (Espoon kaupunki, STT 24.11.2026) on neljä hanketta:
+
+| hanke | kannassa | toimenpide |
+|---|---|---|
+| AB Investin hotelli-, kongressi- ja toimistokokonaisuus (KONE + Clarion) | ei | uusi jonorivi `a673abc3` |
+| Keilaniemen rampit Länsiväylälle (valmis 2028) | `c4975822` (Väylävirasto) ja `e0a7d09a` (GRK:n urakka) | ei mitään |
+| Metrokorttelin pysäköintilaitos (SRV + Espoo) | jonorivi hylätty 8/2026 | ei lisätty, ei uutta päätöstä |
+| YIT:n 15-kerroksinen asuinkerrostalo | ei | ei lisätty, valmistuu 12/2026 |
+
+**AB Invest** yhtenä hankkeena, koska rakennukset ovat samaa
+kehityshanketta ja kongressikeskus yhdistää ne. Tiedot tiedotteesta ja
+Espoon vuokrapäätöksestä 2024: kortteli 10051 Keilarannan kadun
+eteläpuolella, vuokra AB Invest AS:lle 30 v osto-oikeudella,
+rakennusoikeus 42 300 k-m², hotelli 23 krs / noin 400 huonetta (2024:
+34 krs / 500), arkkitehti Davidsson Tarkela Siren. Meritäyttö käynnissä,
+rakentaminen alkaa 2027, valmis loppuvuodesta 2029. Sijainti on
+likimääräinen (Keilaniementie 9), koska Keilarannan kadulla ei vielä ole
+osoitteita. Tiedotteen yhteyshenkilö (kaupunkiympäristön toimialajohtaja)
+on merkitty viranomaiseksi.
+
+Alkuperäinen rivi jätettiin jonoon Johanneksen päätettäväksi
+(`scripts/pura-keilaniemen-tiedote.ts`). Rampit ovat kannassa kahdesti
+(Väyläviraston hanke ja GRK:n urakkauutinen); yhdistäminen jätetty
+Johannekselle.
+
 ### D-459 – Hilman sopimuskauden loppu lasketaan kestosta, kun päivää ei ilmoiteta
 
 Johannes 27.11.2026 jonorivistä *"Korkeasaaren pääsisäänkäyntirakennus,
