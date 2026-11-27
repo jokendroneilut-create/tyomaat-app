@@ -19592,6 +19592,29 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
 
   if (current) blocks.push(current)
 
+  /*
+   * KUVAUS SELOSTUKSESTA (D-455). Kuvaukseksi koottiin liitelinkkien
+   * tekstit ("Kaavaehdotus, Ähtäri 2.3.2026 Kaavaselostus … Liite 1.
+   * Meluselvitys …"), eli kaikilla Ähtärin kaavoilla oli nimilista.
+   * Luetaan uudelleen vain kun liitteet muuttuvat.
+   */
+  const { data: aiemmatAhtari } = await supabaseAdmin
+    .from("source_documents")
+    .select("document_url, raw_payload")
+    .eq("source_id", source.id)
+  const tunnetutAhtari = new Map<string, { kuvaus: string | null; aloitteentekija: string | null; asiakirja: string | null; liitteet: string[] }>()
+  for (const rivi of aiemmatAhtari ?? []) {
+    const rp = (rivi as any).raw_payload ?? {}
+    if (Array.isArray(rp.liitteet_luettu)) {
+      tunnetutAhtari.set((rivi as any).document_url, {
+        kuvaus: rp.liitteen_kuvaus ?? null,
+        aloitteentekija: rp.developer ?? null,
+        asiakirja: rp.asiakirja_url ?? null,
+        liitteet: rp.liitteet_luettu,
+      })
+    }
+  }
+
   let found = 0
   let saved = 0
 
@@ -19604,8 +19627,9 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
     const { otsikko: title, tila: kasittelymerkinta, hyvaksytty } = jaaOtsikkoJaTila(block.title)
     if (!title) continue
 
-    const description = block.links.map((l) => l.label).join(" ")
-    const phase = ahtariPhaseFromText(`${title} ${hyvaksytty ? "hyväksytty" : ""} ${description}`)
+    /* Liitteiden nimet kertovat vaiheen ("Kaavaehdotus …"), mutta eivät ole kuvaus. */
+    const liitteidenNimet = block.links.map((l) => l.label).join(" ")
+    const phase = ahtariPhaseFromText(`${title} ${hyvaksytty ? "hyväksytty" : ""} ${liitteidenNimet}`)
     const completed = phase === "Voimaantulo"
     const contacts = [AHTARI_CONTACT]
     const attachments = block.links
@@ -19614,6 +19638,19 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
 
     const slug = ahtariSlug(title)
     const documentUrl = `${AHTARI_LISTING_URL}#${slug}`
+
+    const liiteUrlit = attachments.map((a) => a.url)
+    const tunnettu = tunnetutAhtari.get(documentUrl)
+    const ennallaan =
+      tunnettu &&
+      tunnettu.liitteet.length === liiteUrlit.length &&
+      tunnettu.liitteet.every((u, i) => u === liiteUrlit[i])
+    const liite = ennallaan
+      ? tunnettu!
+      : completed
+        ? { kuvaus: null, aloitteentekija: null, asiakirja: null }
+        : await haeKaavanLiitetiedot(attachments)
+    const description = liite.kuvaus
 
     const rawText = JSON.stringify({ title, phase, description, contacts, attachments })
     const contentHash = hashContent(rawText)
@@ -19639,6 +19676,10 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
           contacts,
           attachments,
           kasittelymerkinta,
+          liitteet_luettu: liiteUrlit,
+          liitteen_kuvaus: liite.kuvaus,
+          developer: liite.aloitteentekija,
+          asiakirja_url: liite.asiakirja,
           completed,
         },
         processed_at: new Date().toISOString(),

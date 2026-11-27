@@ -51,6 +51,40 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-455 – Ähtärin kaavoille kuvaus selostuksesta liitteiden nimilistan sijaan
+
+Johannes 27.11.2026 jonorivistä Kimpilamminkankaan tuulivoimaosayleiskaava
+(`bcc8f40d`): *"kuvaus puuttuu"*, liitteenä kaavaselostuksen kappale.
+
+**Vika.** Ähtärin keräin kokosi kuvauksen liitelinkkien teksteistä
+("Kaavaehdotus, Ähtäri 2.3.2026 Kaavaselostus … Liite 1. Meluselvitys
+106 dB(A) …"), joten kaikilla neljällä Ähtärin näkyvällä kaavahankkeella
+kuvauksena oli liitteiden nimilista.
+
+**Korjaus:** keräin käyttää D-450:n `haeKaavanLiitetiedot`-lukijaa
+(selostus tai OAS, uudelleen vain kun liitteet muuttuvat). Liitteiden
+nimet luetaan yhä vaiheen tunnistukseen ("Kaavaehdotus …"), mutta ne eivät
+ole koskaan kuvaus.
+
+**Sisällysluettelo ei kelpaa kuvaukseksi.** Moksunniemen selostuksesta
+yleinen jäsennin poimi sisällysluettelon, jossa otsikko ja sivunumero ovat
+liimautuneet ("Asemakaavan tavoitteet24 4.4.1Lähtökohta-…").
+`naytaaSisallysluettelolta` hylkää tekstin, jossa on vähintään kaksi
+"sana+sivunumero alaluku" -kohtaa (2 testiä); silloin kuvaus jää tyhjäksi.
+
+**Data:** Juoleikonkangas ja Tuomarniemi saivat selostuksen kuvauksen.
+Kimpilamminkankaalle kirjoitettiin Johanneksen liittämä kappale ja
+valtuuston hyväksyminen 5.10.2026; Moksunniemelle luvuista 1.3 ja 3.1.1
+(hotelli Mesikämmenen suojelumääräykset, kelluvat sauna- ja
+majoitusrakennukset). Käsin kirjoitetut kuvaukset tallennettiin myös
+lähdedokumenttiin, koska…
+
+**…synkronointi kirjoittaa tyhjän päälle.** `syncApprovedProject` yhdistää
+resolverin metatiedot hankkeen metatietojen päälle (`{ ...hanke, ...uusi }`),
+joten dokumentin tyhjä kuvaus pyyhkisi hankkeen `metadata.description`-
+kentän seuraavalla synkronoinnilla. `additional_info` säilyy. Tätä ei
+korjattu (vaikuttaa kaikkiin lähteisiin); avoinna.
+
 ### D-454 – Ähtärin kaavalistalta päivitysmerkintä hankkeeksi ja käsittelymerkintä nimeen
 
 Johannes 27.11.2026 jonorivistä *"- Sivua päivitetty marraskuu 2026"*

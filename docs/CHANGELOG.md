@@ -11,6 +11,11 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-27 (datakeskukset)
 
+### Ähtärin kaavoille kuvaus kaavaselostuksesta (D-455)
+
+Ähtärin kaavojen kuvauksena näkyi liitteiden nimilista. Kuvaus luetaan nyt
+kaavaselostuksesta tai OAS:sta, ja neljän hankkeen kuvaus korjattiin.
+
 ### Ähtärin kaavalistalta ei enää tule sivun päivitysmerkintää hankkeeksi (D-454)
 
 Sivun alareunan "Sivua päivitetty" -merkintä tuli jonoon hankkeena aina, kun

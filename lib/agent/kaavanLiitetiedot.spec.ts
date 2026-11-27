@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { haeKaavanLiitetiedot, kaavanAsiakirja, lohkonOmaTeksti } from "./kaavanLiitetiedot"
+import { haeKaavanLiitetiedot, kaavanAsiakirja, lohkonOmaTeksti, naytaaSisallysluettelolta } from "./kaavanLiitetiedot"
 
 const OAS = "https://www.toholampi.fi/wp-content/uploads/2026/05/Datakeskuksen_alueen_AK_OAS_11052026.pdf"
 const LIITTEET = [{ label: "Datakeskuksen alueen OAS-11052026", url: OAS }]
@@ -26,5 +26,14 @@ Toimijan tavoitteena on toteuttaa alueelle datakeskuskokonaisuus, joka rakennett
     const tulos = await haeKaavanLiitetiedot(LIITTEET, async () => teksti)
     expect(tulos.asiakirja).toBe(OAS)
     expect(tulos.aloitteentekija).toBe("Greensky Energy Oy")
+  })
+})
+
+describe("naytaaSisallysluettelolta (Ähtäri 27.11.2026)", () => {
+  it("tunnistaa liimautuneen sisällysluettelon", () => {
+    expect(naytaaSisallysluettelolta("Asemakaavan tavoitteet24 4.4.1Lähtökohta-aineiston antamat tavoitteet24 4.5Asemakaavaratkaisun vaihtoehdot ja niiden vaikutukset25 4.5.1Asemakaavaratkaisun valinta")).toBe(true)
+  })
+  it("ei hylkää tavallista kuvausta", () => {
+    expect(naytaaSisallysluettelolta("Kaava-alueen kokonaispinta-ala on noin 1104 hehtaaria ja Ähtärin kaupungin alueella noin 669 hehtaaria. Kortteli 713 sijaitsee 4.5 km päässä.")).toBe(false)
   })
 })

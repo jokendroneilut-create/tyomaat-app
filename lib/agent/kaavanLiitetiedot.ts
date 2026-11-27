@@ -38,6 +38,18 @@ export function lohkonOmaTeksti(lohkonTeksti: string, liitteet: KaavanLiite[]): 
   return t.length >= 60 && /\p{Ll}{3,}[^.]*\.\s*/u.test(t) ? t : null
 }
 
+/*
+ * Sisällysluettelo kuvauksena (Ähtärin Moksunniemi 27.11.2026): otsikko ja
+ * sivunumero ovat liimautuneet ("Asemakaavan tavoitteet24 4.4.1Lähtökohta-
+ * aineiston antamat tavoitteet24"), joten yleisen jäsentimen
+ * luettelotunnistus ei osunut. Kaksi "sana+sivunumero alaluku" -kohtaa
+ * riittää: tavallisessa tekstissä niitä ei ole.
+ */
+export function naytaaSisallysluettelolta(teksti: string | null | undefined): boolean {
+  const osumat = String(teksti ?? "").match(/\p{L}\d{1,3}\s+\d+(?:\.\d+)+\s?\p{Lu}/gu) ?? []
+  return osumat.length >= 2
+}
+
 export async function haeKaavanLiitetiedot(
   liitteet: KaavanLiite[],
   hae: (url: string) => Promise<string | null> = haeKaavaselostuksenTeksti
@@ -46,8 +58,9 @@ export async function haeKaavanLiitetiedot(
   if (!asiakirja) return { kuvaus: null, aloitteentekija: null, asiakirja: null }
   const teksti = await hae(asiakirja)
   if (!teksti) return { kuvaus: null, aloitteentekija: null, asiakirja }
+  const kuvaus = kaavanKuvausTekstista(teksti)
   return {
-    kuvaus: kaavanKuvausTekstista(teksti),
+    kuvaus: naytaaSisallysluettelolta(kuvaus) ? null : kuvaus,
     aloitteentekija: jasennaAloitteentekija(teksti),
     asiakirja,
   }
