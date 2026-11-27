@@ -51,6 +51,8 @@ export type Sopimuskausi = {
   puitesopimus: boolean
   /** CPV-pääluokka, esim. "45" = rakennustyöt. */
   cpv: string | null
+  /** Loppu laskettu alusta ja kestosta, koska ilmoitus ei antanut päivää (D-459). */
+  loppuKestosta?: true
 }
 
 export const TYHJA: Sopimuskausi = {
@@ -76,6 +78,38 @@ function paiva(v: unknown): string | null {
   return `${m[1]}-${m[2]}-${m[3]}`
 }
 
+/*
+ * LOPPU KESTOSTA (27.11.2026, D-459). Osa ilmoituksista antaa jakson
+ * alkupäivänä ja kestona eikä loppupäivänä: Korkeasaaren
+ * pääsisäänkäyntirakennus "startDate 2024-07-15, durationMeasure 15
+ * MONTH". Loppu jäi tyhjäksi, joten D-438:n varoitus päättyneestä
+ * sopimuskaudesta ei lauennut, ja kesällä 2026 valmistuneen urakan
+ * jälki-ilmoitus tuli jonoon kuin uusi hanke.
+ */
+export function lisaaKesto(alku: string, maara: unknown, yksikko: unknown): string | null {
+  const n = Number(maara)
+  if (!Number.isFinite(n) || n <= 0) return null
+  const d = new Date(`${alku}T00:00:00Z`)
+  if (Number.isNaN(d.getTime())) return null
+  switch (String(yksikko ?? "").toUpperCase()) {
+    case "DAY":
+      d.setUTCDate(d.getUTCDate() + n)
+      break
+    case "WEEK":
+      d.setUTCDate(d.getUTCDate() + 7 * n)
+      break
+    case "MONTH":
+      d.setUTCMonth(d.getUTCMonth() + n)
+      break
+    case "YEAR":
+      d.setUTCFullYear(d.getUTCFullYear() + n)
+      break
+    default:
+      return null
+  }
+  return d.toISOString().slice(0, 10)
+}
+
 function koodi(o: unknown): { listName: string; value: string } | null {
   const l = String((o as any)?.listName ?? "").trim()
   const v = String((o as any)?.value ?? "").trim()
@@ -99,12 +133,17 @@ export function poimiSopimuskausi(eForm: unknown): Sopimuskausi {
   const luonteet: string[] = []
   const cpvt: string[] = []
   let puitesopimus = false
+  let loppuKestosta = false
 
   for (const lohko of lista) {
     const projekti = lohko?.procurementProject
     const jakso = projekti?.plannedPeriod
     const a = paiva(jakso?.startDate)
-    const l = paiva(jakso?.endDate)
+    let l = paiva(jakso?.endDate)
+    if (!l && a && jakso?.durationMeasure) {
+      l = lisaaKesto(a, jakso.durationMeasure.value, jakso.durationMeasure.unitCode)
+      if (l) loppuKestosta = true
+    }
     if (a) alut.push(a)
     if (l) loput.push(l)
 
@@ -140,6 +179,7 @@ export function poimiSopimuskausi(eForm: unknown): Sopimuskausi {
     luonne: [...new Set(luonteet)].length === 1 ? luonteet[0] : null,
     puitesopimus,
     cpv: [...new Set(cpvt)].length === 1 ? cpvt[0] : null,
+    ...(loppuKestosta ? { loppuKestosta: true as const } : {}),
   }
 }
 

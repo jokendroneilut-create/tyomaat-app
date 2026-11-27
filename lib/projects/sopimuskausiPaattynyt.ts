@@ -21,6 +21,8 @@ export type PaattynytSopimuskausi = {
   loppu: string
   /** Päättyikö kausi jo ennen kuin ilmoitus julkaistiin (työ tehty ennen kuin kuulimme). */
   ennenJulkaisua: boolean
+  /** Loppu laskettu alusta ja kestosta, ilmoitus ei antanut päivää (D-459). */
+  laskettu: boolean
 }
 
 const PAIVA = /^\d{4}-\d{2}-\d{2}/
@@ -38,7 +40,7 @@ export function sopimuskausiPaattynyt(
 
   const julkaistu = typeof metadata?.date_published === "string" ? metadata.date_published.slice(0, 10) : null
   const alku = typeof kausi?.alku === "string" && PAIVA.test(kausi.alku) ? kausi.alku.slice(0, 10) : null
-  return { alku, loppu, ennenJulkaisua: !!julkaistu && loppu < julkaistu }
+  return { alku, loppu, ennenJulkaisua: !!julkaistu && loppu < julkaistu, laskettu: kausi?.loppuKestosta === true }
 }
 
 export function suomeksi(paiva: string): string {

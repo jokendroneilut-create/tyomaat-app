@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { poimiSopimuskausi, kelpaaAloitukseksi } from "./hilmaSopimuskausi"
+import { poimiSopimuskausi, kelpaaAloitukseksi, lisaaKesto } from "./hilmaSopimuskausi"
 
 /*
  * Jokainen tapaus on otettu oikeasta ilmoituksesta, jonka tunniste on
@@ -201,5 +201,37 @@ describe("kelpaaAloitukseksi", () => {
 
   it("hylkää kun jaksoa ei ole", () => {
     expect(kelpaaAloitukseksi(poimiSopimuskausi({})).syy).toBe("ei jaksoa")
+  })
+})
+
+describe("loppu kestosta (D-459)", () => {
+  it("laskee lopun alusta ja kuukausikestosta", () => {
+    const eForm = {
+      procurementProjectLot: [
+        {
+          procurementProject: {
+            plannedPeriod: { startDate: { value: "2024-07-15+03:00" }, durationMeasure: { unitCode: "MONTH", value: 15 } },
+            procurementTypeCode: { listName: "contract-nature", value: "works" },
+          },
+        },
+      ],
+    }
+    const k = poimiSopimuskausi(eForm)
+    expect(k.alku).toBe("2024-07-15")
+    expect(k.loppu).toBe("2025-10-15")
+    expect(k.loppuKestosta).toBe(true)
+  })
+
+  it("ilmoitettu loppupäivä voittaa eikä merkitä lasketuksi", () => {
+    const k = poimiSopimuskausi({
+      procurementProjectLot: [{ procurementProject: { plannedPeriod: { startDate: "2026-01-01", endDate: "2026-06-30", durationMeasure: { unitCode: "MONTH", value: 3 } } } }],
+    })
+    expect(k.loppu).toBe("2026-06-30")
+    expect(k.loppuKestosta).toBeUndefined()
+  })
+
+  it("tuntematon yksikkö ei arvaa", () => {
+    expect(lisaaKesto("2026-01-01", 5, "DECADE")).toBeNull()
+    expect(lisaaKesto("2026-01-01", 2, "YEAR")).toBe("2028-01-01")
   })
 })

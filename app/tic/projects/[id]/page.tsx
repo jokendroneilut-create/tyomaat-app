@@ -101,7 +101,7 @@ export default async function CandidateDetailPage({ params }: Props) {
               return (
                 <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                   <strong>⚠️ Sopimuskausi päättynyt {suomeksi(p.loppu)}.</strong>{" "}
-                  {p.alku ? `Kausi oli ${suomeksi(p.alku)}–${suomeksi(p.loppu)}. ` : ""}
+                  {p.alku ? `Kausi oli ${suomeksi(p.alku)}–${suomeksi(p.loppu)}${p.laskettu ? " (loppu laskettu ilmoitetusta kestosta)" : ""}. ` : ""}
                   {p.ennenJulkaisua
                     ? "Kausi päättyi jo ennen kuin ilmoitus julkaistiin, joten työ on todennäköisesti tehty."
                     : "Työ on todennäköisesti tehty tai loppusuoralla."}

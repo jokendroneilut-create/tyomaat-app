@@ -13,7 +13,7 @@ describe("sopimuskausiPaattynyt", () => {
         },
         NYT
       )
-    ).toEqual({ alku: "2026-05-29", loppu: "2026-07-20", ennenJulkaisua: true })
+    ).toEqual({ alku: "2026-05-29", loppu: "2026-07-20", ennenJulkaisua: true, laskettu: false })
   })
 
   it("päättyi julkaisun jälkeen mutta ennen tätä päivää", () => {
@@ -22,7 +22,7 @@ describe("sopimuskausiPaattynyt", () => {
         { date_published: "2026-11-01T00:00:00Z", hilma_sopimuskausi: { alku: "2026-08-10", loppu: "2026-11-15" } },
         NYT
       )
-    ).toEqual({ alku: "2026-08-10", loppu: "2026-11-15", ennenJulkaisua: false })
+    ).toEqual({ alku: "2026-08-10", loppu: "2026-11-15", ennenJulkaisua: false, laskettu: false })
   })
 
   it("käynnissä oleva tai tänään päättyvä kausi ei laukaise", () => {
@@ -47,5 +47,16 @@ describe("sopimuskausiPaattynyt", () => {
 describe("suomeksi", () => {
   it("muotoilee ISO-päivän", () => {
     expect(suomeksi("2026-07-20")).toBe("20.7.2026")
+  })
+})
+
+describe("sopimuskausiPaattynyt: kestosta laskettu loppu (D-459)", () => {
+  it("Korkeasaari: 15.7.2024 + 15 kk päättyi ennen julkaisua 24.11.2026", () => {
+    expect(
+      sopimuskausiPaattynyt(
+        { hilma_sopimuskausi: { alku: "2024-07-15", loppu: "2025-10-15", loppuKestosta: true }, date_published: "2026-11-24T04:05:05Z" },
+        new Date("2026-11-27T12:00:00Z")
+      )
+    ).toEqual({ alku: "2024-07-15", loppu: "2025-10-15", ennenJulkaisua: true, laskettu: true })
   })
 })

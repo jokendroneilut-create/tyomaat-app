@@ -11,6 +11,12 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-27 (datakeskukset)
 
+### Vanhojen Hilma-urakoiden varoitus toimii myös kestolla ilmoitetuille (D-459)
+
+Hilman jälki-ilmoituksen "Sopimuskausi päättynyt" -varoitus ei näkynyt, jos
+ilmoitus kertoi sopimuskauden alkuna ja kestona eikä loppupäivänä. Loppu
+lasketaan nyt kestosta; 131 riviä täydennettiin.
+
 ### Sodankylän kaavojen ä- ja ö-kirjaimet korjattu (D-458)
 
 Sodankylän kaavalista luettiin väärällä merkistöllä, jolloin "Kirkonkylän" näkyi

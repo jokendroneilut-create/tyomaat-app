@@ -51,6 +51,37 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-459 – Hilman sopimuskauden loppu lasketaan kestosta, kun päivää ei ilmoiteta
+
+Johannes 27.11.2026 jonorivistä *"Korkeasaaren pääsisäänkäyntirakennus,
+kokonaisurakka (= päätoteuttaja)"* (`dfeb10af`): *"vastaava todella vanha
+hanke tuli jo aiemmin. tämä on jo valmistunut kesällä. mistä johtuu?"*
+
+**Syy.** Rivi on Hilman jälki-ilmoitus (24.11.2026, voittaja Arkta
+Rakennuskultti Oy, 8,27 M€) hankinnasta, joka on aloitettu 2024
+(menettely 6021, viittaa TED-ilmoitukseen 254898-2024). D-438 lisäsi tällaisille
+varoituksen "⚠️ Sopimuskausi päättynyt", mutta se ei lauennut:
+ilmoitus antoi jakson muodossa **alku + kesto** ("startDate 2024-07-15,
+durationMeasure 15 MONTH") eikä loppupäivänä. `poimiSopimuskausi` luki
+vain `endDate`-kentän, joten loppu jäi tyhjäksi ja tuntematon loppu ei
+tarkoituksella laukaise mitään.
+
+**Korjaus** (`lib/agent/hilmaSopimuskausi.ts`, 3 testiä): kun loppupäivä
+puuttuu mutta alku ja kesto (DAY/WEEK/MONTH/YEAR) on annettu, loppu
+lasketaan (`lisaaKesto`) ja merkitään `loppuKestosta: true`. Ilmoitettu
+loppupäivä voittaa aina. TIC:n varoitus kertoo, kun loppu on laskettu
+("loppu laskettu ilmoitetusta kestosta"). Kestosääntö
+(yli 8 vuoden jakso ei kelpaa aloituspäiväksi) toimii nyt myös näillä.
+
+**Takautuvasti** (`scripts/taydenna-hilman-sopimuskauden-loppu.ts`): 174
+riviltä puuttui loppu; ilmoitus haettiin uudelleen ja 131 sai lopun
+(vain `metadata.hilma_sopimuskausi`, aloituspäivään ja valmistumiseen ei
+kosketa, D-324). Kahdeksalla kausi on jo päättynyt: jonossa vain
+Korkeasaari (15.7.2024–15.10.2025, päättyi yli vuosi ennen ilmoitusta),
+lisäksi seitsemän näkyvää hanketta, joiden kausi päättyi 10–11/2026.
+
+Päätös D-438 pysyy: varoitus katselmoijalle, ei automaattista karsintaa.
+
 ### D-458 – Sodankylän kaavalista: merkistö tunnistetaan, ei oleteta
 
 Johannes 27.11.2026 jonorivistä *"KirkonkylÃ¤n asemakaavan muutos,
