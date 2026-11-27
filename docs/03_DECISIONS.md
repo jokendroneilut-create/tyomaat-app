@@ -51,6 +51,34 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-454 – Ähtärin kaavalistalta päivitysmerkintä hankkeeksi ja käsittelymerkintä nimeen
+
+Johannes 27.11.2026 jonorivistä *"- Sivua päivitetty marraskuu 2026"*
+(`329009fe`): *"selvitä mikä ongelma tässä ehdotuksessa on"*.
+
+**Ongelma 1: sivun päivitysmerkintä kaavaksi.** Ähtärin keräin tekee
+jokaisesta linkittömästä kappaleesta kaavan otsikon, joten sivun alareunan
+"- Sivua päivitetty *kuukausi vuosi*" tuli jonoon aina, kun kunta päivitti
+sivun: toukokuu ja elokuu 2026 (molemmat hylätty käsin) ja nyt marraskuu.
+Mitattu: muissa lähteissä ei vastaavaa.
+
+**Ongelma 2: käsittelymerkintä nimessä.** Samassa ajossa kunta lisäsi
+nimeen "Kimpilamminkankaan tuulivoimaosayleiskaava (hyv. KV 5.10.2026 §
+82)". Nimestä tehty tunniste vaihtui, ja jo hankkeena olevasta kaavasta
+syntyi uusi jonorivi. Merkintä on tieto (valtuusto hyväksyi 5.10.2026),
+ei osa nimeä.
+
+**Korjaus** (`lib/agent/ahtariKaava.ts`, 4 testiä): `onPaivitysmerkinta`
+ohittaa päivitysmerkinnät; `jaaOtsikkoJaTila` erottaa nimen lopun
+käsittelymerkinnän ("hyv.", "hyväksytty", "lainvoimainen", "nähtävillä",
+KV/KH), jolloin tunniste pysyy ja merkintä luetaan vaiheeksi
+(Hyväksyminen) ja kenttään `kasittelymerkinta`. Nimeen kuuluvat sulkeet
+("osakortteli 713") jäävät. Ajon jälkeen Kimpilamminkangas palasi
+alkuperäiseen dokumenttiinsa vaiheella Hyväksyminen.
+
+**Avoimet jonorivit** (päivitysmerkintä ja Kimpilamminkankaan
+kaksoiskappale) jätettiin Johanneksen päätettäviksi.
+
 ### D-453 – Onzeron Herttoniemen datakeskus lisätty, Heikinlaakson kaksoiskappale yhdistetty
 
 Johannes 27.11.2026 IS:n ja Ylen jutuista: onko Herttoniemen

@@ -72,6 +72,7 @@ import { etsiKaavasivut, kaavasivunIngressi, kuvausIngressinKanssa } from "../..
 import { haeUlvilanKaavanTiedot } from "../../ulvilaKaava"
 import { haeTurunSivu, turunKaavasivunOsoite } from "../../turkuKaava"
 import { haeKaavanLiitetiedot, lohkonOmaTeksti } from "../../kaavanLiitetiedot"
+import { jaaOtsikkoJaTila, onPaivitysmerkinta } from "../../ahtariKaava"
 import { aloitteentekija, tervolanKaavasivu, type TervolaOsapuolet } from "../../tervolaKaava"
 import {
   jasennaRaahenHenkilosto,
@@ -19559,6 +19560,8 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
         const $el = $(el)
         const text = $el.text().trim()
         if (!text) return
+        /* Sivun alareunan "- Sivua päivitetty marraskuu 2026" ei ole kaava (D-454). */
+        if (onPaivitysmerkinta(text)) return
 
         if (/^VIREILLÄ OLEVAT\b/i.test(text)) {
           if (current) blocks.push(current)
@@ -19593,11 +19596,16 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
   let saved = 0
 
   for (const block of blocks) {
-    const title = block.title
+    /*
+     * Käsittelymerkintä pois nimestä (D-454): "(hyv. KV 5.10.2026 § 82)"
+     * vaihtoi nimestä tehdyn tunnisteen ja synnytti uuden rivin. Merkintä
+     * luetaan vaiheeksi ja talletetaan omaan kenttäänsä.
+     */
+    const { otsikko: title, tila: kasittelymerkinta, hyvaksytty } = jaaOtsikkoJaTila(block.title)
     if (!title) continue
 
     const description = block.links.map((l) => l.label).join(" ")
-    const phase = ahtariPhaseFromText(`${title} ${description}`)
+    const phase = ahtariPhaseFromText(`${title} ${hyvaksytty ? "hyväksytty" : ""} ${description}`)
     const completed = phase === "Voimaantulo"
     const contacts = [AHTARI_CONTACT]
     const attachments = block.links
@@ -19630,6 +19638,7 @@ async function collectAhtariKaavaSource(source: DiscoverySource) {
           description,
           contacts,
           attachments,
+          kasittelymerkinta,
           completed,
         },
         processed_at: new Date().toISOString(),

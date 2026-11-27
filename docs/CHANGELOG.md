@@ -11,6 +11,12 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ## 2026-11-27 (datakeskukset)
 
+### Ähtärin kaavalistalta ei enää tule sivun päivitysmerkintää hankkeeksi (D-454)
+
+Sivun alareunan "Sivua päivitetty" -merkintä tuli jonoon hankkeena aina, kun
+kunta päivitti sivun. Lisäksi kaavan nimeen lisätty hyväksymismerkintä synnytti
+samasta kaavasta uuden rivin; merkintä luetaan nyt vaiheeksi.
+
 ### Onzeron Herttoniemen datakeskus lisätty (D-453)
 
 Helsingin Herttoniemeen suunniteltu Onzeron datakeskus (rakentamislupa
