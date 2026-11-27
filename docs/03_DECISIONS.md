@@ -85,6 +85,12 @@ otsikko jäi vaihtoehtoiseksi nimeksi ja teksti kuvaukseen. Alkuperäinen
 tiedoterivi `fa33e1e4` hylättiin syyllä "Purettu omiksi hankkeiksi"
 (`scripts/pura-keilaniemen-tiedote.ts`).
 
+Johanneksen päätöksellä ("nosta rakenteilla vaiheeseen") ramppihanke
+`c4975822` nostettiin Suunnittelusta vaiheeseen **Rakenteilla**: GRK aloitti
+silta- ja liittymäurakan, ja Espoon tiedotteen mukaan työt ovat käynnissä.
+Kirjattu vaihehistoriaan (`manual_correction`) ja perusteluineen
+`field_sources.phase`-kenttään.
+
 ### D-459 – Hilman sopimuskauden loppu lasketaan kestosta, kun päivää ei ilmoiteta
 
 Johannes 27.11.2026 jonorivistä *"Korkeasaaren pääsisäänkäyntirakennus,
