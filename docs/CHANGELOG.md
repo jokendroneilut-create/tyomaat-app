@@ -9,6 +9,15 @@ tiedostossaan: [`07_ZONING_SOURCES.md`](07_ZONING_SOURCES.md).
 
 ---
 
+## 2026-11-27 (datakeskukset)
+
+### Onzeron Herttoniemen datakeskus lisätty (D-453)
+
+Helsingin Herttoniemeen suunniteltu Onzeron datakeskus (rakentamislupa
+LP-091-2026-00150 vireillä) lisättiin hankkeeksi. Heikinlaakson datakeskus
+näkyi kahdesti, ja rivit yhdistettiin.
+
+
 ## 2026-11-25 (kaavaliitteet)
 
 ### Hausjärven kaavakuvauksista pois raaka HTML (D-452)

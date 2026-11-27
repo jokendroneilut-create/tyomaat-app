@@ -51,6 +51,40 @@ uudelleen läpi joka sessiossa. Ylin = uusin.
 > `grep -c "^### D-" | sort` -tyyliin aina kun paiva on ollut
 > rinnakkainen.
 
+### D-453 – Onzeron Herttoniemen datakeskus lisätty, Heikinlaakson kaksoiskappale yhdistetty
+
+Johannes 27.11.2026 IS:n ja Ylen jutuista: onko Herttoniemen
+datakeskus meillä, ja Ylen 27.11. jutun kuvassa näkyvä lupanumero.
+
+**Ei ollut.** Kannasta ei löytynyt Onzeroa eikä Herttoniemen datakeskusta
+hankkeista, jonosta eikä kerätyistä dokumenteista; lupatunnusta
+LP-091-2026-00150 ei myöskään Lupapisteen lähteestä. Helenin 31.8.2026
+tiedote ei kertonut sijaintia, joten se ei olisi riittänyt hankkeeksi.
+
+**Lisätty** `4b9befdd` "Onzero datakeskus, Herttoniemi, Helsinki":
+rakennuttaja OnZero Finland Oy, vaihe Rakennuslupa (rakentamislupa
+LP-091-2026-00150 vireillä, hakemus 3.7.2026; hakija ja tontin omistaja
+Laakkonen Kiinteistöt), arkkitehti Arrak Arkkitehdit Oy, 120 MW sähkö /
+80 MW kaukolämpö, 525 000 MWh/v (noin 9 % Helsingin kaukolämmöstä),
+käynnistys 2027. Lupatunnus `project_identifiers`-tauluun, jotta
+Lupapisteen kuulutus liittyy hankkeeseen.
+
+- **Kustannusarvio jätettiin tyhjäksi.** Julkisuudessa toistettu 4
+  miljardia sisältää yli 3 miljardin palvelimet; rakentamisen osuus on
+  "vajaa miljardi". Molemmat ovat kuvauksessa.
+- **Sijainti on likimääräinen:** Mekaanikonkatu 13 (kadun keskikohta,
+  PKS-osoiteluettelo). Yle kertoo vain, että puolen hehtaarin tontti on
+  Itäväylän varressa parkkipaikan ja autokaupan välissä; merkitty
+  `geocode_source`-kenttään.
+
+**Heikinlaakso.** Kaksi riviä samasta hankkeesta (samat koordinaatit):
+`9a3cba90` "Datakeskus, Heikinlaakso" (Yle 4/2026, kuvaus, vastuutus) ja
+`1927d529` "Brunswick Heikinlaakso, Helsinki" (datakeskusrekisteri, 200 MW,
+kaava 8865). Säilytettiin `9a3cba90`, rekisteririvi piilotettiin
+(`merge-duplicate-projects.ts`). Kuvaukseen lisättiin rekisterin tiedot ja
+Ylen 26.11.2026 maininta: kaupunginhallituksen viimeisimmän linjauksen
+takia Heikinlaakson toteutuminen on erittäin epätodennäköistä.
+
 ### D-452 – Hausjärven kaavakuvauksiin raakaa HTML:ää noscript-kuvista
 
 Johannes 25.11.2026 jonorivistä *"Oitin asemakaavamuutos kortteleissa 343
